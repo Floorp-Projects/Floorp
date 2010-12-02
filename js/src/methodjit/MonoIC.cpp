@@ -513,7 +513,7 @@ class CallCompiler : public BaseCompiler
          */
         Assembler masm;
         InlineFrameAssembler inlFrame(masm, ic, flags);
-        RegisterID t0 = inlFrame.tempRegs.takeAnyReg();
+        RegisterID t0 = inlFrame.tempRegs.takeAnyReg().reg();
 
         /* Generate the inline frame creation. */
         inlFrame.assemble(ic.funGuard.labelAtOffset(ic.joinPointOffset).executableAddress());
@@ -616,10 +616,10 @@ class CallCompiler : public BaseCompiler
         /* Slightly less fast path - guard on fun->getFunctionPrivate() instead. */
         Assembler masm;
 
-        Registers tempRegs;
+        Registers tempRegs(Registers::AvailRegs);
         tempRegs.takeReg(ic.funObjReg);
 
-        RegisterID t0 = tempRegs.takeAnyReg();
+        RegisterID t0 = tempRegs.takeAnyReg().reg();
 
         /* Guard that it's actually a function object. */
         Jump claspGuard = masm.testObjClass(Assembler::NotEqual, ic.funObjReg, &js_FunctionClass);
@@ -714,13 +714,13 @@ class CallCompiler : public BaseCompiler
                                 f.regs.pc, initialFrameDepth);
         }
 
-        Registers tempRegs;
+        Registers tempRegs(Registers::AvailRegs);
 #ifndef JS_CPU_X86
         tempRegs.takeReg(Registers::ArgReg0);
         tempRegs.takeReg(Registers::ArgReg1);
         tempRegs.takeReg(Registers::ArgReg2);
 #endif
-        RegisterID t0 = tempRegs.takeAnyReg();
+        RegisterID t0 = tempRegs.takeAnyReg().reg();
 
         /* Store pc. */
         masm.storePtr(ImmPtr(cx->regs->pc),
@@ -738,7 +738,7 @@ class CallCompiler : public BaseCompiler
 
         /* Grab cx. */
 #ifdef JS_CPU_X86
-        RegisterID cxReg = tempRegs.takeAnyReg();
+        RegisterID cxReg = tempRegs.takeAnyReg().reg();
 #else
         RegisterID cxReg = Registers::ArgReg0;
 #endif
@@ -755,12 +755,12 @@ class CallCompiler : public BaseCompiler
             uint32 vpOffset = sizeof(JSStackFrame) + (vp - f.regs.fp->slots()) * sizeof(Value);
             masm.addPtr(Imm32(vpOffset), JSFrameReg, vpReg);
         } else {
-            argcReg = tempRegs.takeAnyReg();
+            argcReg = tempRegs.takeAnyReg().reg();
             masm.load32(FrameAddress(offsetof(VMFrame, u.call.dynamicArgc)), argcReg.reg());
             masm.loadPtr(FrameAddress(offsetof(VMFrame, regs.sp)), vpReg);
 
             /* vpOff = (argc + 2) * sizeof(Value) */
-            RegisterID vpOff = tempRegs.takeAnyReg();
+            RegisterID vpOff = tempRegs.takeAnyReg().reg();
             masm.move(argcReg.reg(), vpOff);
             masm.add32(Imm32(2), vpOff);  /* callee, this */
             JS_STATIC_ASSERT(sizeof(Value) == 8);

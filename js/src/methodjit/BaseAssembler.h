@@ -149,9 +149,6 @@ class Assembler : public ValueAssembler
         startLabel = label();
     }
 
-    /* Total number of floating-point registers. */
-    static const uint32 TotalFPRegisters = FPRegisters::TotalFPRegisters;
-
     /* Register pair storing returned type/data for calls. */
 #if defined(JS_CPU_X86) || defined(JS_CPU_X64)
 static const JSC::MacroAssembler::RegisterID JSReturnReg_Type  = JSC::X86Registers::ecx;
@@ -206,8 +203,8 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegiste
             m_assembler.pinsrd_rr(hi, fpReg);
         } else {
             m_assembler.movd_rr(lo, fpReg);
-            m_assembler.movd_rr(hi, FPRegisters::ConversionTemp);
-            m_assembler.unpcklps_rr(FPRegisters::ConversionTemp, fpReg);
+            m_assembler.movd_rr(hi, Registers::FPConversionTemp);
+            m_assembler.unpcklps_rr(Registers::FPConversionTemp, fpReg);
         }
     }
 #endif
@@ -255,8 +252,8 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegiste
     void ensureInMemoryDouble(Address address)
     {
         Jump notInteger = testInt32(Assembler::NotEqual, address);
-        convertInt32ToDouble(payloadOf(address), FPRegisters::ConversionTemp);
-        storeDouble(FPRegisters::ConversionTemp, address);
+        convertInt32ToDouble(payloadOf(address), Registers::FPConversionTemp);
+        storeDouble(Registers::FPConversionTemp, address);
         notInteger.linkTo(label(), this);
     }
 
@@ -264,8 +261,8 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegiste
     {
 #if defined JS_CPU_X86 || defined JS_CPU_X64
         static const uint64 DoubleNegMask = 0x8000000000000000ULL;
-        loadDouble(&DoubleNegMask, FPRegisters::ConversionTemp);
-        xorDouble(FPRegisters::ConversionTemp, fpreg);
+        loadDouble(&DoubleNegMask, Registers::FPConversionTemp);
+        xorDouble(Registers::FPConversionTemp, fpreg);
 #elif defined JS_CPU_ARM
         negDouble(fpreg, fpreg);
 #endif
@@ -304,6 +301,8 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegiste
         return pfun;
     }
 
+    /* :FIXME: unused */
+#if 0
     // Save all registers in the given mask.
     void saveRegs(uint32 volatileMask) {
         // Only one use per call.
@@ -320,6 +319,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegiste
             push(reg);
         }
     }
+#endif
 
     static const uint32 StackAlignment = 16;
 

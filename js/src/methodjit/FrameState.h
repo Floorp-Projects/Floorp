@@ -532,8 +532,7 @@ class FrameState
      * Frees a temporary register. If this register is being tracked, then it
      * is not spilled; the backing data becomes invalidated!
      */
-    inline void freeReg(RegisterID reg);
-    inline void freeFPReg(FPRegisterID reg);
+    inline void freeReg(AnyRegisterID reg);
 
     /*
      * Allocates a register. If none are free, one may be spilled from the
@@ -546,7 +545,7 @@ class FrameState
     /*
      * Allocates a register, except using a mask.
      */
-    inline RegisterID allocReg(uint32 mask);
+    inline AnyRegisterID allocReg(uint32 mask);
 
     /*
      * Allocates a specific register, evicting it if it's not avaliable.
@@ -599,10 +598,11 @@ class FrameState
      */
     void syncAndKill(Registers kill, Uses uses, Uses ignored);
     void syncAndKill(Registers kill, Uses uses) { syncAndKill(kill, uses, Uses(0)); }
+    void syncAndKill(Uses uses) { syncAndKill(Registers(Registers::AvailAnyRegs), uses, Uses(0)); }
 
     /* Syncs and kills everything. */
     void syncAndKillEverything() {
-        syncAndKill(Registers(Registers::AvailRegs), Uses(frameSlots()));
+        syncAndKill(Registers(Registers::AvailAnyRegs), Uses(frameSlots()));
     }
 
     /*
@@ -699,14 +699,12 @@ class FrameState
      * no matter what. In addition, pinReg() can only be used on registers
      * which are associated with FrameEntries.
      */
-    inline void pinReg(RegisterID reg) { regstate[reg].pin(); }
-    inline void pinFPReg(FPRegisterID reg) { fpregstate[reg].pin(); }
+    inline void pinReg(AnyRegisterID reg) { regstate(reg).pin(); }
 
     /*
      * Unpins a previously pinned register.
      */
-    inline void unpinReg(RegisterID reg) { regstate[reg].unpin(); }
-    inline void unpinFPReg(FPRegisterID reg) { fpregstate[reg].unpin(); }
+    inline void unpinReg(AnyRegisterID reg) { regstate(reg).unpin(); }
 
     /*
      * Same as unpinReg(), but does not restore the FrameEntry.
@@ -799,15 +797,12 @@ class FrameState
     }
 
   private:
-    inline RegisterID allocReg(FrameEntry *fe, RematInfo::RematType type);
-    inline void forgetReg(RegisterID reg);
-    inline void forgetFPReg(FPRegisterID reg);
-    RegisterID evictSomeReg(uint32 mask);
-    FPRegisterID evictSomeFPReg();
-    void evictReg(RegisterID reg);
+    inline AnyRegisterID allocReg(FrameEntry *fe, bool fp, RematInfo::RematType type);
+    inline void forgetReg(AnyRegisterID reg);
+    AnyRegisterID evictSomeReg(uint32 mask);
+    void evictReg(AnyRegisterID reg);
     inline FrameEntry *rawPush();
     inline void addToTracker(FrameEntry *fe);
-    inline void setFPRegister(FrameEntry *fe, FPRegisterID fpreg, bool reassociate = false);
 
     /* Guarantee sync, but do not set any sync flag. */
     inline void ensureFeSynced(const FrameEntry *fe, Assembler &masm) const;
@@ -855,7 +850,9 @@ class FrameState
         return &entries[index];
     }
 
-    RegisterID evictSomeReg() { return evictSomeReg(Registers::AvailRegs); }
+    AnyRegisterID evictSomeReg(bool fp) {
+        return evictSomeReg(fp ? Registers::AvailFPRegs : Registers::AvailRegs);
+    }
     uint32 indexOf(int32 depth) const {
         JS_ASSERT(uint32((sp + depth) - entries) < feLimit());
         return uint32((sp + depth) - entries);
@@ -869,6 +866,16 @@ class FrameState
     inline bool isClosedVar(uint32 slot);
     inline bool isClosedArg(uint32 slot);
 
+    RegisterState & regstate(AnyRegisterID reg) {
+        JS_ASSERT(reg.reg_ < Registers::TotalAnyRegisters);
+        return regstate_[reg.reg_];
+    }
+
+    const RegisterState & regstate(AnyRegisterID reg) const {
+        JS_ASSERT(reg.reg_ < Registers::TotalAnyRegisters);
+        return regstate_[reg.reg_];
+    }
+
   private:
     JSContext *cx;
     JSScript *script;
@@ -878,7 +885,6 @@ class FrameState
 
     /* All allocated registers. */
     Registers freeRegs;
-    FPRegisters freeFPRegs;
 
     /* Cache of FrameEntry objects. */
     FrameEntry *entries;
@@ -905,8 +911,7 @@ class FrameState
      * Register ownership state. This can't be used alone; to find whether an
      * entry is active, you must check the allocated registers.
      */
-    RegisterState regstate[Assembler::TotalRegisters];
-    RegisterState fpregstate[FPRegisters::TotalFPRegisters];
+    RegisterState regstate_[Registers::TotalAnyRegisters];
 
 #if defined JS_NUNBOX32
     mutable ImmutableSync reifier;
