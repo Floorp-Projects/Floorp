@@ -20,4 +20,5 @@ table.bc {border-collapse:collapse}
 tbody.border{border-top: 1px solid  black; border-bottom: 1px solid black; }
 tr.border{border-top: 1px solid black; border-bottom: 1px solid  black; }
 td.border{border-left:1px solid black;}
+div.maskPixel{position:absolute; background-color:Black; width:1px; height:1px; }
 
