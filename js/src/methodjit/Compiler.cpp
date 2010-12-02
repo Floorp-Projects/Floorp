@@ -2362,7 +2362,7 @@ void
 mjit::Compiler::prepareStubCall(Uses uses)
 {
     JaegerSpew(JSpew_Insns, " ---- STUB CALL, SYNCING FRAME ---- \n");
-    frame.syncAndKill(Registers(Registers::TempRegs), uses);
+    frame.syncAndKill(Registers(Registers::TempAnyRegs), uses);
     JaegerSpew(JSpew_Insns, " ---- FRAME SYNCING DONE ---- \n");
 }
 
@@ -2442,7 +2442,7 @@ mjit::Compiler::emitUncachedCall(uint32 argc, bool callingNew)
     RegisterID r0 = Registers::ReturnReg;
     VoidPtrStubUInt32 stub = callingNew ? stubs::UncachedNew : stubs::UncachedCall;
 
-    frame.syncAndKill(Registers(Registers::AvailRegs), Uses(argc + 2));
+    frame.syncAndKill(Uses(argc + 2));
     prepareStubCall(Uses(argc + 2));
     masm.move(Imm32(argc), Registers::ArgReg1);
     INLINE_STUBCALL(stub);
@@ -2679,7 +2679,7 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew)
                 PinRegAcrossSyncAndKill p3(frame, origThisData), p4(frame, origThisType);
 
                 /* Leaves pinned regs untouched. */
-                frame.syncAndKill(Registers(Registers::AvailRegs), Uses(speculatedArgc + 2));
+                frame.syncAndKill(Uses(speculatedArgc + 2));
             }
 
             checkCallApplySpeculation(callImmArgc, speculatedArgc,
@@ -2704,7 +2704,7 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew)
                 callIC.frameSize.initDynamic();
         } else {
             /* Leaves pinned regs untouched. */
-            frame.syncAndKill(Registers(Registers::AvailRegs), Uses(speculatedArgc + 2));
+            frame.syncAndKill(Uses(speculatedArgc + 2));
 
             icCalleeType = origCalleeType;
             icCalleeData = origCalleeData;
@@ -2722,15 +2722,15 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew)
      * For an optimized apply, keep icCalleeData and funPtrReg in a
      * callee-saved registers for the subsequent ic::SplatApplyArgs call.
      */
-    Registers tempRegs;
+    Registers tempRegs(Registers::AvailRegs);
     if (callIC.frameSize.isDynamic() && !Registers::isSaved(icCalleeData)) {
-        RegisterID x = tempRegs.takeRegInMask(Registers::SavedRegs);
+        RegisterID x = tempRegs.takeAnyReg(Registers::SavedRegs).reg();
         masm.move(icCalleeData, x);
         icCalleeData = x;
     } else {
         tempRegs.takeReg(icCalleeData);
     }
-    RegisterID funPtrReg = tempRegs.takeRegInMask(Registers::SavedRegs);
+    RegisterID funPtrReg = tempRegs.takeAnyReg(Registers::SavedRegs).reg();
 
     /*
      * Guard on the callee identity. This misses on the first run. If the
@@ -2752,7 +2752,7 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew)
         Jump notFunction = stubcc.masm.testFunction(Assembler::NotEqual, icCalleeData);
 
         /* Test if the function is scripted. */
-        RegisterID tmp = tempRegs.takeAnyReg();
+        RegisterID tmp = tempRegs.takeAnyReg().reg();
         stubcc.masm.loadFunctionPrivate(icCalleeData, funPtrReg);
         stubcc.masm.load16(Address(funPtrReg, offsetof(JSFunction, flags)), tmp);
         stubcc.masm.and32(Imm32(JSFUN_KINDMASK), tmp);
@@ -4816,7 +4816,7 @@ mjit::Compiler::emitEval(uint32 argc)
     /* Check for interrupts on function call */
     interruptCheckHelper();
 
-    frame.syncAndKill(Registers(Registers::AvailRegs), Uses(argc + 2));
+    frame.syncAndKill(Uses(argc + 2));
     prepareStubCall(Uses(argc + 2));
     masm.move(Imm32(argc), Registers::ArgReg1);
     INLINE_STUBCALL(stubs::Eval);

@@ -48,7 +48,7 @@ using namespace js;
 using namespace js::mjit;
 
 ImmutableSync::ImmutableSync(JSContext *cx, const FrameState &frame)
-  : cx(cx), entries(NULL), frame(frame), generation(0)
+  : cx(cx), entries(NULL), frame(frame), avail(Registers::AvailRegs), generation(0)
 {
 }
 
@@ -79,13 +79,13 @@ JSC::MacroAssembler::RegisterID
 ImmutableSync::allocReg()
 {
     if (!avail.empty())
-        return avail.takeAnyReg();
+        return avail.takeAnyReg().reg();
 
     uint32 lastResort = FrameState::InvalidIndex;
     uint32 evictFromFrame = FrameState::InvalidIndex;
 
     /* Find something to evict. */
-    for (uint32 i = 0; i < JSC::MacroAssembler::TotalRegisters; i++) {
+    for (uint32 i = 0; i < Registers::TotalRegisters; i++) {
         RegisterID reg = RegisterID(i);
         if (!(Registers::maskReg(reg) & Registers::AvailRegs))
             continue;
@@ -94,7 +94,7 @@ ImmutableSync::allocReg()
 
         if (!regs[i]) {
             /* If the frame does not own this register, take it! */
-            FrameEntry *fe = frame.regstate[i].usedBy();
+            FrameEntry *fe = frame.regstate(reg).usedBy();
             if (!fe)
                 return reg;
 
@@ -110,16 +110,17 @@ ImmutableSync::allocReg()
     }
 
     if (evictFromFrame != FrameState::InvalidIndex) {
-        FrameEntry *fe = frame.regstate[evictFromFrame].usedBy();
+        RegisterID evict = RegisterID(evictFromFrame);
+        FrameEntry *fe = frame.regstate(evict).usedBy();
         SyncEntry &e = entryFor(fe);
-        if (frame.regstate[evictFromFrame].type() == RematInfo::TYPE) {
+        if (frame.regstate(evict).type() == RematInfo::TYPE) {
             JS_ASSERT(!e.typeClobbered);
             e.typeClobbered = true;
         } else {
             JS_ASSERT(!e.dataClobbered);
             e.dataClobbered = true;
         }
-        return RegisterID(evictFromFrame);
+        return evict;
     }
 
     JS_ASSERT(lastResort != FrameState::InvalidIndex);
@@ -263,7 +264,7 @@ ImmutableSync::syncNormal(FrameEntry *fe)
         regs[e.dataReg] = NULL;
     } else if (!e.dataClobbered &&
                fe->data.inRegister() &&
-               frame.regstate[fe->data.reg()].usedBy()) {
+               frame.regstate(fe->data.reg()).usedBy()) {
         avail.putReg(fe->data.reg());
     }
 
@@ -272,7 +273,7 @@ ImmutableSync::syncNormal(FrameEntry *fe)
         regs[e.typeReg] = NULL;
     } else if (!e.typeClobbered &&
                fe->type.inRegister() &&
-               frame.regstate[fe->type.reg()].usedBy()) {
+               frame.regstate(fe->type.reg()).usedBy()) {
         avail.putReg(fe->type.reg());
     }
 }

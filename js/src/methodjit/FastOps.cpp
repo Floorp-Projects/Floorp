@@ -152,7 +152,7 @@ mjit::Compiler::ensureInteger(FrameEntry *fe, Uses uses)
         masm.move(scratchReg, dataReg);
         intGuard.linkTo(masm.label(), &masm);
 
-        frame.freeFPReg(fpreg);
+        frame.freeReg(fpreg);
         frame.freeReg(scratchReg);
         frame.learnType(fe, JSVAL_TYPE_INT32);
     }
@@ -658,7 +658,7 @@ mjit::Compiler::jsop_not()
         switch (type) {
           case JSVAL_TYPE_INT32:
           {
-            RegisterID data = frame.allocReg(Registers::SingleByteRegs);
+            RegisterID data = frame.allocReg(Registers::SingleByteRegs).reg();
             if (frame.shouldAvoidDataRemat(top))
                 masm.loadPayload(frame.addressOf(top), data);
             else
@@ -707,7 +707,7 @@ mjit::Compiler::jsop_not()
         return;
     }
 
-    RegisterID data = frame.allocReg(Registers::SingleByteRegs);
+    RegisterID data = frame.allocReg(Registers::SingleByteRegs).reg();
     if (frame.shouldAvoidDataRemat(top))
         masm.loadPayload(frame.addressOf(top), data);
     else
@@ -1674,7 +1674,7 @@ mjit::Compiler::jsop_stricteq(JSOp op)
         }
         
         /* Assume NaN is in canonical form. */
-        RegisterID result = frame.allocReg(Registers::SingleByteRegs);
+        RegisterID result = frame.allocReg(Registers::SingleByteRegs).reg();
         RegisterID treg = frame.tempRegForType(lhs);
 
         Assembler::Condition oppositeCond = (op == JSOP_STRICTEQ) ? Assembler::NotEqual : Assembler::Equal;
@@ -1707,7 +1707,7 @@ mjit::Compiler::jsop_stricteq(JSOp op)
         }
 
         /* This is only true if the other side is |null|. */
-        RegisterID result = frame.allocReg(Registers::SingleByteRegs);
+        RegisterID result = frame.allocReg(Registers::SingleByteRegs).reg();
 #if defined JS_CPU_X86 || defined JS_CPU_ARM
         JSValueTag mask = known->getKnownTag();
         if (frame.shouldAvoidTypeRemat(test))
@@ -1750,7 +1750,7 @@ mjit::Compiler::jsop_stricteq(JSOp op)
 
         RegisterID result = data;
         if (!(Registers::maskReg(data) & Registers::SingleByteRegs))
-            result = frame.allocReg(Registers::SingleByteRegs);
+            result = frame.allocReg(Registers::SingleByteRegs).reg();
         
         Jump notBoolean;
         if (!test->isTypeKnown())

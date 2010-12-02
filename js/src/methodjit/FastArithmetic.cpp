@@ -402,18 +402,18 @@ mjit::Compiler::jsop_binary_double(FrameEntry *lhs, FrameEntry *rhs, JSOp op,
     OOL_STUBCALL(stub);
 
     if (allocateRight)
-        frame.freeFPReg(fpRight);
+        frame.freeReg(fpRight);
 
     frame.popn(2);
 
     if (type == JSVAL_TYPE_UNKNOWN) {
-        frame.freeFPReg(fpLeft);
+        frame.freeReg(fpLeft);
         frame.pushSynced(type);
     } else if (type == JSVAL_TYPE_DOUBLE) {
         frame.pushDouble(fpLeft);
     } else {
         JS_ASSERT(op == JSOP_DIV && type == JSVAL_TYPE_INT32);
-        frame.freeFPReg(fpLeft);
+        frame.freeReg(fpLeft);
         frame.pushSynced(type);
     }
 
@@ -513,7 +513,7 @@ mjit::Compiler::jsop_binary_full_simple(FrameEntry *fe, JSOp op, VoidStub stub, 
     else
         frame.pushNumber(regs.result, true);
 
-    frame.freeFPReg(regs.lhsFP);
+    frame.freeReg(regs.lhsFP);
 
     /* Merge back OOL double path. */
     if (doublePathDone.isSet())
@@ -763,8 +763,8 @@ mjit::Compiler::jsop_binary_full(FrameEntry *lhs, FrameEntry *rhs, JSOp op,
     else
         frame.pushNumber(regs.result, true);
 
-    frame.freeFPReg(regs.lhsFP);
-    frame.freeFPReg(regs.rhsFP);
+    frame.freeReg(regs.lhsFP);
+    frame.freeReg(regs.rhsFP);
 
     /* Merge back OOL double path. */
     if (doublePathDone.isSet())
@@ -829,7 +829,7 @@ mjit::Compiler::jsop_neg()
 
         /* Overwrite pushed frame's memory (before push). */
         masm.storeDouble(fpreg, frame.addressOf(fe));
-        frame.freeFPReg(fpreg);
+        frame.freeReg(fpreg);
     }
 
     /* Try an integer path (out-of-line). */
@@ -937,12 +937,12 @@ mjit::Compiler::jsop_mod()
     /* Get RHS into anything but EDX - could avoid more spilling? */
     MaybeRegisterID temp;
     RegisterID rhsReg;
+    uint32 mask = Registers::AvailRegs & ~Registers::maskReg(X86Registers::edx);
     if (!rhs->isConstant()) {
-        uint32 mask = Registers::AvailRegs & ~Registers::maskReg(X86Registers::edx);
         rhsReg = frame.tempRegInMaskForData(rhs, mask);
         JS_ASSERT(rhsReg != X86Registers::edx);
     } else {
-        rhsReg = frame.allocReg(Registers::AvailRegs & ~Registers::maskReg(X86Registers::edx));
+        rhsReg = frame.allocReg(mask).reg();
         JS_ASSERT(rhsReg != X86Registers::edx);
         masm.move(Imm32(rhs->getValue().toInt32()), rhsReg);
         temp = rhsReg;
@@ -1223,7 +1223,7 @@ mjit::Compiler::jsop_equality_int_string(JSOp op, BoolStub stub, jsbytecode *tar
         /* x86/64's SET instruction can only take single-byte regs.*/
         RegisterID resultReg = reg;
         if (!(Registers::maskReg(reg) & Registers::SingleByteRegs))
-            resultReg = frame.allocReg(Registers::SingleByteRegs);
+            resultReg = frame.allocReg(Registers::SingleByteRegs).reg();
 
         /* Emit the compare & set. */
         if (rhs->isConstant()) {
@@ -1358,11 +1358,11 @@ mjit::Compiler::jsop_relational_double(JSOp op, BoolStub stub, jsbytecode *targe
 
     MaybeJump lhsNotNumber = loadDouble(lhs, &fpLeft, &allocateLeft);
     if (!allocateLeft)
-        frame.pinFPReg(fpLeft);
+        frame.pinReg(fpLeft);
 
     MaybeJump rhsNotNumber = loadDouble(rhs, &fpRight, &allocateRight);
     if (!allocateLeft)
-        frame.unpinFPReg(fpLeft);
+        frame.unpinReg(fpLeft);
 
     Assembler::DoubleCondition dblCond = DoubleCondForOp(op, fused);
 
@@ -1421,9 +1421,9 @@ mjit::Compiler::jsop_relational_double(JSOp op, BoolStub stub, jsbytecode *targe
         stubcc.rejoin(Changes(1));
 
         if (allocateLeft)
-            frame.freeFPReg(fpLeft);
+            frame.freeReg(fpLeft);
         if (allocateRight)
-            frame.freeFPReg(fpRight);
+            frame.freeReg(fpRight);
     }
 
     return true;
@@ -1692,8 +1692,8 @@ mjit::Compiler::jsop_relational_full(JSOp op, BoolStub stub, jsbytecode *target,
             stubcc.crossJump(doubleDone.get(), masm.label());
         stubcc.rejoin(Changes(1));
 
-        frame.freeFPReg(regs.lhsFP);
-        frame.freeFPReg(regs.rhsFP);
+        frame.freeReg(regs.lhsFP);
+        frame.freeReg(regs.rhsFP);
     }
 
     return true;
