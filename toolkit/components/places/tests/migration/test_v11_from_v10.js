@@ -6,6 +6,32 @@
  * 11.
  */
 
+////////////////////////////////////////////////////////////////////////////////
+//// Constants
+
+const kGuidAnnotationName = "sync/guid";
+const kExpectedAnnotations = 5;
+const kExpectedValidGuids = 2;
+
+////////////////////////////////////////////////////////////////////////////////
+//// Globals
+
+// Set in test_initial_state to the value in the database.
+var gItemGuid = [];
+var gItemId = [];
+
+////////////////////////////////////////////////////////////////////////////////
+//// Helpers
+
+/**
+ * Determines if a guid is valid or not.
+ *
+ * @return true if it is a valid guid, false otherwise.
+ */
+function isValidGuid(aGuid)
+{
+  return /^[a-zA-Z0-9\-_]{12}$/.test(aGuid);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Test Functions
@@ -26,6 +52,26 @@ function test_initial_state()
 
   do_check_false(db.indexExists("moz_bookmarks_guid_uniqueindex"));
 
+  // There should be five item annotations for a bookmark guid.
+  stmt = db.createStatement(
+    "SELECT content AS guid, item_id "
+  + "FROM moz_items_annos "
+  + "WHERE anno_attribute_id = ( "
+  +   "SELECT id "
+  +   "FROM moz_anno_attributes "
+  +   "WHERE name = :attr_name "
+  + ") "
+  );
+  stmt.params.attr_name = kGuidAnnotationName;
+  while (stmt.executeStep()) {
+    gItemGuid.push(stmt.row.guid);
+    gItemId.push(stmt.row.item_id)
+  }
+  do_check_eq(gItemGuid.length, gItemId.length);
+  do_check_eq(gItemGuid.length, kExpectedAnnotations);
+  stmt.finalize();
+
+  // Check our schema version to make sure it is actually at 10.
   do_check_eq(db.schemaVersion, 10);
 
   db.close();
@@ -66,6 +112,61 @@ function test_bookmark_guids_non_null()
   run_next_test();
 }
 
+function test_bookmark_guid_annotation_imported()
+{
+  // Make sure we have the imported guid; not a newly generated one.
+  let stmt = DBConn().createStatement(
+    "SELECT id "
+  + "FROM moz_bookmarks "
+  + "WHERE guid = :guid "
+  + "AND id = :item_id "
+  );
+  let validGuids = 0;
+  let seenGuids = [];
+  for (let i = 0; i < gItemGuid.length; i++) {
+    let guid = gItemGuid[i];
+    stmt.params.guid = guid;
+    stmt.params.item_id = gItemId[i];
+
+    // Check that it is a valid guid that we expect, and that it is not a
+    // duplicate (which would violate the unique constraint).
+    let valid = isValidGuid(guid) && seenGuids.indexOf(guid) == -1;
+    seenGuids.push(guid);
+
+    if (valid) {
+      validGuids++;
+      do_check_true(stmt.executeStep());
+    }
+    else {
+      do_check_false(stmt.executeStep());
+    }
+    stmt.reset();
+  }
+  do_check_eq(validGuids, kExpectedValidGuids);
+  stmt.finalize();
+
+  run_next_test();
+}
+
+function test_bookmark_guid_annotation_removed()
+{
+  let stmt = DBConn().createStatement(
+    "SELECT COUNT(1) "
+  + "FROM moz_items_annos "
+  + "WHERE anno_attribute_id = ( "
+  +   "SELECT id "
+  +   "FROM moz_anno_attributes "
+  +   "WHERE name = :attr_name "
+  + ") "
+  );
+  stmt.params.attr_name = kGuidAnnotationName;
+  do_check_true(stmt.executeStep());
+  do_check_eq(stmt.getInt32(0), 0);
+  stmt.finalize();
+
+  run_next_test();
+}
+
 function test_final_state()
 {
   // We open a new database mostly so that we can check that the settings were
@@ -96,6 +197,8 @@ let tests = [
   test_initial_state,
   test_moz_bookmarks_guid_exists,
   test_bookmark_guids_non_null,
+  test_bookmark_guid_annotation_imported,
+  test_bookmark_guid_annotation_removed,
   test_final_state,
 ];
 let index = 0;
