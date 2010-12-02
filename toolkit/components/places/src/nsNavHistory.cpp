@@ -519,8 +519,8 @@ nsNavHistory::Init()
                  NS_ERROR_OUT_OF_MEMORY);
   NS_ENSURE_TRUE(mRecentRedirects.Init(RECENT_EVENTS_INITIAL_CACHE_SIZE),
                  NS_ERROR_OUT_OF_MEMORY);
-  
-  // Rmbed visits hash table.
+
+  // Embed visits hash table.
   NS_ENSURE_TRUE(mEmbedVisits.Init(EMBED_VISITS_INITIAL_CACHE_SIZE),
                  NS_ERROR_OUT_OF_MEMORY);
 
@@ -1353,8 +1353,9 @@ nsNavHistory::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
   // will fetch the id of the existing entry.
   RETURN_IF_STMT(mDBAddNewPage, NS_LITERAL_CSTRING(
     "INSERT OR IGNORE INTO moz_places "
-      "(url, title, rev_host, hidden, typed, frecency) "
-    "VALUES (:page_url, :page_title, :rev_host, :hidden, :typed, :frecency) "
+      "(url, title, rev_host, hidden, typed, frecency, guid) "
+    "VALUES (:page_url, :page_title, :rev_host, :hidden, :typed, :frecency, "
+             "GENERATE_GUID()) "
   ));
 
   RETURN_IF_STMT(mDBGetTags, NS_LITERAL_CSTRING(
@@ -5709,6 +5710,24 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
     // Finalize all statements.
     nsresult rv = FinalizeInternalStatements();
     NS_ENSURE_SUCCESS(rv, rv);
+
+#ifdef DEBUG
+    { // Sanity check that all places have guids.
+      nsCOMPtr<mozIStorageStatement> stmt;
+      nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+        "SELECT * "
+        "FROM moz_places "
+        "WHERE guid IS NULL "
+      ), getter_AddRefs(stmt));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      PRBool haveNullGuids;
+      rv = stmt->ExecuteStep(&haveNullGuids);
+      NS_ENSURE_SUCCESS(rv, rv);
+      NS_ASSERTION(!haveNullGuids,
+                   "Someone added a place without adding a GUID!");
+    }
+#endif
 
     // Finally, close the connection.
     nsRefPtr<PlacesEvent> closeListener =

@@ -62,6 +62,7 @@ function add_visit(aURI, aReferrer) {
                                  0);
   dump("### Added visit with id of " + visitId + "\n");
   do_check_true(gh.isVisited(aURI));
+  do_check_guid_for_uri(aURI);
   return visitId;
 }
 

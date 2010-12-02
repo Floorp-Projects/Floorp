@@ -16,7 +16,7 @@
  * The Original Code is places test code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Foundation.
+ * the Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
@@ -87,7 +87,7 @@ static size_t gPassedTests = 0;
 #else
 #include <sstream>
 
-#define do_check_eq(aExpected, aActual) \
+#define do_check_eq(aActual, aExpected) \
   PR_BEGIN_MACRO \
     gTotalTests++; \
     if (aExpected == aActual) { \
@@ -145,6 +145,7 @@ struct PlaceRecord
   PRInt32 hidden;
   PRInt32 typed;
   PRInt32 visitCount;
+  nsCString guid;
 };
 
 struct VisitRecord
@@ -201,7 +202,7 @@ do_get_place(nsIURI* aURI, PlaceRecord& result)
   do_check_success(rv);
 
   rv = dbConn->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT id, hidden, typed, visit_count FROM moz_places "
+    "SELECT id, hidden, typed, visit_count, guid FROM moz_places "
     "WHERE url=?1 "
   ), getter_AddRefs(stmt));
   do_check_success(rv);
@@ -224,6 +225,8 @@ do_get_place(nsIURI* aURI, PlaceRecord& result)
   rv = stmt->GetInt32(2, &result.typed);
   do_check_success(rv);
   rv = stmt->GetInt32(3, &result.visitCount);
+  do_check_success(rv);
+  rv = stmt->GetUTF8String(4, result.guid);
   do_check_success(rv);
 }
 

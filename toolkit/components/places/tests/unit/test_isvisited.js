@@ -47,12 +47,15 @@ try {
   do_throw("Could not get the global history service\n");
 } 
 
-function add_uri_to_history(aURI) {
+function add_uri_to_history(aURI, aCheckForGuid) {
   var referrer = uri("about:blank");
   gh.addURI(aURI,
             false, // not redirect
             true, // top level 
             referrer);
+  if (aCheckForGuid === undefined) {
+    do_check_guid_for_uri(aURI);
+  }
 }
 
 // main
@@ -102,7 +105,7 @@ function run_test() {
       print("Exception thrown for '" + currentURL + "', ignored.");
     }
     if (cantAddUri) {
-      add_uri_to_history(cantAddUri);
+      add_uri_to_history(cantAddUri, false);
       do_check_false(gh.isVisited(cantAddUri));
     }
   }
