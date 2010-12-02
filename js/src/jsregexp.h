@@ -70,16 +70,6 @@ class RegExpStatics
 
     bool createDependent(JSContext *cx, size_t start, size_t end, Value *out) const;
 
-    size_t pairCount() const {
-        JS_ASSERT(matchPairs.length() % 2 == 0);
-        return matchPairs.length() / 2;
-    }
-
-    size_t pairCountCrash() const {
-        JS_CRASH_UNLESS(matchPairs.length() % 2 == 0);
-        return pairCount();
-    }
-
     void copyTo(RegExpStatics &dst) {
         dst.matchPairs.clear();
         /* 'save' has already reserved space in matchPairs */
@@ -139,15 +129,22 @@ class RegExpStatics
 #endif
     }
 
+    /* 
+     * Since the first pair indicates the whole match, the paren pair numbers have to be in the
+     * range [1, pairCount).
+     */
+    void checkParenNum(size_t pairNum) const {
+        JS_CRASH_UNLESS(1 <= pairNum);
+        JS_CRASH_UNLESS(pairNum < pairCount());
+    }
+
     bool pairIsPresent(size_t pairNum) const {
         return getCrash(pairNum, 0) >= 0;
     }
 
     /* Precondition: paren is present. */
-    size_t getParenLength(size_t parenNum) const {
-        size_t pairNum = parenNum + 1;
-        if (pairCountCrash() <= pairNum)
-            return 0;
+    size_t getParenLength(size_t pairNum) const {
+        checkParenNum(pairNum);
         JS_CRASH_UNLESS(pairIsPresent(pairNum));
         return getCrash(pairNum, 1) - getCrash(pairNum, 0);
     }
@@ -231,6 +228,31 @@ class RegExpStatics
 
     /* Accessors. */
 
+    /*
+     * When there is a match present, the pairCount is at least 1 for the whole
+     * match. There is one additional pair per parenthesis.
+     *
+     * Getting a parenCount requires there to be a match result as a precondition.
+     */
+
+  private:
+    size_t pairCount() const {
+        JS_ASSERT(matchPairs.length() % 2 == 0);
+        return matchPairs.length() / 2;
+    }
+
+    size_t pairCountCrash() const {
+        JS_CRASH_UNLESS(matchPairs.length() % 2 == 0);
+        return pairCount();
+    }
+
+  public:
+    size_t parenCount() const {
+        size_t pc = pairCount();
+        JS_CRASH_UNLESS(pc);
+        return pc - 1;
+    }
+
     JSString *getPendingInput() const { return pendingInput; }
     uintN getFlags() const { return flags; }
     bool multiline() const { return flags & JSREG_MULTILINE; }
@@ -254,12 +276,6 @@ class RegExpStatics
         return get(0, 1) - get(0, 0) > 0;
     }
 
-    size_t getParenCount() const {
-        /* The first pair is the whole match. */
-        JS_ASSERT(pairCount() > 0);
-        return pairCount() - 1;
-    }
-
     void mark(JSTracer *trc) const {
         if (pendingInput)
             JS_CALL_STRING_TRACER(trc, pendingInput, "res->pendingInput");
@@ -275,14 +291,19 @@ class RegExpStatics
     bool createLeftContext(JSContext *cx, Value *out) const;
     bool createRightContext(JSContext *cx, Value *out) const;
 
-    bool createParen(JSContext *cx, size_t parenNum, Value *out) const {
-        return makeMatch(cx, (parenNum + 1) * 2, parenNum + 1, out);
+    /* @param pairNum   Any number >= 1. */
+    bool createParen(JSContext *cx, size_t pairNum, Value *out) const {
+        JS_CRASH_UNLESS(pairNum >= 1);
+        if (pairNum >= pairCount()) {
+            out->setString(cx->runtime->emptyString);
+            return true;
+        }
+        return makeMatch(cx, pairNum * 2, pairNum, out);
     }
 
     /* Substring creators. */
 
-    /* @param num   Zero-indexed paren number (i.e. $1 is 0). */
-    void getParen(size_t num, JSSubString *out) const;
+    void getParen(size_t pairNum, JSSubString *out) const;
     void getLastMatch(JSSubString *out) const;
     void getLastParen(JSSubString *out) const;
     void getLeftContext(JSSubString *out) const;
