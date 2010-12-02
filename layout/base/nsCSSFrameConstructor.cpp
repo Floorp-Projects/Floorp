@@ -3930,6 +3930,16 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState& aState,
 static void
 SetFlagsOnSubtree(nsIContent *aNode, PtrBits aFlagsToSet)
 {
+#ifdef DEBUG
+  // Make sure that the node passed to us doesn't have any XBL children
+  {
+    nsIDocument *doc = aNode->GetOwnerDoc();
+    NS_ASSERTION(doc, "The node must be in a document");
+    NS_ASSERTION(!doc->BindingManager()->GetXBLChildNodesFor(aNode),
+                 "The node should not have any XBL children");
+  }
+#endif
+
   // Set the flag on the node itself
   aNode->SetFlags(aFlagsToSet);
 
@@ -3979,6 +3989,8 @@ nsCSSFrameConstructor::GetAnonymousContent(nsIContent* aParent,
     // We need to set the flag on the whole subtree, because existing
     // children's flags have already been set as part of the BindToTree operation.
     if (anonContentIsEditable) {
+      NS_ASSERTION(aParentFrame->GetType() == nsGkAtoms::textInputFrame,
+                   "We only expect this for anonymous content under a text control frame");
       SetFlagsOnSubtree(content, NODE_IS_EDITABLE);
     }
     if (NS_FAILED(rv)) {
