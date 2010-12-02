@@ -1,4 +1,3 @@
-Cu.import("resource://services-sync/base_records/keys.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/service.js");
@@ -62,8 +61,6 @@ function test_identities() {
 function test_urls() {
   _("URL related Service properties corresopnd to preference settings.");
   try {
-    do_check_eq(PubKeys.defaultKeyUri, undefined);
-    do_check_eq(PrivKeys.defaultKeyUri, undefined);
     do_check_true(!!Service.serverURL); // actual value may change
     do_check_eq(Service.clusterURL, "");
     do_check_eq(Service.userBaseURL, undefined);
@@ -79,8 +76,6 @@ function test_urls() {
     do_check_eq(Service.userBaseURL, undefined);
     do_check_eq(Service.storageURL, undefined);
     do_check_eq(Service.metaURL, undefined);
-    do_check_eq(PubKeys.defaultKeyUri, undefined);
-    do_check_eq(PrivKeys.defaultKeyUri, undefined);
 
     Service.serverURL = "http://weave.server/";
     Service.clusterURL = "http://weave.cluster/";
@@ -93,10 +88,6 @@ function test_urls() {
                 "http://weave.cluster/1.0/johndoe/storage/");
     do_check_eq(Service.metaURL,
                 "http://weave.cluster/1.0/johndoe/storage/meta/global");
-    do_check_eq(PubKeys.defaultKeyUri,
-                "http://weave.cluster/1.0/johndoe/storage/keys/pubkey");
-    do_check_eq(PrivKeys.defaultKeyUri,
-                "http://weave.cluster/1.0/johndoe/storage/keys/privkey");
 
     _("The 'miscURL' and 'userURL' attributes can be relative to 'serverURL' or absolute.");
     Svc.Prefs.set("miscURL", "relative/misc/");

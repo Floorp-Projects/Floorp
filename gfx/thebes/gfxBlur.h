@@ -41,8 +41,7 @@
 #include "gfxContext.h"
 #include "gfxImageSurface.h"
 #include "gfxTypes.h"
-#include "gfxUtils.h"
-#include "nsRect.h"
+#include "gfxThebesUtils.h"
 
 /**
  * Implementation of a triple box blur approximation of a Gaussian blur.

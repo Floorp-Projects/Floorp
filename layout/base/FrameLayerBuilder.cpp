@@ -45,7 +45,6 @@
 #include "nsSubDocumentFrame.h"
 #include "nsCSSRendering.h"
 #include "nsCSSFrameConstructor.h"
-#include "gfxUtils.h"
 
 #ifdef DEBUG
 #include <stdio.h>
@@ -748,7 +747,7 @@ SetVisibleRectForLayer(Layer* aLayer, const nsIntRect& aRect)
         gfxRect(aRect.x, aRect.y, aRect.width, aRect.height));
     layerVisible.RoundOut();
     nsIntRect visibleRect;
-    if (!gfxUtils::GfxRectToIntRect(layerVisible, &visibleRect)) {
+    if (NS_FAILED(nsLayoutUtils::GfxRectToIntRect(layerVisible, &visibleRect))) {
       visibleRect = nsIntRect(0, 0, 0, 0);
       NS_WARNING("Visible rect transformed out of bounds");
     }

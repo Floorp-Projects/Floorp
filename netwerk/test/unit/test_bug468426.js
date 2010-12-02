@@ -61,7 +61,7 @@ function checkValueAndTrigger(request, data, ctx) {
         index++;
         // This call happens in onStopRequest from the channel. Opening a new
         // channel to the same url here is no good idea!  Post it instead...
-        do_timeout(1, "triggerNextTest();");
+        do_timeout(1, triggerNextTest);
     } else {
         httpserver.stop(do_test_finished);
     }

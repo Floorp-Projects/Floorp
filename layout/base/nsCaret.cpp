@@ -146,21 +146,6 @@ AdjustCaretFrameForLineEnd(nsIFrame** aFrame, PRInt32* aOffset)
   }
 }
 
-static PRBool
-FramesOnSameLineHaveZeroHeight(nsIFrame* aFrame)
-{
-  nsLineBox* line = FindContainingLine(aFrame);
-  if (!line)
-    return aFrame->GetRect().height == 0;
-  PRInt32 count = line->GetChildCount();
-  for (nsIFrame* f = line->mFirstChild; count > 0; --count, f = f->GetNextSibling())
-  {
-   if (f->GetRect().height != 0)
-     return PR_FALSE;
-  }
-  return PR_TRUE;
-}
-
 //-----------------------------------------------------------------------------
 
 nsCaret::nsCaret()

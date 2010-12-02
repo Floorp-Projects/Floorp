@@ -5,16 +5,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452161
 -->
 <head>
   <title>nsIAccessibleEditableText chrome tests</title>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 
   <script type="application/javascript"
           src="chrome://mochikit/content/MochiKit/packed.js"></script>
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
   <script type="application/javascript"
           src="common.js"></script>
   <script type="application/javascript"
           src="editabletext.js"></script>
+  <script type="application/javascript"
+          src="events.js"></script>
 
   <script type="application/javascript">
     var gParagraphAcc;
@@ -60,16 +64,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452161
 //      et.cutNPasteText(7, 8, 8, "hehelloo");
     }
 
+    function testDocEditableNFinishTest(aDoc)
+    {
+      testEditable(aDoc);
+      SimpleTest.finish();
+    }
+
     function doTest()
     {
       testEditable("input");
       // testEditable("div"); XXX: bug 452599
 
-      var frame = document.getElementById("frame");
+      // Design mode on/off trigger document accessible subtree recreation.
+      var frame = getNode("frame");
+      waitForEvent(EVENT_REORDER, frame.contentDocument,
+                   testDocEditableNFinishTest, null, frame.contentDocument);
       frame.contentDocument.designMode = "on";
-      testEditable(frame.contentDocument);
-
-      SimpleTest.finish();
     }
 
     SimpleTest.waitForExplicitFinish();
