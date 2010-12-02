@@ -952,6 +952,9 @@ nsNavHistory::InitDB()
     rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_LASTVISITDATE);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_GUID);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     // CREATE TABLE moz_historyvisits.
     rv = mDBConn->ExecuteSimpleSQL(CREATE_MOZ_HISTORYVISITS);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1086,6 +1089,18 @@ nsNavHistory::CheckAndUpdateGUIDs()
   // Next, generate guids for any bookmark that does not already have one.
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
     "UPDATE moz_bookmarks "
+    "SET guid = GENERATE_GUID() "
+    "WHERE guid IS NULL "
+  ), getter_AddRefs(stmt));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = stmt->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Finally, we need to generate guids for any places that do not already have
+  // one.
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "UPDATE moz_places "
     "SET guid = GENERATE_GUID() "
     "WHERE guid IS NULL "
   ), getter_AddRefs(stmt));
@@ -1926,6 +1941,17 @@ nsNavHistory::MigrateV11Up(mozIStorageConnection *aDBConn)
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = aDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_BOOKMARKS_GUID);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // moz_placess grew a guid column.  Add the column, but do not populate it
+    // with anything just yet.  We will do that soon.
+    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "ALTER TABLE moz_places "
+      "ADD COLUMN guid TEXT"
+    ));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = aDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_GUID);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

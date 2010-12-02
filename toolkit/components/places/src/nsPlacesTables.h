@@ -53,6 +53,7 @@
     ", favicon_id INTEGER" \
     ", frecency INTEGER DEFAULT -1 NOT NULL" \
     ", last_visit_date INTEGER " \
+    ", guid TEXT" \
   ")" \
 )
 #define MOZ_PLACES_COLUMNS \
