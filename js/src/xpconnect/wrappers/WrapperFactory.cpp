@@ -209,7 +209,7 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
                 if (!xrayHolder)
                     return nsnull;
             } else {
-                wrapper = &JSCrossCompartmentWrapper::singleton;
+                wrapper = &CrossOriginWrapper::singleton;
             }
         }
     } else if (AccessCheck::isChrome(origin)) {
