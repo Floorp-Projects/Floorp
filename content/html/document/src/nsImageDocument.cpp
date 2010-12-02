@@ -270,7 +270,7 @@ NS_IMPL_RELEASE_INHERITED(nsImageDocument, nsMediaDocument)
 
 DOMCI_NODE_DATA(ImageDocument, nsImageDocument)
 
-NS_INTERFACE_TABLE_HEAD(nsImageDocument)
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsImageDocument)
   NS_HTML_DOCUMENT_INTERFACE_TABLE_BEGIN(nsImageDocument)
     NS_INTERFACE_TABLE_ENTRY(nsImageDocument, nsIImageDocument)
     NS_INTERFACE_TABLE_ENTRY(nsImageDocument, imgIDecoderObserver)
