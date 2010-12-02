@@ -4265,9 +4265,10 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
     newY = aState.mY + dy;
   }
 
-  // See if the line fit. If it doesn't we need to push it. Our first
-  // line will always fit.
-  if (mLines.front() != aLine &&
+  // See if the line fit. If it doesn't we need to push it.  Lines at
+  // y<=0 always fit, since there's no point moving them to the next
+  // continuation, where they will be at y=0.
+  if (aState.mY > 0 &&
       newY > aState.mBottomEdge &&
       aState.mBottomEdge != NS_UNCONSTRAINEDSIZE) {
     // Push this line and all of its children and anything else that
