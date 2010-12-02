@@ -650,8 +650,8 @@ fails == 374927-1.html 374927-1-ref.html # Was broken by patch for bug 368600; f
 random-if(cocoaWidget) == 379316-2.html 379316-2-ref.html # bug 379786
 == 379328-1.html 379328-1-ref.html
 == 379349-1a.xhtml 379349-1-ref.xhtml
-fails-if(d2d) == 379349-1b.xhtml 379349-1-ref.xhtml # bug 578116
-fails-if(d2d) == 379349-1c.xhtml 379349-1-ref.xhtml # bug 578116
+== 379349-1b.xhtml 379349-1-ref.xhtml
+== 379349-1c.xhtml 379349-1-ref.xhtml
 == 379349-2a.xhtml 379349-2-ref.xhtml
 == 379349-2b.xhtml 379349-2-ref.xhtml
 == 379349-3a.xhtml 379349-3-ref.xhtml
