@@ -1097,6 +1097,69 @@ nsNavHistory::CheckAndUpdateGUIDs()
   rv = stmt->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Now, import any history guids already set by Sync.
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "UPDATE moz_places "
+    "SET guid = :guid "
+    "WHERE id = :place_id "
+  ), getter_AddRefs(updateStmt));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT place_id, content "
+    "FROM moz_annos "
+    "JOIN moz_anno_attributes "
+    "WHERE name = :anno_name "
+  ), getter_AddRefs(stmt));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("anno_name"),
+                                  SYNCGUID_ANNO);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
+    PRInt64 placeId;
+    rv = stmt->GetInt64(0, &placeId);
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCAutoString guid;
+    rv = stmt->GetUTF8String(1, guid);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // If we have an invalid guid, we don't need to do any more work.
+    if (!IsValidGUID(guid)) {
+      continue;
+    }
+
+    mozStorageStatementScoper scoper(updateStmt);
+    rv = updateStmt->BindInt64ByName(NS_LITERAL_CSTRING("place_id"), placeId);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = updateStmt->BindUTF8StringByName(NS_LITERAL_CSTRING("guid"), guid);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = updateStmt->Execute();
+    if (rv == NS_ERROR_STORAGE_CONSTRAINT) {
+      // We just tried to insert a duplicate guid.  Ignore this error, and we
+      // will generate a new one next.
+      continue;
+    }
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Now, remove all the place guid annotations that we just imported.
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "DELETE FROM moz_annos "
+    "WHERE anno_attribute_id = ( "
+      "SELECT id "
+      "FROM moz_anno_attributes "
+      "WHERE name = :anno_name "
+    ") "
+  ), getter_AddRefs(stmt));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("anno_name"),
+                                  SYNCGUID_ANNO);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = stmt->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // Finally, we need to generate guids for any places that do not already have
   // one.
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
