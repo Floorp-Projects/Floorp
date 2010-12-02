@@ -158,6 +158,9 @@ static const PRInt64 USECS_PER_DAY = LL_INIT(20, 500654080);
 // character-set annotation
 #define CHARSET_ANNO NS_LITERAL_CSTRING("URIProperties/characterSet")
 
+// Sync guid annotation
+#define SYNCGUID_ANNO NS_LITERAL_CSTRING("sync/guid")
+
 // These macros are used when splitting history by date.
 // These are the day containers and catch-all final container.
 #define HISTORY_ADDITIONAL_DATE_CONT_NUM 3
@@ -1014,8 +1017,74 @@ nsNavHistory::InitAdditionalDBItems()
 nsresult
 nsNavHistory::CheckAndUpdateGUIDs()
 {
-  nsCOMPtr<mozIStorageStatement> stmt;
+  // First, import any bookmark guids already set by Sync.
+  nsCOMPtr<mozIStorageStatement> updateStmt;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "UPDATE moz_bookmarks "
+    "SET guid = :guid "
+    "WHERE id = :item_id "
+  ), getter_AddRefs(updateStmt));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<mozIStorageStatement> stmt;
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT item_id, content "
+    "FROM moz_items_annos "
+    "JOIN moz_anno_attributes "
+    "WHERE name = :anno_name "
+  ), getter_AddRefs(stmt));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("anno_name"),
+                                  SYNCGUID_ANNO);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool hasResult;
+  while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
+    PRInt64 itemId;
+    rv = stmt->GetInt64(0, &itemId);
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCAutoString guid;
+    rv = stmt->GetUTF8String(1, guid);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // If we have an invalid guid, we don't need to do any more work.
+    if (!IsValidGUID(guid)) {
+      continue;
+    }
+
+    mozStorageStatementScoper scoper(updateStmt);
+    rv = updateStmt->BindInt64ByName(NS_LITERAL_CSTRING("item_id"), itemId);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = updateStmt->BindUTF8StringByName(NS_LITERAL_CSTRING("guid"), guid);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = updateStmt->Execute();
+    if (rv == NS_ERROR_STORAGE_CONSTRAINT) {
+      // We just tried to insert a duplicate guid.  Ignore this error, and we
+      // will generate a new one next.
+      continue;
+    }
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Now, remove all the bookmark guid annotations that we just imported.
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "DELETE FROM moz_items_annos "
+    "WHERE anno_attribute_id = ( "
+      "SELECT id "
+      "FROM moz_anno_attributes "
+      "WHERE name = :anno_name "
+    ") "
+  ), getter_AddRefs(stmt));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("anno_name"),
+                                  SYNCGUID_ANNO);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = stmt->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Next, generate guids for any bookmark that does not already have one.
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
     "UPDATE moz_bookmarks "
     "SET guid = GENERATE_GUID() "
     "WHERE guid IS NULL "

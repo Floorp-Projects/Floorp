@@ -15,7 +15,7 @@
  * The Original Code is Places code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Foundation.
+ * the Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
@@ -206,6 +206,15 @@ void ReverseString(const nsString& aInput, nsString& aReversed);
  * @note This guid uses the characters a-z, A-Z, 0-9, '-', and '_'.
  */
 nsresult GenerateGUID(nsCString& _guid);
+
+/**
+ * Determines if the string is a valid guid or not.
+ *
+ * @param aGUID
+ *        The guid to test.
+ * @return true if it is a valid guid, false otherwise.
+ */
+bool IsValidGUID(const nsCString& aGUID);
 
 /**
  * Used to finalize a statementCache on a specified thread.
