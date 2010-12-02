@@ -305,9 +305,10 @@ nsNavBookmarks::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
   RETURN_IF_STMT(mDBInsertBookmark, NS_LITERAL_CSTRING(
     "INSERT INTO moz_bookmarks "
       "(id, fk, type, parent, position, title, folder_type, "
-       "dateAdded, lastModified) "
+       "dateAdded, lastModified, guid) "
     "VALUES (:item_id, :page_id, :item_type, :parent, :item_index, "
-            ":item_title, :folder_type, :date_added, :last_modified)"));
+            ":item_title, :folder_type, :date_added, :last_modified, "
+            "GENERATE_GUID())"));
 
   // Just select position since it's just an int32 and may be faster.
   // We don't actually care about the data, just whether there is any.
@@ -475,6 +476,23 @@ nsNavBookmarks::FinalizeStatements() {
 
   // Since we are shutting down, close the read-only connection.
   (void)mDBReadOnlyConn->AsyncClose(nsnull);
+
+#ifdef DEBUG
+  // Sanity check that all bookmarks have guids.
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT * "
+    "FROM moz_bookmarks "
+    "WHERE guid IS NULL "
+  ), getter_AddRefs(stmt));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool haveNullGuids;
+  rv = stmt->ExecuteStep(&haveNullGuids);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ASSERTION(!haveNullGuids,
+               "Someone added a bookmark without adding a GUID!");
+#endif
 
   return NS_OK;
 }

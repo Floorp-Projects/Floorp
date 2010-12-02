@@ -55,6 +55,18 @@ let bookmarksObserver = {
     this._itemAddedParent = folder;
     this._itemAddedIndex = index;
     this._itemAddedURI = uri;
+
+    // Ensure that we've created a guid for this item.
+    let stmt = DBConn().createStatement(
+      "SELECT guid "
+    + "FROM moz_bookmarks "
+    + "WHERE id = :item_id "
+    );
+    stmt.params.item_id = id;
+    do_check_true(stmt.executeStep());
+    do_check_false(stmt.getIsNull(0));
+    do_check_valid_places_guid(stmt.row.guid);
+    stmt.finalize();
   },
   onBeforeItemRemoved: function(){},
   onItemRemoved: function(id, folder, index, itemType) {
