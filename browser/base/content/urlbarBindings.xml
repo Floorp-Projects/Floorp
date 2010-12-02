@@ -1025,6 +1025,31 @@
     </implementation>
   </binding>
 
+  <binding id="splitmenu">
+    <content>
+      <xul:menuitem anonid="item" flex="1"
+                    class="menuitem-tooltip split-menuitem-item"
+                    xbl:inherits="label,key"/>
+      <xul:menu anonid="menu" class="split-menuitem-menu"
+                oncommand="event.stopPropagation();">
+        <children includes="menupopup"/>
+      </xul:menu>
+    </content>
+
+    <implementation>
+      <constructor><![CDATA[
+        if (this.getAttribute("iconic") == "true") {
+          this.item.classList.remove("menuitem-tooltip");
+          this.item.classList.add("menuitem-iconic-tooltip");
+          this.item.classList.add("menuitem-iconic");
+        }
+      ]]></constructor>
+      <field name="item" readonly="true">
+        document.getAnonymousElementByAttribute(this, "anonid", "item");
+      </field>
+    </implementation>
+  </binding>
+
   <binding id="menuitem-tooltip" extends="chrome://global/content/bindings/menu.xml#menuitem">
     <implementation>
       <constructor><![CDATA[
