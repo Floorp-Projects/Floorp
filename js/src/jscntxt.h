@@ -1581,6 +1581,7 @@ struct JSRuntime {
     jsrefcount          totalScripts;
     jsrefcount          liveEmptyScripts;
     jsrefcount          totalEmptyScripts;
+    jsrefcount          highWaterLiveScripts;
 #endif /* DEBUG */
 
 #ifdef JS_SCOPE_DEPTH_METER
