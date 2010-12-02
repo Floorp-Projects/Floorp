@@ -265,7 +265,6 @@ RegExp::createResult(JSContext *cx, JSString *input, int *buf, size_t matchItemC
         } else {
             /* Missing parenthesized match. */
             JS_ASSERT(i != 0); /* Since we had a match, first pair must be present. */
-            JS_ASSERT(start == end && end == -1);
             if (!builder.append(INT_TO_JSID(i / 2), UndefinedValue()))
                 return NULL;
         }
@@ -582,11 +581,11 @@ RegExpStatics::createLastParen(JSContext *cx, Value *out) const
     int start = get(num, 0);
     int end = get(num, 1);
     if (start == -1) {
-        JS_ASSERT(end == -1);
         out->setString(cx->runtime->emptyString);
         return true;
     }
     JS_ASSERT(start >= 0 && end >= 0);
+    JS_ASSERT(end >= start);
     return createDependent(cx, start, end, out);
 }
 
@@ -621,7 +620,12 @@ RegExpStatics::createRightContext(JSContext *cx, Value *out) const
 inline void
 RegExpStatics::getParen(size_t num, JSSubString *out) const
 {
-    out->chars = matchPairsInput->chars() + getCrash(num + 1, 0);
+    size_t pairNum = num + 1;
+    if (!pairIsPresent(pairNum)) {
+        *out = js_EmptySubString;
+        return;
+    }
+    out->chars = matchPairsInput->chars() + getCrash(pairNum, 0);
     out->length = getParenLength(num);
 }
 
@@ -641,14 +645,12 @@ RegExpStatics::getLastMatch(JSSubString *out) const
 inline void
 RegExpStatics::getLastParen(JSSubString *out) const
 {
-    if (!pairCountCrash()) {
+    size_t parenCount = getParenCount();
+    if (!parenCount) {
         *out = js_EmptySubString;
         return;
     }
-    size_t num = pairCount() - 1;
-    out->chars = matchPairsInput->chars() + getCrash(num, 0);
-    JS_CRASH_UNLESS(getCrash(num, 1) >= get(num, 0));
-    out->length = get(num, 1) - get(num, 0);
+    getParen(parenCount - 1, out);
 }
 
 inline void
