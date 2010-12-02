@@ -56,6 +56,7 @@ function checkAddSucceeded(pageURI, mimetype, data) {
   // Ensure input and output are identical
   do_check_eq(mimetype, outMimeType.value);
   do_check_true(compareArrays(data, outData));
+  do_check_guid_for_uri(pageURI);
 }
 
 var favicons = [
