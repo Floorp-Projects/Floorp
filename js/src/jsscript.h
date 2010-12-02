@@ -213,19 +213,22 @@ struct JSScript {
     uint16          version;    /* JS version under which script was compiled */
     uint16          nfixed;     /* number of slots besides stack operands in
                                    slot array */
+
+    /*
+     * Offsets to various array structures from the end of this script, or
+     * JSScript::INVALID_OFFSET if the array has length 0.
+     */
     uint8           objectsOffset;  /* offset to the array of nested function,
                                        block, scope, xml and one-time regexps
-                                       objects or 0 if none */
+                                       objects */
     uint8           upvarsOffset;   /* offset of the array of display ("up")
-                                       closure vars or 0 if none */
+                                       closure vars */
     uint8           regexpsOffset;  /* offset to the array of to-be-cloned
-                                       regexps or 0 if none. */
-    uint8           trynotesOffset; /* offset to the array of try notes or
-                                       0 if none */
-    uint8           globalsOffset;  /* offset to the array of global slots or
-                                       0 if none */
-    uint8           constOffset;    /* offset to the array of constants or
-                                       0 if none */
+                                       regexps  */
+    uint8           trynotesOffset; /* offset to the array of try notes */
+    uint8           globalsOffset;  /* offset to the array of global slots */
+    uint8           constOffset;    /* offset to the array of constants */
+
     bool            noScriptRval:1; /* no need for result value of last
                                        expression statement */
     bool            savedCallerFun:1; /* object 0 is caller function */
@@ -316,34 +319,37 @@ struct JSScript {
     /* Script notes are allocated right after the code. */
     jssrcnote *notes() { return (jssrcnote *)(code + length); }
 
+    static const uint8 INVALID_OFFSET = 0xFF;
+    static bool isValidOffset(uint8 offset) { return offset != INVALID_OFFSET; }
+
     JSObjectArray *objects() {
-        JS_ASSERT(objectsOffset != 0);
-        return (JSObjectArray *)((uint8 *) this + objectsOffset);
+        JS_ASSERT(isValidOffset(objectsOffset));
+        return (JSObjectArray *)((uint8 *) (this + 1) + objectsOffset);
     }
 
     JSUpvarArray *upvars() {
-        JS_ASSERT(upvarsOffset != 0);
-        return (JSUpvarArray *) ((uint8 *) this + upvarsOffset);
+        JS_ASSERT(isValidOffset(upvarsOffset));
+        return (JSUpvarArray *) ((uint8 *) (this + 1) + upvarsOffset);
     }
 
     JSObjectArray *regexps() {
-        JS_ASSERT(regexpsOffset != 0);
-        return (JSObjectArray *) ((uint8 *) this + regexpsOffset);
+        JS_ASSERT(isValidOffset(regexpsOffset));
+        return (JSObjectArray *) ((uint8 *) (this + 1) + regexpsOffset);
     }
 
     JSTryNoteArray *trynotes() {
-        JS_ASSERT(trynotesOffset != 0);
-        return (JSTryNoteArray *) ((uint8 *) this + trynotesOffset);
+        JS_ASSERT(isValidOffset(trynotesOffset));
+        return (JSTryNoteArray *) ((uint8 *) (this + 1) + trynotesOffset);
     }
 
     js::GlobalSlotArray *globals() {
-        JS_ASSERT(globalsOffset != 0);
-        return (js::GlobalSlotArray *) ((uint8 *)this + globalsOffset);
+        JS_ASSERT(isValidOffset(globalsOffset));
+        return (js::GlobalSlotArray *) ((uint8 *) (this + 1) + globalsOffset);
     }
 
     JSConstArray *consts() {
-        JS_ASSERT(constOffset != 0);
-        return (JSConstArray *) ((uint8 *) this + constOffset);
+        JS_ASSERT(isValidOffset(constOffset));
+        return (JSConstArray *) ((uint8 *) (this + 1) + constOffset);
     }
 
     JSAtom *getAtom(size_t index) {

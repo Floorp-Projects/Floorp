@@ -110,7 +110,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
     notes = NULL;
 
     /* Should not XDR scripts optimized for a single global object. */
-    JS_ASSERT_IF(script, !script->globalsOffset);
+    JS_ASSERT_IF(script, !JSScript::isValidOffset(script->globalsOffset));
 
     if (xdr->mode == JSXDR_ENCODE)
         magic = JSXDR_MAGIC_SCRIPT_CURRENT;
@@ -150,15 +150,15 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
         nsrcnotes = sn - notes;
         nsrcnotes++;            /* room for the terminator */
 
-        if (script->objectsOffset != 0)
+        if (JSScript::isValidOffset(script->objectsOffset))
             nobjects = script->objects()->length;
-        if (script->upvarsOffset != 0)
+        if (JSScript::isValidOffset(script->upvarsOffset))
             nupvars = script->upvars()->length;
-        if (script->regexpsOffset != 0)
+        if (JSScript::isValidOffset(script->regexpsOffset))
             nregexps = script->regexps()->length;
-        if (script->trynotesOffset != 0)
+        if (JSScript::isValidOffset(script->trynotesOffset))
             ntrynotes = script->trynotes()->length;
-        if (script->constOffset != 0)
+        if (JSScript::isValidOffset(script->constOffset))
             nconsts = script->consts()->length;
 
         nClosedArgs = script->nClosedArgs;
@@ -898,39 +898,52 @@ JSScript::NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natom
     script->length = length;
     script->setVersion(cx->findVersion());
 
+    uint8 *scriptEnd = reinterpret_cast<uint8 *>(script + 1);
+
     cursor = (uint8 *)script + sizeof(JSScript);
     if (nobjects != 0) {
-        script->objectsOffset = (uint8)(cursor - (uint8 *)script);
+        script->objectsOffset = (uint8)(cursor - scriptEnd);
         cursor += sizeof(JSObjectArray);
+    } else {
+        script->objectsOffset = JSScript::INVALID_OFFSET;
     }
     if (nupvars != 0) {
-        script->upvarsOffset = (uint8)(cursor - (uint8 *)script);
+        script->upvarsOffset = (uint8)(cursor - scriptEnd);
         cursor += sizeof(JSUpvarArray);
+    } else {
+        script->upvarsOffset = JSScript::INVALID_OFFSET;
     }
     if (nregexps != 0) {
-        script->regexpsOffset = (uint8)(cursor - (uint8 *)script);
+        script->regexpsOffset = (uint8)(cursor - scriptEnd);
         cursor += sizeof(JSObjectArray);
+    } else {
+        script->regexpsOffset = JSScript::INVALID_OFFSET;
     }
     if (ntrynotes != 0) {
-        script->trynotesOffset = (uint8)(cursor - (uint8 *)script);
+        script->trynotesOffset = (uint8)(cursor - scriptEnd);
         cursor += sizeof(JSTryNoteArray);
+    } else {
+        script->trynotesOffset = JSScript::INVALID_OFFSET;
     }
     if (nglobals != 0) {
-        script->globalsOffset = (uint8)(cursor - (uint8 *)script);
+        script->globalsOffset = (uint8)(cursor - scriptEnd);
         cursor += sizeof(GlobalSlotArray);
+    } else {
+        script->globalsOffset = JSScript::INVALID_OFFSET;
     }
-    JS_ASSERT((cursor - (uint8 *)script) <= 0xFF);
+    JS_ASSERT((cursor - (uint8 *)script) < 0xFF);
     if (nconsts != 0) {
-        script->constOffset = (uint8)(cursor - (uint8 *)script);
+        script->constOffset = (uint8)(cursor - scriptEnd);
         cursor += sizeof(JSConstArray);
+    } else {
+        script->constOffset = JSScript::INVALID_OFFSET;
     }
 
-    JS_STATIC_ASSERT(sizeof(JSScript) +
-                     sizeof(JSObjectArray) +
+    JS_STATIC_ASSERT(sizeof(JSObjectArray) +
                      sizeof(JSUpvarArray) +
                      sizeof(JSObjectArray) +
                      sizeof(JSTryNoteArray) +
-                     sizeof(GlobalSlotArray) <= 0xFF);
+                     sizeof(GlobalSlotArray) < 0xFF);
 
     if (natoms != 0) {
         script->atomMap.length = natoms;
@@ -1132,7 +1145,7 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     if (cg->inFunction()) {
         fun = cg->fun();
         JS_ASSERT(FUN_INTERPRETED(fun) && !FUN_SCRIPT(fun));
-        if (script->upvarsOffset != 0)
+        if (JSScript::isValidOffset(script->upvarsOffset))
             JS_ASSERT(script->upvars()->length == fun->u.i.nupvars);
         else
             fun->u.i.nupvars = 0;
@@ -1157,10 +1170,10 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
             newTotal =
                 JS_RUNTIME_METER(cx->runtime, totalEmptyScripts) + cx->runtime->totalScripts;
         } else {
-            newLive = JS_RUNTIME_METER(cx->runtime, liveScripts);
             newEmptyLive = cx->runtime->liveEmptyScripts;
+            newLive = JS_RUNTIME_METER(cx->runtime, liveScripts);
             newTotal =
-                JS_RUNTIME_METER(cx->runtime, totalScripts) + cx->runtime->totalEmptyScripts;
+                cx->runtime->totalEmptyScripts + JS_RUNTIME_METER(cx->runtime, totalScripts);
         }
 
         jsrefcount oldHigh = cx->runtime->highWaterLiveScripts;
@@ -1304,7 +1317,7 @@ js_TraceScript(JSTracer *trc, JSScript *script)
     JSAtomMap *map = &script->atomMap;
     MarkAtomRange(trc, map->length, map->vector, "atomMap");
 
-    if (script->objectsOffset != 0) {
+    if (JSScript::isValidOffset(script->objectsOffset)) {
         JSObjectArray *objarray = script->objects();
         uintN i = objarray->length;
         do {
@@ -1316,7 +1329,7 @@ js_TraceScript(JSTracer *trc, JSScript *script)
         } while (i != 0);
     }
 
-    if (script->regexpsOffset != 0) {
+    if (JSScript::isValidOffset(script->regexpsOffset)) {
         JSObjectArray *objarray = script->regexps();
         uintN i = objarray->length;
         do {
@@ -1328,7 +1341,7 @@ js_TraceScript(JSTracer *trc, JSScript *script)
         } while (i != 0);
     }
 
-    if (script->constOffset != 0) {
+    if (JSScript::isValidOffset(script->constOffset)) {
         JSConstArray *constarray = script->consts();
         MarkValueRange(trc, constarray->length, constarray->vector, "consts");
     }
