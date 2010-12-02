@@ -566,3 +566,14 @@ function waitForAsyncUpdates(aCallback, aScope, aArguments)
     }
   });
 }
+
+/**
+ * Tests if a given guid is valid for use in Places or not.
+ *
+ * @param aGuid
+ *        The guid to test.
+ */
+function do_check_valid_places_guid(aGuid)
+{
+  do_check_true(/^[a-zA-Z0-9\-_]{12}$/.test(aGuid), Components.stack.caller);
+}
