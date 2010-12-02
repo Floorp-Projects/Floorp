@@ -1149,8 +1149,8 @@ struct JSObject : js::gc::Cell {
     inline JSObject *getThrowTypeError() const;
 
     JSObject *clone(JSContext *cx, JSObject *proto, JSObject *parent);
-    bool copyPropertiesFrom(JSContext *cx, JSObject *obj);
-    bool swap(JSContext *cx, JSObject *other);
+    JS_FRIEND_API(bool) copyPropertiesFrom(JSContext *cx, JSObject *obj);
+    JS_FRIEND_API(bool) swap(JSContext *cx, JSObject *other);
 
     const js::Shape *defineBlockVariable(JSContext *cx, jsid id, intN index);
 
