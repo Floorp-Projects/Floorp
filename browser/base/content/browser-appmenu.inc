@@ -46,15 +46,10 @@
 #endif
   <hbox>
     <vbox id="appmenuPrimaryPane">
-      <hbox flex="1"
-            class="split-menuitem">
-        <menuitem id="appmenu_newTab"
-                  class="menuitem-tooltip split-menuitem-item"
-                  flex="1"
-                  label="&tabCmd.label;"
-                  command="cmd_newNavigatorTab"
-                  key="key_newNavigatorTab"/>
-        <menu class="split-menuitem-menu">
+      <splitmenu id="appmenu_newTab"
+                 label="&tabCmd.label;"
+                 command="cmd_newNavigatorTab"
+                 key="key_newNavigatorTab">
           <menupopup>
             <menuitem id="appmenu_newTab_popup"
                       label="&tabCmd.label;"
@@ -70,8 +65,7 @@
                       command="Browser:OpenFile"
                       key="openFileKb"/>
           </menupopup>
-        </menu>
-      </hbox>
+      </splitmenu>
       <menuitem id="appmenu_privateBrowsing"
                 class="menuitem-iconic menuitem-iconic-tooltip"
                 label="&privateBrowsingCmd.start.label;"
@@ -119,15 +113,11 @@
       <menuitem id="appmenu_sendLink"
                 label="&sendPageCmd.label;"
                 command="Browser:SendLink"/>
-      <hbox flex="1"
-            class="split-menuitem">
-        <menuitem id="appmenu_print"
-                  class="menuitem-iconic menuitem-iconic-tooltip split-menuitem-item"
-                  flex="1"
-                  label="&printCmd.label;"
-                  command="cmd_print"
-                  key="printKb"/>
-        <menu class="split-menuitem-menu">
+      <splitmenu id="appmenu_print"
+                 iconic="true"
+                 label="&printCmd.label;"
+                 command="cmd_print"
+                 key="printKb">
           <menupopup>
             <menuitem id="appmenu_print_popup"
                       class="menuitem-iconic"
@@ -141,8 +131,7 @@
                       label="&printSetupCmd.label;"
                       command="cmd_pageSetup"/>
           </menupopup>
-        </menu>
-      </hbox>
+      </splitmenu>
       <menuseparator class="appmenu-menuseparator"/>
       <menu id="appmenu_webDeveloper"
             label="&appMenuWebDeveloper.label;">
@@ -193,15 +182,11 @@
                 command="cmd_quitApplication"/>
     </vbox>
     <vbox id="appmenuSecondaryPane">
-      <hbox class="split-menuitem">
-        <menuitem id="appmenu_bookmarks"
-                  class="menuitem-iconic menuitem-iconic-tooltip split-menuitem-item"
-                  flex="1"
-                  label="&bookmarksMenu.label;"
-                  command="Browser:ShowAllBookmarks"
-                  key="manBookmarkKb"/>
-        <menu id="appmenu_bookmarksMenu"
-              class="split-menuitem-menu">
+      <splitmenu id="appmenu_bookmarks"
+                 iconic="true"
+                 label="&bookmarksMenu.label;"
+                 command="Browser:ShowAllBookmarks"
+                 key="manBookmarkKb">
           <menupopup id="appmenu_bookmarksPopup"
                      placespopup="true"
                      context="placesContext"
@@ -260,17 +245,12 @@
                       oncommand="PlacesCommandHook.showPlacesOrganizer('UnfiledBookmarks');"
                       class="menuitem-iconic"/>
           </menupopup>
-        </menu>
-      </hbox>
-      <hbox class="split-menuitem">
-        <menuitem id="appmenu_history"
-                  class="menuitem-iconic menuitem-iconic-tooltip split-menuitem-item"
-                  flex="1"
-                  label="&historyMenu.label;"
-                  command="Browser:ShowAllHistory"
-                  key="showAllHistoryKb"/>
-        <menu id="appmenu_historyMenu"
-              class="split-menuitem-menu">
+      </splitmenu>
+      <splitmenu id="appmenu_history"
+                 iconic="true"
+                 label="&historyMenu.label;"
+                 command="Browser:ShowAllHistory"
+                 key="showAllHistoryKb">
           <menupopup id="appmenu_historyMenupopup"
                      placespopup="true"
                      oncommand="this.parentNode._placesView._onCommand(event);"
@@ -310,8 +290,7 @@
             </menu>
             <menuseparator/>
           </menupopup>
-        </menu>
-      </hbox>
+      </splitmenu>
       <menuitem id="appmenu_downloads"
                 class="menuitem-tooltip"
                 label="&downloads.label;"
@@ -323,18 +302,13 @@
                 label="&addons.label;"
                 command="Tools:Addons"
                 key="key_openAddons"/>
-      <hbox class="split-menuitem">
-        <menuitem id="appmenu_customize"
+      <splitmenu id="appmenu_customize"
 #ifdef XP_UNIX
-                  label="&preferencesCmdUnix.label;"
+                 label="&preferencesCmdUnix.label;"
 #else
-                  label="&preferencesCmd2.label;"
+                 label="&preferencesCmd2.label;"
 #endif
-                  class="split-menuitem-item"
-                  flex="1"
-                  oncommand="openPreferences();"/>
-        <menu class="split-menuitem-menu"
-              label="&preferencesCmd2.label;">
+                 oncommand="openPreferences();">
           <menupopup id="appmenu_customizeMenu"
                      onpopupshowing="onViewToolbarsPopupShowing(event, document.getElementById('appmenu_toggleTabsOnTop').previousSibling);">
             <menuitem id="appmenu_preferences"
@@ -354,15 +328,10 @@
                       label="&appMenuToolbarLayout.label;"
                       command="cmd_CustomizeToolbars"/>
           </menupopup>
-        </menu>
-      </hbox>
-      <hbox class="split-menuitem">
-        <menuitem id="appmenu_help"
-                  class="split-menuitem-item"
-                  flex="1"
-                  label="&helpMenu.label;"
-                  oncommand="openHelpLink('firefox-help')"/>
-        <menu class="split-menuitem-menu">
+      </splitmenu>
+      <splitmenu id="appmenu_help"
+                 label="&helpMenu.label;"
+                 oncommand="openHelpLink('firefox-help')">
           <menupopup id="appmenu_helpMenupopup">
             <menuitem id="appmenu_openHelp"
                       label="&helpMenu.label;"
@@ -390,8 +359,7 @@
                       label="&aboutProduct.label;"
                       oncommand="openAboutDialog();"/>
           </menupopup>
-        </menu>
-      </hbox>
+      </splitmenu>
 #ifdef MOZ_SERVICES_SYNC
       <spacer flex="1"/>
       <!-- only one of sync-setup or sync-syncnow will be showing at once -->
