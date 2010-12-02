@@ -1821,10 +1821,10 @@ var FormHelperUI = {
   get enabled() {
     return Services.prefs.getBoolPref("formhelper.enabled");
   },
-
+  
   _visibleScreenArea: null,
   get visibleScreenArea() {
-    let visibleRect = Rect.fromRect(Browser.selectedBrowser.getBoundingClientRect());
+    let visibleRect = Rect.fromRect(this._currentBrowser.getBoundingClientRect());
     let visibleScreenArea = visibleRect;
     if (this._visibleScreenArea) {
       visibleScreenArea = this._visibleScreenArea.clone();
@@ -1865,7 +1865,10 @@ var FormHelperUI = {
     Services.obs.removeObserver(this, "softkb-change");
   },
 
+  _currentBrowser: null,
   show: function formHelperShow(aElement, aHasPrevious, aHasNext) {
+    this._currentBrowser = Browser.selectedBrowser;
+
     // Update the next/previous commands
     this._cmdPrevious.setAttribute("disabled", !aHasPrevious);
     this._cmdNext.setAttribute("disabled", !aHasNext);
@@ -1886,7 +1889,7 @@ var FormHelperUI = {
     this._zoom(Rect.fromRect(aElement.rect), Rect.fromRect(aElement.caretRect));
 
     // Prevent the view to scroll automatically while typing
-    Browser.selectedBrowser.scrollSync = false;
+    this._currentBrowser.scrollSync = false;
   },
 
   hide: function formHelperHide() {
@@ -1894,16 +1897,16 @@ var FormHelperUI = {
       return;
 
     // Restore the scroll synchonisation
-    Browser.selectedBrowser.scrollSync = true;
+    this._currentBrowser.scrollSync = true;
 
     // reset current Element and Caret Rect
     this._currentElementRect = null;
     this._currentCaretRect = null;
 
     this._updateContainerForSelect(this._currentElement, null);
-    this._open = false;
 
-    Browser.selectedBrowser.messageManager.sendAsyncMessage("FormAssist:Closed", { });
+    this._currentBrowser.messageManager.sendAsyncMessage("FormAssist:Closed", { });
+    this._open = false;
   },
 
   handleEvent: function formHelperHandleEvent(aEvent) {
@@ -1982,17 +1985,17 @@ var FormHelperUI = {
   },
 
   goToPrevious: function formHelperGoToPrevious() {
-    Browser.selectedBrowser.messageManager.sendAsyncMessage("FormAssist:Previous", { });
+    this._currentBrowser.messageManager.sendAsyncMessage("FormAssist:Previous", { });
   },
 
   goToNext: function formHelperGoToNext() {
-    Browser.selectedBrowser.messageManager.sendAsyncMessage("FormAssist:Next", { });
+    this._currentBrowser.messageManager.sendAsyncMessage("FormAssist:Next", { });
   },
 
   doAutoComplete: function formHelperDoAutoComplete(aElement) {
     // Suggestions are only in <label>s. Ignore the rest.
     if (aElement instanceof Ci.nsIDOMXULLabelElement)
-      Browser.selectedBrowser.messageManager.sendAsyncMessage("FormAssist:AutoComplete", { value: aElement.value });
+      this._currentBrowser.messageManager.sendAsyncMessage("FormAssist:AutoComplete", { value: aElement.value });
   },
 
   get _open() {

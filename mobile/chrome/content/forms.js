@@ -174,12 +174,6 @@ FormAssistant.prototype = {
         break;
 
       case "Content:SetWindowSize":
-        // We don't want to react to size change if the form assistant is not
-        // active, and since this message is the only one not sent by the Form
-        // Helper UI, it needs a check to ensure the Assistant is actually used
-        if (this._open)
-          return;
-
         // If the CSS viewport change just show the current element to the new
         // position
         sendAsyncMessage("FormAssist:Show", this._getJSON());
@@ -225,6 +219,7 @@ FormAssistant.prototype = {
       case "FormAssist:Closed":
         currentElement.blur();
         this._currentIndex = null;
+        this._open = false;
         break;
     }
   },
