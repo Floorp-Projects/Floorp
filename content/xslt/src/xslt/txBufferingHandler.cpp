@@ -408,103 +408,122 @@ txResultBuffer::addTransaction(txOutputTransaction* aTransaction)
     return NS_OK;
 }
 
-static nsresult
-flushTransaction(txOutputTransaction* aTransaction,
-                 txAXMLEventHandler* aHandler,
-                 nsAFlatString::const_char_iterator& aIter)
+struct Holder
 {
-    switch (aTransaction->mType) {
+    txAXMLEventHandler** mHandler;
+    nsresult mResult;
+    nsAFlatString::const_char_iterator mIter;
+};
+
+static PRBool
+flushTransaction(txOutputTransaction* aElement, Holder* aData)
+{
+    Holder* holder = aData;
+    txAXMLEventHandler* handler = *holder->mHandler;
+    txOutputTransaction* transaction = aElement;
+
+    nsresult rv;
+    switch (transaction->mType) {
         case txOutputTransaction::eAttributeAtomTransaction:
         {
             txAttributeAtomTransaction* transaction =
-                static_cast<txAttributeAtomTransaction*>(aTransaction);
-            return aHandler->attribute(transaction->mPrefix,
-                                       transaction->mLocalName,
-                                       transaction->mLowercaseLocalName,
-                                       transaction->mNsID,
-                                       transaction->mValue);
+                static_cast<txAttributeAtomTransaction*>(aElement);
+            rv = handler->attribute(transaction->mPrefix,
+                                    transaction->mLocalName,
+                                    transaction->mLowercaseLocalName,
+                                    transaction->mNsID,
+                                    transaction->mValue);
+            break;
         }
         case txOutputTransaction::eAttributeTransaction:
         {
             txAttributeTransaction* attrTransaction =
-                static_cast<txAttributeTransaction*>(aTransaction);
-            return aHandler->attribute(attrTransaction->mPrefix,
-                                       attrTransaction->mLocalName,
-                                       attrTransaction->mNsID,
-                                       attrTransaction->mValue);
+                static_cast<txAttributeTransaction*>(aElement);
+            rv = handler->attribute(attrTransaction->mPrefix,
+                                    attrTransaction->mLocalName,
+                                    attrTransaction->mNsID,
+                                    attrTransaction->mValue);
+            break;
         }
         case txOutputTransaction::eCharacterTransaction:
         case txOutputTransaction::eCharacterNoOETransaction:
         {
             txCharacterTransaction* charTransaction =
-                static_cast<txCharacterTransaction*>(aTransaction);
-            nsAFlatString::const_char_iterator& start = aIter;
+                static_cast<txCharacterTransaction*>(aElement);
+            nsAFlatString::const_char_iterator& start =
+                holder->mIter;
             nsAFlatString::const_char_iterator end =
                 start + charTransaction->mLength;
-            aIter = end;
-            return aHandler->characters(Substring(start, end),
-                                        aTransaction->mType ==
-                                        txOutputTransaction::eCharacterNoOETransaction);
+            rv = handler->characters(Substring(start, end),
+                                     transaction->mType ==
+                                     txOutputTransaction::eCharacterNoOETransaction);
+            start = end;
+            break;
         }
         case txOutputTransaction::eCommentTransaction:
         {
             txCommentTransaction* commentTransaction =
-                static_cast<txCommentTransaction*>(aTransaction);
-            return aHandler->comment(commentTransaction->mValue);
+                static_cast<txCommentTransaction*>(aElement);
+            rv = handler->comment(commentTransaction->mValue);
+            break;
         }
         case txOutputTransaction::eEndElementTransaction:
         {
-            return aHandler->endElement();
+            rv = handler->endElement();
+            break;
         }
         case txOutputTransaction::ePITransaction:
         {
             txPITransaction* piTransaction =
-                static_cast<txPITransaction*>(aTransaction);
-            return aHandler->processingInstruction(piTransaction->mTarget,
-                                                   piTransaction->mData);
+                static_cast<txPITransaction*>(aElement);
+            rv = handler->processingInstruction(piTransaction->mTarget,
+                                                piTransaction->mData);
+            break;
         }
         case txOutputTransaction::eStartDocumentTransaction:
         {
-            return aHandler->startDocument();
+            rv = handler->startDocument();
+            break;
         }
         case txOutputTransaction::eStartElementAtomTransaction:
         {
             txStartElementAtomTransaction* transaction =
-                static_cast<txStartElementAtomTransaction*>(aTransaction);
-            return aHandler->startElement(transaction->mPrefix,
-                                          transaction->mLocalName,
-                                          transaction->mLowercaseLocalName,
-                                          transaction->mNsID);
+                static_cast<txStartElementAtomTransaction*>(aElement);
+            rv = handler->startElement(transaction->mPrefix,
+                                       transaction->mLocalName,
+                                       transaction->mLowercaseLocalName,
+                                       transaction->mNsID);
+            break;
         }
         case txOutputTransaction::eStartElementTransaction:
         {
             txStartElementTransaction* transaction =
-                static_cast<txStartElementTransaction*>(aTransaction);
-            return aHandler->startElement(transaction->mPrefix,
-                                          transaction->mLocalName,
-                                          transaction->mNsID);
-        }
-        default:
-        {
-            NS_NOTREACHED("Unexpected transaction type");
+                static_cast<txStartElementTransaction*>(aElement);
+            rv = handler->startElement(transaction->mPrefix,
+                                       transaction->mLocalName,
+                                       transaction->mNsID);
+            break;
         }
     }
 
-    return NS_ERROR_UNEXPECTED;
+    holder->mResult = rv;
+
+    return NS_SUCCEEDED(rv);
 }
 
 nsresult
-txResultBuffer::flushToHandler(txAXMLEventHandler* aHandler)
+txResultBuffer::flushToHandler(txAXMLEventHandler** aHandler)
 {
-    nsAFlatString::const_char_iterator iter;
-    mStringValue.BeginReading(iter);
+    Holder data = { aHandler, NS_OK };
+    mStringValue.BeginReading(data.mIter);
 
     for (PRUint32 i = 0, len = mTransactions.Length(); i < len; ++i) {
-        nsresult rv = flushTransaction(mTransactions[i], aHandler, iter);
-        NS_ENSURE_SUCCESS(rv, rv);
+        if (!flushTransaction(mTransactions[i], &data)) {
+            break;
+        }
     }
 
-    return NS_OK;
+    return data.mResult;
 }
 
 txOutputTransaction*
