@@ -621,13 +621,6 @@ nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
   else
 #endif
   if (eventType.EqualsLiteral("focus")) {
-    if (targetNode == mDocument && mDocument != gLastFocusedNode) {
-      // Got focus event for the window, we will make sure that an accessible
-      // focus event for initial focus is fired. We do this on a short timer
-      // because the initial focus may not have been set yet.
-      NS_DISPATCH_RUNNABLEMETHOD(FireCurrentFocusEvent, this)
-    }
-
     // Keep a reference to the target node. We might want to change
     // it to the individual radio button or selected item, and send
     // the focus event to that.
