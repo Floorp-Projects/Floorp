@@ -16,7 +16,7 @@
  * The Original Code is Places code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corporation.
+ * the Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
@@ -37,8 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __nsPlacesIndexes_h__
-#define __nsPlacesIndexes_h__
+#ifndef nsPlacesIndexes_h__
+#define nsPlacesIndexes_h__
 
 #define CREATE_PLACES_IDX(__name, __table, __columns, __type) \
   NS_LITERAL_CSTRING( \
@@ -117,6 +117,11 @@
     "itemlastmodifiedindex", "moz_bookmarks", "fk, lastModified", "" \
   )
 
+#define CREATE_IDX_MOZ_BOOKMARKS_GUID \
+  CREATE_PLACES_IDX( \
+    "guid_uniqueindex", "moz_bookmarks", "guid", "UNIQUE" \
+  )
+
 /**
  * moz_annos
  */
@@ -136,4 +141,4 @@
   )
 
 
-#endif // __nsPlacesIndexes_h__
+#endif // nsPlacesIndexes_h__
