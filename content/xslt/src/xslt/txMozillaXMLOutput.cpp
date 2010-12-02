@@ -94,6 +94,7 @@ txMozillaXMLOutput::txMozillaXMLOutput(const nsSubstring& aRootName,
       mRootContentCreated(PR_FALSE),
       mNoFixup(PR_FALSE)
 {
+    MOZ_COUNT_CTOR(txMozillaXMLOutput);
     if (aObserver) {
         mNotifier = new txTransformNotifier();
         if (mNotifier) {
@@ -118,6 +119,7 @@ txMozillaXMLOutput::txMozillaXMLOutput(txOutputFormat* aFormat,
       mRootContentCreated(PR_FALSE),
       mNoFixup(aNoFixup)
 {
+    MOZ_COUNT_CTOR(txMozillaXMLOutput);
     mOutputFormat.merge(*aFormat);
     mOutputFormat.setFromDefaults();
 
@@ -129,6 +131,11 @@ txMozillaXMLOutput::txMozillaXMLOutput(txOutputFormat* aFormat,
     else {
       mCurrentNode = nsnull;
     }
+}
+
+txMozillaXMLOutput::~txMozillaXMLOutput()
+{
+    MOZ_COUNT_DTOR(txMozillaXMLOutput);
 }
 
 nsresult
