@@ -363,7 +363,7 @@ interface nsINavBookmarksService : nsISupports
    *           The ID of the item to get the GUID for
    *  @return The GUID string.
    */
-  AString getItemGUID(in long long aItemId);
+  [deprecated] AString getItemGUID(in long long aItemId);
 
   /**
    * Set a globally unique identifier.  This can be useful when a sync
@@ -374,7 +374,7 @@ interface nsINavBookmarksService : nsISupports
    *  @param   aGUID
    *           The GUID string
    */
-  void setItemGUID(in long long aItemId, in AString aGUID);
+  [deprecated] void setItemGUID(in long long aItemId, in AString aGUID);
 
   /**
    * Get the ID of the item with the given GUID.
@@ -382,7 +382,7 @@ interface nsINavBookmarksService : nsISupports
    *          The GUID string of the item to search for
    * @return The item ID, or -1 if not found.
    */
-  long long getItemIdForGUID(in AString aGUID);
+  [deprecated] long long getItemIdForGUID(in AString aGUID);
 
   /**
    * Set the title for an item.
