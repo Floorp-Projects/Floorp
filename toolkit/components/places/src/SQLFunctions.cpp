@@ -15,7 +15,7 @@
  * The Original Code is Places code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corporation.
+ * the Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
@@ -48,6 +48,7 @@
 #include "nsINavHistoryService.h"
 #include "nsPrintfCString.h"
 #include "nsNavHistory.h"
+#include "nsIRandomGenerator.h"
 
 using namespace mozilla::storage;
 
@@ -596,6 +597,13 @@ namespace places {
   nsresult
   GenerateGUIDFunction::create(mozIStorageConnection *aDBConn)
   {
+    // We need this service to be initialized on the main thread because it is
+    // not threadsafe.  We are about to use it asynchronously, so initialize it
+    // now.
+    nsCOMPtr<nsIRandomGenerator> rg =
+      do_GetService("@mozilla.org/security/random-generator;1");
+    NS_ENSURE_STATE(rg);
+
     nsCOMPtr<GenerateGUIDFunction> function = new GenerateGUIDFunction();
     nsresult rv = aDBConn->CreateFunction(
       NS_LITERAL_CSTRING("generate_guid"), 0, function

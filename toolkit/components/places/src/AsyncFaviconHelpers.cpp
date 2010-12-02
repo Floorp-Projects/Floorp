@@ -754,8 +754,8 @@ AsyncAssociateIconToPage::Run()
   if (mPage.id == 0) {
     nsCOMPtr<mozIStorageStatement> stmt =
       mFaviconSvc->mSyncStatements.GetCachedStatement(NS_LITERAL_CSTRING(
-        "INSERT INTO moz_places (url, rev_host, favicon_id) "
-        "VALUES (:page_url, :rev_host, :favicon_id) "
+        "INSERT INTO moz_places (url, rev_host, favicon_id, guid) "
+        "VALUES (:page_url, :rev_host, :favicon_id, GENERATE_GUID()) "
       ));
     NS_ENSURE_STATE(stmt);
     mozStorageStatementScoper scoper(stmt);
