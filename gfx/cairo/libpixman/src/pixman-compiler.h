@@ -64,6 +64,11 @@
 #   endif
 #endif
 
+/* In libxul builds we don't ever want to export pixman symbols */
+#ifdef cairo_public
+#   define PIXMAN_EXPORT cairo_public
+#else
+
 /* GCC visibility */
 #if defined(__GNUC__) && __GNUC__ >= 4 && !defined(_WIN32)
 #   define PIXMAN_EXPORT __attribute__ ((visibility("default")))
@@ -73,6 +78,8 @@
 #else
 #   define PIXMAN_EXPORT
 #endif
+
+#endif /* cairo_public */
 
 /* TLS */
 #if defined(PIXMAN_NO_TLS)

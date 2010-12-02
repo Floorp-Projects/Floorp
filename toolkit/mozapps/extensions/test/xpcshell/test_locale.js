@@ -131,6 +131,10 @@ function run_test_7() {
 
 // Test that the prefs will override localized values from the manifest
 function run_test_8() {
+  dump("The rest of this test is disabled for now\n");
+  do_test_finished();
+  return;
+
   Services.prefs.setCharPref(PREF_SELECTED_LOCALE, "fr-FR");
   restartManager();
 

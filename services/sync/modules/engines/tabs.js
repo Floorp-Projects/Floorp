@@ -156,8 +156,8 @@ TabStore.prototype = {
     return allTabs;
   },
 
-  createRecord: function createRecord(guid, uri) {
-    let record = new TabSetRecord(uri);
+  createRecord: function createRecord(id, collection) {
+    let record = new TabSetRecord(collection, id);
     record.clientName = Clients.localName;
 
     // Don't provide any tabs to compare against and ignore the update later.

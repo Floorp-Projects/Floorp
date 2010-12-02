@@ -163,9 +163,9 @@ FormStore.prototype = {
     return FormWrapper.hasGUID(id);
   },
 
-  createRecord: function createRecord(guid, uri) {
-    let record = new FormRec(uri);
-    let entry = FormWrapper.getEntry(guid);
+  createRecord: function createRecord(id, collection) {
+    let record = new FormRec(collection, id);
+    let entry = FormWrapper.getEntry(id);
     if (entry != null) {
       record.name = entry.name;
       record.value = entry.value

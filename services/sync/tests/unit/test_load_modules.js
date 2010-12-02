@@ -2,7 +2,6 @@ const modules = [
                  "auth.js",
                  "base_records/collection.js",
                  "base_records/crypto.js",
-                 "base_records/keys.js",
                  "base_records/wbo.js",
                  "constants.js",
                  "engines/bookmarks.js",

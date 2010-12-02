@@ -333,14 +333,16 @@ ContentChild::AllocPAudio(const PRInt32& numChannels,
                           const PRInt32& rate,
                           const PRInt32& format)
 {
-    PAudioChild *child = new AudioChild();
+    AudioChild *child = new AudioChild();
+    NS_ADDREF(child);
     return child;
 }
 
 bool
 ContentChild::DeallocPAudio(PAudioChild* doomed)
 {
-    delete doomed;
+    AudioChild *child = static_cast<AudioChild*>(doomed);
+    NS_RELEASE(child);
     return true;
 }
 

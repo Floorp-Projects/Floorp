@@ -103,7 +103,7 @@ can reach it easily. -->
 <!ENTITY subscribeToPageMenupopup.label "Subscribe to This Page">
 <!ENTITY subscribeToPageMenuitem.label "Subscribe to This Page…">
 <!ENTITY addCurPagesCmd.label "Bookmark All Tabs…">
-<!ENTITY showAllBookmarks.label "Show All Bookmarks…">
+<!ENTITY showAllBookmarks2.label "Show All Bookmarks">
 <!ENTITY bookmarkAllCmd.label "Bookmark All Tabs…">
 <!ENTITY bookmarksToolbarChevron.tooltip "Show more bookmarks">
 
@@ -237,8 +237,8 @@ can reach it easily. -->
 <!ENTITY selectAllCmd.label         "Select All">  
 <!ENTITY selectAllCmd.key         "A">  
 <!ENTITY selectAllCmd.accesskey       "A"> 
-<!ENTITY preferencesCmd.label       "Options…">
-<!ENTITY preferencesCmd.accesskey     "O"> 
+<!ENTITY preferencesCmd2.label       "Options">
+<!ENTITY preferencesCmd2.accesskey     "O">
 <!ENTITY preferencesCmdUnix.label       "Preferences">
 <!ENTITY preferencesCmdUnix.accesskey     "n"> 
 

@@ -44,7 +44,6 @@
 
 class gfxDrawable;
 class nsIntRegion;
-class nsIntRect;
 
 class THEBES_API gfxUtils {
 public:
@@ -100,13 +99,6 @@ public:
      * Convert image format to depth value
      */
     static int ImageFormatToDepth(gfxASurface::gfxImageFormat aFormat);
-
-    /**
-     * If aIn can be represented exactly using an nsIntRect (i.e.
-     * integer-aligned edges and coordinates in the PRInt32 range) then we
-     * set aOut to that rectangle, otherwise return failure.
-    */
-    static PRBool GfxRectToIntRect(const gfxRect& aIn, nsIntRect* aOut);
 };
 
 #endif

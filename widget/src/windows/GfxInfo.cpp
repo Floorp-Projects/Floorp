@@ -375,9 +375,9 @@ GfxInfo::AddCrashReportAnnotations()
   if (vendorID == 0) {
       /* if we didn't find a valid vendorID lets append the mDeviceID string to try to find out why */
       note.Append(", ");
-      note.AppendWithConversion(mDeviceKeyDebug);
-      note.Append(", ");
       note.AppendWithConversion(mDeviceID);
+      note.Append(", ");
+      note.AppendWithConversion(mDeviceKeyDebug);
   }
   note.Append("\n");
 

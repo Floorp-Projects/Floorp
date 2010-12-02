@@ -24,16 +24,17 @@
       testRole("nav", ROLE_SECTION);
       testRole("header", ROLE_HEADER);
       testRole("footer", ROLE_FOOTER);
-      testRole("article", ROLE_SECTION);
+      testRole("article", ROLE_DOCUMENT);
       testRole("aside", ROLE_NOTE);
+
+      testRole("main", ROLE_DOCUMENT);
 
       // Some AT may look for this
       testAttrs("nav", {"xml-roles" : "navigation"}, true);
       testAttrs("header", {"xml-roles" : "banner"}, true);
       testAttrs("footer", {"xml-roles" : "contentinfo"}, true);
-      testAttrs("article", {"xml-roles" : "main"}, true);
       testAttrs("aside", {"xml-roles" : "note"}, true);
-      testAttrs("document", {"xml-roles" : "document"}, true); // ARIA override
+      testAttrs("main", {"xml-roles" : "main"}, true); // ARIA override
 
       // And some AT may look for this
       testAttrs("nav", {"tag" : "NAV"}, true);
@@ -41,7 +42,7 @@
       testAttrs("footer", {"tag" : "FOOTER"}, true);
       testAttrs("article", {"tag" : "ARTICLE"}, true);
       testAttrs("aside", {"tag" : "ASIDE"}, true);
-      testAttrs("document", {"tag" : "ARTICLE"}, true); // no override expected
+      testAttrs("main", {"tag" : "ARTICLE"}, true); // no override expected
 
       SimpleTest.finish();
     }
@@ -53,8 +54,15 @@
 <body>
 
   <a target="_blank"
-     title="Provide mappings for html5 <nav> <header> <footer> <article>"
-     href="https://bugzilla.mozilla.org/show_bug.cgi?id=593368">Bug 593368</a>
+    title="Provide mappings for html5 <nav> <header> <footer> <article>"
+    href="https://bugzilla.mozilla.org/show_bug.cgi?id=593368">
+     Mozilla Bug 593368
+  </a><br/>
+  <a target="_blank"
+    href="https://bugzilla.mozilla.org/show_bug.cgi?id=613502"
+    title="Map <article> like we do aria role article">
+     Mozilla Bug 613502
+  </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
@@ -63,10 +71,10 @@
   <nav id="nav">a nav</nav>
   <header id="header">a header</header>
   <footer id="footer">a footer</footer>
-  <article id="article">an article</article>
   <aside id="aside">by the way I am an aside</aside>
 
-  <article id="document" role="document">a document</article>
+  <article id="article">an article</article>
+  <article id="main" role="main">a main area</article>
 
 </body>
 </html>

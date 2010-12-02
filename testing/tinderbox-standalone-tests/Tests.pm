@@ -50,7 +50,6 @@ sub global_prefs {
 
     # Suppress firefox's popup blocking
     if ($Settings::BinaryName =~ /^firefox/) {
-        Prefs::set_pref($pref_file, 'privacy.popups.firstTime', 'false');
         Prefs::set_pref($pref_file, 'dom.disable_open_during_load', 'false');
 
         # Suppress default browser dialog

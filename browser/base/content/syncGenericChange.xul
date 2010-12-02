@@ -98,7 +98,7 @@
           <label id="passphraseLabel" control="passphraseBox"/>
           <textbox id="passphraseBox"
                    onfocus="this.select()"
-                   oninput="Change.validate()"/>
+                   onkeyup="Change.validate(event)"/>
           <label id="generatePassphraseButton"
                  value="&syncKeyGenerate.label;"
                  class="text-link inline-link"
@@ -113,25 +113,6 @@
         <image id="statusIcon" class="statusIcon"/>
         <label id="status" class="status" value=" "/>
       </hbox>
-
-      <vbox id="passphraseStrengthRow" hidden="true" pack="end">
-        <hbox>
-          <label id="passphraseStrengthLabel"
-                 control="passphraseStrength"
-                 value="&syncKeyStrength.label;"/>
-          <progressmeter id="passphraseStrength"
-                         aria-labelledby="passphraseStrengthLabel"
-                         max="128"
-                         value="0"
-                         flex="1"/>
-        </hbox>
-        <hbox align="right" flex="1">
-          <label class="text-link inline-link"
-                 onclick="event.stopPropagation();
-                          gSyncUtils.openSyncKeyHelp();"
-                 value="&syncKeyHelp.label;"/>
-        </hbox>
-      </vbox>
     </vbox>
 
     <hbox id="passphraseBackupButtons" pack="center">

@@ -1985,7 +1985,7 @@ nsRect nsDisplayTransform::GetBounds(nsDisplayListBuilder *aBuilder)
 }
 
 /* The transform is opaque iff the transform consists solely of scales and
- * transforms and if the underlying content is opaque.  Thus if the transform
+ * translations and if the underlying content is opaque.  Thus if the transform
  * is of the form
  *
  * |a c e|
@@ -1993,6 +1993,12 @@ nsRect nsDisplayTransform::GetBounds(nsDisplayListBuilder *aBuilder)
  * |0 0 1|
  *
  * We need b and c to be zero.
+ *
+ * We also need to check whether the underlying opaque content completely fills
+ * our visible rect. We use UntransformRect which expands to the axis-aligned
+ * bounding rect, but that's OK since if
+ * mStoredList.GetVisibleRect().Contains(untransformedVisible), then it
+ * certainly contains the actual (non-axis-aligned) untransformed rect.
  */
 PRBool nsDisplayTransform::IsOpaque(nsDisplayListBuilder *aBuilder,
                                     PRBool* aForceTransparentSurface)
@@ -2001,8 +2007,11 @@ PRBool nsDisplayTransform::IsOpaque(nsDisplayListBuilder *aBuilder,
     *aForceTransparentSurface = PR_FALSE;
   }
   const nsStyleDisplay* disp = mFrame->GetStyleDisplay();
+  nsRect untransformedVisible =
+    UntransformRect(mVisibleRect, mFrame, ToReferenceFrame());
   return disp->mTransform.GetMainMatrixEntry(1) == 0.0f &&
     disp->mTransform.GetMainMatrixEntry(2) == 0.0f &&
+    mStoredList.GetVisibleRect().Contains(untransformedVisible) &&
     mStoredList.IsOpaque(aBuilder);
 }
 
@@ -2013,8 +2022,11 @@ PRBool nsDisplayTransform::IsOpaque(nsDisplayListBuilder *aBuilder,
 PRBool nsDisplayTransform::IsUniform(nsDisplayListBuilder *aBuilder, nscolor* aColor)
 {
   const nsStyleDisplay* disp = mFrame->GetStyleDisplay();
+  nsRect untransformedVisible =
+    UntransformRect(mVisibleRect, mFrame, ToReferenceFrame());
   return disp->mTransform.GetMainMatrixEntry(1) == 0.0f &&
     disp->mTransform.GetMainMatrixEntry(2) == 0.0f &&
+    mStoredList.GetVisibleRect().Contains(untransformedVisible) &&
     mStoredList.IsUniform(aBuilder, aColor);
 }
 
