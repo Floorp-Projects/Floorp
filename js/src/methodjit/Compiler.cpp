@@ -2177,8 +2177,12 @@ mjit::Compiler::fixPrimitiveReturn(Assembler *masm, FrameEntry *fe)
     bool ool = (masm != &this->masm);
     Address thisv(JSFrameReg, JSStackFrame::offsetOfThis(fun));
 
-    // Easy cases - no return value, or known primitive, so just return thisv.
-    if (!fe || (fe->isTypeKnown() && fe->getKnownType() != JSVAL_TYPE_OBJECT)) {
+    // We can just load |thisv| if either of the following is true:
+    //  (1) There is no explicit return value, AND fp->rval is not used.
+    //  (2) There is an explicit return value, and it's known to be primitive.
+    if ((!fe && !analysis->usesReturnValue()) ||
+        (fe && fe->isTypeKnown() && fe->getKnownType() != JSVAL_TYPE_OBJECT))
+    {
         if (ool)
             masm->loadValueAsComponents(thisv, JSReturnReg_Type, JSReturnReg_Data);
         else
@@ -2187,7 +2191,7 @@ mjit::Compiler::fixPrimitiveReturn(Assembler *masm, FrameEntry *fe)
     }
 
     // If the type is known to be an object, just load the return value as normal.
-    if (fe->isTypeKnown() && fe->getKnownType() == JSVAL_TYPE_OBJECT) {
+    if (fe && fe->isTypeKnown() && fe->getKnownType() == JSVAL_TYPE_OBJECT) {
         loadReturnValue(masm, fe);
         return;
     }
