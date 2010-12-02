@@ -47,7 +47,37 @@ namespace js {
 
 namespace mjit {
 
+/* Common handling for both general purpose and floating point registers. */
+
+struct AnyRegisterID {
+    unsigned reg_;
+
+    AnyRegisterID()
+        : reg_((unsigned)-1)
+    {}
+
+    AnyRegisterID(const AnyRegisterID &o)
+        : reg_(o.reg_)
+    {}
+
+    AnyRegisterID(JSC::MacroAssembler::RegisterID reg)
+        : reg_((unsigned)reg)
+    {}
+
+    AnyRegisterID(JSC::MacroAssembler::FPRegisterID reg)
+        : reg_(JSC::MacroAssembler::TotalRegisters + (unsigned)reg)
+    {}
+
+    inline JSC::MacroAssembler::RegisterID reg();
+    inline JSC::MacroAssembler::FPRegisterID fpreg();
+};
+
 struct Registers {
+
+    /* General purpose registers. */
+
+    static const uint32 TotalRegisters = JSC::MacroAssembler::TotalRegisters;
+
     enum CallConvention {
         NormalCall,
         FastCall
@@ -240,9 +270,50 @@ struct Registers {
         return true;
     }
 
-    Registers()
-      : freeMask(AvailRegs)
-    { }
+    /* Floating point registers. */
+
+    typedef JSC::MacroAssembler::FPRegisterID FPRegisterID;
+
+#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
+    static const uint32 TotalFPRegisters = 7;
+    static const uint32 TempFPRegs = (
+          (1 << JSC::X86Registers::xmm0)
+        | (1 << JSC::X86Registers::xmm1)
+        | (1 << JSC::X86Registers::xmm2)
+        | (1 << JSC::X86Registers::xmm3)
+        | (1 << JSC::X86Registers::xmm4)
+        | (1 << JSC::X86Registers::xmm5)
+        | (1 << JSC::X86Registers::xmm6)
+        ) << TotalRegisters;
+    /* For shuffling FP values around, or loading GPRs into a FP reg. */
+    static const FPRegisterID FPConversionTemp = JSC::X86Registers::xmm7;
+#elif defined(JS_CPU_ARM)
+    static const uint32 TotalFPRegisters = 3;
+    static const uint32 TempFPRegs = (
+          (1 << JSC::ARMRegisters::d0)
+        | (1 << JSC::ARMRegisters::d1)
+        | (1 << JSC::ARMRegisters::d2);
+        ) << TotalRegisters;
+    static const FPRegisterID FPConversionTemp = JSC::ARMRegisters::d3;
+#else
+# error "Unsupported platform"
+#endif
+
+    static const uint32 AvailFPRegs = TempFPRegs;
+
+    static inline uint32 maskReg(FPRegisterID reg) {
+        return (1 << reg) << TotalRegisters;
+    }
+
+    /* Common code. */
+
+    static const uint32 TotalAnyRegisters = TotalRegisters + TotalFPRegisters;
+    static const uint32 TempAnyRegs = TempRegs | TempFPRegs;
+    static const uint32 AvailAnyRegs = AvailRegs | AvailFPRegs;
+
+    static inline uint32 maskReg(AnyRegisterID reg) {
+        return (1 << reg.reg_);
+    }
 
     Registers(uint32 freeMask)
       : freeMask(freeMask)
@@ -258,60 +329,56 @@ struct Registers {
         return *this;
     }
 
-    void reset() {
-        freeMask = AvailRegs;
+    bool empty(uint32 mask) const {
+        return !(freeMask & mask);
     }
 
     bool empty() const {
         return !freeMask;
     }
 
-    bool empty(uint32 mask) const {
-        return !(freeMask & mask);
-    }
-
-    RegisterID peekReg() {
-        JS_ASSERT(!empty());
+    AnyRegisterID peekReg(uint32 mask) {
+        JS_ASSERT(!empty(mask));
         int ireg;
-        JS_FLOOR_LOG2(ireg, freeMask);
+        JS_FLOOR_LOG2(ireg, freeMask & mask);
         RegisterID reg = (RegisterID)ireg;
         return reg;
     }
 
-    RegisterID takeAnyReg() {
-        RegisterID reg = peekReg();
+    AnyRegisterID peekReg() {
+        return peekReg(freeMask);
+    }
+
+    AnyRegisterID takeAnyReg(uint32 mask) {
+        AnyRegisterID reg = peekReg(mask);
         takeReg(reg);
         return reg;
+    }
+
+    AnyRegisterID takeAnyReg() {
+        return takeAnyReg(freeMask);
+    }
+
+    bool hasReg(AnyRegisterID reg) const {
+        return !!(freeMask & (1 << reg.reg_));
     }
 
     bool hasRegInMask(uint32 mask) const {
-        Registers temp(freeMask & mask);
-        return !temp.empty();
+        return !!(freeMask & mask);
     }
 
-    RegisterID takeRegInMask(uint32 mask) {
-        Registers temp(freeMask & mask);
-        RegisterID reg = temp.takeAnyReg();
-        takeReg(reg);
-        return reg;
+    void putRegUnchecked(AnyRegisterID reg) {
+        freeMask |= (1 << reg.reg_);
     }
 
-    bool hasReg(RegisterID reg) const {
-        return !!(freeMask & (1 << reg));
-    }
-
-    void putRegUnchecked(RegisterID reg) {
-        freeMask |= (1 << reg);
-    }
-
-    void putReg(RegisterID reg) {
+    void putReg(AnyRegisterID reg) {
         JS_ASSERT(!hasReg(reg));
         putRegUnchecked(reg);
     }
 
-    void takeReg(RegisterID reg) {
+    void takeReg(AnyRegisterID reg) {
         JS_ASSERT(hasReg(reg));
-        freeMask &= ~(1 << reg);
+        freeMask &= ~(1 << reg.reg_);
     }
 
     bool operator ==(const Registers &other) {
@@ -321,113 +388,22 @@ struct Registers {
     uint32 freeMask;
 };
 
-
-struct FPRegisters {
-
-    typedef JSC::MacroAssembler::FPRegisterID FPRegisterID;
-
-#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
-    static const uint32 TotalFPRegisters = 7;
-    static const uint32 TempFPRegs =
-          (1 << JSC::X86Registers::xmm0)
-        | (1 << JSC::X86Registers::xmm1)
-        | (1 << JSC::X86Registers::xmm2)
-        | (1 << JSC::X86Registers::xmm3)
-        | (1 << JSC::X86Registers::xmm4)
-        | (1 << JSC::X86Registers::xmm5)
-        | (1 << JSC::X86Registers::xmm6);
-    /* For shuffling FP values around, or loading GPRs into a FP reg. */
-    static const FPRegisterID ConversionTemp = JSC::X86Registers::xmm7;
-#elif defined(JS_CPU_ARM)
-    static const uint32 TotalFPRegisters = 3;
-    static const uint32 TempFPRegs = 
-          (1 << JSC::ARMRegisters::d0)
-        | (1 << JSC::ARMRegisters::d1)
-        | (1 << JSC::ARMRegisters::d2);
-    static const FPRegisterID ConversionTemp = JSC::ARMRegisters::d3;
-#else
-# error "Unsupported platform"
-#endif
-
-    static const uint32 AvailFPRegs = TempFPRegs;
-
-    FPRegisters()
-      : freeFPMask(AvailFPRegs)
-    { }
-
-    FPRegisters(uint32 freeFPMask)
-      : freeFPMask(freeFPMask)
-    { }
-
-    FPRegisters(const FPRegisters &other)
-      : freeFPMask(other.freeFPMask)
-    { }
-
-    FPRegisters & operator =(const FPRegisters &other)
-    {
-        freeFPMask = other.freeFPMask;
-        return *this;
-    }
-
-    void reset() {
-        freeFPMask = AvailFPRegs;
-    }
-
-    bool empty() const {
-        return !freeFPMask;
-    }
-
-    bool empty(uint32 mask) const {
-        return !(freeFPMask & mask);
-    }
-
-    FPRegisterID takeAnyReg() {
-        JS_ASSERT(!empty());
-        int ireg;
-        JS_FLOOR_LOG2(ireg, freeFPMask);
-        FPRegisterID reg = (FPRegisterID)ireg;
-        takeReg(reg);
-        return reg;
-    }
-
-    bool hasRegInMask(uint32 mask) const {
-        FPRegisters temp(freeFPMask & mask);
-        return !temp.empty();
-    }
-
-    FPRegisterID takeRegInMask(uint32 mask) {
-        FPRegisters temp(freeFPMask & mask);
-        FPRegisterID reg = temp.takeAnyReg();
-        takeReg(reg);
-        return reg;
-    }
-
-    bool hasReg(FPRegisterID fpreg) const {
-        return !!(freeFPMask & (1 << fpreg));
-    }
-
-    void putRegUnchecked(FPRegisterID fpreg) {
-        freeFPMask |= (1 << fpreg);
-    }
-
-    void putReg(FPRegisterID fpreg) {
-        JS_ASSERT(!hasReg(fpreg));
-        putRegUnchecked(fpreg);
-    }
-
-    void takeReg(FPRegisterID fpreg) {
-        JS_ASSERT(hasReg(fpreg));
-        freeFPMask &= ~(1 << fpreg);
-    }
-
-    bool operator ==(const FPRegisters &other) {
-        return freeFPMask == other.freeFPMask;
-    }
-
-    uint32 freeFPMask;
-};
-
 static const JSC::MacroAssembler::RegisterID JSFrameReg = Registers::JSFrameReg;
+
+JSC::MacroAssembler::RegisterID
+AnyRegisterID::reg()
+{
+    JS_ASSERT(reg_ < Registers::TotalRegisters);
+    return (JSC::MacroAssembler::RegisterID) reg_;
+}
+
+JSC::MacroAssembler::FPRegisterID
+AnyRegisterID::fpreg()
+{
+    JS_ASSERT(reg_ >= Registers::TotalRegisters &&
+              reg_ < Registers::TotalAnyRegisters);
+    return (JSC::MacroAssembler::FPRegisterID) (reg_ - Registers::TotalRegisters);
+}
 
 } /* namespace mjit */
 
