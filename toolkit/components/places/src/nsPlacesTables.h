@@ -141,6 +141,7 @@
     ", folder_type TEXT" \
     ", dateAdded INTEGER" \
     ", lastModified INTEGER" \
+    ", guid TEXT" \
   ")" \
 )
 

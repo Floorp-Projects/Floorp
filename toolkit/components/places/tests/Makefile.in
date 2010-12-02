@@ -53,6 +53,7 @@ XPCSHELL_TESTS = \
 	queries \
 	unit \
 	network \
+	migration \
 	$(NULL)
 
 # Files in the main "tests" folder.
