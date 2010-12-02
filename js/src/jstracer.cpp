@@ -2221,7 +2221,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
     global_slots(NULL),
     callDepth(anchor ? anchor->calldepth : 0),
     atoms(FrameAtomBase(cx, cx->fp())),
-    consts(cx->fp()->script()->constOffset
+    consts(JSScript::isValidOffset(cx->fp()->script()->constOffset)
            ? cx->fp()->script()->consts()->vector
            : NULL),
     strictModeCode_ins(NULL),
@@ -7884,9 +7884,9 @@ TraceRecorder::updateAtoms()
 {
     JSScript *script = cx->fp()->script();
     atoms = FrameAtomBase(cx, cx->fp());
-    consts = cx->fp()->hasImacropc() || script->constOffset == 0
-           ? 0 
-           : script->consts()->vector;
+    consts = (cx->fp()->hasImacropc() || !JSScript::isValidOffset(script->constOffset))
+             ? 0
+             : script->consts()->vector;
     strictModeCode_ins = w.name(w.immi(script->strictModeCode), "strict");
 }
 
@@ -7894,7 +7894,7 @@ JS_REQUIRES_STACK void
 TraceRecorder::updateAtoms(JSScript *script)
 {
     atoms = script->atomMap.vector;
-    consts = script->constOffset == 0 ? 0 : script->consts()->vector;
+    consts = JSScript::isValidOffset(script->constOffset) ? script->consts()->vector : 0;
     strictModeCode_ins = w.name(w.immi(script->strictModeCode), "strict");
 }
 
