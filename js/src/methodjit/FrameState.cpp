@@ -298,7 +298,7 @@ FrameState::storeTo(FrameEntry *fe, Address address, bool popped)
             dreg = allocReg();
             canPinDreg = false;
         } else {
-            dreg = allocReg(fe, RematInfo::DATA);
+            dreg = allocReg(fe, false, RematInfo::DATA).reg();
             fe->data.setRegister(dreg.reg());
         }
         masm.loadPayload(addressOf(fe), dreg.reg());
@@ -314,7 +314,7 @@ FrameState::storeTo(FrameEntry *fe, Address address, bool popped)
         if (canPinDreg)
             pinReg(dreg.reg());
 
-        RegisterID treg = popped ? allocReg() : allocReg(fe, RematInfo::TYPE);
+        RegisterID treg = popped ? allocReg() : allocReg(fe, false, RematInfo::TYPE).reg();
         masm.loadTypeTag(addressOf(fe), treg);
         masm.storeValueFromComponents(treg, dreg.reg(), address);
 
@@ -682,12 +682,12 @@ FrameState::syncAndKill(Registers kill, Uses uses, Uses ignore)
         /* Take the other register in the pair, if one exists. */
         if (regstate(reg).type() == RematInfo::DATA) {
             if (!fe->isType(JSVAL_TYPE_DOUBLE)) {
-                JS_ASSERT(fe->data.reg() == reg);
+                JS_ASSERT(fe->data.reg() == reg.reg());
                 if (fe->type.inRegister() && search.hasReg(fe->type.reg()))
                     search.takeReg(fe->type.reg());
             }
         } else {
-            JS_ASSERT(fe->type.reg() == reg);
+            JS_ASSERT(fe->type.reg() == reg.reg());
             if (fe->data.inRegister() && search.hasReg(fe->data.reg()))
                 search.takeReg(fe->data.reg());
         }
