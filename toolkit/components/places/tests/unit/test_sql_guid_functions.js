@@ -17,9 +17,7 @@ function check_invariants(aGuid)
   print("TEST-INFO | " + tests[index - 1].name + " | Checking guid '" +
         aGuid + "'");
 
-  const kGUIDLength = 12;
-  do_check_eq(aGuid.length, kGUIDLength);
-  do_check_true(/[a-zA-Z0-9\-_]{12}/.test(aGuid));
+  do_check_valid_places_guid(aGuid);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

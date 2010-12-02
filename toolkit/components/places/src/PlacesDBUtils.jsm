@@ -16,7 +16,7 @@
  * The Original Code is Places Database Utils code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corporation.
+ * the Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
@@ -140,8 +140,9 @@ nsPlacesDBUtils.prototype = {
     if (!selectPlacesRoot.executeStep()) {
       // We are missing the root, try to recreate it.
       let createPlacesRoot = DBConn.createStatement(
-        "INSERT INTO moz_bookmarks (id, type, fk, parent, position, title) " +
-        "VALUES (:places_root, 2, NULL, 0, 0, :title)");
+        "INSERT INTO moz_bookmarks (id, type, fk, parent, position, title, "
+      +                            "guid) "
+      + "VALUES (:places_root, 2, NULL, 0, 0, :title, GENERATE_GUID())");
       createPlacesRoot.params["places_root"] = PlacesUtils.placesRootId;
       createPlacesRoot.params["title"] = "";
       cleanupStatements.push(createPlacesRoot);
