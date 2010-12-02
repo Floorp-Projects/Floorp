@@ -2020,6 +2020,16 @@ InterpretDollar(JSContext *cx, RegExpStatics *res, jschar *dp, jschar *ep, Repla
         *skip = cp - dp;
 
         JS_CRASH_UNLESS(num <= res->parenCount());
+
+        switch (num) {
+          case 1: *path = JSContext::DOLLAR_1; break;
+          case 2: *path = JSContext::DOLLAR_2; break;
+          case 3: *path = JSContext::DOLLAR_3; break;
+          case 4: *path = JSContext::DOLLAR_4; break;
+          case 5: *path = JSContext::DOLLAR_5; break;
+          default: *path = JSContext::DOLLAR_OTHER;
+        }
+
         /* 
          * Note: we index to get the paren with the (1-indexed) pair
          * number, as opposed to a (0-indexed) paren number.
@@ -2185,9 +2195,11 @@ DoReplace(JSContext *cx, RegExpStatics *res, ReplaceData &rdata, jschar *chars)
     jschar *cp;
     jschar *bp = cp = repstr->chars();
     volatile JSContext::DollarPath path;
+#ifdef XP_WIN
     cx->dollarPath = &path;
     jschar sourceBuf[128];
     cx->blackBox = sourceBuf;
+#endif
 
     for (jschar *dp = rdata.dollar, *ep = rdata.dollarEnd; dp; dp = js_strchr_limit(dp, '$', ep)) {
         size_t len = dp - cp;
@@ -2198,11 +2210,24 @@ DoReplace(JSContext *cx, RegExpStatics *res, ReplaceData &rdata, jschar *chars)
         JSSubString sub;
         size_t skip;
         if (InterpretDollar(cx, res, dp, ep, rdata, &sub, &skip, &path)) {
+#ifdef XP_WIN
             if (((size_t(sub.chars) & 0xfffffU) + sub.length) > 0x100000U) {
                 /* Going to cross a 0xffffe address, so take a gander at the replace value. */
-                size_t peekLen = JS_MIN(rdata.dollarEnd - rdata.dollar, 128);
-                js_strncpy(sourceBuf, rdata.dollar, peekLen);
+                volatile JSSubString vsub = sub;
+                volatile jschar *repstrChars = rdata.repstr->chars();
+                volatile jschar *repstrDollar = rdata.dollar;
+                volatile jschar *repstrDollarEnd = rdata.dollarEnd;
+                cx->sub = &vsub;
+                cx->repstrChars = &repstrChars;
+                cx->repstrDollar = &repstrDollar;
+                cx->repstrDollarEnd = &repstrDollarEnd;
+                ptrdiff_t dollarDistance = rdata.dollarEnd - rdata.dollar;
+                JS_CRASH_UNLESS(dollarDistance >= 0);
+                volatile size_t peekLen = JS_MIN(rdata.repstr->length(), 128);
+                cx->peekLen = &peekLen;
+                js_strncpy(sourceBuf, rdata.repstr->chars(), peekLen);
             }
+#endif
 
             len = sub.length;
             js_strncpy(chars, sub.chars, len);
