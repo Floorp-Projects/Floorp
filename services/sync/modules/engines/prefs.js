@@ -133,16 +133,13 @@ PrefStore.prototype = {
     let ltmExists = true;
     let ltm = {};
     let enabledBefore = false;
+    let enabledPref = "lightweightThemes.isThemeSelected";
     let prevTheme = "";
     try {
       Cu.import("resource://gre/modules/LightweightThemeManager.jsm", ltm);
       ltm = ltm.LightweightThemeManager;
-
-      let enabledPref = "lightweightThemes.isThemeSelected";
-      if (this._prefs.getPrefType(enabledPref) == this._prefs.PREF_BOOL) {
-        enabledBefore = this._prefs.getBoolPref(enabledPref);
-        prevTheme = ltm.currentTheme;
-      }
+      enabledBefore = this._prefs.get(enabledPref, false);
+      prevTheme = ltm.currentTheme;
     } catch(ex) {
       ltmExists = false;
     } // LightweightThemeManager only exists in Firefox 3.6+
@@ -166,7 +163,7 @@ PrefStore.prototype = {
 
     // Notify the lightweight theme manager of all the new values
     if (ltmExists) {
-      let enabledNow = this._prefs.getBoolPref("lightweightThemes.isThemeSelected");    
+      let enabledNow = this._prefs.get(enabledPref, false);
       if (enabledBefore && !enabledNow)
         ltm.currentTheme = null;
       else if (enabledNow && ltm.usedThemes[0] != prevTheme) {
