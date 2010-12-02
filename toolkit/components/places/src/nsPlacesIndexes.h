@@ -79,6 +79,11 @@
     "lastvisitdateindex", "moz_places", "last_visit_date", "" \
   )
 
+#define CREATE_IDX_MOZ_PLACES_GUID \
+  CREATE_PLACES_IDX( \
+    "guid_uniqueindex", "moz_places", "guid", "UNIQUE" \
+  )
+
 /**
  * moz_historyvisits
  */
