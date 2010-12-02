@@ -27,7 +27,7 @@ function testCloseButton() {
 
   HUDService.disableAnimation(hudId);
   executeSoon(function() {
-    let closeButton = hudBox.querySelector(".jsterm-close-button");
+    let closeButton = hudBox.querySelector(".webconsole-close-button");
     ok(closeButton != null, "we have the close button");
 
     // XXX: ASSERTION: ###!!! ASSERTION: XPConnect is being called on a scope without a 'Components' property!: 'Error', file /home/ddahl/code/moz/mozilla-central/mozilla-central/js/src/xpconnect/src/xpcwrappednativescope.cpp, line 795
