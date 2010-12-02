@@ -2272,6 +2272,7 @@ var SelectHelperUI = {
   get showFilter() {
     return this._showFilter;
   },
+
   set showFilter(val) {
     this._showFilter = val;
     if (!this._panel.hidden)
@@ -2461,6 +2462,15 @@ var SelectHelperUI = {
       clearAll: aClearAll
     };
     Browser.selectedBrowser.messageManager.sendAsyncMessage("FormAssist:ChoiceSelect", json);
+
+    // http://www.whatwg.org/specs/web-apps/current-work/multipage/the-button-element.html#the-select-element
+    if (!this._list.multiple) {
+      this._updateControl();
+      // Update the selectedIndex so the field will fire a new change event if
+      // needed
+      this._selectedIndexes = [aIndex];
+    }
+
   }
 };
 
