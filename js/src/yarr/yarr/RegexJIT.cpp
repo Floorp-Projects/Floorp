@@ -994,7 +994,7 @@ class RegexGenerator : private MacroAssembler {
             parenthesesState.linkAlternativeBacktracks(this);
             if (term.invertOrCapture) {
                 store32(Imm32(-1), Address(output, (term.parentheses.subpatternId << 1) * sizeof(int)));
-#if DEBUG
+#if 0
                 store32(Imm32(-1), Address(output, ((term.parentheses.subpatternId << 1) + 1) * sizeof(int)));
 #endif
             }
