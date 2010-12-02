@@ -592,7 +592,6 @@ Prompt.prototype = {
 
     if (username.value && password.value) {
       PromptUtils.setAuthInfo(aAuthInfo, username.value, password.value);
-      return true;
     }
 
     let ok;
