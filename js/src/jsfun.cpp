@@ -389,20 +389,20 @@ WrapEscapingClosure(JSContext *cx, JSStackFrame *fp, JSFunction *fun)
     /* NB: GC must not occur before wscript is homed in wfun->u.i.script. */
     JSScript *wscript = JSScript::NewScript(cx, script->length, nsrcnotes,
                                             script->atomMap.length,
-                                            (script->objectsOffset != 0)
+                                            JSScript::isValidOffset(script->objectsOffset)
                                             ? script->objects()->length
                                             : 0,
                                             fun->u.i.nupvars,
-                                            (script->regexpsOffset != 0)
+                                            JSScript::isValidOffset(script->regexpsOffset)
                                             ? script->regexps()->length
                                             : 0,
-                                            (script->trynotesOffset != 0)
+                                            JSScript::isValidOffset(script->trynotesOffset)
                                             ? script->trynotes()->length
                                             : 0,
-                                            (script->constOffset != 0)
+                                            JSScript::isValidOffset(script->constOffset)
                                             ? script->consts()->length
                                             : 0,
-                                            (script->globalsOffset != 0)
+                                            JSScript::isValidOffset(script->globalsOffset)
                                             ? script->globals()->length
                                             : 0,
                                             script->nClosedArgs,
@@ -416,19 +416,19 @@ WrapEscapingClosure(JSContext *cx, JSStackFrame *fp, JSFunction *fun)
     memcpy(wscript->notes(), snbase, nsrcnotes * sizeof(jssrcnote));
     memcpy(wscript->atomMap.vector, script->atomMap.vector,
            wscript->atomMap.length * sizeof(JSAtom *));
-    if (script->objectsOffset != 0) {
+    if (JSScript::isValidOffset(script->objectsOffset)) {
         memcpy(wscript->objects()->vector, script->objects()->vector,
                wscript->objects()->length * sizeof(JSObject *));
     }
-    if (script->regexpsOffset != 0) {
+    if (JSScript::isValidOffset(script->regexpsOffset)) {
         memcpy(wscript->regexps()->vector, script->regexps()->vector,
                wscript->regexps()->length * sizeof(JSObject *));
     }
-    if (script->trynotesOffset != 0) {
+    if (JSScript::isValidOffset(script->trynotesOffset)) {
         memcpy(wscript->trynotes()->vector, script->trynotes()->vector,
                wscript->trynotes()->length * sizeof(JSTryNote));
     }
-    if (script->globalsOffset != 0) {
+    if (JSScript::isValidOffset(script->globalsOffset)) {
         memcpy(wscript->globals()->vector, script->globals()->vector,
                wscript->globals()->length * sizeof(GlobalSlotArray::Entry));
     }
@@ -2859,7 +2859,7 @@ JSObject * JS_FASTCALL
 js_AllocFlatClosure(JSContext *cx, JSFunction *fun, JSObject *scopeChain)
 {
     JS_ASSERT(FUN_FLAT_CLOSURE(fun));
-    JS_ASSERT((fun->u.i.script->upvarsOffset
+    JS_ASSERT((JSScript::isValidOffset(fun->u.i.script->upvarsOffset)
                ? fun->u.i.script->upvars()->length
                : 0) == fun->u.i.nupvars);
 

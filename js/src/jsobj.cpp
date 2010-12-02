@@ -1055,7 +1055,7 @@ EvalCacheLookup(JSContext *cx, JSString *str, JSStackFrame *caller, uintN static
                     int i = 1;
 
                     if (objarray->length == 1) {
-                        if (script->regexpsOffset != 0) {
+                        if (JSScript::isValidOffset(script->regexpsOffset)) {
                             objarray = script->regexps();
                             i = 0;
                         } else {
@@ -3538,9 +3538,9 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
     if (xdr->mode == JSXDR_ENCODE) {
         obj = *objp;
         parent = obj->getParent();
-        parentId = (xdr->script->objectsOffset == 0)
-                   ? NO_PARENT_INDEX
-                   : FindObjectIndex(xdr->script->objects(), parent);
+        parentId = JSScript::isValidOffset(xdr->script->objectsOffset)
+                   ? FindObjectIndex(xdr->script->objects(), parent)
+                   : NO_PARENT_INDEX;
         depth = (uint16)OBJ_BLOCK_DEPTH(cx, obj);
         count = (uint16)OBJ_BLOCK_COUNT(cx, obj);
         depthAndCount = (uint32)(depth << 16) | count;

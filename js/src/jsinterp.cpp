@@ -6829,7 +6829,7 @@ END_CASE(JSOP_ARRAYPUSH)
         /*
          * Look for a try block in script that can catch this exception.
          */
-        if (script->trynotesOffset == 0)
+        if (!JSScript::isValidOffset(script->trynotesOffset))
             goto no_catch;
 
         offset = (uint32)(regs.pc - script->main);

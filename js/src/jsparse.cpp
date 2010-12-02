@@ -1070,7 +1070,7 @@ Compiler::defineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *scrip
         JSScript *inner = worklist.back();
         worklist.popBack();
 
-        if (inner->objectsOffset != 0) {
+        if (JSScript::isValidOffset(inner->objectsOffset)) {
             JSObjectArray *arr = inner->objects();
             for (size_t i = 0; i < arr->length; i++) {
                 JSObject *obj = arr->vector[i];
@@ -1079,14 +1079,16 @@ Compiler::defineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *scrip
                 JSFunction *fun = obj->getFunctionPrivate();
                 JS_ASSERT(fun->isInterpreted());
                 JSScript *inner = fun->u.i.script;
-                if (inner->globalsOffset == 0 && inner->objectsOffset == 0)
+                if (!JSScript::isValidOffset(inner->globalsOffset) &&
+                    !JSScript::isValidOffset(inner->objectsOffset)) {
                     continue;
+                }
                 if (!worklist.append(inner))
                     return false;
             }
         }
 
-        if (inner->globalsOffset == 0)
+        if (!JSScript::isValidOffset(inner->globalsOffset))
             continue;
 
         GlobalSlotArray *globalUses = inner->globals();
