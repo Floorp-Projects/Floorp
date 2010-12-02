@@ -707,7 +707,11 @@ function createAndAppendElement(aParent, aTag, aAttributes)
 
 function unwrap(aObject)
 {
-  return XPCNativeWrapper.unwrap(aObject);
+  try {
+    return XPCNativeWrapper.unwrap(aObject);
+  } catch(e) {
+    return aObject;
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////
