@@ -88,10 +88,7 @@ convertRtfToNode(txIEvalContext *aContext, txResultTreeFragment *aRtf)
     txOutputFormat format;
     txMozillaXMLOutput mozHandler(&format, domFragment, PR_TRUE);
 
-    txAXMLEventHandler* handler = &mozHandler;
-    rv = aRtf->flushToHandler(&handler);
-    NS_ASSERTION(handler == &mozHandler,
-                 "This handler shouldn't have been replaced!");
+    rv = aRtf->flushToHandler(&mozHandler);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = mozHandler.closePrevious(PR_TRUE);

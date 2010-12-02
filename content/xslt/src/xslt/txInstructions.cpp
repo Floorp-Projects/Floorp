@@ -432,7 +432,7 @@ txCopyOf::execute(txExecutionState& aEs)
             txResultTreeFragment* rtf =
                 static_cast<txResultTreeFragment*>
                            (static_cast<txAExprResult*>(exprRes));
-            return rtf->flushToHandler(&aEs.mResultHandler);
+            return rtf->flushToHandler(aEs.mResultHandler);
         }
         default:
         {
