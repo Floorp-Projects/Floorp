@@ -4438,7 +4438,6 @@ nsWindow::ProcessMessageForPlugin(const MSG &aMsg,
 
     case WM_DEADCHAR:
     case WM_SYSDEADCHAR:
-    case WM_CONTEXTMENU:
 
     case WM_CUT:
     case WM_COPY:
