@@ -80,11 +80,7 @@ using namespace mozilla::dom;
     if (!mCurrentNode)                                  \
         return NS_ERROR_UNEXPECTED
 
-txMozillaXMLOutput::txMozillaXMLOutput(const nsSubstring& aRootName,
-                                       PRInt32 aRootNsID,
-                                       txOutputFormat* aFormat,
-                                       nsIDOMDocument* aSourceDocument,
-                                       nsIDOMDocument* aResultDocument,
+txMozillaXMLOutput::txMozillaXMLOutput(txOutputFormat* aFormat,
                                        nsITransformObserver* aObserver)
     : mTreeDepth(0),
       mBadChildLevel(0),
@@ -104,8 +100,6 @@ txMozillaXMLOutput::txMozillaXMLOutput(const nsSubstring& aRootName,
 
     mOutputFormat.merge(*aFormat);
     mOutputFormat.setFromDefaults();
-
-    createResultDocument(aRootName, aRootNsID, aSourceDocument, aResultDocument);
 }
 
 txMozillaXMLOutput::txMozillaXMLOutput(txOutputFormat* aFormat,

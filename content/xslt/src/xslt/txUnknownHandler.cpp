@@ -153,14 +153,17 @@ nsresult txUnknownHandler::createHandlerAndFlush(PRBool aHTMLRoot,
         format.mMethod = aHTMLRoot ? eHTMLOutput : eXMLOutput;
     }
 
-    txAXMLEventHandler *handler = nsnull;
+    nsAutoPtr<txAXMLEventHandler> handler;
     nsresult rv = mEs->mOutputHandlerFactory->createHandlerWith(&format, aName,
                                                                 aNsID,
-                                                                &handler);
+                                                                getter_Transfers(handler));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = mBuffer->flushToHandler(handler);
     NS_ENSURE_SUCCESS(rv, rv);
 
     mEs->mOutputHandler = handler;
-    mEs->mResultHandler = handler;
+    mEs->mResultHandler = handler.forget();
 
-    return mBuffer->flushToHandler(&handler);
+    return NS_OK;
 }

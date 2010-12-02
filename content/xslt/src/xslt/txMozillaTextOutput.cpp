@@ -58,13 +58,10 @@
 
 using namespace mozilla::dom;
 
-txMozillaTextOutput::txMozillaTextOutput(nsIDOMDocument* aSourceDocument,
-                                         nsIDOMDocument* aResultDocument,
-                                         nsITransformObserver* aObserver)
+txMozillaTextOutput::txMozillaTextOutput(nsITransformObserver* aObserver)
 {
     MOZ_COUNT_CTOR(txMozillaTextOutput);
     mObserver = do_GetWeakReference(aObserver);
-    createResultDocument(aSourceDocument, aResultDocument);
 }
 
 txMozillaTextOutput::txMozillaTextOutput(nsIDOMDocumentFragment* aDest)
