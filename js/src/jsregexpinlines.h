@@ -244,7 +244,7 @@ RegExp::createResult(JSContext *cx, JSString *input, int *buf, size_t matchItemC
     /*
      * Create the result array for a match. Array contents:
      *  0:              matched string
-     *  1..parenCount:  paren matches
+     *  1..pairCount-1: paren matches
      */
     JSObject *array = js_NewSlowArrayObject(cx);
     if (!array)
@@ -618,15 +618,15 @@ RegExpStatics::createRightContext(JSContext *cx, Value *out) const
 }
 
 inline void
-RegExpStatics::getParen(size_t num, JSSubString *out) const
+RegExpStatics::getParen(size_t pairNum, JSSubString *out) const
 {
-    size_t pairNum = num + 1;
+    checkParenNum(pairNum);
     if (!pairIsPresent(pairNum)) {
         *out = js_EmptySubString;
         return;
     }
     out->chars = matchPairsInput->chars() + getCrash(pairNum, 0);
-    out->length = getParenLength(num);
+    out->length = getParenLength(pairNum);
 }
 
 inline void
@@ -645,12 +645,13 @@ RegExpStatics::getLastMatch(JSSubString *out) const
 inline void
 RegExpStatics::getLastParen(JSSubString *out) const
 {
-    size_t parenCount = getParenCount();
-    if (!parenCount) {
+    size_t pairCount = pairCountCrash();
+    /* Note: the first pair is the whole match. */
+    if (pairCount <= 1) {
         *out = js_EmptySubString;
         return;
     }
-    getParen(parenCount - 1, out);
+    getParen(pairCount - 1, out);
 }
 
 inline void
