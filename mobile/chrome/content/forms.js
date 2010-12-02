@@ -192,9 +192,24 @@ FormAssistant.prototype = {
       }
 
       case "FormAssist:ChoiceChange": {
-        // ChoiceChange happened once we have move to an other element so we 
-        // should remenber the used wrapper
+        // ChoiceChange could happened once we have move to an other element or
+        // to nothing, so we should keep the used wrapper in mind
         this._selectWrapper.fireOnChange();
+
+        // New elements can be shown when a select is updated so we need to
+        // reconstruct the inner elements array and to take care of possible
+        // focus change, this is why we use "self.currentElement" instead of 
+        // using directly "currentElement".
+        let self = this;
+        let timer = new Util.Timeout(function() {
+          let currentElement = self.currentElement;
+          if (!currentElement)
+            return;
+
+          self._elements = [];
+          self._currentIndex = self._getAllElements(currentElement);
+        });
+        timer.once(0);
         break;
       }
 
