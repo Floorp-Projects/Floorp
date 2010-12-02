@@ -177,13 +177,6 @@ nsChromeRegistry::GetService()
 nsresult
 nsChromeRegistry::Init()
 {
-  // Check to see if necko and the JAR protocol handler are registered yet
-  // if not, somebody is doing work during XPCOM registration that they
-  // shouldn't be doing. See bug 292549, where JS components are trying
-  // to call Components.utils.import("chrome:///") early in registration
-  NS_ASSERTION(nsCOMPtr<nsIIOService>(mozilla::services::GetIOService()),
-               "I/O service not registered or available early enough?");
-
   if (!mOverrideTable.Init())
     return NS_ERROR_FAILURE;
 
@@ -556,6 +549,7 @@ nsChromeRegistry::FlushAllCaches()
 NS_IMETHODIMP
 nsChromeRegistry::ReloadChrome()
 {
+  UpdateSelectedLocale();
   FlushAllCaches();
   // Do a reload of all top level windows.
   nsresult rv = NS_OK;

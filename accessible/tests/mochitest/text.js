@@ -124,6 +124,103 @@ function testTextBeforeOffset(aOffset, aBoundaryType,
   }
 }
 
+/**
+ * Test word count for an element.
+ *
+ * @param aElement   [in] element identifier
+ * @param aCount     [in] Expected word count
+ * @param aToDoFlag  [in] kTodo or kOk for returned text
+ */
+function testWordCount(aElement, aCount, aToDoFlag)
+{
+  var isFunc = (aToDoFlag == kTodo) ? todo_is : is;
+  var acc = getAccessible(aElement, nsIAccessibleText);
+  var startOffsetObj = {}, endOffsetObj = {};
+  var length = acc.characterCount;
+  var offset = 0;
+  var wordCount = 0;
+  while (true) {
+    var text = acc.getTextAtOffset(offset, BOUNDARY_WORD_START,
+                                   startOffsetObj, endOffsetObj);
+    if (offset >= length)
+      break;
+
+    wordCount++;
+    offset = endOffsetObj.value;
+  }
+  isFunc(wordCount, aCount,  "wrong words count for '" + acc.getText(0, -1) + "': " +
+         wordCount);
+}
+
+/**
+ * Test word at a position for an element.
+ *
+ * @param aElement    [in] element identifier
+ * @param aWordIndex  [in] index of the word to test
+ * @param aText       [in] expected text for that word
+ * @param aToDoFlag   [in] kTodo or kOk for returned text
+ */
+function testWordAt(aElement, aWordIndex, aText, aToDoFlag)
+{
+  var isFunc = (aToDoFlag == kTodo) ? todo_is : is;
+  var acc = getAccessible(aElement, nsIAccessibleText);
+  var startOffsetObj = {}, endOffsetObj = {};
+  var length = acc.characterCount;
+  var offset = 0;
+  var wordIndex = -1;
+  var wordFountAtOffset = -1;
+  while (true) {
+    var text = acc.getTextAtOffset(offset, BOUNDARY_WORD_START,
+                                   startOffsetObj, endOffsetObj);
+    if (offset >= length)
+      break;
+
+    wordIndex++;
+    offset = endOffsetObj.value;
+    if (wordIndex == aWordIndex) {
+       wordFountAtOffset = startOffsetObj.value;
+       break;
+    }
+  } 
+  if (wordFountAtOffset >= 0) {
+    var text = acc.getTextAtOffset(wordFountAtOffset, BOUNDARY_WORD_END,
+                                   startOffsetObj, endOffsetObj);
+
+    if (endOffsetObj.value < wordFountAtOffset) {
+      todo(false,  "wrong start and end offset for word '" + aWordIndex + "': " +
+           " of text '" + acc.getText(0, -1) + "'");
+      return;
+    }
+
+    text = acc.getText(wordFountAtOffset, endOffsetObj.value);
+    isFunc(text, aText,  "wrong text for word at pos '" + aWordIndex + "': " +
+           " of text '" + acc.getText(0, -1) + "'");
+  }
+  else {
+    isFunc(false, "failed to find word " + aText + " at word pos " + aWordIndex +
+           " of text '" + acc.getText(0, -1) + "'");
+  }
+}
+
+/**
+ * Test words in a element.
+ *
+ * @param aElement   [in]           element identifier
+ * @param aWords     [in]           array of expected words
+ * @param aToDoFlag  [in, optional] kTodo or kOk for returned text
+ */
+function testWords(aElement, aWords, aToDoFlag)
+{
+  if (aToDoFlag == null)
+    aToDoFlag = kOk;
+
+  testWordCount(aElement, aWords.length, aToDoFlag);
+
+  for (var i = 0; i < aWords.length; i++) {
+    testWordAt(aElement, i, aWords[i], aToDoFlag);
+  }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Private
 

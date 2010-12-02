@@ -46,6 +46,13 @@ Cu.import("resource://services-sync/ext/Sync.js");
 Cu.import("resource://services-sync/log4moz.js");
 Cu.import("resource://services-sync/util.js");
 
+// Avoid circular import.
+__defineGetter__("Service", function() {
+  delete this.Service;
+  Cu.import("resource://services-sync/service.js", this);
+  return this.Service;
+});
+
 Utils.lazy(this, 'ID', IDManager);
 
 // For storing identities we'll use throughout Weave

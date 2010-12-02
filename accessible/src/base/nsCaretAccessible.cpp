@@ -201,78 +201,76 @@ nsCaretAccessible::RemoveDocSelectionListener(nsIPresShell *aShell)
 }
 
 NS_IMETHODIMP
-nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc,
-                                          nsISelection *aSel,
+nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
+                                          nsISelection* aSelection,
                                           PRInt16 aReason)
 {
-  NS_ENSURE_ARG(aDoc);
+  NS_ENSURE_ARG(aDOMDocument);
+  NS_ENSURE_STATE(mRootAccessible);
 
-  nsCOMPtr<nsIDocument> document(do_QueryInterface(aDoc));
-  nsDocAccessible *docAccessible = GetAccService()->GetDocAccessible(document);
+  nsCOMPtr<nsIDocument> documentNode(do_QueryInterface(aDOMDocument));
+  nsDocAccessible* document = GetAccService()->GetDocAccessible(documentNode);
 
   // Don't fire events until document is loaded.
-  if (!docAccessible || !docAccessible->IsContentLoaded())
+  if (!document || !document->IsContentLoaded())
     return NS_OK;
 
-  nsCOMPtr<nsISelection2> sel2(do_QueryInterface(aSel));
+  nsCOMPtr<nsISelection2> sel2(do_QueryInterface(aSelection));
 
   PRInt16 type = 0;
   sel2->GetType(&type);
 
   if (type == nsISelectionController::SELECTION_NORMAL)
-    return NormalSelectionChanged(aDoc, aSel);
+    NormalSelectionChanged(document, aSelection);
 
-  if (type == nsISelectionController::SELECTION_SPELLCHECK)
-    return SpellcheckSelectionChanged(aDoc, aSel);
+  else if (type == nsISelectionController::SELECTION_SPELLCHECK)
+    SpellcheckSelectionChanged(document, aSelection);
 
   return NS_OK;
 }
 
-nsresult
-nsCaretAccessible::NormalSelectionChanged(nsIDOMDocument *aDoc,
-                                          nsISelection *aSel)
+void
+nsCaretAccessible::NormalSelectionChanged(nsDocAccessible* aDocument,
+                                          nsISelection* aSelection)
 {
-  NS_ENSURE_TRUE(mRootAccessible, NS_ERROR_FAILURE);
-
-  mLastUsedSelection = do_GetWeakReference(aSel);
+  mLastUsedSelection = do_GetWeakReference(aSelection);
 
   PRInt32 rangeCount = 0;
-  nsresult rv = aSel->GetRangeCount(&rangeCount);
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  aSelection->GetRangeCount(&rangeCount);
   if (rangeCount == 0) {
     mLastTextAccessible = nsnull;
-    return NS_OK; // No selection
+    return; // No selection
   }
 
-  nsCOMPtr<nsINode> textNode;
   nsRefPtr<nsHyperTextAccessible> textAcc =
-    nsAccUtils::GetTextAccessibleFromSelection(aSel, getter_AddRefs(textNode));
-  NS_ENSURE_STATE(textAcc);
+    nsAccUtils::GetTextAccessibleFromSelection(aSelection);
+  if (!textAcc)
+    return;
 
-  PRInt32 caretOffset;
-  rv = textAcc->GetCaretOffset(&caretOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
+  PRInt32 caretOffset = -1;
+  nsresult rv = textAcc->GetCaretOffset(&caretOffset);
+  if (NS_FAILED(rv))
+    return;
 
   if (textAcc == mLastTextAccessible && caretOffset == mLastCaretOffset) {
-    PRInt32 selectionCount;
+    PRInt32 selectionCount = 0;
     textAcc->GetSelectionCount(&selectionCount);   // Don't swallow similar events when selecting text
-    if (!selectionCount) {
-      return NS_OK;  // Swallow duplicate caret event
-    }
+    if (!selectionCount)
+      return;  // Swallow duplicate caret event
   }
+
   mLastCaretOffset = caretOffset;
   mLastTextAccessible.swap(textAcc);
 
-  nsRefPtr<AccEvent> event = new AccCaretMoveEvent(textNode);
-  NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
-
-  return mRootAccessible->FireDelayedAccessibleEvent(event);
+  nsRefPtr<AccEvent> event =
+    new AccCaretMoveEvent(mLastTextAccessible->GetNode());
+  if (event)
+    aDocument->FireDelayedAccessibleEvent(event);
 }
 
-nsresult
-nsCaretAccessible::SpellcheckSelectionChanged(nsIDOMDocument *aDoc,
-                                              nsISelection *aSel)
+void
+nsCaretAccessible::SpellcheckSelectionChanged(nsDocAccessible* aDocument,
+                                              nsISelection* aSelection)
 {
   // XXX: fire an event for accessible of focus node of the selection. If
   // spellchecking is enabled then we will fire the number of events for
@@ -281,14 +279,14 @@ nsCaretAccessible::SpellcheckSelectionChanged(nsIDOMDocument *aDoc,
   // @spellcheck="false" on html:body) then we won't fire any event.
 
   nsRefPtr<nsHyperTextAccessible> textAcc =
-    nsAccUtils::GetTextAccessibleFromSelection(aSel);
-  NS_ENSURE_STATE(textAcc);
+    nsAccUtils::GetTextAccessibleFromSelection(aSelection);
+  if (!textAcc)
+    return;
 
   nsRefPtr<AccEvent> event =
     new AccEvent(nsIAccessibleEvent::EVENT_TEXT_ATTRIBUTE_CHANGED, textAcc);
-
-  nsEventShell::FireEvent(event);
-  return NS_OK;
+  if (event)
+    aDocument->FireDelayedAccessibleEvent(event);
 }
 
 nsIntRect

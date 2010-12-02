@@ -116,8 +116,18 @@ public:
   nsIntRect GetCaretRect(nsIWidget **aOutWidget);
 
 protected:
-  nsresult NormalSelectionChanged(nsIDOMDocument *aDoc, nsISelection *aSel);
-  nsresult SpellcheckSelectionChanged(nsIDOMDocument *aDoc, nsISelection *aSel);
+  /**
+   * Process normal selection change and fire caret move event.
+   */
+  void NormalSelectionChanged(nsDocAccessible* aDocument,
+                              nsISelection* aSelection);
+
+  /**
+   * Process spellcheck selection change and fire text attribute changed event
+   * for invalid text attribute.
+   */
+  void SpellcheckSelectionChanged(nsDocAccessible* aDocument,
+                                  nsISelection* aSelection);
 
   /**
    * Return selection controller for the given node.

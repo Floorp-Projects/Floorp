@@ -16,10 +16,23 @@ function change_content_type() {
 function TestListener() {
 }
 TestListener.prototype.onStartRequest = function(request, context) {
-  change_content_type();
+  try {
+    // request might be different from channel
+    channel = request.QueryInterface(Components.interfaces.nsIChannel);
+
+    change_content_type();
+  } catch (ex) {
+    print(ex);
+    throw ex;
+  }
 }
 TestListener.prototype.onStopRequest = function(request, context, status) {
-  change_content_type();
+  try {
+    change_content_type();
+  } catch (ex) {
+    print(ex);
+    // don't re-throw ex to avoid hanging the test
+  }
 
   do_timeout(0, after_channel_closed);
 }
