@@ -3193,43 +3193,62 @@ HeadsUpDisplay.prototype = {
    */
   makeFilterToolbar: function HUD_makeFilterToolbar()
   {
-    let buttons = ["Network", "CSSParser", "Exception", "Error",
-                   "Info", "Warn", "Log",];
-
-    const pageButtons = [
-      { prefKey: "network", name: "PageNet" },
-      { prefKey: "cssparser", name: "PageCSS" },
-      { prefKey: "exception", name: "PageJS" }
-    ];
-    const consoleButtons = [
-      { prefKey: "error", name: "ConsoleErrors" },
-      { prefKey: "warn", name: "ConsoleWarnings" },
-      { prefKey: "info", name: "ConsoleInfo" },
-      { prefKey: "log", name: "ConsoleLog" }
+    const BUTTONS = [
+      {
+        name: "PageNet",
+        category: "net",
+        severities: [
+          { name: "ConsoleErrors", prefKey: "network" },
+          { name: "ConsoleLog", prefKey: "networkinfo" }
+        ]
+      },
+      {
+        name: "PageCSS",
+        category: "css",
+        severities: [
+          { name: "ConsoleErrors", prefKey: "csserror" },
+          { name: "ConsoleWarnings", prefKey: "cssparser" }
+        ]
+      },
+      {
+        name: "PageJS",
+        category: "js",
+        severities: [
+          { name: "ConsoleErrors", prefKey: "exception" },
+          { name: "ConsoleWarnings", prefKey: "jswarn" }
+        ]
+      },
+      {
+        name: "PageWebDeveloper",
+        category: "webdev",
+        severities: [
+          { name: "ConsoleErrors", prefKey: "error" },
+          { name: "ConsoleWarnings", prefKey: "warn" },
+          { name: "ConsoleInfo", prefKey: "info" },
+          { name: "ConsoleLog", prefKey: "log" }
+        ]
+      }
     ];
 
     let toolbar = this.makeXULNode("toolbar");
     toolbar.setAttribute("class", "hud-console-filter-toolbar");
-    toolbar.setAttribute("mode", "text");
+    toolbar.setAttribute("mode", "full");
 
-    let pageCategoryTitle = this.getStr("categoryPage");
-    this.addButtonCategory(toolbar, pageCategoryTitle, pageButtons);
+    this.makeCloseButton(toolbar);
 
-    let separator = this.makeXULNode("separator");
-    separator.setAttribute("orient", "vertical");
-    toolbar.appendChild(separator);
-
-    let consoleCategoryTitle = this.getStr("categoryConsole");
-    this.addButtonCategory(toolbar, consoleCategoryTitle, consoleButtons);
+    for (let i = 0; i < BUTTONS.length; i++) {
+      this.makeFilterButton(toolbar, BUTTONS[i]);
+    }
 
     toolbar.appendChild(this.filterSpacer);
     toolbar.appendChild(this.filterBox);
+    this.makeClearConsoleButton(toolbar);
+
     return toolbar;
   },
 
   /**
-   * Creates the context menu on the console, which contains the "clear
-   * console" functionality.
+   * Creates the context menu on the console.
    *
    * @param nsIDOMNode aOutputNode
    *        The console output DOM node.
@@ -3267,79 +3286,109 @@ HeadsUpDisplay.prototype = {
     selectAllItem.setAttribute("oncommand", "HUDConsoleUI.command(this);");
     menuPopup.appendChild(selectAllItem);
 
-    menuPopup.appendChild(this.makeXULNode("menuseparator"));
-
-    let clearItem = this.makeXULNode("menuitem");
-    clearItem.setAttribute("label", this.getStr("clearConsoleCmd.label"));
-    clearItem.setAttribute("accesskey",
-                           this.getStr("clearConsoleCmd.accesskey"));
-    clearItem.setAttribute("hudId", this.hudId);
-    clearItem.setAttribute("buttonType", "clear");
-    clearItem.setAttribute("oncommand", "HUDConsoleUI.command(this);");
-    menuPopup.appendChild(clearItem);
-
     aConsoleWrapper.appendChild(menuPopup);
     aConsoleWrapper.setAttribute("context", id);
   },
 
-  makeButton: function HUD_makeButton(aName, aPrefKey, aType)
+  /**
+   * Creates one of the filter buttons on the toolbar.
+   *
+   * @param nsIDOMNode aParent
+   *        The node to which the filter button should be appended.
+   * @param object aDescriptor
+   *        A descriptor that contains info about the button. Contains "name",
+   *        "category", and "prefKey" properties, and optionally a "severities"
+   *        property.
+   * @return void
+   */
+  makeFilterButton: function HUD_makeFilterButton(aParent, aDescriptor)
   {
-    var self = this;
-    let prefKey = aPrefKey;
+    let toolbarButton = this.makeXULNode("toolbarbutton");
+    aParent.appendChild(toolbarButton);
 
-    let btn;
-    if (aType == "checkbox") {
-      btn = this.makeXULNode("checkbox");
-      btn.setAttribute("type", aType);
-    } else {
-      btn = this.makeXULNode("toolbarbutton");
+    let toggleFilter = HeadsUpDisplayUICommands.toggleFilter;
+    toolbarButton.addEventListener("click", toggleFilter, false);
+
+    let name = aDescriptor.name;
+    toolbarButton.setAttribute("type", "menu-button");
+    toolbarButton.setAttribute("label", this.getStr("btn" + name));
+    toolbarButton.setAttribute("tooltip", this.getStr("tip" + name));
+    toolbarButton.setAttribute("category", aDescriptor.category);
+    toolbarButton.setAttribute("hudId", this.hudId);
+    toolbarButton.classList.add("webconsole-filter-button");
+
+    let menuPopup = this.makeXULNode("menupopup");
+    toolbarButton.appendChild(menuPopup);
+
+    let allChecked = true;
+    for (let i = 0; i < aDescriptor.severities.length; i++) {
+      let severity = aDescriptor.severities[i];
+      let menuItem = this.makeXULNode("menuitem");
+      menuItem.setAttribute("label", this.getStr("btn" + severity.name));
+      menuItem.setAttribute("type", "checkbox");
+      menuItem.setAttribute("autocheck", "false");
+      menuItem.setAttribute("hudId", this.hudId);
+
+      let prefKey = severity.prefKey;
+      menuItem.setAttribute("prefKey", prefKey);
+
+      let checked = this.filterPrefs[prefKey];
+      menuItem.setAttribute("checked", checked);
+      if (!checked) {
+        allChecked = false;
+      }
+
+      menuItem.addEventListener("command", toggleFilter, false);
+
+      menuPopup.appendChild(menuItem);
     }
 
-    btn.setAttribute("hudId", this.hudId);
-    btn.setAttribute("buttonType", prefKey);
-    btn.setAttribute("class", "hud-filter-btn");
-    let key = "btn" + aName;
-    btn.setAttribute("label", this.getStr(key));
-    key = "tip" + aName;
-    btn.setAttribute("tooltip", this.getStr(key));
-
-    if (aType == "checkbox") {
-      btn.setAttribute("checked", this.filterPrefs[prefKey]);
-      function toggle(btn) {
-        self.consoleFilterCommands.toggle(btn);
-      };
-
-      btn.setAttribute("oncommand", "HUDConsoleUI.toggleFilter(this);");
-    }
-    else {
-      var command = "HUDConsoleUI.command(this)";
-      btn.setAttribute("oncommand", command);
-    }
-    return btn;
+    toolbarButton.setAttribute("checked", allChecked);
   },
 
   /**
-   * Appends a category title and a series of buttons to the filter bar.
+   * Creates the close button on the toolbar.
    *
-   * @param nsIDOMNode aToolbar
-   *        The DOM node to which to add the category.
-   * @param string aTitle
-   *        The title for the category.
-   * @param Array aButtons
-   *        The buttons, specified as objects with "name" and "prefKey"
-   *        properties.
-   * @returns nsIDOMNode
+   * @param nsIDOMNode aParent
+   *        The toolbar to attach the close button to.
+   * @return void
    */
-  addButtonCategory: function(aToolbar, aTitle, aButtons) {
-    let lbl = this.makeXULNode("label");
-    lbl.setAttribute("class", "hud-filter-cat");
-    lbl.setAttribute("value", aTitle);
-    aToolbar.appendChild(lbl);
-
-    for (let i = 0; i < aButtons.length; i++) {
-      let btn = aButtons[i];
-      aToolbar.appendChild(this.makeButton(btn.name, btn.prefKey, "checkbox"));
+  makeCloseButton: function HUD_makeCloseButton(aToolbar)
+  {
+    function HUD_closeButton_onCommand() {
+      let tab = this.ownerDocument.defaultView.gBrowser.selectedTab;
+      HUDService.deactivateHUDForContext(tab);
     }
+
+    let closeButton = this.makeXULNode("toolbarbutton");
+    closeButton.classList.add("webconsole-close-button");
+    closeButton.addEventListener("command", HUD_closeButton_onCommand, false);
+
+    aToolbar.appendChild(closeButton);
+  },
+
+  /**
+   * Creates the "Clear Console" button.
+   *
+   * @param nsIDOMNode aParent
+   *        The toolbar to attach the "Clear Console" button to.
+   * @param string aHUDId
+   *        The ID of the console.
+   * @return void
+   */
+  makeClearConsoleButton: function HUD_makeClearConsoleButton(aToolbar)
+  {
+    let hudId = this.hudId;
+    function HUD_clearButton_onCommand() {
+      HUDService.clearDisplay(hudId);
+    }
+
+    let clearButton = this.makeXULNode("toolbarbutton");
+    clearButton.setAttribute("label", this.getStr("btnClear"));
+    clearButton.classList.add("webconsole-clear-console-button");
+    clearButton.addEventListener("command", HUD_clearButton_onCommand, false);
+
+    aToolbar.appendChild(clearButton);
   },
 
   createHUD: function HUD_createHUD()
@@ -4573,12 +4622,6 @@ JSTermFirefoxMixin.prototype = {
     inputNode.setAttribute("rows", "1");
     inputContainer.appendChild(inputNode);
 
-    let closeButton = this.xulElementFactory("button");
-    closeButton.setAttribute("class", "jsterm-close-button");
-    inputContainer.appendChild(closeButton);
-    closeButton.addEventListener("command", HeadsUpDisplayUICommands.toggleHUD,
-                                 false);
-
     if (this.existingConsoleNode == undefined) {
       // create elements
       let term = this.xulElementFactory("vbox");
@@ -4904,27 +4947,84 @@ HeadsUpDisplayUICommands = {
     }
   },
 
-  toggleFilter: function UIC_toggleFilter(aButton) {
-    var filter = aButton.getAttribute("buttonType");
-    var hudId = aButton.getAttribute("hudId");
-    var state = HUDService.getFilterState(hudId, filter);
-    if (state) {
-      HUDService.setFilterState(hudId, filter, false);
-      aButton.setAttribute("checked", false);
+  /**
+   * The event handler that is called whenever a user switches a filter on or
+   * off.
+   *
+   * @param nsIDOMEvent aEvent
+   *        The event that triggered the filter change.
+   * @return boolean
+   */
+  toggleFilter: function UIC_toggleFilter(aEvent) {
+    let hudId = this.getAttribute("hudId");
+    switch (this.tagName) {
+      case "toolbarbutton": {
+        let originalTarget = aEvent.originalTarget;
+        let classes = originalTarget.classList;
+
+        if (originalTarget.localName !== "toolbarbutton") {
+          // Oddly enough, the click event is sent to the menu button when
+          // selecting a menu item with the mouse. Detect this case and bail
+          // out.
+          break;
+        }
+
+        if (!classes.contains("toolbarbutton-menubutton-button") &&
+            originalTarget.getAttribute("type") === "menu-button") {
+          // This is a filter button with a drop-down. The user clicked the
+          // drop-down, so do nothing. (The menu will automatically appear
+          // without our intervention.)
+          break;
+        }
+
+        let state = this.getAttribute("checked") !== "true";
+        this.setAttribute("checked", state);
+
+        // This is a filter button with a drop-down, and the user clicked the
+        // main part of the button. Go through all the severities and toggle
+        // their associated filters.
+        let menuItems = this.querySelectorAll("menuitem");
+        for (let i = 0; i < menuItems.length; i++) {
+          menuItems[i].setAttribute("checked", state);
+          let prefKey = menuItems[i].getAttribute("prefKey");
+          HUDService.setFilterState(hudId, prefKey, state);
+        }
+        break;
+      }
+
+      case "menuitem": {
+        let state = this.getAttribute("checked") !== "true";
+        this.setAttribute("checked", state);
+
+        let prefKey = this.getAttribute("prefKey");
+        HUDService.setFilterState(hudId, prefKey, state);
+
+        // Adjust the state of the button appropriately.
+        let menuPopup = this.parentNode;
+
+        let allChecked = true;
+        let menuItem = menuPopup.firstChild;
+        while (menuItem) {
+          if (menuItem.getAttribute("checked") !== "true") {
+            allChecked = false;
+            break;
+          }
+          menuItem = menuItem.nextSibling;
+        }
+
+        let toolbarButton = menuPopup.parentNode;
+        toolbarButton.setAttribute("checked", allChecked);
+        break;
+      }
     }
-    else {
-      HUDService.setFilterState(hudId, filter, true);
-      aButton.setAttribute("checked", true);
-    }
+
+    return true;
   },
 
   command: function UIC_command(aButton) {
     var filter = aButton.getAttribute("buttonType");
     var hudId = aButton.getAttribute("hudId");
     switch (filter) {
-      case "clear":
-        HUDService.clearDisplay(hudId);
-        break;
       case "selectAll":
         let outputNode = HUDService.getOutputNodeById(hudId);
         let chromeWindow = outputNode.ownerDocument.defaultView;
@@ -4951,8 +5051,11 @@ const GLOBAL_STORAGE_INDEX_ID = "GLOBAL_CONSOLE";
 const PREFS_BRANCH_PREF = "devtools.hud.display.filter";
 const PREFS_PREFIX = "devtools.hud.display.filter.";
 const PREFS = { network: PREFS_PREFIX + "network",
+                networkinfo: PREFS_PREFIX + "networkinfo",
+                csserror: PREFS_PREFIX + "csserror",
                 cssparser: PREFS_PREFIX + "cssparser",
                 exception: PREFS_PREFIX + "exception",
+                jswarn: PREFS_PREFIX + "jswarn",
                 error: PREFS_PREFIX + "error",
                 info: PREFS_PREFIX + "info",
                 warn: PREFS_PREFIX + "warn",
@@ -4993,8 +5096,11 @@ function ConsoleStorage()
   if (filterPrefs) {
     defaultDisplayPrefs = {
       network: (prefs.getBoolPref(PREFS.network) ? true: false),
+      networkinfo: (prefs.getBoolPref(PREFS.networkinfo) ? true: false),
+      csserror: (prefs.getBoolPref(PREFS.csserror) ? true: false),
       cssparser: (prefs.getBoolPref(PREFS.cssparser) ? true: false),
       exception: (prefs.getBoolPref(PREFS.exception) ? true: false),
+      jswarn: (prefs.getBoolPref(PREFS.jswarn) ? true: false),
       error: (prefs.getBoolPref(PREFS.error) ? true: false),
       info: (prefs.getBoolPref(PREFS.info) ? true: false),
       warn: (prefs.getBoolPref(PREFS.warn) ? true: false),
@@ -5006,8 +5112,11 @@ function ConsoleStorage()
     prefs.setBoolPref(PREFS_BRANCH_PREF, false);
     // default prefs for each HeadsUpDisplay
     prefs.setBoolPref(PREFS.network, true);
+    prefs.setBoolPref(PREFS.networkinfo, true);
+    prefs.setBoolPref(PREFS.csserror, true);
     prefs.setBoolPref(PREFS.cssparser, true);
     prefs.setBoolPref(PREFS.exception, true);
+    prefs.setBoolPref(PREFS.jswarn, true);
     prefs.setBoolPref(PREFS.error, true);
     prefs.setBoolPref(PREFS.info, true);
     prefs.setBoolPref(PREFS.warn, true);
@@ -5016,8 +5125,11 @@ function ConsoleStorage()
 
     defaultDisplayPrefs = {
       network: prefs.getBoolPref(PREFS.network),
+      networkinfo: prefs.getBoolPref(PREFS.networkinfo),
+      csserror: prefs.getBoolPref(PREFS.csserror),
       cssparser: prefs.getBoolPref(PREFS.cssparser),
       exception: prefs.getBoolPref(PREFS.exception),
+      jswarn: prefs.getBoolPref(PREFS.jswarn),
       error: prefs.getBoolPref(PREFS.error),
       info: prefs.getBoolPref(PREFS.info),
       warn: prefs.getBoolPref(PREFS.warn),
@@ -5033,8 +5145,12 @@ ConsoleStorage.prototype = {
   updateDefaultDisplayPrefs:
   function CS_updateDefaultDisplayPrefs(aPrefsObject) {
     prefs.setBoolPref(PREFS.network, (aPrefsObject.network ? true : false));
+    prefs.setBoolPref(PREFS.networkinfo,
+                      (aPrefsObject.networkinfo ? true : false));
+    prefs.setBoolPref(PREFS.csserror, (aPrefsObject.csserror ? true : false));
     prefs.setBoolPref(PREFS.cssparser, (aPrefsObject.cssparser ? true : false));
     prefs.setBoolPref(PREFS.exception, (aPrefsObject.exception ? true : false));
+    prefs.setBoolPref(PREFS.jswarn, (aPrefsObject.jswarn ? true : false));
     prefs.setBoolPref(PREFS.error, (aPrefsObject.error ? true : false));
     prefs.setBoolPref(PREFS.info, (aPrefsObject.info ? true : false));
     prefs.setBoolPref(PREFS.warn, (aPrefsObject.warn ? true : false));
