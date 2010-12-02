@@ -596,3 +596,14 @@ function do_check_guid_for_uri(aURI)
   do_check_valid_places_guid(stmt.row.guid);
   stmt.finalize();
 }
+
+/**
+ * Logs info to the console in the standard way (includes the filename).
+ *
+ * @param aMessage
+ *        The message to log to the console.
+ */
+function do_log_info(aMessage)
+{
+  print("TEST-INFO | " + _TEST_FILE + " | " + aMessage);
+}
