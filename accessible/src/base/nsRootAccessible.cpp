@@ -227,7 +227,7 @@ nsRootAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
 }
 
 const char* const docEvents[] = {
-#ifdef DEBUG
+#ifdef DEBUG_DRAGDROPSTART
   // Capture mouse over events and fire fake DRAGDROPSTART event to simplify
   // debugging a11y objects with event viewers
   "mouseover",
@@ -744,7 +744,7 @@ nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     FireDelayedAccessibleEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE,
                                targetNode, AccEvent::eRemoveDupes);
   }
-#ifdef DEBUG
+#ifdef DEBUG_DRAGDROPSTART
   else if (eventType.EqualsLiteral("mouseover")) {
     nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_DRAGDROP_START,
                             accessible);
