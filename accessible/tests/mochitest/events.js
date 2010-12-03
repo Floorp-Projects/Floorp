@@ -36,6 +36,11 @@ var gA11yEventDumpID = "";
 var gA11yEventDumpToConsole = false;
 
 /**
+ * Set up this variable to dump event processing into error console.
+ */
+var gA11yEventDumpToAppConsole = false;
+
+/**
  * Executes the function when requested event is handled.
  *
  * @param aEventType  [in] event type
@@ -270,10 +275,12 @@ function eventQueue(aEventType)
     // Start processing of next invoker.
     invoker = this.getNextInvoker();
 
-    this.setEventHandler(invoker);
+    if (gLogger.isEnabled()) {
+      gLogger.logToConsole("Event queue: \n  invoke: " + invoker.getID());
+      gLogger.logToDOM("EQ: invoke: " + invoker.getID(), true);
+    }
 
-    if (gA11yEventDumpToConsole)
-      dump("\nEvent queue: \n  invoke: " + invoker.getID() + "\n");
+    this.setEventHandler(invoker);
 
     if (invoker.invoke() == INVOKER_ACTION_FAILED) {
       // Invoker failed to prepare action, fail and finish tests.
@@ -402,6 +409,22 @@ function eventQueue(aEventType)
 
       for (var idx = 0; idx < this.mEventSeq.length; idx++) {
         var eventType = this.getEventType(idx);
+
+        if (gLogger.isEnabled()) {
+          var strEventType = (typeof eventType == "string") ? eventType :
+            eventTypeToString(eventType);
+
+          var msg = "registered";
+          if (this.isEventUnexpected(idx))
+            msg += " unexpected";
+
+          msg += ": event type: " + strEventType + ", target: " +
+            prettyName(this.getEventTarget(idx));
+
+          gLogger.logToConsole(msg);
+          gLogger.logToDOM(msg, true);
+        }
+
         if (typeof eventType == "string") {
           // DOM event
           var target = this.getEventTarget(idx);
@@ -466,6 +489,11 @@ function eventQueue(aEventType)
     return invoker.getID();
   }
 
+  this.isEventUnexpected = function eventQueue_isEventUnexpected(aIdx)
+  {
+    return this.mEventSeq[aIdx].unexpected;
+  }
+
   this.compareEvents = function eventQueue_compareEvents(aIdx, aEvent)
   {
     var eventType1 = this.getEventType(aIdx);
@@ -526,7 +554,7 @@ function eventQueue(aEventType)
                                                            aExpectedEventIdx,
                                                            aMatch)
   {
-    if (!gA11yEventDumpID) // debug stuff
+    if (!gLogger.isEnabled()) // debug stuff
       return;
 
     // Dump DOM event information. Skip a11y event since it is dumped by
@@ -534,46 +562,31 @@ function eventQueue(aEventType)
     if (aOrigEvent instanceof nsIDOMEvent) {
       var info = "Event type: " + aOrigEvent.type;
       info += ". Target: " + prettyName(aOrigEvent.originalTarget);
-      dumpInfoToDOM(info);
+      gLogger.logToDOM(info);
     }
 
     var currType = this.getEventType(aExpectedEventIdx);
     var currTarget = this.getEventTarget(aExpectedEventIdx);
 
-    var containerTagName = document instanceof nsIDOMHTMLDocument ?
-      "div" : "description";
-    var inlineTagName = document instanceof nsIDOMHTMLDocument ?
-      "span" : "description";
-
-    var container = document.createElement(containerTagName);
-    container.setAttribute("style", "padding-left: 10px;");
-
-    var text1 = document.createTextNode("EQ: ");
-    container.appendChild(text1);
-
-    var styledNode = document.createElement(inlineTagName);
+    var msg = "EQ: ";
+    var emphText = "";
     if (aMatch) {
-      styledNode.setAttribute("style", "color: blue;");
-      styledNode.textContent = "matched";
+      emphText = "matched ";
 
-      // Dump matched events into console.
-      if (gA11yEventDumpToConsole)
-        dump("\n*****\nEQ matched: " + eventTypeToString(currType) + "\n*****\n");
+      var consoleMsg =
+        "*****\nEQ matched: " + eventTypeToString(currType) + "\n*****";
+      gLogger.logToConsole(consoleMsg);
 
     } else {
-      styledNode.textContent = "expected";
+      msg += "expected";
     }
-    container.appendChild(styledNode);
 
-    var info = " event, type: ";
-    info += (typeof currType == "string") ?
+    msg += " event, type: ";
+    msg += (typeof currType == "string") ?
       currType : eventTypeToString(currType);
-    info += ". Target: " + prettyName(currTarget);
+    msg += ", target: " + prettyName(currTarget);
 
-    var text1 = document.createTextNode(info);
-    container.appendChild(text1);
-
-    dumpInfoToDOM(container);
+    gLogger.logToDOM(msg, true, emphText);
   }
 
   this.mDefEventType = aEventType;
@@ -911,17 +924,20 @@ var gA11yEventObserver =
     var listenersArray = gA11yEventListeners[event.eventType];
 
     var eventFromDumpArea = false;
-    if (gA11yEventDumpID) { // debug stuff
+    if (gLogger.isEnabled()) { // debug stuff
       eventFromDumpArea = true;
 
       var target = event.DOMNode;
-      var dumpElm = document.getElementById(gA11yEventDumpID);
+      var dumpElm = gA11yEventDumpID ?
+        document.getElementById(gA11yEventDumpID) : null;
 
-      var parent = target;
-      while (parent && parent != dumpElm)
-        parent = parent.parentNode;
+      if (dumpElm) {
+        var parent = target;
+        while (parent && parent != dumpElm)
+          parent = parent.parentNode;
+      }
 
-      if (parent != dumpElm) {
+      if (!dumpElm || parent != dumpElm) {
         var type = eventTypeToString(event.eventType);
         var info = "Event type: " + type;
 
@@ -937,10 +953,7 @@ var gA11yEventObserver =
           info += ". Listeners count: " + listenersArray.length;
 
         eventFromDumpArea = false;
-
-        if (gA11yEventDumpToConsole)
-          dump("\n" + info + "\n");
-        dumpInfoToDOM(info);
+        gLogger.log(info);
       }
     }
 
@@ -998,35 +1011,93 @@ function removeA11yEventListener(aEventType, aEventHandler)
 }
 
 /**
- * Dumps message to DOM.
- *
- * @param aInfo      [in] the message or DOM node to dump
- * @param aDumpNode  [in, optional] host DOM node for dumped message, if ommited
- *                    then global variable gA11yEventDumpID is used
+ * Used to dump debug information.
  */
-function dumpInfoToDOM(aInfo, aDumpNode)
+var gLogger =
 {
-  var dumpID = gA11yEventDumpID ? gA11yEventDumpID : aDumpNode;
-  if (!dumpID)
-    return;
-  
-  var dumpElm = document.getElementById(dumpID);
-  if (!dumpElm) {
-    ok(false, "No dump element '" + dumpID + "' within the document!");
-    return;
-  }
-  
-  var containerTagName = document instanceof nsIDOMHTMLDocument ?
-    "div" : "description";
+  /**
+   * Return true if dump is enabled.
+   */
+  isEnabled: function debugOutput_isEnabled()
+  {
+    return gA11yEventDumpID || gA11yEventDumpToConsole ||
+      gA11yEventDumpToAppConsole;
+  },
 
-  var container = document.createElement(containerTagName);
-  if (aInfo instanceof nsIDOMNode)
-    container.appendChild(aInfo);
-  else
-    container.textContent = aInfo;
+  /**
+   * Dump information into DOM and console if applicable.
+   */
+  log: function logger_log(aMsg)
+  {
+    this.logToConsole(aMsg);
+    this.logToAppConsole(aMsg);
+    this.logToDOM(aMsg);
+  },
 
-  dumpElm.appendChild(container);
-}
+  /**
+   * Log message to DOM.
+   *
+   * @param aMsg          [in] the primary message
+   * @param aHasIndent    [in, optional] if specified the message has an indent
+   * @param aPreEmphText  [in, optional] the text is colored and appended prior
+   *                        primary message
+   */
+  logToDOM: function logger_logToDOM(aMsg, aHasIndent, aPreEmphText)
+  {
+    if (gA11yEventDumpID == "")
+      return;
+
+    var dumpElm = document.getElementById(gA11yEventDumpID);
+    if (!dumpElm) {
+      ok(false,
+         "No dump element '" + gA11yEventDumpID + "' within the document!");
+      return;
+    }
+
+    var containerTagName = document instanceof nsIDOMHTMLDocument ?
+      "div" : "description";
+
+    var container = document.createElement(containerTagName);
+    if (aHasIndent)
+      container.setAttribute("style", "padding-left: 10px;");
+
+    if (aPreEmphText) {
+      var inlineTagName = document instanceof nsIDOMHTMLDocument ?
+        "span" : "description";
+      var emphElm = document.createElement(inlineTagName);
+      emphElm.setAttribute("style", "color: blue;");
+      emphElm.textContent = aPreEmphText;
+
+      container.appendChild(emphElm);
+    }
+
+    var textNode = document.createTextNode(aMsg);
+    container.appendChild(textNode);
+
+    dumpElm.appendChild(container);
+  },
+
+  /**
+   * Log message to console.
+   */
+  logToConsole: function logger_logToConsole(aMsg)
+  {
+    if (gA11yEventDumpToConsole)
+      dump("\n" + aMsg + "\n");
+  },
+
+  /**
+   * Log message to error console.
+   */
+  logToAppConsole: function logger_logToAppConsole(aMsg)
+  {
+    if (gA11yEventDumpToAppConsole)
+      consoleService.logStringMessage("events: " + aMsg);
+  },
+
+  consoleService: Components.classes["@mozilla.org/consoleservice;1"].
+    getService(Components.interfaces.nsIConsoleService)
+};
 
 
 ////////////////////////////////////////////////////////////////////////////////
