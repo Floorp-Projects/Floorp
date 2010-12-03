@@ -37,33 +37,10 @@
 #include "SVGAnimatedLengthList.h"
 #include "DOMSVGAnimatedLengthList.h"
 #include "SVGLengthList.h"
-#include "nsSVGAnimatedNumberList.h"
-#include "nsSVGNumberList.h"
+#include "DOMSVGAnimatedNumberList.h"
 
 using namespace mozilla;
 
-nsresult
-nsSVGTextPositioningElement::Init()
-{
-  nsresult rv = nsSVGTextPositioningElementBase::Init();
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  // Create mapped properties:
-
-  // DOM property: nsIDOMSVGTextPositioningElement::rotate, #IMPLIED attrib: rotate
-  {
-    nsCOMPtr<nsIDOMSVGNumberList> numberList;
-    rv = NS_NewSVGNumberList(getter_AddRefs(numberList));
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedNumberList(getter_AddRefs(mRotate),
-                                     numberList);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::rotate, mRotate);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  return rv;
-}
 
 nsSVGElement::LengthListInfo nsSVGTextPositioningElement::sLengthListInfo[4] =
 {
@@ -80,6 +57,18 @@ nsSVGTextPositioningElement::GetLengthListInfo()
                                   NS_ARRAY_LENGTH(sLengthListInfo));
 }
 
+
+nsSVGElement::NumberListInfo nsSVGTextPositioningElement::sNumberListInfo[1] =
+{
+  { &nsGkAtoms::rotate }
+};
+
+nsSVGElement::NumberListAttributesInfo
+nsSVGTextPositioningElement::GetNumberListInfo()
+{
+  return NumberListAttributesInfo(mNumberListAttributes, sNumberListInfo,
+                                  NS_ARRAY_LENGTH(sNumberListInfo));
+}
 
 //----------------------------------------------------------------------
 // nsIDOMSVGTextPositioningElement methods
@@ -119,7 +108,7 @@ NS_IMETHODIMP nsSVGTextPositioningElement::GetDy(nsIDOMSVGAnimatedLengthList * *
 /* readonly attribute nsIDOMSVGAnimatedNumberList rotate; */
 NS_IMETHODIMP nsSVGTextPositioningElement::GetRotate(nsIDOMSVGAnimatedNumberList * *aRotate)
 {
-  *aRotate = mRotate;
-  NS_IF_ADDREF(*aRotate);
+  *aRotate = DOMSVGAnimatedNumberList::GetDOMWrapper(&mNumberListAttributes[ROTATE],
+                                                     this, ROTATE).get();
   return NS_OK;
 }
