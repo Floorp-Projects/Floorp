@@ -5212,18 +5212,10 @@ nsContentUtils::GetSameOriginChecker()
   return sSameOriginChecker;
 }
 
-
-NS_IMPL_ISUPPORTS2(nsSameOriginChecker,
-                   nsIChannelEventSink,
-                   nsIInterfaceRequestor)
-
-NS_IMETHODIMP
-nsSameOriginChecker::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
-                                            nsIChannel *aNewChannel,
-                                            PRUint32 aFlags,
-                                            nsIAsyncVerifyRedirectCallback *cb)
+/* static */
+nsresult
+nsContentUtils::CheckSameOrigin(nsIChannel *aOldChannel, nsIChannel *aNewChannel)
 {
-  NS_PRECONDITION(aNewChannel, "Redirecting to null channel?");
   if (!nsContentUtils::GetSecurityManager())
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -5243,11 +5235,27 @@ nsSameOriginChecker::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
     rv = oldPrincipal->CheckMayLoad(newOriginalURI, PR_FALSE);
   }
 
-  if (NS_FAILED(rv))
-      return rv;
+  return rv;
+}
 
-  cb->OnRedirectVerifyCallback(NS_OK);
-  return NS_OK;
+NS_IMPL_ISUPPORTS2(nsSameOriginChecker,
+                   nsIChannelEventSink,
+                   nsIInterfaceRequestor)
+
+NS_IMETHODIMP
+nsSameOriginChecker::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
+                                            nsIChannel *aNewChannel,
+                                            PRUint32 aFlags,
+                                            nsIAsyncVerifyRedirectCallback *cb)
+{
+  NS_PRECONDITION(aNewChannel, "Redirecting to null channel?");
+
+  nsresult rv = nsContentUtils::CheckSameOrigin(aOldChannel, aNewChannel);
+  if (NS_SUCCEEDED(rv)) {
+    cb->OnRedirectVerifyCallback(NS_OK);
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -6517,4 +6525,10 @@ nsIInterfaceRequestor*
 nsIContentUtils2::GetSameOriginChecker()
 {
   return nsContentUtils::GetSameOriginChecker();
+}
+
+nsresult
+nsIContentUtils2::CheckSameOrigin(nsIChannel *aOldChannel, nsIChannel *aNewChannel)
+{
+  return nsContentUtils::CheckSameOrigin(aOldChannel, aNewChannel);
 }
