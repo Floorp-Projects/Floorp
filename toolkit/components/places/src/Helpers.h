@@ -257,6 +257,16 @@ protected:
   nsCOMPtr<nsIThread> mCallingThread;
 };
 
+/**
+ * Forces a WAL checkpoint. This will cause all transactions stored in the
+ * journal file to be committed to the main database.
+ * 
+ * @param aDBConn
+ *        Connection to the database.
+ * @note The checkpoint will force a fsync/flush.
+ */
+void ForceWALCheckpoint(mozIStorageConnection* aDBConn);
+
 } // namespace places
 } // namespace mozilla
 
