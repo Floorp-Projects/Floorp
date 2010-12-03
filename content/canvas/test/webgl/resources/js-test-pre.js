@@ -90,11 +90,15 @@ function testFailed(msg)
 
 function areArraysEqual(_a, _b)
 {
-    if (_a.length !== _b.length)
-        return false;
-    for (var i = 0; i < _a.length; i++)
-        if (_a[i] !== _b[i])
+    try {
+        if (_a.length !== _b.length)
             return false;
+        for (var i = 0; i < _a.length; i++)
+            if (_a[i] !== _b[i])
+                return false;
+    } catch (ex) {
+        return false;
+    }
     return true;
 }
 
@@ -139,6 +143,7 @@ function evalAndLog(_a)
   } catch (e) {
     testFailed(_a + " threw exception " + e);
   }
+  return _av;
 }
 
 function shouldBe(_a, _b)
@@ -266,6 +271,44 @@ function shouldBeUndefined(_a)
     testFailed(_a + " should be undefined. Was " + _av);
 }
 
+function shouldBeDefined(_a)
+{
+  var exception;
+  var _av;
+  try {
+     _av = eval(_a);
+  } catch (e) {
+     exception = e;
+  }
+
+  if (exception)
+    testFailed(_a + " should be defined. Threw exception " + exception);
+  else if (_av !== undefined)
+    testPassed(_a + " is defined.");
+  else
+    testFailed(_a + " should be defined. Was " + _av);
+}
+
+function shouldBeGreaterThanOrEqual(_a, _b) {
+    if (typeof _a != "string" || typeof _b != "string")
+        debug("WARN: shouldBeGreaterThanOrEqual expects string arguments");
+
+    var exception;
+    var _av;
+    try {
+        _av = eval(_a);
+    } catch (e) {
+        exception = e;
+    }
+    var _bv = eval(_b);
+
+    if (exception)
+        testFailed(_a + " should be >= " + _b + ". Threw exception " + exception);
+    else if (typeof _av == "undefined" || _av < _bv)
+        testFailed(_a + " should be >= " + _b + ". Was " + _av + " (of type " + typeof _av + ").");
+    else
+        testPassed(_a + " is >= " + _b);
+}
 
 function shouldThrow(_a, _e)
 {
