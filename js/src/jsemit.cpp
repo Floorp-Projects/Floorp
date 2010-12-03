@@ -2161,13 +2161,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
      *
      * Turn JSOP_DELNAME into JSOP_FALSE if dn is known, as all declared
      * bindings visible to the compiler are permanent in JS unless the
-     * declaration originates in eval code. We detect eval code by testing
-     * cg->parser->callerFrame, which is set only by eval or a debugger
-     * equivalent.
-     *
-     * Note that this callerFrame non-null test must be qualified by testing
-     * !cg->funbox to exclude function code nested in eval code, which is not
-     * subject to the deletable binding exception.
+     * declaration originates at top level in eval code.
      */
     switch (op) {
       case JSOP_NAME:
@@ -2175,7 +2169,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         break;
       case JSOP_DELNAME:
         if (dn_kind != JSDefinition::UNKNOWN) {
-            if (cg->parser->callerFrame && !cg->funbox)
+            if (cg->parser->callerFrame && dn->isTopLevel())
                 JS_ASSERT(cg->compileAndGo());
             else
                 pn->pn_op = JSOP_FALSE;
@@ -4578,11 +4572,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 return JS_FALSE;
             break;
         }
-
-        JS_ASSERT_IF(cx->options & JSOPTION_ANONFUNFIX,
-                     pn->pn_defn ||
-                     (!pn->pn_used && !pn->isTopLevel()) ||
-                     (fun->flags & JSFUN_LAMBDA));
 
         JS_ASSERT_IF(pn->pn_funbox->tcflags & TCF_FUN_HEAVYWEIGHT,
                      FUN_KIND(fun) == JSFUN_INTERPRETED);
