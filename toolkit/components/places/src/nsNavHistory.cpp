@@ -131,12 +131,10 @@ using namespace mozilla::places;
 // Out of this cache, SQLite will use at most the size of the database file.
 #define DATABASE_DEFAULT_CACHE_TO_MEMORY_PERCENTAGE 6
 
-// Integer value used to calculate the number of pages in WAL before a
-// automatic checkpoint.  It represents a percentage to apply to the cache size.
-#define DATABASE_CACHE_TO_CHECKPOINT_PERCENTAGE 10
-// Maximum number of pages before a checkpoint.  This is the value suggested
-// by SQLite docs (http://www.sqlite.org/c3ref/wal_autocheckpoint.html).
-#define DATABASE_MAX_CHECKPOINT_PAGES 1000
+// Maximum size for the WAL file.  It should be small enough since in case of
+// crashes we could lose all the transactions in the file.  But a too small
+// file could hurt performance.
+#define DATABASE_MAX_WAL_SIZE_IN_KIBIBYTES 512
 
 // This is the schema version, update it at any schema change and add a
 // corresponding migrateVxx method below.
@@ -766,13 +764,6 @@ nsNavHistory::InitDB()
       "PRAGMA temp_store = MEMORY"));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Set pragma synchronous to FULL to ensure maximum data integrity, even in
-  // case of crashes or unclean shutdowns.
-  // The suggested setting for SQLite is FULL, but Storage defaults to NORMAL.
-  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "PRAGMA synchronous = FULL"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // Compute the size of the database cache using the device's memory size.
   // We don't use PRAGMA default_cache_size, since the database could be moved
   // among different devices and the value would adapt accordingly.
@@ -798,25 +789,30 @@ nsNavHistory::InitDB()
 
   // Be sure to set journal mode after page_size.  WAL would prevent the change
   // otherwise.
-  if (NS_FAILED(SetJournalMode(JOURNAL_WAL))) {
+  if (NS_SUCCEEDED(SetJournalMode(JOURNAL_WAL))) {
+    // Set the WAL journal size limit.  We want it to be small, since in
+    // synchronous = NORMAL mode a crash could cause loss of all the
+    // transactions in the journal.  For added safety we will also force
+    // checkpointing at strategic moments.
+    PRInt32 checkpointPages =
+      static_cast<PRInt32>(DATABASE_MAX_WAL_SIZE_IN_KIBIBYTES * 1024 / mDBPageSize);
+    nsCAutoString checkpointPragma("PRAGMA wal_autocheckpoint = ");
+    checkpointPragma.AppendInt(checkpointPages);
+    rv = mDBConn->ExecuteSimpleSQL(checkpointPragma);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  else {
     // Ignore errors, if we fail here the database could be considered corrupt
     // and we won't be able to go on, even if it's just matter of a bogus file
     // system.  The default mode (DELETE) will be fine in such a case.
     (void)SetJournalMode(JOURNAL_TRUNCATE);
-  }
 
-  // Set the WAL journal limit.  We adapt it to the device we are running on,
-  // since mobile does not have space for the default size.
-  // Since cache_size is calculated based on physical memory (a somewhat good
-  // indicator of the device capabilities), use a percentage of it, with a cap.
-  PRInt32 checkpointPages = NS_MIN(
-    static_cast<PRInt32>(cachePages * DATABASE_CACHE_TO_CHECKPOINT_PERCENTAGE / 100),
-    DATABASE_MAX_CHECKPOINT_PAGES
-  );
-  nsCAutoString checkpointPragma("PRAGMA wal_autocheckpoint = ");
-  checkpointPragma.AppendInt(checkpointPages);
-  rv = mDBConn->ExecuteSimpleSQL(checkpointPragma);
-  NS_ENSURE_SUCCESS(rv, rv);
+    // Set synchronous to FULL to ensure maximum data integrity, even in
+    // case of crashes or unclean shutdowns.
+    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "PRAGMA synchronous = FULL"));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   // We are going to initialize tables, so everything from now on should be in
   // a transaction for performances.
