@@ -54,6 +54,12 @@ JSObject::isDate() const
     return getClass() == &js_DateClass;
 }
 
+#define HalfTimeDomain  8.64e15
+
+#define TIMECLIP(d) ((JSDOUBLE_IS_FINITE(d) \
+                      && !((d < 0 ? -d : d) > HalfTimeDomain)) \
+                     ? js_DoubleToInteger(d + (+0.)) : js_NaN)
+
 extern JSObject *
 js_InitDateClass(JSContext *cx, JSObject *obj);
 
