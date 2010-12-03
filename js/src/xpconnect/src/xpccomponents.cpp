@@ -3237,9 +3237,10 @@ xpc_CreateSandboxObject(JSContext * cx, jsval * vp, nsISupports *prinOrSop, JSOb
                 return NS_ERROR_XPC_UNEXPECTED;
 
             if (xpc::WrapperFactory::IsXrayWrapper(proto) && !wantXrays) {
-                jsval v = OBJECT_TO_JSVAL(proto);
-                if (!xpc::WrapperFactory::WaiveXrayAndWrap(cx, &v))
-                    return NS_ERROR_FAILURE;
+                jsval v;
+                if (!JS_GetProperty(cx, proto, "wrappedJSObject", &v))
+                    return NS_ERROR_XPC_UNEXPECTED;
+
                 proto = JSVAL_TO_OBJECT(v);
             }
 
