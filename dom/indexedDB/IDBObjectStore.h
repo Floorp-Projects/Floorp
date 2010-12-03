@@ -78,6 +78,7 @@ public:
 
   static nsresult
   GetKeyFromJSVal(jsval aKeyVal,
+                  JSContext* aCx,
                   Key& aKey);
 
   static nsresult

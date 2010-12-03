@@ -2940,17 +2940,27 @@ nsWebSocket::Initialize(nsISupports* aOwner,
   if (!jsstr) {
     return NS_ERROR_DOM_SYNTAX_ERR;
   }
-  urlParam.Assign(reinterpret_cast<const PRUnichar*>(JS_GetStringChars(jsstr)),
-                  JS_GetStringLength(jsstr));
+
+  size_t length;
+  const jschar *chars = JS_GetStringCharsAndLength(aContext, jsstr, &length);
+  if (!chars) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  urlParam.Assign(chars, length);
 
   if (aArgc == 2) {
     jsstr = JS_ValueToString(aContext, aArgv[1]);
     if (!jsstr) {
       return NS_ERROR_DOM_SYNTAX_ERR;
     }
-    protocolParam.
-      Assign(reinterpret_cast<const PRUnichar*>(JS_GetStringChars(jsstr)),
-             JS_GetStringLength(jsstr));
+
+    chars = JS_GetStringCharsAndLength(aContext, jsstr, &length);
+    if (!chars) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    protocolParam.Assign(chars, length);
     if (protocolParam.IsEmpty()) {
       return NS_ERROR_DOM_SYNTAX_ERR;
     }

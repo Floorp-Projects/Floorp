@@ -214,7 +214,8 @@ _dumpJSDScript(JSDContext* jsdc, JSDScript* jsdscript, const char* leadingtext)
         if (fun) {
             n += size_t(snprintf(Buf + n, sizeof(Buf) - n, "%s", "no fun"));
         } else {
-            n += JS_PutEscapedString(Buf + n, sizeof(Buf) - n, fun, 0);
+            n += JS_PutEscapedFlatString(Buf + n, sizeof(Buf) - n,
+                                         JS_ASSERT_STRING_IS_FLAT(fun), 0);
             Buf[sizeof(Buf) - 1] = '\0';
         }
         if (n + 1 < sizeof(Buf))

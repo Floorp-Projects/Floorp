@@ -357,7 +357,7 @@ GetKeyFromObject(JSContext* aCx,
   JSBool ok = JS_GetUCProperty(aCx, aObj, keyPathChars, keyPathLen, &key);
   NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
-  nsresult rv = IDBObjectStore::GetKeyFromJSVal(key, aKey);
+  nsresult rv = IDBObjectStore::GetKeyFromJSVal(key, aCx, aKey);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -442,6 +442,7 @@ IDBObjectStore::GetKeyFromVariant(nsIVariant* aKeyVariant,
 // static
 nsresult
 IDBObjectStore::GetKeyFromJSVal(jsval aKeyVal,
+                                JSContext* aCx,
                                 Key& aKey)
 {
   if (JSVAL_IS_VOID(aKeyVal)) {
@@ -451,7 +452,11 @@ IDBObjectStore::GetKeyFromJSVal(jsval aKeyVal,
     aKey = Key::NULLKEY;
   }
   else if (JSVAL_IS_STRING(aKeyVal)) {
-    aKey = nsDependentJSString(aKeyVal);
+    nsDependentJSString depStr;
+    if (!depStr.init(aCx, JSVAL_TO_STRING(aKeyVal))) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    aKey = depStr;
   }
   else if (JSVAL_IS_INT(aKeyVal)) {
     aKey = JSVAL_TO_INT(aKeyVal);
@@ -586,7 +591,12 @@ IDBObjectStore::GetKeyPathValueFromJSON(const nsAString& aJSON,
                                value.jsval_addr());
   NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
-  rv = GetKeyFromJSVal(value.jsval_value(), aValue);
+  rv = GetKeyFromJSVal(value.jsval_value(), *aCx, aValue);
+  if (rv == NS_ERROR_OUT_OF_MEMORY) {
+    NS_ASSERTION(JS_IsExceptionPending(*aCx), "OOM from JS should throw");
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   if (NS_FAILED(rv) || aValue.IsNull()) {
     // If the object doesn't have a value that we can use for our index then we
     // leave it unset.
@@ -627,7 +637,12 @@ IDBObjectStore::GetIndexUpdateInfo(ObjectStoreInfo* aObjectStoreInfo,
       NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
       Key value;
-      nsresult rv = GetKeyFromJSVal(keyPathValue, value);
+      nsresult rv = GetKeyFromJSVal(keyPathValue, aCx, value);
+      if (rv == NS_ERROR_OUT_OF_MEMORY) {
+        NS_ASSERTION(JS_IsExceptionPending(aCx), "OOM from JS should throw");
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+
       if (NS_FAILED(rv) || value.IsUnset() || value.IsNull()) {
         // Not a value we can do anything with, ignore it.
         continue;
@@ -794,7 +809,7 @@ IDBObjectStore::GetAddInfo(JSContext* aCx,
   JSAutoRequest ar(aCx);
 
   if (mKeyPath.IsEmpty()) {
-    rv = GetKeyFromJSVal(aKeyVal, aKey);
+    rv = GetKeyFromJSVal(aKeyVal, aCx, aKey);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR);
   }
   else {

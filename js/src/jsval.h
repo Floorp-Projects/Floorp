@@ -266,8 +266,9 @@ typedef enum JSWhyMagic
     JS_GENERIC_MAGIC             /* for local use */
 } JSWhyMagic;
 
-typedef struct JSString JSString;
-typedef struct JSObject JSObject;
+typedef struct JSString     JSString;
+typedef struct JSFlatString JSFlatString;
+typedef struct JSObject     JSObject;
 
 #if defined(IS_LITTLE_ENDIAN)
 # if JS_BITS_PER_WORD == 32

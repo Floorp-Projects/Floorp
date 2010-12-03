@@ -46,6 +46,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIXPConnect.h"
 #include "jsapi.h"
+#include "nsJSUtils.h"
 
 #include "nsFrameManager.h"
 #include "nsDisplayList.h"
@@ -502,8 +503,11 @@ nsHTMLCanvasElement::GetContext(const nsAString& aContextId,
           }
 
           JSString *propnameString = JS_ValueToString(cx, propname);
-
-          nsDependentString pstr(JS_GetStringChars(propnameString), JS_GetStringLength(propnameString));
+          nsDependentJSString pstr;
+          if (!propnameString || !pstr.init(cx, propnameString)) {
+            mCurrentContext = nsnull;
+            return NS_ERROR_FAILURE;
+          }
 
           if (JSVAL_IS_BOOLEAN(propval)) {
             newProps->SetPropertyAsBool(pstr, propval == JSVAL_TRUE ? PR_TRUE : PR_FALSE);
@@ -512,8 +516,14 @@ nsHTMLCanvasElement::GetContext(const nsAString& aContextId,
           } else if (JSVAL_IS_DOUBLE(propval)) {
             newProps->SetPropertyAsDouble(pstr, JSVAL_TO_DOUBLE(propval));
           } else if (JSVAL_IS_STRING(propval)) {
-            newProps->SetPropertyAsAString(pstr, nsDependentString(JS_GetStringChars(JS_ValueToString(cx, propval)),
-                                                                   JS_GetStringLength(JS_ValueToString(cx, propval))));
+            JSString *propvalString = JS_ValueToString(cx, propval);
+            nsDependentJSString vstr;
+            if (!propvalString || !vstr.init(cx, propvalString)) {
+              mCurrentContext = nsnull;
+              return NS_ERROR_FAILURE;
+            }
+
+            newProps->SetPropertyAsAString(pstr, vstr);
           }
         }
       }

@@ -60,7 +60,9 @@ static int sDOMStringFinalizerIndex = -1;
 static void
 DOMStringFinalizer(JSContext *cx, JSString *str)
 {
-    nsStringBuffer::FromData(JS_GetStringChars(str))->Release();
+    jschar *chars = const_cast<jschar *>(JS_GetStringCharsZ(cx, str));
+    NS_ASSERTION(chars, "How could this OOM if we allocated the memory?");
+    nsStringBuffer::FromData(chars)->Release();
 }
 
 void
@@ -138,16 +140,4 @@ XPCStringConvert::ReadableToJSVal(JSContext *cx,
             JS_free(cx, chars);
     }
     return STRING_TO_JSVAL(str);
-}
-
-// static
-XPCReadableJSStringWrapper *
-XPCStringConvert::JSStringToReadable(XPCCallContext& ccx, JSString *str)
-{
-    const PRUnichar *chars =
-        reinterpret_cast<const PRUnichar *>(JS_GetStringCharsZ(ccx, str));
-    if(!chars)
-        return nsnull;
-
-    return ccx.NewStringWrapper(chars, JS_GetStringLength(str));
 }
