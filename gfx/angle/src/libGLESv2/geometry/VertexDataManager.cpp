@@ -65,6 +65,7 @@ std::bitset<MAX_VERTEX_ATTRIBS> VertexDataManager::getActiveAttribs() const
 GLenum VertexDataManager::preRenderValidate(GLint start, GLsizei count,
                                             TranslatedAttribute *translated)
 {
+    GLenum error = GL_NO_ERROR;
     const AttributeState *attribs = mContext->getVertexAttribBlock();
     const std::bitset<MAX_VERTEX_ATTRIBS> activeAttribs = getActiveAttribs();
 
@@ -126,6 +127,11 @@ GLenum VertexDataManager::preRenderValidate(GLint start, GLsizei count,
             size_t elementSize = typeSize(attribs[i].mType) * attribs[i].mSize;
 
             void *output = mStreamBuffer->map(spaceRequired(attribs[i], count), &translated[i].offset);
+            if (output == NULL)
+            {
+                ERR(" failed to map vertex buffer.");
+                return GL_OUT_OF_MEMORY;
+            }
 
             const void *input;
             if (attribs[i].mBoundBuffer.get())
@@ -174,10 +180,10 @@ GLenum VertexDataManager::preRenderValidate(GLint start, GLsizei count,
 
     if (usesCurrentValues)
     {
-        processNonArrayAttributes(attribs, activeAttribs, translated, count);
+        error =  processNonArrayAttributes(attribs, activeAttribs, translated, count);
     }
 
-    return GL_NO_ERROR;
+    return error;
 }
 
 std::size_t VertexDataManager::typeSize(GLenum type) const
@@ -223,7 +229,7 @@ std::size_t VertexDataManager::spaceRequired(const AttributeState &attrib, std::
     return roundUp(size, 4 * sizeof(GLfloat));
 }
 
-void VertexDataManager::processNonArrayAttributes(const AttributeState *attribs, const std::bitset<MAX_VERTEX_ATTRIBS> &activeAttribs, TranslatedAttribute *translated, std::size_t count)
+GLenum VertexDataManager::processNonArrayAttributes(const AttributeState *attribs, const std::bitset<MAX_VERTEX_ATTRIBS> &activeAttribs, TranslatedAttribute *translated, std::size_t count)
 {
     if (mDirtyCurrentValues)
     {
@@ -232,6 +238,11 @@ void VertexDataManager::processNonArrayAttributes(const AttributeState *attribs,
         mCurrentValueBuffer->reserveSpace(totalSize);
 
         float* currentValues = static_cast<float*>(mCurrentValueBuffer->map(totalSize, &mCurrentValueOffset));
+        if (currentValues == NULL)
+        {
+            ERR(" failed to map vertex buffer.");
+            return GL_OUT_OF_MEMORY;
+        }
 
         for (int i = 0; i < MAX_VERTEX_ATTRIBS; i++)
         {
@@ -260,6 +271,8 @@ void VertexDataManager::processNonArrayAttributes(const AttributeState *attribs,
             translated[i].offset = mCurrentValueOffset + 4 * sizeof(float) * i;
         }
     }
+
+    return GL_NO_ERROR;
 }
 
 }
