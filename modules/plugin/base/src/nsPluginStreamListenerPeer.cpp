@@ -1307,12 +1307,10 @@ nsPluginStreamListenerPeer::AsyncOnChannelRedirect(nsIChannel *oldChannel, nsICh
       if (method.EqualsLiteral("POST")) {
         nsCOMPtr<nsIContentUtils2> contentUtils2 = do_GetService("@mozilla.org/content/contentutils2;1");
         NS_ENSURE_TRUE(contentUtils2, NS_ERROR_FAILURE);
-
-        nsCOMPtr<nsIInterfaceRequestor> sameOriginChecker = contentUtils2->GetSameOriginChecker();
-        nsCOMPtr<nsIChannelEventSink> sameOriginChannelEventSink = do_GetInterface(sameOriginChecker);
-        NS_ENSURE_TRUE(sameOriginChannelEventSink, NS_ERROR_FAILURE);
-        
-        return sameOriginChannelEventSink->AsyncOnChannelRedirect(oldChannel, newChannel, flags, callback);        
+        rv = contentUtils2->CheckSameOrigin(oldChannel, newChannel);
+        if (NS_FAILED(rv)) {
+          return rv;
+        }
       }
     }
   }
