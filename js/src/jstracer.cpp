@@ -2736,7 +2736,6 @@ TraceMonitor::flush()
     traceAlloc->reset();
     codeAlloc->reset();
     tempAlloc->reset();
-    reTempAlloc->reset();
     oracle->clear();
     loopProfiles->clear();
 
@@ -7590,7 +7589,6 @@ InitJIT(TraceMonitor *tm)
     tm->dataAlloc = new VMAllocator();
     tm->traceAlloc = new VMAllocator();
     tm->tempAlloc = new VMAllocator();
-    tm->reTempAlloc = new VMAllocator();
     tm->codeAlloc = new CodeAlloc();
     tm->frameCache = new FrameInfoCache(tm->dataAlloc);
     tm->storage = new TraceNativeStorage();
@@ -7725,11 +7723,6 @@ FinishJIT(TraceMonitor *tm)
     if (tm->tempAlloc) {
         delete tm->tempAlloc;
         tm->tempAlloc = NULL;
-    }
-
-    if (tm->reTempAlloc) {
-        delete tm->reTempAlloc;
-        tm->reTempAlloc = NULL;
     }
 
     if (tm->storage) {
