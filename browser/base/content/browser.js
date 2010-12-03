@@ -3901,7 +3901,6 @@ var XULBrowserWindow = {
   startTime: 0,
   statusText: "",
   isBusy: false,
-  inContentWhitelist: ["about:addons"],
 
   QueryInterface: function (aIID) {
     if (aIID.equals(Ci.nsIWebProgressListener) ||
@@ -4139,16 +4138,6 @@ var XULBrowserWindow = {
         }
       }
     }
-
-    // Show or hide browser chrome based on the whitelist
-    var disableChrome = this.inContentWhitelist.some(function(aSpec) {
-      return aSpec == location;
-    });
-
-    if (disableChrome)
-      document.documentElement.setAttribute("disablechrome", "true");
-    else
-      document.documentElement.removeAttribute("disablechrome");
 
     // This code here does not compare uris exactly when determining
     // whether or not the message should be hidden since the message
