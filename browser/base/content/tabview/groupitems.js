@@ -1080,10 +1080,10 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       return: 'widthAndColumns',
       count: count || this._children.length
     };
-    let arrObj = Items.arrange(null, bb, options);
- 
-    let shouldStack = arrObj.childWidth < TabItems.minTabWidth * 1.35;
-    this._columns = shouldStack ? null : arrObj.columns;
+    let {childWidth, columns} = Items.arrange(null, bb, options);
+
+    let shouldStack = childWidth < TabItems.minTabWidth * 1.35;
+    this._columns = shouldStack ? null : columns;
 
     return shouldStack;
   },
@@ -1532,7 +1532,6 @@ let GroupItems = {
   _arrangePaused: false,
   _arrangesPending: [],
   _removingHiddenGroups: false,
-  _delayedModUpdates: [],
 
   // ----------
   // Function: init
@@ -1544,18 +1543,9 @@ let GroupItems = {
       self._handleAttrModified(xulTab);
     }
 
-    // make sure any closed tabs are removed from the delay update list
-    function handleClose(xulTab) {
-      let idx = self._delayedModUpdates.indexOf(xulTab);
-      if (idx != -1)
-        self._delayedModUpdates.splice(idx, 1);
-    }
-
     AllTabs.register("attrModified", handleAttrModified);
-    AllTabs.register("close", handleClose);
     this._cleanupFunctions.push(function() {
       AllTabs.unregister("attrModified", handleAttrModified);
-      AllTabs.unregister("close", handleClose);
     });
   },
 
@@ -1622,30 +1612,6 @@ let GroupItems = {
   // Function: _handleAttrModified
   // watch for icon changes on app tabs
   _handleAttrModified: function GroupItems__handleAttrModified(xulTab) {
-    if (!UI.isTabViewVisible()) {
-      if (this._delayedModUpdates.indexOf(xulTab) == -1) {
-        this._delayedModUpdates.push(xulTab);
-      }
-    } else
-      this._updateAppTabIcons(xulTab); 
-  },
-
-  // ----------
-  // Function: flushTabUpdates
-  // Update apptab icons based on xulTabs which have been updated
-  // while the TabView hasn't been visible 
-  flushAppTabUpdates: function GroupItems_flushAppTabUpdates() {
-    let self = this;
-    this._delayedModUpdates.forEach(function(xulTab) {
-      self._updateAppTabIcons(xulTab);
-    });
-    this._delayedModUpdates = [];
-  },
-
-  // ----------
-  // Function: _updateAppTabIcons
-  // Update images of any apptab icons that point to passed in xultab 
-  _updateAppTabIcons: function GroupItems__updateAppTabIcons(xulTab) {
     if (xulTab.ownerDocument.defaultView != gWindow || !xulTab.pinned)
       return;
 
@@ -1660,7 +1626,7 @@ let GroupItems = {
           $icon.attr("src", iconUrl);
       });
     });
-  },  
+  },
 
   // ----------
   // Function: addAppTab
