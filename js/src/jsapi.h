@@ -965,7 +965,7 @@ extern JS_PUBLIC_API(JSBool)
 JS_WrapValue(JSContext *cx, jsval *vp);
 
 extern JS_PUBLIC_API(JSObject *)
-JS_TransplantObject(JSContext *cx, JSObject *origobj, JSObject *target);
+JS_TransplantWrapper(JSContext *cx, JSObject *wrapper, JSObject *target);
 
 #ifdef __cplusplus
 JS_END_EXTERN_C
