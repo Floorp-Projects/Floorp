@@ -132,10 +132,12 @@ include $(topsrcdir)/config/rules.mk
 CXXFLAGS := $(filter-out -pedantic,$(CXXFLAGS))
 CFLAGS := $(filter-out -pedantic,$(CFLAGS))
 
-ifdef _MSC_VER
-# disabled for now, but we should be building it in the future once
-# bug 529938 is fixed
-#BUILD_ANGLE = 1
+ifdef MOZ_ANGLE
+# ANGLE only on Win32 for now, the solution isn't set up
+# for 64-bit yet.
+ifndef HAVE_64BIT_OS
+BUILD_ANGLE = 1
+endif
 endif
 
 ifdef BUILD_ANGLE
@@ -143,6 +145,11 @@ ifdef MOZ_DEBUG
 ANGLE_DIR = Debug
 else
 ANGLE_DIR = Release
+endif
+
+ifdef MOZ_DIRECTX_SDK_PATH
+INCLUDE := $(INCLUDE);$(MOZ_DIRECTX_SDK_PATH)\include
+LIB := $(LIB);$(MOZ_DIRECTX_SDK_PATH)\lib\x86
 endif
 
 ANGLE_DEP_PATTERNS = \
@@ -155,20 +162,23 @@ ANGLE_DEP_PATTERNS = \
 
 ANGLE_DEPS = $(filter-out Gen_glslang.cpp Gen_glslang_tab.cpp glslang_tab.h,$(wildcard $(ANGLE_DEP_PATTERNS)))
 
-libs:: angle-build/libGLESv2.dll angle-build/libEGL.dll
-	$(INSTALL) $(IFLAGS2) angle-build/libGLESv2.dll angle-build/libEGL.dll $(DIST)/bin
+libs:: libGLESv2.dll libEGL.dll
+	$(INSTALL) $(IFLAGS2) libGLESv2.dll libEGL.dll $(DIST)/bin
 
-angle-build/libGLESv2.dll angle-build/libEGL.dll: $(GLOBAL_DEPS) $(ANGLE_DEPS)
-	@echo "=== Building ANGLE via devenv.exe ==="
-	@rm -rf angle-build
-	@mkdir angle-build
-	@cp -r $(srcdir)/src $(srcdir)/include angle-build
-	@(cd angle-build/src \
+# we don't want this to attempt to parallel-build these dlls;
+# building one will build both.
+libGLESv2.dll: libEGL.dll
+
+libEGL.dll: $(GLOBAL_DEPS) $(ANGLE_DEPS)
+	@(echo "=== Building ANGLE via devenv.exe ===" \
+	&& rm -rf angle-build && mkdir angle-build \
+	&& cp -r $(srcdir)/src $(srcdir)/include angle-build \
+	&& cd angle-build/src \
 	&& echo "Upgrading solution..." \
 	&& devenv angle.sln //upgrade \
 	&& echo "Building solution, target $(ANGLE_DIR)|Win32..." \
 	&& devenv angle.sln //useenv //build "$(ANGLE_DIR)|Win32" \
 	&& echo "Copying dlls..." \
-	&& cp $(ANGLE_DIR)/*.dll ..)
+	&& cp $(ANGLE_DIR)/*.dll ../..)
 
 endif
