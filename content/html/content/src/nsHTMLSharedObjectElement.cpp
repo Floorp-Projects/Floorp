@@ -420,6 +420,21 @@ MapAttributesIntoRule(const nsMappedAttributes *aAttributes,
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
 }
 
+static void
+EmbedMapAttributesIntoRule(const nsMappedAttributes *aAttributes,
+                           nsRuleData *aData)
+{
+  // NOTE: this should call the exact some methods than MapAttributesIntoRule
+  // except that MapCommonAttributesExceptHiddenInto is called instead of
+  // MapCommonAttributesInto.
+  // TODO: This method should be removed when bug 614825 will be fixed.
+  nsGenericHTMLElement::MapImageBorderAttributeInto(aAttributes, aData);
+  nsGenericHTMLElement::MapImageMarginAttributeInto(aAttributes, aData);
+  nsGenericHTMLElement::MapImageSizeAttributesInto(aAttributes, aData);
+  nsGenericHTMLElement::MapImageAlignAttributeInto(aAttributes, aData);
+  nsGenericHTMLElement::MapCommonAttributesExceptHiddenInto(aAttributes, aData);
+}
+
 NS_IMETHODIMP_(PRBool)
 nsHTMLSharedObjectElement::IsAttributeMapped(const nsIAtom *aAttribute) const
 {
@@ -437,6 +452,10 @@ nsHTMLSharedObjectElement::IsAttributeMapped(const nsIAtom *aAttribute) const
 nsMapRuleToAttributesFunc
 nsHTMLSharedObjectElement::GetAttributeMappingFunction() const
 {
+  if (mNodeInfo->Equals(nsGkAtoms::embed)) {
+    return &EmbedMapAttributesIntoRule;
+  }
+
   return &MapAttributesIntoRule;
 }
 
