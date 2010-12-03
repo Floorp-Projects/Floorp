@@ -320,6 +320,12 @@ struct JSString
 
     const jschar *undepend(JSContext *cx);
 
+    const jschar *getCharsZ(JSContext *cx) {
+        if (!isFlat())
+            return undepend(cx);
+        return flatChars();
+    }
+
     inline bool ensureNotDependent(JSContext *cx) {
         return !isDependent() || undepend(cx);
     }
@@ -443,6 +449,12 @@ struct JSString
                            JSString::LENGTH_SHIFT) == JSString::MAX_LENGTH);
     }
 };
+
+struct JSFlatString : JSString
+{
+};
+
+JS_STATIC_ASSERT(sizeof(JSFlatString) == sizeof(JSString));
 
 struct JSExternalString : JSString
 {

@@ -278,20 +278,23 @@ SetProtocol(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
   JSAutoRequest ar(cx);
 
-  JSString *protocol = JS_ValueToString(cx, argv[0]);
+  JSString *str = JS_ValueToString(cx, argv[0]);
+  if (!str) return JS_FALSE;
+
+  JSFlatString *protocol = JS_FlattenString(cx, str);
   if (!protocol) return JS_FALSE;
   
-  if (JS_MatchStringAndAscii(protocol, "interactive")) {
+  if (JS_FlatStringEqualsAscii(protocol, "interactive")) {
     shell->mEmitHeader = PR_FALSE;
     shell->mPrompt = NS_LITERAL_CSTRING("\n> ");
     shell->mProtocol = protocol;
   }
-  else if (JS_MatchStringAndAscii(protocol, "synchronous")) {
+  else if (JS_FlatStringEqualsAscii(protocol, "synchronous")) {
     shell->mEmitHeader = PR_TRUE;
     shell->mPrompt = NS_LITERAL_CSTRING("\n> ");
     shell->mProtocol = protocol;
   }
-  else if (JS_MatchStringAndAscii(protocol, "plain")) {
+  else if (JS_FlatStringEqualsAscii(protocol, "plain")) {
     shell->mEmitHeader = PR_FALSE;
     shell->mPrompt = NS_LITERAL_CSTRING("\n");
     shell->mProtocol = protocol;

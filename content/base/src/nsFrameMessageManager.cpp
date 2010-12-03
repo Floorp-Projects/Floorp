@@ -208,7 +208,11 @@ nsFrameMessageManager::GetParamsForMessage(nsAString& aMessageName,
   JSAutoRequest ar(ctx);
   JSString* str;
   if (argc && (str = JS_ValueToString(ctx, argv[0])) && str) {
-    aMessageName.Assign(nsDependentJSString(str));
+    nsDependentJSString depStr;
+    if (!depStr.init(ctx, str)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    aMessageName.Assign(depStr);
   }
 
   if (argc >= 2) {

@@ -562,8 +562,11 @@ jsd_GetValueProperty(JSDContext* jsdc, JSDValue* jsdval, JSString* name)
     while(NULL != (jsdprop = jsd_IterateProperties(jsdc, jsdval, &iter)))
     {
         JSString* propName = jsd_GetValueString(jsdc, jsdprop->name);
-        if(propName && !JS_CompareStrings(propName, name))
-            return jsdprop;
+        if(propName) {
+            intN result;
+            if (JS_CompareStrings(cx, propName, name, &result) && !result)
+                return jsdprop;
+        }
         JSD_DropProperty(jsdc, jsdprop);
     }
     /* Not found in property list, look it up explicitly */
@@ -571,8 +574,8 @@ jsd_GetValueProperty(JSDContext* jsdc, JSDValue* jsdval, JSString* name)
     if(!(obj = JSVAL_TO_OBJECT(jsdval->val)))
         return NULL;
 
-    nameChars = JS_GetStringChars(name);
-    nameLen   = JS_GetStringLength(name);
+    if (!(nameChars = JS_GetStringCharsZAndLength(cx, name, &nameLen)))
+        return NULL;
 
     JS_BeginRequest(cx);
     call = JS_EnterCrossCompartmentCall(cx, obj);

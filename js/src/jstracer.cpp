@@ -2692,7 +2692,7 @@ ValueToNative(const Value &v, JSValueType type, double* slot)
         if (LogController.lcbits & LC_TMTracer) {
             char funName[40];
             if (fun->atom)
-                JS_PutEscapedString(funName, sizeof funName, ATOM_TO_STRING(fun->atom), 0);
+                JS_PutEscapedFlatString(funName, sizeof funName, ATOM_TO_STRING(fun->atom), 0);
             else
                 strcpy(funName, "unnamed");
             LogController.printf("function<%p:%s> ", (void*)*(JSObject **)slot, funName);
@@ -2890,7 +2890,7 @@ NativeToValue(JSContext* cx, Value& v, JSValueType type, double* slot)
             JSFunction* fun = GET_FUNCTION_PRIVATE(cx, &v.toObject());
             char funName[40];
             if (fun->atom)
-                JS_PutEscapedString(funName, sizeof funName, ATOM_TO_STRING(fun->atom), 0);
+                JS_PutEscapedFlatString(funName, sizeof funName, ATOM_TO_STRING(fun->atom), 0);
             else
                 strcpy(funName, "unnamed");
             LogController.printf("function<%p:%s> ", (void*) &v.toObject(), funName);

@@ -142,9 +142,11 @@ nsDOMWorkerFunctions::Dump(JSContext* aCx,
 
   JSString* str;
   if (aArgc && (str = JS_ValueToString(aCx, JS_ARGV(aCx, aVp)[0])) && str) {
-    nsDependentJSString string(str);
-    fputs(NS_ConvertUTF16toUTF8(nsDependentJSString(str)).get(), stderr);
-    fflush(stderr);
+    nsDependentJSString depStr;
+    if (depStr.init(aCx, str)) {
+      fputs(NS_ConvertUTF16toUTF8(depStr).get(), stderr);
+      fflush(stderr);
+    }
   }
   return JS_TRUE;
 }
@@ -268,7 +270,12 @@ nsDOMWorkerFunctions::LoadScripts(JSContext* aCx,
     nsString* newURL = urls.AppendElement();
     NS_ASSERTION(newURL, "Shouldn't fail if SetCapacity succeeded above!");
 
-    newURL->Assign(nsDependentJSString(str));
+    nsDependentJSString depStr;
+    if (!depStr.init(aCx, str)) {
+      return JS_FALSE;
+    }
+
+    newURL->Assign(depStr);
   }
 
   nsRefPtr<nsDOMWorkerScriptLoader> loader =
@@ -507,8 +514,7 @@ nsDOMWorkerFunctions::CTypesLazyGetter(JSContext* aCx,
   {
     NS_ASSERTION(JS_GetGlobalForObject(aCx, aObj) == aObj, "Bad object!");
     NS_ASSERTION(JSID_IS_STRING(aId), "Not a string!");
-    JSString* str = JSID_TO_STRING(aId);
-    NS_ASSERTION(nsDependentJSString(str).EqualsLiteral("ctypes"), "Bad id!");
+    NS_ASSERTION(nsDependentJSString(aId).EqualsLiteral("ctypes"), "Bad id!");
   }
 #endif
   nsDOMWorker* worker = static_cast<nsDOMWorker*>(JS_GetContextPrivate(aCx));
@@ -674,14 +680,14 @@ nsDOMWorkerScope::AddProperty(nsIXPConnectWrappedNative* aWrapper,
     return NS_OK;
   }
 
-  JSString *str = JSID_TO_STRING(aId);
+  JSFlatString *str = JSID_TO_FLAT_STRING(aId);
 
   // Figure out which listener we're setting.
   SetListenerFunc func;
-  if (JS_MatchStringAndAscii(str, "onmessage")) {
+  if (JS_FlatStringEqualsAscii(str, "onmessage")) {
     func = &nsDOMWorkerScope::SetOnmessage;
   }
-  else if (JS_MatchStringAndAscii(str, "onerror")) {
+  else if (JS_FlatStringEqualsAscii(str, "onerror")) {
     func = &nsDOMWorkerScope::SetOnerror;
   }
   else {
@@ -1302,7 +1308,10 @@ nsDOMWorker::InitializeInternal(nsIScriptGlobalObject* aOwner,
   JSString* str = JS_ValueToString(aCx, aArgv[0]);
   NS_ENSURE_TRUE(str, NS_ERROR_XPC_BAD_CONVERT_JS);
 
-  mScriptURL.Assign(nsDependentJSString(str));
+  nsDependentJSString depStr;
+  NS_ENSURE_TRUE(depStr.init(aCx, str), NS_ERROR_OUT_OF_MEMORY);
+
+  mScriptURL.Assign(depStr);
   NS_ENSURE_FALSE(mScriptURL.IsEmpty(), NS_ERROR_INVALID_ARG);
 
   mLock = nsAutoLock::NewLock("nsDOMWorker::mLock");

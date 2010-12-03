@@ -581,17 +581,19 @@ JS_GetTypeName(JSContext *cx, JSType type)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_StrictlyEqual(JSContext *cx, jsval v1, jsval v2)
+JS_StrictlyEqual(JSContext *cx, jsval v1, jsval v2, JSBool *equal)
 {
     assertSameCompartment(cx, v1, v2);
-    return StrictlyEqual(cx, Valueify(v1), Valueify(v2));
+    *equal = StrictlyEqual(cx, Valueify(v1), Valueify(v2));
+    return JS_TRUE;
 }
 
 JS_PUBLIC_API(JSBool)
-JS_SameValue(JSContext *cx, jsval v1, jsval v2)
+JS_SameValue(JSContext *cx, jsval v1, jsval v2, JSBool *same)
 {
     assertSameCompartment(cx, v1, v2);
-    return SameValue(Valueify(v1), Valueify(v2), cx);
+    *same = SameValue(Valueify(v1), Valueify(v2), cx);
+    return JS_TRUE;
 }
 
 /************************************************************************/
@@ -5246,6 +5248,16 @@ JS_StringHasBeenInterned(JSString *str)
 }
 
 JS_PUBLIC_API(JSString *)
+JS_InternJSString(JSContext *cx, JSString *str)
+{
+    CHECK_REQUEST(cx);
+    JSAtom *atom = js_AtomizeString(cx, str, 0);
+    if (!atom)
+        return NULL;
+    return ATOM_TO_STRING(atom);
+}
+
+JS_PUBLIC_API(JSString *)
 JS_InternString(JSContext *cx, const char *s)
 {
     JSAtom *atom;
@@ -5298,45 +5310,6 @@ JS_InternUCString(JSContext *cx, const jschar *s)
     return JS_InternUCStringN(cx, s, js_strlen(s));
 }
 
-JS_PUBLIC_API(jschar *)
-JS_GetStringChars(JSString *str)
-{
-    size_t n, size;
-    jschar *s;
-
-    str->ensureNotRope();
-
-    /*
-     * API botch: we have no cx to report out-of-memory when undepending
-     * strings, so we replace JSString::undepend with explicit malloc call and
-     * ignore its errors.
-     *
-     * If we fail to convert a dependent string into an independent one, our
-     * caller will not be guaranteed a \u0000 terminator as a backstop.  This
-     * may break some clients who already misbehave on embedded NULs.
-     *
-     * The gain of dependent strings, which cure quadratic and cubic growth
-     * rate bugs in string concatenation, is worth this slight loss in API
-     * compatibility.
-     */
-    if (str->isDependent()) {
-        n = str->dependentLength();
-        size = (n + 1) * sizeof(jschar);
-        s = (jschar *) js_malloc(size);
-        if (s) {
-            memcpy(s, str->dependentChars(), n * sizeof *s);
-            s[n] = 0;
-            str->initFlat(s, n);
-        } else {
-            s = str->dependentChars();
-        }
-    } else {
-        str->flatClearExtensible();
-        s = str->flatChars();
-    }
-    return s;
-}
-
 JS_PUBLIC_API(size_t)
 JS_GetStringLength(JSString *str)
 {
@@ -5344,33 +5317,88 @@ JS_GetStringLength(JSString *str)
 }
 
 JS_PUBLIC_API(const jschar *)
-JS_GetStringCharsAndLength(JSString *str, size_t *lengthp)
+JS_GetStringCharsZ(JSContext *cx, JSString *str)
 {
-    *lengthp = str->length();
-    return str->chars();
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, str);
+    return str->getCharsZ(cx);
 }
 
 JS_PUBLIC_API(const jschar *)
-JS_GetStringCharsZ(JSContext *cx, JSString *str)
+JS_GetStringCharsZAndLength(JSContext *cx, JSString *str, size_t *plength)
 {
+    CHECK_REQUEST(cx);
     assertSameCompartment(cx, str);
-    return str->undepend(cx);
+    *plength = str->length();
+    return str->getCharsZ(cx);
 }
 
-JS_PUBLIC_API(intN)
-JS_CompareStrings(JSString *str1, JSString *str2)
+JS_PUBLIC_API(const jschar *)
+JS_GetStringCharsAndLength(JSContext *cx, JSString *str, size_t *plength)
 {
-    return js_CompareStrings(str1, str2);
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, str);
+    const jschar *chars;
+    str->getCharsAndLength(chars, *plength);
+    return chars;
+}
+
+JS_PUBLIC_API(const jschar *)
+JS_GetInternedStringChars(JSString *str)
+{
+    JS_ASSERT(str->isAtomized());
+    return str->flatChars();
+}
+
+JS_PUBLIC_API(const jschar *)
+JS_GetInternedStringCharsAndLength(JSString *str, size_t *plength)
+{
+    JS_ASSERT(str->isAtomized());
+    *plength = str->flatLength();
+    return str->flatChars();
+}
+
+extern JS_PUBLIC_API(JSFlatString *)
+JS_FlattenString(JSContext *cx, JSString *str)
+{
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, str);
+    return str->getCharsZ(cx) ? (JSFlatString *)str : NULL;
+}
+
+extern JS_PUBLIC_API(const jschar *)
+JS_GetFlatStringChars(JSFlatString *str)
+{
+    return reinterpret_cast<JSString *>(str)->flatChars();
 }
 
 JS_PUBLIC_API(JSBool)
-JS_MatchStringAndAscii(JSString *str, const char *asciiBytes)
+JS_CompareStrings(JSContext *cx, JSString *str1, JSString *str2, int32 *result)
+{
+    *result = js_CompareStrings(str1, str2);
+    return JS_TRUE;
+}
+
+JS_PUBLIC_API(JSBool)
+JS_StringEqualsAscii(JSContext *cx, JSString *str, const char *asciiBytes, JSBool *match)
+{
+    return MatchStringAndAscii(str, asciiBytes);
+}
+
+JS_PUBLIC_API(JSBool)
+JS_FlatStringEqualsAscii(JSFlatString *str, const char *asciiBytes)
 {
     return MatchStringAndAscii(str, asciiBytes);
 }
 
 JS_PUBLIC_API(size_t)
-JS_PutEscapedString(char *buffer, size_t size, JSString *str, char quote)
+JS_PutEscapedFlatString(char *buffer, size_t size, JSFlatString *str, char quote)
+{
+    return PutEscapedString(buffer, size, str, quote);
+}
+
+JS_PUBLIC_API(size_t)
+JS_PutEscapedString(JSContext *cx, char *buffer, size_t size, JSString *str, char quote)
 {
     return PutEscapedString(buffer, size, str, quote);
 }
@@ -5406,7 +5434,7 @@ JS_PUBLIC_API(const jschar *)
 JS_UndependString(JSContext *cx, JSString *str)
 {
     CHECK_REQUEST(cx);
-    return str->undepend(cx);
+    return str->getCharsZ(cx);
 }
 
 JS_PUBLIC_API(JSBool)

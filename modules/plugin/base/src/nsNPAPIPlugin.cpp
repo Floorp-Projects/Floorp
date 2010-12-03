@@ -1441,7 +1441,7 @@ _utf8fromidentifier(NPIdentifier id)
   JSString *str = NPIdentifierToString(id);
 
   return
-    ToNewUTF8String(nsDependentString((PRUnichar *)::JS_GetStringChars(str),
+    ToNewUTF8String(nsDependentString(::JS_GetInternedStringChars(str),
                                       ::JS_GetStringLength(str)));
 }
 
