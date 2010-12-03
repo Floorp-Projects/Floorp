@@ -59,7 +59,6 @@ LOCAL_INCLUDES += -I$(srcdir)/include -I$(srcdir)/src
 VPATH += $(srcdir)/src
 VPATH += $(srcdir)/src/compiler
 VPATH += $(srcdir)/src/compiler/preprocessor
-VPATH += $(srcdir)/generated
 
 CPPSRCS = \
 	Compiler.cpp \
@@ -80,11 +79,13 @@ CPPSRCS = \
 	VariableInfo.cpp \
 	debug.cpp \
 	ossource_nspr.cpp \
+	util.cpp \
+	ValidateLimitations.cpp \
 	$(NULL)
 
 # flex/yacc generated files
 CPPSRCS += \
-	glslang.cpp \
+	glslang_lex.cpp \
 	glslang_tab.cpp \
 	$(NULL)
 
@@ -93,6 +94,7 @@ CPPSRCS += \
 	CodeGenGLSL.cpp \
 	OutputGLSL.cpp \
 	TranslatorGLSL.cpp \
+	VersionGLSL.cpp \
 	$(NULL)
 
 # Currently, only one or the other

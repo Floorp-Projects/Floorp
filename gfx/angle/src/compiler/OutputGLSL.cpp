@@ -612,23 +612,32 @@ bool TOutputGLSL::visitLoop(Visit visit, TIntermLoop* node)
 
     incrementDepth();
     // Loop header.
-    if (node->testFirst())  // for loop
+    TLoopType loopType = node->getType();
+    if (loopType == ELoopFor)  // for loop
     {
         out << "for (";
         if (node->getInit())
             node->getInit()->traverse(this);
         out << "; ";
 
-        ASSERT(node->getTest() != NULL);
-        node->getTest()->traverse(this);
+        if (node->getCondition())
+            node->getCondition()->traverse(this);
         out << "; ";
 
-        if (node->getTerminal())
-            node->getTerminal()->traverse(this);
+        if (node->getExpression())
+            node->getExpression()->traverse(this);
+        out << ")\n";
+    }
+    else if (loopType == ELoopWhile)  // while loop
+    {
+        out << "while (";
+        ASSERT(node->getCondition() != NULL);
+        node->getCondition()->traverse(this);
         out << ")\n";
     }
     else  // do-while loop
     {
+        ASSERT(loopType == ELoopDoWhile);
         out << "do\n";
     }
 
@@ -636,11 +645,11 @@ bool TOutputGLSL::visitLoop(Visit visit, TIntermLoop* node)
     visitCodeBlock(node->getBody());
 
     // Loop footer.
-    if (!node->testFirst())  // while loop
+    if (loopType == ELoopDoWhile)  // do-while loop
     {
         out << "while (";
-        ASSERT(node->getTest() != NULL);
-        node->getTest()->traverse(this);
+        ASSERT(node->getCondition() != NULL);
+        node->getCondition()->traverse(this);
         out << ");\n";
     }
     decrementDepth();
