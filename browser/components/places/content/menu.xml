@@ -490,7 +490,7 @@
         event.stopPropagation();
       ]]></handler>
 
-      <handler event="dragleave"><![CDATA[
+      <handler event="dragexit"><![CDATA[
         PlacesControllerDragHelper.currentDropTarget = null;
         this.removeAttribute("dragover");
 

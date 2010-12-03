@@ -3294,7 +3294,7 @@
         event.stopPropagation();
       ]]></handler>
 
-      <handler event="dragleave"><![CDATA[
+      <handler event="dragexit"><![CDATA[
         this._dragTime = 0;
 
         // This does not work at all (see bug 458613)

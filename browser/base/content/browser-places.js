@@ -844,11 +844,11 @@ var PlacesMenuDNDHandler = {
   },
 
   /**
-   * Handles dragleave on the <menu> element.
+   * Handles dragexit on the <menu> element.
    * @returns true if the element is a container element (menu or 
    *          menu-toolbarbutton), false otherwise.
    */
-  onDragLeave: function PMDH_onDragLeave(event) {
+  onDragExit: function PMDH_onDragExit(event) {
     // Closing menus in a Places popup is handled by the view itself.
     if (!this._isStaticContainer(event.target))
       return;
