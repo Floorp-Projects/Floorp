@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <title></title>
+
+  <text transform="translate(20, 20)" rotate="110 120 130">ABC</text>
+  <text transform="translate(120, 20)" rotate="110 120 130">DEF</text>
+  <text transform="translate(220, 20)" rotate="110 120 130">GHI</text>
+  <text transform="translate(320, 20)" rotate="310 320 330">JKL</text>
+
+</svg>

@@ -91,7 +91,6 @@
 #include "nsSVGPathGeometryFrame.h"
 #include "prdtoa.h"
 #include "mozilla/dom/Element.h"
-#include "nsIDOMSVGNumberList.h"
 
 using namespace mozilla::dom;
 
@@ -1516,21 +1515,6 @@ nsSVGUtils::NumberFromString(const nsAString& aString, float* aValue,
     }
   }
   return PR_FALSE;
-}
-
-/* static */ float
-nsSVGUtils::GetNumberListValue(nsIDOMSVGNumberList *aList, PRUint32 aIndex)
-{
-  if (!aList) {
-    return 0.0f;
-  }
-  nsCOMPtr<nsIDOMSVGNumber> number;
-  nsresult rv = aList->GetItem(aIndex, getter_AddRefs(number));
-  float value = 0.0f;
-  if (NS_SUCCEEDED(rv)) {
-    number->GetValue(&value);
-  }
-  return value;
 }
 
 // ----------------------------------------------------------------------

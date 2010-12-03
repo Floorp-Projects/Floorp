@@ -39,7 +39,10 @@
 
 #include "nsSVGTSpanFrame.h"
 #include "SVGLengthList.h"
-#include "nsSVGNumberList.h"
+
+namespace mozilla {
+class SVGNumberList;
+}
 
 typedef nsSVGTSpanFrame nsSVGTextPathFrameBase;
 
@@ -85,9 +88,9 @@ public:
   gfxFloat GetPathScale();
 protected:
 
-  virtual void GetXY(mozilla::SVGUserUnitList *aX, mozilla::SVGUserUnitList *aY);
-  virtual void GetDxDy(mozilla::SVGUserUnitList *aDx, mozilla::SVGUserUnitList *aDy);
-  virtual already_AddRefed<nsIDOMSVGNumberList> GetRotate();
+  virtual void GetXY(SVGUserUnitList *aX, SVGUserUnitList *aY);
+  virtual void GetDxDy(SVGUserUnitList *aDx, SVGUserUnitList *aDy);
+  virtual const SVGNumberList *GetRotate();
 
 private:
   already_AddRefed<gfxFlattenedPath> GetFlattenedPath(nsIFrame *path);

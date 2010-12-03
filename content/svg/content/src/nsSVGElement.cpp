@@ -74,11 +74,10 @@
 #include "nsSVGEnum.h"
 #include "nsSVGViewBox.h"
 #include "nsSVGString.h"
+#include "SVGAnimatedNumberList.h"
 #include "SVGAnimatedLengthList.h"
 #include "SVGAnimatedPathSegList.h"
 #include "nsIDOMSVGUnitTypes.h"
-#include "nsIDOMSVGNumberList.h"
-#include "nsIDOMSVGAnimatedNumberList.h"
 #include "nsIDOMSVGPointList.h"
 #include "nsIDOMSVGAnimatedPoints.h"
 #include "nsIDOMSVGTransformList.h"
@@ -178,6 +177,12 @@ nsSVGElement::Init()
 
   for (i = 0; i < lengthListInfo.mLengthListCount; i++) {
     lengthListInfo.Reset(i);
+  }
+
+  NumberListAttributesInfo numberListInfo = GetNumberListInfo();
+
+  for (i = 0; i < numberListInfo.mNumberListCount; i++) {
+    numberListInfo.Reset(i);
   }
 
   // No need to reset SVGPathData since the default value in always the same
@@ -368,8 +373,24 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
         if (aAttribute == *lengthListInfo.mLengthListInfo[i].mName) {
           rv = lengthListInfo.mLengthLists[i].SetBaseValueString(aValue);
           if (NS_FAILED(rv)) {
-            // ReportToConsole
+            ReportAttributeParseFailure(GetOwnerDoc(), aAttribute, aValue);
             lengthListInfo.Reset(i);
+          }
+          foundMatch = PR_TRUE;
+          break;
+        }
+      }
+    }
+
+    if (!foundMatch) {
+      // Check for SVGAnimatedNumberList attribute
+      NumberListAttributesInfo numberListInfo = GetNumberListInfo();
+      for (i = 0; i < numberListInfo.mNumberListCount; i++) {
+        if (aAttribute == *numberListInfo.mNumberListInfo[i].mName) {
+          rv = numberListInfo.mNumberLists[i].SetBaseValueString(aValue);
+          if (NS_FAILED(rv)) {
+            ReportAttributeParseFailure(GetOwnerDoc(), aAttribute, aValue);
+            numberListInfo.Reset(i);
           }
           foundMatch = PR_TRUE;
           break;
@@ -589,6 +610,20 @@ nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
     }
 
     if (!foundMatch) {
+      // Check if this is a number list attribute going away
+      NumberListAttributesInfo numberListInfo = GetNumberListInfo();
+
+      for (PRUint32 i = 0; i < numberListInfo.mNumberListCount; i++) {
+        if (aName == *numberListInfo.mNumberListInfo[i].mName) {
+          numberListInfo.Reset(i);
+          DidChangeNumberList(i, PR_FALSE);
+          foundMatch = PR_TRUE;
+          break;
+        }
+      }
+    }
+
+    if (!foundMatch) {
       // Check if this is a path segment list attribute going away
       if (GetPathDataAttrName() == aName) {
         SVGAnimatedPathSegList *segList = GetAnimPathSegList();
@@ -736,12 +771,6 @@ nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
 void
 nsSVGElement::ResetOldStyleBaseType(nsISVGValue *svg_value)
 {
-  nsCOMPtr<nsIDOMSVGAnimatedNumberList> nl = do_QueryInterface(svg_value);
-  if (nl) {
-    nsCOMPtr<nsIDOMSVGNumberList> numberlist;
-    nl->GetBaseVal(getter_AddRefs(numberlist));
-    numberlist->Clear();
-  }
   nsCOMPtr<nsIDOMSVGAnimatedTransformList> tl = do_QueryInterface(svg_value);
   if (tl) {
     nsCOMPtr<nsIDOMSVGTransformList> transform;
@@ -1579,6 +1608,78 @@ nsSVGElement::GetAnimatedLengthList(PRUint8 aAttrEnum)
 }
 
 
+nsSVGElement::NumberListAttributesInfo
+nsSVGElement::GetNumberListInfo()
+{
+  return NumberListAttributesInfo(nsnull, nsnull, 0);
+}
+
+void
+nsSVGElement::NumberListAttributesInfo::Reset(PRUint8 aAttrEnum)
+{
+  NS_ABORT_IF_FALSE(aAttrEnum < mNumberListCount, "Bad attr enum");
+  mNumberLists[aAttrEnum].ClearBaseValue(aAttrEnum);
+  // caller notifies
+}
+
+void
+nsSVGElement::DidChangeNumberList(PRUint8 aAttrEnum, PRBool aDoSetAttr)
+{
+  if (!aDoSetAttr)
+    return;
+
+  NumberListAttributesInfo info = GetNumberListInfo();
+
+  NS_ABORT_IF_FALSE(info.mNumberListCount > 0,
+                    "DidChangeNumberList on element with no number list attribs");
+  NS_ABORT_IF_FALSE(aAttrEnum < info.mNumberListCount, "aAttrEnum out of range");
+
+  nsAutoString newStr;
+  info.mNumberLists[aAttrEnum].GetBaseValue().GetValueAsString(newStr);
+
+  SetAttr(kNameSpaceID_None, *info.mNumberListInfo[aAttrEnum].mName,
+          newStr, PR_TRUE);
+}
+
+void
+nsSVGElement::DidAnimateNumberList(PRUint8 aAttrEnum)
+{
+  nsIFrame* frame = GetPrimaryFrame();
+
+  if (frame) {
+    NumberListAttributesInfo info = GetNumberListInfo();
+    NS_ABORT_IF_FALSE(aAttrEnum < info.mNumberListCount, "aAttrEnum out of range");
+
+    frame->AttributeChanged(kNameSpaceID_None,
+                            *info.mNumberListInfo[aAttrEnum].mName,
+                            nsIDOMMutationEvent::MODIFICATION);
+  }
+}
+
+SVGAnimatedNumberList*
+nsSVGElement::GetAnimatedNumberList(PRUint8 aAttrEnum)
+{
+  NumberListAttributesInfo info = GetNumberListInfo();
+  if (aAttrEnum < info.mNumberListCount) {
+    return &(info.mNumberLists[aAttrEnum]);
+  }
+  NS_ABORT_IF_FALSE(PR_FALSE, "Bad attrEnum");
+  return nsnull;
+}
+
+SVGAnimatedNumberList*
+nsSVGElement::GetAnimatedNumberList(nsIAtom *aAttrName)
+{
+  NumberListAttributesInfo info = GetNumberListInfo();
+  for (PRUint32 i = 0; i < info.mNumberListCount; i++) {
+    if (aAttrName == *info.mNumberListInfo[i].mName) {
+      return &info.mNumberLists[i];
+    }
+  }
+  NS_ABORT_IF_FALSE(PR_FALSE, "Bad caller");
+  return nsnull;
+}
+
 void
 nsSVGElement::DidChangePathSegList(PRBool aDoSetAttr)
 {
@@ -2249,6 +2350,17 @@ nsSVGElement::GetAnimatedAttr(PRInt32 aNamespaceID, nsIAtom* aName)
     if (aName == nsGkAtoms::preserveAspectRatio) {
       nsSVGPreserveAspectRatio *preserveAspectRatio = GetPreserveAspectRatio();
       return preserveAspectRatio ? preserveAspectRatio->ToSMILAttr(this) : nsnull;
+    }
+
+    // NumberLists:
+    {
+      NumberListAttributesInfo info = GetNumberListInfo();
+      for (PRUint32 i = 0; i < info.mNumberListCount; i++) {
+        if (aName == *info.mNumberListInfo[i].mName) {
+          NS_ABORT_IF_FALSE(i <= UCHAR_MAX, "Too many attributes");
+          return info.mNumberLists[i].ToSMILAttr(this, PRUint8(i));
+        }
+      }
     }
 
     // LengthLists:
