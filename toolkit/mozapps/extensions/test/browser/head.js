@@ -26,7 +26,6 @@ const MANAGER_URI = "about:addons";
 const INSTALL_URI = "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul";
 const PREF_LOGGING_ENABLED = "extensions.logging.enabled";
 const PREF_SEARCH_MAXRESULTS = "extensions.getAddons.maxResults";
-const PREF_DISCOVERURL = "extensions.webservice.discoverURL";
 
 var gPendingTests = [];
 var gTestsRun = 0;
@@ -38,8 +37,6 @@ var gUseInContentUI = !gTestInWindow && ("switchToTabHavingURI" in window);
 Services.prefs.setBoolPref(PREF_LOGGING_ENABLED, true);
 // Turn off remote results in searches
 Services.prefs.setIntPref(PREF_SEARCH_MAXRESULTS, 0);
-// Default to a local discovery pane
-Services.prefs.setCharPref(PREF_DISCOVERURL, "http://127.0.0.1/extensions-dummy/discoveryURL");
 registerCleanupFunction(function() {
   Services.prefs.clearUserPref(PREF_LOGGING_ENABLED);
   try {
@@ -540,22 +537,11 @@ MockProvider.prototype = {
    */
   addInstall: function MP_addInstall(aInstall) {
     this.installs.push(aInstall);
-    aInstall._provider = this;
 
     if (!this.started)
       return;
 
     aInstall.callListeners("onNewInstall");
-  },
-
-  removeInstall: function MP_removeInstall(aInstall) {
-    var pos = this.installs.indexOf(aInstall);
-    if (pos == -1) {
-      ok(false, "Tried to remove an install that wasn't registered with the mock provider");
-      return;
-    }
-
-    this.installs.splice(pos, 1);
   },
 
   /**
@@ -1034,7 +1020,6 @@ MockInstall.prototype = {
         AddonManagerPrivate.callAddonListeners("onInstalling", this.addon);
 
         this.state = AddonManager.STATE_INSTALLED;
-        this._provider.removeInstall(this);
         this.callListeners("onInstallEnded");
         break;
       case AddonManager.STATE_DOWNLOADING:
