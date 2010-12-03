@@ -1,0 +1,204 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Accessible menu events testing for XUL menu">
+
+  <script type="application/javascript" 
+          src="chrome://mochikit/content/MochiKit/packed.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+  <script type="application/javascript"
+          src="../common.js" />
+  <script type="application/javascript"
+          src="../events.js" />
+
+  <script type="application/javascript">
+    function openFileMenu()
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_MENU_START, getNode("menubar")),
+        new invokerChecker(EVENT_MENUPOPUP_START, getNode("menupopup-file"))
+        // new invokerChecker(EVENT_FOCUS, getNode("menuitem-newtab")) intermitent failure
+      ];
+
+      this.invoke = function openFileMenu_invoke()
+      {
+        synthesizeKey("F", { altKey: true, shiftKey: true });
+      }
+
+      this.getID = function openFileMenu_getID()
+      {
+        return "open file menu by alt+F press";
+      }
+    }
+
+    function openEditMenu()
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_MENUPOPUP_END, getNode("menupopup-file")),
+        new invokerChecker(EVENT_MENUPOPUP_START, getNode("menupopup-edit"))
+        // new invokerChecker(EVENT_FOCUS, getNode("menuitem-undo")) intermitent failure
+      ];
+
+      this.invoke = function openEditMenu_invoke()
+      {
+        synthesizeKey("VK_RIGHT", { });
+      }
+
+      this.getID = function openEditMenu_getID()
+      {
+        return "open edit menu by lef arrow press";
+      }
+    }
+
+    function closeEditMenu()
+    {
+      this.eventSeq = [
+        //new invokerChecker(EVENT_FOCUS, document), intermitent failure
+        new invokerChecker(EVENT_MENUPOPUP_END, getNode("menupopup-edit")),
+        new invokerChecker(EVENT_MENU_END, getNode("menubar"))
+      ];
+
+      this.invoke = function closeEditMenu_invoke()
+      {
+        synthesizeKey("VK_ESCAPE", { });
+      }
+
+      this.getID = function closeEditMenu_getID()
+      {
+        return "close edit menu, leave menubar";
+      }
+    }
+
+    function focusFileMenu()
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_MENU_START, getNode("menubar")),
+        new invokerChecker(EVENT_FOCUS, getNode("menuitem-file"))
+      ];
+
+      this.invoke = function focusFileMenu_invoke()
+      {
+        synthesizeKey("VK_ALT", { });
+      }
+
+      this.getID = function focusFileMenu_getID()
+      {
+        return "activate menubar, focus file menu (atl press)";
+      }
+    }
+
+    function focusEditMenu()
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_FOCUS, getNode("menuitem-edit"))
+      ];
+
+      this.invoke = function focusEditMenu_invoke()
+      {
+        synthesizeKey("VK_RIGHT", { });
+      }
+
+      this.getID = function focusEditMenu_getID()
+      {
+        return "focus edit menu";
+      }
+    }
+
+    function leaveMenubar()
+    {
+      this.eventSeq = [
+        //new invokerChecker(EVENT_FOCUS, document), intermitent failure
+        new invokerChecker(EVENT_MENU_END, getNode("menubar"))
+      ];
+
+      this.invoke = function leaveMenubar_invoke()
+      {
+        synthesizeKey("VK_ESCAPE", { });
+      }
+
+      this.getID = function leaveMenubar_getID()
+      {
+        return "leave menubar";
+      }
+    }
+
+    /**
+     * Do tests.
+     */
+
+    //gA11yEventDumpID = "eventdump";
+    gA11yEventDumpToConsole = true;
+
+    var gQueue = null;
+
+    function doTests()
+    {
+      if (!WIN) {
+        todo(false, "Enable this test on other platforms.");
+        SimpleTest.finish();
+        return;
+      }
+
+      todo(false,
+           "Fix intermitent failures. Focus may randomly occur before or after menupopup events!");
+
+      gQueue = new eventQueue();
+
+      gQueue.push(new openFileMenu());
+      gQueue.push(new openEditMenu());
+      gQueue.push(new closeEditMenu());
+
+      // Alt key is used to active menubar and focus menu item on Windows,
+      // other platforms requires setting a ui.key.menuAccessKeyFocuses
+      // preference.
+      if (WIN) {
+        gQueue.push(new focusFileMenu());
+        gQueue.push(new focusEditMenu());
+        gQueue.push(new leaveMenubar());
+      }
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=615189"
+         title="Clean up FireAccessibleFocusEvent">
+        Mozilla Bug 615189
+      </a>
+      <p id="display"></p>
+      <div id="content" style="display: none"></div>
+      <pre id="test">
+      </pre>
+    </body>
+
+    <vbox flex="1">
+      <menubar id="menubar">
+        <menu id="menuitem-file" label="File" accesskey="F">
+          <menupopup id="menupopup-file">
+            <menuitem id="menuitem-newtab" label="New Tab"/>
+          </menupopup>
+        </menu>
+        <menu id="menuitem-edit" label="Edit" accesskey="E">
+          <menupopup id="menupopup-edit">
+            <menuitem id="menuitem-undo" label="Undo"/>
+          </menupopup>
+        </menu>
+      </menubar>
+
+      <vbox id="eventdump" role="log"/>
+    </vbox>
+  </hbox>
+</window>

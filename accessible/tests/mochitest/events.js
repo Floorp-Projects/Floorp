@@ -8,6 +8,8 @@ const EVENT_DOCUMENT_LOAD_STOPPED = nsIAccessibleEvent.EVENT_DOCUMENT_LOAD_STOPP
 const EVENT_HIDE = nsIAccessibleEvent.EVENT_HIDE;
 const EVENT_FOCUS = nsIAccessibleEvent.EVENT_FOCUS;
 const EVENT_NAME_CHANGE = nsIAccessibleEvent.EVENT_NAME_CHANGE;
+const EVENT_MENU_START = nsIAccessibleEvent.EVENT_MENU_START;
+const EVENT_MENU_END = nsIAccessibleEvent.EVENT_MENU_END;
 const EVENT_MENUPOPUP_START = nsIAccessibleEvent.EVENT_MENUPOPUP_START;
 const EVENT_MENUPOPUP_END = nsIAccessibleEvent.EVENT_MENUPOPUP_END;
 const EVENT_REORDER = nsIAccessibleEvent.EVENT_REORDER;
@@ -653,11 +655,12 @@ function sequence()
 // Event queue invokers
 
 /**
- * Invokers defined below take a checker object implementing 'check' method
- * which will be called when proper event is handled. Invokers listen default
- * event type registered in event queue object until it is passed explicetly.
+ * Invokers defined below take a checker object (or array of checker objects)
+ * implementing 'check' method which will be called when proper event is
+ * handled. Invokers listen default event type registered in event queue object
+ * until it is passed explicetly.
  *
- * Note, checker object is optional.
+ * Note, checker object or array of checker objects is optional.
  * Note, you don't need to initialize 'target' and 'type' members of checker
  * object. The 'target' member will be initialized by invoker object and you are
  * free to use it in 'check' method.
@@ -666,9 +669,9 @@ function sequence()
 /**
  * Click invoker.
  */
-function synthClick(aNodeOrID, aChecker, aEventType)
+function synthClick(aNodeOrID, aCheckerOrEventSeq, aEventType)
 {
-  this.__proto__ = new synthAction(aNodeOrID, aChecker, aEventType);
+  this.__proto__ = new synthAction(aNodeOrID, aCheckerOrEventSeq, aEventType);
 
   this.invoke = function synthClick_invoke()
   {
@@ -688,9 +691,9 @@ function synthClick(aNodeOrID, aChecker, aEventType)
 /**
  * Mouse move invoker.
  */
-function synthMouseMove(aNodeOrID, aChecker, aEventType)
+function synthMouseMove(aNodeOrID, aCheckerOrEventSeq, aEventType)
 {
-  this.__proto__ = new synthAction(aNodeOrID, aChecker, aEventType);
+  this.__proto__ = new synthAction(aNodeOrID, aCheckerOrEventSeq, aEventType);
 
   this.invoke = function synthMouseMove_invoke()
   {
@@ -707,9 +710,9 @@ function synthMouseMove(aNodeOrID, aChecker, aEventType)
 /**
  * General key press invoker.
  */
-function synthKey(aNodeOrID, aKey, aArgs, aChecker, aEventType)
+function synthKey(aNodeOrID, aKey, aArgs, aCheckerOrEventSeq, aEventType)
 {
-  this.__proto__ = new synthAction(aNodeOrID, aChecker, aEventType);
+  this.__proto__ = new synthAction(aNodeOrID, aCheckerOrEventSeq, aEventType);
 
   this.invoke = function synthKey_invoke()
   {
@@ -728,10 +731,10 @@ function synthKey(aNodeOrID, aKey, aArgs, aChecker, aEventType)
 /**
  * Tab key invoker.
  */
-function synthTab(aNodeOrID, aChecker, aEventType)
+function synthTab(aNodeOrID, aCheckerOrEventSeq, aEventType)
 {
   this.__proto__ = new synthKey(aNodeOrID, "VK_TAB", { shiftKey: false },
-                                aChecker, aEventType);
+                                aCheckerOrEventSeq, aEventType);
 
   this.getID = function synthTab_getID() 
   { 
@@ -742,10 +745,10 @@ function synthTab(aNodeOrID, aChecker, aEventType)
 /**
  * Shift tab key invoker.
  */
-function synthShiftTab(aNodeOrID, aChecker, aEventType)
+function synthShiftTab(aNodeOrID, aCheckerOrEventSeq, aEventType)
 {
   this.__proto__ = new synthKey(aNodeOrID, "VK_TAB", { shiftKey: true },
-                                aChecker, aEventType);
+                                aCheckerOrEventSeq, aEventType);
 
   this.getID = function synthTabTest_getID() 
   { 
@@ -756,9 +759,9 @@ function synthShiftTab(aNodeOrID, aChecker, aEventType)
 /**
  * Down arrow key invoker.
  */
-function synthDownKey(aNodeOrID, aChecker, aEventType)
+function synthDownKey(aNodeOrID, aCheckerOrEventSeq, aEventType)
 {
-  this.__proto__ = new synthKey(aNodeOrID, "VK_DOWN", null, aChecker,
+  this.__proto__ = new synthKey(aNodeOrID, "VK_DOWN", null, aCheckerOrEventSeq,
                                 aEventType);
 
   this.getID = function synthDownKey_getID()
@@ -770,9 +773,9 @@ function synthDownKey(aNodeOrID, aChecker, aEventType)
 /**
  * Right arrow key invoker.
  */
-function synthRightKey(aNodeOrID, aChecker, aEventType)
+function synthRightKey(aNodeOrID, aCheckerOrEventSeq, aEventType)
 {
-  this.__proto__ = new synthKey(aNodeOrID, "VK_RIGHT", null, aChecker,
+  this.__proto__ = new synthKey(aNodeOrID, "VK_RIGHT", null, aCheckerOrEventSeq,
                                 aEventType);
 
   this.getID = function synthRightKey_getID()
@@ -784,9 +787,9 @@ function synthRightKey(aNodeOrID, aChecker, aEventType)
 /**
  * Home key invoker.
  */
-function synthHomeKey(aNodeOrID, aChecker, aEventType)
+function synthHomeKey(aNodeOrID, aCheckerOrEventSeq, aEventType)
 {
-  this.__proto__ = new synthKey(aNodeOrID, "VK_HOME", null, aChecker,
+  this.__proto__ = new synthKey(aNodeOrID, "VK_HOME", null, aCheckerOrEventSeq,
                                 aEventType);
   
   this.getID = function synthHomeKey_getID()
@@ -798,9 +801,9 @@ function synthHomeKey(aNodeOrID, aChecker, aEventType)
 /**
  * Focus invoker.
  */
-function synthFocus(aNodeOrID, aChecker, aEventType)
+function synthFocus(aNodeOrID, aCheckerOrEventSeq, aEventType)
 {
-  this.__proto__ = new synthAction(aNodeOrID, aChecker, aEventType);
+  this.__proto__ = new synthAction(aNodeOrID, aCheckerOrEventSeq, aEventType);
 
   this.invoke = function synthFocus_invoke()
   {
@@ -816,10 +819,10 @@ function synthFocus(aNodeOrID, aChecker, aEventType)
 /**
  * Focus invoker. Focus the HTML body of content document of iframe.
  */
-function synthFocusOnFrame(aNodeOrID, aChecker, aEventType)
+function synthFocusOnFrame(aNodeOrID, aCheckerOrEventSeq, aEventType)
 {
   this.__proto__ = new synthAction(getNode(aNodeOrID).contentDocument,
-                                   aChecker, aEventType);
+                                   aCheckerOrEventSeq, aEventType);
   
   this.invoke = function synthFocus_invoke()
   {
@@ -835,9 +838,9 @@ function synthFocusOnFrame(aNodeOrID, aChecker, aEventType)
 /**
  * Select all invoker.
  */
-function synthSelectAll(aNodeOrID, aChecker, aEventType)
+function synthSelectAll(aNodeOrID, aCheckerOrEventSeq, aEventType)
 {
-  this.__proto__ = new synthAction(aNodeOrID, aChecker, aEventType);
+  this.__proto__ = new synthAction(aNodeOrID, aCheckerOrEventSeq, aEventType);
 
   this.invoke = function synthSelectAll_invoke()
   {
@@ -1144,19 +1147,27 @@ function sequenceItem(aProcessor, aEventType, aTarget, aItemID)
 /**
  * Invoker base class for prepare an action.
  */
-function synthAction(aNodeOrID, aChecker, aEventType)
+function synthAction(aNodeOrID, aCheckerOrEventSeq, aEventType)
 {
   this.DOMNode = getNode(aNodeOrID);
-  if (aChecker)
-    aChecker.target = this.DOMNode;
+
+  this.checker = null;
+  if (aCheckerOrEventSeq) {
+    if (aCheckerOrEventSeq instanceof Array) {
+      this.eventSeq = aCheckerOrEventSeq;
+    } else {
+      this.checker = aCheckerOrEventSeq;
+      this.checker.target = this.DOMNode;
+    }
+  }
 
   if (aEventType)
     this.eventSeq = [ new invokerChecker(aEventType, this.DOMNode) ];
 
   this.check = function synthAction_check(aEvent)
   {
-    if (aChecker)
-      aChecker.check(aEvent);
+    if (this.checker)
+      this.checker.check(aEvent);
   }
 
   this.getID = function synthAction_getID() { return aNodeOrID + " action"; }
