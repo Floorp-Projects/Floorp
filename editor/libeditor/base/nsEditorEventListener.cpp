@@ -143,7 +143,7 @@ nsEditorEventListener::InstallToEditor()
                                     NS_EVENT_FLAG_BUBBLE, sysGroup);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = elmP->AddEventListenerByType(static_cast<nsIDOMKeyListener*>(this),
-                                    NS_LITERAL_STRING("dragleave"),
+                                    NS_LITERAL_STRING("dragexit"),
                                     NS_EVENT_FLAG_BUBBLE, sysGroup);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = elmP->AddEventListenerByType(static_cast<nsIDOMKeyListener*>(this),
@@ -216,7 +216,7 @@ nsEditorEventListener::UninstallFromEditor()
                                   NS_LITERAL_STRING("dragover"),
                                   NS_EVENT_FLAG_BUBBLE, sysGroup);
   elmP->RemoveEventListenerByType(static_cast<nsIDOMKeyListener*>(this),
-                                  NS_LITERAL_STRING("dragleave"),
+                                  NS_LITERAL_STRING("dragexit"),
                                   NS_EVENT_FLAG_BUBBLE, sysGroup);
   elmP->RemoveEventListenerByType(static_cast<nsIDOMKeyListener*>(this),
                                   NS_LITERAL_STRING("drop"),
@@ -283,8 +283,8 @@ nsEditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
       return DragEnter(dragEvent);
     if (eventType.EqualsLiteral("dragover"))
       return DragOver(dragEvent);
-    if (eventType.EqualsLiteral("dragleave"))
-      return DragLeave(dragEvent);
+    if (eventType.EqualsLiteral("dragexit"))
+      return DragExit(dragEvent);
     if (eventType.EqualsLiteral("drop"))
       return Drop(dragEvent);
   }
@@ -601,7 +601,7 @@ nsEditorEventListener::DragOver(nsIDOMDragEvent* aDragEvent)
 }
 
 nsresult
-nsEditorEventListener::DragLeave(nsIDOMDragEvent* aDragEvent)
+nsEditorEventListener::DragExit(nsIDOMDragEvent* aDragEvent)
 {
   if (mCaret && mCaretDrawn)
   {

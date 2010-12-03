@@ -515,7 +515,7 @@
                      ondragover="homeButtonObserver.onDragOver(event)"
                      ondragenter="homeButtonObserver.onDragOver(event)"
                      ondrop="homeButtonObserver.onDrop(event)"
-                     ondragleave="homeButtonObserver.onDragLeave(event)"
+                     ondragexit="homeButtonObserver.onDragExit(event)"
                      onclick="BrowserGoHome(event);"
                      aboutHomeOverrideTooltip="&abouthome.pageTitle;"/>
 
@@ -624,7 +624,7 @@
                        tooltiptext="&bookmarksMenuButton.tooltip;"
                        ondragenter="PlacesMenuDNDHandler.onDragEnter(event);"
                        ondragover="PlacesMenuDNDHandler.onDragOver(event);"
-                       ondragleave="PlacesMenuDNDHandler.onDragLeave(event);"
+                       ondragexit="PlacesMenuDNDHandler.onDragExit(event);"
                        ondrop="PlacesMenuDNDHandler.onDrop(event);">
           <menupopup id="BMB_bookmarksPopup"
                      placespopup="true"
@@ -813,7 +813,7 @@
                      ondrop="newTabButtonObserver.onDrop(event)"
                      ondragover="newTabButtonObserver.onDragOver(event)"
                      ondragenter="newTabButtonObserver.onDragOver(event)"
-                     ondragleave="newTabButtonObserver.onDragLeave(event)"
+                     ondragexit="newTabButtonObserver.onDragExit(event)"
                      removable="true"/>
 
       <toolbarbutton id="alltabs-button"
@@ -860,7 +860,7 @@
                      ondrop="DownloadsButtonDNDObserver.onDrop(event)"
                      ondragover="DownloadsButtonDNDObserver.onDragOver(event)"
                      ondragenter="DownloadsButtonDNDObserver.onDragOver(event)"
-                     ondragleave="DownloadsButtonDNDObserver.onDragLeave(event)"
+                     ondragexit="DownloadsButtonDNDObserver.onDragExit(event)"
                      label="&downloads.label;"
                      tooltiptext="&downloads.tooltip;"/>
 
@@ -874,7 +874,7 @@
                      ondrop="bookmarksButtonObserver.onDrop(event)"
                      ondragover="bookmarksButtonObserver.onDragOver(event)"
                      ondragenter="bookmarksButtonObserver.onDragOver(event)"
-                     ondragleave="bookmarksButtonObserver.onDragLeave(event)"/>
+                     ondragexit="bookmarksButtonObserver.onDragExit(event)"/>
 
       <toolbarbutton id="new-window-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      label="&newNavigatorCmd.label;"
@@ -883,7 +883,7 @@
                      ondrop="newWindowButtonObserver.onDrop(event)"
                      ondragover="newWindowButtonObserver.onDragOver(event)"
                      ondragenter="newWindowButtonObserver.onDragOver(event)"
-                     ondragleave="newWindowButtonObserver.onDragLeave(event)"/>
+                     ondragexit="newWindowButtonObserver.onDragExit(event)"/>
 
       <toolbarbutton id="cut-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      label="&cutCmd.label;"

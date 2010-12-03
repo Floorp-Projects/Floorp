@@ -2887,7 +2887,7 @@ var homeButtonObserver = {
       browserDragAndDrop.dragOver(aEvent, "droponhomebutton");
       aEvent.dropEffect = "link";
     },
-  onDragLeave: function (aEvent)
+  onDragExit: function (aEvent)
     {
       XULWindowBrowser.setStatusText("");
     }
@@ -2930,7 +2930,7 @@ var bookmarksButtonObserver = {
     aEvent.dropEffect = "link";
   },
 
-  onDragLeave: function (aEvent)
+  onDragExit: function (aEvent)
   {
     XULWindowBrowser.setStatusText("");
   }
@@ -2942,7 +2942,7 @@ var newTabButtonObserver = {
     browserDragAndDrop.dragOver(aEvent, "droponnewtabbutton");
   },
 
-  onDragLeave: function (aEvent)
+  onDragExit: function (aEvent)
   {
     XULWindowBrowser.setStatusText("");
   },
@@ -2964,7 +2964,7 @@ var newWindowButtonObserver = {
   {
     browserDragAndDrop.dragOver(aEvent, "droponnewwindowbutton");
   },
-  onDragLeave: function (aEvent)
+  onDragExit: function (aEvent)
   {
     XULWindowBrowser.setStatusText("");
   },
@@ -2991,7 +2991,7 @@ var DownloadsButtonDNDObserver = {
       aEvent.preventDefault();
   },
 
-  onDragLeave: function (aEvent)
+  onDragExit: function (aEvent)
   {
     XULWindowBrowser.setStatusText("");
   },
