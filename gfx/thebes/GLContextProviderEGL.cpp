@@ -78,9 +78,9 @@ typedef void *EGLNativeWindowType;
 
 #elif defined(XP_WIN)
 
-#include <nsServiceManagerUtils.h>
-#include <nsIPrefBranch.h>
-#include <nsILocalFile.h>
+#include "nsServiceManagerUtils.h"
+#include "nsIPrefBranch.h"
+#include "nsILocalFile.h"
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN 1
@@ -282,26 +282,26 @@ public:
         }
 
 #ifdef XP_WIN
-        // ANGLE is an addon currently, so we have to do a bit of work
-        // to find the directory; the addon sets this on startup/shutdown.
+        // Allow for explicitly specifying the location of libEGL.dll and
+        // libGLESv2.dll.
         do {
             nsCOMPtr<nsIPrefBranch> prefs = do_GetService("@mozilla.org/preferences-service;1");
-            nsCOMPtr<nsILocalFile> angleFile, glesv2File;
+            nsCOMPtr<nsILocalFile> eglFile, glesv2File;
             if (!prefs)
                 break;
 
             nsresult rv = prefs->GetComplexValue("gfx.angle.egl.path",
                                                  NS_GET_IID(nsILocalFile),
-                                                 getter_AddRefs(angleFile));
-            if (NS_FAILED(rv) || !angleFile)
+                                                 getter_AddRefs(eglFile));
+            if (NS_FAILED(rv) || !eglFile)
                 break;
 
             nsCAutoString s;
 
             // note that we have to load the libs in this order, because libEGL.dll
-            // depends on libGLESv2.dll, but is not in our search path.
+            // depends on libGLESv2.dll, but is not/may not be in our search path.
             nsCOMPtr<nsIFile> f;
-            angleFile->Clone(getter_AddRefs(f));
+            eglFile->Clone(getter_AddRefs(f));
             glesv2File = do_QueryInterface(f);
             if (!glesv2File)
                 break;
@@ -313,18 +313,20 @@ public:
             if (!glesv2lib)
                 break;
 
-            angleFile->Append(NS_LITERAL_STRING("libEGL.dll"));
-            angleFile->Load(&mEGLLibrary);
+            eglFile->Append(NS_LITERAL_STRING("libEGL.dll"));
+            eglFile->Load(&mEGLLibrary);
         } while (false);
 #endif
 
         if (!mEGLLibrary) {
             mEGLLibrary = PR_LoadLibrary(EGL_LIB);
-            if (!mEGLLibrary) {
-                NS_WARNING("Couldn't load EGL LIB.");
-                return PR_FALSE;
-            }
         }
+
+        if (!mEGLLibrary) {
+            NS_WARNING("Couldn't load EGL LIB.");
+            return PR_FALSE;
+        }
+
 #define SYMBOL(name) \
     { (PRFuncPtr*) &f##name, { "egl" #name, NULL } }
 
