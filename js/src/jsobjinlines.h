@@ -190,11 +190,13 @@ inline bool
 JSObject::methodWriteBarrier(JSContext *cx, const js::Shape &shape, const js::Value &v)
 {
     if (flags & (BRANDED | METHOD_BARRIER)) {
-        const js::Value &prev = nativeGetSlot(shape.slot);
+        if (shape.slot != SHAPE_INVALID_SLOT) {
+            const js::Value &prev = nativeGetSlot(shape.slot);
 
-        if (ChangesMethodValue(prev, v)) {
-            JS_FUNCTION_METER(cx, mwritebarrier);
-            return methodShapeChange(cx, shape);
+            if (ChangesMethodValue(prev, v)) {
+                JS_FUNCTION_METER(cx, mwritebarrier);
+                return methodShapeChange(cx, shape);
+            }
         }
     }
     return true;
