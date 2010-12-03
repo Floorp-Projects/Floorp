@@ -34,13 +34,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef MOZILLA_DOMSVGLENGTHLIST_H__
-#define MOZILLA_DOMSVGLENGTHLIST_H__
+#ifndef MOZILLA_DOMSVGNUMBERLIST_H__
+#define MOZILLA_DOMSVGNUMBERLIST_H__
 
-#include "nsIDOMSVGLengthList.h"
-#include "SVGLengthList.h"
-#include "SVGLength.h"
-#include "DOMSVGAnimatedLengthList.h"
+#include "nsIDOMSVGNumberList.h"
+#include "SVGNumberList.h"
+#include "DOMSVGAnimatedNumberList.h"
 #include "nsCOMArray.h"
 #include "nsAutoPtr.h"
 
@@ -48,55 +47,54 @@ class nsSVGElement;
 
 namespace mozilla {
 
-class DOMSVGLength;
+class DOMSVGNumber;
 
 /**
- * Class DOMSVGLengthList
+ * Class DOMSVGNumberList
  *
  * This class is used to create the DOM tearoff objects that wrap internal
- * SVGLengthList objects.
+ * SVGNumberList objects.
  *
- * See the architecture comment in DOMSVGAnimatedLengthList.h.
+ * See the architecture comment in DOMSVGAnimatedNumberList.h.
  *
- * This class is strongly intertwined with DOMSVGAnimatedLengthList and
- * DOMSVGLength. We are a friend of DOMSVGAnimatedLengthList, and are
- * responsible for nulling out our DOMSVGAnimatedLengthList's pointer to us
+ * This class is strongly intertwined with DOMSVGAnimatedNumberList and
+ * DOMSVGNumber. We are a friend of DOMSVGAnimatedNumberList, and are
+ * responsible for nulling out our DOMSVGAnimatedNumberList's pointer to us
  * when we die, essentially making its pointer to us a weak pointer. Similarly,
- * our DOMSVGLength items are friends of us and responsible for nulling out our
+ * our DOMSVGNumber items are friends of us and responsible for nulling out our
  * pointers to them.
  *
  * Our DOM items are created lazily on demand as and when script requests them.
  */
-class DOMSVGLengthList : public nsIDOMSVGLengthList
+class DOMSVGNumberList : public nsIDOMSVGNumberList
 {
-  friend class DOMSVGLength;
+  friend class DOMSVGNumber;
 
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(DOMSVGLengthList)
-  NS_DECL_NSIDOMSVGLENGTHLIST
+  NS_DECL_CYCLE_COLLECTION_CLASS(DOMSVGNumberList)
+  NS_DECL_NSIDOMSVGNUMBERLIST
 
-  DOMSVGLengthList(DOMSVGAnimatedLengthList *aAList)
+  DOMSVGNumberList(DOMSVGAnimatedNumberList *aAList,
+                   const SVGNumberList &aInternalList)
     : mAList(aAList)
   {
-    // We silently ignore SetLength OOM failure since being out of sync is safe
-    // so long as we have *fewer* items than our internal list.
+    // We can NOT use InternalList() here - it depends on IsAnimValList, which
+    // in turn depends on this object having been assigned to either aAList's
+    // mBaseVal or mAnimVal. At this point we haven't been assigned to either!
+    // This is why our caller must pass in aInternalList.
 
-    mItems.SetLength(InternalList().Length());
-    for (PRUint32 i = 0; i < Length(); ++i) {
-      // null out all the pointers - items are created on-demand
-      mItems[i] = nsnull;
-    }
+    InternalListLengthWillChange(aInternalList.Length()); // Initialize mItems
   }
 
-  ~DOMSVGLengthList() {
+  ~DOMSVGNumberList() {
     // Our mAList's weak ref to us must be nulled out when we die. If GC has
     // unlinked us using the cycle collector code, then that has already
     // happened, and mAList is null.
     if (mAList) {
       ( IsAnimValList() ? mAList->mAnimVal : mAList->mBaseVal ) = nsnull;
     }
-  };
+  }
 
   /**
    * This will normally be the same as InternalList().Length(), except if we've
@@ -105,7 +103,7 @@ public:
   PRUint32 Length() const {
     NS_ABORT_IF_FALSE(mItems.Length() == 0 ||
                       mItems.Length() ==
-                        const_cast<DOMSVGLengthList*>(this)->InternalList().Length(),
+                        const_cast<DOMSVGNumberList*>(this)->InternalList().Length(),
                       "DOM wrapper's list length is out of sync");
     return mItems.Length();
   }
@@ -123,35 +121,33 @@ private:
     return mAList->mAttrEnum;
   }
 
-  PRUint8 Axis() const {
-    return mAList->mAxis;
-  }
-
   /// Used to determine if this list is the baseVal or animVal list.
   PRBool IsAnimValList() const {
+    NS_ABORT_IF_FALSE(this == mAList->mBaseVal || this == mAList->mAnimVal,
+                      "Calling IsAnimValList() too early?!");
     return this == mAList->mAnimVal;
   }
 
   /**
-   * Get a reference to this object's corresponding internal SVGLengthList.
+   * Get a reference to this object's corresponding internal SVGNumberList.
    *
    * To simplify the code we just have this one method for obtaining both
    * baseVal and animVal internal lists. This means that animVal lists don't
    * get const protection, but our setter methods guard against changing
    * animVal lists.
    */
-  SVGLengthList& InternalList();
+  SVGNumberList& InternalList();
 
-  /// Creates a DOMSVGLength for aIndex, if it doesn't already exist.
+  /// Creates a DOMSVGNumber for aIndex, if it doesn't already exist.
   void EnsureItemAt(PRUint32 aIndex);
 
-  // Weak refs to our DOMSVGLength items. The items are friends and take care
+  // Weak refs to our DOMSVGNumber items. The items are friends and take care
   // of clearing our pointer to them when they die.
-  nsTArray<DOMSVGLength*> mItems;
+  nsTArray<DOMSVGNumber*> mItems;
 
-  nsRefPtr<DOMSVGAnimatedLengthList> mAList;
+  nsRefPtr<DOMSVGAnimatedNumberList> mAList;
 };
 
 } // namespace mozilla
 
-#endif // MOZILLA_DOMSVGLENGTHLIST_H__
+#endif // MOZILLA_DOMSVGNUMBERLIST_H__

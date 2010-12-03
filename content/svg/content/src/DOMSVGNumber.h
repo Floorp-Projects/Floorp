@@ -34,87 +34,63 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef MOZILLA_DOMSVGLENGTH_H__
-#define MOZILLA_DOMSVGLENGTH_H__
+#ifndef MOZILLA_DOMSVGNUMBER_H__
+#define MOZILLA_DOMSVGNUMBER_H__
 
-#include "nsIDOMSVGLength.h"
-#include "DOMSVGLengthList.h"
-#include "SVGLength.h"
+#include "nsIDOMSVGNumber.h"
+#include "DOMSVGNumberList.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsAutoPtr.h"
 
 class nsSVGElement;
 
-// We make DOMSVGLength a pseudo-interface to allow us to QI to it in order to
-// check that the objects that scripts pass to DOMSVGLengthList methods are our
-// *native* length objects.
+// We make DOMSVGNumber a pseudo-interface to allow us to QI to it in order to
+// check that the objects that scripts pass to DOMSVGNumberList methods are our
+// *native* number objects.
 //
-// {A8468350-7F7B-4976-9A7E-3765A1DADF9A}
-#define MOZILLA_DOMSVGLENGTH_IID \
-  { 0xA8468350, 0x7F7B, 0x4976, { 0x9A, 0x7E, 0x37, 0x65, 0xA1, 0xDA, 0xDF, 0x9A } }
+// {2CA92412-2E1F-4DDB-A16C-52B3B582270D}
+#define MOZILLA_DOMSVGNUMBER_IID \
+  { 0x2CA92412, 0x2E1F, 0x4DDB, \
+    { 0xA1, 0x6C, 0x52, 0xB3, 0xB5, 0x82, 0x27, 0x0D } }
 
 namespace mozilla {
 
 /**
- * Class DOMSVGLength
+ * Class DOMSVGNumber
  *
- * This class creates the DOM objects that wrap internal SVGLength objects that
- * are in an SVGLengthList. It is also used to create the objects returned by
- * SVGSVGElement.createSVGLength().
+ * This class creates the DOM objects that wrap internal SVGNumber objects that
+ * are in an SVGNumberList. It is also used to create the objects returned by
+ * SVGSVGElement.createSVGNumber().
  *
- * For the DOM wrapper classes for non-list SVGLength, see nsSVGLength2.h.
+ * For the DOM wrapper classes for non-list SVGNumber, see nsSVGNumber2.h.
  *
- * See the architecture comment in DOMSVGAnimatedLengthList.h.
+ * See the architecture comment in DOMSVGAnimatedNumberList.h.
  *
- * This class is strongly intertwined with DOMSVGAnimatedLengthList and
- * DOMSVGLengthList. We are a friend of DOMSVGLengthList, and are responsible
- * for nulling out our DOMSVGLengthList's pointer to us when we die, making it
- * a real weak pointer.
- *
- * When objects of this type are in a DOMSVGLengthList they belong to an
- * attribute. While they belong to an attribute, the objects' values come from
- * their corresponding internal SVGLength objects in the internal SVGLengthList
- * objects for the attribute. Getting and setting values of a DOMSVGLength
- * requires reading and writing to its internal SVGLength. However, if the
- * DOMSVGLength is detached from its DOMSVGLengthList then it first makes a
- * copy of its internal SVGLength's value and unit so that it doesn't appear to
- * "lose" its value from script's perspective on being removed from the list.
- * This means that these DOM tearoffs have space to store these values, even
- * though they're not used in the common case.
- *
- * This class also stores its current list index, attribute enum, and whether
- * it belongs to a baseVal or animVal list. This is so that objects of this
- * type can find their corresponding internal SVGLength.
- *
- * To use these classes for <length> attributes as well as <list-of-length>
- * attributes, we would need to take a bit from mListIndex and use that to
- * indicate whether the object belongs to a list or non-list attribute, then
- * if-else as appropriate. The bug for doing that work is:
- * https://bugzilla.mozilla.org/show_bug.cgi?id=571734
+ * See the comment in DOMSVGLength.h (yes, LENGTH), which applies here too.
  */
-class DOMSVGLength : public nsIDOMSVGLength
+class DOMSVGNumber : public nsIDOMSVGNumber
 {
 public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(MOZILLA_DOMSVGLENGTH_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(MOZILLA_DOMSVGNUMBER_IID)
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(DOMSVGLength)
-  NS_DECL_NSIDOMSVGLENGTH
+  NS_DECL_CYCLE_COLLECTION_CLASS(DOMSVGNumber)
+  NS_DECL_NSIDOMSVGNUMBER
 
   /**
-   * Generic ctor for DOMSVGLength objects that are created for an attribute.
+   * Generic ctor for DOMSVGNumber objects that are created for an attribute.
    */
-  DOMSVGLength(DOMSVGLengthList *aList,
+  DOMSVGNumber(DOMSVGNumberList *aList,
                PRUint32 aAttrEnum,
                PRUint8 aListIndex,
                PRUint8 aIsAnimValItem);
 
   /**
-   * Ctor for creating the objects returned by SVGSVGElement.createSVGLength(),
+   * Ctor for creating the objects returned by SVGSVGElement.createSVGNumber(),
    * which do not initially belong to an attribute.
    */
-  DOMSVGLength();
+  DOMSVGNumber();
 
-  ~DOMSVGLength() {
+  ~DOMSVGNumber() {
     // Our mList's weak ref to us must be nulled out when we die. If GC has
     // unlinked us using the cycle collector code, then that has already
     // happened, and mList is null.
@@ -124,15 +100,12 @@ public:
   };
 
   /**
-   * Create an unowned copy of an owned length. The caller is responsible for
-   * the first AddRef().
+   * Create an unowned copy. The caller is responsible for the first AddRef().
    */
-  DOMSVGLength* Copy() {
-    NS_ASSERTION(mList, "unexpected caller");
-    DOMSVGLength *copy = new DOMSVGLength();
-    SVGLength &length = InternalItem();
-    copy->NewValueSpecifiedUnits(length.GetUnit(), length.GetValueInCurrentUnits());
-    return copy;
+  DOMSVGNumber* Clone() {
+    DOMSVGNumber *clone = new DOMSVGNumber();
+    clone->mValue = ToSVGNumber();
+    return clone;
   }
 
   PRBool IsInList() const {
@@ -140,7 +113,7 @@ public:
   }
 
   /**
-   * In future, if this class is used for non-list lengths, this will be
+   * In future, if this class is used for non-list numbers, this will be
    * different to IsInList().
    */
   PRBool HasOwner() const {
@@ -154,9 +127,9 @@ public:
    * This object MUST NOT already belong to a list when this method is called.
    * That's not to say that script can't move these DOM objects between
    * lists - it can - it's just that the logic to handle that (and send out
-   * the necessary notifications) is located elsewhere (in DOMSVGLengthList).)
+   * the necessary notifications) is located elsewhere (in DOMSVGNumberList).)
    */
-  void InsertingIntoList(DOMSVGLengthList *aList,
+  void InsertingIntoList(DOMSVGNumberList *aList,
                          PRUint32 aAttrEnum,
                          PRUint8 aListIndex,
                          PRUint8 aIsAnimValItem);
@@ -169,12 +142,12 @@ public:
   /**
    * This method is called to notify this DOM object that it is about to be
    * removed from its current DOM list so that it can first make a copy of its
-   * internal counterpart's values. (If it didn't do this, then it would
+   * internal counterpart's value. (If it didn't do this, then it would
    * "lose" its value on being removed.)
    */
   void RemovingFromList();
 
-  SVGLength ToSVGLength();
+  float ToSVGNumber();
 
 private:
 
@@ -187,15 +160,7 @@ private:
   }
 
   /**
-   * Get the axis that this length lies along. This method must only be called
-   * when this object is associated with an element (HasOwner() returns true).
-   */
-  PRUint8 Axis() const {
-    return mList->Axis();
-  }
-
-  /**
-   * Get a reference to the internal SVGLength list item that this DOM wrapper
+   * Get a reference to the internal SVGNumber list item that this DOM wrapper
    * object currently wraps.
    *
    * To simplify the code we just have this one method for obtaining both
@@ -203,28 +168,27 @@ private:
    * get const protection, but then our setter methods guard against changing
    * animVal items.
    */
-  SVGLength& InternalItem();
+  float& InternalItem();
 
 #ifdef DEBUG
   PRBool IndexIsValid();
 #endif
 
-  nsRefPtr<DOMSVGLengthList> mList;
+  nsRefPtr<DOMSVGNumberList> mList;
 
   // Bounds for the following are checked in the ctor, so be sure to update
   // that if you change the capacity of any of the following.
 
-  PRUint32 mListIndex:22; // supports > 4 million list items
+  PRUint32 mListIndex:27; // supports > 134 million list items
   PRUint32 mAttrEnum:4; // supports up to 16 attributes
   PRUint32 mIsAnimValItem:1;
 
-  // The following members are only used when we're not in a list:
-  PRUint32 mUnit:5; // can handle 31 units (the 10 SVG 1.1 units + rem, vw, vh, wm, calc + future additions)
+  // The following member is only used when we're not in a list:
   float mValue;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(DOMSVGLength, MOZILLA_DOMSVGLENGTH_IID)
+NS_DEFINE_STATIC_IID_ACCESSOR(DOMSVGNumber, MOZILLA_DOMSVGNUMBER_IID)
 
 } // namespace mozilla
 
-#endif // MOZILLA_DOMSVGLENGTH_H__
+#endif // MOZILLA_DOMSVGNUMBER_H__
