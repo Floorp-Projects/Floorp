@@ -185,6 +185,8 @@ SimpleTest.waitForFocus(function() {
 
   document.getElementById('a').addEventListener("change", function(aEvent) {
     ok(true, "change event correctly sent");
+    ok(aEvent.bubbles, "change event should bubble");
+    todo(!aEvent.cancelable, "change event should not be cancelable");
     testCounter++;
 
     if (testCounter >= testNb) {
