@@ -1,7 +1,7 @@
 diff --git a/gfx/angle/include/GLSLANG/ShaderLang.h b/gfx/angle/include/GLSLANG/ShaderLang.h
 --- a/gfx/angle/include/GLSLANG/ShaderLang.h
 +++ b/gfx/angle/include/GLSLANG/ShaderLang.h
-@@ -1,16 +1,32 @@
+@@ -1,16 +1,36 @@
  //
  // Copyright (c) 2002-2010 The ANGLE Project Authors. All rights reserved.
  // Use of this source code is governed by a BSD-style license that can be
@@ -10,6 +10,7 @@ diff --git a/gfx/angle/include/GLSLANG/ShaderLang.h b/gfx/angle/include/GLSLANG/
  #ifndef _COMPILER_INTERFACE_INCLUDED_
  #define _COMPILER_INTERFACE_INCLUDED_
  
++#ifdef MOZILLA_VERSION
 +#include "nscore.h"
 +
 +#ifdef WIN32
@@ -25,6 +26,9 @@ diff --git a/gfx/angle/include/GLSLANG/ShaderLang.h b/gfx/angle/include/GLSLANG/
 +#else
 +# define ANGLE_API NS_EXTERNAL_VIS
 +#endif
++#else
++#define ANGLE_API /*nothing*/
++#endif
 +
  //
  // This is the platform independent interface between an OGL driver
@@ -34,9 +38,9 @@ diff --git a/gfx/angle/include/GLSLANG/ShaderLang.h b/gfx/angle/include/GLSLANG/
  #ifdef __cplusplus
  extern "C" {
  #endif
-@@ -72,21 +88,21 @@ typedef enum {
-   SH_OBJECT_CODE         = 0x002,
-   SH_ATTRIBUTES_UNIFORMS = 0x004
+@@ -73,21 +93,21 @@ typedef enum {
+   SH_OBJECT_CODE            = 0x0004,
+   SH_ATTRIBUTES_UNIFORMS    = 0x0008
  } ShCompileOptions;
  
  //
@@ -58,7 +62,7 @@ diff --git a/gfx/angle/include/GLSLANG/ShaderLang.h b/gfx/angle/include/GLSLANG/
  typedef struct
  {
      // Constants.
-@@ -102,17 +118,17 @@ typedef struct
+@@ -103,17 +123,17 @@ typedef struct
      // Extensions.
      // Set to 1 to enable the extension, else 0.
      int OES_standard_derivatives;
@@ -77,7 +81,7 @@ diff --git a/gfx/angle/include/GLSLANG/ShaderLang.h b/gfx/angle/include/GLSLANG/
  //
  // If handle creation fails, 0 will be returned.
  //
-@@ -122,19 +138,19 @@ typedef void* ShHandle;
+@@ -123,19 +143,19 @@ typedef void* ShHandle;
  // Driver calls these to create and destroy compiler objects.
  //
  // Returns the handle of constructed compiler.
@@ -99,7 +103,7 @@ diff --git a/gfx/angle/include/GLSLANG/ShaderLang.h b/gfx/angle/include/GLSLANG/
  // handle: Specifies the handle of compiler to be used.
  // shaderStrings: Specifies an array of pointers to null-terminated strings
  //                containing the shader source code.
-@@ -144,17 +160,17 @@ void ShDestruct(ShHandle handle);
+@@ -152,17 +172,17 @@ void ShDestruct(ShHandle handle);
  // SH_INTERMEDIATE_TREE: Writes intermediate tree to info log.
  //                       Can be queried by calling ShGetInfoLog().
  // SH_OBJECT_CODE: Translates intermediate tree to glsl or hlsl shader.
@@ -118,7 +122,7 @@ diff --git a/gfx/angle/include/GLSLANG/ShaderLang.h b/gfx/angle/include/GLSLANG/
  
  // Returns a parameter from a compiled shader.
  // Parameters:
-@@ -170,53 +186,53 @@ int ShCompile(
+@@ -178,53 +198,53 @@ int ShCompile(
  //                                 variable name including the null
  //                                 termination character.
  // SH_ACTIVE_UNIFORMS: the number of active uniform variables.
@@ -176,7 +180,7 @@ diff --git a/gfx/angle/include/GLSLANG/ShaderLang.h b/gfx/angle/include/GLSLANG/
  
  // Returns information about an active uniform variable.
  // Parameters:
-@@ -227,17 +243,17 @@ void ShGetActiveAttrib(const ShHandle ha
+@@ -235,17 +255,17 @@ void ShGetActiveAttrib(const ShHandle ha
  //         other than NULL is passed.
  // size: Returns the size of the uniform variable.
  // type: Returns the data type of the uniform variable.
@@ -195,42 +199,3 @@ diff --git a/gfx/angle/include/GLSLANG/ShaderLang.h b/gfx/angle/include/GLSLANG/
  
  #ifdef __cplusplus
  }
-diff --git a/gfx/angle/include/GLSLANG/ShaderLang.h b/gfx/angle/include/GLSLANG/ShaderLang.h
---- a/gfx/angle/include/GLSLANG/ShaderLang.h
-+++ b/gfx/angle/include/GLSLANG/ShaderLang.h
-@@ -1,31 +1,35 @@
- //
- // Copyright (c) 2002-2010 The ANGLE Project Authors. All rights reserved.
- // Use of this source code is governed by a BSD-style license that can be
- // found in the LICENSE file.
- //
- #ifndef _COMPILER_INTERFACE_INCLUDED_
- #define _COMPILER_INTERFACE_INCLUDED_
- 
-+#ifdef MOZILLA_VERSION
- #include "nscore.h"
- 
- #ifdef WIN32
- # if !defined(MOZ_ENABLE_LIBXUL) && !defined(MOZ_STATIC_BUILD)
- #  ifdef ANGLE_BUILD
- #   define ANGLE_API NS_EXPORT
- #  else
- #   define ANGLE_API NS_IMPORT
- #  endif
- # else
- #  define ANGLE_API  /*nothing*/
- # endif
- #else
- # define ANGLE_API NS_EXTERNAL_VIS
- #endif
-+#else
-+#define ANGLE_API /*nothing*/
-+#endif
- 
- //
- // This is the platform independent interface between an OGL driver
- // and the shading language compiler.
- //
- 
- #ifdef __cplusplus
- extern "C" {

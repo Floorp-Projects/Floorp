@@ -161,15 +161,7 @@ int ShCompile(
     if (compiler == 0)
         return 0;
 
-    GlobalPoolAllocator.push();
-
     bool success = compiler->compile(shaderStrings, numStrings, compileOptions);
-
-    //
-    // Throw away all the temporary memory used by the compilation process.
-    //
-    GlobalPoolAllocator.pop();
-
     return success ? 1 : 0;
 }
 

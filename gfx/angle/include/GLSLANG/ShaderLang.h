@@ -37,7 +37,7 @@ extern "C" {
 
 // Version number for shader translation API.
 // It is incremented everytime the API changes.
-#define SH_VERSION 101
+#define SH_VERSION 103
 
 //
 // The names of the following enums have been derived by replacing GL prefix
@@ -87,10 +87,11 @@ typedef enum {
 
 // Compile options.
 typedef enum {
-  SH_VALIDATE            = 0,
-  SH_INTERMEDIATE_TREE   = 0x001,
-  SH_OBJECT_CODE         = 0x002,
-  SH_ATTRIBUTES_UNIFORMS = 0x004
+  SH_VALIDATE               = 0,
+  SH_VALIDATE_LOOP_INDEXING = 0x0001,
+  SH_INTERMEDIATE_TREE      = 0x0002,
+  SH_OBJECT_CODE            = 0x0004,
+  SH_ATTRIBUTES_UNIFORMS    = 0x0008
 } ShCompileOptions;
 
 //
@@ -160,7 +161,14 @@ ANGLE_API void ShDestruct(ShHandle handle);
 //                containing the shader source code.
 // numStrings: Specifies the number of elements in shaderStrings array.
 // compileOptions: A mask containing the following parameters:
-// SH_VALIDATE: Performs validations only.
+// SH_VALIDATE: Validates shader to ensure that it conforms to the spec
+//              specified during compiler construction.
+// SH_VALIDATE_LOOP_INDEXING: Validates loop and indexing in the shader to
+//                            ensure that they do not exceed the minimum
+//                            functionality mandated in GLSL 1.0 spec,
+//                            Appendix A, Section 4 and 5.
+//                            There is no need to specify this parameter when
+//                            compiling for WebGL - it is implied.
 // SH_INTERMEDIATE_TREE: Writes intermediate tree to info log.
 //                       Can be queried by calling ShGetInfoLog().
 // SH_OBJECT_CODE: Translates intermediate tree to glsl or hlsl shader.
