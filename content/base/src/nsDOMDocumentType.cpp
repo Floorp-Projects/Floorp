@@ -268,15 +268,16 @@ nsDOMDocumentType::BindToTree(nsIDocument *aDocument, nsIContent *aParent,
 
     mNodeInfo.swap(newNodeInfo);
 
-    JSObject *oldScope = GetWrapper();
-    if (oldScope) {
+    nsCOMPtr<nsIDocument> oldOwnerDoc =
+      do_QueryInterface(nsContentUtils::GetDocumentFromContext());
+    nsIDocument *newOwnerDoc = nimgr->GetDocument();
+    if (oldOwnerDoc && newOwnerDoc) {
       nsIXPConnect *xpc = nsContentUtils::XPConnect();
 
       JSContext *cx = nsnull;
-      JSObject *newScope = nsnull;
-      nsresult rv = nsContentUtils::GetContextAndScope(nsnull,
-                                                       nimgr->GetDocument(),
-                                                       &cx, &newScope);
+      JSObject *oldScope = nsnull, *newScope = nsnull;
+      nsresult rv = nsContentUtils::GetContextAndScopes(oldOwnerDoc, newOwnerDoc, &cx,
+                                                        &oldScope, &newScope);
       if (cx && xpc) {
         nsISupports *node = NS_ISUPPORTS_CAST(nsIContent*, this);
         nsCOMPtr<nsIXPConnectJSObjectHolder> oldWrapper;
