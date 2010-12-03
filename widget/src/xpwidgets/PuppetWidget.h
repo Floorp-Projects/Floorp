@@ -179,6 +179,12 @@ public:
                              PRUint32 aNewEnd);
   NS_IMETHOD OnIMESelectionChange(void);
 
+  // Gets the DPI of the screen corresponding to this widget.
+  // Contacts the parent process which gets the DPI from the
+  // proper widget there. TODO: Handle DPI changes that happen
+  // later on.
+  virtual float GetDPI();
+
 private:
   nsresult DispatchPaintEvent();
   nsresult DispatchResizeEvent();
@@ -223,6 +229,9 @@ private:
   // Note that if seqno overflows (~50 days at 1 ms increment rate),
   // events will be discarded until new focus/blur occurs
   PRUint32 mIMELastBlurSeqno;
+
+  // The DPI of the screen corresponding to this widget
+  float mDPI;
 };
 
 }  // namespace widget
