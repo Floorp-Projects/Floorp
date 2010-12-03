@@ -473,6 +473,10 @@ private:
 
   bool mShuttingDown;
 
+  // Tracks whether we are in batch mode.
+  // Note: this is only tracking bookmarks batches, not history ones.
+  bool mBatching;
+
   /**
    * Always call EnsureKeywordsHash() and check it for errors before actually
    * using the hash.  Internal keyword methods are already doing that.
