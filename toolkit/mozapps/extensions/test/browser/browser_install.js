@@ -204,7 +204,7 @@ add_test(function() {
 add_test(function() {
   installSearchResult(function() {
     close_manager(gManagerWindow, function() {
-        open_manager("addons://list/extension", function(aWindow) {
+      open_manager(null, function(aWindow) {
         gManagerWindow = aWindow;
         gCategoryUtilities = new CategoryUtilities(gManagerWindow);
         check_undo_install();

@@ -40,23 +40,21 @@ function end_test() {
 }
 
 function search(aRemoteSearch, aCallback) {
-  waitForFocus(function() {
-    var searchBox = gManagerWindow.document.getElementById("header-search");
-    searchBox.value = SEARCH_QUERY;
+  var searchBox = gManagerWindow.document.getElementById("header-search");
+  searchBox.value = SEARCH_QUERY;
 
-    EventUtils.synthesizeMouseAtCenter(searchBox, { }, gManagerWindow);
-    EventUtils.synthesizeKey("VK_RETURN", { }, gManagerWindow);
+  EventUtils.synthesizeMouseAtCenter(searchBox, { }, gManagerWindow);
+  EventUtils.synthesizeKey("VK_RETURN", { }, gManagerWindow);
 
-    wait_for_view_load(gManagerWindow, function() {
-      if (aRemoteSearch)
-        var filter = gManagerWindow.document.getElementById("search-filter-remote");
-      else
-        var filter = gManagerWindow.document.getElementById("search-filter-local");
-      EventUtils.synthesizeMouseAtCenter(filter, { }, gManagerWindow);
+  wait_for_view_load(gManagerWindow, function() {
+    if (aRemoteSearch)
+      var filter = gManagerWindow.document.getElementById("search-filter-remote");
+    else
+      var filter = gManagerWindow.document.getElementById("search-filter-local");
+    EventUtils.synthesizeMouseAtCenter(filter, { }, gManagerWindow);
 
-      executeSoon(aCallback);
-    });
-  }, gManagerWindow);
+    executeSoon(aCallback);
+  });
 }
 
 function check_allresultslink(aShouldShow) {

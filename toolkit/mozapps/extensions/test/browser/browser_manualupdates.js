@@ -48,16 +48,25 @@ add_test(function() {
     applyBackgroundUpdates: AddonManager.AUTOUPDATE_DISABLE
   }]);
   
-  is(gCategoryUtilities.isVisible(gAvailableCategory), false, "Available Updates category should still be hidden");
-
-  run_next_test();
+  is(gCategoryUtilities.isVisible(gAvailableCategory), true, "Available Updates category should now be visible");
+  
+  gAvailableCategory.addEventListener("CategoryVisible", function() {
+    gAvailableCategory.removeEventListener("CategoryVisible", arguments.callee, false);
+    is(gCategoryUtilities.isVisible(gAvailableCategory), false, "Available Updates category should not be visible");
+    gAvailableCategory.addEventListener("CategoryVisible", function() {
+      gAvailableCategory.removeEventListener("CategoryVisible", arguments.callee, false);
+      is(gCategoryUtilities.isVisible(gAvailableCategory), true, "Available Updates category should be visible");
+      run_next_test();
+    }, false);
+    gProvider.addons[1].applyBackgroundUpdates = AddonManager.AUTOUPDATE_DISABLE;
+  }, false);
+  gProvider.addons[1].applyBackgroundUpdates = AddonManager.AUTOUPDATE_ENABLE;
 });
 
 
 add_test(function() {
   gAvailableCategory.addEventListener("CategoryBadgeUpdated", function() {
     gAvailableCategory.removeEventListener("CategoryBadgeUpdated", arguments.callee, false);
-    is(gCategoryUtilities.isVisible(gAvailableCategory), true, "Available Updates category should now be visible");
     is(gAvailableCategory.badgeCount, 1, "Badge for Available Updates should now be 1");
     run_next_test();
   }, false);
@@ -156,17 +165,6 @@ add_test(function() {
 
 
 add_test(function() {
-  var badgeUpdated = false;
-  var installCompleted = false;
-
-  gAvailableCategory.addEventListener("CategoryBadgeUpdated", function() {
-    gAvailableCategory.removeEventListener("CategoryBadgeUpdated", arguments.callee, false);
-    if (installCompleted)
-      run_next_test();
-    else
-      badgeUpdated = true;
-  }, false);
-
   var list = gManagerWindow.document.getElementById("updates-list");
   var item = list.firstChild;
   var updateBtn = item._updateBtn;
@@ -180,63 +178,11 @@ add_test(function() {
     },
     onInstallEnded: function() {
       install.removeTestListener(this);
-      info("Install ended");
+      info("install ended");
       is_element_hidden(item._installStatus, "Install progress widget should be hidden");
-
-      if (badgeUpdated)
-        run_next_test();
-      else
-        installCompleted = true;
+      run_next_test();
     }
   };
   install.addTestListener(listener);
   EventUtils.synthesizeMouseAtCenter(updateBtn, { }, gManagerWindow);
-});
-
-
-add_test(function() {
-  is(gCategoryUtilities.isVisible(gAvailableCategory), true, "Available Updates category should still be visible");
-  is(gAvailableCategory.badgeCount, 0, "Badge for Available Updates should now be 0");
-
-  gCategoryUtilities.openType("extension", function() {
-    is(gCategoryUtilities.isVisible(gAvailableCategory), false, "Available Updates category should be hidden");
-
-    close_manager(gManagerWindow, function() {
-      open_manager(null, function(aWindow) {
-        gManagerWindow = aWindow;
-        gCategoryUtilities = new CategoryUtilities(gManagerWindow);
-        gAvailableCategory = gManagerWindow.gCategories.get("addons://updates/available");
-
-        is(gCategoryUtilities.isVisible(gAvailableCategory), false, "Available Updates category should be hidden");
-
-        run_next_test();
-      });
-    });
-  });
-});
-
-add_test(function() {
-  gAvailableCategory.addEventListener("CategoryBadgeUpdated", function() {
-    gAvailableCategory.removeEventListener("CategoryBadgeUpdated", arguments.callee, false);
-    is(gCategoryUtilities.isVisible(gAvailableCategory), true, "Available Updates category should now be visible");
-    is(gAvailableCategory.badgeCount, 1, "Badge for Available Updates should now be 1");
-
-    gAvailableCategory.addEventListener("CategoryBadgeUpdated", function() {
-      gAvailableCategory.removeEventListener("CategoryBadgeUpdated", arguments.callee, false);
-      is(gCategoryUtilities.isVisible(gAvailableCategory), false, "Available Updates category should now be hidden");
-
-      run_next_test();
-    }, false);
-
-    AddonManager.getAddonByID("addon2@tests.mozilla.org", function(aAddon) {
-      aAddon.applyBackgroundUpdates = AddonManager.AUTOUPDATE_ENABLE;
-    });
-  }, false);
-
-  gProvider.createInstalls([{
-    name: "manually updating addon (new and even more improved!)",
-    existingAddon: gProvider.addons[1],
-    version: "1.2",
-    releaseNotesURI: Services.io.newURI(TESTROOT + "thereIsNoFileHere.xhtml", null, null)
-  }]);
 });
