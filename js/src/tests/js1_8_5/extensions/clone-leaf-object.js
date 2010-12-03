@@ -26,7 +26,6 @@ var a = [new Boolean(true),
          new String("\0123\u4567"),
          new Date(0),
          new Date(-0),
-         new Date(Math.PI),
          new Date(0x7fffffff),
          new Date(-0x7fffffff),
          new Date(0x80000000),
@@ -40,9 +39,14 @@ var a = [new Boolean(true),
          new Date(-8.64e15),
          new Date(NaN)];
 
+function primitive(a) {
+    return a instanceof Date ? +a : a.constructor(a);
+}
+
 for (var i = 0; i < a.length; i++) {
     var x = a[i];
     var expectedSource = x.toSource();
+    var expectedPrimitive = primitive(x);
     var expectedProto = x.__proto__;
     var expectedString = Object.prototype.toString.call(x);
     x.expando = 1;
@@ -50,6 +54,7 @@ for (var i = 0; i < a.length; i++) {
 
     var y = deserialize(serialize(x));
     assertEq(y.toSource(), expectedSource);
+    assertEq(primitive(y), expectedPrimitive);
     assertEq(y.__proto__, expectedProto);
     assertEq(Object.prototype.toString.call(y), expectedString);
     assertEq("expando" in y, false);
