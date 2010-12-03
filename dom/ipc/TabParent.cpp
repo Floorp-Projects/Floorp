@@ -69,6 +69,7 @@
 #include "nsIPromptFactory.h"
 #include "nsIContent.h"
 #include "mozilla/unused.h"
+#include "nsDebug.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
@@ -535,6 +536,15 @@ TabParent::RecvSetIMEOpenState(const PRBool& aValue)
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (widget && AllowContentIME())
     widget->SetIMEOpenState(aValue);
+  return true;
+}
+
+bool
+TabParent::RecvGetDPI(float* aValue)
+{
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  NS_ABORT_IF_FALSE(widget, "Must have a widget to find the DPI!");
+  *aValue = widget->GetDPI();
   return true;
 }
 
