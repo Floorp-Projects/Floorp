@@ -42,8 +42,11 @@ NPError NP_Initialize(NPNetscapeFuncs* browserFuncs)
 // Symbol called by the browser to get the plugin's function list
 NPError NP_GetEntryPoints(NPPluginFuncs* pluginFuncs)
 {
-  pluginFuncs->version = 11;
-  pluginFuncs->size = sizeof(pluginFuncs);
+  // Check the size of the provided structure based on the offset of the
+  // last member we need.
+  if (pluginFuncs->size < (offsetof(NPPluginFuncs, setvalue) + sizeof(void*)))
+    return NPERR_INVALID_FUNCTABLE_ERROR;
+
   pluginFuncs->newp = NPP_New;
   pluginFuncs->destroy = NPP_Destroy;
   pluginFuncs->setwindow = NPP_SetWindow;
