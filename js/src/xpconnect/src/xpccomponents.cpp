@@ -673,11 +673,10 @@ nsXPCComponents_InterfacesByID::NewResolve(nsIXPConnectWrappedNative *wrapper,
     if(mManager &&
        JSID_IS_STRING(id) &&
        38 == JS_GetStringLength(JSID_TO_STRING(id)) &&
-       nsnull != (name = JS_GetStringChars(JSID_TO_STRING(id))))
+       nsnull != (name = JS_GetInternedStringChars(JSID_TO_STRING(id))))
     {
         nsID iid;
-        if (!iid.Parse(NS_ConvertUTF16toUTF8(reinterpret_cast<const PRUnichar*>
-                                                             (name)).get()))
+        if (!iid.Parse(NS_ConvertUTF16toUTF8(name).get()))
             return NS_OK;
 
         nsCOMPtr<nsIInterfaceInfo> info;
@@ -2958,8 +2957,11 @@ nsXPCComponents_Utils::ReportError()
             frame->GetLineNumber(&lineNo);
         }
 
-        rv = scripterr->Init(reinterpret_cast<const PRUnichar*>
-                                             (JS_GetStringChars(msgstr)),
+        const jschar *msgchars = JS_GetStringCharsZ(cx, msgstr);
+        if (!msgchars)
+            return NS_OK;
+
+        rv = scripterr->Init(msgchars,
                              NS_ConvertUTF8toUTF16(fileName).get(),
                              nsnull,
                              lineNo, 0,
@@ -2996,12 +2998,12 @@ SandboxDump(JSContext *cx, uintN argc, jsval *vp)
     if (!str)
         return JS_FALSE;
 
-    jschar *chars = JS_GetStringChars(str);
+    size_t length;
+    const jschar *chars = JS_GetStringCharsZAndLength(cx, str, &length);
     if (!chars)
         return JS_FALSE;
 
-    nsDependentString wstr(reinterpret_cast<PRUnichar *>(chars),
-                           JS_GetStringLength(str));
+    nsDependentString wstr(chars, length);
     char *cstr = ToNewUTF8String(wstr);
     if (!cstr)
         return JS_FALSE;
@@ -3332,10 +3334,15 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
     nsCOMPtr<nsIPrincipal> principal;
     nsISupports *prinOrSop = nsnull;
     if (JSVAL_IS_STRING(argv[0])) {
-        JSString *codebasestr = JSVAL_TO_STRING(argv[0]);
-        nsAutoString codebase(reinterpret_cast<PRUnichar*>
-                                              (JS_GetStringChars(codebasestr)),
-                              JS_GetStringLength(codebasestr));
+        JSString *codebaseStr = JSVAL_TO_STRING(argv[0]);
+        size_t codebaseLength;
+        const jschar *codebaseChars = JS_GetStringCharsAndLength(cx, codebaseStr,
+                                                                 &codebaseLength);
+        if (!codebaseChars) {
+            return ThrowAndFail(NS_ERROR_FAILURE, cx, _retval);
+        }
+
+        nsAutoString codebase(codebaseChars, codebaseLength);
         nsCOMPtr<nsIURI> uri;
         rv = NS_NewURI(getter_AddRefs(uri), codebase);
         if (NS_FAILED(rv)) {
