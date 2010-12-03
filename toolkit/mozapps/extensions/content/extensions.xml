@@ -246,7 +246,7 @@
       <xul:button anonid="date-btn" class="sorter"
                   label="&sort.dateUpdated.label;"
                   tooltiptext="&sort.dateUpdated.tooltip;"
-                  oncommand="this.parentNode._handleChange('updateDate');"/>
+                  oncommand="this.parentNode._handleChange('dateUpdated');"/>
       <xul:button anonid="relevance-btn" class="sorter" hidden="true"
                   label="&sort.relevance.label;"
                   tooltiptext="&sort.relevance.tooltip;"
@@ -348,7 +348,7 @@
             this._btnName.checked = false;
           }
 
-          if (sortBy == "updateDate") {
+          if (sortBy == "dateUpdated") {
             this._btnDate.checkState = checkState;
             this._btnDate.checked = true;
           } else {
@@ -1034,6 +1034,11 @@
 
           this.setAttribute("name", aAddon.name);
 
+          if (aAddon.size)
+            this.setAttribute("size", aAddon.size);
+          else
+            this.removeAttribute("size");
+
           var iconURL = this.mAddon.iconURL;
           if (iconURL)
             this._icon.src = iconURL;
@@ -1106,10 +1111,13 @@
                                  );
           }
 
-          if (this.mAddon.updateDate)
+          if (this.mAddon.updateDate) {
             this._dateUpdated.value = formatDate(this.mAddon.updateDate);
-          else
+            this.setAttribute("dateUpdated", this.mAddon.updateDate.getTime() / 1000);
+          } else {
             this._dateUpdated.value = this._dateUpdated.getAttribute("unknown");
+            this.removeAttribute("dateUpdated");
+          }
         ]]></body>
       </method>
 
