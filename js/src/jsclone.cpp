@@ -719,8 +719,13 @@ JSStructuredCloneReader::startRead(Value *vp)
 
       case SCTAG_DATE_OBJECT: {
         jsdouble d;
-        if (!in.readDouble(&d))
+        if (!in.readDouble(&d) || !checkDouble(d))
             return false;
+        if (d == d && d != TIMECLIP(d)) {
+            JS_ReportErrorNumber(context(), js_GetErrorMessage, NULL, JSMSG_SC_BAD_SERIALIZED_DATA,
+                                 "date");
+            return false;
+        }
         JSObject *obj = js_NewDateObjectMsec(context(), d);
         if (!obj)
             return false;
