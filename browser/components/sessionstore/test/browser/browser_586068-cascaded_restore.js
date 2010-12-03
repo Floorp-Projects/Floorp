@@ -79,7 +79,8 @@ function runNextTest() {
       }
     }
 
-    ss.setBrowserState(JSON.stringify({ windows: [{ tabs: [{ url: 'about:blank' }] }] }));
+    let testState = { windows: [{ tabs: [{ entries: [{ url: 'about:blank' }] }] }] };
+    ss.setBrowserState(JSON.stringify(testState));
     let currentTest = tests.shift();
     info("running " + currentTest.name);
     executeSoon(currentTest);
