@@ -252,10 +252,10 @@ JSObject::setPrimitiveThis(const js::Value &pthis)
     setSlot(JSSLOT_PRIMITIVE_THIS, pthis);
 }
 
-inline /* gc::FinalizeKind */ unsigned
-JSObject::finalizeKind() const
+inline js::gc::FinalizeKind
+GetObjectFinalizeKind(const JSObject *obj)
 {
-    return js::gc::FinalizeKind(arena()->header()->thingKind);
+    return js::gc::FinalizeKind(obj->arena()->header()->thingKind);
 }
 
 inline size_t
@@ -265,7 +265,7 @@ JSObject::numFixedSlots() const
         return JSObject::FUN_CLASS_RESERVED_SLOTS;
     if (!hasSlotsArray())
         return capacity;
-    return js::gc::GetGCKindSlots(js::gc::FinalizeKind(finalizeKind()));
+    return js::gc::GetGCKindSlots(GetObjectFinalizeKind(this));
 }
 
 inline size_t
@@ -1063,7 +1063,7 @@ CopyInitializerObject(JSContext *cx, JSObject *baseobj)
     JS_ASSERT(baseobj->getClass() == &js_ObjectClass);
     JS_ASSERT(!baseobj->inDictionaryMode());
 
-    gc::FinalizeKind kind = gc::FinalizeKind(baseobj->finalizeKind());
+    gc::FinalizeKind kind = GetObjectFinalizeKind(baseobj);
     JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass, kind);
 
     if (!obj || !obj->ensureSlots(cx, baseobj->numSlots()))
