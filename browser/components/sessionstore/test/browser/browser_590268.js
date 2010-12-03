@@ -54,6 +54,7 @@ function test() {
   // fired for them.
   let wasLoaded = { };
   let restoringTabsCount = 0;
+  let restoredTabsCount = 0;
   let uniq2 = { };
   let uniq2Count = 0;
   let state = { windows: [{ tabs: [] }] };
@@ -80,6 +81,12 @@ function test() {
       onFirstSSTabRestoring();
     else if (restoringTabsCount == NUM_TABS)
       onLastSSTabRestoring();
+  }
+
+  function onSSTabRestored(aEvent) {
+    if (++restoredTabsCount < NUM_TABS)
+      return;
+    cleanup();
   }
 
   // This does the actual testing. SSTabRestoring should be firing on tabs from
@@ -120,12 +127,12 @@ function test() {
       }
     }
     is(checked, uniq2Count, "checked the same number of uniq2 as we set");
-    cleanup();
   }
 
   function cleanup() {
     // remove the event listener and clean up before finishing
     gBrowser.tabContainer.removeEventListener("SSTabRestoring", onSSTabRestoring, false);
+    gBrowser.tabContainer.removeEventListener("SSTabRestored", onSSTabRestored, true);
     // Put this in an executeSoon because we still haven't called restoreNextTab
     // in sessionstore for the last tab (we'll call it after this). We end up
     // trying to restore the tab (since we then add a closed tab to the array).
@@ -137,6 +144,7 @@ function test() {
 
   // Add the event listener
   gBrowser.tabContainer.addEventListener("SSTabRestoring", onSSTabRestoring, false);
+  gBrowser.tabContainer.addEventListener("SSTabRestored", onSSTabRestored, true);
   // Restore state
   ss.setBrowserState(JSON.stringify(state));
 }
