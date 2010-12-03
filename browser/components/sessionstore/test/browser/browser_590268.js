@@ -75,6 +75,9 @@ function test() {
     let uniq = ss.getTabValue(aEvent.originalTarget, "uniq");
     wasLoaded[uniq] = true;
 
+    is(ss.getTabValue(aEvent.originalTarget, "foo"), "",
+       "There is no value for 'foo'");
+
     // On the first SSTabRestoring we're going to run the the real test.
     // We'll keep this listener around so we can keep marking tabs as restored.
     if (restoringTabsCount == 1)
@@ -87,6 +90,13 @@ function test() {
     if (++restoredTabsCount < NUM_TABS)
       return;
     cleanup();
+  }
+
+  function onTabOpen(aEvent) {
+    // To test bug 614708, we'll just set a value on the tab here. This value
+    // would previously cause us to not recognize the values in extData until
+    // much later. So testing "uniq" failed.
+    ss.setTabValue(aEvent.originalTarget, "foo", "bar");
   }
 
   // This does the actual testing. SSTabRestoring should be firing on tabs from
@@ -133,6 +143,7 @@ function test() {
     // remove the event listener and clean up before finishing
     gBrowser.tabContainer.removeEventListener("SSTabRestoring", onSSTabRestoring, false);
     gBrowser.tabContainer.removeEventListener("SSTabRestored", onSSTabRestored, true);
+    gBrowser.tabContainer.removeEventListener("TabOpen", onTabOpen, false);
     // Put this in an executeSoon because we still haven't called restoreNextTab
     // in sessionstore for the last tab (we'll call it after this). We end up
     // trying to restore the tab (since we then add a closed tab to the array).
@@ -142,9 +153,10 @@ function test() {
     });
   }
 
-  // Add the event listener
+  // Add the event listeners
   gBrowser.tabContainer.addEventListener("SSTabRestoring", onSSTabRestoring, false);
   gBrowser.tabContainer.addEventListener("SSTabRestored", onSSTabRestored, true);
+  gBrowser.tabContainer.addEventListener("TabOpen", onTabOpen, false);
   // Restore state
   ss.setBrowserState(JSON.stringify(state));
 }
