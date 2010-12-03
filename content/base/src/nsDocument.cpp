@@ -6082,10 +6082,11 @@ nsDocument::AdoptNode(nsIDOMNode *aAdoptedNode, nsIDOMNode **aResult)
   PRBool sameDocument = oldDocument == this;
 
   JSContext *cx = nsnull;
-  JSObject *oldScope = adoptedNode->GetWrapper();
+  JSObject *oldScope = nsnull;
   JSObject *newScope = nsnull;
-  if (oldScope && !sameDocument) {
-    rv = nsContentUtils::GetContextAndScope(oldDocument, this, &cx, &newScope);
+  if (!sameDocument && oldDocument) {
+    rv = nsContentUtils::GetContextAndScopes(oldDocument, this, &cx, &oldScope,
+                                             &newScope);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
