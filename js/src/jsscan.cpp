@@ -1701,12 +1701,6 @@ TokenStream::getTokenInternal()
             tokenbuf.clear();
             for (;;) {
                 c = getChar();
-                if (c == '\n' || c == EOF) {
-                    ungetChar(c);
-                    ReportCompileErrorNumber(cx, this, NULL, JSREPORT_ERROR,
-                                             JSMSG_UNTERMINATED_REGEXP);
-                    goto error;
-                }
                 if (c == '\\') {
                     if (!tokenbuf.append(c))
                         goto error;
@@ -1718,6 +1712,12 @@ TokenStream::getTokenInternal()
                 } else if (c == '/' && !inCharClass) {
                     /* For compat with IE, allow unescaped / in char classes. */
                     break;
+                }
+                if (c == '\n' || c == EOF) {
+                    ungetChar(c);
+                    ReportCompileErrorNumber(cx, this, NULL, JSREPORT_ERROR,
+                                             JSMSG_UNTERMINATED_REGEXP);
+                    goto error;
                 }
                 if (!tokenbuf.append(c))
                     goto error;
