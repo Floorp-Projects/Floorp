@@ -86,10 +86,10 @@ nsHttpConnectionMgr::nsHttpConnectionMgr()
     , mMaxConnsPerProxy(0)
     , mMaxPersistConnsPerHost(0)
     , mMaxPersistConnsPerProxy(0)
+    , mIsShuttingDown(PR_FALSE)
     , mNumActiveConns(0)
     , mNumIdleConns(0)
     , mTimeOfNextWakeUp(LL_MAXUINT)
-    , mIsShuttingDown(PR_FALSE)
 {
     LOG(("Creating nsHttpConnectionMgr @%x\n", this));
 }
