@@ -387,11 +387,6 @@ public:
                              PRTime aFirstVisitDate,
                              PRTime aLastVisitDate);
 
-  // Checks the database for any duplicate URLs.  If any are found,
-  // all but the first are removed.  This must be called after using
-  // AddPageWithVisits, to ensure that the database is in a consistent state.
-  nsresult RemoveDuplicateURIs();
-
   // sets the schema version in the database to match SCHEMA_VERSION
   nsresult UpdateSchemaVersion();
 
@@ -719,9 +714,6 @@ protected:
   nsresult InitFunctions();
   nsresult InitTriggers();
   nsresult CheckAndUpdateGUIDs();
-  nsresult ForceMigrateBookmarksDB(mozIStorageConnection *aDBConn);
-  nsresult MigrateV3Up(mozIStorageConnection *aDBConn);
-  nsresult MigrateV6Up(mozIStorageConnection *aDBConn);
   nsresult MigrateV7Up(mozIStorageConnection *aDBConn);
   nsresult MigrateV8Up(mozIStorageConnection *aDBConn);
   nsresult MigrateV9Up(mozIStorageConnection *aDBConn);

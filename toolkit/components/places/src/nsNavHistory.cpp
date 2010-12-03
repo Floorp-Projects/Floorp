@@ -136,6 +136,8 @@ using namespace mozilla::places;
 // file could hurt performance.
 #define DATABASE_MAX_WAL_SIZE_IN_KIBIBYTES 512
 
+#define BYTES_PER_MEBIBYTE 1048576
+
 // This is the schema version, update it at any schema change and add a
 // corresponding migrateVxx method below.
 #define DATABASE_SCHEMA_VERSION 11
@@ -737,15 +739,11 @@ nsNavHistory::SetJournalMode(enum JournalMode aJournalMode)
 nsresult
 nsNavHistory::InitDB()
 {
-  // Get the database schema version.
-  PRInt32 currentSchemaVersion = 0;
-  nsresult rv = mDBConn->GetSchemaVersion(&currentSchemaVersion);
-  NS_ENSURE_SUCCESS(rv, rv);
   {
     // Get the page size.  This may be different than the default if the
     // database file already existed with a different page size.
     nsCOMPtr<mozIStorageStatement> statement;
-    rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("PRAGMA page_size"),
+    nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("PRAGMA page_size"),
                                   getter_AddRefs(statement));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -758,9 +756,8 @@ nsNavHistory::InitDB()
     NS_ENSURE_TRUE(mDBPageSize > 0, NS_ERROR_UNEXPECTED);
   }
 
-  // Ensure that temp tables are held in memory, not on disk.  We use temp
-  // tables mainly for fsync and I/O reduction.
-  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+  // Ensure that temp tables are held in memory, not on disk.
+  nsresult rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
       "PRAGMA temp_store = MEMORY"));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -814,165 +811,112 @@ nsNavHistory::InitDB()
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // We are going to initialize tables, so everything from now on should be in
-  // a transaction for performances.
-  mozStorageTransaction transaction(mDBConn, PR_FALSE);
-
-  // Grow places in 10MB increments
-  mDBConn->SetGrowthIncrement(10 * 1024 * 1024, EmptyCString());
-
-  bool databaseInitialized = (currentSchemaVersion > 0);
-  if (!databaseInitialized) {
-    // This is the first run, so we set schema version to the latest one, since
-    // we don't need to migrate anything.  We will create tables from scratch.
-    rv = UpdateSchemaVersion();
-    NS_ENSURE_SUCCESS(rv, rv);
-    currentSchemaVersion = DATABASE_SCHEMA_VERSION;
-  }
+  // Grow places in 10MiB increments
+  (void)mDBConn->SetGrowthIncrement(10 * BYTES_PER_MEBIBYTE, EmptyCString());
 
   // We use our functions during migration, so initialize them now.
   rv = InitFunctions();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (DATABASE_SCHEMA_VERSION != currentSchemaVersion) {
+  // Get the database schema version.
+  PRInt32 currentSchemaVersion;
+  rv = mDBConn->GetSchemaVersion(&currentSchemaVersion);
+  NS_ENSURE_SUCCESS(rv, rv);
+  bool databaseInitialized = currentSchemaVersion > 0;
+
+  if (databaseInitialized && currentSchemaVersion == DATABASE_SCHEMA_VERSION) {
+    // The database is up to date and ready to go.
+    return NS_OK;
+  }
+
+  // We are going to update the database, so everything from now on should be in
+  // a transaction for performances.
+  mozStorageTransaction transaction(mDBConn, PR_FALSE);
+
+  if (databaseInitialized) {
     // Migration How-to:
     //
     // 1. increment PLACES_SCHEMA_VERSION.
-    // 2. implement a method that performs up/sidegrade to your version
-    //    from the current version.
+    // 2. implement a method that performs upgrade to your version from the
+    //    previous one.
     //
-    // NOTE: We don't support downgrading back to History-only Places.
-    // If you want to go from newer schema version back to V0, you'll need to
-    // blow away your sqlite file. Subsequent up/downgrades have backwards and
-    // forward migration code.
-    //
-    // XXX Backup places.sqlite to places-{version}.sqlite when doing db migration?
-    
+    // NOTE: The downgrade process is pretty much complicated by the fact old
+    //       versions cannot know what a new version is going to implement.
+    //       The only thing we will do for downgrades is setting back the schema
+    //       version, so that next upgrades will run again the migration step.
+
     if (currentSchemaVersion < DATABASE_SCHEMA_VERSION) {
-      // Upgrading.
       mDatabaseStatus = DATABASE_STATUS_UPGRADED;
 
-      // Migrate anno tables up to V3
-      if (currentSchemaVersion < 3) {
-        rv = MigrateV3Up(mDBConn);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
+      // Firefox 3.0 uses schema version 6.
 
-      // Migrate bookmarks tables up to V5
-      if (currentSchemaVersion < 5) {
-        rv = ForceMigrateBookmarksDB(mDBConn);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-
-      // Migrate anno tables up to V6
-      if (currentSchemaVersion < 6) {
-        rv = MigrateV6Up(mDBConn);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-
-      // Migrate historyvisits and bookmarks up to V7
       if (currentSchemaVersion < 7) {
         rv = MigrateV7Up(mDBConn);
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      // Migrate historyvisits up to V8
       if (currentSchemaVersion < 8) {
         rv = MigrateV8Up(mDBConn);
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      // Migrate places up to V9
+      // Firefox 3.5 uses schema version 8.
+
       if (currentSchemaVersion < 9) {
         rv = MigrateV9Up(mDBConn);
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      // Migrate places up to V10
       if (currentSchemaVersion < 10) {
         rv = MigrateV10Up(mDBConn);
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      // Migrate places up to V11
+      // Firefox 3.6 uses schema version 10.
+
       if (currentSchemaVersion < 11) {
         rv = MigrateV11Up(mDBConn);
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
+      // Firefox 4.0 uses schema version 11.
+
       // Schema Upgrades must add migration code here.
-
-    } else {
-      // Downgrading
-
-      // XXX Need to prompt user or otherwise notify of 
-      // potential dataloss when downgrading.
-
-      // XXX Downgrades from >V6 must add migration code here.
-
-      // Downgrade v1,2,4,5
-      // v3,6 have no backwards incompatible changes.
-      if (currentSchemaVersion > 2 && currentSchemaVersion < 6) {
-        // perform downgrade to v2
-        rv = ForceMigrateBookmarksDB(mDBConn);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
     }
-
-    // Update schema version to the current one.
-    rv = UpdateSchemaVersion();
-    NS_ENSURE_SUCCESS(rv, rv);
   }
-
-  if (!databaseInitialized) {
-    // CREATE TABLE moz_places.
+  else {
+    // This is a new database, so we have to create all the tables and indices.
     rv = mDBConn->ExecuteSimpleSQL(CREATE_MOZ_PLACES);
     NS_ENSURE_SUCCESS(rv, rv);
-
     rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_URL);
     NS_ENSURE_SUCCESS(rv, rv);
-
-    // This index is used for favicon expiration, see nsNavHistoryExpire::ExpireItems.
     rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_FAVICON);
     NS_ENSURE_SUCCESS(rv, rv);
-
     rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_REVHOST);
     NS_ENSURE_SUCCESS(rv, rv);
-
     rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_VISITCOUNT);
     NS_ENSURE_SUCCESS(rv, rv);
-
     rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_FRECENCY);
     NS_ENSURE_SUCCESS(rv, rv);
-
     rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_LASTVISITDATE);
     NS_ENSURE_SUCCESS(rv, rv);
-
     rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_GUID);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // CREATE TABLE moz_historyvisits.
     rv = mDBConn->ExecuteSimpleSQL(CREATE_MOZ_HISTORYVISITS);
     NS_ENSURE_SUCCESS(rv, rv);
-
     rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_HISTORYVISITS_PLACEDATE);
     NS_ENSURE_SUCCESS(rv, rv);
-
-    // This makes a big difference in startup time for large profiles because of
-    // finding bookmark redirects using the referring page. 
     rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_HISTORYVISITS_FROMVISIT);
     NS_ENSURE_SUCCESS(rv, rv);
-
     rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_HISTORYVISITS_VISITDATE);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // moz_inputhistory
     rv = mDBConn->ExecuteSimpleSQL(CREATE_MOZ_INPUTHISTORY);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Initialize the other Places services' database tables before creating our
-    // statements. Some of our statements depend on these external tables, such as
-    // the bookmarks or favicon tables.
+    // Initialize the other Places services' database tables, since some of our
+    // statements depend on them.
     rv = nsNavBookmarks::InitTables(mDBConn);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = nsFaviconService::InitTables(mDBConn);
@@ -981,8 +925,14 @@ nsNavHistory::InitDB()
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  // Set the schema version to the current one.
+  rv = UpdateSchemaVersion();
+  NS_ENSURE_SUCCESS(rv, rv);
+
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
+
+  ForceWALCheckpoint(mDBConn);
 
   // ANY FAILURE IN THIS METHOD WILL CAUSE US TO MARK THE DATABASE AS CORRUPT
   // AND TRY TO REPLACE IT.
@@ -1491,202 +1441,6 @@ nsNavHistory::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
   ));
 
   return nsnull;
-}
-
-
-/**
- * This dumps all bookmarks-related tables, and recreates them,
- * forcing a re-import of bookmarks.html.
- *
- * @note This may cause data-loss if downgrading!
- *       Only use this for migration if you're sure that bookmarks.html
- *       and the target version support all bookmarks fields.
- */
-nsresult
-nsNavHistory::ForceMigrateBookmarksDB(mozIStorageConnection* aDBConn) 
-{
-  // drop bookmarks tables
-  nsresult rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "DROP TABLE IF EXISTS moz_bookmarks"));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "DROP TABLE IF EXISTS moz_bookmarks_folders"));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "DROP TABLE IF EXISTS moz_bookmarks_roots"));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "DROP TABLE IF EXISTS moz_keywords"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // initialize bookmarks tables
-  rv = nsNavBookmarks::InitTables(aDBConn);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // We have done a new database init, so we mark this as if the database has
-  // been created now, so the frontend can distinguish this status and import
-  // if needed.
-  mDatabaseStatus = DATABASE_STATUS_CREATE;
-
-  return NS_OK;
-}
-
-
-nsresult
-nsNavHistory::MigrateV3Up(mozIStorageConnection* aDBConn) 
-{
-  // if type col is already there, then a partial update occurred.
-  // return, making no changes, and allowing db version to be updated.
-  nsCOMPtr<mozIStorageStatement> statement;
-  nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT type from moz_annos"),
-    getter_AddRefs(statement));
-  if (NS_SUCCEEDED(rv))
-    return NS_OK;
-
-  // add type column to moz_annos
-  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "ALTER TABLE moz_annos ADD type INTEGER DEFAULT 0"));
-  if (NS_FAILED(rv)) {
-    // if the alteration failed, force-migrate
-    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "DROP TABLE IF EXISTS moz_annos"));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = nsAnnotationService::InitTables(mDBConn);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  NS_ENSURE_SUCCESS(rv, rv);
-  return NS_OK;
-}
-
-
-nsresult
-nsNavHistory::MigrateV6Up(mozIStorageConnection* aDBConn) 
-{
-  mozStorageTransaction transaction(aDBConn, PR_FALSE);
-
-  // if dateAdded & lastModified cols are already there, then a partial update occurred,
-  // and so we should not attempt to add these cols.
-  nsCOMPtr<mozIStorageStatement> statement;
-  nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT a.dateAdded, a.lastModified FROM moz_annos a"), 
-    getter_AddRefs(statement));
-  if (NS_FAILED(rv)) {
-    // add dateAdded and lastModified columns to moz_annos
-    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "ALTER TABLE moz_annos ADD dateAdded INTEGER DEFAULT 0"));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "ALTER TABLE moz_annos ADD lastModified INTEGER DEFAULT 0"));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  // if dateAdded & lastModified cols are already there, then a partial update occurred,
-  // and so we should not attempt to add these cols.  see bug #408443 for details.
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT b.dateAdded, b.lastModified FROM moz_items_annos b"), 
-    getter_AddRefs(statement));
-  if (NS_FAILED(rv)) {
-    // add dateAdded and lastModified columns to moz_items_annos
-    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "ALTER TABLE moz_items_annos ADD dateAdded INTEGER DEFAULT 0"));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "ALTER TABLE moz_items_annos ADD lastModified INTEGER DEFAULT 0"));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  // we used to create an indexes on moz_favicons.url and
-  // moz_anno_attributes.name, but those indexes are not needed
-  // because those columns are UNIQUE, so remove them.
-  // see bug #386303 for more details
-  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "DROP INDEX IF EXISTS moz_favicons_url"));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "DROP INDEX IF EXISTS moz_anno_attributes_nameindex"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-
-  // bug #371800 - remove moz_places.user_title
-  // test for moz_places.user_title
-  nsCOMPtr<mozIStorageStatement> statement2;
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT user_title FROM moz_places"),
-    getter_AddRefs(statement2));
-  if (NS_SUCCEEDED(rv)) {
-    // 1. Indexes are moved along with the renamed table. Since we're dropping
-    // that table, we're also dropping its indexes, and later re-creating them
-    // for the new table.
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "DROP INDEX IF EXISTS moz_places_urlindex"));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "DROP INDEX IF EXISTS moz_places_titleindex"));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "DROP INDEX IF EXISTS moz_places_faviconindex"));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "DROP INDEX IF EXISTS moz_places_hostindex"));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "DROP INDEX IF EXISTS moz_places_visitcount"));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "DROP INDEX IF EXISTS moz_places_frecencyindex"));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // 2. remove any duplicate URIs
-    rv = RemoveDuplicateURIs();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // 3. rename moz_places to moz_places_backup
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "ALTER TABLE moz_places RENAME TO moz_places_backup"));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // 4. create moz_places w/o user_title
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE TABLE moz_places ("
-          "id INTEGER PRIMARY KEY, "
-          "url LONGVARCHAR, "
-          "title LONGVARCHAR, "
-          "rev_host LONGVARCHAR, "
-          "visit_count INTEGER DEFAULT 0, "
-          "hidden INTEGER DEFAULT 0 NOT NULL, "
-          "typed INTEGER DEFAULT 0 NOT NULL, "
-          "favicon_id INTEGER, "
-          "frecency INTEGER DEFAULT -1 NOT NULL)"));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // 5. recreate the indexes
-    // NOTE: tests showed that it's faster to create the indexes prior to filling
-    // the table than it is to add them afterwards.
-    rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_URL);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_FAVICON);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_REVHOST);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_VISITCOUNT);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mDBConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_FRECENCY);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // 6. copy all data into moz_places
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "INSERT INTO moz_places (" MOZ_PLACES_COLUMNS ")"
-        "SELECT " MOZ_PLACES_COLUMNS " FROM moz_places_backup"));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // 7. drop moz_places_backup
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "DROP TABLE moz_places_backup"));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  return transaction.Commit();
 }
 
 
@@ -7104,125 +6858,6 @@ nsNavHistory::AddPageWithVisits(nsIURI *aURI,
     }
   }
 
-  return NS_OK;
-}
-
-nsresult
-nsNavHistory::RemoveDuplicateURIs()
-{
-  // this must be in a transaction because we do related queries
-  mozStorageTransaction transaction(mDBConn, PR_FALSE);
-
-  // this query chooses an id for every duplicate uris
-  // this id will be retained while duplicates will be discarded
-  // total_visit_count is the sum of all duplicate uris visit_count
-  nsCOMPtr<mozIStorageStatement> selectStatement;
-  nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT "
-        "(SELECT h.id FROM moz_places h WHERE h.url = url "
-         "ORDER BY h.visit_count DESC LIMIT 1), "
-        "url, SUM(visit_count) "
-      "FROM moz_places "
-      "GROUP BY url HAVING( COUNT(url) > 1)"),
-    getter_AddRefs(selectStatement));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // this query remaps history visits to the retained place_id
-  nsCOMPtr<mozIStorageStatement> updateStatement;
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "UPDATE moz_historyvisits "
-      "SET place_id = ?1 "
-      "WHERE place_id IN "
-        "(SELECT id FROM moz_places WHERE id <> ?1 AND url = ?2)"),
-    getter_AddRefs(updateStatement));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // this query remaps bookmarks to the retained place_id
-  nsCOMPtr<mozIStorageStatement> bookmarkStatement;
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "UPDATE moz_bookmarks "
-      "SET fk = ?1 "
-      "WHERE fk IN "
-        "(SELECT id FROM moz_places WHERE id <> ?1 AND url = ?2)"),
-    getter_AddRefs(bookmarkStatement));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // this query remaps annotations to the retained place_id
-  nsCOMPtr<mozIStorageStatement> annoStatement;
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "UPDATE moz_annos "
-      "SET place_id = ?1 "
-      "WHERE place_id IN "
-        "(SELECT id FROM moz_places WHERE id <> ?1 AND url = ?2)"),
-    getter_AddRefs(annoStatement));
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  // this query deletes all duplicate uris except the chosen id
-  nsCOMPtr<mozIStorageStatement> deleteStatement;
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "DELETE FROM moz_places WHERE url = ?1 AND id <> ?2"),
-    getter_AddRefs(deleteStatement));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // this query updates visit_count to the sum of all visits
-  nsCOMPtr<mozIStorageStatement> countStatement;
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "UPDATE moz_places SET visit_count = ?1 WHERE id = ?2"),
-    getter_AddRefs(countStatement));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // for each duplicate uri we update historyvisit and visit_count
-  PRBool hasMore;
-  while (NS_SUCCEEDED(selectStatement->ExecuteStep(&hasMore)) && hasMore) {
-    PRUint64 id = selectStatement->AsInt64(0);
-    nsCAutoString url;
-    rv = selectStatement->GetUTF8String(1, url);
-    NS_ENSURE_SUCCESS(rv, rv);
-    PRUint64 visit_count = selectStatement->AsInt64(2);
-
-    // update historyvisits so they are remapped to the retained uri
-    rv = updateStatement->BindInt64ByIndex(0, id);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = URIBinder::Bind(updateStatement, 1, url);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = updateStatement->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // remap bookmarks to the retained id
-    rv = bookmarkStatement->BindInt64ByIndex(0, id);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = URIBinder::Bind(bookmarkStatement, 1, url);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = bookmarkStatement->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // remap annotations to the retained id
-    rv = annoStatement->BindInt64ByIndex(0, id);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = URIBinder::Bind(annoStatement, 1, url);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = annoStatement->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
-    
-    // remove duplicate uris from moz_places
-    rv = URIBinder::Bind(deleteStatement, 0, url);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = deleteStatement->BindInt64ByIndex(1, id);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = deleteStatement->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // update visit_count to the sum of all visit_count
-    rv = countStatement->BindInt64ByIndex(0, visit_count);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = countStatement->BindInt64ByIndex(1, id);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = countStatement->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  rv = transaction.Commit();
-  NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
 
