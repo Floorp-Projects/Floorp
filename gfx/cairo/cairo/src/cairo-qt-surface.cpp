@@ -464,7 +464,7 @@ _cairo_qt_surface_finish (void *abstract_surface)
     /* Only delete p if we created it */
     if (qs->image || qs->pixmap)
         delete qs->p;
-    else
+    else if (qs->p)
 	qs->p->restore ();
 
     if (qs->image_equiv)
@@ -741,7 +741,7 @@ _cairo_qt_surface_set_clip (cairo_qt_surface_t *qs,
 {
     cairo_int_status_t status;
 
-    D(fprintf(stderr, "q[%p] intersect_clip_path %s\n", abstract_surface, path ? "(path)" : "(clear)"));
+    D(fprintf(stderr, "q[%p] intersect_clip_path %s\n", qs, clip ? "(path)" : "(clear)"));
 
     if (clip == NULL) {
 	_cairo_surface_clipper_reset (&qs->clipper);
@@ -1610,6 +1610,15 @@ cairo_qt_surface_create_with_qimage (cairo_format_t format,
     _cairo_surface_clipper_init (&qs->clipper,
 				 _cairo_qt_surface_clipper_intersect_clip_path);
 
+    if (CAIRO_FORMAT_A8 == format) {
+        qs->image = NULL;
+        qs->image_equiv = cairo_image_surface_create(format,
+                                                     width, height);
+        qs->p = NULL;
+        qs->supports_porter_duff = false;
+        qs->window = QRect(0, 0, width, height);
+        return &qs->base;
+    }
 
     QImage *image = new QImage (width, height,
 				_qimage_format_from_cairo_format (format));
