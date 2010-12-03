@@ -405,6 +405,14 @@
 @BINPATH@/components/@DLL_PREFIX@mozgnome@DLL_SUFFIX@
 #endif
 
+; ANGLE on Win32
+#ifdef XP_WIN32
+#ifndef HAVE_64BIT_OS
+@BINPATH@/libEGL.dll
+@BINPATH@/libGLESv2.dll
+#endif
+#endif
+
 ; [Browser Chrome Files]
 @BINPATH@/chrome/browser@JAREXT@
 @BINPATH@/chrome/browser.manifest
