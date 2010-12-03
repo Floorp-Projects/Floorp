@@ -284,7 +284,7 @@ var fillTexture = function(gl, tex, width, height, color, opt_level) {
  */
 var createColoredTexture = function(gl, width, height, color) {
   var tex = gl.createTexture();
-  fillTexture(gl, text, width, height, color);
+  fillTexture(gl, tex, width, height, color);
   return tex;
 };
 
@@ -378,20 +378,15 @@ var loadTexture = function(gl, url, callback) {
  *     passed in one will be created.
  * @return {!WebGLContext} The created context.
  */
-var create3DContext = function(opt_canvas) {
+var create3DContext = function(opt_canvas, opt_attributes) {
   opt_canvas = opt_canvas || document.createElement("canvas");
   var context = null;
   try {
-    context = opt_canvas.getContext("experimental-webgl");
+    context = opt_canvas.getContext("webgl", opt_attributes);
   } catch(e) {}
   if (!context) {
     try {
-      context = opt_canvas.getContext("webkit-3d");
-    } catch(e) {}
-  }
-  if (!context) {
-    try {
-      context = opt_canvas.getContext("moz-webgl");
+      context = opt_canvas.getContext("experimental-webgl", opt_attributes);
     } catch(e) {}
   }
   if (!context) {
