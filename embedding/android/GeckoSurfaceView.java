@@ -113,7 +113,8 @@ class GeckoSurfaceView
                      mSoftwareBuffer.capacity() < (width * height * 2) ||
                      mWidth != width || mHeight != height)
                 mSoftwareBuffer = ByteBuffer.allocateDirect(width * height * 2);
-            boolean doSyncDraw = m2DMode && mSoftwareBuffer != null &&
+            boolean doSyncDraw = mDrawMode == DRAW_2D &&
+                mSoftwareBuffer != null &&
                 GeckoApp.checkLaunchState(GeckoApp.LaunchState.GeckoRunning);
             mSyncDraw = doSyncDraw;
 
@@ -131,6 +132,8 @@ class GeckoSurfaceView
                 GeckoAppShell.scheduleRedraw();
 
             if (!doSyncDraw) {
+                if (mDrawMode == DRAW_GLES_2)
+                    return;
                 Canvas c = holder.lockCanvas();
                 c.drawARGB(255, 255, 255, 255);
                 holder.unlockCanvasAndPost(c);
@@ -165,7 +168,7 @@ class GeckoSurfaceView
     }
 
     public ByteBuffer getSoftwareDrawBuffer() {
-        m2DMode = true;
+        mDrawMode = DRAW_2D;
         return mSoftwareBuffer;
     }
 
@@ -175,6 +178,7 @@ class GeckoSurfaceView
 
     public static final int DRAW_ERROR = 0;
     public static final int DRAW_GLES_2 = 1;
+    public static final int DRAW_2D = 2;
 
     public int beginDrawing() {
         if (mInDrawing) {
@@ -202,6 +206,7 @@ class GeckoSurfaceView
         }
 
         mInDrawing = true;
+        mDrawMode = DRAW_GLES_2;
         return DRAW_GLES_2;
     }
 
@@ -386,7 +391,7 @@ class GeckoSurfaceView
     boolean mSyncDraw;
 
     // True if gecko requests a buffer
-    boolean m2DMode;
+    int mDrawMode;
 
     // let's not change stuff around while we're in the middle of
     // starting drawing, ending drawing, or changing surface
