@@ -1061,7 +1061,7 @@ nsLayoutUtils::CombineBreakType(PRUint8 aOrigBreakType,
 #ifdef DEBUG
 #include <stdio.h>
 
-static PRBool gDumpPaintList = PR_FALSE;
+static PRBool gDumpPaintList = getenv("MOZ_DUMP_PAINT_LIST") != 0;
 static PRBool gDumpEventList = PR_FALSE;
 #endif
 
