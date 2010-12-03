@@ -130,6 +130,7 @@ nsNavBookmarks::nsNavBookmarks() : mItemCount(0)
                                  , mCanNotify(false)
                                  , mCacheObservers("bookmark-observers")
                                  , mShuttingDown(false)
+                                 , mBatching(false)
 {
   NS_ASSERTION(!gBookmarksService,
                "Attempting to create two instances of the service!");
@@ -564,6 +565,10 @@ nsNavBookmarks::InitRoots(bool aForceCreate)
 
     rv = transaction.Commit();
     NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!mBatching) {
+      ForceWALCheckpoint(mDBConn);
+    }
   }
 
   return NS_OK;
@@ -874,6 +879,10 @@ nsNavBookmarks::InsertBookmark(PRInt64 aFolder,
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  if (!mBatching) {
+    ForceWALCheckpoint(mDBConn);
+  }
+
   NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
                    nsINavBookmarkObserver,
                    OnItemAdded(*aNewBookmarkId, aFolder, index, TYPE_BOOKMARK,
@@ -979,6 +988,10 @@ nsNavBookmarks::RemoveItem(PRInt64 aItemId)
 
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!mBatching) {
+    ForceWALCheckpoint(mDBConn);
+  }
 
   if (itemType == TYPE_BOOKMARK) {
     nsNavHistory* history = nsNavHistory::GetHistoryService();
@@ -1136,6 +1149,10 @@ nsNavBookmarks::CreateContainerWithID(PRInt64 aItemId,
 
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!mBatching) {
+    ForceWALCheckpoint(mDBConn);
+  }
 
   NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
                    nsINavBookmarkObserver,
@@ -1354,6 +1371,10 @@ nsNavBookmarks::RemoveFolder(PRInt64 aFolderId)
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  if (!mBatching) {
+    ForceWALCheckpoint(mDBConn);
+  }
+
   if (aFolderId == mToolbarRoot) {
     mToolbarRoot = 0;
   }
@@ -1562,6 +1583,10 @@ nsNavBookmarks::RemoveFolderChildren(PRInt64 aFolderId)
 
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!mBatching) {
+    ForceWALCheckpoint(mDBConn);
+  }
 
   // Call observers in reverse order to serve children before their parent.
   for (PRInt32 i = folderChildrenArray.Length() - 1; i >= 0 ; i--) {
@@ -2814,6 +2839,8 @@ nsNavBookmarks::RunInBatchMode(nsINavHistoryBatchCallback* aCallback,
                                nsISupports* aUserData) {
   NS_ENSURE_ARG(aCallback);
 
+  mBatching = true;
+
   // Just forward the request to history.  History service must exist for
   // bookmarks to work and we are observing it, thus batch notifications will be
   // forwarded to bookmarks observers.
@@ -2856,6 +2883,11 @@ nsNavBookmarks::OnBeginUpdateBatch()
 NS_IMETHODIMP
 nsNavBookmarks::OnEndUpdateBatch()
 {
+  if (mBatching) {
+    mBatching = false;
+    ForceWALCheckpoint(mDBConn);
+  }
+
   NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
                    nsINavBookmarkObserver, OnEndUpdateBatch());
   return NS_OK;
