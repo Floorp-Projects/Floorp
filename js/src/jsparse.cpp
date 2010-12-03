@@ -640,9 +640,9 @@ NameNode::initCommon(JSTreeContext *tc)
 {
     pn_expr = NULL;
     pn_cookie.makeFree();
-    pn_dflags = tc->atTopLevel() ? PND_TOPLEVEL : 0;
-    if (!tc->topStmt || tc->topStmt->type == STMT_BLOCK)
-        pn_dflags |= PND_BLOCKCHILD;
+    pn_dflags = (!tc->topStmt || tc->topStmt->type == STMT_BLOCK)
+                ? PND_BLOCKCHILD
+                : 0;
     pn_blockid = tc->blockid();
 }
 
@@ -1482,6 +1482,8 @@ Define(JSParseNode *pn, JSAtom *atom, JSTreeContext *tc, bool let = false)
     ALE_SET_DEFN(ale, pn);
     pn->pn_defn = true;
     pn->pn_dflags &= ~PND_PLACEHOLDER;
+    if (!tc->parent)
+        pn->pn_dflags |= PND_TOPLEVEL;
     return true;
 }
 
@@ -1563,7 +1565,6 @@ MakeDefIntoUse(JSDefinition *dn, JSParseNode *pn, JSAtom *atom, JSTreeContext *t
 
         dn->pn_op = (js_CodeSpec[dn->pn_op].format & JOF_SET) ? JSOP_SETNAME : JSOP_NAME;
     } else if (dn->kind() == JSDefinition::FUNCTION) {
-        JS_ASSERT(dn->isTopLevel());
         JS_ASSERT(dn->pn_op == JSOP_NOP);
         dn->pn_type = TOK_NAME;
         dn->pn_arity = PN_NAME;
@@ -2546,8 +2547,6 @@ LeaveFunction(JSParseNode *fn, JSTreeContext *funtc, JSAtom *funAtom = NULL,
     funbox->tcflags |= funtc->flags & (TCF_FUN_FLAGS | TCF_COMPILE_N_GO | TCF_RETURN_EXPR);
 
     fn->pn_dflags |= PND_INITIALIZED;
-    JS_ASSERT_IF(tc->atTopLevel() && lambda == 0 && funAtom,
-                 fn->pn_dflags & PND_TOPLEVEL);
     if (!tc->topStmt || tc->topStmt->type == STMT_BLOCK)
         fn->pn_dflags |= PND_BLOCKCHILD;
 
@@ -2937,43 +2936,36 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
         }
 
         /*
-         * A function nested at top level inside another's body needs only a
-         * local variable to bind its name to its value, and not an activation
-         * object property (it might also need the activation property, if the
-         * outer function contains with statements, e.g., but the stack slot
-         * wins when jsemit.c's BindNameToSlot can optimize a JSOP_NAME into a
+         * A function directly inside another's body needs only a local
+         * variable to bind its name to its value, and not an activation object
+         * property (it might also need the activation property, if the outer
+         * function contains with statements, e.g., but the stack slot wins
+         * when jsemit.cpp's BindNameToSlot can optimize a JSOP_NAME into a
          * JSOP_GETLOCAL bytecode).
          */
-        if (topLevel) {
-            pn->pn_dflags |= PND_TOPLEVEL;
+        if (topLevel && tc->inFunction()) {
+            /*
+             * Define a local in the outer function so that BindNameToSlot
+             * can properly optimize accesses. Note that we need a local
+             * variable, not an argument, for the function statement. Thus
+             * we add a variable even if a parameter with the given name
+             * already exists.
+             */
+            uintN index;
+            switch (tc->fun()->lookupLocal(context, funAtom, &index)) {
+              case JSLOCAL_NONE:
+              case JSLOCAL_ARG:
+                index = tc->fun()->u.i.nvars;
+                if (!tc->fun()->addLocal(context, funAtom, JSLOCAL_VAR))
+                    return NULL;
+                /* FALL THROUGH */
 
-            if (tc->inFunction()) {
-                JSLocalKind localKind;
-                uintN index;
+              case JSLOCAL_VAR:
+                pn->pn_cookie.set(tc->staticLevel, index);
+                pn->pn_dflags |= PND_BOUND;
+                break;
 
-                /*
-                 * Define a local in the outer function so that BindNameToSlot
-                 * can properly optimize accesses. Note that we need a local
-                 * variable, not an argument, for the function statement. Thus
-                 * we add a variable even if a parameter with the given name
-                 * already exists.
-                 */
-                localKind = tc->fun()->lookupLocal(context, funAtom, &index);
-                switch (localKind) {
-                  case JSLOCAL_NONE:
-                  case JSLOCAL_ARG:
-                    index = tc->fun()->u.i.nvars;
-                    if (!tc->fun()->addLocal(context, funAtom, JSLOCAL_VAR))
-                        return NULL;
-                    /* FALL THROUGH */
-
-                  case JSLOCAL_VAR:
-                    pn->pn_cookie.set(tc->staticLevel, index);
-                    pn->pn_dflags |= PND_BOUND;
-                    break;
-
-                  default:;
-                }
+              default:;
             }
         }
     }

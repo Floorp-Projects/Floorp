@@ -15,3 +15,4 @@ script watchpoint-deletes-JSPropertyOp-setter.js
 script eval-native-callback-is-indirect.js
 script regress-bug607284.js
 script Object-keys-and-object-ids.js
+fails script nested-delete-name-in-evalcode.js # bug 604301, at a minimum
