@@ -5161,6 +5161,30 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
   }
 
   PRBool isText = aContent->IsNodeOfType(nsINode::eTEXT);
+
+  // never create frames for non-option/optgroup kids of <select> and
+  // non-option kids of <optgroup> inside a <select>.
+  // XXXbz it's not clear how this should best work with XBL.
+  nsIContent *parent = aContent->GetParent();
+  if (parent) {
+    // Check tag first, since that check will usually fail
+    nsIAtom* parentTag = parent->Tag();
+    if ((parentTag == nsGkAtoms::select || parentTag == nsGkAtoms::optgroup) &&
+        parent->IsHTML() &&
+        // <option> is ok no matter what
+        !aContent->IsHTML(nsGkAtoms::option) &&
+        // <optgroup> is OK in <select> but not in <optgroup>
+        (!aContent->IsHTML(nsGkAtoms::optgroup) ||
+         parentTag != nsGkAtoms::select)) {
+      // No frame for aContent
+      if (!isText) {
+        SetAsUndisplayedContent(aState.mFrameManager, aContent, styleContext,
+                                isGeneratedContent);
+      }
+      return;
+    }
+  }
+
   PRBool isPopup = PR_FALSE;
   // Try to find frame construction data for this content
   const FrameConstructionData* data;
