@@ -184,12 +184,8 @@ SVGMotionSMILAnimationFunction::
     return;
   }
 
-  // NOTE: We have to cast away constness on context node, since the
-  // nsSVGLength2 methods that need it for unit-conversion
-  // (e.g. nsSVGLength2::GetBaseValue) aren't const-correct.
-  nsSVGElement* svgCtx =
-    static_cast<nsSVGElement*>(const_cast<nsIContent*>(aContextElem));
-  SVGMotionSMILPathUtils::PathGenerator pathGenerator(svgCtx);
+  SVGMotionSMILPathUtils::PathGenerator
+    pathGenerator(static_cast<const nsSVGElement*>(aContextElem));
 
   PRBool success = PR_FALSE;
   if (HasAttr(nsGkAtoms::values)) {
