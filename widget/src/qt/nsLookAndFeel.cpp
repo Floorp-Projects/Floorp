@@ -349,8 +349,6 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID,PRInt32 &aMetric)
 
   res = NS_OK;
 
-  QStyle* qStyle = qApp->style();
-
   switch (aID) {
     case eMetric_CaretBlinkTime:
       aMetric = 500;
