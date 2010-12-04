@@ -5175,7 +5175,9 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
         !aContent->IsHTML(nsGkAtoms::option) &&
         // <optgroup> is OK in <select> but not in <optgroup>
         (!aContent->IsHTML(nsGkAtoms::optgroup) ||
-         parentTag != nsGkAtoms::select)) {
+         parentTag != nsGkAtoms::select) &&
+        // Allow native anonymous content no matter what
+        !aContent->IsRootOfNativeAnonymousSubtree()) {
       // No frame for aContent
       if (!isText) {
         SetAsUndisplayedContent(aState.mFrameManager, aContent, styleContext,
