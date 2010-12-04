@@ -332,6 +332,23 @@ nsIDOMCanvasRenderingContext2D_PutImageData(JSContext *cx, uintN argc, jsval *vp
     uint32 w = (uint32) wi;
     uint32 h = (uint32) hi;
 
+    // the optional dirty rect
+    PRBool hasDirtyRect = PR_FALSE;
+    int32 dirtyX = 0,
+          dirtyY = 0,
+          dirtyWidth = w,
+          dirtyHeight = h;
+
+    if (argc >= 7) {
+        if (!JS_ValueToECMAInt32(cx, argv[3], &dirtyX) ||
+            !JS_ValueToECMAInt32(cx, argv[4], &dirtyY) ||
+            !JS_ValueToECMAInt32(cx, argv[5], &dirtyWidth) ||
+            !JS_ValueToECMAInt32(cx, argv[6], &dirtyHeight))
+            return JS_FALSE;
+
+        hasDirtyRect = PR_TRUE;
+    }
+
     if (!JS_GetProperty(cx, dataObject, "data", tv.jsval_addr()) ||
         JSVAL_IS_PRIMITIVE(tv.jsval_value()))
         return JS_FALSE;
@@ -358,7 +375,7 @@ nsIDOMCanvasRenderingContext2D_PutImageData(JSContext *cx, uintN argc, jsval *vp
     }
 
     // make the call
-    rv = self->PutImageData_explicit(x, y, w, h, (PRUint8*) tsrc->data, tsrc->byteLength);
+    rv = self->PutImageData_explicit(x, y, w, h, (PRUint8*) tsrc->data, tsrc->byteLength, hasDirtyRect, dirtyX, dirtyY, dirtyWidth, dirtyHeight);
     if (NS_FAILED(rv))
         return xpc_qsThrowMethodFailed(cx, rv, vp);
 
