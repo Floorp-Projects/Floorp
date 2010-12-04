@@ -1321,8 +1321,6 @@ nsXMLHttpRequest::GetStatusText(nsACString& aStatusText)
 
   aStatusText.Truncate();
 
-  nsresult rv = NS_OK;
-
   if (httpChannel) {
     if (mState & XML_HTTP_REQUEST_USE_XSITE_AC) {
       // Make sure we don't leak status information from denied cross-site
