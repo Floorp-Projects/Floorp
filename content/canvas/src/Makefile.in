@@ -86,18 +86,6 @@ USE_ANGLE=1
 endif
 endif
 
-ifndef MOZ_ENABLE_LIBXUL
-
-ifdef USE_ANGLE
-
-SHARED_LIBRARY_LIBS += \
-	$(DEPTH)/gfx/angle/$(LIB_PREFIX)angle.$(LIB_SUFFIX) \
-	$(NULL)
-
-endif
-
-endif
-
 else
 
 CPPSRCS += WebGLContextNotSupported.cpp
