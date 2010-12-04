@@ -822,11 +822,15 @@ nsHttpTransaction::ParseHead(char *buf,
         // Value returned by IsHttp09Allowed() can change between calls to this
         // method, but it can change only from PR_TRUE to PR_FALSE and this is
         // OK since we can enter this statement multiple time only when the
-        // value id PR_FALSE.
+        // value is PR_FALSE.
         nsRefPtr<nsHttpConnectionInfo> ci;
-        mConnection->GetConnectionInfo(getter_AddRefs(ci));
+        if (mConnection) {
+            mConnection->GetConnectionInfo(getter_AddRefs(ci));
+        }
 
-        if (ci->IsHttp09Allowed()) {
+        // If the connection information is not available, we can't have a response
+        // body, so it doens't make sense to look for jumk in it.
+        if (ci && ci->IsHttp09Allowed()) {
             // tolerate some junk before the status line
             mHttpResponseMatched = PR_TRUE;
             char *p = LocateHttpStart(buf, PR_MIN(count, 8), PR_TRUE);
