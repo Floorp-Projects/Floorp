@@ -1318,7 +1318,9 @@ nsCSSBorderRenderer::DrawRectangularCompositeColors()
       secondCorner.x -= cornerAdjusts[side].a;
       secondCorner.y -= cornerAdjusts[side].b;
         
-      gfxRGBA currentColor = gfxRGBA(currentColors[side]->mColor);
+      gfxRGBA currentColor =
+        currentColors[side] ? gfxRGBA(currentColors[side]->mColor)
+                            : gfxRGBA(mBorderColors[side]);
 
       mContext->SetColor(currentColor);
       mContext->NewPath();
@@ -1331,7 +1333,10 @@ nsCSSBorderRenderer::DrawRectangularCompositeColors()
       cornerTopLeft.x -= 0.5;
       cornerTopLeft.y -= 0.5;
       mContext->Rectangle(gfxRect(cornerTopLeft, gfxSize(1, 1)));
-      gfxRGBA nextColor = gfxRGBA(currentColors[sideNext]->mColor);
+      gfxRGBA nextColor =
+        currentColors[sideNext] ? gfxRGBA(currentColors[sideNext]->mColor)
+                                : gfxRGBA(mBorderColors[sideNext]);
+
       gfxRGBA cornerColor((currentColor.r + nextColor.r) / 2.0,
                           (currentColor.g + nextColor.g) / 2.0,
                           (currentColor.b + nextColor.b) / 2.0,
@@ -1341,13 +1346,13 @@ nsCSSBorderRenderer::DrawRectangularCompositeColors()
 
       if (side != 0) {
         // We'll have to keep side 0 for the color averaging on side 3.
-        if (currentColors[side]->mNext) {
+        if (currentColors[side] && currentColors[side]->mNext) {
           currentColors[side] = currentColors[side]->mNext;
         }
       }
     }
     // Now advance the color for side 0.
-    if (currentColors[0]->mNext) {
+    if (currentColors[0] && currentColors[0]->mNext) {
       currentColors[0] = currentColors[0]->mNext;
     }
     rect.Inset(1);
