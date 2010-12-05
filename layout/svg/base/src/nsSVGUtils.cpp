@@ -1495,29 +1495,6 @@ nsSVGUtils::IsInnerSVG(nsIContent* aContent)
                      ancestor->Tag() != nsGkAtoms::foreignObject;
 }
 
-/* static */ PRBool
-nsSVGUtils::NumberFromString(const nsAString& aString, float* aValue,
-                             PRBool aAllowPercentages)
-{
-  NS_ConvertUTF16toUTF8 s(aString);
-  const char *str = s.get();
-
-  char *rest;
-  float value = float(PR_strtod(str, &rest));
-  if (str != rest && NS_FloatIsFinite(value)) {
-    if (aAllowPercentages && *rest == '%') {
-      value /= 100;
-      ++rest;
-    }
-    // XXX should allow trailing whitespace
-    if (*rest == '\0') {
-      *aValue = value;
-      return PR_TRUE;
-    }
-  }
-  return PR_FALSE;
-}
-
 // ----------------------------------------------------------------------
 
 nsSVGRenderState::nsSVGRenderState(nsIRenderingContext *aContext) :

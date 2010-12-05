@@ -167,6 +167,9 @@ public:
   PRBool IsStringAnimatable(PRUint8 aAttrEnum) {
     return GetStringInfo().mStringInfo[aAttrEnum].mIsAnimatable;
   }
+  PRBool NumberAttrAllowsPercentage(PRUint8 aAttrEnum) {
+    return GetNumberInfo().mNumberInfo[aAttrEnum].mPercentagesAllowed;
+  }
   virtual void DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr);
   virtual void DidChangeNumber(PRUint8 aAttrEnum, PRBool aDoSetAttr);
   virtual void DidChangeInteger(PRUint8 aAttrEnum, PRBool aDoSetAttr);
@@ -275,6 +278,7 @@ protected:
   struct NumberInfo {
     nsIAtom** mName;
     float     mDefaultValue;
+    PRPackedBool mPercentagesAllowed;
   };
 
   struct NumberAttributesInfo {

@@ -431,8 +431,8 @@ private:
 
 nsSVGElement::NumberInfo nsSVGFEGaussianBlurElement::sNumberInfo[2] =
 {
-  { &nsGkAtoms::stdDeviation, 0 },
-  { &nsGkAtoms::stdDeviation, 0 }
+  { &nsGkAtoms::stdDeviation, 0, PR_FALSE },
+  { &nsGkAtoms::stdDeviation, 0, PR_FALSE }
 };
 
 nsSVGElement::StringInfo nsSVGFEGaussianBlurElement::sStringInfo[2] =
@@ -1416,10 +1416,10 @@ protected:
 
 nsSVGElement::NumberInfo nsSVGFECompositeElement::sNumberInfo[4] =
 {
-  { &nsGkAtoms::k1, 0 },
-  { &nsGkAtoms::k2, 0 },
-  { &nsGkAtoms::k3, 0 },
-  { &nsGkAtoms::k4, 0 }
+  { &nsGkAtoms::k1, 0, PR_FALSE },
+  { &nsGkAtoms::k2, 0, PR_FALSE },
+  { &nsGkAtoms::k3, 0, PR_FALSE },
+  { &nsGkAtoms::k4, 0, PR_FALSE }
 };
 
 nsSVGEnumMapping nsSVGFECompositeElement::sOperatorMap[] = {
@@ -1871,11 +1871,11 @@ nsSVGElement::NumberListInfo nsSVGComponentTransferFunctionElement::sNumberListI
 
 nsSVGElement::NumberInfo nsSVGComponentTransferFunctionElement::sNumberInfo[5] =
 {
-  { &nsGkAtoms::slope,     1 },
-  { &nsGkAtoms::intercept, 0 },
-  { &nsGkAtoms::amplitude, 1 },
-  { &nsGkAtoms::exponent,  1 },
-  { &nsGkAtoms::offset,    0 }
+  { &nsGkAtoms::slope,     1, PR_FALSE },
+  { &nsGkAtoms::intercept, 0, PR_FALSE },
+  { &nsGkAtoms::amplitude, 1, PR_FALSE },
+  { &nsGkAtoms::exponent,  1, PR_FALSE },
+  { &nsGkAtoms::offset,    0, PR_FALSE }
 };
 
 nsSVGEnumMapping nsSVGComponentTransferFunctionElement::sTypeMap[] = {
@@ -2519,8 +2519,8 @@ protected:
 
 nsSVGElement::NumberInfo nsSVGFEOffsetElement::sNumberInfo[2] =
 {
-  { &nsGkAtoms::dx, 0 },
-  { &nsGkAtoms::dy, 0 }
+  { &nsGkAtoms::dx, 0, PR_FALSE },
+  { &nsGkAtoms::dy, 0, PR_FALSE }
 };
 
 nsSVGElement::StringInfo nsSVGFEOffsetElement::sStringInfo[2] =
@@ -3126,9 +3126,9 @@ private:
 
 nsSVGElement::NumberInfo nsSVGFETurbulenceElement::sNumberInfo[3] =
 {
-  { &nsGkAtoms::baseFrequency, 0 },
-  { &nsGkAtoms::baseFrequency, 0 },
-  { &nsGkAtoms::seed, 0 }
+  { &nsGkAtoms::baseFrequency, 0, PR_FALSE },
+  { &nsGkAtoms::baseFrequency, 0, PR_FALSE },
+  { &nsGkAtoms::seed, 0, PR_FALSE }
 };
 
 nsSVGElement::IntegerInfo nsSVGFETurbulenceElement::sIntegerInfo[1] =
@@ -3584,8 +3584,8 @@ protected:
 
 nsSVGElement::NumberInfo nsSVGFEMorphologyElement::sNumberInfo[2] =
 {
-  { &nsGkAtoms::radius, 0 },
-  { &nsGkAtoms::radius, 0 }
+  { &nsGkAtoms::radius, 0, PR_FALSE },
+  { &nsGkAtoms::radius, 0, PR_FALSE }
 };
 
 nsSVGEnumMapping nsSVGFEMorphologyElement::sOperatorMap[] = {
@@ -3927,10 +3927,10 @@ protected:
 
 nsSVGElement::NumberInfo nsSVGFEConvolveMatrixElement::sNumberInfo[4] =
 {
-  { &nsGkAtoms::divisor, 1 },
-  { &nsGkAtoms::bias, 0 },
-  { &nsGkAtoms::kernelUnitLength, 0 },
-  { &nsGkAtoms::kernelUnitLength, 0 }
+  { &nsGkAtoms::divisor, 1, PR_FALSE },
+  { &nsGkAtoms::bias, 0, PR_FALSE },
+  { &nsGkAtoms::kernelUnitLength, 0, PR_FALSE },
+  { &nsGkAtoms::kernelUnitLength, 0, PR_FALSE }
 };
 
 nsSVGElement::IntegerInfo nsSVGFEConvolveMatrixElement::sIntegerInfo[4] =
@@ -4348,8 +4348,8 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(FEDistantLight)
 
 nsSVGElement::NumberInfo nsSVGFEDistantLightElement::sNumberInfo[2] =
 {
-  { &nsGkAtoms::azimuth,   0 },
-  { &nsGkAtoms::elevation, 0 }
+  { &nsGkAtoms::azimuth,   0, PR_FALSE },
+  { &nsGkAtoms::elevation, 0, PR_FALSE }
 };
 
 //----------------------------------------------------------------------
@@ -4441,9 +4441,9 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(FEPointLight)
 
 nsSVGElement::NumberInfo nsSVGFEPointLightElement::sNumberInfo[3] =
 {
-  { &nsGkAtoms::x, 0 },
-  { &nsGkAtoms::y, 0 },
-  { &nsGkAtoms::z, 0 }
+  { &nsGkAtoms::x, 0, PR_FALSE },
+  { &nsGkAtoms::y, 0, PR_FALSE },
+  { &nsGkAtoms::z, 0, PR_FALSE }
 };
 
 //----------------------------------------------------------------------
@@ -4540,14 +4540,14 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(FESpotLight)
 
 nsSVGElement::NumberInfo nsSVGFESpotLightElement::sNumberInfo[8] =
 {
-  { &nsGkAtoms::x, 0 },
-  { &nsGkAtoms::y, 0 },
-  { &nsGkAtoms::z, 0 },
-  { &nsGkAtoms::pointsAtX, 0 },
-  { &nsGkAtoms::pointsAtY, 0 },
-  { &nsGkAtoms::pointsAtZ, 0 },
-  { &nsGkAtoms::specularExponent, 1 },
-  { &nsGkAtoms::limitingConeAngle, 0 }
+  { &nsGkAtoms::x, 0, PR_FALSE },
+  { &nsGkAtoms::y, 0, PR_FALSE },
+  { &nsGkAtoms::z, 0, PR_FALSE },
+  { &nsGkAtoms::pointsAtX, 0, PR_FALSE },
+  { &nsGkAtoms::pointsAtY, 0, PR_FALSE },
+  { &nsGkAtoms::pointsAtZ, 0, PR_FALSE },
+  { &nsGkAtoms::specularExponent, 1, PR_FALSE },
+  { &nsGkAtoms::limitingConeAngle, 0, PR_FALSE }
 };
 
 //----------------------------------------------------------------------
@@ -4689,12 +4689,12 @@ protected:
 
 nsSVGElement::NumberInfo nsSVGFELightingElement::sNumberInfo[6] =
 {
-  { &nsGkAtoms::surfaceScale, 1 },
-  { &nsGkAtoms::diffuseConstant, 1 },
-  { &nsGkAtoms::specularConstant, 1 },
-  { &nsGkAtoms::specularExponent, 1 },
-  { &nsGkAtoms::kernelUnitLength, 0 },
-  { &nsGkAtoms::kernelUnitLength, 0 }
+  { &nsGkAtoms::surfaceScale, 1, PR_FALSE },
+  { &nsGkAtoms::diffuseConstant, 1, PR_FALSE },
+  { &nsGkAtoms::specularConstant, 1, PR_FALSE },
+  { &nsGkAtoms::specularExponent, 1, PR_FALSE },
+  { &nsGkAtoms::kernelUnitLength, 0, PR_FALSE },
+  { &nsGkAtoms::kernelUnitLength, 0, PR_FALSE }
 };
 
 nsSVGElement::StringInfo nsSVGFELightingElement::sStringInfo[2] =
@@ -5727,7 +5727,7 @@ protected:
 
 nsSVGElement::NumberInfo nsSVGFEDisplacementMapElement::sNumberInfo[1] =
 {
-  { &nsGkAtoms::scale, 0 },
+  { &nsGkAtoms::scale, 0, PR_FALSE },
 };
 
 nsSVGEnumMapping nsSVGFEDisplacementMapElement::sChannelMap[] = {
