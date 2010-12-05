@@ -1957,16 +1957,15 @@ nsGenericHTMLElement::MapBackgroundInto(const nsMappedAttributes* aAttributes,
           // Note that this should generally succeed here, due to the way
           // |spec| is created.  Maybe we should just add an nsStringBuffer
           // accessor on nsAttrValue?
-          nsStringBuffer* buffer = nsCSSValue::BufferFromString(spec);
-          if (NS_LIKELY(buffer != 0)) {
+          nsRefPtr<nsStringBuffer> buffer = nsCSSValue::BufferFromString(spec);
+          if (NS_LIKELY(buffer)) {
             // XXXbz it would be nice to assert that doc->NodePrincipal() is
             // the same as the principal of the node (which we'd need to store
             // in the mapped attrs or something?)
             nsCSSValue::Image *img =
               new nsCSSValue::Image(uri, buffer, doc->GetDocumentURI(),
                                     doc->NodePrincipal(), doc);
-            buffer->Release();
-            if (NS_LIKELY(img != 0)) {
+            if (NS_LIKELY(img)) {
               nsCSSValueList* list =
                 aData->mColorData->mBackImage.SetListValue();
               list->mValue.SetImageValue(img);
