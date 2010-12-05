@@ -87,8 +87,8 @@ TabParent *TabParent::mIMETabParent = nsnull;
 NS_IMPL_ISUPPORTS3(TabParent, nsITabParent, nsIAuthPromptProvider, nsISecureBrowserUI)
 
 TabParent::TabParent()
-  : mIMECompositionEnding(PR_FALSE)
-  , mIMEComposing(PR_FALSE)
+  : mIMEComposing(PR_FALSE)
+  , mIMECompositionEnding(PR_FALSE)
 {
 }
 
