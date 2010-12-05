@@ -80,6 +80,7 @@
 #define NUM_ENTRIES_IN_4x5_MATRIX 20
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 static void
 CopyDataRect(PRUint8 *aDest, const PRUint8 *aSrc, PRUint32 aStride,
@@ -306,7 +307,7 @@ nsSVGFE::GetLengthInfo()
                               NS_ARRAY_LENGTH(sLengthInfo));
 }
 
-inline static void DidAnimateAttr(nsSVGFE *aFilterPrimitive)
+inline static void DidAnimateAttr(Element *aFilterPrimitive)
 {
   // nsSVGLeafFrame doesn't implement AttributeChanged.
   nsIFrame* frame = aFilterPrimitive->GetPrimaryFrame();
@@ -1779,10 +1780,23 @@ public:
 
 protected:
   virtual NumberAttributesInfo GetNumberInfo();
+  virtual void DidAnimateNumber(PRUint8 aAttrEnum) {
+    // No frame, use parent's
+    NS_ASSERTION(!GetPrimaryFrame(), "Not expecting a frame");
+    DidAnimateAttr(nsSVGUtils::GetParentElement(this));
+  }
   virtual EnumAttributesInfo GetEnumInfo();
+  virtual void DidAnimateEnum(PRUint8 aAttrEnum) {
+    // No frame, use parent's
+    NS_ASSERTION(!GetPrimaryFrame(), "Not expecting a frame");
+    DidAnimateAttr(nsSVGUtils::GetParentElement(this));
+  }
   virtual NumberListAttributesInfo GetNumberListInfo();
-
-  virtual void DidAnimateNumberList(PRUint8 aAttrEnum);
+  virtual void DidAnimateNumberList(PRUint8 aAttrEnum) {
+    // No frame, use parent's
+    NS_ASSERTION(!GetPrimaryFrame(), "Not expecting a frame");
+    DidAnimateAttr(nsSVGUtils::GetParentElement(this));
+  }
 
   // nsIDOMSVGComponentTransferFunctionElement properties:
   enum { TABLEVALUES };
@@ -2052,22 +2066,6 @@ nsSVGComponentTransferFunctionElement::GetNumberInfo()
   return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
                               NS_ARRAY_LENGTH(sNumberInfo));
 }
-
-void
-nsSVGComponentTransferFunctionElement::DidAnimateNumberList(PRUint8 aAttrEnum)
-{
-  // We don't have a frame, so use our parent's
-  nsCOMPtr<nsIDOMSVGFEComponentTransferElement> compTrans =
-    do_QueryInterface(GetParent());
-  if (compTrans) {
-    // nsSVGLeafFrame doesn't implement AttributeChanged.
-    nsIFrame* frame = static_cast<nsSVGFE*>(GetParent())->GetPrimaryFrame();
-    if (frame) {
-      nsSVGEffects::InvalidateRenderingObservers(frame);
-    }
-  }
-}
-
 
 class nsSVGFEFuncRElement : public nsSVGComponentTransferFunctionElement,
                             public nsIDOMSVGFEFuncRElement
@@ -4335,6 +4333,11 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
   virtual NumberAttributesInfo GetNumberInfo();
+  virtual void DidAnimateNumber(PRUint8 aAttrEnum) {
+    // No frame, use parent's
+    NS_ASSERTION(!GetPrimaryFrame(), "Not expecting a frame");
+    DidAnimateAttr(nsSVGUtils::GetParentElement(this));
+  }
 
   enum { AZIMUTH, ELEVATION };
   nsSVGNumber2 mNumberAttributes[2];
@@ -4423,6 +4426,11 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
   virtual NumberAttributesInfo GetNumberInfo();
+  virtual void DidAnimateNumber(PRUint8 aAttrEnum) {
+    // No frame, use parent's
+    NS_ASSERTION(!GetPrimaryFrame(), "Not expecting a frame");
+    DidAnimateAttr(nsSVGUtils::GetParentElement(this));
+  }
 
   enum { X, Y, Z };
   nsSVGNumber2 mNumberAttributes[3];
@@ -4516,6 +4524,11 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
   virtual NumberAttributesInfo GetNumberInfo();
+  virtual void DidAnimateNumber(PRUint8 aAttrEnum) {
+    // No frame, use parent's
+    NS_ASSERTION(!GetPrimaryFrame(), "Not expecting a frame");
+    DidAnimateAttr(nsSVGUtils::GetParentElement(this));
+  }
 
   enum { X, Y, Z, POINTS_AT_X, POINTS_AT_Y, POINTS_AT_Z,
          SPECULAR_EXPONENT, LIMITING_CONE_ANGLE };
