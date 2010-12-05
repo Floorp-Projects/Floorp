@@ -81,7 +81,7 @@ nsCSSValue::nsCSSValue(const nsString& aValue, nsCSSUnit aUnit)
 {
   NS_ABORT_IF_FALSE(UnitHasStringValue(), "not a string value");
   if (UnitHasStringValue()) {
-    mValue.mString = BufferFromString(aValue);
+    mValue.mString = BufferFromString(aValue).get();
     if (NS_UNLIKELY(!mValue.mString)) {
       // XXXbz not much we can do here; just make sure that our promise of a
       // non-null mValue.mString holds for string units.
@@ -356,7 +356,7 @@ void nsCSSValue::SetStringValue(const nsString& aValue,
   mUnit = aUnit;
   NS_ABORT_IF_FALSE(UnitHasStringValue(), "not a string unit");
   if (UnitHasStringValue()) {
-    mValue.mString = BufferFromString(aValue);
+    mValue.mString = BufferFromString(aValue).get();
     if (NS_UNLIKELY(!mValue.mString)) {
       // XXXbz not much we can do here; just make sure that our promise of a
       // non-null mValue.mString holds for string units.
@@ -598,7 +598,7 @@ nsCSSValue::EqualsFunction(nsCSSKeyword aFunctionId) const
 }
 
 // static
-nsStringBuffer*
+already_AddRefed<nsStringBuffer>
 nsCSSValue::BufferFromString(const nsString& aValue)
 {
   nsStringBuffer* buffer = nsStringBuffer::FromString(aValue);
@@ -608,6 +608,8 @@ nsCSSValue::BufferFromString(const nsString& aValue)
   }
   
   PRUnichar length = aValue.Length();
+
+  // NOTE: Alloc prouduces a new, already-addref'd (refcnt = 1) buffer.
   buffer = nsStringBuffer::Alloc((length + 1) * sizeof(PRUnichar));
   if (NS_LIKELY(buffer != 0)) {
     PRUnichar* data = static_cast<PRUnichar*>(buffer->Data());

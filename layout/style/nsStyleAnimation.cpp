@@ -2844,7 +2844,7 @@ nsStyleAnimation::Value::SetUnparsedStringValue(const nsString& aString)
 {
   FreeValue();
   mUnit = eUnit_UnparsedString;
-  mValue.mString = nsCSSValue::BufferFromString(aString);
+  mValue.mString = nsCSSValue::BufferFromString(aString).get();
   if (NS_UNLIKELY(!mValue.mString)) {
     // not much we can do here; just make sure that our promise of a
     // non-null mValue.mString holds for string units.
