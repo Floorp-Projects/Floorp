@@ -1,0 +1,55 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=515116
+-->
+<head>
+  <title>Tests specific to SVGLengthList</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=515116">Mozilla Bug 515116</a>
+<p id="display"></p>
+<div id="content" style="display:none;">
+<svg id="svg" xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+  <text id="text" x="10cm 20cm 30mc"/>
+</svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+/*
+This file runs a series of SVGLengthList specific tests. Generic SVGXxxList
+tests can be found in test_SVGxxxList.xhtml. Anything that can be generalized
+to other list types belongs there.
+*/
+
+function run_tests()
+{
+  document.getElementById('svg').pauseAnimations();
+
+  var text = document.getElementById("text");
+  var lengths = text.x.baseVal;
+
+  is(lengths.numberOfItems, 0, 'Checking numberOfItems');
+
+/*
+  is(lengths.numberOfItems, 2, 'Checking numberOfItems');
+  is(lengths.getItem(1).valueInSpecifiedUnits == 20, 'Checking the value of the second length');
+  is(lengths.getItem(1).unitType == SVGLength.SVG_LENGTHTYPE_CM, 'Checking the unit of the second length');
+*/
+
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", run_tests, false);
+
+]]>
+</script>
+</pre>
+</body>
+</html>

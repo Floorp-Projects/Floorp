@@ -68,6 +68,7 @@ _TEST_FILES = \
 		test_pointer-events.xhtml \
 		test_scientific.html \
 		scientific-helper.svg \
+		test_SVGLengthList.xhtml \
 		test_SVGPathSegList.xhtml \
 		test_SVGStyleElement.xhtml \
 		test_SVGxxxList.xhtml \
