@@ -83,7 +83,10 @@ fails == anim-fillcolor-1.svg      anim-standard-ref.svg # bug 436296
 == anim-filter-size-01.svg lime.svg
 
 # animate some <number> attributes:
+== anim-feComponentTransfer-01.svg lime.svg
+== anim-feDistantLight-01.svg anim-feDistantLight-01-ref.svg
 == anim-feOffset-01.svg lime.svg
+== anim-feSpotLight-01.svg anim-feSpotLight-01-ref.svg
 == anim-offset-01.svg lime.svg
 == anim-pathLength-01.svg anim-pathLength-01-ref.svg
 
