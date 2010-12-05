@@ -233,6 +233,7 @@
 #include "nsIXULRuntime.h"
 
 using namespace mozilla::widget;
+using namespace mozilla::layers;
 
 /**************************************************************
  **************************************************************
@@ -1392,8 +1393,19 @@ NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
     }
 #endif
     ClearThemeRegion();
-    VERIFY(::SetWindowPos(mWnd, NULL, aX, aY, 0, 0,
-                          SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOSIZE));
+
+    UINT flags = SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOSIZE;
+    // Workaround SetWindowPos bug with D3D9. If our window has a clip
+    // region, some drivers or OSes may incorrectly copy into the clipped-out
+    // area.
+    if (mWindowType == eWindowType_plugin &&
+        (!mLayerManager || mLayerManager->GetBackendType() == LayerManager::LAYERS_D3D9) &&
+        mClipRects &&
+        (mClipRectCount != 1 || mClipRects[0] != nsIntRect(0, 0, mBounds.width, mBounds.height))) {
+      flags |= SWP_NOCOPYBITS;
+    }
+    VERIFY(::SetWindowPos(mWnd, NULL, aX, aY, 0, 0, flags));
+
     SetThemeRegion();
   }
   return NS_OK;
