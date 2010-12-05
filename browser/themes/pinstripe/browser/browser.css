@@ -2031,11 +2031,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   -moz-border-image: url(chrome://browser/skin/hud-panel.png) 26 18 22 50 / 26px 18px 22px 50px repeat;
 }
 
-#notification-popup {
-  margin-left: -16px;
-  margin-right: -16px;
-}
-
 #notification-popup-box {
   margin: 0 3px;
 }

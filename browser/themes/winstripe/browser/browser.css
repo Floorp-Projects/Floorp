@@ -1859,11 +1859,6 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   color: MenuText;
 }
 
-/* Notification popup */
-#notification-popup {
-  padding: 10px;
-}
-
 .popup-notification-icon {
   width: 64px;
   height: 64px;
