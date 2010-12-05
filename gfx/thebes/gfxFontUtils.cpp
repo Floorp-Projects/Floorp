@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -532,7 +532,7 @@ gfxFontUtils::FindPreferredSubtable(const PRUint8 *aBuf, PRUint32 aBufLength,
 
     // PRUint16 version = ReadShortAt(aBuf, OffsetVersion); // Unused: self-documenting.
     PRUint16 numTables = ReadShortAt(aBuf, OffsetNumTables);
-    if (aBufLength < SizeOfHeader + numTables * SizeOfTable) {
+    if (aBufLength < PRUint32(SizeOfHeader + numTables * SizeOfTable)) {
         return 0;
     }
 
@@ -1084,8 +1084,9 @@ gfxFontUtils::ValidateSFNTHeaders(const PRUint8 *aFontData,
     PRBool foundHead = PR_FALSE, foundOS2 = PR_FALSE, foundName = PR_FALSE;
     PRBool foundGlyphs = PR_FALSE, foundCFF = PR_FALSE, foundKern = PR_FALSE;
     PRBool foundLoca = PR_FALSE, foundMaxp = PR_FALSE;
-    PRUint32 headOffset, headLen, nameOffset, nameLen, kernOffset, kernLen,
-             glyfLen, locaOffset, locaLen, maxpOffset, maxpLen;
+    PRUint32 headOffset = 0, headLen, nameOffset = 0, nameLen, kernOffset = 0,
+        kernLen = 0, glyfLen = 0, locaOffset = 0, locaLen = 0,
+        maxpOffset = 0, maxpLen;
     PRUint32 i, numTables;
 
     numTables = sfntHeader->numTables;
