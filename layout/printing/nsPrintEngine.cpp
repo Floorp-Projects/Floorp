@@ -616,18 +616,26 @@ nsPrintEngine::DoCommonPrint(PRBool                  aIsPrintPreview,
         nsCOMPtr<nsIWebBrowserPrint> wbp(do_QueryInterface(mDocViewerPrint));
         rv = printPromptService->ShowPrintDialog(domWin, wbp,
                                                  mPrt->mPrintSettings);
-        if (rv == NS_ERROR_NOT_IMPLEMENTED) {
-          // This means the Dialog service was there, 
-          // but they choose not to implement this dialog and 
-          // are looking for default behavior from the toolkit
-          rv = NS_OK;
-        } else if (NS_SUCCEEDED(rv)) {
+        //
+        // ShowPrintDialog triggers an event loop which means we can't assume
+        // that the state of this->{anything} matches the state we've checked
+        // above. Including that a given {thing} is non null.
+
+        if (NS_SUCCEEDED(rv)) {
           // since we got the dialog and it worked then make sure we 
           // are telling GFX we want to print silent
           printSilently = PR_TRUE;
+
+          if (mPrt && mPrt->mPrintSettings) {
+            // The user might have changed shrink-to-fit in the print dialog, so update our copy of its state
+            mPrt->mPrintSettings->GetShrinkToFit(&mPrt->mShrinkToFit);
+          }
+        } else if (rv == NS_ERROR_NOT_IMPLEMENTED) {
+          // This means the Dialog service was there,
+          // but they choose not to implement this dialog and
+          // are looking for default behavior from the toolkit
+          rv = NS_OK;
         }
-        // The user might have changed shrink-to-fit in the print dialog, so update our copy of its state
-        mPrt->mPrintSettings->GetShrinkToFit(&mPrt->mShrinkToFit);
       } else {
         rv = NS_ERROR_GFX_NO_PRINTROMPTSERVICE;
       }
