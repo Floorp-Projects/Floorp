@@ -324,7 +324,9 @@
             hideAnchor = true;
           }
           else {
-            arrowbox.pack = popupRect.left + popupRect.width / 2 < anchorRect.left ? "end" : "start";
+            let rtl = (window.getComputedStyle(this).direction == "rtl");
+            arrowbox.pack = (popupRect.left + popupRect.width / 2 < anchorRect.left) != rtl ?
+                              "end" : "start";
             if (vertPos == 1) {
               container.dir = "";
               anchorClass = "top";
