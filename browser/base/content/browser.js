@@ -7267,7 +7267,7 @@ var gIdentityHandler = {
 
     // Make sure the identity popup hangs toward the middle of the location bar
     // in RTL builds
-    var position = (getComputedStyle(gNavToolbox, "").direction == "rtl") ? 'after_end' : 'after_start';
+    var position = (getComputedStyle(gNavToolbox, "").direction == "rtl") ? 'bottomcenter topright' : 'bottomcenter topleft';
 
     // Add the "open" attribute to the identity box for styling
     this._identityBox.setAttribute("open", "true");
