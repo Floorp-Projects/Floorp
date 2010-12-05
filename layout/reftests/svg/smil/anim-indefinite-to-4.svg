@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <!-- This is not really a to-animation, but we want to check that set
+       animation isn't incorrectly treated as to-animation.
+
+       Provided the attribute being animated is interpolatable (as it is in this
+       case) and calcMode != discrete, to-animation will begin from the base
+       value (and never change in this case as the simple duration is
+       indefinite).
+
+       Set animation, however, never sets the base value, only the to value. -->
+  <rect x="15" y="15" width="200" height="100" fill="blue">
+    <set attributeName="height" to="200" dur="indefinite"/>
+  </rect>
+</svg>

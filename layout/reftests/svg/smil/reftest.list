@@ -64,6 +64,11 @@ include event/reftest.list
 == anim-discrete-to-3.svg          anim-standard-ref.svg
 == anim-discrete-to-4.svg          anim-standard-ref.svg
 
+== anim-indefinite-to-1.svg        anim-standard-ref.svg
+== anim-indefinite-to-2.svg        anim-standard-ref.svg
+== anim-indefinite-to-3.svg        anim-standard-ref.svg
+== anim-indefinite-to-4.svg        anim-standard-ref.svg
+
 fails == anim-fillcolor-1.svg      anim-standard-ref.svg # bug 436296
 == anim-fillopacity-1none.svg anim-standard-ref.svg
 == anim-fillopacity-1css.svg  anim-standard-ref.svg
