@@ -552,7 +552,7 @@ function linksToTableRows(links, recursionLevel)
 }
 
 function arrayOfTestFiles(linkArray, fileArray, testPattern) {
-  for (var [link, value] in linkArray) {
+  for (var [link, value] in Iterator(linkArray)) {
     if (value instanceof Object) {
       arrayOfTestFiles(value, fileArray, testPattern);
     } else if (isTest(link, testPattern)) {
