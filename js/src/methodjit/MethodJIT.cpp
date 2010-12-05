@@ -138,7 +138,7 @@ SetVMFrameRegs(VMFrame &f)
     f.cx->setCurrentRegs(&f.regs);
 }
 
-#if defined(__APPLE__) || defined(XP_WIN)
+#if defined(__APPLE__) || defined(XP_WIN) || defined(XP_OS2)
 # define SYMBOL_STRING(name) "_" #name
 #else
 # define SYMBOL_STRING(name) #name
@@ -152,7 +152,7 @@ JS_STATIC_ASSERT(offsetof(JSFrameRegs, sp) == 0);
 # define SYMBOL_STRING_RELOC(name) SYMBOL_STRING(name)
 #endif
 
-#if defined(XP_WIN) && defined(JS_CPU_X86)
+#if (defined(XP_WIN) || defined(XP_OS2)) && defined(JS_CPU_X86)
 # define SYMBOL_STRING_VMFRAME(name) "@" #name "@4"
 #else
 # define SYMBOL_STRING_VMFRAME(name) SYMBOL_STRING_RELOC(name)
