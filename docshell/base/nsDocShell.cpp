@@ -1,6 +1,6 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: ft=cpp tw=78 sw=4 et ts=4 sts=4 cin
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: ft=cpp tw=78 sw=4 et ts=8 sts=4 cin */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -6576,12 +6576,15 @@ nsDocShell::ReattachEditorToWindow(nsISHEntry *aSHEntry)
                  "Reattaching when there's not a detached editor.");
 
     if (mEditorData || !aSHEntry)
-      return;
+        return;
 
     mEditorData = aSHEntry->ForgetEditorData();
     if (mEditorData) {
-        nsresult res = mEditorData->ReattachToWindow(this);
-        NS_ASSERTION(NS_SUCCEEDED(res), "Failed to reattach editing session");
+#ifdef DEBUG
+        nsresult rv =
+#endif
+        mEditorData->ReattachToWindow(this);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to reattach editing session");
     }
 }
 
