@@ -63,6 +63,18 @@ panel[type="arrow"] {
   -moz-transition: opacity 300ms;
 }
 
+panel[type="arrow"][side="top"],
+panel[type="arrow"][side="bottom"] {
+  margin-left: -26px;
+  margin-right: -26px;
+}
+
+panel[type="arrow"][side="left"],
+panel[type="arrow"][side="right"] {
+  margin-top: -26px;
+  margin-bottom: -26px;
+}
+
 .panel-arrowcontent {
   -moz-appearance: none;
   color: white;

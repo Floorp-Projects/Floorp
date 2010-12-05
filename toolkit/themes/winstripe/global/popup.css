@@ -70,6 +70,18 @@ panel[type="arrow"] {
   -moz-transition: opacity 300ms;
 }
 
+panel[type="arrow"][side="top"],
+panel[type="arrow"][side="bottom"] {
+  margin-left: -25px;
+  margin-right: -25px;
+}
+
+panel[type="arrow"][side="left"],
+panel[type="arrow"][side="right"] {
+  margin-top: -25px;
+  margin-bottom: -25px;
+}
+
 .panel-arrowcontent {
   border-radius: 6px;
 %ifdef WINSTRIPE_AERO
