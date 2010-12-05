@@ -86,10 +86,10 @@ NS_INTERFACE_MAP_END
 
 /* Implementation */
 
-nsresult
-nsSVGNumber2::SetBaseValueString(const nsAString &aValueAsString,
-                                 nsSVGElement *aSVGElement,
-                                 PRBool aDoSetAttr)
+static nsresult
+GetValueFromString(const nsAString &aValueAsString,
+                   PRBool aPercentagesAllowed,
+                   float *aValue)
 {
   NS_ConvertUTF16toUTF8 value(aValueAsString);
   const char *str = value.get();
@@ -98,9 +98,32 @@ nsSVGNumber2::SetBaseValueString(const nsAString &aValueAsString,
     return NS_ERROR_DOM_SYNTAX_ERR;
   
   char *rest;
-  float val = float(PR_strtod(str, &rest));
-  if (rest == str || *rest != '\0' || !NS_FloatIsFinite(val)) {
+  *aValue = float(PR_strtod(str, &rest));
+  if (rest == str || !NS_FloatIsFinite(*aValue)) {
     return NS_ERROR_DOM_SYNTAX_ERR;
+  }
+  if (*rest == '%' && aPercentagesAllowed) {
+    *aValue /= 100;
+    ++rest;
+  }
+  if (*rest == '\0') {
+    return NS_OK;
+  }
+  return NS_ERROR_DOM_SYNTAX_ERR;
+}
+
+nsresult
+nsSVGNumber2::SetBaseValueString(const nsAString &aValueAsString,
+                                 nsSVGElement *aSVGElement,
+                                 PRBool aDoSetAttr)
+{
+  float val;
+
+  nsresult rv = GetValueFromString(
+    aValueAsString, aSVGElement->NumberAttrAllowsPercentage(mAttrEnum), &val);
+
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
   mBaseVal = val;
@@ -178,9 +201,11 @@ nsSVGNumber2::SMILNumber::ValueFromString(const nsAString& aStr,
 {
   float value;
 
-  PRBool ok = nsSVGUtils::NumberFromString(aStr, &value);
-  if (!ok) {
-    return NS_ERROR_FAILURE;
+  nsresult rv = GetValueFromString(
+    aStr, mSVGElement->NumberAttrAllowsPercentage(mVal->mAttrEnum), &value);
+
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
   nsSMILValue val(&nsSMILFloatType::sSingleton);
