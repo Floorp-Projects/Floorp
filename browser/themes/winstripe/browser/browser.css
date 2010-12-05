@@ -1366,13 +1366,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 
 /* bookmarking panel */
-
-#editBookmarkPanel {
-  -moz-appearance: menupopup;
-  color: MenuText;
-  padding: 4px;
-}
-
 #editBookmarkPanelStarIcon {
   list-style-image: url("chrome://browser/skin/places/starred48.png");
   width: 48px;
@@ -1853,12 +1846,6 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   -moz-margin-end: 0;
 }
 
-/* Popup Bounding Box */
-#identity-popup {
-  -moz-appearance: menupopup;
-  color: MenuText;
-}
-
 .popup-notification-icon {
   width: 64px;
   height: 64px;
@@ -1925,7 +1912,6 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 
 #identity-popup-container {
   min-width: 280px;
-  padding: 9px;
 }
 
 #download-monitor {
