@@ -12,13 +12,13 @@ tabmodalprompt {
 
 .info\.body {
   max-width: 45em;
-}
-
-.infoContainer {
   -moz-user-focus: normal;
   -moz-user-select: text;
   cursor: text !important;
   white-space: pre-wrap;
+}
+
+.infoContainer {
   max-height: 10em;
   overflow-y: auto;
 }
