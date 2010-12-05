@@ -20,6 +20,7 @@ include moz-only/reftest.list
 include svg-integration/reftest.list
 
 == altGlyph-01.svg altGlyph-01-ref.svg
+== cssComment-in-attribute-01.svg cssComment-in-attribute-01-ref.svg
 == clip-01.svg pass.svg
 == clip-02a.svg clip-02-ref.svg
 == clip-02b.svg clip-02-ref.svg
