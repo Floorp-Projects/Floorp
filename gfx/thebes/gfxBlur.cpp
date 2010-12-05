@@ -294,6 +294,9 @@ static void ComputeLobes(PRInt32 aRadius, PRInt32 aLobes[3][2])
         major = final = z + 1;
         minor = z;
         break;
+    default:
+        NS_ERROR("Mathematical impossibility.");
+        major = minor = final = 0;
     }
     NS_ASSERTION(major + minor + final == aRadius,
                  "Lobes don't sum to the right length");
