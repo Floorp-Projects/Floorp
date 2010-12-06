@@ -1513,7 +1513,6 @@ WebGLContext::GetParameter(PRUint32 pname, nsIVariant **retval)
         case LOCAL_GL_ALPHA_BITS:
         case LOCAL_GL_DEPTH_BITS:
         case LOCAL_GL_STENCIL_BITS:
-        case UNPACK_COLORSPACE_CONVERSION_WEBGL:
         {
             GLint i = 0;
             gl->fGetIntegerv(pname, &i);
@@ -1596,6 +1595,11 @@ WebGLContext::GetParameter(PRUint32 pname, nsIVariant **retval)
             break;
         case UNPACK_PREMULTIPLY_ALPHA_WEBGL:
             wrval->SetAsBool(mPixelStorePremultiplyAlpha);
+            break;
+
+// uint, WebGL-specific
+        case UNPACK_COLORSPACE_CONVERSION_WEBGL:
+            wrval->SetAsUint32(mPixelStoreColorspaceConversion);
             break;
 
         //
@@ -2473,6 +2477,12 @@ WebGLContext::PixelStorei(WebGLenum pname, WebGLint param)
             break;
         case UNPACK_PREMULTIPLY_ALPHA_WEBGL:
             mPixelStorePremultiplyAlpha = (param != 0);
+            break;
+        case UNPACK_COLORSPACE_CONVERSION_WEBGL:
+            if (param == LOCAL_GL_NONE || param == BROWSER_DEFAULT_WEBGL)
+                mPixelStoreColorspaceConversion = param;
+            else
+                return ErrorInvalidEnumInfo("pixelStorei: colorspace conversion parameter", param);
             break;
         case LOCAL_GL_PACK_ALIGNMENT:
         case LOCAL_GL_UNPACK_ALIGNMENT:

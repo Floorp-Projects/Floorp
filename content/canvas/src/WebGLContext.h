@@ -526,7 +526,7 @@ protected:
     nsRefPtrHashtable<nsUint32HashKey, WebGLRenderbuffer> mMapRenderbuffers;
 
     // PixelStore parameters
-    PRUint32 mPixelStorePackAlignment, mPixelStoreUnpackAlignment;
+    PRUint32 mPixelStorePackAlignment, mPixelStoreUnpackAlignment, mPixelStoreColorspaceConversion;
     PRBool mPixelStoreFlipY, mPixelStorePremultiplyAlpha;
 
     FakeBlackStatus mFakeBlackStatus;
