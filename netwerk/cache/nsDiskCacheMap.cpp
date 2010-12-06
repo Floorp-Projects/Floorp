@@ -48,6 +48,7 @@
 #include "nsCache.h"
 
 #include <string.h>
+#include "nsPrintfCString.h"
 
 #include "nsISerializable.h"
 #include "nsSerializationHelper.h"
@@ -90,6 +91,9 @@ nsDiskCacheMap::Open(nsILocalFile *  cacheDirectory)
 
         // block files shouldn't exist if we're creating the _CACHE_MAP_
         if (cacheFilesExist)
+            goto error_exit;
+
+        if (NS_FAILED(CreateCacheSubDirectories()))
             goto error_exit;
 
         // create the file - initialize in memory
@@ -656,6 +660,32 @@ nsDiskCacheMap::CacheFilesExist()
 }
 
 
+nsresult
+nsDiskCacheMap::CreateCacheSubDirectories()
+{
+    if (!mCacheDirectory)
+        return NS_ERROR_UNEXPECTED;
+
+    for (PRInt32 index = 0 ; index < 16 ; index++) {
+        nsCOMPtr<nsIFile> file;
+        nsresult rv = mCacheDirectory->Clone(getter_AddRefs(file));
+        if (NS_FAILED(rv))
+            return rv;
+
+        rv = file->AppendNative(nsPrintfCString("%X", index));
+        if (NS_FAILED(rv))
+            return rv;
+
+        nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(file, &rv);
+        rv = localFile->Create(nsIFile::DIRECTORY_TYPE, 0700);
+        if (NS_FAILED(rv))
+            return rv;
+    }
+
+    return NS_OK;
+}
+
+
 nsDiskCacheEntry *
 nsDiskCacheMap::ReadDiskCacheEntry(nsDiskCacheRecord * record)
 {
@@ -671,7 +701,10 @@ nsDiskCacheMap::ReadDiskCacheEntry(nsDiskCacheRecord * record)
     if (metaFile == 0) {  // entry/metadata stored in separate file
         // open and read the file
         nsCOMPtr<nsILocalFile> file;
-        rv = GetLocalFileForDiskCacheRecord(record, nsDiskCache::kMetaData, getter_AddRefs(file));
+        rv = GetLocalFileForDiskCacheRecord(record,
+                                            nsDiskCache::kMetaData,
+                                            PR_FALSE,
+                                            getter_AddRefs(file));
         NS_ENSURE_SUCCESS(rv, nsnull);
 
         PRFileDesc * fd = nsnull;
@@ -820,6 +853,7 @@ nsDiskCacheMap::WriteDiskCacheEntry(nsDiskCacheBinding *  binding)
 
         rv = GetLocalFileForDiskCacheRecord(&binding->mRecord,
                                             nsDiskCache::kMetaData,
+                                            PR_TRUE,
                                             getter_AddRefs(localFile));
         NS_ENSURE_SUCCESS(rv, rv);
         
@@ -944,7 +978,7 @@ nsDiskCacheMap::DeleteStorage(nsDiskCacheRecord * record, PRBool metaData)
         PRUint32  sizeK = metaData ? record->MetaFileSize() : record->DataFileSize();
         // XXX if sizeK == USHRT_MAX, stat file for actual size
 
-        rv = GetFileForDiskCacheRecord(record, metaData, getter_AddRefs(file));
+        rv = GetFileForDiskCacheRecord(record, metaData, PR_FALSE, getter_AddRefs(file));
         if (NS_SUCCEEDED(rv)) {
             rv = file->Remove(PR_FALSE);    // false == non-recursive
         }
@@ -968,6 +1002,7 @@ nsDiskCacheMap::DeleteStorage(nsDiskCacheRecord * record, PRBool metaData)
 nsresult
 nsDiskCacheMap::GetFileForDiskCacheRecord(nsDiskCacheRecord * record,
                                           PRBool              meta,
+                                          PRBool              createPath,
                                           nsIFile **          result)
 {
     if (!mCacheDirectory)  return NS_ERROR_NOT_AVAILABLE;
@@ -975,10 +1010,28 @@ nsDiskCacheMap::GetFileForDiskCacheRecord(nsDiskCacheRecord * record,
     nsCOMPtr<nsIFile> file;
     nsresult rv = mCacheDirectory->Clone(getter_AddRefs(file));
     if (NS_FAILED(rv))  return rv;
-    
+
+    PRUint32 hash = record->HashNumber();
+
+    // The file is stored under subdirectories according to the hash number:
+    // 0x01234567 -> 0/12/
+    rv = file->AppendNative(nsPrintfCString("%X", hash >> 28));
+    if (NS_FAILED(rv))  return rv;
+    rv = file->AppendNative(nsPrintfCString("%02X", (hash >> 20) & 0xFF));
+    if (NS_FAILED(rv))  return rv;
+
+    PRBool exists;
+    if (createPath && (NS_FAILED(file->Exists(&exists)) || !exists)) {
+        nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(file, &rv);
+        rv = localFile->Create(nsIFile::DIRECTORY_TYPE, 0700);
+        if (NS_FAILED(rv))  return rv;
+    }
+
     PRInt16 generation = record->Generation();
     char name[32];
-    ::sprintf(name, "%08X%c%02X", record->HashNumber(),  (meta ? 'm' : 'd'), generation);
+    // Cut the beginning of the hash that was used in the path
+    ::sprintf(name, "%05X%c%02X", hash & 0xFFFFF, (meta ? 'm' : 'd'),
+              generation);
     rv = file->AppendNative(nsDependentCString(name));
     if (NS_FAILED(rv))  return rv;
     
@@ -990,10 +1043,14 @@ nsDiskCacheMap::GetFileForDiskCacheRecord(nsDiskCacheRecord * record,
 nsresult
 nsDiskCacheMap::GetLocalFileForDiskCacheRecord(nsDiskCacheRecord * record,
                                                PRBool              meta,
+                                               PRBool              createPath,
                                                nsILocalFile **     result)
 {
     nsCOMPtr<nsIFile> file;
-    nsresult rv = GetFileForDiskCacheRecord(record, meta, getter_AddRefs(file));
+    nsresult rv = GetFileForDiskCacheRecord(record,
+                                            meta,
+                                            createPath,
+                                            getter_AddRefs(file));
     if (NS_FAILED(rv))  return rv;
     
     nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(file, &rv);
