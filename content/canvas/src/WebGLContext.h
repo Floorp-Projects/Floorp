@@ -422,9 +422,10 @@ protected:
     PRBool InitAndValidateGL();
     PRBool ValidateBuffers(PRUint32 count);
     PRBool ValidateCapabilityEnum(WebGLenum cap, const char *info);
-    PRBool ValidateBlendEquationEnum(WebGLuint cap, const char *info);
-    PRBool ValidateBlendFuncDstEnum(WebGLuint mode, const char *info);
-    PRBool ValidateBlendFuncSrcEnum(WebGLuint mode, const char *info);
+    PRBool ValidateBlendEquationEnum(WebGLenum cap, const char *info);
+    PRBool ValidateBlendFuncDstEnum(WebGLenum mode, const char *info);
+    PRBool ValidateBlendFuncSrcEnum(WebGLenum mode, const char *info);
+    PRBool ValidateBlendFuncEnumsCompatibility(WebGLenum sfactor, WebGLenum dfactor, const char *info);
     PRBool ValidateTextureTargetEnum(WebGLenum target, const char *info);
     PRBool ValidateComparisonEnum(WebGLenum target, const char *info);
     PRBool ValidateStencilOpEnum(WebGLenum action, const char *info);
