@@ -1,8 +1,11 @@
+Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/bookmarks.js");
 Cu.import("resource://services-sync/type_records/bookmark.js");
 Cu.import("resource://services-sync/util.js");
 
-let store = new BookmarksEngine()._store;
+Engines.register(BookmarksEngine);
+let engine = Engines.get("bookmarks");
+let store = engine._store;
 let fxuri = Utils.makeURI("http://getfirefox.com/");
 let tburi = Utils.makeURI("http://getthunderbird.com/");
 
@@ -110,6 +113,8 @@ function test_move_folder() {
 }
 
 function test_move_order() {
+  // Make sure the tracker is turned on.
+  Svc.Obs.notify("weave:engine:start-tracking");
   try {
     _("Create two bookmarks");
     let bmk1_id = Svc.Bookmark.insertBookmark(
@@ -124,23 +129,28 @@ function test_move_order() {
     _("Verify order.");
     do_check_eq(Svc.Bookmark.getItemIndex(bmk1_id), 0);
     do_check_eq(Svc.Bookmark.getItemIndex(bmk2_id), 1);
-    let rec1 = store.createRecord(bmk1_guid);
-    let rec2 = store.createRecord(bmk2_guid);
-    do_check_eq(rec1.predecessorid, undefined);
-    do_check_eq(rec2.predecessorid, rec1.id);
+    let toolbar = store.createRecord("toolbar");
+    dump(JSON.stringify(toolbar.cleartext));
+    do_check_eq(toolbar.children.length, 2);
+    do_check_eq(toolbar.children[0], bmk1_guid);
+    do_check_eq(toolbar.children[1], bmk2_guid);
 
     _("Move bookmarks around.");
-    rec2.predecessorid = null;
-    rec1.predecessorid = rec2.id;
-    rec2.description = rec1.description = ""; //TODO for some reason we need this
-    store.applyIncoming(rec2);
-    store.applyIncoming(rec1);
+    store._childrenToOrder = {};
+    toolbar.children = [bmk2_guid, bmk1_guid];
+    store.applyIncoming(toolbar);
+    // Bookmarks engine does this at the end of _processIncoming
+    engine._tracker.ignoreAll = true;
+    store._orderChildren();
+    engine._tracker.ignoreAll = false;
+    delete store._childrenToOrder;
 
     _("Verify new order.");
     do_check_eq(Svc.Bookmark.getItemIndex(bmk2_id), 0);
     do_check_eq(Svc.Bookmark.getItemIndex(bmk1_id), 1);
 
   } finally {
+    Svc.Obs.notify("weave:engine:stop-tracking");
     _("Clean up.");
     store.wipe();
   }

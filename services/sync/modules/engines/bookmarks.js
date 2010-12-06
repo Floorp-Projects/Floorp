@@ -45,7 +45,7 @@ const Cu = Components.utils;
 
 const GUID_ANNO = "sync/guid";
 const PARENT_ANNO = "sync/parent";
-const PREDECESSOR_ANNO = "sync/predecessor";
+const CHILDREN_ANNO = "sync/children";
 const SERVICE_NOT_SUPPORTED = "Service not supported on this platform";
 const FOLDER_SORTINDEX = 1000000;
 
@@ -159,6 +159,9 @@ BookmarksEngine.prototype = {
 
         // The mapping is on a per parent-folder-name basis
         let parent = Svc.Bookmark.getFolderIdForItem(id);
+        if (parent <= 0)
+          continue;
+
         let parentName = Svc.Bookmark.getItemTitle(parent);
         if (lazyMap[parentName] == null)
           lazyMap[parentName] = {};
@@ -201,6 +204,17 @@ BookmarksEngine.prototype = {
         return dupe;
       };
     });
+
+    this._store._childrenToOrder = {};
+  },
+
+  _processIncoming: function _processIncoming() {
+    SyncEngine.prototype._processIncoming.call(this);
+    // Reorder children.
+    this._tracker.ignoreAll = true;
+    this._store._orderChildren();
+    this._tracker.ignoreAll = false;
+    delete this._store._childrenToOrder;
   },
 
   _syncFinish: function _syncFinish() {
@@ -312,14 +326,16 @@ BookmarksStore.prototype = {
   aliases: {},
 
   applyIncoming: function BStore_applyIncoming(record) {
-    // Ignore (accidental?) root changes
-    if (record.id in kSpecialIds) {
-      this._log.debug("Skipping change to root node: " + record.id);
+    // For special folders we're only interested in child ordering.
+    if ((record.id in kSpecialIds) && record.children) {
+      this._log.debug("Processing special node: " + record.id);
+      // Reorder children later
+      this._childrenToOrder[record.id] = record.children;
       return;
     }
 
     // Convert GUID fields to the aliased GUID if necessary
-    ["id", "parentid", "predecessorid"].forEach(function(field) {
+    ["id", "parentid"].forEach(function(field) {
       let alias = this.aliases[record[field]];
       if (alias != null)
         record[field] = alias;
@@ -374,25 +390,6 @@ BookmarksStore.prototype = {
       record._parent = parentId;
     }
 
-    // Default to append unless we're not an orphan with the predecessor
-    let predGUID = record.predecessorid;
-    record._insertPos = Svc.Bookmark.DEFAULT_INDEX;
-    if (!record._orphan) {
-      // No predecessor means it's the first item
-      if (predGUID == null)
-        record._insertPos = 0;
-      else {
-        // The insert position is one after the predecessor of the same parent
-        let predId = this.idForGUID(predGUID);
-        if (predId != -1 && this._getParentGUIDForId(predId) == parentGUID) {
-          record._insertPos = Svc.Bookmark.getItemIndex(predId) + 1;
-          record._predId = predId;
-        }
-        else
-          this._log.trace("Appending to end until predecessor is synced");
-      }
-    }
-
     // Do the normal processing of incoming records
     Store.prototype.applyIncoming.apply(this, arguments);
 
@@ -400,19 +397,16 @@ BookmarksStore.prototype = {
     let itemId = this.idForGUID(record.id);
     if (itemId > 0) {
       // Move any children that are looking for this folder as a parent
-      if (record.type == "folder")
+      if (record.type == "folder") {
         this._reparentOrphans(itemId);
+        // Reorder children later
+        if (record.children)
+          this._childrenToOrder[record.id] = record.children;
+      }
 
       // Create an annotation to remember that it needs a parent
       if (record._orphan)
         Utils.anno(itemId, PARENT_ANNO, parentGUID);
-      // It's now in the right folder, so move annotated items behind this
-      else
-        this._attachFollowers(itemId);
-
-      // Create an annotation if we have a predecessor but no position
-      if (predGUID != null && record._insertPos == Svc.Bookmark.DEFAULT_INDEX)
-        Utils.anno(itemId, PREDECESSOR_ANNO, predGUID);
     }
   },
 
@@ -434,70 +428,9 @@ BookmarksStore.prototype = {
 
     this._log.debug("Reparenting orphans " + orphans + " to " + parentId);
     orphans.forEach(function(orphan) {
-      // Append the orphan under the parent unless it's supposed to be first
-      let insertPos = Svc.Bookmark.DEFAULT_INDEX;
-      if (!Svc.Annos.itemHasAnnotation(orphan, PREDECESSOR_ANNO))
-        insertPos = 0;
-
       // Move the orphan to the parent and drop the missing parent annotation
-      Svc.Bookmark.moveItem(orphan, parentId, insertPos);
+      Svc.Bookmark.moveItem(orphan, parentId, Svc.Bookmark.DEFAULT_INDEX);
       Svc.Annos.removeItemAnnotation(orphan, PARENT_ANNO);
-    });
-
-    // Fix up the ordering of the now-parented items
-    orphans.forEach(this._attachFollowers, this);
-  },
-
-  /**
-   * Move an item and all of its followers to a new position until reaching an
-   * item that shouldn't be moved
-   */
-  _moveItemChain: function BStore__moveItemChain(itemId, insertPos, stopId) {
-    let parentId = Svc.Bookmark.getFolderIdForItem(itemId);
-
-    // Keep processing the item chain until it loops to the stop item
-    do {
-      // Figure out what's next in the chain
-      let itemPos = Svc.Bookmark.getItemIndex(itemId);
-      let nextId = Svc.Bookmark.getIdForItemAt(parentId, itemPos + 1);
-
-      Svc.Bookmark.moveItem(itemId, parentId, insertPos);
-      this._log.trace("Moved " + itemId + " to " + insertPos);
-
-      // Prepare for the next item in the chain
-      insertPos = Svc.Bookmark.getItemIndex(itemId) + 1;
-      itemId = nextId;
-
-      // Stop if we ran off the end or the item is looking for its pred.
-      if (itemId == -1 || Svc.Annos.itemHasAnnotation(itemId, PREDECESSOR_ANNO))
-        break;
-    } while (itemId != stopId);
-  },
-
-  /**
-   * For the provided predecessor item, attach its followers to it
-   */
-  _attachFollowers: function BStore__attachFollowers(predId) {
-    let predGUID = this.GUIDForId(predId);
-    let followers = this._findAnnoItems(PREDECESSOR_ANNO, predGUID);
-    if (followers.length > 1)
-      this._log.warn(predId + " has more than one followers: " + followers);
-
-    // Start at the first follower and move the chain of followers
-    let parent = Svc.Bookmark.getFolderIdForItem(predId);
-    followers.forEach(function(follow) {
-      this._log.trace("Repositioning " + follow + " behind " + predId);
-      if (Svc.Bookmark.getFolderIdForItem(follow) != parent) {
-        this._log.warn("Follower doesn't have the same parent: " + parent);
-        return;
-      }
-
-      // Move the chain of followers to after the predecessor
-      let insertPos = Svc.Bookmark.getItemIndex(predId) + 1;
-      this._moveItemChain(follow, insertPos, predId);
-
-      // Remove the annotation now that we're putting it in the right spot
-      Svc.Annos.removeItemAnnotation(follow, PREDECESSOR_ANNO);
     }, this);
   },
 
@@ -508,10 +441,10 @@ BookmarksStore.prototype = {
     case "query":
     case "microsummary": {
       let uri = Utils.makeURI(record.bmkUri);
-      newId = this._bms.insertBookmark(record._parent, uri, record._insertPos,
-        record.title);
-      this._log.debug(["created bookmark", newId, "under", record._parent, "at",
-        record._insertPos, "as", record.title, record.bmkUri].join(" "));
+      newId = this._bms.insertBookmark(record._parent, uri,
+                                       Svc.Bookmark.DEFAULT_INDEX, record.title);
+      this._log.debug(["created bookmark", newId, "under", record._parent,
+                       "as", record.title, record.bmkUri].join(" "));
 
       this._tagURI(uri, record.tags);
       this._bms.setKeywordForBookmark(newId, record.keyword);
@@ -538,12 +471,14 @@ BookmarksStore.prototype = {
     } break;
     case "folder":
       newId = this._bms.createFolder(record._parent, record.title,
-        record._insertPos);
-      this._log.debug(["created folder", newId, "under", record._parent, "at",
-        record._insertPos, "as", record.title].join(" "));
+                                     Svc.Bookmark.DEFAULT_INDEX);
+      this._log.debug(["created folder", newId, "under", record._parent,
+                       "as", record.title].join(" "));
 
       if (record.description)
         Utils.anno(newId, "bookmarkProperties/description", record.description);
+
+      // record.children will be dealt with in _orderChildren.
       break;
     case "livemark":
       let siteURI = null;
@@ -551,15 +486,16 @@ BookmarksStore.prototype = {
         siteURI = Utils.makeURI(record.siteUri);
 
       newId = this._ls.createLivemark(record._parent, record.title, siteURI,
-        Utils.makeURI(record.feedUri), record._insertPos);
-      this._log.debug(["created livemark", newId, "under", record._parent, "at",
-        record._insertPos, "as", record.title, record.siteUri, record.feedUri].
-        join(" "));
+                                      Utils.makeURI(record.feedUri),
+                                      Svc.Bookmark.DEFAULT_INDEX);
+      this._log.debug(["created livemark", newId, "under", record._parent, "as",
+                       record.title, record.siteUri, record.feedUri].join(" "));
       break;
     case "separator":
-      newId = this._bms.insertSeparator(record._parent, record._insertPos);
-      this._log.debug(["created separator", newId, "under", record._parent,
-        "at", record._insertPos].join(" "));
+      newId = this._bms.insertSeparator(record._parent,
+                                        Svc.Bookmark.DEFAULT_INDEX);
+      this._log.debug(["created separator", newId, "under", record._parent]
+                      .join(" "));
       break;
     case "item":
       this._log.debug(" -> got a generic places item.. do nothing?");
@@ -611,18 +547,10 @@ BookmarksStore.prototype = {
 
     this._log.trace("Updating " + record.id + " (" + itemId + ")");
 
-    // Move the bookmark to a new parent if necessary
+    // Move the bookmark to a new parent or new position if necessary
     if (Svc.Bookmark.getFolderIdForItem(itemId) != record._parent) {
-      this._log.trace("Moving item to a new parent");
-      Svc.Bookmark.moveItem(itemId, record._parent, record._insertPos);
-    }
-    // Move the chain of bookmarks to a new position
-    else if (Svc.Bookmark.getItemIndex(itemId) != record._insertPos &&
-             !record._orphan) {
-      this._log.trace("Moving item and followers to a new position");
-
-      // Stop moving at the predecessor unless we don't have one
-      this._moveItemChain(itemId, record._insertPos, record._predId || itemId);
+      this._log.trace("Moving item to a new parent.");
+      Svc.Bookmark.moveItem(itemId, record._parent, Svc.Bookmark.DEFAULT_INDEX);
     }
 
     for (let [key, val] in Iterator(record.cleartext)) {
@@ -668,8 +596,76 @@ BookmarksStore.prototype = {
       case "feedUri":
         this._ls.setFeedURI(itemId, Utils.makeURI(val));
         break;
+      case "children":
+        Utils.anno(itemId, CHILDREN_ANNO, val.join(","));
+        break;
       }
     }
+  },
+
+  _orderChildren: function _orderChildren() {
+    for (let [guid, children] in Iterator(this._childrenToOrder)) {
+      // Convert children GUIDs to aliases if they exist.
+      children = children.map(function(guid) {
+        return this.aliases[guid] || guid;
+      }, this);
+
+      // Reorder children according to the GUID list. Gracefully deal
+      // with missing items, e.g. locally deleted.
+      let delta = 0;
+      for (let idx = 0; idx < children.length; idx++) {
+        let itemid = this.idForGUID(children[idx]);
+        if (itemid == -1) {
+          delta += 1;
+          this._log.trace("Could not locate record " + children[idx]);
+          continue;
+        }
+        try {
+          Svc.Bookmark.setItemIndex(itemid, idx - delta);
+        } catch (ex) {
+          this._log.debug("Could not move item " + children[idx] + ": " + ex);
+        }
+      }
+
+      // Update the children annotation. If there were mismatches due to local
+      // changes, we'll have to regenerate it from scratch, otherwise we can
+      // just use the incoming value.
+      let folderid = this.idForGUID(guid);
+      if (delta) {
+        this._updateChildrenAnno(folderid);
+      } else {
+        Utils.anno(folderid, CHILDREN_ANNO, children.join(","));
+      }
+    }
+  },
+
+  _updateChildrenAnno: function _updateChildrenAnno(itemid) {
+    let node = node = this._getNode(itemid);
+    let childids = [];
+
+    if (node.type == node.RESULT_TYPE_FOLDER &&
+        !this._ls.isLivemark(node.itemId)) {
+      node.QueryInterface(Ci.nsINavHistoryQueryResultNode);
+      node.containerOpen = true;
+      for (var i = 0; i < node.childCount; i++)
+        childids.push(node.getChild(i).itemId);
+    }
+    let childGUIDs = childids.map(this.GUIDForId, this);
+    Utils.anno(itemid, CHILDREN_ANNO, childGUIDs.join(","));
+    return childGUIDs;
+  },
+
+  get _removeAllChildrenAnnosStm() {
+    let stmt = this._getStmt(
+      "DELETE FROM moz_items_annos " +
+      "WHERE anno_attribute_id = " +
+        "(SELECT id FROM moz_anno_attributes WHERE name = :anno_name)");
+    stmt.params.anno_name = CHILDREN_ANNO;
+    return stmt;
+  },
+
+  _removeAllChildrenAnnos: function _removeAllChildrenAnnos() {
+    Utils.queryAsync(this._removeAllChildrenAnnosStm);
   },
 
   changeItemID: function BStore_changeItemID(oldID, newID) {
@@ -680,9 +676,6 @@ BookmarksStore.prototype = {
     this._findAnnoItems(PARENT_ANNO, oldID).forEach(function(itemId) {
       Utils.anno(itemId, PARENT_ANNO, newID);
     }, this);
-    this._findAnnoItems(PREDECESSOR_ANNO, oldID).forEach(function(itemId) {
-      Utils.anno(itemId, PREDECESSOR_ANNO, newID);
-    }, this);
 
     // Make sure there's an item to change GUIDs
     let itemId = this.idForGUID(oldID);
@@ -691,6 +684,10 @@ BookmarksStore.prototype = {
 
     this._log.debug("Changing GUID " + oldID + " to " + newID);
     this._setGUID(itemId, newID);
+
+    // Update parent
+    let parentid = this._bms.getFolderIdForItem(itemId);
+    this._updateChildrenAnno(parentid);
   },
 
   _getNode: function BStore__getNode(folder) {
@@ -727,6 +724,19 @@ BookmarksStore.prototype = {
     } catch (e) {
       return "";
     }
+  },
+
+  _getChildGUIDsForId: function _getChildGUIDsForId(itemid) {
+    let anno;
+    try {
+      anno = Utils.anno(itemid, CHILDREN_ANNO);
+    } catch(ex) {
+      // Ignore
+    }
+    if (anno)
+      return anno.split(",");
+
+    return this._updateChildrenAnno(itemid);
   },
 
   // Create a record starting from the weave id (places guid)
@@ -791,15 +801,18 @@ BookmarksStore.prototype = {
         record = new BookmarkFolder(collection, id);
       }
 
-      record.parentName = Svc.Bookmark.getItemTitle(parent);
+      if (parent > 0)
+        record.parentName = Svc.Bookmark.getItemTitle(parent);
       record.title = this._bms.getItemTitle(placeId);
       record.description = this._getDescription(placeId);
+      record.children = this._getChildGUIDsForId(placeId);
       break;
 
     case this._bms.TYPE_SEPARATOR:
       record = new BookmarkSeparator(collection, id);
-      // Create a positioning identifier for the separator
-      record.parentName = Svc.Bookmark.getItemTitle(parent);
+      if (parent > 0)
+        record.parentName = Svc.Bookmark.getItemTitle(parent);
+      // Create a positioning identifier for the separator, used by _lazyMap
       record.pos = Svc.Bookmark.getItemIndex(placeId);
       break;
 
@@ -814,8 +827,7 @@ BookmarksStore.prototype = {
                      this._bms.getItemType(placeId));
     }
 
-    record.parentid = this._getParentGUIDForId(placeId);
-    record.predecessorid = this._getPredecessorGUIDForId(placeId);
+    record.parentid = this.GUIDForId(parent);
     record.sortindex = this._calculateIndex(record);
 
     return record;
@@ -980,65 +992,6 @@ BookmarksStore.prototype = {
     return index;
   },
 
-  _getParentGUIDForId: function BStore__getParentGUIDForId(itemId) {
-    // Give the parent annotation if it exists
-    try {
-      return Utils.anno(itemId, PARENT_ANNO);
-    }
-    catch(ex) {}
-
-    let parentid = this._bms.getFolderIdForItem(itemId);
-    if (parentid == -1) {
-      this._log.debug("Found orphan bookmark, reparenting to unfiled");
-      parentid = this._bms.unfiledBookmarksFolder;
-      this._bms.moveItem(itemId, parentid, -1);
-    }
-    return this.GUIDForId(parentid);
-  },
-
-  _getPredecessorGUIDForId: function BStore__getPredecessorGUIDForId(itemId) {
-    // Give the predecessor annotation if it exists
-    try {
-      return Utils.anno(itemId, PREDECESSOR_ANNO);
-    }
-    catch(ex) {}
-
-    // Figure out the predecessor, unless it's the first item
-    let itemPos = Svc.Bookmark.getItemIndex(itemId);
-    if (itemPos == 0)
-      return;
-
-    // For items directly under unfiled/unsorted, give no predecessor
-    let parentId = Svc.Bookmark.getFolderIdForItem(itemId);
-    if (parentId == Svc.Bookmark.unfiledBookmarksFolder)
-      return;
-
-    let predecessorId = Svc.Bookmark.getIdForItemAt(parentId, itemPos - 1);
-    if (predecessorId == -1) {
-      this._log.debug("No predecessor directly before " + itemId + " under " +
-        parentId + " at " + itemPos);
-
-      // Find the predecessor before the item
-      do {
-        // No more items to check, it must be the first one
-        if (--itemPos < 0)
-          break;
-        predecessorId = Svc.Bookmark.getIdForItemAt(parentId, itemPos);
-      } while (predecessorId == -1);
-
-      // Fix up the item to be at the right position for next time
-      itemPos++;
-      this._log.debug("Fixing " + itemId + " to be at position " + itemPos);
-      Svc.Bookmark.moveItem(itemId, parentId, itemPos);
-
-      // There must be no predecessor for this item!
-      if (itemPos == 0)
-        return;
-    }
-
-    return this.GUIDForId(predecessorId);
-  },
-
   _getChildren: function BStore_getChildren(guid, items) {
     let node = guid; // the recursion case
     if (typeof(node) == "string") // callers will give us the guid as the first arg
@@ -1073,7 +1026,8 @@ BookmarksStore.prototype = {
   },
 
   getAllIDs: function BStore_getAllIDs() {
-    let items = {};
+    let items = {"menu": true,
+                 "toolbar": true};
     for (let [guid, id] in Iterator(kSpecialIds))
       if (guid != "places" && guid != "tags")
         this._getChildren(guid, items);
@@ -1092,10 +1046,6 @@ BookmarksStore.prototype = {
 
 function BookmarksTracker(name) {
   Tracker.call(this, name);
-
-  // Ignore changes to the special roots
-  for (let guid in kSpecialIds)
-    this.ignoreID(guid);
 
   Svc.Obs.add("places-shutdown", this);
   Svc.Obs.add("weave:engine:start-tracking", this);
@@ -1124,6 +1074,12 @@ BookmarksTracker.prototype = {
         // we don't leak
         this.__ls = null;
         this.__bms = null;
+        break;
+      case "weave:service:start-over":
+        // User has decided to stop syncing, we're going to stop tracking soon.
+        // This means we have to clean up the children annotations so that they
+        // won't be out of sync with reality if/when we start tracking again.
+        Engines.get("bookmarks")._store._removeAllChildrenAnnos();
         break;
     }
   },
@@ -1155,6 +1111,10 @@ BookmarksTracker.prototype = {
     return Engines.get("bookmarks")._store.GUIDForId(item_id);
   },
 
+  _updateChildrenAnno: function _updateChildrenAnno(itemid) {
+    return Engines.get("bookmarks")._store._updateChildrenAnno(itemid);
+  },
+
   /**
    * Add a bookmark (places) id to be uploaded and bump up the sync score
    *
@@ -1164,17 +1124,6 @@ BookmarksTracker.prototype = {
   _addId: function BMT__addId(itemId) {
     if (this.addChangedID(this._GUIDForId(itemId, true)))
       this._upScore();
-  },
-
-  /**
-   * Add the successor id for the item that follows the given item
-   */
-  _addSuccessor: function BMT__addSuccessor(itemId) {
-    let parentId = Svc.Bookmark.getFolderIdForItem(itemId);
-    let itemPos = Svc.Bookmark.getItemIndex(itemId);
-    let succId = Svc.Bookmark.getIdForItemAt(parentId, itemPos + 1);
-    if (succId != -1)
-      this._addId(succId);
   },
 
   /* Every add/remove/change is worth 10 points */
@@ -1228,7 +1177,8 @@ BookmarksTracker.prototype = {
 
     this._log.trace("onItemAdded: " + itemId);
     this._addId(itemId);
-    this._addSuccessor(itemId);
+    this._updateChildrenAnno(folder);
+    this._addId(folder);
   },
 
   onBeforeItemRemoved: function BMT_onBeforeItemRemoved(itemId) {
@@ -1237,7 +1187,9 @@ BookmarksTracker.prototype = {
 
     this._log.trace("onBeforeItemRemoved: " + itemId);
     this._addId(itemId);
-    this._addSuccessor(itemId);
+    let folder = Svc.Bookmark.getFolderIdForItem(itemId);
+    this._updateChildrenAnno(folder);
+    this._addId(folder);
   },
 
   _ensureMobileQuery: function _ensureMobileQuery() {
@@ -1301,17 +1253,16 @@ BookmarksTracker.prototype = {
       return;
 
     this._log.trace("onItemMoved: " + itemId);
-    this._addId(itemId);
-    this._addSuccessor(itemId);
-
-    // Get the thing that's now at the old place
-    let oldSucc = Svc.Bookmark.getIdForItemAt(oldParent, oldIndex);
-    if (oldSucc != -1)
-      this._addId(oldSucc);
+    this._updateChildrenAnno(oldParent);
+    this._addId(oldParent);
+    if (oldParent != newParent) {
+      this._addId(itemId);
+      this._updateChildrenAnno(newParent);
+      this._addId(newParent);
+    }
 
     // Remove any position annotations now that the user moved the item
     Svc.Annos.removeItemAnnotation(itemId, PARENT_ANNO);
-    Svc.Annos.removeItemAnnotation(itemId, PREDECESSOR_ANNO);
   },
 
   onBeginUpdateBatch: function BMT_onBeginUpdateBatch() {},
