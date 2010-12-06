@@ -11,6 +11,12 @@
 == clipPath-html-06.xhtml clipPath-html-06-ref.xhtml
 == clipPath-html-06-extref.xhtml clipPath-html-06-ref.xhtml
 == clipPath-html-zoomed-01.xhtml clipPath-html-01-ref.svg
+== conditions-outer-svg-01.xhtml ../pass.svg
+== conditions-outer-svg-02.xhtml ../pass.svg
+== dynamic-conditions-outer-svg-01.xhtml ../pass.svg
+== dynamic-conditions-outer-svg-02.xhtml ../pass.svg
+== dynamic-conditions-outer-svg-03.xhtml ../pass.svg
+== dynamic-conditions-outer-svg-04.xhtml ../pass.svg
 == filter-html-01.xhtml filter-html-01-ref.svg
 == filter-html-01-extref.xhtml filter-html-01-ref.svg
 == filter-html-zoomed-01.xhtml filter-html-01-ref.svg

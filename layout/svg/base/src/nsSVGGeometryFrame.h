@@ -73,7 +73,6 @@ public:
   // nsSVGGeometryFrame methods:
   virtual gfxMatrix GetCanvasTM() = 0;
   PRUint16 GetClipRule();
-  PRBool IsClipChild(); 
 
   float GetStrokeWidth();
 

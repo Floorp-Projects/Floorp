@@ -4806,27 +4806,25 @@ nsCSSFrameConstructor::FindSVGData(nsIContent* aContent,
     return &sSuppressData;
   }
 
-  // Elements with failing conditional processing attributes never get
-  // rendered.  Note that this is not where we select which frame in a
-  // <switch> to render!  That happens in nsSVGSwitchFrame::PaintSVG.
-  if (!nsSVGFeatures::PassesConditionalProcessingTests(aContent)) {
-    return &sContainerData;
-  }
-
-  // Special case for aTag == nsGkAtoms::svg because we don't want to
-  // have to recompute parentIsSVG for it.
-  if (aTag == nsGkAtoms::svg) {
-    if (parentIsSVG) {
-      static const FrameConstructionData sInnerSVGData =
-        SIMPLE_SVG_FCDATA(NS_NewSVGInnerSVGFrame);
-      return &sInnerSVGData;
-    }
-
+  if (aTag == nsGkAtoms::svg && !parentIsSVG) {
+    // We need outer <svg> elements to have an nsSVGOuterSVGFrame regardless
+    // of whether they fail conditional processing attributes, since various
+    // SVG frames assume that one exists.  We handle the non-rendering
+    // of failing outer <svg> element contents like <switch> statements,
+    // and do the PassesConditionalProcessingTests call in
+    // nsSVGOuterSVGFrame::Init.
     static const FrameConstructionData sOuterSVGData =
       FCDATA_DECL(FCDATA_FORCE_VIEW | FCDATA_SKIP_ABSPOS_PUSH |
                   FCDATA_DISALLOW_GENERATED_CONTENT,
                   NS_NewSVGOuterSVGFrame);
     return &sOuterSVGData;
+  }
+  
+  if (!nsSVGFeatures::PassesConditionalProcessingTests(aContent)) {
+    // Elements with failing conditional processing attributes never get
+    // rendered.  Note that this is not where we select which frame in a
+    // <switch> to render!  That happens in nsSVGSwitchFrame::PaintSVG.
+    return &sContainerData;
   }
 
   // Special cases for text/tspan/textPath, because the kind of frame
@@ -4858,6 +4856,7 @@ nsCSSFrameConstructor::FindSVGData(nsIContent* aContent,
   }
 
   static const FrameConstructionDataByTag sSVGData[] = {
+    SIMPLE_SVG_CREATE(svg, NS_NewSVGInnerSVGFrame),
     SIMPLE_SVG_CREATE(g, NS_NewSVGGFrame),
     SIMPLE_SVG_CREATE(svgSwitch, NS_NewSVGSwitchFrame),
     SIMPLE_SVG_CREATE(polygon, NS_NewSVGPathGeometryFrame),
