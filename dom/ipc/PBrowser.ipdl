@@ -175,6 +175,11 @@ parent:
 
     SetIMEOpenState(PRBool value);
 
+    /**
+     * Gets the DPI of the screen corresponding to this browser.
+     */
+    sync GetDPI() returns (float value);
+
     PContentPermissionRequest(nsCString aType, URI uri);
 
     PContentDialog(PRUint32 aType, nsCString aName, nsCString aFeatures,

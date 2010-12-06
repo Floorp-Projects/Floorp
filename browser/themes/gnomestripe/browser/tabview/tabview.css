@@ -542,10 +542,15 @@ html[dir=rtl] #exit-button {
 
 /* Search
 ----------------------------------*/
-#search{
+#searchshade{
   background-color: rgba(0,0,0,.42);
   width: 100%;
-  height: 100%;  
+  height: 100%;
+}
+
+#search{
+  width: 100%;
+  height: 100%;
 }
 
 #searchbox{

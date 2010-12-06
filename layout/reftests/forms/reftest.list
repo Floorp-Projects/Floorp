@@ -45,6 +45,8 @@ skip-if(winWidget) == textarea-resize-background.html textarea-resize-background
 != radio-checked-native-notref.html about:blank
 
 == select-multiple.html select-multiple-ref.html
+== select-boguskids.html select-boguskids-ref.html
+== select-dynamic-boguskids.html select-boguskids-ref.html
 
 # placeholder
 include placeholder/reftest.list

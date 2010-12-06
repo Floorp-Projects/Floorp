@@ -86,6 +86,10 @@ SVGLength::SetValueFromString(const nsAString &aValue)
       }
       nsCAutoString unitStr(unit, theRest - unit);
       tmpUnit = GetUnitTypeForString(unitStr.get());
+      if (tmpUnit == nsIDOMSVGLength::SVG_LENGTHTYPE_UNKNOWN) {
+        // nsSVGUtils::ReportToConsole
+        return PR_FALSE;
+      }
     } else {
       tmpUnit = nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER;
     }
@@ -272,7 +276,6 @@ GetUnitTypeForString(const char* unitStr)
       return i;
     }
   }
-  NS_NOTREACHED("Returning unknown unit type");
   return nsIDOMSVGLength::SVG_LENGTHTYPE_UNKNOWN;
 }
 

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <!-- Test that an indefinite to-animation just sticks to the base value for
+       interpolatable attributes. -->
+  <rect x="15" y="15" width="200" height="200" fill="blue">
+    <animate attributeName="height" to="100" dur="indefinite"/>
+  </rect>
+</svg>

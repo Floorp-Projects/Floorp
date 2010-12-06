@@ -18,16 +18,11 @@ browser.jar:
   skin/classic/browser/Geolocation-64.png
   skin/classic/browser/Go-arrow.png
   skin/classic/browser/home.png
-  skin/classic/browser/hud-panel.png
-  skin/classic/browser/hud-style-button-middle-background.png
   skin/classic/browser/hud-style-check-box-checked.png
   skin/classic/browser/hud-style-check-box-empty.png
   skin/classic/browser/hud-style-dropmarker-double-arrows.png
   skin/classic/browser/hud-style-expander-closed.png
   skin/classic/browser/hud-style-expander-open.png
-  skin/classic/browser/hud-style-new-folder-bar-background-active.png
-  skin/classic/browser/hud-style-new-folder-bar-background.gif
-  skin/classic/browser/hud-style-new-folder-bar-background.png
   skin/classic/browser/hud-style-new-folder-plus-sign.png
   skin/classic/browser/hud-style-twisties.png
   skin/classic/browser/identity.png

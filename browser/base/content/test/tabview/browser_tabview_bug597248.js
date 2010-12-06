@@ -157,19 +157,36 @@ function onTabViewFrameInitialized() {
 
   let contentWindow = restoredWin.document.getElementById("tab-view").contentWindow;
 
-  let tabItems = contentWindow.TabItems.getItems();
-  tabItems.forEach(function(tabItem) {
-    ok(tabItem.isShowingCachedData(), "Tab item is showing cached data");
-  });
+  let nextStep = function() {
+    // since we are not sure whether the frame is initialized first or two tabs
+    // compete loading first so we need this.
+    if (restoredNewTabOneLoaded && restoredNewTabTwoLoaded) {
+      // executeSoon is used to ensure tabItem.shouldHideCachedData is set
+      // because tabs progress listener might run at the same time as this test code.
+      executeSoon(updateAndCheck);
+    } else
+      frameInitialized = true;
+  }
 
-  // since we are not sure whether the frame is initialized first or two tabs
-  // compete loading first so we need this.
-  if (restoredNewTabOneLoaded && restoredNewTabTwoLoaded) {
-    // executeSoon is used to ensure tabItem.shouldHideCachedData is set
-    // because tabs progress listener might run at the same time as this test code.
-    executeSoon(updateAndCheck);
-  } else
-    frameInitialized = true;
+  let tabItems = contentWindow.TabItems.getItems();
+  let count = tabItems.length;
+  tabItems.forEach(function(tabItem) {
+    // tabitem might not be connected so use subscriber for those which are not
+    // connected.
+    if (tabItem.reconnected) {
+      ok(tabItem.isShowingCachedData(), "Tab item is showing cached data");
+      count--;
+      if (count == 0)
+        nextStep();
+    } else {
+      tabItem.addSubscriber(tabItem, "reconnected", function() {
+        tabItem.removeSubscriber(tabItem, "reconnected");
+        count--;
+        if (count == 0)
+          nextStep();
+      });
+    }
+  });
 }
 
 function updateAndCheck() {

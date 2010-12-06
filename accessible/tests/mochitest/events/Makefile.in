@@ -65,6 +65,7 @@ _TEST_FILES =\
 		test_focus.xul \
 		test_focus_name.html \
 		test_focusdoc.html \
+		test_menu.xul \
 		test_mutation.html \
 		test_scroll.xul \
 		test_selection.html \

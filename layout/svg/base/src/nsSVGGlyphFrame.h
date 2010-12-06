@@ -216,8 +216,8 @@ protected:
                             float aMetricsScale);
   gfxFloat GetBaselineOffset(float aMetricsScale);
 
-  virtual void GetDxDy(mozilla::SVGUserUnitList *aDx, mozilla::SVGUserUnitList *aDy);
-  already_AddRefed<nsIDOMSVGNumberList> GetRotate();
+  virtual void GetDxDy(SVGUserUnitList *aDx, SVGUserUnitList *aDy);
+  virtual const SVGNumberList *GetRotate();
 
   // Used to support GetBBoxContribution by making GetConvasTM use this as the
   // parent transform instead of the real CanvasTM.

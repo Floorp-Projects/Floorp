@@ -553,6 +553,20 @@ var popupTests = [
   condition: function() { return (navigator.platform.indexOf("Win") == 0) },
   events: [ "DOMMenuBarInactive menubar", "DOMMenuItemInactive filemenu"  ],
   test: function() { synthesizeKey("VK_ALT", { }); },
+},
+{
+  testname: "Don't activate menubar with mousedown during alt key auto-repeat",
+  test: function() {
+    synthesizeKey("VK_ALT", { type: "keydown" });
+    synthesizeMouse(document.getElementById("menubar"), 8, -30, { type: "mousedown", altKey: true });
+    synthesizeKey("VK_ALT", { type: "keydown" });
+    synthesizeMouse(document.getElementById("menubar"), 8, -30, { type: "mouseup", altKey: true });
+    synthesizeKey("VK_ALT", { type: "keydown" });
+    synthesizeKey("VK_ALT", { type: "keyup" });
+  },
+  result: function (testname) {
+    checkActive(document.getElementById("menubar"), "", testname);
+  }
 }
 
 ];

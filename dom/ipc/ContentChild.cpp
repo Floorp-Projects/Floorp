@@ -114,8 +114,8 @@ class AlertObserver
 public:
 
     AlertObserver(nsIObserver *aObserver, const nsString& aData)
-        : mData(aData)
-        , mObserver(aObserver)
+        : mObserver(aObserver)
+        , mData(aData)
     {
     }
 

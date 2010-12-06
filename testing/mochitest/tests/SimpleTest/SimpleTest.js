@@ -12,7 +12,7 @@
  * instance, do not use const or JS > 1.5 features which are not yet
  * implemented everywhere.
  *
-**/
+ */
 
 if (typeof(SimpleTest) == "undefined") {
     var SimpleTest = {};
@@ -34,7 +34,7 @@ if (parentRunner) {
 
 /**
  * Check for OOP test plugin
-**/
+ */
 SimpleTest.testPluginIsOOP = function () {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     var prefservice = Components.classes["@mozilla.org/preferences-service;1"]
@@ -77,7 +77,7 @@ SimpleTest._stopOnLoad = true;
 
 /**
  * Something like assert.
-**/
+ */
 SimpleTest.ok = function (condition, name, diag) {
     var test = {'result': !!condition, 'name': name, 'diag': diag};
     if (SimpleTest._logEnabled)
@@ -87,7 +87,7 @@ SimpleTest.ok = function (condition, name, diag) {
 
 /**
  * Roughly equivalent to ok(a==b, name)
-**/
+ */
 SimpleTest.is = function (a, b, name) {
     var repr = MochiKit.Base.repr;
     var pass = (a == b);
@@ -136,7 +136,7 @@ SimpleTest._logResult = function(test, passString, failString) {
 
 /**
  * Copies of is and isnot with the call to ok replaced by a call to todo.
-**/
+ */
 
 SimpleTest.todo_is = function (a, b, name) {
     var repr = MochiKit.Base.repr;
@@ -157,7 +157,7 @@ SimpleTest.todo_isnot = function (a, b, name) {
 
 /**
  * Makes a test report, returns it as a DIV element.
-**/
+ */
 SimpleTest.report = function () {
     var DIV = MochiKit.DOM.DIV;
     var passed = 0;
@@ -205,7 +205,7 @@ SimpleTest.report = function () {
 
 /**
  * Toggle element visibility
-**/
+ */
 SimpleTest.toggle = function(el) {
     if (MochiKit.Style.computedStyle(el, 'display') == 'block') {
         el.style.display = 'none';
@@ -216,7 +216,7 @@ SimpleTest.toggle = function(el) {
 
 /**
  * Toggle visibility for divs with a specific class.
-**/
+ */
 SimpleTest.toggleByClass = function (cls, evt) {
     var elems = getElementsByTagAndClassName('div', cls);
     MochiKit.Base.map(SimpleTest.toggle, elems);
@@ -226,7 +226,7 @@ SimpleTest.toggleByClass = function (cls, evt) {
 
 /**
  * Shows the report in the browser
-**/
+ */
 
 SimpleTest.showReport = function() {
     var togglePassed = A({'href': '#'}, "Toggle passed checks");
@@ -261,12 +261,12 @@ SimpleTest.showReport = function() {
 };
 
 /**
- * Tells SimpleTest to don't finish the test when the document is loaded,
- * useful for asynchronous tests.
+ * Tells SimpleTest harness not to finish the test automatically.
+ * Asynchronous tests must call this function.
  *
- * When SimpleTest.waitForExplicitFinish is called,
- * explicit SimpleTest.finish() is required.
-**/
+ * After this function has been called,
+ * an explicit call to SimpleTest.finish is required to finish the test.
+ */
 SimpleTest.waitForExplicitFinish = function () {
     SimpleTest._stopOnLoad = false;
 };
@@ -513,10 +513,9 @@ SimpleTest.executeSoon = function(aFunc) {
     if ("Components" in window && "classes" in window.Components) {
         try {
             netscape.security.PrivilegeManager
-              .enablePrivilege("UniversalXPConnect");
+                             .enablePrivilege("UniversalXPConnect");
             var tm = Components.classes["@mozilla.org/thread-manager;1"]
-                       .getService(Components.interfaces.nsIThreadManager);
-
+                               .getService(Components.interfaces.nsIThreadManager);
             tm.mainThread.dispatch({
                 run: function() {
                     aFunc();
@@ -528,27 +527,42 @@ SimpleTest.executeSoon = function(aFunc) {
             // failing, fall through to the setTimeout path.
         }
     }
+
     setTimeout(aFunc, 0);
 }
 
 /**
- * Finishes the tests. This is automatically called, except when
- * SimpleTest.waitForExplicitFinish() has been invoked.
-**/
+ * Finishes the test, after letting it actually end first.
+ *
+ * Tests must call this function when they have called
+ * SimpleTest.waitForExplicitFinish before.
+ */
 SimpleTest.finish = function () {
+  SimpleTest.executeSoon(SimpleTest._finishNow);
+};
+
+/**
+ * Finishes the test, now.
+ *
+ * Not to be directly called by tests.
+ */
+SimpleTest._finishNow = function () {
     if (parentRunner) {
-        /* We're running in an iframe, and the parent has a TestRunner */
+        // The test is running in an iframe, and its parent has a TestRunner.
         parentRunner.testFinished(SimpleTest._tests);
     } else {
+        // The test is running alone in the window.
         SimpleTest.showReport();
     }
 };
 
-
+/**
+ * Automatically call SimpleTest._finishNow when the document has loaded,
+ * except when SimpleTest.waitForExplicitFinish has been called.
+ */
 addLoadEvent(function() {
-    if (SimpleTest._stopOnLoad) {
-        SimpleTest.finish();
-    }
+    if (SimpleTest._stopOnLoad)
+      SimpleTest._finishNow();
 });
 
 //  --------------- Test.Builder/Test.More isDeeply() -----------------
@@ -779,7 +793,7 @@ window.onerror = function simpletestOnerror(errorMsg, url, lineNumber) {
   }
 
   if (!SimpleTest._stopOnLoad) {
-    // Need to finish() manually here, yet let the test actually end first.
-    SimpleTest.executeSoon(SimpleTest.finish);
+    // Call finish, as the test (hopefully) doesn't run anymore.
+    SimpleTest.finish();
   }
 }
