@@ -935,7 +935,7 @@ LifetimeScript::analyze(JSContext *cx, analyze::Script *analysis, JSScript *scri
                     targetOffset = targetOffset + GetJumpOffset(target, target);
                 } else {
                     /* This is a loop back edge, no lifetime to pull in yet. */
-                    JS_ASSERT(nop == JSOP_TRACE);
+                    JS_ASSERT(nop == JSOP_TRACE || nop == JSOP_NOTRACE);
                     codeArray[targetOffset].loopBackedge = offset;
                     break;
                 }
