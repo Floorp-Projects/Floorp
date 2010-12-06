@@ -904,7 +904,16 @@ WebGLContext::DepthFunc(WebGLenum func)
 
 GL_SAME_METHOD_1(DepthMask, DepthMask, WebGLboolean)
 
-GL_SAME_METHOD_2(DepthRange, DepthRange, WebGLfloat, WebGLfloat)
+NS_IMETHODIMP
+WebGLContext::DepthRange(WebGLfloat zNear, WebGLfloat zFar)
+{
+    if (zNear > zFar)
+        return ErrorInvalidOperation("depthRange: the near value is greater than the far value!");
+
+    MakeContextCurrent();
+    gl->fDepthRange(zNear, zFar);
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 WebGLContext::DisableVertexAttribArray(WebGLuint index)
