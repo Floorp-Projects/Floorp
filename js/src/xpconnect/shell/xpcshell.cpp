@@ -78,6 +78,7 @@
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsIXPCSecurityManager.h"
+#include "xpcpublic.h"
 #ifdef XP_MACOSX
 #include "xpcshellMacUtils.h"
 #endif
@@ -1901,6 +1902,8 @@ main(int argc, char **argv)
             printf("JS_NewContext failed!\n");
             return 1;
         }
+
+        xpc_LocalizeContext(cx);
 
         nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());
         if (!xpc) {
