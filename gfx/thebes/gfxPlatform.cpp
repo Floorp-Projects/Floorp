@@ -60,6 +60,8 @@
 #include "gfxTextRunCache.h"
 #include "gfxTextRunWordCache.h"
 #include "gfxUserFontSet.h"
+#include "gfxUnicodeProperties.h"
+#include "harfbuzz/hb-unicode.h"
 
 #include "nsUnicodeRange.h"
 #include "nsServiceManagerUtils.h"
@@ -1113,21 +1115,6 @@ static void MigratePrefs()
 
 // default SetupClusterBoundaries, based on Unicode properties;
 // platform subclasses may override if they wish
-static nsIUGenCategory* gGenCategory = nsnull;
-
-static nsIUGenCategory*
-GetGenCategory()
-{
-    if (!gGenCategory) {
-        nsresult rv = CallGetService(NS_UNICHARCATEGORY_CONTRACTID, &gGenCategory);
-        if (NS_FAILED(rv)) {
-            NS_ERROR("Failed to get the Unicode character category service!");
-            gGenCategory = nsnull;
-        }
-    }
-    return gGenCategory;
-}
-
 void
 gfxPlatform::SetupClusterBoundaries(gfxTextRun *aTextRun, const PRUnichar *aString)
 {
@@ -1136,33 +1123,110 @@ gfxPlatform::SetupClusterBoundaries(gfxTextRun *aTextRun, const PRUnichar *aStri
         // XXX is this true in all languages???
         // behdad: don't think so.  Czech for example IIRC has a
         // 'ch' grapheme.
+        // jfkthame: but that's not expected to behave as a grapheme cluster
+        // for selection/editing/etc.
         return;
     }
 
-    nsIUGenCategory* gc = GetGenCategory();
-    if (!gc) {
-        NS_WARNING("No Unicode category service: cannot determine clusters");
-        return;
-    }
+    gfxTextRun::CompressedGlyph extendCluster;
+    extendCluster.SetComplex(PR_FALSE, PR_TRUE, 0);
 
     PRUint32 i, length = aTextRun->GetLength();
+    gfxUnicodeProperties::HSType hangulState = gfxUnicodeProperties::HST_NONE;
+
     for (i = 0; i < length; ++i) {
         PRBool surrogatePair = PR_FALSE;
         PRUint32 ch = aString[i];
         if (NS_IS_HIGH_SURROGATE(ch) &&
-            i < length - 1 && NS_IS_LOW_SURROGATE(aString[i+1])) {
+            i < length - 1 && NS_IS_LOW_SURROGATE(aString[i+1]))
+        {
             ch = SURROGATE_TO_UCS4(ch, aString[i+1]);
             surrogatePair = PR_TRUE;
         }
-        if (i > 0 && gc->Get(ch) == nsIUGenCategory::kMark) {
-            gfxTextRun::CompressedGlyph g;
-            aTextRun->SetGlyphs(i, g.SetComplex(PR_FALSE, PR_TRUE, 0), nsnull);
+
+        PRUint8 category = gfxUnicodeProperties::GetGeneralCategory(ch);
+        gfxUnicodeProperties::HSType hangulType = gfxUnicodeProperties::HST_NONE;
+
+        // combining marks extend the cluster
+        if ((category >= HB_CATEGORY_COMBINING_MARK &&
+             category <= HB_CATEGORY_NON_SPACING_MARK) ||
+            (ch >= 0x200c && ch <= 0x200d) || // ZWJ, ZWNJ
+            (ch >= 0xff9e && ch <= 0xff9f))   // katakana sound marks
+        {
+            if (i > 0) {
+                aTextRun->SetGlyphs(i, extendCluster, nsnull);
+            }
+        } else if (category == HB_CATEGORY_OTHER_LETTER) {
+            // handle special cases in Letter_Other category
+#if 0
+            // Currently disabled. This would follow the UAX#29 specification
+            // for extended grapheme clusters, but this is not favored by
+            // Thai users, at least for editing behavior.
+            // See discussion of equivalent Pango issue in bug 474068 and
+            // upstream at https://bugzilla.gnome.org/show_bug.cgi?id=576156.
+
+            if ((ch & ~0xff) == 0x0e00) {
+                // specific Thai & Lao (U+0Exx) chars that extend the cluster
+                if ( ch == 0x0e30 ||
+                    (ch >= 0x0e32 && ch <= 0x0e33) ||
+                     ch == 0x0e45 ||
+                     ch == 0x0eb0 ||
+                    (ch >= 0x0eb2 && ch <= 0x0eb3))
+                {
+                    if (i > 0) {
+                        aTextRun->SetGlyphs(i, extendCluster, nsnull);
+                    }
+                }
+                else if ((ch >= 0x0e40 && ch <= 0x0e44) ||
+                         (ch >= 0x0ec0 && ch <= 0x0ec4))
+                {
+                    // characters that are prepended to the following cluster
+                    if (i < length - 1) {
+                        aTextRun->SetGlyphs(i+1, extendCluster, nsnull);
+                    }
+                }
+            } else
+#endif
+            if ((ch & ~0xff) == 0x1100 ||
+                (ch >= 0xa960 && ch <= 0xa97f) ||
+                (ch >= 0xac00 && ch <= 0xd7ff))
+            {
+                // no break within Hangul syllables
+                hangulType = gfxUnicodeProperties::GetHangulSyllableType(ch);
+                switch (hangulType) {
+                case gfxUnicodeProperties::HST_L:
+                case gfxUnicodeProperties::HST_LV:
+                case gfxUnicodeProperties::HST_LVT:
+                    if (hangulState == gfxUnicodeProperties::HST_L) {
+                        aTextRun->SetGlyphs(i, extendCluster, nsnull);
+                    }
+                    break;
+                case gfxUnicodeProperties::HST_V:
+                    if ( (hangulState != gfxUnicodeProperties::HST_NONE) &&
+                        !(hangulState & gfxUnicodeProperties::HST_T))
+                    {
+                        aTextRun->SetGlyphs(i, extendCluster, nsnull);
+                    }
+                    break;
+                case gfxUnicodeProperties::HST_T:
+                    if (hangulState & (gfxUnicodeProperties::HST_V |
+                                       gfxUnicodeProperties::HST_T))
+                    {
+                        aTextRun->SetGlyphs(i, extendCluster, nsnull);
+                    }
+                    break;
+                default:
+                    break;
+                }
+            }
         }
+
         if (surrogatePair) {
             ++i;
-            gfxTextRun::CompressedGlyph g;
-            aTextRun->SetGlyphs(i, g.SetComplex(PR_FALSE, PR_TRUE, 0), nsnull);
+            aTextRun->SetGlyphs(i, extendCluster, nsnull);
         }
+
+        hangulState = hangulType;
     }
 }
 
