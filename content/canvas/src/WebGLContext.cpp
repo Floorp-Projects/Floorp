@@ -316,12 +316,14 @@ WebGLContext::SetContextOptions(nsIPropertyBag *aOptions)
     // enforce that if stencil is specified, we also give back depth
     newOpts.depth |= newOpts.stencil;
 
+#if 0
     LogMessage("aaHint: %d stencil: %d depth: %d alpha: %d premult: %d\n",
                newOpts.antialiasHint ? 1 : 0,
                newOpts.stencil ? 1 : 0,
                newOpts.depth ? 1 : 0,
                newOpts.alpha ? 1 : 0,
                newOpts.premultipliedAlpha ? 1 : 0);
+#endif
 
     if (mOptionsFrozen && newOpts != mOptions) {
         // Error if the options are already frozen, and the ones that were asked for
@@ -398,8 +400,14 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     // Get some prefs for some preferred/overriden things
     PRBool forceOSMesa = PR_FALSE;
     PRBool preferEGL = PR_FALSE;
+    PRBool preferOpenGL = PR_FALSE;
     prefService->GetBoolPref("webgl.force_osmesa", &forceOSMesa);
     prefService->GetBoolPref("webgl.prefer_egl", &preferEGL);
+    prefService->GetBoolPref("webgl.prefer_gl", &preferOpenGL);
+
+    if (PR_GetEnv("MOZ_WEBGL_PREFER_EGL")) {
+        preferEGL = PR_TRUE;
+    }
 
     // Ask GfxInfo about what we should use
     PRBool useOpenGL = PR_TRUE;
@@ -424,6 +432,13 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
         }
     }
 
+    // allow forcing GL and not EGL/ANGLE
+    if (PR_GetEnv("MOZ_WEBGL_FORCE_OPENGL")) {
+        preferEGL = PR_FALSE;
+        useANGLE = PR_FALSE;
+        useOpenGL = PR_TRUE;
+    }
+
     // if we're forcing osmesa, do it first
     if (forceOSMesa) {
         gl = gl::GLContextProviderOSMesa::CreateOffscreen(gfxIntSize(width, height), format);
@@ -435,24 +450,8 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     }
 
 #ifdef XP_WIN
-    // On Windows, we may have a choice of backends, including straight
-    // OpenGL, D3D through ANGLE via EGL, or straight EGL/GLES2.
-    // We don't differentiate the latter two yet, but we allow for
-    // a env var to try EGL first, instead of last; there's also a pref,
-    // the env var being set overrides the pref
-    if (PR_GetEnv("MOZ_WEBGL_PREFER_EGL")) {
-        preferEGL = PR_TRUE;
-    }
-
-    // force opengl instead of EGL/ANGLE
-    if (PR_GetEnv("MOZ_WEBGL_FORCE_OPENGL")) {
-        preferEGL = PR_FALSE;
-        useANGLE = PR_FALSE;
-        useOpenGL = PR_TRUE;
-    }
-
-    // if we want EGL, try it first
-    if (!gl && (preferEGL || useANGLE)) {
+    // if we want EGL, try it now
+    if (!gl && (preferEGL || useANGLE) && !preferOpenGL) {
         gl = gl::GLContextProviderEGL::CreateOffscreen(gfxIntSize(width, height), format);
         if (gl && !InitAndValidateGL()) {
             gl = nsnull;

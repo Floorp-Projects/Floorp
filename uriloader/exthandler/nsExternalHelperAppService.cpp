@@ -567,6 +567,9 @@ static nsExtraMimeTypeEntry extraMimeEntries [] =
   { APPLICATION_XPINSTALL, "xpi", "XPInstall Install" },
   { APPLICATION_POSTSCRIPT, "ps,eps,ai", "Postscript File" },
   { APPLICATION_XJAVASCRIPT, "js", "Javascript Source File" },
+#ifdef ANDROID
+  { "application/vnd.android.package-archive", "apk", "Android Package" },
+#endif
   { IMAGE_ART, "art", "ART Image" },
   { IMAGE_BMP, "bmp", "BMP Image" },
   { IMAGE_GIF, "gif", "GIF Image" },
@@ -2352,7 +2355,7 @@ nsresult nsExternalAppHandler::OpenWithApplication()
     if (deleteTempFileOnExit || gExtProtSvc->InPrivateBrowsing())
       mFinalFileDestination->SetPermissions(0400);
 
-    rv = mMimeInfo->LaunchWithFile(mFinalFileDestination);        
+    rv = mMimeInfo->LaunchWithFile(mFinalFileDestination);
     if (NS_FAILED(rv))
     {
       // Send error notification.
@@ -2481,6 +2484,13 @@ NS_IMETHODIMP nsExternalAppHandler::Cancel(nsresult aReason)
   {
     mTempFile->Remove(PR_FALSE);
     mTempFile = nsnull;
+  }
+
+  // If we have already created a final destination file, we remove it as well
+  if (mFinalFileDestination)
+  {
+    mFinalFileDestination->Remove(PR_FALSE);
+    mFinalFileDestination = nsnull;
   }
 
   // Release the listener, to break the reference cycle with it (we are the

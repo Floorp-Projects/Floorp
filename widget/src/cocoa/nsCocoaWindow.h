@@ -281,11 +281,6 @@ public:
     // be notified that a some form of drag event needs to go into Gecko
     virtual PRBool DragEvent(unsigned int aMessage, Point aMouseGlobal, UInt16 aKeyModifiers);
 
-    // Helpers to prevent recursive resizing during live-resize
-    PRBool IsResizing () const { return mIsResizing; }
-    void StartResizing () { mIsResizing = PR_TRUE; }
-    void StopResizing () { mIsResizing = PR_FALSE; }
-
     PRBool HasModalDescendents() { return mNumModalDescendents > 0; }
     NSWindow *GetCocoaWindow() { return mWindow; }
 
@@ -338,7 +333,6 @@ protected:
   PRInt32              mShadowStyle;
   NSUInteger           mWindowFilter;
 
-  PRPackedBool         mIsResizing;     // we originated the resize, prevent infinite recursion
   PRPackedBool         mWindowMadeHere; // true if we created the window, false for embedding
   PRPackedBool         mSheetNeedsShow; // if this is a sheet, are we waiting to be shown?
                                         // this is used for sibling sheet contention only

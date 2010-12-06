@@ -585,27 +585,9 @@ const gPopupBlockerObserver = {
 
   dontShowMessage: function ()
   {
-#if 0 
-    // Disabled until bug 594294 is fixed.
     var showMessage = gPrefService.getBoolPref("privacy.popups.showBrowserMessage");
-    var firstTime = gPrefService.getBoolPref("privacy.popups.firstTime");
-
-    // If the info message is showing at the top of the window, and the user has never
-    // hidden the message before, show an info box telling the user where the info
-    // will be displayed.
-    if (showMessage && firstTime)
-      this._displayPageReportFirstTime();
-
     gPrefService.setBoolPref("privacy.popups.showBrowserMessage", !showMessage);
-#endif
-
     gBrowser.getNotificationBox().removeCurrentNotification();
-  },
-
-  _displayPageReportFirstTime: function ()
-  {
-    window.openDialog("chrome://browser/content/pageReportFirstTime.xul", "_blank",
-                      "dependent");
   }
 };
 
@@ -1246,6 +1228,9 @@ function BrowserStartup() {
 
   BookmarksMenuButton.init();
 
+  // initialize the private browsing UI
+  gPrivateBrowsingUI.init();
+
   setTimeout(delayedStartup, 0, isLoadingBlank, mustLoadSidebar);
 }
 
@@ -1532,9 +1517,6 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   placesContext.addEventListener("popupshowing", updateEditUIVisibility, false);
   placesContext.addEventListener("popuphiding", updateEditUIVisibility, false);
 #endif
-
-  // initialize the private browsing UI
-  gPrivateBrowsingUI.init();
 
   gBrowser.mPanelContainer.addEventListener("InstallBrowserTheme", LightWeightThemeWebInstaller, false, true);
   gBrowser.mPanelContainer.addEventListener("PreviewBrowserTheme", LightWeightThemeWebInstaller, false, true);
@@ -2905,7 +2887,7 @@ var homeButtonObserver = {
       browserDragAndDrop.dragOver(aEvent, "droponhomebutton");
       aEvent.dropEffect = "link";
     },
-  onDragLeave: function (aEvent)
+  onDragExit: function (aEvent)
     {
       XULWindowBrowser.setStatusText("");
     }
@@ -2948,7 +2930,7 @@ var bookmarksButtonObserver = {
     aEvent.dropEffect = "link";
   },
 
-  onDragLeave: function (aEvent)
+  onDragExit: function (aEvent)
   {
     XULWindowBrowser.setStatusText("");
   }
@@ -2960,7 +2942,7 @@ var newTabButtonObserver = {
     browserDragAndDrop.dragOver(aEvent, "droponnewtabbutton");
   },
 
-  onDragLeave: function (aEvent)
+  onDragExit: function (aEvent)
   {
     XULWindowBrowser.setStatusText("");
   },
@@ -2982,7 +2964,7 @@ var newWindowButtonObserver = {
   {
     browserDragAndDrop.dragOver(aEvent, "droponnewwindowbutton");
   },
-  onDragLeave: function (aEvent)
+  onDragExit: function (aEvent)
   {
     XULWindowBrowser.setStatusText("");
   },
@@ -3009,7 +2991,7 @@ var DownloadsButtonDNDObserver = {
       aEvent.preventDefault();
   },
 
-  onDragLeave: function (aEvent)
+  onDragExit: function (aEvent)
   {
     XULWindowBrowser.setStatusText("");
   },
@@ -6804,6 +6786,7 @@ function undoCloseTab(aIndex) {
   var ss = Cc["@mozilla.org/browser/sessionstore;1"].
            getService(Ci.nsISessionStore);
   if (ss.getClosedTabCount(window) > (aIndex || 0)) {
+    TabView.prepareUndoCloseTab();
     tab = ss.undoCloseTab(window, aIndex || 0);
 
     if (blankTabToRemove)
@@ -7284,7 +7267,7 @@ var gIdentityHandler = {
 
     // Make sure the identity popup hangs toward the middle of the location bar
     // in RTL builds
-    var position = (getComputedStyle(gNavToolbox, "").direction == "rtl") ? 'after_end' : 'after_start';
+    var position = (getComputedStyle(gNavToolbox, "").direction == "rtl") ? 'bottomcenter topright' : 'bottomcenter topleft';
 
     // Add the "open" attribute to the identity box for styling
     this._identityBox.setAttribute("open", "true");
@@ -7515,11 +7498,8 @@ let gPrivateBrowsingUI = {
     }
     else if (aTopic == "private-browsing-transition-complete") {
       if (this._disableUIOnToggle) {
-        // use setTimeout here in order to make the code testable
-        setTimeout(function() {
-          document.getElementById("Tools:PrivateBrowsing")
-                  .removeAttribute("disabled");
-        }, 0);
+        document.getElementById("Tools:PrivateBrowsing")
+                .removeAttribute("disabled");
       }
     }
   },

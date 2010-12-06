@@ -62,7 +62,7 @@ public:
   // coordinates in the <animateMotion> from/by/to/values attributes.
   class PathGenerator {
   public:
-    PathGenerator(nsSVGElement* aSVGElement)
+    PathGenerator(const nsSVGElement* aSVGElement)
       : mSVGElement(aSVGElement),
         mGfxContext(gfxPlatform::GetPlatform()->ScreenReferenceSurface()),
         mHaveReceivedCommands(PR_FALSE)
@@ -91,7 +91,7 @@ public:
                                float& aXVal, float& aYVal);
 
     // Member data
-    nsSVGElement* mSVGElement; // context for converting out of relative units
+    const nsSVGElement* mSVGElement; // context for converting to user units
     gfxContext    mGfxContext;
     PRPackedBool  mHaveReceivedCommands;
   };

@@ -5365,9 +5365,15 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
       mGeckoChild->DispatchWindowEvent(pluginEvent);
       if (!mGeckoChild)
         return;
-      
+
       if (!mPluginComplexTextInputRequested) {
-        // Ideally we'd cancel any TSM composition here.
+#ifdef NP_NO_CARBON
+        [[ComplexTextInputPanel sharedComplexTextInputPanel] cancelComposition];
+#else
+        if (mPluginTSMDoc) {
+          ::FixTSMDocument(mPluginTSMDoc);
+        }
+#endif
         return;
       }
 

@@ -33,7 +33,7 @@ struct TParseContext {
     TParseContext(TSymbolTable& symt, const TExtensionBehavior& ext, TIntermediate& interm, ShShaderType type, ShShaderSpec spec, TInfoSink& is) :
             intermediate(interm), symbolTable(symt), extensionBehavior(ext), infoSink(is), shaderType(type), shaderSpec(spec), treeRoot(0),
             recoveredFromError(false), numErrors(0), lexAfterType(false), loopNestingLevel(0),
-            inTypeParen(false), contextPragma(true, false) {  }
+            inTypeParen(false), scanner(NULL), contextPragma(true, false) {  }
     TIntermediate& intermediate; // to hold and build a parse tree
     TSymbolTable& symbolTable;   // symbol table that goes with the language currently being parsed
     TExtensionBehavior extensionBehavior;  // mapping between supported extensions and current behavior.
@@ -49,8 +49,10 @@ struct TParseContext {
     const TType* currentFunctionType;  // the return type of the function that's currently being parsed
     bool functionReturnsValue;   // true if a non-void function has a return
 
-    void error(TSourceLoc, const char *szReason, const char *szToken,
-               const char *szExtraInfoFormat, ...);
+    void error(TSourceLoc loc, const char *reason, const char* token,
+               const char* extraInfoFormat, ...);
+    void warning(TSourceLoc loc, const char* reason, const char* token,
+                 const char* extraInfoFormat, ...);
     bool reservedErrorCheck(int line, const TString& identifier);
     void recover();
 
@@ -93,16 +95,14 @@ struct TParseContext {
     TIntermTyped* addConstArrayNode(int index, TIntermTyped* node, TSourceLoc line);
     TIntermTyped* addConstStruct(TString& , TIntermTyped*, TSourceLoc);
     bool arraySetMaxSize(TIntermSymbol*, TType*, int, bool, TSourceLoc);
+    void* scanner;
     struct TPragma contextPragma;
     TString HashErrMsg;
     bool AfterEOF;
 };
 
-int PaParseStrings(const char* const argv[], const int strLen[], int argc, TParseContext&);
-void PaReservedWord();
-int PaIdentOrType(TString& id, TParseContext&, TSymbol*&);
-int PaParseComment(int &lineno, TParseContext&);
-void setInitialState();
+int PaParseStrings(int count, const char* const string[], const int length[],
+                   TParseContext* context);
 
 typedef TParseContext* TParseContextPointer;
 extern TParseContextPointer& GetGlobalParseContext();

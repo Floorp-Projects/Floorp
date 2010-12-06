@@ -108,6 +108,10 @@ public:
     PRBool IsOffline() { return mOffline; }
     PRBool IsLinkUp();
 
+    PRBool IsComingOnline() const {
+      return mOffline && mSettingOffline && !mSetOfflineValue;
+    }
+
 private:
     // These shouldn't be called directly:
     // - construct using GetInstance
@@ -128,6 +132,8 @@ private:
     NS_HIDDEN_(void) PrefsChanged(nsIPrefBranch *prefs, const char *pref = nsnull);
     NS_HIDDEN_(void) GetPrefBranch(nsIPrefBranch2 **);
     NS_HIDDEN_(void) ParsePortList(nsIPrefBranch *prefBranch, const char *pref, PRBool remove);
+
+    nsresult InitializeSocketTransportService();
 
 private:
     PRPackedBool                         mOffline;

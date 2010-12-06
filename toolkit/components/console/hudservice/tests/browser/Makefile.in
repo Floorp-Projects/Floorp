@@ -52,6 +52,7 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_580001_closing_after_completion.js \
 	browser_webconsole_bug_580400_groups.js \
 	browser_webconsole_bug_588730_text_node_insertion.js \
+	browser_webconsole_bug_601667_filter_buttons.js \
 	browser_webconsole_bug_597136_external_script_errors.js \
 	browser_webconsole_bug_597136_network_requests_from_chrome.js \
 	browser_webconsole_completion.js \

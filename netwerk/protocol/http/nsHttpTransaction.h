@@ -139,6 +139,8 @@ public:
 
 private:
     nsresult Restart();
+    char    *LocateHttpStart(char *buf, PRUint32 len,
+                             PRBool aAllowPartialMatch);
     void     ParseLine(char *line);
     nsresult ParseLineSegment(char *seg, PRUint32 len);
     nsresult ParseHead(char *, PRUint32 count, PRUint32 *countRead);
@@ -203,6 +205,7 @@ private:
     PRUint32                        mStatusEventPending : 1;
     PRUint32                        mHasRequestBody     : 1;
     PRUint32                        mSSLConnectFailed   : 1;
+    PRUint32                        mHttpResponseMatched: 1;
 
     // mClosed           := transaction has been explicitly closed
     // mTransactionDone  := transaction ran to completion or was interrupted

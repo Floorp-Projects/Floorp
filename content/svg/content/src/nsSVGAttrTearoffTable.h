@@ -75,7 +75,11 @@ nsSVGAttrTearoffTable<SimpleType, TearoffType>::GetTearoff(SimpleType* aSimple)
     return nsnull;
 
   TearoffType *tearoff = nsnull;
-  PRBool found = mTable.Get(aSimple, &tearoff);
+
+#ifdef DEBUG
+  PRBool found =
+#endif
+    mTable.Get(aSimple, &tearoff);
   NS_ABORT_IF_FALSE(!found || tearoff,
       "NULL pointer stored in attribute tear-off map");
 
@@ -98,7 +102,10 @@ nsSVGAttrTearoffTable<SimpleType, TearoffType>::AddTearoff(SimpleType* aSimple,
     return;
   }
 
-  PRBool result = mTable.Put(aSimple, aTearoff);
+#ifdef DEBUG
+  PRBool result =
+#endif
+    mTable.Put(aSimple, aTearoff);
   NS_ABORT_IF_FALSE(result, "Out of memory.");
 }
 

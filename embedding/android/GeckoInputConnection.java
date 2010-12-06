@@ -200,7 +200,7 @@ public class GeckoInputConnection
 
         switch (id) {
             case R.id.selectAll:
-                setSelection(0, mUpdateExtract.text.length());
+                setSelection(0, text.length());
                 break;
             case R.id.cut:
                 // Fill the clipboard

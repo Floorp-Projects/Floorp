@@ -126,7 +126,6 @@ public:
 
   // nsAccessible
   virtual nsresult GetARIAState(PRUint32 *aState, PRUint32 *aExtraState);
-  virtual PRUint32 Role();
   virtual PRUint32 NativeRole();
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
 

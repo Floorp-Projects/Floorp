@@ -84,21 +84,15 @@ _TEST_FILES = \
   file_loopback_inner.html \
   $(NULL)
 
-# the tests below use Firefox-specific features
-ifdef MOZ_PHOENIX
 _BROWSER_TEST_FILES = \
   browser_test_favicon.js \
   $(NULL)
-endif
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
 
-# see above, only defined for Firefox
-ifdef MOZ_PHOENIX
 libs:: $(_BROWSER_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
-endif
 
 XPCSHELL_TESTS = unit
 

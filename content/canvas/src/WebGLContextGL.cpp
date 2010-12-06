@@ -123,12 +123,6 @@ WebGLProgram::GetUniformLocationObject(GLint glLocation)
     return loc.forget();
 }
 
-static PRBool
-InternalFormatHasAlpha(WebGLenum aInternalFormat) {
-    return aInternalFormat == LOCAL_GL_RGBA4 ||
-        aInternalFormat == LOCAL_GL_RGB5_A1;
-}
-
 //
 //  WebGL API
 //
@@ -2701,7 +2695,7 @@ WebGLContext::RenderbufferStorage(WebGLenum target, WebGLenum internalformat, We
         internalformatForGL = LOCAL_GL_DEPTH24_STENCIL8;
         break;
     default:
-        ErrorInvalidEnumInfo("renderbufferStorage: internalformat", internalformat);
+        return ErrorInvalidEnumInfo("renderbufferStorage: internalformat", internalformat);
     }
 
     gl->fRenderbufferStorage(target, internalformatForGL, width, height);

@@ -135,7 +135,7 @@ private:
   /**
    * Get a reference to this object's corresponding internal SVGLengthList.
    *
-   * To simplyfy the code we just have this one method for obtaining both
+   * To simplify the code we just have this one method for obtaining both
    * baseVal and animVal internal lists. This means that animVal lists don't
    * get const protection, but our setter methods guard against changing
    * animVal lists.

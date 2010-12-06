@@ -186,9 +186,16 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
             TakeMinidump(getter_AddRefs(crashDump)) &&
                 CrashReporter::GetIDFromMinidump(crashDump, dumpID);
 
-            if (!dumpID.IsEmpty())
+            if (!dumpID.IsEmpty()) {
                 props->SetPropertyAsAString(NS_LITERAL_STRING("dumpID"),
                                             dumpID);
+
+                CrashReporter::AnnotationTable notes;
+                notes.Init();
+                notes.Put(NS_LITERAL_CSTRING("ProcessType"), NS_LITERAL_CSTRING("content"));
+                // TODO: Additional per-process annotations.
+                CrashReporter::AppendExtraData(dumpID, notes);
+            }
 #endif
 
             obs->NotifyObservers((nsIPropertyBag2*) props, "ipc:content-shutdown", nsnull);
@@ -427,7 +434,7 @@ ContentParent::AllocPAudio(const PRInt32& numChannels,
                            const PRInt32& format)
 {
     AudioParent *parent = new AudioParent(numChannels, rate, format);
-    parent->AddRef();
+    NS_ADDREF(parent);
     return parent;
 }
 
