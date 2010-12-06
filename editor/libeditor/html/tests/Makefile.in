@@ -88,6 +88,7 @@ _DATA_FILES = \
 _CHROME_TEST_FILES = \
 		test_bug490879.xul \
 		test_bug607584.xul \
+		test_bug616590.xul \
 		green.png \
 		$(NULL)
 
