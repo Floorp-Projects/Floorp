@@ -353,6 +353,14 @@ WebGLContext::BufferData(PRInt32 dummy)
 }
 
 NS_IMETHODIMP
+WebGLContext::BufferData_null()
+{
+    // see http://www.khronos.org/bugzilla/show_bug.cgi?id=386
+    return ErrorInvalidValue("bufferData: null object passed");
+}
+
+
+NS_IMETHODIMP
 WebGLContext::BufferData_size(WebGLenum target, WebGLsizei size, WebGLenum usage)
 {
     WebGLBuffer *boundBuffer = NULL;
@@ -446,6 +454,12 @@ NS_IMETHODIMP
 WebGLContext::BufferSubData(PRInt32 dummy)
 {
     return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+WebGLContext::BufferSubData_null()
+{
+    return NS_OK; // see http://www.khronos.org/bugzilla/show_bug.cgi?id=386
 }
 
 NS_IMETHODIMP
