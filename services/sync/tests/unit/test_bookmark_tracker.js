@@ -1,8 +1,10 @@
+Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/bookmarks.js");
 Cu.import("resource://services-sync/util.js");
 
 function run_test() {
-  let engine = new BookmarksEngine();
+  Engines.register(BookmarksEngine);
+  let engine = Engines.get("bookmarks");
   engine._store.wipe();
 
   _("Verify we've got an empty tracker to work with.");
