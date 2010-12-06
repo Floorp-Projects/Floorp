@@ -1459,6 +1459,15 @@ SessionStoreService.prototype = {
         tabData.pinned = true;
       else
         delete tabData.pinned;
+      tabData.hidden = aTab.hidden;
+
+      // If __SS_extdata is set then we'll use that since it might be newer.
+      if (aTab.__SS_extdata)
+        tabData.extData = aTab.__SS_extdata;
+      // If it exists but is empty then a key was likely deleted. In that case just
+      // delete extData.
+      if (tabData.extData && !Object.keys(tabData.extData).length)
+        delete tabData.extData;
       return tabData;
     }
     
