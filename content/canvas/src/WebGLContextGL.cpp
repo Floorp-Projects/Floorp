@@ -603,11 +603,12 @@ WebGLContext::CopyTexImage2D(WebGLenum target,
             return ErrorInvalidEnumInfo("copyTexImage2D: target", target);
     }
 
+
     switch (internalformat) {
         case LOCAL_GL_RGB:
+        case LOCAL_GL_LUMINANCE:
         case LOCAL_GL_RGBA:
         case LOCAL_GL_ALPHA:
-        case LOCAL_GL_LUMINANCE:
         case LOCAL_GL_LUMINANCE_ALPHA:
             break;
         default:
@@ -625,6 +626,15 @@ WebGLContext::CopyTexImage2D(WebGLenum target,
               is_pot_assuming_nonnegative(height)))
             return ErrorInvalidValue("copyTexImage2D: with level > 0, width and height must be powers of two");
     }
+
+    PRBool texFormatRequiresAlpha = internalformat == LOCAL_GL_RGBA ||
+                                    internalformat == LOCAL_GL_ALPHA ||
+                                    internalformat == LOCAL_GL_LUMINANCE_ALPHA;
+    PRBool fboFormatHasAlpha = mBoundFramebuffer ? mBoundFramebuffer->ColorAttachment().HasAlpha()
+                                                 : PRBool(gl->ActualFormat().alpha > 0);
+    if (texFormatRequiresAlpha && !fboFormatHasAlpha)
+        return ErrorInvalidOperation("copyTexImage2D: texture format requires an alpha channel "
+                                     "but the framebuffer doesn't have one");
 
     if (!CanvasUtils::CheckSaneSubrectSize(x,y,width, height, mWidth, mHeight))
         return ErrorInvalidOperation("CopyTexImage2D: copied rectangle out of bounds");
@@ -668,6 +678,21 @@ WebGLContext::CopyTexSubImage2D(WebGLenum target,
         default:
             return ErrorInvalidEnumInfo("CopyTexSubImage2D: target", target);
     }
+
+    WebGLTexture *tex = activeBoundTextureForTarget(target);
+    if (!tex)
+        return ErrorInvalidOperation("copyTexSubImage2D: no texture bound to this target");
+
+    WebGLenum format = tex->ImageInfoAt(0,0).mFormat;
+    PRBool texFormatRequiresAlpha = format == LOCAL_GL_RGBA ||
+                                    format == LOCAL_GL_ALPHA ||
+                                    format == LOCAL_GL_LUMINANCE_ALPHA;
+    PRBool fboFormatHasAlpha = mBoundFramebuffer ? mBoundFramebuffer->ColorAttachment().HasAlpha()
+                                                 : PRBool(gl->ActualFormat().alpha > 0);
+
+    if (texFormatRequiresAlpha && !fboFormatHasAlpha)
+        return ErrorInvalidOperation("copyTexSubImage2D: texture format requires an alpha channel "
+                                     "but the framebuffer doesn't have one");
 
     if (!CanvasUtils::CheckSaneSubrectSize(x,y,width, height, mWidth, mHeight))
         return ErrorInvalidOperation("CopyTexSubImage2D: copied rectangle out of bounds");
@@ -2073,11 +2098,13 @@ nsresult WebGLContext::TexParameter_base(WebGLenum target, WebGLenum pname,
     }
 
     if (pnameAndParamAreIncompatible) {
+        // note that currently all params are enums, and the tex-input-validation test wants INVALID_ENUM errors
+        // even for texParameterf. why not.
         if (intParamPtr)
             return ErrorInvalidEnum("texParameteri: pname %x and param %x (decimal %d) are mutually incompatible",
                                     pname, intParam, intParam);
         else
-            return ErrorInvalidValue("texParameterf: pname %x and floating-point param %e are mutually incompatible",
+            return ErrorInvalidEnum("texParameterf: pname %x and floating-point param %e are mutually incompatible",
                                     pname, floatParam);
     }
 
@@ -2647,7 +2674,7 @@ WebGLContext::ReadPixels_base(WebGLint x, WebGLint y, WebGLsizei width, WebGLsiz
     {
         PRBool needAlphaFixup;
         if (mBoundFramebuffer) {
-            needAlphaFixup = !mBoundFramebuffer->ColorAttachmentHasAlpha();
+            needAlphaFixup = !mBoundFramebuffer->ColorAttachment().HasAlpha();
         } else {
             needAlphaFixup = gl->ActualFormat().alpha == 0;
         }
