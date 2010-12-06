@@ -743,6 +743,11 @@ inline jsid
 Script::getLocalId(unsigned index, Bytecode *code)
 {
     if (index >= script->nfixed) {
+        /*
+         * This is an access on a let variable, we need the stack to figure out
+         * the name of the accessed variable.  If multiple let variables have
+         * the same name, we flatten their types together.
+         */
         if (!code)
             return JSID_VOID;
 

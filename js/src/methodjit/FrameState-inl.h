@@ -85,30 +85,14 @@ FrameState::haveSameBacking(FrameEntry *lhs, FrameEntry *rhs)
 inline AnyRegisterID
 FrameState::allocReg(uint32 mask)
 {
-    if (freeRegs.hasRegInMask(mask))
-        return freeRegs.takeAnyReg(mask);
+    if (freeRegs.hasRegInMask(mask)) {
+        AnyRegisterID reg = freeRegs.takeAnyReg(mask);
+        clearLoopReg(reg);
+        return reg;
+    }
 
     AnyRegisterID reg = evictSomeReg(mask);
     regstate(reg).forget();
-    return reg;
-}
-
-inline AnyRegisterID
-FrameState::allocReg(FrameEntry *fe, bool fp, RematInfo::RematType type)
-{
-    JS_ASSERT_IF(fp, type == RematInfo::DATA);
-    uint32 mask = fp ? (uint32) Registers::AvailFPRegs : (uint32) Registers::AvailRegs;
-
-    AnyRegisterID reg;
-    if (!freeRegs.empty(mask)) {
-        reg = freeRegs.takeAnyReg(mask);
-    } else {
-        reg = evictSomeReg(mask);
-        regstate(reg).forget();
-    }
-
-    regstate(reg).associate(fe, type);
-
     return reg;
 }
 
@@ -122,6 +106,56 @@ inline JSC::MacroAssembler::FPRegisterID
 FrameState::allocFPReg()
 {
     return allocReg(Registers::AvailFPRegs).fpreg();
+}
+
+inline AnyRegisterID
+FrameState::allocAndLoadReg(FrameEntry *fe, bool fp, RematInfo::RematType type)
+{
+    AnyRegisterID reg;
+    uint32 mask = fp ? (uint32) Registers::AvailFPRegs : (uint32) Registers::AvailRegs;
+
+    /*
+     * Decide whether to retroactively mark a register as holding the entry
+     * at the start of the current loop. We can do this if (a) the register has
+     * not been touched since the start of the loop (it is in loopRegs), and (b)
+     * the entry has also not been written to or already had a loop register
+     * assigned.
+     */
+    if (freeRegs.hasRegInMask(loopRegs.freeMask & mask) && type == RematInfo::DATA &&
+        (fe == this_ || isArg(fe) || isLocal(fe)) && fe->lastLoop < activeLoop->head) {
+        reg = freeRegs.takeAnyReg(loopRegs.freeMask & mask);
+        setLoopReg(reg, fe);
+        return reg;
+    }
+
+    if (!freeRegs.empty(mask)) {
+        reg = freeRegs.takeAnyReg(mask);
+        clearLoopReg(reg);
+    } else {
+        reg = evictSomeReg(mask);
+        regstate(reg).forget();
+    }
+
+    if (fp)
+        masm.loadDouble(addressOf(fe), reg.fpreg());
+    else if (type == RematInfo::TYPE)
+        masm.loadTypeTag(addressOf(fe), reg.reg());
+    else
+        masm.loadPayload(addressOf(fe), reg.reg());
+
+    regstate(reg).associate(fe, type);
+    return reg;
+}
+
+inline void
+FrameState::clearLoopReg(AnyRegisterID reg)
+{
+    JS_ASSERT(loopRegs.hasReg(reg) == (activeLoop && activeLoop->alloc->loop(reg)));
+    if (loopRegs.hasReg(reg)) {
+        loopRegs.takeReg(reg);
+        activeLoop->alloc->setUnassigned(reg);
+        JaegerSpew(JSpew_Regalloc, "clearing loop register %s\n", reg.name());
+    }
 }
 
 inline void
@@ -179,13 +213,6 @@ FrameState::forgetReg(AnyRegisterID reg)
         regstate(reg).forget();
         freeRegs.putReg(reg);
     }
-}
-
-inline void
-FrameState::syncAndForgetEverything(uint32 newStackDepth)
-{
-    syncAndForgetEverything();
-    sp = spBase + newStackDepth;
 }
 
 inline FrameEntry *
@@ -254,6 +281,15 @@ FrameState::push(Address address, JSValueType knownType)
     bool free = freeRegs.hasReg(address.base);
     if (free)
         freeRegs.takeReg(address.base);
+
+    if (knownType != JSVAL_TYPE_UNKNOWN) {
+        RegisterID dataReg = allocReg();
+        if (free)
+            freeRegs.putReg(address.base);
+        masm.loadPayload(address, dataReg);
+        pushTypedPayload(knownType, dataReg);
+        return;
+    }
 
     RegisterID typeReg = allocReg();
 
@@ -415,8 +451,7 @@ FrameState::tempRegForType(FrameEntry *fe)
 
     /* :XXX: X86 */
 
-    RegisterID reg = allocReg(fe, false, RematInfo::TYPE).reg();
-    masm.loadTypeTag(addressOf(fe), reg);
+    RegisterID reg = allocAndLoadReg(fe, false, RematInfo::TYPE).reg();
     fe->type.setRegister(reg);
     return reg;
 }
@@ -433,8 +468,7 @@ FrameState::tempRegForData(FrameEntry *fe)
     if (fe->data.inRegister())
         return fe->data.reg();
 
-    RegisterID reg = allocReg(fe, false, RematInfo::DATA).reg();
-    masm.loadPayload(addressOf(fe), reg);
+    RegisterID reg = allocAndLoadReg(fe, false, RematInfo::DATA).reg();
     fe->data.setRegister(reg);
     return reg;
 }
@@ -451,8 +485,7 @@ FrameState::tempFPRegForData(FrameEntry *fe)
     if (fe->data.inFPRegister())
         return fe->data.fpreg();
 
-    FPRegisterID reg = allocReg(fe, true, RematInfo::DATA).fpreg();
-    masm.loadDouble(addressOf(fe), reg);
+    FPRegisterID reg = allocAndLoadReg(fe, true, RematInfo::DATA).fpreg();
     fe->data.setFPRegister(reg);
     return reg;
 }
@@ -701,6 +734,15 @@ FrameState::syncFe(FrameEntry *fe)
     if (!fe->data.synced())
         fe->data.sync();
 #endif
+}
+
+inline void
+FrameState::syncAndForgetFe(FrameEntry *fe)
+{
+    syncFe(fe);
+    forgetAllRegs(fe);
+    fe->type.setMemory();
+    fe->data.setMemory();
 }
 
 inline void
@@ -1165,13 +1207,13 @@ FrameState::loadDouble(FrameEntry *fe, FPRegisterID fpReg, Assembler &masm) cons
 }
 
 inline bool
-FrameState::isClosedVar(uint32 slot)
+FrameState::isClosedVar(uint32 slot) const
 {
     return eval || closedVars[slot];
 }
 
 inline bool
-FrameState::isClosedArg(uint32 slot)
+FrameState::isClosedArg(uint32 slot) const
 {
     return eval || usesArguments || closedArgs[slot];
 }

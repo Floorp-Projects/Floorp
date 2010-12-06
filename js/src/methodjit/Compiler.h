@@ -103,6 +103,8 @@ class Compiler : public BaseCompiler
         MaybeJump jumpToStub;
         Label fallThrough;
         jsbytecode *jumpTarget;
+        bool trampoline;
+        Label trampolineStart;
         ValueRemat lvr, rvr;
         Assembler::Condition cond;
         JSC::MacroAssembler::RegisterID tempReg;
@@ -113,6 +115,8 @@ class Compiler : public BaseCompiler
         Label stubEntry;
         DataLabelPtr addrLabel;
         jsbytecode *jumpTarget;
+        bool trampoline;
+        Label trampolineStart;
         Jump traceHint;
         MaybeJump slowTraceHint;
 
@@ -259,12 +263,6 @@ class Compiler : public BaseCompiler
         { }
     };
 
-    struct DoublePatch {
-        double d;
-        DataLabelPtr label;
-        bool ool;
-    };
-
     JSStackFrame *fp;
     JSScript *script;
     JSObject *scopeChain;
@@ -277,6 +275,7 @@ class Compiler : public BaseCompiler
     jsbytecode *PC;
     Assembler masm;
     FrameState frame;
+    analyze::LifetimeScript liveness;
     js::Vector<BranchPatch, 64, CompilerAllocPolicy> branchPatches;
 #if defined JS_MONOIC
     js::Vector<MICGenInfo, 64, CompilerAllocPolicy> mics;
@@ -291,7 +290,6 @@ class Compiler : public BaseCompiler
 #endif
     js::Vector<CallPatchInfo, 64, CompilerAllocPolicy> callPatches;
     js::Vector<InternalCallSite, 64, CompilerAllocPolicy> callSites;
-    js::Vector<DoublePatch, 16, CompilerAllocPolicy> doubleList;
     StubCompiler stubcc;
     Label invokeLabel;
     Label arityLabel;
@@ -381,7 +379,8 @@ class Compiler : public BaseCompiler
     void truncateDoubleToInt32(FrameEntry *fe, Uses uses);
 
     /* Opcode handlers. */
-    bool jumpAndTrace(Jump j, jsbytecode *target, Jump *slow = NULL);
+    bool jumpAndTrace(Jump j, jsbytecode *target, Jump *slow = NULL, bool *trampoline = NULL);
+    bool finishLoop(jsbytecode *head);
     void jsop_bindname(uint32 index, bool usePropCache);
     void jsop_setglobal(uint32 index);
     void jsop_getglobal(uint32 index);
@@ -451,6 +450,7 @@ class Compiler : public BaseCompiler
     bool jsop_relational_self(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);
     bool jsop_relational_full(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);
     bool jsop_relational_double(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);
+    bool jsop_relational_int(JSOp op, jsbytecode *target, JSOp fused);
 
     void emitLeftDoublePath(FrameEntry *lhs, FrameEntry *rhs, FrameState::BinaryAlloc &regs,
                             MaybeJump &lhsNotDouble, MaybeJump &rhsNotNumber,

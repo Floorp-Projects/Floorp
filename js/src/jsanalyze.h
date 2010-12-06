@@ -48,6 +48,9 @@
 
 struct JSScript;
 
+/* Forward declaration of downstream register allocations computed for join points. */
+namespace js { namespace mjit { struct RegisterAllocation; } }
+
 namespace js {
 namespace analyze {
 
@@ -64,6 +67,12 @@ struct Bytecode
     /* Whether there is fallthrough to this instruction from a non-branching instruction. */
     bool fallthrough : 1;
 
+    /* Whether this instruction is the fall through point of a conditional jump. */
+    bool jumpFallthrough : 1;
+
+    /* Whether this instruction can be branched to from a switch statement.  Implies jumpTarget. */
+    bool switchTarget : 1;
+
     /* Whether this instruction has been analyzed to get its output defines and stack. */
     bool analyzed : 1;
 
@@ -72,9 +81,6 @@ struct Bytecode
 
     /* Whether this is in a try block. */
     bool inTryBlock : 1;
-
-    /* Whether this is a method JIT safe point. */
-    bool safePoint : 1;
 
     /*
      * For type inference, whether this bytecode needs to have its effects monitored dynamically.
@@ -172,6 +178,7 @@ class Script
     friend struct Bytecode;
 
     JSScript *script;
+
     Bytecode **codeArray;
 
     /* Maximum number of locals to consider for a script. */
@@ -523,6 +530,133 @@ GetDefCount(JSScript *script, unsigned offset)
         return js_CodeSpec[*pc].ndefs;
     }
 }
+
+/*
+ * Lifetime analysis. The goal of this analysis is to make a single backwards pass
+ * over a script to approximate the regions where each variable is live, without
+ * doing a full fixpointing live-variables pass. This is based on the algorithm
+ * described in:
+ *
+ * "Quality and Speed in Linear-scan Register Allocation"
+ * Traub et. al.
+ * PLDI, 1998
+ */
+
+/*
+ * Information about the lifetime of a local or argument. These form a linked list
+ * describing successive intervals in the program where the variable's value
+ * may be live. At points in the script not in one of these segments (points in
+ * a 'lifetime hole'), the variable is dead and registers containing its type/payload
+ * can be discarded without needing to be synced.
+ */
+struct Lifetime
+{
+    /*
+     * Start and end offsets of this lifetime. The variable is live at the beginning
+     * of every bytecode in this (inclusive) range.
+     */
+    uint32 start;
+    uint32 end;
+
+    /*
+     * This is an artificial segment extending the lifetime of a variable to the
+     * end of a loop, when it is live at the head of the loop. It will not be used
+     * anymore in the loop body until the next iteration.
+     */
+    bool loopTail;
+
+    /* Next lifetime. The variable is dead from this->end to next->start. */
+    Lifetime *next;
+
+    Lifetime(uint32 offset, Lifetime *next)
+        : start(offset), end(offset), loopTail(false), next(next)
+    {}
+};
+
+/* Lifetime and register information for a bytecode. */
+struct LifetimeBytecode
+{
+    /* If this is a loop head, offset of the loop back edge. */
+    uint32 loopBackedge;
+
+    /* Any allocation computed downstream for this bytecode. */
+    mjit::RegisterAllocation *allocation;
+};
+
+/* Current lifetime information for a variable. */
+struct LifetimeVariable
+{
+    /* If the variable is currently live, the lifetime segment. */
+    Lifetime *lifetime;
+
+    /* If the variable is currently dead, the next live segment. */
+    Lifetime *saved;
+
+    /* Jump preceding the basic block which killed this variable. */
+    uint32 savedEnd;
+
+    Lifetime * live(uint32 offset) {
+        if (lifetime && lifetime->end >= offset)
+            return lifetime;
+        Lifetime *segment = lifetime ? lifetime : saved;
+        while (segment && segment->start <= offset) {
+            if (segment->end >= offset)
+                return segment;
+            segment = segment->next;
+        }
+        return NULL;
+    }
+};
+
+/*
+ * Analysis approximating variable liveness information at points in a script.
+ * This is separate from analyze::Script as it is computed on every compilation
+ * and thrown away afterwards.
+ */
+class LifetimeScript
+{
+    analyze::Script *analysis;
+    JSScript *script;
+    JSFunction *fun;
+
+    LifetimeBytecode *codeArray;
+    LifetimeVariable *locals;
+    LifetimeVariable *args;
+    LifetimeVariable thisVar;
+
+    LifetimeVariable **saved;
+    unsigned savedCount;
+
+  public:
+    JSArenaPool pool;
+
+    LifetimeScript();
+    ~LifetimeScript();
+
+    bool analyze(JSContext *cx, analyze::Script *analysis, JSScript *script, JSFunction *fun);
+
+    LifetimeBytecode &getCode(uint32 offset) {
+        JS_ASSERT(analysis->maybeCode(offset));
+        return codeArray[offset];
+    }
+    LifetimeBytecode &getCode(jsbytecode *pc) { return getCode(pc - script->code); }
+
+#ifdef DEBUG
+    void dumpVariable(LifetimeVariable &var);
+    void dumpLocal(unsigned i) { dumpVariable(locals[i]); }
+    void dumpArg(unsigned i) { dumpVariable(args[i]); }
+#endif
+
+    Lifetime * argLive(uint32 arg, uint32 offset) { return args[arg].live(offset); }
+    Lifetime * localLive(uint32 local, uint32 offset) { return locals[local].live(offset); }
+    Lifetime * thisLive(uint32 offset) { return thisVar.live(offset); }
+
+  private:
+
+    inline bool addVariable(JSContext *cx, LifetimeVariable &var, unsigned offset);
+    inline void killVariable(JSContext *cx, LifetimeVariable &var, unsigned offset);
+    inline bool extendVariable(JSContext *cx, LifetimeVariable &var, unsigned start, unsigned end);
+};
 
 } /* namespace analyze */
 } /* namespace js */

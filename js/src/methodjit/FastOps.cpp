@@ -636,6 +636,8 @@ mjit::Compiler::jsop_relational(JSOp op, BoolStub stub, jsbytecode *target, JSOp
         return emitStubCmpOp(stub, target, fused);
     } else if (lhs->isType(JSVAL_TYPE_DOUBLE) || rhs->isType(JSVAL_TYPE_DOUBLE)) {
         return jsop_relational_double(op, stub, target, fused);
+    } else if (lhs->isType(JSVAL_TYPE_INT32) && rhs->isType(JSVAL_TYPE_INT32)) {
+        return jsop_relational_int(op, target, fused);
     } else {
         return jsop_relational_full(op, stub, target, fused);
     }
@@ -895,9 +897,14 @@ mjit::Compiler::jsop_ifneq(JSOp op, jsbytecode *target)
         if (op == JSOP_IFEQ)
             b = !b;
         if (b) {
-            frame.syncAndForgetEverything();
+            fixDoubleTypes(Uses(0));
+            if (!frame.syncForBranch(target, Uses(0)))
+                return false;
             if (!jumpAndTrace(masm.jump(), target))
                 return false;
+        } else {
+            if (target < PC && !finishLoop(target))
+                return Compile_Error;
         }
         return true;
     }
@@ -916,7 +923,9 @@ mjit::Compiler::jsop_andor(JSOp op, jsbytecode *target)
         /* Short-circuit. */
         if ((op == JSOP_OR && b == JS_TRUE) ||
             (op == JSOP_AND && b == JS_FALSE)) {
-            frame.syncAndForgetEverything();
+            fixDoubleTypes(Uses(0));
+            if (!frame.syncForBranch(target, Uses(0)))
+                return false;
             if (!jumpAndTrace(masm.jump(), target))
                 return false;
         }
@@ -931,110 +940,61 @@ mjit::Compiler::jsop_andor(JSOp op, jsbytecode *target)
 void
 mjit::Compiler::jsop_localinc(JSOp op, uint32 slot, bool popped)
 {
-    bool post = (op == JSOP_LOCALINC || op == JSOP_LOCALDEC);
-    int32 amt = (op == JSOP_INCLOCAL || op == JSOP_LOCALINC) ? 1 : -1;
-
     JSValueType type = knownLocalType(slot);
-    frame.pushLocal(slot, type);
 
-    FrameEntry *fe = frame.peek(-1);
+    if (popped || (op == JSOP_INCLOCAL || op == JSOP_DECLOCAL)) {
+        int amt = (op == JSOP_LOCALINC || op == JSOP_INCLOCAL) ? -1 : 1;
 
-    if (fe->isConstant() && fe->getValue().isPrimitive()) {
-        Value v = fe->getValue();
-        double d;
-        ValueToNumber(cx, v, &d);
-        if (post) {
-            frame.push(NumberValue(d + amt));
-            frame.storeLocal(slot);
-            frame.pop();
-        } else {
-            frame.pop();
-            frame.push(NumberValue(d + amt));
-            frame.storeLocal(slot);
-        }
+        // Before: 
+        // After:  V
+        frame.pushLocal(slot, type);
+
+        // Before: V
+        // After:  V 1
+        frame.push(Int32Value(amt));
+
+        // Note, SUB will perform integer conversion for us.
+        // Before: V 1
+        // After:  N+1
+        jsop_binary(JSOP_SUB, stubs::Sub, type);
+
+        // Before: N+1
+        // After:  N+1
+        frame.storeLocal(slot, popped, type);
+
         if (popped)
             frame.pop();
-        return;
-    }
+    } else {
+        int amt = (op == JSOP_LOCALINC || op == JSOP_INCLOCAL) ? 1 : -1;
 
-    VoidStubUInt32 stub =
-        (op == JSOP_LOCALINC || op == JSOP_INCLOCAL) ? stubs::IncLocal : stubs::DecLocal;
+        // Before:
+        // After: V
+        frame.pushLocal(slot, type);
 
-    /*
-     * If the local variable is not known to be an int32, or the pre-value
-     * is observed, then do the simple thing and decompose x++ into simpler
-     * opcodes.
-     */
-    if (fe->isNotType(JSVAL_TYPE_INT32) || (post && !popped)) {
-        /* V */
+        // Before: V
+        // After:  N
         jsop_pos();
-        /* N */
 
-        if (post && !popped) {
-            frame.dup();
-            /* N N */
-        }
+        // Before: N
+        // After:  N N
+        frame.dup();
 
-        frame.push(Int32Value(1));
-        /* N? N 1 */
+        // Before: N N
+        // After:  N N 1
+        frame.push(Int32Value(amt));
 
-        if (amt == 1)
-            jsop_binary(JSOP_ADD, stubs::Add, type);
-        else
-            jsop_binary(JSOP_SUB, stubs::Sub, type);
-        /* N? N+1 */
+        // Before: N N 1
+        // After:  N N+1
+        jsop_binary(JSOP_ADD, stubs::Add, type);
 
-        frame.storeLocal(slot, post || popped, type);
-        /* N? N+1 */
+        // Before: N N+1
+        // After:  N N+1
+        frame.storeLocal(slot, true, type);
 
-        /* Make a stub call too in case we are recompiling from an overflowing localinc. */
-        if (recompiling) {
-            stubcc.masm.move(Imm32(slot), Registers::ArgReg1);
-            OOL_STUBCALL(stub);
-        }
-
-        if (post || popped)
-            frame.pop();
-
-        if (recompiling)
-            stubcc.rejoin(Changes(0));
-
-        return;
-    }
-
-    /* If the pre value is not observed, we can emit better code. */
-    if (!fe->isTypeKnown()) {
-        Jump intFail = frame.testInt32(Assembler::NotEqual, fe);
-        stubcc.linkExit(intFail, Uses(1));
-    }
-
-    RegisterID reg = frame.copyDataIntoReg(fe);
-
-    Jump ovf;
-    if (amt > 0)
-        ovf = masm.branchAdd32(Assembler::Overflow, Imm32(1), reg);
-    else
-        ovf = masm.branchSub32(Assembler::Overflow, Imm32(1), reg);
-    stubcc.linkExit(ovf, Uses(1));
-
-    /* Note, stub call will push the original value again no matter what. */
-    stubcc.leave();
-
-    stubcc.masm.move(Imm32(slot), Registers::ArgReg1);
-    OOL_STUBCALL(stub);
-
-    frame.pop();
-
-    if (type == JSVAL_TYPE_INT32)
-        frame.pushTypedPayload(JSVAL_TYPE_INT32, reg);
-    else
-        frame.pushNumber(reg, true);
-    frame.storeLocal(slot, popped, type);
-
-    if (popped)
+        // Before: N N+1
+        // After:  N
         frame.pop();
-
-    stubcc.rejoin(Changes(0));
+    }
 }
 
 void
