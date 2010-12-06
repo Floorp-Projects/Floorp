@@ -85,25 +85,6 @@ static NS_DEFINE_CID(kMultiplexInputStream, NS_MULTIPLEXINPUTSTREAM_CID);
 // helpers
 //-----------------------------------------------------------------------------
 
-static char *
-LocateHttpStart(char *buf, PRUint32 len)
-{
-    // if we have received less than 4 bytes of data, then we'll have to
-    // just accept a partial match, which may not be correct.
-    if (len < 4)
-        return (PL_strncasecmp(buf, "HTTP", len) == 0) ? buf : 0;
-
-    // PL_strncasestr would be perfect for this, but unfortunately bug 96571
-    // prevents its use here.
-    while (len >= 4) {
-        if (PL_strncasecmp(buf, "HTTP", 4) == 0)
-            return buf;
-        buf++;
-        len--;
-    }
-    return 0;
-}
-
 #if defined(PR_LOGGING)
 static void
 LogHeaders(const char *lines)
@@ -152,6 +133,7 @@ nsHttpTransaction::nsHttpTransaction()
     , mStatusEventPending(PR_FALSE)
     , mHasRequestBody(PR_FALSE)
     , mSSLConnectFailed(PR_FALSE)
+    , mHttpResponseMatched(PR_FALSE)
 {
     LOG(("Creating nsHttpTransaction @%x\n", this));
 }
@@ -692,6 +674,60 @@ nsHttpTransaction::Restart()
     return gHttpHandler->InitiateTransaction(this, mPriority);
 }
 
+char *
+nsHttpTransaction::LocateHttpStart(char *buf, PRUint32 len,
+                                   PRBool aAllowPartialMatch)
+{
+    NS_ASSERTION(!aAllowPartialMatch || mLineBuf.IsEmpty(), "ouch");
+
+    static const char HTTPHeader[] = "HTTP/1.";
+    static const PRInt32 HTTPHeaderLen = sizeof(HTTPHeader) - 1;
+
+    // mLineBuf can contain partial match from previous search
+    if (!mLineBuf.IsEmpty()) {
+        NS_ASSERTION(mLineBuf.Length() < HTTPHeaderLen, "ouch");
+        PRInt32 checkChars = PR_MIN(len, HTTPHeaderLen - mLineBuf.Length());
+        if (PL_strncasecmp(buf, HTTPHeader + mLineBuf.Length(),
+                           checkChars) == 0) {
+            mLineBuf.Append(buf, checkChars);
+            if (mLineBuf.Length() == HTTPHeaderLen) {
+                // We've found whole HTTPHeader sequence. Return pointer at the
+                // end of matched sequence since it is stored in mLineBuf.
+                return (buf + checkChars);
+            }
+            else {
+                // Response matches pattern but is still incomplete.
+                return 0;
+            }
+        }
+        // Previous partial match together with new data doesn't match the
+        // pattern. Start the search again.
+        mLineBuf.Truncate();
+    }
+
+    while (len > 0) {
+        if (PL_strncasecmp(buf, HTTPHeader, PR_MIN(len, HTTPHeaderLen)) == 0) {
+            if (len < HTTPHeaderLen) {
+                // partial HTTPHeader sequence found
+                if (aAllowPartialMatch) {
+                    return buf;
+                } else {
+                    // save partial match to mLineBuf
+                    mLineBuf.Assign(buf, len);
+                    return 0;
+                }
+            }
+
+            // whole HTTPHeader sequence found
+            return buf;
+        }
+        buf++;
+        len--;
+    }
+    return 0;
+}
+
+
 void
 nsHttpTransaction::ParseLine(char *line)
 {
@@ -739,6 +775,7 @@ nsHttpTransaction::ParseLineSegment(char *segment, PRUint32 len)
         if (mResponseHead->Status() / 100 == 1) {
             LOG(("ignoring 1xx response\n"));
             mHaveStatusLine = PR_FALSE;
+            mHttpResponseMatched = PR_FALSE;
             mResponseHead->Reset();
             return NS_OK;
         }
@@ -777,25 +814,48 @@ nsHttpTransaction::ParseHead(char *buf,
                 PR_Now(), LL_ZERO, EmptyCString());
     }
 
-    // if we don't have a status line and the line buf is empty, then
-    // this must be the first time we've been called.
-    if (!mHaveStatusLine && mLineBuf.IsEmpty()) {
-        // tolerate some junk before the status line
-        char *p = LocateHttpStart(buf, PR_MIN(count, 8));
-        if (!p) {
-            // Treat any 0.9 style response of a put as a failure.
-            if (mRequestHead->Method() == nsHttp::Put)
-                return NS_ERROR_ABORT;
+    if (!mHttpResponseMatched) {
+        // If HTTP 0.9 response is allowed (i.e. neither 1.0 nor 1.1 was yet
+        // received on the connection) then do a simple junk detection.
+        // Otherwise find a HTTP response.
 
-            mResponseHead->ParseStatusLine("");
-            mHaveStatusLine = PR_TRUE;
-            mHaveAllHeaders = PR_TRUE;
-            return NS_OK;
+        // Value returned by IsHttp09Allowed() can change between calls to this
+        // method, but it can change only from PR_TRUE to PR_FALSE and this is
+        // OK since we can enter this statement multiple time only when the
+        // value id PR_FALSE.
+        nsRefPtr<nsHttpConnectionInfo> ci;
+        mConnection->GetConnectionInfo(getter_AddRefs(ci));
+
+        if (ci->IsHttp09Allowed()) {
+            // tolerate some junk before the status line
+            mHttpResponseMatched = PR_TRUE;
+            char *p = LocateHttpStart(buf, PR_MIN(count, 8), PR_TRUE);
+            if (!p) {
+                // Treat any 0.9 style response of a put as a failure.
+                if (mRequestHead->Method() == nsHttp::Put)
+                    return NS_ERROR_ABORT;
+
+                mResponseHead->ParseStatusLine("");
+                mHaveStatusLine = PR_TRUE;
+                mHaveAllHeaders = PR_TRUE;
+                return NS_OK;
+            }
+            if (p > buf) {
+                // skip over the junk
+                *countRead = p - buf;
+                buf = p;
+            }
         }
-        if (p > buf) {
-            // skip over the junk
-            *countRead = p - buf;
-            buf = p;
+        else {
+            char *p = LocateHttpStart(buf, count, PR_FALSE);
+            if (p) {
+                *countRead = p - buf;
+                buf = p;
+                mHttpResponseMatched = PR_TRUE;
+            } else {
+                *countRead = count;
+                return NS_OK;
+            }
         }
     }
     // otherwise we can assume that we don't have a HTTP/0.9 response.
@@ -863,6 +923,7 @@ nsHttpTransaction::HandleContentStart()
             mHaveStatusLine = PR_FALSE;
             mReceivedData = PR_FALSE;
             mSentData = PR_FALSE;
+            mHttpResponseMatched = PR_FALSE;
             mResponseHead->Reset();
             // wait to be called again...
             return NS_OK;

@@ -443,8 +443,8 @@ AsyncClickHandler::Run()
     mInput->SetFiles(newFiles, true);
     nsContentUtils::DispatchTrustedEvent(mInput->GetOwnerDoc(),
                                          static_cast<nsIDOMHTMLInputElement*>(mInput.get()),
-                                         NS_LITERAL_STRING("change"), PR_FALSE,
-                                         PR_FALSE);
+                                         NS_LITERAL_STRING("change"), PR_TRUE,
+                                         PR_TRUE);
   }
 
   return NS_OK;

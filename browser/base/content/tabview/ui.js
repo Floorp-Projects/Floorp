@@ -65,6 +65,10 @@ let UI = {
   // If true, a select tab has just been closed in TabView.
   _closedSelectedTabInTabView : false,
 
+  // Variable: restoredClosedTab
+  // If true, a closed tab has just been restored.
+  restoredClosedTab : false,
+
   // Variable: _reorderTabItemsOnShow
   // Keeps track of the <GroupItem>s which their tab items' tabs have been moved
   // and re-orders the tab items when switching to TabView.
@@ -169,7 +173,6 @@ let UI = {
       this._addTabActionHandlers();
 
       // ___ Storage
-
       GroupItems.pauseArrange();
       GroupItems.init();
 
@@ -203,7 +206,7 @@ let UI = {
       var observer = {
         observe : function(subject, topic, data) {
           if (topic == "quit-application-requested") {
-            if (self._isTabViewVisible()) {
+            if (self.isTabViewVisible()) {
               GroupItems.removeHiddenGroups();
               TabItems.saveAll(true);
             }
@@ -372,9 +375,9 @@ let UI = {
   },
 
   // ----------
-  // Function: _isTabViewVisible
+  // Function: isTabViewVisible
   // Returns true if the TabView UI is currently shown.
-  _isTabViewVisible: function UI__isTabViewVisible() {
+  isTabViewVisible: function UI_isTabViewVisible() {
     return gTabViewDeck.selectedIndex == 1;
   },
 
@@ -395,7 +398,7 @@ let UI = {
   // Parameters:
   //   zoomOut - true for zoom out animation, false for nothing.
   showTabView: function UI_showTabView(zoomOut) {
-    if (this._isTabViewVisible())
+    if (this.isTabViewVisible())
       return;
 
     // initialize the direction of the page
@@ -461,7 +464,7 @@ let UI = {
   // Function: hideTabView
   // Hides TabView and shows the main browser UI.
   hideTabView: function UI_hideTabView() {
-    if (!this._isTabViewVisible())
+    if (!this.isTabViewVisible())
       return;
 
     // another tab might be select if user decides to stay on a page when
@@ -557,8 +560,8 @@ let UI = {
         self._privateBrowsing.transitionStage = 3;
         if (aData == "enter") {
           // If we are in Tab View, exit. 
-          self._privateBrowsing.wasInTabView = self._isTabViewVisible();
-          if (self._isTabViewVisible())
+          self._privateBrowsing.wasInTabView = self.isTabViewVisible();
+          if (self.isTabViewVisible())
             self.goToTab(gBrowser.selectedTab);
         }
       } else if (aTopic == "private-browsing-change-granted") {
@@ -596,7 +599,7 @@ let UI = {
       if (tab.pinned)
         GroupItems.removeAppTab(tab);
         
-      if (self._isTabViewVisible()) {
+      if (self.isTabViewVisible()) {
         // just closed the selected tab in the TabView interface.
         if (self._currentTab == tab)
           self._closedSelectedTabInTabView = true;
@@ -709,19 +712,30 @@ let UI = {
     this._currentTab = tab;
 
     // if the last visible tab has just been closed, don't show the chrome UI.
-    if (this._isTabViewVisible() &&
-        (this._closedLastVisibleTab || this._closedSelectedTabInTabView)) {
+    if (this.isTabViewVisible() &&
+        (this._closedLastVisibleTab || this._closedSelectedTabInTabView ||
+         this.restoredClosedTab)) {
+      if (this.restoredClosedTab) {
+        // when the tab view UI is being displayed, update the thumb for the 
+        // restored closed tab after the page load
+        tab.linkedBrowser.addEventListener("load", function (event) {
+          tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
+          TabItems._update(tab);
+        }, true);
+      }
       this._closedLastVisibleTab = false;
       this._closedSelectedTabInTabView = false;
+      this.restoredClosedTab = false;
       return;
     }
     // reset these vars, just in case.
     this._closedLastVisibleTab = false;
     this._closedSelectedTabInTabView = false;
+    this.restoredClosedTab = false;
 
     // if TabView is visible but we didn't just close the last tab or
     // selected tab, show chrome.
-    if (this._isTabViewVisible())
+    if (this.isTabViewVisible())
       this.hideTabView();
 
     // another tab might be selected when hideTabView() is invoked so a
@@ -734,7 +748,7 @@ let UI = {
 
     if (currentTab && currentTab.tabItem)
       oldItem = currentTab.tabItem;
-      
+
     // update the tab bar for the new tab's group
     if (tab && tab.tabItem) {
       newItem = tab.tabItem;
@@ -779,7 +793,7 @@ let UI = {
   // Parameters:
   //   groupItem - the groupItem which would be used for re-ordering tabs.
   setReorderTabsOnHide: function UI_setReorderTabsOnHide(groupItem) {
-    if (this._isTabViewVisible()) {
+    if (this.isTabViewVisible()) {
       var index = this._reorderTabsOnHide.indexOf(groupItem);
       if (index == -1)
         this._reorderTabsOnHide.push(groupItem);
@@ -793,7 +807,7 @@ let UI = {
   // Parameters:
   //   groupItem - the groupItem which would be used for re-ordering tab items.
   setReorderTabItemsOnShow: function UI_setReorderTabItemsOnShow(groupItem) {
-    if (!this._isTabViewVisible()) {
+    if (!this.isTabViewVisible()) {
       var index = this._reorderTabItemsOnShow.indexOf(groupItem);
       if (index == -1)
         this._reorderTabItemsOnShow.push(groupItem);
@@ -1098,7 +1112,7 @@ let UI = {
 
     // If TabView isn't focused and is not showing, don't perform a resize.
     // This resize really slows things down.
-    if (!force && !this._isTabViewVisible())
+    if (!force && !this.isTabViewVisible())
       return;
 
     var oldPageBounds = new Rect(this._pageBounds);
@@ -1193,16 +1207,51 @@ let UI = {
     }
 
     if (!zoomedIn) {
+      let unhiddenGroups = GroupItems.groupItems.filter(function(groupItem) {
+        return (!groupItem.hidden && groupItem.getChildren().length > 0);
+      });
+      // no visible groups, no orphaned tabs and no apps tabs, open a new group
+      // with a blank tab
+      if (unhiddenGroups.length == 0 && GroupItems.getOrphanedTabs().length == 0 &&
+          gBrowser._numPinnedTabs == 0) {
+        let box = new Rect(20, 20, 250, 200);
+        let groupItem = new GroupItem([], { bounds: box, immediately: true });
+        groupItem.newTab();
+        return;
+      }
+
       // If there's an active TabItem, zoom into it. If not (for instance when the
       // selected tab is an app tab), just go there.
       let activeTabItem = this.getActiveTab();
-      if (!activeTabItem)
-        activeTabItem = gBrowser.selectedTab.tabItem;
+      if (!activeTabItem) {
+        let tabItem = gBrowser.selectedTab.tabItem;
+        if (tabItem) {
+          if (!tabItem.parent || !tabItem.parent.hidden) {
+            activeTabItem = tabItem;
+          } else { // set active tab item if there is at least one unhidden group
+            if (unhiddenGroups.length > 0)
+              activeTabItem = unhiddenGroups[0].getActiveTab();
+          }
+        }
+      }
 
-      if (activeTabItem)
+      if (activeTabItem) {
         activeTabItem.zoomIn();
-      else
-        self.goToTab(gBrowser.selectedTab);
+      } else {
+        if (gBrowser._numPinnedTabs > 0) {
+          if (gBrowser.selectedTab.pinned) {
+            self.goToTab(gBrowser.selectedTab);
+          } else {
+            Array.some(gBrowser.tabs, function(tab) {
+              if (tab.pinned) {
+                self.goToTab(tab);
+                return true;
+              }
+              return false
+            });
+          }
+        }
+      }
     }
   },
 

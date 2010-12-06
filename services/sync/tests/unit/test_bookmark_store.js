@@ -35,7 +35,7 @@ function run_test() {
     do_check_eq(Svc.Bookmark.getKeywordForBookmark(id), fxrecord.keyword);
 
     _("Have the store create a new record object. Verify that it has the same data.");
-    let newrecord = store.createRecord(fxrecord.id, "http://fake/uri");
+    let newrecord = store.createRecord(fxrecord.id);
     for each (let property in ["type", "bmkUri", "title", "keyword",
                                "parentName", "parentid"])
       do_check_eq(newrecord[property], fxrecord[property]);      
@@ -47,7 +47,7 @@ function run_test() {
     let folder_id = Svc.Bookmark.createFolder(Svc.Bookmark.toolbarFolder,
                                               "Test Folder", 0);
     let folder_guid = Svc.Bookmark.getItemGUID(folder_id);
-    let folder_record = store.createRecord(folder_guid, "http://fake/uri");
+    let folder_record = store.createRecord(folder_guid);
     do_check_eq(folder_record.sortindex, 1000000);
   } finally {
     _("Clean up.");

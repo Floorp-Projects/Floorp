@@ -38,14 +38,10 @@
 #define NS_SVGTEXTCONTAINERFRAME_H
 
 #include "nsSVGContainerFrame.h"
-#include "nsIDOMSVGNumberList.h"
 
 class nsISVGGlyphFragmentNode;
 class nsISVGGlyphFragmentLeaf;
 class nsSVGTextFrame;
-namespace mozilla {
-class SVGUserUnitList;
-}
 
 class nsSVGTextContainerFrame : public nsSVGDisplayContainerFrame
 {
@@ -54,9 +50,9 @@ public:
     nsSVGDisplayContainerFrame(aContext) {}
 
   void NotifyGlyphMetricsChange();
-  virtual void GetXY(mozilla::SVGUserUnitList *aX, mozilla::SVGUserUnitList *aY);
-  virtual void GetDxDy(mozilla::SVGUserUnitList *aDx, mozilla::SVGUserUnitList *aDy);
-  virtual already_AddRefed<nsIDOMSVGNumberList> GetRotate();
+  virtual void GetXY(SVGUserUnitList *aX, SVGUserUnitList *aY);
+  virtual void GetDxDy(SVGUserUnitList *aDx, SVGUserUnitList *aDy);
+  virtual const SVGNumberList *GetRotate();
   
 public:
   NS_DECL_QUERYFRAME_TARGET(nsSVGTextContainerFrame)
@@ -115,11 +111,11 @@ protected:
    */
   void SetWhitespaceHandling();
   void CopyPositionList(nsTArray<float> *parentList,
-                        mozilla::SVGUserUnitList *selfList,
+                        SVGUserUnitList *selfList,
                         nsTArray<float> &dstList,
                         PRUint32 aOffset);
   void CopyRotateList(nsTArray<float> *parentList,
-                      nsCOMPtr<nsIDOMSVGNumberList> selfList,
+                      const SVGNumberList *selfList,
                       nsTArray<float> &dstList,
                       PRUint32 aOffset);
   PRUint32 BuildPositionList(PRUint32 aOffset, PRUint32 aDepth);

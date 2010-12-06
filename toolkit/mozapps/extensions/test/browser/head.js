@@ -26,6 +26,7 @@ const MANAGER_URI = "about:addons";
 const INSTALL_URI = "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul";
 const PREF_LOGGING_ENABLED = "extensions.logging.enabled";
 const PREF_SEARCH_MAXRESULTS = "extensions.getAddons.maxResults";
+const PREF_DISCOVERURL = "extensions.webservice.discoverURL";
 
 var gPendingTests = [];
 var gTestsRun = 0;
@@ -37,6 +38,8 @@ var gUseInContentUI = !gTestInWindow && ("switchToTabHavingURI" in window);
 Services.prefs.setBoolPref(PREF_LOGGING_ENABLED, true);
 // Turn off remote results in searches
 Services.prefs.setIntPref(PREF_SEARCH_MAXRESULTS, 0);
+// Default to a local discovery pane
+Services.prefs.setCharPref(PREF_DISCOVERURL, "http://127.0.0.1/extensions-dummy/discoveryURL");
 registerCleanupFunction(function() {
   Services.prefs.clearUserPref(PREF_LOGGING_ENABLED);
   try {

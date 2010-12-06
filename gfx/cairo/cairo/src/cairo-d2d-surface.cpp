@@ -3277,16 +3277,15 @@ _cairo_d2d_stroke(void			*surface,
     if (!strokeStyle) {
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
-    D2D1::Matrix3x2F mat = _cairo_d2d_matrix_from_matrix(ctm);
     RefPtr<ID2D1Geometry> d2dpath = _cairo_d2d_create_path_geometry_for_path(path, 
 		    							     CAIRO_FILL_RULE_WINDING, 
 									     D2D1_FIGURE_BEGIN_FILLED);
-    D2D1::Matrix3x2F inverse_mat = _cairo_d2d_invert_matrix(mat);
     
-    RefPtr<ID2D1TransformedGeometry> trans_geom;
-    sD2DFactory->CreateTransformedGeometry(d2dpath, &inverse_mat, &trans_geom);
+    bool transformed = true;
 
-    target_rt->SetTransform(mat);
+    if (_cairo_matrix_is_identity(ctm)) {
+      transformed = false;
+    }
 
     RefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(d2dsurf,
 								   source);
@@ -3294,13 +3293,40 @@ _cairo_d2d_stroke(void			*surface,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
-    target_rt->DrawGeometry(trans_geom, brush, (FLOAT)style->line_width, strokeStyle);
+    D2D1::Matrix3x2F mat;
+    if (transformed) {
+      // If we are transformed we will draw the geometry multiplied by the
+      // inverse transformation and apply the transform to our render target.
+      // This way the transformation will also be applied to the strokestyle.
+      mat = _cairo_d2d_matrix_from_matrix(ctm);
+      D2D1::Matrix3x2F inverse_mat = _cairo_d2d_invert_matrix(mat);
+    
+      RefPtr<ID2D1TransformedGeometry> trans_geom;
+      sD2DFactory->CreateTransformedGeometry(d2dpath, &inverse_mat, &trans_geom);
 
-    target_rt->SetTransform(D2D1::Matrix3x2F::Identity());
+      // If we are setting a transform on the render target, we've multiplied
+      // the geometry by the inverse transform, we should also multiply the
+      // brush matrix by this inverse transform then to map the brush to the
+      // correct place.
+      D2D1_MATRIX_3X2_F brushMatrix;
+      brush->GetTransform(&brushMatrix);
+      brushMatrix = brushMatrix * inverse_mat;
+      brush->SetTransform(brushMatrix);
+      target_rt->SetTransform(mat);
+      d2dpath = trans_geom;
+    } else {
+      mat = D2D1::Matrix3x2F::Identity();
+    }
+
+    target_rt->DrawGeometry(d2dpath, brush, (FLOAT)style->line_width, strokeStyle);
+
+    if (transformed) {
+      target_rt->SetTransform(D2D1::Matrix3x2F::Identity());
+    }
 
     if (target_rt.get() != d2dsurf->rt.get()) {
 	D2D1_RECT_F bounds;
-	trans_geom->GetWidenedBounds((FLOAT)style->line_width, strokeStyle, mat, &bounds);
+	d2dpath->GetWidenedBounds((FLOAT)style->line_width, strokeStyle, mat, &bounds);
 	cairo_rectangle_int_t bound_rect;
 	_cairo_d2d_round_out_to_int_rect(&bound_rect, bounds.left, bounds.top, bounds.right, bounds.bottom);
 	return _cairo_d2d_blend_temp_surface(d2dsurf, op, target_rt, clip, &bound_rect);

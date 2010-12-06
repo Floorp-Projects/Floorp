@@ -38,7 +38,6 @@ browser.jar:
 *       content/browser/pageinfo/security.js          (content/pageinfo/security.js)
 *       content/browser/openLocation.js               (content/openLocation.js)
 *       content/browser/openLocation.xul              (content/openLocation.xul)
-*       content/browser/pageReportFirstTime.xul       (content/pageReportFirstTime.xul)
 *       content/browser/safeMode.js                   (content/safeMode.js)
 *       content/browser/safeMode.xul                  (content/safeMode.xul)
 *       content/browser/sanitize.js                   (content/sanitize.js)

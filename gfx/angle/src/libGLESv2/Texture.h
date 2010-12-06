@@ -28,10 +28,13 @@ class Blit;
 
 enum
 {
-    MAX_TEXTURE_SIZE = 2048,
-    MAX_CUBE_MAP_TEXTURE_SIZE = 2048,
+    // These are the maximums the implementation can support
+    // The actual GL caps are limited by the device caps
+    // and should be queried from the Context
+    IMPLEMENTATION_MAX_TEXTURE_SIZE = 16384,
+    IMPLEMENTATION_MAX_CUBE_MAP_TEXTURE_SIZE = 16384,
 
-    MAX_TEXTURE_LEVELS = 12   // 1+log2 of MAX_TEXTURE_SIZE
+    IMPLEMENTATION_MAX_TEXTURE_LEVELS = 15   // 1+log2 of MAX_TEXTURE_SIZE
 };
 
 class Texture : public RefCountObject
@@ -60,12 +63,14 @@ class Texture : public RefCountObject
     virtual bool isComplete() const = 0;
     virtual bool isCompressed() const = 0;
     bool isFloatingPoint() const;
+    bool isRenderableFormat() const;
 
     D3DFORMAT getD3DFormat() const;
     IDirect3DBaseTexture9 *getTexture();
     virtual Renderbuffer *getColorbuffer(GLenum target) = 0;
 
     virtual void generateMipmaps() = 0;
+    virtual void copySubImage(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height, RenderbufferStorage *source) = 0;
 
     bool isDirty() const;
 
@@ -116,6 +121,7 @@ class Texture : public RefCountObject
     bool subImage(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, GLint unpackAlignment, const void *pixels, Image *img);
     void setCompressedImage(GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, const void *pixels, Image *img);
     bool subImageCompressed(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, const void *pixels, Image *img);
+    void copyNonRenderable(Image *image, GLenum internalFormat, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height, IDirect3DSurface9 *renderTarget);
 
     void needRenderTarget();
 
@@ -132,10 +138,13 @@ class Texture : public RefCountObject
 
     void dropTexture();
     void pushTexture(IDirect3DBaseTexture9 *newTexture, bool renderable);
+    void createSurface(GLsizei width, GLsizei height, GLenum format, GLenum type, Image *img);
 
     Blit *getBlitter();
 
     int levelCount() const;
+
+    bool isRenderable() const;
 
     unsigned int mWidth;
     unsigned int mHeight;
@@ -145,11 +154,13 @@ class Texture : public RefCountObject
     GLenum mWrapT;
     GLenum mType;
 
+    bool mDirtyMetaData;
+
   private:
     DISALLOW_COPY_AND_ASSIGN(Texture);
 
     void loadImageData(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type,
-                       GLint unpackAlignment, const void *input, std::size_t outputPitch, void *output) const;
+                       GLint unpackAlignment, const void *input, std::size_t outputPitch, void *output, D3DSURFACE_DESC *description) const;
 
     void loadAlphaImageData(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
                             size_t inputPitch, const void *input, size_t outputPitch, void *output) const;
@@ -158,13 +169,13 @@ class Texture : public RefCountObject
     void loadAlphaHalfFloatImageData(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
                                      size_t inputPitch, const void *input, size_t outputPitch, void *output) const;
     void loadLuminanceImageData(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
-                                size_t inputPitch, const void *input, size_t outputPitch, void *output) const;
+                                size_t inputPitch, const void *input, size_t outputPitch, void *output, bool native) const;
     void loadLuminanceFloatImageData(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
                                      size_t inputPitch, const void *input, size_t outputPitch, void *output) const;
     void loadLuminanceHalfFloatImageData(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
                                          size_t inputPitch, const void *input, size_t outputPitch, void *output) const;
     void loadLuminanceAlphaImageData(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
-                                     size_t inputPitch, const void *input, size_t outputPitch, void *output) const;
+                                     size_t inputPitch, const void *input, size_t outputPitch, void *output, bool native) const;
     void loadLuminanceAlphaFloatImageData(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
                                           size_t inputPitch, const void *input, size_t outputPitch, void *output) const;
     void loadLuminanceAlphaHalfFloatImageData(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
@@ -190,14 +201,10 @@ class Texture : public RefCountObject
     void loadBGRAImageData(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
                            size_t inputPitch, const void *input, size_t outputPitch, void *output) const;
 
-    void createSurface(GLsizei width, GLsizei height, GLenum format, GLenum type, Image *img);
-
     IDirect3DBaseTexture9 *mBaseTexture; // This is a weak pointer. The derived class is assumed to own a strong pointer.
 
     bool mDirty;
-    bool mDirtyMetaData;
     bool mIsRenderable;
-
 };
 
 class Texture2D : public Texture
@@ -215,7 +222,7 @@ class Texture2D : public Texture
     void subImage(GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, GLint unpackAlignment, const void *pixels);
     void subImageCompressed(GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, const void *pixels);
     void copyImage(GLint level, GLenum internalFormat, GLint x, GLint y, GLsizei width, GLsizei height, RenderbufferStorage *source);
-    void copySubImage(GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height, RenderbufferStorage *source);
+    void copySubImage(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height, RenderbufferStorage *source);
 
     bool isComplete() const;
     bool isCompressed() const;
@@ -237,7 +244,7 @@ class Texture2D : public Texture
     bool redefineTexture(GLint level, GLenum internalFormat, GLsizei width, GLsizei height, GLenum type);
     void commitRect(GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height);
 
-    Image mImageArray[MAX_TEXTURE_LEVELS];
+    Image mImageArray[IMPLEMENTATION_MAX_TEXTURE_LEVELS];
 
     IDirect3DTexture9 *mTexture;
 
@@ -263,10 +270,10 @@ class TextureCubeMap : public Texture
 
     void setCompressedImage(GLenum face, GLint level, GLenum internalFormat, GLsizei width, GLsizei height, GLsizei imageSize, const void *pixels);
 
-    void subImage(GLenum face, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, GLint unpackAlignment, const void *pixels);
-    void subImageCompressed(GLenum face, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, const void *pixels);
-    void copyImage(GLenum face, GLint level, GLenum internalFormat, GLint x, GLint y, GLsizei width, GLsizei height, RenderbufferStorage *source);
-    void copySubImage(GLenum face, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height, RenderbufferStorage *source);
+    void subImage(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, GLint unpackAlignment, const void *pixels);
+    void subImageCompressed(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, const void *pixels);
+    void copyImage(GLenum target, GLint level, GLenum internalFormat, GLint x, GLint y, GLsizei width, GLsizei height, RenderbufferStorage *source);
+    void copySubImage(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height, RenderbufferStorage *source);
 
     bool isComplete() const;
     bool isCompressed() const;
@@ -297,7 +304,7 @@ class TextureCubeMap : public Texture
     void commitRect(GLenum faceTarget, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height);
     bool redefineTexture(GLint level, GLenum internalFormat, GLsizei width);
 
-    Image mImageArray[6][MAX_TEXTURE_LEVELS];
+    Image mImageArray[6][IMPLEMENTATION_MAX_TEXTURE_LEVELS];
 
     IDirect3DCubeTexture9 *mTexture;
 

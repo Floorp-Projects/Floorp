@@ -549,7 +549,6 @@ nsTableCellFrame::GetBorderOverflow()
 
 void nsTableCellFrame::VerticallyAlignChild(nscoord aMaxAscent)
 {
-  const nsStyleTextReset* textStyle = GetStyleTextReset();
   /* It's the 'border-collapse' on the table that matters */
   nsMargin borderPadding = GetUsedBorderAndPadding();
 

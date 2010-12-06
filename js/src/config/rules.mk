@@ -144,14 +144,14 @@ endif
 # Testing frameworks support
 ################################################################################
 
+testxpcobjdir = $(DEPTH)/_tests/xpcshell
+
 ifdef ENABLE_TESTS
 
 ifdef XPCSHELL_TESTS
 ifndef relativesrcdir
 $(error Must define relativesrcdir when defining XPCSHELL_TESTS.)
 endif
-
-testxpcobjdir = $(DEPTH)/_tests/xpcshell
 
 # Test file installation
 ifneq (,$(filter WINNT os2-emx,$(HOST_OS_ARCH)))

@@ -2468,8 +2468,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
       *aNewFrame = frameItems.FirstChild();
       NS_ASSERTION(frameItems.OnlyChild(), "multiple root element frames");
     } else {
-      contentFrame = NS_NewBlockFrame(mPresShell, styleContext,
-        NS_BLOCK_FLOAT_MGR|NS_BLOCK_MARGIN_ROOT);
+      contentFrame = NS_NewBlockFormattingContext(mPresShell, styleContext);
       if (!contentFrame)
         return NS_ERROR_OUT_OF_MEMORY;
       nsFrameItems frameItems;
@@ -3709,6 +3708,11 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
   CHECK_ONLY_ONE_BIT(FCDATA_FUNC_IS_FULL_CTOR, FCDATA_ALLOW_BLOCK_STYLES);
   CHECK_ONLY_ONE_BIT(FCDATA_MAY_NEED_SCROLLFRAME, FCDATA_FORCE_VIEW);
 #undef CHECK_ONLY_ONE_BIT
+  NS_ASSERTION(!(bits & FCDATA_FORCED_NON_SCROLLABLE_BLOCK) ||
+               ((bits & FCDATA_FUNC_IS_FULL_CTOR) &&
+                data->mFullConstructor ==
+                  &nsCSSFrameConstructor::ConstructNonScrollableBlock),
+               "Unexpected FCDATA_FORCED_NON_SCROLLABLE_BLOCK flag");
 
   // Don't create a subdocument frame for iframes if we're creating extra frames
   if (aState.mCreatingExtraFrames && aItem.mContent->IsHTML() &&
@@ -4365,20 +4369,25 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay* aDisplay,
                "Shouldn't propagate scroll in paginated contexts");
 
   // If the frame is a block-level frame and is scrollable, then wrap it in a
-  // scroll frame.  Except we don't want to do that for paginated contexts for
-  // frames that are block-outside and aren't frames for native anonymous stuff.
-  // The condition on skipping scrollframe construction in the
-  // paginated case needs to match code in ConstructNonScrollableBlock
-  // and in nsFrame::ApplyPaginatedOverflowClipping.
+  // scroll frame.
   // XXX Ignore tables for the time being
   // XXXbz it would be nice to combine this with the other block
   // case... Think about how do do this?
   if (aDisplay->IsBlockInside() &&
       aDisplay->IsScrollableOverflow() &&
-      !propagatedScrollToViewport &&
-      (!mPresShell->GetPresContext()->IsPaginated() ||
-       !aDisplay->IsBlockOutside() ||
-       aContent->IsInNativeAnonymousSubtree())) {
+      !propagatedScrollToViewport) {
+    // Except we don't want to do that for paginated contexts for
+    // frames that are block-outside and aren't frames for native
+    // anonymous stuff.
+    if (mPresShell->GetPresContext()->IsPaginated() &&
+        aDisplay->IsBlockOutside() &&
+        !aContent->IsInNativeAnonymousSubtree()) {
+      static const FrameConstructionData sForcedNonScrollableBlockData =
+        FULL_CTOR_FCDATA(FCDATA_FORCED_NON_SCROLLABLE_BLOCK,
+                         &nsCSSFrameConstructor::ConstructNonScrollableBlock);
+      return &sForcedNonScrollableBlockData;
+    }
+
     static const FrameConstructionData sScrollableBlockData =
       FULL_CTOR_FCDATA(0, &nsCSSFrameConstructor::ConstructScrollableBlock);
     return &sScrollableBlockData;
@@ -4504,22 +4513,20 @@ nsCSSFrameConstructor::ConstructNonScrollableBlock(nsFrameConstructorState& aSta
 {
   nsStyleContext* const styleContext = aItem.mStyleContext;
 
+  // We want a block formatting context root in paginated contexts for
+  // every block that would be scrollable in a non-paginated context.
+  // We mark our blocks with a bit here if this condition is true, so
+  // we can check it later in nsFrame::ApplyPaginatedOverflowClipping.
+  PRBool clipPaginatedOverflow =
+    (aItem.mFCData->mBits & FCDATA_FORCED_NON_SCROLLABLE_BLOCK) != 0;
   if (aDisplay->IsAbsolutelyPositioned() ||
       aDisplay->IsFloating() ||
       NS_STYLE_DISPLAY_INLINE_BLOCK == aDisplay->mDisplay ||
-      // This check just needs to be the same as the check for using scrollable
-      // blocks in FindDisplayData and the check for clipping in
-      // nsFrame::ApplyPaginatedOverflowClipping; we want a block formatting
-      // context root in paginated contexts for every block that would be
-      // scrollable in a non-paginated context.  Note that IsPaginated()
-      // implies that no propagation to viewport has taken place, so we don't
-      // need to check for propagation here.
-      (mPresShell->GetPresContext()->IsPaginated() &&
-       aDisplay->IsBlockInside() &&
-       aDisplay->IsScrollableOverflow() &&
-       aDisplay->IsBlockOutside() &&
-       !aItem.mContent->IsInNativeAnonymousSubtree())) {
+      clipPaginatedOverflow) {
     *aNewFrame = NS_NewBlockFormattingContext(mPresShell, styleContext);
+    if (clipPaginatedOverflow) {
+      (*aNewFrame)->AddStateBits(NS_BLOCK_CLIP_PAGINATED_OVERFLOW);
+    }
   } else {
     *aNewFrame = NS_NewBlockFrame(mPresShell, styleContext);
   }
@@ -4772,7 +4779,11 @@ nsCSSFrameConstructor::FindSVGData(nsIContent* aContent,
   }
 
   if ((aTag != nsGkAtoms::svg && !parentIsSVG) ||
-      (aTag == nsGkAtoms::desc || aTag == nsGkAtoms::title)) {
+      (aTag == nsGkAtoms::desc || aTag == nsGkAtoms::title ||
+       aTag == nsGkAtoms::feFuncR || aTag == nsGkAtoms::feFuncG ||
+       aTag == nsGkAtoms::feFuncB || aTag == nsGkAtoms::feFuncA ||
+       aTag == nsGkAtoms::feDistantLight || aTag == nsGkAtoms::fePointLight ||
+       aTag == nsGkAtoms::feSpotLight)) {
     // Sections 5.1 and G.4 of SVG 1.1 say that SVG elements other than
     // svg:svg not contained within svg:svg are incorrect, although they
     // don't seem to specify error handling.  Ignore them, since many of
@@ -4784,6 +4795,9 @@ nsCSSFrameConstructor::FindSVGData(nsIContent* aContent,
     // adding to the undisplayed content map.
     //
     // We don't currently handle any UI for desc/title
+    //
+    // The filter types are children of filter elements that use their
+    // parent frames when necessary
     return &sSuppressData;
   }
 
@@ -4873,15 +4887,8 @@ nsCSSFrameConstructor::FindSVGData(nsIContent* aContent,
     SIMPLE_SVG_CREATE(filter, NS_NewSVGFilterFrame),
     SIMPLE_SVG_CREATE(pattern, NS_NewSVGPatternFrame),
     SIMPLE_SVG_CREATE(mask, NS_NewSVGMaskFrame),
-    SIMPLE_SVG_CREATE(feDistantLight, NS_NewSVGLeafFrame),
-    SIMPLE_SVG_CREATE(fePointLight, NS_NewSVGLeafFrame),
-    SIMPLE_SVG_CREATE(feSpotLight, NS_NewSVGLeafFrame),
     SIMPLE_SVG_CREATE(feBlend, NS_NewSVGLeafFrame),
     SIMPLE_SVG_CREATE(feColorMatrix, NS_NewSVGLeafFrame),
-    SIMPLE_SVG_CREATE(feFuncR, NS_NewSVGLeafFrame),
-    SIMPLE_SVG_CREATE(feFuncG, NS_NewSVGLeafFrame),
-    SIMPLE_SVG_CREATE(feFuncB, NS_NewSVGLeafFrame),
-    SIMPLE_SVG_CREATE(feFuncA, NS_NewSVGLeafFrame),
     SIMPLE_SVG_CREATE(feComposite, NS_NewSVGLeafFrame),
     SIMPLE_SVG_CREATE(feComponentTransfer, NS_NewSVGLeafFrame),
     SIMPLE_SVG_CREATE(feConvolveMatrix, NS_NewSVGLeafFrame),
@@ -5154,6 +5161,32 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
   }
 
   PRBool isText = aContent->IsNodeOfType(nsINode::eTEXT);
+
+  // never create frames for non-option/optgroup kids of <select> and
+  // non-option kids of <optgroup> inside a <select>.
+  // XXXbz it's not clear how this should best work with XBL.
+  nsIContent *parent = aContent->GetParent();
+  if (parent) {
+    // Check tag first, since that check will usually fail
+    nsIAtom* parentTag = parent->Tag();
+    if ((parentTag == nsGkAtoms::select || parentTag == nsGkAtoms::optgroup) &&
+        parent->IsHTML() &&
+        // <option> is ok no matter what
+        !aContent->IsHTML(nsGkAtoms::option) &&
+        // <optgroup> is OK in <select> but not in <optgroup>
+        (!aContent->IsHTML(nsGkAtoms::optgroup) ||
+         parentTag != nsGkAtoms::select) &&
+        // Allow native anonymous content no matter what
+        !aContent->IsRootOfNativeAnonymousSubtree()) {
+      // No frame for aContent
+      if (!isText) {
+        SetAsUndisplayedContent(aState.mFrameManager, aContent, styleContext,
+                                isGeneratedContent);
+      }
+      return;
+    }
+  }
+
   PRBool isPopup = PR_FALSE;
   // Try to find frame construction data for this content
   const FrameConstructionData* data;

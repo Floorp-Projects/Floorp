@@ -9,8 +9,34 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+#include "compiler/glslang.h"
 #include "compiler/osinclude.h"
 #include "compiler/InitializeParseContext.h"
+
+extern "C" {
+extern int InitPreprocessor();
+extern int FinalizePreprocessor();
+extern void PredefineIntMacro(const char *name, int value);
+}
+
+static void ReportInfo(TInfoSinkBase& sink,
+                       TPrefixType type, TSourceLoc loc,
+                       const char* reason, const char* token, 
+                       const char* extraInfo)
+{
+    /* VC++ format: file(linenum) : error #: 'token' : extrainfo */
+    sink.prefix(type);
+    sink.location(loc);
+    sink << "'" << token <<  "' : " << reason << " " << extraInfo << "\n";
+}
+
+static void DefineExtensionMacros(const TExtensionBehavior& extBehavior)
+{
+    for (TExtensionBehavior::const_iterator iter = extBehavior.begin();
+         iter != extBehavior.end(); ++iter) {
+        PredefineIntMacro(iter->first.c_str(), 1);
+    }
+}
 
 ///////////////////////////////////////////////////////////////////////
 //
@@ -176,24 +202,32 @@ void TParseContext::recover()
 //
 // Used by flex/bison to output all syntax and parsing errors.
 //
-void TParseContext::error(TSourceLoc nLine, const char *szReason, const char *szToken, 
-                          const char *szExtraInfoFormat, ...)
+void TParseContext::error(TSourceLoc loc,
+                          const char* reason, const char* token, 
+                          const char* extraInfoFormat, ...)
 {
-    char szExtraInfo[400];
+    char extraInfo[512];
     va_list marker;
+    va_start(marker, extraInfoFormat);
+    vsnprintf(extraInfo, sizeof(extraInfo), extraInfoFormat, marker);
 
-    va_start(marker, szExtraInfoFormat);
-
-    vsnprintf(szExtraInfo, sizeof(szExtraInfo), szExtraInfoFormat, marker);
-
-    /* VC++ format: file(linenum) : error #: 'token' : extrainfo */
-    infoSink.info.prefix(EPrefixError);
-    infoSink.info.location(nLine);
-    infoSink.info << "'" << szToken <<  "' : " << szReason << " " << szExtraInfo << "\n";
+    ReportInfo(infoSink.info, EPrefixError, loc, reason, token, extraInfo);
 
     va_end(marker);
-
     ++numErrors;
+}
+
+void TParseContext::warning(TSourceLoc loc,
+                            const char* reason, const char* token,
+                            const char* extraInfoFormat, ...) {
+    char extraInfo[512];
+    va_list marker;
+    va_start(marker, extraInfoFormat);
+    vsnprintf(extraInfo, sizeof(extraInfo), extraInfoFormat, marker);
+
+    ReportInfo(infoSink.info, EPrefixWarning, loc, reason, token, extraInfo);
+
+    va_end(marker);
 }
 
 //
@@ -1025,6 +1059,7 @@ bool TParseContext::executeInitializer(TSourceLoc line, TString& identifier, TPu
 
 bool TParseContext::areAllChildConst(TIntermAggregate* aggrNode)
 {
+    ASSERT(aggrNode != NULL);
     if (!aggrNode->isConstructor())
         return false;
 
@@ -1032,13 +1067,10 @@ bool TParseContext::areAllChildConst(TIntermAggregate* aggrNode)
 
     // check if all the child nodes are constants so that they can be inserted into 
     // the parent node
-    if (aggrNode) {
-        TIntermSequence &childSequenceVector = aggrNode->getSequence() ;
-        for (TIntermSequence::iterator p = childSequenceVector.begin(); 
-                                    p != childSequenceVector.end(); p++) {
-            if (!(*p)->getAsTyped()->getAsConstantUnion())
-                return false;
-        }
+    TIntermSequence &sequence = aggrNode->getSequence() ;
+    for (TIntermSequence::iterator p = sequence.begin(); p != sequence.end(); ++p) {
+        if (!(*p)->getAsTyped()->getAsConstantUnion())
+            return false;
     }
 
     return allConstant;
@@ -1380,6 +1412,32 @@ TIntermTyped* TParseContext::addConstStruct(TString& identifier, TIntermTyped* n
     }
 
     return typedNode;
+}
+
+//
+// Parse an array of strings using yyparse.
+//
+// Returns 0 for success.
+//
+int PaParseStrings(int count, const char* const string[], const int length[],
+                   TParseContext* context) {
+    if ((count == 0) || (string == NULL))
+        return 1;
+
+    // setup preprocessor.
+    if (InitPreprocessor())
+        return 1;
+    DefineExtensionMacros(context->extensionBehavior);
+
+    if (glslang_initialize(context))
+        return 1;
+
+    glslang_scan(count, string, length, context);
+    int error = glslang_parse(context);
+
+    glslang_finalize(context);
+    FinalizePreprocessor();
+    return (error == 0) && (context->numErrors == 0) ? 0 : 1;
 }
 
 OS_TLSIndex GlobalParseContextIndex = OS_INVALID_TLS_INDEX;

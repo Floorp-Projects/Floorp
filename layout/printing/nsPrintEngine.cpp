@@ -616,18 +616,26 @@ nsPrintEngine::DoCommonPrint(PRBool                  aIsPrintPreview,
         nsCOMPtr<nsIWebBrowserPrint> wbp(do_QueryInterface(mDocViewerPrint));
         rv = printPromptService->ShowPrintDialog(domWin, wbp,
                                                  mPrt->mPrintSettings);
-        if (rv == NS_ERROR_NOT_IMPLEMENTED) {
-          // This means the Dialog service was there, 
-          // but they choose not to implement this dialog and 
-          // are looking for default behavior from the toolkit
-          rv = NS_OK;
-        } else if (NS_SUCCEEDED(rv)) {
+        //
+        // ShowPrintDialog triggers an event loop which means we can't assume
+        // that the state of this->{anything} matches the state we've checked
+        // above. Including that a given {thing} is non null.
+
+        if (NS_SUCCEEDED(rv)) {
           // since we got the dialog and it worked then make sure we 
           // are telling GFX we want to print silent
           printSilently = PR_TRUE;
+
+          if (mPrt && mPrt->mPrintSettings) {
+            // The user might have changed shrink-to-fit in the print dialog, so update our copy of its state
+            mPrt->mPrintSettings->GetShrinkToFit(&mPrt->mShrinkToFit);
+          }
+        } else if (rv == NS_ERROR_NOT_IMPLEMENTED) {
+          // This means the Dialog service was there,
+          // but they choose not to implement this dialog and
+          // are looking for default behavior from the toolkit
+          rv = NS_OK;
         }
-        // The user might have changed shrink-to-fit in the print dialog, so update our copy of its state
-        mPrt->mPrintSettings->GetShrinkToFit(&mPrt->mShrinkToFit);
       } else {
         rv = NS_ERROR_GFX_NO_PRINTROMPTSERVICE;
       }
@@ -2307,104 +2315,104 @@ nsPrintEngine::DoPrint(nsPrintObject * aPO)
       }
 #endif
 
-      if (mPrt->mPrintSettings) {
-        PRUnichar * docTitleStr = nsnull;
-        PRUnichar * docURLStr   = nsnull;
-
-        GetDisplayTitleAndURL(aPO, &docTitleStr, &docURLStr, eDocTitleDefBlank); 
-
-        if (nsIPrintSettings::kRangeSelection == printRangeType) {
-          CloneSelection(aPO->mDocument->GetOriginalDocument(), aPO->mDocument);
-
-          poPresContext->SetIsRenderingOnlySelection(PR_TRUE);
-          // temporarily creating rendering context
-          // which is needed to dinf the selection frames
-          nsCOMPtr<nsIRenderingContext> rc;
-          mPrt->mPrintDC->CreateRenderingContext(*getter_AddRefs(rc));
-
-          // find the starting and ending page numbers
-          // via the selection
-          nsIFrame* startFrame;
-          nsIFrame* endFrame;
-          PRInt32   startPageNum;
-          PRInt32   endPageNum;
-          nsRect    startRect;
-          nsRect    endRect;
-
-          nsCOMPtr<nsISelection> selectionPS;
-          selectionPS = poPresShell->GetCurrentSelection(nsISelectionController::SELECTION_NORMAL);
-
-          rv = GetPageRangeForSelection(poPresShell, poPresContext, *rc, selectionPS, pageSequence,
-                                        &startFrame, startPageNum, startRect,
-                                        &endFrame, endPageNum, endRect);
-          if (NS_SUCCEEDED(rv)) {
-            mPrt->mPrintSettings->SetStartPageRange(startPageNum);
-            mPrt->mPrintSettings->SetEndPageRange(endPageNum);
-            nsIntMargin marginTwips(0,0,0,0);
-            nsIntMargin unwrtMarginTwips(0,0,0,0);
-            mPrt->mPrintSettings->GetMarginInTwips(marginTwips);
-            mPrt->mPrintSettings->GetUnwriteableMarginInTwips(unwrtMarginTwips);
-            nsMargin totalMargin = poPresContext->CSSTwipsToAppUnits(marginTwips + 
-                                                                     unwrtMarginTwips);
-            if (startPageNum == endPageNum) {
-              {
-                startRect.y -= totalMargin.top;
-                endRect.y   -= totalMargin.top;
-
-                // Clip out selection regions above the top of the first page
-                if (startRect.y < 0) {
-                  // Reduce height to be the height of the positive-territory
-                  // region of original rect
-                  startRect.height = NS_MAX(0, startRect.YMost());
-                  startRect.y = 0;
-                }
-                if (endRect.y < 0) {
-                  // Reduce height to be the height of the positive-territory
-                  // region of original rect
-                  endRect.height = NS_MAX(0, endRect.YMost());
-                  endRect.y = 0;
-                }
-                NS_ASSERTION(endRect.y >= startRect.y,
-                             "Selection end point should be after start point");
-                NS_ASSERTION(startRect.height >= 0,
-                             "rect should have non-negative height.");
-                NS_ASSERTION(endRect.height >= 0,
-                             "rect should have non-negative height.");
-
-                nscoord selectionHgt = endRect.y + endRect.height - startRect.y;
-                // XXX This is temporary fix for printing more than one page of a selection
-                pageSequence->SetSelectionHeight(startRect.y * aPO->mZoomRatio,
-                                                 selectionHgt * aPO->mZoomRatio);
-
-                // calc total pages by getting calculating the selection's height
-                // and then dividing it by how page content frames will fit.
-                nscoord pageWidth, pageHeight;
-                mPrt->mPrintDC->GetDeviceSurfaceDimensions(pageWidth, pageHeight);
-                pageHeight -= totalMargin.top + totalMargin.bottom;
-                PRInt32 totalPages = NSToIntCeil(float(selectionHgt) * aPO->mZoomRatio / float(pageHeight));
-                pageSequence->SetTotalNumPages(totalPages);
-              }
-            }
-          }
-        }
-
-        nsIFrame * seqFrame = do_QueryFrame(pageSequence);
-        if (!seqFrame) {
-          SetIsPrinting(PR_FALSE);
-          return NS_ERROR_FAILURE;
-        }
-
-        mPageSeqFrame = pageSequence;
-        mPageSeqFrame->StartPrint(poPresContext, mPrt->mPrintSettings, docTitleStr, docURLStr);
-
-        // Schedule Page to Print
-        PR_PL(("Scheduling Print of PO: %p (%s) \n", aPO, gFrameTypesStr[aPO->mFrameType]));
-        StartPagePrintTimer(aPO);
-      } else {
+      if (!mPrt->mPrintSettings) {
         // not sure what to do here!
         SetIsPrinting(PR_FALSE);
         return NS_ERROR_FAILURE;
       }
+
+      PRUnichar * docTitleStr = nsnull;
+      PRUnichar * docURLStr   = nsnull;
+
+      GetDisplayTitleAndURL(aPO, &docTitleStr, &docURLStr, eDocTitleDefBlank);
+
+      if (nsIPrintSettings::kRangeSelection == printRangeType) {
+        CloneSelection(aPO->mDocument->GetOriginalDocument(), aPO->mDocument);
+
+        poPresContext->SetIsRenderingOnlySelection(PR_TRUE);
+        // temporarily creating rendering context
+        // which is needed to dinf the selection frames
+        nsCOMPtr<nsIRenderingContext> rc;
+        mPrt->mPrintDC->CreateRenderingContext(*getter_AddRefs(rc));
+
+        // find the starting and ending page numbers
+        // via the selection
+        nsIFrame* startFrame;
+        nsIFrame* endFrame;
+        PRInt32   startPageNum;
+        PRInt32   endPageNum;
+        nsRect    startRect;
+        nsRect    endRect;
+
+        nsCOMPtr<nsISelection> selectionPS;
+        selectionPS = poPresShell->GetCurrentSelection(nsISelectionController::SELECTION_NORMAL);
+
+        rv = GetPageRangeForSelection(poPresShell, poPresContext, *rc, selectionPS, pageSequence,
+                                      &startFrame, startPageNum, startRect,
+                                      &endFrame, endPageNum, endRect);
+        if (NS_SUCCEEDED(rv)) {
+          mPrt->mPrintSettings->SetStartPageRange(startPageNum);
+          mPrt->mPrintSettings->SetEndPageRange(endPageNum);
+          nsIntMargin marginTwips(0,0,0,0);
+          nsIntMargin unwrtMarginTwips(0,0,0,0);
+          mPrt->mPrintSettings->GetMarginInTwips(marginTwips);
+          mPrt->mPrintSettings->GetUnwriteableMarginInTwips(unwrtMarginTwips);
+          nsMargin totalMargin = poPresContext->CSSTwipsToAppUnits(marginTwips +
+                                                                   unwrtMarginTwips);
+          if (startPageNum == endPageNum) {
+            startRect.y -= totalMargin.top;
+            endRect.y   -= totalMargin.top;
+
+            // Clip out selection regions above the top of the first page
+            if (startRect.y < 0) {
+              // Reduce height to be the height of the positive-territory
+              // region of original rect
+              startRect.height = NS_MAX(0, startRect.YMost());
+              startRect.y = 0;
+            }
+            if (endRect.y < 0) {
+              // Reduce height to be the height of the positive-territory
+              // region of original rect
+              endRect.height = NS_MAX(0, endRect.YMost());
+              endRect.y = 0;
+            }
+            NS_ASSERTION(endRect.y >= startRect.y,
+                         "Selection end point should be after start point");
+            NS_ASSERTION(startRect.height >= 0,
+                         "rect should have non-negative height.");
+            NS_ASSERTION(endRect.height >= 0,
+                         "rect should have non-negative height.");
+
+            nscoord selectionHgt = endRect.y + endRect.height - startRect.y;
+            // XXX This is temporary fix for printing more than one page of a selection
+            pageSequence->SetSelectionHeight(startRect.y * aPO->mZoomRatio,
+                                             selectionHgt * aPO->mZoomRatio);
+
+            // calc total pages by getting calculating the selection's height
+            // and then dividing it by how page content frames will fit.
+            nscoord pageWidth, pageHeight;
+            mPrt->mPrintDC->GetDeviceSurfaceDimensions(pageWidth, pageHeight);
+            pageHeight -= totalMargin.top + totalMargin.bottom;
+            PRInt32 totalPages = NSToIntCeil(float(selectionHgt) * aPO->mZoomRatio / float(pageHeight));
+            pageSequence->SetTotalNumPages(totalPages);
+          }
+        }
+      }
+
+      nsIFrame * seqFrame = do_QueryFrame(pageSequence);
+      if (!seqFrame) {
+        SetIsPrinting(PR_FALSE);
+        if (docTitleStr) nsMemory::Free(docTitleStr);
+        if (docURLStr) nsMemory::Free(docURLStr);
+        return NS_ERROR_FAILURE;
+      }
+
+      mPageSeqFrame = pageSequence;
+      mPageSeqFrame->StartPrint(poPresContext, mPrt->mPrintSettings, docTitleStr, docURLStr);
+
+      // Schedule Page to Print
+      PR_PL(("Scheduling Print of PO: %p (%s) \n", aPO, gFrameTypesStr[aPO->mFrameType]));
+      StartPagePrintTimer(aPO);
     }
   }
 

@@ -18,58 +18,66 @@ found in the LICENSE file.
 <div id="description"></div>
 <div id="console"></div>
 <script>
-var wtu = WebGLTestUtils;
-var canvas = document.getElementById("example");
-var gl = wtu.create3DContext(canvas);
-var program = wtu.setupTexturedQuad(gl);
+window.onload = init;
+debug("Tests a WebGL program that draws a bunch of large polygons");
 
-assertMsg(gl.getError() == gl.NO_ERROR, "Should be no errors from setup.");
-
-var tex = gl.createTexture();
-gl.enable(gl.BLEND);
-gl.disable(gl.DEPTH_TEST);
-
-wtu.fillTexture(gl, tex, 4096, 4096, [0, 192, 128, 255], 0);
-wtu.glErrorShouldBe(gl, gl.NO_ERROR, "after creating texture");
-
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-wtu.glErrorShouldBe(gl, gl.NO_ERROR, "after setting texture params");
-
-var loc = gl.getUniformLocation(program, "tex");
-wtu.glErrorShouldBe(gl, gl.NO_ERROR, "after getting tex locations");
-gl.uniform1i(loc, 0);
-wtu.glErrorShouldBe(gl, gl.NO_ERROR, "after setting tex uniform");
-
-var numQuads = 100000;
-var indexBuf = new ArrayBuffer(numQuads * 6);
-var indices = new Uint8Array(indexBuf);
-for (var ii = 0; ii < numQuads; ++ii) {
-  var offset = ii * 6;
-  indices[offset + 0] = 0;
-  indices[offset + 1] = 1;
-  indices[offset + 2] = 2;
-  indices[offset + 3] = 3;
-  indices[offset + 4] = 4;
-  indices[offset + 5] = 5;
+function init() {
+  if (confirm(
+      "after clicking ok your machine may be come unresponsive or crash")) {
+    main();
+  } else {
+    debug("cancelled");
+  }
 }
-var indexBuffer = gl.createBuffer();
-gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
-wtu.glErrorShouldBe(gl, gl.NO_ERROR, "after creating index buffer");
-gl.drawElements(gl.TRIANGLES, numQuads * 6, gl.UNSIGNED_BYTE, 0);
-wtu.glErrorShouldBe(gl, gl.NO_ERROR, "after drawing");
 
-successfullyParsed = true;
+function main() {
+  var wtu = WebGLTestUtils;
+  var canvas = document.getElementById("example");
+  var gl = wtu.create3DContext(canvas);
+  var program = wtu.setupTexturedQuad(gl);
+
+  assertMsg(gl.getError() == gl.NO_ERROR, "Should be no errors from setup.");
+
+  var tex = gl.createTexture();
+  gl.enable(gl.BLEND);
+  gl.disable(gl.DEPTH_TEST);
+
+  wtu.fillTexture(gl, tex, 4096, 4096, [0, 192, 128, 255], 0);
+  wtu.glErrorShouldBe(gl, gl.NO_ERROR, "after creating texture");
+
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  wtu.glErrorShouldBe(gl, gl.NO_ERROR, "after setting texture params");
+
+  var loc = gl.getUniformLocation(program, "tex");
+  wtu.glErrorShouldBe(gl, gl.NO_ERROR, "after getting tex locations");
+  gl.uniform1i(loc, 0);
+  wtu.glErrorShouldBe(gl, gl.NO_ERROR, "after setting tex uniform");
+
+  var numQuads = 100000;
+  var indexBuf = new ArrayBuffer(numQuads * 6);
+  var indices = new Uint8Array(indexBuf);
+  for (var ii = 0; ii < numQuads; ++ii) {
+    var offset = ii * 6;
+    indices[offset + 0] = 0;
+    indices[offset + 1] = 1;
+    indices[offset + 2] = 2;
+    indices[offset + 3] = 3;
+    indices[offset + 4] = 4;
+    indices[offset + 5] = 5;
+  }
+  var indexBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+  wtu.glErrorShouldBe(gl, gl.NO_ERROR, "after creating index buffer");
+  gl.drawElements(gl.TRIANGLES, numQuads * 6, gl.UNSIGNED_BYTE, 0);
+  wtu.glErrorShouldBe(gl, gl.NO_ERROR, "after drawing");
+
+  successfullyParsed = true;
+}
 </script>
-</body>
-<script src="../resources/js-test-post.js"></script>
-
-<script>
-</script>
-
 </body>
 </html>
 

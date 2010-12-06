@@ -142,6 +142,7 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
     , mIsTransparent(false)
     , mSurfaceType(gfxASurface::SurfaceTypeMax)
     , mCurrentInvalidateTask(nsnull)
+    , mCurrentAsyncSetWindowTask(nsnull)
     , mPendingPluginCall(false)
     , mDoAlphaExtraction(false)
     , mSurfaceDifferenceRect(0,0,0,0)
@@ -814,6 +815,9 @@ PluginInstanceChild::AnswerNPP_HandleEvent_IOSurface(const NPRemoteEvent& event,
 bool
 PluginInstanceChild::RecvWindowPosChanged(const NPRemoteEvent& event)
 {
+    NS_ASSERTION(!mLayersRendering && !mPendingPluginCall,
+                 "Shouldn't be receiving WindowPosChanged with layer rendering");
+
 #ifdef OS_WIN
     int16_t dontcare;
     return AnswerNPP_HandleEvent(event, &dontcare);
@@ -862,6 +866,8 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
                       aWindow.window,
                       aWindow.x, aWindow.y,
                       aWindow.width, aWindow.height));
+    NS_ASSERTION(!mLayersRendering && !mPendingPluginCall,
+                 "Shouldn't be receiving NPP_SetWindow with layer rendering");
     AssertPluginThread();
 
 #if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
@@ -880,8 +886,6 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
     if (!XVisualIDToInfo(mWsInfo.display, aWindow.visualID,
                          &mWsInfo.visual, &mWsInfo.depth))
         return false;
-
-    mLayersRendering = false;
 
 #ifdef MOZ_WIDGET_GTK2
     if (gtk_check_version(2,18,7) != NULL) { // older
@@ -2168,6 +2172,43 @@ PluginInstanceChild::RecvAsyncSetWindow(const gfxSurfaceType& aSurfaceType,
 
     NS_ASSERTION(!aWindow.window, "Remote window should be null.");
 
+    if (mCurrentAsyncSetWindowTask) {
+        mCurrentAsyncSetWindowTask->Cancel();
+        mCurrentAsyncSetWindowTask = nsnull;
+    }
+
+    if (mPendingPluginCall) {
+        // We shouldn't process this now. Run it later.
+        mCurrentAsyncSetWindowTask =
+            NewRunnableMethod<PluginInstanceChild,
+                              void (PluginInstanceChild::*)(const gfxSurfaceType&, const NPRemoteWindow&, bool),
+                              gfxSurfaceType, NPRemoteWindow, bool>
+                (this, &PluginInstanceChild::DoAsyncSetWindow,
+                 aSurfaceType, aWindow, true);
+        MessageLoop::current()->PostTask(FROM_HERE, mCurrentAsyncSetWindowTask);
+    } else {
+        DoAsyncSetWindow(aSurfaceType, aWindow, false);
+    }
+
+    return true;
+}
+
+void
+PluginInstanceChild::DoAsyncSetWindow(const gfxSurfaceType& aSurfaceType,
+                                      const NPRemoteWindow& aWindow,
+                                      bool aIsAsync)
+{
+    AssertPluginThread();
+    NS_ASSERTION(!aWindow.window, "Remote window should be null.");
+    NS_ASSERTION(!mPendingPluginCall, "Can't do SetWindow during plugin call!");
+
+    if (aIsAsync) {
+        if (!mCurrentAsyncSetWindowTask) {
+            return;
+        }
+        mCurrentAsyncSetWindowTask = nsnull;
+    }
+
     mWindow.window = NULL;
     if (mWindow.width != aWindow.width || mWindow.height != aWindow.height) {
         mCurrentSurface = nsnull;
@@ -2204,8 +2245,6 @@ PluginInstanceChild::RecvAsyncSetWindow(const gfxSurfaceType& aSurfaceType,
     if (!mAccumulatedInvalidRect.IsEmpty()) {
         AsyncShowPluginFrame();
     }
-
-    return true;
 }
 
 static inline gfxRect
@@ -2962,6 +3001,10 @@ PluginInstanceChild::AnswerNPP_Destroy(NPError* aResult)
     if (mCurrentInvalidateTask) {
         mCurrentInvalidateTask->Cancel();
         mCurrentInvalidateTask = nsnull;
+    }
+    if (mCurrentAsyncSetWindowTask) {
+        mCurrentAsyncSetWindowTask->Cancel();
+        mCurrentAsyncSetWindowTask = nsnull;
     }
 
     PluginModuleChild::current()->NPP_Destroy(this);

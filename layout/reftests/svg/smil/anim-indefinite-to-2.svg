@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <!-- Test that an indefinite to-animation with discrete calcMode still applies
+       the to-value for the whole time. -->
+  <rect x="15" y="15" width="200" height="100" fill="blue">
+    <animate attributeName="height" to="200" dur="indefinite"
+      calcMode="discrete"/>
+  </rect>
+</svg>
