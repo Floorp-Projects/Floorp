@@ -564,8 +564,14 @@ add_test(function() {
     var doc = aManager.document;
 
     if (gUseInContentUI) {
-      is_element_hidden(doc.getElementById("back-btn"), "Back button should be hidden");
-      is_element_hidden(doc.getElementById("forward-btn"), "Forward button should be hidden");
+      var btn = document.getElementById("back-button");
+      if (!btn || is_hidden(btn)) {
+        is_element_visible(doc.getElementById("back-btn"), "Back button should not be hidden");
+        is_element_visible(doc.getElementById("forward-btn"), "Forward button should not be hidden");
+      } else {
+        is_element_hidden(doc.getElementById("back-btn"), "Back button should be hidden");
+        is_element_hidden(doc.getElementById("forward-btn"), "Forward button should be hidden");
+      }
     } else {
       is_element_visible(doc.getElementById("back-btn"), "Back button should not be hidden");
       is_element_visible(doc.getElementById("forward-btn"), "Forward button should not be hidden");
