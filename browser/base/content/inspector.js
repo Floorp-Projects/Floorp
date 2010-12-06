@@ -1425,13 +1425,13 @@ XPCOMUtils.defineLazyGetter(InspectorUI, "strings", function () {
 
 XPCOMUtils.defineLazyGetter(InspectorUI, "PropertyTreeView", function () {
   var obj = {};
-  Cu.import("resource://gre/modules/PropertyPanel.jsm", obj);
+  Cu.import("resource:///modules/PropertyPanel.jsm", obj);
   return obj.PropertyTreeView;
 });
 
 XPCOMUtils.defineLazyGetter(InspectorUI, "PropertyPanel", function () {
   var obj = {};
-  Cu.import("resource://gre/modules/PropertyPanel.jsm", obj);
+  Cu.import("resource:///modules/PropertyPanel.jsm", obj);
   return obj.PropertyPanel;
 });
 
