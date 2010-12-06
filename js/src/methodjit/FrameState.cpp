@@ -49,7 +49,7 @@ using namespace js::analyze;
 JS_STATIC_ASSERT(sizeof(FrameEntry) % 8 == 0);
 
 FrameState::FrameState(JSContext *cx, JSScript *script, JSFunction *fun,
-                       Compiler &cc, Assembler &masm, StubCompiler &stubcc,
+                       mjit::Compiler &cc, Assembler &masm, StubCompiler &stubcc,
                        LifetimeScript &liveness)
   : cx(cx), script(script), fun(fun),
     nargs(fun ? fun->nargs : 0),
