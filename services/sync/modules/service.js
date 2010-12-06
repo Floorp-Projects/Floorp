@@ -1071,7 +1071,7 @@ WeaveSvc.prototype = {
       // Delete the cached meta record...
       this._log.debug("Clearing cached meta record. metaModified is " +
           JSON.stringify(this.metaModified) + ", setting to " +
-          JSON.stringify(info.obj.meta));
+          JSON.stringify(infoResponse.obj.meta));
       Records.del(this.metaURL);
       
       // ... fetch the current record from the server, and COPY THE FLAGS.
@@ -1081,7 +1081,7 @@ WeaveSvc.prototype = {
       
       // Switch in the new meta object and record the new time.
       meta              = newMeta;
-      this.metaModified = info.obj.meta;
+      this.metaModified = infoResponse.obj.meta;
     }
 
     let remoteVersion = (meta && meta.payload.storageVersion)?
