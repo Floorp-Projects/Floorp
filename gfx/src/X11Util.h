@@ -49,6 +49,7 @@
 //   enum CursorShape { ... }.  Good times!
 #undef CursorShape
 #  include <QX11Info>
+#  include <X11/Xlib.h>
 #else
 #  error Unknown toolkit
 #endif 
@@ -106,6 +107,86 @@ private:
   static void* operator new (size_t);
   static void operator delete (void*);
 };
+
+/**
+ * On construction, set a graceful X error handler that doesn't crash the application and records X errors.
+ * On destruction, restore the X error handler to what it was before construction.
+ * 
+ * The SyncAndGetError() method allows to know whether a X error occurred, optionally allows to get the full XErrorEvent,
+ * and resets the recorded X error state so that a single X error will be reported only once.
+ *
+ * Nesting is correctly handled: multiple nested ScopedXErrorHandler's don't interfere with each other's state. However,
+ * if SyncAndGetError is not called on the nested ScopedXErrorHandler, then any X errors caused by X calls made while the nested
+ * ScopedXErrorHandler was in place may then be caught by the other ScopedXErrorHandler. This is just a result of X being
+ * asynchronous and us not doing any implicit syncing: the only method in this class what causes syncing is SyncAndGetError().
+ *
+ * This class is not thread-safe at all. It is assumed that only one thread is using any ScopedXErrorHandler's. Given that it's
+ * not used on Mac, it should be easy to make it thread-safe by using thread-local storage with __thread.
+ */
+class ScopedXErrorHandler
+{
+    // trivial wrapper around XErrorEvent, just adding ctor initializing by zero.
+    struct ErrorEvent
+    {
+        XErrorEvent m_error;
+
+        ErrorEvent()
+        {
+            memset(this, 0, sizeof(ErrorEvent));
+        }
+    };
+
+    // this ScopedXErrorHandler's ErrorEvent object
+    ErrorEvent m_xerror;
+
+    // static pointer for use by the error handler
+    static ErrorEvent* s_xerrorptr;
+
+    // what to restore s_xerrorptr to on destruction
+    ErrorEvent* m_oldxerrorptr;
+
+    // what to restore the error handler to on destruction
+    int (*m_oldErrorHandler)(Display *, XErrorEvent *);
+
+public:
+
+    static int
+    ErrorHandler(Display *, XErrorEvent *ev)
+    {
+        s_xerrorptr->m_error = *ev;
+        return 0;
+    }
+
+    ScopedXErrorHandler()
+    {
+        // let s_xerrorptr point to this object's m_xerror object, but don't reset this m_xerror object!
+        // think of the case of nested ScopedXErrorHandler's.
+        m_oldxerrorptr = s_xerrorptr;
+        s_xerrorptr = &m_xerror;
+        m_oldErrorHandler = XSetErrorHandler(ErrorHandler);
+    }
+
+    ~ScopedXErrorHandler()
+    {
+        s_xerrorptr = m_oldxerrorptr;
+        XSetErrorHandler(m_oldErrorHandler);
+    }
+
+    /** \returns true if a X error occurred since the last time this method was called on this ScopedXErrorHandler object.
+     *
+     * \param ev this optional parameter, if set, will be filled with the XErrorEvent object
+     */
+    bool SyncAndGetError(Display *dpy, XErrorEvent *ev = nsnull)
+    {
+        XSync(dpy, False);
+        bool retval = m_xerror.m_error.error_code != 0;
+        if (ev)
+            *ev = m_xerror.m_error;
+        m_xerror = ErrorEvent(); // reset
+        return retval;
+    }
+};
+
 
 } // namespace mozilla
 
