@@ -43,7 +43,6 @@
 #include "jsapi.h"
 #include "nsISupports.h"
 #include "jsobj.h"
-#include "nsAString.h"
 #include "nsIPrincipal.h"
 #include "nsWrapperCache.h"
 
@@ -59,6 +58,10 @@ nsresult
 xpc_CreateMTGlobalObject(JSContext *cx, JSClass *clasp,
                          nsISupports *ptr, JSObject **global,
                          JSCompartment **compartment);
+
+// XXX where should this live?
+NS_EXPORT_(void)
+xpc_LocalizeContext(JSContext *cx);
 
 nsresult
 xpc_MorphSlimWrapper(JSContext *cx, nsISupports *tomorph);
