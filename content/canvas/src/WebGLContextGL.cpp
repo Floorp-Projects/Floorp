@@ -2773,6 +2773,9 @@ WebGLContext::StencilFunc(WebGLenum func, WebGLint ref, WebGLuint mask)
     if (!ValidateComparisonEnum(func, "stencilFunc: func"))
         return NS_OK;
 
+    mStencilRef = ref;
+    mStencilValueMask = mask;
+
     MakeContextCurrent();
     gl->fStencilFunc(func, ref, mask);
     return NS_OK;
@@ -2785,18 +2788,38 @@ WebGLContext::StencilFuncSeparate(WebGLenum face, WebGLenum func, WebGLint ref, 
         !ValidateComparisonEnum(func, "stencilFuncSeparate: func"))
         return NS_OK;
 
+    if (face != LOCAL_GL_FRONT_AND_BACK && (ref != mStencilRef || mask != mStencilValueMask))
+        return ErrorInvalidOperation("stencilFuncSeparate: WebGL doesn't currently allow specifying "
+                                     "different values for front and back.");
+
+    mStencilRef = ref;
+    mStencilValueMask = mask;
+
     MakeContextCurrent();
     gl->fStencilFuncSeparate(face, func, ref, mask);
     return NS_OK;
 }
 
-GL_SAME_METHOD_1(StencilMask, StencilMask, WebGLuint)
+NS_IMETHODIMP
+WebGLContext::StencilMask(WebGLuint mask)
+{
+    mStencilWriteMask = mask;
+
+    MakeContextCurrent();
+    gl->fStencilMask(mask);
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 WebGLContext::StencilMaskSeparate(WebGLenum face, WebGLuint mask)
 {
     if (!ValidateFaceEnum(face, "stencilMaskSeparate: face"))
         return NS_OK;
+
+    if (face != LOCAL_GL_FRONT_AND_BACK && mask != mStencilWriteMask)
+        return ErrorInvalidOperation("stencilMaskSeparate: WebGL doesn't currently allow specifying "
+                                     "different values for front and back.");
+    mStencilWriteMask = mask;
 
     MakeContextCurrent();
     gl->fStencilMaskSeparate(face, mask);

@@ -537,6 +537,9 @@ protected:
     WebGLfloat mVertexAttrib0Vector[4];
     nsAutoArrayPtr<WebGLfloat> mFakeVertexAttrib0Array;
 
+    WebGLint mStencilRef;
+    WebGLuint mStencilValueMask, mStencilWriteMask;
+
 public:
     // console logging helpers
     static void LogMessage(const char *fmt, ...);
