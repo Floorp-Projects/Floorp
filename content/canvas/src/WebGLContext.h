@@ -1037,31 +1037,16 @@ public:
             // Determine if the texture needs to be faked as a black texture.
             // See 3.8.2 Shader Execution in the OpenGL ES 2.0.24 spec.
 
-            // First detect undefined images. These are typically not-yet-loaded textures.
-            // The generic fake-black-texture messages have been confusing in this case, see bug 594310.
-            // So generate a special message for that.
-
-            PRBool areAllLevel0ImagesDefined = PR_TRUE;
             for (size_t face = 0; face < mFacesCount; ++face) {
-                    areAllLevel0ImagesDefined &= ImageInfoAt(0, face).mIsDefined;
-            }
-
-            if (!areAllLevel0ImagesDefined) {
-                if (mTarget == LOCAL_GL_TEXTURE_2D) {
-                    mContext->LogMessageIfVerbose(
-                        "We are currently drawing stuff, but some 2D texture has not yet been "
-                        "uploaded any image at level 0. Until it's uploaded, this texture will look black.");
-                } else {
-                    mContext->LogMessageIfVerbose(
-                        "We are currently drawing stuff, but some cube map texture has not yet been "
-                        "uploaded any image at level 0, for at least one of its six faces. "
-                        "Until it's uploaded, this texture will look black.");
+                if (!ImageInfoAt(0, face).mIsDefined) {
+                    // In case of undefined texture image, we don't print any message because this is a very common
+                    // and often legitimate case, for example when doing asynchronous texture loading.
+                    // An extreme case of this is the photowall google demo.
+                    // Exiting early here allows us to avoid making noise on valid webgl code.
+                    mFakeBlackStatus = DoNeedFakeBlack;
+                    return PR_TRUE;
                 }
-                mFakeBlackStatus = DoNeedFakeBlack;
-                return PR_TRUE;
             }
-
-            // ok, done with the stupid special cases above. Now actually implementing the cases defined in section 3.8.2.
 
             const char *msg_rendering_as_black
                 = "A texture is going to be rendered as if it were black, as per the OpenGL ES 2.0.24 spec section 3.8.2, "
