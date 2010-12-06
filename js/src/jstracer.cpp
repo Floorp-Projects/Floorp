@@ -437,14 +437,14 @@ jitstats_getProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     int index = -1;
 
     if (JSID_IS_STRING(id)) {
-        JSString* str = JSID_TO_STRING(id);
-        if (MatchStringAndAscii(str, "HOTLOOP")) {
+        JSAtom* str = JSID_TO_ATOM(id);
+        if (StringEqualsAscii(str, "HOTLOOP")) {
             *vp = INT_TO_JSVAL(HOTLOOP);
             return JS_TRUE;
         }
 
 #ifdef JS_METHODJIT
-        if (MatchStringAndAscii(str, "profiler")) {
+        if (StringEqualsAscii(str, "profiler")) {
             *vp = BOOLEAN_TO_JSVAL(cx->profilingEnabled);
             return JS_TRUE;
         }
@@ -910,7 +910,11 @@ PrintOnTrace(char* format, uint32 argc, double *argv)
                 // protect against massive spew if u.s is a bad pointer.
                 if (length > 1 << 16)
                     length = 1 << 16;
-                jschar *chars = u.s->chars();
+                if (u.s->isRope()) {
+                    fprintf(out, "<rope>");
+                    break;
+                }
+                const jschar *chars = u.s->nonRopeChars();
                 for (unsigned i = 0; i < length; ++i) {
                     jschar co = chars[i];
                     if (co < 128)
@@ -8429,8 +8433,13 @@ TraceRecorder::d2i(LIns* d, bool resultCanBeImpreciseIfFractional)
 #endif
         }
         if (ci == &js_StringToNumber_ci) {
-            LIns* args[] = { d->callArgN(1), d->callArgN(0) };
-            return w.call(&js_StringToInt32_ci, args);
+            LIns* ok_ins = w.allocp(sizeof(JSBool));
+            LIns* args[] = { ok_ins, d->callArgN(1), d->callArgN(0) };
+            LIns* ret_ins = w.call(&js_StringToInt32_ci, args);
+            guard(false,
+                  w.name(w.eqi0(w.ldiAlloc(ok_ins)), "guard(oom)"),
+                  OOM_EXIT);
+            return ret_ins;
         }
     }
     return resultCanBeImpreciseIfFractional
@@ -8646,10 +8655,13 @@ TraceRecorder::switchop()
               w.name(w.eqd(v_ins, w.immd(d)), "guard(switch on numeric)"),
               BRANCH_EXIT);
     } else if (v.isString()) {
-        LIns* args[] = { w.immpStrGC(v.toString()), v_ins };
-        guard(true,
-              w.name(w.eqi0(w.eqi0(w.call(&js_EqualStrings_ci, args))),
-                     "guard(switch on string)"),
+        LIns* args[] = { w.immpStrGC(v.toString()), v_ins, cx_ins };
+        LIns* equal_rval = w.call(&js_EqualStringsOnTrace_ci, args);
+        guard(false,
+              w.name(w.eqiN(equal_rval, JS_NEITHER), "guard(oom)"),
+              OOM_EXIT);
+        guard(false,
+              w.name(w.eqi0(equal_rval), "guard(switch on string)"),
               BRANCH_EXIT);
     } else if (v.isBoolean()) {
         guard(true,
@@ -8711,8 +8723,12 @@ TraceRecorder::incHelper(const Value &v, LIns*& v_ins, LIns*& v_after, jsint inc
         if (v.isBoolean()) {
             v_ins = w.i2d(v_ins);
         } else if (v.isString()) {
-            LIns* args[] = { v_ins, cx_ins };
+            LIns* ok_ins = w.allocp(sizeof(JSBool));
+            LIns* args[] = { ok_ins, v_ins, cx_ins };
             v_ins = w.call(&js_StringToNumber_ci, args);
+            guard(false,
+                  w.name(w.eqi0(w.ldiAlloc(ok_ins)), "guard(oom)"),
+                  OOM_EXIT);
         } else {
             JS_ASSERT(v.isNumber());
         }
@@ -8804,14 +8820,18 @@ EvalCmp(LOpcode op, double l, double r)
 }
 
 static bool
-EvalCmp(LOpcode op, JSString* l, JSString* r)
+EvalCmp(JSContext *cx, LOpcode op, JSString* l, JSString* r, JSBool *ret)
 {
     if (op == LIR_eqd)
-        return !!js_EqualStrings(l, r);
-    return EvalCmp(op, js_CompareStrings(l, r), 0);
+        return EqualStrings(cx, l, r, ret);
+    JSBool cmp;
+    if (!CompareStrings(cx, l, r, &cmp))
+        return false;
+    *ret = EvalCmp(op, cmp, 0);
+    return true;
 }
 
-JS_REQUIRES_STACK void
+JS_REQUIRES_STACK RecordingStatus
 TraceRecorder::strictEquality(bool equal, bool cmpCase)
 {
     Value& r = stackval(-1);
@@ -8819,16 +8839,21 @@ TraceRecorder::strictEquality(bool equal, bool cmpCase)
     LIns* l_ins = get(&l);
     LIns* r_ins = get(&r);
     LIns* x;
-    bool cond;
+    JSBool cond;
 
     JSValueType ltag = getPromotedType(l);
     if (ltag != getPromotedType(r)) {
         cond = !equal;
         x = w.immi(cond);
     } else if (ltag == JSVAL_TYPE_STRING) {
-        LIns* args[] = { r_ins, l_ins };
-        x = w.eqiN(w.call(&js_EqualStrings_ci, args), equal);
-        cond = !!js_EqualStrings(l.toString(), r.toString());
+        LIns* args[] = { r_ins, l_ins, cx_ins };
+        LIns* equal_ins = w.call(&js_EqualStringsOnTrace_ci, args);
+        guard(false,
+              w.name(w.eqiN(equal_ins, JS_NEITHER), "guard(oom)"),
+              OOM_EXIT);
+        x = w.eqiN(equal_ins, equal);
+        if (!EqualStrings(cx, l.toString(), r.toString(), &cond))
+            RETURN_ERROR("oom");
     } else {
         if (ltag == JSVAL_TYPE_DOUBLE)
             x = w.eqd(l_ins, r_ins);
@@ -8848,10 +8873,11 @@ TraceRecorder::strictEquality(bool equal, bool cmpCase)
         /* Only guard if the same path may not always be taken. */
         if (!x->isImmI())
             guard(cond, x, BRANCH_EXIT);
-        return;
+        return RECORD_CONTINUE;
     }
 
     set(&l, x);
+    return RECORD_CONTINUE;
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
@@ -8871,8 +8897,8 @@ TraceRecorder::equalityHelper(Value& l, Value& r, LIns* l_ins, LIns* r_ins,
                               Value& rval)
 {
     LOpcode op = LIR_eqi;
-    bool cond;
-    LIns* args[] = { NULL, NULL };
+    JSBool cond;
+    LIns* args[] = { NULL, NULL, NULL };
 
     /*
      * The if chain below closely mirrors that found in 11.9.3, in general
@@ -8913,11 +8939,16 @@ TraceRecorder::equalityHelper(Value& l, Value& r, LIns* l_ins, LIns* r_ins,
                 l_ins = w.getStringChar(l_ins, w.immpNonGC(0));
                 r_ins = w.getStringChar(r_ins, w.immpNonGC(0));
             } else {
-                args[0] = r_ins, args[1] = l_ins;
-                l_ins = w.call(&js_EqualStrings_ci, args);
+                args[0] = r_ins, args[1] = l_ins, args[2] = cx_ins;
+                LIns *equal_ins = w.call(&js_EqualStringsOnTrace_ci, args);
+                guard(false,
+                      w.name(w.eqiN(equal_ins, JS_NEITHER), "guard(oom)"),
+                      OOM_EXIT);
+                l_ins = equal_ins;
                 r_ins = w.immi(1);
             }
-            cond = !!js_EqualStrings(l.toString(), r.toString());
+            if (!EqualStrings(cx, l.toString(), r.toString(), &cond))
+                RETURN_ERROR_A("oom");
         } else {
             JS_ASSERT(l.isNumber() && r.isNumber());
             cond = (l.toNumber() == r.toNumber());
@@ -8930,14 +8961,30 @@ TraceRecorder::equalityHelper(Value& l, Value& r, LIns* l_ins, LIns* r_ins,
         r_ins = w.immiUndefined();
         cond = true;
     } else if (l.isNumber() && r.isString()) {
-        args[0] = r_ins, args[1] = cx_ins;
+        LIns* ok_ins = w.allocp(sizeof(JSBool));
+        args[0] = ok_ins, args[1] = r_ins, args[2] = cx_ins;
         r_ins = w.call(&js_StringToNumber_ci, args);
-        cond = (l.toNumber() == js_StringToNumber(cx, r.toString()));
+        guard(false,
+              w.name(w.eqi0(w.ldiAlloc(ok_ins)), "guard(oom)"),
+              OOM_EXIT);
+        JSBool ok;
+        double d = js_StringToNumber(cx, r.toString(), &ok);
+        if (!ok)
+            RETURN_ERROR_A("oom");
+        cond = (l.toNumber() == d);
         op = LIR_eqd;
     } else if (l.isString() && r.isNumber()) {
-        args[0] = l_ins, args[1] = cx_ins;
+        LIns* ok_ins = w.allocp(sizeof(JSBool));
+        args[0] = ok_ins, args[1] = l_ins, args[2] = cx_ins;
         l_ins = w.call(&js_StringToNumber_ci, args);
-        cond = (js_StringToNumber(cx, l.toString()) == r.toNumber());
+        guard(false,
+              w.name(w.eqi0(w.ldiAlloc(ok_ins)), "guard(oom)"),
+              OOM_EXIT);
+        JSBool ok;
+        double d = js_StringToNumber(cx, l.toString(), &ok);
+        if (!ok)
+            RETURN_ERROR_A("oom");
+        cond = (d == r.toNumber());
         op = LIR_eqd;
     } else {
         // Below we may assign to l or r, which modifies the interpreter state.
@@ -9011,7 +9058,7 @@ TraceRecorder::relational(LOpcode op, bool tryBranchAfterCond)
     Value& r = stackval(-1);
     Value& l = stackval(-2);
     LIns* x = NULL;
-    bool cond;
+    JSBool cond;
     LIns* l_ins = get(&l);
     LIns* r_ins = get(&r);
     bool fp = false;
@@ -9037,22 +9084,31 @@ TraceRecorder::relational(LOpcode op, bool tryBranchAfterCond)
 
     /* 11.8.5 steps 3, 16-21. */
     if (l.isString() && r.isString()) {
-        LIns* args[] = { r_ins, l_ins };
-        l_ins = w.call(&js_CompareStrings_ci, args);
+        LIns* args[] = { r_ins, l_ins, cx_ins };
+        LIns* result_ins = w.call(&js_CompareStringsOnTrace_ci, args);
+        guard(false,
+              w.name(w.eqiN(result_ins, INT32_MIN), "guard(oom)"),
+              OOM_EXIT);
+        l_ins = result_ins;
         r_ins = w.immi(0);
-        cond = EvalCmp(op, l.toString(), r.toString());
+        if (!EvalCmp(cx, op, l.toString(), r.toString(), &cond))
+            RETURN_ERROR_A("oom");
         goto do_comparison;
     }
 
     /* 11.8.5 steps 4-5. */
     if (!l.isNumber()) {
-        LIns* args[] = { l_ins, cx_ins };
         if (l.isBoolean()) {
             l_ins = w.i2d(l_ins);
         } else if (l.isUndefined()) {
             l_ins = w.immd(js_NaN);
         } else if (l.isString()) {
+            LIns* ok_ins = w.allocp(sizeof(JSBool));
+            LIns* args[] = { ok_ins, l_ins, cx_ins };
             l_ins = w.call(&js_StringToNumber_ci, args);
+            guard(false,
+                  w.name(w.eqi0(w.ldiAlloc(ok_ins)), "guard(oom)"),
+                  OOM_EXIT);
         } else if (l.isNull()) {
             l_ins = w.immd(0.0);
         } else {
@@ -9062,13 +9118,17 @@ TraceRecorder::relational(LOpcode op, bool tryBranchAfterCond)
         }
     }
     if (!r.isNumber()) {
-        LIns* args[] = { r_ins, cx_ins };
         if (r.isBoolean()) {
             r_ins = w.i2d(r_ins);
         } else if (r.isUndefined()) {
             r_ins = w.immd(js_NaN);
         } else if (r.isString()) {
+            LIns* ok_ins = w.allocp(sizeof(JSBool));
+            LIns* args[] = { ok_ins, r_ins, cx_ins };
             r_ins = w.call(&js_StringToNumber_ci, args);
+            guard(false,
+                  w.name(w.eqi0(w.ldiAlloc(ok_ins)), "guard(oom)"),
+                  OOM_EXIT);
         } else if (r.isNull()) {
             r_ins = w.immd(0.0);
         } else {
@@ -9176,16 +9236,30 @@ TraceRecorder::binary(LOpcode op)
 
     if (l.isString()) {
         NanoAssert(op != LIR_addd); // LIR_addd/IS_STRING case handled by record_JSOP_ADD()
-        LIns* args[] = { a, cx_ins };
+        LIns* ok_ins = w.allocp(sizeof(JSBool));
+        LIns* args[] = { ok_ins, a, cx_ins };
         a = w.call(&js_StringToNumber_ci, args);
-        lnum = js_StringToNumber(cx, l.toString());
+        guard(false,
+              w.name(w.eqi0(w.ldiAlloc(ok_ins)), "guard(oom)"),
+              OOM_EXIT);
+        JSBool ok;
+        lnum = js_StringToNumber(cx, l.toString(), &ok);
+        if (!ok)
+            RETURN_ERROR("oom");
         leftIsNumber = true;
     }
     if (r.isString()) {
         NanoAssert(op != LIR_addd); // LIR_addd/IS_STRING case handled by record_JSOP_ADD()
-        LIns* args[] = { b, cx_ins };
+        LIns* ok_ins = w.allocp(sizeof(JSBool));
+        LIns* args[] = { ok_ins, b, cx_ins };
         b = w.call(&js_StringToNumber_ci, args);
-        rnum = js_StringToNumber(cx, r.toString());
+        guard(false,
+              w.name(w.eqi0(w.ldiAlloc(ok_ins)), "guard(oom)"),
+              OOM_EXIT);
+        JSBool ok;
+        rnum = js_StringToNumber(cx, r.toString(), &ok);
+        if (!ok)
+            RETURN_ERROR("oom");
         rightIsNumber = true;
     }
     if (l.isBoolean()) {
@@ -10706,8 +10780,13 @@ TraceRecorder::record_JSOP_NEG()
     }
 
     if (v.isString()) {
-        LIns* args[] = { get(&v), cx_ins };
-        set(&v, w.negd(w.call(&js_StringToNumber_ci, args)));
+        LIns* ok_ins = w.allocp(sizeof(JSBool));
+        LIns* args[] = { ok_ins, get(&v), cx_ins };
+        LIns* num_ins = w.call(&js_StringToNumber_ci, args);
+        guard(false,
+              w.name(w.eqi0(w.ldiAlloc(ok_ins)), "guard(oom)"),
+              OOM_EXIT);
+        set(&v, w.negd(num_ins));
         return ARECORD_CONTINUE;
     }
 
@@ -10739,8 +10818,13 @@ TraceRecorder::record_JSOP_POS()
     }
 
     if (v.isString()) {
-        LIns* args[] = { get(&v), cx_ins };
-        set(&v, w.call(&js_StringToNumber_ci, args));
+        LIns* ok_ins = w.allocp(sizeof(JSBool));
+        LIns* args[] = { ok_ins, get(&v), cx_ins };
+        LIns* num_ins = w.call(&js_StringToNumber_ci, args);
+        guard(false,
+              w.name(w.eqi0(w.ldiAlloc(ok_ins)), "guard(oom)"),
+              OOM_EXIT);
+        set(&v, num_ins);
         return ARECORD_CONTINUE;
     }
 
@@ -12425,7 +12509,9 @@ TraceRecorder::getCharCodeAt(JSString *str, LIns* str_ins, LIns* idx_ins, LIns**
     LIns *lengthAndFlags_ins = w.ldpStringLengthAndFlags(str_ins);
     if (MaybeBranch mbr = w.jt(w.eqp0(w.andp(lengthAndFlags_ins, w.nameImmw(JSString::ROPE_BIT)))))
     {
-        w.call(&js_Flatten_ci, &str_ins);
+        LIns *args[] = { str_ins, cx_ins };
+        LIns *ok_ins = w.call(&js_Flatten_ci, args);
+        guard(false, w.eqi0(ok_ins), OOM_EXIT);
         w.label(mbr);
     }
 
@@ -12457,7 +12543,9 @@ TraceRecorder::getCharAt(JSString *str, LIns* str_ins, LIns* idx_ins, JSOp mode,
     if (MaybeBranch mbr = w.jt(w.eqp0(w.andp(lengthAndFlags_ins,
                                              w.nameImmw(JSString::ROPE_BIT)))))
     {
-        w.call(&js_Flatten_ci, &str_ins);
+        LIns *args[] = { str_ins, cx_ins };
+        LIns *ok_ins = w.call(&js_Flatten_ci, args);
+        guard(false, w.eqi0(ok_ins), OOM_EXIT);
         w.label(mbr);
     }
 
@@ -12827,8 +12915,12 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
             } else if (v.isUndefined()) {
                 typed_v_ins = w.immd(js_NaN);
             } else if (v.isString()) {
-                LIns* args[] = { typed_v_ins, cx_ins };
+                LIns* ok_ins = w.allocp(sizeof(JSBool));
+                LIns* args[] = { ok_ins, typed_v_ins, cx_ins };
                 typed_v_ins = w.call(&js_StringToNumber_ci, args);
+                guard(false,
+                      w.name(w.eqi0(w.ldiAlloc(ok_ins)), "guard(oom)"),
+                      OOM_EXIT);
             } else if (v.isBoolean()) {
                 JS_ASSERT(v.isBoolean());
                 typed_v_ins = w.i2d(typed_v_ins);
@@ -14025,14 +14117,14 @@ TraceRecorder::record_JSOP_LOOKUPSWITCH()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_STRICTEQ()
 {
-    strictEquality(true, false);
+    CHECK_STATUS_A(strictEquality(true, false));
     return ARECORD_CONTINUE;
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_STRICTNE()
 {
-    strictEquality(false, false);
+    CHECK_STATUS_A(strictEquality(false, false));
     return ARECORD_CONTINUE;
 }
 
@@ -14937,7 +15029,7 @@ TraceRecorder::record_JSOP_CONDSWITCH()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_CASE()
 {
-    strictEquality(true, true);
+    CHECK_STATUS_A(strictEquality(true, true));
     return ARECORD_CONTINUE;
 }
 
@@ -15315,7 +15407,7 @@ TraceRecorder::record_JSOP_GOSUBX()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_CASEX()
 {
-    strictEquality(true, true);
+    CHECK_STATUS_A(strictEquality(true, true));
     return ARECORD_CONTINUE;
 }
 

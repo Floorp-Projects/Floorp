@@ -143,10 +143,10 @@ ENSURE_SLOW_ARRAY(JSContext *cx, JSObject *obj)
  * 'id' is passed as a jsboxedword since the given id need not necessarily hold
  * an atomized string.
  */
-JSBool
-js_StringIsIndex(JSString *str, jsuint *indexp)
+bool
+js_StringIsIndex(JSLinearString *str, jsuint *indexp)
 {
-    jschar *cp = str->chars();
+    const jschar *cp = str->chars();
     if (JS7_ISDEC(*cp) && str->length() < sizeof(MAXSTR)) {
         jsuint index = JS7_UNDEC(*cp++);
         jsuint oldIndex = 0;
@@ -166,10 +166,10 @@ js_StringIsIndex(JSString *str, jsuint *indexp)
               (oldIndex == (MAXINDEX / 10) && c < (MAXINDEX % 10))))
         {
             *indexp = index;
-            return JS_TRUE;
+            return true;
         }
     }
-    return JS_FALSE;
+    return false;
 }
 
 static bool 
@@ -1149,12 +1149,13 @@ array_toSource(JSContext *cx, uintN argc, Value *vp)
                 goto out;
         }
         vp->setString(str);
-        const jschar *chars;
-        size_t charlen;
-        str->getCharsAndLength(chars, charlen);
+
+        const jschar *chars = str->getChars(cx);
+        if (!chars)
+            goto out;
 
         /* Append element to buffer. */
-        if (!cb.append(chars, charlen))
+        if (!cb.append(chars, chars + str->length()))
             goto out;
         if (index + 1 != length) {
             if (!js_AppendLiteral(cb, ", "))
@@ -1188,6 +1189,20 @@ array_toString_sub(JSContext *cx, JSObject *obj, JSBool locale,
 {
     JS_CHECK_RECURSION(cx, return false);
 
+    /* Get characters to use for the separator. */
+    static const jschar comma = ',';
+    const jschar *sep;
+    size_t seplen;
+    if (sepstr) {
+        seplen = sepstr->length();
+        sep = sepstr->getChars(cx);
+        if (!sep)
+            return false;
+    } else {
+        sep = &comma;
+        seplen = 1;
+    }
+
     /*
      * Use HashTable entry as the cycle indicator. On first visit, create the
      * entry, and, when leaving, remove the entry.
@@ -1197,10 +1212,8 @@ array_toString_sub(JSContext *cx, JSObject *obj, JSBool locale,
     uint32 genBefore;
     if (!hashp) {
         /* Not in hash table, so not a cycle. */
-        if (!cx->busyArrays.add(hashp, obj)) {
-            JS_ReportOutOfMemory(cx);
+        if (!cx->busyArrays.add(hashp, obj))
             return false;
-        }
         genBefore = cx->busyArrays.generation();
     } else {
         /* Cycle, so return empty string. */
@@ -1213,17 +1226,6 @@ array_toString_sub(JSContext *cx, JSObject *obj, JSBool locale,
     /* After this point, all paths exit through the 'out' label. */
     MUST_FLOW_THROUGH("out");
     bool ok = false;
-
-    /* Get characters to use for the separator. */
-    static const jschar comma = ',';
-    const jschar *sep;
-    size_t seplen;
-    if (sepstr) {
-        sepstr->getCharsAndLength(sep, seplen);
-    } else {
-        sep = &comma;
-        seplen = 1;
-    }
 
     /*
      * This object will take responsibility for the jschar buffer until the
@@ -1710,15 +1712,10 @@ comparator_stack_cast(JSRedComparator func)
 static int
 sort_compare_strings(void *arg, const void *a, const void *b, int *result)
 {
-    const Value *av = (const Value *)a, *bv = (const Value *)b;
-
-    JS_ASSERT(av->isString());
-    JS_ASSERT(bv->isString());
-    if (!JS_CHECK_OPERATION_LIMIT((JSContext *)arg))
-        return JS_FALSE;
-
-    *result = (int) js_CompareStrings(av->toString(), bv->toString());
-    return JS_TRUE;
+    JSContext *cx = (JSContext *)arg;
+    JSString *astr = ((const Value *)a)->toString();
+    JSString *bstr = ((const Value *)b)->toString();
+    return JS_CHECK_OPERATION_LIMIT(cx) && CompareStrings(cx, astr, bstr, result);
 }
 
 JSBool
@@ -2615,9 +2612,14 @@ array_indexOfHelper(JSContext *cx, JSBool isLast, uintN argc, Value *vp)
             !GetElement(cx, obj, (jsuint)i, &hole, vp)) {
             return JS_FALSE;
         }
-        if (!hole && StrictlyEqual(cx, *vp, tosearch)) {
-            vp->setNumber(i);
-            return JS_TRUE;
+        if (!hole) {
+            JSBool equal;
+            if (!StrictlyEqual(cx, *vp, tosearch, &equal))
+                return JS_FALSE;
+            if (equal) {
+                vp->setNumber(i);
+                return JS_TRUE;
+            }
         }
         if (i == stop)
             goto not_found;

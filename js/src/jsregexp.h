@@ -61,7 +61,7 @@ class RegExpStatics
     typedef Vector<int, 20, SystemAllocPolicy> MatchPairs;
     MatchPairs      matchPairs;
     /* The input that was used to produce matchPairs. */
-    JSString        *matchPairsInput;
+    JSLinearString  *matchPairsInput;
     /* The input last set on the statics. */
     JSString        *pendingInput;
     uintN           flags;
@@ -180,7 +180,7 @@ class RegExpStatics
 
     /* Mutators. */
 
-    bool updateFromMatch(JSContext *cx, JSString *input, int *buf, size_t matchItemCount) {
+    bool updateFromMatch(JSContext *cx, JSLinearString *input, int *buf, size_t matchItemCount) {
         aboutToWrite();
         pendingInput = input;
 

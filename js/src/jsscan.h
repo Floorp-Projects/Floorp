@@ -537,7 +537,7 @@ typedef void (*JSMapKeywordFun)(const char *);
  * check if str is a JS keyword.
  */
 extern JSBool
-js_IsIdentifier(JSString *str);
+js_IsIdentifier(JSLinearString *str);
 
 /*
  * Steal one JSREPORT_* bit (see jsapi.h) to tell that arguments to the error

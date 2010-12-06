@@ -1130,40 +1130,44 @@ HasInstance(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
     return JS_FALSE;
 }
 
-static JS_ALWAYS_INLINE bool
-EqualObjects(JSContext *cx, JSObject *lobj, JSObject *robj)
-{
-    return lobj == robj;
-}
-
 bool
-StrictlyEqual(JSContext *cx, const Value &lref, const Value &rref)
+StrictlyEqual(JSContext *cx, const Value &lref, const Value &rref, JSBool *equal)
 {
     Value lval = lref, rval = rref;
     if (SameType(lval, rval)) {
         if (lval.isString())
-            return js_EqualStrings(lval.toString(), rval.toString());
-        if (lval.isDouble())
-            return JSDOUBLE_COMPARE(lval.toDouble(), ==, rval.toDouble(), JS_FALSE);
-        if (lval.isObject())
-            return EqualObjects(cx, &lval.toObject(), &rval.toObject());
-        if (lval.isUndefined())
-                return true;
-        return lval.payloadAsRawUint32() == rval.payloadAsRawUint32();
+            return EqualStrings(cx, lval.toString(), rval.toString(), equal);
+        if (lval.isDouble()) {
+            *equal = JSDOUBLE_COMPARE(lval.toDouble(), ==, rval.toDouble(), JS_FALSE);
+            return true;
+        }
+        if (lval.isObject()) {
+            *equal = &lval.toObject() == &rval.toObject();
+            return true;
+        }
+        if (lval.isUndefined()) {
+            *equal = true;
+            return true;
+        }
+        *equal = lval.payloadAsRawUint32() == rval.payloadAsRawUint32();
+        return true;
     }
 
     if (lval.isDouble() && rval.isInt32()) {
         double ld = lval.toDouble();
         double rd = rval.toInt32();
-        return JSDOUBLE_COMPARE(ld, ==, rd, JS_FALSE);
+        *equal = JSDOUBLE_COMPARE(ld, ==, rd, JS_FALSE);
+        return true;
     }
     if (lval.isInt32() && rval.isDouble()) {
         double ld = lval.toInt32();
         double rd = rval.toDouble();
-        return JSDOUBLE_COMPARE(ld, ==, rd, JS_FALSE);
+        *equal = JSDOUBLE_COMPARE(ld, ==, rd, JS_FALSE);
+        return true;
     }
 
-    return false;
+    *equal = false;
+    return true;
 }
 
 static inline bool
@@ -1179,15 +1183,21 @@ IsNaN(const Value &v)
 }
 
 bool
-SameValue(const Value &v1, const Value &v2, JSContext *cx)
+SameValue(JSContext *cx, const Value &v1, const Value &v2, JSBool *same)
 {
-    if (IsNegativeZero(v1))
-        return IsNegativeZero(v2);
-    if (IsNegativeZero(v2))
-        return false;
-    if (IsNaN(v1) && IsNaN(v2))
+    if (IsNegativeZero(v1)) {
+        *same = IsNegativeZero(v2);
         return true;
-    return StrictlyEqual(cx, v1, v2);
+    }
+    if (IsNegativeZero(v2)) {
+        *same = false;
+        return true;
+    }
+    if (IsNaN(v1) && IsNaN(v2)) {
+        *same = true;
+        return true;
+    }
+    return StrictlyEqual(cx, v1, v2, same);
 }
 
 JSType
@@ -1516,7 +1526,6 @@ js_LogOpcode(JSContext *cx)
     JSStackFrame *fp;
     JSFrameRegs *regs;
     intN ndefs, n, nuses;
-    JSString *str;
     JSOp op;
 
     logfp = (FILE *) cx->logfp;
@@ -1562,12 +1571,13 @@ js_LogOpcode(JSContext *cx)
                  */
                 fputs("<call>", logfp);
             } else {
-                str = js_ValueToString(cx, *siter);
-                if (!str) {
+                JSString *str = js_ValueToString(cx, *siter);
+                JSLinearString *linearStr = str ? str->ensureLinear(cx) : NULL;
+                if (!linearStr) {
                     fputs("<null>", logfp);
-                } else {
                     JS_ClearPendingException(cx);
-                    FileEscapedString(logfp, str, 0);
+                } else {
+                    FileEscapedString(logfp, linearStr, 0);
                 }
             }
             fputc(' ', logfp);
@@ -3389,7 +3399,10 @@ END_CASE(JSOP_BITAND)
         if (SameType(lval, rval)) {                                           \
             if (lval.isString()) {                                            \
                 JSString *l = lval.toString(), *r = rval.toString();          \
-                cond = js_EqualStrings(l, r) OP JS_TRUE;                      \
+                JSBool equal;                                                 \
+                if (!EqualStrings(cx, l, r, &equal))                          \
+                    goto error;                                               \
+                cond = equal OP JS_TRUE;                                      \
             } else if (lval.isDouble()) {                                     \
                 double l = lval.toDouble(), r = rval.toDouble();              \
                 cond = JSDOUBLE_COMPARE(l, OP, r, IFNAN);                     \
@@ -3418,7 +3431,10 @@ END_CASE(JSOP_BITAND)
                     DEFAULT_VALUE(cx, -1, JSTYPE_VOID, rval);                 \
                 if (lval.isString() && rval.isString()) {                     \
                     JSString *l = lval.toString(), *r = rval.toString();      \
-                    cond = js_EqualStrings(l, r) OP JS_TRUE;                  \
+                    JSBool equal;                                             \
+                    if (!EqualStrings(cx, l, r, &equal))                      \
+                        goto error;                                           \
+                    cond = equal OP JS_TRUE;                                  \
                 } else {                                                      \
                     double l, r;                                              \
                     if (!ValueToNumber(cx, lval, &l) ||                       \
@@ -3450,7 +3466,10 @@ END_CASE(JSOP_NE)
     JS_BEGIN_MACRO                                                            \
         const Value &rref = regs.sp[-1];                                      \
         const Value &lref = regs.sp[-2];                                      \
-        COND = StrictlyEqual(cx, lref, rref) OP true;                         \
+        JSBool equal;                                                         \
+        if (!StrictlyEqual(cx, lref, rref, &equal))                           \
+            goto error;                                                       \
+        COND = equal OP true;                                                 \
         regs.sp--;                                                            \
     JS_END_MACRO
 
@@ -3511,7 +3530,10 @@ END_CASE(JSOP_CASEX)
                 DEFAULT_VALUE(cx, -1, JSTYPE_NUMBER, rval);                   \
             if (lval.isString() && rval.isString()) {                         \
                 JSString *l = lval.toString(), *r = rval.toString();          \
-                cond = js_CompareStrings(l, r) OP 0;                          \
+                int32 result;                                                 \
+                if (!CompareStrings(cx, l, r, &result))                       \
+                    goto error;                                               \
+                cond = result OP 0;                                           \
             } else {                                                          \
                 double l, r;                                                  \
                 if (!ValueToNumber(cx, lval, &l) ||                           \
@@ -5094,12 +5116,14 @@ BEGIN_CASE(JSOP_LOOKUPSWITCH)
     }
 
     if (lval.isString()) {
-        JSString *str = lval.toString();
-        JSString *str2;
+        JSLinearString *str = lval.toString()->ensureLinear(cx);
+        if (!str)
+            goto error;
+        JSLinearString *str2;
         SEARCH_PAIRS(
             match = (rval.isString() &&
-                     ((str2 = rval.toString()) == str ||
-                      js_EqualStrings(str2, str)));
+                     ((str2 = rval.toString()->assertIsLinear()) == str ||
+                      EqualStrings(str2, str)));
         )
     } else if (lval.isNumber()) {
         double ldbl = lval.toNumber();

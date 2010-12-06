@@ -357,10 +357,11 @@ PodArrayZero(T (&t)[N])
 
 template <class T>
 JS_ALWAYS_INLINE static void
-PodCopy(T *dst, T *src, size_t nelem)
+PodCopy(T *dst, const T *src, size_t nelem)
 {
+    JS_ASSERT(abs(dst - src) >= ptrdiff_t(nelem));
     if (nelem < 128) {
-        for (T *srcend = src + nelem; src != srcend; ++src, ++dst)
+        for (const T *srcend = src + nelem; src != srcend; ++src, ++dst)
             *dst = *src;
     } else {
         memcpy(dst, src, nelem * sizeof(T));

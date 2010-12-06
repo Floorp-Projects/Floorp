@@ -352,7 +352,7 @@ typedef union jsval_layout
 static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_DOUBLE_IMPL(jsval_layout l)
 {
-    return (uint32)l.s.tag < (uint32)JSVAL_TAG_CLEAR;
+    return (uint32)l.s.tag <= (uint32)JSVAL_TAG_CLEAR;
 }
 
 static JS_ALWAYS_INLINE jsval_layout

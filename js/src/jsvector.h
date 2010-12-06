@@ -265,6 +265,10 @@ class Vector : AllocPolicy
 
     /* accessors */
 
+    const AllocPolicy &allocPolicy() const {
+        return *this;
+    }
+
     enum { InlineLength = N };
 
     size_t length() const {

@@ -1369,7 +1369,7 @@ struct JSRuntime {
     js::Value           negativeInfinityValue;
     js::Value           positiveInfinityValue;
 
-    JSString            *emptyString;
+    JSFlatString        *emptyString;
 
     /* List of active contexts sharing this runtime; protected by gcLock. */
     JSCList             contextList;
@@ -2386,10 +2386,10 @@ struct JSContext
 #ifdef XP_WIN
     volatile DollarPath *dollarPath;
     volatile JSSubString *sub;
-    volatile jschar *blackBox;
-    volatile jschar **repstrChars;
-    volatile jschar **repstrDollar;
-    volatile jschar **repstrDollarEnd;
+    volatile const jschar *blackBox;
+    volatile const jschar **repstrChars;
+    volatile const jschar **repstrDollar;
+    volatile const jschar **repstrDollarEnd;
     volatile size_t *peekLen;
 #endif
 

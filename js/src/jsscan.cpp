@@ -147,19 +147,17 @@ js_CheckKeyword(const jschar *str, size_t length)
 }
 
 JSBool
-js_IsIdentifier(JSString *str)
+js_IsIdentifier(JSLinearString *str)
 {
-    size_t length;
-    jschar c;
-    const jschar *chars, *end;
+    const jschar *chars = str->chars();
+    size_t length = str->length();
 
-    str->getCharsAndLength(chars, length);
     if (length == 0)
         return JS_FALSE;
-    c = *chars;
+    jschar c = *chars;
     if (!JS_ISIDSTART(c))
         return JS_FALSE;
-    end = chars + length;
+    const jschar *end = chars + length;
     while (++chars != end) {
         c = *chars;
         if (!JS_ISIDENT(c))
