@@ -2354,6 +2354,10 @@ gfxFontGroup::InitTextRun(gfxContext *aContext,
         InitTextRun(aContext, aTextRun, aString, aLength,
                     runStart, runLimit, runScript);
     }
+
+    // Is this actually necessary? Without it, gfxTextRun::CopyGlyphDataFrom may assert
+    // "Glyphruns not coalesced", but does that matter?
+    aTextRun->SortGlyphRuns();
 }
 
 void
@@ -2414,10 +2418,6 @@ gfxFontGroup::InitTextRun(gfxContext *aContext,
     // need to eliminate them from the glyph run array to avoid drawing "partial
     // ligatures" with the wrong font.
     aTextRun->SanitizeGlyphRuns();
-
-    // Is this actually necessary? Without it, gfxTextRun::CopyGlyphDataFrom may assert
-    // "Glyphruns not coalesced", but does that matter?
-    aTextRun->SortGlyphRuns();
 
 #ifdef DUMP_TEXT_RUNS
     nsCAutoString lang;
@@ -3798,9 +3798,24 @@ gfxTextRun::AddGlyphRun(gfxFont *aFont, PRUint32 aUTF16Offset, PRBool aForceNewR
         NS_ASSERTION(lastGlyphRun->mCharacterOffset <= aUTF16Offset,
                      "Glyph runs out of order (and run not forced)");
 
+        // Don't append a run if the font is already the one we want
         if (lastGlyphRun->mFont == aFont)
             return NS_OK;
+
+        // If the offset has not changed, avoid leaving a zero-length run
+        // by overwriting the last entry instead of appending...
         if (lastGlyphRun->mCharacterOffset == aUTF16Offset) {
+
+            // ...except that if the run before the last entry had the same
+            // font as the new one wants, merge with it instead of creating
+            // adjacent runs with the same font
+            if (numGlyphRuns > 1 &&
+                mGlyphRuns[numGlyphRuns - 2].mFont == aFont)
+            {
+                mGlyphRuns.TruncateLength(numGlyphRuns - 1);
+                return NS_OK;
+            }
+
             lastGlyphRun->mFont = aFont;
             return NS_OK;
         }
