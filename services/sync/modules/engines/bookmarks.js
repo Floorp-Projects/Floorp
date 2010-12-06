@@ -44,8 +44,8 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 
 const GUID_ANNO = "sync/guid";
-const PARENT_ANNO = "weave/parent";
-const PREDECESSOR_ANNO = "weave/predecessor";
+const PARENT_ANNO = "sync/parent";
+const PREDECESSOR_ANNO = "sync/predecessor";
 const SERVICE_NOT_SUPPORTED = "Service not supported on this platform";
 const FOLDER_SORTINDEX = 1000000;
 
@@ -404,17 +404,15 @@ BookmarksStore.prototype = {
         this._reparentOrphans(itemId);
 
       // Create an annotation to remember that it needs a parent
-      // XXX Work around Bug 510628 by prepending parenT
       if (record._orphan)
-        Utils.anno(itemId, PARENT_ANNO, "T" + parentGUID);
+        Utils.anno(itemId, PARENT_ANNO, parentGUID);
       // It's now in the right folder, so move annotated items behind this
       else
         this._attachFollowers(itemId);
 
       // Create an annotation if we have a predecessor but no position
-      // XXX Work around Bug 510628 by prepending predecessoR
       if (predGUID != null && record._insertPos == Svc.Bookmark.DEFAULT_INDEX)
-        Utils.anno(itemId, PREDECESSOR_ANNO, "R" + predGUID);
+        Utils.anno(itemId, PREDECESSOR_ANNO, predGUID);
     }
   },
 
@@ -422,13 +420,6 @@ BookmarksStore.prototype = {
    * Find all ids of items that have a given value for an annotation
    */
   _findAnnoItems: function BStore__findAnnoItems(anno, val) {
-    // XXX Work around Bug 510628 by prepending parenT
-    if (anno == PARENT_ANNO)
-      val = "T" + val;
-    // XXX Work around Bug 510628 by prepending predecessoR
-    else if (anno == PREDECESSOR_ANNO)
-      val = "R" + val;
-
     return Svc.Annos.getItemsWithAnnotation(anno, {}).filter(function(id)
       Utils.anno(id, anno) == val);
   },
@@ -687,10 +678,10 @@ BookmarksStore.prototype = {
 
     // Update any existing annotation references
     this._findAnnoItems(PARENT_ANNO, oldID).forEach(function(itemId) {
-      Utils.anno(itemId, PARENT_ANNO, "T" + newID);
+      Utils.anno(itemId, PARENT_ANNO, newID);
     }, this);
     this._findAnnoItems(PREDECESSOR_ANNO, oldID).forEach(function(itemId) {
-      Utils.anno(itemId, PREDECESSOR_ANNO, "R" + newID);
+      Utils.anno(itemId, PREDECESSOR_ANNO, newID);
     }, this);
 
     // Make sure there's an item to change GUIDs
@@ -992,8 +983,7 @@ BookmarksStore.prototype = {
   _getParentGUIDForId: function BStore__getParentGUIDForId(itemId) {
     // Give the parent annotation if it exists
     try {
-      // XXX Work around Bug 510628 by removing prepended parenT
-      return Utils.anno(itemId, PARENT_ANNO).slice(1);
+      return Utils.anno(itemId, PARENT_ANNO);
     }
     catch(ex) {}
 
@@ -1009,8 +999,7 @@ BookmarksStore.prototype = {
   _getPredecessorGUIDForId: function BStore__getPredecessorGUIDForId(itemId) {
     // Give the predecessor annotation if it exists
     try {
-      // XXX Work around Bug 510628 by removing prepended predecessoR
-      return Utils.anno(itemId, PREDECESSOR_ANNO).slice(1);
+      return Utils.anno(itemId, PREDECESSOR_ANNO);
     }
     catch(ex) {}
 
