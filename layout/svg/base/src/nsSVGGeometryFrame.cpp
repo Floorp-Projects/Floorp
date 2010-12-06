@@ -52,7 +52,8 @@ nsSVGGeometryFrame::Init(nsIContent* aContent,
                          nsIFrame* aParent,
                          nsIFrame* aPrevInFlow)
 {
-  AddStateBits((aParent->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD) |
+  AddStateBits((aParent->GetStateBits() &
+                (NS_STATE_SVG_NONDISPLAY_CHILD | NS_STATE_SVG_CLIPPATH_CHILD)) |
                NS_STATE_SVG_PROPAGATE_TRANSFORM);
   nsresult rv = nsSVGGeometryFrameBase::Init(aContent, aParent, aPrevInFlow);
   return rv;
@@ -160,26 +161,6 @@ PRUint16
 nsSVGGeometryFrame::GetClipRule()
 {
   return GetStyleSVG()->mClipRule;
-}
-
-PRBool
-nsSVGGeometryFrame::IsClipChild()
-{
-  nsIContent *node = mContent;
-
-  do {
-    // Return false if we find a non-svg ancestor. Non-SVG elements are not
-    // allowed inside an SVG clipPath element.
-    if (node->GetNameSpaceID() != kNameSpaceID_SVG) {
-      break;
-    }
-    if (node->NodeInfo()->Equals(nsGkAtoms::clipPath, kNameSpaceID_SVG)) {
-      return PR_TRUE;
-    }
-    node = node->GetParent();
-  } while (node);
-    
-  return PR_FALSE;
 }
 
 static void
