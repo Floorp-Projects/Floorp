@@ -310,7 +310,7 @@ struct TypeStack
     bool ignoreTypeTag;
 
 #ifdef DEBUG
-    /* Identifier for this class within the script. filled in during printing. */
+    /* Identifier for this class within the script. Filled in during printing. */
     int id;
 #endif
 

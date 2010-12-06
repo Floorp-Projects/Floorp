@@ -3267,13 +3267,8 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, AnalyzeState &state)
 
       case JSOP_DEFVAR:
         /*
-         * Watch for variable declarations within an 'eval'. We will effectively
-         * ignore this declaration, merging references to it into the innermost
-         * containing scope which declares a variable with the same name.
-         * Get that scope and mark its type as unknown. The same goes for variables
-         * defined in a function script using DEFVAR or DEFFUN. :FIXME: this approach
-         * needs monitoring if there is a DEFVAR is an ambiguous scope, and may be
-         * broken altogether.
+         * Trash known types going up the scope chain when a variable has
+         * ambiguous scope or a non-global eval defines a variable.
          */
         if (!isGlobal()) {
             jsid id = GetAtomId(cx, this, pc, 0);

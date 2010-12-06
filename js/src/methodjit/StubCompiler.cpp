@@ -153,7 +153,7 @@ StubCompiler::rejoin(Changes changes)
     frame.merge(masm, changes);
 
     Jump j = masm.jump();
-    crossJump(j, cc.getLabel());
+    frame.addJoin(crossJump(j, cc.getLabel()), false);
 
     JaegerSpew(JSpew_Insns, " ---- END SLOW RESTORE CODE ---- \n");
 }
@@ -240,20 +240,38 @@ StubCompiler::vpInc(JSOp op, uint32 depth)
     return emitStubCall(JS_FUNC_TO_DATA_PTR(void *, stub), slots);
 }
 
-void
+unsigned
 StubCompiler::crossJump(Jump j, Label L)
 {
     joins.append(CrossPatch(j, L));
+
+    /* This won't underflow, as joins has space preallocated for some entries. */
+    return joins.length() - 1;
 }
 
 bool
 StubCompiler::jumpInScript(Jump j, jsbytecode *target)
 {
     if (cc.knownJump(target)) {
-        crossJump(j, cc.labelOf(target));
-        return true;
+        frame.addJoin(crossJump(j, cc.labelOf(target)), false);
     } else {
-        return scriptJoins.append(CrossJumpInScript(j, target));
+        if (!scriptJoins.append(CrossJumpInScript(j, target)))
+            return false;
+        frame.addJoin(scriptJoins.length() - 1, true);
     }
+    return true;
 }
 
+void
+StubCompiler::patchJoin(unsigned i, bool script, Assembler::Address address, AnyRegisterID reg)
+{
+    Jump &j = script ? scriptJoins[i].from : joins[i].from;
+    j.linkTo(masm.label(), &masm);
+
+    if (reg.isReg())
+        masm.loadPayload(address, reg.reg());
+    else
+        masm.loadDouble(address, reg.fpreg());
+
+    j = masm.jump();
+}

@@ -253,6 +253,12 @@ class FrameEntry
         tracked = false;
     }
 
+    inline bool dataInRegister(AnyRegisterID reg) const {
+        JS_ASSERT(!copy);
+        return (data.inRegister() && data.reg() == reg.reg())
+            || (data.inFPRegister() && data.fpreg() == reg.fpreg());
+    }
+
   private:
     JSValueType knownType;
     jsval_layout v_;
@@ -264,10 +270,7 @@ class FrameEntry
     bool       tracked;
     bool       initArray;
     JSObject   *initObject;
-
-#if (JS_BITS_PER_WORD == 32)
-    void       *padding;
-#endif
+    jsbytecode *lastLoop;
 };
 
 } /* namespace mjit */

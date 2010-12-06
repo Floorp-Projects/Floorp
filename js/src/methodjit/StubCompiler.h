@@ -137,10 +137,12 @@ class StubCompiler
     /* Finish all native code patching. */
     void fixCrossJumps(uint8 *ncode, size_t offset, size_t total);
     bool jumpInScript(Jump j, jsbytecode *target);
-    void crossJump(Jump j, Label l);
+    unsigned crossJump(Jump j, Label l);
 
     Call emitStubCall(void *ptr);
     Call emitStubCall(void *ptr, int32 slots);
+
+    void patchJoin(unsigned i, bool script, Assembler::Address address, AnyRegisterID reg);
 };
 
 } /* namepsace mjit */

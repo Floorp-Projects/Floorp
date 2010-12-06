@@ -160,6 +160,13 @@ class NunboxAssembler : public JSC::MacroAssembler
         move(Imm32(jv.s.payload.u32), payload);
     }
 
+    void loadValuePayload(const Value &val, RegisterID payload) {
+        jsval_layout jv;
+        jv.asBits = JSVAL_BITS(Jsvalify(val));
+
+        move(Imm32(jv.s.payload.u32), payload);
+    }
+
     /*
      * Stores type first, then payload.
      */

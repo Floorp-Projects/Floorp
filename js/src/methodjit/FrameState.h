@@ -40,6 +40,7 @@
 #if !defined jsjaeger_framestate_h__ && defined JS_METHODJIT
 #define jsjaeger_framestate_h__
 
+#include "jsanalyze.h"
 #include "jsapi.h"
 #include "methodjit/MachineRegs.h"
 #include "methodjit/FrameEntry.h"
@@ -64,6 +65,8 @@ struct Changes {
     uint32 nchanges;
 };
 
+class StubCompiler;
+
 /*
  * The FrameState keeps track of values on the frame during compilation.
  * The compiler can query FrameState for information about arguments, locals,
@@ -81,11 +84,11 @@ struct Changes {
  * 
  * Observations:
  *
- * 1) We totally blow away known information quite often; branches, merge points.
- * 2) Every time we need a slow call, we must sync everything.
- * 3) Efficient side-exits need to quickly deltize state snapshots.
- * 4) Syncing is limited to constants and registers.
- * 5) Once a value is tracked, there is no reason to "forget" it until #1.
+ * 1) Every time we need a slow call, we must sync everything.
+ * 2) Efficient side-exits need to quickly deltize state snapshots.
+ * 3) Syncing is limited to constants and registers.
+ * 4) Entries are not forgotten unless they are entirely in memory and are
+ *    not constants or copies.
  * 
  * With these in mind, we want to make sure that the compiler doesn't degrade
  * badly as functions get larger.
@@ -238,7 +241,9 @@ class FrameState
 
     FrameState *thisFromCtor() { return this; }
   public:
-    FrameState(JSContext *cx, JSScript *script, JSFunction *fun, Assembler &masm);
+    FrameState(JSContext *cx, JSScript *script, JSFunction *fun,
+               Compiler &cc, Assembler &masm, StubCompiler &stubcc,
+               analyze::LifetimeScript &liveness);
     ~FrameState();
     bool init();
 
@@ -550,7 +555,7 @@ class FrameState
     /*
      * Allocates a specific register, evicting it if it's not avaliable.
      */
-    void takeReg(RegisterID reg);
+    void takeReg(AnyRegisterID reg);
 
     /*
      * Returns a FrameEntry * for a slot on the operation stack.
@@ -580,7 +585,6 @@ class FrameState
                   JSValueType type = JSVAL_TYPE_UNKNOWN);
     void storeTop(FrameEntry *target, bool popGuaranteed = false,
                   JSValueType type = JSVAL_TYPE_UNKNOWN);
-    void finishStore(FrameEntry *fe, bool closed);
 
     /*
      * Restores state from a slow path.
@@ -606,28 +610,41 @@ class FrameState
     }
 
     /*
-     * Clear all tracker entries, syncing all outstanding stores in the process.
-     * The stack depth is in case some merge points' edges did not immediately
-     * precede the current instruction.
-     */
-    inline void syncAndForgetEverything(uint32 newStackDepth);
-
-    /*
-     * Same as above, except the stack depth is not changed. This is used for
-     * branching opcodes.
-     */
-    void syncAndForgetEverything();
-
-    /*
      * Throw away the entire frame state, without syncing anything.
      * This can only be called after a syncAndKill() against all registers.
      */
     void forgetEverything();
 
+    void syncAndForgetEverything()
+    {
+        syncAndKillEverything();
+        forgetEverything();
+    }
+
     /*
      * Discard the entire framestate forcefully.
      */
     void discardFrame();
+
+    /*
+     * Tries to syncs and shuffle registers in accordance with the register state
+     * at target, constructing that state if necessary. Forgets all constants and
+     * copies, and nothing can be pinned. Keeps the top Uses in registers; if Uses
+     * is non-zero the state may not actually be consistent with target.
+     */
+    bool syncForBranch(jsbytecode *target, Uses uses);
+
+    /* Discards the current frame state and updates to the register state at target. */
+    bool discardForJoin(jsbytecode *target, uint32 stackDepth);
+
+    /* Return whether the register state is consistent with that at target. */
+    bool consistentRegisters(jsbytecode *target);
+
+    /*
+     * Load all registers to update from either the current register state (if synced
+     * is unset) or a synced state (if synced is set) to target.
+     */
+    void prepareForJump(jsbytecode *target, Assembler &masm, bool synced);
 
     /*
      * Mark an existing slot with a type.  unsync indicates whether type is already synced.
@@ -796,8 +813,29 @@ class FrameState
         this->inTryBlock = inTryBlock;
     }
 
+    void setAnalysis(analyze::Script *analysis) { this->analysis = analysis; }
+
+    bool pushLoop(jsbytecode *head, Jump entry, jsbytecode *entryTarget);
+    void popLoop(jsbytecode *head, Jump *pentry, jsbytecode **pentryTarget);
+
+    void setPC(jsbytecode *PC) { this->PC = PC; }
+
+    struct StubJoin {
+        unsigned index;
+        bool script;
+    };
+
+    void addJoin(unsigned index, bool script) {
+        if (activeLoop) {
+            StubJoin r;
+            r.index = index;
+            r.script = script;
+            loopJoins.append(r);
+        }
+    }
+
   private:
-    inline AnyRegisterID allocReg(FrameEntry *fe, bool fp, RematInfo::RematType type);
+    inline AnyRegisterID allocAndLoadReg(FrameEntry *fe, bool fp, RematInfo::RematType type);
     inline void forgetReg(AnyRegisterID reg);
     AnyRegisterID evictSomeReg(uint32 mask);
     void evictReg(AnyRegisterID reg);
@@ -813,6 +851,7 @@ class FrameState
     inline void syncFe(FrameEntry *fe);
     inline void syncType(FrameEntry *fe);
     inline void syncData(FrameEntry *fe);
+    inline void syncAndForgetFe(FrameEntry *fe);
 
     inline FrameEntry *getOrTrack(uint32 index);
     inline FrameEntry *getCallee();
@@ -839,6 +878,12 @@ class FrameState
     FrameEntry *walkTrackerForUncopy(FrameEntry *original);
     FrameEntry *walkFrameForUncopy(FrameEntry *original);
 
+    /* Whether fe is the only copy of backing. */
+    bool hasOnlyCopy(FrameEntry *backing, FrameEntry *fe);
+
+    /* Tests whether fe actually has any copies on the stack or in variables. */
+    bool isEntryCopied(FrameEntry *fe) const;
+
     /*
      * All registers in the FE are forgotten. If it is copied, it is uncopied
      * beforehand.
@@ -850,9 +895,6 @@ class FrameState
         return &entries[index];
     }
 
-    AnyRegisterID evictSomeReg(bool fp) {
-        return evictSomeReg(fp ? Registers::AvailFPRegs : Registers::AvailRegs);
-    }
     uint32 indexOf(int32 depth) const {
         JS_ASSERT(uint32((sp + depth) - entries) < feLimit());
         return uint32((sp + depth) - entries);
@@ -863,8 +905,8 @@ class FrameState
     }
     uint32 feLimit() const { return script->nslots + nargs + 2; }
 
-    inline bool isClosedVar(uint32 slot);
-    inline bool isClosedArg(uint32 slot);
+    inline bool isClosedVar(uint32 slot) const;
+    inline bool isClosedArg(uint32 slot) const;
 
     RegisterState & regstate(AnyRegisterID reg) {
         JS_ASSERT(reg.reg_ < Registers::TotalAnyRegisters);
@@ -876,12 +918,34 @@ class FrameState
         return regstate_[reg.reg_];
     }
 
+    AnyRegisterID bestEvictReg(uint32 mask, bool includePinned) const;
+
+    inline analyze::Lifetime * variableLive(FrameEntry *fe, jsbytecode *pc) const;
+    inline bool binaryEntryLive(FrameEntry *fe) const;
+    RegisterAllocation * computeAllocation(jsbytecode *target);
+    void relocateReg(AnyRegisterID reg, RegisterAllocation *alloc, Uses uses);
+
+    bool isArg(FrameEntry *fe) const { return fun && fe >= args && fe - args < fun->nargs; }
+    bool isLocal(FrameEntry *fe) const { return fe >= locals && fe - locals < script->nfixed; }
+
+    inline void clearLoopReg(AnyRegisterID reg);
+    void setLoopReg(AnyRegisterID reg, FrameEntry *fe);
+    void flushLoopJoins();
+
+#ifdef DEBUG
+    const char * entryName(FrameEntry *fe) const;
+    void dumpAllocation(RegisterAllocation *alloc);
+#else
+    const char * entryName(FrameEntry *fe) const { return NULL; }
+#endif
+
   private:
     JSContext *cx;
     JSScript *script;
     JSFunction *fun;
     uint32 nargs;
     Assembler &masm;
+    StubCompiler &stubcc;
 
     /* All allocated registers. */
     Registers freeRegs;
@@ -913,6 +977,48 @@ class FrameState
      */
     RegisterState regstate_[Registers::TotalAnyRegisters];
 
+    struct LoopState
+    {
+        LoopState *outer;
+        jsbytecode *head;
+        RegisterAllocation *alloc;
+
+        /*
+         * Jump which initially enters the loop, and bytecode target of the jump.
+         * The state is synced when this jump occurs, and needs a trampoline
+         * generated to load the right registers before going to entryTarget.
+         */
+        Jump entry;
+        jsbytecode *entryTarget;
+    };
+
+    /* Stack of active loops. */
+    LoopState *activeLoop;
+
+    /* Registers available for loop variables. */
+    Registers loopRegs;
+
+    /* Prior stub rejoins to patch when new loop registers are allocated. */
+    Vector<StubJoin,16,CompilerAllocPolicy> loopJoins;
+
+    struct StubJoinPatch {
+        StubJoin join;
+        Address address;
+        AnyRegisterID reg;
+    };
+
+    /* Pending loads to patch for stub rejoins. */
+    Vector<StubJoinPatch,16,CompilerAllocPolicy> loopPatches;
+
+    analyze::Script *analysis;
+
+    /*
+     * Liveness analysis, and current pc. The pc should only be used for decisions
+     * on register eviction.
+     */
+    analyze::LifetimeScript &liveness;
+    jsbytecode *PC;
+
 #if defined JS_NUNBOX32
     mutable ImmutableSync reifier;
 #endif
@@ -922,6 +1028,118 @@ class FrameState
     bool eval;
     bool usesArguments;
     bool inTryBlock;
+};
+
+/*
+ * Register allocation overview. We want to allocate registers at the same time
+ * as we emit code, in a single forward pass over the script. This is good both
+ * for compilation speed and for design simplicity; we allocate registers for
+ * variables and temporaries as the compiler needs them. To get a good allocation,
+ * however, we need knowledge of which variables will be used in the future and
+ * in what order --- we must prioritize keeping variables in registers which
+ * will be used soon, and evict variables after they are no longer needed.
+ * We get this from the analyze::LifetimeScript analysis, an initial backwards
+ * pass over the script.
+ *
+ * Combining a backwards lifetime pass with a forward allocation pass in this
+ * way produces a Linear-scan register allocator. These can generate code at
+ * a speed close to that produced by a graph coloring register allocator,
+ * at a fraction of the compilation time.
+ */
+
+/* Register allocation to use at a join point. */
+struct RegisterAllocation {
+  private:
+    typedef JSC::MacroAssembler::RegisterID RegisterID;
+    typedef JSC::MacroAssembler::FPRegisterID FPRegisterID;
+
+    /* Entry for an unassigned register at the join point. */
+    static const uint32 UNASSIGNED_REGISTER = 0xffffffff;
+
+    /*
+     * In the body of a loop, entry for an unassigned register that has not been
+     * used since the start of the loop. We do not finalize the register state
+     * at the start of a loop body until after generating code for the entire loop,
+     * so we can decide on which variables to carry around the loop after seeing
+     * them accessed early on in the body.
+     */
+    static const uint32 LOOP_REGISTER = 0xfffffffe;
+
+    /*
+     * Assignment of registers to payloads. Type tags are always in memory,
+     * except for known doubles in FP registers.
+     */
+    uint32 regstate_[Registers::TotalAnyRegisters];
+
+    /* Mask for regstate entries indicating if the slot is synced. */
+    static const uint32 SYNCED = 0x80000000;
+
+    uint32 & regstate(AnyRegisterID reg) {
+        JS_ASSERT(reg.reg_ < Registers::TotalAnyRegisters);
+        return regstate_[reg.reg_];
+    }
+
+  public:
+    RegisterAllocation(bool forLoop) {
+        uint32 entry = forLoop ? (uint32) LOOP_REGISTER : (uint32) UNASSIGNED_REGISTER;
+        for (unsigned i = 0; i < Registers::TotalAnyRegisters; i++) {
+            AnyRegisterID reg = AnyRegisterID::fromRaw(i);
+            bool avail = Registers::maskReg(reg) & Registers::AvailAnyRegs;
+            regstate_[i] = avail ? entry : UNASSIGNED_REGISTER;
+        }
+    }
+
+    bool assigned(AnyRegisterID reg) {
+        return regstate(reg) != UNASSIGNED_REGISTER && regstate(reg) != LOOP_REGISTER;
+    }
+
+    bool loop(AnyRegisterID reg) {
+        return regstate(reg) == LOOP_REGISTER;
+    }
+
+    bool synced(AnyRegisterID reg) {
+        JS_ASSERT(assigned(reg));
+        return regstate(reg) & SYNCED;
+    }
+
+    uint32 slot(AnyRegisterID reg) {
+        JS_ASSERT(assigned(reg));
+        return regstate(reg) & ~SYNCED;
+    }
+
+    void set(AnyRegisterID reg, uint32 slot, bool synced) {
+        JS_ASSERT(slot != LOOP_REGISTER && slot != UNASSIGNED_REGISTER);
+        regstate(reg) = slot | (synced ? SYNCED : 0);
+    }
+
+    void setUnassigned(AnyRegisterID reg) {
+        regstate(reg) = UNASSIGNED_REGISTER;
+    }
+
+    bool synced() {
+        for (unsigned i = 0; i < Registers::TotalAnyRegisters; i++) {
+            if (assigned(AnyRegisterID::fromRaw(i)))
+                return false;
+        }
+        return true;
+    }
+
+    void clearLoops() {
+        for (unsigned i = 0; i < Registers::TotalAnyRegisters; i++) {
+            AnyRegisterID reg = AnyRegisterID::fromRaw(i);
+            if (loop(reg))
+                setUnassigned(reg);
+        }
+    }
+
+    bool hasAnyReg(uint32 n) {
+        for (unsigned i = 0; i < Registers::TotalAnyRegisters; i++) {
+            AnyRegisterID reg = AnyRegisterID::fromRaw(i);
+            if (assigned(reg) && slot(reg) == n)
+                return true;
+        }
+        return false;
+    }
 };
 
 class AutoPreserveAcrossSyncAndKill;

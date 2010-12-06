@@ -304,37 +304,39 @@ struct RematInfo {
     SyncState sync_;
 };
 
-class MaybeRegisterID {
-    typedef JSC::MacroAssembler::RegisterID RegisterID;
-
+template <class T>
+class MaybeRegister {
   public:
-    MaybeRegisterID()
-      : reg_(Registers::ReturnReg), set(false)
+    MaybeRegister()
+      : reg_((T)0), set(false)
     { }
 
-    MaybeRegisterID(RegisterID reg)
+    MaybeRegister(T reg)
       : reg_(reg), set(true)
     { }
 
-    inline RegisterID reg() const { JS_ASSERT(set); return reg_; }
-    inline void setReg(const RegisterID r) { reg_ = r; set = true; }
+    inline T reg() const { JS_ASSERT(set); return reg_; }
+    inline void setReg(T r) { reg_ = r; set = true; }
     inline bool isSet() const { return set; }
 
-    MaybeRegisterID & operator =(const MaybeRegisterID &other) {
+    MaybeRegister<T> & operator =(const MaybeRegister<T> &other) {
         set = other.set;
         reg_ = other.reg_;
         return *this;
     }
 
-    MaybeRegisterID & operator =(RegisterID r) {
+    MaybeRegister<T> & operator =(T r) {
         setReg(r);
         return *this;
     }
 
   private:
-    RegisterID reg_;
+    T reg_;
     bool set;
 };
+
+typedef MaybeRegister<JSC::MacroAssembler::RegisterID> MaybeRegisterID;
+typedef MaybeRegister<JSC::MacroAssembler::FPRegisterID> MaybeFPRegisterID;
 
 class MaybeJump {
     typedef JSC::MacroAssembler::Jump Jump;
