@@ -1078,6 +1078,13 @@ public:
         m_assembler.forceFlushConstantPool();
     }
 
+#ifdef DEBUG
+    void allowPoolFlush(bool allowFlush)
+    {
+        m_assembler.allowPoolFlush(allowFlush);
+    }
+#endif
+
 protected:
     ARMAssembler::Condition ARMCondition(Condition cond)
     {
