@@ -1098,6 +1098,26 @@ ic::PurgeMICs(JSContext *cx, JSScript *script)
 }
 
 void
+JITScript::nukeScriptDependentICs()
+{
+    if (!nCallICs)
+        return;
+
+    Repatcher repatcher(this);
+
+    for (uint32 i = 0; i < nCallICs; i++) {
+        ic::CallICInfo &ic = callICs[i];
+        if (!ic.fastGuardedObject)
+            continue;
+        repatcher.repatch(ic.funGuard, NULL);
+        repatcher.relink(ic.funJump, ic.slowPathStart);
+        ic.releasePool(CallICInfo::Pool_ClosureStub);
+        ic.fastGuardedObject = NULL;
+        ic.hasJsFunCheck = false;
+    }
+}
+
+void
 JITScript::sweepCallICs()
 {
     if (!nCallICs)

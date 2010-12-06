@@ -91,6 +91,14 @@ typedef JSIntn intn;
  */
 #if defined(AIX) && defined(HAVE_SYS_INTTYPES_H)
 #include <sys/inttypes.h>
+#elif defined(__SUNPRO_C) || defined(__SUNPRO_CC)
+typedef JSInt64 int64;
+
+/* Explicit signed keyword for bitfield types is required. */
+/* Some compilers may treat them as unsigned without it. */
+typedef signed int int32;
+typedef signed short int16;
+typedef signed char int8;
 #else
 typedef JSInt64 int64;
 

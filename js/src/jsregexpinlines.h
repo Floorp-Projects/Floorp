@@ -222,7 +222,6 @@ RegExp::checkMatchPairs(JSString *input, int *buf, size_t matchItemCount)
 {
 #if DEBUG
     size_t inputLength = input->length();
-    int largestStartSeen = 0;
     for (size_t i = 0; i < matchItemCount; i += 2) {
         int start = buf[i];
         int limit = buf[i + 1];
@@ -231,9 +230,6 @@ RegExp::checkMatchPairs(JSString *input, int *buf, size_t matchItemCount)
             continue;
         JS_ASSERT(start >= 0);
         JS_ASSERT(size_t(limit) <= inputLength);
-        /* Test the monotonically increasing nature of left parens. */
-        JS_ASSERT(start >= largestStartSeen);
-        largestStartSeen = start;
     }
 #endif
 }

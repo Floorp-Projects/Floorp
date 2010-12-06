@@ -37,6 +37,7 @@
 
 #include "AssemblerBuffer.h"
 #include "assembler/wtf/SegmentedVector.h"
+#include "assembler/wtf/Assertions.h"
 
 #define ASSEMBLER_HAS_CONSTANT_POOL 1
 
@@ -103,6 +104,9 @@ public:
         , m_numConsts(0)
         , m_maxDistance(maxPoolSize)
         , m_lastConstDelta(0)
+#ifdef DEBUG
+        , m_allowFlush(true)
+#endif
     {
         m_pool = static_cast<uint32_t*>(malloc(maxPoolSize));
         m_mask = static_cast<char*>(malloc(maxPoolSize / sizeof(uint32_t)));
@@ -235,6 +239,15 @@ public:
         return m_numConsts;
     }
 
+#ifdef DEBUG
+    // Guard constant pool flushes to ensure that they don't occur during
+    // regions where offsets into the code have to be maintained (such as PICs).
+    void allowPoolFlush(bool allowFlush)
+    {
+        m_allowFlush = allowFlush;
+    }
+#endif
+
 private:
     void correctDeltas(int insnSize)
     {
@@ -254,6 +267,7 @@ private:
 
     void flushConstantPool(bool useBarrier = true)
     {
+        ASSERT(m_allowFlush);
         if (m_numConsts == 0)
             return;
         int alignPool = (AssemblerBuffer::size() + (useBarrier ? barrierSize : 0)) & (sizeof(uint64_t) - 1);
@@ -313,6 +327,10 @@ private:
     int m_numConsts;
     int m_maxDistance;
     int m_lastConstDelta;
+
+#ifdef DEBUG
+    bool    m_allowFlush;
+#endif
 };
 
 } // namespace JSC

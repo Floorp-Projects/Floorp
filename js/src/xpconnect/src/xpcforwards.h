@@ -83,6 +83,7 @@ class XPCNativeScriptableSharedMap;
 class XPCWrappedNativeProtoMap;
 class XPCNativeWrapperMap;
 class WrappedNative2WrapperMap;
+class JSObject2JSObjectMap;
 
 class nsXPCComponents;
 class nsXPCComponents_Interfaces;
