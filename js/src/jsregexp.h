@@ -134,29 +134,24 @@ class RegExpStatics
      * range [1, pairCount).
      */
     void checkParenNum(size_t pairNum) const {
-        JS_CRASH_UNLESS(1 <= pairNum);
-        JS_CRASH_UNLESS(pairNum < pairCount());
+        JS_ASSERT(1 <= pairNum);
+        JS_ASSERT(pairNum < pairCount());
     }
 
     bool pairIsPresent(size_t pairNum) const {
-        return getCrash(pairNum, 0) >= 0;
+        return get(pairNum, 0) >= 0;
     }
 
     /* Precondition: paren is present. */
     size_t getParenLength(size_t pairNum) const {
         checkParenNum(pairNum);
-        JS_CRASH_UNLESS(pairIsPresent(pairNum));
-        return getCrash(pairNum, 1) - getCrash(pairNum, 0);
+        JS_ASSERT(pairIsPresent(pairNum));
+        return get(pairNum, 1) - get(pairNum, 0);
     }
 
     int get(size_t pairNum, bool which) const {
         JS_ASSERT(pairNum < pairCount());
         return matchPairs[2 * pairNum + which];
-    }
-
-    int getCrash(size_t pairNum, bool which) const {
-         JS_CRASH_UNLESS(pairNum < pairCountCrash());
-         return get(pairNum, which);
     }
 
     /*
@@ -241,15 +236,10 @@ class RegExpStatics
         return matchPairs.length() / 2;
     }
 
-    size_t pairCountCrash() const {
-        JS_CRASH_UNLESS(matchPairs.length() % 2 == 0);
-        return pairCount();
-    }
-
   public:
     size_t parenCount() const {
         size_t pc = pairCount();
-        JS_CRASH_UNLESS(pc);
+        JS_ASSERT(pc);
         return pc - 1;
     }
 
@@ -293,7 +283,7 @@ class RegExpStatics
 
     /* @param pairNum   Any number >= 1. */
     bool createParen(JSContext *cx, size_t pairNum, Value *out) const {
-        JS_CRASH_UNLESS(pairNum >= 1);
+        JS_ASSERT(pairNum >= 1);
         if (pairNum >= pairCount()) {
             out->setString(cx->runtime->emptyString);
             return true;
