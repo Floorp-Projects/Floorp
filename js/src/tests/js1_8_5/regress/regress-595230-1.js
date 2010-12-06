@@ -11,7 +11,8 @@ var src =
     '    *\n' +
     '} catch(e) {}\n' +
     'default xml namespace = x\n' +
-    'for (let b in [0, 0]) <x/>\n';
+    'for (let b in [0, 0]) <x/>\n' +
+    '0\n';
 
 evalcx(src, box);
 

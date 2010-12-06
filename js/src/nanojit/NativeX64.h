@@ -423,9 +423,12 @@ namespace nanojit
         void endLoadRegs(LIns *ins);\
         void dis(NIns *p, int bytes);\
         void asm_cmp(LIns*);\
-        void asm_cmp_imm(LIns*);\
-        void asm_cmpd(LIns*, LIns*);\
-        NIns* asm_branchd(bool, LIns*, NIns*);\
+        void asm_cmpi(LIns*);\
+        void asm_cmpi_imm(LIns*);\
+        void asm_cmpd(LIns*);\
+        NIns* asm_branch_helper(bool, LIns*, NIns*);\
+        NIns* asm_branchi_helper(bool, LIns*, NIns*);\
+        NIns* asm_branchd_helper(bool, LIns*, NIns*);\
         void asm_div(LIns *ins);\
         void asm_div_mod(LIns *ins);\
         int max_stk_used;\
