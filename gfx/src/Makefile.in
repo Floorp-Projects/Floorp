@@ -91,17 +91,18 @@ CPPSRCS = \
         nsScriptableRegion.cpp \
         $(NULL)
 
-ifdef MOZ_X11
-CPPSRCS += \
-        X11Util.cpp \
-        $(NULL)
-endif
-
 EXTRA_DSO_LDOPTS = \
         $(MOZ_UNICHARUTIL_LIBS) \
         $(MOZ_COMPONENT_LIBS) \
         $(MOZ_JS_LIBS) \
         $(NULL)
+
+ifdef MOZ_X11
+CPPSRCS += \
+        X11Util.cpp \
+        $(NULL)
+EXTRA_DSO_LDOPTS += $(XLDFLAGS) $(XLIBS)
+endif
 
 ifneq (,$(filter cocoa,$(MOZ_WIDGET_TOOLKIT)))
 EXTRA_DSO_LDOPTS += \
