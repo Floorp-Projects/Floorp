@@ -1767,7 +1767,7 @@ js_FinalizeStringRT(JSRuntime *rt, JSString *str)
         JS_ASSERT(IsFinalizableStringKind(thingKind));
 
         /* A stillborn string has null chars, so is not valid. */
-        jschar *chars = str->flatChars();
+        jschar *chars = const_cast<jschar *>(str->flatChars());
         if (!chars)
             return;
         if (thingKind == FINALIZE_STRING) {

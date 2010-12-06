@@ -2830,7 +2830,8 @@ mjit::Compiler::compareTwoValues(JSContext *cx, JSOp op, const Value &lhs, const
     JS_ASSERT(rhs.isPrimitive());
 
     if (lhs.isString() && rhs.isString()) {
-        int cmp = js_CompareStrings(lhs.toString(), rhs.toString());
+        int32 cmp;
+        CompareStrings(cx, lhs.toString(), rhs.toString(), &cmp);
         switch (op) {
           case JSOP_LT:
             return cmp < 0;

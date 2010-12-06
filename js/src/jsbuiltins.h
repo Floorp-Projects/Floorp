@@ -547,7 +547,7 @@ struct ClosureVarInfo;
 #define _JS_DEFINE_CALLINFO_n(n, args)  JS_DEFINE_CALLINFO_##n args
 
 jsdouble FASTCALL
-js_StringToNumber(JSContext* cx, JSString* str);
+js_StringToNumber(JSContext* cx, JSString* str, JSBool *ok);
 
 /* Extern version of SetBuiltinError. */
 extern JS_FRIEND_API(void)
@@ -623,9 +623,9 @@ JS_DECLARE_CALLINFO(js_CloneRegExpObject)
 
 /* Defined in jsstr.cpp. */
 JS_DECLARE_CALLINFO(js_String_tn)
-JS_DECLARE_CALLINFO(js_CompareStrings)
+JS_DECLARE_CALLINFO(js_CompareStringsOnTrace)
 JS_DECLARE_CALLINFO(js_ConcatStrings)
-JS_DECLARE_CALLINFO(js_EqualStrings)
+JS_DECLARE_CALLINFO(js_EqualStringsOnTrace)
 JS_DECLARE_CALLINFO(js_Flatten)
 
 /* Defined in jstypedarray.cpp. */

@@ -8003,11 +8003,9 @@ Parser::xmlElementOrList(JSBool allowList)
                 return NULL;
             }
             if (endAtom && startAtom && endAtom != startAtom) {
-                JSString *str = ATOM_TO_STRING(startAtom);
-
                 /* End vs. start tag name mismatch: point to the tag name. */
                 reportErrorNumber(pn2, JSREPORT_UC | JSREPORT_ERROR, JSMSG_XML_TAG_NAME_MISMATCH,
-                                  str->chars());
+                                  startAtom->chars());
                 return NULL;
             }
 
@@ -8676,15 +8674,12 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
 #if JS_HAS_XML_SUPPORT
         if (tokenStream.matchToken(TOK_DBLCOLON)) {
             if (afterDot) {
-                JSString *str;
-
                 /*
                  * Here primaryExpr is called after . or .. followed by a name
                  * followed by ::. This is the only case where a keyword after
                  * . or .. is not treated as a property name.
                  */
-                str = ATOM_TO_STRING(pn->pn_atom);
-                tt = js_CheckKeyword(str->chars(), str->length());
+                tt = js_CheckKeyword(pn->pn_atom->chars(), pn->pn_atom->length());
                 if (tt == TOK_FUNCTION) {
                     pn->pn_arity = PN_NULLARY;
                     pn->pn_type = TOK_FUNCTION;

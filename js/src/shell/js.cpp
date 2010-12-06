@@ -3402,7 +3402,12 @@ EvalInFrame(JSContext *cx, uintN argc, jsval *vp)
     if (saveCurrent)
         oldfp = JS_SaveFrameChain(cx);
 
-    JSBool ok = JS_EvaluateUCInStackFrame(cx, fp, str->chars(), str->length(),
+    size_t length;
+    const jschar *chars = JS_GetStringCharsAndLength(cx, str, &length);
+    if (!chars)
+        return JS_FALSE;
+
+    JSBool ok = JS_EvaluateUCInStackFrame(cx, fp, chars, length,
                                           fp->script()->filename,
                                           JS_PCToLineNumber(cx, fp->script(),
                                                             fi.pc()),

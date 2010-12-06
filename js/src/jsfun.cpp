@@ -2603,7 +2603,12 @@ Function(JSContext *cx, uintN argc, Value *vp)
         for (uintN i = 0; i < n; i++) {
             JSString *arg = argv[i].toString();
             size_t arg_length = arg->length();
-            (void) js_strncpy(cp, arg->chars(), arg_length);
+            const jschar *arg_chars = arg->getChars(cx);
+            if (!arg_chars) {
+                JS_ARENA_RELEASE(&cx->tempPool, mark);
+                return JS_FALSE;
+            }
+            (void) js_strncpy(cp, arg_chars, arg_length);
             cp += arg_length;
 
             /* Add separating comma or terminating 0. */
@@ -2690,8 +2695,11 @@ Function(JSContext *cx, uintN argc, Value *vp)
         str = cx->runtime->emptyString;
     }
 
-    return Compiler::compileFunctionBody(cx, fun, principals,
-                                         str->chars(), str->length(),
+    size_t length = str->length();
+    const jschar *chars = str->getChars(cx);
+    if (!chars)
+        return JS_FALSE;
+    return Compiler::compileFunctionBody(cx, fun, principals, chars, length,
                                          filename, lineno);
 }
 

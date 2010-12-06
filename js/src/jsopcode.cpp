@@ -655,19 +655,16 @@ SprintCString(Sprinter *sp, const char *s)
 static ptrdiff_t
 SprintString(Sprinter *sp, JSString *str)
 {
-    const jschar *chars;
-    size_t length, size;
-    ptrdiff_t offset;
+    size_t length = str->length();
+    const jschar *chars = str->getChars(sp->context);
+    if (!chars)
+        return -1;
 
-    str->getCharsAndLength(chars, length);
-    if (length == 0)
-        return sp->offset;
-
-    size = js_GetDeflatedStringLength(sp->context, chars, length);
+    size_t size = js_GetDeflatedStringLength(sp->context, chars, length);
     if (size == (size_t)-1 || !SprintEnsureBuffer(sp, size))
         return -1;
 
-    offset = sp->offset;
+    ptrdiff_t offset = sp->offset;
     sp->offset += size;
     js_DeflateStringToBuffer(sp->context, chars, length, sp->base + offset,
                              &size);
@@ -713,39 +710,36 @@ const char js_EscapeMap[] = {
 static char *
 QuoteString(Sprinter *sp, JSString *str, uint32 quote)
 {
-    JSBool dontEscape, ok;
-    jschar qc, c;
-    ptrdiff_t off, len;
-    const jschar *s, *t, *z;
-    const char *e;
-    char *bp;
-
     /* Sample off first for later return value pointer computation. */
-    dontEscape = (quote & DONT_ESCAPE) != 0;
-    qc = (jschar) quote;
-    off = sp->offset;
+    JSBool dontEscape = (quote & DONT_ESCAPE) != 0;
+    jschar qc = (jschar) quote;
+    ptrdiff_t off = sp->offset;
     if (qc && Sprint(sp, "%c", (char)qc) < 0)
         return NULL;
 
+    const jschar *s = str->getChars(sp->context);
+    if (!s)
+        return NULL;
+    const jschar *z = s + str->length();
+
     /* Loop control variables: z points at end of string sentinel. */
-    str->getCharsAndEnd(s, z);
-    for (t = s; t < z; s = ++t) {
+    for (const jschar *t = s; t < z; s = ++t) {
         /* Move t forward from s past un-quote-worthy characters. */
-        c = *t;
+        jschar c = *t;
         while (JS_ISPRINT(c) && c != qc && c != '\\' && c != '\t' &&
                !(c >> 8)) {
             c = *++t;
             if (t == z)
                 break;
         }
-        len = t - s;
+        ptrdiff_t len = t - s;
 
         /* Allocate space for s, including the '\0' at the end. */
         if (!SprintEnsureBuffer(sp, len))
             return NULL;
 
         /* Advance sp->offset and copy s into sp's buffer. */
-        bp = sp->base + sp->offset;
+        char *bp = sp->base + sp->offset;
         sp->offset += len;
         while (--len >= 0)
             *bp++ = (char) *s++;
@@ -755,6 +749,8 @@ QuoteString(Sprinter *sp, JSString *str, uint32 quote)
             break;
 
         /* Use js_EscapeMap, \u, or \x only if necessary. */
+        bool ok;
+        const char *e;
         if (!(c >> 8) && (e = strchr(js_EscapeMap, (int)c)) != NULL) {
             ok = dontEscape
                  ? Sprint(sp, "%c", (char)c) >= 0
@@ -1580,7 +1576,6 @@ DecompileDestructuring(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc)
     const char *lval;
     JSAtom *atom;
     jssrcnote *sn;
-    JSString *str;
     JSBool hole;
 
     LOCAL_ASSERT(*pc == JSOP_DUP);
@@ -1661,18 +1656,19 @@ DecompileDestructuring(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc)
           case JSOP_GETPROP:
             LOAD_ATOM(0);
           do_destructure_atom:
+          {
             *OFF2STR(&ss->sprinter, head) = '{';
-            str = ATOM_TO_STRING(atom);
 #if JS_HAS_DESTRUCTURING_SHORTHAND
             nameoff = ss->sprinter.offset;
 #endif
-            if (!QuoteString(&ss->sprinter, str,
-                             js_IsIdentifier(str) ? 0 : (jschar)'\'')) {
+            if (!QuoteString(&ss->sprinter, atom,
+                             js_IsIdentifier(atom) ? 0 : (jschar)'\'')) {
                 return NULL;
             }
             if (SprintPut(&ss->sprinter, ": ", 2) < 0)
                 return NULL;
             break;
+          }
 
           default:
             LOCAL_ASSERT(0);
@@ -5198,7 +5194,11 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v_in,
         if (!fallback)
             return NULL;
     }
-    return js_DeflateString(cx, fallback->chars(), fallback->length());
+    size_t length = fallback->length();
+    const jschar *chars = fallback->getChars(cx);
+    if (!chars)
+        return NULL;
+    return js_DeflateString(cx, chars, length);
 }
 
 static char *
