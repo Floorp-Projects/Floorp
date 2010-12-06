@@ -50,7 +50,7 @@ const CONSOLEAPI_CLASS_ID = "{b49c18f8-3379-4fc0-8c90-d7772c1a9ff3}";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/NetworkHelper.jsm");
+Cu.import("resource:///modules/NetworkHelper.jsm");
 
 var EXPORTED_SYMBOLS = ["HUDService", "ConsoleUtils"];
 
@@ -75,7 +75,7 @@ XPCOMUtils.defineLazyGetter(this, "NetUtil", function () {
 XPCOMUtils.defineLazyGetter(this, "PropertyPanel", function () {
   var obj = {};
   try {
-    Cu.import("resource://gre/modules/PropertyPanel.jsm", obj);
+    Cu.import("resource:///modules/PropertyPanel.jsm", obj);
   } catch (err) {
     Cu.reportError(err);
   }
@@ -84,7 +84,7 @@ XPCOMUtils.defineLazyGetter(this, "PropertyPanel", function () {
 
 XPCOMUtils.defineLazyGetter(this, "namesAndValuesOf", function () {
   var obj = {};
-  Cu.import("resource://gre/modules/PropertyPanel.jsm", obj);
+  Cu.import("resource:///modules/PropertyPanel.jsm", obj);
   return obj.namesAndValuesOf;
 });
 
