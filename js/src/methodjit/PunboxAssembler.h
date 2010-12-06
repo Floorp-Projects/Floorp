@@ -132,6 +132,10 @@ class PunboxAssembler : public JSC::MacroAssembler
         move(Imm64(val.asRawBits() & JSVAL_PAYLOAD_MASK), payload);
     }
 
+    void loadValuePayload(const Value &val, RegisterID payload) {
+        move(Imm64(val.asRawBits() & JSVAL_PAYLOAD_MASK), payload);
+    }
+
     template <typename T>
     void storeValueFromComponents(RegisterID type, RegisterID payload, T address) {
         move(type, Registers::ValueReg);

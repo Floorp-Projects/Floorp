@@ -176,15 +176,10 @@ void
 mjit::Compiler::slowLoadConstantDouble(Assembler &masm,
                                        FrameEntry *fe, FPRegisterID fpreg)
 {
-    DoublePatch patch;
-    if (fe->getKnownType() == JSVAL_TYPE_INT32)
-        patch.d = (double)fe->getValue().toInt32();
+    if (fe->getValue().isInt32())
+        masm.slowLoadConstantDouble((double) fe->getValue().toInt32(), fpreg);
     else
-        patch.d = fe->getValue().toDouble();
-    patch.label = masm.loadDouble(NULL, fpreg);
-    patch.ool = &masm != &this->masm;
-    JS_ASSERT_IF(patch.ool, &masm == &stubcc.masm);
-    doubleList.append(patch);
+        masm.slowLoadConstantDouble(fe->getValue().toDouble(), fpreg);
 }
 
 void
@@ -716,13 +711,15 @@ mjit::Compiler::jsop_binary_full(FrameEntry *lhs, FrameEntry *rhs, JSOp op,
 
     /* Restore the original operand registers for ADD. */
     if (regs.undoResult) {
-        JS_ASSERT(op == JSOP_ADD);
         if (reg.isSet()) {
+            JS_ASSERT(op == JSOP_ADD);
             stubcc.masm.neg32(reg.reg());
             stubcc.masm.add32(reg.reg(), regs.result);
             stubcc.masm.neg32(reg.reg());
         } else {
-            stubcc.masm.add32(Imm32(-value), regs.result);
+            JS_ASSERT(op == JSOP_ADD || op == JSOP_SUB);
+            int32 fixValue = (op == JSOP_ADD) ? -value : value;
+            stubcc.masm.add32(Imm32(fixValue), regs.result);
         }
     }
 
@@ -1088,6 +1085,7 @@ mjit::Compiler::jsop_equality_int_string(JSOp op, BoolStub stub, jsbytecode *tar
          * Sync everything except the top two entries.
          * We will handle the lhs/rhs in the stub call path.
          */
+        fixDoubleTypes(Uses(2));
         frame.syncAndKill(Registers(Registers::AvailRegs), Uses(frame.frameSlots()), Uses(2));
 
         RegisterID tempReg = frame.allocReg();
@@ -1165,9 +1163,6 @@ mjit::Compiler::jsop_equality_int_string(JSOp op, BoolStub stub, jsbytecode *tar
                 fast = masm.branch32(cond, lvr.dataReg(), Imm32(rval.toInt32()));
             else
                 fast = masm.branch32(cond, lvr.dataReg(), rvr.dataReg());
-
-            if (!jumpInScript(fast, target))
-                return false;
         } else {
             Jump j = masm.jump();
             stubcc.linkExitDirect(j, stubEntry);
@@ -1177,24 +1172,34 @@ mjit::Compiler::jsop_equality_int_string(JSOp op, BoolStub stub, jsbytecode *tar
             fast = masm.jump();
         }
 
+        /* Jump from the stub call fallthrough to here. */
+        stubcc.crossJump(stubFallthrough, masm.label());
+
+        bool *ptrampoline = NULL;
 #ifdef JS_MONOIC
-        ic.jumpToStub = firstStubJump;
+        /* Remember the stub label in case there is a trampoline for the IC. */
+        ic.trampoline = false;
+        ic.trampolineStart = stubcc.masm.label();
+        if (useIC)
+            ptrampoline = &ic.trampoline;
+#endif
+
+        /*
+         * NB: jumpAndTrace emits to the OOL path, so make sure not to use it
+         * in the middle of an in-progress slow path.
+         */
+        if (!jumpAndTrace(fast, target, &stubBranch, ptrampoline))
+            return false;
+
+#ifdef JS_MONOIC
         if (useIC) {
+            ic.jumpToStub = firstStubJump;
             ic.fallThrough = masm.label();
             ic.jumpTarget = target;
             equalityICs.append(ic);
         }
 #endif
 
-        /* Jump from the stub call fallthrough to here. */
-        stubcc.crossJump(stubFallthrough, masm.label());
-
-        /*
-         * NB: jumpAndTrace emits to the OOL path, so make sure not to use it
-         * in the middle of an in-progress slow path.
-         */
-        if (!jumpAndTrace(fast, target, &stubBranch))
-            return false;
     } else {
         /* No fusing. Compare, set, and push a boolean. */
 
@@ -1351,6 +1356,9 @@ mjit::Compiler::jsop_relational_double(JSOp op, BoolStub stub, jsbytecode *targe
     FrameEntry *rhs = frame.peek(-1);
     FrameEntry *lhs = frame.peek(-2);
 
+    if (target)
+        fixDoubleTypes(Uses(2));
+
     JS_ASSERT_IF(!target, fused != JSOP_IFEQ);
 
     FPRegisterID fpLeft, fpRight;
@@ -1374,23 +1382,18 @@ mjit::Compiler::jsop_relational_double(JSOp op, BoolStub stub, jsbytecode *targe
         stubcc.leave();
         OOL_STUBCALL(stub);
 
-        frame.popn(2);
         frame.syncAndForgetEverything();
-
         Jump j = masm.branchDouble(dblCond, fpLeft, fpRight);
 
-        /*
-         * The stub call has no need to rejoin since the state is synced.
-         * Instead, we can just test the return value.
-         */
+        frame.popn(2);
+
         Assembler::Condition cond = (fused == JSOP_IFEQ)
                                     ? Assembler::Zero
                                     : Assembler::NonZero;
         Jump sj = stubcc.masm.branchTest32(cond, Registers::ReturnReg, Registers::ReturnReg);
 
         /* Rejoin from the slow path. */
-        Jump j2 = stubcc.masm.jump();
-        stubcc.crossJump(j2, masm.label());
+        stubcc.rejoin(Changes(0));
 
         /*
          * NB: jumpAndTrace emits to the OOL path, so make sure not to use it
@@ -1429,6 +1432,92 @@ mjit::Compiler::jsop_relational_double(JSOp op, BoolStub stub, jsbytecode *targe
     return true;
 }
 
+static inline JSOp
+ReverseCompareOp(JSOp op)
+{
+    switch (op) {
+      case JSOP_GT:
+        return JSOP_LT;
+      case JSOP_GE:
+        return JSOP_LE;
+      case JSOP_LT:
+        return JSOP_GT;
+      case JSOP_LE:
+        return JSOP_GE;
+      default:
+        JS_NOT_REACHED("unrecognized op");
+        return op;
+    }
+}
+
+static inline Assembler::Condition
+GetCompareCondition(JSOp op, JSOp fused)
+{
+    bool ifeq = fused == JSOP_IFEQ;
+    switch (op) {
+      case JSOP_GT:
+        return ifeq ? Assembler::LessThanOrEqual : Assembler::GreaterThan;
+      case JSOP_GE:
+        return ifeq ? Assembler::LessThan : Assembler::GreaterThanOrEqual;
+      case JSOP_LT:
+        return ifeq ? Assembler::GreaterThanOrEqual : Assembler::LessThan;
+      case JSOP_LE:
+        return ifeq ? Assembler::GreaterThan : Assembler::LessThanOrEqual;
+      default:
+        JS_NOT_REACHED("unrecognized op");
+        return Assembler::Equal;
+    }
+}
+
+bool
+mjit::Compiler::jsop_relational_int(JSOp op, jsbytecode *target, JSOp fused)
+{
+    FrameEntry *rhs = frame.peek(-1);
+    FrameEntry *lhs = frame.peek(-2);
+
+    /* Reverse N cmp A comparisons.  The left side must be in a register. */
+    if (lhs->isConstant()) {
+        JS_ASSERT(!rhs->isConstant());
+        FrameEntry *tmp = lhs;
+        lhs = rhs;
+        rhs = tmp;
+        op = ReverseCompareOp(op);
+    }
+
+    JS_ASSERT_IF(!target, fused != JSOP_IFEQ);
+    Assembler::Condition cond = GetCompareCondition(op, fused);
+
+    if (target) {
+        fixDoubleTypes(Uses(2));
+        if (!frame.syncForBranch(target, Uses(2)))
+            return false;
+
+        Jump fast;
+        if (rhs->isConstant())
+            fast = masm.branch32(cond, frame.tempRegForData(lhs), Imm32(rhs->getValue().toInt32()));
+        else
+            fast = masm.branch32(cond, frame.tempRegForData(lhs), frame.tempRegForData(rhs));
+
+        frame.popn(2);
+        return jumpAndTrace(fast, target);
+    } else {
+        RegisterID lreg = frame.tempRegForData(lhs);
+        RegisterID result = frame.allocReg();
+
+        if (rhs->isConstant()) {
+            masm.branchValue(cond, lreg, rhs->getValue().toInt32(), result);
+        } else {
+            RegisterID rreg = frame.tempRegForData(rhs);
+            masm.branchValue(cond, lreg, rreg, result);
+        }
+
+        frame.popn(2);
+        frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, result);
+    }
+
+    return true;
+}
+
 bool
 mjit::Compiler::jsop_relational_self(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused)
 {
@@ -1449,6 +1538,9 @@ mjit::Compiler::jsop_relational_full(JSOp op, BoolStub stub, jsbytecode *target,
 {
     FrameEntry *rhs = frame.peek(-1);
     FrameEntry *lhs = frame.peek(-2);
+
+    if (target)
+        fixDoubleTypes(Uses(2));
 
     /* Allocate all registers up-front. */
     FrameState::BinaryAlloc regs;
@@ -1481,23 +1573,7 @@ mjit::Compiler::jsop_relational_full(JSOp op, BoolStub stub, jsbytecode *target,
     } else {
         cmpReg = regs.rhsData.reg();
         value = lhs->getValue().toInt32();
-        switch (op) {
-          case JSOP_GT:
-            cmpOp = JSOP_LT;
-            break;
-          case JSOP_GE:
-            cmpOp = JSOP_LE;
-            break;
-          case JSOP_LT:
-            cmpOp = JSOP_GT;
-            break;
-          case JSOP_LE:
-            cmpOp = JSOP_GE;
-            break;
-          default:
-            JS_NOT_REACHED("unrecognized op");
-            break;
-        }
+        cmpOp = ReverseCompareOp(op);
     }
 
     /*
@@ -1555,25 +1631,7 @@ mjit::Compiler::jsop_relational_full(JSOp op, BoolStub stub, jsbytecode *target,
         frame.syncAndForgetEverything();
         
         /* Operands could have been reordered, so use cmpOp. */
-        Assembler::Condition i32Cond;
-        bool ifeq = fused == JSOP_IFEQ;
-        switch (cmpOp) {
-          case JSOP_GT:
-            i32Cond = ifeq ? Assembler::LessThanOrEqual : Assembler::GreaterThan;
-            break;
-          case JSOP_GE:
-            i32Cond = ifeq ? Assembler::LessThan : Assembler::GreaterThanOrEqual;
-            break;
-          case JSOP_LT:
-            i32Cond = ifeq ? Assembler::GreaterThanOrEqual : Assembler::LessThan;
-            break;
-          case JSOP_LE:
-            i32Cond = ifeq ? Assembler::GreaterThan : Assembler::LessThanOrEqual;
-            break;
-          default:
-            JS_NOT_REACHED("unrecognized op");
-            return false;
-        }
+        Assembler::Condition i32Cond = GetCompareCondition(cmpOp, fused);
 
         /* Emit the i32 path. */
         Jump fast;
@@ -1647,43 +1705,13 @@ mjit::Compiler::jsop_relational_full(JSOp op, BoolStub stub, jsbytecode *target,
         }
 
         /* Get an integer comparison condition. */
-        Assembler::Condition i32Cond;
-        switch (cmpOp) {
-          case JSOP_GT:
-            i32Cond = Assembler::GreaterThan;
-            break;
-          case JSOP_GE:
-            i32Cond = Assembler::GreaterThanOrEqual;
-            break;
-          case JSOP_LT:
-            i32Cond = Assembler::LessThan;
-            break;
-          case JSOP_LE:
-            i32Cond = Assembler::LessThanOrEqual;
-            break;
-          default:
-            JS_NOT_REACHED("unrecognized op");
-            return false;
-        }
+        Assembler::Condition i32Cond = GetCompareCondition(cmpOp, fused);
 
         /* Emit the compare & set. */
-        if (Registers::maskReg(regs.result) & Registers::SingleByteRegs) {
-            if (reg.isSet())
-                masm.set32(i32Cond, cmpReg, reg.reg(), regs.result);
-            else
-                masm.set32(i32Cond, cmpReg, Imm32(value), regs.result);
-        } else {
-            Jump j;
-            if (reg.isSet())
-                j = masm.branch32(i32Cond, cmpReg, reg.reg());
-            else
-                j = masm.branch32(i32Cond, cmpReg, Imm32(value));
-            masm.move(Imm32(0), regs.result);
-            Jump skip = masm.jump();
-            j.linkTo(masm.label(),  &masm);
-            masm.move(Imm32(1), regs.result);
-            skip.linkTo(masm.label(), &masm);
-        }
+        if (reg.isSet())
+            masm.branchValue(i32Cond, cmpReg, reg.reg(), regs.result);
+        else
+            masm.branchValue(i32Cond, cmpReg, value, regs.result);
 
         frame.popn(2);
         frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, regs.result);

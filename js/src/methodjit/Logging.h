@@ -54,6 +54,7 @@ namespace js {
     _(VMFrame)              \
     _(PICs)                 \
     _(SlowCalls)            \
+    _(Regalloc)             \
     _(Recompile)
 
 enum JaegerSpewChannel {

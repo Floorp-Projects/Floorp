@@ -546,6 +546,7 @@ Script::analyze(JSContext *cx)
                          stackDepth, stack, defineArray, defineCount)) {
                 return;
             }
+            getCode(defaultOffset).switchTarget = true;
 
             for (jsint i = low; i <= high; i++) {
                 unsigned targetOffset = offset + GetJumpOffset(pc, pc2);
@@ -555,6 +556,7 @@ Script::analyze(JSContext *cx)
                         return;
                     }
                 }
+                getCode(targetOffset).switchTarget = true;
                 pc2 += jmplen;
             }
             break;
@@ -573,6 +575,7 @@ Script::analyze(JSContext *cx)
                          stackDepth, stack, defineArray, defineCount)) {
                 return;
             }
+            getCode(defaultOffset).switchTarget = true;
 
             while (npairs) {
                 pc2 += INDEX_LEN;
@@ -581,6 +584,7 @@ Script::analyze(JSContext *cx)
                              stackDepth, stack, defineArray, defineCount)) {
                     return;
                 }
+                getCode(targetOffset).switchTarget = true;
                 pc2 += jmplen;
                 npairs--;
             }
@@ -734,6 +738,9 @@ Script::analyze(JSContext *cx)
                 }
             }
 
+            if (type == JOF_JUMP || type == JOF_JUMPX)
+                nextcode->jumpFallthrough = true;
+
             if (!nextcode->mergeDefines(cx, this, initial, stackDepth, stack,
                                         defineArray, defineCount)) {
                 return;
@@ -770,7 +777,295 @@ Script::analyze(JSContext *cx)
     }
 
     state.destroy(cx);
-#endif
+
+#endif /* JS_TYPE_INFERENCE */
+}
+
+/////////////////////////////////////////////////////////////////////
+// Live Range Analysis
+/////////////////////////////////////////////////////////////////////
+
+LifetimeScript::LifetimeScript()
+    : analysis(NULL), script(NULL), fun(NULL), codeArray(NULL)
+{
+    JS_InitArenaPool(&pool, "script_liverange", 256, 8, NULL);
+}
+
+LifetimeScript::~LifetimeScript()
+{
+    JS_FinishArenaPool(&pool);
+}
+
+bool
+LifetimeScript::analyze(JSContext *cx, analyze::Script *analysis, JSScript *script, JSFunction *fun)
+{
+    JS_ASSERT(analysis->hasAnalyzed() && !analysis->failed());
+
+    this->analysis = analysis;
+    this->script = script;
+    this->fun = fun;
+
+    codeArray = ArenaArray<LifetimeBytecode>(pool, script->length);
+    if (!codeArray)
+        return false;
+    PodZero(codeArray, script->length);
+
+    if (script->nfixed) {
+        locals = ArenaArray<LifetimeVariable>(pool, script->nfixed);
+        if (!locals)
+            return false;
+        PodZero(locals, script->nfixed);
+    } else {
+        locals = NULL;
+    }
+
+    if (fun && fun->nargs) {
+        args = ArenaArray<LifetimeVariable>(pool, fun->nargs);
+        if (!args)
+            return false;
+        PodZero(args, fun->nargs);
+    } else {
+        args = NULL;
+    }
+
+    PodZero(&thisVar);
+
+    saved = ArenaArray<LifetimeVariable*>(pool, script->nfixed + (fun ? fun->nargs : 0));
+    savedCount = 0;
+
+    uint32 offset = script->length - 1;
+    while (offset < script->length) {
+        Bytecode *code = analysis->maybeCode(offset);
+        if (!code) {
+            offset--;
+            continue;
+        }
+
+        UntrapOpcode untrap(cx, script, script->code + offset);
+
+        if (codeArray[offset].loopBackedge) {
+            /*
+             * This is the head of a loop, we need to go and make sure that any
+             * variables live at the head are live at the backedge and points prior.
+             * For each such variable, look for the last lifetime segment in the body
+             * and extend it to the end of the loop.
+             */
+            unsigned backedge = codeArray[offset].loopBackedge;
+            for (unsigned i = 0; i < script->nfixed; i++) {
+                if (locals[i].lifetime && !extendVariable(cx, locals[i], offset, backedge))
+                    return false;
+            }
+            for (unsigned i = 0; fun && i < fun->nargs; i++) {
+                if (args[i].lifetime && !extendVariable(cx, args[i], offset, backedge))
+                    return false;
+            }
+        }
+
+        jsbytecode *pc = script->code + offset;
+        JSOp op = (JSOp) *pc;
+
+        switch (op) {
+          case JSOP_GETARG:
+          case JSOP_CALLARG:
+          case JSOP_INCARG:
+          case JSOP_DECARG:
+          case JSOP_ARGINC:
+          case JSOP_ARGDEC:
+          case JSOP_GETARGPROP: {
+            unsigned arg = GET_ARGNO(pc);
+            if (!analysis->argEscapes(arg)) {
+                if (!addVariable(cx, args[arg], offset))
+                    return false;
+            }
+            break;
+          }
+
+          case JSOP_SETARG: {
+            unsigned arg = GET_ARGNO(pc);
+            if (!analysis->argEscapes(arg))
+                killVariable(cx, args[arg], offset);
+            break;
+          }
+
+          case JSOP_GETLOCAL:
+          case JSOP_CALLLOCAL:
+          case JSOP_INCLOCAL:
+          case JSOP_DECLOCAL:
+          case JSOP_LOCALINC:
+          case JSOP_LOCALDEC:
+          case JSOP_GETLOCALPROP: {
+            unsigned local = GET_SLOTNO(pc);
+            if (!analysis->localEscapes(local)) {
+                if (!addVariable(cx, locals[local], offset))
+                    return false;
+            }
+            break;
+          }
+
+          case JSOP_SETLOCAL:
+          case JSOP_SETLOCALPOP: {
+            unsigned local = GET_SLOTNO(pc);
+            if (!analysis->localEscapes(local))
+                killVariable(cx, locals[local], offset);
+            break;
+          }
+
+          case JSOP_THIS:
+          case JSOP_GETTHISPROP:
+            if (!addVariable(cx, thisVar, offset))
+                return false;
+            break;
+
+          case JSOP_IFEQ:
+          case JSOP_IFEQX:
+          case JSOP_IFNE:
+          case JSOP_IFNEX:
+          case JSOP_OR:
+          case JSOP_ORX:
+          case JSOP_AND:
+          case JSOP_ANDX:
+          case JSOP_GOTO:
+          case JSOP_GOTOX: {
+            uint32 targetOffset = offset + GetJumpOffset(pc, pc);
+            if (targetOffset < offset) {
+                JSOp nop = JSOp(script->code[targetOffset]);
+                if (nop == JSOP_GOTO || nop == JSOP_GOTOX) {
+                    /* This is a continue, short circuit the backwards goto. */
+                    jsbytecode *target = script->code + targetOffset;
+                    targetOffset = targetOffset + GetJumpOffset(target, target);
+                } else {
+                    /* This is a loop back edge, no lifetime to pull in yet. */
+                    JS_ASSERT(nop == JSOP_TRACE);
+                    codeArray[targetOffset].loopBackedge = offset;
+                    break;
+                }
+            }
+            for (unsigned i = 0; i < savedCount; i++) {
+                JS_ASSERT(!saved[i]->lifetime && saved[i]->saved);
+                if (!saved[i]->savedEnd) {
+                    /*
+                     * This jump precedes the basic block which killed the variable,
+                     * remember it and use it for the end of the next lifetime
+                     * segment should the variable become live again. This is needed
+                     * for loops, as if we wrap liveness around the loop the isLive
+                     * test below may have given the wrong answer.
+                     */
+                    saved[i]->savedEnd = offset;
+                }
+                if (saved[i]->live(targetOffset)) {
+                    /*
+                     * Jumping to a place where this variable is live. Make a new
+                     * lifetime segment for the variable.
+                     */
+                    if (!addVariable(cx, *saved[i], saved[i]->savedEnd))
+                        return false;
+                }
+            }
+            break;
+          }
+
+          case JSOP_LOOKUPSWITCH:
+          case JSOP_LOOKUPSWITCHX:
+          case JSOP_TABLESWITCH:
+          case JSOP_TABLESWITCHX:
+            /* Restore all saved variables. :FIXME: maybe do this precisely. */
+            for (unsigned i = 0; i < savedCount; i++) {
+                if (!addVariable(cx, *saved[i], offset))
+                    return false;
+            }
+            savedCount = 0;
+            break;
+
+          default:;
+        }
+
+        offset--;
+    }
+
+    return true;
+}
+
+#ifdef DEBUG
+void
+LifetimeScript::dumpVariable(LifetimeVariable &var)
+{
+    Lifetime *segment = var.lifetime ? var.lifetime : var.saved;
+    while (segment) {
+        printf(" (%u,%u%s)", segment->start, segment->end, segment->loopTail ? ",tail" : "");
+        segment = segment->next;
+    }
+    printf("\n");
+}
+#endif /* DEBUG */
+
+inline bool
+LifetimeScript::addVariable(JSContext *cx, LifetimeVariable &var, unsigned offset)
+{
+    if (var.lifetime) {
+        JS_ASSERT(offset < var.lifetime->start);
+        var.lifetime->start = offset;
+    } else {
+        if (var.saved) {
+            /* Remove from the list of saved entries. */
+            for (unsigned i = 0; i < savedCount; i++) {
+                if (saved[i] == &var) {
+                    JS_ASSERT(savedCount);
+                    saved[i--] = saved[--savedCount];
+                    break;
+                }
+            }
+        }
+        var.lifetime = ArenaNew<Lifetime>(pool, offset, var.saved);
+        if (!var.lifetime)
+            return false;
+        var.saved = NULL;
+    }
+    return true;
+}
+
+inline void
+LifetimeScript::killVariable(JSContext *cx, LifetimeVariable &var, unsigned offset)
+{
+    if (!var.lifetime)
+        return;
+    JS_ASSERT(offset < var.lifetime->start);
+
+    /*
+     * The variable is considered to be live at the bytecode which kills it
+     * (just not at earlier bytecodes). This behavior is needed by downstream
+     * register allocation (see FrameState::bestEvictReg).
+     */
+    var.lifetime->start = offset;
+
+    var.saved = var.lifetime;
+    var.savedEnd = 0;
+    var.lifetime = NULL;
+
+    saved[savedCount++] = &var;
+}
+
+inline bool
+LifetimeScript::extendVariable(JSContext *cx, LifetimeVariable &var, unsigned start, unsigned end)
+{
+    JS_ASSERT(var.lifetime);
+    var.lifetime->start = start;
+
+    Lifetime *segment = var.lifetime;
+    if (segment->start >= end)
+        return true;
+    while (segment->next && segment->next->start < end)
+        segment = segment->next;
+    if (segment->end >= end)
+        return true;
+
+    Lifetime *tail = ArenaNew<Lifetime>(pool, end, segment->next);
+    if (!tail)
+        return false;
+    tail->start = segment->end;
+    tail->loopTail = true;
+    segment->next = tail;
+
+    return true;
 }
 
 } /* namespace analyze */

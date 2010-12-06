@@ -68,8 +68,15 @@ struct AnyRegisterID {
         : reg_(JSC::MacroAssembler::TotalRegisters + (unsigned)reg)
     {}
 
+    static inline AnyRegisterID fromRaw(unsigned reg);
+
     inline JSC::MacroAssembler::RegisterID reg();
     inline JSC::MacroAssembler::FPRegisterID fpreg();
+
+    bool isReg() { return reg_ < JSC::MacroAssembler::TotalRegisters; }
+    bool isSet() { return reg_ != unsigned(-1); }
+
+    inline const char * name();
 };
 
 struct Registers {
@@ -199,6 +206,11 @@ struct Registers {
 #endif
 
     static const uint32 AvailRegs = SavedRegs | TempRegs;
+
+    static bool isAvail(RegisterID reg) {
+        uint32 mask = maskReg(reg);
+        return bool(mask & AvailRegs);
+    }
 
     static bool isSaved(RegisterID reg) {
         uint32 mask = maskReg(reg);
@@ -390,6 +402,15 @@ struct Registers {
 
 static const JSC::MacroAssembler::RegisterID JSFrameReg = Registers::JSFrameReg;
 
+AnyRegisterID
+AnyRegisterID::fromRaw(unsigned reg_)
+{
+    JS_ASSERT(reg_ < Registers::TotalAnyRegisters);
+    AnyRegisterID reg;
+    reg.reg_ = reg_;
+    return reg;
+}
+
 JSC::MacroAssembler::RegisterID
 AnyRegisterID::reg()
 {
@@ -403,6 +424,18 @@ AnyRegisterID::fpreg()
     JS_ASSERT(reg_ >= Registers::TotalRegisters &&
               reg_ < Registers::TotalAnyRegisters);
     return (JSC::MacroAssembler::FPRegisterID) (reg_ - Registers::TotalRegisters);
+}
+
+const char *
+AnyRegisterID::name()
+{
+#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
+    return isReg() ? JSC::X86Registers::nameIReg(reg()) : JSC::X86Registers::nameFPReg(fpreg());
+#elif defined(JS_CPU_ARM)
+    return isreg() ? JSC::ARMAssembler::nameGpReg(reg()) : JSC::ARMAssembler::nameFpReg(fpreg());
+#else
+    return "???";
+#endif
 }
 
 } /* namespace mjit */

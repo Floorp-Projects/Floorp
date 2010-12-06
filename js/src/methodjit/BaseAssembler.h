@@ -111,6 +111,11 @@ class Assembler : public ValueAssembler
         JSC::FunctionPtr fun;
     };
 
+    struct DoublePatch {
+        double d;
+        DataLabelPtr label;
+    };
+
     /* Need a temp reg that is not ArgReg1. */
 #if defined(JS_CPU_X86) || defined(JS_CPU_X64)
     static const RegisterID ClobberInCall = JSC::X86Registers::ecx;
@@ -121,6 +126,7 @@ class Assembler : public ValueAssembler
     /* :TODO: OOM */
     Label startLabel;
     Vector<CallPatch, 64, SystemAllocPolicy> callPatches;
+    Vector<DoublePatch, 16, SystemAllocPolicy> doublePatches;
 
     // List and count of registers that will be saved and restored across a call.
     uint32      saveCount;
@@ -537,10 +543,26 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegiste
         return callWithABI(getCallTarget(ptr));
     }
 
-    void finalize(JSC::LinkBuffer &linker) {
+    // Constant doubles can't be directly moved into a register, we need to put
+    // them in memory and load them back with.
+    void slowLoadConstantDouble(double d, FPRegisterID fpreg) {
+        DoublePatch patch;
+        patch.d = d;
+        patch.label = loadDouble(NULL, fpreg);
+        doublePatches.append(patch);
+    }
+
+    size_t numDoubles() { return doublePatches.length(); }
+
+    void finalize(JSC::LinkBuffer &linker, double *doubleVec = NULL) {
         for (size_t i = 0; i < callPatches.length(); i++) {
             CallPatch &patch = callPatches[i];
             linker.link(patch.call, JSC::FunctionPtr(patch.fun));
+        }
+        for (size_t i = 0; i < doublePatches.length(); i++) {
+            DoublePatch &patch = doublePatches[i];
+            doubleVec[i] = patch.d;
+            linker.patch(patch.label, &doubleVec[i]);
         }
     }
 
@@ -607,6 +629,34 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegiste
 
     Jump testObjClass(Condition cond, RegisterID objReg, js::Class *clasp) {
         return branchPtr(cond, Address(objReg, offsetof(JSObject, clasp)), ImmPtr(clasp));
+    }
+
+    void branchValue(Condition cond, RegisterID reg, int32 value, RegisterID result)
+    {
+        if (Registers::maskReg(result) & Registers::SingleByteRegs) {
+            set32(cond, reg, Imm32(value), result);
+        } else {
+            Jump j = branch32(cond, reg, Imm32(value));
+            move(Imm32(0), result);
+            Jump skip = jump();
+            j.linkTo(label(), this);
+            move(Imm32(1), result);
+            skip.linkTo(label(), this);
+        }
+    }
+
+    void branchValue(Condition cond, RegisterID lreg, RegisterID rreg, RegisterID result)
+    {
+        if (Registers::maskReg(result) & Registers::SingleByteRegs) {
+            set32(cond, lreg, rreg, result);
+        } else {
+            Jump j = branch32(cond, lreg, rreg);
+            move(Imm32(0), result);
+            Jump skip = jump();
+            j.linkTo(label(), this);
+            move(Imm32(1), result);
+            skip.linkTo(label(), this);
+        }
     }
 
     void rematPayload(const StateRemat &remat, RegisterID reg) {
