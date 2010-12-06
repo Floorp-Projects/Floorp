@@ -13,8 +13,7 @@ function test_bookmark_create() {
     do_check_eq(ids.length, 0);
 
     _("Let's create a new record.");
-    let fxrecord = new Bookmark("bookmarks",
-                                "{5d81b87c-d5fc-42d9-a114-d69b7342f10e}0");
+    let fxrecord = new Bookmark("bookmarks", "get-firefox1");
     fxrecord.bmkUri        = fxuri.spec;
     fxrecord.description   = "Firefox is awesome.";
     fxrecord.title         = "Get Firefox!";
@@ -26,8 +25,8 @@ function test_bookmark_create() {
     store.applyIncoming(fxrecord);
 
     _("Verify it has been created correctly.");
-    let id = Svc.Bookmark.getItemIdForGUID(fxrecord.id);
-    do_check_eq(Svc.Bookmark.getItemGUID(id), fxrecord.id);
+    let id = store.idForGUID(fxrecord.id);
+    do_check_eq(store.GUIDForId(id), fxrecord.id);
     do_check_eq(Svc.Bookmark.getItemType(id), Svc.Bookmark.TYPE_BOOKMARK);
     do_check_eq(Svc.Bookmark.getItemTitle(id), fxrecord.title);
     do_check_eq(Svc.Bookmark.getFolderIdForItem(id),
@@ -54,15 +53,14 @@ function test_bookmark_create() {
 function test_folder_create() {
   try {
     _("Create a folder.");
-    let folder = new BookmarkFolder("bookmarks",
-                                    "{5d81b87c-d5fc-42d9-a114-d69b7342f10e}0");
+    let folder = new BookmarkFolder("bookmarks", "testfolder-1");
     folder.parentName = "Bookmarks Toolbar";
     folder.parentid   = "toolbar";
     folder.title      = "Test Folder";
     store.applyIncoming(folder);
 
     _("Verify it has been created correctly.");
-    let id = Svc.Bookmark.getItemIdForGUID(folder.id);
+    let id = store.idForGUID(folder.id);
     do_check_eq(Svc.Bookmark.getItemType(id), Svc.Bookmark.TYPE_FOLDER);
     do_check_eq(Svc.Bookmark.getItemTitle(id), folder.title);
     do_check_eq(Svc.Bookmark.getFolderIdForItem(id),
@@ -87,13 +85,13 @@ function test_move_folder() {
     _("Create two folders and a bookmark in one of them.");
     let folder1_id = Svc.Bookmark.createFolder(
       Svc.Bookmark.toolbarFolder, "Folder1", 0);
-    let folder1_guid = Svc.Bookmark.getItemGUID(folder1_id);
+    let folder1_guid = store.GUIDForId(folder1_id);
     let folder2_id = Svc.Bookmark.createFolder(
       Svc.Bookmark.toolbarFolder, "Folder2", 0);
-    let folder2_guid = Svc.Bookmark.getItemGUID(folder2_id);
+    let folder2_guid = store.GUIDForId(folder2_id);
     let bmk_id = Svc.Bookmark.insertBookmark(
       folder1_id, fxuri, Svc.Bookmark.DEFAULT_INDEX, "Get Firefox!");
-    let bmk_guid = Svc.Bookmark.getItemGUID(bmk_id);
+    let bmk_guid = store.GUIDForId(bmk_id);
 
     _("Get a record, reparent it and apply it to the store.");
     let record = store.createRecord(bmk_guid);
@@ -104,7 +102,7 @@ function test_move_folder() {
 
     _("Verify the new parent.");
     let new_folder_id = Svc.Bookmark.getFolderIdForItem(bmk_id);
-    do_check_eq(Svc.Bookmark.getItemGUID(new_folder_id), folder2_guid);
+    do_check_eq(store.GUIDForId(new_folder_id), folder2_guid);
   } finally {
     _("Clean up.");
     store.wipe();
@@ -117,11 +115,11 @@ function test_move_order() {
     let bmk1_id = Svc.Bookmark.insertBookmark(
       Svc.Bookmark.toolbarFolder, fxuri, Svc.Bookmark.DEFAULT_INDEX,
       "Get Firefox!");
-    let bmk1_guid = Svc.Bookmark.getItemGUID(bmk1_id);
+    let bmk1_guid = store.GUIDForId(bmk1_id);
     let bmk2_id = Svc.Bookmark.insertBookmark(
       Svc.Bookmark.toolbarFolder, tburi, Svc.Bookmark.DEFAULT_INDEX,
       "Get Thunderbird!");
-    let bmk2_guid = Svc.Bookmark.getItemGUID(bmk2_id);
+    let bmk2_guid = store.GUIDForId(bmk2_id);
 
     _("Verify order.");
     do_check_eq(Svc.Bookmark.getItemIndex(bmk1_id), 0);

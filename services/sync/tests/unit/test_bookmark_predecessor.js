@@ -3,8 +3,6 @@ Cu.import("resource://services-sync/engines/bookmarks.js");
 Cu.import("resource://services-sync/util.js");
 
 function run_test() {
-  let baseuri = "http://fake/uri/";
-
   _("Starting with a clean slate of no bookmarks");
   let store = new (new BookmarksEngine())._storeObj();
   store.wipe();
@@ -14,7 +12,7 @@ function run_test() {
     folder = folder || Svc.Bookmark.toolbarFolder;
     let name = "pos" + pos;
     let bmk = Svc.Bookmark.insertBookmark(folder, uri, pos, name);
-    Svc.Bookmark.setItemGUID(bmk, name);
+    store._setGUID(bmk, name);
     return bmk;
   }
 
