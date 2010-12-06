@@ -48,7 +48,9 @@ public:
   friend nsIFrame* NS_NewButtonBoxFrame(nsIPresShell* aPresShell);
 
   nsButtonBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
-    :nsBoxFrame(aPresShell, aContext, PR_FALSE) {}
+    :nsBoxFrame(aPresShell, aContext, PR_FALSE) {
+    UpdateMouseThrough();
+  }
 
   NS_IMETHOD BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
                                          const nsRect&           aDirtyRect,
@@ -57,8 +59,6 @@ public:
   NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
                                       nsGUIEvent* aEvent,
                                       nsEventStatus* aEventStatus);
-
-  virtual PRBool GetMouseThrough() const { return PR_FALSE; }
 
   virtual void MouseClicked (nsPresContext* aPresContext, nsGUIEvent* aEvent)
   { DoMouseClick(aEvent, PR_FALSE); }
@@ -74,6 +74,7 @@ public:
    * @param aTrustEvent if PR_TRUE and aEvent as null, then assume the event was trusted
    */
   void DoMouseClick(nsGUIEvent* aEvent, PRBool aTrustEvent);
+  void UpdateMouseThrough() { AddStateBits(NS_FRAME_MOUSE_THROUGH_NEVER); }
 }; // class nsButtonBoxFrame
 
 #endif /* nsButtonBoxFrame_h___ */

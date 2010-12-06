@@ -279,7 +279,7 @@
   </binding>
 
   <binding id="arrowpanel" extends="chrome://global/content/bindings/popup.xml#panel">
-    <content flip="both">
+    <content flip="both" side="top" position="bottomcenter topleft">
       <xul:box anonid="container" class="panel-arrowcontainer">
         <xul:box anonid="arrowbox" class="panel-arrowbox">
           <xul:image anonid="arrow" class="panel-arrow"/>
@@ -324,9 +324,11 @@
             hideAnchor = true;
           }
           else {
-            arrowbox.pack = popupRect.left + popupRect.width / 2 < anchorRect.left ? "end" : "start";
+            let rtl = (window.getComputedStyle(this).direction == "rtl");
+            arrowbox.pack = (popupRect.left + popupRect.width / 2 < anchorRect.left) != rtl ?
+                              "end" : "start";
             if (vertPos == 1) {
-              container.dir = ""; 
+              container.dir = "";
               anchorClass = "top";
             }
             else if (vertPos == -1) {
@@ -344,7 +346,7 @@
           else {
             arrowbox.pack = popupRect.top + popupRect.height / 2 < anchorRect.top ? "end" : "start";
             if (horizPos == 1) {
-              container.dir = ""; 
+              container.dir = "";
               anchorClass = "left";
             }
             else if (horizPos == -1) {
@@ -358,6 +360,7 @@
         }
         arrow.hidden = hideAnchor;
         arrow.setAttribute("side", anchorClass);
+        this.setAttribute("side", anchorClass);
 
         // set fading
         var fade = this.getAttribute("fade");
@@ -369,11 +372,11 @@
         }
       ]]>
       </handler>
-      <handler event="popuphiding">
+      <handler event="popuphiding" phase="target">
         clearTimeout(this._fadeTimer);
         this.style.removeProperty("opacity");
       </handler>
-      <handler event="transitionend">
+      <handler event="transitionend" phase="target">
       <![CDATA[
         if (event.propertyName == "opacity") {
           this.hidePopup();

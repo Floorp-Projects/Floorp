@@ -205,6 +205,7 @@ PluginModuleChild::Init(const std::string& aPluginFilename,
 
     memset((void*) &mFunctions, 0, sizeof(mFunctions));
     mFunctions.size = sizeof(mFunctions);
+    mFunctions.version = (NP_VERSION_MAJOR << 8) | NP_VERSION_MINOR;
 
     // TODO: use PluginPRLibrary here
 

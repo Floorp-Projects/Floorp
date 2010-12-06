@@ -297,7 +297,6 @@ public class CrashReporter extends Activity
       Intent intent = new Intent(action);
       intent.setClassName("org.mozilla.@MOZ_APP_NAME@",
                           "org.mozilla.@MOZ_APP_NAME@.App");
-      intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
       Log.i("GeckoCrashReporter", intent.toString());
       startActivity(intent);
     } catch (Exception e) {

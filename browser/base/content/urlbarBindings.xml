@@ -998,7 +998,7 @@
                  xbl:inherits="popupid"/>
       <xul:vbox>
         <xul:description class="popup-notification-description"
-                         xbl:inherits="value=label"/>
+                         xbl:inherits="xbl:text=label"/>
         <xul:spacer flex="1"/>
         <xul:hbox pack="end">
           <xul:label anonid="learnmore" class="text-link geolocation-text-link"/>

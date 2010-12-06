@@ -45,6 +45,12 @@
 txUnknownHandler::txUnknownHandler(txExecutionState* aEs)
     : mEs(aEs)
 {
+    MOZ_COUNT_CTOR_INHERITED(txUnknownHandler, txBufferingHandler);
+}
+
+txUnknownHandler::~txUnknownHandler()
+{
+    MOZ_COUNT_DTOR_INHERITED(txUnknownHandler, txBufferingHandler);
 }
 
 nsresult

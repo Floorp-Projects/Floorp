@@ -22,6 +22,101 @@ static TPrecision GetHigherPrecision( TPrecision left, TPrecision right ){
     return left > right ? left : right;
 }
 
+const char* getOperatorString(TOperator op) {
+    switch (op) {
+      case EOpInitialize: return "=";
+      case EOpAssign: return "=";
+      case EOpAddAssign: return "+=";
+      case EOpSubAssign: return "-=";
+      case EOpDivAssign: return "/=";
+
+      // Fall-through.
+      case EOpMulAssign: 
+      case EOpVectorTimesMatrixAssign:
+      case EOpVectorTimesScalarAssign:
+      case EOpMatrixTimesScalarAssign:
+      case EOpMatrixTimesMatrixAssign: return "*=";
+
+      // Fall-through.
+      case EOpIndexDirect:
+      case EOpIndexIndirect: return "[]";
+
+      case EOpIndexDirectStruct: return ".";
+      case EOpVectorSwizzle: return ".";
+      case EOpAdd: return "+";
+      case EOpSub: return "-";
+      case EOpMul: return "*";
+      case EOpDiv: return "/";
+      case EOpMod: UNIMPLEMENTED(); break;
+      case EOpEqual: return "==";
+      case EOpNotEqual: return "!=";
+      case EOpLessThan: return "<";
+      case EOpGreaterThan: return ">";
+      case EOpLessThanEqual: return "<=";
+      case EOpGreaterThanEqual: return ">=";
+
+      // Fall-through.
+      case EOpVectorTimesScalar:
+      case EOpVectorTimesMatrix:
+      case EOpMatrixTimesVector:
+      case EOpMatrixTimesScalar:
+      case EOpMatrixTimesMatrix: return "*";
+
+      case EOpLogicalOr: return "||";
+      case EOpLogicalXor: return "^^";
+      case EOpLogicalAnd: return "&&";
+      case EOpNegative: return "-";
+      case EOpVectorLogicalNot: return "not";
+      case EOpLogicalNot: return "!";
+      case EOpPostIncrement: return "++";
+      case EOpPostDecrement: return "--";
+      case EOpPreIncrement: return "++";
+      case EOpPreDecrement: return "--";
+
+      // Fall-through.
+      case EOpConvIntToBool:
+      case EOpConvFloatToBool: return "bool";
+ 
+      // Fall-through.
+      case EOpConvBoolToFloat:
+      case EOpConvIntToFloat: return "float";
+ 
+      // Fall-through.
+      case EOpConvFloatToInt:
+      case EOpConvBoolToInt: return "int";
+
+      case EOpRadians: return "radians";
+      case EOpDegrees: return "degrees";
+      case EOpSin: return "sin";
+      case EOpCos: return "cos";
+      case EOpTan: return "tan";
+      case EOpAsin: return "asin";
+      case EOpAcos: return "acos";
+      case EOpAtan: return "atan";
+      case EOpExp: return "exp";
+      case EOpLog: return "log";
+      case EOpExp2: return "exp2";
+      case EOpLog2: return "log2";
+      case EOpSqrt: return "sqrt";
+      case EOpInverseSqrt: return "inversesqrt";
+      case EOpAbs: return "abs";
+      case EOpSign: return "sign";
+      case EOpFloor: return "floor";
+      case EOpCeil: return "ceil";
+      case EOpFract: return "fract";
+      case EOpLength: return "length";
+      case EOpNormalize: return "normalize";
+      case EOpDFdx: return "dFdx";
+      case EOpDFdy: return "dFdy";
+      case EOpFwidth: return "fwidth";
+      case EOpAny: return "any";
+      case EOpAll: return "all";
+
+      default: break;
+    }
+    return "";
+}
+
 ////////////////////////////////////////////////////////////////////////////
 //
 // First set of functions are to help build the intermediate representation.
@@ -603,9 +698,9 @@ TIntermTyped* TIntermediate::addSwizzle(TVectorFields& fields, TSourceLoc line)
 //
 // Create loop nodes.
 //
-TIntermNode* TIntermediate::addLoop(TIntermNode *init, TIntermNode* body, TIntermTyped* test, TIntermTyped* terminal, bool testFirst, TSourceLoc line)
+TIntermNode* TIntermediate::addLoop(TLoopType type, TIntermNode* init, TIntermTyped* cond, TIntermTyped* expr, TIntermNode* body, TSourceLoc line)
 {
-    TIntermNode* node = new TIntermLoop(init, body, test, terminal, testFirst);
+    TIntermNode* node = new TIntermLoop(type, init, cond, expr, body);
     node->setLine(line);
 
     return node;

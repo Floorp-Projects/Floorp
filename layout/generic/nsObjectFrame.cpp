@@ -458,8 +458,7 @@ public:
                                      nsIDOMClientRect* clip);
 #endif
 
-  void NotifyPaintWaiter(nsDisplayListBuilder* aBuilder,
-                         LayerManager* aManager);
+  void NotifyPaintWaiter(nsDisplayListBuilder* aBuilder);
   // Return true if we set image with valid surface
   PRBool SetCurrentImage(ImageContainer* aContainer);
 
@@ -1251,10 +1250,13 @@ nsDisplayPlugin::GetBounds(nsDisplayListBuilder* aBuilder)
     ToReferenceFrame();
   nsObjectFrame* f = static_cast<nsObjectFrame*>(mFrame);
   if (mozilla::LAYER_ACTIVE == f->GetLayerState(aBuilder, nsnull)) {
-    gfxIntSize size = f->GetImageContainer()->GetCurrentSize();
-    PRInt32 appUnitsPerDevPixel = f->PresContext()->AppUnitsPerDevPixel();
-    r -= nsPoint((r.width - size.width * appUnitsPerDevPixel) / 2,
-                 (r.height - size.height * appUnitsPerDevPixel) / 2);
+    ImageContainer* c = f->GetImageContainer();
+    if (c) {
+      gfxIntSize size = c->GetCurrentSize();
+      PRInt32 appUnitsPerDevPixel = f->PresContext()->AppUnitsPerDevPixel();
+      r -= nsPoint((r.width - size.width * appUnitsPerDevPixel) / 2,
+                   (r.height - size.height * appUnitsPerDevPixel) / 2);
+    }
   }
   return r;
 }
@@ -1683,21 +1685,22 @@ nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
 ImageContainer*
 nsObjectFrame::GetImageContainer()
 {
-  if (mImageContainer)
-    return mImageContainer;
-
   nsRefPtr<LayerManager> manager =
     nsContentUtils::LayerManagerForDocument(mContent->GetOwnerDoc());
-  if (!manager)
+  if (!manager) {
     return nsnull;
+  }
+
+  if (mImageContainer && mImageContainer->Manager() == manager) {
+    return mImageContainer;
+  }
 
   mImageContainer = manager->CreateImageContainer();
   return mImageContainer;
 }
 
 void
-nsPluginInstanceOwner::NotifyPaintWaiter(nsDisplayListBuilder* aBuilder,
-                                         LayerManager* aManager)
+nsPluginInstanceOwner::NotifyPaintWaiter(nsDisplayListBuilder* aBuilder)
 {
   // This is notification for reftests about async plugin paint start
   if (!mWaitingForPaint && !IsUpToDate() && aBuilder->ShouldSyncDecodeImages()) {
@@ -1772,7 +1775,7 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
     (aBuilder->LayerBuilder()->GetLeafLayerFor(aBuilder, aManager, aItem));
 
   if (!layer) {
-    mInstanceOwner->NotifyPaintWaiter(aBuilder, aManager);
+    mInstanceOwner->NotifyPaintWaiter(aBuilder);
     // Initialize ImageLayer
     layer = aManager->CreateImageLayer();
   }
@@ -1795,6 +1798,10 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   imglayer->SetFilter(nsLayoutUtils::GetGraphicsFilterForFrame(this));
 
   layer->SetContentFlags(IsOpaque() ? Layer::CONTENT_OPAQUE : 0);
+
+  if (container->GetCurrentSize() != gfxIntSize(window->width, window->height)) {
+    mInstanceOwner->NotifyPaintWaiter(aBuilder);
+  }
 
   // Set a transform on the layer to draw the plugin in the right place
   gfxMatrix transform;
@@ -5378,7 +5385,9 @@ nsPluginInstanceOwner::PrepareToStop(PRBool aDelayedStop)
   // Drop image reference because the child may destroy the surface after we return.
   if (mLayerSurface) {
      nsRefPtr<ImageContainer> container = mObjectFrame->GetImageContainer();
-     container->SetCurrentImage(nsnull);
+     if (container) {
+       container->SetCurrentImage(nsnull);
+     }
      mLayerSurface = nsnull;
   }
 

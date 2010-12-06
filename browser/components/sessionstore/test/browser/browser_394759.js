@@ -98,8 +98,13 @@ function test() {
             is(ss.getClosedWindowCount(), closedWindowCount,
                "The reopened window was removed from Recently Closed Windows");
 
+            // SSTabRestored will fire more than once, so we need to make sure we count them
+            let restoredTabs = 0;
+            let expectedTabs = data.tabs.length;
             newWin2.addEventListener("load", function(aEvent) {
               newWin2.gBrowser.tabContainer.addEventListener("SSTabRestored", function(aEvent) {
+                if (++restoredTabs < expectedTabs)
+                  return;
                 newWin2.gBrowser.tabContainer.removeEventListener("SSTabRestored", arguments.callee, true);
 
                 is(newWin2.gBrowser.tabs.length, 2,

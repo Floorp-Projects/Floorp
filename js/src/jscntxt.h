@@ -2369,10 +2369,24 @@ struct JSContext
         DOLLAR_AMP,
         DOLLAR_PLUS,
         DOLLAR_TICK,
-        DOLLAR_QUOT
+        DOLLAR_QUOT,
+        DOLLAR_EMPTY,
+        DOLLAR_1,
+        DOLLAR_2,
+        DOLLAR_3,
+        DOLLAR_4,
+        DOLLAR_5,
+        DOLLAR_OTHER
     };
+#ifdef XP_WIN
     volatile DollarPath *dollarPath;
+    volatile JSSubString *sub;
     volatile jschar *blackBox;
+    volatile jschar **repstrChars;
+    volatile jschar **repstrDollar;
+    volatile jschar **repstrDollarEnd;
+    volatile size_t *peekLen;
+#endif
 
 private:
 

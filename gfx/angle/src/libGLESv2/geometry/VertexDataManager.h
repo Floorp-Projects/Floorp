@@ -43,7 +43,7 @@ class VertexDataManager
   private:
     std::bitset<MAX_VERTEX_ATTRIBS> getActiveAttribs() const;
 
-    void processNonArrayAttributes(const AttributeState *attribs, const std::bitset<MAX_VERTEX_ATTRIBS> &activeAttribs, TranslatedAttribute *translated, std::size_t count);
+    GLenum processNonArrayAttributes(const AttributeState *attribs, const std::bitset<MAX_VERTEX_ATTRIBS> &activeAttribs, TranslatedAttribute *translated, std::size_t count);
 
     std::size_t typeSize(GLenum type) const;
     std::size_t interpretGlStride(const AttributeState &attrib) const;

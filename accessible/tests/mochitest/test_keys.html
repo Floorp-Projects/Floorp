@@ -1,6 +1,7 @@
 <html>
 
 <head>
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
   <title>Keyboard shortcuts tests</title>
   <link rel="stylesheet" type="text/css"
         href="chrome://mochikit/content/tests/SimpleTest/test.css" />
@@ -27,7 +28,7 @@
     function doTest()
     {
       testKeyboardShortcut("input1", "");
-      testKeyboardShortcut("input2", "Alt+Shift+b");
+      testKeyboardShortcut("input2", MAC ? "⌃b" : "Alt+Shift+b");
 
       SimpleTest.finish();
     }

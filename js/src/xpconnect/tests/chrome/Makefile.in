@@ -57,6 +57,7 @@ _CHROME_FILES = \
 		test_cows.xul \
 		test_bug517163.xul \
 		test_bug571849.xul \
+		test_bug601803.xul \
 		$(NULL)
 
 # Disabled until this test gets updated to test the new proxy based

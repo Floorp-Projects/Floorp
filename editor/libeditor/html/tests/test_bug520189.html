@@ -249,13 +249,13 @@ var tests = [
     isIFrame: true,
     payload: invalidStyle5Payload,
     rootElement: function() document.getElementById("y").contentDocument.documentElement,
-    checkResult: function(html) is(html.indexOf("xxx"), -1, "Should not have retained the font-face style")
+    checkResult: function(html) isnot(html.indexOf("xxx"), -1, "Should not have retained the font-face style")
   },
   {
     id: "z",
     payload: invalidStyle5Payload,
     rootElement: function() document.getElementById("z"),
-    checkResult: function(html) is(html.indexOf("xxx"), -1, "Should not have retained the font-face style")
+    checkResult: function(html) isnot(html.indexOf("xxx"), -1, "Should not have retained the font-face style")
   },
   {
     id: "aa",
@@ -296,13 +296,13 @@ var tests = [
     isIFrame: true,
     payload: invalidStyle6Payload,
     rootElement: function() document.getElementById("ee").contentDocument.documentElement,
-    checkResult: function(html) is(html.indexOf("xxx"), -1, "Should not have retained the namespace style")
+    checkResult: function(html) isnot(html.indexOf("xxx"), -1, "Should not have retained the namespace style")
   },
   {
     id: "ff",
     payload: invalidStyle6Payload,
     rootElement: function() document.getElementById("ff"),
-    checkResult: function(html) is(html.indexOf("xxx"), -1, "Should not have retained the namespace style")
+    checkResult: function(html) isnot(html.indexOf("xxx"), -1, "Should not have retained the namespace style")
   },
   {
     id: "gg",

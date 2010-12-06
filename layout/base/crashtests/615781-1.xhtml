@@ -1,0 +1,22 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+
+<input id="i"/>
+
+<script>
+<![CDATA[
+
+function boom()
+{
+  var i = document.getElementById("i");
+  i.select();
+  i.setAttribute("type", "radio");
+  i.blur();
+  document.documentElement.removeAttribute("class");
+}
+
+window.addEventListener("load", function() { setTimeout(boom, 100); }, false);
+
+]]>
+</script>
+
+</html>

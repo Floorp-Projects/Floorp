@@ -418,6 +418,17 @@ class nsTSubstring_CharT
           AppendPrintf( fmt, aInteger );
         }
 
+      /**
+       * Append the given float to this string 
+       */
+      void AppendFloat( float aFloat )
+                      { DoAppendFloat(aFloat, 6); }
+      void AppendFloat( double aFloat )
+                      { DoAppendFloat(aFloat, 15); }
+  private:
+      NS_COM void NS_FASTCALL DoAppendFloat( double aFloat, int digits );
+  public:
+
     // AppendLiteral must ONLY be applied to an actual literal string.
     // Do not attempt to use it with a regular char* pointer, or with a char
     // array variable. Use AppendASCII for those.

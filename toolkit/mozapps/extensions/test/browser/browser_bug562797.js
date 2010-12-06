@@ -387,7 +387,7 @@ add_test(function() {
     return;
   }
 
-  open_manager(null, function(aManager) {
+  open_manager("addons://list/extension", function(aManager) {
     info("Part 1");
     is_in_list(aManager, "addons://list/extension", false, false);
 
@@ -453,7 +453,7 @@ add_test(function() {
     return;
   }
 
-  open_manager(null, function(aManager) {
+  open_manager("addons://list/extension", function(aManager) {
     info("Part 1");
     is_in_list(aManager, "addons://list/extension", false, false);
 
@@ -530,7 +530,7 @@ add_test(function() {
 // Tests that removing an extension from the detail view goes back and doesn't
 // allow you to go forward again.
 add_test(function() {
-  open_manager(null, function(aManager) {
+  open_manager("addons://list/extension", function(aManager) {
     info("Part 1");
     is_in_list(aManager, "addons://list/extension", false, false);
 
@@ -572,5 +572,22 @@ add_test(function() {
     }
 
     close_manager(aManager, run_next_test);
+  });
+});
+
+// Tests that opening the manager opens the last view
+add_test(function() {
+  open_manager("addons://list/plugin", function(aManager) {
+    info("Part 1");
+    is_in_list(aManager, "addons://list/plugin", false, false);
+
+    close_manager(aManager, function() {
+      open_manager(null, function(aManager) {
+        info("Part 1");
+        is_in_list(aManager, "addons://list/plugin", false, false);
+
+        close_manager(aManager, run_next_test);
+      });
+    });
   });
 });
