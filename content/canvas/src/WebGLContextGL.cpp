@@ -523,7 +523,7 @@ WebGLContext::CheckFramebufferStatus(WebGLenum target, WebGLenum *retval)
     if (target != LOCAL_GL_FRAMEBUFFER)
         return ErrorInvalidEnum("checkFramebufferStatus: target must be FRAMEBUFFER");
 
-    if (mBoundFramebuffer && mBoundFramebuffer->HasConflictingAttachments())
+    if (mBoundFramebuffer && mBoundFramebuffer->HasBadAttachments())
         *retval = LOCAL_GL_FRAMEBUFFER_UNSUPPORTED;
     else
         *retval = gl->fCheckFramebufferStatus(target);
@@ -1794,7 +1794,6 @@ WebGLContext::GetRenderbufferParameter(WebGLenum target, WebGLenum pname, nsIVar
     switch (pname) {
         case LOCAL_GL_RENDERBUFFER_WIDTH:
         case LOCAL_GL_RENDERBUFFER_HEIGHT:
-        case LOCAL_GL_RENDERBUFFER_INTERNAL_FORMAT:
         case LOCAL_GL_RENDERBUFFER_RED_SIZE:
         case LOCAL_GL_RENDERBUFFER_GREEN_SIZE:
         case LOCAL_GL_RENDERBUFFER_BLUE_SIZE:
@@ -1807,7 +1806,17 @@ WebGLContext::GetRenderbufferParameter(WebGLenum target, WebGLenum pname, nsIVar
             wrval->SetAsInt32(i);
         }
             break;
-
+        case LOCAL_GL_RENDERBUFFER_INTERNAL_FORMAT:
+        {
+            GLint i = 0;
+            gl->fGetRenderbufferParameteriv(target, pname, &i);
+            if (i == LOCAL_GL_DEPTH24_STENCIL8)
+            {
+                i = LOCAL_GL_DEPTH_STENCIL;
+            }
+            wrval->SetAsInt32(i);
+        }
+            break;
         default:
             return ErrorInvalidEnumInfo("GetRenderbufferParameter: parameter", pname);
     }
@@ -2590,7 +2599,7 @@ WebGLContext::ReadPixels_base(WebGLint x, WebGLint y, WebGLsizei width, WebGLsiz
     {
         PRBool needAlphaFixup;
         if (mBoundFramebuffer) {
-            needAlphaFixup = !mBoundFramebuffer->ColorAttachment0HasAlpha();
+            needAlphaFixup = !mBoundFramebuffer->ColorAttachmentHasAlpha();
         } else {
             needAlphaFixup = gl->ActualFormat().alpha == 0;
         }
@@ -2681,8 +2690,8 @@ WebGLContext::RenderbufferStorage(WebGLenum target, WebGLenum internalformat, We
         if (!gl->IsGLES2()) internalformatForGL = LOCAL_GL_RGB8;
         break;
     case LOCAL_GL_DEPTH_COMPONENT16:
+        break;
     case LOCAL_GL_STENCIL_INDEX8:
-        // nothing to do for these ones
         break;
     case LOCAL_GL_DEPTH_STENCIL:
         // this one is available in newer OpenGL (at least since 3.1); will probably become available
