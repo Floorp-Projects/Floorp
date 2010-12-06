@@ -415,6 +415,11 @@ nsHTMLEditor::FindSelectionRoot(nsINode *aNode)
   }
 
   if (!content->HasFlag(NODE_IS_EDITABLE)) {
+    // If the content is in read-write state but is not editable itself,
+    // return it as the selection root.
+    if (content->IntrinsicState().HasState(NS_EVENT_STATE_MOZ_READWRITE)) {
+      return content.forget();
+    }
     return nsnull;
   }
 
