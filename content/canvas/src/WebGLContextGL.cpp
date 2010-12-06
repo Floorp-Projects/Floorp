@@ -621,6 +621,10 @@ WebGLContext::CopyTexImage2D(WebGLenum target,
     if (!CanvasUtils::CheckSaneSubrectSize(x,y,width, height, mWidth, mHeight))
         return ErrorInvalidOperation("CopyTexImage2D: copied rectangle out of bounds");
 
+
+    if (mBoundFramebuffer && !mBoundFramebuffer->CheckAndInitializeRenderbuffers())
+        return NS_OK;
+
     WebGLTexture *tex = activeBoundTextureForTarget(target);
     if (!tex)
         return ErrorInvalidOperation("copyTexImage2D: no texture bound to this target");
@@ -659,6 +663,9 @@ WebGLContext::CopyTexSubImage2D(WebGLenum target,
 
     if (!CanvasUtils::CheckSaneSubrectSize(x,y,width, height, mWidth, mHeight))
         return ErrorInvalidOperation("CopyTexSubImage2D: copied rectangle out of bounds");
+
+    if (mBoundFramebuffer && !mBoundFramebuffer->CheckAndInitializeRenderbuffers())
+        return NS_OK;
 
     MakeContextCurrent();
 
