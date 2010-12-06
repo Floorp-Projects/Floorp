@@ -4006,12 +4006,10 @@ nsINode::ReplaceOrInsertBefore(PRBool aReplace, nsINode* aNewChild,
     return NS_ERROR_NULL_POINTER;
   }
 
-  if (IsNodeOfType(eDATA_NODE)) {
+  if (!IsNodeOfType(eDOCUMENT) &&
+      !IsNodeOfType(eDOCUMENT_FRAGMENT) &&
+      !IsElement()) {
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
-  }
-
-  if (IsNodeOfType(eATTRIBUTE)) {
-    return NS_ERROR_NOT_IMPLEMENTED;
   }
 
   nsIContent* refContent;

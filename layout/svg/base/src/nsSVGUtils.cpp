@@ -91,7 +91,7 @@
 #include "nsSVGPathGeometryFrame.h"
 #include "prdtoa.h"
 #include "mozilla/dom/Element.h"
-#include "nsIDOMSVGNumberList.h"
+#include "gfxUtils.h"
 
 using namespace mozilla::dom;
 
@@ -637,7 +637,7 @@ nsSVGUtils::FindFilterInvalidation(nsIFrame *aFrame, const nsRect& aRect)
                          TransformBounds(gfxRect(x, y, width, height));
       bounds.RoundOut();
       nsIntRect r;
-      if (NS_SUCCEEDED(nsLayoutUtils::GfxRectToIntRect(bounds, &r))) {
+      if (gfxUtils::GfxRectToIntRect(bounds, &r)) {
         rect = r;
       } else {
         NS_NOTREACHED("Not going to invalidate the correct area");
@@ -956,7 +956,7 @@ public:
       gfxRect dirtyBounds = userToDeviceSpace.TransformBounds(
         gfxRect(aDirtyRect->x, aDirtyRect->y, aDirtyRect->width, aDirtyRect->height));
       dirtyBounds.RoundOut();
-      if (NS_SUCCEEDED(nsLayoutUtils::GfxRectToIntRect(dirtyBounds, &tmpDirtyRect))) {
+      if (gfxUtils::GfxRectToIntRect(dirtyBounds, &tmpDirtyRect)) {
         dirtyRect = &tmpDirtyRect;
       }
     }
@@ -1493,44 +1493,6 @@ nsSVGUtils::IsInnerSVG(nsIContent* aContent)
   nsIContent *ancestor = GetParentElement(aContent);
   return ancestor && ancestor->GetNameSpaceID() == kNameSpaceID_SVG &&
                      ancestor->Tag() != nsGkAtoms::foreignObject;
-}
-
-/* static */ PRBool
-nsSVGUtils::NumberFromString(const nsAString& aString, float* aValue,
-                             PRBool aAllowPercentages)
-{
-  NS_ConvertUTF16toUTF8 s(aString);
-  const char *str = s.get();
-
-  char *rest;
-  float value = float(PR_strtod(str, &rest));
-  if (str != rest && NS_FloatIsFinite(value)) {
-    if (aAllowPercentages && *rest == '%') {
-      value /= 100;
-      ++rest;
-    }
-    // XXX should allow trailing whitespace
-    if (*rest == '\0') {
-      *aValue = value;
-      return PR_TRUE;
-    }
-  }
-  return PR_FALSE;
-}
-
-/* static */ float
-nsSVGUtils::GetNumberListValue(nsIDOMSVGNumberList *aList, PRUint32 aIndex)
-{
-  if (!aList) {
-    return 0.0f;
-  }
-  nsCOMPtr<nsIDOMSVGNumber> number;
-  nsresult rv = aList->GetItem(aIndex, getter_AddRefs(number));
-  float value = 0.0f;
-  if (NS_SUCCEEDED(rv)) {
-    number->GetValue(&value);
-  }
-  return value;
 }
 
 // ----------------------------------------------------------------------

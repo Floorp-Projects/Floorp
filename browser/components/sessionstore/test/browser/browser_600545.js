@@ -62,18 +62,18 @@ function testBug600545() {
 
   // Need to wait for all tabs to be restored before reading browser state
   function waitForBrowserState(aState, aSetStateCallback) {
-    let locationChanges = 0;
-    let tabsRestored = getStateTabCount(aState);
+    let tabsRestored = 0;
+    let expectedTabs = getStateTabCount(aState);
+
+    // We know that there are only 2 windows total, so just be specific
+    let newWin;
 
     // Used to determine when tabs have been restored
-    let progressListener = {
-      onLocationChange: function (aBrowser) {
-        if (++locationChanges == tabsRestored) {
-          // Remove the progress listener from this window, it will be removed from
-          // theWin when that window is closed (in setBrowserState).
-          window.gBrowser.removeTabsProgressListener(this);
-          executeSoon(aSetStateCallback);
-        }
+    function onTabRestored(aEvent) {
+      if (++tabsRestored == expectedTabs) {
+        gBrowser.tabContainer.removeEventListener("SSTabRestored", onTabRestored, true);
+        newWin.gBrowser.tabContainer.removeEventListener("SSTabRestored", onTabRestored, true);
+        executeSoon(aSetStateCallback);
       }
     }
 
@@ -84,14 +84,17 @@ function testBug600545() {
         theWin.addEventListener("load", function() {
           theWin.removeEventListener("load", arguments.callee, false);
 
+          // So we can remove the event listener in onTabRestored
+          newWin = theWin;
+
           Services.ww.unregisterNotification(windowObserver);
-          theWin.gBrowser.addTabsProgressListener(progressListener);
+          theWin.gBrowser.tabContainer.addEventListener("SSTabRestored", onTabRestored, true);
         }, false);
       }
     }
 
     Services.ww.registerNotification(windowObserver);
-    window.gBrowser.addTabsProgressListener(progressListener);
+    gBrowser.tabContainer.addEventListener("SSTabRestored", onTabRestored, true);
     ss.setBrowserState(JSON.stringify(aState));
   }
 

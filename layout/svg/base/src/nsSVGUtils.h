@@ -60,7 +60,6 @@ class nsIFrame;
 struct nsStyleSVGPaint;
 class nsIDOMSVGElement;
 class nsIDOMSVGLength;
-class nsIDOMSVGNumberList;
 class nsIURI;
 class nsSVGOuterSVGFrame;
 class nsSVGPreserveAspectRatio;
@@ -130,6 +129,13 @@ IsSVGWhitespace(char aChar)
 {
   return aChar == '\x20' || aChar == '\x9' ||
          aChar == '\xD'  || aChar == '\xA';
+}
+
+inline PRBool
+IsSVGWhitespace(PRUnichar aChar)
+{
+  return aChar == PRUnichar('\x20') || aChar == PRUnichar('\x9') ||
+         aChar == PRUnichar('\xD')  || aChar == PRUnichar('\xA');
 }
 
 /*
@@ -581,17 +587,6 @@ public:
   static PRBool IsInnerSVG(nsIContent* aContent);
 
   /**
-   * Parse a string that may contain either a CSS <number> or, if
-   * aAllowPercentages is set to true, a CSS <percentage>, and return the
-   * number as a float.
-   *
-   * This helper returns PR_TRUE if a number was successfully parsed from the
-   * string and no characters were left, else it returns PR_FALSE.
-   */
-  static PRBool NumberFromString(const nsAString& aString, float* aValue,
-                                 PRBool aAllowPercentages = PR_FALSE);
-
-  /**
    * Convert a floating-point value to a 32-bit integer value, clamping to
    * the range of valid integers.
    */
@@ -600,11 +595,6 @@ public:
     return NS_lround(NS_MAX(double(PR_INT32_MIN),
                             NS_MIN(double(PR_INT32_MAX), aVal)));
   }
-
-  /**
-   * Returns aIndex-th item of nsIDOMSVGNumberList
-   */
-  static float GetNumberListValue(nsIDOMSVGNumberList *aList, PRUint32 aIndex);
 
   /**
    * Given a nsIContent* that is actually an nsSVGSVGElement*, this method

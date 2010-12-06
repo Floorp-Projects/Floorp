@@ -2976,7 +2976,7 @@ public:
   }
 
   NS_IMETHOD Run() {
-    if (mElement->GetOwnerDoc() == mDoc) {
+    if (mElement && mElement->GetOwnerDoc() == mDoc) {
       mDoc->DeferredContentEditableCountChange(mElement);
     }
     return NS_OK;

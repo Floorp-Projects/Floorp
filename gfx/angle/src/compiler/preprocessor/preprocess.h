@@ -42,7 +42,7 @@ TORT (INCLUDING NEGLIGENCE), STRICT LIABILITY OR OTHERWISE, EVEN IF
 NVIDIA HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 \****************************************************************************/
 
-# include "compiler/preprocessor/slglobals.h"
+#include "compiler/preprocessor/slglobals.h"
 extern CPPStruct *cpp;
 int InitCPPStruct(void);
 int InitScanner(CPPStruct *cpp);

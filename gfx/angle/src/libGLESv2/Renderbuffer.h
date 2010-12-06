@@ -55,7 +55,7 @@ class RenderbufferStorage
     GLenum mFormat;
     D3DFORMAT mD3DFormat;
     GLsizei mSamples;
-    unsigned int mSerial;
+    const unsigned int mSerial;
 
   private:
     DISALLOW_COPY_AND_ASSIGN(RenderbufferStorage);
@@ -109,10 +109,10 @@ class Colorbuffer : public RenderbufferStorage
 
     bool isColorbuffer() const;
 
-    GLuint getRedSize() const;
-    GLuint getGreenSize() const;
-    GLuint getBlueSize() const;
-    GLuint getAlphaSize() const;
+    GLuint getRedSize();
+    GLuint getGreenSize();
+    GLuint getBlueSize();
+    GLuint getAlphaSize();
 
     IDirect3DSurface9 *getRenderTarget();
 

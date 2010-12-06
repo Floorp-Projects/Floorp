@@ -1230,7 +1230,7 @@ Sphere.create();
 
 initGL_CONTEXT_ID = function(){
   var c = document.createElement('canvas');
-  var contextNames = ['experimental-webgl'];
+  var contextNames = ['webgl', 'experimental-webgl'];
   GL_CONTEXT_ID = null;
   for (var i=0; i<contextNames.length; i++) {
     try {

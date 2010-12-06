@@ -63,6 +63,8 @@ class nsBoxLayoutState;
 #define NS_STATE_BOX_WRAPS_KIDS_IN_BLOCK NS_FRAME_STATE_BIT(29)
 #define NS_STATE_EQUAL_SIZE              NS_FRAME_STATE_BIT(30)
 //#define NS_STATE_IS_DIRECTION_NORMAL     NS_FRAME_STATE_BIT(31)  moved to nsIFrame.h
+#define NS_FRAME_MOUSE_THROUGH_ALWAYS    NS_FRAME_STATE_BIT(60)
+#define NS_FRAME_MOUSE_THROUGH_NEVER     NS_FRAME_STATE_BIT(61)
 
 nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell,
                          nsStyleContext* aContext,
@@ -104,7 +106,6 @@ public:
   virtual Halignment GetHAlign() const { return mHalign; }
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
 
-  virtual PRBool GetMouseThrough() const;
   virtual PRBool ComputesOwnOverflowArea() { return PR_FALSE; }
 
   // ----- child and sibling operations ---
@@ -272,15 +273,13 @@ private:
     void DrawLine(nsIRenderingContext& aRenderingContext,  PRBool aHorizontal, nscoord x1, nscoord y1, nscoord x2, nscoord y2);
     void FillRect(nsIRenderingContext& aRenderingContext,  PRBool aHorizontal, nscoord x, nscoord y, nscoord width, nscoord height);
 #endif
-    void UpdateMouseThrough();
+    virtual void UpdateMouseThrough();
 
     void CacheAttributes();
 
     // instance variables.
     Halignment mHalign;
     Valignment mValign;
-
-    eMouseThrough mMouseThrough;
 
 #ifdef DEBUG_LAYOUT
     static PRBool gDebug;

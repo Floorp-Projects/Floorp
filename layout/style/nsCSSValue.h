@@ -440,7 +440,8 @@ public:
 
   // Returns an already addrefed buffer.  Can return null on allocation
   // failure.
-  static nsStringBuffer* BufferFromString(const nsString& aValue);
+  static already_AddRefed<nsStringBuffer>
+    BufferFromString(const nsString& aValue);
 
   struct URL {
     // Methods are not inline because using an nsIPrincipal means requiring

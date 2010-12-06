@@ -279,14 +279,14 @@
                   label="&historyUndoMenu.label;"
                   disabled="true">
               <menupopup id="appmenu_recentlyClosedTabsMenupopup"
-                         onpopupshowing="document.getElementById('appmenu_historyMenu')._placesView.populateUndoSubmenu();"/>
+                         onpopupshowing="document.getElementById('appmenu_history')._placesView.populateUndoSubmenu();"/>
             </menu>
             <menu id="appmenu_recentlyClosedWindowsMenu"
                   class="recentlyClosedWindowsMenu"
                   label="&historyUndoWindowMenu.label;"
                   disabled="true">
               <menupopup id="appmenu_recentlyClosedWindowsMenupopup"
-                         onpopupshowing="document.getElementById('appmenu_historyMenu')._placesView.populateUndoWindowSubmenu();"/>
+                         onpopupshowing="document.getElementById('appmenu_history')._placesView.populateUndoWindowSubmenu();"/>
             </menu>
             <menuseparator/>
           </menupopup>

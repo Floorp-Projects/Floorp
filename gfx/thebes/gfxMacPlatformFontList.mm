@@ -228,21 +228,23 @@ MacOSFontEntry::ReadCMAP()
 
     ATSFontRef fontRef = GetFontRef();
 
-    // for layout support, check for the presence of mort/morx and GSUB/GPOS
+    // for layout support, check for the presence of mort/morx and/or
+    // opentype layout tables
     PRBool hasAATLayout =
         (::ATSFontGetTable(fontRef, TRUETYPE_TAG('m','o','r','x'),
                            0, 0, 0, &size) == noErr) ||
         (::ATSFontGetTable(fontRef, TRUETYPE_TAG('m','o','r','t'),
                            0, 0, 0, &size) == noErr);
 
-    PRBool hasOTLayout =
+    PRBool hasGSUB =
         (::ATSFontGetTable(fontRef, TRUETYPE_TAG('G','S','U','B'),
-                           0, 0, 0, &size) == noErr) ||
+                           0, 0, 0, &size) == noErr);
+    PRBool hasGPOS =
         (::ATSFontGetTable(fontRef, TRUETYPE_TAG('G','P','O','S'),
                            0, 0, 0, &size) == noErr);
 
-    if (hasAATLayout && !hasOTLayout) {
-        mRequiresAAT = PR_TRUE;
+    if (hasAATLayout && !(hasGSUB || hasGPOS)) {
+        mRequiresAAT = PR_TRUE; // prefer CoreText if font has no OTL tables
     }
 
     PRUint32 numScripts =
@@ -258,13 +260,20 @@ MacOSFontEntry::ReadCMAP()
 
             if (hasAATLayout) {
                 omitRange = PR_FALSE;
+                // prefer CoreText for Apple's complex-script fonts,
+                // even if they also have some OpenType tables
+                // (e.g. Geeza Pro Bold on 10.6; see bug 614903)
+                mRequiresAAT = PR_TRUE;
             } else if (whichScript == eComplexScriptArabic) {
                 // special-case for Arabic:
                 // even if there's no morph table, CoreText can shape Arabic
                 // using OpenType layout; or if it's a downloaded font,
                 // assume the site knows what it's doing (as harfbuzz will
-                // be able to shape even though the font itself lacks tables)
-                if (hasOTLayout || (mIsUserFont && !mIsLocalUserFont)) {
+                // be able to shape even though the font itself lacks tables
+                // stripped during sanitization).
+                // We check for GSUB here, as GPOS alone would not be ok
+                // for Arabic shaping.
+                if (hasGSUB || (mIsUserFont && !mIsLocalUserFont)) {
                     // TODO: to be really thorough, we could check that the
                     // GSUB table actually supports the 'arab' script tag.
                     omitRange = PR_FALSE;

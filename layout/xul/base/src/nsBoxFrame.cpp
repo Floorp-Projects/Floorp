@@ -136,8 +136,7 @@ nsBoxFrame::nsBoxFrame(nsIPresShell* aPresShell,
                        nsStyleContext* aContext,
                        PRBool aIsRoot,
                        nsIBoxLayout* aLayoutManager) :
-  nsContainerFrame(aContext),
-  mMouseThrough(unset)
+  nsContainerFrame(aContext)
 {
   mState |= NS_STATE_IS_HORIZONTAL;
   mState |= NS_STATE_AUTO_STRETCH;
@@ -211,8 +210,6 @@ nsBoxFrame::Init(nsIContent*      aContent,
       GetDebugPref(GetPresContext());
 #endif
 
-  mMouseThrough = unset;
-
   UpdateMouseThrough();
 
   // register access key
@@ -226,30 +223,17 @@ void nsBoxFrame::UpdateMouseThrough()
   if (mContent) {
     static nsIContent::AttrValuesArray strings[] =
       {&nsGkAtoms::never, &nsGkAtoms::always, nsnull};
-    static const eMouseThrough values[] = {never, always};
-    PRInt32 index = mContent->FindAttrValueIn(kNameSpaceID_None,
-        nsGkAtoms::mousethrough, strings, eCaseMatters);
-    if (index >= 0) {
-      mMouseThrough = values[index];
+    switch (mContent->FindAttrValueIn(kNameSpaceID_None,
+              nsGkAtoms::mousethrough, strings, eCaseMatters)) {
+      case 0: AddStateBits(NS_FRAME_MOUSE_THROUGH_NEVER); break;
+      case 1: AddStateBits(NS_FRAME_MOUSE_THROUGH_ALWAYS); break;
+      case 2: {
+        RemoveStateBits(NS_FRAME_MOUSE_THROUGH_ALWAYS);
+        RemoveStateBits(NS_FRAME_MOUSE_THROUGH_NEVER);
+        break;
+      }
     }
   }
-}
-
-PRBool
-nsBoxFrame::GetMouseThrough() const
-{
-  switch(mMouseThrough)
-  {
-    case always:
-      return PR_TRUE;
-    case never:
-      return PR_FALSE;
-    case unset:
-      if (mParent && mParent->IsBoxFrame())
-        return mParent->GetMouseThrough();
-  }
-
-  return PR_FALSE;
 }
 
 void

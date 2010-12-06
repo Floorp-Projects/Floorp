@@ -1612,6 +1612,14 @@ nsSocketTransport::OnSocketDetached(PRFileDesc *fd)
     // finally, release our reference to the socket (must do this within
     // the transport lock) possibly closing the socket. Also release our
     // listeners to break potential refcount cycles.
+
+    // We should be careful not to release mEventSink and mCallbacks while
+    // we're locked, because releasing it might require acquiring the lock
+    // again, so we just null out mEventSink and mCallbacks while we're
+    // holding the lock, and let the stack based objects' destuctors take
+    // care of destroying it if needed.
+    nsCOMPtr<nsIInterfaceRequestor> ourCallbacks;
+    nsCOMPtr<nsITransportEventSink> ourEventSink;
     {
         nsAutoLock lock(mLock);
         if (mFD) {
@@ -1626,8 +1634,8 @@ nsSocketTransport::OnSocketDetached(PRFileDesc *fd)
         // link with UI and security callbacks on next connection attempt 
         // round. That would lead e.g. to a broken certificate exception page.
         if (NS_FAILED(mCondition)) {
-            mCallbacks = nsnull;
-            mEventSink = nsnull;
+            mCallbacks.swap(ourCallbacks);
+            mEventSink.swap(ourEventSink);
         }
     }
 }

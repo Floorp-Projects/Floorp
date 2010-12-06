@@ -6,6 +6,8 @@
 
 const TEST_ID = "0181";
 const MAR_IN_USE_WIN_FILE = "data/partial_in_use_win.mar";
+// Time to wait for the test helper process to start before continuing the test
+const TEST_HELPER_TIMEOUT = 1000;
 
 // The files are in the same order as they are applied from the mar
 var TEST_FILES = [
@@ -84,7 +86,7 @@ function run_test() {
 
   // Give the file in use process time to launch before updating otherwise this
   // test can fail intermittently on Windows debug builds.
-  do_timeout(100, testUpdate);
+  do_timeout(TEST_HELPER_TIMEOUT, testUpdate);
 }
 
 function end_test() {

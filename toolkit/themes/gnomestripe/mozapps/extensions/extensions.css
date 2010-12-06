@@ -576,6 +576,8 @@
 
 #detail-icon {
   -moz-margin-end: 10px;
+  max-width: 64px;
+  max-height: 64px;
 }
 
 #detail-summary {

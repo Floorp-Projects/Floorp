@@ -40,10 +40,12 @@
 #include "nsSVGOuterSVGFrame.h"
 #include "nsIDOMSVGTextElement.h"
 #include "nsIDOMSVGAnimatedLengthList.h"
-#include "nsIDOMSVGAnimatedNumberList.h"
+#include "SVGAnimatedNumberList.h"
+#include "SVGNumberList.h"
 #include "nsISVGGlyphFragmentLeaf.h"
 #include "nsDOMError.h"
 #include "SVGLengthList.h"
+#include "nsSVGTextPositioningElement.h"
 
 using namespace mozilla;
 
@@ -81,20 +83,13 @@ nsSVGTextContainerFrame::GetDxDy(SVGUserUnitList *aDx, SVGUserUnitList *aDy)
     GetAnimatedLengthListValues(&xLengthList, &yLengthList, aDx, aDy, nsnull);
 }
 
-already_AddRefed<nsIDOMSVGNumberList>
+const SVGNumberList*
 nsSVGTextContainerFrame::GetRotate()
 {
-  nsCOMPtr<nsIDOMSVGTextPositioningElement> tpElement =
-    do_QueryInterface(mContent);
-
-  if (!tpElement)
-    return nsnull;
-
-  nsCOMPtr<nsIDOMSVGAnimatedNumberList> animNumberList;
-  tpElement->GetRotate(getter_AddRefs(animNumberList));
-  nsIDOMSVGNumberList *retval;
-  animNumberList->GetAnimVal(&retval);
-  return retval;
+  SVGAnimatedNumberList *animList =
+    static_cast<nsSVGElement*>(mContent)->
+      GetAnimatedNumberList(nsGkAtoms::rotate);
+  return animList ? &animList->GetAnimValue() : nsnull;
 }
 
 //----------------------------------------------------------------------
@@ -430,7 +425,7 @@ nsSVGTextContainerFrame::CopyPositionList(nsTArray<float> *parentList,
 
 void
 nsSVGTextContainerFrame::CopyRotateList(nsTArray<float> *parentList,
-                                        nsCOMPtr<nsIDOMSVGNumberList> selfList,
+                                        const SVGNumberList *selfList,
                                         nsTArray<float> &dstList,
                                         PRUint32 aOffset)
 {
@@ -442,18 +437,14 @@ nsSVGTextContainerFrame::CopyRotateList(nsTArray<float> *parentList,
     parentCount = NS_MIN(parentList->Length() - aOffset, strLength);
   }
 
-  PRUint32 selfCount = 0;
-  if (selfList) {
-    selfList->GetNumberOfItems(&selfCount);
-  }
-  selfCount = NS_MIN(selfCount, strLength);
-
+  PRUint32 selfCount = NS_MIN(selfList ? selfList->Length() : 0, strLength);
   PRUint32 count = NS_MAX(parentCount, selfCount);
+
   if (count > 0) {
     if (!dstList.SetLength(count))
       return;
     for (PRUint32 i = 0; i < selfCount; i++) {
-      dstList[i] = nsSVGUtils::GetNumberListValue(selfList, i);
+      dstList[i] = (*selfList)[i];
     }
     for (PRUint32 i = selfCount; i < parentCount; i++) {
       dstList[i] = (*parentList)[aOffset + i];
@@ -490,7 +481,7 @@ nsSVGTextContainerFrame::BuildPositionList(PRUint32 aOffset,
   CopyPositionList(parentDx, &dx, mDx, aOffset);
   CopyPositionList(parentDy, &dy, mDy, aOffset);
 
-  nsCOMPtr<nsIDOMSVGNumberList> rotate = GetRotate();
+  const SVGNumberList *rotate = GetRotate();
   CopyRotateList(parentRotate, rotate, mRotate, aOffset);
 
   PRUint32 startIndex = 0;
