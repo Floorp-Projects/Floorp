@@ -54,6 +54,7 @@
 #  error Unknown toolkit
 #endif 
 
+#include "gfxCore.h"
 #include "nsDebug.h"
 
 namespace mozilla {
@@ -123,12 +124,12 @@ private:
  * This class is not thread-safe at all. It is assumed that only one thread is using any ScopedXErrorHandler's. Given that it's
  * not used on Mac, it should be easy to make it thread-safe by using thread-local storage with __thread.
  */
-class ScopedXErrorHandler
+class NS_GFX ScopedXErrorHandler
 {
     // trivial wrapper around XErrorEvent, just adding ctor initializing by zero.
     struct ErrorEvent
     {
-        XErrorEvent m_error;
+        XErrorEvent mError;
 
         ErrorEvent()
         {
@@ -137,54 +138,31 @@ class ScopedXErrorHandler
     };
 
     // this ScopedXErrorHandler's ErrorEvent object
-    ErrorEvent m_xerror;
+    ErrorEvent mXError;
 
     // static pointer for use by the error handler
-    static ErrorEvent* s_xerrorptr;
+    static ErrorEvent* sXErrorPtr;
 
-    // what to restore s_xerrorptr to on destruction
-    ErrorEvent* m_oldxerrorptr;
+    // what to restore sXErrorPtr to on destruction
+    ErrorEvent* mOldXErrorPtr;
 
     // what to restore the error handler to on destruction
-    int (*m_oldErrorHandler)(Display *, XErrorEvent *);
+    int (*mOldErrorHandler)(Display *, XErrorEvent *);
 
 public:
 
     static int
-    ErrorHandler(Display *, XErrorEvent *ev)
-    {
-        s_xerrorptr->m_error = *ev;
-        return 0;
-    }
+    ErrorHandler(Display *, XErrorEvent *ev);
 
-    ScopedXErrorHandler()
-    {
-        // let s_xerrorptr point to this object's m_xerror object, but don't reset this m_xerror object!
-        // think of the case of nested ScopedXErrorHandler's.
-        m_oldxerrorptr = s_xerrorptr;
-        s_xerrorptr = &m_xerror;
-        m_oldErrorHandler = XSetErrorHandler(ErrorHandler);
-    }
+    ScopedXErrorHandler();
 
-    ~ScopedXErrorHandler()
-    {
-        s_xerrorptr = m_oldxerrorptr;
-        XSetErrorHandler(m_oldErrorHandler);
-    }
+    ~ScopedXErrorHandler();
 
     /** \returns true if a X error occurred since the last time this method was called on this ScopedXErrorHandler object.
      *
      * \param ev this optional parameter, if set, will be filled with the XErrorEvent object
      */
-    bool SyncAndGetError(Display *dpy, XErrorEvent *ev = nsnull)
-    {
-        XSync(dpy, False);
-        bool retval = m_xerror.m_error.error_code != 0;
-        if (ev)
-            *ev = m_xerror.m_error;
-        m_xerror = ErrorEvent(); // reset
-        return retval;
-    }
+    bool SyncAndGetError(Display *dpy, XErrorEvent *ev = nsnull);
 };
 
 
