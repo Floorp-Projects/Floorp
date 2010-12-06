@@ -638,9 +638,7 @@ FrameState::syncForBranch(jsbytecode *target, Uses uses)
         FrameEntry *fe = getOrTrack(alloc->slot(reg));
         JS_ASSERT(!fe->isCopy());
 
-        JS_ASSERT(reg.isReg() != fe->isType(JSVAL_TYPE_DOUBLE));
-
-        JS_ASSERT(fe->type.synced());
+        JS_ASSERT_IF(!fe->isType(JSVAL_TYPE_DOUBLE), fe->type.synced());
         if (!fe->data.synced() && alloc->synced(reg))
             syncData(fe);
 
@@ -650,7 +648,32 @@ FrameState::syncForBranch(jsbytecode *target, Uses uses)
         if (!freeRegs.hasReg(reg))
             relocateReg(reg, alloc, uses);
 
-        if (fe->isType(JSVAL_TYPE_DOUBLE)) {
+        if (reg.isReg()) {
+            JS_ASSERT_IF(fe->isType(JSVAL_TYPE_DOUBLE), fe->isConstant());
+
+            RegisterID nreg = reg.reg();
+            if (fe->data.inMemory()) {
+                masm.loadPayload(addressOf(fe), nreg);
+            } else if (fe->isConstant()) {
+                if (fe->isType(JSVAL_TYPE_DOUBLE)) {
+                    /*
+                     * At the join point we will forget this is a double and won't have
+                     * the full type tag anymore, so make sure the type is synced.
+                     */
+                    syncFe(fe);
+                }
+                masm.loadValuePayload(fe->getValue(), nreg);
+            } else {
+                JS_ASSERT(fe->data.inRegister() && fe->data.reg() != nreg);
+                masm.move(fe->data.reg(), nreg);
+                freeRegs.putReg(fe->data.reg());
+                regstate(fe->data.reg()).forget();
+            }
+
+            fe->data.setRegister(nreg);
+        } else {
+            JS_ASSERT(fe->isType(JSVAL_TYPE_DOUBLE));
+
             FPRegisterID nreg = reg.fpreg();
             if (fe->data.inMemory()) {
                 masm.loadDouble(addressOf(fe), nreg);
@@ -664,20 +687,6 @@ FrameState::syncForBranch(jsbytecode *target, Uses uses)
             }
 
             fe->data.setFPRegister(nreg);
-        } else {
-            RegisterID nreg = reg.reg();
-            if (fe->data.inMemory()) {
-                masm.loadPayload(addressOf(fe), nreg);
-            } else if (fe->isConstant()) {
-                masm.loadValuePayload(fe->getValue(), nreg);
-            } else {
-                JS_ASSERT(fe->data.inRegister() && fe->data.reg() != nreg);
-                masm.move(fe->data.reg(), nreg);
-                freeRegs.putReg(fe->data.reg());
-                regstate(fe->data.reg()).forget();
-            }
-
-            fe->data.setRegister(nreg);
         }
 
         freeRegs.takeReg(reg);
