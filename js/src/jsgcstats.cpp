@@ -362,9 +362,13 @@ GCMarker::dumpConservativeRoots()
           }
           case JSTRACE_STRING: {
             JSString *str = (JSString *) i->thing;
-            char buf[50];
-            PutEscapedString(buf, sizeof buf, str, '"');
-            fprintf(fp, "string %s", buf);
+            if (str->isLinear()) {
+                char buf[50];
+                PutEscapedString(buf, sizeof buf, str->assertIsLinear(), '"');
+                fprintf(fp, "string %s", buf);
+            } else {
+                fprintf(fp, "rope: length %d", (int)str->length());
+            }
             break;
           }
 # if JS_HAS_XML_SUPPORT

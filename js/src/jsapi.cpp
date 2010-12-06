@@ -584,16 +584,14 @@ JS_PUBLIC_API(JSBool)
 JS_StrictlyEqual(JSContext *cx, jsval v1, jsval v2, JSBool *equal)
 {
     assertSameCompartment(cx, v1, v2);
-    *equal = StrictlyEqual(cx, Valueify(v1), Valueify(v2));
-    return JS_TRUE;
+    return StrictlyEqual(cx, Valueify(v1), Valueify(v2), equal);
 }
 
 JS_PUBLIC_API(JSBool)
 JS_SameValue(JSContext *cx, jsval v1, jsval v2, JSBool *same)
 {
     assertSameCompartment(cx, v1, v2);
-    *same = SameValue(Valueify(v1), Valueify(v2), cx);
-    return JS_TRUE;
+    return SameValue(cx, Valueify(v1), Valueify(v2), same);
 }
 
 /************************************************************************/
@@ -2239,8 +2237,14 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing, ui
           }
 
           case JSTRACE_STRING:
-            PutEscapedString(buf, bufsize, (JSString *)thing, 0);
+          {
+            JSString *str = (JSString *)thing;
+            if (str->isLinear())
+                PutEscapedString(buf, bufsize, str->assertIsLinear(), 0);
+            else
+                JS_snprintf(buf, bufsize, "<rope: length %d>", (int)str->length());
             break;
+          }
 
 #if JS_HAS_XML_SUPPORT
           case JSTRACE_XML:
@@ -5208,17 +5212,8 @@ JS_RestoreFrameChain(JSContext *cx, JSStackFrame *fp)
 JS_PUBLIC_API(JSString *)
 JS_NewStringCopyN(JSContext *cx, const char *s, size_t n)
 {
-    jschar *js;
-    JSString *str;
-
     CHECK_REQUEST(cx);
-    js = js_InflateString(cx, s, &n);
-    if (!js)
-        return NULL;
-    str = js_NewString(cx, js, n);
-    if (!str)
-        cx->free(js);
-    return str;
+    return js_NewStringCopyN(cx, s, n);
 }
 
 JS_PUBLIC_API(JSString *)
@@ -5338,9 +5333,8 @@ JS_GetStringCharsAndLength(JSContext *cx, JSString *str, size_t *plength)
 {
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, str);
-    const jschar *chars;
-    str->getCharsAndLength(chars, *plength);
-    return chars;
+    *plength = str->length();
+    return str->getChars(cx);
 }
 
 JS_PUBLIC_API(const jschar *)
@@ -5369,26 +5363,29 @@ JS_FlattenString(JSContext *cx, JSString *str)
 extern JS_PUBLIC_API(const jschar *)
 JS_GetFlatStringChars(JSFlatString *str)
 {
-    return reinterpret_cast<JSString *>(str)->flatChars();
+    return str->chars();
 }
 
 JS_PUBLIC_API(JSBool)
 JS_CompareStrings(JSContext *cx, JSString *str1, JSString *str2, int32 *result)
 {
-    *result = js_CompareStrings(str1, str2);
-    return JS_TRUE;
+    return CompareStrings(cx, str1, str2, result);
 }
 
 JS_PUBLIC_API(JSBool)
 JS_StringEqualsAscii(JSContext *cx, JSString *str, const char *asciiBytes, JSBool *match)
 {
-    return MatchStringAndAscii(str, asciiBytes);
+    JSLinearString *linearStr = str->ensureLinear(cx);
+    if (!linearStr)
+        return false;
+    *match = StringEqualsAscii(linearStr, asciiBytes);
+    return true;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_FlatStringEqualsAscii(JSFlatString *str, const char *asciiBytes)
 {
-    return MatchStringAndAscii(str, asciiBytes);
+    return StringEqualsAscii(str, asciiBytes);
 }
 
 JS_PUBLIC_API(size_t)
@@ -5400,13 +5397,17 @@ JS_PutEscapedFlatString(char *buffer, size_t size, JSFlatString *str, char quote
 JS_PUBLIC_API(size_t)
 JS_PutEscapedString(JSContext *cx, char *buffer, size_t size, JSString *str, char quote)
 {
-    return PutEscapedString(buffer, size, str, quote);
+    JSLinearString *linearStr = str->ensureLinear(cx);
+    if (!linearStr)
+        return size_t(-1);
+    return PutEscapedString(buffer, size, linearStr, quote);
 }
 
 JS_PUBLIC_API(JSBool)
 JS_FileEscapedString(FILE *fp, JSString *str, char quote)
 {
-    return FileEscapedString(fp, str, quote);
+    JSLinearString *linearStr = str->ensureLinear(NULL);
+    return linearStr && FileEscapedString(fp, linearStr, quote);
 }
 
 JS_PUBLIC_API(JSString *)
@@ -5470,13 +5471,19 @@ JS_DecodeBytes(JSContext *cx, const char *src, size_t srclen, jschar *dst, size_
 JS_PUBLIC_API(char *)
 JS_EncodeString(JSContext *cx, JSString *str)
 {
-    return js_DeflateString(cx, str->chars(), str->length());
+    const jschar *chars = str->getChars(cx);
+    if (!chars)
+        return NULL;
+    return js_DeflateString(cx, chars, str->length());
 }
 
 JS_PUBLIC_API(size_t)
 JS_GetStringEncodingLength(JSContext *cx, JSString *str)
 {
-    return js_GetDeflatedStringLength(cx, str->chars(), str->length());
+    const jschar *chars = str->getChars(cx);
+    if (!chars)
+        return size_t(-1);
+    return js_GetDeflatedStringLength(cx, chars, str->length());
 }
 
 JS_PUBLIC_API(size_t)
@@ -5488,12 +5495,15 @@ JS_EncodeStringToBuffer(JSString *str, char *buffer, size_t length)
      * error.
      */
     size_t writtenLength = length;
-    if (js_DeflateStringToBuffer(NULL, str->chars(), str->length(), buffer, &writtenLength)) {
+    const jschar *chars = str->getChars(NULL);
+    if (!chars)
+        return size_t(-1);
+    if (js_DeflateStringToBuffer(NULL, chars, str->length(), buffer, &writtenLength)) {
         JS_ASSERT(writtenLength <= length);
         return writtenLength;
     }
     JS_ASSERT(writtenLength <= length);
-    size_t necessaryLength = js_GetDeflatedStringLength(NULL, str->chars(), str->length());
+    size_t necessaryLength = js_GetDeflatedStringLength(NULL, chars, str->length());
     if (necessaryLength == size_t(-1))
         return size_t(-1);
     if (writtenLength != length) {

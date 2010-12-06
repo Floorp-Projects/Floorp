@@ -1300,7 +1300,7 @@ class TraceRecorder
     JS_REQUIRES_STACK RecordingStatus incElem(jsint incr, bool pre = true);
     JS_REQUIRES_STACK AbortableRecordingStatus incName(jsint incr, bool pre = true);
 
-    JS_REQUIRES_STACK void strictEquality(bool equal, bool cmpCase);
+    JS_REQUIRES_STACK RecordingStatus strictEquality(bool equal, bool cmpCase);
     JS_REQUIRES_STACK AbortableRecordingStatus equality(bool negate, bool tryBranchAfterCond);
     JS_REQUIRES_STACK AbortableRecordingStatus equalityHelper(Value& l, Value& r,
                                                                 nanojit::LIns* l_ins, nanojit::LIns* r_ins,

@@ -42,49 +42,53 @@
 
 #include "jsstr.h"
 
-inline JSString *
+inline JSFlatString *
 JSString::unitString(jschar c)
 {
     JS_ASSERT(c < UNIT_STRING_LIMIT);
-    return const_cast<JSString *>(&unitStringTable[c]);
+    return const_cast<JSString *>(&unitStringTable[c])->assertIsFlat();
 }
 
-inline JSString *
+inline JSLinearString *
 JSString::getUnitString(JSContext *cx, JSString *str, size_t index)
 {
     JS_ASSERT(index < str->length());
-    jschar c = str->chars()[index];
+    const jschar *chars = str->getChars(cx);
+    if (!chars)
+        return NULL;
+    jschar c = chars[index];
     if (c < UNIT_STRING_LIMIT)
         return unitString(c);
     return js_NewDependentString(cx, str, index, 1);
 }
 
-inline JSString *
+inline JSFlatString *
 JSString::length2String(jschar c1, jschar c2)
 {
     JS_ASSERT(fitsInSmallChar(c1));
     JS_ASSERT(fitsInSmallChar(c2));
-    return const_cast<JSString *>
-           (&length2StringTable[(((size_t)toSmallChar[c1]) << 6) + toSmallChar[c2]]);
+    return const_cast<JSString *> (
+             &length2StringTable[(((size_t)toSmallChar[c1]) << 6) + toSmallChar[c2]]
+           )->assertIsFlat();
 }
 
-inline JSString *
+inline JSFlatString *
 JSString::length2String(uint32 i)
 {
     JS_ASSERT(i < 100);
     return length2String('0' + i / 10, '0' + i % 10);
 }
 
-inline JSString *
+inline JSFlatString *
 JSString::intString(jsint i)
 {
     jsuint u = jsuint(i);
     JS_ASSERT(u < INT_STRING_LIMIT);
-    return const_cast<JSString *>(JSString::intStringTable[u]);
+    return const_cast<JSString *>(JSString::intStringTable[u])->assertIsFlat();
 }
 
 /* Get a static atomized string for chars if possible. */
-inline JSString *
+inline JSFlatString *
 JSString::lookupStaticString(const jschar *chars, size_t length)
 {
     if (length == 1) {
@@ -125,14 +129,13 @@ JSString::finalize(JSContext *cx) {
     JS_ASSERT(!JSString::isStatic(this));
     JS_RUNTIME_UNMETER(cx->runtime, liveStrings);
     if (isDependent()) {
-        JS_ASSERT(dependentBase());
         JS_RUNTIME_UNMETER(cx->runtime, liveDependentStrings);
     } else if (isFlat()) {
         /*
          * flatChars for stillborn string is null, but cx->free checks
          * for a null pointer on its own.
          */
-        cx->free(flatChars());
+        cx->free(const_cast<jschar *>(flatChars()));
     }
 }
 
@@ -153,7 +156,7 @@ JSExternalString::finalize(JSContext *cx)
     JS_RUNTIME_UNMETER(cx->runtime, liveStrings);
 
     /* A stillborn string has null chars. */
-    jschar *chars = flatChars();
+    jschar *chars = const_cast<jschar *>(flatChars());
     if (!chars)
         return;
     JSStringFinalizeOp finalizer = str_finalizers[externalStringType];
