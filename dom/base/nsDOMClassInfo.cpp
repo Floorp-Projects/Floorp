@@ -4946,7 +4946,7 @@ nsWindowSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
     }
 
     *parentObj = win->GetCurrentInnerWindowInternal()->FastGetGlobalJSObject();
-    return win->IsChromeWindow() ? NS_OK : NS_SUCCESS_NEEDS_XOW;
+    return NS_OK;
   }
 
   JSObject *winObj = win->FastGetGlobalJSObject();
