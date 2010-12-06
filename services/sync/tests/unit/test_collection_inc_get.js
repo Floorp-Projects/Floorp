@@ -3,7 +3,8 @@ Cu.import("resource://services-sync/base_records/collection.js");
 Cu.import("resource://services-sync/base_records/wbo.js");
 
 function run_test() {
-  let coll = new Collection("http://fake/uri", WBORecord);
+  let base = "http://fake/";
+  let coll = new Collection("http://fake/uri/", WBORecord);
   let stream = { _data: "" };
   let called, recCount, sum;
 
@@ -13,8 +14,10 @@ function run_test() {
   coll.recordHandler = function(rec) {
     called = true;
     _("Got record:", JSON.stringify(rec));
+    rec.collection = "uri";           // This would be done by an engine, so do it here.
+    do_check_eq(rec.collection, "uri");
     do_check_eq(rec.id, "hello");
-    do_check_eq(rec.uri.spec, "http://fake/uri/hello");
+    do_check_eq(rec.uri(base).spec, "http://fake/uri/hello");
     do_check_eq(rec.payload, "world");
   };
   coll._onProgress.call(stream);
@@ -48,22 +51,23 @@ function run_test() {
     recCount++;
     sum += rec.payload.value;
     _("Incremental status: count", recCount, "sum", sum);
+    rec.collection = "uri";
     switch (recCount) {
       case 1:
         do_check_eq(rec.id, "hundred");
-        do_check_eq(rec.uri.spec, "http://fake/uri/hundred");
+        do_check_eq(rec.uri(base).spec, "http://fake/uri/hundred");
         do_check_eq(rec.payload.value, 100);
         do_check_eq(sum, 100);
         break;
       case 2:
         do_check_eq(rec.id, "ten");
-        do_check_eq(rec.uri.spec, "http://fake/uri/ten");
+        do_check_eq(rec.uri(base).spec, "http://fake/uri/ten");
         do_check_eq(rec.payload.value, 10);
         do_check_eq(sum, 110);
         break;
       case 3:
         do_check_eq(rec.id, "one");
-        do_check_eq(rec.uri.spec, "http://fake/uri/one");
+        do_check_eq(rec.uri(base).spec, "http://fake/uri/one");
         do_check_eq(rec.payload.value, 1);
         do_check_eq(sum, 111);
         break;

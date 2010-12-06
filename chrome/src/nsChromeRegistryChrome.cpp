@@ -350,6 +350,9 @@ nsChromeRegistryChrome::SelectLocaleFromPref(nsIPrefBranch* prefs)
     }
   }
 
+  if (NS_FAILED(rv))
+    NS_ERROR("Couldn't select locale from pref!");
+
   return rv;
 }
 
@@ -367,15 +370,18 @@ nsChromeRegistryChrome::Observe(nsISupports *aSubject, const char *aTopic,
 
     if (pref.EqualsLiteral(MATCH_OS_LOCALE_PREF) ||
         pref.EqualsLiteral(SELECTED_LOCALE_PREF)) {
-      rv = SelectLocaleFromPref(prefs);
-      if (NS_SUCCEEDED(rv) && mProfileLoaded)
-        FlushAllCaches();
+      if (!mProfileLoaded) {
+        rv = SelectLocaleFromPref(prefs);
+        if (NS_FAILED(rv))
+          return rv;
+      }
+      FlushAllCaches();
     }
     else if (pref.EqualsLiteral(SELECTED_SKIN_PREF)) {
       nsXPIDLCString provider;
       rv = prefs->GetCharPref(pref.get(), getter_Copies(provider));
       if (NS_FAILED(rv)) {
-        NS_ERROR("Couldn't get new locale pref!");
+        NS_ERROR("Couldn't get new skin pref!");
         return rv;
       }
 
@@ -420,6 +426,21 @@ nsChromeRegistryChrome::CheckForNewChrome()
 
   nsComponentManagerImpl::gComponentManager->RereadChromeManifests();
   return NS_OK;
+}
+
+void nsChromeRegistryChrome::UpdateSelectedLocale()
+{
+  nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (prefs) {
+    nsresult rv = SelectLocaleFromPref(prefs);
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIObserverService> obsSvc =
+        mozilla::services::GetObserverService();
+      NS_ASSERTION(obsSvc, "Couldn't get observer service.");
+      obsSvc->NotifyObservers((nsIChromeRegistry*) this,
+                              "selected-locale-has-changed", nsnull);
+    }
+  }
 }
 
 #ifdef MOZ_IPC

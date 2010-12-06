@@ -207,9 +207,9 @@ gfxXlibNativeRenderer::DrawDirect(gfxContext *ctx, nsIntSize size,
                                    cairo_xlib_surface_get_width(target),
                                    cairo_xlib_surface_get_height(target)));
 
-    PRBool needs_clip;
+    PRBool needs_clip = PR_TRUE;
     nsIntRect rectangles[MAX_STATIC_CLIP_RECTANGLES];
-    int rect_count;
+    int rect_count = 0;
 
     /* Check that the clip is rectangular and aligned on unit boundaries. */
     /* Temporarily set the matrix for _get_rectangular_clip. It's basically

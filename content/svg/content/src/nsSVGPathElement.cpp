@@ -53,7 +53,7 @@
 using namespace mozilla;
 
 nsSVGElement::NumberInfo nsSVGPathElement::sNumberInfo = 
-                                                  { &nsGkAtoms::pathLength, 0 };
+{ &nsGkAtoms::pathLength, 0, PR_FALSE };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Path)
 

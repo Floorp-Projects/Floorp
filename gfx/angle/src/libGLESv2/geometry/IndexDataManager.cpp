@@ -103,6 +103,11 @@ GLenum IndexDataManager::preRenderValidate(GLenum mode, GLenum type, GLsizei cou
 
     size_t offset;
     void *output = streamIb->map(requiredSpace, &offset);
+    if (output == NULL)
+    {
+        ERR(" failed to map index buffer.");
+        return GL_OUT_OF_MEMORY;
+    }
 
     translated->buffer = streamIb;
     translated->offset = offset;
@@ -210,6 +215,11 @@ GLenum IndexDataManager::preRenderValidateUnindexed(GLenum mode, GLsizei count, 
         mLineLoopBuffer = mBackend->createIndexBuffer((count+1) * sizeof(unsigned short), GL_UNSIGNED_SHORT);
 
         unsigned short *indices = static_cast<unsigned short *>(mLineLoopBuffer->map());
+        if (indices == NULL)
+        {
+            ERR(" failed to map index buffer.");
+            return GL_OUT_OF_MEMORY;
+        }
 
         for (int i = 0; i < count; i++)
         {
@@ -232,6 +242,11 @@ GLenum IndexDataManager::preRenderValidateUnindexed(GLenum mode, GLsizei count, 
         mCountingBuffer = mBackend->createIndexBuffer(count * sizeof(unsigned short), GL_UNSIGNED_SHORT);
 
         unsigned short *indices = static_cast<unsigned short *>(mCountingBuffer->map());
+        if (indices == NULL)
+        {
+            ERR(" failed to map index buffer.");
+            return GL_OUT_OF_MEMORY;
+        }
 
         for (int i = 0; i < count; i++)
         {

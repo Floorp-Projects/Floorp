@@ -37,6 +37,8 @@
 
 #include "ContainerLayerD3D10.h"
 #include "nsAlgorithm.h"
+#include "gfxUtils.h"
+#include "nsRect.h"
 
 namespace mozilla {
 namespace layers {
@@ -143,6 +145,15 @@ ContainerLayerD3D10::GetFirstChildD3D10()
   return static_cast<LayerD3D10*>(mFirstChild->ImplData());
 }
 
+static inline LayerD3D10*
+GetNextSiblingD3D10(LayerD3D10* aLayer)
+{
+   Layer* layer = aLayer->GetLayer()->GetNextSibling();
+   return layer ? static_cast<LayerD3D10*>(layer->
+                                           ImplData())
+                : nsnull;
+}
+
 void
 ContainerLayerD3D10::RenderLayer()
 {
@@ -197,9 +208,15 @@ ContainerLayerD3D10::RenderLayer()
   /*
    * Render this container's contents.
    */
-  LayerD3D10 *layerToRender = GetFirstChildD3D10();
-  while (layerToRender) {
-    const nsIntRect *clipRect = layerToRender->GetLayer()->GetClipRect();
+  for (LayerD3D10* layerToRender = GetFirstChildD3D10();
+       layerToRender != nsnull;
+       layerToRender = GetNextSiblingD3D10(layerToRender)) {
+
+    const nsIntRect* clipRect = layerToRender->GetLayer()->GetClipRect();
+    if ((clipRect && clipRect->IsEmpty()) ||
+        layerToRender->GetLayer()->GetEffectiveVisibleRegion().IsEmpty()) {
+      continue;
+    }
 
     D3D10_RECT oldScissor;
     if (clipRect || useIntermediate) {
@@ -231,10 +248,6 @@ ContainerLayerD3D10::RenderLayer()
 
       if (r.left >= r.right || r.top >= r.bottom) {
         // Entire layer's clipped out, don't bother drawing.
-        Layer *nextSibling = layerToRender->GetLayer()->GetNextSibling();
-        layerToRender = nextSibling ? static_cast<LayerD3D10*>(nextSibling->
-                                                              ImplData())
-                                    : nsnull;
         continue;
       }
 
@@ -252,11 +265,6 @@ ContainerLayerD3D10::RenderLayer()
     if (clipRect || useIntermediate) {
       device()->RSSetScissorRects(1, &oldScissor);
     }
-
-    Layer *nextSibling = layerToRender->GetLayer()->GetNextSibling();
-    layerToRender = nextSibling ? static_cast<LayerD3D10*>(nextSibling->
-                                                          ImplData())
-                                : nsnull;
   }
 
   if (useIntermediate) {

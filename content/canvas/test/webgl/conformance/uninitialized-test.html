@@ -1,11 +1,11 @@
 <!doctype html>
 <html>
 <head>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-	<title>WebGL Uninitialized GL Resources Tests</title>
-	<link rel="stylesheet" href="../resources/js-test-style.css"/>
-	<script src="../resources/js-test-pre.js"></script>
-	<script src="resources/webgl-test.js"></script>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>WebGL Uninitialized GL Resources Tests</title>
+<link rel="stylesheet" href="../resources/js-test-style.css"/>
+<script src="../resources/js-test-pre.js"></script>
+<script src="resources/webgl-test.js"></script>
 </head>
 <body>
 <div id="description"></div>
@@ -20,7 +20,6 @@ if (!gl)
   testFailed("Context created.");
 else
   testPassed("Context created.");
-
 
 debug("Reading an uninitialized texture should succeed with all bytes set to 0.");
 
@@ -63,15 +62,15 @@ if (data.length != expectedDataLength) {
 } else {
     var k = 0;
     for (var i = 0; i < data.length; ++i) {
-	if (data[i] != 0) {
-	    k++;
-	}
+        if (data[i] != 0) {
+            k++;
+        }
     }
 
     if (k) {
-	testFailed("Found " + k + " non-zero bytes");
+        testFailed("Found " + k + " non-zero bytes");
     } else {
-	testPassed("All data initialized");
+        testPassed("All data initialized");
     }
 }
 
@@ -83,14 +82,10 @@ glErrorShouldBe(gl, gl.NO_ERROR);
 //TODO: uninitialized renderbuffer? (implementations would need to do a GL clear at first binding?)
 //TODO: uninitialized uniform arrays?
 
-
 debug("");
 successfullyParsed = true;
 </script>
 <script src="../resources/js-test-post.js"></script>
-<script>
-</script>
-
 </body>
 </html>
 

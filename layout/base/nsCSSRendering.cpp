@@ -1213,8 +1213,12 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
       devCtx->CreateRenderingContextInstance(*getter_AddRefs(wrapperCtx));
       wrapperCtx->Init(devCtx, shadowContext);
       wrapperCtx->Translate(shadowItem->mXOffset, shadowItem->mYOffset);
+
+      nsRect nativeRect;
+      nativeRect.IntersectRect(frameRect, aDirtyRect);
+
       aPresContext->GetTheme()->DrawWidgetBackground(wrapperCtx, aForFrame,
-          styleDisplay->mAppearance, aFrameArea, frameRect);
+          styleDisplay->mAppearance, aFrameArea, nativeRect);
     } else {
       // Clip out the area of the actual frame so the shadow is not shown within
       // the frame

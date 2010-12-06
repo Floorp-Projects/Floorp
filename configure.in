@@ -796,7 +796,7 @@ EOF
                 AC_LANG_RESTORE
             ])
 
-        if test "$ac_cv_have_std__Throw" == "yes"; then
+        if test "$ac_cv_have_std__Throw" = "yes"; then
             AC_CACHE_CHECK(for |class __declspec(dllimport) exception| bug,
                            ac_cv_have_dllimport_exception_bug,
                 [
@@ -1049,7 +1049,7 @@ from building Mozilla. Upgrade to Xcode 2.1 or later.])
         changequote(,)
         XCODEBUILD_VERSION=`$PBBUILD -version 2>/dev/null | xargs | sed -e 's/.*DevToolsCore-\([0-9]*\).*/\1/'`
         changequote([,])
-        if test -n "$XCODEBUILD_VERSION" -a "$XCODEBUILD_VERSION" -ge 620 ; then
+        if test -n "$XCODEBUILD_VERSION" && test "$XCODEBUILD_VERSION" -ge 620 ; then
           HAS_XCODE_2_1=1;
         fi
       ;;
@@ -3812,7 +3812,7 @@ fi
 
 dnl check for wcrtomb/mbrtowc
 dnl =======================================================================
-if test -z "$MACOS_DEPLOYMENT_TARGET" -o "$MACOS_DEPLOYMENT_TARGET" -ge "100300"; then
+if test -z "$MACOS_DEPLOYMENT_TARGET" || test "$MACOS_DEPLOYMENT_TARGET" -ge "100300"; then
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
 AC_CACHE_CHECK(for wcrtomb,
@@ -6315,6 +6315,51 @@ if test -n "${MOZ_JAVAXPCOM}"; then
 fi
 
 dnl ========================================================
+dnl = ANGLE OpenGL->D3D translator for WebGL
+dnl = * only applies to win32
+dnl = * enabled by default (shipping build); requires explicit --disable to disable
+dnl ========================================================
+MOZ_ANGLE=
+MOZ_DIRECTX_SDK_PATH=
+case "$target_os" in
+    *msvc*|*mks*|*cygwin*|*mingw*)
+        MOZ_ANGLE=1
+        ;;
+esac
+
+if test -n "$MOZ_ANGLE"; then
+MOZ_ARG_DISABLE_BOOL(angle,
+[  --disable-angle     Disable building of ANGLE for WebGL->D3D translation],
+    MOZ_ANGLE=,
+    MOZ_ANGLE=1)
+
+if test -n "$MOZ_ANGLE"; then
+  if test -z "$_WIN32_MSVC"; then
+    AC_MSG_ERROR([Building ANGLE requires MSVC.  To build without ANGLE, reconfigure with --disable-angle.])
+  fi
+
+  AC_CHECK_HEADER(d3dx9.h, [], [MOZ_ANGLE=])
+
+  if test -z "$MOZ_ANGLE"; then
+    # Try again, but try to get the SDK path from the registry.  We're going to hardcode
+    # the February 2010 SDK, since that's the one that's installed on the tinderboxen.
+    MOZ_DIRECTX_SDK_PATH=`reg query 'HKLM\Software\Microsoft\DirectX\Microsoft DirectX SDK (February 2010)' //v InstallPath | grep REG_SZ | sed 's,  *, ,g' | cut -d' ' -f4`
+    if test -n "$MOZ_DIRECTX_SDK_PATH" ; then
+      if test -f "$MOZ_DIRECTX_SDK_PATH"/include/d3dx9.h && test -f "$MOZ_DIRECTX_SDK_PATH"/lib/x86/dxguid.lib ; then
+        AC_MSG_WARN([Found DirectX SDK in registry, using $MOZ_DIRECTX_SDK])
+        MOZ_ANGLE=1
+      fi
+    fi
+  fi
+
+  if test -z "$MOZ_ANGLE"; then
+    AC_MSG_WARN([Couldn't find d3dx9.h in your INCLUDE path, needed for ANGLE.  Please install the February 2010 DirectX SDK, or make another version available in your LIB and INCLUDE path env variables.  To explicitly build without ANGLE, reconfigure with --disable-angle.])
+    AC_MSG_WARN([This will become an error in the future.])
+  fi
+fi
+fi
+
+dnl ========================================================
 dnl = Breakpad crash reporting (on by default on supported platforms)
 dnl ========================================================
 
@@ -6557,14 +6602,14 @@ if test -n "$MOZ_INSTALLER" -a "$OS_ARCH" = "WINNT"; then
     changequote(,)
     MAKENSISU_VER=`"$MAKENSISU" -version 2>/dev/null | sed -e '/-Unicode/!s/.*//g' -e 's/^v\([0-9]\+\.[0-9]\+\)\-Unicode$/\1/g'`
     changequote([,])
-    if test ! "$MAKENSISU_VER" == ""; then
+    if test ! "$MAKENSISU_VER" = ""; then
         MAKENSISU_MAJOR_VER=`echo $MAKENSISU_VER | $AWK -F\. '{ print $1 }'`
         MAKENSISU_MINOR_VER=`echo $MAKENSISU_VER | $AWK -F\. '{ print $2 }'`
     fi
     AC_MSG_CHECKING([for Unicode NSIS with major version == $REQ_NSIS_MAJOR_VER and minor version >= $MIN_NSIS_MINOR_VER])
-    if test "$MAKENSISU_VER" == "" -o \
-       ! "$MAKENSISU_MAJOR_VER" == "$REQ_NSIS_MAJOR_VER" -o \
-       ! "$MAKENSISU_MINOR_VER" -ge $MIN_NSIS_MINOR_VER; then
+    if test "$MAKENSISU_VER" = "" ||
+       test ! "$MAKENSISU_MAJOR_VER" = "$REQ_NSIS_MAJOR_VER" -o \
+            ! "$MAKENSISU_MINOR_VER" -ge $MIN_NSIS_MINOR_VER; then
         AC_MSG_RESULT([no])
         AC_MSG_ERROR([To build the installer you must have the latest MozillaBuild or Unicode NSIS with a major version of $REQ_NSIS_MAJOR_VER and a minimum minor version of $MIN_NSIS_MINOR_VER in your path. To build without the installer reconfigure using --disable-installer.])
     fi
@@ -8156,7 +8201,10 @@ else
     fi
     AC_SUBST(CL_INCLUDES_PREFIX)
     rm -f dummy-hello.c
+    _topsrcdirwin=`cd \`dirname $0\`; pwd -W`
     dnl cl.py provides dependency generation for MSVC
+    CC_WRAPPER="$PYTHON -O $_topsrcdirwin/build/cl.py"
+    CXX_WRAPPER="$PYTHON -O $_topsrcdirwin/build/cl.py"
     COMPILER_DEPEND=1
   fi
 fi
@@ -8165,6 +8213,9 @@ MDDEPDIR='.deps'
 AC_SUBST(MOZ_AUTO_DEPS)
 AC_SUBST(COMPILER_DEPEND)
 AC_SUBST(MDDEPDIR)
+AC_SUBST(CC_WRAPPER)
+AC_SUBST(CXX_WRAPPER)
+
 
 dnl ========================================================
 dnl =
@@ -8598,6 +8649,7 @@ if test "$MOZ_TREE_CAIRO"; then
     MOZ_CAIRO_LIBS='$(call EXPAND_LIBNAME_PATH,mozcairo,$(DEPTH)/gfx/cairo/cairo/src)'" $CAIRO_FT_LIBS"
 
     if test "$MOZ_TREE_PIXMAN"; then
+        AC_DEFINE(MOZ_TREE_PIXMAN)
         MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS"' $(call EXPAND_LIBNAME_PATH,mozlibpixman,$(DEPTH)/gfx/cairo/libpixman/src)'
     else
         PKG_CHECK_MODULES(PIXMAN, pixman-1 >= 0.19.2)
@@ -8919,6 +8971,8 @@ AC_SUBST(MOZ_SPELLCHECK)
 AC_SUBST(MOZ_USER_DIR)
 AC_SUBST(MOZ_CRASHREPORTER)
 AC_SUBST(MOZ_UPDATER)
+AC_SUBST(MOZ_ANGLE)
+AC_SUBST(MOZ_DIRECTX_SDK_PATH)
 
 AC_SUBST(ENABLE_STRIP)
 AC_SUBST(PKG_SKIP_STRIP)

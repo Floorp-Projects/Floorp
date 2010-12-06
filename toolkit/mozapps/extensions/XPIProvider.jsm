@@ -6338,6 +6338,7 @@ function AddonWrapper(aAddon) {
                    aProp.substring(0, aProp.length - 1);
         let list = Services.prefs.getChildList(pref, {});
         if (list.length > 0) {
+          list.sort();
           results = [];
           list.forEach(function(aPref) {
             let value = Services.prefs.getComplexValue(aPref,

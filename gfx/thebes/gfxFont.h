@@ -1793,7 +1793,7 @@ public:
         /** The advance, x-offset and y-offset of the glyph, in appunits
          *  mAdvance is in the text direction (RTL or LTR)
          *  mXOffset is always from left to right
-         *  mYOffset is always from bottom to top */   
+         *  mYOffset is always from top to bottom */   
         PRInt32  mAdvance;
         float    mXOffset, mYOffset;
     };

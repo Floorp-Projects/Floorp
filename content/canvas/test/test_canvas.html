@@ -8411,7 +8411,7 @@ isPixel(ctx, 50,45, 0,255,0,255, 2);
 } catch (e) {
     _thrown_outer = true;
 }
-todo(!_thrown_outer, 'should not throw exception');
+ok(!_thrown_outer, 'should not throw exception');
 
 
 }
@@ -8457,7 +8457,7 @@ isPixel(ctx, 1,45, 0,255,0,255, 2);
 } catch (e) {
     _thrown_outer = true;
 }
-todo(!_thrown_outer, 'should not throw exception');
+ok(!_thrown_outer, 'should not throw exception');
 
 
 }
@@ -8501,7 +8501,7 @@ isPixel(ctx, 50,45, 0,255,0,255, 2);
 } catch (e) {
     _thrown_outer = true;
 }
-todo(!_thrown_outer, 'should not throw exception');
+ok(!_thrown_outer, 'should not throw exception');
 
 
 }
@@ -8545,7 +8545,7 @@ isPixel(ctx, 50,45, 0,255,0,255, 2);
 } catch (e) {
     _thrown_outer = true;
 }
-todo(!_thrown_outer, 'should not throw exception');
+ok(!_thrown_outer, 'should not throw exception');
 
 
 }
@@ -8571,7 +8571,7 @@ var imgdata = ctx.getImageData(0, 0, 100, 50);
 ctx.fillStyle = '#0f0';
 ctx.fillRect(0, 0, 100, 50)
 ctx.putImageData(imgdata, 0, 0, 0, 0, 0, 0);
-todo_isPixel(ctx, 50,25, 0,255,0,255, 2);
+isPixel(ctx, 50,25, 0,255,0,255, 2);
 
 
 }

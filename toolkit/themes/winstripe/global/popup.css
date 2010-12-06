@@ -70,6 +70,18 @@ panel[type="arrow"] {
   -moz-transition: opacity 300ms;
 }
 
+panel[type="arrow"][side="top"],
+panel[type="arrow"][side="bottom"] {
+  margin-left: -25px;
+  margin-right: -25px;
+}
+
+panel[type="arrow"][side="left"],
+panel[type="arrow"][side="right"] {
+  margin-top: -25px;
+  margin-bottom: -25px;
+}
+
 .panel-arrowcontent {
   border-radius: 6px;
 %ifdef WINSTRIPE_AERO
@@ -82,7 +94,7 @@ panel[type="arrow"] {
               0 1px 3px 2px rgba(0,0,0,.65);
 %else
   background: -moz-linear-gradient(rgba(250,251,253,.95), rgba(250,251,253,.95) 20px, rgba(250,251,253,.95));
-  padding: 14px;
+  padding: 16px;
   margin: 3px;
   box-shadow: 0 0 5px 1px rgba(184,205,232,1) inset,
               0 0 0 1px rgba(0,0,0,.25),
@@ -101,7 +113,7 @@ panel[type="arrow"] {
   -moz-border-left-colors: rgba(255,255,255,.6) rgba(0,0,0,.7);
   -moz-border-bottom-colors: rgba(255,255,255,.6) rgba(0,0,0,.7);
   -moz-border-right-colors: rgba(255,255,255,.6) rgba(0,0,0,.7);
-  padding: 14px;
+  padding: 16px;
 }
 %endif
 

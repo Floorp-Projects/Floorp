@@ -248,5 +248,12 @@ let TabView = {
         });
       }
     }, true);
+  },
+  
+  // ----------
+  // Prepares the tab view for undo close tab.
+  prepareUndoCloseTab: function() {
+    if (this._window)
+      this._window.UI.restoredClosedTab = true;
   }
 };

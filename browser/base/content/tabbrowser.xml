@@ -1310,12 +1310,13 @@
               try {
                 b.loadURIWithFlags(aURI, flags, aReferrerURI, aCharset, aPostData);
 
-                // We start our browsers out as inactive, and then maintain
-                // activeness in the tab switcher.
-                b.docShell.isActive = false;
               }
               catch (ex) { }
             }
+
+            // We start our browsers out as inactive, and then maintain
+            // activeness in the tab switcher.
+            b.docShell.isActive = false;
 
             // Check if we're opening a tab related to the current tab and
             // move it to after the current tab.
@@ -3293,7 +3294,7 @@
         event.stopPropagation();
       ]]></handler>
 
-      <handler event="dragleave"><![CDATA[
+      <handler event="dragexit"><![CDATA[
         this._dragTime = 0;
 
         // This does not work at all (see bug 458613)

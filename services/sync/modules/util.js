@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *  Dan Mills <thunder@mozilla.com>
+ *  Richard Newman <rnewman@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -107,11 +108,12 @@ let Utils = {
    * @usage MyObj._lock = Utils.lock;
    *        MyObj.foo = function() { this._lock(func)(); }
    */
-  lock: function Utils_lock(func) {
+  lock: function lock(label, func) {
     let thisArg = this;
     return function WrappedLock() {
-      if (!thisArg.lock())
-        throw "Could not acquire lock";
+      if (!thisArg.lock()) {
+        throw "Could not acquire lock. Label: \"" + label + "\".";
+      }
 
       try {
         return func.call(thisArg);
@@ -213,30 +215,33 @@ let Utils = {
     });
   },
 
-  // Generates a brand-new globally unique identifier (GUID).
+  byteArrayToString: function byteArrayToString(bytes) {
+    return [String.fromCharCode(byte) for each (byte in bytes)].join("");
+  },
+
+  /**
+   * Generate a string of random bytes.
+   */
+  generateRandomBytes: function generateRandomBytes(length) {
+    let rng = Cc["@mozilla.org/security/random-generator;1"]
+                .createInstance(Ci.nsIRandomGenerator);
+    let bytes = rng.generateRandomBytes(length);
+    return Utils.byteArrayToString(bytes);
+  },
+
+  /**
+   * Encode byte string as base64url (RFC 4648).
+   */
+  encodeBase64url: function encodeBase64url(bytes) {
+    return btoa(bytes).replace('+', '-', 'g').replace('/', '_', 'g');
+  },
+
+  /**
+   * GUIDs are 9 random bytes encoded with base64url (RFC 4648).
+   * That makes them 12 characters long with 72 bits of entropy.
+   */
   makeGUID: function makeGUID() {
-    // 70 characters that are not-escaped URL-friendly
-    const code =
-      "!()*-.0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~";
-
-    let guid = "";
-    let num = 0;
-    let val;
-
-    // Generate ten 70-value characters for a 70^10 (~61.29-bit) GUID
-    for (let i = 0; i < 10; i++) {
-      // Refresh the number source after using it a few times
-      if (i == 0 || i == 5)
-        num = Math.random();
-
-      // Figure out which code to use for the next GUID character
-      num *= 70;
-      val = Math.floor(num);
-      guid += code[val];
-      num -= val;
-    }
-
-    return guid;
+    return Utils.encodeBase64url(Utils.generateRandomBytes(9));
   },
 
   anno: function anno(id, anno, val, expire) {
@@ -330,8 +335,21 @@ let Utils = {
     let prot = obj.prototype;
 
     // Create a getter if it doesn't exist yet
-    if (!prot.__lookupGetter__(prop))
-      prot.__defineGetter__(prop, function() deref(this)[prop]);
+    if (!prot.__lookupGetter__(prop)) {
+      // Yes, this should be a one-liner, but there are errors if it's not
+      // broken out. *sigh*
+      // Errors are these:
+      // JavaScript strict warning: resource://services-sync/util.js, line 304: reference to undefined property deref(this)[prop]
+      // JavaScript strict warning: resource://services-sync/util.js, line 304: reference to undefined property deref(this)[prop]
+      let f = function() {
+        let d = deref(this);
+        if (!d)
+          return undefined;
+        let out = d[prop];
+        return out;
+      }
+      prot.__defineGetter__(prop, f);
+    }
 
     // Create a setter if it doesn't exist yet
     if (!prot.__lookupSetter__(prop))
@@ -481,7 +499,7 @@ let Utils = {
   exceptionStr: function Weave_exceptionStr(e) {
     let message = e.message ? e.message : e;
     return message + " " + Utils.stackTrace(e);
- },
+  },
 
   stackTraceFromFrame: function Weave_stackTraceFromFrame(frame) {
     let output = [];
@@ -549,6 +567,21 @@ let Utils = {
             for each (byte in bytes)].join("");
   },
 
+  _sha256: function _sha256(message) {
+    let hasher = Cc["@mozilla.org/security/hash;1"].
+      createInstance(Ci.nsICryptoHash);
+    hasher.init(hasher.SHA256);
+    return Utils.digest(message, hasher);
+  },
+
+  sha256: function sha256(message) {
+    return Utils.bytesAsHex(Utils._sha256(message));
+  },
+
+  sha256Base64: function (message) {
+    return btoa(Utils._sha256(message));
+  },
+
   _sha1: function _sha1(message) {
     let hasher = Cc["@mozilla.org/security/hash;1"].
       createInstance(Ci.nsICryptoHash);
@@ -563,15 +596,249 @@ let Utils = {
   sha1Base32: function sha1Base32(message) {
     return Utils.encodeBase32(Utils._sha1(message));
   },
+  
+  /**
+   * Produce an HMAC key object from a key string.
+   */
+  makeHMACKey: function makeHMACKey(str) {
+    return Svc.KeyFactory.keyFromString(Ci.nsIKeyObject.HMAC, str);
+  },
+    
+  /**
+   * Produce an HMAC hasher.
+   */
+  makeHMACHasher: function makeHMACHasher() {
+    return Cc["@mozilla.org/security/hmac;1"]
+             .createInstance(Ci.nsICryptoHMAC);
+  },
+
+  sha1Base64: function (message) {
+    return btoa(Utils._sha1(message));
+  },
 
   /**
-   * Generate a sha256 HMAC for a string message and a given nsIKeyObject
+   * Generate a sha1 HMAC for a message, not UTF-8 encoded,
+   * and a given nsIKeyObject.
+   * Optionally provide an existing hasher, which will be 
+   * initialized and reused.
    */
-  sha256HMAC: function sha256HMAC(message, key) {
-    let hasher = Cc["@mozilla.org/security/hmac;1"].
-      createInstance(Ci.nsICryptoHMAC);
-    hasher.init(hasher.SHA256, key);
-    return Utils.bytesAsHex(Utils.digest(message, hasher));
+  sha1HMACBytes: function sha1HMACBytes(message, key, hasher) {
+    let h = hasher || this.makeHMACHasher();
+    h.init(h.SHA1, key);
+    
+    // No UTF-8 encoding for you, sunshine.
+    let bytes = [b.charCodeAt() for each (b in message)];
+    h.update(bytes, bytes.length);
+    return h.finish(false);
+  },
+  
+  /**
+   * Generate a sha256 HMAC for a string message and a given nsIKeyObject.
+   * Optionally provide an existing hasher, which will be
+   * initialized and reused.
+   *
+   * Returns hex output.
+   */
+  sha256HMAC: function sha256HMAC(message, key, hasher) {
+    let h = hasher || this.makeHMACHasher();
+    h.init(h.SHA256, key);
+    return Utils.bytesAsHex(Utils.digest(message, h));
+  },
+  
+  
+  /**
+   * Generate a sha256 HMAC for a string message, not UTF-8 encoded,
+   * and a given nsIKeyObject.
+   * Optionally provide an existing hasher, which will be
+   * initialized and reused.
+   */
+  sha256HMACBytes: function sha256HMACBytes(message, key, hasher) {
+    let h = hasher || this.makeHMACHasher();
+    h.init(h.SHA256, key);
+
+    // No UTF-8 encoding for you, sunshine.
+    let bytes = [b.charCodeAt() for each (b in message)];
+    h.update(bytes, bytes.length);
+    return h.finish(false);
+  },
+
+  byteArrayToString: function byteArrayToString(bytes) {
+    return [String.fromCharCode(byte) for each (byte in bytes)].join("");
+  },
+  
+  /**
+   * PBKDF2 implementation in Javascript.
+   * 
+   * The arguments to this function correspond to items in 
+   * PKCS #5, v2.0 pp. 9-10 
+   * 
+   * P: the passphrase, an octet string:              e.g., "secret phrase"
+   * S: the salt, an octet string:                    e.g., "DNXPzPpiwn"
+   * c: the number of iterations, a positive integer: e.g., 4096
+   * dkLen: the length in octets of the destination 
+   *        key, a positive integer:                  e.g., 16
+   *        
+   * The output is an octet string of length dkLen, which you
+   * can encode as you wish.
+   */
+  pbkdf2Generate : function pbkdf2Generate(P, S, c, dkLen) {
+    
+    // We don't have a default in the algo itself, as NSS does.
+    // Use the constant.
+    if (!dkLen)
+      dkLen = SYNC_KEY_DECODED_LENGTH;
+    
+    /* For HMAC-SHA-1 */
+    const HLEN = 20;
+    
+    function F(PK, S, c, i, h) {
+    
+      function XOR(a, b, isA) {
+        if (a.length != b.length) {
+          return false;
+        }
+
+        let val = [];
+        for (let i = 0; i < a.length; i++) {
+          if (isA) {
+            val[i] = a[i] ^ b[i];
+          } else {
+            val[i] = a.charCodeAt(i) ^ b.charCodeAt(i);
+          }
+        }
+
+        return val;
+      }
+    
+      let ret;
+      let U = [];
+
+      /* Encode i into 4 octets: _INT */
+      let I = [];
+      I[0] = String.fromCharCode((i >> 24) & 0xff);
+      I[1] = String.fromCharCode((i >> 16) & 0xff);
+      I[2] = String.fromCharCode((i >> 8) & 0xff);
+      I[3] = String.fromCharCode(i & 0xff);
+
+      U[0] = Utils.sha1HMACBytes(S + I.join(''), PK, h);
+      for (let j = 1; j < c; j++) {
+        U[j] = Utils.sha1HMACBytes(U[j - 1], PK, h);
+      }
+
+      ret = U[0];
+      for (j = 1; j < c; j++) {
+        ret = Utils.byteArrayToString(XOR(ret, U[j]));
+      }
+
+      return ret;
+    }
+    
+    let l = Math.ceil(dkLen / HLEN);
+    let r = dkLen - ((l - 1) * HLEN);
+
+    // Reuse the key and the hasher. Remaking them 4096 times is 'spensive.
+    let PK = Utils.makeHMACKey(P);
+    let h = Utils.makeHMACHasher();
+    
+    T = [];
+    for (let i = 0; i < l;) {
+      T[i] = F(PK, S, c, ++i, h);
+    }
+
+    let ret = '';
+    for (i = 0; i < l-1;) {
+      ret += T[i++];
+    }
+    ret += T[l - 1].substr(0, r);
+
+    return ret;
+  },
+
+
+  /**
+   * Base32 decode (RFC 4648) a string.
+   */
+  decodeBase32: function decodeBase32(str) {
+    const key = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+
+    let padChar = str.indexOf("=");
+    let chars = (padChar == -1) ? str.length : padChar;
+    let bytes = Math.floor(chars * 5 / 8);
+    let blocks = Math.ceil(chars / 8);
+
+    // Process a chunk of 5 bytes / 8 characters.
+    // The processing of this is known in advance,
+    // so avoid arithmetic!
+    function processBlock(ret, cOffset, rOffset) {
+      let c, val;
+
+      // N.B., this relies on
+      //   undefined | foo == foo.
+      function accumulate(val) {
+        ret[rOffset] |= val;
+      }
+
+      function advance() {
+        c  = str[cOffset++];
+        if (!c || c == "" || c == "=") // Easier than range checking.
+          throw "Done";                // Will be caught far away.
+        val = key.indexOf(c);
+        if (val == -1)
+          throw "Unknown character in base32: " + c;
+      }
+
+      // Handle a left shift, restricted to bytes.
+      function left(octet, shift)
+        (octet << shift) & 0xff;
+
+      advance();
+      accumulate(left(val, 3));
+      advance();
+      accumulate(val >> 2);
+      ++rOffset;
+      accumulate(left(val, 6));
+      advance();
+      accumulate(left(val, 1));
+      advance();
+      accumulate(val >> 4);
+      ++rOffset;
+      accumulate(left(val, 4));
+      advance();
+      accumulate(val >> 1);
+      ++rOffset;
+      accumulate(left(val, 7));
+      advance();
+      accumulate(left(val, 2));
+      advance();
+      accumulate(val >> 3);
+      ++rOffset;
+      accumulate(left(val, 5));
+      advance();
+      accumulate(val);
+      ++rOffset;
+    }
+
+    // Our output. Define to be explicit (and maybe the compiler will be smart).
+    let ret  = new Array(bytes);
+    let i    = 0;
+    let cOff = 0;
+    let rOff = 0;
+
+    for (; i < blocks; ++i) {
+      try {
+        processBlock(ret, cOff, rOff);
+      } catch (ex) {
+        // Handle the detection of padding.
+        if (ex == "Done")
+          break;
+        throw ex;
+      }
+      cOff += 8;
+      rOff += 5;
+    }
+
+    // Slice in case our shift overflowed to the right.
+    return Utils.byteArrayToString(ret.slice(0, bytes));
   },
 
   /**
@@ -616,6 +883,85 @@ let Utils = {
       default:
         return ret;
     }
+  },
+
+  /**
+   * Turn RFC 4648 base32 into our own user-friendly version.
+   *   ABCDEFGHIJKLMNOPQRSTUVWXYZ234567
+   * becomes
+   *   abcdefghijk8mn9pqrstuvwxyz234567
+   */
+  base32ToFriendly: function base32ToFriendly(input) {
+    return input.toLowerCase()
+                .replace("l", '8', "g")
+                .replace("o", '9', "g");
+  },
+
+  base32FromFriendly: function base32FromFriendly(input) {
+    return input.toUpperCase()
+                .replace("8", 'L', "g")
+                .replace("9", 'O', "g");
+  },
+
+
+  /**
+   * Key manipulation.
+   */
+
+  // Return an octet string in friendly base32 *with no trailing =*.
+  encodeKeyBase32: function encodeKeyBase32(keyData) {
+    return Utils.base32ToFriendly(
+             Utils.encodeBase32(keyData))
+           .slice(0, SYNC_KEY_ENCODED_LENGTH);
+  },
+
+  decodeKeyBase32: function decodeKeyBase32(encoded) {
+    return Utils.decodeBase32(
+             Utils.base32FromFriendly(
+               Utils.normalizePassphrase(encoded)))
+           .slice(0, SYNC_KEY_DECODED_LENGTH);
+  },
+
+  base64Key: function base64Key(keyData) {
+    return btoa(keyData);
+  },
+
+  deriveKeyFromPassphrase: function deriveKeyFromPassphrase(passphrase, salt, keyLength, forceJS) {
+    if (Svc.Crypto.deriveKeyFromPassphrase && !forceJS) {
+      return Svc.Crypto.deriveKeyFromPassphrase(passphrase, salt, keyLength);
+    }
+    else {
+      // Fall back to JS implementation.
+      // 4096 is hardcoded in WeaveCrypto, so do so here.
+      return Utils.pbkdf2Generate(passphrase, atob(salt), 4096, keyLength);
+    }
+  },
+
+  /**
+   * N.B., salt should be base64 encoded, even though we have to decode
+   * it later!
+   */
+  derivePresentableKeyFromPassphrase : function derivePresentableKeyFromPassphrase(passphrase, salt, keyLength, forceJS) {
+    let k = Utils.deriveKeyFromPassphrase(passphrase, salt, keyLength, forceJS);
+    return Utils.encodeKeyBase32(k);
+  },
+
+  /**
+   * N.B., salt should be base64 encoded, even though we have to decode
+   * it later!
+   */
+  deriveEncodedKeyFromPassphrase : function deriveEncodedKeyFromPassphrase(passphrase, salt, keyLength, forceJS) {
+    let k = Utils.deriveKeyFromPassphrase(passphrase, salt, keyLength, forceJS);
+    return Utils.base64Key(k);
+  },
+
+  /**
+   * Take a base64-encoded 128-bit AES key, returning it as five groups of five
+   * uppercase alphanumeric characters, separated by hyphens.
+   * A.K.A. base64-to-base32 encoding.
+   */
+  presentEncodedKeyAsSyncKey : function presentEncodedKeyAsSyncKey(encodedKey) {
+    return Utils.encodeKeyBase32(atob(encodedKey));
   },
 
   makeURI: function Weave_makeURI(URIString) {
@@ -861,34 +1207,90 @@ let Utils = {
   },
 
   /**
-   * Generate 20 random characters a-z
+   * Generate 26 characters.
    */
-  generatePassphrase: function() {
-    let rng = Cc["@mozilla.org/security/random-generator;1"]
-                .createInstance(Ci.nsIRandomGenerator);
-    let bytes = rng.generateRandomBytes(20);
-    return [String.fromCharCode(97 + Math.floor(byte * 26 / 256))
-            for each (byte in bytes)].join("");
+  generatePassphrase: function generatePassphrase() {
+    // Note that this is a different base32 alphabet to the one we use for
+    // other tasks. It's lowercase, uses different letters, and needs to be
+    // decoded with decodeKeyBase32, not just decodeBase32.
+    return Utils.encodeKeyBase32(Utils.generateRandomBytes(16));
   },
 
   /**
-   * Hyphenate a 20 character passphrase in 4 groups of 5.
+   * The following are the methods supported for UI use:
+   *
+   * * isPassphrase:
+   *     determines whether a string is either a normalized or presentable
+   *     passphrase.
+   * * hyphenatePassphrase:
+   *     present a normalized passphrase for display. This might actually
+   *     perform work beyond just hyphenation; sorry.
+   * * hyphenatePartialPassphrase:
+   *     present a fragment of a normalized passphrase for display.
+   * * normalizePassphrase:
+   *     take a presentable passphrase and reduce it to a normalized
+   *     representation for storage. normalizePassphrase can safely be called
+   *     on normalized input.
    */
-  hyphenatePassphrase: function(passphrase) {
-    return passphrase.slice(0, 5) + '-'
-         + passphrase.slice(5, 10) + '-'
-         + passphrase.slice(10, 15) + '-'
-         + passphrase.slice(15, 20);
+
+  isPassphrase: function(s) {
+    if (s) {
+      return /^[abcdefghijkmnpqrstuvwxyz23456789]{26}$/.test(Utils.normalizePassphrase(s));
+    }
+    return false;
   },
 
   /**
-   * Remove hyphens as inserted by hyphenatePassphrase().
+   * Hyphenate a passphrase (26 characters) into groups.
+   * abbbbccccddddeeeeffffggggh
+   * =>
+   * a-bbbbc-cccdd-ddeee-effff-ggggh
    */
-  normalizePassphrase: function(pp) {
-    if (pp.length == 23 && pp[5] == '-' && pp[11] == '-' && pp[17] == '-')
-      return pp.slice(0, 5) + pp.slice(6, 11)
-           + pp.slice(12, 17) + pp.slice(18, 23);
+  hyphenatePassphrase: function hyphenatePassphrase(passphrase) {
+    // For now, these are the same.
+    return Utils.hyphenatePartialPassphrase(passphrase, true);
+  },
+
+  hyphenatePartialPassphrase: function hyphenatePartialPassphrase(passphrase, omitTrailingDash) {
+    if (!passphrase)
+      return null;
+
+    // Get the raw data input. Just base32.
+    let data = passphrase.toLowerCase().replace(/[^abcdefghijkmnpqrstuvwxyz23456789]/g, "");
+
+    // This is the neatest way to do this.
+    if ((data.length == 1) && !omitTrailingDash)
+      return data + "-";
+
+    // Hyphenate it.
+    let y = data.substr(0,1);
+    let z = data.substr(1).replace(/(.{1,5})/g, "-$1");
+
+    // Correct length? We're done.
+    if ((z.length == 30) || omitTrailingDash)
+      return y + z;
+
+    // Add a trailing dash if appropriate.
+    return (y + z.replace(/([^-]{5})$/, "$1-")).substr(0, SYNC_KEY_HYPHENATED_LENGTH);
+  },
+
+  normalizePassphrase: function normalizePassphrase(pp) {
+    // Short var name... have you seen the lines below?!
+    pp = pp.toLowerCase();
+    if (pp.length == 31 && [1, 7, 13, 19, 25].every(function(i) pp[i] == '-'))
+      return pp.slice(0, 1) + pp.slice(2, 7)
+             + pp.slice(8, 13) + pp.slice(14, 19)
+             + pp.slice(20, 25) + pp.slice(26, 31);
     return pp;
+  },
+
+  // WeaveCrypto returns bad base64 strings. Truncate excess padding
+  // and decode.
+  // See Bug 562431, comment 4.
+  safeAtoB: function safeAtoB(b64) {
+    let len = b64.length;
+    let over = len % 4;
+    return over ? atob(b64.substr(0, len - over)) : atob(b64);
   },
 
   /*
