@@ -225,6 +225,10 @@ public:
         // expose event top left coordinates within the plugin-rect and
         // not at the drawable origin are misinterpreted.
         QUIRK_FLASH_EXPOSE_COORD_TRANSLATION            = 1 << 4,
+        // Win32: Catch get window info calls on the browser and tweak the
+        // results so mouse input works when flash is displaying it's settings
+        // window.
+        QUIRK_FLASH_HOOK_GETWINDOINFO                   = 1 << 5,
     };
 
     int GetQuirks() { return mQuirks; }
