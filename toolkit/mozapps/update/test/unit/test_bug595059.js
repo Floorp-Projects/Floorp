@@ -60,8 +60,8 @@ var WindowWatcher = {
         let title = getString("updaterIOErrorTitle");
         do_check_eq(aTitle, title);
         let text = gUpdateBundle.formatStringFromName("updaterIOErrorMsg",
-                                                    [Services.appinfo.name,
-                                                     Services.appinfo.name], 2);
+                                                      [Services.appinfo.name,
+                                                       Services.appinfo.name], 2);
         do_check_eq(aText, text);
         do_test_finished();
       }
