@@ -2968,13 +2968,6 @@ PluginInstanceChild::AnswerNPP_Destroy(NPError* aResult)
     for (PRUint32 i = 0; i < streams.Length(); ++i)
         static_cast<BrowserStreamChild*>(streams[i])->FinishDelivery();
 
-    {
-        MutexAutoLock lock(mAsyncCallMutex);
-        for (PRUint32 i = 0; i < mPendingAsyncCalls.Length(); ++i)
-            mPendingAsyncCalls[i]->Cancel();
-        mPendingAsyncCalls.TruncateLength(0);
-    }
-
     mTimers.Clear();
     if (mCurrentInvalidateTask) {
         mCurrentInvalidateTask->Cancel();
@@ -2985,6 +2978,9 @@ PluginInstanceChild::AnswerNPP_Destroy(NPError* aResult)
         mCurrentAsyncSetWindowTask = nsnull;
     }
 
+    // NPP_Destroy() should be a synchronization point for plugin threads
+    // calling NPN_AsyncCall: after this function returns, they are no longer
+    // allowed to make async calls on this instance.
     PluginModuleChild::current()->NPP_Destroy(this);
     mData.ndata = 0;
 
@@ -3005,6 +3001,13 @@ PluginInstanceChild::AnswerNPP_Destroy(NPError* aResult)
     DestroyWinlessPopupSurrogate();
     UnhookWinlessFlashThrottle();
 #endif
+
+    // Pending async calls are discarded, not delivered. This matches the
+    // in-process behavior.
+    for (PRUint32 i = 0; i < mPendingAsyncCalls.Length(); ++i)
+        mPendingAsyncCalls[i]->Cancel();
+
+    mPendingAsyncCalls.Clear();
 
     return true;
 }
