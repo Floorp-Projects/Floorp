@@ -279,6 +279,10 @@ mjit::Compiler::jsop_bitop(JSOp op)
         return;
     }
 
+    /* Convert a double RHS to integer if it's constant for the test below. */
+    if (rhs->isConstant() && rhs->getValue().isDouble())
+        rhs->convertConstantDoubleToInt32(cx);
+
     /* We only want to handle integers here. */
     if ((lhs->isNotType(JSVAL_TYPE_INT32) && lhs->isNotType(JSVAL_TYPE_DOUBLE)) ||
         (rhs->isNotType(JSVAL_TYPE_INT32) && rhs->isNotType(JSVAL_TYPE_DOUBLE)) ||
