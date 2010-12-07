@@ -75,7 +75,7 @@ xhtml|link {
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#rating");
 }
 
-.download-progress {
+.download-progress, .download-progress[mode="undetermined"] {
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#download-progress");
 }
 

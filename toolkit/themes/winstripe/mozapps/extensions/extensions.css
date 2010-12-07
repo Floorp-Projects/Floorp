@@ -910,10 +910,17 @@
   margin: 0 8px;
 }
 
+.download-progress[mode="undetermined"] {
+  border-color: #358942 #317F3D #2E773A;
+}
 
+.download-progress[mode="undetermined"] .status-container {
+  padding: 0 2px;
+}
 
 .download-progress .start-cap,
 .download-progress[complete] .end-cap,
+.download-progress[mode="undetermined"] .end-cap,
 .download-progress .progress .progress-bar {
   -moz-appearance: none;
   background-image: -moz-linear-gradient(#71CA83, #54B06C 49%, #43A05D 51%, #60BB76);
@@ -936,6 +943,7 @@
 .download-progress .progress .progress-bar  {
   border-left-width: 0;
   border-right-width: 0;
+  min-height: 21px;
 }
 
 .download-progress .progress {
