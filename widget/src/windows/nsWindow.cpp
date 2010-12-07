@@ -1097,6 +1097,35 @@ nsWindow* nsWindow::GetParentWindow(PRBool aIncludeOwner)
 
   return widget;
 }
+ 
+BOOL CALLBACK
+nsWindow::EnumAllChildWindProc(HWND aWnd, LPARAM aParam)
+{
+  nsWindow *wnd = nsWindow::GetNSWindowPtr(aWnd);
+  if (wnd) {
+    ((nsWindow::WindowEnumCallback*)aParam)(wnd);
+  }
+  return TRUE;
+}
+
+BOOL CALLBACK
+nsWindow::EnumAllThreadWindowProc(HWND aWnd, LPARAM aParam)
+{
+  nsWindow *wnd = nsWindow::GetNSWindowPtr(aWnd);
+  if (wnd) {
+    ((nsWindow::WindowEnumCallback*)aParam)(wnd);
+  }
+  EnumChildWindows(aWnd, EnumAllChildWindProc, aParam);
+  return TRUE;
+}
+
+void
+nsWindow::EnumAllWindows(WindowEnumCallback aCallback)
+{
+  EnumThreadWindows(GetCurrentThreadId(),
+                    EnumAllThreadWindowProc,
+                    (LPARAM)&aCallback);
+}
 
 /**************************************************************
  *
