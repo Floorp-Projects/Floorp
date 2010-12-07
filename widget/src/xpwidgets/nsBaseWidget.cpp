@@ -137,6 +137,10 @@ nsBaseWidget::~nsBaseWidget()
     static_cast<BasicLayerManager*>(mLayerManager.get())->ClearRetainerWidget();
   }
 
+  if (mLayerManager) {
+    mLayerManager->Destroy();
+  }
+
 #ifdef NOISY_WIDGET_LEAKS
   gNumWidgets--;
   printf("WIDGETS- = %d\n", gNumWidgets);
@@ -1027,6 +1031,9 @@ nsBaseWidget::SetAcceleratedRendering(PRBool aEnabled)
     return NS_OK;
   }
   mUseAcceleratedRendering = aEnabled;
+  if (mLayerManager) {
+    mLayerManager->Destroy();
+  }
   mLayerManager = NULL;
   return NS_OK;
 }

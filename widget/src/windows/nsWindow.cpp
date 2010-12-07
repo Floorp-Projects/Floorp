@@ -3196,6 +3196,7 @@ nsWindow::GetLayerManager(bool* aAllowRetaining)
       if (layerManagerD3D10->device() !=
           gfxWindowsPlatform::GetPlatform()->GetD3D10Device())
       {
+        mLayerManager->Destroy();
         mLayerManager = nsnull;
       }
     }

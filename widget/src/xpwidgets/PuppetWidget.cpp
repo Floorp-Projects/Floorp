@@ -154,6 +154,9 @@ PuppetWidget::Destroy()
   Base::Destroy();
   mPaintTask.Revoke();
   mChild = nsnull;
+  if (mLayerManager) {
+    mLayerManager->Destroy();
+  }
   mLayerManager = nsnull;
   mTabChild = nsnull;
   return NS_OK;
