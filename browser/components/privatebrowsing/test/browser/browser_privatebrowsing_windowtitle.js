@@ -47,6 +47,7 @@ function test() {
   const testPageURL = "http://mochi.test:8888/browser/" +
     "browser/components/privatebrowsing/test/browser/browser_privatebrowsing_windowtitle_page.html";
   waitForExplicitFinish();
+  requestLongerTimeout(2);
 
   // initialization of expected titles
   let test_title = "Test title";

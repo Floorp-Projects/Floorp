@@ -996,8 +996,6 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
 
         DrawTo(nsnull);
 
-        if (sGLContext)
-            sGLContext->SwapBuffers();
         sview.EndDrawing();
     }
 }

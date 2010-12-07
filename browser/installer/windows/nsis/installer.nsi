@@ -228,6 +228,8 @@ Section "-InstallStartCleanup"
   ; Remove the updates directory for Vista and above
   ${CleanUpdatesDir} "Mozilla\Firefox"
 
+  ${RemoveDeprecatedFiles}
+
   ${InstallStartCleanupCommon}
 SectionEnd
 

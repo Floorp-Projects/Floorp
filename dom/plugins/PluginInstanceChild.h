@@ -183,7 +183,7 @@ protected:
     AnswerUpdateWindow();
 
 public:
-    PluginInstanceChild(const NPPluginFuncs* aPluginIface, const nsCString& aMimeType);
+    PluginInstanceChild(const NPPluginFuncs* aPluginIface);
 
     virtual ~PluginInstanceChild();
 
@@ -214,29 +214,10 @@ public:
 
     void AsyncCall(PluginThreadCallback aFunc, void* aUserData);
 
-    int GetQuirks() { return mQuirks; }
-
-    // Quirks mode support for various plugin mime types
-    enum PluginQuirks {
-        // Silverlight assumes it is transparent in windowless mode. This quirk
-        // matches the logic in nsNPAPIPluginInstance::SetWindowless.
-        QUIRK_SILVERLIGHT_DEFAULT_TRANSPARENT           = 1 << 0,
-        // Win32: Hook TrackPopupMenu api so that we can swap out parent
-        // hwnds. The api will fail with parents not associated with our
-        // child ui thread. See WinlessHandleEvent for details.
-        QUIRK_WINLESS_TRACKPOPUP_HOOK                   = 1 << 1,
-        // Win32: Throttle flash WM_USER+1 heart beat messages to prevent
-        // flooding chromium's dispatch loop, which can cause ipc traffic
-        // processing lag.
-        QUIRK_FLASH_THROTTLE_WMUSER_EVENTS              = 1 << 2,
-        // Win32: Catch resets on our subclass by hooking SetWindowLong.
-        QUIRK_FLASH_HOOK_SETLONGPTR                     = 1 << 3,
-    };
+    int GetQuirks();
 
 private:
     friend class PluginModuleChild;
-
-    void InitQuirksModes(const nsCString& aMimeType);
 
     NPError
     InternalGetNPObjectForValue(NPNVariable aValue,
@@ -334,7 +315,6 @@ private:
     const NPPluginFuncs* mPluginIface;
     NPP_t mData;
     NPWindow mWindow;
-    int mQuirks;
 
     // Cached scriptable actors to avoid IPC churn
     PluginScriptableObjectChild* mCachedWindowActor;
@@ -523,10 +503,6 @@ private:
     // in plugin coordinates.
     nsIntRect mSurfaceDifferenceRect;
 
-#ifdef MOZ_X11
-    // Used with windowless flash plugin only, see bug 574583
-    bool                  mFlash10Quirks;
-#endif
 #if (MOZ_PLATFORM_MAEMO == 5) || (MOZ_PLATFORM_MAEMO == 6)
     // Maemo5 Flash does not remember WindowlessLocal state
     // we should listen for NPP values negotiation and remember it

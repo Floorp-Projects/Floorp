@@ -79,6 +79,9 @@ enum StructuredDataType {
     SCTAG_ARRAY_OBJECT,
     SCTAG_OBJECT_OBJECT,
     SCTAG_ARRAY_BUFFER_OBJECT,
+    SCTAG_BOOLEAN_OBJECT,
+    SCTAG_STRING_OBJECT,
+    SCTAG_NUMBER_OBJECT,
     SCTAG_TYPED_ARRAY_MIN = 0xFFFF0100,
     SCTAG_TYPED_ARRAY_MAX = SCTAG_TYPED_ARRAY_MIN + TypedArray::TYPE_MAX - 1,
     SCTAG_END_OF_BUILTIN_TYPES
@@ -345,12 +348,12 @@ SCOutput::extractBuffer(uint64_t **datap, size_t *sizep)
 JS_STATIC_ASSERT(JSString::MAX_LENGTH < UINT32_MAX);
 
 bool
-JSStructuredCloneWriter::writeString(JSString *str)
+JSStructuredCloneWriter::writeString(uint32_t tag, JSString *str)
 {
     const jschar *chars;
     size_t length;
     str->getCharsAndLength(chars, length);
-    return out.writePair(SCTAG_STRING, uint32_t(length)) && out.writeChars(chars, length);
+    return out.writePair(tag, uint32_t(length)) && out.writeChars(chars, length);
 }
 
 bool
@@ -359,7 +362,7 @@ JSStructuredCloneWriter::writeId(jsid id)
     if (JSID_IS_INT(id))
         return out.writePair(SCTAG_INDEX, uint32_t(JSID_TO_INT(id)));
     JS_ASSERT(JSID_IS_STRING(id));
-    return writeString(JSID_TO_STRING(id));
+    return writeString(SCTAG_STRING, JSID_TO_STRING(id));
 }
 
 inline void
@@ -496,7 +499,7 @@ bool
 JSStructuredCloneWriter::startWrite(const js::Value &v)
 {
     if (v.isString()) {
-        return writeString(v.toString());
+        return writeString(SCTAG_STRING, v.toString());
     } else if (v.isNumber()) {
         return out.writeDouble(v.toNumber());
     } else if (v.isBoolean()) {
@@ -510,7 +513,7 @@ JSStructuredCloneWriter::startWrite(const js::Value &v)
         if (obj->isRegExp()) {
             RegExp *re = RegExp::extractFrom(obj);
             return out.writePair(SCTAG_REGEXP_OBJECT, re->getFlags()) &&
-                   writeString(re->getSource());
+                   writeString(SCTAG_STRING, re->getSource());
         } else if (obj->isDate()) {
             jsdouble d = js_DateGetMsecSinceEpoch(context(), obj);
             return out.writePair(SCTAG_DATE_OBJECT, 0) && out.writeDouble(d);
@@ -520,6 +523,13 @@ JSStructuredCloneWriter::startWrite(const js::Value &v)
             return writeTypedArray(obj);
         } else if (js_IsArrayBuffer(obj) && ArrayBuffer::fromJSObject(obj)) {
             return writeArrayBuffer(obj);
+        } else if (obj->isBoolean()) {
+            return out.writePair(SCTAG_BOOLEAN_OBJECT, obj->getPrimitiveThis().toBoolean());
+        } else if (obj->isNumber()) {
+            return out.writePair(SCTAG_NUMBER_OBJECT, 0) &&
+                   out.writeDouble(obj->getPrimitiveThis().toNumber());
+        } else if (obj->isString()) {
+            return writeString(SCTAG_STRING_OBJECT, obj->getPrimitiveThis().toString());
         }
 
         const JSStructuredCloneCallbacks *cb = context()->runtime->structuredCloneCallbacks;
@@ -570,6 +580,17 @@ JSStructuredCloneWriter::write(const Value &v)
             objs.popBack();
             counts.popBack();
         }
+    }
+    return true;
+}
+
+bool
+JSStructuredCloneReader::checkDouble(jsdouble d)
+{
+    if (IsNonCanonicalizedNaN(d)) {
+        JS_ReportErrorNumber(context(), js_GetErrorMessage, NULL,
+                             JSMSG_SC_BAD_SERIALIZED_DATA, "unrecognized NaN");
+        return false;
     }
     return true;
 }
@@ -669,21 +690,42 @@ JSStructuredCloneReader::startRead(Value *vp)
         break;
 
       case SCTAG_BOOLEAN:
+      case SCTAG_BOOLEAN_OBJECT:
         vp->setBoolean(!!data);
+        if (tag == SCTAG_BOOLEAN_OBJECT && !js_PrimitiveToObject(context(), vp))
+            return false;
         break;
 
-      case SCTAG_STRING: {
+      case SCTAG_STRING:
+      case SCTAG_STRING_OBJECT: {
         JSString *str = readString(data);
         if (!str)
             return false;
         vp->setString(str);
+        if (tag == SCTAG_STRING_OBJECT && !js_PrimitiveToObject(context(), vp))
+            return false;
+        break;
+      }
+
+      case SCTAG_NUMBER_OBJECT: {
+        jsdouble d;
+        if (!in.readDouble(&d) || !checkDouble(d))
+            return false;
+        vp->setDouble(d);
+        if (!js_PrimitiveToObject(context(), vp))
+            return false;
         break;
       }
 
       case SCTAG_DATE_OBJECT: {
         jsdouble d;
-        if (!in.readDouble(&d))
+        if (!in.readDouble(&d) || !checkDouble(d))
             return false;
+        if (d == d && d != TIMECLIP(d)) {
+            JS_ReportErrorNumber(context(), js_GetErrorMessage, NULL, JSMSG_SC_BAD_SERIALIZED_DATA,
+                                 "date");
+            return false;
+        }
         JSObject *obj = js_NewDateObjectMsec(context(), d);
         if (!obj)
             return false;
@@ -730,11 +772,8 @@ JSStructuredCloneReader::startRead(Value *vp)
       default: {
         if (tag <= SCTAG_FLOAT_MAX) {
             jsdouble d = ReinterpretPairAsDouble(tag, data);
-            if (IsNonCanonicalizedNaN(d)) {
-                JS_ReportErrorNumber(context(), js_GetErrorMessage, NULL,
-                                     JSMSG_SC_BAD_SERIALIZED_DATA, "unrecognized NaN");
+            if (!checkDouble(d))
                 return false;
-            }
             vp->setNumber(d);
             break;
         }

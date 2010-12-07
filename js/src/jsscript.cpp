@@ -910,7 +910,7 @@ JSScript *
 JSScript::NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natoms,
                     uint32 nobjects, uint32 nupvars, uint32 nregexps,
                     uint32 ntrynotes, uint32 nconsts, uint32 nglobals,
-                    uint32 nClosedArgs, uint32 nClosedVars)
+                    uint16 nClosedArgs, uint16 nClosedVars)
 {
     size_t size, vectorSize;
     JSScript *script;
@@ -1160,12 +1160,15 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
 
   skip_empty:
     CG_COUNT_FINAL_SRCNOTES(cg, nsrcnotes);
+    uint16 nClosedArgs = uint16(cg->closedArgs.length());
+    JS_ASSERT(nClosedArgs == cg->closedArgs.length());
+    uint16 nClosedVars = uint16(cg->closedVars.length());
+    JS_ASSERT(nClosedVars == cg->closedVars.length());
     script = NewScript(cx, prologLength + mainLength, nsrcnotes,
                        cg->atomList.count, cg->objectList.length,
                        cg->upvarList.count, cg->regexpList.length,
                        cg->ntrynotes, cg->constList.length(),
-                       cg->globalUses.length(), cg->closedArgs.length(),
-                       cg->closedVars.length());
+                       cg->globalUses.length(), nClosedArgs, nClosedVars);
     if (!script)
         return NULL;
 
