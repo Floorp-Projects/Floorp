@@ -78,6 +78,20 @@
 #include "nsIDOMWindow.h"
 #include "nsContentUtils.h"
 
+class nsAutoEditorKeypressOperation {
+public:
+  nsAutoEditorKeypressOperation(nsEditor *aEditor, nsIDOMNSEvent *aEvent)
+    : mEditor(aEditor) {
+    mEditor->BeginKeypressHandling(aEvent);
+  }
+  ~nsAutoEditorKeypressOperation() {
+    mEditor->EndKeypressHandling();
+  }
+
+private:
+  nsEditor *mEditor;
+};
+
 nsEditorEventListener::nsEditorEventListener() :
   mEditor(nsnull), mCaretDrawn(PR_FALSE), mCommitText(PR_FALSE),
   mInTransaction(PR_FALSE)
@@ -319,6 +333,10 @@ nsEditorEventListener::KeyPress(nsIDOMEvent* aKeyEvent)
   if (!mEditor->IsAcceptableInputEvent(aKeyEvent)) {
     return NS_OK;
   }
+
+  // Transfer the event's trusted-ness to our editor
+  nsCOMPtr<nsIDOMNSEvent> NSEvent = do_QueryInterface(aKeyEvent);
+  nsAutoEditorKeypressOperation operation(mEditor, NSEvent);
 
   // DOM event handling happens in two passes, the client pass and the system
   // pass.  We do all of our processing in the system pass, to allow client
