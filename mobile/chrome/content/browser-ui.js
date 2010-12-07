@@ -1850,7 +1850,9 @@ var FormHelperUI = {
     messageManager.addMessageListener("FormAssist:AutoComplete", this);
 
     // Listen for events where form assistant should be closed or updated
-    document.getElementById("tabs").addEventListener("TabSelect", this, true);
+    let tabs = document.getElementById("tabs");
+    tabs.addEventListener("TabSelect", this, true);
+    tabs.addEventListener("TabClose", this, true);
     Elements.browsers.addEventListener("URLChanged", this, true);
     window.addEventListener("resize", this, true);
 
@@ -1915,6 +1917,7 @@ var FormHelperUI = {
 
     switch (aEvent.type) {
       case "TabSelect":
+      case "TabClose":
       case "URLChanged":
         this.hide();
         break;
