@@ -974,8 +974,12 @@ LifetimeScript::analyze(JSContext *cx, analyze::Script *analysis, JSScript *scri
           case JSOP_TABLESWITCHX:
             /* Restore all saved variables. :FIXME: maybe do this precisely. */
             for (unsigned i = 0; i < savedCount; i++) {
-                if (!addVariable(cx, *saved[i], offset))
+                LifetimeVariable &var = *saved[i];
+                var.lifetime = ArenaNew<Lifetime>(pool, offset, var.saved);
+                if (!var.lifetime)
                     return false;
+                var.saved = NULL;
+                saved[i--] = saved[--savedCount];
             }
             savedCount = 0;
             break;
