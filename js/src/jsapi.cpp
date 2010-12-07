@@ -45,6 +45,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include "jstypes.h"
 #include "jsstdint.h"
 #include "jsarena.h"
@@ -4428,7 +4429,7 @@ JS_CompileUCScriptForPrincipals(JSContext *cx, JSObject *obj, JSPrincipals *prin
 
     uint32 tcflags = JS_OPTIONS_TO_TCFLAGS(cx) | TCF_NEED_MUTABLE_SCRIPT;
     JSScript *script = Compiler::compileScript(cx, obj, NULL, principals, tcflags,
-                                               chars, length, NULL, filename, lineno);
+                                               chars, length, filename, lineno);
     if (script && !js_NewScriptObject(cx, script)) {
         js_DestroyScript(cx, script);
         script = NULL;
@@ -4503,7 +4504,7 @@ JS_BufferIsCompilableUnit(JSContext *cx, JSObject *obj, const char *bytes, size_
     exnState = JS_SaveExceptionState(cx);
     {
         Parser parser(cx);
-        if (parser.init(chars, length, NULL, NULL, 1)) {
+        if (parser.init(chars, length, NULL, 1)) {
             older = JS_SetErrorReporter(cx, NULL);
             if (!parser.parse(obj) &&
                 parser.tokenStream.isUnexpectedEOF()) {
@@ -4520,6 +4521,70 @@ JS_BufferIsCompilableUnit(JSContext *cx, JSObject *obj, const char *bytes, size_
     cx->free(chars);
     JS_RestoreExceptionState(cx, exnState);
     return result;
+}
+
+/* Use the fastest available getc. */
+#if defined(HAVE_GETC_UNLOCKED)
+# define fast_getc getc_unlocked
+#elif defined(HAVE__GETC_NOLOCK)
+# define fast_getc _getc_nolock
+#else
+# define fast_getc getc
+#endif
+
+static JSScript *
+CompileFileHelper(JSContext *cx, JSObject *obj, JSPrincipals *principals, uint32 tcflags,
+                  const char* filename, FILE *fp)
+{
+    struct stat st;
+    int ok = fstat(fileno(fp), &st);
+    if (ok != 0)
+        return NULL;
+
+    jschar *buf = NULL;
+    size_t len = st.st_size;
+    size_t i = 0;
+    JSScript *script;
+
+    /* Read in the whole file, then compile it. */
+    if (fp == stdin) {
+        JS_ASSERT(len == 0);
+        len = 8;  /* start with a small buffer, expand as necessary */
+        int c;
+        bool hitEOF = false;
+        while (!hitEOF) {
+            len *= 2;
+            jschar* tmpbuf = (jschar *) cx->realloc(buf, len * sizeof(jschar));
+            if (!tmpbuf) {
+                cx->free(buf);
+                return NULL;
+            }
+            buf = tmpbuf;
+
+            while (i < len) {
+                c = fast_getc(fp);
+                if (c == EOF) {
+                    hitEOF = true;
+                    break;
+                }
+                buf[i++] = (jschar) (unsigned char) c;
+            }
+        }
+    } else {
+        buf = (jschar *) cx->malloc(len * sizeof(jschar));
+        if (!buf)
+            return NULL;
+
+        int c;
+        while ((c = fast_getc(fp)) != EOF)
+            buf[i++] = (jschar) (unsigned char) c;
+    }
+
+    JS_ASSERT(i <= len);
+    len = i;
+    script = Compiler::compileScript(cx, obj, NULL, principals, tcflags, buf, len, filename, 1);
+    cx->free(buf);
+    return script;
 }
 
 JS_PUBLIC_API(JSScript *)
@@ -4544,8 +4609,8 @@ JS_CompileFile(JSContext *cx, JSObject *obj, const char *filename)
     }
 
     tcflags = JS_OPTIONS_TO_TCFLAGS(cx) | TCF_NEED_MUTABLE_SCRIPT;
-    script = Compiler::compileScript(cx, obj, NULL, NULL, tcflags,
-                                     NULL, 0, fp, filename, 1);
+    script = CompileFileHelper(cx, obj, NULL, tcflags, filename, fp);
+
     if (fp != stdin)
         fclose(fp);
     if (script && !js_NewScriptObject(cx, script)) {
@@ -4567,8 +4632,8 @@ JS_CompileFileHandleForPrincipals(JSContext *cx, JSObject *obj, const char *file
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, principals);
     tcflags = JS_OPTIONS_TO_TCFLAGS(cx) | TCF_NEED_MUTABLE_SCRIPT;
-    script = Compiler::compileScript(cx, obj, NULL, principals, tcflags,
-                                     NULL, 0, file, filename, 1);
+    script = CompileFileHelper(cx, obj, principals, tcflags, filename, file);
+
     if (script && !js_NewScriptObject(cx, script)) {
         js_DestroyScript(cx, script);
         script = NULL;
@@ -4867,7 +4932,7 @@ JS_EvaluateUCScriptForPrincipals(JSContext *cx, JSObject *obj,
                                      !rval
                                      ? TCF_COMPILE_N_GO | TCF_NO_SCRIPT_RVAL
                                      : TCF_COMPILE_N_GO,
-                                     chars, length, NULL, filename, lineno);
+                                     chars, length, filename, lineno);
     if (!script) {
         LAST_FRAME_CHECKS(cx, script);
         return JS_FALSE;

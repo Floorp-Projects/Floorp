@@ -1028,7 +1028,7 @@ struct Parser : private js::AutoGCRooter
      * and save the pointer beyond the next Parser destructor invocation.
      */
     bool init(const jschar *base, size_t length,
-              FILE *fp, const char *filename, uintN lineno);
+              const char *filename, uintN lineno);
 
     void setPrincipals(JSPrincipals *prin);
 
@@ -1175,9 +1175,9 @@ struct Compiler
      */
     inline bool
     init(const jschar *base, size_t length,
-         FILE *fp, const char *filename, uintN lineno)
+         const char *filename, uintN lineno)
     {
-        return parser.init(base, length, fp, filename, lineno);
+        return parser.init(base, length, filename, lineno);
     }
 
     static bool
@@ -1189,7 +1189,7 @@ struct Compiler
     compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *callerFrame,
                   JSPrincipals *principals, uint32 tcflags,
                   const jschar *chars, size_t length,
-                  FILE *file, const char *filename, uintN lineno,
+                  const char *filename, uintN lineno,
                   JSString *source = NULL,
                   uintN staticLevel = 0);
 
