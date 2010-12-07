@@ -59,6 +59,7 @@
 #include "gfxWindowsSurface.h"
 #include "nsWindowDbg.h"
 #include "cairo.h"
+#include "nsITimer.h"
 #ifdef CAIRO_HAS_D2D_SURFACE
 #include "gfxD2DSurface.h"
 #endif
@@ -259,6 +260,15 @@ public:
   // needed in nsIMM32Handler.cpp
   PRBool                  PluginHasFocus() { return mIMEContext.mStatus == nsIWidget::IME_STATUS_PLUGIN; }
   PRBool                  IsTopLevelWidget() { return mIsTopWidgetWindow; }
+  /**
+   * Start allowing Direct3D9 to be used by widgets when GetLayerManager is
+   * called.
+   *
+   * @param aReinitialize Call GetLayerManager on widgets to ensure D3D9 is
+   *                      initialized, this is usually called when this function
+   *                      is triggered by timeout and not user/web interaction.
+   */
+  static void             StartAllowingD3D9(bool aReinitialize);
 
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
   PRBool HasTaskbarIconBeenCreated() { return mHasTaskbarIconBeenCreated; }
@@ -297,6 +307,8 @@ protected:
   static BOOL    CALLBACK ClearResourcesCallback(HWND aChild, LPARAM aParam);
   static BOOL    CALLBACK EnumAllChildWindProc(HWND aWnd, LPARAM aParam);
   static BOOL    CALLBACK EnumAllThreadWindowProc(HWND aWnd, LPARAM aParam);
+  static void             AllowD3D9Callback(nsWindow *aWindow);
+  static void             AllowD3D9WithReinitializeCallback(nsWindow *aWindow);
 
   /**
    * Window utilities
@@ -504,6 +516,7 @@ protected:
   static int            sTrimOnMinimize;
   static PRBool         sDefaultTrackPointHack;
   static const char*    sDefaultMainWindowClass;
+  static bool           sAllowD3D9;
 #ifdef MOZ_IPC
   static PRUint32       sOOPPPluginFocusEvent;
 #endif
