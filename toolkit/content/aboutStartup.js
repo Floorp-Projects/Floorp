@@ -96,16 +96,18 @@ function clamp(min, value, max) Math.max(min, (Math.min(value, max)));
 ///// First, display the timings from the current startup
 let launched, startup, restored;
 
+let runtime = Services.appinfo;
+runtime.QueryInterface(Ci.nsIXULRuntime_MOZILLA_2_0);
 try {
-  displayTimestamp("launched", launched = Services.appinfo.launchTimestamp);
+  displayTimestamp("launched", launched = runtime.launchTimestamp);
 } catch(x) { }
 
-displayTimestamp("started", startup = Services.appinfo.startupTimestamp);
+displayTimestamp("started", startup = runtime.startupTimestamp);
 if (launched)
   displayDuration("started", startup - launched);
 
 let app = Cc["@mozilla.org/toolkit/app-startup;1"]
-            .getService(Ci.nsIAppStartup2);
+            .getService(Ci.nsIAppStartup_MOZILLA_2_0);
 displayTimestamp("restored", restored = app.restoredTimestamp);
 displayDuration("restored", restored - startup);
 
