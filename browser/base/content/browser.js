@@ -7305,7 +7305,7 @@ var gIdentityHandler = {
     dt.setData("text/uri-list", value);
     dt.setData("text/plain", value);
     dt.setData("text/html", htmlString);
-    dt.setDragImage(event.currentTarget, 0, 0);
+    dt.addElement(event.currentTarget);
   }
 };
 
