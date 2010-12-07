@@ -85,6 +85,21 @@ CrossOriginWrapper::get(JSContext *cx, JSObject *wrapper, JSObject *receiver, js
 }
 
 bool
+CrossOriginWrapper::call(JSContext *cx, JSObject *wrapper, uintN argc, js::Value *vp)
+{
+    return JSCrossCompartmentWrapper::call(cx, wrapper, argc, vp) &&
+           WrapperFactory::WaiveXrayAndWrap(cx, js::Jsvalify(vp));
+}
+
+bool
+CrossOriginWrapper::construct(JSContext *cx, JSObject *wrapper,
+                              uintN argc, js::Value *argv, js::Value *rval)
+{
+    return JSCrossCompartmentWrapper::construct(cx, wrapper, argc, argv, rval) &&
+           WrapperFactory::WaiveXrayAndWrap(cx, js::Jsvalify(rval));
+}
+
+bool
 CrossOriginWrapper::enter(JSContext *cx, JSObject *wrapper, jsid id, Action act)
 {
     nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();

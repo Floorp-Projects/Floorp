@@ -668,6 +668,7 @@ nsDiskCacheStreamIO::OpenCacheFile(PRIntn flags, PRFileDesc ** fd)
     
     rv = cacheMap->GetLocalFileForDiskCacheRecord(&mBinding->mRecord,
                                                   nsDiskCache::kData,
+                                                  !!(flags & PR_CREATE_FILE),
                                                   getter_AddRefs(mLocalFile));
     if (NS_FAILED(rv))  return rv;
     

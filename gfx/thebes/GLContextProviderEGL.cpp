@@ -1543,7 +1543,7 @@ TRY_AGAIN_NO_SHARING:
     if (!glContext->Init())
         return nsnull;
 
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(ANDROID)
     glContext->SetIsDoubleBuffered(PR_TRUE);
 #endif
 

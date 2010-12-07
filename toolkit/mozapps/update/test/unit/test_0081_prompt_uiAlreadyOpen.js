@@ -7,8 +7,6 @@
  * showUpdateAvailable when there is already an application update window open.
  */
 
-var gCheckFunc;
-
 function run_test() {
   do_test_pending();
   do_register_cleanup(end_test);

@@ -146,7 +146,7 @@ TrampolineCompiler::generateForceReturnFast(Assembler &masm)
 #else
     // In case of no fast call, when we change the return address,
     // we need to make sure add esp by 8.
-    masm.addPtr(Imm32(8), Registers::StackPointer);
+    masm.addPtr(Imm32(16), Registers::StackPointer);
 #endif
     return generateForceReturn(masm);
 }

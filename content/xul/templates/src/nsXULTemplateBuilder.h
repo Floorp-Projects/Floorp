@@ -164,8 +164,11 @@ public:
         }
       }
     }
-    void UninitFalse() { Uninit(PR_FALSE); }
-    void UninitTrue() { Uninit(PR_TRUE); }
+
+    // mRoot should not be cleared until after Uninit is finished so that
+    // generated content can be removed during uninitialization.
+    void UninitFalse() { Uninit(PR_FALSE); mRoot = nsnull; }
+    void UninitTrue() { Uninit(PR_TRUE); mRoot = nsnull; }
 
     /**
      * Find the <template> tag that applies for this builder

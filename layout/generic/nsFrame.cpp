@@ -1644,7 +1644,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     return NS_OK;
   }
 
-  if (aBuilder->GetSelectedFramesOnly() &&
+  if (aBuilder->GetIncludeAllOutOfFlows() &&
       (aChild->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
     dirty = aChild->GetVisualOverflowRect();
   } else if (!(aChild->GetStateBits() & NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO)) {

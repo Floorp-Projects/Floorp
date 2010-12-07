@@ -99,6 +99,7 @@ WebGLContext::WebGLContext()
     mSynthesizedGLError = LOCAL_GL_NO_ERROR;
     mPixelStoreFlipY = PR_FALSE;
     mPixelStorePremultiplyAlpha = PR_FALSE;
+    mPixelStoreColorspaceConversion = BROWSER_DEFAULT_WEBGL;
 
     mShaderValidation = PR_TRUE;
 

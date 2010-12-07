@@ -2088,10 +2088,22 @@ Disassemble(JSContext *cx, uintN argc, jsval *vp)
         argv++, argc--;
     }
 
-    for (uintN i = 0; i < argc; i++) {
-        if (!DisassembleValue(cx, argv[i], lines, recursive))
-            return false;
+    if (argc == 0) {
+        /* Without arguments, disassemble the current script. */
+        if (JSStackFrame *frame = JS_GetScriptedCaller(cx, NULL)) {
+            JSScript *script = JS_GetFrameScript(cx, frame);
+            if (!js_Disassemble(cx, script, lines, stdout))
+                return false;
+            SrcNotes(cx, script);
+            TryNotes(cx, script);
+        }
+    } else {
+        for (uintN i = 0; i < argc; i++) {
+            if (!DisassembleValue(cx, argv[i], lines, recursive))
+                return false;
+        }
     }
+
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return true;
 }
