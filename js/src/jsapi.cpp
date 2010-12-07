@@ -947,6 +947,8 @@ JS_IsInRequest(JSContext *cx)
 #ifdef JS_THREADSAFE
     JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread));
     return JS_THREAD_DATA(cx)->requestDepth != 0;
+#else
+    return false;
 #endif
 }
 
