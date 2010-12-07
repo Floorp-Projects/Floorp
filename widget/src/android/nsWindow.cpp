@@ -657,7 +657,7 @@ nsWindow::SetWindowClass(const nsAString& xulWinType)
 }
 
 mozilla::layers::LayerManager*
-nsWindow::GetLayerManager(bool* aAllowRetaining)
+nsWindow::GetLayerManager(LayerManagerPersistence, bool* aAllowRetaining)
 {
     if (aAllowRetaining) {
         *aAllowRetaining = true;
@@ -868,7 +868,7 @@ nsWindow::DrawTo(gfxASurface *targetSurface)
 
         nsPaintEvent event(PR_TRUE, NS_PAINT, this);
         event.region = boundsRect;
-        switch (GetLayerManager()->GetBackendType()) {
+        switch (GetLayerManager(nsnull)->GetBackendType()) {
             case LayerManager::LAYERS_BASIC: {
                 nsRefPtr<gfxContext> ctx = new gfxContext(targetSurface);
 
@@ -891,7 +891,7 @@ nsWindow::DrawTo(gfxASurface *targetSurface)
             }
 
             case LayerManager::LAYERS_OPENGL: {
-                static_cast<mozilla::layers::LayerManagerOGL*>(GetLayerManager())->
+                static_cast<mozilla::layers::LayerManagerOGL*>(GetLayerManager(nsnull))->
                     SetClippingRegion(nsIntRegion(boundsRect));
 
                 status = DispatchEvent(&event);
@@ -960,7 +960,7 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
 
     AndroidBridge::Bridge()->HideProgressDialogOnce();
 
-    if (GetLayerManager()->GetBackendType() == LayerManager::LAYERS_BASIC) {
+    if (GetLayerManager(nsnull)->GetBackendType() == LayerManager::LAYERS_BASIC) {
         jobject bytebuf = sview.GetSoftwareDrawBuffer();
         if (!bytebuf) {
             ALOG("no buffer to draw into - skipping draw");

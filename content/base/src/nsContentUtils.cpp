@@ -6370,8 +6370,8 @@ nsContentUtils::PlatformToDOMLineBreaks(nsString &aString)
   }
 }
 
-already_AddRefed<LayerManager>
-nsContentUtils::LayerManagerForDocument(nsIDocument *aDoc)
+static already_AddRefed<LayerManager>
+LayerManagerForDocumentInternal(nsIDocument *aDoc, bool aRequirePersistent)
 {
   nsIDocument* doc = aDoc;
   nsIDocument* displayDoc = doc->GetDisplayDocument();
@@ -6405,7 +6405,10 @@ nsContentUtils::LayerManagerForDocument(nsIDocument *aDoc)
       nsIWidget* widget =
         nsLayoutUtils::GetDisplayRootFrame(rootFrame)->GetNearestWidget();
       if (widget) {
-        nsRefPtr<LayerManager> manager = widget->GetLayerManager();
+        nsRefPtr<LayerManager> manager =
+          static_cast<nsIWidget_MOZILLA_2_0_BRANCH*>(widget)->
+            GetLayerManager(aRequirePersistent ? nsIWidget_MOZILLA_2_0_BRANCH::LAYER_MANAGER_PERSISTENT : 
+                                                 nsIWidget_MOZILLA_2_0_BRANCH::LAYER_MANAGER_CURRENT);
         return manager.forget();
       }
     }
@@ -6413,6 +6416,18 @@ nsContentUtils::LayerManagerForDocument(nsIDocument *aDoc)
 
   nsRefPtr<LayerManager> manager = new BasicLayerManager();
   return manager.forget();
+}
+
+already_AddRefed<LayerManager>
+nsContentUtils::LayerManagerForDocument(nsIDocument *aDoc)
+{
+  return LayerManagerForDocumentInternal(aDoc, false);
+}
+
+already_AddRefed<LayerManager>
+nsContentUtils::PersistentLayerManagerForDocument(nsIDocument *aDoc)
+{
+  return LayerManagerForDocumentInternal(aDoc, true);
 }
 
 bool
