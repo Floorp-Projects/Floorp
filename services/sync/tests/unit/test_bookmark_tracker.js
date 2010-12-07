@@ -1,10 +1,8 @@
-Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/bookmarks.js");
 Cu.import("resource://services-sync/util.js");
 
 function run_test() {
-  Engines.register(BookmarksEngine);
-  let engine = Engines.get("bookmarks");
+  let engine = new BookmarksEngine();
   engine._store.wipe();
 
   _("Verify we've got an empty tracker to work with.");
@@ -29,14 +27,12 @@ function run_test() {
     _("Tell the tracker to start tracking changes.");
     Svc.Obs.notify("weave:engine:start-tracking");
     createBmk();
-    // We expect two changed items because the containing folder
-    // changed as well (new child).
-    do_check_eq([id for (id in tracker.changedIDs)].length, 2);
+    do_check_eq([id for (id in tracker.changedIDs)].length, 1);
 
     _("Notifying twice won't do any harm.");
     Svc.Obs.notify("weave:engine:start-tracking");
     createBmk();
-    do_check_eq([id for (id in tracker.changedIDs)].length, 3);
+    do_check_eq([id for (id in tracker.changedIDs)].length, 2);
 
     _("Let's stop tracking again.");
     tracker.clearChangedIDs();
