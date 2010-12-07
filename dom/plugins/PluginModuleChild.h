@@ -221,6 +221,10 @@ public:
         QUIRK_FLASH_THROTTLE_WMUSER_EVENTS              = 1 << 2,
         // Win32: Catch resets on our subclass by hooking SetWindowLong.
         QUIRK_FLASH_HOOK_SETLONGPTR                     = 1 << 3,
+        // X11: Work around a bug in Flash up to 10.1 d51 at least, where
+        // expose event top left coordinates within the plugin-rect and
+        // not at the drawable origin are misinterpreted.
+        QUIRK_FLASH_EXPOSE_COORD_TRANSLATION            = 1 << 4,
     };
 
     int GetQuirks() { return mQuirks; }
