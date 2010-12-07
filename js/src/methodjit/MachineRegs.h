@@ -54,19 +54,19 @@ struct AnyRegisterID {
 
     AnyRegisterID()
         : reg_((unsigned)-1)
-    {}
+    { pin(); }
 
     AnyRegisterID(const AnyRegisterID &o)
         : reg_(o.reg_)
-    {}
+    { pin(); }
 
     AnyRegisterID(JSC::MacroAssembler::RegisterID reg)
         : reg_((unsigned)reg)
-    {}
+    { pin(); }
 
     AnyRegisterID(JSC::MacroAssembler::FPRegisterID reg)
         : reg_(JSC::MacroAssembler::TotalRegisters + (unsigned)reg)
-    {}
+    { pin(); }
 
     static inline AnyRegisterID fromRaw(unsigned reg);
 
@@ -77,6 +77,16 @@ struct AnyRegisterID {
     bool isSet() { return reg_ != unsigned(-1); }
 
     inline const char * name();
+
+  private:
+    void pin() {
+        /*
+         * Workaround for apparent compiler bug in GCC 4.2. If GCC thinks that reg_
+         * cannot escape then it compiles isReg() and other accesses to reg_ incorrectly.
+         */
+        static unsigned *v;
+        v = &reg_;
+    }
 };
 
 struct Registers {
