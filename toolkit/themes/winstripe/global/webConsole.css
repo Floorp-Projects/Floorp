@@ -45,6 +45,10 @@
   -moz-transition: height 100ms;
 }
 
+.hud-splitter {
+  border-top: none;
+}
+
 .hud-outer-wrapper {
   width: 100%;
   height: 100%;
