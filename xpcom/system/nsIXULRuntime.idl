@@ -44,7 +44,7 @@
  *                    stable/frozen, please contact Benjamin Smedberg.
  */
 
-[scriptable, uuid(a79a4031-9590-496c-b005-96b8542591ef)]
+[scriptable, uuid(7685dac8-3637-4660-a544-928c5ec0e714)]
 interface nsIXULRuntime : nsISupports
 {
   /**
@@ -116,7 +116,11 @@ interface nsIXULRuntime : nsISupports
    * @throw NS_ERROR_NOT_AVAILABLE if not available.
    */
   void ensureContentProcess();
+};
 
+[scriptable, uuid(a79a4031-9590-496c-b005-96b8542591ef)]
+interface nsIXULRuntime_MOZILLA_2_0 : nsISupports
+{
   /**
    * Recorded timestamp indicating when the operating system began launching the app
     */
