@@ -43,6 +43,25 @@ function runNextTest() {
   }
 }
 
+function waitForPageShow(aCallback) {
+  messageManager.addMessageListener("pageshow", function(aMessage) {
+    if (gCurrentTest._currentTab.browser.currentURI.spec != "about:blank") {
+      messageManager.removeMessageListener(aMessage.name, arguments.callee);
+      setTimeout(aCallback, 0);
+    }
+  });
+}
+
+function waitForNavigationPanel(aCallback, aWaitForHide) {
+  let evt = aWaitForHide ? "NavigationPanelHidden" : "NavigationPanelShown";
+  info("waitFor " + evt + "(" + Components.stack.caller + ")");
+  window.addEventListener(evt, function(aEvent) {
+    info("receive " + evt);
+    window.removeEventListener(aEvent.type, arguments.callee, false);
+    setTimeout(aCallback, 0);
+  }, false);
+}
+
 //------------------------------------------------------------------------------
 // Case: Test adding a bookmark with the Star button
 gTests.push({
@@ -53,13 +72,7 @@ gTests.push({
     this._currentTab = Browser.addTab(testURL_01, true);
 
     // Need to wait until the page is loaded
-    messageManager.addMessageListener("pageshow",
-    function(aMessage) {
-      if (gCurrentTest._currentTab.browser.currentURI.spec != "about:blank") {
-        messageManager.removeMessageListener(aMessage.name, arguments.callee);
-        gCurrentTest.onPageReady();
-      }
-    });
+    waitForPageShow(gCurrentTest.onPageReady);
   },
 
   onPageReady: function() {
@@ -82,33 +95,20 @@ gTests.push({
   _currentTab: null,
 
   run: function() {
-    info("is nav panel open: " + BrowserUI.isAutoCompleteOpen())
     BrowserUI.closeAutoComplete(true);
-    info("opening new tab")
     this._currentTab = Browser.addTab(testURL_02, true);
 
     // Need to wait until the page is loaded
-    messageManager.addMessageListener("pageshow", function(aMessage) {
-      info("got a pageshow: " + gCurrentTest._currentTab.browser.currentURI.spec)
-      if (gCurrentTest._currentTab.browser.currentURI.spec != "about:blank") {
-        info("got the right pageshow")
-        messageManager.removeMessageListener(aMessage.name, arguments.callee);
-        gCurrentTest.onPageReady();
-      }
-    });
+    waitForPageShow(gCurrentTest.onPageReady);
   },
 
   onPageReady: function() {
     // Wait for the bookmarks to load, then do the test
-    window.addEventListener("NavigationPanelShown", gCurrentTest.onBookmarksReady, false);
-    info("opening nav panel")
+    waitForNavigationPanel(gCurrentTest.onBookmarksReady);
     BrowserUI.doCommand("cmd_bookmarks");
   },
 
   onBookmarksReady: function() {
-    info("nav panel is open")
-    window.removeEventListener("NavigationPanelShown", gCurrentTest.onBookmarksReady, false);
-
     let bookmarkitem = document.getAnonymousElementByAttribute(BookmarkList.panel, "uri", testURL_01);
     bookmarkitem.control.scrollBoxObject.ensureElementIsVisible(bookmarkitem);
 
@@ -117,10 +117,8 @@ gTests.push({
     is(bookmarkitem.spec, testURL_01, "Bookmark has the right URL via property");
 
     // Create a listener for the opening bookmark
-    messageManager.addMessageListener("pageshow", function(aMessage) {
-      messageManager.removeMessageListener(aMessage.name, arguments.callee);
+    waitForPageShow(function() {
       is(gCurrentTest._currentTab.browser.currentURI.spec, testURL_01, "Opened the right bookmark");
-
       Browser.closeTab(gCurrentTest._currentTab);
 
       runNextTest();
@@ -137,13 +135,11 @@ gTests.push({
 
   run: function() {
     // Wait for the bookmarks to load, then do the test
-    window.addEventListener("NavigationPanelShown", gCurrentTest.onBookmarksReady, false);
+    waitForNavigationPanel(gCurrentTest.onBookmarksReady);
     BrowserUI.doCommand("cmd_bookmarks");
   },
 
   onBookmarksReady: function() {
-    window.removeEventListener("NavigationPanelShown", gCurrentTest.onBookmarksReady, false);
-
     // Go into edit mode
     let bookmark = BookmarkList.panel.items[0];
     bookmark.startEditing();
@@ -179,13 +175,11 @@ gTests.push({
 
   run: function() {
     // Wait for the bookmarks to load, then do the test
-    window.addEventListener("NavigationPanelShown", gCurrentTest.onBookmarksReady, false);
+    waitForNavigationPanel(gCurrentTest.onBookmarksReady);
     BrowserUI.doCommand("cmd_bookmarks");
   },
 
   onBookmarksReady: function() {
-    window.removeEventListener("NavigationPanelShown", gCurrentTest.onBookmarksReady, false);
-
     // Go into edit mode
     let bookmark = BookmarkList.panel.items[0];
     bookmark.startEditing();
@@ -224,13 +218,11 @@ gTests.push({
 
   run: function() {
     // Wait for the bookmarks to load, then do the test
-    window.addEventListener("NavigationPanelShown", gCurrentTest.onBookmarksReady, false);
+    waitForNavigationPanel(gCurrentTest.onBookmarksReady);
     BrowserUI.doCommand("cmd_bookmarks");
   },
 
   onBookmarksReady: function() {
-    window.removeEventListener("NavigationPanelShown", gCurrentTest.onBookmarksReady, false);
-
     // Go into edit mode
     let bookmark = BookmarkList.panel.items[0];
     bookmark.startEditing();
@@ -268,13 +260,11 @@ gTests.push({
                                                    testURL_02);
 
     // Wait for the bookmarks to load, then do the test
-    window.addEventListener("NavigationPanelShown", gCurrentTest.onBookmarksReady, false);
+    waitForNavigationPanel(gCurrentTest.onBookmarksReady);
     BrowserUI.doCommand("cmd_bookmarks");
   },
 
   onBookmarksReady: function() {
-    window.removeEventListener("NavigationPanelShown", gCurrentTest.onBookmarksReady, false);
-
     // Go into edit mode
     let bookmarksPanel = BookmarkList.panel;
     let bookmark = bookmarksPanel.items[0];
