@@ -613,13 +613,15 @@ class nsXULAppInfo : public nsIXULAppInfo,
 #ifdef MOZ_CRASHREPORTER
                      public nsICrashReporter,
 #endif
-                     public nsIXULRuntime
+                     public nsIXULRuntime,
+                     public nsIXULRuntime_MOZILLA_2_0
 
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIXULAPPINFO
   NS_DECL_NSIXULRUNTIME
+  NS_DECL_NSIXULRUNTIME_MOZILLA_2_0
 #ifdef MOZ_CRASHREPORTER
   NS_DECL_NSICRASHREPORTER
 #endif
@@ -631,6 +633,7 @@ public:
 NS_INTERFACE_MAP_BEGIN(nsXULAppInfo)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXULRuntime)
   NS_INTERFACE_MAP_ENTRY(nsIXULRuntime)
+  NS_INTERFACE_MAP_ENTRY(nsIXULRuntime_MOZILLA_2_0)
 #ifdef XP_WIN
   NS_INTERFACE_MAP_ENTRY(nsIWinAppHelper)
 #endif

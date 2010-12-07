@@ -152,9 +152,10 @@ nsAppStartup::Init()
 // nsAppStartup->nsISupports
 //
 
-NS_IMPL_THREADSAFE_ISUPPORTS6(nsAppStartup,
+NS_IMPL_THREADSAFE_ISUPPORTS7(nsAppStartup,
                               nsIAppStartup,
                               nsIAppStartup2,
+                              nsIAppStartup_MOZILLA_2_0,
                               nsIWindowCreator,
                               nsIWindowCreator2,
                               nsIObserver,
@@ -540,8 +541,8 @@ nsresult nsAppStartup::RecordStartupDuration()
   PRTime launched = 0, started = 0;
   mRestoredTimestamp = PR_Now();
 
-  nsCOMPtr<nsIXULRuntime> runtime = do_GetService(XULRUNTIME_SERVICE_CONTRACTID);
-  nsCOMPtr<nsIXULAppInfo> appinfo = do_QueryInterface(runtime);
+  nsCOMPtr<nsIXULAppInfo> appinfo = do_GetService(XULRUNTIME_SERVICE_CONTRACTID);
+  nsCOMPtr<nsIXULRuntime_MOZILLA_2_0> runtime = do_QueryInterface(appinfo);
 
   runtime->GetLaunchTimestamp(reinterpret_cast<PRUint64*>(&launched));
   runtime->GetStartupTimestamp(reinterpret_cast<PRUint64*>(&started));
