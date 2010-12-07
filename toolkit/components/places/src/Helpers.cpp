@@ -38,8 +38,8 @@
 
 #include "Helpers.h"
 #include "mozIStorageError.h"
-#include "nsIRandomGenerator.h"
 #include "plbase64.h"
+#include "prio.h"
 #include "nsString.h"
 #include "nsNavHistory.h"
 
@@ -256,6 +256,45 @@ Base64urlEncode(const PRUint8* aBytes,
   return NS_OK;
 }
 
+#ifdef XP_WIN
+// Included here because windows.h conflicts with the use of mozIStorageError
+// above.
+#include <windows.h>
+#include <Wincrypt.h>
+#endif
+
+static
+nsresult
+GenerateRandomBytes(PRUint32 aSize,
+                    PRUint8* _buffer)
+{
+  // On Windows, we'll use its built-in cryptographic API.
+#if defined(XP_WIN)
+  HCRYPTPROV cryptoProvider;
+  BOOL rc = CryptAcquireContext(&cryptoProvider, 0, 0, PROV_RSA_FULL,
+                                CRYPT_VERIFYCONTEXT | CRYPT_SILENT);
+  if (rc) {
+    rc = CryptGenRandom(cryptoProvider, aSize, _buffer);
+  }
+  (void)CryptReleaseContext(cryptoProvider, 0);
+  return rc ? NS_OK : NS_ERROR_FAILURE;
+
+  // On Unix, we'll just read in from /dev/urandom.
+#elif defined(XP_UNIX)
+  NS_ENSURE_ARG_MAX(aSize, PR_INT32_MAX);
+  PRFileDesc* urandom = PR_Open("/dev/urandom", PR_RDONLY, 0);
+  nsresult rv = NS_ERROR_FAILURE;
+  if (urandom) {
+    PRInt32 bytesRead = PR_Read(urandom, _buffer, aSize);
+    if (bytesRead == static_cast<PRInt32>(aSize)) {
+      rv = NS_OK;
+    }
+    (void)PR_Close(urandom);
+  }
+  return rv;
+#endif
+}
+
 nsresult
 GenerateGUID(nsCString& _guid)
 {
@@ -266,16 +305,11 @@ GenerateGUID(nsCString& _guid)
   const PRUint32 kRequiredBytesLength =
     static_cast<PRUint32>(GUID_LENGTH / 4 * 3);
 
-  nsCOMPtr<nsIRandomGenerator> rg =
-    do_GetService("@mozilla.org/security/random-generator;1");
-  NS_ENSURE_STATE(rg);
-
-  PRUint8* buffer;
-  nsresult rv = rg->GenerateRandomBytes(kRequiredBytesLength, &buffer);
+  PRUint8 buffer[kRequiredBytesLength];
+  nsresult rv = GenerateRandomBytes(kRequiredBytesLength, buffer);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = Base64urlEncode(buffer, kRequiredBytesLength, _guid);
-  NS_Free(buffer);
   NS_ENSURE_SUCCESS(rv, rv);
 
   NS_ASSERTION(_guid.Length() == GUID_LENGTH, "GUID is not the right size!");

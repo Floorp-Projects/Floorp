@@ -29,22 +29,29 @@ function test_guid_invariants()
   const kAllowedChars =
     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_"
   do_check_eq(kAllowedChars.length, kExpectedChars);
-  let checkedChars = {};
-  for (let i = 0; i < kAllowedChars; i++) {
-    checkedChars[kAllowedChars[i]] = false;
+  const kGuidLength = 12;
+
+  let checkedChars = [];
+  for (let i = 0; i < kGuidLength; i++) {
+    checkedChars[i] = {};
+    for (let j = 0; j < kAllowedChars; j++) {
+      checkedChars[i][kAllowedChars[j]] = false;
+    }
   }
 
-  // We run this until we've seen every character that we expect to see.
+  // We run this until we've seen every character that we expect to see in every
+  // position.
   let seenChars = 0;
   let stmt = DBConn().createStatement("SELECT GENERATE_GUID()");
-  while (seenChars != kExpectedChars) {
+  while (seenChars != (kExpectedChars * kGuidLength)) {
     do_check_true(stmt.executeStep());
     let guid = stmt.getString(0);
     check_invariants(guid);
 
     for (let i = 0; i < guid.length; i++) {
-      if (!checkedChars[guid[i]]) {
-        checkedChars[guid[i]] = true;
+      let character = guid[i];
+      if (!checkedChars[i][character]) {
+        checkedChars[i][character] = true;
         seenChars++;
       }
     }
@@ -53,8 +60,10 @@ function test_guid_invariants()
   stmt.finalize();
 
   // One last reality check - make sure all of our characters were seen.
-  for (let i = 0; i < kAllowedChars; i++) {
-    do_check_true(checkedChars[kAllowedChars[i]]);
+  for (let i = 0; i < kGuidLength; i++) {
+    for (let j = 0; j < kAllowedChars; j++) {
+      do_check_true(checkedChars[i][kAllowedChars[j]]);
+    }
   }
 
   run_next_test();
