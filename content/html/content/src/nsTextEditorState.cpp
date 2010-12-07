@@ -884,7 +884,11 @@ nsTextInputListener::EditAction()
   }
 
   // Fire input event
-  mFrame->FireOnInput();
+  nsCOMPtr<nsIEditor_MOZILLA_2_0_BRANCH> editor20 = do_QueryInterface(editor);
+  NS_ASSERTION(editor20, "Something is very wrong!");
+  PRBool trusted = PR_FALSE;
+  editor20->GetLastKeypressEventTrusted(&trusted);
+  mFrame->FireOnInput(trusted);
 
   return NS_OK;
 }
