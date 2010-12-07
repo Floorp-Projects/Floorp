@@ -1532,6 +1532,15 @@ WeaveSvc.prototype = {
     let meta = Records.get(this.metaURL);
     if (meta.isNew || !meta.payload.engines)
       return;
+    
+    // If we're the only client, and no engines are marked as enabled,
+    // thumb our noses at the server data: it can't be right.
+    // Belt-and-suspenders approach to Bug 615926.
+    if ((this.numClients <= 1) &&
+        ([e for (e in meta.payload.engines) if (e != "clients")].length == 0)) {
+      this._log.info("One client and no enabled engines: not touching local engine status.");
+      return;
+    }
 
     this._ignorePrefObserver = true;
 
