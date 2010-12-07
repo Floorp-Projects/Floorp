@@ -261,6 +261,10 @@
                 onget="return this._docShell || (this._docShell = this.boxObject.QueryInterface(Components.interfaces.nsIContainerBoxObject).docShell);"
                 readonly="true"/>
 
+      <property name="messageManager"
+                onget="return this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader.messageManager;"
+                readonly="true"/>
+
       <field name="_webNavigation">null</field>
 
       <property name="webNavigation"
