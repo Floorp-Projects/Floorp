@@ -122,6 +122,10 @@ _TEST_FILES =	\
 		     bug602141-3-ref.html \
 		     bug602141-4.html \
 		     bug602141-4-ref.html \
+		     bug612271-1.html \
+		     bug612271-2.html \
+		     bug612271-3.html \
+		     bug612271-ref.html \
 		     bug613433-1.html \
 		     bug613433-2.html \
 		     bug613433-3.html \
