@@ -4,6 +4,30 @@ Cu.import("resource://services-sync/base_records/crypto.js");
 Cu.import("resource://services-sync/constants.js");
 btoa = Cu.import("resource://services-sync/util.js").btoa;
 
+function test_time_keyFromString(iterations) {
+  let k;
+  let o;
+  let b = new BulkKeyBundle();
+  let d = Utils.decodeKeyBase32("ababcdefabcdefabcdefabcdef");
+  b.generateRandom();
+  
+  _("Running " + iterations + " iterations of hmacKeyObject + sha256HMACBytes.");
+  for (let i = 0; i < iterations; ++i) {
+    let k = b.hmacKeyObject;
+    o = Utils.sha256HMACBytes(d, k);
+  }
+  do_check_true(!!o);
+  _("Done.");
+}
+
+function test_repeated_hmac() {
+  let testKey = "ababcdefabcdefabcdefabcdef";
+  let k = Utils.makeHMACKey("foo");
+  let one = Utils.sha256HMACBytes(Utils.decodeKeyBase32(testKey), k);
+  let two = Utils.sha256HMACBytes(Utils.decodeKeyBase32(testKey), k);
+  do_check_eq(one, two);
+}
+
 function test_keymanager() {
   let testKey = "ababcdefabcdefabcdefabcdef";
   
@@ -156,4 +180,8 @@ function run_test() {
   test_keymanager();
   test_collections_manager();
   test_key_persistence();
+  test_repeated_hmac();
+  
+  // Only do 1,000 to avoid a 5-second pause in test runs.
+  test_time_keyFromString(1000);
 }

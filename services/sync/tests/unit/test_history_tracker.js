@@ -18,7 +18,7 @@ function run_test() {
   }
 
   try {
-    _("Create bookmark. Won't show because we haven't started tracking yet");
+    _("Create history item. Won't show because we haven't started tracking yet");
     addVisit();
     do_check_eq([id for (id in tracker.changedIDs)].length, 0);
 
