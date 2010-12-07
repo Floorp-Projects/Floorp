@@ -560,13 +560,24 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
       // note that a script-inserted script can steal a preload!
       request = mPreloads[i].mRequest;
       request->mElement = aElement;
-      // XXX what if the charset attribute of the element and the charset
-      // of the preload don't match?
+      nsString preloadCharset(mPreloads[i].mCharset);
       mPreloads.RemoveElementAt(i);
-      rv = CheckContentPolicy(mDocument, aElement, request->mURI, type);
-      NS_ENSURE_SUCCESS(rv, rv);
-    } else {
-      // not preloaded
+
+      // Double-check that the charset the preload used is the same as
+      // the charset we have now.
+      nsAutoString elementCharset;
+      aElement->GetScriptCharset(elementCharset);
+      if (elementCharset.Equals(preloadCharset)) {
+        rv = CheckContentPolicy(mDocument, aElement, request->mURI, type);
+        NS_ENSURE_SUCCESS(rv, rv);
+      } else {
+        // Drop the preload
+        request = nsnull;
+      }
+    }
+
+    if (!request) {
+      // no usable preload
       request = new nsScriptLoadRequest(aElement, version);
       NS_ENSURE_TRUE(request, NS_ERROR_OUT_OF_MEMORY);
       request->mURI = scriptURI;
