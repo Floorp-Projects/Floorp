@@ -941,8 +941,9 @@ LifetimeScript::analyze(JSContext *cx, analyze::Script *analysis, JSScript *scri
                 }
             }
             for (unsigned i = 0; i < savedCount; i++) {
-                JS_ASSERT(!saved[i]->lifetime && saved[i]->saved);
-                if (!saved[i]->savedEnd) {
+                LifetimeVariable &var = *saved[i];
+                JS_ASSERT(!var.lifetime && var.saved);
+                if (!var.savedEnd) {
                     /*
                      * This jump precedes the basic block which killed the variable,
                      * remember it and use it for the end of the next lifetime
@@ -950,15 +951,18 @@ LifetimeScript::analyze(JSContext *cx, analyze::Script *analysis, JSScript *scri
                      * for loops, as if we wrap liveness around the loop the isLive
                      * test below may have given the wrong answer.
                      */
-                    saved[i]->savedEnd = offset;
+                    var.savedEnd = offset;
                 }
-                if (saved[i]->live(targetOffset)) {
+                if (var.live(targetOffset)) {
                     /*
                      * Jumping to a place where this variable is live. Make a new
                      * lifetime segment for the variable.
                      */
-                    if (!addVariable(cx, *saved[i], saved[i]->savedEnd))
+                    var.lifetime = ArenaNew<Lifetime>(pool, offset, var.saved);
+                    if (!var.lifetime)
                         return false;
+                    var.saved = NULL;
+                    saved[i--] = saved[--savedCount];
                 }
             }
             break;
