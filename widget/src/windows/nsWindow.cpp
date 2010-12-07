@@ -3208,7 +3208,7 @@ nsWindow::HasPendingInputEvent()
  **************************************************************/
 
 mozilla::layers::LayerManager*
-nsWindow::GetLayerManager(bool* aAllowRetaining)
+nsWindow::GetLayerManager(LayerManagerPersistence aPersistence, bool* aAllowRetaining)
 {
   if (aAllowRetaining) {
     *aAllowRetaining = true;
