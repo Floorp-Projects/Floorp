@@ -502,17 +502,13 @@ ProcessUpdates(nsIFile *greDir, nsIFile *appDir, nsIFile *updRootDir,
   rv = updRootDir->Clone(getter_AddRefs(updatesDir));
   if (NS_FAILED(rv))
     return rv;
+
   rv = updatesDir->AppendNative(NS_LITERAL_CSTRING("updates"));
   if (NS_FAILED(rv))
     return rv;
 
   rv = updatesDir->AppendNative(NS_LITERAL_CSTRING("0"));
   if (NS_FAILED(rv))
-    return rv;
-
-  PRBool exists;
-  rv = updatesDir->Exists(&exists);
-  if (NS_FAILED(rv) || !exists)
     return rv;
 
   nsCOMPtr<nsILocalFile> statusFile;
