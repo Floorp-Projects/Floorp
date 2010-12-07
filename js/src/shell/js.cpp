@@ -3392,8 +3392,8 @@ EvalInFrame(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 ShapeOf(JSContext *cx, uintN argc, jsval *vp)
 {
-    jsval v = JS_ARGV(cx, vp)[0];
-    if (!JSVAL_IS_OBJECT(v)) {
+    jsval v;
+    if (argc < 1 || !JSVAL_IS_OBJECT(v = JS_ARGV(cx, vp)[0])) {
         JS_ReportError(cx, "shapeOf: object expected");
         return JS_FALSE;
     }
