@@ -1369,6 +1369,8 @@ class nsIWidget_MOZILLA_2_0_BRANCH : public nsIWidget {
   public:
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_IWIDGET_MOZILLA_2_0_BRANCH_IID)
 
+    typedef mozilla::layers::LayerManager LayerManager;
+
     /*
      * Notifies the IME if the input context changes.
      *
@@ -1381,6 +1383,15 @@ class nsIWidget_MOZILLA_2_0_BRANCH : public nsIWidget {
      * Get IME is 'Enabled' or 'Disabled' or 'Password' and other input context
      */
     NS_IMETHOD GetInputMode(IMEContext& aContext) = 0;
+
+    enum LayerManagerPersistence
+    {
+      LAYER_MANAGER_CURRENT = 0,
+      LAYER_MANAGER_PERSISTENT
+    };
+
+    virtual LayerManager *GetLayerManager(LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
+                                          bool* aAllowRetaining = nsnull) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIWidget_MOZILLA_2_0_BRANCH, NS_IWIDGET_MOZILLA_2_0_BRANCH_IID)

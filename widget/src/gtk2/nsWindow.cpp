@@ -2154,9 +2154,9 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
         return TRUE;
     }
 
-    if (GetLayerManager()->GetBackendType() == LayerManager::LAYERS_OPENGL)
+    if (GetLayerManager(nsnull)->GetBackendType() == LayerManager::LAYERS_OPENGL)
     {
-        LayerManagerOGL *manager = static_cast<LayerManagerOGL*>(GetLayerManager());
+        LayerManagerOGL *manager = static_cast<LayerManagerOGL*>(GetLayerManager(nsnull));
         manager->SetClippingRegion(event.region);
 
         nsEventStatus status;

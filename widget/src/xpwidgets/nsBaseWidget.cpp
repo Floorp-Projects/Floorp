@@ -747,7 +747,7 @@ nsBaseWidget::AutoLayerManagerSetup::AutoLayerManagerSetup(
   : mWidget(aWidget)
 {
   BasicLayerManager* manager =
-    static_cast<BasicLayerManager*>(mWidget->GetLayerManager());
+    static_cast<BasicLayerManager*>(mWidget->GetLayerManager(nsnull));
   if (manager) {
     NS_ASSERTION(manager->GetBackendType() == LayerManager::LAYERS_BASIC,
       "AutoLayerManagerSetup instantiated for non-basic layer backend!");
@@ -758,7 +758,7 @@ nsBaseWidget::AutoLayerManagerSetup::AutoLayerManagerSetup(
 nsBaseWidget::AutoLayerManagerSetup::~AutoLayerManagerSetup()
 {
   BasicLayerManager* manager =
-    static_cast<BasicLayerManager*>(mWidget->GetLayerManager());
+    static_cast<BasicLayerManager*>(mWidget->GetLayerManager(nsnull));
   if (manager) {
     NS_ASSERTION(manager->GetBackendType() == LayerManager::LAYERS_BASIC,
       "AutoLayerManagerSetup instantiated for non-basic layer backend!");
@@ -811,6 +811,12 @@ nsBaseWidget::GetShouldAccelerate()
 }
 
 LayerManager* nsBaseWidget::GetLayerManager(bool* aAllowRetaining)
+{
+  return GetLayerManager(LAYER_MANAGER_CURRENT, aAllowRetaining);
+}
+
+LayerManager* nsBaseWidget::GetLayerManager(LayerManagerPersistence,
+                                            bool* aAllowRetaining)
 {
   if (!mLayerManager) {
     nsCOMPtr<nsIPrefBranch2> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
