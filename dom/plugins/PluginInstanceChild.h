@@ -503,10 +503,6 @@ private:
     // in plugin coordinates.
     nsIntRect mSurfaceDifferenceRect;
 
-#ifdef MOZ_X11
-    // Used with windowless flash plugin only, see bug 574583
-    bool                  mFlash10Quirks;
-#endif
 #if (MOZ_PLATFORM_MAEMO == 5) || (MOZ_PLATFORM_MAEMO == 6)
     // Maemo5 Flash does not remember WindowlessLocal state
     // we should listen for NPP values negotiation and remember it
