@@ -1914,6 +1914,7 @@ var gListView = {
   },
 
   show: function(aType, aRequest) {
+    this.node.setAttribute("type", aType);
     this.showEmptyNotice(false);
 
     while (this._listBox.itemCount > 0)
