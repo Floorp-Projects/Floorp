@@ -159,8 +159,6 @@
 #include "mozilla/Services.h"
 #include "nsNativeThemeWin.h"
 #include "nsWindowsDllInterceptor.h"
-#include "nsIWindowMediator.h"
-#include "nsIServiceManager.h"
 
 #if defined(WINCE)
 #include "nsWindowCE.h"
@@ -298,8 +296,6 @@ PRBool          nsWindow::sDefaultTrackPointHack  = PR_FALSE;
 // Default value for general window class (used when the pref is the empty string).
 const char*     nsWindow::sDefaultMainWindowClass = kClassNameGeneral;
 
-// If we're using D3D9, this will not be allowed during initial 5 seconds.
-bool            nsWindow::sAllowD3D9              = false;
 
 #ifdef ACCESSIBILITY
 BOOL            nsWindow::sIsAccessibilityOn      = FALSE;
@@ -1100,35 +1096,6 @@ nsWindow* nsWindow::GetParentWindow(PRBool aIncludeOwner)
   }
 
   return widget;
-}
- 
-BOOL CALLBACK
-nsWindow::EnumAllChildWindProc(HWND aWnd, LPARAM aParam)
-{
-  nsWindow *wnd = nsWindow::GetNSWindowPtr(aWnd);
-  if (wnd) {
-    ((nsWindow::WindowEnumCallback*)aParam)(wnd);
-  }
-  return TRUE;
-}
-
-BOOL CALLBACK
-nsWindow::EnumAllThreadWindowProc(HWND aWnd, LPARAM aParam)
-{
-  nsWindow *wnd = nsWindow::GetNSWindowPtr(aWnd);
-  if (wnd) {
-    ((nsWindow::WindowEnumCallback*)aParam)(wnd);
-  }
-  EnumChildWindows(aWnd, EnumAllChildWindProc, aParam);
-  return TRUE;
-}
-
-void
-nsWindow::EnumAllWindows(WindowEnumCallback aCallback)
-{
-  EnumThreadWindows(GetCurrentThreadId(),
-                    EnumAllThreadWindowProc,
-                    (LPARAM)&aCallback);
 }
 
 /**************************************************************
@@ -3212,7 +3179,7 @@ nsWindow::HasPendingInputEvent()
  **************************************************************/
 
 mozilla::layers::LayerManager*
-nsWindow::GetLayerManager(LayerManagerPersistence aPersistence, bool* aAllowRetaining)
+nsWindow::GetLayerManager(bool* aAllowRetaining)
 {
   if (aAllowRetaining) {
     *aAllowRetaining = true;
@@ -3235,12 +3202,7 @@ nsWindow::GetLayerManager(LayerManagerPersistence aPersistence, bool* aAllowReta
   }
 #endif
 
-  if (!mLayerManager ||
-      (!sAllowD3D9 && aPersistence == LAYER_MANAGER_PERSISTENT &&
-        mLayerManager->GetBackendType() == 
-        mozilla::layers::LayerManager::LAYERS_BASIC)) {
-    // If D3D9 is not currently allowed but the permanent manager is required,
-    // -and- we're currently using basic layers, run through this check.
+  if (!mLayerManager) {
     nsCOMPtr<nsIPrefBranch2> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
 
     PRBool accelerateByDefault = PR_TRUE;
@@ -3279,12 +3241,6 @@ nsWindow::GetLayerManager(LayerManagerPersistence aPersistence, bool* aAllowReta
       mUseAcceleratedRendering = PR_TRUE;
 
     if (mUseAcceleratedRendering) {
-      if (aPersistence == LAYER_MANAGER_PERSISTENT && !sAllowD3D9) {
-        // This will clear out our existing layer manager if we have one since
-        // if we hit this with a LayerManager we're always using BasicLayers.
-        nsToolkit::StartAllowingD3D9();
-      }
-
 #ifdef MOZ_ENABLE_D3D10_LAYER
       if (!preferD3D9) {
         nsRefPtr<mozilla::layers::LayerManagerD3D10> layerManager =
@@ -3295,7 +3251,7 @@ nsWindow::GetLayerManager(LayerManagerPersistence aPersistence, bool* aAllowReta
       }
 #endif
 #ifdef MOZ_ENABLE_D3D9_LAYER
-      if (!preferOpenGL && !mLayerManager && sAllowD3D9) {
+      if (!preferOpenGL && !mLayerManager) {
         nsRefPtr<mozilla::layers::LayerManagerD3D9> layerManager =
           new mozilla::layers::LayerManagerD3D9(this);
         if (layerManager->Initialize()) {
@@ -7535,37 +7491,6 @@ PRBool nsWindow::OnScroll(UINT aMsg, WPARAM aWParam, LPARAM aLParam)
 PRBool nsWindow::AutoErase(HDC dc)
 {
   return PR_FALSE;
-}
-
-void
-nsWindow::AllowD3D9Callback(nsWindow *aWindow)
-{
-  if (aWindow->mLayerManager) {
-    aWindow->mLayerManager->Destroy();
-    aWindow->mLayerManager = NULL;
-  }
-}
-
-void
-nsWindow::AllowD3D9WithReinitializeCallback(nsWindow *aWindow)
-{
-  if (aWindow->mLayerManager) {
-    aWindow->mLayerManager->Destroy();
-    aWindow->mLayerManager = NULL;
-    (void) aWindow->GetLayerManager();
-  }
-}
-
-void
-nsWindow::StartAllowingD3D9(bool aReinitialize)
-{
-  sAllowD3D9 = true;
-
-  if (aReinitialize) {
-    EnumAllWindows(AllowD3D9WithReinitializeCallback);
-  } else {
-    EnumAllWindows(AllowD3D9Callback);
-  }
 }
 
 /**************************************************************

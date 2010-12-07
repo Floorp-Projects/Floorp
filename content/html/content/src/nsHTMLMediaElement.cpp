@@ -2209,8 +2209,7 @@ ImageContainer* nsHTMLMediaElement::GetImageContainer()
   if (!video)
     return nsnull;
 
-  nsRefPtr<LayerManager> manager =
-    nsContentUtils::PersistentLayerManagerForDocument(GetOwnerDoc());
+  nsRefPtr<LayerManager> manager = nsContentUtils::LayerManagerForDocument(GetOwnerDoc());
   if (!manager)
     return nsnull;
 

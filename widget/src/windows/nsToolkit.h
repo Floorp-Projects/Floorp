@@ -100,7 +100,6 @@ protected:
     HWND        mDispatchWnd;
     // Thread Id of the "main" Gui thread.
     PRThread    *mGuiThread;
-    nsCOMPtr<nsITimer> mD3D9Timer;
 
 public:
     static HINSTANCE mDllInstance;
@@ -110,7 +109,6 @@ public:
     static PRBool InitVersionInfo();
     static void Startup(HINSTANCE hModule);
     static void Shutdown();
-    static void StartAllowingD3D9();
 
     static MouseTrailer *gMouseTrailer;
 };

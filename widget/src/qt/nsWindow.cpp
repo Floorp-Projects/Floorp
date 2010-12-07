@@ -1014,12 +1014,12 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption, Q
     nsEventStatus status;
     nsIntRect rect(r.x(), r.y(), r.width(), r.height());
 
-    if (GetLayerManager(nsnull)->GetBackendType() == LayerManager::LAYERS_OPENGL) {
+    if (GetLayerManager()->GetBackendType() == LayerManager::LAYERS_OPENGL) {
         nsPaintEvent event(PR_TRUE, NS_PAINT, this);
         event.refPoint.x = r.x();
         event.refPoint.y = r.y();
         event.region = nsIntRegion(rect);
-        static_cast<mozilla::layers::LayerManagerOGL*>(GetLayerManager(nsnull))->
+        static_cast<mozilla::layers::LayerManagerOGL*>(GetLayerManager())->
             SetClippingRegion(event.region);
         return DispatchEvent(&event);
     }
