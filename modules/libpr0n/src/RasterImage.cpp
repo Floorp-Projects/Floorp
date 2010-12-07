@@ -420,8 +420,16 @@ RasterImage::GetType(PRUint16 *aType)
 {
   NS_ENSURE_ARG_POINTER(aType);
 
-  *aType = imgIContainer::TYPE_RASTER;
+  *aType = GetType();
   return NS_OK;
+}
+
+//******************************************************************************
+/* [noscript, notxpcom] PRUint16 GetType(); */
+NS_IMETHODIMP_(PRUint16)
+RasterImage::GetType()
+{
+  return imgIContainer::TYPE_RASTER;
 }
 
 imgFrame*
