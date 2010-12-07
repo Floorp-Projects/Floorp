@@ -247,6 +247,9 @@ public:
   static nsWindow*        GetNSWindowPtr(HWND aWnd);
   WindowHook&             GetWindowHook() { return mWindowHook; }
   nsWindow*               GetParentWindow(PRBool aIncludeOwner);
+  // Get an array of all nsWindow*s on the main thread.
+  typedef void            (WindowEnumCallback)(nsWindow*);
+  static void             EnumAllWindows(WindowEnumCallback aCallback);
 
   /**
    * Misc.
@@ -292,6 +295,8 @@ protected:
   static LRESULT CALLBACK MozSpecialMouseProc(int code, WPARAM wParam, LPARAM lParam);
   static VOID    CALLBACK HookTimerForPopups( HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime );
   static BOOL    CALLBACK ClearResourcesCallback(HWND aChild, LPARAM aParam);
+  static BOOL    CALLBACK EnumAllChildWindProc(HWND aWnd, LPARAM aParam);
+  static BOOL    CALLBACK EnumAllThreadWindowProc(HWND aWnd, LPARAM aParam);
 
   /**
    * Window utilities
