@@ -745,6 +745,7 @@ nsDiskCacheDevice::GetFileForEntry(nsCacheEntry *    entry,
     nsCOMPtr<nsIFile>  file;
     rv = mCacheMap.GetFileForDiskCacheRecord(&binding->mRecord,
                                              nsDiskCache::kData,
+                                             PR_FALSE,
                                              getter_AddRefs(file));
     if (NS_FAILED(rv))  return rv;
     

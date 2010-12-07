@@ -121,6 +121,13 @@ nsHTMLMetaElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                                  aBindingParent,
                                                  aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
+  if (aDocument &&
+      AttrValueIs(kNameSpaceID_None, nsGkAtoms::name, nsGkAtoms::viewport, eIgnoreCase)) {
+    nsAutoString content;
+    rv = GetContent(content);
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsContentUtils::ProcessViewportInfo(aDocument, content);  
+  }
   CreateAndDispatchEvent(aDocument, NS_LITERAL_STRING("DOMMetaAdded"));
   return rv;
 }

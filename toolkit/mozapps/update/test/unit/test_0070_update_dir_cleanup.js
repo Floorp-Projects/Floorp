@@ -77,7 +77,7 @@ function run_test() {
   do_check_false(log.exists());
 
   dir.append("0");
-  dump("testing " + dir.path + " should exists (bug 512994)");
+  logTestInfo("testing " + dir.path + " should exist (bug 512994)");
   do_check_true(dir.exists());
 
   do_test_finished();

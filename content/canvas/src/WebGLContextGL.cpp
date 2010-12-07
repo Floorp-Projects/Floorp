@@ -324,6 +324,9 @@ NS_IMETHODIMP WebGLContext::BlendFunc(WebGLenum sfactor, WebGLenum dfactor)
         !ValidateBlendFuncDstEnum(dfactor, "blendFunc: dfactor"))
         return NS_OK;
 
+    if (!ValidateBlendFuncEnumsCompatibility(sfactor, dfactor, "blendFuncSeparate: srcRGB and dstRGB"))
+        return NS_OK;
+
     MakeContextCurrent();
     gl->fBlendFunc(sfactor, dfactor);
     return NS_OK;
@@ -339,6 +342,11 @@ WebGLContext::BlendFuncSeparate(WebGLenum srcRGB, WebGLenum dstRGB,
         !ValidateBlendFuncDstEnum(dstAlpha, "blendFuncSeparate: dstAlpha"))
         return NS_OK;
 
+    // note that we only check compatibity for the RGB enums, no need to for the Alpha enums, see
+    // "Section 6.8 forgetting to mention alpha factors?" thread on the public_webgl mailing list
+    if (!ValidateBlendFuncEnumsCompatibility(srcRGB, dstRGB, "blendFuncSeparate: srcRGB and dstRGB"))
+        return NS_OK;
+
     MakeContextCurrent();
     gl->fBlendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha);
     return NS_OK;
@@ -351,6 +359,14 @@ WebGLContext::BufferData(PRInt32 dummy)
     LogMessageIfVerbose("BufferData");
     return NS_ERROR_FAILURE;
 }
+
+NS_IMETHODIMP
+WebGLContext::BufferData_null()
+{
+    // see http://www.khronos.org/bugzilla/show_bug.cgi?id=386
+    return ErrorInvalidValue("bufferData: null object passed");
+}
+
 
 NS_IMETHODIMP
 WebGLContext::BufferData_size(WebGLenum target, WebGLsizei size, WebGLenum usage)
@@ -449,6 +465,12 @@ WebGLContext::BufferSubData(PRInt32 dummy)
 }
 
 NS_IMETHODIMP
+WebGLContext::BufferSubData_null()
+{
+    return NS_OK; // see http://www.khronos.org/bugzilla/show_bug.cgi?id=386
+}
+
+NS_IMETHODIMP
 WebGLContext::BufferSubData_buf(GLenum target, WebGLsizei byteOffset, js::ArrayBuffer *wb)
 {
     WebGLBuffer *boundBuffer = NULL;
@@ -523,7 +545,7 @@ WebGLContext::CheckFramebufferStatus(WebGLenum target, WebGLenum *retval)
     if (target != LOCAL_GL_FRAMEBUFFER)
         return ErrorInvalidEnum("checkFramebufferStatus: target must be FRAMEBUFFER");
 
-    if (mBoundFramebuffer && mBoundFramebuffer->HasConflictingAttachments())
+    if (mBoundFramebuffer && mBoundFramebuffer->HasBadAttachments())
         *retval = LOCAL_GL_FRAMEBUFFER_UNSUPPORTED;
     else
         *retval = gl->fCheckFramebufferStatus(target);
@@ -581,11 +603,12 @@ WebGLContext::CopyTexImage2D(WebGLenum target,
             return ErrorInvalidEnumInfo("copyTexImage2D: target", target);
     }
 
+
     switch (internalformat) {
         case LOCAL_GL_RGB:
+        case LOCAL_GL_LUMINANCE:
         case LOCAL_GL_RGBA:
         case LOCAL_GL_ALPHA:
-        case LOCAL_GL_LUMINANCE:
         case LOCAL_GL_LUMINANCE_ALPHA:
             break;
         default:
@@ -604,8 +627,21 @@ WebGLContext::CopyTexImage2D(WebGLenum target,
             return ErrorInvalidValue("copyTexImage2D: with level > 0, width and height must be powers of two");
     }
 
+    PRBool texFormatRequiresAlpha = internalformat == LOCAL_GL_RGBA ||
+                                    internalformat == LOCAL_GL_ALPHA ||
+                                    internalformat == LOCAL_GL_LUMINANCE_ALPHA;
+    PRBool fboFormatHasAlpha = mBoundFramebuffer ? mBoundFramebuffer->ColorAttachment().HasAlpha()
+                                                 : PRBool(gl->ActualFormat().alpha > 0);
+    if (texFormatRequiresAlpha && !fboFormatHasAlpha)
+        return ErrorInvalidOperation("copyTexImage2D: texture format requires an alpha channel "
+                                     "but the framebuffer doesn't have one");
+
     if (!CanvasUtils::CheckSaneSubrectSize(x,y,width, height, mWidth, mHeight))
         return ErrorInvalidOperation("CopyTexImage2D: copied rectangle out of bounds");
+
+
+    if (mBoundFramebuffer && !mBoundFramebuffer->CheckAndInitializeRenderbuffers())
+        return NS_OK;
 
     WebGLTexture *tex = activeBoundTextureForTarget(target);
     if (!tex)
@@ -643,8 +679,26 @@ WebGLContext::CopyTexSubImage2D(WebGLenum target,
             return ErrorInvalidEnumInfo("CopyTexSubImage2D: target", target);
     }
 
+    WebGLTexture *tex = activeBoundTextureForTarget(target);
+    if (!tex)
+        return ErrorInvalidOperation("copyTexSubImage2D: no texture bound to this target");
+
+    WebGLenum format = tex->ImageInfoAt(0,0).mFormat;
+    PRBool texFormatRequiresAlpha = format == LOCAL_GL_RGBA ||
+                                    format == LOCAL_GL_ALPHA ||
+                                    format == LOCAL_GL_LUMINANCE_ALPHA;
+    PRBool fboFormatHasAlpha = mBoundFramebuffer ? mBoundFramebuffer->ColorAttachment().HasAlpha()
+                                                 : PRBool(gl->ActualFormat().alpha > 0);
+
+    if (texFormatRequiresAlpha && !fboFormatHasAlpha)
+        return ErrorInvalidOperation("copyTexSubImage2D: texture format requires an alpha channel "
+                                     "but the framebuffer doesn't have one");
+
     if (!CanvasUtils::CheckSaneSubrectSize(x,y,width, height, mWidth, mHeight))
         return ErrorInvalidOperation("CopyTexSubImage2D: copied rectangle out of bounds");
+
+    if (mBoundFramebuffer && !mBoundFramebuffer->CheckAndInitializeRenderbuffers())
+        return NS_OK;
 
     MakeContextCurrent();
 
@@ -875,7 +929,16 @@ WebGLContext::DepthFunc(WebGLenum func)
 
 GL_SAME_METHOD_1(DepthMask, DepthMask, WebGLboolean)
 
-GL_SAME_METHOD_2(DepthRange, DepthRange, WebGLfloat, WebGLfloat)
+NS_IMETHODIMP
+WebGLContext::DepthRange(WebGLfloat zNear, WebGLfloat zFar)
+{
+    if (zNear > zFar)
+        return ErrorInvalidOperation("depthRange: the near value is greater than the far value!");
+
+    MakeContextCurrent();
+    gl->fDepthRange(zNear, zFar);
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 WebGLContext::DisableVertexAttribArray(WebGLuint index)
@@ -1468,6 +1531,8 @@ WebGLContext::GetParameter(PRUint32 pname, nsIVariant **retval)
         case LOCAL_GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS:
         case LOCAL_GL_MAX_TEXTURE_IMAGE_UNITS:
         case LOCAL_GL_MAX_FRAGMENT_UNIFORM_COMPONENTS:
+        case LOCAL_GL_MAX_FRAGMENT_UNIFORM_VECTORS:
+        case LOCAL_GL_MAX_VERTEX_UNIFORM_VECTORS:
         case LOCAL_GL_MAX_RENDERBUFFER_SIZE:
         case LOCAL_GL_RED_BITS:
         case LOCAL_GL_GREEN_BITS:
@@ -1475,7 +1540,6 @@ WebGLContext::GetParameter(PRUint32 pname, nsIVariant **retval)
         case LOCAL_GL_ALPHA_BITS:
         case LOCAL_GL_DEPTH_BITS:
         case LOCAL_GL_STENCIL_BITS:
-        case UNPACK_COLORSPACE_CONVERSION_WEBGL:
         {
             GLint i = 0;
             gl->fGetIntegerv(pname, &i);
@@ -1558,6 +1622,11 @@ WebGLContext::GetParameter(PRUint32 pname, nsIVariant **retval)
             break;
         case UNPACK_PREMULTIPLY_ALPHA_WEBGL:
             wrval->SetAsBool(mPixelStorePremultiplyAlpha);
+            break;
+
+// uint, WebGL-specific
+        case UNPACK_COLORSPACE_CONVERSION_WEBGL:
+            wrval->SetAsUint32(mPixelStoreColorspaceConversion);
             break;
 
         //
@@ -1794,7 +1863,6 @@ WebGLContext::GetRenderbufferParameter(WebGLenum target, WebGLenum pname, nsIVar
     switch (pname) {
         case LOCAL_GL_RENDERBUFFER_WIDTH:
         case LOCAL_GL_RENDERBUFFER_HEIGHT:
-        case LOCAL_GL_RENDERBUFFER_INTERNAL_FORMAT:
         case LOCAL_GL_RENDERBUFFER_RED_SIZE:
         case LOCAL_GL_RENDERBUFFER_GREEN_SIZE:
         case LOCAL_GL_RENDERBUFFER_BLUE_SIZE:
@@ -1807,7 +1875,17 @@ WebGLContext::GetRenderbufferParameter(WebGLenum target, WebGLenum pname, nsIVar
             wrval->SetAsInt32(i);
         }
             break;
-
+        case LOCAL_GL_RENDERBUFFER_INTERNAL_FORMAT:
+        {
+            GLint i = 0;
+            gl->fGetRenderbufferParameteriv(target, pname, &i);
+            if (i == LOCAL_GL_DEPTH24_STENCIL8)
+            {
+                i = LOCAL_GL_DEPTH_STENCIL;
+            }
+            wrval->SetAsInt32(i);
+        }
+            break;
         default:
             return ErrorInvalidEnumInfo("GetRenderbufferParameter: parameter", pname);
     }
@@ -2022,11 +2100,13 @@ nsresult WebGLContext::TexParameter_base(WebGLenum target, WebGLenum pname,
     }
 
     if (pnameAndParamAreIncompatible) {
+        // note that currently all params are enums, and the tex-input-validation test wants INVALID_ENUM errors
+        // even for texParameterf. why not.
         if (intParamPtr)
             return ErrorInvalidEnum("texParameteri: pname %x and param %x (decimal %d) are mutually incompatible",
                                     pname, intParam, intParam);
         else
-            return ErrorInvalidValue("texParameterf: pname %x and floating-point param %e are mutually incompatible",
+            return ErrorInvalidEnum("texParameterf: pname %x and floating-point param %e are mutually incompatible",
                                     pname, floatParam);
     }
 
@@ -2427,6 +2507,12 @@ WebGLContext::PixelStorei(WebGLenum pname, WebGLint param)
         case UNPACK_PREMULTIPLY_ALPHA_WEBGL:
             mPixelStorePremultiplyAlpha = (param != 0);
             break;
+        case UNPACK_COLORSPACE_CONVERSION_WEBGL:
+            if (param == LOCAL_GL_NONE || param == BROWSER_DEFAULT_WEBGL)
+                mPixelStoreColorspaceConversion = param;
+            else
+                return ErrorInvalidEnumInfo("pixelStorei: colorspace conversion parameter", param);
+            break;
         case LOCAL_GL_PACK_ALIGNMENT:
         case LOCAL_GL_UNPACK_ALIGNMENT:
             if (param != 1 &&
@@ -2590,7 +2676,7 @@ WebGLContext::ReadPixels_base(WebGLint x, WebGLint y, WebGLsizei width, WebGLsiz
     {
         PRBool needAlphaFixup;
         if (mBoundFramebuffer) {
-            needAlphaFixup = !mBoundFramebuffer->ColorAttachment0HasAlpha();
+            needAlphaFixup = !mBoundFramebuffer->ColorAttachment().HasAlpha();
         } else {
             needAlphaFixup = gl->ActualFormat().alpha == 0;
         }
@@ -2681,8 +2767,8 @@ WebGLContext::RenderbufferStorage(WebGLenum target, WebGLenum internalformat, We
         if (!gl->IsGLES2()) internalformatForGL = LOCAL_GL_RGB8;
         break;
     case LOCAL_GL_DEPTH_COMPONENT16:
+        break;
     case LOCAL_GL_STENCIL_INDEX8:
-        // nothing to do for these ones
         break;
     case LOCAL_GL_DEPTH_STENCIL:
         // this one is available in newer OpenGL (at least since 3.1); will probably become available
@@ -2726,6 +2812,9 @@ WebGLContext::StencilFunc(WebGLenum func, WebGLint ref, WebGLuint mask)
     if (!ValidateComparisonEnum(func, "stencilFunc: func"))
         return NS_OK;
 
+    mStencilRef = ref;
+    mStencilValueMask = mask;
+
     MakeContextCurrent();
     gl->fStencilFunc(func, ref, mask);
     return NS_OK;
@@ -2738,18 +2827,38 @@ WebGLContext::StencilFuncSeparate(WebGLenum face, WebGLenum func, WebGLint ref, 
         !ValidateComparisonEnum(func, "stencilFuncSeparate: func"))
         return NS_OK;
 
+    if (face != LOCAL_GL_FRONT_AND_BACK && (ref != mStencilRef || mask != mStencilValueMask))
+        return ErrorInvalidOperation("stencilFuncSeparate: WebGL doesn't currently allow specifying "
+                                     "different values for front and back.");
+
+    mStencilRef = ref;
+    mStencilValueMask = mask;
+
     MakeContextCurrent();
     gl->fStencilFuncSeparate(face, func, ref, mask);
     return NS_OK;
 }
 
-GL_SAME_METHOD_1(StencilMask, StencilMask, WebGLuint)
+NS_IMETHODIMP
+WebGLContext::StencilMask(WebGLuint mask)
+{
+    mStencilWriteMask = mask;
+
+    MakeContextCurrent();
+    gl->fStencilMask(mask);
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 WebGLContext::StencilMaskSeparate(WebGLenum face, WebGLuint mask)
 {
     if (!ValidateFaceEnum(face, "stencilMaskSeparate: face"))
         return NS_OK;
+
+    if (face != LOCAL_GL_FRONT_AND_BACK && mask != mStencilWriteMask)
+        return ErrorInvalidOperation("stencilMaskSeparate: WebGL doesn't currently allow specifying "
+                                     "different values for front and back.");
+    mStencilWriteMask = mask;
 
     MakeContextCurrent();
     gl->fStencilMaskSeparate(face, mask);

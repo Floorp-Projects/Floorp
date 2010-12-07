@@ -207,7 +207,7 @@ class Repatcher : public JSC::RepatchBuffer
 #ifdef JS_CPU_ARM
 class AutoReserveICSpace {
     typedef Assembler::Label Label;
-    static const size_t reservedSpace = 64;
+    static const size_t reservedSpace = 68;
 
     Assembler           &masm;
 #ifdef DEBUG
@@ -219,6 +219,11 @@ class AutoReserveICSpace {
         masm.ensureSpace(reservedSpace);
 #ifdef DEBUG
         startLabel = masm.label();
+
+        /* Assert that the constant pool is not flushed until we reach a safe point. */
+        masm.allowPoolFlush(false);
+
+        JaegerSpew(JSpew_Insns, " -- BEGIN CONSTANT-POOL-FREE REGION -- \n");
 #endif
     }
 
@@ -226,8 +231,18 @@ class AutoReserveICSpace {
 #ifdef DEBUG
         Label endLabel = masm.label();
         int spaceUsed = masm.differenceBetween(startLabel, endLabel);
+
+        /* Spew the space used, to help tuning of reservedSpace. */
+        JaegerSpew(JSpew_Insns,
+                   " -- END CONSTANT-POOL-FREE REGION: %u bytes used of %u reserved. -- \n",
+                   spaceUsed, reservedSpace);
+
+        /* Assert that we didn't emit more code than we protected. */
         JS_ASSERT(spaceUsed >= 0);
         JS_ASSERT(size_t(spaceUsed) <= reservedSpace);
+
+        /* Allow the pool to be flushed. */
+        masm.allowPoolFlush(true);
 #endif
     }
 };

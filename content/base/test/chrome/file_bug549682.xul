@@ -12,6 +12,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=549682
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
   var didRunAsync = false;
+  var didRunLocal = false;
   var global = Components.classes["@mozilla.org/globalmessagemanager;1"].getService(Components.interfaces.nsIChromeFrameMessageManager);
   var globalListenerCallCount = 0;
   function globalListener(m) {
@@ -23,6 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=549682
       // Note, the result depends on what other windows are open.
       opener.wrappedJSObject.ok(globalListenerCallCount >= 4,
                                 "Global listener should have been called at least 4 times!");
+      opener.wrappedJSObject.ok(didRunLocal, "Local message received.");
 
       opener.setTimeout("done()", 0);
       var i = document.getElementById("ifr");
@@ -43,12 +45,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=549682
     opener.wrappedJSObject.ok(didRunAsync, "Should have run async!");
   }
 
+  function localL(m) {
+    opener.wrappedJSObject.is(m.name, "lasync", "Wrong message!");
+    opener.wrappedJSObject.is(m.json.data, 2345, "Wrong data!");
+    didRunLocal = true;
+  }
+
   function loadScript() {
     // Async should be processed first!
     messageManager.loadFrameScript("data:,sendAsyncMessage('async', { data: 1234 }); sendSyncMessage('sync', { data: 1234 });", false);
   }
 
   function run() {
+    var localmm = document.getElementById('ifr').messageManager;
+    localmm.addMessageListener("lasync", localL);
+    localmm.loadFrameScript("data:,sendAsyncMessage('lasync', { data: 2345 })", false);
+
     messageManager.addMessageListener("async", asyncL);
     messageManager.addMessageListener("sync", syncL);
     global.addMessageListener("async", globalListener);

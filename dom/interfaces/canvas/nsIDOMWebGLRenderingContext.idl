@@ -579,10 +579,12 @@ interface nsIDOMWebGLRenderingContext : nsISupports
   [noscript] void bufferData_size(in WebGLenum target, in WebGLsizei size, in WebGLenum usage);
   [noscript] void bufferData_buf(in WebGLenum target, in WebGLArrayBufferPtr data, in WebGLenum usage);
   [noscript] void bufferData_array(in WebGLenum target, in WebGLArrayPtr data, in WebGLenum usage);
+  [noscript] void bufferData_null();
 
   void bufferSubData([optional] in long dummy);
   [noscript] void bufferSubData_buf(in WebGLenum target, in long offset, in WebGLArrayBufferPtr data);
   [noscript] void bufferSubData_array(in WebGLenum target, in long offset, in WebGLArrayPtr data);
+  [noscript] void bufferSubData_null();
 
   WebGLenum checkFramebufferStatus(in WebGLenum target);
   void clear(in WebGLbitfield mask);

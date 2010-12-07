@@ -7,29 +7,17 @@
 %define glassActiveBorderColor rgb(37, 44, 51)
 %define glassInactiveBorderColor rgb(102, 102, 102)
 
-@media all and (-moz-windows-default-theme) {
-  #navigator-toolbox > toolbar:not(:-moz-lwtheme) {
-    background-color: @customToolbarColor@;
-  }
-
-  .tabbrowser-tab[selected="true"]:not(:-moz-lwtheme) {
-    background-image: -moz-linear-gradient(white, @toolbarHighlight@ 30%),
-                      -moz-linear-gradient(@customToolbarColor@, @customToolbarColor@);
-  }
-
-  /* App menu button */
-
+@media not all and (-moz-windows-classic) {
   #main-window[sizemode="normal"] > #titlebar > #titlebar-content > #appmenu-button-container {
     margin-top: 1px;
   }
 
   #appmenu-button {
-    border: 2px solid;
-    border-top: none;
+    border-width: 2px;
     -moz-border-left-colors: rgba(255,255,255,.5) rgba(83,42,6,.9);
     -moz-border-bottom-colors: rgba(255,255,255,.5) rgba(83,42,6,.9);
     -moz-border-right-colors: rgba(255,255,255,.5) rgba(83,42,6,.9);
-    margin-bottom: -1px; /* compensate white outer border */
+    margin-bottom: 1px; /* compensate white outer border */
     box-shadow: 0 1px 0 rgba(255,255,255,.25) inset,
                 0 0 2px 1px rgba(255,255,255,.25) inset;
   }
@@ -44,6 +32,17 @@
     margin-top: -1px;
     -moz-margin-start: 1px;
   }
+}
+
+@media all and (-moz-windows-default-theme) {
+  #navigator-toolbox > toolbar:not(:-moz-lwtheme) {
+    background-color: @customToolbarColor@;
+  }
+
+  .tabbrowser-tab[selected="true"]:not(:-moz-lwtheme) {
+    background-image: -moz-linear-gradient(white, @toolbarHighlight@ 30%),
+                      -moz-linear-gradient(@customToolbarColor@, @customToolbarColor@);
+  }
 
   #sidebar-splitter {
     border: 0;
@@ -54,13 +53,6 @@
     -moz-margin-start: -3px;
     position: relative;
     z-index: 10;
-  }
-}
-
-@media not all and (-moz-windows-compositor) {
-  /* aero basic, which is a default windows theme */
-  #appmenu-button:-moz-system-metric(windows-theme-aero) {
-    margin-bottom: 1px;
   }
 }
 
@@ -99,6 +91,10 @@
 
   #main-window[sizemode="normal"] #titlebar-buttonbox:-moz-lwtheme {
     margin-top: -2px;
+  }
+
+  #appmenu-button {
+    margin-bottom: -1px; /* compensate white outer border */
   }
 
   #main-window:not(:-moz-lwtheme)[inFullscreen="true"] {
