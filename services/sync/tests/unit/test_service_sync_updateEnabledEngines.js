@@ -216,11 +216,11 @@ function test_disabledRemotely() {
     Weave.Service.login();
     Weave.Service.sync();
 
-    _("Engine is disabled.");
-    do_check_false(engine.enabled);
+    _("Engine is not disabled: only one client.");
+    do_check_true(engine.enabled);
+    
+    // TODO: add a second client and verify that the local pref is changed.
 
-    _("Meta record isn't uploaded.");
-    do_check_false(!!metaWBO.data.engines.steam);
   } finally {
     server.stop(do_test_finished);
     Service.startOver();
