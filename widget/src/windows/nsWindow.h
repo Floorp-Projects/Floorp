@@ -59,7 +59,6 @@
 #include "gfxWindowsSurface.h"
 #include "nsWindowDbg.h"
 #include "cairo.h"
-#include "nsITimer.h"
 #ifdef CAIRO_HAS_D2D_SURFACE
 #include "gfxD2DSurface.h"
 #endif
@@ -167,7 +166,7 @@ public:
                                               PRBool aDoCapture, PRBool aConsumeRollupEvent);
   NS_IMETHOD              GetAttention(PRInt32 aCycleCount);
   virtual PRBool          HasPendingInputEvent();
-  virtual LayerManager*   GetLayerManager(LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT, bool* aAllowRetaining = nsnull);
+  virtual LayerManager*   GetLayerManager(bool* aAllowRetaining = nsnull);
   gfxASurface             *GetThebesSurface();
   NS_IMETHOD              OnDefaultButtonLoaded(const nsIntRect &aButtonRect);
   NS_IMETHOD              OverrideSystemMouseScrollSpeed(PRInt32 aOriginalDelta, PRBool aIsHorizontal, PRInt32 &aOverriddenDelta);
@@ -248,9 +247,6 @@ public:
   static nsWindow*        GetNSWindowPtr(HWND aWnd);
   WindowHook&             GetWindowHook() { return mWindowHook; }
   nsWindow*               GetParentWindow(PRBool aIncludeOwner);
-  // Get an array of all nsWindow*s on the main thread.
-  typedef void            (WindowEnumCallback)(nsWindow*);
-  static void             EnumAllWindows(WindowEnumCallback aCallback);
 
   /**
    * Misc.
@@ -260,15 +256,6 @@ public:
   // needed in nsIMM32Handler.cpp
   PRBool                  PluginHasFocus() { return mIMEContext.mStatus == nsIWidget::IME_STATUS_PLUGIN; }
   PRBool                  IsTopLevelWidget() { return mIsTopWidgetWindow; }
-  /**
-   * Start allowing Direct3D9 to be used by widgets when GetLayerManager is
-   * called.
-   *
-   * @param aReinitialize Call GetLayerManager on widgets to ensure D3D9 is
-   *                      initialized, this is usually called when this function
-   *                      is triggered by timeout and not user/web interaction.
-   */
-  static void             StartAllowingD3D9(bool aReinitialize);
 
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
   PRBool HasTaskbarIconBeenCreated() { return mHasTaskbarIconBeenCreated; }
@@ -305,10 +292,6 @@ protected:
   static LRESULT CALLBACK MozSpecialMouseProc(int code, WPARAM wParam, LPARAM lParam);
   static VOID    CALLBACK HookTimerForPopups( HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime );
   static BOOL    CALLBACK ClearResourcesCallback(HWND aChild, LPARAM aParam);
-  static BOOL    CALLBACK EnumAllChildWindProc(HWND aWnd, LPARAM aParam);
-  static BOOL    CALLBACK EnumAllThreadWindowProc(HWND aWnd, LPARAM aParam);
-  static void             AllowD3D9Callback(nsWindow *aWindow);
-  static void             AllowD3D9WithReinitializeCallback(nsWindow *aWindow);
 
   /**
    * Window utilities
@@ -516,7 +499,6 @@ protected:
   static int            sTrimOnMinimize;
   static PRBool         sDefaultTrackPointHack;
   static const char*    sDefaultMainWindowClass;
-  static bool           sAllowD3D9;
 #ifdef MOZ_IPC
   static PRUint32       sOOPPPluginFocusEvent;
 #endif

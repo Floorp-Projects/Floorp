@@ -312,7 +312,7 @@ PuppetWidget::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
 }
 
 LayerManager*
-PuppetWidget::GetLayerManager(LayerManagerPersistence, bool* aAllowRetaining)
+PuppetWidget::GetLayerManager(bool* aAllowRetaining)
 {
   if (!mLayerManager) {
     mLayerManager = new BasicShadowLayerManager(this);
