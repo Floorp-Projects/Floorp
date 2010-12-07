@@ -41,7 +41,7 @@ function runtests {
     local testdir=$1
     local options=${2-}
     for infile in "$TESTS_DIR"/"$testdir"/*.in ; do
-        runtest $infile $options
+        runtest $infile "$options"
     done
 }
 

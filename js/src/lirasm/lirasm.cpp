@@ -2368,10 +2368,10 @@ processCmdLine(int argc, char **argv, CmdLineOptions& opts)
             // Check that the argument was a number.
             if ('\0' == *endptr) {
                 if ((arm_arch < 4) || (arm_arch > 7)) {
-                    errMsgAndQuit(opts.progname, "Unsupported argument to --arm-arch.\n");
+                    errMsgAndQuit(opts.progname, "Unsupported argument to --arch.\n");
                 }
             } else {
-                errMsgAndQuit(opts.progname, "Unrecognized argument to --arm-arch.\n");
+                errMsgAndQuit(opts.progname, "Unrecognized argument to --arch.\n");
             }
             i++;
         } else if (arg == "--vfp") {
