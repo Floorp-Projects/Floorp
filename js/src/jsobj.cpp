@@ -1231,7 +1231,7 @@ EvalKernel(JSContext *cx, uintN argc, Value *vp, EvalType evalType, JSStackFrame
         script = Compiler::compileScript(cx, scopeobj, callerFrame,
                                          principals, tcflags,
                                          chars, length,
-                                         NULL, filename, lineno, str, staticLevel);
+                                         filename, lineno, str, staticLevel);
         if (!script)
             return false;
     }

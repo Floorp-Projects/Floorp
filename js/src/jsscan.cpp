@@ -175,8 +175,7 @@ js_IsIdentifier(JSString *str)
 
 /* Initialize members that aren't initialized in |init|. */
 TokenStream::TokenStream(JSContext *cx)
-  : cx(cx), tokens(), cursor(), lookahead(), flags(),
-    linepos(), lineposNext(), file(), listenerTSData(), tokenbuf(cx)
+  : cx(cx), tokens(), cursor(), lookahead(), flags(), listenerTSData(), tokenbuf(cx)
 {}
 
 #ifdef _MSC_VER
@@ -184,57 +183,39 @@ TokenStream::TokenStream(JSContext *cx)
 #endif
 
 bool
-TokenStream::init(JSVersion version, const jschar *base, size_t length, FILE *fp,
-                  const char *fn, uintN ln)
+TokenStream::init(JSVersion version, const jschar *base, size_t length, const char *fn, uintN ln)
 {
     this->version = version;
-    JS_ASSERT_IF(fp, !base);
-    JS_ASSERT_IF(!base, length == 0);
-    size_t nb = fp
-         ? (UNGET_LIMIT + 2 * LINE_LIMIT) * sizeof(jschar)    /* see below */
-         : (UNGET_LIMIT + 1 * LINE_LIMIT) * sizeof(jschar);
-    jschar *buf;
-    JS_ARENA_ALLOCATE_CAST(buf, jschar *, &cx->tempPool, nb);
-    if (!buf) {
-        js_ReportOutOfScriptQuota(cx);
-        return false;
-    }
-    memset(buf, 0, nb);
 
-    /* Initialize members. */
     filename = fn;
     lineno = ln;
-    /* 
-     * Split 'buf' into 3 (ungetbuf, linebuf, userbuf) or 2 (ungetbuf, linebuf).
-     * ungetbuf is empty and fills backwards.  linebuf is empty and fills forwards.
-     */
-    ungetbuf.base = buf;
-    ungetbuf.limit = ungetbuf.ptr = buf + UNGET_LIMIT;
-    linebuf.base = linebuf.limit = linebuf.ptr = buf + UNGET_LIMIT;
-    if (fp) {
-        file = fp;
-        userbuf.base = buf + UNGET_LIMIT + LINE_LIMIT;
-        userbuf.ptr = userbuf.limit = userbuf.base + LINE_LIMIT;
-    } else {
-        userbuf.base = (jschar *)base;
-        userbuf.limit = (jschar *)base + length;
-        userbuf.ptr = (jschar *)base;
-    }
-    currbuf = &linebuf;
+
+    userbuf.base = (jschar *)base;
+    userbuf.limit = (jschar *)base + length;
+    userbuf.ptr = (jschar *)base;
+
+    linebase = userbuf.base;
+    prevLinebase = NULL;
+
     listener = cx->debugHooks->sourceHandler;
     listenerData = cx->debugHooks->sourceHandlerData;
-    /* See getCharFillLinebuf() for an explanation of maybeEOL[]. */
+
+    /* See getChar() for an explanation of maybeEOL[]. */
     memset(maybeEOL, 0, sizeof(maybeEOL));
     maybeEOL['\n'] = true;
     maybeEOL['\r'] = true;
     maybeEOL[LINE_SEPARATOR & 0xff] = true;
     maybeEOL[PARA_SEPARATOR & 0xff] = true;
+
     /* See getTokenInternal() for an explanation of maybeStrSpecial[]. */
     memset(maybeStrSpecial, 0, sizeof(maybeStrSpecial));
     maybeStrSpecial['"'] = true;
     maybeStrSpecial['\''] = true;
-    maybeStrSpecial['\n'] = true;
     maybeStrSpecial['\\'] = true;
+    maybeStrSpecial['\n'] = true;
+    maybeStrSpecial['\r'] = true;
+    maybeStrSpecial[LINE_SEPARATOR & 0xff] = true;
+    maybeStrSpecial[PARA_SEPARATOR & 0xff] = true;
     maybeStrSpecial[EOF & 0xff] = true;
     return true;
 }
@@ -283,97 +264,17 @@ js_fgets(char *buf, int size, FILE *file)
     return i;
 }
 
-/*
- * Nb: This does *not* append a terminating '\0'.  Returns the number of chars
- * read from the file.
- */
-int
-TokenStream::fillUserbuf()
-{
-    /*
-     * We avoid splitting a \r\n pair, because this makes things much easier
-     * for getChar().  To do this, we only try to fill userbuf up with
-     * LINE_LIMIT-1 chars.  Once we've reached that number, if the last one is
-     * \r then we check if the following one is \n;  if so we get it too,
-     * knowing that we have space for it.
-     */
-    jschar *buf = userbuf.base;
-    int n = LINE_LIMIT - 1;     /* reserve space for \n following a \r */
-    JS_ASSERT(n > 0);
-    int i;
-    i = 0;
-    while (true) {
-        int c = fast_getc(file);
-        if (c == EOF)
-            break;
-        buf[i] = (jschar) (unsigned char) c;
-        i++;
-
-        if (i == n) {
-            if (buf[i - 1] == '\r') {
-                /* Look for a following \n.  We know we have space in buf for it. */
-                c = fast_getc(file);
-                if (c == EOF)
-                    break;
-                if (c == '\n') {
-                    buf[i] = (jschar) (unsigned char) c;
-                    i++;
-                    break;
-                }
-                ungetc(c, file);    /* \r wasn't followed by \n, unget */
-            }
-            break;
-        }
-    }
-    return i;
-}
-
+/* This gets the next char, normalizing all EOL sequences to '\n' as it goes. */
 int32
-TokenStream::getCharFillLinebuf()
+TokenStream::getChar()
 {
-    ptrdiff_t ulen = userbuf.limit - userbuf.ptr;
-    if (ulen <= 0) {
-        if (!file) {
-            flags |= TSF_EOF;
-            return EOF;
-        }
-
-        /* Fill userbuf so that \r and \r\n convert to \n. */
-        ulen = fillUserbuf();
-        JS_ASSERT(ulen >= 0);
-        if (ulen == 0) {
-            flags |= TSF_EOF;
-            return EOF;
-        }
-        userbuf.limit = userbuf.base + ulen;
-        userbuf.ptr = userbuf.base;
-    }
-    if (listener)
-        listener(filename, lineno, userbuf.ptr, ulen, &listenerTSData, listenerData);
-
-    /*
-     * Copy from userbuf to linebuf.  Stop when any of these happen:
-     * (a) we reach the end of userbuf;
-     * (b) we reach the end of linebuf;
-     * (c) we hit an EOL.
-     *
-     * "EOL" means any of: \r, \n, \r\n, or the Unicode line and paragraph
-     * separators.
-     */
-    jschar *from = userbuf.ptr;
-    jschar *to = linebuf.base;
-
-    int llenAdjust = 0;
-    int limit = JS_MIN(size_t(ulen), LINE_LIMIT);
-    int i = 0;
-    while (i < limit) {
-        /* Copy the jschar from userbuf to linebuf. */
-        jschar d = to[i] = from[i];
-        i++;
+    int32 c;
+    if (JS_LIKELY(userbuf.ptr < userbuf.limit)) {
+        c = *userbuf.ptr++;
 
         /*
-         * Normalize the copied jschar if it was a newline.  We need to detect
-         * any of these four characters:  '\n' (0x000a), '\r' (0x000d),
+         * Normalize the jschar if it was a newline.  We need to detect any of
+         * these four characters:  '\n' (0x000a), '\r' (0x000d),
          * LINE_SEPARATOR (0x2028), PARA_SEPARATOR (0x2029).  Testing for each
          * one in turn is slow, so we use a single probabilistic check, and if
          * that succeeds, test for them individually.
@@ -386,67 +287,44 @@ TokenStream::getCharFillLinebuf()
          * and masking and isn't worthwhile.  See TokenStream::init() for the
          * initialization of the relevant entries in the table.
          */
-        if (maybeEOL[d & 0xff]) {
-            if (d == '\n') {
-                break;
-            }
-
-            if (d == '\r') {
-                to[i - 1] = '\n';       /* overwrite with '\n' */
-                if (i < ulen && from[i] == '\n') {
-                    i++;                /* skip over '\n' */
-                    llenAdjust = -1;
+        if (JS_UNLIKELY(maybeEOL[c & 0xff])) {
+            if (c == '\n')
+                goto eol;
+            if (c == '\r') {
+                if (userbuf.ptr < userbuf.limit && *userbuf.ptr == '\n') {
+                    /* a \r\n sequence: treat as a single EOL, skip over the \n */
+                    userbuf.ptr++;
                 }
-                break;
+                goto eol;
             }
-
-            if (d == LINE_SEPARATOR || d == PARA_SEPARATOR) {
-                to[i - 1] = '\n';       /* overwrite with '\n' */
-                break;
-            }
+            if (c == LINE_SEPARATOR || c == PARA_SEPARATOR)
+                goto eol;
         }
+        return c;
     }
-    
-    /* At this point 'i' is the index one past the last char copied. */
-    ulen = i;
-    userbuf.ptr += ulen;
 
-    /* Reset linebuf based on normalized length. */
-    linebuf.ptr = linebuf.base;
-    linebuf.limit = linebuf.base + ulen + llenAdjust;
+    flags |= TSF_EOF;
+    return EOF;
 
-    /* Update position of linebuf within physical userbuf line. */
-    linepos = lineposNext;
-    if (linebuf.limit[-1] == '\n')
-        lineposNext = 0;
-    else
-        lineposNext += ulen;
-
-    return *linebuf.ptr++;
+  eol:
+    prevLinebase = linebase;
+    linebase = userbuf.ptr;
+    lineno++;
+    return '\n';
 }
 
 /*
- * This gets the next char, normalizing all EOL sequences to '\n' as it goes.
+ * This gets the next char. It does nothing special with EOL sequences, not
+ * even updating the line counters.
  */
 int32
-TokenStream::getCharSlowCase()
+TokenStream::getCharIgnoreEOL()
 {
-    int32 c;
-    if (currbuf->ptr == currbuf->limit - 1) {
-        /* Last char of currbuf.  Switch to linebuf if we're in ungetbuf. */
-        c = *currbuf->ptr++;
-        if (currbuf == &ungetbuf)
-            currbuf = &linebuf;
+    if (JS_LIKELY(userbuf.ptr < userbuf.limit))
+        return *userbuf.ptr++;
 
-    } else {
-        /* One past the last char of currbuf;  can only happen for linebuf. */
-        JS_ASSERT(currbuf->ptr == currbuf->limit);
-        JS_ASSERT(currbuf == &linebuf);
-        c = getCharFillLinebuf();
-    }
-    if (c == '\n')
-        lineno++;
-    return c;
+    flags |= TSF_EOF;
+    return EOF;
 }
 
 void
@@ -454,14 +332,32 @@ TokenStream::ungetChar(int32 c)
 {
     if (c == EOF)
         return;
-    JS_ASSERT(ungetbuf.ptr >= ungetbuf.base);
+    JS_ASSERT(userbuf.ptr > userbuf.base);
+    userbuf.ptr--;
     if (c == '\n') {
-        /* We can only unget one '\n', and it must be the first ungotten char. */
-        JS_ASSERT(ungetbuf.ptr == ungetbuf.limit);
+#ifdef DEBUG
+        int32 c2 = *userbuf.ptr;
+        JS_ASSERT(c2 == '\n' || c2 == '\r' || c2 == LINE_SEPARATOR || c2 == PARA_SEPARATOR);
+#endif
+        if (userbuf.ptr > userbuf.base && *(userbuf.ptr - 1) == '\r')
+            userbuf.ptr--;          /* also unget the \r in a \r\n sequence */
+        JS_ASSERT(prevLinebase);    /* we should never get more than one EOL char */
+        linebase = prevLinebase;
+        prevLinebase = NULL;
         lineno--;
+    } else {
+        JS_ASSERT(*userbuf.ptr == c);
     }
-    *(--ungetbuf.ptr) = (jschar)c;
-    currbuf = &ungetbuf;
+}
+
+void
+TokenStream::ungetCharIgnoreEOL(int32 c)
+{
+    JS_ASSERT(c == '\n' || c == '\r' || c == LINE_SEPARATOR || c == PARA_SEPARATOR || c == EOF);
+    if (c == EOF)
+        return;
+    JS_ASSERT(userbuf.ptr > userbuf.base);
+    userbuf.ptr--;
 }
 
 /*
@@ -490,6 +386,32 @@ TokenStream::peekChars(intN n, jschar *cp)
     return i == n;
 }
 
+jschar *
+TokenStream::findEOL()
+{
+    TokenBuf tmpUserbuf = userbuf;
+    jschar *tmpLinebase = linebase;
+    jschar *tmpPrevLinebase = prevLinebase;
+    uintN tmpFlags = flags;
+    uintN tmpLineno = lineno;
+
+    while (true) {
+        int32 c = getChar();
+        if (c == '\n' || c == EOF)
+            break;
+    }
+    jschar *linelimit = userbuf.ptr;
+
+    /* Need to restore everything changed by getChar(). */
+    userbuf = tmpUserbuf;
+    linebase = tmpLinebase;
+    prevLinebase = tmpPrevLinebase;
+    flags = tmpFlags;
+    lineno = tmpLineno;
+
+    return linelimit;
+}
+
 bool
 TokenStream::reportCompileErrorNumberVA(JSParseNode *pn, uintN flags, uintN errorNumber,
                                         va_list ap)
@@ -498,14 +420,13 @@ TokenStream::reportCompileErrorNumberVA(JSParseNode *pn, uintN flags, uintN erro
     char *message;
     size_t linelength;
     jschar *linechars;
+    jschar *linelimit;
     char *linebytes;
     bool warning;
     JSBool ok;
     TokenPos *tp;
     uintN index, i;
     JSErrorReporter onError;
-
-    JS_ASSERT(linebuf.limit <= linebuf.base + LINE_LIMIT);
 
     if (JSREPORT_IS_STRICT(flags) && !JS_HAS_STRICT_OPTION(cx))
         return JS_TRUE;
@@ -544,36 +465,27 @@ TokenStream::reportCompileErrorNumberVA(JSParseNode *pn, uintN flags, uintN erro
         tp = &tokens[cursor].pos;
     }
     report.lineno = lineno;
-    linelength = linebuf.limit - linebuf.base;
+
+    linelimit = findEOL();
+    linelength = linelimit - linebase;
+
     linechars = (jschar *)cx->malloc((linelength + 1) * sizeof(jschar));
     if (!linechars) {
         warning = false;
         goto out;
     }
-    memcpy(linechars, linebuf.base, linelength * sizeof(jschar));
+    memcpy(linechars, linebase, linelength * sizeof(jschar));
     linechars[linelength] = 0;
     linebytes = js_DeflateString(cx, linechars, linelength);
     if (!linebytes) {
         warning = false;
         goto out;
     }
-    report.linebuf = linebytes;
+    report.linebuf = linebytes;     /* the offending source line, without final \n */
 
-    /*
-     * FIXME: What should instead happen here is that we should
-     * find error-tokens in userbuf, if !file.  That will
-     * allow us to deliver a more helpful error message, which
-     * includes all or part of the bad string or bad token.  The
-     * code here yields something that looks truncated.
-     * See https://bugzilla.mozilla.org/show_bug.cgi?id=352970
-     */
-    index = 0;
-    if (tp->begin.lineno == tp->end.lineno) {
-        if (tp->begin.index < linepos)
-            goto report;
-
-        index = tp->begin.index - linepos;
-    }
+    index = (tp->begin.lineno == tp->end.lineno) 
+            ? tp->begin.index         /* the column number of the start of the bad token */
+            : 0;
 
     report.tokenptr = report.linebuf + index;
     report.uclinebuf = linechars;
@@ -855,8 +767,8 @@ TokenStream::newToken(ptrdiff_t adjust)
 {
     cursor = (cursor + 1) & ntokensMask;
     Token *tp = &tokens[cursor];
-    tp->ptr = linebuf.ptr + adjust;
-    tp->pos.begin.index = linepos + (tp->ptr - linebuf.base) - (ungetbuf.limit - ungetbuf.ptr);
+    tp->ptr = userbuf.ptr + adjust;
+    tp->pos.begin.index = tp->ptr - linebase;
     tp->pos.begin.lineno = tp->pos.end.lineno = lineno;
     return tp;
 }
@@ -892,6 +804,10 @@ TokenStream::getTokenInternal()
 #endif
 
 #if JS_HAS_XML_SUPPORT
+    /*
+     * Look for XML text.
+     */
+
     if (flags & TSF_XMLTEXTMODE) {
         tt = TOK_XMLSPACE;      /* veto if non-space, return TOK_XMLTEXT */
         tp = newToken(0);
@@ -925,6 +841,10 @@ TokenStream::getTokenInternal()
         tp->t_atom = atom;
         goto out;
     }
+
+    /*
+     * Look for XML tags.
+     */
 
     if (flags & TSF_XMLTAGMODE) {
         tp = newToken(0);
@@ -1051,6 +971,9 @@ TokenStream::getTokenInternal()
 #endif /* JS_HAS_XML_SUPPORT */
 
   retry:
+    /*
+     * This gets the next non-space char and starts the token.
+     */
     do {
         c = getChar();
         if (c == '\n') {
@@ -1066,11 +989,16 @@ TokenStream::getTokenInternal()
         goto out;
     }
 
+    /*
+     * Look for an identifier.
+     */
+
     hadUnicodeEscape = JS_FALSE;
     if (JS_ISIDSTART(c) ||
         (c == '\\' &&
          (qc = getUnicodeEscape(),
-          hadUnicodeEscape = JS_ISIDSTART(qc)))) {
+          hadUnicodeEscape = JS_ISIDSTART(qc))))
+    {
         if (hadUnicodeEscape)
             c = qc;
         tokenbuf.clear();
@@ -1118,6 +1046,10 @@ TokenStream::getTokenInternal()
         tt = TOK_NAME;
         goto out;
     }
+
+    /*
+     * Look for a number.
+     */
 
     if (JS7_ISDEC(c) || (c == '.' && JS7_ISDEC(peekChar()))) {
         int radix = 10;
@@ -1221,20 +1153,26 @@ TokenStream::getTokenInternal()
         goto out;
     }
 
+    /*
+     * Look for a string.
+     */
+
     if (c == '"' || c == '\'') {
         qc = c;
         tokenbuf.clear();
         while (true) {
-            c = getChar();
             /*
-             * We need to detect any of these four chars:  " or ', \n, \\,
-             * EOF.  We use maybeStrSpecial[] in a manner similar to
-             * maybeEOL[], see above.
+             * We need to detect any of these chars:  " or ', \n (or its
+             * equivalents), \\, EOF.  We use maybeStrSpecial[] in a manner
+             * similar to maybeEOL[], see above.  Because we detect EOL
+             * sequences here and put them back immediately, we can use
+             * getCharIgnoreEOL().
              */
+            c = getCharIgnoreEOL();
             if (maybeStrSpecial[c & 0xff]) {
-                if (c == qc) {
+                if (c == qc)
                     break;
-                } else if (c == '\\') {
+                if (c == '\\') {
                     switch (c = getChar()) {
                       case 'b': c = '\b'; break;
                       case 'f': c = '\f'; break;
@@ -1294,8 +1232,10 @@ TokenStream::getTokenInternal()
                         }
                         break;
                     }
-                } else if (c == '\n' || c == EOF) {
-                    ungetChar(c);
+                } else if (c == '\n' || c == '\r' || c == LINE_SEPARATOR || c == PARA_SEPARATOR ||
+                           c == EOF)
+                {
+                    ungetCharIgnoreEOL(c);
                     ReportCompileErrorNumber(cx, this, NULL, JSREPORT_ERROR,
                                              JSMSG_UNTERMINATED_STRING);
                     goto error;
@@ -1313,6 +1253,10 @@ TokenStream::getTokenInternal()
         tt = TOK_STRING;
         goto out;
     }
+
+    /*
+     * This handles everything else.
+     */
 
     switch (c) {
       case '\n': tt = TOK_EOL; goto eol_out;
@@ -1849,7 +1793,7 @@ TokenStream::getTokenInternal()
 
   eol_out:
     JS_ASSERT(tt < TOK_LIMIT);
-    tp->pos.end.index = linepos + (linebuf.ptr - linebuf.base) - (ungetbuf.limit - ungetbuf.ptr);
+    tp->pos.end.index = userbuf.ptr - linebase;
     tp->type = tt;
     return tt;
 
