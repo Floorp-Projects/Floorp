@@ -15,6 +15,7 @@ function nextRightElement()  elementFromPoint(right(scrollbox) + 1);
 function firstScrollable()   tabs[gBrowser._numPinnedTabs];
 
 function test() {
+  requestLongerTimeout(2);
   waitForExplicitFinish();
 
   // If the previous (or more) test finished with cleaning up the tabs,
