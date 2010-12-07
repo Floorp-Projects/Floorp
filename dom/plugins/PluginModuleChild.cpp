@@ -101,7 +101,8 @@ static bool gDelayFlashFocusReplyUntilEval = false;
 PluginModuleChild::PluginModuleChild() :
     mLibrary(0),
     mShutdownFunc(0),
-    mInitializeFunc(0)
+    mInitializeFunc(0),
+    mQuirks(QUIRKS_NOT_INITIALIZED)
 #if defined(OS_WIN) || defined(OS_MACOSX)
   , mGetEntryPointsFunc(0)
 #elif defined(MOZ_WIDGET_GTK2)
@@ -1719,13 +1720,42 @@ PluginModuleChild::AllocPPluginInstance(const nsCString& aMimeType,
     PLUGIN_LOG_DEBUG_METHOD;
     AssertPluginThread();
 
+    InitQuirksModes(aMimeType);
+
     nsAutoPtr<PluginInstanceChild> childInstance(
-        new PluginInstanceChild(&mFunctions, aMimeType));
+        new PluginInstanceChild(&mFunctions));
     if (!childInstance->Initialize()) {
         *rv = NPERR_GENERIC_ERROR;
         return 0;
     }
     return childInstance.forget();
+}
+
+void
+PluginModuleChild::InitQuirksModes(const nsCString& aMimeType)
+{
+    if (mQuirks != QUIRKS_NOT_INITIALIZED)
+      return;
+    mQuirks = 0;
+    // application/x-silverlight
+    // application/x-silverlight-2
+    NS_NAMED_LITERAL_CSTRING(silverlight, "application/x-silverlight");
+    if (FindInReadable(silverlight, aMimeType)) {
+        mQuirks |= QUIRK_SILVERLIGHT_DEFAULT_TRANSPARENT;
+#ifdef OS_WIN
+        mQuirks |= QUIRK_WINLESS_TRACKPOPUP_HOOK;
+#endif
+    }
+
+#ifdef OS_WIN
+    // application/x-shockwave-flash
+    NS_NAMED_LITERAL_CSTRING(flash, "application/x-shockwave-flash");
+    if (FindInReadable(flash, aMimeType)) {
+        mQuirks |= QUIRK_WINLESS_TRACKPOPUP_HOOK;
+        mQuirks |= QUIRK_FLASH_THROTTLE_WMUSER_EVENTS; 
+        mQuirks |= QUIRK_FLASH_HOOK_SETLONGPTR;
+    }
+#endif
 }
 
 bool
