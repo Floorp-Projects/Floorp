@@ -4284,7 +4284,7 @@ JSObject::allocSlot(JSContext *cx, uint32 *slotp)
     return true;
 }
 
-void
+bool
 JSObject::freeSlot(JSContext *cx, uint32 slot)
 {
     uint32 limit = slotSpan();
@@ -4307,10 +4307,11 @@ JSObject::freeSlot(JSContext *cx, uint32 slot)
             JS_ASSERT_IF(last != SHAPE_INVALID_SLOT, last < slotSpan());
             vref.setPrivateUint32(last);
             last = slot;
-            return;
+            return true;
         }
     }
     vref.setUndefined();
+    return false;
 }
 
 /* JSBOXEDWORD_INT_MAX as a string */
