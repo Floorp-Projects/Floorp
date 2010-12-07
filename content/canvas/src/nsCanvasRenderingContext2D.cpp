@@ -1078,7 +1078,8 @@ nsCanvasRenderingContext2D::SetDimensions(PRInt32 width, PRInt32 height)
             nsRefPtr<LayerManager> layerManager = nsnull;
 
             if (ownerDoc)
-              layerManager = nsContentUtils::LayerManagerForDocument(ownerDoc);
+              layerManager =
+                nsContentUtils::PersistentLayerManagerForDocument(ownerDoc);
 
             if (layerManager) {
               surface = layerManager->CreateOptimalSurface(gfxIntSize(width, height), format);
