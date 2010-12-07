@@ -106,10 +106,7 @@ interface imgIContainer : nsISupports
   /**
    * Direct C++ accessor for 'type' attribute, for convenience.
    */
-%{C++
-  virtual PRUint16 GetType() = 0;
-%}
-
+  [noscript, notxpcom] PRUint16 GetType();
 
   /**
    * Whether this image is animated. You can only be guaranteed that querying
