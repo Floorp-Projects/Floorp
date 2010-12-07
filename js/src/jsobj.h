@@ -1031,7 +1031,10 @@ struct JSObject : js::gc::Cell {
     inline bool hasProperty(JSContext *cx, jsid id, bool *foundp, uintN flags = 0);
 
     bool allocSlot(JSContext *cx, uint32 *slotp);
-    void freeSlot(JSContext *cx, uint32 slot);
+    /*
+     * Return true iff this is a dictionary-mode object and the freed slot was
+     * added to the freelist. */
+    bool freeSlot(JSContext *cx, uint32 slot);
 
     bool reportReadOnly(JSContext* cx, jsid id, uintN report = JSREPORT_ERROR);
     bool reportNotConfigurable(JSContext* cx, jsid id, uintN report = JSREPORT_ERROR);
