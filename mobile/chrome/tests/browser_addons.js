@@ -16,8 +16,9 @@ const CHROME_NAME                     = "mochikit";
 const PREF_AUTOUPDATE_DEFAULT         = "extensions.update.autoUpdateDefault"
 const PREF_GETADDONS_BROWSESEARCHRESULTS = "extensions.getAddons.search.browseURL";
 const PREF_GETADDONS_GETSEARCHRESULTS    = "extensions.getAddons.search.url";
-const PREF_GETADDONS_GETRECOMMENDED   = "extensions.getAddons.recommended.url";
+const PREF_GETADDONS_GETRECOMMENDED      = "extensions.getAddons.recommended.url";
 const PREF_GETADDONS_BROWSERECOMMENDED   = "extensions.getAddons.recommended.browseURL";
+const PREF_GETADDONS_UPDATE              = "extensions.update.url";
 const SEARCH_URL = TESTROOT + "browser_details.xml";
 
 var addons = [{
@@ -71,6 +72,7 @@ function test() {
   Services.prefs.setCharPref(PREF_GETADDONS_BROWSERECOMMENDED,   TESTROOT + "browser_install.xml");
   Services.prefs.setCharPref(PREF_GETADDONS_BROWSESEARCHRESULTS, TESTROOT + "browser_install.xml");
   Services.prefs.setCharPref(PREF_GETADDONS_GETSEARCHRESULTS,    TESTROOT + "browser_install.xml");
+  Services.prefs.setCharPref(PREF_GETADDONS_UPDATE,              TESTROOT + "browser_upgrade.rdf");
   Services.prefs.setBoolPref("extensions.checkUpdateSecurity", false);
   run_next_test();
 }
