@@ -1710,7 +1710,8 @@ toolbar[mode="text"] toolbarbutton.chevron > .toolbarbutton-icon {
 
 /* Application menu toolbar button */
 
-#appmenu-toolbar-button > .toolbarbutton-text {
+#appmenu-toolbar-button > .toolbarbutton-text,
+#appmenu-toolbar-button > .toolbarbutton-menu-dropmarker {
   margin-top: -2px !important;
   margin-bottom: -2px !important;
 }
