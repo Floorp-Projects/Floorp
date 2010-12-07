@@ -46,15 +46,17 @@ gTests.push({
   _currentTab: null,
 
   run: function() {
-    Browser.addTab("about:blank", true);
     this._currentTab = Browser.addTab(testURL, true);
 
-    // Need to wait until the page is loaded
+    // Need to wait until the page is loaded and then wait till the tab has
+    // the right data store into __SS_data/__SS_extdata.
     messageManager.addMessageListener("pageshow",
     function(aMessage) {
       if (gCurrentTest._currentTab.browser.currentURI.spec != "about:blank") {
         messageManager.removeMessageListener(aMessage.name, arguments.callee);
-        gCurrentTest.onPageReady();
+        waitFor(gCurrentTest.onPageReady, function() {
+          return Browser.selectedBrowser.__SS_data.entries[0].url != "about:blank";
+        });
       }
     });
   },
@@ -66,25 +68,33 @@ gTests.push({
 
     // Close tab and then undo the close
     gCurrentTest.numTabs = Browser.tabs.length;
-    gCurrentTest.numClosed = ss.getClosedTabCount(window);
+
+    let tabs = document.getElementById("tabs");
+    tabs.addEventListener("TabClose", function() {
+      tabs.removeEventListener("TabClose", arguments.callee, false);
+      setTimeout(function() { gCurrentTest.onTabClose(); }, 0);
+    }, false);
 
     Browser.closeTab(gCurrentTest._currentTab);
+    gCurrentTest.numClosed = ss.getClosedTabCount(window);
+  },
 
+  onTabClose: function() {
     isnot(Browser.tabs.length, gCurrentTest.numTabs, "Tab was closed");
 
-    // XXX The behavior is different depending if the tests is launch alone or with the testsuite
-    todo_isnot(ss.getClosedTabCount(window), gCurrentTest.numClosed, "Tab was stored");
+    is(ss.getClosedTabCount(window), gCurrentTest.numClosed, "Tab was stored");
 
     // SessionStore works with chrome tab elements, not JS tab objects.
     // Map the _currentTab from chrome to JS
     gCurrentTest._currentTab = Browser.getTabFromChrome(ss.undoCloseTab(window, 0));
+    gCurrentTest.numClosed = ss.getClosedTabCount(window);
 
     // Need to wait until the page is loaded
     messageManager.addMessageListener("pageshow",
     function(aMessage) {
       if (gCurrentTest._currentTab.browser.currentURI.spec != "about:blank") {
         messageManager.removeMessageListener(aMessage.name, arguments.callee);
-        gCurrentTest.onPageUndo();
+        setTimeout(function() { gCurrentTest.onPageUndo(); }, 0);
       }
     });
   },
@@ -92,7 +102,7 @@ gTests.push({
   onPageUndo: function() {
     is(Browser.tabs.length, gCurrentTest.numTabs, "Tab was reopened");
     // XXX The behavior is different depending if the tests is launch alone or with the testsuite
-    todo_is(ss.getClosedTabCount(window), gCurrentTest.numClosed, "Tab was removed from store");
+    is(ss.getClosedTabCount(window), gCurrentTest.numClosed, "Tab was removed from store");
 
     is(ss.getTabValue(gCurrentTest._currentTab.chromeTab, "test1"), "hello", "Set/Get tab value matches after un-close");
 

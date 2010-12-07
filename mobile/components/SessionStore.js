@@ -181,10 +181,6 @@ SessionStore.prototype = {
   handleEvent: function ss_handleEvent(aEvent) {
     let window = aEvent.currentTarget.ownerDocument.defaultView;
     switch (aEvent.type) {
-      case "load":
-      case "pageshow":
-        this.onTabLoad(window, aEvent.currentTarget, aEvent);
-        break;
       case "TabOpen":
       case "TabClose": {
         let browser = aEvent.originalTarget.linkedBrowser;
@@ -207,11 +203,7 @@ SessionStore.prototype = {
 
   receiveMessage: function ss_receiveMessage(aMessage) {
     let window = aMessage.target.ownerDocument.defaultView;
-    switch (aMessage.name) {
-      case "pageshow":
-        this.onTabLoad(window, aMessage.target, aMessage);
-        break;
-    }
+    this.onTabLoad(window, aMessage.target, aMessage);
   },
 
   onWindowOpen: function ss_onWindowOpen(aWindow) {
