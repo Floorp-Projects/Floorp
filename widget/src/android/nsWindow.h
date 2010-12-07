@@ -55,8 +55,6 @@ class nsWindow :
     public nsBaseWidget
 {
 public:
-    using nsBaseWidget::GetLayerManager;
-
     nsWindow();
     virtual ~nsWindow();
 
@@ -164,8 +162,7 @@ public:
     NS_IMETHOD OnIMESelectionChange(void);
     virtual nsIMEUpdatePreference GetIMEUpdatePreference();
 
-    LayerManager* GetLayerManager(LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
-                                  bool* aAllowRetaining = nsnull);
+    LayerManager* GetLayerManager(bool* aAllowRetaining = nsnull);
     gfxASurface* GetThebesSurface();
 
     NS_IMETHOD ReparentNativeWidget(nsIWidget* aNewParent);
