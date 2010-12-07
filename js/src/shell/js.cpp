@@ -458,9 +458,7 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
             JS_DestroyScript(cx, script);
         }
 
-        if (file != stdin)
-            fclose(file);
-        return;
+        goto cleanup;
     }
 
     /* It's an interactive filehandle; drop into read-eval-print loop. */
@@ -491,7 +489,7 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
                 if (errno) {
                     JS_ReportError(cx, strerror(errno));
                     free(buffer);
-                    return;
+                    goto cleanup;
                 }
                 hitEOF = JS_TRUE;
                 break;
@@ -512,7 +510,7 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
                         free(buffer);
                         free(line);
                         JS_ReportOutOfMemory(cx);
-                        return;
+                        goto cleanup;
                     }
                     buffer = newBuf;
                 }
@@ -566,6 +564,7 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
 
     free(buffer);
     fprintf(gOutFile, "\n");
+cleanup:
     if (file != stdin)
         fclose(file);
     return;
