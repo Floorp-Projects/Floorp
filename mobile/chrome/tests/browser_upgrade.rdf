@@ -23,4 +23,23 @@
     </em:updates>
   </Description>
 
+  <Description about="urn:mozilla:extension:mochikit@mozilla.org">
+    <em:updates>
+      <Seq>
+        <li>
+          <Description>
+            <em:version>1.0</em:version>
+            <em:targetApplication>
+              <Description>
+                <em:id>mochikit@mozilla.org</em:id>
+                <em:minVersion>0</em:minVersion>
+                <em:maxVersion>*</em:maxVersion>
+              </Description>
+            </em:targetApplication>
+          </Description>
+        </li>
+      </Seq>
+    </em:updates>
+  </Description>
+
 </RDF>
