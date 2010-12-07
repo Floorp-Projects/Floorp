@@ -392,3 +392,19 @@ let _ = function(some, debug, text, to) print(Array.slice(arguments).join(" "));
 _("Setting the identity for passphrase");
 Cu.import("resource://services-sync/identity.js");
 
+
+/*
+ * Test setup helpers.
+ */
+
+// Turn WBO cleartext into "encrypted" payload as it goes over the wire
+function encryptPayload(cleartext) {
+  if (typeof cleartext == "object") {
+    cleartext = JSON.stringify(cleartext);
+  }
+
+  return {ciphertext: cleartext, // ciphertext == cleartext with fake crypto
+          IV: "irrelevant",
+          hmac: Utils.sha256HMAC(cleartext, Utils.makeHMACKey(""))};
+}
+

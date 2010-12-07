@@ -101,6 +101,8 @@ PERMS_DIRECTORY:                       0755,
 // FIXME: Record size limit is 256k (new cluster), so this can be quite large!
 // (Bug 569295)
 MAX_UPLOAD_RECORDS:                    100,
+MAX_HISTORY_UPLOAD:                    5000,
+MAX_HISTORY_DOWNLOAD:                  5000,
 
 // Top-level statuses:
 STATUS_OK:                             "success.status_ok",
