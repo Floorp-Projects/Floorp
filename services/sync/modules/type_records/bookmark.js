@@ -86,7 +86,7 @@ PlacesItem.prototype = {
 };
 
 Utils.deferGetSet(PlacesItem, "cleartext", ["hasDupe", "parentid", "parentName",
-                                            "type"]);
+  "predecessorid", "type"]);
 
 function Bookmark(collection, id, type) {
   PlacesItem.call(this, collection, id, type || "bookmark");
@@ -127,8 +127,7 @@ BookmarkFolder.prototype = {
   _logName: "Record.Folder",
 };
 
-Utils.deferGetSet(BookmarkFolder, "cleartext", ["description", "title",
-                                                "children"]);
+Utils.deferGetSet(BookmarkFolder, "cleartext", ["description", "title"]);
 
 function Livemark(collection, id) {
   BookmarkFolder.call(this, collection, id, "livemark");
