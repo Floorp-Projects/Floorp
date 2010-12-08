@@ -1,4 +1,6 @@
+Cu.import("resource://services-sync/stores.js");
 Cu.import("resource://services-sync/engines.js");
+Cu.import("resource://services-sync/engines/clients.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/base_records/crypto.js");
@@ -9,12 +11,23 @@ Cu.import("resource://services-sync/service.js");
 
 initTestLogging();
 
+function QuietStore() {
+  Store.call("Quiet");
+}
+QuietStore.prototype = {
+  getAllIDs: function getAllIDs() {
+    return [];
+  }
+}
+
 function SteamEngine() {
   SyncEngine.call(this, "Steam");
 }
 SteamEngine.prototype = {
   __proto__: SyncEngine.prototype,
   // We're not interested in engine sync but what the service does.
+  _storeObj: QuietStore,
+  
   _sync: function _sync() {
     this._syncStartup();
   }
@@ -31,14 +44,50 @@ StirlingEngine.prototype = {
 };
 Engines.register(StirlingEngine);
 
+let collections = {};
 
+function update_collection(coll) {
+  let timestamp = Date.now() / 1000;
+  collections[coll] = timestamp;
+}
+
+function with_updated_collection(coll, f) {
+  return function(request, response) {
+    if (request.method != "GET")
+      update_collection(coll);
+    f.call(this, request, response);
+  };
+}
+
+function info_collections(request, response) {
+  let body = "Error.";
+  switch(request.method) {
+    case "GET":
+      body = JSON.stringify(collections);
+      break;
+    default:
+      throw "Non-GET on info_collections.";
+  }
+      
+  response.setHeader('X-Weave-Timestamp', ''+Date.now()/1000, false);
+  response.setStatusLine(request.httpVersion, 200, "OK");
+  response.bodyOutputStream.write(body, body.length);
+}
+  
 function sync_httpd_setup(handlers) {
-  let collections = {};
-  handlers["/1.0/johndoe/storage/crypto/keys"] = new ServerWBO().handler(),
-  handlers["/1.0/johndoe/info/collections"]
-      = (new ServerWBO("collections", collections)).handler(),
-  handlers["/1.0/johndoe/storage/clients"]
-      = (new ServerCollection()).handler();
+  
+  collections = {};
+    
+  handlers["/1.0/johndoe/info/collections"] = info_collections;
+  
+  let cr = new ServerWBO("keys");
+  handlers["/1.0/johndoe/storage/crypto/keys"] =
+    with_updated_collection("crypto", cr.handler());
+  
+  let cl = new ServerCollection();
+  handlers["/1.0/johndoe/storage/clients"] =
+    with_updated_collection("clients", cl.handler());
+  
   return httpd_setup(handlers);
 }
 
@@ -192,6 +241,52 @@ function test_enabledRemotely() {
   }
 }
 
+function test_disabledRemotelyTwoClients() {
+  _("Test: Engine is enabled locally and disabled on a remote client... with two clients.");
+  Service.syncID = "abcdefghij";
+  let engine = Engines.get("steam");
+  let metaWBO = new ServerWBO("global", {syncID: Service.syncID,
+                                         storageVersion: STORAGE_VERSION,
+                                         engines: {}});
+  let server = sync_httpd_setup({
+    "/1.0/johndoe/storage/meta/global":
+    with_updated_collection("meta", metaWBO.handler()),
+      
+    "/1.0/johndoe/storage/steam":
+    with_updated_collection("steam", new ServerWBO("steam", {}).handler())
+  });
+  do_test_pending();
+  setUp();
+
+  try {
+    _("Enable engine locally.");
+    Service._ignorePrefObserver = true;
+    engine.enabled = true;
+    Service._ignorePrefObserver = false;
+
+    _("Sync.");
+    Weave.Service.login();
+    Weave.Service.sync();
+
+    _("Disable engine by deleting from meta/global.");
+    let d = metaWBO.data; 
+    delete d.engines["steam"];
+    metaWBO.payload = JSON.stringify(d);
+    metaWBO.modified = Date.now() / 1000;
+    
+    _("Add a second client and verify that the local pref is changed.");
+    Clients._store._remoteClients["foobar"] = {name: "foobar", type: "desktop"};
+    Weave.Service.sync();
+    
+    _("Engine is disabled.");
+    do_check_false(engine.enabled);
+    
+  } finally {
+    server.stop(do_test_finished);
+    Service.startOver();
+  }
+}
+
 function test_disabledRemotely() {
   _("Test: Engine is enabled locally and disabled on a remote client");
   Service.syncID = "abcdefghij";
@@ -219,8 +314,6 @@ function test_disabledRemotely() {
     _("Engine is not disabled: only one client.");
     do_check_true(engine.enabled);
     
-    // TODO: add a second client and verify that the local pref is changed.
-
   } finally {
     server.stop(do_test_finished);
     Service.startOver();
@@ -327,6 +420,7 @@ function run_test() {
   test_disabledLocally();
   test_enabledRemotely();
   test_disabledRemotely();
+  test_disabledRemotelyTwoClients();
   test_dependentEnginesEnabledLocally();
   test_dependentEnginesDisabledLocally();
 }
