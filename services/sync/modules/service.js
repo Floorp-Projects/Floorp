@@ -1529,6 +1529,7 @@ WeaveSvc.prototype = {
   },
 
   _updateEnabledEngines: function _updateEnabledEngines() {
+    this._log.info("Updating enabled engines: " + this.numClients + " clients.");
     let meta = Records.get(this.metaURL);
     if (meta.isNew || !meta.payload.engines)
       return;
