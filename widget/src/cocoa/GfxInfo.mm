@@ -83,7 +83,7 @@ GfxInfo::Init()
       mRendererIDs[i] = prop;
       mRendererIDsString.AppendPrintf("0x%04x", prop);
     } else {
-      mRendererIDs[i] = -1;
+      mRendererIDs[i] = 0;
       mRendererIDsString.AppendPrintf("???");
     }
   }
@@ -149,7 +149,7 @@ GfxInfo::GetAdapterDriverDate(nsAString & aAdapterDriverDate)
 NS_IMETHODIMP
 GfxInfo::GetAdapterVendorID(PRUint32 *aAdapterVendorID)
 {
-  *aAdapterVendorID = mRendererIDs[0];
+  *aAdapterVendorID = 0;
   return NS_OK;
 }
 
@@ -157,7 +157,7 @@ GfxInfo::GetAdapterVendorID(PRUint32 *aAdapterVendorID)
 NS_IMETHODIMP
 GfxInfo::GetAdapterDeviceID(PRUint32 *aAdapterDeviceID)
 {
-  *aAdapterDeviceID = mRendererIDs[0];
+  *aAdapterDeviceID = 0;
   return NS_OK;
 }
 
@@ -182,21 +182,23 @@ GfxInfo::AddCrashReportAnnotations()
 NS_IMETHODIMP
 GfxInfo::GetFeatureStatus(PRInt32 aFeature, PRInt32 *aStatus)
 {
-  // CGL reports a list of renderers, some renderers are slow (e.g. software)
-  // and AFAIK we can't decide which one will be used among them, so let's implement this blocklist
-  // by defaulting to BLOCKED_DEVICE, and unblocking when a non-blacklisted renderer is found.
-  // The assumption that we make here is that the system will spontaneously use the best/fastest renderer in the list.
-  // Note that the presence of software renderer fallbacks means that slow software rendering may be automatically
-  // used, which seems to be the case in bug 611292 where the user had a Intel GMA 945 card (non programmable hardware).
-  // Therefore we need to explicitly blacklist non-OpenGL2 hardware, which could result in a software renderer
-  // being used.
-  PRInt32 status = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
+  NS_ENSURE_ARG_POINTER(aStatus);
 
-  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(mRendererIDs); ++i) {
-    PRUint32 r = mRendererIDs[i];
+  PRInt32 status = nsIGfxInfo::FEATURE_NO_INFO;
 
-    if (aFeature == nsIGfxInfo::FEATURE_OPENGL_LAYERS) {
-      switch (r) {
+  if (aFeature == nsIGfxInfo::FEATURE_OPENGL_LAYERS) {
+    // CGL reports a list of renderers, some renderers are slow (e.g. software)
+    // and AFAIK we can't decide which one will be used among them, so let's implement this by returning NO_INFO
+    // if any not-known-to-be-bad renderer is found.
+    // The assumption that we make here is that the system will spontaneously use the best/fastest renderer in the list.
+    // Note that the presence of software renderer fallbacks means that slow software rendering may be automatically
+    // used, which seems to be the case in bug 611292 where the user had a Intel GMA 945 card (non programmable hardware).
+    // Therefore we need to explicitly blacklist non-OpenGL2 hardware, which could result in a software renderer
+    // being used.
+    PRBool foundGoodDevice = PR_FALSE;
+
+    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(mRendererIDs); ++i) {
+      switch (mRendererIDs[i]) {
         case kCGLRendererATIRage128ID: // non-programmable
         case kCGLRendererATIRadeonID: // non-programmable
         case kCGLRendererATIRageProID: // non-programmable
@@ -216,11 +218,13 @@ GfxInfo::GetFeatureStatus(PRInt32 aFeature, PRInt32 *aStatus)
         case kCGLRendererAppleSWID: // software renderer
           break;
         default:
-          status = nsIGfxInfo::FEATURE_NO_INFO;
+          if (mRendererIDs[i])
+            foundGoodDevice = PR_TRUE;
       }
     }
+    if (!foundGoodDevice)
+      status = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
   }
-
   *aStatus = status;
   return NS_OK;
 }
