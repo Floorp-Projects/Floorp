@@ -1929,7 +1929,7 @@ FrameState::storeLocal(uint32 n, bool popGuaranteed, JSValueType type)
     if (activeLoop)
         local->lastLoop = activeLoop->head;
 
-    if (type != JSVAL_TYPE_UNKNOWN && type != JSVAL_TYPE_DOUBLE) {
+    if (type != JSVAL_TYPE_UNKNOWN && type != JSVAL_TYPE_DOUBLE && !local->type.synced()) {
         /* Known types are always in sync for locals. */
         local->type.sync();
     }
@@ -1956,7 +1956,7 @@ FrameState::storeArg(uint32 n, bool popGuaranteed, JSValueType type)
     if (activeLoop)
         arg->lastLoop = activeLoop->head;
 
-    if (type != JSVAL_TYPE_UNKNOWN && type != JSVAL_TYPE_DOUBLE) {
+    if (type != JSVAL_TYPE_UNKNOWN && type != JSVAL_TYPE_DOUBLE && !arg->type.synced()) {
         /* Known types are always in sync for args. */
         arg->type.sync();
     }
