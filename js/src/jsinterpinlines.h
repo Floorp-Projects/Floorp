@@ -731,7 +731,7 @@ ScriptEpilogue(JSContext *cx, JSStackFrame *fp, JSBool ok)
      * If inline-constructing, replace primitive rval with the new object
      * passed in via |this|, and instrument this constructor invocation.
      */
-    if (fp->isConstructing() && ok) {
+    if (fp->isConstructing()) {
         if (fp->returnValue().isPrimitive())
             fp->setReturnValue(ObjectValue(fp->constructorThis()));
         JS_RUNTIME_METER(cx->runtime, constructs);
