@@ -1681,15 +1681,18 @@ mjit::Compiler::jsop_stricteq(JSOp op)
     }
 
     if (frame.haveSameBacking(lhs, rhs)) {
+        RegisterID result = frame.allocReg(Registers::SingleByteRegs).reg();
+
         /* False iff NaN. */
         if (lhs->isTypeKnown() && lhs->isNotType(JSVAL_TYPE_DOUBLE)) {
             frame.popn(2);
-            frame.push(BooleanValue(op == JSOP_STRICTEQ));
+
+            masm.move(Imm32(op == JSOP_STRICTEQ), result);
+            frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, result);
             return;
         }
-        
+
         /* Assume NaN is in canonical form. */
-        RegisterID result = frame.allocReg(Registers::SingleByteRegs).reg();
         RegisterID treg = frame.tempRegForType(lhs);
 
         Assembler::Condition oppositeCond = (op == JSOP_STRICTEQ) ? Assembler::NotEqual : Assembler::Equal;
@@ -1713,16 +1716,18 @@ mjit::Compiler::jsop_stricteq(JSOp op)
     if ((lhsTest = ReallySimpleStrictTest(lhs)) || ReallySimpleStrictTest(rhs)) {
         FrameEntry *test = lhsTest ? rhs : lhs;
         FrameEntry *known = lhsTest ? lhs : rhs;
+        RegisterID result = frame.allocReg(Registers::SingleByteRegs).reg();
 
         if (test->isTypeKnown()) {
             frame.popn(2);
-            frame.push(BooleanValue((test->getKnownType() == known->getKnownType()) ==
-                                  (op == JSOP_STRICTEQ)));
+
+            masm.move(Imm32((test->getKnownType() == known->getKnownType()) ==
+                            (op == JSOP_STRICTEQ)), result);
+            frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, result);
             return;
         }
 
         /* This is only true if the other side is |null|. */
-        RegisterID result = frame.allocReg(Registers::SingleByteRegs).reg();
 #if defined JS_CPU_X86 || defined JS_CPU_ARM
         JSValueTag mask = known->getKnownTag();
         if (frame.shouldAvoidTypeRemat(test))
@@ -1748,8 +1753,11 @@ mjit::Compiler::jsop_stricteq(JSOp op)
         FrameEntry *test = lhsTest ? rhs : lhs;
 
         if (test->isTypeKnown() && test->isNotType(JSVAL_TYPE_BOOLEAN)) {
+            RegisterID result = frame.allocReg(Registers::SingleByteRegs).reg();
             frame.popn(2);
-            frame.push(BooleanValue(op == JSOP_STRICTNE));
+
+            masm.move(Imm32(op == JSOP_STRICTNE), result);
+            frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, result);
             return;
         }
 
