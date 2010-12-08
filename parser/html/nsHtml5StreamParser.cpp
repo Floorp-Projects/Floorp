@@ -589,7 +589,7 @@ nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
     }
   }
   
-  if (mCharsetSource < kCharsetFromChannel) {
+  if (mCharsetSource <= kCharsetFromMetaPrescan) {
     // we aren't ready to commit to an encoding yet
     // leave converter uninstantiated for now
     return NS_OK;
@@ -751,7 +751,7 @@ nsHtml5StreamParser::OnDataAvailable(nsIRequest* aRequest,
   return rv;
 }
 
-void
+PRBool
 nsHtml5StreamParser::internalEncodingDeclaration(nsString* aEncoding)
 {
   // This code needs to stay in sync with
@@ -759,11 +759,11 @@ nsHtml5StreamParser::internalEncodingDeclaration(nsString* aEncoding)
   // trickery with member fields there leads to some copy-paste reuse. :-(
   NS_ASSERTION(IsParserThread(), "Wrong thread!");
   if (mCharsetSource >= kCharsetFromMetaTag) { // this threshold corresponds to "confident" in the HTML5 spec
-    return;
+    return PR_FALSE;
   }
 
   if (mReparseForbidden) {
-    return; // not reparsing even if we wanted to
+    return PR_FALSE; // not reparsing even if we wanted to
   }
 
   nsCAutoString newEncoding;
@@ -779,17 +779,17 @@ nsHtml5StreamParser::internalEncodingDeclaration(nsString* aEncoding)
   nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID, &rv));
   if (NS_FAILED(rv)) {
     NS_NOTREACHED("Charset alias service not available.");
-    return;
+    return PR_FALSE;
   }
   PRBool eq;
   rv = calias->Equals(newEncoding, mCharset, &eq);
   if (NS_FAILED(rv)) {
     NS_NOTREACHED("Charset name equality check failed.");
-    return;
+    return PR_FALSE;
   }
   if (eq) {
     mCharsetSource = kCharsetFromMetaTag; // become confident
-    return;
+    return PR_FALSE;
   }
   
   // XXX check HTML5 non-IANA aliases here
@@ -799,7 +799,7 @@ nsHtml5StreamParser::internalEncodingDeclaration(nsString* aEncoding)
   rv = calias->GetPreferred(newEncoding, preferred);
   if (NS_FAILED(rv)) {
     // the encoding name is bogus
-    return;
+    return PR_FALSE;
   }
   
   if (preferred.LowerCaseEqualsLiteral("utf-16") ||
@@ -814,7 +814,7 @@ nsHtml5StreamParser::internalEncodingDeclaration(nsString* aEncoding)
       preferred.LowerCaseEqualsLiteral("x-imap4-modified-utf7") ||
       preferred.LowerCaseEqualsLiteral("x-user-defined")) {
     // Not a rough ASCII superset
-    return;
+    return PR_FALSE;
   }
 
   mTreeBuilder->NeedsCharsetSwitchTo(preferred);
@@ -823,6 +823,7 @@ nsHtml5StreamParser::internalEncodingDeclaration(nsString* aEncoding)
   // the tree op executor will cause the stream parser to terminate
   // if the charset switch request is accepted or it'll uninterrupt 
   // if the request failed.
+  return PR_TRUE;
 }
 
 void

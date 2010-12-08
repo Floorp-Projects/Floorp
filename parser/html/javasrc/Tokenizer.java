@@ -6460,11 +6460,12 @@ public class Tokenizer implements Locator {
 
     // ]NOCPP]
 
-    public void internalEncodingDeclaration(String internalCharset)
+    public boolean internalEncodingDeclaration(String internalCharset)
             throws SAXException {
         if (encodingDeclarationHandler != null) {
-            encodingDeclarationHandler.internalEncodingDeclaration(internalCharset);
+            return encodingDeclarationHandler.internalEncodingDeclaration(internalCharset);
         }
+        return false;
     }
 
     /**

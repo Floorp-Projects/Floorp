@@ -2024,21 +2024,26 @@ nsHtml5TreeBuilder::extractCharsetFromContent(nsString* attributeValue)
 void 
 nsHtml5TreeBuilder::checkMetaCharset(nsHtml5HtmlAttributes* attributes)
 {
-  nsString* content = attributes->getValue(nsHtml5AttributeName::ATTR_CONTENT);
-  nsString* internalCharsetLegacy = nsnull;
-  if (content) {
-    internalCharsetLegacy = nsHtml5TreeBuilder::extractCharsetFromContent(content);
-  }
-  if (!internalCharsetLegacy) {
-    nsString* internalCharsetHtml5 = attributes->getValue(nsHtml5AttributeName::ATTR_CHARSET);
-    if (internalCharsetHtml5) {
-      tokenizer->internalEncodingDeclaration(internalCharsetHtml5);
+  nsString* charset = attributes->getValue(nsHtml5AttributeName::ATTR_CHARSET);
+  if (charset) {
+    if (tokenizer->internalEncodingDeclaration(charset)) {
       requestSuspension();
+      return;
     }
-  } else {
-    tokenizer->internalEncodingDeclaration(internalCharsetLegacy);
-    nsHtml5Portability::releaseString(internalCharsetLegacy);
-    requestSuspension();
+    return;
+  }
+  if (!nsHtml5Portability::lowerCaseLiteralEqualsIgnoreAsciiCaseString("content-type", attributes->getValue(nsHtml5AttributeName::ATTR_HTTP_EQUIV))) {
+    return;
+  }
+  nsString* content = attributes->getValue(nsHtml5AttributeName::ATTR_CONTENT);
+  if (content) {
+    nsString* extract = nsHtml5TreeBuilder::extractCharsetFromContent(content);
+    if (extract) {
+      if (tokenizer->internalEncodingDeclaration(extract)) {
+        requestSuspension();
+      }
+    }
+    nsHtml5Portability::releaseString(extract);
   }
 }
 
