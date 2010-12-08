@@ -90,7 +90,7 @@
         windowtype="navigator:browser"
         screenX="4" screenY="4"
         browsingmode="normal"
-        persist="screenX screenY width height sizemode"> 
+        persist="screenX screenY width height sizemode">
 
 # All JS files which are not content (only) dependent that browser.xul
 # wishes to include *must* go into the global-scripts.inc file
@@ -127,7 +127,7 @@
         <menupopup id="context_tabViewMenuPopup"
                    onpopupshowing="if (event.target == this) TabView.updateContextMenu(TabContextMenu.contextTab, this);">
           <menuseparator id="context_tabViewNamedGroups" hidden="true"/>
-          <menuitem label="&moveToNewGroup.label;"
+          <menuitem id="context_tabViewNewGroup" label="&moveToNewGroup.label;"
                     oncommand="TabView.moveTabTo(TabContextMenu.contextTab, null);"/>
         </menupopup>
       </menu>
@@ -302,7 +302,7 @@
                 accesskey="&viewCustomizeToolbar.accesskey;"/>
     </menupopup>
 
-    <menupopup id="blockedPopupOptions" 
+    <menupopup id="blockedPopupOptions"
                onpopupshowing="gPopupBlockerObserver.fillPopupList(event);">
       <menuitem observes="blockedPopupAllowSite"/>
       <menuitem observes="blockedPopupEditSettings"/>
@@ -480,7 +480,7 @@
 #endif
              context="toolbar-context-menu">
       <toolbaritem id="menubar-items" align="center">
-# The entire main menubar is placed into browser-menubar.inc, so that it can be shared by 
+# The entire main menubar is placed into browser-menubar.inc, so that it can be shared by
 # hiddenWindow.xul.
 #include browser-menubar.inc
       </toolbaritem>
