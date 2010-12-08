@@ -233,10 +233,16 @@ SafeMoveOperation.prototype = {
   },
 
   _moveDirEntry: function(aDirEntry, aTargetDirectory) {
-    if (aDirEntry.isDirectory())
-      this._moveDirectory(aDirEntry, aTargetDirectory);
-    else
-      this._moveFile(aDirEntry, aTargetDirectory);
+    try {
+      if (aDirEntry.isDirectory())
+        this._moveDirectory(aDirEntry, aTargetDirectory);
+      else
+        this._moveFile(aDirEntry, aTargetDirectory);
+    }
+    catch (e) {
+      ERROR("Failure moving " + aDirEntry.path + " to " + aTargetDirectory.path);
+      throw e;
+    }
   },
 
   /**
@@ -254,7 +260,6 @@ SafeMoveOperation.prototype = {
       this._moveDirEntry(aFile, aTargetDirectory);
     }
     catch (e) {
-      ERROR("Failure moving " + aFile.path + " to " + aTargetDirectory.path);
       this.rollback();
       throw e;
     }
