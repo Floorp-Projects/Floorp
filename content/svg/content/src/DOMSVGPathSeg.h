@@ -82,7 +82,9 @@ public:
   NS_DECL_NSIDOMSVGPATHSEG
 
   /**
-   * This convenient factory method creates instances of the correct sub-class.
+   * Unlike the other list classes, we hide our ctor (because no one should be
+   * creating instances of this class directly). This factory method in exposed
+   * instead to take care of creating instances of the correct sub-class.
    */
   static DOMSVGPathSeg *CreateFor(DOMSVGPathSegList *aList,
                                   PRUint32 aListIndex,

@@ -34,93 +34,77 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "SVGNumberListSMILType.h"
+#include "SVGPointListSMILType.h"
 #include "nsSMILValue.h"
-#include "SVGNumberList.h"
+#include "SVGPointList.h"
+#include "nsMathUtils.h"
 #include <math.h>
-
-/* The "identity" number list for a given number list attribute (the effective
- * number list that is used if an attribute value is not specified) varies
- * widely for different number list attributes, and can depend on the value of
- * other attributes on the same element:
- *
- * http://www.w3.org/TR/SVG11/filters.html#feColorMatrixValuesAttribute
- * http://www.w3.org/TR/SVG11/filters.html#feComponentTransferTableValuesAttribute
- * http://www.w3.org/TR/SVG11/filters.html#feConvolveMatrixElementKernelMatrixAttribute
- * http://www.w3.org/TR/SVG11/text.html#TextElementRotateAttribute
- *
- * Note that we don't need to worry about that variation here, however. The way
- * that the SMIL engine creates and composites sandwich layers together allows
- * us to treat "identity" nsSMILValue objects as a number list of zeros. Such
- * identity nsSMILValues are identified by the fact that their
- # SVGNumberListAndInfo has not been given an element yet.
- */
 
 using namespace mozilla;
 
-/*static*/ SVGNumberListSMILType SVGNumberListSMILType::sSingleton;
+/*static*/ SVGPointListSMILType SVGPointListSMILType::sSingleton;
 
 //----------------------------------------------------------------------
 // nsISMILType implementation
 
 void
-SVGNumberListSMILType::Init(nsSMILValue &aValue) const
+SVGPointListSMILType::Init(nsSMILValue &aValue) const
 {
   NS_ABORT_IF_FALSE(aValue.IsNull(), "Unexpected value type");
 
-  SVGNumberListAndInfo* numberList = new SVGNumberListAndInfo();
+  SVGPointListAndInfo* pointList = new SVGPointListAndInfo();
 
-  aValue.mU.mPtr = numberList;
+  aValue.mU.mPtr = pointList;
   aValue.mType = this;
 }
 
 void
-SVGNumberListSMILType::Destroy(nsSMILValue& aValue) const
+SVGPointListSMILType::Destroy(nsSMILValue& aValue) const
 {
   NS_PRECONDITION(aValue.mType == this, "Unexpected SMIL value type");
-  delete static_cast<SVGNumberListAndInfo*>(aValue.mU.mPtr);
+  delete static_cast<SVGPointListAndInfo*>(aValue.mU.mPtr);
   aValue.mU.mPtr = nsnull;
   aValue.mType = &nsSMILNullType::sSingleton;
 }
 
 nsresult
-SVGNumberListSMILType::Assign(nsSMILValue& aDest,
+SVGPointListSMILType::Assign(nsSMILValue& aDest,
                               const nsSMILValue& aSrc) const
 {
   NS_PRECONDITION(aDest.mType == aSrc.mType, "Incompatible SMIL types");
   NS_PRECONDITION(aDest.mType == this, "Unexpected SMIL value");
 
-  const SVGNumberListAndInfo* src =
-    static_cast<const SVGNumberListAndInfo*>(aSrc.mU.mPtr);
-  SVGNumberListAndInfo* dest =
-    static_cast<SVGNumberListAndInfo*>(aDest.mU.mPtr);
+  const SVGPointListAndInfo* src =
+    static_cast<const SVGPointListAndInfo*>(aSrc.mU.mPtr);
+  SVGPointListAndInfo* dest =
+    static_cast<SVGPointListAndInfo*>(aDest.mU.mPtr);
 
   return dest->CopyFrom(*src);
 }
 
 PRBool
-SVGNumberListSMILType::IsEqual(const nsSMILValue& aLeft,
+SVGPointListSMILType::IsEqual(const nsSMILValue& aLeft,
                                const nsSMILValue& aRight) const
 {
   NS_PRECONDITION(aLeft.mType == aRight.mType, "Incompatible SMIL types");
   NS_PRECONDITION(aLeft.mType == this, "Unexpected type for SMIL value");
 
-  return *static_cast<const SVGNumberListAndInfo*>(aLeft.mU.mPtr) ==
-         *static_cast<const SVGNumberListAndInfo*>(aRight.mU.mPtr);
+  return *static_cast<const SVGPointListAndInfo*>(aLeft.mU.mPtr) ==
+         *static_cast<const SVGPointListAndInfo*>(aRight.mU.mPtr);
 }
 
 nsresult
-SVGNumberListSMILType::Add(nsSMILValue& aDest,
-                           const nsSMILValue& aValueToAdd,
-                           PRUint32 aCount) const
+SVGPointListSMILType::Add(nsSMILValue& aDest,
+                          const nsSMILValue& aValueToAdd,
+                          PRUint32 aCount) const
 {
   NS_PRECONDITION(aDest.mType == this, "Unexpected SMIL type");
   NS_PRECONDITION(aValueToAdd.mType == this, "Incompatible SMIL type");
 
-  SVGNumberListAndInfo& dest =
-    *static_cast<SVGNumberListAndInfo*>(aDest.mU.mPtr);
-  const SVGNumberListAndInfo& valueToAdd =
-    *static_cast<const SVGNumberListAndInfo*>(aValueToAdd.mU.mPtr);
+  SVGPointListAndInfo& dest =
+    *static_cast<SVGPointListAndInfo*>(aDest.mU.mPtr);
+  const SVGPointListAndInfo& valueToAdd =
+    *static_cast<const SVGPointListAndInfo*>(aValueToAdd.mU.mPtr);
 
   NS_ABORT_IF_FALSE(dest.Element() || valueToAdd.Element(),
                     "Target element propagation failure");
@@ -157,17 +141,17 @@ SVGNumberListSMILType::Add(nsSMILValue& aDest,
 }
 
 nsresult
-SVGNumberListSMILType::ComputeDistance(const nsSMILValue& aFrom,
-                                       const nsSMILValue& aTo,
-                                       double& aDistance) const
+SVGPointListSMILType::ComputeDistance(const nsSMILValue& aFrom,
+                                      const nsSMILValue& aTo,
+                                      double& aDistance) const
 {
   NS_PRECONDITION(aFrom.mType == this, "Unexpected SMIL type");
   NS_PRECONDITION(aTo.mType == this, "Incompatible SMIL type");
 
-  const SVGNumberListAndInfo& from =
-    *static_cast<const SVGNumberListAndInfo*>(aFrom.mU.mPtr);
-  const SVGNumberListAndInfo& to =
-    *static_cast<const SVGNumberListAndInfo*>(aTo.mU.mPtr);
+  const SVGPointListAndInfo& from =
+    *static_cast<const SVGPointListAndInfo*>(aFrom.mU.mPtr);
+  const SVGPointListAndInfo& to =
+    *static_cast<const SVGPointListAndInfo*>(aTo.mU.mPtr);
 
   if (from.Length() != to.Length()) {
     // Lists in the 'values' attribute must have the same length.
@@ -175,14 +159,15 @@ SVGNumberListSMILType::ComputeDistance(const nsSMILValue& aFrom,
     return NS_ERROR_FAILURE;
   }
 
-  // We return the root of the sum of the squares of the delta between the
-  // numbers at each correspanding index.
+  // We return the root of the sum of the squares of the distances between the
+  // points at each corresponding index.
 
   double total = 0.0;
 
   for (PRUint32 i = 0; i < to.Length(); ++i) {
-    double delta = to[i] - from[i];
-    total += delta * delta;
+    double dx = to[i].mX - from[i].mX;
+    double dy = to[i].mY - from[i].mY;
+    total += dx * dx + dy * dy;
   }
   double distance = sqrt(total);
   if (!NS_FloatIsFinite(distance)) {
@@ -194,10 +179,10 @@ SVGNumberListSMILType::ComputeDistance(const nsSMILValue& aFrom,
 }
 
 nsresult
-SVGNumberListSMILType::Interpolate(const nsSMILValue& aStartVal,
-                                   const nsSMILValue& aEndVal,
-                                   double aUnitDistance,
-                                   nsSMILValue& aResult) const
+SVGPointListSMILType::Interpolate(const nsSMILValue& aStartVal,
+                                  const nsSMILValue& aEndVal,
+                                  double aUnitDistance,
+                                  nsSMILValue& aResult) const
 {
   NS_PRECONDITION(aStartVal.mType == aEndVal.mType,
                   "Trying to interpolate different types");
@@ -205,12 +190,12 @@ SVGNumberListSMILType::Interpolate(const nsSMILValue& aStartVal,
                   "Unexpected types for interpolation");
   NS_PRECONDITION(aResult.mType == this, "Unexpected result type");
 
-  const SVGNumberListAndInfo& start =
-    *static_cast<const SVGNumberListAndInfo*>(aStartVal.mU.mPtr);
-  const SVGNumberListAndInfo& end =
-    *static_cast<const SVGNumberListAndInfo*>(aEndVal.mU.mPtr);
-  SVGNumberListAndInfo& result =
-    *static_cast<SVGNumberListAndInfo*>(aResult.mU.mPtr);
+  const SVGPointListAndInfo& start =
+    *static_cast<const SVGPointListAndInfo*>(aStartVal.mU.mPtr);
+  const SVGPointListAndInfo& end =
+    *static_cast<const SVGPointListAndInfo*>(aEndVal.mU.mPtr);
+  SVGPointListAndInfo& result =
+    *static_cast<SVGPointListAndInfo*>(aResult.mU.mPtr);
 
   NS_ABORT_IF_FALSE(end.Element(), "Can't propagate target element");
   NS_ABORT_IF_FALSE(start.Element() == end.Element() || !start.Element(),

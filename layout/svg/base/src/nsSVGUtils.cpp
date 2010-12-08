@@ -57,8 +57,6 @@
 #include "nsContentUtils.h"
 #include "nsSVGFilterFrame.h"
 #include "nsINameSpaceManager.h"
-#include "nsIDOMSVGPoint.h"
-#include "nsSVGPoint.h"
 #include "nsDOMError.h"
 #include "nsSVGOuterSVGFrame.h"
 #include "nsSVGInnerSVGFrame.h"
