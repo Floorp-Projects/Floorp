@@ -2101,16 +2101,20 @@ FrameState::storeTop(FrameEntry *target, bool popGuaranteed, JSValueType type)
                 regstate(reg).reassociate(target);
             }
         } else if (type == JSVAL_TYPE_DOUBLE) {
-            JS_ASSERT(backing->isType(JSVAL_TYPE_INT32));
-
             FPRegisterID fpreg = allocFPReg();
-            masm.convertInt32ToDouble(reg, fpreg);
+            if (backing->isTypeKnown()) {
+                JS_ASSERT(backing->isType(JSVAL_TYPE_INT32));
+                masm.convertInt32ToDouble(reg, fpreg);
+            } else {
+                syncFe(backing);
+                masm.moveInt32OrDouble(addressOf(backing), fpreg);
+            }
 
             target->setType(JSVAL_TYPE_DOUBLE);
             target->data.setFPRegister(fpreg);
             regstate(fpreg).associate(target, RematInfo::DATA);
 
-            forgetReg(reg);
+            forgetAllRegs(backing);
         } else {
             /*
              * The backing should normally already be the type we are storing.  However,
