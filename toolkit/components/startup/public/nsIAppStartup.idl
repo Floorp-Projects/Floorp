@@ -123,17 +123,6 @@ interface nsIAppStartup2 : nsIAppStartup
     readonly attribute boolean shuttingDown;
 };
 
-[scriptable, uuid(079594bc-fcfd-4da7-b46f-4dcaf4bd929e)]
-interface nsIAppStartup_MOZILLA_2_0 : nsIAppStartup2
-{
-  /**
-   * Recorded timestamp indicating when app startup finished and the
-   * app was ready for user input (session restore finished, in
-   * Firefox)
-   */
-    readonly attribute PRUint64 restoredTimestamp;
-};
-
 %{C++
 /**
  * This success code may be returned by nsIAppStartup::Run to indicate that the

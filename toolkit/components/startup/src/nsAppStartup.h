@@ -55,7 +55,7 @@ struct PLEvent;
 { 0x7dd4d320, 0xc84b, 0x4624, { 0x8d, 0x45, 0x7b, 0xb9, 0xb2, 0x35, 0x69, 0x77 } }
 
 
-class nsAppStartup : public nsIAppStartup_MOZILLA_2_0,
+class nsAppStartup : public nsIAppStartup2,
                      public nsIWindowCreator2,
                      public nsIObserver,
                      public nsSupportsWeakReference
@@ -64,7 +64,6 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIAPPSTARTUP
   NS_DECL_NSIAPPSTARTUP2
-  NS_DECL_NSIAPPSTARTUP_MOZILLA_2_0
   NS_DECL_NSIWINDOWCREATOR
   NS_DECL_NSIWINDOWCREATOR2
   NS_DECL_NSIOBSERVER
@@ -86,11 +85,6 @@ private:
   PRPackedBool mShuttingDown;   // Quit method reentrancy check
   PRPackedBool mAttemptingQuit; // Quit(eAttemptQuit) still trying
   PRPackedBool mRestart;        // Quit(eRestart)
-
-  PRTime mRestoredTimestamp;
-
-  nsresult RecordStartupDuration();
-  nsresult RecordAddonEvent(const PRUnichar *event, nsISupports *details);
 };
 
 #endif // nsAppStartup_h__

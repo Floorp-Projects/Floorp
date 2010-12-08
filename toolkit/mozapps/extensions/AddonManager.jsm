@@ -437,12 +437,6 @@ var AddonManagerInternal = {
         WARN("AddonListener threw exception when calling " + aMethod, e);
       }
     });
-    let bag = Cc["@mozilla.org/hash-property-bag;1"]
-                .createInstance(Ci.nsIWritablePropertyBag2);
-    bag.setPropertyAsAString("id", args[0].id);
-    bag.setPropertyAsAString("name", args[0].name);
-    bag.setPropertyAsAString("version", args[0].version);
-    Services.obs.notifyObservers(bag, "AddonManager-event", aMethod);
   },
 
   /**
@@ -865,7 +859,7 @@ var AddonManagerInternal = {
         pos++;
     }
   },
-
+  
   get autoUpdateDefault() {
     try {
       return Services.prefs.getBoolPref(PREF_EM_AUTOUPDATE_DEFAULT);
