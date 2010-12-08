@@ -544,7 +544,7 @@ public:
                             PRBool* aReturn);
   nsresult CloneNode(PRBool aDeep, nsIDOMNode **aResult)
   {
-    return nsNodeUtils::CloneNodeImpl(this, aDeep, aResult);
+    return nsNodeUtils::CloneNodeImpl(this, aDeep, PR_TRUE, aResult);
   }
 
   //----------------------------------------

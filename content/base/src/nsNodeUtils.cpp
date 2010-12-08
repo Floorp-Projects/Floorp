@@ -418,7 +418,9 @@ nsNodeUtils::TraverseUserData(nsINode* aNode,
 
 /* static */
 nsresult
-nsNodeUtils::CloneNodeImpl(nsINode *aNode, PRBool aDeep, nsIDOMNode **aResult)
+nsNodeUtils::CloneNodeImpl(nsINode *aNode, PRBool aDeep,
+                           PRBool aCallUserDataHandlers,
+                           nsIDOMNode **aResult)
 {
   *aResult = nsnull;
 
@@ -429,7 +431,7 @@ nsNodeUtils::CloneNodeImpl(nsINode *aNode, PRBool aDeep, nsIDOMNode **aResult)
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsIDocument *ownerDoc = aNode->GetOwnerDoc();
-  if (ownerDoc) {
+  if (ownerDoc && aCallUserDataHandlers) {
     rv = CallUserDataHandlers(nodesWithProperties, ownerDoc,
                               nsIDOMUserDataHandler::NODE_CLONED, PR_TRUE);
     NS_ENSURE_SUCCESS(rv, rv);
