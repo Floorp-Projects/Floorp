@@ -405,6 +405,8 @@ pref("app.faqURL", "http://www.mozilla.com/%LOCALE%/mobile/faq/");
 // Name of alternate about: page for certificate errors (when undefined, defaults to about:neterror)
 pref("security.alternate_certificate_error_page", "certerror");
 
+pref("security.warn_viewing_mixed", false); // Broken in e10s (Bug 616712)
+
 // Override some named colors to avoid inverse OS themes
 pref("ui.-moz-dialog", "#efebe7");
 pref("ui.-moz-dialogtext", "#101010");
