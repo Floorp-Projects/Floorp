@@ -2114,7 +2114,7 @@ var gDetailView = {
     if ("contributionURL" in aAddon && aAddon.contributionURL) {
       contributions.hidden = false;
       var amount = document.getElementById("detail-contrib-suggested");
-      amount.value = gStrings.ext.formatStringFromName("contributionAmount",
+      amount.value = gStrings.ext.formatStringFromName("contributionAmount2",
                                                        [aAddon.contributionAmount],
                                                        1);
     } else {
