@@ -117,17 +117,3 @@ interface nsIXULRuntime : nsISupports
    */
   void ensureContentProcess();
 };
-
-[scriptable, uuid(a79a4031-9590-496c-b005-96b8542591ef)]
-interface nsIXULRuntime_MOZILLA_2_0 : nsISupports
-{
-  /**
-   * Recorded timestamp indicating when the operating system began launching the app
-    */
-  readonly attribute unsigned long long launchTimestamp;
-
-  /**
-   * Recorded timestamp indicating when app startup began (essentially XRE_Main)
-    */
-  readonly attribute unsigned long long startupTimestamp;
-};
