@@ -845,6 +845,9 @@ WeaveSvc.prototype = {
     Svc.Prefs.resetBranch("");
     this._ignorePrefObserver = false;
     
+    // Clear keys.
+    CollectionKeys.clear();
+    
     Svc.Prefs.set("lastversion", WEAVE_VERSION);
     // Find weave logins and remove them.
     this.password = "";
@@ -1529,6 +1532,7 @@ WeaveSvc.prototype = {
   },
 
   _updateEnabledEngines: function _updateEnabledEngines() {
+    this._log.info("Updating enabled engines: " + this.numClients + " clients.");
     let meta = Records.get(this.metaURL);
     if (meta.isNew || !meta.payload.engines)
       return;
