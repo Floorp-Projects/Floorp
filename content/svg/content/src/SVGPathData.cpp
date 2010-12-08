@@ -688,7 +688,7 @@ SVGPathData::GetMarkerPositioningData(nsTArray<nsSVGMark> *aMarks) const
     case nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS:
     case nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL:
       cp1 = SVGPathSegUtils::IsQuadraticType(prevSegType) ? segStart * 2 - prevCP : segStart;
-      if (segType == nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_ABS) {
+      if (segType == nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS) {
         segEnd = gfxPoint(mData[i], mData[i+1]);
       } else {
         segEnd = segStart + gfxPoint(mData[i], mData[i+1]);
