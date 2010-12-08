@@ -392,7 +392,9 @@ struct JSTreeContext {              /* tree context for semantic checks */
 
     bool compileAndGo() const { return flags & TCF_COMPILE_N_GO; }
     bool inFunction() const { return flags & TCF_IN_FUNCTION; }
+
     bool compiling() const { return flags & TCF_COMPILING; }
+    inline JSCodeGenerator *asCodeGenerator();
 
     bool usesArguments() const {
         return flags & TCF_FUN_USES_ARGUMENTS;
@@ -594,7 +596,7 @@ struct JSCodeGenerator : public JSTreeContext
     SlotVector      closedVars;
 
     uint16          traceIndex;     /* index for the next JSOP_TRACE instruction */
-    
+
     /*
      * Initialize cg to allocate bytecode space from codePool, source note
      * space from notePool, and all other arena-allocated temporaries from
@@ -667,6 +669,13 @@ struct JSCodeGenerator : public JSTreeContext
 
 #define CG_SWITCH_TO_MAIN(cg)   ((cg)->current = &(cg)->main)
 #define CG_SWITCH_TO_PROLOG(cg) ((cg)->current = &(cg)->prolog)
+
+inline JSCodeGenerator *
+JSTreeContext::asCodeGenerator()
+{
+    JS_ASSERT(compiling());
+    return static_cast<JSCodeGenerator *>(this);
+}
 
 /*
  * Emit one bytecode.
