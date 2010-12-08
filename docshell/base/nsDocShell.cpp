@@ -4072,33 +4072,40 @@ nsDocShell::LoadErrorPage(nsIURI *aURI, const PRUnichar *aURL,
 
     // Create a URL to pass all the error information through to the page.
 
-    char *escapedUrl = nsEscape(url.get(), url_Path);
-    char *escapedCharset = nsEscape(charset.get(), url_Path);
-    char *escapedError = nsEscape(NS_ConvertUTF16toUTF8(aErrorType).get(), url_Path);
-    char *escapedDescription = nsEscape(NS_ConvertUTF16toUTF8(aDescription).get(), url_Path);
-    char *escapedCSSClass = nsEscape(aCSSClass, url_Path);
-
+#undef SAFE_ESCAPE
+#define SAFE_ESCAPE(cstring, escArg1, escArg2)  \
+    {                                           \
+        char* s = nsEscape(escArg1, escArg2);   \
+        if (!s)                                 \
+            return NS_ERROR_OUT_OF_MEMORY;      \
+        cstring.Adopt(s);                       \
+    }
+    nsCString escapedUrl, escapedCharset, escapedError, escapedDescription,
+              escapedCSSClass;
+    SAFE_ESCAPE(escapedUrl, url.get(), url_Path);
+    SAFE_ESCAPE(escapedCharset, charset.get(), url_Path);
+    SAFE_ESCAPE(escapedError,
+                NS_ConvertUTF16toUTF8(aErrorType).get(), url_Path);
+    SAFE_ESCAPE(escapedDescription,
+                NS_ConvertUTF16toUTF8(aDescription).get(), url_Path);
+    if (aCSSClass) {
+        SAFE_ESCAPE(escapedCSSClass, aCSSClass, url_Path);
+    }
     nsCString errorPageUrl("about:");
     errorPageUrl.AppendASCII(aErrorPage);
     errorPageUrl.AppendLiteral("?e=");
 
-    errorPageUrl.AppendASCII(escapedError);
+    errorPageUrl.AppendASCII(escapedError.get());
     errorPageUrl.AppendLiteral("&u=");
-    errorPageUrl.AppendASCII(escapedUrl);
-    if (escapedCSSClass && escapedCSSClass[0]) {
+    errorPageUrl.AppendASCII(escapedUrl.get());
+    if (!escapedCSSClass.IsEmpty()) {
         errorPageUrl.AppendASCII("&s=");
-        errorPageUrl.AppendASCII(escapedCSSClass);
+        errorPageUrl.AppendASCII(escapedCSSClass.get());
     }
     errorPageUrl.AppendLiteral("&c=");
-    errorPageUrl.AppendASCII(escapedCharset);
+    errorPageUrl.AppendASCII(escapedCharset.get());
     errorPageUrl.AppendLiteral("&d=");
-    errorPageUrl.AppendASCII(escapedDescription);
-
-    nsMemory::Free(escapedDescription);
-    nsMemory::Free(escapedError);
-    nsMemory::Free(escapedUrl);
-    nsMemory::Free(escapedCharset);
-    nsMemory::Free(escapedCSSClass);
+    errorPageUrl.AppendASCII(escapedDescription.get());
 
     nsCOMPtr<nsIURI> errorPageURI;
     nsresult rv = NS_NewURI(getter_AddRefs(errorPageURI), errorPageUrl);
