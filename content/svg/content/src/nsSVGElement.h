@@ -76,6 +76,7 @@ class SVGAnimatedNumberList;
 class SVGNumberList;
 class SVGAnimatedLengthList;
 class SVGUserUnitList;
+class SVGAnimatedPointList;
 class SVGAnimatedPathSegList;
 }
 
@@ -94,6 +95,7 @@ public:
   typedef mozilla::SVGAnimatedNumberList SVGAnimatedNumberList;
   typedef mozilla::SVGUserUnitList SVGUserUnitList;
   typedef mozilla::SVGAnimatedLengthList SVGAnimatedLengthList;
+  typedef mozilla::SVGAnimatedPointList SVGAnimatedPointList;
   typedef mozilla::SVGAnimatedPathSegList SVGAnimatedPathSegList;
 
   // nsISupports
@@ -180,6 +182,7 @@ public:
   virtual void DidChangePreserveAspectRatio(PRBool aDoSetAttr);
   virtual void DidChangeNumberList(PRUint8 aAttrEnum, PRBool aDoSetAttr);
   virtual void DidChangeLengthList(PRUint8 aAttrEnum, PRBool aDoSetAttr);
+  virtual void DidChangePointList(PRBool aDoSetAttr);
   virtual void DidChangePathSegList(PRBool aDoSetAttr);
   virtual void DidChangeString(PRUint8 aAttrEnum) {}
 
@@ -193,6 +196,7 @@ public:
   virtual void DidAnimatePreserveAspectRatio();
   virtual void DidAnimateNumberList(PRUint8 aAttrEnum);
   virtual void DidAnimateLengthList(PRUint8 aAttrEnum);
+  virtual void DidAnimatePointList();
   virtual void DidAnimatePathSegList();
   virtual void DidAnimateTransform();
   virtual void DidAnimateString(PRUint8 aAttrEnum);
@@ -204,6 +208,9 @@ public:
   SVGAnimatedNumberList* GetAnimatedNumberList(nsIAtom *aAttrName);
   void GetAnimatedLengthListValues(SVGUserUnitList *aFirst, ...);
   SVGAnimatedLengthList* GetAnimatedLengthList(PRUint8 aAttrEnum);
+  virtual SVGAnimatedPointList* GetAnimatedPointList() {
+    return nsnull;
+  }
   virtual SVGAnimatedPathSegList* GetAnimPathSegList() {
     // DOM interface 'SVGAnimatedPathData' (*inherited* by nsSVGPathElement)
     // has a member called 'animatedPathSegList' member, so we have a shorter
@@ -226,6 +233,9 @@ public:
   void GetStringBaseValue(PRUint8 aAttrEnum, nsAString& aResult) const;
   void SetStringBaseValue(PRUint8 aAttrEnum, const nsAString& aValue);
 
+  virtual nsIAtom* GetPointListAttrName() const {
+    return nsnull;
+  }
   virtual nsIAtom* GetPathDataAttrName() const {
     return nsnull;
   }

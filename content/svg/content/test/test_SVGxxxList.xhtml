@@ -22,6 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=515116
   </desc>
   <text id="text">text</text>
   <path id="path"/>
+  <polyline id="polyline"/>
 </svg>
 </div>
 <pre id="test">
@@ -147,7 +148,6 @@ var tests = [
       return document.getElementById('svg').createSVGNumber();
     }
   },
-/*
   {
     // SVGPointList test:
     target_element_id: 'polyline',
@@ -159,14 +159,16 @@ var tests = [
     prop_type: null,
     list_type: 'SVGPointList',
     item_type: 'SVGPoint',
-    attr_val_3a: '',
-    attr_val_3b: '',
-    attr_val_4 : '',
-    attr_val_5a: '',
-    attr_val_5b: '',
-    item_constructor: document.getElementById('svg').createSVGPoint
+    attr_val_3a: ' 10,10 50,50 90,10 ',
+    attr_val_3b: ' 10,50 50,10 90,50 ',
+    attr_val_4 : ' 10,10 50,50 90,10 200,100 ',
+    attr_val_5a: ' 10,10 50,50 90,10 130,50 170,10 ',
+    attr_val_5b: ' 50,10 50,10 90,50 130,10 170,50 ',
+    item_constructor: function() {
+      // XXX return different values each time
+      return document.getElementById('svg').createSVGPoint();
+    }
   },
-*/
   {
     // SVGPathSegList test:
     target_element_id: 'path',

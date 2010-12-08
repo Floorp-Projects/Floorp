@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <style type="text/css">
+    polyline { fill: none; stroke: blue; stroke-width: 2px; }
+  </style>
+
+  <polyline points="10,10 70,50 110,10 160,30 210,10"/>
+
+  <polyline transform="translate(0, 70)"
+            points="10,10 70,50 110,10 160,30 210,10"/>
+
+  <polyline transform="translate(0, 140)"
+            points="10,10 70,50 110,10 160,30 210,10"/>
+
+  <polyline transform="translate(0, 210)"
+            points="10,10 70,10 110,10 160,70 210,10"/>
+
+</svg>

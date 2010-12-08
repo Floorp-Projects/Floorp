@@ -43,11 +43,10 @@
 #include "SVGLengthList.h"
 #include "nsIDOMSVGLength.h"
 #include "nsIDOMSVGRect.h"
-#include "nsIDOMSVGPoint.h"
+#include "DOMSVGPoint.h"
 #include "nsSVGGlyphFrame.h"
 #include "nsSVGTextPathFrame.h"
 #include "nsSVGPathElement.h"
-#include "nsSVGPoint.h"
 #include "nsSVGRect.h"
 #include "nsDOMError.h"
 #include "gfxContext.h"
@@ -1099,7 +1098,8 @@ nsSVGGlyphFrame::GetStartPositionOfChar(PRUint32 charnum,
   if (!iter.AdvanceToCharacter(charnum))
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
 
-  return NS_NewSVGPoint(_retval, iter.GetPositionData().pos);
+  NS_ADDREF(*_retval = new DOMSVGPoint(iter.GetPositionData().pos));
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1116,7 +1116,8 @@ nsSVGGlyphFrame::GetEndPositionOfChar(PRUint32 charnum,
   iter.SetupForMetrics(tmpCtx);
   tmpCtx->MoveTo(gfxPoint(mTextRun->GetAdvanceWidth(charnum, 1, nsnull), 0));
   tmpCtx->IdentityMatrix();
-  return NS_NewSVGPoint(_retval, tmpCtx->CurrentPoint());
+  NS_ADDREF(*_retval = new DOMSVGPoint(tmpCtx->CurrentPoint()));
+  return NS_OK;
 }
 
 NS_IMETHODIMP
