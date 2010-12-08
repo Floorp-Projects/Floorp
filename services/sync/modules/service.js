@@ -845,6 +845,9 @@ WeaveSvc.prototype = {
     Svc.Prefs.resetBranch("");
     this._ignorePrefObserver = false;
     
+    // Clear keys.
+    CollectionKeys.clear();
+    
     Svc.Prefs.set("lastversion", WEAVE_VERSION);
     // Find weave logins and remove them.
     this.password = "";
