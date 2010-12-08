@@ -723,6 +723,9 @@ nsSubDocumentFrame::AttributeChanged(PRInt32 aNameSpaceID,
 
     nsCOMPtr<nsIDocShellTreeItem> parentItem;
     docShellAsItem->GetParent(getter_AddRefs(parentItem));
+    if (!parentItem) {
+      return NS_OK;
+    }
 
     PRInt32 parentType;
     parentItem->GetItemType(&parentType);
