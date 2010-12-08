@@ -608,7 +608,7 @@ class Chars {
         p = (jschar *) cx->malloc((len + 1) * sizeof(jschar));
         this->cx = cx;
         if (p) {
-            p[len] = (jschar)0;
+            p[len] = jschar(0);
             return true;
         }
         return false;
