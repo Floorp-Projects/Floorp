@@ -17,6 +17,8 @@
 <script class="testbody" type="text/javascript">
 
 var ws;
+var oldPrefVal;
+var domBranch;
 
 var params = ["protocol", "resource", "origin", "end"];
 var results = ["test", "/tests/content/base/test/file_ws_basic_tests", "http://mochi.test:8888", "end"];
@@ -29,7 +31,21 @@ function forcegc(){
   wu.garbageCollect();
 }
 
+function finishWSTest() {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    domBranch.setBoolPref("override-security-block", oldPrefVal);
+    SimpleTest.finish();
+}
+
 function testWebSocket () {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var prefService =
+      Components.classes["@mozilla.org/preferences-service;1"]
+      .getService(Components.interfaces.nsIPrefService);
+  domBranch = prefService.getBranch("network.websocket.");
+  oldPrefVal = domBranch.getBoolPref("override-security-block");
+  domBranch.setBoolPref("override-security-block", true);
+
   var url = "ws://mochi.test:8888/tests/content/base/test/file_ws_basic_tests";
   ws = new WebSocket("ws://mochi.test:8888/tests/content/base/test/file_ws_basic_tests", "test");
   is(ws.url, url, "Wrong Websocket.url!");
@@ -45,7 +61,7 @@ function testWebSocket () {
   }
   ws.onerror = function(e) {
     ok(false, "onerror called!");
-    SimpleTest.finish();
+    finishWSTest();
   }
   ws.onmessage = function(e) {
     document.getElementById('log').textContent += "\n" + e.data;
@@ -71,7 +87,7 @@ function testWebSocket2() {
   }
   ws.onerror = function(e) {
     ok(false, "onerror called!");
-    SimpleTest.finish();
+    finishWSTest();
   }
   ws.onmessage = function(e) {
     ++messageCount;
@@ -101,7 +117,7 @@ function testWebSocket3() {
   }
   ws.onerror = function(e) {
     ok(false, "onerror called!");
-    SimpleTest.finish();
+    finishWSTest();
   }
   ws.onmessage = function(e) {
     forcegc(); // Do something evil, call cycle collector a lot.
@@ -128,7 +144,7 @@ function testWebSocket4() {
   }
   ws.onerror = function(e) {
     ok(false, "onerror called!");
-    SimpleTest.finish();
+    finishWSTest();
   }
   ws.onmessage = function(e) {
     is(this, ws, "'this' should point to the WebSocket. (3)");
@@ -149,11 +165,11 @@ function testWebSocket5() {
     var msg = "some data";
     this.send(msg);
     ok(this.bufferedAmount, msg.length, "Should have some data buffered");
-    SimpleTest.finish();
+    finishWSTest();
   }
   ws.onerror = function(e) {
     ok(false, "onerror called!");
-    SimpleTest.finish();
+    finishWSTest();
   }
 }
 
