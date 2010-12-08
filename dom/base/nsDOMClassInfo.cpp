@@ -6345,6 +6345,13 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
       return NS_OK;
     }
 
+    // For now don't expose web sockets unless user has explicitly enabled them
+    if (name_struct->mDOMClassInfoID == eDOMClassInfo_WebSocket_id) {
+      if (!nsWebSocket::PrefEnabled()) {
+        return NS_OK;
+      }
+    }
+
     // Create the XPConnect prototype for our classinfo, PostCreateProto will
     // set up the prototype chain.
     nsCOMPtr<nsIXPConnectJSObjectHolder> proto_holder;
