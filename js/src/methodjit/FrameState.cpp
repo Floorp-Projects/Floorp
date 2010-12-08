@@ -2082,10 +2082,11 @@ FrameState::storeTop(FrameEntry *target, bool popGuaranteed, JSValueType type)
             forgetReg(fpreg);
         } else {
             JS_ASSERT(type == JSVAL_TYPE_DOUBLE);
-            target->setType(JSVAL_TYPE_DOUBLE);
             target->data.setFPRegister(fpreg);
             regstate(fpreg).reassociate(target);
         }
+
+        target->setType(JSVAL_TYPE_DOUBLE);
     } else {
         /*
          * Move the backing store down - we spill registers here, but we could be
@@ -2127,8 +2128,7 @@ FrameState::storeTop(FrameEntry *target, bool popGuaranteed, JSValueType type)
             JS_ASSERT_IF(backing->isTypeKnown(), backing->isType(type));
             if (!backing->isTypeKnown())
                 learnType(backing, type);
-            target->type.setConstant();
-            target->knownType = type;
+            target->setType(type);
         }
     }
 
