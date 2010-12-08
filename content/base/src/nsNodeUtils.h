@@ -242,9 +242,11 @@ public:
    *
    * @param aNode the node to clone
    * @param aDeep if true all descendants will be cloned too
+   * @param aCallUserDataHandlers if true, user data handlers will be called
    * @param aResult the clone
    */
   static nsresult CloneNodeImpl(nsINode *aNode, PRBool aDeep,
+                                PRBool aCallUserDataHandlers,
                                 nsIDOMNode **aResult);
 
   /**
