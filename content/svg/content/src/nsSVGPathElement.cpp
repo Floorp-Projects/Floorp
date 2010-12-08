@@ -46,7 +46,7 @@
 #include "nsSVGPathElement.h"
 #include "nsISVGValueUtils.h"
 #include "nsSVGUtils.h"
-#include "nsSVGPoint.h"
+#include "DOMSVGPoint.h"
 #include "gfxContext.h"
 #include "gfxPlatform.h"
 
@@ -129,7 +129,8 @@ nsSVGPathElement::GetPointAtLength(float distance, nsIDOMSVGPoint **_retval)
   distance = NS_MAX(0.f,         distance);
   distance = NS_MIN(totalLength, distance);
 
-  return NS_NewSVGPoint(_retval, flat->FindPoint(gfxPoint(distance, 0)));
+  NS_ADDREF(*_retval = new DOMSVGPoint(flat->FindPoint(gfxPoint(distance, 0))));
+  return NS_OK;
 }
 
 /* unsigned long getPathSegAtLength (in float distance); */
