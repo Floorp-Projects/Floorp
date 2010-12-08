@@ -59,8 +59,40 @@
 
 #include "nsHtml5MetaScanner.h"
 
-PRUnichar nsHtml5MetaScanner::CHARSET[] = { 'c', 'h', 'a', 'r', 's', 'e', 't' };
-PRUnichar nsHtml5MetaScanner::CONTENT[] = { 'c', 'o', 'n', 't', 'e', 'n', 't' };
+static PRUnichar const CHARSET_DATA[] = { 'h', 'a', 'r', 's', 'e', 't' };
+staticJArray<PRUnichar,PRInt32> nsHtml5MetaScanner::CHARSET = { CHARSET_DATA, NS_ARRAY_LENGTH(CHARSET_DATA) };
+static PRUnichar const CONTENT_DATA[] = { 'o', 'n', 't', 'e', 'n', 't' };
+staticJArray<PRUnichar,PRInt32> nsHtml5MetaScanner::CONTENT = { CONTENT_DATA, NS_ARRAY_LENGTH(CONTENT_DATA) };
+static PRUnichar const HTTP_EQUIV_DATA[] = { 't', 't', 'p', '-', 'e', 'q', 'u', 'i', 'v' };
+staticJArray<PRUnichar,PRInt32> nsHtml5MetaScanner::HTTP_EQUIV = { HTTP_EQUIV_DATA, NS_ARRAY_LENGTH(HTTP_EQUIV_DATA) };
+static PRUnichar const CONTENT_TYPE_DATA[] = { 'c', 'o', 'n', 't', 'e', 'n', 't', '-', 't', 'y', 'p', 'e' };
+staticJArray<PRUnichar,PRInt32> nsHtml5MetaScanner::CONTENT_TYPE = { CONTENT_TYPE_DATA, NS_ARRAY_LENGTH(CONTENT_TYPE_DATA) };
+
+nsHtml5MetaScanner::nsHtml5MetaScanner()
+  : readable(nsnull),
+    metaState(NS_HTML5META_SCANNER_NO),
+    contentIndex(PR_INT32_MAX),
+    charsetIndex(PR_INT32_MAX),
+    httpEquivIndex(PR_INT32_MAX),
+    contentTypeIndex(PR_INT32_MAX),
+    stateSave(NS_HTML5META_SCANNER_DATA),
+    strBufLen(0),
+    strBuf(jArray<PRUnichar,PRInt32>::newJArray(36)),
+    content(nsnull),
+    charset(nsnull),
+    httpEquivState(NS_HTML5META_SCANNER_HTTP_EQUIV_NOT_SEEN)
+{
+  MOZ_COUNT_CTOR(nsHtml5MetaScanner);
+}
+
+
+nsHtml5MetaScanner::~nsHtml5MetaScanner()
+{
+  MOZ_COUNT_DTOR(nsHtml5MetaScanner);
+  nsHtml5Portability::releaseString(content);
+  nsHtml5Portability::releaseString(charset);
+}
+
 void 
 nsHtml5MetaScanner::stateLoop(PRInt32 state)
 {
@@ -209,6 +241,9 @@ nsHtml5MetaScanner::stateLoop(PRInt32 state)
               NS_HTML5_CONTINUE(stateloop);
             }
             case '>': {
+              if (handleTag()) {
+                NS_HTML5_BREAK(stateloop);
+              }
               state = NS_HTML5META_SCANNER_DATA;
               NS_HTML5_CONTINUE(stateloop);
             }
@@ -216,12 +251,25 @@ nsHtml5MetaScanner::stateLoop(PRInt32 state)
             case 'C': {
               contentIndex = 0;
               charsetIndex = 0;
+              httpEquivIndex = PR_INT32_MAX;
+              contentTypeIndex = PR_INT32_MAX;
+              state = NS_HTML5META_SCANNER_ATTRIBUTE_NAME;
+              NS_HTML5_BREAK(beforeattributenameloop);
+            }
+            case 'h':
+            case 'H': {
+              contentIndex = PR_INT32_MAX;
+              charsetIndex = PR_INT32_MAX;
+              httpEquivIndex = 0;
+              contentTypeIndex = PR_INT32_MAX;
               state = NS_HTML5META_SCANNER_ATTRIBUTE_NAME;
               NS_HTML5_BREAK(beforeattributenameloop);
             }
             default: {
-              contentIndex = -1;
-              charsetIndex = -1;
+              contentIndex = PR_INT32_MAX;
+              charsetIndex = PR_INT32_MAX;
+              httpEquivIndex = PR_INT32_MAX;
+              contentTypeIndex = PR_INT32_MAX;
               state = NS_HTML5META_SCANNER_ATTRIBUTE_NAME;
               NS_HTML5_BREAK(beforeattributenameloop);
             }
@@ -249,10 +297,14 @@ nsHtml5MetaScanner::stateLoop(PRInt32 state)
             }
             case '=': {
               strBufLen = 0;
+              contentTypeIndex = 0;
               state = NS_HTML5META_SCANNER_BEFORE_ATTRIBUTE_VALUE;
               NS_HTML5_BREAK(attributenameloop);
             }
             case '>': {
+              if (handleTag()) {
+                NS_HTML5_BREAK(stateloop);
+              }
               state = NS_HTML5META_SCANNER_DATA;
               NS_HTML5_CONTINUE(stateloop);
             }
@@ -261,15 +313,20 @@ nsHtml5MetaScanner::stateLoop(PRInt32 state)
                 if (c >= 'A' && c <= 'Z') {
                   c += 0x20;
                 }
-                if (contentIndex == 6) {
-                  contentIndex = -1;
-                } else if (contentIndex > -1 && contentIndex < 6 && (c == CONTENT[contentIndex + 1])) {
-                  contentIndex++;
+                if (contentIndex < CONTENT.length && c == CONTENT[contentIndex]) {
+                  ++contentIndex;
+                } else {
+                  contentIndex = PR_INT32_MAX;
                 }
-                if (charsetIndex == 6) {
-                  charsetIndex = -1;
-                } else if (charsetIndex > -1 && charsetIndex < 6 && (c == CHARSET[charsetIndex + 1])) {
-                  charsetIndex++;
+                if (charsetIndex < CHARSET.length && c == CHARSET[charsetIndex]) {
+                  ++charsetIndex;
+                } else {
+                  charsetIndex = PR_INT32_MAX;
+                }
+                if (httpEquivIndex < HTTP_EQUIV.length && c == HTTP_EQUIV[httpEquivIndex]) {
+                  ++httpEquivIndex;
+                } else {
+                  httpEquivIndex = PR_INT32_MAX;
                 }
               }
               continue;
@@ -300,13 +357,14 @@ nsHtml5MetaScanner::stateLoop(PRInt32 state)
               NS_HTML5_CONTINUE(stateloop);
             }
             case '>': {
+              if (handleTag()) {
+                NS_HTML5_BREAK(stateloop);
+              }
               state = NS_HTML5META_SCANNER_DATA;
               NS_HTML5_CONTINUE(stateloop);
             }
             default: {
-              if (charsetIndex == 6 || contentIndex == 6) {
-                addToBuffer(c);
-              }
+              handleCharInAttributeValue(c);
               state = NS_HTML5META_SCANNER_ATTRIBUTE_VALUE_UNQUOTED;
               NS_HTML5_CONTINUE(stateloop);
             }
@@ -326,16 +384,12 @@ nsHtml5MetaScanner::stateLoop(PRInt32 state)
               NS_HTML5_BREAK(stateloop);
             }
             case '\"': {
-              if (tryCharset()) {
-                NS_HTML5_BREAK(stateloop);
-              }
+              handleAttributeValue();
               state = NS_HTML5META_SCANNER_AFTER_ATTRIBUTE_VALUE_QUOTED;
               NS_HTML5_BREAK(attributevaluedoublequotedloop);
             }
             default: {
-              if (metaState == NS_HTML5META_SCANNER_A && (contentIndex == 6 || charsetIndex == 6)) {
-                addToBuffer(c);
-              }
+              handleCharInAttributeValue(c);
               continue;
             }
           }
@@ -361,6 +415,9 @@ nsHtml5MetaScanner::stateLoop(PRInt32 state)
               NS_HTML5_BREAK(afterattributevaluequotedloop);
             }
             case '>': {
+              if (handleTag()) {
+                NS_HTML5_BREAK(stateloop);
+              }
               state = NS_HTML5META_SCANNER_DATA;
               NS_HTML5_CONTINUE(stateloop);
             }
@@ -380,6 +437,9 @@ nsHtml5MetaScanner::stateLoop(PRInt32 state)
             NS_HTML5_BREAK(stateloop);
           }
           case '>': {
+            if (handleTag()) {
+              NS_HTML5_BREAK(stateloop);
+            }
             state = NS_HTML5META_SCANNER_DATA;
             NS_HTML5_CONTINUE(stateloop);
           }
@@ -405,23 +465,20 @@ nsHtml5MetaScanner::stateLoop(PRInt32 state)
             case '\t':
             case '\n':
             case '\f': {
-              if (tryCharset()) {
-                NS_HTML5_BREAK(stateloop);
-              }
+              handleAttributeValue();
               state = NS_HTML5META_SCANNER_BEFORE_ATTRIBUTE_NAME;
               NS_HTML5_CONTINUE(stateloop);
             }
             case '>': {
-              if (tryCharset()) {
+              handleAttributeValue();
+              if (handleTag()) {
                 NS_HTML5_BREAK(stateloop);
               }
               state = NS_HTML5META_SCANNER_DATA;
               NS_HTML5_CONTINUE(stateloop);
             }
             default: {
-              if (metaState == NS_HTML5META_SCANNER_A && (contentIndex == 6 || charsetIndex == 6)) {
-                addToBuffer(c);
-              }
+              handleCharInAttributeValue(c);
               continue;
             }
           }
@@ -441,18 +498,19 @@ nsHtml5MetaScanner::stateLoop(PRInt32 state)
               continue;
             }
             case '/': {
-              if (tryCharset()) {
-                NS_HTML5_BREAK(stateloop);
-              }
+              handleAttributeValue();
               state = NS_HTML5META_SCANNER_SELF_CLOSING_START_TAG;
               NS_HTML5_CONTINUE(stateloop);
             }
             case '=': {
+              strBufLen = 0;
+              contentTypeIndex = 0;
               state = NS_HTML5META_SCANNER_BEFORE_ATTRIBUTE_VALUE;
               NS_HTML5_CONTINUE(stateloop);
             }
             case '>': {
-              if (tryCharset()) {
+              handleAttributeValue();
+              if (handleTag()) {
                 NS_HTML5_BREAK(stateloop);
               }
               state = NS_HTML5META_SCANNER_DATA;
@@ -627,16 +685,12 @@ nsHtml5MetaScanner::stateLoop(PRInt32 state)
               NS_HTML5_BREAK(stateloop);
             }
             case '\'': {
-              if (tryCharset()) {
-                NS_HTML5_BREAK(stateloop);
-              }
+              handleAttributeValue();
               state = NS_HTML5META_SCANNER_AFTER_ATTRIBUTE_VALUE_QUOTED;
               NS_HTML5_CONTINUE(stateloop);
             }
             default: {
-              if (metaState == NS_HTML5META_SCANNER_A && (contentIndex == 6 || charsetIndex == 6)) {
-                addToBuffer(c);
-              }
+              handleCharInAttributeValue(c);
               continue;
             }
           }
@@ -670,6 +724,22 @@ nsHtml5MetaScanner::stateLoop(PRInt32 state)
 }
 
 void 
+nsHtml5MetaScanner::handleCharInAttributeValue(PRInt32 c)
+{
+  if (metaState == NS_HTML5META_SCANNER_A) {
+    if (contentIndex == CONTENT.length || charsetIndex == CHARSET.length) {
+      addToBuffer(c);
+    } else if (httpEquivIndex == HTTP_EQUIV.length) {
+      if (contentTypeIndex < CONTENT_TYPE.length && toAsciiLowerCase(c) == CONTENT_TYPE[contentTypeIndex]) {
+        ++contentTypeIndex;
+      } else {
+        contentTypeIndex = PR_INT32_MAX;
+      }
+    }
+  }
+}
+
+void 
 nsHtml5MetaScanner::addToBuffer(PRInt32 c)
 {
   if (strBufLen == strBuf.length) {
@@ -680,28 +750,54 @@ nsHtml5MetaScanner::addToBuffer(PRInt32 c)
   strBuf[strBufLen++] = (PRUnichar) c;
 }
 
-PRBool 
-nsHtml5MetaScanner::tryCharset()
+void 
+nsHtml5MetaScanner::handleAttributeValue()
 {
-  if (metaState != NS_HTML5META_SCANNER_A || !(contentIndex == 6 || charsetIndex == 6)) {
-    return PR_FALSE;
+  if (metaState != NS_HTML5META_SCANNER_A) {
+    return;
   }
-  nsString* attVal = nsHtml5Portability::newStringFromBuffer(strBuf, 0, strBufLen);
-  nsString* candidateEncoding;
-  if (contentIndex == 6) {
-    candidateEncoding = nsHtml5TreeBuilder::extractCharsetFromContent(attVal);
-    nsHtml5Portability::releaseString(attVal);
-  } else {
-    candidateEncoding = attVal;
+  if (contentIndex == CONTENT.length && !content) {
+    content = nsHtml5Portability::newStringFromBuffer(strBuf, 0, strBufLen);
+    return;
   }
-  if (!candidateEncoding) {
-    return PR_FALSE;
+  if (charsetIndex == CHARSET.length && !charset) {
+    charset = nsHtml5Portability::newStringFromBuffer(strBuf, 0, strBufLen);
+    return;
   }
-  PRBool success = tryCharset(candidateEncoding);
-  nsHtml5Portability::releaseString(candidateEncoding);
-  contentIndex = -1;
-  charsetIndex = -1;
-  return success;
+  if (httpEquivIndex == HTTP_EQUIV.length && httpEquivState == NS_HTML5META_SCANNER_HTTP_EQUIV_NOT_SEEN) {
+    httpEquivState = (contentTypeIndex == CONTENT_TYPE.length) ? NS_HTML5META_SCANNER_HTTP_EQUIV_CONTENT_TYPE : NS_HTML5META_SCANNER_HTTP_EQUIV_OTHER;
+    return;
+  }
+}
+
+PRBool 
+nsHtml5MetaScanner::handleTag()
+{
+  PRBool stop = handleTagInner();
+  nsHtml5Portability::releaseString(content);
+  content = nsnull;
+  nsHtml5Portability::releaseString(charset);
+  charset = nsnull;
+  httpEquivState = NS_HTML5META_SCANNER_HTTP_EQUIV_NOT_SEEN;
+  return stop;
+}
+
+PRBool 
+nsHtml5MetaScanner::handleTagInner()
+{
+  if (!!charset && tryCharset(charset)) {
+    return PR_TRUE;
+  }
+  if (!!content && httpEquivState == NS_HTML5META_SCANNER_HTTP_EQUIV_CONTENT_TYPE) {
+    nsString* extract = nsHtml5TreeBuilder::extractCharsetFromContent(content);
+    if (!extract) {
+      return PR_FALSE;
+    }
+    PRBool success = tryCharset(extract);
+    nsHtml5Portability::releaseString(extract);
+    return success;
+  }
+  return PR_FALSE;
 }
 
 void
