@@ -24,7 +24,6 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Robert O'Callahan <roc+moz@cs.cmu.edu>
  *   Benjamin Smedberg <bsmedberg@covad.net>
- *   Daniel Brooks <db48x@db48x.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -70,17 +69,10 @@
 #include "nsWidgetsCID.h"
 #include "nsAppShellCID.h"
 #include "mozilla/Services.h"
-#include "mozilla/storage.h"
-#include "mozIStorageAsyncStatement.h"
+
 #include "mozilla/FunctionTimer.h"
-#include "nsAppDirectoryServiceDefs.h"
-#include "nsIXULRuntime.h"
-#include "nsIXULAppInfo.h"
-#include "nsXPCOMCIDInternal.h"
-#include "nsIPropertyBag2.h"
 
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
-static const PRInt32 STARTUP_DATABASE_CURRENT_SCHEMA = 1;
 
 class nsAppExitEvent : public nsRunnable {
 private:
@@ -100,10 +92,6 @@ public:
   }
 };
 
-nsresult OpenStartupDatabase(mozIStorageConnection **db);
-nsresult EnsureTable(mozIStorageConnection *db, const nsACString &table,
-                     const nsACString &schema);
-
 //
 // nsAppStartup
 //
@@ -113,8 +101,7 @@ nsAppStartup::nsAppStartup() :
   mRunning(PR_FALSE),
   mShuttingDown(PR_FALSE),
   mAttemptingQuit(PR_FALSE),
-  mRestart(PR_FALSE),
-  mRestoredTimestamp(0)
+  mRestart(PR_FALSE)
 { }
 
 
@@ -138,8 +125,6 @@ nsAppStartup::Init()
   NS_TIME_FUNCTION_MARK("Got Observer service");
 
   os->AddObserver(this, "quit-application-forced", PR_TRUE);
-  os->AddObserver(this, "sessionstore-windows-restored", PR_TRUE);
-  os->AddObserver(this, "AddonManager-event", PR_TRUE);
   os->AddObserver(this, "profile-change-teardown", PR_TRUE);
   os->AddObserver(this, "xul-window-registered", PR_TRUE);
   os->AddObserver(this, "xul-window-destroyed", PR_TRUE);
@@ -152,10 +137,9 @@ nsAppStartup::Init()
 // nsAppStartup->nsISupports
 //
 
-NS_IMPL_THREADSAFE_ISUPPORTS7(nsAppStartup,
+NS_IMPL_THREADSAFE_ISUPPORTS6(nsAppStartup,
                               nsIAppStartup,
                               nsIAppStartup2,
-                              nsIAppStartup_MOZILLA_2_0,
                               nsIWindowCreator,
                               nsIWindowCreator2,
                               nsIObserver,
@@ -483,7 +467,7 @@ nsAppStartup::CreateChromeWindow2(nsIWebBrowserChrome *aParent,
     nsCOMPtr<nsIAppShellService> appShell(do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
     if (!appShell)
       return NS_ERROR_FAILURE;
-
+    
     appShell->CreateTopLevelWindow(0, 0, aChromeFlags,
                                    nsIAppShellService::SIZE_TO_CONTENT,
                                    nsIAppShellService::SIZE_TO_CONTENT,
@@ -524,234 +508,9 @@ nsAppStartup::Observe(nsISupports *aSubject,
     EnterLastWindowClosingSurvivalArea();
   } else if (!strcmp(aTopic, "xul-window-destroyed")) {
     ExitLastWindowClosingSurvivalArea();
-  } else if (!strcmp(aTopic, "sessionstore-windows-restored")) {
-    RecordStartupDuration();
-  } else if (!strcmp(aTopic, "AddonManager-event")) {
-    RecordAddonEvent(aData, aSubject);
   } else {
     NS_ERROR("Unexpected observer topic.");
   }
 
-  return NS_OK;
-}
-
-nsresult nsAppStartup::RecordStartupDuration()
-{
-  nsresult rv;
-  PRTime launched = 0, started = 0;
-  mRestoredTimestamp = PR_Now();
-
-  nsCOMPtr<nsIXULAppInfo> appinfo = do_GetService(XULRUNTIME_SERVICE_CONTRACTID);
-  nsCOMPtr<nsIXULRuntime_MOZILLA_2_0> runtime = do_QueryInterface(appinfo);
-
-  runtime->GetLaunchTimestamp(reinterpret_cast<PRUint64*>(&launched));
-  runtime->GetStartupTimestamp(reinterpret_cast<PRUint64*>(&started));
-
-  if (!launched)
-  {
-    launched = started;
-  }
-
-  nsCAutoString appVersion, appBuild, platformVersion, platformBuild;
-  appinfo->GetVersion(appVersion);
-  appinfo->GetAppBuildID(appBuild);
-  appinfo->GetPlatformVersion(platformVersion);
-  appinfo->GetPlatformBuildID(platformBuild);
-
-  nsCOMPtr<mozIStorageConnection> db;
-  rv = OpenStartupDatabase(getter_AddRefs(db));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<mozIStorageAsyncStatement> statement;
-  rv = db->CreateAsyncStatement(NS_LITERAL_CSTRING(
-    "INSERT INTO duration (timestamp, launch, startup, appVersion, "
-                          "appBuild, platformVersion, platformBuild)"
-    "VALUES (:timestamp, :launch, :startup, :appVersion, :appBuild, "
-             ":platformVersion, :platformBuild)"),
-                                getter_AddRefs(statement));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<mozIStorageBindingParamsArray> parametersArray;
-  rv = statement->NewBindingParamsArray(getter_AddRefs(parametersArray));
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<mozIStorageBindingParams> parameters;
-  rv = parametersArray->NewBindingParams(getter_AddRefs(parameters));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = parameters->BindInt64ByName(NS_LITERAL_CSTRING("timestamp"),
-                                   launched);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = parameters->BindInt64ByName(NS_LITERAL_CSTRING("launch"),
-                                   started - launched);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = parameters->BindInt64ByName(NS_LITERAL_CSTRING("startup"),
-                                   mRestoredTimestamp - started);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = parameters->BindUTF8StringByName(NS_LITERAL_CSTRING("appVersion"),
-                                        appVersion);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = parameters->BindUTF8StringByName(NS_LITERAL_CSTRING("appBuild"),
-                                        appBuild);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = parameters->BindUTF8StringByName(NS_LITERAL_CSTRING("platformVersion"),
-                                        platformVersion);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = parameters->BindUTF8StringByName(NS_LITERAL_CSTRING("platformBuild"),
-                                        platformBuild);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-
-  rv = parametersArray->AddParams(parameters);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = statement->BindParameters(parametersArray);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<mozIStoragePendingStatement> pending;
-  rv = statement->ExecuteAsync(nsnull, getter_AddRefs(pending));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = db->AsyncClose(nsnull);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-nsresult nsAppStartup::RecordAddonEvent(const PRUnichar *event, nsISupports *details)
-{
-  PRTime now = PR_Now();
-  nsresult rv;
-
-  nsCOMPtr<nsIPropertyBag2> bag = do_QueryInterface(details);
-  NS_ENSURE_STATE(bag);
-  nsAutoString id, name, version;
-  bag->GetPropertyAsAString(NS_LITERAL_STRING("id"), id);
-  bag->GetPropertyAsAString(NS_LITERAL_STRING("name"), name);
-  bag->GetPropertyAsAString(NS_LITERAL_STRING("version"), version);
-
-  nsCOMPtr<mozIStorageConnection> db;
-  rv = OpenStartupDatabase(getter_AddRefs(db));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<mozIStorageAsyncStatement> statement;
-  rv = db->CreateAsyncStatement(NS_LITERAL_CSTRING(
-    "INSERT INTO events (timestamp, extid, name, version, action) "
-    "VALUES (:timestamp, :extid, :name, :version, :action)"),
-                                getter_AddRefs(statement));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<mozIStorageBindingParamsArray> parametersArray;
-  rv = statement->NewBindingParamsArray(getter_AddRefs(parametersArray));
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<mozIStorageBindingParams> parameters;
-  rv = parametersArray->NewBindingParams(getter_AddRefs(parameters));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = parameters->BindInt64ByName(NS_LITERAL_CSTRING("timestamp"),
-                                   now);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = parameters->BindUTF8StringByName(NS_LITERAL_CSTRING("extid"),
-                                        NS_ConvertUTF16toUTF8(id));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = parameters->BindUTF8StringByName(NS_LITERAL_CSTRING("name"),
-                                        NS_ConvertUTF16toUTF8(name));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = parameters->BindUTF8StringByName(NS_LITERAL_CSTRING("version"),
-                                        NS_ConvertUTF16toUTF8(version));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = parameters->BindUTF8StringByName(NS_LITERAL_CSTRING("action"),
-                                        NS_ConvertUTF16toUTF8(nsDependentString(event)));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = parametersArray->AddParams(parameters);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = statement->BindParameters(parametersArray);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<mozIStoragePendingStatement> pending;
-  rv = statement->ExecuteAsync(nsnull, getter_AddRefs(pending));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  db->AsyncClose(nsnull);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return NS_OK;
-}
-
-nsresult OpenStartupDatabase(mozIStorageConnection **db)
-{
-  nsresult rv;
-  nsCOMPtr<nsIFile> file;
-  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = file->Append(NS_LITERAL_STRING("startup.sqlite"));
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<mozIStorageService> svc = do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = svc->OpenDatabase(file, db);
-  if (NS_ERROR_FILE_CORRUPTED == rv)
-  {
-    rv = file->Remove(PR_FALSE);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = svc->OpenDatabase(file, db);
-  }
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mozStorageTransaction transaction(*db, PR_FALSE);
-
-  PRInt32 schema;
-  rv = (*db)->GetSchemaVersion(&schema);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (0 == schema)
-  {
-    rv = EnsureTable(*db,
-                     NS_LITERAL_CSTRING("duration"),
-                     NS_LITERAL_CSTRING("timestamp INTEGER,             \
-                                         launch INTEGER,                \
-                                         startup INTEGER,               \
-                                         appVersion TEXT,               \
-                                         appBuild TEXT,                 \
-                                         platformVersion TEXT,          \
-                                         platformBuild TEXT"));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = EnsureTable(*db,
-                     NS_LITERAL_CSTRING("events"),
-                     NS_LITERAL_CSTRING("timestamp INTEGER,             \
-                                         extid TEXT,                    \
-                                         name TEXT,                     \
-                                         version TEXT,                  \
-                                         action TEXT"));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  rv = (*db)->SetSchemaVersion(STARTUP_DATABASE_CURRENT_SCHEMA);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = transaction.Commit();
-  NS_ENSURE_SUCCESS(rv, rv);
-  return NS_OK;
-}
-
-nsresult EnsureTable(mozIStorageConnection *db, const nsACString &table,
-                     const nsACString &schema)
-{
-  nsresult rv;
-  PRBool exists = false;
-  rv = db->TableExists(table, &exists);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!exists)
-  {
-    rv = db->CreateTable(PromiseFlatCString(table).get(),
-                         PromiseFlatCString(schema).get());
-  }
-  NS_ENSURE_SUCCESS(rv, rv);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAppStartup::GetRestoredTimestamp(PRUint64 *aResult)
-{
-  *aResult = (PRTime)mRestoredTimestamp;
   return NS_OK;
 }

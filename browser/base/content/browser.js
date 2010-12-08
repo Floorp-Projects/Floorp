@@ -491,7 +491,7 @@ const gPopupBlockerObserver = {
     if (pageReport) {
       for (var i = 0; i < pageReport.length; ++i) {
         // popupWindowURI will be null if the file picker popup is blocked.
-        // xxxdz this should make the option say "Show file picker" and do it (Bug 590306)
+        // xxxdz this should make the option say "Show file picker" and do it (Bug 590306) 
         if (!pageReport[i].popupWindowURI)
           continue;
         var popupURIspec = pageReport[i].popupWindowURI.spec;
@@ -4234,7 +4234,7 @@ var XULBrowserWindow = {
       // Of course, this is especially wrong with bfcache on...
 
       // fix bug 253793 - turn off highlight when page changes
-      gFindBar.getElement("highlight").checked = false;
+      gFindBar.getElement("highlight").checked = false;      
     }
 
     // See bug 358202, when tabs are switched during a drag operation,

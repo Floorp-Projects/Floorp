@@ -26,7 +26,6 @@
  *   Fredrik Holmqvist <thesuckiestemail@yahoo.se>
  *   Ben Turner <mozilla@songbirdnest.com>
  *   Sergei Dolgov <sergei_d@fi.tartu.ee>
- *   Daniel Brooks <db48x@db48x.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -613,15 +612,13 @@ class nsXULAppInfo : public nsIXULAppInfo,
 #ifdef MOZ_CRASHREPORTER
                      public nsICrashReporter,
 #endif
-                     public nsIXULRuntime,
-                     public nsIXULRuntime_MOZILLA_2_0
+                     public nsIXULRuntime
 
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIXULAPPINFO
   NS_DECL_NSIXULRUNTIME
-  NS_DECL_NSIXULRUNTIME_MOZILLA_2_0
 #ifdef MOZ_CRASHREPORTER
   NS_DECL_NSICRASHREPORTER
 #endif
@@ -633,7 +630,6 @@ public:
 NS_INTERFACE_MAP_BEGIN(nsXULAppInfo)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXULRuntime)
   NS_INTERFACE_MAP_ENTRY(nsIXULRuntime)
-  NS_INTERFACE_MAP_ENTRY(nsIXULRuntime_MOZILLA_2_0)
 #ifdef XP_WIN
   NS_INTERFACE_MAP_ENTRY(nsIWinAppHelper)
 #endif
@@ -838,77 +834,6 @@ nsXULAppInfo::InvalidateCachesOnRestart()
   }
   return NS_OK;
 }
-
-/* readonly attribute unsigned long launchTimestamp; */
-NS_IMETHODIMP nsXULAppInfo::GetLaunchTimestamp(PRUint64 *aTimestamp)
-{
-  static PRUint64 cached = 0;
-  if (cached)
-  {
-    *aTimestamp = cached;
-    return NS_OK;
-  }
-#if defined(XP_UNIX) && !defined(XP_MACOSX)
-  FILE *uptime;
-  long tickspersecond = sysconf(_SC_CLK_TCK);
-  unsigned long long sec, ssec;
-
-  uptime = fopen("/proc/uptime", "r");
-  fscanf(uptime, "%lld.%lld", &sec, &ssec);
-  PRTime boottime = PR_Now() - (((sec * PR_MSEC_PER_SEC) + (ssec * 10)) * PR_USEC_PER_MSEC);
-  fclose(uptime);
-
-  FILE *pidstat;
-  pid_t pid = getpid();
-  char *statpath = PR_smprintf("/proc/%d/stat", pid);
-  pidstat = fopen(statpath, "r");
-  if (!pidstat)
-    return NS_ERROR_FAILURE;
-
-  char stat[512];
-  memset(&stat, 0, 512);
-  int n = fread(&stat, 1, 511, pidstat);
-  if (n <= 0)
-    return NS_ERROR_FAILURE;
-  fclose(pidstat);
-  PR_smprintf_free(statpath);
-
-  long starttime = 0;
-  sscanf(strrchr(stat, ')') + 2,
-         "%*c %*d %*d %*d %*d %*d %*u %*u %*u %*u "
-         "%*u %*u %*u %*u %*u %*d %*d %*d %*d %lu",
-         &starttime);
-
-  *aTimestamp = cached = boottime + ((starttime / tickspersecond) * PR_USEC_PER_SEC);
-  return NS_OK;
-#elif XP_WIN
-  FILETIME start, foo, bar, baz;
-  bool success = GetProcessTimes(GetCurrentProcess(), &start, &foo, &bar, &baz);
-  if (success)
-  {
-    // copied from NSPR _PR_FileTimeToPRTime
-    CopyMemory(aTimestamp, &start, sizeof(PRTime));
-#ifdef __GNUC__
-    *aTimestamp = cached = (*aTimestamp - 116444736000000000LL) / 10LL;
-#else
-    *aTimestamp = cached = (*aTimestamp - 116444736000000000i64) / 10i64;
-#endif    
-    return NS_OK;
-  }
-#else
-  return NS_ERROR_NOT_IMPLEMENTED;
-#endif
-  return NS_ERROR_FAILURE;
-}
-
-/* readonly attribute unsigned long startupTimestamp; */
-NS_IMETHODIMP nsXULAppInfo::GetStartupTimestamp(PRUint64 *aTimestamp)
-{
-  *aTimestamp = gAppData->startupTimestamp;
-  return NS_OK;
-}
-
-
 
 #ifdef XP_WIN
 // Matches the enum in WinNT.h for the Vista SDK but renamed so that we can
