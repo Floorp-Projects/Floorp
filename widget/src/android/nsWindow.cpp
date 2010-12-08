@@ -992,8 +992,6 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
 
         NS_ASSERTION(sGLContext, "Drawing with GLES without a GL context?");
 
-        sGLContext->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT);
-
         DrawTo(nsnull);
 
         sview.EndDrawing();
