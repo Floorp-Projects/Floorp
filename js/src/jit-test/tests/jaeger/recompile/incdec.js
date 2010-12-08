@@ -39,6 +39,14 @@ function oarg(j)
 }
 oarg(0x7ffffff0);
 
+// basic global inc/dec correctness
+var x = 1.23;
+x = x--;
+x = x++;
+x = ++x;
+x = --x;
+assertEq(x, 1.23);
+
 var g = 0x7ffffff0;
 function glob()
 {

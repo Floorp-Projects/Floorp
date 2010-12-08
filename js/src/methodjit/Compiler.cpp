@@ -2165,9 +2165,18 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_DECGLOBAL)
           BEGIN_CASE(JSOP_GLOBALINC)
           BEGIN_CASE(JSOP_GLOBALDEC)
-            /* Advances PC automatically. */
-            jsop_globalinc(op, GET_SLOTNO(PC));
+          {
+            jsbytecode *next = &PC[JSOP_LOCALINC_LENGTH];
+            bool popped = false;
+            if (JSOp(*next) == JSOP_POP && !analysis->jumpTarget(next))
+                popped = true;
+            /* These manually advance the PC. */
+            jsop_globalinc(op, GET_SLOTNO(PC), popped);
+            PC += JSOP_LOCALINC_LENGTH;
+            if (popped)
+                PC += JSOP_POP_LENGTH;
             break;
+          }
           END_CASE(JSOP_GLOBALINC)
 
           BEGIN_CASE(JSOP_FORGLOBAL)
