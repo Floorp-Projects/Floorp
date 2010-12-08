@@ -1351,7 +1351,6 @@ pref("dom.ipc.plugins.enabled.nppdf.so", false);
 #endif
 #endif
 
-pref("svg.enabled", true);
 pref("svg.smil.enabled", true);
 
 pref("font.minimum-size.ar", 0);
