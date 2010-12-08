@@ -1700,6 +1700,10 @@ fun_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
         JS_ASSERT(!IsInternalFunctionObject(obj));
         JS_ASSERT(!obj->isBoundFunction());
 
+        /* No need to reflect fun.prototype in 'fun.prototype = ... '. */
+        if (flags & JSRESOLVE_ASSIGNING)
+            return true;
+
         /*
          * Make the prototype object an instance of Object with the same parent
          * as the function object itself.
