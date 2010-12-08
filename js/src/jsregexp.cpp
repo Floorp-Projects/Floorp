@@ -652,9 +652,9 @@ EscapeNakedForwardSlashes(JSContext *cx, JSString *unescaped)
 
     if (newChars.length()) {
         size_t len = newChars.length();
-        jschar *chars = newChars.extractRawBuffer();
-        if (!chars)
+        if (!newChars.append('\0'))
             return NULL;
+        jschar *chars = newChars.extractRawBuffer();
         JSString *escaped = js_NewString(cx, chars, len);
         if (!escaped)
             cx->free(chars);
