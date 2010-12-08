@@ -174,10 +174,13 @@ FrameState::evictReg(AnyRegisterID reg)
     JaegerSpew(JSpew_Regalloc, "evicting %s from %s\n", entryName(fe), reg.name());
 
     if (regstate(reg).type() == RematInfo::TYPE) {
-        ensureTypeSynced(fe, masm);
+        syncType(fe);
         fe->type.setMemory();
+    } else if (reg.isReg()) {
+        syncData(fe);
+        fe->data.setMemory();
     } else {
-        ensureDataSynced(fe, masm);
+        syncFe(fe);
         fe->data.setMemory();
     }
 }
@@ -2176,19 +2179,22 @@ FrameState::forgetKnownDouble(FrameEntry *fe)
      */
     JS_ASSERT(!fe->isConstant() && fe->isType(JSVAL_TYPE_DOUBLE));
 
-    FPRegisterID fpreg = tempFPRegForData(fe);
-    forgetAllRegs(fe);
-    fe->resetUnsynced();
-
     RegisterID typeReg = allocReg();
     RegisterID dataReg = allocReg();
 
+    /* Copy into a different FP register, as breakDouble can modify fpreg. */
+    FPRegisterID fpreg = allocFPReg();
+    masm.moveDouble(tempFPRegForData(fe), fpreg);
     masm.breakDouble(fpreg, typeReg, dataReg);
+
+    forgetAllRegs(fe);
+    fe->resetUnsynced();
 
     regstate(typeReg).associate(fe, RematInfo::TYPE);
     regstate(dataReg).associate(fe, RematInfo::DATA);
     fe->type.setRegister(typeReg);
     fe->data.setRegister(dataReg);
+    freeReg(fpreg);
 }
 
 void
