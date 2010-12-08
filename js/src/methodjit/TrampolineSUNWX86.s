@@ -1,4 +1,4 @@
-/ -*- Mode: C++/ tab-width: 4/ indent-tabs-mode: nil/ c-basic-offset: 4 -*-
+/ -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 / ***** BEGIN LICENSE BLOCK *****
 / Version: MPL 1.1/GPL 2.0/LGPL 2.1
 /
@@ -92,8 +92,8 @@ JaegerTrampolineReturn:
 .type   JaegerThrowpoline, @function
 JaegerThrowpoline:
     /* For Sun Studio there is no fast call. */
-    /* We add the stack by 8 before. */
-    addl $0x8, %esp
+    /* We add the stack by 16 before. */
+    addl $0x10, %esp
     /* Align the stack to 16 bytes. */
     pushl %esp 
     pushl (%esp)
@@ -127,8 +127,8 @@ InjectJaegerReturn:
     movl 0x1C(%ebx), %ecx                        /* fp->rval_ type */
     movl 0x14(%ebx), %eax                        /* fp->ncode_ */
     /* For Sun Studio there is no fast call. */
-    /* We add the stack by 8 before. */
-    addl $0x8, %esp
+    /* We add the stack by 16 before. */
+    addl $0x10, %esp
     /* Restore frame regs. */
     movl 0x1C(%esp), %ebx                        /* f.fp */
     jmp *%eax

@@ -1,0 +1,23 @@
+/* Override default style */
+input:-moz-ui-invalid {
+  box-shadow: none;
+}
+
+input.notinvalid {
+  background-color: green;
+}
+input.notinvalid:-moz-ui-invalid {
+  background-color: red;
+}
+
+input.invalid {
+  background-color: red;
+}
+input.invalid:-moz-ui-invalid {
+  background-color: green;
+}
+
+input[type=checkbox],
+input[type=radio] {
+  display: none;
+}

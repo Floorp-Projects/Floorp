@@ -212,9 +212,6 @@ nsSVGFeatures::PassesConditionalProcessingTests(nsIContent *aContent,
     return PR_TRUE;
   }
 
-  const nsAutoString acceptLangs(aAcceptLangs ? *aAcceptLangs :
-    nsContentUtils::GetLocalizedStringPref("intl.accept_languages"));
-
   // systemLanguage
   //
   // Evaluates to "true" if one of the languages indicated by user preferences
@@ -224,6 +221,10 @@ nsSVGFeatures::PassesConditionalProcessingTests(nsIContent *aContent,
   // that the first tag character following the prefix is "-".
   if (aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::systemLanguage,
                         value)) {
+
+    const nsAutoString acceptLangs(aAcceptLangs ? *aAcceptLangs :
+      nsContentUtils::GetLocalizedStringPref("intl.accept_languages"));
+
     // Get our language preferences
     if (!acceptLangs.IsEmpty()) {
       return MatchesLanguagePreferences(value, acceptLangs);

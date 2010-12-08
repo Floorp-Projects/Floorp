@@ -182,14 +182,42 @@ GfxInfo::AddCrashReportAnnotations()
 NS_IMETHODIMP
 GfxInfo::GetFeatureStatus(PRInt32 aFeature, PRInt32 *aStatus)
 {
-  PRInt32 status = nsIGfxInfo::FEATURE_NO_INFO;
+  // CGL reports a list of renderers, some renderers are slow (e.g. software)
+  // and AFAIK we can't decide which one will be used among them, so let's implement this blocklist
+  // by defaulting to BLOCKED_DEVICE, and unblocking when a non-blacklisted renderer is found.
+  // The assumption that we make here is that the system will spontaneously use the best/fastest renderer in the list.
+  // Note that the presence of software renderer fallbacks means that slow software rendering may be automatically
+  // used, which seems to be the case in bug 611292 where the user had a Intel GMA 945 card (non programmable hardware).
+  // Therefore we need to explicitly blacklist non-OpenGL2 hardware, which could result in a software renderer
+  // being used.
+  PRInt32 status = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
 
   for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(mRendererIDs); ++i) {
     PRUint32 r = mRendererIDs[i];
 
     if (aFeature == nsIGfxInfo::FEATURE_OPENGL_LAYERS) {
-      if (r == kCGLRendererATIRadeonX1000ID)
-        status = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
+      switch (r) {
+        case kCGLRendererATIRage128ID: // non-programmable
+        case kCGLRendererATIRadeonID: // non-programmable
+        case kCGLRendererATIRageProID: // non-programmable
+        case kCGLRendererATIRadeon8500ID: // no OpenGL 2 support, http://en.wikipedia.org/wiki/Radeon_R200
+        case kCGLRendererATIRadeon9700ID: // no OpenGL 2 support, http://en.wikipedia.org/wiki/Radeon_R200
+        case kCGLRendererATIRadeonX1000ID: // can't render to non-power-of-two texture backed framebuffers
+        case kCGLRendererIntel900ID: // non-programmable
+        case kCGLRendererGeForce2MXID: // non-programmable
+        case kCGLRendererGeForce3ID: // no OpenGL 2 support,
+                                     // http://en.wikipedia.org/wiki/Comparison_of_Nvidia_graphics_processing_units
+        case kCGLRendererGeForceFXID: // incomplete OpenGL 2 support with software fallbacks,
+                                      // http://en.wikipedia.org/wiki/Comparison_of_Nvidia_graphics_processing_units
+        case kCGLRendererVTBladeXP2ID: // Trident DX8 chip, assuming it's not GL2 capable
+        case kCGLRendererMesa3DFXID: // non-programmable
+        case kCGLRendererGenericFloatID: // software renderer
+        case kCGLRendererGenericID: // software renderer
+        case kCGLRendererAppleSWID: // software renderer
+          break;
+        default:
+          status = nsIGfxInfo::FEATURE_NO_INFO;
+      }
     }
   }
 

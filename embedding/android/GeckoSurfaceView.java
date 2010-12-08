@@ -87,7 +87,8 @@ class GeckoSurfaceView
         mEditableFactory = Editable.Factory.getInstance();
         setupEditable("");
         mIMEState = IME_STATE_DISABLED;
-        mIMEHint = "";
+        mIMETypeHint = "";
+        mIMEActionHint = "";
     }
 
     protected void finalize() throws Throwable {
@@ -112,8 +113,9 @@ class GeckoSurfaceView
                      mSoftwareBuffer.capacity() < (width * height * 2) ||
                      mWidth != width || mHeight != height)
                 mSoftwareBuffer = ByteBuffer.allocateDirect(width * height * 2);
-            boolean doSyncDraw = GeckoAppShell.sGeckoRunning && m2DMode &&
-                                 mSoftwareBuffer != null;
+            boolean doSyncDraw = mDrawMode == DRAW_2D &&
+                mSoftwareBuffer != null &&
+                GeckoApp.checkLaunchState(GeckoApp.LaunchState.GeckoRunning);
             mSyncDraw = doSyncDraw;
 
             mFormat = format;
@@ -130,6 +132,8 @@ class GeckoSurfaceView
                 GeckoAppShell.scheduleRedraw();
 
             if (!doSyncDraw) {
+                if (mDrawMode == DRAW_GLES_2)
+                    return;
                 Canvas c = holder.lockCanvas();
                 c.drawARGB(255, 255, 255, 255);
                 holder.unlockCanvasAndPost(c);
@@ -164,7 +168,7 @@ class GeckoSurfaceView
     }
 
     public ByteBuffer getSoftwareDrawBuffer() {
-        m2DMode = true;
+        mDrawMode = DRAW_2D;
         return mSoftwareBuffer;
     }
 
@@ -174,6 +178,7 @@ class GeckoSurfaceView
 
     public static final int DRAW_ERROR = 0;
     public static final int DRAW_GLES_2 = 1;
+    public static final int DRAW_2D = 2;
 
     public int beginDrawing() {
         if (mInDrawing) {
@@ -201,6 +206,7 @@ class GeckoSurfaceView
         }
 
         mInDrawing = true;
+        mDrawMode = DRAW_GLES_2;
         return DRAW_GLES_2;
     }
 
@@ -291,33 +297,45 @@ class GeckoSurfaceView
     @Override
     public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
         outAttrs.inputType = InputType.TYPE_CLASS_TEXT;
-        outAttrs.imeOptions = EditorInfo.IME_ACTION_GO;
+        outAttrs.imeOptions = EditorInfo.IME_ACTION_NONE;
         mKeyListener = TextKeyListener.getInstance();
 
         if (mIMEState == IME_STATE_PASSWORD)
             outAttrs.inputType |= InputType.TYPE_TEXT_VARIATION_PASSWORD;
-        else if (mIMEHint.equalsIgnoreCase("url"))
+        else if (mIMETypeHint.equalsIgnoreCase("url"))
             outAttrs.inputType |= InputType.TYPE_TEXT_VARIATION_URI;
-        else if (mIMEHint.equalsIgnoreCase("email"))
+        else if (mIMETypeHint.equalsIgnoreCase("email"))
             outAttrs.inputType |= InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS;
-        else if (mIMEHint.equalsIgnoreCase("search"))
+        else if (mIMETypeHint.equalsIgnoreCase("search"))
             outAttrs.imeOptions = EditorInfo.IME_ACTION_SEARCH;
-        else if (mIMEHint.equalsIgnoreCase("tel"))
+        else if (mIMETypeHint.equalsIgnoreCase("tel"))
             outAttrs.inputType = InputType.TYPE_CLASS_PHONE;
-        else if (mIMEHint.equalsIgnoreCase("number") ||
-                 mIMEHint.equalsIgnoreCase("range"))
+        else if (mIMETypeHint.equalsIgnoreCase("number") ||
+                 mIMETypeHint.equalsIgnoreCase("range"))
             outAttrs.inputType = InputType.TYPE_CLASS_NUMBER;
-        else if (mIMEHint.equalsIgnoreCase("datetime") ||
-                 mIMEHint.equalsIgnoreCase("datetime-local"))
+        else if (mIMETypeHint.equalsIgnoreCase("datetime") ||
+                 mIMETypeHint.equalsIgnoreCase("datetime-local"))
             outAttrs.inputType = InputType.TYPE_CLASS_DATETIME |
                                  InputType.TYPE_DATETIME_VARIATION_NORMAL;
-        else if (mIMEHint.equalsIgnoreCase("date"))
+        else if (mIMETypeHint.equalsIgnoreCase("date"))
             outAttrs.inputType = InputType.TYPE_CLASS_DATETIME |
                                  InputType.TYPE_DATETIME_VARIATION_DATE;
-        else if (mIMEHint.equalsIgnoreCase("time"))
+        else if (mIMETypeHint.equalsIgnoreCase("time"))
             outAttrs.inputType = InputType.TYPE_CLASS_DATETIME |
                                  InputType.TYPE_DATETIME_VARIATION_TIME;
 
+        if (mIMEActionHint.equalsIgnoreCase("go"))
+            outAttrs.imeOptions = EditorInfo.IME_ACTION_GO;
+        else if (mIMEActionHint.equalsIgnoreCase("done"))
+            outAttrs.imeOptions = EditorInfo.IME_ACTION_DONE;
+        else if (mIMEActionHint.equalsIgnoreCase("next"))
+            outAttrs.imeOptions = EditorInfo.IME_ACTION_NEXT;
+        else if (mIMEActionHint.equalsIgnoreCase("search"))
+            outAttrs.imeOptions = EditorInfo.IME_ACTION_SEARCH;
+        else if (mIMEActionHint.equalsIgnoreCase("send"))
+            outAttrs.imeOptions = EditorInfo.IME_ACTION_SEND;
+        else
+            outAttrs.actionLabel = mIMEActionHint;
         inputConnection.reset();
         return inputConnection;
     }
@@ -373,7 +391,7 @@ class GeckoSurfaceView
     boolean mSyncDraw;
 
     // True if gecko requests a buffer
-    boolean m2DMode;
+    int mDrawMode;
 
     // let's not change stuff around while we're in the middle of
     // starting drawing, ending drawing, or changing surface
@@ -404,7 +422,8 @@ class GeckoSurfaceView
     Editable.Factory mEditableFactory;
     boolean mIMEFocus;
     int mIMEState;
-    String mIMEHint;
+    String mIMETypeHint;
+    String mIMEActionHint;
 
     // Software rendering
     ByteBuffer mSoftwareBuffer;

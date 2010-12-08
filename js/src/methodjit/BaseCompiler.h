@@ -44,6 +44,9 @@
 #include "jstl.h"
 #include "assembler/assembler/MacroAssembler.h"
 #include "assembler/assembler/LinkBuffer.h"
+#include "assembler/assembler/RepatchBuffer.h"
+#include "assembler/jit/ExecutableAllocator.h"
+#include <limits.h>
 
 namespace js {
 namespace mjit {
@@ -69,6 +72,7 @@ struct MacroAssemblerTypedefs {
     typedef JSC::CodeLocationCall CodeLocationCall;
     typedef JSC::ReturnAddressPtr ReturnAddressPtr;
     typedef JSC::MacroAssemblerCodePtr MacroAssemblerCodePtr;
+    typedef JSC::JITCode JITCode;
 };
 
 class BaseCompiler : public MacroAssemblerTypedefs
@@ -86,14 +90,15 @@ class BaseCompiler : public MacroAssemblerTypedefs
   protected:
 
     JSC::ExecutablePool *
-    getExecPool(size_t size) {
-        return BaseCompiler::GetExecPool(cx, size);
+    getExecPool(JSScript *script, size_t size) {
+        return BaseCompiler::GetExecPool(cx, script, size);
     }
 
   public:
     static JSC::ExecutablePool *
-    GetExecPool(JSContext *cx, size_t size) {
-        JSC::ExecutablePool *pool = cx->jaegerCompartment()->poolForSize(size);
+    GetExecPool(JSContext *cx, JSScript *script, size_t size) {
+        JaegerCompartment *jc = script->compartment->jaegerCompartment;
+        JSC::ExecutablePool *pool = jc->poolForSize(size);
         if (!pool)
             js_ReportOutOfMemory(cx);
         return pool;
@@ -106,16 +111,48 @@ class BaseCompiler : public MacroAssemblerTypedefs
 class LinkerHelper : public JSC::LinkBuffer
 {
   protected:
-    JSContext *cx;
+    Assembler &masm;
+#ifdef DEBUG
+    bool verifiedRange;
+#endif
 
   public:
-    LinkerHelper(JSContext *cx) : cx(cx)
+    LinkerHelper(Assembler &masm) : masm(masm)
+#ifdef DEBUG
+        , verifiedRange(false)
+#endif
     { }
 
-    JSC::ExecutablePool *init(Assembler &masm) {
+    ~LinkerHelper() {
+        JS_ASSERT(verifiedRange);
+    }
+
+    bool verifyRange(const JSC::JITCode &other) {
+#ifdef DEBUG
+        verifiedRange = true;
+#endif
+#ifdef JS_CPU_X64
+        uintptr_t lowest = JS_MIN(uintptr_t(m_code), uintptr_t(other.start()));
+
+        uintptr_t myEnd = uintptr_t(m_code) + m_size;
+        uintptr_t otherEnd = uintptr_t(other.start()) + other.size();
+        uintptr_t highest = JS_MAX(myEnd, otherEnd);
+
+        return (highest - lowest < INT_MAX);
+#else
+        return true;
+#endif
+    }
+
+    bool verifyRange(JITScript *jit) {
+        return verifyRange(JSC::JITCode(jit->code.m_code.executableAddress(), jit->code.m_size));
+    }
+
+    JSC::ExecutablePool *init(JSContext *cx) {
         // The pool is incref'd after this call, so it's necessary to release()
         // on any failure.
-        JSC::ExecutablePool *ep = BaseCompiler::GetExecPool(cx, masm.size());
+        JSScript *script = cx->fp()->script();
+        JSC::ExecutablePool *ep = BaseCompiler::GetExecPool(cx, script, masm.size());
         if (!ep)
             return ep;
 
@@ -129,12 +166,90 @@ class LinkerHelper : public JSC::LinkBuffer
         return ep;
     }
 
+    JSC::CodeLocationLabel finalize() {
+        masm.finalize(*this);
+        return finalizeCodeAddendum();
+    }
+
     void maybeLink(MaybeJump jump, JSC::CodeLocationLabel label) {
         if (!jump.isSet())
             return;
         link(jump.get(), label);
     }
+
+    size_t size() const {
+        return m_size;
+    }
 };
+
+class Repatcher : public JSC::RepatchBuffer
+{
+  public:
+    Repatcher(JITScript *jit) : JSC::RepatchBuffer(jit->code)
+    { }
+
+    Repatcher(const JSC::JITCode &code) : JSC::RepatchBuffer(code)
+    { }
+};
+
+/*
+ * On ARM, we periodically flush a constant pool into the instruction stream
+ * where constants are found using PC-relative addressing. This is necessary
+ * because the fixed-width instruction set doesn't support wide immediates.
+ *
+ * ICs perform repatching on the inline (fast) path by knowing small and
+ * generally fixed code location offset values where the patchable instructions
+ * live. Dumping a huge constant pool into the middle of an IC's inline path
+ * makes the distance between emitted instructions potentially variable and/or
+ * large, which makes the IC offsets invalid. We must reserve contiguous space
+ * up front to prevent this from happening.
+ */
+#ifdef JS_CPU_ARM
+class AutoReserveICSpace {
+    typedef Assembler::Label Label;
+    static const size_t reservedSpace = 68;
+
+    Assembler           &masm;
+#ifdef DEBUG
+    Label               startLabel;
+#endif
+
+  public:
+    AutoReserveICSpace(Assembler &masm) : masm(masm) {
+        masm.ensureSpace(reservedSpace);
+#ifdef DEBUG
+        startLabel = masm.label();
+
+        /* Assert that the constant pool is not flushed until we reach a safe point. */
+        masm.allowPoolFlush(false);
+
+        JaegerSpew(JSpew_Insns, " -- BEGIN CONSTANT-POOL-FREE REGION -- \n");
+#endif
+    }
+
+    ~AutoReserveICSpace() {
+#ifdef DEBUG
+        Label endLabel = masm.label();
+        int spaceUsed = masm.differenceBetween(startLabel, endLabel);
+
+        /* Spew the space used, to help tuning of reservedSpace. */
+        JaegerSpew(JSpew_Insns,
+                   " -- END CONSTANT-POOL-FREE REGION: %u bytes used of %u reserved. -- \n",
+                   spaceUsed, reservedSpace);
+
+        /* Assert that we didn't emit more code than we protected. */
+        JS_ASSERT(spaceUsed >= 0);
+        JS_ASSERT(size_t(spaceUsed) <= reservedSpace);
+
+        /* Allow the pool to be flushed. */
+        masm.allowPoolFlush(true);
+#endif
+    }
+};
+# define RESERVE_IC_SPACE(__masm) AutoReserveICSpace arics(__masm)
+#else
+# define RESERVE_IC_SPACE(__masm) /* Nothing. */
+#endif
 
 } /* namespace js */
 } /* namespace mjit */

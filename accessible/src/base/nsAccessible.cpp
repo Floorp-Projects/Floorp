@@ -44,7 +44,6 @@
 #include "AccGroupInfo.h"
 #include "AccIterator.h"
 #include "nsAccUtils.h"
-#include "nsARIAMap.h"
 #include "nsDocAccessible.h"
 #include "nsEventShell.h"
 
@@ -1824,11 +1823,10 @@ nsAccessible::GetKeyBindings(PRUint8 aActionIndex,
 }
 
 PRUint32
-nsAccessible::Role()
+nsAccessible::ARIARoleInternal()
 {
-  // No ARIA role or it doesn't suppress role from native markup.
-  if (!mRoleMapEntry || mRoleMapEntry->roleRule != kUseMapRole)
-    return NativeRole();
+  NS_PRECONDITION(mRoleMapEntry && mRoleMapEntry->roleRule == kUseMapRole,
+                  "ARIARoleInternal should only be called when ARIA role overrides!");
 
   // XXX: these unfortunate exceptions don't fit into the ARIA table. This is
   // where the accessible role depends on both the role and ARIA state.

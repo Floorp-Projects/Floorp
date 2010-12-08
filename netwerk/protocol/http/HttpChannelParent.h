@@ -46,6 +46,7 @@
 #include "mozilla/dom/PBrowserParent.h"
 #include "mozilla/net/PHttpChannelParent.h"
 #include "mozilla/net/NeckoCommon.h"
+#include "nsIParentRedirectingChannel.h"
 #include "nsIProgressEventSink.h"
 #include "nsITabParent.h"
 
@@ -59,24 +60,19 @@ namespace net {
 class HttpChannelParentListener;
 
 class HttpChannelParent : public PHttpChannelParent
+                        , public nsIParentRedirectingChannel
                         , public nsIProgressEventSink
+                        , public nsIInterfaceRequestor
 {
 public:
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIREQUESTOBSERVER
+  NS_DECL_NSISTREAMLISTENER
+  NS_DECL_NSIPARENTCHANNEL
+  NS_DECL_NSIPARENTREDIRECTINGCHANNEL
   NS_DECL_NSIPROGRESSEVENTSINK
+  NS_DECL_NSIINTERFACEREQUESTOR
 
-  // Make these non-virtual for a little performance benefit
-  nsresult OnStartRequest(nsIRequest *aRequest, 
-                          nsISupports *aContext);
-  nsresult OnStopRequest(nsIRequest *aRequest, 
-                         nsISupports *aContext, 
-                         nsresult aStatusCode);
-  nsresult OnDataAvailable(nsIRequest *aRequest, 
-                           nsISupports *aContext, 
-                           nsIInputStream *aInputStream, 
-                           PRUint32 aOffset, 
-                           PRUint32 aCount);
-  
   HttpChannelParent(PBrowserParent* iframeEmbedding);
   virtual ~HttpChannelParent();
 
@@ -100,6 +96,7 @@ protected:
                              const bool&                chooseApplicationCache,
                              const nsCString&           appCacheClientID);
 
+  virtual bool RecvConnectChannel(const PRUint32& channelId);
   virtual bool RecvSetPriority(const PRUint16& priority);
   virtual bool RecvSetCacheTokenCachedCharset(const nsCString& charset);
   virtual bool RecvSuspend();
@@ -122,9 +119,11 @@ protected:
 
 private:
   nsCOMPtr<nsIChannel> mChannel;
-  nsRefPtr<HttpChannelParentListener> mChannelListener;
   nsCOMPtr<nsICacheEntryDescriptor> mCacheDescriptor;
   bool mIPCClosed;                // PHttpChannel actor has been Closed()
+
+  nsCOMPtr<nsIChannel> mRedirectChannel;
+  nsCOMPtr<nsIAsyncVerifyRedirectCallback> mRedirectCallback;
 };
 
 } // namespace net

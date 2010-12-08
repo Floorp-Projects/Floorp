@@ -109,6 +109,11 @@ enum FlipStyle {
 #define POPUPALIGNMENT_BOTTOMLEFT 2
 #define POPUPALIGNMENT_BOTTOMRIGHT -2
 
+#define POPUPALIGNMENT_LEFTCENTER 16
+#define POPUPALIGNMENT_RIGHTCENTER 17
+#define POPUPALIGNMENT_TOPCENTER 18
+#define POPUPALIGNMENT_BOTTOMCENTER 19
+
 #define INC_TYP_INTERVAL  1000  // 1s. If the interval between two keypresses is shorter than this, 
                                 //   treat as a continue typing
 // XXX, kyle.yuan@sun.com, there are 4 definitions for the same purpose:
@@ -354,7 +359,7 @@ protected:
   // return the position where the popup should be, when it should be
   // anchored at anchorRect. aHFlip and aVFlip will be set if the popup may be
   // flipped in that direction if there is not enough space available.
-  nsPoint AdjustPositionForAnchorAlign(const nsRect& anchorRect,
+  nsPoint AdjustPositionForAnchorAlign(nsRect& anchorRect,
                                        FlipStyle& aHFlip, FlipStyle& aVFlip);
 
   // check if the popup will fit into the available space and resize it. This

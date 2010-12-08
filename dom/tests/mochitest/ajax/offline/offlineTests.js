@@ -58,7 +58,7 @@ fetch: function(callback)
 
 var OfflineTest = {
 
-_slaveWindow: null,
+_hasSlave: false,
 
 // The window where test results should be sent.
 _masterWindow: null,
@@ -71,24 +71,28 @@ _SJSsStated: [],
 
 setupChild: function()
 {
-  if (window.parent.OfflineTest.hasSlave()) {
+  if (window.parent.OfflineTest._hasSlave) {
     return false;
   }
 
-  this._slaveWindow = null;
   this._masterWindow = window.top;
 
   return true;
 },
 
-// Setup the tests.  This will reload the current page in a new window
-// if necessary.
+/**
+ * Setup the tests.  This will reload the current page in a new window
+ * if necessary.
+ *
+ * @return boolean Whether this window is the slave window
+ *                 to actually run the test in.
+ */
 setup: function()
 {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
   if (!window.opener || !window.opener.OfflineTest ||
-      !window.opener.OfflineTest._isMaster) {
+      !window.opener.OfflineTest._hasSlave) {
     // Offline applications must be toplevel windows and have the
     // offline-app permission.  Because we were loaded without the
     // offline-app permission and (probably) in an iframe, we need to
@@ -101,16 +105,14 @@ setup: function()
       .getService(Ci.nsIIOService)
       .newURI(window.location.href, null, null);
     if (pm.testPermission(uri, "offline-app") != 0) {
-      dump("Previous test failed to clear offline-app permission!  Expect failures.\n");
+      ok(false, "Previous test failed to clear offline-app permission!  Expect failures.");
     }
     pm.add(uri, "offline-app", Ci.nsIPermissionManager.ALLOW_ACTION);
 
     // Tests must run as toplevel windows.  Open a slave window to run
     // the test.
-    this._isMaster = true;
-    this._slaveWindow = window.open(window.location, "offlinetest");
-
-    this._slaveWindow._OfflineSlaveWindow = true;
+    this._hasSlave = true;
+    window.open(window.location, "offlinetest");
 
     return false;
   }
@@ -144,17 +146,14 @@ teardown: function()
 
 finish: function()
 {
-  SimpleTest.finish();
-
   if (this._masterWindow) {
-    this._masterWindow.OfflineTest.finish();
+    // Slave window: pass control back to master window, close itself.
+    this._masterWindow.SimpleTest.executeSoon(this._masterWindow.OfflineTest.finish);
     window.close();
+  } else {
+    // Master window: finish test.
+    SimpleTest.finish();
   }
-},
-
-hasSlave: function()
-{
-  return (this._slaveWindow != null);
 },
 
 //
@@ -203,7 +202,7 @@ waitForAdd: function(url, onFinished) {
     var cacheSession = OfflineTest.getActiveSession();
     var entry;
     try {
-      var entry = cacheSession.openCacheEntry(url, Ci.nsICache.ACCESS_READ, false);
+      entry = cacheSession.openCacheEntry(url, Ci.nsICache.ACCESS_READ, false);
     } catch (e) {
     }
 
@@ -241,7 +240,8 @@ getActiveCache: function()
 getActiveSession: function()
 {
   var cache = this.getActiveCache();
-  if (!cache) return null;
+  if (!cache)
+    return null;
 
   var cacheService = Cc["@mozilla.org/network/cache-service;1"]
                      .getService(Ci.nsICacheService);

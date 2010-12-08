@@ -661,6 +661,8 @@ nsSubDocumentFrame::ReflowFinished()
       // Make sure that we can post a reflow callback in the future.
       mPostedReflowCallback = PR_FALSE;
     }
+  } else {
+    mPostedReflowCallback = PR_FALSE;
   }
   return PR_FALSE;
 }
@@ -721,6 +723,9 @@ nsSubDocumentFrame::AttributeChanged(PRInt32 aNameSpaceID,
 
     nsCOMPtr<nsIDocShellTreeItem> parentItem;
     docShellAsItem->GetParent(getter_AddRefs(parentItem));
+    if (!parentItem) {
+      return NS_OK;
+    }
 
     PRInt32 parentType;
     parentItem->GetItemType(&parentType);

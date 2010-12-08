@@ -28,13 +28,13 @@ function run_test() {
   }
   do_check_true(store.itemExists(id));
 
-  let rec = store.createRecord(id, baseuri + id);
+  let rec = store.createRecord(id);
   _("Got record for id", id, rec);
   do_check_eq(rec.name, "name!!");
   do_check_eq(rec.value, "value??");
 
   _("Create a non-existent id for delete");
-  do_check_true(store.createRecord("deleted!!", baseuri + "deleted!!").deleted);
+  do_check_true(store.createRecord("deleted!!").deleted);
 
   _("Try updating.. doesn't do anything yet");
   store.update({});

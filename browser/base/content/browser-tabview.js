@@ -219,6 +219,12 @@ let TabView = {
   },
 
   // ----------
+  enableSearch: function Tabview_enableSearch(event) {
+    if (this._window)
+      this._window.UI.enableSearch(event);
+  },
+
+  // ----------
   // Adds new key commands to the browser, for invoking the Tab Candy UI
   // and for switching between groups of tabs when outside of the Tab Candy UI.
   _setBrowserKeyHandlers : function() {
@@ -242,5 +248,12 @@ let TabView = {
         });
       }
     }, true);
+  },
+  
+  // ----------
+  // Prepares the tab view for undo close tab.
+  prepareUndoCloseTab: function() {
+    if (this._window)
+      this._window.UI.restoredClosedTab = true;
   }
 };

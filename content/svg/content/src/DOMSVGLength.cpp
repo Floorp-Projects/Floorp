@@ -88,27 +88,20 @@ DOMSVGLength::DOMSVGLength(DOMSVGLengthList *aList,
   , mUnit(nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER)
   , mValue(0.0f)
 {
-#ifdef DEBUG
-  // These shifts are in sync with the flag member's in the header.
+  // These shifts are in sync with the members in the header.
   NS_ABORT_IF_FALSE(aList &&
                     aAttrEnum < (1 << 22) &&
                     aListIndex < (1 << 4) &&
                     aIsAnimValItem < (1 << 1), "bad arg");
-  if (aIsAnimValItem &&
-      mListIndex >= Element()->GetAnimatedLengthList(mAttrEnum)->GetAnimValue().Length() ||
-      !aIsAnimValItem &&
-      mListIndex >= Element()->GetAnimatedLengthList(mAttrEnum)->GetBaseValue().Length()) {
-    NS_ABORT_IF_FALSE(0, "Bad aListIndex!");
-    mList = nsnull;
-  }
-#endif
+
+  NS_ABORT_IF_FALSE(IndexIsValid(), "Bad index for DOMSVGNumber!");
 }
 
 DOMSVGLength::DOMSVGLength()
   : mList(nsnull)
   , mListIndex(0)
   , mAttrEnum(0)
-  , mIsAnimValItem(0)
+  , mIsAnimValItem(PR_FALSE)
   , mUnit(nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER)
   , mValue(0.0f)
 {
@@ -321,16 +314,13 @@ DOMSVGLength::InsertingIntoList(DOMSVGLengthList *aList,
                                 PRUint8 aIsAnimValItem)
 {
   NS_ASSERTION(!HasOwner(), "Inserting item that is already in a list");
-  NS_ASSERTION(mIsAnimValItem &&
-               aListIndex < aList->Element()->GetAnimatedLengthList(aAttrEnum)->GetAnimValue().Length() ||
-               !aIsAnimValItem &&
-               aListIndex < aList->Element()->GetAnimatedLengthList(aAttrEnum)->GetBaseValue().Length(),
-               "mListIndex too big");
 
   mList = aList;
   mAttrEnum = aAttrEnum;
   mListIndex = aListIndex;
   mIsAnimValItem = aIsAnimValItem;
+
+  NS_ABORT_IF_FALSE(IndexIsValid(), "Bad index for DOMSVGLength!");
 }
 
 void
@@ -339,7 +329,7 @@ DOMSVGLength::RemovingFromList()
   mValue = InternalItem().GetValueInCurrentUnits();
   mUnit  = InternalItem().GetUnit();
   mList = nsnull;
-  mIsAnimValItem = 0;
+  mIsAnimValItem = PR_FALSE;
 }
 
 SVGLength
@@ -360,5 +350,17 @@ DOMSVGLength::InternalItem()
     (*alist->mAnimVal)[mListIndex] :
     alist->mBaseVal[mListIndex];
 }
+
+#ifdef DEBUG
+PRBool
+DOMSVGLength::IndexIsValid()
+{
+  SVGAnimatedLengthList *alist = Element()->GetAnimatedLengthList(mAttrEnum);
+  return (mIsAnimValItem &&
+          mListIndex < alist->GetAnimValue().Length()) ||
+         (!mIsAnimValItem &&
+          mListIndex < alist->GetBaseValue().Length());
+}
+#endif
 
 } // namespace mozilla

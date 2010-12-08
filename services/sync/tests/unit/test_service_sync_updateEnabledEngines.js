@@ -2,7 +2,6 @@ Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/base_records/crypto.js");
-Cu.import("resource://services-sync/base_records/keys.js");
 Cu.import("resource://services-sync/base_records/wbo.js");
 
 Svc.DefaultPrefs.set("registerEngines", "");
@@ -34,18 +33,12 @@ Engines.register(StirlingEngine);
 
 
 function sync_httpd_setup(handlers) {
+  let collections = {};
+  handlers["/1.0/johndoe/storage/crypto/keys"] = new ServerWBO().handler(),
   handlers["/1.0/johndoe/info/collections"]
-      = (new ServerWBO("collections", {})).handler(),
-  handlers["/1.0/johndoe/storage/keys/pubkey"]
-      = (new ServerWBO("pubkey")).handler();
-  handlers["/1.0/johndoe/storage/keys/privkey"]
-      = (new ServerWBO("privkey")).handler();
+      = (new ServerWBO("collections", collections)).handler(),
   handlers["/1.0/johndoe/storage/clients"]
       = (new ServerCollection()).handler();
-  handlers["/1.0/johndoe/storage/crypto"]
-      = (new ServerCollection()).handler();
-  handlers["/1.0/johndoe/storage/crypto/clients"]
-      = (new ServerWBO("clients", {})).handler();
   return httpd_setup(handlers);
 }
 
@@ -55,7 +48,6 @@ function setUp() {
   Service.passphrase = "sekrit";
   Service.clusterURL = "http://localhost:8080/";
   new FakeCryptoService();
-  createAndUploadKeypair();
 }
 
 const PAYLOAD = 42;
@@ -65,7 +57,6 @@ function test_newAccount() {
   let engine = Engines.get("steam");
   let server = sync_httpd_setup({
     "/1.0/johndoe/storage/meta/global": new ServerWBO("global", {}).handler(),
-    "/1.0/johndoe/storage/crypto/steam": new ServerWBO("steam", {}).handler(),
     "/1.0/johndoe/storage/steam": new ServerWBO("steam", {}).handler()
   });
   do_test_pending();
@@ -98,7 +89,6 @@ function test_enabledLocally() {
                                          engines: {}});
   let server = sync_httpd_setup({
     "/1.0/johndoe/storage/meta/global": metaWBO.handler(),
-    "/1.0/johndoe/storage/crypto/steam": new ServerWBO("steam", {}).handler(),
     "/1.0/johndoe/storage/steam": new ServerWBO("steam", {}).handler()
   });
   do_test_pending();
@@ -133,11 +123,9 @@ function test_disabledLocally() {
     engines: {steam: {syncID: engine.syncID,
                       version: engine.version}}
   });
-  let steamCrypto = new ServerWBO("steam", PAYLOAD);
   let steamCollection = new ServerWBO("steam", PAYLOAD);
   let server = sync_httpd_setup({
     "/1.0/johndoe/storage/meta/global": metaWBO.handler(),
-    "/1.0/johndoe/storage/crypto/steam": steamCrypto.handler(),
     "/1.0/johndoe/storage/steam": steamCollection.handler()
   });
   do_test_pending();
@@ -159,7 +147,6 @@ function test_disabledLocally() {
 
     _("Server records are wiped.");
     do_check_eq(steamCollection.payload, undefined);
-    do_check_eq(steamCrypto.payload, undefined);
 
     _("Engine continues to be disabled.");
     do_check_false(engine.enabled);
@@ -181,7 +168,6 @@ function test_enabledRemotely() {
   });
   let server = sync_httpd_setup({
     "/1.0/johndoe/storage/meta/global": metaWBO.handler(),
-    "/1.0/johndoe/storage/crypto/steam": new ServerWBO("steam", {}).handler(),
     "/1.0/johndoe/storage/steam": new ServerWBO("steam", {}).handler()
   });
   do_test_pending();
@@ -215,7 +201,6 @@ function test_disabledRemotely() {
                                          engines: {}});
   let server = sync_httpd_setup({
     "/1.0/johndoe/storage/meta/global": metaWBO.handler(),
-    "/1.0/johndoe/storage/crypto/steam": new ServerWBO("steam", {}).handler(),
     "/1.0/johndoe/storage/steam": new ServerWBO("steam", {}).handler()
   });
   do_test_pending();
@@ -231,11 +216,11 @@ function test_disabledRemotely() {
     Weave.Service.login();
     Weave.Service.sync();
 
-    _("Engine is disabled.");
-    do_check_false(engine.enabled);
+    _("Engine is not disabled: only one client.");
+    do_check_true(engine.enabled);
+    
+    // TODO: add a second client and verify that the local pref is changed.
 
-    _("Meta record isn't uploaded.");
-    do_check_false(!!metaWBO.data.engines.steam);
   } finally {
     server.stop(do_test_finished);
     Service.startOver();
@@ -252,9 +237,7 @@ function test_dependentEnginesEnabledLocally() {
                                          engines: {}});
   let server = sync_httpd_setup({
     "/1.0/johndoe/storage/meta/global": metaWBO.handler(),
-    "/1.0/johndoe/storage/crypto/steam": new ServerWBO("steam", {}).handler(),
     "/1.0/johndoe/storage/steam": new ServerWBO("steam", {}).handler(),
-    "/1.0/johndoe/storage/crypto/stirling": new ServerWBO("stirling", {}).handler(),
     "/1.0/johndoe/storage/stirling": new ServerWBO("stirling", {}).handler()
   });
   do_test_pending();
@@ -295,15 +278,11 @@ function test_dependentEnginesDisabledLocally() {
                          version: stirlingEngine.version}}
   });
 
-  let steamCrypto = new ServerWBO("steam", PAYLOAD);
   let steamCollection = new ServerWBO("steam", PAYLOAD);
-  let stirlingCrypto = new ServerWBO("stirling", PAYLOAD);
   let stirlingCollection = new ServerWBO("stirling", PAYLOAD);
   let server = sync_httpd_setup({
     "/1.0/johndoe/storage/meta/global":     metaWBO.handler(),
-    "/1.0/johndoe/storage/crypto/steam":    steamCrypto.handler(),
     "/1.0/johndoe/storage/steam":           steamCollection.handler(),
-    "/1.0/johndoe/storage/crypto/stirling": stirlingCrypto.handler(),
     "/1.0/johndoe/storage/stirling":        stirlingCollection.handler()
   });
   do_test_pending();
@@ -328,9 +307,7 @@ function test_dependentEnginesDisabledLocally() {
 
     _("Server records are wiped.");
     do_check_eq(steamCollection.payload, undefined);
-    do_check_eq(steamCrypto.payload, undefined);
     do_check_eq(stirlingCollection.payload, undefined);
-    do_check_eq(stirlingCrypto.payload, undefined);
 
     _("Engines continue to be disabled.");
     do_check_false(steamEngine.enabled);

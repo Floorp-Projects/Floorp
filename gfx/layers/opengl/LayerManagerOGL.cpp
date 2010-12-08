@@ -212,7 +212,9 @@ LayerManagerOGL::Initialize(GLContext *aExistingContext)
 
   // NOTE: Order matters here, and should be in the same order as the
   // ProgramType enum!
+#ifdef DEBUG
   GLint programIndex = 0;
+#endif
 
   /* Layer programs */
   SHADER_PROGRAM(RGBALayerProgramType, ColorTextureLayerProgram,

@@ -308,6 +308,12 @@ nsFrameMessageManager::Dump(const nsAString& aStr)
 }
 
 NS_IMETHODIMP
+nsFrameMessageManager::PrivateNoteIntentionalCrash()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsFrameMessageManager::GetContent(nsIDOMWindow** aContent)
 {
   *aContent = nsnull;

@@ -47,6 +47,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsDOMEventTargetHelper.h"
 #include "nsDOMLists.h"
+#include "nsIDocument.h"
 
 class nsIScriptContext;
 class nsPIDOMWindow;
@@ -107,6 +108,13 @@ public:
   {
     NS_ASSERTION(mOwner, "This should never be null!");
     return mOwner;
+  }
+
+  already_AddRefed<nsIDocument> GetOwnerDocument()
+  {
+    NS_ASSERTION(mOwner, "This should never be null!");
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(mOwner->GetExtantDocument());
+    return doc.forget();
   }
 
   bool IsQuotaDisabled();

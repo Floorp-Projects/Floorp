@@ -47,8 +47,8 @@ class nsIRenderingContext;
 class nsGUIEvent;
 
 #define NS_IVIEWOBSERVER_IID  \
-  { 0x4d467c73, 0xb6a9, 0x462a, \
-    { 0x90, 0x25, 0x80, 0xd9, 0x42, 0xbc, 0xcc, 0xb5 } }
+  { 0xc8ba5804, 0x2459, 0x4b62, \
+    { 0xa4, 0x15, 0x02, 0x84, 0x1a, 0xd7, 0x93, 0xa7 } }
 
 class nsIViewObserver : public nsISupports
 {
@@ -97,6 +97,7 @@ public:
    */
   NS_IMETHOD HandleEvent(nsIView*       aView,
                          nsGUIEvent*    aEvent,
+                         PRBool         aDontRetargetEvents,
                          nsEventStatus* aEventStatus) = 0;
 
   /* called when the view has been resized and the

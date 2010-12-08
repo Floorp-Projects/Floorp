@@ -98,7 +98,10 @@ def parse(filename, xul_tester, reldir = ''):
     for line in f:
         sline = comment_re.sub('', line)
         parts = sline.split()
-        if parts[0] == 'include':
+        if len(parts) == 0:
+            # line is empty or just a comment, skip
+            pass
+        elif parts[0] == 'include':
             include_file = parts[1]
             include_reldir = os.path.join(reldir, os.path.dirname(include_file))
             ans += parse(os.path.join(dir, include_file), xul_tester, include_reldir)

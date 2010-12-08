@@ -86,7 +86,7 @@ static const jsbytecode emptyScriptCode[] = {JSOP_STOP, SRC_NULL};
     false,      /* debugMode */
 #endif
     const_cast<jsbytecode*>(emptyScriptCode),
-    {0, NULL}, NULL, NULL, 0, 0, 0,
+    {0, jsatomid(0)}, NULL, NULL, 0, 0, 0,
     0,          /* nClosedArgs */
     0,          /* nClosedVars */
     NULL, {NULL},
@@ -480,7 +480,7 @@ script_finalize(JSContext *cx, JSObject *obj)
 {
     JSScript *script = (JSScript *) obj->getPrivate();
     if (script)
-        js_DestroyScript(cx, script);
+        js_DestroyScriptFromGC(cx, script, NULL);
 }
 
 static void
@@ -910,7 +910,7 @@ JSScript *
 JSScript::NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natoms,
                     uint32 nobjects, uint32 nupvars, uint32 nregexps,
                     uint32 ntrynotes, uint32 nconsts, uint32 nglobals,
-                    uint32 nClosedArgs, uint32 nClosedVars)
+                    uint16 nClosedArgs, uint16 nClosedVars)
 {
     size_t size, vectorSize;
     JSScript *script;
@@ -1160,12 +1160,15 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
 
   skip_empty:
     CG_COUNT_FINAL_SRCNOTES(cg, nsrcnotes);
+    uint16 nClosedArgs = uint16(cg->closedArgs.length());
+    JS_ASSERT(nClosedArgs == cg->closedArgs.length());
+    uint16 nClosedVars = uint16(cg->closedVars.length());
+    JS_ASSERT(nClosedVars == cg->closedVars.length());
     script = NewScript(cx, prologLength + mainLength, nsrcnotes,
                        cg->atomList.count, cg->objectList.length,
                        cg->upvarList.count, cg->regexpList.length,
                        cg->ntrynotes, cg->constList.length(),
-                       cg->globalUses.length(), cg->closedArgs.length(),
-                       cg->closedVars.length());
+                       cg->globalUses.length(), nClosedArgs, nClosedVars);
     if (!script)
         return NULL;
 
@@ -1301,8 +1304,8 @@ js_CallDestroyScriptHook(JSContext *cx, JSScript *script)
         hook(cx, script, cx->debugHooks->destroyScriptHookData);
 }
 
-void
-js_DestroyScript(JSContext *cx, JSScript *script)
+static void
+DestroyScript(JSContext *cx, JSScript *script, JSThreadData *data)
 {
     if (script == JSScript::emptyScript()) {
         JS_RUNTIME_UNMETER(cx->runtime, liveEmptyScripts);
@@ -1359,7 +1362,16 @@ js_DestroyScript(JSContext *cx, JSScript *script)
     }
 
 #ifdef JS_TRACER
-    PurgeScriptFragments(cx, script);
+# ifdef JS_THREADSAFE
+    if (data) {
+        PurgeScriptFragments(&data->traceMonitor, script);
+    } else {
+        for (ThreadDataIter i(cx->runtime); !i.empty(); i.popFront())
+            PurgeScriptFragments(&i.threadData()->traceMonitor, script);
+    }
+# else
+    PurgeScriptFragments(&JS_TRACE_MONITOR(cx), script);
+# endif
 #endif
 
 #if defined(JS_METHODJIT)
@@ -1370,6 +1382,20 @@ js_DestroyScript(JSContext *cx, JSScript *script)
     cx->free(script);
 
     JS_RUNTIME_UNMETER(cx->runtime, liveScripts);
+}
+
+void
+js_DestroyScript(JSContext *cx, JSScript *script)
+{
+    JS_ASSERT(!cx->runtime->gcRunning);
+    DestroyScript(cx, script, JS_THREAD_DATA(cx));
+}
+
+void
+js_DestroyScriptFromGC(JSContext *cx, JSScript *script, JSThreadData *data)
+{
+    JS_ASSERT(cx->runtime->gcRunning);
+    DestroyScript(cx, script, data);
 }
 
 void

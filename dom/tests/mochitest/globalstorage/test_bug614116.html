@@ -1,0 +1,86 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=614116
+-->
+<head>
+  <title>Test for Bug 614116</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=614116">Mozilla Bug 614116</a>
+<p id="display"></p>
+<div id="content">
+<iframe id="http"></iframe>
+<iframe id="https"></iframe>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 614116 **/
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+  const httpDomain = "http://example.com";
+  const httpsDomain = "https://example.com";
+  const path = "/tests/dom/tests/mochitest/globalstorage/";
+
+  var pm = Components.classes["@mozilla.org/permissionmanager;1"]
+                     .getService(Components.interfaces.nsIPermissionManager);
+  var ios = Components.classes["@mozilla.org/network/io-service;1"]
+                      .getService(Components.interfaces.nsIIOService);
+  pm.add(ios.newURI(httpDomain, null, null), "cookie", Components.interfaces.nsICookiePermission.ACCESS_SESSION);
+  pm.add(ios.newURI(httpsDomain, null, null), "cookie", Components.interfaces.nsICookiePermission.ACCESS_SESSION);
+
+  var http = document.getElementById("http");
+  var https = document.getElementById("https");
+
+  function finishTest() {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    pm.remove("example.com", "cookie");
+    SimpleTest.finish();
+  }
+
+  var loaded = 0;
+  function onMessageReceived(e) {
+    switch (e.data) {
+    case "loaded":
+      ++loaded;
+      ok(loaded <= 2, "Two iframes should be loaded at most");
+      if (loaded == 2) {
+        https.contentWindow.postMessage("setdata", httpsDomain);
+      }
+      break;
+    default:
+      if (e.data.indexOf("dataset:") == 0) {
+        is(e.data.substr(8), "value", "Correct value should be set");
+        http.contentWindow.postMessage("getdata", httpDomain);
+      } else if (e.data.indexOf("data:") == 0) {
+        is(e.data.substr(5), "undefined", "Data should not be available in HTTP mode");
+        http.contentWindow.postMessage("setdata", httpDomain);
+      } else if (e.data.indexOf("dataset2:") == 0) {
+        is(e.data.substr(9), "undefined", "Correct value should be set");
+        https.contentWindow.postMessage("getdata", httpsDomain);
+      } else if (e.data.indexOf("data2:") == 0) {
+        is(e.data.substr(6), "value", "Data should not be modified in HTTP mode");
+        finishTest();
+      } else if (e.data.indexOf("success:") == 0) {
+        is(e.data.substr(8), "false", "Setting the value in HTTP mode should fail");
+      }
+    }
+  }
+
+  window.addEventListener("message", onMessageReceived, false);
+
+  http.src = httpDomain + path + "iframe_bug614116-1.html";
+  https.src = httpsDomain + path + "iframe_bug614116-2.html";
+});
+
+</script>
+</pre>
+</body>
+</html>

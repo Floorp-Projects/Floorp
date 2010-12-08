@@ -19,15 +19,32 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=495319
 var manager = new MediaTestManager;
 
 function timeupdate(e) {
-  e.target._timeupdateCount++;
+  var v = e.target;
+  v._timeupdateCount++;
+  ok(!v.gotEnded, v._name + " - shouldn't get timeupdate after ended");
 }
 
 function ended(e) {
   var v = e.target;
+  v.gotEnded = true;
   ok(v._timeupdateCount > 0, v._name + " - should see at least one timeupdate: " + v.currentTime);
   v._finished = true;
-  v.parentNode.removeChild(v);
-  manager.finished(v.token);
+  // Finish the test after 500ms. We shouldn't receive any timeupdate events
+  // after the ended event, so this gives time for any pending timeupdate events
+  // to fire so we can ensure we don't regress behaviour.
+  setTimeout(
+    function() {
+      // Remove the event listeners before removing the video from the document.
+      // We should receive a timeupdate and pause event when we remove the element
+      // from the document (as the element is specified to behave as if pause() was
+      // invoked when it's removed from a document), and we don't want those
+      // confusing the test results.
+      v.removeEventListener("ended", ended, false);
+      v.removeEventListener("timeupdate", timeupdate, false);
+      v.parentNode.removeChild(v);
+      manager.finished(v.token);
+    },
+    500);
 }
 
 function startTest(test, token) {
@@ -39,6 +56,7 @@ function startTest(test, token) {
   v._name = test.name;
   v._timeupdateCount = 0;
   v._finished = false;
+  v.gotEnded = false;
   v.autoplay = true;
   v.addEventListener("ended", ended, false);
   v.addEventListener("timeupdate", timeupdate, false);

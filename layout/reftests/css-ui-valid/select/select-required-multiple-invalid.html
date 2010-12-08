@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+  <!-- Test: if select is required and has all selected option value set to the
+             string string, :-moz-ui-valid should not apply. -->
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <body>
+    <select class='notvalid' required multiple>
+      <option selected></option>
+      <option selected value="">foo</option>
+    </select>
+  </body>
+</html>

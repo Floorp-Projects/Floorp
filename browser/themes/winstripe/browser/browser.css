@@ -123,7 +123,13 @@
                0 1px 1.5px rgba(0,0,0,.5);
   font-weight: bold;
   padding: 0 1.5em .05em;
-  margin: 0;
+  margin: 0 0 2px;
+}
+
+@media all and (-moz-windows-classic) {
+  #appmenu-button {
+    margin-bottom: 1px;
+  }
 }
 
 #main-window[privatebrowsingmode=temporary] #appmenu-button {
@@ -202,24 +208,70 @@
   #appmenu-popup {
     -moz-appearance: none;
     background: white;
-    border: 1px solid rgba(0,0,0,.5);
+    border: 1px solid ThreeDShadow;
   }
   #appmenuPrimaryPane {
-    -moz-margin-end: -1px;
     background-color: rgba(255,255,255,0.5);
-    -moz-border-end: 1px solid #c4c4c5;
-    -moz-padding-start: 2px;
+    padding: 2px;
+    -moz-border-end: none;
   }
   #appmenuSecondaryPane {
     background-color: #f1f5fb;
     box-shadow: 1px 0 2px rgb(204,214,234) inset;
-    border: 0;
-    padding-top: 5px;
+    -moz-padding-start: 3px;
+    -moz-padding-end: 2px;
+    padding-top: 2px;
+    padding-bottom: 2px;
     font-family: "Segoe UI Semibold", "Segoe UI", sans-serif;
   }
   #appmenuSecondaryPane:-moz-locale-dir(rtl) {
     box-shadow: -1px 0 2px rgb(204,214,234) inset;
   }
+
+%ifdef WINSTRIPE_AERO
+  #appmenuPrimaryPane menupopup {
+    -moz-appearance: none;
+    background-image: -moz-linear-gradient(left, white 26px, ThreeDLightShadow 26px,
+                                           ThreeDLightShadow 27px, ThreeDHighlight 27px,
+                                           ThreeDHighlight 28px, white 28px);
+    border: 3px solid;
+    -moz-border-top-colors: ThreeDShadow white;
+    -moz-border-bottom-colors: ThreeDShadow white;
+    -moz-border-left-colors: ThreeDShadow white;
+    -moz-border-right-colors: ThreeDShadow white;
+  }
+%endif
+
+  #appmenuSecondaryPane menupopup {
+    -moz-appearance: none;
+%ifdef WINSTRIPE_AERO
+    background-image: -moz-linear-gradient(left, #f1f5fb 26px, ThreeDLightShadow 26px,
+                                           ThreeDLightShadow 27px, ThreeDHighlight 27px,
+                                           ThreeDHighlight 28px, #f1f5fb 28px);
+    border: 3px solid;
+    -moz-border-top-colors: ThreeDShadow #f1f5fb;
+    -moz-border-bottom-colors: ThreeDShadow #f1f5fb;
+    -moz-border-left-colors: ThreeDShadow #f1f5fb;
+    -moz-border-right-colors: ThreeDShadow #f1f5fb;
+%else
+    background-color: #f1f5fb;
+    border: 1px solid ThreeDShadow;
+    padding: 2px;
+%endif
+  }
+
+%ifdef WINSTRIPE_AERO
+  #appmenuPrimaryPane menupopup:-moz-locale-dir(rtl) {
+    background-image: -moz-linear-gradient(right, white 26px, ThreeDLightShadow 26px,
+                                           ThreeDLightShadow 27px, ThreeDHighlight 27px,
+                                           ThreeDHighlight 28px, white 28px);
+  }
+  #appmenuSecondaryPane menupopup:-moz-locale-dir(rtl) {
+    background-image: -moz-linear-gradient(right, #f1f5fb 26px, ThreeDLightShadow 26px,
+                                           ThreeDLightShadow 27px, ThreeDHighlight 27px,
+                                           ThreeDHighlight 28px, #f1f5fb 28px);
+  }
+%endif
 
   .appmenu-menuseparator {
     -moz-appearance: none;
@@ -302,21 +354,12 @@
 
 /* ::::: titlebar ::::: */
 
-#titlebar {
+#main-window[sizemode="normal"] > #titlebar {
   -moz-appearance: -moz-window-titlebar;
-  /* we only need to the middle section, hide the edges of the
-  theme background beyond the window frame. */
-  margin-left: -15px;
-  margin-right: -15px;
 }
 
 #main-window[sizemode="maximized"] > #titlebar {
   -moz-appearance: -moz-window-titlebar-maximized;
-}
-
-#titlebar-content {
-  margin-left: 15px;
-  margin-right: 15px;
 }
 
 @media all and (-moz-windows-classic) {
@@ -352,15 +395,8 @@
 }
 
 @media not all and (-moz-windows-classic) {
-  #titlebar-min,
-  #titlebar-max {
+  #titlebar-min {
     -moz-margin-end: 2px;
-  }
-}
-
-@media all and (-moz-windows-classic) {
-  #titlebar-close {
-    -moz-margin-start: 2px;
   }
 }
 
@@ -607,13 +643,9 @@ toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   min-width: 57px;
 }
 
-#TabsToolbar > .toolbarbutton-1,
-#TabsToolbar > .toolbarbutton-1 > .toolbarbutton-menubutton-button,
-#TabsToolbar > .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker,
-#TabsToolbar > toolbarpaletteitem > .toolbarbutton-1,
-#TabsToolbar > toolbarpaletteitem > .toolbarbutton-1 > .toolbarbutton-menubutton-button,
-#TabsToolbar > toolbarpaletteitem > .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker,
-#TabsToolbar > #bookmarks-menu-button-container > #bookmarks-menu-button {
+#TabsToolbar .toolbarbutton-1,
+#TabsToolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button,
+#TabsToolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
   -moz-appearance: toolbarbutton;
 %ifdef WINSTRIPE_AERO
   margin: -2px 0 -1px;
@@ -640,8 +672,7 @@ toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 }
 %endif
 
-#TabsToolbar > .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker,
-#TabsToolbar > toolbarpaletteitem > .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
+#TabsToolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
   -moz-appearance: none;
 }
 
@@ -659,7 +690,8 @@ toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 }
 
 #back-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
-#forward-button:-moz-locale-dir(rtl) {
+#forward-button:-moz-locale-dir(rtl),
+#forward-button:-moz-locale-dir(rtl) > .toolbarbutton-text {
   -moz-transform: scaleX(-1);
 }
 
@@ -1335,13 +1367,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 
 /* bookmarking panel */
-
-#editBookmarkPanel {
-  -moz-appearance: menupopup;
-  color: MenuText;
-  padding: 4px;
-}
-
 #editBookmarkPanelStarIcon {
   list-style-image: url("chrome://browser/skin/places/starred48.png");
   width: 48px;
@@ -1549,9 +1574,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 @media all and (-moz-touch-enabled) {
   .tabbrowser-arrowscrollbox > .scrollbutton-up,
   .tabbrowser-arrowscrollbox > .scrollbutton-down,
-  #TabsToolbar > toolbarbutton,
-  #TabsToolbar > toolbarpaletteitem > toolbarbutton,
-  #TabsToolbar > #bookmarks-menu-button-container > #bookmarks-menu-button {
+  #TabsToolbar .toolbarbutton-1 {
     min-width: 8.1mozmm;
   }
 
@@ -1824,26 +1847,6 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   -moz-margin-end: 0;
 }
 
-/* Popup Bounding Box */
-#identity-popup {
-  -moz-appearance: menupopup;
-  color: MenuText;
-}
-
-/* Invalid form popup */
-#invalid-form-popup {
-  -moz-appearance: none;
-  background-color: #fffcd6;
-  border: 1px solid #dad8b6;
-  padding: 5px 5px 5px 5px;
-  font-weight: bold;
-}
-
-/* Notification popup */
-#notification-popup {
-  padding: 10px;
-}
-
 .popup-notification-icon {
   width: 64px;
   height: 64px;
@@ -1910,7 +1913,6 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 
 #identity-popup-container {
   min-width: 280px;
-  padding: 9px;
 }
 
 #download-monitor {

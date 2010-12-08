@@ -6,15 +6,15 @@ found in the LICENSE file.
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
   "http://www.w3.org/TR/html4/loose.dtd">
 <html>
-  <head>
-    <title>WebGL ReadPixels conformance test.</title>
-    <link rel="stylesheet" href="../resources/js-test-style.css"/>
-    <script src="../resources/js-test-pre.js"></script>
-    <script src="resources/webgl-test.js"> </script>
-    <script src="resources/webgl-test-utils.js"> </script>
+<head>
+<title>WebGL ReadPixels conformance test.</title>
+<link rel="stylesheet" href="../resources/js-test-style.css"/>
+<script src="../resources/js-test-pre.js"></script>
+<script src="resources/webgl-test.js"> </script>
+<script src="resources/webgl-test-utils.js"> </script>
 </head>
 <body>
-<canvas id="example" width="200" height="200"></canvas>
+<canvas id="example" width="200" height="200" style="width: 20px; height: 20px"></canvas>
 <div id="description"></div>
 <div id="console"></div>
 <script>
@@ -70,8 +70,7 @@ for (var tt = 0; tt < tests.length; ++tt) {
               test.oneColor, test.oneX, test.oneY);
 }
 
-glErrorShouldBe(gl, gl.NO_ERROR,
-          "there should be no GL errors");
+glErrorShouldBe(gl, gl.NO_ERROR, "there should be no GL errors");
 
 function checkBuffer(checkColor, x, y, oneColor, oneX, oneY) {
   var buf = new Uint8Array(width * height * 4);
@@ -85,8 +84,7 @@ function checkBuffer(checkColor, x, y, oneColor, oneX, oneY) {
         var color = buf[offset + cc];
         var diff = Math.abs(expectedColor - color);
         assertMsg(diff < 3,
-                  "color pixel at " + xx + ", " + yy + " should be about " +
-                  expectedColor + " was " + color);
+                  "color pixel at " + xx + ", " + yy + " should be about " + expectedColor);
       }
     }
   }
@@ -128,6 +126,8 @@ var badFormats = [
     dest: new Uint8Array(2)
   }
 ];
+debug("");
+debug("check disallowed formats");
 for (var tt = 0; tt < badFormats.length; ++ tt) {
   var info = badFormats[tt]
   var format = info.format;
@@ -143,14 +143,53 @@ for (var tt = 0; tt < badFormats.length; ++ tt) {
 }
 
 debug("");
+debug("check reading with lots of drawing");
+width = 1024;
+height = 1024;
+canvas.width = width;
+canvas.height = height;
+gl.viewport(0, 0, 1024, 1024);
+var program = wtu.setupTexturedQuad(gl);
+var loc = gl.getUniformLocation(program, "tex");
+gl.disable(gl.BLEND);
+gl.disable(gl.DEPTH_TEST);
+var colors = [[255, 0, 0, 1], [0, 255, 0, 1], [0, 0, 255, 1]];
+var textures = [];
+var results = [];
+for (var ii = 0; ii < colors.length; ++ii) {
+  gl.activeTexture(gl.TEXTURE0 + ii);
+  var tex = gl.createTexture();
+  wtu.fillTexture(gl, tex, 1, 1, colors[ii]);
+  textures.push(tex);
+}
+for (var ii = 0; ii < colors.length; ++ii) {
+  for (var jj = 0; jj < 300 + ii + 1; ++jj) {
+    gl.uniform1i(loc, jj % 3);
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+  }
+  var buf = new Uint8Array(4);
+  gl.readPixels(512, 512, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, buf);
+  results.push(buf);
+  for (var kk = 0; kk < 99; ++kk) {
+    gl.uniform1i(loc, (jj + kk) % 3);
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+  }
+}
+var actual;
+var expected;
+for (var ii = 0; ii < colors.length; ++ii) {
+  var buf = results[ii];
+  var color = colors[ii];
+  actual = [buf[0], buf[1], buf[2], buf[3]];
+  expected = [color[0], color[1], color[2], color[3] * 255];
+  shouldBe("actual", "expected");
+}
+glErrorShouldBe(gl, gl.NO_ERROR, "there should be no GL errors");
+
+debug("");
 successfullyParsed = true;
 </script>
-</body>
 <script src="../resources/js-test-post.js"></script>
-
-<script>
-</script>
-
 </body>
 </html>
 

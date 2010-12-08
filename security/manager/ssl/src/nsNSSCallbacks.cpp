@@ -234,14 +234,14 @@ SECStatus nsNSSHttpRequestSession::createFcn(SEC_HTTP_SERVER_SESSION session,
     rs->mTimeoutInterval = maxBug404059Timeout;
   }
 
-  rs->mURL.Append(nsDependentCString(http_protocol_variant));
+  rs->mURL.Assign(http_protocol_variant);
   rs->mURL.AppendLiteral("://");
   rs->mURL.Append(hss->mHost);
   rs->mURL.AppendLiteral(":");
   rs->mURL.AppendInt(hss->mPort);
   rs->mURL.Append(path_and_query_string);
 
-  rs->mRequestMethod = nsDependentCString(http_request_method);
+  rs->mRequestMethod = http_request_method;
 
   *pRequest = (void*)rs;
   return SECSuccess;

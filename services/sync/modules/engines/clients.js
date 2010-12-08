@@ -180,17 +180,17 @@ ClientStore.prototype = {
       this._remoteClients[record.id] = record.cleartext;
   },
 
-  createRecord: function createRecord(guid, uri) {
-    let record = new ClientsRec(uri);
+  createRecord: function createRecord(id, collection) {
+    let record = new ClientsRec(collection, id);
 
     // Package the individual components into a record for the local client
-    if (guid == Clients.localID) {
+    if (id == Clients.localID) {
       record.name = Clients.localName;
       record.type = Clients.localType;
       record.commands = Clients.localCommands;
     }
     else
-      record.cleartext = this._remoteClients[guid];
+      record.cleartext = this._remoteClients[id];
 
     return record;
   },

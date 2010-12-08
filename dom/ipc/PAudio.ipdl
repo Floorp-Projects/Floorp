@@ -42,7 +42,7 @@ include protocol PContent;
 namespace mozilla {
 namespace dom {
 
-sync protocol PAudio
+protocol PAudio
 {
   manager PContent;
 
@@ -54,7 +54,7 @@ parent:
 
   SetVolume(float aVolume);
 
-  sync Drain();
+  Drain();
 
   Pause();
   Resume();
@@ -62,6 +62,7 @@ parent:
  child:
 
   SampleOffsetUpdate(PRInt64 offset, PRInt64 time);
+  DrainDone();
 
 
 };

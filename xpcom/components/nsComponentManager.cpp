@@ -442,6 +442,9 @@ nsComponentManagerImpl::RegisterModule(const mozilla::Module* aModule,
     KnownModule* m = new KnownModule(aModule, aFile);
     if (aFile) {
         nsCOMPtr<nsIHashable> h = do_QueryInterface(aFile);
+        NS_ASSERTION(!mKnownFileModules.Get(h),
+                     "Must not register a binary module twice.");
+
         mKnownFileModules.Put(h, m);
     }
     else
@@ -478,7 +481,7 @@ nsComponentManagerImpl::RegisterCIDEntry(const mozilla::Module::CIDEntry* aEntry
 
     nsFactoryEntry* f = mFactories.Get(*aEntry->cid);
     if (f) {
-        NS_ERROR("Re-registering a CID?");
+        NS_WARNING("Re-registering a CID?");
 
         char idstr[NSID_LENGTH];
         aEntry->cid->ToProvidedString(idstr);
@@ -731,6 +734,15 @@ nsComponentManagerImpl::ManifestBinaryComponent(ManifestProcessingContext& cx, i
     nsresult rv = clfile->AppendRelativeNativePath(nsDependentCString(file));
     if (NS_FAILED(rv)) {
         NS_WARNING("Couldn't append relative path?");
+        return;
+    }
+
+    nsCOMPtr<nsIHashable> h = do_QueryInterface(clfile);
+    NS_ASSERTION(h, "nsILocalFile doesn't implement nsIHashable");
+    if (mKnownFileModules.Get(h)) {
+        NS_WARNING("Attempting to register a binary component twice.");
+        LogMessageWithContext(cx.mFile, cx.mPath, lineno,
+                              "Attempting to register a binary component twice.");
         return;
     }
 

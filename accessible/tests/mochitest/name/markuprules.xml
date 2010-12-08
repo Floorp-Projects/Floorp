@@ -124,7 +124,7 @@
 
   <rulesample>
 
-    <markup ref="html:button" ruleset="htmlctrl">
+    <markup ref="html:button" ruleset="htmlctrl" id="markup1test">
       <html:span id="l1" a11yname="test2">test2</html:span>
       <html:span id="l2" a11yname="test3">test3</html:span>
       <html:label for="btn" a11yname="test4">test4</html:label>
@@ -135,7 +135,7 @@
                    a11yname="press me">press me</html:button>
     </markup>
 
-    <markup ref="html:input" ruleset="htmlinputbutton">
+    <markup ref="html:input" ruleset="htmlinputbutton" id="markup2test">
       <html:span id="l1" a11yname="test2">test2</html:span>
       <html:span id="l2" a11yname="test3">test3</html:span>
       <html:label for="btn" a11yname="test4">test4</html:label>
@@ -150,7 +150,8 @@
                   title="test9"/>
     </markup>
 
-    <markup ref="html:select/html:option[1]" ruleset="htmloption">
+    <markup ref="html:select/html:option[1]" ruleset="htmloption"
+            id="markup3test">
       <html:span id="l1" a11yname="test2">test2</html:span>
       <html:span id="l2" a11yname="test3">test3</html:span>
       <html:select>
@@ -164,7 +165,8 @@
       </html:select>
     </markup>
 
-    <markup ref="html:table/html:tr/html:td" ruleset="htmlelm">
+    <markup ref="html:table/html:tr/html:td" ruleset="htmlelm"
+            id="markup4test">
       <html:span id="l1" a11yname="test2">test2</html:span>
       <html:span id="l2" a11yname="test3">test3</html:span>
       <html:label for="tc" a11yname="test4">test4</html:label>
@@ -184,7 +186,8 @@
       </html:table>
     </markup>
 
-    <markup ref="html:table/html:tr/html:td" ruleset="htmlctrl">
+    <markup ref="html:table/html:tr/html:td" ruleset="htmlctrl"
+            id="markup5test">
       <html:span id="l1" a11yname="test2">test2</html:span>
       <html:span id="l2" a11yname="test3">test3</html:span>
       <html:label for="gc" a11yname="test4">test4</html:label>

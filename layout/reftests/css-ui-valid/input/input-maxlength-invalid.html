@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- Test: if input isn't valid nor barred from constraint validation,
+             it should not be affected by :-moz-ui-valid pseudo-class. -->
+  <!-- TODO: this is valid until bug bug 613016 and bug 613019 are fixed. -->
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <body onload="document.getElementById('i').value='foo'; document.documentElement.className='';">
+    <input class='valid' maxlength="2" id='i'>
+  </body>
+</html>
+

@@ -28,6 +28,9 @@ void main() {
 }
 </script>
 <script>
+window.onload = main;
+
+debug("Tests drawing a very slow shader.");
 var wtu = WebGLTestUtils;
 var canvas = document.getElementById("example");
 var gl = wtu.create3DContext(canvas);
@@ -93,18 +96,19 @@ var indexBuffer = gl.createBuffer();
 gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
 gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
 wtu.glErrorShouldBe(gl, gl.NO_ERROR, "after setting up indices");
-alert("click to draw");
-gl.drawElements(gl.TRIANGLES, numQuads * 6, gl.UNSIGNED_BYTE, 0);
-wtu.glErrorShouldBe(gl, gl.NO_ERROR, "after drawing");
+
+function main () {
+  if (confirm(
+      "after clicking ok your machine may be come unresponsive or crash")) {
+    gl.drawElements(gl.TRIANGLES, numQuads * 6, gl.UNSIGNED_BYTE, 0);
+    wtu.glErrorShouldBe(gl, gl.NO_ERROR, "after drawing");
+  } else {
+    debug("cancelled");
+  }
+}
 
 successfullyParsed = true;
 </script>
-</body>
-<script src="../resources/js-test-post.js"></script>
-
-<script>
-</script>
-
 </body>
 </html>
 

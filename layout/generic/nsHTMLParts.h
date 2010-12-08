@@ -62,6 +62,10 @@ class nsTableColFrame;
  * Additional frame-state bits used by nsBlockFrame
  * See the meanings at http://www.mozilla.org/newlayout/doc/block-and-line.html
  *
+ * NS_BLOCK_CLIP_PAGINATED_OVERFLOW is only set in paginated prescontexts, on
+ *  blocks which were forced to not have scrollframes but still need to clip
+ *  the display of their kids.
+ *
  * NS_BLOCK_HAS_FIRST_LETTER_STYLE means that the block has first-letter style,
  *  even if it has no actual first-letter frame among its descendants.
  *
@@ -72,6 +76,7 @@ class nsTableColFrame;
  */
 #define NS_BLOCK_MARGIN_ROOT              NS_FRAME_STATE_BIT(22)
 #define NS_BLOCK_FLOAT_MGR                NS_FRAME_STATE_BIT(23)
+#define NS_BLOCK_CLIP_PAGINATED_OVERFLOW  NS_FRAME_STATE_BIT(28)
 #define NS_BLOCK_HAS_FIRST_LETTER_STYLE   NS_FRAME_STATE_BIT(29)
 #define NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET NS_FRAME_STATE_BIT(30)
 #define NS_BLOCK_HAS_FIRST_LETTER_CHILD   NS_FRAME_STATE_BIT(31)
@@ -79,6 +84,7 @@ class nsTableColFrame;
 // next-in-flows and are not private to blocks
 #define NS_BLOCK_FLAGS_MASK               (NS_BLOCK_MARGIN_ROOT | \
                                            NS_BLOCK_FLOAT_MGR | \
+                                           NS_BLOCK_CLIP_PAGINATED_OVERFLOW | \
                                            NS_BLOCK_HAS_FIRST_LETTER_STYLE | \
                                            NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET | \
                                            NS_BLOCK_HAS_FIRST_LETTER_CHILD)

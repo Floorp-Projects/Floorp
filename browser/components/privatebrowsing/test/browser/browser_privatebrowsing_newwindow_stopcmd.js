@@ -47,17 +47,16 @@ function test() {
   pb.privateBrowsingEnabled = true;
 
   let win = OpenBrowserWindow();
-  Services.obs.addObserver(function(subject, topic, data) {
-    Services.obs.removeObserver(arguments.callee, "browser-delayed-startup-finished");
-    var notifiedWin = subject.QueryInterface(Ci.nsIDOMWindow);
-    is(win, notifiedWin, "sanity check");
+  win.addEventListener("load", function() {
+    win.removeEventListener("load", arguments.callee, false);
+    executeSoon(function() {
+      let cmd = win.document.getElementById("Tools:PrivateBrowsing");
+      ok(!cmd.hasAttribute("disabled"),
+         "The Private Browsing command in a new window should be enabled");
 
-    let cmd = win.document.getElementById("Tools:PrivateBrowsing");
-    ok(!cmd.hasAttribute("disabled"),
-       "The Private Browsing command in a new window should be enabled");
-
-    win.close();
-    pb.privateBrowsingEnabled = false;
-    finish();
-  }, "browser-delayed-startup-finished", false);
+      win.close();
+      pb.privateBrowsingEnabled = false;
+      finish();
+    });
+  }, false);
 }

@@ -652,35 +652,31 @@ case "$target" in
         if test "$_CC_MAJOR_VERSION" != "$_CXX_MAJOR_VERSION"; then
             AC_MSG_ERROR([The major versions of \$CC and \$CXX do not match.])
         fi
-        if test "$_CC_MAJOR_VERSION" = "13"; then
-            _CC_SUITE=7
-        elif test "$_CC_MAJOR_VERSION" = "14"; then
+
+        if test "$_CC_MAJOR_VERSION" = "14"; then
+            dnl Require VC8SP1 or newer.
+            dnl VC8 is 14.00.50727.42, VC8SP1 is 14.00.50727.762.
+            if test "$_CC_RELEASE" -lt 50727 -o \
+                    \( "$_CC_RELEASE" -eq 50727 -a "$_CC_BUILD" -lt 762 \); then
+              AC_MSG_ERROR([This version ($CC_VERSION) of the MSVC compiler is unsupported. You probably need to install Service Pack 1 of Visual Studio 2005. See https://developer.mozilla.org/en/Windows_Build_Prerequisites.])
+            fi
+
             _CC_SUITE=8
             CXXFLAGS="$CXXFLAGS -Zc:wchar_t-"
-            dnl -DYNAMICBASE is only supported on VC8SP1 or newer,
-            dnl so be very specific here!
-            dnl VC8 is 14.00.50727.42, VC8SP1 is 14.00.50727.762
-            if test $_CC_RELEASE -gt 50727; then
-               _USE_DYNAMICBASE=1
-            elif test $_CC_BUILD -ge 762; then
-               _USE_DYNAMICBASE=1
-            fi
             AC_DEFINE(_CRT_SECURE_NO_DEPRECATE)
             AC_DEFINE(_CRT_NONSTDC_NO_DEPRECATE)
         elif test "$_CC_MAJOR_VERSION" = "15"; then
             _CC_SUITE=9
             CXXFLAGS="$CXXFLAGS -Zc:wchar_t-"
-            _USE_DYNAMICBASE=1
             AC_DEFINE(_CRT_SECURE_NO_WARNINGS)
             AC_DEFINE(_CRT_NONSTDC_NO_WARNINGS)
         elif test "$_CC_MAJOR_VERSION" = "16"; then
             _CC_SUITE=10
             CXXFLAGS="$CXXFLAGS -Zc:wchar_t-"
-            _USE_DYNAMICBASE=1
             AC_DEFINE(_CRT_SECURE_NO_WARNINGS)
             AC_DEFINE(_CRT_NONSTDC_NO_WARNINGS)
         else
-            AC_MSG_ERROR([This version of the MSVC compiler, $CC_VERSION , is unsupported.])
+            AC_MSG_ERROR([This version ($CC_VERSION) of the MSVC compiler is unsupported. See https://developer.mozilla.org/en/Windows_Build_Prerequisites.])
         fi
 
         _MOZ_RTTI_FLAGS_ON='-GR'
@@ -691,26 +687,24 @@ case "$target" in
         if test -n "$WIN32_REDIST_DIR"; then
             WIN32_REDIST_DIR=`cd "$WIN32_REDIST_DIR" && pwd`
         fi
-	
-        # bug #249782
-        # ensure that mt.exe is Microsoft (R) Manifest Tool and not magnetic tape manipulation utility (or something else)
-        if test "$_CC_SUITE" -ge "8"; then
-                changequote(,)
-                _MSMT_VER_FILTER='s|.* \([0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\).*|\1|p'
-                changequote([,])
 
-                MSMT_TOOL=`mt 2>&1|grep 'Microsoft (R) Manifest Tool'`
-                if test -n "$MSMT_TOOL"; then
-                        MSMANIFEST_TOOL_VERSION=`echo ${MSMT_TOOL}|sed -ne "$_MSMT_VER_FILTER"`
-                        if test -z "$MSMANIFEST_TOOL_VERSION"; then
-                                AC_MSG_WARN([Unknown version of the Microsoft (R) Manifest Tool.])
-                        fi
-                        MSMANIFEST_TOOL=1
-                        unset MSMT_TOOL
-                else
-                        AC_MSG_ERROR([Microsoft (R) Manifest Tool must be in your \$PATH.])
-                fi
+        dnl Ensure that mt.exe is 'Microsoft (R) Manifest Tool',
+        dnl not something else like "magnetic tape manipulation utility".
+        MSMT_TOOL=`mt 2>&1|grep 'Microsoft (R) Manifest Tool'`
+        if test -z "$MSMT_TOOL"; then
+          AC_MSG_ERROR([Microsoft (R) Manifest Tool must be in your \$PATH.])
         fi
+
+        changequote(,)
+        _MSMT_VER_FILTER='s|.* \([0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\).*|\1|p'
+        changequote([,])
+        MSMANIFEST_TOOL_VERSION=`echo ${MSMT_TOOL}|sed -ne "$_MSMT_VER_FILTER"`
+        if test -z "$MSMANIFEST_TOOL_VERSION"; then
+          AC_MSG_WARN([Unknown version of the Microsoft (R) Manifest Tool.])
+        fi
+
+        MSMANIFEST_TOOL=1
+        unset MSMT_TOOL
 
         # Check linker version
         _LD_FULL_VERSION=`"${LD}" -v 2>&1 | sed -nre "$_MSVC_VER_FILTER"`
@@ -718,6 +712,7 @@ case "$target" in
         if test "$_LD_MAJOR_VERSION" != "$_CC_SUITE"; then
             AC_MSG_ERROR([The linker major version, $_LD_FULL_VERSION,  does not match the compiler suite version, $_CC_SUITE.])
         fi
+
         INCREMENTAL_LINKER=1
 
         # Check midl version
@@ -801,7 +796,7 @@ EOF
                 AC_LANG_RESTORE
             ])
 
-        if test "$ac_cv_have_std__Throw" == "yes"; then
+        if test "$ac_cv_have_std__Throw" = "yes"; then
             AC_CACHE_CHECK(for |class __declspec(dllimport) exception| bug,
                            ac_cv_have_dllimport_exception_bug,
                 [
@@ -1054,7 +1049,7 @@ from building Mozilla. Upgrade to Xcode 2.1 or later.])
         changequote(,)
         XCODEBUILD_VERSION=`$PBBUILD -version 2>/dev/null | xargs | sed -e 's/.*DevToolsCore-\([0-9]*\).*/\1/'`
         changequote([,])
-        if test -n "$XCODEBUILD_VERSION" -a "$XCODEBUILD_VERSION" -ge 620 ; then
+        if test -n "$XCODEBUILD_VERSION" && test "$XCODEBUILD_VERSION" -ge 620 ; then
           HAS_XCODE_2_1=1;
         fi
       ;;
@@ -2430,9 +2425,7 @@ ia64*-hpux*)
             dnl XXX: should be -LTCG:PGOPTIMIZE, but that fails on libxul.
             dnl Probably also a compiler bug, but what can you do?
             PROFILE_USE_LDFLAGS="-LTCG:PGUPDATE"
-            if test -n "$_USE_DYNAMICBASE"; then
-               LDFLAGS="$LDFLAGS -DYNAMICBASE"
-            fi
+            LDFLAGS="$LDFLAGS -DYNAMICBASE"
         fi
     fi
     MOZ_JPEG_LIBS='$(call EXPAND_LIBNAME_PATH,jpeg32$(VERSION_NUMBER),$(DEPTH)/jpeg)'
@@ -2493,7 +2486,7 @@ ia64*-hpux*)
 
     case "$host_os" in
     cygwin*|msvc*|mks*)
-        AC_MSG_WARN([Using a cygwin build environment is unsupported. Configure cannot check for the presence of necessary headers. Please upgrade to MozillaBuild; see http://developer.mozilla.org/en/docs/Windows_Build_Prerequisites])
+        AC_MSG_WARN([Using a cygwin build environment is unsupported. Configure cannot check for the presence of necessary headers. Please upgrade to MozillaBuild; see https://developer.mozilla.org/en/Windows_Build_Prerequisites.])
         ;;
 
     *)
@@ -3819,7 +3812,7 @@ fi
 
 dnl check for wcrtomb/mbrtowc
 dnl =======================================================================
-if test -z "$MACOS_DEPLOYMENT_TARGET" -o "$MACOS_DEPLOYMENT_TARGET" -ge "100300"; then
+if test -z "$MACOS_DEPLOYMENT_TARGET" || test "$MACOS_DEPLOYMENT_TARGET" -ge "100300"; then
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
 AC_CACHE_CHECK(for wcrtomb,
@@ -6322,6 +6315,51 @@ if test -n "${MOZ_JAVAXPCOM}"; then
 fi
 
 dnl ========================================================
+dnl = ANGLE OpenGL->D3D translator for WebGL
+dnl = * only applies to win32
+dnl = * enabled by default (shipping build); requires explicit --disable to disable
+dnl ========================================================
+MOZ_ANGLE=
+MOZ_DIRECTX_SDK_PATH=
+case "$target_os" in
+    *msvc*|*mks*|*cygwin*|*mingw*)
+        MOZ_ANGLE=1
+        ;;
+esac
+
+if test -n "$MOZ_ANGLE"; then
+MOZ_ARG_DISABLE_BOOL(angle,
+[  --disable-angle     Disable building of ANGLE for WebGL->D3D translation],
+    MOZ_ANGLE=,
+    MOZ_ANGLE=1)
+
+if test -n "$MOZ_ANGLE"; then
+  if test -z "$_WIN32_MSVC"; then
+    AC_MSG_ERROR([Building ANGLE requires MSVC.  To build without ANGLE, reconfigure with --disable-angle.])
+  fi
+
+  AC_CHECK_HEADER(d3dx9.h, [], [MOZ_ANGLE=])
+
+  if test -z "$MOZ_ANGLE"; then
+    # Try again, but try to get the SDK path from the registry.  We're going to hardcode
+    # the February 2010 SDK, since that's the one that's installed on the tinderboxen.
+    MOZ_DIRECTX_SDK_PATH=`reg query 'HKLM\Software\Microsoft\DirectX\Microsoft DirectX SDK (February 2010)' //v InstallPath | grep REG_SZ | sed 's,  *, ,g' | cut -d' ' -f4`
+    if test -n "$MOZ_DIRECTX_SDK_PATH" ; then
+      if test -f "$MOZ_DIRECTX_SDK_PATH"/include/d3dx9.h && test -f "$MOZ_DIRECTX_SDK_PATH"/lib/x86/dxguid.lib ; then
+        AC_MSG_WARN([Found DirectX SDK in registry, using $MOZ_DIRECTX_SDK])
+        MOZ_ANGLE=1
+      fi
+    fi
+  fi
+
+  if test -z "$MOZ_ANGLE"; then
+    AC_MSG_WARN([Couldn't find d3dx9.h in your INCLUDE path, needed for ANGLE.  Please install the February 2010 DirectX SDK, or make another version available in your LIB and INCLUDE path env variables.  To explicitly build without ANGLE, reconfigure with --disable-angle.])
+    AC_MSG_WARN([This will become an error in the future.])
+  fi
+fi
+fi
+
+dnl ========================================================
 dnl = Breakpad crash reporting (on by default on supported platforms)
 dnl ========================================================
 
@@ -6496,15 +6534,9 @@ if test "$MOZ_MATHML"; then
 fi
 
 dnl ========================================================
-dnl SVG
+dnl Keeping AC_DEFINE(MOZ_SVG) for the moment in case of something needs it.
 dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(svg,
-[  --disable-svg           Disable SVG support],
-    MOZ_SVG=,
-    MOZ_SVG=1 )
-if test -n "$MOZ_SVG"; then
-  AC_DEFINE(MOZ_SVG)
-fi
+AC_DEFINE(MOZ_SVG)
 
 dnl ========================================================
 dnl SMIL
@@ -6514,10 +6546,6 @@ MOZ_ARG_DISABLE_BOOL(smil,
 [  --disable-smil          Disable SMIL animation support],
     MOZ_SMIL=,
     MOZ_SMIL=1 )
-# Automatically disable SMIL if SVG is disabled
-if test -z "$MOZ_SVG"; then
-  MOZ_SMIL=
-fi
 if test -n "$MOZ_SMIL"; then
   AC_DEFINE(MOZ_SMIL)
 fi
@@ -6574,14 +6602,14 @@ if test -n "$MOZ_INSTALLER" -a "$OS_ARCH" = "WINNT"; then
     changequote(,)
     MAKENSISU_VER=`"$MAKENSISU" -version 2>/dev/null | sed -e '/-Unicode/!s/.*//g' -e 's/^v\([0-9]\+\.[0-9]\+\)\-Unicode$/\1/g'`
     changequote([,])
-    if test ! "$MAKENSISU_VER" == ""; then
+    if test ! "$MAKENSISU_VER" = ""; then
         MAKENSISU_MAJOR_VER=`echo $MAKENSISU_VER | $AWK -F\. '{ print $1 }'`
         MAKENSISU_MINOR_VER=`echo $MAKENSISU_VER | $AWK -F\. '{ print $2 }'`
     fi
     AC_MSG_CHECKING([for Unicode NSIS with major version == $REQ_NSIS_MAJOR_VER and minor version >= $MIN_NSIS_MINOR_VER])
-    if test "$MAKENSISU_VER" == "" -o \
-       ! "$MAKENSISU_MAJOR_VER" == "$REQ_NSIS_MAJOR_VER" -o \
-       ! "$MAKENSISU_MINOR_VER" -ge $MIN_NSIS_MINOR_VER; then
+    if test "$MAKENSISU_VER" = "" ||
+       test ! "$MAKENSISU_MAJOR_VER" = "$REQ_NSIS_MAJOR_VER" -o \
+            ! "$MAKENSISU_MINOR_VER" -ge $MIN_NSIS_MINOR_VER; then
         AC_MSG_RESULT([no])
         AC_MSG_ERROR([To build the installer you must have the latest MozillaBuild or Unicode NSIS with a major version of $REQ_NSIS_MAJOR_VER and a minimum minor version of $MIN_NSIS_MINOR_VER in your path. To build without the installer reconfigure using --disable-installer.])
     fi
@@ -8173,7 +8201,10 @@ else
     fi
     AC_SUBST(CL_INCLUDES_PREFIX)
     rm -f dummy-hello.c
+    _topsrcdirwin=`cd \`dirname $0\`; pwd -W`
     dnl cl.py provides dependency generation for MSVC
+    CC_WRAPPER="$PYTHON -O $_topsrcdirwin/build/cl.py"
+    CXX_WRAPPER="$PYTHON -O $_topsrcdirwin/build/cl.py"
     COMPILER_DEPEND=1
   fi
 fi
@@ -8182,6 +8213,9 @@ MDDEPDIR='.deps'
 AC_SUBST(MOZ_AUTO_DEPS)
 AC_SUBST(COMPILER_DEPEND)
 AC_SUBST(MDDEPDIR)
+AC_SUBST(CC_WRAPPER)
+AC_SUBST(CXX_WRAPPER)
+
 
 dnl ========================================================
 dnl =
@@ -8615,6 +8649,7 @@ if test "$MOZ_TREE_CAIRO"; then
     MOZ_CAIRO_LIBS='$(call EXPAND_LIBNAME_PATH,mozcairo,$(DEPTH)/gfx/cairo/cairo/src)'" $CAIRO_FT_LIBS"
 
     if test "$MOZ_TREE_PIXMAN"; then
+        AC_DEFINE(MOZ_TREE_PIXMAN)
         MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS"' $(call EXPAND_LIBNAME_PATH,mozlibpixman,$(DEPTH)/gfx/cairo/libpixman/src)'
     else
         PKG_CHECK_MODULES(PIXMAN, pixman-1 >= 0.19.2)
@@ -8936,6 +8971,8 @@ AC_SUBST(MOZ_SPELLCHECK)
 AC_SUBST(MOZ_USER_DIR)
 AC_SUBST(MOZ_CRASHREPORTER)
 AC_SUBST(MOZ_UPDATER)
+AC_SUBST(MOZ_ANGLE)
+AC_SUBST(MOZ_DIRECTX_SDK_PATH)
 
 AC_SUBST(ENABLE_STRIP)
 AC_SUBST(PKG_SKIP_STRIP)

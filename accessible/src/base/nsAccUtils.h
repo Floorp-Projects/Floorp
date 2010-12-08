@@ -223,12 +223,10 @@ public:
    * Used for normal and misspelling selection changes processing.
    *
    * @param aSelection  [in] the given selection
-   * @param aNode       [out, optional] the DOM node of text accessible
    * @return            text accessible
    */
   static already_AddRefed<nsHyperTextAccessible>
-    GetTextAccessibleFromSelection(nsISelection *aSelection,
-                                   nsINode **aNode = nsnull);
+    GetTextAccessibleFromSelection(nsISelection* aSelection);
 
   /**
    * Converts the given coordinates to coordinates relative screen.

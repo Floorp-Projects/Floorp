@@ -1,24 +1,6 @@
 // Try no args. This shouldn't do anything.
 importScripts();
 
-onmessage = function(event) {
-  switch (event.data) {
-    case 'start':
-      importScripts("importScripts_worker_imported2.js");
-      importedScriptFunction2();
-      tryBadScripts();
-      postMessage('started');
-      break;
-    case 'stop':
-      tryBadScripts();
-      postMessage('stopped');
-      break;
-    default:
-      throw new Error("Bad message: " + event.data);
-      break;
-  }
-}
-
 // This caused security exceptions in the past, make sure it doesn't!
 var constructor = {}.constructor;
 
@@ -51,6 +33,24 @@ function tryBadScripts() {
     if (!caughtException) {
       throw "Bad script didn't throw exception: " + url;
     }
+  }
+}
+
+onmessage = function(event) {
+  switch (event.data) {
+    case 'start':
+      importScripts("importScripts_worker_imported2.js");
+      importedScriptFunction2();
+      tryBadScripts();
+      postMessage('started');
+      break;
+    case 'stop':
+      tryBadScripts();
+      postMessage('stopped');
+      break;
+    default:
+      throw new Error("Bad message: " + event.data);
+      break;
   }
 }
 

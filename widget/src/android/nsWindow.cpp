@@ -1,4 +1,4 @@
-/* -*- Mode: c++; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
+/* -*- Mode: c++; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: nil; -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -40,9 +40,20 @@
 #include <android/log.h>
 #include <math.h>
 
+#ifdef MOZ_IPC
+#include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/ContentChild.h"
+#include "mozilla/unused.h"
+
+using mozilla::dom::ContentParent;
+using mozilla::dom::ContentChild;
+using mozilla::unused;
+#endif
+
 #include "nsAppShell.h"
 #include "nsIdleService.h"
 #include "nsWindow.h"
+#include "nsIObserverService.h"
 
 #include "nsIDeviceContext.h"
 #include "nsIRenderingContext.h"
@@ -71,6 +82,43 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsBaseWidget)
 
 // The dimensions of the current android view
 static gfxIntSize gAndroidBounds;
+
+#ifdef MOZ_IPC
+class ContentCreationNotifier;
+static nsCOMPtr<ContentCreationNotifier> gContentCreationNotifier;
+// A helper class to send updates when content processes
+// are created. Currently an update for the screen size is sent.
+class ContentCreationNotifier : public nsIObserver
+{
+    NS_DECL_ISUPPORTS
+
+    NS_IMETHOD Observe(nsISupports* aSubject,
+                       const char* aTopic,
+                       const PRUnichar* aData)
+    {
+        if (!strcmp(aTopic, "ipc:content-created")) {
+            ContentParent *cp = ContentParent::GetSingleton(PR_FALSE);
+            NS_ABORT_IF_FALSE(cp, "Must have content process if notified of its creation");
+            unused << cp->SendScreenSizeChanged(gAndroidBounds);
+        } else if (!strcmp(aTopic, "xpcom-shutdown")) {
+            nsCOMPtr<nsIObserverService>
+                obs(do_GetService("@mozilla.org/observer-service;1"));
+            if (obs) {
+                obs->RemoveObserver(static_cast<nsIObserver*>(this),
+                                    "xpcom-shutdown");
+                obs->RemoveObserver(static_cast<nsIObserver*>(this),
+                                    "ipc:content-created");
+            }
+            gContentCreationNotifier = nsnull;
+        }
+
+        return NS_OK;
+    }
+};
+
+NS_IMPL_ISUPPORTS1(ContentCreationNotifier,
+                   nsIObserver)
+#endif
 
 static PRBool gLeftShift;
 static PRBool gRightShift;
@@ -609,7 +657,7 @@ nsWindow::SetWindowClass(const nsAString& xulWinType)
 }
 
 mozilla::layers::LayerManager*
-nsWindow::GetLayerManager(bool* aAllowRetaining)
+nsWindow::GetLayerManager(LayerManagerPersistence, bool* aAllowRetaining)
 {
     if (aAllowRetaining) {
         *aAllowRetaining = true;
@@ -702,6 +750,27 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
                     gTopLevelWindows[i]->Resize(gAndroidBounds.width, gAndroidBounds.height, PR_TRUE);
             }
 
+#ifdef MOZ_IPC
+            if (XRE_GetProcessType() == GeckoProcessType_Default) {
+                if (!gContentCreationNotifier) {
+                    nsCOMPtr<nsIObserverService> obs =
+                        do_GetService("@mozilla.org/observer-service;1");
+                    if (obs) {
+                        nsCOMPtr<ContentCreationNotifier> notifier = new ContentCreationNotifier;
+                        if (NS_SUCCEEDED(obs->AddObserver(notifier, "ipc:content-created", PR_FALSE))) {
+                            if (NS_SUCCEEDED(obs->AddObserver(notifier, "xpcom-shutdown", PR_FALSE)))
+                                gContentCreationNotifier = notifier;
+                            else {
+                                obs->RemoveObserver(notifier, "ipc:content-created");
+                            }
+                        }
+                    }
+                }
+                ContentParent *cp = ContentParent::GetSingleton(PR_FALSE);
+                if (cp)
+                    unused << cp->SendScreenSizeChanged(gAndroidBounds);
+            }
+#endif
             break;
         }
 
@@ -799,7 +868,7 @@ nsWindow::DrawTo(gfxASurface *targetSurface)
 
         nsPaintEvent event(PR_TRUE, NS_PAINT, this);
         event.region = boundsRect;
-        switch (GetLayerManager()->GetBackendType()) {
+        switch (GetLayerManager(nsnull)->GetBackendType()) {
             case LayerManager::LAYERS_BASIC: {
                 nsRefPtr<gfxContext> ctx = new gfxContext(targetSurface);
 
@@ -822,7 +891,7 @@ nsWindow::DrawTo(gfxASurface *targetSurface)
             }
 
             case LayerManager::LAYERS_OPENGL: {
-                static_cast<mozilla::layers::LayerManagerOGL*>(GetLayerManager())->
+                static_cast<mozilla::layers::LayerManagerOGL*>(GetLayerManager(nsnull))->
                     SetClippingRegion(nsIntRegion(boundsRect));
 
                 status = DispatchEvent(&event);
@@ -891,7 +960,7 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
 
     AndroidBridge::Bridge()->HideProgressDialogOnce();
 
-    if (GetLayerManager()->GetBackendType() == LayerManager::LAYERS_BASIC) {
+    if (GetLayerManager(nsnull)->GetBackendType() == LayerManager::LAYERS_BASIC) {
         jobject bytebuf = sview.GetSoftwareDrawBuffer();
         if (!bytebuf) {
             ALOG("no buffer to draw into - skipping draw");
@@ -923,12 +992,8 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
 
         NS_ASSERTION(sGLContext, "Drawing with GLES without a GL context?");
 
-        sGLContext->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT);
-
         DrawTo(nsnull);
 
-        if (sGLContext)
-            sGLContext->SwapBuffers();
         sview.EndDrawing();
     }
 }
@@ -982,6 +1047,11 @@ nsWindow::SetInitialAndroidBounds(const gfxIntSize& sz)
 gfxIntSize
 nsWindow::GetAndroidBounds()
 {
+#ifdef MOZ_IPC
+    if (XRE_GetProcessType() == GeckoProcessType_Content) {
+        return ContentChild::GetSingleton()->GetScreenSize();
+    }
+#endif
     return gAndroidBounds;
 }
 
@@ -1651,7 +1721,7 @@ nsWindow::SetInputMode(const IMEContext& aContext)
     ALOGIME("IME: SetInputMode: s=%d", aContext.mStatus);
 
     mIMEContext = aContext;
-    AndroidBridge::NotifyIMEEnabled(int(aContext.mStatus), aContext.mHTMLInputType);
+    AndroidBridge::NotifyIMEEnabled(int(aContext.mStatus), aContext.mHTMLInputType, aContext.mActionHint);
     return NS_OK;
 }
 
@@ -1690,6 +1760,12 @@ nsWindow::OnIMEFocusChange(PRBool aFocus)
 
     AndroidBridge::NotifyIME(AndroidBridge::NOTIFY_IME_FOCUSCHANGE, 
                              int(aFocus));
+
+    if (aFocus) {
+        OnIMETextChange(0, 0, 0);
+        OnIMESelectionChange();
+    }
+
     return NS_OK;
 }
 
@@ -1699,25 +1775,22 @@ nsWindow::OnIMETextChange(PRUint32 aStart, PRUint32 aOldEnd, PRUint32 aNewEnd)
     ALOGIME("IME: OnIMETextChange: s=%d, oe=%d, ne=%d",
             aStart, aOldEnd, aNewEnd);
 
-    // A quirk in Android makes it necessary to pass the whole text
-    // from index 0 to index aNewEnd. The more efficient way would
-    // have been passing the substring from index aStart to index aNewEnd
+    // A quirk in Android makes it necessary to pass the whole text.
+    // The more efficient way would have been passing the substring from index
+    // aStart to index aNewEnd
 
-    if (aNewEnd > 0) {
-        nsQueryContentEvent event(PR_TRUE, NS_QUERY_TEXT_CONTENT, this);
-        InitEvent(event, nsnull);
-        event.InitForQueryTextContent(0, aNewEnd);
+    nsQueryContentEvent event(PR_TRUE, NS_QUERY_TEXT_CONTENT, this);
+    InitEvent(event, nsnull);
+    event.InitForQueryTextContent(0, PR_UINT32_MAX);
 
-        DispatchEvent(&event);
-        if (!event.mSucceeded)
-            return NS_OK;
+    DispatchEvent(&event);
+    if (!event.mSucceeded)
+        return NS_OK;
 
-        AndroidBridge::NotifyIMEChange(event.mReply.mString.get(),
-                                       event.mReply.mString.Length(),
-                                       aStart, aOldEnd, aNewEnd);
-    } else {
-        AndroidBridge::NotifyIMEChange(nsnull, 0, aStart, aOldEnd, aNewEnd);
-    }
+    AndroidBridge::NotifyIMEChange(event.mReply.mString.get(),
+                                   event.mReply.mString.Length(),
+                                   aStart, aOldEnd, aNewEnd);
+
     return NS_OK;
 }
 

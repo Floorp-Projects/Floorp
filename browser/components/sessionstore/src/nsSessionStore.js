@@ -367,10 +367,14 @@ SessionStoreService.prototype = {
 
   /**
    * Start tracking a window.
-   * Important note: despite its name, this function doesn't initialize
-   * the component!
+   * This function also initializes the component if it's not already
+   * initialized.
    */
   init: function sss_init(aWindow) {
+    // Initialize the service if needed.
+    if (!this._initialized)
+      this.initService();
+
     if (!aWindow || this._loadState == STATE_RUNNING) {
       // make sure that all browser windows which try to initialize
       // SessionStore are really tracked by it
@@ -385,10 +389,6 @@ SessionStoreService.prototype = {
         this._loadState = STATE_RUNNING;
       return;
     }
-
-    // Initialize the service if needed.
-    if (!this._initialized)
-      this.initService();
 
     // As this is called at delayedStartup, restoration must be initiated here
     this.onLoad(aWindow);
@@ -1459,6 +1459,15 @@ SessionStoreService.prototype = {
         tabData.pinned = true;
       else
         delete tabData.pinned;
+      tabData.hidden = aTab.hidden;
+
+      // If __SS_extdata is set then we'll use that since it might be newer.
+      if (aTab.__SS_extdata)
+        tabData.extData = aTab.__SS_extdata;
+      // If it exists but is empty then a key was likely deleted. In that case just
+      // delete extData.
+      if (tabData.extData && !Object.keys(tabData.extData).length)
+        delete tabData.extData;
       return tabData;
     }
     
@@ -2443,7 +2452,7 @@ SessionStoreService.prototype = {
 
       // Determine if we can optimize & load visible tabs first
       let maxVisibleTabs = Math.ceil(tabbrowser.tabContainer.mTabstrip.scrollClientSize /
-                                     aTabs[unhiddenTabs - 1].clientWidth);
+                                     aTabs[unhiddenTabs - 1].getBoundingClientRect().width);
 
       // make sure we restore visible tabs first, if there are enough
       if (maxVisibleTabs < unhiddenTabs && aSelectTab > 1) {
@@ -2493,6 +2502,10 @@ SessionStoreService.prototype = {
       // a tab gets closed before it's been properly restored
       browser.__SS_data = tabData;
       browser.__SS_restoreState = TAB_STATE_NEEDS_RESTORE;
+
+      // Make sure that set/getTabValue will set/read the correct data by
+      // wiping out any current value in tab.__SS_extdata.
+      delete tab.__SS_extdata;
 
       if (!tabData.entries || tabData.entries.length == 0) {
         // make sure to blank out this tab's content
@@ -2699,15 +2712,23 @@ SessionStoreService.prototype = {
     if (tabData.userTypedValue) {
       browser.userTypedValue = tabData.userTypedValue;
       if (tabData.userTypedClear) {
+        // Make it so that we'll enter restoreDocument on page load. We will
+        // fire SSTabRestored from there. We don't have any form data to restore
+        // so we can just set the URL to null.
+        browser.__SS_restore_data = { url: null };
+        browser.__SS_restore_tab = aTab;
         didStartLoad = true;
         browser.loadURI(tabData.userTypedValue, null, null, true);
       }
     }
 
     // If we didn't start a load, then we won't reset this tab through the usual
-    // channel (via the progress listener), so reset the tab ourselves.
-    if (!didStartLoad)
+    // channel (via the progress listener), so reset the tab ourselves. We will
+    // also send SSTabRestored since this tab has technically been restored.
+    if (!didStartLoad) {
+      this._sendTabRestoredNotification(aTab);
       this._resetTabRestoringState(aTab);
+    }
 
     return didStartLoad;
   },
@@ -2962,12 +2983,10 @@ SessionStoreService.prototype = {
       var content = aEvent.originalTarget.defaultView;
       restoreTextDataAndScrolling(content, aBrowser.__SS_restore_data, "");
       aBrowser.markupDocumentViewer.authorStyleDisabled = selectedPageStyle == "_nostyle";
-
-      // notify the tabbrowser that this document has been completely restored
-      var event = aBrowser.ownerDocument.createEvent("Events");
-      event.initEvent("SSTabRestored", true, false);
-      aBrowser.__SS_restore_tab.dispatchEvent(event);
     }
+
+    // notify the tabbrowser that this document has been completely restored
+    this._sendTabRestoredNotification(aBrowser.__SS_restore_tab);
 
     delete aBrowser.__SS_restore_data;
     delete aBrowser.__SS_restore_pageStyle;
@@ -3633,6 +3652,16 @@ SessionStoreService.prototype = {
         this._browserSetState = false;
       }
     }
+  },
+
+  /**
+   * Dispatch the SSTabRestored event for the given tab.
+   * @param aTab the which has been restored
+   */
+  _sendTabRestoredNotification: function sss__sendTabRestoredNotification(aTab) {
+      let event = aTab.ownerDocument.createEvent("Events");
+      event.initEvent("SSTabRestored", true, false);
+      aTab.dispatchEvent(event);
   },
 
   /**

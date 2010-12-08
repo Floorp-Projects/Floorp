@@ -48,8 +48,9 @@ NVIDIA HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #if !defined(__SCANNER_H)
 #define __SCANNER_H 1
 
-#define MAX_SYMBOL_NAME_LEN 128
-#define MAX_STRING_LEN 512
+// These lengths do not include the NULL terminator.
+#define MAX_SYMBOL_NAME_LEN 127
+#define MAX_STRING_LEN 511
 
 #include "compiler/preprocessor/parser.h"
 
@@ -58,8 +59,6 @@ NVIDIA HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 typedef struct SourceLoc_Rec {
     unsigned short file, line;
 } SourceLoc;
-
-int yyparse (void);
 
 int yylex_CPP(char* buf, int maxSize);
 

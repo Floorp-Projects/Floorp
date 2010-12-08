@@ -56,6 +56,7 @@ namespace dom {
 class AlertObserver;
 class PrefObserver;
 class ConsoleListener;
+class PStorageChild;
 
 class ContentChild : public PContentChild
 {
@@ -79,6 +80,9 @@ public:
     virtual PBrowserChild* AllocPBrowser(const PRUint32& aChromeFlags);
     virtual bool DeallocPBrowser(PBrowserChild*);
 
+    virtual PCrashReporterChild* AllocPCrashReporter();
+    virtual bool DeallocPCrashReporter(PCrashReporterChild*);
+
     virtual PTestShellChild* AllocPTestShell();
     virtual bool DeallocPTestShell(PTestShellChild*);
     virtual bool RecvPTestShellConstructor(PTestShellChild*);
@@ -99,6 +103,9 @@ public:
             const PRInt64& aContentLength,
             const IPC::URI& aReferrer);
     virtual bool DeallocPExternalHelperApp(PExternalHelperAppChild *aService);
+
+    virtual PStorageChild* AllocPStorage(const StorageConstructData& aData);
+    virtual bool DeallocPStorage(PStorageChild* aActor);
 
     virtual bool RecvRegisterChrome(const InfallibleTArray<ChromePackage>& packages,
                                     const InfallibleTArray<ResourceMapping>& resources,
@@ -123,6 +130,11 @@ public:
     virtual bool RecvAccelerationChanged(const double& x, const double& y,
                                          const double& z);
 
+    virtual bool RecvScreenSizeChanged(const gfxIntSize &size);
+#ifdef ANDROID
+    gfxIntSize GetScreenSize() { return mScreenSize; }
+#endif
+
 private:
     NS_OVERRIDE
     virtual void ActorDestroy(ActorDestroyReason why);
@@ -138,6 +150,9 @@ private:
 
     InfallibleTArray<nsAutoPtr<AlertObserver> > mAlertObservers;
     nsRefPtr<ConsoleListener> mConsoleListener;
+#ifdef ANDROID
+    gfxIntSize mScreenSize;
+#endif
 
     static ContentChild* sSingleton;
 

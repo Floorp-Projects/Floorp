@@ -108,6 +108,19 @@ Declaration::RemoveProperty(nsCSSProperty aProperty)
 }
 
 PRBool
+Declaration::HasProperty(nsCSSProperty aProperty) const
+{
+  NS_ABORT_IF_FALSE(0 <= aProperty &&
+                    aProperty < eCSSProperty_COUNT_no_shorthands,
+                    "property ID out of range");
+
+  nsCSSCompressedDataBlock *data = GetValueIsImportant(aProperty)
+                                      ? mImportantData : mData;
+  const nsCSSValue *val = data->ValueFor(aProperty);
+  return !!val;
+}
+
+PRBool
 Declaration::AppendValueToString(nsCSSProperty aProperty,
                                  nsAString& aResult) const
 {

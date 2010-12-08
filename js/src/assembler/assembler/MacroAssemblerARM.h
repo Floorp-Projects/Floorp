@@ -277,6 +277,7 @@ public:
 
     DataLabel32 load32WithAddressOffsetPatch(Address address, RegisterID dest)
     {
+        ASSERT(address.base != ARMRegisters::S0);
         DataLabel32 dataLabel(this);
         m_assembler.ldr_un_imm(ARMRegisters::S0, 0);
         m_assembler.dtr_ur(true, dest, address.base, ARMRegisters::S0);
@@ -285,6 +286,8 @@ public:
 
     DataLabel32 load64WithAddressOffsetPatch(Address address, RegisterID hi, RegisterID lo)
     {
+        ASSERT(address.base != ARMRegisters::S0);
+        ASSERT(lo != ARMRegisters::S0);
         DataLabel32 dataLabel(this);
         m_assembler.ldr_un_imm(ARMRegisters::S0, 0);
         m_assembler.add_r(ARMRegisters::S0, ARMRegisters::S0, address.base);
@@ -316,6 +319,7 @@ public:
 
     DataLabel32 store32WithAddressOffsetPatch(RegisterID src, Address address)
     {
+        ASSERT(address.base != ARMRegisters::S0);
         DataLabel32 dataLabel(this);
         m_assembler.ldr_un_imm(ARMRegisters::S0, 0);
         m_assembler.dtr_ur(false, src, address.base, ARMRegisters::S0);
@@ -324,6 +328,9 @@ public:
 
     DataLabel32 store64WithAddressOffsetPatch(RegisterID hi, RegisterID lo, Address address)
     {
+        ASSERT(hi != ARMRegisters::S0);
+        ASSERT(lo != ARMRegisters::S0);
+        ASSERT(address.base != ARMRegisters::S0);
         DataLabel32 dataLabel(this);
         m_assembler.ldr_un_imm(ARMRegisters::S0, 0);
         m_assembler.add_r(ARMRegisters::S0, ARMRegisters::S0, address.base);
@@ -334,9 +341,14 @@ public:
 
     DataLabel32 store64WithAddressOffsetPatch(Imm32 hi, RegisterID lo, Address address)
     {
+        ASSERT(lo != ARMRegisters::S0);
+        ASSERT(lo != ARMRegisters::S1);
+        ASSERT(lo != address.base);
+        ASSERT(address.base != ARMRegisters::S0);
+        ASSERT(address.base != ARMRegisters::S1);
         DataLabel32 dataLabel(this);
         m_assembler.ldr_un_imm(ARMRegisters::S0, 0);
-        m_assembler.getImm(hi.m_value, ARMRegisters::S1);
+        m_assembler.moveImm(hi.m_value, ARMRegisters::S1);
         m_assembler.add_r(ARMRegisters::S0, ARMRegisters::S0, address.base);
         m_assembler.dtr_u(false, lo, ARMRegisters::S0, 0);
         m_assembler.dtr_u(false, ARMRegisters::S1, ARMRegisters::S0, 4);
@@ -1056,10 +1068,22 @@ public:
         convertInt32ToDouble(ARMRegisters::S0, srcDest);
     }
 
+    void ensureSpace(int space)
+    {
+        m_assembler.ensureSpace(space);
+    }
+
     void forceFlushConstantPool()
     {
         m_assembler.forceFlushConstantPool();
     }
+
+#ifdef DEBUG
+    void allowPoolFlush(bool allowFlush)
+    {
+        m_assembler.allowPoolFlush(allowFlush);
+    }
+#endif
 
 protected:
     ARMAssembler::Condition ARMCondition(Condition cond)

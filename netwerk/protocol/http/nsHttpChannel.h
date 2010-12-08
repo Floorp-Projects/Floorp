@@ -63,6 +63,7 @@
 #include "nsITraceableChannel.h"
 #include "nsIHttpChannelAuthProvider.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
+#include "nsICryptoHash.h"
 
 class nsAHttpConnection;
 class AutoRedirectVetoNotifier;
@@ -264,6 +265,12 @@ private:
      */
     nsresult ProcessSTSHeader();
 
+    /**
+     * Computes and returns a 64 bit encoded string holding a hash of the
+     * input buffer. Input buffer must be a null-terminated string.
+     */
+    nsresult Hash(const char *buf, nsACString &hash);
+
 private:
     nsCOMPtr<nsISupports>             mSecurityInfo;
     nsCOMPtr<nsICancelable>           mProxyRequest;
@@ -341,6 +348,8 @@ private:
     PRUint32                          mRequestTimeInitialized : 1;
 
     nsTArray<nsContinueRedirectionFunc> mRedirectFuncStack;
+
+    nsCOMPtr<nsICryptoHash>        mHasher;
 
     nsresult WaitForRedirectCallback();
     void PushRedirectAsyncFunc(nsContinueRedirectionFunc func);

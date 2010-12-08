@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -14,7 +14,8 @@
  *
  * The Original Code is Mozilla Corporation code.
  *
- * The Initial Developer of the Original Code is Mozilla Corporation.
+ * The Initial Developer of the Original Code is
+ * the Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2009-2010
  * the Initial Developer. All Rights Reserved.
  *
@@ -709,7 +710,7 @@ gfxHarfBuzzShaper::InitTextRun(gfxContext *aContext,
         if (!sHBFontFuncs) {
             // static function callback pointers, initialized by the first
             // harfbuzz shaper used
-            sHBFontFuncs = hb_font_funcs_copy(hb_font_funcs_create());
+            sHBFontFuncs = hb_font_funcs_create();
             hb_font_funcs_set_glyph_func(sHBFontFuncs, HBGetGlyph);
             hb_font_funcs_set_glyph_advance_func(sHBFontFuncs,
                                                  HBGetGlyphAdvance);
@@ -717,7 +718,7 @@ gfxHarfBuzzShaper::InitTextRun(gfxContext *aContext,
                                                  HBGetContourPoint);
             hb_font_funcs_set_kerning_func(sHBFontFuncs, HBGetKerning);
 
-            sHBUnicodeFuncs = hb_unicode_funcs_copy(hb_unicode_funcs_create());
+            sHBUnicodeFuncs = hb_unicode_funcs_create();
             hb_unicode_funcs_set_mirroring_func(sHBUnicodeFuncs,
                                                 HBGetMirroring);
             hb_unicode_funcs_set_script_func(sHBUnicodeFuncs, HBGetScript);
@@ -869,8 +870,10 @@ gfxHarfBuzzShaper::InitTextRun(gfxContext *aContext,
         hb_buffer_reverse(buffer);
     }
 
-    nsresult rv = SetGlyphsFromRun(aContext, aTextRun, buffer,
-                                   aRunStart, aRunLength);
+#ifdef DEBUG
+    nsresult rv =
+#endif
+    SetGlyphsFromRun(aContext, aTextRun, buffer, aRunStart, aRunLength);
     NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "failed to store glyphs into textrun");
     hb_buffer_destroy(buffer);
     hb_font_destroy(font);
@@ -1067,20 +1070,20 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxContext *aContext,
         // and endCharIndex to the limit (position beyond the last char),
         // adjusting for the offset of the stringRange relative to the textRun.
         PRInt32 baseCharIndex, endCharIndex;
-        while (charEnd < aRunLength && charToGlyph[charEnd] == NO_GLYPH)
+        while (charEnd < PRInt32(aRunLength) && charToGlyph[charEnd] == NO_GLYPH)
             charEnd++;
         baseCharIndex = charStart;
         endCharIndex = charEnd;
 
         // Then we check if the clump falls outside our actual string range;
         // if so, just go to the next.
-        if (baseCharIndex >= aRunLength) {
+        if (baseCharIndex >= PRInt32(aRunLength)) {
             glyphStart = glyphEnd;
             charStart = charEnd;
             continue;
         }
         // Ensure we won't try to go beyond the valid length of the textRun's text
-        endCharIndex = PR_MIN(endCharIndex, aRunLength);
+        endCharIndex = NS_MIN<PRInt32>(endCharIndex, aRunLength);
 
         // Now we're ready to set the glyph info in the textRun
         PRInt32 glyphsInClump = glyphEnd - glyphStart;
@@ -1132,8 +1135,8 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxContext *aContext,
                     : NS_floor(hb2appUnits * x_offset + 0.5);
                 hb_position_t y_offset = posInfo[glyphStart].y_offset;
                 details->mYOffset = yPos -
-                    roundY ? dev2appUnits * FixedToIntRound(y_offset)
-                    : NS_floor(hb2appUnits * y_offset + 0.5);
+                    (roundY ? dev2appUnits * FixedToIntRound(y_offset)
+                     : NS_floor(hb2appUnits * y_offset + 0.5));
 
                 details->mAdvance = advance;
                 hb_position_t y_advance = posInfo[glyphStart].y_advance;
@@ -1162,7 +1165,8 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxContext *aContext,
 
         // the rest of the chars in the group are ligature continuations,
         // no associated glyphs
-        while (++baseCharIndex != endCharIndex && baseCharIndex < aRunLength) {
+        while (++baseCharIndex != endCharIndex &&
+               baseCharIndex < PRInt32(aRunLength)) {
             gfxTextRun::CompressedGlyph g;
             g.SetComplex(inOrder &&
                          aTextRun->IsClusterStart(aTextRunOffset + baseCharIndex),

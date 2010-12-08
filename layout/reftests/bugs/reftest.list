@@ -266,7 +266,7 @@ random == 99850-1b.html 99850-1-ref.html # bug 471629
 == 283686-2.html 283686-2-ref.html
 == 283686-3.html about:blank
 == 289384-1.xhtml 289384-ref.xhtml
-fails-if(gtk2Widget||d2d) HTTP == 289480.html#top 289480-ref.html # basically-verbatim acid2 test, HTTP for a 404 page -- bug 409329 for the non-Mac failures
+fails-if(d2d) HTTP == 289480.html#top 289480-ref.html # basically-verbatim acid2 test, HTTP for a 404 page -- bug 409329 for the non-Mac failures
 asserts(1) == 290129-1.html 290129-1-ref.html # bug 315549/460637
 == 291078-1.html 291078-1-ref.html
 == 291078-2.html 291078-2-ref.html
@@ -399,7 +399,7 @@ random == 328829-1.xhtml 328829-1-ref.xhtml # bug 369046 (intermittent)
 == 332360-width-ltr.html 332360-ltr-ref.html
 == 332557-1.html 332557-1-ref.html
 == 332975-1.html 332975-1-ref.html
-random-if(gtk2Widget) == 333970-1.html 333970-1-ref.html # bug 333970
+== 333970-1.html 333970-1-ref.html
 == 334829-1a.xhtml 334829-1-ref.xhtml
 == 334829-1b.xhtml 334829-1-ref.xhtml
 == 335628-1.html 335628-1-ref.html
@@ -561,10 +561,10 @@ fails-if(cocoaWidget) == 356774-1.html 356774-1-ref.html # probably bug 379317
 == 367612-1f.html 367612-1-ref.html
 != 367612-1g.html 367612-1-ref.html
 == 368020-1.html 368020-1-ref.html
-random == 368020-2.html 368020-2-ref.html # bug 403181 comment 52 explains why this test is disabled.
+== 368020-2.html 368020-2-ref.html
 fails == 368020-3.html 368020-3-ref.html # bug 368085
 fails == 368020-4.html 368020-4-ref.html # bug 368085
-random-if(gtk2Widget) == 368020-5.html 368020-5-ref.html # bug 388591
+== 368020-5.html 368020-5-ref.html
 == 368155-1.xhtml 368155-1-ref.xhtml
 asserts(4) == 368155-negative-margins-1.html 368155-negative-margins-1-ref.html # bug 387205 / bug 457397
 # we can't test this because there's antialiasing involved, and our comparison
@@ -650,8 +650,8 @@ fails == 374927-1.html 374927-1-ref.html # Was broken by patch for bug 368600; f
 random-if(cocoaWidget) == 379316-2.html 379316-2-ref.html # bug 379786
 == 379328-1.html 379328-1-ref.html
 == 379349-1a.xhtml 379349-1-ref.xhtml
-fails-if(d2d) == 379349-1b.xhtml 379349-1-ref.xhtml # bug 578116
-fails-if(d2d) == 379349-1c.xhtml 379349-1-ref.xhtml # bug 578116
+== 379349-1b.xhtml 379349-1-ref.xhtml
+== 379349-1c.xhtml 379349-1-ref.xhtml
 == 379349-2a.xhtml 379349-2-ref.xhtml
 == 379349-2b.xhtml 379349-2-ref.xhtml
 == 379349-3a.xhtml 379349-3-ref.xhtml
@@ -720,7 +720,7 @@ fails == 386147-1.html 386147-1-ref.html # bug 447460
 == 387227-2.html 387227-2-ref.html
 fails == 387344-1.html 387344-1-ref.html # scrolling rowgroups were removed in bug 28800
 == 387876-1.html 387876-1-ref.html
-random == 387876-2.html 387876-2-ref.html # bug 471630
+== 387876-2.html 387876-2-ref.html
 == 387876-3a.html 387876-3-ref.html
 == 387876-3b.html 387876-3-ref.html
 == 388026-1.html 388026-1-ref.html
@@ -972,7 +972,7 @@ asserts(1) == 418574-2.html 418574-2-ref.html # bug 478135
 == 421436-1a.html 421436-1-ref.html
 == 421436-1b.html 421436-1-ref.html
 == 421632-1.html 421632-1-ref.html
-asserts-if(gtk2Widget,4) != 421710-1.html about:blank     # assertion test (and crash test), asserts are bug 602426.
+asserts-if(gtk2Widget,4) asserts-if(winWidget,0-4) != 421710-1.html about:blank     # assertion test (and crash test), asserts are bug 602426.
 == 421885-1.xml 421885-1-ref.xml
 == 421955-1.html 421955-1-ref.html
 == 422249-1.html 422249-1-ref.html
@@ -1425,6 +1425,7 @@ asserts(5) == 528038-2.html 528038-2-ref.html # bug 512749
 == 539323-3.html 539323-3-ref.html
 == 539880-1.html 539880-1-ref.html
 == 539880-1-dynamic.html 539880-1-ref.html
+== 539949-1.html#test2 539949-1-ref.html#test2
 == 541382-1.html 541382-1-ref.html
 random-if(!haveTestPlugin) == 541406-1.html 541406-1-ref.html
 != 542116-1.html 542116-1-ref.html
@@ -1540,4 +1541,17 @@ fails-if(!haveTestPlugin) == 599476.html 599476-ref.html
 == 604737.html 604737-ref.html
 == 605138-1.html 605138-1-ref.html
 == 605157-1.xhtml 605157-1-ref.xhtml
+== 609272-1.html 609272-1-ref.html
 == 608636-1.html 608636-1-ref.html
+== 613433-1.html 613433-1-ref.html
+== 613433-1.html 613433-2-ref.html
+== 613433-1.html 613433-3-ref.html
+== 613433-2.html 613433-1-ref.html
+== 613433-2.html 613433-2-ref.html
+== 613433-2.html 613433-3-ref.html
+== 613433-3.html 613433-1-ref.html
+== 613433-3.html 613433-2-ref.html
+== 613433-3.html 613433-3-ref.html
+HTTP(..) == 615121-1.html 615121-1-ref.html
+HTTP(..) != 615121-2.html 615121-2-notref.html
+== 617242-1.html 617242-1-ref.html

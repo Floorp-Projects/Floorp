@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script>
+moz_indexedDB.open(parent.location).onsuccess = function(e) {
+  var db = e.result;
+  // This should never be called
+  db.onversionchange = function(e) {
+    db.transaction(["mystore"]).objectStore("mystore").put({ hello: "fail" }, 42);
+  }
+  db.setVersion("1.0").onsuccess = function(e) {
+    trans = e.transaction;
+    if (db.objectStoreNames.contains("mystore")) {
+      db.deleteObjectStore("mystore");
+    }
+    var store = db.createObjectStore("mystore", "");
+    store.add({ hello: "world" }, 42);
+    trans.oncomplete = function() {
+      parent.postMessage("go", "http://mochi.test:8888");
+    }
+  };
+};
+  </script>
+</head>
+<body>
+  This is page one.
+</body>
+</html>

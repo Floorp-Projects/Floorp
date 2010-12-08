@@ -18,6 +18,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
           src="../role.js"></script>
   <script type="application/javascript"
           src="../states.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript"
+          src="hyperlink.js"></script>
 
   <script type="application/javascript">
     function testThis(aID, aAcc, aRole, aAnchors, aName, aValid, aStartIndex,
@@ -36,15 +41,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
                                    + aID + "!");
     }
 
-    function testFocus(aID, aAcc, aSelectedBefore, aSelectedAfter)
-    {
-      is(aAcc.selected, aSelectedBefore,
-         "Wrong selected state before focus for ID " + aID + "!");
-      document.getElementById(aID).focus();
-      is(aAcc.selected, aSelectedAfter,
-         "Wrong seleccted state after focus for ID " + aID + "!");
-    }
-
     function testAction(aId, aAcc, aActionName)
     {
       var numActions = aActionName ? 1 : 0;
@@ -61,6 +57,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       }
     }
 
+    //gA11yEventDumpToConsole = true; // debug stuff
+
+    var gQueue = null;
     function doTest()
     {
       //////////////////////////////////////////////////////////////////////////
@@ -71,13 +70,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
                "Mozilla Foundation", true, 17, 18);
       is(normalHyperlinkAcc.getURI(0).spec, "http://www.mozilla.org/", 
          "URI wrong for normalHyperlinkElement!");
-      testStates(normalHyperlinkAcc,
-                 (STATE_FOCUSABLE | STATE_LINKED),
-                 (EXT_STATE_HORIZONTAL));
-      testFocus("NormalHyperlink", normalHyperlinkAcc, false, true);
-      testStates(normalHyperlinkAcc,
-                 (STATE_FOCUSABLE | STATE_FOCUSED | STATE_LINKED),
-                 (EXT_STATE_HORIZONTAL));
+      testStates(normalHyperlinkAcc, STATE_LINKED, EXT_STATE_HORIZONTAL);
 
       //////////////////////////////////////////////////////////////////////////
       // ARIA hyperlink
@@ -85,13 +78,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
                                            [nsIAccessibleHyperLink]);
       testThis("AriaHyperlink", ariaHyperlinkAcc, ROLE_LINK, 1,
                "Mozilla Foundation Home", true, 30, 31);
-      testStates(ariaHyperlinkAcc,
-                 (STATE_FOCUSABLE | STATE_LINKED),
-                 (EXT_STATE_HORIZONTAL));
-      testFocus("AriaHyperlink", ariaHyperlinkAcc, false, true);
-      testStates(ariaHyperlinkAcc,
-                 (STATE_FOCUSABLE | STATE_FOCUSED | STATE_LINKED),
-                 (EXT_STATE_HORIZONTAL));
+      testStates(ariaHyperlinkAcc, STATE_LINKED, EXT_STATE_HORIZONTAL);
       testAction("AriaHyperlink", ariaHyperlinkAcc, "click");
 
       //////////////////////////////////////////////////////////////////////////
@@ -99,11 +86,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       var invalidAriaHyperlinkAcc = getAccessible("InvalidAriaHyperlink",
                                                   [nsIAccessibleHyperLink]);
       is(invalidAriaHyperlinkAcc.valid, false, "Should not be valid!");
-      testStates(invalidAriaHyperlinkAcc,
-                 (STATE_LINKED),
-                 (EXT_STATE_HORIZONTAL), (STATE_FOCUSABLE));
-      testFocus("InvalidAriaHyperlink", invalidAriaHyperlinkAcc,
-                false, false);
+      testStates(invalidAriaHyperlinkAcc, STATE_LINKED, EXT_STATE_HORIZONTAL);
 
       //////////////////////////////////////////////////////////////////////////
       // image map and its link children
@@ -151,13 +134,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
                "Heise Online", true, 119, 120);
       is(hyperlinkWithSpanAcc.getURI(0).spec, "http://www.heise.de/", 
          "URI wrong for hyperlinkElementWithSpan!");
-      testStates(hyperlinkWithSpanAcc,
-                 (STATE_FOCUSABLE | STATE_LINKED),
-               (EXT_STATE_HORIZONTAL));
-      testFocus("LinkWithSpan", hyperlinkWithSpanAcc, false, true);
-      testStates(hyperlinkWithSpanAcc,
-                 (STATE_FOCUSABLE | STATE_FOCUSED | STATE_LINKED),
-                 (EXT_STATE_HORIZONTAL));
+      testStates(hyperlinkWithSpanAcc, STATE_LINKED, EXT_STATE_HORIZONTAL);
       testAction("LinkWithSpan", hyperlinkWithSpanAcc, "jump");
 
       //////////////////////////////////////////////////////////////////////////
@@ -247,7 +224,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
                              [nsIAccessibleHyperLink]);
       ok(!res, "Text accessible shouldn't implement nsIAccessibleHyperLink");
 
-      SimpleTest.finish();
+      //////////////////////////////////////////////////////////////////////////
+      // Test focus
+      gQueue = new eventQueue();
+
+      gQueue.push(new focusLink("NormalHyperlink", true));
+      gQueue.push(new focusLink("AriaHyperlink", true));
+      gQueue.push(new focusLink("InvalidAriaHyperlink", false));
+      gQueue.push(new focusLink("LinkWithSpan", true));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
     }
 
     SimpleTest.waitForExplicitFinish();

@@ -37,8 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 function run_test() {
-  do_test_pending();
-
   let exceptionCaught = false;
   try {
     PlacesUtils.favicons.setAndLoadFaviconForPage(
@@ -59,13 +57,4 @@ function run_test() {
     exceptionCaught = true;
   }
   do_check_true(exceptionCaught, "should throw because page param is null");
-
-  PlacesUtils.favicons.setAndLoadFaviconForPage(
-    uri("http://www.google.com"), uri("http://www.google.com/favicon.ico"),
-    false, continue_test
-  );
-}
-
-function continue_test(aFaviconData) {
-  do_test_finished();
 }
