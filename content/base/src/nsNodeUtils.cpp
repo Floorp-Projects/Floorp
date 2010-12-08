@@ -444,14 +444,15 @@ nsNodeUtils::CloneNodeImpl(nsINode *aNode, PRBool aDeep, nsIDOMNode **aResult)
 nsresult
 nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
                            nsNodeInfoManager *aNewNodeInfoManager,
-                           JSContext *aCx, JSObject *aNewScope,
+                           JSContext *aCx, JSObject *aOldScope,
+                           JSObject *aNewScope,
                            nsCOMArray<nsINode> &aNodesWithProperties,
                            nsINode *aParent, nsINode **aResult)
 {
   NS_PRECONDITION((!aClone && aNewNodeInfoManager) || !aCx,
                   "If cloning or not getting a new nodeinfo we shouldn't "
                   "rewrap");
-  NS_PRECONDITION(!aCx || aNewScope, "Must have new scope");
+  NS_PRECONDITION(!aCx || (aOldScope && aNewScope), "Must have scopes");
   NS_PRECONDITION(!aParent || aNode->IsNodeOfType(nsINode::eCONTENT),
                   "Can't insert document or attribute nodes into a parent");
 
@@ -462,8 +463,7 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
   // attributes and children).
 
   nsresult rv;
-  JSObject *wrapper;
-  if (aCx && (wrapper = aNode->GetWrapper())) {
+  if (aCx) {
       rv = xpc_MorphSlimWrapper(aCx, aNode);
       NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -582,9 +582,11 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
       elem->RecompileScriptEventListeners();
     }
 
-    if (aCx && wrapper) {
+    if (aCx) {
       nsIXPConnect *xpc = nsContentUtils::XPConnect();
       if (xpc) {
+        nsWrapperCache *cache;
+        CallQueryInterface(aNode, &cache);
         JSObject *preservedWrapper = nsnull;
 
         // If reparenting moves us to a new compartment, preserving causes
@@ -592,17 +594,17 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
         // reparenting so we're sure to have the right JS object preserved.
         // We use a JSObject stack copy of the wrapper to protect it from GC
         // under ReparentWrappedNativeIfFound.
-        if (aNode->PreservingWrapper()) {
-          preservedWrapper = wrapper;
-          nsContentUtils::ReleaseWrapper(aNode, aNode);
+        if (cache && cache->PreservingWrapper()) {
+          preservedWrapper = cache->GetWrapper();
+          nsContentUtils::ReleaseWrapper(aNode, cache);
         }
 
         nsCOMPtr<nsIXPConnectJSObjectHolder> oldWrapper;
-        rv = xpc->ReparentWrappedNativeIfFound(aCx, wrapper, aNewScope, aNode,
+        rv = xpc->ReparentWrappedNativeIfFound(aCx, aOldScope, aNewScope, aNode,
                                                getter_AddRefs(oldWrapper));
 
         if (preservedWrapper) {
-          nsContentUtils::PreserveWrapper(aNode, aNode);
+          nsContentUtils::PreserveWrapper(aNode, cache);
         }
 
         if (NS_FAILED(rv)) {
@@ -646,8 +648,8 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
     for (i = 0; i < length; ++i) {
       nsCOMPtr<nsINode> child;
       rv = CloneAndAdopt(aNode->GetChildAt(i), aClone, PR_TRUE, nodeInfoManager,
-                         aCx, aNewScope, aNodesWithProperties, clone,
-                         getter_AddRefs(child));
+                         aCx, aOldScope, aNewScope, aNodesWithProperties,
+                         clone, getter_AddRefs(child));
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
