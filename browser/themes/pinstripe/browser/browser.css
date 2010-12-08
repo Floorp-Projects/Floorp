@@ -2262,6 +2262,10 @@ panel[dimmed="true"] {
   -moz-appearance: none;
 }
 
+#addon-bar {
+  -moz-appearance: statusbar;
+}
+
 browser[tabmodalPromptShowing] {
   filter: url("chrome://browser/skin/effects.svg#blurAndDesaturate");
 }
