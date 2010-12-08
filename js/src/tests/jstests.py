@@ -229,6 +229,8 @@ if __name__ == '__main__':
                   help='write tests that have not passed to the given file')
     op.add_option('--run-slow-tests', dest='run_slow_tests', action='store_true',
                   help='run particularly slow tests as well as average-speed tests')
+    op.add_option('--xul-info', dest='xul_info_src',
+                  help='config data for xulRuntime (avoids search for config/autoconf.mk)')
     (OPTIONS, args) = op.parse_args()
     if len(args) < 1:
         if not OPTIONS.check_manifest:
@@ -279,7 +281,12 @@ if __name__ == '__main__':
     if JS is None:
         xul_tester = manifest.NullXULInfoTester()
     else:
-        xul_info = manifest.XULInfo.create(JS)
+        if OPTIONS.xul_info_src is None:
+            xul_info = manifest.XULInfo.create(JS)
+        else:
+            xul_abi, xul_os, xul_debug = OPTIONS.xul_info_src.split(r':')
+            xul_debug = xul_debug.lower() is 'true'
+            xul_info = manifest.XULInfo(xul_abi, xul_os, xul_debug)
         xul_tester = manifest.XULInfoTester(xul_info, JS)
     test_list = manifest.parse(OPTIONS.manifest, xul_tester)
 
