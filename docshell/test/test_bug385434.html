@@ -25,7 +25,6 @@ SimpleTest.waitForExplicitFinish();
 
 var gNumHashchanges = 0;
 var gCallbackOnIframeLoad = false;
-var gCallbackOnHashchange = false;
 
 function statusMsg(msg) {
   var msgElem = document.createElement("p");
@@ -43,14 +42,7 @@ function longWait() {
 // event which was fired.
 function onIframeHashchange() {
   gNumHashchanges++;
-  if (gCallbackOnHashchange) {
-    gCallbackOnHashchange = false;
-    gGen.next();
-  }
-}
-
-function enableHashchangeCallback() {
-  gCallbackOnHashchange = true;
+  gGen.next();
 }
 
 function onIframeLoad() {
@@ -121,35 +113,36 @@ function run_test() {
 
   noEventExpected("No hashchange expected initially.");
 
-  enableHashchangeCallback();
   sendMouseEvent({type: "click"}, "link1", frameCw);
   yield;
   eventExpected("Clicking link1 should trigger a hashchange.");
 
-  enableHashchangeCallback();
   sendMouseEvent({type: "click"}, "link1", frameCw);
   longWait();
   yield;
   // succeed if a hashchange event wasn't triggered while we were waiting
   noEventExpected("Clicking link1 again should not trigger a hashchange.");
 
-  enableHashchangeCallback();
   sendMouseEvent({type: "click"}, "link2", frameCw);
   yield;
   eventExpected("Clicking link2 should trigger a hashchange.");
 
   frameCw.history.go(-1);
+  yield;
   eventExpected("Going back should trigger a hashchange.");
 
   frameCw.history.go(1);
+  yield;
   eventExpected("Going forward should trigger a hashchange.");
 
   frameCw.window.location.hash = "";
+  yield;
   eventExpected("Changing window.location.hash should trigger a hashchange.");
 
   // window.location has a trailing '#' right now, so we append "link1", not
   // "#link1".
   frameCw.window.location = frameCw.window.location + "link1";
+  yield;
   eventExpected("Assigning to window.location should trigger a hashchange.");
 
   // Set up history in the iframe which looks like:
@@ -184,8 +177,9 @@ function run_test() {
   yield;
 
   frameCw.document.location = "file_bug385434_2.html#foo";
-  eventExpected("frame onhashchange should fire events.");
+  yield;
 
+  eventExpected("frame onhashchange should fire events.");
   // iframe should set gSampleEvent
   is(gSampleEvent.target, frameCw,
      "The hashchange event should be targeted to the window.");
@@ -201,7 +195,6 @@ function run_test() {
    *     hashchange is dispatched if the current document readyState is
    *     not "complete" (bug 504837).
    */
-  enableHashchangeCallback();
   frameCw.document.location = "file_bug385434_3.html";
   yield;
   eventExpected("Hashchange should fire even if the document " +

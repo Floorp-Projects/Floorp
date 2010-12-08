@@ -105,6 +105,7 @@ public:
     virtual bool RecvSetInputMode(const PRUint32& aValue, const nsString& aType, const nsString& aAction);
     virtual bool RecvGetIMEOpenState(PRBool* aValue);
     virtual bool RecvSetIMEOpenState(const PRBool& aValue);
+    virtual bool RecvGetDPI(float* aValue);
     virtual PContentDialogParent* AllocPContentDialog(const PRUint32& aType,
                                                       const nsCString& aName,
                                                       const nsCString& aFeatures,
@@ -115,6 +116,7 @@ public:
       delete aDialog;
       return true;
     }
+
 
     void LoadURL(nsIURI* aURI);
     // XXX/cjones: it's not clear what we gain by hiding these

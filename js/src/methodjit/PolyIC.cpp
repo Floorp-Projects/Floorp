@@ -1477,17 +1477,16 @@ class ScopeNameCompiler : public PICStubCompiler
             return false;
         }
 
-        if (!obj->isNative() || !holder->isNative()) {
-            if (!obj->getProperty(cx, ATOM_TO_JSID(atom), vp))
-                return false;
-        } else {
-            const Shape *shape = getprop.shape;
-            JS_ASSERT(shape);
-            JSObject *normalized = obj;
-            if (obj->getClass() == &js_WithClass && !shape->hasDefaultGetter())
-                normalized = js_UnwrapWithObject(cx, obj);
-            NATIVE_GET(cx, normalized, holder, shape, JSGET_METHOD_BARRIER, vp, return false);
-        }
+        // If the property was found, but we decided not to cache it, then
+        // take a slow path and do a full property fetch.
+        if (!getprop.shape)
+            return obj->getProperty(cx, ATOM_TO_JSID(atom), vp);
+
+        const Shape *shape = getprop.shape;
+        JSObject *normalized = obj;
+        if (obj->getClass() == &js_WithClass && !shape->hasDefaultGetter())
+            normalized = js_UnwrapWithObject(cx, obj);
+        NATIVE_GET(cx, normalized, holder, shape, JSGET_METHOD_BARRIER, vp, return false);
 
         return true;
     }
@@ -1551,6 +1550,8 @@ class BindNameCompiler : public PICStubCompiler
             masm.loadShape(pic.objReg, pic.shapeReg);
             Jump shapeTest = masm.branch32(Assembler::NotEqual, pic.shapeReg,
                                            Imm32(tobj->shape()));
+            if (!fails.append(shapeTest))
+                return error();
             tobj = tobj->getParent();
         }
         if (tobj != obj)
@@ -2397,24 +2398,21 @@ SetElementIC::attachHoleStub(JSContext *cx, JSObject *obj, int32 keyval)
 
     Assembler masm;
 
-    // Test for indexed properties in Array.prototype. It is safe to bake in
-    // this pointer because changing __proto__ will slowify.
-    JSObject *arrayProto = obj->getProto();
-    masm.move(ImmPtr(arrayProto), objReg);
-    Jump extendedArray = masm.branchTest32(Assembler::NonZero,
-                                           Address(objReg, offsetof(JSObject, flags)),
-                                           Imm32(JSObject::INDEXED));
+    Vector<Jump, 4> fails(cx);
 
-    // Text for indexed properties in Object.prototype. Guard that
-    // Array.prototype doesn't change, too.
-    JSObject *objProto = arrayProto->getProto();
-    Jump sameProto = masm.branchPtr(Assembler::NotEqual,
-                                    Address(objReg, offsetof(JSObject, proto)),
-                                    ImmPtr(objProto));
-    masm.move(ImmPtr(objProto), objReg);
-    Jump extendedObject = masm.branchTest32(Assembler::NonZero,
-                                            Address(objReg, offsetof(JSObject, flags)),
-                                            Imm32(JSObject::INDEXED));
+    // Test for indexed properties in Array.prototype. We test each shape
+    // along the proto chain. This affords us two optimizations:
+    //  1) Loading the prototype can be avoided because the shape would change;
+    //     instead we can bake in their identities.
+    //  2) We only have to test the shape, rather than INDEXED.
+    for (JSObject *pobj = obj->getProto(); pobj; pobj = pobj->getProto()) {
+        if (!pobj->isNative())
+            return disable(cx, "non-native array prototype");
+        masm.move(ImmPtr(pobj), objReg);
+        Jump j = masm.guardShape(objReg, pobj);
+        if (!fails.append(j))
+            return error(cx);
+    }
 
     // Restore |obj|.
     masm.rematPayload(StateRemat::FromInt32(objRemat), objReg);
@@ -2462,9 +2460,8 @@ SetElementIC::attachHoleStub(JSContext *cx, JSObject *obj, int32 keyval)
         return disable(cx, "code memory is out of range");
 
     // Patch all guards.
-    buffer.link(extendedArray, slowPathStart);
-    buffer.link(sameProto, slowPathStart);
-    buffer.link(extendedObject, slowPathStart);
+    for (size_t i = 0; i < fails.length(); i++)
+        buffer.link(fails[i], slowPathStart);
     buffer.link(done, fastPathRejoin);
 
     CodeLocationLabel cs = buffer.finalize();

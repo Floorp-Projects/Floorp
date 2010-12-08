@@ -120,8 +120,6 @@ public:
   virtual void Trace(TraceCallback aCallback, void *aClosure) const = 0;
 
 protected:
-  friend class nsAutoGCRoot;
-  
   nsXBLProtoImplMember* mNext;  // The members of an implementation are chained.
   PRUnichar* mName;               // The name of the field, method, or property.
 };

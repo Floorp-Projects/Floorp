@@ -170,7 +170,7 @@ public:
    * This method is called to notify this DOM object that it is about to be
    * removed from its current DOM list so that it can first make a copy of its
    * internal counterpart's values. (If it didn't do this, then it would
-   * "loose" its value on being removed.)
+   * "lose" its value on being removed.)
    */
   void RemovingFromList();
 
@@ -198,12 +198,16 @@ private:
    * Get a reference to the internal SVGLength list item that this DOM wrapper
    * object currently wraps.
    *
-   * To simplyfy the code we just have this one method for obtaining both
+   * To simplify the code we just have this one method for obtaining both
    * baseVal and animVal internal items. This means that animVal items don't
    * get const protection, but then our setter methods guard against changing
    * animVal items.
    */
   SVGLength& InternalItem();
+
+#ifdef DEBUG
+  PRBool IndexIsValid();
+#endif
 
   nsRefPtr<DOMSVGLengthList> mList;
 

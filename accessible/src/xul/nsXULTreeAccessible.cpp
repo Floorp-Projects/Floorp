@@ -596,26 +596,18 @@ nsXULTreeAccessible::TreeViewChanged()
   if (IsDefunct())
     return;
 
-  // Fire only notification destroy/create events on accessible tree to lie to
-  // AT because it should be expensive to fire destroy events for each tree item
-  // in cache.
-  nsRefPtr<AccEvent> eventDestroy =
-    new AccEvent(nsIAccessibleEvent::EVENT_HIDE, this);
-  if (!eventDestroy)
-    return;
+  // Fire reorder event on tree accessible on accessible tree (do not fire
+  // show/hide events on tree items because it can be expensive to fire them for
+  // each tree item.
+  nsRefPtr<AccEvent> reorderEvent =
+    new AccEvent(nsIAccessibleEvent::EVENT_REORDER, this, eAutoDetect,
+                 AccEvent::eCoalesceFromSameSubtree);
+  if (reorderEvent)
+    GetDocAccessible()->FireDelayedAccessibleEvent(reorderEvent);
 
-  FirePlatformEvent(eventDestroy);
-
+  // Clear cache.
   ClearCache(mAccessibleCache);
-
   mTree->GetView(getter_AddRefs(mTreeView));
-
-  nsRefPtr<AccEvent> eventCreate =
-    new AccEvent(nsIAccessibleEvent::EVENT_SHOW, this);
-  if (!eventCreate)
-    return;
-
-  FirePlatformEvent(eventCreate);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

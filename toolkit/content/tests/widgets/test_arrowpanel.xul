@@ -48,6 +48,7 @@ function nextTest()
     expectedSide = expected;
     expectedAnchorEdge = anchorEdge;
 
+    panel.removeAttribute("side");
     panel.openPopup(expectedAnchor, position, 0, 0, false, false, null);
   }
 
@@ -95,6 +96,24 @@ function nextTest()
   openPopup("end_before", "bottomright", "right", "bottom");
   yield;
 
+  openPopup("topcenter bottomleft", "bottomleft", "bottom", "center left");
+  yield;
+  openPopup("bottomcenter topleft", "topleft", "top", "center left");
+  yield;
+  openPopup("topcenter bottomright", "bottomright", "bottom", "center right");
+  yield;
+  openPopup("bottomcenter topright", "topright", "top", "center right");
+  yield;
+  openPopup("topcenter bottomleft", "middle", "bottom", "center left");
+  yield;
+  openPopup("bottomcenter topleft", "middle", "top", "center left");
+  yield;
+
+  openPopup("leftcenter topright", "middle", "right", "center top");
+  yield;
+  openPopup("rightcenter bottomleft", "middle", "left", "center bottom");
+  yield;
+
   SimpleTest.finish();
   yield;
 }
@@ -120,18 +139,37 @@ function checkPanelPosition(panel)
       break;
   }
 
+  let iscentered = false;
+  if (expectedAnchorEdge.indexOf("center ") == 0) {
+    expectedAnchorEdge = expectedAnchorEdge.substring(7);
+    iscentered = true;
+  }
+
+  let adj;
   switch (expectedAnchorEdge) {
     case "top":
-      is(panelRect.top, anchorRect.top, "anchored on top");
+      adj = parseInt(getComputedStyle(panel, "").marginTop);
+      if (iscentered)
+        adj += anchorRect.height / 2;
+      is(Math.round(panelRect.top), Math.round(anchorRect.top + adj), "anchored on top");
       break;
     case "bottom":
-      is(panelRect.bottom, anchorRect.bottom, "anchored on bottom");
+      adj = parseInt(getComputedStyle(panel, "").marginBottom);
+      if (iscentered)
+        adj += anchorRect.height / 2;
+      is(Math.round(panelRect.bottom), Math.round(anchorRect.bottom - adj), "anchored on bottom");
       break;
     case "left":
-      is(panelRect.left, anchorRect.left, "anchored on left");
+      adj = parseInt(getComputedStyle(panel, "").marginLeft);
+      if (iscentered)
+        adj += anchorRect.width / 2;
+      is(Math.round(panelRect.left), Math.round(anchorRect.left + adj), "anchored on left ");
       break;
     case "right":
-      is(panelRect.right, anchorRect.right, "anchored on right");
+      adj = parseInt(getComputedStyle(panel, "").marginRight);
+      if (iscentered)
+        adj += anchorRect.width / 2;
+      is(Math.round(panelRect.right), Math.round(anchorRect.right - adj), "anchored on right");
       break;
   }
 

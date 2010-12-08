@@ -42,6 +42,7 @@
 #define jsobjinlines_h___
 
 #include <new>
+#include "jsarray.h"
 #include "jsdate.h"
 #include "jsfun.h"
 #include "jsiter.h"
@@ -191,11 +192,13 @@ inline bool
 JSObject::methodWriteBarrier(JSContext *cx, const js::Shape &shape, const js::Value &v)
 {
     if (flags & (BRANDED | METHOD_BARRIER)) {
-        const js::Value &prev = nativeGetSlot(shape.slot);
+        if (shape.slot != SHAPE_INVALID_SLOT) {
+            const js::Value &prev = nativeGetSlot(shape.slot);
 
-        if (ChangesMethodValue(prev, v)) {
-            JS_FUNCTION_METER(cx, mwritebarrier);
-            return methodShapeChange(cx, shape);
+            if (ChangesMethodValue(prev, v)) {
+                JS_FUNCTION_METER(cx, mwritebarrier);
+                return methodShapeChange(cx, shape);
+            }
         }
     }
     return true;
@@ -253,10 +256,10 @@ JSObject::setPrimitiveThis(const js::Value &pthis)
     setSlot(JSSLOT_PRIMITIVE_THIS, pthis);
 }
 
-inline js::gc::FinalizeKind
-GetObjectFinalizeKind(const JSObject *obj)
+inline /* gc::FinalizeKind */ unsigned
+JSObject::finalizeKind() const
 {
-    return js::gc::FinalizeKind(obj->arena()->header()->thingKind);
+    return js::gc::FinalizeKind(arena()->header()->thingKind);
 }
 
 inline size_t
@@ -266,7 +269,7 @@ JSObject::numFixedSlots() const
         return JSObject::FUN_CLASS_RESERVED_SLOTS;
     if (!hasSlotsArray())
         return capacity;
-    return js::gc::GetGCKindSlots(GetObjectFinalizeKind(this));
+    return js::gc::GetGCKindSlots(js::gc::FinalizeKind(finalizeKind()));
 }
 
 inline size_t
@@ -307,21 +310,6 @@ JSObject::getDenseArrayCapacity()
     return numSlots();
 }
 
-inline uint32
-JSObject::getDenseArrayInitializedLength()
-{
-    JS_ASSERT(isDenseArray());
-    return initializedLength;
-}
-
-inline void
-JSObject::setDenseArrayInitializedLength(uint32 length)
-{
-    JS_ASSERT(isDenseArray());
-    JS_ASSERT(length <= getDenseArrayCapacity() && length <= getArrayLength());
-    initializedLength = length;
-}
-
 inline js::Value*
 JSObject::getDenseArrayElements()
 {
@@ -350,35 +338,11 @@ JSObject::setDenseArrayElement(uintN idx, const js::Value &val)
     setSlot(idx, val);
 }
 
-inline bool
-JSObject::ensureDenseArrayElements(JSContext *cx, uintN cap)
-{
-    JS_ASSERT(isDenseArray());
-    return ensureSlots(cx, cap);
-}
-
 inline void
 JSObject::shrinkDenseArrayElements(JSContext *cx, uintN cap)
 {
     JS_ASSERT(isDenseArray());
     shrinkSlots(cx, cap);
-}
-
-inline bool
-JSObject::isPackedDenseArray()
-{
-    JS_ASSERT(isDenseArray());
-    return flags & PACKED_ARRAY;
-}
-
-inline void
-JSObject::setDenseArrayNotPacked(JSContext *cx)
-{
-    JS_ASSERT(isDenseArray());
-    if (flags & PACKED_ARRAY) {
-        flags ^= PACKED_ARRAY;
-        cx->markTypeArrayNotPacked(getTypeObject(), false);
-    }
 }
 
 inline void
@@ -1148,7 +1112,7 @@ CopyInitializerObject(JSContext *cx, JSObject *baseobj, types::TypeObject *type)
     JS_ASSERT(baseobj->getClass() == &js_ObjectClass);
     JS_ASSERT(!baseobj->inDictionaryMode());
 
-    gc::FinalizeKind kind = GetObjectFinalizeKind(baseobj);
+    gc::FinalizeKind kind = gc::FinalizeKind(baseobj->finalizeKind());
     JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass, type, kind);
 
     if (!obj || !obj->ensureSlots(cx, baseobj->numSlots()))

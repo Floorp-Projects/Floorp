@@ -11,6 +11,8 @@ var gMessagesExpected = [
   { line: 2, message: /Malformed CID/, found: false },
   { line: 6, message: /re-register/, found: false },
   { line: 9, message: /Could not/, found: false },
+  { line: 2, message: /binary component twice/, found: false },
+  { line: 3, message: /binary component twice/, found: false },
 ];
 
 const kConsoleListener = {
@@ -56,6 +58,8 @@ function run_test()
   var manifest = do_get_file('compmgr_warnings.manifest');
   Components.manager.QueryInterface(Ci.nsIComponentRegistrar).
     autoRegister(manifest);
+  manifest = do_get_file('testcomponent.manifest');
+  Components.manager.autoRegister(manifest);
 
   run_deferred_event(function() {
     cs.unregisterListener(kConsoleListener);

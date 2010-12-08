@@ -5991,7 +5991,8 @@ BEGIN_CASE(JSOP_NEWARRAY)
     TypeObject *type = script->getTypeInitObject(cx, regs.pc, true);
     JSObject *obj = js_NewArrayObject(cx, count, NULL, type);
 
-    if (!obj || !obj->ensureDenseArrayElements(cx, count))
+    /* Avoid ensureDenseArrayElements to skip sparse array checks there. */
+    if (!obj || !obj->ensureSlots(cx, count))
         goto error;
 
     PUSH_OBJECT(*obj);

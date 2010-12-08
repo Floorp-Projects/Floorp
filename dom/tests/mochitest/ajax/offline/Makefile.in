@@ -63,6 +63,7 @@ _TEST_FILES	= \
 	test_bug445544.html \
 	test_bug460353.html \
 	test_bug474696.html \
+	test_bug544462.html \
 	test_foreign.html \
 	test_fallback.html \
 	test_overlap.html \
@@ -109,6 +110,8 @@ _TEST_FILES	= \
 	redirects.sjs \
 	simpleManifest.cacheManifest \
 	simpleManifest.cacheManifest^headers^ \
+	wildcardManifest.cacheManifest \
+	wildcardManifest.cacheManifest^headers^ \
 	updatingManifest.sjs \
 	simpleManifest.notmanifest \
 	changing1Sec.sjs \
@@ -118,6 +121,7 @@ _TEST_FILES	= \
 	test_xhtmlManifest.xhtml \
 	test_missingManifest.html \
 	missing.html \
+	jupiter.jpg \
 	$(NULL)
 
 libs::	$(_TEST_FILES)

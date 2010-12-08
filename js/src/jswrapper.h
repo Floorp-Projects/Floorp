@@ -103,6 +103,14 @@ class JS_FRIEND_API(JSWrapper) : public js::JSProxyHandler {
     static inline JSObject *wrappedObject(const JSObject *wrapper) {
         return wrapper->getProxyPrivate().toObjectOrNull();
     }
+    static inline JSWrapper *wrapperHandler(const JSObject *wrapper) {
+        return static_cast<JSWrapper *>(wrapper->getProxyHandler());
+    }
+
+    enum {
+        CROSS_COMPARTMENT = 1 << 0,
+        LAST_USED_FLAG = CROSS_COMPARTMENT
+    };
 
     static void *getWrapperFamily();
 };

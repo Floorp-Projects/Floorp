@@ -42,9 +42,108 @@
 /*
  * JS Array interface.
  */
+#include "jscntxt.h"
 #include "jsprvtd.h"
 #include "jspubtd.h"
 #include "jsobj.h"
+
+/* Small arrays are dense, no matter what. */
+const uintN MIN_SPARSE_INDEX = 256;
+
+inline uint32
+JSObject::getDenseArrayInitializedLength()
+{
+    JS_ASSERT(isDenseArray());
+    return initializedLength;
+}
+
+inline void
+JSObject::setDenseArrayInitializedLength(uint32 length)
+{
+    JS_ASSERT(isDenseArray());
+    JS_ASSERT(length <= getDenseArrayCapacity());
+    initializedLength = length;
+}
+
+inline bool
+JSObject::isPackedDenseArray()
+{
+    JS_ASSERT(isDenseArray());
+    return flags & PACKED_ARRAY;
+}
+
+inline void
+JSObject::setDenseArrayNotPacked(JSContext *cx)
+{
+    JS_ASSERT(isDenseArray());
+    if (flags & PACKED_ARRAY) {
+        flags ^= PACKED_ARRAY;
+        cx->markTypeArrayNotPacked(getTypeObject(), false);
+    }
+}
+
+inline JSObject::EnsureDenseResult
+JSObject::ensureDenseArrayElements(JSContext *cx, uintN index, uintN extra)
+{
+    JS_ASSERT(isDenseArray());
+    uintN currentCapacity = numSlots();
+    uintN initLength = getDenseArrayInitializedLength();
+
+    uintN requiredCapacity;
+    if (extra == 1) {
+        /* Optimize for the common case. */
+        if (index < initLength)
+            return ED_OK;
+        if (index < currentCapacity) {
+            if (index > initLength) {
+                ClearValueRange(getSlots() + initLength, index - initLength, true);
+                setDenseArrayNotPacked(cx);
+            }
+            setDenseArrayInitializedLength(index + 1);
+            return ED_OK;
+        }
+        requiredCapacity = index + 1;
+        if (requiredCapacity == 0) {
+            /* Overflow. */
+            return ED_SPARSE;
+        }
+    } else {
+        requiredCapacity = index + extra;
+        if (requiredCapacity < index) {
+            /* Overflow. */
+            return ED_SPARSE;
+        }
+        if (requiredCapacity <= initLength)
+            return ED_OK;
+        if (requiredCapacity <= currentCapacity) {
+            if (index > initLength) {
+                ClearValueRange(getSlots() + initLength, index - initLength, true);
+                setDenseArrayNotPacked(cx);
+            }
+            setDenseArrayInitializedLength(requiredCapacity);
+            return ED_OK;
+        }
+    }
+
+    /*
+     * We use the extra argument also as a hint about number of non-hole
+     * elements to be inserted.
+     */
+    if (requiredCapacity > MIN_SPARSE_INDEX &&
+        willBeSparseDenseArray(requiredCapacity, extra)) {
+        return ED_SPARSE;
+    }
+    if (!growSlots(cx, requiredCapacity))
+        return ED_FAILED;
+
+    if (index > initLength) {
+        ClearValueRange(getSlots() + initLength, index - initLength, true);
+        setDenseArrayNotPacked(cx);
+    }
+    setDenseArrayInitializedLength(requiredCapacity);
+
+    return ED_OK;
+}
 
 extern JSBool
 js_StringIsIndex(JSString *str, jsuint *indexp);
@@ -143,9 +242,6 @@ js_NewArrayObject(JSContext *cx, jsuint length, const js::Value *vector, js::typ
 /* Create an array object that starts out already made slow/sparse. */
 extern JSObject *
 js_NewSlowArrayObject(JSContext *cx, js::types::TypeObject *type);
-
-/* Minimum size at which a dense array can be made sparse. */
-const uint32 MIN_SPARSE_INDEX = 256;
 
 extern JSBool
 js_GetLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp);

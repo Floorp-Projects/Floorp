@@ -2229,18 +2229,25 @@ usageAndQuit(const string& progname)
     cout <<
         "usage: " << progname << " [options] [filename]\n"
         "Options:\n"
-        "  -h --help        print this message\n"
-        "  -v --verbose     print LIR and assembly code\n"
-        "  --execute        execute LIR\n"
-        "  --[no-]optimize  enable or disable optimization of the LIR (default=off)\n"
-        "  --random [N]     generate a random LIR block of size N (default=1000)\n"
-        "  --word-size      prints the word size (32 or 64) for this build of lirasm and exits\n"
-        "  --endianness     prints endianness (little-endian or big-endian) for this build of librasm and exits\n"
-        " i386-specific options:\n"
-        "  --sse            use SSE2 instructions\n"
-        " ARM-specific options:\n"
-        "  --arch N         generate code for ARM architecture version N (default=7)\n"
-        "  --[no]vfp        enable or disable the generation of ARM VFP code (default=on)\n"
+        "  -h --help         print this message\n"
+        "  -v --verbose      print LIR and assembly code\n"
+        "  --execute         execute LIR\n"
+        "  --[no-]optimize   enable or disable optimization of the LIR (default=off)\n"
+        "  --random [N]      generate a random LIR block of size N (default=1000)\n"
+        "\n"
+        "Build query options (these print a value for this build of lirasm and exit)\n"
+        "  --show-arch       show the architecture ('i386', 'X64', 'arm', 'ppc',\n"
+        "                    'sparc', 'mips', or 'sh4')\n"
+        "  --show-word-size  show the word size ('32' or '64')\n"
+        "  --show-endianness show the endianness ('little-endian' or 'big-endian')\n"
+        "\n"
+        "i386-specific options:\n"
+        "  --[no]sse         use SSE2 instructions (default=on)\n"
+        "\n"
+        "ARM-specific options:\n"
+        "  --arch N          use ARM architecture version N instructions (default=7)\n"
+        "  --[no]vfp         use ARM VFP instructions (default=on)\n"
+        "\n"
         ;
     exit(0);
 }
@@ -2272,7 +2279,7 @@ processCmdLine(int argc, char **argv, CmdLineOptions& opts)
 
     // Architecture-specific options.
 #if defined NANOJIT_IA32
-    bool            i386_sse = false;
+    bool            i386_sse = true;
 #elif defined NANOJIT_ARM
     unsigned int    arm_arch = 7;
     bool            arm_vfp = true;
@@ -2310,11 +2317,33 @@ processCmdLine(int argc, char **argv, CmdLineOptions& opts)
                 }
             }
         }
-        else if (arg == "--word-size") {
+        else if (arg == "--show-arch") {
+            const char* str = 
+#if defined NANOJIT_IA32
+                "i386";
+#elif defined NANOJIT_X64
+                "X64";
+#elif defined NANOJIT_ARM
+                "arm";
+#elif defined NANOJIT_PPC
+                "ppc";
+#elif defined NANOJIT_SPARC
+                "sparc";
+#elif defined NANOJIT_MIPS
+                "mips";
+#elif defined NANOJIT_SH4
+                "sh4";
+#else
+#               error "unknown arch"
+#endif
+            cout << str << "\n";
+            exit(0);
+        }
+        else if (arg == "--show-word-size") {
             cout << sizeof(void*) * 8 << "\n";
             exit(0);
         }
-        else if (arg == "--endianness") {
+        else if (arg == "--show-endianness") {
             int32_t x = 0x01020304;
             if (*(char*)&x == 0x1) {
               cout << "big-endian" << "\n";
@@ -2329,6 +2358,9 @@ processCmdLine(int argc, char **argv, CmdLineOptions& opts)
         else if (arg == "--sse") {
             i386_sse = true;
         }
+        else if (arg == "--nosse") {
+            i386_sse = false;
+        }
 #elif defined NANOJIT_ARM
         else if ((arg == "--arch") && (i < argc-1)) {
             char* endptr;
@@ -2336,10 +2368,10 @@ processCmdLine(int argc, char **argv, CmdLineOptions& opts)
             // Check that the argument was a number.
             if ('\0' == *endptr) {
                 if ((arm_arch < 4) || (arm_arch > 7)) {
-                    errMsgAndQuit(opts.progname, "Unsupported argument to --arm-arch.\n");
+                    errMsgAndQuit(opts.progname, "Unsupported argument to --arch.\n");
                 }
             } else {
-                errMsgAndQuit(opts.progname, "Unrecognized argument to --arm-arch.\n");
+                errMsgAndQuit(opts.progname, "Unrecognized argument to --arch.\n");
             }
             i++;
         } else if (arg == "--vfp") {

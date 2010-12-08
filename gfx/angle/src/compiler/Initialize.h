@@ -32,8 +32,4 @@ void IdentifyBuiltIns(ShShaderType type, ShShaderSpec spec,
 void InitExtensionBehavior(const ShBuiltInResources& resources,
                            TExtensionBehavior& extensionBehavior);
 
-extern "C" int InitPreprocessor(void);
-extern "C" int FinalizePreprocessor(void);
-extern "C" void PredefineIntMacro(const char *name, int value);
-
 #endif // _INITIALIZE_INCLUDED_

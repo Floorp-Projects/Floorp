@@ -23,7 +23,6 @@ Surface::Surface(Display *display, const Config *config, HWND window)
     mSwapChain = NULL;
     mDepthStencil = NULL;
     mBackBuffer = NULL;
-    mRenderTarget = NULL;
     mFlipTexture = NULL;
     mFlipState = NULL;
     mPreFlipState = NULL;
@@ -34,11 +33,13 @@ Surface::Surface(Display *display, const Config *config, HWND window)
     mSwapInterval = -1;
     setSwapInterval(1);
 
+    subclassWindow();
     resetSwapChain();
 }
 
 Surface::~Surface()
 {
+    unsubclassWindow();
     release();
 }
 
@@ -54,12 +55,6 @@ void Surface::release()
     {
         mBackBuffer->Release();
         mBackBuffer = NULL;
-    }
-
-    if (mRenderTarget)
-    {
-        mRenderTarget->Release();
-        mRenderTarget = NULL;
     }
 
     if (mDepthStencil)
@@ -89,12 +84,31 @@ void Surface::release()
 
 void Surface::resetSwapChain()
 {
+    RECT windowRect;
+    if (!GetClientRect(getWindowHandle(), &windowRect))
+    {
+        ASSERT(false);
+
+        ERR("Could not retrieve the window dimensions");
+        return;
+    }
+
+    resetSwapChain(windowRect.right - windowRect.left, windowRect.bottom - windowRect.top);
+}
+
+void Surface::resetSwapChain(int backbufferWidth, int backbufferHeight)
+{
     IDirect3DDevice9 *device = mDisplay->getDevice();
 
     if (device == NULL)
     {
         return;
     }
+
+    // Evict all non-render target textures to system memory and release all resources
+    // before reallocating them to free up as much video memory as possible.
+    device->EvictManagedResources();
+    release();
     
     D3DPRESENT_PARAMETERS presentParameters = {0};
 
@@ -109,19 +123,10 @@ void Surface::resetSwapChain()
     presentParameters.PresentationInterval = mPresentInterval;
     presentParameters.SwapEffect = D3DSWAPEFFECT_DISCARD;
     presentParameters.Windowed = TRUE;
+    presentParameters.BackBufferWidth = backbufferWidth;
+    presentParameters.BackBufferHeight = backbufferHeight;
 
-    RECT windowRect;
-    if (!GetClientRect(getWindowHandle(), &windowRect))
-    {
-        ASSERT(false);
-        return;
-    }
-
-    presentParameters.BackBufferWidth = windowRect.right - windowRect.left;
-    presentParameters.BackBufferHeight = windowRect.bottom - windowRect.top;
-
-    IDirect3DSwapChain9 *swapChain = NULL;
-    HRESULT result = device->CreateAdditionalSwapChain(&presentParameters, &swapChain);
+    HRESULT result = device->CreateAdditionalSwapChain(&presentParameters, &mSwapChain);
 
     if (FAILED(result))
     {
@@ -131,73 +136,43 @@ void Surface::resetSwapChain()
         return error(EGL_BAD_ALLOC);
     }
 
-    IDirect3DSurface9 *depthStencilSurface = NULL;
     result = device->CreateDepthStencilSurface(presentParameters.BackBufferWidth, presentParameters.BackBufferHeight,
                                                presentParameters.AutoDepthStencilFormat, presentParameters.MultiSampleType,
-                                               presentParameters.MultiSampleQuality, FALSE, &depthStencilSurface, NULL);
+                                               presentParameters.MultiSampleQuality, FALSE, &mDepthStencil, NULL);
 
     if (FAILED(result))
     {
         ASSERT(result == D3DERR_OUTOFVIDEOMEMORY || result == E_OUTOFMEMORY);
 
-        swapChain->Release();
+        mSwapChain->Release();
 
         ERR("Could not create depthstencil surface for new swap chain: %08lX", result);
         return error(EGL_BAD_ALLOC);
     }
 
-    IDirect3DSurface9 *renderTarget = NULL;
-    result = device->CreateRenderTarget(presentParameters.BackBufferWidth, presentParameters.BackBufferHeight, presentParameters.BackBufferFormat,
-                                        presentParameters.MultiSampleType, presentParameters.MultiSampleQuality, FALSE, &renderTarget, NULL);
-
-    if (FAILED(result))
-    {
-        ASSERT(result == D3DERR_OUTOFVIDEOMEMORY || result == E_OUTOFMEMORY);
-
-        swapChain->Release();
-        depthStencilSurface->Release();
-
-        ERR("Could not create render target surface for new swap chain: %08lX", result);
-        return error(EGL_BAD_ALLOC);
-    }
-
     ASSERT(SUCCEEDED(result));
 
-    IDirect3DTexture9 *flipTexture = NULL;
     result = device->CreateTexture(presentParameters.BackBufferWidth, presentParameters.BackBufferHeight, 1, D3DUSAGE_RENDERTARGET,
-                                   presentParameters.BackBufferFormat, D3DPOOL_DEFAULT, &flipTexture, NULL);
+                                   presentParameters.BackBufferFormat, D3DPOOL_DEFAULT, &mFlipTexture, NULL);
 
     if (FAILED(result))
     {
         ASSERT(result == D3DERR_OUTOFVIDEOMEMORY || result == E_OUTOFMEMORY);
 
-        swapChain->Release();
-        depthStencilSurface->Release();
-        renderTarget->Release();
+        mSwapChain->Release();
+        mDepthStencil->Release();
 
         ERR("Could not create flip texture for new swap chain: %08lX", result);
         return error(EGL_BAD_ALLOC);
     }
 
-    IDirect3DSurface9 *backBuffer = NULL;
-    swapChain->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &backBuffer);
-
-    if (mSwapChain) mSwapChain->Release();
-    if (mDepthStencil) mDepthStencil->Release();
-    if (mBackBuffer) mBackBuffer->Release();
-    if (mRenderTarget) mRenderTarget->Release();
-    if (mFlipTexture) mFlipTexture->Release();
-
+    mSwapChain->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &mBackBuffer);
     mWidth = presentParameters.BackBufferWidth;
     mHeight = presentParameters.BackBufferHeight;
 
-    mSwapChain = swapChain;
-    mDepthStencil = depthStencilSurface;
-    mBackBuffer = backBuffer;
-    mRenderTarget = renderTarget;
-    mFlipTexture = flipTexture;
-
     mPresentIntervalDirty = false;
+
+    InvalidateRect(mWindow, NULL, FALSE);
 
     // The flip state block recorded mFlipTexture so it is now invalid.
     releaseRecordedState(device);
@@ -220,6 +195,7 @@ void Surface::writeRecordableFlipState(IDirect3DDevice9 *device)
     device->SetRenderState(D3DRS_CLIPPLANEENABLE, 0);
     device->SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_ALPHA | D3DCOLORWRITEENABLE_BLUE | D3DCOLORWRITEENABLE_GREEN | D3DCOLORWRITEENABLE_RED);
     device->SetRenderState(D3DRS_SRGBWRITEENABLE, FALSE);
+    device->SetRenderState(D3DRS_SCISSORTESTENABLE, FALSE);
     device->SetPixelShader(NULL);
     device->SetVertexShader(NULL);
 
@@ -227,7 +203,7 @@ void Surface::writeRecordableFlipState(IDirect3DDevice9 *device)
     device->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
     device->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
     device->SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_DISABLE);
-    device->SetTexture(0, NULL); // The actual texture will change after resizing. But the pre-flip state block must save/restore the texture.
+    device->SetTexture(0, NULL);   // The actual texture will change after resizing. But the pre-flip state block must save/restore the texture.
     device->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_POINT);
     device->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_POINT);
     device->SetSamplerState(0, D3DSAMP_SRGBTEXTURE, FALSE);
@@ -235,7 +211,12 @@ void Surface::writeRecordableFlipState(IDirect3DDevice9 *device)
     device->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
     device->SetFVF(D3DFVF_XYZRHW | D3DFVF_TEX1);
 
-    device->SetStreamSourceFreq(0, 1); // DrawPrimitiveUP only cares about stream 0, not the rest.
+    device->SetStreamSourceFreq(0, 1);   // DrawPrimitiveUP only cares about stream 0, not the rest.
+
+    RECT scissorRect = {0};   // Scissoring is disabled for flipping, but we need this to capture and restore the old rectangle
+    device->SetScissorRect(&scissorRect);
+    D3DVIEWPORT9 viewport = {0, 0, mWidth, mHeight, 0.0f, 1.0f};
+    device->SetViewport(&viewport);
 }
 
 void Surface::applyFlipState(IDirect3DDevice9 *device)
@@ -296,8 +277,6 @@ void Surface::applyFlipState(IDirect3DDevice9 *device)
 
 void Surface::restoreState(IDirect3DDevice9 *device)
 {
-    mPreFlipState->Apply();
-
     device->SetRenderTarget(0, mPreFlipBackBuffer);
     device->SetDepthStencilSurface(mPreFlipDepthStencil);
 
@@ -312,6 +291,8 @@ void Surface::restoreState(IDirect3DDevice9 *device)
         mPreFlipDepthStencil->Release();
         mPreFlipDepthStencil = NULL;
     }
+
+    mPreFlipState->Apply();
 }
 
 // On the next flip, this will cause the state to be recorded from scratch.
@@ -330,6 +311,52 @@ void Surface::releaseRecordedState(IDirect3DDevice9 *device)
         mPreFlipState = NULL;
     }
 }
+#define kSurfaceProperty L"Egl::SurfaceOwner"
+#define kParentWndProc L"Egl::SurfaceParentWndProc"
+
+static LRESULT CALLBACK SurfaceWindowProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam) {
+  if (message == WM_SIZE) {
+      Surface* surf = reinterpret_cast<Surface*>(GetProp(hwnd, kSurfaceProperty));
+      if(surf) {
+        surf->checkForOutOfDateSwapChain();
+      }
+  }
+  WNDPROC prevWndFunc = reinterpret_cast<WNDPROC >(GetProp(hwnd, kParentWndProc));
+  return CallWindowProc(prevWndFunc, hwnd, message, wparam, lparam);
+}
+
+void Surface::subclassWindow()
+{
+  SetLastError(0);
+  LONG oldWndProc = SetWindowLong(mWindow, GWL_WNDPROC, reinterpret_cast<LONG>(SurfaceWindowProc));
+  if(oldWndProc == 0 && GetLastError() != ERROR_SUCCESS) {
+    mWindowSubclassed = false;
+    return;
+  }
+
+  SetProp(mWindow, kSurfaceProperty, reinterpret_cast<HANDLE>(this));
+  SetProp(mWindow, kParentWndProc, reinterpret_cast<HANDLE>(oldWndProc));
+  mWindowSubclassed = true;
+}
+
+void Surface::unsubclassWindow()
+{
+  if(!mWindowSubclassed)
+    return;
+  // Check the windowproc is still SurfaceWindowProc.
+  // If this assert fails, then it is likely the application has subclassed the
+  // hwnd as well and did not unsubclass before destroying its EGL context. The
+  // application should be modified to either subclass before initializing the
+  // EGL context, or to unsubclass before destroying the EGL context.
+  ASSERT(GetWindowLong(mWindow, GWL_WNDPROC) == reinterpret_cast<LONG>(SurfaceWindowProc));
+
+  // un-subclass
+  LONG prevWndFunc = reinterpret_cast<LONG>(GetProp(mWindow, kParentWndProc));
+  SetWindowLong(mWindow, GWL_WNDPROC, prevWndFunc);
+  RemoveProp(mWindow, kSurfaceProperty);
+  RemoveProp(mWindow, kParentWndProc);
+  mWindowSubclassed = false;
+}
 
 bool Surface::checkForOutOfDateSwapChain()
 {
@@ -340,10 +367,14 @@ bool Surface::checkForOutOfDateSwapChain()
         return false;
     }
 
-    if (getWidth() != client.right - client.left || getHeight() != client.bottom - client.top || mPresentIntervalDirty)
-    {
-        resetSwapChain();
+    // Grow the buffer now, if the window has grown. We need to grow now to avoid losing information.
+    int clientWidth = client.right - client.left;
+    int clientHeight = client.bottom - client.top;
+    bool sizeDirty = clientWidth != getWidth() || clientHeight != getHeight();
 
+    if (sizeDirty || mPresentIntervalDirty)
+    {
+        resetSwapChain(clientWidth, clientHeight);
         if (static_cast<egl::Surface*>(getCurrentDrawSurface()) == this)
         {
             glMakeCurrent(glGetCurrentContext(), static_cast<egl::Display*>(getCurrentDisplay()), this);
@@ -351,7 +382,6 @@ bool Surface::checkForOutOfDateSwapChain()
 
         return true;
     }
-
     return false;
 }
 
@@ -375,48 +405,27 @@ bool Surface::swap()
 {
     if (mSwapChain)
     {
-        IDirect3DTexture9 *flipTexture = mFlipTexture;
-        flipTexture->AddRef();
-
-        IDirect3DSurface9 *renderTarget = mRenderTarget;
-        renderTarget->AddRef();
-
-        EGLint oldWidth = mWidth;
-        EGLint oldHeight = mHeight;
-
-        checkForOutOfDateSwapChain();
-
         IDirect3DDevice9 *device = mDisplay->getDevice();
 
-        IDirect3DSurface9 *textureSurface;
-        flipTexture->GetSurfaceLevel(0, &textureSurface);
-
-        mDisplay->endScene();
-        device->StretchRect(renderTarget, NULL, textureSurface, NULL, D3DTEXF_NONE);
-        renderTarget->Release();
-
         applyFlipState(device);
-        device->SetTexture(0, flipTexture);
-
-        float xscale = (float)mWidth / oldWidth;
-        float yscale = (float)mHeight / oldHeight;
+        device->SetTexture(0, mFlipTexture);
 
         // Render the texture upside down into the back buffer
-        // Texcoords are chosen to pin a potentially resized image into the upper-left corner without scaling.
-        float quad[4][6] = {{     0 - 0.5f,       0 - 0.5f, 0.0f, 1.0f, 0.0f,   1.0f       },
-                            {mWidth - 0.5f,       0 - 0.5f, 0.0f, 1.0f, xscale, 1.0f       },
-                            {mWidth - 0.5f, mHeight - 0.5f, 0.0f, 1.0f, xscale, 1.0f-yscale},
-                            {     0 - 0.5f, mHeight - 0.5f, 0.0f, 1.0f, 0.0f,   1.0f-yscale}};   // x, y, z, rhw, u, v
+        // Texcoords are chosen to flip the renderTarget about its Y axis.
+        float w = static_cast<float>(getWidth());
+        float h = static_cast<float>(getHeight());
+        float quad[4][6] = {{0 - 0.5f, 0 - 0.5f, 0.0f, 1.0f, 0.0f, 1.0f},
+                            {w - 0.5f, 0 - 0.5f, 0.0f, 1.0f, 1.0f, 1.0f},
+                            {w - 0.5f, h - 0.5f, 0.0f, 1.0f, 1.0f, 0.0f},
+                            {0 - 0.5f, h - 0.5f, 0.0f, 1.0f, 0.0f, 0.0f}};   // x, y, z, rhw, u, v
 
         mDisplay->startScene();
         device->DrawPrimitiveUP(D3DPT_TRIANGLEFAN, 2, quad, 6 * sizeof(float));
 
-        flipTexture->Release();
-        textureSurface->Release();
-
         restoreState(device);
 
         mDisplay->endScene();
+
         HRESULT result = mSwapChain->Present(NULL, NULL, NULL, NULL, 0);
 
         if (result == D3DERR_OUTOFVIDEOMEMORY || result == E_OUTOFMEMORY || result == D3DERR_DRIVERINTERNALERROR)
@@ -431,6 +440,7 @@ bool Surface::swap()
 
         ASSERT(SUCCEEDED(result));
 
+        checkForOutOfDateSwapChain();
     }
 
     return true;
@@ -448,12 +458,14 @@ EGLint Surface::getHeight() const
 
 IDirect3DSurface9 *Surface::getRenderTarget()
 {
-    if (mRenderTarget)
+    IDirect3DSurface9 *textureSurface = NULL;
+
+    if (mFlipTexture)
     {
-        mRenderTarget->AddRef();
+        mFlipTexture->GetSurfaceLevel(0, &textureSurface);
     }
 
-    return mRenderTarget;
+    return textureSurface;
 }
 
 IDirect3DSurface9 *Surface::getDepthStencil()

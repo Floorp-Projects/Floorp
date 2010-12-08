@@ -223,6 +223,16 @@ function checkScrollAndFinish()
 {
   is($("scroller").scrollTop, 0, "mousewheel on menulist does not scroll vbox parent");
   is($("scroller-in-listbox").scrollTop, 0, "mousewheel on menulist does not scroll listbox parent");
+
+  // bug 561243, outline causes the mouse click to be targeted incorrectly
+  var editableMenulist = $("menulist-editable");
+  editableMenulist.className = "outlined";
+
+  synthesizeMouse(editableMenulist.inputField, 25, 8, { type: "mousedown" });
+  synthesizeMouse(editableMenulist.inputField, 25, 8, { type: "mouseup" });
+  isnot(editableMenulist.inputField.selectionStart, editableMenulist.inputField.textLength,
+        "mouse event on editable menulist with outline caret position");
+
   SimpleTest.finish();
 }
 
@@ -230,6 +240,9 @@ function checkScrollAndFinish()
 </script>
 
 <body xmlns="http://www.w3.org/1999/xhtml">
+<style>
+.outlined > .menulist-editable-box { outline: 1px solid black; }
+</style>
 <p id="display">
 </p>
 <div id="content" style="display: none">

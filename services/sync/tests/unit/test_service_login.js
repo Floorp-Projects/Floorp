@@ -27,7 +27,15 @@ function run_test() {
   do_test_pending();
   let server = httpd_setup({
     "/1.0/johndoe/info/collections": login_handler,
-    "/1.0/janedoe/info/collections": login_handler
+    "/1.0/janedoe/info/collections": login_handler,
+      
+    // We need these handlers because we test login, and login
+    // is where keys are generated or fetched.
+    // TODO: have Jane fetch her keys, not generate them...
+    "/1.0/johndoe/storage/crypto/keys": new ServerWBO().handler(),
+    "/1.0/johndoe/storage/meta/global": new ServerWBO().handler(),
+    "/1.0/janedoe/storage/crypto/keys": new ServerWBO().handler(),
+    "/1.0/janedoe/storage/meta/global": new ServerWBO().handler()
   });
 
   try {
@@ -39,7 +47,7 @@ function run_test() {
     Status.service = STATUS_OK;
     do_check_eq(Status.service, STATUS_OK);
 
-    _("Try logging in. It wont' work because we're not configured yet.");
+    _("Try logging in. It won't work because we're not configured yet.");
     Service.login();
     do_check_eq(Status.service, CLIENT_NOT_CONFIGURED);
     do_check_eq(Status.login, LOGIN_FAILED_NO_USERNAME);

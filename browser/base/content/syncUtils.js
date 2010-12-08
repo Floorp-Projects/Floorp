@@ -105,10 +105,6 @@ let gSyncUtils = {
     this._openLink(Weave.Svc.Prefs.get("privacyURL"));
   },
 
-  openSyncKeyHelp: function () {
-    this._openLink(Weave.Svc.Prefs.get("syncKeyHelpURL"));
-  },
-
   // xxxmpc - fix domain before 1.3 final (bug 583652)
   _baseURL: "http://www.mozilla.com/firefox/sync/",
 
@@ -120,37 +116,6 @@ let gSyncUtils = {
   openAddedClientFirstrun: function () {
     let url = this._baseURL + "secondrun.html";
     this._openLink(url);
-  },
-
-  /**
-   * Generate 20 random characters a-z
-   */
-  generatePassphrase: function() {
-    let rng = Cc["@mozilla.org/security/random-generator;1"]
-                .createInstance(Ci.nsIRandomGenerator);
-    let bytes = rng.generateRandomBytes(20);
-    return [String.fromCharCode(97 + Math.floor(byte * 26 / 256))
-            for each (byte in bytes)].join("");
-  },
-
-  /**
-   * Hyphenate a 20 character passphrase in 4 groups of 5.
-   */
-  hyphenatePassphrase: function(passphrase) {
-    return passphrase.slice(0, 5) + '-'
-         + passphrase.slice(5, 10) + '-'
-         + passphrase.slice(10, 15) + '-'
-         + passphrase.slice(15, 20);
-  },
-
-  /**
-   * Remove hyphens as inserted by hyphenatePassphrase().
-   */
-  normalizePassphrase: function(pp) {
-    if (pp.length == 23 && pp[5] == '-' && pp[11] == '-' && pp[17] == '-')
-      return pp.slice(0, 5) + pp.slice(6, 11)
-           + pp.slice(12, 17) + pp.slice(18, 23);
-    return pp;
   },
 
   /**
@@ -284,36 +249,5 @@ let gSyncUtils = {
     }
     let errorString = error ? Weave.Utils.getErrorString(error) : "";
     return [valid, errorString];
-  },
-
-  /**
-   * validatePassphrase
-   *
-   * @param el : the textbox element
-   * @param change : indicate whether this signifies a passphrase change
-   * 
-   * returns [valid, errorString]
-   */
-  validatePassphrase: function (el, change) {
-    let valid = false;
-    let val = el.value;
-    let error = "";
-
-    if (val.length < Weave.MIN_PP_LENGTH)
-      error = "change.synckey.tooShort";
-    else if (val == Weave.Service.username)
-      error = "change.synckey.sameAsUsername";
-    else if (val == Weave.Service.account)
-      error = "change.synckey.sameAsEmail";
-    else if (val == Weave.Service.password)
-      error = "change.synckey.sameAsPassword";
-    else if (change && val == Weave.Service.passphrase)
-      error = "change.synckey.sameAsSyncKey";
-    else
-      valid = true;
-
-    let errorString = error ? Weave.Utils.getErrorString(error) : "";
-    return [valid, errorString];
   }
-}
-
+};

@@ -74,11 +74,12 @@ public:
   NS_OVERRIDE virtual PRBool UnsetAttr(nsIAtom* aAttribute);
 
 protected:
-  // <set> uses the "to" attribute as its only source of animation values
-  // (which gives us a single value in our values array), and we want to use
-  // that value whenever the animation is active (no interpolation or anything).
-  NS_OVERRIDE virtual PRBool TreatSingleValueAsStatic() const {
-    return PR_TRUE;
+  // Although <set> animation might look like to-animation, unlike to-animation,
+  // it never interpolates values.
+  // Returning PR_FALSE here will mean this animation function gets treated as
+  // a single-valued function and no interpolation will be attempted.
+  NS_OVERRIDE virtual PRBool IsToAnimation() const {
+    return PR_FALSE;
   }
   NS_OVERRIDE virtual PRBool             HasAttr(nsIAtom* aAttName) const;
   NS_OVERRIDE virtual const nsAttrValue* GetAttr(nsIAtom* aAttName) const;

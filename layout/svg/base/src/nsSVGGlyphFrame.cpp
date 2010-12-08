@@ -381,7 +381,9 @@ nsSVGGlyphFrame::PaintSVG(nsSVGRenderState *aContext,
   iter.SetInitialMatrix(gfx);
 
   if (SetupCairoFill(gfx)) {
+    gfxMatrix matrix = gfx->CurrentMatrix();
     FillCharacters(&iter, gfx);
+    gfx->SetMatrix(matrix);
   }
 
   if (SetupCairoStroke(gfx)) {
@@ -1250,7 +1252,7 @@ nsSVGGlyphFrame::GetEffectiveDxDy(PRInt32 strLength, nsTArray<float> &aDx, nsTAr
   aDy.AppendElements(dy.Elements() + mStartIndex, dyCount);
 }
 
-already_AddRefed<nsIDOMSVGNumberList>
+const SVGNumberList*
 nsSVGGlyphFrame::GetRotate()
 {
   nsSVGTextContainerFrame *containerFrame;

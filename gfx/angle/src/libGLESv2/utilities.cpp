@@ -336,6 +336,69 @@ bool CheckTextureFormatType(GLenum format, GLenum type)
     }
 }
 
+bool IsColorRenderable(GLenum internalformat)
+{
+    switch (internalformat)
+    {
+      case GL_RGBA4:
+      case GL_RGB5_A1:
+      case GL_RGB565:
+      case GL_RGB8_OES:
+      case GL_RGBA8_OES:
+        return true;
+      case GL_DEPTH_COMPONENT16:
+      case GL_STENCIL_INDEX8:
+      case GL_DEPTH24_STENCIL8_OES:
+        return false;
+      default:
+        UNIMPLEMENTED();
+    }
+
+    return false;
+}
+
+bool IsDepthRenderable(GLenum internalformat)
+{
+    switch (internalformat)
+    {
+      case GL_DEPTH_COMPONENT16:
+      case GL_DEPTH24_STENCIL8_OES:
+        return true;
+      case GL_STENCIL_INDEX8:
+      case GL_RGBA4:
+      case GL_RGB5_A1:
+      case GL_RGB565:
+      case GL_RGB8_OES:
+      case GL_RGBA8_OES:
+        return false;
+      default:
+        UNIMPLEMENTED();
+    }
+
+    return false;
+}
+
+bool IsStencilRenderable(GLenum internalformat)
+{
+    switch (internalformat)
+    {
+      case GL_STENCIL_INDEX8:
+      case GL_DEPTH24_STENCIL8_OES:
+        return true;
+      case GL_RGBA4:
+      case GL_RGB5_A1:
+      case GL_RGB565:
+      case GL_RGB8_OES:
+      case GL_RGBA8_OES:
+      case GL_DEPTH_COMPONENT16:
+        return false;
+      default:
+        UNIMPLEMENTED();
+    }
+
+    return false;
+}
+
 }
 
 namespace es2dx
@@ -560,7 +623,6 @@ unsigned int GetAlphaSize(D3DFORMAT colorFormat)
       case D3DFMT_A1R5G5B5:
         return 1;
       case D3DFMT_X8R8G8B8:
-      case D3DFMT_X1R5G5B5:
       case D3DFMT_R5G6B5:
         return 0;
       default: UNREACHABLE();
@@ -583,7 +645,6 @@ unsigned int GetRedSize(D3DFORMAT colorFormat)
         return 8;
       case D3DFMT_A1R5G5B5:
       case D3DFMT_R5G6B5:
-      case D3DFMT_X1R5G5B5:
         return 5;
       default: UNREACHABLE();
     }
@@ -604,7 +665,6 @@ unsigned int GetGreenSize(D3DFORMAT colorFormat)
       case D3DFMT_X8R8G8B8:
         return 8;
       case D3DFMT_A1R5G5B5:
-      case D3DFMT_X1R5G5B5:
         return 5;
       case D3DFMT_R5G6B5:
         return 6;
@@ -628,7 +688,6 @@ unsigned int GetBlueSize(D3DFORMAT colorFormat)
         return 8;
       case D3DFMT_A1R5G5B5:
       case D3DFMT_R5G6B5:
-      case D3DFMT_X1R5G5B5:
         return 5;
       default: UNREACHABLE();
     }
@@ -726,6 +785,43 @@ D3DMULTISAMPLE_TYPE GetMultisampleTypeFromSamples(GLsizei samples)
         return D3DMULTISAMPLE_NONE;
     else
         return (D3DMULTISAMPLE_TYPE)samples;
+}
+
+}
+
+namespace dx2es
+{
+
+GLenum ConvertBackBufferFormat(D3DFORMAT format)
+{
+    switch (format)
+    {
+      case D3DFMT_A4R4G4B4: return GL_RGBA4;
+      case D3DFMT_A8R8G8B8: return GL_RGBA8_OES;
+      case D3DFMT_A1R5G5B5: return GL_RGB5_A1;
+      case D3DFMT_R5G6B5:   return GL_RGB565;
+      case D3DFMT_X8R8G8B8: return GL_RGB8_OES;
+      default:
+        UNREACHABLE();
+    }
+
+    return GL_RGBA4;
+}
+
+GLenum ConvertDepthStencilFormat(D3DFORMAT format)
+{
+    switch (format)
+    {
+      case D3DFMT_D16:
+      case D3DFMT_D24X8:
+        return GL_DEPTH_COMPONENT16;
+      case D3DFMT_D24S8:
+        return GL_DEPTH24_STENCIL8_OES;
+      default:
+        UNREACHABLE();
+    }
+
+    return GL_DEPTH24_STENCIL8_OES;
 }
 
 }

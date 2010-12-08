@@ -49,7 +49,7 @@ ifndef MOZ_ENABLE_LIBXUL
 MOZILLA_INTERNAL_API = 1
 endif
 
-DIRS		= external
+DIRS		= external component
 
 # Disabled because manifests make this test difficult to run correctly.
 # ifdef MOZ_ENABLE_LIBXUL

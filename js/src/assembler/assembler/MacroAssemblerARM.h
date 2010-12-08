@@ -1068,10 +1068,22 @@ public:
         convertInt32ToDouble(ARMRegisters::S0, srcDest);
     }
 
+    void ensureSpace(int space)
+    {
+        m_assembler.ensureSpace(space);
+    }
+
     void forceFlushConstantPool()
     {
         m_assembler.forceFlushConstantPool();
     }
+
+#ifdef DEBUG
+    void allowPoolFlush(bool allowFlush)
+    {
+        m_assembler.allowPoolFlush(allowFlush);
+    }
+#endif
 
 protected:
     ARMAssembler::Condition ARMCondition(Condition cond)

@@ -445,9 +445,8 @@ nsAttrValue::ToString(nsAString& aResult) const
 #endif
     case eFloatValue:
     {
-      nsAutoString str;
-      str.AppendFloat(GetFloatValue());
-      aResult = str;
+      aResult.Truncate();
+      aResult.AppendFloat(GetFloatValue());
       break;
     }
     default:

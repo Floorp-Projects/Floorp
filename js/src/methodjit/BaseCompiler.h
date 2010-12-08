@@ -192,6 +192,65 @@ class Repatcher : public JSC::RepatchBuffer
     { }
 };
 
+/*
+ * On ARM, we periodically flush a constant pool into the instruction stream
+ * where constants are found using PC-relative addressing. This is necessary
+ * because the fixed-width instruction set doesn't support wide immediates.
+ *
+ * ICs perform repatching on the inline (fast) path by knowing small and
+ * generally fixed code location offset values where the patchable instructions
+ * live. Dumping a huge constant pool into the middle of an IC's inline path
+ * makes the distance between emitted instructions potentially variable and/or
+ * large, which makes the IC offsets invalid. We must reserve contiguous space
+ * up front to prevent this from happening.
+ */
+#ifdef JS_CPU_ARM
+class AutoReserveICSpace {
+    typedef Assembler::Label Label;
+    static const size_t reservedSpace = 68;
+
+    Assembler           &masm;
+#ifdef DEBUG
+    Label               startLabel;
+#endif
+
+  public:
+    AutoReserveICSpace(Assembler &masm) : masm(masm) {
+        masm.ensureSpace(reservedSpace);
+#ifdef DEBUG
+        startLabel = masm.label();
+
+        /* Assert that the constant pool is not flushed until we reach a safe point. */
+        masm.allowPoolFlush(false);
+
+        JaegerSpew(JSpew_Insns, " -- BEGIN CONSTANT-POOL-FREE REGION -- \n");
+#endif
+    }
+
+    ~AutoReserveICSpace() {
+#ifdef DEBUG
+        Label endLabel = masm.label();
+        int spaceUsed = masm.differenceBetween(startLabel, endLabel);
+
+        /* Spew the space used, to help tuning of reservedSpace. */
+        JaegerSpew(JSpew_Insns,
+                   " -- END CONSTANT-POOL-FREE REGION: %u bytes used of %u reserved. -- \n",
+                   spaceUsed, reservedSpace);
+
+        /* Assert that we didn't emit more code than we protected. */
+        JS_ASSERT(spaceUsed >= 0);
+        JS_ASSERT(size_t(spaceUsed) <= reservedSpace);
+
+        /* Allow the pool to be flushed. */
+        masm.allowPoolFlush(true);
+#endif
+    }
+};
+# define RESERVE_IC_SPACE(__masm) AutoReserveICSpace arics(__masm)
+#else
+# define RESERVE_IC_SPACE(__masm) /* Nothing. */
+#endif
+
 } /* namespace js */
 } /* namespace mjit */
 

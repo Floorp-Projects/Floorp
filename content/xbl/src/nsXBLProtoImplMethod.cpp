@@ -160,10 +160,6 @@ nsXBLProtoImplMethod::InstallMember(nsIScriptContext* aContext,
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    nsresult rv;
-    nsAutoGCRoot root(&method, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    
     if (!::JS_DefineUCProperty(cx, targetClassObject,
                                reinterpret_cast<const jschar*>(mName), 
                                name.Length(), OBJECT_TO_JSVAL(method),

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>nsIAccessibleText getText related function tests for html:input,html:div and html:textarea</title>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../text.js"></script>
+  <script type="application/javascript">
+    
+    function doTest()
+    {
+      // "one two"
+      testWords("div1", ["one", "two"]);
+
+      // "one  two"
+      testWords("div2", ["one", "two"]);
+
+      // "one,two"
+      testWordCount("div3", 2, kOk);
+      testWordAt("div3", 0, "one", kTodo);
+      testWordAt("div3", 1, "two", kOk);
+
+      // "one, two"
+      testWordCount("div4", 2, kOk);
+      testWordAt("div4", 0, "one", kTodo);
+      testWordAt("div4", 1, "two", kOk);
+
+      // "one+two"
+      testWordCount("div5", 2, kOk);
+      testWordAt("div5", 0, "one", kTodo);
+      testWordAt("div5", 1, "two", kOk);
+
+      // "one+two   "
+      testWordCount("div6", 2, kOk);
+      testWordAt("div6", 0, "one", kTodo);
+      testWordAt("div6", 1, "two", kOk);
+
+      // "one\ntwo"
+      testWordCount("div7", 2, kOk);
+      testWordAt("div7", 0, "one", kOk);
+      testWordAt("div7", 1, "two", kTodo);
+
+      // "one.two"
+      testWordCount("div8", 2, kOk);
+      testWordAt("div8", 0, "one", kTodo);
+      testWordAt("div8", 1, "two", kOk);
+
+      // "345"
+      testWords("div9", ["345"]);
+
+      // "3a A4"
+      testWords("div10", ["3a", "A4"]);
+
+      // "3.1416"
+      testWords("div11", ["3.1416"], kTodo);
+
+      // "4,261.01"
+      testWords("div12", ["4,261.01"], kTodo);
+
+      // "カタカナ"
+      testWords("div13", ["カタカナ"], kTodo);
+
+      // "Peter's car"
+      testWords("div14", ["Peter's", "car"], kTodo);
+
+      // "N.A.T.O."
+      testWords("div15", ["N.A.T.O."], kTodo);
+
+      // "3+4*5=23"
+      testWordCount("div16", 4, kOk);
+      testWordAt("div15", 0, "3", kTodo);
+      testWordAt("div15", 1, "4", kTodo);
+      testWordAt("div15", 2, "5", kTodo);
+      testWordAt("div15", 3, "23", kTodo);
+
+      // "Hello. Friend, are you here?!"
+      testWordCount("div17", 5, kOk);
+      testWordAt("div17", 0, "Hello", kTodo);
+      testWordAt("div17", 1, "Friend", kTodo);
+      testWordAt("div17", 2, "are", kOk);
+      testWordAt("div17", 3, "you", kOk);
+      testWordAt("div17", 4, "here", kTodo);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="nsIAccessibleText test word boundaries"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=452769">Mozilla Bug 452769</a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  <div id="div1">one two</div>
+  <div id="div2">one  two</div>
+  <div id="div3">one,two</div>
+  <div id="div4">one, two</div>
+  <div id="div5">one+two</div>
+  <div id="div6">one+two   </div>
+  <div id="div7">one<br/>two</div>
+  <div id="div8">one.two</div>
+  <div id="div9">345</div>
+  <div id="div10">3a A4</div>
+  <div id="div11">3.1416</div>
+  <div id="div12">4,261.01</div>
+  <div id="div13">カタカナ</div>
+  <div id="div14">Peter's car</div>
+  <div id="div15">N.A.T.O.</div>
+  <div id="div16">3+4*5=23</div>
+  <div id="div17">Hello. Friend, are you here?!</div>
+  </pre>
+</body>
+</html>

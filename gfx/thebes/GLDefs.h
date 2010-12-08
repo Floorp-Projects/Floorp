@@ -3185,5 +3185,13 @@ typedef ptrdiff_t GLintptr;
 #define LOCAL_EGL_IMAGE_PRESERVED_KHR         0x30D2
 #define LOCAL_EGL_FALSE                       0
 #define LOCAL_EGL_TRUE                        1
+#define LOCAL_EGL_BITMAP_POINTER_KHR          0x30C6
+#define LOCAL_EGL_BITMAP_PITCH_KHR            0x30C7
+#define LOCAL_EGL_BITMAP_PIXEL_SIZE_KHR       0x3110
+#define LOCAL_EGL_LOCK_USAGE_HINT_KHR         0x30C5
+#define LOCAL_EGL_MAP_PRESERVE_PIXELS_KHR     0x30C4
+#define LOCAL_EGL_READ_SURFACE_BIT_KHR        0x0001
+#define LOCAL_EGL_WRITE_SURFACE_BIT_KHR       0x0002
+#define LOCAL_EGL_LOCK_SURFACE_BIT_KHR        0x0080
 
 #endif

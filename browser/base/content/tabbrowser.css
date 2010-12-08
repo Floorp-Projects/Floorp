@@ -40,7 +40,7 @@ tabpanels {
 
 .tab-drop-indicator {
   position: relative;
-  z-index: 1;
+  z-index: 2;
 }
 
 .tab-throbber:not([busy]),

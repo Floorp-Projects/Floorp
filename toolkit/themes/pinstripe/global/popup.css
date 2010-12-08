@@ -63,6 +63,18 @@ panel[type="arrow"] {
   -moz-transition: opacity 300ms;
 }
 
+panel[type="arrow"][side="top"],
+panel[type="arrow"][side="bottom"] {
+  margin-left: -26px;
+  margin-right: -26px;
+}
+
+panel[type="arrow"][side="left"],
+panel[type="arrow"][side="right"] {
+  margin-top: -26px;
+  margin-bottom: -26px;
+}
+
 .panel-arrowcontent {
   -moz-appearance: none;
   color: white;
@@ -71,7 +83,7 @@ panel[type="arrow"] {
   box-shadow: 0 0 0 1px rgba(255,255,255,.15) inset,
               0 1px 0 rgba(255,255,255,.05) inset,
               0 0 0 1px rgba(0,0,0,.25);
-  padding: 14px;
+  padding: 16px;
   margin: 1px;
 }
 

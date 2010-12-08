@@ -512,8 +512,8 @@
 #define png_read_frame_head             MOZ_APNG_read_frame_head
 
 #ifndef PR_LOGGING
-  #define MOZ_PNG_warning(s1,s2) ""
-  #define MOZ_PNG_chunk_warn(s1,s2) ""
+  #define MOZ_PNG_warning(s1,s2) (void)0
+  #define MOZ_PNG_chunk_warn(s1,s2) (void)0
   #if PNG_LIBPNG_VER > 10221
     #define PNG_NO_WARNINGS
     #define PNG_NO_ERROR_TEXT

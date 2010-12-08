@@ -10,7 +10,7 @@
       <animate attributeName="offset" attributeType="XML"
                calcMode="linear"
                begin="0s" dur="2s"
-               to="1"
+               to="100%"
                fill="freeze"/>
     </stop>
     <stop stop-color="red" offset="0">
@@ -28,7 +28,7 @@
       <animate attributeName="offset" attributeType="XML"
                calcMode="linear"
                begin="0s" dur="1s"
-               to="1"
+               to="100%"
                fill="freeze"/>
     </stop>
     <stop stop-color="red" offset="0">

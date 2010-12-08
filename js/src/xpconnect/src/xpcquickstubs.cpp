@@ -694,83 +694,28 @@ xpc_qsDOMString::xpc_qsDOMString(JSContext *cx, jsval v, jsval *pval,
                                  StringificationBehavior nullBehavior,
                                  StringificationBehavior undefinedBehavior)
 {
-    // From the T_DOMSTRING case in XPCConvert::JSData2Native.
     typedef implementation_type::char_traits traits;
-    JSString *s;
-    const PRUnichar *chars;
-    size_t len;
+    // From the T_DOMSTRING case in XPCConvert::JSData2Native.
+    JSString *s = InitOrStringify<traits>(cx, v, pval, nullBehavior,
+                                          undefinedBehavior);
+    if (!s)
+        return;
 
-    if(JSVAL_IS_STRING(v))
-    {
-        s = JSVAL_TO_STRING(v);
-    }
-    else
-    {
-        StringificationBehavior behavior = eStringify;
-        if(JSVAL_IS_NULL(v))
-        {
-            behavior = nullBehavior;
-        }
-        else if(JSVAL_IS_VOID(v))
-        {
-            behavior = undefinedBehavior;
-        }
-
-        // If pval is null, that means the argument was optional and
-        // not passed; turn those into void strings if they're
-        // supposed to be stringified.
-        if (behavior != eStringify || !pval)
-        {
-            // Here behavior == eStringify implies !pval, so both eNull and
-            // eStringify should end up with void strings.
-            (new(mBuf) implementation_type(
-                traits::sEmptyBuffer, PRUint32(0)))->SetIsVoid(behavior != eEmpty);
-            mValid = JS_TRUE;
-            return;
-        }
-
-        s = JS_ValueToString(cx, v);
-        if(!s)
-        {
-            mValid = JS_FALSE;
-            return;
-        }
-        *pval = STRING_TO_JSVAL(s);  // Root the new string.
-    }
-
-    len = s->length();
-    chars = (len == 0 ? traits::sEmptyBuffer :
-                        reinterpret_cast<const PRUnichar*>(JS_GetStringChars(s)));
+    size_t len = s->length();
+    const PRUnichar* chars =
+        (len == 0 ? traits::sEmptyBuffer :
+                    reinterpret_cast<const PRUnichar*>(JS_GetStringChars(s)));
     new(mBuf) implementation_type(chars, len);
     mValid = JS_TRUE;
 }
 
 xpc_qsACString::xpc_qsACString(JSContext *cx, jsval v, jsval *pval)
 {
+    typedef implementation_type::char_traits traits;
     // From the T_CSTRING case in XPCConvert::JSData2Native.
-    JSString *s;
-
-    if(JSVAL_IS_STRING(v))
-    {
-        s = JSVAL_TO_STRING(v);
-    }
-    else
-    {
-        if(JSVAL_IS_NULL(v) || JSVAL_IS_VOID(v))
-        {
-            (new(mBuf) implementation_type())->SetIsVoid(PR_TRUE);
-            mValid = JS_TRUE;
-            return;
-        }
-
-        s = JS_ValueToString(cx, v);
-        if(!s)
-        {
-            mValid = JS_FALSE;
-            return;
-        }
-        *pval = STRING_TO_JSVAL(s);  // Root the new string.
-    }
+    JSString *s = InitOrStringify<traits>(cx, v, pval, eNull, eNull);
+    if (!s)
+        return;
 
     JSAutoByteString bytes(cx, s);
     if(!bytes)
@@ -780,6 +725,22 @@ xpc_qsACString::xpc_qsACString(JSContext *cx, jsval v, jsval *pval)
     }
 
     new(mBuf) implementation_type(bytes.ptr(), strlen(bytes.ptr()));
+    mValid = JS_TRUE;
+}
+
+xpc_qsAUTF8String::xpc_qsAUTF8String(JSContext *cx, jsval v, jsval *pval)
+{
+    typedef nsCharTraits<PRUnichar> traits;
+    // From the T_UTF8STRING  case in XPCConvert::JSData2Native.
+    JSString *s = InitOrStringify<traits>(cx, v, pval, eNull, eNull);
+    if (!s)
+        return;
+
+    size_t len = s->length();
+    const PRUnichar* chars =
+        reinterpret_cast<const PRUnichar*>(JS_GetStringChars(s));
+
+    new(mBuf) implementation_type(chars, len);
     mValid = JS_TRUE;
 }
 

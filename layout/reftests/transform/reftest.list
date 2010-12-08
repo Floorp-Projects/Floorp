@@ -105,3 +105,6 @@ fails-if(d2d) == abspos-1d.html abspos-1-ref.html
 == propagate-inherit-boolean.html propagate-inherit-boolean-ref.html
 # Ensure you can't move outside an iframe
 == iframe-1.html iframe-1-ref.html
+# Bugs
+== 601894-1.html 601894-ref.html
+== 601894-2.html 601894-ref.html

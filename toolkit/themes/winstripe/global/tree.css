@@ -212,11 +212,12 @@ treechildren::-moz-tree-drop-feedback {
 
 treechildren::-moz-tree-progressmeter {
   margin: 2px 4px;
-  border: 2px solid;
-  -moz-border-top-colors: ThreeDShadow -moz-Dialog;
-  -moz-border-right-colors: ThreeDHighlight -moz-Dialog;
-  -moz-border-bottom-colors: ThreeDHighlight -moz-Dialog;
-  -moz-border-left-colors: ThreeDShadow -moz-Dialog;
+  padding: 1px;
+  border: 1px solid;
+  border-top-color: ThreeDShadow;
+  border-right-color: ThreeDHighlight;
+  border-bottom-color: ThreeDHighlight;
+  border-left-color: ThreeDShadow;
   background-color: -moz-Dialog;
   color: ThreeDShadow;
 }

@@ -641,7 +641,7 @@ bool MinidumpGenerator::WriteMemoryListStream(
 
   unsigned int i;
   for (i = 0; i < memory_count; ++i) {
-    list.CopyIndexAfterObject(i++, &memory_blocks_[i],
+    list.CopyIndexAfterObject(i, &memory_blocks_[i],
                               sizeof(MDMemoryDescriptor));
   }
 

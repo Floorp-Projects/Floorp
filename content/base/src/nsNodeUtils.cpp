@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=99: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -64,6 +65,7 @@
 #include "nsImageLoadingContent.h"
 #include "jsobj.h"
 #include "jsgc.h"
+#include "xpcpublic.h"
 
 using namespace mozilla::dom;
 
@@ -442,15 +444,14 @@ nsNodeUtils::CloneNodeImpl(nsINode *aNode, PRBool aDeep, nsIDOMNode **aResult)
 nsresult
 nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
                            nsNodeInfoManager *aNewNodeInfoManager,
-                           JSContext *aCx, JSObject *aOldScope,
-                           JSObject *aNewScope,
+                           JSContext *aCx, JSObject *aNewScope,
                            nsCOMArray<nsINode> &aNodesWithProperties,
                            nsINode *aParent, nsINode **aResult)
 {
   NS_PRECONDITION((!aClone && aNewNodeInfoManager) || !aCx,
                   "If cloning or not getting a new nodeinfo we shouldn't "
                   "rewrap");
-  NS_PRECONDITION(!aCx || (aOldScope && aNewScope), "Must have scopes");
+  NS_PRECONDITION(!aCx || aNewScope, "Must have new scope");
   NS_PRECONDITION(!aParent || aNode->IsNodeOfType(nsINode::eCONTENT),
                   "Can't insert document or attribute nodes into a parent");
 
@@ -461,6 +462,12 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
   // attributes and children).
 
   nsresult rv;
+  JSObject *wrapper;
+  if (aCx && (wrapper = aNode->GetWrapper())) {
+      rv = xpc_MorphSlimWrapper(aCx, aNode);
+      NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   nsNodeInfoManager *nodeInfoManager = aNewNodeInfoManager;
 
   // aNode.
@@ -516,11 +523,6 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
     }
   }
   else if (nodeInfoManager) {
-    // FIXME Bug 601803 Need to support adopting a node cross-compartment
-    if (aCx && aOldScope->compartment() != aNewScope->compartment()) {
-      return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-    }
-
     nsIDocument* oldDoc = aNode->GetOwnerDoc();
     PRBool wasRegistered = PR_FALSE;
     if (oldDoc && aNode->IsElement()) {
@@ -580,12 +582,29 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
       elem->RecompileScriptEventListeners();
     }
 
-    if (aCx) {
+    if (aCx && wrapper) {
       nsIXPConnect *xpc = nsContentUtils::XPConnect();
       if (xpc) {
+        JSObject *preservedWrapper = nsnull;
+
+        // If reparenting moves us to a new compartment, preserving causes
+        // problems. In that case, we release ourselves and re-preserve after
+        // reparenting so we're sure to have the right JS object preserved.
+        // We use a JSObject stack copy of the wrapper to protect it from GC
+        // under ReparentWrappedNativeIfFound.
+        if (aNode->PreservingWrapper()) {
+          preservedWrapper = wrapper;
+          nsContentUtils::ReleaseWrapper(aNode, aNode);
+        }
+
         nsCOMPtr<nsIXPConnectJSObjectHolder> oldWrapper;
-        rv = xpc->ReparentWrappedNativeIfFound(aCx, aOldScope, aNewScope, aNode,
+        rv = xpc->ReparentWrappedNativeIfFound(aCx, wrapper, aNewScope, aNode,
                                                getter_AddRefs(oldWrapper));
+
+        if (preservedWrapper) {
+          nsContentUtils::PreserveWrapper(aNode, aNode);
+        }
+
         if (NS_FAILED(rv)) {
           aNode->mNodeInfo.swap(nodeInfo);
 
@@ -627,8 +646,8 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
     for (i = 0; i < length; ++i) {
       nsCOMPtr<nsINode> child;
       rv = CloneAndAdopt(aNode->GetChildAt(i), aClone, PR_TRUE, nodeInfoManager,
-                         aCx, aOldScope, aNewScope, aNodesWithProperties,
-                         clone, getter_AddRefs(child));
+                         aCx, aNewScope, aNodesWithProperties, clone,
+                         getter_AddRefs(child));
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
