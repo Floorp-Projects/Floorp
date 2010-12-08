@@ -2113,11 +2113,12 @@ FrameState::storeTop(FrameEntry *target, bool popGuaranteed, JSValueType type)
                 masm.moveInt32OrDouble(addressOf(backing), fpreg);
             }
 
+            forgetAllRegs(backing);
+
+            backing->setType(JSVAL_TYPE_DOUBLE);
             target->setType(JSVAL_TYPE_DOUBLE);
             target->data.setFPRegister(fpreg);
             regstate(fpreg).associate(target, RematInfo::DATA);
-
-            forgetAllRegs(backing);
         } else {
             /*
              * The backing should normally already be the type we are storing.  However,
