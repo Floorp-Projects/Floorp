@@ -393,6 +393,13 @@ nsJAR::GetCertificatePrincipal(const char* aFilename, nsIPrincipal** aPrincipal)
     return NS_ERROR_NULL_POINTER;
   *aPrincipal = nsnull;
 
+#ifdef MOZ_OMNIJAR
+  // Don't check signatures in the omnijar - this is only
+  // interesting for extensions/XPIs.
+  if (mZip == mozilla::OmnijarReader())
+    return NS_OK;
+#endif
+
   //-- Parse the manifest
   nsresult rv = ParseManifest();
   if (NS_FAILED(rv)) return rv;

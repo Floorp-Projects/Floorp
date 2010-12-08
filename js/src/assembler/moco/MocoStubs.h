@@ -48,10 +48,10 @@ class JITCode {
 public:
   JITCode(void* start, size_t size)
     : m_start(start), m_size(size)
-  {
-  }
-  void*  start() { return m_start; }
-  size_t size()  { return m_size; }
+  { }
+  JITCode() { }
+  void*  start() const { return m_start; }
+  size_t size() const { return m_size; }
 private:
   void*  m_start;
   size_t m_size;

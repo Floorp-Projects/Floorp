@@ -142,9 +142,9 @@
 
   <!-- main header -->
   <hbox id="header" align="center">
-    <button id="back-btn" class="nav-button" command="cmd_back"
+    <toolbarbutton id="back-btn" class="nav-button header-button" command="cmd_back"
             tooltiptext="&cmd.back.tooltip;" hidden="true" disabled="true"/>
-    <button id="forward-btn" class="nav-button" command="cmd_forward"
+    <toolbarbutton id="forward-btn" class="nav-button header-button" command="cmd_forward"
             tooltiptext="&cmd.forward.tooltip;" hidden="true" disabled="true"/>
     <spacer flex="1"/>
     <hbox id="updates-container" align="center">
@@ -164,7 +164,8 @@
               label="&updates.restart.label;"
               command="cmd_restartApp"/>
     </hbox>
-    <button id="header-utils-btn" type="menu" tooltiptext="&toolsMenu.tooltip;">
+    <toolbarbutton id="header-utils-btn" class="header-button" type="menu"
+            tooltiptext="&toolsMenu.tooltip;">
       <menupopup id="utils-menu">
         <menuitem id="utils-updateNow"
                   label="&updates.checkForUpdates.label;"
@@ -194,10 +195,9 @@
                   accesskey="&updates.resetUpdatesToManual.accesskey;"
                   command="cmd_resetAddonAutoUpdate"/>
       </menupopup>
-    </button>
+    </toolbarbutton>
     <textbox id="header-search" type="search" searchbutton="true"
              placeholder="&search.placeholder;"/>
-    <image id="header-searching"/>
   </hbox>
 
   <hbox flex="1">
@@ -206,34 +206,44 @@
     <richlistbox id="categories" persist="last-selected">
       <richlistitem id="category-search" value="addons://search/"
                     class="category"
-                    name="&view.search.label;" disabled="true"/>
+                    name="&view.search.label;"
+                    tooltiptext="&view.search.label;" disabled="true"/>
       <richlistitem id="category-discover" value="addons://discover/"
                     class="category"
-                    name="&view.discover.label;"/>
+                    name="&view.discover.label;"
+                    tooltiptext="&view.discover.label;"/>
       <richlistitem id="category-languages" value="addons://list/locale"
                     class="category"
                     name="&view.locales.label;"
+                    tooltiptext="&view.locales.label;"
                     hidden="true" persist="hidden"/>
       <richlistitem id="category-searchengines"
                     value="addons://list/searchengine"
                     class="category"
                     name="&view.searchengines.label;"
+                    tooltiptext="&view.searchengines.label;"
                     hidden="true" persist="hidden"/>
       <richlistitem id="category-extensions" value="addons://list/extension"
                     class="category"
-                    name="&view.features.label;"/>
+                    name="&view.features.label;"
+                    tooltiptext="&view.features.label;"/>
       <richlistitem id="category-themes" value="addons://list/theme"
                     class="category"
-                    name="&view.appearance2.label;"/>
+                    name="&view.appearance2.label;"
+                    tooltiptext="&view.appearance2.label;"/>
       <richlistitem id="category-plugins" value="addons://list/plugin"
                     class="category"
-                    name="&view.plugins.label;"/>
+                    name="&view.plugins.label;"
+                    tooltiptext="&view.plugins.label;"/>
       <richlistitem id="category-availableUpdates" value="addons://updates/available"
                     class="category"
-                    name="&view.availableUpdates.label;" disabled="true"/>
+                    name="&view.availableUpdates.label;"
+                    tooltiptext="&view.availableUpdates.label;"
+                    disabled="true"/>
       <richlistitem id="category-recentUpdates" value="addons://updates/recent"
                     class="category"
-                    name="&view.recentUpdates.label;" disabled="true"/>
+                    name="&view.recentUpdates.label;"
+                    tooltiptext="&view.recentUpdates.label;" disabled="true"/>
     </richlistbox>
 
     <box id="view-port-container" flex="1">
@@ -249,18 +259,6 @@
 
         <!-- search view -->
         <vbox id="search-view" flex="1" class="view-pane">
-          <hbox id="search-filter" align="center">
-            <label id="search-filter-label" value="&search.filter2.label;"/>
-            <radiogroup id="search-filter-radiogroup" orient="horizontal"
-                        align="center" persist="value" value="local">
-              <radio id="search-filter-local" class="search-filter-radio"
-                     label="&search.filter2.installed.label;" value="local"
-                     tooltiptext="&search.filter2.installed.tooltip;"/>
-              <radio id="search-filter-remote" class="search-filter-radio"
-                     label="&search.filter2.available.label;" value="remote"
-                     tooltiptext="&search.filter2.available.tooltip;"/>
-            </radiogroup>
-          </hbox>
           <hbox class="view-header global-warning-container" align="center">
             <!-- global warnings -->
             <hbox class="global-warning" flex="1">
@@ -296,13 +294,36 @@
             <hbox id="search-sorters" class="sort-controls"
                   showrelevance="true" sortby="relevancescore" ascending="false"/>
           </hbox>
-          <vbox id="search-list-empty" class="empty-list-notice"
+          <hbox id="search-filter" align="center">
+            <label id="search-filter-label" value="&search.filter2.label;"/>
+            <radiogroup id="search-filter-radiogroup" orient="horizontal"
+                        align="center" persist="value" value="local">
+              <radio id="search-filter-local" class="search-filter-radio"
+                     label="&search.filter2.installed.label;" value="local"
+                     tooltiptext="&search.filter2.installed.tooltip;"/>
+              <radio id="search-filter-remote" class="search-filter-radio"
+                     label="&search.filter2.available.label;" value="remote"
+                     tooltiptext="&search.filter2.available.tooltip;"/>
+            </radiogroup>
+          </hbox>
+          <vbox id="search-loading" class="alert-container"
                 flex="1" hidden="true">
-            <spacer flex="1"/>
-            <label value="&listEmpty.search.label;"/>
-            <button label="&listEmpty.button.label;" class="addon-control"
-                    command="cmd_goToDiscoverPane"/>
-            <spacer flex="3"/>
+            <spacer class="alert-spacer-before"/>
+            <hbox class="alert loading" align="center">
+              <image/>
+              <label value="&loading.label;"/>
+            </hbox>
+            <spacer class="alert-spacer-after"/>
+          </vbox>
+          <vbox id="search-list-empty" class="alert-container"
+                flex="1" hidden="true">
+            <spacer class="alert-spacer-before"/>
+            <vbox class="alert">
+              <label value="&listEmpty.search.label;"/>
+              <button label="&listEmpty.button.label;" class="addon-control"
+                      command="cmd_goToDiscoverPane"/>
+            </vbox>
+            <spacer class="alert-spacer-after"/>
           </vbox>
           <richlistbox id="search-list" class="list" flex="1">
             <hbox pack="center">
@@ -348,13 +369,15 @@
             <hbox id="list-sorters" class="sort-controls" sortby="name"
                   ascending="true"/>
           </hbox>
-          <vbox id="addon-list-empty" class="empty-list-notice"
+          <vbox id="addon-list-empty" class="alert-container"
                 flex="1" hidden="true">
-            <spacer flex="1"/>
-            <label value="&listEmpty.installed.label;"/>
-            <button label="&listEmpty.button.label;" class="addon-control"
-                    command="cmd_goToDiscoverPane"/>
-            <spacer flex="3"/>
+            <spacer class="alert-spacer-before"/>
+            <vbox class="alert">
+              <label value="&listEmpty.installed.label;"/>
+              <button label="&listEmpty.button.label;" class="addon-control"
+                      command="cmd_goToDiscoverPane"/>
+            </vbox>
+            <spacer class="alert-spacer-after"/>
           </vbox>
           <richlistbox id="addon-list" class="list" flex="1"/>
         </vbox>
@@ -393,17 +416,19 @@
               <spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
             </hbox>
             <spacer flex="1"/>
-            <hbox id="updates-sorters" class="sort-controls" sortby="dateUpdated"
+            <hbox id="updates-sorters" class="sort-controls" sortby="updateDate"
                   ascending="false"/>
           </hbox>
-          <vbox id="updates-list-empty" class="empty-list-notice"
+          <vbox id="updates-list-empty" class="alert-container"
                 flex="1" hidden="true">
-            <spacer flex="1"/>
-            <label id="empty-availableUpdates-msg" value="&listEmpty.availableUpdates.label;"/>
-            <label id="empty-recentUpdates-msg" value="&listEmpty.recentUpdates.label;"/>
-            <button label="&listEmpty.findUpdates.label;" class="addon-control"
-                    command="cmd_findAllUpdates"/>
-            <spacer flex="3"/>
+            <spacer class="alert-spacer-before"/>
+            <vbox class="alert">
+              <label id="empty-availableUpdates-msg" value="&listEmpty.availableUpdates.label;"/>
+              <label id="empty-recentUpdates-msg" value="&listEmpty.recentUpdates.label;"/>
+              <button label="&listEmpty.findUpdates.label;" class="addon-control"
+                      command="cmd_findAllUpdates"/>
+            </vbox>
+            <spacer class="alert-spacer-after"/>
           </vbox>
           <hbox id="update-actions" pack="center">
             <button id="update-selected-btn" hidden="true"
@@ -448,10 +473,14 @@
           <hbox flex="1">
             <spacer flex="1"/>
             <!-- "loading" splash screen -->
-            <hbox class="loading" flex="1">
-              <image/>
-              <label value="&loading.label;"/>
-            </hbox>
+            <vbox class="alert-container">
+              <spacer class="alert-spacer-before"/>
+              <hbox class="alert loading">
+                <image/>
+                <label value="&loading.label;"/>
+              </hbox>
+              <spacer class="alert-spacer-after"/>
+            </vbox>
             <!-- actual detail view -->
             <vbox class="detail-view-container" flex="3" contextmenu="addonitem-popup">
               <vbox id="detail-notifications">
@@ -484,7 +513,8 @@
                 <image id="detail-icon" class="icon"/>
                 <vbox flex="1">
                   <vbox id="detail-summary">
-                    <hbox id="detail-name-container" align="start">
+                    <hbox id="detail-name-container" class="name-container"
+                          align="start">
                       <label id="detail-name" flex="1"/>
                       <label id="detail-version"/>
                       <label class="disabled-postfix" value="&addon.disabled.postfix;"/>
@@ -493,7 +523,7 @@
                     </hbox>
                     <label id="detail-creator" class="creator"/>
                   </vbox>
-                  <hbox id="detail-desc-container" align="end">
+                  <hbox id="detail-desc-container" align="start">
                     <image id="detail-screenshot" hidden="true"/>
                     <description id="detail-desc" flex="1"/>
                   </hbox>
@@ -504,7 +534,7 @@
                     <hbox align="center">
                       <label id="detail-contrib-suggested"/>
                       <spacer flex="1"/>
-                      <button id="detail-contrib-btn" class="addon-control"
+                      <button id="detail-contrib-btn"
                               label="&cmd.contribute.label;"
                               accesskey="&cmd.contribute.accesskey;"
                               tooltiptext="&cmd.contribute.tooltip;"
@@ -543,7 +573,7 @@
                       </row>
                       <row class="detail-row-complex" id="detail-homepage-row" label="&detail.home;">
                         <label class="detail-row-label" value="&detail.home;"/>
-                        <label id="detail-homepage" class="detail-row-value text-link"/>
+                        <label id="detail-homepage" class="detail-row-value text-link" crop="end"/>
                       </row>
                       <row class="detail-row-complex" id="detail-repository-row" label="&detail.repository;">
                         <label class="detail-row-label" value="&detail.repository;"/>
@@ -562,7 +592,7 @@
                     </rows>
                   </grid>
                   <hbox id="detail-controls">
-                    <button id="detail-prefs-btn" class="addon-control"
+                    <button id="detail-prefs-btn" class="addon-control preferences"
 #ifdef XP_WIN
                             label="&detail.showPreferencesWin.label;"
                             accesskey="&detail.showPreferencesWin.accesskey;"

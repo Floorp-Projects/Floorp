@@ -881,6 +881,9 @@ nsTextControlFrame::SelectAllOrCollapseToEndOfText(PRBool aSelect)
 
   nsCOMPtr<nsIContent> rootContent = do_QueryInterface(rootElement);
   nsCOMPtr<nsIDOMNode> rootNode(do_QueryInterface(rootElement));
+
+  NS_ENSURE_TRUE(rootNode && rootContent, NS_ERROR_FAILURE);
+
   PRInt32 numChildren = rootContent->GetChildCount();
 
   if (numChildren > 0) {

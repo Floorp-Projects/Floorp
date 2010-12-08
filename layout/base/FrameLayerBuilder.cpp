@@ -45,6 +45,7 @@
 #include "nsSubDocumentFrame.h"
 #include "nsCSSRendering.h"
 #include "nsCSSFrameConstructor.h"
+#include "gfxUtils.h"
 
 #ifdef DEBUG
 #include <stdio.h>
@@ -61,9 +62,10 @@ namespace {
  */
 class LayerManagerData : public LayerUserData {
 public:
-  LayerManagerData() :
+  LayerManagerData(LayerManager *aManager) :
     mInvalidateAllThebesContent(PR_FALSE),
-    mInvalidateAllLayers(PR_FALSE)
+    mInvalidateAllLayers(PR_FALSE),
+    mLayerManager(aManager)
   {
     MOZ_COUNT_CTOR(LayerManagerData);
     mFramesWithLayers.Init();
@@ -82,6 +84,8 @@ public:
   nsTHashtable<nsPtrHashKey<nsIFrame> > mFramesWithLayers;
   PRPackedBool mInvalidateAllThebesContent;
   PRPackedBool mInvalidateAllLayers;
+  /** Layer manager we belong to, we hold a reference to this object. */
+  nsRefPtr<LayerManager> mLayerManager;
 };
 
 static void DestroyRegion(void* aPropertyValue)
@@ -406,12 +410,11 @@ FrameLayerBuilder::InternalDestroyDisplayItemData(nsIFrame* aFrame,
     NS_ASSERTION(data, "Frame with layer should have been recorded");
     data->mFramesWithLayers.RemoveEntry(aFrame);
     if (data->mFramesWithLayers.Count() == 0) {
-      manager->RemoveUserData(&gLayerManagerUserData);
-      // Consume the reference we added when we set the user data
-      // in DidEndTransaction. But don't actually release until we've
-      // released all the layers in the DisplayItemData array below!
+      // Destroying our user data will consume a reference from the layer
+      // manager. But don't actually release until we've released all the layers
+      // in the DisplayItemData array below!
       managerRef = manager;
-      NS_RELEASE(manager);
+      manager->RemoveUserData(&gLayerManagerUserData);
     }
   }
 
@@ -484,11 +487,8 @@ FrameLayerBuilder::WillEndTransaction(LayerManager* aManager)
     // Update all the frames that used to have layers.
     data->mFramesWithLayers.EnumerateEntries(UpdateDisplayItemDataForFrame, this);
   } else {
-    data = new LayerManagerData();
+    data = new LayerManagerData(mRetainingManager);
     mRetainingManager->SetUserData(&gLayerManagerUserData, data);
-    // Addref mRetainingManager. We'll release it when 'data' is
-    // removed.
-    NS_ADDREF(mRetainingManager);
   }
   // Now go through all the frames that didn't have any retained
   // display items before, and record those retained display items.
@@ -747,7 +747,7 @@ SetVisibleRectForLayer(Layer* aLayer, const nsIntRect& aRect)
         gfxRect(aRect.x, aRect.y, aRect.width, aRect.height));
     layerVisible.RoundOut();
     nsIntRect visibleRect;
-    if (NS_FAILED(nsLayoutUtils::GfxRectToIntRect(layerVisible, &visibleRect))) {
+    if (!gfxUtils::GfxRectToIntRect(layerVisible, &visibleRect)) {
       visibleRect = nsIntRect(0, 0, 0, 0);
       NS_WARNING("Visible rect transformed out of bounds");
     }

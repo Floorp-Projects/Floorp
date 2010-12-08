@@ -495,7 +495,10 @@ JSThreadData::init()
     if (!stackSpace.init())
         return false;
 #ifdef JS_TRACER
-    InitJIT(&traceMonitor);
+    if (!InitJIT(&traceMonitor)) {
+        finish();
+        return false;
+    }
 #endif
     dtoaState = js_NewDtoaState();
     if (!dtoaState) {
@@ -643,7 +646,15 @@ js_CurrentThread(JSRuntime *rt)
         JS_ASSERT(p->value == thread);
     }
     JS_ASSERT(thread->id == id);
-    JS_ASSERT(thread->data.nativeStackBase == GetNativeStackBase());
+
+#ifdef DEBUG
+    char* gnsb = (char*) GetNativeStackBase();
+    JS_ASSERT(gnsb + 0      == (char*) thread->data.nativeStackBase ||
+              /* Work around apparent glibc bug; see bug 608526. */
+              gnsb + 0x1000 == (char*) thread->data.nativeStackBase ||
+              gnsb + 0x2000 == (char*) thread->data.nativeStackBase ||
+              gnsb + 0x3000 == (char*) thread->data.nativeStackBase);
+#endif
 
     return thread;
 }
@@ -1834,9 +1845,9 @@ js_InvokeOperationCallback(JSContext *cx)
     JS_ASSERT(td->interruptFlags != 0);
 
     /*
-     * Reset the callback counter first, then yield. If another thread is racing
-     * us here we will accumulate another callback request which will be
-     * serviced at the next opportunity.
+     * Reset the callback counter first, then run GC and yield. If another
+     * thread is racing us here we will accumulate another callback request
+     * which will be serviced at the next opportunity.
      */
     JS_LOCK_GC(rt);
     td->interruptFlags = 0;
@@ -1845,13 +1856,6 @@ js_InvokeOperationCallback(JSContext *cx)
 #endif
     JS_UNLOCK_GC(rt);
 
-    /*
-     * Unless we are going to run the GC, we automatically yield the current
-     * context every time the operation callback is hit since we might be
-     * called as a result of an impending GC, which would deadlock if we do
-     * not yield. Operation callbacks are supposed to happen rarely (seconds,
-     * not milliseconds) so it is acceptable to yield at every callback.
-     */
     if (rt->gcIsNeeded) {
         js_GC(cx, GC_NORMAL);
 
@@ -1868,10 +1872,19 @@ js_InvokeOperationCallback(JSContext *cx)
             return false;
         }
     }
+    
 #ifdef JS_THREADSAFE
-    else {
-        JS_YieldRequest(cx);
-    }
+    /*
+     * We automatically yield the current context every time the operation
+     * callback is hit since we might be called as a result of an impending
+     * GC on another thread, which would deadlock if we do not yield.
+     * Operation callbacks are supposed to happen rarely (seconds, not
+     * milliseconds) so it is acceptable to yield at every callback.
+     *
+     * As the GC can be canceled before it does any request checks we yield
+     * even if rt->gcIsNeeded was true above. See bug 590533.
+     */
+    JS_YieldRequest(cx);
 #endif
 
     JSOperationCallback cb = cx->operationCallback;

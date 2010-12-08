@@ -1,0 +1,102 @@
+<html>
+
+<head>
+  <title>Text attribute changed event for misspelled text</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+  <script type="application/javascript"
+          src="../attributes.js"></script>
+
+  <script type="application/javascript">
+
+    const nsIDOMNSEditableElement =
+      Components.interfaces.nsIDOMNSEditableElement;
+
+    function spelledTextInvoker(aID)
+    {
+      this.DOMNode = getNode(aID);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_TEXT_ATTRIBUTE_CHANGED, this.DOMNode)
+      ];
+
+      this.invoke = function spelledTextInvoker_invoke()
+      {
+        this.DOMNode.setAttribute("value", "valid text inalid tixt");
+        this.DOMNode.focus();
+
+        var editor = this.DOMNode.QueryInterface(nsIDOMNSEditableElement).editor;
+        var spellchecker = editor.getInlineSpellChecker(true);
+        spellchecker.enableRealTimeSpell = true;
+      }
+
+      this.finalCheck = function spelledTextInvoker_finalCheck()
+      {
+        var defAttrs = buildDefaultTextAttrs(this.DOMNode, kInputFontSize);
+        testDefaultTextAttrs(aID, defAttrs);
+
+        var attrs = { };
+        var misspelledAttrs = {
+          "invalid": "spelling"
+        };
+
+        testTextAttrs(aID, 0, attrs, defAttrs, 0, 11);
+        testTextAttrs(aID, 11, misspelledAttrs, defAttrs, 11, 17);
+        testTextAttrs(aID, 17, attrs, defAttrs, 17, 18);
+        testTextAttrs(aID, 18, misspelledAttrs, defAttrs, 18, 22);
+      }
+
+      this.getID = function spelledTextInvoker_getID()
+      {
+        return "text attribute change for misspelled text";
+      }
+    }
+
+    /**
+     * Do tests.
+     */
+    //gA11yEventDumpID = "eventdump"; // debug stuff
+
+    var gQueue = null;
+    function doTests()
+    {
+      gQueue = new eventQueue();
+      gQueue.push(new spelledTextInvoker("area8"));
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=345759"
+     title="Implement text attributes">
+    Mozilla Bug 345759
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <input id="area8"/>
+
+  <div id="eventdump"></div>
+</body>
+</html>

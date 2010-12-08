@@ -92,6 +92,12 @@ include css-submit-invalid/reftest.list
 # css transitions
 include css-transitions/reftest.list
 
+# css :-moz-ui-invalid
+include css-ui-invalid/reftest.list
+
+# css :-moz-ui-valid
+include css-ui-valid/reftest.list
+
 # css values and units
 include css-valuesandunits/reftest.list
 

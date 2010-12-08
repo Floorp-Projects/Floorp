@@ -15,6 +15,7 @@ function testRegExp(b) {
     assertEq(a.ignoreCase, b.ignoreCase);
     assertEq(a.multiline, b.multiline);
     assertEq(a.sticky, b.sticky);
+    assertEq("expando" in a, false);
 }
 
 testRegExp(RegExp(""));

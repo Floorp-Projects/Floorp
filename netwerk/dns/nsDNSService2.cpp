@@ -57,6 +57,7 @@
 #include "prmon.h"
 #include "prio.h"
 #include "plstr.h"
+#include "nsIOService.h"
 
 #include "mozilla/FunctionTimer.h"
 
@@ -382,6 +383,13 @@ nsDNSService::Init()
     if (enableIDN)
         idn = do_GetService(NS_IDNSERVICE_CONTRACTID);
 
+    nsDNSPrefetch::Initialize(this);
+
+    // Don't initialize the resolver if we're in offline mode.
+    // Later on, the IO service will reinitialize us when going online.
+    if (gIOService->IsOffline() && !gIOService->IsComingOnline())
+        return NS_OK;
+
     nsRefPtr<nsHostResolver> res;
     nsresult rv = nsHostResolver::Create(maxCacheEntries,
                                          maxCacheLifetime,
@@ -397,8 +405,6 @@ nsDNSService::Init()
         // Disable prefetching either by explicit preference or if a manual proxy is configured 
         mDisablePrefetch = disablePrefetch || (proxyType == nsIProtocolProxyService::PROXYCONFIG_MANUAL);
     }
-    
-    nsDNSPrefetch::Initialize(this);
     return rv;
 }
 
@@ -571,8 +577,8 @@ nsDNSService::Observe(nsISupports *subject, const char *topic, const PRUnichar *
 
     if (mResolver) {
         Shutdown();
-        Init();
     }
+    Init();
     return NS_OK;
 }
 

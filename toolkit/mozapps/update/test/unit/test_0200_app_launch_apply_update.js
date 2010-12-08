@@ -148,9 +148,8 @@ function run_test() {
     removeDirRecursive(updateTestDir);
   }
   catch (e) {
-    dump("Unable to remove directory\n" +
-         "path: " + updateTestDir.path + "\n" +
-         "Exception: " + e + "\n");
+    logTestInfo("unable to remove directory - path: " + updateTestDir.path +
+                ", exception: " + e);
   }
 
   // Add the directory where the update files will be added and add files that
@@ -251,9 +250,8 @@ function end_test() {
     removeDirRecursive(updateTestDir);
   }
   catch (e) {
-    dump("Unable to remove directory\n" +
-         "path: " + updateTestDir.path + "\n" +
-         "Exception: " + e + "\n");
+    logTestInfo("unable to remove directory - path: " + updateTestDir.path +
+                ", exception: " + e);
   }
 
   // This will delete the app console log file if it exists.

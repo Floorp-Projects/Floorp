@@ -202,7 +202,7 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
          * with stub getters and setters, we can cache the slot.
          */
         if (!(cs->format & (JOF_SET | JOF_FOR)) &&
-            (!(cs->format & JOF_INCDEC) || shape->hasDefaultSetter()) &&
+            (!(cs->format & JOF_INCDEC) || (shape->hasDefaultSetter() && shape->writable())) &&
             shape->hasDefaultGetter() &&
             pobj->containsSlot(shape->slot)) {
             /* Great, let's cache shape's slot and use it on cache hit. */

@@ -171,10 +171,7 @@ public:
     }
 
     // for anything that wants to know if we're in private browsing mode.
-    PRBool InPrivateBrowsingMode()
-    {
-      return mInPrivateBrowsingMode;
-    }
+    PRBool InPrivateBrowsingMode();
 
     //
     // The HTTP handler caches pointers to specific XPCOM services, and
@@ -277,9 +274,6 @@ private:
 
     PRUint8  mRedirectionLimit;
 
-    // cached value of whether or not the browser is in private browsing mode.
-    PRBool   mInPrivateBrowsingMode;
-
     // we'll warn the user if we load an URL containing a userpass field
     // unless its length is less than this threshold.  this warning is
     // intended to protect the user against spoofing attempts that use
@@ -289,6 +283,13 @@ private:
     PRUint8  mQoSBits;
 
     PRPackedBool mPipeliningOverSSL;
+
+    // cached value of whether or not the browser is in private browsing mode.
+    enum {
+        PRIVATE_BROWSING_OFF = PR_FALSE,
+        PRIVATE_BROWSING_ON = PR_TRUE,
+        PRIVATE_BROWSING_UNKNOWN = 2
+    } mInPrivateBrowsingMode;
 
     nsCString mAccept;
     nsCString mAcceptLanguages;

@@ -326,6 +326,33 @@ function compareEdge(anchor, popup, edge, offsetX, offsetY, testname)
      (Math.round(popuprect.bottom) - Math.round(popuprect.top)),
      testname + " size");
 
+  var spaceIdx = edge.indexOf(" ");
+  if (spaceIdx > 0) {
+    let cornerX, cornerY;
+    let [anchor, align] = edge.split(" ");
+    switch (anchor) {
+      case "topleft": cornerX = anchorrect.left; cornerY = anchorrect.top; break;
+      case "topcenter": cornerX = anchorrect.left + anchorrect.width / 2; cornerY = anchorrect.top; break;
+      case "topright": cornerX = anchorrect.right; cornerY = anchorrect.top; break;
+      case "leftcenter": cornerX = anchorrect.left; cornerY = anchorrect.top + anchorrect.height / 2; break;
+      case "rightcenter": cornerX = anchorrect.right; cornerY = anchorrect.top + anchorrect.height / 2; break;
+      case "bottomleft": cornerX = anchorrect.left; cornerY = anchorrect.bottom; break;
+      case "bottomcenter": cornerX = anchorrect.left + anchorrect.width / 2; cornerY = anchorrect.bottom; break;
+      case "bottomright": cornerX = anchorrect.right; cornerY = anchorrect.bottom; break;
+    }
+
+    switch (align) {
+      case "topleft": cornerX += offsetX; cornerY += offsetY; break;
+      case "topright": cornerX += -popuprect.width + offsetX; cornerY += offsetY; break;
+      case "bottomleft": cornerX += offsetX; cornerY += -popuprect.height + offsetY; break;
+      case "bottomright": cornerX += -popuprect.width + offsetX; cornerY += -popuprect.height + offsetY; break;
+    }
+
+    is(Math.round(popuprect.left), Math.round(cornerX), testname + " x position");
+    is(Math.round(popuprect.top), Math.round(cornerY), testname + " y position");
+    return;
+  }
+
   if (edge == "after_pointer") {
     is(Math.round(popuprect.left), Math.round(anchorrect.left) + offsetX, testname + " x position");
     is(Math.round(popuprect.top), Math.round(anchorrect.top) + offsetY + 21, testname + " y position");

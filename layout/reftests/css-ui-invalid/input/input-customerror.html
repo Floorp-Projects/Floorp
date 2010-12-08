@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- Test: if input has a custom error, it should be affected by :-moz-ui-invalid
+             pseudo-class. -->
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <body onload="document.getElementById('t').setCustomValidity('foo'); document.documentElement.className='';">
+    <input class='invalid' id='t'>
+  </body>
+</html>

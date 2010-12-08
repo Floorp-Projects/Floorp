@@ -103,6 +103,7 @@ members = [
     'nsIDOMDocument.getElementById',
     'nsIDOMDocument.createDocumentFragment',
     'nsIDOMDocument.createElement',
+    'nsIDOMDocument.createElementNS',
     'nsIDOMDocument.importNode',
     'nsIDOMDocument.createTextNode',
     'nsIDOMElement.removeAttributeNS',
@@ -427,8 +428,6 @@ members = [
     # nsIXMLHttpRequest.channel is not used on the web, and more
     # importantly relies on the CAPS check that quickstubs don't make.
     '-nsIXMLHttpRequest.channel',
-    # nsIXMLHttpRequest.open uses the JS stack
-    '-nsIXMLHttpRequest.open',
     # various XHR things use ACString and AUTF8String and [cstring]
     # which quickstubs don't handle as return values (or at all in the
     # case of AUTF8String) yet.
@@ -908,6 +907,11 @@ customMethodCalls = {
         'thisType': 'nsDocument',
         'code': '    nsCOMPtr<nsIContent> result;\n'
                 '    rv = self->CreateElement(arg0, getter_AddRefs(result));'
+    },
+    'nsIDOMDocument_CreateElementNS': {
+        'thisType': 'nsDocument',
+        'code': '    nsCOMPtr<nsIContent> result;\n'
+                '    rv = self->CreateElementNS(arg0, arg1, getter_AddRefs(result));'
     },
     'nsIDOMDocument_CreateTextNode': {
         'thisType': 'nsDocument',

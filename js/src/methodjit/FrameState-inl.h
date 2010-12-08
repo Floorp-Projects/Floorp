@@ -343,6 +343,16 @@ FrameState::pushInt32(RegisterID payload)
 }
 
 inline void
+FrameState::pushInitializerObject(RegisterID payload, bool array, JSObject *baseobj)
+{
+    pushTypedPayload(JSVAL_TYPE_OBJECT, payload);
+
+    FrameEntry *fe = peek(-1);
+    fe->initArray = array;
+    fe->initObject = baseobj;
+}
+
+inline void
 FrameState::pushUntypedPayload(JSValueType type, RegisterID payload)
 {
     JS_ASSERT(!freeRegs.hasReg(payload));

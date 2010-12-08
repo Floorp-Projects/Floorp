@@ -1,0 +1,55 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US">
+<head>
+	<title></title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<style type="text/css">
+
+	@font-face {
+		font-family: "MarkA";
+		src: url(../fonts/markA.ttf);
+	}
+
+	.c1 { font-family: sans-serif, MarkA; }
+	.c2 { font-family: serif, MarkA; }
+	.c3 { font-family: monospace, MarkA; }
+	.c4 { font-family: fantasy, MarkA; }
+	.c5 { font-family: cursive, MarkA; }
+
+	.c11 { font-family: MarkA, sans-serif; }
+	.c12 { font-family: MarkA, serif; }
+	.c13 { font-family: MarkA, monospace; }
+	.c14 { font-family: MarkA, fantasy; }
+	.c15 { font-family: MarkA, cursive; }
+
+        /* to ensure the same vertical positioning of the text */
+        .spacer { line-height: 3em }
+	</style>
+</head>
+<body>
+
+<p class="c1">AB</p>
+<p class="c2">AB</p>
+<p class="c3">AB</p>
+<!-- Rev3 Fedora 12 test machines don't have fantasy or cursive,
+     and WINNT 5.2 machines don't have fantasy.
+<p class="c4">AB</p>
+<p class="c5">AB</p>
+-->
+
+<p class="c11">A</p>
+<p><span class="c11">B</span><span class="spacer"></span></p>
+<p class="c12">A</p>
+<p><span class="c12">B</span><span class="spacer"></span></p>
+<p class="c13">A</p>
+<p><span class="c13">B</span><span class="spacer"></span></p>
+<!--
+<p class="c14">A</p>
+<p class="c14">B</p>
+<p class="c15">A</p>
+<p class="c15">B</p>
+-->
+
+</body>
+</html>

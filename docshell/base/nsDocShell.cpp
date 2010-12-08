@@ -1,6 +1,6 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: ft=cpp tw=78 sw=4 et ts=4 sts=4 cin
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: ft=cpp tw=78 sw=4 et ts=8 sts=4 cin */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -4072,33 +4072,40 @@ nsDocShell::LoadErrorPage(nsIURI *aURI, const PRUnichar *aURL,
 
     // Create a URL to pass all the error information through to the page.
 
-    char *escapedUrl = nsEscape(url.get(), url_Path);
-    char *escapedCharset = nsEscape(charset.get(), url_Path);
-    char *escapedError = nsEscape(NS_ConvertUTF16toUTF8(aErrorType).get(), url_Path);
-    char *escapedDescription = nsEscape(NS_ConvertUTF16toUTF8(aDescription).get(), url_Path);
-    char *escapedCSSClass = nsEscape(aCSSClass, url_Path);
-
+#undef SAFE_ESCAPE
+#define SAFE_ESCAPE(cstring, escArg1, escArg2)  \
+    {                                           \
+        char* s = nsEscape(escArg1, escArg2);   \
+        if (!s)                                 \
+            return NS_ERROR_OUT_OF_MEMORY;      \
+        cstring.Adopt(s);                       \
+    }
+    nsCString escapedUrl, escapedCharset, escapedError, escapedDescription,
+              escapedCSSClass;
+    SAFE_ESCAPE(escapedUrl, url.get(), url_Path);
+    SAFE_ESCAPE(escapedCharset, charset.get(), url_Path);
+    SAFE_ESCAPE(escapedError,
+                NS_ConvertUTF16toUTF8(aErrorType).get(), url_Path);
+    SAFE_ESCAPE(escapedDescription,
+                NS_ConvertUTF16toUTF8(aDescription).get(), url_Path);
+    if (aCSSClass) {
+        SAFE_ESCAPE(escapedCSSClass, aCSSClass, url_Path);
+    }
     nsCString errorPageUrl("about:");
     errorPageUrl.AppendASCII(aErrorPage);
     errorPageUrl.AppendLiteral("?e=");
 
-    errorPageUrl.AppendASCII(escapedError);
+    errorPageUrl.AppendASCII(escapedError.get());
     errorPageUrl.AppendLiteral("&u=");
-    errorPageUrl.AppendASCII(escapedUrl);
-    if (escapedCSSClass && escapedCSSClass[0]) {
+    errorPageUrl.AppendASCII(escapedUrl.get());
+    if (!escapedCSSClass.IsEmpty()) {
         errorPageUrl.AppendASCII("&s=");
-        errorPageUrl.AppendASCII(escapedCSSClass);
+        errorPageUrl.AppendASCII(escapedCSSClass.get());
     }
     errorPageUrl.AppendLiteral("&c=");
-    errorPageUrl.AppendASCII(escapedCharset);
+    errorPageUrl.AppendASCII(escapedCharset.get());
     errorPageUrl.AppendLiteral("&d=");
-    errorPageUrl.AppendASCII(escapedDescription);
-
-    nsMemory::Free(escapedDescription);
-    nsMemory::Free(escapedError);
-    nsMemory::Free(escapedUrl);
-    nsMemory::Free(escapedCharset);
-    nsMemory::Free(escapedCSSClass);
+    errorPageUrl.AppendASCII(escapedDescription.get());
 
     nsCOMPtr<nsIURI> errorPageURI;
     nsresult rv = NS_NewURI(getter_AddRefs(errorPageURI), errorPageUrl);
@@ -4299,7 +4306,7 @@ nsDocShell::GetSessionHistory(nsISHistory ** aSessionHistory)
 
 //*****************************************************************************
 // nsDocShell::nsIWebPageDescriptor
-//*****************************************************************************   
+//*****************************************************************************
 NS_IMETHODIMP
 nsDocShell::LoadPage(nsISupports *aPageDescriptor, PRUint32 aDisplayType)
 {
@@ -4315,7 +4322,13 @@ nsDocShell::LoadPage(nsISupports *aPageDescriptor, PRUint32 aDisplayType)
     nsCOMPtr<nsISHEntry> shEntry;
     nsresult rv = shEntryIn->Clone(getter_AddRefs(shEntry));
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
+    // Give our cloned shEntry a new document identifier so this load is
+    // independent of all other loads.  (This is important, in particular,
+    // for bugs 582795 and 585298.)
+    rv = shEntry->SetUniqueDocIdentifier();
+    NS_ENSURE_SUCCESS(rv, rv);
+
     //
     // load the page as view-source
     //
@@ -6570,12 +6583,15 @@ nsDocShell::ReattachEditorToWindow(nsISHEntry *aSHEntry)
                  "Reattaching when there's not a detached editor.");
 
     if (mEditorData || !aSHEntry)
-      return;
+        return;
 
     mEditorData = aSHEntry->ForgetEditorData();
     if (mEditorData) {
-        nsresult res = mEditorData->ReattachToWindow(this);
-        NS_ASSERTION(NS_SUCCEEDED(res), "Failed to reattach editing session");
+#ifdef DEBUG
+        nsresult rv =
+#endif
+        mEditorData->ReattachToWindow(this);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to reattach editing session");
     }
 }
 
@@ -8331,7 +8347,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                 window->DispatchSyncPopState();
 
                 if (doHashchange)
-                  window->DispatchSyncHashchange();
+                  window->DispatchAsyncHashchange();
             }
 
             return NS_OK;
@@ -10444,7 +10460,7 @@ nsDocShell::ExtractLastVisit(nsIChannel* aChannel,
       );
 
       NS_WARN_IF_FALSE(
-          NS_FAILED(rv),
+          NS_SUCCEEDED(rv),
           "Could not fetch previous flags, URI will be treated like referrer"
       );
     }

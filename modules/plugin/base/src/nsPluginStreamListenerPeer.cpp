@@ -608,15 +608,9 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request,
           mPluginInstance->Start();
           mOwner->CreateWidget();
           // If we've got a native window, the let the plugin know about it.
-          if (window->window) {
-            ((nsPluginNativeWindow*)window)->CallSetWindow(pluginInstCOMPtr);
-          } else {
-            PRBool useAsyncPainting = PR_FALSE;
-            mPluginInstance->UseAsyncPainting(&useAsyncPainting);
-            if (useAsyncPainting) {
-              mPluginInstance->AsyncSetWindow(window);
-            }
-          }
+          nsCOMPtr<nsIPluginInstanceOwner_MOZILLA_2_0_BRANCH> owner = do_QueryInterface(mOwner);
+          if (owner)
+            owner->SetWindow();
         }
       }
     }
@@ -815,10 +809,9 @@ nsresult nsPluginStreamListenerPeer::ServeStreamAsFile(nsIRequest *request,
       window->window = widget->GetNativeData(NS_NATIVE_PLUGIN_PORT);
     }
 #endif
-    if (window->window) {
-      nsCOMPtr<nsIPluginInstance> pluginInstCOMPtr = mPluginInstance.get();
-      ((nsPluginNativeWindow*)window)->CallSetWindow(pluginInstCOMPtr);
-    }
+    nsCOMPtr<nsIPluginInstanceOwner_MOZILLA_2_0_BRANCH> owner = do_QueryInterface(mOwner);
+    if (owner)
+      owner->SetWindow();
   }
   
   mSeekable = PR_FALSE;
@@ -1307,12 +1300,10 @@ nsPluginStreamListenerPeer::AsyncOnChannelRedirect(nsIChannel *oldChannel, nsICh
       if (method.EqualsLiteral("POST")) {
         nsCOMPtr<nsIContentUtils2> contentUtils2 = do_GetService("@mozilla.org/content/contentutils2;1");
         NS_ENSURE_TRUE(contentUtils2, NS_ERROR_FAILURE);
-
-        nsCOMPtr<nsIInterfaceRequestor> sameOriginChecker = contentUtils2->GetSameOriginChecker();
-        nsCOMPtr<nsIChannelEventSink> sameOriginChannelEventSink = do_GetInterface(sameOriginChecker);
-        NS_ENSURE_TRUE(sameOriginChannelEventSink, NS_ERROR_FAILURE);
-        
-        return sameOriginChannelEventSink->AsyncOnChannelRedirect(oldChannel, newChannel, flags, callback);        
+        rv = contentUtils2->CheckSameOrigin(oldChannel, newChannel);
+        if (NS_FAILED(rv)) {
+          return rv;
+        }
       }
     }
   }

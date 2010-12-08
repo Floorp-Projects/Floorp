@@ -1,0 +1,22 @@
+/* Override default style */
+output {
+  color: black;
+}
+
+output.notinvalid {
+  color: green;
+}
+output.notinvalid:-moz-ui-invalid {
+  color: red;
+}
+
+output.invalid {
+  color: red;
+}
+output.invalid:-moz-ui-invalid {
+  color: green;
+}
+
+output.ref {
+  color: green;
+}

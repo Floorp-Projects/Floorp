@@ -57,6 +57,10 @@ class CrossOriginWrapper : public JSCrossCompartmentWrapper {
     virtual bool get(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id,
                      js::Value *vp);
 
+    virtual bool call(JSContext *cx, JSObject *wrapper, uintN argc, js::Value *vp);
+    virtual bool construct(JSContext *cx, JSObject *wrapper,
+                           uintN argc, js::Value *argv, js::Value *rval);
+
     virtual bool enter(JSContext *cx, JSObject *wrapper, jsid id, Action act);
     virtual void leave(JSContext *cx, JSObject *wrapper);
 

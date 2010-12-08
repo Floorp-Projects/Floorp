@@ -208,7 +208,7 @@ struct JSScript {
     static JSScript *NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natoms,
                                uint32 nobjects, uint32 nupvars, uint32 nregexps,
                                uint32 ntrynotes, uint32 nconsts, uint32 nglobals,
-                               uint32 nClosedArgs, uint32 nClosedVars);
+                               uint16 nClosedArgs, uint16 nClosedVars);
 
     static JSScript *NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg);
 
@@ -510,8 +510,19 @@ js_CallNewScriptHook(JSContext *cx, JSScript *script, JSFunction *fun);
 extern JS_FRIEND_API(void)
 js_CallDestroyScriptHook(JSContext *cx, JSScript *script);
 
+/*
+ * The function must be used only outside the GC for a script that was run
+ * only on the current thread.
+ */
 extern void
 js_DestroyScript(JSContext *cx, JSScript *script);
+
+/*
+ * If data is not null, it indicates that the script could been accessed only
+ * from that thread.
+ */
+extern void
+js_DestroyScriptFromGC(JSContext *cx, JSScript *script, JSThreadData *data);
 
 extern void
 js_TraceScript(JSTracer *trc, JSScript *script);

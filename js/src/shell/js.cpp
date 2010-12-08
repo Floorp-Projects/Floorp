@@ -2075,22 +2075,35 @@ DisassembleValue(JSContext *cx, jsval v, bool lines, bool recursive)
 static JSBool
 Disassemble(JSContext *cx, uintN argc, jsval *vp)
 {
-    bool lines = false, recursive = false;
-
     jsval *argv = JS_ARGV(cx, vp);
+
+    /* Read options off early arguments */
+    bool lines = false, recursive = false;
     while (argc > 0 && JSVAL_IS_STRING(argv[0])) {
         JSString *str = JSVAL_TO_STRING(argv[0]);
-        lines = JS_MatchStringAndAscii(str, "-l");
-        recursive = JS_MatchStringAndAscii(str, "-r");
+        lines |= !!JS_MatchStringAndAscii(str, "-l");
+        recursive |= !!JS_MatchStringAndAscii(str, "-r");
         if (!lines && !recursive)
             break;
         argv++, argc--;
     }
 
-    for (uintN i = 0; i < argc; i++) {
-        if (!DisassembleValue(cx, argv[i], lines, recursive))
-            return false;
+    if (argc == 0) {
+        /* Without arguments, disassemble the current script. */
+        if (JSStackFrame *frame = JS_GetScriptedCaller(cx, NULL)) {
+            JSScript *script = JS_GetFrameScript(cx, frame);
+            if (!js_Disassemble(cx, script, lines, stdout))
+                return false;
+            SrcNotes(cx, script);
+            TryNotes(cx, script);
+        }
+    } else {
+        for (uintN i = 0; i < argc; i++) {
+            if (!DisassembleValue(cx, argv[i], lines, recursive))
+                return false;
+        }
     }
+
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return true;
 }
@@ -2104,6 +2117,12 @@ DisassFile(JSContext *cx, uintN argc, jsval *vp)
         JS_SET_RVAL(cx, vp, JSVAL_VOID);
         return JS_TRUE;
     }
+
+    /* Support extra options at the start, just like Dissassemble. */
+    uintN _argc = argc;
+    argv += argc-1;
+    argc = 1;
+
 
     JSObject *thisobj = JS_THIS_OBJECT(cx, vp);
     if (!thisobj)
@@ -2133,7 +2152,7 @@ DisassFile(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
 
     argv[0] = OBJECT_TO_JSVAL(obj); /* I like to root it, root it. */
-    JSBool ok = Disassemble(cx, 1, vp); /* gross, but works! */
+    JSBool ok = Disassemble(cx, _argc, vp); /* gross, but works! */
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return ok;
 }
@@ -4145,7 +4164,7 @@ Wrap(JSContext *cx, uintN argc, jsval *vp)
     }
 
     JSObject *obj = JSVAL_TO_OBJECT(v);
-    JSObject *wrapped = JSWrapper::New(cx, obj, obj->getProto(), obj->getParent(),
+    JSObject *wrapped = JSWrapper::New(cx, obj, obj->getProto(), obj->getGlobal(),
                                        &JSWrapper::singleton);
     if (!wrapped)
         return false;
@@ -4191,8 +4210,10 @@ Deserialize(JSContext *cx, uintN argc, jsval *vp)
         return false;
     }
 
-    if (!JS_ReadStructuredClone(cx, (uint64 *) array->data, array->byteLength, &v))
+    if (!JS_ReadStructuredClone(cx, (uint64 *) array->data, array->byteLength,
+                                JS_STRUCTURED_CLONE_VERSION, &v)) {
         return false;
+    }
     JS_SET_RVAL(cx, vp, v);
     return true;
 }
@@ -4349,9 +4370,11 @@ static const char *const shell_help_messages[] = {
 "testUTF8(mode)           Perform UTF-8 tests (modes are 1 to 4)",
 "throwError()             Throw an error from JS_ReportError",
 #ifdef DEBUG
-"dis([fun])               Disassemble functions into bytecodes\n"
-"dis('-r', fun)           Disassembles recursively",
-"disfile('foo.js')        Disassemble script file into bytecodes",
+"dis([fun])               Disassemble functions into bytecodes",
+"disfile('foo.js')        Disassemble script file into bytecodes\n"
+"  dis and disfile take these options as preceeding string arguments\n"
+"    \"-r\" (disassemble recursively)\n"
+"    \"-l\" (show line numbers)",
 "dissrc([fun])            Disassemble functions with source lines",
 "dumpHeap([fileName[, start[, toFind[, maxDepth[, toIgnore]]]]])\n"
 "  Interface to JS_DumpHeap with output sent to file",

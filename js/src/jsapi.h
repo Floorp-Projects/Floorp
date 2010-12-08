@@ -965,7 +965,7 @@ extern JS_PUBLIC_API(JSBool)
 JS_WrapValue(JSContext *cx, jsval *vp);
 
 extern JS_PUBLIC_API(JSObject *)
-JS_TransplantWrapper(JSContext *cx, JSObject *wrapper, JSObject *target);
+JS_TransplantObject(JSContext *cx, JSObject *origobj, JSObject *target);
 
 #ifdef __cplusplus
 JS_END_EXTERN_C
@@ -1644,7 +1644,7 @@ JS_SetNativeStackQuota(JSContext *cx, size_t stackSize);
  * Set the quota on the number of bytes that stack-like data structures can
  * use when the runtime compiles and executes scripts. These structures
  * consume heap space, so JS_SetThreadStackLimit does not bound their size.
- * The default quota is 32MB which is quite generous.
+ * The default quota is 128MB which is very generous.
  *
  * The function must be called before any script compilation or execution API
  * calls, i.e. either immediately after JS_NewContext or from JSCONTEXT_NEW
@@ -1653,7 +1653,7 @@ JS_SetNativeStackQuota(JSContext *cx, size_t stackSize);
 extern JS_PUBLIC_API(void)
 JS_SetScriptStackQuota(JSContext *cx, size_t quota);
 
-#define JS_DEFAULT_SCRIPT_STACK_QUOTA   ((size_t) 0x2000000)
+#define JS_DEFAULT_SCRIPT_STACK_QUOTA   ((size_t) 0x8000000)
 
 /************************************************************************/
 
@@ -3025,7 +3025,7 @@ JS_FinishJSONParse(JSContext *cx, JSONParser *jp, jsval reviver);
 #define JS_STRUCTURED_CLONE_VERSION 1
 
 JS_PUBLIC_API(JSBool)
-JS_ReadStructuredClone(JSContext *cx, const uint64 *data, size_t nbytes, jsval *vp);
+JS_ReadStructuredClone(JSContext *cx, const uint64 *data, size_t nbytes, uint32 version, jsval *vp);
 
 /* Note: On success, the caller is responsible for calling js_free(*datap). */
 JS_PUBLIC_API(JSBool)
@@ -3040,9 +3040,12 @@ class JSAutoStructuredCloneBuffer {
     JSContext *cx;
     uint64 *data_;
     size_t nbytes_;
+    uint32 version_;
 
   public:
-    explicit JSAutoStructuredCloneBuffer(JSContext *cx) : cx(cx), data_(NULL), nbytes_(0) {}
+    explicit JSAutoStructuredCloneBuffer(JSContext *cx)
+        : cx(cx), data_(NULL), nbytes_(0), version_(JS_STRUCTURED_CLONE_VERSION) {}
+
     ~JSAutoStructuredCloneBuffer() { clear(); }
 
     uint64 *data() const { return data_; }
@@ -3060,10 +3063,11 @@ class JSAutoStructuredCloneBuffer {
      * Adopt some memory. It will be automatically freed by the destructor.
      * data must have been allocated using JS_malloc.
      */
-    void adopt(uint64 *data, size_t nbytes) {
+    void adopt(uint64 *data, size_t nbytes, uint32 version=JS_STRUCTURED_CLONE_VERSION) {
         clear();
         data_ = data;
         nbytes_ = nbytes;
+        version_ = version;
     }
 
     /*
@@ -3079,7 +3083,7 @@ class JSAutoStructuredCloneBuffer {
 
     bool read(jsval *vp) const {
         JS_ASSERT(data_);
-        return !!JS_ReadStructuredClone(cx, data_, nbytes_, vp);
+        return !!JS_ReadStructuredClone(cx, data_, nbytes_, version_, vp);
     }
 
     bool write(jsval v) {

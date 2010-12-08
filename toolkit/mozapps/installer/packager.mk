@@ -193,14 +193,20 @@ ifdef MOZ_IPC
 DIST_FILES += $(MOZ_CHILD_PROCESS_NAME)
 endif
 
+ifdef MOZ_THUMB2
+ABI_DIR = armeabi-v7a
+else
+ABI_DIR = armeabi
+endif
+
 PKG_SUFFIX      = .apk
 INNER_MAKE_PACKAGE	= \
   rm -f $(_ABS_DIST)/gecko.ap_ && \
   ( cd $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH) && \
     rm -rf lib && \
-    mkdir -p lib/armeabi && \
+    mkdir -p lib/$(ABI_DIR) && \
     cp lib*.so lib && \
-    mv lib/libmozutils.so lib/armeabi && \
+    mv lib/libmozutils.so lib/$(ABI_DIR) && \
     rm -f lib.id && \
     for SOMELIB in lib/*.so ; \
     do \
@@ -216,7 +222,7 @@ INNER_UNMAKE_PACKAGE	= \
   mkdir $(MOZ_PKG_DIR) && \
   cd $(MOZ_PKG_DIR) && \
   $(UNZIP) $(UNPACKAGE) && \
-  mv lib/armeabi/*.so . && \
+  mv lib/$(ABI_DIR)/*.so . && \
   mv lib/*.so . && \
   rm -rf lib
 endif

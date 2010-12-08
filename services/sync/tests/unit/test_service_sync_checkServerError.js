@@ -1,10 +1,11 @@
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/constants.js");
-Cu.import("resource://services-sync/util.js");
 
+Cu.import("resource://services-sync/util.js");
 Svc.DefaultPrefs.set("registerEngines", "");
 Cu.import("resource://services-sync/service.js");
+Cu.import("resource://services-sync/base_records/crypto.js");
 
 initTestLogging();
 
@@ -23,14 +24,12 @@ function sync_httpd_setup() {
   let handlers = {};
   handlers["/1.0/johndoe/info/collections"]
       = (new ServerWBO("collections", {})).handler(),
-  handlers["/1.0/johndoe/storage/keys/pubkey"]
-      = (new ServerWBO("pubkey")).handler();
-  handlers["/1.0/johndoe/storage/keys/privkey"]
-      = (new ServerWBO("privkey")).handler();
   handlers["/1.0/johndoe/storage/clients"]
       = (new ServerCollection()).handler();
   handlers["/1.0/johndoe/storage/crypto"]
       = (new ServerCollection()).handler();
+  handlers["/1.0/johndoe/storage/crypto/keys"]
+      = (new ServerWBO("keys", {})).handler();
   handlers["/1.0/johndoe/storage/crypto/clients"]
       = (new ServerWBO("clients", {})).handler();
   handlers["/1.0/johndoe/storage/meta/global"]
@@ -41,7 +40,7 @@ function sync_httpd_setup() {
 function setUp() {
   Service.username = "johndoe";
   Service.password = "ilovejane";
-  Service.passphrase = "sekrit";
+  Service.passphrase = "aabcdeabcdeabcdeabcdeabcde";
   Service.clusterURL = "http://localhost:8080/";
   new FakeCryptoService();
 }
@@ -59,6 +58,11 @@ function test_backoff500() {
 
   try {
     do_check_false(Status.enforceBackoff);
+    
+    // Forcibly create and upload keys here -- otherwise we don't get to the 500!
+    CollectionKeys.generateNewKeys();
+    do_check_true(CollectionKeys.asWBO().upload("http://localhost:8080/1.0/johndoe/storage/crypto/keys").success);
+    
     Service.login();
     Service.sync();
     do_check_true(Status.enforceBackoff);

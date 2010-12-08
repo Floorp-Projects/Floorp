@@ -46,6 +46,7 @@
 #endif
 
 #include "ContentChild.h"
+#include "CrashReporterChild.h"
 #include "TabChild.h"
 #include "AudioChild.h"
 
@@ -54,6 +55,8 @@
 #include "mozilla/ipc/XPCShellEnvironment.h"
 #include "mozilla/jsipc/PContextWrapperChild.h"
 #include "mozilla/dom/ExternalHelperAppChild.h"
+#include "mozilla/dom/StorageChild.h"
+#include "mozilla/dom/PCrashReporterChild.h"
 
 #include "nsAudioStream.h"
 
@@ -95,6 +98,10 @@ static const int kRelativeNiceness = 10;
 
 #include "nsAccelerometer.h"
 
+#if defined(ANDROID)
+#include "APKOpen.h"
+#endif
+
 using namespace mozilla::ipc;
 using namespace mozilla::net;
 using namespace mozilla::places;
@@ -107,8 +114,8 @@ class AlertObserver
 public:
 
     AlertObserver(nsIObserver *aObserver, const nsString& aData)
-        : mData(aData)
-        , mObserver(aObserver)
+        : mObserver(aObserver)
+        , mData(aData)
     {
     }
 
@@ -194,6 +201,9 @@ ConsoleListener::Observe(nsIConsoleMessage* aMessage)
 ContentChild* ContentChild::sSingleton;
 
 ContentChild::ContentChild()
+#ifdef ANDROID
+ : mScreenSize(0, 0)
+#endif
 {
 }
 
@@ -238,6 +248,21 @@ ContentChild::Init(MessageLoop* aIOLoop,
     Open(aChannel, aParentHandle, aIOLoop);
     sSingleton = this;
 
+#if defined(ANDROID)
+    PCrashReporterChild* crashreporter = SendPCrashReporterConstructor();
+    InfallibleTArray<Mapping> mappings;
+    const struct mapping_info *info = getLibraryMapping();
+    while (info->name) {
+        mappings.AppendElement(Mapping(nsDependentCString(info->name),
+                                       nsDependentCString(info->file_id),
+                                       info->base,
+                                       info->len,
+                                       info->offset));
+        info++;
+    }
+    crashreporter->SendAddLibraryMappings(mappings);
+#endif
+
     return true;
 }
 
@@ -270,6 +295,19 @@ ContentChild::DeallocPBrowser(PBrowserChild* iframe)
     return true;
 }
 
+PCrashReporterChild*
+ContentChild::AllocPCrashReporter()
+{
+    return new CrashReporterChild();
+}
+
+bool
+ContentChild::DeallocPCrashReporter(PCrashReporterChild* crashreporter)
+{
+    delete crashreporter;
+    return true;
+}
+
 PTestShellChild*
 ContentChild::AllocPTestShell()
 {
@@ -295,14 +333,16 @@ ContentChild::AllocPAudio(const PRInt32& numChannels,
                           const PRInt32& rate,
                           const PRInt32& format)
 {
-    PAudioChild *child = new AudioChild();
+    AudioChild *child = new AudioChild();
+    NS_ADDREF(child);
     return child;
 }
 
 bool
 ContentChild::DeallocPAudio(PAudioChild* doomed)
 {
-    delete doomed;
+    AudioChild *child = static_cast<AudioChild*>(doomed);
+    NS_RELEASE(child);
     return true;
 }
 
@@ -337,6 +377,21 @@ ContentChild::DeallocPExternalHelperApp(PExternalHelperAppChild* aService)
 {
     ExternalHelperAppChild *child = static_cast<ExternalHelperAppChild*>(aService);
     child->Release();
+    return true;
+}
+
+PStorageChild*
+ContentChild::AllocPStorage(const StorageConstructData& aData)
+{
+    NS_NOTREACHED("We should never be manually allocating PStorageChild actors");
+    return nsnull;
+}
+
+bool
+ContentChild::DeallocPStorage(PStorageChild* aActor)
+{
+    StorageChild* child = static_cast<StorageChild*>(aActor);
+    child->ReleaseIPDLReference();
     return true;
 }
 
@@ -518,6 +573,17 @@ ContentChild::RecvAccelerationChanged(const double& x, const double& y,
     if (acu)
         acu->AccelerationChanged(x, y, z);
     return true;
+}
+
+bool
+ContentChild::RecvScreenSizeChanged(const gfxIntSize& size)
+{
+#ifdef ANDROID
+    mScreenSize = size;
+#else
+    NS_RUNTIMEABORT("Message currently only expected on android");
+#endif
+  return true;
 }
 
 } // namespace dom

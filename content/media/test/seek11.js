@@ -12,12 +12,16 @@ function startTest() {
   target = v.duration / 2;
   v.currentTime = target;
   v.currentTime = target;
+  v._seekTarget = target;
   return false;
 }
 
 function startSeeking() {
+  ok(v.currentTime >= v._seekTarget - 0.1,
+     "Video currentTime should be around " + v._seekTarget + ": " + v.currentTime);
   if (!seekedNonZero) {
     v.currentTime = target;
+    v._seekTarget = target;
   }
 }
 
@@ -30,6 +34,7 @@ function seekEnded() {
        "Seek to wrong destination " + v.currentTime);
     seekedNonZero = true;
     v.currentTime = 0.0;
+    v._seekTarget = 0.0;
   } else {
     ok(seekedNonZero, "Successfully seeked to nonzero");
     ok(true, "Seek back to zero was successful");

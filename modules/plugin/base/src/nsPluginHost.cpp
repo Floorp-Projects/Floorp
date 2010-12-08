@@ -1075,19 +1075,15 @@ nsPluginHost::DoInstantiateEmbeddedPlugin(const char *aMimeType, nsIURI* aURL,
 
   // if we are here then we have loaded a plugin for this mimetype
   nsNPAPIPluginInstance *instance = static_cast<nsNPAPIPluginInstance*>(instanceCOMPtr.get());
-  NPWindow *window = nsnull;
-
-  //we got a plugin built, now stream
-  aOwner->GetWindow(window);
 
   if (instance) {
     instance->Start();
     aOwner->CreateWidget();
 
     // If we've got a native window, the let the plugin know about it.
-    if (window->window) {
-      ((nsPluginNativeWindow*)window)->CallSetWindow(instanceCOMPtr);
-    }
+    nsCOMPtr<nsIPluginInstanceOwner_MOZILLA_2_0_BRANCH> owner = do_QueryInterface(aOwner);
+    if (owner)
+      owner->SetWindow();
 
     // create an initial stream with data
     // don't make the stream if it's a java applet or we don't have SRC or DATA attribute
@@ -1162,15 +1158,15 @@ NS_IMETHODIMP nsPluginHost::InstantiateFullPagePlugin(const char *aMimeType,
       aOwner->CreateWidget();
 
       // If we've got a native window, the let the plugin know about it.
-      nsPluginNativeWindow * window = (nsPluginNativeWindow *)win;
-      if (window->window)
-        window->CallSetWindow(instanceCOMPtr);
+      nsCOMPtr<nsIPluginInstanceOwner_MOZILLA_2_0_BRANCH> owner = do_QueryInterface(aOwner);
+      if (owner)
+        owner->SetWindow();
 
       rv = NewFullPagePluginStream(aURI, instance, aStreamListener);
 
       // If we've got a native window, the let the plugin know about it.
-      if (window->window)
-        window->CallSetWindow(instanceCOMPtr);
+      if (owner)
+        owner->SetWindow();
     }
   }
 
@@ -1218,9 +1214,6 @@ nsresult nsPluginHost::FindStoppedPluginForURL(nsIURI* aURL,
 
   nsNPAPIPluginInstance *instance = FindStoppedInstance(url.get());
   if (instance && !instance->IsRunning()) {
-    NPWindow* window = nsnull;
-    aOwner->GetWindow(window);
-
     aOwner->SetInstance(instance);
     instance->SetOwner(aOwner);
 
@@ -1228,10 +1221,9 @@ nsresult nsPluginHost::FindStoppedPluginForURL(nsIURI* aURL,
     aOwner->CreateWidget();
 
     // If we've got a native window, the let the plugin know about it.
-    if (window->window) {
-      nsCOMPtr<nsIPluginInstance> inst = instance;
-      ((nsPluginNativeWindow*)window)->CallSetWindow(inst);
-    }
+    nsCOMPtr<nsIPluginInstanceOwner_MOZILLA_2_0_BRANCH> owner = do_QueryInterface(aOwner);
+    if (owner)
+      owner->SetWindow();
 
     return NS_OK;
   }

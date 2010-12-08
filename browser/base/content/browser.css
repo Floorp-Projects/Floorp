@@ -29,12 +29,18 @@ tabbrowser {
   max-width: 250px;
   min-width: 100px;
   width: 0;
-  -moz-transition: min-width .2s ease-out, max-width .25s ease-out;
+  -moz-transition: min-width 200ms ease-out,
+                   max-width 250ms ease-out,
+                   opacity 50ms ease-out 20ms /* hide the tab for the first 20ms of the max-width transition */;
 }
 
 .tabbrowser-tab:not([pinned]):not([fadein]) {
-  max-width: 1px;
-  min-width: 1px;
+  max-width: 0.1px;
+  min-width: 0.1px;
+  opacity: 0 !important;
+  -moz-transition: min-width 200ms ease-out,
+                   max-width 250ms ease-out,
+                   opacity 50ms ease-out 180ms /* hide the tab for the last 20ms of the max-width transition */;
 }
 
 .tab-throbber:not([fadein]):not([pinned]),
@@ -48,7 +54,7 @@ tabbrowser {
 .tab-label,
 .tab-icon-image,
 .tab-close-button {
-  -moz-transition: opacity .25s;
+  -moz-transition: opacity 250ms;
 }
 
 .tabbrowser-tabs:not([pinnedonly]) > .tabbrowser-tab[pinned] {
@@ -94,6 +100,10 @@ toolbarpaletteitem[place="palette"] > toolbaritem > hbox[type="places"] {
   display: none;
 }
 
+#main-window[disablechrome] #navigator-toolbox[tabsontop="true"] > toolbar:not(#toolbar-menubar):not(#TabsToolbar) {
+  visibility: collapse;
+}
+
 #wrapper-urlbar-container #urlbar-container > #urlbar > toolbarbutton,
 #urlbar-container:not([combined]) > #urlbar > toolbarbutton,
 #urlbar-container[combined] + #reload-button + #stop-button,
@@ -128,6 +138,15 @@ toolbar[mode="icons"] > #reload-button[displaystop] {
 #browser-bottombox[lwthemefooter="true"] {
   background-repeat: no-repeat;
   background-position: bottom left;
+}
+
+splitmenu {
+  -moz-binding: url("chrome://browser/content/urlbarBindings.xml#splitmenu");
+}
+
+.split-menuitem-item {
+  list-style-image: inherit;
+  -moz-image-region: inherit;
 }
 
 .split-menuitem-menu > .menu-text,
@@ -438,7 +457,7 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
   display: -moz-box;
 }
 
-#invalid-form-popup {
+#invalid-form-popup > description {
   max-width: 280px;
 }
 

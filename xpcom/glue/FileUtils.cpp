@@ -47,21 +47,32 @@
 #include "nscore.h"
 #include "private/pprio.h"
 #include "mozilla/FileUtils.h"
+#include "mozilla/FunctionTimer.h"
 
 bool 
 mozilla::fallocate(PRFileDesc *aFD, PRInt64 aLength) 
 {
+  NS_TIME_FUNCTION;
 #if defined(HAVE_POSIX_FALLOCATE)
   return posix_fallocate(PR_FileDesc2NativeHandle(aFD), 0, aLength) == 0;
 #elif defined(XP_WIN)
-  return PR_Seek64(aFD, aLength, PR_SEEK_SET) == aLength
-    && 0 != SetEndOfFile((HANDLE)PR_FileDesc2NativeHandle(aFD));
+  PROffset64 oldpos = PR_Seek64(aFD, 0, PR_SEEK_CUR);
+  if (oldpos == -1)
+    return false;
+
+  if (PR_Seek64(aFD, aLength, PR_SEEK_SET) != aLength)
+    return false;
+
+  bool retval = (0 != SetEndOfFile((HANDLE)PR_FileDesc2NativeHandle(aFD)));
+
+  PR_Seek64(aFD, oldpos, PR_SEEK_SET);
+  return retval;
 #elif defined(XP_MACOSX)
   int fd = PR_FileDesc2NativeHandle(aFD);
   fstore_t store = {F_ALLOCATECONTIG, F_PEOFPOSMODE, 0, aLength};
   // Try to get a continous chunk of disk space
   int ret = fcntl(fd, F_PREALLOCATE, &store);
-	if(-1 == ret){
+  if (-1 == ret) {
     // OK, perhaps we are too fragmented, allocate non-continuous
     store.fst_flags = F_ALLOCATEALL;
     ret = fcntl(fd, F_PREALLOCATE, &store);
@@ -77,6 +88,10 @@ mozilla::fallocate(PRFileDesc *aFD, PRInt64 aLength)
   ** is the same technique used by glibc to implement posix_fallocate()
   ** on systems that do not have a real fallocate() system call.
   */
+  PROffset64 oldpos = PR_Seek64(aFD, 0, PR_SEEK_CUR);
+  if (oldpos == -1)
+    return false;
+
   struct stat buf;
   int fd = PR_FileDesc2NativeHandle(aFD);
   if (fstat(fd, &buf))
@@ -92,7 +107,7 @@ mozilla::fallocate(PRFileDesc *aFD, PRInt64 aLength)
 
   if (ftruncate(fd, aLength))
     return false;
-  
+
   int nWrite; // Return value from write()
   PRInt64 iWrite = ((buf.st_size + 2 * nBlk - 1) / nBlk) * nBlk - 1; // Next offset to write to
   do {
@@ -101,6 +116,8 @@ mozilla::fallocate(PRFileDesc *aFD, PRInt64 aLength)
       nWrite = PR_Write(aFD, "", 1);
     iWrite += nBlk;
   } while (nWrite == 1 && iWrite < aLength);
+
+  PR_Seek64(aFD, oldpos, PR_SEEK_SET);
   return nWrite == 1;
 #endif
   return false;

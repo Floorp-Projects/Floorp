@@ -44,7 +44,7 @@
 #include "mozIStorageStatement.h"
 #include "nsTHashtable.h"
 
-class nsDOMStorage;
+class DOMStorageImpl;
 class nsSessionStorageEntry;
 
 class nsDOMStoragePersistentDB
@@ -57,15 +57,15 @@ public:
   Init(const nsString& aDatabaseName);
 
   nsresult
-  EnsureLoadTemporaryTableForStorage(nsDOMStorage* aStorage);
+  EnsureLoadTemporaryTableForStorage(DOMStorageImpl* aStorage);
   nsresult
-  FlushAndDeleteTemporaryTableForStorage(nsDOMStorage* aStorage);
+  FlushAndDeleteTemporaryTableForStorage(DOMStorageImpl* aStorage);
 
   /**
    * Retrieve a list of all the keys associated with a particular domain.
    */
   nsresult
-  GetAllKeys(nsDOMStorage* aStorage,
+  GetAllKeys(DOMStorageImpl* aStorage,
              nsTHashtable<nsSessionStorageEntry>* aKeys);
 
   /**
@@ -74,7 +74,7 @@ public:
    * @throws NS_ERROR_DOM_NOT_FOUND_ERR if key not found
    */
   nsresult
-  GetKeyValue(nsDOMStorage* aStorage,
+  GetKeyValue(DOMStorageImpl* aStorage,
               const nsAString& aKey,
               nsAString& aValue,
               PRBool* aSecure);
@@ -83,7 +83,7 @@ public:
    * Set the value and secure flag for a key in storage.
    */
   nsresult
-  SetKey(nsDOMStorage* aStorage,
+  SetKey(DOMStorageImpl* aStorage,
          const nsAString& aKey,
          const nsAString& aValue,
          PRBool aSecure,
@@ -96,7 +96,7 @@ public:
    * not found.
    */
   nsresult
-  SetSecure(nsDOMStorage* aStorage,
+  SetSecure(DOMStorageImpl* aStorage,
             const nsAString& aKey,
             const PRBool aSecure);
 
@@ -104,7 +104,7 @@ public:
    * Removes a key from storage.
    */
   nsresult
-  RemoveKey(nsDOMStorage* aStorage,
+  RemoveKey(DOMStorageImpl* aStorage,
             const nsAString& aKey,
             PRBool aExcludeOfflineFromUsage,
             PRInt32 aKeyUsage);
@@ -112,7 +112,7 @@ public:
   /**
     * Remove all keys belonging to this storage.
     */
-  nsresult ClearStorage(nsDOMStorage* aStorage);
+  nsresult ClearStorage(DOMStorageImpl* aStorage);
 
   /**
    * Removes all keys added by a given domain.
@@ -138,7 +138,7 @@ public:
     * Returns usage for a storage using its GetQuotaDomainDBKey() as a key.
     */
   nsresult
-  GetUsage(nsDOMStorage* aStorage, PRBool aExcludeOfflineFromUsage, PRInt32 *aUsage);
+  GetUsage(DOMStorageImpl* aStorage, PRBool aExcludeOfflineFromUsage, PRInt32 *aUsage);
 
   /**
     * Returns usage of the domain and optionaly by any subdomain.

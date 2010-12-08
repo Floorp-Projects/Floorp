@@ -4504,9 +4504,14 @@ BEGIN_CASE(JSOP_GETELEM)
         else
             goto intern_big_int;
     } else {
-      intern_big_int:
-        if (!js_InternNonIntElementId(cx, obj, rref, &id))
-            goto error;
+        int32_t i;
+        if (ValueFitsInInt32(rref, &i) && INT_FITS_IN_JSID(i)) {
+            id = INT_TO_JSID(i);
+        } else {
+          intern_big_int:
+            if (!js_InternNonIntElementId(cx, obj, rref, &id))
+                goto error;
+        }
     }
 
     if (!obj->getProperty(cx, id, &rval))
@@ -5879,42 +5884,56 @@ BEGIN_CASE(JSOP_HOLE)
     PUSH_HOLE();
 END_CASE(JSOP_HOLE)
 
-BEGIN_CASE(JSOP_NEWARRAY)
-{
-    len = GET_UINT16(regs.pc);
-    cx->assertValidStackDepth(len);
-    JSObject *obj = js_NewArrayObject(cx, len, regs.sp - len);
-    if (!obj)
-        goto error;
-    regs.sp -= len - 1;
-    regs.sp[-1].setObject(*obj);
-}
-END_CASE(JSOP_NEWARRAY)
-
 BEGIN_CASE(JSOP_NEWINIT)
 {
-    jsint i = GET_UINT16(regs.pc);
-    jsint count = GET_UINT16(regs.pc + UINT16_LEN);
+    jsint i = regs.pc[1];
 
     JS_ASSERT(i == JSProto_Array || i == JSProto_Object);
     JSObject *obj;
 
-    gc::FinalizeKind kind = GuessObjectGCKind(count, i == JSProto_Array);
-
     if (i == JSProto_Array) {
-        obj = NewArrayWithKind(cx, kind);
-        if (!obj)
-            goto error;
+        obj = js_NewArrayObject(cx, 0, NULL);
     } else {
+        gc::FinalizeKind kind = GuessObjectGCKind(0, false);
         obj = NewBuiltinClassInstance(cx, &js_ObjectClass, kind);
-        if (!obj)
-            goto error;
     }
+
+    if (!obj)
+        goto error;
 
     PUSH_OBJECT(*obj);
     CHECK_INTERRUPT_HANDLER();
 }
 END_CASE(JSOP_NEWINIT)
+
+BEGIN_CASE(JSOP_NEWARRAY)
+{
+    unsigned count = GET_UINT24(regs.pc);
+    JSObject *obj = js_NewArrayObject(cx, count, NULL);
+
+    /* Avoid ensureDenseArrayElements to skip sparse array checks there. */
+    if (!obj || !obj->ensureSlots(cx, count))
+        goto error;
+
+    PUSH_OBJECT(*obj);
+    CHECK_INTERRUPT_HANDLER();
+}
+END_CASE(JSOP_NEWARRAY)
+
+BEGIN_CASE(JSOP_NEWOBJECT)
+{
+    JSObject *baseobj;
+    LOAD_OBJECT(0, baseobj);
+
+    JSObject *obj = CopyInitializerObject(cx, baseobj);
+
+    if (!obj)
+        goto error;
+
+    PUSH_OBJECT(*obj);
+    CHECK_INTERRUPT_HANDLER();
+}
+END_CASE(JSOP_NEWOBJECT)
 
 BEGIN_CASE(JSOP_ENDINIT)
 {
@@ -5937,10 +5956,6 @@ BEGIN_CASE(JSOP_INITMETHOD)
 
     /*
      * Probe the property cache.
-     *
-     * We can not assume that the object created by JSOP_NEWINIT is still
-     * single-threaded as the debugger can access it from other threads.
-     * So check first.
      *
      * On a hit, if the cached shape has a non-default setter, it must be
      * __proto__. If shape->previous() != obj->lastProperty(), there must be a

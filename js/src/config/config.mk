@@ -170,19 +170,6 @@ endif
 endif
 endif
 
-ifndef NO_CXX_WRAPPER
-ifdef _MSC_VER
-ifndef .PYMAKE
-CC_WRAPPER = $(PYTHON) -O $(topsrcdir)/build/cl.py
-CXX_WRAPPER = $(PYTHON) -O $(topsrcdir)/build/cl.py
-else
-PYCOMMANDPATH += $(topsrcdir)/build
-CC_WRAPPER = %cl InvokeClWithDependencyGeneration
-CXX_WRAPPER = %cl InvokeClWithDependencyGeneration
-endif # .PYMAKE
-endif # _MSC_VER
-endif # NO_CXX_WRAPPER
-
 CC := $(CC_WRAPPER) $(CC)
 CXX := $(CXX_WRAPPER) $(CXX)
 

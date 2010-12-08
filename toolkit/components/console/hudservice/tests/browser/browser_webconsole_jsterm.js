@@ -137,5 +137,11 @@ function testJSTerm()
   let labels = jsterm.outputNode.querySelectorAll(".jsterm-output-line");
   ok(labels.length, "more than 0 lines of output for keys(window)");
 
+  jsterm.clearOutput();
+  jsterm.execute("pprint('hi')");
+  // Doesn't conform to checkResult format, bug 614561
+  let label = jsterm.outputNode.querySelector(".jsterm-output-line");
+  is(label.textContent.trim(), '0: "h"\n  1: "i"', 'pprint("hi") worked');
+
   finishTest();
 }

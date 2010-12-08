@@ -265,10 +265,10 @@ nsUXThemeData::InitTitlebarInfo()
   sCommandButtons[3].cx = sCommandButtons[0].cx * 3;
   sCommandButtons[3].cy = sCommandButtons[0].cy;
 
-  // Use system metrics for pre-vista
-  if (nsWindow::GetWindowsVersion() < VISTA_VERSION) {
-    sTitlebarInfoPopulatedAero = sTitlebarInfoPopulatedThemed = PR_TRUE;
-  }
+  // Use system metrics for pre-vista, otherwise trigger a
+  // refresh on the next layout.
+  sTitlebarInfoPopulatedAero = sTitlebarInfoPopulatedThemed =
+    (nsWindow::GetWindowsVersion() < VISTA_VERSION);
 }
 
 // static

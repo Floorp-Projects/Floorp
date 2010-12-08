@@ -32,10 +32,6 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifndef MOZ_ENABLE_LIBXUL
-VISIBILITY_FLAGS =
-endif
-
 MODULE         = ots
 LIBRARY_NAME   = mozots
 LIBXUL_LIBRARY = 1

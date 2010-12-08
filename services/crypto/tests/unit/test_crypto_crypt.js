@@ -8,7 +8,69 @@ try {
                 .getService(Ci.IWeaveCrypto);
 }
 
-function run_test() {
+function weavecrypto_memo() {
+  if (!cryptoSvc._importSymKey)
+    return
+      
+  let w = new WeaveCrypto();
+  let key = w.generateRandomKey();
+  let keyItem1 = w.makeSECItem(key, true, true);
+  let keyItem2 = w.makeSECItem(key, true, true);
+  do_check_eq(keyItem1, keyItem2);
+  
+  do_check_eq("" + w.nss.PK11_AlgtagToMechanism(w.algorithm),
+              "" + w.nss.PK11_AlgtagToMechanism(w.algorithm));
+  
+  let symKey1 =
+    w._importSymKey(w.nss.PK11_GetInternalKeySlot(),
+                    w.nss.PK11_AlgtagToMechanism(w.algorithm),
+                    w.nss.PK11_OriginUnwrap,
+                    w.nss.CKA_DECRYPT, 
+                    keyItem1);
+  let symKey2 =
+    w._importSymKey(w.nss.PK11_GetInternalKeySlot(),
+                    w.nss.PK11_AlgtagToMechanism(w.algorithm),
+                    w.nss.PK11_OriginUnwrap,
+                    w.nss.CKA_DECRYPT, 
+                    keyItem1);
+  do_check_eq(symKey1, symKey2);
+}
+
+/*
+With memoization:
+make check-one  10.39s user 0.75s system 100% cpu 11.041 total
+nsStringStats
+ => mAllocCount:           1923
+ => mReallocCount:          306
+ => mFreeCount:            1923
+ => mShareCount:           6764
+ => mAdoptCount:            101
+ => mAdoptFreeCount:        101
+<<<<<<<
+
+Without memoization, it crashes after a few thousand iterations... and 5610 take
+make check-one  7.57s user 0.67s system 101% cpu 8.105 total
+nsStringStats
+ => mAllocCount:           1923
+ => mReallocCount:          306
+ => mFreeCount:            1923
+ => mShareCount:           6764
+ => mAdoptCount:            101
+ => mAdoptFreeCount:        101
+<<<<<<<
+*/ 
+function multiple_decrypts(iterations) {
+  let iv = cryptoSvc.generateRandomIV();
+  let key = cryptoSvc.generateRandomKey();
+  let cipherText = cryptoSvc.encrypt("Hello, world.", key, iv);
+  
+  for (let i = 0; i < iterations; ++i) {
+    let clearText = cryptoSvc.decrypt(cipherText, key, iv);
+    do_check_eq(clearText + " " + i, "Hello, world. " + i);
+  }
+}
+  
+function test_encryption() {
   // First, do a normal run with expected usage... Generate a random key and
   // iv, encrypt and decrypt a string.
   var iv = cryptoSvc.generateRandomIV();
@@ -161,4 +223,10 @@ function run_test() {
   }
   do_check_true(failure);
 
+}
+
+function run_test() {
+  weavecrypto_memo();
+  multiple_decrypts(6000);
+  test_encryption();
 }

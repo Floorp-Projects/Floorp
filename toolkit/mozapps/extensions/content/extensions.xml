@@ -206,6 +206,8 @@
           this._progress.value = val;
           if (val == this._progress.max)
             this.setAttribute("complete", true);
+          else
+            this.removeAttribute("complete");
         ]]></setter>
       </property>
 
@@ -216,10 +218,11 @@
         <setter><![CDATA[
           if (val == -1) {
             this._progress.mode = "undetermined";
-            return;
+          } else {
+            this._progress.mode = "determined";
+            this._progress.max = val;
           }
-          this._progress.mode = "determined";
-          this._progress.max = val;
+          this.setAttribute("mode", this._progress.mode);
         ]]></setter>
       </property>
 
@@ -244,7 +247,7 @@
       <xul:button anonid="date-btn" class="sorter"
                   label="&sort.dateUpdated.label;"
                   tooltiptext="&sort.dateUpdated.tooltip;"
-                  oncommand="this.parentNode._handleChange('dateUpdated');"/>
+                  oncommand="this.parentNode._handleChange('updateDate');"/>
       <xul:button anonid="relevance-btn" class="sorter" hidden="true"
                   label="&sort.relevance.label;"
                   tooltiptext="&sort.relevance.tooltip;"
@@ -338,20 +341,29 @@
           var sortBy = this.sortBy;
           var checkState = this.ascending ? 2 : 1;
 
-          if (sortBy == "name")
+          if (sortBy == "name") {
             this._btnName.checkState = checkState;
-          else
+            this._btnName.checked = true;
+          } else {
             this._btnName.checkState = 0;
+            this._btnName.checked = false;
+          }
 
-          if (sortBy == "dateUpdated")
+          if (sortBy == "updateDate") {
             this._btnDate.checkState = checkState;
-          else
+            this._btnDate.checked = true;
+          } else {
             this._btnDate.checkState = 0;
+            this._btnDate.checked = false;
+          }
 
-          if (sortBy == "relevancescore")
+          if (sortBy == "relevancescore") {
             this._btnRelevance.checkState = checkState;
-          else
+            this._btnRelevance.checked = true;
+          } else {
             this._btnRelevance.checkState = 0;
+            this._btnRelevance.checked = false;
+          }
 
           if (this.handler && "onSortChanged" in this.handler)
             this.handler.onSortChanged(sortBy, this.ascending);
@@ -473,11 +485,11 @@
       <xul:label anonid="message"/>
       <xul:progressmeter anonid="progress" class="download-progress"/>
       <xul:button anonid="install-remote-btn" hidden="true"
-                  class="addon-control" label="&addon.install.label;"
+                  class="addon-control install" label="&addon.install.label;"
                   tooltiptext="&addon.install.tooltip;"
                   oncommand="document.getBindingParent(this).installRemote();"/>
       <xul:button anonid="restart-install-btn" hidden="true"
-                  class="addon-control" label="&addon.install.label;"
+                  class="addon-control install" label="&addon.install.label;"
                   tooltiptext="&addon.install.tooltip;"
                   oncommand="document.getBindingParent(this).restartInstall();"/>
     </content>
@@ -586,7 +598,7 @@
         <parameter name="aHideProgress"/>
         <body><![CDATA[
           this._message.setAttribute("hidden", !aHideProgress);
-          this._progress.setAttribute("hidden", aHideProgress);
+          this._progress.setAttribute("hidden", !!aHideProgress);
 
           var msg = gStrings.ext.GetStringFromName(aMsgId);
           if (aHideProgress)
@@ -602,14 +614,13 @@
             return;
 
           if (this.mControl.mAddon.eula) {
-            var eula = {
-              name: this.mControl.mAddon.name,
-              text: this.mControl.mAddon.eula,
+            var data = {
+              addon: this.mControl.mAddon,
               accepted: false
             };
             window.openDialog("chrome://mozapps/content/extensions/eula.xul", "_blank",
-                              "chrome,dialog,modal,centerscreen,resizable=no", eula);
-            if (!eula.accepted)
+                              "chrome,dialog,modal,centerscreen,resizable=no", data);
+            if (!data.accepted)
               return;
           }
 
@@ -666,6 +677,7 @@
 
       <method name="onInstallStarted">
         <body><![CDATA[
+          this._progress.progress = 0;
           this.refreshState();
         ]]></body>
       </method>
@@ -757,7 +769,7 @@
       </xul:hbox>
 
       <xul:hbox>
-        <xul:vbox align="center" pack="center" class="icon-container">
+        <xul:vbox align="center" pack="start" class="icon-container">
           <xul:image anonid="icon" class="icon"/>
         </xul:vbox>
         <xul:vbox flex="1">
@@ -773,7 +785,8 @@
               </xul:hbox>
               <xul:label anonid="creator" class="creator"/>
             </xul:vbox>
-            <xul:label anonid="date-updated" unknown="&addon.unknownDate;"/>
+            <xul:label anonid="date-updated" class="date-updated"
+                       unknown="&addon.unknownDate;"/>
           </xul:hbox>
 
           <xul:hbox flex="1" align="end">
@@ -791,7 +804,7 @@
                 <xul:label anonid="relnotes-loading" value="&addon.loadingReleaseNotes.label;"/>
                 <xul:label anonid="relnotes-error" hidden="true"
                            value="&addon.errorLoadingReleaseNotes.label;"/>
-                <xul:vbox anonid="relnotes"/>
+                <xul:vbox anonid="relnotes" class="relnotes"/>
               </xul:vbox>
               <xul:hbox pack="start">
                 <xul:button anonid="relnotes-toggle-btn" class="relnotes-toggle"
@@ -818,7 +831,7 @@
                   <xul:hbox align="center">
                     <xul:label class="update-available-notice"
                                value="&addon.updateAvailable.label;"/>
-                    <xul:button anonid="update-btn" class="addon-control"
+                    <xul:button anonid="update-btn" class="addon-control update"
                                 label="&addon.updateNow.label;"
                                 tooltiptext="&addon.updateNow.tooltip;"
                                 oncommand="document.getBindingParent(this).upgrade();"/>
@@ -828,7 +841,8 @@
                           hidden="true"/>
               </xul:hbox>
               <xul:hbox anonid="control-container" class="control-container">
-                <xul:button anonid="preferences-btn" class="addon-control"
+                <xul:button anonid="preferences-btn"
+                            class="addon-control preferences"
 #ifdef XP_WIN
                             label="&cmd.showPreferencesWin.label;"
                             tooltiptext="&cmd.showPreferencesWin.tooltip;"
@@ -1021,11 +1035,6 @@
 
           this.setAttribute("name", aAddon.name);
 
-          if (aAddon.size)
-            this.setAttribute("size", aAddon.size);
-          else
-            this.removeAttribute("size");
-
           var iconURL = this.mAddon.iconURL;
           if (iconURL)
             this._icon.src = iconURL;
@@ -1098,13 +1107,10 @@
                                  );
           }
 
-          if (this.mAddon.updateDate) {
+          if (this.mAddon.updateDate)
             this._dateUpdated.value = formatDate(this.mAddon.updateDate);
-            this.setAttribute("dateUpdated", this.mAddon.updateDate.getTime() / 1000);
-          } else {
+          else
             this._dateUpdated.value = this._dateUpdated.getAttribute("unknown");
-            this.removeAttribute("dateUpdated");
-          }
         ]]></body>
       </method>
 

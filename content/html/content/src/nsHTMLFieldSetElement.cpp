@@ -66,7 +66,8 @@ nsHTMLFieldSetElement::~nsHTMLFieldSetElement()
 
 // nsISupports
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsHTMLFieldSetElement)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsHTMLFieldSetElement,
+                                                nsGenericHTMLFormElement)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mElements)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -82,7 +83,7 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLFieldSetElement, nsGenericElement)
 DOMCI_NODE_DATA(HTMLFieldSetElement, nsHTMLFieldSetElement)
 
 // QueryInterface implementation for nsHTMLFieldSetElement
-NS_INTERFACE_TABLE_HEAD(nsHTMLFieldSetElement)
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLFieldSetElement)
   NS_HTML_CONTENT_INTERFACE_TABLE2(nsHTMLFieldSetElement,
                                    nsIDOMHTMLFieldSetElement,
                                    nsIConstraintValidation)

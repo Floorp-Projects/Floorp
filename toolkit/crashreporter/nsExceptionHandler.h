@@ -169,6 +169,16 @@ void AddLibraryMapping(const char* library_name,
                        uintptr_t   start_address,
                        size_t      mapping_length,
                        size_t      file_offset);
+
+#if defined(MOZ_IPC)
+void AddLibraryMappingForChild(PRUint32    childPid,
+                               const char* library_name,
+                               const char* file_id,
+                               uintptr_t   start_address,
+                               size_t      mapping_length,
+                               size_t      file_offset);
+void RemoveLibraryMappingsForChild(PRUint32 childPid);
+#endif
 #endif
 }
 

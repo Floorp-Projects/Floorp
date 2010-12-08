@@ -7,29 +7,17 @@
 %define glassActiveBorderColor rgb(37, 44, 51)
 %define glassInactiveBorderColor rgb(102, 102, 102)
 
-@media all and (-moz-windows-default-theme) {
-  #navigator-toolbox > toolbar:not(:-moz-lwtheme) {
-    background-color: @customToolbarColor@;
-  }
-
-  .tabbrowser-tab[selected="true"]:not(:-moz-lwtheme) {
-    background-image: -moz-linear-gradient(white, @toolbarHighlight@ 30%),
-                      -moz-linear-gradient(@customToolbarColor@, @customToolbarColor@);
-  }
-
-  /* App menu button */
-
+@media not all and (-moz-windows-classic) {
   #main-window[sizemode="normal"] > #titlebar > #titlebar-content > #appmenu-button-container {
     margin-top: 1px;
   }
 
   #appmenu-button {
-    border: 2px solid;
-    border-top: none;
+    border-width: 2px;
     -moz-border-left-colors: rgba(255,255,255,.5) rgba(83,42,6,.9);
     -moz-border-bottom-colors: rgba(255,255,255,.5) rgba(83,42,6,.9);
     -moz-border-right-colors: rgba(255,255,255,.5) rgba(83,42,6,.9);
-    margin-bottom: -1px; /* compensate white outer border */
+    margin-bottom: 1px; /* compensate white outer border */
     box-shadow: 0 1px 0 rgba(255,255,255,.25) inset,
                 0 0 2px 1px rgba(255,255,255,.25) inset;
   }
@@ -44,20 +32,16 @@
     margin-top: -1px;
     -moz-margin-start: 1px;
   }
+}
 
-  /* Bug 413060, comment 16: Vista Aero is a special case where we use a
-     tooltip appearance for the address bar popup panels */
-  #identity-popup,
-  #editBookmarkPanel {
-    -moz-appearance: tooltip;
-    color: InfoText;
+@media all and (-moz-windows-default-theme) {
+  #navigator-toolbox > toolbar:not(:-moz-lwtheme) {
+    background-color: @customToolbarColor@;
   }
 
-  /* Make the left and right paddings smaller, to compensate for the horizontal
-     space added by the tooltip appearance, see bug 432529. */
-  #identity-popup-container {
-    -moz-padding-start: 6px;
-    -moz-padding-end: 6px;
+  .tabbrowser-tab[selected="true"]:not(:-moz-lwtheme) {
+    background-image: -moz-linear-gradient(white, @toolbarHighlight@ 30%),
+                      -moz-linear-gradient(@customToolbarColor@, @customToolbarColor@);
   }
 
   #sidebar-splitter {
@@ -109,6 +93,10 @@
     margin-top: -2px;
   }
 
+  #appmenu-button {
+    margin-bottom: -1px; /* compensate white outer border */
+  }
+
   #main-window:not(:-moz-lwtheme)[inFullscreen="true"] {
     -moz-appearance: none;
     background-color: #556;
@@ -123,7 +111,7 @@
     text-shadow: 0 0 .5em white, 0 0 .5em white, 0 1px 0 rgba(255,255,255,.4);
   }
 
-  #main-window[sizemode="normal"]:not([inFullscreen="true"]) #navigator-toolbox[tabsontop="true"] > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(:-moz-lwtheme) {
+  #main-window[sizemode="normal"] #navigator-toolbox[tabsontop="true"] > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not([inFullscreen="true"]):not(:-moz-lwtheme) {
     border-left: 1px solid @glassToolbarBorderColor@;
     border-right: 1px solid @glassToolbarBorderColor@;
   }
@@ -133,15 +121,20 @@
     background-clip: padding-box;
   }
 
-  #main-window[sizemode="normal"]:not([inFullscreen="true"]) #navigator-toolbox[tabsontop="true"] > #nav-bar:not(:-moz-lwtheme),
-  #main-window[sizemode="normal"]:not([inFullscreen="true"]) #navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + toolbar:not(:-moz-lwtheme),
-  #main-window[sizemode="normal"]:not([inFullscreen="true"]) #navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + #customToolbars + #PersonalToolbar:not(:-moz-lwtheme),
-  #main-window[sizemode="normal"]:not([inFullscreen="true"]) #navigator-toolbox:not([tabsontop="true"]) > #PersonalToolbar:not(:-moz-lwtheme) {
+  #main-window[sizemode="normal"] #navigator-toolbox[tabsontop="true"] > #nav-bar:not([inFullscreen="true"]):not(:-moz-lwtheme),
+  #main-window[sizemode="normal"] #navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + toolbar:not([inFullscreen="true"]):not(:-moz-lwtheme),
+  #main-window[sizemode="normal"] #navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + #customToolbars + #PersonalToolbar:not(:-moz-lwtheme),
+  #main-window[sizemode="normal"] #navigator-toolbox:not([tabsontop="true"]) > #PersonalToolbar:not(:-moz-lwtheme) {
     border-top-left-radius: 3.5px;
     border-top-right-radius: 3.5px;
   }
 
-  #main-window[sizemode="normal"]:not([inFullscreen="true"]) #TabsToolbar[tabsontop="true"]:not(:-moz-lwtheme) {
+  #navigator-toolbox:not([tabsontop="true"]) > #PersonalToolbar {
+    padding-top: 0 !important;
+    margin-top: 3px;
+  }
+
+  #main-window[sizemode="normal"] #TabsToolbar[tabsontop="true"]:not([inFullscreen="true"]):not(:-moz-lwtheme) {
     padding-left: 4px;
     padding-right: 4px;
   }
@@ -187,16 +180,19 @@
     background-color: white;
   }
 
+  .tabbrowser-tab:not(:-moz-lwtheme) {
+    text-shadow: none;
+  }
+
   .tabbrowser-tab:not(:-moz-lwtheme):not([selected="true"]),
   .tabs-newtab-button:not(:-moz-lwtheme) {
-    background-image: -moz-linear-gradient(hsla(214,15%,80%,.8), hsla(214,15%,65%,.8) 50%);
-    text-shadow: none;
+    background-image: -moz-linear-gradient(hsl(214,15%,80%), hsl(214,15%,65%) 50%);
     color: black;
   }
 
   .tabbrowser-tab:not(:-moz-lwtheme):not([selected="true"]):hover,
   .tabs-newtab-button:not(:-moz-lwtheme):hover {
-    background-image: -moz-linear-gradient(hsla(214,15%,90%,.8), hsla(214,15%,75%,.8) 50%);
+    background-image: -moz-linear-gradient(hsl(214,15%,90%), hsl(214,15%,75%) 50%);
   }
 
   #allTabs-panel,

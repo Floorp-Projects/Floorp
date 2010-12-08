@@ -172,7 +172,7 @@ public:
                         nsIDOMNode **aResult)
   {
     return CloneAndAdopt(aNode, PR_TRUE, aDeep, aNewNodeInfoManager, nsnull,
-                         nsnull, nsnull, aNodesWithProperties, aResult);
+                         nsnull, aNodesWithProperties, aResult);
   }
 
   /**
@@ -190,18 +190,16 @@ public:
    * @param aCx Context to use for reparenting the wrappers, or null if no
    *            reparenting should be done. Must be null if aNewNodeInfoManager
    *            is null.
-   * @param aOldScope Old scope for the wrappers. May be null if aCx is null.
    * @param aNewScope New scope for the wrappers. May be null if aCx is null.
    * @param aNodesWithProperties All nodes (from amongst aNode and its
    *                             descendants) with properties.
    */
   static nsresult Adopt(nsINode *aNode, nsNodeInfoManager *aNewNodeInfoManager,
-                        JSContext *aCx, JSObject *aOldScope,
-                        JSObject *aNewScope,
+                        JSContext *aCx, JSObject *aNewScope,
                         nsCOMArray<nsINode> &aNodesWithProperties)
   {
     nsresult rv = CloneAndAdopt(aNode, PR_FALSE, PR_TRUE, aNewNodeInfoManager,
-                                aCx, aOldScope, aNewScope, aNodesWithProperties,
+                                aCx, aNewScope, aNodesWithProperties,
                                 nsnull);
 
     nsMutationGuard::DidMutate();
@@ -277,7 +275,6 @@ private:
    * @param aCx Context to use for reparenting the wrappers, or null if no
    *            reparenting should be done. Must be null if aClone is PR_TRUE or
    *            if aNewNodeInfoManager is null.
-   * @param aOldScope Old scope for the wrappers. May be null if aCx is null.
    * @param aNewScope New scope for the wrappers. May be null if aCx is null.
    * @param aNodesWithProperties All nodes (from amongst aNode and its
    *                             descendants) with properties. If aClone is
@@ -288,8 +285,7 @@ private:
    */
   static nsresult CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
                                 nsNodeInfoManager *aNewNodeInfoManager,
-                                JSContext *aCx, JSObject *aOldScope,
-                                JSObject *aNewScope,
+                                JSContext *aCx, JSObject *aNewScope,
                                 nsCOMArray<nsINode> &aNodesWithProperties,
                                 nsIDOMNode **aResult)
   {
@@ -299,7 +295,7 @@ private:
 
     nsCOMPtr<nsINode> clone;
     nsresult rv = CloneAndAdopt(aNode, aClone, aDeep, aNewNodeInfoManager,
-                                aCx, aOldScope, aNewScope, aNodesWithProperties,
+                                aCx, aNewScope, aNodesWithProperties,
                                 nsnull, getter_AddRefs(clone));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -317,8 +313,7 @@ private:
    */
   static nsresult CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
                                 nsNodeInfoManager *aNewNodeInfoManager,
-                                JSContext *aCx, JSObject *aOldScope,
-                                JSObject *aNewScope,
+                                JSContext *aCx, JSObject *aNewScope,
                                 nsCOMArray<nsINode> &aNodesWithProperties,
                                 nsINode *aParent, nsINode **aResult);
 };

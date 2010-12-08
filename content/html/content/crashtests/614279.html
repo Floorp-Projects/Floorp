@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var a = document.createElementNS("http://www.w3.org/1999/xhtml", "datalist");
+  var b = document.createElementNS("http://www.w3.org/1999/xhtml", "option");
+
+  a.appendChild(b);
+  b.expando = a.options;
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>

@@ -1,38 +1,70 @@
+#genericAbout {
+  padding: 0px;
+  min-height: 200px;
+  max-height: 400px;
+  width: 30em;
+}
+
 #clientBox {
-  background-color: #FFFFFF;
-  color: #000000;
+  background-color: -moz-Dialog;
+  color: -moz-DialogText;
+}
+
+@media all and (-moz-windows-compositor) {
+  #genericAbout {
+    -moz-appearance: -moz-win-glass;
+    background: transparent;
+  }
+}
+
+
+.basic-info {
+  padding: 10px;
+}
+
+#extensionIcon {
+  list-style-image: url("chrome://mozapps/skin/extensions/extensionGeneric.png");
+  max-width: 64px;
+  max-height: 64px;
+  -moz-margin-end: 6px;
+}
+
+#genericAbout[addontype="theme"] #extensionIcon {
+  list-style-image: url("chrome://mozapps/skin/extensions/themeGeneric.png");
+}
+
+#genericAbout[addontype="locale"] #extensionIcon {
+  list-style-image: url("chrome://mozapps/skin/extensions/localeGeneric.png");
+}
+
+#genericAbout[addontype="plugin"] #extensionIcon {
+  list-style-image: url("chrome://mozapps/skin/plugins/pluginGeneric.png");
 }
 
 #extensionName {
-  font-size: large;
-  font-weight: bold;
+  font-size: 200%;
+  font-weight: bolder;
 }
 
 #extensionVersion {
   font-weight: bold;
-  color: #909090;
 }
 
-#genericAbout {
-  padding: 0px 0px 10px 0px;
-  min-height: 200px;
-  width: 30em;
+#extensionDescription {
+  margin-top: 4px;
 }
 
 #groove {
-  margin-top: 0px;
+  margin-top: 8px;
 }
 
-#clientBox {
-  padding: 10px;
-} 
-
-#extensionDescription {
-  color: #404040;
+#extensionDetailsBox {
+  overflow: auto;
+  min-height: 100px;
 }
 
 .boxIndent {
-  -moz-margin-start: 6px;
+  -moz-margin-start: 18px;
 }
 
 #extensionCreator, .contributor {
@@ -40,7 +72,6 @@
 } 
 
 .sectionTitle {
-  border-top: 2px solid #C0C0C0;
   padding: 2px 0px 3px 0px;
   margin-top: 3px;
   font-weight: bold;

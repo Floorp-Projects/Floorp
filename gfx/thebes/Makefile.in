@@ -35,7 +35,6 @@ EXPORTS	= \
 	gfxTypes.h \
 	gfxTextRunCache.h \
 	gfxTextRunWordCache.h \
-	gfxThebesUtils.h \
 	gfxUtils.h \
 	gfxUserFontSet.h \
 	GLDefs.h \
@@ -153,7 +152,6 @@ ifdef WINCE
 EXPORTS += \
 	gfxFT2Fonts.h \
 	gfxFT2FontBase.h \
-	gfxDDrawSurface.h \
 	$(NULL)
 else
 EXPORTS += \
@@ -185,7 +183,6 @@ CPPSRCS	= \
 	gfxSkipChars.cpp \
 	gfxTextRunCache.cpp \
 	gfxTextRunWordCache.cpp \
-	gfxThebesUtils.cpp \
 	gfxUserFontSet.cpp \
 	gfxUtils.cpp \
 	gfxUnicodeProperties.cpp \
@@ -246,7 +243,6 @@ ifdef WINCE
 CPPSRCS	+= gfxFT2Fonts.cpp \
 	   gfxFT2FontBase.cpp \
 	   gfxFT2Utils.cpp \
-	   gfxDDrawSurface.cpp \
 	   gfxFT2FontList.cpp \
 	   $(NULL)
 

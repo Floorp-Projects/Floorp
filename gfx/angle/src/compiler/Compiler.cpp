@@ -7,19 +7,19 @@
 #include "compiler/Initialize.h"
 #include "compiler/ParseHelper.h"
 #include "compiler/ShHandle.h"
+#include "compiler/ValidateLimitations.h"
 
-static bool InitializeSymbolTable(
-        const TBuiltInStrings& builtInStrings,
-        ShShaderType type, ShShaderSpec spec, const ShBuiltInResources& resources,
-        TInfoSink& infoSink, TSymbolTable& symbolTable)
+namespace {
+bool InitializeSymbolTable(
+    const TBuiltInStrings& builtInStrings,
+    ShShaderType type, ShShaderSpec spec, const ShBuiltInResources& resources,
+    TInfoSink& infoSink, TSymbolTable& symbolTable)
 {
     TIntermediate intermediate(infoSink);
     TExtensionBehavior extBehavior;
     TParseContext parseContext(symbolTable, extBehavior, intermediate, type, spec, infoSink);
 
     GlobalParseContext = &parseContext;
-
-    setInitialState();
 
     assert(symbolTable.isEmpty());       
     //
@@ -31,13 +31,6 @@ static bool InitializeSymbolTable(
     // are preserved, and the test for an empty table fails.
     //
     symbolTable.push();
-    
-    //Initialize the Preprocessor
-    if (InitPreprocessor())
-    {
-        infoSink.info.message(EPrefixInternalError,  "Unable to intialize the Preprocessor");
-        return false;
-    }
 
     for (TBuiltInStrings::const_iterator i = builtInStrings.begin(); i != builtInStrings.end(); ++i)
     {
@@ -46,7 +39,7 @@ static bool InitializeSymbolTable(
         if (builtInLengths <= 0)
           continue;
 
-        if (PaParseStrings(&builtInShaders, &builtInLengths, 1, parseContext) != 0)
+        if (PaParseStrings(1, &builtInShaders, &builtInLengths, &parseContext) != 0)
         {
             infoSink.info.message(EPrefixInternalError, "Unable to parse built-ins");
             return false;
@@ -55,17 +48,35 @@ static bool InitializeSymbolTable(
 
     IdentifyBuiltIns(type, spec, resources, symbolTable);
 
-    FinalizePreprocessor();
-
     return true;
 }
 
-static void DefineExtensionMacros(const TExtensionBehavior& extBehavior)
-{
-    for (TExtensionBehavior::const_iterator iter = extBehavior.begin();
-         iter != extBehavior.end(); ++iter) {
-        PredefineIntMacro(iter->first.c_str(), 1);
+class TScopedPoolAllocator {
+public:
+    TScopedPoolAllocator(TPoolAllocator* allocator, bool pushPop)
+        : mAllocator(allocator), mPushPopAllocator(pushPop) {
+        if (mPushPopAllocator) mAllocator->push();
+        SetGlobalPoolAllocator(mAllocator);
     }
+    ~TScopedPoolAllocator() {
+        SetGlobalPoolAllocator(NULL);
+        if (mPushPopAllocator) mAllocator->pop();
+    }
+
+private:
+    TPoolAllocator* mAllocator;
+    bool mPushPopAllocator;
+};
+}  // namespace
+
+TShHandleBase::TShHandleBase() {
+    allocator.push();
+    SetGlobalPoolAllocator(&allocator);
+}
+
+TShHandleBase::~TShHandleBase() {
+    SetGlobalPoolAllocator(NULL);
+    allocator.popAll();
 }
 
 TCompiler::TCompiler(ShShaderType type, ShShaderSpec spec)
@@ -80,11 +91,13 @@ TCompiler::~TCompiler()
 
 bool TCompiler::Init(const ShBuiltInResources& resources)
 {
+    TScopedPoolAllocator scopedAlloc(&allocator, false);
+
     // Generate built-in symbol table.
     if (!InitBuiltInSymbolTable(resources))
         return false;
-
     InitExtensionBehavior(resources, extensionBehavior);
+
     return true;
 }
 
@@ -92,20 +105,20 @@ bool TCompiler::compile(const char* const shaderStrings[],
                         const int numStrings,
                         int compileOptions)
 {
+    TScopedPoolAllocator scopedAlloc(&allocator, true);
     clearResults();
 
     if (numStrings == 0)
         return true;
 
+    // If compiling for WebGL, validate loop and indexing as well.
+    if (shaderSpec == SH_WEBGL_SPEC)
+        compileOptions |= SH_VALIDATE_LOOP_INDEXING;
+
     TIntermediate intermediate(infoSink);
     TParseContext parseContext(symbolTable, extensionBehavior, intermediate,
                                shaderType, shaderSpec, infoSink);
     GlobalParseContext = &parseContext;
-    setInitialState();
-
-    // Initialize preprocessor.
-    InitPreprocessor();
-    DefineExtensionMacros(extensionBehavior);
 
     // We preserve symbols at the built-in level from compile-to-compile.
     // Start pushing the user-defined symbols at global level.
@@ -115,19 +128,23 @@ bool TCompiler::compile(const char* const shaderStrings[],
 
     // Parse shader.
     bool success =
-        (PaParseStrings(shaderStrings, 0, numStrings, parseContext) == 0) &&
+        (PaParseStrings(numStrings, shaderStrings, NULL, &parseContext) == 0) &&
         (parseContext.treeRoot != NULL);
     if (success) {
-        success = intermediate.postProcess(parseContext.treeRoot);
+        TIntermNode* root = parseContext.treeRoot;
+        success = intermediate.postProcess(root);
+
+        if (success && (compileOptions & SH_VALIDATE_LOOP_INDEXING))
+            success = validateLimitations(root);
 
         if (success && (compileOptions & SH_INTERMEDIATE_TREE))
-            intermediate.outputTree(parseContext.treeRoot);
+            intermediate.outputTree(root);
 
         if (success && (compileOptions & SH_OBJECT_CODE))
-            translate(parseContext.treeRoot);
+            translate(root);
 
         if (success && (compileOptions & SH_ATTRIBUTES_UNIFORMS))
-            collectAttribsUniforms(parseContext.treeRoot);
+            collectAttribsUniforms(root);
     }
 
     // Cleanup memory.
@@ -136,7 +153,6 @@ bool TCompiler::compile(const char* const shaderStrings[],
     // throwing away all but the built-ins.
     while (!symbolTable.atBuiltInLevel())
         symbolTable.pop();
-    FinalizePreprocessor();
 
     return success;
 }
@@ -158,6 +174,12 @@ void TCompiler::clearResults()
 
     attribs.clear();
     uniforms.clear();
+}
+
+bool TCompiler::validateLimitations(TIntermNode* root) {
+    ValidateLimitations validate(shaderType, infoSink.info);
+    root->traverse(&validate);
+    return validate.numErrors() == 0;
 }
 
 void TCompiler::collectAttribsUniforms(TIntermNode* root)

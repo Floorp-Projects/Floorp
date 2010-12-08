@@ -1103,7 +1103,7 @@ nsThebesDeviceContext::CalcPrintingSize()
 
     PRBool inPoints = PR_TRUE;
 
-    gfxSize size;
+    gfxSize size(0, 0);
     switch (mPrintingSurface->GetType()) {
     case gfxASurface::SurfaceTypeImage:
         inPoints = PR_FALSE;

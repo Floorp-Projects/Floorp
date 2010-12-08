@@ -42,7 +42,11 @@
 }
 
 .hud-box.animated {
-  -moz-transition: height 350ms;
+  -moz-transition: height 100ms;
+}
+
+.hud-splitter {
+  border-top: none;
 }
 
 .hud-outer-wrapper {
@@ -116,12 +120,49 @@
   display: none;
 }
 
-.hud-filter-cat:-moz-system-metric(windows-default-theme) {
-  color: GrayText;
+.webconsole-clear-console-button > .toolbarbutton-icon {
+  display: none;
 }
 
-.hud-group:first-child > .hud-divider {
-  display: none;
+.webconsole-filter-button > .toolbarbutton-menubutton-button {
+  -moz-box-orient: horizontal;
+  list-style-image: url("chrome://global/skin/icons/webconsole.png");
+}
+
+/* Network button */
+.webconsole-filter-button[category="net"] {
+  -moz-image-region: rect(0, 40px, 10px, 30px);
+}
+
+/* CSS button */
+.webconsole-filter-button[category="css"] {
+  -moz-image-region: rect(10px, 40px, 20px, 30px);
+}
+
+/* JS button */
+.webconsole-filter-button[category="js"] {
+  -moz-image-region: rect(20px, 40px, 30px, 30px);
+}
+
+/* Web Developer button */
+.webconsole-filter-button[category="webdev"] {
+  -moz-image-region: rect(30px, 40px, 40px, 30px);
+}
+
+.webconsole-close-button {
+  border: none;
+  padding: 3px;
+  list-style-image: url("chrome://global/skin/icons/close.png");
+  -moz-image-region: rect(0, 16px, 16px, 0);
+  -moz-appearance: none;
+}
+
+.webconsole-close-button:hover {
+  -moz-image-region: rect(0, 32px, 16px, 16px);
+}
+
+.webconsole-close-button:hover:active {
+  -moz-image-region: rect(0, 48px, 16px, 32px);
 }
 
 /* JSTerm Styles */
@@ -179,26 +220,5 @@
   -moz-appearance: none;
   background-color: -moz-dialog;
   border-top: none;
-}
-
-
-.jsterm-close-button {
-  background: none;
-  border: none;
-  list-style-image: url("chrome://global/skin/icons/close.png");
-  margin: 0px;
-  min-width: 0px;
-  padding: 1px 3px 1px 7px;
-  -moz-appearance: none;
-  -moz-image-region: rect(0, 16px, 16px, 0);
-  -moz-user-focus: ignore;
-}
-
-.jsterm-close-button:hover {
-  -moz-image-region: rect(0, 32px, 16px, 16px);
-}
-
-.jsterm-close-button:hover:active {
-  -moz-image-region: rect(0, 48px, 16px, 32px);
 }
 

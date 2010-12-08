@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- Test: if select is disabled, it is barred from constraint validation
+             and should not be affected by :-moz-ui-invalid pseudo-class. -->
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <body onload="document.getElementById('s').setCustomValidity('foo'); document.documentElement.className='';">
+    <select class='notinvalid' id='s' disabled></select>
+  </body>
+</html>

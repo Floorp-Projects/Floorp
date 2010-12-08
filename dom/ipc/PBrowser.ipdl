@@ -169,11 +169,16 @@ parent:
 
     sync GetIMEEnabled() returns (PRUint32 value);
 
-    SetInputMode(PRUint32 value, nsString type);
+    SetInputMode(PRUint32 value, nsString type, nsString actionHint);
 
     sync GetIMEOpenState() returns (PRBool value);
 
     SetIMEOpenState(PRBool value);
+
+    /**
+     * Gets the DPI of the screen corresponding to this browser.
+     */
+    sync GetDPI() returns (float value);
 
     PContentPermissionRequest(nsCString aType, URI uri);
 

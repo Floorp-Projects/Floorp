@@ -203,51 +203,12 @@
     <spacer/>
 
     <groupbox>
-      <hbox>
-        <label value="&syncKeyEntry.label;"
-               accesskey="&syncKeyEntry.accesskey;"
-               control="weavePassphrase"/>
-        <spacer flex="1" />
-        <label id="generatePassphraseButton"
-               value="&syncKeyGenerate.label;"
-               class="text-link inline-link"
-               onclick="event.stopPropagation();
-                        gSyncSetup.onPassphraseGenerate();"/>
-      </hbox>
+      <label value="&syncKeyEntry.label;"
+             accesskey="&syncKeyEntry.accesskey;"
+             control="weavePassphrase"/>
       <textbox id="weavePassphrase"
-               onkeyup="gSyncSetup.onPassphraseChange()"
-               onchange="gSyncSetup.onPassphraseChange()"
-               onfocus="this.select();
-                        gSyncSetup.afterBackup();"/>
-
-      <vbox id="passphraseFeedback" pack="center">
-        <hbox id="passphraseFeedbackRow" hidden="true" align="center">
-          <spacer/>
-          <hbox>
-            <image class="statusIcon"/>
-            <label class="status" value=" "/>
-          </hbox>
-        </hbox>
-
-        <vbox id="passphraseStrengthRow" hidden="true" pack="end">
-          <hbox>
-            <label id="passphraseStrengthLabel"
-                   control="passphraseStrength"
-                   value="&syncKeyStrength.label;"/>
-            <progressmeter id="passphraseStrength"
-                           aria-labelledby="passphraseStrengthLabel"
-                           max="128"
-                           value="0"
-                           flex="1"/>
-          </hbox>
-          <hbox align="right" flex="1">
-            <label class="text-link inline-link"
-                   onclick="event.stopPropagation();
-                            gSyncUtils.openSyncKeyHelp();"
-                   value="&syncKeyHelp.label;"/>
-          </hbox>
-        </vbox>
-      </vbox>
+               readonly="true"
+               onfocus="this.select();"/>
     </groupbox>
 
     <groupbox align="center">
@@ -256,13 +217,11 @@
         <button id="printSyncKeyButton"
                 label="&button.syncKeyBackup.print.label;"
                 accesskey="&button.syncKeyBackup.print.accesskey;"
-                oncommand="gSyncUtils.passphrasePrint('weavePassphrase');
-                           gSyncSetup.afterBackup();"/>
+                oncommand="gSyncUtils.passphrasePrint('weavePassphrase');"/>
         <button id="saveSyncKeyButton"
                 label="&button.syncKeyBackup.save.label;"
                 accesskey="&button.syncKeyBackup.save.accesskey;"
-                oncommand="gSyncUtils.passphraseSave('weavePassphrase');
-                           gSyncSetup.afterBackup();"/>
+                oncommand="gSyncUtils.passphraseSave('weavePassphrase');"/>
       </hbox>
     </groupbox>
   </wizardpage>
@@ -360,12 +319,13 @@
   </wizardpage>
 
   <wizardpage id="existingPassphraseEntry"
+              label="&setup.existingSyncKeyPage.title;"
               onextra1="gSyncSetup.onSyncOptions()"
-              label="&setup.existingSyncKeyPage.title;">
+              onpageshow="gSyncSetup.onPageShow()">
     <description>&setup.existingSyncKeyPage.description;</description>
     <textbox id="existingPassphrase"
-             onkeyup="gSyncSetup.checkFields(event)"
-             onchange="gSyncSetup.checkFields(event)"/>
+             onkeyup="gSyncSetup.onPassphraseKeyUp(event)"
+             onchange="gSyncSetup.checkFields()"/>
     <hbox id="passphrase-throbber" hidden="true">
       <image/>
       <label value="&verifying.label;"/>

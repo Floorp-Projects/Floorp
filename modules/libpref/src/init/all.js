@@ -3200,14 +3200,11 @@ pref("image.mem.max_ms_before_yield", 400);
 pref("image.mem.max_bytes_for_sync_decode", 150000);
 
 // WebGL prefs
-// keep disabled on linux-x64 until bug 578877 is fixed
-#ifdef _AMD64_
-#ifdef MOZ_X11
-// MOZ_X11 && AMD64
+// keep disabled on linux until bug 578877 is fixed
+// This is not an ideal define, but it gets the right set of
+// build machines.
+#ifdef MOZ_WIDGET_GTK2
 pref("webgl.enabled_for_all_sites", false);
-#else
-pref("webgl.enabled_for_all_sites", true);
-#endif
 #else
 pref("webgl.enabled_for_all_sites", true);
 #endif

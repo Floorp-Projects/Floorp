@@ -728,6 +728,10 @@ private:
      This can be used with or without FCDATA_FUNC_IS_FULL_CTOR.
      The child items might still need table pseudo processing. */
 #define FCDATA_USE_CHILD_ITEMS 0x20000
+  /* If FCDATA_FORCED_NON_SCROLLABLE_BLOCK is set, then this block
+     would have been scrollable but has been forced to be
+     non-scrollable due to being in a paginated context. */
+#define FCDATA_FORCED_NON_SCROLLABLE_BLOCK 0x40000
 
   /* Structure representing information about how a frame should be
      constructed.  */

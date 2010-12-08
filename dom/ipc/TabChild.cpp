@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "TabChild.h"
+#include "mozilla/IntentionalCrash.h"
 #include "mozilla/dom/PContentChild.h"
 #include "mozilla/dom/PContentDialogChild.h"
 #include "mozilla/layers/PLayersChild.h"
@@ -995,6 +996,13 @@ TabChildGlobal::GetContent(nsIDOMWindow** aContent)
   nsCOMPtr<nsIDOMWindow> window = do_GetInterface(mTabChild->WebNavigation());
   window.swap(*aContent);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+TabChildGlobal::PrivateNoteIntentionalCrash()
+{
+    mozilla::NoteIntentionalCrash("tab");
+    return NS_OK;
 }
 
 NS_IMETHODIMP

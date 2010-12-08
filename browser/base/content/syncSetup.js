@@ -75,7 +75,6 @@ var gSyncSetup = {
     email: false,
     server: false
   },
-  _haveSyncKeyBackup: false,
 
   get _usingMainServers() {
     if (this._settingUpNew)
@@ -143,7 +142,8 @@ var gSyncSetup = {
   },
 
   onResetPassphrase: function () {
-    document.getElementById("existingPassphrase").value = Weave.Service.passphrase;
+    document.getElementById("existingPassphrase").value = 
+      Weave.Utils.hyphenatePassphrase(Weave.Service.passphrase);
     this.wizard.advance();
   },
 
@@ -199,6 +199,14 @@ var gSyncSetup = {
     }
   },
 
+  onPassphraseKeyUp: function (event) {
+    if (event.keyCode != event.DOM_VK_BACK_SPACE) {
+      let el = event.target;
+      el.value = Weave.Utils.hyphenatePartialPassphrase(el.value);
+    }
+    this.checkFields();
+  },
+
   // fun with validation!
   checkFields: function () {
     this.wizard.canAdvance = this.readyToAdvance();
@@ -217,8 +225,6 @@ var gSyncSetup = {
           return document.getElementById("tos").checked;
 
         return true;
-      case NEW_ACCOUNT_PP_PAGE:
-        return this._haveSyncKeyBackup && this.checkPassphrase();
       case EXISTING_ACCOUNT_LOGIN_PAGE:
         let hasUser = document.getElementById("existingAccountName").value != "";
         let hasPass = document.getElementById("existingPassword").value != "";
@@ -231,7 +237,8 @@ var gSyncSetup = {
         }
         return false;
       case EXISTING_ACCOUNT_PP_PAGE:
-        return document.getElementById("existingPassphrase").value != "";
+        let el = document.getElementById("existingPassphrase");
+        return Weave.Utils.isPassphrase(el.value);
     }
     // we probably shouldn't get here
     return true;
@@ -300,80 +307,11 @@ var gSyncSetup = {
     this.checkFields();
   },
 
-  onPassphraseChange: function () {
-    // Ignore if there's no actual change from the generated one.
-    let el = document.getElementById("weavePassphrase");
-    if (gSyncUtils.normalizePassphrase(el.value) == Weave.Service.passphrase) {
-      el = document.getElementById("generatePassphraseButton");
-      el.hidden = true;
-      this._haveCustomSyncKey = false;
-      return;
-    }
-
-    this._haveSyncKeyBackup = true;
-    this._haveCustomSyncKey = true;
-    el = document.getElementById("generatePassphraseButton");
-    el.hidden = false;
-    this.checkFields();
-  },
-
   onPassphraseGenerate: function () {
-    let passphrase = gSyncUtils.generatePassphrase();
+    let passphrase = Weave.Utils.generatePassphrase();
     Weave.Service.passphrase = passphrase;
     let el = document.getElementById("weavePassphrase");
-    el.value = gSyncUtils.hyphenatePassphrase(passphrase);
-
-    el = document.getElementById("generatePassphraseButton");
-    el.hidden = true;
-    document.getElementById("passphraseStrengthRow").hidden = true;
-    let feedback = document.getElementById("passphraseFeedbackRow");
-    this._setFeedback(feedback, true, "");
-  },
-
-  afterBackup: function () {
-    this._haveSyncKeyBackup = true;
-    this.checkFields();
-  },
-
-  checkPassphrase: function () {
-    let el1 = document.getElementById("weavePassphrase");
-    let valid, str;
-    // xxxmpc - hack, sigh
-    if (el1.value == document.getElementById("weavePassword").value) {
-      valid = false;
-      str = Weave.Utils.getErrorString("change.synckey.sameAsPassword");
-    }
-    else {
-      [valid, str] = gSyncUtils.validatePassphrase(el1);
-    }
-
-    let feedback = document.getElementById("passphraseFeedbackRow");
-    this._setFeedback(feedback, valid, str);
-    if (!valid) {
-      // Hide strength meter if we're displaying an error.
-      document.getElementById("passphraseStrengthRow").hidden = true;
-      return valid;
-    }
-
-    // No passphrase strength meter for the generated key.
-    if (!this._haveCustomSyncKey)
-      return valid;
-
-    // Display passphrase strength
-    let pp = document.getElementById("weavePassphrase").value;
-    let bits = Weave.Utils.passphraseStrength(pp);
-    let meter = document.getElementById("passphraseStrength");
-    meter.value = bits;
-    // The generated 20 character passphrase has an entropy of 94 bits
-    // which we consider "strong".
-    if (bits > 94)
-      meter.className = "strong";
-    else if (bits > 47)
-      meter.className = "medium";
-    else
-      meter.className = "";
-    document.getElementById("passphraseStrengthRow").hidden = false;
-    return valid;
+    el.value = Weave.Utils.hyphenatePassphrase(passphrase);
   },
 
   onPageShow: function() {
@@ -400,6 +338,9 @@ var gSyncSetup = {
         this.wizard.getButton("back").hidden = false;
         this.wizard.getButton("extra1").hidden = false;
         this.wizard.canRewind = true;
+        break;
+      case EXISTING_ACCOUNT_PP_PAGE:
+        this.checkFields();
         break;
       case SETUP_SUCCESS_PAGE:
         this.wizard.canRewind = false;
@@ -486,8 +427,6 @@ var gSyncSetup = {
         label.value = Weave.Utils.getErrorString(error);
         return false;
       case NEW_ACCOUNT_PP_PAGE:
-        if (this._haveCustomSyncKey)
-          Weave.Service.passphrase = document.getElementById("weavePassphrase").value;
         // Time to load the captcha.
         // First check for NoScript and whitelist the right sites.
         this._handleNoScript(true);
@@ -496,7 +435,9 @@ var gSyncSetup = {
       case EXISTING_ACCOUNT_LOGIN_PAGE:
         Weave.Service.account = document.getElementById("existingAccountName").value;
         Weave.Service.password = document.getElementById("existingPassword").value;
-        Weave.Service.passphrase = document.getElementById("existingPassphrase").value;
+        Weave.Service.passphrase = Weave.Utils.normalizePassphrase(
+            document.getElementById("existingPassphrase").value);
+
         // verifyLogin() will likely return false because we probably don't
         // have a passphrase yet (unless the user already entered it
         // and hit the back button).
@@ -510,7 +451,7 @@ var gSyncSetup = {
         break;
       case EXISTING_ACCOUNT_PP_PAGE:
         let pp = document.getElementById("existingPassphrase").value;
-        Weave.Service.passphrase = gSyncUtils.normalizePassphrase(pp);
+        Weave.Service.passphrase = Weave.Utils.normalizePassphrase(pp);
         if (Weave.Service.login())
           this.wizard.pageIndex = SETUP_SUCCESS_PAGE;
         return false;

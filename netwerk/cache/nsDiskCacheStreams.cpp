@@ -43,6 +43,7 @@
 #include "nsDiskCacheDevice.h"
 #include "nsDiskCacheStreams.h"
 #include "nsCacheService.h"
+#include "mozilla/FileUtils.h"
 
 
 
@@ -667,6 +668,7 @@ nsDiskCacheStreamIO::OpenCacheFile(PRIntn flags, PRFileDesc ** fd)
     
     rv = cacheMap->GetLocalFileForDiskCacheRecord(&mBinding->mRecord,
                                                   nsDiskCache::kData,
+                                                  !!(flags & PR_CREATE_FILE),
                                                   getter_AddRefs(mLocalFile));
     if (NS_FAILED(rv))  return rv;
     
@@ -729,6 +731,10 @@ nsDiskCacheStreamIO::FlushBufferToFile()
         // allocate file
         rv = OpenCacheFile(PR_RDWR | PR_CREATE_FILE, &mFD);
         if (NS_FAILED(rv))  return rv;
+
+        PRInt64 dataSize = mBinding->mCacheEntry->PredictedDataSize();
+        if (dataSize != -1)
+            mozilla::fallocate(mFD, PR_MIN(dataSize, kPreallocateLimit));
     }
     
     // write buffer

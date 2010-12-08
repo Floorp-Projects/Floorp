@@ -129,11 +129,11 @@ js::JaegerSpew(JaegerSpewChannel channel, const char *fmt, ...)
     if (!(LoggingBits & (1 << uint32(channel))))
         return;
 
-    fprintf(stdout, "[jaeger] %-7s  ", ChannelNames[channel]);
+    fprintf(stderr, "[jaeger] %-7s  ", ChannelNames[channel]);
 
     va_list ap;
     va_start(ap, fmt);
-    vfprintf(stdout, fmt, ap);
+    vfprintf(stderr, fmt, ap);
     va_end(ap);
 
     /* fprintf(stdout, "\n"); */
