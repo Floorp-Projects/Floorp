@@ -15,3 +15,13 @@ function foo() {
 foo();
 
 assertEq(g, NaN);
+
+/* Recompilation while being processed by a native call IC. */
+
+function native() {
+  var x;
+  x = x;
+  x = Math.ceil(NaN);
+  assertEq(x, NaN);
+}
+native();
