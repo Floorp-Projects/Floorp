@@ -570,17 +570,11 @@ public:
     static nsresult Base64Encode(const nsAString &aString,
                                  nsAString &aBinaryData);
 
-    // If this returns JS_FALSE then an exception will be set on cx.
-    static JSBool Base64Encode(JSContext *cx, jsval val, jsval *out);
-
     static nsresult Base64Decode(const nsACString &aBinaryData,
                                  nsACString &aString);
 
     static nsresult Base64Decode(const nsAString &aBinaryData,
                                  nsAString &aString);
-
-    // If this returns JS_FALSE then an exception will be set on cx.
-    static JSBool Base64Decode(JSContext *cx, jsval val, jsval *out);
 
     // nsCycleCollectionParticipant
     NS_IMETHOD RootAndUnlinkJSObjects(void *p);
