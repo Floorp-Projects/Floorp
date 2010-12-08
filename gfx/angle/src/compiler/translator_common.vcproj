@@ -51,18 +51,18 @@
       </File>
       <File RelativePath=".\glslang.l">
         <FileConfiguration Name="Debug|Win32">
-          <Tool Name="VCCustomBuildTool" Description="Executing flex on $(InputPath)" CommandLine="@echo on&#xD;&#xA;if EXIST &quot;$(InputDir)Gen_glslang.cpp&quot; del &quot;$(InputDir)Gen_glslang.cpp&quot;&#xD;&#xA;&quot;$(InputDir)tools\flex.exe&quot; &quot;$(InputPath)&quot;&#xD;&#xA;rename &quot;$(InputDir)lex.yy.c&quot; Gen_$(InputName).cpp&#xD;&#xA;@echo off&#xD;&#xA;" AdditionalDependencies="glslang_tab.h" Outputs="$(InputDir)Gen_glslang.cpp" />
+          <Tool Name="VCCustomBuildTool" Description="" CommandLine="" AdditionalDependencies="" Outputs="" />
         </FileConfiguration>
         <FileConfiguration Name="Release|Win32">
-          <Tool Name="VCCustomBuildTool" Description="Executing flex on $(InputPath)" CommandLine="@echo on&#xD;&#xA;if EXIST &quot;$(InputDir)Gen_glslang.cpp&quot; del &quot;$(InputDir)Gen_glslang.cpp&quot;&#xD;&#xA;&quot;$(InputDir)tools\flex.exe&quot; &quot;$(InputPath)&quot;&#xD;&#xA;rename &quot;$(InputDir)lex.yy.c&quot; Gen_$(InputName).cpp&#xD;&#xA;@echo off&#xD;&#xA;" AdditionalDependencies="glslang_tab.h" Outputs="$(InputDir)Gen_glslang.cpp" />
+          <Tool Name="VCCustomBuildTool" Description="" CommandLine="" AdditionalDependencies="" Outputs="" />
         </FileConfiguration>
       </File>
       <File RelativePath=".\glslang.y">
         <FileConfiguration Name="Debug|Win32">
-          <Tool Name="VCCustomBuildTool" Description="Executing Bison on $(InputPath)" CommandLine="@echo on&#xD;&#xA;SET BISON_SIMPLE=tools\bison.simple&#xD;&#xA;SET BISON_HAIRY=tools\bison.simple&#xD;&#xA;if EXIST &quot;$(InputDir)Gen_$(InputName)_tab.cpp&quot; del &quot;$(InputDir)Gen_$(InputName)_tab.cpp&quot;&#xD;&#xA;tools\bison.exe -d -t -v $(InputName).y&#xD;&#xA;rename &quot;$(InputDir)$(InputName)_tab.c&quot; Gen_$(InputName)_tab.cpp&#xD;&#xA;@echo off&#xD;&#xA;" Outputs="$(InputDir)Gen_$(InputName)_tab.cpp" />
+          <Tool Name="VCCustomBuildTool" Description="" CommandLine="" Outputs="" />
         </FileConfiguration>
         <FileConfiguration Name="Release|Win32">
-          <Tool Name="VCCustomBuildTool" Description="Executing Bison on $(InputPath)" CommandLine="@echo on&#xD;&#xA;SET BISON_SIMPLE=tools\bison.simple&#xD;&#xA;SET BISON_HAIRY=tools\bison.simple&#xD;&#xA;if EXIST &quot;$(InputDir)Gen_$(InputName)_tab.cpp&quot; del &quot;$(InputDir)Gen_$(InputName)_tab.cpp&quot;&#xD;&#xA;tools\bison.exe -d -t -v $(InputName).y&#xD;&#xA;rename &quot;$(InputDir)$(InputName)_tab.c&quot; Gen_$(InputName)_tab.cpp&#xD;&#xA;@echo off&#xD;&#xA;" Outputs="$(InputDir)Gen_$(InputName)_tab.cpp" />
+          <Tool Name="VCCustomBuildTool" Description="" CommandLine="" Outputs="" />
         </FileConfiguration>
       </File>
       <File RelativePath=".\InfoSink.cpp">
@@ -93,6 +93,10 @@
       </File>
       <File RelativePath=".\SymbolTable.cpp">
       </File>
+      <File RelativePath=".\util.cpp">
+      </File>
+      <File RelativePath=".\ValidateLimitations.cpp">
+      </File>
       <File RelativePath=".\VariableInfo.cpp">
       </File>
       <Filter Name="preprocessor">
@@ -112,9 +116,9 @@
         </File>
       </Filter>
       <Filter Name="generated">
-        <File RelativePath=".\Gen_glslang.cpp">
+        <File RelativePath=".\glslang_lex.cpp">
         </File>
-        <File RelativePath=".\Gen_glslang_tab.cpp">
+        <File RelativePath=".\glslang_tab.cpp">
         </File>
       </Filter>
     </Filter>
@@ -163,7 +167,9 @@
       </File>
       <File RelativePath=".\Types.h">
       </File>
-      <File RelativePath=".\unistd.h">
+      <File RelativePath=".\util.h">
+      </File>
+      <File RelativePath=".\ValidateLimitations.h">
       </File>
       <File RelativePath=".\VariableInfo.h">
       </File>

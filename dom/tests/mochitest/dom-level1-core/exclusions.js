@@ -74,7 +74,7 @@ var indexErrTests = ["characterdataindexsizeerrdeletedatacountnegative", "charac
                      "characterdataindexsizeerrsubstringcountnegative", "hc_characterdataindexsizeerrdeletedatacountnegative",
                      "hc_characterdataindexsizeerrreplacedatacountnegative", "hc_characterdataindexsizeerrsubstringcountnegative"];
 
-var attributeModTests = ["hc_attrappendchild1", "hc_attrappendchild2", "hc_attrappendchild3", "hc_attrappendchild5",
+var attributeModTests = ["hc_attrappendchild1", "hc_attrappendchild3", "hc_attrappendchild5",
                          "hc_attrappendchild6", "hc_attrchildnodes2", "hc_attrclonenode1", "hc_attrinsertbefore1",
                          "hc_attrinsertbefore2", "hc_attrinsertbefore3", "hc_attrinsertbefore4", "hc_attrinsertbefore6",
                          "hc_attrnormalize", "hc_attrremovechild2", "hc_attrreplacechild1", "hc_attrreplacechild2",

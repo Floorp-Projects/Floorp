@@ -1374,16 +1374,6 @@ GCMarker::markDelayedChildren()
     JS_ASSERT(!unmarkedArenaStackTop);
 }
 
-void
-GCMarker::slowifyArrays()
-{
-    while (!arraysToSlowify.empty()) {
-        JSObject *obj = arraysToSlowify.back();
-        arraysToSlowify.popBack();
-        if (obj->isMarked())
-            obj->makeDenseArraySlow(context);
-    }
-}
 } /* namespace js */
 
 static void
@@ -2237,12 +2227,6 @@ MarkAndSweep(JSContext *cx, JSGCInvocationKind gckind GCTIMER_PARAM)
     }
     TIMESTAMP(sweepObjectEnd);
 
-    /*
-     * We sweep the deflated cache before we finalize the strings so the
-     * cache can safely use js_IsAboutToBeFinalized..
-     */
-    rt->deflatedStringCache->sweep(cx);
-
     for (JSCompartment **comp = rt->compartments.begin(); comp != rt->compartments.end(); comp++) {
         FinalizeArenaList<JSShortString>(*comp, cx, FINALIZE_SHORT_STRING);
         FinalizeArenaList<JSString>(*comp, cx, FINALIZE_STRING);
@@ -2266,9 +2250,6 @@ MarkAndSweep(JSContext *cx, JSGCInvocationKind gckind GCTIMER_PARAM)
      * script's filename. See bug 323267.
      */
     js_SweepScriptFilenames(rt);
-
-    /* Slowify arrays we have accumulated. */
-    gcmarker.slowifyArrays();
 
     /*
      * Destroy arenas after we finished the sweeping so finalizers can safely

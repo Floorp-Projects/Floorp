@@ -193,7 +193,8 @@ enum CanvasMultiGetterType {
   [noscript] void getImageData_explicit(in long x, in long y, in unsigned long width, in unsigned long height,
                                         [array, size_is(dataLen)] in octet dataPtr, in unsigned long dataLen);
   [noscript] void putImageData_explicit(in long x, in long y, in unsigned long width, in unsigned long height,
-                                        [array, size_is(dataLen)] in octet dataPtr, in unsigned long dataLen);
+                                        [array, size_is(dataLen)] in octet dataPtr, in unsigned long dataLen, in boolean hasDirtyRect,
+                                        in long dirtyX, in long dirtyY, in long dirtyWidth, in long dirtyHeight);
 
   // ImageData createImageData(in float w, in float h);
   // Note: this is basically script-only (and really, quickstub-only).  Native callers

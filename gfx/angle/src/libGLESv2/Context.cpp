@@ -207,8 +207,6 @@ Context::~Context()
 
     mState.arrayBuffer.set(NULL);
     mState.elementArrayBuffer.set(NULL);
-    mState.texture2D.set(NULL);
-    mState.textureCubeMap.set(NULL);
     mState.renderbuffer.set(NULL);
 
     mTexture2DZero.set(NULL);
@@ -240,6 +238,16 @@ void Context::makeCurrent(egl::Display *display, egl::Surface *surface)
         mIndexDataManager = new IndexDataManager(this, mBufferBackEnd);
         mBlit = new Blit(this);
 
+        mSupportsShaderModel3 = mDeviceCaps.PixelShaderVersion == D3DPS_VERSION(3, 0);
+
+        mMaxTextureDimension = std::min(std::min((int)mDeviceCaps.MaxTextureWidth, (int)mDeviceCaps.MaxTextureHeight),
+                                        (int)gl::IMPLEMENTATION_MAX_TEXTURE_SIZE);
+        mMaxCubeTextureDimension = std::min(mMaxTextureDimension, (int)gl::IMPLEMENTATION_MAX_CUBE_MAP_TEXTURE_SIZE);
+        mMaxRenderbufferDimension = mMaxTextureDimension;
+        mMaxTextureLevel = log2(mMaxTextureDimension) + 1;
+        TRACE("MaxTextureDimension=%d, MaxCubeTextureDimension=%d, MaxRenderbufferDimension=%d, MaxTextureLevel=%d",
+              mMaxTextureDimension, mMaxCubeTextureDimension, mMaxRenderbufferDimension, mMaxTextureLevel);
+
         const D3DFORMAT renderBufferFormats[] =
         {
             D3DFMT_A8R8G8B8,
@@ -270,6 +278,8 @@ void Context::makeCurrent(egl::Display *display, egl::Surface *surface)
         mSupportsCompressedTextures = display->getCompressedTextureSupport();
         mSupportsFloatTextures = display->getFloatTextureSupport(&mSupportsFloatLinearFilter, &mSupportsFloatRenderableTextures);
         mSupportsHalfFloatTextures = display->getHalfFloatTextureSupport(&mSupportsHalfFloatLinearFilter, &mSupportsHalfFloatRenderableTextures);
+        mSupportsLuminanceTextures = display->getLuminanceTextureSupport();
+        mSupportsLuminanceAlphaTextures = display->getLuminanceAlphaTextureSupport();
 
         initExtensionString();
 
@@ -306,8 +316,6 @@ void Context::makeCurrent(egl::Display *display, egl::Surface *surface)
         depthStencil->Release();
     }
     
-    mSupportsShaderModel3 = mDeviceCaps.PixelShaderVersion == D3DPS_VERSION(3, 0);
-
     markAllStateDirty();
 }
 
@@ -958,18 +966,14 @@ void Context::bindTexture2D(GLuint texture)
 {
     mResourceManager->checkTextureAllocation(texture, SAMPLER_2D);
 
-    mState.texture2D.set(getTexture(texture));
-
-    mState.samplerTexture[SAMPLER_2D][mState.activeSampler].set(mState.texture2D.get());
+    mState.samplerTexture[SAMPLER_2D][mState.activeSampler].set(getTexture(texture));
 }
 
 void Context::bindTextureCubeMap(GLuint texture)
 {
     mResourceManager->checkTextureAllocation(texture, SAMPLER_CUBE);
 
-    mState.textureCubeMap.set(getTexture(texture));
-
-    mState.samplerTexture[SAMPLER_CUBE][mState.activeSampler].set(mState.textureCubeMap.get());
+    mState.samplerTexture[SAMPLER_CUBE][mState.activeSampler].set(getTexture(texture));
 }
 
 void Context::bindReadFramebuffer(GLuint framebuffer)
@@ -1078,29 +1082,19 @@ Program *Context::getCurrentProgram()
 
 Texture2D *Context::getTexture2D()
 {
-    if (mState.texture2D.id() == 0)   // Special case: 0 refers to different initial textures based on the target
-    {
-        return mTexture2DZero.get();
-    }
-
-    return static_cast<Texture2D*>(mState.texture2D.get());
+    return static_cast<Texture2D*>(getSamplerTexture(mState.activeSampler, SAMPLER_2D));
 }
 
 TextureCubeMap *Context::getTextureCubeMap()
 {
-    if (mState.textureCubeMap.id() == 0)   // Special case: 0 refers to different initial textures based on the target
-    {
-        return mTextureCubeMapZero.get();
-    }
-
-    return static_cast<TextureCubeMap*>(mState.textureCubeMap.get());
+    return static_cast<TextureCubeMap*>(getSamplerTexture(mState.activeSampler, SAMPLER_CUBE));
 }
 
 Texture *Context::getSamplerTexture(unsigned int sampler, SamplerType type)
 {
     GLuint texid = mState.samplerTexture[type][sampler].id();
 
-    if (texid == 0)
+    if (texid == 0)   // Special case: 0 refers to different initial textures based on the target
     {
         switch (type)
         {
@@ -1126,15 +1120,15 @@ bool Context::getBooleanv(GLenum pname, GLboolean *params)
         params[2] = mState.colorMaskBlue;
         params[3] = mState.colorMaskAlpha;
         break;
-      case GL_CULL_FACE:                *params = mState.cullFace;
-      case GL_POLYGON_OFFSET_FILL:      *params = mState.polygonOffsetFill;
-      case GL_SAMPLE_ALPHA_TO_COVERAGE: *params = mState.sampleAlphaToCoverage;
-      case GL_SAMPLE_COVERAGE:          *params = mState.sampleCoverage;
-      case GL_SCISSOR_TEST:             *params = mState.scissorTest;
-      case GL_STENCIL_TEST:             *params = mState.stencilTest;
-      case GL_DEPTH_TEST:               *params = mState.depthTest;
-      case GL_BLEND:                    *params = mState.blend;
-      case GL_DITHER:                   *params = mState.dither;
+      case GL_CULL_FACE:                *params = mState.cullFace;                  break;
+      case GL_POLYGON_OFFSET_FILL:      *params = mState.polygonOffsetFill;         break;
+      case GL_SAMPLE_ALPHA_TO_COVERAGE: *params = mState.sampleAlphaToCoverage;     break;
+      case GL_SAMPLE_COVERAGE:          *params = mState.sampleCoverage;            break;
+      case GL_SCISSOR_TEST:             *params = mState.scissorTest;               break;
+      case GL_STENCIL_TEST:             *params = mState.stencilTest;               break;
+      case GL_DEPTH_TEST:               *params = mState.depthTest;                 break;
+      case GL_BLEND:                    *params = mState.blend;                     break;
+      case GL_DITHER:                   *params = mState.dither;                    break;
       default:
         return false;
     }
@@ -1197,19 +1191,19 @@ bool Context::getIntegerv(GLenum pname, GLint *params)
     {
       case GL_MAX_VERTEX_ATTRIBS:               *params = gl::MAX_VERTEX_ATTRIBS;               break;
       case GL_MAX_VERTEX_UNIFORM_VECTORS:       *params = gl::MAX_VERTEX_UNIFORM_VECTORS;       break;
-      case GL_MAX_VARYING_VECTORS:              *params = gl::MAX_VARYING_VECTORS;              break;
+      case GL_MAX_VARYING_VECTORS:              *params = getMaximumVaryingVectors();           break;
       case GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS: *params = gl::MAX_COMBINED_TEXTURE_IMAGE_UNITS; break;
       case GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS:   *params = gl::MAX_VERTEX_TEXTURE_IMAGE_UNITS;   break;
       case GL_MAX_TEXTURE_IMAGE_UNITS:          *params = gl::MAX_TEXTURE_IMAGE_UNITS;          break;
-      case GL_MAX_FRAGMENT_UNIFORM_VECTORS:     *params = gl::MAX_FRAGMENT_UNIFORM_VECTORS;     break;
-      case GL_MAX_RENDERBUFFER_SIZE:            *params = gl::MAX_RENDERBUFFER_SIZE;            break;
+      case GL_MAX_FRAGMENT_UNIFORM_VECTORS:     *params = getMaximumFragmentUniformVectors();   break;
+      case GL_MAX_RENDERBUFFER_SIZE:            *params = getMaximumRenderbufferDimension();    break;
       case GL_NUM_SHADER_BINARY_FORMATS:        *params = 0;                                    break;
       case GL_SHADER_BINARY_FORMATS:      /* no shader binary formats are supported */          break;
       case GL_ARRAY_BUFFER_BINDING:             *params = mState.arrayBuffer.id();              break;
       case GL_ELEMENT_ARRAY_BUFFER_BINDING:     *params = mState.elementArrayBuffer.id();       break;
-      //case GL_FRAMEBUFFER_BINDING:              // now equivalent to GL_DRAW_FRAMEBUFFER_BINDING_ANGLE
-      case GL_DRAW_FRAMEBUFFER_BINDING_ANGLE:     *params = mState.drawFramebuffer;               break;
-      case GL_READ_FRAMEBUFFER_BINDING_ANGLE:     *params = mState.readFramebuffer;               break;
+      //case GL_FRAMEBUFFER_BINDING:            // now equivalent to GL_DRAW_FRAMEBUFFER_BINDING_ANGLE
+      case GL_DRAW_FRAMEBUFFER_BINDING_ANGLE:   *params = mState.drawFramebuffer;               break;
+      case GL_READ_FRAMEBUFFER_BINDING_ANGLE:   *params = mState.readFramebuffer;               break;
       case GL_RENDERBUFFER_BINDING:             *params = mState.renderbuffer.id();             break;
       case GL_CURRENT_PROGRAM:                  *params = mState.currentProgram;                break;
       case GL_PACK_ALIGNMENT:                   *params = mState.packAlignment;                 break;
@@ -1240,8 +1234,8 @@ bool Context::getIntegerv(GLenum pname, GLint *params)
       case GL_STENCIL_BACK_WRITEMASK:           *params = mState.stencilBackWritemask;          break;
       case GL_STENCIL_CLEAR_VALUE:              *params = mState.stencilClearValue;             break;
       case GL_SUBPIXEL_BITS:                    *params = 4;                                    break;
-      case GL_MAX_TEXTURE_SIZE:                 *params = gl::MAX_TEXTURE_SIZE;                 break;
-      case GL_MAX_CUBE_MAP_TEXTURE_SIZE:        *params = gl::MAX_CUBE_MAP_TEXTURE_SIZE;        break;
+      case GL_MAX_TEXTURE_SIZE:                 *params = getMaximumTextureDimension();         break;
+      case GL_MAX_CUBE_MAP_TEXTURE_SIZE:        *params = getMaximumCubeTextureDimension();     break;
       case GL_NUM_COMPRESSED_TEXTURE_FORMATS:   
         {
             if (supportsCompressedTextures())
@@ -1303,7 +1297,7 @@ bool Context::getIntegerv(GLenum pname, GLint *params)
       case GL_IMPLEMENTATION_COLOR_READ_FORMAT: *params = gl::IMPLEMENTATION_COLOR_READ_FORMAT; break;
       case GL_MAX_VIEWPORT_DIMS:
         {
-            int maxDimension = std::max((int)gl::MAX_RENDERBUFFER_SIZE, (int)gl::MAX_TEXTURE_SIZE);
+            int maxDimension = std::max(getMaximumRenderbufferDimension(), getMaximumTextureDimension());
             params[0] = maxDimension;
             params[1] = maxDimension;
         }
@@ -1648,6 +1642,9 @@ bool Context::applyRenderTarget(bool ignoreViewport)
     D3DSURFACE_DESC desc;
     renderTarget->GetDesc(&desc);
 
+    float zNear = clamp01(mState.zNear);
+    float zFar = clamp01(mState.zFar);
+
     if (ignoreViewport)
     {
         viewport.X = 0;
@@ -1663,8 +1660,8 @@ bool Context::applyRenderTarget(bool ignoreViewport)
         viewport.Y = std::max(mState.viewportY, 0);
         viewport.Width = std::min(mState.viewportWidth, (int)desc.Width - (int)viewport.X);
         viewport.Height = std::min(mState.viewportHeight, (int)desc.Height - (int)viewport.Y);
-        viewport.MinZ = clamp01(mState.zNear);
-        viewport.MaxZ = clamp01(mState.zFar);
+        viewport.MinZ = zNear;
+        viewport.MaxZ = zFar;
     }
 
     if (viewport.Width <= 0 || viewport.Height <= 0)
@@ -1701,27 +1698,21 @@ bool Context::applyRenderTarget(bool ignoreViewport)
 
         GLint halfPixelSize = programObject->getDxHalfPixelSizeLocation();
         GLfloat xy[2] = {1.0f / viewport.Width, 1.0f / viewport.Height};
-        programObject->setUniform2fv(halfPixelSize, 1, (GLfloat*)&xy);
+        programObject->setUniform2fv(halfPixelSize, 1, xy);
 
-        GLint window = programObject->getDxViewportLocation();
+        GLint viewport = programObject->getDxViewportLocation();
         GLfloat whxy[4] = {mState.viewportWidth / 2.0f, mState.viewportHeight / 2.0f, 
                           (float)mState.viewportX + mState.viewportWidth / 2.0f, 
                           (float)mState.viewportY + mState.viewportHeight / 2.0f};
-        programObject->setUniform4fv(window, 1, (GLfloat*)&whxy);
+        programObject->setUniform4fv(viewport, 1, whxy);
 
         GLint depth = programObject->getDxDepthLocation();
-        GLfloat dz[2] = {(mState.zFar - mState.zNear) / 2.0f, (mState.zNear + mState.zFar) / 2.0f};
-        programObject->setUniform2fv(depth, 1, (GLfloat*)&dz);
+        GLfloat dz[2] = {(zFar - zNear) / 2.0f, (zNear + zFar) / 2.0f};
+        programObject->setUniform2fv(depth, 1, dz);
 
-        GLint near = programObject->getDepthRangeNearLocation();
-        programObject->setUniform1fv(near, 1, &mState.zNear);
-
-        GLint far = programObject->getDepthRangeFarLocation();
-        programObject->setUniform1fv(far, 1, &mState.zFar);
-
-        GLint diff = programObject->getDepthRangeDiffLocation();
-        GLfloat zDiff = mState.zFar - mState.zNear;
-        programObject->setUniform1fv(diff, 1, &zDiff);
+        GLint depthRange = programObject->getDxDepthRangeLocation();
+        GLfloat nearFarDiff[3] = {zNear, zFar, zFar - zNear};
+        programObject->setUniform3fv(depthRange, 1, nearFarDiff);
     }
 
     return true;
@@ -2230,16 +2221,6 @@ void Context::readPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum
                     b = (rgb & 0x001F) * (1.0f / 0x001F);
                     g = (rgb & 0x07E0) * (1.0f / 0x07E0);
                     r = (rgb & 0xF800) * (1.0f / 0xF800);
-                }
-                break;
-              case D3DFMT_X1R5G5B5:
-                {
-                    unsigned short xrgb = *(unsigned short*)(source + 2 * i + j * lock.Pitch);
-
-                    a = 1.0f;
-                    b = (xrgb & 0x001F) * (1.0f / 0x001F);
-                    g = (xrgb & 0x03E0) * (1.0f / 0x03E0);
-                    r = (xrgb & 0x7C00) * (1.0f / 0x7C00);
                 }
                 break;
               case D3DFMT_A1R5G5B5:
@@ -2885,6 +2866,16 @@ bool Context::supportsShaderModel3() const
     return mSupportsShaderModel3;
 }
 
+int Context::getMaximumVaryingVectors() const
+{
+    return mSupportsShaderModel3 ? MAX_VARYING_VECTORS_SM3 : MAX_VARYING_VECTORS_SM2;
+}
+
+int Context::getMaximumFragmentUniformVectors() const
+{
+    return mSupportsShaderModel3 ? MAX_FRAGMENT_UNIFORM_VECTORS_SM3 : MAX_FRAGMENT_UNIFORM_VECTORS_SM2;
+}
+
 int Context::getMaxSupportedSamples() const
 {
     return mMaxSupportedSamples;
@@ -2952,6 +2943,36 @@ bool Context::supportsHalfFloatLinearFilter() const
 bool Context::supportsHalfFloatRenderableTextures() const
 {
     return mSupportsHalfFloatRenderableTextures;
+}
+
+int Context::getMaximumRenderbufferDimension() const
+{
+    return mMaxRenderbufferDimension;
+}
+
+int Context::getMaximumTextureDimension() const
+{
+    return mMaxTextureDimension;
+}
+
+int Context::getMaximumCubeTextureDimension() const
+{
+    return mMaxCubeTextureDimension;
+}
+
+int Context::getMaximumTextureLevel() const
+{
+    return mMaxTextureLevel;
+}
+
+bool Context::supportsLuminanceTextures() const
+{
+    return mSupportsLuminanceTextures;
+}
+
+bool Context::supportsLuminanceAlphaTextures() const
+{
+    return mSupportsLuminanceAlphaTextures;
 }
 
 void Context::detachBuffer(GLuint buffer)

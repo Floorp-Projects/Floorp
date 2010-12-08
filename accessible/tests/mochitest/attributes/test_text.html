@@ -17,60 +17,7 @@
           src="../events.js"></script>
 
   <script type="application/javascript">
-
-    const nsIDOMNSEditableElement =
-      Components.interfaces.nsIDOMNSEditableElement;
-
     var gComputedStyle = null;
-
-    var gTextAttrChangedEventHandler = {
-      handleEvent: function gTextAttrChangedEventHandler_handleEvent(aEvent)
-      {
-        this.eventNumber++;
-      },
-
-      eventNumber: 0
-    };
-
-    function testSpellTextAttrs()
-    {
-      registerA11yEventListener(nsIAccessibleEvent.EVENT_TEXT_ATTRIBUTE_CHANGED,
-                                gTextAttrChangedEventHandler);
-
-      ID = "area8";
-  
-      var node = document.getElementById(ID);
-      node.setAttribute("value", "valid text inalid tixt");
-      node.focus();
-
-      var editor = node.QueryInterface(nsIDOMNSEditableElement).editor;
-      var spellchecker = editor.getInlineSpellChecker(true);
-      spellchecker.enableRealTimeSpell = true;
-
-      window.setTimeout(function()
-        {
-          var defAttrs = buildDefaultTextAttrs(node, kInputFontSize);
-          testDefaultTextAttrs(ID, defAttrs);
-
-          var attrs = { };
-          var misspelledAttrs = {
-            "invalid": "spelling"
-          };
-
-          testTextAttrs(ID, 0, attrs, defAttrs, 0, 11);
-          testTextAttrs(ID, 11, misspelledAttrs, defAttrs, 11, 17);
-          testTextAttrs(ID, 17, attrs, defAttrs, 17, 18);
-          testTextAttrs(ID, 18, misspelledAttrs, defAttrs, 18, 22);
-
-          is(gTextAttrChangedEventHandler.eventNumber, 2,
-             "Wrong count of 'text attribute changed' events for " + ID);
-
-          unregisterA11yEventListener(nsIAccessibleEvent.EVENT_TEXT_ATTRIBUTE_CHANGED,
-                                      gTextAttrChangedEventHandler);
-
-          SimpleTest.finish();
-        }, 0);
-    }
 
     function doTest()
     {
@@ -458,9 +405,7 @@
       // p
       testTextAttrs(ID, 23, { }, { }, 23, 24);
 
-      //////////////////////////////////////////////////////////////////////////
-      // test spelling text attributes
-      testSpellTextAttrs(); // Will call SimpleTest.finish();
+      SimpleTest.finish();
     }
 
     SimpleTest.waitForExplicitFinish();
@@ -520,8 +465,6 @@
       <span style="color: magenta">Magenta<b>Bold</b>Magenta</span>
     </span>
   </p>
-
-  <input id="area8"/>
 
   <p id="area9" style="font-size: smaller">Small
     <span style="font-size: 120%">bigger</span> smaller

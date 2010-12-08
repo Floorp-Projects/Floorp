@@ -267,6 +267,11 @@ nsChromeRegistryContent::GetXULOverlays(nsIURI *aChromeURL,
   CONTENT_NOT_IMPLEMENTED();
 }
 
+void nsChromeRegistryContent::UpdateSelectedLocale()
+{
+  CONTENT_NOTREACHED();
+}
+
 void
 nsChromeRegistryContent::ManifestContent(ManifestProcessingContext& cx,
                                          int lineno, char *const * argv,

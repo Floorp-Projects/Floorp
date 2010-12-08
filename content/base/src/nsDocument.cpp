@@ -3176,7 +3176,7 @@ nsDocument::doCreateShell(nsPresContext* aContext,
 
   NS_ASSERTION(!mPresShell, "We have a presshell already!");
 
-  NS_ENSURE_FALSE(mShellIsHidden, NS_ERROR_FAILURE);
+  NS_ENSURE_FALSE(GetBFCacheEntry(), NS_ERROR_FAILURE);
 
   FillStyleSet(aStyleSet);
   
@@ -4351,7 +4351,18 @@ nsDocument::CreateElementNS(const nsAString& aNamespaceURI,
                             nsIDOMElement** aReturn)
 {
   *aReturn = nsnull;
+  nsCOMPtr<nsIContent> content;
+  nsresult rv = CreateElementNS(aNamespaceURI, aQualifiedName,
+                                getter_AddRefs(content));
+  NS_ENSURE_SUCCESS(rv, rv);
+  return CallQueryInterface(content, aReturn);
+}
 
+nsresult
+nsDocument::CreateElementNS(const nsAString& aNamespaceURI,
+                            const nsAString& aQualifiedName,
+                            nsIContent** aReturn)
+{
   nsCOMPtr<nsINodeInfo> nodeInfo;
   nsresult rv = nsContentUtils::GetNodeInfoFromQName(aNamespaceURI,
                                                      aQualifiedName,
@@ -4359,13 +4370,9 @@ nsDocument::CreateElementNS(const nsAString& aNamespaceURI,
                                                      getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIContent> content;
   PRInt32 ns = nodeInfo->NamespaceID();
-  rv = NS_NewElement(getter_AddRefs(content), ns, nodeInfo.forget(),
-                     NOT_FROM_PARSER);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return CallQueryInterface(content, aReturn);
+  return NS_NewElement(aReturn, ns,
+                       nodeInfo.forget(), NOT_FROM_PARSER);
 }
 
 NS_IMETHODIMP
@@ -6075,17 +6082,15 @@ nsDocument::AdoptNode(nsIDOMNode *aAdoptedNode, nsIDOMNode **aResult)
   PRBool sameDocument = oldDocument == this;
 
   JSContext *cx = nsnull;
-  JSObject *oldScope = nsnull;
   JSObject *newScope = nsnull;
-  if (!sameDocument && oldDocument) {
-    rv = nsContentUtils::GetContextAndScopes(oldDocument, this, &cx, &oldScope,
-                                             &newScope);
+  if (!sameDocument) {
+    rv = nsContentUtils::GetContextAndScope(oldDocument, this, &cx, &newScope);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
   nsCOMArray<nsINode> nodesWithProperties;
   rv = nsNodeUtils::Adopt(adoptedNode, sameDocument ? nsnull : mNodeInfoManager,
-                          cx, oldScope, newScope, nodesWithProperties);
+                          cx, newScope, nodesWithProperties);
   if (NS_FAILED(rv)) {
     // Disconnect all nodes from their parents, since some have the old document
     // as their ownerDocument and some have this as their ownerDocument.

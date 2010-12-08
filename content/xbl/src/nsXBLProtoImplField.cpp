@@ -110,14 +110,9 @@ nsXBLProtoImplField::InstallField(nsIScriptContext* aContext,
     return NS_OK;
   }
 
-  jsval result = JSVAL_NULL;
-  
   // EvaluateStringWithValue and JS_DefineUCProperty can both trigger GC, so
   // protect |result| here.
   nsresult rv;
-  nsAutoGCRoot root(&result, &rv);
-  if (NS_FAILED(rv))
-    return rv;
 
   nsCAutoString uriSpec;
   aBindingDocURI->GetSpec(uriSpec);
@@ -129,6 +124,9 @@ nsXBLProtoImplField::InstallField(nsIScriptContext* aContext,
   // compile the literal string
   PRBool undefined;
   nsCOMPtr<nsIScriptContext> context = aContext;
+
+  JSAutoRequest ar(cx);
+  jsval result = JSVAL_NULL;
   rv = context->EvaluateStringWithValue(nsDependentString(mFieldText,
                                                           mFieldTextLength), 
                                         aBoundNode,
@@ -144,7 +142,6 @@ nsXBLProtoImplField::InstallField(nsIScriptContext* aContext,
 
   // Define the evaluated result as a JS property
   nsDependentString name(mName);
-  JSAutoRequest ar(cx);
   if (!::JS_DefineUCProperty(cx, aBoundNode,
                              reinterpret_cast<const jschar*>(mName), 
                              name.Length(), result, nsnull, nsnull,

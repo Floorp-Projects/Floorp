@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script>
+    function doIt() {
+      var insertions = [
+        [ "opt1", "Shouldn't see me" ],
+        [ "opt2", "Or me" ],
+        [ "opt3", "I should hide too" ],
+        [ "opt4", "And me too" ]
+      ];
+      for (var i = 0; i < insertions.length; ++i) {
+        var next = document.getElementById(insertions[i][0]);
+        next.parentNode.insertBefore(document.createTextNode(insertions[i][1]),
+                                     next);
+      }
+      document.getElementById("sel").appendChild(document.createTextNode("And I"));
+    }
+    </script>
+  </head>
+  <body onload="doIt()">
+    <select size="10" id="sel">
+      <option id="opt1">one</option>
+      <option id="opt2">two</option>
+      <optgroup>
+        <option id="opt3">three</option>
+        <option id="opt4">four</option>
+      </optgroup>
+    </select>
+  </body>
+</html>

@@ -97,24 +97,35 @@ bool Display::initialize()
 
         HRESULT result;
         
-        do
+        // Give up on getting device caps after about one second.
+        for (int i = 0; i < 10; ++i)
         {
             result = mD3d9->GetDeviceCaps(mAdapter, mDeviceType, &mDeviceCaps);
-
-            if (result == D3DERR_NOTAVAILABLE)
+            
+            if (SUCCEEDED(result))
             {
-                Sleep(0);   // Give the driver some time to initialize/recover
+                break;
+            }
+            else if (result == D3DERR_NOTAVAILABLE)
+            {
+                Sleep(100);   // Give the driver some time to initialize/recover
             }
             else if (FAILED(result))   // D3DERR_OUTOFVIDEOMEMORY, E_OUTOFMEMORY, D3DERR_INVALIDDEVICE, or another error we can't recover from
             {
+                terminate();
                 return error(EGL_BAD_ALLOC, false);
             }
         }
-        while(result == D3DERR_NOTAVAILABLE);
-
-        ASSERT(SUCCEEDED(result));
 
         if (mDeviceCaps.PixelShaderVersion < D3DPS_VERSION(2, 0))
+        {
+            terminate();
+            return error(EGL_NOT_INITIALIZED, false);
+        }
+
+        // When DirectX9 is running with an older DirectX8 driver, a StretchRect from a regular texture to a render target texture is not supported.
+        // This is required by Texture2D::convertToRenderTarget.
+        if ((mDeviceCaps.DevCaps2 & D3DDEVCAPS2_CAN_STRETCHRECT_FROM_TEXTURES) == 0)
         {
             terminate();
             return error(EGL_NOT_INITIALIZED, false);
@@ -135,7 +146,7 @@ bool Display::initialize()
         //  D3DFMT_A2R10G10B10,   // The color_ramp conformance test uses ReadPixels with UNSIGNED_BYTE causing it to think that rendering skipped a colour value.
             D3DFMT_A8R8G8B8,
             D3DFMT_R5G6B5,
-            D3DFMT_X1R5G5B5,
+        //  D3DFMT_X1R5G5B5,      // Has no compatible OpenGL ES renderbuffer format
             D3DFMT_X8R8G8B8
         };
 
@@ -577,6 +588,22 @@ bool Display::getHalfFloatTextureSupport(bool *filtering, bool *renderable)
     {
         return true;
     }
+}
+
+bool Display::getLuminanceTextureSupport()
+{
+    D3DDISPLAYMODE currentDisplayMode;
+    mD3d9->GetAdapterDisplayMode(mAdapter, &currentDisplayMode);
+
+    return SUCCEEDED(mD3d9->CheckDeviceFormat(mAdapter, mDeviceType, currentDisplayMode.Format, 0, D3DRTYPE_TEXTURE, D3DFMT_L8));
+}
+
+bool Display::getLuminanceAlphaTextureSupport()
+{
+    D3DDISPLAYMODE currentDisplayMode;
+    mD3d9->GetAdapterDisplayMode(mAdapter, &currentDisplayMode);
+
+    return SUCCEEDED(mD3d9->CheckDeviceFormat(mAdapter, mDeviceType, currentDisplayMode.Format, 0, D3DRTYPE_TEXTURE, D3DFMT_A8L8));
 }
 
 bool Display::getEventQuerySupport()

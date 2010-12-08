@@ -273,7 +273,7 @@ struct JSDValue
     intN        nref;
     JSCList     props;
     JSString*   string;
-    const char* funName;
+    JSString*   funName;
     const char* className;
     JSDValue*   proto;
     JSDValue*   parent;
@@ -460,7 +460,7 @@ jsd_IsActiveScript(JSDContext* jsdc, JSDScript *jsdscript);
 extern const char*
 jsd_GetScriptFilename(JSDContext* jsdc, JSDScript *jsdscript);
 
-extern const char*
+extern JSString*
 jsd_GetScriptFunctionName(JSDContext* jsdc, JSDScript *jsdscript);
 
 extern uintN
@@ -724,7 +724,7 @@ jsd_GetThisForStackFrame(JSDContext* jsdc,
                          JSDThreadState* jsdthreadstate,
                          JSDStackFrameInfo* jsdframe);
 
-extern const char*
+extern JSString*
 jsd_GetNameForStackFrame(JSDContext* jsdc, 
                          JSDThreadState* jsdthreadstate,
                          JSDStackFrameInfo* jsdframe);
@@ -969,7 +969,7 @@ jsd_GetValueDouble(JSDContext* jsdc, JSDValue* jsdval);
 extern JSString*
 jsd_GetValueString(JSDContext* jsdc, JSDValue* jsdval);
 
-extern const char*
+extern JSString*
 jsd_GetValueFunctionName(JSDContext* jsdc, JSDValue* jsdval);
 
 /**************************************************/

@@ -281,7 +281,6 @@ var xml = <prefs>
 <pref><name>intl.charsetmenu.browser.more4</name></pref>
 <pref><name>network.http.keep-alive</name></pref>
 <pref><name>ui.key.accelKey</name></pref>
-<pref><name>privacy.popups.firstTime</name></pref>
 <pref><name>browser.fixup.alternate.enabled</name></pref>
 <pref><name>font.name-list.serif.x-cans</name></pref>
 <pref><name>security.enable_ssl3</name></pref>

@@ -819,7 +819,7 @@ function PlacesToolbar(aPlace) {
 PlacesToolbar.prototype = {
   __proto__: PlacesViewBase.prototype,
 
-  _cbEvents: ["dragstart", "dragover", "dragleave", "dragend", "drop",
+  _cbEvents: ["dragstart", "dragover", "dragexit", "dragend", "drop",
 #ifdef XP_UNIX
 #ifndef XP_MACOSX
               "mousedown", "mouseup",
@@ -991,8 +991,8 @@ PlacesToolbar.prototype = {
       case "dragover":
         this._onDragOver(aEvent);
         break;
-      case "dragleave":
-        this._onDragLeave(aEvent);
+      case "dragexit":
+        this._onDragExit(aEvent);
         break;
       case "dragend":
         this._onDragEnd(aEvent);
@@ -1533,7 +1533,7 @@ PlacesToolbar.prototype = {
     aEvent.stopPropagation();
   },
 
-  _onDragLeave: function PT__onDragLeave(aEvent) {
+  _onDragExit: function PT__onDragExit(aEvent) {
     PlacesControllerDragHelper.currentDropTarget = null;
 
     // Set timer to turn off indicator bar (if we turn it off

@@ -35,7 +35,7 @@ function run_test() {
     do_check_true(!!id);
 
     _("Let's provide a passphrase");
-    id.password = "chickeninacan";
+    id.keyStr = "a-bcdef-abcde-acbde-acbde-acbde";
     do_check_eq(Status.checkSetup(), STATUS_OK);
     Status.resetSync();
 

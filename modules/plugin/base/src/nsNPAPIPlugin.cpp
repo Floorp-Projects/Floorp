@@ -242,14 +242,13 @@ nsNPAPIPlugin::nsNPAPIPlugin()
 
   memset((void*)&mPluginFuncs, 0, sizeof(mPluginFuncs));
   mPluginFuncs.size = sizeof(mPluginFuncs);
+  mPluginFuncs.version = (NP_VERSION_MAJOR << 8) | NP_VERSION_MINOR;
 
   mLibrary = nsnull;
 }
 
 nsNPAPIPlugin::~nsNPAPIPlugin()
 {
-  // reset the callbacks list
-  memset((void*) &mPluginFuncs, 0, sizeof(mPluginFuncs));
   delete mLibrary;
   mLibrary = nsnull;
 }

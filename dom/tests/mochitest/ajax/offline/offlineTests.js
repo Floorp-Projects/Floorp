@@ -58,7 +58,7 @@ fetch: function(callback)
 
 var OfflineTest = {
 
-_slaveWindow: null,
+_hasSlave: false,
 
 // The window where test results should be sent.
 _masterWindow: null,
@@ -71,11 +71,10 @@ _SJSsStated: [],
 
 setupChild: function()
 {
-  if (window.parent.OfflineTest.hasSlave()) {
+  if (window.parent.OfflineTest._hasSlave) {
     return false;
   }
 
-  this._slaveWindow = null;
   this._masterWindow = window.top;
 
   return true;
@@ -88,7 +87,7 @@ setup: function()
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
   if (!window.opener || !window.opener.OfflineTest ||
-      !window.opener.OfflineTest._isMaster) {
+      !window.opener.OfflineTest._hasSlave) {
     // Offline applications must be toplevel windows and have the
     // offline-app permission.  Because we were loaded without the
     // offline-app permission and (probably) in an iframe, we need to
@@ -107,10 +106,8 @@ setup: function()
 
     // Tests must run as toplevel windows.  Open a slave window to run
     // the test.
-    this._isMaster = true;
-    this._slaveWindow = window.open(window.location, "offlinetest");
-
-    this._slaveWindow._OfflineSlaveWindow = true;
+    this._hasSlave = true;
+    window.open(window.location, "offlinetest");
 
     return false;
   }
@@ -144,17 +141,14 @@ teardown: function()
 
 finish: function()
 {
-  SimpleTest.finish();
-
   if (this._masterWindow) {
-    this._masterWindow.OfflineTest.finish();
+    // Slave window: pass control back to master window, close itself.
+    SimpleTest.executeSoon(this._masterWindow.OfflineTest.finish);
     window.close();
+  } else {
+    // Master window: finish test.
+    SimpleTest.finish();
   }
-},
-
-hasSlave: function()
-{
-  return (this._slaveWindow != null);
 },
 
 //

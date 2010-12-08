@@ -250,6 +250,12 @@ interface nsISHEntry : nsIHistoryEntry
     attribute unsigned long long docshellID;
 };
 
+[scriptable, uuid(e0b0ac6d-cb29-4be2-b685-1755d6301a69)]
+interface nsISHEntryInternal : nsISupports
+{
+    [notxpcom] void RemoveFromBFCacheAsync();
+    [notxpcom] void RemoveFromBFCacheSync();
+};
 
 %{ C++
 // {BFD1A791-AD9F-11d3-BDC7-0050040A9B44}

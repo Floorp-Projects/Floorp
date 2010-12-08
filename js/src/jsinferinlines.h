@@ -132,9 +132,8 @@ static inline const char *
 TypeIdString(jsid id)
 {
 #ifdef DEBUG
-    if (JSID_IS_VOID(id))
-        return "(index)";
-    return js_GetStringBytes(JSID_TO_ATOM(id));
+    const char * TypeIdStringImpl(jsid id);
+    return TypeIdStringImpl(id);
 #else
     return "(missing)";
 #endif

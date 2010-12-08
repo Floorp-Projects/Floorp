@@ -38,8 +38,12 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsARIAMap.h"
+
 #include "nsIAccessibleRole.h"
 #include "nsIAccessibleStates.h"
+
+#include "nsAccessibilityAtoms.h"
+#include "nsIContent.h"
 
 /**
  *  This list of WAI-defined roles are currently hardcoded.

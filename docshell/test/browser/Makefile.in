@@ -44,6 +44,9 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _BROWSER_TEST_FILES =	\
+		browser_bug92473.js \
+		test-form_sjis.html \
+		browser_bug134911.js \
 		browser_bug349769.js \
 		browser_bug388121-1.js \
 		browser_bug388121-2.js \
@@ -52,15 +55,6 @@ _BROWSER_TEST_FILES =	\
 		file_bug503832.html \
 		browser_bug554155.js \
 		$(NULL)
-
-# the tests below use FUEL, which is a Firefox-specific feature
-ifdef MOZ_PHOENIX
-_BROWSER_TEST_FILES +=	\
-		browser_bug92473.js \
-		test-form_sjis.html \
-		browser_bug134911.js \
-		$(NULL)
-endif
 
 libs:: $(_BROWSER_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)

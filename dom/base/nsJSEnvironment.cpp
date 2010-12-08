@@ -2219,17 +2219,15 @@ nsJSContext::BindCompiledEventHandler(nsISupports* aTarget, void *aScope,
   NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
 
   NS_PRECONDITION(AtomIsEventHandlerName(aName), "Bad event name");
-  nsresult rv;
+
+  JSAutoRequest ar(mContext);
 
   // Get the jsobject associated with this target
   JSObject *target = nsnull;
-  nsAutoGCRoot root(&target, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = JSObjectFromInterface(aTarget, aScope, &target);
+  nsresult rv = JSObjectFromInterface(aTarget, aScope, &target);
   NS_ENSURE_SUCCESS(rv, rv);
 
   JSObject *funobj = (JSObject*) aHandler;
-  JSAutoRequest ar(mContext);
 
 #ifdef DEBUG
   {
@@ -2290,12 +2288,9 @@ nsJSContext::GetBoundEventHandler(nsISupports* aTarget, void *aScope,
 {
     NS_PRECONDITION(AtomIsEventHandlerName(aName), "Bad event name");
 
-    nsresult rv;
-    JSObject *obj = nsnull;
-    nsAutoGCRoot root(&obj, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
     JSAutoRequest ar(mContext);
-    rv = JSObjectFromInterface(aTarget, aScope, &obj);
+    JSObject *obj = nsnull;
+    nsresult rv = JSObjectFromInterface(aTarget, aScope, &obj);
     NS_ENSURE_SUCCESS(rv, rv);
 
     JSAutoEnterCompartment ac;
@@ -3440,10 +3435,31 @@ nsJSContext::ClearScope(void *aGlobalObj, PRBool aClearFromProtoChain)
     JSAutoEnterCompartment ac;
     ac.enterAndIgnoreErrors(mContext, obj);
 
+    // Grab a reference to the window property, which is the outer
+    // window, so that we can re-define it once we've cleared
+    // scope. This is what keeps the outer window alive in cases where
+    // nothing else does.
+    jsval window;
+    if (!JS_GetProperty(mContext, obj, "window", &window)) {
+      window = JSVAL_VOID;
+
+      JS_ClearPendingException(mContext);
+    }
+
     JS_ClearScope(mContext, obj);
     if (xpc::WrapperFactory::IsXrayWrapper(obj)) {
       JS_ClearScope(mContext, &obj->getProxyExtra().toObject());
     }
+
+    if (window != JSVAL_VOID) {
+      if (!JS_DefineProperty(mContext, obj, "window", window,
+                             JS_PropertyStub, JS_PropertyStub,
+                             JSPROP_ENUMERATE | JSPROP_READONLY |
+                             JSPROP_PERMANENT)) {
+        JS_ClearPendingException(mContext);
+      }
+    }
+
     if (!obj->getParent()) {
       JS_ClearRegExpStatics(mContext, obj);
     }

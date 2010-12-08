@@ -1,0 +1,24 @@
+<html>
+<head>
+<style type="text/css">
+@font-face {
+  font-family: schz;
+  src: url(../fonts/sil/ScheherazadeRegOT.ttf);
+}
+div {
+  font-family: schz;
+  font-size: 32px;
+  margin: 32px;
+}
+</style>
+</head>
+<body>
+<!-- test for bug 615121: diacritics should stack to project above the em-height;
+     sign error will make them overprint the base letter instead -->
+<div>
+<p>Diacritics should stack above the black box:<br>
+<span style="background:black;padding:0 .5em;margin-right:-1em;">
+</span>&nbsp;&#x679;&#x651;&#x64c;&#x610;&nbsp;
+</div>
+</body>
+</html>

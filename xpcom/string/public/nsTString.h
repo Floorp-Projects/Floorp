@@ -384,34 +384,6 @@ class nsTString_CharT : public nsTSubstring_CharT
       NS_COM void AppendWithConversion( const nsTAString_IncompatibleCharT& aString );
       NS_COM void AppendWithConversion( const incompatible_char_type* aData, PRInt32 aLength=-1 );
 
-      using nsTSubstring_CharT::AppendInt;
-
-        /**
-         * Append the given integer to this string 
-         * @param aInteger The integer to append
-         * @param aRadix   The radix to use; can be 8, 10 or 16.
-         * @deprecated Use AppendInt( PRInt32 aInteger ) or
-         *             AppendInt( PRUint32 aInteger, PRInt32 aRadix = 10 )
-         */
-      NS_COM void AppendInt( PRInt32 aInteger, PRInt32 aRadix ); //radix=8,10 or 16
-
-        /**
-         * Append the given 64-bit integer to this string.
-         * @param aInteger The integer to append
-         * @param aRadix   The radix to use; can be 8, 10 or 16.
-         * @deprecated Use AppendInt( PRInt64 aInteger ) or
-         *             AppendInt( PRUint64 aInteger, PRInt32 aRadix = 10 )
-         */
-      NS_COM void AppendInt( PRInt64 aInteger, PRInt32 aRadix );
-
-        /**
-         * Append the given float to this string 
-         */
-
-      NS_COM void AppendFloat( float aFloat );
-
-      NS_COM void AppendFloat( double aFloat );
-
 #endif // !MOZ_STRING_WITH_OBSOLETE_API
 
 

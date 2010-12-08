@@ -1539,6 +1539,7 @@ DocumentViewerImpl::Destroy()
       nsresult rv = mDocument->Sanitize();
       if (NS_FAILED(rv)) {
         // If we failed to sanitize, don't save presentation.
+        // XXX Shouldn't we run all the stuff after the |if (mSHEntry)| then?
         savePresentation = PR_FALSE;
       }
     }
@@ -1560,8 +1561,9 @@ DocumentViewerImpl::Destroy()
     // When the presentation is restored, Open() and InitInternal() will reset
     // these pointers to their original values.
 
-    if (mDocument)
+    if (mDocument) {
       mDocument->SetContainer(nsnull);
+    }
     if (mPresContext) {
       mPresContext->SetLinkHandler(nsnull);
       mPresContext->SetContainer(nsnull);
@@ -1580,6 +1582,8 @@ DocumentViewerImpl::Destroy()
 
     return NS_OK;
   }
+
+  // The document was not put in the bfcache
 
   if (mDocument) {
     mDocument->Destroy();

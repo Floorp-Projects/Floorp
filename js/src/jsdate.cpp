@@ -154,7 +154,6 @@ using namespace js::types;
  * Supporting functions - ECMA 15.9.1.*
  */
 
-#define HalfTimeDomain  8.64e15
 #define HoursPerDay     24.0
 #define MinutesPerDay   (HoursPerDay * MinutesPerHour)
 #define MinutesPerHour  60.0
@@ -483,10 +482,6 @@ msFromTime(jsdouble t)
         result += (intN)msPerSecond;
     return result;
 }
-
-#define TIMECLIP(d) ((JSDOUBLE_IS_FINITE(d) \
-                      && !((d < 0 ? -d : d) > HalfTimeDomain)) \
-                     ? js_DoubleToInteger(d + (+0.)) : js_NaN)
 
 /**
  * end of ECMA 'support' functions
@@ -2707,135 +2702,6 @@ js_DateGetSeconds(JSContext *cx, JSObject* obj)
         return 0;
 
     return (int) SecFromTime(utctime);
-}
-
-JS_FRIEND_API(void)
-js_DateSetYear(JSContext *cx, JSObject *obj, int year)
-{
-    jsdouble local;
-
-    if (!GetAndCacheLocalTime(cx, obj, NULL, &local))
-        return;
-
-    /* reset date if it was NaN */
-    if (JSDOUBLE_IS_NaN(local))
-        local = 0;
-
-    local = date_msecFromDate(year,
-                              MonthFromTime(local),
-                              DateFromTime(local),
-                              HourFromTime(local),
-                              MinFromTime(local),
-                              SecFromTime(local),
-                              msFromTime(local));
-
-    /* SetUTCTime also invalidates local time cache. */
-    SetUTCTime(cx, obj, UTC(local, cx));
-}
-
-JS_FRIEND_API(void)
-js_DateSetMonth(JSContext *cx, JSObject *obj, int month)
-{
-    jsdouble local;
-
-    JS_ASSERT(month < 12);
-
-    if (!GetAndCacheLocalTime(cx, obj, NULL, &local))
-        return;
-
-    /* bail if date was NaN */
-    if (JSDOUBLE_IS_NaN(local))
-        return;
-
-    local = date_msecFromDate(YearFromTime(local),
-                              month,
-                              DateFromTime(local),
-                              HourFromTime(local),
-                              MinFromTime(local),
-                              SecFromTime(local),
-                              msFromTime(local));
-    SetUTCTime(cx, obj, UTC(local, cx));
-}
-
-JS_FRIEND_API(void)
-js_DateSetDate(JSContext *cx, JSObject *obj, int date)
-{
-    jsdouble local;
-
-    if (!GetAndCacheLocalTime(cx, obj, NULL, &local))
-        return;
-
-    if (JSDOUBLE_IS_NaN(local))
-        return;
-
-    local = date_msecFromDate(YearFromTime(local),
-                              MonthFromTime(local),
-                              date,
-                              HourFromTime(local),
-                              MinFromTime(local),
-                              SecFromTime(local),
-                              msFromTime(local));
-    SetUTCTime(cx, obj, UTC(local, cx));
-}
-
-JS_FRIEND_API(void)
-js_DateSetHours(JSContext *cx, JSObject *obj, int hours)
-{
-    jsdouble local;
-
-    if (!GetAndCacheLocalTime(cx, obj, NULL, &local))
-        return;
-
-    if (JSDOUBLE_IS_NaN(local))
-        return;
-    local = date_msecFromDate(YearFromTime(local),
-                              MonthFromTime(local),
-                              DateFromTime(local),
-                              hours,
-                              MinFromTime(local),
-                              SecFromTime(local),
-                              msFromTime(local));
-    SetUTCTime(cx, obj, UTC(local, cx));
-}
-
-JS_FRIEND_API(void)
-js_DateSetMinutes(JSContext *cx, JSObject *obj, int minutes)
-{
-    jsdouble local;
-
-    if (!GetAndCacheLocalTime(cx, obj, NULL, &local))
-        return;
-
-    if (JSDOUBLE_IS_NaN(local))
-        return;
-    local = date_msecFromDate(YearFromTime(local),
-                              MonthFromTime(local),
-                              DateFromTime(local),
-                              HourFromTime(local),
-                              minutes,
-                              SecFromTime(local),
-                              msFromTime(local));
-    SetUTCTime(cx, obj, UTC(local, cx));
-}
-
-JS_FRIEND_API(void)
-js_DateSetSeconds(JSContext *cx, JSObject *obj, int seconds)
-{
-    jsdouble local;
-
-    if (!GetAndCacheLocalTime(cx, obj, NULL, &local))
-        return;
-
-    if (JSDOUBLE_IS_NaN(local))
-        return;
-    local = date_msecFromDate(YearFromTime(local),
-                              MonthFromTime(local),
-                              DateFromTime(local),
-                              HourFromTime(local),
-                              MinFromTime(local),
-                              seconds,
-                              msFromTime(local));
-    SetUTCTime(cx, obj, UTC(local, cx));
 }
 
 JS_FRIEND_API(jsdouble)

@@ -102,6 +102,7 @@ public:
     txMozillaXMLOutput(txOutputFormat* aFormat,
                        nsIDOMDocumentFragment* aFragment,
                        PRBool aNoFixup);
+    ~txMozillaXMLOutput();
 
     TX_DECL_TXAXMLEVENTHANDLER
     TX_DECL_TXAOUTPUTXMLEVENTHANDLER

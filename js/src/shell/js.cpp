@@ -459,9 +459,7 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY, JSBool la
             JS_DestroyScript(cx, script);
         }
 
-        if (file != stdin)
-            fclose(file);
-        return;
+        goto cleanup;
     }
 
     /* It's an interactive filehandle; drop into read-eval-print loop. */
@@ -492,7 +490,7 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY, JSBool la
                 if (errno) {
                     JS_ReportError(cx, strerror(errno));
                     free(buffer);
-                    return;
+                    goto cleanup;
                 }
                 hitEOF = JS_TRUE;
                 break;
@@ -513,7 +511,7 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY, JSBool la
                         free(buffer);
                         free(line);
                         JS_ReportOutOfMemory(cx);
-                        return;
+                        goto cleanup;
                     }
                     buffer = newBuf;
                 }
@@ -567,6 +565,7 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY, JSBool la
 
     free(buffer);
     fprintf(gOutFile, "\n");
+cleanup:
     if (file != stdin)
         fclose(file);
     return;
@@ -2092,10 +2091,22 @@ Disassemble(JSContext *cx, uintN argc, jsval *vp)
         argv++, argc--;
     }
 
-    for (uintN i = 0; i < argc; i++) {
-        if (!DisassembleValue(cx, argv[i], lines, recursive))
-            return false;
+    if (argc == 0) {
+        /* Without arguments, disassemble the current script. */
+        if (JSStackFrame *frame = JS_GetScriptedCaller(cx, NULL)) {
+            JSScript *script = JS_GetFrameScript(cx, frame);
+            if (!js_Disassemble(cx, script, lines, stdout))
+                return false;
+            SrcNotes(cx, script);
+            TryNotes(cx, script);
+        }
+    } else {
+        for (uintN i = 0; i < argc; i++) {
+            if (!DisassembleValue(cx, argv[i], lines, recursive))
+                return false;
+        }
     }
+
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return true;
 }
@@ -3384,8 +3395,8 @@ EvalInFrame(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 ShapeOf(JSContext *cx, uintN argc, jsval *vp)
 {
-    jsval v = JS_ARGV(cx, vp)[0];
-    if (!JSVAL_IS_OBJECT(v)) {
+    jsval v;
+    if (argc < 1 || !JSVAL_IS_OBJECT(v = JS_ARGV(cx, vp)[0])) {
         JS_ReportError(cx, "shapeOf: object expected");
         return JS_FALSE;
     }
@@ -4062,7 +4073,7 @@ Parse(JSContext *cx, uintN argc, jsval *vp)
     JSString *scriptContents = JSVAL_TO_STRING(arg0);
     js::Parser parser(cx);
     parser.init(JS_GetStringCharsZ(cx, scriptContents), JS_GetStringLength(scriptContents),
-                NULL, "<string>", 0);
+                "<string>", 0);
     if (!parser.parse(NULL))
         return JS_FALSE;
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
@@ -4156,7 +4167,7 @@ Wrap(JSContext *cx, uintN argc, jsval *vp)
     }
 
     JSObject *obj = JSVAL_TO_OBJECT(v);
-    JSObject *wrapped = JSWrapper::New(cx, obj, obj->getProto(), obj->getParent(),
+    JSObject *wrapped = JSWrapper::New(cx, obj, obj->getProto(), obj->getGlobal(),
                                        &JSWrapper::singleton);
     if (!wrapped)
         return false;

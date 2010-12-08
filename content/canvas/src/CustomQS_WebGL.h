@@ -177,7 +177,7 @@ nsIDOMWebGLRenderingContext_BufferSubData(JSContext *cx, uintN argc, jsval *vp)
     if (!JS_ValueToECMAInt32(cx, argv[1], &offset))
         return JS_FALSE;
 
-    if (JSVAL_IS_PRIMITIVE(argv[2])) {
+    if (!JSVAL_IS_OBJECT(argv[2])) {
         xpc_qsThrowBadArg(cx, NS_ERROR_FAILURE, vp, 2);
         return JS_FALSE;
     }

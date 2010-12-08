@@ -2855,7 +2855,7 @@ reflect_parse(JSContext *cx, uint32 argc, jsval *vp)
 
     Parser parser(cx);
 
-    if (!parser.init(chars, length, NULL, filename, lineno))
+    if (!parser.init(chars, length, filename, lineno))
         return JS_FALSE;
 
     JSParseNode *pn = parser.parse(NULL);

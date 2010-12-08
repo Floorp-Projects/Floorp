@@ -302,7 +302,7 @@ JSD_GetScriptFilename(JSDContext* jsdc, JSDScript *jsdscript)
     return jsd_GetScriptFilename(jsdc, jsdscript);
 }
 
-JSD_PUBLIC_API(const char*)
+JSD_PUBLIC_API(JSString *)
 JSD_GetScriptFunctionName(JSDContext* jsdc, JSDScript *jsdscript)
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
@@ -741,7 +741,7 @@ JSD_GetThisForStackFrame(JSDContext* jsdc,
     return jsd_GetThisForStackFrame(jsdc, jsdthreadstate, jsdframe);
 }
 
-JSD_PUBLIC_API(const char*)
+JSD_PUBLIC_API(JSString *)
 JSD_GetNameForStackFrame(JSDContext* jsdc,
                          JSDThreadState* jsdthreadstate,
                          JSDStackFrameInfo* jsdframe)
@@ -1108,7 +1108,7 @@ JSD_GetValueString(JSDContext* jsdc, JSDValue* jsdval)
     return jsd_GetValueString(jsdc, jsdval);
 }
 
-JSD_PUBLIC_API(const char*)
+JSD_PUBLIC_API(JSString *)
 JSD_GetValueFunctionName(JSDContext* jsdc, JSDValue* jsdval)
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);

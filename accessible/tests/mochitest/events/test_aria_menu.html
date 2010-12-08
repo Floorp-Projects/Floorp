@@ -10,6 +10,8 @@
           src="chrome://mochikit/content/MochiKit/packed.js"></script>
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 
   <script type="application/javascript"
           src="../common.js"></script>
@@ -19,23 +21,123 @@
           src="../events.js"></script>
 
   <script type="application/javascript">
-    function showMenu(aID, aViaDisplayStyle)
+    const kViaDisplayStyle = 0;
+    const kViaVisibilityStyle = 1;
+
+    function focusMenu(aMenuBarID, aMenuID)
     {
-      this.DOMNode = getNode(aID);
+      this.eventSeq = [
+        new invokerChecker(EVENT_MENU_START, getNode(aMenuBarID)),
+        new invokerChecker(EVENT_FOCUS, getNode(aMenuID)),
+      ];
+
+      this.invoke = function focusMenu_invoke()
+      {
+        getNode(aMenuID).focus();
+      }
+
+      this.getID = function focusMenu_getID()
+      {
+        return "focus menu '" + aMenuID + "'";
+      }
+    }
+
+    function showMenu(aMenuID, aParentMenuID, aHow)
+    {
+      this.menuNode = getNode(aMenuID);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_SHOW, this.menuNode),
+        new invokerChecker(EVENT_MENUPOPUP_START, this.menuNode),
+        new invokerChecker(EVENT_REORDER, getNode(aParentMenuID))
+      ];
 
       this.invoke = function showMenu_invoke()
       {
-        if (aViaDisplayStyle)
-          this.DOMNode.style.display = "block";
+        if (aHow == kViaDisplayStyle)
+          this.menuNode.style.display = "block";
         else
-          this.DOMNode.style.visibility = "visible";
+          this.menuNode.style.visibility = "visible";
       };
 
       this.getID = function showMenu_getID()
       {
-        return "Show ARIA menu " + aID + " by " +
-          (aViaDisplayStyle ? "display" : "visibility") + " style tricks";
+        return "Show ARIA menu " + aMenuID + " by " +
+          (aHow == kViaDisplayStyle ? "display" : "visibility") +
+          " style tricks";
       };
+    }
+
+    function closeMenu(aMenuID, aParentMenuID, aHow)
+    {
+      this.menuNode = getNode(aMenuID);
+      this.menu = null;
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_MENUPOPUP_END, getMenu, this),
+        new invokerChecker(EVENT_HIDE, getMenu, this),
+        new invokerChecker(EVENT_REORDER, getNode(aParentMenuID))
+      ];
+
+      this.invoke = function closeMenu_invoke()
+      {
+        // Store menu accessible reference while menu is still open.
+        this.menu = getAccessible(this.menuNode);
+
+        // Hide menu.
+        if (aHow == kViaDisplayStyle)
+          this.menuNode.style.display = "none";
+        else
+          this.menuNode.style.visibility = "hidden";
+      }
+
+      this.getID = function closeMenu_getID()
+      {
+        return "Close ARIA menu " + aMenuID + " by " +
+          (aHow == kViaDisplayStyle ? "display" : "visibility") +
+          " style tricks";
+      }
+
+      function getMenu(aThisObj)
+      {
+        return aThisObj.menu;
+      }
+    }
+
+    function focusInsideMenu(aMenuID, aMenuBarID)
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_FOCUS, getNode(aMenuID))
+      ];
+
+      this.unexpectedEventSeq = [
+        new invokerChecker(EVENT_MENU_END, getNode(aMenuBarID))
+      ];
+
+      this.invoke = function focusInsideMenu_invoke()
+      {
+        getNode(aMenuID).focus();
+      }
+
+      this.getID = function focusInsideMenu_getID()
+      {
+        return "focus menu '" + aMenuID + "'";
+      }
+    }
+
+    function blurMenu(aMenuBarID)
+    {
+      var eventSeq = [
+        new invokerChecker(EVENT_MENU_END, getNode(aMenuBarID)),
+        new invokerChecker(EVENT_FOCUS, getNode("outsidemenu"))
+      ];
+
+      this.__proto__ = new synthClick("outsidemenu", eventSeq);
+
+      this.getID = function blurMenu_getID()
+      {
+        return "blur menu";
+      }
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -44,13 +146,19 @@
     var gQueue = null;
 
     //gA11yEventDumpID = "eventdump";
+    //gA11yEventDumpToConsole = true;
 
     function doTests()
     {
-      gQueue = new eventQueue(EVENT_MENUPOPUP_START);
+      gQueue = new eventQueue();
 
-      gQueue.push(new showMenu("menu1", true));
-      gQueue.push(new showMenu("menu2", false));
+      gQueue.push(new focusMenu("menubar", "menu-file"));
+      gQueue.push(new showMenu("menupopup-file", "menu-file", kViaDisplayStyle));
+      gQueue.push(new closeMenu("menupopup-file", "menu-file", kViaDisplayStyle));
+      gQueue.push(new showMenu("menupopup-edit", "menu-edit", kViaVisibilityStyle));
+      gQueue.push(new closeMenu("menupopup-edit", "menu-edit", kViaVisibilityStyle));
+      gQueue.push(new focusInsideMenu("menu-edit", "menubar"));
+      gQueue.push(new blurMenu("menubar"));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
@@ -67,20 +175,39 @@
      title="Dojo dropdown buttons are broken">
     Mozilla Bug 606207
   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=614829"
+     title="Menupopup end event isn't fired for ARIA menus">
+    Mozilla Bug 614829
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=615189"
+     title="Clean up FireAccessibleFocusEvent">
+    Mozilla Bug 615189
+  </a>
 
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
   </pre>
 
-  <div id="menu1" role="menu" style="display: none;">
-    <div role="menuitem">menuitem1.1</div>
-    <div role="menuitem">menuitem1.2</div>
+  <div id="menubar" role="menubar">
+    <div id="menu-file" role="menuitem" tabindex="0">
+      File
+      <div id="menupopup-file" role="menu" style="display: none;">
+        <div id="menuitem-newtab" role="menuitem" tabindex="0">New Tab</div>
+        <div id="menuitem-newwindow" role="menuitem" tabindex="0">New Window</div>
+      </div>
+    </div>
+    <div id="menu-edit" role="menuitem" tabindex="0">
+      Edit
+      <div id="menupopup-edit" role="menu" style="visibility: hidden;">
+        <div id="menuitem-undo" role="menuitem" tabindex="0">Undo</div>
+        <div id="menuitem-redo" role="menuitem" tabindex="0">Redo</div>
+      </div>
+    </div>
   </div>
-  <div id="menu2" role="menu" style="visibility: hidden;">
-    <div role="menuitem">menuitem2.1</div>
-    <div role="menuitem">menuitem2.2</div>
-  </div>
+  <div tabindex="0" id="outsidemenu">outsidemenu</div>
 
   <div id="eventdump"></div>
 

@@ -62,10 +62,6 @@
 
 #include "CheckedInt.h"
 
-#define UNPACK_FLIP_Y_WEBGL            0x9240
-#define UNPACK_PREMULTIPLY_ALPHA_WEBGL 0x9241
-#define CONTEXT_LOST_WEBGL             0x9242
-
 class nsIDocShell;
 class nsIPropertyBag;
 

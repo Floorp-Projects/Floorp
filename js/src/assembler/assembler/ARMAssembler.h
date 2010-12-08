@@ -922,10 +922,22 @@ namespace JSC {
             m_buffer.ensureSpace(insnSpace, constSpace);
         }
 
+        void ensureSpace(int space)
+        {
+            m_buffer.ensureSpace(space);
+        }
+
         int sizeOfConstantPool()
         {
             return m_buffer.sizeOfConstantPool();
         }
+
+#ifdef DEBUG
+        void allowPoolFlush(bool allowFlush)
+        {
+            m_buffer.allowPoolFlush(allowFlush);
+        }
+#endif
 
         JmpDst label()
         {

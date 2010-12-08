@@ -40,7 +40,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-const GUID_ANNO = "weave/guid";
+const GUID_ANNO = "sync/guid";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-sync/engines.js");
@@ -383,9 +383,9 @@ HistoryStore.prototype = {
     return url ? this._hsvc.isVisited(url) : false;
   },
 
-  createRecord: function createRecord(guid, uri) {
-    let foo = this._findURLByGUID(guid);
-    let record = new HistoryRec(uri);
+  createRecord: function createRecord(id, collection) {
+    let foo = this._findURLByGUID(id);
+    let record = new HistoryRec(collection, id);
     if (foo) {
       record.histUri = foo.url;
       record.title = foo.title;

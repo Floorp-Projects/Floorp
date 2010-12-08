@@ -70,6 +70,7 @@ nsTitleBarFrame::nsTitleBarFrame(nsIPresShell* aPresShell, nsStyleContext* aCont
 :nsBoxFrame(aPresShell, aContext, PR_FALSE)
 {
   mTrackingMouseMove = PR_FALSE;
+  UpdateMouseThrough();
 }
 
 NS_IMETHODIMP

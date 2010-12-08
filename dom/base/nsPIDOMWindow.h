@@ -524,9 +524,10 @@ public:
   virtual void PageHidden() = 0;
 
   /**
-   * Instructs this window to synchronously dispatch a hashchange event.
+   * Instructs this window to asynchronously dispatch a hashchange event.  This
+   * method must be called on an inner window.
    */
-  virtual nsresult DispatchSyncHashchange() = 0;
+  virtual nsresult DispatchAsyncHashchange() = 0;
 
   /**
    * Instructs this window to synchronously dispatch a popState event.

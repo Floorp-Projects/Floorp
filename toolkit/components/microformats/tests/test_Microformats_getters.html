@@ -7,6 +7,52 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"></link>
 </head>
 <body id="contentbody">
+  <pre id="test">
+  <script class="testbody" type="text/javascript">
+
+  // Called from onload in iframe
+  function test_MicroformatsAPI() {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    Components.utils.import("resource://gre/modules/Microformats.js");
+
+    // Test that we can get them all
+    var mfs = [];
+    mfs = Microformats.get("adr",
+                           document.getElementById("content"),
+                           {showHidden: true});
+
+    is(mfs.length, 2, "Two adr's in our array");
+
+    mfs = Microformats.get("geo",
+                           document.getElementById("content"),
+                           {recurseExternalFrames: true});
+    is(mfs.length, 3, "Three geo's in our array");
+
+    mfs = Microformats.get("hCalendar",
+                            document.getElementById("content"),
+                            {recurseExternalFrames: false});
+    // Should get the hCalendar whether we recurseExternalFrames or not.
+    is(mfs.length, 2, "Two hCalendar returned not recursing frames");
+
+    mfs = Microformats.get("hCalendar",
+                           document.getElementById("content"),
+                           {recurseExternalFrames: true});
+    is(mfs.length, 2, "Two hCalendars returned recursing frames");
+
+    mfs = Microformats.get("hCard",
+                           document.getElementById("content"),
+                           {recurseExternalFrames: true},
+                           mfs);
+    is(mfs.length, 3, "Two hCalendars and one hCard");
+
+    mfs = Microformats.get("hCalendar", document.getElementById("secondnode"));
+
+    is(mfs[0].summary, "Pseudo Conference", 
+       "Make sure we get the proper hCalendar from the second level node");
+    is(mfs.length, 1, "And we should only get one hCalendar not two from this node.");
+  }
+  </script>
+  </pre>
   <div id="content">
     <!-- hCard -->
     <p class="vcard" id="23-abbr-title-everything">
@@ -108,51 +154,5 @@
       </div>
     </div>
   </div>
-  <!-- Ok, the test, here we go -->
-  <pre id="test">
-  <script class="testbody" type="text/javascript">
-
-  // Called from onload in iframe
-  function test_MicroformatsAPI() {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    Components.utils.import("resource://gre/modules/Microformats.js");
-
-    // Test that we can get them all
-    var mfs = [];
-    mfs = Microformats.get("adr",
-                           document.getElementById("content"),
-                           {showHidden: true});
-
-    is(mfs.length, 2, "Two adr's in our array");
-
-    mfs = Microformats.get("geo",
-                           document.getElementById("content"),
-                           {recurseExternalFrames: true});
-    is(mfs.length, 3, "Three geo's in our array");
-
-    mfs = Microformats.get("hCalendar",
-                            document.getElementById("content"),
-                            {recurseExternalFrames: false});
-    // Should get the hCalendar whether we recurseExternalFrames or not.
-    is(mfs.length, 2, "Two hCalendar returned not recursing frames");
-
-    mfs = Microformats.get("hCalendar",
-                           document.getElementById("content"),
-                           {recurseExternalFrames: true});
-    is(mfs.length, 2, "Two hCalendars returned recursing frames");
-
-    mfs = Microformats.get("hCard",
-                           document.getElementById("content"),
-                           {recurseExternalFrames: true},
-                           mfs);
-    is(mfs.length, 3, "Two hCalendars and one hCard");
-
-    mfs = Microformats.get("hCalendar", document.getElementById("secondnode"));
-
-    is(mfs[0].summary, "Pseudo Conference", 
-       "Make sure we get the proper hCalendar from the second level node");
-    is(mfs.length, 1, "And we should only get one hCalendar not two from this node.");
-  }
-  </script>
 </body>
 </html>

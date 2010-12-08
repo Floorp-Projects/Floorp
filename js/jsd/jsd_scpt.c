@@ -197,22 +197,29 @@ static void
 _dumpJSDScript(JSDContext* jsdc, JSDScript* jsdscript, const char* leadingtext)
 {
     const char* name;
-    const char* fun;
+    JSString* fun;
     uintN base;
     uintN extent;
     char Buf[256];
-    
+    size_t n;
+
     name   = jsd_GetScriptFilename(jsdc, jsdscript);
     fun    = jsd_GetScriptFunctionName(jsdc, jsdscript);
     base   = jsd_GetScriptBaseLineNumber(jsdc, jsdscript);
     extent = jsd_GetScriptLineExtent(jsdc, jsdscript);
-    
-    sprintf( Buf, "%sscript=%08X, %s, %s, %d-%d\n", 
-             leadingtext,
-             (unsigned) jsdscript->script,
-             name ? name : "no URL", 
-             fun  ? fun  : "no fun", 
-             base, base + extent - 1 );
+    n = size_t(snprintf(Buf, sizeof(Buf), "%sscript=%08X, %s, ",
+                        leadingtext, (unsigned) jsdscript->script,
+                        name ? name : "no URL"));
+    if (n + 1 < sizeof(Buf)) {
+        if (fun) {
+            n += size_t(snprintf(Buf + n, sizeof(Buf) - n, "%s", "no fun"));
+        } else {
+            n += JS_PutEscapedString(Buf + n, sizeof(Buf) - n, fun, 0);
+            Buf[sizeof(Buf) - 1] = '\0';
+        }
+        if (n + 1 < sizeof(Buf))
+            snprintf(Buf + n, sizeof(Buf) - n, ", %d-%d\n", base, base + extent - 1);
+    }
     OutputDebugString( Buf );
 }
 
@@ -232,7 +239,7 @@ _dumpJSDScriptList( JSDContext* jsdc )
 static JSHashNumber
 jsd_hash_script(const void *key)
 {
-    return ((JSHashNumber) key) >> 2; /* help lame MSVC1.5 on Win16 */
+    return ((JSHashNumber)(ptrdiff_t) key) >> 2; /* help lame MSVC1.5 on Win16 */
 }
 
 static void *
@@ -279,7 +286,7 @@ jsd_InitScriptManager(JSDContext* jsdc)
     jsdc->scriptsTable = JS_NewHashTable(JSD_SCRIPT_HASH_SIZE, jsd_hash_script,
                                          JS_CompareValues, JS_CompareValues,
                                          &script_alloc_ops, (void*) jsdc);
-    return (JSBool) jsdc->scriptsTable;
+    return !!jsdc->scriptsTable;
 }
 
 void
@@ -488,12 +495,15 @@ jsd_GetScriptFilename(JSDContext* jsdc, JSDScript *jsdscript)
     return jsdscript->url;
 }
 
-const char*
+JSString*
 jsd_GetScriptFunctionName(JSDContext* jsdc, JSDScript *jsdscript)
 {
+    JSString* str;
+
     if( ! jsdscript->function )
         return NULL;
-    return JS_GetFunctionName(jsdscript->function);
+    str = JS_GetFunctionId(jsdscript->function);
+    return str ? str : JS_GetEmptyString(jsdc->jsrt);
 }
 
 uintN

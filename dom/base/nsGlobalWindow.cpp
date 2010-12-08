@@ -2050,7 +2050,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
         return NS_ERROR_FAILURE;
       }
 
-      outerObject = JS_TransplantWrapper(cx, mJSObject, outerObject);
+      outerObject = JS_TransplantObject(cx, mJSObject, outerObject);
       if (!outerObject) {
         NS_ERROR("unable to transplant wrappers, probably OOM");
         return NS_ERROR_FAILURE;
@@ -7506,11 +7506,20 @@ nsGlobalWindow::PageHidden()
 }
 
 nsresult
-nsGlobalWindow::DispatchSyncHashchange()
+nsGlobalWindow::DispatchAsyncHashchange()
 {
-  FORWARD_TO_INNER(DispatchSyncHashchange, (), NS_OK);
-  NS_ASSERTION(nsContentUtils::IsSafeToRunScript(),
-               "Must be safe to run script here.");
+  FORWARD_TO_INNER(DispatchAsyncHashchange, (), NS_OK);
+
+  nsCOMPtr<nsIRunnable> event =
+    NS_NewRunnableMethod(this, &nsGlobalWindow::FireHashchange);
+
+  return NS_DispatchToCurrentThread(event);
+}
+
+nsresult
+nsGlobalWindow::FireHashchange()
+{
+  NS_ENSURE_TRUE(IsInnerWindow(), NS_ERROR_FAILURE);
 
   // Don't do anything if the window is frozen.
   if (IsFrozen())
@@ -7575,14 +7584,14 @@ nsGlobalWindow::DispatchSyncPopState()
 
     JSContext *cx = (JSContext*) scx->GetNativeContext();
 
+    // Make sure we in the request while we have jsval on the native stack.
+    JSAutoRequest ar(cx);
+
     // If our json call triggers a JS-to-C++ call, we want that call to use cx
     // as the context.  So we push cx onto the context stack.
     nsCxPusher cxPusher;
 
     jsval jsStateObj = JSVAL_NULL;
-    // Root the container which will hold our decoded state object.
-    nsAutoGCRoot root(&jsStateObj, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
 
     // Deserialize the state object into an nsIVariant.
     nsCOMPtr<nsIJSON> json = do_GetService("@mozilla.org/dom/json;1");

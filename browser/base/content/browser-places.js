@@ -229,7 +229,7 @@ var StarUI = {
     // Consume dismiss clicks, see bug 400924
     this.panel.popupBoxObject
         .setConsumeRollupEvent(Ci.nsIPopupBoxObject.ROLLUP_CONSUME);
-    this.panel.openPopup(aAnchorElement, aPosition, -1, -1);
+    this.panel.openPopup(aAnchorElement, aPosition);
 
     gEditItemOverlay.initPanel(this._itemId,
                                { hiddenRows: ["description", "location",
@@ -347,7 +347,8 @@ var PlacesCommandHook = {
       if (starIcon && isElementVisible(starIcon)) {
         // Make sure the bookmark properties dialog hangs toward the middle of
         // the location bar in RTL builds
-        var position = (getComputedStyle(gNavToolbox, "").direction == "rtl") ? 'after_start' : 'after_end';
+        var position = (getComputedStyle(gNavToolbox, "").direction == "rtl") ?
+          'bottomcenter topleft' : 'bottomcenter topright';
         if (aShowEditUI)
           StarUI.showEditBookmarkPopup(itemId, starIcon, position);
         return;
@@ -844,11 +845,11 @@ var PlacesMenuDNDHandler = {
   },
 
   /**
-   * Handles dragleave on the <menu> element.
+   * Handles dragexit on the <menu> element.
    * @returns true if the element is a container element (menu or 
    *          menu-toolbarbutton), false otherwise.
    */
-  onDragLeave: function PMDH_onDragLeave(event) {
+  onDragExit: function PMDH_onDragExit(event) {
     // Closing menus in a Places popup is handled by the view itself.
     if (!this._isStaticContainer(event.target))
       return;
