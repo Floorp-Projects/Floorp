@@ -56,7 +56,7 @@ function run_test() {
   standardInit();
   // The mock XMLHttpRequest is MUCH faster
   overrideXHR(callHandleEvent);
-  do_timeout(0, run_test_pt1);
+  do_execute_soon(run_test_pt1);
 }
 
 function end_test() {

@@ -223,7 +223,7 @@ protected:
     NS_ASSERTION(IsAutoArray(), "Should be an auto array to call this");
 
     return reinterpret_cast<Header*>(&(reinterpret_cast<AutoArray*>(&mHdr))->aligned);
-    }
+  }
 
   // Returns true if this is an nsAutoTArray and it currently uses the
   // built-in buffer to store its elements.

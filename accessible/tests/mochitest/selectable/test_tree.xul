@@ -19,11 +19,11 @@
   <script type="application/javascript"
           src="../common.js" />
   <script type="application/javascript"
+          src="../events.js" />
+  <script type="application/javascript"
           src="../role.js" />
   <script type="application/javascript"
           src="../states.js" />
-  <script type="application/javascript"
-          src="../events.js" />
 
   <script type="application/javascript">
   <![CDATA[
@@ -83,7 +83,7 @@
 
     function doTest()
     {
-      gQueue = new eventQueue("TreeViewChanged");
+      gQueue = new eventQueue(EVENT_REORDER);
       gQueue.push(new statesChecker("tree", new nsTreeTreeView()));
       gQueue.push(new statesChecker("treesingle", new nsTreeTreeView()));
       gQueue.push(new statesChecker("treecell", new nsTreeTreeView()));

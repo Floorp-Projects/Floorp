@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *  Dan Mills <thunder@mozilla.com>
+ *  Richard Newman <rnewman@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -40,9 +41,10 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-const GUID_ANNO = "weave/guid";
+const GUID_ANNO = "sync/guid";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/stores.js");
 Cu.import("resource://services-sync/trackers.js");
@@ -52,6 +54,7 @@ Cu.import("resource://services-sync/log4moz.js");
 
 function HistoryEngine() {
   SyncEngine.call(this, "History");
+  this.downloadLimit = MAX_HISTORY_DOWNLOAD;
 }
 HistoryEngine.prototype = {
   __proto__: SyncEngine.prototype,
@@ -322,7 +325,7 @@ HistoryStore.prototype = {
   getAllIDs: function HistStore_getAllIDs() {
     // Only get places visited within the last 30 days (30*24*60*60*1000ms)
     this._allUrlStm.params.cutoff_date = (Date.now() - 2592000000) * 1000;
-    this._allUrlStm.params.max_results = 5000;
+    this._allUrlStm.params.max_results = MAX_HISTORY_UPLOAD;
 
     let urls = Utils.queryAsync(this._allUrlStm, "url");
     let self = this;
@@ -383,9 +386,9 @@ HistoryStore.prototype = {
     return url ? this._hsvc.isVisited(url) : false;
   },
 
-  createRecord: function createRecord(guid, uri) {
-    let foo = this._findURLByGUID(guid);
-    let record = new HistoryRec(uri);
+  createRecord: function createRecord(id, collection) {
+    let foo = this._findURLByGUID(id);
+    let record = new HistoryRec(collection, id);
     if (foo) {
       record.histUri = foo.url;
       record.title = foo.title;

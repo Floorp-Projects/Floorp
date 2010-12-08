@@ -170,7 +170,11 @@ var popupTests = [
   events: [ "popupshowing thepopup", "popupshown thepopup" ],
   autohide: "thepopup",
   steps: ["before_start", "before_end", "after_start", "after_end",
-          "start_before", "start_after", "end_before", "end_after", "after_pointer", "overlap"],
+          "start_before", "start_after", "end_before", "end_after", "after_pointer", "overlap",
+          "topleft topleft", "topcenter topleft", "topright topleft",
+          "leftcenter topright", "rightcenter topright",
+          "bottomleft bottomleft", "bottomcenter bottomleft", "bottomright bottomleft",
+          "topleft bottomright", "bottomcenter bottomright", "rightcenter topright"],
   test: function(testname, step) {
     gExpectedTriggerNode = "notset";
     gMenuPopup.openPopup(gTrigger, step, 0, 0, false, false);
@@ -190,16 +194,22 @@ var popupTests = [
   events: [ "popupshowing thepopup", "popupshown thepopup" ],
   autohide: "thepopup",
   steps: ["before_start", "before_end", "after_start", "after_end",
-          "start_before", "start_after", "end_before", "end_after", "after_pointer", "overlap"],
+          "start_before", "start_after", "end_before", "end_after", "after_pointer", "overlap",
+          "topleft topleft", "topcenter topleft", "topright topleft",
+          "leftcenter topright", "rightcenter topright",
+          "bottomleft bottomleft", "bottomcenter bottomleft", "bottomright bottomleft",
+          "topleft bottomright", "bottomcenter bottomright", "rightcenter topright"],
   test: function(testname, step) {
     gMenuPopup.setAttribute("style", "margin: 10px;");
     gMenuPopup.openPopup(gTrigger, step, 0, 0, false, false);
   },
   result: function(testname, step) {
     var rightmod = step == "before_end" || step == "after_end" ||
-                   step == "start_before" || step == "start_after";
+                   step == "start_before" || step == "start_after" ||
+                   step.match(/topright$/) || step.match(/bottomright$/);
     var bottommod = step == "before_start" || step == "before_end" ||
-                    step == "start_after" || step == "end_after";
+                    step == "start_after" || step == "end_after" ||
+                   step.match(/bottomleft$/) || step.match(/bottomright$/);
     compareEdge(gTrigger, gMenuPopup, step, rightmod ? -10 : 10, bottommod ? -10 : 10, testname);
     gMenuPopup.removeAttribute("style");
   }
@@ -231,7 +241,8 @@ var popupTests = [
   events: [ "popupshowing thepopup", "popupshown thepopup" ],
   autohide: "thepopup",
   steps: ["before_start", "before_end", "after_start", "after_end",
-          "start_before", "start_after", "end_before", "end_after", "after_pointer", "overlap"],
+          "start_before", "start_after", "end_before", "end_after", "after_pointer", "overlap",
+          "topcenter topleft", "topright bottomright", "leftcenter topright"],
   test: function(testname, step) {
     gMenuPopup.setAttribute("position", step);
     gMenuPopup.openPopup(gTrigger, "", 0, 0, false, false);

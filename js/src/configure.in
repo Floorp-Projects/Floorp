@@ -353,9 +353,17 @@ AR_FLAGS='cr $@'
 
 if test "$COMPILE_ENVIRONMENT"; then
 
+# Note:
+#   In Mozilla, we use the names $target, $host and $build incorrectly, but are
+#   too far gone to back out now. See Bug 475488:
+#     - When we say $target, we mean $host, that is, the system on which
+#       Mozilla will be run.
+#     - When we say $host, we mean $build, that is, the system on which Mozilla
+#       is built.
+#     - $target (in its correct usage) is for compilers who generate code for a
+#       different platform than $host, so it would not be used by Mozilla.
 if test "$target" != "$host"; then
     echo "cross compiling from $host to $target"
-    CROSS_COMPILE=1
 
     _SAVE_CC="$CC"
     _SAVE_CFLAGS="$CFLAGS"
@@ -481,6 +489,12 @@ if test "$target" != "$host"; then
     AC_CHECK_PROGS(STRIP, $STRIP "${target_alias}-strip" "${target}-strip", :)
     AC_CHECK_PROGS(WINDRES, $WINDRES "${target_alias}-windres" "${target}-windres", :)
     AC_DEFINE(CROSS_COMPILE)
+
+    dnl If we cross compile for ppc on Mac OS X x86, cross_compiling will
+    dnl have erroneously been set to "no", because the x86 build host is
+    dnl able to run ppc code in a translated environment, making a cross
+    dnl compiler appear native.  So we override that here.
+    cross_compiling=yes
 else
     AC_PROG_CC
     AC_PROG_CXX
@@ -915,6 +929,12 @@ fi
 
 fi # COMPILE_ENVIRONMENT
 
+if test "$cross_compiling"  = "yes"; then
+    CROSS_COMPILE=1
+else
+    CROSS_COMPILE=
+fi
+
 # Check to see if we are running in a broken QEMU scratchbox.
 # We know that anything below 1.0.16 is broken.
 AC_CHECK_PROGS(SBCONF, sb-conf ve, "")
@@ -1032,7 +1052,7 @@ from building Mozilla. Upgrade to Xcode 2.1 or later.])
         changequote(,)
         XCODEBUILD_VERSION=`$PBBUILD -version 2>/dev/null | xargs | sed -e 's/.*DevToolsCore-\([0-9]*\).*/\1/'`
         changequote([,])
-        if test -n "$XCODEBUILD_VERSION" -a "$XCODEBUILD_VERSION" -ge 620 ; then
+        if test -n "$XCODEBUILD_VERSION" && test "$XCODEBUILD_VERSION" -ge 620 ; then
           HAS_XCODE_2_1=1;
         fi
       ;;
@@ -3753,7 +3773,7 @@ fi
 
 dnl check for wcrtomb/mbrtowc
 dnl =======================================================================
-if test -z "$MACOS_DEPLOYMENT_TARGET" -o "$MACOS_DEPLOYMENT_TARGET" -ge "100300"; then
+if test -z "$MACOS_DEPLOYMENT_TARGET" || test "$MACOS_DEPLOYMENT_TARGET" -ge "100300"; then
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
 AC_CACHE_CHECK(for wcrtomb,
@@ -5482,7 +5502,10 @@ else
     fi
     AC_SUBST(CL_INCLUDES_PREFIX)
     rm -f dummy-hello.c
+    _topsrcdirwin=`cd \`dirname $0\`; pwd -W`
     dnl cl.py provides dependency generation for MSVC
+    CC_WRAPPER="$PYTHON -O $_topsrcdirwin/build/cl.py"
+    CXX_WRAPPER="$PYTHON -O $_topsrcdirwin/build/cl.py"
     COMPILER_DEPEND=1
   fi
 fi
@@ -5491,6 +5514,9 @@ MDDEPDIR='.deps'
 AC_SUBST(MOZ_AUTO_DEPS)
 AC_SUBST(COMPILER_DEPEND)
 AC_SUBST(MDDEPDIR)
+AC_SUBST(CC_WRAPPER)
+AC_SUBST(CXX_WRAPPER)
+
 
 dnl ========================================================
 dnl =
@@ -5562,9 +5588,9 @@ MOZ_ARG_ENABLE_BOOL(ctypes,
     JS_HAS_CTYPES= )
 AC_SUBST(JS_HAS_CTYPES)
 if test "$JS_HAS_CTYPES"; then
-  if test "$_MSC_VER" -a -z $AS; then
-    # Error out if we're on MSVC and MASM is unavailable.
-    AC_MSG_ERROR([No suitable assembler found. An assembler is required to build js-ctypes. If you are building with MS Visual Studio 8 Express, you may download the MASM 8.0 package, upgrade to Visual Studio 9 Express, or install the Vista SDK.])
+  dnl Error out if we're on MSVC and MASM is unavailable.
+  if test -n "$_MSC_VER" -a \( "$AS" != "ml.exe" -a "$AS" != "ml64.exe" \); then
+    AC_MSG_ERROR([\"$AS\" is not a suitable assembler to build js-ctypes. If you are building with MS Visual Studio 8 Express, you may download the MASM 8.0 package, upgrade to Visual Studio 9 Express, or install the Vista SDK. Or do not use --enable-ctypes.])
   fi
   AC_DEFINE(JS_HAS_CTYPES)
 fi

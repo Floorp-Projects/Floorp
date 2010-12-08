@@ -62,10 +62,6 @@
 
 #include "CheckedInt.h"
 
-#define UNPACK_FLIP_Y_WEBGL            0x9240
-#define UNPACK_PREMULTIPLY_ALPHA_WEBGL 0x9241
-#define CONTEXT_LOST_WEBGL             0x9242
-
 class nsIDocShell;
 class nsIPropertyBag;
 
@@ -426,9 +422,10 @@ protected:
     PRBool InitAndValidateGL();
     PRBool ValidateBuffers(PRUint32 count);
     PRBool ValidateCapabilityEnum(WebGLenum cap, const char *info);
-    PRBool ValidateBlendEquationEnum(WebGLuint cap, const char *info);
-    PRBool ValidateBlendFuncDstEnum(WebGLuint mode, const char *info);
-    PRBool ValidateBlendFuncSrcEnum(WebGLuint mode, const char *info);
+    PRBool ValidateBlendEquationEnum(WebGLenum cap, const char *info);
+    PRBool ValidateBlendFuncDstEnum(WebGLenum mode, const char *info);
+    PRBool ValidateBlendFuncSrcEnum(WebGLenum mode, const char *info);
+    PRBool ValidateBlendFuncEnumsCompatibility(WebGLenum sfactor, WebGLenum dfactor, const char *info);
     PRBool ValidateTextureTargetEnum(WebGLenum target, const char *info);
     PRBool ValidateComparisonEnum(WebGLenum target, const char *info);
     PRBool ValidateStencilOpEnum(WebGLenum action, const char *info);
@@ -529,7 +526,7 @@ protected:
     nsRefPtrHashtable<nsUint32HashKey, WebGLRenderbuffer> mMapRenderbuffers;
 
     // PixelStore parameters
-    PRUint32 mPixelStorePackAlignment, mPixelStoreUnpackAlignment;
+    PRUint32 mPixelStorePackAlignment, mPixelStoreUnpackAlignment, mPixelStoreColorspaceConversion;
     PRBool mPixelStoreFlipY, mPixelStorePremultiplyAlpha;
 
     FakeBlackStatus mFakeBlackStatus;
@@ -539,6 +536,9 @@ protected:
 
     WebGLfloat mVertexAttrib0Vector[4];
     nsAutoArrayPtr<WebGLfloat> mFakeVertexAttrib0Array;
+
+    WebGLint mStencilRef;
+    WebGLuint mStencilValueMask, mStencilWriteMask;
 
 public:
     // console logging helpers
@@ -754,7 +754,8 @@ public:
         mMaxLevelWithCustomImages(0),
         mHaveGeneratedMipmap(PR_FALSE),
         mFakeBlackStatus(DoNotNeedFakeBlack)
-    {}
+    {
+    }
 
     void Delete() {
         if (mDeleted)
@@ -803,6 +804,8 @@ protected:
         PRBool mIsDefined;
     };
 
+public:
+
     ImageInfo& ImageInfoAt(size_t level, size_t face) {
 #ifdef DEBUG
         if (face >= mFacesCount)
@@ -815,6 +818,8 @@ protected:
     const ImageInfo& ImageInfoAt(size_t level, size_t face) const {
         return const_cast<WebGLTexture*>(this)->ImageInfoAt(level, face);
     }
+
+protected:
 
     WebGLenum mTarget;
     WebGLenum mMinFilter, mMagFilter, mWrapS, mWrapT;
@@ -1032,31 +1037,16 @@ public:
             // Determine if the texture needs to be faked as a black texture.
             // See 3.8.2 Shader Execution in the OpenGL ES 2.0.24 spec.
 
-            // First detect undefined images. These are typically not-yet-loaded textures.
-            // The generic fake-black-texture messages have been confusing in this case, see bug 594310.
-            // So generate a special message for that.
-
-            PRBool areAllLevel0ImagesDefined = PR_TRUE;
             for (size_t face = 0; face < mFacesCount; ++face) {
-                    areAllLevel0ImagesDefined &= ImageInfoAt(0, face).mIsDefined;
-            }
-
-            if (!areAllLevel0ImagesDefined) {
-                if (mTarget == LOCAL_GL_TEXTURE_2D) {
-                    mContext->LogMessageIfVerbose(
-                        "We are currently drawing stuff, but some 2D texture has not yet been "
-                        "uploaded any image at level 0. Until it's uploaded, this texture will look black.");
-                } else {
-                    mContext->LogMessageIfVerbose(
-                        "We are currently drawing stuff, but some cube map texture has not yet been "
-                        "uploaded any image at level 0, for at least one of its six faces. "
-                        "Until it's uploaded, this texture will look black.");
+                if (!ImageInfoAt(0, face).mIsDefined) {
+                    // In case of undefined texture image, we don't print any message because this is a very common
+                    // and often legitimate case, for example when doing asynchronous texture loading.
+                    // An extreme case of this is the photowall google demo.
+                    // Exiting early here allows us to avoid making noise on valid webgl code.
+                    mFakeBlackStatus = DoNeedFakeBlack;
+                    return PR_TRUE;
                 }
-                mFakeBlackStatus = DoNeedFakeBlack;
-                return PR_TRUE;
             }
-
-            // ok, done with the stupid special cases above. Now actually implementing the cases defined in section 3.8.2.
 
             const char *msg_rendering_as_black
                 = "A texture is going to be rendered as if it were black, as per the OpenGL ES 2.0.24 spec section 3.8.2, "
@@ -1356,6 +1346,79 @@ protected:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(WebGLRenderbuffer, WEBGLRENDERBUFFER_PRIVATE_IID)
 
+class WebGLFramebufferAttachment
+{
+    nsRefPtr<WebGLTexture> mTexturePtr;
+    nsRefPtr<WebGLRenderbuffer> mRenderbufferPtr;
+    WebGLenum mAttachmentPoint;
+
+public:
+    WebGLFramebufferAttachment(WebGLenum aAttachmentPoint)
+        : mAttachmentPoint(aAttachmentPoint)
+    {}
+
+    PRBool IsNull() const {
+        return !mTexturePtr && !mRenderbufferPtr;
+    }
+
+    PRBool HasAlpha() const {
+        WebGLenum format = 0;
+        if (mTexturePtr)
+            format = mTexturePtr->ImageInfoAt(0,0).mFormat;
+        if (mRenderbufferPtr)
+            format = mRenderbufferPtr->InternalFormat();
+        return format == LOCAL_GL_RGBA ||
+               format == LOCAL_GL_LUMINANCE_ALPHA ||
+               format == LOCAL_GL_ALPHA ||
+               format == LOCAL_GL_RGBA4 ||
+               format == LOCAL_GL_RGB5_A1;
+    }
+
+    void SetTexture(WebGLTexture *tex) {
+        mTexturePtr = tex;
+        mRenderbufferPtr = nsnull;
+    }
+    void SetRenderbuffer(WebGLRenderbuffer *rb) {
+        mTexturePtr = nsnull;
+        mRenderbufferPtr = rb;
+    }
+    WebGLTexture *Texture() const {
+        return mTexturePtr.get();
+    }
+    WebGLRenderbuffer *Renderbuffer() const {
+        return mRenderbufferPtr.get();
+    }
+
+    PRBool IsIncompatibleWithAttachmentPoint() const
+    {
+        // textures can only be color textures in WebGL
+        if (mTexturePtr)
+            return mAttachmentPoint != LOCAL_GL_COLOR_ATTACHMENT0;
+
+        if (mRenderbufferPtr) {
+            WebGLenum format = mRenderbufferPtr->InternalFormat();
+            switch (mAttachmentPoint) {
+                case LOCAL_GL_COLOR_ATTACHMENT0:
+                    return format != LOCAL_GL_RGB565 &&
+                           format != LOCAL_GL_RGB5_A1 &&
+                           format != LOCAL_GL_RGBA4;
+                case LOCAL_GL_DEPTH_ATTACHMENT:
+                    return format != LOCAL_GL_DEPTH_COMPONENT16;
+                case LOCAL_GL_STENCIL_ATTACHMENT:
+                    return format != LOCAL_GL_STENCIL_INDEX8;
+                case LOCAL_GL_DEPTH_STENCIL_ATTACHMENT:
+                    return format != LOCAL_GL_DEPTH_STENCIL;
+            }
+        }
+
+        return PR_FALSE; // no attachment at all, so no incompatibility
+    }
+
+    PRBool HasUninitializedRenderbuffer() const {
+        return mRenderbufferPtr && !mRenderbufferPtr->Initialized();
+    }
+};
+
 #define WEBGLFRAMEBUFFER_PRIVATE_IID \
     {0x0052a16f, 0x4bc9, 0x4a55, {0x9d, 0xa3, 0x54, 0x95, 0xaa, 0x4e, 0x80, 0xb9}}
 class WebGLFramebuffer :
@@ -1370,10 +1433,10 @@ public:
     WebGLFramebuffer(WebGLContext *context, WebGLuint name) :
         WebGLContextBoundObject(context),
         mName(name), mDeleted(PR_FALSE),
-        mColorAttachment0HasAlpha(PR_FALSE),
-        mHasDepthAttachment(PR_FALSE),
-        mHasStencilAttachment(PR_FALSE),
-        mHasDepthStencilAttachment(PR_FALSE)
+        mColorAttachment(LOCAL_GL_COLOR_ATTACHMENT0),
+        mDepthAttachment(LOCAL_GL_DEPTH_ATTACHMENT),
+        mStencilAttachment(LOCAL_GL_STENCIL_ATTACHMENT),
+        mDepthStencilAttachment(LOCAL_GL_DEPTH_STENCIL_ATTACHMENT)
     { }
 
     void Delete() {
@@ -1384,8 +1447,6 @@ public:
     }
     PRBool Deleted() { return mDeleted; }
     WebGLuint GLName() { return mName; }
-
-    PRBool ColorAttachment0HasAlpha() { return mColorAttachment0HasAlpha; }
 
     nsresult FramebufferRenderbuffer(WebGLenum target,
                                      WebGLenum attachment,
@@ -1408,59 +1469,26 @@ public:
         if (rbtarget != LOCAL_GL_RENDERBUFFER)
             return mContext->ErrorInvalidEnumInfo("framebufferRenderbuffer: renderbuffer target:", rbtarget);
 
-        const char *badAttachmentFormatMsg =
-            "framebufferRenderbuffer: this renderbuffer does not have a suitable format for this attachment point";
-
         switch (attachment) {
         case LOCAL_GL_DEPTH_ATTACHMENT:
-            if (!isNull) {
-                if (wrb->mInternalFormat != LOCAL_GL_DEPTH_COMPONENT16)
-                    return mContext->ErrorInvalidOperation(badAttachmentFormatMsg);
-            }
-            mDepthOrStencilRenderbufferAttachment = wrb;
-            mHasDepthAttachment = !isNull;
+            mDepthAttachment.SetRenderbuffer(wrb);
             break;
         case LOCAL_GL_STENCIL_ATTACHMENT:
-            if (!isNull) {
-                if (wrb->mInternalFormat != LOCAL_GL_STENCIL_INDEX8)
-                    return mContext->ErrorInvalidOperation(badAttachmentFormatMsg);
-            }
-            mDepthOrStencilRenderbufferAttachment = wrb;
-            mHasStencilAttachment = !isNull;
+            mStencilAttachment.SetRenderbuffer(wrb);
             break;
         case LOCAL_GL_DEPTH_STENCIL_ATTACHMENT:
-            if (!isNull) {
-                if (wrb->mInternalFormat != LOCAL_GL_DEPTH_STENCIL)
-                    return mContext->ErrorInvalidOperation(badAttachmentFormatMsg);
-            }
-            mDepthOrStencilRenderbufferAttachment = wrb;
-            mHasDepthStencilAttachment = !isNull;
+            mDepthStencilAttachment.SetRenderbuffer(wrb);
             break;
         default:
             // finish checking that the 'attachment' parameter is among the allowed values
-            if ((attachment < LOCAL_GL_COLOR_ATTACHMENT0 ||
-                 attachment >= LOCAL_GL_COLOR_ATTACHMENT0 + mContext->mMaxFramebufferColorAttachments))
-            {
+            if (attachment != LOCAL_GL_COLOR_ATTACHMENT0)
                 return mContext->ErrorInvalidEnumInfo("framebufferRenderbuffer: attachment", attachment);
-            }
             if (!isNull) {
-                if (wrb->mInternalFormat != LOCAL_GL_RGBA4 &&
-                    wrb->mInternalFormat != LOCAL_GL_RGB565 &&
-                    wrb->mInternalFormat != LOCAL_GL_RGB5_A1)
-                {
-                    return mContext->ErrorInvalidOperation(badAttachmentFormatMsg);
-                }
-
                 // ReadPixels needs alpha and size information, but only
                 // for COLOR_ATTACHMENT0
-                if (attachment == LOCAL_GL_COLOR_ATTACHMENT0) {
-                    setDimensions(wrb);
-                    mColorAttachment0HasAlpha = InternalFormatHasAlpha(wrb->mInternalFormat);
-                } else {
-                    mColorAttachment0HasAlpha = PR_FALSE;
-                }
+                setDimensions(wrb);
             }
-            mColorRenderbufferAttachment = wrb;
+            mColorAttachment.SetRenderbuffer(wrb);
             break;
         }
 
@@ -1499,34 +1527,22 @@ public:
 
         switch (attachment) {
         case LOCAL_GL_DEPTH_ATTACHMENT:
+            mDepthAttachment.SetTexture(wtex);
+            break;
         case LOCAL_GL_STENCIL_ATTACHMENT:
+            mStencilAttachment.SetTexture(wtex);
+            break;
         case LOCAL_GL_DEPTH_STENCIL_ATTACHMENT:
-            return mContext->ErrorInvalidOperation("framebufferTexture2D: depth and stencil attachments can "
-                          "only be renderbuffers, not textures, as there is no suitable texture format.");
+            mDepthStencilAttachment.SetTexture(wtex);
             break;
         default:
-            if ((attachment < LOCAL_GL_COLOR_ATTACHMENT0 ||
-                 attachment >= LOCAL_GL_COLOR_ATTACHMENT0 + mContext->mMaxFramebufferColorAttachments))
-            {
+            if (attachment != LOCAL_GL_COLOR_ATTACHMENT0)
                 return mContext->ErrorInvalidEnumInfo("framebufferTexture2D: attachment", attachment);
-            }
 
             // keep data for readPixels, function only uses COLOR_ATTACHMENT0
-            if (attachment == LOCAL_GL_COLOR_ATTACHMENT0) {
-                setDimensions(wtex);
+            setDimensions(wtex);
 
-                if (wtex) {
-                    const WebGLTexture::ImageInfo& ia = wtex->ImageInfoAt
-                        (level, textarget == LOCAL_GL_TEXTURE_2D
-                         ? 0
-                         : textarget - LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X);
-                    mColorAttachment0HasAlpha = InternalFormatHasAlpha(ia.mFormat);
-                } else {
-                    mColorAttachment0HasAlpha = PR_FALSE;
-                }
-            }
-
-            // nothing else to do for color buffers. all textures have a color-renderable format.
+            mColorAttachment.SetTexture(wtex);
             break;
         }
 
@@ -1536,17 +1552,17 @@ public:
         return NS_OK;
     }
 
-    // implement inline, as it's performance critical (called by draw-functions).
-    // the generic case for which we're optimizing is the case where there's nothing to initialize.
-    inline PRBool CheckAndInitializeRenderbuffers()
+    PRBool CheckAndInitializeRenderbuffers()
     {
-        if (HasConflictingAttachments()) {
+        if (HasBadAttachments()) {
             mContext->SynthesizeGLError(LOCAL_GL_INVALID_FRAMEBUFFER_OPERATION);
             return PR_FALSE;
         }
 
-        if ((mColorRenderbufferAttachment          && !mColorRenderbufferAttachment->Initialized()) ||
-            (mDepthOrStencilRenderbufferAttachment && !mDepthOrStencilRenderbufferAttachment->Initialized()))
+        if (mColorAttachment.HasUninitializedRenderbuffer() ||
+            mDepthAttachment.HasUninitializedRenderbuffer() ||
+            mStencilAttachment.HasUninitializedRenderbuffer() ||
+            mDepthStencilAttachment.HasUninitializedRenderbuffer())
         {
             InitializeRenderbuffers();
         }
@@ -1554,22 +1570,31 @@ public:
         return PR_TRUE;
     }
 
+    PRBool HasBadAttachments() const {
+        if (mColorAttachment.IsIncompatibleWithAttachmentPoint() ||
+            mDepthAttachment.IsIncompatibleWithAttachmentPoint() ||
+            mStencilAttachment.IsIncompatibleWithAttachmentPoint() ||
+            mDepthStencilAttachment.IsIncompatibleWithAttachmentPoint())
+        {
+            // some attachment is incompatible with its attachment point
+            return PR_TRUE;
+        }
+        else if (int(mDepthAttachment.IsNull()) +
+                 int(mStencilAttachment.IsNull()) +
+                 int(mDepthStencilAttachment.IsNull()) <= 1)
+        {
+            // has at least two among Depth, Stencil, DepthStencil
+            return PR_TRUE;
+        }
+        else return PR_FALSE;
+    }
+
+    const WebGLFramebufferAttachment ColorAttachment() const {
+        return mColorAttachment;
+    }
+
     NS_DECL_ISUPPORTS
     NS_DECL_NSIWEBGLFRAMEBUFFER
-
-    PRBool HasConflictingAttachments() const {
-        return int(mHasDepthAttachment) +
-               int(mHasStencilAttachment) +
-               int(mHasDepthStencilAttachment) > 1;
-    }
-
-    static PRBool InternalFormatHasAlpha(WebGLenum aInternalFormat) {
-        return
-            aInternalFormat == LOCAL_GL_RGBA ||
-            aInternalFormat == LOCAL_GL_ALPHA ||
-            aInternalFormat == LOCAL_GL_RGBA4 ||
-            aInternalFormat == LOCAL_GL_RGB5_A1;
-    }
 
 protected:
 
@@ -1581,12 +1606,11 @@ protected:
         if (mContext->gl->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER) != LOCAL_GL_FRAMEBUFFER_COMPLETE)
             return;
 
-        PRBool initializeColorBuffer = mColorRenderbufferAttachment &&
-                                       !mColorRenderbufferAttachment->Initialized();
-        PRBool initializeDepthOrStencilBuffer = mDepthOrStencilRenderbufferAttachment &&
-                                                !mDepthOrStencilRenderbufferAttachment->Initialized();
-        PRBool initializeDepthBuffer = initializeDepthOrStencilBuffer && HasDepthBuffer();
-        PRBool initializeStencilBuffer = initializeDepthOrStencilBuffer && HasStencilBuffer();
+        PRBool initializeColorBuffer = mColorAttachment.HasUninitializedRenderbuffer();
+        PRBool initializeDepthBuffer = mDepthAttachment.HasUninitializedRenderbuffer() ||
+                                       mDepthStencilAttachment.HasUninitializedRenderbuffer();
+        PRBool initializeStencilBuffer = mStencilAttachment.HasUninitializedRenderbuffer() ||
+                                         mDepthStencilAttachment.HasUninitializedRenderbuffer();
 
         realGLboolean savedColorMask[] = {0}, savedDepthMask = 0;
         GLuint savedStencilMask = 0;
@@ -1638,19 +1662,26 @@ protected:
                                       savedColorClearValue[1],
                                       savedColorClearValue[2],
                                       savedColorClearValue[3]);
-            mColorRenderbufferAttachment->SetInitialized(PR_TRUE);
+            mColorAttachment.Renderbuffer()->SetInitialized(PR_TRUE);
         }
 
         if (initializeDepthBuffer) {
             mContext->gl->fDepthMask(savedDepthMask);
             mContext->gl->fClearDepth(savedDepthClearValue);
-            mDepthOrStencilRenderbufferAttachment->SetInitialized(PR_TRUE);
+            if (mDepthAttachment.Renderbuffer())
+                mDepthAttachment.Renderbuffer()->SetInitialized(PR_TRUE);
         }
 
         if (initializeStencilBuffer) {
             mContext->gl->fStencilMask(savedStencilMask);
             mContext->gl->fClearStencil(savedStencilClearValue);
-            mDepthOrStencilRenderbufferAttachment->SetInitialized(PR_TRUE);
+            if (mStencilAttachment.Renderbuffer())
+                mStencilAttachment.Renderbuffer()->SetInitialized(PR_TRUE);
+        }
+
+        if (initializeDepthBuffer && initializeStencilBuffer) {
+            if (mDepthStencilAttachment.Renderbuffer())
+                mDepthStencilAttachment.Renderbuffer()->SetInitialized(PR_TRUE);
         }
 
         mContext->gl->PopViewportRect();
@@ -1666,28 +1697,15 @@ protected:
             mContext->gl->fDisable(LOCAL_GL_SCISSOR_TEST);
     }
 
-    PRBool HasDepthBuffer() const {
-        return mHasDepthAttachment || mHasDepthStencilAttachment;
-    }
-
-    PRBool HasStencilBuffer() const {
-        return mHasStencilAttachment || mHasDepthStencilAttachment;
-    }
-
     WebGLuint mName;
     PRPackedBool mDeleted;
-    PRPackedBool mColorAttachment0HasAlpha;
 
     // we only store pointers to attached renderbuffers, not to attached textures, because
     // we will only need to initialize renderbuffers. Textures are already initialized.
-    nsRefPtr<WebGLRenderbuffer> mColorRenderbufferAttachment;
-    nsRefPtr<WebGLRenderbuffer> mDepthOrStencilRenderbufferAttachment;
-
-    // these boolean values keep track of all attachments: renderbuffers and textures.
-    // thus they are not at all redundant with the above member pointers.
-    PRBool mHasDepthAttachment;
-    PRBool mHasStencilAttachment;
-    PRBool mHasDepthStencilAttachment;
+    WebGLFramebufferAttachment mColorAttachment,
+                               mDepthAttachment,
+                               mStencilAttachment,
+                               mDepthStencilAttachment;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(WebGLFramebuffer, WEBGLFRAMEBUFFER_PRIVATE_IID)

@@ -44,7 +44,13 @@
 }
 
 .hud-box.animated {
-  -moz-transition: height 350ms;
+  -moz-transition: height 100ms;
+}
+
+.hud-splitter {
+  border-bottom: solid #a5a5a5 1px;
+  background: url("chrome://global/skin/splitter/dimple.png") no-repeat center,
+    -moz-linear-gradient(top, #fcfcfc, #dfdfdf);
 }
 
 .hud-outer-wrapper {
@@ -118,13 +124,103 @@
   display: none;
 }
 
-.hud-group:first-child > .hud-divider {
-  display: none;
+.webconsole-filter-button,
+.webconsole-clear-console-button {
+  -moz-appearance: none;
+  border: @roundButtonBorder@;
+  background: @roundButtonBackground@;
+  box-shadow: @roundButtonShadow@;
+  color: buttontext;
+  margin: 1px 0;
+  padding: 0;
 }
 
-.hud-filter-cat {
-  color: #6b6b6b;
-  font-weight: bold;
+.webconsole-filter-button {
+  border-radius: 10000px;
+  -moz-margin-start: 6px;
+  -moz-box-orient: horizontal;
+}
+
+.webconsole-clear-console-button {
+  border-radius: 3px;
+  -moz-margin-end: 6px;
+  -moz-margin-start: 4px;
+  padding: 1px 6px;
+}
+
+.webconsole-filter-button[checked="true"] {
+  box-shadow: @roundButtonPressedShadow@;
+  background: #d0d0d0;
+}
+
+.webconsole-filter-button > .toolbarbutton-menubutton-button {
+  -moz-appearance: none;
+  margin: 0;
+  padding: 1px 0;
+  list-style-image: url("chrome://global/skin/icons/webconsole.png");
+  -moz-box-orient: horizontal;
+}
+
+.webconsole-filter-button:hover:active,
+.webconsole-clear-console-button:hover:active {
+  text-shadow: @loweredShadow@;
+  box-shadow: @roundButtonPressedShadow@;
+  background: @roundButtonPressedBackground@;
+}
+
+.webconsole-clear-console-button > .toolbarbutton-text {
+  margin: 0;
+}
+
+.webconsole-filter-button > .toolbarbutton-menubutton-button > .toolbarbutton-text {
+  margin: 0 3px;
+}
+
+.webconsole-filter-button > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
+  -moz-margin-start: 3px;
+}
+
+.webconsole-filter-button > .toolbarbutton-menubutton-dropmarker {
+  padding: 6px 3px 2px;
+  -moz-border-start: dotted #aaaaaa 1px;
+}
+
+/* Network button */
+.webconsole-filter-button[category="net"] {
+  -moz-image-region: rect(0, 40px, 10px, 30px);
+}
+
+/* CSS button */
+.webconsole-filter-button[category="css"] {
+  -moz-image-region: rect(10px, 40px, 20px, 30px);
+}
+
+/* JS button */
+.webconsole-filter-button[category="js"] {
+  -moz-image-region: rect(20px, 40px, 30px, 30px);
+}
+
+/* Web Developer button */
+.webconsole-filter-button[category="webdev"] {
+  -moz-image-region: rect(30px, 40px, 40px, 30px);
+}
+
+.webconsole-close-button {
+  list-style-image: url("chrome://global/skin/icons/closetab.png");
+  margin-top: 0;
+  margin-bottom: 0;
+  -moz-margin-start: 3px;
+  -moz-margin-end: -14px;
+  min-width: 0;
+  -moz-appearance: none;
+}
+
+.webconsole-close-button:hover {
+  list-style-image: url("chrome://global/skin/icons/closetab-hover.png");
+}
+
+.webconsole-close-button:hover:active {
+  list-style-image: url("chrome://global/skin/icons/closetab-active.png");
 }
 
 /* JSTerm Styles */
@@ -186,17 +282,5 @@
 
 .hud-console-filter-toolbar:-moz-lwtheme {
   border-top: @scopeBarSeparatorBorder@;
-}
-
-.jsterm-close-button {
-  list-style-image: url("chrome://global/skin/icons/console-close.png");
-  margin: 0px;
-  min-width: 0px;
-  padding: 1px 3px 1px 7px;
-  -moz-appearance: none;
-}
-
-.jsterm-close-button:active {
-  background-color: rgb(175, 175, 175);
 }
 

@@ -217,10 +217,10 @@ protected:
       nscoord mCaretWidth;        // full caret width including bidi indicator
     };
     Metrics ComputeMetrics(nsIFrame* aFrame, PRInt32 aOffset, nscoord aCaretHeight);
-    void GetGeometryForFrame(nsIFrame* aFrame,
-                             PRInt32   aFrameOffset,
-                             nsRect*   aRect,
-                             nscoord*  aBidiIndicatorSize);
+    nsresult GetGeometryForFrame(nsIFrame* aFrame,
+                                 PRInt32   aFrameOffset,
+                                 nsRect*   aRect,
+                                 nscoord*  aBidiIndicatorSize);
 
     // Returns true if the caret should be drawn. When |mDrawn| is true,
     // this returns true, so that we erase the drawn caret. If |aIgnoreDrawnState|

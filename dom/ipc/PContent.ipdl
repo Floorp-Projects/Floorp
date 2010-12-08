@@ -38,9 +38,11 @@
 
 include protocol PAudio;
 include protocol PBrowser;
+include protocol PCrashReporter;
 include protocol PTestShell;
 include protocol PNecko;
 include protocol PExternalHelperApp;
+include protocol PStorage;
 
 include "mozilla/chrome/RegistryMessageUtils.h";
 include "mozilla/net/NeckoMessageUtils.h";
@@ -56,17 +58,38 @@ using ResourceMapping;
 using OverrideMapping;
 using IPC::URI;
 using IPC::Permission;
+using mozilla::null_t;
+using gfxIntSize;
 
 namespace mozilla {
 namespace dom {
+
+// Data required to clone an existing DOMStorageImpl in the parent
+struct StorageClone
+{
+    // Existing cross-process storage actor to clone
+    PStorage actor;
+    // Result of calling IsCallerSecure() in the child
+    bool callerSecure;
+};
+
+// When creating a new PStorage protocol, an existing one can be
+// cloned (see nsDOMStorage2::Clone)
+union StorageConstructData
+{
+    null_t;
+    StorageClone;
+};
 
 rpc protocol PContent
 {
     manages PAudio;
     manages PBrowser;
+    manages PCrashReporter;
     manages PTestShell;
     manages PNecko;
     manages PExternalHelperApp;
+    manages PStorage;
 
 child:
     PBrowser(PRUint32 chromeFlags);
@@ -91,8 +114,13 @@ child:
 
     AccelerationChanged(double x, double y, double z);
 
+    ScreenSizeChanged(gfxIntSize size);
+
 parent:
     PNecko();
+    PCrashReporter();
+    
+    PStorage(StorageConstructData data);
 
     PAudio(PRInt32 aNumChannels, PRInt32 aRate, PRInt32 aFormat);
 

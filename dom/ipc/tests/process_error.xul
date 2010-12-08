@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+	orient="vertical">
+
+  <browser id="thebrowser" type="content" remote="true" />
+  <script type="application/javascript"><![CDATA[
+    Components.utils.import("resource://gre/modules/Services.jsm");
+
+    const ok = window.opener.wrappedJSObject.ok;
+    const is = window.opener.wrappedJSObject.is;
+    const done = window.opener.wrappedJSObject.done;
+    const SimpleTest = window.opener.wrappedJSObject.SimpleTest;
+
+    function crashObserver(subject, topic, data) {
+      is(topic, 'ipc:content-shutdown', 'Received correct observer topic.');
+      ok(subject instanceof Components.interfaces.nsIPropertyBag2,
+         'Subject implements nsIPropertyBag2.');
+      
+      if ('nsICrashReporter' in Components.interfaces) {
+        ok(subject.getPropertyAsAString('dumpID'), "dumpID is present");
+      }
+
+      Services.obs.removeObserver(crashObserver, 'ipc:content-shutdown');
+      done();
+    }
+    Services.obs.addObserver(crashObserver, 'ipc:content-shutdown', false);
+
+    document.getElementById('thebrowser').
+      QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader.
+      messageManager.loadFrameScript('chrome://mochitests/content/chrome/dom/ipc/tests/process_error_contentscript.js', true);
+  ]]></script>
+
+</window>

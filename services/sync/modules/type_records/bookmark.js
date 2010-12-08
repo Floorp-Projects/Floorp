@@ -45,12 +45,12 @@ const Cu = Components.utils;
 Cu.import("resource://services-sync/base_records/crypto.js");
 Cu.import("resource://services-sync/util.js");
 
-function PlacesItem(uri, type) {
-  CryptoWrapper.call(this, uri);
+function PlacesItem(collection, id, type) {
+  CryptoWrapper.call(this, collection, id);
   this.type = type || "item";
 }
 PlacesItem.prototype = {
-  decrypt: function PlacesItem_decrypt(passphrase, keyUri) {
+  decrypt: function PlacesItem_decrypt() {
     // Do the normal CryptoWrapper decrypt, but change types before returning
     let clear = CryptoWrapper.prototype.decrypt.apply(this, arguments);
 
@@ -86,10 +86,10 @@ PlacesItem.prototype = {
 };
 
 Utils.deferGetSet(PlacesItem, "cleartext", ["hasDupe", "parentid", "parentName",
-  "predecessorid", "type"]);
+                                            "type"]);
 
-function Bookmark(uri, type) {
-  PlacesItem.call(this, uri, type || "bookmark");
+function Bookmark(collection, id, type) {
+  PlacesItem.call(this, collection, id, type || "bookmark");
 }
 Bookmark.prototype = {
   __proto__: PlacesItem.prototype,
@@ -99,8 +99,8 @@ Bookmark.prototype = {
 Utils.deferGetSet(Bookmark, "cleartext", ["title", "bmkUri", "description",
   "loadInSidebar", "tags", "keyword"]);
 
-function BookmarkMicsum(uri) {
-  Bookmark.call(this, uri, "microsummary");
+function BookmarkMicsum(collection, id) {
+  Bookmark.call(this, collection, id, "microsummary");
 }
 BookmarkMicsum.prototype = {
   __proto__: Bookmark.prototype,
@@ -109,8 +109,8 @@ BookmarkMicsum.prototype = {
 
 Utils.deferGetSet(BookmarkMicsum, "cleartext", ["generatorUri", "staticTitle"]);
 
-function BookmarkQuery(uri) {
-  Bookmark.call(this, uri, "query");
+function BookmarkQuery(collection, id) {
+  Bookmark.call(this, collection, id, "query");
 }
 BookmarkQuery.prototype = {
   __proto__: Bookmark.prototype,
@@ -119,18 +119,19 @@ BookmarkQuery.prototype = {
 
 Utils.deferGetSet(BookmarkQuery, "cleartext", ["folderName"]);
 
-function BookmarkFolder(uri, type) {
-  PlacesItem.call(this, uri, type || "folder");
+function BookmarkFolder(collection, id, type) {
+  PlacesItem.call(this, collection, id, type || "folder");
 }
 BookmarkFolder.prototype = {
   __proto__: PlacesItem.prototype,
   _logName: "Record.Folder",
 };
 
-Utils.deferGetSet(BookmarkFolder, "cleartext", ["description", "title"]);
+Utils.deferGetSet(BookmarkFolder, "cleartext", ["description", "title",
+                                                "children"]);
 
-function Livemark(uri) {
-  BookmarkFolder.call(this, uri, "livemark");
+function Livemark(collection, id) {
+  BookmarkFolder.call(this, collection, id, "livemark");
 }
 Livemark.prototype = {
   __proto__: BookmarkFolder.prototype,
@@ -139,8 +140,8 @@ Livemark.prototype = {
 
 Utils.deferGetSet(Livemark, "cleartext", ["siteUri", "feedUri"]);
 
-function BookmarkSeparator(uri) {
-  PlacesItem.call(this, uri, "separator");
+function BookmarkSeparator(collection, id) {
+  PlacesItem.call(this, collection, id, "separator");
 }
 BookmarkSeparator.prototype = {
   __proto__: PlacesItem.prototype,

@@ -246,7 +246,7 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
           (drawBounds.y < yBoundary && yBoundary < drawBounds.YMost())) {
         // The stuff we need to redraw will wrap around an edge of the
         // buffer, so we will need to do a self-copy
-        if (mBufferRotation == nsIntPoint(0,0)) {
+        if (mBuffer->SupportsSelfCopy() && mBufferRotation == nsIntPoint(0,0)) {
           destBuffer = mBuffer;
         } else {
           // We can't do a real self-copy because the buffer is rotated.

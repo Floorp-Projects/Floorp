@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html class='reftest-wait'>
+  <!-- Test: if select has no custom error and is not barred from constraint
+             validation, it should be affected by :-moz-ui-valid pseudo-class. -->
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <body onload="document.getElementById('s').selectedIndex = 0;
+                document.forms[0].reset();
+                document.documentElement.className ='';">
+    <form>
+      <select id='s' class='notvalid' required>
+        <option>foo</option>
+      </select>
+    </form>
+  </body>
+</html>

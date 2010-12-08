@@ -119,6 +119,8 @@ struct nsCSSBorderRenderer {
   // the style and size of the border
   const PRUint8* mBorderStyles;
   const gfxFloat* mBorderWidths;
+  PRUint8* mSanitizedStyles;
+  gfxFloat* mSanitizedWidths;
   gfxCornerSizes mBorderRadii;
 
   // colors
@@ -197,6 +199,34 @@ struct nsCSSBorderRenderer {
 
   // draw the given dashed side
   void DrawDashedSide (mozilla::css::Side aSide);
+  
+  // Setup the stroke style for a given side
+  void SetupStrokeStyle(mozilla::css::Side aSize);
+
+  // Analyze if all border sides have the same width.
+  bool AllBordersSameWidth();
+
+  // Analyze if all borders are 'solid' this also considers hidden or 'none'
+  // borders because they can be considered 'solid' borders of 0 width and
+  // with no color effect.
+  bool AllBordersSolid(bool *aHasCompositeColors);
+
+  // Create a gradient pattern that will handle the color transition for a
+  // corner.
+  already_AddRefed<gfxPattern> CreateCornerGradient(mozilla::css::Corner aCorner,
+                                                    const gfxRGBA &aFirstColor,
+                                                    const gfxRGBA &aSecondColor);
+
+  // Draw a solid color border that is uniformly the same width.
+  void DrawSingleWidthSolidBorder();
+
+  // Draw any border which is solid on all sides and does not use
+  // CompositeColors.
+  void DrawNoCompositeColorSolidBorder();
+
+  // Draw a solid border that has no border radius (i.e. is rectangular) and
+  // uses CompositeColors.
+  void DrawRectangularCompositeColors();
 
   // draw the entire border
   void DrawBorders ();

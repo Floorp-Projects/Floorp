@@ -21,6 +21,7 @@
  *  Dan Mills <thunder@mozilla.com>
  *  Myk Melez <myk@mozilla.org>
  *  Philipp von Weitershausen <philipp@weitershausen.de>
+ *  Richard Newman <rnewman@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -45,7 +46,6 @@ const Cu = Components.utils;
 
 Cu.import("resource://services-sync/base_records/collection.js");
 Cu.import("resource://services-sync/base_records/crypto.js");
-Cu.import("resource://services-sync/base_records/keys.js");
 Cu.import("resource://services-sync/base_records/wbo.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/ext/Observers.js");
@@ -81,8 +81,11 @@ EngineManagerSvc.prototype = {
     }
 
     let engine = this._engines[name];
-    if (!engine)
+    if (!engine) {
       this._log.debug("Could not get engine: " + name);
+      if (Object.keys)
+        this._log.debug("Engines are: " + JSON.stringify(Object.keys(this._engines)));
+    }
     return engine;
   },
   getAll: function EngMgr_getAll() {
@@ -136,6 +139,7 @@ EngineManagerSvc.prototype = {
 function Engine(name) {
   this.Name = name || "Unnamed";
   this.name = name.toLowerCase();
+  this.downloadLimit = null;
 
   this._notify = Utils.notify("weave:engine:");
   this._log = Log4Moz.repository.getLogger("Engine." + this.Name);
@@ -294,7 +298,7 @@ SyncEngine.prototype = {
 
   get engineURL() this.storageURL + this.name,
 
-  get cryptoMetaURL() this.storageURL + "crypto/" + this.name,
+  get cryptoKeysURL() this.storageURL + "crypto/keys",
 
   get metaURL() this.storageURL + "meta/global",
 
@@ -348,49 +352,28 @@ SyncEngine.prototype = {
 
   // Create a new record using the store and add in crypto fields
   _createRecord: function SyncEngine__createRecord(id) {
-    let record = this._store.createRecord(id, this.engineURL + "/" + id);
+    let record = this._store.createRecord(id, this.name);
     record.id = id;
-    record.encryption = this.cryptoMetaURL;
+    record.collection = this.name;
     return record;
   },
 
   // Any setup that needs to happen at the beginning of each sync.
-  // Makes sure crypto records and keys are all set-up
   _syncStartup: function SyncEngine__syncStartup() {
-    this._log.trace("Ensuring server crypto records are there");
-
-    // Try getting/unwrapping the crypto record
-    let meta = CryptoMetas.get(this.cryptoMetaURL);
-    if (meta) {
-      try {
-        let pubkey = PubKeys.getDefaultKey();
-        let privkey = PrivKeys.get(pubkey.privateKeyUri);
-        meta.getKey(privkey, ID.get("WeaveCryptoID"));
-      }
-      catch(ex) {
-        // Indicate that we don't have a cryptometa to delete and reupload
-        this._log.debug("Purging bad data after failed unwrap crypto: " + ex);
-        meta = null;
-      }
-    }
-    // Don't proceed if we failed to get the crypto meta for reasons not 404
-    else if (CryptoMetas.response.status != 404) {
-      let resp = CryptoMetas.response;
-      resp.failureCode = ENGINE_METARECORD_DOWNLOAD_FAIL;
-      throw resp;
-    }
 
     // Determine if we need to wipe on outdated versions
     let metaGlobal = Records.get(this.metaURL);
     let engines = metaGlobal.payload.engines || {};
     let engineData = engines[this.name] || {};
 
+    let needsWipe = false;
+
     // Assume missing versions are 0 and wipe the server
     if ((engineData.version || 0) < this.version) {
       this._log.debug("Old engine data: " + [engineData.version, this.version]);
 
       // Prepare to clear the server and upload everything
-      meta = null;
+      needsWipe = true;
       this.syncID = "";
 
       // Set the newer version and newly generated syncID
@@ -415,34 +398,21 @@ SyncEngine.prototype = {
       this._resetClient();
     };
 
-    // Delete any existing data and reupload on bad version or missing meta
-    if (meta == null) {
+    // Delete any existing data and reupload on bad version or missing meta.
+    // No crypto component here...? We could regenerate per-collection keys...
+    if (needsWipe) {
       this.wipeServer(true);
-
-      // Generate a new crypto record
-      let symkey = Svc.Crypto.generateRandomKey();
-      let pubkey = PubKeys.getDefaultKey();
-      meta = new CryptoMeta(this.cryptoMetaURL);
-      meta.addUnwrappedKey(pubkey, symkey);
-      let res = new Resource(meta.uri);
-      let resp = res.put(meta);
-      if (!resp.success) {
-        this._log.debug("Metarecord upload fail:" + resp);
-        resp.failureCode = ENGINE_METARECORD_UPLOAD_FAIL;
-        throw resp;
-      }
-
-      // Cache the cryto meta that we just put on the server
-      CryptoMetas.set(meta.uri, meta);
     }
 
-    this._maybeLastSyncLocal = Date.now();
+    // Save objects that need to be uploaded in this._modified. We also save
+    // the timestamp of this fetch in this.lastSyncLocal. As we successfully
+    // upload objects we remove them from this._modified. If an error occurs
+    // or any objects fail to upload, they will remain in this._modified. At
+    // the end of a sync, or after an error, we add all objects remaining in
+    // this._modified to the tracker.
+    this.lastSyncLocal = Date.now();
     if (this.lastSync) {
       this._modified = this.getChangedIDs();
-      // Clear the tracker now but remember the changed IDs in case we
-      // need to roll back.
-      this._backupChangedIDs = this._tracker.changedIDs;
-      this._tracker.clearChangedIDs();
     } else {
       // Mark all items to be uploaded, but treat them as changed from long ago
       this._log.debug("First sync, uploading all items");
@@ -450,9 +420,15 @@ SyncEngine.prototype = {
       for (let id in this._store.getAllIDs())
         this._modified[id] = 0;
     }
-
-    let outnum = [i for (i in this._modified)].length;
-    this._log.info(outnum + " outgoing items pre-reconciliation");
+    // Clear the tracker now. If the sync fails we'll add the ones we failed
+    // to upload back.
+    this._tracker.clearChangedIDs();
+ 
+    // Array of just the IDs from this._modified. This is what we iterate over
+    // so we can modify this._modified during the iteration.
+    this._modifiedIDs = [id for (id in this._modified)];
+    this._log.info(this._modifiedIDs.length +
+                   " outgoing items pre-reconciliation");
 
     // Keep track of what to delete at the end of sync
     this._delete = {};
@@ -479,17 +455,14 @@ SyncEngine.prototype = {
       if (this.lastModified == null || item.modified > this.lastModified)
         this.lastModified = item.modified;
 
+      // Track the collection for the WBO.
+      item.collection = this.name;
+      
       // Remember which records were processed
       handled.push(item.id);
 
       try {
-        // Short-circuit the key URI to the engine's one in case the WBO's
-        // might be wrong due to relative URI confusions (bug 600995).
-        try {
-          item.decrypt(ID.get("WeaveCryptoID"), this.cryptoMetaURL);
-        } catch (ex) {
-          item.decrypt(ID.get("WeaveCryptoID"), item.encryption);
-        }
+        item.decrypt();
         if (this._reconcile(item)) {
           count.applied++;
           this._tracker.ignoreAll = true;
@@ -523,7 +496,13 @@ SyncEngine.prototype = {
     let toFetch = [];
     if (handled.length == newitems.limit) {
       let guidColl = new Collection(this.engineURL);
+      
+      // Sort and limit so that on mobile we only get the last X records.
+      guidColl.limit = this.downloadLimit;
       guidColl.newer = this.lastSync;
+      
+      // index: Orders by the sortindex descending (highest weight first).
+      guidColl.sort  = "index";
 
       let guids = guidColl.get();
       if (!guids.success)
@@ -622,7 +601,7 @@ SyncEngine.prototype = {
     if (item.id in this._modified) {
       // If the incoming and local changes are the same, skip
       if (this._isEqual(item)) {
-        this._tracker.removeChangedID(item.id);
+        delete this._modified[item.id];
         return false;
       }
 
@@ -654,10 +633,9 @@ SyncEngine.prototype = {
 
   // Upload outgoing records
   _uploadOutgoing: function SyncEngine__uploadOutgoing() {
-    let failed = {};
-    let outnum = [i for (i in this._modified)].length;
-    if (outnum) {
-      this._log.trace("Preparing " + outnum + " outgoing records");
+    if (this._modifiedIDs.length) {
+      this._log.trace("Preparing " + this._modifiedIDs.length +
+                      " outgoing records");
 
       // collection we'll upload
       let up = new Collection(this.engineURL);
@@ -665,7 +643,8 @@ SyncEngine.prototype = {
 
       // Upload what we've got so far in the collection
       let doUpload = Utils.bind2(this, function(desc) {
-        this._log.info("Uploading " + desc + " of " + outnum + " records");
+        this._log.info("Uploading " + desc + " of " +
+                       this._modifiedIDs.length + " records");
         let resp = up.post();
         if (!resp.success) {
           this._log.debug("Uploading records failed: " + resp);
@@ -678,28 +657,27 @@ SyncEngine.prototype = {
         if (modified > this.lastSync)
           this.lastSync = modified;
 
-        // Remember changed IDs and timestamp of failed items so we
-        // can mark them changed again.
-        let failed_ids = [];
-        for (let id in resp.obj.failed) {
-          failed[id] = this._modified[id];
-          failed_ids.push(id);
-        }
+        let failed_ids = [id for (id in resp.obj.failed)];
         if (failed_ids.length)
           this._log.debug("Records that will be uploaded again because "
                           + "the server couldn't store them: "
                           + failed_ids.join(", "));
 
+        // Clear successfully uploaded objects.
+        for each (let id in resp.obj.success) {
+          delete this._modified[id];
+        }
+
         up.clearRecords();
       });
 
-      for (let id in this._modified) {
+      for each (let id in this._modifiedIDs) {
         try {
           let out = this._createRecord(id);
           if (this._log.level <= Log4Moz.Level.Trace)
             this._log.trace("Outgoing: " + out);
 
-          out.encrypt(ID.get("WeaveCryptoID"));
+          out.encrypt();
           up.pushData(out);
         }
         catch(ex) {
@@ -716,16 +694,6 @@ SyncEngine.prototype = {
       // Final upload
       if (count % MAX_UPLOAD_RECORDS > 0)
         doUpload(count >= MAX_UPLOAD_RECORDS ? "last batch" : "all");
-    }
-
-    // Update local timestamp.
-    this.lastSyncLocal = this._maybeLastSyncLocal;
-    delete this._modified;
-    delete this._backupChangedIDs;
-
-    // Mark failed WBOs as changed again so they are reuploaded next time.
-    for (let id in failed) {
-      this._tracker.addChangedID(id, failed[id]);
     }
   },
 
@@ -758,13 +726,16 @@ SyncEngine.prototype = {
     }
   },
 
-  _rollback: function _rollback() {
-    if (!this._backupChangedIDs)
+  _syncCleanup: function _syncCleanup() {
+    if (!this._modified)
       return;
 
-    for (let [id, when] in Iterator(this._backupChangedIDs)) {
+    // Mark failed WBOs as changed again so they are reuploaded next time.
+    for (let [id, when] in Iterator(this._modified)) {
       this._tracker.addChangedID(id, when);
     }
+    delete this._modified;
+    delete this._modifiedIDs;
   },
 
   _sync: function SyncEngine__sync() {
@@ -775,11 +746,8 @@ SyncEngine.prototype = {
       Observers.notify("weave:engine:sync:status", "upload-outgoing");
       this._uploadOutgoing();
       this._syncFinish();
-    }
-    catch (e) {
-      this._rollback();
-      this._log.warn("Sync failed");
-      throw e;
+    } finally {
+      this._syncCleanup();
     }
   },
 
@@ -792,9 +760,8 @@ SyncEngine.prototype = {
     test.limit = 1;
     test.sort = "newest";
     test.full = true;
-    let self = this;
     test.recordHandler = function(record) {
-      record.decrypt(ID.get("WeaveCryptoID"), self.cryptoMetaURL);
+      record.decrypt();
       canDecrypt = true;
     };
 
@@ -814,10 +781,8 @@ SyncEngine.prototype = {
     this.resetLastSync();
   },
 
-  wipeServer: function wipeServer(ignoreCrypto) {
+  wipeServer: function wipeServer() {
     new Resource(this.engineURL).delete();
-    if (!ignoreCrypto)
-      new Resource(this.cryptoMetaURL).delete();
     this._resetClient();
   }
 };

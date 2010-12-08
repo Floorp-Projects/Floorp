@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- Test: if select has a custom error, it should be affected by :-moz-ui-invalid
+             pseudo-class. -->
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <body onload="document.getElementById('s').selectedIndex = 0;
+                document.forms[0].reset();
+                document.documentElement.className='';">
+    <form>
+      <select id='s' class='notinvalid' id='s' required>
+        <option value="">foo</option>
+      </select>
+    </form>
+  </body>
+</html>

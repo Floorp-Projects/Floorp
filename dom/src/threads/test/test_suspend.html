@@ -1,4 +1,4 @@
-﻿<!DOCTYPE HTML>
+<!DOCTYPE HTML>
 <html>
 <head>
   <title>Test for DOM Worker Threads</title>
@@ -70,7 +70,7 @@
     if (finished) {
       return;
     }
-    ok(false, "shouldn't get here!");
+    ok(false, "We don't want suspend_iframe.html to fire a new load event, we want it to come out of the bfcache!");
     finishTest();
   }
 
@@ -83,7 +83,8 @@
     is(resumed, false, "Already resumed?");
     setCachePref(false);
     suspended = true;
-    iframe.onload = badOnloadCallback;
+    var iframeElement = document.getElementById("workerFrame");
+    iframeElement.onload = badOnloadCallback;
     oldMessageCount = lastCount;
     interval = setInterval(waitInterval, 1000);
   }
@@ -100,6 +101,10 @@
       if (lastCount == 50) {
         setCachePref(true);
         iframe.location = "about:blank";
+        // We want suspend_iframe.html to go into bfcache, so we need to flush
+        // out all pending notifications. Otherwise, if they're flushed too
+        // late, they could kick us out of the bfcache again.
+        iframe.document.body.offsetTop;
       }
       return;
     }

@@ -47,6 +47,7 @@
 #include "jsgcchunk.h"
 #include "nsIMemoryReporter.h"
 #include "mozilla/FunctionTimer.h"
+#include "prsystem.h"
 
 /***************************************************************************/
 
@@ -237,6 +238,12 @@ ContextCallback(JSContext *cx, uintN operation)
         }
     }
     return JS_TRUE;
+}
+
+xpc::CompartmentPrivate::~CompartmentPrivate()
+{
+    if (waiverWrapperMap)
+        delete waiverWrapperMap;
 }
 
 static JSBool
@@ -544,6 +551,27 @@ DoDeferredRelease(nsTArray<T> &array)
     }
 }
 
+static JSDHashOperator
+SweepWaiverWrappers(JSDHashTable *table, JSDHashEntryHdr *hdr,
+                    uint32 number, void *arg)
+{
+    JSObject *key = ((JSObject2JSObjectMap::Entry *)hdr)->key;
+    JSObject *value = ((JSObject2JSObjectMap::Entry *)hdr)->value;
+    if(IsAboutToBeFinalized(key) || IsAboutToBeFinalized(value))
+        return JS_DHASH_REMOVE;
+    return JS_DHASH_NEXT;
+}
+
+static PLDHashOperator
+SweepCompartment(nsCStringHashKey& aKey, JSCompartment *compartment, void *aClosure)
+{
+    xpc::CompartmentPrivate *priv = (xpc::CompartmentPrivate *)
+        JS_GetCompartmentPrivate((JSContext *)aClosure, compartment);
+    if (priv->waiverWrapperMap)
+        priv->waiverWrapperMap->Enumerate(SweepWaiverWrappers, nsnull);
+    return PL_DHASH_NEXT;
+}
+
 // static
 JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
 {
@@ -596,8 +624,13 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
                         Enumerate(WrappedJSDyingJSObjectFinder, &data);
                 }
 
-                // Find dying scopes...
+                // Find dying scopes.
                 XPCWrappedNativeScope::FinishedMarkPhaseOfGC(cx, self);
+
+                // Sweep compartments.
+                self->GetCompartmentMap().EnumerateRead(
+                    (XPCCompartmentMap::EnumReadFunction)
+                    SweepCompartment, cx);
 
                 self->mDoingFinalization = JS_TRUE;
                 break;
@@ -1313,7 +1346,9 @@ XPCJSRuntime::OnJSContextNew(JSContext *cx)
         return JS_FALSE;
 
     JS_SetNativeStackQuota(cx, 128 * sizeof(size_t) * 1024);
-    JS_SetScriptStackQuota(cx, 25 * sizeof(size_t) * 1024 * 1024);
+    PRInt64 totalMemory = PR_GetPhysicalMemorySize();
+    JS_SetScriptStackQuota(cx, PR_MAX(25 * sizeof(size_t) * 1024 * 1024,
+                                      totalMemory / 4));
 
     // we want to mark the global object ourselves since we use a different color
     JS_ToggleOptions(cx, JSOPTION_UNROOTED_GLOBAL);

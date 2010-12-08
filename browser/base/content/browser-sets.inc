@@ -80,7 +80,7 @@
     <command id="View:PageInfo" oncommand="BrowserPageInfo();"/>
     <command id="View:FullScreen" oncommand="BrowserFullScreen();"/>
     <command id="cmd_find"
-             oncommand="gFindBar.onFindCommand();"
+             oncommand="if (TabView.isVisible()) TabView.enableSearch(event); else gFindBar.onFindCommand();"
              observes="isImage"/>
     <command id="cmd_findAgain"
              oncommand="gFindBar.onFindAgainCommand(false);"

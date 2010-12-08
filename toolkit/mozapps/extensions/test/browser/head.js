@@ -26,6 +26,7 @@ const MANAGER_URI = "about:addons";
 const INSTALL_URI = "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul";
 const PREF_LOGGING_ENABLED = "extensions.logging.enabled";
 const PREF_SEARCH_MAXRESULTS = "extensions.getAddons.maxResults";
+const PREF_DISCOVERURL = "extensions.webservice.discoverURL";
 
 var gPendingTests = [];
 var gTestsRun = 0;
@@ -37,6 +38,8 @@ var gUseInContentUI = !gTestInWindow && ("switchToTabHavingURI" in window);
 Services.prefs.setBoolPref(PREF_LOGGING_ENABLED, true);
 // Turn off remote results in searches
 Services.prefs.setIntPref(PREF_SEARCH_MAXRESULTS, 0);
+// Default to a local discovery pane
+Services.prefs.setCharPref(PREF_DISCOVERURL, "http://127.0.0.1/extensions-dummy/discoveryURL");
 registerCleanupFunction(function() {
   Services.prefs.clearUserPref(PREF_LOGGING_ENABLED);
   try {
@@ -289,6 +292,14 @@ function wait_for_window_open(aCallback) {
     onWindowTitleChange: function(aWindow, aTitle) {
     }
   });
+}
+
+function get_string(aName) {
+  var bundle = Services.strings.createBundle("chrome://mozapps/locale/extensions/extensions.properties");
+  if (arguments.length == 1)
+    return bundle.GetStringFromName(aName);
+  var args = Array.slice(arguments, 1);
+  return bundle.formatStringFromName(aName, args, args.length);
 }
 
 function is_hidden(aElement) {
@@ -982,6 +993,22 @@ MockInstall.prototype = {
           return;
         }
 
+        // Adding addon to MockProvider to be implemented when needed
+        if (this._addonToInstall)
+          this.addon = this._addonToInstall;
+        else {
+          this.addon = new MockAddon("", this.name, this.type);
+          this.addon.version = this.version;
+          this.addon.pendingOperations = AddonManager.PENDING_INSTALL;
+        }
+        this.addon.install = this;
+        if (this.existingAddon) {
+          if (!this.addon.id)
+            this.addon.id = this.existingAddon.id;
+          this.existingAddon.pendingUpgrade = this.addon;
+          this.existingAddon.pendingOperations |= AddonManager.PENDING_UPGRADE;
+        }
+
         this.state = AddonManager.STATE_DOWNLOADED;
         this.callListeners("onDownloadEnded");
 
@@ -993,13 +1020,7 @@ MockInstall.prototype = {
           return;
         }
 
-        // Adding addon to MockProvider to be implemented when needed
-        if (this._addonToInstall)
-          this.addon = this._addonToInstall;
-        else {
-          this.addon = new MockAddon("", this.name, this.type);
-          this.addon.pendingOperations = AddonManager.PENDING_INSTALL;
-        }
+        AddonManagerPrivate.callAddonListeners("onInstalling", this.addon);
 
         this.state = AddonManager.STATE_INSTALLED;
         this.callListeners("onInstallEnded");

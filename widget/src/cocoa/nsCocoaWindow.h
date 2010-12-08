@@ -258,7 +258,8 @@ public:
     NS_IMETHOD Invalidate(const nsIntRect &aRect, PRBool aIsSynchronous);
     NS_IMETHOD Update();
     virtual nsresult ConfigureChildren(const nsTArray<Configuration>& aConfigurations);
-    virtual LayerManager* GetLayerManager(bool* aAllowRetaining = nsnull);
+    virtual LayerManager* GetLayerManager(LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
+                                          bool* aAllowRetaining = nsnull);
     NS_IMETHOD DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus) ;
     NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener, nsIMenuRollup * aMenuRollup,
                                    PRBool aDoCapture, PRBool aConsumeRollupEvent);
@@ -280,11 +281,6 @@ public:
 
     // be notified that a some form of drag event needs to go into Gecko
     virtual PRBool DragEvent(unsigned int aMessage, Point aMouseGlobal, UInt16 aKeyModifiers);
-
-    // Helpers to prevent recursive resizing during live-resize
-    PRBool IsResizing () const { return mIsResizing; }
-    void StartResizing () { mIsResizing = PR_TRUE; }
-    void StopResizing () { mIsResizing = PR_FALSE; }
 
     PRBool HasModalDescendents() { return mNumModalDescendents > 0; }
     NSWindow *GetCocoaWindow() { return mWindow; }
@@ -338,7 +334,6 @@ protected:
   PRInt32              mShadowStyle;
   NSUInteger           mWindowFilter;
 
-  PRPackedBool         mIsResizing;     // we originated the resize, prevent infinite recursion
   PRPackedBool         mWindowMadeHere; // true if we created the window, false for embedding
   PRPackedBool         mSheetNeedsShow; // if this is a sheet, are we waiting to be shown?
                                         // this is used for sibling sheet contention only

@@ -69,6 +69,7 @@
 #include "nsIPromptFactory.h"
 #include "nsIContent.h"
 #include "mozilla/unused.h"
+#include "nsDebug.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
@@ -86,8 +87,8 @@ TabParent *TabParent::mIMETabParent = nsnull;
 NS_IMPL_ISUPPORTS3(TabParent, nsITabParent, nsIAuthPromptProvider, nsISecureBrowserUI)
 
 TabParent::TabParent()
-  : mIMECompositionEnding(PR_FALSE)
-  , mIMEComposing(PR_FALSE)
+  : mIMEComposing(PR_FALSE)
+  , mIMECompositionEnding(PR_FALSE)
 {
 }
 
@@ -495,7 +496,7 @@ TabParent::RecvGetIMEEnabled(PRUint32* aValue)
 }
 
 bool
-TabParent::RecvSetInputMode(const PRUint32& aValue, const nsString& aType)
+TabParent::RecvSetInputMode(const PRUint32& aValue, const nsString& aType, const nsString& aAction)
 {
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget || !AllowContentIME())
@@ -506,6 +507,7 @@ TabParent::RecvSetInputMode(const PRUint32& aValue, const nsString& aType)
   IMEContext context;
   context.mStatus = aValue;
   context.mHTMLInputType.Assign(aType);
+  context.mActionHint.Assign(aAction);
   widget2->SetInputMode(context);
 
   nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
@@ -534,6 +536,15 @@ TabParent::RecvSetIMEOpenState(const PRBool& aValue)
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (widget && AllowContentIME())
     widget->SetIMEOpenState(aValue);
+  return true;
+}
+
+bool
+TabParent::RecvGetDPI(float* aValue)
+{
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  NS_ABORT_IF_FALSE(widget, "Must have a widget to find the DPI!");
+  *aValue = widget->GetDPI();
   return true;
 }
 

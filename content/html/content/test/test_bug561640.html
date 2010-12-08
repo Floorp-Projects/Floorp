@@ -36,9 +36,9 @@ function checkValid(elmt)
 
 function checkInvalid(elmt)
 {
-  ok(elmt.validity.tooLong, "element should be too long");
-  is(window.getComputedStyle(elmt, null).getPropertyValue('background-color'),
-     "rgb(255, 0, 0)", ":invalid pseudo-class should apply");
+  todo(elmt.validity.tooLong, "element should be too long");
+  todo_is(window.getComputedStyle(elmt, null).getPropertyValue('background-color'),
+          "rgb(255, 0, 0)", ":invalid pseudo-class should apply");
 }
 
 for each (var elmtName in elements) {

@@ -898,6 +898,10 @@ typedef HashMap<jsbytecode*,
 
 class Oracle;
 
+typedef HashSet<JSScript *,
+                DefaultHasher<JSScript *>,
+                SystemAllocPolicy> TracedScriptSet;
+
 /*
  * Trace monitor. Every JSThread (if JS_THREADSAFE) or JSRuntime (if not
  * JS_THREADSAFE) has an associated trace monitor that keeps track of loop
@@ -924,7 +928,7 @@ struct TraceMonitor {
     TraceNativeStorage      *storage;
 
     /*
-     * There are 5 allocators here.  This might seem like overkill, but they
+     * There are 4 allocators here.  This might seem like overkill, but they
      * have different lifecycles, and by keeping them separate we keep the
      * amount of retained memory down significantly.  They are flushed (ie.
      * all the allocated memory is freed) periodically.
@@ -942,10 +946,6 @@ struct TraceMonitor {
      *   used to store LIR code and for all other elements in the LIR
      *   pipeline.
      *
-     * - reTempAlloc is just like tempAlloc, but is used for regexp
-     *   compilation in RegExpNativeCompiler rather than normal compilation in
-     *   TraceRecorder.
-     *
      * - codeAlloc has the same lifetime as dataAlloc, but its API is
      *   different (CodeAlloc vs. VMAllocator).  It's used for native code.
      *   It's also a good idea to keep code and data separate to avoid I-cache
@@ -954,7 +954,6 @@ struct TraceMonitor {
     VMAllocator*            dataAlloc;
     VMAllocator*            traceAlloc;
     VMAllocator*            tempAlloc;
-    VMAllocator*            reTempAlloc;
     nanojit::CodeAlloc*     codeAlloc;
     nanojit::Assembler*     assembler;
     FrameInfoCache*         frameCache;
@@ -997,6 +996,9 @@ struct TraceMonitor {
     // This must be used in only one place at a given time. It must be cleared
     // before use.
     TypeMap*                cachedTempTypeMap;
+
+    /* Scripts with recorded fragments. */
+    TracedScriptSet         tracedScripts;
 
 #ifdef DEBUG
     /* Fields needed for fragment/guard profiling. */
@@ -2356,16 +2358,6 @@ struct JSContext
 #else
     void assertValidStackDepth(uintN /*depth*/) {}
 #endif
-
-    enum DollarPath {
-        DOLLAR_LITERAL = 1,
-        DOLLAR_AMP,
-        DOLLAR_PLUS,
-        DOLLAR_TICK,
-        DOLLAR_QUOT
-    };
-    volatile DollarPath *dollarPath;
-    volatile jschar *blackBox;
 
 private:
 

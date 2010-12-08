@@ -370,17 +370,17 @@ _TEST_FILES2 = \
 		file_CSP_main.html \
 		file_CSP_main.html^headers^ \
 		file_CSP_main.js \
- 		test_CSP_frameancestors.html \
- 		file_CSP_frameancestors.sjs \
- 		file_CSP_frameancestors_main.html \
- 		file_CSP_frameancestors_main.js \
- 		test_CSP_inlinescript.html \
- 		file_CSP_inlinescript_main.html \
- 		file_CSP_inlinescript_main.html^headers^ \
- 		test_CSP_evalscript.html \
- 		file_CSP_evalscript_main.html \
- 		file_CSP_evalscript_main.html^headers^ \
- 		file_CSP_evalscript_main.js \
+		test_CSP_frameancestors.html \
+		file_CSP_frameancestors.sjs \
+		file_CSP_frameancestors_main.html \
+		file_CSP_frameancestors_main.js \
+		test_CSP_inlinescript.html \
+		file_CSP_inlinescript_main.html \
+		file_CSP_inlinescript_main.html^headers^ \
+		test_CSP_evalscript.html \
+		file_CSP_evalscript_main.html \
+		file_CSP_evalscript_main.html^headers^ \
+		file_CSP_evalscript_main.js \
 		test_bug540854.html \
 		bug540854.sjs \
 		test_bug548463.html \
@@ -421,9 +421,13 @@ _TEST_FILES2 = \
 		file_x-frame-options_main.html \
 		file_x-frame-options_page.sjs \
 		test_createHTMLDocument.html \
+		test_bug564047.html \
 		test_bug567350.html \
 		test_bug574596.html \
 		test_bug578096.html \
+		test_bug597345.html \
+		script-1_bug597345.sjs \
+		script-2_bug597345.js \
 		test_bug598877.html \
 		test_bug599588.html \
 		test_bug600466.html \
@@ -444,6 +448,7 @@ _TEST_FILES2 = \
 		test_bug605982.html \
 		test_bug606729.html \
 		test_treewalker_nextsibling.xml \
+		test_bug614058.html \
 		$(NULL)
 
 # This test fails on the Mac for some reason

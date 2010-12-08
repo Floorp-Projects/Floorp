@@ -134,7 +134,8 @@
 #include "nsIEditingSession.h"
 #include "nsIEditor.h"
 #include "nsNodeInfoManager.h"
-#include "nsIEditor.h"
+#include "nsIPlaintextEditor.h"
+#include "nsIHTMLEditor.h"
 #include "nsIEditorDocShell.h"
 #include "nsIEditorStyleSheets.h"
 #include "nsIInlineSpellChecker.h"
@@ -2976,7 +2977,7 @@ public:
   }
 
   NS_IMETHOD Run() {
-    if (mElement->GetOwnerDoc() == mDoc) {
+    if (mElement && mElement->GetOwnerDoc() == mDoc) {
       mDoc->DeferredContentEditableCountChange(mElement);
     }
     return NS_OK;
@@ -3263,6 +3264,22 @@ nsHTMLDocument::EditingStateChanged()
   nsresult rv;
   nsCOMPtr<nsIEditingSession> editSession = do_GetInterface(docshell, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIEditor> existingEditor;
+  editSession->GetEditorForWindow(window, getter_AddRefs(existingEditor));
+  if (existingEditor) {
+    // We might already have an editor if it was set up for mail, let's see
+    // if this is actually the case.
+    nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(existingEditor);
+    NS_ABORT_IF_FALSE(htmlEditor, "If we have an editor, it must be an HTML editor");
+    PRUint32 flags = 0;
+    existingEditor->GetFlags(&flags);
+    if (flags & nsIPlaintextEditor::eEditorMailMask) {
+      // We already have a mail editor, then we should not attempt to create
+      // another one.
+      return NS_OK;
+    }
+  }
 
   if (!HasPresShell(window)) {
     // We should not make the window editable or setup its editor.

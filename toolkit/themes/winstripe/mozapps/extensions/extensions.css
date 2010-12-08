@@ -36,37 +36,92 @@
  * ***** END LICENSE BLOCK ***** */
 
 #addons-page {
-  background-color: #c5ccd7;
   -moz-appearance: none;
-  margin: 20px;
+  padding: 18px;
+  background-repeat: repeat;
+  color: -moz-dialogText;
+  background-color: -moz-dialog;
+  background-image: /* Fade-out texture at the top, and blend with browser tab */
+                    -moz-linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0) 30%),
+                    /* Texture */
+                    url("chrome://mozapps/skin/extensions/background-texture.png");
 }
+
+%ifdef WINSTRIPE_AERO
+@media all and (-moz-windows-default-theme) {
+  #addons-page {
+    color: #000;
+    background-color: #CCD9EA;
+    background-image: /* Fade-out texture at the top */
+                      -moz-linear-gradient(top, rgb(231,237,246), rgba(231,237,246,0) 156px),
+                      /* Texture */
+                      url("chrome://mozapps/skin/extensions/background-texture.png");
+  }
+}
+@media all and (-moz-windows-compositor) {
+  #addons-page {
+    border: 1px solid rgb(40%, 40%, 40%);
+    border-top: none;
+    color: #000;
+    /* Blame shorlander for this monstrosity. */
+    background-image: /* Fade-out texture and light beams at the top */
+                      -moz-linear-gradient(top, rgb(231,237,246) 3px, rgba(231,237,246,0) 156px),
+                      /* Side gradients */
+                      -moz-linear-gradient(left,
+                                           rgba(255,255,255,0.2), rgba(255,255,255,0) 40%,
+                                           rgba(255,255,255,0) 60%, rgba(255,255,255,0.2)),
+                      /* Aero-style light beams */
+                      -moz-linear-gradient(left 32deg,
+                                           /* First light beam */
+                                           rgba(255,255,255,0) 19.5%, rgba(255,255,255,0.1) 20%,
+                                           rgba(255,255,255,0.1) 21.5%, rgba(255,255,255,0.2) 22%,
+                                           rgba(255,255,255,0.2) 25.5%, rgba(255,255,255,0.1) 26%,
+                                           rgba(255,255,255,0.1) 27.5%, rgba(255,255,255,0) 28%,
+                                           /* Second light beam */
+                                           rgba(255,255,255,0) 49.5%, rgba(255,255,255,0.1) 50%,
+                                           rgba(255,255,255,0.1) 52.5%, rgba(255,255,255,0.2) 53%,
+                                           rgba(255,255,255,0.2) 54.5%, rgba(255,255,255,0.1) 55%,
+                                           rgba(255,255,255,0.1) 57.5%, rgba(255,255,255,0) 58%,
+                                           /* Third light beam */
+                                           rgba(255,255,255,0) 87%, rgba(255,255,255,0.2) 90%),
+                      /* Texture */
+                      url("chrome://mozapps/skin/extensions/background-texture.png");
+  }
+}
+%endif
 
 #view-port-container {
   /* Needed to allow the radius to clip the inner content, see bug 595656 */
   overflow: hidden;
-  background-color: #d2d7df;
-  border: 1px solid black;
+  background-color: rgba(255, 255, 255, 0.35);
+  background-image: -moz-linear-gradient(top,
+                                         rgba(255, 255, 255, 0),
+                                         rgba(255, 255, 255, 0.75));
+  border: 1px solid #C3CEDF;
   border-radius: 5px;
 }
 
 .nav-button {
   list-style-image: url(chrome://mozapps/skin/extensions/navigation.png);
   min-width: 0;
-  -moz-margin-end: 0;
 }
 
-.nav-button[disabled="true"] .button-icon {
-  opacity: 0.4;
+#forward-btn {
+  -moz-border-start: none;
 }
 
 #back-btn:-moz-locale-dir(ltr),
 #forward-btn:-moz-locale-dir(rtl) {
   -moz-image-region: rect(0, 18px, 18px, 0);
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
 }
 
 #back-btn:-moz-locale-dir(rtl),
 #forward-btn:-moz-locale-dir(ltr) {
   -moz-image-region: rect(0, 36px, 18px, 18px);
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
 }
 
 /*** global warnings ***/
@@ -89,44 +144,109 @@
 
 #addons-page[warning] .global-warning-container {
   background-color: rgba(255, 255, 0, 0.1);
-  background-image: url("chrome://mozapps/skin/extensions/warning-stripes.png");
+  background-image: url("chrome://mozapps/skin/extensions/stripes-warning.png");
   background-repeat: repeat-x;
 }
 
 #detail-view .global-warning {
   padding: 4px 12px;
-  border-bottom: 1px solid #A8A8A8;  
+  border-bottom: 1px solid #CAD4E0;  
 }
 
-@media all and (max-width: 700px) {
+@media all and (max-width: 600px) {
   .global-warning-text {
     display: none;
   }
+
+  .global-warning .warning-icon {
+    background-color: #FFF;
+    box-shadow: 0px 0px 2px 5px #FFF;
+    border-radius: 10px;
+  }
 }
+
+/* Plugins aren't yet disabled by safemode (bug 342333),
+   so don't show that warning when viewing plugins. */
+#addons-page[warning="safemode"] .view-pane[type="plugin"] .global-warning-container,
+#addons-page[warning="safemode"] #detail-view[loading="true"] .global-warning-container {
+  background-color: inherit;
+  background-image: none;
+}
+
 
 /*** notification icons ***/
 
 .warning-icon {
-  list-style-image: url("chrome://global/skin/icons/warning-16.png");
+  list-style-image: url("chrome://mozapps/skin/extensions/alerticon-warning.png");
   width: 16px;
-  height: 16px;
+  height: 15px;
   margin: 3px 0;
 }
 
 .error-icon {
-  list-style-image: url("chrome://global/skin/icons/error-16.png");
+  list-style-image: url("chrome://mozapps/skin/extensions/alerticon-error.png");
   width: 16px;
-  height: 16px;
+  height: 15px;
   margin: 3px 0;
 }
 
 .pending-icon,
 .info-icon {
-  list-style-image: url("chrome://global/skin/icons/information-16.png");
+  list-style-image: url("chrome://mozapps/skin/extensions/alerticon-info-positive.png");
   width: 16px;
-  height: 16px;
+  height: 15px;
   margin: 3px 0;
 }
+
+.addon-view[pending="disable"] .pending-icon,
+.addon-view[pending="uninstall"] .pending-icon {
+  list-style-image: url("chrome://mozapps/skin/extensions/alerticon-info-negative.png");
+  width: 16px;
+  height: 15px;
+  margin: 3px 0;
+}
+
+
+/*** view alert boxes ***/
+
+.alert-container {
+  -moz-box-align: center;
+}
+
+.alert-spacer-before {
+  -moz-box-flex: 1;
+}
+
+.alert-spacer-after {
+  -moz-box-flex: 3;
+}
+
+.alert {
+  -moz-box-align: center;
+  padding: 10px;
+  color: #373D48;
+  border: 1px solid #A8B8D1;
+  border-radius: 8px;
+  background-image: -moz-linear-gradient(top, #FFF, #ECF1F7);
+  box-shadow: 2px 2px 4px #999; 
+}
+
+.alert .alert-title {
+  font-weight: bold;
+  font-size: 200%;
+  margin-bottom: 15px;
+}
+
+.alert .addon-control {
+  margin: 1em 2em;
+}
+
+.loading {
+  list-style-image: url("chrome://global/skin/icons/loading_16.png");
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
 
 /*** category selector ***/
 
@@ -136,18 +256,20 @@
   -moz-margin-end: -1px;
   background-color: transparent;
   position: relative;
+  margin-top: 31px;
 }
 
 .category {
   -moz-appearance: none;
+  background-color: transparent;
+  color: #252F3B;
+  min-height: 0;
+  padding: 10px 4px;
   border-width: 1px;
-  -moz-border-end-width: 0;
   border-style: solid;
   border-color: transparent;
-  padding: 10px 4px;
   -moz-box-align: center;
   overflow: hidden;
-  min-height: 0px;
 }
 
 .category:-moz-locale-dir(ltr) {
@@ -161,7 +283,7 @@
 }
 
 .category[disabled] {
-  height: 0px;
+  height: 0;
   opacity: 0;
   -moz-transition-property: height, opacity;
   -moz-transition-duration: 1s, 0.8s;
@@ -174,19 +296,28 @@
 }
 
 .category[selected] {
-  background-color: #d4d9e1;
-  color: -moz-dialogtext;
-  border-color: black;
+  background-color: rgba(255, 255, 255, 0.4);
+  color: #252F3B;
+  font-weight: bold;
+  border-color: #C3CEDF;
+  -moz-border-end-color: #E2E9F2;
 }
 
 .category-name {
   font-size: 150%;
 }
 
+/* Maximize the size of the viewport when the window is small */
+@media all and (max-width: 800px) {
+  .category-name {
+    display: none;
+  }
+}
+
 .category-badge {
   background-color: #55D4FF;
   padding: 2px 8px;
-  margin: 6px 0px;
+  margin: 6px 0;
   border-radius: 10000px;
   color: #FFF;
   font-weight: bold;
@@ -235,68 +366,42 @@
 /*** header ***/
 
 #header {
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
-#header-name, #header-link {
-  color: #555;
-  text-shadow: 1px 1px 1px #EEE;
-}
-
-#header-name {
-  font-size: 180%;
-}
-
-#header-link {
+#header-search {
   -moz-appearance: none;
-  border: none;
-  background: transparent;
-  font-size: 120%;
-  cursor: pointer;
-  list-style-image: url("chrome://mozapps/skin/extensions/go-back.png");
+  color: black;
+  border: 1px solid;
+  border-color: rgba(0, 0, 0, 0.25) rgba(0, 0, 0, 0.32) rgba(0, 0, 0, 0.37);
+  border-radius: 4px;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1) inset,
+              0 1px 0 rgba(255, 255, 255, 0.4);
+  padding: 3px;
+  background-color: rgba(255, 255, 255, 0.8);
+  margin: 0;
 }
 
-#header-link .button-icon {
-  -moz-margin-end: 6px;
+#header-search .textbox-input:-moz-placeholder {
+  color: grey;
 }
 
-#header-searching {
-  list-style-image: url("chrome://global/skin/icons/loading_16.png");
+#header-search[focused="true"] {
+  background-color: white;
 }
 
 #header-utils-btn {
-  -moz-appearance: none;
   min-width: 4.5em;
-  border-width: 1px;
-  -moz-border-top-colors: #999;
-  -moz-border-bottom-colors: #999;
-  -moz-border-left-colors: #999;
-  -moz-border-right-colors: #999;
-  border-radius: 8px;
-  background-image: -moz-linear-gradient(#FFF, #BBB);
   list-style-image: url("chrome://mozapps/skin/extensions/utilities.png");
-}
-
-#header-utils-btn:hover,
-#header-utils-btn[open="true"] {
-  -moz-border-top-colors: #777;
-  -moz-border-bottom-colors: #777;
-  -moz-border-left-colors: #777;
-  -moz-border-right-colors: #777;
-}
-
-#header-utils-btn[open="true"] {
-  box-shadow: inset 3px 3px 5.5px #555;
-}
-
-#header-utils-btn:-moz-focusring > .button-box {
-  border: none;
+  -moz-margin-end: 18px;
 }
 
 .view-header {
+  background-color: rgba(251, 252, 253, 0.25);
   padding: 4px;
-  margin: 0px;
-  border-bottom: 1px solid #A8A8A8;
+  margin: 0;
+  min-height: 31px;
+  border-bottom: 1px solid #CAD4E0;
 }
 
 
@@ -310,16 +415,23 @@
   -moz-appearance: none;
   border: none;
   background-color: transparent;
+  color: #536680;
   border-radius: 10000px;
-  padding: 0px 6px;
-  margin: 0px 6px;
+  padding: 0 6px;
+  margin: 0 6px;
   min-width: 12px !important;
   -moz-box-direction: reverse;
 }
 
+.sorter .button-box {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
 .sorter[checkState="1"],
 .sorter[checkState="2"] {
-  background-color: #DADADA;
+  background-color: rgba(194, 200, 206, 0.4);
+  box-shadow: 1px 1px 2px #B6BBC4 inset;
 }
 
 .sorter[checkState="1"] {
@@ -335,29 +447,35 @@
 }
 
 
-/*** empty list notification ***/
-
-.empty-list-notice {
-  -moz-box-align: center;
-}
-
-.empty-list-notice > button {
-  margin: 20px;
-}
-
-
 /*** list ***/
 
 .list {
   -moz-appearance: none;
-  margin: 0px;
+  margin: 0;
   border: none;
   background-color: transparent;
 }
 
 .addon {
-  border-bottom: 1px solid #F2F2F2;
+  color: black;
+  border-top: 2px solid;
+  -moz-border-top-colors: rgba(0, 0, 0, 0.1) rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid;
+  -moz-border-bottom-colors: rgba(255, 255, 255, 0.1);
   padding: 5px;
+  background-origin: border-box;
+}
+
+.view-pane:not(#search-view) .addon:first-of-type,
+#search-view .addon[first] {
+  border-top-width: 1px;
+  -moz-border-top-colors: rgba(255, 255, 255, 0.1);
+}
+
+.view-pane:not(#search-view) .addon:last-of-type,
+#search-view .addon[last] {
+  border-bottom-width: 2px;
+  -moz-border-bottom-colors: rgba(0, 0, 0, 0.1) rgba(255, 255, 255, 0.1);
 }
 
 .addon[status="installing"] {
@@ -373,7 +491,7 @@
 .icon-container {
   width: 48px;
   height: 48px;
-  margin: 7px;
+  margin: 22px 7px 7px 7px;
 }
 
 .icon {
@@ -381,6 +499,11 @@
   max-width: 48px;
   max-height: 48px;
 }
+
+.addon[active="false"] .icon {
+  filter: url("chrome://mozapps/skin/extensions/extensions.svg#greyscale");
+}
+
 
 .addon-view[type="theme"] .icon {
   list-style-image: url("chrome://mozapps/skin/extensions/themeGeneric.png");
@@ -394,9 +517,21 @@
   list-style-image: url("chrome://mozapps/skin/plugins/pluginGeneric.png");
 }
 
-.name-container {
+.name-container,
+.addon[status="installing"] .name {
   font-size: 150%;
-  margin-bottom: 0px;
+  font-weight: bold;
+  color: #3F3F3F;
+  margin-bottom: 0;
+  text-shadow: 1px 1px 1px #FFF;
+}
+
+.creator {
+  font-weight: bold;
+}
+
+.creator .text-link {
+  color: #0066CC;
 }
 
 .description-container {
@@ -408,48 +543,35 @@
   margin: 0;
 }
 
-.warning, .pending, .error, .info {
+.warning,
+.pending,
+.error {
   -moz-margin-start: 48px;
+  font-weight: bold;
+  text-shadow: 1px 1px 1px #FFF;
 }
 
-.addon-view:not([selected]) .warning {
-  color: #90792E;
+.addon-view .warning {
+  color: #916D15;
 }
 
-.addon-view:not([selected]) .error {
-  color: #7C322B;
+.addon-view .error {
+  color: #864441;
 }
 
-.addon-view:not([selected]) .pending {
-  color: #4F7939;
+.addon-view .pending {
+  color: #1B7123;
 }
 
-.addon-view[notification="warning"] {
-  background-image: -moz-linear-gradient(rgba(255, 255, 0, 0.2), rgba(255, 255, 0, 0.1));
-}
-
-.addon-view[notification="error"] {
-  background-image: -moz-linear-gradient(rgba(255, 0, 0, 0.2), rgba(255, 0, 0, 0.1));
-}
-
-.addon-view[notification="info"] {
-  background-image: -moz-linear-gradient(rgba(0, 0, 255, 0.2), rgba(0, 0, 255, 0.1));
-}
-
-.addon-view[pending="enable"],
-.addon-view[pending="upgrade"],
-.addon-view[pending="install"] {
-  background-image: -moz-linear-gradient(rgba(0, 255, 0, 0.2), rgba(0, 255, 0, 0.1));
-}
-
-.addon-view[pending="disable"],
-.addon-view[pending="uninstall"] {
-  background-image: -moz-linear-gradient(rgba(128, 128, 128, 0.2), rgba(128, 128, 128, 0.1));
+.addon-view[pending="disable"] .pending,
+.addon-view[pending="uninstall"] .pending {
+  color: #62666E;
 }
 
 .addon .relnotes-container {
   -moz-box-align: start;
-  height: 0px;
+  -moz-margin-start: 6px;
+  height: 0;
   overflow: hidden;
   opacity: 0;
   -moz-transition-property: height, opacity;
@@ -464,7 +586,7 @@
 
 .addon .relnotes-header {
   font-weight: bold;
-  margin: 10px 0px;
+  margin: 10px 0;
 }
 
 .addon .relnotes-toggle {
@@ -483,6 +605,61 @@
 
 .addon[show-relnotes] .relnotes-toggle {
   list-style-image: url("chrome://global/skin/arrow/arrow-up.gif");
+}
+
+.addon[active="false"] {
+  background-color: rgba(135, 135, 135, 0.1);
+  background-image: -moz-linear-gradient(rgba(135, 135, 135, 0),
+                                         rgba(135, 135, 135, 0.1));
+}
+
+.addon-view[active="false"],
+.addon-view[active="false"] .name-container {
+  color: #888A8B;
+}
+
+.addon-view[notification="warning"] {
+  background-image: url("chrome://mozapps/skin/extensions/stripes-warning.png"),
+                    -moz-linear-gradient(rgba(255, 255, 0, 0.04),
+                                         rgba(255, 255, 0, 0));
+  background-repeat: repeat-x;
+}
+
+.addon-view[notification="error"] {
+  background-image: url("chrome://mozapps/skin/extensions/stripes-error.png"),
+                    -moz-linear-gradient(rgba(255, 0, 0, 0.04),
+                                         rgba(255, 0, 0, 0));
+  background-repeat: repeat-x;
+}
+
+.addon-view[pending="enable"],
+.addon-view[pending="upgrade"],
+.addon-view[pending="install"] {
+  background-image: url("chrome://mozapps/skin/extensions/stripes-info-positive.png"),
+                    -moz-linear-gradient(rgba(0, 255, 0, 0.04),
+                                         rgba(0, 255, 0, 0));
+  background-repeat: repeat-x;
+}
+
+.addon-view[pending="disable"],
+.addon-view[pending="uninstall"] {
+  background-image: url("chrome://mozapps/skin/extensions/stripes-info-negative.png"),
+                    -moz-linear-gradient(rgba(128, 128, 128, 0.04),
+                                         rgba(128, 128, 128, 0));
+  background-repeat: repeat-x;
+}
+
+.addon[selected] {
+  background-color: rgba(148, 172, 204, 0.39);
+  color: black;
+}
+
+.addon[selected] .name-container {
+  text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.7);  
+}
+
+.addon[active="false"][selected] .name-container {
+  color: #3F3F3F;
 }
 
 
@@ -511,6 +688,7 @@
 #search-filter {
   padding: 5px 20px;
   font-size: 120%;
+  border-bottom: 1px solid #CAD4E0;
   overflow-x: hidden;
 }
 
@@ -521,8 +699,8 @@
 
 .search-filter-radio {
   -moz-appearance: none;
-  padding: 0px 6px;
-  margin: 0px 3px;
+  padding: 0 6px;
+  margin: 0 3px;
   border-radius: 10000px;
 }
 
@@ -546,48 +724,41 @@
 
 /*** detail view ***/
 
-#detail-view[active="false"] .fade {
-  opacity: 0.6;
-}
-
 #detail-view .loading {
   opacity: 0;
 }
 
-#detail-view:not([loading]) .loading {
+#detail-view:not([loading]) .alert-container {
   visibility: collapse;
 }
 
 #detail-view[loading-extended] .loading {
-  -moz-box-align: center;
-  -moz-box-pack: center;
   opacity: 1;
   -moz-transition-property: opacity;
   -moz-transition-duration: 1s;
 }
 
-#detail-view .loading > image {
-  list-style-image: url("chrome://global/skin/icons/loading_16.png");
-}
-
 .detail-view-container {
-  padding: 2em;
+  padding: 0 2em 2em 2em;
   font-size: 110%;
 }
 
 #detail-notifications {
+  margin-top: 1em;
   margin-bottom: 2em;
 }
 
 #detail-notifications .warning,
 #detail-notifications .pending,
-#detail-notifications .error,
-#detail-notifications .info {
+#detail-notifications .error {
   -moz-margin-start: 0;
 }
 
 #detail-icon {
   -moz-margin-end: 10px;
+  margin-top: 6px;
+  max-width: 64px;
+  max-height: 64px;
 }
 
 #detail-summary {
@@ -612,42 +783,63 @@
      bug 592712*/
   outline: solid transparent;
   white-space: pre-wrap;
+  min-width: 8em;
 }
 
 #detail-contributions {
   border-radius: 5px;
-  border: 1px solid #B0C8D1;
+  border: 1px solid #D2DBE8;
   margin-bottom: 2em;
   padding: 1em;
-  background: #D8DDE4;
+  background-color: #F3F7FB;
 }
 
 #detail-contrib-description {
   font-style: italic;
   margin-bottom: 1em;
+  color: #373D48;
 }
 
 #detail-contrib-suggested {
   color: grey;
+  font-weight: bold;
 }
 
-#detail-contrib-button {
+#detail-contrib-btn {
   -moz-appearance: none;
   color: #FFF;
-  text-shadow: #4C9EF8 -1px -1px 1px;
-  border: 1px solid #4C9EF8;
-  border-radius: 2px;
-  background-image: -moz-linear-gradient(#93C5FA, #4C9EF8);
+  border: 1px solid #3A4EEE;
+  border-radius: 3px;
   list-style-image: url("chrome://mozapps/skin/extensions/heart.png");
+  background-color: #2F73EF;
+  background-image: -moz-linear-gradient(rgba(251, 252, 253, 0.70), rgba(246, 247, 248, 0.27) 49%, 
+                                         rgba(231, 232, 233, 0.25) 51%, rgba(225, 226, 229, 0.1));
 }
 
-#detail-contrib-button .button-icon {
+#detail-contrib-btn .button-box {
+  padding: 0 6px 1px 6px;
+}
+
+#detail-contrib-btn .button-icon {
   -moz-margin-end: 3px;
 }
 
-#detail-contrib-button:hover {
+#detail-contrib-btn:not(:active):hover {
   border-color: #4271FF;
-  background-image: -moz-linear-gradient(#49CEFF, #4271FF);
+  background-color: #0459F7;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1),
+              0 0 3.5px hsl(190, 90%, 80%);
+  -moz-transition: background-color .4s ease-in,
+                   border-color .3s ease-in,
+                   box-shadow .3s ease-in
+}
+
+#detail-contrib-btn:active:hover {
+  background-color: #8FA1C1;
+  border-color: rgba(0, 0, 0, 0.65) rgba(0, 0, 0, 0.55) rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 6.5px rgba(0, 0, 0, 0.4) inset,
+              0 0 2px rgba(0, 0, 0, 0.4) inset,
+              0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
 #detail-grid {
@@ -661,7 +853,8 @@
 
 .detail-row,
 .detail-row-complex {
-  border-top: 1px solid grey;
+  border-top: 2px solid;
+  -moz-border-top-colors: rgba(28, 31, 37, 0.1) rgba(255, 255, 255, 0.1);
   -moz-box-align: center;
 }
 
@@ -669,12 +862,20 @@
   -moz-margin-start: 0;
 }
 
+#detail-controls {
+  margin-bottom: 1em;
+}
+
+#detail-view[active="false"]:not([pending]):not([notification]) {
+  background-image: -moz-linear-gradient(rgba(135, 135, 135, 0.1),
+                                         rgba(135, 135, 135, 0));
+}
 
 /*** creator ***/
 
 .creator > label {
-  -moz-margin-start: 0px;
-  -moz-margin-end: 0px;
+  -moz-margin-start: 0;
+  -moz-margin-end: 0;
 }
 
 .creator > .text-link {
@@ -686,86 +887,133 @@
 /*** rating ***/
 
 .meta-rating {
-  -moz-margin-start: 0px;
-  -moz-margin-end: 0px;
-  vertical-align: text-top;
+  -moz-margin-start: 0;
+  -moz-margin-end: 0;
+  padding-top: 2px;
 }
 
-.meta-rating[showrating="average"] > .star {
+.meta-rating > .star {
   list-style-image: url("chrome://mozapps/skin/extensions/rating-not-won.png");
-  padding: 0px 1px;
+  padding: 0 1px;
 }
 
-.meta-rating[showrating="user"] > .star {
-  list-style-image: url("chrome://mozapps/skin/extensions/rating-unrated.png");
-  padding: 2px 3px;
-}
-
-.meta-rating > .star[on="true"],
-.meta-rating[showrating="user"] > .star[hover] {
+.meta-rating > .star[on="true"] {
   list-style-image: url("chrome://mozapps/skin/extensions/rating-won.png");
-  padding: 0px 1px;
 }
 
 
 /*** download progress ***/
 
 .download-progress {
-  background-image: -moz-linear-gradient(#E1E1E1, #FEFEFE);
-  border-radius: 10000px;
-  border: 1px solid #555;
-  box-shadow: #777 1px 1px 1.5px;
+  background-color: rgba(151,152,153,.05);
+  background-image: -moz-linear-gradient(rgba(251, 252, 253, 0.95), rgba(246, 247, 248, 0.47) 49%, 
+                                         rgba(231, 232, 233, 0.45) 51%, rgba(225, 226, 229, 0.3));
+  background-clip: padding-box;
+  border-radius: 3px;
+  border: 1px solid;
+  border-color: rgba(0, 0, 0, 0.12) rgba(0, 0, 0, 0.19) rgba(0, 0, 0, 0.38);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3) inset,
+              0 0 0 2px rgba(255, 255, 255, 0.1) inset;
   width: 200px;
-  height: 24px;
-  margin: 0px 8px;
+  height: 21px;
+  margin: 0 8px;
+}
+
+.download-progress[mode="undetermined"] {
+  border-color: #358942 #317F3D #2E773A;
+}
+
+.download-progress[mode="undetermined"] .status-container {
+  padding: 0 2px;
 }
 
 .download-progress .start-cap,
 .download-progress[complete] .end-cap,
+.download-progress[mode="undetermined"] .end-cap,
 .download-progress .progress .progress-bar {
   -moz-appearance: none;
-  background-image: -moz-linear-gradient(#84A9D9, #5183C0);
+  background-image: -moz-linear-gradient(#71CA83, #54B06C 49%, #43A05D 51%, #60BB76);
+  margin-top: -1px;
+  margin-bottom: -1px;
+  border: 1px solid;
+  border-color: #358942 #317F3D #2E773A;
+}
+
+.download-progress .start-cap {
+  -moz-margin-start: -1px;
+  -moz-border-end-width: 0;
+}
+
+.download-progress .end-cap {
+  -moz-margin-end: -1px;
+  -moz-border-start-width: 0px !important;
+}
+
+.download-progress .progress .progress-bar  {
+  border-left-width: 0;
+  border-right-width: 0;
+  min-height: 21px;
 }
 
 .download-progress .progress {
+  -moz-appearance: none;
   background-color: transparent;
+  padding: 0;
+  margin: 0;
+  border: none;
 }
 
-.download-progress .start-cap, .download-progress .end-cap {
-  width: 12px;
+.download-progress .start-cap,
+.download-progress .end-cap {
+  width: 4px;
 }
 
 .download-progress .start-cap:-moz-locale-dir(ltr),
 .download-progress .end-cap:-moz-locale-dir(rtl) {
-  border-radius: 10000px 0 0 10000px;
+  border-radius: 3px 0 0 3px;
 }
 
 .download-progress .end-cap:-moz-locale-dir(ltr),
 .download-progress .start-cap:-moz-locale-dir(rtl) {
-  border-radius: 0 10000px 10000px 0;
+  border-radius: 0 3px 3px 0;
 }
 
-.download-progress .progress {
+.download-progress .pause,
+.download-progress .cancel {
   -moz-appearance: none;
-  padding: 0px;
-  margin: 0px;
+  background-color: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(0, 0, 0, 0.4);
+  padding: 3px;
+  border-radius: 3px;
+  min-width: 0;
+  margin: 3px;
+}
+
+.download-progress .pause:hover,
+.download-progress .cancel:hover {
+  background-color: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(0, 0, 0, 0.8);
+}
+
+.download-progress .pause:active:hover,
+.download-progress .cancel:active:hover {
+  box-shadow: inset rgba(0, 0, 0, 0.5) 1px 1px 2px;
+}
+
+.download-progress .pause .button-box,
+.download-progress .cancel .button-box {
+  padding: 0;
   border: none;
 }
 
-.download-progress .pause, .download-progress .cancel {
-  -moz-appearance: none;
-  background-image: -moz-linear-gradient(#E1E1E1, #FEFEFE);
-  border-width: 1px 0px 0px 1px;
-  padding-right: 1px;
-  border-style: solid;
-  -moz-border-top-colors: #FFF;
-  -moz-border-left-colors: #FFF;
-  border-radius: 10000px;
-  min-width: 16px;
-  width: 16px;
-  height: 16px;
-  margin: 3px;
-  box-shadow: #777 1px 1px 1px;
+.download-progress .pause .button-text,
+.download-progress .cancel .button-text {
+  display: none;
+}
+
+.download-progress .pause .button-icon,
+.download-progress .cancel .button-icon {
+  -moz-margin-start: 0;
 }
 
 .download-progress .pause {
@@ -780,6 +1028,9 @@
   -moz-box-align: center;
 }
 
+.download-progress .status {
+  text-shadow: #FFF 0 0 2px;
+}
 
 /*** install status ***/
 
@@ -792,9 +1043,16 @@
 
 #updates-container {
   -moz-box-align: center;
+  text-shadow: 0 0 3px white;
 }
 
-#updates-installed, #updates-downloaded {
+#updates-container .button-link {
+  text-shadow: 0 0 3px white;
+  font-weight: bold;
+}
+
+#updates-installed,
+#updates-downloaded {
   color: #00BB00;
   font-weight: bold;
 }
@@ -806,6 +1064,45 @@
 
 /*** buttons ***/
 
+.addon-control {
+  -moz-appearance: none;
+  color: black;
+  padding: 0 5px;
+  background-color: rgba(151,152,153,.05);
+  background-image: -moz-linear-gradient(rgba(251, 252, 253, 0.95), rgba(246, 247, 248, 0.47) 49%, 
+                                         rgba(231, 232, 233, 0.45) 51%, rgba(225, 226, 229, 0.3));
+  background-clip: padding-box;
+  border-radius: 3px;
+  border: 1px solid;
+  border-color: rgba(0, 0, 0, 0.12) rgba(0, 0, 0, 0.19) rgba(0, 0, 0, 0.38);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3) inset,
+              0 0 0 2px rgba(255, 255, 255, 0.1) inset;
+}
+
+.addon-control:not(:active):hover {
+  background-color: hsla(190, 60%, 70%, 0.5);
+  border-color: hsla(190, 50%, 65%, 0.8) hsla(190, 50%, 50%, 0.8) hsla(190, 50%, 40%, 0.8);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3) inset,
+              0 0 0 1.5px rgba(255, 255, 255, 0.1) inset,
+              0 1px 0 rgba(0, 0, 0, 0.1),
+              0 0 3.5px hsl(190, 90%, 80%);
+  -moz-transition: background-color .4s ease-in,
+                   border-color .3s ease-in,
+                   box-shadow .3s ease-in
+}
+
+.addon-control:active:hover {
+  background-color: transparent;
+  border-color: rgba(0, 0, 0, 0.65) rgba(0, 0, 0, 0.55) rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 6.5px rgba(0, 0, 0, 0.4) inset,
+              0 0 2px rgba(0, 0, 0, 0.4) inset,
+              0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.addon-control .button-box {
+  padding: 1px;
+}
+
 .addon-control[disabled="true"] {
   display: none;
 }
@@ -815,8 +1112,67 @@
   background: transparent;
   border: none;
   text-decoration: underline;
-  color: -moz-nativehyperlinktext;
+  color: #0066CC;
   cursor: pointer;
   min-width: 0;
   margin: 0 6px;
+}
+
+.text-link {
+  color: #3386D5;
+}
+
+.button-link:hover,
+.text-link:hover {
+  color: #3DA1FF;
+}
+
+.header-button {
+  -moz-appearance: none;
+  margin: 0;
+  background: rgba(151,152,153,.05)
+              -moz-linear-gradient(rgba(251, 252, 253, 0.95), rgba(246, 247, 248, 0.47) 49%, 
+                                   rgba(231, 232, 233, 0.45) 51%, rgba(225, 226, 229, 0.3));
+  background-clip: padding-box;
+  border-radius: 4.5px;
+  border: 1px solid;
+  border-color: rgba(0, 0, 0, 0.12) rgba(0, 0, 0, 0.19) rgba(0, 0, 0, 0.38);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3) inset,
+              0 0 0 2px rgba(255, 255, 255, 0.1) inset;
+}
+
+.header-button[disabled="true"] {
+  -moz-border-top-colors: rgba(0, 0, 0, 0.12) !important;
+  -moz-border-left-colors: rgba(0, 0, 0, 0.19) !important;
+  -moz-border-right-colors: rgba(0, 0, 0, 0.19) !important;
+  -moz-border-bottom-colors: rgba(0, 0, 0, 0.38) !important;
+  opacity: 0.8;
+}
+
+.nav-button[disabled="true"] .toolbarbutton-icon {
+  opacity: 0.4;
+}
+
+.header-button:not([open="true"]):not([disabled="true"]):not(:active):hover {
+  background-color: hsla(190, 60%, 70%, 0.5);
+  border-color: hsla(190, 50%, 65%, 0.8) hsla(190, 50%, 50%, 0.8) hsla(190, 50%, 40%, 0.8);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3) inset,
+              0 0 0 1.5px rgba(255, 255, 255, 0.1) inset,
+              0 1px 0 rgba(0, 0, 0, 0.1),
+              0 0 3.5px hsl(190, 90%, 80%);
+  -moz-transition: background-color .4s ease-in,
+                   border-color .3s ease-in,
+                   box-shadow .3s ease-in
+}
+
+.header-button:not([disabled="true"]):active:hover,
+.header-button[open="true"] {
+  background-color: transparent;
+  border-color: rgba(0, 0, 0, 0.65) rgba(0, 0, 0, 0.55) rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 6.5px rgba(0, 0, 0, 0.4) inset,
+              0 0 2px rgba(0, 0, 0, 0.4) inset;
+}
+
+.header-button .toolbarbutton-text {
+  display: none;
 }

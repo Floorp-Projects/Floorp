@@ -123,6 +123,7 @@ _BROWSER_TEST_FILES = \
 	browser_589246.js \
 	browser_590268.js \
 	browser_600545.js \
+	browser_607016.js \
 	$(NULL)
 
 ifneq ($(OS_ARCH),Darwin)

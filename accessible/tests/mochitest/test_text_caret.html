@@ -43,15 +43,16 @@
       this.invoke = function setCaretOffsetInvoker_invoke()
       {
         this.target.caretOffset = aOffset;
+        todo(false, "Enable focus event handling when bug 422744 is fixed.");
       }
 
       this.getID = function setCaretOffsetInvoker_getID()
       {
-        "nsIAccessibleText::caretOffset test"
+        return "nsIAccessibleText::caretOffset test";
       }
 
       this.eventSeq = [
-        new invokerChecker(EVENT_FOCUS, this.target),
+        // new invokerChecker(EVENT_FOCUS, this.target),
         new caretMovedChecker(this.target, aOffset)
       ];
     }

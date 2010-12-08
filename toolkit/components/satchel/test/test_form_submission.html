@@ -428,6 +428,18 @@ function checkSubmit(formNum) {
   if (formNum == 21)
     prefBranch.clearUserPref("browser.formfill.saveHttpsForms");
 
+  // End the test now on SeaMonkey.
+  if (formNum == 21 && navigator.userAgent.match(/ SeaMonkey\//)) {
+    Services.obs.removeObserver(checkObserver, "satchel-storage-changed");
+    is(numSubmittedForms, 21, "Ensuring all forms were submitted.");
+
+    todo(false, "Skipping remaining checks on SeaMonkey ftb. (Bug 589471)");
+    // finish(), yet let the test actually end first, to be safe.
+    SimpleTest.executeSoon(SimpleTest.finish);
+
+    return false; // return false to cancel current form submission
+  }
+
   // Form 109 requires browser.formfill.save_https_forms to be true;
   // Form 110 requires it to be false.
   if (formNum == 108)

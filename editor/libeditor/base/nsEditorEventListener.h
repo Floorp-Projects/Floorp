@@ -102,7 +102,7 @@ protected:
   PRBool CanDrop(nsIDOMDragEvent* aEvent);
   nsresult DragEnter(nsIDOMDragEvent* aDragEvent);
   nsresult DragOver(nsIDOMDragEvent* aDragEvent);
-  nsresult DragLeave(nsIDOMDragEvent* aDragEvent);
+  nsresult DragExit(nsIDOMDragEvent* aDragEvent);
   nsresult Drop(nsIDOMDragEvent* aDragEvent);
   nsresult DragGesture(nsIDOMDragEvent* aDragEvent);
   already_AddRefed<nsIPresShell> GetPresShell();

@@ -53,9 +53,19 @@ PR_BEGIN_MACRO                                                \
   NS_LogCtor((void*)this, #_type, sizeof(*this));             \
 PR_END_MACRO
 
+#define MOZ_COUNT_CTOR_INHERITED(_type, _base)                    \
+PR_BEGIN_MACRO                                                    \
+  NS_LogCtor((void*)this, #_type, sizeof(*this) - sizeof(_base)); \
+PR_END_MACRO
+
 #define MOZ_COUNT_DTOR(_type)                                 \
 PR_BEGIN_MACRO                                                \
   NS_LogDtor((void*)this, #_type, sizeof(*this));             \
+PR_END_MACRO
+
+#define MOZ_COUNT_DTOR_INHERITED(_type, _base)                    \
+PR_BEGIN_MACRO                                                    \
+  NS_LogDtor((void*)this, #_type, sizeof(*this) - sizeof(_base)); \
 PR_END_MACRO
 
 /* nsCOMPtr.h allows these macros to be defined by clients
@@ -74,7 +84,9 @@ PR_END_MACRO
 #define NS_LOG_ADDREF(_p, _rc, _type, _size)
 #define NS_LOG_RELEASE(_p, _rc, _type)
 #define MOZ_COUNT_CTOR(_type)
+#define MOZ_COUNT_CTOR_INHERITED(_type, _base)
 #define MOZ_COUNT_DTOR(_type)
+#define MOZ_COUNT_DTOR_INHERITED(_type, _base)
 
 #endif /* NS_BUILD_REFCNT_LOGGING */
 

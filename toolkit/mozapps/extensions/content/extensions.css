@@ -75,7 +75,7 @@ xhtml|link {
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#rating");
 }
 
-.download-progress {
+.download-progress, .download-progress[mode="undetermined"] {
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#download-progress");
 }
 
@@ -125,7 +125,7 @@ xhtml|link {
 #detail-view:not([pending]) .pending,
 #detail-view:not([upgrade="true"]) .update-postfix,
 #detail-view[active="true"] .disabled-postfix,
-#detail-view[loading] > .detail-view-container,
+#detail-view[loading] .detail-view-container,
 .detail-row:not([value]),
 #search-list[remote="false"] #search-allresults-link {
   display: none;
@@ -143,4 +143,15 @@ xhtml|link {
 #addons-page:not([warning="checkcompatibility"]) .global-warning-checkcompatibility,
 #addons-page:not([warning="updatesecurity"]) .global-warning-updatesecurity {
   display: none;
+}
+
+/* Plugins aren't yet disabled by safemode (bug 342333),
+   so don't show that warning when viewing plugins. */
+#addons-page[warning="safemode"] .view-pane[type="plugin"] .global-warning,
+#addons-page[warning="safemode"] #detail-view[loading="true"] .global-warning {
+  display: none;
+}
+
+.addon .relnotes {
+  -moz-user-select: text;
 }

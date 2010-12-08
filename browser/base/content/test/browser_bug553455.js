@@ -59,6 +59,45 @@ function wait_for_install_dialog(aCallback) {
 }
 
 var TESTS = [
+function test_disabled_install() {
+  Services.prefs.setBoolPref("xpinstall.enabled", false);
+
+  // Wait for the disabled notification
+  wait_for_notification(function(aPanel) {
+    let notification = aPanel.childNodes[0];
+    is(notification.id, "xpinstall-disabled-notification", "Should have seen installs disabled");
+    is(notification.button.label, "Enable", "Should have seen the right button");
+    is(notification.getAttribute("label"),
+       "Software installation is currently disabled. Click Enable and try again.");
+
+    // Click on Enable
+    EventUtils.synthesizeMouseAtCenter(notification.button, {});
+
+    try {
+      Services.prefs.getBoolPref("xpinstall.disabled");
+      ok(false, "xpinstall.disabled should not be set");
+    }
+    catch (e) {
+      ok(true, "xpinstall.disabled should not be set");
+    }
+
+    gBrowser.removeTab(gBrowser.selectedTab);
+
+    AddonManager.getAllInstalls(function(aInstalls) {
+      is(aInstalls.length, 1, "Should have been one install created");
+      aInstalls[0].cancel();
+
+      runNextTest();
+    });
+  });
+
+  var triggers = encodeURIComponent(JSON.stringify({
+    "XPI": "unsigned.xpi"
+  }));
+  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
+},
+
 function test_blocked_install() {
   // Wait for the blocked notification
   wait_for_notification(function(aPanel) {

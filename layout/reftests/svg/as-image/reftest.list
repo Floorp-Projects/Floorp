@@ -51,7 +51,7 @@ fails == canvas-drawImage-slice-1b.html lime100x100-ref.html # XXX all edges fuz
 == img-simple-7.html  lime100x100-ref.html
 
 # More complex <img> tests
-== img-anim-1.html  lime100x100-ref.html
+random-if(gtk2Widget) == img-anim-1.html  lime100x100-ref.html # bug 612214
 == img-content-outside-viewBox-1.html img-content-outside-viewBox-1-ref.html
 random == img-dyn-1.html img-dyn-1-ref.html # Bug 596478
 

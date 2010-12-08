@@ -44,6 +44,7 @@ BlendState NonPremul
 RasterizerState LayerRast
 {
   ScissorEnable = True;
+  CullMode = None;
 };
 
 Texture2D tRGB;

@@ -159,6 +159,8 @@
 #include "mozilla/Services.h"
 #include "nsNativeThemeWin.h"
 #include "nsWindowsDllInterceptor.h"
+#include "nsIWindowMediator.h"
+#include "nsIServiceManager.h"
 
 #if defined(WINCE)
 #include "nsWindowCE.h"
@@ -233,6 +235,7 @@
 #include "nsIXULRuntime.h"
 
 using namespace mozilla::widget;
+using namespace mozilla::layers;
 
 /**************************************************************
  **************************************************************
@@ -295,6 +298,8 @@ PRBool          nsWindow::sDefaultTrackPointHack  = PR_FALSE;
 // Default value for general window class (used when the pref is the empty string).
 const char*     nsWindow::sDefaultMainWindowClass = kClassNameGeneral;
 
+// If we're using D3D9, this will not be allowed during initial 5 seconds.
+bool            nsWindow::sAllowD3D9              = false;
 
 #ifdef ACCESSIBILITY
 BOOL            nsWindow::sIsAccessibilityOn      = FALSE;
@@ -711,8 +716,11 @@ NS_METHOD nsWindow::Destroy()
   
   // Our windows can be subclassed which may prevent us receiving WM_DESTROY. If OnDestroy()
   // didn't get called, call it now.
-  if (PR_FALSE == mOnDestroyCalled)
+  if (PR_FALSE == mOnDestroyCalled) {
+    LRESULT result;
+    mWindowHook.Notify(mWnd, WM_DESTROY, 0, 0, &result);
     OnDestroy();
+  }
 
   return NS_OK;
 }
@@ -1093,6 +1101,35 @@ nsWindow* nsWindow::GetParentWindow(PRBool aIncludeOwner)
 
   return widget;
 }
+ 
+BOOL CALLBACK
+nsWindow::EnumAllChildWindProc(HWND aWnd, LPARAM aParam)
+{
+  nsWindow *wnd = nsWindow::GetNSWindowPtr(aWnd);
+  if (wnd) {
+    ((nsWindow::WindowEnumCallback*)aParam)(wnd);
+  }
+  return TRUE;
+}
+
+BOOL CALLBACK
+nsWindow::EnumAllThreadWindowProc(HWND aWnd, LPARAM aParam)
+{
+  nsWindow *wnd = nsWindow::GetNSWindowPtr(aWnd);
+  if (wnd) {
+    ((nsWindow::WindowEnumCallback*)aParam)(wnd);
+  }
+  EnumChildWindows(aWnd, EnumAllChildWindProc, aParam);
+  return TRUE;
+}
+
+void
+nsWindow::EnumAllWindows(WindowEnumCallback aCallback)
+{
+  EnumThreadWindows(GetCurrentThreadId(),
+                    EnumAllThreadWindowProc,
+                    (LPARAM)&aCallback);
+}
 
 /**************************************************************
  *
@@ -1389,8 +1426,19 @@ NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
     }
 #endif
     ClearThemeRegion();
-    VERIFY(::SetWindowPos(mWnd, NULL, aX, aY, 0, 0,
-                          SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOSIZE));
+
+    UINT flags = SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOSIZE;
+    // Workaround SetWindowPos bug with D3D9. If our window has a clip
+    // region, some drivers or OSes may incorrectly copy into the clipped-out
+    // area.
+    if (mWindowType == eWindowType_plugin &&
+        (!mLayerManager || mLayerManager->GetBackendType() == LayerManager::LAYERS_D3D9) &&
+        mClipRects &&
+        (mClipRectCount != 1 || mClipRects[0] != nsIntRect(0, 0, mBounds.width, mBounds.height))) {
+      flags |= SWP_NOCOPYBITS;
+    }
+    VERIFY(::SetWindowPos(mWnd, NULL, aX, aY, 0, 0, flags));
+
     SetThemeRegion();
   }
   return NS_OK;
@@ -3164,7 +3212,7 @@ nsWindow::HasPendingInputEvent()
  **************************************************************/
 
 mozilla::layers::LayerManager*
-nsWindow::GetLayerManager(bool* aAllowRetaining)
+nsWindow::GetLayerManager(LayerManagerPersistence aPersistence, bool* aAllowRetaining)
 {
   if (aAllowRetaining) {
     *aAllowRetaining = true;
@@ -3181,13 +3229,19 @@ nsWindow::GetLayerManager(bool* aAllowRetaining)
       if (layerManagerD3D10->device() !=
           gfxWindowsPlatform::GetPlatform()->GetD3D10Device())
       {
+        mLayerManager->Destroy();
         mLayerManager = nsnull;
       }
     }
   }
 #endif
 
-  if (!mLayerManager) {
+  if (!mLayerManager ||
+      (!sAllowD3D9 && aPersistence == LAYER_MANAGER_PERSISTENT &&
+        mLayerManager->GetBackendType() == 
+        mozilla::layers::LayerManager::LAYERS_BASIC)) {
+    // If D3D9 is not currently allowed but the permanent manager is required,
+    // -and- we're currently using basic layers, run through this check.
     nsCOMPtr<nsIPrefBranch2> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
 
     PRBool accelerateByDefault = PR_TRUE;
@@ -3226,6 +3280,12 @@ nsWindow::GetLayerManager(bool* aAllowRetaining)
       mUseAcceleratedRendering = PR_TRUE;
 
     if (mUseAcceleratedRendering) {
+      if (aPersistence == LAYER_MANAGER_PERSISTENT && !sAllowD3D9) {
+        // This will clear out our existing layer manager if we have one since
+        // if we hit this with a LayerManager we're always using BasicLayers.
+        nsToolkit::StartAllowingD3D9();
+      }
+
 #ifdef MOZ_ENABLE_D3D10_LAYER
       if (!preferD3D9) {
         nsRefPtr<mozilla::layers::LayerManagerD3D10> layerManager =
@@ -3236,7 +3296,7 @@ nsWindow::GetLayerManager(bool* aAllowRetaining)
       }
 #endif
 #ifdef MOZ_ENABLE_D3D9_LAYER
-      if (!preferOpenGL && !mLayerManager) {
+      if (!preferOpenGL && !mLayerManager && sAllowD3D9) {
         nsRefPtr<mozilla::layers::LayerManagerD3D9> layerManager =
           new mozilla::layers::LayerManagerD3D9(this);
         if (layerManager->Initialize()) {
@@ -4435,7 +4495,6 @@ nsWindow::ProcessMessageForPlugin(const MSG &aMsg,
 
     case WM_DEADCHAR:
     case WM_SYSDEADCHAR:
-    case WM_CONTEXTMENU:
 
     case WM_CUT:
     case WM_COPY:
@@ -4580,10 +4639,11 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     }
     break;
 
-    case WM_XP_THEMECHANGED:
+    case WM_THEMECHANGED:
     {
       // Update non-client margin offsets 
       UpdateNonClientMargins();
+      nsUXThemeData::InitTitlebarInfo();
       nsUXThemeData::UpdateNativeThemeInfo();
 
       DispatchStandardEvent(NS_THEMECHANGED);
@@ -5273,22 +5333,25 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
 
 #ifndef WINCE
     case WM_SYSCOMMAND:
+    {
+      WPARAM filteredWParam = (wParam &0xFFF0);
       // prevent Windows from trimming the working set. bug 76831
-      if (!sTrimOnMinimize && wParam == SC_MINIMIZE) {
+      if (!sTrimOnMinimize && filteredWParam == SC_MINIMIZE) {
         ::ShowWindow(mWnd, SW_SHOWMINIMIZED);
         result = PR_TRUE;
       }
 
       // Handle the system menu manually when we're in full screen mode
       // so we can set the appropriate options.
-      if (wParam == SC_KEYMENU && lParam == VK_SPACE &&
+      if (filteredWParam == SC_KEYMENU && lParam == VK_SPACE &&
           mSizeMode == nsSizeMode_Fullscreen) {
         DisplaySystemMenu(mWnd, mSizeMode, mIsRTL,
                           MOZ_SYSCONTEXT_X_POS,
                           MOZ_SYSCONTEXT_Y_POS);
         result = PR_TRUE;
       }
-      break;
+    }
+    break;
 #endif
 
 
@@ -7475,6 +7538,37 @@ PRBool nsWindow::AutoErase(HDC dc)
   return PR_FALSE;
 }
 
+void
+nsWindow::AllowD3D9Callback(nsWindow *aWindow)
+{
+  if (aWindow->mLayerManager) {
+    aWindow->mLayerManager->Destroy();
+    aWindow->mLayerManager = NULL;
+  }
+}
+
+void
+nsWindow::AllowD3D9WithReinitializeCallback(nsWindow *aWindow)
+{
+  if (aWindow->mLayerManager) {
+    aWindow->mLayerManager->Destroy();
+    aWindow->mLayerManager = NULL;
+    (void) aWindow->GetLayerManager();
+  }
+}
+
+void
+nsWindow::StartAllowingD3D9(bool aReinitialize)
+{
+  sAllowD3D9 = true;
+
+  if (aReinitialize) {
+    EnumAllWindows(AllowD3D9WithReinitializeCallback);
+  } else {
+    EnumAllWindows(AllowD3D9Callback);
+  }
+}
+
 /**************************************************************
  **************************************************************
  **
@@ -8246,7 +8340,22 @@ nsWindow::DealWithPopups(HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inLPara
         //
         // So if we are NOT supposed to be consuming events, let it go through
         if (consumeRollupEvent && inMsg != WM_RBUTTONDOWN) {
-          *outResult = TRUE;
+          *outResult = MA_ACTIVATE;
+
+          // However, don't activate panels
+#ifndef WINCE
+          if (inMsg == WM_MOUSEACTIVATE) {
+            nsWindow* activateWindow = GetNSWindowPtr(inWnd);
+            if (activateWindow) {
+              nsWindowType wintype;
+              activateWindow->GetWindowType(wintype);
+              if (wintype == eWindowType_popup && activateWindow->PopupType() == ePopupTypePanel) {
+                *outResult = MA_NOACTIVATE;
+              }
+            }
+          }
+#endif
+
           return TRUE;
         }
 #ifndef WINCE

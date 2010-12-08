@@ -76,8 +76,6 @@
 #include "nsXULAppAPI.h"
 #endif
 
-static nsOfflineCacheUpdateService *gOfflineCacheUpdateService = nsnull;
-
 static const PRUint32 kRescheduleLimit = 3;
 
 #if defined(PR_LOGGING)
@@ -927,6 +925,18 @@ nsOfflineManifestItem::HandleManifestLine(const nsCString::const_iterator &aBegi
     }
 
     case PARSE_BYPASS_ENTRIES: {
+        if (line[0] == '*' && (line.Length() == 1 || line[1] == ' ' || line[1] == '\t'))
+        {
+          // '*' indicates to make the online whitelist wildcard flag open,
+          // i.e. do allow load of resources not present in the offline cache
+          // or not conforming any namespace.
+          // We achive that simply by adding an 'empty' - i.e. universal
+          // namespace of BYPASS type into the cache.
+          AddNamespace(nsIApplicationCacheNamespace::NAMESPACE_BYPASS,
+                       EmptyCString(), EmptyCString());
+          break;
+        }
+
         nsCOMPtr<nsIURI> bypassURI;
         rv = NS_NewURI(getter_AddRefs(bypassURI), line, nsnull, mURI);
         if (NS_FAILED(rv))
@@ -1490,7 +1500,7 @@ nsOfflineCacheUpdate::ManifestCheckCompleted(nsresult aStatus,
         // In a rare case the manifest will not be modified on the next refetch
         // transfer all master document URIs to the new update to ensure that
         // all documents refering it will be properly cached.
-        for (PRUint32 i = 0; i < mDocumentURIs.Count(); i++) {
+        for (PRInt32 i = 0; i < mDocumentURIs.Count(); i++) {
             newUpdate->StickDocument(mDocumentURIs[i]);
         }
 
@@ -1760,7 +1770,7 @@ nsOfflineCacheUpdate::ScheduleImplicit()
     rv = update->InitPartial(mManifestURI, clientID, mDocumentURI);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    for (PRUint32 i = 0; i < mDocumentURIs.Count(); i++) {
+    for (PRInt32 i = 0; i < mDocumentURIs.Count(); i++) {
         rv = update->AddURI(mDocumentURIs[i], 
               nsIApplicationCache::ITEM_IMPLICIT);
         NS_ENSURE_SUCCESS(rv, rv);

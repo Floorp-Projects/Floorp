@@ -1,0 +1,3 @@
+%define WINSTRIPE_AERO
+%include extensions.css
+%undef WINSTRIPE_AERO

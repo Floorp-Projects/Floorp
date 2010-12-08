@@ -1497,8 +1497,7 @@ nsDocAccessible::UpdateTree(nsIContent* aContainerNode,
     // children of alert accessible to avoid this.
     nsAccessible* ancestor = container;
     while (ancestor) {
-      const nsRoleMapEntry* roleMapEntry = ancestor->GetRoleMapEntry();
-      if (roleMapEntry && roleMapEntry->role == nsIAccessibleRole::ROLE_ALERT) {
+      if (ancestor->ARIARole() == nsIAccessibleRole::ROLE_ALERT) {
         FireDelayedAccessibleEvent(nsIAccessibleEvent::EVENT_ALERT,
                                    ancestor->GetNode(), AccEvent::eRemoveDupes,
                                    fromUserInput);
@@ -1923,6 +1922,25 @@ nsDocAccessible::UpdateTreeInternal(nsAccessible* aContainer,
 
     updateFlags |= eAccessible;
 
+    if (!aIsInsert) {
+      // Fire menupopup end event before hide event if a menu goes away.
+
+      // XXX: We don't look into children of hidden subtree to find hiding
+      // menupopup (as we did prior bug 570275) because we don't do that when
+      // menu is showing (and that's impossible until bug 606924 is fixed).
+      // Nevertheless we should do this at least because layout coalesces
+      // the changes before our processing and we may miss some menupopup
+      // events. Now we just want to be consistent in content insertion/removal
+      // handling.
+      if (accessible->ARIARole() == nsIAccessibleRole::ROLE_MENUPOPUP) {
+        nsRefPtr<AccEvent> event =
+          new AccEvent(nsIAccessibleEvent::EVENT_MENUPOPUP_END, accessible);
+
+        if (event)
+          FireDelayedAccessibleEvent(event);
+      }
+    }
+
     // Fire show/hide event.
     if (aFireAllEvents) {
       nsRefPtr<AccEvent> event;
@@ -1936,19 +1954,17 @@ nsDocAccessible::UpdateTreeInternal(nsAccessible* aContainer,
     }
 
     if (aIsInsert) {
-      const nsRoleMapEntry* roleMapEntry = accessible->GetRoleMapEntry();
-      if (roleMapEntry) {
-        if (roleMapEntry->role == nsIAccessibleRole::ROLE_MENUPOPUP) {
-          // Fire EVENT_MENUPOPUP_START if ARIA menu appears.
-          FireDelayedAccessibleEvent(nsIAccessibleEvent::EVENT_MENUPOPUP_START,
-                                     node, AccEvent::eRemoveDupes, aFromUserInput);
+      PRUint32 ariaRole = accessible->ARIARole();
+      if (ariaRole == nsIAccessibleRole::ROLE_MENUPOPUP) {
+        // Fire EVENT_MENUPOPUP_START if ARIA menu appears.
+        FireDelayedAccessibleEvent(nsIAccessibleEvent::EVENT_MENUPOPUP_START,
+                                   node, AccEvent::eRemoveDupes, aFromUserInput);
 
-        } else if (roleMapEntry->role == nsIAccessibleRole::ROLE_ALERT) {
-          // Fire EVENT_ALERT if ARIA alert appears.
-          updateFlags = eAlertAccessible;
-          FireDelayedAccessibleEvent(nsIAccessibleEvent::EVENT_ALERT, node,
-                                     AccEvent::eRemoveDupes, aFromUserInput);
-        }
+      } else if (ariaRole == nsIAccessibleRole::ROLE_ALERT) {
+        // Fire EVENT_ALERT if ARIA alert appears.
+        updateFlags = eAlertAccessible;
+        FireDelayedAccessibleEvent(nsIAccessibleEvent::EVENT_ALERT, node,
+                                   AccEvent::eRemoveDupes, aFromUserInput);
       }
 
       // If focused node has been shown then it means its frame was recreated

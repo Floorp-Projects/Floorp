@@ -232,7 +232,7 @@ _dumpJSDScriptList( JSDContext* jsdc )
 static JSHashNumber
 jsd_hash_script(const void *key)
 {
-    return ((JSHashNumber) key) >> 2; /* help lame MSVC1.5 on Win16 */
+    return ((JSHashNumber)(ptrdiff_t) key) >> 2; /* help lame MSVC1.5 on Win16 */
 }
 
 static void *
@@ -279,7 +279,7 @@ jsd_InitScriptManager(JSDContext* jsdc)
     jsdc->scriptsTable = JS_NewHashTable(JSD_SCRIPT_HASH_SIZE, jsd_hash_script,
                                          JS_CompareValues, JS_CompareValues,
                                          &script_alloc_ops, (void*) jsdc);
-    return (JSBool) jsdc->scriptsTable;
+    return !!jsdc->scriptsTable;
 }
 
 void

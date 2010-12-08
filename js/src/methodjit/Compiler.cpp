@@ -395,7 +395,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
                        stubcc.size() +
                        doubleList.length() * sizeof(double);
 
-    JSC::ExecutablePool *execPool = getExecPool(totalSize);
+    JSC::ExecutablePool *execPool = getExecPool(script, totalSize);
     if (!execPool)
         return Compile_Abort;
 
@@ -1506,44 +1506,33 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_UINT16)
 
           BEGIN_CASE(JSOP_NEWINIT)
-          {
-            jsint i = GET_UINT16(PC);
-            uint32 count = GET_UINT16(PC + UINT16_LEN);
-
-            JS_ASSERT(i == JSProto_Array || i == JSProto_Object);
-
-            prepareStubCall(Uses(0));
-            masm.move(Imm32(count), Registers::ArgReg1);
-            if (i == JSProto_Array)
-                INLINE_STUBCALL(stubs::NewInitArray);
-            else
-                INLINE_STUBCALL(stubs::NewInitObject);
-            frame.takeReg(Registers::ReturnReg);
-            frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
-          }
+            jsop_newinit();
           END_CASE(JSOP_NEWINIT)
+
+          BEGIN_CASE(JSOP_NEWARRAY)
+            jsop_newinit();
+          END_CASE(JSOP_NEWARRAY)
+
+          BEGIN_CASE(JSOP_NEWOBJECT)
+            jsop_newinit();
+          END_CASE(JSOP_NEWOBJECT)
 
           BEGIN_CASE(JSOP_ENDINIT)
           END_CASE(JSOP_ENDINIT)
 
-          BEGIN_CASE(JSOP_INITPROP)
-          {
-            JSAtom *atom = script->getAtom(fullAtomIndex(PC));
-            prepareStubCall(Uses(2));
-            masm.move(ImmPtr(atom), Registers::ArgReg1);
-            INLINE_STUBCALL(stubs::InitProp);
+          BEGIN_CASE(JSOP_INITMETHOD)
+            jsop_initmethod();
             frame.pop();
-          }
+          END_CASE(JSOP_INITMETHOD)
+
+          BEGIN_CASE(JSOP_INITPROP)
+            jsop_initprop();
+            frame.pop();
           END_CASE(JSOP_INITPROP)
 
           BEGIN_CASE(JSOP_INITELEM)
-          {
-            JSOp next = JSOp(PC[JSOP_INITELEM_LENGTH]);
-            prepareStubCall(Uses(3));
-            masm.move(Imm32(next == JSOP_ENDINIT ? 1 : 0), Registers::ArgReg1);
-            INLINE_STUBCALL(stubs::InitElem);
+            jsop_initelem();
             frame.popn(2);
-          }
           END_CASE(JSOP_INITELEM)
 
           BEGIN_CASE(JSOP_INCARG)
@@ -1941,18 +1930,6 @@ mjit::Compiler::generateMethod()
             frame.push(Value(Int32Value(GET_INT32(PC))));
           END_CASE(JSOP_INT32)
 
-          BEGIN_CASE(JSOP_NEWARRAY)
-          {
-            uint32 len = GET_UINT16(PC);
-            prepareStubCall(Uses(len));
-            masm.move(Imm32(len), Registers::ArgReg1);
-            INLINE_STUBCALL(stubs::NewArray);
-            frame.popn(len);
-            frame.takeReg(Registers::ReturnReg);
-            frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
-          }
-          END_CASE(JSOP_NEWARRAY)
-
           BEGIN_CASE(JSOP_HOLE)
             frame.push(MagicValue(JS_ARRAY_HOLE));
           END_CASE(JSOP_HOLE)
@@ -1981,16 +1958,6 @@ mjit::Compiler::generateMethod()
             masm.move(ImmPtr(PC), Registers::ArgReg1);
             INLINE_STUBCALL(stubs::Debugger);
           END_CASE(JSOP_DEBUGGER)
-
-          BEGIN_CASE(JSOP_INITMETHOD)
-          {
-            JSAtom *atom = script->getAtom(fullAtomIndex(PC));
-            prepareStubCall(Uses(2));
-            masm.move(ImmPtr(atom), Registers::ArgReg1);
-            INLINE_STUBCALL(stubs::InitMethod);
-            frame.pop();
-          }
-          END_CASE(JSOP_INITMETHOD)
 
           BEGIN_CASE(JSOP_UNBRAND)
             jsop_unbrand();
@@ -2210,8 +2177,12 @@ mjit::Compiler::fixPrimitiveReturn(Assembler *masm, FrameEntry *fe)
     bool ool = (masm != &this->masm);
     Address thisv(JSFrameReg, JSStackFrame::offsetOfThis(fun));
 
-    // Easy cases - no return value, or known primitive, so just return thisv.
-    if (!fe || (fe->isTypeKnown() && fe->getKnownType() != JSVAL_TYPE_OBJECT)) {
+    // We can just load |thisv| if either of the following is true:
+    //  (1) There is no explicit return value, AND fp->rval is not used.
+    //  (2) There is an explicit return value, and it's known to be primitive.
+    if ((!fe && !analysis->usesReturnValue()) ||
+        (fe && fe->isTypeKnown() && fe->getKnownType() != JSVAL_TYPE_OBJECT))
+    {
         if (ool)
             masm->loadValueAsComponents(thisv, JSReturnReg_Type, JSReturnReg_Data);
         else
@@ -2220,7 +2191,7 @@ mjit::Compiler::fixPrimitiveReturn(Assembler *masm, FrameEntry *fe)
     }
 
     // If the type is known to be an object, just load the return value as normal.
-    if (fe->isTypeKnown() && fe->getKnownType() == JSVAL_TYPE_OBJECT) {
+    if (fe && fe->isTypeKnown() && fe->getKnownType() == JSVAL_TYPE_OBJECT) {
         loadReturnValue(masm, fe);
         return;
     }
@@ -2507,6 +2478,7 @@ mjit::Compiler::canUseApplyTricks()
     jsbytecode *nextpc = PC + JSOP_ARGUMENTS_LENGTH;
     return *nextpc == JSOP_FUNAPPLY &&
            IsLowerableFunCallOrApply(nextpc) &&
+           !analysis->jumpTarget(nextpc) &&
            !debugMode();
 }
 
@@ -4357,6 +4329,7 @@ mjit::Compiler::jsop_getgname(uint32 index)
     JS_ASSERT(fe->isTypeKnown() && fe->getKnownType() == JSVAL_TYPE_OBJECT);
 
     MICGenInfo mic(ic::MICInfo::GET);
+    RESERVE_IC_SPACE(masm);
     RegisterID objReg;
     Jump shapeGuard;
 
@@ -4459,6 +4432,7 @@ mjit::Compiler::jsop_setgname(uint32 index, bool usePropertyCache)
     JS_ASSERT_IF(objFe->isTypeKnown(), objFe->getKnownType() == JSVAL_TYPE_OBJECT);
 
     MICGenInfo mic(ic::MICInfo::SET);
+    RESERVE_IC_SPACE(masm);
     RegisterID objReg;
     Jump shapeGuard;
 
@@ -4708,6 +4682,41 @@ mjit::Compiler::jsop_arguments()
 {
     prepareStubCall(Uses(0));
     INLINE_STUBCALL(stubs::Arguments);
+}
+
+void
+mjit::Compiler::jsop_newinit()
+{
+    bool isArray;
+    unsigned count = 0;
+    JSObject *baseobj = NULL;
+    switch (*PC) {
+      case JSOP_NEWINIT:
+        isArray = (PC[1] == JSProto_Array);
+        break;
+      case JSOP_NEWARRAY:
+        isArray = true;
+        count = GET_UINT24(PC);
+        break;
+      case JSOP_NEWOBJECT:
+        isArray = false;
+        baseobj = script->getObject(fullAtomIndex(PC));
+        break;
+      default:
+        JS_NOT_REACHED("Bad op");
+        return;
+    }
+
+    prepareStubCall(Uses(0));
+    if (isArray) {
+        masm.move(Imm32(count), Registers::ArgReg1);
+        INLINE_STUBCALL(stubs::NewInitArray);
+    } else {
+        masm.move(ImmPtr(baseobj), Registers::ArgReg1);
+        INLINE_STUBCALL(stubs::NewInitObject);
+    }
+    frame.takeReg(Registers::ReturnReg);
+    frame.pushInitializerObject(Registers::ReturnReg, *PC == JSOP_NEWARRAY, baseobj);
 }
 
 /*

@@ -205,7 +205,41 @@ public:
     }
 #endif
 
+    // Quirks mode support for various plugin mime types
+    enum PluginQuirks {
+        QUIRKS_NOT_INITIALIZED                          = 0,
+        // Silverlight assumes it is transparent in windowless mode. This quirk
+        // matches the logic in nsNPAPIPluginInstance::SetWindowless.
+        QUIRK_SILVERLIGHT_DEFAULT_TRANSPARENT           = 1 << 0,
+        // Win32: Hook TrackPopupMenu api so that we can swap out parent
+        // hwnds. The api will fail with parents not associated with our
+        // child ui thread. See WinlessHandleEvent for details.
+        QUIRK_WINLESS_TRACKPOPUP_HOOK                   = 1 << 1,
+        // Win32: Throttle flash WM_USER+1 heart beat messages to prevent
+        // flooding chromium's dispatch loop, which can cause ipc traffic
+        // processing lag.
+        QUIRK_FLASH_THROTTLE_WMUSER_EVENTS              = 1 << 2,
+        // Win32: Catch resets on our subclass by hooking SetWindowLong.
+        QUIRK_FLASH_HOOK_SETLONGPTR                     = 1 << 3,
+        // X11: Work around a bug in Flash up to 10.1 d51 at least, where
+        // expose event top left coordinates within the plugin-rect and
+        // not at the drawable origin are misinterpreted.
+        QUIRK_FLASH_EXPOSE_COORD_TRANSLATION            = 1 << 4,
+        // Win32: Catch get window info calls on the browser and tweak the
+        // results so mouse input works when flash is displaying it's settings
+        // window.
+        QUIRK_FLASH_HOOK_GETWINDOINFO                   = 1 << 5,
+    };
+
+    int GetQuirks() { return mQuirks; }
+    void AddQuirk(PluginQuirks quirk) {
+      if (mQuirks == QUIRKS_NOT_INITIALIZED)
+        mQuirks = 0;
+      mQuirks |= quirk;
+    }
+
 private:
+    void InitQuirksModes(const nsCString& aMimeType);
     bool InitGraphics();
 #if defined(MOZ_WIDGET_GTK2)
     static gboolean DetectNestedEventLoop(gpointer data);
@@ -226,6 +260,7 @@ private:
     std::string mPluginFilename;
     PRLibrary* mLibrary;
     nsCString mUserAgent;
+    int mQuirks;
 
     // we get this from the plugin
     NP_PLUGINSHUTDOWN mShutdownFunc;

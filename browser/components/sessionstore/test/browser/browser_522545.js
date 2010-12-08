@@ -56,15 +56,13 @@ function test() {
            getService(Ci.nsISessionStore);
 
   function waitForBrowserState(aState, aSetStateCallback) {
-    var locationChanges = 0;
-    gBrowser.addTabsProgressListener({
-      onLocationChange: function (aBrowser) {
-        if (++locationChanges == aState.windows[0].tabs.length) {
-          gBrowser.removeTabsProgressListener(this);
-          executeSoon(aSetStateCallback);
-        }
+    let tabsRestored = 0;
+    gBrowser.tabContainer.addEventListener("SSTabRestored", function() {
+      if (++tabsRestored == aState.windows[0].tabs.length) {
+        gBrowser.tabContainer.removeEventListener("SSTabRestored", arguments.callee, true);
+        executeSoon(aSetStateCallback);
       }
-    });
+    }, true);
     ss.setBrowserState(JSON.stringify(aState));
   }
 
@@ -285,16 +283,7 @@ function test() {
       }]
     };
 
-    // Set state here and listen for load event because waitForBrowserState
-    // doesn't guarantee all the tabs have loaded, so the test could continue
-    // before we're in a testable state. This is important here because of the
-    // distinction between "http://example.com" and "http://example.com/".
-    ss.setBrowserState(JSON.stringify(state));
-    gBrowser.addEventListener("load", function(aEvent) {
-      if (gBrowser.currentURI.spec == "about:blank")
-        return;
-      gBrowser.removeEventListener("load", arguments.callee, true);
-
+    waitForBrowserState(state, function() {
       let browser = gBrowser.selectedBrowser;
       is(browser.currentURI.spec, "http://example.com/",
          "userTypedClear=2 caused userTypedValue to be loaded");
@@ -305,7 +294,7 @@ function test() {
       is(gURLBar.value, "http://example.com/",
          "Address bar's value set after loading URI");
       runNextTest();
-    }, true);
+    });
   }
 
 

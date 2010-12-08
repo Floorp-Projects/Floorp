@@ -61,14 +61,9 @@ import android.net.Uri;
 
 class GeckoAppShell
 {
-    static {
-        sGeckoRunning = false;
-    }
-
     // static members only
     private GeckoAppShell() { }
 
-    static boolean sGeckoRunning;
     static private GeckoEvent gPendingResize = null;
 
     static private boolean gRestartScheduled = false;
@@ -149,7 +144,7 @@ class GeckoAppShell
     private static GeckoEvent mLastDrawEvent;
 
     public static void sendEventToGecko(GeckoEvent e) {
-        if (sGeckoRunning) {
+        if (GeckoApp.checkLaunchState(GeckoApp.LaunchState.GeckoRunning)) {
             if (gPendingResize != null) {
                 notifyGeckoOfEvent(gPendingResize);
                 gPendingResize = null;
@@ -256,14 +251,16 @@ class GeckoAppShell
         }
     }
 
-    public static void notifyIMEEnabled(int state, String hint) {
+    public static void notifyIMEEnabled(int state, String typeHint, 
+                                        String actionHint) {
         if (GeckoApp.surfaceView == null)
             return;
 
         /* When IME is 'disabled', IME processing is disabled.
             In addition, the IME UI is hidden */
         GeckoApp.surfaceView.mIMEState = state;
-        GeckoApp.surfaceView.mIMEHint = hint;
+        GeckoApp.surfaceView.mIMETypeHint = typeHint;
+        GeckoApp.surfaceView.mIMEActionHint = actionHint;
         IMEStateUpdater.enableIME();
     }
 
@@ -336,7 +333,8 @@ class GeckoAppShell
 
     static void onAppShellReady()
     {
-        sGeckoRunning = true;
+        // mLaunchState can only be Launched at this point
+        GeckoApp.setLaunchState(GeckoApp.LaunchState.GeckoRunning);
         if (gPendingResize != null) {
             notifyGeckoOfEvent(gPendingResize);
             gPendingResize = null;
@@ -344,7 +342,8 @@ class GeckoAppShell
     }
 
     static void onXreExit() {
-        sGeckoRunning = false;
+        // mLaunchState can only be Launched or GeckoRunning at this point
+        GeckoApp.setLaunchState(GeckoApp.LaunchState.GeckoExiting);
         Log.i("GeckoAppJava", "XRE exited");
         if (gRestartScheduled) {
             GeckoApp.mAppContext.doRestart();
@@ -556,6 +555,12 @@ class GeckoAppShell
         AlertNotification notification = mAlertNotifications.get(notificationID);
         if (notification != null)
             notification.updateProgress(aAlertText, aProgress, aProgressMax);
+
+        if (aProgress == aProgressMax) {
+            // Hide the notification at 100%
+            removeObserver(aAlertName);
+            removeNotification(notificationID);
+        }
     }
 
     public static void alertsProgressListener_OnCancel(String aAlertName) {

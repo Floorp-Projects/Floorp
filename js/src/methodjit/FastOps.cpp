@@ -38,6 +38,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "jsbool.h"
+#include "jscntxt.h"
+#include "jsemit.h"
 #include "jslibmath.h"
 #include "jsnum.h"
 #include "jsscope.h"
@@ -912,6 +914,53 @@ mjit::Compiler::jsop_typeof()
         }
     }
 
+    JSOp fused = JSOp(PC[JSOP_TYPEOF_LENGTH]);
+    if (fused == JSOP_STRING && !fe->isTypeKnown()) {
+        JSOp op = JSOp(PC[JSOP_TYPEOF_LENGTH + JSOP_STRING_LENGTH]);
+
+        if (op == JSOP_STRICTEQ || op == JSOP_EQ || op == JSOP_STRICTNE || op == JSOP_NE) {
+            JSAtom *atom = script->getAtom(fullAtomIndex(PC + JSOP_TYPEOF_LENGTH));
+            JSRuntime *rt = cx->runtime;
+            JSValueType type = JSVAL_TYPE_UNINITIALIZED;
+            Assembler::Condition cond = (op == JSOP_STRICTEQ || op == JSOP_EQ)
+                                        ? Assembler::Equal
+                                        : Assembler::NotEqual;
+            
+            if (atom == rt->atomState.typeAtoms[JSTYPE_VOID]) {
+                type = JSVAL_TYPE_UNDEFINED;
+            } else if (atom == rt->atomState.typeAtoms[JSTYPE_STRING]) {
+                type = JSVAL_TYPE_STRING;
+            } else if (atom == rt->atomState.typeAtoms[JSTYPE_BOOLEAN]) {
+                type = JSVAL_TYPE_BOOLEAN;
+            } else if (atom == rt->atomState.typeAtoms[JSTYPE_NUMBER]) {
+                type = JSVAL_TYPE_INT32;
+
+                /* JSVAL_TYPE_DOUBLE is 0x0 and JSVAL_TYPE_INT32 is 0x1, use <= or > to match both */
+                cond = (cond == Assembler::Equal) ? Assembler::BelowOrEqual : Assembler::Above;
+            }
+
+            if (type != JSVAL_TYPE_UNINITIALIZED) {
+                PC += JSOP_STRING_LENGTH;;
+                PC += JSOP_EQ_LENGTH;
+
+                RegisterID result = frame.allocReg(Registers::SingleByteRegs);
+
+#if defined JS_NUNBOX32
+                if (frame.shouldAvoidTypeRemat(fe))
+                    masm.set32(cond, masm.tagOf(frame.addressOf(fe)), ImmType(type), result);
+                else
+                    masm.set32(cond, frame.tempRegForType(fe), ImmType(type), result);
+#elif defined JS_PUNBOX64
+                masm.setPtr(cond, frame.tempRegForType(fe), ImmType(type), result);
+#endif
+
+                frame.pop();
+                frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, result);
+                return;
+            }
+        }
+    }
+
     prepareStubCall(Uses(1));
     INLINE_STUBCALL(stubs::TypeOf);
     frame.pop();
@@ -1047,98 +1096,59 @@ mjit::Compiler::jsop_andor(JSOp op, jsbytecode *target)
 void
 mjit::Compiler::jsop_localinc(JSOp op, uint32 slot, bool popped)
 {
-    bool post = (op == JSOP_LOCALINC || op == JSOP_LOCALDEC);
-    int32 amt = (op == JSOP_INCLOCAL || op == JSOP_LOCALINC) ? 1 : -1;
+    if (popped || (op == JSOP_INCLOCAL || op == JSOP_DECLOCAL)) {
+        int amt = (op == JSOP_LOCALINC || op == JSOP_INCLOCAL) ? -1 : 1;
 
-    frame.pushLocal(slot);
+        // Before: 
+        // After:  V
+        frame.pushLocal(slot);
 
-    FrameEntry *fe = frame.peek(-1);
+        // Before: V
+        // After:  V 1
+        frame.push(Int32Value(amt));
 
-    if (fe->isConstant() && fe->getValue().isPrimitive()) {
-        Value v = fe->getValue();
-        double d;
-        ValueToNumber(cx, v, &d);
-        if (post) {
-            frame.push(NumberValue(d + amt));
-            frame.storeLocal(slot);
-            frame.pop();
-        } else {
-            frame.pop();
-            frame.push(NumberValue(d + amt));
-            frame.storeLocal(slot);
-        }
+        // Note, SUB will perform integer conversion for us.
+        // Before: V 1
+        // After:  N+1
+        jsop_binary(JSOP_SUB, stubs::Sub);
+
+        // Before: N+1
+        // After:  N+1
+        frame.storeLocal(slot, popped);
+
         if (popped)
             frame.pop();
-        return;
-    }
+    } else {
+        int amt = (op == JSOP_LOCALINC || op == JSOP_INCLOCAL) ? 1 : -1;
 
-    /*
-     * If the local variable is not known to be an int32, or the pre-value
-     * is observed, then do the simple thing and decompose x++ into simpler
-     * opcodes.
-     */
-    if (fe->isNotType(JSVAL_TYPE_INT32) || (post && !popped)) {
-        /* V */
+        // Before:
+        // After: V
+        frame.pushLocal(slot);
+
+        // Before: V
+        // After:  N
         jsop_pos();
-        /* N */
 
-        if (post && !popped) {
-            frame.dup();
-            /* N N */
-        }
+        // Before: N
+        // After:  N N
+        frame.dup();
 
-        frame.push(Int32Value(1));
-        /* N? N 1 */
+        // Before: N N
+        // After:  N N 1
+        frame.push(Int32Value(amt));
 
-        if (amt == 1)
-            jsop_binary(JSOP_ADD, stubs::Add);
-        else
-            jsop_binary(JSOP_SUB, stubs::Sub);
-        /* N? N+1 */
+        // Before: N N 1
+        // After:  N N+1
+        jsop_binary(JSOP_ADD, stubs::Add);
 
-        frame.storeLocal(slot, post || popped);
-        /* N? N+1 */
+        // Before: N N+1
+        // After:  N N+1
+        frame.storeLocal(slot, true);
 
-        if (post || popped)
-            frame.pop();
-
-        return;
-    }
-
-    /* If the pre value is not observed, we can emit better code. */
-    if (!fe->isTypeKnown()) {
-        Jump intFail = frame.testInt32(Assembler::NotEqual, fe);
-        stubcc.linkExit(intFail, Uses(1));
-    }
-
-    RegisterID reg = frame.copyDataIntoReg(fe);
-
-    Jump ovf;
-    if (amt > 0)
-        ovf = masm.branchAdd32(Assembler::Overflow, Imm32(1), reg);
-    else
-        ovf = masm.branchSub32(Assembler::Overflow, Imm32(1), reg);
-    stubcc.linkExit(ovf, Uses(1));
-
-    /* Note, stub call will push the original value again no matter what. */
-    stubcc.leave();
-
-    stubcc.masm.move(Imm32(slot), Registers::ArgReg1);
-    if (op == JSOP_LOCALINC || op == JSOP_INCLOCAL)
-        OOL_STUBCALL(stubs::IncLocal);
-    else
-        OOL_STUBCALL(stubs::DecLocal);
-
-    frame.pop();
-    frame.pushTypedPayload(JSVAL_TYPE_INT32, reg);
-    frame.storeLocal(slot, popped, false);
-
-    if (popped)
+        // Before: N N+1
+        // After:  N
         frame.pop();
-    else
-        frame.forgetType(frame.peek(-1));
-
-    stubcc.rejoin(Changes(0));
+    }
 }
 
 void
@@ -1639,12 +1649,12 @@ mjit::Compiler::jsop_stricteq(JSOp op)
             return;
         }
 
-        RegisterID data = frame.tempRegForData(test);
-        frame.pinReg(data);
-        RegisterID result = frame.allocReg(Registers::SingleByteRegs);
-        frame.unpinReg(data);
+        RegisterID data = frame.copyDataIntoReg(test);
+
+        RegisterID result = data;
+        if (!(Registers::maskReg(data) & Registers::SingleByteRegs))
+            result = frame.allocReg(Registers::SingleByteRegs);
         
-        /* Is the other side boolean? */
         Jump notBoolean;
         if (!test->isTypeKnown())
            notBoolean = frame.testBoolean(Assembler::NotEqual, test);
@@ -1659,6 +1669,9 @@ mjit::Compiler::jsop_stricteq(JSOp op)
             masm.move(Imm32((op == JSOP_STRICTNE)), result);
             done.linkTo(masm.label(), &masm);
         }
+
+        if (data != result)
+            frame.freeReg(data);
 
         frame.popn(2);
         frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, result);
@@ -1780,3 +1793,90 @@ mjit::Compiler::jsop_pos()
     stubcc.rejoin(Changes(1));
 }
 
+void
+mjit::Compiler::jsop_initmethod()
+{
+#ifdef DEBUG
+    FrameEntry *obj = frame.peek(-2);
+#endif
+    JSAtom *atom = script->getAtom(fullAtomIndex(PC));
+
+    /* Initializers with INITMETHOD are not fast yet. */
+    JS_ASSERT(!obj->initializerObject());
+
+    prepareStubCall(Uses(2));
+    masm.move(ImmPtr(atom), Registers::ArgReg1);
+    INLINE_STUBCALL(stubs::InitMethod);
+}
+
+void
+mjit::Compiler::jsop_initprop()
+{
+    FrameEntry *obj = frame.peek(-2);
+    FrameEntry *fe = frame.peek(-1);
+    JSAtom *atom = script->getAtom(fullAtomIndex(PC));
+
+    JSObject *baseobj = obj->initializerObject();
+
+    if (!baseobj) {
+        prepareStubCall(Uses(2));
+        masm.move(ImmPtr(atom), Registers::ArgReg1);
+        INLINE_STUBCALL(stubs::InitProp);
+        return;
+    }
+
+    JSObject *holder;
+    JSProperty *prop = NULL;
+#ifdef DEBUG
+    int res =
+#endif
+    js_LookupPropertyWithFlags(cx, baseobj, ATOM_TO_JSID(atom),
+                               JSRESOLVE_QUALIFIED, &holder, &prop);
+    JS_ASSERT(res >= 0 && prop && holder == baseobj);
+
+    RegisterID objReg = frame.copyDataIntoReg(obj);
+    masm.loadPtr(Address(objReg, offsetof(JSObject, slots)), objReg);
+
+    /* Perform the store. */
+    Shape *shape = (Shape *) prop;
+    frame.storeTo(fe, Address(objReg, shape->slot * sizeof(Value)));
+    frame.freeReg(objReg);
+}
+
+void
+mjit::Compiler::jsop_initelem()
+{
+    FrameEntry *obj = frame.peek(-3);
+    FrameEntry *id = frame.peek(-2);
+    FrameEntry *fe = frame.peek(-1);
+
+    /*
+     * The initialized index is always a constant, but we won't remember which
+     * constant if there are branches inside the code computing the initializer
+     * expression (e.g. the expression uses the '?' operator).  Slow path those
+     * cases, as well as those where INITELEM is used on an object initializer
+     * or a non-fast array initializer.
+     */
+    if (!id->isConstant() || !obj->initializerArray()) {
+        JSOp next = JSOp(PC[JSOP_INITELEM_LENGTH]);
+
+        prepareStubCall(Uses(3));
+        masm.move(Imm32(next == JSOP_ENDINIT ? 1 : 0), Registers::ArgReg1);
+        INLINE_STUBCALL(stubs::InitElem);
+        return;
+    }
+
+    JS_ASSERT(id->getValue().isInt32());
+
+    if (fe->isConstant() && fe->getValue().isMagic(JS_ARRAY_HOLE)) {
+        /* The array already has the correct length, nothing to do. */
+        return;
+    }
+
+    RegisterID objReg = frame.copyDataIntoReg(obj);
+    masm.loadPtr(Address(objReg, offsetof(JSObject, slots)), objReg);
+
+    /* Perform the store. */
+    frame.storeTo(fe, Address(objReg, id->getValue().toInt32() * sizeof(Value)));
+    frame.freeReg(objReg);
+}

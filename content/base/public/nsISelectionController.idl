@@ -67,7 +67,8 @@ interface nsISelectionController : nsISelectionDisplay
 
    const short SELECTION_ANCHOR_REGION = 0;
    const short SELECTION_FOCUS_REGION = 1;
-   const short NUM_SELECTION_REGIONS = 2;
+   const short SELECTION_WHOLE_SELECTION = 2;
+   const short NUM_SELECTION_REGIONS = 3;
 
    const short SELECTION_OFF = 0;
    const short SELECTION_HIDDEN =1;//>HIDDEN displays selection

@@ -42,8 +42,8 @@ function run_test() {
   do_test_pending();
   do_register_cleanup(end_test);
 
-  dump("Testing: removing an active update for a channel that is not valid " +
-       "due to switching channels (bug 486275)");
+  logTestInfo("testing removing an active update for a channel that is not" +
+              "valid due to switching channels (bug 486275)");
   removeUpdateDirsAndFiles();
   setUpdateChannel("original_channel");
 

@@ -124,6 +124,9 @@ static PRLogModuleInfo* gMediaElementEventsLog;
 using namespace mozilla::dom;
 using namespace mozilla::layers;
 
+// Number of milliseconds between timeupdate events as defined by spec
+#define TIMEUPDATE_MS 250
+
 // Under certain conditions there may be no-one holding references to
 // a media element from script, DOM parent, etc, but the element may still
 // fire meaningful events in the future so we can't destroy it yet:
@@ -508,7 +511,7 @@ void nsHTMLMediaElement::AbortExistingLoads()
       // will now be reported as 0. The playback position was non-zero when
       // we destroyed the decoder, so fire a timeupdate event so that the
       // change will be reflected in the controls.
-      DispatchAsyncEvent(NS_LITERAL_STRING("timeupdate"));
+      FireTimeUpdate(PR_FALSE);
     }
     DispatchEvent(NS_LITERAL_STRING("emptied"));
   }
@@ -1148,7 +1151,7 @@ NS_IMETHODIMP nsHTMLMediaElement::Pause()
   AddRemoveSelfReference();
 
   if (!oldPaused) {
-    DispatchAsyncEvent(NS_LITERAL_STRING("timeupdate"));
+    FireTimeUpdate(PR_FALSE);
     DispatchAsyncEvent(NS_LITERAL_STRING("pause"));
   }
 
@@ -1266,6 +1269,7 @@ nsHTMLMediaElement::nsHTMLMediaElement(already_AddRefed<nsINodeInfo> aNodeInfo,
     mRate(0),
     mPreloadAction(PRELOAD_UNDEFINED),
     mMediaSize(-1,-1),
+    mLastCurrentTime(0.0),
     mAllowAudioData(PR_FALSE),
     mBegun(PR_FALSE),
     mLoadedFirstFrame(PR_FALSE),
@@ -1375,6 +1379,7 @@ NS_IMETHODIMP nsHTMLMediaElement::Play()
     switch (mReadyState) {
     case nsIDOMHTMLMediaElement::HAVE_METADATA:
     case nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA:
+      FireTimeUpdate(PR_FALSE);
       DispatchAsyncEvent(NS_LITERAL_STRING("waiting"));
       break;
     case nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA:
@@ -2015,13 +2020,14 @@ void nsHTMLMediaElement::PlaybackEnded()
   // We changed the state of IsPlaybackEnded which can affect AddRemoveSelfReference
   AddRemoveSelfReference();
 
+  FireTimeUpdate(PR_FALSE);
   DispatchAsyncEvent(NS_LITERAL_STRING("ended"));
 }
 
 void nsHTMLMediaElement::SeekStarted()
 {
   DispatchAsyncEvent(NS_LITERAL_STRING("seeking"));
-  DispatchAsyncEvent(NS_LITERAL_STRING("timeupdate"));
+  FireTimeUpdate(PR_FALSE);
 }
 
 void nsHTMLMediaElement::SeekCompleted()
@@ -2076,6 +2082,7 @@ void nsHTMLMediaElement::UpdateReadyStateForData(NextFrameStatus aNextFrame)
   if (aNextFrame != NEXT_FRAME_AVAILABLE) {
     ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA);
     if (!mWaitingFired && aNextFrame == NEXT_FRAME_UNAVAILABLE_BUFFERING) {
+      FireTimeUpdate(PR_FALSE);
       DispatchAsyncEvent(NS_LITERAL_STRING("waiting"));
       mWaitingFired = PR_TRUE;
     }
@@ -2202,7 +2209,8 @@ ImageContainer* nsHTMLMediaElement::GetImageContainer()
   if (!video)
     return nsnull;
 
-  nsRefPtr<LayerManager> manager = nsContentUtils::LayerManagerForDocument(GetOwnerDoc());
+  nsRefPtr<LayerManager> manager =
+    nsContentUtils::PersistentLayerManagerForDocument(GetOwnerDoc());
   if (!manager)
     return nsnull;
 
@@ -2564,9 +2572,39 @@ void nsHTMLMediaElement::SetRequestHeaders(nsIHttpChannel* aChannel)
   // Send Accept header for video and audio types only (Bug 489071)
   SetAcceptHeader(aChannel);
 
+  // Apache doesn't send Content-Length when gzip transfer encoding is used,
+  // which prevents us from estimating the video length (if explicit Content-Duration
+  // and a length spec in the container are not present either) and from seeking.
+  // So, disable the standard "Accept-Encoding: gzip,deflate" that we usually send.
+  // See bug 614760.
+  aChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept-Encoding"),
+                             NS_LITERAL_CSTRING(""), PR_FALSE);
+
   // Set the Referer header
   nsIDocument* doc = GetOwnerDoc();
   if (doc) {
     aChannel->SetReferrer(doc->GetDocumentURI());
+  }
+}
+
+void nsHTMLMediaElement::FireTimeUpdate(PRBool aPeriodic)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
+
+  TimeStamp now = TimeStamp::Now();
+  float time = 0;
+  GetCurrentTime(&time);
+
+  // Fire a timupdate event if this is not a periodic update (i.e. it's a
+  // timeupdate event mandated by the spec), or if it's a periodic update
+  // and TIMEUPDATE_MS has passed since the last timeupdate event fired and
+  // the time has changed.
+  if (!aPeriodic ||
+      (mLastCurrentTime != time &&
+       (mTimeUpdateTime.IsNull() ||
+        now - mTimeUpdateTime >= TimeDuration::FromMilliseconds(TIMEUPDATE_MS)))) {
+    DispatchAsyncEvent(NS_LITERAL_STRING("timeupdate"));
+    mTimeUpdateTime = now;
+    mLastCurrentTime = time;
   }
 }

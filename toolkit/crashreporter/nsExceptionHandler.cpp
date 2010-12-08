@@ -78,6 +78,8 @@
 #  include "client/linux/crash_generation/crash_generation_server.h"
 #endif
 #include "client/linux/handler/exception_handler.h"
+#include "client/linux/minidump_writer/linux_dumper.h"
+#include "client/linux/minidump_writer/minidump_writer.h"
 #include <fcntl.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -103,6 +105,7 @@
 #include "nsInterfaceHashtable.h"
 #include "prprf.h"
 #include "nsIXULAppInfo.h"
+#include <map>
 #include <vector>
 
 #if defined(XP_MACOSX)
@@ -255,6 +258,8 @@ typedef struct {
   size_t      file_offset;
 } mapping_info;
 static std::vector<mapping_info> library_mappings;
+typedef std::map<PRUint32,google_breakpad::MappingList> MappingMap;
+static MappingMap child_library_mappings;
 
 void FileIDToGUID(const char* file_id, u_int8_t guid[sizeof(MDGUID)])
 {
@@ -1619,6 +1624,24 @@ OnChildProcessDumpRequested(void* aContext,
 #endif
                      getter_AddRefs(minidump));
 
+#if defined(__ANDROID__)
+  // Do dump generation here since the CrashGenerationServer doesn't
+  // have access to the library mappings.
+  MappingMap::const_iterator iter = 
+    child_library_mappings.find(aClientInfo->pid_);
+  if (iter == child_library_mappings.end()) {
+    NS_WARNING("No library mappings found for child, can't write minidump!");
+    return;
+  }
+
+  if (!google_breakpad::WriteMinidump(aFilePath->c_str(),
+                                      aClientInfo->pid_,
+                                      aClientInfo->crash_context,
+                                      aClientInfo->crash_context_size,
+                                      iter->second))
+    return;
+#endif
+
   if (!WriteExtraForMinidump(minidump,
                              Blacklist(kSubprocessBlacklist,
                                        NS_ARRAY_LENGTH(kSubprocessBlacklist)),
@@ -1676,11 +1699,17 @@ OOPInit()
     NS_RUNTIMEABORT("can't create crash reporter socketpair()");
 
   const std::string dumpPath = gExceptionHandler->dump_path();
+  bool generateDumps = true;
+#if defined(__ANDROID__)
+  // On Android, the callback will do dump generation, since it needs
+  // to pass the library mappings.
+  generateDumps = false;
+#endif
   crashServer = new CrashGenerationServer(
     serverSocketFd,
     OnChildProcessDumpRequested, NULL,
     NULL, NULL,                 // we don't care about process exit here
-    true,                       // automatically generate dumps
+    generateDumps,
     &dumpPath);
 
 #elif defined(XP_MACOSX)
@@ -2031,6 +2060,38 @@ void AddLibraryMapping(const char* library_name,
                                       file_offset);
   }
 }
+
+#ifdef MOZ_IPC
+void AddLibraryMappingForChild(PRUint32    childPid,
+                               const char* library_name,
+                               const char* file_id,
+                               uintptr_t   start_address,
+                               size_t      mapping_length,
+                               size_t      file_offset)
+{
+  if (child_library_mappings.find(childPid) == child_library_mappings.end())
+    child_library_mappings[childPid] = google_breakpad::MappingList();
+  google_breakpad::MappingInfo info;
+  info.start_addr = start_address;
+  info.size = mapping_length;
+  info.offset = file_offset;
+  strcpy(info.name, library_name);
+ 
+  std::pair<google_breakpad::MappingInfo, u_int8_t[sizeof(MDGUID)]> mapping;
+  mapping.first = info;
+  u_int8_t guid[sizeof(MDGUID)];
+  FileIDToGUID(file_id, guid);
+  memcpy(mapping.second, guid, sizeof(MDGUID));
+  child_library_mappings[childPid].push_back(mapping);
+}
+
+void RemoveLibraryMappingsForChild(PRUint32 childPid)
+{
+  MappingMap::iterator iter = child_library_mappings.find(childPid);
+  if (iter != child_library_mappings.end())
+    child_library_mappings.erase(iter);
+}
+#endif
 #endif
 
 } // namespace CrashReporter

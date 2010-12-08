@@ -78,6 +78,7 @@ NS_IMPL_ISUPPORTS_INHERITED1(PuppetWidget, nsBaseWidget,
 
 PuppetWidget::PuppetWidget(PBrowserChild *aTabChild)
   : mTabChild(aTabChild)
+  , mDPI(-1)
 {
   MOZ_COUNT_CTOR(PuppetWidget);
 }
@@ -111,8 +112,9 @@ PuppetWidget::Create(nsIWidget        *aParent,
                                       gfxASurface::ContentFromFormat(gfxASurface::ImageFormatARGB32));
 
   mIMEComposing = PR_FALSE;
-  mIMELastReceivedSeqno = 0;
-  mIMELastBlurSeqno = 0;
+  PRUint32 chromeSeqno;
+  mTabChild->SendNotifyIMEFocus(false, &mIMEPreference, &chromeSeqno);
+  mIMELastBlurSeqno = mIMELastReceivedSeqno = chromeSeqno;
 
   PuppetWidget* parent = static_cast<PuppetWidget*>(aParent);
   if (parent) {
@@ -152,6 +154,9 @@ PuppetWidget::Destroy()
   Base::Destroy();
   mPaintTask.Revoke();
   mChild = nsnull;
+  if (mLayerManager) {
+    mLayerManager->Destroy();
+  }
   mLayerManager = nsnull;
   mTabChild = nsnull;
   return NS_OK;
@@ -310,7 +315,7 @@ PuppetWidget::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
 }
 
 LayerManager*
-PuppetWidget::GetLayerManager(bool* aAllowRetaining)
+PuppetWidget::GetLayerManager(LayerManagerPersistence, bool* aAllowRetaining)
 {
   if (!mLayerManager) {
     mLayerManager = new BasicShadowLayerManager(this);
@@ -373,7 +378,7 @@ NS_IMETHODIMP
 PuppetWidget::SetInputMode(const IMEContext& aContext)
 {
   if (mTabChild &&
-      mTabChild->SendSetInputMode(aContext.mStatus, aContext.mHTMLInputType))
+      mTabChild->SendSetInputMode(aContext.mStatus, aContext.mHTMLInputType, aContext.mActionHint))
     return NS_OK;
   return NS_ERROR_FAILURE;
 }
@@ -547,6 +552,17 @@ PuppetWidget::PaintTask::Run()
     mWidget->DispatchPaintEvent();
   }
   return NS_OK;
+}
+
+float
+PuppetWidget::GetDPI()
+{
+  if (mDPI < 0) {
+    NS_ABORT_IF_FALSE(mTabChild, "Need TabChild to get the DPI from!");
+    mTabChild->SendGetDPI(&mDPI);
+  }
+
+  return mDPI;
 }
 
 }  // namespace widget
