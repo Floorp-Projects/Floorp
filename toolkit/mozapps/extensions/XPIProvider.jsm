@@ -1069,8 +1069,10 @@ function recursiveRemove(aFile) {
     return;
   }
   catch (e) {
-    if (!aFile.isDirectory())
+    if (!aFile.isDirectory()) {
+      ERROR("Failed to remove file " + aFile.path, e);
       throw e;
+    }
   }
 
   let entry;
@@ -1671,7 +1673,7 @@ var XPIProvider = {
         }
         catch (e) {
           // Non-critical, just saves some perf on startup if we clean this up.
-          LOG("Error removing XPI staging dir " + stagedXPIDir.path + ": " + e);
+          LOG("Error removing XPI staging dir " + stagedXPIDir.path, e);
         }
       }
 
@@ -1774,7 +1776,7 @@ var XPIProvider = {
       }
       catch (e) {
         // Non-critical, just saves some perf on startup if we clean this up.
-        LOG("Error removing staging dir " + stagingDir.path + ": " + e);
+        LOG("Error removing staging dir " + stagingDir.path, e);
       }
     });
     return changed;
@@ -4941,6 +4943,9 @@ AddonInstall.prototype = {
       break;
     case AddonManager.STATE_INSTALLED:
       LOG("Cancelling install of " + this.addon.id);
+      let xpi = this.installLocation.getStagingDir();
+      xpi.append(this.addon.id + ".xpi");
+      Services.obs.notifyObservers(xpi, "flush-cache-entry", null);
       cleanStagingDir(this.installLocation.getStagingDir(),
                       [this.addon.id, this.addon.id + ".xpi",
                        this.addon.id + ".json"]);
