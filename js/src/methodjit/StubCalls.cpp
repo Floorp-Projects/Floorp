@@ -2450,15 +2450,15 @@ stubs::LookupSwitch(VMFrame &f, jsbytecode *pc)
 {
     jsbytecode *jpc = pc;
     JSScript *script = f.fp()->script();
-    void **nmap = script->nativeMap(f.fp()->isConstructing());
+    bool ctor = f.fp()->isConstructing();
 
     /* This is correct because the compiler adjusts the stack beforehand. */
     Value lval = f.regs.sp[-1];
 
     if (!lval.isPrimitive()) {
-        ptrdiff_t offs = (pc + GET_JUMP_OFFSET(pc)) - script->code;
-        JS_ASSERT(nmap[offs]);
-        return nmap[offs];
+        void* native = script->nativeCodeForPC(ctor, pc + GET_JUMP_OFFSET(pc));
+        JS_ASSERT(native);
+        return native;
     }
 
     JS_ASSERT(pc[0] == JSOP_LOOKUPSWITCH);
@@ -2477,9 +2477,10 @@ stubs::LookupSwitch(VMFrame &f, jsbytecode *pc)
             if (rval.isString()) {
                 JSString *rhs = rval.toString();
                 if (rhs == str || js_EqualStrings(str, rhs)) {
-                    ptrdiff_t offs = (jpc + GET_JUMP_OFFSET(pc)) - script->code;
-                    JS_ASSERT(nmap[offs]);
-                    return nmap[offs];
+                    void* native = script->nativeCodeForPC(ctor,
+                                                           jpc + GET_JUMP_OFFSET(pc));
+                    JS_ASSERT(native);
+                    return native;
                 }
             }
             pc += JUMP_OFFSET_LEN;
@@ -2490,9 +2491,10 @@ stubs::LookupSwitch(VMFrame &f, jsbytecode *pc)
             Value rval = script->getConst(GET_INDEX(pc));
             pc += INDEX_LEN;
             if (rval.isNumber() && d == rval.toNumber()) {
-                ptrdiff_t offs = (jpc + GET_JUMP_OFFSET(pc)) - script->code;
-                JS_ASSERT(nmap[offs]);
-                return nmap[offs];
+                void* native = script->nativeCodeForPC(ctor,
+                                                       jpc + GET_JUMP_OFFSET(pc));
+                JS_ASSERT(native);
+                return native;
             }
             pc += JUMP_OFFSET_LEN;
         }
@@ -2501,17 +2503,18 @@ stubs::LookupSwitch(VMFrame &f, jsbytecode *pc)
             Value rval = script->getConst(GET_INDEX(pc));
             pc += INDEX_LEN;
             if (lval == rval) {
-                ptrdiff_t offs = (jpc + GET_JUMP_OFFSET(pc)) - script->code;
-                JS_ASSERT(nmap[offs]);
-                return nmap[offs];
+                void* native = script->nativeCodeForPC(ctor,
+                                                       jpc + GET_JUMP_OFFSET(pc));
+                JS_ASSERT(native);
+                return native;
             }
             pc += JUMP_OFFSET_LEN;
         }
     }
 
-    ptrdiff_t offs = (jpc + GET_JUMP_OFFSET(jpc)) - script->code;
-    JS_ASSERT(nmap[offs]);
-    return nmap[offs];
+    void* native = script->nativeCodeForPC(ctor, jpc + GET_JUMP_OFFSET(jpc));
+    JS_ASSERT(native);
+    return native;
 }
 
 void * JS_FASTCALL
@@ -2556,13 +2559,12 @@ stubs::TableSwitch(VMFrame &f, jsbytecode *origPc)
     }
 
 finally:
-    JSScript *script = f.fp()->script();
-    void **nmap = script->nativeMap(f.fp()->isConstructing());
-
     /* Provide the native address. */
-    ptrdiff_t offset = (originalPC + jumpOffset) - script->code;
-    JS_ASSERT(nmap[offset]);
-    return nmap[offset];
+    JSScript* script = f.fp()->script();
+    void* native = script->nativeCodeForPC(f.fp()->isConstructing(),
+                                           originalPC + jumpOffset);
+    JS_ASSERT(native);
+    return native;
 }
 
 void JS_FASTCALL
