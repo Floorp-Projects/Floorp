@@ -3179,83 +3179,86 @@ nsPluginHost::HandleBadPlugin(PRLibrary* aLibrary, nsIPluginInstance *aInstance)
   // can also be used to look up the plugin name, but we cannot get rid of it because
   // the |nsIPluginHost| interface is deprecated which in fact means 'frozen'
 
-  nsresult rv = NS_OK;
-
-  NS_ASSERTION(PR_FALSE, "Plugin performed illegal operation");
+  NS_ERROR("Plugin performed illegal operation");
+  NS_ENSURE_ARG_POINTER(aInstance);
 
   if (mDontShowBadPluginMessage)
-    return rv;
+    return NS_OK;
 
   nsCOMPtr<nsIPluginInstanceOwner> owner;
-  if (aInstance)
-    aInstance->GetOwner(getter_AddRefs(owner));
+  aInstance->GetOwner(getter_AddRefs(owner));
 
   nsCOMPtr<nsIPrompt> prompt;
   GetPrompt(owner, getter_AddRefs(prompt));
-  if (prompt) {
-    nsCOMPtr<nsIStringBundleService> strings =
-      mozilla::services::GetStringBundleService();
-    if (!strings)
-      return NS_ERROR_FAILURE;
+  if (!prompt)
+    return NS_OK;
 
-    nsCOMPtr<nsIStringBundle> bundle;
-    rv = strings->CreateBundle(BRAND_PROPERTIES_URL, getter_AddRefs(bundle));
-    if (NS_FAILED(rv))
-      return rv;
+  nsCOMPtr<nsIStringBundleService> strings =
+    mozilla::services::GetStringBundleService();
+  if (!strings)
+    return NS_ERROR_FAILURE;
 
-    nsXPIDLString brandName;
-    if (NS_FAILED(rv = bundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(),
-                                 getter_Copies(brandName))))
-      return rv;
+  nsCOMPtr<nsIStringBundle> bundle;
+  nsresult rv = strings->CreateBundle(BRAND_PROPERTIES_URL, getter_AddRefs(bundle));
+  if (NS_FAILED(rv))
+    return rv;
 
-    rv = strings->CreateBundle(PLUGIN_PROPERTIES_URL, getter_AddRefs(bundle));
-    if (NS_FAILED(rv))
-      return rv;
+  nsXPIDLString brandName;
+  rv = bundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(),
+                                 getter_Copies(brandName));
+  if (NS_FAILED(rv))
+    return rv;
 
-    nsXPIDLString title, message, checkboxMessage;
-    if (NS_FAILED(rv = bundle->GetStringFromName(NS_LITERAL_STRING("BadPluginTitle").get(),
-                                 getter_Copies(title))))
-      return rv;
+  rv = strings->CreateBundle(PLUGIN_PROPERTIES_URL, getter_AddRefs(bundle));
+  if (NS_FAILED(rv))
+    return rv;
 
-    const PRUnichar *formatStrings[] = { brandName.get() };
-    if (NS_FAILED(rv = bundle->FormatStringFromName(NS_LITERAL_STRING("BadPluginMessage").get(),
-                                 formatStrings, 1, getter_Copies(message))))
-      return rv;
+  nsXPIDLString title, message, checkboxMessage;
+  rv = bundle->GetStringFromName(NS_LITERAL_STRING("BadPluginTitle").get(),
+                                 getter_Copies(title));
+  if (NS_FAILED(rv))
+    return rv;
 
-    if (NS_FAILED(rv = bundle->GetStringFromName(NS_LITERAL_STRING("BadPluginCheckboxMessage").get(),
-                                 getter_Copies(checkboxMessage))))
-      return rv;
+  const PRUnichar *formatStrings[] = { brandName.get() };
+  if (NS_FAILED(rv = bundle->FormatStringFromName(NS_LITERAL_STRING("BadPluginMessage").get(),
+                               formatStrings, 1, getter_Copies(message))))
+    return rv;
 
-    nsNPAPIPluginInstance *instance = static_cast<nsNPAPIPluginInstance*>(aInstance);
+  rv = bundle->GetStringFromName(NS_LITERAL_STRING("BadPluginCheckboxMessage").get(),
+                                 getter_Copies(checkboxMessage));
+  if (NS_FAILED(rv))
+    return rv;
 
-    nsNPAPIPlugin *plugin = instance->GetPlugin();
-    if (!plugin)
-      return NS_ERROR_FAILURE;
+  nsNPAPIPluginInstance *instance = static_cast<nsNPAPIPluginInstance*>(aInstance);
 
-    nsPluginTag *pluginTag = TagForPlugin(plugin);
+  nsNPAPIPlugin *plugin = instance->GetPlugin();
+  if (!plugin)
+    return NS_ERROR_FAILURE;
 
-    // add plugin name to the message
-    nsCString pluginname;
-    if (!pluginTag->mName.IsEmpty())
-      pluginname = pluginTag->mName;
-    else
-      pluginname = pluginTag->mFileName;
+  nsPluginTag *pluginTag = TagForPlugin(plugin);
 
-    NS_ConvertUTF8toUTF16 msg(pluginname);
-    msg.AppendLiteral("\n\n");
-    msg.Append(message);
-
-    PRInt32 buttonPressed;
-    PRBool checkboxState = PR_FALSE;
-    rv = prompt->ConfirmEx(title, msg.get(),
-                         nsIPrompt::BUTTON_TITLE_OK * nsIPrompt::BUTTON_POS_0,
-                         nsnull, nsnull, nsnull,
-                         checkboxMessage, &checkboxState, &buttonPressed);
-
-
-    if (NS_SUCCEEDED(rv) && checkboxState)
-      mDontShowBadPluginMessage = PR_TRUE;
+  // add plugin name to the message
+  nsCString pluginname;
+  if (!pluginTag->mName.IsEmpty()) {
+    pluginname = pluginTag->mName;
+  } else {
+    pluginname = pluginTag->mFileName;
   }
+
+  NS_ConvertUTF8toUTF16 msg(pluginname);
+  msg.AppendLiteral("\n\n");
+  msg.Append(message);
+
+  PRInt32 buttonPressed;
+  PRBool checkboxState = PR_FALSE;
+  rv = prompt->ConfirmEx(title, msg.get(),
+                       nsIPrompt::BUTTON_TITLE_OK * nsIPrompt::BUTTON_POS_0,
+                       nsnull, nsnull, nsnull,
+                       checkboxMessage, &checkboxState, &buttonPressed);
+
+
+  if (NS_SUCCEEDED(rv) && checkboxState)
+    mDontShowBadPluginMessage = PR_TRUE;
 
   return rv;
 }
