@@ -2924,9 +2924,7 @@ nsWebSocket::Initialize(nsISupports* aOwner,
 {
   nsAutoString urlParam, protocolParam;
 
-  PRBool prefEnabled =
-    nsContentUtils::GetBoolPref("network.websocket.enabled", PR_TRUE);
-  if (!prefEnabled) {
+  if (!PrefEnabled()) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
@@ -3102,6 +3100,14 @@ nsWebSocket::CreateAndDispatchCloseEvent(PRBool aWasClean)
   NS_ENSURE_SUCCESS(rv, rv);
 
   return DispatchDOMEvent(nsnull, event, nsnull, nsnull);
+}
+
+PRBool
+nsWebSocket::PrefEnabled()
+{
+  return nsContentUtils::GetBoolPref("network.websocket.enabled", PR_TRUE) &&
+    nsContentUtils::GetBoolPref("network.websocket.override-security-block",
+                                PR_FALSE);
 }
 
 void
@@ -3502,9 +3508,7 @@ nsWebSocket::Init(nsIPrincipal* aPrincipal,
 
   NS_ENSURE_ARG(aPrincipal);
 
-  PRBool prefEnabled =
-    nsContentUtils::GetBoolPref("network.websocket.enabled", PR_TRUE);
-  if (!prefEnabled) {
+  if (!PrefEnabled()) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
