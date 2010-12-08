@@ -221,36 +221,7 @@ Atob(JSContext *cx, uintN argc, jsval *vp)
     if (!argc)
         return JS_TRUE;
 
-    JSString *str = JS_ValueToString(cx, JS_ARGV(cx, vp)[0]);
-    if (!str)
-        return JS_FALSE;
-
-    size_t len = JS_GetStringEncodingLength(cx, str);
-    if (len == size_t(-1))
-        return JS_FALSE;
-
-    JSUint32 alloc_len = (len + 1) * sizeof(char);
-    char *buffer = static_cast<char *>(nsMemory::Alloc(alloc_len));
-    if (!buffer)
-        return JS_FALSE;
-
-    JS_EncodeStringToBuffer(str, buffer, len);
-    buffer[len] = '\0';
-
-    nsDependentCString string(buffer, JS_GetStringLength(str));
-    nsCAutoString result;
-
-    if (NS_FAILED(nsXPConnect::Base64Decode(string, result))) {
-        JS_ReportError(cx, "Failed to decode base64 string!");
-        return JS_FALSE;
-    }
-
-    str = JS_NewStringCopyN(cx, result.get(), result.Length());
-    if (!str)
-        return JS_FALSE;
-
-    JS_SET_RVAL(cx, vp, STRING_TO_JSVAL(str));
-    return JS_TRUE;
+    return nsXPConnect::Base64Decode(cx, JS_ARGV(cx, vp)[0], &JS_RVAL(cx, vp));
 }
 
 static JSBool
@@ -259,36 +230,7 @@ Btoa(JSContext *cx, uintN argc, jsval *vp)
     if (!argc)
         return JS_TRUE;
 
-    JSString *str = JS_ValueToString(cx, JS_ARGV(cx, vp)[0]);
-    if (!str)
-        return JS_FALSE;
-
-    size_t len = JS_GetStringEncodingLength(cx, str);
-    if (len == size_t(-1))
-        return JS_FALSE;
-
-    JSUint32 alloc_len = (len + 1) * sizeof(char);
-    char *buffer = static_cast<char *>(nsMemory::Alloc(alloc_len));
-    if (!buffer)
-        return JS_FALSE;
-
-    JS_EncodeStringToBuffer(str, buffer, len);
-    buffer[len] = '\0';
-
-    nsDependentCString data(buffer, len);
-    nsCAutoString result;
-
-    if (NS_FAILED(nsXPConnect::Base64Encode(data, result))) {
-        JS_ReportError(cx, "Failed to encode base64 data!");
-        return JS_FALSE;
-    }
-
-    str = JS_NewStringCopyN(cx, result.get(), result.Length());
-    if (!str)
-        return JS_FALSE;
-
-    JS_SET_RVAL(cx, vp, STRING_TO_JSVAL(str));
-    return JS_TRUE;
+    return nsXPConnect::Base64Encode(cx, JS_ARGV(cx, vp)[0], &JS_RVAL(cx, vp));
 }
 
 static JSFunctionSpec gGlobalFun[] = {
