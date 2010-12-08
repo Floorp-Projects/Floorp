@@ -752,6 +752,11 @@ pref("network.ftp.control.qos", 0);
 // </http>
 
 // <ws>: WebSocket
+// The -76 websocket network protocol may be subject to HTTP cache poisoning
+// attacks. Until there is a secure open standard available and implemented
+// in necko the override-security-block preference must be set to true before
+// the normal enabled preference is considered. Bug 616733
+pref("network.websocket.override-security-block", false);
 pref("network.websocket.enabled", true);
 // </ws>
 
