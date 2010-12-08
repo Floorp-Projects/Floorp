@@ -933,13 +933,6 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     if (aNotify) {
       nsIDocument* doc = GetCurrentDoc();
 
-      if (aName == nsGkAtoms::type) {
-        UpdateEditableState();
-      } else if (IsSingleLineTextControl(PR_FALSE) && aName == nsGkAtoms::readonly) {
-        UpdateEditableState();
-        states |= NS_EVENT_STATE_MOZ_READONLY | NS_EVENT_STATE_MOZ_READWRITE;
-      }
-
       if (doc && !states.IsEmpty()) {
         MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
         doc->ContentStatesChanged(this, nsnull, states);
