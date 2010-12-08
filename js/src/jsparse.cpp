@@ -3159,7 +3159,7 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
     if (!outertc->inFunction() && topLevel && funAtom && !lambda &&
         outertc->compiling()) {
         JS_ASSERT(pn->pn_cookie.isFree());
-        if (!DefineGlobal(pn, (JSCodeGenerator *)outertc, funAtom))
+        if (!DefineGlobal(pn, outertc->asCodeGenerator(), funAtom))
             return false;
     }
 
@@ -3583,7 +3583,7 @@ BindGvar(JSParseNode *pn, JSTreeContext *tc)
     if (!tc->compiling() || tc->parser->callerFrame)
         return true;
 
-    JSCodeGenerator *cg = (JSCodeGenerator *) tc;
+    JSCodeGenerator *cg = tc->asCodeGenerator();
 
     if (pn->pn_dflags & PND_CONST)
         return true;
