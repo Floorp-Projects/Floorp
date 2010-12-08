@@ -367,8 +367,39 @@ nsDOMWorkerFunctions::AtoB(JSContext* aCx,
     return JS_FALSE;
   }
 
-  return nsXPConnect::Base64Decode(aCx, JS_ARGV(aCx, aVp)[0],
-                                   &JS_RVAL(aCx, aVp));
+  JSString* str = JS_ValueToString(aCx, JS_ARGV(aCx, aVp)[0]);
+  if (!str) {
+    NS_ASSERTION(JS_IsExceptionPending(aCx), "Need to set an exception!");
+    return JS_FALSE;
+  }
+
+  size_t len = JS_GetStringEncodingLength(aCx, str);
+  if (len == size_t(-1))
+      return JS_FALSE;
+
+  JSUint32 alloc_len = (len + 1) * sizeof(char);
+  char *buffer = static_cast<char *>(nsMemory::Alloc(alloc_len));
+  if (!buffer)
+      return JS_FALSE;
+
+  JS_EncodeStringToBuffer(str, buffer, len);
+  buffer[len] = '\0';
+
+  nsDependentCString string(buffer, len);
+  nsCAutoString result;
+
+  if (NS_FAILED(nsXPConnect::Base64Decode(string, result))) {
+    JS_ReportError(aCx, "Failed to decode base64 string!");
+    return JS_FALSE;
+  }
+
+  str = JS_NewStringCopyN(aCx, result.get(), result.Length());
+  if (!str) {
+    return JS_FALSE;
+  }
+
+  JS_SET_RVAL(aCx, aVp, STRING_TO_JSVAL(str));
+  return JS_TRUE;
 }
 
 JSBool
@@ -388,8 +419,39 @@ nsDOMWorkerFunctions::BtoA(JSContext* aCx,
     return JS_FALSE;
   }
 
-  return nsXPConnect::Base64Encode(aCx, JS_ARGV(aCx, aVp)[0],
-                                   &JS_RVAL(aCx, aVp));
+  JSString* str = JS_ValueToString(aCx, JS_ARGV(aCx, aVp)[0]);
+  if (!str) {
+    NS_ASSERTION(JS_IsExceptionPending(aCx), "Need to set an exception!");
+    return JS_FALSE;
+  }
+
+  size_t len = JS_GetStringEncodingLength(aCx, str);
+  if (len == size_t(-1))
+      return JS_FALSE;
+
+  JSUint32 alloc_len = (len + 1) * sizeof(char);
+  char *buffer = static_cast<char *>(nsMemory::Alloc(alloc_len));
+  if (!buffer)
+      return JS_FALSE;
+
+  JS_EncodeStringToBuffer(str, buffer, len);
+  buffer[len] = '\0';
+
+  nsDependentCString string(buffer, len);
+  nsCAutoString result;
+
+  if (NS_FAILED(nsXPConnect::Base64Encode(string, result))) {
+    JS_ReportError(aCx, "Failed to encode base64 data!");
+    return JS_FALSE;
+  }
+
+  str = JS_NewStringCopyN(aCx, result.get(), result.Length());
+  if (!str) {
+    return JS_FALSE;
+  }
+
+  JS_SET_RVAL(aCx, aVp, STRING_TO_JSVAL(str));
+  return JS_TRUE;
 }
 
 JSBool

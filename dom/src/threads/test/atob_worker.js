@@ -1,4 +1,7 @@
-var data = [ -1, 0, 1, 1.5, null, undefined, true, false ];
+var data = [ -1, 0, 1, 1.5, undefined, true, false ];
+
+// XXXbent window.atob treats |null| as the empty string, whereas worker.atob
+//         and the js component loader treat it as the string 'null'. Meh.
 
 var str = "";
 for (var i = 0; i < 30; i++) {
