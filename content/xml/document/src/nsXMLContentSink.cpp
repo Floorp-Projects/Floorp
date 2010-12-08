@@ -514,6 +514,7 @@ nsXMLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
     ) {
     nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(content);
     sele->SetScriptLineNumber(aLineNumber);
+    sele->SetCreatorParser(mParser);
     mConstrainSize = PR_FALSE;
   }
 
