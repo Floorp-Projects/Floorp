@@ -266,6 +266,8 @@ endif
 ifndef MOZ_TREE_PIXMAN
 CFLAGS += $(MOZ_CAIRO_CFLAGS)
 CXXFLAGS += $(MOZ_CAIRO_CFLAGS)
+else
+DEFINES += -DMOZ_TREE_PIXMAN
 endif
 
 cairo-features.h: $(srcdir)/cairo-features.h.in $(GLOBAL_DEPS)

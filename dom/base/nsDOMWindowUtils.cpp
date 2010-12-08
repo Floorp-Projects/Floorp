@@ -403,7 +403,7 @@ nsDOMWindowUtils::SendMouseEventCommon(const nsAString& aType,
       return NS_ERROR_FAILURE;
 
     status = nsEventStatus_eIgnore;
-    rv = vo->HandleEvent(view, &event, &status);
+    rv = vo->HandleEvent(view, &event, PR_FALSE, &status);
   } else {
     rv = widget->DispatchEvent(&event, status);
   }

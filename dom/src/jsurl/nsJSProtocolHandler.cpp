@@ -308,10 +308,6 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
         NS_ENSURE_SUCCESS(rv, rv);
 
         jsval rval = JSVAL_VOID;
-        nsAutoGCRoot root(&rval, &rv);
-        if (NS_FAILED(rv)) {
-            return rv;
-        }
 
         // Push our JSContext on the context stack so the JS_ValueToString call (and
         // JS_ReportPendingException, if relevant) will use the principal of cx.

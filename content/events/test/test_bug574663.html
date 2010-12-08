@@ -107,6 +107,8 @@ function initPrefs()
   // Disables the app level scroll acceleration
   prefSvc.setIntPref("mousewheel.acceleration.start", -1);
   prefSvc.setBoolPref("mousewheel.system_scroll_override_on_root_content.enabled", false);
+  // Enable zooming for ctrl-scrolling
+  prefSvc.setIntPref("mousewheel.withcontrolkey.action", 3);
 }
 
 function clearPrefs()
@@ -119,6 +121,8 @@ function clearPrefs()
     prefSvc.clearUserPref("mousewheel.acceleration.start");
   if (prefSvc.prefHasUserValue("mousewheel.system_scroll_override_on_root_content.enabled"))
     prefSvc.clearUserPref("mousewheel.system_scroll_override_on_root_content.enabled");
+  if (prefSvc.prefHasUserValue("mousewheel.withcontrolkey.action"))
+    prefSvc.clearUserPref("mousewheel.withcontrolkey.action");
 }
 
 window.onload = function () {

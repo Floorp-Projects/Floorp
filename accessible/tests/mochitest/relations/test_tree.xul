@@ -17,6 +17,8 @@
   <script type="application/javascript"
           src="../common.js" />
   <script type="application/javascript"
+          src="../events.js" />
+  <script type="application/javascript"
           src="../relations.js" />
 
   <script type="application/javascript">
@@ -27,7 +29,6 @@
     function doTestRelations()
     {
       var treeNode = getNode("tree");
-      treeNode.removeEventListener("TreeViewChanged", doTestRelations, false);
 
       var tree = getAccessible(treeNode);
       var treeitem1 = tree.firstChild.nextSibling;
@@ -54,7 +55,7 @@
     function doTest()
     {
       var treeNode = getNode("tree");
-      treeNode.addEventListener("TreeViewChanged", doTestRelations, false);
+      waitForEvent(EVENT_REORDER, treeNode, doTestRelations);
       treeNode.view = new nsTreeTreeView();
     }
 

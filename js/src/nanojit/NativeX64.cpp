@@ -1173,20 +1173,24 @@ namespace nanojit
         Register rf = findRegFor(iffalse, allow & ~rmask(rr));
 
         if (ins->isop(LIR_cmovd)) {
+            // See Nativei386.cpp:asm_cmov() for an explanation of the subtleties here.
             NIns* target = _nIns;
             asm_nongp_copy(rr, rf);
-            asm_branch(false, cond, target);
+            asm_branch_helper(false, cond, target);
 
             // If 'iftrue' isn't in a register, it can be clobbered by 'ins'.
             Register rt = iftrue->isInReg() ? iftrue->getReg() : rr;
 
             if (rr != rt)
                 asm_nongp_copy(rr, rt);
+
             freeResourcesOf(ins);
             if (!iftrue->isInReg()) {
                 NanoAssert(rt == rr);
                 findSpecificRegForUnallocated(iftrue, rr);
             }
+
+            asm_cmp(cond);
             return;
         }
 
@@ -1194,8 +1198,8 @@ namespace nanojit
         Register rt = iftrue->isInReg() ? iftrue->getReg() : rr;
 
         // WARNING: We cannot generate any code that affects the condition
-        // codes between the MRcc generation here and the asm_cmp() call
-        // below.  See asm_cmp() for more details.
+        // codes between the MRcc generation here and the asm_cmpi() call
+        // below.  See asm_cmpi() for more details.
         LOpcode condop = cond->opcode();
         if (ins->isop(LIR_cmovi)) {
             switch (condop) {
@@ -1234,30 +1238,36 @@ namespace nanojit
             findSpecificRegForUnallocated(iftrue, rr);
         }
 
-        asm_cmp(cond);
+        asm_cmpi(cond);
     }
 
-    NIns* Assembler::asm_branch(bool onFalse, LIns *cond, NIns *target) {
-        NanoAssert(cond->isCmp());
-        LOpcode condop = cond->opcode();
+    NIns* Assembler::asm_branch(bool onFalse, LIns* cond, NIns* target) {
+        NIns* patch = asm_branch_helper(onFalse, cond, target);
+        asm_cmp(cond);
+        return patch;
+    }
 
+    NIns* Assembler::asm_branch_helper(bool onFalse, LIns *cond, NIns *target) {
         if (target && !isTargetWithinS32(target)) {
-            // conditional jumps beyond 32bit range, so invert the branch/compare
-            // and emit an unconditional jump to the target
+            // A conditional jump beyond 32-bit range, so invert the
+            // branch/compare and emit an unconditional jump to the target:
             //         j(inverted) B1
             //         jmp target
             //     B1:
             NIns* shortTarget = _nIns;
             JMP(target);
             target = shortTarget;
-
             onFalse = !onFalse;
         }
-        if (isCmpDOpcode(condop))
-            return asm_branchd(onFalse, cond, target);
+        return isCmpDOpcode(cond->opcode())
+             ? asm_branchd_helper(onFalse, cond, target)
+             : asm_branchi_helper(onFalse, cond, target);
+    }
 
+    NIns* Assembler::asm_branchi_helper(bool onFalse, LIns *cond, NIns *target) {
         // We must ensure there's room for the instruction before calculating
         // the offset.  And the offset determines the opcode (8bit or 32bit).
+        LOpcode condop = cond->opcode();
         if (target && isTargetWithinS8(target)) {
             if (onFalse) {
                 switch (condop) {
@@ -1315,9 +1325,7 @@ namespace nanojit
                 }
             }
         }
-        NIns *patch = _nIns;    // address of instruction to patch
-        asm_cmp(cond);
-        return patch;
+        return _nIns;   // address of instruction to patch
     }
 
     NIns* Assembler::asm_branch_ov(LOpcode, NIns* target) {
@@ -1334,13 +1342,17 @@ namespace nanojit
         return _nIns;
     }
 
+    void Assembler::asm_cmp(LIns *cond) {
+        isCmpDOpcode(cond->opcode()) ? asm_cmpd(cond) : asm_cmpi(cond);
+    }
+
     // WARNING: this function cannot generate code that will affect the
     // condition codes prior to the generation of the test/cmp.  See
-    // Nativei386.cpp:asm_cmp() for details.
-    void Assembler::asm_cmp(LIns *cond) {
+    // Nativei386.cpp:asm_cmpi() for details.
+    void Assembler::asm_cmpi(LIns *cond) {
         LIns *b = cond->oprnd2();
         if (isImm32(b)) {
-            asm_cmp_imm(cond);
+            asm_cmpi_imm(cond);
             return;
         }
         LIns *a = cond->oprnd1();
@@ -1361,7 +1373,7 @@ namespace nanojit
         }
     }
 
-    void Assembler::asm_cmp_imm(LIns *cond) {
+    void Assembler::asm_cmpi_imm(LIns *cond) {
         LOpcode condop = cond->opcode();
         LIns *a = cond->oprnd1();
         LIns *b = cond->oprnd2();
@@ -1399,11 +1411,9 @@ namespace nanojit
     //  LIR_jt  jae ja  swap+jae swap+ja  jp over je
     //  LIR_jf  jb  jbe swap+jb  swap+jbe jne+jp
 
-    NIns* Assembler::asm_branchd(bool onFalse, LIns *cond, NIns *target) {
+    NIns* Assembler::asm_branchd_helper(bool onFalse, LIns *cond, NIns *target) {
         LOpcode condop = cond->opcode();
         NIns *patch;
-        LIns *a = cond->oprnd1();
-        LIns *b = cond->oprnd2();
         if (condop == LIR_eqd) {
             if (onFalse) {
                 // branch if unordered or !=
@@ -1422,34 +1432,23 @@ namespace nanojit
             }
         }
         else {
-            if (condop == LIR_ltd) {
-                condop = LIR_gtd;
-                LIns *t = a; a = b; b = t;
-            } else if (condop == LIR_led) {
-                condop = LIR_ged;
-                LIns *t = a; a = b; b = t;
-            }
-            if (condop == LIR_gtd) {
-                if (onFalse)
-                    JBE(8, target);
-                else
-                    JA(8, target);
-            } else { // LIR_ged
-                if (onFalse)
-                    JB(8, target);
-                else
-                    JAE(8, target);
+            // LIR_ltd and LIR_gtd are handled by the same case because
+            // asm_cmpd() converts LIR_ltd(a,b) to LIR_gtd(b,a).  Likewise for
+            // LIR_led/LIR_ged.
+            switch (condop) {
+            case LIR_ltd:
+            case LIR_gtd: if (onFalse) JBE(8, target); else JA(8, target);  break;
+            case LIR_led:
+            case LIR_ged: if (onFalse) JB(8, target);  else JAE(8, target); break;
+            default:      NanoAssert(0);                                    break;
             }
             patch = _nIns;
         }
-        asm_cmpd(a, b);
         return patch;
     }
 
     void Assembler::asm_condd(LIns *ins) {
         LOpcode op = ins->opcode();
-        LIns *a = ins->oprnd1();
-        LIns *b = ins->oprnd2();
         if (op == LIR_eqd) {
             // result = ZF & !PF, must do logic on flags
             // r = al|bl|cl|dl, can only use rh without rex prefix
@@ -1460,30 +1459,40 @@ namespace nanojit
             X86_SETNP(r);       // setnp    rh       rh = !PF
             X86_SETE(r);        // sete     rl       rl = ZF
         } else {
-            if (op == LIR_ltd) {
-                op = LIR_gtd;
-                LIns *t = a; a = b; b = t;
-            } else if (op == LIR_led) {
-                op = LIR_ged;
-                LIns *t = a; a = b; b = t;
-            }
+            // LIR_ltd and LIR_gtd are handled by the same case because
+            // asm_cmpd() converts LIR_ltd(a,b) to LIR_gtd(b,a).  Likewise for
+            // LIR_led/LIR_ged.
             Register r = prepareResultReg(ins, GpRegs); // x64 can use any GPR as setcc target
             MOVZX8(r, r);
-            if (op == LIR_gtd)
-                SETA(r);
-            else
-                SETAE(r);
+            switch (op) {
+            case LIR_ltd:
+            case LIR_gtd: SETA(r);       break;
+            case LIR_led:
+            case LIR_ged: SETAE(r);      break;
+            default:      NanoAssert(0); break;
+            }
         }
 
         freeResourcesOf(ins);
 
-        asm_cmpd(a, b);
+        asm_cmpd(ins);
     }
 
     // WARNING: This function cannot generate any code that will affect the
-    // condition codes prior to the generation of the ucomisd.  See asm_cmp()
+    // condition codes prior to the generation of the ucomisd.  See asm_cmpi()
     // for more details.
-    void Assembler::asm_cmpd(LIns *a, LIns *b) {
+    void Assembler::asm_cmpd(LIns *cond) {
+        LOpcode opcode = cond->opcode();
+        LIns* a = cond->oprnd1();
+        LIns* b = cond->oprnd2();
+        // First, we convert (a < b) into (b > a), and (a <= b) into (b >= a).
+        if (opcode == LIR_ltd) {
+            opcode = LIR_gtd;
+            LIns* t = a; a = b; b = t;
+        } else if (opcode == LIR_led) {
+            opcode = LIR_ged;
+            LIns* t = a; a = b; b = t;
+        }
         Register ra, rb;
         findRegFor2(FpRegs, a, ra, FpRegs, b, rb);
         UCOMISD(ra, rb);
@@ -1518,7 +1527,7 @@ namespace nanojit
     }
 
     // WARNING: the code generated by this function must not affect the
-    // condition codes.  See asm_cmp() for details.
+    // condition codes.  See asm_cmpi() for details.
     void Assembler::asm_restore(LIns *ins, Register r) {
         if (ins->isop(LIR_allocp)) {
             int d = arDisp(ins);
@@ -1587,7 +1596,7 @@ namespace nanojit
         }
         freeResourcesOf(ins);
 
-        asm_cmp(ins);
+        asm_cmpi(ins);
     }
 
     void Assembler::asm_ret(LIns *ins) {

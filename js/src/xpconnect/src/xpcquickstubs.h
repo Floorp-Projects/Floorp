@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -313,33 +313,6 @@ public:
         return *Ptr();
     }
 
-protected:
-    /*
-     * Neither field is initialized; that is left to the derived class
-     * constructor. However, the destructor destroys the string object
-     * stored in mBuf, if mValid is true.
-     */
-    void *mBuf[JS_HOWMANY(sizeof(implementation_type), sizeof(void *))];
-    JSBool mValid;
-};
-
-/**
- * Class for converting a jsval to DOMString.
- *
- *     xpc_qsDOMString arg0(cx, &argv[0]);
- *     if (!arg0.IsValid())
- *         return JS_FALSE;
- *
- * The second argument to the constructor is an in-out parameter. It must
- * point to a rooted jsval, such as a JSNative argument or return value slot.
- * The value in the jsval on entry is converted to a string. The constructor
- * may overwrite that jsval with a string value, to protect the characters of
- * the string from garbage collection. The caller must leave the jsval alone
- * for the lifetime of the xpc_qsDOMString.
- */
-class xpc_qsDOMString : public xpc_qsBasicString<nsAString, nsDependentString>
-{
-public:
     /* Enum that defines how JS |null| and |undefined| should be treated.  See
      * the WebIDL specification.  eStringify means convert to the string "null"
      * or "undefined" respectively, via the standard JS ToString() operation;
@@ -360,6 +333,88 @@ public:
         eDefaultUndefinedBehavior = eStringify
     };
 
+protected:
+    /*
+     * Neither field is initialized; that is left to the derived class
+     * constructor. However, the destructor destroys the string object
+     * stored in mBuf, if mValid is true.
+     */
+    void *mBuf[JS_HOWMANY(sizeof(implementation_type), sizeof(void *))];
+    JSBool mValid;
+
+    /*
+     * If null is returned, then we either failed or fully initialized
+     * |this|; in either case the caller should return immediately
+     * without doing anything else. Otherwise, the JSString* created
+     * from |v| will be returned.  It'll be rooted, as needed, in
+     * *pval.  nullBehavior and undefinedBehavior control what happens
+     * when |v| is JSVAL_IS_NULL and JSVAL_IS_VOID respectively.
+     */
+    template<class traits>
+    JSString* InitOrStringify(JSContext* cx, jsval v, jsval* pval,
+                              StringificationBehavior nullBehavior,
+                              StringificationBehavior undefinedBehavior) {
+        JSString *s;
+        if(JSVAL_IS_STRING(v))
+        {
+            s = JSVAL_TO_STRING(v);
+        }
+        else
+        {
+            StringificationBehavior behavior = eStringify;
+            if(JSVAL_IS_NULL(v))
+            {
+                behavior = nullBehavior;
+            }
+            else if(JSVAL_IS_VOID(v))
+            {
+                behavior = undefinedBehavior;
+            }
+
+            // If pval is null, that means the argument was optional and
+            // not passed; turn those into void strings if they're
+            // supposed to be stringified.
+            if (behavior != eStringify || !pval)
+            {
+                // Here behavior == eStringify implies !pval, so both eNull and
+                // eStringify should end up with void strings.
+                (new(mBuf) implementation_type(
+                    traits::sEmptyBuffer, PRUint32(0)))->
+                    SetIsVoid(behavior != eEmpty);
+                mValid = JS_TRUE;
+                return nsnull;
+            }
+
+            s = JS_ValueToString(cx, v);
+            if(!s)
+            {
+                mValid = JS_FALSE;
+                return nsnull;
+            }
+            *pval = STRING_TO_JSVAL(s);  // Root the new string.
+        }
+
+        return s;
+    }
+};
+
+/**
+ * Class for converting a jsval to DOMString.
+ *
+ *     xpc_qsDOMString arg0(cx, &argv[0]);
+ *     if (!arg0.IsValid())
+ *         return JS_FALSE;
+ *
+ * The second argument to the constructor is an in-out parameter. It must
+ * point to a rooted jsval, such as a JSNative argument or return value slot.
+ * The value in the jsval on entry is converted to a string. The constructor
+ * may overwrite that jsval with a string value, to protect the characters of
+ * the string from garbage collection. The caller must leave the jsval alone
+ * for the lifetime of the xpc_qsDOMString.
+ */
+class xpc_qsDOMString : public xpc_qsBasicString<nsAString, nsDependentString>
+{
+public:
     xpc_qsDOMString(JSContext *cx, jsval v, jsval *pval,
                     StringificationBehavior nullBehavior,
                     StringificationBehavior undefinedBehavior);
@@ -385,6 +440,16 @@ class xpc_qsACString : public xpc_qsBasicString<nsACString, nsCString>
 {
 public:
     xpc_qsACString(JSContext *cx, jsval v, jsval *pval);
+};
+
+/**
+ * And similar for AUTF8String.
+ */
+class xpc_qsAUTF8String :
+  public xpc_qsBasicString<nsACString, NS_ConvertUTF16toUTF8>
+{
+public:
+  xpc_qsAUTF8String(JSContext* cx, jsval v, jsval *pval);
 };
 
 struct xpc_qsSelfRef

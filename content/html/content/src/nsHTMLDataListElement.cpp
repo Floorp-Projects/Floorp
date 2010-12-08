@@ -95,7 +95,8 @@ nsHTMLDataListElement::~nsHTMLDataListElement()
 }
 
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsHTMLDataListElement)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsHTMLDataListElement,
+                                                nsGenericHTMLElement)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOptions)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -110,7 +111,7 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLDataListElement, nsGenericElement)
 
 DOMCI_NODE_DATA(HTMLDataListElement, nsHTMLDataListElement)
 
-NS_INTERFACE_TABLE_HEAD(nsHTMLDataListElement)
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLDataListElement)
   NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLDataListElement, nsIDOMHTMLDataListElement)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLDataListElement,
                                                nsGenericHTMLElement)

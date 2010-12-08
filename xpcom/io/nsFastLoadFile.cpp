@@ -61,6 +61,23 @@
 #include <sys/mman.h>
 #endif
 
+#ifdef XP_WIN
+#include <windows.h>
+#include "private/pprio.h"  // To get PR_ImportFile
+
+#define MOZ_WIN_MEM_TRY_BEGIN __try {
+#define MOZ_WIN_MEM_TRY_CATCH(cmd) }                                \
+  __except(GetExceptionCode()==EXCEPTION_IN_PAGE_ERROR ?            \
+           EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH)   \
+  {                                                                 \
+    NS_WARNING("EXCEPTION_IN_PAGE_ERROR in " __FUNCTION__);         \
+    cmd;                                                            \
+  }
+#else
+#define MOZ_WIN_MEM_TRY_BEGIN {
+#define MOZ_WIN_MEM_TRY_CATCH(cmd) }
+#endif
+
 #ifdef DEBUG_brendan
 # define METERING
 # define DEBUG_MUX
@@ -568,7 +585,9 @@ nsFastLoadFileReader::Read(char* aBuffer, PRUint32 aCount, PRUint32 *aBytesRead)
         return NS_BASE_STREAM_CLOSED;
 
     PRUint32 count = PR_MIN(mFileLen - mFilePos, aCount);
+MOZ_WIN_MEM_TRY_BEGIN
     memcpy(aBuffer, mFileData+mFilePos, count);
+MOZ_WIN_MEM_TRY_CATCH(return NS_ERROR_FAILURE)
     *aBytesRead = count;
     mFilePos += count;
     if (entry) {
@@ -598,9 +617,11 @@ nsFastLoadFileReader::ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
 
     PRUint32 count = PR_MIN(mFileLen - mFilePos, aCount);
 
+MOZ_WIN_MEM_TRY_BEGIN
     // Errors returned from the writer get ignored.
     aWriter(this, aClosure, (char*)(mFileData + mFilePos), 0,
             count, aResult);
+MOZ_WIN_MEM_TRY_CATCH(return NS_ERROR_FAILURE)
     mFilePos += count;
     if (entry) {
         NS_ASSERTION(entry->mBytesLeft >= *aResult,
@@ -622,10 +643,36 @@ nsFastLoadFileReader::ComputeChecksum(PRUint32 *aResult)
     PRUint32 checksum = 0;
     // Skip first 2 fields.
     PRUint32 pos = offsetof(nsFastLoadHeader, mVersion);
+#ifdef XP_WIN
+    if (pos != PR_Seek(mFD, pos, PR_SEEK_SET))
+        return NS_ERROR_FAILURE;
+    PRUint32 len, rem = 0;
+    char buf[64 * 1024];
+    while ((len = PR_Read(mFD, buf + rem, sizeof(buf) - rem)) && len > 0) {
+        len += rem;
+        rem = NS_AccumulateFastLoadChecksum(&checksum,
+                                            reinterpret_cast<PRUint8*>(buf),
+                                            len,
+                                            PR_FALSE);
+        if (rem)
+            memcpy(buf, buf + len - rem, rem);
+    }
+    if (len < 0)
+        return NS_ERROR_FAILURE;
+
+    if (rem) {
+        NS_AccumulateFastLoadChecksum(&checksum,
+                                      reinterpret_cast<PRUint8*>(buf),
+                                      rem,
+                                      PR_TRUE);
+    }
+
+#else
     NS_AccumulateFastLoadChecksum(&checksum,
                                   mFileData + pos,
                                   mFileLen - pos,
                                   PR_TRUE);
+#endif
     *aResult = checksum;
     return NS_OK;
 }
@@ -863,14 +910,27 @@ nsresult
 nsFastLoadFileReader::Open()
 {
     nsresult rv;
+    PRFileDesc *fd;    // OS file-descriptor
+    {    
+#ifdef XP_WIN
+    nsAutoString name;
+    rv = mFile->GetPath(name);
+    NS_ENSURE_SUCCESS(rv, rv);
+    // By not using OpenNSPRFileDesc can pass FILE_FLAG_SEQUENTIAL_SCAN so Windows reads in the file faster
+    HANDLE winFD = ::CreateFileW(name.get(), GENERIC_READ, FILE_SHARE_READ,
+                                 NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+    if (winFD == INVALID_HANDLE_VALUE)
+        return NS_ERROR_FAILURE;
+    fd = PR_ImportFile((PROsfd) winFD);
+#else
     nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(mFile, &rv);
     if (NS_FAILED(rv))
         return rv;
-    PRFileDesc *fd;    // OS file-descriptor
     rv = localFile->OpenNSPRFileDesc(PR_RDONLY, 0, &fd);
     if (NS_FAILED(rv))
         return rv;
-
+#endif
+    }
     PRInt64 size = PR_Available64(fd);
     if (size >= PR_INT32_MAX) {
         PR_Close(fd);
@@ -890,8 +950,12 @@ nsFastLoadFileReader::Open()
     }
 
     mFileData = (PRUint8*) PR_MemMap(mFileMap, 0, mFileLen);
-    // At this point the non-mmap file descriptor is no longer needed
+#ifdef XP_WIN
+    mFD = fd;
+#else
+    // At this point the non-mmap file descriptor is no longer needed on non-windows
     PR_Close(fd);
+#endif
 
     if (!mFileData)
         return NS_ERROR_FAILURE;
@@ -900,6 +964,7 @@ nsFastLoadFileReader::Open()
     madvise((char *)mFileData, mFileLen, MADV_WILLNEED);
 #endif
 
+MOZ_WIN_MEM_TRY_BEGIN
     rv = ReadHeader(&mHeader);
     if (NS_FAILED(rv))
         return rv;
@@ -908,19 +973,22 @@ nsFastLoadFileReader::Open()
     rv = ComputeChecksum(&checksum);
     if (NS_FAILED(rv))
         return rv;
-    
+
     if (checksum != mHeader.mChecksum)
         return NS_ERROR_FAILURE;
 
     if (mHeader.mVersion != MFL_FILE_VERSION ||
-        mHeader.mFooterOffset == 0 || 
+        mHeader.mFooterOffset == 0 ||
         memcmp(mHeader.mMagic, magic, MFL_FILE_MAGIC_SIZE))
         return NS_ERROR_UNEXPECTED;
-    
+
     SeekTo(mHeader.mFooterOffset);
 
     rv = ReadFooter(&mFooter);
-    if (NS_FAILED(rv))
+
+MOZ_WIN_MEM_TRY_CATCH(return NS_ERROR_FAILURE)
+
+   if (NS_FAILED(rv))
         return rv;
 
     SeekTo(sizeof(nsFastLoadHeader));
@@ -948,10 +1016,14 @@ nsFastLoadFileReader::Close()
         PR_CloseFileMap(mFileMap);
         mFileMap = nsnull;
     }
+    
+#ifdef XP_WIN
+    mFD = nsnull;
+#endif
 
     mFileLen = 0;
     mFilePos = 0;
-    
+
     if (!mFooter.mObjectMap)
         return NS_OK;
 
@@ -1851,7 +1923,7 @@ nsresult
 nsFastLoadFileWriter::Open()
 {
     nsresult rv;
-    
+
     if (!mSeekableOutput)
         return NS_ERROR_FAILURE;
 
@@ -1936,7 +2008,7 @@ nsFastLoadFileWriter::Close()
         rv = mFileIO->GetInputStream(getter_AddRefs(input));
         if (NS_FAILED(rv))
             return rv;
- 
+
         // Seek the input stream to right after checksum/magic.
         nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(input);
         rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET,
@@ -2158,7 +2230,7 @@ nsFastLoadFileWriter::WriteCompoundObject(nsISupports* aObject,
 {
     nsresult rv;
     nsCOMPtr<nsISupports> rootObject(do_QueryInterface(aObject));
-    
+
     // We could assert that |rootObject != aObject|, but that would prevent
     // callers who don't know whether they're dealing with the primary
     // nsISupports pointer (e.g., they don't know which implementation of

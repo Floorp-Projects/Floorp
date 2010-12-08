@@ -1077,41 +1077,50 @@ JSObject::changeProperty(JSContext *cx, const Shape *shape, uintN attrs, uintN m
     if (shape->attrs == attrs && shape->getter() == getter && shape->setter() == setter)
         return shape;
 
-    Shape child(shape->id, getter, setter, shape->slot, attrs, shape->flags, shape->shortid);
-
     const Shape *newShape;
 
+    /*
+     * Dictionary-mode objects exclusively own their mutable shape structs, so
+     * we simply modify in place.
+     */
     if (inDictionaryMode()) {
-        shape->removeFromDictionary(this);
-        newShape = Shape::newDictionaryShape(cx, child, &lastProp);
-        if (newShape) {
-            JS_ASSERT(newShape == lastProp);
-
-            /*
-             * Let tableShape be the shape with non-null table, either the one
-             * we removed or the parent of lastProp.
-             */
-            const Shape *tableShape = shape->table ? shape : lastProp->parent;
-
-            if (PropertyTable *table = tableShape->table) {
-                /* Overwrite shape with newShape in the property table. */
-                Shape **spp = table->search(shape->id, true);
-                SHAPE_STORE_PRESERVING_COLLISION(spp, newShape);
-
-                /* Hand the table off from tableShape to newShape. */
-                tableShape->setTable(NULL);
-                newShape->setTable(table);
-            }
-
-            updateFlags(newShape);
-            updateShape(cx);
-
-            if (!js_UpdateWatchpointsForShape(cx, this, newShape)) {
-                METER(wrapWatchFails);
+        /* FIXME bug 593129 -- slot allocation and JSObject *this must move out of here! */
+        uint32 slot = shape->slot;
+        if (slot == SHAPE_INVALID_SLOT && !(attrs & JSPROP_SHARED) && !(flags & Shape::ALIAS)) {
+            if (!allocSlot(cx, &slot))
                 return NULL;
+        }
+
+        Shape *mutableShape = const_cast<Shape *>(shape);
+        mutableShape->slot = slot;
+        if (slot != SHAPE_INVALID_SLOT && slot >= shape->slotSpan) {
+            mutableShape->slotSpan = slot + 1;
+
+            for (Shape *temp = lastProp; temp != shape; temp = temp->parent) {
+                if (temp->slotSpan <= slot)
+                    temp->slotSpan = slot + 1;
             }
         }
+
+        mutableShape->rawGetter = getter;
+        mutableShape->rawSetter = setter;
+        mutableShape->attrs = uint8(attrs);
+
+        updateFlags(shape);
+
+        /* See the corresponding code in putProperty. */
+        lastProp->shape = js_GenerateShape(cx, false);
+        clearOwnShape();
+
+        if (!js_UpdateWatchpointsForShape(cx, this, shape)) {
+            METER(wrapWatchFails);
+            return NULL;
+        }
+
+        newShape = mutableShape;
     } else if (shape == lastProp) {
+        Shape child(shape->id, getter, setter, shape->slot, attrs, shape->flags, shape->shortid);
+
         newShape = getChildProperty(cx, shape->parent, child);
 #ifdef DEBUG
         if (newShape) {
@@ -1129,6 +1138,7 @@ JSObject::changeProperty(JSContext *cx, const Shape *shape, uintN attrs, uintN m
          * removeProperty because it will free an allocated shape->slot, and
          * putProperty won't re-allocate it.
          */
+        Shape child(shape->id, getter, setter, shape->slot, attrs, shape->flags, shape->shortid);
         newShape = putProperty(cx, child.id, child.rawGetter, child.rawSetter, child.slot,
                                child.attrs, child.flags, child.shortid);
 #ifdef DEBUG
@@ -1158,9 +1168,10 @@ JSObject::removeProperty(JSContext *cx, jsid id)
     }
 
     /* First, if shape is unshared and not has a slot, free its slot number. */
+    bool addedToFreelist = false;
     bool hadSlot = !shape->isAlias() && shape->hasSlot();
     if (hadSlot) {
-        freeSlot(cx, shape->slot);
+        addedToFreelist = freeSlot(cx, shape->slot);
         JS_ATOMIC_INCREMENT(&cx->runtime->propertyRemovals);
     }
 
@@ -1225,12 +1236,20 @@ JSObject::removeProperty(JSContext *cx, jsid id)
                 JS_ASSERT_IF(hadSlot, shape->slot + 1 <= shape->slotSpan);
 
                 /*
-                 * If the dictionary table's freelist is non-empty, we must
-                 * preserve lastProp->slotSpan. We can't reduce slotSpan even
-                 * by one or we might lose non-decreasing slotSpan order.
-                 */
-                if (table->freelist != SHAPE_INVALID_SLOT)
+                 * Maintain slot freelist consistency. The only constraint we
+                 * have is that slot numbers on the freelist are less than 
+                 * lastProp->slotSpan. Thus, if the freelist is non-empty,
+                 * then lastProp->slotSpan may not decrease.
+                 */ 
+                if (table->freelist != SHAPE_INVALID_SLOT) {
                     lastProp->slotSpan = shape->slotSpan;
+                    
+                    /* Add the slot to the freelist if it wasn't added in freeSlot. */
+                    if (hadSlot && !addedToFreelist) {
+                        getSlotRef(shape->slot).setPrivateUint32(table->freelist);
+                        table->freelist = shape->slot;
+                    }
+                }
             }
 
             /* Hand off table from old to new lastProp. */

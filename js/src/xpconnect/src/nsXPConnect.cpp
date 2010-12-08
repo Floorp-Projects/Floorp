@@ -1182,6 +1182,20 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
     return NS_OK;
 }
 
+nsresult
+xpc_MorphSlimWrapper(JSContext *cx, nsISupports *tomorph)
+{
+    nsWrapperCache *cache;
+    CallQueryInterface(tomorph, &cache);
+    if(!cache)
+        return NS_OK;
+
+    JSObject *obj = cache->GetWrapper();
+    if(!obj || !IS_SLIM_WRAPPER(obj))
+        return NS_OK;
+    return MorphSlimWrapper(cx, obj);
+}
+
 static nsresult
 NativeInterface2JSObject(XPCLazyCallContext & lccx,
                          JSObject * aScope,
@@ -1483,10 +1497,14 @@ static JSDHashOperator
 MoveableWrapperFinder(JSDHashTable *table, JSDHashEntryHdr *hdr,
                       uint32 number, void *arg)
 {
-    // Every element counts.
     nsTArray<nsRefPtr<XPCWrappedNative> > *array =
         static_cast<nsTArray<nsRefPtr<XPCWrappedNative> > *>(arg);
-    array->AppendElement(((Native2WrappedNativeMap::Entry*)hdr)->value);
+    XPCWrappedNative *wn = ((Native2WrappedNativeMap::Entry*)hdr)->value;
+
+    // If a wrapper is expired, then there are no references to it from JS, so
+    // we don't have to move it.
+    if(!wn->IsWrapperExpired())
+        array->AppendElement(wn);
     return JS_DHASH_NEXT;
 }
 

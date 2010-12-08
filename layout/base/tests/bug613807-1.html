@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body>
+<textarea id="t" rows="4"></textarea>
+<script>
+  addLoadEvent(function() {
+    var area = document.getElementById('t');
+    area.focus();
+
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    const nsIDOMWindowUtils = Components.interfaces.nsIDOMWindowUtils;
+
+    // start composition
+    synthesizeComposition(true);
+
+    // input raw characters
+    synthesizeText(
+      { composition:
+        { string: "\u306D",
+          clauses: [
+            { length: 1, attr: nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+          ]
+        },
+        caret: { start: 1, length: 0 }
+      });
+    synthesizeText(
+      { composition:
+        { string: "\u306D\u3053",
+          clauses: [
+            { length: 2, attr: nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+          ]
+        },
+        caret: { start: 2, length: 0 }
+      });
+
+    // convert
+    synthesizeText(
+      { composition:
+        { string: "\u732B",
+          clauses: [
+            { length: 1, attr: nsIDOMWindowUtils.COMPOSITION_ATTR_SELECTEDCONVERTEDTEXT }
+          ]
+        },
+        caret: { start: 1, length: 0 }
+      });
+
+    // commit
+    synthesizeText(
+      { composition:
+        { string: "\u732B",
+          clauses: [
+            { length: 0, attr: 0 }
+          ]
+        },
+        caret: { start: 1, length: 0 }
+      });
+
+    // end composition
+    synthesizeComposition(false);
+
+    document.body.clientWidth;
+
+    // undo
+    synthesizeKey("Z", {accelKey: true});
+  });
+</script>
+</body>
+</html>

@@ -118,6 +118,7 @@ struct JSStructuredCloneReader {
   private:
     JSContext *context() { return in.context(); }
 
+    bool checkDouble(jsdouble d);
     JSString *readString(uint32_t nchars);
     bool readTypedArray(uint32_t tag, uint32_t nelems, js::Value *vp);
     bool readArrayBuffer(uint32_t nbytes, js::Value *vp);
@@ -145,7 +146,7 @@ struct JSStructuredCloneWriter {
   private:
     JSContext *context() { return out.context(); }
 
-    bool writeString(JSString *str);
+    bool writeString(uint32_t tag, JSString *str);
     bool writeId(jsid id);
     bool writeArrayBuffer(JSObject *obj);
     bool writeTypedArray(JSObject *obj);

@@ -158,6 +158,18 @@ static bool InferSpewActive(SpewChannel channel)
 #ifdef DEBUG
 
 const char *
+TypeIdStringImpl(jsid id)
+{
+    if (JSID_IS_VOID(id))
+        return "(index)";
+    static char bufs[100][4];
+    static unsigned which = 0;
+    which = (which + 1) & 3;
+    PutEscapedString(bufs[which], 100, JSID_TO_STRING(id), 0);
+    return bufs[which];
+}
+
+const char *
 TypeObjectString(TypeObject *object)
 {
     return TypeIdString(object->name);
@@ -1671,8 +1683,12 @@ TypeCompartment::dynamicAssign(JSContext *cx, JSObject *obj, jsid id, const Valu
          * Writing the __proto__ property marks the object's type as unknown.
          * Can't analyze objects with a mutable prototype.
          */
-        if (id == id___proto__(cx))
+        if (id == id___proto__(cx)) {
             cx->markTypeObjectUnknownProperties(object);
+            if (hasPendingRecompiles())
+                processPendingRecompiles(cx);
+            return;
+        }
     }
 
     if (assignTypes->hasType(rvtype))
@@ -1898,10 +1914,14 @@ TypeObject::addProperty(JSContext *cx, jsid id, Property *&base)
     TypeFunction *function = asFunction();
     JS_ASSERT(!function->prototypeObject);
 
-    const char *baseName = js_GetStringBytes(JSID_TO_ATOM(name));
-    unsigned len = strlen(baseName) + 15;
+    JSString *baseName = JSID_TO_STRING(name);
+    unsigned len = baseName->length() + 15;
+
     char *prototypeName = (char *)alloca(len);
-    JS_snprintf(prototypeName, len, "%s:prototype", baseName);
+    unsigned nlen = PutEscapedString(prototypeName, len, baseName, 0);
+    JS_ASSERT(nlen == baseName->length());
+
+    JS_snprintf(prototypeName + nlen, len - nlen, ":prototype");
     function->prototypeObject = cx->getTypeObject(prototypeName, NULL);
 
     base->ownTypes.addType(cx, (jstype) function->prototypeObject);
@@ -1951,10 +1971,15 @@ TypeObject::getNewObject(JSContext *cx)
 {
     if (newObject)
         return newObject;
-    const char *baseName = js_GetStringBytes(JSID_TO_ATOM(name));
-    unsigned len = strlen(baseName) + 10;
+
+    JSString *baseName = JSID_TO_STRING(name);
+    unsigned len = baseName->length() + 10;
+
     char *newName = (char *)alloca(len);
-    JS_snprintf(newName, len, "%s:new", baseName);
+    unsigned nlen = PutEscapedString(newName, len, baseName, 0);
+    JS_ASSERT(nlen == baseName->length());
+
+    JS_snprintf(newName + nlen, len - nlen, ":new");
     newObject = cx->getTypeObject(newName, this);
     return newObject;
 }

@@ -242,8 +242,8 @@ interface nsIXMLHttpRequest : nsISupports
    */
   [optional_argc] void open(in AUTF8String method, in AUTF8String url,
                             [optional] in boolean async,
-                            [optional] in DOMString user,
-                            [optional] in DOMString password);
+                            [optional,Undefined(Empty)] in DOMString user,
+                            [optional,Undefined(Empty)] in DOMString password);
 
   /**
    * Sends the request. If the request is asynchronous, returns

@@ -52,3 +52,9 @@ notification[type="critical"] .messageImage {
   margin-top: 0;
   margin-bottom: 0;
 }
+
+/* Popup notification */
+
+.popup-notification-description {
+  max-width: 248px;
+}

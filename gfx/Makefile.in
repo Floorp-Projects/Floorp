@@ -56,9 +56,14 @@ ifndef BUILD_STATIC_LIBS
 DIRS		+= ycbcr
 endif
 
-ifneq ($(OS_ARCH)$(OS_TEST),Linuxx86_64)
+ifneq ($(OS_ARCH),Linux)
+DIRS		+= angle
+else
+ifdef FORCE_BUILD_ANGLE
 DIRS		+= angle
 endif
+endif
+
 
 DIRS		+= src qcms layers harfbuzz/src ots/src thebes src/thebes
 

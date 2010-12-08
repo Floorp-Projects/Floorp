@@ -72,6 +72,8 @@ class nsSVGPreserveAspectRatio;
 class nsSVGString;
 struct gfxMatrix;
 namespace mozilla {
+class SVGAnimatedNumberList;
+class SVGNumberList;
 class SVGAnimatedLengthList;
 class SVGUserUnitList;
 class SVGAnimatedPathSegList;
@@ -88,6 +90,8 @@ protected:
   virtual ~nsSVGElement();
 
 public:
+  typedef mozilla::SVGNumberList SVGNumberList;
+  typedef mozilla::SVGAnimatedNumberList SVGAnimatedNumberList;
   typedef mozilla::SVGUserUnitList SVGUserUnitList;
   typedef mozilla::SVGAnimatedLengthList SVGAnimatedLengthList;
   typedef mozilla::SVGAnimatedPathSegList SVGAnimatedPathSegList;
@@ -163,6 +167,9 @@ public:
   PRBool IsStringAnimatable(PRUint8 aAttrEnum) {
     return GetStringInfo().mStringInfo[aAttrEnum].mIsAnimatable;
   }
+  PRBool NumberAttrAllowsPercentage(PRUint8 aAttrEnum) {
+    return GetNumberInfo().mNumberInfo[aAttrEnum].mPercentagesAllowed;
+  }
   virtual void DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr);
   virtual void DidChangeNumber(PRUint8 aAttrEnum, PRBool aDoSetAttr);
   virtual void DidChangeInteger(PRUint8 aAttrEnum, PRBool aDoSetAttr);
@@ -171,6 +178,7 @@ public:
   virtual void DidChangeEnum(PRUint8 aAttrEnum, PRBool aDoSetAttr);
   virtual void DidChangeViewBox(PRBool aDoSetAttr);
   virtual void DidChangePreserveAspectRatio(PRBool aDoSetAttr);
+  virtual void DidChangeNumberList(PRUint8 aAttrEnum, PRBool aDoSetAttr);
   virtual void DidChangeLengthList(PRUint8 aAttrEnum, PRBool aDoSetAttr);
   virtual void DidChangePathSegList(PRBool aDoSetAttr);
   virtual void DidChangeString(PRUint8 aAttrEnum) {}
@@ -183,6 +191,7 @@ public:
   virtual void DidAnimateEnum(PRUint8 aAttrEnum);
   virtual void DidAnimateViewBox();
   virtual void DidAnimatePreserveAspectRatio();
+  virtual void DidAnimateNumberList(PRUint8 aAttrEnum);
   virtual void DidAnimateLengthList(PRUint8 aAttrEnum);
   virtual void DidAnimatePathSegList();
   virtual void DidAnimateTransform();
@@ -191,6 +200,8 @@ public:
   void GetAnimatedLengthValues(float *aFirst, ...);
   void GetAnimatedNumberValues(float *aFirst, ...);
   void GetAnimatedIntegerValues(PRInt32 *aFirst, ...);
+  SVGAnimatedNumberList* GetAnimatedNumberList(PRUint8 aAttrEnum);
+  SVGAnimatedNumberList* GetAnimatedNumberList(nsIAtom *aAttrName);
   void GetAnimatedLengthListValues(SVGUserUnitList *aFirst, ...);
   SVGAnimatedLengthList* GetAnimatedLengthList(PRUint8 aAttrEnum);
   virtual SVGAnimatedPathSegList* GetAnimPathSegList() {
@@ -267,6 +278,7 @@ protected:
   struct NumberInfo {
     nsIAtom** mName;
     float     mDefaultValue;
+    PRPackedBool mPercentagesAllowed;
   };
 
   struct NumberAttributesInfo {
@@ -363,6 +375,26 @@ protected:
     void Reset(PRUint8 aAttrEnum);
   };
 
+  struct NumberListInfo {
+    nsIAtom** mName;
+  };
+
+  struct NumberListAttributesInfo {
+    SVGAnimatedNumberList* mNumberLists;
+    NumberListInfo*        mNumberListInfo;
+    PRUint32               mNumberListCount;
+
+    NumberListAttributesInfo(SVGAnimatedNumberList *aNumberLists,
+                             NumberListInfo *aNumberListInfo,
+                             PRUint32 aNumberListCount)
+      : mNumberLists(aNumberLists)
+      , mNumberListInfo(aNumberListInfo)
+      , mNumberListCount(aNumberListCount)
+    {}
+
+    void Reset(PRUint8 aAttrEnum);
+  };
+
   struct LengthListInfo {
     nsIAtom** mName;
     PRUint8   mAxis;
@@ -423,6 +455,7 @@ protected:
   // so we don't need to wrap the class
   virtual nsSVGViewBox *GetViewBox();
   virtual nsSVGPreserveAspectRatio *GetPreserveAspectRatio();
+  virtual NumberListAttributesInfo GetNumberListInfo();
   virtual LengthListAttributesInfo GetLengthListInfo();
   virtual StringAttributesInfo GetStringInfo();
 

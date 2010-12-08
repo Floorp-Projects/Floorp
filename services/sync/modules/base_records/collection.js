@@ -138,12 +138,6 @@ Collection.prototype = {
     // Save this because onProgress is called with this as the ChannelListener
     let coll = this;
 
-    // Prepare a dummyUri so that records can generate the correct
-    // relative URLs.  The last bit will be replaced with record.id.
-    let dummyUri = this.uri.clone().QueryInterface(Ci.nsIURL);
-    dummyUri.filePath += "/replaceme";
-    dummyUri.query = "";
-
     // Switch to newline separated records for incremental parsing
     coll.setHeader("Accept", "application/newlines");
 
@@ -155,7 +149,7 @@ Collection.prototype = {
         this._data = this._data.slice(newline + 1);
 
         // Deserialize a record from json and give it to the callback
-        let record = new coll._recordObj(dummyUri);
+        let record = new coll._recordObj();
         record.deserialize(json);
         onRecord(record);
       }

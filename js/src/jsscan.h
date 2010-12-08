@@ -292,11 +292,6 @@ enum TokenStreamFlags
 #define t_atom2         u.p.atom2
 #define t_dval          u.dval
 
-static const size_t LINE_LIMIT = 1024; /* logical line buffer size limit
-                                          -- physical line length is unlimited */
-static const size_t UNGET_LIMIT = 6;   /* maximum number of chars to unget at once
-                                          -- for \uXXXX lookahead */
-
 class TokenStream
 {
     static const size_t ntokens = 4;                /* 1 current + 2 lookahead, rounded
@@ -317,10 +312,10 @@ class TokenStream
     TokenStream(JSContext *);
 
     /*
-     * Create a new token stream, either from an input buffer or from a file.
-     * Return false on file-open or memory-allocation failure.
+     * Create a new token stream from an input buffer.
+     * Return false on memory-allocation failure.
      */
-    bool init(JSVersion version, const jschar *base, size_t length, FILE *fp,
+    bool init(JSVersion version, const jschar *base, size_t length,
               const char *filename, uintN lineno);
     void close();
     ~TokenStream() {}
@@ -383,8 +378,7 @@ class TokenStream
      * Get the next token from the stream, make it the current token, and
      * return its kind.
      */
-    TokenKind getToken(uintN withFlags = 0) {
-        Flagger flagger(this, withFlags);
+    TokenKind getToken() {
         /* Check for a pushed-back token resulting from mismatching lookahead. */
         while (lookahead != 0) {
             JS_ASSERT(!(flags & TSF_XMLTEXTMODE));
@@ -401,6 +395,12 @@ class TokenStream
             return TOK_ERROR;
 
         return getTokenInternal();
+    }
+
+    /* Similar, but also sets flags. */
+    TokenKind getToken(uintN withFlags) {
+        Flagger flagger(this, withFlags);
+        return getToken();
     }
 
     /*
@@ -452,28 +452,16 @@ class TokenStream
     } TokenBuf;
 
     TokenKind getTokenInternal();     /* doesn't check for pushback or error flag. */
-    int fillUserbuf();
-    int32 getCharFillLinebuf();
 
-    /* This gets the next char, normalizing all EOL sequences to '\n' as it goes. */
-    JS_ALWAYS_INLINE int32 getChar() {
-        int32 c;
-        if (currbuf->ptr < currbuf->limit - 1) {
-            /* Not yet the last char of currbuf, so it can't be a newline.  Just get it. */
-            c = *currbuf->ptr++;
-            JS_ASSERT(c != '\n');
-        } else {
-            c = getCharSlowCase();
-        }
-        return c;
-    }
-
-    int32 getCharSlowCase();
+    int32 getChar();
+    int32 getCharIgnoreEOL();
     void ungetChar(int32 c);
+    void ungetCharIgnoreEOL(int32 c);
     Token *newToken(ptrdiff_t adjust);
     int32 getUnicodeEscape();
     JSBool peekChars(intN n, jschar *cp);
     JSBool getXMLEntity();
+    jschar *findEOL();
 
     JSBool matchChar(int32 expect) {
         int32 c = getChar();
@@ -500,14 +488,10 @@ class TokenStream
     uintN               lookahead;      /* count of lookahead tokens */
     uintN               lineno;         /* current line number */
     uintN               flags;          /* flags -- see above */
-    uint32              linepos;        /* linebuf offset in physical line */
-    uint32              lineposNext;    /* the next value of linepos */
-    TokenBuf            linebuf;        /* line buffer for diagnostics */
-    TokenBuf            userbuf;        /* user input buffer if !file */
-    TokenBuf            ungetbuf;       /* buffer for ungetChar */
-    TokenBuf            *currbuf;       /* the buffer getChar is currently using */
+    jschar              *linebase;      /* start of current line;  points into userbuf */
+    jschar              *prevLinebase;  /* start of previous line;  NULL if on the first line */
+    TokenBuf            userbuf;        /* user input buffer */
     const char          *filename;      /* input filename or null */
-    FILE                *file;          /* stdio stream if reading from file */
     JSSourceHandler     listener;       /* callback for source; eg debugger */
     void                *listenerData;  /* listener 'this' data */
     void                *listenerTSData;/* listener data for this TokenStream */

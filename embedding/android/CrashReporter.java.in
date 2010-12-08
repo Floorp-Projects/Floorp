@@ -257,7 +257,8 @@ public class CrashReporter extends Activity
       sendPart(os, boundary, "Android_Device", Build.DEVICE);
       sendPart(os, boundary, "Android_Display", Build.DISPLAY);
       sendPart(os, boundary, "Android_Fingerprint", Build.FINGERPRINT);
-      sendPart(os, boundary, "Android_Hardware", Build.HARDWARE);
+      if (Build.VERSION.SDK_INT >= 8)
+        sendPart(os, boundary, "Android_Hardware", Build.HARDWARE);
       sendPart(os, boundary, "Android_Version",  Build.VERSION.SDK_INT + " (" + Build.VERSION.CODENAME + ")");
 
       sendFile(os, boundary, kMiniDumpPathKey, minidumpFile);
@@ -296,7 +297,6 @@ public class CrashReporter extends Activity
       Intent intent = new Intent(action);
       intent.setClassName("org.mozilla.@MOZ_APP_NAME@",
                           "org.mozilla.@MOZ_APP_NAME@.App");
-      intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
       Log.i("GeckoCrashReporter", intent.toString());
       startActivity(intent);
     } catch (Exception e) {

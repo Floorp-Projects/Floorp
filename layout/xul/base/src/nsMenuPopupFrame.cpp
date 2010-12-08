@@ -541,6 +541,14 @@ nsMenuPopupFrame::InitPositionFromAnchorAlign(const nsAString& aAnchor,
     mPopupAnchor = POPUPALIGNMENT_BOTTOMLEFT;
   else if (aAnchor.EqualsLiteral("bottomright"))
     mPopupAnchor = POPUPALIGNMENT_BOTTOMRIGHT;
+  else if (aAnchor.EqualsLiteral("leftcenter"))
+    mPopupAnchor = POPUPALIGNMENT_LEFTCENTER;
+  else if (aAnchor.EqualsLiteral("rightcenter"))
+    mPopupAnchor = POPUPALIGNMENT_RIGHTCENTER;
+  else if (aAnchor.EqualsLiteral("topcenter"))
+    mPopupAnchor = POPUPALIGNMENT_TOPCENTER;
+  else if (aAnchor.EqualsLiteral("bottomcenter"))
+    mPopupAnchor = POPUPALIGNMENT_BOTTOMCENTER;
   else
     mPopupAnchor = POPUPALIGNMENT_NONE;
 
@@ -596,7 +604,14 @@ nsMenuPopupFrame::InitializePopup(nsIContent* aAnchorContent,
 
     mFlipBoth = flip.EqualsLiteral("both");
 
-    if (position.EqualsLiteral("before_start")) {
+    position.CompressWhitespace();
+    PRInt32 spaceIdx = position.FindChar(' ');
+    // if there is a space in the position, assume it is the anchor and
+    // alignment as two separate tokens.
+    if (spaceIdx >= 0) {
+      InitPositionFromAnchorAlign(Substring(position, 0, spaceIdx), Substring(position, spaceIdx + 1));
+    }
+    else if (position.EqualsLiteral("before_start")) {
       mPopupAnchor = POPUPALIGNMENT_TOPLEFT;
       mPopupAlignment = POPUPALIGNMENT_BOTTOMLEFT;
     }
@@ -879,20 +894,43 @@ nsMenuPopupFrame::GetRootViewForPopup(nsIFrame* aStartFrame)
 }
 
 nsPoint
-nsMenuPopupFrame::AdjustPositionForAnchorAlign(const nsRect& anchorRect,
+nsMenuPopupFrame::AdjustPositionForAnchorAlign(nsRect& anchorRect,
                                                FlipStyle& aHFlip, FlipStyle& aVFlip)
 {
   // flip the anchor and alignment for right-to-left
   PRInt8 popupAnchor(mPopupAnchor);
   PRInt8 popupAlign(mPopupAlignment);
   if (GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
-    popupAnchor = -popupAnchor;
+    // no need to flip the centered anchor types
+    if (popupAnchor < POPUPALIGNMENT_LEFTCENTER) {
+      popupAnchor = -popupAnchor;
+    }
     popupAlign = -popupAlign;
   }
 
   // first, determine at which corner of the anchor the popup should appear
   nsPoint pnt;
   switch (popupAnchor) {
+    case POPUPALIGNMENT_LEFTCENTER:
+      pnt = nsPoint(anchorRect.x, anchorRect.y + anchorRect.height / 2);
+      anchorRect.y = pnt.y;
+      anchorRect.height = 0;
+      break;
+    case POPUPALIGNMENT_RIGHTCENTER:
+      pnt = nsPoint(anchorRect.XMost(), anchorRect.y + anchorRect.height / 2);
+      anchorRect.y = pnt.y;
+      anchorRect.height = 0;
+      break;
+    case POPUPALIGNMENT_TOPCENTER:
+      pnt = nsPoint(anchorRect.x + anchorRect.width / 2, anchorRect.y);
+      anchorRect.x = pnt.x;
+      anchorRect.width = 0;
+      break;
+    case POPUPALIGNMENT_BOTTOMCENTER:
+      pnt = nsPoint(anchorRect.x + anchorRect.width / 2, anchorRect.YMost());
+      anchorRect.x = pnt.x;
+      anchorRect.width = 0;
+      break;
     case POPUPALIGNMENT_TOPRIGHT:
       pnt = anchorRect.TopRight();
       break;
@@ -944,13 +982,26 @@ nsMenuPopupFrame::AdjustPositionForAnchorAlign(const nsRect& anchorRect,
   // however horizontally, we want to to use the inside edges so the popup
   // still appears underneath the anchor menu instead of floating off the
   // side of the menu.
-  FlipStyle anchorEdge = mFlipBoth ? FlipStyle_Inside: FlipStyle_None;
-  aHFlip = (popupAnchor == -popupAlign) ? FlipStyle_Outside : anchorEdge;
-  if (((popupAnchor > 0) == (popupAlign > 0)) ||
-      (popupAnchor == POPUPALIGNMENT_TOPLEFT && popupAlign == POPUPALIGNMENT_TOPLEFT))
-    aVFlip = FlipStyle_Outside;
-  else
-    aVFlip = anchorEdge;
+  if (popupAnchor >= POPUPALIGNMENT_LEFTCENTER) {
+    if (popupAnchor == POPUPALIGNMENT_LEFTCENTER ||
+        popupAnchor == POPUPALIGNMENT_RIGHTCENTER) {
+      aHFlip = FlipStyle_Outside;
+      aVFlip = FlipStyle_Inside;
+    }
+    else {
+      aHFlip = FlipStyle_Inside;
+      aVFlip = FlipStyle_Outside;
+    }
+  }
+  else {
+    FlipStyle anchorEdge = mFlipBoth ? FlipStyle_Inside : FlipStyle_None;
+    aHFlip = (popupAnchor == -popupAlign) ? FlipStyle_Outside : anchorEdge;
+    if (((popupAnchor > 0) == (popupAlign > 0)) ||
+        (popupAnchor == POPUPALIGNMENT_TOPLEFT && popupAlign == POPUPALIGNMENT_TOPLEFT))
+      aVFlip = FlipStyle_Outside;
+    else
+      aVFlip = anchorEdge;
+  }
 
   return pnt;
 }

@@ -49,6 +49,7 @@ PROGRAM         = jsapi-tests$(BIN_SUFFIX)
 CPPSRCS = \
   tests.cpp \
   selfTest.cpp \
+  testBug604087.cpp \
   testClassGetter.cpp \
   testCloneScript.cpp \
   testConservativeGC.cpp \
@@ -69,7 +70,7 @@ CPPSRCS = \
   testSameValue.cpp \
   testScriptObject.cpp \
   testSetPropertyWithNativeGetterStubSetter.cpp \
-  testBug604087.cpp \
+  testThreadGC.cpp \
   testThreads.cpp \
   testTrap.cpp \
   testUTF8.cpp \

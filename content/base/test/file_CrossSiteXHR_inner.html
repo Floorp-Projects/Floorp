@@ -16,7 +16,12 @@ window.addEventListener("message", function(e) {
   var res = {
     didFail: false,
     events: [],
-    progressEvents: 0
+    progressEvents: 0,
+    status: 0,
+    responseText: "",
+    statusText: "",
+    responseXML: null,
+    sendThrew: false
   };
   
   var xhr = new XMLHttpRequest();
@@ -51,6 +56,7 @@ window.addEventListener("message", function(e) {
     try {
       res.statusText = xhr.statusText;
     } catch (e) {
+      delete(res.statusText);
     }
     res.responseXML = xhr.responseXML ?
       (new XMLSerializer()).serializeToString(xhr.responseXML) :
@@ -72,14 +78,28 @@ window.addEventListener("message", function(e) {
     sendData = req.body;
 
   res.events.push("opening");
-  xhr.open(req.method, req.url, true);
+  // Allow passign in falsy usernames/passwords so we can test them
+  try {
+    xhr.open(req.method, req.url, true,
+             ("username" in req) ? req.username : "",
+             ("password" in req) ? req.password : "aa");
+  } catch (ex) {
+    res.didFail = true;
+    post(e, res);
+  }
 
   for (header in req.headers) {
     xhr.setRequestHeader(header, req.headers[header]);
   }
 
   res.events.push("sending");
-  xhr.send(sendData);
+  try {
+    xhr.send(sendData);
+  } catch (ex) {
+    res.didFail = true;
+    res.sendThrew = true;
+    post(e, res);
+  }
 
 }, false);
 

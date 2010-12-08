@@ -40,6 +40,14 @@
 do_load_httpd_js();
 do_get_profile();
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+var downloadUtils = { };
+XPCOMUtils.defineLazyServiceGetter(downloadUtils,
+                                   "downloadManager",
+                                   "@mozilla.org/download-manager;1",
+                                   Ci.nsIDownloadManager);
+
 function createURI(aObj)
 {
   var ios = Cc["@mozilla.org/network/io-service;1"].

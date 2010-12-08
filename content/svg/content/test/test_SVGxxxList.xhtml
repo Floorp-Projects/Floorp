@@ -13,6 +13,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=515116
 <p id="display"></p>
 <div id="content" style="display:none;">
 <svg id="svg" xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+  <desc>
+    <filter>
+      <feComponentTransfer>
+        <feFuncR id="feFuncR" type="table"/>
+      </feComponentTransfer>
+    </filter>
+  </desc>
   <text id="text">text</text>
   <path id="path"/>
 </svg>
@@ -96,7 +103,6 @@ var tests = [
       return document.getElementById('svg').createSVGLength();
     }
   },
-  /*
   {
     // SVGNumberList test:
     target_element_id: 'text',
@@ -108,31 +114,40 @@ var tests = [
     prop_type: 'SVGAnimatedNumberList',
     list_type: 'SVGNumberList',
     item_type: 'SVGNumber',
-    attr_val_3a: '',
-    attr_val_3b: '',
-    attr_val_4 : '',
-    attr_val_5a: '',
-    attr_val_5b: '',
-    item_constructor: document.getElementById('svg').createSVGNumber
+    attr_val_3a: '0 20 40',
+    attr_val_3b: '60 40 20',
+    attr_val_4 : '40 20 10 80',
+    attr_val_5a: '90 30 60 20 70',
+    attr_val_5b: '30 20 70 30 90',
+    item_constructor: function() {
+      // We need this function literal to avoid "Illegal operation on
+      // WrappedNative prototype object" NS_ERROR_XPC_BAD_OP_ON_WN_PROTO.
+      return document.getElementById('svg').createSVGNumber();
+    }
   },
   {
     // SVGNumberList test:
-    target_element_id: 'feComponentTransfer',
+    target_element_id: 'feFuncR',
     attr_name: 'tableValues',
     prop_name: 'tableValues',
     bv_name: 'baseVal',
     av_name: 'animVal',
-    el_type: 'xxx',
+    el_type: 'SVGFEComponentTransferElement',
     prop_type: 'SVGAnimatedNumberList',
     list_type: 'SVGNumberList',
     item_type: 'SVGNumber',
-    attr_val_3a: '',
-    attr_val_3b: '',
-    attr_val_4 : '',
-    attr_val_5a: '',
-    attr_val_5b: '',
-    item_constructor: document.getElementById('svg').createSVGNumber
+    attr_val_3a: '0 .5 .2',
+    attr_val_3b: '1 .7 .1',
+    attr_val_4 : '.5 .3 .8 .2',
+    attr_val_5a: '3 4 5 6 7',
+    attr_val_5b: '7 6 5 4 3',
+    item_constructor: function() {
+      // We need this function literal to avoid "Illegal operation on
+      // WrappedNative prototype object" NS_ERROR_XPC_BAD_OP_ON_WN_PROTO.
+      return document.getElementById('svg').createSVGNumber();
+    }
   },
+/*
   {
     // SVGPointList test:
     target_element_id: 'polyline',
@@ -1096,7 +1111,9 @@ function run_animation_timeline_tests()
        ' should still be more than the same as the number of items in '+
        t.bv_path+' since one of the animations is still frozen.');
 
-    t.element.querySelector('animate').removeAttribute('fill');
+    var frozen_animate_element =
+      t.element.querySelector('animate[fill][attributeName="'+t.attr_name+'"]');
+    frozen_animate_element.removeAttribute('fill');
 
     ok(t.animVal.numberOfItems == t.baseVal.numberOfItems,
        'Once all SMIL animation have finished and been un-frozen, the number '+

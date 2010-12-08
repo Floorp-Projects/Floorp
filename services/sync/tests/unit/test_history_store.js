@@ -83,11 +83,11 @@ function run_test() {
     do_check_true(store.itemExists(fxguid));
 
     _("If we query a non-existent record, it's marked as deleted.");
-    let record = store.createRecord("non-existent", "http://fake/uri");
+    let record = store.createRecord("non-existent");
     do_check_true(record.deleted);
 
     _("Verify createRecord() returns a complete record.");
-    record = store.createRecord(fxguid, "http://fake/urk");
+    record = store.createRecord(fxguid);
     do_check_eq(record.histUri, fxuri.spec);
     do_check_eq(record.title, "Get Firefox!");
     do_check_eq(record.visits.length, 1);

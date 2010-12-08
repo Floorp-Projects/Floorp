@@ -64,14 +64,14 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsClientAuthRememberService,
 
 nsClientAuthRememberService::nsClientAuthRememberService()
 {
-  monitor = PR_NewMonitor();
+  monitor = nsAutoMonitor::NewMonitor("security.clientAuthRememberServiceMonitor");
 }
 
 nsClientAuthRememberService::~nsClientAuthRememberService()
 {
   RemoveAllFromMemory();
   if (monitor)
-    PR_DestroyMonitor(monitor);
+    nsAutoMonitor::DestroyMonitor(monitor);
 }
 
 nsresult

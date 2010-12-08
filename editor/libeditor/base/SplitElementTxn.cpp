@@ -117,16 +117,21 @@ NS_IMETHODIMP SplitElementTxn::DoTransaction(void)
 
   // insert the new node
   result = mEditor->SplitNodeImpl(mExistingRightNode, mOffset, mNewLeftNode, mParent);
-  if (NS_SUCCEEDED(result) && mNewLeftNode)
-  {
-    nsCOMPtr<nsISelection>selection;
-    mEditor->GetSelection(getter_AddRefs(selection));
-    NS_ENSURE_SUCCESS(result, result);
-    NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
-    result = selection->Collapse(mNewLeftNode, mOffset);
-  }
-  else {
-    result = NS_ERROR_NOT_IMPLEMENTED;
+  if (mNewLeftNode) {
+    PRBool bAdjustSelection;
+    mEditor->ShouldTxnSetSelection(&bAdjustSelection);
+    if (bAdjustSelection)
+    {
+      nsCOMPtr<nsISelection> selection;
+      result = mEditor->GetSelection(getter_AddRefs(selection));
+      NS_ENSURE_SUCCESS(result, result);
+      NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
+      result = selection->Collapse(mNewLeftNode, mOffset);
+    }
+    else
+    {
+      // do nothing - dom range gravity will adjust selection
+    }
   }
   return result;
 }

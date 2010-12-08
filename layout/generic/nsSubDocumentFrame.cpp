@@ -661,6 +661,8 @@ nsSubDocumentFrame::ReflowFinished()
       // Make sure that we can post a reflow callback in the future.
       mPostedReflowCallback = PR_FALSE;
     }
+  } else {
+    mPostedReflowCallback = PR_FALSE;
   }
   return PR_FALSE;
 }

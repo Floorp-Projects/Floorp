@@ -47,9 +47,13 @@
 class nsAppShell : public nsBaseAppShell
 {
 public:
-  nsAppShell() : mEventWnd(NULL) {}
+  nsAppShell() :
+    mEventWnd(NULL),
+    mNativeCallbackPending(PR_FALSE)
+  {}
 
   nsresult Init();
+  void DoProcessMoreGeckoEvents();
 
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
   static UINT GetTaskbarButtonCreatedMessage();
@@ -67,6 +71,7 @@ protected:
 
 protected:
   HWND mEventWnd;
+  PRBool mNativeCallbackPending;
 };
 
 #endif // nsAppShell_h__

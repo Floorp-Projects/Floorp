@@ -28,9 +28,14 @@ class TCompiler;
 //
 class TShHandleBase {
 public:
-    TShHandleBase() { }
-    virtual ~TShHandleBase() { }
+    TShHandleBase();
+    virtual ~TShHandleBase();
     virtual TCompiler* getAsCompiler() { return 0; }
+
+protected:
+    // Memory allocator. Allocates and tracks memory required by the compiler.
+    // Deallocates all memory when compiler is destructed.
+    TPoolAllocator allocator;
 };
 
 //
@@ -54,10 +59,15 @@ public:
     const TVariableInfoList& getUniforms() const { return uniforms; }
 
 protected:
+    ShShaderType getShaderType() const { return shaderType; }
+    ShShaderSpec getShaderSpec() const { return shaderSpec; }
     // Initialize symbol-table with built-in symbols.
     bool InitBuiltInSymbolTable(const ShBuiltInResources& resources);
     // Clears the results from the previous compilation.
     void clearResults();
+    // Returns true if the given shader does not exceed the minimum
+    // functionality mandated in GLSL 1.0 spec Appendix A.
+    bool validateLimitations(TIntermNode* root);
     // Collect info for all attribs and uniforms.
     void collectAttribsUniforms(TIntermNode* root);
     // Translate to object code.

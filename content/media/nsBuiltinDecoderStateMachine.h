@@ -252,16 +252,17 @@ public:
 
 protected:
 
+  // Returns PR_TRUE if the decode is withing an estimated one tenth of a
+  // second's worth of data of the download, i.e. the decode has almost
+  // caught up with the download. If we can't estimate one tenth of a second's
+  // worth of data, we'll return PR_TRUE if the decode is within 100KB of
+  // the download.
+  PRBool IsDecodeCloseToDownload();
+
   // Returns the number of unplayed ms of audio we've got decoded and/or
   // pushed to the hardware waiting to play. This is how much audio we can
   // play without having to run the audio decoder.
   PRInt64 AudioDecodedMs() const;
-
-  // Returns PR_TRUE if we're running low on decoded data.
-  PRBool HasLowDecodedData() const;
-
-  // Returns PR_TRUE if we've got plenty of decoded data.
-  PRBool HasAmpleDecodedData() const;
 
   // Returns PR_TRUE when there's decoded audio waiting to play.
   // The decoder monitor must be held.

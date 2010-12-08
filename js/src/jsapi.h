@@ -545,6 +545,9 @@ JS_GetPositiveInfinityValue(JSContext *cx);
 extern JS_PUBLIC_API(jsval)
 JS_GetEmptyStringValue(JSContext *cx);
 
+extern JS_PUBLIC_API(JSString *)
+JS_GetEmptyString(JSRuntime *rt);
+
 /*
  * Format is a string of the following characters (spaces are insignificant),
  * specifying the tabulated type conversions:
@@ -752,6 +755,9 @@ JS_SuspendRequest(JSContext *cx);
 extern JS_PUBLIC_API(void)
 JS_ResumeRequest(JSContext *cx, jsrefcount saveDepth);
 
+extern JS_PUBLIC_API(JSBool)
+JS_IsInRequest(JSContext *cx);
+
 #ifdef __cplusplus
 JS_END_EXTERN_C
 
@@ -815,6 +821,30 @@ class JSAutoSuspendRequest {
     static void *operator new(size_t) CPP_THROW_NEW { return 0; };
     static void operator delete(void *, size_t) { };
 #endif
+};
+
+class JSAutoCheckRequest {
+  public:
+    JSAutoCheckRequest(JSContext *cx JS_GUARD_OBJECT_NOTIFIER_PARAM) {
+#if defined JS_THREADSAFE && defined DEBUG
+        mContext = cx;
+        JS_ASSERT(JS_IsInRequest(cx));
+#endif
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+    
+    ~JSAutoCheckRequest() {
+#if defined JS_THREADSAFE && defined DEBUG
+        JS_ASSERT(JS_IsInRequest(mContext));
+#endif
+    }
+
+
+  private:
+#if defined JS_THREADSAFE && defined DEBUG
+    JSContext *mContext;
+#endif
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 JS_BEGIN_EXTERN_C
@@ -965,7 +995,7 @@ extern JS_PUBLIC_API(JSBool)
 JS_WrapValue(JSContext *cx, jsval *vp);
 
 extern JS_PUBLIC_API(JSObject *)
-JS_TransplantWrapper(JSContext *cx, JSObject *wrapper, JSObject *target);
+JS_TransplantObject(JSContext *cx, JSObject *origobj, JSObject *target);
 
 #ifdef __cplusplus
 JS_END_EXTERN_C
@@ -2442,21 +2472,10 @@ extern JS_PUBLIC_API(JSObject *)
 JS_GetFunctionObject(JSFunction *fun);
 
 /*
- * Deprecated, useful only for diagnostics.  Use JS_GetFunctionId instead for
- * anonymous vs. "anonymous" disambiguation and Unicode fidelity.
- */
-extern JS_PUBLIC_API(const char *)
-JS_GetFunctionName(JSFunction *fun);
-
-/*
  * Return the function's identifier as a JSString, or null if fun is unnamed.
  * The returned string lives as long as fun, so you don't need to root a saved
  * reference to it if fun is well-connected or rooted, and provided you bound
  * the use of the saved reference by fun's lifetime.
- *
- * Prefer JS_GetFunctionId over JS_GetFunctionName because it returns null for
- * truly anonymous functions, and because it doesn't chop to ISO-Latin-1 chars
- * from UTF-16-ish jschars.
  */
 extern JS_PUBLIC_API(JSString *)
 JS_GetFunctionId(JSFunction *fun);

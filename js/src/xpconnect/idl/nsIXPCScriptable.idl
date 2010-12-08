@@ -64,13 +64,6 @@
  */
 #define NS_SUCCESS_ALLOW_SLIM_WRAPPERS \
    (NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_XPCONNECT,3))
-
-/**
- * Classes that can change principals and require same-origin XOWs must return
- * this from their scriptable helper's PreCreate hook.
- */
-#define NS_SUCCESS_NEEDS_XOW \
-   (NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_XPCONNECT,4))
 %}
 
 /**
