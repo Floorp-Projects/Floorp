@@ -1676,22 +1676,6 @@ nsGenericHTMLElement::MapCommonAttributesInto(const nsMappedAttributes* aAttribu
   }
 }
 
-void
-nsGenericHTMLFormElement::UpdateEditableFormControlState()
-{
-  ContentEditableTristate value = GetContentEditableValue();
-  if (value != eInherit) {
-    SetEditableFlag(!!value);
-
-    return;
-  }
-
-  nsIContent *parent = GetParent();
-
-  PRBool inEditableSubtree = parent && parent->HasFlag(NODE_IS_EDITABLE);
-  SetEditableFlag(inEditableSubtree);
-}
-
 
 /* static */ const nsGenericHTMLElement::MappedAttributeEntry
 nsGenericHTMLElement::sCommonAttributeMap[] = {
