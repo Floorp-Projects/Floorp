@@ -9408,6 +9408,7 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
             chars = (jschar *) cx->malloc((length + 1) * sizeof(jschar));
             if (!chars)
                 return JS_FALSE;
+            chars[length] = 0;
             str = js_NewString(cx, chars, length);
             if (!str) {
                 cx->free(chars);
@@ -9421,7 +9422,7 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
                 js_strncpy(chars, str2->flatChars(), length2);
                 chars += length2;
             }
-            *chars = 0;
+            JS_ASSERT(*chars == 0);
 
             /* Atomize the result string and mutate pn to refer to it. */
             pn->pn_atom = js_AtomizeString(cx, str, 0);

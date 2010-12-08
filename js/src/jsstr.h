@@ -270,14 +270,19 @@ struct JSString {
         return mInlineStorage;
     }
 
-    /* Specific flat string initializer and accessor methods. */
-    JS_ALWAYS_INLINE void initFlat(jschar *chars, size_t length) {
+    JS_ALWAYS_INLINE void initFlatNotTerminated(jschar *chars, size_t length) {
         JS_ASSERT(length <= MAX_LENGTH);
         JS_ASSERT(!isStatic(this));
         e.mBase = NULL;
         e.mCapacity = 0;
         mLengthAndFlags = (length << FLAGS_LENGTH_SHIFT) | FLAT;
         mChars = chars;
+    }
+
+    /* Specific flat string initializer and accessor methods. */
+    JS_ALWAYS_INLINE void initFlat(jschar *chars, size_t length) {
+        initFlatNotTerminated(chars, length);
+        JS_ASSERT(chars[length] == jschar(0));
     }
 
     JS_ALWAYS_INLINE void initShortString(jschar *chars, size_t length) {
@@ -289,6 +294,7 @@ struct JSString {
 
     JS_ALWAYS_INLINE void initFlatExtensible(jschar *chars, size_t length, size_t cap) {
         JS_ASSERT(length <= MAX_LENGTH);
+        JS_ASSERT(chars[length] == jschar(0));
         JS_ASSERT(!isStatic(this));
         e.mBase = NULL;
         e.mCapacity = cap;
