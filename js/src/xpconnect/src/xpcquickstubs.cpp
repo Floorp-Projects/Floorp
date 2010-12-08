@@ -709,14 +709,11 @@ xpc_qsDOMString::xpc_qsDOMString(JSContext *cx, jsval v, jsval *pval,
     mValid = JS_TRUE;
 }
 
-xpc_qsACString::xpc_qsACString(JSContext *cx, jsval v, jsval *pval,
-                               StringificationBehavior nullBehavior,
-                               StringificationBehavior undefinedBehavior)
+xpc_qsACString::xpc_qsACString(JSContext *cx, jsval v, jsval *pval)
 {
     typedef implementation_type::char_traits traits;
     // From the T_CSTRING case in XPCConvert::JSData2Native.
-    JSString *s = InitOrStringify<traits>(cx, v, pval, nullBehavior,
-                                          undefinedBehavior);
+    JSString *s = InitOrStringify<traits>(cx, v, pval, eNull, eNull);
     if (!s)
         return;
 
