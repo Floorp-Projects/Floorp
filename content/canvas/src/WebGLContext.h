@@ -1612,9 +1612,11 @@ protected:
         PRBool initializeStencilBuffer = mStencilAttachment.HasUninitializedRenderbuffer() ||
                                          mDepthStencilAttachment.HasUninitializedRenderbuffer();
 
-        realGLboolean savedColorMask[] = {0}, savedDepthMask = 0;
+        realGLboolean savedColorMask[4] = {0};
+        realGLboolean savedDepthMask = 0;
         GLuint savedStencilMask = 0;
-        GLfloat savedColorClearValue[] = {0.f}, savedDepthClearValue = 0.f;
+        GLfloat savedColorClearValue[4] = {0.f};
+        GLfloat savedDepthClearValue = 0.f;
         GLint savedStencilClearValue = 0;
         GLuint clearBits = 0;
 
