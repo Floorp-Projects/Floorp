@@ -117,10 +117,6 @@ struct THEBES_API gfxFontStyle {
                  const nsString& aLanguageOverride);
     gfxFontStyle(const gfxFontStyle& aStyle);
 
-    ~gfxFontStyle() {
-        delete featureSettings;
-    }
-
     // The style of font (normal, italic, oblique)
     PRUint8 style : 7;
 
@@ -170,7 +166,7 @@ struct THEBES_API gfxFontStyle {
     PRUint32 languageOverride;
 
     // custom opentype feature settings
-    nsTArray<gfxFontFeature> *featureSettings;
+    nsTArray<gfxFontFeature> featureSettings;
 
     // Return the final adjusted font size for the given aspect ratio.
     // Not meant to be called when sizeAdjust = 0.
@@ -198,9 +194,7 @@ struct THEBES_API gfxFontStyle {
             (stretch == other.stretch) &&
             (language == other.language) &&
             (sizeAdjust == other.sizeAdjust) &&
-            ((!featureSettings && !other.featureSettings) ||
-             (featureSettings && other.featureSettings &&
-              (*featureSettings == *other.featureSettings))) &&
+            (featureSettings == other.featureSettings) &&
             (languageOverride == other.languageOverride);
     }
 
@@ -226,7 +220,6 @@ public:
         mCmapInitialized(PR_FALSE),
         mUVSOffset(0), mUVSData(nsnull),
         mUserFontData(nsnull),
-        mFeatureSettings(nsnull),
         mLanguageOverride(NO_FONT_LANGUAGE_OVERRIDE),
         mFamily(aFamily)
     { }
@@ -331,7 +324,7 @@ public:
     nsAutoArrayPtr<PRUint8> mUVSData;
     gfxUserFontData* mUserFontData;
 
-    nsTArray<gfxFontFeature> *mFeatureSettings;
+    nsTArray<gfxFontFeature> mFeatureSettings;
     PRUint32         mLanguageOverride;
 
 protected:
@@ -354,7 +347,6 @@ protected:
         mCmapInitialized(PR_FALSE),
         mUVSOffset(0), mUVSData(nsnull),
         mUserFontData(nsnull),
-        mFeatureSettings(nsnull),
         mLanguageOverride(NO_FONT_LANGUAGE_OVERRIDE),
         mFamily(nsnull)
     { }

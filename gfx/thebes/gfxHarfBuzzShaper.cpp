@@ -820,24 +820,22 @@ gfxHarfBuzzShaper::InitTextRun(gfxContext *aContext,
 
     // css features need to be merged with the existing ones, if any
     const gfxFontStyle *style = aTextRun->GetFontGroup()->GetStyle();
-    const nsTArray<gfxFontFeature> *cssFeatures = style->featureSettings;
-    if (!cssFeatures) {
-        cssFeatures = mFont->GetFontEntry()->mFeatureSettings;
+    const nsTArray<gfxFontFeature> *cssFeatures = &style->featureSettings;
+    if (cssFeatures->IsEmpty()) {
+        cssFeatures = &mFont->GetFontEntry()->mFeatureSettings;
     }
-    if (cssFeatures) {
-        for (PRUint32 i = 0; i < cssFeatures->Length(); ++i) {
-            PRUint32 j;
-            for (j = 0; j < features.Length(); ++j) {
-                if (cssFeatures->ElementAt(i).mTag == features[j].tag) {
-                    features[j].value = cssFeatures->ElementAt(i).mValue;
-                    break;
-                }
+    for (PRUint32 i = 0; i < cssFeatures->Length(); ++i) {
+        PRUint32 j;
+        for (j = 0; j < features.Length(); ++j) {
+            if (cssFeatures->ElementAt(i).mTag == features[j].tag) {
+                features[j].value = cssFeatures->ElementAt(i).mValue;
+                break;
             }
-            if (j == features.Length()) {
-                const gfxFontFeature& f = cssFeatures->ElementAt(i);
-                hb_feature_t hbf = { f.mTag, f.mValue, 0, -1 };
-                features.AppendElement(hbf);
-            }
+        }
+        if (j == features.Length()) {
+            const gfxFontFeature& f = cssFeatures->ElementAt(i);
+            hb_feature_t hbf = { f.mTag, f.mValue, 0, -1 };
+            features.AppendElement(hbf);
         }
     }
 
