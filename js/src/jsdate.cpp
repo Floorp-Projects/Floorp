@@ -2355,11 +2355,10 @@ date_toSource(JSContext *cx, uintN argc, Value *vp)
         return JS_FALSE;
     }
 
-    str = JS_NewString(cx, bytes, strlen(bytes));
-    if (!str) {
-        js_free(bytes);
+    str = JS_NewStringCopyZ(cx, bytes);
+    js_free(bytes);
+    if (!str)
         return JS_FALSE;
-    }
     vp->setString(str);
     return JS_TRUE;
 }
