@@ -611,7 +611,21 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         this.close();
     }
     // Find closest tab to make active
-    UI.setActiveTab( UI.getClosestTab(closeCenter) );
+    let closestTabItem = UI.getClosestTab(closeCenter);
+    UI.setActiveTab(closestTabItem);
+
+    // set the active group or orphan tabitem.
+    if (closestTabItem) {
+      if (closestTabItem.parent) {
+        GroupItems.setActiveGroupItem(closestTabItem.parent);
+      } else {
+        GroupItems.setActiveOrphanTab(closestTabItem);
+        GroupItems.setActiveGroupItem(null);
+      }
+    } else {
+      GroupItems.setActiveGroupItem(null);
+      GroupItems.setActiveOrphanTab(null);
+    }
   },
 
   // ----------
@@ -1831,41 +1845,47 @@ let GroupItems = {
 
     let orphanTabItem = this.getActiveOrphanTab();
     if (!orphanTabItem) {
-      let otherTab;
+      let targetGroupItem;
       // find first visible non-app tab in the tabbar.
       gBrowser.visibleTabs.some(function(tab) {
         if (!tab.pinned && tab != tabItem.tab) {
-          otherTab = tab;
+          if (tab.tabItem) {
+            if (!tab.tabItem.parent) {
+              // the first visible tab is an orphan tab, set the orphan tab, and 
+              // create a new group for orphan tab and new tabItem
+              orphanTabItem = tab.tabItem;
+            } else if (!tab.tabItem.parent.hidden) {
+              // the first visible tab belongs to a group, add the new tabItem to 
+              // that group
+              targetGroupItem = tab.tabItem.parent;
+            }
+          }
           return true;
         }
         return false;
       });
 
-      if (otherTab && otherTab.tabItem) {
-        // the first visible tab belongs to a group, add the new tabItem into 
-        // that group
-        if (otherTab.tabItem.parent) {
-          let groupItem = otherTab.tabItem.parent;
-          groupItem.add(tabItem);
-          this.setActiveGroupItem(groupItem);
-          return;
-        }
-        // the first visible tab is an orphan tab, set the orphan tab, and 
-        // create a new group for orphan tab and new tabItem
-        orphanTabItem = otherTab.tabItem;
-      }
-
+      let visibleGroupItems;
       if (!orphanTabItem) {
-        // add the new tabItem to the first group item
-        if (this.groupItems.length > 0) {
-          let groupItem = this.groupItems[0];
-          groupItem.add(tabItem);
-          this.setActiveGroupItem(groupItem);
+        if (targetGroupItem) {
+          // add the new tabItem to the first group item
+          targetGroupItem.add(tabItem);
+          this.setActiveGroupItem(targetGroupItem);
           return;
+        } else {
+          // find the first visible group item
+          visibleGroupItems = this.groupItems.filter(function(groupItem) {
+            return (!groupItem.hidden);
+          });
+          if (visibleGroupItems.length > 0) {
+            visibleGroupItems[0].add(tabItem);
+            this.setActiveGroupItem(visibleGroupItems[0]);
+            return;
+          }
         }
+        let orphanedTabs = this.getOrphanedTabs();
         // set the orphan tab, and create a new group for orphan tab and 
         // new tabItem
-        let orphanedTabs = this.getOrphanedTabs();
         if (orphanedTabs.length > 0)
           orphanTabItem = orphanedTabs[0];
       }
@@ -1873,7 +1893,7 @@ let GroupItems = {
 
     // create new group for orphan tab and new tabItem
     let tabItems;
-    let newGroupItemBounds; 
+    let newGroupItemBounds;
     // the orphan tab would be the same as tabItem when all tabs are app tabs
     // and a new tab is created.
     if (orphanTabItem && orphanTabItem.tab != tabItem.tab) {
@@ -1886,8 +1906,7 @@ let GroupItems = {
     }
 
     newGroupItemBounds.inset(-40,-40);
-    let newGroupItem = 
-      new GroupItem(tabItems, { bounds: newGroupItemBounds });
+    let newGroupItem = new GroupItem(tabItems, { bounds: newGroupItemBounds });
     newGroupItem.snap();
     this.setActiveGroupItem(newGroupItem);
   },
