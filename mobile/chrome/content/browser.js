@@ -1870,7 +1870,7 @@ IdentityHandler.prototype = {
   },
 
   handleEvent: function(aEvent) {
-    if (aEvent.type == "URLChanged" && !this._identityPopup.hidden)
+    if (aEvent.type == "URLChanged" && aEvent.target == Browser.selectedBrowser && !this._identityPopup.hidden)
       this.hide();
   }
 };
@@ -2347,6 +2347,10 @@ ProgressController.prototype = {
         Browser.scrollContentToTop({ x: 0 });
       }
     }
+
+    let event = document.createEvent("Events");
+    event.initEvent("URLChanged", true, false);
+    this.browser.dispatchEvent(event);
   },
 
   /**
@@ -2391,10 +2395,6 @@ ProgressController.prototype = {
       if (this._tab.browser.currentURI.spec == "about:blank")
         BrowserUI.updateURI();
     }
-
-    let event = document.createEvent("Events");
-    event.initEvent("URLChanged", true, false);
-    this.browser.dispatchEvent(event);
   },
 
   _networkStop: function _networkStop() {

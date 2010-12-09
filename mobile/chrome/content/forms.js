@@ -91,7 +91,9 @@ FormAssistant.prototype = {
   set currentIndex(aIndex) {
     let element = this._elements[aIndex];
     if (element) {
+      this.focusSync = false;
       gFocusManager.setFocus(element, Ci.nsIFocusManager.FLAG_NOSCROLL);
+      this.focusSync = true;
       this._currentIndex = aIndex;
       sendAsyncMessage("FormAssist:Show", this._getJSON());
     }
