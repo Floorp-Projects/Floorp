@@ -49,6 +49,20 @@
 #include <fontconfig/fcfreetype.h>
 #endif
 
+#include "prlink.h"
+
+static PRFuncPtr
+FindFunctionSymbol(const char *name)
+{
+    PRLibrary *lib = nsnull;
+    PRFuncPtr result = PR_FindFunctionSymbolAndLibrary(name, &lib);
+    if (lib) {
+        PR_UnloadLibrary(lib);
+    }
+
+    return result;
+}
+
 // aScale is intended for a 16.16 x/y_scale of an FT_Size_Metrics
 static inline FT_Long
 ScaleRoundDesignUnits(FT_Short aDesignMetric, FT_Fixed aScale)
@@ -321,6 +335,37 @@ gfxFT2LockedFace::GetGlyph(PRUint32 aCharCode)
 #else
     return FT_Get_Char_Index(mFace, aCharCode);
 #endif
+}
+
+typedef FT_UInt (*GetCharVariantFunction)(FT_Face  face,
+                                          FT_ULong charcode,
+                                          FT_ULong variantSelector);
+
+PRUint32
+gfxFT2LockedFace::GetUVSGlyph(PRUint32 aCharCode, PRUint32 aVariantSelector)
+{
+    NS_PRECONDITION(aVariantSelector, "aVariantSelector should not be NULL");
+
+    if (NS_UNLIKELY(!mFace))
+        return 0;
+
+    // This function is available from FreeType 2.3.6 (June 2008).
+    static GetCharVariantFunction sGetCharVariantPtr =
+        reinterpret_cast<GetCharVariantFunction>
+        (FindFunctionSymbol("FT_Face_GetCharVariantIndex"));
+
+    if (!sGetCharVariantPtr)
+        return 0;
+
+#ifdef HAVE_FONTCONFIG_FCFREETYPE_H
+    // FcFreeTypeCharIndex may have changed the selected charmap.
+    // FT_Face_GetCharVariantIndex needs a unicode charmap.
+    if (!mFace->charmap || mFace->charmap->encoding != FT_ENCODING_UNICODE) {
+        FT_Select_Charmap(mFace, FT_ENCODING_UNICODE);
+    }
+#endif
+
+    return (*sGetCharVariantPtr)(mFace, aCharCode, aVariantSelector);
 }
 
 PRBool
