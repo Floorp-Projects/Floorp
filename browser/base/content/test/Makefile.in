@@ -232,6 +232,7 @@ _BROWSER_FILES = \
                  app_bug575561.html \
                  app_subframe_bug575561.html \
                  browser_contentAreaClick.js \
+                 browser_addon_bar_close_button.js \
                  $(NULL)
 
 # compartment-disabled
