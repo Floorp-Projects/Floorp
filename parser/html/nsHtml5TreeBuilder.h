@@ -74,7 +74,6 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     PRInt32 mode;
     PRInt32 originalMode;
     PRBool framesetOk;
-    PRBool inForeign;
   protected:
     nsHtml5Tokenizer* tokenizer;
   private:
@@ -121,7 +120,6 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     PRInt32 findLastInScope(nsIAtom* name);
     PRInt32 findLastInListScope(nsIAtom* name);
     PRInt32 findLastInScopeHn();
-    PRBool hasForeignInScope();
     void generateImpliedEndTagsExceptFor(nsIAtom* name);
     void generateImpliedEndTags();
     PRBool isSecondOnStackBody();
@@ -212,7 +210,14 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     void elementPushed(PRInt32 ns, nsIAtom* name, nsIContent** node);
     void elementPopped(PRInt32 ns, nsIAtom* name, nsIContent** node);
   public:
-    PRBool cdataSectionAllowed();
+    inline PRBool cdataSectionAllowed()
+    {
+      return isInForeign();
+    }
+
+  private:
+    PRBool isInForeign();
+  public:
     void setFragmentContext(nsIAtom* context, PRInt32 ns, nsIContent** node, PRBool quirks);
   protected:
     nsIContent** currentNode();
@@ -237,7 +242,6 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     PRInt32 getMode();
     PRInt32 getOriginalMode();
     PRBool isFramesetOk();
-    PRBool isInForeign();
     PRBool isNeedToDropLF();
     PRBool isQuirks();
     PRInt32 getListOfActiveFormattingElementsLength();
