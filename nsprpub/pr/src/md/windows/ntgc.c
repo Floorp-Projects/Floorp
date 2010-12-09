@@ -87,7 +87,7 @@ PRWord *_MD_HomeGCRegisters(PRThread *t, int isCurrent, int *np)
         t->md.gcContext[0] = 0;                /* context.Eax */
         t->md.gcContext[1] = fiberData[0x2e];  /* context.Ebx */
         t->md.gcContext[2] = 0;                /* context.Ecx */
-        t->md.gcContext[2] = 0;                /* context.Edx */
+        t->md.gcContext[3] = 0;                /* context.Edx */
         t->md.gcContext[4] = fiberData[0x2d];  /* context.Esi */
         t->md.gcContext[5] = fiberData[0x2c];  /* context.Edi */
         t->md.gcContext[6] = fiberData[0x36];  /* context.Esp */
