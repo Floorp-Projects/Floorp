@@ -61,6 +61,8 @@ public:
     virtual nsString GetUniqueName();
     virtual PRUint32 GetSpaceGlyph();
     virtual hb_blob_t *GetFontTable(PRUint32 aTag);
+    virtual PRBool ProvidesGetGlyph() const { return PR_TRUE; }
+    virtual PRUint32 GetGlyph(PRUint32 unicode, PRUint32 variation_selector);
     virtual PRBool ProvidesHintedWidths() const { return PR_TRUE; }
     virtual PRInt32 GetHintedGlyphWidth(gfxContext *aCtx, PRUint16 aGID);
 

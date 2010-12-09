@@ -202,6 +202,19 @@ gfxFT2FontBase::GetFontTable(PRUint32 aTag)
                                                 haveTable ? &buffer : nsnull);
 }
 
+PRUint32
+gfxFT2FontBase::GetGlyph(PRUint32 unicode, PRUint32 variation_selector)
+{
+    if (variation_selector) {
+        PRUint32 id =
+            gfxFT2LockedFace(this).GetUVSGlyph(unicode, variation_selector);
+        if (id)
+            return id;
+    }
+
+    return GetGlyph(unicode);
+}
+
 PRInt32
 gfxFT2FontBase::GetHintedGlyphWidth(gfxContext *aCtx, PRUint16 aGID)
 {
