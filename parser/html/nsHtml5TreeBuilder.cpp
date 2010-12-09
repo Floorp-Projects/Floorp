@@ -919,7 +919,16 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
               NS_HTML5_BREAK(inbodyloop);
             }
             case NS_HTML5TREE_BUILDER_BODY: {
+              if (!currentPtr || stack[1]->getGroup() != NS_HTML5TREE_BUILDER_BODY) {
 
+
+                NS_HTML5_BREAK(starttagloop);
+              }
+
+              framesetOk = PR_FALSE;
+              if (mode == NS_HTML5TREE_BUILDER_FRAMESET_OK) {
+                mode = NS_HTML5TREE_BUILDER_IN_BODY;
+              }
               if (addAttributesToBody(attributes)) {
                 attributes = nsnull;
               }
