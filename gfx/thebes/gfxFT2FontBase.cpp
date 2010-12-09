@@ -42,6 +42,7 @@
 
 #include "gfxFT2FontBase.h"
 #include "gfxFT2Utils.h"
+#include "harfbuzz/hb-blob.h"
 
 gfxFT2FontBase::gfxFT2FontBase(cairo_scaled_font_t *aScaledFont,
                                gfxFontEntry *aFontEntry,
@@ -183,6 +184,22 @@ gfxFT2FontBase::GetSpaceGlyph()
                  "forgot to short-circuit a text run with zero-sized font?");
     GetMetrics();
     return mSpaceGlyph;
+}
+
+hb_blob_t *
+gfxFT2FontBase::GetFontTable(PRUint32 aTag)
+{
+    hb_blob_t *blob;
+    if (mFontEntry->GetExistingFontTable(aTag, &blob))
+        return blob;
+
+    nsTArray<PRUint8> buffer;
+    PRBool haveTable = gfxFT2LockedFace(this).GetFontTable(aTag, buffer);
+
+    // Cache even when there is no table to save having to open the FT_Face
+    // again.
+    return mFontEntry->ShareFontTableAndGetBlob(aTag,
+                                                haveTable ? &buffer : nsnull);
 }
 
 PRBool

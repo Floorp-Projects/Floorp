@@ -60,6 +60,7 @@ public:
     virtual const gfxFont::Metrics& GetMetrics();
     virtual nsString GetUniqueName();
     virtual PRUint32 GetSpaceGlyph();
+    virtual hb_blob_t *GetFontTable(PRUint32 aTag);
 
     cairo_scaled_font_t *CairoScaledFont() { return mScaledFont; };
     virtual PRBool SetupCairoFont(gfxContext *aContext);
