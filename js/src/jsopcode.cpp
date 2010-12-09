@@ -296,42 +296,43 @@ ToDisassemblySource(JSContext *cx, jsval v, JSAutoByteString *bytes)
 
         if (clasp == &js_BlockClass) {
             char *source = JS_sprintf_append(NULL, "depth %d {", OBJ_BLOCK_DEPTH(cx, obj));
+            if (!source)
+                return false;
 
             Shape::Range r = obj->lastProperty()->all();
             while (!r.empty()) {
                 const Shape &shape = r.front();
                 JSAutoByteString bytes;
                 if (!js_AtomToPrintableString(cx, JSID_TO_ATOM(shape.id), &bytes))
-                    return NULL;
+                    return false;
 
                 r.popFront();
                 source = JS_sprintf_append(source, "%s: %d%s",
                                            bytes.ptr(), shape.shortid,
                                            !r.empty() ? ", " : "");
+                if (!source)
+                    return false;
             }
 
             source = JS_sprintf_append(source, "}");
             if (!source)
-                return NULL;
-
-            JSString *str = JS_NewString(cx, source, strlen(source));
-            if (!str)
-                return NULL;
-            return bytes->encode(cx, str);
+                return false;
+            bytes->initBytes(source);
+            return true;
         }
 
         if (clasp == &js_FunctionClass) {
             JSFunction *fun = GET_FUNCTION_PRIVATE(cx, obj);
             JSString *str = JS_DecompileFunction(cx, fun, JS_DONT_PRETTY_PRINT);
             if (!str)
-                return NULL;
+                return false;
             return bytes->encode(cx, str);
         }
 
         if (clasp == &js_RegExpClass) {
             AutoValueRooter tvr(cx);
             if (!js_regexp_toString(cx, obj, tvr.addr()))
-                return NULL;
+                return false;
             return bytes->encode(cx, JSVAL_TO_STRING(Jsvalify(tvr.value())));
         }
     }
