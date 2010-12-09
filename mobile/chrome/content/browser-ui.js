@@ -1737,7 +1737,7 @@ var FindHelperUI = {
   },
 
   handleEvent: function findHelperHandleEvent(aEvent) {
-    if (aEvent.type == "TabSelect" || aEvent.type == "URLChanged")
+    if (aEvent.type == "TabSelect" || (aEvent.type == "URLChanged" && aEvent.target == Browser.selectedBrowser))
       this.hide();
   },
 
@@ -1918,8 +1918,12 @@ var FormHelperUI = {
     switch (aEvent.type) {
       case "TabSelect":
       case "TabClose":
-      case "URLChanged":
         this.hide();
+        break;
+
+      case "URLChanged":
+        if (aEvent.target == Browser.selectedBrowser)
+          this.hide();
         break;
 
       case "resize":
