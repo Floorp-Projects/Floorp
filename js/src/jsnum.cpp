@@ -809,8 +809,11 @@ num_toLocaleString(JSContext *cx, uintN argc, Value *vp)
         strcpy(tmpDest, nint);
     }
 
-    if (cx->localeCallbacks && cx->localeCallbacks->localeToUnicode)
-        return cx->localeCallbacks->localeToUnicode(cx, buf, Jsvalify(vp));
+    if (cx->localeCallbacks && cx->localeCallbacks->localeToUnicode) {
+        JSBool ok = cx->localeCallbacks->localeToUnicode(cx, buf, Jsvalify(vp));
+        cx->free(buf);
+        return ok;
+    }
 
     str = js_NewStringCopyN(cx, buf, size);
     cx->free(buf);
