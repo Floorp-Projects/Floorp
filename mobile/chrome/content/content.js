@@ -915,14 +915,14 @@ var FindHandler = {
     }
 
     let selection = this._fastFind.currentWindow.getSelection();
-    if (!selection.rangeCount) {
+    if (!selection.rangeCount || selection.isCollapsed) {
       // The selection can be into an input or a textarea element
       let nodes = content.document.querySelectorAll("input[type='text'], textarea");
       for (let i = 0; i < nodes.length; i++) {
         let node = nodes[i];
         if (node instanceof Ci.nsIDOMNSEditableElement && node.editor) {
           selection = node.editor.selectionController.getSelection(Ci.nsISelectionController.SELECTION_NORMAL);
-          if (selection.rangeCount)
+          if (selection.rangeCount && !selection.isCollapsed)
             break;
         }
       }
