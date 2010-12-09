@@ -491,10 +491,10 @@
              fullscreentoolbar="true" mode="icons" customizable="true"
 #ifdef WINCE
              iconsize="small" defaulticonsize="small"
-             defaultset="unified-back-forward-button,home-button,urlbar-container,reload-button,stop-button,search-container,bookmarks-menu-button-container,navigator-throbber,fullscreenflex,window-controls"
+             defaultset="unified-back-forward-button,urlbar-container,reload-button,stop-button,search-container,home-button,bookmarks-menu-button-container,navigator-throbber,fullscreenflex,window-controls"
 #else
              iconsize="large"
-             defaultset="unified-back-forward-button,home-button,urlbar-container,reload-button,stop-button,search-container,bookmarks-menu-button-container,fullscreenflex,window-controls"
+             defaultset="unified-back-forward-button,urlbar-container,reload-button,stop-button,search-container,home-button,bookmarks-menu-button-container,fullscreenflex,window-controls"
 #endif
              context="toolbar-context-menu">
 
@@ -512,16 +512,6 @@
                        onclick="checkForMiddleClick(this, event);"
                        tooltiptext="&forwardButton.tooltip;"/>
       </toolbaritem>
-
-      <toolbarbutton id="home-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     persist="class" removable="true"
-                     label="&homeButton.label;"
-                     ondragover="homeButtonObserver.onDragOver(event)"
-                     ondragenter="homeButtonObserver.onDragOver(event)"
-                     ondrop="homeButtonObserver.onDrop(event)"
-                     ondragexit="homeButtonObserver.onDragExit(event)"
-                     onclick="BrowserGoHome(event);"
-                     aboutHomeOverrideTooltip="&abouthome.pageTitle;"/>
 
       <toolbaritem id="urlbar-container" align="center" flex="400" persist="width" combined="true"
                    title="&locationItem.title;" class="chromeclass-location" removable="true">
@@ -616,6 +606,16 @@
                    flex="100" persist="width" removable="true">
         <searchbar id="searchbar" flex="1"/>
       </toolbaritem>
+
+      <toolbarbutton id="home-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     persist="class" removable="true"
+                     label="&homeButton.label;"
+                     ondragover="homeButtonObserver.onDragOver(event)"
+                     ondragenter="homeButtonObserver.onDragOver(event)"
+                     ondrop="homeButtonObserver.onDrop(event)"
+                     ondragexit="homeButtonObserver.onDragExit(event)"
+                     onclick="BrowserGoHome(event);"
+                     aboutHomeOverrideTooltip="&abouthome.pageTitle;"/>
 
       <toolbaritem id="bookmarks-menu-button-container"
                    class="chromeclass-toolbar-additional"
