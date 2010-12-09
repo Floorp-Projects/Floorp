@@ -43,11 +43,12 @@ function test_keymanager() {
   // Decode the key here to mirror what generateEntry will do,
   // but pass it encoded into the KeyBundle call below.
   
-  let sha256inputE = Utils.makeHMACKey("" + HMAC_INPUT + username + "\x01");
-  let encryptKey = Utils.sha256HMACBytes(Utils.decodeKeyBase32(testKey), sha256inputE);
+  let sha256inputE = "" + HMAC_INPUT + username + "\x01";
+  let key = Utils.makeHMACKey(Utils.decodeKeyBase32(testKey));
+  let encryptKey = Utils.sha256HMACBytes(sha256inputE, key);
   
-  let sha256inputH = Utils.makeHMACKey(encryptKey + HMAC_INPUT + username + "\x02");
-  let hmacKey = Utils.sha256HMACBytes(Utils.decodeKeyBase32(testKey), sha256inputH);
+  let sha256inputH = encryptKey + HMAC_INPUT + username + "\x02";
+  let hmacKey = Utils.sha256HMACBytes(sha256inputH, key);
   
   // Encryption key is stored in base64 for WeaveCrypto convenience.
   do_check_eq(btoa(encryptKey), new SyncKeyBundle(null, username, testKey).encryptionKey);
