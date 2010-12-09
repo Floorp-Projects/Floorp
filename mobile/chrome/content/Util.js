@@ -118,7 +118,7 @@ let Util = {
   },
 
   isLocalScheme: function isLocalScheme(aURL) {
-    return (aURL.indexOf("about:") == 0 && aURL != "about:blank") || aURL.indexOf("chrome:") == 0;
+    return (aURL.indexOf("about:") == 0 && aURL != "about:blank" && aURL != "about:empty") || aURL.indexOf("chrome:") == 0;
   },
 
   isShareableScheme: function isShareableScheme(aProtocol) {
