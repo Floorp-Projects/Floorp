@@ -674,6 +674,23 @@ let Utils = {
     return h.finish(false);
   },
 
+  /**
+   * HMAC-based Key Derivation Step 2 according to RFC 5869.
+   */
+  hkdfExpand: function hkdfExpand(prk, info, len) {
+    const BLOCKSIZE = 256 / 8;
+    let h = Utils.makeHMACHasher();
+    let T = "";
+    let Tn = "";
+    let iterations = Math.ceil(len/BLOCKSIZE);
+    for (let i = 0; i < iterations; i++) {
+      Tn = Utils.sha256HMACBytes(Tn + info + String.fromCharCode(i + 1),
+                                 Utils.makeHMACKey(prk), h);
+      T += Tn;
+    }
+    return T.slice(0, len);
+  },
+
   byteArrayToString: function byteArrayToString(bytes) {
     return [String.fromCharCode(byte) for each (byte in bytes)].join("");
   },
