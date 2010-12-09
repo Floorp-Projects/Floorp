@@ -1204,3 +1204,17 @@
 |     <summary>
 |       <article>
 |     "a"
+
+#data
+<!doctype html><p><a><plaintext>b
+#errors
+#document
+| <!DOCTYPE html>
+| <html>
+|   <head>
+|   <body>
+|     <p>
+|       <a>
+|     <plaintext>
+|       <a>
+|         "b"

@@ -1214,10 +1214,24 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     /**
      * @see nu.validator.htmlparser.common.TokenHandler#zeroOriginatingReplacementCharacter()
      */
-    public void zeroOriginatingReplacementCharacter()
-            throws SAXException {
-        if (isInForeign() || mode == TEXT) {
-            characters(REPLACEMENT_CHARACTER, 0, 1);
+    public void zeroOriginatingReplacementCharacter() throws SAXException {
+        if (mode == TEXT) {
+            accumulateCharacters(REPLACEMENT_CHARACTER, 0, 1);
+            return;
+        }
+        if (currentPtr >= 0) {
+            StackNode<T> stackNode = stack[currentPtr];
+            if (stackNode.ns == "http://www.w3.org/1999/xhtml") {
+                return;
+            }
+            if (stackNode.isHtmlIntegrationPoint()) {
+                return;
+            }
+            if (stackNode.ns == "http://www.w3.org/1998/Math/MathML"
+                    && stackNode.getGroup() == MI_MO_MN_MS_MTEXT) {
+                return;
+            }
+            accumulateCharacters(REPLACEMENT_CHARACTER, 0, 1);
         }
     }
 
