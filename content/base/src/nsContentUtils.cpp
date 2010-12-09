@@ -260,9 +260,6 @@ PRUint32 nsContentUtils::sRunnersCountAtFirstBlocker = 0;
 PRUint32 nsContentUtils::sScriptBlockerCountWhereRunnersPrevented = 0;
 nsIInterfaceRequestor* nsContentUtils::sSameOriginChecker = nsnull;
 
-nsIJSRuntimeService *nsAutoGCRoot::sJSRuntimeService;
-JSRuntime *nsAutoGCRoot::sJSScriptRuntime;
-
 PRBool nsContentUtils::sIsHandlingKeyBoardEvent = PR_FALSE;
 PRBool nsContentUtils::sAllowXULXBL_for_file = PR_FALSE;
 
@@ -1211,8 +1208,6 @@ nsContentUtils::Shutdown()
 
   NS_IF_RELEASE(sSameOriginChecker);
   
-  nsAutoGCRoot::Shutdown();
-
   nsTextEditorState::ShutDown();
 }
 
@@ -3286,53 +3281,6 @@ nsContentUtils::GetContentPolicy()
 }
 
 // static
-nsresult
-nsAutoGCRoot::AddJSGCRoot(void* aPtr, RootType aRootType, const char* aName)
-{
-  if (!sJSScriptRuntime) {
-    nsresult rv = CallGetService("@mozilla.org/js/xpc/RuntimeService;1",
-                                 &sJSRuntimeService);
-    NS_ENSURE_TRUE(sJSRuntimeService, rv);
-
-    sJSRuntimeService->GetRuntime(&sJSScriptRuntime);
-    if (!sJSScriptRuntime) {
-      NS_RELEASE(sJSRuntimeService);
-      NS_WARNING("Unable to get JS runtime from JS runtime service");
-      return NS_ERROR_FAILURE;
-    }
-  }
-
-  PRBool ok;
-  if (aRootType == RootType_JSVal)
-    ok = ::js_AddRootRT(sJSScriptRuntime, (jsval *)aPtr, aName);
-  else
-    ok = ::js_AddGCThingRootRT(sJSScriptRuntime, (void **)aPtr, aName);
-  if (!ok) {
-    NS_WARNING("JS_AddNamedRootRT failed");
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return NS_OK;
-}
-
-/* static */
-nsresult
-nsAutoGCRoot::RemoveJSGCRoot(void* aPtr, RootType aRootType)
-{
-  if (!sJSScriptRuntime) {
-    NS_NOTREACHED("Trying to remove a JS GC root when none were added");
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  if (aRootType == RootType_JSVal)
-    ::js_RemoveRoot(sJSScriptRuntime, (jsval *)aPtr);
-  else
-    ::js_RemoveRoot(sJSScriptRuntime, (JSObject **)aPtr);
-
-  return NS_OK;
-}
-
-// static
 PRBool
 nsContentUtils::IsEventAttributeName(nsIAtom* aName, PRInt32 aType)
 {
@@ -5192,13 +5140,6 @@ nsContentUtils::EqualsIgnoreASCIICase(const nsAString& aStr1,
   }
 
   return PR_TRUE;
-}
-
-/* static */
-void
-nsAutoGCRoot::Shutdown()
-{
-  NS_IF_RELEASE(sJSRuntimeService);
 }
 
 /* static */

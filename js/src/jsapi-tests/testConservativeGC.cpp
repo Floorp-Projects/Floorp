@@ -58,3 +58,23 @@ bool checkObjectFields(JSObject *savedCopy, JSObject *obj)
 }
 
 END_TEST(testConservativeGC)
+
+BEGIN_TEST(testDerivedValues)
+{
+  JSString *str = JS_NewStringCopyZ(cx, "once upon a midnight dreary");
+  js::Anchor<JSString *> str_anchor(str);
+  static const jschar expected[] = { 'o', 'n', 'c', 'e' };
+  const jschar *ch = JS_GetStringCharsZ(cx, str);
+  str = NULL;
+
+  /* Do a lot of allocation and collection. */
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 1000; j++)
+      JS_NewStringCopyZ(cx, "as I pondered weak and weary");
+    JS_GC(cx);
+  }
+
+  CHECK(!memcmp(ch, expected, sizeof(expected)));
+  return true;
+}
+END_TEST(testDerivedValues)
