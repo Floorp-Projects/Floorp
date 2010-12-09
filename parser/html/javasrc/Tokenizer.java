@@ -3424,7 +3424,7 @@ public class Tokenizer implements Locator {
                         }
                         switch (c) {
                             case '\u0000':
-                                emitReplacementCharacter(buf, pos);
+                                emitPlaintextReplacementCharacter(buf, pos);
                                 continue;
                             case '\r':
                                 emitCarriageReturn(buf, pos);
@@ -5782,6 +5782,13 @@ public class Tokenizer implements Locator {
             throws SAXException {
         flushChars(buf, pos);
         tokenHandler.zeroOriginatingReplacementCharacter();
+        cstart = pos + 1;
+    }
+
+    private void emitPlaintextReplacementCharacter(@NoLength char[] buf, int pos)
+            throws SAXException {
+        flushChars(buf, pos);
+        tokenHandler.characters(REPLACEMENT_CHARACTER, 0, 1);
         cstart = pos + 1;
     }
 

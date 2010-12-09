@@ -259,6 +259,7 @@ class nsHtml5Tokenizer
   private:
     void emitCarriageReturn(PRUnichar* buf, PRInt32 pos);
     void emitReplacementCharacter(PRUnichar* buf, PRInt32 pos);
+    void emitPlaintextReplacementCharacter(PRUnichar* buf, PRInt32 pos);
     void setAdditionalAndRememberAmpersandLocation(PRUnichar add);
     void bogusDoctype();
     void bogusDoctypeWithoutQuirks();

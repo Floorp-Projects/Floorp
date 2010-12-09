@@ -1717,7 +1717,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* 
           }
           switch(c) {
             case '\0': {
-              emitReplacementCharacter(buf, pos);
+              emitPlaintextReplacementCharacter(buf, pos);
               continue;
             }
             case '\r': {
@@ -3297,6 +3297,14 @@ nsHtml5Tokenizer::emitReplacementCharacter(PRUnichar* buf, PRInt32 pos)
 {
   flushChars(buf, pos);
   tokenHandler->zeroOriginatingReplacementCharacter();
+  cstart = pos + 1;
+}
+
+void 
+nsHtml5Tokenizer::emitPlaintextReplacementCharacter(PRUnichar* buf, PRInt32 pos)
+{
+  flushChars(buf, pos);
+  tokenHandler->characters(REPLACEMENT_CHARACTER, 0, 1);
   cstart = pos + 1;
 }
 

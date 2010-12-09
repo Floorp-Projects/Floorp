@@ -423,8 +423,22 @@ nsHtml5TreeBuilder::characters(const PRUnichar* buf, PRInt32 start, PRInt32 leng
 void 
 nsHtml5TreeBuilder::zeroOriginatingReplacementCharacter()
 {
-  if (isInForeign() || mode == NS_HTML5TREE_BUILDER_TEXT) {
-    characters(REPLACEMENT_CHARACTER, 0, 1);
+  if (mode == NS_HTML5TREE_BUILDER_TEXT) {
+    accumulateCharacters(REPLACEMENT_CHARACTER, 0, 1);
+    return;
+  }
+  if (currentPtr >= 0) {
+    nsHtml5StackNode* stackNode = stack[currentPtr];
+    if (stackNode->ns == kNameSpaceID_XHTML) {
+      return;
+    }
+    if (stackNode->isHtmlIntegrationPoint()) {
+      return;
+    }
+    if (stackNode->ns == kNameSpaceID_MathML && stackNode->getGroup() == NS_HTML5TREE_BUILDER_MI_MO_MN_MS_MTEXT) {
+      return;
+    }
+    accumulateCharacters(REPLACEMENT_CHARACTER, 0, 1);
   }
 }
 
