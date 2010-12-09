@@ -1381,18 +1381,9 @@ class Anchor: AnchorPermitted<T> {
         volatile T sink;
 #ifdef JS_USE_JSVAL_JSID_STRUCT_TYPES
         /*
-         * The default assignment operator for |struct C| has the signature:
-         *
-         *   C& C::operator=(const C&)
-         *
-         * And in particular requires implicit conversion of |this| to
-         * type |C| for the return value.  But |volatile C| cannot
-         * thus be converted to |C|, so just doing |sink = hold| here
-         * would fail to compile.  Do the assignment on asBits
-         * instead, since I don't think we want to give jsval_layout
-         * an assignment operator returning |volatile jsval_layout|.
+         * Can't just do a simple assignment here.
          */
-        sink.asBits = hold.asBits;
+        doAssignment(sink, hold);
 #else
         sink = hold;
 #endif
@@ -1412,13 +1403,40 @@ class Anchor: AnchorPermitted<T> {
  * Ensure that attempts to create Anchors for types the garbage collector's conservative
  * scanner doesn't actually recgonize fail. Such anchors would have no effect.
  */
-template<> class AnchorPermitted<JSObject *> { };
-template<> class AnchorPermitted<const JSObject *> { };
-template<> class AnchorPermitted<JSFunction *> { };
-template<> class AnchorPermitted<const JSFunction *> { };
-template<> class AnchorPermitted<JSString *> { };
-template<> class AnchorPermitted<const JSString *> { };
-template<> class AnchorPermitted<jsval> { };
+class Anchor_base {
+protected:
+#ifdef JS_USE_JSVAL_JSID_STRUCT_TYPES
+    template<typename T> void doAssignment(volatile T &lhs, const T &rhs) {
+        lhs = rhs;
+    }
+#endif
+};
+template<> class AnchorPermitted<JSObject *> : protected Anchor_base { };
+template<> class AnchorPermitted<const JSObject *> : protected Anchor_base { };
+template<> class AnchorPermitted<JSFunction *> : protected Anchor_base { };
+template<> class AnchorPermitted<const JSFunction *> : protected Anchor_base { };
+template<> class AnchorPermitted<JSString *> : protected Anchor_base { };
+template<> class AnchorPermitted<const JSString *> : protected Anchor_base { };
+template<> class AnchorPermitted<jsval> : protected Anchor_base {
+protected:
+#ifdef JS_USE_JSVAL_JSID_STRUCT_TYPES
+    void doAssignment(volatile jsval &lhs, const jsval &rhs) {
+        /*
+         * The default assignment operator for |struct C| has the signature:
+         *
+         *   C& C::operator=(const C&)
+         *
+         * And in particular requires implicit conversion of |this| to
+         * type |C| for the return value.  But |volatile C| cannot
+         * thus be converted to |C|, so just doing |sink = hold| here
+         * would fail to compile.  Do the assignment on asBits
+         * instead, since I don't think we want to give jsval_layout
+         * an assignment operator returning |volatile jsval_layout|.
+         */
+        lhs.asBits = rhs.asBits;
+#endif
+    }
+};
 
 }  /* namespace js */
 
