@@ -18,7 +18,8 @@
       </xul:stack>
     </content>
 
-   <implementation>
+    <implementation>
+      <field name="ignoreUndo">false</field>
       <field name="thumbnail">document.getAnonymousElementByAttribute(this, "anonid", "thumbnail");</field>
       <field name="_container">this.parentNode.parentNode;</field>
       <method name="_onClick">
@@ -35,7 +36,6 @@
       <method name="_onClose">
         <body>
           <![CDATA[
-
             let callbackFunc = this._container.getAttribute(this.hasAttribute("reload") ? "onclosereloadtab" : "onclosetab");
             let closeFn = new Function("event", callbackFunc);
             closeFn.call(this);
@@ -129,7 +129,9 @@
               this._closedTab = null;
             }
 
-            if (!closedTab || closedTab != aTab) {
+            if (aTab.ignoreUndo) {
+              this.children.removeChild(aTab);
+            } else if (!closedTab || closedTab != aTab) {
               if (aTab.thumbnail && !aTab.thumbnail.hasAttribute("empty")) {
                 // duplicate the old thumbnail to the new one because moving the
                 // tab in the dom clear the canvas
