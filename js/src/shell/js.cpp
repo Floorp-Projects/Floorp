@@ -4115,6 +4115,7 @@ Snarf(JSContext *cx, uintN argc, jsval *vp)
     JSStackFrame *fp;
     JSBool ok;
     size_t cc, len;
+    ssize_t tellresult;
     char *buf;
     FILE *file;
 
@@ -4149,10 +4150,13 @@ Snarf(JSContext *cx, uintN argc, jsval *vp)
         if (fseek(file, 0, SEEK_END) == EOF) {
             JS_ReportError(cx, "can't seek end of %s", pathname);
         } else {
-            len = ftell(file);
-            if (fseek(file, 0, SEEK_SET) == EOF) {
+            tellresult = ftell(file);
+            if (tellresult <= EOF) {
+                JS_ReportError(cx, "error getting length of %s", pathname);
+            } else if (fseek(file, 0, SEEK_SET) == EOF) {
                 JS_ReportError(cx, "can't seek start of %s", pathname);
             } else {
+                len = (size_t)tellresult;
                 buf = (char*) JS_malloc(cx, len + 1);
                 if (buf) {
                     cc = fread(buf, 1, len, file);
@@ -4160,7 +4164,7 @@ Snarf(JSContext *cx, uintN argc, jsval *vp)
                         JS_ReportError(cx, "can't read %s: %s", pathname,
                                        (ptrdiff_t(cc) < 0) ? strerror(errno) : "short read");
                     } else {
-                        len = (size_t)cc;
+                        len = cc;
                         ok = JS_TRUE;
                     }
                 }
