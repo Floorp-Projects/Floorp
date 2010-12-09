@@ -1434,8 +1434,8 @@ protected:
          * an assignment operator returning |volatile jsval_layout|.
          */
         lhs.asBits = rhs.asBits;
-#endif
     }
+#endif
 };
 
 }  /* namespace js */
