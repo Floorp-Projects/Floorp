@@ -1249,6 +1249,7 @@ nsBrowserAccess.prototype = {
       browser.focus();
     } catch(e) { }
 
+    BrowserUI.closeAutoComplete();
     return browser;
   },
 
