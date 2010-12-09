@@ -111,19 +111,19 @@ NSPR_API(PRInt32)	PR_AtomicAdd(PRInt32 *ptr, PRInt32 val);
 **    interchangeably.
 */
 #if defined(_WIN32) && !defined(_WIN32_WCE) && \
-    defined(_MSC_VER) && (_MSC_VER >= 1310)
+    (!defined(_MSC_VER) || (_MSC_VER >= 1310))
+
+#ifdef _MSC_VER
+#pragma intrinsic(_InterlockedIncrement)
+#pragma intrinsic(_InterlockedDecrement)
+#pragma intrinsic(_InterlockedExchange)
+#pragma intrinsic(_InterlockedExchangeAdd)
+#endif
 
 long __cdecl _InterlockedIncrement(long volatile *Addend);
-#pragma intrinsic(_InterlockedIncrement)
-
 long __cdecl _InterlockedDecrement(long volatile *Addend);
-#pragma intrinsic(_InterlockedDecrement)
-
 long __cdecl _InterlockedExchange(long volatile *Target, long Value);
-#pragma intrinsic(_InterlockedExchange)
-
 long __cdecl _InterlockedExchangeAdd(long volatile *Addend, long Value);
-#pragma intrinsic(_InterlockedExchangeAdd)
 
 #define PR_ATOMIC_INCREMENT(val) _InterlockedIncrement((long volatile *)(val))
 #define PR_ATOMIC_DECREMENT(val) _InterlockedDecrement((long volatile *)(val))

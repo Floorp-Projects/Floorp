@@ -37,64 +37,18 @@
 CORE_DEPTH = ../../..
 
 MODULE = nss
-DIRS = legacydb
 
-REQUIRES = dbm
+REQUIRES = seccmd dbm softoken
 
-LIBRARY_NAME = softokn
-LIBRARY_VERSION = 3
-MAPFILE = $(OBJDIR)/softokn.def
-
-DEFINES += -DSHLIB_SUFFIX=\"$(DLL_SUFFIX)\" -DSHLIB_PREFIX=\"$(DLL_PREFIX)\" -DSOFTOKEN_LIB_NAME=\"$(notdir $(SHARED_LIBRARY))\" -DSHLIB_VERSION=\"$(LIBRARY_VERSION)\"
-
-ifdef SQLITE_INCLUDE_DIR
-INCLUDES += -I$(SQLITE_INCLUDE_DIR)
-endif
+PROGRAM = rsapoptst
 
 EXPORTS = \
-	secmodt.h \
 	$(NULL)
 
 PRIVATE_EXPORTS = \
-	lgglue.h  \
-	lowkeyi.h \
-	lowkeyti.h \
-	pk11pars.h \
-	pkcs11ni.h \
-	softoken.h \
-	softoknt.h \
-	softkver.h \
-	sdb.h \
-	sftkdbt.h \
-	pk11init.h \
 	$(NULL)
 
 CSRCS = \
-	ecdecode.c \
-	fipsaudt.c \
-	fipstest.c \
-	fipstokn.c \
-	lgglue.c   \
-	lowkey.c   \
-	lowpbe.c   \
-	padbuf.c   \
-	pkcs11.c   \
-	pkcs11c.c  \
-	pkcs11u.c  \
-	rsawrapr.c  \
-	sdb.c  \
-	sftkdb.c  \
-	sftkmod.c  \
-	sftkpars.c  \
-	sftkpwd.c  \
-	softkver.c  \
-	tlsprf.c   \
-	jpakesftk.c \
+	rsapoptst.c \
 	$(NULL)
 
-ifdef SQLITE_UNSAFE_THREADS
-DEFINES += -DSQLITE_UNSAFE_THREADS
-endif
-
-# This part of the code, including all sub-dirs, can be optimized for size
-export ALLOW_OPT_CODE_SIZE = 1
