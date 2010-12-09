@@ -123,7 +123,9 @@ var BrowserUI = {
     let url = this.getDisplayURI(browser);
     let caption = browser.contentTitle || url;
 
-    if (Util.isURLEmpty(url))
+    if (browser.contentTitle == "" && !Util.isURLEmpty(browser.userTypedValue))
+      caption = browser.userTypedValue;
+    else if (Util.isURLEmpty(url))
       caption = "";
 
     if (caption) {
@@ -602,6 +604,8 @@ var BrowserUI = {
     let fixupFlags = Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
     let uri = gURIFixup.createFixupURI(aURI, fixupFlags);
     gHistSvc.markPageAsTyped(uri);
+
+    this._titleChanged(Browser.selectedBrowser);
   },
 
   showAutoComplete: function showAutoComplete() {
@@ -1554,8 +1558,10 @@ var AwesomePanel = function(aElementId, aCommandId) {
   this.openLink = function aw_openLink(aEvent) {
     let item = aEvent.originalTarget;
     let uri = item.getAttribute("url") || item.getAttribute("uri");
-    if (uri != "")
+    if (uri != "") {
+      Browser.selectedBrowser.userTypedValue = uri;
       BrowserUI.goToURI(uri);
+    }
   }
 };
 
