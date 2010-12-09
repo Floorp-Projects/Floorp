@@ -1000,6 +1000,18 @@ public:
     // the table doesn't exist in the font
     virtual hb_blob_t *GetFontTable(PRUint32 aTag);
 
+    // Subclasses may choose to look up glyph ids for characters.
+    // If they do not override this, gfxHarfBuzzShaper will fetch the cmap
+    // table and use that.
+    virtual PRBool ProvidesGetGlyph() const {
+        return PR_FALSE;
+    }
+    // Map unicode character to glyph ID.
+    // Only used if ProvidesGetGlyph() returns PR_TRUE.
+    virtual PRUint32 GetGlyph(PRUint32 unicode, PRUint32 variation_selector) {
+        return 0;
+    }
+
     // subclasses may provide hinted glyph widths (in font units);
     // if they do not override this, harfbuzz will use unhinted widths
     // derived from the font tables
