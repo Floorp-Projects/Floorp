@@ -518,7 +518,7 @@ typedef JSBool
                     jsval *rval);
 
 typedef JSBool
-(* JSLocaleToUnicode)(JSContext *cx, char *src, jsval *rval);
+(* JSLocaleToUnicode)(JSContext *cx, const char *src, jsval *rval);
 
 /*
  * Security protocol types.

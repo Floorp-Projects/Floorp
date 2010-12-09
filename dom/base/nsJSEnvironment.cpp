@@ -645,7 +645,7 @@ NS_ScriptErrorReporter(JSContext *cx,
 }
 
 static JSBool
-LocaleToUnicode(JSContext *cx, char *src, jsval *rval)
+LocaleToUnicode(JSContext *cx, const char *src, jsval *rval)
 {
   nsresult rv;
 
