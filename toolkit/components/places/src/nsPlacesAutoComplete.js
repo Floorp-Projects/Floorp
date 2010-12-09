@@ -325,22 +325,16 @@ function nsPlacesAutoComplete()
 
   XPCOMUtils.defineLazyGetter(this, "_openPagesQuery", function() {
     return this._db.createAsyncStatement(
-      "SELECT t.url, "
-    +        "IFNULL(h.title, t.url) AS c_title, f.url, "
-    +         kBookTagSQLFragment + ", "
-    +         "h.visit_count, h.typed, "
-    +         "h.id, :query_type, t.open_count, h.frecency "
+      "SELECT t.url, t.url, NULL, NULL, NULL, NULL, NULL, NULL, NULL, "
+    +         ":query_type, t.open_count, NULL "
     + "FROM moz_openpages_temp t "
     + "LEFT JOIN moz_places h ON h.url = t.url "
-    + "LEFT JOIN moz_favicons f ON f.id = h.favicon_id "
-    + "WHERE t.open_count > 0 "
-    +   "AND AUTOCOMPLETE_MATCH(:searchString, t.url, "
-    +                          "COALESCE(bookmark, c_title, t.url), tags, "
-    +                          "h.visit_count, h.typed, parent, "
-    +                          "t.open_count, "
+    + "WHERE h.id IS NULL "
+    +   "AND AUTOCOMPLETE_MATCH(:searchString, t.url, t.url, NULL, "
+    +                          "NULL, NULL, NULL, t.open_count, "
     +                          ":matchBehavior, :searchBehavior) "
-    + "ORDER BY h.frecency DESC, t.ROWID DESC "
-    + "LIMIT :maxResults"
+    + "ORDER BY t.ROWID DESC "
+    + "LIMIT :maxResults "
     );
   });
 
@@ -494,7 +488,7 @@ nsPlacesAutoComplete.prototype = {
     // For any given search, we run up to four queries:
     // 1) keywords (this._keywordQuery)
     // 2) adaptive learning (this._adaptiveQuery)
-    // 3) openPages (this._openPagesQuery)
+    // 3) open pages not supported by history (this._openPagesQuery)
     // 4) query from this._getSearch
     // (1) only gets ran if we get any filtered tokens from this._getSearch,
     // since if there are no tokens, there is nothing to match, so there is no
@@ -915,11 +909,13 @@ nsPlacesAutoComplete.prototype = {
     // We use more optimized queries for restricted searches, so we will always
     // return the most restrictive one to the least restrictive one if more than
     // one token is found.
+    // Note: "openpages" behavior is supported by the default query.
+    //       _openPagesQuery instead returns only pages not supported by
+    //       history and it is always executed.
     let query = this._hasBehavior("tag") ? this._tagsQuery :
                 this._hasBehavior("bookmark") ? this._bookmarkQuery :
                 this._hasBehavior("typed") ? this._typedQuery :
                 this._hasBehavior("history") ? this._historyQuery :
-                this._hasBehavior("openpage") ? this._openPagesQuery :
                 this._defaultQuery;
 
     // Bind the needed parameters to the query so consumers can use it.
@@ -947,7 +943,6 @@ nsPlacesAutoComplete.prototype = {
 
     // Bind the needed parameters to the query so consumers can use it.
     let (params = query.params) {
-      params.parent = this._bs.tagsFolder;
       params.query_type = kQueryTypeFiltered;
       params.matchBehavior = this._matchBehavior;
       params.searchBehavior = this._behavior;
