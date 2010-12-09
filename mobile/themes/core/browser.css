@@ -850,7 +850,7 @@ autocompleteresult.noresults {
 }
 
 autocompleteresult.noresults:hover:active {
-  background-color: white;
+  background-color: white !important;
 }
 
 autocompleteresult.noresults > .autocomplete-item-container {
