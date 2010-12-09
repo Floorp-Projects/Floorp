@@ -1297,6 +1297,7 @@ const BrowserSearch = {
       let button = document.createElement("button");
       button.className = "prompt-button";
       button.setAttribute("label", aEngine.name);
+      button.setAttribute("crop", "end");
       button.setAttribute("pack", "start");
       button.setAttribute("image", aEngine.iconURI ? aEngine.iconURI.spec : null);
       button.onclick = function() {
@@ -1311,19 +1312,13 @@ const BrowserSearch = {
     popup.anchorTo(document.getElementById("tool-search"));
 
     document.getElementById("urlbar-icons").setAttribute("open", "true");
-    window.addEventListener("resize", this, true);
     BrowserUI.pushPopup(this, [popup, this._button]);
   },
 
   hide: function bs_hide() {
     this._popup.hidden = true;
     document.getElementById("urlbar-icons").removeAttribute("open");
-    window.removeEventListener("resize", this, true);
     BrowserUI.popPopup(this);
-  },
-
-  handleEvent: function handleEvent(aEvent) {
-    this._popup.anchorTo(document.getElementById("tool-search"));
   },
 
   observe: function bs_observe(aSubject, aTopic, aData) {

@@ -43,34 +43,68 @@
 
   <binding id="arrowbox" extends="xul:box">
     <content orient="vertical">
-      <xul:box anonid="container" class="panel-arrowcontainer">
+      <xul:box anonid="container" class="panel-arrowcontainer" flex="1">
         <xul:box anonid="arrowbox" class="panel-arrowbox" dir="ltr">
           <xul:image anonid="arrow" class="panel-arrow"/>
         </xul:box>
-        <xul:box class="panel-arrowcontent" flex="1">
+        <xul:scrollbox anonid="arrowcontent" class="panel-arrowcontent" flex="1">
           <xul:box class="panel-inner-arrowcontent" xbl:inherits="align,dir,orient,pack,flex">
             <children/>
           </xul:box>
-        </xul:box>
+        </xul:scrollbox>
       </xul:box>
     </content>
-    <implementation>
-      <field name="_fadeTimer"/>
+    <implementation implements="nsIDOMEventListener">
+      <constructor>
+        <![CDATA[
+          window.addEventListener("resize", this._eventHandler, false);
+        ]]>
+      </constructor>
+
+      <desctructor>
+        <![CDATA[
+          window.removeEventListener("resize", this._eventHandler, false);
+        ]]>
+      </desctructor>
+
+      <property name="scrollBoxObject" readonly="true">
+        <getter><![CDATA[
+          let content = document.getAnonymousElementByAttribute(this, "anonid", "arrowcontent");
+          if (content.style.overflow == "hidden")
+            return content.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
+
+          return null;
+        ]]></getter>
+      </property>
 
       <property name="offset" onget="return parseInt(this.getAttribute('offset')) || 0;"
                               onset="this.setAttribute('offset', val); return val;"/>
 
+      <field name="anchorNode">null</field>
       <method name="anchorTo">
          <parameter name="aAnchorNode"/>
          <body>
             <![CDATA[
+              if (!aAnchorNode) {
+                this.arrow.hidden = true;
+                return;
+              }
+
+              this.anchorNode = aAnchorNode;
               let container = document.getAnonymousElementByAttribute(this, "anonid", "container");
+              let content = document.getAnonymousElementByAttribute(this, "anonid", "arrowcontent");
               let arrowbox = document.getAnonymousElementByAttribute(this, "anonid", "arrowbox");
               let arrow = document.getAnonymousElementByAttribute(this, "anonid", "arrow");
 
-              if (!aAnchorNode) {
-                arrow.hidden = true;
-                return;
+              // If the content of the arrowbox if taller than the available
+              // screen space, force a maximum height
+              this.style.minHeight = "";
+              content.style.overflow = "visible";
+              const kBottomMargin = 64;
+              let contentRect = content.firstChild.getBoundingClientRect();
+              if ((contentRect.height + contentRect.top + kBottomMargin) > window.innerHeight) {
+                content.style.overflow = "hidden";
+                this.style.minHeight = (window.innerHeight - parseInt(this.top) - kBottomMargin) + "px";
               }
 
               let anchorRect = aAnchorNode.getBoundingClientRect();
@@ -120,6 +154,25 @@
             ]]>
          </body>
       </method>
+
+      <field name="_eventHandler"><![CDATA[
+        ({
+          self: this,
+          handleEvent: function handleEvent(aEvent) {
+            // We need to reset the margins because the previous values could
+            // cause the arrowbox to size incorrectly.
+            let self = this.self;
+            switch (aEvent.type) {
+              case "resize":
+                let arrowbox = document.getAnonymousElementByAttribute(self, "anonid", "arrowbox");
+                arrowbox.style.marginLeft = "0px";
+                arrowbox.style.marginTop = "0px";
+                self.anchorTo(self.anchorNode);
+                break;
+            }
+          }
+        })
+      ]]></field>
     </implementation>
   </binding>
 </bindings>

@@ -567,8 +567,8 @@
     </vbox>
 #endif
 
-    <arrowbox id="search-engines-popup" hidden="true" class="window-width" offset="18">
-      <hbox id="search-engines-list" class="prompt-buttons window-width"/>
+    <arrowbox id="search-engines-popup" hidden="true" offset="18" flex="1">
+      <hbox id="search-engines-list" class="prompt-buttons" flex="1"/>
     </arrowbox>
 
     <vbox id="newtab-popup" hidden="true" class="dialog-dark" onclick="NewTabPopup.selectTab()" align="center" left="21">
