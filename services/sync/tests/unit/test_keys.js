@@ -28,6 +28,13 @@ function test_repeated_hmac() {
   do_check_eq(one, two);
 }
 
+function do_check_array_eq(a1, a2) {
+  do_check_eq(a1.length, a2.length);
+  for (let i = 0; i < a1.length; ++i) {
+    do_check_eq(a1[i], a2[i]);
+  }
+}
+
 function test_keymanager() {
   let testKey = "ababcdefabcdefabcdefabcdef";
   
@@ -97,9 +104,10 @@ function test_collections_manager() {
   
   log.info("Updating CollectionKeys.");
   
-  // updateContents decrypts the object, but it also returns the payload
-  // for us to use.
-  let payload = CollectionKeys.updateContents(keyBundle, storage_keys);
+  // updateContents decrypts the object, releasing the payload for us to use.
+  // Returns true, because the default key has changed.
+  do_check_true(CollectionKeys.updateContents(keyBundle, storage_keys));
+  let payload = storage_keys.cleartext;
   
   _("CK: " + JSON.stringify(CollectionKeys._collections));
   
@@ -107,6 +115,7 @@ function test_collections_manager() {
   let wbo = CollectionKeys.asWBO("crypto", "keys");
   
   _("WBO: " + JSON.stringify(wbo));
+  _("WBO cleartext: " + JSON.stringify(wbo.cleartext));
   
   // Check the individual contents.
   do_check_eq(wbo.collection, "crypto");
@@ -119,6 +128,10 @@ function test_collections_manager() {
   do_check_true('bookmarks' in CollectionKeys._collections);
   do_check_false('tabs' in CollectionKeys._collections);
   
+  _("Updating contents twice with the same data doesn't proceed.");
+  storage_keys.encrypt(keyBundle);
+  do_check_false(CollectionKeys.updateContents(keyBundle, storage_keys));
+  
   /*
    * Test that we get the right keys out when we ask for
    * a collection's tokens.
@@ -128,8 +141,16 @@ function test_collections_manager() {
   let b2 = CollectionKeys.keyForCollection("bookmarks");
   do_check_keypair_eq(b1.keyPair, b2.keyPair);
   
+  // Check key equality.
+  do_check_true(b1.equals(b2));
+  do_check_true(b2.equals(b1));
+  
   b1 = new BulkKeyBundle(null, "[default]");
   b1.keyPair = [default_key64, default_hmac64];
+  
+  do_check_false(b1.equals(b2));
+  do_check_false(b2.equals(b1));
+  
   b2 = CollectionKeys.keyForCollection(null);
   do_check_keypair_eq(b1.keyPair, b2.keyPair);
   
@@ -145,6 +166,51 @@ function test_collections_manager() {
   
   CollectionKeys._lastModified = null;
   do_check_true(CollectionKeys.updateNeeded({}));
+  
+  /*
+   * Check _compareKeyBundleCollections.
+   */
+  function newBundle(name) {
+    let r = new BulkKeyBundle(null, name);
+    r.generateRandom();
+    return r;
+  }
+  let k1 = newBundle("k1");
+  let k2 = newBundle("k2");
+  let k3 = newBundle("k3");
+  let k4 = newBundle("k4");
+  let k5 = newBundle("k5");
+  let coll1 = {"foo": k1, "bar": k2};
+  let coll2 = {"foo": k1, "bar": k2};
+  let coll3 = {"foo": k1, "bar": k3};
+  let coll4 = {"foo": k4};
+  let coll5 = {"baz": k5, "bar": k2};
+  let coll6 = {};
+  
+  let d1 = CollectionKeys._compareKeyBundleCollections(coll1, coll2); // []
+  let d2 = CollectionKeys._compareKeyBundleCollections(coll1, coll3); // ["bar"]
+  let d3 = CollectionKeys._compareKeyBundleCollections(coll3, coll2); // ["bar"]
+  let d4 = CollectionKeys._compareKeyBundleCollections(coll1, coll4); // ["bar", "foo"]
+  let d5 = CollectionKeys._compareKeyBundleCollections(coll5, coll2); // ["baz", "foo"]
+  let d6 = CollectionKeys._compareKeyBundleCollections(coll6, coll1); // ["bar", "foo"]
+  let d7 = CollectionKeys._compareKeyBundleCollections(coll5, coll5); // []
+  let d8 = CollectionKeys._compareKeyBundleCollections(coll6, coll6); // []
+  
+  do_check_true(d1.same);
+  do_check_false(d2.same);
+  do_check_false(d3.same);
+  do_check_false(d4.same);
+  do_check_false(d5.same);
+  do_check_false(d6.same);
+  do_check_true(d7.same);
+  do_check_true(d8.same);
+  
+  do_check_array_eq(d1.changed, []);
+  do_check_array_eq(d2.changed, ["bar"]);
+  do_check_array_eq(d3.changed, ["bar"]);
+  do_check_array_eq(d4.changed, ["bar", "foo"]);
+  do_check_array_eq(d5.changed, ["baz", "foo"]);
+  do_check_array_eq(d6.changed, ["bar", "foo"]);
 }
 
 // Make sure that KeyBundles work when persisted through Identity.

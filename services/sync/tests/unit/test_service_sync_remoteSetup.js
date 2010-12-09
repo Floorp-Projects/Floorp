@@ -17,13 +17,10 @@ function run_test() {
   let clients = new ServerCollection();
   let meta_global = new ServerWBO('global');
 
-  let collections = {};
-  function info_collections(request, response) {
-    let body = JSON.stringify(collections);
-    response.setStatusLine(request.httpVersion, 200, "OK");
-    response.bodyOutputStream.write(body, body.length);
-  }
-
+  let collectionsHelper = track_collections_helper();
+  let upd = collectionsHelper.with_updated_collection;
+  let collections = collectionsHelper.collections;
+  
   function wasCalledHandler(wbo) {
     let handler = wbo.handler();
     return function() {
@@ -34,10 +31,10 @@ function run_test() {
 
   do_test_pending();
   let server = httpd_setup({
-    "/1.0/johndoe/storage/crypto/keys": new ServerWBO().handler(),
-    "/1.0/johndoe/storage/clients": clients.handler(),
-    "/1.0/johndoe/storage/meta/global": wasCalledHandler(meta_global),
-    "/1.0/johndoe/info/collections": info_collections
+    "/1.0/johndoe/storage/crypto/keys": upd("crypto", new ServerWBO("keys").handler()),
+    "/1.0/johndoe/storage/clients": upd("clients", clients.handler()),
+    "/1.0/johndoe/storage/meta/global": upd("meta", wasCalledHandler(meta_global)),
+    "/1.0/johndoe/info/collections": collectionsHelper.handler
   });
 
   try {
@@ -50,7 +47,7 @@ function run_test() {
     do_check_eq(Status.sync, CREDENTIALS_CHANGED);
     do_check_eq(Status.login, LOGIN_FAILED_INVALID_PASSPHRASE);
 
-    Weave.Service.login("johndoe", "ilovejane", "foo");
+    Weave.Service.login("johndoe", "ilovejane", "abcdeabcdeabcdeabcdeabcdea");
     do_check_true(Weave.Service.isLoggedIn);
 
     _("Checking that remoteSetup returns true when credentials have changed.");
@@ -71,8 +68,8 @@ function run_test() {
     do_check_eq(meta_global.data.engines.clients.syncID, Weave.Clients.syncID);
 
     _("Set the collection info hash so that sync() will remember the modified times for future runs.");
-    collections = {meta: Weave.Clients.lastSync,
-                   clients: Weave.Clients.lastSync};
+    collections.meta = Weave.Clients.lastSync;
+    collections.clients = Weave.Clients.lastSync;
     Weave.Service.sync();
 
     _("Sync again and verify that meta/global wasn't downloaded again");
@@ -104,7 +101,7 @@ function run_test() {
     // server, just as might happen with a second client.
     _("Attempting to screw up HMAC by re-encrypting keys.");
     let keys = CollectionKeys.asWBO();
-    let b = new BulkKeyBundle();
+    let b = new BulkKeyBundle("hmacerror", "hmacerror");
     b.generateRandom();
     collections.crypto = keys.modified = 100 + (Date.now()/1000);  // Future modification time.
     keys.encrypt(b);

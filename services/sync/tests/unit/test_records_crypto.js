@@ -104,7 +104,7 @@ function run_test() {
     catch(ex) {
       error = ex;
     }
-    do_check_eq(error.substr(0, 32), "Record SHA256 HMAC mismatch: foo");
+    do_check_eq(error.substr(0, 42), "Record SHA256 HMAC mismatch: should be foo");
 
     // Checking per-collection keys and default key handling.
     

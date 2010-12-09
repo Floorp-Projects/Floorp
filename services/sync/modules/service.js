@@ -628,8 +628,27 @@ WeaveSvc.prototype = {
             let cryptoResp = cryptoKeys.fetch(this.cryptoKeysURL).response;
             
             if (cryptoResp.success) {
-              // On success, pass to CollectionKeys.
-              CollectionKeys.updateContents(syncKey, cryptoKeys);
+              // Don't want to wipe if we're just starting up!
+              // This is largely relevant because we don't persist
+              // CollectionKeys yet: Bug 610913.
+              let wasBlank = CollectionKeys.isClear;
+              let keysChanged = CollectionKeys.updateContents(syncKey, cryptoKeys);
+              
+              if (keysChanged && !wasBlank) {
+                this._log.debug("Keys changed: " + JSON.stringify(keysChanged));
+                this._log.info("Resetting client to reflect key change.");
+                
+                if (keysChanged.length) {
+                  // Collection keys only. Reset individual engines.
+                  this.resetClient(keysChanged);
+                }
+                else {
+                  // Default key changed: wipe it all.
+                  this.resetClient();
+                }
+                
+                this._log.info("Downloaded new keys, client reset. Proceeding.");
+              }
               return true;
             }
             else if (cryptoResp.status == 404) {
@@ -650,8 +669,7 @@ WeaveSvc.prototype = {
             // TODO: Um, what exceptions might we get here? Should we re-throw any?
             
             // One kind of exception: HMAC failure.
-            let hmacFail = "Record SHA256 HMAC mismatch: ";
-            if (ex && ex.substr && (ex.substr(0, hmacFail.length) == hmacFail)) {
+            if (Utils.isHMACMismatch(ex)) {
               Status.login = LOGIN_FAILED_INVALID_PASSPHRASE;
               Status.sync = CREDENTIALS_CHANGED;
             }
@@ -669,6 +687,9 @@ WeaveSvc.prototype = {
           // Must have got a 404, or no reported collection.
           // Better make some and upload them.
           this.generateNewSymmetricKeys();
+          
+          // Oh, and reset the client so we reupload, too.
+          this.resetClient();
           return true;
         }
         
