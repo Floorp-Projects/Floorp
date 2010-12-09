@@ -190,14 +190,13 @@ Parser::Parser(JSContext *cx, JSPrincipals *prin, JSStackFrame *cfp)
 }
 
 bool
-Parser::init(const jschar *base, size_t length,
-             FILE *fp, const char *filename, uintN lineno)
+Parser::init(const jschar *base, size_t length, const char *filename, uintN lineno)
 {
     JSContext *cx = context;
     version = cx->findVersion();
     
     tempPoolMark = JS_ARENA_MARK(&cx->tempPool);
-    if (!tokenStream.init(version, base, length, fp, filename, lineno)) {
+    if (!tokenStream.init(version, base, length, filename, lineno)) {
         JS_ARENA_RELEASE(&cx->tempPool, tempPoolMark);
         return false;
     }
@@ -748,7 +747,7 @@ JSScript *
 Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *callerFrame,
                         JSPrincipals *principals, uint32 tcflags,
                         const jschar *chars, size_t length,
-                        FILE *file, const char *filename, uintN lineno,
+                        const char *filename, uintN lineno,
                         JSString *source /* = NULL */,
                         uintN staticLevel /* = 0 */)
 {
@@ -772,7 +771,7 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *calle
     JS_ASSERT_IF(staticLevel != 0, callerFrame);
 
     Compiler compiler(cx, principals, callerFrame);
-    if (!compiler.init(chars, length, file, filename, lineno))
+    if (!compiler.init(chars, length, filename, lineno))
         return NULL;
 
     JS_InitArenaPool(&codePool, "code", 1024, sizeof(jsbytecode),
@@ -1645,7 +1644,7 @@ Compiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *prin
 {
     Compiler compiler(cx, principals);
 
-    if (!compiler.init(chars, length, NULL, filename, lineno))
+    if (!compiler.init(chars, length, filename, lineno))
         return false;
 
     /* No early return from after here until the js_FinishArenaPool calls. */
@@ -9409,6 +9408,7 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
             chars = (jschar *) cx->malloc((length + 1) * sizeof(jschar));
             if (!chars)
                 return JS_FALSE;
+            chars[length] = 0;
             str = js_NewString(cx, chars, length);
             if (!str) {
                 cx->free(chars);
@@ -9422,7 +9422,7 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
                 js_strncpy(chars, str2->flatChars(), length2);
                 chars += length2;
             }
-            *chars = 0;
+            JS_ASSERT(*chars == 0);
 
             /* Atomize the result string and mutate pn to refer to it. */
             pn->pn_atom = js_AtomizeString(cx, str, 0);

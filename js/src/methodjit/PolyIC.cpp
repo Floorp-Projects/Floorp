@@ -576,12 +576,18 @@ class SetPropCompiler : public PICStubCompiler
                 getter = CastAsPropertyOp(funobj);
             }
 
+            /*
+             * Define the property but do not set it yet. For setmethod,
+             * populate the slot to satisfy the method invariant (in case we
+             * hit an early return below).
+             */
             const Shape *shape =
                 obj->putProperty(cx, id, getter, clasp->setProperty,
                                  SHAPE_INVALID_SLOT, JSPROP_ENUMERATE, flags, 0);
-
             if (!shape)
                 return error();
+            if (flags & Shape::METHOD)
+                obj->nativeSetSlot(shape->slot, f.regs.sp[-1]);
 
             /*
              * Test after calling putProperty since it can switch obj into
