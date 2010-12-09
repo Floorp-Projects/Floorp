@@ -1743,7 +1743,8 @@ var FindHelperUI = {
 
   show: function findHelperShow() {
     this._container.show(this);
-    this.search("");
+    this.search(this._textbox.value);
+    this._textbox.select();
     this._textbox.focus();
     this._open = true;
 
