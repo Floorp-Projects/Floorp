@@ -5,6 +5,5 @@
     var grid = generateSymbolGrid("blueRect10x10.svg#root", 40, 20);
     grid.setAttribute("transform", "translate(10, 10)");
     document.documentElement.appendChild(grid);
-    document.documentElement.removeAttribute("class");
   </script>
 </svg>
