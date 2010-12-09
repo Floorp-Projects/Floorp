@@ -196,7 +196,7 @@ abstract public class GeckoApp
             return;
         }
         final String action = intent.getAction();
-        if (action.equals("org.mozilla.gecko.DEBUG") &&
+        if ("org.mozilla.gecko.DEBUG".equals(action) &&
             checkAndSetLaunchState(LaunchState.Launching, LaunchState.WaitButton)) {
             final Button launchButton = new Button(this);
             launchButton.setText("Launch"); // don't need to localize
