@@ -70,7 +70,7 @@ gfxProxyFontEntry::gfxProxyFontEntry(const nsTArray<gfxFontFaceSrc>& aFontFaceSr
              PRUint32 aWeight,
              PRUint32 aStretch,
              PRUint32 aItalicStyle,
-             const nsTArray<gfxFontFeature> *aFeatureSettings,
+             const nsTArray<gfxFontFeature>& aFeatureSettings,
              PRUint32 aLanguageOverride,
              gfxSparseBitSet *aUnicodeRanges)
     : gfxFontEntry(NS_LITERAL_STRING("Proxy"), aFamily), mIsLoading(PR_FALSE)
@@ -81,10 +81,7 @@ gfxProxyFontEntry::gfxProxyFontEntry(const nsTArray<gfxFontFaceSrc>& aFontFaceSr
     mWeight = aWeight;
     mStretch = aStretch;
     mItalic = (aItalicStyle & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)) != 0;
-    if (aFeatureSettings) {
-        mFeatureSettings = new nsTArray<gfxFontFeature>;
-        mFeatureSettings->AppendElements(*aFeatureSettings);
-    }
+    mFeatureSettings.AppendElements(aFeatureSettings);
     mLanguageOverride = aLanguageOverride;
     mIsUserFont = PR_TRUE;
 }
@@ -146,8 +143,7 @@ gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
         gfxProxyFontEntry *proxyEntry = 
             new gfxProxyFontEntry(aFontFaceSrcList, family, aWeight, aStretch, 
                                   aItalicStyle,
-                                  featureSettings.Length() > 0 ?
-                                      &featureSettings : nsnull,
+                                  featureSettings,
                                   languageOverride,
                                   aUnicodeRanges);
         family->AddFontEntry(proxyEntry);
@@ -523,10 +519,7 @@ gfxUserFontSet::OnLoadComplete(gfxFontEntry *aFontToLoad,
         if (fe) {
             // copy OpenType feature/language settings from the proxy to the
             // newly-created font entry
-            if (pe->mFeatureSettings) {
-                fe->mFeatureSettings = new nsTArray<gfxFontFeature>;
-                fe->mFeatureSettings->AppendElements(*pe->mFeatureSettings);
-            }
+            fe->mFeatureSettings.AppendElements(pe->mFeatureSettings);
             fe->mLanguageOverride = pe->mLanguageOverride;
 
             static_cast<gfxMixedFontFamily*>(pe->mFamily)->ReplaceFontEntry(pe, fe);
@@ -615,10 +608,7 @@ gfxUserFontSet::LoadNext(gfxProxyFontEntry *aProxyEntry)
                      NS_ConvertUTF16toUTF8(currSrc.mLocalName).get(), 
                      NS_ConvertUTF16toUTF8(aProxyEntry->mFamily->Name()).get(), 
                      PRUint32(mGeneration)));
-                if (aProxyEntry->mFeatureSettings) {
-                    fe->mFeatureSettings = new nsTArray<gfxFontFeature>;
-                    fe->mFeatureSettings->AppendElements(*aProxyEntry->mFeatureSettings);
-                }
+                fe->mFeatureSettings.AppendElements(aProxyEntry->mFeatureSettings);
                 fe->mLanguageOverride = aProxyEntry->mLanguageOverride;
                 static_cast<gfxMixedFontFamily*>(aProxyEntry->mFamily)->ReplaceFontEntry(aProxyEntry, fe);
                 return STATUS_LOADED;
