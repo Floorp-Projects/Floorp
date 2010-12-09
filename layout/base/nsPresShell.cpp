@@ -7478,13 +7478,15 @@ PresShell::Freeze()
 
   mDocument->EnumerateFreezableElements(FreezeElement, nsnull);
 
-  if (mCaret)
+  if (mCaret) {
     mCaret->SetCaretVisible(PR_FALSE);
+  }
 
   mPaintingSuppressed = PR_TRUE;
 
-  if (mDocument)
+  if (mDocument) {
     mDocument->EnumerateSubDocuments(FreezeSubDocument, nsnull);
+  }
 
   nsPresContext* presContext = GetPresContext();
   if (presContext &&
@@ -7493,7 +7495,9 @@ PresShell::Freeze()
   }
 
   mFrozen = PR_TRUE;
-  UpdateImageLockingState();
+  if (mDocument) {
+    UpdateImageLockingState();
+  }
 }
 
 void
