@@ -622,8 +622,27 @@ ShadowBufferOGL::Upload(gfxASurface* aUpdate, const nsIntRegion& aUpdated,
   // top-left is 0,0
   nsIntPoint visTopLeft = mLayer->GetVisibleRegion().GetBounds().TopLeft();
   destRegion.MoveBy(-visTopLeft);
+
+  // |aUpdated|, |aRect|, and |aRotation| are in thebes-layer space,
+  // unadjusted for resolution.  The texture is in device space, so
+  // first we need to map the update params to device space.
+  //
+  // XXX this prematurely commits us to updating rects instead of
+  // regions here.  This will be a perf penalty on platforms that
+  // support region updates.  This is OK for now because the
+  // TextureImage backends we care about need to update contiguous
+  // rects anyway, and would do this conversion internally.  To fix
+  // this, we would need to scale the region instead of its bounds
+  // here.
+  nsIntRect destBounds = destRegion.GetBounds();
+  gfxRect destRect(destBounds.x, destBounds.y, destBounds.width, destBounds.height);
+  destRect.Scale(mLayer->GetXResolution(), mLayer->GetYResolution());
+  destRect.RoundOut();
+
   // NB: this gfxContext must not escape EndUpdate() below
-  nsRefPtr<gfxContext> dest = mTexImage->BeginUpdate(destRegion);
+  nsIntRegion scaledDestRegion(nsIntRect(destRect.pos.x, destRect.pos.y,
+                                         destRect.size.width, destRect.size.height));
+  nsRefPtr<gfxContext> dest = mTexImage->BeginUpdate(scaledDestRegion);
 
   dest->SetOperator(gfxContext::OPERATOR_SOURCE);
   dest->DrawSurface(aUpdate, aUpdate->GetSize());
