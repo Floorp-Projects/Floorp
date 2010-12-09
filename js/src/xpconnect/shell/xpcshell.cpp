@@ -824,10 +824,11 @@ Options(JSContext *cx, uintN argc, jsval *vp)
         JS_ReportOutOfMemory(cx);
         return JS_FALSE;
     }
-    str = JS_NewStringCopyZ(cx, names);
-    free(names);
-    if (!str)
+    str = JS_NewString(cx, names, strlen(names));
+    if (!str) {
+        free(names);
         return JS_FALSE;
+    }
     JS_SET_RVAL(cx, vp, STRING_TO_JSVAL(str));
     return JS_TRUE;
 }

@@ -812,10 +812,11 @@ num_toLocaleString(JSContext *cx, uintN argc, Value *vp)
     if (cx->localeCallbacks && cx->localeCallbacks->localeToUnicode)
         return cx->localeCallbacks->localeToUnicode(cx, buf, Jsvalify(vp));
 
-    str = js_NewStringCopyN(cx, buf, size);
-    cx->free(buf);
-    if (!str)
+    str = JS_NewString(cx, buf, size);
+    if (!str) {
+        cx->free(buf);
         return JS_FALSE;
+    }
 
     vp->setString(str);
     return JS_TRUE;
