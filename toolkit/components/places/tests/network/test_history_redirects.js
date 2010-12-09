@@ -20,6 +20,8 @@ HTTPSVR.registerPathHandler(PERMA_REDIR_PATH, permaRedirHandler);
 HTTPSVR.registerPathHandler(TEMP_REDIR_PATH, tempRedirHandler);
 HTTPSVR.registerPathHandler(FOUND_PATH, foundHandler);
 
+const EXPECTED_SESSION_ID = 1;
+
 const STATUS = {
   REDIRECT_PERMANENT: [301, "Moved Permanently"],
   REDIRECT_TEMPORARY: [302, "Moved"],
@@ -83,17 +85,17 @@ function continue_test() {
       url: PERMA_REDIR_URL,
       from_visit: 0,
       visit_type: Ci.nsINavHistoryService.TRANSITION_LINK,
-      session: 2 },
+      session: EXPECTED_SESSION_ID },
     { id: 2,
       url: TEMP_REDIR_URL,
       from_visit: 1,
       visit_type: Ci.nsINavHistoryService.TRANSITION_REDIRECT_PERMANENT,
-      session: 2 },
+      session: EXPECTED_SESSION_ID },
     { id: 3,
       url: FOUND_URL,
       from_visit: 2,
       visit_type: Ci.nsINavHistoryService.TRANSITION_REDIRECT_TEMPORARY,
-      session: 2 },
+      session: EXPECTED_SESSION_ID },
   ];
   try {
     while(stmt.executeStep()) {
