@@ -72,6 +72,8 @@ public:
 
     void GetMetrics(gfxFont::Metrics* aMetrics, PRUint32* aSpaceGlyph);
 
+    PRBool GetFontTable(PRUint32 aTag, nsTArray<PRUint8>& aBuffer);
+
 protected:
     /**
      * Get extents for a simple character representable by a single glyph.
