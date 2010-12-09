@@ -28,6 +28,7 @@ let WebProgressListener = {
       notifyFlags |= Ci.nsIWebProgress.NOTIFY_STATE_WINDOW;
 
     let json = {
+      contentWindowId: content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID,
       windowId: aWebProgress.DOMWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID,
       stateFlags: aStateFlags,
       status: aStatus,
@@ -39,6 +40,7 @@ let WebProgressListener = {
 
   onProgressChange: function onProgressChange(aWebProgress, aRequest, aCurSelf, aMaxSelf, aCurTotal, aMaxTotal) {
     let json = {
+      contentWindowId: content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID,
       windowId: aWebProgress.DOMWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID,
       curSelf: aCurSelf,
       maxSelf: aMaxSelf,
@@ -53,6 +55,7 @@ let WebProgressListener = {
   onLocationChange: function onLocationChange(aWebProgress, aRequest, aLocationURI) {
     let location = aLocationURI ? aLocationURI.spec : "";
     let json = {
+      contentWindowId: content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID,
       windowId: aWebProgress.DOMWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID,
       documentURI: aWebProgress.DOMWindow.document.documentURIObject.spec,
       location: location,
@@ -64,6 +67,7 @@ let WebProgressListener = {
 
   onStatusChange: function onStatusChange(aWebProgress, aRequest, aStatus, aMessage) {
     let json = {
+      contentWindowId: content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID,
       windowId: aWebProgress.DOMWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID,
       status: aStatus,
       message: aMessage
@@ -77,6 +81,7 @@ let WebProgressListener = {
     let serialization = SecurityUI.getSSLStatusAsString();
 
     let json = {
+      contentWindowId: content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID,
       windowId: aWebProgress.DOMWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID,
       SSLStatusAsString: serialization,
       state: aState
