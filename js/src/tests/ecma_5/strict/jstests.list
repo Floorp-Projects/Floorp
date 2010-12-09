@@ -25,7 +25,7 @@ script 15.4.4.8.js
 script 15.4.4.9.js
 script 15.4.4.12.js
 script 15.4.4.13.js
-script 15.4.5.1.js
+skip script 15.4.5.1.js  # Waiting for bug 537873 to be fully resolved.
 script 15.5.5.1.js
 script 15.5.5.2.js
 script 15.10.7.js
