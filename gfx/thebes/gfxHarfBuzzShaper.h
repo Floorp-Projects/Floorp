@@ -115,9 +115,12 @@ protected:
     mutable PRUint32   mSubtableOffset;
     mutable PRUint32   mUVSTableOffset;
 
+    // Whether the font implements GetGlyph, or we should read tables
+    // directly
+    PRPackedBool mUseFontGetGlyph;
     // Whether the font implements hinted widths, or we should read tables
     // directly to get ideal widths
-    PRBool mUseHintedWidths;
+    PRPackedBool mUseHintedWidths;
 };
 
 #endif /* GFX_HARFBUZZSHAPER_H */

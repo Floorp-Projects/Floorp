@@ -82,6 +82,7 @@ gfxHarfBuzzShaper::gfxHarfBuzzShaper(gfxFont *aFont)
       mCmapFormat(-1),
       mSubtableOffset(0),
       mUVSTableOffset(0),
+      mUseFontGetGlyph(aFont->ProvidesGetGlyph()),
       mUseHintedWidths(aFont->ProvidesHintedWidths())
 {
 }
@@ -127,6 +128,10 @@ hb_codepoint_t
 gfxHarfBuzzShaper::GetGlyph(hb_codepoint_t unicode,
                             hb_codepoint_t variation_selector) const
 {
+    if (mUseFontGetGlyph) {
+        return mFont->GetGlyph(unicode, variation_selector);
+    }
+
     // we only instantiate a harfbuzz shaper if there's a cmap available
     NS_ASSERTION(mFont->GetFontEntry()->HasCmapTable(),
                  "we cannot be using this font!");
@@ -731,21 +736,21 @@ gfxHarfBuzzShaper::InitTextRun(gfxContext *aContext,
 
         mHBFace = hb_face_create_for_tables(HBGetTable, nsnull, this);
 
-        // get the cmap table and find offset to our subtable
-        mCmapTable = mFont->GetFontTable(TRUETYPE_TAG('c','m','a','p'));
-        if (!mCmapTable) {
-            NS_WARNING("failed to load cmap, glyphs will be missing");
-            return PR_FALSE;
+        if (!mUseFontGetGlyph) {
+            // get the cmap table and find offset to our subtable
+            mCmapTable = mFont->GetFontTable(TRUETYPE_TAG('c','m','a','p'));
+            if (!mCmapTable) {
+                NS_WARNING("failed to load cmap, glyphs will be missing");
+                return PR_FALSE;
+            }
+            const PRUint8* data = (const PRUint8*)hb_blob_lock(mCmapTable);
+            PRBool symbol;
+            mCmapFormat = gfxFontUtils::
+                FindPreferredSubtable(data, hb_blob_get_length(mCmapTable),
+                                      &mSubtableOffset, &mUVSTableOffset,
+                                      &symbol);
+            hb_blob_unlock(mCmapTable);
         }
-        const PRUint8* data = (const PRUint8*)hb_blob_lock(mCmapTable);
-        PRBool symbol;
-        mCmapFormat =
-            gfxFontUtils::FindPreferredSubtable(data,
-                                                hb_blob_get_length(mCmapTable),
-                                                &mSubtableOffset,
-                                                &mUVSTableOffset,
-                                                &symbol);
-        hb_blob_unlock(mCmapTable);
 
         if (!mUseHintedWidths) {
             // if font doesn't implement hinted widths, we will be reading
@@ -782,7 +787,8 @@ gfxHarfBuzzShaper::InitTextRun(gfxContext *aContext,
         }
     }
 
-    if (mCmapFormat <= 0 || (!mUseHintedWidths && !mHmtxTable)) {
+    if ((!mUseFontGetGlyph && mCmapFormat <= 0) ||
+        (!mUseHintedWidths && !mHmtxTable)) {
         // unable to shape with this font
         return PR_FALSE;
     }
