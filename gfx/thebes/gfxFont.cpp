@@ -95,9 +95,6 @@ gfxFontEntry::~gfxFontEntry()
     if (mUserFontData) {
         delete mUserFontData;
     }
-    if (mFeatureSettings) {
-        delete mFeatureSettings;
-    }
 }
 
 PRBool gfxFontEntry::TestCharacterMap(PRUint32 aCh)
@@ -2807,8 +2804,7 @@ gfxFontStyle::gfxFontStyle() :
     stretch(NS_FONT_STRETCH_NORMAL), size(DEFAULT_PIXEL_FONT_SIZE),
     sizeAdjust(0.0f),
     language(gfxAtoms::x_western),
-    languageOverride(NO_FONT_LANGUAGE_OVERRIDE),
-    featureSettings(nsnull)
+    languageOverride(NO_FONT_LANGUAGE_OVERRIDE)
 {
 }
 
@@ -2823,17 +2819,9 @@ gfxFontStyle::gfxFontStyle(PRUint8 aStyle, PRUint16 aWeight, PRInt16 aStretch,
     familyNameQuirks(aFamilyNameQuirks), weight(aWeight), stretch(aStretch),
     size(aSize), sizeAdjust(aSizeAdjust),
     language(aLanguage),
-    languageOverride(ParseFontLanguageOverride(aLanguageOverride)),
-    featureSettings(nsnull)
+    languageOverride(ParseFontLanguageOverride(aLanguageOverride))
 {
-    if (!aFeatureSettings.IsEmpty()) {
-        featureSettings = new nsTArray<gfxFontFeature>;
-        ParseFontFeatureSettings(aFeatureSettings, *featureSettings);
-        if (featureSettings->Length() == 0) {
-            delete featureSettings;
-            featureSettings = nsnull;
-        }
-    }
+    ParseFontFeatureSettings(aFeatureSettings, featureSettings);
 
     if (weight > 900)
         weight = 900;
@@ -2860,13 +2848,9 @@ gfxFontStyle::gfxFontStyle(const gfxFontStyle& aStyle) :
     stretch(aStyle.stretch), size(aStyle.size),
     sizeAdjust(aStyle.sizeAdjust),
     language(aStyle.language),
-    languageOverride(aStyle.languageOverride),
-    featureSettings(nsnull)
+    languageOverride(aStyle.languageOverride)
 {
-    if (aStyle.featureSettings) {
-        featureSettings = new nsTArray<gfxFontFeature>;
-        featureSettings->AppendElements(*aStyle.featureSettings);
-    }
+    featureSettings.AppendElements(aStyle.featureSettings);
 }
 
 PRInt8
