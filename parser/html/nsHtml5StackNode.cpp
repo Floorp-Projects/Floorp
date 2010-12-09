@@ -83,6 +83,12 @@ nsHtml5StackNode::isFosterParenting()
   return (flags & NS_HTML5ELEMENT_NAME_FOSTER_PARENTING);
 }
 
+PRBool 
+nsHtml5StackNode::isHtmlIntegrationPoint()
+{
+  return (flags & NS_HTML5ELEMENT_NAME_HTML_INTEGRATION_POINT);
+}
+
 
 nsHtml5StackNode::nsHtml5StackNode(PRInt32 flags, PRInt32 ns, nsIAtom* name, nsIContent** node, nsIAtom* popName, nsHtml5HtmlAttributes* attributes)
   : flags(flags),
@@ -152,7 +158,7 @@ nsHtml5StackNode::nsHtml5StackNode(nsHtml5ElementName* elementName, nsIAtom* pop
 
 
 nsHtml5StackNode::nsHtml5StackNode(nsHtml5ElementName* elementName, nsIContent** node, nsIAtom* popName, PRBool markAsIntegrationPoint)
-  : flags(prepareMathFlags(elementName->getFlags())),
+  : flags(prepareMathFlags(elementName->getFlags(), markAsIntegrationPoint)),
     name(elementName->name),
     popName(popName),
     ns(kNameSpaceID_MathML),
@@ -174,11 +180,14 @@ nsHtml5StackNode::prepareSvgFlags(PRInt32 flags)
 }
 
 PRInt32 
-nsHtml5StackNode::prepareMathFlags(PRInt32 flags)
+nsHtml5StackNode::prepareMathFlags(PRInt32 flags, PRBool markAsIntegrationPoint)
 {
   flags &= ~(NS_HTML5ELEMENT_NAME_FOSTER_PARENTING | NS_HTML5ELEMENT_NAME_SCOPING | NS_HTML5ELEMENT_NAME_SPECIAL);
   if ((flags & NS_HTML5ELEMENT_NAME_SCOPING_AS_MATHML)) {
     flags |= (NS_HTML5ELEMENT_NAME_SCOPING | NS_HTML5ELEMENT_NAME_SPECIAL);
+  }
+  if (markAsIntegrationPoint) {
+    flags |= NS_HTML5ELEMENT_NAME_HTML_INTEGRATION_POINT;
   }
   return flags;
 }
