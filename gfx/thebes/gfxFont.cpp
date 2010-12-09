@@ -317,8 +317,8 @@ gfxFontEntry::FontTableHashEntry::GetBlob() const
     return hb_blob_reference(mBlob);
 }
 
-hb_blob_t *
-gfxFontEntry::GetFontTable(PRUint32 aTag)
+PRBool
+gfxFontEntry::GetExistingFontTable(PRUint32 aTag, hb_blob_t **aBlob)
 {
     if (!mFontTableCache.IsInitialized()) {
         // we do this here rather than on fontEntry construction
@@ -327,21 +327,36 @@ gfxFontEntry::GetFontTable(PRUint32 aTag)
     }
 
     FontTableHashEntry *entry = mFontTableCache.GetEntry(aTag);
-    if (entry) {
-        return entry->GetBlob();
+    if (!entry) {
+        return PR_FALSE;
     }
 
-    entry = mFontTableCache.PutEntry(aTag);
+    *aBlob = entry->GetBlob();
+    return PR_TRUE;
+}
+
+hb_blob_t *
+gfxFontEntry::ShareFontTableAndGetBlob(PRUint32 aTag,
+                                       nsTArray<PRUint8>* aBuffer)
+{
+    if (NS_UNLIKELY(!mFontTableCache.IsInitialized())) {
+        // we do this here rather than on fontEntry construction
+        // because not all shapers will access the table cache at all
+        mFontTableCache.Init(10);
+    }
+
+    FontTableHashEntry *entry = mFontTableCache.PutEntry(aTag);
     if (NS_UNLIKELY(!entry)) { // OOM
         return nsnull;
     }
 
-    nsTArray<PRUint8> buffer;
-    if (NS_FAILED(GetFontTable(aTag, buffer))) {
-        return nsnull; // leaves the null entry cached in the hashtable
+    if (!aBuffer) {
+        // ensure the entry is null
+        entry->Clear();
+        return nsnull;
     }
 
-    return entry->ShareTableAndGetBlob(buffer, &mFontTableCache);
+    return entry->ShareTableAndGetBlob(*aBuffer, &mFontTableCache);
 }
 
 void
@@ -1035,6 +1050,19 @@ gfxFont::~gfxFont()
     for (i = 0; i < mGlyphExtentsArray.Length(); ++i) {
         delete mGlyphExtentsArray[i];
     }
+}
+
+hb_blob_t *
+gfxFont::GetFontTable(PRUint32 aTag) {
+    hb_blob_t *blob;
+    if (mFontEntry->GetExistingFontTable(aTag, &blob))
+        return blob;
+
+    nsTArray<PRUint8> buffer;
+    PRBool haveTable = NS_SUCCEEDED(mFontEntry->GetFontTable(aTag, buffer));
+
+    return mFontEntry->ShareFontTableAndGetBlob(aTag,
+                                                haveTable ? &buffer : nsnull);
 }
 
 /**

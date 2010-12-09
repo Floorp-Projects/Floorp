@@ -286,12 +286,23 @@ public:
     already_AddRefed<gfxFont> FindOrMakeFont(const gfxFontStyle *aStyle,
                                              PRBool aNeedsBold);
 
-    // Subclasses should override this if they can do something more efficient
-    // than getting tables with GetFontTable() and caching them in the entry.
+    // Get an existing font table cache entry in aBlob if it has been
+    // registered, or return PR_FALSE if not.  Callers must call
+    // hb_blob_destroy on aBlob if PR_TRUE is returned.
     //
     // Note that some gfxFont implementations may not call this at all,
     // if it is more efficient to get the table from the OS at that level.
-    virtual hb_blob_t *GetFontTable(PRUint32 aTag);
+    PRBool GetExistingFontTable(PRUint32 aTag, hb_blob_t** aBlob);
+
+    // Elements of aTable are transferred (not copied) to and returned in a
+    // new hb_blob_t which is registered on the gfxFontEntry, but the initial
+    // reference is owned by the caller.  Removing the last reference
+    // unregisters the table from the font entry.
+    //
+    // Pass NULL for aBuffer to indicate that the table is not present and
+    // NULL will be returned.  Also returns NULL on OOM.
+    hb_blob_t *ShareFontTableAndGetBlob(PRUint32 aTag,
+                                        nsTArray<PRUint8>* aTable);
 
     // Preload a font table into the cache (used to store layout tables for
     // harfbuzz, when they will be stripped from the actual sfnt being
@@ -978,15 +989,16 @@ public:
     // returns a pointer to data owned by the fontEntry or the OS,
     // which will remain valid until released.
     //
-    // Default implementations forward to the font entry, which
-    // maintains a shared table cache; however, subclasses may
-    // override if they can provide more efficient table access.
-
-    // Get pointer to a specific font table, or an empty blob if
+    // Default implementations forward to the font entry,
+    // and maintain a shared table.
+    //
+    // Subclasses should override this if they can provide more efficient
+    // access than getting tables with mFontEntry->GetFontTable() and sharing
+    // them via the entry.
+    //
+    // Get pointer to a specific font table, or NULL if
     // the table doesn't exist in the font
-    virtual hb_blob_t *GetFontTable(PRUint32 aTag) {
-        return mFontEntry->GetFontTable(aTag);
-    }
+    virtual hb_blob_t *GetFontTable(PRUint32 aTag);
 
     // subclasses may provide hinted glyph widths (in font units);
     // if they do not override this, harfbuzz will use unhinted widths
