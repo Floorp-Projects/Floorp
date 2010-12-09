@@ -2288,7 +2288,7 @@ ProgressController.prototype = {
   },
 
   onStateChange: function onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
-    // ignore notification that aren't about the main document (iframes, etc)
+    // Ignore notification that aren't about the main document (iframes, etc)
     if (aWebProgress.windowId != this._tab.browser.contentWindowId && this._tab.browser.contentWindowId)
       return;
 
