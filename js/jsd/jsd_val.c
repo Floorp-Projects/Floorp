@@ -298,7 +298,7 @@ jsd_NewValue(JSDContext* jsdc, jsval val)
         call = JS_EnterCrossCompartmentCall(jsdc->dumbContext, jsdc->glob);
         if(!call) {
             JS_EndRequest(jsdc->dumbContext);
-
+            free(jsdval);
             return NULL;
         }
 
