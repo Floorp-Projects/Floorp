@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: loader.c,v 1.44 2009/03/29 03:45:32 wtc%google.com Exp $ */
+/* $Id: loader.c,v 1.44.22.2 2010/12/04 18:59:01 rrelyea%redhat.com Exp $ */
 
 #include "loader.h"
 #include "prmem.h"
@@ -293,6 +293,14 @@ DSA_SignDigestWithSeed(DSAPrivateKey * key, SECItem * signature,
   if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
       return SECFailure;
   return (vector->p_DSA_SignDigestWithSeed)( key, signature, digest, seed);
+}
+
+SECStatus
+DSA_NewRandom(PLArenaPool * arena, const SECItem * q, SECItem * seed)
+{
+    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+        return SECFailure;
+    return (vector->p_DSA_NewRandom)(arena, q, seed);
 }
 
 SECStatus 
@@ -1696,4 +1704,54 @@ PRNGTEST_Uninstantiate()
     return (vector->p_PRNGTEST_Uninstantiate)();
 }
 
+SECStatus
+RSA_PopulatePrivateKey(RSAPrivateKey *key)
+{
+    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+	return SECFailure;
+    return (vector->p_RSA_PopulatePrivateKey)(key);
+}
 
+SECStatus
+JPAKE_Sign(PLArenaPool * arena, const PQGParams * pqg, HASH_HashType hashType,
+           const SECItem * signerID, const SECItem * x,
+           const SECItem * testRandom, const SECItem * gxIn, SECItem * gxOut,
+           SECItem * gv, SECItem * r)
+{
+    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+        return SECFailure;
+    return (vector->p_JPAKE_Sign)(arena, pqg, hashType, signerID, x,
+                                  testRandom, gxIn, gxOut, gv, r);
+}
+
+SECStatus
+JPAKE_Verify(PLArenaPool * arena, const PQGParams * pqg,
+             HASH_HashType hashType, const SECItem * signerID,
+             const SECItem * peerID,  const SECItem * gx,
+             const SECItem * gv, const SECItem * r)
+{
+    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+        return SECFailure;
+    return (vector->p_JPAKE_Verify)(arena, pqg, hashType, signerID, peerID, 
+                                    gx, gv, r);
+}
+
+SECStatus
+JPAKE_Round2(PLArenaPool * arena, const SECItem * p, const SECItem  *q,
+             const SECItem * gx1, const SECItem * gx3, const SECItem * gx4,
+             SECItem * base, const SECItem * x2, const SECItem * s, SECItem * x2s)
+{
+    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+        return SECFailure;
+    return (vector->p_JPAKE_Round2)(arena, p, q, gx1, gx3, gx4, base, x2, s, x2s);
+}
+
+SECStatus
+JPAKE_Final(PLArenaPool * arena, const SECItem * p, const SECItem  *q,
+            const SECItem * x2, const SECItem * gx4, const SECItem * x2s,
+            const SECItem * B, SECItem * K)
+{
+    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+        return SECFailure;
+    return (vector->p_JPAKE_Final)(arena, p, q, x2, gx4, x2s, B, K);
+}
