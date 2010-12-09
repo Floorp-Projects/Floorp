@@ -1205,26 +1205,8 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
             }
             case NS_HTML5TREE_BUILDER_OPTGROUP:
             case NS_HTML5TREE_BUILDER_OPTION: {
-              if (findLastInScope(nsHtml5Atoms::option) != NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK) {
-                for (; ; ) {
-                  if (isCurrent(nsHtml5Atoms::option)) {
-                    pop();
-                    NS_HTML5_BREAK(optionendtagloop);
-                  }
-                  eltPos = currentPtr;
-                  for (; ; ) {
-                    if (stack[eltPos]->name == nsHtml5Atoms::option) {
-                      generateImpliedEndTags();
-
-                      while (currentPtr >= eltPos) {
-                        pop();
-                      }
-                      NS_HTML5_BREAK(optionendtagloop);
-                    }
-                    eltPos--;
-                  }
-                }
-                optionendtagloop_end: ;
+              if (isCurrent(nsHtml5Atoms::option)) {
+                pop();
               }
               reconstructTheActiveFormattingElements();
               appendToCurrentNodeAndPushElementMayFoster(elementName, attributes);
