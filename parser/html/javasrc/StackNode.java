@@ -63,6 +63,10 @@ final class StackNode<T> {
         return (flags & ElementName.FOSTER_PARENTING) != 0;
     }
 
+    public boolean isHtmlIntegrationPoint() {
+        return (flags & ElementName.HTML_INTEGRATION_POINT) != 0;
+    }
+    
     /**
      * Constructor for copying. This doesn't take another 
      * <code>StackNode</code> because in C++ the caller is reponsible for
@@ -168,7 +172,7 @@ final class StackNode<T> {
      */
     StackNode(ElementName elementName, T node, @Local String popName,
             boolean markAsIntegrationPoint) {
-        this.flags = prepareMathFlags(elementName.getFlags());
+        this.flags = prepareMathFlags(elementName.getFlags(), markAsIntegrationPoint);
         this.name = elementName.name;
         this.popName = popName;
         this.ns = "http://www.w3.org/1998/Math/MathML";
@@ -185,10 +189,13 @@ final class StackNode<T> {
         return flags;
     }
 
-    private static int prepareMathFlags(int flags) {
+    private static int prepareMathFlags(int flags, boolean markAsIntegrationPoint) {
         flags &= ~(ElementName.FOSTER_PARENTING | ElementName.SCOPING | ElementName.SPECIAL);
         if ((flags & ElementName.SCOPING_AS_MATHML) != 0) {
             flags |= (ElementName.SCOPING | ElementName.SPECIAL);
+        }
+        if (markAsIntegrationPoint) {
+            flags |= ElementName.HTML_INTEGRATION_POINT;
         }
         return flags;
     }
