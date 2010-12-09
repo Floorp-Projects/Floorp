@@ -1865,48 +1865,6 @@ private:
 #endif
 };
 
-class NS_STACK_CLASS nsAutoGCRoot {
-public:
-  // aPtr should be the pointer to the jsval we want to protect
-  nsAutoGCRoot(jsval* aPtr, nsresult* aResult
-               MOZILLA_GUARD_OBJECT_NOTIFIER_PARAM) :
-    mPtr(aPtr), mRootType(RootType_JSVal)
-  {
-    MOZILLA_GUARD_OBJECT_NOTIFIER_INIT;
-    mResult = *aResult = AddJSGCRoot(aPtr, RootType_JSVal, "nsAutoGCRoot");
-  }
-
-  // aPtr should be the pointer to the JSObject* we want to protect
-  nsAutoGCRoot(JSObject** aPtr, nsresult* aResult
-               MOZILLA_GUARD_OBJECT_NOTIFIER_PARAM) :
-    mPtr(aPtr), mRootType(RootType_Object)
-  {
-    MOZILLA_GUARD_OBJECT_NOTIFIER_INIT;
-    mResult = *aResult = AddJSGCRoot(aPtr, RootType_Object, "nsAutoGCRoot");
-  }
-
-  ~nsAutoGCRoot() {
-    if (NS_SUCCEEDED(mResult)) {
-      RemoveJSGCRoot((jsval *)mPtr, mRootType);
-    }
-  }
-
-  static void Shutdown();
-
-private:
-  enum RootType { RootType_JSVal, RootType_Object };
-  static nsresult AddJSGCRoot(void *aPtr, RootType aRootType, const char* aName);
-  static nsresult RemoveJSGCRoot(void *aPtr, RootType aRootType);
-
-  static nsIJSRuntimeService* sJSRuntimeService;
-  static JSRuntime* sJSScriptRuntime;
-
-  void* mPtr;
-  RootType mRootType;
-  nsresult mResult;
-  MOZILLA_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
 class NS_STACK_CLASS nsAutoScriptBlocker {
 public:
   nsAutoScriptBlocker(MOZILLA_GUARD_OBJECT_NOTIFIER_ONLY_PARAM) {
@@ -1933,13 +1891,6 @@ private:
   nsCOMPtr<nsIDocumentObserver> mObserver;
   MOZILLA_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
-
-#define NS_AUTO_GCROOT_PASTE2(tok,line) tok##line
-#define NS_AUTO_GCROOT_PASTE(tok,line) \
-  NS_AUTO_GCROOT_PASTE2(tok,line)
-#define NS_AUTO_GCROOT(ptr, result) \ \
-  nsAutoGCRoot NS_AUTO_GCROOT_PASTE(_autoGCRoot_, __LINE__) \
-  (ptr, result)
 
 #define NS_INTERFACE_MAP_ENTRY_TEAROFF(_interface, _allocator)                \
   if (aIID.Equals(NS_GET_IID(_interface))) {                                  \

@@ -458,9 +458,7 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
             JS_DestroyScript(cx, script);
         }
 
-        if (file != stdin)
-            fclose(file);
-        return;
+        goto cleanup;
     }
 
     /* It's an interactive filehandle; drop into read-eval-print loop. */
@@ -491,7 +489,7 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
                 if (errno) {
                     JS_ReportError(cx, strerror(errno));
                     free(buffer);
-                    return;
+                    goto cleanup;
                 }
                 hitEOF = JS_TRUE;
                 break;
@@ -512,7 +510,7 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
                         free(buffer);
                         free(line);
                         JS_ReportOutOfMemory(cx);
-                        return;
+                        goto cleanup;
                     }
                     buffer = newBuf;
                 }
@@ -566,6 +564,7 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
 
     free(buffer);
     fprintf(gOutFile, "\n");
+cleanup:
     if (file != stdin)
         fclose(file);
     return;
@@ -1014,11 +1013,10 @@ Options(JSContext *cx, uintN argc, jsval *vp)
         JS_ReportOutOfMemory(cx);
         return JS_FALSE;
     }
-    str = JS_NewString(cx, names, strlen(names));
-    if (!str) {
-        free(names);
+    str = JS_NewStringCopyZ(cx, names);
+    free(names);
+    if (!str)
         return JS_FALSE;
-    }
     *vp = STRING_TO_JSVAL(str);
     return JS_TRUE;
 }
@@ -1137,11 +1135,10 @@ ReadLine(JSContext *cx, uintN argc, jsval *vp)
      * Turn buf into a JSString. Note that buflength includes the trailing null
      * character.
      */
-    str = JS_NewString(cx, buf, sawNewline ? buflength - 1 : buflength);
-    if (!str) {
-        JS_free(cx, buf);
+    str = JS_NewStringCopyN(cx, buf, sawNewline ? buflength - 1 : buflength);
+    JS_free(cx, buf);
+    if (!str)
         return JS_FALSE;
-    }
 
     *vp = STRING_TO_JSVAL(str);
     return JS_TRUE;
@@ -3392,8 +3389,8 @@ EvalInFrame(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 ShapeOf(JSContext *cx, uintN argc, jsval *vp)
 {
-    jsval v = JS_ARGV(cx, vp)[0];
-    if (!JSVAL_IS_OBJECT(v)) {
+    jsval v;
+    if (argc < 1 || !JSVAL_IS_OBJECT(v = JS_ARGV(cx, vp)[0])) {
         JS_ReportError(cx, "shapeOf: object expected");
         return JS_FALSE;
     }
@@ -4070,7 +4067,7 @@ Parse(JSContext *cx, uintN argc, jsval *vp)
     JSString *scriptContents = JSVAL_TO_STRING(arg0);
     js::Parser parser(cx);
     parser.init(JS_GetStringCharsZ(cx, scriptContents), JS_GetStringLength(scriptContents),
-                NULL, "<string>", 0);
+                "<string>", 0);
     if (!parser.parse(NULL))
         return JS_FALSE;
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
@@ -4144,12 +4141,10 @@ Snarf(JSContext *cx, uintN argc, jsval *vp)
         return ok;
     }
 
-    buf[len] = '\0';
-    str = JS_NewString(cx, buf, len);
-    if (!str) {
-        JS_free(cx, buf);
+    str = JS_NewStringCopyN(cx, buf, len);
+    JS_free(cx, buf);
+    if (!str)
         return JS_FALSE;
-    }
     *vp = STRING_TO_JSVAL(str);
     return JS_TRUE;
 }

@@ -1152,8 +1152,24 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
                 fun->u.i.script = empty;
             }
 
-            JS_RUNTIME_METER(cx->runtime, liveEmptyScripts);
-            JS_RUNTIME_METER(cx->runtime, totalEmptyScripts);
+#ifdef DEBUG
+            {
+                jsrefcount newEmptyLive = JS_RUNTIME_METER(cx->runtime, liveEmptyScripts);
+                jsrefcount newLive = cx->runtime->liveScripts;
+                jsrefcount newTotal =
+                    JS_RUNTIME_METER(cx->runtime, totalEmptyScripts) + cx->runtime->totalScripts;
+
+                jsrefcount oldHigh = cx->runtime->highWaterLiveScripts;
+                if (newEmptyLive + newLive > oldHigh) {
+                    JS_ATOMIC_SET(&cx->runtime->highWaterLiveScripts, newEmptyLive + newLive);
+                    if (getenv("JS_DUMP_LIVE_SCRIPTS")) {
+                        fprintf(stderr, "high water script count: %d empty, %d not (total %d)\n",
+                                newEmptyLive, newLive, newTotal);
+                    }
+                }
+            }
+#endif
+
             return empty;
         }
     }
@@ -1268,8 +1284,23 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
 
     /* Tell the debugger about this compiled script. */
     js_CallNewScriptHook(cx, script, fun);
-    JS_RUNTIME_METER(cx->runtime, liveScripts);
-    JS_RUNTIME_METER(cx->runtime, totalScripts);
+#ifdef DEBUG
+    {
+        jsrefcount newLive = JS_RUNTIME_METER(cx->runtime, liveScripts);
+        jsrefcount newEmptyLive = cx->runtime->liveEmptyScripts;
+        jsrefcount newTotal =
+            JS_RUNTIME_METER(cx->runtime, totalScripts) + cx->runtime->totalEmptyScripts;
+        jsrefcount oldHigh = cx->runtime->highWaterLiveScripts;
+        if (newEmptyLive + newLive > oldHigh) {
+            JS_ATOMIC_SET(&cx->runtime->highWaterLiveScripts, newEmptyLive + newLive);
+            if (getenv("JS_DUMP_LIVE_SCRIPTS")) {
+                fprintf(stderr, "high water script count: %d empty, %d not (total %d)\n",
+                        newEmptyLive, newLive, newTotal);
+            }
+        }
+    }
+#endif
+
     return script;
 
 bad:
@@ -1311,6 +1342,10 @@ DestroyScript(JSContext *cx, JSScript *script, JSThreadData *data)
         JS_RUNTIME_UNMETER(cx->runtime, liveEmptyScripts);
         return;
     }
+
+#ifdef DEBUG
+    JS_RUNTIME_UNMETER(cx->runtime, liveScripts);
+#endif
 
     js_CallDestroyScriptHook(cx, script);
     JS_ClearScriptTraps(cx, script);
@@ -1380,8 +1415,6 @@ DestroyScript(JSContext *cx, JSScript *script, JSThreadData *data)
     JS_REMOVE_LINK(&script->links);
 
     cx->free(script);
-
-    JS_RUNTIME_UNMETER(cx->runtime, liveScripts);
 }
 
 void
