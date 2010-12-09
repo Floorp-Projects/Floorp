@@ -75,7 +75,6 @@ using namespace mozilla; // for AutoSwap_* types
 gfxHarfBuzzShaper::gfxHarfBuzzShaper(gfxFont *aFont)
     : gfxFontShaper(aFont),
       mHBFace(nsnull),
-      mHBLanguage(nsnull),
       mKernTable(nsnull),
       mHmtxTable(nsnull),
       mNumLongMetrics(0),
@@ -781,18 +780,6 @@ gfxHarfBuzzShaper::InitTextRun(gfxContext *aContext,
             }
             hb_blob_destroy(hheaTable);
         }
-
-        if (mFont->GetStyle()->languageOverride) {
-            mHBLanguage =
-                hb_ot_tag_to_language(mFont->GetStyle()->languageOverride);
-        } else if (mFont->GetFontEntry()->mLanguageOverride) {
-            mHBLanguage =
-                hb_ot_tag_to_language(mFont->GetFontEntry()->mLanguageOverride);
-        } else {
-            nsCString langString;
-            mFont->GetStyle()->language->ToUTF8String(langString);
-            mHBLanguage = hb_language_from_string(langString.get());
-        }
     }
 
     if (mCmapFormat <= 0 || (!mUseHintedWidths && !mHmtxTable)) {
@@ -826,8 +813,8 @@ gfxHarfBuzzShaper::InitTextRun(gfxContext *aContext,
     }
 
     // css features need to be merged with the existing ones, if any
-    const nsTArray<gfxFontFeature> *cssFeatures =
-        mFont->GetStyle()->featureSettings;
+    const gfxFontStyle *style = aTextRun->GetFontGroup()->GetStyle();
+    const nsTArray<gfxFontFeature> *cssFeatures = style->featureSettings;
     if (!cssFeatures) {
         cssFeatures = mFont->GetFontEntry()->mFeatureSettings;
     }
@@ -859,7 +846,19 @@ gfxHarfBuzzShaper::InitTextRun(gfxContext *aContext,
     hb_buffer_set_script(buffer,
                          aRunScript <= HB_SCRIPT_INHERITED ? HB_SCRIPT_LATIN
                          : hb_script_t(aRunScript));
-    hb_buffer_set_language(buffer, mHBLanguage);
+
+    hb_language_t language;
+    if (style->languageOverride) {
+        language = hb_ot_tag_to_language(style->languageOverride);
+    } else if (mFont->GetFontEntry()->mLanguageOverride) {
+        language =
+            hb_ot_tag_to_language(mFont->GetFontEntry()->mLanguageOverride);
+    } else {
+        nsCString langString;
+        style->language->ToUTF8String(langString);
+        language = hb_language_from_string(langString.get());
+    }
+    hb_buffer_set_language(buffer, language);
 
     hb_buffer_add_utf16(buffer, reinterpret_cast<const uint16_t*>(aString + aRunStart),
                         aRunLength, 0, aRunLength);
