@@ -62,6 +62,8 @@
 #include FT_TRUETYPE_TAGS_H
 #include FT_TRUETYPE_TABLES_H
 #include "gfxFontUtils.h"
+#include "gfxHarfBuzzShaper.h"
+#include "gfxUnicodeProperties.h"
 #include "gfxAtoms.h"
 #include "nsTArray.h"
 #include "nsUnicodeRange.h"
@@ -678,7 +680,19 @@ gfxFT2Font::InitTextRun(gfxContext *aContext,
                         PRInt32 aRunScript,
                         PRBool aPreferPlatformShaping)
 {
-    AddRange(aTextRun, aString, aRunStart, aRunLength);
+    PRBool ok = PR_FALSE;
+
+    if (gfxPlatform::GetPlatform()->UseHarfBuzzLevel() >=
+        gfxUnicodeProperties::ScriptShapingLevel(aRunScript))
+    {
+        ok = mHarfBuzzShaper->InitTextRun(aContext, aTextRun, aString,
+                                          aRunStart, aRunLength, aRunScript);
+    }
+
+    if (!ok) {
+        AddRange(aTextRun, aString, aRunStart, aRunLength);
+    }
+
     return PR_TRUE;
 }
 
@@ -789,6 +803,8 @@ gfxFT2Font::gfxFT2Font(cairo_scaled_font_t *aCairoFont,
     NS_ASSERTION(mFontEntry, "Unable to find font entry for font.  Something is whack.");
 
     mCharGlyphCache.Init(64);
+
+    mHarfBuzzShaper = new gfxHarfBuzzShaper(this);
 }
 
 gfxFT2Font::~gfxFT2Font()
