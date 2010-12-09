@@ -324,7 +324,11 @@ toolbarbutton.button-control {
   background-color: transparent !important;
   -moz-box-align: center;
   -moz-box-pack: center;
-  height: 82px;
+  height: 70px;
+}
+
+toolbarbutton.button-control:last-child {
+  border-bottom: 0px solid rgba(0,0,0,0.2) !important;
 }
 
 toolbarbutton.button-control[disabled="true"] {
@@ -961,7 +965,7 @@ documenttab[reload="true"] > stack > .documenttab-reload {
 #newtab-button {
   -moz-box-flex: 1;
   list-style-image: url("images/newtab-default-64.png");
-  height: 82px;
+  height: 70px;
 }
 
 /* bookmark editor   ------------------------------------------------------- */
