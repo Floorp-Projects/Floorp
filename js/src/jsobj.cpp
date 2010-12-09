@@ -3939,7 +3939,7 @@ JSObject::growSlots(JSContext *cx, size_t newcap)
     if (!hasSlotsArray())
         return allocSlots(cx, actualCapacity);
 
-    Value *tmpslots = (Value*) cx->realloc(slots, actualCapacity * sizeof(Value));
+    Value *tmpslots = (Value*) cx->realloc(slots, oldcap * sizeof(Value), actualCapacity * sizeof(Value));
     if (!tmpslots)
         return false;    /* Leave dslots as its old size. */
     slots = tmpslots;
