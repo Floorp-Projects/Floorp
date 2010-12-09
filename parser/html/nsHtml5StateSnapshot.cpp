@@ -165,7 +165,6 @@ nsHtml5StateSnapshot::~nsHtml5StateSnapshot()
       listOfActiveFormattingElements[i]->release();
     }
   }
-  ;
 }
 
 void

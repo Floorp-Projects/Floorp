@@ -3271,7 +3271,6 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* 
 void 
 nsHtml5Tokenizer::initDoctypeFields()
 {
-  nsHtml5Portability::releaseLocal(doctypeName);
   doctypeName = nsHtml5Atoms::emptystring;
   if (systemIdentifier) {
     nsHtml5Portability::releaseString(systemIdentifier);
@@ -3441,7 +3440,6 @@ nsHtml5Tokenizer::eof()
           emitComment(0, 0);
         } else {
 
-          nsHtml5Portability::releaseLocal(doctypeName);
           doctypeName = nsHtml5Atoms::emptystring;
           if (systemIdentifier) {
             nsHtml5Portability::releaseString(systemIdentifier);
@@ -3672,7 +3670,6 @@ nsHtml5Tokenizer::emitDoctypeToken(PRInt32 pos)
 {
   cstart = pos + 1;
   tokenHandler->doctype(doctypeName, publicIdentifier, systemIdentifier, forceQuirks);
-  nsHtml5Portability::releaseLocal(doctypeName);
   doctypeName = nsnull;
   nsHtml5Portability::releaseString(publicIdentifier);
   publicIdentifier = nsnull;
@@ -3715,7 +3712,6 @@ nsHtml5Tokenizer::end()
 {
   strBuf = nsnull;
   longStrBuf = nsnull;
-  nsHtml5Portability::releaseLocal(doctypeName);
   doctypeName = nsnull;
   if (systemIdentifier) {
     nsHtml5Portability::releaseString(systemIdentifier);
@@ -3821,7 +3817,6 @@ nsHtml5Tokenizer::loadState(nsHtml5Tokenizer* other)
   seenDigits = other->seenDigits;
   endTag = other->endTag;
   shouldSuspend = PR_FALSE;
-  nsHtml5Portability::releaseLocal(doctypeName);
   if (!other->doctypeName) {
     doctypeName = nsnull;
   } else {
