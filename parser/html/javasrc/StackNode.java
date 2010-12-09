@@ -23,11 +23,12 @@
 
 package nu.validator.htmlparser.impl;
 
+import nu.validator.htmlparser.annotation.Inline;
 import nu.validator.htmlparser.annotation.Local;
 import nu.validator.htmlparser.annotation.NsUri;
 
 final class StackNode<T> {
-    final int group;
+    final int flags;
 
     final @Local String name;
 
@@ -37,17 +38,35 @@ final class StackNode<T> {
 
     final T node;
 
-    final boolean scoping;
-
-    final boolean special;
-
-    final boolean fosterParenting;
-    
     // Only used on the list of formatting elements
     HtmlAttributes attributes;
 
     private int refcount = 1;
-    
+
+    @Inline public int getFlags() {
+        return flags;
+    }
+
+    public int getGroup() {
+        return flags & ElementName.GROUP_MASK;
+    }
+
+    public boolean isScoping() {
+        return (flags & ElementName.SCOPING) != 0;
+    }
+
+    public boolean isSpecial() {
+        return (flags & ElementName.SPECIAL) != 0;
+    }
+
+    public boolean isScopingOrSpecial() {
+        return (flags & (ElementName.SCOPING | ElementName.SPECIAL)) != 0;
+    }
+
+    public boolean isFosterParenting() {
+        return (flags & ElementName.FOSTER_PARENTING) != 0;
+    }
+
     /**
      * @param group
      *            TODO
@@ -58,23 +77,19 @@ final class StackNode<T> {
      * @param popName
      *            TODO
      */
-    StackNode(int group, final @NsUri String ns, final @Local String name, final T node,
-            final boolean scoping, final boolean special,
-            final boolean fosterParenting, final @Local String popName, HtmlAttributes attributes) {
-        this.group = group;
+    StackNode(int flags, final @NsUri String ns, final @Local String name,
+            final T node, final @Local String popName, HtmlAttributes attributes) {
+        this.flags = flags;
         this.name = name;
         this.popName = popName;
         this.ns = ns;
         this.node = node;
-        this.scoping = scoping;
-        this.special = special;
-        this.fosterParenting = fosterParenting;
         this.attributes = attributes;
         this.refcount = 1;
         Portability.retainLocal(name);
         Portability.retainLocal(popName);
         Portability.retainElement(node);
-        // not retaining namespace for now        
+        // not retaining namespace for now
     }
 
     /**
@@ -83,73 +98,66 @@ final class StackNode<T> {
      * @param node
      */
     StackNode(final @NsUri String ns, ElementName elementName, final T node) {
-        this.group = elementName.group;
+        this.flags = elementName.getFlags();
         this.name = elementName.name;
         this.popName = elementName.name;
         this.ns = ns;
         this.node = node;
-        this.scoping = elementName.scoping;
-        this.special = elementName.special;
-        this.fosterParenting = elementName.fosterParenting;
         this.attributes = null;
         this.refcount = 1;
         Portability.retainLocal(name);
         Portability.retainLocal(popName);
         Portability.retainElement(node);
-        // not retaining namespace for now        
+        // not retaining namespace for now
     }
 
-    StackNode(final @NsUri String ns, ElementName elementName, final T node, HtmlAttributes attributes) {
-        this.group = elementName.group;
+    StackNode(final @NsUri String ns, ElementName elementName, final T node,
+            HtmlAttributes attributes) {
+        this.flags = elementName.getFlags();
         this.name = elementName.name;
         this.popName = elementName.name;
         this.ns = ns;
         this.node = node;
-        this.scoping = elementName.scoping;
-        this.special = elementName.special;
-        this.fosterParenting = elementName.fosterParenting;
         this.attributes = attributes;
         this.refcount = 1;
         Portability.retainLocal(name);
         Portability.retainLocal(popName);
         Portability.retainElement(node);
-        // not retaining namespace for now        
+        // not retaining namespace for now
     }
 
-    StackNode(final @NsUri String ns, ElementName elementName, final T node, @Local String popName) {
-        this.group = elementName.group;
+    StackNode(final @NsUri String ns, ElementName elementName, final T node,
+            @Local String popName) {
+        this.flags = elementName.getFlags();
         this.name = elementName.name;
         this.popName = popName;
         this.ns = ns;
         this.node = node;
-        this.scoping = elementName.scoping;
-        this.special = elementName.special;
-        this.fosterParenting = elementName.fosterParenting;
         this.attributes = null;
         this.refcount = 1;
         Portability.retainLocal(name);
         Portability.retainLocal(popName);
         Portability.retainElement(node);
-        // not retaining namespace for now        
+        // not retaining namespace for now
     }
 
-    StackNode(final @NsUri String ns, ElementName elementName, final T node, @Local String popName, boolean scoping) {
-        this.group = elementName.group;
+    StackNode(final @NsUri String ns, ElementName elementName, final T node,
+            @Local String popName, boolean scoping) {
+        this.flags = (scoping ? (elementName.getFlags() | ElementName.SCOPING)
+                : (elementName.getFlags() & ~ElementName.SCOPING))
+                & ~(ElementName.SPECIAL | ElementName.FOSTER_PARENTING);
         this.name = elementName.name;
         this.popName = popName;
         this.ns = ns;
         this.node = node;
-        this.scoping = scoping;
-        this.special = false;
-        this.fosterParenting = false;
         this.attributes = null;
         this.refcount = 1;
         Portability.retainLocal(name);
         Portability.retainLocal(popName);
         Portability.retainElement(node);
-        // not retaining namespace for now        
+        // not retaining namespace for now
     }
-    
+
     @SuppressWarnings("unused") private void destructor() {
         Portability.releaseLocal(name);
         Portability.releaseLocal(popName);
@@ -157,11 +165,11 @@ final class StackNode<T> {
         // not releasing namespace for now
         Portability.delete(attributes);
     }
-    
+
     public void dropAttributes() {
         attributes = null;
     }
-    
+
     // [NOCPP[
     /**
      * @see java.lang.Object#toString()
@@ -169,12 +177,13 @@ final class StackNode<T> {
     @Override public @Local String toString() {
         return name;
     }
+
     // ]NOCPP]
-    
-    public void retain() {   
+
+    public void retain() {
         refcount++;
     }
-    
+
     public void release() {
         refcount--;
         if (refcount == 0) {

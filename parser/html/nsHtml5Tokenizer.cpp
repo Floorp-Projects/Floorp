@@ -142,7 +142,7 @@ nsHtml5Tokenizer::setStateAndEndTagExpectation(PRInt32 specialTokenizerState, ns
 void 
 nsHtml5Tokenizer::endTagExpectationToArray()
 {
-  switch(endTagExpectation->group) {
+  switch(endTagExpectation->getGroup()) {
     case NS_HTML5TREE_BUILDER_TITLE: {
       endTagExpectationAsArray = TITLE_ARR;
       return;

@@ -697,7 +697,7 @@ public class Tokenizer implements Locator {
     }
 
     private void endTagExpectationToArray() {
-        switch (endTagExpectation.group) {
+        switch (endTagExpectation.getGroup()) {
             case TreeBuilder.TITLE:
                 endTagExpectationAsArray = TITLE_ARR;
                 return;

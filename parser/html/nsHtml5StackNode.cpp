@@ -59,16 +59,43 @@
 
 #include "nsHtml5StackNode.h"
 
+PRInt32 
+nsHtml5StackNode::getGroup()
+{
+  return flags & NS_HTML5ELEMENT_NAME_GROUP_MASK;
+}
 
-nsHtml5StackNode::nsHtml5StackNode(PRInt32 group, PRInt32 ns, nsIAtom* name, nsIContent** node, PRBool scoping, PRBool special, PRBool fosterParenting, nsIAtom* popName, nsHtml5HtmlAttributes* attributes)
-  : group(group),
+PRBool 
+nsHtml5StackNode::isScoping()
+{
+  return (flags & NS_HTML5ELEMENT_NAME_SCOPING);
+}
+
+PRBool 
+nsHtml5StackNode::isSpecial()
+{
+  return (flags & NS_HTML5ELEMENT_NAME_SPECIAL);
+}
+
+PRBool 
+nsHtml5StackNode::isScopingOrSpecial()
+{
+  return (flags & (NS_HTML5ELEMENT_NAME_SCOPING | NS_HTML5ELEMENT_NAME_SPECIAL));
+}
+
+PRBool 
+nsHtml5StackNode::isFosterParenting()
+{
+  return (flags & NS_HTML5ELEMENT_NAME_FOSTER_PARENTING);
+}
+
+
+nsHtml5StackNode::nsHtml5StackNode(PRInt32 flags, PRInt32 ns, nsIAtom* name, nsIContent** node, nsIAtom* popName, nsHtml5HtmlAttributes* attributes)
+  : flags(flags),
     name(name),
     popName(popName),
     ns(ns),
     node(node),
-    scoping(scoping),
-    special(special),
-    fosterParenting(fosterParenting),
     attributes(attributes),
     refcount(1)
 {
@@ -80,14 +107,11 @@ nsHtml5StackNode::nsHtml5StackNode(PRInt32 group, PRInt32 ns, nsIAtom* name, nsI
 
 
 nsHtml5StackNode::nsHtml5StackNode(PRInt32 ns, nsHtml5ElementName* elementName, nsIContent** node)
-  : group(elementName->group),
+  : flags(elementName->getFlags()),
     name(elementName->name),
     popName(elementName->name),
     ns(ns),
     node(node),
-    scoping(elementName->scoping),
-    special(elementName->special),
-    fosterParenting(elementName->fosterParenting),
     attributes(nsnull),
     refcount(1)
 {
@@ -99,14 +123,11 @@ nsHtml5StackNode::nsHtml5StackNode(PRInt32 ns, nsHtml5ElementName* elementName, 
 
 
 nsHtml5StackNode::nsHtml5StackNode(PRInt32 ns, nsHtml5ElementName* elementName, nsIContent** node, nsHtml5HtmlAttributes* attributes)
-  : group(elementName->group),
+  : flags(elementName->getFlags()),
     name(elementName->name),
     popName(elementName->name),
     ns(ns),
     node(node),
-    scoping(elementName->scoping),
-    special(elementName->special),
-    fosterParenting(elementName->fosterParenting),
     attributes(attributes),
     refcount(1)
 {
@@ -118,14 +139,11 @@ nsHtml5StackNode::nsHtml5StackNode(PRInt32 ns, nsHtml5ElementName* elementName, 
 
 
 nsHtml5StackNode::nsHtml5StackNode(PRInt32 ns, nsHtml5ElementName* elementName, nsIContent** node, nsIAtom* popName)
-  : group(elementName->group),
+  : flags(elementName->getFlags()),
     name(elementName->name),
     popName(popName),
     ns(ns),
     node(node),
-    scoping(elementName->scoping),
-    special(elementName->special),
-    fosterParenting(elementName->fosterParenting),
     attributes(nsnull),
     refcount(1)
 {
@@ -137,14 +155,11 @@ nsHtml5StackNode::nsHtml5StackNode(PRInt32 ns, nsHtml5ElementName* elementName, 
 
 
 nsHtml5StackNode::nsHtml5StackNode(PRInt32 ns, nsHtml5ElementName* elementName, nsIContent** node, nsIAtom* popName, PRBool scoping)
-  : group(elementName->group),
+  : flags((scoping ? (elementName->getFlags() | NS_HTML5ELEMENT_NAME_SCOPING) : (elementName->getFlags() & ~NS_HTML5ELEMENT_NAME_SCOPING)) & ~(NS_HTML5ELEMENT_NAME_SPECIAL | NS_HTML5ELEMENT_NAME_FOSTER_PARENTING)),
     name(elementName->name),
     popName(popName),
     ns(ns),
     node(node),
-    scoping(scoping),
-    special(PR_FALSE),
-    fosterParenting(PR_FALSE),
     attributes(nsnull),
     refcount(1)
 {
