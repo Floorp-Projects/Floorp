@@ -1007,6 +1007,8 @@ public:
         return PR_FALSE;
     }
 
+    // The return value is interpreted as a horizontal advance in 16.16 fixed
+    // point format.
     virtual PRInt32 GetHintedGlyphWidth(gfxContext *aCtx, PRUint16 aGID) {
         return -1;
     }

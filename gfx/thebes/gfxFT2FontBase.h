@@ -61,6 +61,8 @@ public:
     virtual nsString GetUniqueName();
     virtual PRUint32 GetSpaceGlyph();
     virtual hb_blob_t *GetFontTable(PRUint32 aTag);
+    virtual PRBool ProvidesHintedWidths() const { return PR_TRUE; }
+    virtual PRInt32 GetHintedGlyphWidth(gfxContext *aCtx, PRUint16 aGID);
 
     cairo_scaled_font_t *CairoScaledFont() { return mScaledFont; };
     virtual PRBool SetupCairoFont(gfxContext *aContext);

@@ -202,6 +202,15 @@ gfxFT2FontBase::GetFontTable(PRUint32 aTag)
                                                 haveTable ? &buffer : nsnull);
 }
 
+PRInt32
+gfxFT2FontBase::GetHintedGlyphWidth(gfxContext *aCtx, PRUint16 aGID)
+{
+    cairo_text_extents_t extents;
+    GetGlyphExtents(aGID, &extents);
+    // convert to 16.16 fixed point
+    return NS_lround(0x10000 * extents.x_advance);
+}
+
 PRBool
 gfxFT2FontBase::SetupCairoFont(gfxContext *aContext)
 {
