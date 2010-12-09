@@ -613,6 +613,7 @@ placeitem[type="folder"] {
 }
 
 placeitem[type="folder"]:-moz-locale-dir(rtl) {
+  background-image: url(images/arrowleft-16.png);
   background-position: 2% 50%;
 }
 
