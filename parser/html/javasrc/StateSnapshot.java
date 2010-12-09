@@ -190,6 +190,5 @@ public class StateSnapshot<T> implements TreeBuilderState<T> {
                 listOfActiveFormattingElements[i].release();                
             }
         }
-        Portability.retainElement(formPointer);
     }
 }
