@@ -2955,12 +2955,6 @@ class JSAutoByteString {
         js_free(mBytes);
     }
 
-    /* Take ownership of the given byte array. */
-    void initBytes(char *bytes) {
-        JS_ASSERT(!mBytes);
-        mBytes = bytes;
-    }
-
     char *encode(JSContext *cx, JSString *str) {
         JS_ASSERT(!mBytes);
         JS_ASSERT(cx);
