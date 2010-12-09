@@ -4627,12 +4627,16 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &valu
     }
 
     if (defineHow & JSDNP_CACHE_RESULT) {
-#ifdef JS_TRACER
         JS_ASSERT_NOT_ON_TRACE(cx);
-        PropertyCacheEntry *entry =
+        if (added) {
+#ifdef JS_TRACER
+            PropertyCacheEntry *entry =
 #endif
-            JS_PROPERTY_CACHE(cx).fill(cx, obj, 0, 0, obj, shape, added);
-        TRACE_2(SetPropHit, entry, shape);
+                JS_PROPERTY_CACHE(cx).fill(cx, obj, 0, 0, obj, shape, true);
+            TRACE_2(SetPropHit, entry, shape);
+        } else {
+            TRACE_2(SetPropHit, JS_NO_PROP_CACHE_FILL, shape);
+        }
     }
     if (propp)
         *propp = (JSProperty *) shape;
@@ -5494,10 +5498,22 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
             shape = NULL;
         }
 
-        if (shape) {
-            if (shape->isMethod()) {
-                JS_ASSERT(pobj->hasMethodBarrier());
-            } else if ((defineHow & JSDNP_SET_METHOD) && obj->canHaveMethodBarrier()) {
+        JS_ASSERT_IF(shape && shape->isMethod(), pobj->hasMethodBarrier());
+        JS_ASSERT_IF(shape && shape->isMethod(),
+                     &pobj->getSlot(shape->slot).toObject() == &shape->methodObject());
+        if (shape && (defineHow & JSDNP_SET_METHOD)) {
+            /*
+             * JSOP_SETMETHOD is assigning to an existing own property. If it
+             * is an identical method property, do nothing. Otherwise downgrade
+             * to ordinary assignment. Either way, do not fill the property
+             * cache, as the interpreter has no fast path for these unusual
+             * cases.
+             */
+            bool identical = shape->isMethod() && &shape->methodObject() == &vp->toObject();
+            if (!identical) {
+                if (!obj->methodShapeChange(cx, *shape))
+                    return false;
+
                 JS_ASSERT(IsFunctionObject(*vp));
                 JS_ASSERT(!(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
 
@@ -5510,6 +5526,11 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
                     vp->setObject(*funobj);
                 }
             }
+            if (defineHow & JSDNP_CACHE_RESULT) {
+                JS_ASSERT_NOT_ON_TRACE(cx);
+                TRACE_2(SetPropHit, JS_NO_PROP_CACHE_FILL, shape);
+            }
+            return identical || js_NativeSet(cx, obj, shape, false, vp);
         }
     }
 
@@ -6582,6 +6603,8 @@ DumpShape(const Shape &shape)
     if (attrs & JSPROP_SETTER) fprintf(stderr, "setter ");
     if (attrs & JSPROP_SHARED) fprintf(stderr, "shared ");
     if (shape.isAlias()) fprintf(stderr, "alias ");
+    if (shape.isMethod()) fprintf(stderr, "method(%p) ", (void *) &shape.methodObject());
+
     if (JSID_IS_ATOM(id))
         dumpString(JSID_TO_STRING(id));
     else if (JSID_IS_INT(id))
