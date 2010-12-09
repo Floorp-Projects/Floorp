@@ -5,6 +5,8 @@ let testURL_03 = chromeRoot + "browser_blank_01.html#tab3";
 let new_tab_01;
 let new_tab_02;
 let new_tab_03;
+let new_tab_04;
+let new_tab_05;
 
 //------------------------------------------------------------------------------
 // Entry point (must be named "test")
@@ -59,7 +61,7 @@ function tab_switch_02() {
   is(Browser.selectedTab.notification, Elements.browsers.selectedPanel, "Deck has correct browser");
 
   //Add new tab
-  new_tab_03 =  Browser.addTab(testURL_03, true, new_tab_01);
+  new_tab_03 = Browser.addTab(testURL_03, true, new_tab_01);
   new_tab_03.browser.addEventListener("load", tab_switch_03, true);
 }
 
@@ -72,7 +74,7 @@ function tab_switch_03() {
   is(Browser.selectedTab, new_tab_01, "Closing tab 03 returns to owner");
   is(Browser.selectedTab.notification, Elements.browsers.selectedPanel, "Deck has correct browser");
 
-  new_tab_03 =  Browser.addTab(testURL_03, true, new_tab_01);
+  new_tab_03 = Browser.addTab(testURL_03, true, new_tab_01);
   new_tab_03.browser.addEventListener("load", tab_switch_04, true);
 }
 
@@ -86,6 +88,31 @@ function tab_switch_04() {
   is(new_tab_03.owner, null, "Closing tab 01 nulls tab3 owner");
   is(Browser.selectedTab.notification, Elements.browsers.selectedPanel, "Deck has correct browser");
 
+  // Add a tab then close it
+  new_tab_04 = Browser.addTab("about:home", true);
+  new_tab_04.browser.addEventListener("load", function() {
+    new_tab_04.browser.removeEventListener("load", arguments.callee, true);
+    Browser.closeTab(new_tab_04);
+    tab_undo();
+  }, true);
+}
+
+function tab_undo() {
+  let undoBox = document.getElementById("tabs")._tabsUndo;
+  ok(undoBox.firstChild, "It should be a tab in the undo box");
+
+  undoBox.firstChild._onUndo();
+  new_tab_04 = Browser.selectedTab;
+  new_tab_05 = Browser.addTab("about:blank", true);
+  tab_on_undo();
+}
+
+function tab_on_undo() {
+  let undoBox = document.getElementById("tabs")._tabsUndo;
+  is(undoBox.firstChild, null, "It should be no tab in the undo box");
+
+  Browser.loadURI("about:firstrun");
+  is(undoBox.firstChild, null, "It should be no tab in the undo box when opening a new local page");
   done();
 }
 
@@ -94,6 +121,8 @@ function done() {
   Browser.closeTab(new_tab_01);
   Browser.closeTab(new_tab_02);
   Browser.closeTab(new_tab_03);
+  Browser.closeTab(new_tab_04);
+  Browser.closeTab(new_tab_05);
 
   // For some reason, this test is causing the sidebar to appear.
   // Clean up the UI for later tests (see bug 598962).

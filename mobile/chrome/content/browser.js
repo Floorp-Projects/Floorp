@@ -534,6 +534,7 @@ var Browser = {
     if (hasLocal != useLocal) {
       let oldTab = this.selectedTab;
       if (currentURI == "about:blank" && !browser.canGoBack && !browser.canGoForward) {
+        oldTab.chromeTab.ignoreUndo = true;
         this.closeTab(oldTab);
         oldTab = null;
       }
@@ -672,11 +673,13 @@ var Browser = {
     return newTab;
   },
 
-  closeTab: function(tab) {
-    if (tab instanceof XULElement)
-      tab = this.getTabFromChrome(tab);
+  closeTab: function(aTab) {
+    let tab = aTab;
+    if (aTab instanceof XULElement)
+      tab = this.getTabFromChrome(aTab);
 
-    if (!tab)
+    // checking the length is a workaround for bug 615404
+    if (!tab || this._tabs.length < 2)
       return;
 
     // Make sure we leave the toolbar in an unlocked state
