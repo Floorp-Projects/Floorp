@@ -540,29 +540,21 @@ SyncKeyBundle.prototype = {
    * If we've got a string, hash it into keys and store them.
    */
   generateEntry: function generateEntry() {
-    let m = this.keyStr;
-    if (m) {
-      // Decode into a 16-byte string before we go any further.
-      m = Utils.decodeKeyBase32(m);
-      
-      // Reuse the hasher.
-      let h = Utils.makeHMACHasher();
-      
-      // First key.
-      let u = this.username; 
-      let k1 = Utils.makeHMACKey("" + HMAC_INPUT + u + "\x01");
-      let enc = Utils.sha256HMACBytes(m, k1, h);
-      
-      // Second key: depends on the output of the first run.
-      let k2 = Utils.makeHMACKey(enc + HMAC_INPUT + u + "\x02");
-      let hmac = Utils.sha256HMACBytes(m, k2, h);
-      
-      // Save them.
-      this._encrypt = btoa(enc);
-      
-      // Individual sets: cheaper than calling parent setter.
-      this._hmac = hmac;
-      this._hmacObj = Utils.makeHMACKey(hmac);
-    }
+    let syncKey = this.keyStr;
+    if (!syncKey)
+      return;
+
+    // Expand the base32 Sync Key to an AES 256 and 256 bit HMAC key.
+    let prk = Utils.decodeKeyBase32(syncKey);
+    let info = HMAC_INPUT + this.username;
+    let okm = Utils.hkdfExpand(prk, info, 32 * 2);
+    let enc = okm.slice(0, 32);
+    let hmac = okm.slice(32, 64);
+
+    // Save them.
+    this._encrypt = btoa(enc);      
+    // Individual sets: cheaper than calling parent setter.
+    this._hmac = hmac;
+    this._hmacObj = Utils.makeHMACKey(hmac);
   }
 };
