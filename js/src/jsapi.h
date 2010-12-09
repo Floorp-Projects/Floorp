@@ -1379,7 +1379,23 @@ class Anchor: AnchorPermitted<T> {
          * We do need to use Anchors in some cases where cycles are tight.
          */
         volatile T sink;
+#ifdef JS_USE_JSVAL_JSID_STRUCT_TYPES
+        /*
+         * The default assignment operator for |struct C| has the signature:
+         *
+         *   C& C::operator=(const C&)
+         *
+         * And in particular requires implicit conversion of |this| to
+         * type |C| for the return value.  But |volatile C| cannot
+         * thus be converted to |C|, so just doing |sink = hold| here
+         * would fail to compile.  Do the assignment on asBits
+         * instead, since I don't think we want to give jsval_layout
+         * an assignment operator returning |volatile jsval_layout|.
+         */
+        sink.asBits = hold.asBits;
+#else
         sink = hold;
+#endif
 #endif
     }
     T &get()      { return hold; }
