@@ -1656,6 +1656,13 @@ struct JSRuntime {
         return JS_LIKELY(!!p) ? p : onOutOfMemory(reinterpret_cast<void *>(1), bytes, cx);
     }
 
+    void* realloc(void* p, size_t oldBytes, size_t newBytes, JSContext *cx = NULL) {
+        JS_ASSERT(oldBytes < newBytes);
+        updateMallocCounter(newBytes - oldBytes);
+        void *p2 = ::js_realloc(p, newBytes);
+        return JS_LIKELY(!!p2) ? p2 : onOutOfMemory(p, newBytes, cx);
+    }
+
     void* realloc(void* p, size_t bytes, JSContext *cx = NULL) {
         /*
          * For compatibility we do not account for realloc that increases
@@ -2293,6 +2300,10 @@ struct JSContext
 
     inline void* realloc(void* p, size_t bytes) {
         return runtime->realloc(p, bytes, this);
+    }
+
+    inline void* realloc(void* p, size_t oldBytes, size_t newBytes) {
+        return runtime->realloc(p, oldBytes, newBytes, this);
     }
 
     inline void free(void* p) {
