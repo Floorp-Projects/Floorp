@@ -5514,7 +5514,6 @@ Parser::withStatement()
 JSParseNode *
 Parser::letStatement()
 {
-    JSObject *obj;
     JSObjectBox *blockbox;
 
     JSParseNode *pn;
@@ -5551,7 +5550,6 @@ Parser::letStatement()
 
         if (stmt && (stmt->flags & SIF_SCOPE)) {
             JS_ASSERT(tc->blockChainBox == stmt->blockBox);
-            obj = tc->blockChain();
         } else {
             if (!stmt || (stmt->flags & SIF_BODY_BLOCK)) {
                 /*
