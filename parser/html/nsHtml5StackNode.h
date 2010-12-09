@@ -64,19 +64,26 @@ class nsHtml5Portability;
 class nsHtml5StackNode
 {
   public:
-    PRInt32 group;
+    PRInt32 flags;
     nsIAtom* name;
     nsIAtom* popName;
     PRInt32 ns;
     nsIContent** node;
-    PRBool scoping;
-    PRBool special;
-    PRBool fosterParenting;
     nsHtml5HtmlAttributes* attributes;
   private:
     PRInt32 refcount;
   public:
-    nsHtml5StackNode(PRInt32 group, PRInt32 ns, nsIAtom* name, nsIContent** node, PRBool scoping, PRBool special, PRBool fosterParenting, nsIAtom* popName, nsHtml5HtmlAttributes* attributes);
+    inline PRInt32 getFlags()
+    {
+      return flags;
+    }
+
+    PRInt32 getGroup();
+    PRBool isScoping();
+    PRBool isSpecial();
+    PRBool isScopingOrSpecial();
+    PRBool isFosterParenting();
+    nsHtml5StackNode(PRInt32 flags, PRInt32 ns, nsIAtom* name, nsIContent** node, nsIAtom* popName, nsHtml5HtmlAttributes* attributes);
     nsHtml5StackNode(PRInt32 ns, nsHtml5ElementName* elementName, nsIContent** node);
     nsHtml5StackNode(PRInt32 ns, nsHtml5ElementName* elementName, nsIContent** node, nsHtml5HtmlAttributes* attributes);
     nsHtml5StackNode(PRInt32 ns, nsHtml5ElementName* elementName, nsIContent** node, nsIAtom* popName);
