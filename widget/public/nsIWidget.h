@@ -1392,6 +1392,10 @@ class nsIWidget_MOZILLA_2_0_BRANCH : public nsIWidget {
 
     virtual LayerManager *GetLayerManager(LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
                                           bool* aAllowRetaining = nsnull) = 0;
+
+    // Hide build warnings about nsIWidget::GetLayerManager being hidden by
+    // our GetLayerManager method above.
+    using nsIWidget::GetLayerManager;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIWidget_MOZILLA_2_0_BRANCH, NS_IWIDGET_MOZILLA_2_0_BRANCH_IID)
