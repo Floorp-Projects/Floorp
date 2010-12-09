@@ -581,17 +581,10 @@ array_length_getter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 }
 
 static JSBool
-array_length_setter(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict)
+array_length_setter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     jsuint newlen, oldlen, gap, index;
     Value junk;
-
-    /* Check for a sealed object first. */
-    if (!obj->isExtensible()) {
-        return js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_READ_ONLY,
-                                        JSDVG_IGNORE_STACK, IdToValue(id), NULL,
-                                        NULL, NULL);
-    }
 
     if (!obj->isArray()) {
         jsid lengthId = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
@@ -633,8 +626,6 @@ array_length_setter(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool str
             }
             if (!DeleteArrayElement(cx, obj, oldlen, true)) {
                 obj->setArrayLength(oldlen + 1);
-                if (strict)
-                    return false;
                 JS_ClearPendingException(cx);
                 return true;
             }
@@ -798,7 +789,7 @@ array_setProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool stric
     uint32 i;
 
     if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom))
-        return array_length_setter(cx, obj, id, vp, strict);
+        return array_length_setter(cx, obj, id, vp);
 
     if (!obj->isDenseArray())
         return js_SetProperty(cx, obj, id, vp, strict);
@@ -825,17 +816,6 @@ array_setProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool stric
 
     if (!obj->makeDenseArraySlow(cx))
         return false;
-    return js_SetProperty(cx, obj, id, vp, strict);
-}
-
-static JSBool
-slowarray_setProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp, JSBool strict)
-{
-    JS_ASSERT(obj->isSlowArray());
-
-    if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom))
-        return array_length_setter(cx, obj, id, vp, strict);
-
     return js_SetProperty(cx, obj, id, vp, strict);
 }
 
@@ -996,34 +976,7 @@ Class js_SlowArrayClass = {
     PropertyStub,   /* setProperty */
     EnumerateStub,
     ResolveStub,
-    js_TryValueOf,
-    NULL,           /* finalize    */
-    NULL,           /* reserved0   */
-    NULL,           /* checkAccess */
-    NULL,           /* call        */
-    NULL,           /* construct   */
-    NULL,           /* xdrObject   */
-    NULL,           /* hasInstance */
-    NULL,           /* mark        */
-    JS_NULL_CLASS_EXT,
-    {
-        NULL,       /* lookupProperty   */
-        NULL,       /* defineProperty   */
-        NULL,       /* getProperty      */
-        /*
-         * For assignments to 'length', we need to know the setter's strictness. A property's
-         * setter isn't passed that, but the ObjectOps member is, so use that.
-         */
-        slowarray_setProperty,
-        NULL,       /* getAttributes    */
-        NULL,       /* setAttributes    */
-        NULL,       /* deleteProperty   */
-        NULL,       /* enumerate        */
-        NULL,       /* typeOf           */
-        NULL,       /* trace            */
-        NULL,       /* thisObject       */
-        NULL,       /* clear            */
-    }
+    js_TryValueOf
 };
 
 /*
@@ -1053,7 +1006,7 @@ JSObject::makeDenseArraySlow(JSContext *cx)
      * The getter/setter here will directly access the object's private value.
      */
     if (!addProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom),
-                     array_length_getter, NULL,
+                     array_length_getter, array_length_setter,
                      SHAPE_INVALID_SLOT, JSPROP_PERMANENT | JSPROP_SHARED, 0, 0)) {
         setMap(oldMap);
         return false;
