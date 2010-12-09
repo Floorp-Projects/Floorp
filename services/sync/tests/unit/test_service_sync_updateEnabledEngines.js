@@ -44,49 +44,21 @@ StirlingEngine.prototype = {
 };
 Engines.register(StirlingEngine);
 
-let collections = {};
+// Tracking info/collections.
+let collectionsHelper = track_collections_helper();
+let upd = collectionsHelper.with_updated_collection;
 
-function update_collection(coll) {
-  let timestamp = Date.now() / 1000;
-  collections[coll] = timestamp;
-}
-
-function with_updated_collection(coll, f) {
-  return function(request, response) {
-    if (request.method != "GET")
-      update_collection(coll);
-    f.call(this, request, response);
-  };
-}
-
-function info_collections(request, response) {
-  let body = "Error.";
-  switch(request.method) {
-    case "GET":
-      body = JSON.stringify(collections);
-      break;
-    default:
-      throw "Non-GET on info_collections.";
-  }
-      
-  response.setHeader('X-Weave-Timestamp', ''+Date.now()/1000, false);
-  response.setStatusLine(request.httpVersion, 200, "OK");
-  response.bodyOutputStream.write(body, body.length);
-}
-  
 function sync_httpd_setup(handlers) {
-  
-  collections = {};
     
-  handlers["/1.0/johndoe/info/collections"] = info_collections;
+  handlers["/1.0/johndoe/info/collections"] = collectionsHelper.handler;
   
   let cr = new ServerWBO("keys");
   handlers["/1.0/johndoe/storage/crypto/keys"] =
-    with_updated_collection("crypto", cr.handler());
+    upd("crypto", cr.handler());
   
   let cl = new ServerCollection();
   handlers["/1.0/johndoe/storage/clients"] =
-    with_updated_collection("clients", cl.handler());
+    upd("clients", cl.handler());
   
   return httpd_setup(handlers);
 }
@@ -250,10 +222,10 @@ function test_disabledRemotelyTwoClients() {
                                          engines: {}});
   let server = sync_httpd_setup({
     "/1.0/johndoe/storage/meta/global":
-    with_updated_collection("meta", metaWBO.handler()),
+    upd("meta", metaWBO.handler()),
       
     "/1.0/johndoe/storage/steam":
-    with_updated_collection("steam", new ServerWBO("steam", {}).handler())
+    upd("steam", new ServerWBO("steam", {}).handler())
   });
   do_test_pending();
   setUp();
