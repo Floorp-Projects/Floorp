@@ -1818,7 +1818,17 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                 // Fall through to IN_HEAD
                                 break inbodyloop;
                             case BODY:
+                                if (currentPtr == 0
+                                        || stack[1].getGroup() != BODY) {
+                                    assert fragment;
+                                    err("Stray \u201Cbody\u201D start tag.");
+                                    break starttagloop;
+                                }
                                 err("\u201Cbody\u201D start tag found but the \u201Cbody\u201D element is already open.");
+                                framesetOk = false;
+                                if (mode == FRAMESET_OK) {
+                                    mode = IN_BODY;
+                                }
                                 if (addAttributesToBody(attributes)) {
                                     attributes = null; // CPP
                                 }
