@@ -5183,8 +5183,12 @@ JS_NewString(JSContext *cx, char *bytes, size_t nbytes)
 
     /* Free chars (but not bytes, which caller frees on error) if we fail. */
     str = js_NewString(cx, chars, length);
-    if (!str)
+    if (!str) {
         cx->free(chars);
+        return NULL;
+    }
+
+    js_free(bytes);
     return str;
 }
 

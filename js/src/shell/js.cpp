@@ -1013,11 +1013,10 @@ Options(JSContext *cx, uintN argc, jsval *vp)
         JS_ReportOutOfMemory(cx);
         return JS_FALSE;
     }
-    str = JS_NewString(cx, names, strlen(names));
-    if (!str) {
-        free(names);
+    str = JS_NewStringCopyZ(cx, names);
+    free(names);
+    if (!str)
         return JS_FALSE;
-    }
     *vp = STRING_TO_JSVAL(str);
     return JS_TRUE;
 }
@@ -1136,11 +1135,10 @@ ReadLine(JSContext *cx, uintN argc, jsval *vp)
      * Turn buf into a JSString. Note that buflength includes the trailing null
      * character.
      */
-    str = JS_NewString(cx, buf, sawNewline ? buflength - 1 : buflength);
-    if (!str) {
-        JS_free(cx, buf);
+    str = JS_NewStringCopyN(cx, buf, sawNewline ? buflength - 1 : buflength);
+    JS_free(cx, buf);
+    if (!str)
         return JS_FALSE;
-    }
 
     *vp = STRING_TO_JSVAL(str);
     return JS_TRUE;
@@ -4143,12 +4141,10 @@ Snarf(JSContext *cx, uintN argc, jsval *vp)
         return ok;
     }
 
-    buf[len] = '\0';
-    str = JS_NewString(cx, buf, len);
-    if (!str) {
-        JS_free(cx, buf);
+    str = JS_NewStringCopyN(cx, buf, len);
+    JS_free(cx, buf);
+    if (!str)
         return JS_FALSE;
-    }
     *vp = STRING_TO_JSVAL(str);
     return JS_TRUE;
 }
