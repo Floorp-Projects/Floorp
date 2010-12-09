@@ -352,8 +352,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
      */
     private boolean framesetOk = true;
 
-    private boolean inForeign = false;
-
     protected Tokenizer tokenizer;
 
     // [NOCPP[
@@ -552,14 +550,13 @@ public abstract class TreeBuilder<T> implements TokenHandler,
             contextNode = null;
         } else {
             mode = INITIAL;
-            inForeign = false;
         }
     }
 
     public final void doctype(@Local String name, String publicIdentifier,
             String systemIdentifier, boolean forceQuirks) throws SAXException {
         needToDropLF = false;
-        if (!inForeign) {
+        if (!isInForeign()) {
             switch (mode) {
                 case INITIAL:
                     // [NOCPP[
@@ -792,7 +789,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
             return;
         }
         // ]NOCPP]
-        if (!inForeign) {
+        if (!isInForeign()) {
             switch (mode) {
                 case INITIAL:
                 case BEFORE_HTML:
@@ -850,7 +847,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
             case IN_BODY:
             case IN_CELL:
             case IN_CAPTION:
-                if (!inForeign) {
+                if (!isInForeign()) {
                     reconstructTheActiveFormattingElements();
                 }
                 // fall through
@@ -909,7 +906,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                      * Reconstruct the active formatting
                                      * elements, if any.
                                      */
-                                    if (!inForeign) {
+                                    if (!isInForeign()) {
                                         flushCharacters();
                                         reconstructTheActiveFormattingElements();
                                     }
@@ -1105,7 +1102,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                      * Reconstruct the active formatting
                                      * elements, if any.
                                      */
-                                    if (!inForeign) {
+                                    if (!isInForeign()) {
                                         flushCharacters();
                                         reconstructTheActiveFormattingElements();
                                     }
@@ -1219,7 +1216,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
      */
     public void zeroOriginatingReplacementCharacter()
             throws SAXException {
-        if (inForeign || mode == TEXT) {
+        if (isInForeign() || mode == TEXT) {
             characters(REPLACEMENT_CHARACTER, 0, 1);
         }
     }
@@ -1227,7 +1224,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     public final void eof() throws SAXException {
         flushCharacters();
         eofloop: for (;;) {
-            if (inForeign) {
+            if (isInForeign()) {
                 err("End of file in a foreign namespace context.");
                 break eofloop;
             }
@@ -1433,19 +1430,13 @@ public abstract class TreeBuilder<T> implements TokenHandler,
 
         int eltPos;
         needToDropLF = false;
-        boolean needsPostProcessing = false;
         starttagloop: for (;;) {
             int group = elementName.getGroup();
             @Local String name = elementName.name;
-            if (inForeign) {
+            if (isInForeign()) {
                 StackNode<T> currentNode = stack[currentPtr];
                 @NsUri String currNs = currentNode.ns;
-                if (("http://www.w3.org/1999/xhtml" == currNs)
-                        || currentNode.isHtmlIntegrationPoint()
-                        || (currNs == "http://www.w3.org/1998/Math/MathML" && ((currentNode.getGroup() == MI_MO_MN_MS_MTEXT && group != MGLYPH_OR_MALIGNMARK) || (currentNode.getGroup() == ANNOTATION_XML && group == SVG)))) {
-                    needsPostProcessing = true;
-                    // fall through to non-foreign behavior
-                } else {
+                if (!(currentNode.isHtmlIntegrationPoint() || (currNs == "http://www.w3.org/1998/Math/MathML" && ((currentNode.getGroup() == MI_MO_MN_MS_MTEXT && group != MGLYPH_OR_MALIGNMARK) || (currentNode.getGroup() == ANNOTATION_XML && group == SVG))))) {
                     switch (group) {
                         case B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U:
                         case DIV_OR_BLOCKQUOTE_OR_CENTER_OR_MENU:
@@ -1470,9 +1461,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                             while (!isSpecialParentInForeign(stack[currentPtr])) {
                                 pop();
                             }
-                            if (!hasForeignInScope()) {
-                                inForeign = false;
-                            }
                             continue starttagloop;
                         case FONT:
                             if (attributes.contains(AttributeName.COLOR)
@@ -1483,9 +1471,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                         + "\u201D in a foreign namespace context.");
                                 while (!isSpecialParentInForeign(stack[currentPtr])) {
                                     pop();
-                                }
-                                if (!hasForeignInScope()) {
-                                    inForeign = false;
                                 }
                                 continue starttagloop;
                             }
@@ -2263,7 +2248,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                 } else {
                                     appendToCurrentNodeAndPushElementMayFosterMathML(
                                             elementName, attributes);
-                                    inForeign = true;
                                 }
                                 attributes = null; // CPP
                                 break starttagloop;
@@ -2278,7 +2262,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                 } else {
                                     appendToCurrentNodeAndPushElementMayFosterSVG(
                                             elementName, attributes);
-                                    inForeign = true;
                                 }
                                 attributes = null; // CPP
                                 break starttagloop;
@@ -2893,15 +2876,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                         // fails
             }
         }
-        if (needsPostProcessing && inForeign                && !hasForeignInScope()) {
-            /*
-             * If, after doing so, the insertion mode is still "in foreign
-             * content", but there is no element in scope that has a namespace
-             * other than the HTML namespace, switch the insertion mode to the
-             * secondary insertion mode.
-             */
-            inForeign = false;
-        }
         if (errorHandler != null && selfClosing) {
             errNoCheck("Self-closing syntax (\u201C/>\u201D) used on a non-void HTML element. Ignoring the slash and treating as a start tag.");
         }
@@ -2912,15 +2886,9 @@ public abstract class TreeBuilder<T> implements TokenHandler,
 
     private boolean isSpecialParentInForeign(StackNode<T> stackNode) {
         @NsUri String ns = stackNode.ns;
-        if ("http://www.w3.org/1999/xhtml" == ns) {
-            return true;
-        }
-        if (ns == "http://www.w3.org/2000/svg") {
-            return stackNode.getGroup() == FOREIGNOBJECT_OR_DESC
-                    || stackNode.getGroup() == TITLE;
-        }
-        assert ns == "http://www.w3.org/1998/Math/MathML" : "Unexpected namespace.";
-        return stackNode.getGroup() == MI_MO_MN_MS_MTEXT;
+        return ("http://www.w3.org/1999/xhtml" == ns)
+                || (stackNode.isHtmlIntegrationPoint())
+                || (("http://www.w3.org/1998/Math/MathML" == ns) && (stackNode.getGroup() == MI_MO_MN_MS_MTEXT));
     }
 
     /**
@@ -3124,9 +3092,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         int group = elementName.getGroup();
         @Local String name = elementName.name;
         endtagloop: for (;;) {
-            assert !inForeign || currentPtr >= 0 : "In foreign without a root element?";
-            if (inForeign
-                    && stack[currentPtr].ns != "http://www.w3.org/1999/xhtml") {
+            if (isInForeign()) {
                 if (errorHandler != null && stack[currentPtr].name != name) {
                     errNoCheck("End tag \u201C"
                             + name
@@ -3441,15 +3407,14 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                             eltPos = findLastInButtonScope("p");
                             if (eltPos == TreeBuilder.NOT_FOUND_ON_STACK) {
                                 err("No \u201Cp\u201D element in scope but a \u201Cp\u201D end tag seen.");
-                                // XXX inline this case
-                                if (inForeign) {
+                                // XXX Can the 'in foreign' case happen anymore?
+                                if (isInForeign()) {
                                     err("HTML start tag \u201C"
                                             + name
                                             + "\u201D in a foreign namespace context.");
                                     while (stack[currentPtr].ns != "http://www.w3.org/1999/xhtml") {
                                         pop();
                                     }
-                                    inForeign = false;
                                 }
                                 appendVoidElementToCurrentMayFoster(
                                         elementName,
@@ -3536,14 +3501,13 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                             break endtagloop;
                         case BR:
                             err("End tag \u201Cbr\u201D.");
-                            if (inForeign) {
+                            if (isInForeign()) {
                                 err("HTML start tag \u201C"
                                         + name
                                         + "\u201D in a foreign namespace context.");
                                 while (stack[currentPtr].ns != "http://www.w3.org/1999/xhtml") {
                                     pop();
                                 }
-                                inForeign = false;
                             }
                             reconstructTheActiveFormattingElements();
                             appendVoidElementToCurrentMayFoster(
@@ -3871,15 +3835,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                     break endtagloop;
             }
         } // endtagloop
-        if (inForeign && !hasForeignInScope()) {
-            /*
-             * If, after doing so, the insertion mode is still "in foreign
-             * content", but there is no element in scope that has a namespace
-             * other than the HTML namespace, switch the insertion mode to the
-             * secondary insertion mode.
-             */
-            inForeign = false;
-        }
     }
 
     private int findLastInTableScopeOrRootTbodyTheadTfoot() {
@@ -3953,17 +3908,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
             }
         }
         return TreeBuilder.NOT_FOUND_ON_STACK;
-    }
-
-    private boolean hasForeignInScope() {
-        for (int i = currentPtr; i > 0; i--) {
-            if (stack[i].ns != "http://www.w3.org/1999/xhtml") {
-                return true;
-            } else if (stack[i].isScoping()) {
-                return false;
-            }
-        }
-        return false;
     }
 
     private void generateImpliedEndTagsExceptFor(@Local String name)
@@ -4124,7 +4068,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     }
 
     private void resetTheInsertionMode() {
-        inForeign = false;
         StackNode<T> node;
         @Local String name;
         @NsUri String ns;
@@ -4163,7 +4106,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                 mode = IN_TABLE;
                 return;
             } else if ("http://www.w3.org/1999/xhtml" != ns) {
-                inForeign = true;
                 mode = framesetOk ? FRAMESET_OK : IN_BODY;
                 return;
             } else if ("head" == name) {
@@ -5239,8 +5181,12 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     /**
      * @see nu.validator.htmlparser.common.TokenHandler#cdataSectionAllowed()
      */
-    public boolean cdataSectionAllowed() throws SAXException {
-        return inForeign && currentPtr >= 0
+    @Inline public boolean cdataSectionAllowed() throws SAXException {
+        return isInForeign();
+    }
+    
+    private boolean isInForeign() {
+        return currentPtr >= 0
                 && stack[currentPtr].ns != "http://www.w3.org/1999/xhtml";
     }
 
@@ -5407,7 +5353,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                 stackCopy[i].retain();
             }
         }
-        return new StateSnapshot<T>(stackCopy, listCopy, formPointer, headPointer, deepTreeSurrogateParent, mode, originalMode, framesetOk, inForeign, needToDropLF, quirks);
+        return new StateSnapshot<T>(stackCopy, listCopy, formPointer, headPointer, deepTreeSurrogateParent, mode, originalMode, framesetOk, needToDropLF, quirks);
     }
 
     public boolean snapshotMatches(TreeBuilderState<T> snapshot) {
@@ -5424,7 +5370,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                 || mode != snapshot.getMode()
                 || originalMode != snapshot.getOriginalMode()
                 || framesetOk != snapshot.isFramesetOk()
-                || inForeign != snapshot.isInForeign()
                 || needToDropLF != snapshot.isNeedToDropLF()
                 || quirks != snapshot.isQuirks()) { // maybe just assert quirks
             return false;
@@ -5508,7 +5453,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         mode = snapshot.getMode();
         originalMode = snapshot.getOriginalMode();
         framesetOk = snapshot.isFramesetOk();
-        inForeign = snapshot.isInForeign();
         needToDropLF = snapshot.isNeedToDropLF();
         quirks = snapshot.isQuirks();
     }
@@ -5588,15 +5532,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         return framesetOk;
     }
     
-    /**
-     * Returns the foreignFlag.
-     *
-     * @return the foreignFlag
-     */
-    public boolean isInForeign() {
-        return inForeign;
-    }
-
     /**
      * Returns the needToDropLF.
      * 

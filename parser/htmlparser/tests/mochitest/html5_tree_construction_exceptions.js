@@ -7,7 +7,6 @@
 var html5Exceptions = {
   "<!doctype html><keygen><frameset>" : true, // Bug 101019
   "<select><keygen>" : true, // Bug 101019
-  "<math><mi><div><object><div><span></span></div></object></div></mi><mi>" : true, // Bug 606925
   "<plaintext>\u0000filler\u0000text\u0000" : true, // Bug 612527
   "<body><svg><foreignObject>\u0000filler\u0000text" : true, // Bug 612527
   "<svg>\u0000</svg><frameset>" : true, // Bug 612527
