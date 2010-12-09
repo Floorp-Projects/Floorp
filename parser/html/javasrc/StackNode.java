@@ -59,26 +59,24 @@ final class StackNode<T> {
         return (flags & ElementName.SPECIAL) != 0;
     }
 
-    public boolean isScopingOrSpecial() {
-        return (flags & (ElementName.SCOPING | ElementName.SPECIAL)) != 0;
-    }
-
     public boolean isFosterParenting() {
         return (flags & ElementName.FOSTER_PARENTING) != 0;
     }
 
     /**
-     * @param group
-     *            TODO
+     * Constructor for copying. This doesn't take another 
+     * <code>StackNode</code> because in C++ the caller is reponsible for
+     * reobtaining the local names from another interner.
+     * 
+     * @param flags
+     * @param ns
      * @param name
      * @param node
-     * @param scoping
-     * @param special
      * @param popName
-     *            TODO
+     * @param attributes
      */
-    StackNode(int flags, final @NsUri String ns, final @Local String name,
-            final T node, final @Local String popName, HtmlAttributes attributes) {
+    StackNode(int flags, @NsUri String ns, @Local String name,
+            T node, @Local String popName, HtmlAttributes attributes) {
         this.flags = flags;
         this.name = name;
         this.popName = popName;
@@ -86,83 +84,116 @@ final class StackNode<T> {
         this.node = node;
         this.attributes = attributes;
         this.refcount = 1;
-        Portability.retainLocal(name);
-        Portability.retainLocal(popName);
-        Portability.retainElement(node);
-        // not retaining namespace for now
     }
 
     /**
+     * Short hand for well-known HTML elements.
+     * 
      * @param elementName
-     *            TODO
      * @param node
      */
-    StackNode(final @NsUri String ns, ElementName elementName, final T node) {
+    StackNode(ElementName elementName, T node) {
         this.flags = elementName.getFlags();
         this.name = elementName.name;
         this.popName = elementName.name;
-        this.ns = ns;
+        this.ns = "http://www.w3.org/1999/xhtml";
         this.node = node;
         this.attributes = null;
         this.refcount = 1;
-        Portability.retainLocal(name);
-        Portability.retainLocal(popName);
-        Portability.retainElement(node);
-        // not retaining namespace for now
+        assert !elementName.isCustom() : "Don't use this constructor for custom elements.";
     }
 
-    StackNode(final @NsUri String ns, ElementName elementName, final T node,
-            HtmlAttributes attributes) {
+    /**
+     * Constructor for HTML formatting elements.
+     * 
+     * @param elementName
+     * @param node
+     * @param attributes
+     */
+    StackNode(ElementName elementName, T node, HtmlAttributes attributes) {
         this.flags = elementName.getFlags();
         this.name = elementName.name;
         this.popName = elementName.name;
-        this.ns = ns;
+        this.ns = "http://www.w3.org/1999/xhtml";
         this.node = node;
         this.attributes = attributes;
         this.refcount = 1;
-        Portability.retainLocal(name);
-        Portability.retainLocal(popName);
-        Portability.retainElement(node);
-        // not retaining namespace for now
+        assert !elementName.isCustom() : "Don't use this constructor for custom elements.";
     }
 
-    StackNode(final @NsUri String ns, ElementName elementName, final T node,
-            @Local String popName) {
+    /**
+     * The common-case HTML constructor.
+     * 
+     * @param elementName
+     * @param node
+     * @param popName
+     */
+    StackNode(ElementName elementName, T node, @Local String popName) {
         this.flags = elementName.getFlags();
         this.name = elementName.name;
         this.popName = popName;
-        this.ns = ns;
+        this.ns = "http://www.w3.org/1999/xhtml";
         this.node = node;
         this.attributes = null;
         this.refcount = 1;
-        Portability.retainLocal(name);
-        Portability.retainLocal(popName);
-        Portability.retainElement(node);
-        // not retaining namespace for now
     }
 
-    StackNode(final @NsUri String ns, ElementName elementName, final T node,
-            @Local String popName, boolean scoping) {
-        this.flags = (scoping ? (elementName.getFlags() | ElementName.SCOPING)
-                : (elementName.getFlags() & ~ElementName.SCOPING))
-                & ~(ElementName.SPECIAL | ElementName.FOSTER_PARENTING);
+    /**
+     * Constructor for SVG elements. Note that the order of the arguments is
+     * what distinguishes this from the HTML constructor. This is ugly, but
+     * AFAICT the least disruptive way to make this work with Java's generics
+     * and without unnecessary branches. :-(
+     * 
+     * @param elementName
+     * @param popName
+     * @param node
+     */
+    StackNode(ElementName elementName, @Local String popName, T node) {
+        this.flags = prepareSvgFlags(elementName.getFlags());
         this.name = elementName.name;
         this.popName = popName;
-        this.ns = ns;
+        this.ns = "http://www.w3.org/2000/svg";
         this.node = node;
         this.attributes = null;
         this.refcount = 1;
-        Portability.retainLocal(name);
-        Portability.retainLocal(popName);
-        Portability.retainElement(node);
-        // not retaining namespace for now
     }
 
+    /**
+     * Constructor for MathML.
+     * 
+     * @param elementName
+     * @param node
+     * @param popName
+     * @param markAsIntegrationPoint
+     */
+    StackNode(ElementName elementName, T node, @Local String popName,
+            boolean markAsIntegrationPoint) {
+        this.flags = prepareMathFlags(elementName.getFlags());
+        this.name = elementName.name;
+        this.popName = popName;
+        this.ns = "http://www.w3.org/1998/Math/MathML";
+        this.node = node;
+        this.attributes = null;
+        this.refcount = 1;
+    }
+    
+    private static int prepareSvgFlags(int flags) {
+        flags &= ~(ElementName.FOSTER_PARENTING | ElementName.SCOPING | ElementName.SPECIAL);
+        if ((flags & ElementName.SCOPING_AS_SVG) != 0) {
+            flags |= (ElementName.SCOPING | ElementName.SPECIAL | ElementName.HTML_INTEGRATION_POINT);
+        }
+        return flags;
+    }
+
+    private static int prepareMathFlags(int flags) {
+        flags &= ~(ElementName.FOSTER_PARENTING | ElementName.SCOPING | ElementName.SPECIAL);
+        if ((flags & ElementName.SCOPING_AS_MATHML) != 0) {
+            flags |= (ElementName.SCOPING | ElementName.SPECIAL);
+        }
+        return flags;
+    }
+    
     @SuppressWarnings("unused") private void destructor() {
-        Portability.releaseLocal(name);
-        Portability.releaseLocal(popName);
-        Portability.releaseElement(node);
-        // not releasing namespace for now
         Portability.delete(attributes);
     }
 

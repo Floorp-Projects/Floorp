@@ -81,13 +81,17 @@ class nsHtml5StackNode
     PRInt32 getGroup();
     PRBool isScoping();
     PRBool isSpecial();
-    PRBool isScopingOrSpecial();
     PRBool isFosterParenting();
     nsHtml5StackNode(PRInt32 flags, PRInt32 ns, nsIAtom* name, nsIContent** node, nsIAtom* popName, nsHtml5HtmlAttributes* attributes);
-    nsHtml5StackNode(PRInt32 ns, nsHtml5ElementName* elementName, nsIContent** node);
-    nsHtml5StackNode(PRInt32 ns, nsHtml5ElementName* elementName, nsIContent** node, nsHtml5HtmlAttributes* attributes);
-    nsHtml5StackNode(PRInt32 ns, nsHtml5ElementName* elementName, nsIContent** node, nsIAtom* popName);
-    nsHtml5StackNode(PRInt32 ns, nsHtml5ElementName* elementName, nsIContent** node, nsIAtom* popName, PRBool scoping);
+    nsHtml5StackNode(nsHtml5ElementName* elementName, nsIContent** node);
+    nsHtml5StackNode(nsHtml5ElementName* elementName, nsIContent** node, nsHtml5HtmlAttributes* attributes);
+    nsHtml5StackNode(nsHtml5ElementName* elementName, nsIContent** node, nsIAtom* popName);
+    nsHtml5StackNode(nsHtml5ElementName* elementName, nsIAtom* popName, nsIContent** node);
+    nsHtml5StackNode(nsHtml5ElementName* elementName, nsIContent** node, nsIAtom* popName, PRBool markAsIntegrationPoint);
+  private:
+    static PRInt32 prepareSvgFlags(PRInt32 flags);
+    static PRInt32 prepareMathFlags(PRInt32 flags);
+  public:
     ~nsHtml5StackNode();
     void dropAttributes();
     void retain();
