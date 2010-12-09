@@ -178,7 +178,7 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface)
 PluginInstanceChild::~PluginInstanceChild()
 {
 #if defined(OS_WIN)
-  DestroyPluginWindow();
+    NS_ASSERTION(!mPluginWindowHWND, "Destroying PluginInstanceChild without NPP_Destroy?");
 #endif
 #if defined(OS_MACOSX)
     if (mShColorSpace) {
@@ -3000,6 +3000,7 @@ PluginInstanceChild::AnswerNPP_Destroy(NPError* aResult)
     SharedSurfaceRelease();
     DestroyWinlessPopupSurrogate();
     UnhookWinlessFlashThrottle();
+    DestroyPluginWindow();
 #endif
 
     // Pending async calls are discarded, not delivered. This matches the
