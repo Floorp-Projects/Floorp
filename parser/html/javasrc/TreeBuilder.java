@@ -1440,10 +1440,9 @@ public abstract class TreeBuilder<T> implements TokenHandler,
             if (inForeign) {
                 StackNode<T> currentNode = stack[currentPtr];
                 @NsUri String currNs = currentNode.ns;
-                int currGroup = currentNode.getGroup();
                 if (("http://www.w3.org/1999/xhtml" == currNs)
-                        || ("http://www.w3.org/1998/Math/MathML" == currNs && ((MGLYPH_OR_MALIGNMARK != group && MI_MO_MN_MS_MTEXT == currGroup) || (SVG == group && ANNOTATION_XML == currGroup)))
-                        || ("http://www.w3.org/2000/svg" == currNs && (TITLE == currGroup || (FOREIGNOBJECT_OR_DESC == currGroup)))) {
+                        || currentNode.isHtmlIntegrationPoint()
+                        || (currNs == "http://www.w3.org/1998/Math/MathML" && ((currentNode.getGroup() == MI_MO_MN_MS_MTEXT && group != MGLYPH_OR_MALIGNMARK) || (currentNode.getGroup() == ANNOTATION_XML && group == SVG)))) {
                     needsPostProcessing = true;
                     // fall through to non-foreign behavior
                 } else {
@@ -4913,8 +4912,25 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         } else {
             appendElement(elt, current.node);
         }
-        StackNode<T> node = new StackNode<T>(elementName, elt, popName, false);
+        boolean markAsHtmlIntegrationPoint = false;
+        if (ElementName.ANNOTATION_XML == elementName
+                && annotationXmlEncodingPermitsHtml(attributes)) {
+            markAsHtmlIntegrationPoint = true;
+        }
+        StackNode<T> node = new StackNode<T>(elementName, elt, popName,
+                markAsHtmlIntegrationPoint);
         push(node);
+    }
+
+    private boolean annotationXmlEncodingPermitsHtml(HtmlAttributes attributes) {
+        String encoding = attributes.getValue(AttributeName.ENCODING);
+        if (encoding == null) {
+            return false;
+        }
+        return Portability.lowerCaseLiteralEqualsIgnoreAsciiCaseString(
+                "application/xhtml+xml", encoding)
+                || Portability.lowerCaseLiteralEqualsIgnoreAsciiCaseString(
+                        "text/html", encoding);
     }
 
     private void appendToCurrentNodeAndPushElementMayFosterSVG(
