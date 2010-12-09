@@ -2255,7 +2255,7 @@ gfxFcFont::GetOrMakeFont(FcPattern *aRequestedPattern, FcPattern *aFontPattern)
                                size, language, 0.0,
                                PR_TRUE, PR_FALSE, PR_FALSE,
                                NS_LITERAL_STRING(""),
-                               NS_LITERAL_STRING("")); // TODO: no opentype feature support here yet
+                               NS_LITERAL_STRING(""));
 
         // Note that a file/index pair (or FT_Face) and the gfxFontStyle are
         // not necessarily enough to provide a key that will describe a unique
