@@ -2337,6 +2337,7 @@ ProgressController.prototype = {
       TapHighlightHelper.hide();
 
       this.browser.lastLocation = location;
+      this.browser.userTypedValue = "";
       Browser.getNotificationBox(this.browser).removeTransientNotifications();
       this._tab.resetZoomLevel();
 

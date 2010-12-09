@@ -662,6 +662,7 @@
           goForward: function() { this._sendMessage("WebNavigation:GoForward", {}); },
           gotoIndex: function(aIndex) { this._sendMessage("WebNavigation:GotoIndex", {index: aIndex}); },
           loadURI: function(aURI, aLoadFlags, aReferrer, aPostData, aHeaders) {
+            this._browser.userTypedValue = aURI;
             this._browser._contentTitle = "";
             this._sendMessage("WebNavigation:LoadURI", {uri: aURI, flags: aLoadFlags});
           },

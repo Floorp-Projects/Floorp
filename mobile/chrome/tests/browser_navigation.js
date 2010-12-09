@@ -1,7 +1,8 @@
 var testURL_01 = chromeRoot + "browser_blank_01.html";
 var testURL_02 = chromeRoot + "browser_blank_02.html";
-var testURL_03 = chromeRoot + "browser_english_title.html";
-var testURL_04 = chromeRoot + "browser_no_title.html";
+
+let baseURI = "http://mochi.test:8888/browser/mobile/chrome/";
+var titleURL = baseURI + "browser_title.sjs?";
 var pngURL = "data:image/gif;base64,R0lGODlhCwALAIAAAAAA3pn/ZiH5BAEAAAEALAAAAAALAAsAAAIUhA+hkcuO4lmNVindo7qyrIXiGBYAOw==";
 
 // A queue to order the tests and a handle for each test
@@ -11,10 +12,10 @@ var gCurrentTest = null;
 var back = document.getElementById("tool-back");
 var forward = document.getElementById("tool-forward");
 
-function pageLoaded(url) {
+function pageLoaded(aURL) {
   return function() {
     let tab = gCurrentTest._currentTab;
-    return !tab.isLoading() && tab.browser.currentURI.spec == url;
+    return !tab.isLoading() && tab.browser.currentURI.spec == aURL;
   }
 }
 
@@ -27,6 +28,15 @@ function test() {
   // Start the tests
   runNextTest();
 }
+
+function waitForPageShow(aPageURL, aCallback) {
+  messageManager.addMessageListener("pageshow", function(aMessage) {
+    if (aMessage.target.currentURI.spec == aPageURL) {
+      messageManager.removeMessageListener("pageshow", arguments.callee);
+      setTimeout(function() { aCallback(); }, 0);
+    }
+  });
+};
 
 //------------------------------------------------------------------------------
 // Iterating tests by shifting test out one by one as runNextTest is called.
@@ -77,13 +87,14 @@ gTests.push({
     let urlbarTitle = document.getElementById("urlbar-title");
 
     // Wait for the awesomebar to load, then do the test
-    window.addEventListener("NavigationPanelShown", gCurrentTest.onFocusReady, false);
+    window.addEventListener("NavigationPanelShown", function() {
+      window.removeEventListener("NavigationPanelShown", arguments.callee, false);
+      setTimeout(gCurrentTest.onFocusReady, 0);
+    }, false);
     EventUtils.synthesizeMouse(urlbarTitle, urlbarTitle.width / 2, urlbarTitle.height / 2, {});
   },
 
   onFocusReady: function() {
-    window.removeEventListener("NavigationPanelShown", gCurrentTest.onFocusReady, false);
-
     // Test mode
     let urlIcons = document.getElementById("urlbar-icons");
     is(urlIcons.getAttribute("mode"), "edit", "URL Mode is set to 'edit'");
@@ -149,81 +160,141 @@ gTests.push({
     // Test forward button state
     is(forward.disabled, !gCurrentTest._currentTab.browser.canGoForward, "Forward button check");
 
-    Browser.closeTab(gCurrentTest._currentTab);
+    BrowserUI.closeTab(gCurrentTest._currentTab);
     runNextTest();
   }
 });
 
-//------------------------------------------------------------------------------
-// Bug 570706 - --browser-chrome Mochitests on Fennec [post navigation]
-// Check for text in the url bar for no title, with title and title change after pageload
+// Bug 611327 -----------------------------------------------------------------
+// Check for urlbar label value
 gTests.push({
-  desc: "Check for text in the url bar for no title, with title and title change after pageload",
+  desc: "Check for urlbar label value on different cases",
   _currentTab: null,
-
+  
   run: function() {
-    gCurrentTest._currentTab = BrowserUI.newTab(testURL_03);
-
-    // Wait for the tab to load, then do the test
-    messageManager.addMessageListener("pageshow", function() {
-    if (gCurrentTest._currentTab.browser.currentURI.spec == testURL_03) {
-      messageManager.removeMessageListener("pageshow", arguments.callee);
-      gCurrentTest.onPageReady();
-    }});
+    gCurrentTest._currentTab = BrowserUI.newTab(titleURL + "no_title");
+    waitForPageShow(titleURL + "no_title", gCurrentTest.onPageLoadWithoutTitle);
   },
 
-  onPageReady: function() {
+  onPageLoadWithoutTitle: function() {
     let urlbarTitle = document.getElementById("urlbar-title");
-    is(urlbarTitle.value, "English Title Page", "The title must be displayed in urlbar");
-    Browser.closeTab(gCurrentTest._currentTab);
-    gCurrentTest._currentTab = BrowserUI.newTab(testURL_04);
+    is(urlbarTitle.value, titleURL + "no_title", "The title should be equal to the URL");
 
-    messageManager.addMessageListener("pageshow", function() {
-    if (gCurrentTest._currentTab.browser.currentURI.spec == testURL_04) {
-      messageManager.removeMessageListener("pageshow", arguments.callee);
-      gCurrentTest.onPageReady2();
-    }});
+    BrowserUI.closeTab(gCurrentTest._currentTab);
+
+    gCurrentTest._currentTab = BrowserUI.newTab(titleURL + "english_title");
+    waitForPageShow(titleURL + "english_title", gCurrentTest.onPageLoadWithTitle);
   },
 
-  onPageReady2: function(){
+  onPageLoadWithTitle: function() {
     let urlbarTitle = document.getElementById("urlbar-title");
-    is(urlbarTitle.value, testURL_04, "The url for no title must be displayed in urlbar");
-    Browser.closeTab(gCurrentTest._currentTab);
+    is(urlbarTitle.value, "English Title Page", "The title should be equal to the page title");
 
-    // Check whether title appears after a pageload
-    gCurrentTest._currentTab = BrowserUI.newTab(testURL_01);
-    messageManager.addMessageListener("pageshow", function() {
-    if (gCurrentTest._currentTab.browser.currentURI.spec == testURL_01) {
+    BrowserUI.closeTab(gCurrentTest._currentTab);
+
+    gCurrentTest._currentTab = BrowserUI.newTab(titleURL + "dynamic_title");
+    messageManager.addMessageListener("pageshow", function(aMessage) {
       messageManager.removeMessageListener("pageshow", arguments.callee);
-      gCurrentTest.onPageReady3();
-    }});
+      gCurrentTest.onBeforePageTitleChanged();
+    });
+
+    messageManager.addMessageListener("DOMTitleChanged", function(aMessage) {
+      messageManager.removeMessageListener("DOMTitleChanged", arguments.callee);
+      setTimeout(function() { gCurrentTest.onPageTitleChanged(); }, 100);
+    });
   },
 
-  onPageReady3: function(){
+  onBeforePageTitleChanged: function() {
     let urlbarTitle = document.getElementById("urlbar-title");
-    is(urlbarTitle.value, "Browser Blank Page 01", "The title of the first page must be displayed");
+    isnot(urlbarTitle.value, "This is not a french title", "The title should not be equal to the new page title yet");
+  },
+
+  onPageTitleChanged: function() {
+    let urlbarTitle = document.getElementById("urlbar-title");
+    is(urlbarTitle.value, "This is not a french title", "The title should be equal to the new page title");
+
+    BrowserUI.closeTab(gCurrentTest._currentTab);
+
+    gCurrentTest._currentTab = BrowserUI.newTab(titleURL + "redirect");
+    waitForPageShow(titleURL + "no_title", gCurrentTest.onPageRedirect);
+  },
+
+  onPageRedirect: function() {
+    let urlbarTitle = document.getElementById("urlbar-title");
+    is(urlbarTitle.value, gCurrentTest._currentTab.browser.currentURI.spec, "The title should be equal to the redirected page url");
+
+    BrowserUI.closeTab(gCurrentTest._currentTab);
+
+    gCurrentTest._currentTab = BrowserUI.newTab(titleURL + "location");
+    waitForPageShow(titleURL + "no_title", gCurrentTest.onPageLocation);
+  },
+
+  onPageLocation: function() {
+    let urlbarTitle = document.getElementById("urlbar-title");
+    is(urlbarTitle.value, gCurrentTest._currentTab.browser.currentURI.spec, "The title should be equal to the relocate page url");
+
+    BrowserUI.closeTab(gCurrentTest._currentTab);
 
     // Wait for the awesomebar to load, then do the test
-    window.addEventListener("NavigationPanelShown", gCurrentTest.onFocusReady, false);
-    EventUtils.synthesizeMouse(urlbarTitle, urlbarTitle.width / 2, urlbarTitle.height / 2, {});
+    window.addEventListener("NavigationPanelShown", function() {
+      window.removeEventListener("NavigationPanelShown", arguments.callee, false);
+
+      setTimeout(function() {
+        EventUtils.synthesizeString(testURL_02, window);
+        EventUtils.synthesizeKey("VK_RETURN", {}, window);
+
+        waitForPageShow(testURL_02, gCurrentTest.onUserTypedValue);
+      }, 0);
+
+    }, false);
+
+    gCurrentTest._currentTab = BrowserUI.newTab("about:blank");
   },
 
-  onFocusReady: function() {
-    window.removeEventListener("NavigationPanelShown", gCurrentTest.onFocusReady, false);
-    EventUtils.synthesizeString(testURL_02, window);
-    EventUtils.synthesizeKey("VK_RETURN", {}, window)
-
-    messageManager.addMessageListener("pageshow", function() {
-    if (gCurrentTest._currentTab.browser.currentURI.spec == testURL_02) {
-      messageManager.removeMessageListener("pageshow", arguments.callee);
-      gCurrentTest.onPageFinish();
-    }});
-  },
-
-  onPageFinish: function() {
+  onUserTypedValue: function() {
     let urlbarTitle = document.getElementById("urlbar-title");
-    is(urlbarTitle.value, "Browser Blank Page 02", "The title of the second page must be displayed");
-    Browser.closeTab(gCurrentTest._currentTab);
+    is(urlbarTitle.value, "Browser Blank Page 02", "The title should be equal to the typed page url title");
+
+    // about:blank has been closed, so we need to close the last selected one
+    BrowserUI.closeTab(Browser.selectedTab);
+
+    // Wait for the awesomebar to load, then do the test
+    window.addEventListener("NavigationPanelShown", function() {
+      window.removeEventListener("NavigationPanelShown", arguments.callee, false);
+
+      EventUtils.synthesizeString("no_title", window);
+
+      // Wait until the no_title result row is here
+      let popup = document.getElementById("popup_autocomplete");
+      let result = null;
+      function hasResults() {
+        result = popup._items.childNodes[0];
+        if (result)
+          return result.getAttribute("value") == (titleURL + "no_title");
+
+        return false;
+      };
+      waitFor(function() { EventUtils.synthesizeMouse(result, result.width / 2, result.height / 2, {}); }, hasResults);
+
+      messageManager.addMessageListener("pageshow", function(aMessage) {
+        messageManager.removeMessageListener("pageshow", arguments.callee);
+        is(urlbarTitle.value, titleURL + "no_title", "The title should be equal to the url of the clicked row");
+      });
+
+      waitForPageShow(titleURL + "no_title", gCurrentTest.onUserSelectValue);
+    }, false);
+
+    gCurrentTest._currentTab = BrowserUI.newTab("about:blank");
+  },
+
+  onUserSelectValue: function() {
+    let urlbarTitle = document.getElementById("urlbar-title");
+    is(urlbarTitle.value, Browser.selectedTab.browser.currentURI.spec, "The title should be equal to the clicked page url");
+
+    // about:blank has been closed, so we need to close the last selected one
+    BrowserUI.closeTab(Browser.selectedTab);
+
+    //is(urlbarTitle.value, "Browser Blank Page 02", "The title of the second page must be displayed");
     runNextTest();
   }
 });
@@ -234,32 +305,23 @@ gTests.push({
   _currentTab: null,
 
   run: function() {
-    gCurrentTest._currentTab = BrowserUI.newTab(testURL_04);
-    messageManager.addMessageListener("pageshow", function() {
-
-    if (gCurrentTest._currentTab.browser.currentURI.spec == testURL_04) {
-      messageManager.removeMessageListener("pageshow", arguments.callee);
-      gCurrentTest.onPageReady();
-    }});
+    gCurrentTest._currentTab = BrowserUI.newTab(testURL_01);
+    waitForPageShow(testURL_01, gCurrentTest.onPageReady);
   },
 
   onPageReady: function() {
     let favicon = document.getElementById("urlbar-favicon");
     is(favicon.src, "", "The default favicon must be loaded");
-    Browser.closeTab(gCurrentTest._currentTab);
+    BrowserUI.closeTab(gCurrentTest._currentTab);
 
-    gCurrentTest._currentTab = BrowserUI.newTab(testURL_03);
-    messageManager.addMessageListener("pageshow", function() {
-    if (gCurrentTest._currentTab.browser.currentURI.spec == testURL_03) {
-      messageManager.removeMessageListener("pageshow", arguments.callee);
-      gCurrentTest.onPageFinish();
-    }});
+    gCurrentTest._currentTab = BrowserUI.newTab(testURL_02);
+    waitForPageShow(testURL_02, gCurrentTest.onPageFinish);
   },
 
   onPageFinish: function(){
     let favicon = document.getElementById("urlbar-favicon");
     is(favicon.src, pngURL, "The page favicon must be loaded");
-    Browser.closeTab(gCurrentTest._currentTab);
+    BrowserUI.closeTab(gCurrentTest._currentTab);
     runNextTest();
   }
 });
@@ -316,7 +378,7 @@ gTests.push({
   },
 
   finish: function() {
-    Browser.closeTab(gCurrentTest._currentTab);
+    BrowserUI.closeTab(gCurrentTest._currentTab);
     runNextTest();
   }
 });

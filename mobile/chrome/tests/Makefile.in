@@ -80,8 +80,7 @@ _BROWSER_FILES = \
   browser_vkb.js \
   browser_viewport.js \
   browser_viewport.sjs \
-  browser_no_title.html \
-  browser_english_title.html \
+  browser_title.sjs \
   browser_install.xml \
   browser_upgrade.rdf\
   $(NULL)
