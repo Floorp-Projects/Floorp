@@ -96,6 +96,8 @@
 #include "nsXPCOMCID.h"
 #include "nsISupportsPrimitives.h"
 
+#include "nsIXULRuntime.h"
+
 // for the dialog
 #include "nsIStringBundle.h"
 #include "nsIWindowWatcher.h"
@@ -189,8 +191,9 @@ using mozilla::TimeStamp;
 // 0.10 added plugin versions on appropriate platforms, bug 427743
 // 0.11 file name and full path fields now store expected values on all platforms, bug 488181
 // 0.12 force refresh due to quicktime pdf claim fix, bug 611197
+// 0.13 add architecture and list of invalid plugins, bug 616271
 // The current plugin registry version (and the maximum version we know how to read)
-static const char *kPluginRegistryVersion = "0.12";
+static const char *kPluginRegistryVersion = "0.13";
 // The minimum registry version we know how to read
 static const char *kMinimumRegistryVersion = "0.9";
 
@@ -231,6 +234,21 @@ PRBool gSkipPluginSafeCalls = PR_FALSE;
 
 nsIFile *nsPluginHost::sPluginTempDir;
 nsPluginHost *nsPluginHost::sInst;
+
+NS_IMPL_ISUPPORTS0(nsInvalidPluginTag)
+
+nsInvalidPluginTag::nsInvalidPluginTag(const char* aFullPath, PRInt64 aLastModifiedTime)
+: mFullPath(aFullPath),
+  mLastModifiedTime(aLastModifiedTime),
+  mSeen(PR_FALSE)
+{
+  
+}
+
+nsInvalidPluginTag::~nsInvalidPluginTag()
+{
+  
+}
 
 // flat file reg funcs
 static
@@ -850,6 +868,7 @@ NS_IMETHODIMP nsPluginHost::Destroy()
 
   NS_ITERATIVE_UNREF_LIST(nsRefPtr<nsPluginTag>, mPlugins, mNext);
   NS_ITERATIVE_UNREF_LIST(nsRefPtr<nsPluginTag>, mCachedPlugins, mNext);
+  NS_ITERATIVE_UNREF_LIST(nsRefPtr<nsInvalidPluginTag>, mInvalidPlugins, mNext);
 
   // Lets remove any of the temporary files that we created.
   if (sPluginTempDir) {
@@ -2004,8 +2023,9 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile * pluginsDir,
     PRInt64 fileModTime = pfd.mModTime;
 
     // Look for it in our cache
+    NS_ConvertUTF16toUTF8 filePath(pfd.mFilePath);
     nsRefPtr<nsPluginTag> pluginTag;
-    RemoveCachedPluginsInfo(NS_ConvertUTF16toUTF8(pfd.mFilePath).get(),
+    RemoveCachedPluginsInfo(filePath.get(),
                             getter_AddRefs(pluginTag));
 
     PRBool enabled = PR_TRUE;
@@ -2049,6 +2069,23 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile * pluginsDir,
         continue;
       }
     }
+    
+    bool isKnownInvalidPlugin = PR_FALSE;
+    for (nsRefPtr<nsInvalidPluginTag> invalidPlugins = mInvalidPlugins;
+         invalidPlugins; invalidPlugins = invalidPlugins->mNext) {
+      // If already marked as invalid, ignore it
+      if (invalidPlugins->mFullPath.Equals(filePath.get()) &&
+          invalidPlugins->mLastModifiedTime == fileModTime) {
+        if (aCreatePluginList) {
+          invalidPlugins->mSeen = true;
+        }
+        isKnownInvalidPlugin = true;
+        break;
+      }
+    }
+    if (isKnownInvalidPlugin) {
+      continue;
+    }
 
     // if it is not found in cache info list or has been changed, create a new one
     if (!pluginTag) {
@@ -2061,7 +2098,21 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile * pluginsDir,
       nsresult res = pluginFile.GetPluginInfo(info, &library);
       // if we don't have mime type don't proceed, this is not a plugin
       if (NS_FAILED(res) || !info.fMimeTypeArray) {
+        nsRefPtr<nsInvalidPluginTag> invalidTag = new nsInvalidPluginTag(filePath.get(),
+                                                                         fileModTime);
         pluginFile.FreePluginInfo(info);
+        
+        if (aCreatePluginList) {
+          invalidTag->mSeen = PR_TRUE;
+        }
+        invalidTag->mNext = mInvalidPlugins;
+        if (mInvalidPlugins) {
+          mInvalidPlugins->mPrev = invalidTag;
+        }
+        mInvalidPlugins = invalidTag;
+        
+        // Mark aPluginsChanged so pluginreg is rewritten
+        *aPluginsChanged = PR_TRUE;
         continue;
       }
 
@@ -2373,6 +2424,33 @@ nsresult nsPluginHost::FindPlugins(PRBool aCreatePluginList, PRBool * aPluginsCh
     if (cachecount > 0)
       *aPluginsChanged = PR_TRUE;
   }
+  
+  // Remove unseen invalid plugins
+  nsRefPtr<nsInvalidPluginTag> invalidPlugins = mInvalidPlugins;
+  while (invalidPlugins) {
+    if (!invalidPlugins->mSeen) {
+      nsRefPtr<nsInvalidPluginTag> invalidPlugin = invalidPlugins;
+      
+      if (invalidPlugin->mPrev) {
+        invalidPlugin->mPrev->mNext = invalidPlugin->mNext;
+      }
+      else {
+        mInvalidPlugins = invalidPlugin->mNext;
+      }
+      if (invalidPlugin->mNext) {
+        invalidPlugin->mNext->mPrev = invalidPlugin->mPrev; 
+      }
+      
+      invalidPlugins = invalidPlugin->mNext;
+      
+      invalidPlugin->mPrev = NULL;
+      invalidPlugin->mNext = NULL;
+    }
+    else {
+      invalidPlugins->mSeen = PR_FALSE;
+      invalidPlugins = invalidPlugins->mNext;
+    }
+  }
 
   // if we are not creating the list, there is no need to proceed
   if (!aCreatePluginList) {
@@ -2464,11 +2542,26 @@ nsPluginHost::WritePluginInfo()
   if (NS_FAILED(rv))
     return rv;
 
+  nsCOMPtr<nsIXULRuntime> runtime = do_GetService("@mozilla.org/xre/runtime;1");
+  if (!runtime) {
+    return NS_ERROR_FAILURE;
+  }
+    
+  nsCAutoString arch;
+  rv = runtime->GetXPCOMABI(arch);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   PR_fprintf(fd, "Generated File. Do not edit.\n");
 
-  PR_fprintf(fd, "\n[HEADER]\nVersion%c%s%c%c\n",
+  PR_fprintf(fd, "\n[HEADER]\nVersion%c%s%c%c\nArch%c%s%c%c\n",
              PLUGIN_REGISTRY_FIELD_DELIMITER,
              kPluginRegistryVersion,
+             PLUGIN_REGISTRY_FIELD_DELIMITER,
+             PLUGIN_REGISTRY_END_OF_LINE_MARKER,
+             PLUGIN_REGISTRY_FIELD_DELIMITER,
+             arch.get(),
              PLUGIN_REGISTRY_FIELD_DELIMITER,
              PLUGIN_REGISTRY_END_OF_LINE_MARKER);
 
@@ -2540,6 +2633,25 @@ nsPluginHost::WritePluginInfo()
           PLUGIN_REGISTRY_END_OF_LINE_MARKER);
       }
     }
+  }
+  
+  PR_fprintf(fd, "\n[INVALID]\n");
+  
+  nsRefPtr<nsInvalidPluginTag> invalidPlugins = mInvalidPlugins;
+  while (invalidPlugins) {
+    // fullPath
+    PR_fprintf(fd, "%s%c%c\n",
+      (!invalidPlugins->mFullPath.IsEmpty() ? invalidPlugins->mFullPath.get() : ""),
+      PLUGIN_REGISTRY_FIELD_DELIMITER,
+      PLUGIN_REGISTRY_END_OF_LINE_MARKER);
+
+    // lastModifiedTimeStamp
+    PR_fprintf(fd, "%lld%c%c\n",
+      invalidPlugins->mLastModifiedTime,
+      PLUGIN_REGISTRY_FIELD_DELIMITER,
+      PLUGIN_REGISTRY_END_OF_LINE_MARKER);
+    
+    invalidPlugins = invalidPlugins->mNext;
   }
 
   if (fd) {
@@ -2646,6 +2758,43 @@ nsPluginHost::ReadPluginInfo()
   // Registry v0.10 and upwards includes the plugin version field
   PRBool regHasVersion = NS_CompareVersions(values[1], "0.10") >= 0;
 
+  // Registry v0.13 and upwards includes the architecture
+  if (NS_CompareVersions(values[1], "0.13") >= 0) {
+    char* archValues[6];
+    
+    if (!reader.NextLine()) {
+      return rv;
+    }
+    
+    // ArchLiteral, Architecture
+    if (2 != reader.ParseLine(archValues, 2)) {
+      return rv;
+    }
+      
+    // ArchLiteral
+    if (PL_strcmp(archValues[0], "Arch")) {
+      return rv;
+    }
+      
+    nsCOMPtr<nsIXULRuntime> runtime = do_GetService("@mozilla.org/xre/runtime;1");
+    if (!runtime) {
+      return rv;
+    }
+      
+    nsCAutoString arch;
+    if (NS_FAILED(runtime->GetXPCOMABI(arch))) {
+      return rv;
+    }
+      
+    // If this is a registry from a different architecture then don't attempt to read it
+    if (PL_strcmp(archValues[1], arch.get())) {
+      return rv;
+    }
+  }
+  
+  // Registry v0.13 and upwards includes the list of invalid plugins
+  bool hasInvalidPlugins = (NS_CompareVersions(values[1], "0.13") >= 0);
+
   if (!ReadSectionHeader(reader, "PLUGINS"))
     return rv;
 
@@ -2659,6 +2808,10 @@ nsPluginHost::ReadPluginInfo()
     const char *filename;
     const char *fullpath;
     nsCAutoString derivedFileName;
+    
+    if (hasInvalidPlugins && *reader.LinePtr() == '[') {
+      break;
+    }
     
     if (hasFullPathInFileNameField) {
       fullpath = reader.LinePtr();
@@ -2775,7 +2928,30 @@ nsPluginHost::ReadPluginInfo()
       ("LoadCachedPluginsInfo : Loading Cached plugininfo for %s\n", tag->mFileName.get()));
     tag->mNext = mCachedPlugins;
     mCachedPlugins = tag;
-
+  }
+  
+  if (hasInvalidPlugins) {
+    if (!ReadSectionHeader(reader, "INVALID")) {
+      return rv;
+    }
+    
+    while (reader.NextLine()) {
+      const char *fullpath = reader.LinePtr();
+      if (!reader.NextLine()) {
+        return rv;
+      }
+      
+      const char *lastModifiedTimeStamp = reader.LinePtr();
+      PRInt64 lastmod = (vdiff == 0) ? nsCRT::atoll(lastModifiedTimeStamp) : -1;
+      
+      nsRefPtr<nsInvalidPluginTag> invalidTag = new nsInvalidPluginTag(fullpath, lastmod);
+      
+      invalidTag->mNext = mInvalidPlugins;
+      if (mInvalidPlugins) {
+        mInvalidPlugins->mPrev = invalidTag;
+      }
+      mInvalidPlugins = invalidTag;
+    }
   }
   return NS_OK;
 }
