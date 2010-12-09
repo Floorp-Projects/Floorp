@@ -367,35 +367,39 @@ NS_GFX_(void) ScaleYCbCrToRGB32(const uint8* y_buf,
     if (source_dx == kFractionMax) {  // Not scaled
       FastConvertYUVToRGB32Row(y_ptr, u_ptr, v_ptr,
                                dest_pixel, width);
-    } else {
-      if (filter & FILTER_BILINEAR_H) {
+    } else if (filter & FILTER_BILINEAR_H) {
         LinearScaleYUVToRGB32Row(y_ptr, u_ptr, v_ptr,
                                  dest_pixel, width, source_dx);
     } else {
 // Specialized scalers and rotation.
-#if defined(_MSC_VER) && defined(_M_IX86)
+#if defined(MOZILLA_MAY_SUPPORT_SSE) && defined(_MSC_VER) && defined(_M_IX86)
+      if(mozilla::supports_sse()) {
         if (width == (source_width * 2)) {
-          DoubleYUVToRGB32Row(y_ptr, u_ptr, v_ptr,
-                              dest_pixel, width);
+          DoubleYUVToRGB32Row_SSE(y_ptr, u_ptr, v_ptr,
+                                  dest_pixel, width);
         } else if ((source_dx & kFractionMask) == 0) {
           // Scaling by integer scale factor. ie half.
-          ConvertYUVToRGB32Row(y_ptr, u_ptr, v_ptr,
-                               dest_pixel, width,
-                               source_dx >> kFractionBits);
+          ConvertYUVToRGB32Row_SSE(y_ptr, u_ptr, v_ptr,
+                                   dest_pixel, width,
+                                   source_dx >> kFractionBits);
         } else if (source_dx_uv == source_dx) {  // Not rotated.
           ScaleYUVToRGB32Row(y_ptr, u_ptr, v_ptr,
                              dest_pixel, width, source_dx);
         } else {
-          RotateConvertYUVToRGB32Row(y_ptr, u_ptr, v_ptr,
-                                     dest_pixel, width,
-                                     source_dx >> kFractionBits,
-                                     source_dx_uv >> kFractionBits);
+          RotateConvertYUVToRGB32Row_SSE(y_ptr, u_ptr, v_ptr,
+                                         dest_pixel, width,
+                                         source_dx >> kFractionBits,
+                                         source_dx_uv >> kFractionBits);
         }
+      }
+      else {
+        ScaleYUVToRGB32Row_C(y_ptr, u_ptr, v_ptr,
+                             dest_pixel, width, source_dx);
+      }
 #else
-        ScaleYUVToRGB32Row(y_ptr, u_ptr, v_ptr,
-                           dest_pixel, width, source_dx);
+      ScaleYUVToRGB32Row(y_ptr, u_ptr, v_ptr,
+                         dest_pixel, width, source_dx);
 #endif
-      }      
     }
   }
   // MMX used for FastConvertYUVToRGB32Row and FilterRows requires emms.
