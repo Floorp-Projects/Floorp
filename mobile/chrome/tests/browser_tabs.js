@@ -113,17 +113,40 @@ function tab_on_undo() {
 
   Browser.loadURI("about:firstrun");
   is(undoBox.firstChild, null, "It should be no tab in the undo box when opening a new local page");
-  done();
-}
 
-function done() {
-  //Close new tab 
   Browser.closeTab(new_tab_01);
   Browser.closeTab(new_tab_02);
   Browser.closeTab(new_tab_03);
   Browser.closeTab(new_tab_04);
   Browser.closeTab(new_tab_05);
 
+  tab_about_empty();
+}
+
+function tab_about_empty() {
+  new_tab_01 = Browser.addTab("about:empty", true);
+  ok(new_tab_01, "Tab Opened");
+  is(new_tab_01.browser.getAttribute("remote"), "true", "about:empty opened in a remote tab");
+
+  Browser.tabs
+    .filter(function(tab) tab != new_tab_01)
+    .forEach(Browser.closeTab.bind(Browser));
+
+  is(Browser.tabs.length, 1, "All other tabs closed");
+
+  Browser.loadURI("about:");
+  let tab = Browser.selectedTab;
+  isnot(tab, new_tab_01, "local page opened in a new tab");
+  isnot(tab.browser.getAttribute("remote"), "true", "local page opened in a local tab");
+  is(Browser.tabs.length, 1, "Old empty tab is closed");
+
+  let undoBox = document.getElementById("tabs")._tabsUndo;
+  is(undoBox.firstChild, null, "about:empty is not in the undo close tab box");
+
+  done();
+}
+
+function done() {
   // For some reason, this test is causing the sidebar to appear.
   // Clean up the UI for later tests (see bug 598962).
   Browser.hideSidebars();
