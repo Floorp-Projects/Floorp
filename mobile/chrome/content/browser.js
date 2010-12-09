@@ -534,12 +534,14 @@ var Browser = {
 
     if (hasLocal != useLocal) {
       let oldTab = this.selectedTab;
-      if (currentURI == "about:blank" && !browser.canGoBack && !browser.canGoForward) {
+
+      // Add new tab before closing the old one, in case there is only one.
+      Browser.addTab(aURI, true, oldTab, aParams);
+      if (/^about:(blank|empty)$/.test(currentURI) && !browser.canGoBack && !browser.canGoForward) {
         oldTab.chromeTab.ignoreUndo = true;
         this.closeTab(oldTab);
         oldTab = null;
       }
-      Browser.addTab(aURI, true, oldTab, aParams);
     }
     else {
       let params = aParams || {};
