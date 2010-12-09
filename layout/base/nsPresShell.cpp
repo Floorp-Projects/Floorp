@@ -9241,6 +9241,8 @@ SetExternalResourceIsActive(nsIDocument* aDocument, void* aClosure)
 nsresult
 PresShell::SetIsActive(PRBool aIsActive)
 {
+  NS_PRECONDITION(mDocument, "should only be called with a document");
+
   mIsActive = aIsActive;
   nsPresContext* presContext = GetPresContext();
   if (presContext &&
@@ -9249,10 +9251,8 @@ PresShell::SetIsActive(PRBool aIsActive)
   }
 
   // Propagate state-change to my resource documents' PresShells
-  if (mDocument) {
-    mDocument->EnumerateExternalResources(SetExternalResourceIsActive,
-                                          &aIsActive);
-  }
+  mDocument->EnumerateExternalResources(SetExternalResourceIsActive,
+                                        &aIsActive);
   return UpdateImageLockingState();
 }
 
