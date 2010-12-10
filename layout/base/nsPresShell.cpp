@@ -6077,10 +6077,21 @@ PresShell::Paint(nsIView*           aDisplayRoot,
   NS_ASSERTION(aViewToPaint, "null view");
   NS_ASSERTION(aWidgetToPaint, "Can't paint without a widget");
 
-  nscolor bgcolor = ComputeBackstopColor(aDisplayRoot);
-
   nsIFrame* frame = aPaintDefaultBackground
       ? nsnull : static_cast<nsIFrame*>(aDisplayRoot->GetClientData());
+
+  LayerManager* layerManager = aWidgetToPaint->GetLayerManager();
+  NS_ASSERTION(layerManager, "Must be in paint event");
+
+  if (frame) {
+    if (!(frame->GetStateBits() & NS_FRAME_UPDATE_LAYER_TREE)) {
+      if (layerManager->DoEmptyTransaction())
+        return NS_OK;
+    }
+    frame->RemoveStateBits(NS_FRAME_UPDATE_LAYER_TREE);
+  }
+
+  nscolor bgcolor = ComputeBackstopColor(aDisplayRoot);
 
   if (frame && aViewToPaint == aDisplayRoot) {
     // Defer invalidates that are triggered during painting, and discard
@@ -6105,9 +6116,6 @@ PresShell::Paint(nsIView*           aDisplayRoot,
     // invalidates of areas that are already being repainted.
     frame->BeginDeferringInvalidatesForDisplayRoot(aDirtyRegion);
   }
-
-  LayerManager* layerManager = aWidgetToPaint->GetLayerManager();
-  NS_ASSERTION(layerManager, "Must be in paint event");
 
   layerManager->BeginTransaction();
   nsRefPtr<ThebesLayer> root = layerManager->CreateThebesLayer();
