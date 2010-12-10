@@ -46,6 +46,17 @@ XPCOMUtils.defineLazyGetter(this, "AddonManager", function() {
   return AddonManager;
 });
 
+XPCOMUtils.defineLazyGetter(this, "AddonRepository", function() {
+  Components.utils.import("resource://gre/modules/AddonRepository.jsm");
+  return AddonRepository;
+});
+
+XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
+  Components.utils.import("resource://gre/modules/NetUtil.jsm");
+  return NetUtil;
+});
+
+
 function getPref(func, preference, defaultValue) {
   try {
     return Services.prefs[func](preference);
@@ -97,6 +108,8 @@ AddonUpdateService.prototype = {
         }
       });
     });
+
+    RecommendedSearchResults.search();
   }
 };
 
@@ -139,6 +152,71 @@ UpdateCheckListener.prototype = {
     Services.obs.notifyObservers(data, "addon-update-ended", this._status);
   }
 };
+
+// -----------------------------------------------------------------------
+// RecommendedSearchResults fetches add-on data and saves it to a cache
+// -----------------------------------------------------------------------
+
+var RecommendedSearchResults = {
+  _getFile: function() {
+    let dirService = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+    let file = dirService.get("ProfD", Ci.nsILocalFile);
+    file.append("recommended-addons.json");
+    return file;
+  },
+
+  _writeFile: function (aFile, aData) {
+    if (!aData)
+      return;
+
+    let stateString = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
+    stateString.data = aData;
+
+    // Initialize the file output stream.
+    let ostream = Cc["@mozilla.org/network/safe-file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
+    ostream.init(aFile, 0x02 | 0x08 | 0x20, 0600, 0);
+
+    // Obtain a converter to convert our data to a UTF-8 encoded input stream.
+    let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(Ci.nsIScriptableUnicodeConverter);
+    converter.charset = "UTF-8";
+
+    // Asynchronously copy the data to the file.
+    let istream = converter.convertToInputStream(aData);
+    NetUtil.asyncCopy(istream, ostream, function(rc) {
+      if (Components.isSuccessCode(rc))
+        Services.obs.notifyObservers(null, "recommended-addons-cache-updated", "");
+    });
+  },
+  
+  searchSucceeded: function(aAddons, aAddonCount, aTotalResults) {
+    let json = {
+      addons: aAddons,
+      addonCount: aAddonCount,
+      totalResults: aTotalResults
+    };
+
+    // Avoid any NSS costs. Convert https to http.
+    json.addons.forEach(function(aAddon){
+      aAddon.iconURL = aAddon.iconURL.replace(/^https/, "http");
+    });
+
+    let file = this._getFile();
+    this._writeFile(file, JSON.stringify(json));
+  },
+  
+  searchFailed: function searchFailed() {
+    let loading = document.getElementById("newAddons");
+    loading.parentNode.removeChild(loading);
+  },
+  
+  search: function() {
+    const kAddonsMaxDisplay = 2;
+
+    if (AddonRepository.isSearching)
+      AddonRepository.cancelSearch();
+    AddonRepository.retrieveRecommendedAddons(kAddonsMaxDisplay, RecommendedSearchResults);
+  }
+}
 
 const NSGetFactory = XPCOMUtils.generateNSGetFactory([AddonUpdateService]);
 
