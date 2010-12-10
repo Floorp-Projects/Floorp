@@ -6543,6 +6543,11 @@ dumpValue(const Value &v)
         } else {
             fputs("<unnamed function", stderr);
         }
+        if (fun->isInterpreted()) {
+            JSScript *script = fun->script();
+            fprintf(stderr, " (%s:%u)",
+                    script->filename ? script->filename : "", script->lineno);
+        }
         fprintf(stderr, " at %p (JSFunction at %p)>", (void *) funobj, (void *) fun);
     } else if (v.isObject()) {
         JSObject *obj = &v.toObject();
