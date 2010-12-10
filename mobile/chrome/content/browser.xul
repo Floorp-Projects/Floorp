@@ -533,30 +533,30 @@
           <description class="syncsetup-center" flex="1">&sync.setup.jpake;</description>
           <separator/>
           <vbox align="center" flex="1">
-            <description class="syncsetup-code">code</description>
-            <description class="syncsetup-code">goes</description>
-            <description class="syncsetup-code">here</description>
+            <description id="syncsetup-code1" class="syncsetup-code"></description>
+            <description id="syncsetup-code2" class="syncsetup-code"></description>
+            <description id="syncsetup-code3" class="syncsetup-code"></description>
           </vbox>
           <separator/>
           <description class="syncsetup-center syncsetup-link" flex="1" onclick="WeaveGlue.openManual();">&sync.fallback;</description>
-          <separator/>
+          <separator flex="1"/>
           <hbox pack="center">
-            <button oncommand="WeaveGlue.close();">&sync.setup.cancel;</button>
+            <button oncommand="WeaveGlue.abortEasySetup(); WeaveGlue.close();">&sync.setup.cancel;</button>
           </hbox>
         </vbox>
         <vbox id="syncsetup-manual" class="syncsetup-page" flex="1" hidden="true">
-          <description class="syncsetup-center">&sync.setup.manual;</description>
+          <description class="syncsetup-center" flex="1">&sync.setup.manual;</description>
           <separator/>
-          <textbox id="syncsetup-account" placeholder="&sync.account;"/>
-          <textbox id="syncsetup-password" placeholder="&sync.password;" type="password"/>
-          <textbox id="syncsetup-synckey" placeholder="&sync.syncKey;"/>
-          <separator/>
+          <textbox id="syncsetup-account" class="syncsetup-edit" placeholder="&sync.account;"/>
+          <textbox id="syncsetup-password" class="syncsetup-edit" placeholder="&sync.password;" type="password"/>
+          <textbox id="syncsetup-synckey" class="syncsetup-edit" placeholder="&sync.syncKey;"/>
+          <separator class="thin"/>
           <button id="syncsetup-usecustomserver" type="checkbox" class="button-checkbox" pack="start" oncommand="WeaveGlue.toggleCustomServer();">
             <image class="button-image-icon"/>
             <description class="syncsetup-label" flex="1">&sync.customServer;</description>
           </button>
           <textbox id="syncsetup-customserver" placeholder="&sync.serverURL;"/>
-          <separator/>
+          <separator flex="1"/>
           <hbox pack="center">
             <button oncommand="WeaveGlue.close();">&sync.setup.cancel;</button>
             <separator/>
