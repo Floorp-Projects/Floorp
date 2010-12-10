@@ -2932,15 +2932,12 @@ JS_RestoreFrameChain(JSContext *cx, JSStackFrame *fp);
 /*
  * Strings.
  *
- * NB: JS_NewString takes ownership of bytes on success, avoiding a copy; but
- * on error (signified by null return), it leaves bytes owned by the caller.
- * So the caller must free bytes in the error case, if it has no use for them.
- * In contrast, all the JS_New*StringCopy* functions do not take ownership of
- * the character memory passed to them -- they copy it.
+ * NB: JS_NewUCString takes ownership of bytes on success, avoiding a copy;
+ * but on error (signified by null return), it leaves chars owned by the
+ * caller. So the caller must free bytes in the error case, if it has no use
+ * for them. In contrast, all the JS_New*StringCopy* functions do not take
+ * ownership of the character memory passed to them -- they copy it.
  */
-extern JS_PUBLIC_API(JSString *)
-JS_NewString(JSContext *cx, char *bytes, size_t length);
-
 extern JS_PUBLIC_API(JSString *)
 JS_NewStringCopyN(JSContext *cx, const char *s, size_t n);
 
