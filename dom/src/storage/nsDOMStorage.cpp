@@ -280,6 +280,7 @@ nsDOMStorageManager::Initialize()
   os->AddObserver(gStorageManager, NS_PRIVATE_BROWSING_SWITCH_TOPIC, PR_FALSE);
   os->AddObserver(gStorageManager, "profile-after-change", PR_FALSE);
   os->AddObserver(gStorageManager, "perm-changed", PR_FALSE);
+  os->AddObserver(gStorageManager, "browser:purge-domain-data", PR_FALSE);
 
   return NS_OK;
 }
@@ -311,6 +312,16 @@ static PLDHashOperator
 ClearStorage(nsDOMStorageEntry* aEntry, void* userArg)
 {
   aEntry->mStorage->ClearAll();
+  return PL_DHASH_REMOVE;
+}
+
+static PLDHashOperator
+ClearStorageIfDomainMatches(nsDOMStorageEntry* aEntry, void* userArg)
+{
+  nsCAutoString* aKey = static_cast<nsCAutoString*> (userArg);
+  if (StringBeginsWith(aEntry->mStorage->GetScopeDBKey(), *aKey)) {
+    aEntry->mStorage->ClearAll();
+  }
   return PL_DHASH_REMOVE;
 }
 
@@ -430,6 +441,34 @@ nsDOMStorageManager::Observe(nsISupports *aSubject,
     nsCOMPtr<nsIObserverService> obsserv = mozilla::services::GetObserverService();
     if (obsserv)
       obsserv->NotifyObservers(nsnull, NS_DOMSTORAGE_FLUSH_TIMER_OBSERVER, nsnull);
+  } else if (!strcmp(aTopic, "browser:purge-domain-data")) {
+    // Convert the domain name to the ACE format
+    nsCAutoString aceDomain;
+    nsresult rv;
+    nsCOMPtr<nsIIDNService> converter = do_GetService(NS_IDNSERVICE_CONTRACTID);
+    if (converter) {
+      rv = converter->ConvertUTF8toACE(NS_ConvertUTF16toUTF8(aData), aceDomain);
+      NS_ENSURE_SUCCESS(rv, rv);
+    } else {
+      // In case the IDN service is not available, this is the best we can come up with!
+      NS_EscapeURL(NS_ConvertUTF16toUTF8(aData),
+                   esc_OnlyNonASCII | esc_AlwaysCopy,
+                   aceDomain);
+    }
+
+    nsCAutoString key;
+    rv = nsDOMStorageDBWrapper::CreateDomainScopeDBKey(aceDomain, key);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Clear the storage entries for matching domains
+    mStorages.EnumerateEntries(ClearStorageIfDomainMatches, &key);
+
+#ifdef MOZ_STORAGE
+    rv = DOMStorageImpl::InitDB();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    DOMStorageImpl::gStorageDB->RemoveOwner(aceDomain, PR_TRUE);
+#endif
   }
 
   return NS_OK;
