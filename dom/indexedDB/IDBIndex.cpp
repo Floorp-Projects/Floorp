@@ -327,6 +327,16 @@ IDBIndex::GetUnique(PRBool* aUnique)
 }
 
 NS_IMETHODIMP
+IDBIndex::GetObjectStore(nsIIDBObjectStore** aObjectStore)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  nsCOMPtr<nsIIDBObjectStore> objectStore(mObjectStore);
+  objectStore.forget(aObjectStore);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 IDBIndex::Get(nsIVariant* aKey,
               nsIIDBRequest** _retval)
 {
