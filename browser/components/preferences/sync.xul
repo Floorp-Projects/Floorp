@@ -147,6 +147,10 @@
                 </row>
               </rows>
             </grid>
+            <!-- TODO l10n -->
+            <label class="text-link"
+                   onclick="gSyncPane.openAddDevice(); return false;"
+                   value="Add a Device"/>
           </groupbox>
           <groupbox>
             <caption label="&syncPrefsCaption.label;"/>

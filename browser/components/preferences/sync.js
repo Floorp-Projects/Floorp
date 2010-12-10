@@ -215,6 +215,15 @@ let gSyncPane = {
                         "centerscreen,chrome,dialog,modal");
   },
 
+  openAddDevice: function () {
+    let win = Services.wm.getMostRecentWindow("Sync:AddDevice");
+    if (win)
+      win.focus();
+    else 
+      window.openDialog("chrome://browser/content/syncAddDevice.xul",
+                        "syncAddDevice", "centerscreen,chrome,resizable=no");
+  },
+
   resetSync: function () {
     this.openSetup(true);
   }
