@@ -133,7 +133,7 @@ public:
 
   void EndConstruction();
 
-  virtual void EndTransaction(DrawThebesLayerCallback aCallback,
+  virtual bool EndTransaction(DrawThebesLayerCallback aCallback,
                               void* aCallbackData);
 
   virtual void SetRoot(Layer* aLayer) { mRoot = aLayer; }
