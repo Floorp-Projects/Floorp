@@ -76,6 +76,11 @@ MULTI_DESKTOP_SYNC:                    60 * 60 * 1000, // 1 hour
 MULTI_MOBILE_SYNC:                     5 * 60 * 1000, // 5 minutes
 PARTIAL_DATA_SYNC:                     60 * 1000, // 1 minute
 
+// HMAC event handling timeout.
+// 10 minutes: a compromise between the multi-desktop sync interval
+// and the mobile sync interval.
+HMAC_EVENT_INTERVAL:                   600000,
+
 // 50 is hardcoded here because of URL length restrictions.
 // (GUIDs can be up to 64 chars long)
 MOBILE_BATCH_SIZE:                     50,
