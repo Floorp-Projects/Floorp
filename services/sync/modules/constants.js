@@ -145,6 +145,16 @@ ENGINE_UNKNOWN_FAIL:                   "error.engine.reason.unknown_fail",
 ENGINE_METARECORD_DOWNLOAD_FAIL:       "error.engine.reason.metarecord_download_fail",
 ENGINE_METARECORD_UPLOAD_FAIL:         "error.engine.reason.metarecord_upload_fail",
 
+JPAKE_ERROR_CHANNEL:                   "jpake.error.channel",
+JPAKE_ERROR_NETWORK:                   "jpake.error.network",
+JPAKE_ERROR_SERVER:                    "jpake.error.server",
+JPAKE_ERROR_TIMEOUT:                   "jpake.error.timeout",
+JPAKE_ERROR_INTERNAL:                  "jpake.error.internal",
+JPAKE_ERROR_INVALID:                   "jpake.error.invalid",
+JPAKE_ERROR_NODATA:                    "jpake.error.nodata",
+JPAKE_ERROR_KEYMISMATCH:               "jpake.error.keymismatch",
+JPAKE_ERROR_WRONGMESSAGE:              "jpake.error.wrongmessage",
+
 // Ways that a sync can be disabled (messages only to be printed in debug log)
 kSyncWeaveDisabled:                    "Weave is disabled",
 kSyncNotLoggedIn:                      "User is not logged in",
