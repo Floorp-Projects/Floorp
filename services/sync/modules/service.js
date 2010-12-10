@@ -1090,19 +1090,37 @@ WeaveSvc.prototype = {
     // Checking modified time of the meta record.
     if (infoResponse &&
         (infoResponse.obj.meta != this.metaModified) &&
-        !meta.isNew) {
+        (!meta || !meta.isNew)) {
       
       // Delete the cached meta record...
       this._log.debug("Clearing cached meta record. metaModified is " +
           JSON.stringify(this.metaModified) + ", setting to " +
           JSON.stringify(infoResponse.obj.meta));
+      
       Records.del(this.metaURL);
       
       // ... fetch the current record from the server, and COPY THE FLAGS.
       let newMeta       = Records.get(this.metaURL);
-      newMeta.isNew     = meta.isNew;
-      newMeta.changed   = meta.changed;
-      
+ 
+      if (!Records.response.success || !newMeta) {
+        this._log.debug("No meta/global record on the server. Creating one.");
+        newMeta = new WBORecord("meta", "global");
+        newMeta.payload.syncID = this.syncID;
+        newMeta.payload.storageVersion = STORAGE_VERSION;
+ 
+        newMeta.isNew = true;
+ 
+        Records.set(this.metaURL, newMeta);
+        if (!newMeta.upload(this.metaURL).success) {
+          this._log.warn("Unable to upload new meta/global. Failing remote setup.");
+          return false;
+        }
+      } else {
+        // If newMeta, then it stands to reason that meta != null.
+        newMeta.isNew   = meta.isNew;
+        newMeta.changed = meta.changed;
+      }
+        
       // Switch in the new meta object and record the new time.
       meta              = newMeta;
       this.metaModified = infoResponse.obj.meta;
