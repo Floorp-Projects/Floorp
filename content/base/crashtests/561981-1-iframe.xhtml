@@ -1,0 +1,56 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script>
+<![CDATA[
+
+var i = 0;
+
+function init()
+{
+  targetWindow = window.frames[0];
+  targetDocument = targetWindow.document;
+  targetDocument.body.appendChild(targetDocument.importNode(document.getElementById('rootish'), true));
+  targetDocument.designMode = 'on';
+  setTimeout(boom, 30);
+}
+
+function boom()
+{
+  var r = targetDocument.createRange();
+  r.setStart(targetDocument.getElementById("bar"), 0);
+  r.setEnd(targetDocument.getElementById("baz").firstChild, 0);
+  targetWindow.getSelection().addRange(r);
+  targetDocument.execCommand("indent", false, null);
+  setTimeout(whack, 300);
+}
+
+function whack()
+{
+  if (++i > 100) return;
+  document.documentElement.style.MozBinding = 'url("data:text/xml,' + encodeURIComponent("<bindings xmlns=\"http://www.mozilla.org/xbl\"><binding id=\"foo\" g=\""+Math.random()+"\"><content>\n<\/content><\/binding><\/bindings>\n") + '")';
+  setTimeout(bonk, 10);
+}
+
+function bonk()
+{
+  document.getElementById("i").style.MozBinding = 'url("data:text/xml,' + encodeURIComponent("<bindings xmlns=\"http://www.mozilla.org/xbl\"><binding id=\"foo\" g=\""+Math.random()+"\"><content>\n\n<\/content><\/binding><\/bindings>\n") + '")';
+  document.documentElement.style.MozBinding = 'url("data:text/xml,' + encodeURIComponent("<bindings xmlns=\"http://www.mozilla.org/xbl\"><binding id=\"foo\" g=\""+Math.random()+"\"><content><iframe xmlns=\"http://www.w3.org/1999/xhtml\" src=\"data:text/html,\" style=\"width: 95%; height: 500px;\"><\/iframe><\/content><\/binding><\/bindings>\n") + '")';
+  setTimeout(whack, 10);
+}
+
+]]>
+</script>
+</head>
+
+<body onload="init()">
+
+<iframe id="i" src="data:text/html," style="width: 95%; height: 500px;"/>
+
+<div id="rootish">
+  <div>Foo</div>
+  <div id="bar">Bar</div>
+  <div><select><option id="baz">baz</option></select></div>
+</div>
+
+</body>
+</html>
