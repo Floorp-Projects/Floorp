@@ -679,7 +679,8 @@ nsresult
 nsIMEStateManager::GetFocusSelectionAndRoot(nsISelection** aSel,
                                             nsIContent** aRoot)
 {
-  if (!sTextStateObserver || !sTextStateObserver->mEditableNode)
+  if (!sTextStateObserver || !sTextStateObserver->mEditableNode ||
+      !sTextStateObserver->mSel)
     return NS_ERROR_NOT_AVAILABLE;
 
   NS_ASSERTION(sTextStateObserver->mSel && sTextStateObserver->mRootContent,
