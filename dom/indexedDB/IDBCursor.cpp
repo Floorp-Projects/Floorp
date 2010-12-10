@@ -329,6 +329,16 @@ IDBCursor::GetDirection(PRUint16* aDirection)
 }
 
 NS_IMETHODIMP
+IDBCursor::GetSource(nsISupports** aSource)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  return mType == OBJECTSTORE ?
+         CallQueryInterface(mObjectStore, aSource) :
+         CallQueryInterface(mIndex, aSource);
+}
+
+NS_IMETHODIMP
 IDBCursor::GetKey(nsIVariant** aKey)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
