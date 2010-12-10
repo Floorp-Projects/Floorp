@@ -49,8 +49,8 @@ const INTRO_PAGE                    = 0;
 const NEW_ACCOUNT_START_PAGE        = 1;
 const NEW_ACCOUNT_PP_PAGE           = 2;
 const NEW_ACCOUNT_CAPTCHA_PAGE      = 3;
-const EXISTING_ACCOUNT_LOGIN_PAGE   = 4;
-const EXISTING_ACCOUNT_PP_PAGE      = 5;
+const EXISTING_ACCOUNT_CONNECT_PAGE = 4;
+const EXISTING_ACCOUNT_LOGIN_PAGE   = 5;
 const OPTIONS_PAGE                  = 6;
 const OPTIONS_CONFIRM_PAGE          = 7;
 const SETUP_SUCCESS_PAGE            = 8;
@@ -78,9 +78,8 @@ var gSyncSetup = {
 
   get _usingMainServers() {
     if (this._settingUpNew)
-      return document.getElementById("serverType").selectedItem.value == "main";
-
-    return document.getElementById("existingServerType").selectedItem.value == "main";
+      return document.getElementById("server").selectedIndex == 0;
+    return document.getElementById("existingServer").selectedIndex == 0;
   },
 
   init: function () {
@@ -138,7 +137,7 @@ var gSyncSetup = {
 
   useExistingAccount: function () {
     this._settingUpNew = false;
-    this.wizard.pageIndex = EXISTING_ACCOUNT_LOGIN_PAGE;
+    this.wizard.pageIndex = EXISTING_ACCOUNT_CONNECT_PAGE;
   },
 
   onResetPassphrase: function () {
@@ -156,31 +155,30 @@ var gSyncSetup = {
   },
 
   toggleLoginFeedback: function (stop) {
-    switch (this.wizard.pageIndex) {
-      case EXISTING_ACCOUNT_LOGIN_PAGE:
-        document.getElementById("connect-throbber").hidden = stop;
-        let feedback = document.getElementById("existingPasswordFeedbackRow");
-        if (stop) {
-          let success = Weave.Status.login == Weave.LOGIN_SUCCEEDED ||
-                        Weave.Status.login == Weave.LOGIN_FAILED_INVALID_PASSPHRASE;
-          this._setFeedbackMessage(feedback, success, Weave.Status.login);
-        }
-        else
-          this._setFeedbackMessage(feedback, true);
-        break;
-      case EXISTING_ACCOUNT_PP_PAGE:
-        document.getElementById("passphrase-throbber").hidden = stop;
-        feedback = document.getElementById("existingPassphraseFeedbackBox");
-        if (stop) {
-          let success = Weave.Status.login == Weave.LOGIN_SUCCEEDED;
-          this._setFeedbackMessage(feedback, success, Weave.Status.login);
-          document.getElementById("passphraseHelpBox").hidden = success;
-        }
-        else
-          this._setFeedbackMessage(feedback, true);
+    document.getElementById("login-throbber").hidden = stop;
+    let password = document.getElementById("existingPasswordFeedbackRow");
+    let server = document.getElementById("existingServerFeedbackRow");
+    let passphrase = document.getElementById("existingPassphraseFeedbackRow");
 
+    if (!stop || (Weave.Status.login == Weave.LOGIN_SUCCEEDED)) {
+      password.hidden = server.hidden = passphrase.hidden = true;
+      return;
+    }
+
+    let feedback;
+    switch (Weave.Status.login) {
+      case Weave.LOGIN_FAILED_NETWORK_ERROR:
+      case Weave.LOGIN_FAILED_SERVER_ERROR:
+        feedback = server;
+        break;
+      case Weave.LOGIN_FAILED_LOGIN_REJECTED:
+        feedback = password;
+        break;
+      case Weave.LOGIN_FAILED_INVALID_PASSPHRASE:
+        feedback = passphrase;
         break;
     }
+    this._setFeedbackMessage(feedback, false, Weave.Status.login);
   },
 
   setupInitialSync: function () {
@@ -228,19 +226,19 @@ var gSyncSetup = {
       case EXISTING_ACCOUNT_LOGIN_PAGE:
         let hasUser = document.getElementById("existingAccountName").value != "";
         let hasPass = document.getElementById("existingPassword").value != "";
-        if (hasUser && hasPass) {
+        let hasKey = Weave.Utils.isPassphrase(
+          document.getElementById("existingPassphrase").value);
+
+        if (hasUser && hasPass && hasKey) {
           if (this._usingMainServers)
             return true;
 
-          if (this._validateServer(document.getElementById("existingServerURL"), false))
+          if (this._validateServer(document.getElementById("existingServer"), false))
             return true;
         }
         return false;
-      case EXISTING_ACCOUNT_PP_PAGE:
-        let el = document.getElementById("existingPassphrase");
-        return Weave.Utils.isPassphrase(el.value);
     }
-    // we probably shouldn't get here
+    // Default, e.g. wizard's special page -1 etc.
     return true;
   },
 
@@ -330,20 +328,26 @@ var gSyncSetup = {
         break;
       case NEW_ACCOUNT_START_PAGE:
         this.wizard.getButton("extra1").hidden = false;
-        this.onServerChange();
-        // fall through
-      case EXISTING_ACCOUNT_LOGIN_PAGE:
+        this.wizard.getButton("next").hidden = false;
+        this.wizard.getButton("back").hidden = false;
+        this.onServerCommand();
+        this.wizard.canRewind = true;
         this.checkFields();
+        break;
+      case EXISTING_ACCOUNT_CONNECT_PAGE:
         this.wizard.getButton("next").hidden = false;
         this.wizard.getButton("back").hidden = false;
         this.wizard.getButton("extra1").hidden = false;
         this.wizard.canRewind = true;
+        this.startEasySetup();
         break;
-      case EXISTING_ACCOUNT_PP_PAGE:
+      case EXISTING_ACCOUNT_LOGIN_PAGE:
+        this.wizard.canRewind = true;
         this.checkFields();
         break;
       case SETUP_SUCCESS_PAGE:
         this.wizard.canRewind = false;
+        this.wizard.canAdvance = true;
         this.wizard.getButton("back").hidden = true;
         this.wizard.getButton("next").hidden = true;
         this.wizard.getButton("cancel").hidden = true;
@@ -435,21 +439,6 @@ var gSyncSetup = {
       case EXISTING_ACCOUNT_LOGIN_PAGE:
         Weave.Service.account = document.getElementById("existingAccountName").value;
         Weave.Service.password = document.getElementById("existingPassword").value;
-        Weave.Service.passphrase = Weave.Utils.normalizePassphrase(
-            document.getElementById("existingPassphrase").value);
-
-        // verifyLogin() will likely return false because we probably don't
-        // have a passphrase yet (unless the user already entered it
-        // and hit the back button).
-        if (!Weave.Service.verifyLogin()
-            && Weave.Status.login != Weave.LOGIN_FAILED_NO_PASSPHRASE
-            && Weave.Status.login != Weave.LOGIN_FAILED_INVALID_PASSPHRASE) {
-          let feedback = document.getElementById("existingPasswordFeedbackRow");
-          this._setFeedbackMessage(feedback, false, Weave.Status.login);
-          return false;
-        }
-        break;
-      case EXISTING_ACCOUNT_PP_PAGE:
         let pp = document.getElementById("existingPassphrase").value;
         Weave.Service.passphrase = Weave.Utils.normalizePassphrase(pp);
         if (Weave.Service.login())
@@ -479,8 +468,9 @@ var gSyncSetup = {
       case EXISTING_ACCOUNT_LOGIN_PAGE:
         this.wizard.pageIndex = INTRO_PAGE;
         return false;
-      case EXISTING_ACCOUNT_PP_PAGE: // no idea wtf is up here, but meh!
-        this.wizard.pageIndex = EXISTING_ACCOUNT_LOGIN_PAGE;
+      case EXISTING_ACCOUNT_CONNECT_PAGE:
+        this.abortEasySetup();
+        this.wizard.pageIndex = INTRO_PAGE;
         return false;
       case OPTIONS_CONFIRM_PAGE:
         // Backing up from the confirmation page = resetting first sync to merge.
@@ -528,6 +518,7 @@ var gSyncSetup = {
       this.onWizardFinish();
       return;
     }
+    this.abortEasySetup();
     this._handleNoScript(false);
     Weave.Service.startOver();
   },
@@ -548,6 +539,64 @@ var gSyncSetup = {
     this.wizard.getButton("extra1").hidden = false;
     this.wizard.pageIndex = this._beforeOptionsPage;
     return false;
+  },
+
+  startEasySetup: function () {
+    // Don't do anything if we have a client already (e.g. we went to
+    // Sync Options and just came back).
+    if (this._jpakeclient)
+      return;
+
+    let self = this;
+    this._jpakeclient = new Weave.JPAKEClient({
+      displayPIN: function displayPIN(pin) {
+        document.getElementById("easySetupPIN1").value = pin.slice(0, 4);
+        document.getElementById("easySetupPIN2").value = pin.slice(4, 8);
+        document.getElementById("easySetupPIN3").value = pin.slice(8);
+      },
+
+      onComplete: function onComplete(credentials) {
+        Weave.Service.account = credentials.account;
+        Weave.Service.password = credentials.password;
+        Weave.Service.passphrase = credentials.synckey;
+        Weave.Service.serverURL = credentials.serverURL;
+        self.wizard.pageIndex = SETUP_SUCCESS_PAGE;
+      },
+
+      onAbort: function onAbort(error) {
+        delete self._jpakeclient;
+
+        // No error means manual abort, e.g. wizard is aborted. Ignore.
+        if (!error)
+          return;
+
+        // Automatically go to manual setup if we couldn't acquire a channel.
+        if (error == Weave.JPAKE_ERROR_CHANNEL) {
+          self.wizard.pageIndex = EXISTING_ACCOUNT_LOGIN_PAGE;
+          return;
+        }
+
+        // Restart on all other errors.
+        self.startEasySetup();
+      }
+    });
+    this._jpakeclient.receiveNoPIN();
+  },
+
+  abortEasySetup: function () {
+    document.getElementById("easySetupPIN1").value = "";
+    document.getElementById("easySetupPIN2").value = "";
+    document.getElementById("easySetupPIN3").value = "";
+    if (!this._jpakeclient)
+      return;
+
+    this._jpakeclient.abort();
+    delete this._jpakeclient;
+  },
+
+  manualSetup: function () {
+    this.abortEasySetup();
+    this.wizard.pageIndex = EXISTING_ACCOUNT_LOGIN_PAGE;
   },
 
   // _handleNoScript is needed because it blocks the captcha. So we temporarily
@@ -577,23 +626,45 @@ var gSyncSetup = {
     }
   },
 
-  onServerChange: function () {
-    if (this.wizard.pageIndex == EXISTING_ACCOUNT_LOGIN_PAGE) {
-      if (this._usingMainServers)
-        Weave.Svc.Prefs.reset("serverURL");
-      document.getElementById("existingServerRow").hidden = this._usingMainServers;
-      this.checkFields();
-      return;
+  onExistingServerCommand: function () {
+    let control = document.getElementById("existingServer");
+    if (control.selectedIndex == 0) {
+      control.removeAttribute("editable");
+      Weave.Svc.Prefs.reset("serverURL");
+    } else {
+      control.setAttribute("editable", "true");
+      // Force a style flush to ensure that the binding is attached.
+      control.clientTop;
+      control.value = "";
+      control.inputField.focus();
     }
+    document.getElementById("existingServerFeedbackRow").hidden = true;
+    this.checkFields();
+  },
 
-    document.getElementById("serverRow").hidden = this._usingMainServers;
+  onExistingServerInput: function () {
+    // Check custom server validity when the user stops typing for 1 second.
+    if (this._existingServerTimer)
+      window.clearTimeout(this._existingServerTimer);
+    this._existingServerTimer = window.setTimeout(function () {
+      gSyncSetup.checkFields();
+    }, 1000);
+  },
+
+  onServerCommand: function () {
     document.getElementById("TOSRow").hidden = !this._usingMainServers;
-
+    let control = document.getElementById("server");
     if (!this._usingMainServers) {
+      control.setAttribute("editable", "true");
+      // Force a style flush to ensure that the binding is attached.
+      control.clientTop;
+      control.value = "";
+      control.inputField.focus();
+      // checkServer() will call checkAccount() and checkFields().
       this.checkServer();
       return;
     }
-
+    control.removeAttribute("editable");
     Weave.Svc.Prefs.reset("serverURL");
     this.checkAccount();
     this.status.server = true;
@@ -612,7 +683,7 @@ var gSyncSetup = {
 
   checkServer: function () {
     delete this._checkServerTimer;
-    let el = document.getElementById("weaveServerURL");
+    let el = document.getElementById("server");
     let valid = false;
     let feedback = document.getElementById("serverFeedbackRow");
     let str = "";
@@ -809,9 +880,9 @@ var gSyncSetup = {
   _setFeedback: function (element, success, string) {
     element.hidden = success || !string;
     let class = success ? "success" : "error";
-    let image = element.firstChild.nextSibling.firstChild;
+    let image = element.getElementsByAttribute("class", "statusIcon")[0];
     image.setAttribute("status", class);
-    let label = image.nextSibling;
+    let label = element.getElementsByAttribute("class", "status")[0];
     label.value = string;
   },
 
