@@ -57,6 +57,8 @@ Cu.import("resource://services-sync/stores.js");
 Cu.import("resource://services-sync/trackers.js");
 Cu.import("resource://services-sync/util.js");
 
+Cu.import("resource://services-sync/main.js");    // So we can get to Service for callbacks.
+
 // Singleton service, holds registered engines
 
 Utils.lazy(this, 'Engines', EngineManagerSvc);
@@ -94,7 +96,7 @@ EngineManagerSvc.prototype = {
   getEnabled: function EngMgr_getEnabled() {
     return this.getAll().filter(function(engine) engine.enabled);
   },
-
+  
   /**
    * Register an Engine to the service. Alternatively, give an array of engine
    * objects to register.
@@ -462,7 +464,22 @@ SyncEngine.prototype = {
       handled.push(item.id);
 
       try {
-        item.decrypt();
+        try {
+          item.decrypt();
+        } catch (ex) {
+          if (Utils.isHMACMismatch(ex) &&
+              this.handleHMACMismatch()) {
+            // Let's try handling it.
+            // If the callback returns true, try decrypting again, because
+            // we've got new keys.
+            this._log.info("Trying decrypt again...");
+            item.decrypt();
+          }
+          else {
+            throw ex;
+          }
+        }
+       
         if (this._reconcile(item)) {
           count.applied++;
           this._tracker.ignoreAll = true;
@@ -784,5 +801,9 @@ SyncEngine.prototype = {
   wipeServer: function wipeServer() {
     new Resource(this.engineURL).delete();
     this._resetClient();
+  },
+  
+  handleHMACMismatch: function handleHMACMismatch() {
+    return Weave.Service.handleHMACEvent();
   }
 };
