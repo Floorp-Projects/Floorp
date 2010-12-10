@@ -2802,7 +2802,7 @@ var SharingUI = {
       name: "Twitter",
       callback: function callback(aURL, aTitle) {
         let url = "http://twitter.com/home?status=" + encodeURIComponent((aTitle ? aTitle+": " : "")+aURL);
-        Browser.addTab(url, true, Browser.selectedTab);
+        BrowserUI.newTab(url, Browser.selectedTab);
       }
     },
     {
@@ -2810,14 +2810,14 @@ var SharingUI = {
       callback: function callback(aURL, aTitle) {
         let url = "http://www.google.com/reader/link?url=" + encodeURIComponent(aURL) +
                   "&title=" + encodeURIComponent(aTitle);
-        Browser.addTab(url, true, Browser.selectedTab);
+        BrowserUI.addTab(url, Browser.selectedTab);
       }
     },
     {
       name: "Facebook",
       callback: function callback(aURL, aTitle) {
         let url = "http://www.facebook.com/share.php?u=" + encodeURIComponent(aURL);
-        Browser.addTab(url, true, Browser.selectedTab);
+        BrowserUI.newTab(url, Browser.selectedTab);
       }
     }
   ]
