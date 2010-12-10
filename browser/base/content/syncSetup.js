@@ -198,10 +198,6 @@ var gSyncSetup = {
   },
 
   onPassphraseKeyUp: function (event) {
-    if (event.keyCode != event.DOM_VK_BACK_SPACE) {
-      let el = event.target;
-      el.value = Weave.Utils.hyphenatePartialPassphrase(el.value);
-    }
     this.checkFields();
   },
 
@@ -226,8 +222,8 @@ var gSyncSetup = {
       case EXISTING_ACCOUNT_LOGIN_PAGE:
         let hasUser = document.getElementById("existingAccountName").value != "";
         let hasPass = document.getElementById("existingPassword").value != "";
-        let hasKey = Weave.Utils.isPassphrase(
-          document.getElementById("existingPassphrase").value);
+        let hasKey = document.getElementById("existingPassphrase")
+                             .value.length >= Weave.MIN_PP_LENGTH;
 
         if (hasUser && hasPass && hasKey) {
           if (this._usingMainServers)
