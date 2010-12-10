@@ -885,6 +885,16 @@ IDBObjectStore::GetKeyPath(nsAString& aKeyPath)
 }
 
 NS_IMETHODIMP
+IDBObjectStore::GetTransaction(nsIIDBTransaction** aTransaction)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  nsCOMPtr<nsIIDBTransaction> transaction(mTransaction);
+  transaction.forget(aTransaction);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 IDBObjectStore::GetIndexNames(nsIDOMDOMStringList** aIndexNames)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");

@@ -51,7 +51,7 @@ interface nsIVariant;
  * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-IDBCursor for more
  * information.
  */
-[scriptable, uuid(7cb9820f-dd23-49e2-b1df-08543162cf40)]
+[scriptable, uuid(17cae1b9-b438-4cee-8d36-a2dc5f517c02)]
 interface nsIIDBCursor : nsISupports
 {
   const unsigned short NEXT = 0;
@@ -59,6 +59,8 @@ interface nsIIDBCursor : nsISupports
   const unsigned short PREV = 2;
   const unsigned short PREV_NO_DUPLICATE = 3;
   readonly attribute unsigned short direction;
+
+  readonly attribute nsISupports source;
 
   readonly attribute nsIVariant key;
 
