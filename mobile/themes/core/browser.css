@@ -1169,9 +1169,9 @@ pageaction:not([image]) > hbox >.pageaction-image {
   visibility: collapse;
 }
 
-/* Needed for the crop attribute to have an effect */
 #search-engines-list > .prompt-button > .button-box > .button-text {
-  -moz-box-flex: 1;
+  text-align: start;
+  -moz-box-flex: 1; /* Needed for the crop attribute to have an effect */
 }
 
 #search-engines-list > .prompt-button > .button-box > .button-icon {
