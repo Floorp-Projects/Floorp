@@ -508,7 +508,6 @@ var Browser = {
   hideSidebars: function scrollSidebarsOffscreen() {
     let rect = Elements.browsers.getBoundingClientRect();
     this.controlsScrollboxScroller.scrollBy(Math.round(rect.left), 0);
-    this.tryUnfloatToolbar();
   },
 
   hideTitlebar: function hideTitlebar() {
