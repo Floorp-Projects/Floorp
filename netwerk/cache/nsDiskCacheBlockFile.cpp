@@ -387,7 +387,8 @@ nsDiskCacheBlockFile::Write(PRInt32 offset, const void *buf, PRInt32 amount)
             mFileSize = PR_MIN(maxPreallocate, PR_MAX(mFileSize, minPreallocate));
         }
         mFileSize = PR_MIN(mFileSize, maxFileSize);
-        mozilla::fallocate(mFD, mFileSize);
+        //  Appears to cause bug 617123?  Disabled for now.
+        //mozilla::fallocate(mFD, mFileSize);
     }
     if (PR_Seek(mFD, offset, PR_SEEK_SET) != offset)
         return false;
