@@ -37,6 +37,7 @@
 let WeaveGlue = {
   setupData: null,
   autoConnect: false,
+  jpake: null,
 
   init: function init() {
     Components.utils.import("resource://services-sync/main.js");
@@ -46,7 +47,7 @@ let WeaveGlue = {
 
     this._addListeners();
 
-    this.setupData = { account: "", password: "" , syncKey: "", customServer: "" };
+    this.setupData = { account: "", password: "" , synckey: "", serverURL: "" };
 
     let enableSync = Services.prefs.getBoolPref("browser.sync.enabled");
     if (enableSync)
@@ -54,8 +55,6 @@ let WeaveGlue = {
 
     // Generating keypairs is expensive on mobile, so disable it
     if (Weave.Status.checkSetup() != Weave.CLIENT_NOT_CONFIGURED) {
-      Weave.Service.keyGenEnabled = false;
-
       this.autoConnect = Services.prefs.getBoolPref("services.sync.autoconnect");
       if (enableSync && this.autoConnect) {
         // Put the settings UI into a state of "connecting..." if we are going to auto-connect
@@ -69,6 +68,17 @@ let WeaveGlue = {
     }
   },
 
+  abortEasySetup: function abortEasySetup() {
+    document.getElementById("syncsetup-code1").value = "";
+    document.getElementById("syncsetup-code2").value = "";
+    document.getElementById("syncsetup-code3").value = "";
+    if (!this.jpake)
+      return;
+
+    this.jpake.abort();
+    this.jpake = null;
+  },
+
   open: function open() {
     // Show the connect UI
     document.getElementById("syncsetup-container").hidden = false;
@@ -76,9 +86,44 @@ let WeaveGlue = {
     document.getElementById("syncsetup-manual").hidden = true;
 
     BrowserUI.pushDialog(this);
+
+    let self = this;
+    this.jpake = new Weave.JPAKEClient({
+      displayPIN: function displayPIN(aPin) {
+        document.getElementById("syncsetup-code1").value = aPin.slice(0, 4);
+        document.getElementById("syncsetup-code2").value = aPin.slice(4, 8);
+        document.getElementById("syncsetup-code3").value = aPin.slice(8);
+      },
+
+      onComplete: function onComplete(aCredentials) {
+        self.close();
+        self.setupData = aCredentials;
+        self.connect();
+      },
+
+      onAbort: function onAbort(aError) {
+        self.jpake = null;
+
+        // No error means manual abort. Ignore.
+        if (!aError)
+          return;
+
+        // Automatically go to manual setup if we couldn't acquire a channel.
+        if (aError == Weave.JPAKE_ERROR_CHANNEL) {
+          self.openManual();
+          return;
+        }
+
+        // Restart on all other errors.
+        self.open();
+      }
+    });
+    this.jpake.receiveNoPIN();
   },
 
   openManual: function openManual() {
+    this.abortEasySetup();
+    
     // Reset the scroll since the previous page might have been scrolled
     let scrollbox = document.getElementById("syncsetup-scrollbox").boxObject.QueryInterface(Ci.nsIScrollBoxObject);
     scrollbox.scrollTo(0, 0);
@@ -90,11 +135,14 @@ let WeaveGlue = {
     if (this.setupData && "account" in this.setupData) {
       this._elements.account.value = this.setupData.account;
       this._elements.password.value = this.setupData.password;
-      this._elements.synckey.value = this.setupData.syncKey;
-      if (this.setupData.customServer && this.setupData.customServer.length) {
+      let pp = this.setupData.synckey;
+      if (Weave.Utils.isPassphrase(pp))
+        pp = Weave.Utils.hyphenatePassphrase(pp);
+      this._elements.synckey.value = pp;
+      if (this.setupData.serverURL && this.setupData.serverURL.length) {
         this._elements.usecustomserver.checked = true;
         this._elements.customserver.disabled = false;
-        this._elements.customserver.value = this.setupData.customServer;
+        this._elements.customserver.value = this.setupData.serverURL;
       } else {
         this._elements.usecustomserver.checked = false;
         this._elements.customserver.disabled = true;
@@ -108,11 +156,12 @@ let WeaveGlue = {
     scrollbox.scrollTo(0, 0);
 
     // Save current setup data
-    this.setupData = {};
-    this.setupData.account = this._elements.account.value;
-    this.setupData.password = this._elements.password.value;
-    this.setupData.syncKey = this._elements.synckey.value;
-    this.setupData.customServer = this._elements.customserver.value;
+    this.setupData = {
+      account: this._elements.account.value,
+      password: this._elements.password.value,
+      synckey: Weave.Utils.normalizePassphrase(this._elements.synckey.value),
+      serverURL: this._validateServer(this._elements.customserver.value)
+    };
 
     // Clear the UI so it's ready for next time
     this._elements.account.value = "";
@@ -147,9 +196,9 @@ let WeaveGlue = {
     if (enabled) {
       // Attempt to go back online
       if (this.setupData) {
-        if (this.setupData.customServer && this.setupData.customServer.length)
-          Weave.Service.serverURL = this.setupData.customServer;
-        Weave.Service.login(Weave.Service.username, this.setupData.password, Weave.Utils.normalizePassphrase(this.setupData.syncKey));
+        if (this.setupData.serverURL && this.setupData.serverURL.length)
+          Weave.Service.serverURL = this.setupData.serverURL;
+        Weave.Service.login(Weave.Service.username, this.setupData.password, this.setupData.synckey);
       } else {
         // We can't just go back online. We need to be setup again.
         this._elements.connected.collapsed = true;
@@ -180,12 +229,12 @@ let WeaveGlue = {
     this._elements.connect.removeAttribute("desc");
 
     // Reset the custom server URL, if we have one
-    if (this.setupData.customServer && this.setupData.customServer.length)
-      Weave.Service.serverURL = this.setupData.customServer;
+    if (this.setupData.serverURL && this.setupData.serverURL.length)
+      Weave.Service.serverURL = this.setupData.serverURL;
 
     // Sync will use the account value and munge it into a username, as needed
     Weave.Service.account = this.setupData.account;
-    Weave.Service.login(Weave.Service.username, this.setupData.password, Weave.Utils.normalizePassphrase(this.setupData.syncKey));
+    Weave.Service.login(Weave.Service.username, this.setupData.password, this.setupData.synckey);
     Weave.Service.persistLogin();
   },
 
@@ -347,17 +396,13 @@ let WeaveGlue = {
       this.setupData = {};
       this.setupData.account = Weave.Service.account || "";
       this.setupData.password = Weave.Service.password || "";
-
-      let pp = Weave.Service.passphrase || "";
-      if (pp.length == 20)
-        pp = Weave.Utils.hyphenatePassphrase(pp);
-      this.setupData.syncKey = pp;
+      this.setupData.synckey = Weave.Service.passphrase || "";
 
       let serverURL = Weave.Service.serverURL;
       let defaultPrefs = Services.prefs.getDefaultBranch(null);
       if (serverURL == defaultPrefs.getCharPref("services.sync.serverURL"))
         serverURL = "";
-      this.setupData.customServer = serverURL;
+      this.setupData.serverURL = serverURL;
     }
     
     // Reset the auto-connect flag after the first attempted login
@@ -414,5 +459,16 @@ let WeaveGlue = {
       return;
 
     this._msg.appendNotification(aMsg, aValue, "", this._msg.PRIORITY_WARNING_LOW, aButtons);
+  },
+
+  _validateServer: function _validateServer(aURL) {
+    let uri = Weave.Utils.makeURI(aURL);
+
+    if (!uri)
+      uri = Weave.Utils.makeURI("https://" + aURL);
+
+    if (!uri)
+      return "";
+    return uri.spec;
   }
 };

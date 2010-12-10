@@ -1581,7 +1581,7 @@ pageaction:not([image]) > hbox >.pageaction-image {
 
 /* Sync setup ------------------------------------------------------------- */
 .syncsetup-page {
-  padding: 8px;
+  padding: 24px;
   background-color: #000;
 }
 
@@ -1594,13 +1594,15 @@ pageaction:not([image]) > hbox >.pageaction-image {
 }
 
 .syncsetup-code {
-  color: #000;
-  background-color: #fff;
-  padding: 0.5em;
-  -moz-padding-end: 0.25em;
-  letter-spacing: 0.5em;
+  color: #fff;
+  background-color: rgb(94,97,102);
+  border-radius: 8px;
+  font-size: 48px !important;
+  padding: 0.2em 0.4em;
+  -moz-padding-end: 0.2em;
+  letter-spacing: 0.2em;
   text-align: center;
-  min-width: 8em;
+  min-width: 5.5em;
 }
 
 .syncsetup-link {
@@ -1609,4 +1611,12 @@ pageaction:not([image]) > hbox >.pageaction-image {
 
 .syncsetup-label {
   color: #fff;
+}
+
+.syncsetup-edit {
+  margin-bottom: 12px;
+}
+
+#syncsetup-customserver {
+  -moz-margin-start: 12px;
 }
