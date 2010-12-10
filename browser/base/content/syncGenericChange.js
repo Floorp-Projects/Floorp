@@ -242,7 +242,7 @@ let Change = {
       if (!this._updatingPassphrase)
         return;
 
-      valid = this._passphraseBox.value.length >= Weave.MIN_PP_LENGTH;
+      valid = this._passphraseBox.value != "";
     }
 
     if (errorString == "")

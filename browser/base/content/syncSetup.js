@@ -222,8 +222,7 @@ var gSyncSetup = {
       case EXISTING_ACCOUNT_LOGIN_PAGE:
         let hasUser = document.getElementById("existingAccountName").value != "";
         let hasPass = document.getElementById("existingPassword").value != "";
-        let hasKey = document.getElementById("existingPassphrase")
-                             .value.length >= Weave.MIN_PP_LENGTH;
+        let hasKey = document.getElementById("existingPassphrase").value != "";
 
         if (hasUser && hasPass && hasKey) {
           if (this._usingMainServers)
