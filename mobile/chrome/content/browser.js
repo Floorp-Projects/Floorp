@@ -2096,6 +2096,8 @@ var ContentCrashObserver = {
     if (!aSubject.QueryInterface(Ci.nsIPropertyBag2).hasKey("abnormal"))
       return;
 
+    let dumpID = aSubject.hasKey("dumpID") ? aSubject.getProperty("dumpID") : null;
+
     // Spin through the open tabs and resurrect the out-of-process tabs. Resurrection
     // does not auto-reload the content. We delay load the content as needed.
     Browser.tabs.forEach(function(aTab) {
@@ -2103,45 +2105,46 @@ var ContentCrashObserver = {
         aTab.resurrect();
     })
 
-    // Ask the user if we should reload or close the current tab. Other tabs
-    // will be reloaded when selected.
-    let title = Elements.browserBundle.getString("tabs.crashWarningTitle");
-    let message = Elements.browserBundle.getString("tabs.crashWarningMsg");
-    let submitText = Elements.browserBundle.getString("tabs.crashSubmitReport");
-    let reloadText = Elements.browserBundle.getString("tabs.crashReload");
-    let closeText = Elements.browserBundle.getString("tabs.crashClose");
-    let buttons = Ci.nsIPrompt.BUTTON_POS_1_DEFAULT +
-                  (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_0) +
-                  (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_1);
-
-    // Only show the submit checkbox if we have a crash report we can submit
-    if (!aSubject.hasKey("dumpID"))
-      submitText = null;
-
-    let submit = { value: true };
-    let reload = Services.prompt.confirmEx(window, title, message, buttons, closeText, reloadText, null, submitText, submit);
-    if (reload) {
-      // Fire a TabSelect event to kick start the restore process
-      let event = document.createEvent("Events");
-      event.initEvent("TabSelect", true, false);
-      event.lastTab = null;
-      Browser.selectedTab.chromeTab.dispatchEvent(event);
-    } else {
-      // If this is the only tab, we need to pre-fab a new tab. We should never
-      // have zero open tabs
-      if (Browser.tabs.length == 1)
-        Browser.addTab(Browser.getHomePage(), false, null, { getAttention: false });
-
-      // Close this tab, it could be the reason we crashed. The undo-close-tab
-      // system will pick it up.
-      Browser.closeTab(Browser.selectedTab);
-    }
-
-    // Submit the report, if we have one and the user wants to submit it
-    if (submit.value && aSubject.hasKey("dumpID")) {
-      let dumpID = aSubject.getProperty("dumpID");
-      this.CrashSubmit.submit(dumpID, Elements.stack, null, null);
-    }
+    // Execute the UI prompt after the notification has had a chance to return and close the child process
+    setTimeout(function(self) {
+      // Ask the user if we should reload or close the current tab. Other tabs
+      // will be reloaded when selected.
+      let title = Elements.browserBundle.getString("tabs.crashWarningTitle");
+      let message = Elements.browserBundle.getString("tabs.crashWarningMsg");
+      let submitText = Elements.browserBundle.getString("tabs.crashSubmitReport");
+      let reloadText = Elements.browserBundle.getString("tabs.crashReload");
+      let closeText = Elements.browserBundle.getString("tabs.crashClose");
+      let buttons = Ci.nsIPrompt.BUTTON_POS_1_DEFAULT +
+                    (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_0) +
+                    (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_1);
+  
+      // Only show the submit checkbox if we have a crash report we can submit
+      if (!dumpID)
+        submitText = null;
+  
+      let submit = { value: true };
+      let reload = Services.prompt.confirmEx(window, title, message, buttons, closeText, reloadText, null, submitText, submit);
+      if (reload) {
+        // Fire a TabSelect event to kick start the restore process
+        let event = document.createEvent("Events");
+        event.initEvent("TabSelect", true, false);
+        event.lastTab = null;
+        Browser.selectedTab.chromeTab.dispatchEvent(event);
+      } else {
+        // If this is the only tab, we need to pre-fab a new tab. We should never
+        // have zero open tabs
+        if (Browser.tabs.length == 1)
+          Browser.addTab(Browser.getHomePage(), false, null, { getAttention: false });
+  
+        // Close this tab, it could be the reason we crashed. The undo-close-tab
+        // system will pick it up.
+        Browser.closeTab(Browser.selectedTab);
+      }
+  
+      // Submit the report, if we have one and the user wants to submit it
+      if (submit.value && dumpID)
+        self.CrashSubmit.submit(dumpID, Elements.stack, null, null);
+    }, 0, this);
   }
 };
 
