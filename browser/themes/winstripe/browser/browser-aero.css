@@ -120,6 +120,16 @@
     border-color: @glassToolbarBorderColor@ !important;
     background-clip: padding-box;
   }
+  #main-window[sizemode="normal"] #browser-border-start,
+  #main-window[sizemode="normal"] #browser-border-end {
+    display: -moz-box;
+    background-color: @glassToolbarBorderColor@;
+    width: 1px;
+  }
+  #main-window[sizemode="normal"] #browser-bottombox {
+    border: 1px solid @glassToolbarBorderColor@;
+    border-top-style: none;
+  }
 
   #main-window[sizemode="normal"] #navigator-toolbox[tabsontop="true"] > #nav-bar:not([inFullscreen="true"]):not(:-moz-lwtheme),
   #main-window[sizemode="normal"] #navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + toolbar:not([inFullscreen="true"]):not(:-moz-lwtheme),
