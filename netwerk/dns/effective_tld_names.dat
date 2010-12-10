@@ -4459,7 +4459,7 @@ k12.de.us
 k12.fl.us
 k12.ga.us
 k12.gu.us
-k12.hi.us
+// k12.hi.us  Hawaii has a state-wide DOE login: bug 614565
 k12.ia.us
 k12.id.us
 k12.il.us
