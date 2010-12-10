@@ -1,4 +1,4 @@
-include $(topsrcdir)/build/binary-location.mk
+include $(MOZILLA_DIR)/build/binary-location.mk
 
 browser_path := \"$(browser_path)\"
 
