@@ -79,6 +79,11 @@ public:
     return mSource;
   }
 
+  void Reset()
+  {
+    mReadyState = nsIIDBRequest::LOADING;
+  }
+
   void SetDone()
   {
     NS_ASSERTION(mReadyState != nsIIDBRequest::DONE, "Already set!");
