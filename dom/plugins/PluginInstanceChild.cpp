@@ -2291,7 +2291,7 @@ PluginInstanceChild::CreateOptSurface(void)
     // Make common shmem implementation working for any platform
     mCurrentSurface = new gfxSharedImageSurface();
     return static_cast<gfxSharedImageSurface*>(mCurrentSurface.get())->
-        Init(this, gfxIntSize(mWindow.width, mWindow.height), format);
+        InitUnsafe(this, gfxIntSize(mWindow.width, mWindow.height), format);
 }
 
 bool
@@ -2774,10 +2774,11 @@ PluginInstanceChild::ReadbackDifferenceRect(const nsIntRect& rect)
     if (!mBackSurface)
         return false;
 
-    // We can read safely from XSurface and SharedDIBSurface, because
-    // PluginHost is not able to modify that surface
+    // We can read safely from XSurface,SharedDIBSurface and Unsafe SharedMemory,
+    // because PluginHost is not able to modify that surface
 #if defined(MOZ_X11)
-    if (mBackSurface->GetType() != gfxASurface::SurfaceTypeXlib)
+    if (mBackSurface->GetType() != gfxASurface::SurfaceTypeXlib &&
+        !gfxSharedImageSurface::IsSharedImage(mBackSurface))
         return false;
 #elif defined(XP_WIN)
     if (!SharedDIBSurface::IsSharedDIBSurface(mBackSurface))
