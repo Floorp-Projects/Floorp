@@ -81,6 +81,11 @@ protected:
   NS_OVERRIDE virtual PRBool IsToAnimation() const {
     return PR_FALSE;
   }
+
+  // <set> applies the exact same value across the simple duration.
+  NS_OVERRIDE virtual PRBool IsValueFixedForSimpleDuration() const {
+    return PR_TRUE;
+  }
   NS_OVERRIDE virtual PRBool             HasAttr(nsIAtom* aAttName) const;
   NS_OVERRIDE virtual const nsAttrValue* GetAttr(nsIAtom* aAttName) const;
   NS_OVERRIDE virtual PRBool             GetAttr(nsIAtom* aAttName,
