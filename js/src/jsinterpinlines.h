@@ -713,10 +713,11 @@ ScriptEpilogue(JSContext *cx, JSStackFrame *fp, JSBool ok)
     if (!fp->isExecuteFrame())
         Probes::exitJSFun(cx, fp->maybeFun(), fp->maybeScript());
 
-    JSInterpreterHook hook = cx->debugHooks->callHook;
-    void* hookData;
+    JSInterpreterHook hook =
+        fp->isExecuteFrame() ? cx->debugHooks->executeHook : cx->debugHooks->callHook;
 
-    if (hook && (hookData = fp->maybeHookData()) && !fp->isExecuteFrame())
+    void* hookData;
+    if (JS_UNLIKELY(hook != NULL) && (hookData = fp->maybeHookData()))
         hook(cx, fp, JS_FALSE, &ok, hookData);
 
     /*
