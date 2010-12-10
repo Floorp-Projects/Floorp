@@ -5165,32 +5165,6 @@ JS_RestoreFrameChain(JSContext *cx, JSStackFrame *fp)
 }
 
 /************************************************************************/
-
-JS_PUBLIC_API(JSString *)
-JS_NewString(JSContext *cx, char *bytes, size_t nbytes)
-{
-    size_t length = nbytes;
-    jschar *chars;
-    JSString *str;
-
-    CHECK_REQUEST(cx);
-
-    /* Make a UTF-16 vector from the 8-bit char codes in bytes. */
-    chars = js_InflateString(cx, bytes, &length);
-    if (!chars)
-        return NULL;
-
-    /* Free chars (but not bytes, which caller frees on error) if we fail. */
-    str = js_NewString(cx, chars, length);
-    if (!str) {
-        cx->free(chars);
-        return NULL;
-    }
-
-    js_free(bytes);
-    return str;
-}
-
 JS_PUBLIC_API(JSString *)
 JS_NewStringCopyN(JSContext *cx, const char *s, size_t n)
 {
