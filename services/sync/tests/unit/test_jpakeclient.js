@@ -112,6 +112,9 @@ const DATA = {"msg": "eggstreamly sekrit"};
 const POLLINTERVAL = 50;
 
 function run_test() {
+  if (DISABLE_TESTS_BUG_618233)
+    return;
+
   Svc.Prefs.set("jpake.serverURL", "http://localhost:8080/");
   Svc.Prefs.set("jpake.pollInterval", POLLINTERVAL);
   Svc.Prefs.set("jpake.maxTries", 5);
