@@ -6689,7 +6689,7 @@ DirectoryInstallLocation.prototype = {
     let entry;
     while (entry = entries.nextFile) {
       // Should never happen really
-      if (!entry instanceof Ci.nsILocalFile)
+      if (!(entry instanceof Ci.nsILocalFile))
         continue;
 
       let id = entry.leafName;
