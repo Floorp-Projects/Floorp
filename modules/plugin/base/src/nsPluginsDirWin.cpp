@@ -235,9 +235,7 @@ PRBool nsPluginsDir::IsPluginFile(nsIFile* file)
       if (!PL_strncasecmp(filename, "npoji", 5) ||
           !PL_strncasecmp(filename, "npjava", 6))
         return PR_FALSE;
-
-      // Check this last since it involves opening the file.
-      return CanLoadPlugin(cPath);
+      return PR_TRUE;
     }
   }
 
@@ -331,6 +329,13 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info, PRLibrary **outLibrary)
   if (!mPlugin)
     return NS_ERROR_NULL_POINTER;
 
+  nsCAutoString fullPathUTF8;
+  if (NS_FAILED(rv = mPlugin->GetNativePath(fullPathUTF8)))
+    return rv;
+  
+  if (!CanLoadPlugin(fullPathUTF8.get()))
+    return NS_ERROR_FAILURE;
+
   nsAutoString fullPath;
   if (NS_FAILED(rv = mPlugin->GetPath(fullPath)))
     return rv;
@@ -366,7 +371,7 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info, PRLibrary **outLibrary)
     info.fMimeTypeArray = MakeStringArray(info.fVariantCount, mimeType);
     info.fMimeDescriptionArray = MakeStringArray(info.fVariantCount, mimeDescription);
     info.fExtensionArray = MakeStringArray(info.fVariantCount, extensions);
-    info.fFullPath = PL_strdup(NS_ConvertUTF16toUTF8(fullPath).get());
+    info.fFullPath = PL_strdup(fullPathUTF8.get());
     info.fFileName = PL_strdup(NS_ConvertUTF16toUTF8(fileName).get());
     info.fVersion = GetVersion(verbuf);
 
