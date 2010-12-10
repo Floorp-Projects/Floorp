@@ -121,6 +121,7 @@
 
     function uninit() {
       uninitWeave();
+      uninitAddons();
     }
 
     function _readFile(aFile) {
@@ -268,17 +269,47 @@
       }
     }
 
-    var RecommendedSearchResults = {
-      searchSucceeded: function(aAddons, aAddonCount, aTotalResults) {
+    var RecommendedAddons = {
+      _getFile: function() {
+        let dirService = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+        let file = dirService.get("ProfD", Ci.nsILocalFile);
+        file.append("recommended-addons.json");
+        return file;
+      },
+
+      _readFile: function(aFile) {
+        try {
+          let stream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(Ci.nsIFileInputStream);
+          stream.init(aFile, 0x01, 0, 0);
+          let cvstream = Cc["@mozilla.org/intl/converter-input-stream;1"].createInstance(Ci.nsIConverterInputStream);
+          
+          let fileSize = stream.available();
+          cvstream.init(stream, "UTF-8", fileSize, Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
+          let data = {};
+          cvstream.readString(fileSize, data);
+          let content = data.value;
+          cvstream.close();
+          return content.replace(/\r\n?/g, "\n");
+        }
+        catch (ex) {
+          Cu.reportError(ex);
+        }
+        return null;
+      },
+
+      _loadAddons: function(aAddons, aAddonCount, aTotalResults) {
         let list = document.getElementById("newAddons");
-        if (aAddons.length == 0) {
-          let placeHolder = document.getElementById("loadingAddons");
-          placeHolder.innerHTML = "<div class='no-items'>" + document.getElementById("text-noaddons").textContent + "</div>";
+        let loading = document.getElementById("loadingAddons");
+
+        if (aAddons.length == 0 && loading) {
+          loading.innerHTML = "<div class='no-items'>" + document.getElementById("text-noaddons").textContent + "</div>";
           return;
         }
 
-        let loading = document.getElementById("loadingAddons");
-        loading.parentNode.removeChild(loading);
+        // Clear all content but the header before filling the addons
+        let header = list.firstElementChild;
+        while (header.nextSibling)
+          list.removeChild(header.nextSibling);
 
         for (let i=0; i<aAddons.length; i++) {
           let outer = document.createElement("div");
@@ -313,19 +344,32 @@
         }
       },
 
-      searchFailed: function searchFailed() {
-        let loading = document.getElementById("newAddons");
-        loading.parentNode.removeChild(loading);
+      loadFromCacheOrScheduleUpdate: function(aDelay) {
+        let file = this._getFile();
+        if (file.exists()) {
+          let json = JSON.parse(this._readFile(file));
+          this._loadAddons(json.addons, json.addonCount, json.totalResults);
+        } else {
+          setTimeout(function() {
+            let aus = Cc["@mozilla.org/browser/addon-update-service;1"].getService(Ci.nsITimerCallback);
+            aus.notify(null);
+          }, aDelay);
+        }
       }
     }
 
-    const kAddonsMaxDisplay = 2;
+    function updateAddons() {
+      // If a cache does not exist, start an update after 10 seconds
+      RecommendedAddons.loadFromCacheOrScheduleUpdate(10000);
+    }
 
     function initAddons() {
-      Cu.import("resource://gre/modules/AddonRepository.jsm");
-      if (AddonRepository.isSearching)
-        AddonRepository.cancelSearch();
-      AddonRepository.retrieveRecommendedAddons(kAddonsMaxDisplay, RecommendedSearchResults);
+       getChromeWin().Services.obs.addObserver(updateAddons, "recommended-addons-cache-updated", false);
+       updateAddons();
+    }
+
+    function uninitAddons() {
+       getChromeWin().Services.obs.removeObserver(updateAddons, "recommended-addons-cache-updated");
     }
   ]]></script>
 </body>
