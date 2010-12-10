@@ -944,6 +944,7 @@
   </toolbox>
 
   <hbox flex="1" id="browser">
+    <vbox id="browser-border-start" hidden="true" layer="true"/>
     <vbox id="sidebar-box" hidden="true" class="chromeclass-extrachrome">
       <sidebarheader id="sidebar-header" align="center">
         <label id="sidebar-title" persist="value" flex="1" crop="end" control="sidebar"/>
@@ -963,6 +964,7 @@
                   autocompletepopup="PopupAutoComplete"
                   onclick="return contentAreaClick(event, false);"/>
     </vbox>
+    <vbox id="browser-border-end" hidden="true" layer="true"/>
   </hbox>
 
   <vbox id="browser-bottombox" layer="true">
