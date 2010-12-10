@@ -1,0 +1,17 @@
+<!DOCTYPE HTML>
+<html reftest-zoom="0.8">
+<title>Testcase, bug 618071</title>
+
+<select size="5">
+  <option id="one">one</option>
+  <option id="two">two</option>
+  <option id="three">three</option>
+  <option id="four">four</option>
+  <option id="five">five</option>
+</select>
+
+<span id="s" style="display: inline-block; background: blue; height: 50px; width: 50px; margin-left: -2.5em;"></span>
+
+<script>
+document.getElementById("three").parentNode.focus();
+</script>
