@@ -4472,7 +4472,7 @@ aggregation_batch_test()
 nsresult
 stress_test(TestTransactionFactory *factory, PRInt32 iterations)
 {
-  printf("Stress test (may take a while) ... ");
+  printf("Stress test of %i iterations (may take a while) ... ", iterations);
   fflush(stdout);
 
   /*******************************************************************
@@ -4568,7 +4568,11 @@ stress_test(TestTransactionFactory *factory, PRInt32 iterations)
         return result;
       }
     }
-  }
+
+    // Trivial feedback not to let the user think the test is stuck.
+    if (NS_UNLIKELY(j % 100 == 0))
+      printf("%i ", j);
+  } // for, iterations.
 
   result = mgr->Clear();
   if (NS_FAILED(result)) {
