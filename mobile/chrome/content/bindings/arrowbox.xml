@@ -85,8 +85,9 @@
          <parameter name="aAnchorNode"/>
          <body>
             <![CDATA[
+              let arrow = document.getAnonymousElementByAttribute(this, "anonid", "arrow");
               if (!aAnchorNode) {
-                this.arrow.hidden = true;
+                arrow.hidden = true;
                 return;
               }
 
@@ -94,7 +95,6 @@
               let container = document.getAnonymousElementByAttribute(this, "anonid", "container");
               let content = document.getAnonymousElementByAttribute(this, "anonid", "arrowcontent");
               let arrowbox = document.getAnonymousElementByAttribute(this, "anonid", "arrowbox");
-              let arrow = document.getAnonymousElementByAttribute(this, "anonid", "arrow");
 
               // If the content of the arrowbox if taller than the available
               // screen space, force a maximum height
