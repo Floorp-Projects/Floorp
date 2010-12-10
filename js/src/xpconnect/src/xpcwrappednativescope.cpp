@@ -42,6 +42,7 @@
 
 #include "xpcprivate.h"
 #include "XPCWrapper.h"
+#include "jsproxy.h"
 
 /***************************************************************************/
 
@@ -756,6 +757,7 @@ GetScopeOfObject(JSObject* obj)
 
 #ifdef DEBUG
 void DEBUG_CheckForComponentsInScope(JSContext* cx, JSObject* obj,
+                                     JSObject* startingObj,
                                      JSBool OKIfNotInitialized,
                                      XPCJSRuntime* runtime)
 {
@@ -776,10 +778,25 @@ void DEBUG_CheckForComponentsInScope(JSContext* cx, JSObject* obj,
     // global properties of that document's window are *gone*. Generally this
     // indicates a problem that should be addressed in the design and use of the
     // callback code.
-    NS_ERROR("XPConnect is being called on a scope without a 'Components' property!");
+    NS_ERROR("XPConnect is being called on a scope without a 'Components' property!  (stack and details follow)");
+    printf("The current JS stack is:\n");
+    xpc_DumpJSStack(cx, JS_TRUE, JS_TRUE, JS_TRUE);
+
+    printf("And the object whose scope lacks a 'Components' property is:\n");
+    js_DumpObject(startingObj);
+
+    JSObject *p = startingObj;
+    while(p->isWrapper())
+    {
+        p = p->getProxyPrivate().toObjectOrNull();
+        if(!p)
+            break;
+        printf("which is a wrapper for:\n");
+        js_DumpObject(p);
+    }
 }
 #else
-#define DEBUG_CheckForComponentsInScope(ccx, obj, OKIfNotInitialized, runtime) \
+#define DEBUG_CheckForComponentsInScope(ccx, obj, startingObj, OKIfNotInitialized, runtime) \
     ((void)0)
 #endif
 
@@ -805,6 +822,10 @@ XPCWrappedNativeScope::FindInJSObjectScope(JSContext* cx, JSObject* obj,
 
     JSAutoEnterCompartment ac;
     ac.enterAndIgnoreErrors(cx, obj);
+
+#ifdef DEBUG
+    JSObject *startingObj = obj;
+#endif
 
     obj = JS_GetGlobalForObject(cx, obj);
 
@@ -834,7 +855,8 @@ XPCWrappedNativeScope::FindInJSObjectScope(JSContext* cx, JSObject* obj,
 
     if(found) {
         // This cannot be called within the map lock!
-        DEBUG_CheckForComponentsInScope(cx, obj, OKIfNotInitialized, runtime);
+        DEBUG_CheckForComponentsInScope(cx, obj, startingObj,
+                                        OKIfNotInitialized, runtime);
         return found;
     }
 
