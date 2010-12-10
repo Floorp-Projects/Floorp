@@ -61,6 +61,8 @@ browser.jar:
         content/browser/aboutSyncTabs.css             (content/aboutSyncTabs.css)
 *       content/browser/aboutSyncTabs-bindings.xml    (content/aboutSyncTabs-bindings.xml)
 *       content/browser/syncSetup.xul                 (content/syncSetup.xul)
+        content/browser/syncAddDevice.js              (content/syncAddDevice.js)
+*       content/browser/syncAddDevice.xul             (content/syncAddDevice.xul)
         content/browser/syncSetup.js                  (content/syncSetup.js)
 *       content/browser/syncGenericChange.xul         (content/syncGenericChange.xul)
         content/browser/syncGenericChange.js          (content/syncGenericChange.js)
