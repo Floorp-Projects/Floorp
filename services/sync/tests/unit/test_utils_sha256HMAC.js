@@ -36,4 +36,17 @@ function run_test() {
     
   do_check_eq(Utils.sha256HMACBytes(d1, Utils.makeHMACKey(k1)), o1);
   do_check_eq(Utils.sha256HMAC(d2, Utils.makeHMACKey(k2)), o2);
+  
+  // Checking HMAC exceptions.
+  let ex;
+  try {
+    Utils.throwHMACMismatch("aaa", "bbb");
+  }
+  catch (e) {
+    ex = e;
+  }
+  do_check_true(Utils.isHMACMismatch(ex));
+  do_check_false(!!Utils.isHMACMismatch(new Error()));
+  do_check_false(!!Utils.isHMACMismatch(null));
+  do_check_false(!!Utils.isHMACMismatch("Error"));
 }
