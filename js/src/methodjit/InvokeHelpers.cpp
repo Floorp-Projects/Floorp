@@ -590,9 +590,14 @@ stubs::EnterScript(VMFrame &f)
     JSContext *cx = f.cx;
 
     if (fp->script()->debugMode) {
-        JSInterpreterHook hook = cx->debugHooks->callHook;
-        if (JS_UNLIKELY(hook != NULL) && !fp->isExecuteFrame()) {
-            fp->setHookData(hook(cx, fp, JS_TRUE, 0, cx->debugHooks->callHookData));
+        if (fp->isExecuteFrame()) {
+            JSInterpreterHook hook = cx->debugHooks->executeHook;
+            if (JS_UNLIKELY(hook != NULL))
+                fp->setHookData(hook(cx, fp, JS_TRUE, 0, cx->debugHooks->executeHookData));
+        } else {
+            JSInterpreterHook hook = cx->debugHooks->callHook;
+            if (JS_UNLIKELY(hook != NULL))
+                fp->setHookData(hook(cx, fp, JS_TRUE, 0, cx->debugHooks->callHookData));
         }
     }
 
@@ -607,10 +612,11 @@ stubs::LeaveScript(VMFrame &f)
     Probes::exitJSFun(cx, fp->maybeFun(), fp->maybeScript());
 
     if (fp->script()->debugMode) {
-        JSInterpreterHook hook = cx->debugHooks->callHook;
         void *hookData;
+        JSInterpreterHook hook =
+            fp->isExecuteFrame() ? cx->debugHooks->executeHook : cx->debugHooks->callHook;
 
-        if (hook && (hookData = fp->maybeHookData()) && !fp->isExecuteFrame()) {
+        if (JS_UNLIKELY(hook != NULL) && (hookData = fp->maybeHookData())) {
             JSBool ok = JS_TRUE;
             hook(cx, fp, JS_FALSE, &ok, hookData);
             if (!ok)

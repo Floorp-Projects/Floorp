@@ -996,20 +996,11 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
 
     Probes::startExecution(cx, script);
 
-    void *hookData = NULL;
-    if (JSInterpreterHook hook = cx->debugHooks->executeHook)
-        hookData = hook(cx, frame.fp(), JS_TRUE, 0, cx->debugHooks->executeHookData);
-
     /* Run script until JSOP_STOP or error. */
     AutoPreserveEnumerators preserve(cx);
     JSBool ok = RunScript(cx, script, frame.fp());
     if (result)
         *result = frame.fp()->returnValue();
-
-    if (hookData) {
-        if (JSInterpreterHook hook = cx->debugHooks->executeHook)
-            hook(cx, frame.fp(), JS_FALSE, &ok, hookData);
-    }
 
     Probes::stopExecution(cx, script);
 
@@ -2199,12 +2190,14 @@ ScriptPrologue(JSContext *cx, JSStackFrame *fp)
             return false;
         fp->functionThis().setObject(*obj);
     }
-    JSInterpreterHook hook = cx->debugHooks->callHook;
-    if (JS_UNLIKELY(hook != NULL) && !fp->isExecuteFrame())
-        fp->setHookData(hook(cx, fp, JS_TRUE, 0, cx->debugHooks->callHookData));
-
-    if (!fp->isExecuteFrame())
+    if (fp->isExecuteFrame()) {
+        if (JSInterpreterHook hook = cx->debugHooks->executeHook)
+            fp->setHookData(hook(cx, fp, JS_TRUE, 0, cx->debugHooks->executeHookData));
+    } else {
+        if (JSInterpreterHook hook = cx->debugHooks->callHook)
+            fp->setHookData(hook(cx, fp, JS_TRUE, 0, cx->debugHooks->callHookData));
         Probes::enterJSFun(cx, fp->maybeFun(), fp->maybeScript());
+    }
 
     return true;
 }
