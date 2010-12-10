@@ -139,13 +139,27 @@ BasicPlanarYCbCrImage::SetData(const Data& aData)
     NS_ERROR("Illegal width or height");
     return;
   }
+
+  gfxASurface::gfxImageFormat format = GetOffscreenFormat();
+
   // 'prescale' is true if the scaling is to be done as part of the
   // YCbCr to RGB conversion rather than on the RGB data when rendered.
   PRBool prescale = mScaleHint.width > 0 && mScaleHint.height > 0;
+  if (format == gfxASurface::ImageFormatRGB16_565) {
+#ifndef HAVE_SCALE_YCBCR_TO_RGB565
+    // yuv2rgb16 with scale function not yet available
+    prescale = PR_FALSE;
+#endif
+#ifndef HAVE_YCBCR_TO_RGB565
+    // yuv2rgb16 function not yet available for non-arm
+    format = gfxASurface::ImageFormatRGB24;
+#endif
+  }
   gfxIntSize size(prescale ? mScaleHint.width : aData.mPicSize.width,
                   prescale ? mScaleHint.height : aData.mPicSize.height);
 
-  mBuffer = new PRUint8[size.width * size.height * 4];
+  int bpp = gfxASurface::BytePerPixelFromFormat(format);
+  mBuffer = new PRUint8[size.width * size.height * bpp];
   if (!mBuffer) {
     // out of memory
     return;
@@ -170,34 +184,52 @@ BasicPlanarYCbCrImage::SetData(const Data& aData)
  
   // Convert from YCbCr to RGB now, scaling the image if needed.
   if (size != aData.mPicSize) {
-    gfx::ScaleYCbCrToRGB32(aData.mYChannel,
-                           aData.mCbChannel,
-                           aData.mCrChannel,
-                           mBuffer,
-                           aData.mPicSize.width,
-                           aData.mPicSize.height,
-                           size.width,
-                           size.height,
-                           aData.mYStride,
-                           aData.mCbCrStride,
-                           size.width*4,
-                           type,
-                           gfx::ROTATE_0,
-                           gfx::FILTER_BILINEAR);
-  }
-  else {
-    gfx::ConvertYCbCrToRGB32(aData.mYChannel,
+    if (format == gfxASurface::ImageFormatRGB24) {
+      gfx::ScaleYCbCrToRGB32(aData.mYChannel,
                              aData.mCbChannel,
                              aData.mCrChannel,
                              mBuffer,
-                             aData.mPicX,
-                             aData.mPicY,
                              aData.mPicSize.width,
                              aData.mPicSize.height,
+                             size.width,
+                             size.height,
                              aData.mYStride,
                              aData.mCbCrStride,
-                             aData.mPicSize.width*4,
-                             type);                                                          
+                             size.width*bpp,
+                             type,
+                             gfx::ROTATE_0,
+                             gfx::FILTER_BILINEAR);
+    } else {
+       NS_ERROR("Fail, ScaleYCbCrToRGB format not supported\n");
+    }
+  } else { // no prescale
+    if (format == gfxASurface::ImageFormatRGB16_565) {
+      gfx::ConvertYCbCrToRGB565(aData.mYChannel,
+                                aData.mCbChannel,
+                                aData.mCrChannel,
+                                mBuffer,
+                                aData.mPicX,
+                                aData.mPicY,
+                                aData.mPicSize.width,
+                                aData.mPicSize.height,
+                                aData.mYStride,
+                                aData.mCbCrStride,
+                                aData.mPicSize.width*bpp,
+                                type);
+    } else { // format != gfxASurface::ImageFormatRGB16_565
+      gfx::ConvertYCbCrToRGB32(aData.mYChannel,
+                               aData.mCbChannel,
+                               aData.mCrChannel,
+                               mBuffer,
+                               aData.mPicX,
+                               aData.mPicY,
+                               aData.mPicSize.width,
+                               aData.mPicSize.height,
+                               aData.mYStride,
+                               aData.mCbCrStride,
+                               aData.mPicSize.width*bpp,
+                               type);
+    }
   }
   mSize = size;
 }
@@ -223,10 +255,13 @@ BasicPlanarYCbCrImage::GetAsSurface()
   if (!mBuffer) {
     return nsnull;
   }
+
+  gfxASurface::gfxImageFormat format = GetOffscreenFormat();
+
   nsRefPtr<gfxImageSurface> imgSurface =
       new gfxImageSurface(mBuffer, mSize,
-                          mSize.width * gfxASurface::BytePerPixelFromFormat(gfxASurface::ImageFormatRGB24),
-                          gfxASurface::ImageFormatRGB24);
+                          mSize.width * gfxASurface::BytePerPixelFromFormat(format),
+                          format);
   if (!imgSurface) {
     return nsnull;
   }
