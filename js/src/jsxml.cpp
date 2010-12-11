@@ -1771,7 +1771,7 @@ ParseXMLSource(JSContext *cx, JSString *src)
 
     {
         Parser parser(cx);
-        if (parser.init(chars, length, NULL, filename, lineno)) {
+        if (parser.init(chars, length, filename, lineno)) {
             JSObject *scopeChain = GetScopeChain(cx);
             if (!scopeChain)
                 return NULL;

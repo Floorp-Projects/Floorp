@@ -270,14 +270,19 @@ struct JSString {
         return mInlineStorage;
     }
 
-    /* Specific flat string initializer and accessor methods. */
-    JS_ALWAYS_INLINE void initFlat(jschar *chars, size_t length) {
+    JS_ALWAYS_INLINE void initFlatNotTerminated(jschar *chars, size_t length) {
         JS_ASSERT(length <= MAX_LENGTH);
         JS_ASSERT(!isStatic(this));
         e.mBase = NULL;
         e.mCapacity = 0;
         mLengthAndFlags = (length << FLAGS_LENGTH_SHIFT) | FLAT;
         mChars = chars;
+    }
+
+    /* Specific flat string initializer and accessor methods. */
+    JS_ALWAYS_INLINE void initFlat(jschar *chars, size_t length) {
+        initFlatNotTerminated(chars, length);
+        JS_ASSERT(chars[length] == jschar(0));
     }
 
     JS_ALWAYS_INLINE void initShortString(jschar *chars, size_t length) {
@@ -289,6 +294,7 @@ struct JSString {
 
     JS_ALWAYS_INLINE void initFlatExtensible(jschar *chars, size_t length, size_t cap) {
         JS_ASSERT(length <= MAX_LENGTH);
+        JS_ASSERT(chars[length] == jschar(0));
         JS_ASSERT(!isStatic(this));
         e.mBase = NULL;
         e.mCapacity = cap;
@@ -514,9 +520,6 @@ struct JSString {
      * strings, we keep a table to map from integer to the correct string.
      */
     static const JSString *const intStringTable[];
-    static const char deflatedIntStringTable[];
-    static const char deflatedUnitStringTable[];
-    static const char deflatedLength2StringTable[];
 
     static JSString *unitString(jschar c);
     static JSString *getUnitString(JSContext *cx, JSString *str, size_t index);
@@ -1146,13 +1149,6 @@ extern JSBool
 js_DeflateStringToUTF8Buffer(JSContext *cx, const jschar *chars,
                              size_t charsLength, char *bytes, size_t *length);
 
-/*
- * Find or create a deflated string cache entry for str that contains its
- * characters chopped from Unicode code points into bytes.
- */
-extern const char *
-js_GetStringBytes(JSAtom *atom);
-
 /* Export a few natives and a helper to other files in SpiderMonkey. */
 extern JSBool
 js_str_escape(JSContext *cx, JSObject *obj, uintN argc, js::Value *argv,
@@ -1222,55 +1218,5 @@ FileEscapedString(FILE *fp, JSString *str, uint32 quote)
 
 extern JSBool
 js_String(JSContext *cx, uintN argc, js::Value *vp);
-
-namespace js {
-
-class DeflatedStringCache {
-  public:
-    DeflatedStringCache();
-    bool init();
-    ~DeflatedStringCache();
-
-    void sweep(JSContext *cx);
-
-  private:
-    struct StringPtrHasher
-    {
-        typedef JSString *Lookup;
-
-        static HashNumber hash(JSString *str) {
-            /*
-             * We hash only GC-allocated Strings. They are aligned on
-             * sizeof(JSString) boundary so we can improve hashing by stripping
-             * initial zeros.
-             */
-            const jsuword ALIGN_LOG = tl::FloorLog2<sizeof(JSString)>::result;
-            JS_STATIC_ASSERT(sizeof(JSString) == (size_t(1) << ALIGN_LOG));
-
-            jsuword ptr = reinterpret_cast<jsuword>(str);
-            jsuword key = ptr >> ALIGN_LOG;
-            JS_ASSERT((key << ALIGN_LOG) == ptr);
-            return HashNumber(key);
-        }
-
-        static bool match(JSString *s1, JSString *s2) {
-            return s1 == s2;
-        }
-    };
-
-    typedef HashMap<JSString *, char *, StringPtrHasher, SystemAllocPolicy> Map;
-
-    char *getBytes(JSString *str);
-
-    friend const char *
-    ::js_GetStringBytes(JSAtom *atom);
-
-    Map                 map;
-#ifdef JS_THREADSAFE
-    JSLock              *lock;
-#endif
-};
-
-} /* namespace js */
 
 #endif /* jsstr_h___ */

@@ -66,8 +66,6 @@ class nsAHtml5TreeBuilderState {
 
     virtual PRBool isFramesetOk() = 0;
 
-    virtual PRBool isInForeign() = 0;
-
     virtual PRBool isNeedToDropLF() = 0;
 
     virtual PRBool isQuirks() = 0;

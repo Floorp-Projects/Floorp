@@ -1541,11 +1541,11 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   // Enable Inspector?
   let enabled = gPrefService.getBoolPref(InspectorUI.prefEnabledName);
   if (enabled) {
-    document.getElementById("menu_pageinspect").setAttribute("hidden", false);
+    document.getElementById("menu_pageinspect").hidden = false;
     document.getElementById("Tools:Inspect").removeAttribute("disabled");
-    let appMenuInspect = document.getElementById("appmenu_pageInspect");
-    if (appMenuInspect)
-      appMenuInspect.setAttribute("hidden", false);
+#ifdef MENUBAR_CAN_AUTOHIDE
+    document.getElementById("appmenu_pageInspect").hidden = false;
+#endif
   }
 
   // Enable Error Console?
@@ -1556,17 +1556,14 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
     document.getElementById("key_errorConsole").removeAttribute("disabled");
   }
 
+#ifdef MENUBAR_CAN_AUTOHIDE
   // If the user (or the locale) hasn't enabled the top-level "Character
   // Encoding" menu via the "browser.menu.showCharacterEncoding" preference,
   // hide it.
-  const showCharacterEncodingPref = "browser.menu.showCharacterEncoding";
-  let extraCharacterEncodingMenuEnabled = gPrefService.
-    getComplexValue(showCharacterEncodingPref, Ci.nsIPrefLocalizedString).data;
-  if (extraCharacterEncodingMenuEnabled !== "true") {
-    let charsetMenu = document.getElementById("appmenu_charsetMenu");
-    if (charsetMenu)
-      charsetMenu.setAttribute("hidden", "true");
-  }
+  if ("true" != gPrefService.getComplexValue("browser.menu.showCharacterEncoding",
+                                             Ci.nsIPrefLocalizedString).data)
+    document.getElementById("appmenu_charsetMenu").hidden = true;
+#endif
 
   Services.obs.notifyObservers(window, "browser-delayed-startup-finished", "");
 }
@@ -8090,7 +8087,7 @@ let AddonsMgrListener = {
   get statusBar() document.getElementById("status-bar"),
   getAddonBarItemCount: function() {
     // Take into account the contents of the status bar shim for the count.
-    return this.addonBar.childNodes.length - 1 +
+    return this.addonBar.childNodes.length - 3 +
            this.statusBar.childNodes.length;
   },
   onInstalling: function(aAddon) {

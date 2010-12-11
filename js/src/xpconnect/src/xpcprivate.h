@@ -1127,7 +1127,8 @@ public:
 
     operator JSContext*() const {return GetJSContext();}
 
-    XPCReadableJSStringWrapper *NewStringWrapper(PRUnichar *str, PRUint32 len);
+    XPCReadableJSStringWrapper *NewStringWrapper(const PRUnichar *str,
+                                                 PRUint32 len);
     void DeleteString(nsAString *string);
 
 #ifdef XPC_IDISPATCH_SUPPORT

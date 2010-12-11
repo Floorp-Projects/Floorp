@@ -79,7 +79,7 @@ function run_test() {
            getService(Ci.nsIPrefBranch);
   ps.setIntPref(PREF_SMART_BOOKMARKS_VERSION, -1);
   // Avoid migrateUI, we are just simulating a partial startup.
-  ps.setIntPref("browser.migration.version", 1);
+  ps.setIntPref("browser.migration.version", 4);
 
   // Initialize Places through the History Service.
   let hs = Cc["@mozilla.org/browser/nav-history-service;1"].

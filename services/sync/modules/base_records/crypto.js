@@ -103,7 +103,7 @@ CryptoWrapper.prototype = {
     let computedHMAC = this.ciphertextHMAC(keyBundle);
 
     if (computedHMAC != this.hmac) {
-      throw "Record SHA256 HMAC mismatch: " + this.hmac + ", not " + computedHMAC;
+      Utils.throwHMACMismatch(this.hmac, computedHMAC);
     }
 
     // Handle invalid data here. Elsewhere we assume that cleartext is an object.
@@ -167,6 +167,37 @@ function CollectionKeyManager() {
 // TODO: persist this locally as an Identity. Bug 610913.
 // Note that the last modified time needs to be preserved.
 CollectionKeyManager.prototype = {
+  
+  // Return information about old vs new keys:
+  // * same: true if two collections are equal
+  // * changed: an array of collection names that changed.
+  _compareKeyBundleCollections: function _compareKeyBundleCollections(m1, m2) {
+    let changed = [];
+    
+    function process(m1, m2) {
+      for (let k1 in m1) {
+        let v1 = m1[k1];
+        let v2 = m2[k1];
+        if (!(v1 && v2 && v1.equals(v2)))
+          changed.push(k1);
+      }
+    }
+    
+    // Diffs both ways.
+    process(m1, m2);
+    process(m2, m1);
+    
+    // Return a sorted, unique array.
+    changed.sort();
+    let last;
+    changed = [x for each (x in changed) if ((x != last) && (last = x))];
+    return {same: changed.length == 0,
+            changed: changed};
+  },
+  
+  get isClear() {
+   return !this._default;
+  },
   
   clear: function clear() {
     this._log.info("Clearing CollectionKeys...");
@@ -242,40 +273,85 @@ CollectionKeyManager.prototype = {
     return (info_collections["crypto"] > this._lastModified);
   },
 
+  // 
+  // Set our keys and modified time to the values fetched from the server.
+  // Returns one of three values:
+  // 
+  // * If the default key was modified, return true.
+  // * If the default key was not modified, but per-collection keys were,
+  //   return an array of such.
+  // * Otherwise, return false -- we were up-to-date.
+  // 
   setContents: function setContents(payload, modified) {
-    if ("collections" in payload) {
-      let out_coll = {};
-      let colls = payload["collections"];
-      for (let k in colls) {
-        let v = colls[k];
-        if (v) {
-          let keyObj = new BulkKeyBundle(null, k);
-          keyObj.keyPair = v;
-          if (keyObj) {
-            out_coll[k] = keyObj;
-          }
-        }
-      }
-      this._collections = out_coll;
-    }
-    if ("default" in payload) {
-      if (payload.default) {
-        let b = new BulkKeyBundle(null, DEFAULT_KEYBUNDLE_NAME);
-        b.keyPair = payload.default;
-        this._default = b;
-      }
-      else {
-        this._default = null;
-      }
-    }
+                 
+    let self = this;
     
     // The server will round the time, which can lead to us having spurious
     // key refreshes. Do the best we can to get an accurate timestamp, but
     // rounded to 2 decimal places.
     // We could use .toFixed(2), but that's a little more multiplication and
     // division...
-    this._lastModified = modified || (Math.round(Date.now()/10)/100);
-    return payload;
+    function bumpModified() {
+      let lm = modified || (Math.round(Date.now()/10)/100);
+      self._log.info("Bumping last modified to " + lm);
+      self._lastModified = lm;
+    }
+    
+    this._log.info("Setting CollectionKeys contents. Our last modified: "
+        + this._lastModified + ", input modified: " + modified + ".");
+    
+    if (!payload)
+      throw "No payload in CollectionKeys.setContents().";
+    
+    if (!payload.default) {
+      this._log.warn("No downloaded default key: this should not occur.");
+      this._log.warn("Not clearing local keys.");
+      throw "No default key in CollectionKeys.setContents(). Cannot proceed.";
+    }
+    
+    // Process the incoming default key.
+    let b = new BulkKeyBundle(null, DEFAULT_KEYBUNDLE_NAME);
+    b.keyPair = payload.default;
+    let newDefault = b;
+    
+    // Process the incoming collections.
+    let newCollections = {};
+    if ("collections" in payload) {
+      this._log.info("Processing downloaded per-collection keys.");
+      let colls = payload.collections;
+      for (let k in colls) {
+        let v = colls[k];
+        if (v) {
+          let keyObj = new BulkKeyBundle(null, k);
+          keyObj.keyPair = v;
+          if (keyObj) {
+            newCollections[k] = keyObj;
+          }
+        }
+      }
+    }
+    
+    // Check to see if these are already our keys.
+    let sameDefault = (this._default && this._default.equals(newDefault));
+    let collComparison = this._compareKeyBundleCollections(newCollections, this._collections);
+    let sameColls = collComparison.same;
+    
+    if (sameDefault && sameColls) {
+      this._log.info("New keys are the same as our old keys! Bumping local modified time and returning.");
+      bumpModified();
+      return false;
+    }
+      
+    // Make sure things are nice and tidy before we set.
+    this.clear();
+    
+    this._log.info("Saving downloaded keys.");
+    this._default     = newDefault;
+    this._collections = newCollections;
+    
+    bumpModified();
+    
+    return sameDefault ? collComparison.changed : true;
   },
 
   updateContents: function updateContents(syncKeyBundle, storage_keys) {
@@ -298,7 +374,7 @@ CollectionKeyManager.prototype = {
     let r = this.setContents(payload, storage_keys.modified);
     log.info("Collection keys updated.");
     return r;
-    }
+  }
 }
 
 /**
@@ -337,6 +413,12 @@ function KeyBundle(realm, collectionName, keyStr) {
 
 KeyBundle.prototype = {
   __proto__: Identity.prototype,
+  
+  equals: function equals(bundle) {
+    return bundle &&
+           (bundle.hmacKey == this.hmacKey) &&
+           (bundle.encryptionKey == this.encryptionKey);
+  },
   
   /*
    * Accessors for the two keys.
@@ -458,29 +540,21 @@ SyncKeyBundle.prototype = {
    * If we've got a string, hash it into keys and store them.
    */
   generateEntry: function generateEntry() {
-    let m = this.keyStr;
-    if (m) {
-      // Decode into a 16-byte string before we go any further.
-      m = Utils.decodeKeyBase32(m);
-      
-      // Reuse the hasher.
-      let h = Utils.makeHMACHasher();
-      
-      // First key.
-      let u = this.username; 
-      let k1 = Utils.makeHMACKey("" + HMAC_INPUT + u + "\x01");
-      let enc = Utils.sha256HMACBytes(m, k1, h);
-      
-      // Second key: depends on the output of the first run.
-      let k2 = Utils.makeHMACKey(enc + HMAC_INPUT + u + "\x02");
-      let hmac = Utils.sha256HMACBytes(m, k2, h);
-      
-      // Save them.
-      this._encrypt = btoa(enc);
-      
-      // Individual sets: cheaper than calling parent setter.
-      this._hmac = hmac;
-      this._hmacObj = Utils.makeHMACKey(hmac);
-    }
+    let syncKey = this.keyStr;
+    if (!syncKey)
+      return;
+
+    // Expand the base32 Sync Key to an AES 256 and 256 bit HMAC key.
+    let prk = Utils.decodeKeyBase32(syncKey);
+    let info = HMAC_INPUT + this.username;
+    let okm = Utils.hkdfExpand(prk, info, 32 * 2);
+    let enc = okm.slice(0, 32);
+    let hmac = okm.slice(32, 64);
+
+    // Save them.
+    this._encrypt = btoa(enc);      
+    // Individual sets: cheaper than calling parent setter.
+    this._hmac = hmac;
+    this._hmacObj = Utils.makeHMACKey(hmac);
   }
 };
