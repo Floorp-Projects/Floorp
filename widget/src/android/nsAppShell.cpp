@@ -234,6 +234,11 @@ nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
         break;
 
     case AndroidGeckoEvent::ACTIVITY_STOPPING: {
+        // Do nothing yet.
+        break;
+    }
+
+    case AndroidGeckoEvent::ACTIVITY_SHUTDOWN: {
         nsCOMPtr<nsIObserverService> obsServ =
           mozilla::services::GetObserverService();
         NS_NAMED_LITERAL_STRING(context, "shutdown-persist");
