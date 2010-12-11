@@ -9,6 +9,8 @@ Local patches:
 
     angle-bug-40.patch - fix angle issue 40: freeze when compiling bad #ifdef shader
 
+    angle-bug-93.patch - fix angle issue 93: was leaking locale objects
+
 == Visual Studio Solution Files ==
 
 The VS solution/project files that are used to build ANGLE are built
