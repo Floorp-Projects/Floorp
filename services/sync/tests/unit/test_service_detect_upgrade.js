@@ -9,10 +9,8 @@ Cu.import("resource://services-sync/base_records/crypto.js");   // For Collectio
 Cu.import("resource://services-sync/engines/tabs.js");
 Cu.import("resource://services-sync/log4moz.js");
   
-function run_test() {
+function v4_upgrade() {
   let passphrase = "abcdeabcdeabcdeabcdeabcdea";
-  let logger = Log4Moz.repository.rootLogger;
-  Log4Moz.repository.rootLogger.addAppender(new Log4Moz.DumpAppender());
 
   let clients = new ServerCollection();
   let meta_global = new ServerWBO('global');
@@ -63,7 +61,7 @@ function run_test() {
       getBrowserState: function () JSON.stringify(myTabs)
     };
     
-    Weave.Service._registerEngines();
+    Status.resetSync();
     
     _("Logging in.");
     Weave.Service.serverURL = "http://localhost:8080/";
@@ -116,7 +114,8 @@ function run_test() {
     let serverDecrypted;
     let serverKeys;
     let serverResp;
-    
+
+      
     function retrieve_server_default() {
       serverKeys = serverResp = serverDecrypted = null;
       
@@ -180,9 +179,130 @@ function run_test() {
     
     _("... and keys will now match.");
     retrieve_and_compare_default(true);
-
+    
+    // Clean up.
+    Weave.Service.startOver();
+    
   } finally {
     Weave.Svc.Prefs.resetBranch("");
     server.stop(do_test_finished);
   }
+}
+
+function v5_upgrade() {
+  let passphrase = "abcdeabcdeabcdeabcdeabcdea";
+
+  // Tracking info/collections.
+  let collectionsHelper = track_collections_helper();
+  let upd = collectionsHelper.with_updated_collection;
+  let collections = collectionsHelper.collections;
+
+  let keysWBO = new ServerWBO("keys");
+  let bulkWBO = new ServerWBO("bulk");
+  let clients = new ServerCollection();
+  let meta_global = new ServerWBO('global');
+  
+  do_test_pending();
+  let server = httpd_setup({
+    // Special.
+    "/1.0/johndoe/storage/meta/global": upd("meta", meta_global.handler()),
+    "/1.0/johndoe/info/collections": collectionsHelper.handler,
+    "/1.0/johndoe/storage/crypto/keys": upd("crypto", keysWBO.handler()),
+    "/1.0/johndoe/storage/crypto/bulk": upd("crypto", bulkWBO.handler()),
+      
+    // Track modified times.
+    "/1.0/johndoe/storage/clients": upd("clients", clients.handler()),
+    "/1.0/johndoe/storage/tabs": upd("tabs", new ServerCollection().handler()),
+  });
+
+  try {
+    
+    Svc.Prefs.set("registerEngines", "Tab");
+    _("Set up some tabs.");
+    let myTabs = 
+      {windows: [{tabs: [{index: 1,
+                          entries: [{
+                            url: "http://foo.com/",
+                            title: "Title"
+                          }],
+                          attributes: {
+                            image: "image"
+                          },
+                          extData: {
+                            weaveLastUsed: 1
+                          }}]}]};
+    delete Svc.Session;
+    Svc.Session = {
+      getBrowserState: function () JSON.stringify(myTabs)
+    };
+    
+    Status.resetSync();
+    
+    Weave.Service.username = "johndoe";
+    Weave.Service.password = "ilovejane";
+    Weave.Service.passphrase = passphrase;
+    
+    Weave.Service.serverURL = "http://localhost:8080/";
+    Weave.Service.clusterURL = "http://localhost:8080/";
+    
+    //
+    // Test an upgrade where the contents of the server would cause us to error
+    // -- keys decrypted with a different sync key, for example.
+    //     
+
+    _("Testing v4 -> v5 (or similar) upgrade.");
+    function update_server_keys(syncKeyBundle, wboName, collWBO) {
+      CollectionKeys.generateNewKeys();
+      serverKeys = CollectionKeys.asWBO("crypto", wboName);
+      serverKeys.encrypt(syncKeyBundle);
+      do_check_true(serverKeys.upload(Weave.Service.storageURL + collWBO).success);
+    }
+    
+    _("Bumping version.");
+    // Bump version on the server.
+    let m = new WBORecord("meta", "global");
+    m.payload = {"syncID": "foooooooooooooooooooooooooo",
+                 "storageVersion": STORAGE_VERSION + 1};
+    m.upload(Weave.Service.metaURL);
+    
+    _("New meta/global: " + JSON.stringify(meta_global));
+    
+    // Fill the keys with bad data.
+    let badKeys = new SyncKeyBundle(null, null, "aaaaaaaaaaaaaaaaaaaaaaaaaa");
+    badKeys.generateEntry();
+    update_server_keys(badKeys, "keys", "crypto/keys");  // v4
+    update_server_keys(badKeys, "bulk", "crypto/bulk");  // v5
+    
+    // ... and get new ones.
+    CollectionKeys.generateNewKeys();
+    
+    // Now sync and see what happens. It should be a version fail, not a crypto
+    // fail.
+    
+    _("Logging in.");
+    try {
+      Weave.Service.login("johndoe", "ilovejane", passphrase);
+    }
+    catch (e) {
+      _("Exception: " + e);
+    }
+    _("Status: " + JSON.stringify(Status));
+    do_check_false(Weave.Service.isLoggedIn);
+    do_check_eq(VERSION_OUT_OF_DATE, Status.sync);
+
+    // Clean up.
+    Weave.Service.startOver();
+    
+  } finally {
+    Weave.Svc.Prefs.resetBranch("");
+    server.stop(do_test_finished);
+  }
+}
+
+function run_test() {
+  let logger = Log4Moz.repository.rootLogger;
+  Log4Moz.repository.rootLogger.addAppender(new Log4Moz.DumpAppender());
+  
+  v4_upgrade();
+  v5_upgrade();
 }

@@ -490,6 +490,12 @@ SyncEngine.prototype = {
         }
       }
       catch(ex) {
+
+        if (!Utils.isHMACMismatch(ex)) {
+          // Rethrow anything we shouldn't handle.
+          throw ex;
+        }
+
         this._log.warn("Error processing record: " + Utils.exceptionStr(ex));
 
         // Upload a new record to replace the bad one if we have it
