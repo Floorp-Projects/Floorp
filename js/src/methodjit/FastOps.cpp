@@ -164,8 +164,13 @@ mjit::Compiler::jsop_rsh()
     FrameEntry *rhs = frame.peek(-1);
     FrameEntry *lhs = frame.peek(-2);
 
-    if (tryBinaryConstantFold(cx, frame, JSOP_RSH, lhs, rhs, knownPushedType(0)))
+    Value v;
+    if (tryBinaryConstantFold(cx, frame, JSOP_RSH, lhs, rhs, &v)) {
+        JS_ASSERT(v.isInt32());
+        frame.popn(2);
+        frame.push(v);
         return;
+    }
 
     if ((lhs->isNotType(JSVAL_TYPE_INT32) && lhs->isNotType(JSVAL_TYPE_DOUBLE)) ||
         (rhs->isNotType(JSVAL_TYPE_INT32) && rhs->isNotType(JSVAL_TYPE_DOUBLE))) {
@@ -319,7 +324,9 @@ mjit::Compiler::jsop_bitop(JSOp op)
           {
             uint32 unsignedL;
             if (ValueToECMAUint32(cx, lhs->getValue(), (uint32_t*)&unsignedL)) {
-                frame.push(NumberValue(uint32(unsignedL >> (R & 31))));
+                Value v = NumberValue(uint32(unsignedL >> (R & 31)));
+                JS_ASSERT(v.isInt32());
+                frame.push(v);
                 return;
             }
             break;
@@ -457,7 +464,7 @@ mjit::Compiler::jsop_bitop(JSOp op)
     stubcc.rejoin(Changes(1));
 }
 
-void
+bool
 mjit::Compiler::jsop_globalinc(JSOp op, uint32 index, bool popped)
 {
     uint32 slot = script->getGlobalSlot(index);
@@ -482,7 +489,10 @@ mjit::Compiler::jsop_globalinc(JSOp op, uint32 index, bool popped)
         // Note, SUB will perform integer conversion for us.
         // Before: V 1
         // After:  N+1
-        jsop_binary(JSOP_SUB, stubs::Sub, type);
+        if (!jsop_binary(JSOP_SUB, stubs::Sub, type)) {
+            markPushedOverflow(0);
+            return false;
+        }
 
         // Before: N+1
         // After:  N+1
@@ -511,7 +521,10 @@ mjit::Compiler::jsop_globalinc(JSOp op, uint32 index, bool popped)
 
         // Before: N N 1
         // After:  N N+1
-        jsop_binary(JSOP_ADD, stubs::Add, type);
+        if (!jsop_binary(JSOP_ADD, stubs::Add, type)) {
+            markPushedOverflow(0);
+            return false;
+        }
 
         // Before: N N+1
         // After:  N N+1
@@ -523,6 +536,7 @@ mjit::Compiler::jsop_globalinc(JSOp op, uint32 index, bool popped)
     }
 
     frame.freeReg(reg);
+    return true;
 }
 
 static inline bool
@@ -992,7 +1006,7 @@ mjit::Compiler::jsop_andor(JSOp op, jsbytecode *target)
     return booleanJumpScript(op, target);
 }
 
-void
+bool
 mjit::Compiler::jsop_localinc(JSOp op, uint32 slot, bool popped)
 {
     JSValueType type = knownLocalType(slot);
@@ -1011,7 +1025,10 @@ mjit::Compiler::jsop_localinc(JSOp op, uint32 slot, bool popped)
         // Note, SUB will perform integer conversion for us.
         // Before: V 1
         // After:  N+1
-        jsop_binary(JSOP_SUB, stubs::Sub, type);
+        if (!jsop_binary(JSOP_SUB, stubs::Sub, type)) {
+            markLocalOverflow(slot);
+            return false;
+        }
 
         // Before: N+1
         // After:  N+1
@@ -1040,7 +1057,10 @@ mjit::Compiler::jsop_localinc(JSOp op, uint32 slot, bool popped)
 
         // Before: N N 1
         // After:  N N+1
-        jsop_binary(JSOP_ADD, stubs::Add, type);
+        if (!jsop_binary(JSOP_ADD, stubs::Add, type)) {
+            markLocalOverflow(slot);
+            return false;
+        }
 
         // Before: N N+1
         // After:  N N+1
@@ -1050,9 +1070,11 @@ mjit::Compiler::jsop_localinc(JSOp op, uint32 slot, bool popped)
         // After:  N
         frame.pop();
     }
+
+    return true;
 }
 
-void
+bool
 mjit::Compiler::jsop_arginc(JSOp op, uint32 slot, bool popped)
 {
     JSValueType type = knownArgumentType(slot);
@@ -1071,7 +1093,10 @@ mjit::Compiler::jsop_arginc(JSOp op, uint32 slot, bool popped)
         // Note, SUB will perform integer conversion for us.
         // Before: V 1
         // After:  N+1
-        jsop_binary(JSOP_SUB, stubs::Sub, type);
+        if (!jsop_binary(JSOP_SUB, stubs::Sub, type)) {
+            markArgumentOverflow(slot);
+            return false;
+        }
 
         // Before: N+1
         // After:  N+1
@@ -1100,7 +1125,10 @@ mjit::Compiler::jsop_arginc(JSOp op, uint32 slot, bool popped)
 
         // Before: N N 1
         // After:  N N+1
-        jsop_binary(JSOP_ADD, stubs::Add, type);
+        if (!jsop_binary(JSOP_ADD, stubs::Add, type)) {
+            markArgumentOverflow(slot);
+            return false;
+        }
 
         // Before: N N+1
         // After:  N N+1
@@ -1110,6 +1138,8 @@ mjit::Compiler::jsop_arginc(JSOp op, uint32 slot, bool popped)
         // After:  N
         frame.pop();
     }
+
+    return true;
 }
 
 static inline bool

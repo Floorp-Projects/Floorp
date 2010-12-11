@@ -291,9 +291,15 @@ mjit::TryCompile(JSContext *cx, JSStackFrame *fp)
     if (fp->isConstructing() && !fp->script()->nslots)
         fp->script()->nslots++;
 
-    Compiler cc(cx, fp);
+    // If there are static overflows in the function, try recompiling it a few
+    // times, using a limit to handle scripts with many static overflows.
+    CompileStatus status = Compile_Overflow;
+    for (unsigned i = 0; status == Compile_Overflow && i < 5; i++) {
+        Compiler cc(cx, fp);
+        status = cc.compile();
+    }
 
-    return cc.compile();
+    return status;
 }
 
 bool
@@ -1239,23 +1245,36 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_URSH)
 
           BEGIN_CASE(JSOP_ADD)
-            jsop_binary(op, stubs::Add, knownPushedType(0));
+            if (!jsop_binary(op, stubs::Add, knownPushedType(0))) {
+                markPushedOverflow(0);
+                return Compile_Overflow;
+            }
           END_CASE(JSOP_ADD)
 
           BEGIN_CASE(JSOP_SUB)
-            jsop_binary(op, stubs::Sub, knownPushedType(0));
+            if (!jsop_binary(op, stubs::Sub, knownPushedType(0))) {
+                markPushedOverflow(0);
+                return Compile_Overflow;
+            }
           END_CASE(JSOP_SUB)
 
           BEGIN_CASE(JSOP_MUL)
-            jsop_binary(op, stubs::Mul, knownPushedType(0));
+            if (!jsop_binary(op, stubs::Mul, knownPushedType(0))) {
+                markPushedOverflow(0);
+                return Compile_Overflow;
+            }
           END_CASE(JSOP_MUL)
 
           BEGIN_CASE(JSOP_DIV)
-            jsop_binary(op, stubs::Div, knownPushedType(0));
+            if (!jsop_binary(op, stubs::Div, knownPushedType(0))) {
+                markPushedOverflow(0);
+                return Compile_Overflow;
+            }
           END_CASE(JSOP_DIV)
 
           BEGIN_CASE(JSOP_MOD)
-            jsop_mod();
+            if (!jsop_mod())
+                return Compile_Overflow;
           END_CASE(JSOP_MOD)
 
           BEGIN_CASE(JSOP_NOT)
@@ -1284,8 +1303,20 @@ mjit::Compiler::generateMethod()
                 double d;
                 ValueToNumber(cx, top->getValue(), &d);
                 d = -d;
+                Value v = NumberValue(d);
+
+                /* Watch for overflow in constant propagation. */
+                if (!v.isInt32() && knownPushedType(0) == JSVAL_TYPE_INT32) {
+#ifdef JS_METHODJIT_SPEW
+                    JaegerSpew(JSpew_Abort, "overflow in negation (%s line %d)\n",
+                               script->filename, js_PCToLineNumber(cx, script, PC));
+#endif
+                    markPushedOverflow(0);
+                    return Compile_Overflow;
+                }
+
                 frame.pop();
-                frame.push(NumberValue(d));
+                frame.push(v);
             } else {
                 jsop_neg();
             }
@@ -1726,7 +1757,8 @@ mjit::Compiler::generateMethod()
             bool popped = false;
             if (JSOp(*next) == JSOP_POP && !analysis->jumpTarget(next))
                 popped = true;
-            jsop_arginc(op, GET_SLOTNO(PC), popped);
+            if (!jsop_arginc(op, GET_SLOTNO(PC), popped))
+                return Compile_Overflow;
             PC += JSOP_ARGINC_LENGTH;
             if (popped)
                 PC += JSOP_POP_LENGTH;
@@ -1744,7 +1776,8 @@ mjit::Compiler::generateMethod()
             if (JSOp(*next) == JSOP_POP && !analysis->jumpTarget(next))
                 popped = true;
             /* These manually advance the PC. */
-            jsop_localinc(op, GET_SLOTNO(PC), popped);
+            if (!jsop_localinc(op, GET_SLOTNO(PC), popped))
+                return Compile_Overflow;
             PC += JSOP_LOCALINC_LENGTH;
             if (popped)
                 PC += JSOP_POP_LENGTH;
@@ -2171,7 +2204,8 @@ mjit::Compiler::generateMethod()
             if (JSOp(*next) == JSOP_POP && !analysis->jumpTarget(next))
                 popped = true;
             /* These manually advance the PC. */
-            jsop_globalinc(op, GET_SLOTNO(PC), popped);
+            if (!jsop_globalinc(op, GET_SLOTNO(PC), popped))
+                return Compile_Overflow;
             PC += JSOP_LOCALINC_LENGTH;
             if (popped)
                 PC += JSOP_POP_LENGTH;
@@ -5341,6 +5375,18 @@ mjit::Compiler::knownArgumentType(uint32 arg)
     return JSVAL_TYPE_UNKNOWN;
 }
 
+void
+mjit::Compiler::markArgumentOverflow(uint32 arg)
+{
+#ifdef JS_TYPE_INFERENCE
+    jsid id = analysis->getArgumentId(arg);
+    types::TypeSet *types = analysis->getVariable(cx, id);
+    JS_ASSERT(!types->hasType(types::TYPE_DOUBLE));
+    types::InferSpew(types::ISpewDynamic, "StaticOverflow: #%u", analysis->id);
+    cx->compartment->types.addDynamicType(cx, types, types::TYPE_DOUBLE);
+#endif
+}
+
 JSValueType
 mjit::Compiler::knownLocalType(uint32 local)
 {
@@ -5352,6 +5398,18 @@ mjit::Compiler::knownLocalType(uint32 local)
     return JSVAL_TYPE_UNKNOWN;
 }
 
+void
+mjit::Compiler::markLocalOverflow(uint32 local)
+{
+#ifdef JS_TYPE_INFERENCE
+    jsid id = analysis->getLocalId(local, NULL);
+    types::TypeSet *types = analysis->getVariable(cx, id);
+    JS_ASSERT(!types->hasType(types::TYPE_DOUBLE));
+    types::InferSpew(types::ISpewDynamic, "StaticOverflow: #%u", analysis->id);
+    cx->compartment->types.addDynamicType(cx, types, types::TYPE_DOUBLE);
+#endif
+}
+
 JSValueType
 mjit::Compiler::knownPushedType(uint32 pushed)
 {
@@ -5360,6 +5418,17 @@ mjit::Compiler::knownPushedType(uint32 pushed)
     return types->getKnownTypeTag(cx, script);
 #endif
     return JSVAL_TYPE_UNKNOWN;
+}
+
+void
+mjit::Compiler::markPushedOverflow(uint32 pushed)
+{
+#ifdef JS_TYPE_INFERENCE
+    types::TypeSet *types = analysis->getCode(PC).pushed(pushed);
+    JS_ASSERT(!types->hasType(types::TYPE_DOUBLE));
+    types::InferSpew(types::ISpewDynamic, "StaticOverflow: #%u", analysis->id);
+    cx->compartment->types.addDynamicType(cx, types, types::TYPE_DOUBLE);
+#endif
 }
 
 types::ObjectKind
