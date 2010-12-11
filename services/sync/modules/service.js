@@ -1938,7 +1938,6 @@ WeaveSvc.prototype = {
     this._catch(this._notify("wipe-remote", "", function() {
       // Make sure stuff gets uploaded
       this.resetClient(engines);
-      CollectionKeys.clear();
 
       // Clear out any server data
       this.wipeServer(engines);
@@ -1949,9 +1948,6 @@ WeaveSvc.prototype = {
       // Tell the remote machines to wipe themselves
       else
         this.prepCommand("wipeAll", []);
-    
-      // Generate new keys.
-      this.generateNewSymmetricKeys();
 
       // Make sure the changed clients get updated
       Clients.sync();
