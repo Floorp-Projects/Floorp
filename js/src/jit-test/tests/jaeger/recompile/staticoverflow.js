@@ -4,6 +4,9 @@
 var y = -null - y;
 assertEq(y, NaN);
 
+var x = -(void 0);
+assertEq(x, NaN);
+
 function overdiv() {
   for(var i=0; i<25; i++) {
     var a, b;
