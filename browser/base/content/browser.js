@@ -8077,8 +8077,17 @@ let AddonsMgrListener = {
   get statusBar() document.getElementById("status-bar"),
   getAddonBarItemCount: function() {
     // Take into account the contents of the status bar shim for the count.
-    return this.addonBar.childNodes.length - 3 +
-           this.statusBar.childNodes.length;
+    var itemCount = this.statusBar.childNodes.length;
+
+    var defaultOrNoninteractive = this.addonBar.getAttribute("defaultset")
+                                      .split(",")
+                                      .concat(["separator", "spacer", "spring"]);
+    this.addonBar.currentSet.split(",").forEach(function (item) {
+      if (defaultOrNoninteractive.indexOf(item) == -1)
+        itemCount++;
+    });
+
+    return itemCount;
   },
   onInstalling: function(aAddon) {
     this.lastAddonBarCount = this.getAddonBarItemCount();

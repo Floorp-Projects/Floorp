@@ -975,12 +975,11 @@
              context="toolbar-context-menu" toolboxid="navigator-toolbox"
              mode="icons" iconsize="small" defaulticonsize="small"
              lockiconsize="true"
-             defaultset="addonbar-closebutton,addonbar-spring,status-bar"
+             defaultset="addonbar-closebutton,spring,status-bar"
              customizable="true">
       <toolbarbutton id="addonbar-closebutton"
                      tooltiptext="&addonBarCloseButton.tooltip;"
                      oncommand="setToolbarVisibility(this.parentNode, false);"/>
-      <hbox id="addonbar-spring" flex="1"/>
       <statusbar id="status-bar"/>
     </toolbar>
   </vbox>
