@@ -7,6 +7,8 @@ Local patches:
 
     angle-fixes.patch - fix angle issues 51 & 52
 
+    angle-bug-40.patch - fix angle issue 40: freeze when compiling bad #ifdef shader
+
 == Visual Studio Solution Files ==
 
 The VS solution/project files that are used to build ANGLE are built
