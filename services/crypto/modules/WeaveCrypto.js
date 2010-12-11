@@ -499,22 +499,11 @@ WeaveCrypto.prototype = {
         return "" + outputBuffer.readString() + "";
     },
 
-    _importSymKey: function _importSymKey(slot, mechanism, origin, op, keyItem) {
-        let symKey = this.nss.PK11_ImportSymKey(slot, mechanism, origin, op, keyItem.address(), null);
-        if (symKey.isNull())
-            throw Components.Exception("symkey import failed", Cr.NS_ERROR_FAILURE);
-        return symKey;
-    },
-    
-    _freeSymKey: function _freeSymKey(symKey) {
-        if (symKey && !symKey.isNull())
-            this.nss.PK11_FreeSymKey(symKey);
-    },
 
     _commonCrypt : function (input, output, symmetricKey, iv, operation) {
         this.log("_commonCrypt() called");
         // Get rid of the base64 encoding and convert to SECItems.
-        let keyItem = this.makeSECItem(symmetricKey, true, true);
+        let keyItem = this.makeSECItem(symmetricKey, true);
         let ivItem  = this.makeSECItem(iv, true);
 
         // Determine which (padded) PKCS#11 mechanism to use.
@@ -534,7 +523,10 @@ WeaveCrypto.prototype = {
             if (slot.isNull())
                 throw Components.Exception("can't get internal key slot", Cr.NS_ERROR_FAILURE);
 
-            symKey = this._importSymKey(slot, mechanism, this.nss.PK11_OriginUnwrap, operation, keyItem);
+            symKey = this.nss.PK11_ImportSymKey(slot, mechanism, this.nss.PK11_OriginUnwrap, operation, keyItem.address(), null);
+            if (symKey.isNull())
+                throw Components.Exception("symkey import failed", Cr.NS_ERROR_FAILURE);
+
             ctx = this.nss.PK11_CreateContextBySymKey(mechanism, operation, symKey, ivParam);
             if (ctx.isNull())
                 throw Components.Exception("couldn't create context for symkey", Cr.NS_ERROR_FAILURE);
@@ -565,7 +557,8 @@ WeaveCrypto.prototype = {
         } finally {
             if (ctx && !ctx.isNull())
                 this.nss.PK11_DestroyContext(ctx, true);
-            this._freeSymKey(symKey);
+            if (symKey && !symKey.isNull())
+                this.nss.PK11_FreeSymKey(symKey);
             if (slot && !slot.isNull())
                 this.nss.PK11_FreeSlot(slot);
             if (ivParam && !ivParam.isNull())
@@ -700,6 +693,7 @@ WeaveCrypto.prototype = {
         return new this.nss_t.SECItem(this.nss.SIBUFFER, outputData, outputData.length);
     },
 
+
     /**
      * Returns the expanded data string for the derived key.
      */
@@ -757,45 +751,3 @@ WeaveCrypto.prototype = {
     }
     },
 };
-
-// Memoize makeSECItem for symmetric keys.
-WeaveCrypto.prototype.makeSECItem =
-(function (orig) {
-  let memo = {};
-
-  return function(input, isEncoded, memoize) {
-    if (memoize) {
-      let memoKey = "" + input + !!isEncoded;
-      let val = memo[memoKey];
-      if (!val) {
-        val = orig.apply(this, arguments);
-        memo[memoKey] = val;
-      }
-      return val;
-    }
-    return orig.apply(this, arguments);
-  };
-}(WeaveCrypto.prototype.makeSECItem));
-
-WeaveCrypto.prototype._importSymKey =
-(function (orig) {
-  let memo = {}
-  
-  return function(slot, mechanism, origin, op, keyItem) {
-    // keyItem lookup is already memoized, so we can directly use the address.
-    // Slot changes each time. Don't use it as memo key input.
-    let memoKey = "" + "-" + mechanism +
-                  origin + op + "-" + keyItem.address();
-    let val = memo[memoKey];
-    if (!val) {
-      val = orig.apply(this, arguments);
-      memo[memoKey] = val;
-    }
-    return val;
-  };
-}(WeaveCrypto.prototype._importSymKey));
-
-// Yes, this leaks. However, _importSymKey is now memoized, so the average user
-// will have only a single key, which we persist for the lifetime of the
-// session...
-WeaveCrypto.prototype._freeSymKey = function(symKey) {};
