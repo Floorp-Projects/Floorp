@@ -364,8 +364,16 @@ struct JSTreeContext {              /* tree context for semantic checks */
     JSObject *blockChain() {
         return blockChainBox ? blockChainBox->object : NULL;
     }
-    
-    bool atTopLevel() { return !topStmt || (topStmt->flags & SIF_BODY_BLOCK); }
+
+    /*
+     * True if we are at the topmost level of a entire script or function body.
+     * For example, while parsing this code we would encounter f1 and f2 at
+     * body level, but we would not encounter f3 or f4 at body level:
+     *
+     *   function f1() { function f2() { } }
+     *   if (cond) { function f3() { if (cond) { function f4() { } } } }
+     */
+    bool atBodyLevel() { return !topStmt || (topStmt->flags & SIF_BODY_BLOCK); }
 
     /* Test whether we're in a statement of given type. */
     bool inStatement(JSStmtType type);

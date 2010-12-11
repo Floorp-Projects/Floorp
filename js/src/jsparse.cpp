@@ -2866,12 +2866,12 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
      * If a lambda, give up on JSOP_{GET,CALL}UPVAR usage unless this function
      * is immediately applied (we clear PND_FUNARG if so -- see memberExpr).
      *
-     * Also treat function sub-statements (non-lambda, non-top-level functions)
-     * as escaping funargs, since we can't statically analyze their definitions
+     * Treat function sub-statements (non-lambda, non-body-level functions) as
+     * escaping funargs, since we can't statically analyze their definitions
      * and uses.
      */
-    bool topLevel = tc->atTopLevel();
-    pn->pn_dflags = (lambda || !topLevel) ? PND_FUNARG : 0;
+    bool bodyLevel = tc->atBodyLevel();
+    pn->pn_dflags = (lambda || !bodyLevel) ? PND_FUNARG : 0;
 
     /*
      * Record names for function statements in tc->decls so we know when to
@@ -2899,7 +2899,7 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
                 }
             }
 
-            if (topLevel) {
+            if (bodyLevel) {
                 ALE_SET_DEFN(ale, pn);
                 pn->pn_defn = true;
                 pn->dn_uses = dn;               /* dn->dn_uses is now pn_link */
@@ -2907,7 +2907,7 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
                 if (!MakeDefIntoUse(dn, pn, funAtom, tc))
                     return NULL;
             }
-        } else if (topLevel) {
+        } else if (bodyLevel) {
             /*
              * If this function was used before it was defined, claim the
              * pre-created definition node for this function that primaryExpr
@@ -2943,7 +2943,7 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
          * when jsemit.cpp's BindNameToSlot can optimize a JSOP_NAME into a
          * JSOP_GETLOCAL bytecode).
          */
-        if (topLevel && tc->inFunction()) {
+        if (bodyLevel && tc->inFunction()) {
             /*
              * Define a local in the outer function so that BindNameToSlot
              * can properly optimize accesses. Note that we need a local
@@ -3099,11 +3099,12 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
         outertc->flags |= TCF_FUN_HEAVYWEIGHT;
     } else {
         /*
-         * If this function is a named statement function not at top-level
-         * (i.e. not a top-level function definiton or expression), then our
-         * enclosing function, if any, must be heavyweight.
+         * If this function is not at body level of a program or function (i.e.
+         * it is a function statement that is not a direct child of a program
+         * or function), then our enclosing function, if any, must be
+         * heavyweight.
          */
-        if (!topLevel && lambda == 0 && funAtom)
+        if (!bodyLevel && lambda == 0 && funAtom)
             outertc->flags |= TCF_FUN_HEAVYWEIGHT;
     }
 
@@ -3129,7 +3130,7 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
         result->pn_pos = pn->pn_pos;
         result->pn_kid = pn;
         op = JSOP_LAMBDA;
-    } else if (!topLevel) {
+    } else if (!bodyLevel) {
         /*
          * ECMA ed. 3 extension: a function expression statement not at the
          * top level, e.g., in a compound statement such as the "then" part
@@ -3151,8 +3152,7 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
         pn->pn_body = body;
     }
 
-    if (!outertc->inFunction() && topLevel && funAtom && !lambda &&
-        outertc->compiling()) {
+    if (!outertc->inFunction() && bodyLevel && funAtom && !lambda && outertc->compiling()) {
         JS_ASSERT(pn->pn_cookie.isFree());
         if (!DefineGlobal(pn, outertc->asCodeGenerator(), funAtom))
             return false;
@@ -3276,7 +3276,7 @@ Parser::statements()
     saveBlock = tc->blockNode;
     tc->blockNode = pn;
 
-    bool inDirectivePrologue = tc->atTopLevel();
+    bool inDirectivePrologue = tc->atBodyLevel();
     tokenStream.setOctalCharacterEscape(false);
     for (;;) {
         tt = tokenStream.peekToken(TSF_OPERAND);
@@ -3300,15 +3300,15 @@ Parser::statements()
 
         if (pn2->pn_type == TOK_FUNCTION) {
             /*
-             * PNX_FUNCDEFS notifies the emitter that the block contains top-
+             * PNX_FUNCDEFS notifies the emitter that the block contains body-
              * level function definitions that should be processed before the
              * rest of nodes.
              *
              * TCF_HAS_FUNCTION_STMT is for the TOK_LC case in Statement. It
-             * is relevant only for function definitions not at top-level,
+             * is relevant only for function definitions not at body-level,
              * which we call function statements.
              */
-            if (tc->atTopLevel())
+            if (tc->atBodyLevel())
                 pn->pn_xflags |= PNX_FUNCDEFS;
             else
                 tc->flags |= TCF_HAS_FUNCTION_STMT;
@@ -3378,10 +3378,10 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
     jsint n;
 
     /*
-     * Top-level 'let' is the same as 'var' currently -- this may change in a
-     * successor standard to ES3.1 that specifies 'let'.
+     * Body-level 'let' is the same as 'var' currently -- this may change in a
+     * successor standard to ES5 that specifies 'let'.
      */
-    JS_ASSERT(!tc->atTopLevel());
+    JS_ASSERT(!tc->atBodyLevel());
 
     pn = data->pn;
     if (!CheckStrictBinding(cx, tc, atom, pn))
