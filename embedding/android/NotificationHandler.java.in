@@ -91,7 +91,10 @@ public class NotificationHandler
             Intent appIntent = new Intent(Intent.ACTION_MAIN);
             appIntent.setClassName(context, "@ANDROID_PACKAGE_NAME@.App");
             appIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            appIntent.putExtra("args", "-alert " + alertName + (alertCookie.length() > 0 ? "#" + alertCookie : ""));
             try {
+                Log.i("GeckoAppJava", "startActivity with intent: Action='" + appIntent.getAction() + "'" +
+                      ", args='" + appIntent.getStringExtra("args") + "'" );
                 context.startActivity(appIntent);
             } catch (ActivityNotFoundException e) {
                 Log.e("GeckoAppJava", "NotificationHandler Exception: ", e);
