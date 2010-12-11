@@ -2859,14 +2859,10 @@ function FillInHTMLTooltip(tipElement)
 var browserDragAndDrop = {
   canDropLink: function (aEvent) Services.droppedLinkHandler.canDropLink(aEvent, true),
 
-  dragOver: function (aEvent, statusString)
+  dragOver: function (aEvent)
   {
     if (this.canDropLink(aEvent)) {
       aEvent.preventDefault();
-
-      if (statusString) {
-        XULBrowserWindow.setStatusText(gNavigatorBundle.getString(statusString));
-      }
     }
   },
 
@@ -2881,12 +2877,11 @@ var homeButtonObserver = {
 
   onDragOver: function (aEvent)
     {
-      browserDragAndDrop.dragOver(aEvent, "droponhomebutton");
+      browserDragAndDrop.dragOver(aEvent);
       aEvent.dropEffect = "link";
     },
   onDragExit: function (aEvent)
     {
-      XULWindowBrowser.setStatusText("");
     }
 }
 
@@ -2923,25 +2918,23 @@ var bookmarksButtonObserver = {
 
   onDragOver: function (aEvent)
   {
-    browserDragAndDrop.dragOver(aEvent, "droponbookmarksbutton");
+    browserDragAndDrop.dragOver(aEvent);
     aEvent.dropEffect = "link";
   },
 
   onDragExit: function (aEvent)
   {
-    XULWindowBrowser.setStatusText("");
   }
 }
 
 var newTabButtonObserver = {
   onDragOver: function (aEvent)
   {
-    browserDragAndDrop.dragOver(aEvent, "droponnewtabbutton");
+    browserDragAndDrop.dragOver(aEvent);
   },
 
   onDragExit: function (aEvent)
   {
-    XULWindowBrowser.setStatusText("");
   },
 
   onDrop: function (aEvent)
@@ -2959,11 +2952,10 @@ var newTabButtonObserver = {
 var newWindowButtonObserver = {
   onDragOver: function (aEvent)
   {
-    browserDragAndDrop.dragOver(aEvent, "droponnewwindowbutton");
+    browserDragAndDrop.dragOver(aEvent);
   },
   onDragExit: function (aEvent)
   {
-    XULWindowBrowser.setStatusText("");
   },
   onDrop: function (aEvent)
   {
@@ -2980,7 +2972,6 @@ var newWindowButtonObserver = {
 var DownloadsButtonDNDObserver = {
   onDragOver: function (aEvent)
   {
-    XULWindowBrowser.setStatusText(gNavigatorBundle.getString("dropondownloadsbutton"));
     var types = aEvent.dataTransfer.types;
     if (types.contains("text/x-moz-url") ||
         types.contains("text/uri-list") ||
@@ -2990,7 +2981,6 @@ var DownloadsButtonDNDObserver = {
 
   onDragExit: function (aEvent)
   {
-    XULWindowBrowser.setStatusText("");
   },
 
   onDrop: function (aEvent)
