@@ -9,6 +9,8 @@ Cu.import("resource://services-sync/base_records/crypto.js");   // For Collectio
 Cu.import("resource://services-sync/engines/tabs.js");
 Cu.import("resource://services-sync/log4moz.js");
   
+Engines.register(TabEngine);
+
 function v4_upgrade() {
   let passphrase = "abcdeabcdeabcdeabcdeabcdea";
 
@@ -42,7 +44,6 @@ function v4_upgrade() {
 
   try {
     
-    Svc.Prefs.set("registerEngines", "Tab");
     _("Set up some tabs.");
     let myTabs = 
       {windows: [{tabs: [{index: 1,
@@ -217,7 +218,6 @@ function v5_upgrade() {
 
   try {
     
-    Svc.Prefs.set("registerEngines", "Tab");
     _("Set up some tabs.");
     let myTabs = 
       {windows: [{tabs: [{index: 1,
