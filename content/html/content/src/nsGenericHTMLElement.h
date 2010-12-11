@@ -939,6 +939,8 @@ protected:
     return PR_FALSE;
   }
 
+  void UpdateEditableFormControlState();
+
   PRBool IsSingleLineTextControlInternal(PRBool aExcludePassword, PRInt32 mType) const;
 
   /**
