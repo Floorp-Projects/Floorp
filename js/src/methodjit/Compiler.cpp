@@ -1307,10 +1307,7 @@ mjit::Compiler::generateMethod()
 
                 /* Watch for overflow in constant propagation. */
                 if (!v.isInt32() && knownPushedType(0) == JSVAL_TYPE_INT32) {
-#ifdef JS_METHODJIT_SPEW
-                    JaegerSpew(JSpew_Abort, "overflow in negation (%s line %d)\n",
-                               script->filename, js_PCToLineNumber(cx, script, PC));
-#endif
+                    JaegerSpew(JSpew_Abort, "overflow in negation (%u)\n", PC - script->code);
                     markPushedOverflow(0);
                     return Compile_Overflow;
                 }

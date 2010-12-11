@@ -206,6 +206,7 @@ mjit::Compiler::jsop_binary(JSOp op, VoidStub stub, JSValueType type)
     if (tryBinaryConstantFold(cx, frame, op, lhs, rhs, &v)) {
         if (type == JSVAL_TYPE_INT32 && !v.isInt32()) {
             /* Caller must mark the right type set as having overflowed. */
+            JaegerSpew(JSpew_Abort, "overflow in binary (%u)\n", PC - script->code);
             return false;
         }
         frame.popn(2);
@@ -881,6 +882,7 @@ mjit::Compiler::jsop_mod()
     Value v;
     if (tryBinaryConstantFold(cx, frame, JSOP_MOD, lhs, rhs, &v)) {
         if (type == JSVAL_TYPE_INT32 && !v.isInt32()) {
+            JaegerSpew(JSpew_Abort, "overflow in mod (%u)\n", PC - script->code);
             markPushedOverflow(0);
             return false;
         }
