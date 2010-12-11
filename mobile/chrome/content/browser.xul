@@ -533,9 +533,9 @@
           <description class="syncsetup-center" flex="1">&sync.setup.jpake;</description>
           <separator/>
           <vbox align="center" flex="1">
-            <description id="syncsetup-code1" class="syncsetup-code"></description>
-            <description id="syncsetup-code2" class="syncsetup-code"></description>
-            <description id="syncsetup-code3" class="syncsetup-code"></description>
+            <description id="syncsetup-code1" class="syncsetup-code">....</description>
+            <description id="syncsetup-code2" class="syncsetup-code">....</description>
+            <description id="syncsetup-code3" class="syncsetup-code">....</description>
           </vbox>
           <separator/>
           <description class="syncsetup-center syncsetup-link" flex="1" onclick="WeaveGlue.openManual();">&sync.fallback;</description>
