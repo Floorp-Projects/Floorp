@@ -114,6 +114,12 @@ function getHomePage() {
   return url;
 }
 
+function showPanelWhenReady(aWindow, aPage) {
+  aWindow.addEventListener("UIReadyDelayed", function(aEvent) {
+    aWindow.BrowserUI.showPanel(aPage);
+  }, false);
+}
+
 
 function BrowserCLH() { }
 
@@ -155,6 +161,9 @@ BrowserCLH.prototype = {
       }
       return;
     }
+
+    // Check and remove the alert flag here, but we'll handle it a bit later - see below
+    let alertFlag = aCmdLine.handleFlagWithParam("alert", false);
 
     // Keep an array of possible URL arguments
     let uris = [];
@@ -206,8 +215,6 @@ BrowserCLH.prototype = {
 
     // Assumption: All remaining command line arguments have been sent remotely (browser is already running)
     // Action: Open any URLs we find into an existing browser window
-    if (uris.length == 0)
-      return;
 
     // First, get a browserDOMWindow object
     while (!win.browserDOMWindow)
@@ -216,6 +223,22 @@ BrowserCLH.prototype = {
     // Open any URIs into new tabs
     for (let i = 0; i < uris.length; i++)
       win.browserDOMWindow.openURI(uris[i], null, Ci.nsIBrowserDOMWindow.OPEN_NEWTAB, Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
+
+    // Handle the notification, if called from it
+    if (alertFlag) {
+      if (alertFlag == "update-app") {
+        // Notification was already displayed and clicked, skip it next time
+        Services.prefs.setBoolPref("app.update.skipNotification", true);
+
+        var updateService = Cc["@mozilla.org/updates/update-service;1"].getService(Ci.nsIApplicationUpdateService);
+        var updateTimerCallback = updateService.QueryInterface(Ci.nsITimerCallback);
+        updateTimerCallback.notify(null);
+      } else if (alertFlag.length >= 9 && alertFlag.substr(0, 9) == "download:") {
+        showPanelWhenReady(win, "downloads-container");
+      } else if (alertFlag == "addons") {
+        showPanelWhenReady(win, "addons-container");
+      }
+    }
   },
 
   // QI

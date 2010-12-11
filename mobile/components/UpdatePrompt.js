@@ -169,6 +169,18 @@ UpdatePrompt.prototype = {
     if (!this._enabled)
       return;
 
+    const PREF_APP_UPDATE_SKIPNOTIFICATION = "app.update.skipNotification";
+
+    if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_SKIPNOTIFICATION) &&
+        Services.prefs.getBoolPref(PREF_APP_UPDATE_SKIPNOTIFICATION)) {
+      Services.prefs.setBoolPref(PREF_APP_UPDATE_SKIPNOTIFICATION, false);
+
+      // Notification was already displayed and clicked, so jump to the next step:
+      // ask the user about downloading update
+      this._handleUpdate(aUpdate, "available");
+      return;
+    }
+
     let stringsPrefix = "updateAvailable_" + aUpdate.type + ".";
     let title = gUpdateBundle.formatStringFromName(stringsPrefix + "title", [aUpdate.name], 1);
     let text = gUpdateBundle.GetStringFromName(stringsPrefix + "text");
