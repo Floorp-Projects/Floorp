@@ -764,9 +764,11 @@ WeaveSvc.prototype = {
               Status.login = LOGIN_FAILED_INVALID_PASSPHRASE;
               Status.sync = CREDENTIALS_CHANGED;
             }
-            else
-              // Assume that every other failure is network-related.
-              Status.login = LOGIN_FAILED_NETWORK_ERROR;
+            else {
+              // In the absence of further disambiguation or more precise
+              // failure constants, just report failure.
+              Status.login = LOGIN_FAILED;
+            }
             return false;
           }
         }
