@@ -121,8 +121,14 @@ public class CrashReporter extends Activity
     readStringsFromFile(mPendingExtrasFile.getPath(), mExtrasStringMap);
   }
 
-  public void onCloseClick(View v)
+  void backgroundSendReport()
   {
+    final CheckBox sendReportCheckbox = (CheckBox) findViewById(R.id.send_report);
+    if (!sendReportCheckbox.isChecked()) {
+      finish();
+      return;
+    }
+
     mProgressDialog.show();
     new Thread(new Runnable() {
       public void run() {
@@ -130,14 +136,15 @@ public class CrashReporter extends Activity
       }}).start();
   }
 
+  public void onCloseClick(View v)
+  {
+    backgroundSendReport();
+  }
+
   public void onRestartClick(View v)
   {
     doRestart();
-    mProgressDialog.show();
-    new Thread(new Runnable() {
-      public void run() {
-        sendReport(mPendingMinidumpFile, mExtrasStringMap, mPendingExtrasFile);
-      }}).start();
+    backgroundSendReport();
   }
 
   boolean readStringsFromFile(String filePath, Map stringMap)
@@ -205,11 +212,7 @@ public class CrashReporter extends Activity
                   File extrasFile)
   {
     Log.i("GeckoCrashReport", "sendReport: " + minidumpFile.getPath());
-    final CheckBox sendReportCheckbox = (CheckBox) findViewById(R.id.send_report);
     final CheckBox includeURLCheckbox = (CheckBox) findViewById(R.id.include_url);
-
-    if (!sendReportCheckbox.isChecked())
-      finish();
 
     String spec = extras.get("ServerURL");
     if (spec == null)
