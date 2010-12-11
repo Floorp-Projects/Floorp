@@ -1,0 +1,27 @@
+# HG changeset patch
+# Parent 29f85e1308509423edf7da745dcb5ad2b2c1d88d
+diff --git a/gfx/angle/src/compiler/preprocessor/cpp.c b/gfx/angle/src/compiler/preprocessor/cpp.c
+--- a/gfx/angle/src/compiler/preprocessor/cpp.c
++++ b/gfx/angle/src/compiler/preprocessor/cpp.c
+@@ -489,19 +489,18 @@ static int CPPifdef(int defined, yystype
+ 	cpp->elsetracker++;
+     cpp->elsedepth[cpp->elsetracker] = 0;
+     if (token != CPP_IDENTIFIER) {
+             defined ? CPPErrorToInfoLog("ifdef"):CPPErrorToInfoLog("ifndef");
+     } else {
+         Symbol *s = LookUpSymbol(macros, name);
+         token = cpp->currentInput->scan(cpp->currentInput, yylvalpp);
+         if (token != '\n') {
+-            CPPWarningToInfoLog("unexpected tokens following #ifdef preprocessor directive - expected a newline");
+-            while (token != '\n')
+-                token = cpp->currentInput->scan(cpp->currentInput, yylvalpp);
++            CPPErrorToInfoLog("unexpected tokens following #ifdef preprocessor directive - expected a newline");
++            return 0;
+         }
+         if (((s && !s->details.mac.undef) ? 1 : 0) != defined)
+             token = CPPelse(1, yylvalpp);
+     }
+     return token;
+ } // CPPifdef
+ 
+ static int CPPline(yystypepp * yylvalpp) 
