@@ -2451,7 +2451,7 @@ array_splice(JSContext *cx, uintN argc, Value *vp)
                 break;
             if (js_PrototypeHasIndexedProperties(cx, obj))
                 break;
-            if (length > obj->getDenseArrayCapacity())
+            if (length > obj->getDenseArrayInitializedLength())
                 break;
             if (length != 0 && obj->getDenseArrayElement(length - 1).isMagic(JS_ARRAY_HOLE))
                 break;
