@@ -166,7 +166,6 @@ nsHtml5AttributeName::release()
 nsHtml5AttributeName::~nsHtml5AttributeName()
 {
   MOZ_COUNT_DTOR(nsHtml5AttributeName);
-  nsHtml5Portability::releaseLocal(local[0]);
   delete[] local;
 }
 

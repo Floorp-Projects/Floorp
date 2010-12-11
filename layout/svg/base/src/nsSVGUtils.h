@@ -141,14 +141,6 @@ IsSVGWhitespace(PRUnichar aChar)
          aChar == PRUnichar('\xD')  || aChar == PRUnichar('\xA');
 }
 
-/*
- * Checks the svg enable preference and if a renderer could
- * successfully be created.  Declared as a function instead of a
- * nsSVGUtil method so that files that can't pull in nsSVGUtils.h (due
- * to cairo.h usage) can still query this information.
- */
-PRBool NS_SVGEnabled();
-
 #ifdef MOZ_SMIL
 /*
  * Checks the smil enabled preference.  Declared as a function to match

@@ -9,7 +9,9 @@
   <script type="application/javascript" 
           src="chrome://mochikit/content/MochiKit/packed.js"></script>
   <script type="application/javascript" 
-          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" 
+          src="chrome://mochikit/content/chrome-harness.js"></script>
 
 <body xmlns="http://www.w3.org/1999/xhtml">
 <p id="display">
@@ -22,7 +24,8 @@
 
 <script>
 SimpleTest.waitForExplicitFinish();
-window.open("DOMWindowCreated_chrome.xul", "_blank", "chrome,width=600,height=550");
+var root = getRootDirectory(window.location.href);
+window.open(root + "DOMWindowCreated_chrome.xul", "_blank", "chrome,width=600,height=550");
 </script>
 
 </window>

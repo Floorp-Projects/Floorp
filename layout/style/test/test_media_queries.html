@@ -168,6 +168,13 @@ function run() {
   query_should_be_parseable("not all and (orientation)");
   query_should_be_parseable("only all and (orientation)");
 
+  query_should_be_parseable("(-moz-device-orientation)");
+  query_should_not_be_parseable("not (-moz-device-orientation)");
+  query_should_not_be_parseable("only (-moz-device-orientation)");
+  query_should_be_parseable("all and (-moz-device-orientation)");
+  query_should_be_parseable("not all and (-moz-device-orientation)");
+  query_should_be_parseable("only all and (-moz-device-orientation)");
+
   var features = [ "width", "height", "device-width", "device-height" ];
   var feature;
   var i;
@@ -281,6 +288,24 @@ function run() {
   should_not_apply("(orientation: landscape)");
   should_apply("not all and (orientation: landscape)");
   should_apply("(orientation: portrait)");
+
+  expression_should_be_parseable("-moz-device-orientation");
+  expression_should_be_parseable("-moz-device-orientation: portrait");
+  expression_should_be_parseable("-moz-device-orientation: landscape");
+  expression_should_not_be_parseable("min--moz-device-orientation");
+  expression_should_not_be_parseable("min--moz-device-orientation: portrait");
+  expression_should_not_be_parseable("min--moz-device-orientation: landscape");
+  expression_should_not_be_parseable("max--moz-device-orientation");
+  expression_should_not_be_parseable("max--moz-device-orientation: portrait");
+  expression_should_not_be_parseable("max--moz-device-orientation: landscape");
+
+  // determine the actual configuration of the screen and test against it
+  var device_orientation = (device_width > device_height) ? "landscape" : "portrait";
+  var not_device_orientation = (device_orientation == "landscape") ? "portrait" : "landscape";
+  should_apply("(-moz-device-orientation)");
+  should_apply("(-moz-device-orientation: " + device_orientation + ")");
+  should_not_apply("(-moz-device-orientation: " + not_device_orientation + ")");
+  should_apply("not all and (-moz-device-orientation: " + not_device_orientation + ")");
 
   should_apply("(aspect-ratio: 59/80)");
   should_not_apply("(aspect-ratio: 58/80)");

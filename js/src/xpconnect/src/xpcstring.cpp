@@ -144,6 +144,10 @@ XPCStringConvert::ReadableToJSVal(JSContext *cx,
 XPCReadableJSStringWrapper *
 XPCStringConvert::JSStringToReadable(XPCCallContext& ccx, JSString *str)
 {
-    return ccx.NewStringWrapper(reinterpret_cast<PRUnichar *>(JS_GetStringChars(str)),
-                                JS_GetStringLength(str));
+    const PRUnichar *chars =
+        reinterpret_cast<const PRUnichar *>(JS_GetStringCharsZ(ccx, str));
+    if(!chars)
+        return nsnull;
+
+    return ccx.NewStringWrapper(chars, JS_GetStringLength(str));
 }

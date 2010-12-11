@@ -26,6 +26,8 @@ var gNavType = NAV_NONE;      // defines the most recent navigation type
 var gOrigMaxTotalViewers =    // original value of max_total_viewers,
   undefined;                  // to be restored at end of test
 
+var gExtractedPath = null;    //used to cache file path for extracting files from a .jar file
+
 /**
  * The doPageNavigation() function performs page navigations asynchronously, 
  * listens for specified events, and compares actual events with a list of 
@@ -406,12 +408,36 @@ function enableBFCache(enable) {
   }
 }
 
+/*
+ * get http root for local tests.  Use a single extractJarToTmp instead of 
+ * extracting for each test.  
+ * Returns a file://path if we have a .jar file
+ */
+function getHttpRoot() {
+  var location = window.location.href;
+  location = getRootDirectory(location);
+  var jar = getJar(location);
+  if (jar != null) {
+    if (gExtractedPath == null) {
+      var resolved = extractJarToTmp(jar);
+      gExtractedPath = resolved.path;
+    }
+  } else {
+    return null;
+  }
+  return "file://" + gExtractedPath + '/';
+}
+
 /**
  * Returns the full HTTP url for a file in the mochitest docshell test 
  * directory.
  */
 function getHttpUrl(filename) {
-  return "http://mochi.test:8888/chrome/docshell/test/chrome/" + filename;
+  var root = getHttpRoot();
+  if (root == null) {
+    root = "http://mochi.test:8888/chrome/docshell/test/chrome/";
+  }
+  return root + filename;
 }
 
 /**

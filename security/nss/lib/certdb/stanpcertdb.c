@@ -614,19 +614,30 @@ CERT_FindCertByDERCert(CERTCertDBHandle *handle, SECItem *derCert)
     return STAN_GetCERTCertificateOrRelease(c);
 }
 
-CERTCertificate *
-CERT_FindCertByNicknameOrEmailAddr(CERTCertDBHandle *handle, const char *name)
+static CERTCertificate *
+common_FindCertByNicknameOrEmailAddrForUsage(CERTCertDBHandle *handle, 
+                                             char *name,
+                                             PRBool anyUsage,
+                                             SECCertUsage lookingForUsage)
 {
     NSSCryptoContext *cc;
     NSSCertificate *c, *ct;
     CERTCertificate *cert;
     NSSUsage usage;
+    CERTCertList *certlist;
 
     if (NULL == name) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return NULL;
     }
-    usage.anyUsage = PR_TRUE;
+
+    usage.anyUsage = anyUsage;
+
+    if (!anyUsage) {
+      usage.nss3lookingForCA = PR_FALSE;
+      usage.nss3usage = lookingForUsage;
+    }
+
     cc = STAN_GetDefaultCryptoContext();
     ct = NSSCryptoContext_FindBestCertificateByNickname(cc, name, 
                                                        NULL, &usage, NULL);
@@ -638,7 +649,34 @@ CERT_FindCertByNicknameOrEmailAddr(CERTCertDBHandle *handle, const char *name)
             PORT_Free(lowercaseName);
         }
     }
-    cert = PK11_FindCertFromNickname(name, NULL);
+
+    if (anyUsage) {
+      cert = PK11_FindCertFromNickname(name, NULL);
+    }
+    else {
+      if (ct) {
+        /* Does ct really have the required usage? */
+          nssDecodedCert *dc;
+          dc = nssCertificate_GetDecoding(ct);
+          if (!dc->matchUsage(dc, &usage)) {
+            CERT_DestroyCertificate(STAN_GetCERTCertificateOrRelease(ct));
+            ct = NULL;
+          }
+      }
+
+      certlist = PK11_FindCertsFromNickname(name, NULL);
+      if (certlist) {
+        SECStatus rv = CERT_FilterCertListByUsage(certlist, 
+                                                  lookingForUsage, 
+                                                  PR_FALSE);
+        if (SECSuccess == rv &&
+            !CERT_LIST_END(CERT_LIST_HEAD(certlist), certlist)) {
+          cert = CERT_DupCertificate(CERT_LIST_HEAD(certlist)->cert);
+        }
+        CERT_DestroyCertList(certlist);
+      }
+    }
+
     if (cert) {
 	c = get_best_temp_or_perm(ct, STAN_GetNSSCertificate(cert));
 	CERT_DestroyCertificate(cert);
@@ -649,6 +687,23 @@ CERT_FindCertByNicknameOrEmailAddr(CERTCertDBHandle *handle, const char *name)
 	c = ct;
     }
     return c ? STAN_GetCERTCertificateOrRelease(c) : NULL;
+}
+
+CERTCertificate *
+CERT_FindCertByNicknameOrEmailAddr(CERTCertDBHandle *handle, const char *name)
+{
+  return common_FindCertByNicknameOrEmailAddrForUsage(handle, name, 
+                                                      PR_TRUE, 0);
+}
+
+CERTCertificate *
+CERT_FindCertByNicknameOrEmailAddrForUsage(CERTCertDBHandle *handle, 
+                                           const char *name, 
+                                           SECCertUsage lookingForUsage)
+{
+  return common_FindCertByNicknameOrEmailAddrForUsage(handle, name, 
+                                                      PR_FALSE, 
+                                                      lookingForUsage);
 }
 
 static void 

@@ -128,19 +128,70 @@ GenerateRequest(IDBCursor* aCursor)
 
 BEGIN_INDEXEDDB_NAMESPACE
 
-class ContinueRunnable : public nsRunnable
+class ContinueHelper : public AsyncConnectionHelper
 {
 public:
-  NS_DECL_NSIRUNNABLE
+  ContinueHelper(IDBCursor* aCursor)
+  : AsyncConnectionHelper(aCursor->mTransaction, aCursor->mRequest),
+    mCursor(aCursor)
+  { }
 
-  ContinueRunnable(IDBCursor* aCursor,
-                   const Key& aKey)
-  : mCursor(aCursor), mKey(aKey)
+  nsresult DoDatabaseWork(mozIStorageConnection* aConnection);
+  nsresult GetSuccessResult(nsIWritableVariant* aResult);
+
+  void ReleaseMainThreadObjects()
+  {
+    mCursor = nsnull;
+    AsyncConnectionHelper::ReleaseMainThreadObjects();
+  }
+
+protected:
+  virtual nsresult
+  BindArgumentsToStatement(mozIStorageStatement* aStatement) = 0;
+
+  virtual nsresult
+  GatherResultsFromStatement(mozIStorageStatement* aStatement) = 0;
+
+protected:
+  nsRefPtr<IDBCursor> mCursor;
+  Key mKey;
+  Key mObjectKey;
+  nsString mValue;
+};
+
+class ContinueObjectStoreHelper : public ContinueHelper
+{
+public:
+  ContinueObjectStoreHelper(IDBCursor* aCursor)
+  : ContinueHelper(aCursor)
   { }
 
 private:
-  nsRefPtr<IDBCursor> mCursor;
-  const Key mKey;
+  nsresult BindArgumentsToStatement(mozIStorageStatement* aStatement);
+  nsresult GatherResultsFromStatement(mozIStorageStatement* aStatement);
+};
+
+class ContinueIndexHelper : public ContinueHelper
+{
+public:
+  ContinueIndexHelper(IDBCursor* aCursor)
+  : ContinueHelper(aCursor)
+  { }
+
+private:
+  nsresult BindArgumentsToStatement(mozIStorageStatement* aStatement);
+  nsresult GatherResultsFromStatement(mozIStorageStatement* aStatement);
+};
+
+class ContinueIndexObjectHelper : public ContinueIndexHelper
+{
+public:
+  ContinueIndexObjectHelper(IDBCursor* aCursor)
+  : ContinueIndexHelper(aCursor)
+  { }
+
+private:
+  nsresult GatherResultsFromStatement(mozIStorageStatement* aStatement);
 };
 
 END_INDEXEDDB_NAMESPACE
@@ -151,23 +202,24 @@ IDBCursor::Create(IDBRequest* aRequest,
                   IDBTransaction* aTransaction,
                   IDBObjectStore* aObjectStore,
                   PRUint16 aDirection,
-                  nsTArray<KeyValuePair>& aData)
+                  const Key& aRangeKey,
+                  const nsACString& aContinueQuery,
+                  const nsACString& aContinueToQuery,
+                  const Key& aKey,
+                  const nsAString& aValue)
 {
   NS_ASSERTION(aObjectStore, "Null pointer!");
+  NS_ASSERTION(!aKey.IsUnset() && !aKey.IsNull(), "Bad key!");
 
   nsRefPtr<IDBCursor> cursor =
-    IDBCursor::CreateCommon(aRequest, aTransaction, aDirection);
+    IDBCursor::CreateCommon(aRequest, aTransaction, aObjectStore, aDirection,
+                            aRangeKey, aContinueQuery, aContinueToQuery);
+  NS_ASSERTION(cursor, "This shouldn't fail!");
 
   cursor->mObjectStore = aObjectStore;
-
-  if (!cursor->mData.SwapElements(aData)) {
-    NS_ERROR("Out of memory?!");
-    return nsnull;
-  }
-  NS_ASSERTION(!cursor->mData.IsEmpty(), "Should never have an empty set!");
-
-  cursor->mDataIndex = cursor->mData.Length() - 1;
   cursor->mType = OBJECTSTORE;
+  cursor->mKey = aKey;
+  cursor->mValue = aValue;
 
   return cursor.forget();
 }
@@ -178,24 +230,26 @@ IDBCursor::Create(IDBRequest* aRequest,
                   IDBTransaction* aTransaction,
                   IDBIndex* aIndex,
                   PRUint16 aDirection,
-                  nsTArray<KeyKeyPair>& aData)
+                  const Key& aRangeKey,
+                  const nsACString& aContinueQuery,
+                  const nsACString& aContinueToQuery,
+                  const Key& aKey,
+                  const Key& aObjectKey)
 {
   NS_ASSERTION(aIndex, "Null pointer!");
+  NS_ASSERTION(!aKey.IsUnset() && !aKey.IsNull(), "Bad key!");
+  NS_ASSERTION(!aObjectKey.IsUnset() && !aObjectKey.IsNull(), "Bad key!");
 
   nsRefPtr<IDBCursor> cursor =
-    IDBCursor::CreateCommon(aRequest, aTransaction, aDirection);
+    IDBCursor::CreateCommon(aRequest, aTransaction, aIndex->ObjectStore(),
+                            aDirection, aRangeKey, aContinueQuery,
+                            aContinueToQuery);
+  NS_ASSERTION(cursor, "This shouldn't fail!");
 
-  cursor->mObjectStore = aIndex->ObjectStore();
   cursor->mIndex = aIndex;
-
-  if (!cursor->mKeyData.SwapElements(aData)) {
-    NS_ERROR("Out of memory?!");
-    return nsnull;
-  }
-  NS_ASSERTION(!cursor->mKeyData.IsEmpty(), "Should never have an empty set!");
-
-  cursor->mDataIndex = cursor->mKeyData.Length() - 1;
   cursor->mType = INDEX;
+  cursor->mKey = aKey,
+  cursor->mObjectKey = aObjectKey;
 
   return cursor.forget();
 }
@@ -206,24 +260,28 @@ IDBCursor::Create(IDBRequest* aRequest,
                   IDBTransaction* aTransaction,
                   IDBIndex* aIndex,
                   PRUint16 aDirection,
-                  nsTArray<KeyValuePair>& aData)
+                  const Key& aRangeKey,
+                  const nsACString& aContinueQuery,
+                  const nsACString& aContinueToQuery,
+                  const Key& aKey,
+                  const Key& aObjectKey,
+                  const nsAString& aValue)
 {
   NS_ASSERTION(aIndex, "Null pointer!");
+  NS_ASSERTION(!aKey.IsUnset() && !aKey.IsNull(), "Bad key!");
 
   nsRefPtr<IDBCursor> cursor =
-    IDBCursor::CreateCommon(aRequest, aTransaction, aDirection);
+    IDBCursor::CreateCommon(aRequest, aTransaction, aIndex->ObjectStore(),
+                            aDirection, aRangeKey, aContinueQuery,
+                            aContinueToQuery);
+  NS_ASSERTION(cursor, "This shouldn't fail!");
 
   cursor->mObjectStore = aIndex->ObjectStore();
   cursor->mIndex = aIndex;
-
-  if (!cursor->mData.SwapElements(aData)) {
-    NS_ERROR("Out of memory?!");
-    return nsnull;
-  }
-  NS_ASSERTION(!cursor->mData.IsEmpty(), "Should never have an empty set!");
-
-  cursor->mDataIndex = cursor->mData.Length() - 1;
   cursor->mType = INDEXOBJECT;
+  cursor->mKey = aKey;
+  cursor->mObjectKey = aObjectKey;
+  cursor->mValue = aValue;
 
   return cursor.forget();
 }
@@ -232,32 +290,41 @@ IDBCursor::Create(IDBRequest* aRequest,
 already_AddRefed<IDBCursor>
 IDBCursor::CreateCommon(IDBRequest* aRequest,
                         IDBTransaction* aTransaction,
-                        PRUint16 aDirection)
+                        IDBObjectStore* aObjectStore,
+                        PRUint16 aDirection,
+                        const Key& aRangeKey,
+                        const nsACString& aContinueQuery,
+                        const nsACString& aContinueToQuery)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(aRequest, "Null pointer!");
   NS_ASSERTION(aTransaction, "Null pointer!");
+  NS_ASSERTION(aObjectStore, "Null pointer!");
+  NS_ASSERTION(!aContinueQuery.IsEmpty(), "Empty query!");
+  NS_ASSERTION(!aContinueToQuery.IsEmpty(), "Empty query!");
 
-  nsRefPtr<IDBCursor> cursor(new IDBCursor());
-
-  cursor->mScriptContext = aTransaction->Database()->ScriptContext();
-  cursor->mOwner = aTransaction->Database()->Owner();
+  nsRefPtr<IDBCursor> cursor = new IDBCursor();
 
   cursor->mRequest = aRequest;
   cursor->mTransaction = aTransaction;
+  cursor->mObjectStore = aObjectStore;
+  cursor->mScriptContext = aTransaction->Database()->ScriptContext();
+  cursor->mOwner = aTransaction->Database()->Owner();
   cursor->mDirection = aDirection;
+  cursor->mContinueQuery = aContinueQuery;
+  cursor->mContinueToQuery = aContinueToQuery;
+  cursor->mRangeKey = aRangeKey;
 
   return cursor.forget();
 }
 
 IDBCursor::IDBCursor()
-: mDirection(nsIIDBCursor::NEXT),
+: mType(OBJECTSTORE),
+  mDirection(nsIIDBCursor::NEXT),
   mCachedValue(JSVAL_VOID),
   mHaveCachedValue(false),
   mValueRooted(false),
-  mContinueCalled(false),
-  mDataIndex(0),
-  mType(OBJECTSTORE)
+  mContinueCalled(false)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 }
@@ -329,6 +396,16 @@ IDBCursor::GetDirection(PRUint16* aDirection)
 }
 
 NS_IMETHODIMP
+IDBCursor::GetSource(nsISupports** aSource)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  return mType == OBJECTSTORE ?
+         CallQueryInterface(mObjectStore, aSource) :
+         CallQueryInterface(mIndex, aSource);
+}
+
+NS_IMETHODIMP
 IDBCursor::GetKey(nsIVariant** aKey)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -339,17 +416,14 @@ IDBCursor::GetKey(nsIVariant** aKey)
       do_CreateInstance(NS_VARIANT_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-    const Key& key = mType == INDEX ?
-                     mKeyData[mDataIndex].key :
-                     mData[mDataIndex].key;
-    NS_ASSERTION(!key.IsUnset() && !key.IsNull(), "Bad key!");
+    NS_ASSERTION(!mKey.IsUnset() && !mKey.IsNull(), "Bad key!");
 
-    if (key.IsString()) {
-      rv = variant->SetAsAString(key.StringValue());
+    if (mKey.IsString()) {
+      rv = variant->SetAsAString(mKey.StringValue());
       NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
     }
-    else if (key.IsInt()) {
-      rv = variant->SetAsInt64(key.IntValue());
+    else if (mKey.IsInt()) {
+      rv = variant->SetAsInt64(mKey.IntValue());
       NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
     }
     else {
@@ -379,10 +453,9 @@ IDBCursor::GetValue(JSContext* aCx,
   nsresult rv;
 
   if (mType == INDEX) {
-    const Key& value = mKeyData[mDataIndex].value;
-    NS_ASSERTION(!value.IsUnset() && !value.IsNull(), "Bad key!");
+    NS_ASSERTION(!mObjectKey.IsUnset() && !mObjectKey.IsNull(), "Bad key!");
 
-    rv = IDBObjectStore::GetJSValFromKey(value, aCx, aValue);
+    rv = IDBObjectStore::GetJSValFromKey(mObjectKey, aCx, aValue);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
     return NS_OK;
@@ -392,7 +465,7 @@ IDBCursor::GetValue(JSContext* aCx,
     JSAutoRequest ar(aCx);
 
     nsCOMPtr<nsIJSON> json(new nsJSON());
-    rv = json->DecodeToJSVal(mData[mDataIndex].value, aCx, &mCachedValue);
+    rv = json->DecodeToJSVal(mValue, aCx, &mCachedValue);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_SERIAL_ERR);
 
     if (!mValueRooted) {
@@ -410,18 +483,12 @@ IDBCursor::GetValue(JSContext* aCx,
 NS_IMETHODIMP
 IDBCursor::Continue(const jsval &aKey,
                     JSContext* aCx,
-                    PRUint8 aOptionalArgCount,
-                    PRBool* _retval)
+                    PRUint8 aOptionalArgCount)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (!mTransaction->TransactionIsOpen()) {
+  if (!mTransaction->TransactionIsOpen() || mContinueCalled) {
     return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
-  }
-
-  if (mContinueCalled) {
-    // XXX Update the spec for precise behavior here.
-    return NS_OK;
   }
 
   Key key;
@@ -437,19 +504,63 @@ IDBCursor::Continue(const jsval &aKey,
     }
   }
 
-  TransactionThreadPool* pool = TransactionThreadPool::GetOrCreate();
-  NS_ENSURE_TRUE(pool, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  if (!key.IsUnset()) {
+    switch (mDirection) {
+      case nsIIDBCursor::NEXT:
+      case nsIIDBCursor::NEXT_NO_DUPLICATE:
+        if (key <= mKey) {
+          return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
+        }
+        break;
 
-  nsRefPtr<ContinueRunnable> runnable(new ContinueRunnable(this, key));
+      case nsIIDBCursor::PREV:
+      case nsIIDBCursor::PREV_NO_DUPLICATE:
+        if (key >= mKey) {
+          return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
+        }
+        break;
 
-  rv = pool->Dispatch(mTransaction, runnable, false, nsnull);
+      default:
+        NS_NOTREACHED("Unknown direction type!");
+    }
+  }
+
+  mContinueToKey = key;
+
+#ifdef DEBUG
+  {
+    PRUint16 readyState;
+    if (NS_FAILED(mRequest->GetReadyState(&readyState))) {
+      NS_ERROR("This should never fail!");
+    }
+    NS_ASSERTION(readyState == nsIIDBRequest::DONE, "Should be DONE!");
+  }
+#endif
+
+  mRequest->Reset();
+
+  nsRefPtr<ContinueHelper> helper;
+  switch (mType) {
+    case OBJECTSTORE:
+      helper = new ContinueObjectStoreHelper(this);
+      break;
+
+    case INDEX:
+      helper = new ContinueIndexHelper(this);
+      break;
+
+    case INDEXOBJECT:
+      helper = new ContinueIndexObjectHelper(this);
+      break;
+
+    default:
+      NS_NOTREACHED("Unknown cursor type!");
+  }
+
+  rv = helper->DispatchToTransactionPool();
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  mTransaction->OnNewRequest();
-
   mContinueCalled = true;
-
-  *_retval = PR_TRUE;
   return NS_OK;
 }
 
@@ -468,10 +579,9 @@ IDBCursor::Update(const jsval& aValue,
     NS_WARNING("Update for non-objectStore cursors is not implemented!");
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
-  NS_ASSERTION(mObjectStore, "This cannot be null!");
 
-  const Key& key = mData[mDataIndex].key;
-  NS_ASSERTION(!key.IsUnset() && !key.IsNull(), "Bad key!");
+  NS_ASSERTION(mObjectStore, "This cannot be null!");
+  NS_ASSERTION(!mKey.IsUnset() && !mKey.IsNull(), "Bad key!");
 
   JSAutoRequest ar(aCx);
 
@@ -491,7 +601,7 @@ IDBCursor::Update(const jsval& aValue,
     NS_ENSURE_TRUE(ok, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
     if (JSVAL_IS_VOID(prop.jsval_value())) {
-      rv = IDBObjectStore::GetJSValFromKey(key, aCx, prop.jsval_addr());
+      rv = IDBObjectStore::GetJSValFromKey(mKey, aCx, prop.jsval_addr());
       NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
       ok = JS_StructuredClone(aCx, clone.jsval_value(), clone.jsval_addr());
@@ -507,7 +617,7 @@ IDBCursor::Update(const jsval& aValue,
       rv = IDBObjectStore::GetKeyFromJSVal(prop.jsval_value(), newKey);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      if (newKey.IsUnset() || newKey.IsNull() || newKey != key) {
+      if (newKey.IsUnset() || newKey.IsNull() || newKey != mKey) {
         return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
       }
     }
@@ -534,7 +644,7 @@ IDBCursor::Update(const jsval& aValue,
   NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsRefPtr<UpdateHelper> helper =
-    new UpdateHelper(mTransaction, request, mObjectStore->Id(), jsonValue, key,
+    new UpdateHelper(mTransaction, request, mObjectStore->Id(), jsonValue, mKey,
                      mObjectStore->IsAutoIncrement(), indexUpdateInfo);
 
   rv = helper->DispatchToTransactionPool();
@@ -557,16 +667,15 @@ IDBCursor::Delete(nsIIDBRequest** _retval)
     NS_WARNING("Delete for non-objectStore cursors is not implemented!");
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
-  NS_ASSERTION(mObjectStore, "This cannot be null!");
 
-  const Key& key = mData[mDataIndex].key;
-  NS_ASSERTION(!key.IsUnset() && !key.IsNull(), "Bad key!");
+  NS_ASSERTION(mObjectStore, "This cannot be null!");
+  NS_ASSERTION(!mKey.IsUnset() && !mKey.IsNull(), "Bad key!");
 
   nsRefPtr<IDBRequest> request = GenerateRequest(this);
   NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsRefPtr<DeleteHelper> helper =
-    new DeleteHelper(mTransaction, request, mObjectStore->Id(), key,
+    new DeleteHelper(mTransaction, request, mObjectStore->Id(), mKey,
                      mObjectStore->IsAutoIncrement());
 
   nsresult rv = helper->DispatchToTransactionPool();
@@ -697,129 +806,330 @@ DeleteHelper::GetSuccessResult(nsIWritableVariant* aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-ContinueRunnable::Run()
+nsresult
+ContinueHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
+{
+  // We need to pick a query based on whether or not the cursor's mContinueToKey
+  // is set. If it is unset then othing was passed to continue so we'll grab the
+  // next item in the database that is greater than (less than, if we're running
+  // a PREV cursor) the current key. If it is set then a key was passed to
+  // continue so we'll grab the next item in the database that is greater than
+  // (less than, if we're running a PREV cursor) or equal to the key that was
+  // specified.
+
+  const nsCString& query = mCursor->mContinueToKey.IsUnset() ?
+                           mCursor->mContinueQuery :
+                           mCursor->mContinueToQuery;
+  NS_ASSERTION(!query.IsEmpty(), "Bad query!");
+
+  nsCOMPtr<mozIStorageStatement> stmt = mTransaction->GetCachedStatement(query);
+  NS_ENSURE_TRUE(stmt, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  mozStorageStatementScoper scoper(stmt);
+
+  nsresult rv = BindArgumentsToStatement(stmt);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  PRBool hasResult;
+  rv = stmt->ExecuteStep(&hasResult);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  if (hasResult) {
+    rv = GatherResultsFromStatement(stmt);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  }
+  else {
+    mKey = Key::UNSETKEY;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+ContinueHelper::GetSuccessResult(nsIWritableVariant* aResult)
 {
   nsresult rv;
 
-  if (!NS_IsMainThread()) {
-    rv = NS_DispatchToMainThread(this, NS_DISPATCH_NORMAL);
+  if (mKey.IsUnset()) {
+    rv = aResult->SetAsEmpty();
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
   }
 
-  // mCursor must be null after this method finishes. Swap out now.
-  nsRefPtr<IDBCursor> cursor;
-  cursor.swap(mCursor);
+#ifdef DEBUG
+  NS_ASSERTION(!mKey.IsNull(), "Huh?!");
+  if (mCursor->mType != IDBCursor::OBJECTSTORE) {
+    NS_ASSERTION(!mObjectKey.IsUnset() && !mObjectKey.IsNull(), "Bad key!");
+  }
+#endif
 
   // Remove cached stuff from last time.
-  cursor->mCachedKey = nsnull;
-  cursor->mCachedValue = JSVAL_VOID;
-  cursor->mHaveCachedValue = false;
-  cursor->mContinueCalled = false;
+  mCursor->mCachedKey = nsnull;
+  mCursor->mCachedObjectKey = nsnull;
+  mCursor->mCachedValue = JSVAL_VOID;
+  mCursor->mHaveCachedValue = false;
+  mCursor->mContinueCalled = false;
 
-  if (cursor->mType == IDBCursor::INDEX) {
-    cursor->mKeyData.RemoveElementAt(cursor->mDataIndex);
-  }
-  else {
-    cursor->mData.RemoveElementAt(cursor->mDataIndex);
-  }
-  if (cursor->mDataIndex) {
-    cursor->mDataIndex--;
-  }
+  // And set new values.
+  mCursor->mKey = mKey;
+  mCursor->mObjectKey = mObjectKey;
+  mCursor->mValue = mValue;
+  mCursor->mContinueToKey = Key::UNSETKEY;
 
-  nsCOMPtr<nsIWritableVariant> variant =
-    do_CreateInstance(NS_VARIANT_CONTRACTID);
-  if (!variant) {
-    NS_ERROR("Couldn't create variant!");
-    return NS_ERROR_FAILURE;
-  }
-
-  PRBool empty = cursor->mType == IDBCursor::INDEX ?
-                 cursor->mKeyData.IsEmpty() :
-                 cursor->mData.IsEmpty();
-
-  if (empty) {
-    rv = variant->SetAsEmpty();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  else {
-    if (!mKey.IsUnset()) {
-      NS_ASSERTION(!mKey.IsNull(), "Huh?!");
-
-      NS_WARNING("Using a slow O(n) search for continue(key), do something "
-                 "smarter!");
-
-      // Skip ahead to our next key match.
-      PRInt32 index = PRInt32(cursor->mDataIndex);
-
-      if (cursor->mType == IDBCursor::INDEX) {
-        while (index >= 0) {
-          const Key& key = cursor->mKeyData[index].key;
-          if (mKey == key) {
-            break;
-          }
-          if (key < mKey) {
-            index--;
-            continue;
-          }
-          index = -1;
-          break;
-        }
-
-        if (index >= 0) {
-          cursor->mDataIndex = PRUint32(index);
-          cursor->mKeyData.RemoveElementsAt(index + 1,
-                                            cursor->mKeyData.Length() - index
-                                            - 1);
-        }
-      }
-      else {
-        while (index >= 0) {
-          const Key& key = cursor->mData[index].key;
-          if (mKey == key) {
-            break;
-          }
-          if (key < mKey) {
-            index--;
-            continue;
-          }
-          index = -1;
-          break;
-        }
-
-        if (index >= 0) {
-          cursor->mDataIndex = PRUint32(index);
-          cursor->mData.RemoveElementsAt(index + 1,
-                                         cursor->mData.Length() - index - 1);
-        }
-      }
-    }
-
-    rv = variant->SetAsISupports(cursor);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  rv = variant->SetWritable(PR_FALSE);
+  rv = aResult->SetAsISupports(mCursor);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDOMEvent> event =
-    IDBSuccessEvent::Create(cursor->mRequest, variant, cursor->mTransaction);
-  if (!event) {
-    NS_ERROR("Failed to create event!");
-    return NS_ERROR_FAILURE;
+  return NS_OK;
+}
+
+nsresult
+ContinueObjectStoreHelper::BindArgumentsToStatement(
+                                               mozIStorageStatement* aStatement)
+{
+  // Bind object store id.
+  nsresult rv = aStatement->BindInt64ByName(NS_LITERAL_CSTRING("id"),
+                                            mCursor->mObjectStore->Id());
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  NS_NAMED_LITERAL_CSTRING(currentKeyName, "current_key");
+  NS_NAMED_LITERAL_CSTRING(rangeKeyName, "range_key");
+
+  // Bind current key.
+  const Key& currentKey = mCursor->mContinueToKey.IsUnset() ?
+                          mCursor->mKey :
+                          mCursor->mContinueToKey;
+
+  if (currentKey.IsString()) {
+    rv = aStatement->BindStringByName(currentKeyName, currentKey.StringValue());
+  }
+  else if (currentKey.IsInt()) {
+    rv = aStatement->BindInt64ByName(currentKeyName, currentKey.IntValue());
+  }
+  else {
+    NS_NOTREACHED("Bad key!");
+  }
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  // Bind range key if it is specified.
+  const Key& rangeKey = mCursor->mRangeKey;
+
+  if (!rangeKey.IsUnset()) {
+    if (rangeKey.IsString()) {
+      rv = aStatement->BindStringByName(rangeKeyName, rangeKey.StringValue());
+    }
+    else if (rangeKey.IsInt()) {
+      rv = aStatement->BindInt64ByName(rangeKeyName, rangeKey.IntValue());
+    }
+    else {
+      NS_NOTREACHED("Bad key!");
+    }
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
 
-  AsyncConnectionHelper::SetCurrentTransaction(cursor->mTransaction);
+  return NS_OK;
+}
 
-  PRBool dummy;
-  cursor->mRequest->DispatchEvent(event, &dummy);
+nsresult
+ContinueObjectStoreHelper::GatherResultsFromStatement(
+                                               mozIStorageStatement* aStatement)
+{
+  // Figure out what kind of key we have next.
+  PRInt32 keyType;
+  nsresult rv = aStatement->GetTypeOfIndex(0, &keyType);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  NS_ASSERTION(AsyncConnectionHelper::GetCurrentTransaction() ==
-               cursor->mTransaction, "Should be unchanged!");
-  AsyncConnectionHelper::SetCurrentTransaction(nsnull);
+  if (keyType == mozIStorageStatement::VALUE_TYPE_INTEGER) {
+    mKey = aStatement->AsInt64(0);
+  }
+  else if (keyType == mozIStorageStatement::VALUE_TYPE_TEXT) {
+    rv = aStatement->GetString(0, mKey.ToString());
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  }
+  else {
+    NS_NOTREACHED("Bad SQLite type!");
+  }
 
-  cursor->mTransaction->OnRequestFinished();
+#ifdef DEBUG
+  {
+    PRInt32 valueType;
+    NS_ASSERTION(NS_SUCCEEDED(aStatement->GetTypeOfIndex(1, &valueType)) &&
+                 valueType == mozIStorageStatement::VALUE_TYPE_TEXT,
+                 "Bad value type!");
+  }
+#endif
+
+  rv = aStatement->GetString(1, mValue);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  return NS_OK;
+}
+
+nsresult
+ContinueIndexHelper::BindArgumentsToStatement(mozIStorageStatement* aStatement)
+{
+  // Bind index id.
+  nsresult rv = aStatement->BindInt64ByName(NS_LITERAL_CSTRING("id"),
+                                            mCursor->mIndex->Id());
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  NS_NAMED_LITERAL_CSTRING(currentKeyName, "current_key");
+
+  // Bind current key.
+  const Key& currentKey = mCursor->mContinueToKey.IsUnset() ?
+                          mCursor->mKey :
+                          mCursor->mContinueToKey;
+
+  if (currentKey.IsString()) {
+    rv = aStatement->BindStringByName(currentKeyName, currentKey.StringValue());
+  }
+  else if (currentKey.IsInt()) {
+    rv = aStatement->BindInt64ByName(currentKeyName, currentKey.IntValue());
+  }
+  else {
+    NS_NOTREACHED("Bad key!");
+  }
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  // Bind range key if it is specified.
+  if (!mCursor->mRangeKey.IsUnset()) {
+    NS_NAMED_LITERAL_CSTRING(rangeKeyName, "range_key");
+    if (mCursor->mRangeKey.IsString()) {
+      rv = aStatement->BindStringByName(rangeKeyName,
+                                        mCursor->mRangeKey.StringValue());
+    }
+    else if (mCursor->mRangeKey.IsInt()) {
+      rv = aStatement->BindInt64ByName(rangeKeyName,
+                                       mCursor->mRangeKey.IntValue());
+    }
+    else {
+      NS_NOTREACHED("Bad key!");
+    }
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  }
+
+  // Bind object key if duplicates are allowed and we're not continuing to a
+  // specific key.
+  if ((mCursor->mDirection == nsIIDBCursor::NEXT ||
+       mCursor->mDirection == nsIIDBCursor::PREV) &&
+       mCursor->mContinueToKey.IsUnset()) {
+    NS_ASSERTION(!mCursor->mObjectKey.IsUnset() &&
+                 !mCursor->mObjectKey.IsNull(), "Bad key!");
+
+    NS_NAMED_LITERAL_CSTRING(objectKeyName, "object_key");
+    if (mCursor->mObjectKey.IsString()) {
+      rv = aStatement->BindStringByName(objectKeyName,
+                                        mCursor->mObjectKey.StringValue());
+    }
+    else if (mCursor->mObjectKey.IsInt()) {
+      rv = aStatement->BindInt64ByName(objectKeyName,
+                                       mCursor->mObjectKey.IntValue());
+    }
+    else {
+      NS_NOTREACHED("Bad key!");
+    }
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  }
+
+  return NS_OK;
+}
+
+nsresult
+ContinueIndexHelper::GatherResultsFromStatement(
+                                               mozIStorageStatement* aStatement)
+{
+  PRInt32 keyType;
+  nsresult rv = aStatement->GetTypeOfIndex(0, &keyType);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  NS_ASSERTION(keyType == mozIStorageStatement::VALUE_TYPE_INTEGER ||
+               keyType == mozIStorageStatement::VALUE_TYPE_TEXT,
+               "Bad key type!");
+
+  if (keyType == mozIStorageStatement::VALUE_TYPE_INTEGER) {
+    mKey = aStatement->AsInt64(0);
+  }
+  else if (keyType == mozIStorageStatement::VALUE_TYPE_TEXT) {
+    rv = aStatement->GetString(0, mKey.ToString());
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  }
+  else {
+    NS_NOTREACHED("Bad SQLite type!");
+  }
+
+  rv = aStatement->GetTypeOfIndex(1, &keyType);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  NS_ASSERTION(keyType == mozIStorageStatement::VALUE_TYPE_INTEGER ||
+               keyType == mozIStorageStatement::VALUE_TYPE_TEXT,
+               "Bad key type!");
+
+  if (keyType == mozIStorageStatement::VALUE_TYPE_INTEGER) {
+    mObjectKey = aStatement->AsInt64(1);
+  }
+  else if (keyType == mozIStorageStatement::VALUE_TYPE_TEXT) {
+    rv = aStatement->GetString(1, mObjectKey.ToString());
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  }
+  else {
+    NS_NOTREACHED("Bad SQLite type!");
+  }
+
+  return NS_OK;
+}
+
+nsresult
+ContinueIndexObjectHelper::GatherResultsFromStatement(
+                                               mozIStorageStatement* aStatement)
+{
+  PRInt32 keyType;
+  nsresult rv = aStatement->GetTypeOfIndex(0, &keyType);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  NS_ASSERTION(keyType == mozIStorageStatement::VALUE_TYPE_INTEGER ||
+               keyType == mozIStorageStatement::VALUE_TYPE_TEXT,
+               "Bad key type!");
+
+  if (keyType == mozIStorageStatement::VALUE_TYPE_INTEGER) {
+    mKey = aStatement->AsInt64(0);
+  }
+  else if (keyType == mozIStorageStatement::VALUE_TYPE_TEXT) {
+    rv = aStatement->GetString(0, mKey.ToString());
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  }
+  else {
+    NS_NOTREACHED("Bad SQLite type!");
+  }
+
+  rv = aStatement->GetTypeOfIndex(1, &keyType);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  NS_ASSERTION(keyType == mozIStorageStatement::VALUE_TYPE_INTEGER ||
+               keyType == mozIStorageStatement::VALUE_TYPE_TEXT,
+               "Bad key type!");
+
+  if (keyType == mozIStorageStatement::VALUE_TYPE_INTEGER) {
+    mObjectKey = aStatement->AsInt64(1);
+  }
+  else if (keyType == mozIStorageStatement::VALUE_TYPE_TEXT) {
+    rv = aStatement->GetString(1, mObjectKey.ToString());
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  }
+  else {
+    NS_NOTREACHED("Bad SQLite type!");
+  }
+
+#ifdef DEBUG
+  {
+    PRInt32 valueType;
+    NS_ASSERTION(NS_SUCCEEDED(aStatement->GetTypeOfIndex(2, &valueType)) &&
+                 valueType == mozIStorageStatement::VALUE_TYPE_TEXT,
+                 "Bad value type!");
+  }
+#endif
+
+  rv = aStatement->GetString(2, mValue);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
   return NS_OK;
 }

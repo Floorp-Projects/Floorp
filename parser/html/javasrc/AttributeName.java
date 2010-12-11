@@ -488,10 +488,6 @@ public final class AttributeName
      * The C++ destructor.
      */
     @SuppressWarnings("unused") private void destructor() {
-        Portability.releaseLocal(local[0]); // this must be a no-op for static
-        // locals
-        // for non-static cases the other array slots contain the same pointer
-        // as weak references.
         Portability.deleteArray(local);
     }
 

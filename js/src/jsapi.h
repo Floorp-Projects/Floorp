@@ -545,6 +545,9 @@ JS_GetPositiveInfinityValue(JSContext *cx);
 extern JS_PUBLIC_API(jsval)
 JS_GetEmptyStringValue(JSContext *cx);
 
+extern JS_PUBLIC_API(JSString *)
+JS_GetEmptyString(JSRuntime *rt);
+
 /*
  * Format is a string of the following characters (spaces are insignificant),
  * specifying the tabulated type conversions:
@@ -752,6 +755,9 @@ JS_SuspendRequest(JSContext *cx);
 extern JS_PUBLIC_API(void)
 JS_ResumeRequest(JSContext *cx, jsrefcount saveDepth);
 
+extern JS_PUBLIC_API(JSBool)
+JS_IsInRequest(JSContext *cx);
+
 #ifdef __cplusplus
 JS_END_EXTERN_C
 
@@ -815,6 +821,30 @@ class JSAutoSuspendRequest {
     static void *operator new(size_t) CPP_THROW_NEW { return 0; };
     static void operator delete(void *, size_t) { };
 #endif
+};
+
+class JSAutoCheckRequest {
+  public:
+    JSAutoCheckRequest(JSContext *cx JS_GUARD_OBJECT_NOTIFIER_PARAM) {
+#if defined JS_THREADSAFE && defined DEBUG
+        mContext = cx;
+        JS_ASSERT(JS_IsInRequest(cx));
+#endif
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+    
+    ~JSAutoCheckRequest() {
+#if defined JS_THREADSAFE && defined DEBUG
+        JS_ASSERT(JS_IsInRequest(mContext));
+#endif
+    }
+
+
+  private:
+#if defined JS_THREADSAFE && defined DEBUG
+    JSContext *mContext;
+#endif
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 JS_BEGIN_EXTERN_C
@@ -1238,6 +1268,180 @@ js_AddGCThingRootRT(JSRuntime *rt, void **rp, const char *name);
 
 extern JS_FRIEND_API(JSBool)
 js_RemoveRoot(JSRuntime *rt, void *rp);
+
+#ifdef __cplusplus
+JS_END_EXTERN_C
+
+namespace js {
+
+/*
+ * Protecting non-jsval, non-JSObject *, non-JSString * values from collection
+ * 
+ * Most of the time, the garbage collector's conservative stack scanner works
+ * behind the scenes, finding all live values and protecting them from being
+ * collected. However, when JSAPI client code obtains a pointer to data the
+ * scanner does not know about, owned by an object the scanner does know about,
+ * Care Must Be Taken.
+ *
+ * The scanner recognizes only a select set of types: pointers to JSObjects and
+ * similar things (JSFunctions, and so on), pointers to JSStrings, and jsvals.
+ * So while the scanner finds all live |JSString| pointers, it does not notice
+ * |jschar| pointers.
+ *
+ * So suppose we have:
+ *
+ *   void f(JSString *str) {
+ *     const jschar *ch = JS_GetStringCharsZ(str);
+ *     ... do stuff with ch, but no uses of str ...;
+ *   }
+ *
+ * After the call to |JS_GetStringCharsZ|, there are no further uses of
+ * |str|, which means that the compiler is within its rights to not store
+ * it anywhere. But because the stack scanner will not notice |ch|, there
+ * is no longer any live value in this frame that would keep the string
+ * alive. If |str| is the last reference to that |JSString|, and the
+ * collector runs while we are using |ch|, the string's array of |jschar|s
+ * may be freed out from under us.
+ *
+ * Note that there is only an issue when 1) we extract a thing X the scanner
+ * doesn't recognize from 2) a thing Y the scanner does recognize, and 3) if Y
+ * gets garbage-collected, then X gets freed. If we have code like this:
+ *
+ *   void g(JSObject *obj) {
+ *     jsval x;
+ *     JS_GetProperty(obj, "x", &x);
+ *     ... do stuff with x ...
+ *   }
+ *
+ * there's no problem, because the value we've extracted, x, is a jsval, a
+ * type that the conservative scanner recognizes.
+ *
+ * Conservative GC frees us from the obligation to explicitly root the types it
+ * knows about, but when we work with derived values like |ch|, we must root
+ * their owners, as the derived value alone won't keep them alive.
+ *
+ * A js::Anchor is a kind of GC root that allows us to keep the owners of
+ * derived values like |ch| alive throughout the Anchor's lifetime. We could
+ * fix the above code as follows:
+ *
+ *   void f(JSString *str) {
+ *     js::Anchor<JSString *> a_str(str);
+ *     const jschar *ch = JS_GetStringCharsZ(str);
+ *     ... do stuff with ch, but no uses of str ...;
+ *   }
+ *
+ * This simply ensures that |str| will be live until |a_str| goes out of scope.
+ * As long as we don't retain a pointer to the string's characters for longer
+ * than that, we have avoided all garbage collection hazards.
+ */
+template<typename T> class AnchorPermitted;
+template<typename T>
+class Anchor: AnchorPermitted<T> {
+  public:
+    Anchor() { }
+    explicit Anchor(T t) { hold = t; }
+    ~Anchor() {
+#ifdef __GNUC__
+        /* 
+         * No code is generated for this. But because this is marked 'volatile', G++ will
+         * assume it has important side-effects, and won't delete it. (G++ never looks at
+         * the actual text and notices it's empty.) And because we have passed |hold| to
+         * it, GCC will keep |hold| alive until this point.
+         *
+         * The "memory" clobber operand ensures that G++ will not move prior memory
+         * accesses after the asm --- it's a barrier. Unfortunately, it also means that
+         * G++ will assume that all memory has changed after the asm, as it would for a
+         * call to an unknown function. I don't know of a way to avoid that consequence.
+         */
+        asm volatile("":: "g" (hold) : "memory");
+#else
+        /*
+         * An adequate portable substitute.
+         *
+         * The compiler promises that, by the end of an expression statement, the
+         * last-stored value to a volatile object is the same as it would be in an
+         * unoptimized, direct implementation (the "abstract machine" whose behavior the
+         * language spec describes). However, the compiler is still free to reorder
+         * non-volatile accesses across this store --- which is what we must prevent. So
+         * assigning the held value to a volatile variable, as we do here, is not enough.
+         *
+         * In our case, however, garbage collection only occurs at function calls, so it
+         * is sufficient to ensure that the destructor's store isn't moved earlier across
+         * any function calls that could collect. It is hard to imagine the compiler
+         * analyzing the program so thoroughly that it could prove that such motion was
+         * safe. In practice, compilers treat calls to the collector as opaque operations
+         * --- in particular, as operations which could access volatile variables, across
+         * which this destructor must not be moved.
+         *
+         * ("Objection, your honor!  *Alleged* killer whale!")
+         *
+         * The disadvantage of this approach is that it does generate code for the store.
+         * We do need to use Anchors in some cases where cycles are tight.
+         */
+        volatile T sink;
+#ifdef JS_USE_JSVAL_JSID_STRUCT_TYPES
+        /*
+         * Can't just do a simple assignment here.
+         */
+        doAssignment(sink, hold);
+#else
+        sink = hold;
+#endif
+#endif
+    }
+    T &get()      { return hold; }
+    void set(T t) { hold = t; }
+    void clear()  { hold = 0; }
+  private:
+    T hold;
+    /* Anchors should not be assigned or passed to functions. */
+    Anchor(const Anchor &);
+    const Anchor &operator=(const Anchor &);
+};
+
+/*
+ * Ensure that attempts to create Anchors for types the garbage collector's conservative
+ * scanner doesn't actually recgonize fail. Such anchors would have no effect.
+ */
+class Anchor_base {
+protected:
+#ifdef JS_USE_JSVAL_JSID_STRUCT_TYPES
+    template<typename T> void doAssignment(volatile T &lhs, const T &rhs) {
+        lhs = rhs;
+    }
+#endif
+};
+template<> class AnchorPermitted<JSObject *> : protected Anchor_base { };
+template<> class AnchorPermitted<const JSObject *> : protected Anchor_base { };
+template<> class AnchorPermitted<JSFunction *> : protected Anchor_base { };
+template<> class AnchorPermitted<const JSFunction *> : protected Anchor_base { };
+template<> class AnchorPermitted<JSString *> : protected Anchor_base { };
+template<> class AnchorPermitted<const JSString *> : protected Anchor_base { };
+template<> class AnchorPermitted<jsval> : protected Anchor_base {
+protected:
+#ifdef JS_USE_JSVAL_JSID_STRUCT_TYPES
+    void doAssignment(volatile jsval &lhs, const jsval &rhs) {
+        /*
+         * The default assignment operator for |struct C| has the signature:
+         *
+         *   C& C::operator=(const C&)
+         *
+         * And in particular requires implicit conversion of |this| to
+         * type |C| for the return value.  But |volatile C| cannot
+         * thus be converted to |C|, so just doing |sink = hold| here
+         * would fail to compile.  Do the assignment on asBits
+         * instead, since I don't think we want to give jsval_layout
+         * an assignment operator returning |volatile jsval_layout|.
+         */
+        lhs.asBits = rhs.asBits;
+    }
+#endif
+};
+
+}  /* namespace js */
+
+JS_BEGIN_EXTERN_C
+#endif
 
 /*
  * This symbol may be used by embedders to detect the change from the old
@@ -2340,21 +2544,10 @@ extern JS_PUBLIC_API(JSObject *)
 JS_GetFunctionObject(JSFunction *fun);
 
 /*
- * Deprecated, useful only for diagnostics.  Use JS_GetFunctionId instead for
- * anonymous vs. "anonymous" disambiguation and Unicode fidelity.
- */
-extern JS_PUBLIC_API(const char *)
-JS_GetFunctionName(JSFunction *fun);
-
-/*
  * Return the function's identifier as a JSString, or null if fun is unnamed.
  * The returned string lives as long as fun, so you don't need to root a saved
  * reference to it if fun is well-connected or rooted, and provided you bound
  * the use of the saved reference by fun's lifetime.
- *
- * Prefer JS_GetFunctionId over JS_GetFunctionName because it returns null for
- * truly anonymous functions, and because it doesn't chop to ISO-Latin-1 chars
- * from UTF-16-ish jschars.
  */
 extern JS_PUBLIC_API(JSString *)
 JS_GetFunctionId(JSFunction *fun);
@@ -2953,6 +3146,12 @@ class JSAutoByteString {
 
     ~JSAutoByteString() {
         js_free(mBytes);
+    }
+
+    /* Take ownership of the given byte array. */
+    void initBytes(char *bytes) {
+        JS_ASSERT(!mBytes);
+        mBytes = bytes;
     }
 
     char *encode(JSContext *cx, JSString *str) {

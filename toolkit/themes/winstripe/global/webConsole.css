@@ -196,31 +196,26 @@
   display: block;
 }
 
-.jsterm-input-node {
+.jsterm-input-node,
+.jsterm-complete-node {
   font-family: monospace;
   font-size: 9pt;
-  background: url("chrome://global/skin/icons/commandline.png") 4px 3px
-    no-repeat;
   border: none;
-  padding: 0px 0px 0px 16px;
+  padding: 0 0 0 16px;
   -moz-appearance: none;
 }
 
-.jsterm-input-node > .textbox-input-box > .textbox-textarea {
+.jsterm-input-node {
+  background: url("chrome://global/skin/icons/commandline.png") 4px 3px no-repeat;
+}
+
+:-moz-any(.jsterm-input-node,
+          .jsterm-complete-node) > .textbox-input-box > .textbox-textarea {
   overflow-x: hidden;
 }
 
-.jsterm-complete-node {
-    font-family: monospace;
-    font-size: 9pt;
-    border: none;
-    padding: 0px 0px 0px 16px;
-    -moz-appearance: none;
-}
-
-.jsterm-complete-node textarea {
-    overflow-x: hidden;
-    color: #AAA;
+.jsterm-complete-node > .textbox-input-box > .textbox-textarea {
+  color: GrayText;
 }
 
 .jsterm-output-line {
