@@ -779,10 +779,13 @@ WeaveSvc.prototype = {
         if (!cryptoKeys) {
           // Must have got a 404, or no reported collection.
           // Better make some and upload them.
+          // 
+          // Reset the client so we reupload.
+          this.resetClient();
+          
+          // Generate the new keys.
           this.generateNewSymmetricKeys();
           
-          // Oh, and reset the client so we reupload, too.
-          this.resetClient();
           return true;
         }
         
@@ -944,6 +947,7 @@ WeaveSvc.prototype = {
 
       /* We need to re-encrypt everything, so reset. */
       this.resetClient();
+      CollectionKeys.clear();
 
       /* Login and sync. This also generates new keys. */
       this.login();
@@ -958,6 +962,7 @@ WeaveSvc.prototype = {
     
     // Reset all engines and clear keys.
     this.resetClient();
+    CollectionKeys.clear();
     
     // Reset Weave prefs.
     this._ignorePrefObserver = true;
@@ -1271,6 +1276,7 @@ WeaveSvc.prototype = {
       
       this._log.info("Sync IDs differ. Local is " + this.syncID + ", remote is " + meta.payload.syncID);
       this.resetClient();
+      CollectionKeys.clear();
       this.syncID = meta.payload.syncID;
       this._log.debug("Clear cached values and take syncId: " + this.syncID);
 
@@ -1806,6 +1812,7 @@ WeaveSvc.prototype = {
   _freshStart: function WeaveSvc__freshStart() {
     this._log.info("Fresh start. Resetting client and considering key upgrade.");
     this.resetClient();
+    CollectionKeys.clear();
     this.upgradeSyncKey(this.syncID);
 
     let meta = new WBORecord("meta", "global");
@@ -1931,6 +1938,7 @@ WeaveSvc.prototype = {
     this._catch(this._notify("wipe-remote", "", function() {
       // Make sure stuff gets uploaded
       this.resetClient(engines);
+      CollectionKeys.clear();
 
       // Clear out any server data
       this.wipeServer(engines);
@@ -1941,6 +1949,9 @@ WeaveSvc.prototype = {
       // Tell the remote machines to wipe themselves
       else
         this.prepCommand("wipeAll", []);
+    
+      // Generate new keys.
+      this.generateNewSymmetricKeys();
 
       // Make sure the changed clients get updated
       Clients.sync();
@@ -1983,9 +1994,6 @@ WeaveSvc.prototype = {
       // Have each engine drop any temporary meta data
       for each (let engine in engines)
         engine.resetClient();
-      
-      // Delete our keys. We'll generate new ones if the server doesn't have any.
-      CollectionKeys.clear();
     }))(),
 
   /**
