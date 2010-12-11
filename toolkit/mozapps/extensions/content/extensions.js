@@ -1258,6 +1258,20 @@ function getAddonsAndInstalls(aType, aCallback) {
   });
 }
 
+function doPendingUninstalls(aListBox) {
+  // Uninstalling add-ons can mutate the list so find the add-ons first then
+  // uninstall them
+  var items = [];
+  var listitem = aListBox.firstChild;
+  while (listitem) {
+    if (listitem.getAttribute("pending") == "uninstall" &&
+        !listitem.isPending("uninstall"))
+      items.push(listitem.mAddon);
+    listitem = listitem.nextSibling;
+  }
+
+  items.forEach(function(aAddon) { aAddon.uninstall(); });
+}
 
 var gCategories = {
   node: null,
@@ -1728,19 +1742,7 @@ var gSearchView = {
 
   hide: function() {
     gEventManager.unregisterInstallListener(this);
-
-    // Uninstalling add-ons can mutate the list so find the add-ons first then
-    // uninstall them
-    var items = [];
-    var listitem = this._listBox.firstChild;
-    while (listitem) {
-      if (listitem.getAttribute("pending") == "uninstall" &&
-          !listitem.isPending("uninstall"))
-        items.push(listitem.mAddon);
-      listitem = listitem.nextSibling;
-    }
-
-    items.forEach(function(aAddon) { aAddon.uninstall(); });
+    doPendingUninstalls(this._listBox);
   },
 
   getMatchScore: function(aObj, aQuery) {
@@ -1940,19 +1942,7 @@ var gListView = {
 
   hide: function() {
     gEventManager.unregisterInstallListener(this);
-
-    // Uninstalling add-ons can mutate the list so find the add-ons first then
-    // uninstall them
-    var items = [];
-    var listitem = this._listBox.firstChild;
-    while (listitem) {
-      if (listitem.getAttribute("pending") == "uninstall" &&
-          !listitem.isPending("uninstall"))
-        items.push(listitem.mAddon);
-      listitem = listitem.nextSibling;
-    }
-
-    items.forEach(function(aAddon) { aAddon.uninstall(); });
+    doPendingUninstalls(this._listBox);
   },
 
   showEmptyNotice: function(aShow) {
@@ -2454,8 +2444,8 @@ var gUpdatesView = {
 
   hide: function() {
     this._updateSelected.hidden = true;
-
     this._categoryItem.disabled = this._categoryItem.badgeCount == 0;
+    doPendingUninstalls(this._listBox);
   },
 
   _showRecentUpdates: function(aRequest) {
