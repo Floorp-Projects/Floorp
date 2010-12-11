@@ -1482,8 +1482,15 @@ nsWindow::OnKeyPressEvent(QKeyEvent *aEvent)
     int x_min_keycode = 0, x_max_keycode = 0, xkeysyms_per_keycode;
     XDisplayKeycodes(display, &x_min_keycode, &x_max_keycode);
     XModifierKeymap *xmodmap = XGetModifierMapping(display);
+    if (!xmodmap)
+        return nsEventStatus_eIgnore;
+
     KeySym *xkeymap = XGetKeyboardMapping(display, x_min_keycode, x_max_keycode - x_min_keycode,
                                           &xkeysyms_per_keycode);
+    if (!xkeymap) {
+        XFreeModifiermap(xmodmap);
+        return nsEventStatus_eIgnore;
+    }
 
     // create modifier masks
     qint32 shift_mask = 0, shift_lock_mask = 0, caps_lock_mask = 0, num_lock_mask = 0;
