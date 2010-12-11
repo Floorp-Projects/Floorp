@@ -942,6 +942,9 @@ WeaveSvc.prototype = {
       this.passphrase = newphrase;
       this.persistLogin();
 
+      /* We need to re-encrypt everything, so reset. */
+      this.resetClient();
+
       /* Login and sync. This also generates new keys. */
       this.login();
       this.sync(true);
@@ -952,15 +955,14 @@ WeaveSvc.prototype = {
     // Set a username error so the status message shows "set up..."
     Status.login = LOGIN_FAILED_NO_USERNAME;
     this.logout();
-    // Reset all engines.
+    
+    // Reset all engines and clear keys.
     this.resetClient();
+    
     // Reset Weave prefs.
     this._ignorePrefObserver = true;
     Svc.Prefs.resetBranch("");
     this._ignorePrefObserver = false;
-    
-    // Clear keys.
-    CollectionKeys.clear();
     
     Svc.Prefs.set("lastversion", WEAVE_VERSION);
     // Find weave logins and remove them.
@@ -1981,6 +1983,9 @@ WeaveSvc.prototype = {
       // Have each engine drop any temporary meta data
       for each (let engine in engines)
         engine.resetClient();
+      
+      // Delete our keys. We'll generate new ones if the server doesn't have any.
+      CollectionKeys.clear();
     }))(),
 
   /**

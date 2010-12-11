@@ -29,11 +29,16 @@ function run_test() {
     };
   }
 
+  let keysWBO = new ServerWBO("keys");
+  let cryptoColl = new ServerCollection({keys: keysWBO});
+  let metaColl = new ServerCollection({global: meta_global});
   do_test_pending();
   let server = httpd_setup({
-    "/1.0/johndoe/storage/crypto/keys": upd("crypto", new ServerWBO("keys").handler()),
+    "/1.0/johndoe/storage/crypto/keys": upd("crypto", keysWBO.handler()),
+    "/1.0/johndoe/storage/crypto": upd("crypto", cryptoColl.handler()),
     "/1.0/johndoe/storage/clients": upd("clients", clients.handler()),
     "/1.0/johndoe/storage/meta/global": upd("meta", wasCalledHandler(meta_global)),
+    "/1.0/johndoe/storage/meta": upd("meta", wasCalledHandler(metaColl)),
     "/1.0/johndoe/info/collections": collectionsHelper.handler
   });
 
@@ -96,6 +101,22 @@ function run_test() {
     Weave.Service.passphrase = pp;
     do_check_true(Weave.Service.verifyAndFetchSymmetricKeys());
     
+    // changePassphrase wipes our keys, and they're regenerated on next sync.
+    _("Checking changed passphrase.");
+    let existingDefault = CollectionKeys.keyForCollection();
+    let existingKeysPayload = keysWBO.payload;
+    let newPassphrase = "bbbbbabcdeabcdeabcdeabcdea";
+    Weave.Service.changePassphrase(newPassphrase);
+    
+    _("Local key cache is full, but different.");
+    do_check_true(!!CollectionKeys._default);
+    do_check_false(CollectionKeys._default.equals(existingDefault));
+    
+    _("Server has new keys.");
+    do_check_true(!!keysWBO.payload);
+    do_check_true(!!keysWBO.modified);
+    do_check_neq(keysWBO.payload, existingKeysPayload);
+
     // Try to screw up HMAC calculation.
     // Re-encrypt keys with a new random keybundle, and upload them to the
     // server, just as might happen with a second client.
