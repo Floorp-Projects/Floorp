@@ -245,6 +245,11 @@ public:
 
   NS_IMETHOD FireAsyncClickHandler();
 
+  virtual void UpdateEditableState()
+  {
+    return UpdateEditableFormControlState();
+  }
+
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsHTMLInputElement,
                                                      nsGenericHTMLFormElement)
 
