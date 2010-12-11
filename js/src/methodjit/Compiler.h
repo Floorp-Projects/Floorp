@@ -345,6 +345,9 @@ class Compiler : public BaseCompiler
     JSValueType knownPushedType(uint32 pushed);
     js::types::ObjectKind knownPoppedObjectKind(uint32 popped);
     bool arrayPrototypeHasIndexedSetter();
+    void markPushedOverflow(uint32 pushed);
+    void markLocalOverflow(uint32 local);
+    void markArgumentOverflow(uint32 arg);
 
     /* Non-emitting helpers. */
     uint32 fullAtomIndex(jsbytecode *pc);
@@ -433,7 +436,7 @@ class Compiler : public BaseCompiler
     void jsop_arguments();
 
     /* Fast arithmetic. */
-    void jsop_binary(JSOp op, VoidStub stub, JSValueType type);
+    bool jsop_binary(JSOp op, VoidStub stub, JSValueType type);
     void jsop_binary_full(FrameEntry *lhs, FrameEntry *rhs, JSOp op, VoidStub stub,
                           JSValueType type);
     void jsop_binary_full_simple(FrameEntry *fe, JSOp op, VoidStub stub,
@@ -458,7 +461,7 @@ class Compiler : public BaseCompiler
     void emitRightDoublePath(FrameEntry *lhs, FrameEntry *rhs, FrameState::BinaryAlloc &regs,
                              MaybeJump &rhsNotNumber2);
     bool tryBinaryConstantFold(JSContext *cx, FrameState &frame, JSOp op,
-                               FrameEntry *lhs, FrameEntry *rhs, JSValueType type);
+                               FrameEntry *lhs, FrameEntry *rhs, Value *vp);
 
     /* Fast opcodes. */
     void jsop_bitop(JSOp op);
@@ -472,8 +475,8 @@ class Compiler : public BaseCompiler
     void jsop_rsh_const_unknown(FrameEntry *lhs, FrameEntry *rhs);
     void jsop_rsh_unknown_const(FrameEntry *lhs, FrameEntry *rhs);
     void jsop_rsh_unknown_any(FrameEntry *lhs, FrameEntry *rhs);
-    void jsop_globalinc(JSOp op, uint32 index, bool popped);
-    void jsop_mod();
+    bool jsop_globalinc(JSOp op, uint32 index, bool popped);
+    bool jsop_mod();
     void jsop_neg();
     void jsop_bitnot();
     void jsop_not();
@@ -481,8 +484,8 @@ class Compiler : public BaseCompiler
     bool booleanJumpScript(JSOp op, jsbytecode *target);
     bool jsop_ifneq(JSOp op, jsbytecode *target);
     bool jsop_andor(JSOp op, jsbytecode *target);
-    void jsop_arginc(JSOp op, uint32 slot, bool popped);
-    void jsop_localinc(JSOp op, uint32 slot, bool popped);
+    bool jsop_arginc(JSOp op, uint32 slot, bool popped);
+    bool jsop_localinc(JSOp op, uint32 slot, bool popped);
     void jsop_newinit();
     void jsop_initmethod();
     void jsop_initprop();

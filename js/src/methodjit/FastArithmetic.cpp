@@ -54,7 +54,7 @@ typedef JSC::MacroAssembler::FPRegisterID FPRegisterID;
 
 bool
 mjit::Compiler::tryBinaryConstantFold(JSContext *cx, FrameState &frame, JSOp op,
-                                      FrameEntry *lhs, FrameEntry *rhs, JSValueType type)
+                                      FrameEntry *lhs, FrameEntry *rhs, Value *vp)
 {
     if (!lhs->isConstant() || !rhs->isConstant())
         return false;
@@ -150,24 +150,10 @@ mjit::Compiler::tryBinaryConstantFold(JSContext *cx, FrameState &frame, JSOp op,
         break;
     }
 
-    Value v;
     if (needInt)
-        v.setInt32(nL);
+        vp->setInt32(nL);
     else
-        v.setNumber(dL);
-
-    if (type == JSVAL_TYPE_INT32 && !v.isInt32()) {
-        /*
-         * Triggered an overflow at compile time. Don't try to update the type
-         * inference data, we can't trigger recompilations during the middle
-         * of compilation. Instead, fall back to the regular path and generate
-         * the overflow when the code first runs.
-         */
-        return false;
-    }
-
-    frame.popn(2);
-    frame.push(v);
+        vp->setNumber(dL);
 
     return true;
 }
@@ -210,18 +196,21 @@ mjit::Compiler::maybeJumpIfNotDouble(Assembler &masm, MaybeJump &mj, FrameEntry 
     }
 }
 
-void
+bool
 mjit::Compiler::jsop_binary(JSOp op, VoidStub stub, JSValueType type)
 {
     FrameEntry *rhs = frame.peek(-1);
     FrameEntry *lhs = frame.peek(-2);
 
-    if (tryBinaryConstantFold(cx, frame, op, lhs, rhs, type)) {
-        if (recompiling) {
-            OOL_STUBCALL(stub);
-            stubcc.rejoin(Changes(1));
+    Value v;
+    if (tryBinaryConstantFold(cx, frame, op, lhs, rhs, &v)) {
+        if (type == JSVAL_TYPE_INT32 && !v.isInt32()) {
+            /* Caller must mark the right type set as having overflowed. */
+            return false;
         }
-        return;
+        frame.popn(2);
+        frame.push(v);
+        return true;
     }
 
     /*
@@ -245,7 +234,7 @@ mjit::Compiler::jsop_binary(JSOp op, VoidStub stub, JSValueType type)
         INLINE_STUBCALL(stub);
         frame.popn(2);
         frame.pushSynced(isStringResult ? JSVAL_TYPE_STRING : type);
-        return;
+        return true;
     }
 
     /* Can do int math iff there is no double constant and the op is not division. */
@@ -257,6 +246,8 @@ mjit::Compiler::jsop_binary(JSOp op, VoidStub stub, JSValueType type)
         jsop_binary_full(lhs, rhs, op, stub, type);
     else
         jsop_binary_double(lhs, rhs, op, stub, type);
+
+    return true;
 }
 
 static void
@@ -878,7 +869,7 @@ mjit::Compiler::jsop_neg()
     stubcc.rejoin(Changes(1));
 }
 
-void
+bool
 mjit::Compiler::jsop_mod()
 {
 #if defined(JS_CPU_X86)
@@ -887,12 +878,15 @@ mjit::Compiler::jsop_mod()
     FrameEntry *lhs = frame.peek(-2);
     FrameEntry *rhs = frame.peek(-1);
 
-    if (tryBinaryConstantFold(cx, frame, JSOP_MOD, lhs, rhs, type)) {
-        if (recompiling) {
-            OOL_STUBCALL(stubs::Mod);
-            stubcc.rejoin(Changes(1));
+    Value v;
+    if (tryBinaryConstantFold(cx, frame, JSOP_MOD, lhs, rhs, &v)) {
+        if (type == JSVAL_TYPE_INT32 && !v.isInt32()) {
+            markPushedOverflow(0);
+            return false;
         }
-        return;
+        frame.popn(2);
+        frame.push(v);
+        return true;
     }
 
     if ((lhs->isConstant() && rhs->isConstant()) ||
@@ -910,7 +904,7 @@ mjit::Compiler::jsop_mod()
             OOL_STUBCALL(stubs::NegZeroHelper);
             stubcc.rejoin(Changes(1));
         }
-        return;
+        return true;
     }
 
 #if defined(JS_CPU_X86)
@@ -1033,6 +1027,8 @@ mjit::Compiler::jsop_mod()
         stubcc.rejoin(Changes(1));
     }
 #endif
+
+    return true;
 }
 
 bool
