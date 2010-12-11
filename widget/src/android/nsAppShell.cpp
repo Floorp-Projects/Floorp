@@ -234,7 +234,11 @@ nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
         break;
 
     case AndroidGeckoEvent::ACTIVITY_STOPPING: {
-        // Do nothing yet.
+        nsCOMPtr<nsIObserverService> obsServ =
+          mozilla::services::GetObserverService();
+        NS_NAMED_LITERAL_STRING(minimize, "heap-minimize");
+        obsServ->NotifyObservers(nsnull, "memory-pressure", minimize.get());
+
         break;
     }
 
