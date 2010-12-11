@@ -1250,12 +1250,14 @@ html|*.urlbar-input:-moz-lwtheme:-moz-placeholder,
   font-size: inherit;
 }
 
-.ac-url-text {
+.ac-url-text,
+.ac-action-text {
   color: -moz-nativehyperlinktext;
 }
 
 %ifndef WINSTRIPE_AERO
-.ac-url-text:-moz-system-metric(windows-default-theme) {
+.ac-url-text:-moz-system-metric(windows-default-theme),
+.ac-action-text:-moz-system-metric(windows-default-theme) {
   color: #006600;
 }
 %endif
@@ -1268,7 +1270,9 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   color: GrayText;
 }
 
-.ac-comment[selected="true"], .ac-url-text[selected="true"] {
+.ac-comment[selected="true"],
+.ac-url-text[selected="true"],
+.ac-action-text[selected="true"] {
   color: inherit !important;
 }
 
