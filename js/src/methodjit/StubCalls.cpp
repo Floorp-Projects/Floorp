@@ -476,8 +476,7 @@ stubs::GetElem(VMFrame &f)
         if (obj->isDenseArray()) {
             jsuint idx = jsuint(i);
 
-            if (idx < obj->getArrayLength() &&
-                idx < obj->getDenseArrayCapacity()) {
+            if (idx < obj->getDenseArrayInitializedLength()) {
                 copyFrom = obj->addressOfDenseArrayElement(idx);
                 if (!copyFrom->isMagic())
                     goto end_getelem;
