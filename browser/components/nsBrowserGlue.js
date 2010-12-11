@@ -1003,7 +1003,7 @@ BrowserGlue.prototype = {
   },
 
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 3;
+    const UI_VERSION = 4;
     let currentUIVersion = 0;
     try {
       currentUIVersion = Services.prefs.getIntPref("browser.migration.version");
@@ -1072,10 +1072,26 @@ BrowserGlue.prototype = {
           currentset.indexOf("stop-button") != -1 &&
           currentset.indexOf("urlbar-container") != -1 &&
           currentset.indexOf("urlbar-container,reload-button,stop-button") == -1) {
-        currentset = currentset.replace(/(^|,)reload-button($|,)/, "$1$2").
-                                replace(/(^|,)stop-button($|,)/, "$1$2").
-                                replace(/(^|,)urlbar-container($|,)/,
+        currentset = currentset.replace(/(^|,)reload-button($|,)/, "$1$2")
+                               .replace(/(^|,)stop-button($|,)/, "$1$2")
+                               .replace(/(^|,)urlbar-container($|,)/,
                                         "$1urlbar-container,reload-button,stop-button$2");
+        this._setPersist(toolbarResource, currentsetResource, currentset);
+      }
+    }
+
+    if (currentUIVersion < 4) {
+      // This code moves the home button to the immediate left of the bookmarks menu button.
+      let currentsetResource = this._rdf.GetResource("currentset");
+      let toolbarResource = this._rdf.GetResource("chrome://browser/content/browser.xul#nav-bar");
+      let currentset = this._getPersist(toolbarResource, currentsetResource);
+      // Need to migrate only if toolbar is customized and the elements are found.
+      if (currentset &&
+          currentset.indexOf("home-button") != -1 &&
+          currentset.indexOf("bookmarks-menu-button-container") != -1) {
+        currentset = currentset.replace(/(^|,)home-button($|,)/, "$1$2")
+                               .replace(/(^|,)bookmarks-menu-button-container($|,)/,
+                                        "$1home-button,bookmarks-menu-button-container$2");
         this._setPersist(toolbarResource, currentsetResource, currentset);
       }
     }

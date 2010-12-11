@@ -250,6 +250,117 @@ WeaveSvc.prototype = {
 
     return ok;
   },
+  
+  /**
+   * Here is a disgusting yet reasonable way of handling HMAC errors deep in
+   * the guts of Sync. The astute reader will note that this is a hacky way of
+   * implementing something like continuable conditions.
+   * 
+   * A handler function is glued to each engine. If the engine discovers an
+   * HMAC failure, we fetch keys from the server and update our keys, just as
+   * we would on startup.
+   * 
+   * If our key collection changed, we signal to the engine (via our return
+   * value) that it should retry decryption.
+   * 
+   * If our key collection did not change, it means that we already had the
+   * correct keys... and thus a different client has the wrong ones. Reupload
+   * the bundle that we fetched, which will bump the modified time on the
+   * server and (we hope) prompt a broken client to fix itself.
+   * 
+   * We keep track of the time at which we last applied this reasoning, because
+   * thrashing doesn't solve anything. We keep a reasonable interval between
+   * these remedial actions.
+   */
+  lastHMACEvent: 0,
+  
+  /*
+   * Returns whether to try again.
+   */
+  handleHMACEvent: function handleHMACEvent() {
+    let now = Date.now();
+    
+    // Leave a sizable delay between HMAC recovery attempts. This gives us
+    // time for another client to fix themselves if we touch the record.
+    if ((now - this.lastHMACEvent) < HMAC_EVENT_INTERVAL)
+      return false;
+    
+    this._log.info("Bad HMAC event detected. Attempting recovery " +
+                   "or signaling to other clients.");
+    
+    // Set the last handled time so that we don't act again.
+    this.lastHMACEvent = now;
+    
+    // Fetch keys.
+    let cryptoKeys = new CryptoWrapper("crypto", "keys");
+    try {
+      let cryptoResp = cryptoKeys.fetch(this.cryptoKeysURL).response;
+      
+      // Save out the ciphertext for when we reupload. If there's a bug in
+      // CollectionKeys, this will prevent us from uploading junk.
+      let cipherText = cryptoKeys.ciphertext;
+      
+      if (!cryptoResp.success) {
+        this._log.warn("Failed to download keys.");
+        return false;
+      }
+      
+      let keysChanged = this.handleFetchedKeys(this.syncKeyBundle,
+                                               cryptoKeys, true);
+      if (keysChanged) {
+        // Did they change? If so, carry on.
+        this._log.info("Suggesting retry.");
+        return true;              // Try again.
+      }
+      
+      // If not, reupload them and continue the current sync.
+      cryptoKeys.ciphertext = cipherText;
+      cryptoKeys.cleartext  = null;
+      
+      let uploadResp = cryptoKeys.upload(this.cryptoKeysURL);
+      if (uploadResp.success)
+        this._log.info("Successfully re-uploaded keys. Continuing sync.");
+      else
+        this._log.warn("Got error response re-uploading keys. " +
+                       "Continuing sync; let's try again later.");
+      
+      return false;            // Don't try again: same keys.
+      
+    } catch (ex) {
+      this._log.warn("Got exception \"" + ex + "\" fetching and handling " +
+                     "crypto keys. Will try again later.");
+      return false;
+    }
+  },
+  
+  handleFetchedKeys: function handleFetchedKeys(syncKey, cryptoKeys, skipReset) {
+    // Don't want to wipe if we're just starting up!
+    // This is largely relevant because we don't persist
+    // CollectionKeys yet: Bug 610913.
+    let wasBlank = CollectionKeys.isClear;
+    let keysChanged = CollectionKeys.updateContents(syncKey, cryptoKeys);
+    
+    if (keysChanged && !wasBlank) {
+      this._log.debug("Keys changed: " + JSON.stringify(keysChanged));
+      
+      if (!skipReset) {
+        this._log.info("Resetting client to reflect key change.");
+
+        if (keysChanged.length) {
+          // Collection keys only. Reset individual engines.
+          this.resetClient(keysChanged);
+        }
+        else {
+          // Default key changed: wipe it all.
+          this.resetClient();
+        }
+
+        this._log.info("Downloaded new keys, client reset. Proceeding.");
+      }
+      return true;
+    }
+    return false;
+  },                
 
   /**
    * Prepare to initialize the rest of Weave after waiting a little bit
@@ -628,8 +739,7 @@ WeaveSvc.prototype = {
             let cryptoResp = cryptoKeys.fetch(this.cryptoKeysURL).response;
             
             if (cryptoResp.success) {
-              // On success, pass to CollectionKeys.
-              CollectionKeys.updateContents(syncKey, cryptoKeys);
+              let keysChanged = this.handleFetchedKeys(syncKey, cryptoKeys);
               return true;
             }
             else if (cryptoResp.status == 404) {
@@ -650,14 +760,15 @@ WeaveSvc.prototype = {
             // TODO: Um, what exceptions might we get here? Should we re-throw any?
             
             // One kind of exception: HMAC failure.
-            let hmacFail = "Record SHA256 HMAC mismatch: ";
-            if (ex && ex.substr && (ex.substr(0, hmacFail.length) == hmacFail)) {
+            if (Utils.isHMACMismatch(ex)) {
               Status.login = LOGIN_FAILED_INVALID_PASSPHRASE;
               Status.sync = CREDENTIALS_CHANGED;
             }
-            else
-              // Assume that every other failure is network-related.
-              Status.login = LOGIN_FAILED_NETWORK_ERROR;
+            else {
+              // In the absence of further disambiguation or more precise
+              // failure constants, just report failure.
+              Status.login = LOGIN_FAILED;
+            }
             return false;
           }
         }
@@ -669,6 +780,9 @@ WeaveSvc.prototype = {
           // Must have got a 404, or no reported collection.
           // Better make some and upload them.
           this.generateNewSymmetricKeys();
+          
+          // Oh, and reset the client so we reupload, too.
+          this.resetClient();
           return true;
         }
         
@@ -1069,19 +1183,37 @@ WeaveSvc.prototype = {
     // Checking modified time of the meta record.
     if (infoResponse &&
         (infoResponse.obj.meta != this.metaModified) &&
-        !meta.isNew) {
+        (!meta || !meta.isNew)) {
       
       // Delete the cached meta record...
       this._log.debug("Clearing cached meta record. metaModified is " +
           JSON.stringify(this.metaModified) + ", setting to " +
           JSON.stringify(infoResponse.obj.meta));
+      
       Records.del(this.metaURL);
       
       // ... fetch the current record from the server, and COPY THE FLAGS.
       let newMeta       = Records.get(this.metaURL);
-      newMeta.isNew     = meta.isNew;
-      newMeta.changed   = meta.changed;
-      
+ 
+      if (!Records.response.success || !newMeta) {
+        this._log.debug("No meta/global record on the server. Creating one.");
+        newMeta = new WBORecord("meta", "global");
+        newMeta.payload.syncID = this.syncID;
+        newMeta.payload.storageVersion = STORAGE_VERSION;
+ 
+        newMeta.isNew = true;
+ 
+        Records.set(this.metaURL, newMeta);
+        if (!newMeta.upload(this.metaURL).success) {
+          this._log.warn("Unable to upload new meta/global. Failing remote setup.");
+          return false;
+        }
+      } else {
+        // If newMeta, then it stands to reason that meta != null.
+        newMeta.isNew   = meta.isNew;
+        newMeta.changed = meta.changed;
+      }
+        
       // Switch in the new meta object and record the new time.
       meta              = newMeta;
       this.metaModified = infoResponse.obj.meta;

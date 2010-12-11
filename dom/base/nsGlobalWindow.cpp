@@ -7584,14 +7584,14 @@ nsGlobalWindow::DispatchSyncPopState()
 
     JSContext *cx = (JSContext*) scx->GetNativeContext();
 
+    // Make sure we in the request while we have jsval on the native stack.
+    JSAutoRequest ar(cx);
+
     // If our json call triggers a JS-to-C++ call, we want that call to use cx
     // as the context.  So we push cx onto the context stack.
     nsCxPusher cxPusher;
 
     jsval jsStateObj = JSVAL_NULL;
-    // Root the container which will hold our decoded state object.
-    nsAutoGCRoot root(&jsStateObj, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
 
     // Deserialize the state object into an nsIVariant.
     nsCOMPtr<nsIJSON> json = do_GetService("@mozilla.org/dom/json;1");

@@ -95,6 +95,18 @@ SECStatus SECMOD_UnloadUserModule(SECMODModule *mod);
 
 SECMODModule * SECMOD_CreateModule(const char *lib, const char *name,
 					const char *param, const char *nss);
+/*
+ * After a fork(), PKCS #11 says we need to call C_Initialize again in
+ * the child before we can use the module. This function causes this 
+ * reinitialization.
+ * NOTE: Any outstanding handles will become invalid, which means your
+ * keys and contexts will fail, but new ones can be created.
+ *
+ * Setting 'force' to true means to do the reinitialization even if the 
+ * PKCS #11 module does not seem to need it. This allows software modules 
+ * which ignore fork to preserve their keys across the fork().
+ */
+SECStatus SECMOD_RestartModules(PRBool force);
 
 
 /* Module Management */

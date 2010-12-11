@@ -127,31 +127,27 @@ nsEventListenerInfo::ToSource(nsAString& aResult)
 {
   aResult.SetIsVoid(PR_TRUE);
 
-  nsresult rv;
-  jsval v = JSVAL_NULL;
-  nsAutoGCRoot root(&v, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (GetJSVal(&v)) {
-    nsCOMPtr<nsIThreadJSContextStack> stack =
-      nsContentUtils::ThreadJSContextStack();
-    if (stack) {
-      JSContext* cx = nsnull;
-      stack->GetSafeJSContext(&cx);
-      if (cx && NS_SUCCEEDED(stack->Push(cx))) {
-        {
-          // Extra block to finish the auto request before calling pop
-          JSAutoRequest ar(cx);
+  nsCOMPtr<nsIThreadJSContextStack> stack =
+    nsContentUtils::ThreadJSContextStack();
+  if (stack) {
+    JSContext* cx = nsnull;
+    stack->GetSafeJSContext(&cx);
+    if (cx && NS_SUCCEEDED(stack->Push(cx))) {
+      {
+        // Extra block to finish the auto request before calling pop
+        JSAutoRequest ar(cx);
+        jsval v = JSVAL_NULL;
+        if (GetJSVal(&v)) {
           JSString* str = JS_ValueToSource(cx, v);
           if (str) {
             aResult.Assign(nsDependentJSString(str));
           }
         }
-        stack->Pop(&cx);
       }
+      stack->Pop(&cx);
     }
   }
-
+  
   return NS_OK;
 }
 
@@ -162,22 +158,33 @@ nsEventListenerInfo::GetDebugObject(nsISupports** aRetVal)
 
 #ifdef MOZ_JSDEBUGGER
   nsresult rv = NS_OK;
-  jsval v = JSVAL_NULL;
-  nsAutoGCRoot root(&v, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (GetJSVal(&v)) {
-    nsCOMPtr<jsdIDebuggerService> jsd =
-      do_GetService("@mozilla.org/js/jsd/debugger-service;1", &rv);
-    NS_ENSURE_SUCCESS(rv, NS_OK);
+  nsCOMPtr<jsdIDebuggerService> jsd =
+    do_GetService("@mozilla.org/js/jsd/debugger-service;1", &rv);
+  NS_ENSURE_SUCCESS(rv, NS_OK);
+  
+  PRBool isOn = PR_FALSE;
+  jsd->GetIsOn(&isOn);
+  NS_ENSURE_TRUE(isOn, NS_OK);
 
-    PRBool isOn = PR_FALSE;
-    jsd->GetIsOn(&isOn);
-    NS_ENSURE_TRUE(isOn, NS_OK);
+  nsCOMPtr<nsIThreadJSContextStack> stack =
+    nsContentUtils::ThreadJSContextStack();
+  if (stack) {
+    JSContext* cx = nsnull;
+    stack->GetSafeJSContext(&cx);
+    if (cx && NS_SUCCEEDED(stack->Push(cx))) {
+      {
+        // Extra block to finish the auto request before calling pop
+        JSAutoRequest ar(cx);
 
-    nsCOMPtr<jsdIValue> jsdValue;
-    jsd->WrapJSValue(v, getter_AddRefs(jsdValue));
-    *aRetVal = jsdValue.forget().get();
-    return NS_OK;
+        jsval v = JSVAL_NULL;
+        if (GetJSVal(&v)) {
+          nsCOMPtr<jsdIValue> jsdValue;
+          jsd->WrapJSValue(v, getter_AddRefs(jsdValue));
+          *aRetVal = jsdValue.forget().get();
+          return NS_OK;
+        }
+      }
+    }
   }
 #endif
 

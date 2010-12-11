@@ -3254,12 +3254,6 @@ __attribute__ ((aligned (8)))
 
 #undef R
 
-#define R(c) FROM_SMALL_CHAR((c) >> 6), FROM_SMALL_CHAR((c) & 0x3f), 0x00
-
-const char JSString::deflatedLength2StringTable[] = { R12(0) };
-
-#undef R
-
 /*
  * Declare int strings. Only int strings from 100 to 255 actually have to be
  * generated, since the rest are either unit strings or length-2 strings. To
@@ -3310,16 +3304,6 @@ const JSString *const JSString::intStringTable[] = { R8(0) };
 #pragma pack(pop)
 #endif
 
-#define R(c) ((c) / 100) + '0', ((c) / 10 % 10) + '0', ((c) % 10) + '0', 0x00
-
-const char JSString::deflatedIntStringTable[] = {
-    R7(100), /* 100 through 227 */
-    R4(100 + (1 << 7)), /* 228 through 243 */
-    R3(100 + (1 << 7) + (1 << 4)), /* 244 through 251 */
-    R2(100 + (1 << 7) + (1 << 4) + (1 << 3)) /* 252 through 255 */
-};
-
-#undef R
 #undef R2
 #undef R4
 #undef R6
@@ -3329,18 +3313,6 @@ const char JSString::deflatedIntStringTable[] = {
 
 #undef R3
 #undef R7
-
-/* Static table for common UTF8 encoding */
-#define U8(c)   char(((c) >> 6) | 0xc0), char(((c) & 0x3f) | 0x80), 0
-#define U(c)    U8(c), U8(c+1), U8(c+2), U8(c+3), U8(c+4), U8(c+5), U8(c+6), U8(c+7)
-
-const char JSString::deflatedUnitStringTable[] = {
-    U(0x80), U(0x88), U(0x90), U(0x98), U(0xa0), U(0xa8), U(0xb0), U(0xb8),
-    U(0xc0), U(0xc8), U(0xd0), U(0xd8), U(0xe0), U(0xe8), U(0xf0), U(0xf8)
-};
-
-#undef U
-#undef U8
 
 JSBool
 js_String(JSContext *cx, uintN argc, Value *vp)
@@ -3972,7 +3944,7 @@ js_InflateString(JSContext *cx, const char *bytes, size_t *lengthp)
 }
 
 /*
- * May be called with null cx by js_GetStringBytes, see below.
+ * May be called with null cx.
  */
 char *
 js_DeflateString(JSContext *cx, const jschar *chars, size_t nchars)
@@ -4017,7 +3989,7 @@ js_GetDeflatedStringLength(JSContext *cx, const jschar *chars, size_t nchars)
 }
 
 /*
- * May be called with null cx through js_GetStringBytes, see below.
+ * May be called with null cx through public API, see below.
  */
 size_t
 js_GetDeflatedUTF8StringLength(JSContext *cx, const jschar *chars, size_t nchars)
@@ -4258,152 +4230,6 @@ bufferTooSmall:
                              JSMSG_BUFFER_TOO_SMALL);
     }
     return JS_FALSE;
-}
-
-namespace js {
-
-DeflatedStringCache::DeflatedStringCache()
-{
-#ifdef JS_THREADSAFE
-    lock = NULL;
-#endif
-}
-
-bool
-DeflatedStringCache::init()
-{
-#ifdef JS_THREADSAFE
-    JS_ASSERT(!lock);
-    lock = JS_NEW_LOCK();
-    if (!lock)
-        return false;
-#endif
-
-    /*
-     * Make room for 2K deflated strings that a typical browser session
-     * creates.
-     */
-    return map.init(2048);
-}
-
-DeflatedStringCache::~DeflatedStringCache()
-{
-#ifdef JS_THREADSAFE
-    if (lock)
-        JS_DESTROY_LOCK(lock);
-#endif
-}
-
-void
-DeflatedStringCache::sweep(JSContext *cx)
-{
-    /*
-     * We must take a lock even during the GC as JS_GetFunctionName can be
-     * called outside the request.
-     */
-    JS_ACQUIRE_LOCK(lock);
-
-    for (Map::Enum e(map); !e.empty(); e.popFront()) {
-        JSString *str = e.front().key;
-        if (IsAboutToBeFinalized(str)) {
-            char *bytes = e.front().value;
-            e.removeFront();
-
-            /*
-             * We cannot use cx->free here as bytes may come from the
-             * embedding that calls JS_NewString(cx, bytes, length). Those
-             * bytes may not be allocated via js_malloc and may not have
-             * space for the background free list.
-             */
-            js_free(bytes);
-        }
-    }
-
-    JS_RELEASE_LOCK(lock);
-}
-
-char *
-DeflatedStringCache::getBytes(JSString *str)
-{
-    JS_ACQUIRE_LOCK(lock);
-    Map::AddPtr p = map.lookupForAdd(str);
-    char *bytes = p ? p->value : NULL;
-    JS_RELEASE_LOCK(lock);
-
-    if (bytes)
-        return bytes;
-
-    bytes = js_DeflateString(NULL, str->chars(), str->length());
-    if (!bytes)
-        return NULL;
-
-    /*
-     * In the single-threaded case we use the add method as js_DeflateString
-     * cannot mutate the map. In particular, it cannot run the GC that may
-     * delete entries from the map. But the JS_THREADSAFE version requires to
-     * deal with other threads adding the entries to the map.
-     */
-    char *bytesToFree = NULL;
-    JSBool ok;
-#ifdef JS_THREADSAFE
-    JS_ACQUIRE_LOCK(lock);
-    ok = map.relookupOrAdd(p, str, bytes);
-    if (ok && p->value != bytes) {
-        /* Some other thread has asked for str bytes .*/
-        JS_ASSERT(!strcmp(p->value, bytes));
-        bytesToFree = bytes;
-        bytes = p->value;
-    }
-    JS_RELEASE_LOCK(lock);
-#else  /* !JS_THREADSAFE */
-    ok = map.add(p, str, bytes);
-#endif
-    if (!ok) {
-        bytesToFree = bytes;
-        bytes = NULL;
-    }
-
-    if (bytesToFree)
-        js_free(bytesToFree);
-    return bytes;
-}
-
-} /* namespace js */
-
-const char *
-js_GetStringBytes(JSAtom *atom)
-{
-    JSString *str = ATOM_TO_STRING(atom);
-    if (JSString::isUnitString(str)) {
-        char *bytes;
-#ifdef IS_LITTLE_ENDIAN
-        /* Unit string data is {c, 0, 0, 0} so we can just cast. */
-        bytes = (char *)str->chars();
-#else
-        /* Unit string data is {0, c, 0, 0} so we can point into the middle. */
-        bytes = (char *)str->chars() + 1;
-#endif
-        return ((*bytes & 0x80) && js_CStringsAreUTF8)
-               ? JSString::deflatedUnitStringTable + ((*bytes & 0x7f) * 3)
-               : bytes;
-    }
-
-    /*
-     * We must burn some space on deflated int strings and length-2 strings
-     * to preserve static allocation (which is to say, JSRuntime independence).
-     */
-    if (JSString::isLength2String(str))
-        return JSString::deflatedLength2StringTable + ((str - JSString::length2StringTable) * 3);
-
-    if (JSString::isHundredString(str)) {
-        /*
-         * We handled the 1 and 2-digit number cases already, so we know that
-         * str is between 100 and 255.
-         */
-        return JSString::deflatedIntStringTable + ((str - JSString::hundredStringTable) * 4);
-    }
-
-    return GetGCThingRuntime(str)->deflatedStringCache->getBytes(str);
 }
 
 /*

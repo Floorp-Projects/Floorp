@@ -438,22 +438,18 @@ intel_aes_encrypt_cbc_128:
 	.globl intel_aes_decrypt_cbc_128
 	.align	16
 intel_aes_decrypt_cbc_128:
-//	leaq	IV_OFFSET(%rdi), %rdx
-//	leaq	EXPANDED_KEY_OFFSET(%rdi), %rdi
-	leaq	16(%rdi), %rdx
-	leaq	48(%rdi), %rdi
+	leaq	16(%rdi), %rdx  /* iv */
+	leaq	48(%rdi), %rdi  /* expanded key */
 
-	movdqu	(%rdx), %xmm0
-	movdqu	(%rdi), %xmm2
-	movdqu	160(%rdi), %xmm12
+	movdqu	(%rdx), %xmm0   /* iv */
+	movdqu	(%rdi), %xmm2   /* first key block */
+	movdqu	160(%rdi), %xmm12 /* last key block */
 	xorl	%eax, %eax
-//	cmpq	$8*16, %r9
 	cmpq	$128, %r9
 	jb	1f
-//	leaq	-8*16(%r9), %r11
 	leaq	-128(%r9), %r11
-2:	movdqu	(%r8, %rax), %xmm3
-	movdqu	16(%r8, %rax), %xmm4
+2:	movdqu	(%r8, %rax), %xmm3 /* 1st data block */
+	movdqu	16(%r8, %rax), %xmm4 /* 2d data block */
 	movdqu	32(%r8, %rax), %xmm5
 	movdqu	48(%r8, %rax), %xmm6
 	movdqu	64(%r8, %rax), %xmm7
@@ -469,7 +465,7 @@ intel_aes_decrypt_cbc_128:
 	pxor	%xmm12, %xmm9
 	pxor	%xmm12, %xmm10
 	movq	$144, %r10
-3:	movdqu	(%rdi, %r10), %xmm1
+3:	movdqu	(%rdi, %r10), %xmm1   /* n-th block of the key */
 	.byte 0x66,0x0f,0x38,0xde,0xd9	/* aesdec	%xmm1, %xmm3 */
 	.byte 0x66,0x0f,0x38,0xde,0xe1	/* aesdec	%xmm1, %xmm4 */
 	.byte 0x66,0x0f,0x38,0xde,0xe9	/* aesdec	%xmm1, %xmm5 */
@@ -488,14 +484,21 @@ intel_aes_decrypt_cbc_128:
 	.byte 0x66,0x44,0x0f,0x38,0xdf,0xc2	/* aesdeclast %xmm2, %xmm8 */
 	.byte 0x66,0x44,0x0f,0x38,0xdf,0xca	/* aesdeclast %xmm2, %xmm9 */
 	.byte 0x66,0x44,0x0f,0x38,0xdf,0xd2	/* aesdeclast %xmm2, %xmm10 */
-	pxor	%xmm0, %xmm3
-	pxor	(%r8, %rax), %xmm4
-	pxor	16(%r8, %rax), %xmm5
-	pxor	32(%r8, %rax), %xmm6
-	pxor	48(%r8, %rax), %xmm7
-	pxor	64(%r8, %rax), %xmm8
-	pxor	80(%r8, %rax), %xmm9
-	pxor	96(%r8, %rax), %xmm10
+ 	pxor	%xmm0, %xmm3
+	movdqu	(%r8, %rax), %xmm0
+	pxor	%xmm0, %xmm4
+	movdqu	16(%r8, %rax), %xmm0
+	pxor	%xmm0, %xmm5
+	movdqu	32(%r8, %rax), %xmm0
+	pxor	%xmm0, %xmm6
+	movdqu	48(%r8, %rax), %xmm0
+	pxor	%xmm0, %xmm7
+	movdqu	64(%r8, %rax), %xmm0
+	pxor	%xmm0, %xmm8
+	movdqu	80(%r8, %rax), %xmm0
+	pxor	%xmm0, %xmm9
+	movdqu	96(%r8, %rax), %xmm0
+	pxor	%xmm0, %xmm10
 	movdqu	112(%r8, %rax), %xmm0
 	movdqu	%xmm3, (%rsi, %rax)
 	movdqu	%xmm4, 16(%rsi, %rax)
@@ -505,7 +508,6 @@ intel_aes_decrypt_cbc_128:
 	movdqu	%xmm8, 80(%rsi, %rax)
 	movdqu	%xmm9, 96(%rsi, %rax)
 	movdqu	%xmm10, 112(%rsi, %rax)
-//	addq	$8*16, %rax
 	addq	$128, %rax
 	cmpq	%r11, %rax
 	jbe	2b
@@ -547,8 +549,7 @@ intel_aes_decrypt_cbc_128:
 	xor	%eax, %eax
 	ret
 	.size intel_aes_decrypt_cbc_128, .-intel_aes_decrypt_cbc_128
-
-
+        
 /* in %rdi : the key
    in %rsi : buffer for expanded key
 */
@@ -974,8 +975,6 @@ intel_aes_encrypt_cbc_192:
 	.globl intel_aes_decrypt_cbc_192
 	.align	16
 intel_aes_decrypt_cbc_192:
-//	leaq	IV_OFFSET(%rdi), %rdx
-//	leaq	EXPANDED_KEY_OFFSET(%rdi), %rdi
 	leaq	16(%rdi), %rdx
 	leaq	48(%rdi), %rdi
 
@@ -983,10 +982,8 @@ intel_aes_decrypt_cbc_192:
 	movdqu	(%rdi), %xmm2
 	movdqu	192(%rdi), %xmm14
 	xorl	%eax, %eax
-//	cmpq	$8*16, %r9
 	cmpq	$128, %r9
 	jb	1f
-//	leaq	-8*16(%r9), %r11
 	leaq	-128(%r9), %r11
 2:	movdqu	(%r8, %rax), %xmm3
 	movdqu	16(%r8, %rax), %xmm4
@@ -1024,14 +1021,21 @@ intel_aes_decrypt_cbc_192:
 	.byte 0x66,0x44,0x0f,0x38,0xdf,0xc2	/* aesdeclast %xmm2, %xmm8 */
 	.byte 0x66,0x44,0x0f,0x38,0xdf,0xca	/* aesdeclast %xmm2, %xmm9 */
 	.byte 0x66,0x44,0x0f,0x38,0xdf,0xd2	/* aesdeclast %xmm2, %xmm10 */
-	pxor	%xmm0, %xmm3
-	pxor	(%r8, %rax), %xmm4
-	pxor	16(%r8, %rax), %xmm5
-	pxor	32(%r8, %rax), %xmm6
-	pxor	48(%r8, %rax), %xmm7
-	pxor	64(%r8, %rax), %xmm8
-	pxor	80(%r8, %rax), %xmm9
-	pxor	96(%r8, %rax), %xmm10
+ 	pxor	%xmm0, %xmm3
+	movdqu	(%r8, %rax), %xmm0
+	pxor	%xmm0, %xmm4
+	movdqu	16(%r8, %rax), %xmm0
+	pxor	%xmm0, %xmm5
+	movdqu	32(%r8, %rax), %xmm0
+	pxor	%xmm0, %xmm6
+	movdqu	48(%r8, %rax), %xmm0
+	pxor	%xmm0, %xmm7
+	movdqu	64(%r8, %rax), %xmm0
+	pxor	%xmm0, %xmm8
+	movdqu	80(%r8, %rax), %xmm0
+	pxor	%xmm0, %xmm9
+	movdqu	96(%r8, %rax), %xmm0
+	pxor	%xmm0, %xmm10
 	movdqu	112(%r8, %rax), %xmm0
 	movdqu	%xmm3, (%rsi, %rax)
 	movdqu	%xmm4, 16(%rsi, %rax)
@@ -1041,7 +1045,6 @@ intel_aes_decrypt_cbc_192:
 	movdqu	%xmm8, 80(%rsi, %rax)
 	movdqu	%xmm9, 96(%rsi, %rax)
 	movdqu	%xmm10, 112(%rsi, %rax)
-//	addq	$8*16, %rax
 	addq	$128, %rax
 	cmpq	%r11, %rax
 	jbe	2b
@@ -1087,7 +1090,6 @@ intel_aes_decrypt_cbc_192:
 	xor	%eax, %eax
 	ret
 	.size intel_aes_decrypt_cbc_192, .-intel_aes_decrypt_cbc_192
-
 
 /* in %rdi : the key
    in %rsi : buffer for expanded key
@@ -1296,13 +1298,13 @@ intel_aes_encrypt_ecb_256:
 1:	cmpq	%rax, %r9
 	je	5f
 
+	movdqu	(%rdi), %xmm8
 	movdqu	16(%rdi), %xmm2
 	movdqu	32(%rdi), %xmm3
 	movdqu	48(%rdi), %xmm4
 	movdqu	64(%rdi), %xmm5
 	movdqu	80(%rdi), %xmm6
 	movdqu	96(%rdi), %xmm7
-	movdqu	112(%rdi), %xmm8
 	movdqu	128(%rdi), %xmm9
 	movdqu	144(%rdi), %xmm10
 	movdqu	160(%rdi), %xmm11
@@ -1311,7 +1313,8 @@ intel_aes_encrypt_ecb_256:
 	movdqu	208(%rdi), %xmm14
 
 4:	movdqu	(%r8, %rax), %xmm1
-	pxor	(%rdi), %xmm1
+	pxor	%xmm8, %xmm1
+	movdqu	112(%rdi), %xmm8
 	.byte 0x66,0x0f,0x38,0xdc,0xca	/* aesenc	%xmm2, %xmm1 */
 	.byte 0x66,0x0f,0x38,0xdc,0xcb	/* aesenc	%xmm3, %xmm1 */
 	.byte 0x66,0x0f,0x38,0xdc,0xcc	/* aesenc	%xmm4, %xmm1 */
@@ -1319,6 +1322,7 @@ intel_aes_encrypt_ecb_256:
 	.byte 0x66,0x0f,0x38,0xdc,0xce	/* aesenc	%xmm6, %xmm1 */
 	.byte 0x66,0x0f,0x38,0xdc,0xcf	/* aesenc	%xmm7, %xmm1 */
 	.byte 0x66,0x41,0x0f,0x38,0xdc,0xc8	/* aesenc	%xmm8, %xmm1 */
+	movdqu	(%rdi), %xmm8
 	.byte 0x66,0x41,0x0f,0x38,0xdc,0xc9	/* aesenc	%xmm9, %xmm1 */
 	.byte 0x66,0x41,0x0f,0x38,0xdc,0xca	/* aesenc	%xmm10, %xmm1 */
 	.byte 0x66,0x41,0x0f,0x38,0xdc,0xcb	/* aesenc	%xmm11, %xmm1 */
@@ -1434,13 +1438,15 @@ intel_aes_decrypt_ecb_256:
 	.byte 0x66,0x41,0x0f,0x38,0xde,0xca	/* aesdec	%xmm10, %xmm1 */
 	.byte 0x66,0x41,0x0f,0x38,0xde,0xc9	/* aesdec	%xmm9, %xmm1 */
 	.byte 0x66,0x41,0x0f,0x38,0xde,0xc8	/* aesdec	%xmm8, %xmm1 */
+	movdqu	(%rdi), %xmm8
 	.byte 0x66,0x0f,0x38,0xde,0xcf	/* aesdec	%xmm7, %xmm1 */
 	.byte 0x66,0x0f,0x38,0xde,0xce	/* aesdec	%xmm6, %xmm1 */
 	.byte 0x66,0x0f,0x38,0xde,0xcd	/* aesdec	%xmm5, %xmm1 */
 	.byte 0x66,0x0f,0x38,0xde,0xcc	/* aesdec	%xmm4, %xmm1 */
 	.byte 0x66,0x0f,0x38,0xde,0xcb	/* aesdec	%xmm3, %xmm1 */
 	.byte 0x66,0x0f,0x38,0xde,0xca	/* aesdec	%xmm2, %xmm1 */
-	.byte 0x66,0x0f,0x38,0xdf,0x0f	/* aesdeclast (%rdi), %xmm1 */
+	.byte 0x66,0x41,0x0f,0x38,0xdf,0xc8	/* aesdeclast %xmm8, %xmm1 */
+	movdqu	112(%rdi), %xmm8
 	movdqu	%xmm1, (%rsi, %rax)
 	addq	$16, %rax
 	cmpq	%rax, %r9
@@ -1473,13 +1479,13 @@ intel_aes_encrypt_cbc_256:
 	leaq	48(%rdi), %rdi
 
 	movdqu	(%rdx), %xmm0
+	movdqu	(%rdi), %xmm8
 	movdqu	16(%rdi), %xmm2
 	movdqu	32(%rdi), %xmm3
 	movdqu	48(%rdi), %xmm4
 	movdqu	64(%rdi), %xmm5
 	movdqu	80(%rdi), %xmm6
 	movdqu	96(%rdi), %xmm7
-	movdqu	112(%rdi), %xmm8
 	movdqu	128(%rdi), %xmm9
 	movdqu	144(%rdi), %xmm10
 	movdqu	160(%rdi), %xmm11
@@ -1491,7 +1497,8 @@ intel_aes_encrypt_cbc_256:
 	xorl	%eax, %eax
 1:	movdqu	(%r8, %rax), %xmm1
 	pxor	%xmm0, %xmm1
-	pxor	(%rdi), %xmm1
+	pxor	%xmm8, %xmm1
+	movdqu	112(%rdi), %xmm8
 	.byte 0x66,0x0f,0x38,0xdc,0xca	/* aesenc	%xmm2, %xmm1 */
 	.byte 0x66,0x0f,0x38,0xdc,0xcb	/* aesenc	%xmm3, %xmm1 */
 	.byte 0x66,0x0f,0x38,0xdc,0xcc	/* aesenc	%xmm4, %xmm1 */
@@ -1499,6 +1506,7 @@ intel_aes_encrypt_cbc_256:
 	.byte 0x66,0x0f,0x38,0xdc,0xce	/* aesenc	%xmm6, %xmm1 */
 	.byte 0x66,0x0f,0x38,0xdc,0xcf	/* aesenc	%xmm7, %xmm1 */
 	.byte 0x66,0x41,0x0f,0x38,0xdc,0xc8	/* aesenc	%xmm8, %xmm1 */
+	movdqu	(%rdi), %xmm8
 	.byte 0x66,0x41,0x0f,0x38,0xdc,0xc9	/* aesenc	%xmm9, %xmm1 */
 	.byte 0x66,0x41,0x0f,0x38,0xdc,0xca	/* aesenc	%xmm10, %xmm1 */
 	.byte 0x66,0x41,0x0f,0x38,0xdc,0xcb	/* aesenc	%xmm11, %xmm1 */
@@ -1582,14 +1590,21 @@ intel_aes_decrypt_cbc_256:
 	.byte 0x66,0x44,0x0f,0x38,0xdf,0xc2	/* aesdeclast %xmm2, %xmm8 */
 	.byte 0x66,0x44,0x0f,0x38,0xdf,0xca	/* aesdeclast %xmm2, %xmm9 */
 	.byte 0x66,0x44,0x0f,0x38,0xdf,0xd2	/* aesdeclast %xmm2, %xmm10 */
-	pxor	%xmm0, %xmm3
-	pxor	(%r8, %rax), %xmm4
-	pxor	16(%r8, %rax), %xmm5
-	pxor	32(%r8, %rax), %xmm6
-	pxor	48(%r8, %rax), %xmm7
-	pxor	64(%r8, %rax), %xmm8
-	pxor	80(%r8, %rax), %xmm9
-	pxor	96(%r8, %rax), %xmm10
+ 	pxor	%xmm0, %xmm3
+	movdqu	(%r8, %rax), %xmm0
+	pxor	%xmm0, %xmm4
+	movdqu	16(%r8, %rax), %xmm0
+	pxor	%xmm0, %xmm5
+	movdqu	32(%r8, %rax), %xmm0
+	pxor	%xmm0, %xmm6
+	movdqu	48(%r8, %rax), %xmm0
+	pxor	%xmm0, %xmm7
+	movdqu	64(%r8, %rax), %xmm0
+	pxor	%xmm0, %xmm8
+	movdqu	80(%r8, %rax), %xmm0
+	pxor	%xmm0, %xmm9
+	movdqu	96(%r8, %rax), %xmm0
+	pxor	%xmm0, %xmm10
 	movdqu	112(%r8, %rax), %xmm0
 	movdqu	%xmm3, (%rsi, %rax)
 	movdqu	%xmm4, 16(%rsi, %rax)
@@ -1629,13 +1644,15 @@ intel_aes_decrypt_cbc_256:
 	.byte 0x66,0x41,0x0f,0x38,0xde,0xca	/* aesdec	%xmm10, %xmm1 */
 	.byte 0x66,0x41,0x0f,0x38,0xde,0xc9	/* aesdec	%xmm9, %xmm1 */
 	.byte 0x66,0x41,0x0f,0x38,0xde,0xc8	/* aesdec	%xmm8, %xmm1 */
+	movdqu	(%rdi), %xmm8
 	.byte 0x66,0x0f,0x38,0xde,0xcf	/* aesdec	%xmm7, %xmm1 */
 	.byte 0x66,0x0f,0x38,0xde,0xce	/* aesdec	%xmm6, %xmm1 */
 	.byte 0x66,0x0f,0x38,0xde,0xcd	/* aesdec	%xmm5, %xmm1 */
 	.byte 0x66,0x0f,0x38,0xde,0xcc	/* aesdec	%xmm4, %xmm1 */
 	.byte 0x66,0x0f,0x38,0xde,0xcb	/* aesdec	%xmm3, %xmm1 */
 	.byte 0x66,0x0f,0x38,0xde,0xca	/* aesdec	%xmm2, %xmm1 */
-	.byte 0x66,0x0f,0x38,0xdf,0x0f	/* aesdeclast (%rdi), %xmm1 */
+	.byte 0x66,0x41,0x0f,0x38,0xdf,0xc8	/* aesdeclast %xmm8, %xmm1 */
+	movdqu	112(%rdi), %xmm8
 	pxor	%xmm0, %xmm1
 	movdqu	%xmm1, (%rsi, %rax)
 	movdqu	(%r8, %rax), %xmm0

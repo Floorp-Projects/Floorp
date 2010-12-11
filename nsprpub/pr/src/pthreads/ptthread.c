@@ -780,8 +780,28 @@ PR_IMPLEMENT(PRStatus) PR_Sleep(PRIntervalTime ticks)
 
 static void _pt_thread_death(void *arg)
 {
+    void *thred;
+    int rv;
+
+    _PT_PTHREAD_GETSPECIFIC(pt_book.key, thred);
+    if (NULL == thred)
+    {
+        /*
+         * Have PR_GetCurrentThread return the expected value to the
+         * destructors.
+         */
+        rv = pthread_setspecific(pt_book.key, arg);
+        PR_ASSERT(0 == rv);
+    }
+
     /* PR_TRUE for: call destructors */ 
     _pt_thread_death_internal(arg, PR_TRUE);
+
+    if (NULL == thred)
+    {
+        rv = pthread_setspecific(pt_book.key, NULL);
+        PR_ASSERT(0 == rv);
+    }
 }
 
 static void _pt_thread_death_internal(void *arg, PRBool callDestructors)

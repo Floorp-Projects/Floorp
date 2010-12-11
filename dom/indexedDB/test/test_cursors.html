@@ -100,11 +100,16 @@
           is(cursor.key, sortedKeys[keyIndex], "Correct key");
           is(cursor.value, "foo", "Correct value");
 
-          let retval = cursor.continue();
-          is(retval, true, "Correct return from continue");
-
           cursor.continue();
-          ok(true, "continue twice should not throw");
+
+          try {
+            cursor.continue();
+            ok(false, "continue twice should throw");
+          }
+          catch (e) {
+            ok(e instanceof IDBDatabaseException, "got a database exception");
+            is(e.code, IDBDatabaseException.NOT_ALLOWED_ERR, "correct code");
+          }
 
           is(cursor.key, sortedKeys[keyIndex], "Correct key");
           is(cursor.value, "foo", "Correct value");
@@ -130,8 +135,7 @@
           is(cursor.key, sortedKeys[keyIndex], "Correct key");
           is(cursor.value, "foo", "Correct value");
 
-          let retval = cursor.continue();
-          is(retval, true, "Correct return from continue");
+          cursor.continue();
 
           is(cursor.key, sortedKeys[keyIndex], "Correct key");
           is(cursor.value, "foo", "Correct value");
@@ -156,8 +160,12 @@
           is(cursor.key, sortedKeys[keyIndex], "Correct key");
           is(cursor.value, "foo", "Correct value");
 
-          let retval = keyIndex ? cursor.continue() : cursor.continue("b");
-          is(retval, true, "Correct return from continue");
+          if (keyIndex) {
+            cursor.continue();
+          }
+          else {
+            cursor.continue("b");
+          }
 
           is(cursor.key, sortedKeys[keyIndex], "Correct key");
           is(cursor.value, "foo", "Correct value");
@@ -182,8 +190,12 @@
           is(cursor.key, sortedKeys[keyIndex], "Correct key");
           is(cursor.value, "foo", "Correct value");
 
-          let retval = keyIndex ? cursor.continue() : cursor.continue(10);
-          is(retval, true, "Correct return from continue");
+          if (keyIndex) {
+            cursor.continue();
+          }
+          else {
+            cursor.continue(10);
+          }
 
           is(cursor.key, sortedKeys[keyIndex], "Correct key");
           is(cursor.value, "foo", "Correct value");
@@ -208,13 +220,17 @@
           is(cursor.key, sortedKeys[keyIndex], "Correct key");
           is(cursor.value, "foo", "Correct value");
 
-          let retval = keyIndex ? cursor.continue() : cursor.continue("c");
-          is(retval, true, "Correct return from continue");
+          if (keyIndex) {
+            cursor.continue();
+          }
+          else {
+            cursor.continue("c");
+          }
 
           is(cursor.key, sortedKeys[keyIndex], "Correct key");
           is(cursor.value, "foo", "Correct value");
 
-          keyIndex++;
+          keyIndex += keyIndex ? 1 : 7;
         }
         else {
           testGenerator.next();
@@ -322,8 +338,7 @@
           is(cursor.key, sortedKeys[keyIndex], "Correct key");
           is(cursor.value, "foo", "Correct value");
 
-          let retval = cursor.continue();
-          is(retval, true, "Correct return from continue");
+          cursor.continue();
 
           is(cursor.key, sortedKeys[keyIndex], "Correct key");
           is(cursor.value, "foo", "Correct value");

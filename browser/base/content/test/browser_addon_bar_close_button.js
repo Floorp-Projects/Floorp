@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,14 +11,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is JavaScript Engine testing utilities.
+ * The Original Code is browser add-on bar test code.
  *
- * The Initial Developer of the Original Code is
- * Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2005
+ * The Initial Developer of the Original Code is the Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s): Igor Bukanov
+ * Contributor(s):
+ * Dietrich Ayala <dietrich@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,27 +34,18 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-//-----------------------------------------------------------------------------
-var BUGNUMBER = 313500;
-var summary = 'Root access to "prototype" property';
-var actual = 'No Crash';
-var expect = 'No Crash';
+function test() {
+  let addonbar = document.getElementById("addon-bar");
+  ok(addonbar.collapsed, "addon bar is collapsed by default");
 
-printBugNumber(BUGNUMBER);
-printStatus (summary);
-printStatus('This test requires TOO_MUCH_GC');
+  // make add-on bar visible
+  setToolbarVisibility(addonbar, true);
+  ok(!addonbar.collapsed, "addon bar is not collapsed after toggle");
 
-function F() { }
+  // click the close button
+  let closeButton = document.getElementById("addonbar-closebutton");
+  EventUtils.synthesizeMouseAtCenter(closeButton, {});
 
-var prepared = new Object();
-
-F.prototype = {};
-F.__defineGetter__('prototype', function() {
-		     var tmp = prepared;
-		     prepared = null;
-		     return tmp;
-		   });
-
-new F();
- 
-reportCompare(expect, actual, summary);
+  // confirm addon bar is closed
+  ok(addonbar.collapsed, "addon bar is collapsed after clicking close button");
+}

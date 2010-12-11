@@ -95,9 +95,6 @@ gfxFontEntry::~gfxFontEntry()
     if (mUserFontData) {
         delete mUserFontData;
     }
-    if (mFeatureSettings) {
-        delete mFeatureSettings;
-    }
 }
 
 PRBool gfxFontEntry::TestCharacterMap(PRUint32 aCh)
@@ -317,8 +314,8 @@ gfxFontEntry::FontTableHashEntry::GetBlob() const
     return hb_blob_reference(mBlob);
 }
 
-hb_blob_t *
-gfxFontEntry::GetFontTable(PRUint32 aTag)
+PRBool
+gfxFontEntry::GetExistingFontTable(PRUint32 aTag, hb_blob_t **aBlob)
 {
     if (!mFontTableCache.IsInitialized()) {
         // we do this here rather than on fontEntry construction
@@ -327,21 +324,36 @@ gfxFontEntry::GetFontTable(PRUint32 aTag)
     }
 
     FontTableHashEntry *entry = mFontTableCache.GetEntry(aTag);
-    if (entry) {
-        return entry->GetBlob();
+    if (!entry) {
+        return PR_FALSE;
     }
 
-    entry = mFontTableCache.PutEntry(aTag);
+    *aBlob = entry->GetBlob();
+    return PR_TRUE;
+}
+
+hb_blob_t *
+gfxFontEntry::ShareFontTableAndGetBlob(PRUint32 aTag,
+                                       nsTArray<PRUint8>* aBuffer)
+{
+    if (NS_UNLIKELY(!mFontTableCache.IsInitialized())) {
+        // we do this here rather than on fontEntry construction
+        // because not all shapers will access the table cache at all
+        mFontTableCache.Init(10);
+    }
+
+    FontTableHashEntry *entry = mFontTableCache.PutEntry(aTag);
     if (NS_UNLIKELY(!entry)) { // OOM
         return nsnull;
     }
 
-    nsTArray<PRUint8> buffer;
-    if (NS_FAILED(GetFontTable(aTag, buffer))) {
-        return nsnull; // leaves the null entry cached in the hashtable
+    if (!aBuffer) {
+        // ensure the entry is null
+        entry->Clear();
+        return nsnull;
     }
 
-    return entry->ShareTableAndGetBlob(buffer, &mFontTableCache);
+    return entry->ShareTableAndGetBlob(*aBuffer, &mFontTableCache);
 }
 
 void
@@ -1035,6 +1047,19 @@ gfxFont::~gfxFont()
     for (i = 0; i < mGlyphExtentsArray.Length(); ++i) {
         delete mGlyphExtentsArray[i];
     }
+}
+
+hb_blob_t *
+gfxFont::GetFontTable(PRUint32 aTag) {
+    hb_blob_t *blob;
+    if (mFontEntry->GetExistingFontTable(aTag, &blob))
+        return blob;
+
+    nsTArray<PRUint8> buffer;
+    PRBool haveTable = NS_SUCCEEDED(mFontEntry->GetFontTable(aTag, buffer));
+
+    return mFontEntry->ShareFontTableAndGetBlob(aTag,
+                                                haveTable ? &buffer : nsnull);
 }
 
 /**
@@ -2354,6 +2379,10 @@ gfxFontGroup::InitTextRun(gfxContext *aContext,
         InitTextRun(aContext, aTextRun, aString, aLength,
                     runStart, runLimit, runScript);
     }
+
+    // Is this actually necessary? Without it, gfxTextRun::CopyGlyphDataFrom may assert
+    // "Glyphruns not coalesced", but does that matter?
+    aTextRun->SortGlyphRuns();
 }
 
 void
@@ -2414,10 +2443,6 @@ gfxFontGroup::InitTextRun(gfxContext *aContext,
     // need to eliminate them from the glyph run array to avoid drawing "partial
     // ligatures" with the wrong font.
     aTextRun->SanitizeGlyphRuns();
-
-    // Is this actually necessary? Without it, gfxTextRun::CopyGlyphDataFrom may assert
-    // "Glyphruns not coalesced", but does that matter?
-    aTextRun->SortGlyphRuns();
 
 #ifdef DUMP_TEXT_RUNS
     nsCAutoString lang;
@@ -2779,8 +2804,7 @@ gfxFontStyle::gfxFontStyle() :
     stretch(NS_FONT_STRETCH_NORMAL), size(DEFAULT_PIXEL_FONT_SIZE),
     sizeAdjust(0.0f),
     language(gfxAtoms::x_western),
-    languageOverride(NO_FONT_LANGUAGE_OVERRIDE),
-    featureSettings(nsnull)
+    languageOverride(NO_FONT_LANGUAGE_OVERRIDE)
 {
 }
 
@@ -2795,17 +2819,9 @@ gfxFontStyle::gfxFontStyle(PRUint8 aStyle, PRUint16 aWeight, PRInt16 aStretch,
     familyNameQuirks(aFamilyNameQuirks), weight(aWeight), stretch(aStretch),
     size(aSize), sizeAdjust(aSizeAdjust),
     language(aLanguage),
-    languageOverride(ParseFontLanguageOverride(aLanguageOverride)),
-    featureSettings(nsnull)
+    languageOverride(ParseFontLanguageOverride(aLanguageOverride))
 {
-    if (!aFeatureSettings.IsEmpty()) {
-        featureSettings = new nsTArray<gfxFontFeature>;
-        ParseFontFeatureSettings(aFeatureSettings, *featureSettings);
-        if (featureSettings->Length() == 0) {
-            delete featureSettings;
-            featureSettings = nsnull;
-        }
-    }
+    ParseFontFeatureSettings(aFeatureSettings, featureSettings);
 
     if (weight > 900)
         weight = 900;
@@ -2832,13 +2848,9 @@ gfxFontStyle::gfxFontStyle(const gfxFontStyle& aStyle) :
     stretch(aStyle.stretch), size(aStyle.size),
     sizeAdjust(aStyle.sizeAdjust),
     language(aStyle.language),
-    languageOverride(aStyle.languageOverride),
-    featureSettings(nsnull)
+    languageOverride(aStyle.languageOverride)
 {
-    if (aStyle.featureSettings) {
-        featureSettings = new nsTArray<gfxFontFeature>;
-        featureSettings->AppendElements(*aStyle.featureSettings);
-    }
+    featureSettings.AppendElements(aStyle.featureSettings);
 }
 
 PRInt8
@@ -3798,9 +3810,24 @@ gfxTextRun::AddGlyphRun(gfxFont *aFont, PRUint32 aUTF16Offset, PRBool aForceNewR
         NS_ASSERTION(lastGlyphRun->mCharacterOffset <= aUTF16Offset,
                      "Glyph runs out of order (and run not forced)");
 
+        // Don't append a run if the font is already the one we want
         if (lastGlyphRun->mFont == aFont)
             return NS_OK;
+
+        // If the offset has not changed, avoid leaving a zero-length run
+        // by overwriting the last entry instead of appending...
         if (lastGlyphRun->mCharacterOffset == aUTF16Offset) {
+
+            // ...except that if the run before the last entry had the same
+            // font as the new one wants, merge with it instead of creating
+            // adjacent runs with the same font
+            if (numGlyphRuns > 1 &&
+                mGlyphRuns[numGlyphRuns - 2].mFont == aFont)
+            {
+                mGlyphRuns.TruncateLength(numGlyphRuns - 1);
+                return NS_OK;
+            }
+
             lastGlyphRun->mFont = aFont;
             return NS_OK;
         }

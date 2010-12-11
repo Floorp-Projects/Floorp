@@ -740,7 +740,8 @@ pref("network.http.qos", 0);
 // The number of milliseconds after sending a SYN for an HTTP connection,
 // to wait before trying a different connection. 0 means do not use a second
 // connection.
-pref("network.http.connection-retry-timeout", 250);
+// Temporarily Disabled for 4.0 Beta 8 - bug 614677
+pref("network.http.connection-retry-timeout", 0);
 
 // default values for FTP
 // in a DSCP environment this should be 40 (0x28, or AF11), per RFC-4594,
@@ -1351,7 +1352,6 @@ pref("dom.ipc.plugins.enabled.nppdf.so", false);
 #endif
 #endif
 
-pref("svg.enabled", true);
 pref("svg.smil.enabled", true);
 
 pref("font.minimum-size.ar", 0);

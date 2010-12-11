@@ -1458,7 +1458,7 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fp,
      * variable references made by this frame.
      */
     JSScript *script = Compiler::compileScript(cx, scobj, fp, js_StackFramePrincipals(cx, fp),
-                                               TCF_COMPILE_N_GO, chars, length, NULL,
+                                               TCF_COMPILE_N_GO, chars, length,
                                                filename, lineno, NULL,
                                                UpvarCookie::UPVAR_LEVEL_LIMIT);
 

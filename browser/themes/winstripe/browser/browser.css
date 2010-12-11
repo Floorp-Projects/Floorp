@@ -2126,3 +2126,20 @@ panel[dimmed="true"] {
 browser[tabmodalPromptShowing] {
   filter: url("chrome://browser/skin/effects.svg#blurAndDesaturate");
 }
+
+/* Add-on bar close button */
+#addonbar-closebutton {
+  border: none;
+  padding: 3px 5px;
+  list-style-image: url("chrome://global/skin/icons/close.png");
+  -moz-appearance: none;
+  -moz-image-region: rect(0, 16px, 16px, 0);
+}
+
+#addonbar-closebutton:hover {
+  -moz-image-region: rect(0, 32px, 16px, 16px);
+}
+
+#addonbar-closebutton:hover:active {
+  -moz-image-region: rect(0, 48px, 16px, 32px);
+}

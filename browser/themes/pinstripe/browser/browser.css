@@ -2266,6 +2266,22 @@ panel[dimmed="true"] {
   -moz-appearance: statusbar;
 }
 
+/* Add-on bar close button */
+#addonbar-closebutton {
+  padding: 0;
+  margin: 0 4px;
+  list-style-image: url("chrome://global/skin/icons/closetab.png");
+  border: none;
+}
+
+#addonbar-closebutton:hover {
+  list-style-image: url("chrome://global/skin/icons/closetab-hover.png");
+}
+
+#addonbar-closebutton:hover:active {
+  list-style-image: url("chrome://global/skin/icons/closetab-active.png");
+}
+
 browser[tabmodalPromptShowing] {
   filter: url("chrome://browser/skin/effects.svg#blurAndDesaturate");
 }

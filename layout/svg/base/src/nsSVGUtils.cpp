@@ -169,40 +169,10 @@ static const PRUint8 gsRGBToLinearRGBMap[256] = {
 239, 242, 244, 246, 248, 250, 253, 255
 };
 
-static PRBool gSVGEnabled;
-static const char SVG_PREF_STR[] = "svg.enabled";
-
 #ifdef MOZ_SMIL
 static PRBool gSMILEnabled;
 static const char SMIL_PREF_STR[] = "svg.smil.enabled";
 #endif // MOZ_SMIL
-
-static int
-SVGPrefChanged(const char *aPref, void *aClosure)
-{
-  PRBool prefVal = nsContentUtils::GetBoolPref(SVG_PREF_STR);
-  if (prefVal == gSVGEnabled)
-    return 0;
-
-  gSVGEnabled = prefVal;
-  return 0;
-}
-
-PRBool
-NS_SVGEnabled()
-{
-  static PRBool sInitialized = PR_FALSE;
-  
-  if (!sInitialized) {
-    /* check and register ourselves with the pref */
-    gSVGEnabled = nsContentUtils::GetBoolPref(SVG_PREF_STR);
-    nsContentUtils::RegisterPrefCallback(SVG_PREF_STR, SVGPrefChanged, nsnull);
-
-    sInitialized = PR_TRUE;
-  }
-
-  return gSVGEnabled;
-}
 
 #ifdef MOZ_SMIL
 static int

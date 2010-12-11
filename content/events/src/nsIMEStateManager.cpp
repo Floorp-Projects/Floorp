@@ -587,11 +587,19 @@ static nsINode* GetRootEditableNode(nsPresContext* aPresContext,
                                     nsIContent* aContent)
 {
   if (aContent) {
-    nsINode* root = nsnull;
-    nsINode* node = aContent;
-    while (node && node->IsEditable()) {
-      root = node;
-      node = node->GetParent();
+    nsIContent* root = nsnull;
+    nsIContent* content = aContent;
+    while (content && content->IntrinsicState().HasState(NS_EVENT_STATE_MOZ_READWRITE)) {
+      root = content;
+      content = content->GetParent();
+    }
+    if (!root) {
+      NS_ASSERTION(content, "We should have a content node here");
+      // See if the document is editable
+      nsIDocument* doc = content->GetCurrentDoc();
+      if (doc && doc->IsEditable()) {
+        return doc;
+      }
     }
     return root;
   }
@@ -671,7 +679,8 @@ nsresult
 nsIMEStateManager::GetFocusSelectionAndRoot(nsISelection** aSel,
                                             nsIContent** aRoot)
 {
-  if (!sTextStateObserver || !sTextStateObserver->mEditableNode)
+  if (!sTextStateObserver || !sTextStateObserver->mEditableNode ||
+      !sTextStateObserver->mSel)
     return NS_ERROR_NOT_AVAILABLE;
 
   NS_ASSERTION(sTextStateObserver->mSel && sTextStateObserver->mRootContent,

@@ -206,8 +206,6 @@
                 if (action == "default") {
                     let bnum = this.args.defaultButtonNum || 0;
                     let button = this.ui["button" + bnum];
-                    if (!button.hasAttribute("default"))
-                        return;
                     this.onButtonClick(bnum);
                 } else { // action == "cancel"
                     this.onButtonClick(1); // Cancel button
@@ -225,14 +223,31 @@
                  group="system" action="this.onKeyAction('default', event);"/>
         <handler event="keypress" keycode="VK_ESCAPE"
                  group="system" action="this.onKeyAction('cancel', event);"/>
-#ifndef XP_MACOSX
         <handler event="focus" phase="capturing">
-            // Focus shift clears the default button.
+            let bnum = this.args.defaultButtonNum || 0;
+            let defaultButton = this.ui["button" + bnum];
+
+#ifdef XP_MACOSX
+            // On OS X, the default button always stays marked as such (until
+            // the entire prompt blurs).
+            defaultButton.setAttribute("default", true);
+#else
+            // On other platforms, the default button is only marked as such
+            // when no other button has focus. XUL buttons on not-OSX will
+            // react to pressing enter as a command, so you can't trigger the
+            // default without tabbing to it or something that isn't a button.
+            let focusedDefault = (event.originalTarget == defaultButton);
+            let someButtonFocused = event.originalTarget instanceof Ci.nsIDOMXULButtonElement;
+            defaultButton.setAttribute("default", focusedDefault || !someButtonFocused);
+#endif
+        </handler>
+        <handler event="blur">
+            // If focus shifted to somewhere else in the browser, don't make
+            // the default button look active.
             let bnum = this.args.defaultButtonNum || 0;
             let button = this.ui["button" + bnum];
-            button.setAttribute("default", event.originalTarget == button);
+            button.setAttribute("default", false);
         </handler>
-#endif
     </handlers>
 
   </binding>

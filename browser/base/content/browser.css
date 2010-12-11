@@ -475,3 +475,7 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
 #status-bar > .statusbar-resizerpanel {
   display: none;
 }
+
+browser[tabmodalPromptShowing] {
+  -moz-user-focus: none !important;
+}

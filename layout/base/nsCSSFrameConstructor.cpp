@@ -144,12 +144,10 @@
 #ifdef MOZ_MATHML
 #include "nsMathMLParts.h"
 #endif
-#ifdef MOZ_SVG
 #include "nsSVGFeatures.h"
 #include "nsSVGEffects.h"
 #include "nsSVGUtils.h"
 #include "nsSVGOuterSVGFrame.h"
-#endif
 
 #include "nsRefreshDriver.h"
 
@@ -164,11 +162,8 @@ nsIFrame*
 NS_NewHTMLVideoFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
 #endif
 
-#ifdef MOZ_SVG
 #include "nsSVGTextContainerFrame.h"
 
-PRBool
-NS_SVGEnabled();
 nsIFrame*
 NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
@@ -217,7 +212,6 @@ nsIFrame*
 NS_NewSVGMaskFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
 NS_NewSVGLeafFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
-#endif
 
 #include "nsIDocument.h"
 #include "nsIDOMElement.h"
@@ -2408,9 +2402,8 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
   }
   else
 #endif
-#ifdef MOZ_SVG
   if (aDocElement->GetNameSpaceID() == kNameSpaceID_SVG) {
-    if (aDocElement->Tag() == nsGkAtoms::svg && NS_SVGEnabled()) {
+    if (aDocElement->Tag() == nsGkAtoms::svg) {
       contentFrame = NS_NewSVGOuterSVGFrame(mPresShell, styleContext);
       if (NS_UNLIKELY(!contentFrame)) {
         return NS_ERROR_OUT_OF_MEMORY;
@@ -2436,10 +2429,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
     } else {
       return NS_ERROR_FAILURE;
     }
-  }
-  else
-#endif
-  {
+  } else {
     PRBool docElemIsTable = (display->mDisplay == NS_STYLE_DISPLAY_TABLE);
     if (docElemIsTable) {
       // We're going to call the right function ourselves, so no need to give a
@@ -3371,7 +3361,6 @@ FindAncestorWithGeneratedContentPseudo(nsIFrame* aFrame)
 const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindTextData(nsIFrame* aParentFrame)
 {
-#ifdef MOZ_SVG
   if (aParentFrame && aParentFrame->IsFrameOfType(nsIFrame::eSVG)) {
     nsIFrame *ancestorFrame =
       nsSVGUtils::GetFirstNonAAncestorFrame(aParentFrame);
@@ -3385,7 +3374,6 @@ nsCSSFrameConstructor::FindTextData(nsIFrame* aParentFrame)
     }
     return nsnull;
   }
-#endif
 
   static const FrameConstructionData sTextData =
     FCDATA_DECL(FCDATA_IS_LINE_PARTICIPANT, NS_NewTextFrame);
@@ -3945,15 +3933,12 @@ nsCSSFrameConstructor::GetAnonymousContent(nsIContent* aParent,
     nsIContent* content = aContent[i];
     NS_ASSERTION(content, "null anonymous content?");
 
-#ifdef MOZ_SVG
     // least-surprise CSS binding until we do the SVG specified
     // cascading rules for <svg:use> - bug 265894
     if (aParent &&
         aParent->NodeInfo()->Equals(nsGkAtoms::use, kNameSpaceID_SVG)) {
       content->SetFlags(NODE_IS_ANONYMOUS);
-    } else
-#endif
-    {
+    } else {
       content->SetNativeAnonymous();
     }
 
@@ -4732,7 +4717,6 @@ nsCSSFrameConstructor::FindMathMLData(nsIContent* aContent,
 }
 #endif // MOZ_MATHML
 
-#ifdef MOZ_SVG
 // Only outer <svg> elements can be floated or positioned.  All other SVG
 // should be in-flow.
 #define SIMPLE_SVG_FCDATA(_func)                                        \
@@ -4750,7 +4734,7 @@ nsCSSFrameConstructor::FindSVGData(nsIContent* aContent,
                                    nsIFrame* aParentFrame,
                                    nsStyleContext* aStyleContext)
 {
-  if (aNameSpaceID != kNameSpaceID_SVG || !NS_SVGEnabled()) {
+  if (aNameSpaceID != kNameSpaceID_SVG) {
     return nsnull;
   }
 
@@ -4972,8 +4956,6 @@ nsCSSFrameConstructor::ConstructSVGForeignObjectFrame(nsFrameConstructorState& a
   return rv;
 }
 
-#endif // MOZ_SVG
-
 void
 nsCSSFrameConstructor::AddPageBreakItem(nsIContent* aContent,
                                         nsStyleContext* aMainStyleContext,
@@ -5191,14 +5173,11 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
   const FrameConstructionData* data;
   if (isText) {
     data = FindTextData(aParentFrame);
-#ifdef MOZ_SVG
     if (!data) {
       // Nothing to do here; suppressed text inside SVG
       return;
     }
-#endif /* MOZ_SVG */
   } else {
-#ifdef MOZ_SVG
     // Don't create frames for non-SVG element children of SVG elements.
     if (aNameSpaceID != kNameSpaceID_SVG &&
         aParentFrame &&
@@ -5209,7 +5188,6 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
                               isGeneratedContent);
       return;
     }
-#endif /* MOZ_SVG */
 
     data = FindHTMLData(aContent, aTag, aNameSpaceID, aParentFrame,
                         styleContext);
@@ -5221,12 +5199,10 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
       data = FindMathMLData(aContent, aTag, aNameSpaceID, styleContext);
     }
 #endif
-#ifdef MOZ_SVG
     if (!data) {
       data = FindSVGData(aContent, aTag, aNameSpaceID, aParentFrame,
                          styleContext);
     }
-#endif /* MOZ_SVG */
 
     // Now check for XUL display types
     if (!data) {
@@ -7738,7 +7714,6 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
     // if frame has view, will already be invalidated
     if (aChange & nsChangeHint_RepaintFrame) {
       if (aFrame->IsFrameOfType(nsIFrame::eSVG)) {
-#ifdef MOZ_SVG
         if (!(aFrame->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)) {
           nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(aFrame);
           if (outerSVGFrame) {
@@ -7756,7 +7731,6 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
             outerSVGFrame->UpdateAndInvalidateCoveredRegion(aFrame);
           }
         }
-#endif
       } else {
         aFrame->InvalidateOverflowRect();
       }
@@ -8045,11 +8019,9 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
       RecreateFramesForContent(content, PR_FALSE);
     } else {
       NS_ASSERTION(frame, "This shouldn't happen");
-#ifdef MOZ_SVG
       if (hint & nsChangeHint_UpdateEffects) {
         nsSVGEffects::UpdateEffects(frame);
       }
-#endif
       if (hint & nsChangeHint_NeedReflow) {
         StyleChangeReflow(frame, hint);
         didReflow = PR_TRUE;
