@@ -1174,7 +1174,7 @@ function run_test_18() {
                   a2.uninstall();
                   restartManager();
 
-                  run_test_19();
+                  run_test_18_1();
                 });
               }
             });
@@ -1187,13 +1187,41 @@ function run_test_18() {
   }, "application/x-xpinstall");
 }
 
-// Checks that metadata is downloaded for new installs and is visible before and
-// after restart
-function run_test_19() {
+
+// Checks that metadata is not stored if the pref is set to false
+function run_test_18_1() {
   Services.prefs.setBoolPref("extensions.getAddons.cache.enabled", true);
   Services.prefs.setCharPref("extensions.getAddons.get.url",
                              "http://localhost:4444/data/test_install.xml");
 
+  Services.prefs.setBoolPref("extensions.addon2@tests.mozilla.org.getAddons.cache.enabled", false);
+
+  let url = "http://localhost:4444/addons/test_install2_1.xpi";
+  AddonManager.getInstallForURL(url, function(aInstall) {
+    aInstall.addListener({
+      onInstallEnded: function(aInstall, aAddon) {
+        do_check_neq(aAddon.fullDescription, "Repository description");
+
+        restartManager();
+
+        AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
+          do_check_neq(a2.fullDescription, "Repository description");
+
+          a2.uninstall();
+          restartManager();
+
+          Services.prefs.setBoolPref("extensions.addon2@tests.mozilla.org.getAddons.cache.enabled", true);
+          run_test_19();
+        });
+      }
+    });
+    aInstall.install();
+  }, "application/x-xpinstall");
+}
+
+// Checks that metadata is downloaded for new installs and is visible before and
+// after restart
+function run_test_19() {
   let url = "http://localhost:4444/addons/test_install2_1.xpi";
   AddonManager.getInstallForURL(url, function(aInstall) {
     aInstall.addListener({
