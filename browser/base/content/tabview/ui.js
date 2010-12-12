@@ -985,10 +985,9 @@ let UI = {
 
     var startPos = { x: e.clientX, y: e.clientY };
     var phantom = iQ("<div>")
-      .addClass("groupItem phantom activeGroupItem")
+      .addClass("groupItem phantom activeGroupItem dragRegion")
       .css({
         position: "absolute",
-        opacity: .7,
         zIndex: -1,
         cursor: "default"
       })
@@ -1005,7 +1004,7 @@ let UI = {
         this.container.css(bounds);
       },
       setZ: function FauxItem_setZ(z) {
-        this.container.css("z-index", z);
+        // don't set a z-index because we want to force it to be low.
       },
       setOpacity: function FauxItem_setOpacity(opacity) {
         this.container.css("opacity", opacity);
@@ -1069,6 +1068,7 @@ let UI = {
 
     function finalize(e) {
       iQ(window).unbind("mousemove", updateSize);
+      item.container.removeClass("dragRegion");
       dragOutInfo.stop();
       if (phantom.css("opacity") != 1)
         collapse();
