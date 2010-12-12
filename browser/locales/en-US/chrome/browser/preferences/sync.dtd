@@ -19,6 +19,7 @@
 <!ENTITY mySyncKey.label              "My Sync Key">
 <!ENTITY resetSync.label              "Reset Sync">
 <!ENTITY stopUsingAccount.label       "Stop Using This Account">
+<!ENTITY addDevice.label              "Add a Device">
 
 <!-- Sync Settings -->
 <!ENTITY syncPrefsCaption.label       "Browser Sync">
