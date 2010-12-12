@@ -195,6 +195,12 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
                 CrashReporter::AnnotationTable notes;
                 notes.Init();
                 notes.Put(NS_LITERAL_CSTRING("ProcessType"), NS_LITERAL_CSTRING("content"));
+
+                char startTime[32];
+                sprintf(startTime, "%lld", static_cast<PRInt64>(mProcessStartTime));
+                notes.Put(NS_LITERAL_CSTRING("StartupTime"),
+                          nsDependentCString(startTime));
+
                 // TODO: Additional per-process annotations.
                 CrashReporter::AppendExtraData(dumpID, notes);
             }
@@ -234,6 +240,7 @@ ContentParent::ContentParent()
     , mRunToCompletionDepth(0)
     , mShouldCallUnblockChild(false)
     , mIsAlive(true)
+    , mProcessStartTime(time(NULL))
 {
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
     mSubprocess = new GeckoChildProcessHost(GeckoProcessType_Content);
