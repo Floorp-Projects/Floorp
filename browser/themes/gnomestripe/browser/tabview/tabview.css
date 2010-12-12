@@ -228,6 +228,10 @@ html[dir=rtl] .groupItem.activeGroupItem {
   border: 1px solid rgba(190,190,190,1);
 }
 
+.dragRegion {
+  background: rgba(248,248,248,0.4);
+}
+
 .overlay {
   background-color: rgba(0,0,0,.7) !important;
   box-shadow: 3px 3px 5.5px rgba(0,0,0,.5);
