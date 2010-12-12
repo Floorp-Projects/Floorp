@@ -91,22 +91,30 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ROOTACCESSIBLE_IMPL_CID)
 
   /**
-   * Fire an accessible focus event for the current focusAccssible
-   * and attach a new selection listener, if necessary.
+   * Fire an accessible focus event for the focused accessible and attach a new
+   * selection listener to real focused element, if necessary.
    *
-   * @param  aFocusAccessible  [in] the accessible which has received focus
-   * @param  aFocusNode        [in] the DOM node which has received focus
-   * @param  aFocusEvent       [in] DOM focus event that caused
-   *                             the node/accessible to receive focus
-   * @param  aForceEvent       [in] fire a focus event even if the last focused
-   *                             item was the same
-   * @return                    boolean -- was a focus event actually fired
+   * @param  aFocusAccessible   [in] the accessible which has received focus
+   * @param  aRealFocusContent  [in] the actual DOM element which has received
+   *                              focus (see @note section)
+   * @param  aForceEvent        [in, optional] fire a focus event even if
+   *                              the last focused item was the same
+   * @param  aIsFromUserInput   [in, optional] specifies whether the event is
+   *                              from user input
+   *
+   * @note  Use the originally focused node where the selection lives as real
+   *         focus node. For example, use the anonymous HTML:input instead of
+   *         the containing XUL:textbox. In this case, sometimes it is a later
+   *         focus event which points to the actual anonymous child with focus,
+   *         so to be safe we need to reset the selection listener every time.
+   *         This happens because when some bindings handle focus, they
+   *         retarget focus to the appropriate child inside of themselves, but
+   *         DOM focus stays outside on that binding parent.
    */
-  PRBool FireAccessibleFocusEvent(nsAccessible *aFocusAccessible,
-                                  nsINode *aFocusNode,
-                                  nsIDOMEvent *aFocusEvent,
-                                  PRBool aForceEvent = PR_FALSE,
-                                  EIsFromUserInput aIsFromUserInput = eAutoDetect);
+  void FireAccessibleFocusEvent(nsAccessible* aFocusAccessible,
+                                nsIContent* aRealFocusContent,
+                                PRBool aForceEvent = PR_FALSE,
+                                EIsFromUserInput aIsFromUserInput = eAutoDetect);
 
     /**
       * Fire an accessible focus event for the current focused node,
