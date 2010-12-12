@@ -40,6 +40,7 @@
 #ifdef MOZ_IPC
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/unused.h"
 #endif
 #include "nsPermissionManager.h"
 #include "nsPermission.h"
@@ -65,6 +66,7 @@ static nsPermissionManager *gPermissionManager = nsnull;
 #ifdef MOZ_IPC
 using mozilla::dom::ContentParent;
 using mozilla::dom::ContentChild;
+using mozilla::unused; // ha!
 
 static PRBool
 IsChildProcess()
@@ -231,7 +233,7 @@ nsPermissionManager::Init()
     InfallibleTArray<IPC::Permission> perms;
     ChildProcess()->SendReadPermissions(&perms);
 
-    for (int i = 0; i < perms.Length(); i++) {
+    for (PRUint32 i = 0; i < perms.Length(); i++) {
       const IPC::Permission &perm = perms[i];
       AddInternal(perm.host, perm.type, perm.capability, 0, perm.expireType,
                   perm.expireTime, eNotify, eNoDBOperation);
@@ -481,7 +483,7 @@ nsPermissionManager::AddInternal(const nsAFlatCString &aHost,
       IPC::Permission permission((aHost),
                                  (aType),
                                  aPermission, aExpireType, aExpireTime);
-      ParentProcess()->SendAddPermission(permission);
+      unused << ParentProcess()->SendAddPermission(permission);
     }
   }
 #endif
