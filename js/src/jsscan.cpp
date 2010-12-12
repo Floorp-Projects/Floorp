@@ -1587,7 +1587,7 @@ TokenStream::getTokenInternal()
                             }
                         }
                         filenameBuf[i] = '\0';
-                        if (c == '\n') {
+                        if (c == EOF || c == '\n') {
                             if (i > 0) {
                                 if (flags & TSF_OWNFILENAME)
                                     cx->free((void *) filename);
