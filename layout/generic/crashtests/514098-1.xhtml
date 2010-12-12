@@ -1,0 +1,16 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:m="http://www.w3.org/1998/Math/MathML">
+<head>
+<script>
+
+function boom()
+{
+  document.getElementById("td").contentEditable = "true";
+  document.execCommand("justifyfull", false, null);
+}
+
+</script>
+</head>
+<body onload="boom();">
+<m:msubsup><td id="td"><m:mn/></td></m:msubsup>
+</body>
+</html>
