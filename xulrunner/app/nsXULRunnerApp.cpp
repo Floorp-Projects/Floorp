@@ -85,7 +85,7 @@ static void Output(PRBool isError, const char *fmt, ... )
     else
       flags |= MB_ICONINFORMATION;
     
-    wchar_t wide_msg[1024];
+    wchar_t wide_msg[2048];
     MultiByteToWideChar(CP_ACP,
 			0,
 			msg,
