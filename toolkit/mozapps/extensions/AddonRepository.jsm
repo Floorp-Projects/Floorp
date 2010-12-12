@@ -533,7 +533,26 @@ var AddonRepository = {
       return;
     }
 
-    this.getAddonsByIDs(aIds, {
+    let enabledIds = aIds.filter(function(aId) {
+      let preference = "extensions." + aId + ".getAddons.cache.enabled";
+      let enabled = true;
+      try {
+        enabled = Services.prefs.getBoolPref(preference);
+      } catch(e) {
+        // If pref doesn't exist, default to enabled = true
+      }
+      return enabled;
+    });
+
+    // Completely remove cache if there are no add-ons to cache
+    if (enabledIds.length == 0) {
+      this._addons = null;
+      this._pendingCallbacks = null;
+      AddonDatabase.delete(aCallback);
+      return;
+    }
+
+    this.getAddonsByIDs(enabledIds, {
       searchSucceeded: function(aAddons) {
         self._addons = {};
         aAddons.forEach(function(aAddon) { self._addons[aAddon.id] = aAddon; });
@@ -564,8 +583,26 @@ var AddonRepository = {
       return;
     }
 
+    let enabledIds = aIds.filter(function(aId) {
+      let preference = "extensions." + aId + ".getAddons.cache.enabled";
+      let enabled = true;
+      try {
+        enabled = Services.prefs.getBoolPref(preference);
+      } catch(e) {
+        // If pref doesn't exist, default to enabled = true
+      }
+      return enabled;
+    });
+
+    // If there are no add-ons to cache, act as if caching is disabled
+    if (enabledIds.length == 0) {
+      if (aCallback)
+        aCallback();
+      return;
+    }
+
     let self = this;
-    this.getAddonsByIDs(aIds, {
+    this.getAddonsByIDs(enabledIds, {
       searchSucceeded: function(aAddons) {
         aAddons.forEach(function(aAddon) { self._addons[aAddon.id] = aAddon; });
         AddonDatabase.insertAddons(aAddons, aCallback);
