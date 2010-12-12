@@ -2499,6 +2499,7 @@ PluginInstanceChild::PaintRectToPlatformSurface(const nsIntRect& aRect,
     // On maemo5 we do support Image rendering NPAPI
     if (mMaemoImageRendering &&
         aSurface->GetType() == gfxASurface::SurfaceTypeImage) {
+        aSurface->Flush();
         mPendingPluginCall = PR_TRUE;
         gfxImageSurface* image = static_cast<gfxImageSurface*>(aSurface);
         NPImageExpose imgExp;
