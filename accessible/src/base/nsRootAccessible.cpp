@@ -355,6 +355,9 @@ nsRootAccessible::FireAccessibleFocusEvent(nsAccessible* aFocusAccessible,
   if (gLastFocusedNode == focusNode && !aForceEvent)
     return;
 
+  nsDocAccessible* focusDocument = focusAccessible->GetDocAccessible();
+  NS_ASSERTION(focusDocument, "No document while accessible is in document?!");
+
   gLastFocusedAccessiblesState = nsAccUtils::State(focusAccessible);
 
   // Fire menu start/end events for ARIA menus.
@@ -373,7 +376,7 @@ nsRootAccessible::FireAccessibleFocusEvent(nsAccessible* aFocusAccessible,
                          menuBarAccessible, aIsFromUserInput,
                          AccEvent::eAllowDupes);
           if (menuStartEvent)
-            FireDelayedAccessibleEvent(menuStartEvent);
+            focusDocument->FireDelayedAccessibleEvent(menuStartEvent);
         }
       }
     }
@@ -384,7 +387,7 @@ nsRootAccessible::FireAccessibleFocusEvent(nsAccessible* aFocusAccessible,
       new AccEvent(nsIAccessibleEvent::EVENT_MENU_END, mCurrentARIAMenubar,
                    aIsFromUserInput, AccEvent::eAllowDupes);
     if (menuEndEvent) {
-      FireDelayedAccessibleEvent(menuEndEvent);
+      focusDocument->FireDelayedAccessibleEvent(menuEndEvent);
     }
     mCurrentARIAMenubar = nsnull;
   }
@@ -395,9 +398,10 @@ nsRootAccessible::FireAccessibleFocusEvent(nsAccessible* aFocusAccessible,
 
   // Coalesce focus events from the same document, because DOM focus event might
   // be fired for the document node and then for the focused DOM element.
-  FireDelayedAccessibleEvent(nsIAccessibleEvent::EVENT_FOCUS,
-                             focusNode, AccEvent::eCoalesceFromSameDocument,
-                             aIsFromUserInput);
+  focusDocument->FireDelayedAccessibleEvent(nsIAccessibleEvent::EVENT_FOCUS,
+                                            focusNode,
+                                            AccEvent::eCoalesceFromSameDocument,
+                                            aIsFromUserInput);
 }
 
 void
@@ -458,6 +462,9 @@ nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
 
   if (!accessible)
     return NS_OK;
+
+  nsDocAccessible* targetDocument = accessible->GetDocAccessible();
+  NS_ASSERTION(targetDocument, "No document while accessible is in document?!");
 
   nsINode* targetNode = accessible->GetNode();
   nsIContent* targetContent = targetNode->IsElement() ?
@@ -692,8 +699,9 @@ nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     FireCurrentFocusEvent();
   }
   else if (eventType.EqualsLiteral("ValueChange")) {
-    FireDelayedAccessibleEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE,
-                               targetNode, AccEvent::eRemoveDupes);
+    targetDocument->
+      FireDelayedAccessibleEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE,
+                                 targetNode, AccEvent::eRemoveDupes);
   }
 #ifdef DEBUG_DRAGDROPSTART
   else if (eventType.EqualsLiteral("mouseover")) {
