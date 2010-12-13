@@ -51,18 +51,6 @@
 
 #include "prlink.h"
 
-static PRFuncPtr
-FindFunctionSymbol(const char *name)
-{
-    PRLibrary *lib = nsnull;
-    PRFuncPtr result = PR_FindFunctionSymbolAndLibrary(name, &lib);
-    if (lib) {
-        PR_UnloadLibrary(lib);
-    }
-
-    return result;
-}
-
 // aScale is intended for a 16.16 x/y_scale of an FT_Size_Metrics
 static inline FT_Long
 ScaleRoundDesignUnits(FT_Short aDesignMetric, FT_Fixed aScale)
@@ -350,10 +338,7 @@ gfxFT2LockedFace::GetUVSGlyph(PRUint32 aCharCode, PRUint32 aVariantSelector)
         return 0;
 
     // This function is available from FreeType 2.3.6 (June 2008).
-    static GetCharVariantFunction sGetCharVariantPtr =
-        reinterpret_cast<GetCharVariantFunction>
-        (FindFunctionSymbol("FT_Face_GetCharVariantIndex"));
-
+    static CharVariantFunction sGetCharVariantPtr = FindCharVariantFunction();
     if (!sGetCharVariantPtr)
         return 0;
 
@@ -407,4 +392,36 @@ gfxFT2LockedFace::GetCharExtents(char aChar, cairo_text_extents_t* aExtents)
     }
 
     return gid;
+}
+
+gfxFT2LockedFace::CharVariantFunction
+gfxFT2LockedFace::FindCharVariantFunction()
+{
+    // This function is available from FreeType 2.3.6 (June 2008).
+    PRLibrary *lib = nsnull;
+    CharVariantFunction function =
+        reinterpret_cast<CharVariantFunction>
+        (PR_FindFunctionSymbolAndLibrary("FT_Face_GetCharVariantIndex", &lib));
+    if (!lib) {
+        return nsnull;
+    }
+
+    FT_Int major;
+    FT_Int minor;
+    FT_Int patch;
+    FT_Library_Version(mFace->glyph->library, &major, &minor, &patch);
+
+    // Versions 2.4.0 to 2.4.3 crash if configured with
+    // FT_CONFIG_OPTION_OLD_INTERNALS.  Presence of the symbol FT_Alloc
+    // indicates FT_CONFIG_OPTION_OLD_INTERNALS.
+    if (major == 2 && minor == 4 && patch < 4 &&
+        PR_FindFunctionSymbol(lib, "FT_Alloc")) {
+        function = nsnull;
+    }
+
+    // Decrement the reference count incremented in
+    // PR_FindFunctionSymbolAndLibrary.
+    PR_UnloadLibrary(lib);
+
+    return function;
 }
