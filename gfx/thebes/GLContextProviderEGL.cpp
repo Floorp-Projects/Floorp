@@ -171,6 +171,11 @@ typedef void *GLeglImageOES;
 
 #define EGL_DISPLAY()        sEGLLibrary.Display()
 
+EGLSurface
+CreateSurfaceForWindow(nsIWidget *aWidget, EGLConfig config);
+EGLConfig
+CreateConfig();
+
 static int
 next_power_of_two(int v)
 {
@@ -671,6 +676,26 @@ public:
 
         return succeeded;
     }
+
+#ifdef MOZ_WIDGET_QT
+    virtual PRBool
+    RenewSurface() {
+        /* We don't support renewing on QT because we don't create the surface ourselves */
+        return PR_FALSE;
+    }
+#else
+    virtual PRBool
+    RenewSurface() {
+        sEGLLibrary.fDestroySurface(EGL_DISPLAY(), mSurface);
+
+        EGLConfig config = CreateConfig();
+        mSurface = CreateSurfaceForWindow(NULL, config);
+
+        return sEGLLibrary.fMakeCurrent(EGL_DISPLAY(),
+                                        mSurface, mSurface,
+                                        mContext);
+    }
+#endif
 
     PRBool SetupLookupFunction()
     {
@@ -1387,14 +1412,13 @@ DepthToGLFormat(int aDepth)
 }
 
 
+#ifdef MOZ_WIDGET_QT
 already_AddRefed<GLContext>
 GLContextProviderEGL::CreateForWindow(nsIWidget *aWidget)
 {
     if (!sEGLLibrary.EnsureInitialized()) {
         return nsnull;
     }
-
-#ifdef MOZ_WIDGET_QT
 
     QWidget *viewport = static_cast<QWidget*>(aWidget->GetNativeData(NS_NATIVE_SHELLWIDGET));
     if (!viewport)
@@ -1422,13 +1446,14 @@ GLContextProviderEGL::CreateForWindow(nsIWidget *aWidget)
 
     // Switch to software rendering here
     return nsnull;
+}
 
 #else
 
+EGLConfig
+CreateConfig()
+{
     EGLConfig  config;
-    EGLSurface surface;
-    EGLContext context;
-
     EGLint attribs[] = {
         LOCAL_EGL_SURFACE_TYPE,    LOCAL_EGL_WINDOW_BIT,
         LOCAL_EGL_RENDERABLE_TYPE, LOCAL_EGL_OPENGL_ES2_BIT,
@@ -1479,10 +1504,14 @@ GLContextProviderEGL::CreateForWindow(nsIWidget *aWidget)
 #endif
     }
 
-    if (!config) {
-        printf_stderr("Failed to create EGL config!\n");
-        return nsnull;
-    }
+    return config;
+}
+
+EGLSurface
+CreateSurfaceForWindow(nsIWidget *aWidget, EGLConfig config)
+{
+    EGLSurface surface;
+
 
 #ifdef DEBUG
     sEGLLibrary.DumpEGLConfig(config);
@@ -1502,6 +1531,28 @@ GLContextProviderEGL::CreateForWindow(nsIWidget *aWidget)
 #else
     surface = sEGLLibrary.fCreateWindowSurface(EGL_DISPLAY(), config, GET_NATIVE_WINDOW(aWidget), 0);
 #endif
+
+    return surface;
+}
+
+already_AddRefed<GLContext>
+GLContextProviderEGL::CreateForWindow(nsIWidget *aWidget)
+{
+    EGLContext context;
+    EGLConfig config;
+
+    if (!sEGLLibrary.EnsureInitialized()) {
+        return nsnull;
+    }
+
+    config = CreateConfig();
+
+    if (!config) {
+        printf_stderr("Failed to create EGL config!\n");
+        return nsnull;
+    }
+
+    EGLSurface surface = CreateSurfaceForWindow(aWidget, config);
 
     if (!surface) {
         return nsnull;
@@ -1548,8 +1599,8 @@ TRY_AGAIN_NO_SHARING:
 #endif
 
     return glContext.forget();
-#endif
 }
+#endif
 
 already_AddRefed<GLContextEGL>
 GLContextEGL::CreateEGLPBufferOffscreenContext(const gfxIntSize& aSize,
