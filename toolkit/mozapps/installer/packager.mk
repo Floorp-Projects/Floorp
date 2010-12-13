@@ -389,7 +389,6 @@ NO_PKG_FILES += \
 	nsinstall \
 	viewer \
 	TestGtkEmbed \
-	bloaturls.txt \
 	codesighs* \
 	elf-dynstr-gc \
 	mangle* \
