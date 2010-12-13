@@ -494,9 +494,8 @@ static int CPPifdef(int defined, yystypepp * yylvalpp)
         Symbol *s = LookUpSymbol(macros, name);
         token = cpp->currentInput->scan(cpp->currentInput, yylvalpp);
         if (token != '\n') {
-            CPPWarningToInfoLog("unexpected tokens following #ifdef preprocessor directive - expected a newline");
-            while (token != '\n')
-                token = cpp->currentInput->scan(cpp->currentInput, yylvalpp);
+            CPPErrorToInfoLog("unexpected tokens following #ifdef preprocessor directive - expected a newline");
+            return 0;
         }
         if (((s && !s->details.mac.undef) ? 1 : 0) != defined)
             token = CPPelse(1, yylvalpp);

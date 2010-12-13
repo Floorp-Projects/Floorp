@@ -154,10 +154,7 @@ NS_IMETHODIMP_(nsIFrame*)
 nsSVGPathGeometryFrame::GetFrameForPoint(const nsPoint &aPoint)
 {
   PRUint16 fillRule, mask;
-  // check if we're a clipPath - cheaper than IsClipChild(), and we shouldn't
-  // get in here for other nondisplay children
-  if (GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD) {
-    NS_ASSERTION(IsClipChild(), "should be in clipPath but we're not");
+  if (GetStateBits() & NS_STATE_SVG_CLIPPATH_CHILD) {
     mask = HITTEST_MASK_FILL;
     fillRule = GetClipRule();
   } else {

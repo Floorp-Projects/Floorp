@@ -1635,6 +1635,7 @@ jsid nsDOMClassInfo::sOnmessage_id       = JSID_VOID;
 jsid nsDOMClassInfo::sOnbeforescriptexecute_id = JSID_VOID;
 jsid nsDOMClassInfo::sOnafterscriptexecute_id = JSID_VOID;
 jsid nsDOMClassInfo::sWrappedJSObject_id = JSID_VOID;
+jsid nsDOMClassInfo::sURL_id             = JSID_VOID;
 
 static const JSClass *sObjectClass = nsnull;
 
@@ -1860,6 +1861,7 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSID_TO_STRING(sOnafterscriptexecute_id, cx, "onafterscriptexecute");
 #endif // MOZ_MEDIA
   SET_JSID_TO_STRING(sWrappedJSObject_id, cx, "wrappedJSObject");
+  SET_JSID_TO_STRING(sURL_id,             cx, "URL");
 
   return NS_OK;
 }
@@ -6343,6 +6345,13 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
       return NS_OK;
     }
 
+    // For now don't expose web sockets unless user has explicitly enabled them
+    if (name_struct->mDOMClassInfoID == eDOMClassInfo_WebSocket_id) {
+      if (!nsWebSocket::PrefEnabled()) {
+        return NS_OK;
+      }
+    }
+
     // Create the XPConnect prototype for our classinfo, PostCreateProto will
     // set up the prototype chain.
     nsCOMPtr<nsIXPConnectJSObjectHolder> proto_holder;
@@ -6739,9 +6748,6 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     }
 
     JSObject *funObj = ::JS_GetFunctionObject(fun);
-
-    nsAutoGCRoot root(&funObj, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
 
     if (!::JS_DefinePropertyById(cx, windowObj, id, JSVAL_VOID,
                                  JS_DATA_TO_FUNC_PTR(JSPropertyOp, funObj),

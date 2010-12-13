@@ -213,8 +213,6 @@ nsFrameMessageManager::GetParamsForMessage(nsAString& aMessageName,
 
   if (argc >= 2) {
     jsval v = argv[1];
-    nsAutoGCRoot root(&v, &rv);
-    NS_ENSURE_SUCCESS(rv, JS_FALSE);
     if (JS_TryJSON(ctx, &v)) {
       JS_Stringify(ctx, &v, nsnull, JSVAL_NULL, JSONCreator, &aJSON);
     }
@@ -364,13 +362,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
         JSObject* param = JS_NewObject(ctx, NULL, NULL, NULL);
         NS_ENSURE_TRUE(param, NS_ERROR_OUT_OF_MEMORY);
 
-        nsresult rv;
-        nsAutoGCRoot resultGCRoot(&param, &rv);
-        NS_ENSURE_SUCCESS(rv, rv);
-
         jsval targetv;
-        nsAutoGCRoot resultGCRoot2(&targetv, &rv);
-        NS_ENSURE_SUCCESS(rv, rv);
         nsContentUtils::WrapNative(ctx,
                                    JS_GetGlobalObject(ctx),
                                    aTarget, &targetv);
@@ -385,12 +377,9 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
             return false;
           }
         }
-        nsAutoGCRoot arrayGCRoot(&aObjectsArray, &rv);
-        NS_ENSURE_SUCCESS(rv, rv);
 
         jsval json = JSVAL_NULL;
-        nsAutoGCRoot root(&json, &rv);
-        if (NS_SUCCEEDED(rv) && !aJSON.IsEmpty()) {
+        if (!aJSON.IsEmpty()) {
           JSONParser* parser = JS_BeginJSONParse(ctx, &json);
           if (parser) {
             JSBool ok = JS_ConsumeJSONText(ctx, parser,
@@ -417,8 +406,6 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
                           NULL, NULL, JSPROP_ENUMERATE);
 
         jsval thisValue = JSVAL_VOID;
-        nsAutoGCRoot resultGCRoot3(&thisValue, &rv);
-        NS_ENSURE_SUCCESS(rv, rv);
 
         JSAutoEnterCompartment ac;
 
@@ -454,8 +441,6 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
         }
 
         jsval rval = JSVAL_VOID;
-        nsAutoGCRoot resultGCRoot4(&rval, &rv);
-        NS_ENSURE_SUCCESS(rv, rv);
 
         js::AutoValueRooter argv(ctx);
         argv.set(OBJECT_TO_JSVAL(param));

@@ -115,7 +115,7 @@ drawToDC(InstanceData* instanceData, HDC dc,
   switch (instanceData->scriptableObject->drawMode) {
     case DM_DEFAULT:
     {
-      const RECT fill = { x, y, width, height };
+      const RECT fill = { x, y, x + width, y + height };
 
       int oldBkMode = ::SetBkMode(dc, TRANSPARENT);
       HBRUSH brush = ::CreateSolidBrush(RGB(0, 0, 0));

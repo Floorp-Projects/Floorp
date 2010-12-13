@@ -1953,7 +1953,7 @@ nsTableFrame::PushChildren(const RowGroupArray& aRowGroups,
   PRUint32 childX;
   for (childX = aPushFrom; childX < aRowGroups.Length(); ++childX) {
     nsTableRowGroupFrame* rgFrame = aRowGroups[childX];
-    if (!rgFrame || !rgFrame->IsRepeatable()) {
+    if (!rgFrame->IsRepeatable()) {
       mFrames.RemoveFrame(rgFrame);
       frames.AppendFrame(nsnull, rgFrame);
     }

@@ -191,18 +191,20 @@ public:
   static nsresult Init();
 
   /**
-   * Get a scope from aNewDocument. Also get a context through the scope of one
-   * of the documents, from the stack or the safe context.
+   * Get a scope from aOldDocument and one from aNewDocument. Also get a
+   * context through one of the scopes, from the stack or the safe context.
    *
-   * @param aOldDocument The document to try to get a context from. May be null.
+   * @param aOldDocument The document to get aOldScope from.
    * @param aNewDocument The document to get aNewScope from.
    * @param aCx [out] Context gotten through one of the scopes, from the stack
    *                  or the safe context.
+   * @param aOldScope [out] Scope gotten from aOldDocument.
    * @param aNewScope [out] Scope gotten from aNewDocument.
    */
-  static nsresult GetContextAndScope(nsIDocument *aOldDocument,
-                                     nsIDocument *aNewDocument,
-                                     JSContext **aCx, JSObject **aNewScope);
+  static nsresult GetContextAndScopes(nsIDocument *aOldDocument,
+                                      nsIDocument *aNewDocument,
+                                      JSContext **aCx, JSObject **aOldScope,
+                                      JSObject **aNewScope);
 
   /**
    * When a document's scope changes (e.g., from document.open(), call this
@@ -1677,6 +1679,23 @@ public:
   LayerManagerForDocument(nsIDocument *aDoc);
 
   /**
+   * Returns a layer manager to use for the given document. Basically we
+   * look up the document hierarchy for the first document which has
+   * a presentation with an associated widget, and use that widget's
+   * layer manager. In addition to the normal layer manager lookup this will
+   * specifically request a persistent layer manager. This means that the layer
+   * manager is expected to remain the layer manager for the document in the
+   * forseeable future. This function should be used carefully as it may change
+   * the document's layer manager.
+   *
+   * If one can't be found, a BasicLayerManager is created and returned.
+   *
+   * @param aDoc the document for which to return a layer manager.
+   */
+  static already_AddRefed<mozilla::layers::LayerManager>
+  PersistentLayerManagerForDocument(nsIDocument *aDoc);
+
+  /**
    * Determine whether a content node is focused or not,
    *
    * @param aContent the content node to check
@@ -1709,7 +1728,6 @@ public:
   static bool AllowXULXBLForPrincipal(nsIPrincipal* aPrincipal);
 
 private:
-
   static PRBool InitializeEventTable();
 
   static nsresult EnsureStringBundle(PropertiesFile aFile);
@@ -1839,48 +1857,6 @@ private:
 #endif
 };
 
-class NS_STACK_CLASS nsAutoGCRoot {
-public:
-  // aPtr should be the pointer to the jsval we want to protect
-  nsAutoGCRoot(jsval* aPtr, nsresult* aResult
-               MOZILLA_GUARD_OBJECT_NOTIFIER_PARAM) :
-    mPtr(aPtr), mRootType(RootType_JSVal)
-  {
-    MOZILLA_GUARD_OBJECT_NOTIFIER_INIT;
-    mResult = *aResult = AddJSGCRoot(aPtr, RootType_JSVal, "nsAutoGCRoot");
-  }
-
-  // aPtr should be the pointer to the JSObject* we want to protect
-  nsAutoGCRoot(JSObject** aPtr, nsresult* aResult
-               MOZILLA_GUARD_OBJECT_NOTIFIER_PARAM) :
-    mPtr(aPtr), mRootType(RootType_Object)
-  {
-    MOZILLA_GUARD_OBJECT_NOTIFIER_INIT;
-    mResult = *aResult = AddJSGCRoot(aPtr, RootType_Object, "nsAutoGCRoot");
-  }
-
-  ~nsAutoGCRoot() {
-    if (NS_SUCCEEDED(mResult)) {
-      RemoveJSGCRoot((jsval *)mPtr, mRootType);
-    }
-  }
-
-  static void Shutdown();
-
-private:
-  enum RootType { RootType_JSVal, RootType_Object };
-  static nsresult AddJSGCRoot(void *aPtr, RootType aRootType, const char* aName);
-  static nsresult RemoveJSGCRoot(void *aPtr, RootType aRootType);
-
-  static nsIJSRuntimeService* sJSRuntimeService;
-  static JSRuntime* sJSScriptRuntime;
-
-  void* mPtr;
-  RootType mRootType;
-  nsresult mResult;
-  MOZILLA_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
 class NS_STACK_CLASS nsAutoScriptBlocker {
 public:
   nsAutoScriptBlocker(MOZILLA_GUARD_OBJECT_NOTIFIER_ONLY_PARAM) {
@@ -1907,13 +1883,6 @@ private:
   nsCOMPtr<nsIDocumentObserver> mObserver;
   MOZILLA_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
-
-#define NS_AUTO_GCROOT_PASTE2(tok,line) tok##line
-#define NS_AUTO_GCROOT_PASTE(tok,line) \
-  NS_AUTO_GCROOT_PASTE2(tok,line)
-#define NS_AUTO_GCROOT(ptr, result) \ \
-  nsAutoGCRoot NS_AUTO_GCROOT_PASTE(_autoGCRoot_, __LINE__) \
-  (ptr, result)
 
 #define NS_INTERFACE_MAP_ENTRY_TEAROFF(_interface, _allocator)                \
   if (aIID.Equals(NS_GET_IID(_interface))) {                                  \

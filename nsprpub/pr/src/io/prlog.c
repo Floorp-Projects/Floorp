@@ -566,9 +566,8 @@ PR_IMPLEMENT(void) PR_Abort(void)
 PR_IMPLEMENT(void) PR_Assert(const char *s, const char *file, PRIntn ln)
 {
     PR_LogPrint("Assertion failure: %s, at %s:%d\n", s, file, ln);
-#if defined(XP_UNIX) || defined(XP_OS2) || defined(XP_BEOS)
     fprintf(stderr, "Assertion failure: %s, at %s:%d\n", s, file, ln);
-#endif
+    fflush(stderr);
 #ifdef WIN32
     DebugBreak();
 #endif

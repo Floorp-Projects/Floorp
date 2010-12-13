@@ -429,9 +429,10 @@ extern JSD_PUBLIC_API(const char*)
 JSD_GetScriptFilename(JSDContext* jsdc, JSDScript *jsdscript);
 
 /*
-* Get the function name associated with this script (NULL if not a function)
+* Get the function name associated with this script (NULL if not a function).
+* If the function does not have a name the result is an empty string.
 */
-extern JSD_PUBLIC_API(const char*)
+extern JSD_PUBLIC_API(JSString *)
 JSD_GetScriptFunctionName(JSDContext* jsdc, JSDScript *jsdscript);
 
 /*
@@ -955,7 +956,7 @@ JSD_GetThisForStackFrame(JSDContext* jsdc,
 * Get the name of the function executing in this stack frame.  Especially useful
 * for native frames (without script objects.)
 */
-extern JSD_PUBLIC_API(const char*)
+extern JSD_PUBLIC_API(JSString *)
 JSD_GetNameForStackFrame(JSDContext* jsdc,
                          JSDThreadState* jsdthreadstate,
                          JSDStackFrameInfo* jsdframe);
@@ -1288,7 +1289,7 @@ JSD_GetValueString(JSDContext* jsdc, JSDValue* jsdval);
 * Return name of function IFF JSDValue represents a function.
 * *** new for version 1.1 ****
 */
-extern JSD_PUBLIC_API(const char*)
+extern JSD_PUBLIC_API(JSString *)
 JSD_GetValueFunctionName(JSDContext* jsdc, JSDValue* jsdval);
 
 /**************************************************/

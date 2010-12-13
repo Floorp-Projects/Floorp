@@ -4,6 +4,7 @@
     <script type="text/javascript">
       function test() {
         var str = "Test Message."
+        console.foobar(str); // if this throws, we don't execute following funcs
         console.log(str);
         console.info(str);
         console.warn(str);

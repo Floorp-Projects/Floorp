@@ -202,6 +202,13 @@ public:
     }
 
     /**
+     * Returns true if the matrix only has an integer translation.
+     */
+    PRBool HasOnlyIntegerTranslation() const {
+        return !HasNonIntegerTranslation();
+    }
+
+    /**
      * Returns true if the matrix has any transform other
      * than a translation or a -1 y scale (y axis flip)
      */

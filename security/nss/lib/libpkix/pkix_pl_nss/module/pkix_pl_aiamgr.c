@@ -658,7 +658,8 @@ PKIX_PL_AIAMgr_GetAIACerts(
 				PKIX_AIAMGRGETLDAPCERTSFAILED);
                 } else {
                         /* We only support http and ldap requests. */
-			PKIX_ERROR(PKIX_UNKNOWNINFOACCESSTYPE);
+                        PKIX_DECREF(ia);
+                        continue;
                 }
 
                 if (nbio != NULL) { /* WOULDBLOCK */

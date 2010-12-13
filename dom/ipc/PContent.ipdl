@@ -116,6 +116,8 @@ child:
 
     ScreenSizeChanged(gfxIntSize size);
 
+    FlushMemory(nsString reason);
+
 parent:
     PNecko();
     PCrashReporter();

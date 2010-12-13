@@ -839,6 +839,13 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
     return NS_ERROR_FAILURE;
   }
 
+  nsCOMPtr<nsIContent> scriptContent(do_QueryInterface(aRequest->mElement));
+  nsIDocument* ownerDoc = scriptContent->GetOwnerDoc();
+  if (ownerDoc != mDocument) {
+    // Willful violation of HTML5 as of 2010-12-01
+    return NS_ERROR_FAILURE;
+  }
+
   nsPIDOMWindow *pwin = mDocument->GetInnerWindow();
   if (!pwin || !pwin->IsInnerWindow()) {
     return NS_ERROR_FAILURE;
@@ -847,7 +854,6 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
   NS_ASSERTION(globalObject, "windows must be global objects");
 
   // Get the script-type to be used by this element.
-  nsCOMPtr<nsIContent> scriptContent(do_QueryInterface(aRequest->mElement));
   NS_ASSERTION(scriptContent, "no content - what is default script-type?");
   PRUint32 stid = scriptContent ? scriptContent->GetScriptTypeID() :
                                   nsIProgrammingLanguage::JAVASCRIPT;

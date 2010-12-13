@@ -245,9 +245,6 @@ nsresult
 NS_NewSVGElement(nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo,
                  FromParser aFromParser)
 {
-  NS_PRECONDITION(NS_SVGEnabled(),
-                  "creating an SVG element while SVG disabled");
-
   static const char kSVGStyleSheetURI[] = "resource://gre/res/svg.css";
 
   // this bit of code is to load svg.css on demand

@@ -71,3 +71,9 @@ let DISABLE_TESTS_BUG_604565 = false;
 DISABLE_TESTS_BUG_604565 = true;
 #endif
 #endif
+
+// test_jpakeclient.js produces random failures on Windows 7
+let DISABLE_TESTS_BUG_618233 = false;
+#ifdef XP_WIN
+DISABLE_TESTS_BUG_618233 = true;
+#endif

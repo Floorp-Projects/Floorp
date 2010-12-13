@@ -91,14 +91,17 @@ class Element;
 #endif
 
 // SVG Frame state bits
-#define NS_STATE_IS_OUTER_SVG         NS_FRAME_STATE_BIT(20)
+#define NS_STATE_IS_OUTER_SVG                    NS_FRAME_STATE_BIT(20)
 
-#define NS_STATE_SVG_DIRTY            NS_FRAME_STATE_BIT(21)
+#define NS_STATE_SVG_DIRTY                       NS_FRAME_STATE_BIT(21)
 
 /* are we the child of a non-display container? */
-#define NS_STATE_SVG_NONDISPLAY_CHILD NS_FRAME_STATE_BIT(22)
+#define NS_STATE_SVG_NONDISPLAY_CHILD            NS_FRAME_STATE_BIT(22)
 
-#define NS_STATE_SVG_PROPAGATE_TRANSFORM NS_FRAME_STATE_BIT(23)
+#define NS_STATE_SVG_PROPAGATE_TRANSFORM         NS_FRAME_STATE_BIT(23)
+
+// If this bit is set, we are a <clipPath> element or descendant.
+#define NS_STATE_SVG_CLIPPATH_CHILD              NS_FRAME_STATE_BIT(24)
 
 /**
  * Byte offsets of channels in a native packed gfxColor or cairo image surface.
@@ -137,14 +140,6 @@ IsSVGWhitespace(PRUnichar aChar)
   return aChar == PRUnichar('\x20') || aChar == PRUnichar('\x9') ||
          aChar == PRUnichar('\xD')  || aChar == PRUnichar('\xA');
 }
-
-/*
- * Checks the svg enable preference and if a renderer could
- * successfully be created.  Declared as a function instead of a
- * nsSVGUtil method so that files that can't pull in nsSVGUtils.h (due
- * to cairo.h usage) can still query this information.
- */
-PRBool NS_SVGEnabled();
 
 #ifdef MOZ_SMIL
 /*

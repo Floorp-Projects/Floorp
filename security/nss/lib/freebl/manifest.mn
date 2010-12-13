@@ -146,6 +146,7 @@ CSRCS = \
 	shvfy.c \
 	tlsprfalg.c \
 	seed.c \
+	jpake.c \
 	$(MPI_SRCS) \
 	$(MPCPU_SRCS) \
 	$(ECL_SRCS) \

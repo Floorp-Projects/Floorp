@@ -2038,6 +2038,8 @@ public:
    * This flag is useful when, during painting, FrameLayerBuilder discovers that
    * a region of the window needs to be drawn differently, and that region
    * may or may not be contained in the currently painted region.
+   * @param aFlags INVALIDATE_NO_UPDATE_LAYER_TREE: invalidate only in the Non-Thebes Layers
+   * Video, Plugin.
    */
   enum {
     INVALIDATE_IMMEDIATE = 0x01,
@@ -2048,7 +2050,8 @@ public:
                              INVALIDATE_REASON_SCROLL_REPAINT,
     INVALIDATE_NO_THEBES_LAYERS = 0x10,
     INVALIDATE_ONLY_THEBES_LAYERS = 0x20,
-    INVALIDATE_EXCLUDE_CURRENT_PAINT = 0x40
+    INVALIDATE_EXCLUDE_CURRENT_PAINT = 0x40,
+    INVALIDATE_NO_UPDATE_LAYER_TREE = 0x80
   };
   virtual void InvalidateInternal(const nsRect& aDamageRect,
                                   nscoord aOffsetX, nscoord aOffsetY,

@@ -586,5 +586,15 @@ ContentChild::RecvScreenSizeChanged(const gfxIntSize& size)
   return true;
 }
 
+bool
+ContentChild::RecvFlushMemory(const nsString& reason)
+{
+    nsCOMPtr<nsIObserverService> os =
+        mozilla::services::GetObserverService();
+    if (os)
+	os->NotifyObservers(nsnull, "memory-pressure", reason.get());
+  return true;
+}
+
 } // namespace dom
 } // namespace mozilla

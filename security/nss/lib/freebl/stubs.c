@@ -171,6 +171,7 @@ STUB_DECLARE(SECStatus,SECITEM_CopyItem_Util,(PRArenaPool *arena,
 			SECItem *to,const SECItem *from));
 STUB_DECLARE(void,SECITEM_FreeItem_Util,(SECItem *zap, PRBool freeit));
 STUB_DECLARE(void,SECITEM_ZfreeItem_Util,(SECItem *zap, PRBool freeit));
+STUB_DECLARE(int, NSS_SecureMemcmp,(const void *a, const void *b, size_t n));
 
 
 #define PORT_ZNew_stub(type) (type*)PORT_ZAlloc_stub(sizeof(type))
@@ -482,6 +483,13 @@ SECITEM_ZfreeItem_stub(SECItem *zap, PRBool freeit)
     abort();
 }
 
+extern int
+NSS_SecureMemcmp_stub(const void *a, const void *b, size_t n)
+{
+    STUB_SAFE_CALL3(NSS_SecureMemcmp, a, b, n);
+    abort();
+}
+
 #ifdef FREEBL_NO_WEAK
 
 static const char *nsprLibName = SHLIB_PREFIX"nspr4."SHLIB_SUFFIX;
@@ -523,6 +531,7 @@ freebl_InitNSSUtil(void *lib)
     STUB_FETCH_FUNCTION(SECITEM_CompareItem_Util);
     STUB_FETCH_FUNCTION(SECITEM_CopyItem_Util);
     STUB_FETCH_FUNCTION(SECITEM_ZfreeItem_Util);
+    STUB_FETCH_FUNCTION(NSS_SecureMemcmp);
     return SECSuccess;
 }
 

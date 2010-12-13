@@ -121,10 +121,12 @@ panel[type="arrow"][side="right"] {
   list-style-image: url("chrome://global/skin/arrow/panelarrow-up.png");
 %ifdef WINSTRIPE_AERO
   margin-bottom: -5px;
+  margin-top: -5px;
 %else
   margin-left: 6px;
   margin-right: 6px;
   margin-bottom: -13px;
+  margin-top: -4px;
 %endif
 }
 
@@ -132,10 +134,12 @@ panel[type="arrow"][side="right"] {
   list-style-image: url("chrome://global/skin/arrow/panelarrow-down.png");
 %ifdef WINSTRIPE_AERO
   margin-top: -5px;
+  margin-bottom: -5px;
 %else
   margin-left: 6px;
   margin-right: 6px;
   margin-top: -12px;
+  margin-bottom: -4px;
 %endif
 }
 
@@ -143,10 +147,12 @@ panel[type="arrow"][side="right"] {
   list-style-image: url("chrome://global/skin/arrow/panelarrow-horiz.png");
 %ifdef WINSTRIPE_AERO
   margin-right: -5px;
+  margin-left: -5px;
 %else
   margin-top: 6px;
   margin-bottom: 6px;
   margin-right: -12px;
+  margin-left: -4px;
 %endif
 }
 
@@ -155,10 +161,12 @@ panel[type="arrow"][side="right"] {
   -moz-transform: scaleX(-1);
 %ifdef WINSTRIPE_AERO
   margin-left: -5px;
+  margin-right: -5px;
 %else
   margin-top: 6px;
   margin-bottom: 6px;
   margin-left: -12px;
+  margin-right: -4px;
 %endif
 }
 

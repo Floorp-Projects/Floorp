@@ -62,6 +62,18 @@ const CSS_TYPE_SHORTHAND_AND_LONGHAND = 2;
 //	 invalid_values: Things that are not values for the property and
 //	   should be rejected.
 
+// Helper functions used to construct gCSSProperties.
+
+function initial_font_family_is_sans_serif()
+{
+	// The initial value of 'font-family' might be 'serif' or
+	// 'sans-serif'.
+	var div = document.createElement("div");
+	div.setAttribute("style", "font: -moz-initial");
+	return getComputedStyle(div, "").fontFamily == "sans-serif";
+}
+var gInitialFontFamilyIsSansSerif = initial_font_family_is_sans_serif();
+
 var gCSSProperties = {
 	"-moz-appearance": {
 		domProp: "MozAppearance",
@@ -1713,7 +1725,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "font-style", "font-variant", "font-weight", "font-size", "line-height", "font-family", "font-stretch", "font-size-adjust", "-moz-font-feature-settings", "-moz-font-language-override" ],
 		/* XXX could be sans-serif */
-		initial_values: [ "medium serif" ],
+		initial_values: [ (gInitialFontFamilyIsSansSerif ? "medium sans-serif" : "medium serif") ],
 		other_values: [ "large serif", "9px fantasy", "bold italic small-caps 24px/1.4 Times New Roman, serif", "caption", "icon", "menu", "message-box", "small-caption", "status-bar" ],
 		invalid_values: []
 	},
@@ -1721,8 +1733,8 @@ var gCSSProperties = {
 		domProp: "fontFamily",
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "serif" ],
-		other_values: [ "sans-serif", "Times New Roman, serif", "'Times New Roman', serif", "cursive", "fantasy", "\"Times New Roman", "Times, \"Times New Roman" ],
+		initial_values: [ (gInitialFontFamilyIsSansSerif ? "sans-serif" : "serif") ],
+		other_values: [ (gInitialFontFamilyIsSansSerif ? "serif" : "sans-serif"), "Times New Roman, serif", "'Times New Roman', serif", "cursive", "fantasy", "\"Times New Roman", "Times, \"Times New Roman" ],
 		invalid_values: [ "\"Times New\" Roman" ]
 	},
 	"-moz-font-feature-settings": {

@@ -2242,13 +2242,13 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
         case eCSSProperty_border_spacing: {
           const nsStyleTableBorder *styleTableBorder =
             static_cast<const nsStyleTableBorder*>(styleStruct);
-          nsCSSValuePair *pair = new nsCSSValuePair;
+          nsAutoPtr<nsCSSValuePair> pair(new nsCSSValuePair);
           if (!pair) {
             return PR_FALSE;
           }
           nscoordToCSSValue(styleTableBorder->mBorderSpacingX, pair->mXValue);
           nscoordToCSSValue(styleTableBorder->mBorderSpacingY, pair->mYValue);
-          aComputedValue.SetAndAdoptCSSValuePairValue(pair,
+          aComputedValue.SetAndAdoptCSSValuePairValue(pair.forget(),
                                                       eUnit_CSSValuePair);
           break;
         }
@@ -2256,7 +2256,7 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
         case eCSSProperty__moz_transform_origin: {
           const nsStyleDisplay *styleDisplay =
             static_cast<const nsStyleDisplay*>(styleStruct);
-          nsCSSValuePair *pair = new nsCSSValuePair;
+          nsAutoPtr<nsCSSValuePair> pair(new nsCSSValuePair);
           if (!pair ||
               !StyleCoordToCSSValue(styleDisplay->mTransformOrigin[0],
                                     pair->mXValue) ||
@@ -2264,7 +2264,7 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
                                     pair->mYValue)) {
             return PR_FALSE;
           }
-          aComputedValue.SetAndAdoptCSSValuePairValue(pair,
+          aComputedValue.SetAndAdoptCSSValuePairValue(pair.forget(),
                                                       eUnit_CSSValuePair);
           break;
         }
@@ -2571,13 +2571,14 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
         corners->Get(NS_FULL_TO_HALF_CORNER(fullCorner, PR_FALSE));
       const nsStyleCoord &vert =
         corners->Get(NS_FULL_TO_HALF_CORNER(fullCorner, PR_TRUE));
-      nsCSSValuePair *pair = new nsCSSValuePair;
+      nsAutoPtr<nsCSSValuePair> pair(new nsCSSValuePair);
       if (!pair ||
           !StyleCoordToCSSValue(horiz, pair->mXValue) ||
           !StyleCoordToCSSValue(vert, pair->mYValue)) {
         return PR_FALSE;
       }
-      aComputedValue.SetAndAdoptCSSValuePairValue(pair, eUnit_CSSValuePair);
+      aComputedValue.SetAndAdoptCSSValuePairValue(pair.forget(),
+                                                  eUnit_CSSValuePair);
       return PR_TRUE;
     }
     case eStyleAnimType_nscoord:

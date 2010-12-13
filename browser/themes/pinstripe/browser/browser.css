@@ -922,7 +922,8 @@ richlistitem[selected="true"][current="true"] > hbox > .ac-result-type-bookmark,
   font-size: inherit;
 }
 
-.ac-url-text {
+.ac-url-text,
+.ac-action-text {
   color: -moz-nativehyperlinktext;
   font-size: 0.95em;
 }
@@ -935,7 +936,9 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   color: GrayText;
 }
 
-.ac-comment[selected="true"], .ac-url-text[selected="true"] {
+.ac-comment[selected="true"],
+.ac-url-text[selected="true"],
+.ac-action-text[selected="true"] {
   color: inherit !important;
 }
 
@@ -2260,6 +2263,26 @@ panel[dimmed="true"] {
 #status-bar > statusbarpanel {
   border-width: 0;
   -moz-appearance: none;
+}
+
+#addon-bar {
+  -moz-appearance: statusbar;
+}
+
+/* Add-on bar close button */
+#addonbar-closebutton {
+  padding: 0;
+  margin: 0 4px;
+  list-style-image: url("chrome://global/skin/icons/closetab.png");
+  border: none;
+}
+
+#addonbar-closebutton:hover {
+  list-style-image: url("chrome://global/skin/icons/closetab-hover.png");
+}
+
+#addonbar-closebutton:hover:active {
+  list-style-image: url("chrome://global/skin/icons/closetab-active.png");
 }
 
 browser[tabmodalPromptShowing] {

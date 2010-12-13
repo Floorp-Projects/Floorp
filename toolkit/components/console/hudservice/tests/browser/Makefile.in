@@ -109,6 +109,7 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_601177_log_levels.js \
 	browser_webconsole_bug_587615_lastTimestamp.js \
 	browser_webconsole_bug_597460_filter_scroll.js \
+	browser_webconsole_console_extras.js \
 	head.js \
 	$(NULL)
 
@@ -147,6 +148,7 @@ _BROWSER_TEST_PAGES = \
 	test-bug-600183-charset.html^headers^ \
 	test-bug-601177-log-levels.html \
 	test-bug-601177-log-levels.js \
+	test-console-extras.html \
 	$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)

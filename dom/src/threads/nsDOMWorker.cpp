@@ -159,6 +159,7 @@ nsDOMWorkerFunctions::MakeTimeout(JSContext* aCx,
   NS_ASSERTION(worker, "This should be set by the DOM thread service!");
 
   if (worker->IsCanceled()) {
+    JS_ReportError(aCx, "Worker is canceled");
     return JS_FALSE;
   }
 
@@ -207,6 +208,7 @@ nsDOMWorkerFunctions::KillTimeout(JSContext* aCx,
   NS_ASSERTION(worker, "This should be set by the DOM thread service!");
 
   if (worker->IsCanceled()) {
+    JS_ReportError(aCx, "Worker is canceled");
     return JS_FALSE;
   }
 
@@ -235,6 +237,7 @@ nsDOMWorkerFunctions::LoadScripts(JSContext* aCx,
   NS_ASSERTION(worker, "This should be set by the DOM thread service!");
 
   if (worker->IsCanceled()) {
+    JS_ReportError(aCx, "Worker is canceled");
     return JS_FALSE;
   }
 
@@ -310,6 +313,7 @@ nsDOMWorkerFunctions::NewXMLHttpRequest(JSContext* aCx,
   NS_ASSERTION(worker, "This should be set by the DOM thread service!");
 
   if (worker->IsCanceled()) {
+    JS_ReportError(aCx, "Worker is canceled");
     return JS_FALSE;
   }
 
@@ -359,6 +363,7 @@ nsDOMWorkerFunctions::AtoB(JSContext* aCx,
   NS_ASSERTION(worker, "This should be set by the DOM thread service!");
 
   if (worker->IsCanceled()) {
+    JS_ReportError(aCx, "Worker is canceled");
     return JS_FALSE;
   }
 
@@ -411,6 +416,7 @@ nsDOMWorkerFunctions::BtoA(JSContext* aCx,
   NS_ASSERTION(worker, "This should be set by the DOM thread service!");
 
   if (worker->IsCanceled()) {
+    JS_ReportError(aCx, "Worker is canceled");
     return JS_FALSE;
   }
 
@@ -485,6 +491,7 @@ nsDOMWorkerFunctions::MakeNewWorker(JSContext* aCx,
   NS_ASSERTION(worker, "This should be set by the DOM thread service!");
 
   if (worker->IsCanceled()) {
+    JS_ReportError(aCx, "Worker is canceled");
     return JS_FALSE;
   }
 
@@ -578,6 +585,7 @@ nsDOMWorkerFunctions::CTypesLazyGetter(JSContext* aCx,
   NS_ASSERTION(worker->IsPrivileged(), "This shouldn't be possible!");
 
   if (worker->IsCanceled()) {
+    JS_ReportError(aCx, "Worker is canceled");
     return JS_FALSE;
   }
 

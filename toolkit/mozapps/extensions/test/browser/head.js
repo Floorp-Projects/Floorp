@@ -540,11 +540,22 @@ MockProvider.prototype = {
    */
   addInstall: function MP_addInstall(aInstall) {
     this.installs.push(aInstall);
+    aInstall._provider = this;
 
     if (!this.started)
       return;
 
     aInstall.callListeners("onNewInstall");
+  },
+
+  removeInstall: function MP_removeInstall(aInstall) {
+    var pos = this.installs.indexOf(aInstall);
+    if (pos == -1) {
+      ok(false, "Tried to remove an install that wasn't registered with the mock provider");
+      return;
+    }
+
+    this.installs.splice(pos, 1);
   },
 
   /**
@@ -586,14 +597,20 @@ MockProvider.prototype = {
   createInstalls: function MP_createInstalls(aInstallProperties) {
     var newInstalls = [];
     aInstallProperties.forEach(function(aInstallProp) {
-      var install = new MockInstall();
+      var install = new MockInstall(aInstallProp.name || null,
+                                    aInstallProp.type || null,
+                                    null);
       for (var prop in aInstallProp) {
-        if (prop == "sourceURI") {
-          install[prop] = NetUtil.newURI(aInstallProp[prop]);
-          continue;
+        switch (prop) {
+          case "name":
+          case "type":
+            break;
+          case "sourceURI":
+            install[prop] = NetUtil.newURI(aInstallProp[prop]);
+            break;
+          default:
+            install[prop] = aInstallProp[prop];
         }
-
-        install[prop] = aInstallProp[prop];
       }
       this.addInstall(install);
       newInstalls.push(install);
@@ -960,7 +977,9 @@ MockAddon.prototype = {
 
 function MockInstall(aName, aType, aAddonToInstall) {
   this.name = aName || "";
-  this.type = aType || "extension";
+  // Don't expose type until download completed
+  this._type = aType || "extension";
+  this.type = null;
   this.version = "1.0";
   this.iconURL = "";
   this.infoURL = "";
@@ -992,6 +1011,8 @@ MockInstall.prototype = {
           this.callListeners("onDownloadCancelled");
           return;
         }
+
+        this.type = this._type;
 
         // Adding addon to MockProvider to be implemented when needed
         if (this._addonToInstall)
@@ -1042,6 +1063,7 @@ MockInstall.prototype = {
         break;
       case AddonManager.STATE_INSTALLED:
         this.state = AddonManager.STATE_CANCELLED;
+        this._provider.removeInstall(this);
         this.callListeners("onInstallCancelled");
         break;
       default:

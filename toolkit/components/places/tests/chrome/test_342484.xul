@@ -53,7 +53,7 @@ var observer =
     setTimeout(runTest, 1000);
     bmsvc.removeObserver(this);
   },
-  onItemAdded: function(){}.
+  onItemAdded: function(){},
   onBeforeItemRemoved: function(){},
   onItemRemoved: function(){},
   onItemChanged: function(){},

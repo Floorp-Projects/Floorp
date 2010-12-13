@@ -99,6 +99,7 @@ load 457115.html
 load 467141-1.html
 load 488388-1.html
 load 513732-1.html
+asserts(0-1) load 533380-1.xhtml # Bug 614457
 load 534716-1.html
 load 573354-1.xhtml
 load 576890-1.html

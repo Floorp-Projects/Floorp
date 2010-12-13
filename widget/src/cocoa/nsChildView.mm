@@ -2718,8 +2718,8 @@ NSEvent* gLastDragMouseDownEvent = nil;
   }
 #endif
 
-  if (mGeckoChild->GetLayerManager()->GetBackendType() == LayerManager::LAYERS_OPENGL) {
-    LayerManagerOGL *manager = static_cast<LayerManagerOGL*>(mGeckoChild->GetLayerManager());
+  if (mGeckoChild->GetLayerManager(nsnull)->GetBackendType() == LayerManager::LAYERS_OPENGL) {
+    LayerManagerOGL *manager = static_cast<LayerManagerOGL*>(mGeckoChild->GetLayerManager(nsnull));
     manager->SetClippingRegion(paintEvent.region); 
     if (!mGLContext) {
       mGLContext = (NSOpenGLContext *)manager->gl()->GetNativeData(mozilla::gl::GLContext::NativeGLContext);

@@ -69,9 +69,7 @@ function testChrome() {
   input.value = "docu";
   input.setSelectionRange(4, 4);
   jsterm.complete(jsterm.COMPLETE_HINT_ONLY);
-  is(input.value, "document", "'docu' completion");
-  is(input.selectionStart, 4, "start selection is alright");
-  is(input.selectionEnd, 8, "end selection is alright");
+  is(jsterm.completeNode.value, "    ment", "'docu' completion");
 
   HUD = jsterm = input = null;
   finishTest();

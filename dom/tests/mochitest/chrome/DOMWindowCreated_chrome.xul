@@ -9,7 +9,9 @@
   <script type="application/javascript" 
           src="chrome://mochikit/content/MochiKit/packed.js"></script>
   <script type="application/javascript" 
-          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" 
+          src="chrome://mochikit/content/chrome-harness.js"></script>
 
 <script type="application/javascript">
 var SimpleTest = window.opener.wrappedJSObject.SimpleTest;
@@ -23,8 +25,11 @@ document.addEventListener("DOMWindowCreated", function(e) {
     window.close();
   };
 }, false);
+
+var root = getRootDirectory(window.location.href);
+var el = document.createElement("iframe");
+el.setAttribute('type', 'content');
+el.setAttribute('src', root + 'DOMWindowCreated_content.html');
+document.documentElement.appendChild(el);
 </script>
-
-<iframe type="content" src="http://mochi.test:8888/chrome/dom/tests/mochitest/chrome/DOMWindowCreated_content.html"/>
-
 </window>

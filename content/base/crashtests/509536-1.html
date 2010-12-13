@@ -1,0 +1,17 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  var frame = document.createElement("iframe");
+  frame.setAttribute("src", "1");
+  document.body.appendChild(frame);
+  frame.setAttribute("src", "2");
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>
