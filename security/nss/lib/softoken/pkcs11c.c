@@ -3141,7 +3141,7 @@ CK_RV NSC_GenerateKey(CK_SESSION_HANDLE hSession,
     int i;
     SFTKSlot *slot = sftk_SlotFromSessionHandle(hSession);
     unsigned char buf[MAX_KEY_LEN];
-    enum {nsc_pbe, nsc_ssl, nsc_bulk, nsc_param} key_gen_type;
+    enum {nsc_pbe, nsc_ssl, nsc_bulk, nsc_param, nsc_jpake} key_gen_type;
     NSSPKCS5PBEParameter *pbe_param;
     SSL3RSAPreMasterSecret *rsa_pms;
     CK_VERSION *version;
@@ -3150,6 +3150,7 @@ CK_RV NSC_GenerateKey(CK_SESSION_HANDLE hSession,
      * produce them any more.  The affected algorithm was 3DES.
      */
     PRBool faultyPBE3DES = PR_FALSE;
+    HASH_HashType hashType;
 
     CHECK_FORK();
 
@@ -3249,6 +3250,24 @@ CK_RV NSC_GenerateKey(CK_SESSION_HANDLE hSession,
 	objclass = CKO_KG_PARAMETERS;
 	crv = CKR_OK;
 	break;
+    case CKM_NSS_JPAKE_ROUND1_SHA1:   hashType = HASH_AlgSHA1;   goto jpake1;
+    case CKM_NSS_JPAKE_ROUND1_SHA256: hashType = HASH_AlgSHA256; goto jpake1;
+    case CKM_NSS_JPAKE_ROUND1_SHA384: hashType = HASH_AlgSHA384; goto jpake1;
+    case CKM_NSS_JPAKE_ROUND1_SHA512: hashType = HASH_AlgSHA512; goto jpake1;
+jpake1:
+	key_gen_type = nsc_jpake;
+	key_type = CKK_NSS_JPAKE_ROUND1;
+        objclass = CKO_PRIVATE_KEY;
+        if (pMechanism->pParameter == NULL ||
+            pMechanism->ulParameterLen != sizeof(CK_NSS_JPAKERound1Params)) {
+            crv = CKR_MECHANISM_PARAM_INVALID;
+            break;
+        }
+        if (sftk_isTrue(key, CKA_TOKEN)) {
+            crv = CKR_TEMPLATE_INCONSISTENT;
+        }
+        crv = CKR_OK;
+        break;
     default:
 	crv = CKR_MECHANISM_INVALID;
 	break;
@@ -3295,6 +3314,11 @@ CK_RV NSC_GenerateKey(CK_SESSION_HANDLE hSession,
 	*buf = 0;
 	crv = nsc_parameter_gen(key_type,key);
 	break;
+    case nsc_jpake:
+        crv = jpake_Round1(hashType,
+                           (CK_NSS_JPAKERound1Params *) pMechanism->pParameter,
+                           key);
+        break;
     }
 
     if (crv != CKR_OK) { sftk_FreeObject(key); return crv; }
@@ -5000,8 +5024,8 @@ CK_RV NSC_DeriveKey( CK_SESSION_HANDLE hSession,
     SFTKSlot    *   slot	= sftk_SlotFromSessionHandle(hSession);
     SFTKObject  *   key;
     SFTKObject  *   sourceKey;
-    SFTKAttribute * att;
-    SFTKAttribute * att2;
+    SFTKAttribute * att = NULL;
+    SFTKAttribute * att2 = NULL;
     unsigned char * buf;
     SHA1Context *   sha;
     MD5Context *    md5;
@@ -5024,6 +5048,8 @@ CK_RV NSC_DeriveKey( CK_SESSION_HANDLE hSession,
     unsigned char   key_block[NUM_MIXERS * MD5_LENGTH];
     unsigned char   key_block2[MD5_LENGTH];
     PRBool          isFIPS;		
+    HASH_HashType   hashType;
+    PRBool          extractValue = PR_TRUE;
 
     CHECK_FORK();
 
@@ -5061,8 +5087,24 @@ CK_RV NSC_DeriveKey( CK_SESSION_HANDLE hSession,
 	keySize = sftk_MapKeySize(keyType);
     }
 
-    /* Derive can only create SECRET KEY's currently... */
-    classType = CKO_SECRET_KEY;
+    switch (pMechanism->mechanism) {
+      case CKM_NSS_JPAKE_ROUND2_SHA1:   /* fall through */
+      case CKM_NSS_JPAKE_ROUND2_SHA256: /* fall through */
+      case CKM_NSS_JPAKE_ROUND2_SHA384: /* fall through */
+      case CKM_NSS_JPAKE_ROUND2_SHA512:
+          extractValue = PR_FALSE;
+          classType = CKO_PRIVATE_KEY;
+          break;
+      case CKM_NSS_JPAKE_FINAL_SHA1:   /* fall through */
+      case CKM_NSS_JPAKE_FINAL_SHA256: /* fall through */
+      case CKM_NSS_JPAKE_FINAL_SHA384: /* fall through */
+      case CKM_NSS_JPAKE_FINAL_SHA512:
+          extractValue = PR_FALSE;
+          /* fall through */
+      default:
+          classType = CKO_SECRET_KEY;
+    }
+    
     crv = sftk_forceAttribute (key,CKA_CLASS,&classType,sizeof(classType));
     if (crv != CKR_OK) {
 	sftk_FreeObject(key);
@@ -5083,12 +5125,14 @@ CK_RV NSC_DeriveKey( CK_SESSION_HANDLE hSession,
         return CKR_KEY_HANDLE_INVALID;
     }
 
-    /* get the value of the base key */
-    att = sftk_FindAttribute(sourceKey,CKA_VALUE);
-    if (att == NULL) {
-	sftk_FreeObject(key);
-	sftk_FreeObject(sourceKey);
-        return CKR_KEY_HANDLE_INVALID;
+    if (extractValue) {
+        /* get the value of the base key */
+        att = sftk_FindAttribute(sourceKey,CKA_VALUE);
+        if (att == NULL) {
+            sftk_FreeObject(key);
+            sftk_FreeObject(sourceKey);
+            return CKR_KEY_HANDLE_INVALID;
+        }
     }
 
     switch (pMechanism->mechanism) {
@@ -6008,10 +6052,161 @@ ec_loser:
       }
 #endif /* NSS_ENABLE_ECC */
 
+    /* See RFC 5869 and CK_NSS_HKDFParams for documentation. */
+    case CKM_NSS_HKDF_SHA1:   hashType = HASH_AlgSHA1;   goto hkdf;
+    case CKM_NSS_HKDF_SHA256: hashType = HASH_AlgSHA256; goto hkdf;
+    case CKM_NSS_HKDF_SHA384: hashType = HASH_AlgSHA384; goto hkdf;
+    case CKM_NSS_HKDF_SHA512: hashType = HASH_AlgSHA512; goto hkdf;
+hkdf: {
+        const CK_NSS_HKDFParams * params =
+            (const CK_NSS_HKDFParams *) pMechanism->pParameter;
+        const SECHashObject * rawHash;
+        unsigned hashLen;
+        CK_BYTE buf[HASH_LENGTH_MAX];
+        /* const */ CK_BYTE * prk;  /* psuedo-random key */
+        CK_ULONG prkLen;
+        const CK_BYTE * okm;        /* output keying material */
+
+        rawHash = HASH_GetRawHashObject(hashType);
+        if (rawHash == NULL || rawHash->length > sizeof buf) {
+            crv = CKR_FUNCTION_FAILED;
+            break;
+        }
+        hashLen = rawHash->length;
+
+        if (pMechanism->ulParameterLen != sizeof(CK_NSS_HKDFParams) ||
+            !params || (!params->bExpand && !params->bExtract) ||
+            (params->bExtract && params->ulSaltLen > 0 && !params->pSalt) ||
+            (params->bExpand && params->ulInfoLen > 0 && !params->pInfo)) {
+            crv = CKR_MECHANISM_PARAM_INVALID;
+            break;
+        }
+        if (keySize == 0 || keySize > sizeof key_block ||
+            (!params->bExpand && keySize > hashLen) ||
+            (params->bExpand && keySize > 255 * hashLen)) {
+            crv = CKR_TEMPLATE_INCONSISTENT;
+            break;
+        }
+        crv = sftk_DeriveSensitiveCheck(sourceKey, key);
+        if (crv != CKR_OK)
+            break;
+
+        /* HKDF-Extract(salt, base key value) */
+        if (params->bExtract) {
+            CK_BYTE * salt;
+            CK_ULONG saltLen;
+            HMACContext * hmac;
+            unsigned int bufLen;
+
+            salt = params->pSalt;
+            saltLen = params->ulSaltLen;
+            if (salt == NULL) {
+                saltLen = hashLen;
+                salt = buf;
+                memset(salt, 0, saltLen);
+            }
+            hmac = HMAC_Create(rawHash, salt, saltLen, isFIPS);
+            if (!hmac) {
+                crv = CKR_HOST_MEMORY;
+                break;
+            }
+            HMAC_Begin(hmac);
+            HMAC_Update(hmac, (const unsigned char*) att->attrib.pValue,
+		        att->attrib.ulValueLen);
+            HMAC_Finish(hmac, buf, &bufLen, sizeof(buf));
+            HMAC_Destroy(hmac, PR_TRUE);
+            PORT_Assert(bufLen == rawHash->length);
+            prk = buf;
+            prkLen = bufLen;
+        } else {
+            /* PRK = base key value */
+            prk = (CK_BYTE*) att->attrib.pValue;
+            prkLen = att->attrib.ulValueLen;
+        }
+        
+        /* HKDF-Expand */
+        if (!params->bExpand) {
+            okm = prk;
+        } else {
+            /* T(1) = HMAC-Hash(prk, "" | info | 0x01)
+             * T(n) = HMAC-Hash(prk, T(n-1) | info | n
+             * key material = T(1) | ... | T(n)
+             */
+            HMACContext * hmac;
+            CK_BYTE i;
+            unsigned iterations = PR_ROUNDUP(keySize, hashLen) / hashLen;
+            hmac = HMAC_Create(rawHash, prk, prkLen, isFIPS);
+            if (hmac == NULL) {
+                crv = CKR_HOST_MEMORY;
+                break;
+            }
+            for (i = 1; i <= iterations; ++i) {
+                unsigned len;
+                HMAC_Begin(hmac);
+                if (i > 1) {
+                    HMAC_Update(hmac, key_block + ((i-2) * hashLen), hashLen);
+                }
+                if (params->ulInfoLen != 0) {
+                    HMAC_Update(hmac, params->pInfo, params->ulInfoLen);
+                }
+                HMAC_Update(hmac, &i, 1);
+                HMAC_Finish(hmac, key_block + ((i-1) * hashLen), &len,
+                            hashLen);
+                PORT_Assert(len == hashLen);
+            }
+            HMAC_Destroy(hmac, PR_TRUE);
+            okm = key_block;
+        }
+        /* key material = prk */
+        crv = sftk_forceAttribute(key, CKA_VALUE, okm, keySize);
+        break;
+      } /* end of CKM_NSS_HKDF_* */
+
+    case CKM_NSS_JPAKE_ROUND2_SHA1: hashType = HASH_AlgSHA1; goto jpake2;
+    case CKM_NSS_JPAKE_ROUND2_SHA256: hashType = HASH_AlgSHA256; goto jpake2;
+    case CKM_NSS_JPAKE_ROUND2_SHA384: hashType = HASH_AlgSHA384; goto jpake2;
+    case CKM_NSS_JPAKE_ROUND2_SHA512: hashType = HASH_AlgSHA512; goto jpake2;
+jpake2:
+        if (pMechanism->pParameter == NULL ||
+            pMechanism->ulParameterLen != sizeof(CK_NSS_JPAKERound2Params))
+            crv = CKR_MECHANISM_PARAM_INVALID;
+        if (crv == CKR_OK && sftk_isTrue(key, CKA_TOKEN))
+            crv = CKR_TEMPLATE_INCONSISTENT;
+	if (crv == CKR_OK)
+            crv = sftk_DeriveSensitiveCheck(sourceKey, key);
+	if (crv == CKR_OK)
+            crv = jpake_Round2(hashType,
+                        (CK_NSS_JPAKERound2Params *) pMechanism->pParameter,
+                        sourceKey, key);
+        break;
+
+    case CKM_NSS_JPAKE_FINAL_SHA1: hashType = HASH_AlgSHA1; goto jpakeFinal;
+    case CKM_NSS_JPAKE_FINAL_SHA256: hashType = HASH_AlgSHA256; goto jpakeFinal;
+    case CKM_NSS_JPAKE_FINAL_SHA384: hashType = HASH_AlgSHA384; goto jpakeFinal;
+    case CKM_NSS_JPAKE_FINAL_SHA512: hashType = HASH_AlgSHA512; goto jpakeFinal;
+jpakeFinal:
+        if (pMechanism->pParameter == NULL ||
+            pMechanism->ulParameterLen != sizeof(CK_NSS_JPAKEFinalParams))
+            crv = CKR_MECHANISM_PARAM_INVALID;
+        /* We purposely do not do the derive sensitivity check; we want to be
+           able to derive non-sensitive keys while allowing the ROUND1 and 
+           ROUND2 keys to be sensitive (which they always are, since they are
+           in the CKO_PRIVATE_KEY class). The caller must include CKA_SENSITIVE
+           in the template in order for the resultant keyblock key to be
+           sensitive.
+         */
+        if (crv == CKR_OK)
+            crv = jpake_Final(hashType,
+                        (CK_NSS_JPAKEFinalParams *) pMechanism->pParameter,
+                        sourceKey, key);
+        break;
+
     default:
 	crv = CKR_MECHANISM_INVALID;
     }
-    sftk_FreeAttribute(att);
+    if (att) {
+        sftk_FreeAttribute(att);
+    }
     sftk_FreeObject(sourceKey);
     if (crv != CKR_OK) { 
 	if (key) sftk_FreeObject(key);

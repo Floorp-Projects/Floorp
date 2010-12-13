@@ -524,7 +524,19 @@ let Utils = {
 
     return "No traceback available";
   },
-
+  
+  // Generator and discriminator for HMAC exceptions.
+  // Split these out in case we want to make them richer in future, and to 
+  // avoid inevitable confusion if the message changes.
+  throwHMACMismatch: function throwHMACMismatch(shouldBe, is) {
+    throw "Record SHA256 HMAC mismatch: should be " + shouldBe + ", is " + is;
+  },
+  
+  isHMACMismatch: function isHMACMismatch(ex) {
+    const hmacFail = "Record SHA256 HMAC mismatch: ";
+    return ex && ex.indexOf && (ex.indexOf(hmacFail) == 0);
+  },
+  
   checkStatus: function Weave_checkStatus(code, msg, ranges) {
     if (!ranges)
       ranges = [[200,300]];
@@ -660,6 +672,23 @@ let Utils = {
     let bytes = [b.charCodeAt() for each (b in message)];
     h.update(bytes, bytes.length);
     return h.finish(false);
+  },
+
+  /**
+   * HMAC-based Key Derivation Step 2 according to RFC 5869.
+   */
+  hkdfExpand: function hkdfExpand(prk, info, len) {
+    const BLOCKSIZE = 256 / 8;
+    let h = Utils.makeHMACHasher();
+    let T = "";
+    let Tn = "";
+    let iterations = Math.ceil(len/BLOCKSIZE);
+    for (let i = 0; i < iterations; i++) {
+      Tn = Utils.sha256HMACBytes(Tn + info + String.fromCharCode(i + 1),
+                                 Utils.makeHMACKey(prk), h);
+      T += Tn;
+    }
+    return T.slice(0, len);
   },
 
   byteArrayToString: function byteArrayToString(bytes) {

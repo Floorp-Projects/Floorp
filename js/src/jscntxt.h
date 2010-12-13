@@ -1369,8 +1369,6 @@ struct JSRuntime {
     js::Value           negativeInfinityValue;
     js::Value           positiveInfinityValue;
 
-    js::DeflatedStringCache *deflatedStringCache;
-
     JSString            *emptyString;
 
     /* List of active contexts sharing this runtime; protected by gcLock. */
@@ -1583,6 +1581,7 @@ struct JSRuntime {
     jsrefcount          totalScripts;
     jsrefcount          liveEmptyScripts;
     jsrefcount          totalEmptyScripts;
+    jsrefcount          highWaterLiveScripts;
 #endif /* DEBUG */
 
 #ifdef JS_SCOPE_DEPTH_METER
@@ -1655,6 +1654,13 @@ struct JSRuntime {
         updateMallocCounter(bytes);
         void *p = ::js_calloc(bytes);
         return JS_LIKELY(!!p) ? p : onOutOfMemory(reinterpret_cast<void *>(1), bytes, cx);
+    }
+
+    void* realloc(void* p, size_t oldBytes, size_t newBytes, JSContext *cx = NULL) {
+        JS_ASSERT(oldBytes < newBytes);
+        updateMallocCounter(newBytes - oldBytes);
+        void *p2 = ::js_realloc(p, newBytes);
+        return JS_LIKELY(!!p2) ? p2 : onOutOfMemory(p, newBytes, cx);
     }
 
     void* realloc(void* p, size_t bytes, JSContext *cx = NULL) {
@@ -2294,6 +2300,10 @@ struct JSContext
 
     inline void* realloc(void* p, size_t bytes) {
         return runtime->realloc(p, bytes, this);
+    }
+
+    inline void* realloc(void* p, size_t oldBytes, size_t newBytes) {
+        return runtime->realloc(p, oldBytes, newBytes, this);
     }
 
     inline void free(void* p) {

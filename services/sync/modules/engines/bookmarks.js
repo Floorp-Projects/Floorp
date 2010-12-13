@@ -240,14 +240,13 @@ BookmarksEngine.prototype = {
   },
 
   _handleDupe: function _handleDupe(item, dupeId) {
-    // The local dupe has the lower id, so make it the winning id
-    if (dupeId < item.id)
-      [item.id, dupeId] = [dupeId, item.id];
-
-    // Trigger id change from dupe to winning and update the server
+    // Always change the local GUID to the incoming one.
     this._store.changeItemID(dupeId, item.id);
     this._deleteId(dupeId);
     this._tracker.addChangedID(item.id, 0);
+    if (item.parentid) {
+      this._tracker.addChangedID(item.parentid, 0);
+    }
   }
 };
 
@@ -322,9 +321,6 @@ BookmarksStore.prototype = {
     return this.idForGUID(id) > 0;
   },
 
-  // Hash of old GUIDs to the new renamed GUIDs
-  aliases: {},
-
   applyIncoming: function BStore_applyIncoming(record) {
     // For special folders we're only interested in child ordering.
     if ((record.id in kSpecialIds) && record.children) {
@@ -333,13 +329,6 @@ BookmarksStore.prototype = {
       this._childrenToOrder[record.id] = record.children;
       return;
     }
-
-    // Convert GUID fields to the aliased GUID if necessary
-    ["id", "parentid"].forEach(function(field) {
-      let alias = this.aliases[record[field]];
-      if (alias != null)
-        record[field] = alias;
-    }, this);
 
     // Preprocess the record before doing the normal apply
     switch (record.type) {
@@ -605,11 +594,6 @@ BookmarksStore.prototype = {
 
   _orderChildren: function _orderChildren() {
     for (let [guid, children] in Iterator(this._childrenToOrder)) {
-      // Convert children GUIDs to aliases if they exist.
-      children = children.map(function(guid) {
-        return this.aliases[guid] || guid;
-      }, this);
-
       // Reorder children according to the GUID list. Gracefully deal
       // with missing items, e.g. locally deleted.
       let delta = 0;
@@ -669,20 +653,13 @@ BookmarksStore.prototype = {
   },
 
   changeItemID: function BStore_changeItemID(oldID, newID) {
-    // Remember the GUID change for incoming records
-    this.aliases[oldID] = newID;
-
-    // Update any existing annotation references
-    this._findAnnoItems(PARENT_ANNO, oldID).forEach(function(itemId) {
-      Utils.anno(itemId, PARENT_ANNO, newID);
-    }, this);
+    this._log.debug("Changing GUID " + oldID + " to " + newID);
 
     // Make sure there's an item to change GUIDs
     let itemId = this.idForGUID(oldID);
     if (itemId <= 0)
       return;
 
-    this._log.debug("Changing GUID " + oldID + " to " + newID);
     this._setGUID(itemId, newID);
 
     // Update parent
@@ -893,8 +870,7 @@ BookmarksStore.prototype = {
     let result = Utils.queryAsync(stmt, ["item_id", "name_id", "anno_id",
                                          "anno_date"])[0];
     if (!result) {
-      let log = Log4Moz.repository.getLogger("Engine.Bookmarks");
-      log.warn("Couldn't annotate bookmark id " + id);
+      this._log.warn("Couldn't annotate bookmark id " + id);
       return guid;
     }
 

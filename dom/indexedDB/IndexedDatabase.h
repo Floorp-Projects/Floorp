@@ -60,4 +60,33 @@
 #define USING_INDEXEDDB_NAMESPACE \
   using namespace mozilla::dom::indexedDB;
 
+BEGIN_INDEXEDDB_NAMESPACE
+
+inline
+void
+AppendConditionClause(const nsACString& aColumnName,
+                      const nsACString& aArgName,
+                      bool aLessThan,
+                      bool aEquals,
+                      nsACString& aResult)
+{
+  aResult += NS_LITERAL_CSTRING(" AND ") + aColumnName +
+             NS_LITERAL_CSTRING(" ");
+
+  if (aLessThan) {
+    aResult.AppendLiteral("<");
+  }
+  else {
+    aResult.AppendLiteral(">");
+  }
+
+  if (aEquals) {
+    aResult.AppendLiteral("=");
+  }
+
+  aResult += NS_LITERAL_CSTRING(" :") + aArgName;
+}
+
+END_INDEXEDDB_NAMESPACE
+
 #endif // mozilla_dom_indexeddb_indexeddatabase_h__

@@ -190,6 +190,15 @@ public:
     return mKey == aKey ? mValue.get() : nsnull;
   }
 
+  /**
+   * Clear out current user data.
+   */
+  void Clear()
+  {
+    mKey = nsnull;
+    mValue = nsnull;
+  }
+
 private:
   void* mKey;
   nsAutoPtr<LayerUserData> mValue;
@@ -241,7 +250,7 @@ public:
    * for its widget going away.  After this call, only user data calls
    * are valid on the layer manager.
    */
-  virtual void Destroy() { mDestroyed = PR_TRUE; }
+  virtual void Destroy() { mDestroyed = PR_TRUE; mUserData.Clear(); }
   PRBool IsDestroyed() { return mDestroyed; }
 
   /**
@@ -296,9 +305,21 @@ public:
    * During the drawing phase, all ThebesLayers in the tree are
    * drawn in tree order, exactly once each, except for those layers
    * where it is known that the visible region is empty.
+   *
+   * If aCallback is null, this is a 'null' transaction.
+   * There must have been no updates to the layer tree in this transaction.
+   * A null transaction can fail, in which case EndTransaction returns false,
+   * and the transaction must be retried with aCallback set to something non-null.
+   *
+   * If IsNullTransactionSupported() returns false, then aCallback must be non-null.
    */
-  virtual void EndTransaction(DrawThebesLayerCallback aCallback,
+  virtual bool EndTransaction(DrawThebesLayerCallback aCallback,
                               void* aCallbackData) = 0;
+
+  /**
+   * See EndTransaction description
+   */
+  virtual bool IsNullTransactionSupported() { return false; }
 
   PRBool IsSnappingEffectiveTransforms() { return mSnapEffectiveTransforms; } 
 

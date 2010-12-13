@@ -183,10 +183,6 @@ already_AddRefed<gfxASurface>
 gfxXlibSurface::CreateSimilarSurface(gfxContentType aContent,
                                      const gfxIntSize& aSize)
 {
-    if (!mSurface || !mSurfaceValid) {
-      return nsnull;
-    }
-
     if (aContent == CONTENT_COLOR) {
         // cairo_surface_create_similar will use a matching visual if it can.
         // However, systems with 16-bit or indexed default visuals may benefit

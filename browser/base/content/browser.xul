@@ -90,7 +90,7 @@
         windowtype="navigator:browser"
         screenX="4" screenY="4"
         browsingmode="normal"
-        persist="screenX screenY width height sizemode"> 
+        persist="screenX screenY width height sizemode">
 
 # All JS files which are not content (only) dependent that browser.xul
 # wishes to include *must* go into the global-scripts.inc file
@@ -127,7 +127,7 @@
         <menupopup id="context_tabViewMenuPopup"
                    onpopupshowing="if (event.target == this) TabView.updateContextMenu(TabContextMenu.contextTab, this);">
           <menuseparator id="context_tabViewNamedGroups" hidden="true"/>
-          <menuitem label="&moveToNewGroup.label;"
+          <menuitem id="context_tabViewNewGroup" label="&moveToNewGroup.label;"
                     oncommand="TabView.moveTabTo(TabContextMenu.contextTab, null);"/>
         </menupopup>
       </menu>
@@ -302,7 +302,7 @@
                 accesskey="&viewCustomizeToolbar.accesskey;"/>
     </menupopup>
 
-    <menupopup id="blockedPopupOptions" 
+    <menupopup id="blockedPopupOptions"
                onpopupshowing="gPopupBlockerObserver.fillPopupList(event);">
       <menuitem observes="blockedPopupAllowSite"/>
       <menuitem observes="blockedPopupEditSettings"/>
@@ -480,7 +480,7 @@
 #endif
              context="toolbar-context-menu">
       <toolbaritem id="menubar-items" align="center">
-# The entire main menubar is placed into browser-menubar.inc, so that it can be shared by 
+# The entire main menubar is placed into browser-menubar.inc, so that it can be shared by
 # hiddenWindow.xul.
 #include browser-menubar.inc
       </toolbaritem>
@@ -491,10 +491,10 @@
              fullscreentoolbar="true" mode="icons" customizable="true"
 #ifdef WINCE
              iconsize="small" defaulticonsize="small"
-             defaultset="unified-back-forward-button,home-button,urlbar-container,reload-button,stop-button,search-container,bookmarks-menu-button-container,navigator-throbber,fullscreenflex,window-controls"
+             defaultset="unified-back-forward-button,urlbar-container,reload-button,stop-button,search-container,home-button,bookmarks-menu-button-container,navigator-throbber,fullscreenflex,window-controls"
 #else
              iconsize="large"
-             defaultset="unified-back-forward-button,home-button,urlbar-container,reload-button,stop-button,search-container,bookmarks-menu-button-container,fullscreenflex,window-controls"
+             defaultset="unified-back-forward-button,urlbar-container,reload-button,stop-button,search-container,home-button,bookmarks-menu-button-container,fullscreenflex,window-controls"
 #endif
              context="toolbar-context-menu">
 
@@ -512,16 +512,6 @@
                        onclick="checkForMiddleClick(this, event);"
                        tooltiptext="&forwardButton.tooltip;"/>
       </toolbaritem>
-
-      <toolbarbutton id="home-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     persist="class" removable="true"
-                     label="&homeButton.label;"
-                     ondragover="homeButtonObserver.onDragOver(event)"
-                     ondragenter="homeButtonObserver.onDragOver(event)"
-                     ondrop="homeButtonObserver.onDrop(event)"
-                     ondragexit="homeButtonObserver.onDragExit(event)"
-                     onclick="BrowserGoHome(event);"
-                     aboutHomeOverrideTooltip="&abouthome.pageTitle;"/>
 
       <toolbaritem id="urlbar-container" align="center" flex="400" persist="width" combined="true"
                    title="&locationItem.title;" class="chromeclass-location" removable="true">
@@ -617,6 +607,16 @@
                    flex="100" persist="width" removable="true">
         <searchbar id="searchbar" flex="1"/>
       </toolbaritem>
+
+      <toolbarbutton id="home-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     persist="class" removable="true"
+                     label="&homeButton.label;"
+                     ondragover="homeButtonObserver.onDragOver(event)"
+                     ondragenter="homeButtonObserver.onDragOver(event)"
+                     ondrop="homeButtonObserver.onDrop(event)"
+                     ondragexit="homeButtonObserver.onDragExit(event)"
+                     onclick="BrowserGoHome(event);"
+                     aboutHomeOverrideTooltip="&abouthome.pageTitle;"/>
 
       <toolbaritem id="bookmarks-menu-button-container"
                    class="chromeclass-toolbar-additional"
@@ -945,6 +945,7 @@
   </toolbox>
 
   <hbox flex="1" id="browser">
+    <vbox id="browser-border-start" hidden="true" layer="true"/>
     <vbox id="sidebar-box" hidden="true" class="chromeclass-extrachrome">
       <sidebarheader id="sidebar-header" align="center">
         <label id="sidebar-title" persist="value" flex="1" crop="end" control="sidebar"/>
@@ -964,6 +965,7 @@
                   autocompletepopup="PopupAutoComplete"
                   onclick="return contentAreaClick(event, false);"/>
     </vbox>
+    <vbox id="browser-border-end" hidden="true" layer="true"/>
   </hbox>
 
   <vbox id="browser-bottombox" layer="true">
@@ -974,8 +976,11 @@
              context="toolbar-context-menu" toolboxid="navigator-toolbox"
              mode="icons" iconsize="small" defaulticonsize="small"
              lockiconsize="true"
-             defaultset="status-bar"
-             customizable="true" align="right">
+             defaultset="addonbar-closebutton,spring,status-bar"
+             customizable="true">
+      <toolbarbutton id="addonbar-closebutton"
+                     tooltiptext="&addonBarCloseButton.tooltip;"
+                     oncommand="setToolbarVisibility(this.parentNode, false);"/>
       <statusbar id="status-bar"/>
     </toolbar>
   </vbox>

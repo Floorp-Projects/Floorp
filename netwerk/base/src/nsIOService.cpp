@@ -268,8 +268,12 @@ nsIOService::Init()
 #endif
         mNetworkLinkService = do_GetService(NS_NETWORK_LINK_SERVICE_CONTRACTID);
 
-    if (!mNetworkLinkService)
+    if (!mNetworkLinkService) {
         mManageOfflineStatus = PR_FALSE;
+        // We can't really determine if the machine has a usable network connection,
+        // so let's cross our fingers!
+        SetOffline(PR_FALSE);
+    }
 
     if (mManageOfflineStatus)
         TrackNetworkLinkStatusForOffline();

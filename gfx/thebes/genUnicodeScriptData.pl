@@ -52,6 +52,7 @@
 #       - Scripts.txt
 #       - EastAsianWidth.txt
 #       - BidiMirroring.txt
+#       - HangulSyllableType.txt
 #     though this may change if we find a need for additional properties.
 #
 #     The Unicode data files should be together in a single directory.
@@ -96,6 +97,7 @@ my @category;
 my @combining;
 my @eaw;
 my @mirror;
+my @hangul;
 for (my $i = 0; $i < 0x110000; ++$i) {
     $script[$i] = $scriptCode{"UNKNOWN"};
     $category[$i] = $catCode{"UNASSIGNED"};
@@ -162,15 +164,10 @@ while (<FH>) {
 close FH;
 
 # read Scripts.txt
-my %scriptAliases = (
-    'MEETEI_MAYEK' => 'MEITEI_MAYEK'
-);
-
 open FH, "< $ARGV[1]/Scripts.txt" or die "can't open UCD file Scripts.txt\n";
 while (<FH>) {
     if (m/([0-9A-F]{4,6})(?:\.\.([0-9A-F]{4,6}))*\s+;\s+([^ ]+)/) {
         my $script = uc($3);
-        $script = $scriptAliases{$script} if exists $scriptAliases{$script};
         warn "unknown script $script" unless exists $scriptCode{$script};
         $script = $scriptCode{$script};
         my $start = hex "0x$1";
@@ -221,6 +218,30 @@ while (<FH>) {
             die "too many distant mirror codes\n" if scalar @distantMirrors == 128 - $smallMirrorOffset;
             $mirror[hex "0x$1"] = $smallMirrorOffset + scalar @distantMirrors;
             push @distantMirrors, hex("0x$2");
+        }
+    }
+}
+close FH;
+
+# read HangulSyllableType.txt
+my %hangulType = (
+  'L'   => 0x01,
+  'V'   => 0x02,
+  'T'   => 0x04,
+  'LV'  => 0x03,
+  'LVT' => 0x07
+);
+open FH, "< $ARGV[1]/HangulSyllableType.txt" or die "can't open UCD file HangulSyllableType.txt\n";
+while (<FH>) {
+    s/#.*//;
+    if (m/([0-9A-F]{4,6})(?:\.\.([0-9A-F]{4,6}))*\s*;\s*([^ ]+)/) {
+        my $hangul = uc($3);
+        warn "unknown Hangul syllable type" unless exists $hangulType{$hangul};
+        $hangul = $hangulType{$hangul};
+        my $start = hex "0x$1";
+        my $end = (defined $2) ? hex "0x$2" : $start;
+        for (my $i = $start; $i <= $end; ++$i) {
+            $hangul[$i] = $hangul;
         }
     }
 }
@@ -313,6 +334,13 @@ sub sprintCatEAW
 }
 &genTables("CatEAW", "struct {\n  unsigned int mEAW:3;\n  unsigned int mCategory:5;\n}",
            9, 7, \&sprintCatEAW, 1);
+
+sub sprintHangulType
+{
+  my $usv = shift;
+  return sprintf("%d,", $hangul[$usv]);
+}
+&genTables("Hangul", "PRUint8", 10, 6, \&sprintHangulType, 0);
 
 sub genTables
 {

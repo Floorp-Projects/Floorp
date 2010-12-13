@@ -65,7 +65,8 @@ public class GeckoEvent {
     public static final int SIZE_CHANGED = 7;
     public static final int ACTIVITY_STOPPING = 8;
     public static final int ACTIVITY_PAUSING = 9;
-    public static final int LOAD_URI = 10;
+    public static final int ACTIVITY_SHUTDOWN = 10;
+    public static final int LOAD_URI = 11;
 
     public static final int IME_COMPOSITION_END = 0;
     public static final int IME_COMPOSITION_BEGIN = 1;

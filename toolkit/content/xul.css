@@ -789,6 +789,8 @@ panel[type="autocomplete-richlistbox"] {
   -moz-binding: url("chrome://global/content/bindings/autocomplete.xml#autocomplete-rich-result-popup");
 }
 
+/* FIXME: bug 616258 */
+
 .autocomplete-tree {
   -moz-binding: url("chrome://global/content/bindings/autocomplete.xml#autocomplete-tree");
   -moz-user-focus: ignore;
@@ -824,6 +826,15 @@ panel[type="autocomplete-richlistbox"] {
 .autocomplete-history-dropmarker[enablehistory="true"] {
   display: -moz-box;
   -moz-binding: url("chrome://global/content/bindings/autocomplete.xml#history-dropmarker");
+}
+
+.ac-ellipsis-after {
+  visibility: hidden;
+}
+
+.ac-url-text[type~="action"],
+.ac-action-text:not([type~="action"]) {
+  visibility: collapse;
 }
 
 %endif

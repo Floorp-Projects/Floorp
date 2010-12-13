@@ -116,7 +116,9 @@ ContentParent::GetSingleton(PRBool aForceNew)
                     }
                 }
                 obs->AddObserver(
-                  parent, NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC, PR_FALSE); 
+                  parent, NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC, PR_FALSE);
+
+                obs->AddObserver(parent, "memory-pressure", PR_FALSE); 
             }
             nsCOMPtr<nsIThreadInternal>
                 threadInt(do_QueryInterface(NS_GetCurrentThread()));
@@ -354,8 +356,12 @@ ContentParent::Observe(nsISupports* aSubject,
     if (!mIsAlive || !mSubprocess)
         return NS_OK;
 
+    // listening for memory pressure event
+    if (!strcmp(aTopic, "memory-pressure")) {
+        SendFlushMemory(nsDependentString(aData));
+    }
     // listening for remotePrefs...
-    if (!strcmp(aTopic, "nsPref:changed")) {
+    else if (!strcmp(aTopic, "nsPref:changed")) {
         // We know prefs are ASCII here.
         NS_LossyConvertUTF16toASCII strData(aData);
 

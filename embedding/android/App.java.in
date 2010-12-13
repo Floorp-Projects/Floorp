@@ -47,8 +47,5 @@ public class App extends GeckoApp {
     public String getContentProcessName() {
         return "@MOZ_CHILD_PROCESS_NAME@";
     }
-    public int getMinCPUVersion() {
-        return @MOZ_MIN_CPU_VERSION@;
-    }
 };
 

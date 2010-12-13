@@ -567,6 +567,60 @@ var popupTests = [
   result: function (testname) {
     checkActive(document.getElementById("menubar"), "", testname);
   }
+},
+
+// Fllowing 4 tests are a test of bug 616797, don't insert any new tests
+// between them.
+{
+  testname: "Open file menu by accelerator",
+  condition: function() { return (navigator.platform.indexOf("Win") == 0) },
+  events: function() {
+    return [ "DOMMenuBarActive menubar", "popupshowing filepopup",
+             "DOMMenuItemActive filemenu", "DOMMenuItemActive item1",
+             "popupshown filepopup" ];
+  },
+  test: function() {
+    synthesizeKey("VK_ALT", { type: "keydown" });
+    synthesizeKey("F", { altKey: true });
+    synthesizeKey("VK_ALT", { type: "keyup" });
+  }
+},
+{
+  testname: "Close file menu by click at outside of popup menu",
+  condition: function() { return (navigator.platform.indexOf("Win") == 0) },
+  events: function() {
+    return [ "popuphiding filepopup", "popuphidden filepopup",
+             "DOMMenuItemInactive item1", "DOMMenuInactive filepopup",
+             "DOMMenuBarInactive menubar", "DOMMenuItemInactive filemenu",
+             "DOMMenuItemInactive filemenu" ];
+  },
+  test: function() {
+    // XXX hidePopup() causes DOMMenuItemInactive event to be fired twice.
+    document.getElementById("filepopup").hidePopup();
+  }
+},
+{
+  testname: "Alt keydown set focus the menubar",
+  condition: function() { return (navigator.platform.indexOf("Win") == 0) },
+  events: function() {
+    return [ "DOMMenuBarActive menubar", "DOMMenuItemActive filemenu" ];
+  },
+  test: function() {
+    synthesizeKey("VK_ALT", {  });
+  },
+  result: function (testname) {
+    checkClosed("filemenu", testname);
+  }
+},
+{
+  testname: "unset focus the menubar",
+  condition: function() { return (navigator.platform.indexOf("Win") == 0) },
+  events: function() {
+    return [ "DOMMenuBarInactive menubar", "DOMMenuItemInactive filemenu" ];
+  },
+  test: function() {
+    synthesizeKey("VK_ALT", {  });
+  }
 }
 
 ];

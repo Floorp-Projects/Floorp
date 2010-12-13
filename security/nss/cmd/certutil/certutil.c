@@ -462,7 +462,7 @@ DumpChain(CERTCertDBHandle *handle, char *name, PRBool ascii)
 }
 
 static SECStatus
-listCerts(CERTCertDBHandle *handle, char *name, PK11SlotInfo *slot,
+listCerts(CERTCertDBHandle *handle, char *name, char *email, PK11SlotInfo *slot,
           PRBool raw, PRBool ascii, PRFileDesc *outfile, void *pwarg)
 {
     SECItem data;
@@ -530,8 +530,45 @@ listCerts(CERTCertDBHandle *handle, char *name, PK11SlotInfo *slot,
 		break;
 	    }
 	}
+    } else if (email) {
+	CERTCertificate *the_cert;
+	certs = PK11_FindCertsFromEmailAddress(email, NULL);
+	if (!certs) {
+	    SECU_PrintError(progName, 
+			"Could not find certificates for email address: %s\n", 
+			email);
+	    return SECFailure;
+	}
+	for (node = CERT_LIST_HEAD(certs); !CERT_LIST_END(node,certs);
+						node = CERT_LIST_NEXT(node)) {
+	    the_cert = node->cert;
+	    /* now get the subjectList that matches this cert */
+	    data.data = the_cert->derCert.data;
+	    data.len  = the_cert->derCert.len;
+	    if (ascii) {
+		PR_fprintf(outfile, "%s\n%s\n%s\n", NS_CERT_HEADER, 
+		           BTOA_DataToAscii(data.data, data.len), 
+			   NS_CERT_TRAILER);
+		rv = SECSuccess;
+	    } else if (raw) {
+		numBytes = PR_Write(outfile, data.data, data.len);
+		rv = SECSuccess;
+		if (numBytes != (PRInt32) data.len) {
+		    SECU_PrintSystemError(progName, "error writing raw cert");
+		    rv = SECFailure;
+		}
+	    } else {
+		rv = SEC_PrintCertificateAndTrust(the_cert, "Certificate",
+                                                  the_cert->trust);
+		if (rv != SECSuccess) {
+		    SECU_PrintError(progName, "problem printing certificate");
+		}
+	    }
+	    if (rv != SECSuccess) {
+		break;
+	    }
+	}
     } else {
-
 	certs = PK11_ListCertsInSlot(slot);
 	if (certs) {
 	    for (node = CERT_LIST_HEAD(certs); !CERT_LIST_END(node,certs);
@@ -553,12 +590,13 @@ listCerts(CERTCertDBHandle *handle, char *name, PK11SlotInfo *slot,
 }
 
 static SECStatus
-ListCerts(CERTCertDBHandle *handle, char *nickname, PK11SlotInfo *slot,
-          PRBool raw, PRBool ascii, PRFileDesc *outfile, secuPWData *pwdata)
+ListCerts(CERTCertDBHandle *handle, char *nickname, char *email, 
+          PK11SlotInfo *slot, PRBool raw, PRBool ascii, PRFileDesc *outfile, 
+	  secuPWData *pwdata)
 {
     SECStatus rv;
 
-    if (!ascii && !raw && !nickname) {
+    if (!ascii && !raw && !nickname && !email) {
         PR_fprintf(outfile, "\n%-60s %-5s\n%-60s %-5s\n\n",
                    "Certificate Nickname", "Trust Attributes", "",
                    "SSL,S/MIME,JAR/XPI");
@@ -569,15 +607,13 @@ ListCerts(CERTCertDBHandle *handle, char *nickname, PK11SlotInfo *slot,
 
 	list = PK11_ListCerts(PK11CertListAll, pwdata);
 	for (node = CERT_LIST_HEAD(list); !CERT_LIST_END(node, list);
-	     node = CERT_LIST_NEXT(node)) 
-	{
+	     node = CERT_LIST_NEXT(node)) {
 	    SECU_PrintCertNickname(node, stdout);
 	}
 	CERT_DestroyCertList(list);
 	return SECSuccess;
-    } else {
-	rv = listCerts(handle,nickname,slot,raw,ascii,outfile,pwdata);
-    }
+    } 
+    rv = listCerts(handle, nickname, email, slot, raw, ascii, outfile, pwdata);
     return rv;
 }
 
@@ -598,10 +634,8 @@ DeleteCert(CERTCertDBHandle *handle, char *name)
     CERT_DestroyCertificate(cert);
     if (rv) {
 	SECU_PrintError(progName, "unable to delete certificate");
-	return SECFailure;
     }
-
-    return SECSuccess;
+    return rv;
 }
 
 static SECStatus
@@ -995,7 +1029,9 @@ Usage(char *progName)
 	progName);
     FPS "\t\t [-P targetDBPrefix] [--source-prefix sourceDBPrefix]\n");
     FPS "\t\t [-f targetPWfile] [-@ sourcePWFile]\n");
-    FPS "\t%s -L [-n cert-name] [-X] [-d certdir] [-P dbprefix] [-r] [-a]\n", progName);
+    FPS "\t%s -L [-n cert-name] [--email email-address] [-X] [-r] [-a]\n",
+	progName);
+    FPS "\t\t [-d certdir] [-P dbprefix]\n");
     FPS "\t%s -M -n cert-name -t trustargs [-d certdir] [-P dbprefix]\n",
 	progName);
     FPS "\t%s -O -n cert-name [-X] [-d certdir] [-a] [-P dbprefix]\n", progName);
@@ -1208,6 +1244,9 @@ static void LongUsage(char *progName)
 	"-L");
     FPS "%-20s Pretty print named cert (list all if unspecified)\n",
 	"   -n cert-name");
+    FPS "%-20s \n"
+              "%-20s Pretty print cert with email address (list all if unspecified)\n",
+	"   --email email-address", "");
     FPS "%-20s Cert database directory (default is ~/.netscape)\n",
 	"   -d certdir");
     FPS "%-20s Cert & Key database prefix\n",
@@ -1827,6 +1866,7 @@ enum certutilOpts {
     opt_KeySize,
     opt_TokenName,
     opt_InputFile,
+    opt_Emailaddress,
     opt_KeyIndex,
     opt_KeyType,
     opt_DetailedInfo,
@@ -1914,6 +1954,7 @@ secuCommandFlag options_init[] =
 	{ /* opt_KeySize             */  'g', PR_TRUE,  0, PR_FALSE },
 	{ /* opt_TokenName           */  'h', PR_TRUE,  0, PR_FALSE },
 	{ /* opt_InputFile           */  'i', PR_TRUE,  0, PR_FALSE },
+	{ /* opt_Emailaddress        */  0,   PR_TRUE,  0, PR_FALSE, "email" },
 	{ /* opt_KeyIndex            */  'j', PR_TRUE,  0, PR_FALSE },
 	{ /* opt_KeyType             */  'k', PR_TRUE,  0, PR_FALSE },
 	{ /* opt_DetailedInfo        */  'l', PR_FALSE, 0, PR_FALSE },
@@ -1991,6 +2032,7 @@ certutil_main(int argc, char **argv, PRBool initialize)
     char *      upgradeTokenName     = "";
     KeyType     keytype         = rsaKey;
     char *      name            = NULL;
+    char *      email            = NULL;
     char *      keysource       = NULL;
     SECOidTag   hashAlgTag      = SEC_OID_UNKNOWN;
     int	        keysize	        = DEFAULT_KEY_BITS;
@@ -2389,6 +2431,7 @@ certutil_main(int argc, char **argv, PRBool initialize)
     }
 
     name = SECU_GetOptionArg(&certutil, opt_Nickname);
+    email = SECU_GetOptionArg(&certutil, opt_Emailaddress);
 
     PK11_SetPasswordFunc(SECU_GetModulePassword);
 
@@ -2579,7 +2622,7 @@ merge_fail:
 
     /*  List certs (-L)  */
     if (certutil.commands[cmd_ListCerts].activated) {
-	rv = ListCerts(certHandle, name, slot,
+	rv = ListCerts(certHandle, name, email, slot,
 	               certutil.options[opt_BinaryDER].activated,
 	               certutil.options[opt_ASCIIForIO].activated, 
                        (outFile) ? outFile : PR_STDOUT, &pwdata);

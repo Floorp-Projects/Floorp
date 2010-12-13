@@ -3950,7 +3950,14 @@ nsIFrame::InvalidateLayer(const nsRect& aDamageRect, PRUint32 aDisplayItemKey)
     return;
   }
 
-  InvalidateWithFlags(aDamageRect, INVALIDATE_NO_THEBES_LAYERS);
+  nsRootPresContext* rootPC = PresContext()->GetRootPresContext();
+  PRUint32 flags = INVALIDATE_NO_THEBES_LAYERS;
+  if (aDisplayItemKey == nsDisplayItem::TYPE_VIDEO ||
+      aDisplayItemKey == nsDisplayItem::TYPE_PLUGIN) {
+    flags = INVALIDATE_NO_UPDATE_LAYER_TREE;
+  }
+
+  InvalidateWithFlags(aDamageRect, flags);
 }
 
 class LayerActivity {
@@ -4044,10 +4051,16 @@ nsIFrame::InvalidateWithFlags(const nsRect& aDamageRect, PRUint32 aFlags)
 
   // Don't allow invalidates to do anything when
   // painting is suppressed.
-  nsIPresShell *shell = PresContext()->GetPresShell();
+  nsPresContext* context = PresContext();
+  nsIPresShell *shell = context->GetPresShell();
   if (shell) {
     if (shell->IsPaintingSuppressed())
       return;
+  }
+
+  if (!(aFlags & INVALIDATE_NO_UPDATE_LAYER_TREE)) {
+    nsRootPresContext* rootPC = context->GetRootPresContext();
+    rootPC->SetNeedToUpdateLayerTree(true);
   }
 
   InvalidateInternal(aDamageRect, 0, 0, nsnull, aFlags);

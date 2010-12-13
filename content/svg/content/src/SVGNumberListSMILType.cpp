@@ -172,7 +172,6 @@ SVGNumberListSMILType::ComputeDistance(const nsSMILValue& aFrom,
   if (from.Length() != to.Length()) {
     // Lists in the 'values' attribute must have the same length.
     // nsSVGUtils::ReportToConsole
-    aDistance = 0.0;
     return NS_ERROR_FAILURE;
   }
 

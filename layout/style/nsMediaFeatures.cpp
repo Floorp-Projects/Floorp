@@ -176,6 +176,23 @@ GetOrientation(nsPresContext* aPresContext, const nsMediaFeature*,
     return NS_OK;
 }
 
+static nsresult
+GetDeviceOrientation(nsPresContext* aPresContext, const nsMediaFeature*,
+                     nsCSSValue& aResult)
+{
+    nsSize size = GetDeviceSize(aPresContext);
+    PRInt32 orientation;
+    if (size.width > size.height) {
+        orientation = NS_STYLE_ORIENTATION_LANDSCAPE;
+    } else {
+        // Per spec, square viewports should be 'portrait'
+        orientation = NS_STYLE_ORIENTATION_PORTRAIT;
+    }
+
+    aResult.SetIntValue(orientation, eCSSUnit_Enumerated);
+    return NS_OK;
+}
+
 // Helper for two features below
 static nsresult
 MakeArray(const nsSize& aSize, nsCSSValue& aResult)
@@ -434,6 +451,13 @@ nsMediaFeatures::features[] = {
         nsMediaFeature::eFloat,
         { nsnull },
         GetDevicePixelRatio
+    },
+    {
+        &nsGkAtoms::_moz_device_orientation,
+        nsMediaFeature::eMinMaxNotAllowed,
+        nsMediaFeature::eEnumerated,
+        { kOrientationKeywords },
+        GetDeviceOrientation
     },
     {
         &nsGkAtoms::_moz_scrollbar_start_backward,

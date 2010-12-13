@@ -241,7 +241,7 @@ public:
                       PRUint32 aWeight,
                       PRUint32 aStretch,
                       PRUint32 aItalicStyle,
-                      const nsTArray<gfxFontFeature> *aFeatureSettings,
+                      const nsTArray<gfxFontFeature>& aFeatureSettings,
                       PRUint32 aLanguageOverride,
                       gfxSparseBitSet *aUnicodeRanges);
 

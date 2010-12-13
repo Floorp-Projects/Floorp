@@ -392,7 +392,7 @@ LayerManagerOGL::BeginTransactionWithTarget(gfxContext *aTarget)
   mTarget = aTarget;
 }
 
-void
+bool
 LayerManagerOGL::EndTransaction(DrawThebesLayerCallback aCallback,
                                 void* aCallbackData)
 {
@@ -403,7 +403,7 @@ LayerManagerOGL::EndTransaction(DrawThebesLayerCallback aCallback,
 
   if (mDestroyed) {
     NS_WARNING("Call on destroyed layer manager");
-    return;
+    return false;
   }
 
   // The results of our drawing always go directly into a pixel buffer,
@@ -427,6 +427,7 @@ LayerManagerOGL::EndTransaction(DrawThebesLayerCallback aCallback,
   Log();
   MOZ_LAYERS_LOG(("]----- EndTransaction"));
 #endif
+  return true;
 }
 
 already_AddRefed<ThebesLayer>

@@ -461,18 +461,6 @@ struct xpc_qsSelfRef
     nsISupports* ptr;
 };
 
-template<size_t N>
-struct xpc_qsArgValArray
-{
-    xpc_qsArgValArray(JSContext *cx) : tvr(cx, N, array)
-    {
-        memset(array, 0, N * sizeof(jsval));
-    }
-
-    js::AutoArrayRooter tvr;
-    jsval array[N];
-};
-
 /**
  * Convert a jsval to char*, returning JS_TRUE on success.
  *

@@ -55,6 +55,7 @@ MODULE		= test_passwordmgr
 # Mochitest tests
 MOCHI_TESTS = \
 		test_basic_form.html \
+		test_basic_form_html5.html \
 		test_basic_form_2.html \
 		test_basic_form_0pw.html \
 		test_basic_form_1pw.html \

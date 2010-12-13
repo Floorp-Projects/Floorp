@@ -43,5 +43,3 @@ private:
   }
 public:
   void sniff(nsHtml5ByteReadable* bytes, nsIUnicodeDecoder** decoder, nsACString& charset);
-  nsHtml5MetaScanner();
-  ~nsHtml5MetaScanner();

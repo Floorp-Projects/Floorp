@@ -79,7 +79,7 @@ js_NewDateObjectMsec(JSContext* cx, jsdouble msec_time);
  *
  * Assert that mon < 12 to help catch off-by-one user errors, which are common
  * due to the 0-based month numbering copied into JS from Java (java.util.Date
- * in 1995). js_DateSetMonth (below) likewise asserts month < 12.
+ * in 1995).
  */
 extern JS_FRIEND_API(JSObject*)
 js_NewDateObject(JSContext* cx, int year, int mon, int mday,
@@ -109,24 +109,6 @@ js_DateGetMinutes(JSContext *cx, JSObject* obj);
 
 extern JS_FRIEND_API(int)
 js_DateGetSeconds(JSContext *cx, JSObject* obj);
-
-extern JS_FRIEND_API(void)
-js_DateSetYear(JSContext *cx, JSObject *obj, int year);
-
-extern JS_FRIEND_API(void)
-js_DateSetMonth(JSContext *cx, JSObject *obj, int month);
-
-extern JS_FRIEND_API(void)
-js_DateSetDate(JSContext *cx, JSObject *obj, int date);
-
-extern JS_FRIEND_API(void)
-js_DateSetHours(JSContext *cx, JSObject *obj, int hours);
-
-extern JS_FRIEND_API(void)
-js_DateSetMinutes(JSContext *cx, JSObject *obj, int minutes);
-
-extern JS_FRIEND_API(void)
-js_DateSetSeconds(JSContext *cx, JSObject *obj, int seconds);
 
 extern JS_FRIEND_API(jsdouble)
 js_DateGetMsecSinceEpoch(JSContext *cx, JSObject *obj);

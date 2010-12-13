@@ -111,7 +111,8 @@ function eventOccurred(event)
     events = events();
   if (events) {
     if (events.length <= gTestEventIndex) {
-      ok(false, "Extra " + event.type + " event fired " + gPopupTests[gTestIndex].testname);
+      ok(false, "Extra " + event.type + " event fired for " + event.target.id +
+                  " " +gPopupTests[gTestIndex].testname);
       return;
     }
 

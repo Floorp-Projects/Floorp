@@ -167,6 +167,16 @@ public:
     return !(*this == aOther || *this < aOther);
   }
 
+  bool operator<=(const Key& aOther) const
+  {
+    return (*this == aOther || *this < aOther);
+  }
+
+  bool operator>=(const Key& aOther) const
+  {
+    return (*this == aOther || !(*this < aOther));
+  }
+
   bool IsUnset() const { return mType == UNSETKEY; }
   bool IsNull() const { return mType == NULLKEY; }
   bool IsString() const { return mType == STRINGKEY; }
