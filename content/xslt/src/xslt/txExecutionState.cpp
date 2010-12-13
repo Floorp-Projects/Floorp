@@ -90,9 +90,6 @@ txExecutionState::txExecutionState(txStylesheet* aStylesheet,
       mNextInstruction(nsnull),
       mLocalVariables(nsnull),
       mRecursionDepth(0),
-      mTemplateRules(nsnull),
-      mTemplateRulesBufferSize(0),
-      mTemplateRuleCount(0),
       mEvalContext(nsnull),
       mInitialEvalContext(nsnull),
       mGlobalParams(nsnull),
@@ -109,12 +106,6 @@ txExecutionState::~txExecutionState()
     delete mResultHandler;
     delete mLocalVariables;
     delete mEvalContext;
-
-    PRInt32 i;
-    for (i = 0; i < mTemplateRuleCount; ++i) {
-        NS_IF_RELEASE(mTemplateRules[i].mModeLocalName);
-    }
-    delete [] mTemplateRules;
     
     txStackIterator varsIter(&mLocalVarsStack);
     while (varsIter.hasNext()) {
@@ -195,8 +186,7 @@ txExecutionState::init(const txXPathNode& aNode,
     txExpandedName nullName;
     txInstruction* templ = mStylesheet->findTemplate(aNode, nullName,
                                                      this, nsnull, &frame);
-    rv = pushTemplateRule(frame, nullName, nsnull);
-    NS_ENSURE_SUCCESS(rv, rv);
+    pushTemplateRule(frame, nullName, nsnull);
 
     return runTemplate(templ);
 }
@@ -204,7 +194,11 @@ txExecutionState::init(const txXPathNode& aNode,
 nsresult
 txExecutionState::end(nsresult aResult)
 {
-    popTemplateRule();
+    NS_ASSERTION(NS_FAILED(aResult) || mTemplateRules.Length() == 1,
+                 "Didn't clean up template rules properly");
+    if (NS_SUCCEEDED(aResult)) {
+        popTemplateRule();
+    }
     return mOutputHandler->endDocument(aResult);
 }
 
@@ -293,9 +287,7 @@ txExecutionState::getVariable(PRInt32 aNamespace, nsIAtom* aLName,
         rv = runTemplate(var->mFirstInstruction);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        rv = pushTemplateRule(nsnull, txExpandedName(), nsnull);
-        NS_ENSURE_SUCCESS(rv, rv);
-
+        pushTemplateRule(nsnull, txExpandedName(), nsnull);
         rv = txXSLTProcessor::execute(*this);
         NS_ENSURE_SUCCESS(rv, rv);
 
@@ -403,40 +395,23 @@ txExecutionState::popResultHandler()
     return oldHandler;
 }
 
-nsresult
+void
 txExecutionState::pushTemplateRule(txStylesheet::ImportFrame* aFrame,
                                    const txExpandedName& aMode,
                                    txVariableMap* aParams)
 {
-    if (mTemplateRuleCount == mTemplateRulesBufferSize) {
-        PRInt32 newSize =
-            mTemplateRulesBufferSize ? mTemplateRulesBufferSize * 2 : 10;
-        TemplateRule* newRules = new TemplateRule[newSize];
-        NS_ENSURE_TRUE(newRules, NS_ERROR_OUT_OF_MEMORY);
-        
-        memcpy(newRules, mTemplateRules,
-               mTemplateRuleCount * sizeof(TemplateRule));
-        delete [] mTemplateRules;
-        mTemplateRules = newRules;
-        mTemplateRulesBufferSize = newSize;
-    }
-
-    mTemplateRules[mTemplateRuleCount].mFrame = aFrame;
-    mTemplateRules[mTemplateRuleCount].mModeNsId = aMode.mNamespaceID;
-    mTemplateRules[mTemplateRuleCount].mModeLocalName = aMode.mLocalName;
-    mTemplateRules[mTemplateRuleCount].mParams = aParams;
-    NS_IF_ADDREF(mTemplateRules[mTemplateRuleCount].mModeLocalName);
-    ++mTemplateRuleCount;
-    
-    return NS_OK;
+    TemplateRule* rule = mTemplateRules.AppendElement();
+    rule->mFrame = aFrame;
+    rule->mModeNsId = aMode.mNamespaceID;
+    rule->mModeLocalName = aMode.mLocalName;
+    rule->mParams = aParams;
 }
 
 void
 txExecutionState::popTemplateRule()
 {
-    // decrement outside of RELEASE, that would decrement twice
-    --mTemplateRuleCount;
-    NS_IF_RELEASE(mTemplateRules[mTemplateRuleCount].mModeLocalName);
+    NS_PRECONDITION(!mTemplateRules.IsEmpty(), "No rules to pop");
+    mTemplateRules.RemoveElementAt(mTemplateRules.Length() - 1);
 }
 
 txIEvalContext*
@@ -497,7 +472,8 @@ txExecutionState::getKeyNodes(const txExpandedName& aKeyName,
 txExecutionState::TemplateRule*
 txExecutionState::getCurrentTemplateRule()
 {
-    return mTemplateRules + mTemplateRuleCount - 1;
+    NS_PRECONDITION(!mTemplateRules.IsEmpty(), "No current rule!");
+    return &mTemplateRules[mTemplateRules.Length() - 1];
 }
 
 txInstruction*
