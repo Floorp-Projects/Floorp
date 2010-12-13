@@ -61,8 +61,7 @@ txApplyDefaultElementTemplate::execute(txExecutionState& aEs)
         aEs.mStylesheet->findTemplate(aEs.getEvalContext()->getContextNode(),
                                       mode, &aEs, nsnull, &frame);
 
-    nsresult rv = aEs.pushTemplateRule(frame, mode, aEs.mTemplateParams);
-    NS_ENSURE_SUCCESS(rv, rv);
+    aEs.pushTemplateRule(frame, mode, aEs.mTemplateParams);
 
     return aEs.runTemplate(templ);
 }
@@ -97,8 +96,7 @@ txApplyImportsStart::execute(txExecutionState& aEs)
         aEs.mStylesheet->findTemplate(aEs.getEvalContext()->getContextNode(),
                                       mode, &aEs, rule->mFrame, &frame);
 
-    rv = aEs.pushTemplateRule(frame, mode, rule->mParams);
-    NS_ENSURE_SUCCESS(rv, rv);
+    aEs.pushTemplateRule(frame, mode, rule->mParams);
 
     return aEs.runTemplate(templ);
 }
@@ -116,8 +114,7 @@ txApplyTemplates::execute(txExecutionState& aEs)
         aEs.mStylesheet->findTemplate(aEs.getEvalContext()->getContextNode(),
                                       mMode, &aEs, nsnull, &frame);
 
-    nsresult rv = aEs.pushTemplateRule(frame, mMode, aEs.mTemplateParams);
-    NS_ENSURE_SUCCESS(rv, rv);
+    aEs.pushTemplateRule(frame, mMode, aEs.mTemplateParams);
 
     return aEs.runTemplate(templ);
 }
@@ -717,7 +714,8 @@ txPushNewContext::addSort(nsAutoPtr<Expr> aSelectExpr,
 nsresult
 txPushNullTemplateRule::execute(txExecutionState& aEs)
 {
-    return aEs.pushTemplateRule(nsnull, txExpandedName(), nsnull);
+    aEs.pushTemplateRule(nsnull, txExpandedName(), nsnull);
+    return NS_OK;
 }
 
 nsresult
