@@ -467,7 +467,7 @@ let WeaveGlue = {
   _validateServer: function _validateServer(aURL) {
     let uri = Weave.Utils.makeURI(aURL);
 
-    if (!uri)
+    if (!uri && aURL)
       uri = Weave.Utils.makeURI("https://" + aURL);
 
     if (!uri)
