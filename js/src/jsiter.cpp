@@ -967,6 +967,7 @@ public:
 bool
 js_SuppressDeletedProperty(JSContext *cx, JSObject *obj, jsid id)
 {
+    id = js_CheckForStringIndex(id);
     return SuppressDeletedPropertyHelper(cx, obj, SingleIdPredicate(id));
 }
 
