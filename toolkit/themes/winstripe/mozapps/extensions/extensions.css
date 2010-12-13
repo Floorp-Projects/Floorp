@@ -60,8 +60,6 @@
 }
 @media all and (-moz-windows-compositor) {
   #addons-page {
-    border: 1px solid rgb(40%, 40%, 40%);
-    border-top: none;
     color: #000;
     /* Blame shorlander for this monstrosity. */
     background-image: /* Fade-out texture and light beams at the top */

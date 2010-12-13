@@ -59,10 +59,6 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 
 using namespace mozilla::dom;
 
-#ifdef MOZ_SVG
-PRBool NS_SVGEnabled();
-#endif
-
 #define kXMLNSNameSpaceURI "http://www.w3.org/2000/xmlns/"
 #define kXMLNameSpaceURI "http://www.w3.org/XML/1998/namespace"
 #define kXHTMLNameSpaceURI "http://www.w3.org/1999/xhtml"
@@ -244,11 +240,9 @@ NS_NewElement(nsIContent** aResult, PRInt32 aElementType,
     return NS_NewMathMLElement(aResult, aNodeInfo);
   }
 #endif
-#ifdef MOZ_SVG
-  if (aElementType == kNameSpaceID_SVG && NS_SVGEnabled()) {
+  if (aElementType == kNameSpaceID_SVG) {
     return NS_NewSVGElement(aResult, aNodeInfo, aFromParser);
   }
-#endif
   if (aElementType == kNameSpaceID_XMLEvents) {
     return NS_NewXMLEventsElement(aResult, aNodeInfo);
   }

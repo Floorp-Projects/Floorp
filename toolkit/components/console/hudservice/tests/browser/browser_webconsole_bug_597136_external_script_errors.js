@@ -37,10 +37,8 @@ function buttonClicked() {
   let hudId = HUDService.getHudIdByWindow(content);
   let outputNode = HUDService.getOutputNodeById(hudId);
 
-  const successMsg = "the error from the external script was logged";
-  const errorMsg = "the error from the external script was not logged";
-
-  testLogEntry(outputNode, "bogus", { success: successMsg, err: errorMsg });
+  let msg = "the error from the external script was logged";
+  testLogEntry(outputNode, "bogus", msg);
 
   finishTest();
 }

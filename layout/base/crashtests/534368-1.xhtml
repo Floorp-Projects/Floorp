@@ -1,0 +1,14 @@
+<html xmlns="http://www.w3.org/1999/xhtml" style="position: absolute; font-size: 1000px; -moz-column-count: 3;">
+<script>
+
+function boom()
+{
+  var newSS = document.createElementNS("http://www.w3.org/1999/xhtml", "style");
+  newSS.appendChild(document.createTextNode("whattheheck:first-line {}"));
+  document.getElementById("h").appendChild(newSS);
+}
+window.addEventListener("load", boom, false);
+
+</script>
+<head id="h" style="overflow-x: scroll; display: block;"><style style="position: absolute; display: block;">zz ]</style><style style="display: none;">[</style><style style="display: none;">[e='zz']:nth-last-child(odd) {}</style><style style="display: none;"></style><style style="display: none;">[c]</style><style style="display: none;">[c]</style><style style="display: none;">[class='zzzzz'] {}</style></head>
+</html>

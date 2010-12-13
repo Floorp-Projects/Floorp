@@ -1504,3 +1504,82 @@ SECMOD_CloseUserDB(PK11SlotInfo *slot)
     PR_smprintf_free(sendSpec);
     return rv;
 }
+
+/*
+ * Restart PKCS #11 modules after a fork(). See secmod.h for more information.
+ */
+SECStatus
+SECMOD_RestartModules(PRBool force)
+{
+    SECMODModuleList *mlp;
+    SECStatus rrv = SECSuccess;
+    int lastError = 0;
+
+    if (!moduleLock) {
+    	PORT_SetError(SEC_ERROR_NOT_INITIALIZED);
+	return SECFailure;
+    }
+
+    /* Only need to restart the PKCS #11 modules that were initialized */
+    SECMOD_GetReadLock(moduleLock);
+    for (mlp = modules; mlp != NULL; mlp = mlp->next) {
+	SECMODModule *mod = mlp->module;
+	CK_ULONG count;
+	SECStatus rv;
+	int i;
+
+	/* If the module needs to be reset, do so */
+	if (force  || (PK11_GETTAB(mod)->
+			C_GetSlotList(CK_FALSE, NULL, &count) != CKR_OK)) {
+            PRBool alreadyLoaded;
+	    /* first call Finalize. This is not required by PKCS #11, but some
+             * older modules require it, and it doesn't hurt (compliant modules
+             * will return CKR_NOT_INITIALIZED */
+	    (void) PK11_GETTAB(mod)->C_Finalize(NULL);
+	    /* now initialize the module, this function reinitializes
+	     * a module in place, preserving existing slots (even if they
+	     * no longer exist) */
+	    rv = secmod_ModuleInit(mod, NULL, &alreadyLoaded);
+	    if (rv != SECSuccess) {
+		/* save the last error code */
+		lastError = PORT_GetError();
+		rrv = rv;
+		/* couldn't reinit the module, disable all its slots */
+		for (i=0; i < mod->slotCount; i++) {
+		    mod->slots[i]->disabled = PR_TRUE;
+		    mod->slots[i]->reason = PK11_DIS_COULD_NOT_INIT_TOKEN;
+		}
+		continue;
+	    }
+	    for (i=0; i < mod->slotCount; i++) {
+		/* get new token sessions, bump the series up so that
+		 * we refresh other old sessions. This will tell much of
+		 * NSS to flush cached handles it may hold as well */
+		rv = PK11_InitToken(mod->slots[i],PR_TRUE);
+		/* PK11_InitToken could fail if the slot isn't present.
+		 * If it is present, though, something is wrong and we should
+		 * disable the slot and let the caller know. */
+		if (rv != SECSuccess && PK11_IsPresent(mod->slots[i])) {
+		    /* save the last error code */
+		    lastError = PORT_GetError();
+		    rrv = rv;
+		    /* disable the token */
+		    mod->slots[i]->disabled = PR_TRUE;
+		    mod->slots[i]->reason = PK11_DIS_COULD_NOT_INIT_TOKEN;
+		}
+	    }
+	}
+    }
+    SECMOD_ReleaseReadLock(moduleLock);
+
+    /*
+     * on multiple failures, we are only returning the lastError. The caller
+     * can determine which slots are bad by calling PK11_IsDisabled().
+     */
+    if (rrv != SECSuccess) {
+	/* restore the last error code */
+	PORT_SetError(lastError);
+    }
+
+    return rrv;
+}

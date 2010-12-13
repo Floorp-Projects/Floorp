@@ -178,7 +178,7 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface)
 PluginInstanceChild::~PluginInstanceChild()
 {
 #if defined(OS_WIN)
-  DestroyPluginWindow();
+    NS_ASSERTION(!mPluginWindowHWND, "Destroying PluginInstanceChild without NPP_Destroy?");
 #endif
 #if defined(OS_MACOSX)
     if (mShColorSpace) {
@@ -2499,6 +2499,7 @@ PluginInstanceChild::PaintRectToPlatformSurface(const nsIntRect& aRect,
     // On maemo5 we do support Image rendering NPAPI
     if (mMaemoImageRendering &&
         aSurface->GetType() == gfxASurface::SurfaceTypeImage) {
+        aSurface->Flush();
         mPendingPluginCall = PR_TRUE;
         gfxImageSurface* image = static_cast<gfxImageSurface*>(aSurface);
         NPImageExpose imgExp;
@@ -3000,6 +3001,7 @@ PluginInstanceChild::AnswerNPP_Destroy(NPError* aResult)
     SharedSurfaceRelease();
     DestroyWinlessPopupSurrogate();
     UnhookWinlessFlashThrottle();
+    DestroyPluginWindow();
 #endif
 
     // Pending async calls are discarded, not delivered. This matches the

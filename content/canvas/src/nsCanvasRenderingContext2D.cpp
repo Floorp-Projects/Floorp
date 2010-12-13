@@ -1078,7 +1078,8 @@ nsCanvasRenderingContext2D::SetDimensions(PRInt32 width, PRInt32 height)
             nsRefPtr<LayerManager> layerManager = nsnull;
 
             if (ownerDoc)
-              layerManager = nsContentUtils::LayerManagerForDocument(ownerDoc);
+              layerManager =
+                nsContentUtils::PersistentLayerManagerForDocument(ownerDoc);
 
             if (layerManager) {
               surface = layerManager->CreateOptimalSurface(gfxIntSize(width, height), format);
@@ -2127,7 +2128,7 @@ nsCanvasRenderingContext2D::ArcTo(float x1, float y1, float x2, float y2, float 
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::Arc(float x, float y, float r, float startAngle, float endAngle, int ccw)
+nsCanvasRenderingContext2D::Arc(float x, float y, float r, float startAngle, float endAngle, PRBool ccw)
 {
     if (!FloatValidate(x,y,r,startAngle,endAngle))
         return NS_ERROR_DOM_SYNTAX_ERR;

@@ -233,10 +233,16 @@ SafeMoveOperation.prototype = {
   },
 
   _moveDirEntry: function(aDirEntry, aTargetDirectory) {
-    if (aDirEntry.isDirectory())
-      this._moveDirectory(aDirEntry, aTargetDirectory);
-    else
-      this._moveFile(aDirEntry, aTargetDirectory);
+    try {
+      if (aDirEntry.isDirectory())
+        this._moveDirectory(aDirEntry, aTargetDirectory);
+      else
+        this._moveFile(aDirEntry, aTargetDirectory);
+    }
+    catch (e) {
+      ERROR("Failure moving " + aDirEntry.path + " to " + aTargetDirectory.path);
+      throw e;
+    }
   },
 
   /**
@@ -254,7 +260,6 @@ SafeMoveOperation.prototype = {
       this._moveDirEntry(aFile, aTargetDirectory);
     }
     catch (e) {
-      ERROR("Failure moving " + aFile.path + " to " + aTargetDirectory.path);
       this.rollback();
       throw e;
     }
@@ -1064,8 +1069,10 @@ function recursiveRemove(aFile) {
     return;
   }
   catch (e) {
-    if (!aFile.isDirectory())
+    if (!aFile.isDirectory()) {
+      ERROR("Failed to remove file " + aFile.path, e);
       throw e;
+    }
   }
 
   let entry;
@@ -1666,7 +1673,7 @@ var XPIProvider = {
         }
         catch (e) {
           // Non-critical, just saves some perf on startup if we clean this up.
-          LOG("Error removing XPI staging dir " + stagedXPIDir.path + ": " + e);
+          LOG("Error removing XPI staging dir " + stagedXPIDir.path, e);
         }
       }
 
@@ -1769,7 +1776,7 @@ var XPIProvider = {
       }
       catch (e) {
         // Non-critical, just saves some perf on startup if we clean this up.
-        LOG("Error removing staging dir " + stagingDir.path + ": " + e);
+        LOG("Error removing staging dir " + stagingDir.path, e);
       }
     });
     return changed;
@@ -4936,6 +4943,9 @@ AddonInstall.prototype = {
       break;
     case AddonManager.STATE_INSTALLED:
       LOG("Cancelling install of " + this.addon.id);
+      let xpi = this.installLocation.getStagingDir();
+      xpi.append(this.addon.id + ".xpi");
+      Services.obs.notifyObservers(xpi, "flush-cache-entry", null);
       cleanStagingDir(this.installLocation.getStagingDir(),
                       [this.addon.id, this.addon.id + ".xpi",
                        this.addon.id + ".json"]);
@@ -6679,7 +6689,7 @@ DirectoryInstallLocation.prototype = {
     let entry;
     while (entry = entries.nextFile) {
       // Should never happen really
-      if (!entry instanceof Ci.nsILocalFile)
+      if (!(entry instanceof Ci.nsILocalFile))
         continue;
 
       let id = entry.leafName;

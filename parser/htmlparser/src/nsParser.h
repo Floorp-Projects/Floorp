@@ -88,6 +88,7 @@
 #include "nsCOMArray.h"
 #include "nsIUnicharStreamListener.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsWeakReference.h"
 
 class nsICharsetConverterManager;
 class nsICharsetAlias;
@@ -102,7 +103,8 @@ class nsIThreadPool;
 
 
 class nsParser : public nsIParser,
-                 public nsIStreamListener
+                 public nsIStreamListener,
+                 public nsSupportsWeakReference
 {
   public:
     /**

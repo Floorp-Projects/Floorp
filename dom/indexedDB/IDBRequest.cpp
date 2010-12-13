@@ -98,6 +98,16 @@ IDBRequest::GetReadyState(PRUint16* aReadyState)
 }
 
 NS_IMETHODIMP
+IDBRequest::GetSource(nsISupports** aSource)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  nsCOMPtr<nsISupports> source(mSource);
+  source.forget(aSource);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 IDBRequest::SetOnsuccess(nsIDOMEventListener* aSuccessListener)
 {
   return RemoveAddEventListener(NS_LITERAL_STRING(SUCCESS_EVT_STR),

@@ -48,6 +48,19 @@ XPIDL_MODULE = services-crypto
 
 XPIDLSRCS = \
   IWeaveCrypto.idl \
+  nsISyncJPAKE.idl \
+  $(NULL)
+
+LIBRARY_NAME   = services-crypto
+EXPORT_LIBRARY = 1
+IS_COMPONENT   = 1
+MODULE_NAME    = nsServicesCryptoModule
+LIBXUL_LIBRARY = 1
+FORCE_USE_PIC  = 1
+MOZILLA_INTERNAL_API = 1
+
+CPPSRCS = \
+  nsSyncJPAKE.cpp \
   $(NULL)
 
 libs::
@@ -58,3 +71,9 @@ DIRS += tests
 endif
 
 include $(topsrcdir)/config/rules.mk
+
+EXTRA_DSO_LDOPTS += \
+	$(MOZ_COMPONENT_LIBS) \
+    $(NSPR_LIBS) \
+    $(NSS_LIBS) \
+    $(NULL)

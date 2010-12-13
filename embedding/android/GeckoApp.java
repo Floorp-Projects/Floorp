@@ -183,45 +183,8 @@ abstract public class GeckoApp
 
         checkAndLaunchUpdate();
 
-        if (!checkCPUCompatability())
-            return;
         // Load our JNI libs
         GeckoAppShell.loadGeckoLibs(getApplication().getPackageResourcePath());
-    }
-
-
-    boolean checkCPUCompatability() {
-        try {
-            BufferedReader reader =
-                new BufferedReader(new FileReader("/proc/cpuinfo"));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                int index = line.indexOf("Processor");
-                if (index == -1)
-                    continue;
-
-                int version = 5;
-                if (line.indexOf("(v8l)") != -1)
-                    version = 8;
-                if (line.indexOf("(v7l)") != -1)
-                    version = 7;
-                if (line.indexOf("(v6l)") != -1)
-                    version = 6;
-                
-                if (version < getMinCPUVersion()) {
-                    showErrorDialog(
-                        getString(R.string.incompatable_cpu_error));
-                    return false;
-                }
-                else {
-                    break;
-                }
-            }
-        } catch (Exception ex) {
-            // Not much we can do here, just continue assuming we're okay
-            Log.i("GeckoApp", "exception: " + ex);
-        }
-        return true;
     }
 
     @Override
@@ -233,7 +196,7 @@ abstract public class GeckoApp
             return;
         }
         final String action = intent.getAction();
-        if (action.equals("org.mozilla.gecko.DEBUG") &&
+        if ("org.mozilla.gecko.DEBUG".equals(action) &&
             checkAndSetLaunchState(LaunchState.Launching, LaunchState.WaitButton)) {
             final Button launchButton = new Button(this);
             launchButton.setText("Launch"); // don't need to localize
@@ -314,8 +277,7 @@ abstract public class GeckoApp
         // etc., and generally mark the profile as 'clean', and then
         // dirty it again if we get an onResume.
 
-        // XXX do the above.
-
+        GeckoAppShell.sendEventToGecko(new GeckoEvent(GeckoEvent.ACTIVITY_STOPPING));
         super.onStop();
     }
 
@@ -340,7 +302,7 @@ abstract public class GeckoApp
         // Tell Gecko to shutting down; we'll end up calling System.exit()
         // in onXreExit.
         if (isFinishing())
-            GeckoAppShell.sendEventToGecko(new GeckoEvent(GeckoEvent.ACTIVITY_STOPPING));
+            GeckoAppShell.sendEventToGecko(new GeckoEvent(GeckoEvent.ACTIVITY_SHUTDOWN));
 
         super.onDestroy();
     }
@@ -449,7 +411,6 @@ abstract public class GeckoApp
 
     abstract public String getAppName();
     abstract public String getContentProcessName();
-    abstract public int getMinCPUVersion();
 
     protected void unpackComponents()
         throws IOException, FileNotFoundException

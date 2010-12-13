@@ -291,10 +291,18 @@ namespace mjit {
 
 struct CallSite;
 
+struct NativeMapEntry {
+    size_t          bcOff;  /* bytecode offset in script */
+    void            *ncode; /* pointer to native code */
+};
+
 struct JITScript {
     typedef JSC::MacroAssemblerCodeRef CodeRef;
     CodeRef         code;       /* pool & code addresses */
-    void            **nmap;     /* pc -> JIT code map, sparse */
+
+    NativeMapEntry  *nmap;      /* array of NativeMapEntrys, sorted by .bcOff.
+                                   .ncode values may not be NULL. */
+    size_t          nNmapPairs; /* number of entries in nmap */
 
     js::mjit::CallSite *callSites;
     uint32          nCallSites;
@@ -409,6 +417,27 @@ EnableTraceHint(JSScript *script, jsbytecode *pc, uint16_t index);
 uintN
 GetCallTargetCount(JSScript *script, jsbytecode *pc);
 
+inline void * bsearch_nmap(NativeMapEntry *nmap, size_t nPairs, size_t bcOff)
+{
+    size_t lo = 1, hi = nPairs;
+    while (1) {
+        /* current unsearched space is from lo-1 to hi-1, inclusive. */
+        if (lo > hi)
+            return NULL; /* not found */
+        size_t mid       = (lo + hi) / 2;
+        size_t bcOff_mid = nmap[mid-1].bcOff;
+        if (bcOff < bcOff_mid) {
+            hi = mid-1;
+            continue;
+        } 
+        if (bcOff > bcOff_mid) {
+            lo = mid+1;
+            continue;
+        }
+        return nmap[mid-1].ncode;
+    }
+}
+
 } /* namespace mjit */
 
 } /* namespace js */
@@ -420,22 +449,17 @@ JSScript::maybeNativeCodeForPC(bool constructing, jsbytecode *pc)
     if (!jit)
         return NULL;
     JS_ASSERT(pc >= code && pc < code + length);
-    return jit->nmap[pc - code];
-}
-
-inline void **
-JSScript::nativeMap(bool constructing)
-{
-    return getJIT(constructing)->nmap;
+    return bsearch_nmap(jit->nmap, jit->nNmapPairs, (size_t)(pc - code));
 }
 
 inline void *
 JSScript::nativeCodeForPC(bool constructing, jsbytecode *pc)
 {
-    void **nmap = nativeMap(constructing);
+    js::mjit::JITScript *jit = getJIT(constructing);
     JS_ASSERT(pc >= code && pc < code + length);
-    JS_ASSERT(nmap[pc - code]);
-    return nmap[pc - code];
+    void* native = bsearch_nmap(jit->nmap, jit->nNmapPairs, (size_t)(pc - code));
+    JS_ASSERT(native);
+    return native;
 }
 
 #ifdef _MSC_VER

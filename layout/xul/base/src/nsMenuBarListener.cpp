@@ -259,6 +259,11 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
         if (result) {
           mMenuBarFrame->SetActive(PR_TRUE);
           result->OpenMenu(PR_TRUE);
+
+          // The opened menu will listen next keyup event.
+          // Therefore, we should clear the keydown flags here.
+          mAccessKeyDown = mAccessKeyDownCanceled = PR_FALSE;
+
           aKeyEvent->StopPropagation();
           aKeyEvent->PreventDefault();
           retVal = NS_OK;       // I am consuming event

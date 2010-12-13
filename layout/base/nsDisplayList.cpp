@@ -360,9 +360,8 @@ nsDisplayList::ComputeVisibilityForSublist(nsDisplayListBuilder* aBuilder,
 
     if (item->ComputeVisibility(aBuilder, aVisibleRegion)) {
       anyVisible = PR_TRUE;
-      nsIFrame* f = item->GetUnderlyingFrame();
       PRBool transparentBackground = PR_FALSE;
-      if (TreatAsOpaque(item, aBuilder, &transparentBackground) && f) {
+      if (TreatAsOpaque(item, aBuilder, &transparentBackground)) {
         // Subtract opaque item from the visible region
         aBuilder->SubtractFromVisibleRegion(aVisibleRegion, nsRegion(bounds));
       }

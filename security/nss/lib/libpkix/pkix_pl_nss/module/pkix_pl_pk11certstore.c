@@ -849,7 +849,7 @@ DownloadCrl(pkix_pl_CrlDp *dp, PKIX_PL_CRL **crl,
             location[uri->len] = 0;
             if (CERT_ParseURL(location, &hostname,
                               &port, &path) != SECSuccess) {
-                PORT_SetError(SEC_ERROR_BAD_INFO_ACCESS_LOCATION);
+                PORT_SetError(SEC_ERROR_BAD_CRL_DP_URL);
                 savedError = PKIX_URLPARSINGFAILED;
                 break;
             }
@@ -859,7 +859,7 @@ DownloadCrl(pkix_pl_CrlDp *dp, PKIX_PL_CRL **crl,
 
             if ((*hcv1->createSessionFcn)(hostname, port, 
                                           &pServerSession) != SECSuccess) {
-                PORT_SetError(SEC_ERROR_BAD_INFO_ACCESS_LOCATION);
+                PORT_SetError(SEC_ERROR_BAD_CRL_DP_URL);
                 savedError = PKIX_URLPARSINGFAILED;
                 break;
             }

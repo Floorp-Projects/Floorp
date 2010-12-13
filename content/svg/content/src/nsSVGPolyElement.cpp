@@ -35,7 +35,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGPolyElement.h"
+#include "DOMSVGPointList.h"
 #include "gfxContext.h"
+#include "nsSVGUtils.h"
+
+using namespace mozilla;
 
 //----------------------------------------------------------------------
 // nsISupports methods
@@ -56,23 +60,6 @@ nsSVGPolyElement::nsSVGPolyElement(already_AddRefed<nsINodeInfo> aNodeInfo)
 
 }
 
-nsresult
-nsSVGPolyElement::Init()
-{
-  nsresult rv = nsSVGPolyElementBase::Init();
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  // Create mapped properties:
-  
-  // points #IMPLIED
-  rv = nsSVGPointList::Create(getter_AddRefs(mPoints));
-  NS_ENSURE_SUCCESS(rv,rv);
-  rv = AddMappedSVGValue(nsGkAtoms::points, mPoints);
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  return rv;
-}
-
 //----------------------------------------------------------------------
 // nsIDOMSGAnimatedPoints methods:
 
@@ -80,8 +67,8 @@ nsSVGPolyElement::Init()
 NS_IMETHODIMP 
 nsSVGPolyElement::GetPoints(nsIDOMSVGPointList * *aPoints)
 {
-  *aPoints = mPoints;
-  NS_ADDREF(*aPoints);
+  void *key = mPoints.GetBaseValKey();
+  *aPoints = DOMSVGPointList::GetDOMWrapper(key, this, PR_FALSE).get();
   return NS_OK;
 }
 
@@ -89,8 +76,8 @@ nsSVGPolyElement::GetPoints(nsIDOMSVGPointList * *aPoints)
 NS_IMETHODIMP 
 nsSVGPolyElement::GetAnimatedPoints(nsIDOMSVGPointList * *aAnimatedPoints)
 {
-  *aAnimatedPoints = mPoints;
-  NS_ADDREF(*aAnimatedPoints);
+  void *key = mPoints.GetAnimValKey();
+  *aAnimatedPoints = DOMSVGPointList::GetDOMWrapper(key, this, PR_TRUE).get();
   return NS_OK;
 }
 
@@ -123,24 +110,16 @@ nsSVGPolyElement::AttributeDefinesGeometry(const nsIAtom *aName)
 void
 nsSVGPolyElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks)
 {
-  if (!mPoints)
-    return;
+  const SVGPointList &points = mPoints.GetAnimValue();
 
-  PRUint32 count;
-  mPoints->GetNumberOfItems(&count);
-  if (count == 0)
+  if (!points.Length())
     return;
 
   float px = 0.0, py = 0.0, prevAngle;
 
-  for (PRUint32 i = 0; i < count; ++i) {
-    nsCOMPtr<nsIDOMSVGPoint> point;
-    mPoints->GetItem(i, getter_AddRefs(point));
-
-    float x, y;
-    point->GetX(&x);
-    point->GetY(&y);
-
+  for (PRUint32 i = 0; i < points.Length(); ++i) {
+    float x = points[i].mX;
+    float y = points[i].mY;
     float angle = atan2(y-py, x-px);
     if (i == 1)
       aMarks->ElementAt(aMarks->Length() - 1).angle = angle;
@@ -161,26 +140,14 @@ nsSVGPolyElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks)
 void
 nsSVGPolyElement::ConstructPath(gfxContext *aCtx)
 {
-  if (!mPoints)
+  const SVGPointList &points = mPoints.GetAnimValue();
+
+  if (!points.Length())
     return;
 
-  PRUint32 count;
-  mPoints->GetNumberOfItems(&count);
-  if (count == 0)
-    return;
-
-  PRUint32 i;
-  for (i = 0; i < count; ++i) {
-    nsCOMPtr<nsIDOMSVGPoint> point;
-    mPoints->GetItem(i, getter_AddRefs(point));
-
-    float x, y;
-    point->GetX(&x);
-    point->GetY(&y);
-    if (i == 0)
-      aCtx->MoveTo(gfxPoint(x, y));
-    else
-      aCtx->LineTo(gfxPoint(x, y));
+  aCtx->MoveTo(points[0]);
+  for (PRUint32 i = 1; i < points.Length(); ++i) {
+    aCtx->LineTo(points[i]);
   }
 }
 

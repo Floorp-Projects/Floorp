@@ -142,7 +142,7 @@ nsHtml5Tokenizer::setStateAndEndTagExpectation(PRInt32 specialTokenizerState, ns
 void 
 nsHtml5Tokenizer::endTagExpectationToArray()
 {
-  switch(endTagExpectation->group) {
+  switch(endTagExpectation->getGroup()) {
     case NS_HTML5TREE_BUILDER_TITLE: {
       endTagExpectationAsArray = TITLE_ARR;
       return;
@@ -1717,7 +1717,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* 
           }
           switch(c) {
             case '\0': {
-              emitReplacementCharacter(buf, pos);
+              emitPlaintextReplacementCharacter(buf, pos);
               continue;
             }
             case '\r': {
@@ -3271,7 +3271,6 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* 
 void 
 nsHtml5Tokenizer::initDoctypeFields()
 {
-  nsHtml5Portability::releaseLocal(doctypeName);
   doctypeName = nsHtml5Atoms::emptystring;
   if (systemIdentifier) {
     nsHtml5Portability::releaseString(systemIdentifier);
@@ -3298,6 +3297,14 @@ nsHtml5Tokenizer::emitReplacementCharacter(PRUnichar* buf, PRInt32 pos)
 {
   flushChars(buf, pos);
   tokenHandler->zeroOriginatingReplacementCharacter();
+  cstart = pos + 1;
+}
+
+void 
+nsHtml5Tokenizer::emitPlaintextReplacementCharacter(PRUnichar* buf, PRInt32 pos)
+{
+  flushChars(buf, pos);
+  tokenHandler->characters(REPLACEMENT_CHARACTER, 0, 1);
   cstart = pos + 1;
 }
 
@@ -3441,7 +3448,6 @@ nsHtml5Tokenizer::eof()
           emitComment(0, 0);
         } else {
 
-          nsHtml5Portability::releaseLocal(doctypeName);
           doctypeName = nsHtml5Atoms::emptystring;
           if (systemIdentifier) {
             nsHtml5Portability::releaseString(systemIdentifier);
@@ -3672,7 +3678,6 @@ nsHtml5Tokenizer::emitDoctypeToken(PRInt32 pos)
 {
   cstart = pos + 1;
   tokenHandler->doctype(doctypeName, publicIdentifier, systemIdentifier, forceQuirks);
-  nsHtml5Portability::releaseLocal(doctypeName);
   doctypeName = nsnull;
   nsHtml5Portability::releaseString(publicIdentifier);
   publicIdentifier = nsnull;
@@ -3680,12 +3685,13 @@ nsHtml5Tokenizer::emitDoctypeToken(PRInt32 pos)
   systemIdentifier = nsnull;
 }
 
-void 
+PRBool 
 nsHtml5Tokenizer::internalEncodingDeclaration(nsString* internalCharset)
 {
   if (encodingDeclarationHandler) {
-    encodingDeclarationHandler->internalEncodingDeclaration(internalCharset);
+    return encodingDeclarationHandler->internalEncodingDeclaration(internalCharset);
   }
+  return PR_FALSE;
 }
 
 void 
@@ -3714,7 +3720,6 @@ nsHtml5Tokenizer::end()
 {
   strBuf = nsnull;
   longStrBuf = nsnull;
-  nsHtml5Portability::releaseLocal(doctypeName);
   doctypeName = nsnull;
   if (systemIdentifier) {
     nsHtml5Portability::releaseString(systemIdentifier);
@@ -3820,7 +3825,6 @@ nsHtml5Tokenizer::loadState(nsHtml5Tokenizer* other)
   seenDigits = other->seenDigits;
   endTag = other->endTag;
   shouldSuspend = PR_FALSE;
-  nsHtml5Portability::releaseLocal(doctypeName);
   if (!other->doctypeName) {
     doctypeName = nsnull;
   } else {

@@ -5,7 +5,6 @@
   XUL Tests for client/scroll properties
   -->
 <window title="Test Offset/Client/Scroll Properties" width="500" height="600"
-        onload="setTimeout(testElements, 0, 'testelements', doneTests);"
         style="margin: 1px !important"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="text/javascript" src="/MochiKit/packed.js"/>
@@ -68,6 +67,11 @@ var whichpopup = "outer";
 
 SimpleTest.waitForExplicitFinish();
 
+function startTests()
+{
+  testElements('testelements', doneTests);
+}
+
 function doneTests()
 {
   if (gTestSet == "box") {
@@ -83,6 +87,8 @@ function doneTests()
     $("outermenu").open = false;
   }
 }
+
+SimpleTest.waitForFocus(startTests);
 
 ]]>
 </script>

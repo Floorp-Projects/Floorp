@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Move node during parse</title>
+</head>
+<body>
+<div>
+<p>This text should not show inside the iframe. It should show inside the parent. Furthermore, there should be text saying "Middle of Page" and then "End of Page" below (also in the parent).</p>
+<script>
+parent.document.documentElement.lastChild.appendChild(document.getElementsByTagName("div")[0]);
+</script>
+<p>Middle of Page</p>
+<script>
+document.body.insertBefore(document.createTextNode("FAIL"), document.body.firstChild);
+</script>
+<p>End of Page</p>
+</div>
+</body>
+</html>

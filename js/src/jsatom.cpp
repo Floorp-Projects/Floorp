@@ -587,7 +587,7 @@ js_AtomizeChars(JSContext *cx, const jschar *chars, size_t length, uintN flags)
     JSString str;
 
     CHECK_REQUEST(cx);
-    str.initFlat((jschar *)chars, length);
+    str.initFlatNotTerminated((jschar *)chars, length);
     return js_AtomizeString(cx, &str, ATOM_TMPSTR | flags);
 }
 
@@ -603,7 +603,7 @@ js_GetExistingStringAtom(JSContext *cx, const jschar *chars, size_t length)
             return STRING_TO_ATOM(JSString::unitString(c));
     }
 
-    str.initFlat((jschar *)chars, length);
+    str.initFlatNotTerminated((jschar *)chars, length);
     state = &cx->runtime->atomState;
 
     JS_LOCK(cx, &state->lock);

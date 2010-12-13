@@ -1030,11 +1030,16 @@ struct JSObject : js::gc::Cell {
 
     inline bool hasProperty(JSContext *cx, jsid id, bool *foundp, uintN flags = 0);
 
-    bool allocSlot(JSContext *cx, uint32 *slotp);
-
     /*
-     * Return true iff this is a dictionary-mode object and the freed slot was
-     * added to the freelist. */
+     * Allocate and free an object slot. Note that freeSlot is infallible: it
+     * returns true iff this is a dictionary-mode object and the freed slot was
+     * added to the freelist.
+     *
+     * FIXME: bug 593129 -- slot allocation should be done by object methods
+     * after calling object-parameter-free shape methods, avoiding coupling
+     * logic across the object vs. shape module wall.
+     */
+    bool allocSlot(JSContext *cx, uint32 *slotp);
     bool freeSlot(JSContext *cx, uint32 slot);
 
     bool reportReadOnly(JSContext* cx, jsid id, uintN report = JSREPORT_ERROR);

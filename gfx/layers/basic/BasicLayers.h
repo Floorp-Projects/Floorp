@@ -140,7 +140,7 @@ public:
 
   virtual void BeginTransaction();
   virtual void BeginTransactionWithTarget(gfxContext* aTarget);
-  virtual void EndTransaction(DrawThebesLayerCallback aCallback,
+  virtual bool EndTransaction(DrawThebesLayerCallback aCallback,
                               void* aCallbackData);
 
   virtual void SetRoot(Layer* aLayer);
@@ -180,6 +180,10 @@ public:
 
   // Clear the cached contents of this layer.
   void ClearCachedResources();
+
+  bool IsNullTransactionSupported() { return mRoot ? true : false; }
+
+  void SetTransactionIncomplete() { mTransactionIncomplete = true; }
 
 protected:
 #ifdef DEBUG
@@ -221,6 +225,7 @@ private:
 
   BufferMode   mDoubleBuffering;
   PRPackedBool mUsingDefaultTarget;
+  bool mTransactionIncomplete;
 };
  
 
@@ -235,7 +240,7 @@ public:
   virtual ~BasicShadowLayerManager();
 
   virtual void BeginTransactionWithTarget(gfxContext* aTarget);
-  virtual void EndTransaction(DrawThebesLayerCallback aCallback,
+  virtual bool EndTransaction(DrawThebesLayerCallback aCallback,
                               void* aCallbackData);
 
   virtual void SetRoot(Layer* aLayer);

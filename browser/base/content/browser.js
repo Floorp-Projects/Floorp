@@ -1539,11 +1539,11 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   // Enable Inspector?
   let enabled = gPrefService.getBoolPref(InspectorUI.prefEnabledName);
   if (enabled) {
-    document.getElementById("menu_pageinspect").setAttribute("hidden", false);
+    document.getElementById("menu_pageinspect").hidden = false;
     document.getElementById("Tools:Inspect").removeAttribute("disabled");
-    let appMenuInspect = document.getElementById("appmenu_pageInspect");
-    if (appMenuInspect)
-      appMenuInspect.setAttribute("hidden", false);
+#ifdef MENUBAR_CAN_AUTOHIDE
+    document.getElementById("appmenu_pageInspect").hidden = false;
+#endif
   }
 
   // Enable Error Console?
@@ -1554,17 +1554,14 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
     document.getElementById("key_errorConsole").removeAttribute("disabled");
   }
 
+#ifdef MENUBAR_CAN_AUTOHIDE
   // If the user (or the locale) hasn't enabled the top-level "Character
   // Encoding" menu via the "browser.menu.showCharacterEncoding" preference,
   // hide it.
-  const showCharacterEncodingPref = "browser.menu.showCharacterEncoding";
-  let extraCharacterEncodingMenuEnabled = gPrefService.
-    getComplexValue(showCharacterEncodingPref, Ci.nsIPrefLocalizedString).data;
-  if (extraCharacterEncodingMenuEnabled !== "true") {
-    let charsetMenu = document.getElementById("appmenu_charsetMenu");
-    if (charsetMenu)
-      charsetMenu.setAttribute("hidden", "true");
-  }
+  if ("true" != gPrefService.getComplexValue("browser.menu.showCharacterEncoding",
+                                             Ci.nsIPrefLocalizedString).data)
+    document.getElementById("appmenu_charsetMenu").hidden = true;
+#endif
 
   Services.obs.notifyObservers(window, "browser-delayed-startup-finished", "");
 }
@@ -2860,14 +2857,10 @@ function FillInHTMLTooltip(tipElement)
 var browserDragAndDrop = {
   canDropLink: function (aEvent) Services.droppedLinkHandler.canDropLink(aEvent, true),
 
-  dragOver: function (aEvent, statusString)
+  dragOver: function (aEvent)
   {
     if (this.canDropLink(aEvent)) {
       aEvent.preventDefault();
-
-      if (statusString) {
-        XULBrowserWindow.setStatusText(gNavigatorBundle.getString(statusString));
-      }
     }
   },
 
@@ -2882,12 +2875,11 @@ var homeButtonObserver = {
 
   onDragOver: function (aEvent)
     {
-      browserDragAndDrop.dragOver(aEvent, "droponhomebutton");
+      browserDragAndDrop.dragOver(aEvent);
       aEvent.dropEffect = "link";
     },
   onDragExit: function (aEvent)
     {
-      XULWindowBrowser.setStatusText("");
     }
 }
 
@@ -2924,25 +2916,23 @@ var bookmarksButtonObserver = {
 
   onDragOver: function (aEvent)
   {
-    browserDragAndDrop.dragOver(aEvent, "droponbookmarksbutton");
+    browserDragAndDrop.dragOver(aEvent);
     aEvent.dropEffect = "link";
   },
 
   onDragExit: function (aEvent)
   {
-    XULWindowBrowser.setStatusText("");
   }
 }
 
 var newTabButtonObserver = {
   onDragOver: function (aEvent)
   {
-    browserDragAndDrop.dragOver(aEvent, "droponnewtabbutton");
+    browserDragAndDrop.dragOver(aEvent);
   },
 
   onDragExit: function (aEvent)
   {
-    XULWindowBrowser.setStatusText("");
   },
 
   onDrop: function (aEvent)
@@ -2960,11 +2950,10 @@ var newTabButtonObserver = {
 var newWindowButtonObserver = {
   onDragOver: function (aEvent)
   {
-    browserDragAndDrop.dragOver(aEvent, "droponnewwindowbutton");
+    browserDragAndDrop.dragOver(aEvent);
   },
   onDragExit: function (aEvent)
   {
-    XULWindowBrowser.setStatusText("");
   },
   onDrop: function (aEvent)
   {
@@ -2981,7 +2970,6 @@ var newWindowButtonObserver = {
 var DownloadsButtonDNDObserver = {
   onDragOver: function (aEvent)
   {
-    XULWindowBrowser.setStatusText(gNavigatorBundle.getString("dropondownloadsbutton"));
     var types = aEvent.dataTransfer.types;
     if (types.contains("text/x-moz-url") ||
         types.contains("text/uri-list") ||
@@ -2991,7 +2979,6 @@ var DownloadsButtonDNDObserver = {
 
   onDragExit: function (aEvent)
   {
-    XULWindowBrowser.setStatusText("");
   },
 
   onDrop: function (aEvent)
@@ -8088,8 +8075,17 @@ let AddonsMgrListener = {
   get statusBar() document.getElementById("status-bar"),
   getAddonBarItemCount: function() {
     // Take into account the contents of the status bar shim for the count.
-    return this.addonBar.childNodes.length - 1 +
-           this.statusBar.childNodes.length;
+    var itemCount = this.statusBar.childNodes.length;
+
+    var defaultOrNoninteractive = this.addonBar.getAttribute("defaultset")
+                                      .split(",")
+                                      .concat(["separator", "spacer", "spring"]);
+    this.addonBar.currentSet.split(",").forEach(function (item) {
+      if (defaultOrNoninteractive.indexOf(item) == -1)
+        itemCount++;
+    });
+
+    return itemCount;
   },
   onInstalling: function(aAddon) {
     this.lastAddonBarCount = this.getAddonBarItemCount();
