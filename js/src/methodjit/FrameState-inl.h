@@ -821,7 +821,7 @@ inline void
 FrameState::learnType(FrameEntry *fe, JSValueType type, RegisterID data)
 {
     forgetAllRegs(fe);
-    fe->setCopyOf(NULL);
+    fe->copy = NULL;
 
     fe->type.setConstant();
     fe->knownType = type;
