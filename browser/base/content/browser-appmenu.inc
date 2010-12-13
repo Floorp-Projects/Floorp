@@ -146,7 +146,6 @@
                     type="checkbox"
                     command="Tools:Inspect"
                     key="key_inspect"/>
-          <menuseparator/>
           <menuitem id="appmenu_pageSource"
                     label="&viewPageSourceCmd.label;"
                     command="View:PageSource"
@@ -157,7 +156,6 @@
 #include browser-charsetmenu.inc
 #undef ID_PREFIX
 #undef OMIT_ACCESSKEYS
-          <menuseparator/>
           <menuitem label="&goOfflineCmd.label;"
                     type="checkbox"
                     observes="workOfflineMenuitemState"
