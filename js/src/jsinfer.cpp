@@ -1641,6 +1641,9 @@ TypeCompartment::addPendingRecompile(JSContext *cx, JSScript *script)
 void
 TypeCompartment::dynamicAssign(JSContext *cx, JSObject *obj, jsid id, const Value &rval)
 {
+    if (obj->isWith())
+        obj = js_UnwrapWithObject(cx, obj);
+
     jstype rvtype = GetValueType(cx, rval);
     TypeObject *object = obj->getTypeObject();
 
