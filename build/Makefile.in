@@ -101,16 +101,6 @@ libs:: $(_LEAKTEST_FILES)
 	$(INSTALL) $^ $(_LEAKTEST_DIR)
 
 ifdef ENABLE_TESTS
-# Install bloaturls.txt file for tinderbox bloat test.
-libs:: bloaturls.txt
-	$(INSTALL) $< $(DIST)/bin
-
-# Install bloatcycle.html into dist/bin/res, for auto-cycling
-# of bloaturls.txt.  This is for browsers that can't do -f
-# autocycling of URLs.
-libs:: bloatcycle.html
-	$(INSTALL) $< $(DIST)/bin/res
-
 libs:: $(topsrcdir)/tools/rb/fix_stack_using_bpsyms.py
 	$(INSTALL) $< $(DIST)/bin
 
