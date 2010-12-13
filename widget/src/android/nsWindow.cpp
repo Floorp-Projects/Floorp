@@ -135,6 +135,7 @@ static nsWindow* gFocusedWindow = nsnull;
 
 static nsRefPtr<gl::GLContext> sGLContext;
 static bool sFailedToCreateGLContext = false;
+static bool sValidSurface;
 
 // Multitouch swipe thresholds in inches
 static const double SWIPE_MAX_PINCH_DELTA_INCHES = 0.4;
@@ -697,6 +698,7 @@ nsWindow::GetLayerManager(LayerManagerPersistence, bool* aAllowRetaining)
 
         if (layerManager && layerManager->Initialize(sGLContext))
             mLayerManager = layerManager;
+        sValidSurface = true;
     }
 
     if (!sGLContext || !mLayerManager) {
@@ -819,6 +821,13 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
                 win->OnIMEEvent(ae);
             }
             break;
+
+	case AndroidGeckoEvent::SURFACE_CREATED:
+	    break;
+
+	case AndroidGeckoEvent::SURFACE_DESTROYED:
+	    sValidSurface = false;
+	    break;
 
         default:
             break;
@@ -989,6 +998,12 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
             ALOG("##### BeginDrawing failed!");
             return;
         }
+
+        if (!sValidSurface) {
+            sGLContext->RenewSurface();
+            sValidSurface = true;
+        }
+
 
         NS_ASSERTION(sGLContext, "Drawing with GLES without a GL context?");
 
