@@ -462,7 +462,7 @@ DOMCI_CLASS(Worker)
 DOMCI_CLASS(ChromeWorker)
 
 // WebGL
-DOMCI_CLASS(CanvasRenderingContextWebGL)
+DOMCI_CLASS(WebGLRenderingContext)
 DOMCI_CLASS(WebGLBuffer)
 DOMCI_CLASS(WebGLTexture)
 DOMCI_CLASS(WebGLProgram)
