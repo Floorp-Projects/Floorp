@@ -647,7 +647,8 @@ class FrameState
     void prepareForJump(jsbytecode *target, Assembler &masm, bool synced);
 
     /*
-     * Mark an existing slot with a type.  unsync indicates whether type is already synced.
+     * Mark an existing slot with a type. unsync indicates whether type is already synced.
+     * Do not call this on entries which might be copied.
      */
     inline void learnType(FrameEntry *fe, JSValueType type, bool unsync = true);
     inline void learnType(FrameEntry *fe, JSValueType type, RegisterID payload);
