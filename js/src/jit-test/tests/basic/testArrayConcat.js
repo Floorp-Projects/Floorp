@@ -7,4 +7,4 @@ var y = x.concat();
 assertEq(y[3], undefined);
 
 var z = x.concat(/abc/).pop();
-assertEq(x.source, "abc");
+assertEq(z.source, "abc");
