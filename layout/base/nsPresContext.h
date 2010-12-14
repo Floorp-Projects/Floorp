@@ -1275,9 +1275,6 @@ public:
    */
   PRUint32 GetDOMGeneration() { return mDOMGeneration; }
 
-  void SetNeedToUpdateLayerTree(bool aUpdate) { mUpdateLayerTree = aUpdate; }
-  bool NeedToUpdateLayerTree() { return mUpdateLayerTree; }
-
 private:
   nsTHashtable<nsPtrHashKey<nsObjectFrame> > mRegisteredPlugins;
   // if mNeedsToUpdatePluginGeometry is set, then this is the frame to
@@ -1286,7 +1283,6 @@ private:
   nsIFrame* mUpdatePluginGeometryForFrame;
   PRUint32 mDOMGeneration;
   PRPackedBool mNeedsToUpdatePluginGeometry;
-  bool mUpdateLayerTree;
 };
 
 inline void
