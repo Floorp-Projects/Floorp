@@ -2235,6 +2235,27 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 return JS_TRUE;
 
             /*
+             * It is illegal to add upvars to heavyweight functions (and
+             * unnecessary, since the optimization avoids creating call
+             * objects). Take the following code as an eval string:
+             *
+             *   (function () {
+             *       $(init);
+             *       function init() {
+             *           $();
+             *       }
+             *    })();
+             *
+             * The first instance of "$" cannot be an upvar, because the
+             * outermost lambda is on "init"'s scope chain, which escapes.
+             *
+             * A similar restriction exists for upvars which do not cross
+             * eval (see the end of BindNameToSlot and bug 616762).
+             */
+            if (cg->flags & TCF_FUN_HEAVYWEIGHT)
+                return JS_TRUE;
+
+            /*
              * Generator functions may be resumed from any call stack, which
              * defeats the display optimization to static link searching used
              * by JSOP_{GET,CALL}UPVAR.
