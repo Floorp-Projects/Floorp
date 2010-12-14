@@ -8144,9 +8144,9 @@ nsCSSFrameConstructor::DoContentStateChanged(Element* aElement,
     // If it's generated content, ignore LOADING/etc state changes on it.
     if (!primaryFrame->IsGeneratedContentFrame() &&
         aStateMask.HasAtLeastOneOfStates(NS_EVENT_STATE_BROKEN |
-                                  NS_EVENT_STATE_USERDISABLED |
-                                  NS_EVENT_STATE_SUPPRESSED |
-                                  NS_EVENT_STATE_LOADING)) {
+                                         NS_EVENT_STATE_USERDISABLED |
+                                         NS_EVENT_STATE_SUPPRESSED |
+                                         NS_EVENT_STATE_LOADING)) {
       hint = nsChangeHint_ReconstructFrame;
     } else {
       PRUint8 app = primaryFrame->GetStyleDisplay()->mAppearance;
@@ -8162,6 +8162,8 @@ nsCSSFrameConstructor::DoContentStateChanged(Element* aElement,
         }
       }
     }
+
+    primaryFrame->ContentStatesChanged(aStateMask);
   }
 
   nsRestyleHint rshint = 
