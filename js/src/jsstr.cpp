@@ -1871,7 +1871,7 @@ BuildFlatMatchArray(JSContext *cx, JSString *textstr, const FlatMatch &fm, Value
     }
 
     /* For this non-global match, produce a RegExp.exec-style array. */
-    JSObject *obj = js_NewSlowArrayObject(cx);
+    JSObject *obj = NewSlowEmptyArray(cx);
     if (!obj)
         return false;
     vp->setObject(*obj);
@@ -1896,7 +1896,7 @@ MatchCallback(JSContext *cx, RegExpStatics *res, size_t count, void *p)
 
     JSObject *&arrayobj = *static_cast<MatchArgType>(p);
     if (!arrayobj) {
-        arrayobj = js_NewArrayObject(cx, 0, NULL);
+        arrayobj = NewDenseEmptyArray(cx);
         if (!arrayobj)
             return false;
     }
@@ -2719,7 +2719,7 @@ str_split(JSContext *cx, uintN argc, Value *vp)
 
     if (argc == 0) {
         Value v = StringValue(str);
-        JSObject *aobj = js_NewArrayObject(cx, 1, &v);
+        JSObject *aobj = NewDenseCopiedArray(cx, 1, &v);
         if (!aobj)
             return false;
         vp->setObject(*aobj);
@@ -2802,7 +2802,7 @@ str_split(JSContext *cx, uintN argc, Value *vp)
     if (j == -2)
         return false;
 
-    JSObject *aobj = js_NewArrayObject(cx, splits.length(), splits.begin());
+    JSObject *aobj = NewDenseCopiedArray(cx, splits.length(), splits.begin());
     if (!aobj)
         return false;
     vp->setObject(*aobj);

@@ -165,7 +165,7 @@ NewKeyValuePair(JSContext *cx, jsid id, const Value &val, Value *rval)
     Value vec[2] = { IdToValue(id), val };
     AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(vec), vec);
 
-    JSObject *aobj = js_NewArrayObject(cx, 2, vec);
+    JSObject *aobj = NewDenseCopiedArray(cx, 2, vec);
     if (!aobj)
         return false;
     rval->setObject(*aobj);

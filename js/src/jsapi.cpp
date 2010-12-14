@@ -4023,7 +4023,7 @@ JS_NewArrayObject(JSContext *cx, jsint length, jsval *vector)
     CHECK_REQUEST(cx);
     /* NB: jsuint cast does ToUint32. */
     assertSameCompartment(cx, JSValueArray(vector, vector ? (jsuint)length : 0));
-    return js_NewArrayObject(cx, (jsuint)length, Valueify(vector));
+    return NewDenseCopiedArray(cx, (jsuint)length, Valueify(vector));
 }
 
 JS_PUBLIC_API(JSBool)

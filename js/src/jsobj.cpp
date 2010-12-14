@@ -1806,7 +1806,7 @@ obj_keys(JSContext *cx, uintN argc, Value *vp)
     }
 
     JS_ASSERT(props.length() <= UINT32_MAX);
-    JSObject *aobj = js_NewArrayObject(cx, jsuint(vals.length()), vals.begin());
+    JSObject *aobj = NewDenseCopiedArray(cx, jsuint(vals.length()), vals.begin());
     if (!aobj)
         return false;
     vp->setObject(*aobj);
@@ -2516,7 +2516,7 @@ obj_getOwnPropertyNames(JSContext *cx, uintN argc, Value *vp)
          }
     }
 
-    JSObject *aobj = js_NewArrayObject(cx, vals.length(), vals.begin());
+    JSObject *aobj = NewDenseCopiedArray(cx, vals.length(), vals.begin());
     if (!aobj)
         return false;
 

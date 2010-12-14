@@ -242,7 +242,7 @@ RegExp::createResult(JSContext *cx, JSString *input, int *buf, size_t matchItemC
      *  0:              matched string
      *  1..pairCount-1: paren matches
      */
-    JSObject *array = js_NewSlowArrayObject(cx);
+    JSObject *array = NewSlowEmptyArray(cx);
     if (!array)
         return NULL;
 
