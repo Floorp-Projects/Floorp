@@ -159,12 +159,17 @@ class GeckoSurfaceView
     }
 
     public void surfaceCreated(SurfaceHolder holder) {
+        Log.i("GeckoAppJava", "surface created");
+        GeckoEvent e = new GeckoEvent(GeckoEvent.SURFACE_CREATED);
+        GeckoAppShell.sendEventToGecko(e);
     }
 
     public void surfaceDestroyed(SurfaceHolder holder) {
         Log.i("GeckoAppJava", "surface destroyed");
         mSurfaceValid = false;
         mSoftwareBuffer = null;
+        GeckoEvent e = new GeckoEvent(GeckoEvent.SURFACE_DESTROYED);
+        GeckoAppShell.sendEventToGecko(e);
     }
 
     public ByteBuffer getSoftwareDrawBuffer() {

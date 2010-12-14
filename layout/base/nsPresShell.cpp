@@ -6073,19 +6073,6 @@ PresShell::Paint(nsIView*           aDisplayRoot,
   NS_ASSERTION(aViewToPaint, "null view");
   NS_ASSERTION(aWidgetToPaint, "Can't paint without a widget");
 
-  nsRootPresContext* rootPC = presContext->GetRootPresContext();
-  if (!rootPC->NeedToUpdateLayerTree() && aWidgetToPaint) {
-    LayerManager* layerManager = aWidgetToPaint->GetLayerManager();
-    NS_ASSERTION(layerManager, "Must be in paint event");
-    if (layerManager->IsNullTransactionSupported()) {
-      layerManager->BeginTransaction();
-      if (layerManager->EndTransaction(nsnull, nsnull)) {
-        return NS_OK;
-      }
-    }
-  }
-  rootPC->SetNeedToUpdateLayerTree(false);
-
   nscolor bgcolor = ComputeBackstopColor(aDisplayRoot);
 
   nsIFrame* frame = aPaintDefaultBackground

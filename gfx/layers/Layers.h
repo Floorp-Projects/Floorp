@@ -305,21 +305,9 @@ public:
    * During the drawing phase, all ThebesLayers in the tree are
    * drawn in tree order, exactly once each, except for those layers
    * where it is known that the visible region is empty.
-   *
-   * If aCallback is null, this is a 'null' transaction.
-   * There must have been no updates to the layer tree in this transaction.
-   * A null transaction can fail, in which case EndTransaction returns false,
-   * and the transaction must be retried with aCallback set to something non-null.
-   *
-   * If IsNullTransactionSupported() returns false, then aCallback must be non-null.
    */
-  virtual bool EndTransaction(DrawThebesLayerCallback aCallback,
+  virtual void EndTransaction(DrawThebesLayerCallback aCallback,
                               void* aCallbackData) = 0;
-
-  /**
-   * See EndTransaction description
-   */
-  virtual bool IsNullTransactionSupported() { return false; }
 
   PRBool IsSnappingEffectiveTransforms() { return mSnapEffectiveTransforms; } 
 

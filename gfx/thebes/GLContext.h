@@ -633,6 +633,8 @@ public:
         return PR_FALSE;
     }
 
+    virtual PRBool RenewSurface() { return PR_FALSE; }
+
     /**`
      * Return a valid, allocated TextureImage of |aSize| with
      * |aContentType|.  The TextureImage's texture is configured to
