@@ -501,9 +501,19 @@ nsSMILTimedElement::DoSampleAt(nsSMILTime aContainerTime, PRBool aEndOnly)
   if (GetTimeContainer()->IsPausedByType(nsSMILTimeContainer::PAUSE_BEGIN))
     return;
 
-  NS_ABORT_IF_FALSE(mElementState != STATE_STARTUP || aEndOnly,
-      "Got a regular sample during startup state, expected an end sample"
-      " instead");
+  // We use an end-sample to start animation since an end-sample lets us
+  // tentatively create an interval without committing to it (by transitioning
+  // to the ACTIVE state) and this is necessary because we might have
+  // dependencies on other animations that are yet to start. After these
+  // other animations start, it may be necessary to revise our initial interval.
+  //
+  // However, sometimes instead of an end-sample we can get a regular sample
+  // during STARTUP state. This can happen, for example, if we register
+  // a milestone before time t=0 and are then re-bound to the tree (which sends
+  // us back to the STARTUP state). In such a case we should just ignore the
+  // sample and wait for our real initial sample which will be an end-sample.
+  if (mElementState == STATE_STARTUP && !aEndOnly)
+    return;
 
   PRBool finishedSeek = PR_FALSE;
   if (GetTimeContainer()->IsSeeking() && mSeekState == SEEK_NOT_SEEKING) {
