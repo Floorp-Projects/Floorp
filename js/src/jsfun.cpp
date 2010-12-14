@@ -3200,7 +3200,7 @@ JSFunction::lookupLocal(JSContext *cx, JSAtom *atom, uintN *indexp)
 {
     JS_ASSERT(FUN_INTERPRETED(this));
 
-    Shape *shape = SHAPE_FETCH(Shape::search(&u.i.names, ATOM_TO_JSID(atom)));
+    Shape *shape = SHAPE_FETCH(Shape::search(cx->runtime, &u.i.names, ATOM_TO_JSID(atom)));
     if (shape) {
         JSLocalKind localKind;
 
