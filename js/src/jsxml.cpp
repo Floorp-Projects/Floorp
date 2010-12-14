@@ -7466,7 +7466,7 @@ GetXMLFunction(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         if (VALUE_IS_FUNCTION(cx, *vp))
             return true;
         target = target->getProto();
-        if (target == NULL)
+        if (target == NULL || !target->isNative())
             break;
         tvr.setObject(target);
     }
