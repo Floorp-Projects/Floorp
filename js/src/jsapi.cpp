@@ -111,6 +111,16 @@
 using namespace js;
 using namespace js::gc;
 
+static JSClass dummy_class = {
+    "jdummy",
+    JSCLASS_GLOBAL_FLAGS,
+    JS_PropertyStub,  JS_PropertyStub,
+    JS_PropertyStub,  JS_PropertyStub,
+    JS_EnumerateStub, JS_ResolveStub,
+    JS_ConvertStub,   NULL,
+    JSCLASS_NO_OPTIONAL_MEMBERS
+};
+
 class AutoVersionAPI
 {
     JSContext   * const cx;
@@ -1169,6 +1179,22 @@ JS_EnterCrossCompartmentCall(JSContext *cx, JSObject *target)
     return reinterpret_cast<JSCrossCompartmentCall *>(call);
 }
 
+JS_PUBLIC_API(JSCrossCompartmentCall *)
+JS_EnterCrossCompartmentCallScript(JSContext *cx, JSScript *target)
+{
+    CHECK_REQUEST(cx);
+
+    JS_ASSERT(target);
+    JSObject *scriptObject = target->u.object;
+    if (!scriptObject) {
+        SwitchToCompartment sc(cx, target->compartment);
+        scriptObject = JS_NewGlobalObject(cx, &dummy_class);
+        if (!scriptObject)
+            return NULL;        
+    }
+    return JS_EnterCrossCompartmentCall(cx, scriptObject);
+}
+
 JS_PUBLIC_API(void)
 JS_LeaveCrossCompartmentCall(JSCrossCompartmentCall *call)
 {
@@ -1188,6 +1214,18 @@ JSAutoEnterCompartment::enter(JSContext *cx, JSObject *target)
     }
     call = JS_EnterCrossCompartmentCall(cx, target);
     return call != NULL;
+}
+
+bool
+JSAutoEnterCompartment::enter(JSContext *cx, JSScript *target)
+{
+    JS_ASSERT(!call);
+    if (cx->compartment == target->compartment) {
+        call = reinterpret_cast<JSCrossCompartmentCall*>(1);
+        return true;
+    }
+    call = JS_EnterCrossCompartmentCallScript(cx, target);
+    return call != NULL;    
 }
 
 void

@@ -1033,17 +1033,27 @@ jsdScript::CreatePPLineMap()
     JSObject   *obj = JS_NewObject(cx, NULL, NULL, NULL);
     JSFunction *fun = JSD_GetJSFunction (mCx, mScript);
     JSScript   *script;
+    JSString   *jsstr;
     PRUint32    baseLine;
     PRBool      scriptOwner = PR_FALSE;
     
     if (fun) {
-        uintN nargs = JS_GetFunctionArgumentCount(cx, fun);
-        if (nargs > 12)
-            return nsnull;
-        JSString *jsstr = JS_DecompileFunctionBody (cx, fun, 4);
-        if (!jsstr)
-            return nsnull;
-    
+        uintN nargs;
+
+        /* Enter a new block so we can leave before the end of this block */
+        do {
+            JSAutoEnterCompartment ac;
+            if (!ac.enter(cx, JS_GetFunctionObject(fun)))
+                return nsnull;
+
+            nargs = JS_GetFunctionArgumentCount(cx, fun);
+            if (nargs > 12)
+                return nsnull;
+            jsstr = JS_DecompileFunctionBody (cx, fun, 4);
+            if (!jsstr)
+                return nsnull;
+        } while(false);
+
         const char *argnames[] = {"arg1", "arg2", "arg3", "arg4", 
                                   "arg5", "arg6", "arg7", "arg8",
                                   "arg9", "arg10", "arg11", "arg12" };
@@ -1055,10 +1065,19 @@ jsdScript::CreatePPLineMap()
             return nsnull;
         baseLine = 3;
     } else {
-        JSString *jsstr = JS_DecompileScript (cx, JSD_GetJSScript(mCx, mScript),
-                                              "ppscript", 4);
-        if (!jsstr)
-            return nsnull;
+        /* Enter a new block so we can leave before the end of this block */
+        do {
+            script = JSD_GetJSScript(mCx, mScript);
+
+            JSAutoEnterCompartment ac;
+            if (!ac.enter(cx, script))
+                return nsnull;
+
+            jsstr = JS_DecompileScript (cx, JSD_GetJSScript(mCx, mScript),
+                                        "ppscript", 4);
+            if (!jsstr)
+                return nsnull;
+        } while(false);
 
         script = JS_CompileUCScript (cx, obj,
                                      JS_GetStringChars(jsstr),
@@ -1343,14 +1362,15 @@ jsdScript::GetFunctionSource(nsAString & aFunctionSource)
     JSAutoRequest ar(cx);
 
     JSString *jsstr;
+    JSAutoEnterCompartment ac;
     if (fun) {
-        JSAutoEnterCompartment ac;
         if (!ac.enter(cx, JS_GetFunctionObject(fun)))
             return NS_ERROR_FAILURE;
         jsstr = JS_DecompileFunction (cx, fun, 4);
     } else {
         JSScript *script = JSD_GetJSScript (mCx, mScript);
-        js::SwitchToCompartment sc(cx, script->compartment);
+        if (!ac.enter(cx, script))
+            return NS_ERROR_FAILURE;
         jsstr = JS_DecompileScript (cx, script, "ppscript", 4);
     }
     if (!jsstr)
