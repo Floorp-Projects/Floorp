@@ -1,3 +1,5 @@
+var gProfD;
+
 // Load httpd from the add-on test harness or from xpcshell and declare Cc, etc.
 // without a var/const so they don't get hoisted and conflict with load_httpd.
 if (this.do_load_httpd_js == null) {
@@ -6,10 +8,15 @@ if (this.do_load_httpd_js == null) {
   Cr = Components.results;
   Cu = Components.utils;
   Cu.import("resource://harness/modules/httpd.js");
+
+  let file = Cc["@mozilla.org/file/directory_service;1"]
+               .getService(Ci.nsIProperties)
+               .get("ProfD", Ci.nsIFile);  
+  gProfD = file.clone();
 }
 else {
   do_load_httpd_js();
-  do_get_profile();
+  gProfD = do_get_profile();
 }
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
