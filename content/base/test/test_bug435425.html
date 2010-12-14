@@ -30,7 +30,7 @@ function logEvent(evt) {
   while ((currentEvents.length != i) &&
          currentEvents[i].optional &&
          ((currentEvents[i].type != evt.type) ||
-          (!evt.target instanceof currentEvents[i].target))) {
+          !(evt.target instanceof currentEvents[i].target))) {
     ++i;
   }
   ok(i != currentEvents.length, "Extra or wrong event?");

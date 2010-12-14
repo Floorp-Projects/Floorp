@@ -230,7 +230,7 @@ static inline bool apply_lookup (hb_apply_context_t *c,
 				 apply_lookup_func_t apply_func)
 {
   unsigned int end = MIN (c->buffer->len, c->buffer->i + c->context_length);
-  if (unlikely (c->buffer->i + count > end))
+  if (unlikely (count == 0 || c->buffer->i + count > end))
     return false;
 
   /* TODO We don't support lookupRecord arrays that are not increasing:

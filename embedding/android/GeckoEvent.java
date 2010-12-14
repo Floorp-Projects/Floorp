@@ -68,6 +68,9 @@ public class GeckoEvent {
     public static final int ACTIVITY_SHUTDOWN = 10;
     public static final int LOAD_URI = 11;
 
+    public static final int SURFACE_CREATED = 12;
+    public static final int SURFACE_DESTROYED = 13;
+
     public static final int IME_COMPOSITION_END = 0;
     public static final int IME_COMPOSITION_BEGIN = 1;
     public static final int IME_SET_TEXT = 2;

@@ -40,8 +40,11 @@
 [scriptable, uuid(b52356e1-45c5-4d61-b61a-fb9bd91690e1)]
 interface nsIDOMFileException : nsISupports
 {
-  const unsigned short NOT_FOUND_ERR    = 0;
-  const unsigned short NOT_READABLE_ERR = 1;
-
+  const unsigned short NOT_FOUND_ERR = 1;
+  const unsigned short SECURITY_ERR = 2;
+  const unsigned short ABORT_ERR = 3;
+  const unsigned short NOT_READABLE_ERR = 4;
+  const unsigned short ENCODING_ERR = 5;
+ 
   readonly attribute unsigned short code;
 };
