@@ -275,11 +275,10 @@
             return;
           }
 
-          if (aTriggeringEvent && aTriggeringEvent.altKey) {
+          if (aTriggeringEvent &&
+              aTriggeringEvent.altKey &&
+              !isTabEmpty(gBrowser.selectedTab)) {
             this.handleRevert();
-            let prevTab = gBrowser.selectedTab;
-            if (isTabEmpty(prevTab))
-              gBrowser.removeTab(prevTab);
             content.focus();
             gBrowser.loadOneTab(url, {
                                 postData: postData,
