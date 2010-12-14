@@ -5515,7 +5515,6 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
                     return false;
 
                 JS_ASSERT(IsFunctionObject(*vp));
-                JS_ASSERT(!(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
 
                 JSObject *funobj = &vp->toObject();
                 JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
