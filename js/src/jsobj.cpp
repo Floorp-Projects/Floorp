@@ -4523,7 +4523,7 @@ CallAddPropertyHook(JSContext *cx, Class *clasp, JSObject *obj, const Shape *sha
     if (clasp->addProperty != PropertyStub) {
         Value nominal = *vp;
 
-        if (!CallJSPropertyOp(cx, clasp->addProperty, obj, SHAPE_USERID(shape), vp))
+        if (!CallJSPropertyOp(cx, clasp->addProperty, obj, shape->id, vp))
             return false;
         if (*vp != nominal) {
             if (obj->containsSlot(shape->slot))
@@ -5495,10 +5495,8 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
         if (pobj != obj) {
             /*
              * We found id in a prototype object: prepare to share or shadow.
-             *
-             * Don't clone a prototype property that doesn't have a slot.
              */
-            if (!shape->hasSlot()) {
+            if (!shape->shadowable()) {
                 if (defineHow & JSDNP_CACHE_RESULT) {
 #ifdef JS_TRACER
                     JS_ASSERT_NOT_ON_TRACE(cx);
@@ -5514,21 +5512,33 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
                 return shape->set(cx, obj, vp);
             }
 
-            /* Restore attrs to the ECMA default for new properties. */
-            attrs = JSPROP_ENUMERATE;
-
             /*
-             * Preserve the shortid, getter, and setter when shadowing any
-             * property that has a shortid.  An old API convention requires
-             * that the property's getter and setter functions receive the
-             * shortid, not id, when they are called on the shadow we are
+             * Preserve attrs except JSPROP_SHARED, getter, and setter when
+             * shadowing any property that has no slot (is shared). We must
+             * clear the shared attribute for the shadowing shape so that the
+             * property in obj that it defines has a slot to retain the value
+             * being set, in case the setter simply cannot operate on instances
+             * of obj's class by storing the value in some class-specific
+             * location.
+             *
+             * A subset of slotless shared properties is the set of properties
+             * with shortids, which must be preserved too. An old API requires
+             * that the property's getter and setter receive the shortid, not
+             * id, when they are called on the shadowing property that we are
              * about to create in obj.
              */
-            if (shape->hasShortID()) {
-                flags = Shape::HAS_SHORTID;
-                shortid = shape->shortid;
+            if (!shape->hasSlot()) {
+                defineHow &= ~JSDNP_SET_METHOD;
+                if (shape->hasShortID()) {
+                    flags = Shape::HAS_SHORTID;
+                    shortid = shape->shortid;
+                }
+                attrs &= ~JSPROP_SHARED;
                 getter = shape->getter();
                 setter = shape->setter();
+            } else {
+                /* Restore attrs to the ECMA default for new properties. */
+                attrs = JSPROP_ENUMERATE;
             }
 
             /*
