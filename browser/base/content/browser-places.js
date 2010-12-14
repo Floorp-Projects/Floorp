@@ -961,6 +961,11 @@ var PlacesStarButton = {
     // Hide the star while we update its state.
     this._starIcon.hidden = true;
 
+    // We can load about:blank before the actual page, but there is no point in handling that page.
+    if (this._uri.spec == "about:blank") {
+      return;
+    }
+
     PlacesUtils.asyncGetBookmarkIds(this._uri, function (aItemIds) {
       this._itemIds = aItemIds;
       this._updateStateInternal();
