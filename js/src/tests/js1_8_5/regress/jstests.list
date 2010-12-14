@@ -11,6 +11,7 @@ script regress-546615.js
 script regress-551763-0.js
 script regress-551763-1.js
 script regress-551763-2.js
+script regress-552432.js
 script regress-553778.js
 script regress-555246-0.js
 script regress-555246-1.js
