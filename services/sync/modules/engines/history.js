@@ -160,6 +160,7 @@ HistoryStore.prototype = {
       return this.__setGUIDStm;
     }
 
+    // Obtains a statement to set the guid iff the guid column exists.
     let stmt;
     try {
       stmt = this._getStmt(
