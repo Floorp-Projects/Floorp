@@ -10839,13 +10839,20 @@ TraceRecorder::newArray(JSObject* ctor, uint32 argc, Value* argv, Value* rval)
     CHECK_STATUS(getClassPrototype(ctor, proto_ins));
 
     LIns *arr_ins;
-    if (argc == 0 || (argc == 1 && argv[0].isNumber())) {
-        LIns *args[] = { argc == 0 ? w.immi(0) : d2i(get(argv)), proto_ins, cx_ins };
-        arr_ins = w.call(&js_NewEmptyArray_ci, args);
+    if (argc == 0) {
+        LIns *args[] = { proto_ins, cx_ins };
+        arr_ins = w.call(&js::NewDenseEmptyArray_ci, args);
         guard(false, w.eqp0(arr_ins), OOM_EXIT);
+
+    } else if (argc == 1 && argv[0].isNumber()) {
+        /* Abort on RangeError if the double doesn't fit in a uint. */
+        LIns *args[] = { proto_ins, d2i(get(argv)), cx_ins };
+        arr_ins = w.call(&js::NewDenseUnallocatedArray_ci, args);
+        guard(false, w.eqp0(arr_ins), OOM_EXIT);
+
     } else {
-        LIns *args[] = { w.nameImmi(argc), proto_ins, cx_ins };
-        arr_ins = w.call(&js_NewPreallocatedArray_ci, args);
+        LIns *args[] = { proto_ins, w.nameImmi(argc), cx_ins };
+        arr_ins = w.call(&js::NewDenseAllocatedArray_ci, args);
         guard(false, w.eqp0(arr_ins), OOM_EXIT);
 
         // arr->slots[i] = box_jsval(vp[i]);  for i in 0..argc
@@ -14073,8 +14080,8 @@ TraceRecorder::record_JSOP_NEWINIT()
 
     LIns *v_ins;
     if (key == JSProto_Array) {
-        LIns *args[] = { w.immi(0), proto_ins, cx_ins };
-        v_ins = w.call(&js_NewPreallocatedArray_ci, args);
+        LIns *args[] = { proto_ins, cx_ins };
+        v_ins = w.call(&NewDenseEmptyArray_ci, args);
     } else {
         LIns *args[] = { w.immpNull(), proto_ins, cx_ins };
         v_ins = w.call(&js_InitializerObject_ci, args);
@@ -14093,8 +14100,8 @@ TraceRecorder::record_JSOP_NEWARRAY()
     CHECK_STATUS_A(getClassPrototype(JSProto_Array, proto_ins));
 
     unsigned count = GET_UINT24(cx->regs->pc);
-    LIns *args[] = { w.immi(count), proto_ins, cx_ins };
-    LIns *v_ins = w.call(&js_NewPreallocatedArray_ci, args);
+    LIns *args[] = { proto_ins, w.immi(count), cx_ins };
+    LIns *v_ins = w.call(&NewDenseAllocatedArray_ci, args);
 
     guard(false, w.eqp0(v_ins), OOM_EXIT);
     stack(0, v_ins);
