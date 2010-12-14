@@ -2127,10 +2127,6 @@ panel[dimmed="true"] {
   -moz-appearance: none;
 }
 
-browser[tabmodalPromptShowing] {
-  filter: url("chrome://browser/skin/effects.svg#desaturate");
-}
-
 /* Add-on bar close button */
 #addonbar-closebutton {
   border: none;
