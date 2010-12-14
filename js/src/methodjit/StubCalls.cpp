@@ -1368,14 +1368,10 @@ stubs::Neg(VMFrame &f)
 JSObject * JS_FASTCALL
 stubs::NewInitArray(VMFrame &f, uint32 count)
 {
-    JSContext *cx = f.cx;
-    gc::FinalizeKind kind = GuessObjectGCKind(count, true);
-
-    JSObject *obj = NewArrayWithKind(cx, kind);
-    if (!obj || !obj->ensureSlots(cx, count))
+    JSObject *obj = NewDenseAllocatedArray(f.cx, count);
+    if (!obj)
         THROWV(NULL);
 
-    obj->setArrayLength(count);
     return obj;
 }
 
