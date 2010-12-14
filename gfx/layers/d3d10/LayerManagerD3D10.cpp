@@ -230,7 +230,7 @@ LayerManagerD3D10::BeginTransactionWithTarget(gfxContext* aTarget)
   mTarget = aTarget;
 }
 
-bool
+void
 LayerManagerD3D10::EndTransaction(DrawThebesLayerCallback aCallback,
                                   void* aCallbackData)
 {
@@ -245,7 +245,6 @@ LayerManagerD3D10::EndTransaction(DrawThebesLayerCallback aCallback,
   mCurrentCallbackInfo.Callback = nsnull;
   mCurrentCallbackInfo.CallbackData = nsnull;
   mTarget = nsnull;
-  return true;
 }
 
 already_AddRefed<ThebesLayer>

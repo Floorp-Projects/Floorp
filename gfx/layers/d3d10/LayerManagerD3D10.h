@@ -104,7 +104,7 @@ public:
     void *CallbackData;
   };
 
-  bool EndTransaction(DrawThebesLayerCallback aCallback,
+  void EndTransaction(DrawThebesLayerCallback aCallback,
                       void* aCallbackData);
 
   const CallbackInfo &GetCallbackInfo() { return mCurrentCallbackInfo; }
