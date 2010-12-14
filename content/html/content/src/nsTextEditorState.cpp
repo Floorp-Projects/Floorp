@@ -879,12 +879,12 @@ nsTextInputListener::EditAction()
   // no undo items; JS could change the value and we'd still need to save it)
   mFrame->SetValueChanged(PR_TRUE);
 
-  // Fire input event
-  mFrame->FireOnInput();
-
   if (!mSettingValue) {
     mTxtCtrlElement->OnValueChanged(PR_TRUE);
   }
+
+  // Fire input event
+  mFrame->FireOnInput();
 
   return NS_OK;
 }
