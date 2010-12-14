@@ -3366,9 +3366,16 @@ HeadsUpDisplay.prototype = {
    */
   makeCloseButton: function HUD_makeCloseButton(aToolbar)
   {
+    let hudId = this.hudId;
+
     function HUD_closeButton_onCommand() {
-      let tab = this.ownerDocument.defaultView.gBrowser.selectedTab;
-      HUDService.deactivateHUDForContext(tab);
+      let ownerDocument = this.ownerDocument;
+      let tab = ownerDocument.defaultView.gBrowser.selectedTab;
+      HUDService.animate(hudId, ANIMATE_OUT, function() {
+        if (ownerDocument.getElementById(hudId)) {
+          HUDService.deactivateHUDForContext(tab, true);
+        }
+      });
     }
 
     let closeButton = this.makeXULNode("toolbarbutton");
