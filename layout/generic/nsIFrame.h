@@ -1298,6 +1298,14 @@ public:
                                PRInt32         aModType) = 0;
 
   /**
+   * When the content states of a content object change, this method is invoked
+   * on the primary frame of that content object.
+   *
+   * @param aStates the changed states
+   */
+  virtual void ContentStatesChanged(nsEventStates aStates) { };
+
+  /**
    * Return how your frame can be split.
    */
   virtual nsSplittableType GetSplittableType() const = 0;
