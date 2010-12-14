@@ -502,11 +502,6 @@ BasicThebesLayer::Paint(gfxContext* aContext,
 
     nsIntRegion toDraw = IntersectWithClip(mVisibleRegion, target);
     if (!toDraw.IsEmpty()) {
-      if (!aCallback) {
-        BasicManager()->SetTransactionIncomplete();
-        return;
-      }
-
       target->Save();
       gfxUtils::ClipToRegionSnapped(target, toDraw);
       if (opacity != 1.0) {
@@ -1020,7 +1015,6 @@ BasicLayerManager::BasicLayerManager(nsIWidget* aWidget) :
   , mYResolution(1.0)
   , mWidget(aWidget)
   , mDoubleBuffering(BUFFER_NONE), mUsingDefaultTarget(PR_FALSE)
-  , mTransactionIncomplete(false)
 {
   MOZ_COUNT_CTOR(BasicLayerManager);
   NS_ASSERTION(aWidget, "Must provide a widget");
@@ -1191,7 +1185,7 @@ MarkLeafLayersCoveredByOpaque(Layer* aLayer, const nsIntRect& aClipRect,
   }
 }
 
-bool
+void
 BasicLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
                                   void* aCallbackData)
 {
@@ -1199,8 +1193,6 @@ BasicLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
   MOZ_LAYERS_LOG(("  ----- (beginning paint)"));
   Log();
 #endif
-
-  mTransactionIncomplete = false;
 
   NS_ASSERTION(InConstruction(), "Should be in construction phase");
 #ifdef DEBUG
@@ -1234,12 +1226,6 @@ BasicLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
                                   mRoot->GetEffectiveVisibleRegion().GetBounds(),
                                   region);
     PaintLayer(mRoot, aCallback, aCallbackData);
-    if (mTransactionIncomplete) {
-#ifdef DEBUG
-      mPhase = PHASE_NONE;
-#endif
-      return false;
-    }
 
     if (useDoubleBuffering) {
       finalTarget->SetOperator(gfxContext::OPERATOR_SOURCE);
@@ -1258,7 +1244,6 @@ BasicLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
   mPhase = PHASE_NONE;
 #endif
   mUsingDefaultTarget = PR_FALSE;
-  return true;
 }
 
 void
@@ -1324,16 +1309,10 @@ BasicLayerManager::PaintLayer(Layer* aLayer,
 #endif
     if (!data->IsCoveredByOpaque()) {
       data->Paint(mTarget, aCallback, aCallbackData);
-      if (mTransactionIncomplete) {
-        return;
-      }
     }
   } else {
     for (; child; child = child->GetNextSibling()) {
       PaintLayer(child, aCallback, aCallbackData);
-      if (mTransactionIncomplete) {
-        return;
-      }
     }
   }
 
@@ -1658,11 +1637,6 @@ BasicShadowableThebesLayer::PaintBuffer(gfxContext* aContext,
                                         LayerManager::DrawThebesLayerCallback aCallback,
                                         void* aCallbackData)
 {
-  if (!aCallback) {
-    BasicManager()->SetTransactionIncomplete();
-    mIsNewBuffer = false;
-    return;
-  }
   Base::PaintBuffer(aContext, aRegionToDraw, aRegionToInvalidate,
                     aCallback, aCallbackData);
   if (!HasShadow()) {
@@ -2557,21 +2531,11 @@ BasicShadowLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
   BasicLayerManager::BeginTransactionWithTarget(aTarget);
 }
 
-bool
+void
 BasicShadowLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
                                         void* aCallbackData)
 {
-  if (!BasicLayerManager::EndTransaction(aCallback, aCallbackData)) {
-    NS_WARNING("Failed to finish transaction, clear mKeepAlive");
-    if (HasShadowManager())
-      ShadowLayerForwarder::EndTransaction(nsnull);
-    mKeepAlive.Clear();
-#ifdef DEBUG
-    mPhase = PHASE_NONE;
-#endif
-    return false;
-  }
-
+  BasicLayerManager::EndTransaction(aCallback, aCallbackData);
 #ifdef DEBUG
   mPhase = PHASE_FORWARD;
 #endif
@@ -2628,7 +2592,6 @@ BasicShadowLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
   // this may result in Layers being deleted, which results in
   // PLayer::Send__delete__() and DeallocShmem()
   mKeepAlive.Clear();
-  return true;
 }
 
 ShadowableLayer*

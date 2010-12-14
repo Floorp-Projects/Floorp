@@ -112,10 +112,11 @@ public:
     /**
      * Struct holding information about a current template rule
      */
-    struct TemplateRule {
+    class TemplateRule {
+    public:
         txStylesheet::ImportFrame* mFrame;
         PRInt32 mModeNsId;
-        nsIAtom* mModeLocalName;
+        nsCOMPtr<nsIAtom> mModeLocalName;
         txVariableMap* mParams;
     };
 
@@ -126,9 +127,9 @@ public:
     PRBool popBool();
     nsresult pushResultHandler(txAXMLEventHandler* aHandler);
     txAXMLEventHandler* popResultHandler();
-    nsresult pushTemplateRule(txStylesheet::ImportFrame* aFrame,
-                              const txExpandedName& aMode,
-                              txVariableMap* aParams);
+    void pushTemplateRule(txStylesheet::ImportFrame* aFrame,
+                          const txExpandedName& aMode,
+                          txVariableMap* aParams);
     void popTemplateRule();
     nsresult pushParamMap(txVariableMap* aParams);
     txVariableMap* popParamMap();
@@ -181,9 +182,7 @@ private:
     nsRefPtr<txAExprResult> mGlobalVarPlaceholderValue;
     PRInt32 mRecursionDepth;
 
-    TemplateRule* mTemplateRules;
-    PRInt32 mTemplateRulesBufferSize;
-    PRInt32 mTemplateRuleCount;
+    AutoInfallibleTArray<TemplateRule, 10> mTemplateRules;
 
     txIEvalContext* mEvalContext;
     txIEvalContext* mInitialEvalContext;

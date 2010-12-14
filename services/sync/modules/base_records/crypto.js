@@ -508,7 +508,6 @@ SyncKeyBundle.prototype = {
     this._hmac    = null;
     this._hmacObj = null;
     this._encrypt = null;
-    this.generateEntry();
   },
   
   /*

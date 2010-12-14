@@ -52,7 +52,17 @@ function run_test() {
     do_check_eq(Status.sync, CREDENTIALS_CHANGED);
     do_check_eq(Status.login, LOGIN_FAILED_INVALID_PASSPHRASE);
 
-    Weave.Service.login("johndoe", "ilovejane", "abcdeabcdeabcdeabcdeabcdea");
+    _("Log in with an old secret phrase, is upgraded to Sync Key.");
+    Weave.Service.login("johndoe", "ilovejane", "my old secret phrase!!1!");
+    do_check_true(Weave.Service.isLoggedIn);
+    do_check_true(Utils.isPassphrase(Weave.Service.passphrase));
+    do_check_true(Utils.isPassphrase(Weave.Service.syncKeyBundle.keyStr));
+    let syncKey = Weave.Service.passphrase;
+    Weave.Service.startOver();
+
+    Weave.Service.serverURL = "http://localhost:8080/";
+    Weave.Service.clusterURL = "http://localhost:8080/";
+    Weave.Service.login("johndoe", "ilovejane", syncKey);
     do_check_true(Weave.Service.isLoggedIn);
 
     _("Checking that remoteSetup returns true when credentials have changed.");

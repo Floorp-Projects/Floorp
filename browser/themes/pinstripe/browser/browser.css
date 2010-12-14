@@ -2284,7 +2284,3 @@ panel[dimmed="true"] {
 #addonbar-closebutton:hover:active {
   list-style-image: url("chrome://global/skin/icons/closetab-active.png");
 }
-
-browser[tabmodalPromptShowing] {
-  filter: url("chrome://browser/skin/effects.svg#blurAndDesaturate");
-}
