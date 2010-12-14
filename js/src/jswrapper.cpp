@@ -526,11 +526,26 @@ CanReify(Value *vp)
            (obj->getNativeIterator()->flags & JSITER_ENUMERATE);
 }
 
+struct AutoCloseIterator
+{
+    AutoCloseIterator(JSContext *cx, JSObject *obj) : cx(cx), obj(obj) {}
+
+    ~AutoCloseIterator() { if (obj) js_CloseIterator(cx, obj); }
+
+    void clear() { obj = NULL; }
+
+  private:
+    JSContext *cx;
+    JSObject *obj;
+};
+
 static bool
 Reify(JSContext *cx, JSCompartment *origin, Value *vp)
 {
     JSObject *iterObj = &vp->toObject();
     NativeIterator *ni = iterObj->getNativeIterator();
+
+    AutoCloseIterator close(cx, iterObj);
 
     /* Wrap the iteratee. */
     JSObject *obj = ni->obj;
@@ -556,6 +571,7 @@ Reify(JSContext *cx, JSCompartment *origin, Value *vp)
             }
         }
 
+        close.clear();
         return js_CloseIterator(cx, iterObj) &&
                VectorToKeyIterator(cx, obj, ni->flags, keys, vp);
     }
@@ -573,6 +589,7 @@ Reify(JSContext *cx, JSCompartment *origin, Value *vp)
 
     }
 
+    close.clear();
     return js_CloseIterator(cx, iterObj) &&
            VectorToValueIterator(cx, obj, ni->flags, vals, vp);
 }
