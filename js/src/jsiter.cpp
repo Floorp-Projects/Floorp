@@ -615,6 +615,14 @@ EnumeratedIdVectorToIterator(JSContext *cx, JSObject *obj, uintN flags, AutoIdVe
 
 typedef Vector<uint32, 8> ShapeVector;
 
+static inline void
+UpdateNativeIterator(NativeIterator *ni, JSObject *obj)
+{
+    // Update the object for which the native iterator is associated, so
+    // SuppressDeletedPropertyHelper will recognize the iterator as a match.
+    ni->obj = obj;
+}
+
 bool
 GetIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
 {
@@ -654,6 +662,7 @@ GetIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
                     proto->shape() == lastni->shapes_array[1] &&
                     !proto->getProto()) {
                     vp->setObject(*last);
+                    UpdateNativeIterator(lastni, obj);
                     RegisterEnumerator(cx, last, lastni);
                     return true;
                 }
@@ -691,6 +700,7 @@ GetIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
                     Compare(ni->shapes_array, shapes.begin(), ni->shapes_length)) {
                     vp->setObject(*iterobj);
 
+                    UpdateNativeIterator(ni, obj);
                     RegisterEnumerator(cx, iterobj, ni);
                     if (shapes.length() == 2)
                         JS_THREAD_DATA(cx)->lastNativeIterator = iterobj;
