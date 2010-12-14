@@ -2446,7 +2446,7 @@ TraceRecorder::finishAbort(const char* reason)
 
     AUDIT(recorderAborted);
 #ifdef DEBUG
-    debug_only_printf(LC_TMMinimal,
+    debug_only_printf(LC_TMMinimal | LC_TMAbort,
                       "Abort recording of tree %s:%d@%d at %s:%d@%d: %s.\n",
                       tree->treeFileName,
                       tree->treeLineNumber,
