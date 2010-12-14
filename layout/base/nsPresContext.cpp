@@ -2389,8 +2389,7 @@ nsRootPresContext::nsRootPresContext(nsIDocument* aDocument,
   : nsPresContext(aDocument, aType),
     mUpdatePluginGeometryForFrame(nsnull),
     mDOMGeneration(0),
-    mNeedsToUpdatePluginGeometry(PR_FALSE),
-    mUpdateLayerTree(false)
+    mNeedsToUpdatePluginGeometry(PR_FALSE)
 {
   mRegisteredPlugins.Init();
 }
