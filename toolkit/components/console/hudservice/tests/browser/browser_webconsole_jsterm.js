@@ -68,41 +68,43 @@ function testJSTerm()
 
   jsterm.clearOutput();
   jsterm.execute("'id=' + $('header').getAttribute('id')");
-  checkResult("id=header", "$() worked", 1);
+  checkResult('"id=header"', "$() worked", 1);
 
   jsterm.clearOutput();
   jsterm.execute("headerQuery = $$('h1')");
   jsterm.execute("'length=' + headerQuery.length");
-  checkResult("length=1", "$$() worked", 2);
+  checkResult('"length=1"', "$$() worked", 2);
 
   jsterm.clearOutput();
   jsterm.execute("xpathQuery = $x('.//*', document.body);");
   jsterm.execute("'headerFound='  + (xpathQuery[0] == headerQuery[0])");
-  checkResult("headerFound=true", "$x() worked", 2);
+  checkResult('"headerFound=true"', "$x() worked", 2);
 
   // no jsterm.clearOutput() here as we clear the output using the clear() fn.
   jsterm.execute("clear()");
-  checkResult("undefined", "clear() worked", 1);
+  let group = jsterm.outputNode.querySelector(".hud-group");
+  ok(!group, "clear() worked");
 
   jsterm.clearOutput();
   jsterm.execute("'keysResult=' + (keys({b:1})[0] == 'b')");
-  checkResult("keysResult=true", "keys() worked", 1);
+  checkResult('"keysResult=true"', "keys() worked", 1);
 
   jsterm.clearOutput();
   jsterm.execute("'valuesResult=' + (values({b:1})[0] == 1)");
-  checkResult("valuesResult=true", "values() worked", 1);
+  checkResult('"valuesResult=true"', "values() worked", 1);
 
   jsterm.clearOutput();
   jsterm.execute("help()");
-  checkResult("undefined", "help() worked", 1);
+  let output = jsterm.outputNode.querySelector(".jsterm-output-line");
+  ok(!group, "help() worked");
 
-  jsterm.clearOutput();
   jsterm.execute("help");
-  checkResult("undefined", "help() worked", 1);
+  output = jsterm.outputNode.querySelector(".jsterm-output-line");
+  ok(!output, "help worked");
 
-  jsterm.clearOutput();
   jsterm.execute("?");
-  checkResult("undefined", "help() worked", 1);
+  output = jsterm.outputNode.querySelector(".jsterm-output-line");
+  ok(!output, "? worked");
 
   jsterm.clearOutput();
   jsterm.execute("pprint({b:2, a:1})");
@@ -130,12 +132,12 @@ function testJSTerm()
   jsterm.clearOutput();
   jsterm.execute("pprint(window)");
   let labels = jsterm.outputNode.querySelectorAll(".jsterm-output-line");
-  ok(labels.length > 1, "more than one line of output for pprint(window)");
+  is(labels.length, 1, "one line of output for pprint(window)");
 
   jsterm.clearOutput();
   jsterm.execute("keys(window)");
-  let labels = jsterm.outputNode.querySelectorAll(".jsterm-output-line");
-  ok(labels.length, "more than 0 lines of output for keys(window)");
+  labels = jsterm.outputNode.querySelectorAll(".jsterm-output-line");
+  is(labels.length, 1, "one line of output for keys(window)");
 
   jsterm.clearOutput();
   jsterm.execute("pprint('hi')");
