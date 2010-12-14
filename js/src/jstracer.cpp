@@ -11172,7 +11172,7 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
                 }
             } else if (native == js_math_abs) {
                 LIns* a = get(&vp[2]);
-                if (IsPromoteInt(a)) {
+                if (IsPromoteInt(a) && vp[2].toNumber() != INT_MIN) {
                     a = w.demote(a);
                     /* abs(INT_MIN) can't be done using integers;  exit if we see it. */
                     LIns* intMin_ins = w.name(w.immi(0x80000000), "INT_MIN");
@@ -11190,6 +11190,8 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
                 JSString *str = vp[1].toString();
                 if (native == js_str_charAt) {
                     jsdouble i = vp[2].toNumber();
+                    if (JSDOUBLE_IS_NaN(i))
+                      i = 0;
                     if (i < 0 || i >= str->length())
                         RETURN_STOP("charAt out of bounds");
                     LIns* str_ins = get(&vp[1]);
@@ -11201,6 +11203,8 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
                     return RECORD_CONTINUE;
                 } else if (native == js_str_charCodeAt) {
                     jsdouble i = vp[2].toNumber();
+                    if (JSDOUBLE_IS_NaN(i))
+                      i = 0;
                     if (i < 0 || i >= str->length())
                         RETURN_STOP("charCodeAt out of bounds");
                     LIns* str_ins = get(&vp[1]);
