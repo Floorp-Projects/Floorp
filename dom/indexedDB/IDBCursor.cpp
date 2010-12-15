@@ -415,7 +415,7 @@ IDBCursor::GetValue(JSContext* aCx,
 
     nsCOMPtr<nsIJSON> json(new nsJSON());
     rv = json->DecodeToJSVal(mValue, aCx, &mCachedValue);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_SERIAL_ERR);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_DATA_CLONE_ERR);
 
     if (!mValueRooted) {
       NS_HOLD_JS_OBJECTS(this, IDBCursor);
@@ -435,7 +435,11 @@ IDBCursor::Continue(const jsval &aKey,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (!mTransaction->TransactionIsOpen() || mContinueCalled) {
+  if (!mTransaction->TransactionIsOpen()) {
+    return NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR;
+  }
+
+  if (mContinueCalled) {
     return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
@@ -510,6 +514,14 @@ IDBCursor::Update(const jsval& aValue,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
+  if (!mTransaction->TransactionIsOpen()) {
+    return NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR;
+  }
+
+  if (!mTransaction->IsWriteAllowed()) {
+    return NS_ERROR_DOM_INDEXEDDB_READ_ONLY_ERR;
+  }
+
   if (mType == INDEXKEY) {
     return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
@@ -564,6 +576,14 @@ IDBCursor::Delete(JSContext* aCx,
                   nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  if (!mTransaction->TransactionIsOpen()) {
+    return NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR;
+  }
+
+  if (!mTransaction->IsWriteAllowed()) {
+    return NS_ERROR_DOM_INDEXEDDB_READ_ONLY_ERR;
+  }
 
   if (mType == INDEXKEY) {
     return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;

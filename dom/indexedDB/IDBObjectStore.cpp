@@ -785,7 +785,7 @@ IDBObjectStore::GetAddInfo(JSContext* aCx,
 
   nsCOMPtr<nsIJSON> json(new nsJSON());
   rv = json->EncodeFromJSVal(&aValue, aCx, aJSON);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_SERIAL_ERR);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_DATA_CLONE_ERR);
 
   return NS_OK;
 }
@@ -800,8 +800,12 @@ IDBObjectStore::AddOrPut(const jsval& aValue,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (!mTransaction->TransactionIsOpen() || !IsWriteAllowed()) {
-    return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
+  if (!mTransaction->TransactionIsOpen()) {
+    return NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR;
+  }
+
+  if (!IsWriteAllowed()) {
+    return NS_ERROR_DOM_INDEXEDDB_READ_ONLY_ERR;
   }
 
   jsval keyval = (aOptionalArgCount >= 1) ? aKey : JSVAL_VOID;
@@ -924,7 +928,7 @@ IDBObjectStore::Get(nsIVariant* aKey,
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   if (!mTransaction->TransactionIsOpen()) {
-    return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
+    return NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR;
   }
 
   Key key;
@@ -958,7 +962,7 @@ IDBObjectStore::GetAll(nsIIDBKeyRange* aKeyRange,
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   if (!mTransaction->TransactionIsOpen()) {
-    return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
+    return NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR;
   }
 
   if (aOptionalArgCount < 2) {
@@ -1039,8 +1043,12 @@ IDBObjectStore::Delete(const jsval& aKey,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (!mTransaction->TransactionIsOpen() || !IsWriteAllowed()) {
-    return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
+  if (!mTransaction->TransactionIsOpen()) {
+    return NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR;
+  }
+
+  if (!IsWriteAllowed()) {
+    return NS_ERROR_DOM_INDEXEDDB_READ_ONLY_ERR;
   }
 
   Key key;
@@ -1071,8 +1079,12 @@ IDBObjectStore::Clear(nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (!mTransaction->TransactionIsOpen() || !IsWriteAllowed()) {
-    return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
+  if (!mTransaction->TransactionIsOpen()) {
+    return NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR;
+  }
+
+  if (!IsWriteAllowed()) {
+    return NS_ERROR_DOM_INDEXEDDB_READ_ONLY_ERR;
   }
 
   nsRefPtr<IDBRequest> request = GenerateRequest(this);
@@ -1096,7 +1108,7 @@ IDBObjectStore::OpenCursor(nsIIDBKeyRange* aKeyRange,
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   if (!mTransaction->TransactionIsOpen()) {
-    return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
+    return NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR;
   }
 
   nsresult rv;
@@ -1248,7 +1260,7 @@ IDBObjectStore::Index(const nsAString& aName,
   NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
 
   if (!mTransaction->TransactionIsOpen()) {
-    return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
+    return NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR;
   }
 
   if (aName.IsEmpty()) {

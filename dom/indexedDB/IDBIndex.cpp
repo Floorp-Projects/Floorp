@@ -354,7 +354,7 @@ IDBIndex::Get(nsIVariant* aKey,
 
   IDBTransaction* transaction = mObjectStore->Transaction();
   if (!transaction->TransactionIsOpen()) {
-    return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
+    return NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR;
   }
 
   Key key;
@@ -386,7 +386,7 @@ IDBIndex::GetKey(nsIVariant* aKey,
 
   IDBTransaction* transaction = mObjectStore->Transaction();
   if (!transaction->TransactionIsOpen()) {
-    return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
+    return NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR;
   }
 
   Key key;
@@ -422,7 +422,7 @@ IDBIndex::GetAll(nsIVariant* aKey,
 
   IDBTransaction* transaction = mObjectStore->Transaction();
   if (!transaction->TransactionIsOpen()) {
-    return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
+    return NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR;
   }
 
   nsresult rv;
@@ -466,7 +466,7 @@ IDBIndex::GetAllKeys(nsIVariant* aKey,
 
   IDBTransaction* transaction = mObjectStore->Transaction();
   if (!transaction->TransactionIsOpen()) {
-    return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
+    return NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR;
   }
 
   nsresult rv;
@@ -510,7 +510,7 @@ IDBIndex::OpenCursor(nsIIDBKeyRange* aKeyRange,
 
   IDBTransaction* transaction = mObjectStore->Transaction();
   if (!transaction->TransactionIsOpen()) {
-    return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
+    return NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR;
   }
 
   nsresult rv;
@@ -578,7 +578,7 @@ IDBIndex::OpenKeyCursor(nsIIDBKeyRange* aKeyRange,
 
   IDBTransaction* transaction = mObjectStore->Transaction();
   if (!transaction->TransactionIsOpen()) {
-    return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
+    return NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR;
   }
 
   nsresult rv;
