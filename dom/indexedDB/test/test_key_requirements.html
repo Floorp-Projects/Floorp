@@ -185,12 +185,13 @@
       request.onsuccess = unexpectedSuccessHandler;
       event = yield;
 
-      request = objectStore.add({}, null);
-      request.onerror = errorHandler;
-      request.onsuccess = grabEventAndContinueHandler;
-      event = yield;
-
-      is(typeof(event.result), "string", "Good generated key");
+      try {
+        objectStore.add({}, null);
+        ok(false, "add with null key should throw!");
+      }
+      catch (e) {
+        ok(true, "add with null key threw");
+      }
 
       try {
         objectStore.put({}, null);
