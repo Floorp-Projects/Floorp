@@ -236,6 +236,7 @@ function test()
 
     empty.set([]);
     empty.set([], 0);
+    empty.set(empty);
 
     checkThrows(function() empty.set([1]));
     checkThrows(function() empty.set([1], 0));
@@ -244,6 +245,7 @@ function test()
     a.set([]);
     a.set([], 3);
     a.set([], 9);
+    a.set(a);
 
     a.set(empty);
     a.set(empty, 3);

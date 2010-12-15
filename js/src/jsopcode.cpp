@@ -1337,7 +1337,7 @@ GetLocal(SprintStack *ss, jsint i)
      * not in a block. In either case, return GetStr(ss, i).
      */
     JSScript *script = ss->printer->script;
-    if (script->objectsOffset == 0)
+    if (!JSScript::isValidOffset(script->objectsOffset))
         return GetStr(ss, i);
 
     for (jsatomid j = 0, n = script->objects()->length; j != n; j++) {
@@ -2890,7 +2890,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                         JS_ASSERT(fp->prev()->fun() == jp->fun);
                         JS_ASSERT(FUN_INTERPRETED(jp->fun));
                         JS_ASSERT(jp->script != jp->fun->u.i.script);
-                        JS_ASSERT(jp->script->upvarsOffset != 0);
+                        JS_ASSERT(JSScript::isValidOffset(jp->script->upvarsOffset));
                     }
 #endif
                     uva = jp->script->upvars();

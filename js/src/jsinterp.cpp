@@ -616,7 +616,7 @@ NoSuchMethod(JSContext *cx, uintN argc, Value *vp, uint32 flags)
     args.callee() = obj->getSlot(JSSLOT_FOUND_FUNCTION);
     args.thisv() = vp[1];
     args[0] = obj->getSlot(JSSLOT_SAVED_ID);
-    JSObject *argsobj = js_NewArrayObject(cx, argc, vp + 2);
+    JSObject *argsobj = NewDenseCopiedArray(cx, argc, vp + 2);
     if (!argsobj)
         return JS_FALSE;
     args[1].setObject(*argsobj);
@@ -908,7 +908,7 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
     if (script->isEmpty()) {
         if (result)
             result->setUndefined();
-        return JS_TRUE;
+        return true;
     }
 
     LeaveTrace(cx);
@@ -2506,9 +2506,6 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
     Value *argv = regs.fp->maybeFormalArgs();
     CHECK_INTERRUPT_HANDLER();
 
-    JS_ASSERT(!script->isEmpty());
-    JS_ASSERT(script->length >= 1);
-
 #if defined(JS_TRACER) && defined(JS_METHODJIT)
     bool leaveOnSafePoint = (interpMode == JSINTERP_SAFEPOINT);
 # define CLEAR_LEAVE_ON_TRACE_POINT() ((void) (leaveOnSafePoint = false))
@@ -4078,8 +4075,8 @@ BEGIN_CASE(JSOP_UNBRANDTHIS)
     Value &thisv = regs.fp->thisValue();
     if (thisv.isObject()) {
         JSObject *obj = &thisv.toObject();
-        if (obj->isNative() && !obj->unbrand(cx))
-            goto error;
+        if (obj->isNative())
+            obj->unbrand(cx);
     }
 }
 END_CASE(JSOP_UNBRANDTHIS)
@@ -4293,8 +4290,7 @@ END_CASE(JSOP_CALLPROP)
 
 BEGIN_CASE(JSOP_UNBRAND)
     JS_ASSERT(regs.sp - regs.fp->slots() >= 1);
-    if (!regs.sp[-1].toObject().unbrand(cx))
-        goto error;
+    regs.sp[-1].toObject().unbrand(cx);
 END_CASE(JSOP_UNBRAND)
 
 BEGIN_CASE(JSOP_SETGNAME)
@@ -4677,7 +4673,7 @@ BEGIN_CASE(JSOP_FUNCALL)
         if (newfun->isInterpreted())
       inline_call:
         {
-            JSScript *newscript = newfun->u.i.script;
+            JSScript *newscript = newfun->script();
             if (JS_UNLIKELY(newscript->isEmpty())) {
                 vp->setUndefined();
                 regs.sp = vp + 1;
@@ -5892,7 +5888,7 @@ BEGIN_CASE(JSOP_NEWINIT)
     JSObject *obj;
 
     if (i == JSProto_Array) {
-        obj = js_NewArrayObject(cx, 0, NULL);
+        obj = NewDenseEmptyArray(cx);
     } else {
         gc::FinalizeKind kind = GuessObjectGCKind(0, false);
         obj = NewBuiltinClassInstance(cx, &js_ObjectClass, kind);
@@ -5909,10 +5905,8 @@ END_CASE(JSOP_NEWINIT)
 BEGIN_CASE(JSOP_NEWARRAY)
 {
     unsigned count = GET_UINT24(regs.pc);
-    JSObject *obj = js_NewArrayObject(cx, count, NULL);
-
-    /* Avoid ensureDenseArrayElements to skip sparse array checks there. */
-    if (!obj || !obj->ensureSlots(cx, count))
+    JSObject *obj = NewDenseAllocatedArray(cx, count);
+    if (!obj)
         goto error;
 
     PUSH_OBJECT(*obj);
@@ -6069,7 +6063,7 @@ BEGIN_CASE(JSOP_DEFSHARP)
         obj = &lref.toObject();
     } else {
         JS_ASSERT(lref.isUndefined());
-        obj = js_NewArrayObject(cx, 0, NULL);
+        obj = NewDenseEmptyArray(cx);
         if (!obj)
             goto error;
         regs.fp->slots()[slot].setObject(*obj);
@@ -6832,7 +6826,7 @@ END_CASE(JSOP_ARRAYPUSH)
         /*
          * Look for a try block in script that can catch this exception.
          */
-        if (script->trynotesOffset == 0)
+        if (!JSScript::isValidOffset(script->trynotesOffset))
             goto no_catch;
 
         offset = (uint32)(regs.pc - script->main);

@@ -5774,7 +5774,7 @@ FindInScopeNamespaces(JSContext *cx, JSXML *xml, JSXMLArray *nsarray)
 static bool
 NamespacesToJSArray(JSContext *cx, JSXMLArray *array, jsval *rval)
 {
-    JSObject *arrayobj = js_NewArrayObject(cx, 0, NULL);
+    JSObject *arrayobj = NewDenseEmptyArray(cx);
     if (!arrayobj)
         return false;
     *rval = OBJECT_TO_JSVAL(arrayobj);
@@ -7466,7 +7466,7 @@ GetXMLFunction(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         if (VALUE_IS_FUNCTION(cx, *vp))
             return true;
         target = target->getProto();
-        if (target == NULL)
+        if (target == NULL || !target->isNative())
             break;
         tvr.setObject(target);
     }
