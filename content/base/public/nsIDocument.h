@@ -214,9 +214,13 @@ public:
    * has just been bound to the document.
    */
   virtual void NotifyPossibleTitleChange(PRBool aBoundTitleElement) = 0;
-  
+
   /**
    * Return the URI for the document. May return null.
+   *
+   * The value returned corresponds to the "document's current address" in
+   * HTML5.  As such, it may change over the lifetime of the document, for
+   * instance as a result of a call to pushState() or replaceState().
    */
   nsIURI* GetDocumentURI() const
   {
@@ -224,7 +228,21 @@ public:
   }
 
   /**
-   * Set the URI for the document.
+   * Return the original URI of the document.  This is the same as the
+   * document's URI unless history.pushState() or replaceState() is invoked on
+   * the document.
+   *
+   * This method corresponds to the "document's address" in HTML5 and, once
+   * set, doesn't change over the lifetime of the document.
+   */
+  nsIURI* GetOriginalURI() const
+  {
+    return mOriginalURI;
+  }
+
+  /**
+   * Set the URI for the document.  This also sets the document's original URI,
+   * if it's null.
    */
   virtual void SetDocumentURI(nsIURI* aURI) = 0;
 
@@ -1548,6 +1566,7 @@ protected:
   }
 
   nsCOMPtr<nsIURI> mDocumentURI;
+  nsCOMPtr<nsIURI> mOriginalURI;
   nsCOMPtr<nsIURI> mDocumentBaseURI;
 
   nsWeakPtr mDocumentLoadGroup;
