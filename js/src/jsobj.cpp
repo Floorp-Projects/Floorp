@@ -2003,6 +2003,23 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropDesc &desc,
 
     JS_ASSERT(!obj->getOps()->defineProperty);
 
+    /*
+     * If we find a shared permanent property in a different object obj2 from
+     * obj, then if the property is shared permanent (an old hack to optimize
+     * per-object properties into one prototype property), ignore that lookup
+     * result (null current).
+     *
+     * FIXME: bug 575997 (see also bug 607863).
+     */
+    if (current && obj2 != obj && obj2->isNative()) {
+        /* See same assertion with comment further below. */
+        JS_ASSERT(obj2->getClass() == obj->getClass());
+
+        Shape *shape = (Shape *) current;
+        if (shape->isSharedPermanent())
+            current = NULL;
+    }
+
     /* 8.12.9 steps 2-4. */
     if (!current) {
         if (!obj->isExtensible())
