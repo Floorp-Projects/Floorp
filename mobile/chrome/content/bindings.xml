@@ -1503,6 +1503,10 @@
           let height = Math.floor(this.getBoundingClientRect().height);
           this.top = window.innerHeight - height;
           this._spacer.setAttribute("height", height);
+
+          let event = document.createEvent("Events");
+          event.initEvent("SizeChanged", true, false);
+          this.dispatchEvent(event);
         ]]></body>
       </method>
 
@@ -1542,6 +1546,7 @@
           this.removeAttribute("type");
 
           this.model = null;
+          this.contentHasChanged();
           this._spacer.hidden = true;
         ]]></body>
       </method>

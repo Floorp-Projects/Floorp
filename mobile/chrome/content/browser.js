@@ -1126,6 +1126,13 @@ var Browser = {
 
 
 Browser.MainDragger = function MainDragger() {
+  this._horizontalScrollbar = document.getElementById("horizontal-scroller");
+  this._verticalScrollbar = document.getElementById("vertical-scroller");
+  this._scrollScales = { x: 0, y: 0 };
+
+  Elements.browsers.addEventListener("PanBegin", this, false);
+  window.addEventListener("PanFinished", this, false);
+  Elements.contentNavigator.addEventListener("SizeChanged", this, false);
 };
 
 Browser.MainDragger.prototype = {
@@ -1156,8 +1163,39 @@ Browser.MainDragger.prototype = {
     Browser.tryFloatToolbar(doffset.x, 0);
     this._panScroller(Browser.controlsScrollboxScroller, doffset);
     this._panScroller(Browser.pageScrollboxScroller, doffset);
+    this._updateScrollbars();
 
     return !doffset.equals(dx, dy);
+  },
+
+  handleEvent: function handleEvent(aEvent) {
+    switch (aEvent.type) {
+      case "PanBegin": {
+        let browser = Browser.selectedBrowser;
+        let width = window.innerWidth, height = window.innerHeight;
+        let contentWidth = browser.contentDocumentWidth * browser.scale;
+        let contentHeight = browser.contentDocumentHeight * browser.scale;
+
+        // Allow a small margin on both sides to prevent adding scrollbars
+        // on small viewport approximation
+        const ALLOWED_MARGIN = 5;
+        const SCROLL_CORNER_SIZE = 8;
+        this._scrollScales = {
+          x: (width + ALLOWED_MARGIN) < contentWidth ? (width - SCROLL_CORNER_SIZE) / contentWidth : 0,
+          y: (height + ALLOWED_MARGIN) < contentHeight ? (height - SCROLL_CORNER_SIZE) / contentHeight : 0
+        }
+        this._showScrollbars();
+        break;
+      }
+      case "PanFinished":
+        this._hideScrollbars();
+        break;
+
+      case "SizeChanged":
+        let height = Elements.contentNavigator.getBoundingClientRect().height;
+        this._horizontalScrollbar.setAttribute("bottom", 2 + height);
+        break;
+    }
   },
 
   /** Return offset that pans controls away from screen. Updates doffset with leftovers. */
@@ -1188,6 +1226,46 @@ Browser.MainDragger.prototype = {
     scroller.scrollBy(doffset.x, doffset.y);
     let scroll1 = Browser.getScrollboxPosition(scroller);
     doffset.subtract(scroll1.x - scroll.x, scroll1.y - scroll.y);
+  },
+
+  _updateScrollbars: function _updateScrollbars() {
+    let scaleX = this._scrollScales.x, scaleY = this._scrollScales.y;
+    let contentScroll = Browser.getScrollboxPosition(Browser.contentScrollboxScroller);
+    if (scaleX)
+      this._horizontalScrollbar.left = contentScroll.x * scaleX;
+
+    if (scaleY) {
+      const SCROLLER_MARGIN = 2;
+      this._verticalScrollbar.top = contentScroll.y * scaleY;
+
+      // right scrollbar is out of view when showing the left sidebar,
+      // the 'solution' for now is to reposition it if needed
+      if (Browser.floatedWhileDragging) {
+        let [leftVis,,leftW,] = Browser.computeSidebarVisibility();
+        this._verticalScrollbar.setAttribute("right", Math.max(SCROLLER_MARGIN, leftW * leftVis + SCROLLER_MARGIN));
+      }
+      else if (this._verticalScrollbar.getAttribute("right") != SCROLLER_MARGIN) {
+        this._verticalScrollbar.setAttribute("right", SCROLLER_MARGIN);
+      }
+    }
+  },
+
+  _showScrollbars: function _showScrollbars() {
+    let scaleX = this._scrollScales.x, scaleY = this._scrollScales.y;
+    if (scaleX) {
+      this._horizontalScrollbar.setAttribute("panning", "true");
+      this._horizontalScrollbar.width = window.innerWidth * scaleX;
+    }
+
+    if (scaleY) {
+      this._verticalScrollbar.setAttribute("panning", "true");
+      this._verticalScrollbar.height = window.innerHeight * scaleY;
+    }
+  },
+
+  _hideScrollbars: function _hideScrollbars() {
+    this._horizontalScrollbar.removeAttribute("panning");
+    this._verticalScrollbar.removeAttribute("panning");
   }
 };
 
