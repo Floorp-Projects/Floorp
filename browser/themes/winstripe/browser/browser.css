@@ -643,9 +643,9 @@ toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   min-width: 57px;
 }
 
-#TabsToolbar .toolbarbutton-1,
-#TabsToolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button,
-#TabsToolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
+:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1,
+:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-button,
+:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
   -moz-appearance: toolbarbutton;
 %ifdef WINSTRIPE_AERO
   margin: -2px 0 -1px;
@@ -672,7 +672,7 @@ toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 }
 %endif
 
-#TabsToolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
+:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
   -moz-appearance: none;
 }
 
