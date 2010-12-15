@@ -649,6 +649,11 @@ EnumerateNames(JSContext *cx, JSObject *wrapper, uintN flags, js::AutoIdVector &
         return js::GetPropertyNames(cx, wnObject, flags, &props);
     }
 
+    if (WrapperFactory::IsPartiallyTransparent(wrapper)) {
+        JS_ReportError(cx, "Not allowed to enumerate cross origin objects");
+        return false;
+    }
+
     // Enumerate expando properties first.
     JSObject *expando = GetExpandoObject(cx, holder);
     if (!expando)
