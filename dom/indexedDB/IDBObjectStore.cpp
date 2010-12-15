@@ -934,7 +934,30 @@ IDBObjectStore::Get(nsIVariant* aKey,
   Key key;
   nsresult rv = GetKeyFromVariant(aKey, key);
   if (NS_FAILED(rv)) {
-    return rv;
+    // Check to see if this is a key range.
+    PRUint16 type;
+    rv = aKey->GetDataType(&type);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+    if (type != nsIDataType::VTYPE_INTERFACE &&
+        type != nsIDataType::VTYPE_INTERFACE_IS) {
+      return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
+    }
+
+    // XXX I hate this API. Move to jsvals, stat.
+    nsID* iid;
+    nsCOMPtr<nsISupports> supports;
+    rv = aKey->GetAsInterface(&iid, getter_AddRefs(supports));
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+    NS_Free(iid);
+
+    nsCOMPtr<nsIIDBKeyRange> keyRange = do_QueryInterface(supports);
+    if (!keyRange) {
+      return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
+    }
+
+    return GetAll(keyRange, 0, 0, _retval);
   }
 
   if (key.IsUnset()) {
