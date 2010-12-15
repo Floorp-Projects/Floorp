@@ -99,7 +99,7 @@
       objectStore = db.transaction(objectStoreName)
                       .objectStore(objectStoreName);
 
-      request = objectStore.index("height").getAllObjects(65);
+      request = objectStore.index("height").getAll(65);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
@@ -119,7 +119,7 @@
         }
       }
 
-      request = objectStore.index("height").getAllObjects();
+      request = objectStore.index("height").getAll();
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
@@ -140,7 +140,7 @@
         }
       }
 
-      request = objectStore.index("height").getAllObjects(null, 4);
+      request = objectStore.index("height").getAll(null, 4);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
@@ -160,7 +160,7 @@
         }
       }
 
-      request = objectStore.index("height").getAllObjects(65, 1);
+      request = objectStore.index("height").getAll(65, 1);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;

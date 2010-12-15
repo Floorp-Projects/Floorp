@@ -99,7 +99,7 @@
 
       let keyIndex = 0;
 
-      request = objectStore.index("weight").openCursor();
+      request = objectStore.index("weight").openKeyCursor();
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
         let cursor = event.result;

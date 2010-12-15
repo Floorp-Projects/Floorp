@@ -45,7 +45,6 @@
 
       objectStore.deleteIndex(indexName);
 
-      is(event.result, undefined, "Correct result");
       is(objectStore.indexNames.length, 0, "Correct indexNames list");
 
       finishTest();
