@@ -428,11 +428,12 @@ AsyncConnectionHelper::OnError(nsIDOMEventTarget* aTarget,
 }
 
 nsresult
-AsyncConnectionHelper::GetSuccessResult(nsIWritableVariant* /* aResult */)
+AsyncConnectionHelper::GetSuccessResult(nsIWritableVariant* aResult)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  // Leave the variant remain set to empty.
+  nsresult rv = aResult->SetAsVoid();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }

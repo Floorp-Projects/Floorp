@@ -87,9 +87,11 @@ function testSteps()
 
     // Make sure it was removed.
     request = objectStore.get(id);
-    request.onerror = new ExpectError(IDBDatabaseException.NOT_FOUND_ERR);
-    request.onsuccess = unexpectedSuccessHandler;
+    request.onerror = errorHandler;
+    request.onsuccess = grabEventAndContinueHandler;
     event = yield;
+
+    ok(event.result === undefined, "Object was deleted");
   }
 
   finishTest();
