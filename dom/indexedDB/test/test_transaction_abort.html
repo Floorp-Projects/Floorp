@@ -207,32 +207,37 @@
       yield;
 
       let keys = [];
+      let abortEventCount = 0;
       objectStore = db.transaction("foo", READ_WRITE).objectStore("foo");
 
       for (let i = 0; i < 10; i++) {
         request = objectStore.add({});
-        request.onerror = errorHandler;
+        request.onerror = function(event) {
+          is(event.code, IDBDatabaseException.ABORT_ERR, "Good code");
+          abortEventCount++;
+          event.preventDefault();
+        };
         request.onsuccess = function(event) {
           keys.push(event.result);
           if (keys.length == 5) {
-            event.transaction.abort();
-          }
-          if (keys.length == 10) {
             event.transaction.onabort = grabEventAndContinueHandler;
+            event.transaction.abort();
           }
         };
       }
       event = yield;
 
-      is(keys.length, 10, "Not enough keys!");
+      is(event.type, "abort", "Got abort event");
+      is(keys.length, 5, "Added 5 items in this transaction");
+      is(abortEventCount, 5, "Got 5 abort error events");
 
-      for (let i = 0; i < 10; i++) {
+      for (let i in keys) {
         request = db.transaction("foo").objectStore("foo").get(keys[i]);
         request.onerror = errorHandler;
         request.onsuccess = grabEventAndContinueHandler;
         event = yield;
 
-        is(event.result, undefined, "Object was removed");
+        is(event.result, undefined, "Object was removed by abort");
       }
 
       finishTest();

@@ -800,7 +800,7 @@ IDBObjectStore::AddOrPut(const jsval& aValue,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (!mTransaction->TransactionIsOpen()) {
+  if (!mTransaction->IsOpen()) {
     return NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR;
   }
 
@@ -927,7 +927,7 @@ IDBObjectStore::Get(nsIVariant* aKey,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (!mTransaction->TransactionIsOpen()) {
+  if (!mTransaction->IsOpen()) {
     return NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR;
   }
 
@@ -961,7 +961,7 @@ IDBObjectStore::GetAll(nsIIDBKeyRange* aKeyRange,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (!mTransaction->TransactionIsOpen()) {
+  if (!mTransaction->IsOpen()) {
     return NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR;
   }
 
@@ -1043,7 +1043,7 @@ IDBObjectStore::Delete(const jsval& aKey,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (!mTransaction->TransactionIsOpen()) {
+  if (!mTransaction->IsOpen()) {
     return NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR;
   }
 
@@ -1079,7 +1079,7 @@ IDBObjectStore::Clear(nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (!mTransaction->TransactionIsOpen()) {
+  if (!mTransaction->IsOpen()) {
     return NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR;
   }
 
@@ -1107,7 +1107,7 @@ IDBObjectStore::OpenCursor(nsIIDBKeyRange* aKeyRange,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (!mTransaction->TransactionIsOpen()) {
+  if (!mTransaction->IsOpen()) {
     return NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR;
   }
 
@@ -1204,7 +1204,7 @@ IDBObjectStore::CreateIndex(const nsAString& aName,
     return NS_ERROR_DOM_INDEXEDDB_CONSTRAINT_ERR;
   }
 
-  NS_ASSERTION(mTransaction->TransactionIsOpen(), "Impossible!");
+  NS_ASSERTION(mTransaction->IsOpen(), "Impossible!");
 
   DatabaseInfo* databaseInfo;
   if (!DatabaseInfo::Get(mTransaction->Database()->Id(), &databaseInfo)) {
@@ -1259,7 +1259,7 @@ IDBObjectStore::Index(const nsAString& aName,
 {
   NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
 
-  if (!mTransaction->TransactionIsOpen()) {
+  if (!mTransaction->IsOpen()) {
     return NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR;
   }
 
@@ -1325,7 +1325,7 @@ IDBObjectStore::DeleteIndex(const nsAString& aName)
     return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
-  NS_ASSERTION(mTransaction->TransactionIsOpen(), "Impossible!");
+  NS_ASSERTION(mTransaction->IsOpen(), "Impossible!");
 
   ObjectStoreInfo* info;
   if (!ObjectStoreInfo::Get(mTransaction->Database()->Id(), mName, &info)) {

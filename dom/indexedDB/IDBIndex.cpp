@@ -353,7 +353,7 @@ IDBIndex::Get(nsIVariant* aKey,
   NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
 
   IDBTransaction* transaction = mObjectStore->Transaction();
-  if (!transaction->TransactionIsOpen()) {
+  if (!transaction->IsOpen()) {
     return NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR;
   }
 
@@ -385,7 +385,7 @@ IDBIndex::GetKey(nsIVariant* aKey,
   NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
 
   IDBTransaction* transaction = mObjectStore->Transaction();
-  if (!transaction->TransactionIsOpen()) {
+  if (!transaction->IsOpen()) {
     return NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR;
   }
 
@@ -421,7 +421,7 @@ IDBIndex::GetAll(nsIVariant* aKey,
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   IDBTransaction* transaction = mObjectStore->Transaction();
-  if (!transaction->TransactionIsOpen()) {
+  if (!transaction->IsOpen()) {
     return NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR;
   }
 
@@ -465,7 +465,7 @@ IDBIndex::GetAllKeys(nsIVariant* aKey,
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   IDBTransaction* transaction = mObjectStore->Transaction();
-  if (!transaction->TransactionIsOpen()) {
+  if (!transaction->IsOpen()) {
     return NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR;
   }
 
@@ -509,7 +509,7 @@ IDBIndex::OpenCursor(nsIIDBKeyRange* aKeyRange,
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   IDBTransaction* transaction = mObjectStore->Transaction();
-  if (!transaction->TransactionIsOpen()) {
+  if (!transaction->IsOpen()) {
     return NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR;
   }
 
@@ -577,7 +577,7 @@ IDBIndex::OpenKeyCursor(nsIIDBKeyRange* aKeyRange,
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   IDBTransaction* transaction = mObjectStore->Transaction();
-  if (!transaction->TransactionIsOpen()) {
+  if (!transaction->IsOpen()) {
     return NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR;
   }
 
