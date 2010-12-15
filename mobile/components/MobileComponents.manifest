@@ -105,3 +105,7 @@ contract @mozilla.org/addons/blocklist-prompt;1 {4e6ea350-b09a-11df-94e2-0800200
 # UpdatePrompt.js
 component {88b3eb21-d072-4e3b-886d-f89d8c49fe59} UpdatePrompt.js
 contract @mozilla.org/updates/update-prompt;1 {88b3eb21-d072-4e3b-886d-f89d8c49fe59}
+
+# SSLCertErrorDialog.js
+component {ffb03576-addc-411f-9d95-c8750edb2032} SSLCertErrorDialog.js
+contract @mozilla.org/nsSSLCertErrorDialog;1 {ffb03576-addc-411f-9d95-c8750edb2032}

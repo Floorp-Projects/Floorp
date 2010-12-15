@@ -6,6 +6,7 @@ dump("!! remote browser loaded\n")
 let WebProgressListener = {
   _notifyFlags: [],
   _calculatedNotifyFlags: 0,
+  _lastLocation: null,
 
   init: function() {
     let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebProgress);
@@ -53,16 +54,22 @@ let WebProgressListener = {
   },
 
   onLocationChange: function onLocationChange(aWebProgress, aRequest, aLocationURI) {
-    let location = aLocationURI ? aLocationURI.spec : "";
+    let spec = aLocationURI ? aLocationURI.spec : "";
+    let location = spec.split("#")[0];
+
     let json = {
       contentWindowId: content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID,
       windowId: aWebProgress.DOMWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID,
       documentURI: aWebProgress.DOMWindow.document.documentURIObject.spec,
-      location: location,
+      location: spec,
       canGoBack: docShell.canGoBack,
       canGoForward: docShell.canGoForward
     };
     sendAsyncMessage("WebProgress:LocationChange", json);
+
+    // Keep track of hash changes
+    this.hashChanged = (location == this._lastLocation);
+    this._lastLocation = location;
   },
 
   onStatusChange: function onStatusChange(aWebProgress, aRequest, aStatus, aMessage) {
@@ -237,8 +244,12 @@ let DOMEvents =  {
         };
 
         // Clear onload focus to prevent the VKB to be shown unexpectingly
-        let focusManager = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
-        focusManager.clearFocus(content);
+        // but only if the location has really changed and not only the
+        // fragment identifier
+        if (!WebProgressListener.hashChanged) {
+          let focusManager = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
+          focusManager.clearFocus(content);
+        }
 
         sendAsyncMessage(aEvent.type, json);
         break;
