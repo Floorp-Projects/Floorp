@@ -13,14 +13,13 @@
  *
  * The Original Code is Weave
  *
- * The Initial Developer of the Original Code is
- * the Mozilla Foundation.
+ * The Initial Developer of the Original Code is Mozilla.
  * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Dan Mills <thunder@mozilla.com>
- *   Richard Newman <rnewman@mozilla.com>
+ *  Dan Mills <thunder@mozilla.com>
+ *  Richard Newman <rnewman@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -122,7 +121,6 @@ HistoryStore.prototype = {
   },
 
   get _addGUIDAnnotationNameStm() {
-    // Gecko <2.0 only
     let stmt = this._getStmt(
       "INSERT OR IGNORE INTO moz_anno_attributes (name) VALUES (:anno_name)");
     stmt.params.anno_name = GUID_ANNO;
@@ -130,22 +128,32 @@ HistoryStore.prototype = {
   },
 
   get _checkGUIDPageAnnotationStm() {
-    // Gecko <2.0 only
-    let stmt = this._getStmt(
+    let base =
       "SELECT h.id AS place_id, " +
         "(SELECT id FROM moz_anno_attributes WHERE name = :anno_name) AS name_id, " +
-        "a.id AS anno_id, a.dateAdded AS anno_date " +
-      "FROM (SELECT id FROM moz_places_temp WHERE url = :page_url " +
-            "UNION " +
-            "SELECT id FROM moz_places WHERE url = :page_url) AS h " +
-      "LEFT JOIN moz_annos a ON a.place_id = h.id " +
-                           "AND a.anno_attribute_id = name_id");
+        "a.id AS anno_id, a.dateAdded AS anno_date ";
+    let stmt;
+    if (this._haveTempTables) {
+      // Gecko <2.0
+      stmt = this._getStmt(base +
+        "FROM (SELECT id FROM moz_places_temp WHERE url = :page_url " +
+              "UNION " +
+              "SELECT id FROM moz_places WHERE url = :page_url) AS h " +
+        "LEFT JOIN moz_annos a ON a.place_id = h.id " +
+                             "AND a.anno_attribute_id = name_id");
+    } else {
+      // Gecko 2.0
+      stmt = this._getStmt(base +
+        "FROM moz_places h " + 
+        "LEFT JOIN moz_annos a ON a.place_id = h.id " +
+                             "AND a.anno_attribute_id = name_id " +
+        "WHERE h.url = :page_url");
+    }
     stmt.params.anno_name = GUID_ANNO;
     return stmt;
   },
 
   get _addPageAnnotationStm() {
-    // Gecko <2.0 only
     return this._getStmt(
     "INSERT OR REPLACE INTO moz_annos " +
       "(id, place_id, anno_attribute_id, mime_type, content, flags, " +
@@ -154,43 +162,12 @@ HistoryStore.prototype = {
             ":expiration, :type, :date_added, :last_modified)");
   },
 
-  __setGUIDStm: null,
-  get _setGUIDStm() {
-    if (this.__setGUIDStm !== null) {
-      return this.__setGUIDStm;
-    }
-
-    // Obtains a statement to set the guid iff the guid column exists.
-    let stmt;
-    try {
-      stmt = this._getStmt(
-        "UPDATE moz_places " +
-        "SET guid = :guid " +
-        "WHERE url = :page_url");
-    }
-    catch (e) {
-      stmt = false;
-    }
-
-    return this.__setGUIDStm = stmt;
-  },
-
   // Some helper functions to handle GUIDs
   setGUID: function setGUID(uri, guid) {
     uri = uri.spec ? uri.spec : uri;
 
     if (arguments.length == 1)
       guid = Utils.makeGUID();
-
-    // If we can, set the GUID on moz_places and do not do any other work.
-    let (stmt = this._setGUIDStm) {
-      if (stmt) {
-        stmt.params.guid = guid;
-        stmt.params.page_url = uri;
-        Utils.queryAsync(stmt);
-        return guid;
-      }
-    }
 
     // Ensure annotation name exists
     Utils.queryAsync(this._addGUIDAnnotationNameStm);
@@ -225,36 +202,29 @@ HistoryStore.prototype = {
     return guid;
   },
 
-  __guidStm: null,
   get _guidStm() {
-    if (this.__guidStm) {
-      return this.__guidStm;
-    }
-
-    // Try to first read from moz_places.  Creating the statement will throw
-    // if the column doesn't exist, though so fallback to just reading from
-    // the annotation table.
-    let stmt;
-    try {
-      stmt = this._getStmt(
-        "SELECT guid " +
-        "FROM moz_places " +
-        "WHERE url = :page_url");
-    }
-    catch (e) {
-      stmt = this._getStmt(
-        "SELECT a.content AS guid " +
-        "FROM moz_annos a " +
-        "JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id " +
+    let base =
+      "SELECT a.content AS guid " +
+      "FROM moz_annos a " +
+      "JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id ";
+    let stm;
+    if (this._haveTempTables) {
+      // Gecko <2.0
+      stm = this._getStmt(base +
         "JOIN ( " +
           "SELECT id FROM moz_places_temp WHERE url = :page_url " +
           "UNION " +
           "SELECT id FROM moz_places WHERE url = :page_url " +
         ") AS h ON h.id = a.place_id " +
-        "WHERE n.name = '" + GUID_ANNO + "'");
+        "WHERE n.name = :anno_name");
+    } else {
+      // Gecko 2.0
+      stm = this._getStmt(base +
+        "JOIN moz_places h ON h.id = a.place_id " +
+        "WHERE n.name = :anno_name AND h.url = :page_url");
     }
-
-    return this.__guidStmt = stmt;
+    stm.params.anno_name = GUID_ANNO;
+    return stm;
   },
 
   GUIDForUri: function GUIDForUri(uri, create) {
@@ -263,7 +233,7 @@ HistoryStore.prototype = {
 
     // Use the existing GUID if it exists
     let result = Utils.queryAsync(stm, ["guid"])[0];
-    if (result && result.guid)
+    if (result)
       return result.guid;
 
     // Give the uri a GUID if it doesn't have one
@@ -294,38 +264,24 @@ HistoryStore.prototype = {
       "ORDER BY date DESC LIMIT 10");
   },
 
-  __urlStmt: null,
   get _urlStm() {
-    if (this.__urlStmt) {
-      return this.__urlStmt;
-    }
-
-    // Try to first read from moz_places.  Creating the statement will throw
-    // if the column doesn't exist, though so fallback to just reading from
-    // the annotation table.
-    let stmt;
-    try {
-      stmt = this._getStmt(
-        "SELECT url, title, frecency " +
-        "FROM moz_places " +
-        "WHERE guid = :guid");
-    }
-    catch (e) {
-      let where =
-        "WHERE id = (" +
-          "SELECT place_id " +
-          "FROM moz_annos " +
-          "WHERE content = :guid AND anno_attribute_id = (" +
-            "SELECT id " +
-            "FROM moz_anno_attributes " +
-            "WHERE name = '" + GUID_ANNO + "')) ";
-      stmt = this._getStmt(
+    let where =
+      "WHERE id = (" +
+        "SELECT place_id " +
+        "FROM moz_annos " +
+        "WHERE content = :guid AND anno_attribute_id = (" +
+          "SELECT id " +
+          "FROM moz_anno_attributes " +
+          "WHERE name = '" + GUID_ANNO + "')) ";
+    // Gecko <2.0
+    if (this._haveTempTables)
+      return this._getStmt(
         "SELECT url, title, frecency FROM moz_places_temp " + where +
         "UNION ALL " +
         "SELECT url, title, frecency FROM moz_places " + where + "LIMIT 1");
-    }
-
-    return this.__urlStmt = stmt;
+    // Gecko 2.0
+    return this._getStmt(
+      "SELECT url, title, frecency FROM moz_places " + where + "LIMIT 1");
   },
 
   get _allUrlStm() {
