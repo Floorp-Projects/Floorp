@@ -264,11 +264,6 @@ MOZ_ARG_WITH_STRING(android-sdk,
                           location where the Android SDK can be found (base directory, e.g. .../android/platforms/android-6)],
     android_sdk=$withval)
 
-MOZ_ARG_WITH_STRING(android-tools,
-[  --with-android-tools=DIR
-                          location where the Android Tools can be found (base directory, e.g. .../android/tools)],
-    android_tools=$withval)
-
 if test "$target" = "arm-android-eabi" ; then
     if test -z "$android_ndk" ; then
         AC_MSG_ERROR([You must specify --with-android-ndk=/path/to/ndk when targeting Android.])
@@ -278,8 +273,9 @@ if test "$target" = "arm-android-eabi" ; then
         AC_MSG_ERROR([You must specify --with-android-sdk=/path/to/sdk when targeting Android.])
     fi
 
-    if test -z "$android_tools" ; then
-        AC_MSG_ERROR([You must specify --with-android-tools=/path/to/sdk/tools when targeting Android.])
+    android_platform_tools="$android_sdk"/../../platform-tools
+    if test ! -d "$android_platform_tools" ; then
+        android_platform_tools="$android_sdk"/tools # SDK Tools < r8
     fi
 
     if test -z "$android_toolchain" ; then
@@ -328,7 +324,7 @@ if test "$target" = "arm-android-eabi" ; then
     ANDROID_TOOLCHAIN="{android_toolchain}"
     ANDROID_PLATFORM="{android_platform}"
     ANDROID_SDK="${android_sdk}"
-    ANDROID_TOOLS="${android_tools}"
+    ANDROID_PLATFORM_TOOLS="${android_platform_tools}"
     ANDROID_VERSION="${android_version}"
 
     AC_DEFINE(ANDROID)
@@ -343,7 +339,7 @@ AC_SUBST(ANDROID_NDK)
 AC_SUBST(ANDROID_TOOLCHAIN)
 AC_SUBST(ANDROID_PLATFORM)
 AC_SUBST(ANDROID_SDK)
-AC_SUBST(ANDROID_TOOLS)
+AC_SUBST(ANDROID_PLATFORM_TOOLS)
 
 dnl ========================================================
 dnl Checks for compilers.
