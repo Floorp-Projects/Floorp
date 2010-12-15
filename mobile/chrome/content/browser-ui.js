@@ -1862,6 +1862,7 @@ var FormHelperUI = {
     messageManager.addMessageListener("FormAssist:Show", this);
     messageManager.addMessageListener("FormAssist:Hide", this);
     messageManager.addMessageListener("FormAssist:Update", this);
+    messageManager.addMessageListener("FormAssist:Resize", this);
     messageManager.addMessageListener("FormAssist:AutoComplete", this);
 
     // Listen for events where form assistant should be closed or updated
@@ -1959,6 +1960,11 @@ var FormHelperUI = {
         // FormHelperUI
         this.enabled ? this.show(json.current, json.hasPrevious, json.hasNext)
                      : SelectHelperUI.show(json.current.choices);
+        break;
+
+      case "FormAssist:Resize":
+        let element = json.current;
+        this._zoom(Rect.fromRect(element.rect), Rect.fromRect(element.caretRect));
         break;
 
       case "FormAssist:Hide":
