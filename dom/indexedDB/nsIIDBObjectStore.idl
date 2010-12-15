@@ -55,7 +55,7 @@ interface nsIDOMDOMStringList;
  * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-nsIIDBObjectStore
  * for more information.
  */
-[scriptable, uuid(626fd729-d66a-4b49-bbaf-058f1c375449)]
+[scriptable, uuid(64f34805-d3e3-4305-91f8-b2cafac3d33c)]
 interface nsIIDBObjectStore : nsISupports
 {
   readonly attribute DOMString name;
@@ -89,8 +89,9 @@ interface nsIIDBObjectStore : nsISupports
       [optional /* undefined */] in jsval key);
 
   // Success fires IDBTransactionEvent, result == null
+  [implicit_jscontext]
   nsIIDBRequest
-  delete(in nsIVariant key);
+  delete(in jsval key);
 
   // Success fires IDBTransactionEvent, result == null
   nsIIDBRequest

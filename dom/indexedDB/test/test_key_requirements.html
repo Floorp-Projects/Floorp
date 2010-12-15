@@ -134,6 +134,14 @@
       }
 
       try {
+        objectStore.add({id:5}, 5);
+        ok(false, "add with inline key and passed key should throw!");
+      }
+      catch (e) {
+        ok(true, "add with inline key and passed key threw");
+      }
+
+      try {
         objectStore.put({});
         ok(false, "put with no key should throw!");
       }
@@ -264,6 +272,14 @@
       }
       catch (e) {
         ok(true, "remove with no key threw");
+      }
+
+      try {
+        objectStore.add({id:5}, 5);
+        ok(false, "add with inline key and passed key should throw!");
+      }
+      catch (e) {
+        ok(true, "add with inline key and passed key threw");
       }
 
       request = objectStore.delete(key2);
