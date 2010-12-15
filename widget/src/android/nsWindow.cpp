@@ -1517,8 +1517,6 @@ nsWindow::OnKeyEvent(AndroidGeckoEvent *ae)
 
     nsKeyEvent event(PR_TRUE, msg, this);
     InitKeyEvent(event, *ae);
-    if (event.charCode)
-        event.keyCode = 0;
     DispatchEvent(&event);
 
     if (isDown) {
