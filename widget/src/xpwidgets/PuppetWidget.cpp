@@ -335,16 +335,19 @@ PuppetWidget::GetThebesSurface()
 nsresult
 PuppetWidget::IMEEndComposition(PRBool aCancel)
 {
-  if (!mIMEComposing)
-    return NS_OK;
-
   nsEventStatus status;
   nsTextEvent textEvent(PR_TRUE, NS_TEXT_TEXT, this);
   InitEvent(textEvent, nsnull);
+  // SendEndIMEComposition is always called since ResetInputState
+  // should always be called even if we aren't composing something.
   if (!mTabChild ||
       !mTabChild->SendEndIMEComposition(aCancel, &textEvent.theText)) {
     return NS_ERROR_FAILURE;
   }
+
+  if (!mIMEComposing)
+    return NS_OK;
+
   DispatchEvent(&textEvent, status);
 
   nsCompositionEvent compEvent(PR_TRUE, NS_COMPOSITION_END, this);
