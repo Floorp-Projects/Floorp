@@ -495,5 +495,4 @@ pref("services.sync.autoconnectDelay", 5);
 // threshold where a tap becomes a drag, in 1/240" reference pixels
 pref("ui.dragThreshold", 24);
 
-// Waiting on bug 598864
-pref("layers.accelerate-all", false);
+pref("layers.accelerate-all", true);
