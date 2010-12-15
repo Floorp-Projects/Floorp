@@ -249,10 +249,16 @@ var Browser = {
     // Saved the scrolls values before the resizing of the window, to restore
     // the scrollbox position once the resize has finished
     window.addEventListener("MozBeforeResize", function(aEvent) {
+      if (aEvent.target != window)
+        return;
+
       let { x: x1, y: y1 } = Browser.getScrollboxPosition(Browser.controlsScrollboxScroller);
       let { x: x2, y: y2 } = Browser.getScrollboxPosition(Browser.pageScrollboxScroller);
+      let [,, leftWidth, rightWidth] = Browser.computeSidebarVisibility();
 
-      Browser.controlsPosition = { x: x1, y: y2, hideSidebars: Browser.controlsPosition ? Browser.controlsPosition.hideSidebars : true };
+      let shouldHideSidebars = Browser.controlsPosition ? Browser.controlsPosition.hideSidebars : true;
+      Browser.controlsPosition = { x: x1, y: y2, hideSidebars: shouldHideSidebars,
+                                   leftSidebar: leftWidth, rightSidebar: rightWidth };
     }, false);
 
     function resizeHandler(e) {
@@ -277,12 +283,20 @@ var Browser = {
       BrowserUI.sizeControls(w, h);
 
       // Restore the previous scroll position
-      if (Browser.controlsPosition.hideSidebars) {
-        Browser.controlsPosition.hideSidebars = false;
+      let restorePosition = Browser.controlsPosition;
+      if (restorePosition.hideSidebars) {
+        restorePosition.hideSidebars = false;
         Browser.hideSidebars();
       } else {
-        Browser.controlsScrollboxScroller.scrollTo(Browser.controlsPosition.x, 0);
-        Browser.pageScrollboxScroller.scrollTo(0, Browser.controlsPosition.y);
+        // Handle Width transformation of the tabs sidebar
+        if (restorePosition.x) {
+          let [,, leftWidth, rightWidth] = Browser.computeSidebarVisibility();
+          let delta = ((restorePosition.leftSidebar - leftWidth) || (restorePosition.rightSidebar - rightWidth));
+          restorePosition.x += (restorePosition.x == leftWidth) ? delta : -delta;
+        }
+
+        Browser.controlsScrollboxScroller.scrollTo(restorePosition.x, 0);
+        Browser.pageScrollboxScroller.scrollTo(0, restorePosition.y);
         Browser.tryFloatToolbar(0, 0);
       }
 

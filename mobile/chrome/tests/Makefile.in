@@ -85,6 +85,12 @@ _BROWSER_FILES = \
   browser_upgrade.rdf\
   $(NULL)
 
+ifndef ANDROID
+ifndef MOZ_PLATFORM_MAEMO
+_BROWSER_FILES +=  browser_sidebars.js
+endif
+endif
+
 libs:: $(_BROWSER_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
 
