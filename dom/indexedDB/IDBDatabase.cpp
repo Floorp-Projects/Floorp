@@ -885,7 +885,7 @@ SetVersionHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 }
 
 nsresult
-SetVersionHelper::GetSuccessResult(nsIWritableVariant* /* aResult */)
+SetVersionHelper::GetSuccessResult(nsIWritableVariant* aResult)
 {
   DatabaseInfo* info;
   if (!DatabaseInfo::Get(mDatabase->Id(), &info)) {
@@ -894,6 +894,7 @@ SetVersionHelper::GetSuccessResult(nsIWritableVariant* /* aResult */)
   }
   info->version = mVersion;
 
+  aResult->SetAsISupports(static_cast<nsPIDOMEventTarget*>(mTransaction));
   return NS_OK;
 }
 
