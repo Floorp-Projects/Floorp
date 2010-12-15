@@ -145,6 +145,14 @@ AsyncConnectionHelper::Run()
       mRequest->SetDone();
     }
 
+    if (mTransaction &&
+        mTransaction->IsAborted() &&
+        NS_SUCCEEDED(mResultCode)) {
+      // Don't fire success events if the transaction has since been aborted.
+      // Instead convert to an error event.
+      mResultCode = NS_ERROR_DOM_INDEXEDDB_ABORT_ERR;
+    }
+
     IDBTransaction* oldTransaction = gCurrentTransaction;
     gCurrentTransaction = mTransaction;
 
@@ -375,9 +383,14 @@ AsyncConnectionHelper::OnSuccess(nsIDOMEventTarget* aTarget)
   nsEvent* internalEvent = privateEvent->GetInternalNSEvent();
   NS_ASSERTION(internalEvent, "This should never be null!");
 
+  NS_ASSERTION(!mTransaction ||
+               mTransaction->IsOpen() ||
+               mTransaction->IsAborted(),
+               "How else can this be closed?!");
+
   if ((internalEvent->flags & NS_EVENT_FLAG_EXCEPTION_THROWN) &&
       mTransaction &&
-      mTransaction->TransactionIsOpen()) {
+      mTransaction->IsOpen()) {
     rv = mTransaction->Abort();
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -401,9 +414,14 @@ AsyncConnectionHelper::OnError(nsIDOMEventTarget* aTarget,
   PRBool doDefault;
   nsresult rv = aTarget->DispatchEvent(event, &doDefault);
   if (NS_SUCCEEDED(rv)) {
+    NS_ASSERTION(!mTransaction ||
+                 mTransaction->IsOpen() ||
+                 mTransaction->IsAborted(),
+                 "How else can this be closed?!");
+
     if (doDefault &&
         mTransaction &&
-        mTransaction->TransactionIsOpen() &&
+        mTransaction->IsOpen() &&
         NS_FAILED(mTransaction->Abort())) {
       NS_WARNING("Failed to abort transaction!");
     }
