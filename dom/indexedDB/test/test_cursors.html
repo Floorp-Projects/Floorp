@@ -314,9 +314,11 @@
       is(gotRemoveEvent, true, "Saw the remove event");
 
       request = objectStore.get(sortedKeys[4]);
-      request.onerror = new ExpectError(IDBDatabaseException.NOT_FOUND_ERR);
-      request.onsuccess = unexpectedSuccessHandler;
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
       event = yield;
+
+      is(event.result, undefined, "Entry was deleted");
 
       request = objectStore.add("foo", sortedKeys[4]);
       request.onerror = errorHandler;
