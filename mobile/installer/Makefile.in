@@ -43,85 +43,58 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-GRE_MILESTONE = $(shell $(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(LIBXUL_DIST)/bin/platform.ini Build Milestone)
-GRE_BUILDID = $(shell $(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(LIBXUL_DIST)/bin/platform.ini Build BuildID)
-ABS_OBJDIR=`cd $(DEPTH); pwd`
-ABS_TOPSRCDIR=$(shell cd $(topsrcdir); pwd)
-BASE64_ICON = dist/branding/fennec_maemo_icon26.txt
-MOZ_DEB_TIMESTAMP = "$(shell date  +"%a, %d  %b %Y %T %z" )"
-
-DEB_PKG_VERSION = $(shell echo $(MOZ_APP_VERSION) | $(PERL) -pe 's/pre/~$(GRE_BUILDID)/; s/^([0-9.]+)([a-z][0-9]+)/$$1~$$2/')
-
-DEB_BUILD_ARCH = $(shell dpkg-architecture -qDEB_BUILD_ARCH)
-# package name should match mobile/installer/debian/changelog.in
-DEB_PKG_NAME = $(MOZ_PKG_APPNAME)_$(DEB_PKG_VERSION)_$(DEB_BUILD_ARCH).deb
-
-DEFINES += \
-	-DGRE_MILESTONE=$(GRE_MILESTONE) \
-	-DGRE_BUILDID=$(GRE_BUILDID) \
-	-Dinstalldir=$(installdir) \
-	-DMOZ_APP_NAME=$(MOZ_APP_NAME) \
-	-DMOZ_APP_DISPLAYNAME=$(MOZ_APP_DISPLAYNAME) \
-	-DMOZ_APP_VERSION=$(MOZ_APP_VERSION) \
-	-DABS_OBJDIR=$(ABS_OBJDIR) \
-	-DBASE64_ICON=$(BASE64_ICON) \
-	-DMOZ_DEB_TIMESTAMP=$(MOZ_DEB_TIMESTAMP) \
-	-DDEB_PKG_VERSION=$(DEB_PKG_VERSION) \
-	$(NULL)
-
-NO_PKG_FILES = \
-	$(MOZ_APP_NAME)-config \
-	$(MOZ_APP_NAME)-bin.elf \
-	xulrunner-config \
-	$(MOZ_APP_NAME)-bin$(BIN_SUFFIX) \
-	nspr-config \
-	regchrome* \
-	regxpcom* \
-	xpcshell* \
-	xpidl* \
-	xpt_dump* \
-	xpt_link* \
-	bloaturls.txt \
-	nsinstall \
-	*Test* \
-	*test* \
-	BadPlugin* \
-	GoodPlugin* \
-	ReadNTLM* \
-	ShowSSEConfig* \
-	SimpleTypeLib* \
-	WriteArgument* \
-	grabpage* \
-	js.exe \
-	js \
-	nsIFileEnumerator* \
-	proxy-create-threadsafety* \
-	rdfcat* \
-	rdfpoll* \
-	dictionaries* \
-	triplescat* \
-	screentopng* \
-	fix-linux-stack.pl* \
-	fix_stack_using_bpsyms.py* \
-	ShowAlignments* \
-	components/httpd* \
-	components/tp-cmdline* \
-	components/reftest-cmdline* \
-	chrome/pageloader* \
-	chrome/reftest* \
-	chrome/xslt-qa* \
-	$(NULL)
-
-ifndef SYSTEM_LIBXUL
-NO_PKG_FILES += xulrunner
-endif
-
 # overwrite mobile-l10n.js with a matchOS=true one for multi-locale builds
 ifeq ($(AB_CD),multi)
 PREF_JS_EXPORTS = $(srcdir)/mobile-l10n.js
 endif
 
 include $(topsrcdir)/config/rules.mk
+
+MOZ_PKG_REMOVALS = $(srcdir)/removed-files.in
+
+ifdef MOZ_ENABLE_LIBXUL
+MOZ_PKG_MANIFEST_P = $(srcdir)/package-manifest.in
+else
+define message
+You need to build with --enable-libxul (the default, unless you specify
+--disable-libxul or --enable-shared or --enable-debug) to package a build.
+endef
+default libs installer::
+	$(error $(message))
+endif
+
+MOZ_NONLOCALIZED_PKG_LIST = \
+	xpcom \
+	browser \
+	mobile \
+	$(NULL)
+
+MOZ_LOCALIZED_PKG_LIST = $(AB_CD)
+
+DEFINES += \
+	-DAB_CD=$(AB_CD) \
+	-DBINPATH=bin \
+	-DMOZ_APP_NAME=$(MOZ_APP_NAME) \
+	-DPREF_DIR=$(PREF_DIR) \
+	$(NULL)
+
+ifeq ($(MOZ_CHROME_FILE_FORMAT),jar)
+DEFINES += -DJAREXT=.jar
+else
+DEFINES += -DJAREXT=
+endif
+
+include $(topsrcdir)/ipc/app/defs.mk
+DEFINES += -DMOZ_CHILD_PROCESS_NAME=$(MOZ_CHILD_PROCESS_NAME)
+
+ifdef MOZ_PKG_MANIFEST_P
+MOZ_PKG_MANIFEST = package-manifest
+
+$(MOZ_PKG_MANIFEST): $(MOZ_PKG_MANIFEST_P)
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $< > $@
+
+GARBAGE += $(MOZ_PKG_MANIFEST)
+endif
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 _BINPATH = /$(_APPNAME)/Contents/Resources
@@ -141,8 +114,6 @@ libs::
 	find $(DIST)/bin/chrome -type f -name *.properties -exec sed -i '/^#/d' {} \;
 
 include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
-
-DEBDESTDIR=debian/$(MOZ_APP_NAME)
 
 ifdef LIBXUL_SDK
 MOZ_GRE_PKG_DIR=$(MOZ_PKG_DIR)/xulrunner
@@ -165,6 +136,33 @@ endif
 endif
 
 ifeq ($(OS_TARGET),Linux)
+GRE_MILESTONE = $(shell $(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(LIBXUL_DIST)/bin/platform.ini Build Milestone)
+GRE_BUILDID = $(shell $(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(LIBXUL_DIST)/bin/platform.ini Build BuildID)
+ABS_OBJDIR=`cd $(DEPTH); pwd`
+ABS_TOPSRCDIR=$(shell cd $(topsrcdir); pwd)
+BASE64_ICON = dist/branding/fennec_maemo_icon26.txt
+MOZ_DEB_TIMESTAMP = "$(shell date  +"%a, %d  %b %Y %T %z" )"
+
+DEB_PKG_VERSION = $(shell echo $(MOZ_APP_VERSION) | $(PERL) -pe 's/pre/~$(GRE_BUILDID)/; s/^([0-9.]+)([a-z][0-9]+)/$$1~$$2/')
+
+DEB_BUILD_ARCH = $(shell dpkg-architecture -qDEB_BUILD_ARCH)
+# package name should match mobile/installer/debian/changelog.in
+DEB_PKG_NAME = $(MOZ_PKG_APPNAME)_$(DEB_PKG_VERSION)_$(DEB_BUILD_ARCH).deb
+
+DEFINES += \
+	-DGRE_MILESTONE=$(GRE_MILESTONE) \
+	-DGRE_BUILDID=$(GRE_BUILDID) \
+	-Dinstalldir=$(installdir) \
+	-DMOZ_APP_DISPLAYNAME=$(MOZ_APP_DISPLAYNAME) \
+	-DMOZ_APP_VERSION=$(MOZ_APP_VERSION) \
+	-DABS_OBJDIR=$(ABS_OBJDIR) \
+	-DBASE64_ICON=$(BASE64_ICON) \
+	-DMOZ_DEB_TIMESTAMP=$(MOZ_DEB_TIMESTAMP) \
+	-DDEB_PKG_VERSION=$(DEB_PKG_VERSION) \
+	$(NULL)
+
+DEBDESTDIR=debian/$(MOZ_APP_NAME)
+
 PP_DEB_FILES =	debian/control \
 		debian/changelog \
 		debian/$(MOZ_APP_NAME).desktop \
