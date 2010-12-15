@@ -21,8 +21,6 @@
       const READ_WRITE = Ci.nsIIDBTransaction.READ_WRITE;
       const VERSION_CHANGE = Ci.nsIIDBTransaction.VERSION_CHANGE;
 
-      const NOT_FOUND_ERR = Ci.nsIIDBDatabaseException.NOT_FOUND_ERR;
-
       const name = window.location.pathname;
       const description = "My Test Database";
 
@@ -199,9 +197,11 @@
       is(event.type, "abort", "Right kind of event");
 
       request = db.transaction("foo").objectStore("foo").get(key);
-      request.onerror = new ExpectError(NOT_FOUND_ERR);
-      request.onsuccess = unexpectedSuccessHandler;
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
       event = yield;
+
+      is(event.result, undefined, "Object was removed");
 
       SimpleTest.executeSoon(function() { testGenerator.next(); });
       yield;
@@ -228,9 +228,11 @@
 
       for (let i = 0; i < 10; i++) {
         request = db.transaction("foo").objectStore("foo").get(keys[i]);
-        request.onerror = new ExpectError(NOT_FOUND_ERR);
-        request.onsuccess = unexpectedSuccessHandler;
+        request.onerror = errorHandler;
+        request.onsuccess = grabEventAndContinueHandler;
         event = yield;
+
+        is(event.result, undefined, "Object was removed");
       }
 
       finishTest();

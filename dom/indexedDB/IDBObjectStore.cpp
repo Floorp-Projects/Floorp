@@ -1617,12 +1617,14 @@ GetHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   rv = stmt->ExecuteStep(&hasResult);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  if (!hasResult) {
-    return NS_ERROR_DOM_INDEXEDDB_NOT_FOUND_ERR;
+  if (hasResult) {
+    // Set the value based on results.
+    rv = stmt->GetString(0, mValue);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
-
-  // Set the value based on results.
-  (void)stmt->GetString(0, mValue);
+  else {
+    mValue.SetIsVoid(PR_TRUE);
+  }
 
   return NS_OK;
 }
@@ -1630,6 +1632,11 @@ GetHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 nsresult
 GetHelper::OnSuccess(nsIDOMEventTarget* aTarget)
 {
+  if (mValue.IsVoid()) {
+    // Default is to have an undefined result.
+    return AsyncConnectionHelper::OnSuccess(aTarget);
+  }
+
   nsRefPtr<GetSuccessEvent> event(new GetSuccessEvent(mValue));
   nsresult rv = event->Init(mRequest, mTransaction);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
