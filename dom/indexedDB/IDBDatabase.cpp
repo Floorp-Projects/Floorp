@@ -723,7 +723,6 @@ IDBDatabase::Transaction(nsIVariant* aStoreNames,
       NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
       if (!info->ContainsStoreName(name)) {
-        // XXX Update spec for a real error code here.
         return NS_ERROR_DOM_INDEXEDDB_NOT_FOUND_ERR;
       }
 
