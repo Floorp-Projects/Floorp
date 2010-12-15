@@ -234,7 +234,7 @@ ContainerLayerD3D9::RenderLayer()
         r.left = NS_MAX<PRInt32>(oldClipRect.left, r.left);
         r.right = NS_MIN<PRInt32>(oldClipRect.right, r.right);
         r.top = NS_MAX<PRInt32>(oldClipRect.top, r.top);
-        r.bottom = NS_MAX<PRInt32>(oldClipRect.bottom, r.bottom);
+        r.bottom = NS_MIN<PRInt32>(oldClipRect.bottom, r.bottom);
       } else {
         // > 0 is implied during the intersection when useIntermediate == true;
         r.left = NS_MAX<LONG>(0, r.left);
