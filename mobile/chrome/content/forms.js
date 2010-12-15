@@ -179,7 +179,7 @@ FormAssistant.prototype = {
       case "Content:SetWindowSize":
         // If the CSS viewport change just show the current element to the new
         // position
-        sendAsyncMessage("FormAssist:Show", this._getJSON());
+        sendAsyncMessage("FormAssist:Resize", this._getJSON());
         break;
 
       case "FormAssist:ChoiceSelect": {
