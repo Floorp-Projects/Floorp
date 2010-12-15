@@ -13,9 +13,6 @@
   <script type="text/javascript;version=1.7">
     function testSteps()
     {
-      const VERSION_CHANGE =
-        Components.interfaces.nsIIDBTransaction.VERSION_CHANGE;
-
       const name = window.location.pathname;
       const description = "My Test Database";
 
@@ -63,7 +60,8 @@
       };
 
       event = yield;
-      is(event.transaction.mode, VERSION_CHANGE, "Correct mode");
+      ok(event.result === event.transaction, "Good result");
+      is(event.transaction.mode, IDBTransaction.VERSION_CHANGE, "Correct mode");
 
       request = moz_indexedDB.open(name, description);
       request.onerror = errorHandler;
@@ -85,7 +83,8 @@
       };
 
       event = yield;
-      is(event.transaction.mode, VERSION_CHANGE, "Correct mode");
+      ok(event.result === event.transaction, "Good result");
+      is(event.transaction.mode, IDBTransaction.VERSION_CHANGE, "Correct mode");
 
       is(versionChangeEventCount, 3, "Saw all expected events");
 
