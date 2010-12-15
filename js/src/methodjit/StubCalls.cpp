@@ -2576,9 +2576,9 @@ stubs::TableSwitch(VMFrame &f, jsbytecode *origPc)
     }
 
     {
-        uint32 low = GET_JUMP_OFFSET(pc);
+        jsint low = GET_JUMP_OFFSET(pc);
         pc += JUMP_OFFSET_LEN;
-        uint32 high = GET_JUMP_OFFSET(pc);
+        jsint high = GET_JUMP_OFFSET(pc);
         pc += JUMP_OFFSET_LEN;
 
         tableIdx -= low;
