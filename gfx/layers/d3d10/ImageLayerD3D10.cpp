@@ -37,6 +37,7 @@
 
 #include "ImageLayerD3D10.h"
 #include "gfxImageSurface.h"
+#include "gfxD2DSurface.h"
 #include "gfxWindowsSurface.h"
 #include "yuv_convert.h"
 
@@ -427,7 +428,10 @@ CairoImageD3D10::SetData(const CairoImage::Data &aData)
 already_AddRefed<gfxASurface>
 CairoImageD3D10::GetAsSurface()
 {
-  return nsnull;
+  nsRefPtr<gfxASurface> surf =
+    new gfxD2DSurface(mTexture, mHasAlpha ? gfxASurface::CONTENT_COLOR_ALPHA :
+                                            gfxASurface::CONTENT_COLOR);
+  return surf.forget();
 }
 
 } /* layers */
