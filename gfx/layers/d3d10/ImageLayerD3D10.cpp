@@ -181,7 +181,10 @@ ImageContainerD3D10::GetCurrentSize()
 PRBool
 ImageContainerD3D10::SetLayerManager(LayerManager *aManager)
 {
-  // we can't do anything here for now
+  if (aManager->GetBackendType() == LayerManager::LAYERS_D3D10) {
+    mManager = aManager;
+    return PR_TRUE;
+  }
   return PR_FALSE;
 }
 
@@ -204,7 +207,60 @@ ImageLayerD3D10::RenderLayer()
 
   ID3D10EffectTechnique *technique;
 
-  if (image->GetFormat() == Image::PLANAR_YCBCR) {
+  if (GetContainer()->Manager() != Manager()) {
+    GetContainer()->SetLayerManager(Manager());
+  }
+
+  if (GetContainer()->Manager() != Manager() ||
+      image->GetFormat() == Image::CAIRO_SURFACE)
+  {
+    gfxIntSize size;
+    bool hasAlpha;
+    nsRefPtr<ID3D10ShaderResourceView> srView;
+
+    if (GetContainer()->Manager() != Manager()) {
+      nsRefPtr<gfxASurface> surf = GetContainer()->GetCurrentAsSurface(&size);
+      
+      nsRefPtr<ID3D10Texture2D> texture = SurfaceToTexture(device(), surf, size);
+      
+      hasAlpha = surf->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA;
+      
+      device()->CreateShaderResourceView(texture, NULL, getter_AddRefs(srView));
+    } else {
+      // image->GetFormat() == Image::CAIRO_SURFACE
+      CairoImageD3D10 *cairoImage =
+        static_cast<CairoImageD3D10*>(image.get());
+      srView = cairoImage->mSRView;
+      hasAlpha = cairoImage->mHasAlpha;
+      size = cairoImage->mSize;
+    }
+
+    if (hasAlpha) {
+      if (mFilter == gfxPattern::FILTER_NEAREST) {
+        technique = effect()->GetTechniqueByName("RenderRGBALayerPremulPoint");
+      } else {
+        technique = effect()->GetTechniqueByName("RenderRGBALayerPremul");
+      }
+    } else {
+      if (mFilter == gfxPattern::FILTER_NEAREST) {
+        technique = effect()->GetTechniqueByName("RenderRGBLayerPremulPoint");
+      } else {
+        technique = effect()->GetTechniqueByName("RenderRGBLayerPremul");
+      }
+    }
+
+    if (srView) {
+      effect()->GetVariableByName("tRGB")->AsShaderResource()->SetResource(srView);
+    }
+
+    effect()->GetVariableByName("vLayerQuad")->AsVector()->SetFloatVector(
+      ShaderConstantRectD3D10(
+        (float)0,
+        (float)0,
+        (float)size.width,
+        (float)size.height)
+      );
+  } else if (image->GetFormat() == Image::PLANAR_YCBCR) {
     PlanarYCbCrImageD3D10 *yuvImage =
       static_cast<PlanarYCbCrImageD3D10*>(image.get());
 
@@ -229,35 +285,6 @@ ImageLayerD3D10::RenderLayer()
         (float)0,
         (float)yuvImage->mSize.width,
         (float)yuvImage->mSize.height)
-      );
-  } else if (image->GetFormat() == Image::CAIRO_SURFACE) {
-    CairoImageD3D10 *cairoImage =
-      static_cast<CairoImageD3D10*>(image.get());
-
-    if (cairoImage->mHasAlpha) {
-      if (mFilter == gfxPattern::FILTER_NEAREST) {
-        technique = effect()->GetTechniqueByName("RenderRGBALayerPremulPoint");
-      } else {
-        technique = effect()->GetTechniqueByName("RenderRGBALayerPremul");
-      }
-    } else {
-      if (mFilter == gfxPattern::FILTER_NEAREST) {
-        technique = effect()->GetTechniqueByName("RenderRGBLayerPremulPoint");
-      } else {
-        technique = effect()->GetTechniqueByName("RenderRGBLayerPremul");
-      }
-    }
-
-    if (cairoImage->mSRView) {
-      effect()->GetVariableByName("tRGB")->AsShaderResource()->SetResource(cairoImage->mSRView);
-    }
-
-    effect()->GetVariableByName("vLayerQuad")->AsVector()->SetFloatVector(
-      ShaderConstantRectD3D10(
-        (float)0,
-        (float)0,
-        (float)cairoImage->mSize.width,
-        (float)cairoImage->mSize.height)
       );
   }
 
