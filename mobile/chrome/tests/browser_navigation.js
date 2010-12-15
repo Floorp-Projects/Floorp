@@ -200,7 +200,12 @@ gTests.push({
 
     messageManager.addMessageListener("DOMTitleChanged", function(aMessage) {
       messageManager.removeMessageListener("DOMTitleChanged", arguments.callee);
-      setTimeout(function() { gCurrentTest.onPageTitleChanged(); }, 100);
+      urlbarTitle.addEventListener("DOMAttrModified", function(aEvent) {
+        if (aEvent.attrName == "value") {
+          urlbarTitle.removeEventListener("DOMAttrModified", arguments.callee, false);
+          setTimeout(gCurrentTest.onPageTitleChanged, 0);
+        }
+      }, false);
     });
   },
 
