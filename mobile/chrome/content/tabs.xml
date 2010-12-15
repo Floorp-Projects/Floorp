@@ -187,7 +187,7 @@
             let lastBox = this.children.lastChild.getBoundingClientRect();
 
             // XXX we can do better than using a constant here
-            let columnsCount = Math.ceil(this.children.childNodes.length / Math.floor(this.children.getBoundingClientRect().height / (firstBox.heigth + 4)));
+            let columnsCount = Math.ceil(this.children.childNodes.length / Math.floor(this.children.getBoundingClientRect().height / (firstBox.height + 4)));
             if (this._columnsCount != columnsCount) {
               let width = Math.max(lastBox.right - firstBox.left, firstBox.right - lastBox.left);
               // XXX we can do better than using a constant
