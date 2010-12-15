@@ -35,6 +35,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+%ifdef MOZ_PLATFORM_MAEMO
+%define ORIENTATION -moz-device-orientation
+%elifdef ANDROID
+%define ORIENTATION -moz-device-orientation
+%else
+%define ORIENTATION orientation
+%endif
+
 /* main toolbar (URL bar) -------------------------------------------------- */
 #toolbar-main {
   -moz-appearance: none;
@@ -456,14 +464,14 @@ toolbarbutton.choice-remotetabs {
 }
 
 /* addons panel UI   ------------------------------------------------------- */
-@media (min-width: 500px) {
+%expand @media (__ORIENTATION__: landscape) {
   #addons-repo {
     -moz-box-orient: horizontal;
     -moz-box-align: center;
   }
 }
 
-@media (max-width: 499px) {
+%expand @media (__ORIENTATION__: portrait) {
   #addons-repo {
     -moz-box-orient: vertical;
     -moz-box-pack: center;
@@ -1207,7 +1215,7 @@ pageaction:not([image]) > hbox >.pageaction-image {
 }
 
 /* Put setting textboxes on a separate row in portrait */
-@media (max-width: 499px) {
+%expand @media (__ORIENTATION__: portrait) {
   .setting-integer,
   .setting-string {
     -moz-box-align: start;
