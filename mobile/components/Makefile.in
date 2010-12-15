@@ -75,7 +75,6 @@ EXTRA_COMPONENTS = \
         LoginManagerPrompter.js \
         BlocklistPrompt.js \
         UpdatePrompt.js \
-        SSLCertErrorDialog.js \
 	$(NULL)
 
 ifndef ANDROID
