@@ -1384,8 +1384,8 @@ RopeMatch(JSString *textstr, const jschar *pat, jsuint patlen)
      */
     size_t textstrlen = textstr->length();
     size_t threshold = textstrlen >> sRopeMatchThresholdRatioLog2;
-    JSRopeLeafIterator iter(textstr);
-    for (JSString *str = iter.init(); str; str = iter.next()) {
+    JSRopeLeafIterator iter;
+    for (JSString *str = iter.init(textstr); str; str = iter.next()) {
         if (threshold-- == 0 || !strs.append(str))
             return StringMatch(textstr->chars(), textstrlen, pat, patlen);
     }
@@ -1871,7 +1871,7 @@ BuildFlatMatchArray(JSContext *cx, JSString *textstr, const FlatMatch &fm, Value
     }
 
     /* For this non-global match, produce a RegExp.exec-style array. */
-    JSObject *obj = js_NewSlowArrayObject(cx);
+    JSObject *obj = NewSlowEmptyArray(cx);
     if (!obj)
         return false;
     vp->setObject(*obj);
@@ -1896,7 +1896,7 @@ MatchCallback(JSContext *cx, RegExpStatics *res, size_t count, void *p)
 
     JSObject *&arrayobj = *static_cast<MatchArgType>(p);
     if (!arrayobj) {
-        arrayobj = js_NewArrayObject(cx, 0, NULL);
+        arrayobj = NewDenseEmptyArray(cx);
         if (!arrayobj)
             return false;
     }
@@ -2242,9 +2242,9 @@ BuildFlatReplacement(JSContext *cx, JSString *textstr, JSString *repstr,
          * If we are replacing over a rope, avoid flattening it by iterating
          * through it, building a new rope.
          */
-        JSRopeLeafIterator iter(textstr);
+        JSRopeLeafIterator iter;
         size_t pos = 0;
-        for (JSString *str = iter.init(); str; str = iter.next()) {
+        for (JSString *str = iter.init(textstr); str; str = iter.next()) {
             size_t len = str->length();
             size_t strEnd = pos + len;
             if (pos < matchEnd && strEnd > match) {
@@ -2679,7 +2679,7 @@ str_split(JSContext *cx, uintN argc, Value *vp)
 
     if (argc == 0) {
         Value v = StringValue(str);
-        JSObject *aobj = js_NewArrayObject(cx, 1, &v);
+        JSObject *aobj = NewDenseCopiedArray(cx, 1, &v);
         if (!aobj)
             return false;
         vp->setObject(*aobj);
@@ -2762,7 +2762,7 @@ str_split(JSContext *cx, uintN argc, Value *vp)
     if (j == -2)
         return false;
 
-    JSObject *aobj = js_NewArrayObject(cx, splits.length(), splits.begin());
+    JSObject *aobj = NewDenseCopiedArray(cx, splits.length(), splits.begin());
     if (!aobj)
         return false;
     vp->setObject(*aobj);

@@ -1055,7 +1055,7 @@ EvalCacheLookup(JSContext *cx, JSString *str, JSStackFrame *caller, uintN static
                     int i = 1;
 
                     if (objarray->length == 1) {
-                        if (script->regexpsOffset != 0) {
+                        if (JSScript::isValidOffset(script->regexpsOffset)) {
                             objarray = script->regexps();
                             i = 0;
                         } else {
@@ -1806,7 +1806,7 @@ obj_keys(JSContext *cx, uintN argc, Value *vp)
     }
 
     JS_ASSERT(props.length() <= UINT32_MAX);
-    JSObject *aobj = js_NewArrayObject(cx, jsuint(vals.length()), vals.begin());
+    JSObject *aobj = NewDenseCopiedArray(cx, jsuint(vals.length()), vals.begin());
     if (!aobj)
         return false;
     vp->setObject(*aobj);
@@ -2516,7 +2516,7 @@ obj_getOwnPropertyNames(JSContext *cx, uintN argc, Value *vp)
          }
     }
 
-    JSObject *aobj = js_NewArrayObject(cx, vals.length(), vals.begin());
+    JSObject *aobj = NewDenseCopiedArray(cx, vals.length(), vals.begin());
     if (!aobj)
         return false;
 
@@ -3538,9 +3538,9 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
     if (xdr->mode == JSXDR_ENCODE) {
         obj = *objp;
         parent = obj->getParent();
-        parentId = (xdr->script->objectsOffset == 0)
-                   ? NO_PARENT_INDEX
-                   : FindObjectIndex(xdr->script->objects(), parent);
+        parentId = JSScript::isValidOffset(xdr->script->objectsOffset)
+                   ? FindObjectIndex(xdr->script->objects(), parent)
+                   : NO_PARENT_INDEX;
         depth = (uint16)OBJ_BLOCK_DEPTH(cx, obj);
         count = (uint16)OBJ_BLOCK_COUNT(cx, obj);
         depthAndCount = (uint32)(depth << 16) | count;
@@ -3835,10 +3835,10 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
      * Pre-brand the prototype and constructor if they have built-in methods.
      * This avoids extra shape guard branch exits in the tracejitted code.
      */
-    if (fs && !proto->brand(cx))
-        goto bad;
-    if (ctor != proto && static_fs && !ctor->brand(cx))
-        goto bad;
+    if (fs)
+        proto->brand(cx);
+    if (ctor != proto && static_fs)
+        ctor->brand(cx);
 
     /*
      * Make sure proto's emptyShape is available to be shared by objects of
@@ -5515,7 +5515,6 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
                     return false;
 
                 JS_ASSERT(IsFunctionObject(*vp));
-                JS_ASSERT(!(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
 
                 JSObject *funobj = &vp->toObject();
                 JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
