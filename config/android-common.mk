@@ -45,8 +45,8 @@ ifndef JAVA_CLASSPATH
   $(error JAVA_CLASSPATH must be defined before including android-common.mk)
 endif
 
-DX=$(ANDROID_SDK)/tools/dx
-AAPT=$(ANDROID_SDK)/tools/aapt
+DX=$(ANDROID_PLATFORM_TOOLS)/dx
+AAPT=$(ANDROID_PLATFORM_TOOLS)/aapt
 APKBUILDER=$(ANDROID_SDK)/../../tools/apkbuilder
 ZIPALIGN=$(ANDROID_SDK)/../../tools/zipalign
 
