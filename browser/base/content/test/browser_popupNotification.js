@@ -106,7 +106,6 @@ function runNextTest() {
       if (!onHiddenArray.length)
         goNext();
     }, onHiddenArray.length);
-
     info("[Test #" + gTestIndex + "] added listeners; panel state: " + PopupNotifications.isPanelOpen);
   }
 
@@ -136,7 +135,7 @@ var gNewTab;
 function basicNotification() {
   var self = this;
   this.browser = gBrowser.selectedBrowser;
-  this.id = "test-notification";
+  this.id = "test-notification-" + gTestIndex;
   this.message = "This is popup notification " + this.id + " from test " + gTestIndex;
   this.anchorID = null;
   this.mainAction = {
@@ -280,7 +279,7 @@ var tests = [
     },
     onShown: function (popup) {
       checkPopup(popup, this.notifyObj);
-      dismissNotification(popup);
+      this.notification2.remove();
     },
     onHidden: function (popup) {
     }
@@ -293,7 +292,7 @@ var tests = [
       showNotification(this.testNotif1);
       this.testNotif2 = new basicNotification();
       this.testNotif2.message += " 2";
-      this.testNotif2.id = "test-notification-2";
+      this.testNotif2.id += "-2";
       showNotification(this.testNotif2);
     },
     onShown: function (popup) {
@@ -320,13 +319,14 @@ var tests = [
     run: function () {
       this.notifyObj = new basicNotification(),
       this.notifyObj.mainAction = null;
-      showNotification(this.notifyObj);
+      this.notification = showNotification(this.notifyObj);
     },
     onShown: function (popup) {
       checkPopup(popup, this.notifyObj);
       dismissNotification(popup);
     },
     onHidden: function (popup) {
+      this.notification.remove();
     }
   },
   // Test two notifications with different anchors
@@ -348,13 +348,15 @@ var tests = [
       dismissNotification(popup);
     },
     onHidden: [
+      // The second showing triggers a popuphidden event that we should ignore.
+      function (popup) {},
       function (popup) {
-        // Remove the first notification
+        // Remove the notifications
         this.firstNotification.remove();
+        this.secondNotification.remove();
         ok(this.notifyObj.removedCallbackTriggered, "removed callback triggered");
-      },
-      // The removal triggers another popuphidden event.
-      function (popup) {}
+        ok(this.notifyObj2.removedCallbackTriggered, "removed callback triggered");
+      }
     ]
   },
   // Test optional params
@@ -389,7 +391,12 @@ var tests = [
       dismissNotification(popup);
     },
     onHidden: function (popup) {
+      let icon = document.getElementById("geo-notification-icon");
+      isnot(icon.boxObject.width, 0,
+            "geo anchor should be visible after dismissal");
       this.notification.remove();
+      is(icon.boxObject.width, 0,
+         "geo anchor should not be visible after removal");
     }
   },
   // Test that persistence allows the notification to persist across reloads
