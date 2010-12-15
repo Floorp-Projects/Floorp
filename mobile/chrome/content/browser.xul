@@ -280,7 +280,11 @@
             <!-- Content viewport -->
             <vbox id="content-viewport" class="window-width window-height">
               <!-- Content viewport -->
-              <deck id="browsers" flex="1"/>
+              <stack>
+                <deck id="browsers" flex="1"/>
+                <!-- vertical scrollbar -->
+                <box id="vertical-scroller" class="scroller" orient="vertical" right="2" top="0"/>
+              </stack>
               <box id="content-navigator-spacer" hidden="true"/>
             </vbox>
           </vbox>
@@ -294,6 +298,9 @@
                    placeholder="&selectHelper.emptytext;" type="search" flex="1" hidden="true"/>
           <textbox id="find-helper-textbox" class="search-bar content-navigator-item" oncommand="FindHelperUI.search(this.value)" oninput="FindHelperUI.updateCommands(this.value);" type="search" flex="1"/>
         </vbox>
+
+        <!-- horizontal scrollbar -->
+        <box id="horizontal-scroller" class="scroller" orient="horizontal" left="0" bottom="2"/>
       </stack>
 
       <!-- Right toolbar -->

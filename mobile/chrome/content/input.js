@@ -391,6 +391,9 @@ MouseModule.prototype = {
     if (!dragData.dragging) {
       this._dragger.dragStop(0, 0, this._targetScrollInterface);
       this._dragger = null;
+
+      // bug 619412
+      // XXX why is PanFinished not dispatched on the same target as PanBegin
       let event = document.createEvent("Events");
       event.initEvent("PanFinished", true, false);
       document.dispatchEvent(event);

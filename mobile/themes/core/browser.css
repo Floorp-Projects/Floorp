@@ -1628,3 +1628,32 @@ pageaction:not([image]) > hbox >.pageaction-image {
 #syncsetup-customserver {
   -moz-margin-start: 12px;
 }
+
+/* content scrollbars */
+.scroller {
+  opacity: 0;
+  background-color: rgba(0, 0, 0, 0.4) !important;
+  -moz-border-top-colors: none !important;
+  -moz-border-bottom-colors: none !important;
+  -moz-border-right-colors: none !important;
+  -moz-border-left-colors: none !important;
+  -moz-border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+}
+
+.scroller[panning="true"] {
+  opacity: 1;
+}
+
+.scroller[orient="vertical"] {
+  min-width: 6px;
+  width: 6px;
+  min-height: 12px;
+}
+
+.scroller[orient="horizontal"] {
+  min-height: 6px;
+  height: 6px;
+  min-width: 12px;
+}
+
