@@ -388,6 +388,109 @@ class GeckoSurfaceView
         return true;
     }
 
+    @Override
+    public boolean onKeyPreIme(int keyCode, KeyEvent event) {
+        if (mIMEState != IME_STATE_DISABLED || event.isSystem())
+            return super.onKeyPreIme(keyCode, event);
+
+        switch (event.getAction()) {
+            case KeyEvent.ACTION_DOWN:
+                return onKeyDown(keyCode, event);
+            case KeyEvent.ACTION_UP:
+                return onKeyUp(keyCode, event);
+            case KeyEvent.ACTION_MULTIPLE:
+                return onKeyMultiple(keyCode, event.getRepeatCount(), event);
+        }
+        return super.onKeyPreIme(keyCode, event);
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_BACK:
+                if (event.getRepeatCount() == 0) {
+                    event.startTracking();
+                    return true;
+                } else {
+                    return false;
+                }
+            case KeyEvent.KEYCODE_MENU:
+                if (event.getRepeatCount() == 0) {
+                    event.startTracking();
+                    break;
+                } else if ((event.getFlags() & KeyEvent.FLAG_LONG_PRESS) != 0) {
+                    break;
+                }
+                // Ignore repeats for KEYCODE_MENU; they confuse the widget code.
+                return false;
+            case KeyEvent.KEYCODE_VOLUME_UP:
+            case KeyEvent.KEYCODE_VOLUME_DOWN:
+            case KeyEvent.KEYCODE_SEARCH:
+                return false;
+            case KeyEvent.KEYCODE_DEL:
+                // See comments in GeckoInputConnection.onKeyDel
+                if (inputConnection != null &&
+                    inputConnection.onKeyDel()) {
+                    return true;
+                }
+                break;
+            case KeyEvent.KEYCODE_ENTER:
+                if ((event.getFlags() & KeyEvent.FLAG_EDITOR_ACTION) != 0 &&
+                    mIMEActionHint.equalsIgnoreCase("next"))
+                    event = new KeyEvent(event.getAction(), KeyEvent.KEYCODE_TAB);
+                break;
+            default:
+                break;
+        }
+        // KeyListener returns true if it handled the event for us.
+        if (mIMEState == IME_STATE_DISABLED ||
+            keyCode == KeyEvent.KEYCODE_ENTER ||
+            !mKeyListener.onKeyDown(this, mEditable, keyCode, event))
+            GeckoAppShell.sendEventToGecko(new GeckoEvent(event));
+        return true;
+    }
+
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_BACK:
+                if (!event.isTracking() || event.isCanceled())
+                    return false;
+                break;
+            default:
+                break;
+        }
+        if (mIMEState == IME_STATE_DISABLED ||
+            keyCode == KeyEvent.KEYCODE_ENTER ||
+            !mKeyListener.onKeyUp(this, mEditable, keyCode, event))
+            GeckoAppShell.sendEventToGecko(new GeckoEvent(event));
+        return true;
+    }
+
+    @Override
+    public boolean onKeyMultiple(int keyCode, int repeatCount, KeyEvent event) {
+        GeckoAppShell.sendEventToGecko(new GeckoEvent(event));
+        return true;
+    }
+
+    @Override
+    public boolean onKeyLongPress(int keyCode, KeyEvent event) {
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_BACK:
+                GeckoAppShell.sendEventToGecko(new GeckoEvent(event));
+                return true;
+            case KeyEvent.KEYCODE_MENU:
+                InputMethodManager imm = (InputMethodManager)
+                    getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.toggleSoftInputFromWindow(getWindowToken(),
+                                              imm.SHOW_FORCED, 0);
+                return true;
+            default:
+                break;
+        }
+        return false;
+    }
+
     // Is this surface valid for drawing into?
     boolean mSurfaceValid;
 
