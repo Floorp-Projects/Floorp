@@ -170,7 +170,7 @@ gTests.push({
 gTests.push({
   desc: "Check for urlbar label value on different cases",
   _currentTab: null,
-  
+
   run: function() {
     gCurrentTest._currentTab = BrowserUI.newTab(titleURL + "no_title");
     waitForPageShow(titleURL + "no_title", gCurrentTest.onPageLoadWithoutTitle);
@@ -276,10 +276,12 @@ gTests.push({
       };
       waitFor(function() { EventUtils.synthesizeMouse(result, result.width / 2, result.height / 2, {}); }, hasResults);
 
-      messageManager.addMessageListener("pageshow", function(aMessage) {
-        messageManager.removeMessageListener("pageshow", arguments.callee);
-        is(urlbarTitle.value, titleURL + "no_title", "The title should be equal to the url of the clicked row");
-      });
+      urlbarTitle.addEventListener("DOMAttrModified", function(aEvent) {
+        if (aEvent.attrName == "value") {
+          urlbarTitle.removeEventListener("DOMAttrModified", arguments.callee, false);
+          is(urlbarTitle.value, titleURL + "no_title", "The title should be equal to the url of the clicked row");
+        }
+      }, false);
 
       waitForPageShow(titleURL + "no_title", gCurrentTest.onUserSelectValue);
     }, false);
