@@ -738,49 +738,28 @@ TokenStream::getXMLEntity()
 #endif /* JS_HAS_XML_SUPPORT */
 
 /*
- * We have encountered a '\': check for a Unicode escape sequence after it.
- * Return 'true' and the character code value (by value) if we found a
- * Unicode escape sequence.  Otherwise, return 'false'.  In both cases, do not
- * advance along the buffer.
+ * We have encountered a '\': check for a Unicode escape sequence after it,
+ * returning the character code value if we found a Unicode escape sequence.
+ * Otherwise, non-destructively return the original '\'.
  */
-bool
-TokenStream::peekUnicodeEscape(int *result)
+int32
+TokenStream::getUnicodeEscape()
 {
     jschar cp[5];
+    int32 c;
 
     if (peekChars(5, cp) && cp[0] == 'u' &&
         JS7_ISHEX(cp[1]) && JS7_ISHEX(cp[2]) &&
         JS7_ISHEX(cp[3]) && JS7_ISHEX(cp[4]))
     {
-        *result = (((((JS7_UNHEX(cp[1]) << 4)
+        c = (((((JS7_UNHEX(cp[1]) << 4)
                 + JS7_UNHEX(cp[2])) << 4)
               + JS7_UNHEX(cp[3])) << 4)
             + JS7_UNHEX(cp[4]);
-        return true;
-    }
-    return false;
-}
-
-bool
-TokenStream::matchUnicodeEscapeIdStart(int32 *cp)
-{
-    peekUnicodeEscape(cp);
-    if (JS_ISIDSTART(*cp)) {
         skipChars(5);
-        return true;
+        return c;
     }
-    return false;
-}
-
-bool
-TokenStream::matchUnicodeEscapeIdent(int32 *cp)
-{
-    peekUnicodeEscape(cp);
-    if (JS_ISIDENT(*cp)) {
-        skipChars(5);
-        return true;
-    }
-    return false;
+    return '\\';
 }
 
 Token *
@@ -816,7 +795,7 @@ TokenStream::getTokenInternal()
     int c, qc;
     Token *tp;
     JSAtom *atom;
-    bool hadUnicodeEscape;
+    JSBool hadUnicodeEscape;
     const struct keyword *kw;
 #if JS_HAS_XML_SUPPORT
     JSBool inTarget;
@@ -1014,9 +993,11 @@ TokenStream::getTokenInternal()
      * Look for an identifier.
      */
 
-    hadUnicodeEscape = false;
+    hadUnicodeEscape = JS_FALSE;
     if (JS_ISIDSTART(c) ||
-        (c == '\\' && (hadUnicodeEscape = matchUnicodeEscapeIdStart(&qc))))
+        (c == '\\' &&
+         (qc = getUnicodeEscape(),
+          hadUnicodeEscape = JS_ISIDSTART(qc))))
     {
         if (hadUnicodeEscape)
             c = qc;
@@ -1026,10 +1007,11 @@ TokenStream::getTokenInternal()
                 goto error;
             c = getChar();
             if (c == '\\') {
-                if (!matchUnicodeEscapeIdent(&qc))
+                qc = getUnicodeEscape();
+                if (!JS_ISIDENT(qc))
                     break;
                 c = qc;
-                hadUnicodeEscape = true;
+                hadUnicodeEscape = JS_TRUE;
             } else {
                 if (!JS_ISIDENT(c))
                     break;
