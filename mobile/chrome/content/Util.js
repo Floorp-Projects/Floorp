@@ -167,7 +167,13 @@ let Util = {
   },
 
   isPortrait: function isPortrait() {
-    return (window.innerWidth < 500);
+#ifdef MOZ_PLATFORM_MAEMO
+    return (screen.width <= screen.height);
+#elifdef ANDROID
+    return (screen.width <= screen.height);
+#else
+    return (window.innerWidth <= window.innerHeight);
+#endif
   }
 };
 
