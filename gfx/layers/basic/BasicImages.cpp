@@ -49,6 +49,8 @@
 
 #include "yuv_convert.h"
 
+#include "gfxPlatform.h"
+
 using mozilla::Monitor;
 
 namespace mozilla {
@@ -103,6 +105,7 @@ protected:
  * in a memory buffer and converted to a cairo surface lazily.
  */
 class BasicPlanarYCbCrImage : public PlanarYCbCrImage, public BasicImageImplData {
+   typedef gfxASurface::gfxImageFormat gfxImageFormat;
 public:
    /** 
     * aScaleHint is a size that the image is expected to be rendered at.
@@ -110,17 +113,22 @@ public:
     */
   BasicPlanarYCbCrImage(const gfxIntSize& aScaleHint) :
     PlanarYCbCrImage(static_cast<BasicImageImplData*>(this)),
-    mScaleHint(aScaleHint)
+    mScaleHint(aScaleHint),
+    mOffscreenFormat(gfxASurface::ImageFormatUnknown)
     {}
 
   virtual void SetData(const Data& aData);
 
   virtual already_AddRefed<gfxASurface> GetAsSurface();
 
+  void SetOffscreenFormat(gfxImageFormat aFormat) { mOffscreenFormat = aFormat; }
+  gfxImageFormat GetOffscreenFormat() { return mOffscreenFormat; }
+
 protected:
   nsAutoArrayPtr<PRUint8>              mBuffer;
   nsCountedRef<nsMainThreadSurfaceRef> mSurface;
   gfxIntSize                           mScaleHint;
+  gfxImageFormat                       mOffscreenFormat;
 };
 
 void
@@ -246,9 +254,12 @@ BasicPlanarYCbCrImage::GetAsSurface()
  */
 class BasicImageContainer : public ImageContainer {
 public:
+  typedef gfxASurface::gfxImageFormat gfxImageFormat;
+
   BasicImageContainer(BasicLayerManager* aManager) :
     ImageContainer(aManager), mMonitor("BasicImageContainer"),
-    mScaleHint(-1, -1)
+    mScaleHint(-1, -1),
+    mOffscreenFormat(gfxASurface::ImageFormatUnknown)
   {}
   virtual already_AddRefed<Image> CreateImage(const Image::Format* aFormats,
                                               PRUint32 aNumFormats);
@@ -258,11 +269,13 @@ public:
   virtual gfxIntSize GetCurrentSize();
   virtual PRBool SetLayerManager(LayerManager *aManager);
   virtual void SetScaleHint(const gfxIntSize& aScaleHint);
+  void SetOffscreenFormat(gfxImageFormat aFormat) { mOffscreenFormat = aFormat; }
 
 protected:
   Monitor mMonitor;
   nsRefPtr<Image> mImage;
   gfxIntSize mScaleHint;
+  gfxImageFormat mOffscreenFormat;
 };
 
 /**
@@ -291,6 +304,7 @@ BasicImageContainer::CreateImage(const Image::Format* aFormats,
   } else if (FormatInList(aFormats, aNumFormats, Image::PLANAR_YCBCR)) {
     MonitorAutoEnter mon(mMonitor);
     image = new BasicPlanarYCbCrImage(mScaleHint);
+    static_cast<BasicPlanarYCbCrImage*>(image.get())->SetOffscreenFormat(mOffscreenFormat);
   }
   return image.forget();
 }
@@ -360,6 +374,8 @@ already_AddRefed<ImageContainer>
 BasicLayerManager::CreateImageContainer()
 {
   nsRefPtr<ImageContainer> container = new BasicImageContainer(this);
+  static_cast<BasicImageContainer*>(container.get())->
+    SetOffscreenFormat(gfxPlatform::GetPlatform()->GetOffscreenFormat());
   return container.forget();
 }
 
