@@ -14,18 +14,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452161
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 
   <script type="application/javascript"
-          src="common.js"></script>
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
   <script type="application/javascript"
           src="editabletext.js"></script>
-  <script type="application/javascript"
-          src="events.js"></script>
 
   <script type="application/javascript">
-    var gParagraphAcc;
-
-    function testEditable(aID)
+    function addTestEditable(aID, aTestRun)
     {
-      var et = new nsEditableText(aID);
+      var et = new editableTextTest(aID);
 
       //////////////////////////////////////////////////////////////////////////
       // insertText
@@ -62,23 +60,28 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452161
 //      et.cutNPasteText(0, 1, 1, "ehhelloo");
 //      et.cutNPasteText(1, 2, 0, "hehelloo");
 //      et.cutNPasteText(7, 8, 8, "hehelloo");
+
+      aTestRun.add(et);
     }
 
-    function testDocEditableNFinishTest(aDoc)
+    function runTest()
     {
-      testEditable(aDoc);
-      SimpleTest.finish();
+      var testRun = new editableTextTestRun();
+
+      addTestEditable("input", testRun);
+      // addTestEditable("div"); XXX: bug 452599
+      addTestEditable(getNode("frame").contentDocument, testRun);
+
+      testRun.run(); // Will call SimpleTest.finish();
     }
 
     function doTest()
     {
-      testEditable("input");
-      // testEditable("div"); XXX: bug 452599
+      // Prepare tested elements.
 
       // Design mode on/off trigger document accessible subtree recreation.
       var frame = getNode("frame");
-      waitForEvent(EVENT_REORDER, frame.contentDocument,
-                   testDocEditableNFinishTest, null, frame.contentDocument);
+      waitForEvent(EVENT_REORDER, frame.contentDocument, runTest);
       frame.contentDocument.designMode = "on";
     }
 

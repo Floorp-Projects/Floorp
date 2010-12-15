@@ -899,6 +899,31 @@ function invokerChecker(aEventType, aTargetOrFunc, aTargetFuncArg)
   this.mTargetFuncArg = aTargetFuncArg;
 }
 
+/**
+ * Text inserted/removed events checker.
+ */
+function textChangeChecker(aID, aStart, aEnd, aTextOrFunc, aIsInserted)
+{
+  this.target = getNode(aID);
+  this.type = aIsInserted ? EVENT_TEXT_INSERTED : EVENT_TEXT_REMOVED;
+
+  this.check = function textChangeChecker_check(aEvent)
+  {
+    aEvent.QueryInterface(nsIAccessibleTextChangeEvent);
+
+    var modifiedText = (typeof aTextOrFunc == "function") ?
+      aTextOrFunc() : aTextOrFunc;
+    var modifiedTextLen = (aEnd == -1) ? modifiedText.length : aEnd - aStart;
+
+    is(aEvent.start, aStart, "Wrong start offset for " + prettyName(aID));
+    is(aEvent.length, modifiedTextLen, "Wrong length for " + prettyName(aID));
+    var changeInfo = (aIsInserted ? "inserted" : "removed");
+    is(aEvent.isInserted(), aIsInserted,
+       "Text was " + changeInfo + " for " + prettyName(aID));
+    is(aEvent.modifiedText, modifiedText,
+       "Wrong " + changeInfo + " text for " + prettyName(aID));
+  }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Private implementation details.
