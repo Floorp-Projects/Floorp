@@ -123,6 +123,24 @@
 
       <constructor>
         <![CDATA[
+          if (document.readyState == "complete") {
+            this._init();
+          } else {
+            // Need to wait until XUL overlays are loaded. See bug 554279.
+            let self = this;
+            document.addEventListener("readystatechange", function (event) {
+              if (document.readyState != "complete")
+                return;
+              document.removeEventListener("readystatechange", arguments.callee, false);
+              self._init();
+            }, false);
+          }
+        ]]>
+      </constructor>
+
+      <method name="_init">
+        <body>
+        <![CDATA[
           // Searching for the toolbox palette in the toolbar binding because
           // toolbars are constructed first.
           var toolbox = this.toolbox;
@@ -153,7 +171,8 @@
           if (currentSet)
             this.currentSet = currentSet;
         ]]>
-      </constructor>
+        </body>
+      </method>
 
       <method name="_idFromNode">
         <parameter name="aNode"/>
