@@ -1798,12 +1798,12 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 
 /**
- * Tabstrip toolbar buttons
+ * Tabstrip & add-on bar toolbar buttons
  */
 
-#TabsToolbar .toolbarbutton-1,
-#TabsToolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button,
-#TabsToolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
+:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1,
+:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-button,
+:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
   margin: 0;
   padding: 0;
   border: none;
@@ -1812,9 +1812,9 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   box-shadow: none;
 }
 
-#TabsToolbar .toolbarbutton-1:not([type="menu-button"]),
-#TabsToolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button,
-#TabsToolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
+:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1:not([type="menu-button"]),
+:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-button,
+:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
   -moz-border-start: 2px solid !important;
   -moz-border-end: none !important;
   -moz-border-left-colors: rgba(0,0,0,0.25) rgba(255,255,255,0.15) !important;
@@ -1825,25 +1825,25 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 .tabs-newtab-button > .toolbarbutton-icon,
-#TabsToolbar .toolbarbutton-1 > .toolbarbutton-icon,
-#TabsToolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
+:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1 > .toolbarbutton-icon,
+:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
   padding: 0;
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled="true"]):hover,
 .tabbrowser-arrowscrollbox > .scrollbutton-down:not([disabled="true"]):hover,
-#TabsToolbar .toolbarbutton-1:not([type="menu-button"]):not([disabled]):not([open]):hover,
-#TabsToolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button:not([disabled]):hover,
-#TabsToolbar .toolbarbutton-1:not([disabled]):not([buttonover]):hover > .toolbarbutton-menubutton-dropmarker {
+:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1:not([type="menu-button"]):not([disabled]):not([open]):hover,
+:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-button:not([disabled]):hover,
+:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1:not([disabled]):not([buttonover]):hover > .toolbarbutton-menubutton-dropmarker {
   background-image: -moz-linear-gradient(transparent, rgba(0,0,0,.15)) !important;
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled="true"]):hover:active,
 .tabbrowser-arrowscrollbox > .scrollbutton-down:not([disabled="true"]):hover:active,
-#TabsToolbar .toolbarbutton-1:not([type="menu-button"]):not([disabled]):hover:active,
-#TabsToolbar .toolbarbutton-1[type="menu"][open],
-#TabsToolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button:not([disabled]):hover:active,
-#TabsToolbar .toolbarbutton-1[open]:not([disabled]):hover > .toolbarbutton-menubutton-dropmarker {
+:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1:not([type="menu-button"]):not([disabled]):hover:active,
+:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1[type="menu"][open],
+:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-button:not([disabled]):hover:active,
+:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1[open]:not([disabled]):hover > .toolbarbutton-menubutton-dropmarker {
   background-image: -moz-linear-gradient(transparent, rgba(0,0,0,.3)) !important;
 }
 
