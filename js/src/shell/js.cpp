@@ -1975,7 +1975,7 @@ TryNotes(JSContext *cx, JSScript *script)
 {
     JSTryNote *tn, *tnlimit;
 
-    if (script->trynotesOffset == 0)
+    if (!JSScript::isValidOffset(script->trynotesOffset))
         return JS_TRUE;
 
     tn = script->trynotes()->vector;
@@ -2053,7 +2053,7 @@ DisassembleValue(JSContext *cx, jsval v, bool lines, bool recursive)
     SrcNotes(cx, script);
     TryNotes(cx, script);
 
-    if (recursive && script->objectsOffset != 0) {
+    if (recursive && JSScript::isValidOffset(script->objectsOffset)) {
         JSObjectArray *objects = script->objects();
         for (uintN i = 0; i != objects->length; ++i) {
             JSObject *obj = objects->vector[i];
@@ -2138,11 +2138,6 @@ DisassFile(JSContext *cx, uintN argc, jsval *vp)
     JS_SetOptions(cx, oldopts);
     if (!script)
         return JS_FALSE;
-
-    if (script->isEmpty()) {
-        JS_SET_RVAL(cx, vp, JSVAL_VOID);
-        return JS_TRUE;
-    }
 
     JSObject *obj = JS_NewScriptObject(cx, script);
     if (!obj)
@@ -4293,7 +4288,7 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN("startTraceVis",  StartTraceVisNative, 1,0),
     JS_FN("stopTraceVis",   StopTraceVisNative,  0,0),
 #endif
-#ifdef DEBUG_ARRAYS
+#ifdef DEBUG
     JS_FN("arrayInfo",      js_ArrayInfo,   1,0),
 #endif
 #ifdef JS_THREADSAFE
@@ -4420,7 +4415,7 @@ static const char *const shell_help_messages[] = {
 "startTraceVis(filename)  Start TraceVis recording (stops any current recording)",
 "stopTraceVis()           Stop TraceVis recording",
 #endif
-#ifdef DEBUG_ARRAYS
+#ifdef DEBUG
 "arrayInfo(a1, a2, ...)   Report statistics about arrays",
 #endif
 #ifdef JS_THREADSAFE

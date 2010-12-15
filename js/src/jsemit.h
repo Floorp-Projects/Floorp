@@ -364,8 +364,16 @@ struct JSTreeContext {              /* tree context for semantic checks */
     JSObject *blockChain() {
         return blockChainBox ? blockChainBox->object : NULL;
     }
-    
-    bool atTopLevel() { return !topStmt || (topStmt->flags & SIF_BODY_BLOCK); }
+
+    /*
+     * True if we are at the topmost level of a entire script or function body.
+     * For example, while parsing this code we would encounter f1 and f2 at
+     * body level, but we would not encounter f3 or f4 at body level:
+     *
+     *   function f1() { function f2() { } }
+     *   if (cond) { function f3() { if (cond) { function f4() { } } } }
+     */
+    bool atBodyLevel() { return !topStmt || (topStmt->flags & SIF_BODY_BLOCK); }
 
     /* Test whether we're in a statement of given type. */
     bool inStatement(JSStmtType type);
@@ -392,7 +400,9 @@ struct JSTreeContext {              /* tree context for semantic checks */
 
     bool compileAndGo() const { return flags & TCF_COMPILE_N_GO; }
     bool inFunction() const { return flags & TCF_IN_FUNCTION; }
+
     bool compiling() const { return flags & TCF_COMPILING; }
+    inline JSCodeGenerator *asCodeGenerator();
 
     bool usesArguments() const {
         return flags & TCF_FUN_USES_ARGUMENTS;
@@ -594,7 +604,7 @@ struct JSCodeGenerator : public JSTreeContext
     SlotVector      closedVars;
 
     uint16          traceIndex;     /* index for the next JSOP_TRACE instruction */
-    
+
     /*
      * Initialize cg to allocate bytecode space from codePool, source note
      * space from notePool, and all other arena-allocated temporaries from
@@ -667,6 +677,13 @@ struct JSCodeGenerator : public JSTreeContext
 
 #define CG_SWITCH_TO_MAIN(cg)   ((cg)->current = &(cg)->main)
 #define CG_SWITCH_TO_PROLOG(cg) ((cg)->current = &(cg)->prolog)
+
+inline JSCodeGenerator *
+JSTreeContext::asCodeGenerator()
+{
+    JS_ASSERT(compiling());
+    return static_cast<JSCodeGenerator *>(this);
+}
 
 /*
  * Emit one bytecode.
