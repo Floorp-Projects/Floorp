@@ -69,35 +69,52 @@ MOZ_NONLOCALIZED_PKG_LIST = \
 	mobile \
 	$(NULL)
 
-MOZ_LOCALIZED_PKG_LIST = $(AB_CD)
+MOZ_LOCALIZED_PKG_LIST = $(AB_CD) multilocale
 
 DEFINES += \
 	-DAB_CD=$(AB_CD) \
-	-DBINPATH=bin \
 	-DMOZ_APP_NAME=$(MOZ_APP_NAME) \
 	-DPREF_DIR=$(PREF_DIR) \
 	$(NULL)
 
 ifeq ($(MOZ_CHROME_FILE_FORMAT),jar)
-DEFINES += -DJAREXT=.jar
+JAREXT=.jar
 else
-DEFINES += -DJAREXT=
+JAREXT=
 endif
+DEFINES += -DJAREXT=$(JAREXT)
 
 include $(topsrcdir)/ipc/app/defs.mk
 DEFINES += -DMOZ_CHILD_PROCESS_NAME=$(MOZ_CHILD_PROCESS_NAME)
 
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+_BINPATH = /$(_APPNAME)/Contents/Resources
+endif
+
+ifeq (bundle, $(MOZ_FS_LAYOUT))
+BINPATH = $(_BINPATH)
+DEFINES += -DAPPNAME=$(_APPNAME)
+else
+# Every other platform just winds up in dist/bin
+BINPATH = bin
+endif
+DEFINES += -DBINPATH=$(BINPATH)
+
 ifdef MOZ_PKG_MANIFEST_P
 MOZ_PKG_MANIFEST = package-manifest
 
-$(MOZ_PKG_MANIFEST): $(MOZ_PKG_MANIFEST_P)
+$(MOZ_PKG_MANIFEST): $(MOZ_PKG_MANIFEST_P) FORCE
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $< > $@
-
-GARBAGE += $(MOZ_PKG_MANIFEST)
+ifdef MOZ_CHROME_MULTILOCALE
+	printf "\n[multilocale]\n" >> $@
+	for LOCALE in $(MOZ_CHROME_MULTILOCALE) ;\
+	do \
+	  printf "$(BINPATH)/chrome/$$LOCALE$(JAREXT)\n" >> $@; \
+	  printf "$(BINPATH)/chrome/$$LOCALE.manifest\n" >> $@; \
+	done
 endif
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-_BINPATH = /$(_APPNAME)/Contents/Resources
+GARBAGE += $(MOZ_PKG_MANIFEST)
 endif
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
