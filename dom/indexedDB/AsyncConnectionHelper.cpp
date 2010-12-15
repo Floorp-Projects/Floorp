@@ -380,7 +380,22 @@ AsyncConnectionHelper::OnSuccess(nsIDOMEventTarget* aTarget)
   }
 
   PRBool dummy;
-  aTarget->DispatchEvent(event, &dummy);
+  rv = aTarget->DispatchEvent(event, &dummy);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(event);
+  NS_ASSERTION(privateEvent, "This should always QI properly!");
+
+  nsEvent* internalEvent = privateEvent->GetInternalNSEvent();
+  NS_ASSERTION(internalEvent, "This should never be null!");
+
+  if ((internalEvent->flags & NS_EVENT_FLAG_EXCEPTION_THROWN) &&
+      mTransaction &&
+      mTransaction->TransactionIsOpen()) {
+    rv = mTransaction->Abort();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   return NS_OK;
 }
 
@@ -397,8 +412,19 @@ AsyncConnectionHelper::OnError(nsIDOMEventTarget* aTarget,
     return;
   }
 
-  PRBool dummy;
-  aTarget->DispatchEvent(event, &dummy);
+  PRBool doDefault;
+  nsresult rv = aTarget->DispatchEvent(event, &doDefault);
+  if (NS_SUCCEEDED(rv)) {
+    if (doDefault &&
+        mTransaction &&
+        mTransaction->TransactionIsOpen() &&
+        NS_FAILED(mTransaction->Abort())) {
+      NS_WARNING("Failed to abort transaction!");
+    }
+  }
+  else {
+    NS_WARNING("DispatchEvent failed!");
+  }
 }
 
 nsresult
