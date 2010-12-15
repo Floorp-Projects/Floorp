@@ -462,9 +462,7 @@ class TokenStream
     void ungetChar(int32 c);
     void ungetCharIgnoreEOL(int32 c);
     Token *newToken(ptrdiff_t adjust);
-    bool peekUnicodeEscape(int32 *c);
-    bool matchUnicodeEscapeIdStart(int32 *c);
-    bool matchUnicodeEscapeIdent(int32 *c);
+    int32 getUnicodeEscape();
     JSBool peekChars(intN n, jschar *cp);
     JSBool getXMLEntity();
     jschar *findEOL();
