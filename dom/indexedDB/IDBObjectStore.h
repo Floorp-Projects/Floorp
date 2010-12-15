@@ -111,11 +111,6 @@ public:
     return mName;
   }
 
-  bool TransactionIsOpen() const
-  {
-    return mTransaction->TransactionIsOpen();
-  }
-
   bool IsAutoIncrement() const
   {
     return mAutoIncrement;
