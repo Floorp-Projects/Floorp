@@ -181,9 +181,9 @@
       is(event.result, key1, "put gave back the same key");
 
       request = objectStore.add({id:10});
-      request.onerror = grabEventAndContinueHandler;
+      request.onerror = new ExpectError(IDBDatabaseException.CONSTRAINT_ERR);
       request.onsuccess = unexpectedSuccessHandler;
-      yield;
+      event = yield;
 
       request = objectStore.add({}, null);
       request.onerror = errorHandler;

@@ -13,11 +13,6 @@
   <script type="text/javascript;version=1.7">
     function testSteps()
     {
-      const NOT_FOUND_ERR =
-        Components.interfaces.nsIIDBDatabaseException.NOT_FOUND_ERR;
-      const NEXT = Components.interfaces.nsIIDBCursor.NEXT;
-      const PREV = Components.interfaces.nsIIDBCursor.PREV;
-
       const name = window.location.pathname;
       const description = "My Test Database";
       const keys = [1, -1, 0, 10, 2000, "q", "z", "two", "b", "a"];
@@ -288,7 +283,7 @@
       let gotRemoveEvent = false;
       let retval = false;
 
-      request = objectStore.openCursor(null, NEXT);
+      request = objectStore.openCursor(null, IDBCursor.NEXT);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
         let cursor = event.result;
@@ -319,7 +314,7 @@
       is(gotRemoveEvent, true, "Saw the remove event");
 
       request = objectStore.get(sortedKeys[4]);
-      request.onerror = new ExpectError(NOT_FOUND_ERR);
+      request.onerror = new ExpectError(IDBDatabaseException.NOT_FOUND_ERR);
       request.onsuccess = unexpectedSuccessHandler;
       event = yield;
 
@@ -330,7 +325,7 @@
 
       keyIndex = sortedKeys.length - 1;
 
-      request = objectStore.openCursor(null, PREV);
+      request = objectStore.openCursor(null, IDBCursor.PREV);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
         let cursor = event.result;

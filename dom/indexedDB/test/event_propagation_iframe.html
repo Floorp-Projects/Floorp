@@ -139,8 +139,13 @@
       objectStore = transaction.objectStore("foo");
 
       request = objectStore.add({}, 1);
+      request.onsuccess = grabEventAndContinueHandler;
+      request.onerror = errorHandler;
+      event = yield;
+
+      request = objectStore.add({}, 1);
       request.onsuccess = function(event) {
-        ok(false, "Did not expect third add to succeed.");
+        ok(false, "Did not expect second add to succeed.");
       };
       request.onerror = errorEventCounter;
       yield;
