@@ -118,7 +118,7 @@ public:
   enum Type
   {
     OBJECTSTORE = 0,
-    INDEX,
+    INDEXKEY,
     INDEXOBJECT
   };
 

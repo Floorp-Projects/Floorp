@@ -51,7 +51,7 @@ interface nsIVariant;
  * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-IDBCursor for more
  * information.
  */
-[scriptable, uuid(12c99a5b-6e67-4d5c-8ae7-3a58da690375)]
+[scriptable, uuid(585d4d50-11a8-4d65-951e-805787f59d89)]
 interface nsIIDBCursor : nsISupports
 {
   const unsigned short NEXT = 0;
@@ -77,5 +77,6 @@ interface nsIIDBCursor : nsISupports
   nsIIDBRequest update(in jsval value);
 
   // Success fires IDBTransactionEvent, result == null
+  [implicit_jscontext]
   nsIIDBRequest delete();
 };
