@@ -1462,8 +1462,11 @@ nsPresContext::SetBidi(PRUint32 aSource, PRBool aForceRestyle)
       SetVisualMode(IsVisualCharset(doc->GetDocumentCharacterSet()));
     }
   }
-  if (aForceRestyle) {
-    RebuildAllStyleData(NS_STYLE_HINT_REFLOW);
+  if (aForceRestyle && mShell) {
+    // Reconstruct the root document element's frame and its children,
+    // because we need to trigger frame reconstruction for direction change.
+    RebuildUserFontSet();
+    mShell->ReconstructFrames();
   }
 }
 
