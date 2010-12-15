@@ -359,10 +359,12 @@ IDBIndex::Get(nsIVariant* aKey,
 
   Key key;
   nsresult rv = IDBObjectStore::GetKeyFromVariant(aKey, key);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
-  if (key.IsUnset() || key.IsNull()) {
-    return NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR;
+  if (key.IsUnset()) {
+    return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
   }
 
   nsRefPtr<IDBRequest> request = GenerateRequest(this);
@@ -389,10 +391,12 @@ IDBIndex::GetKey(nsIVariant* aKey,
 
   Key key;
   nsresult rv = IDBObjectStore::GetKeyFromVariant(aKey, key);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
-  if (key.IsUnset() || key.IsNull()) {
-    return NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR;
+  if (key.IsUnset()) {
+    return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
   }
 
   nsRefPtr<IDBRequest> request = GenerateRequest(this);
@@ -421,12 +425,18 @@ IDBIndex::GetAll(nsIVariant* aKey,
     return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
-  Key key;
-  nsresult rv = IDBObjectStore::GetKeyFromVariant(aKey, key);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR);
+  nsresult rv;
 
-  if (key.IsNull()) {
-    key = Key::UNSETKEY;
+  Key key;
+  if (aOptionalArgCount &&
+      NS_FAILED(IDBObjectStore::GetKeyFromVariant(aKey, key))) {
+    PRUint16 type;
+    rv = aKey->GetDataType(&type);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+    if (type != nsIDataType::VTYPE_EMPTY) {
+      return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
+    }
   }
 
   if (aOptionalArgCount < 2) {
@@ -459,12 +469,18 @@ IDBIndex::GetAllKeys(nsIVariant* aKey,
     return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
-  Key key;
-  nsresult rv = IDBObjectStore::GetKeyFromVariant(aKey, key);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR);
+  nsresult rv;
 
-  if (key.IsNull()) {
-    key = Key::UNSETKEY;
+  Key key;
+  if (aOptionalArgCount &&
+      NS_FAILED(IDBObjectStore::GetKeyFromVariant(aKey, key))) {
+    PRUint16 type;
+    rv = aKey->GetDataType(&type);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+    if (type != nsIDataType::VTYPE_EMPTY) {
+      return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
+    }
   }
 
   if (aOptionalArgCount < 2) {
@@ -507,13 +523,17 @@ IDBIndex::OpenCursor(nsIIDBKeyRange* aKeyRange,
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
     rv = IDBObjectStore::GetKeyFromVariant(variant, lowerKey);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
 
     rv = aKeyRange->GetUpper(getter_AddRefs(variant));
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
     rv = IDBObjectStore::GetKeyFromVariant(variant, upperKey);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
 
     rv = aKeyRange->GetLowerOpen(&lowerOpen);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
@@ -571,13 +591,17 @@ IDBIndex::OpenKeyCursor(nsIIDBKeyRange* aKeyRange,
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
     rv = IDBObjectStore::GetKeyFromVariant(variant, lowerKey);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
 
     rv = aKeyRange->GetUpper(getter_AddRefs(variant));
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
     rv = IDBObjectStore::GetKeyFromVariant(variant, upperKey);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
 
     rv = aKeyRange->GetLowerOpen(&lowerOpen);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
@@ -674,8 +698,6 @@ GetKeyHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 nsresult
 GetKeyHelper::GetSuccessResult(nsIWritableVariant* aResult)
 {
-  NS_ASSERTION(!mKey.IsNull(), "Badness!");
-
   if (mKey.IsUnset()) {
     aResult->SetAsEmpty();
   }

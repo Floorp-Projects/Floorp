@@ -548,7 +548,7 @@ GetAllKeySuccessEvent::GetResult(JSContext* aCx,
 
       for (jsint index = 0; index < count; index++) {
         const Key& key = keys[index];
-        NS_ASSERTION(!key.IsUnset() && !key.IsNull(), "Bad key!");
+        NS_ASSERTION(!key.IsUnset(), "Bad key!");
 
         nsresult rv = IDBObjectStore::GetJSValFromKey(key, aCx, value.jsval_addr());
         if (NS_FAILED(rv)) {

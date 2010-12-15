@@ -86,10 +86,6 @@ public:
                   jsval* aKeyVal);
 
   static nsresult
-  GetJSONFromArg0(/* jsval arg0, */
-                  nsAString& aJSON);
-
-  static nsresult
   GetKeyPathValueFromJSON(const nsAString& aJSON,
                           const nsAString& aKeyPath,
                           JSContext** aCx,
@@ -156,6 +152,13 @@ protected:
                       nsString& aJSON,
                       Key& aKey,
                       nsTArray<IndexUpdateInfo>& aUpdateInfoArray);
+
+  nsresult AddOrPut(const jsval& aValue,
+                    const jsval& aKey,
+                    JSContext* aCx,
+                    PRUint8 aOptionalArgCount,
+                    nsIIDBRequest** _retval,
+                    bool aOverwrite);
 
 private:
   nsRefPtr<IDBTransaction> mTransaction;
