@@ -91,7 +91,7 @@ gfxAndroidPlatform::CreateOffscreenSurface(const gfxIntSize& size,
 {
     nsRefPtr<gfxASurface> newSurface;
     if (contentType == gfxImageSurface::CONTENT_COLOR)
-        newSurface = new gfxImageSurface (size, gfxASurface::ImageFormatRGB16_565);
+        newSurface = new gfxImageSurface (size, GetOffscreenFormat());
     else
         newSurface = new gfxImageSurface (size, gfxASurface::FormatFromContent(contentType));
 

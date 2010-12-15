@@ -203,9 +203,9 @@ gfxQtPlatform::CreateOffscreenSurface(const gfxIntSize& size,
 
     // try to optimize it for 16bpp screen
     gfxASurface::gfxImageFormat imageFormat = gfxASurface::FormatFromContent(contentType);
-    if (gfxASurface::CONTENT_COLOR == contentType
-        && 16 == QX11Info().depth())
-        imageFormat = gfxASurface::ImageFormatRGB16_565;
+    if (gfxASurface::CONTENT_COLOR == contentType) {
+      imageFormat = GetOffscreenFormat();
+    }
 
 #ifdef CAIRO_HAS_QT_SURFACE
     if (mRenderMode == RENDER_QPAINTER) {
@@ -589,4 +589,14 @@ gfxQtPlatform::GetDPI()
     QDesktopWidget* rootWindow = qApp->desktop();
     PRInt32 dpi = rootWindow->logicalDpiY(); // y-axis DPI for fonts
     return dpi <= 0 ? 96 : dpi;
+}
+
+gfxImageFormat
+gfxQtPlatform::GetOffscreenFormat()
+{
+    if (QX11Info::appDepth() == 16) {
+        return gfxASurface::ImageFormatRGB16_565;
+    }
+
+    return gfxASurface::ImageFormatRGB24;
 }
