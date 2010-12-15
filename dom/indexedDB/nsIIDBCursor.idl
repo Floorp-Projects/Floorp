@@ -51,7 +51,7 @@ interface nsIVariant;
  * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-IDBCursor for more
  * information.
  */
-[scriptable, uuid(17cae1b9-b438-4cee-8d36-a2dc5f517c02)]
+[scriptable, uuid(12c99a5b-6e67-4d5c-8ae7-3a58da690375)]
 interface nsIIDBCursor : nsISupports
 {
   const unsigned short NEXT = 0;
@@ -69,7 +69,7 @@ interface nsIIDBCursor : nsISupports
 
   // Calling continue means that the same onsuccess function will be called
   // again with the new key/value (or null if no more matches).
-  [implicit_jscontext, optional_argc]
+  [implicit_jscontext]
   void continue([optional /* undefined */] in jsval key);
 
   // Success fires IDBTransactionEvent, result == key
