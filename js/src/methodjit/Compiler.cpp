@@ -110,6 +110,8 @@ mjit::Compiler::Compiler(JSContext *cx, JSStackFrame *fp)
     callPatches(CompilerAllocPolicy(cx, *thisFromCtor())),
     callSites(CompilerAllocPolicy(cx, *thisFromCtor())), 
     doubleList(CompilerAllocPolicy(cx, *thisFromCtor())),
+    jumpTables(CompilerAllocPolicy(cx, *thisFromCtor())),
+    jumpTableOffsets(CompilerAllocPolicy(cx, *thisFromCtor())),
     stubcc(cx, *thisFromCtor(), frame, script),
     debugMode_(cx->compartment->debugMode),
 #if defined JS_TRACER
@@ -393,7 +395,8 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
 
     size_t totalSize = masm.size() +
                        stubcc.size() +
-                       doubleList.length() * sizeof(double);
+                       doubleList.length() * sizeof(double) +
+                       jumpTableOffsets.length() * sizeof(void *);
 
     JSC::ExecutablePool *execPool = getExecPool(script, totalSize);
     if (!execPool)
@@ -764,6 +767,21 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
             stubCode.patch(patch.label, &doubleVec[i]);
         else
             fullCode.patch(patch.label, &doubleVec[i]);
+    }
+
+    /* Generate jump tables. */
+    void **jumpVec = (void **)(doubleVec + doubleList.length());
+
+    for (size_t i = 0; i < jumpTableOffsets.length(); i++) {
+        uint32 offset = jumpTableOffsets[i];
+        JS_ASSERT(jumpMap[offset].isValid());
+        jumpVec[i] = (void *)(result + masm.distanceOf(jumpMap[offset]));
+    }
+
+    /* Patch jump table references. */
+    for (size_t i = 0; i < jumpTables.length(); i++) {
+        JumpTable &jumpTable = jumpTables[i];
+        fullCode.patch(jumpTable.label, &jumpVec[jumpTable.offsetIndex]);
     }
 
     /* Patch all outgoing calls. */
@@ -1428,6 +1446,7 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_AND)
 
           BEGIN_CASE(JSOP_TABLESWITCH)
+#if defined JS_CPU_ARM /* Need to implement jump(BaseIndex) for ARM */
             frame.syncAndForgetEverything();
             masm.move(ImmPtr(PC), Registers::ArgReg1);
 
@@ -1436,6 +1455,9 @@ mjit::Compiler::generateMethod()
             frame.pop();
 
             masm.jump(Registers::ReturnReg);
+#else
+            jsop_tableswitch(PC);
+#endif
             PC += js_GetVariableBytecodeLength(PC);
             break;
           END_CASE(JSOP_TABLESWITCH)
@@ -4940,6 +4962,92 @@ mjit::Compiler::constructThis()
     INLINE_STUBCALL(stubs::CreateThis);
     frame.freeReg(protoReg);
     return true;
+}
+
+void
+mjit::Compiler::jsop_tableswitch(jsbytecode *pc)
+{
+#if defined JS_CPU_ARM
+    JS_NOT_REACHED("Implement jump(BaseIndex) for ARM");
+#else
+    jsbytecode *originalPC = pc;
+
+    uint32 defaultTarget = GET_JUMP_OFFSET(pc);
+    pc += JUMP_OFFSET_LEN;
+
+    jsint low = GET_JUMP_OFFSET(pc);
+    pc += JUMP_OFFSET_LEN;
+    jsint high = GET_JUMP_OFFSET(pc);
+    pc += JUMP_OFFSET_LEN;
+    int numJumps = high + 1 - low;
+    JS_ASSERT(numJumps >= 0);
+
+    /*
+     * If there are no cases, this is a no-op. The default case immediately
+     * follows in the bytecode and is always taken.
+     */
+    if (numJumps == 0) {
+        frame.pop();
+        return;
+    }
+
+    FrameEntry *fe = frame.peek(-1);
+    if (fe->isNotType(JSVAL_TYPE_INT32) || numJumps > 256) {
+        frame.syncAndForgetEverything();
+        masm.move(ImmPtr(originalPC), Registers::ArgReg1);
+
+        /* prepareStubCall() is not needed due to forgetEverything() */
+        INLINE_STUBCALL(stubs::TableSwitch);
+        frame.pop();
+        masm.jump(Registers::ReturnReg);
+        return;
+    }
+
+    RegisterID dataReg;
+    if (fe->isConstant()) {
+        JS_ASSERT(fe->isType(JSVAL_TYPE_INT32));
+        dataReg = frame.allocReg();
+        masm.move(Imm32(fe->getValue().toInt32()), dataReg);
+    } else {
+        dataReg = frame.copyDataIntoReg(fe);
+    }
+
+    RegisterID reg = frame.allocReg();
+    frame.syncAndForgetEverything();
+
+    MaybeJump notInt;
+    if (!fe->isType(JSVAL_TYPE_INT32))
+        notInt = masm.testInt32(Assembler::NotEqual, frame.addressOf(fe));
+
+    JumpTable jt;
+    jt.offsetIndex = jumpTableOffsets.length();
+    jt.label = masm.moveWithPatch(ImmPtr(NULL), reg);
+    jumpTables.append(jt);
+
+    for (int i = 0; i < numJumps; i++) {
+        uint32 target = GET_JUMP_OFFSET(pc);
+        if (!target)
+            target = defaultTarget;
+        uint32 offset = (originalPC + target) - script->code;
+        jumpTableOffsets.append(offset);
+        pc += JUMP_OFFSET_LEN;
+    }
+    if (low != 0)
+        masm.sub32(Imm32(low), dataReg);
+    Jump defaultCase = masm.branch32(Assembler::AboveOrEqual, dataReg, Imm32(numJumps));
+    BaseIndex jumpTarget(reg, dataReg, Assembler::ScalePtr);
+    masm.jump(jumpTarget);
+
+    if (notInt.isSet()) {
+        stubcc.linkExitDirect(notInt.get(), stubcc.masm.label());
+        stubcc.leave();
+        stubcc.masm.move(ImmPtr(originalPC), Registers::ArgReg1);
+        OOL_STUBCALL(stubs::TableSwitch);
+        stubcc.masm.jump(Registers::ReturnReg);
+    }
+    frame.pop();
+    jumpAndTrace(defaultCase, originalPC + defaultTarget);
+#endif
 }
 
 void

@@ -1680,6 +1680,13 @@ public:
         m_formatter.oneByteOp(OP_GROUP5_Ev, GROUP5_OP_JMPN, base, offset);
     }
 
+    void jmp_m(int offset, RegisterID base, RegisterID index, int scale) {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "jmp       ((%d(%s,%s,%d)))\n", MAYBE_PAD,
+                       offset, nameIReg(base), nameIReg(index), scale);
+        m_formatter.oneByteOp(OP_GROUP5_Ev, GROUP5_OP_JMPN, base, index, scale, offset);
+    }
+
     JmpSrc jne()
     {
         return jCC(ConditionNE);
