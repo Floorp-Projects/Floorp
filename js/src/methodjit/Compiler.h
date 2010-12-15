@@ -266,6 +266,11 @@ class Compiler : public BaseCompiler
         bool ool;
     };
 
+    struct JumpTable {
+        DataLabelPtr label;
+        size_t offsetIndex;
+    };
+
     JSStackFrame *fp;
     JSScript *script;
     JSObject *scopeChain;
@@ -293,6 +298,8 @@ class Compiler : public BaseCompiler
     js::Vector<CallPatchInfo, 64, CompilerAllocPolicy> callPatches;
     js::Vector<InternalCallSite, 64, CompilerAllocPolicy> callSites;
     js::Vector<DoublePatch, 16, CompilerAllocPolicy> doubleList;
+    js::Vector<JumpTable, 16> jumpTables;
+    js::Vector<uint32, 16> jumpTableOffsets;
     StubCompiler stubcc;
     Label invokeLabel;
     Label arityLabel;
@@ -406,6 +413,7 @@ class Compiler : public BaseCompiler
     void leaveBlock();
     void emitEval(uint32 argc);
     void jsop_arguments();
+    void jsop_tableswitch(jsbytecode *pc);
 
     /* Fast arithmetic. */
     void jsop_binary(JSOp op, VoidStub stub);

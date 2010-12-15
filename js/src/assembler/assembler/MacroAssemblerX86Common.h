@@ -857,7 +857,11 @@ public:
         m_assembler.jmp_m(address.offset, address.base);
     }
 
-    
+    void jump(BaseIndex address)
+    {
+        m_assembler.jmp_m(address.offset, address.base, address.index, address.scale);
+    }
+
     // Arithmetic control flow operations:
     //
     // This set of conditional branch operations branch based
