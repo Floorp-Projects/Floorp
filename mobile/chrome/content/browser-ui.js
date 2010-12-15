@@ -1743,8 +1743,16 @@ var FindHelperUI = {
   },
 
   handleEvent: function findHelperHandleEvent(aEvent) {
-    if (aEvent.type == "TabSelect" || (aEvent.type == "URLChanged" && aEvent.target == Browser.selectedBrowser))
-      this.hide();
+    switch (aEvent.type) {
+      case "TabSelect":
+        this.hide();
+        break;
+
+      case "URLChanged":
+        if (aEvent.detail && aEvent.target == getBrowser())
+          this.hide();
+        break;
+    }
   },
 
   show: function findHelperShow() {
@@ -1929,7 +1937,7 @@ var FormHelperUI = {
         break;
 
       case "URLChanged":
-        if (aEvent.target == Browser.selectedBrowser)
+        if (aEvent.detail && aEvent.target == getBrowser())
           this.hide();
         break;
 

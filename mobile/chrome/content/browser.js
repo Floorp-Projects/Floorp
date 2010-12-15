@@ -2340,7 +2340,8 @@ ProgressController.prototype = {
     if (this._tab == Browser.selectedTab)
       BrowserUI.updateURI();
 
-    if (location != this.browser.lastLocation) {
+    let locationHasChanged = (location != this.browser.lastLocation);
+    if (locationHasChanged) {
       TapHighlightHelper.hide();
 
       this.browser.lastLocation = location;
@@ -2356,8 +2357,8 @@ ProgressController.prototype = {
       }
     }
 
-    let event = document.createEvent("Events");
-    event.initEvent("URLChanged", true, false);
+    let event = document.createEvent("UIEvents");
+    event.initUIEvent("URLChanged", true, false, window, locationHasChanged);
     this.browser.dispatchEvent(event);
   },
 
