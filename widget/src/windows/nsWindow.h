@@ -500,6 +500,7 @@ protected:
   PRPackedBool          mHideChrome;
   PRPackedBool          mIsRTL;
   PRPackedBool          mFullscreenMode;
+  PRPackedBool          mMousePresent;
   PRUint32              mBlurSuppressLevel;
   DWORD_PTR             mOldStyle;
   DWORD_PTR             mOldExStyle;
