@@ -54,7 +54,7 @@ bool CrashGenerationClient::RequestDumpForException(
   info.exception_code = exception_code;
   info.exception_subcode = exception_subcode;
   message.SetData(&info, sizeof(info));
-  
+
   const mach_msg_timeout_t kSendTimeoutMs = 2 * 1000;
   kern_return_t result = sender_.SendMessage(message, kSendTimeoutMs);
   if (result != KERN_SUCCESS)
@@ -66,7 +66,6 @@ bool CrashGenerationClient::RequestDumpForException(
   MachReceiveMessage acknowledge_message;
   result = acknowledge_port.WaitForMessage(&acknowledge_message,
 					   kReceiveTimeoutMs);
-  
   return result == KERN_SUCCESS;
 }
 

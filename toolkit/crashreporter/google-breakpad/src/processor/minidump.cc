@@ -839,7 +839,7 @@ bool MinidumpContext::CheckAgainstSystemInfo(u_int32_t context_cpu_type) {
 
   BPLOG_IF(ERROR, !return_value) << "MinidumpContext CPU " <<
                                     HexString(context_cpu_type) <<
-                                    " wrong for MinidumpSysmtemInfo CPU " <<
+                                    " wrong for MinidumpSystemInfo CPU " <<
                                     HexString(system_info_cpu_type);
 
   return return_value;

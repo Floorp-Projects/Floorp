@@ -1,4 +1,4 @@
-// Copyright (c) 2006, Google Inc.
+// Copyright (c) 2010, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -27,55 +27,48 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+// minidump_generator_test_helper.cc: A helper program that
+//   minidump_generator_test.cc can launch to test certain things
+//   that require a separate executable.
+
 #include <unistd.h>
 
-#include <pthread.h>
-#include <pwd.h>
+#include "client/mac/handler/exception_handler.h"
+#include "common/mac/MachIPC.h"
 
-#include <CoreFoundation/CoreFoundation.h>
+using google_breakpad::MachPortSender;
+using google_breakpad::MachReceiveMessage;
+using google_breakpad::MachSendMessage;
+using google_breakpad::ReceivePort;
 
-#include "minidump_generator.h"
-#include "minidump_file_writer.h"
+int main(int argc, char** argv) {
+  if (argc < 2)
+    return 1;
 
-using std::string;
-using google_breakpad::MinidumpGenerator;
+  if (strcmp(argv[1], "crash") != 0) {
+    const int kTimeoutMs = 2000;
+    // Send parent process the task and thread ports.
+    MachSendMessage child_message(0);
+    child_message.AddDescriptor(mach_task_self());
+    child_message.AddDescriptor(mach_thread_self());
 
-static bool doneWritingReport = false;
+    MachPortSender child_sender(argv[1]);
+    if (child_sender.SendMessage(child_message, kTimeoutMs) != KERN_SUCCESS) {
+      fprintf(stderr, "Error sending message from child process!\n");
+      exit(1);
+    }
 
-static void *Reporter(void *) {
-  char buffer[PATH_MAX];
-  MinidumpGenerator md;
-
-  // Write it to the desktop
-  snprintf(buffer,
-           sizeof(buffer),
-           "/tmp/test.dmp");
-
-
-  fprintf(stdout, "Writing %s\n", buffer);
-  unlink(buffer);
-  md.Write(buffer);
-  doneWritingReport = true;
-
-  return NULL;
-}
-
-static void SleepyFunction() {
-  while (!doneWritingReport) {
-    usleep(100);
+    // Loop forever.
+    while (true) {
+      sleep(100);
+    }
+  } else if (argc == 3 && strcmp(argv[1], "crash") == 0) {
+    // Instantiate an OOP exception handler
+    google_breakpad::ExceptionHandler eh("", NULL, NULL, NULL, true, argv[2]);
+    // and crash.
+    int *a = (int*)0x42;
+    *a = 1;
   }
-}
-
-int main(int argc, char * const argv[]) {
-  pthread_t reporter_thread;
-
-  if (pthread_create(&reporter_thread, NULL, Reporter, NULL) == 0) {
-    pthread_detach(reporter_thread);
-  } else {
-    perror("pthread_create");
-  }
-
-  SleepyFunction();
 
   return 0;
 }

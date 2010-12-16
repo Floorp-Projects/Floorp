@@ -51,17 +51,44 @@
 		8B4BDABE12012CEF009C7060 /* libcrypto.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 8B4BDAA7120124EA009C7060 /* libcrypto.dylib */; };
 		8B4BDAC512012D05009C7060 /* libcrypto.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 8B4BDAA7120124EA009C7060 /* libcrypto.dylib */; };
 		8DC2EF570486A6940098B216 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7B1FEA5585E11CA2CBB /* Cocoa.framework */; };
+		D23F4B2E12A7E13200686C8D /* minidump_generator_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = D23F4B2C12A7E13200686C8D /* minidump_generator_test.cc */; };
+		D23F4B3312A7E17700686C8D /* libgtest.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D2F9A41512131EF0002747C1 /* libgtest.a */; };
+		D23F4BB112A868CB00686C8D /* minidump_generator_test_helper.cc in Sources */ = {isa = PBXBuildFile; fileRef = D23F4B9A12A8688800686C8D /* minidump_generator_test_helper.cc */; };
+		D23F4BB812A868F700686C8D /* MachIPC.mm in Sources */ = {isa = PBXBuildFile; fileRef = F92C53790ECCE635009BE4BA /* MachIPC.mm */; };
 		D244536A12426F00009BBCE0 /* logging.cc in Sources */ = {isa = PBXBuildFile; fileRef = D244535112426EBB009BBCE0 /* logging.cc */; };
 		D244536B12426F00009BBCE0 /* minidump.cc in Sources */ = {isa = PBXBuildFile; fileRef = D244535212426EBB009BBCE0 /* minidump.cc */; };
 		D244536C12426F00009BBCE0 /* pathname_stripper.cc in Sources */ = {isa = PBXBuildFile; fileRef = D244535312426EBB009BBCE0 /* pathname_stripper.cc */; };
 		D244536D12426F00009BBCE0 /* basic_code_modules.cc in Sources */ = {isa = PBXBuildFile; fileRef = D244534F12426E98009BBCE0 /* basic_code_modules.cc */; };
 		D244540B12439BA0009BBCE0 /* memory_unittest.cc in Sources */ = {isa = PBXBuildFile; fileRef = D244540A12439BA0009BBCE0 /* memory_unittest.cc */; };
+		D246417012BAA40E005170D0 /* exception_handler.cc in Sources */ = {isa = PBXBuildFile; fileRef = F92C536D0ECCE3FD009BE4BA /* exception_handler.cc */; };
+		D246417112BAA41C005170D0 /* crash_generation_client.cc in Sources */ = {isa = PBXBuildFile; fileRef = D2F9A4C6121336C7002747C1 /* crash_generation_client.cc */; };
+		D246417512BAA438005170D0 /* minidump_generator.cc in Sources */ = {isa = PBXBuildFile; fileRef = F92C536F0ECCE3FD009BE4BA /* minidump_generator.cc */; };
+		D246417612BAA43F005170D0 /* dynamic_images.cc in Sources */ = {isa = PBXBuildFile; fileRef = F92C536B0ECCE3FD009BE4BA /* dynamic_images.cc */; };
+		D246417712BAA444005170D0 /* breakpad_nlist_64.cc in Sources */ = {isa = PBXBuildFile; fileRef = F92C53690ECCE3FD009BE4BA /* breakpad_nlist_64.cc */; };
+		D246418412BAA4BA005170D0 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0867D69BFE84028FC02AAC07 /* Foundation.framework */; };
+		D246418812BAA4E3005170D0 /* string_utilities.cc in Sources */ = {isa = PBXBuildFile; fileRef = F92C53820ECCE635009BE4BA /* string_utilities.cc */; };
+		D246418C12BAA508005170D0 /* minidump_file_writer.cc in Sources */ = {isa = PBXBuildFile; fileRef = F92C538F0ECCE70A009BE4BA /* minidump_file_writer.cc */; };
+		D246419012BAA52A005170D0 /* string_conversion.cc in Sources */ = {isa = PBXBuildFile; fileRef = F92C53850ECCE6AD009BE4BA /* string_conversion.cc */; };
+		D246419112BAA52F005170D0 /* convert_UTF.c in Sources */ = {isa = PBXBuildFile; fileRef = F92C53870ECCE6C0009BE4BA /* convert_UTF.c */; };
+		D246419512BAA54C005170D0 /* file_id.cc in Sources */ = {isa = PBXBuildFile; fileRef = F92C53740ECCE635009BE4BA /* file_id.cc */; };
+		D246419612BAA55A005170D0 /* macho_id.cc in Sources */ = {isa = PBXBuildFile; fileRef = F92C537A0ECCE635009BE4BA /* macho_id.cc */; };
+		D246419C12BAA65F005170D0 /* libcrypto.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 8B4BDAA7120124EA009C7060 /* libcrypto.dylib */; };
+		D24641A012BAA67F005170D0 /* macho_walker.cc in Sources */ = {isa = PBXBuildFile; fileRef = F92C537E0ECCE635009BE4BA /* macho_walker.cc */; };
+		D24641AF12BAA82D005170D0 /* macho_utilities.cc in Sources */ = {isa = PBXBuildFile; fileRef = F92C537C0ECCE635009BE4BA /* macho_utilities.cc */; };
+		D24641EC12BAC6FB005170D0 /* logging.cc in Sources */ = {isa = PBXBuildFile; fileRef = D244535112426EBB009BBCE0 /* logging.cc */; };
+		D24641ED12BAC6FB005170D0 /* minidump.cc in Sources */ = {isa = PBXBuildFile; fileRef = D244535212426EBB009BBCE0 /* minidump.cc */; };
+		D24641EE12BAC6FB005170D0 /* pathname_stripper.cc in Sources */ = {isa = PBXBuildFile; fileRef = D244535312426EBB009BBCE0 /* pathname_stripper.cc */; };
+		D24641EF12BAC6FB005170D0 /* basic_code_modules.cc in Sources */ = {isa = PBXBuildFile; fileRef = D244534F12426E98009BBCE0 /* basic_code_modules.cc */; };
 		D24BBBFD121050F000F3D417 /* breakpadUtilities.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F92C563C0ECD10B3009BE4BA /* breakpadUtilities.dylib */; };
 		D24BBD291211EDB100F3D417 /* MachIPC.mm in Sources */ = {isa = PBXBuildFile; fileRef = F92C53790ECCE635009BE4BA /* MachIPC.mm */; };
 		D24BBD321212CACF00F3D417 /* MachIPC.mm in Sources */ = {isa = PBXBuildFile; fileRef = F92C53790ECCE635009BE4BA /* MachIPC.mm */; };
 		D2A5DD301188633800081F03 /* breakpad_nlist_64.cc in Sources */ = {isa = PBXBuildFile; fileRef = F92C53690ECCE3FD009BE4BA /* breakpad_nlist_64.cc */; };
 		D2A5DD401188640400081F03 /* breakpad_nlist_64.cc in Sources */ = {isa = PBXBuildFile; fileRef = F92C53690ECCE3FD009BE4BA /* breakpad_nlist_64.cc */; };
 		D2A5DD411188642E00081F03 /* breakpad_nlist_64.cc in Sources */ = {isa = PBXBuildFile; fileRef = F92C53690ECCE3FD009BE4BA /* breakpad_nlist_64.cc */; };
+		D2C1DBE412AFC270006917BD /* logging.cc in Sources */ = {isa = PBXBuildFile; fileRef = D244535112426EBB009BBCE0 /* logging.cc */; };
+		D2C1DBE512AFC270006917BD /* minidump.cc in Sources */ = {isa = PBXBuildFile; fileRef = D244535212426EBB009BBCE0 /* minidump.cc */; };
+		D2C1DBE612AFC270006917BD /* pathname_stripper.cc in Sources */ = {isa = PBXBuildFile; fileRef = D244535312426EBB009BBCE0 /* pathname_stripper.cc */; };
+		D2C1DBE712AFC270006917BD /* basic_code_modules.cc in Sources */ = {isa = PBXBuildFile; fileRef = D244534F12426E98009BBCE0 /* basic_code_modules.cc */; };
 		D2F9A3D51212F87C002747C1 /* exception_handler_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = D2F9A3D41212F87C002747C1 /* exception_handler_test.cc */; };
 		D2F9A43D12131F55002747C1 /* gmock-all.cc in Sources */ = {isa = PBXBuildFile; fileRef = D2F9A43C12131F55002747C1 /* gmock-all.cc */; };
 		D2F9A44012131F65002747C1 /* gtest_main.cc in Sources */ = {isa = PBXBuildFile; fileRef = D2F9A43E12131F65002747C1 /* gtest_main.cc */; };
@@ -135,7 +162,6 @@
 		F93803D50F8083B7004D428B /* macho_utilities.cc in Sources */ = {isa = PBXBuildFile; fileRef = F92C537C0ECCE635009BE4BA /* macho_utilities.cc */; };
 		F93803D60F8083B7004D428B /* macho_walker.cc in Sources */ = {isa = PBXBuildFile; fileRef = F92C537E0ECCE635009BE4BA /* macho_walker.cc */; };
 		F93803D70F8083B7004D428B /* string_utilities.cc in Sources */ = {isa = PBXBuildFile; fileRef = F92C53820ECCE635009BE4BA /* string_utilities.cc */; };
-		F93803DA0F8083D8004D428B /* minidump_generator_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = F93803D90F8083D8004D428B /* minidump_generator_test.cc */; };
 		F93DE2D80F82A70E00608B94 /* minidump_file_writer_unittest.cc in Sources */ = {isa = PBXBuildFile; fileRef = F93DE2D70F82A70E00608B94 /* minidump_file_writer_unittest.cc */; };
 		F93DE2D90F82A73500608B94 /* minidump_file_writer.cc in Sources */ = {isa = PBXBuildFile; fileRef = F92C538F0ECCE70A009BE4BA /* minidump_file_writer.cc */; };
 		F93DE2DA0F82A73500608B94 /* convert_UTF.c in Sources */ = {isa = PBXBuildFile; fileRef = F92C53870ECCE6C0009BE4BA /* convert_UTF.c */; };
@@ -311,6 +337,20 @@
 			proxyType = 2;
 			remoteGlobalIDString = D21F97D211CBA0F200239E38;
 			remoteInfo = test_assembler_unittest;
+		};
+		D23F4B2F12A7E16200686C8D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0867D690FE84028FC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D2F9A41412131EF0002747C1;
+			remoteInfo = gtest;
+		};
+		D23F4BB912A8694C00686C8D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0867D690FE84028FC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D23F4BAA12A868A500686C8D;
+			remoteInfo = minidump_generator_test_helper;
 		};
 		D2F9A44212131F80002747C1 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -512,6 +552,9 @@
 		8B31FFF611F0C90500FCF3E4 /* Breakpad.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Breakpad.xcconfig; path = ../../common/mac/Breakpad.xcconfig; sourceTree = SOURCE_ROOT; };
 		8B4BDAA7120124EA009C7060 /* libcrypto.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.dylib; path = usr/lib/libcrypto.dylib; sourceTree = SDKROOT; };
 		8DC2EF5B0486A6940098B216 /* Breakpad.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Breakpad.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		D23F4B2C12A7E13200686C8D /* minidump_generator_test.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = minidump_generator_test.cc; path = tests/minidump_generator_test.cc; sourceTree = "<group>"; };
+		D23F4B9A12A8688800686C8D /* minidump_generator_test_helper.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = minidump_generator_test_helper.cc; path = tests/minidump_generator_test_helper.cc; sourceTree = "<group>"; };
+		D23F4BAB12A868A500686C8D /* minidump_generator_test_helper */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = minidump_generator_test_helper; sourceTree = BUILT_PRODUCTS_DIR; };
 		D244534F12426E98009BBCE0 /* basic_code_modules.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = basic_code_modules.cc; path = ../../processor/basic_code_modules.cc; sourceTree = SOURCE_ROOT; };
 		D244535112426EBB009BBCE0 /* logging.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = logging.cc; path = ../../processor/logging.cc; sourceTree = SOURCE_ROOT; };
 		D244535212426EBB009BBCE0 /* minidump.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = minidump.cc; path = ../../processor/minidump.cc; sourceTree = SOURCE_ROOT; };
@@ -602,7 +645,6 @@
 		F92C56A70ECE04C5009BE4BA /* crash_report_sender.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = crash_report_sender.h; path = sender/crash_report_sender.h; sourceTree = "<group>"; };
 		F92C56A80ECE04C5009BE4BA /* crash_report_sender.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = crash_report_sender.m; path = sender/crash_report_sender.m; sourceTree = "<group>"; };
 		F93803BE0F80820F004D428B /* generator_test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = generator_test; sourceTree = BUILT_PRODUCTS_DIR; };
-		F93803D90F8083D8004D428B /* minidump_generator_test.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = minidump_generator_test.cc; path = handler/minidump_generator_test.cc; sourceTree = "<group>"; };
 		F93DE2D10F82A67300608B94 /* minidump_file_writer_unittest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = minidump_file_writer_unittest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F93DE2D70F82A70E00608B94 /* minidump_file_writer_unittest.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = minidump_file_writer_unittest.cc; path = ../minidump_file_writer_unittest.cc; sourceTree = SOURCE_ROOT; };
 		F93DE32C0F82C55600608B94 /* handler_test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = handler_test; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -641,6 +683,15 @@
 			files = (
 				F92C565C0ECD1158009BE4BA /* breakpadUtilities.dylib in Frameworks */,
 				8DC2EF570486A6940098B216 /* Cocoa.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D23F4BA912A868A500686C8D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D246418412BAA4BA005170D0 /* Foundation.framework in Frameworks */,
+				D246419C12BAA65F005170D0 /* libcrypto.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -696,6 +747,7 @@
 			files = (
 				8B31029411F0D54300FCF3E4 /* Foundation.framework in Frameworks */,
 				8B4BDABE12012CEF009C7060 /* libcrypto.dylib in Frameworks */,
+				D23F4B3312A7E17700686C8D /* libgtest.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -754,6 +806,7 @@
 				F93DE32C0F82C55600608B94 /* handler_test */,
 				D2F9A41512131EF0002747C1 /* libgtest.a */,
 				D2F9A546121383A1002747C1 /* crash_generation_server_test */,
+				D23F4BAB12A868A500686C8D /* minidump_generator_test_helper */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -815,7 +868,6 @@
 		F92C53590ECCE3BB009BE4BA /* handler */ = {
 			isa = PBXGroup;
 			children = (
-				F93803D90F8083D8004D428B /* minidump_generator_test.cc */,
 				F92C53670ECCE3FD009BE4BA /* breakpad_exc_server.c */,
 				F92C53680ECCE3FD009BE4BA /* breakpad_exc_server.h */,
 				F92C53690ECCE3FD009BE4BA /* breakpad_nlist_64.cc */,
@@ -1009,6 +1061,8 @@
 		F9C77DDF0F7DD7CF0045F7DB /* tests */ = {
 			isa = PBXGroup;
 			children = (
+				D23F4B9A12A8688800686C8D /* minidump_generator_test_helper.cc */,
+				D23F4B2C12A7E13200686C8D /* minidump_generator_test.cc */,
 				D2F9A4CE121336F7002747C1 /* crash_generation_server_test.cc */,
 				D2F9A3D41212F87C002747C1 /* exception_handler_test.cc */,
 				F9C77DE00F7DD7E30045F7DB /* SimpleStringDictionaryTest.h */,
@@ -1081,6 +1135,22 @@
 			productName = Breakpad;
 			productReference = 8DC2EF5B0486A6940098B216 /* Breakpad.framework */;
 			productType = "com.apple.product-type.framework";
+		};
+		D23F4BAA12A868A500686C8D /* minidump_generator_test_helper */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D23F4BB012A868C400686C8D /* Build configuration list for PBXNativeTarget "minidump_generator_test_helper" */;
+			buildPhases = (
+				D23F4BA812A868A500686C8D /* Sources */,
+				D23F4BA912A868A500686C8D /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = minidump_generator_test_helper;
+			productName = minidump_generator_test_helper;
+			productReference = D23F4BAB12A868A500686C8D /* minidump_generator_test_helper */;
+			productType = "com.apple.product-type.tool";
 		};
 		D2F9A41412131EF0002747C1 /* gtest */ = {
 			isa = PBXNativeTarget;
@@ -1178,6 +1248,8 @@
 			buildRules = (
 			);
 			dependencies = (
+				D23F4B3012A7E16200686C8D /* PBXTargetDependency */,
+				D23F4BBA12A8694C00686C8D /* PBXTargetDependency */,
 			);
 			name = generator_test;
 			productName = generator_test;
@@ -1311,6 +1383,7 @@
 				F93DE32B0F82C55600608B94 /* handler_test */,
 				D2F9A41412131EF0002747C1 /* gtest */,
 				D2F9A52A121383A1002747C1 /* crash_generation_server_test */,
+				D23F4BAA12A868A500686C8D /* minidump_generator_test_helper */,
 			);
 		};
 /* End PBXProject section */
@@ -1545,6 +1618,28 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D23F4BA812A868A500686C8D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D23F4BB112A868CB00686C8D /* minidump_generator_test_helper.cc in Sources */,
+				D23F4BB812A868F700686C8D /* MachIPC.mm in Sources */,
+				D246417012BAA40E005170D0 /* exception_handler.cc in Sources */,
+				D246417112BAA41C005170D0 /* crash_generation_client.cc in Sources */,
+				D246417512BAA438005170D0 /* minidump_generator.cc in Sources */,
+				D246417612BAA43F005170D0 /* dynamic_images.cc in Sources */,
+				D246417712BAA444005170D0 /* breakpad_nlist_64.cc in Sources */,
+				D246418812BAA4E3005170D0 /* string_utilities.cc in Sources */,
+				D246418C12BAA508005170D0 /* minidump_file_writer.cc in Sources */,
+				D246419012BAA52A005170D0 /* string_conversion.cc in Sources */,
+				D246419112BAA52F005170D0 /* convert_UTF.c in Sources */,
+				D246419512BAA54C005170D0 /* file_id.cc in Sources */,
+				D246419612BAA55A005170D0 /* macho_id.cc in Sources */,
+				D24641A012BAA67F005170D0 /* macho_walker.cc in Sources */,
+				D24641AF12BAA82D005170D0 /* macho_utilities.cc in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D2F9A41212131EF0002747C1 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1575,6 +1670,10 @@
 				D2F9A53A121383A1002747C1 /* macho_utilities.cc in Sources */,
 				D2F9A53B121383A1002747C1 /* macho_walker.cc in Sources */,
 				D2F9A53C121383A1002747C1 /* string_utilities.cc in Sources */,
+				D24641EC12BAC6FB005170D0 /* logging.cc in Sources */,
+				D24641ED12BAC6FB005170D0 /* minidump.cc in Sources */,
+				D24641EE12BAC6FB005170D0 /* pathname_stripper.cc in Sources */,
+				D24641EF12BAC6FB005170D0 /* basic_code_modules.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1621,6 +1720,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D2C1DBE412AFC270006917BD /* logging.cc in Sources */,
+				D2C1DBE512AFC270006917BD /* minidump.cc in Sources */,
+				D2C1DBE612AFC270006917BD /* pathname_stripper.cc in Sources */,
+				D2C1DBE712AFC270006917BD /* basic_code_modules.cc in Sources */,
 				D2F9A4DF12133AD9002747C1 /* crash_generation_client.cc in Sources */,
 				D2F9A4E012133AD9002747C1 /* crash_generation_server.cc in Sources */,
 				D24BBD291211EDB100F3D417 /* MachIPC.mm in Sources */,
@@ -1636,7 +1739,7 @@
 				F93803D50F8083B7004D428B /* macho_utilities.cc in Sources */,
 				F93803D60F8083B7004D428B /* macho_walker.cc in Sources */,
 				F93803D70F8083B7004D428B /* string_utilities.cc in Sources */,
-				F93803DA0F8083D8004D428B /* minidump_generator_test.cc in Sources */,
+				D23F4B2E12A7E13200686C8D /* minidump_generator_test.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1732,6 +1835,16 @@
 			isa = PBXTargetDependency;
 			name = minidump_upload;
 			targetProxy = 8B31051E11F1010E00FCF3E4 /* PBXContainerItemProxy */;
+		};
+		D23F4B3012A7E16200686C8D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D2F9A41412131EF0002747C1 /* gtest */;
+			targetProxy = D23F4B2F12A7E16200686C8D /* PBXContainerItemProxy */;
+		};
+		D23F4BBA12A8694C00686C8D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D23F4BAA12A868A500686C8D /* minidump_generator_test_helper */;
+			targetProxy = D23F4BB912A8694C00686C8D /* PBXContainerItemProxy */;
 		};
 		D2F9A44312131F80002747C1 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -1930,6 +2043,10 @@
 			baseConfigurationReference = 8B31027711F0D3AF00FCF3E4 /* BreakpadDebug.xcconfig */;
 			buildSettings = {
 				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
+				SDKROOT = macosx10.5;
+				"SDKROOT[arch=i386]" = macosx10.4;
+				"SDKROOT[arch=ppc]" = macosx10.4;
+				"SDKROOT[arch=x86_64]" = macosx10.6;
 			};
 			name = Debug;
 		};
@@ -1938,6 +2055,49 @@
 			baseConfigurationReference = 8B31027811F0D3AF00FCF3E4 /* BreakpadRelease.xcconfig */;
 			buildSettings = {
 				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
+			};
+			name = Release;
+		};
+		D23F4BAD12A868A600686C8D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				HEADER_SEARCH_PATHS = ../..;
+				INSTALL_PATH = /usr/local/bin;
+				PREBINDING = NO;
+				PRODUCT_NAME = minidump_generator_test_helper;
+			};
+			name = Debug;
+		};
+		D23F4BAE12A868A600686C8D /* Debug With Code Coverage */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				INSTALL_PATH = /usr/local/bin;
+				PREBINDING = NO;
+				PRODUCT_NAME = minidump_generator_test_helper;
+			};
+			name = "Debug With Code Coverage";
+		};
+		D23F4BAF12A868A600686C8D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_MODEL_TUNING = G5;
+				INSTALL_PATH = /usr/local/bin;
+				PREBINDING = NO;
+				PRODUCT_NAME = minidump_generator_test_helper;
+				ZERO_LINK = NO;
 			};
 			name = Release;
 		};
@@ -1987,6 +2147,7 @@
 			buildSettings = {
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_PREPROCESSOR_DEFINITIONS = "BP_LOGGING_INCLUDE=\\\"client/mac/tests/testlogging.h\\\"";
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
 					../..,
@@ -2094,7 +2255,15 @@
 		F93803C00F808210004D428B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				HEADER_SEARCH_PATHS = ../..;
+				GCC_PREPROCESSOR_DEFINITIONS = "BP_LOGGING_INCLUDE=\\\"client/mac/tests/testlogging.h\\\"";
+				HEADER_SEARCH_PATHS = (
+					../..,
+					../../..,
+					../../testing,
+					../../testing/include,
+					../../testing/gtest,
+					../../testing/gtest/include,
+				);
 				PRODUCT_NAME = generator_test;
 			};
 			name = Debug;
@@ -2352,6 +2521,16 @@
 				1DEB91B208733DA50010E9CD /* Debug */,
 				F93DE3B90F830E7000608B94 /* Debug With Code Coverage */,
 				1DEB91B308733DA50010E9CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D23F4BB012A868C400686C8D /* Build configuration list for PBXNativeTarget "minidump_generator_test_helper" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D23F4BAD12A868A600686C8D /* Debug */,
+				D23F4BAE12A868A600686C8D /* Debug With Code Coverage */,
+				D23F4BAF12A868A600686C8D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
