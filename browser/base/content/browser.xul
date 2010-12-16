@@ -303,7 +303,8 @@
     </menupopup>
 
     <menupopup id="blockedPopupOptions"
-               onpopupshowing="gPopupBlockerObserver.fillPopupList(event);">
+               onpopupshowing="gPopupBlockerObserver.fillPopupList(event);"
+               onpopuphiding="gPopupBlockerObserver.onPopupHiding(event);">
       <menuitem observes="blockedPopupAllowSite"/>
       <menuitem observes="blockedPopupEditSettings"/>
       <menuitem observes="blockedPopupDontShowMessage"/>
@@ -566,6 +567,12 @@
           </box>
           <label id="urlbar-display" value="&urlbar.switchToTab.label;"/>
           <hbox id="urlbar-icons">
+            <image id="page-report-button"
+                   class="urlbar-icon"
+                   hidden="true"
+                   tooltiptext="&pageReportIcon.tooltip;"
+                   onclick="gPopupBlockerObserver.onReportButtonClick(event);"/>
+
             <image id="star-button"
                    class="urlbar-icon"
                    hidden="true"

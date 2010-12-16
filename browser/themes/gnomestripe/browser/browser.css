@@ -1314,6 +1314,11 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   background-image: -moz-linear-gradient(rgb(237,120,120), rgb(216,92,92));
 }
 
+/* Popup blocker button */
+#page-report-button {
+  list-style-image: url("chrome://browser/skin/Info.png");
+}
+
 /* Star button */
 #star-button {
   padding: 1px;

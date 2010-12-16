@@ -47,6 +47,7 @@ browser.jar:
   skin/classic/browser/Toolbar.png
   skin/classic/browser/toolbarbutton-dropmarker.png
   skin/classic/browser/urlbar-favicon-glow.png
+  skin/classic/browser/urlbar-popup-blocked.png
   skin/classic/browser/feeds/subscribe.css                  (feeds/subscribe.css)
   skin/classic/browser/feeds/subscribe-ui.css               (feeds/subscribe-ui.css)
   skin/classic/browser/feeds/feedIcon.png                   (feeds/feedIcon.png)

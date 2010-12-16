@@ -1351,6 +1351,22 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   background-image: -moz-linear-gradient(rgb(244,156,128), rgb(215,101,77) 49%, rgb(194,66,48) 51%, rgb(170,41,23));
 }
 
+/* popup blocker button */
+
+#page-report-button {
+  list-style-image: url("chrome://browser/skin/urlbar-popup-blocked.png");
+  -moz-image-region: rect(0, 16px, 16px, 0);
+}
+
+#page-report-button:hover {
+  -moz-image-region: rect(0, 32px, 16px, 16px);
+}
+
+#page-report-button:hover:active,
+#page-report-button[open="true"] {
+  -moz-image-region: rect(0, 48px, 16px, 32px);
+}
+
 /* star button */
 
 #star-button {
