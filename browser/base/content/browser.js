@@ -372,15 +372,35 @@ function findChildShell(aDocument, aDocShell, aSoughtURI) {
   return null;
 }
 
-const gPopupBlockerObserver = {
+var gPopupBlockerObserver = {
+  _reportButton: null,
+  
+  onReportButtonClick: function (aEvent)
+  {
+    if (aEvent.button != 0 || aEvent.target != this._reportButton)
+      return;
 
-  onUpdatePageReport: function (aEvent)
+    document.getElementById("blockedPopupOptions")
+            .openPopup(this._reportButton, "after_end", 0, 2, false, false, aEvent);
+  },
+
+  handleEvent: function (aEvent)
   {
     if (aEvent.originalTarget != gBrowser.selectedBrowser)
       return;
 
-    if (!gBrowser.pageReport)
+    if (!this._reportButton && gURLBar)
+      this._reportButton = document.getElementById("page-report-button");
+
+    if (!gBrowser.pageReport) {
+      // Hide the icon in the location bar (if the location bar exists)
+      if (gURLBar)
+        this._reportButton.hidden = true;
       return;
+    }
+
+    if (gURLBar)
+      this._reportButton.hidden = false;
 
     // Only show the notification again if we've not already shown it. Since
     // notifications are per-browser, we don't need to worry about re-adding
@@ -538,7 +558,16 @@ const gPopupBlockerObserver = {
     var blockedPopupDontShowMessage = document.getElementById("blockedPopupDontShowMessage");
     var showMessage = gPrefService.getBoolPref("privacy.popups.showBrowserMessage");
     blockedPopupDontShowMessage.setAttribute("checked", !showMessage);
-    blockedPopupDontShowMessage.setAttribute("label", gNavigatorBundle.getString("popupWarningDontShowFromMessage"));
+    if (aEvent.target.anchorNode.id == "page-report-button") {
+      aEvent.target.anchorNode.setAttribute("open", "true");
+      blockedPopupDontShowMessage.setAttribute("label", gNavigatorBundle.getString("popupWarningDontShowFromLocationbar"));
+    } else
+      blockedPopupDontShowMessage.setAttribute("label", gNavigatorBundle.getString("popupWarningDontShowFromMessage"));
+  },
+
+  onPopupHiding: function (aEvent) {
+    if (aEvent.target.anchorNode.id == "page-report-button")
+      aEvent.target.anchorNode.removeAttribute("open");
   },
 
   showBlockedPopup: function (aEvent)
@@ -1264,7 +1293,7 @@ function HandleAppCommandEvent(evt) {
 }
 
 function prepareForStartup() {
-  gBrowser.addEventListener("DOMUpdatePageReport", gPopupBlockerObserver.onUpdatePageReport, false);
+  gBrowser.addEventListener("DOMUpdatePageReport", gPopupBlockerObserver, false);
 
   gBrowser.addEventListener("PluginNotFound",     gPluginHandler, true);
   gBrowser.addEventListener("PluginCrashed",      gPluginHandler, true);
