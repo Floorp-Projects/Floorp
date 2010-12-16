@@ -132,6 +132,11 @@ var ViewConfig = {
   },
 
   _currentItem: null,
+
+  delayEdit: function(aItem) {
+    setTimeout(this.edit.bind(this), 0, aItem);
+  },
+
   edit: function(aItem) {
     if (!aItem)
       return;

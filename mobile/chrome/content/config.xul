@@ -61,7 +61,7 @@
              emptytext="&empty.label;"/>
 
     <hbox id="main-container" class="panel-dark">
-      <richlistbox id="prefs-container" flex="1" onselect="ViewConfig.edit(this.selectedItem)" batch="25">
+      <richlistbox id="prefs-container" flex="1" onselect="ViewConfig.delayEdit(this.selectedItem)" batch="25">
         <richlistitem id="editor-row">
           <vbox id="editor-container" flex="1">
 
