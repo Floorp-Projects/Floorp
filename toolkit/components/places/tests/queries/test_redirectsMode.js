@@ -283,6 +283,10 @@ function add_visits_to_database() {
 
 // Main
 function run_test() {
+  // Bug 523578: temporarily disabled on Windows due to frequent random failures.
+  if ("@mozilla.org/windows-registry-key;1" in Components.classes)
+    return;
+
   // Populate the database.
   add_visits_to_database();
 
