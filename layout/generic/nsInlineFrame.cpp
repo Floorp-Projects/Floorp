@@ -166,8 +166,7 @@ nsInlineFrame::IsEmpty()
 }
 
 PRBool
-nsInlineFrame::PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset,
-                                   PRBool aRespectClusters)
+nsInlineFrame::PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset)
 {
   // Override the implementation in nsFrame, to skip empty inline frames
   NS_ASSERTION (aOffset && *aOffset <= 1, "aOffset out of range");
