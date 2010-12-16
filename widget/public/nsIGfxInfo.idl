@@ -117,5 +117,12 @@ interface nsIGfxInfo : nsISupports
    * FEATURE_BLOCKED_DRIVER_VERSION, otherwise return an empty string. 
    */
   DOMString getFeatureSuggestedDriverVersion(in long aFeature);
+
+  /**
+   * WebGL info; valid params are "full-renderer", "vendor", "renderer", "version",
+   * "shading_language_version", "extensions".  These return info from
+   * underlying GL impl that's used to implement WebGL.
+   */
+  DOMString getWebGLParameter(in DOMString aParam);
 };
 

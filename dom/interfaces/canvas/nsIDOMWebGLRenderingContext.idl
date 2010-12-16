@@ -822,4 +822,9 @@ interface nsIDOMWebGLRenderingContext : nsISupports
   void vertexAttribPointer(in WebGLuint idx, in WebGLint size, in WebGLenum type, in WebGLboolean normalized, in WebGLsizei stride, in WebGLsizeiptr offset);
 
   void viewport(in WebGLint x, in WebGLint y, in WebGLsizei width, in WebGLsizei height);
+
+  // get an underlying GL parameter, without any WebGL intervention.
+  // Most useful for querying GL_VENDOR/GL_RENDERER for identifying
+  // the underlying renderer to the user.
+  [noscript] DOMString mozGetUnderlyingParamString(in WebGLenum pname);
 };

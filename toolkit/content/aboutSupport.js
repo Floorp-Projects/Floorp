@@ -1,3 +1,4 @@
+# -*- Mode: js2; indent-tabs-mode: nil; js2-basic-offset: 2; -*-
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -240,8 +241,18 @@ function populateGraphicsSection() {
       createElement("td", dwEnabled),
     ]));
 
-    appendChildren(graphics_tbody, trGraphics);
+    var webglrenderer;
+    try {
+      webglrenderer = gfxInfo.getWebGLParameter("full-renderer");
+    } catch (e) {
+      webglrenderer = "(WebGL unavailable)";
+    }
+    trGraphics.push(createParentElement("tr", [
+      createHeader(bundle.GetStringFromName("webglRenderer")),
+      createElement("td", webglrenderer)
+    ]));
 
+    appendChildren(graphics_tbody, trGraphics);
   } // end if (gfxInfo)
 
   let windows = Services.ww.getWindowEnumerator();

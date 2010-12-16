@@ -39,6 +39,7 @@
 #include <windows.h>
 #include "gfxWindowsPlatform.h"
 #include "GfxInfo.h"
+#include "GfxInfoWebGL.h"
 #include "nsUnicharUtils.h"
 #include "nsPrintfCString.h"
 #include "mozilla/FunctionTimer.h"
@@ -750,4 +751,10 @@ GfxInfo::GetFeatureSuggestedDriverVersion(PRInt32 aFeature, nsAString& aSuggeste
 {
   PRInt32 i;
   return GetFeatureStatusImpl(aFeature, &i, aSuggestedDriverVersion);
+}
+
+NS_IMETHODIMP
+GfxInfo::GetWebGLParameter(const nsAString& aParam, nsAString& aResult)
+{
+  return GfxInfoWebGL::GetWebGLParameter(aParam, aResult);
 }
