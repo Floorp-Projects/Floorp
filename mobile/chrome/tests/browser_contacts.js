@@ -73,5 +73,16 @@ let tests = {
     is(firstEmail, "super.cool@place.com", "The non-contact entry is first");
 
     fh.removeAllEntries();
+  },
+
+  testFakeInputField: function() {
+    let attributes = ["type", "id", "class"];
+    for (let i = 0; i < attributes.length; i++) {
+      let field = document.createElementNS("http://www.w3.org/1999/xhtml", "html:input");
+      field.setAttribute(attributes[i], "tel");
+
+      let results = fac.autoCompleteSearch("", "-Jo", field, null);
+      is(results.matchCount, 1 + prePhoneCount, "Found 1 phone number -Jo");
+    }
   }
 };
