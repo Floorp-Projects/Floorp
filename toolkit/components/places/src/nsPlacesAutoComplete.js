@@ -158,7 +158,12 @@ function initTempTable(aDatabase)
  */
 function inPrivateBrowsingMode()
 {
-  return pb.privateBrowsingEnabled;
+  try {
+    return pb.privateBrowsingEnabled;
+  }
+  catch (ex) {
+    return false;
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
