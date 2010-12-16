@@ -135,6 +135,9 @@ private:
                              nsISocketTransport **sock,
                              nsIAsyncInputStream **instream,
                              nsIAsyncOutputStream **outstream);
+    nsresult AssignTransport(nsISocketTransport *sock,
+                             nsIAsyncOutputStream *outs,
+                             nsIAsyncInputStream *ins);
 
     nsresult OnTransactionDone(nsresult reason);
     nsresult OnSocketWritable();
@@ -146,8 +149,8 @@ private:
     PRBool   SupportsPipelining(nsHttpResponseHead *);
     
     static void  IdleSynTimeout(nsITimer *, void *);
-    nsresult     SelectPrimaryTransport(nsIAsyncOutputStream *out);
-    nsresult     ReleaseBackupTransport(nsISocketTransport *sock,
+    void         SelectPrimaryTransport(nsIAsyncOutputStream *out);
+    void         ReleaseBackupTransport(nsISocketTransport *sock,
                                         nsIAsyncOutputStream *outs,
                                         nsIAsyncInputStream *ins);
 private:
@@ -182,6 +185,7 @@ private:
     // attempt when network.http.connection-retry-timeout has expired
     PRUint8                         mSocketCaps;
     nsCOMPtr<nsITimer>              mIdleSynTimer;
+    nsRefPtr<nsHttpConnection>      mBackupConnection;
 
     nsCOMPtr<nsISocketTransport>    mSocketTransport1;
     nsCOMPtr<nsIAsyncInputStream>   mSocketIn1;

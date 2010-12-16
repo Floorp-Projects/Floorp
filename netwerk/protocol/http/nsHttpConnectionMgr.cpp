@@ -598,8 +598,8 @@ nsHttpConnectionMgr::AtActiveConnectionLimit(nsConnectionEntry *ent, PRUint8 cap
     LOG(("nsHttpConnectionMgr::AtActiveConnectionLimit [ci=%s caps=%x]\n",
         ci->HashKey().get(), caps));
 
-    // If we have more active connections than the limit, then we're done --
-    // purging idle connections won't get us below it.
+    // If there are more active connections than the global limit, then we're
+    // done. Purging idle connections won't get us below it.
     if (mNumActiveConns >= mMaxConns) {
         LOG(("  num active conns == max conns\n"));
         return PR_TRUE;
@@ -634,6 +634,18 @@ nsHttpConnectionMgr::AtActiveConnectionLimit(nsConnectionEntry *ent, PRUint8 cap
     // use >= just to be safe
     return (totalCount >= maxConns) || ( (caps & NS_HTTP_ALLOW_KEEPALIVE) &&
                                          (persistCount >= maxPersistConns) );
+}
+
+void
+nsHttpConnectionMgr::GetConnection(nsHttpConnectionInfo *ci,
+                                   PRUint8 caps,
+                                   nsHttpConnection **result)
+{
+    NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+    nsCStringKey key(ci->HashKey());
+    nsConnectionEntry *ent = (nsConnectionEntry *) mCT.Get(&key);
+    if (!ent) return;
+    GetConnection(ent, caps, result);
 }
 
 void
@@ -704,6 +716,11 @@ nsHttpConnectionMgr::GetConnection(nsConnectionEntry *ent, PRUint8 caps,
         }
     }
 
+    // hold an owning ref to this connection
+    ent->mActiveConns.AppendElement(conn);
+    mNumActiveConns++;
+    NS_ADDREF(conn);
+
     *result = conn;
 }
 
@@ -727,11 +744,6 @@ nsHttpConnectionMgr::DispatchTransaction(nsConnectionEntry *ent,
         if (BuildPipeline(ent, trans, &pipeline))
             trans = pipeline;
     }
-
-    // hold an owning ref to this connection
-    ent->mActiveConns.AppendElement(conn);
-    mNumActiveConns++;
-    NS_ADDREF(conn);
 
     // give the transaction the indirect reference to the connection.
     trans->SetConnection(handle);
@@ -847,15 +859,6 @@ nsHttpConnectionMgr::ProcessNewTransaction(nsHttpTransaction *trans)
 
         // destroy connection handle.
         trans->SetConnection(nsnull);
-
-        // remove sticky connection from active connection list; we'll add it
-        // right back in DispatchTransaction.
-        if (ent->mActiveConns.RemoveElement(conn))
-            mNumActiveConns--;
-        else {
-            NS_ERROR("sticky connection not found in active list");
-            return NS_ERROR_UNEXPECTED;
-        }
     }
     else
         GetConnection(ent, caps, &conn);
