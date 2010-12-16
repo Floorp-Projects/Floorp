@@ -45,18 +45,20 @@ import java.net.SocketException;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Timer;
+
 import com.mozilla.SUTAgentAndroid.service.ASMozStub;
 import com.mozilla.SUTAgentAndroid.service.DoCommand;
+import com.mozilla.watcher.*;
 
-// import dalvik.system.VMRuntime;
 import android.app.Activity;
 import android.app.KeyguardManager;
 import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
-// import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.net.Uri;
 import android.net.wifi.SupplicantState;
 import android.net.wifi.WifiConfiguration;
@@ -65,7 +67,6 @@ import android.net.wifi.WifiManager;
 import android.net.wifi.WifiManager.WifiLock;
 import android.os.BatteryManager;
 import android.os.Bundle;
-import android.os.Debug;
 import android.os.PowerManager;
 import android.telephony.TelephonyManager;
 import android.util.Log;
@@ -83,7 +84,6 @@ public class SUTAgentAndroid extends Activity
 	MenuItem mExitMenuItem;
 	Timer timer = null;
 	
-//	public static SUTAgentAndroid me = null;
     public static String sUniqueID = null;
     public static String sLocalIPAddr = null;
     public static String sACStatus = null;
@@ -105,7 +105,8 @@ public class SUTAgentAndroid extends Activity
     private PowerManager.WakeLock pwl = null;
     
     private BroadcastReceiver battReceiver = null;
-//    private ComponentName service = null;
+    
+    IWatcherService mService = null;
 
 	public boolean onCreateOptionsMenu(Menu menu)
 		{
@@ -133,14 +134,11 @@ public class SUTAgentAndroid extends Activity
     public void onCreate(Bundle savedInstanceState)
     	{
         super.onCreate(savedInstanceState);
+        
         setContentView(R.layout.main);
 
 //        Debug.waitForDebugger();
 
-//        long lHeapSize = VMRuntime.getRuntime().getMinimumHeapSize();
-//        lHeapSize = 16000000;
-//        VMRuntime.getRuntime().setMinimumHeapSize(lHeapSize);
-        
         // Keep phone from locking or remove lock on screen
         KeyguardManager km = (KeyguardManager)getSystemService(Context.KEYGUARD_SERVICE);
         if (km != null)
@@ -159,6 +157,8 @@ public class SUTAgentAndroid extends Activity
         		pwl.acquire();
         	}
         
+        fixScreenOrientation();
+        
         DoCommand dc = new DoCommand(getApplication());
         
         // Get configuration settings from "ini" file
@@ -175,8 +175,6 @@ public class SUTAgentAndroid extends Activity
 
         if (getLocalIpAddress() == null)
         	setUpNetwork(sIniFile);
-        
-//        me = this;
         
         WifiInfo wifi;
         WifiManager wifiMan = (WifiManager)getSystemService(Context.WIFI_SERVICE);
@@ -195,7 +193,7 @@ public class SUTAgentAndroid extends Activity
         if (sUniqueID == null)
         	{
         	BluetoothAdapter ba = BluetoothAdapter.getDefaultAdapter();
-        	if (ba.isEnabled() != true)
+        	if ((ba != null) && (ba.isEnabled() != true))
         		{
         		ba.enable();
         		while(ba.getState() != BluetoothAdapter.STATE_ON)
@@ -225,8 +223,11 @@ public class SUTAgentAndroid extends Activity
         		}
         	else
         		{
-        		sUniqueID = ba.getAddress();
-        		sUniqueID.toLowerCase();
+        		if (ba != null)
+        			{
+        			sUniqueID = ba.getAddress();
+        			sUniqueID.toLowerCase();
+        			}
         		}
         	}
 
@@ -273,14 +274,23 @@ public class SUTAgentAndroid extends Activity
         
         String sTemp = Uri.encode(sRegString,"=&");
         sRegString = "register " + sTemp;
-        
+/*        
+		Intent svcIntent = new Intent();
+		svcIntent.setClassName("com.mozilla.watcher", "com.mozilla.watcher.WatcherService");
+    	boolean bRet = bindService(svcIntent, mConn, Context.BIND_AUTO_CREATE);
+*/        
         if (!bNetworkingStarted)
         	{
         	Thread thread = new Thread(null, doStartService, "StartServiceBkgnd");
         	thread.start();
-//        	ToDoListening(1,300,dc);
         	bNetworkingStarted = true;
-        	String sRegRet = "";
+        	
+        	// If we are returning from an update let'em know we're back
+//        	Debug.waitForDebugger();
+        	String sRegRet = dc.UpdateCallBack("update.info");
+        	
+        	sRegRet = "";
+        	
         	if (RegSvrIPAddr.length() > 0)
         		{
         		sRegRet = dc.RegisterTheDevice(RegSvrIPAddr, RegSvrIPPort, sRegString);
@@ -308,7 +318,49 @@ public class SUTAgentAndroid extends Activity
     			finish();
                 }
         	});
+/*            	
+        
+        final Button runButton = (Button) findViewById(R.id.Button03);
+        runButton.setOnClickListener(new OnClickListener() {
+            public void onClick(View v) {
+            	String sRet = "";
+        		if (mService != null)
+					{
+        			try
+    					{
+        				int nRet = mService.UpdateApplication("com.mozilla.test", "/sdcard/foo.apk", "/update.info", 0);
+        				if (nRet == 1)
+        					sRet = "Success";
+    					}
+        			catch (RemoteException e)
+						{
+        				e.printStackTrace();
+        				e.printStackTrace();
+						}
+//        			unbindService(mConn);
+					}
+            	}
+        	});
+        
+        final Button testButton = (Button) findViewById(R.id.Button02);
+        testButton.setOnClickListener(new OnClickListener() {
+            public void onClick(View v) {
+            	String sRet = "";
+        		Intent svcIntent = new Intent();
+        		svcIntent.setClassName("com.mozilla.watcher", "com.mozilla.watcher.WatcherService");
+
+            	boolean bRet = bindService(svcIntent, mConn, Context.BIND_AUTO_CREATE);
+           		int nRet = sRet.length();
+            	}
+        	});
+*/            	
         }
+    
+    public void fixScreenOrientation()
+    	{
+    	setRequestedOrientation((getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) ?
+    							ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE : ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);    	
+    	}
     
     protected void onActivityResult(int requestCode, int resultCode, Intent data)
     	{
@@ -328,6 +380,8 @@ public class SUTAgentAndroid extends Activity
     		listenerSvc.setAction("com.mozilla.SUTAgentAndroid.service.LISTENER_SERVICE");
     		stopService(listenerSvc);
     		bNetworkingStarted = false;
+    		
+//			unbindService(mConn);
     		
 			unregisterReceiver(battReceiver);
 	        KeyguardManager km = (KeyguardManager)getSystemService(Context.KEYGUARD_SERVICE);
@@ -622,101 +676,8 @@ public class SUTAgentAndroid extends Activity
 			Intent listenerService = new Intent();
 			listenerService.setAction("com.mozilla.SUTAgentAndroid.service.LISTENER_SERVICE");
 			startService(listenerService);
-//			service = startService(listenerService);
     		}
     	};
-/*
-    class ToDoListener extends TimerTask 
-    	{
-    	boolean 	bFirstRun = true;
-    	DoCommand	dc = null;
-    	
-    	ToDoListener() {}
-    	
-    	ToDoListener(DoCommand dc)
-    		{
-    		this.dc = dc;
-    		}
-    	
-		public void run ()
-			{
-			if (bFirstRun == true)
-				{
-				Intent listenerService = new Intent();
-				listenerService.setAction("com.mozilla.SUTAgentAndroid.service.LISTENER_SERVICE");
-				service = startService(listenerService);
-				bFirstRun = false;
-				}
-			else
-				{
-				if (dc != null)
-					{
-					String sRet = this.dc.SendPing("www.mozilla.org", null);
-					if (sRet.contains("3 received"))
-						this.dc.StopAlert();
-					else
-						this.dc.StartAlert();
-					sRet = null;
-					System.gc();
-					}
-				}
-			}
-		}
-	
-	public void ToDoListening(int delay, int interval, DoCommand dc)
-		{
-		if (timer == null)
-			timer = new Timer();
-//		timer.scheduleAtFixedRate(new ToDoListener(dc), delay * 1000, interval * 1000);
-//		timer.schedule(new ToDoListener(dc), delay * 1000);
-		timer.schedule(new ToDoListener(), delay * 1000);
-		}
-
-	class DoHeartBeat extends TimerTask
-		{
-    	PrintWriter out;
-	
-    	DoHeartBeat(PrintWriter out)
-			{
-    		this.out = out;
-			}
-	
-    	public void run ()
-			{
-    		String sRet = "";
-    		
-    		Calendar cal = Calendar.getInstance();
-    		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd-HH:mm:ss");
-    		sRet = sdf.format(cal.getTime());
-    		sRet += " Thump thump - " + sUniqueID + "\r\n";
-
-    		out.write(sRet);
-    		out.flush();
-			}
-		}
-
-	public void StartHeartBeat(PrintWriter out)
-		{
-		// start the heartbeat
-		this.dataOut = out;
-		if (timer == null)
-			timer = new Timer();
-		timer.scheduleAtFixedRate(new DoHeartBeat(dataOut), 0, 60000);
-		}
-	
-	public void StopHeartBeat()
-		{
-		// stop the heartbeat
-		this.dataOut = null;
-		if (timer != null)
-			{
-			timer.cancel();
-			timer.purge();
-			timer = null;
-			System.gc();
-			}
-		}
-*/	
 	
     public String getLocalIpAddress()
 		{
@@ -741,4 +702,24 @@ public class SUTAgentAndroid extends Activity
     		}
 		return null;
 		}
+/*    
+    private ServiceConnection mConn = new ServiceConnection() {
+        public void onServiceConnected(ComponentName className, IBinder service) {
+            // This is called when the connection with the service has been
+            // established, giving us the service object we can use to
+            // interact with the service.  We are communicating with our
+            // service through an IDL interface, so get a client-side
+            // representation of that from the raw service object.
+        	Debug.waitForDebugger();
+            mService = IWatcherService.Stub.asInterface(service);
+        }
+
+        public void onServiceDisconnected(ComponentName className) {
+            // This is called when the connection with the service has been
+            // unexpectedly disconnected -- that is, its process crashed.
+        	Debug.waitForDebugger();
+            mService = null;
+        }
+    };
+*/	
 }
