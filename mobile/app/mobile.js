@@ -504,6 +504,5 @@ pref("services.sync.autoconnectDelay", 5);
 // threshold where a tap becomes a drag, in 1/240" reference pixels
 pref("ui.dragThreshold", 24);
 
-#ifndef MOZ_PLATFORM_MAEMO
-pref("layers.accelerate-all", true);
-#endif
+pref("layers.accelerate-all", false);
+
