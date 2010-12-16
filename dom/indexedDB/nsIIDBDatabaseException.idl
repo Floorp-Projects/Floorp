@@ -48,7 +48,9 @@ interface nsIIDBDatabaseException : nsISupports
   const unsigned short CONSTRAINT_ERR = 3;
   const unsigned short DATA_ERR = 4;
   const unsigned short NOT_ALLOWED_ERR = 5;
-  const unsigned short SERIAL_ERR = 11;
+  const unsigned short TRANSACTION_INACTIVE_ERR = 6;
+  const unsigned short ABORT_ERR = 7;
+  const unsigned short READ_ONLY_ERR = 11;
   const unsigned short RECOVERABLE_ERR = 21;
   const unsigned short TRANSIENT_ERR = 31;
   const unsigned short TIMEOUT_ERR = 32;

@@ -125,6 +125,12 @@ public:
 
   void Compact();
 
+  bool CanFitMoreAttrs() const
+  {
+    return AttrSlotCount() < ATTRCHILD_ARRAY_MAX_ATTR_COUNT ||
+           !AttrSlotIsTaken(ATTRCHILD_ARRAY_MAX_ATTR_COUNT - 1);
+  }
+
 private:
   nsAttrAndChildArray(const nsAttrAndChildArray& aOther); // Not to be implemented
   nsAttrAndChildArray& operator=(const nsAttrAndChildArray& aOther); // Not to be implemented
@@ -148,6 +154,12 @@ private:
   PRUint32 AttrSlotCount() const
   {
     return mImpl ? mImpl->mAttrAndChildCount & ATTRCHILD_ARRAY_ATTR_SLOTS_COUNT_MASK : 0;
+  }
+
+  bool AttrSlotIsTaken(PRUint32 aSlot) const
+  {
+    NS_PRECONDITION(aSlot < AttrSlotCount(), "out-of-bounds");
+    return mImpl->mBuffer[aSlot * ATTRSIZE];
   }
 
   void SetChildCount(PRUint32 aCount)

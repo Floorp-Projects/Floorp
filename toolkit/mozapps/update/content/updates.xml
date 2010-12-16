@@ -104,7 +104,6 @@
           //       region.
           // height: zoom out if the height is greater than the client region.
           // width: zoom out if the width is greater than the client region.
-          var doc = this._content.contentDocument;
           if (doc.body.hasAttribute("zoomOutToFit")) {
             let zoomAdjustWidth = 1;
             let zoomAdjustHeight = 1;
