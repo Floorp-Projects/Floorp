@@ -67,6 +67,7 @@ import android.net.wifi.WifiManager;
 import android.net.wifi.WifiManager.WifiLock;
 import android.os.BatteryManager;
 import android.os.Bundle;
+import android.os.Debug;
 import android.os.PowerManager;
 import android.telephony.TelephonyManager;
 import android.util.Log;
@@ -106,8 +107,6 @@ public class SUTAgentAndroid extends Activity
     
     private BroadcastReceiver battReceiver = null;
     
-    IWatcherService mService = null;
-
 	public boolean onCreateOptionsMenu(Menu menu)
 		{
 		mExitMenuItem = menu.add("Exit");
@@ -136,8 +135,6 @@ public class SUTAgentAndroid extends Activity
         super.onCreate(savedInstanceState);
         
         setContentView(R.layout.main);
-
-//        Debug.waitForDebugger();
 
         // Keep phone from locking or remove lock on screen
         KeyguardManager km = (KeyguardManager)getSystemService(Context.KEYGUARD_SERVICE);
