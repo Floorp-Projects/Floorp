@@ -138,6 +138,17 @@ FormAssistant.prototype = {
         aElement.focus();
       }
 
+      // If the element is a <select/> element and the user has manually click
+      // it we need to inform the UI of such a change to keep in sync with the
+      // new selected options once the event is finished
+      if (aElement instanceof HTMLSelectElement) {
+        let self = this;
+        let timer = new Util.Timeout(function() {
+          sendAsyncMessage("FormAssist:Show", self._getJSON());
+        });
+        timer.once(0);
+      }
+
       return false;
     }
 

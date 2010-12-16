@@ -2249,7 +2249,7 @@ var SelectHelperUI = {
     return this._textbox = document.getElementById("select-helper-textbox");
   },
 
-  show: function(aList) {
+  show: function selectHelperShow(aList) {
     this.showFilter = false;
     this._textbox.blur();
     this._list = aList;
@@ -2310,20 +2310,20 @@ var SelectHelperUI = {
       this._textbox.hidden = !val;
   },
 
-  dock: function dock(aContainer) {
+  dock: function selectHelperDock(aContainer) {
     aContainer.insertBefore(this._panel, aContainer.lastChild);
     this.resize();
     this._docked = true;
   },
 
-  undock: function undock() {
+  undock: function selectHelperUndock() {
     let rootNode = Elements.stack;
     rootNode.insertBefore(this._panel, rootNode.lastChild);
     this._panel.style.maxHeight = "";
     this._docked = false;
   },
 
-  reset: function() {
+  reset: function selectHelperReset() {
     this._updateControl();
     let empty = this._container.cloneNode(false);
     this._container.parentNode.replaceChild(empty, this._container);
@@ -2334,11 +2334,11 @@ var SelectHelperUI = {
     this._textbox.value = "";
   },
 
-  resize: function resize() {
+  resize: function selectHelperResize() {
     this._panel.style.maxHeight = (window.innerHeight / 1.8) + "px";
   },
 
-  hide: function() {
+  hide: function selectHelperResize() {
     this.showFilter = false;
     this._container.removeEventListener("click", this, false);
     this._panel.removeEventListener("overflow", this, true);
@@ -2353,7 +2353,7 @@ var SelectHelperUI = {
     this.reset();
   },
 
-  filter: function(aValue) {
+  filter: function selectHelperFilter(aValue) {
     let reg = new RegExp(aValue, "gi");
     let options = this._container.childNodes;
     for (let i = 0; i < options.length; i++) {
@@ -2363,7 +2363,7 @@ var SelectHelperUI = {
     }
   },
 
-  unselectAll: function() {
+  unselectAll: function selectHelperUnselectAll() {
     if (!this._list)
       return;
 
@@ -2374,7 +2374,7 @@ var SelectHelperUI = {
     });
   },
 
-  selectByIndex: function(aIndex) {
+  selectByIndex: function selectHelperSelectByIndex(aIndex) {
     if (!this._list)
       return;
 
@@ -2390,7 +2390,7 @@ var SelectHelperUI = {
     }
   },
 
-  _getSelectedIndexes: function() {
+  _getSelectedIndexes: function _selectHelperGetSelectedIndexes() {
     let indexes = [];
     if (!this._list)
       return indexes;
@@ -2405,7 +2405,7 @@ var SelectHelperUI = {
     return indexes;
   },
 
-  _scrollElementIntoView: function(aElement) {
+  _scrollElementIntoView: function _selectHelperScrollElementIntoView(aElement) {
     if (!aElement)
       return;
 
@@ -2432,7 +2432,7 @@ var SelectHelperUI = {
     }
   },
 
-  _forEachOption: function(aCallback) {
+  _forEachOption: function _selectHelperForEachOption(aCallback) {
     let children = this._container.children;
     for (let i = 0; i < children.length; i++) {
       let item = children[i];
@@ -2442,7 +2442,7 @@ var SelectHelperUI = {
     }
   },
 
-  _updateControl: function() {
+  _updateControl: function _selectHelperUpdateControl() {
     let currentSelectedIndexes = this._getSelectedIndexes();
 
     let isIdentical = (this._selectedIndexes && this._selectedIndexes.length == currentSelectedIndexes.length);
@@ -2461,7 +2461,7 @@ var SelectHelperUI = {
     Browser.selectedBrowser.messageManager.sendAsyncMessage("FormAssist:ChoiceChange", { });
   },
 
-  handleEvent: function(aEvent) {
+  handleEvent: function selectHelperHandleEvent(aEvent) {
     switch (aEvent.type) {
       case "click":
         let item = aEvent.target;
@@ -2486,7 +2486,7 @@ var SelectHelperUI = {
     }
   },
 
-  onSelect: function(aIndex, aSelected, aClearAll) {
+  onSelect: function selectHelperOnSelect(aIndex, aSelected, aClearAll) {
     let json = {
       index: aIndex,
       selected: aSelected,
