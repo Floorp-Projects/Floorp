@@ -69,7 +69,8 @@ public:
   virtual ContentOffsets CalcContentOffsetsFromFramePoint(nsPoint aPoint);
 
   virtual PRBool PeekOffsetNoAmount(PRBool aForward, PRInt32* aOffset);
-  virtual PRBool PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset);
+  virtual PRBool PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset,
+                                     PRBool aRespectClusters = PR_TRUE);
   virtual PRBool PeekOffsetWord(PRBool aForward, PRBool aWordSelectEatSpace, PRBool aIsKeyboardSelect,
                                 PRInt32* aOffset, PeekWordState* aState);
 
@@ -274,7 +275,8 @@ BRFrame::PeekOffsetNoAmount(PRBool aForward, PRInt32* aOffset)
 }
 
 PRBool
-BRFrame::PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset)
+BRFrame::PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset,
+                             PRBool aRespectClusters)
 {
   NS_ASSERTION (aOffset && *aOffset <= 1, "aOffset out of range");
   // Keep going. The actual line jumping will stop us.
