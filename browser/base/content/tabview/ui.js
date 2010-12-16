@@ -399,20 +399,21 @@ let UI = {
   //
   // Parameters:
   //  - Takes a <TabItem>
-  setActiveTab: function UI_setActiveTab(tab) {
-    if (tab == this._activeTab)
+  setActiveTab: function UI_setActiveTab(tabItem) {
+    if (tabItem == this._activeTab)
       return;
 
     if (this._activeTab) {
       this._activeTab.makeDeactive();
       this._activeTab.removeSubscriber(this, "close");
     }
-    this._activeTab = tab;
+    this._activeTab = tabItem;
 
     if (this._activeTab) {
-      var self = this;
-      this._activeTab.addSubscriber(this, "close", function() {
-        self._activeTab = null;
+      let self = this;
+      this._activeTab.addSubscriber(this, "close", function(closedTabItem) {
+        if (self._activeTab == closedTabItem)
+          self._activeTab = null;
       });
 
       this._activeTab.makeActive();

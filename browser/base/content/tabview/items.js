@@ -200,7 +200,7 @@ Item.prototype = {
     this.dropOptions = {
       over: function() {},
       out: function() {
-        var groupItem = drag.info.item.parent;
+        let groupItem = drag.info.item.parent;
         if (groupItem)
           groupItem.remove(drag.info.$el, {dontClose: true});
         iQ(this.container).removeClass("acceptsDrop");
