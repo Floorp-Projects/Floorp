@@ -97,7 +97,8 @@ public:
   virtual PRBool IsEmpty();
   virtual PRBool IsSelfEmpty();
 
-  virtual PRBool PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset);
+  virtual PRBool PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset,
+                                     PRBool aRespectClusters = PR_TRUE);
   
   // nsIHTMLReflow overrides
   virtual void AddInlineMinWidth(nsIRenderingContext *aRenderingContext,
