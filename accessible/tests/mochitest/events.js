@@ -230,8 +230,7 @@ function eventQueue(aEventType)
           var type = this.getEventType(idx);
           var unexpected = this.mEventSeq[idx].unexpected;
 
-          var typeStr = (typeof type == "string") ?
-            type : gAccRetrieval.getStringEventType(type);
+          var typeStr = this.getEventTypeAsString(idx);
 
           var msg = "test with ID = '" + id + "' failed. ";
           if (unexpected) {
@@ -327,10 +326,23 @@ function eventQueue(aEventType)
     if ("debugCheck" in invoker)
       invoker.debugCheck(aEvent);
 
-    // Search through unexpected events to ensure no one of them was handled.
+    // Search through handled expected events if one of them was handled again.
     var idx = 0;
     for (; idx < this.mEventSeq.length; idx++) {
-      if (this.mEventSeq[idx].unexpected && this.compareEvents(idx, aEvent))
+      if (!this.isEventUnexpected(idx) && (invoker.wasCaught[idx] == true) &&
+          this.compareEvents(idx, aEvent)) {
+
+        var msg = "Doubled event { event type: " +
+          this.getEventTypeAsString(idx) + ", target: " +
+          prettyName(this.getEventTarget(idx)) + "} in test with ID = '" +
+          this.getEventID(idx) + "'.";
+        ok(false, msg);
+      }
+    }
+
+    // Search through unexpected events to ensure no one of them was handled.
+    for (idx = 0; idx < this.mEventSeq.length; idx++) {
+      if (this.isEventUnexpected(idx) && this.compareEvents(idx, aEvent))
         invoker.wasCaught[idx] = true;
     }
 
@@ -413,15 +425,12 @@ function eventQueue(aEventType)
         var eventType = this.getEventType(idx);
 
         if (gLogger.isEnabled()) {
-          var strEventType = (typeof eventType == "string") ? eventType :
-            eventTypeToString(eventType);
-
           var msg = "registered";
           if (this.isEventUnexpected(idx))
             msg += " unexpected";
 
-          msg += ": event type: " + strEventType + ", target: " +
-            prettyName(this.getEventTarget(idx));
+          msg += ": event type: " + this.getEventTypeAsString(idx) +
+            ", target: " + prettyName(this.getEventTarget(idx));
 
           gLogger.logToConsole(msg);
           gLogger.logToDOM(msg, true);
@@ -465,6 +474,12 @@ function eventQueue(aEventType)
   this.getEventType = function eventQueue_getEventType(aIdx)
   {
     return this.mEventSeq[aIdx].type;
+  }
+
+  this.getEventTypeAsString = function eventQueue_getEventTypeAsString(aIdx)
+  {
+    var type = this.mEventSeq[aIdx].type;
+    return (typeof type == "string") ? type : eventTypeToString(type);
   }
 
   this.getEventTarget = function eventQueue_getEventTarget(aIdx)
@@ -567,7 +582,7 @@ function eventQueue(aEventType)
       gLogger.logToDOM(info);
     }
 
-    var currType = this.getEventType(aExpectedEventIdx);
+    var currType = this.getEventTypeAsString(aExpectedEventIdx);
     var currTarget = this.getEventTarget(aExpectedEventIdx);
 
     var msg = "EQ: ";
@@ -575,18 +590,13 @@ function eventQueue(aEventType)
     if (aMatch) {
       emphText = "matched ";
 
-      var consoleMsg =
-        "*****\nEQ matched: " + eventTypeToString(currType) + "\n*****";
+      var consoleMsg = "*****\nEQ matched: " + currType + "\n*****";
       gLogger.logToConsole(consoleMsg);
 
     } else {
       msg += "expected";
     }
-
-    msg += " event, type: ";
-    msg += (typeof currType == "string") ?
-      currType : eventTypeToString(currType);
-    msg += ", target: " + prettyName(currTarget);
+    msg += " event, type: " + currType + ", target: " + prettyName(currTarget);
 
     gLogger.logToDOM(msg, true, emphText);
   }
@@ -889,6 +899,31 @@ function invokerChecker(aEventType, aTargetOrFunc, aTargetFuncArg)
   this.mTargetFuncArg = aTargetFuncArg;
 }
 
+/**
+ * Text inserted/removed events checker.
+ */
+function textChangeChecker(aID, aStart, aEnd, aTextOrFunc, aIsInserted)
+{
+  this.target = getNode(aID);
+  this.type = aIsInserted ? EVENT_TEXT_INSERTED : EVENT_TEXT_REMOVED;
+
+  this.check = function textChangeChecker_check(aEvent)
+  {
+    aEvent.QueryInterface(nsIAccessibleTextChangeEvent);
+
+    var modifiedText = (typeof aTextOrFunc == "function") ?
+      aTextOrFunc() : aTextOrFunc;
+    var modifiedTextLen = (aEnd == -1) ? modifiedText.length : aEnd - aStart;
+
+    is(aEvent.start, aStart, "Wrong start offset for " + prettyName(aID));
+    is(aEvent.length, modifiedTextLen, "Wrong length for " + prettyName(aID));
+    var changeInfo = (aIsInserted ? "inserted" : "removed");
+    is(aEvent.isInserted(), aIsInserted,
+       "Text was " + changeInfo + " for " + prettyName(aID));
+    is(aEvent.modifiedText, modifiedText,
+       "Wrong " + changeInfo + " text for " + prettyName(aID));
+  }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Private implementation details.
@@ -989,8 +1024,11 @@ function addA11yEventListener(aEventType, aEventHandler)
 {
   if (!(aEventType in gA11yEventListeners))
     gA11yEventListeners[aEventType] = new Array();
-  
-  gA11yEventListeners[aEventType].push(aEventHandler);
+
+  var listenersArray = gA11yEventListeners[aEventType];
+  var index = listenersArray.indexOf(aEventHandler);
+  if (index == -1)
+    listenersArray.push(aEventHandler);
 }
 
 function removeA11yEventListener(aEventType, aEventHandler)

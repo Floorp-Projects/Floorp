@@ -127,14 +127,14 @@
         is(index.unique, indexData[i].unique, "Correct keyPath");
       }
 
-      request = objectStore.index("name").get("Bob");
+      request = objectStore.index("name").getKey("Bob");
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
       is(event.result, "237-23-7732", "Correct key returned!");
 
-      request = objectStore.index("name").getObject("Bob");
+      request = objectStore.index("name").get("Bob");
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
@@ -147,7 +147,7 @@
 
       let keyIndex = 0;
 
-      request = objectStore.index("name").openCursor();
+      request = objectStore.index("name").openKeyCursor();
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
         let cursor = event.result;
@@ -178,7 +178,7 @@
 
       keyIndex = 0;
 
-      request = objectStore.index("weight").openCursor(null, NEXT);
+      request = objectStore.index("weight").openKeyCursor(null, NEXT);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
         let cursor = event.result;
@@ -218,7 +218,7 @@
 
       keyIndex = objectStoreDataNameSort.length - 1;
 
-      request = objectStore.index("name").openCursor(null, PREV);
+      request = objectStore.index("name").openKeyCursor(null, PREV);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
         let cursor = event.result;
@@ -250,7 +250,7 @@
       keyIndex = 1;
       let keyRange = IDBKeyRange.bound("Bob", "Ron");
 
-      request = objectStore.index("name").openCursor(keyRange);
+      request = objectStore.index("name").openKeyCursor(keyRange);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
         let cursor = event.result;
@@ -276,7 +276,7 @@
       keyIndex = 2;
       let keyRange = IDBKeyRange.bound("Bob", "Ron", true);
 
-      request = objectStore.index("name").openCursor(keyRange);
+      request = objectStore.index("name").openKeyCursor(keyRange);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
         let cursor = event.result;
@@ -302,7 +302,7 @@
       keyIndex = 1;
       let keyRange = IDBKeyRange.bound("Bob", "Ron", false, true);
 
-      request = objectStore.index("name").openCursor(keyRange);
+      request = objectStore.index("name").openKeyCursor(keyRange);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
         let cursor = event.result;
@@ -328,7 +328,7 @@
       keyIndex = 2;
       keyRange = IDBKeyRange.bound("Bob", "Ron", true, true);
 
-      request = objectStore.index("name").openCursor(keyRange);
+      request = objectStore.index("name").openKeyCursor(keyRange);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
         let cursor = event.result;
@@ -354,7 +354,7 @@
       keyIndex = 1;
       keyRange = IDBKeyRange.lowerBound("Bob");
 
-      request = objectStore.index("name").openCursor(keyRange);
+      request = objectStore.index("name").openKeyCursor(keyRange);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
         let cursor = event.result;
@@ -380,7 +380,7 @@
       keyIndex = 2;
       keyRange = IDBKeyRange.lowerBound("Bob", true);
 
-      request = objectStore.index("name").openCursor(keyRange);
+      request = objectStore.index("name").openKeyCursor(keyRange);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
         let cursor = event.result;
@@ -406,7 +406,7 @@
       keyIndex = 0;
       keyRange = IDBKeyRange.upperBound("Joe");
 
-      request = objectStore.index("name").openCursor(keyRange);
+      request = objectStore.index("name").openKeyCursor(keyRange);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
         let cursor = event.result;
@@ -432,7 +432,7 @@
       keyIndex = 0;
       keyRange = IDBKeyRange.upperBound("Joe", true);
 
-      request = objectStore.index("name").openCursor(keyRange);
+      request = objectStore.index("name").openKeyCursor(keyRange);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
         let cursor = event.result;
@@ -458,7 +458,7 @@
       keyIndex = 3;
       keyRange = IDBKeyRange.only("Pat");
 
-      request = objectStore.index("name").openCursor(keyRange);
+      request = objectStore.index("name").openKeyCursor(keyRange);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
         let cursor = event.result;
@@ -483,7 +483,7 @@
 
       keyIndex = 0;
 
-      request = objectStore.index("name").openObjectCursor();
+      request = objectStore.index("name").openCursor();
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
         let cursor = event.result;
@@ -530,7 +530,7 @@
 
       keyIndex = objectStoreDataNameSort.length - 1;
 
-      request = objectStore.index("name").openObjectCursor(null, PREV);
+      request = objectStore.index("name").openCursor(null, PREV);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
         let cursor = event.result;
@@ -578,7 +578,7 @@
       keyIndex = 1;
       keyRange = IDBKeyRange.bound("Bob", "Ron");
 
-      request = objectStore.index("name").openObjectCursor(keyRange);
+      request = objectStore.index("name").openCursor(keyRange);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
         let cursor = event.result;
@@ -626,7 +626,7 @@
       keyIndex = 2;
       keyRange = IDBKeyRange.bound("Bob", "Ron", true);
 
-      request = objectStore.index("name").openObjectCursor(keyRange);
+      request = objectStore.index("name").openCursor(keyRange);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
         let cursor = event.result;
@@ -674,7 +674,7 @@
       keyIndex = 1;
       keyRange = IDBKeyRange.bound("Bob", "Ron", false, true);
 
-      request = objectStore.index("name").openObjectCursor(keyRange);
+      request = objectStore.index("name").openCursor(keyRange);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
         let cursor = event.result;
@@ -722,7 +722,7 @@
       keyIndex = 2;
       keyRange = IDBKeyRange.bound("Bob", "Ron", true, true);
 
-      request = objectStore.index("name").openObjectCursor(keyRange);
+      request = objectStore.index("name").openCursor(keyRange);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
         let cursor = event.result;
@@ -770,7 +770,7 @@
       keyIndex = 4;
       keyRange = IDBKeyRange.bound("Bob", "Ron");
 
-      request = objectStore.index("name").openObjectCursor(keyRange, PREV);
+      request = objectStore.index("name").openCursor(keyRange, PREV);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
         let cursor = event.result;
@@ -819,7 +819,7 @@
       keyIndex = 3;
       keyRange = IDBKeyRange.only(65);
 
-      request = objectStore.index("height").openCursor(keyRange, NEXT);
+      request = objectStore.index("height").openKeyCursor(keyRange, NEXT);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
         let cursor = event.result;
@@ -845,8 +845,8 @@
       keyIndex = 3;
       keyRange = IDBKeyRange.only(65);
 
-      request = objectStore.index("height").openCursor(keyRange,
-                                                       NEXT_NO_DUPLICATE);
+      request = objectStore.index("height").openKeyCursor(keyRange,
+                                                          NEXT_NO_DUPLICATE);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
         let cursor = event.result;
@@ -871,8 +871,8 @@
 
       keyIndex = 5;
 
-      request = objectStore.index("height").openCursor(null,
-                                                       PREV_NO_DUPLICATE);
+      request = objectStore.index("height").openKeyCursor(null,
+                                                          PREV_NO_DUPLICATE);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
         let cursor = event.result;
@@ -901,7 +901,7 @@
       keyIndex = 3;
       keyRange = IDBKeyRange.only(65);
 
-      request = objectStore.index("height").openObjectCursor(keyRange, NEXT);
+      request = objectStore.index("height").openCursor(keyRange, NEXT);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
         let cursor = event.result;
@@ -935,8 +935,8 @@
       keyIndex = 3;
       keyRange = IDBKeyRange.only(65);
 
-      request = objectStore.index("height").openObjectCursor(keyRange,
-                                                             NEXT_NO_DUPLICATE);
+      request = objectStore.index("height").openCursor(keyRange,
+                                                       NEXT_NO_DUPLICATE);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
         let cursor = event.result;
@@ -969,8 +969,8 @@
 
       keyIndex = 5;
 
-      request = objectStore.index("height").openObjectCursor(null,
-                                                             PREV_NO_DUPLICATE);
+      request = objectStore.index("height").openCursor(null,
+                                                       PREV_NO_DUPLICATE);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
         let cursor = event.result;
@@ -1006,7 +1006,7 @@
 
       keyIndex = 0;
 
-      request = objectStore.index("name").openCursor();
+      request = objectStore.index("name").openKeyCursor();
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
         let cursor = event.result;
@@ -1044,7 +1044,7 @@
 
       keyIndex = 0;
 
-      request = objectStore.index("name").openCursor();
+      request = objectStore.index("name").openKeyCursor();
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
         let cursor = event.result;
@@ -1077,7 +1077,7 @@
 
       keyIndex = 0;
 
-      request = objectStore.index("name").openObjectCursor();
+      request = objectStore.index("name").openCursor();
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
         let cursor = event.result;
@@ -1131,7 +1131,7 @@
 
       keyIndex = 0;
 
-      request = objectStore.index("name").openObjectCursor();
+      request = objectStore.index("name").openCursor();
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
         let cursor = event.result;

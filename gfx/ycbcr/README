@@ -13,3 +13,5 @@ convert.patch: Change Chromium code to build using Mozilla build system.
                The YUV conversion will convert within this 
                picture region only.
                Add YCbCr 4:4:4 support
+
+arm.patch: Add YCbCr to rgb16_565 conversion support, bug 616469

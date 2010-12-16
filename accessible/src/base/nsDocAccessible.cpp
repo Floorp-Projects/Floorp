@@ -1979,7 +1979,13 @@ nsDocAccessible::UpdateTreeInternal(nsAccessible* aContainer,
       }
     } else {
       // Update the tree for content removal.
-      aContainer->RemoveChild(accessible);
+      // The accessible parent may differ from container accessible if
+      // the parent doesn't have own DOM node like list accessible for HTML
+      // selects.
+      nsAccessible* parent = accessible->GetParent();
+      NS_ASSERTION(parent, "No accessible parent?!");
+      parent->RemoveChild(accessible);
+
       UncacheChildrenInSubtree(accessible);
     }
   }

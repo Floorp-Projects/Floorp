@@ -4023,7 +4023,7 @@ JS_NewArrayObject(JSContext *cx, jsint length, jsval *vector)
     CHECK_REQUEST(cx);
     /* NB: jsuint cast does ToUint32. */
     assertSameCompartment(cx, JSValueArray(vector, vector ? (jsuint)length : 0));
-    return js_NewArrayObject(cx, (jsuint)length, Valueify(vector));
+    return NewDenseCopiedArray(cx, (jsuint)length, Valueify(vector));
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4672,7 +4672,6 @@ JS_NewScriptObject(JSContext *cx, JSScript *script)
      * described in the comment for JSScript::u.object.
      */
     JS_ASSERT(script->u.object);
-    JS_ASSERT(script != JSScript::emptyScript());
     return script->u.object;
 }
 
@@ -4889,7 +4888,7 @@ JS_ExecuteScript(JSContext *cx, JSObject *obj, JSScript *script, jsval *rval)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, script);
     /* This should receive only scripts handed out via the JSAPI. */
-    JS_ASSERT(script == JSScript::emptyScript() || script->u.object);
+    JS_ASSERT(script->u.object);
     ok = Execute(cx, obj, script, NULL, 0, Valueify(rval));
     LAST_FRAME_CHECKS(cx, ok);
     return ok;
@@ -5166,32 +5165,6 @@ JS_RestoreFrameChain(JSContext *cx, JSStackFrame *fp)
 }
 
 /************************************************************************/
-
-JS_PUBLIC_API(JSString *)
-JS_NewString(JSContext *cx, char *bytes, size_t nbytes)
-{
-    size_t length = nbytes;
-    jschar *chars;
-    JSString *str;
-
-    CHECK_REQUEST(cx);
-
-    /* Make a UTF-16 vector from the 8-bit char codes in bytes. */
-    chars = js_InflateString(cx, bytes, &length);
-    if (!chars)
-        return NULL;
-
-    /* Free chars (but not bytes, which caller frees on error) if we fail. */
-    str = js_NewString(cx, chars, length);
-    if (!str) {
-        cx->free(chars);
-        return NULL;
-    }
-
-    js_free(bytes);
-    return str;
-}
-
 JS_PUBLIC_API(JSString *)
 JS_NewStringCopyN(JSContext *cx, const char *s, size_t n)
 {

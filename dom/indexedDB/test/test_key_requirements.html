@@ -134,6 +134,14 @@
       }
 
       try {
+        objectStore.add({id:5}, 5);
+        ok(false, "add with inline key and passed key should throw!");
+      }
+      catch (e) {
+        ok(true, "add with inline key and passed key threw");
+      }
+
+      try {
         objectStore.put({});
         ok(false, "put with no key should throw!");
       }
@@ -181,16 +189,17 @@
       is(event.result, key1, "put gave back the same key");
 
       request = objectStore.add({id:10});
-      request.onerror = grabEventAndContinueHandler;
+      request.onerror = new ExpectError(IDBDatabaseException.CONSTRAINT_ERR);
       request.onsuccess = unexpectedSuccessHandler;
-      yield;
-
-      request = objectStore.add({}, null);
-      request.onerror = errorHandler;
-      request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      is(typeof(event.result), "string", "Good generated key");
+      try {
+        objectStore.add({}, null);
+        ok(false, "add with null key should throw!");
+      }
+      catch (e) {
+        ok(true, "add with null key threw");
+      }
 
       try {
         objectStore.put({}, null);
@@ -263,6 +272,14 @@
       }
       catch (e) {
         ok(true, "remove with no key threw");
+      }
+
+      try {
+        objectStore.add({id:5}, 5);
+        ok(false, "add with inline key and passed key should throw!");
+      }
+      catch (e) {
+        ok(true, "add with inline key and passed key threw");
       }
 
       request = objectStore.delete(key2);

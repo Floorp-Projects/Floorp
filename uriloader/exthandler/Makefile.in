@@ -108,6 +108,8 @@ OSHELPER += nsMIMEInfoAndroid.cpp
 OSHELPER += nsAndroidHandlerApp.cpp
 OSHELPER += nsExternalSharingAppService.cpp
 EXPORTS += nsExternalSharingAppService.h
+OSHELPER += nsExternalURLHandlerService.cpp
+EXPORTS += nsExternalURLHandlerService.h
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
@@ -147,6 +149,7 @@ XPIDLSRCS = \
 	nsIContentDispatchChooser.idl \
 	nsIHandlerService.idl	\
 	nsIExternalSharingAppService.idl \
+	nsIExternalURLHandlerService.idl \
 	$(NULL)
 
 CPPSRCS	= \

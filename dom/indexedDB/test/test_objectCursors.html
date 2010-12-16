@@ -71,7 +71,7 @@
                               .objectStore(objectStores[i].name);
           let index = objectStore.index(indexes[j].name);
 
-          request = index.openObjectCursor();
+          request = index.openCursor();
           request.onerror = errorHandler;
           request.onsuccess = function (event) {
             is(event.result.value.name, "Ben", "Good object");

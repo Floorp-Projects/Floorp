@@ -343,8 +343,11 @@ nsRootAccessible::FireAccessibleFocusEvent(nsAccessible* aFocusAccessible,
       // If aria-activedescendant is set to nonexistant ID, then treat as focus
       // on the activedescendant container (which has real DOM focus).
       if (activeDescendantContent) {
-        focusAccessible =
+        nsAccessible* activeDescendant = 
           GetAccService()->GetAccessible(activeDescendantContent);
+        if (activeDescendant) {
+          focusAccessible = activeDescendant;
+        }
       }
     }
   }

@@ -101,7 +101,7 @@
       objectStore = db.transaction(objectStoreName)
                       .objectStore(objectStoreName);
 
-      request = objectStore.index("height").getAll(65);
+      request = objectStore.index("height").getAllKeys(65);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
@@ -115,7 +115,7 @@
            "Correct key");
       }
 
-      request = objectStore.index("height").getAll();
+      request = objectStore.index("height").getAllKeys();
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
@@ -129,7 +129,7 @@
         is(event.result[i], objectStoreDataHeightSort[i].key, "Correct key");
       }
 
-      request = objectStore.index("height").getAll(null, 4);
+      request = objectStore.index("height").getAllKeys(null, 4);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
@@ -142,7 +142,7 @@
         is(event.result[i], objectStoreDataHeightSort[i].key, "Correct key");
       }
 
-      request = objectStore.index("height").getAll(65, 1);
+      request = objectStore.index("height").getAllKeys(65, 1);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;

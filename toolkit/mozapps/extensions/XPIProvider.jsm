@@ -6476,7 +6476,9 @@ function AddonWrapper(aAddon) {
     }
     if (aAddon._installLocation) {
       if (!aAddon._installLocation.locked) {
-        permissions |= AddonManager.PERM_CAN_UPGRADE;
+        if (!aAddon._installLocation.isLinkedAddon(aAddon.id))
+          permissions |= AddonManager.PERM_CAN_UPGRADE;
+
         if (!aAddon.pendingUninstall)
           permissions |= AddonManager.PERM_CAN_UNINSTALL;
       }
@@ -6620,6 +6622,7 @@ function DirectoryInstallLocation(aName, aDirectory, aScope, aLocked) {
   this._scope = aScope
   this._IDToFileMap = {};
   this._FileToIDMap = {};
+  this._linkedAddons = [];
 
   if (!aDirectory.exists())
     return;
@@ -6714,7 +6717,9 @@ DirectoryInstallLocation.prototype = {
         newEntry = this._readDirectoryFromFile(entry);
         if (!newEntry)
           continue;
+
         entry = newEntry;
+        this._linkedAddons.push(id);
       }
 
       this._IDToFileMap[id] = entry;
@@ -6940,6 +6945,17 @@ DirectoryInstallLocation.prototype = {
     if (aId in this._IDToFileMap)
       return this._IDToFileMap[aId].clone().QueryInterface(Ci.nsILocalFile);
     throw new Error("Unknown add-on ID " + aId);
+  },
+
+  /**
+   * Returns true if the given addon was installed in this location by a text
+   * file pointing to its real path.
+   *
+   * @param aId
+   *        The ID of the addon
+   */
+  isLinkedAddon: function(aId) {
+    return this._linkedAddons.indexOf(aId) != -1;
   }
 };
 
@@ -7085,6 +7101,13 @@ WinRegInstallLocation.prototype = {
     if (aId in this._IDToFileMap)
       return this._IDToFileMap[aId].clone().QueryInterface(Ci.nsILocalFile);
     throw new Error("Unknown add-on ID");
+  },
+
+  /**
+   * @see DirectoryInstallLocation
+   */
+  isLinkedAddon: function(aId) {
+    return true;
   }
 };
 #endif

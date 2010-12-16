@@ -1032,9 +1032,9 @@ Update.prototype = {
     update.setAttribute("showSurvey", this.showSurvey);
     update.setAttribute("type", this.type);
     // for backwards compatibility in case the user downgrades
+    update.setAttribute("version", this.displayVersion);
 
     // Optional attributes
-    update.setAttribute("version", this.displayVersion);
     if (this.billboardURL)
       update.setAttribute("billboardURL", this.billboardURL);
     if (this.detailsURL)

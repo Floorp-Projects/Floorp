@@ -1737,7 +1737,7 @@ LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
                     break;
             }
         }
-    } while ((cg = (JSCodeGenerator *) cg->parent) != NULL);
+    } while (cg->parent && (cg = cg->parent->asCodeGenerator()));
     return JS_TRUE;
 }
 
@@ -2161,13 +2161,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
      *
      * Turn JSOP_DELNAME into JSOP_FALSE if dn is known, as all declared
      * bindings visible to the compiler are permanent in JS unless the
-     * declaration originates in eval code. We detect eval code by testing
-     * cg->parser->callerFrame, which is set only by eval or a debugger
-     * equivalent.
-     *
-     * Note that this callerFrame non-null test must be qualified by testing
-     * !cg->funbox to exclude function code nested in eval code, which is not
-     * subject to the deletable binding exception.
+     * declaration originates at top level in eval code.
      */
     switch (op) {
       case JSOP_NAME:
@@ -2175,7 +2169,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         break;
       case JSOP_DELNAME:
         if (dn_kind != JSDefinition::UNKNOWN) {
-            if (cg->parser->callerFrame && !cg->funbox)
+            if (cg->parser->callerFrame && dn->isTopLevel())
                 JS_ASSERT(cg->compileAndGo());
             else
                 pn->pn_op = JSOP_FALSE;
@@ -2238,6 +2232,27 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * arguments object.
              */
             if (op != JSOP_NAME)
+                return JS_TRUE;
+
+            /*
+             * It is illegal to add upvars to heavyweight functions (and
+             * unnecessary, since the optimization avoids creating call
+             * objects). Take the following code as an eval string:
+             *
+             *   (function () {
+             *       $(init);
+             *       function init() {
+             *           $();
+             *       }
+             *    })();
+             *
+             * The first instance of "$" cannot be an upvar, because the
+             * outermost lambda is on "init"'s scope chain, which escapes.
+             *
+             * A similar restriction exists for upvars which do not cross
+             * eval (see the end of BindNameToSlot and bug 616762).
+             */
+            if (cg->flags & TCF_FUN_HEAVYWEIGHT)
                 return JS_TRUE;
 
             /*
@@ -2332,9 +2347,8 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         JSTreeContext *tc = cg;
         while (tc->staticLevel != level)
             tc = tc->parent;
-        JS_ASSERT(tc->compiling());
 
-        JSCodeGenerator *evalcg = (JSCodeGenerator *) tc;
+        JSCodeGenerator *evalcg = tc->asCodeGenerator();
         JS_ASSERT(evalcg->compileAndGo());
         JS_ASSERT(caller->isFunctionFrame());
         JS_ASSERT(cg->parser->callerVarObj == evalcg->scopeChain());
@@ -2412,10 +2426,9 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             JS_ASSERT(index == cg->upvarList.count - 1);
 
             UpvarCookie *vector = cg->upvarMap.vector;
-            if (!vector) {
-                uint32 length = cg->lexdeps.count;
-
-                vector = (UpvarCookie *) js_calloc(length * sizeof *vector);
+            uint32 length = cg->lexdeps.count;
+            if (!vector || cg->upvarMap.length != length) {
+                vector = (UpvarCookie *) js_realloc(vector, length * sizeof *vector);
                 if (!vector) {
                     JS_ReportOutOfMemory(cx);
                     return JS_FALSE;
@@ -2434,6 +2447,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     slot += tc->fun()->nargs;
             }
 
+            JS_ASSERT(index < cg->upvarMap.length);
             vector[index].set(skip, slot);
         }
 
@@ -4580,11 +4594,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             break;
         }
 
-        JS_ASSERT_IF(cx->options & JSOPTION_ANONFUNFIX,
-                     pn->pn_defn ||
-                     (!pn->pn_used && !pn->isTopLevel()) ||
-                     (fun->flags & JSFUN_LAMBDA));
-
         JS_ASSERT_IF(pn->pn_funbox->tcflags & TCF_FUN_HEAVYWEIGHT,
                      FUN_KIND(fun) == JSFUN_INTERPRETED);
 
@@ -4604,7 +4613,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         if (!cg2->init())
             return JS_FALSE;
 
-        cg2->flags = pn->pn_funbox->tcflags | TCF_IN_FUNCTION;
+        cg2->flags = pn->pn_funbox->tcflags | TCF_COMPILING | TCF_IN_FUNCTION;
 #if JS_HAS_SHARP_VARS
         if (cg2->flags & TCF_HAS_SHARPS) {
             cg2->sharpSlotBase = fun->sharpSlotBase(cx);
