@@ -221,13 +221,24 @@ public:
   static nsresult GetDomainFromScopeKey(const nsACString& aScope,
                                          nsACString& aDomain);
 
+  /**
+   * Ensures the temp table flush timer is running. This is called when we add
+   * data that will need to be flushed.
+   */
+  void EnsureTempTableFlushTimer();
+
+  /**
+   * Stops the temp table flush timer.
+   */
+  void StopTempTableFlushTimer();
+
 protected:
   nsDOMStoragePersistentDB mChromePersistentDB;
   nsDOMStoragePersistentDB mPersistentDB;
   nsDOMStorageMemoryDB mSessionOnlyDB;
   nsDOMStorageMemoryDB mPrivateBrowsingDB;
 
-  nsCOMPtr<nsITimer> mFlushTimer;
+  nsCOMPtr<nsITimer> mTempTableFlushTimer;
 };
 
 #endif /* nsDOMStorageDB_h___ */
