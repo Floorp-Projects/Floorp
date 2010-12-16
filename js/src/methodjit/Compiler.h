@@ -344,7 +344,8 @@ class Compiler : public BaseCompiler
     JSValueType knownLocalType(uint32 local);
     JSValueType knownPushedType(uint32 pushed);
     js::types::ObjectKind knownPoppedObjectKind(uint32 popped);
-    bool arrayPrototypeHasIndexedSetter();
+    bool arrayPrototypeHasIndexedProperty();
+    bool mayPushUndefined(uint32 pushed);
     void markPushedOverflow(uint32 pushed);
     void markLocalOverflow(uint32 local);
     void markArgumentOverflow(uint32 arg);
