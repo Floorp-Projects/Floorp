@@ -65,6 +65,9 @@ pref("browser.viewport.scaleRatio", -1);
 /* use custom widget for html:select */
 pref("ui.use_native_popup_windows", true);
 
+/* allow scrollbars to float above chrome ui */
+pref("ui.scrollbarsCanOverlapContent", 1);
+
 /* use long press to display a context menu */
 pref("ui.click_hold_context_menus", true);
 

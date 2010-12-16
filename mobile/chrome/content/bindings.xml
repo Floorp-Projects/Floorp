@@ -168,12 +168,10 @@
   </binding>
 
   <binding id="popup_autocomplete">
-    <content orient="vbox" class="autocomplete-box" flex="1">
+    <content class="autocomplete-box" flex="1">
       <!-- 24 child items, to match browser.urlbar.maxRichResults -->
-      <xul:scrollbox orient="vertical"
-                     class="autocomplete-items"
-                     anonid="autocomplete-items"
-                     flex="1000">
+      <xul:scrollbox anonid="autocomplete-items"
+                     class="autocomplete-items" orient="vertical" flex="1">
         <xul:autocompleteresult/>
         <xul:autocompleteresult/>
         <xul:autocompleteresult/>
