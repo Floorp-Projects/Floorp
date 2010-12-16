@@ -1712,10 +1712,7 @@ nsHTMLInputElement::SetCheckedInternal(PRBool aChecked, PRBool aNotify)
   }
 
   if (mType == NS_FORM_INPUT_RADIO) {
-    // OnValueChanged is going to be called for all radios in the radio group.
-    nsCOMPtr<nsIRadioVisitor> visitor =
-      NS_GetRadioUpdateValueMissingVisitor();
-    VisitGroup(visitor, aNotify);
+    UpdateValueMissingValidityState();
   }
 }
 
@@ -4255,34 +4252,6 @@ protected:
   nsIFormControl* mExcludeElement;
 };
 
-class nsRadioUpdateValueMissingVisitor : public nsRadioVisitor {
-public:
-  nsRadioUpdateValueMissingVisitor()
-    : nsRadioVisitor()
-    { }
-
-  virtual ~nsRadioUpdateValueMissingVisitor() { };
-
-  NS_IMETHOD Visit(nsIFormControl* aRadio, PRBool* aStop)
-  {
-    /**
-     * The simplest way to update the value missing validity state is to do a
-     * global update of the validity state by simulationg a value change.
-     * OnValueChanged() is declared into nsITextControlElement. That may sound
-     * to be a weird way to update the validity states for radio controls but
-     * they are also implementing nsITextControlElement interface.
-     *
-     * When OnValueChanged() is called on a radio control, it will check if any
-     * radio in the group is checked. If none, the required radio will be
-     * suffering from being missing.
-     */
-    nsCOMPtr<nsITextControlElement> textCtl(do_QueryInterface(aRadio));
-    NS_ASSERTION(textCtl, "Visit() passed a null or non-radio pointer");
-    textCtl->OnValueChanged(PR_TRUE);
-    return NS_OK;
-  }
-};
-
 class nsRadioGroupRequiredVisitor : public nsRadioVisitor {
 public:
   nsRadioGroupRequiredVisitor(nsIFormControl* aExcludeElement, bool* aRequired)
@@ -4422,8 +4391,8 @@ NS_GetRadioGetCheckedChangedVisitor(PRBool* aCheckedChanged,
 }
 
 /*
- * This method is a factory: it lets callers to create an instance of
- * nsRadioUpdateValueMissing without the class declaration and definition.
+ * These methods are factores: they let callers to create an instance of
+ * a radio group visitor without the class declaration and definition.
  *
  * TODO:
  * Do we really need factories for radio visitors? Or at least, we should move
@@ -4431,12 +4400,6 @@ NS_GetRadioGetCheckedChangedVisitor(PRBool* aCheckedChanged,
  * visitor classes are defined after most of nsHTMLInputElement code.
  * See bug 586298
  */
-nsIRadioVisitor*
-NS_GetRadioUpdateValueMissingVisitor()
-{
-  return new nsRadioUpdateValueMissingVisitor();
-}
-
 nsIRadioVisitor*
 NS_GetRadioGroupRequiredVisitor(nsIFormControl* aExcludeElement,
                                 bool* aRequired)
