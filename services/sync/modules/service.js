@@ -1521,12 +1521,27 @@ WeaveSvc.prototype = {
     this._log.config("Starting backoff, next sync at:" + d.toString());
   },
 
+  // Call _lockedSync with a specialized variant of Utils.catch.
+  // This provides a more informative error message when we're already syncing:
+  // see Bug 616568.
+  sync: function sync() {
+    try {
+      return this._lockedSync();
+    } catch (ex) {
+      this._log.debug("Exception: " + Utils.exceptionStr(ex));
+      if (Utils.isLockException(ex)) {
+        // This only happens if we're syncing already.
+        this._log.info("Cannot start sync: already syncing?");
+      }
+    }
+  },
+  
   /**
    * Sync up engines with the server.
    */
-  sync: function sync()
-    this._catch(this._lock("service.js: sync", 
-                           this._notify("sync", "", function() {
+  _lockedSync: function _lockedSync()
+    this._lock("service.js: sync", 
+               this._notify("sync", "", function() {
 
     this._log.info("In sync().");
 
@@ -1647,7 +1662,7 @@ WeaveSvc.prototype = {
       this._syncError = false;
       Svc.Prefs.reset("firstSync");
     }
-  })))(),
+  }))(),
 
   /**
    * Process the locally stored clients list to figure out what mode to be in
