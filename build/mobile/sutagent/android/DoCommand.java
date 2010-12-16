@@ -123,7 +123,7 @@ public class DoCommand {
 	String	sErrorPrefix = "##AGENT-WARNING## ";
 	boolean bTraceOn = false;
 	
-	private final String prgVersion = "SUTAgentAndroid Version 0.93";
+	private final String prgVersion = "SUTAgentAndroid Version 0.94";
 	
 	public enum Command
 		{
@@ -2376,7 +2376,8 @@ public class DoCommand {
 						temp = sLine.split("=");
 						if (temp != null)
 							{
-							sRet = temp[1].trim();
+							if (temp.length > 1)
+								sRet = temp[1].trim();
 							}
 						break;
 						}
