@@ -2838,7 +2838,6 @@ Tab.prototype = {
     this._listener = new ProgressController(this);
     browser.webProgress.addProgressListener(this._listener, flags);
 
-    BrowserUI.closeAutoComplete();
     return browser;
   },
 
