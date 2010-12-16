@@ -4125,16 +4125,6 @@ var XULBrowserWindow = {
       }
     }
 
-    // Show or hide browser chrome based on the whitelist
-    var disableChrome = this.inContentWhitelist.some(function(aSpec) {
-      return aSpec == location;
-    });
-
-    if (disableChrome)
-      document.documentElement.setAttribute("disablechrome", "true");
-    else
-      document.documentElement.removeAttribute("disablechrome");
-
     // This code here does not compare uris exactly when determining
     // whether or not the message should be hidden since the message
     // may be prematurely hidden when an install is invoked by a click
@@ -4206,6 +4196,16 @@ var XULBrowserWindow = {
         // Update starring UI
         PlacesStarButton.updateState();
       }
+
+      // Show or hide browser chrome based on the whitelist
+      var disableChrome = this.inContentWhitelist.some(function(aSpec) {
+        return aSpec == location;
+      });
+
+      if (disableChrome)
+        document.documentElement.setAttribute("disablechrome", "true");
+      else
+        document.documentElement.removeAttribute("disablechrome");
     }
     UpdateBackForwardCommands(gBrowser.webNavigation);
 

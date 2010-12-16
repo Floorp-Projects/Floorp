@@ -73,10 +73,10 @@ function doStep()
 
     case 5:
       is(localStorage.getItem("Y"), null, "Y null in the master");
+      releaseTestObserver();
       break;
 
     case 7:
-      releaseTestObserver();
       return finishTest();
   }
 

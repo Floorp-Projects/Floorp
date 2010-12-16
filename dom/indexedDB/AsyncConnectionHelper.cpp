@@ -145,7 +145,16 @@ AsyncConnectionHelper::Run()
       mRequest->SetDone();
     }
 
-    SetCurrentTransaction(mTransaction);
+    if (mTransaction &&
+        mTransaction->IsAborted() &&
+        NS_SUCCEEDED(mResultCode)) {
+      // Don't fire success events if the transaction has since been aborted.
+      // Instead convert to an error event.
+      mResultCode = NS_ERROR_DOM_INDEXEDDB_ABORT_ERR;
+    }
+
+    IDBTransaction* oldTransaction = gCurrentTransaction;
+    gCurrentTransaction = mTransaction;
 
     // Call OnError if the database had an error or if the OnSuccess handler
     // has an error.
@@ -154,9 +163,8 @@ AsyncConnectionHelper::Run()
       OnError(mRequest, mResultCode);
     }
 
-    NS_ASSERTION(GetCurrentTransaction() == mTransaction,
-                 "Should be unchanged!");
-    SetCurrentTransaction(nsnull);
+    NS_ASSERTION(gCurrentTransaction == mTransaction, "Should be unchanged!");
+    gCurrentTransaction = oldTransaction;
 
     if (mDispatched && mTransaction) {
       mTransaction->OnRequestFinished();
@@ -319,20 +327,6 @@ AsyncConnectionHelper::GetCurrentTransaction()
   return gCurrentTransaction;
 }
 
-// static
-void
-AsyncConnectionHelper::SetCurrentTransaction(IDBTransaction* aTransaction)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  if (aTransaction) {
-    NS_ASSERTION(!gCurrentTransaction, "Overwriting current transaction!");
-  }
-
-  gCurrentTransaction = aTransaction;
-}
-
-
 nsresult
 AsyncConnectionHelper::Init()
 {
@@ -380,7 +374,27 @@ AsyncConnectionHelper::OnSuccess(nsIDOMEventTarget* aTarget)
   }
 
   PRBool dummy;
-  aTarget->DispatchEvent(event, &dummy);
+  rv = aTarget->DispatchEvent(event, &dummy);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(event);
+  NS_ASSERTION(privateEvent, "This should always QI properly!");
+
+  nsEvent* internalEvent = privateEvent->GetInternalNSEvent();
+  NS_ASSERTION(internalEvent, "This should never be null!");
+
+  NS_ASSERTION(!mTransaction ||
+               mTransaction->IsOpen() ||
+               mTransaction->IsAborted(),
+               "How else can this be closed?!");
+
+  if ((internalEvent->flags & NS_EVENT_FLAG_EXCEPTION_THROWN) &&
+      mTransaction &&
+      mTransaction->IsOpen()) {
+    rv = mTransaction->Abort();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   return NS_OK;
 }
 
@@ -397,16 +411,33 @@ AsyncConnectionHelper::OnError(nsIDOMEventTarget* aTarget,
     return;
   }
 
-  PRBool dummy;
-  aTarget->DispatchEvent(event, &dummy);
+  PRBool doDefault;
+  nsresult rv = aTarget->DispatchEvent(event, &doDefault);
+  if (NS_SUCCEEDED(rv)) {
+    NS_ASSERTION(!mTransaction ||
+                 mTransaction->IsOpen() ||
+                 mTransaction->IsAborted(),
+                 "How else can this be closed?!");
+
+    if (doDefault &&
+        mTransaction &&
+        mTransaction->IsOpen() &&
+        NS_FAILED(mTransaction->Abort())) {
+      NS_WARNING("Failed to abort transaction!");
+    }
+  }
+  else {
+    NS_WARNING("DispatchEvent failed!");
+  }
 }
 
 nsresult
-AsyncConnectionHelper::GetSuccessResult(nsIWritableVariant* /* aResult */)
+AsyncConnectionHelper::GetSuccessResult(nsIWritableVariant* aResult)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  // Leave the variant remain set to empty.
+  nsresult rv = aResult->SetAsVoid();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }

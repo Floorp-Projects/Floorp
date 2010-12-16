@@ -106,10 +106,13 @@ nsMIMEInfoAndroid::GetMimeInfoForFileExt(const nsACString& aFileExt,
   return GetMimeInfoForMimeType(mimeType, aMimeInfo);
 }
 
+/**
+ * Returns MIME info for the aURL, which may contain the whole URL or only a protocol
+ */
 nsresult
-nsMIMEInfoAndroid::GetMimeInfoForProtocol(const nsACString &aScheme,
-                                          PRBool *found,
-                                          nsIHandlerInfo **info)
+nsMIMEInfoAndroid::GetMimeInfoForURL(const nsACString &aURL,
+                                     PRBool *found,
+                                     nsIHandlerInfo **info)
 {
   const nsCString &emptyC = EmptyCString();
   mozilla::AndroidBridge* bridge = mozilla::AndroidBridge::Bridge();
@@ -124,8 +127,8 @@ nsMIMEInfoAndroid::GetMimeInfoForProtocol(const nsACString &aScheme,
   }
 
   nsIHandlerApp* systemDefault = nsnull;
-  bridge->GetHandlersForProtocol(nsCAutoString(aScheme).get(), 
-                                 mimeinfo->mHandlerApps, &systemDefault);
+  bridge->GetHandlersForURL(nsCAutoString(aURL).get(), 
+                            mimeinfo->mHandlerApps, &systemDefault);
   
   if (systemDefault)
     mimeinfo->mPrefApp = systemDefault;

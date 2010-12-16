@@ -723,7 +723,6 @@ IDBDatabase::Transaction(nsIVariant* aStoreNames,
       NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
       if (!info->ContainsStoreName(name)) {
-        // XXX Update spec for a real error code here.
         return NS_ERROR_DOM_INDEXEDDB_NOT_FOUND_ERR;
       }
 
@@ -885,7 +884,7 @@ SetVersionHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 }
 
 nsresult
-SetVersionHelper::GetSuccessResult(nsIWritableVariant* /* aResult */)
+SetVersionHelper::GetSuccessResult(nsIWritableVariant* aResult)
 {
   DatabaseInfo* info;
   if (!DatabaseInfo::Get(mDatabase->Id(), &info)) {
@@ -894,6 +893,7 @@ SetVersionHelper::GetSuccessResult(nsIWritableVariant* /* aResult */)
   }
   info->version = mVersion;
 
+  aResult->SetAsISupports(static_cast<nsPIDOMEventTarget*>(mTransaction));
   return NS_OK;
 }
 

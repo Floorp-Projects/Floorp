@@ -55,7 +55,7 @@ interface nsIDOMEventListener;
  * http://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#idl-def-IDBDatabase
  * for more information.
  */
-[scriptable, uuid(a4a707af-f5bb-45e4-a615-7616b03a5edc)]
+[scriptable, uuid(6563ebdc-4509-4aeb-ac14-7e78ad74e2d3)]
 interface nsIIDBDatabase : nsISupports
 {
   readonly attribute DOMString name;
@@ -66,7 +66,7 @@ interface nsIIDBDatabase : nsISupports
 
   nsIIDBObjectStore
   createObjectStore(in AString name,
-                    in AString keyPath,
+                    [optional /* none */] in AString keyPath,
                     [optional /* false */] in boolean autoIncrement);
 
   void

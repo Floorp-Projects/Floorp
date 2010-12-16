@@ -50,9 +50,10 @@ public:
   static PRBool
   GetMimeInfoForFileExt(const nsACString& aFileExt, 
                         nsMIMEInfoAndroid** aMimeInfo);
+
   static nsresult 
-  GetMimeInfoForProtocol(const nsACString &aScheme, PRBool *found,
-                         nsIHandlerInfo **info);
+  GetMimeInfoForURL(const nsACString &aURL, PRBool *found,
+                    nsIHandlerInfo **info);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMIMEINFO

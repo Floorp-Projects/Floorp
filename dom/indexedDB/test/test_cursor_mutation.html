@@ -82,7 +82,7 @@
       sawRemoved = false;
 
       db.transaction("foo", IDBTransaction.READ_WRITE).objectStore("foo")
-        .index("name").openObjectCursor().onsuccess = function(event) {
+        .index("name").openCursor().onsuccess = function(event) {
           event.transaction.oncomplete = continueToNextStep;
           let cursor = event.result;
           if (cursor) {

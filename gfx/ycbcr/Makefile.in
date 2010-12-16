@@ -45,6 +45,11 @@ endif # SunOS
 endif # linux
 endif # windows
 
+ifeq (arm,$(findstring arm,$(OS_TEST)))
+CPPSRCS += yuv_convert_arm.cpp \
+           $(NULL)
+endif
+
 EXTRA_DSO_LDOPTS += \
         $(LIBS_DIR) \
         $(EXTRA_DSO_LIBS) \

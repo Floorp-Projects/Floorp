@@ -2128,6 +2128,9 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
   // Release the stylesheets list.
   mDOMStyleSheets = nsnull;
 
+  // Clear the original URI so SetDocumentURI sets it.
+  mOriginalURI = nsnull;
+
   SetDocumentURI(aURI);
   // If mDocumentBaseURI is null, nsIDocument::GetBaseURI() returns
   // mDocumentURI.
@@ -2509,6 +2512,11 @@ nsDocument::SetDocumentURI(nsIURI* aURI)
   else {
     equalBases = !oldBase && !newBase;
   }
+
+  // If this is the first time we're setting the document's URI, set the
+  // document's original URI.
+  if (!mOriginalURI)
+    mOriginalURI = mDocumentURI;
 
   // If changing the document's URI changed the base URI of the document, we
   // need to refresh the hrefs of all the links on the page.

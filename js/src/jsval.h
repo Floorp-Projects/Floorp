@@ -789,10 +789,10 @@ extern "C++"
 # endif /* defined(__cplusplus) */
 
 /* Internal helper macros */
-#define JSVAL_BITS(v)    (v.asBits)
+#define JSVAL_BITS(v)    ((v).asBits)
 #define JSVAL_FROM_LAYOUT(l) (l)
 #define IMPL_TO_JSVAL(v) (v)
-#define JSID_BITS(id)    (id.asBits)
+#define JSID_BITS(id)    ((id).asBits)
 
 #else /* defined(JS_USE_JSVAL_JSID_STRUCT_TYPES) */
 

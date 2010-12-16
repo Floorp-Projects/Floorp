@@ -337,16 +337,19 @@ struct JSObject : js::gc::Cell {
     inline bool nativeContains(const js::Shape &shape);
 
     enum {
-        DELEGATE        = 0x01,
-        SYSTEM          = 0x02,
-        NOT_EXTENSIBLE  = 0x04,
-        BRANDED         = 0x08,
-        GENERIC         = 0x10,
-        METHOD_BARRIER  = 0x20,
-        INDEXED         = 0x40,
-        OWN_SHAPE       = 0x80,
-        BOUND_FUNCTION  = 0x100,
-        HAS_EQUALITY    = 0x200
+        DELEGATE                  =  0x01,
+        SYSTEM                    =  0x02,
+        NOT_EXTENSIBLE            =  0x04,
+        BRANDED                   =  0x08,
+        GENERIC                   =  0x10,
+        METHOD_BARRIER            =  0x20,
+        INDEXED                   =  0x40,
+        OWN_SHAPE                 =  0x80,
+        BOUND_FUNCTION            = 0x100,
+        HAS_EQUALITY              = 0x200,
+        METHOD_THRASH_COUNT_MASK  = 0xc00,
+        METHOD_THRASH_COUNT_SHIFT =    10,
+        METHOD_THRASH_COUNT_MAX   = METHOD_THRASH_COUNT_MASK >> METHOD_THRASH_COUNT_SHIFT
     };
 
     /*
@@ -423,11 +426,25 @@ struct JSObject : js::gc::Cell {
      */
     bool branded()              { return !!(flags & BRANDED); }
 
+    /*
+     * NB: these return false on shape overflow but do not report any error.
+     * Callers who depend on shape guarantees should therefore bail off trace,
+     * e.g., on false returns.
+     */
     bool brand(JSContext *cx);
     bool unbrand(JSContext *cx);
 
     bool generic()              { return !!(flags & GENERIC); }
     void setGeneric()           { flags |= GENERIC; }
+
+    uintN getMethodThrashCount() const {
+        return (flags & METHOD_THRASH_COUNT_MASK) >> METHOD_THRASH_COUNT_SHIFT;
+    }
+
+    void setMethodThrashCount(uintN count) {
+        JS_ASSERT(count <= METHOD_THRASH_COUNT_MAX);
+        flags = (flags & ~METHOD_THRASH_COUNT_MASK) | (count << METHOD_THRASH_COUNT_SHIFT);
+    }
 
     bool hasSpecialEquality() const { return !!(flags & HAS_EQUALITY); }
     void assertSpecialEqualitySynced() const {

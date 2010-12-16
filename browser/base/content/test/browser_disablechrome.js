@@ -30,14 +30,34 @@ function is_chrome_visible() {
   ok(!is_element_hidden(document.getElementById("nav-bar")), "Toolbar should not be hidden");
 }
 
-function load_page(aURL, aCallback) {
+function load_page(aURL, aCanHide, aCallback) {
   gNewBrowser.addEventListener("pageshow", function() {
     // Filter out about:blank loads
     if (gNewBrowser.currentURI.spec != aURL)
       return;
 
     gNewBrowser.removeEventListener("pageshow", arguments.callee, false);
-    executeSoon(aCallback);
+
+    if (aCanHide)
+      is_chrome_hidden();
+    else
+      is_chrome_visible();
+
+    if (aURL == "about:addons") {
+      gNewBrowser.contentDocument.addEventListener("Initialized", function() {
+        gNewBrowser.contentDocument.removeEventListener("Initialized", arguments.callee, false);
+
+        if (aCanHide)
+          is_chrome_hidden();
+        else
+          is_chrome_visible();
+
+        aCallback();
+      }, false);
+    }
+    else {
+      executeSoon(aCallback);
+    }
   }, false);
   gNewBrowser.loadURI(aURL);
 }
@@ -47,6 +67,10 @@ var gNewTab;
 var gNewBrowser;
 
 function test() {
+  // Opening the add-ons manager and waiting for it to load the discovery pane
+  // takes more time in windows debug builds
+  requestLongerTimeout(2);
+
   var gOldTabsOnTop = TabsOnTop.enabled;
   registerCleanupFunction(function() {
     TabsOnTop.enabled = gOldTabsOnTop;
@@ -73,12 +97,7 @@ function test_url(aURL, aCanHide, aNextTest) {
   is_chrome_visible();
 
   info("Page load");
-  load_page(aURL, function() {
-    if (aCanHide)
-      is_chrome_hidden();
-    else
-      is_chrome_visible();
-
+  load_page(aURL, aCanHide, function() {
     info("Switch away");
     gBrowser.selectedTab = gOldTab;
     is_chrome_visible();
@@ -97,9 +116,7 @@ function test_url(aURL, aCanHide, aNextTest) {
     gBrowser.selectedTab = gOldTab;
 
     info("Background load");
-    load_page(aURL, function() {
-      is_chrome_visible();
-
+    load_page(aURL, false, function() {
       info("Switch back");
       gBrowser.selectedTab = gNewTab;
       if (aCanHide)
@@ -107,7 +124,7 @@ function test_url(aURL, aCanHide, aNextTest) {
       else
         is_chrome_visible();
 
-      load_page("about:blank", aNextTest);
+      load_page("about:blank", false, aNextTest);
     });
   });
 }

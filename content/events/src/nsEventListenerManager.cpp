@@ -1206,8 +1206,11 @@ found:
                                   dispData->method, *typeData->iid);
             } else if (useGenericInterface &&
                        aPusher->RePush(aCurrentTarget)) {
-              HandleEventSubType(ls, ls->mListener, *aDOMEvent,
-                                 aCurrentTarget, aFlags, aPusher);
+              if (NS_FAILED(HandleEventSubType(ls, ls->mListener, *aDOMEvent,
+                                               aCurrentTarget, aFlags,
+                                               aPusher))) {
+                aEvent->flags |= NS_EVENT_FLAG_EXCEPTION_THROWN;
+              }
             }
           }
         }
