@@ -27,7 +27,6 @@
           window.removeEventListener("PanBegin", this, true);
         ]]>
       </desctructor>
-      <property name="mIgnoreFocus" onget="return true;" onset="val;"/>
       <property name="mIgnoreClick" onget="return true;" onset="val;"/>
       <property name="readOnly" onget="return this.inputField.readOnly;">
         <setter><![CDATA[
@@ -45,7 +44,7 @@
           input.focus();
 
           if (val)
-            input.selectionStart = input.selectionEnd = 0;
+            input.selectionStart = input.selectionEnd = input.textLength;
 
           return val;
         ]]></setter>
@@ -104,13 +103,6 @@
         <![CDATA[
           if (this.mController.input == this)
             this.mController.handleText();
-        ]]>
-      </handler>
-
-      <handler event="focus" phase="bubbling">
-        <![CDATA[
-          if (this.clickSelectsAll && !this.readOnly)
-            this.select();
         ]]>
       </handler>
 
