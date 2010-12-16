@@ -1598,8 +1598,12 @@ const ContentTouchHandler = {
    * Check if the event concern the browser content
    */
   _targetIsContent: function _targetIsContent(aEvent) {
+    // TapUp event with XULDocument as a target occurs on desktop when the
+    // mouse is released outside of the Fennec window, and because XULDocument
+    // does not have a classList properties, just check it exists first to
+    // prevent a warning
     let target = aEvent.target;
-    return target && target.classList.contains("inputHandler");
+    return target && ("classList" in target && target.classList.contains("inputHandler"));
   },
 
   _dispatchMouseEvent: function _dispatchMouseEvent(aName, aX, aY, aModifiers) {
