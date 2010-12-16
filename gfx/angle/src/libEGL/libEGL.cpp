@@ -360,6 +360,8 @@ EGLSurface __stdcall eglCreateWindowSurface(EGLDisplay dpy, EGLConfig config, EG
                   default:
                     return error(EGL_BAD_ATTRIBUTE, EGL_NO_SURFACE);
                 }
+
+                attrib_list += 2;
             }
         }
 
