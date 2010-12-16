@@ -258,13 +258,13 @@ function checkInputRequiredValidityForRadio()
   checkNotSufferingFromBeingMissing(element);
 
   // If a radio button is not required but another radio button is required in
-  // the same group, the not required radio button should not suffer from value
+  // the same group, the not required radio button should suffer from value
   // missing.
   element2.disabled = false;
   element2.checked = false;
   element.required = false;
   element2.required = true;
-  checkNotSufferingFromBeingMissing(element);
+  checkSufferingFromBeingMissing(element);
   checkSufferingFromBeingMissing(element2);
 
   element.checked = true;
