@@ -182,6 +182,10 @@ LayerManagerD3D10::Initialize()
   swapDesc.SampleDesc.Quality = 0;
   swapDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
   swapDesc.BufferCount = 1;
+  // We don't really need this flag, however it seems on some NVidia hardware
+  // smaller windows do not present properly without this flag. This flag
+  // should have no negative consequences by itsself. See bug 613790.
+  swapDesc.Flags = DXGI_SWAP_CHAIN_FLAG_GDI_COMPATIBLE;
   swapDesc.OutputWindow = (HWND)mWidget->GetNativeData(NS_NATIVE_WINDOW);
   swapDesc.Windowed = TRUE;
 
@@ -433,7 +437,8 @@ LayerManagerD3D10::VerifyBufferSize()
 
   mRTView = nsnull;
   mSwapChain->ResizeBuffers(1, rect.width, rect.height,
-                            DXGI_FORMAT_B8G8R8A8_UNORM, 0);
+                            DXGI_FORMAT_B8G8R8A8_UNORM,
+                            DXGI_SWAP_CHAIN_FLAG_GDI_COMPATIBLE);
 
 }
 
