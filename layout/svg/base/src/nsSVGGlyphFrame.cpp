@@ -1445,6 +1445,22 @@ nsSVGGlyphFrame::SetWhitespaceHandling(PRUint8 aWhitespaceHandling)
   mWhitespaceHandling = aWhitespaceHandling;
 }
 
+NS_IMETHODIMP_(PRBool)
+nsSVGGlyphFrame::IsAllWhitespace()
+{
+  const nsTextFragment* text = mContent->GetText();
+
+  if (text->Is2b())
+    return PR_FALSE;
+  PRInt32 len = text->GetLength();
+  const char* str = text->Get1b();
+  for (PRInt32 i = 0; i < len; ++i) {
+    if (!NS_IsAsciiWhitespace(str[i]))
+      return PR_FALSE;
+  }
+  return PR_TRUE;
+}
+
 //----------------------------------------------------------------------
 //
 
