@@ -5804,6 +5804,7 @@ var IndexedDBPromptHelper = {
 
   _quotaPrompt: "indexedDB-quota-prompt",
   _quotaResponse: "indexedDB-quota-response",
+  _quotaCancel: "indexedDB-quota-cancel",
 
   _notificationIcon: "indexedDB-notification-icon",
 
@@ -5811,18 +5812,21 @@ var IndexedDBPromptHelper = {
   function IndexedDBPromptHelper_init() {
     Services.obs.addObserver(this, this._permissionsPrompt, false);
     Services.obs.addObserver(this, this._quotaPrompt, false);
+    Services.obs.addObserver(this, this._quotaCancel, false);
   },
 
   uninit:
   function IndexedDBPromptHelper_uninit() {
     Services.obs.removeObserver(this, this._permissionsPrompt, false);
     Services.obs.removeObserver(this, this._quotaPrompt, false);
+    Services.obs.removeObserver(this, this._quotaCancel, false);
   },
 
   observe:
   function IndexedDBPromptHelper_observe(subject, topic, data) {
     if (topic != this._permissionsPrompt &&
-        topic != this._quotaPrompt) {
+        topic != this._quotaPrompt &&
+        topic != this._quotaCancel) {
       throw new Error("Unexpected topic!");
     }
 
@@ -5854,14 +5858,22 @@ var IndexedDBPromptHelper = {
                                                     [ host, data ]);
       responseTopic = this._quotaResponse;
     }
+    else if (topic == this._quotaCancel) {
+      responseTopic = this._quotaResponse;
+    }
 
-    var self = this;
+    const hiddenTimeoutDuration = 30000; // 30 seconds
+    const firstTimeoutDuration = 360000; // 5 minutes
+
+    var timeoutId;
+
     var observer = requestor.getInterface(Ci.nsIObserver);
 
     var mainAction = {
       label: gNavigatorBundle.getString("offlineApps.allow"),
       accessKey: gNavigatorBundle.getString("offlineApps.allowAccessKey"),
       callback: function() {
+        clearTimeout(timeoutId);
         observer.observe(null, responseTopic,
                          Ci.nsIPermissionManager.ALLOW_ACTION);
       }
@@ -5872,15 +5884,70 @@ var IndexedDBPromptHelper = {
         label: gNavigatorBundle.getString("offlineApps.never"),
         accessKey: gNavigatorBundle.getString("offlineApps.neverAccessKey"),
         callback: function() {
+          clearTimeout(timeoutId);
           observer.observe(null, responseTopic,
                            Ci.nsIPermissionManager.DENY_ACTION);
         }
       }
     ];
 
-    PopupNotifications.show(browser, topic, message, this._notificationIcon,
-                            mainAction, secondaryActions);
+    // This will be set to the result of PopupNotifications.show() below, or to
+    // the result of PopupNotifications.getNotification() if this is a
+    // quotaCancel notification.
+    var notification;
 
+    function timeoutNotification() {
+      // Remove the notification.
+      if (notification) {
+        notification.remove();
+      }
+
+      // Clear all of our timeout stuff. We may be called directly, not just
+      // when the timeout actually elapses.
+      clearTimeout(timeoutId);
+
+      // And tell the page that the popup timed out.
+      observer.observe(null, responseTopic,
+                       Ci.nsIPermissionManager.UNKNOWN_ACTION);
+    }
+
+    var options = {
+      eventCallback: function(state) {
+        // Don't do anything if the timeout has not been set yet.
+        if (!timeoutId) {
+          return;
+        }
+
+        // If the popup is being dismissed start the short timeout.
+        if (state == "dismissed") {
+          clearTimeout(timeoutId);
+          timeoutId = setTimeout(timeoutNotification, hiddenTimeoutDuration);
+          return;
+        }
+
+        // If the popup is being re-shown then clear the timeout allowing
+        // unlimited waiting.
+        if (state == "shown") {
+          clearTimeout(timeoutId);
+        }
+      }
+    };
+
+    if (topic == this._quotaCancel) {
+      notification = PopupNotifications.getNotification(this._quotaPrompt,
+                                                        browser);
+      timeoutNotification();
+      return;
+    }
+
+    notification = PopupNotifications.show(browser, topic, message,
+                                           this._notificationIcon, mainAction,
+                                           secondaryActions, options);
+
+    // Set the timeoutId after the popup has been created, and use the long
+    // timeout value. If the user doesn't notice the popup after this amount of
+    // time then it is most likely not visible and we want to alert the page.
+    timeoutId = setTimeout(timeoutNotification, firstTimeoutDuration);
   }
 };
 
