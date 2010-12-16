@@ -206,37 +206,60 @@ var AutoCompleteUtils = {
         this.fetch(this.query);
         return;
       }
-
-      let result = cache.result;
-
-      // Add back functions to the result
-      result.getValueAt = function(index) this.data[index][0];
-      result.getLabelAt = function(index) this.data[index][0];
-      result.getCommentAt = function(index) this.data[index][1];
-      result.getStyleAt = function(index) this.data[index][2];
-      result.getImageAt = function(index) this.data[index][3];
-
-      this.cache = result;
+      this.cache = new cacheResult(cache.result.searchString, cache.result.data);
     } catch (ex) {
       Cu.reportError("AutoCompleteUtils: Could not read from cache file: " + ex);
     }
   }
 };
 
+function cacheResult(aSearchString, aData) {
+  if (aData)
+    this.data = aData;
+  this.searchString = aSearchString;
+}
+
+cacheResult.prototype = {
+  QueryInterface : XPCOMUtils.generateQI([Ci.nsIAutoCompleteSimpleResult, Ci.nsIAutoCompleteResult, Ci.nsISupportsWeakReference]),
+  searchString : "",
+  data: [],
+  errorDescription : "",
+  defaultIndex : 0,
+  get matchCount() { return this.data.length; },
+  searchResult : Ci.nsIAutoCompleteResult.RESULT_SUCCESS,
+
+  getValueAt : function(index) this.data[index][0],
+  getLabelAt : function(index) this.data[index][0],
+  getCommentAt : function(index) this.data[index][1],
+  getStyleAt : function(index) this.data[index][2],
+  getImageAt : function(index) this.data[index][3],
+  
+  appendMatch : function(aValue, aComment, aImage, aStyle) { this.data.push([aValue, aComment, aStyle, aImage]) },
+  setErrorDescription : function(aErrorDescription) { this.errorDescription = aErrorDescription; },
+  setDefaultIndex : function(aDefaultIndex) { this.defaultIndex = aDefaultIndex; },
+  setSearchString : function(aSearchString) { this.searchString = aSearchString; },
+  setSearchResult : function(aSearchResult) { this.searchResult = aSearchResult; },
+  setListener : function(aListener) { return; }
+}
+
 // -----------------------------------------------------------------------
 // AutoCompleteCache bypasses SQLite backend for common searches
 // -----------------------------------------------------------------------
 
 function AutoCompleteCache() {
+  this.searchEngines = Services.search.getVisibleEngines();
   AutoCompleteUtils.init();
 
   Services.obs.addObserver(this, "browser:purge-session-history", true);
+  Services.obs.addObserver(this, "browser-search-engine-modified", true);
 }
 
 AutoCompleteCache.prototype = {
   classID: Components.ID("{a65f9dca-62ab-4b36-a870-972927c78b56}"),
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteSearch, Ci.nsIObserver, Ci.nsISupportsWeakReference]),
+
+  searchEngines: [],
 
   get _searchThreshold() {
     delete this._searchCount;
@@ -245,40 +268,54 @@ AutoCompleteCache.prototype = {
 
   startSearch: function(query, param, prev, listener) {
     let self = this;
-    let done = function(result, aType) {
-      let showSearch = (result.matchCount < self._searchThreshold) && (aType == RESULT_NEW);
+    let done = function(aResult, aType) {
+      let showSearch = (aResult.matchCount < self._searchThreshold) && (aType == RESULT_NEW);
 
-      if (showSearch && (result.searchResult == Ci.nsIAutoCompleteResult.RESULT_SUCCESS ||
-                         result.searchResult == Ci.nsIAutoCompleteResult.RESULT_NOMATCH)) {
-        let engines = Services.search.getVisibleEngines();
-        try {
-          result.QueryInterface(Ci.nsIAutoCompleteSimpleResult);
-          if (engines.length > 0) {  
-            for (let i = 0; i < engines.length; i++) {
-              let url = engines[i].getSubmission(query).uri.spec;
-              result.appendMatch(url, engines[i].name, engines[i].iconURI.spec, "search");
-            }
-            result.setSearchResult(Ci.nsIAutoCompleteResult.RESULT_SUCCESS);
-          }
-        } catch(ex) {
-        }
+      if (showSearch && (aResult.searchResult == Ci.nsIAutoCompleteResult.RESULT_SUCCESS ||
+                         aResult.searchResult == Ci.nsIAutoCompleteResult.RESULT_NOMATCH)) {
+        self._addSearchProviders(aResult);
       }
-      listener.onSearchResult(self, result);
+      listener.onSearchResult(self, aResult);
     };
 
     // Strip out leading/trailing spaces
     query = query.trim();
+    let usedCache = false;
 
     if (AutoCompleteUtils.query == query && AutoCompleteUtils.cache) {
       // On a cache-hit, give the results right away and fetch in the background
       done(AutoCompleteUtils.cache, RESULT_CACHE);
-    } else {
-      // Otherwise, fetch the result, cache it, and pass it on
-      AutoCompleteUtils.fetch(query, done);
+      usedCache = true;
+    } else if (prev) {
+      // Otherwise, check if this is the same as the prev search,
+      // and if the previous search was null
+      let prevSearch = prev.searchString;
+      if (prev.matchCount == this.searchEngines.length && (query.indexOf(prevSearch) == 0)) {
+        done(new cacheResult(query, []), RESULT_NEW);
+        usedCache = true;
+      }
     }
+
+    // Only start a fetch if we think we actually need to update the cache
+    if (!usedCache)
+      AutoCompleteUtils.fetch(query, done);
 
     // Keep the cache warm
     AutoCompleteUtils.update();
+  },
+
+  _addSearchProviders: function(aResult) {
+    try {
+      aResult.QueryInterface(Ci.nsIAutoCompleteSimpleResult);
+      if (this.searchEngines.length > 0) {  
+        for (let i = 0; i < this.searchEngines.length; i++) {
+          let engine = this.searchEngines[i];
+          let url = engine.getSubmission(aResult.searchString).uri.spec;
+          aResult.appendMatch(url, engine.name, engine.iconURI.spec, "search");
+        }
+        aResult.setSearchResult(Ci.nsIAutoCompleteResult.RESULT_SUCCESS);
+      }
+    } catch(ex) {}
   },
 
   stopSearch: function() {
@@ -290,6 +327,9 @@ AutoCompleteCache.prototype = {
     switch (aTopic) {
       case "browser:purge-session-history":
         AutoCompleteUtils.update();
+        break;
+      case "browser-search-engine-modified":
+        this.searchEngines = Services.search.getVisibleEngines();
         break;
     }
   }
