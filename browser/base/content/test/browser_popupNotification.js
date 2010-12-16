@@ -527,6 +527,22 @@ var tests = [
             "geo anchor should be visible");
     }
   },
+  // Test notification "Not Now" menu item
+  { // Test #17
+    run: function () {
+      this.notifyObj = new basicNotification(),
+      this.notification = showNotification(this.notifyObj);
+    },
+    onShown: function (popup) {
+      checkPopup(popup, this.notifyObj);
+      triggerSecondaryCommand(popup, 1);
+    },
+    onHidden: function (popup) {
+      ok(this.notifyObj.dismissalCallbackTriggered, "dismissal callback triggered");
+      this.notification.remove();
+      ok(this.notifyObj.removedCallbackTriggered, "removed callback triggered");
+    }
+  },
 ];
 
 function showNotification(notifyObj) {
@@ -558,7 +574,13 @@ function checkPopup(popup, notificationObj) {
   }
   let actualSecondaryActions = notification.childNodes;
   let secondaryActions = notificationObj.secondaryActions || [];
-  is(actualSecondaryActions.length, secondaryActions.length, actualSecondaryActions.length + " secondary actions");
+  let actualSecondaryActionsCount = actualSecondaryActions.length;
+  if (secondaryActions.length) {
+    let lastChild = actualSecondaryActions.item(actualSecondaryActions.length - 1);
+    is(lastChild.tagName, "menuseparator", "menuseparator exists");
+    actualSecondaryActionsCount--;
+  }
+  is(actualSecondaryActionsCount, secondaryActions.length, actualSecondaryActions.length + " secondary actions");
   secondaryActions.forEach(function (a, i) {
     is(actualSecondaryActions[i].getAttribute("label"), a.label, "label for secondary action " + i + " matches");
     is(actualSecondaryActions[i].getAttribute("accesskey"), a.accessKey, "accessKey for secondary action " + i + " matches");
