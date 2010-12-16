@@ -239,6 +239,38 @@ js_GetEnterBlockStackDefs(JSContext *cx, JSScript *script, jsbytecode *pc)
     return OBJ_BLOCK_COUNT(cx, obj);
 }
 
+class AutoScriptUntrapper {
+    JSContext *cx;
+    JSScript *script;
+    jsbytecode *origPC;
+    jsbytecode *newPC;
+
+public:
+    AutoScriptUntrapper(JSContext *cx, JSScript *script, jsbytecode **pc)
+        : cx(cx), script(script), origPC(*pc)
+    {
+        jsbytecode *newCode = js_UntrapScriptCode(cx, script);
+        if (newCode == script->code) {
+            // No change needed
+            newPC = origPC;
+        } else {
+            script->main += newCode - script->code;
+            *pc = newPC = origPC + (newCode - script->code);
+            script->code = newCode;
+        }
+    }
+    ~AutoScriptUntrapper()
+    {
+        ptrdiff_t delta = newPC - origPC;
+        if (delta) {
+            jsbytecode *oldCode = script->code - delta;
+            cx->free(script->code);
+            script->code = oldCode;
+            script->main -= delta;
+        }
+    }
+};
+
 #ifdef DEBUG
 
 /* If pc != NULL, includes a prefix indicating whether the PC is at the current line. */
@@ -339,38 +371,6 @@ ToDisassemblySource(JSContext *cx, jsval v, JSAutoByteString *bytes)
 
     return !!js_ValueToPrintable(cx, Valueify(v), bytes, true);
 }
-
-class AutoScriptUntrapper {
-    JSContext *cx;
-    JSScript *script;
-    jsbytecode *origPC;
-    jsbytecode *newPC;
-
-public:
-    AutoScriptUntrapper(JSContext *cx, JSScript *script, jsbytecode **pc)
-        : cx(cx), script(script), origPC(*pc)
-    {
-        jsbytecode *newCode = js_UntrapScriptCode(cx, script);
-        if (newCode == script->code) {
-            // No change needed
-            newPC = origPC;
-        } else {
-            script->main += newCode - script->code;
-            *pc = newPC = origPC + (newCode - script->code);
-            script->code = newCode;
-        }
-    }
-    ~AutoScriptUntrapper()
-    {
-        ptrdiff_t delta = newPC - origPC;
-        if (delta) {
-            jsbytecode *oldCode = script->code - delta;
-            cx->free(script->code);
-            script->code = oldCode;
-            script->main -= delta;
-        }
-    }
-};
 
 JS_FRIEND_API(uintN)
 js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
