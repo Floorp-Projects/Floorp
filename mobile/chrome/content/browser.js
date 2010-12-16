@@ -1150,7 +1150,7 @@ Browser.MainDragger = function MainDragger() {
   this._scrollScales = { x: 0, y: 0 };
 
   Elements.browsers.addEventListener("PanBegin", this, false);
-  window.addEventListener("PanFinished", this, false);
+  Elements.browsers.addEventListener("PanFinished", this, false);
   Elements.contentNavigator.addEventListener("SizeChanged", this, false);
 };
 

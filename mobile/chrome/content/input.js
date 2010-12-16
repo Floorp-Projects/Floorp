@@ -94,6 +94,7 @@ function MouseModule() {
   this._inputField = null;
 
   this._downUpEvents = [];
+  this._targetScrollbox = null;
   this._targetScrollInterface = null;
   this._suppressNextMouseUp = false;
 
@@ -169,6 +170,7 @@ MouseModule.prototype = {
     // made kinetic panning active.
     this._kinetic.end();
 
+    this._targetScrollbox = null;
     this._targetScrollInterface = null;
 
     this._cleanClickBuffer();
@@ -193,6 +195,7 @@ MouseModule.prototype = {
     if (this._kinetic.isActive() && this._dragger != dragger)
       this._kinetic.end();
 
+    this._targetScrollbox = targetScrollbox;
     this._targetScrollInterface = targetScrollInterface;
 
     // Do tap
@@ -304,7 +307,7 @@ MouseModule.prototype = {
 
           let event = document.createEvent("Events");
           event.initEvent("PanBegin", true, false);
-          aEvent.target.dispatchEvent(event);
+          this._targetScrollbox.dispatchEvent(event);
         }
       }
     }
@@ -392,11 +395,9 @@ MouseModule.prototype = {
       this._dragger.dragStop(0, 0, this._targetScrollInterface);
       this._dragger = null;
 
-      // bug 619412
-      // XXX why is PanFinished not dispatched on the same target as PanBegin
       let event = document.createEvent("Events");
       event.initEvent("PanFinished", true, false);
-      document.dispatchEvent(event);
+      this._targetScrollbox.dispatchEvent(event);
     }
   },
 

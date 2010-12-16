@@ -446,7 +446,8 @@ var BrowserUI = {
     tabs.addEventListener("TabSelect", this, true);
     tabs.addEventListener("TabOpen", this, true);
     tabs.addEventListener("TabOpen", NewTabPopup, true);
-    window.addEventListener("PanFinished", this, true);
+
+    Elements.browsers.addEventListener("PanFinished", this, true);
 
     // listen content messages
     messageManager.addMessageListener("DOMLinkAdded", this);
