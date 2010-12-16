@@ -203,7 +203,7 @@ GLint Program::getSamplerMapping(unsigned int samplerIndex)
         logicalTextureUnit = mSamplers[samplerIndex].logicalTextureUnit;
     }
 
-    if (logicalTextureUnit < MAX_TEXTURE_IMAGE_UNITS)
+    if (logicalTextureUnit >= 0 && logicalTextureUnit < MAX_TEXTURE_IMAGE_UNITS)
     {
         return logicalTextureUnit;
     }
@@ -1659,14 +1659,15 @@ bool Program::defineUniform(const D3DXHANDLE &constantHandle, const D3DXCONSTANT
 {
     if (constantDescription.RegisterSet == D3DXRS_SAMPLER)
     {
-        unsigned int samplerIndex = constantDescription.RegisterIndex;
+        for (unsigned int samplerIndex = constantDescription.RegisterIndex; samplerIndex < constantDescription.RegisterIndex + constantDescription.RegisterCount; samplerIndex++)
+        {
+            ASSERT(samplerIndex < sizeof(mSamplers)/sizeof(mSamplers[0]));
 
-        assert(samplerIndex < sizeof(mSamplers)/sizeof(mSamplers[0]));
-
-        mSamplers[samplerIndex].active = true;
-        mSamplers[samplerIndex].type = (constantDescription.Type == D3DXPT_SAMPLERCUBE) ? SAMPLER_CUBE : SAMPLER_2D;
-        mSamplers[samplerIndex].logicalTextureUnit = 0;
-        mSamplers[samplerIndex].dirty = true;
+            mSamplers[samplerIndex].active = true;
+            mSamplers[samplerIndex].type = (constantDescription.Type == D3DXPT_SAMPLERCUBE) ? SAMPLER_CUBE : SAMPLER_2D;
+            mSamplers[samplerIndex].logicalTextureUnit = 0;
+            mSamplers[samplerIndex].dirty = true;
+        }
     }
 
     switch(constantDescription.Class)
@@ -2225,14 +2226,14 @@ bool Program::applyUniform1iv(GLint location, GLsizei count, const GLint *v)
         {
             unsigned int firstIndex = mConstantTablePS->GetSamplerIndex(constantPS);
 
-            for (unsigned int samplerIndex = firstIndex; samplerIndex < firstIndex + count; samplerIndex++)
+            for (int i = 0; i < count; i++)
             {
-                GLint mappedSampler = v[0];
+                unsigned int samplerIndex = firstIndex + i;
 
-                if (samplerIndex >= 0 && samplerIndex < MAX_TEXTURE_IMAGE_UNITS)
+                if (samplerIndex < MAX_TEXTURE_IMAGE_UNITS)
                 {
                     ASSERT(mSamplers[samplerIndex].active);
-                    mSamplers[samplerIndex].logicalTextureUnit = mappedSampler;
+                    mSamplers[samplerIndex].logicalTextureUnit = v[i];
                     mSamplers[samplerIndex].dirty = true;
                 }
             }
@@ -2581,16 +2582,22 @@ void Program::getAttachedShaders(GLsizei maxCount, GLsizei *count, GLuint *shade
 
 void Program::getActiveAttribute(GLuint index, GLsizei bufsize, GLsizei *length, GLint *size, GLenum *type, GLchar *name)
 {
-    unsigned int attribute = 0;
-    for (unsigned int i = 0; i < index; i++)
+    // Skip over inactive attributes
+    unsigned int activeAttribute = 0;
+    unsigned int attribute;
+    for (attribute = 0; attribute < MAX_VERTEX_ATTRIBS; attribute++)
     {
-        do
+        if (mLinkedAttribute[attribute].name.empty())
         {
-            attribute++;
-
-            ASSERT(attribute < MAX_VERTEX_ATTRIBS);   // index must be smaller than getActiveAttributeCount()
+            continue;
         }
-        while (mLinkedAttribute[attribute].name.empty());
+
+        if (activeAttribute == index)
+        {
+            break;
+        }
+
+        activeAttribute++;
     }
 
     if (bufsize > 0)
@@ -2648,9 +2655,9 @@ void Program::getActiveUniform(GLuint index, GLsizei bufsize, GLsizei *length, G
     unsigned int uniform;
     for (uniform = 0; uniform < mUniforms.size(); uniform++)
     {
-        while (mUniforms[uniform]->name.substr(0, 3) == "dx_")
+        if (mUniforms[uniform]->name.substr(0, 3) == "dx_")
         {
-            uniform++;
+            continue;
         }
 
         if (activeUniform == index)

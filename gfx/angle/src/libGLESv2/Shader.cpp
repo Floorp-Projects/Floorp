@@ -243,7 +243,7 @@ void Shader::parseVaryings()
             char varyingType[256];
             char varyingName[256];
 
-            int matches = sscanf(input, "static %s %s", varyingType, varyingName);
+            int matches = sscanf(input, "static %255s %255s", varyingType, varyingName);
 
             if (matches != 2)
             {
@@ -473,7 +473,7 @@ void VertexShader::parseAttributes()
             char attributeType[256];
             char attributeName[256];
 
-            int matches = sscanf(input, "static %s _%s", attributeType, attributeName);
+            int matches = sscanf(input, "static %255s _%255s", attributeType, attributeName);
 
             if (matches != 2)
             {

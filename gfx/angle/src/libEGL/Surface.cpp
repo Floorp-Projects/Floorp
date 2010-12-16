@@ -343,16 +343,20 @@ void Surface::unsubclassWindow()
 {
   if(!mWindowSubclassed)
     return;
+
+  // un-subclass
+  LONG parentWndFunc = reinterpret_cast<LONG>(GetProp(mWindow, kParentWndProc));
+
   // Check the windowproc is still SurfaceWindowProc.
   // If this assert fails, then it is likely the application has subclassed the
   // hwnd as well and did not unsubclass before destroying its EGL context. The
   // application should be modified to either subclass before initializing the
   // EGL context, or to unsubclass before destroying the EGL context.
-  ASSERT(GetWindowLong(mWindow, GWL_WNDPROC) == reinterpret_cast<LONG>(SurfaceWindowProc));
+  if(parentWndFunc) {
+    LONG prevWndFunc = SetWindowLong(mWindow, GWL_WNDPROC, parentWndFunc);
+    ASSERT(prevWndFunc == reinterpret_cast<LONG>(SurfaceWindowProc));
+  }
 
-  // un-subclass
-  LONG prevWndFunc = reinterpret_cast<LONG>(GetProp(mWindow, kParentWndProc));
-  SetWindowLong(mWindow, GWL_WNDPROC, prevWndFunc);
   RemoveProp(mWindow, kSurfaceProperty);
   RemoveProp(mWindow, kParentWndProc);
   mWindowSubclassed = false;
