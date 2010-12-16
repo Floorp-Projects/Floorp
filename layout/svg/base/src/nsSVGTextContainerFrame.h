@@ -110,6 +110,7 @@ protected:
    * Set Whitespace handling
    */
   void SetWhitespaceHandling();
+  PRBool IsAllWhitespace();
   void CopyPositionList(nsTArray<float> *parentList,
                         SVGUserUnitList *selfList,
                         nsTArray<float> &dstList,
