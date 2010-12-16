@@ -10360,11 +10360,18 @@ TraceRecorder::record_JSOP_GOTO()
      */
     jssrcnote* sn = js_GetSrcNote(cx->fp()->script(), cx->regs->pc);
 
-    if (sn &&
-        (SN_TYPE(sn) == SRC_BREAK || SN_TYPE(sn) == SRC_CONT2LABEL ||
-         SN_TYPE(sn) == SRC_BREAK2LABEL)) {
-        AUDIT(breakLoopExits);
-        return endLoop();
+    if (sn) {
+        if (SN_TYPE(sn) == SRC_BREAK) {
+            AUDIT(breakLoopExits);
+            return endLoop();
+        }
+
+        /*
+         * Tracing labeled break isn't impossible, but does require potentially
+         * fixing up the block chain. See bug 616119.
+         */
+        if (SN_TYPE(sn) == SRC_BREAK2LABEL || SN_TYPE(sn) == SRC_CONT2LABEL)
+            RETURN_STOP_A("labeled break");
     }
     return ARECORD_CONTINUE;
 }
