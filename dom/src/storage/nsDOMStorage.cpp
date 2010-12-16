@@ -441,6 +441,8 @@ nsDOMStorageManager::Observe(nsISupports *aSubject,
     nsCOMPtr<nsIObserverService> obsserv = mozilla::services::GetObserverService();
     if (obsserv)
       obsserv->NotifyObservers(nsnull, NS_DOMSTORAGE_FLUSH_TIMER_OBSERVER, nsnull);
+    if (!UnflushedDataExists())
+      DOMStorageImpl::gStorageDB->StopTempTableFlushTimer();
   } else if (!strcmp(aTopic, "browser:purge-domain-data")) {
     // Convert the domain name to the ACE format
     nsCAutoString aceDomain;
@@ -535,6 +537,26 @@ nsDOMStorageManager::RemoveFromStoragesHash(DOMStorageImpl* aStorage)
   nsDOMStorageEntry* entry = mStorages.GetEntry(aStorage);
   if (entry)
     mStorages.RemoveEntry(aStorage);
+}
+
+static PLDHashOperator
+CheckUnflushedData(nsDOMStorageEntry* aEntry, void* userArg)
+{
+  if (aEntry->mStorage->WasTemporaryTableLoaded()) {
+    PRBool *unflushedData = (PRBool*)userArg;
+    *unflushedData = PR_TRUE;
+    return PL_DHASH_STOP;
+  }
+
+  return PL_DHASH_NEXT;
+}
+
+PRBool
+nsDOMStorageManager::UnflushedDataExists()
+{
+  PRBool unflushedData = PR_FALSE;
+  mStorages.EnumerateEntries(CheckUnflushedData, &unflushedData);
+  return unflushedData;
 }
 
 //
@@ -1055,6 +1077,8 @@ DOMStorageImpl::SetTemporaryTableLoaded(bool loaded)
     mLastTemporaryTableAccessTime = TimeStamp::Now();
     if (!mLoadedTemporaryTable)
       mTemporaryTableAge = mLastTemporaryTableAccessTime;
+
+    gStorageDB->EnsureTempTableFlushTimer();
   }
 
   mLoadedTemporaryTable = loaded;
