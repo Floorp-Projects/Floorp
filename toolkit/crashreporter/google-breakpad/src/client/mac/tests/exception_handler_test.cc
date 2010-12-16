@@ -154,7 +154,7 @@ TEST_F(ExceptionHandlerTest, DumpChildProcess) {
   pid_t pid = fork();
   if (pid == 0) {
     // In the child process
-    close(fds[0]);
+    close(fds[1]);
 
     // Send parent process the task and thread ports.
     MachSendMessage child_message(0);
@@ -167,12 +167,12 @@ TEST_F(ExceptionHandlerTest, DumpChildProcess) {
 
     // Wait for the parent process.
     uint8_t data;
-    read(fds[1], &data, 1);
+    read(fds[0], &data, 1);
     exit(0);
   }
   // In the parent process.
   ASSERT_NE(-1, pid);
-  close(fds[1]);
+  close(fds[0]);
 
   // Read the child's task and thread ports.
   MachReceiveMessage child_message;
@@ -199,7 +199,7 @@ TEST_F(ExceptionHandlerTest, DumpChildProcess) {
 
   // Unblock child process
   uint8_t data = 1;
-  (void)write(fds[0], &data, 1);
+  (void)write(fds[1], &data, 1);
 
   // Child process should have exited with a zero status.
   int ret;

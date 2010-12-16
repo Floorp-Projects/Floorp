@@ -48,14 +48,11 @@ XPI_NAME 	= crashreporter
 LOCAL_INCLUDES 	= -I$(srcdir)/../../..
 
 CPPSRCS	= \
+  breakpad_nlist_64.cc \
   exception_handler.cc \
   minidump_generator.cc \
   dynamic_images.cc \
   $(NULL)
-
-ifeq (x86_64,$(TARGET_CPU))
-CPPSRCS += breakpad_nlist_64.cc
-endif
 
 # need static lib
 FORCE_STATIC_LIB = 1
