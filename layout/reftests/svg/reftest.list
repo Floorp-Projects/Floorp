@@ -184,6 +184,7 @@ random-if(winWidget) == text-gradient-02.svg text-gradient-02-ref.svg # see bug 
 random-if(gtk2Widget) != text-language-01.xhtml text-language-01-ref.xhtml # Fails on Linux tryserver due to lack of CJK fonts.
 == text-layout-01.svg text-layout-01-ref.svg
 == text-layout-02.svg text-layout-02-ref.svg
+== text-layout-03.svg text-layout-03-ref.svg
 == text-scale-01.svg text-scale-01-ref.svg
 == text-stroke-scaling-01.svg text-stroke-scaling-01-ref.svg
 == text-style-01a.svg text-style-01-ref.svg
