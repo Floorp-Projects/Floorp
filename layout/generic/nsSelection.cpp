@@ -1247,7 +1247,7 @@ nsFrameSelection::MoveCaret(PRUint32          aKeycode,
     nsIFrame *theFrame;
     PRInt32 currentOffset, frameStart, frameEnd;
 
-    if (aAmount == eSelectCharacter || aAmount == eSelectWord)
+    if (aAmount >= eSelectCharacter && aAmount <= eSelectWord)
     {
       // For left/right, PeekOffset() sets pos.mResultFrame correctly, but does not set pos.mAttachForward,
       // so determine the hint here based on the result frame and offset:
@@ -2191,15 +2191,15 @@ nsresult
 nsFrameSelection::CharacterMove(PRBool aForward, PRBool aExtend)
 {
   if (aForward)
-    return MoveCaret(nsIDOMKeyEvent::DOM_VK_RIGHT,aExtend,eSelectCharacter);
+    return MoveCaret(nsIDOMKeyEvent::DOM_VK_RIGHT, aExtend, eSelectCluster);
   else
-    return MoveCaret(nsIDOMKeyEvent::DOM_VK_LEFT,aExtend,eSelectCharacter);
+    return MoveCaret(nsIDOMKeyEvent::DOM_VK_LEFT, aExtend, eSelectCluster);
 }
 
 nsresult
 nsFrameSelection::CharacterExtendForDelete()
 {
-  return MoveCaret(nsIDOMKeyEvent::DOM_VK_DELETE, PR_TRUE, eSelectCharacter);
+  return MoveCaret(nsIDOMKeyEvent::DOM_VK_DELETE, PR_TRUE, eSelectCluster);
 }
 
 nsresult
@@ -5847,7 +5847,7 @@ nsTypedSelection::Modify(const nsAString& aAlter, const nsAString& aDirection,
   nsSelectionAmount amount;
   PRUint32 keycode;
   if (aGranularity.LowerCaseEqualsLiteral("character")) {
-    amount = eSelectCharacter;
+    amount = eSelectCluster;
     keycode = forward ? (PRUint32) nsIDOMKeyEvent::DOM_VK_RIGHT :
                         (PRUint32) nsIDOMKeyEvent::DOM_VK_LEFT;
   }

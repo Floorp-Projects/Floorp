@@ -5404,6 +5404,7 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
   
   switch (aPos->mAmount) {
     case eSelectCharacter:
+    case eSelectCluster:
     {
       PRBool eatingNonRenderableWS = PR_FALSE;
       PRBool done = PR_FALSE;
@@ -5416,7 +5417,8 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
         if (eatingNonRenderableWS)
           done = current->PeekOffsetNoAmount(movingInFrameDirection, &offset); 
         else
-          done = current->PeekOffsetCharacter(movingInFrameDirection, &offset); 
+          done = current->PeekOffsetCharacter(movingInFrameDirection, &offset,
+                                              aPos->mAmount == eSelectCluster);
 
         if (!done) {
           result =
@@ -5705,7 +5707,8 @@ nsFrame::PeekOffsetNoAmount(PRBool aForward, PRInt32* aOffset)
 }
 
 PRBool
-nsFrame::PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset)
+nsFrame::PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset,
+                             PRBool aRespectClusters)
 {
   NS_ASSERTION (aOffset && *aOffset <= 1, "aOffset out of range");
   PRInt32 startOffset = *aOffset;
