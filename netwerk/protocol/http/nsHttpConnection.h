@@ -46,6 +46,7 @@
 #include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
 #include "prlock.h"
+#include "nsAutoPtr.h"
 
 #include "nsIStreamListener.h"
 #include "nsISocketTransport.h"
