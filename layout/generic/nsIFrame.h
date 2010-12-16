@@ -289,18 +289,13 @@ typedef PRUint64 nsFrameState;
 //----------------------------------------------------------------------
 
 enum nsSelectionAmount {
-  eSelectCharacter = 0, // a single Unicode character;
-                        // do not use this (prefer Cluster) unless you
-                        // are really sure it's what you want
-  eSelectCluster   = 1, // a grapheme cluster: this is usually the right
-                        // choice for movement or selection by "character"
-                        // as perceived by the user
-  eSelectWord      = 2,
-  eSelectLine      = 3, // previous drawn line in flow.
-  eSelectBeginLine = 4,
-  eSelectEndLine   = 5,
-  eSelectNoAmount  = 6, // just bounce back current offset.
-  eSelectParagraph = 7  // select a "paragraph"
+  eSelectCharacter = 0,
+  eSelectWord      = 1,
+  eSelectLine      = 2,  //previous drawn line in flow.
+  eSelectBeginLine = 3,
+  eSelectEndLine   = 4,
+  eSelectNoAmount  = 5,   //just bounce back current offset.
+  eSelectParagraph = 6    //select a "paragraph"
 };
 
 enum nsDirection {
@@ -2677,15 +2672,11 @@ protected:
    * @param  aForward [in] Are we moving forward (or backward) in content order.
    * @param  aOffset [in/out] At what offset into the frame to start looking.
    *         on output - what offset was reached (whether or not we found a place to stop).
-   * @param  aRespectClusters [in] Whether to restrict result to valid cursor locations
-   *         (between grapheme clusters) - default TRUE maintains "normal" behavior,
-   *         FALSE is used for selection by "code unit" (instead of "character")
    * @return PR_TRUE: An appropriate offset was found within this frame,
    *         and is given by aOffset.
    *         PR_FALSE: Not found within this frame, need to try the next frame.
    */
-  virtual PRBool PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset,
-                                     PRBool aRespectClusters = PR_TRUE) = 0;
+  virtual PRBool PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset) = 0;
   
   /**
    * Search the frame for the next word boundary
