@@ -63,10 +63,12 @@ class DeviceManager:
   _redo = False
   deviceRoot = None
   tempRoot = os.getcwd()
-  base_prompt = '\$\>'
+  base_prompt = '$>'
+  base_prompt_re = '\$\>'
   prompt_sep = '\x00'
-  prompt_regex = '.*' + base_prompt + prompt_sep
+  prompt_regex = '.*(' + base_prompt_re + prompt_sep + ')'
   agentErrorRE = re.compile('^##AGENT-WARNING##.*')
+
 
   def __init__(self, host, port = 20701):
     self.host = host
@@ -85,7 +87,8 @@ class DeviceManager:
     """
     noResponseCmds = [re.compile('^push .*$'),
                       re.compile('^rebt'),
-                      re.compile('^uninst .*$')]
+                      re.compile('^uninst .*$'),
+                      re.compile('^pull .*$')]
 
     for c in noResponseCmds:
       if (c.match(cmd)):
@@ -336,13 +339,18 @@ class DeviceManager:
 
   # list files on the device, requires cd to directory first
   def listFiles(self, rootdir):
+    rootdir = rootdir.rstrip('/')
     if (self.dirExists(rootdir) == False):
       return []  
     data = self.sendCMD(['cd ' + rootdir, 'ls'])
     if (data == None):
       return None
     retVal = self.stripPrompt(data)
-    return retVal.split('\n')
+    files = filter(lambda x: x, retVal.split('\n'))
+    if len(files) == 1 and files[0] == '<empty>':
+      # special case on the agent: empty directories return just the string "<empty>"
+      return []
+    return files
 
   def removeFile(self, filename):
     if (self.debug>= 2): print "removing file: " + filename
@@ -395,11 +403,14 @@ class DeviceManager:
     self.process = self.processExist(appname)
     if (self.debug >= 4): print "got pid: " + str(self.process) + " for process: " + str(appname)
 
-  def launchProcess(self, cmd, outputFile = "process.txt", cwd = ''):
+  def launchProcess(self, cmd, outputFile = "process.txt", cwd = '', env = ''):
     cmdline = subprocess.list2cmdline(cmd)
     if (outputFile == "process.txt" or outputFile == None):
       outputFile = self.getDeviceRoot() + '/' + "process.txt"
       cmdline += " > " + outputFile
+    
+    # Prepend our env to the command 
+    cmdline = ('%s ' % self.formatEnvString(env)) + cmdline
 
     self.fireProcess(cmdline)
     return outputFile
@@ -425,7 +436,7 @@ class DeviceManager:
 
   def poll(self, process):
     try:
-      if (self.processExist(process) == None):
+      if (self.processExist(process) == ''):
         return None
       return 1
     except:
@@ -435,6 +446,21 @@ class DeviceManager:
   # iterates process list and returns pid if exists, otherwise ''
   def processExist(self, appname):
     pid = ''
+
+    #remove the environment variables in the cli if they exist
+    parts = appname.split(' ')
+    for p in parts:
+      if (p is ''):
+        parts.remove(p)
+
+    if len(parts[0].strip('"').split('=')) > 1:
+      envvars = parts[0].strip('"').split(',')
+      for e in envvars:
+        env = e.split('=')
+        if (len(env) > 1):
+          os.environ[env[0]] = str(env[1])
+      appname = ' '.join(parts[1:])
+
   
     pieces = appname.split(' ')
     parts = pieces[0].split('/')
@@ -463,20 +489,92 @@ class DeviceManager:
     if (data == None):
       return None
     return self.stripPrompt(data).strip('\n')
+
+  def catFile(self, remoteFile):
+    data = self.sendCMD(['cat ' + remoteFile])
+    if data == None:
+        return None
+    return self.stripPrompt(data)
   
+  def pullFile(self, remoteFile):
+    def err(error_msg):
+        err_str = 'bad response to pull: %s!' % error_msg
+        print err_str
+        self._sock = None
+        raise FileError(err_str) 
+
+    def read(to_recv, error_msg):
+      data = self._sock.recv(to_recv)
+      if not data:
+        err(error_msg)
+        return None
+      return data
+
+    self.sendCMD(['pull ' + remoteFile])
+    buffer = ''
+    while not '\n' in buffer:
+      data = read(1024, 'could not find metadata')
+      if data == None:
+        return
+      buffer += data
+    nl = buffer.find('\n')
+    metadata = buffer[:nl]
+    print 'metadata: %s' % metadata
+    filedata = buffer[nl+1:]  # skip newline
+    sep = metadata.rfind(',')
+    if sep == -1:
+      err('could not find file size')
+      return None
+    filename = metadata[:sep]
+    filesizestr = metadata[sep+1:]
+    prompt = self.base_prompt + self.prompt_sep
+    try:
+        filesize = int(filesizestr)
+    except ValueError:
+      err('invalid file size')
+      return None
+    if filesize == -1:
+      while not '\n' in filedata:
+        data = read(1024, 'could not find metadata')
+        if data == None:
+          return None
+        filedata += data
+      nl = filedata.find('\n')
+      error_str = filedata[:nl]
+      filedata = filedata[nl+1:]
+      while filedata < len(prompt):
+        data = read(1024, 'could not find metadata')
+        if data == None:
+          return None
+      print 'error pulling file: %s' % error_str
+      return None
+
+    total_to_recv = filesize + len(prompt)
+    while len(filedata) < total_to_recv:
+      to_recv = min(total_to_recv - len(filedata), 1024)
+      data = read(to_recv, 'could not get all file data')
+      if data == None:
+        return None
+      filedata += data
+    if filedata[-len(prompt):] != prompt:
+      err('no prompt')
+      return filedata
+    return filedata[:-len(prompt)]
+
   # copy file from device (remoteFile) to host (localFile)
   def getFile(self, remoteFile, localFile = ''):
     if localFile == '':
-        localFile = os.path.join(self.tempRoot, "temp.txt")
+      localFile = os.path.join(self.tempRoot, "temp.txt")
   
-    promptre = re.compile(self.prompt_regex + '.*')
-    data = self.sendCMD(['cat ' + remoteFile])
-    if (data == None):
+    retVal = self.pullFile(remoteFile)
+    if retVal == None:
       return None
-    retVal = self.stripPrompt(data)
     fhandle = open(localFile, 'wb')
     fhandle.write(retVal)
     fhandle.close()
+    if not self.validateFile(remoteFile, localFile):
+      print 'failed to validate file when downloading %s!' % remoteFile
+      return None
     return retVal
     
   # copy directory structure from device (remoteDir) to host (localDir)
@@ -489,15 +587,36 @@ class DeviceManager:
     if not os.path.exists(localDir):
       os.makedirs(localDir)
   
-    # TODO: is this a comprehensive file regex?
-    isFile = re.compile('^([a-zA-Z0-9_\-\. ]+)\.([a-zA-Z0-9]+)$')
     for f in filelist:
-      if (isFile.match(f)):
-        if (self.getFile(remoteDir + '/' + f, os.path.join(localDir, f)) == None):
+      if f == '.' or f == '..':
+        continue
+      remotePath = remoteDir + '/' + f
+      localPath = os.path.join(localDir, f)
+      print 'remotePath is %s' % remotePath
+      print 'localPath is %s' % localPath
+      try:
+        is_dir = self.isDir(remotePath)
+      except FileError:
+        print 'bad file "%s"!' % remotePath
+        continue
+      if is_dir:
+        if (self.getDirectory(remotePath, localPath) == None):
+          print 'aborted when getting directory'
           return None
       else:
-        if (self.getDirectory(remoteDir + '/' + f, os.path.join(localDir, f)) == None):
-          return None
+        # It's sometimes acceptable to have getFile() return None, such as
+        # when the agent encounters broken symlinks.
+        # FIXME: This should be improved so we know when a file transfer really
+        # failed.
+        self.getFile(remotePath, localPath)
+    return filelist
+
+  def isDir(self, remotePath):
+    data = self.sendCMD(['isdir ' + remotePath])
+    retVal = self.stripPrompt(data).strip()
+    if not retVal:
+      raise FileError('isdir returned null')
+    return retVal == 'TRUE'
 
   # true/false check if the two files have the same md5 sum
   def validateFile(self, remoteFile, localFile):
@@ -746,7 +865,7 @@ class DeviceManager:
         reboot that the udpate call forces on us.  We can't install our own heartbeat
         listener here because we run the risk of racing with other heartbeat listeners.
   """
-  def updateApp(self, appBundlePath, processName=None, destPath=None, ipAddr=None, port=None):
+  def updateApp(self, appBundlePath, processName=None, destPath=None, ipAddr=None, port=30000):
     status = None
     cmd = 'updt '
     if (processName == None):
@@ -758,17 +877,18 @@ class DeviceManager:
     if (destPath):
       cmd += " " + destPath
 
-    ip, port = self.getCallbackIpAndPort(ipAddr, 30000)
+    if (ipAddr is not None):
+      ip, port = self.getCallbackIpAndPort(ipAddr, port)
 
-    cmd += " %s %s" % (ip, port)
+      cmd += " %s %s" % (ip, port)
 
-    if (self.debug > 3): print "updateApp using command: " + str(cmd)
+      if (self.debug > 3): print "updateApp using command: " + str(cmd)
 
-    # Set up our callback server
-    callbacksvr = callbackServer(ip, port, self.debug)
-    data = self.sendCMD([cmd])
-    status = callbacksvr.disconnect()
-    if (self.debug > 3): print "got status back: " + str(status)
+      # Set up our callback server
+      callbacksvr = callbackServer(ip, port, self.debug)
+      data = self.sendCMD([cmd])
+      status = callbacksvr.disconnect()
+      if (self.debug > 3): print "got status back: " + str(status)
 
     return status
 
@@ -796,6 +916,27 @@ class DeviceManager:
     else:
       port = nettools.findOpenPort(ip, 30000)
     return ip, port
+
+  """
+    Returns a properly formatted env string for the agent.
+    Input - env, which is either None, '', or a dict
+    Output - a quoted string of the form: '"envvar1=val1,envvar2=val2..."'
+    If env is None or '' return '""' (empty quoted string)
+  """
+  def formatEnvString(self, env):
+    if (env == None or env == ''):
+      return '""'
+
+    envstr = '"'
+    # TODO: I believe this is inefficient for large dicts
+    for k, v in env.items():
+      envstr += ('%s=%s,' % (k, v))
+    
+    # kill the trailing comma, add the last quote
+    envstr = envstr.rstrip(',')
+    envstr += '"'
+
+    return envstr
 
 gCallbackData = ''
 
