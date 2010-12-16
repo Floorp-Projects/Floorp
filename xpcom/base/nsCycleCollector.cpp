@@ -1897,7 +1897,7 @@ nsCycleCollector::RootWhite()
     {
         PtrInfo *pinfo = etor.GetNext();
         if (pinfo->mColor == white && mWhiteNodes->AppendElement(pinfo)) {
-            rv = pinfo->mParticipant->RootAndUnlinkJSObjects(pinfo->mPointer);
+            rv = pinfo->mParticipant->Root(pinfo->mPointer);
             if (NS_FAILED(rv)) {
                 Fault("Failed root call while unlinking", pinfo);
                 mWhiteNodes->RemoveElementAt(mWhiteNodes->Length() - 1);

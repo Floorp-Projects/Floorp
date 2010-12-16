@@ -538,7 +538,7 @@ nsXPConnect::ToParticipant(void *p)
 }
 
 NS_IMETHODIMP
-nsXPConnect::RootAndUnlinkJSObjects(void *p)
+nsXPConnect::Root(void *p)
 {
     return NS_OK;
 }
@@ -864,7 +864,7 @@ nsXPConnect::GetOutstandingRequests(JSContext* cx)
 class JSContextParticipant : public nsCycleCollectionParticipant
 {
 public:
-    NS_IMETHOD RootAndUnlinkJSObjects(void *n)
+    NS_IMETHOD Root(void *n)
     {
         return NS_OK;
     }
