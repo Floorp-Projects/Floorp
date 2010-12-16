@@ -81,15 +81,15 @@ FormAutoComplete.prototype = {
     // If we have an input field with the desired html5 type, take it!
     if (aField && "type" in aField) {
       let type = aField.type;
-      if (this.contactTypes[type] != null)
+      if (type && type in this.contactTypes)
         return type;
     }
 
     // Grab properties to check for contact inputs
     let props = [aName];
     if (aField) {
-      let specialProps = [aField["className"], aField["id"], aField["rel"]];
-      props = props.concat(props.filter(function(aValue) {
+      let specialProps = [aField["className"], aField["id"]];
+      props = props.concat(specialProps.filter(function(aValue) {
         return aValue;
       }));
     }
@@ -139,7 +139,7 @@ FormAutoComplete.prototype = {
 
   autoCompleteSearch: function autoCompleteSearch(aName, aQuery, aField, aPrev) {
     if (!Services.prefs.getBoolPref("browser.formfill.enable"))
-      return;
+      return null;
 
     LOG("autocomplete search", Array.slice(arguments));
     let result = Cc["@mozilla.org/autocomplete/simple-result;1"].createInstance(Ci.nsIAutoCompleteSimpleResult);
