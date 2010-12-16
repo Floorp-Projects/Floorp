@@ -1417,14 +1417,16 @@ nsHTMLFormElement::OnSubmitClickBegin(nsIContent* aOriginatingElement)
   if (NS_FAILED(rv) || !actionURI)
     return;
 
-  //
-  // Notify observers of submit
-  //
-  PRBool cancelSubmit = PR_FALSE;
-  rv = NotifySubmitObservers(actionURI, &cancelSubmit, PR_TRUE);
-  if (NS_SUCCEEDED(rv)) {
-    mNotifiedObservers = PR_TRUE;
-    mNotifiedObserversResult = cancelSubmit;
+  // Notify observers of submit if the form is valid.
+  // TODO: checking for mInvalidElementsCount is a temporary fix that should be
+  // removed with bug 610402.
+  if (mInvalidElementsCount == 0) {
+    PRBool cancelSubmit = PR_FALSE;
+    rv = NotifySubmitObservers(actionURI, &cancelSubmit, PR_TRUE);
+    if (NS_SUCCEEDED(rv)) {
+      mNotifiedObservers = PR_TRUE;
+      mNotifiedObserversResult = cancelSubmit;
+    }
   }
 }
 
