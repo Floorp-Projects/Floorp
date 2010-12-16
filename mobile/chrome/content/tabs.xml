@@ -179,7 +179,7 @@
         </body>
       </method>
 
-      <field name="_columnsCount">1</field>
+      <field name="_columnsCount">0</field>
       <method name="_updateWidth">
         <body>
           <![CDATA[
