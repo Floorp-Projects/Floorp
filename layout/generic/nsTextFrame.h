@@ -169,8 +169,7 @@ public:
                         SelectionType aType);
 
   virtual PRBool PeekOffsetNoAmount(PRBool aForward, PRInt32* aOffset);
-  virtual PRBool PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset,
-                                     PRBool aRespectClusters = PR_TRUE);
+  virtual PRBool PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset);
   virtual PRBool PeekOffsetWord(PRBool aForward, PRBool aWordSelectEatSpace, PRBool aIsKeyboardSelect,
                                 PRInt32* aOffset, PeekWordState* aState);
 
