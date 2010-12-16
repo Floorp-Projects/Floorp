@@ -14,7 +14,6 @@ toolkit.jar:
   skin/classic/mozapps/extensions/category-plugins.png            (extensions/category-plugins.png)
   skin/classic/mozapps/extensions/category-recent.png             (extensions/category-recent.png)
   skin/classic/mozapps/extensions/category-available.png          (extensions/category-available.png)
-  skin/classic/mozapps/extensions/discover-logo.png               (extensions/discover-logo.png)
   skin/classic/mozapps/extensions/extensionGeneric.png            (extensions/extensionGeneric.png)
   skin/classic/mozapps/extensions/extensionGeneric-16.png         (extensions/extensionGeneric-16.png)
   skin/classic/mozapps/extensions/themeGeneric.png                (extensions/themeGeneric.png)
