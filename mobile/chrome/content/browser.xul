@@ -228,7 +228,7 @@
 
       <!-- Page Area -->
       <stack class="window-width window-height">
-        <scrollbox id="page-scrollbox" class="window-width window-height" style="overflow: hidden;">
+        <scrollbox id="page-scrollbox" class="window-width window-height">
           <vbox>
             <!-- Main Toolbar -->
             <box id="toolbar-container" class="panel-dark toolbar-height">

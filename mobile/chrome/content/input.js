@@ -574,9 +574,12 @@ var ScrollUtils = {
       return { x: sX.value > rect.width, y: sY.value > rect.height };
     },
 
-    dragStart: function dragStart(cx, cy, target, scroller) {},
+    dragStart: function dragStart(cx, cy, target, scroller) {
+      scroller.element.setAttribute("panning", "true");
+    },
 
     dragStop : function dragStop(dx, dy, scroller) {
+      scroller.element.removeAttribute("panning");
       return this.dragMove(dx, dy, scroller);
     },
 

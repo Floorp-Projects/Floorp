@@ -53,9 +53,42 @@
 }
 
 /* Style the scrollbars */
-xul|scrollbar {
+xul|scrollbar[orient="vertical"] {
   -moz-appearance: none !important;
-  display: none !important;
+  opacity: 0;
+  position: relative;
+  margin-left: -8px;
+  min-width: 8px;
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+xul|scrollbar[orient="horizontal"] {
+  -moz-appearance: none !important;
+  opacity: 0;
+  position: relative;
+  min-height: 8px;
+  margin-top: -8px;
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+xul|*[panning="true"] xul|scrollbar {
+  opacity: 1;
+}
+
+
+xul|scrollbar[orient="vertical"] xul|thumb {
+  max-width: 6px !important;
+}
+
+xul|scrollbar[orient="horizontal"] xul|thumb {
+  max-height: 6px !important;
+}
+
+xul|scrollbox {
+  overflow-y: scroll;
+  overflow-x: scroll;
 }
 
 xul|scrollbarbutton {
@@ -63,12 +96,14 @@ xul|scrollbarbutton {
   display: none !important;
 }
 
-xul|scrollbarbutton > xul|thumb {
-  min-width: 10px !important;
-  -moz-appearance: none !important;
-  background-color: gray !important;
-  border: 1px solid gray !important;
-  -moz-border-radius: 4px !important;
+xul|thumb {
+  background-color: rgba(0, 0, 0, 0.4) !important;
+  -moz-border-top-colors: none !important;
+  -moz-border-bottom-colors: none !important;
+  -moz-border-right-colors: none !important;
+  -moz-border-left-colors: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  -moz-border-radius: 3px;
 }
 
 select:not([size]):not([multiple]) > xul|scrollbar,
