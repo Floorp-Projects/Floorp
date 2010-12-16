@@ -15,6 +15,10 @@ random-if(cocoaWidget) == ja-3.html ja-3-ref.html
 == non-breakable-2.html non-breakable-2-ref.html
 == numerics-1.html numerics-1-ref.html
 == parentheses-1.html parentheses-1-ref.html
+== punctuation-open-1.html punctuation-open-1-ref.html
+== punctuation-open-2.html punctuation-open-2-ref.html
+== punctuation-open-3.html punctuation-open-3-ref.html
+== punctuation-open-4.html punctuation-open-4-ref.html
 == quotationmarks-1.html quotationmarks-1-ref.html
 # The following is currently disabled on Linux because of a rendering issue with missing-glyph
 # representations on the test boxes. See bug #450088 for discussion.
