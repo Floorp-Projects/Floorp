@@ -44,6 +44,15 @@
 #include "client/mac/crash_generation/crash_generation_server.h"
 #include "client/mac/handler/exception_handler.h"
 #include "client/mac/tests/auto_tempdir.h"
+#include "client/mac/tests/spawn_child_process.h"
+#include "google_breakpad/processor/minidump.h"
+
+namespace google_breakpad {
+// This acts as the log sink for INFO logging from the processor
+// logging code. The logging output confuses XCode and makes it think
+// there are unit test failures. testlogging.h handles the overriding.
+std::ostringstream info_log;
+}
 
 namespace {
 using std::string;
@@ -52,7 +61,16 @@ using google_breakpad::ClientInfo;
 using google_breakpad::CrashGenerationClient;
 using google_breakpad::CrashGenerationServer;
 using google_breakpad::ExceptionHandler;
+using google_breakpad::Minidump;
+using google_breakpad::MinidumpContext;
+using google_breakpad::MinidumpException;
+using google_breakpad::MinidumpModule;
+using google_breakpad::MinidumpModuleList;
+using google_breakpad::MinidumpSystemInfo;
+using google_breakpad::MinidumpThread;
+using google_breakpad::MinidumpThreadList;
 using testing::Test;
+using namespace google_breakpad_test;
 
 class CrashGenerationServerTest : public Test {
 public:
@@ -217,7 +235,111 @@ TEST_F(CrashGenerationServerTest, testChildProcessCrash) {
   ASSERT_FALSE(last_dump_name.empty());
   struct stat st;
   EXPECT_EQ(0, stat(last_dump_name.c_str(), &st));
-  EXPECT_LT(0, st.st_size);  
+  EXPECT_LT(0, st.st_size);
+
+  // Read the minidump, sanity check some data.
+  Minidump minidump(last_dump_name.c_str());
+  ASSERT_TRUE(minidump.Read());
+
+  MinidumpSystemInfo* system_info = minidump.GetSystemInfo();
+  ASSERT_TRUE(system_info);
+  const MDRawSystemInfo* raw_info = system_info->system_info();
+  ASSERT_TRUE(raw_info);
+  EXPECT_EQ(kNativeArchitecture, raw_info->processor_architecture);
+
+  MinidumpThreadList* thread_list = minidump.GetThreadList();
+  ASSERT_TRUE(thread_list);
+  ASSERT_EQ((unsigned int)1, thread_list->thread_count());
+
+  MinidumpThread* main_thread = thread_list->GetThreadAtIndex(0);
+  ASSERT_TRUE(main_thread);
+  MinidumpContext* context = main_thread->GetContext();
+  ASSERT_TRUE(context);
+  EXPECT_EQ(kNativeContext, context->GetContextCPU());
+
+  MinidumpModuleList* module_list = minidump.GetModuleList();
+  ASSERT_TRUE(module_list);
+  const MinidumpModule* main_module = module_list->GetMainModule();
+  ASSERT_TRUE(main_module);
+  EXPECT_EQ(GetExecutablePath(), main_module->code_file());
 }
+
+#if (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_6) && \
+  (defined(__x86_64__) || defined(__i386__))
+// Test that crashing a child process of a different architecture
+// produces a valid minidump.
+TEST_F(CrashGenerationServerTest, testChildProcessCrashCrossArchitecture) {
+  CrashGenerationServer server(mach_port_name,
+			       dumpCallback,  // dump callback
+			       this,  // dump context
+			       NULL,  // exit callback
+			       NULL,  // exit context
+			       true, //  generate dumps
+			       temp_dir.path); // dump path
+  ASSERT_TRUE(server.Start());
+
+  // Spawn a child process
+  string helper_path = GetHelperPath();
+  const char* argv[] = {
+    helper_path.c_str(),
+    "crash",
+    mach_port_name,
+    NULL
+  };
+  pid_t pid = spawn_child_process(argv);
+  ASSERT_NE(-1, pid);
+
+  int ret;
+  ASSERT_EQ(pid, waitpid(pid, &ret, 0));
+  EXPECT_FALSE(WIFEXITED(ret));
+  EXPECT_TRUE(server.Stop());
+  // check that minidump was written
+  ASSERT_FALSE(last_dump_name.empty());
+  struct stat st;
+  EXPECT_EQ(0, stat(last_dump_name.c_str(), &st));
+  EXPECT_LT(0, st.st_size);
+
+const MDCPUArchitecture kExpectedArchitecture =
+#if defined(__x86_64__)
+  MD_CPU_ARCHITECTURE_X86
+#elif defined(__i386__)
+  MD_CPU_ARCHITECTURE_AMD64
+#endif
+  ;
+const u_int32_t kExpectedContext =
+#if defined(__i386__)
+  MD_CONTEXT_AMD64
+#elif defined(__x86_64__)
+  MD_CONTEXT_X86
+#endif
+  ;
+
+  // Read the minidump, sanity check some data.
+  Minidump minidump(last_dump_name.c_str());
+  ASSERT_TRUE(minidump.Read());
+
+  MinidumpSystemInfo* system_info = minidump.GetSystemInfo();
+  ASSERT_TRUE(system_info);
+  const MDRawSystemInfo* raw_info = system_info->system_info();
+  ASSERT_TRUE(raw_info);
+  EXPECT_EQ(kExpectedArchitecture, raw_info->processor_architecture);
+
+  MinidumpThreadList* thread_list = minidump.GetThreadList();
+  ASSERT_TRUE(thread_list);
+  ASSERT_EQ((unsigned int)1, thread_list->thread_count());
+
+  MinidumpThread* main_thread = thread_list->GetThreadAtIndex(0);
+  ASSERT_TRUE(main_thread);
+  MinidumpContext* context = main_thread->GetContext();
+  ASSERT_TRUE(context);
+  EXPECT_EQ(kExpectedContext, context->GetContextCPU());
+
+  MinidumpModuleList* module_list = minidump.GetModuleList();
+  ASSERT_TRUE(module_list);
+  const MinidumpModule* main_module = module_list->GetMainModule();
+  ASSERT_TRUE(main_module);
+  EXPECT_EQ(helper_path, main_module->code_file());
+}
+#endif
 
 }  // namespace
