@@ -283,13 +283,16 @@ function add_visits_to_database() {
 
 // Main
 function run_test() {
-  // Bug 523578: temporarily disabled on Windows due to frequent random failures.
-  if ("@mozilla.org/windows-registry-key;1" in Components.classes)
-    return;
+  do_test_pending();
 
   // Populate the database.
   add_visits_to_database();
 
+  // Frecency and hidden are updated asynchronously, wait for them.
+  waitForAsyncUpdates(continue_test);
+ }
+
+ function continue_test() {
   // This array will be used by cartProd to generate a matrix of all possible
   // combinations.
   let includeHidden_options = [true, false];
@@ -306,7 +309,6 @@ function run_test() {
   cartProd([includeHidden_options, redirectsMode_options, maxResults_options, sorting_options],
            check_results_callback);
 
-  // Clean up so we can't pollute next tests.
-  PlacesUtils.bhistory.removeAllPages();
   remove_all_bookmarks();
+  waitForClearHistory(do_test_finished);
 }
