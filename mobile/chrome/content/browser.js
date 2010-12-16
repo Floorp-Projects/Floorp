@@ -2200,7 +2200,18 @@ var ContentCrashObserver = {
     if (!aSubject.QueryInterface(Ci.nsIPropertyBag2).hasKey("abnormal"))
       return;
 
-    let dumpID = aSubject.hasKey("dumpID") ? aSubject.getProperty("dumpID") : null;
+    // See if we should hide the UI or auto close the app based on env vars
+    let env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
+    let shutdown = env.get("MOZ_CRASHREPORTER_SHUTDOWN");
+    if (shutdown) {
+      let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup);
+      appStartup.quit(Ci.nsIAppStartup.eForceQuit);
+      return;
+    }
+
+    let hideUI = env.get("MOZ_CRASHREPORTER_NO_REPORT");
+    if (hideUI)
+      return;
 
     // Spin through the open tabs and resurrect the out-of-process tabs. Resurrection
     // does not auto-reload the content. We delay load the content as needed.
@@ -2208,6 +2219,8 @@ var ContentCrashObserver = {
       if (aTab.browser.getAttribute("remote") == "true")
         aTab.resurrect();
     })
+
+    let dumpID = aSubject.hasKey("dumpID") ? aSubject.getProperty("dumpID") : null;
 
     // Execute the UI prompt after the notification has had a chance to return and close the child process
     setTimeout(function(self) {
