@@ -907,7 +907,7 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
   PRBool needsStart = PR_FALSE;
   switch (aBoundaryType) {
     case BOUNDARY_CHAR:
-      amount = eSelectCharacter;
+      amount = eSelectCluster;
       if (aType == eGetAt)
         aType = eGetAfter; // Avoid returning 2 characters
       break;
