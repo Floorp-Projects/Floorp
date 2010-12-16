@@ -922,6 +922,7 @@ nsWindow::DrawTo(gfxASurface *targetSurface)
         offset = targetSurface->GetDeviceOffset();
 
     for (PRUint32 i = coveringChildIndex; i < mChildren.Length(); ++i) {
+        ALOG("nsWindow[%p]::DrawTo child[%d]", (void*) this, i);
         if (mChildren[i]->mBounds.IsEmpty() ||
             !mChildren[i]->mBounds.Intersects(boundsRect)) {
             continue;
@@ -940,6 +941,8 @@ nsWindow::DrawTo(gfxASurface *targetSurface)
 
     if (targetSurface)
         targetSurface->SetDeviceOffset(offset);
+
+    ALOG("nsWindow[%p]::DrawTo done", (void*) this);
 
     return PR_TRUE;
 }
