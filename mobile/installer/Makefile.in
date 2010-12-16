@@ -107,7 +107,7 @@ $(MOZ_PKG_MANIFEST): $(MOZ_PKG_MANIFEST_P) FORCE
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $< > $@
 ifdef MOZ_CHROME_MULTILOCALE
 	printf "\n[multilocale]\n" >> $@
-	for LOCALE in $(MOZ_CHROME_MULTILOCALE) ;\
+	for LOCALE in en-US $(MOZ_CHROME_MULTILOCALE) ;\
 	do \
 	  printf "$(BINPATH)/chrome/$$LOCALE$(JAREXT)\n" >> $@; \
 	  printf "$(BINPATH)/chrome/$$LOCALE.manifest\n" >> $@; \
