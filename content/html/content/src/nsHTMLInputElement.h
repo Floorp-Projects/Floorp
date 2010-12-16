@@ -110,7 +110,6 @@ private:
   PRBool mInPrivateBrowsing;
 };
 
-class nsIRadioGroupContainer;
 class nsIRadioVisitor;
 
 class nsHTMLInputElement : public nsGenericHTMLFormElement,
@@ -283,6 +282,15 @@ public:
   void     UpdateBarredFromConstraintValidation();
   nsresult GetValidationMessage(nsAString& aValidationMessage,
                                 ValidityStateType aType);
+  /**
+   * Update the value missing validity state for radio elements when they have
+   * a group.
+   *
+   * @param aIgnoreSelf Whether the required attribute and the checked state
+   * of the current radio should be ignored.
+   * @note This method shouldn't be called if the radio elemnet hasn't a group.
+   */
+  void     UpdateValueMissingValidityStateForRadio(bool aIgnoreSelf);
 
   /**
    * Returns the filter which should be used for the file picker according to
