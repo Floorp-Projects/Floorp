@@ -18,7 +18,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Mark Finkle <mfinkle@mozilla.com>
+ *   Mark 'evil' Finkle <mfinkle@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -72,9 +72,11 @@ SessionStore.prototype = {
 
   _windows: {},
   _lastSaveTime: 0,
-  _interval: 15000,
+  _lastSessionTime: 0,
+  _interval: 10000,
   _maxTabsUndo: 5,
-  
+  _shouldRestore: false,
+
   init: function ss_init() {
     // Get file references
     this._sessionFile = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
@@ -85,18 +87,30 @@ SessionStore.prototype = {
     this._loadState = STATE_STOPPED;
 
     try {
-      if (this._sessionFileBackup.exists())
+      if (this._sessionFileBackup.exists()) {
+        this._shouldRestore = true;
         this._sessionFileBackup.remove(false);
-      if (this._sessionFile.exists())
+      }
+      if (this._sessionFile.exists()) {
+        // Disable crash recovery if we have exceeded the timeout
+        this._lastSessionTime = this._sessionFile.lastModifiedTime;
+        let delta = Date.now() - this._lastSessionTime;
+        let timeout = Services.prefs.getIntPref("browser.sessionstore.resume_from_crash_timeout");
+        if (delta > (timeout * 60000))
+          this._shouldRestore = false;
+
         this._sessionFile.copyTo(null, this._sessionFileBackup.leafName);
+      }
     } catch (ex) {
-      Cu.reportError(ex);  // file was write-locked?
+      Cu.reportError(ex); // file was write-locked?
     }
 
-    try {
-      this._interval = Services.prefs.getIntPref("sessionstore.interval");
-      this._maxTabsUndo = Services.prefs.getIntPref("sessionstore.max_tabs_undo");
-    } catch (e) {}
+    this._interval = Services.prefs.getIntPref("browser.sessionstore.interval");
+    this._maxTabsUndo = Services.prefs.getIntPref("browser.sessionstore.max_tabs_undo");
+
+    // Disable crash recovery if it has been turned off
+    if (!Services.prefs.getBoolPref("browser.sessionstore.resume_from_crash"))
+      this._shouldRestore = false;
   },
   
   observe: function ss_observe(aSubject, aTopic, aData) {
@@ -155,6 +169,9 @@ SessionStore.prototype = {
       case "quit-application":
         // Freeze the data at what we've got (ignoring closing windows)
         this._loadState = STATE_QUITTING;
+
+        // No need for this back up, we are shutting down just fine
+        this._sessionFileBackup.remove(false);
 
         observerService.removeObserver(this, "domwindowopened");
         observerService.removeObserver(this, "domwindowclosed");
@@ -267,7 +284,7 @@ SessionStore.prototype = {
   
   onTabAdd: function ss_onTabAdd(aWindow, aBrowser, aNoNotification) {
     aBrowser.messageManager.addMessageListener("pageshow", this);
-    
+
     if (!aNoNotification)
       this.saveStateDelayed();
     this._updateCrashReportURL(aWindow);
@@ -275,7 +292,11 @@ SessionStore.prototype = {
 
   onTabRemove: function ss_onTabRemove(aWindow, aBrowser, aNoNotification) {
     aBrowser.messageManager.removeMessageListener("pageshow", this);
-    
+
+    // If this browser is being restored, skip any session save activity
+    if (aBrowser.__SS_restore)
+      return;
+
     delete aBrowser.__SS_data;
     
     if (!aNoNotification)
@@ -290,7 +311,7 @@ SessionStore.prototype = {
       // Bundle this browser's data and extra data and save in the closedTabs
       // window property
       let data = aBrowser.__SS_data;
-      data.extraData = aBrowser.__SS_extdata;
+      data.extData = aBrowser.__SS_extdata;
 
       this._windows[aWindow.__SSID].closedTabs.unshift(data);
       let length = this._windows[aWindow.__SSID].closedTabs.length;
@@ -300,6 +321,10 @@ SessionStore.prototype = {
   },
 
   onTabLoad: function ss_onTabLoad(aWindow, aBrowser, aMessage) { 
+    // If this browser is being restored, skip any session save activity
+    if (aBrowser.__SS_restore)
+      return;
+
     delete aBrowser.__SS_data;
     this._collectTabData(aBrowser);
 
@@ -311,17 +336,8 @@ SessionStore.prototype = {
     if (this._loadState != STATE_RUNNING)
       return;
 
-    let index = 0;
-    let browser = aWindow.Browser;
-    let tabs = browser.tabs;
-    for (let i = 0; i < tabs.length; i++) {
-      if (tabs[i].browser == aBrowser) {
-        index = i;
-        break;
-      }
-    }
-
-    this._windows[aWindow.__SSID].selected = index + 1; // 1-based
+    let index = aWindow.Elements.browsers.selectedIndex;
+    this._windows[aWindow.__SSID].selected = parseInt(index) + 1; // 1-based
 
     // Restore the resurrected browser
     // * currently we only load the last URL into the browser
@@ -329,7 +345,7 @@ SessionStore.prototype = {
       let data = aBrowser.__SS_data;
       if (data.entries.length > 0)
         aBrowser.loadURI(data.entries[0].url, null, null);
-
+  
       delete aBrowser.__SS_restore;
     }
 
@@ -374,6 +390,10 @@ SessionStore.prototype = {
   },
 
   _collectTabData: function ss__collectTabData(aBrowser) {
+    // If this browser is being restored, skip any session save activity
+    if (aBrowser.__SS_restore)
+      return;
+
     let tabData = { entries: [{}] };
     tabData.entries[0] = { url: aBrowser.currentURI.spec, title: aBrowser.contentTitle };
     tabData.index = 1;
@@ -389,6 +409,9 @@ SessionStore.prototype = {
 
     let winData = this._windows[aWindow.__SSID];
     winData.tabs = [];
+
+    let index = aWindow.Elements.browsers.selectedIndex;
+    winData.selected = parseInt(index) + 1; // 1-based
 
     let tabs = aWindow.Browser.tabs;
     for (let i = 0; i < tabs.length; i++) {
@@ -435,6 +458,27 @@ SessionStore.prototype = {
         Services.obs.notifyObservers(null, "sessionstore-state-write-complete", "");
       }
     });
+  },
+
+  _readFile: function ss_readFile(aFile) {
+    try {
+      let stream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(Ci.nsIFileInputStream);
+      stream.init(aFile, 0x01, 0, 0);
+      let cvstream = Cc["@mozilla.org/intl/converter-input-stream;1"].createInstance(Ci.nsIConverterInputStream);
+    
+      let fileSize = stream.available();
+      cvstream.init(stream, "UTF-8", fileSize, Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
+
+      let data = {};
+      cvstream.readString(fileSize, data);
+      let content = data.value;
+      cvstream.close();
+
+      return content.replace(/\r\n?/g, "\n");
+    } catch (ex) {
+      Cu.reportError(ex);
+    }
+    return null;
   },
 
   _updateCrashReportURL: function ss_updateCrashReportURL(aWindow) {
@@ -496,7 +540,7 @@ SessionStore.prototype = {
     let tab = aWindow.Browser.addTab(closedTab.entries[0].url, true);
 
     // Put back the extra data
-    tab.browser.__SS_extdata = closedTab.extraData;
+    tab.browser.__SS_extdata = closedTab.extData;
 
     // TODO: save and restore more data (position, field values, etc)
 
@@ -538,6 +582,57 @@ SessionStore.prototype = {
       delete browser.__SS_extdata[aKey];
     else
       throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
+  },
+
+  shouldRestore: function ss_shouldRestore() {
+    return this._shouldRestore;
+  },
+
+  restoreLastSession: function ss_restoreLastSession() {
+    // The previous session data has already been renamed to the backup file
+    let dirService = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+    let session = dirService.get("ProfD", Ci.nsILocalFile);
+    session.append("sessionstore.bak");
+
+    let data = JSON.parse(this._readFile(session));
+    if (!data || data.windows.length == 0)
+      return;
+
+    let window = Services.wm.getMostRecentWindow("navigator:browser");
+
+    let selected = data.windows[0].selected;
+    let tabs = data.windows[0].tabs;
+    for (let i=0; i<tabs.length; i++) {
+      let tabData = tabs[i];
+
+      // Add a tab, but don't load the URL until we need to
+      let params = { getAttention: false, delayLoad: true };
+      if (i + 1 == selected)
+        params.delayLoad = false;
+
+      // We must have selected tabs as soon as possible, so we let all tabs be selected
+      // until we get the real selected tab. Then we stop selecting tabs. The end result
+      // is that the right tab is selected, but we also don't get a bunch of errors
+      let bringToFront = (i + 1 <= selected);
+      let tab = window.Browser.addTab(tabData.entries[0].url, bringToFront, null, params);
+
+      // Recreate the thumbnail if we are delay loading the tab
+      if (tabData.extData && params.delayLoad) {
+          let canvas = tab.chromeTab.thumbnail;
+          canvas.setAttribute("restored", "true");
+
+          let image = new window.Image();
+          image.onload = function() {
+            if (canvas)
+              canvas.getContext("2d").drawImage(image, 0, 0);
+          };
+          image.src = tabData.extData.thumbnail;
+      }
+      
+      tab.browser.__SS_data = tabData;
+      tab.browser.__SS_extdata = tabData.extData;
+      tab.browser.__SS_restore = params.delayLoad;
+    }
   }
 };
 

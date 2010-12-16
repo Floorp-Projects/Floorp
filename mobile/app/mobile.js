@@ -112,6 +112,12 @@ pref("browser.display.history.maxresults", 100);
 pref("browser.sessionhistory.max_total_viewers", 1);
 pref("browser.sessionhistory.max_entries", 50);
 
+/* session store */
+pref("browser.sessionstore.resume_from_crash", true);
+pref("browser.sessionstore.resume_from_crash_timeout", 60); // minutes
+pref("browser.sessionstore.interval", 10000); // milliseconds
+pref("browser.sessionstore.max_tabs_undo", 5);
+
 /* these should help performance */
 pref("mozilla.widget.force-24bpp", true);
 pref("mozilla.widget.use-buffer-pixmap", true);

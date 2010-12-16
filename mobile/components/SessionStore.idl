@@ -102,4 +102,14 @@ interface nsISessionStore : nsISupports
    * @param aKey is the value's name.
    */
   void deleteTabValue(in nsIDOMNode aTab, in AString aKey);
+
+  /**
+   * @returns A boolean indicating we should restore previous browser session
+   */
+  boolean shouldRestore();
+
+  /**
+   *  Restores the previous browser session using a fast, lightweight strategy
+   */
+  void restoreLastSession();
 };

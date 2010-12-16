@@ -65,10 +65,19 @@
 
             let ratio = tabHeight / tabWidth;
             height = width * ratio;
-            
+
             let thumbnail = this.thumbnail;
             thumbnail.removeAttribute("empty");
 
+            // Recreate the canvas as it may be tainted and not useable for remote pages
+            if (thumbnail.hasAttribute("restored")) {
+              thumbnail.removeAttribute("restored");
+              thumbnail = this.thumbnail.cloneNode(false);
+              this.thumbnail.parentNode.replaceChild(thumbnail, this.thumbnail);
+              this.thumbnail = thumbnail;
+            }
+
+            let self = this;
             let renderer = rendererFactory(browser, thumbnail)
             renderer.drawContent(function(ctx, callback) {
               ctx.save();
@@ -76,6 +85,14 @@
               ctx.scale(tabWidth / width, tabHeight / height);
               callback(browser, 0, 0, width, height, "white");
               ctx.restore();
+
+              // We don't have an event for the async drawContent anymore, so hack it
+              setTimeout(function() {
+                // Save the thumbnail to the session in case we need to use it in a restore
+                let data = thumbnail.toDataURL("image/png");
+                let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
+                ss.setTabValue(self, "thumbnail", data);
+              }, 800);
             });
           ]]>
         </body>
