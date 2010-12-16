@@ -1272,56 +1272,35 @@ TypeSet::getKnownObjectKind(JSContext *cx, JSScript *script)
     return kind;
 }
 
-/*
- * Constraint which triggers recompilation of a script if a getter or setter is added
- * to a type set.
- */
-class TypeConstraintFreezeGetSet : public TypeConstraint
+/* Constraint which triggers recompilation if any type is added to a type set. */
+class TypeConstraintFreezeNonEmpty : public TypeConstraint
 {
 public:
     JSScript *script;
-    bool hasGetSet;
+    bool hasType;
 
-    TypeConstraintFreezeGetSet(JSScript *script)
-        : TypeConstraint("freezeGetSet"),
-          script(script), hasGetSet(false)
+    TypeConstraintFreezeNonEmpty(JSScript *script)
+        : TypeConstraint("freezeNonEmpty"),
+          script(script), hasType(false)
     {}
 
     void newType(JSContext *cx, TypeSet *source, jstype type)
     {
-        if (hasGetSet)
+        if (hasType)
             return;
 
-        if (type != TYPE_UNKNOWN) {
-            if (!TypeIsObject(type))
-                return;
-            if (cx->getFixedTypeObject(TYPE_OBJECT_GETSET) != (TypeObject *) type)
-                return;
-        }
-
-        hasGetSet = true;
-
+        hasType = true;
         cx->compartment->types.addPendingRecompile(cx, script);
     }
 };
 
 bool
-TypeSet::hasGetterSetter(JSContext *cx, JSScript *script)
+TypeSet::knownNonEmpty(JSContext *cx, JSScript *script)
 {
-    TypeObject *getset = cx->getFixedTypeObject(TYPE_OBJECT_GETSET);
+    if (typeFlags != 0)
+        return true;
 
-    if (objectCount >= 2) {
-        unsigned objectCapacity = HashSetCapacity(objectCount);
-        for (unsigned i = 0; i < objectCapacity; i++) {
-            if (getset == objectSet[i])
-                return true;
-        }
-    } else if (objectCount == 1) {
-        if (getset == (TypeObject *) objectSet)
-            return true;
-    }
-
-    add(cx, ArenaNew<TypeConstraintFreezeGetSet>(script->analysis->pool, script), true);
+    add(cx, ArenaNew<TypeConstraintFreezeNonEmpty>(script->analysis->pool, script), false);
 
     return false;
 }
