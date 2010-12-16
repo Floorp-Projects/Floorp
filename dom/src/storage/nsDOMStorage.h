@@ -136,6 +136,11 @@ public:
   static nsDOMStorageManager* GetInstance();
   static void Shutdown();
 
+  /**
+   * Checks whether there is any data waiting to be flushed from a temp table.
+   */
+  PRBool UnflushedDataExists();
+
   static nsDOMStorageManager* gStorageManager;
 
 protected:
