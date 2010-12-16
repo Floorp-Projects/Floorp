@@ -99,13 +99,6 @@ NS_GetRadioGetCheckedChangedVisitor(PRBool* aCheckedChanged,
                                     nsIRadioVisitor** aVisitor);
 
 /**
- * This visitor will make sure all radio into the group updates their
- * value missing validity state.
- */
-nsIRadioVisitor*
-NS_GetRadioUpdateValueMissingVisitor();
-
-/**
  * This visitor will return (via aRequired) if an element of the group has the
  * required attribute set.
  *
