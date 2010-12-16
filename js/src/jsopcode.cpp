@@ -340,6 +340,38 @@ ToDisassemblySource(JSContext *cx, jsval v, JSAutoByteString *bytes)
     return !!js_ValueToPrintable(cx, Valueify(v), bytes, true);
 }
 
+class AutoScriptUntrapper {
+    JSContext *cx;
+    JSScript *script;
+    jsbytecode *origPC;
+    jsbytecode *newPC;
+
+public:
+    AutoScriptUntrapper(JSContext *cx, JSScript *script, jsbytecode **pc)
+        : cx(cx), script(script), origPC(*pc)
+    {
+        jsbytecode *newCode = js_UntrapScriptCode(cx, script);
+        if (newCode == script->code) {
+            // No change needed
+            newPC = origPC;
+        } else {
+            script->main += newCode - script->code;
+            *pc = newPC = origPC + (newCode - script->code);
+            script->code = newCode;
+        }
+    }
+    ~AutoScriptUntrapper()
+    {
+        ptrdiff_t delta = newPC - origPC;
+        if (delta) {
+            jsbytecode *oldCode = script->code - delta;
+            cx->free(script->code);
+            script->code = oldCode;
+            script->main -= delta;
+        }
+    }
+};
+
 JS_FRIEND_API(uintN)
 js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
                 uintN loc, JSBool lines, FILE *fp)
@@ -353,6 +385,8 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
     JSObject *obj;
     jsval v;
     jsint i;
+
+    AutoScriptUntrapper untrapper(cx, script, &pc);
 
     op = (JSOp)*pc;
     if (op >= JSOP_LIMIT) {
@@ -372,10 +406,6 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
     type = JOF_TYPE(cs->format);
     switch (type) {
       case JOF_BYTE:
-        if (op == JSOP_TRAP) {
-            op = JS_GetTrapOpcode(cx, script, pc);
-            len = (ptrdiff_t) js_CodeSpec[op].length;
-        }
         break;
 
       case JOF_JUMP:
@@ -4814,14 +4844,15 @@ DecompileCode(JSPrinter *jp, JSScript *script, jsbytecode *pc, uintN len,
     void *mark;
     JSBool ok;
     JSScript *oldscript;
-    jsbytecode *oldcode, *oldmain, *code;
     char *last;
 
     depth = StackDepth(script);
     JS_ASSERT(pcdepth <= depth);
+    cx = jp->sprinter.context;
+
+    AutoScriptUntrapper untrapper(cx, script, &pc);
 
     /* Initialize a sprinter for use with the offset stack. */
-    cx = jp->sprinter.context;
     mark = JS_ARENA_MARK(&cx->tempPool);
     ok = InitSprintStack(cx, &ss, jp, depth);
     if (!ok)
@@ -4849,21 +4880,7 @@ DecompileCode(JSPrinter *jp, JSScript *script, jsbytecode *pc, uintN len,
     /* Call recursive subroutine to do the hard work. */
     oldscript = jp->script;
     jp->script = script;
-    oldcode = jp->script->code;
-    oldmain = jp->script->main;
-    code = js_UntrapScriptCode(cx, jp->script);
-    if (code != oldcode) {
-        jp->script->code = code;
-        jp->script->main = code + (oldmain - oldcode);
-        pc = code + (pc - oldcode);
-    }
-
     ok = Decompile(&ss, pc, len, JSOP_NOP) != NULL;
-    if (code != oldcode) {
-        cx->free(jp->script->code);
-        jp->script->code = oldcode;
-        jp->script->main = oldmain;
-    }
     jp->script = oldscript;
 
     /* If the given code didn't empty the stack, do it now. */
@@ -4969,6 +4986,7 @@ js_DecompileFunction(JSPrinter *jp)
 
         /* Print the parameters. */
         pc = script->main;
+        AutoScriptUntrapper untrapper(jp->sprinter.context, script, &pc);
         endpc = pc + script->length;
         ok = JS_TRUE;
 
@@ -5187,7 +5205,6 @@ static char *
 DecompileExpression(JSContext *cx, JSScript *script, JSFunction *fun,
                     jsbytecode *pc)
 {
-    jsbytecode *code, *oldcode, *oldmain;
     JSOp op;
     const JSCodeSpec *cs;
     jsbytecode *begin, *end;
@@ -5201,17 +5218,7 @@ DecompileExpression(JSContext *cx, JSScript *script, JSFunction *fun,
     JS_ASSERT(script->code <= pc && pc < script->code + script->length);
 
     pcstack = NULL;
-    oldcode = script->code;
-    oldmain = script->main;
-
-    MUST_FLOW_THROUGH("out");
-    code = js_UntrapScriptCode(cx, script);
-    if (code != oldcode) {
-        script->code = code;
-        script->main = code + (oldmain - oldcode);
-        pc = code + (pc - oldcode);
-    }
-
+    AutoScriptUntrapper untrapper(cx, script, &pc);
     op = (JSOp) *pc;
 
     /* None of these stack-writing ops generates novel values. */
@@ -5306,13 +5313,7 @@ DecompileExpression(JSContext *cx, JSScript *script, JSFunction *fun,
         js_DestroyPrinter(jp);
     }
 
-  out:
-    if (code != oldcode) {
-        cx->free(script->code);
-        script->code = oldcode;
-        script->main = oldmain;
-    }
-
+out:
     cx->free(pcstack);
     return name;
 }
