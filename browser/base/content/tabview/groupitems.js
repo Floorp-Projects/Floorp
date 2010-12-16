@@ -839,6 +839,10 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
         item.addSubscriber(this, "close", function() {
           self.remove(item);
+          if (self._children.length > 0 && self._activeTab) {
+            GroupItems.setActiveGroupItem(self);
+            UI.setActiveTab(self._activeTab);
+          }
         });
 
         item.setParent(this);
@@ -901,7 +905,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       if (index != -1)
         this._children.splice(index, 1);
 
-      if (item == this._activeTab) {
+      if (item == this._activeTab || !this._activeTab) {
         if (this._children.length > 0)
           this._activeTab = this._children[0];
         else
