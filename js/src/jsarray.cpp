@@ -853,21 +853,35 @@ static JSBool
 array_defineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *value,
                      PropertyOp getter, PropertyOp setter, uintN attrs)
 {
-    uint32 i = 0;       // init to shut GCC up
-    JSBool isIndex;
-
     if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom))
         return JS_TRUE;
 
-    isIndex = js_IdIsIndex(id, &i);
-    if (!isIndex || attrs != JSPROP_ENUMERATE) {
-        if (!ENSURE_SLOW_ARRAY(cx, obj))
-            return JS_FALSE;
+    if (!obj->isDenseArray())
         return js_DefineProperty(cx, obj, id, value, getter, setter, attrs);
-    }
 
-    Value tmp = *value;
-    return array_setProperty(cx, obj, id, &tmp, false);
+    do {
+        uint32 i = 0;       // init to shut GCC up
+        bool isIndex = js_IdIsIndex(id, &i);
+        if (!isIndex || attrs != JSPROP_ENUMERATE)
+            break;
+
+        JSObject::EnsureDenseResult result = obj->ensureDenseArrayElements(cx, i, 1);
+        if (result != JSObject::ED_OK) {
+            if (result == JSObject::ED_FAILED)
+                return false;
+            JS_ASSERT(result == JSObject::ED_SPARSE);
+            break;
+        }
+
+        if (i >= obj->getArrayLength())
+            obj->setArrayLength(i + 1);
+        obj->setDenseArrayElement(i, *value);
+        return true;
+    } while (false);
+
+    if (!obj->makeDenseArraySlow(cx))
+        return false;
+    return js_DefineProperty(cx, obj, id, value, getter, setter, attrs);
 }
 
 static JSBool
