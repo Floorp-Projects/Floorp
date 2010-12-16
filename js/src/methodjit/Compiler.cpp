@@ -823,21 +823,21 @@ class SrcNoteLineScanner {
     jssrcnote *sn;
 
 public:
-    SrcNoteLineScanner(jssrcnote *sn) : offset(0), sn(sn) {}
+    SrcNoteLineScanner(jssrcnote *sn) : offset(SN_DELTA(sn)), sn(sn) {}
 
     bool firstOpInLine(ptrdiff_t relpc) {
         while ((offset < relpc) && !SN_IS_TERMINATOR(sn)) {
-            offset += SN_DELTA(sn);
             sn = SN_NEXT(sn);
+            offset += SN_DELTA(sn);
         }
 
         while ((offset == relpc) && !SN_IS_TERMINATOR(sn)) {
             JSSrcNoteType type = (JSSrcNoteType) SN_TYPE(sn);
             if (type == SRC_SETLINE || type == SRC_NEWLINE)
                 return true;
-                
-            offset += SN_DELTA(sn);
+
             sn = SN_NEXT(sn);
+            offset += SN_DELTA(sn);
         }
 
         return false;
