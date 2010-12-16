@@ -949,11 +949,12 @@ nsDocAccessible::AttributeWillChange(nsIDocument *aDocument,
   // such as the existence of aria-pressed for button (so we know if we need to
   // newly expose it as a toggle button) etc.
 
-  // Update dependent IDs cache.
+  // Update dependent IDs cache. Take care of elements that are accessible
+  // because dependent IDs cache doesn't contain IDs from non accessible
+  // elements.
   if (aModType == nsIDOMMutationEvent::MODIFICATION ||
       aModType == nsIDOMMutationEvent::REMOVAL) {
-    nsAccessible* accessible =
-      GetAccService()->GetAccessibleInWeakShell(aElement, mWeakShell);
+    nsAccessible* accessible = GetCachedAccessible(aElement);
     if (accessible)
       RemoveDependentIDsFor(accessible, aAttribute);
   }
@@ -967,22 +968,23 @@ nsDocAccessible::AttributeChanged(nsIDocument *aDocument,
 {
   AttributeChangedImpl(aElement, aNameSpaceID, aAttribute);
 
-  // Update dependent IDs cache.
+  nsAccessible* accessible = GetCachedAccessible(aElement);
+  if (!accessible)
+    return;
+
+  // Update dependent IDs cache. Take care of accessible elements because no
+  // accessible element means either the element is not accessible at all or
+  // its accessible will be created later. It doesn't make sense to keep
+  // dependent IDs for non accessible elements. For the second case we'll update
+  // dependent IDs cache when its accessible is created.
   if (aModType == nsIDOMMutationEvent::MODIFICATION ||
       aModType == nsIDOMMutationEvent::ADDITION) {
-    nsAccessible* accessible =
-      GetAccService()->GetAccessibleInWeakShell(aElement, mWeakShell);
-
-    if (accessible)
-      AddDependentIDsFor(accessible, aAttribute);
+    AddDependentIDsFor(accessible, aAttribute);
   }
 
-  // If it was the focused node, cache the new state
-  if (aElement == gLastFocusedNode) {
-    nsAccessible *focusedAccessible = GetAccService()->GetAccessible(aElement);
-    if (focusedAccessible)
-      gLastFocusedAccessiblesState = nsAccUtils::State(focusedAccessible);
-  }
+  // If it was the focused node, cache the new state.
+  if (aElement == gLastFocusedNode)
+    gLastFocusedAccessiblesState = nsAccUtils::State(accessible);
 }
 
 // nsDocAccessible protected member
@@ -1004,7 +1006,7 @@ nsDocAccessible::AttributeChangedImpl(nsIContent* aContent, PRInt32 aNameSpaceID
   //
   // XXX todo:  invalidate accessible when aria state changes affect exposed role
   // filed as bug 472143
-  
+
   nsCOMPtr<nsISupports> container = mDocument->GetContainer();
   nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
   if (!docShell) {
