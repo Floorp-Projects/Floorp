@@ -821,6 +821,22 @@ BookmarksStore.prototype = {
                                                       query);
   },
 
+  __haveGUIDColumn: null,
+  get _haveGUIDColumn() {
+    if (this.__haveGUIDColumn !== null) {
+      return this.__haveGUIDColumn;
+    }
+    let stmt;
+    try {
+      stmt = this._hsvc.DBConnection.createStatement(
+        "SELECT guid FROM moz_places");
+      stmt.finalize();
+      return this.__haveGUIDColumn = true;
+    } catch(ex) {
+      return this.__haveGUIDColumn = false;
+    }
+  },
+
   get _frecencyStm() {
     return this._getStmt(
         "SELECT frecency " +
@@ -867,13 +883,12 @@ BookmarksStore.prototype = {
 
     // Obtains a statement to set the guid iff the guid column exists.
     let stmt;
-    try {
+    if (this._haveGUIDColumn) {
       stmt = this._getStmt(
         "UPDATE moz_bookmarks " +
         "SET guid = :guid " +
         "WHERE id = :item_id");
-    }
-    catch (e) {
+    } else {
       stmt = false;
     }
     return this.__setGUIDStm = stmt;
@@ -936,13 +951,12 @@ BookmarksStore.prototype = {
     // fail, however, if the guid column does not exist.  We fallback to just
     // reading the annotation table in this case.
     let stmt;
-    try {
+    if (this._haveGUIDColumn) {
       stmt = this._getStmt(
         "SELECT guid " +
         "FROM moz_bookmarks " +
         "WHERE id = :item_id");
-    }
-    catch (e) {
+    } else {
       stmt = this._getStmt(
         "SELECT a.content AS guid " +
         "FROM moz_items_annos a " +
@@ -983,13 +997,12 @@ BookmarksStore.prototype = {
     // fail, however, if the guid column does not exist.  We fallback to just
     // reading the annotation table in this case.
     let stmt;
-    try {
+    if (this._haveGUIDColumn) {
       stmt = this._getStmt(
         "SELECT id AS item_id " +
         "FROM moz_bookmarks " +
         "WHERE guid = :guid");
-    }
-    catch (e) {
+    } else {
       stmt = this._getStmt(
         "SELECT a.item_id AS item_id " +
         "FROM moz_items_annos a " +

@@ -114,11 +114,27 @@ HistoryStore.prototype = {
       "WHERE name IN ('moz_places_temp', 'moz_historyvisits_temp')");
   },
 
+  __haveTempTables: null,
   get _haveTempTables() {
-    if (this.__haveTempTables == null)
+    if (this.__haveTempTables === null)
       this.__haveTempTables = !!Utils.queryAsync(this._haveTempTablesStm,
                                                  ["name"]).length;
     return this.__haveTempTables;
+  },
+
+  __haveGUIDColumn: null,
+  get _haveGUIDColumn() {
+    if (this.__haveGUIDColumn !== null) {
+      return this.__haveGUIDColumn;
+    }
+    let stmt;
+    try {
+      stmt = this._db.createStatement("SELECT guid FROM moz_places");
+      stmt.finalize();
+      return this.__haveGUIDColumn = true;
+    } catch(ex) {
+      return this.__haveGUIDColumn = false;
+    }
   },
 
   get _addGUIDAnnotationNameStm() {
@@ -162,13 +178,12 @@ HistoryStore.prototype = {
 
     // Obtains a statement to set the guid iff the guid column exists.
     let stmt;
-    try {
+    if (this._haveGUIDColumn) {
       stmt = this._getStmt(
         "UPDATE moz_places " +
         "SET guid = :guid " +
         "WHERE url = :page_url");
-    }
-    catch (e) {
+    } else {
       stmt = false;
     }
 
@@ -235,13 +250,12 @@ HistoryStore.prototype = {
     // if the column doesn't exist, though so fallback to just reading from
     // the annotation table.
     let stmt;
-    try {
+    if (this._haveGUIDColumn) {
       stmt = this._getStmt(
         "SELECT guid " +
         "FROM moz_places " +
         "WHERE url = :page_url");
-    }
-    catch (e) {
+    } else {
       stmt = this._getStmt(
         "SELECT a.content AS guid " +
         "FROM moz_annos a " +
@@ -304,13 +318,12 @@ HistoryStore.prototype = {
     // if the column doesn't exist, though so fallback to just reading from
     // the annotation table.
     let stmt;
-    try {
+    if (this._haveGUIDColumn) {
       stmt = this._getStmt(
         "SELECT url, title, frecency " +
         "FROM moz_places " +
         "WHERE guid = :guid");
-    }
-    catch (e) {
+    } else {
       let where =
         "WHERE id = (" +
           "SELECT place_id " +
