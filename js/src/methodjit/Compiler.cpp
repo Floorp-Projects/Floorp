@@ -5417,6 +5417,24 @@ mjit::Compiler::knownPushedType(uint32 pushed)
     return JSVAL_TYPE_UNKNOWN;
 }
 
+bool
+mjit::Compiler::mayPushUndefined(uint32 pushed)
+{
+#ifdef JS_TYPE_INFERENCE
+    /*
+     * This should only be used when the compiler is checking if it is OK to push
+     * undefined without going to a stub that can trigger recompilation.
+     * If this returns false and undefined subsequently becomes a feasible
+     * value pushed by the bytecode, recompilation will *NOT* be triggered.
+     */
+    types::TypeSet *types = analysis->getCode(PC).pushed(pushed);
+    return types->hasType(types::TYPE_UNDEFINED);
+#else
+    JS_NOT_REACHED("mayPushUndefined without JS_TYPE_INFERENCE");
+    return false;
+#endif
+}
+
 void
 mjit::Compiler::markPushedOverflow(uint32 pushed)
 {
@@ -5439,15 +5457,15 @@ mjit::Compiler::knownPoppedObjectKind(uint32 popped)
 }
 
 bool
-mjit::Compiler::arrayPrototypeHasIndexedSetter()
+mjit::Compiler::arrayPrototypeHasIndexedProperty()
 {
 #ifdef JS_TYPE_INFERENCE
     types::TypeSet *arrayTypes =
         cx->getFixedTypeObject(types::TYPE_OBJECT_ARRAY_PROTOTYPE)->getProperty(cx, JSID_VOID, false);
     types::TypeSet *objectTypes =
         cx->getFixedTypeObject(types::TYPE_OBJECT_OBJECT_PROTOTYPE)->getProperty(cx, JSID_VOID, false);
-    return arrayTypes->hasGetterSetter(cx, script)
-        || objectTypes->hasGetterSetter(cx, script);
+    return arrayTypes->knownNonEmpty(cx, script)
+        || objectTypes->knownNonEmpty(cx, script);
 #endif
     return true;
 }

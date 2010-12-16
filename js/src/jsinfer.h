@@ -271,8 +271,8 @@ struct TypeSet
     /* Get information about the kinds of objects in this type set. */
     ObjectKind getKnownObjectKind(JSContext *cx, JSScript *script);
 
-    /* Get whether this type set contains any scripted getter or setter. */
-    bool hasGetterSetter(JSContext *cx, JSScript *script);
+    /* Get whether this type set is non-empty. */
+    bool knownNonEmpty(JSContext *cx, JSScript *script);
 };
 
 /*

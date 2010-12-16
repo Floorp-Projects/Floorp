@@ -1280,7 +1280,7 @@ mjit::Compiler::jsop_setelem()
     types::ObjectKind kind = knownPoppedObjectKind(2);
     if (id->mightBeType(JSVAL_TYPE_INT32) &&
         (kind == types::OBJECT_DENSE_ARRAY || kind == types::OBJECT_PACKED_ARRAY) &&
-        !arrayPrototypeHasIndexedSetter()) {
+        !arrayPrototypeHasIndexedProperty()) {
         // this is definitely a dense array, generate code directly without
         // using an inline cache.
         jsop_setelem_dense();
@@ -1486,10 +1486,16 @@ mjit::Compiler::jsop_getelem_dense(bool isPacked)
     if (!key.isConstant() && !frame.haveSameBacking(id, obj))
         frame.unpinReg(key.reg());
 
+    // If we know the result of the GETELEM may be undefined, then misses on the
+    // initialized length or hole checks can just produce an undefined value.
+    // We checked in the caller that prototypes do not have indexed properties.
+    bool allowUndefined = mayPushUndefined(0);
+
     // Guard on the array's initialized length.
     Jump initlenGuard = masm.guardArrayExtent(offsetof(JSObject, initializedLength),
                                               objReg, key, Assembler::BelowOrEqual);
-    stubcc.linkExit(initlenGuard, Uses(2));
+    if (!allowUndefined)
+        stubcc.linkExit(initlenGuard, Uses(2));
 
     masm.loadPtr(Address(objReg, offsetof(JSObject, slots)), dataReg);
 
@@ -1505,7 +1511,8 @@ mjit::Compiler::jsop_getelem_dense(bool isPacked)
     }
 
     if (!isPacked) {
-        stubcc.linkExit(holeCheck, Uses(2));
+        if (!allowUndefined)
+            stubcc.linkExit(holeCheck, Uses(2));
         if (type != JSVAL_TYPE_UNKNOWN && type != JSVAL_TYPE_DOUBLE)
             frame.freeReg(typeReg.reg());
     }
@@ -1521,6 +1528,18 @@ mjit::Compiler::jsop_getelem_dense(bool isPacked)
         frame.pushTypedPayload(type, dataReg);
 
     stubcc.rejoin(Changes(2));
+
+    if (allowUndefined) {
+        stubcc.linkExitDirect(initlenGuard, stubcc.masm.label());
+        if (!isPacked)
+            stubcc.linkExitDirect(holeCheck, stubcc.masm.label());
+        JS_ASSERT(type == JSVAL_TYPE_UNKNOWN || type == JSVAL_TYPE_UNDEFINED);
+        if (type == JSVAL_TYPE_UNDEFINED)
+            stubcc.masm.loadValuePayload(UndefinedValue(), dataReg);
+        else
+            stubcc.masm.loadValueAsComponents(UndefinedValue(), typeReg.reg(), dataReg);
+        stubcc.linkRejoin(stubcc.masm.jump());
+    }
 }
 
 bool
@@ -1540,7 +1559,8 @@ mjit::Compiler::jsop_getelem(bool isCall)
     types::ObjectKind kind = knownPoppedObjectKind(1);
 
     if (!isCall && id->mightBeType(JSVAL_TYPE_INT32) &&
-        (kind == types::OBJECT_DENSE_ARRAY || kind == types::OBJECT_PACKED_ARRAY)) {
+        (kind == types::OBJECT_DENSE_ARRAY || kind == types::OBJECT_PACKED_ARRAY) &&
+        !arrayPrototypeHasIndexedProperty()) {
         // this is definitely a dense array, generate code directly without
         // using an inline cache.
         jsop_getelem_dense(kind == types::OBJECT_PACKED_ARRAY);
