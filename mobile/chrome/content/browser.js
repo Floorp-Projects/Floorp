@@ -359,19 +359,21 @@ var Browser = {
     // Make sure we're online before attempting to load
     Util.forceOnline();
 
-    // If this is an intial window launch the commandline handler passes us the default
-    // page as an argument
-    let defaultURL = this.getHomePage();
+    let homeURL = this.getHomePage();
+    let commandURL;
     if (window.arguments && window.arguments[0])
-      defaultURL = window.arguments[0];
+      commandURL = window.arguments[0];
 
     // Should we restore the previous session (crash or some other event)
     let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
-    if (ss.shouldRestore())
+    if (ss.shouldRestore()) {
       ss.restoreLastSession();
-    else
-      this.addTab(defaultURL, true);
-    
+      if (commandURL)
+        this.addTab(commandURL, true);
+    } else {
+      this.addTab(commandURL || homeURL, true);
+    }
+
     // JavaScript Error Console
     if (Services.prefs.getBoolPref("browser.console.showInPanel")){
       let button = document.getElementById("tool-console");
@@ -2219,11 +2221,11 @@ var ContentCrashObserver = {
       let buttons = Ci.nsIPrompt.BUTTON_POS_1_DEFAULT +
                     (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_0) +
                     (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_1);
-  
+
       // Only show the submit checkbox if we have a crash report we can submit
       if (!dumpID)
         submitText = null;
-  
+
       let submit = { value: true };
       let reload = Services.prompt.confirmEx(window, title, message, buttons, closeText, reloadText, null, submitText, submit);
       if (reload) {
@@ -2237,12 +2239,12 @@ var ContentCrashObserver = {
         // have zero open tabs
         if (Browser.tabs.length == 1)
           Browser.addTab(Browser.getHomePage(), false, null, { getAttention: false });
-  
+
         // Close this tab, it could be the reason we crashed. The undo-close-tab
         // system will pick it up.
         Browser.closeTab(Browser.selectedTab);
       }
-  
+
       // Submit the report, if we have one and the user wants to submit it
       if (submit.value && dumpID)
         self.CrashSubmit.submit(dumpID, Elements.stack, null, null);

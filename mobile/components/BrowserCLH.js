@@ -48,7 +48,7 @@ function openWindow(aParent, aURL, aTarget, aFeatures, aArgs) {
     argString = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
     argString.data = aArgs;
   }
-  
+
   return Services.ww.openWindow(aParent, aURL, aTarget, aFeatures, argString);
 }
 
@@ -104,16 +104,6 @@ function needHomepageOverride() {
 
   return "none";
 }
-
-function getHomePage() {
-  let url = "about:home";
-  try {
-    url = Services.prefs.getComplexValue("browser.startup.homepage", Ci.nsIPrefLocalizedString).data;
-  } catch (e) { }
-
-  return url;
-}
-
 
 function BrowserCLH() { }
 
@@ -182,13 +172,12 @@ BrowserCLH.prototype = {
     try {
       win = Services.wm.getMostRecentWindow("navigator:browser");
       if (!win) {
-        // Default to the saved homepage
-        let defaultURL = getHomePage();
-  
+        let defaultURL;
+
         // Override the default if we have a new profile
         if (needHomepageOverride() == "new profile")
             defaultURL = "about:firstrun";
-  
+
         // Override the default if we have a URL passed on command line
         if (uris.length > 0) {
           defaultURL = uris[0].spec;
