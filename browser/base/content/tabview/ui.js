@@ -206,10 +206,10 @@ let UI = {
       var observer = {
         observe : function(subject, topic, data) {
           if (topic == "quit-application-requested") {
-            if (self.isTabViewVisible()) {
+            if (self.isTabViewVisible())
               GroupItems.removeHiddenGroups();
-              TabItems.saveAll(true);
-            }
+
+            TabItems.saveAll(true);
             self._save();
           }
         }
