@@ -103,6 +103,18 @@ CanvasLayerOGL::Initialize(const Data& aData)
   }
 
   mBounds.SetRect(0, 0, aData.mSize.width, aData.mSize.height);
+      
+  // Check the maximum texture size supported by GL. glTexImage2D supports
+  // images of up to 2 + GL_MAX_TEXTURE_SIZE
+  GLint texSize = gl()->GetMaxTextureSize();
+  if (mBounds.width > (2 + texSize) || mBounds.height > (2 + texSize)) {
+    mDelayedUpdates = PR_TRUE;
+    MakeTexture();
+    // This should only ever occur with 2d canvas, WebGL can't already have a texture
+    // of this size can it?
+    NS_ABORT_IF_FALSE(mCanvasSurface, 
+                      "Invalid texture size when WebGL surface already exists at that size?");
+  }
 }
 
 void
@@ -125,7 +137,7 @@ CanvasLayerOGL::MakeTexture()
 void
 CanvasLayerOGL::Updated(const nsIntRect& aRect)
 {
-  if (mDestroyed) {
+  if (mDestroyed || mDelayedUpdates) {
     return;
   }
 
@@ -202,6 +214,7 @@ CanvasLayerOGL::Updated(const nsIntRect& aRect)
     }
 
     if (newTexture) {
+
       gl()->fTexImage2D(LOCAL_GL_TEXTURE_2D,
                         0,
                         LOCAL_GL_RGBA,
@@ -250,6 +263,8 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
   bool useGLContext = mCanvasGLContext &&
     mCanvasGLContext->GetContextType() == gl()->GetContextType();
 
+  nsIntRect drawRect = mBounds;
+
   if (useGLContext) {
     mCanvasGLContext->MakeCurrent();
     mCanvasGLContext->fFlush();
@@ -257,6 +272,29 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
     gl()->MakeCurrent();
     gl()->BindTex2DOffscreen(mCanvasGLContext);
     DEBUG_GL_ERROR_CHECK(gl());
+  } else if (mDelayedUpdates) {
+    NS_ABORT_IF_FALSE(mCanvasSurface, "WebGL canvases should always be using full texture upload");
+    
+    drawRect.IntersectRect(drawRect, GetEffectiveVisibleRegion().GetBounds());
+
+    nsRefPtr<gfxImageSurface> imageSurface = 
+      new gfxImageSurface(gfxIntSize(drawRect.width, drawRect.height),
+                                     gfxASurface::ImageFormatARGB32);
+    nsRefPtr<gfxContext> ctx = new gfxContext(imageSurface);
+    ctx->Translate(gfxPoint(-drawRect.x, -drawRect.y));
+    ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+    ctx->SetSource(mCanvasSurface);
+    ctx->Paint();
+
+    gl()->fTexImage2D(LOCAL_GL_TEXTURE_2D,
+                      0,
+                      LOCAL_GL_RGBA,
+                      drawRect.width,
+                      drawRect.height,
+                      0,
+                      LOCAL_GL_RGBA,
+                      LOCAL_GL_UNSIGNED_BYTE,
+                      imageSurface->Data());
   }
   program =
     mOGLManager->GetBasicLayerProgram(CanUseOpaqueSurface(),
@@ -265,7 +303,7 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
   ApplyFilter(mFilter);
 
   program->Activate();
-  program->SetLayerQuadRect(mBounds);
+  program->SetLayerQuadRect(drawRect);
   program->SetLayerTransform(GetEffectiveTransform());
   program->SetLayerOpacity(GetEffectiveOpacity());
   program->SetRenderOffset(aOffset);
