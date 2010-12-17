@@ -813,6 +813,11 @@ nsEditorEventListener::HandleEndComposition(nsIDOMEvent* aCompositionEvent)
   if (!mEditor->IsAcceptableInputEvent(aCompositionEvent)) {
     return NS_OK;
   }
+
+  // Transfer the event's trusted-ness to our editor
+  nsCOMPtr<nsIDOMNSEvent> NSEvent = do_QueryInterface(aCompositionEvent);
+  nsAutoEditorKeypressOperation operation(mEditor, NSEvent);
+
   return mEditor->EndIMEComposition();
 }
 
