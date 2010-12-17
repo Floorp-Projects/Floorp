@@ -444,7 +444,7 @@ AsyncClickHandler::Run()
     nsContentUtils::DispatchTrustedEvent(mInput->GetOwnerDoc(),
                                          static_cast<nsIDOMHTMLInputElement*>(mInput.get()),
                                          NS_LITERAL_STRING("change"), PR_TRUE,
-                                         PR_TRUE);
+                                         PR_FALSE);
   }
 
   return NS_OK;
@@ -1719,20 +1719,6 @@ nsHTMLInputElement::SetCheckedInternal(PRBool aChecked, PRBool aNotify)
   }
 }
 
-
-void
-nsHTMLInputElement::FireOnChange()
-{
-  //
-  // Since the value is changing, send out an onchange event (bug 23571)
-  //
-  nsEventStatus status = nsEventStatus_eIgnore;
-  nsEvent event(PR_TRUE, NS_FORM_CHANGE);
-  nsRefPtr<nsPresContext> presContext = GetPresContext();
-  nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this), presContext,
-                              &event, nsnull, &status);
-}
-
 NS_IMETHODIMP
 nsHTMLInputElement::Blur()
 {
@@ -2234,7 +2220,10 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
         DoSetChecked(originalCheckedValue, PR_TRUE, PR_TRUE);
       }
     } else {
-      FireOnChange();
+      nsContentUtils::DispatchTrustedEvent(GetOwnerDoc(),
+                                           static_cast<nsIDOMHTMLInputElement*>(this),
+                                           NS_LITERAL_STRING("change"), PR_TRUE,
+                                           PR_FALSE);
 #ifdef ACCESSIBILITY
       // Fire an event to notify accessibility
       if (mType == NS_FORM_INPUT_CHECKBOX) {
