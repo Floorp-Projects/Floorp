@@ -22,35 +22,34 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=604067
 
 /** Test for Bug 604067 **/
 
-var f = document.createElement("iframe");
-
 function check() {
-  var v = document.body.getElementsByTagName("iframe")[0].contentDocument.body.getElementsByTagName("video")[0];
-  
+  var v = document.body.getElementsByTagName("iframe")[0]
+                  .contentDocument.body.getElementsByTagName("video")[0];
+
   // Debug info for Bug 608634
   ok(true, "iframe src=" + document.body.getElementsByTagName("iframe")[0].src);
-  ok(true, "v.readyState=" + v.readyState);
-  ok(true, "v.networkState=" + v.networkState);
-  if (v.error) {
-    ok(true, "v.error.code=" + v.error.code);
-  } else {
-    ok(true, "v.error is null");
-  }
-  
-  ok(v.error && v.error.code == MediaError.MEDIA_ERR_DECODE, "Must have error set to MEDIA_ERR_DECODE");
+  is(v.readyState, 0, "Ready state");
+
+  is(v.networkState, 0, "Network state");
+  isnot(v.error, null, "Error object");
+  if (v.error)
+    is(v.error.code, MediaError.MEDIA_ERR_DECODE, "Error code");
+
   SimpleTest.finish();
 }
 
 // Find an error test that we'd think we should be able to play (if it
 // wasn't already known to fail).
 var t = getPlayableVideo(gErrorTests);
-if (t != null) {
-  f.src = t.name;
-  f.addEventListener("load", function() {setTimeout(check, 0);}, false);
-  document.body.appendChild(f);
-  SimpleTest.waitForExplicitFinish();
-} else {
+if (!t) {
   todo(false, "No types supported");
+} else {
+  SimpleTest.waitForExplicitFinish();
+
+  var f = document.createElement("iframe");
+  f.src = t.name;
+  f.addEventListener("load", function() { SimpleTest.executeSoon(check); }, false);
+  document.body.appendChild(f);
 }
 
 </script>
