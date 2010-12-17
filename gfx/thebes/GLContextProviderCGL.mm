@@ -305,14 +305,22 @@ protected:
         else
             format = gfxASurface::ImageFormatARGB32;
 
-        if (!mTextureInited || !mBackingSurface || !mUpdateSurface ||
-            nsIntSize(mBackingSurface->Width(), mBackingSurface->Height()) < mSize ||
-            mBackingSurface->Format() != format)
+        if (!mTextureInited || !mUpdateSurface ||
+            mUpdateSurface->GetContentType() != GetContentType())
         {
             mUpdateSurface = nsnull;
             mUpdateOffset = nsIntPoint(0, 0);
             // We need to (re)create our backing store. Let the base class to that.
             return BasicTextureImage::BeginUpdate(aRegion);
+        }
+
+        nsRefPtr<gfxImageSurface> imageSurface = mUpdateSurface->GetAsImageSurface();
+        if (!imageSurface ||
+            nsIntSize(imageSurface->Width(), imageSurface->Height()) < mSize) {
+          mUpdateSurface = nsnull;
+          mUpdateOffset = nsIntPoint(0, 0);
+          // We need to (re)create our backing store. Let the base class to that.
+          return BasicTextureImage::BeginUpdate(aRegion);
         }
 
         // the basic impl can only upload updates to rectangles
@@ -352,31 +360,6 @@ protected:
     {
         mUpdateFormat = aFmt;
         return gfxPlatform::GetPlatform()->CreateOffscreenSurface(aSize, gfxASurface::ContentFromFormat(aFmt));
-    }
-
-    virtual already_AddRefed<gfxImageSurface>
-    GetImageForUpload(gfxASurface* aUpdateSurface)
-    {
-        nsRefPtr<gfxImageSurface> image = aUpdateSurface->GetAsImageSurface();
-
-        if (image && image->Format() != mUpdateFormat) {
-          image = nsnull;
-        }
-
-        // If we don't get an image directly from the quartz surface, we have
-        // to take the slow boat.
-        if (!image) {
-          image = new gfxImageSurface(gfxIntSize(mUpdateRect.width,
-                                                 mUpdateRect.height),
-                                      mUpdateFormat);
-          nsRefPtr<gfxContext> tmpContext = new gfxContext(image);
-
-          tmpContext->SetSource(aUpdateSurface);
-          tmpContext->SetOperator(gfxContext::OPERATOR_SOURCE);
-          tmpContext->Paint();
-        }
-
-        return image.forget();
     }
 
 private:

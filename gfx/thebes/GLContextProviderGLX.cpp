@@ -426,22 +426,6 @@ protected:
         return gfxPlatform::GetPlatform()->CreateOffscreenSurface(aSize, gfxASurface::ContentFromFormat(aFmt));
     }
 
-    virtual already_AddRefed<gfxImageSurface>
-    GetImageForUpload(gfxASurface* aUpdateSurface)
-    {
-        nsRefPtr<gfxImageSurface> image =
-            new gfxImageSurface(gfxIntSize(mUpdateRect.width,
-                                           mUpdateRect.height),
-                                mUpdateFormat);
-        nsRefPtr<gfxContext> tmpContext = new gfxContext(image);
-
-        tmpContext->SetSource(aUpdateSurface);
-        tmpContext->SetOperator(gfxContext::OPERATOR_SOURCE);
-        tmpContext->Paint();
-
-        return image.forget();
-    }
-
 private:
     TextureImageGLX(GLuint aTexture,
                     const nsIntSize& aSize,
