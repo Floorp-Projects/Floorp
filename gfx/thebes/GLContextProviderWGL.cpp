@@ -327,13 +327,6 @@ public:
 
     HGLRC Context() { return mContext; }
 
-    virtual already_AddRefed<TextureImage>
-    CreateBasicTextureImage(GLuint aTexture,
-                            const nsIntSize& aSize,
-                            GLenum aWrapMode,
-                            TextureImage::ContentType aContentType,
-                            GLContext* aContext);
-
 protected:
     friend class GLContextProviderWGL;
 
@@ -443,50 +436,6 @@ static GLContextWGL *
 GetGlobalContextWGL()
 {
     return static_cast<GLContextWGL*>(GLContextProviderWGL::GetGlobalContext());
-}
-
-class TextureImageWGL : public BasicTextureImage
-{
-    friend already_AddRefed<TextureImage>
-    GLContextWGL::CreateBasicTextureImage(GLuint,
-                                          const nsIntSize&,
-                                          GLenum,
-                                          TextureImage::ContentType,
-                                          GLContext*);
-
-protected:
-    virtual already_AddRefed<gfxASurface>
-    CreateUpdateSurface(const gfxIntSize& aSize, ImageFormat aFmt)
-    {
-        mUpdateSize = aSize;
-        mUpdateFormat = aFmt;
-
-        return gfxPlatform::GetPlatform()->CreateOffscreenSurface(aSize, gfxASurface::ContentFromFormat(aFmt));
-    }
-
-private:
-    TextureImageWGL(GLuint aTexture,
-                    const nsIntSize& aSize,
-                    GLenum aWrapMode,
-                    ContentType aContentType,
-                    GLContext* aContext)
-        : BasicTextureImage(aTexture, aSize, aWrapMode, aContentType, aContext)
-    {}
-
-    gfxIntSize mUpdateSize;
-    ImageFormat mUpdateFormat;
-};
-
-already_AddRefed<TextureImage>
-GLContextWGL::CreateBasicTextureImage(GLuint aTexture,
-                                      const nsIntSize& aSize,
-                                      GLenum aWrapMode,
-                                      TextureImage::ContentType aContentType,
-                                      GLContext* aContext)
-{
-    nsRefPtr<TextureImageWGL> teximage
-        (new TextureImageWGL(aTexture, aSize, aWrapMode, aContentType, aContext));
-    return teximage.forget();
 }
 
 already_AddRefed<GLContext>

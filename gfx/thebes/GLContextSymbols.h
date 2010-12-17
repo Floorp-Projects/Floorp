@@ -363,6 +363,11 @@ struct GLContextSymbols
     typedef void (GLAPIENTRY * PFNGLDELETERENDERBUFFERS) (GLsizei n, const GLuint* ids);
     PFNGLDELETERENDERBUFFERS fDeleteRenderbuffers;
 
+    typedef void* (GLAPIENTRY * PFNGLMAPBUFFER) (GLenum target, GLenum access);
+    PFNGLMAPBUFFER fMapBuffer;
+    typedef realGLboolean (GLAPIENTRY * PFNGLUNMAPBUFFER) (GLenum target);
+    PFNGLUNMAPBUFFER fUnmapBuffer;
+
 };
 
 }
