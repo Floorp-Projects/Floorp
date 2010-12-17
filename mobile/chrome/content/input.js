@@ -48,6 +48,9 @@ const kDoubleClickInterval = 400;
 // Maximum distance in inches between the taps of a double-tap
 const kDoubleClickRadius = 0.4;
 
+// Amount of time to wait before tap is generate a mousemove 
+const kOverTapWait = 150;
+
 // Amount of time to wait before tap becomes long tap
 const kLongTapWait = 500;
 
@@ -102,6 +105,7 @@ function MouseModule() {
                                         this._kineticStop.bind(this));
 
   this._singleClickTimeout = new Util.Timeout(this._doSingleClick.bind(this));
+  this._mouseOverTimeout = new Util.Timeout(this._doMouseOver.bind(this));
   this._longClickTimeout = new Util.Timeout(this._doLongClick.bind(this));
 
   this._doubleClickRadius = Util.getWindowUtils(window).displayDPI * kDoubleClickRadius;
@@ -207,6 +211,7 @@ MouseModule.prototype = {
     if (success) {
       this._recordEvent(aEvent);
       this._target = aEvent.target;
+      this._mouseOverTimeout.once(kOverTapWait);
       this._longClickTimeout.once(kLongTapWait);
     } else {
       // cancel all pending content clicks
@@ -266,6 +271,7 @@ MouseModule.prototype = {
       }
     }
 
+    this._mouseOverTimeout.clear();
     this._longClickTimeout.clear();
     this._target = null;
 
@@ -303,6 +309,7 @@ MouseModule.prototype = {
 
         // Let everyone know when mousemove begins a pan
         if (!oldIsPan && dragData.isPan()) {
+          this._mouseOverTimeout.clear();
           this._longClickTimeout.clear();
 
           let event = document.createEvent("Events");
@@ -401,6 +408,12 @@ MouseModule.prototype = {
     }
   },
 
+  /** Called when tap down times is long enought to generate a mousemove **/
+  _doMouseOver: function _doMouseOver() {
+    let ev = this._downUpEvents[0];
+    this._dispatchTap("TapOver", ev);
+  },
+
   /** Called when tap down times out and becomes a long tap. */
   _doLongClick: function _doLongClick() {
     let ev = this._downUpEvents[0];
@@ -480,6 +493,7 @@ MouseModule.prototype = {
    */
   _cleanClickBuffer: function _cleanClickBuffer() {
     this._singleClickTimeout.clear();
+    this._mouseOverTimeout.clear();
     this._longClickTimeout.clear();
     this._downUpEvents.splice(0);
   },

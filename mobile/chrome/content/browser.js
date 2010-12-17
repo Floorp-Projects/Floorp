@@ -1501,6 +1501,7 @@ const ContentTouchHandler = {
 
   init: function init() {
     document.addEventListener("TapDown", this, true);
+    document.addEventListener("TapOver", this, false);
     document.addEventListener("TapUp", this, false);
     document.addEventListener("TapSingle", this, false);
     document.addEventListener("TapDouble", this, false);
@@ -1553,6 +1554,9 @@ const ContentTouchHandler = {
         switch (aEvent.type) {
           case "TapDown":
             this.tapDown(aEvent.clientX, aEvent.clientY);
+            break;
+          case "TapOver":
+            this.tapOver(aEvent.clientX, aEvent.clientY);
             break;
           case "TapUp":
             this.tapUp(aEvent.clientX, aEvent.clientY);
@@ -1631,6 +1635,10 @@ const ContentTouchHandler = {
     } catch (e) {
     }
     this._dispatchMouseEvent("Browser:MouseDown", aX, aY);
+  },
+
+  tapOver: function tapOver(aX, aY) {
+    this._dispatchMouseEvent("Browser:MouseOver", aX, aY);
   },
 
   tapUp: function tapUp(aX, aY) {
