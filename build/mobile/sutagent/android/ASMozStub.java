@@ -115,7 +115,8 @@ public class ASMozStub extends android.app.Service {
 	public void SendToDataChannel(String strToSend)
 		{
 		if (runDataThrd.isAlive())
+			{
 			runDataThrd.SendToDataChannel(strToSend);
+			}
 		}
-	
 }
