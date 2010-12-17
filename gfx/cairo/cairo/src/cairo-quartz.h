@@ -50,6 +50,13 @@ cairo_quartz_surface_create (cairo_format_t format,
                              unsigned int height);
 
 cairo_public cairo_surface_t *
+cairo_quartz_surface_create_for_data (unsigned char *data,
+				      cairo_format_t format,
+				      unsigned int width,
+				      unsigned int height,
+				      unsigned int stride);
+
+cairo_public cairo_surface_t *
 cairo_quartz_surface_create_cg_layer (cairo_surface_t *surface,
                                       cairo_content_t content,
                                       unsigned int width,
