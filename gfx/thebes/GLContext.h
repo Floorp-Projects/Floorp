@@ -202,6 +202,8 @@ public:
         EndUpdate();
     }
 
+    virtual bool DirectUpdate(gfxASurface *aSurf, const nsIntRegion& aRegion) =0;
+
     /**
      * Return this TextureImage's texture ID for use with GL APIs.
      * Callers are responsible for properly binding the texture etc.
@@ -295,6 +297,7 @@ public:
 
     virtual gfxContext* BeginUpdate(nsIntRegion& aRegion);
     virtual PRBool EndUpdate();
+    virtual bool DirectUpdate(gfxASurface *aSurf, const nsIntRegion& aRegion);
 
     // Returns a surface to draw into
     virtual already_AddRefed<gfxASurface>

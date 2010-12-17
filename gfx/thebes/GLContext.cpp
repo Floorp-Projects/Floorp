@@ -645,6 +645,25 @@ BasicTextureImage::FinishedSurfaceUpload()
 {
 }
 
+bool 
+BasicTextureImage::DirectUpdate(gfxASurface *aSurf, const nsIntRegion& aRegion)
+{
+  nsIntRect bounds = aRegion.GetBounds();
+  if (!mTextureInited) {
+    bounds = nsIntRect(0, 0, mSize.width, mSize.height);
+  }
+
+  mShaderType =
+    mGLContext->UploadSurfaceToTexture(aSurf,
+                                       bounds,
+                                       mTexture,
+                                       !mTextureInited,
+                                       bounds.TopLeft(),
+                                       PR_FALSE);
+  mTextureInited = PR_TRUE;
+  return true;
+}
+
 void
 BasicTextureImage::Resize(const nsIntSize& aSize)
 {
