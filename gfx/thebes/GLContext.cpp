@@ -536,8 +536,6 @@ BasicTextureImage::~BasicTextureImage()
         mGLContext->MakeCurrent();
         mGLContext->fDeleteTextures(1, &mTexture);
     }
-
-    mBackingSurface = nsnull;
 }
 
 gfxContext*
@@ -549,20 +547,12 @@ BasicTextureImage::BeginUpdate(nsIntRegion& aRegion)
     ImageFormat format =
         (GetContentType() == gfxASurface::CONTENT_COLOR) ?
         gfxASurface::ImageFormatRGB24 : gfxASurface::ImageFormatARGB32;
-    PRBool repaintEverything = PR_FALSE;
-    if (mGLContext->IsExtensionSupported(gl::GLContext::APPLE_client_storage)) {
-        repaintEverything =
-            !(mBackingSurface &&
-              mBackingSurface->GetSize() == gfxIntSize(mSize.width, mSize.height) &&
-              mBackingSurface->Format() == format);
-    }
-    if (!mTextureInited || repaintEverything)
+    if (!mTextureInited)
     {
         // if the texture hasn't been initialized yet, or something important
         // changed, we need to recreate our backing surface and force the
         // client to paint everything
         mUpdateRect = nsIntRect(nsIntPoint(0, 0), mSize);
-        mTextureInited = PR_FALSE;
     } else {
         mUpdateRect = aRegion.GetBounds();
     }
@@ -600,72 +590,21 @@ BasicTextureImage::EndUpdate()
     // but important if we ever do anything directly with the surface.
     originalSurface->SetDeviceOffset(gfxPoint(0, 0));
 
-    nsRefPtr<gfxImageSurface> uploadImage = GetImageForUpload(originalSurface);
-    if (!uploadImage)
-        return PR_FALSE;
-
-    mGLContext->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
-
-    // The images that come out of the cairo quartz surface are 16-byte aligned
-    // for performance. We know this is an RGBA surface, so we divide the
-    // stride by 4 to represent the number of elements long the row is.
-    mGLContext->fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH,
-                             uploadImage->Stride() / 4);
-
-    DEBUG_GL_ERROR_CHECK(mGLContext);
-
-    if (!mTextureInited)
-    {
-        // If we can use the client storage extension, we should.
-        if (mGLContext->IsExtensionSupported(gl::GLContext::APPLE_client_storage)) {
-            mGLContext->fPixelStorei(LOCAL_GL_UNPACK_CLIENT_STORAGE_APPLE,
-                                     LOCAL_GL_TRUE);
-            DEBUG_GL_ERROR_CHECK(mGLContext);
-        }
-
-        mGLContext->fTexImage2D(LOCAL_GL_TEXTURE_2D,
-                                0,
-                                LOCAL_GL_RGBA,
-                                mUpdateRect.width,
-                                mUpdateRect.height,
-                                0,
-                                LOCAL_GL_RGBA,
-                                LOCAL_GL_UNSIGNED_BYTE,
-                                uploadImage->Data());
-
-        DEBUG_GL_ERROR_CHECK(mGLContext);
-
-        mTextureInited = PR_TRUE;
-
-        // Reset the pixel store attribute, and hold on to the update surface
-        // because we're using the client storage extension.
-        if (mGLContext->IsExtensionSupported(gl::GLContext::APPLE_client_storage)) {
-            mBackingSurface = uploadImage;
-            mGLContext->fPixelStorei(LOCAL_GL_UNPACK_CLIENT_STORAGE_APPLE,
-                                     LOCAL_GL_FALSE);
-          DEBUG_GL_ERROR_CHECK(mGLContext);
-        }
-    } else {
-        // By default, mUpdateOffset is initialized to (0, 0), so we will
-        // upload from the origin of the update surface. Subclasses can set
-        // mUpdateOffset in an overridden BeginUpdate or EndUpdate to change
-        // this.
-        unsigned char* data = uploadImage->Data() + mUpdateOffset.x * 4 +
-                                                    mUpdateOffset.y * uploadImage->Stride();
-        mGLContext->fTexSubImage2D(LOCAL_GL_TEXTURE_2D,
-                                   0,
-                                   mUpdateRect.x,
-                                   mUpdateRect.y,
-                                   mUpdateRect.width,
-                                   mUpdateRect.height,
-                                   LOCAL_GL_RGBA,
-                                   LOCAL_GL_UNSIGNED_BYTE,
-                                   data);
+    // The rect to upload from the surface is mUpdateRect sized and located at mUpdateOffset.
+    nsIntRect surfaceRect(mUpdateOffset.x, mUpdateOffset.y, mUpdateRect.width, mUpdateRect.height);
+    if (!mTextureInited) {
+     surfaceRect.x = 0;
+     surfaceRect.y = 0;
     }
-    mUpdateContext = NULL;
 
-    // Reset pixel store attributes to use the defaults.
-    mGLContext->fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, 0);
+    mShaderType =
+      mGLContext->UploadSurfaceToTexture(originalSurface,
+                                         surfaceRect,
+                                         mTexture,
+                                         !mTextureInited,
+                                         mUpdateRect.TopLeft());
+    mUpdateContext = nsnull;
+    mTextureInited = PR_TRUE;
 
     return PR_TRUE;         // mTexture is bound
 }
@@ -1274,7 +1213,7 @@ GLContext::UploadSurfaceToTexture(gfxASurface *aSurface,
   bool textureInited = aOverwrite ? false : true;
   MakeCurrent();
   fActiveTexture(LOCAL_GL_TEXTURE0);
-
+  
   if (!aTexture) {
     fGenTextures(1, &aTexture);
     fBindTexture(LOCAL_GL_TEXTURE_2D, aTexture);
