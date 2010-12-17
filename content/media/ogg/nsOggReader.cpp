@@ -102,6 +102,8 @@ nsOggReader::nsOggReader(nsBuiltinDecoder* aDecoder)
     mTheoraState(nsnull),
     mVorbisState(nsnull),
     mSkeletonState(nsnull),
+    mVorbisSerial(0),
+    mTheoraSerial(0),
     mPageOffset(0),
     mTheoraGranulepos(-1),
     mVorbisGranulepos(-1)
@@ -204,6 +206,7 @@ nsresult nsOggReader::ReadMetadata()
       PRBool r = mCodecStates.Put(serial, codecState);
       NS_ASSERTION(r, "Failed to insert into mCodecStates");
       bitstreams.AppendElement(codecState);
+      mKnownStreams.AppendElement(serial);
       if (codecState &&
           codecState->GetType() == nsOggCodecState::TYPE_VORBIS &&
           !mVorbisState)
@@ -333,6 +336,18 @@ nsresult nsOggReader::ReadMetadata()
       mDecoder->GetStateMachine()->SetDuration(duration);
       LOG(PR_LOG_DEBUG, ("Got duration from Skeleton index %lld", duration));
     }
+  }
+
+  // Copy Vorbis and Theora info data for time computations on other threads.
+  if (mVorbisState) {
+    memcpy(&mVorbisInfo, &mVorbisState->mInfo, sizeof(mVorbisInfo));
+    mVorbisInfo.codec_setup = NULL;
+    mVorbisSerial = mVorbisState->mSerial;
+  }
+
+  if (mTheoraState) {
+    memcpy(&mTheoraInfo, &mTheoraState->mInfo, sizeof(mTheoraInfo));
+    mTheoraSerial = mTheoraState->mSerial;
   }
 
   LOG(PR_LOG_DEBUG, ("Done loading headers, data offset %lld", mDataOffset));
@@ -1601,14 +1616,17 @@ nsresult nsOggReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
       }
 
       PRUint32 serial = ogg_page_serialno(&page);
-      nsOggCodecState* codecState = nsnull;
-      mCodecStates.Get(serial, &codecState);
-      if (codecState && codecState->mActive) {
-        startTime = codecState->Time(granulepos) - aStartTime;
+      if (serial == mVorbisSerial) {
+        startTime = nsVorbisState::Time(&mVorbisInfo, granulepos) - aStartTime;
         NS_ASSERTION(startTime > 0, "Must have positive start time");
       }
-      else if(codecState) {
-        // Page is for an inactive stream, skip it.
+      else if (serial == mTheoraSerial) {
+        startTime = nsTheoraState::Time(&mTheoraInfo, granulepos) - aStartTime;
+        NS_ASSERTION(startTime > 0, "Must have positive start time");
+      }
+      else if (IsKnownStream(serial)) {
+        // Stream is not the theora or vorbis stream we're playing,
+        // but is one that we have header data for.
         startOffset += page.header_len + page.body_len;
         continue;
       }
@@ -1639,3 +1657,18 @@ nsresult nsOggReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
 
   return NS_OK;
 }
+
+PRBool nsOggReader::IsKnownStream(PRUint32 aSerial)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
+
+  for (PRUint32 i = 0; i < mKnownStreams.Length(); i++) {
+    PRUint32 serial = mKnownStreams[i];
+    if (serial == aSerial) {
+      return PR_TRUE;
+    }
+  }
+
+  return PR_FALSE;
+}
+
