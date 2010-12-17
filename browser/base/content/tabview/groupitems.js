@@ -153,7 +153,7 @@ function GroupItem(listOfEls, options) {
     .html(html)
     .appendTo($container);
 
-  var $close = iQ('<div>')
+  this.$closeButton = iQ('<div>')
     .addClass('close')
     .click(function() {
       self.closeAll();
@@ -242,7 +242,7 @@ function GroupItem(listOfEls, options) {
     $container.css({cursor: 'default'});
 
   if (this.locked.close)
-    $close.hide();
+    this.$closeButton.hide();
 
   // ___ Undo Close
   this.$undoContainer = null;
@@ -280,6 +280,8 @@ function GroupItem(listOfEls, options) {
 
   this._inited = true;
   this.save();
+
+  GroupItems.updateGroupCloseButtons();
 };
 
 // ----------
@@ -540,6 +542,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       this.removeTrenches();
       Items.unsquish();
       this._sendToSubscribers("close");
+      GroupItems.updateGroupCloseButtons();
     } else {
       let self = this;
       iQ(this.container).animate({
@@ -552,6 +555,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
           self.removeTrenches();
           Items.unsquish();
           self._sendToSubscribers("close");
+          GroupItems.updateGroupCloseButtons();
         }
       });
     }
@@ -624,6 +628,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       }
     });
 
+    GroupItems.updateGroupCloseButtons();
     self._sendToSubscribers("groupShown", { groupItemId: self.id });
   },
 
@@ -756,6 +761,8 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     this.$undoContainer.mouseout(function() {
       self.setupFadeAwayUndoButtonTimer();
     });
+
+    GroupItems.updateGroupCloseButtons();
   },
 
   // ----------
@@ -913,14 +920,18 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       if (typeof item.setResizable == 'function')
         item.setResizable(true, options.immediately);
 
-      if (!this._children.length && !this.locked.close && !this.getTitle() && !options.dontClose) {
-        this.close();
+      if (this._children.length == 0 && !this.locked.close && !this.getTitle() && 
+          !options.dontClose) {
+        if (!GroupItems.getUnclosableGroupItemId()) {
+          this.close();
+        } else {
+          // this.close();  this line is causing the leak but the leak doesn't happen after re-enabling it
+        }
       } else if (!options.dontArrange) {
         this.arrange({animate: !options.immediately});
       }
 
       this._sendToSubscribers("childRemoved",{ groupItemId: this.id, item: item });
-
     } catch(e) {
       Utils.log(e);
     }
@@ -1716,6 +1727,7 @@ let GroupItems = {
     this.groupItems.forEach(function(groupItem) {
       groupItem.addAppTab(xulTab);
     });
+    this.updateGroupCloseButtons();
   },
 
   // ----------
@@ -1725,6 +1737,7 @@ let GroupItems = {
     this.groupItems.forEach(function(groupItem) {
       groupItem.removeAppTab(xulTab);
     });
+    this.updateGroupCloseButtons();
   },
 
   // ----------
@@ -2290,5 +2303,44 @@ let GroupItems = {
      });
 
     this._removingHiddenGroups = false;
+  },
+
+  // ----------
+  // Function: getUnclosableGroupItemId
+  // If there's only one (non-hidden) group, and there are app tabs present, 
+  // returns that group.
+  // Return the <GroupItem>'s Id
+  getUnclosableGroupItemId: function GroupItems_getUnclosableGroupItemId() {
+    let unclosableGroupItemId = null;
+
+    if (gBrowser._numPinnedTabs > 0) {
+      let hiddenGroupItems = 
+        this.groupItems.concat().filter(function(groupItem) {
+          return !groupItem.hidden;
+        });
+      if (hiddenGroupItems.length == 1)
+        unclosableGroupItemId = hiddenGroupItems[0].id;
+    }
+
+    return unclosableGroupItemId;
+  },
+
+  // ----------
+  // Function: updateGroupCloseButtons
+  // Updates group close buttons.
+  updateGroupCloseButtons: function GroupItems_updateGroupCloseButtons() {
+    let unclosableGroupItemId = this.getUnclosableGroupItemId();
+
+    if (unclosableGroupItemId) {
+      let groupItem = this.groupItem(unclosableGroupItemId);
+
+      if (groupItem) {
+        groupItem.$closeButton.hide();
+      }
+    } else {
+      this.groupItems.forEach(function(groupItem) {
+        groupItem.$closeButton.show();
+      });
+    }
   }
 };
