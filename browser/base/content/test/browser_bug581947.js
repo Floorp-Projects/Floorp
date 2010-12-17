@@ -26,6 +26,12 @@ function check(aElementName, aBarred, aType) {
   ok (!FillInHTMLTooltip(e),
       "No tooltip should be shown if the title attribute is set");
 
+  e.removeAttribute('title');
+  content.setAttribute('novalidate', '');
+  ok (!FillInHTMLTooltip(e),
+      "No tooltip should be shown if the novalidate attribute is set on the form owner");
+  content.removeAttribute('novalidate');
+
   content.removeChild(e);
 }
 
@@ -84,6 +90,6 @@ function test () {
   }, true);
 
   content.location = 
-    "data:text/html,<!DOCTYPE html><html><body><div id='content'></div></body></html>";
+    "data:text/html,<!DOCTYPE html><html><body><form id='content'></form></body></html>";
 }
 
