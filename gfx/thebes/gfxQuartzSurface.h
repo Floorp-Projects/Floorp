@@ -51,6 +51,7 @@ public:
     gfxQuartzSurface(const gfxSize& size, gfxImageFormat format, PRBool aForPrinting = PR_FALSE);
     gfxQuartzSurface(CGContextRef context, const gfxSize& size, PRBool aForPrinting = PR_FALSE);
     gfxQuartzSurface(cairo_surface_t *csurf, PRBool aForPrinting = PR_FALSE);
+    gfxQuartzSurface(unsigned char *data, const gfxSize& size, long stride, gfxImageFormat format, PRBool aForPrinting = PR_FALSE);
 
     virtual ~gfxQuartzSurface();
 
