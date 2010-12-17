@@ -337,6 +337,8 @@ GLContext::InitWithPrefix(const char *prefix, PRBool trygl)
                 "Qualcomm"
         };
 
+        fGetIntegerv(LOCAL_GL_MAX_TEXTURE_SIZE, &mMaxTextureSize);
+
         mVendor = VendorOther;
         for (int i = 0; i < VendorOther; ++i) {
             if (DoesVendorStringMatch(glVendorString, vendorMatchStrings[i])) {

@@ -57,7 +57,8 @@ public:
   CanvasLayerOGL(LayerManagerOGL *aManager)
     : CanvasLayer(aManager, NULL),
       LayerOGL(aManager),
-      mTexture(0)
+      mTexture(0),
+      mDelayedUpdates(PR_FALSE)
   { 
       mImplData = static_cast<LayerOGL*>(this);
   }
@@ -82,6 +83,7 @@ protected:
 
   nsIntRect mUpdatedRect;
 
+  PRPackedBool mDelayedUpdates;
   PRPackedBool mGLBufferIsPremultiplied;
   PRPackedBool mNeedsYFlip;
 };
