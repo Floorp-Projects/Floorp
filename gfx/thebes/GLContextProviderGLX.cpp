@@ -370,13 +370,6 @@ TRY_AGAIN_NO_SHARING:
         return PR_TRUE;
     }
 
-    virtual already_AddRefed<TextureImage>
-    CreateBasicTextureImage(GLuint aTexture,
-                            const nsIntSize& aSize,
-                            GLenum aWrapMode,
-                            TextureImage::ContentType aContentType,
-                            GLContext* aContext);
-
 private:
     friend class GLContextProviderGLX;
 
@@ -405,50 +398,6 @@ private:
 
     nsRefPtr<gfxXlibSurface> mPixmap;
 };
-
-// FIXME/bug 575505: this is a (very slow!) placeholder
-// implementation.  Much better would be to create a Pixmap, wrap that
-// in a GLXPixmap, and then glXBindTexImage() to our texture.
-class TextureImageGLX : public BasicTextureImage
-{
-    friend already_AddRefed<TextureImage>
-    GLContextGLX::CreateBasicTextureImage(GLuint,
-                                          const nsIntSize&,
-                                          GLenum,
-                                          TextureImage::ContentType,
-                                          GLContext*);
-
-protected:
-    virtual already_AddRefed<gfxASurface>
-    CreateUpdateSurface(const gfxIntSize& aSize, ImageFormat aFmt)
-    {
-        mUpdateFormat = aFmt;
-        return gfxPlatform::GetPlatform()->CreateOffscreenSurface(aSize, gfxASurface::ContentFromFormat(aFmt));
-    }
-
-private:
-    TextureImageGLX(GLuint aTexture,
-                    const nsIntSize& aSize,
-                    GLenum aWrapMode,
-                    ContentType aContentType,
-                    GLContext* aContext)
-        : BasicTextureImage(aTexture, aSize, aWrapMode, aContentType, aContext)
-    {}
-
-    ImageFormat mUpdateFormat;
-};
-
-already_AddRefed<TextureImage>
-GLContextGLX::CreateBasicTextureImage(GLuint aTexture,
-                                      const nsIntSize& aSize,
-                                      GLenum aWrapMode,
-                                      TextureImage::ContentType aContentType,
-                                      GLContext* aContext)
-{
-    nsRefPtr<TextureImageGLX> teximage(
-        new TextureImageGLX(aTexture, aSize, aWrapMode, aContentType, aContext));
-    return teximage.forget();
-}
 
 static GLContextGLX *
 GetGlobalContextGLX()

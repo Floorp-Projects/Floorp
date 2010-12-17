@@ -47,7 +47,7 @@
 
 #include "nsThreadUtils.h"
 
-#include "gfxImageSurface.h"
+#include "gfxPlatform.h"
 #include "GLContext.h"
 #include "GLContextProvider.h"
 
@@ -312,6 +312,11 @@ GLContext::InitWithPrefix(const char *prefix, PRBool trygl)
         { mIsGLES2 ? (PRFuncPtr*) NULL : (PRFuncPtr*) &mSymbols.fReadBuffer,
           { mIsGLES2 ? NULL : "ReadBuffer", NULL } },
 
+        { mIsGLES2 ? (PRFuncPtr*) NULL : (PRFuncPtr*) &mSymbols.fMapBuffer,
+          { mIsGLES2 ? NULL : "MapBuffer", NULL } },
+        { mIsGLES2 ? (PRFuncPtr*) NULL : (PRFuncPtr*) &mSymbols.fUnmapBuffer,
+          { mIsGLES2 ? NULL : "UnmapBuffer", NULL } },
+
         { NULL, { NULL } },
 
     };
@@ -320,6 +325,10 @@ GLContext::InitWithPrefix(const char *prefix, PRBool trygl)
 
     if (mInitialized) {
         InitExtensions();
+
+        NS_ASSERTION(!IsExtensionSupported(GLContext::ARB_pixel_buffer_object) ||
+                     (mSymbols.fMapBuffer && mSymbols.fUnmapBuffer),
+                     "ARB_pixel_buffer_object supported without glMapBuffer/UnmapBuffer being available!");
 
         GLint v[4];
 
@@ -404,6 +413,7 @@ static const char *sExtensionNames[] = {
     "GL_EXT_read_format_bgra",
     "GL_APPLE_client_storage",
     "GL_ARB_texture_non_power_of_two",
+    "GL_ARB_pixel_buffer_object",
     NULL
 };
 
@@ -566,15 +576,22 @@ BasicTextureImage::BeginUpdate(nsIntRegion& aRegion)
         return NULL;
     }
 
-    nsRefPtr<gfxASurface> updateSurface =
-        CreateUpdateSurface(gfxIntSize(rgnSize.width, rgnSize.height),
-                            format);
+    nsRefPtr<gfxASurface> updateSurface = 
+      GetSurfaceForUpdate(gfxIntSize(rgnSize.width, rgnSize.height), format);
+
     if (!updateSurface)
         return NULL;
 
     updateSurface->SetDeviceOffset(gfxPoint(-mUpdateRect.x, -mUpdateRect.y));
 
     mUpdateContext = new gfxContext(updateSurface);
+   
+    // Clear the returned surface because it might have been re-used.
+    if (format == gfxASurface::ImageFormatARGB32) {
+      mUpdateContext->SetOperator(gfxContext::OPERATOR_CLEAR);
+      mUpdateContext->Paint();
+      mUpdateContext->SetOperator(gfxContext::OPERATOR_OVER);
+    }
     return mUpdateContext;
 }
 
@@ -590,23 +607,42 @@ BasicTextureImage::EndUpdate()
     // but important if we ever do anything directly with the surface.
     originalSurface->SetDeviceOffset(gfxPoint(0, 0));
 
+    bool relative = FinishedSurfaceUpdate();
+
     // The rect to upload from the surface is mUpdateRect sized and located at mUpdateOffset.
     nsIntRect surfaceRect(mUpdateOffset.x, mUpdateOffset.y, mUpdateRect.width, mUpdateRect.height);
-    if (!mTextureInited) {
-     surfaceRect.x = 0;
-     surfaceRect.y = 0;
-    }
 
     mShaderType =
       mGLContext->UploadSurfaceToTexture(originalSurface,
                                          surfaceRect,
                                          mTexture,
                                          !mTextureInited,
-                                         mUpdateRect.TopLeft());
+                                         mUpdateRect.TopLeft(),
+                                         relative);
+    FinishedSurfaceUpload();
+
     mUpdateContext = nsnull;
     mTextureInited = PR_TRUE;
 
     return PR_TRUE;         // mTexture is bound
+}
+
+already_AddRefed<gfxASurface>
+BasicTextureImage::GetSurfaceForUpdate(const gfxIntSize& aSize, ImageFormat aFmt)
+{
+    return gfxPlatform::GetPlatform()->
+      CreateOffscreenSurface(aSize, gfxASurface::ContentFromFormat(aFmt));
+}
+
+bool
+BasicTextureImage::FinishedSurfaceUpdate()
+{
+  return false;
+}
+
+void
+BasicTextureImage::FinishedSurfaceUpload()
+{
 }
 
 void
@@ -1208,7 +1244,8 @@ GLContext::UploadSurfaceToTexture(gfxASurface *aSurface,
                                   const nsIntRect& aSrcRect,
                                   GLuint& aTexture,
                                   bool aOverwrite,
-                                  const nsIntPoint& aDstPoint)
+                                  const nsIntPoint& aDstPoint,
+                                  bool aPixelBuffer)
 {
   bool textureInited = aOverwrite ? false : true;
   MakeCurrent();
@@ -1235,7 +1272,9 @@ GLContext::UploadSurfaceToTexture(gfxASurface *aSurface,
   }
 
   nsRefPtr<gfxImageSurface> imageSurface = aSurface->GetAsImageSurface();
-  unsigned char* data;
+  // If a pixel buffer is bound the data pointer parameter is relative
+  // to the start of the data block.
+  unsigned char* data = aPixelBuffer ? NULL : imageSurface->Data();
 
   if (!imageSurface || 
       (imageSurface->Format() != gfxASurface::ImageFormatARGB32 &&
@@ -1251,9 +1290,7 @@ GLContext::UploadSurfaceToTexture(gfxASurface *aSurface,
     context->Translate(-gfxPoint(aSrcRect.x, aSrcRect.y));
     context->SetSource(aSurface);
     context->Paint();
-    data = imageSurface->Data();
   } else {
-    data = imageSurface->Data();
     data += aSrcRect.y * imageSurface->Stride();
     data += aSrcRect.x * 4;
   }
