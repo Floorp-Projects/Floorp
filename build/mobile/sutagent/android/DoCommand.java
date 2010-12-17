@@ -51,6 +51,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.lang.reflect.Field;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
@@ -59,6 +60,7 @@ import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
@@ -86,25 +88,26 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 
 import com.mozilla.SUTAgentAndroid.SUTAgentAndroid;
+
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.AlarmManager;
 import android.content.ActivityNotFoundException;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.content.pm.ServiceInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Debug;
 import android.os.Environment;
 import android.os.StatFs;
 import android.os.SystemClock;
+import android.provider.Settings;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.WindowManager;
@@ -121,9 +124,8 @@ public class DoCommand {
 	
 	String	currentDir = "/";
 	String	sErrorPrefix = "##AGENT-WARNING## ";
-	boolean bTraceOn = false;
 	
-	private final String prgVersion = "SUTAgentAndroid Version 0.93";
+	private final String prgVersion = "SUTAgentAndroid Version 0.87";
 	
 	public enum Command
 		{
@@ -154,12 +156,10 @@ public class DoCommand {
 		CWD ("cwd"),
 		MV ("mv"),
 		PUSH ("push"),
-		PULL ("pull"),
 		RM ("rm"),
 		PRUNE ("rmdr"),
 		MKDR ("mkdr"),
 		DIRWRITABLE ("dirw"),
-		ISDIR ("isdir"),
 		DEAD ("dead"),
 		MEMS ("mems"),
 		LS ("ls"),
@@ -179,8 +179,6 @@ public class DoCommand {
 		UPDT ("updt"),
 		UNINST ("uninst"),
 		TEST ("test"),
-		DBG ("dbg"),
-		TRACE ("trace"),
 		VER ("ver"),
 		TZGET ("tzget"),
 		TZSET ("tzset"),
@@ -211,15 +209,12 @@ public class DoCommand {
 		{
 		this.contextWrapper = service;
 		}
-
+	
 	public String processCommand(String theCmdLine, PrintWriter out, BufferedInputStream in, OutputStream cmdOut)
 		{
 		String 	strReturn = "";
 		Command	cCmd = null;
 		Command cSubCmd = null;
-		
-		if (bTraceOn)
-			((ASMozStub)this.contextWrapper).SendToDataChannel(theCmdLine);
 		
 		String [] Argv = parseCmdLine2(theCmdLine);
 		
@@ -229,13 +224,6 @@ public class DoCommand {
 		
 		switch(cCmd)
 			{
-			case TRACE:
-				if (Argc == 2)
-					bTraceOn = (Argv[1].equalsIgnoreCase("on") ? true : false);
-				else
-					strReturn = sErrorPrefix + "Wrong number of arguments for trace command!";
-				break;
-				
 			case VER:
 				strReturn = prgVersion;
 				break;
@@ -256,7 +244,7 @@ public class DoCommand {
 				break;
 				
 			case UPDT:
-				strReturn = StrtUpdtOMatic(Argv[1], Argv[2], (Argc > 3 ? Argv[3] : null), (Argc > 4 ? Argv[4] : null));
+				strReturn = StartUpdateOMatic(Argv[1], Argv[2]);
 				break;
 			
 			case SETTIME:
@@ -291,13 +279,6 @@ public class DoCommand {
 					strReturn = sErrorPrefix + "Wrong number of arguments for getapproot command!";
 				break;
 				
-			case ISDIR:
-				if (Argc == 2)
-					strReturn = isDirectory(Argv[1]);
-				else
-					strReturn = sErrorPrefix + "Wrong number of arguments for isdir command!";
-				break;
-				
 			case TESTROOT:
 				strReturn = GetTestRoot();
 				break;
@@ -311,13 +292,6 @@ public class DoCommand {
 				
 			case PS:
 				strReturn = GetProcessInfo();
-				break;
-				
-			case PULL:
-				if (Argc == 2)
-					strReturn = Pull(Argv[1], cmdOut);
-				else
-					strReturn = sErrorPrefix + "Wrong number of arguments for pull command!";
 				break;
 				
 			case PUSH:
@@ -509,7 +483,7 @@ public class DoCommand {
 				if (Argc == 2)
 					strReturn = RemoveFile(Argv[1]);
 				else
-					strReturn = sErrorPrefix + "Wrong number of arguments for rm command!";
+					strReturn = sErrorPrefix + "Wrong number of arguments for mkdr command!";
 				break;
 				
 			case MV:
@@ -531,15 +505,183 @@ public class DoCommand {
 				strReturn = Argv[0];
 				break;
 				
-			case DBG:
-		        Debug.waitForDebugger();
-		        strReturn = "waitForDebugger on";
-				break;
-				
 			case TEST:
+//				boolean bRet = false;
+/*				
+				Configuration userConfig = new Configuration();
+				Settings.System.getConfiguration( contextWrapper.getContentResolver(), userConfig );
+				Calendar cal = Calendar.getInstance( userConfig.locale);
+				TimeZone ctz = cal.getTimeZone();
+				String sctzLongName = ctz.getDisplayName();
+				String pstzName = TimeZone.getDefault().getDisplayName();
+*/
+				String sTimeZoneName = GetTimeZone();
+				
+				TimeZone tz = TimeZone.getTimeZone("America/Los_Angeles");
+				TimeZone tz2 = TimeZone.getTimeZone("GMT-08:00");
+				int	nOffset = (-8 * 3600000);
+				String [] zoneNames = TimeZone.getAvailableIDs(nOffset);
+				int nNumMatches = zoneNames.length;
+				TimeZone.setDefault(tz);
+				
+				String sOldTZ = System.setProperty("persist.sys.timezone", "America/Los_Angeles");
+				
+/*				
+				byte[] buffer = new byte [4096];
+				int	nRead = 0;
+				long lTotalRead = 0;
+
+				Context ctx = SUTAgentAndroid.me.getApplicationContext();
+
+				FTPClient ftp = new FTPClient();
+				try 
+					{
+					String strRet = "";
+					int	reply = 0;
+					FileOutputStream outStream = null;
+					
+					ftp.connect("ftp.mozilla.org");
+					strRet = ftp.getReplyString();
+					reply = ftp.getReplyCode();
+					
+				    if(!FTPReply.isPositiveCompletion(reply))
+				    	{
+				        ftp.disconnect();
+				        System.err.println("FTP server refused connection.");
+				        System.exit(1);
+				        }
+				    // transfer files
+				    
+				    ftp.login("anonymous", "b@t.com");
+					strRet = ftp.getReplyString();
+					reply = ftp.getReplyCode();
+					
+				    if(!FTPReply.isPositiveCompletion(reply))
+				    	{
+				        ftp.disconnect();
+				        System.err.println("FTP server refused connection.");
+				        System.exit(1);
+				        }
+				    
+				    ftp.enterLocalPassiveMode();
+				    
+				    if (ftp.setFileType(FTP.BINARY_FILE_TYPE))
+				    	{
+				    	File root = Environment.getExternalStorageDirectory();
+				    	if (root.canWrite())
+				    		{
+				    		File outFile = new File(root, "firefox-3.6b4.cab");
+				    		outStream = new FileOutputStream(outFile);
+				    		}
+				    	else
+				    		outStream = ctx.openFileOutput("firefox-3.6b4.cab", Context.MODE_WORLD_READABLE | Context.MODE_WORLD_WRITEABLE);
+//				    	outStream = new FileOutputStream("/sdcard/firefox-3.6b4.cab");
+				    	InputStream ftpIn = ftp.retrieveFileStream("pub/mozilla.org/firefox/releases/3.6b4/wince-arm/en-US/firefox-3.6b4.cab");
+						while ((nRead = ftpIn.read(buffer)) != -1)
+							{
+							lTotalRead += nRead;
+							outStream.write(buffer, 0, nRead);
+							strRet = "\r" + lTotalRead + " bytes received";
+							cmdOut.write(strRet.getBytes());
+							cmdOut.flush();
+							}
+						
+						ftpIn.close();
+						boolean bRet = ftp.completePendingCommand();
+						outStream.flush();
+
+				    	/*				    	
+				    	if (ftp.retrieveFile("pub/mozilla.org/firefox/releases/3.6b4/wince-arm/en-US/firefox-3.6b4.cab", outStream))
+				    		{
+				    		outStream.flush();
+				    		}
+				    	 * /				    		
+			    		outStream.close();
+						strRet = ftp.getReplyString();
+						reply = ftp.getReplyCode();
+				    	}
+					strRet = ftp.getReplyString();
+					reply = ftp.getReplyCode();
+				    ftp.logout();
+				    
+				    strReturn = "\r\n" + strRet; 
+					}
+				catch (SocketException e)
+					{
+					// TODO Auto-generated catch block
+					strReturn = e.getMessage();
+					e.printStackTrace();
+					}
+				catch (IOException e)
+					{
+					// TODO Auto-generated catch block
+					strReturn = e.getMessage();
+					e.printStackTrace();
+					}
+*/				
+//				strReturn = InstallApplication();
+//				strReturn = InstallApp(Argv[1], cmdOut);
+				
+//				strReturn = UninstallApplication();
+//				String sPingCheck = SendPing("www.mozilla.org",null);
+//				if (sPingCheck.contains("3 received"))
+//					strReturn = sPingCheck;
+//				RunReboot(cmdOut);
+/*
+				try 
+					{
+					FileOutputStream outFile = ctx.openFileOutput("test.txt", Context.MODE_WORLD_READABLE | Context.MODE_WORLD_WRITEABLE);
+					OutputStreamWriter outS = new OutputStreamWriter(outFile);
+					outS.write("Hello world 1" + lineSep);
+					outS.write("Hello world 2" + lineSep);
+					outS.write("Hello world 3" + lineSep);
+					outS.write("Hello world 4" + lineSep);
+					outS.flush();
+					outS.close();
+					
+					String [] files = ctx.fileList();
+					File aFile   = ctx.getFilesDir();
+					String aPath = aFile.getCanonicalPath();
+					String hold = aFile.getName();
+					
+					strReturn = PrintDir(aPath);
+					strReturn += "\r\n";
+					
+					String src = aPath + "/test.txt";
+					String dst = aPath + "/test2.txt";
+					strReturn += CopyFile(src, dst);
+					strReturn += "\r\n";
+					
+					strReturn += PrintDir(aPath);
+					strReturn += "\r\n";
+					
+					dst = aPath + "/test3.txt";
+					strReturn += Move(src, dst);
+					strReturn += "\r\n";
+					
+					strReturn += PrintDir(aPath);
+					strReturn += "\r\n";
+
+					src = aPath + "/test2.txt";
+					strReturn += RemoveFile(src);
+					strReturn += "\r\n";
+					strReturn += RemoveFile(dst);
+					strReturn += "\r\n";
+					strReturn += PrintDir(aPath);
+					}
+				catch (FileNotFoundException e)
+					{
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					} 
+				catch (IOException e) 
+					{
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					}
+*/
 				break;
 				
-			case EXEC:
 			case ENVRUN:
 				if (Argc >= 2)
 					{
@@ -558,6 +700,7 @@ public class DoCommand {
 					}
 				break;
 				
+			case EXEC:
 			case RUN:
 				if (Argc >= 2)
 					{
@@ -571,7 +714,7 @@ public class DoCommand {
 					if (Argv[1].contains("/") || Argv[1].contains("\\") || !Argv[1].contains("."))
 						strReturn = StartPrg(theArgs, cmdOut);
 					else
-						strReturn = StartJavaPrg(theArgs, null);
+						strReturn = StartJavaPrg(theArgs);
 					}
 				else
 					{
@@ -581,6 +724,8 @@ public class DoCommand {
 
 			case KILL:
 				if (Argc == 2)
+//					strReturn = NewKillProc(Argv[1], Argv[2], cmdOut);
+//					strReturn = NewKillProc(Argv[1], cmdOut);
 					strReturn = KillProcess(Argv[1], cmdOut);
 				else
 					strReturn = sErrorPrefix + "Wrong number of arguments for kill command!";
@@ -925,7 +1070,6 @@ public class DoCommand {
 			else // no quote so find the next space
 				{
 				nEnd = workingString.indexOf(' ', nStart);
-				
 				// there isn't one of those
 				if (nEnd == -1)
 					nEnd = nLength;	// Just grab the rest of the cmdline
@@ -936,6 +1080,10 @@ public class DoCommand {
 			
 			// add it to the list
 			lst.add(new String(workingString2));
+			
+			// if we are dealing with a quote
+//			if (nStart > 0)
+//				nEnd++; //  point past the end one
 			
 			// jump past the substring and trim it
 			workingString = (workingString.substring(nEnd)).trim();
@@ -1205,7 +1353,7 @@ public class DoCommand {
 	
 	public String GetAppRoot(String AppName)
 		{
-		String sRet = sErrorPrefix + " internal error [no context]";
+		String sRet = "";
 		Context ctx = contextWrapper.getApplicationContext();
 		
 		if (ctx != null)
@@ -1226,48 +1374,6 @@ public class DoCommand {
 			}
 		return(sRet);
 		}
-	
-	public String isDirectory(String sDir)
-		{
-		String	sRet = sErrorPrefix + sDir + " does not exist";
-		String	tmpDir	= fixFileName(sDir);
-		String [] theArgs = new String [3];
-		
-		theArgs[0] = "su";
-		theArgs[1] = "-c";
-		theArgs[2] = "ls -l " + sDir;
-		
-		File tmpFile = new java.io.File(tmpDir);
-		
-		if (tmpFile.exists())
-			{
-			sRet = (tmpFile.isDirectory() ? "TRUE" : "FALSE");
-			}
-		else
-			{
-			try 
-				{
-				pProc = Runtime.getRuntime().exec(theArgs);
-				RedirOutputThread outThrd = new RedirOutputThread(pProc, null);
-				outThrd.start();
-				outThrd.join(5000);
-				sRet = outThrd.strOutput;
-				if (!sRet.contains("No such file or directory") && sRet.startsWith("l"))
-					sRet = "FALSE";
-				}
-			catch (IOException e) 
-				{
-				sRet = e.getMessage();
-				e.printStackTrace();
-				} 
-			catch (InterruptedException e)
-				{
-				e.printStackTrace();
-				}
-			}
-		
-		return(sRet);
-		}
 
 	public String changeDir(String newDir)
 		{
@@ -1279,16 +1385,12 @@ public class DoCommand {
 		if (tmpFile.exists())
 			{
 			try {
-				if (tmpFile.isDirectory())
-					{
-					currentDir = tmpFile.getCanonicalPath();
-					sRet = "";
-					}
-				else
-					sRet = sErrorPrefix + tmpDir + " is not a valid directory";
+				currentDir = tmpFile.getCanonicalPath();
+				sRet = "";
 				}
 			catch (IOException e)
 				{
+				// TODO Auto-generated catch block
 				e.printStackTrace();
 				}
 			}
@@ -1664,48 +1766,6 @@ public class DoCommand {
 		return (sRet);
 	}
 	
-	public String Pull(String fileName, OutputStream out)
-		{
-		String	sTmpFileName = fixFileName(fileName);
-		String	sRet = sErrorPrefix + "Could not read the file " + sTmpFileName;
-		byte[]	buffer = new byte [4096];
-		int		nRead = 0;
-	
-		try {
-			File f = new File(sTmpFileName);
-			long lFileLength = f.length();
-			FileInputStream fin = new FileInputStream(f);
-			if (lFileLength == 0)
-				{
-				while ((nRead = fin.read(buffer)) != -1)
-					{
-					lFileLength += nRead;
-					}
-				fin.close();
-				fin = new FileInputStream(f);
-				}
-			
-			String sTmp = sTmpFileName + "," + lFileLength + "\n";
-			out.write(sTmp.getBytes());
-			while ((nRead = fin.read(buffer)) != -1)
-				{
-				out.write(buffer,0,nRead);
-				}
-			fin.close();
-			out.flush();
-			sRet = "";
-			}
-		catch (FileNotFoundException e)
-			{
-			sRet = sErrorPrefix + sTmpFileName + ",-1\nNo such file or directory";
-			} 
-		catch (IOException e) 
-			{
-			sRet = e.toString();
-			}
-		return (sRet);
-		}
-
 	public String Cat(String fileName, OutputStream out)
 		{
 		String	sTmpFileName = fixFileName(fileName);
@@ -1719,13 +1779,12 @@ public class DoCommand {
 				{
 				out.write(buffer,0,nRead);
 				}
-			fin.close();
 			out.flush();
 			sRet = "";
 			}
 		catch (FileNotFoundException e)
 			{
-			sRet = sErrorPrefix + sTmpFileName + " No such file or directory";
+			sRet = e.toString();
 			} 
 		catch (IOException e) 
 			{
@@ -1936,56 +1995,6 @@ public class DoCommand {
 		return (lMem);
 		}
 	
-	public String UpdateCallBack(String sFileName)
-		{
-		String sRet = sErrorPrefix + "No file specified";
-		String sIP = "";
-		String sPort = "";
-		int nEnd = 0;
-		int nStart = 0;
-		
-		if ((sFileName == null) || (sFileName.length() == 0))
-			return(sRet);
-			
-		Context ctx = contextWrapper.getApplicationContext();
-		try {
-			FileInputStream fis = ctx.openFileInput(sFileName);
-			int nBytes = fis.available();
-			if (nBytes > 0)
-				{
-				byte [] buffer = new byte [nBytes + 1];
-				int nRead = fis.read(buffer, 0, nBytes);
-				fis.close();
-				ctx.deleteFile(sFileName);
-				if (nRead > 0)
-					{
-					String sBuffer = new String(buffer);
-					nEnd = sBuffer.indexOf(',');
-					if (nEnd > 0)
-						{
-						sIP = (sBuffer.substring(0, nEnd)).trim();
-						nStart = nEnd + 1;
-						nEnd = sBuffer.indexOf('\r', nStart);
-						if (nEnd > 0)
-							{
-							sPort = (sBuffer.substring(nStart, nEnd)).trim();
-							sRet = RegisterTheDevice(sIP, sPort, sBuffer.substring(nEnd + 1));
-							}
-						}
-					}
-				}
-			} 
-		catch (FileNotFoundException e)
-			{
-			sRet = sErrorPrefix + "Nothing to do";
-			} 
-		catch (IOException e)
-			{
-			sRet = sErrorPrefix + "Couldn't send info to " + sIP + ":" + sPort;
-			}
-		return(sRet);
-		}
-	
 	public String RegisterTheDevice(String sSrvr, String sPort, String sData)
 		{
 		String sRet = "";
@@ -2006,20 +2015,13 @@ public class DoCommand {
 					while (socket.isInputShutdown() == false)
 						{
 						line = in.readLine();
-						
-						if (line != null)
+						line = line.toLowerCase();
+						if ((line == null) || (line.contains("ok")))
 							{
-							line = line.toLowerCase();
 							sRet += line;
-							// ok means we're done
-							if (line.contains("ok"))
-								break;
-							}
-						else
-							{
-							// end of stream reached
 							break;
 							}
+						sRet += line;
 						}
 					}
 				out.close();
@@ -2065,6 +2067,8 @@ public class DoCommand {
 			else
 				{
 			    InputStream content = response.getEntity().getContent();
+//			    int nAvailable = content.available();
+//			    byte [] data = new byte [nAvailable];
 			    byte [] data = new byte [2048];
 			    int nRead = content.read(data);
 			    sRet = new String(data, 0, nRead);
@@ -2269,6 +2273,7 @@ public class DoCommand {
 			} 
 		catch (InterruptedException e)
 			{
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 			}
 
@@ -2453,6 +2458,7 @@ public class DoCommand {
 			} 
 		catch (InterruptedException e)
 			{
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 			}
 		
@@ -2464,20 +2470,25 @@ public class DoCommand {
 		String sRet = "";
 		String [] theArgs = new String [3];
 		File	srcFile = new File(sApp);
+//		boolean bDone = false;
+//		int		nExitCode;
 
 		theArgs[0] = "su";
 		theArgs[1] = "-c";
 		theArgs[2] = "mv " + GetTmpDir() + "/" + srcFile.getName() + " /data/local/tmp/" + srcFile.getName() + ";exit";
+//		theArgs[2] += ";chmod 666 /data/local/tmp/" + srcFile.getName();
+//		theArgs[2] += ";pm install /data/local/tmp/" + srcFile.getName() + " Cleanup";
+//		theArgs[2] += ";done;exit";
 		
 		sRet = CopyFile(sApp, GetTmpDir() + "/" + srcFile.getName());
 		try {
 			out.write(sRet.getBytes());
 			out.flush();
-			}
-		catch (IOException e1)
-			{
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
 			e1.printStackTrace();
-			}
+		}
+//		CopyFile(sApp, GetTmpDir() + "/" + srcFile.getName());
 
 		try 
 			{
@@ -2487,6 +2498,7 @@ public class DoCommand {
 			outThrd.start();
 			outThrd.join(90000);
 			int nRet = pProc.exitValue();
+//			boolean bRet = outThrd.isAlive();
 			sRet = "\nmove complete [" + nRet + "]";
 			try 
 				{
@@ -2495,6 +2507,7 @@ public class DoCommand {
 				}
 			catch (IOException e1)
 				{
+				// TODO Auto-generated catch block
 				e1.printStackTrace();
 				}
 			
@@ -2504,6 +2517,7 @@ public class DoCommand {
 			outThrd2.start();
 			outThrd2.join(10000);
 			int nRet2 = pProc.exitValue();
+//			bRet = outThrd2.isAlive();
 			sRet = "\npermission change complete [" + nRet2 + "]\n";
 			try {
 				out.write(sRet.getBytes());
@@ -2511,6 +2525,7 @@ public class DoCommand {
 				}
 			catch (IOException e1)
 				{
+				// TODO Auto-generated catch block
 				e1.printStackTrace();
 				}
 			
@@ -2527,6 +2542,7 @@ public class DoCommand {
 				}
 			catch (IOException e1)
 				{
+				// TODO Auto-generated catch block
 				e1.printStackTrace();
 				}
 			
@@ -2543,6 +2559,7 @@ public class DoCommand {
 				}
 			catch (IOException e1)
 				{
+				// TODO Auto-generated catch block
 				e1.printStackTrace();
 				}
 			sRet = "\nSuccess";
@@ -2561,25 +2578,26 @@ public class DoCommand {
 		return (sRet);
 		}
 
-	public String StrtUpdtOMatic(String sPkgName, String sPkgFileName, String sCallBackIP, String sCallBackPort)
+	public String StartUpdateOMatic(String sPkgName, String sPkgFileName)
 		{
 		String sRet = "";
-		
+	
 		Context ctx = contextWrapper.getApplicationContext();
 		PackageManager pm = ctx.getPackageManager();
 
 		Intent prgIntent = new Intent();
-		prgIntent.setPackage("com.mozilla.watcher");
-		
+		prgIntent.setPackage("com.mozilla.UpdateOMatic");
+		prgIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
 		try {
-			PackageInfo pi = pm.getPackageInfo("com.mozilla.watcher", PackageManager.GET_SERVICES | PackageManager.GET_INTENT_FILTERS);
-			ServiceInfo [] si = pi.services;
-			for (int i = 0; i < si.length; i++)
+			PackageInfo pi = pm.getPackageInfo("com.mozilla.UpdateOMatic", PackageManager.GET_ACTIVITIES | PackageManager.GET_INTENT_FILTERS);
+			ActivityInfo [] ai = pi.activities;
+			for (int i = 0; i < ai.length; i++)
 				{
-				ServiceInfo s = si[i];
-				if (s.name.length() > 0)
+				ActivityInfo a = ai[i];
+				if (a.name.length() > 0)
 					{
-					prgIntent.setClassName(s.packageName, s.name);
+					prgIntent.setClassName(a.packageName, a.name);
 					break;
 					}
 				}
@@ -2587,68 +2605,36 @@ public class DoCommand {
 		catch (NameNotFoundException e)
 			{
 			e.printStackTrace();
-			sRet = sErrorPrefix + "watcher is not properly installed";
-			return(sRet);
 			}
 		
-		prgIntent.putExtra("command", "updt");
 		prgIntent.putExtra("pkgName", sPkgName);
-		prgIntent.putExtra("pkgFile", sPkgFileName);
-		
+		prgIntent.putExtra("pkgFileName", sPkgFileName);
+
 		try 
 			{
-			if ((sCallBackIP != null) && (sCallBackPort != null) && 
-					(sCallBackIP.length() > 0) && (sCallBackPort.length() > 0))
-				{
-				FileOutputStream fos = ctx.openFileOutput("update.info", Context.MODE_WORLD_READABLE | Context.MODE_WORLD_WRITEABLE);
-				String sBuffer = sCallBackIP + "," + sCallBackPort + "\rupdate started " + sPkgName + " " + sPkgFileName + "\r";
-				fos.write(sBuffer.getBytes());
-				fos.flush();
-				fos.close();
-				fos = null;
-				prgIntent.putExtra("outFile", ctx.getFilesDir() + "/update.info");
-				}
-			
-			ComponentName cn = contextWrapper.startService(prgIntent);
-			if (cn != null)
-				sRet = "exit";
-			else
-				sRet = sErrorPrefix + "Unable to use watcher service";
+			contextWrapper.startActivity(prgIntent);
+			sRet = "exit";
 			}
 		catch(ActivityNotFoundException anf)
 			{
 			anf.printStackTrace();
 			} 
-		catch (FileNotFoundException e)
-			{
-			e.printStackTrace();
-			}
-		catch (IOException e)
-			{
-			e.printStackTrace();
-			}
-
+	
 		ctx = null;
-		
 		return (sRet);
 		}
 
-	public String StartJavaPrg(String [] sArgs, Intent preIntent)
+	public String StartJavaPrg(String [] sArgs)
 		{
 		String sRet = "";
 		String sArgList = "";
 		String sUrl = "";
-//		String sRedirFileName = "";
-		Intent prgIntent = null;
+		String sRedirFileName = "";
 		
 		Context ctx = contextWrapper.getApplicationContext();
 		PackageManager pm = ctx.getPackageManager();
 
-		if (preIntent == null)
-			prgIntent = new Intent();
-		else
-			prgIntent = preIntent;
-		
+		Intent prgIntent = new Intent();
 		prgIntent.setPackage(sArgs[0]);
 		prgIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
@@ -2672,10 +2658,8 @@ public class DoCommand {
 		
 		if (sArgs.length > 1)
 			{
-			if (sArgs[0].contains("android.browser"))
+//			if (sArgs[0].contains("android.browser"))
 				prgIntent.setAction(Intent.ACTION_VIEW);
-			else
-				prgIntent.setAction(Intent.ACTION_MAIN);
 			
 			if (sArgs[0].contains("fennec"))
 				{
@@ -2685,18 +2669,14 @@ public class DoCommand {
 				for (int lcv = 1; lcv < sArgs.length; lcv++)
 					{
 					if (sArgs[lcv].contains("://"))
-						{
-						prgIntent.setAction(Intent.ACTION_VIEW);
 						sUrl = sArgs[lcv];
-						}
 					else
 						{
 						if (sArgs[lcv].equals(">"))
 							{
 							lcv++;
 							if (lcv < sArgs.length)
-								lcv++;
-//								sRedirFileName = sArgs[lcv++];
+								sRedirFileName = sArgs[lcv++];
 							}
 						else
 							sArgList += " " + sArgs[lcv];
@@ -2718,9 +2698,7 @@ public class DoCommand {
 				}
 			}
 		else
-			{
-			prgIntent.setAction(Intent.ACTION_MAIN);
-			}
+			prgIntent.setData(Uri.parse("about:blank"));
 
 		try 
 			{
@@ -2760,7 +2738,26 @@ public class DoCommand {
 
 		return (sRet);
 		}
+/*	
+	@SuppressWarnings("unchecked")
+	public static void set(String key, String value) throws Exception
+		{
+	    Class[] classes = Collections.class.getDeclaredClasses();
+	    Map env = System.getenv();
+	    for(Class cl : classes)
+	    	{
+	        if("java.util.Collections$UnmodifiableMap".equals(cl.getName()))
+	        	{
+	            Field field = cl.getDeclaredField("m");
+	            field.setAccessible(true);
+	            Object obj = field.get(env);
+	            Map<String, String> map = (Map<String, String>) obj;
+	            map.put(key, value);
+	        	}
+	    	}
+		}
 
+*/	
 	public String StartPrg2(String [] progArray, OutputStream out)
 		{
 		String sRet = "";
@@ -2771,15 +2768,6 @@ public class DoCommand {
 		int	temp = 0;
 
 		String sEnvString = progArray[0];
-		
-		if (!sEnvString.contains("="))
-			{
-			if (sEnvString.contains("/") || sEnvString.contains("\\") || !sEnvString.contains("."))
-				sRet = StartPrg(progArray, out);
-			else
-				sRet = StartJavaPrg(progArray, null);
-			return(sRet);
-			}
 
 		// Set up command line args stripping off the environment string
 		String [] theArgs = new String [nArgs];
@@ -2848,26 +2836,14 @@ public class DoCommand {
 				{
         		envArray[i++] = entry.getKey() + "=" + entry.getValue();
 				}
-			
-			if (theArgs[0].contains("/") || theArgs[0].contains("\\") || !theArgs[0].contains("."))
-				{
-				pProc = Runtime.getRuntime().exec(theArgs, envArray);
+	        
+			pProc = Runtime.getRuntime().exec(theArgs, envArray);
 
-				RedirOutputThread outThrd = new RedirOutputThread(pProc, out);
-				outThrd.start();
-				outThrd.join(10000);
-				int nRetCode = pProc.exitValue();
-				sRet = "return code [" + nRetCode + "]";
-				}
-			else
-				{
-				Intent preIntent = new Intent();
-				for (lcv = 0; lcv < envArray.length; lcv++)
-					{
-					preIntent.putExtra("env" + lcv, envArray[lcv]);
-					}
-				sRet = StartJavaPrg(theArgs, preIntent);
-				}
+			RedirOutputThread outThrd = new RedirOutputThread(pProc, out);
+			outThrd.start();
+			outThrd.join(10000);
+			int nRetCode = pProc.exitValue();
+			sRet = "return code [" + nRetCode + "]";
 			}
 		catch(UnsupportedOperationException e)
 			{
@@ -2901,13 +2877,44 @@ public class DoCommand {
 
 		return (sRet);
 		}
+/*	
+	public String InstallApplication()
+		{
+		String sRet = "";
+		String sFileName = Environment.getExternalStorageDirectory() + "/org.mozilla.fennec.apk";
+		
+		Intent instIntent = new Intent();
+		
+		instIntent.setAction(android.content.Intent.ACTION_VIEW);
+		instIntent.setDataAndType(Uri.fromFile(new File(sFileName)), "application/vnd.android.package-archive");
+//		instIntent.setDataAndType(Uri.parse("file:///sdcard/org.mozilla.fennec.apk"), "application/vnd.android.package-archive");
+		SUTAgentAndroid.me.startActivity(instIntent);
+		
+//		Instrumentation inst = new Instrumentation();
+//		inst.sendKeyDownUpSync(KeyEvent.KEYCODE_SOFT_LEFT);
+		
+		return(sRet);
+		}
 
+	public String UninstallApplication()
+		{
+		String sRet = "";
+		Uri		pkgURI = Uri.parse("package:" + "org.mozilla.fennec");
+	
+		Intent unInstIntent = new Intent(Intent.ACTION_DELETE, pkgURI);
+	
+		SUTAgentAndroid.me.startActivity(unInstIntent);
+
+		return(sRet);
+		}
+*/
 	private String PrintUsage()
 		{
 		String sRet = 
-			"run [cmdline]                - start program no wait\n" +
-			"exec [env pairs] [cmdline]   - start program no wait optionally pass env\n" +
-			"                               key=value pairs (comma separated)\n" +
+			"run [executable] [args]      - start program no wait\n" +
+			"exec [executable] [args]     - start program wait\n" +
+			"fire [executable] [args]     - start program no wait\n" +
+			"envrun [env pairs] [cmdline] - start program no wait\n" +
 			"kill [program name]          - kill program no path\n" +
 			"killall                      - kill all processes started\n" +
 			"ps                           - list of running processes\n" +
@@ -2915,32 +2922,30 @@ public class DoCommand {
 			"        [os]                 - os version for device\n" +
 			"        [id]                 - unique identifier for device\n" +
 			"        [uptime]             - uptime for device\n" +
-			"        [systime]            - current system time\n" +
+			"        [systime]            - current system time on device\n" +
 			"        [screen]             - width, height and bits per pixel for device\n" +
-			"        [memory]             - physical, free, available, storage memory\n" +
-			"                               for device\n" +
+			"        [memory]             - physical, free, available, storage memory for device\n" +
 			"        [processes]          - list of running processes see 'ps'\n" +
 			"deadman timeout              - set the duration for the deadman timer\n" +
 			"alrt [on/off]                - start or stop sysalert behavior\n" +
 			"disk [arg]                   - prints disk space info\n" +
-			"cp file1 file2               - copy file1 to file2\n" +
-			"time file                    - timestamp for file\n" +
-			"hash file                    - generate hash for file\n" +
-			"cd directory                 - change cwd\n" +
-			"cat file                     - cat file\n" +
-			"cwd                          - display cwd\n" +
-			"mv file1 file2               - move file1 to file2\n" +
+			"cp file1 file2               - copy file1 to file2 on device\n" +
+			"time file                    - timestamp for file on device\n" +
+			"hash file                    - generate hash for file on device\n" +
+			"cd directory                 - change cwd on device\n" +
+			"cat file                     - cat file on device\n" +
+			"cwd                          - display cwd on device\n" +
+			"mv file1 file2               - move file1 to file2 on device\n" +
 			"push filename                - push file to device\n" +
-			"rm file                      - delete file\n" +
-			"rmdr directory               - delete directory even if not empty\n" +
-			"mkdr directory               - create directory\n" +
-			"dirw directory               - tests whether the directory is writable\n" +
-			"isdir directory              - test whether the directory exists\n" +
-			"stat processid               - stat process\n" +
-			"dead processid               - print whether the process is alive or hung\n" +
-			"mems                         - dump memory stats\n" +
-			"ls                           - print directory\n" +
-			"tmpd                         - print temp directory\n" +
+			"rm file                      - delete file on device\n" +
+			"rmdr directory               - delete directory on device even if not empty\n" +
+			"mkdr directory               - create directory on device\n" +
+			"dirw directory               - tests whether the directory is writable on the device\n" +
+			"stat processid               - stat process on device\n" +
+			"dead processid               - print whether the process is alive or hung on device\n" +
+			"mems                         - dump memory stats on device\n" +
+			"ls                           - print directory on device\n" +
+			"tmpd                         - print temp directory on device\n" +
 			"ping [hostname/ipaddr]       - ping a network device\n" +
 			"unzp zipfile destdir         - unzip the zipfile into the destination dir\n" +
 			"zip zipfile src              - zip the source file/dir into zipfile\n" +
@@ -2948,12 +2953,9 @@ public class DoCommand {
 			"inst /path/filename.apk      - install the referenced apk file\n" +
 			"uninst packagename           - uninstall the referenced package\n" +
 			"updt pkgname pkgfile         - unpdate the referenced package\n" +
-			"clok                         - the current device time expressed as the" +
-			"                               number of millisecs since epoch\n" +
-			"settime date time            - sets the device date and time\n" +
-			"                               (YYYY/MM/DD HH:MM:SS)\n" +
-			"tzset timezone               - sets the device timezone format is\n" +
-			"                               GMTxhh:mm x = +/- or a recognized Olsen string\n" +
+			"clok                         - the current device time expressed as the number of millisecs since epoch\n" +
+			"settime date time            - sets the device date and time (YYYY/MM/DD HH:MM:SS)\n" +
+			"tzset timezone               - sets the device timezone format is GMTxhh:mm x = +/- or a recognized Olsen string\n" +
 			"tzget                        - returns the current timezone set on the device\n" +
 			"rebt                         - reboot device\n" +
 			"quit                         - disconnect SUTAgent\n" +
