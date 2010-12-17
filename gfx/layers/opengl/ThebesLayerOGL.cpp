@@ -641,12 +641,7 @@ ShadowBufferOGL::Upload(gfxASurface* aUpdate, const nsIntRegion& aUpdated,
   // NB: this gfxContext must not escape EndUpdate() below
   nsIntRegion scaledDestRegion(nsIntRect(destRect.pos.x, destRect.pos.y,
                                          destRect.size.width, destRect.size.height));
-  nsRefPtr<gfxContext> dest = mTexImage->BeginUpdate(scaledDestRegion);
-
-  dest->SetOperator(gfxContext::OPERATOR_SOURCE);
-  dest->DrawSurface(aUpdate, aUpdate->GetSize());
-
-  mTexImage->EndUpdate();
+  mTexImage->DirectUpdate(aUpdate, scaledDestRegion);
 
   mBufferRect = aRect;
   mBufferRotation = aRotation;

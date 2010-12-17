@@ -285,13 +285,7 @@ ShadowCanvasLayerOGL::Swap(gfxSharedImageSurface* aNewFront)
 
     gfxSize sz = aNewFront->GetSize();
     nsIntRegion updateRegion(nsIntRect(0, 0, sz.width, sz.height));
-    // NB: this gfxContext must not escape EndUpdate() below
-    nsRefPtr<gfxContext> dest = mTexImage->BeginUpdate(updateRegion);
-
-    dest->SetOperator(gfxContext::OPERATOR_SOURCE);
-    dest->DrawSurface(aNewFront, aNewFront->GetSize());
-
-    mTexImage->EndUpdate();
+    mTexImage->DirectUpdate(aNewFront, updateRegion);
   }
 
   return aNewFront;
