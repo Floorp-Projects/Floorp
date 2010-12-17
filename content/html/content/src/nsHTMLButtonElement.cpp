@@ -708,8 +708,17 @@ nsHTMLButtonElement::IntrinsicState() const
   nsEventStates state = nsGenericHTMLFormElement::IntrinsicState();
 
   if (IsCandidateForConstraintValidation()) {
-    state |= IsValid() ? NS_EVENT_STATE_VALID | NS_EVENT_STATE_MOZ_UI_VALID
-                       : NS_EVENT_STATE_INVALID | NS_EVENT_STATE_MOZ_UI_INVALID;
+    if (IsValid()) {
+      state |= NS_EVENT_STATE_VALID;
+      if (!mForm || !mForm->HasAttr(kNameSpaceID_None, nsGkAtoms::novalidate)) {
+        state |= NS_EVENT_STATE_MOZ_UI_VALID;
+      }
+    } else {
+      state |= NS_EVENT_STATE_INVALID;
+      if (!mForm || !mForm->HasAttr(kNameSpaceID_None, nsGkAtoms::novalidate)) {
+        state |= NS_EVENT_STATE_MOZ_UI_INVALID;
+      }
+    }
   }
 
   if (mForm && !mForm->GetValidity() && IsSubmitControl()) {
