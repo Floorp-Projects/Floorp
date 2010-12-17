@@ -770,6 +770,8 @@ public:
     static PRBool ListHasExtension(const GLubyte *extensions,
                                    const char *extension);
 
+    GLint GetMaxTextureSize() { return mMaxTextureSize; }
+
 protected:
     PRPackedBool mInitialized;
     PRPackedBool mIsOffscreen;
@@ -866,6 +868,8 @@ protected:
 protected:
     nsTArray<nsIntRect> mViewportStack;
     nsTArray<nsIntRect> mScissorStack;
+
+    GLint mMaxTextureSize;
 
 public:
 
