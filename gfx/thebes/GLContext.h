@@ -355,6 +355,19 @@ struct THEBES_API ContextFormat
     int colorBits() const { return red + green + blue; }
 };
 
+enum ShaderProgramType {
+    RGBALayerProgramType,
+    BGRALayerProgramType,
+    RGBXLayerProgramType,
+    BGRXLayerProgramType,
+    RGBARectLayerProgramType,
+    ColorLayerProgramType,
+    YCbCrLayerProgramType,
+    Copy2DProgramType,
+    Copy2DRectProgramType,
+    NumProgramTypes
+};
+
 class GLContext
     : public LibrarySymbolLoader
 {
@@ -704,6 +717,35 @@ public:
      */
     void BlitTextureImage(TextureImage *aSrc, const nsIntRect& aSrcRect,
                           TextureImage *aDst, const nsIntRect& aDstRect);
+
+    /**
+     * Creates a RGB/RGBA texture (or uses one provided) and uploads the surface
+     * contents to it within aSrcRect.
+     *
+     * aSrcRect.x/y will be uploaded to 0/0 in the texture, and the size
+     * of the texture with be aSrcRect.width/height.
+     *
+     * If an existing texture is passed through aTexture, it is assumed it
+     * has already been initialised with glTexImage2D (or this function),
+     * and that its size is equal to or greater than aSrcRect + aDstPoint.
+     * You can alternatively set the overwrite flag to true and have a new
+     * texture memory block allocated.
+     *
+     * The aDstPoint parameter is ignored if no texture was provided
+     * or aOverwrite is true.
+     *
+     * \param aSurface Surface to upload. 
+     * \param aSrcRect Region of aSurface to upload.
+     * \param aTexture Texture to use, or 0 to have one created for you.
+     * \param aOverwrite Over an existing texture with a new one.
+     * \param aDstPoint Offset into existing texture to upload contents.
+     * \return Shader program needed to render this texture.
+     */
+    ShaderProgramType UploadSurfaceToTexture(gfxASurface *aSurface, 
+                                             const nsIntRect& aSrcRect,
+                                             GLuint& aTexture,
+                                             bool aOverwrite = false,
+                                             const nsIntPoint& aDstPoint = nsIntPoint(0, 0));
 
     /** Helper for DecomposeIntoNoRepeatTriangles
      */
