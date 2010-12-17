@@ -429,9 +429,8 @@ ImageLayerOGL::RenderLayer(int,
     gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
     gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, cairoImage->mTexture.GetTextureID());
 
-    ColorTextureLayerProgram *program =
-      mOGLManager->GetBasicLayerProgram(CanUseOpaqueSurface(),
-                                        cairoImage->mASurfaceAsGLContext != 0);
+    ColorTextureLayerProgram *program = 
+      mOGLManager->GetColorTextureLayerProgram(cairoImage->mLayerProgram);
 
     ApplyFilter(mFilter);
 
@@ -680,12 +679,12 @@ CairoImageOGL::SetData(const CairoImage::Data &aData)
   mozilla::gl::GLContext *gl = mTexture.GetGLContext();
   gl->MakeCurrent();
 
+  GLuint tex = mTexture.GetTextureID();
+
   if (mSize != aData.mSize) {
     gl->fActiveTexture(LOCAL_GL_TEXTURE0);
-    InitTexture(gl, mTexture.GetTextureID(), LOCAL_GL_RGBA, aData.mSize);
+    InitTexture(gl, tex, LOCAL_GL_RGBA, aData.mSize);
     mSize = aData.mSize;
-  } else {
-    gl->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture.GetTextureID());
   }
 
   if (!mASurfaceAsGLContext) {
@@ -697,22 +696,10 @@ CairoImageOGL::SetData(const CairoImage::Data &aData)
   if (mASurfaceAsGLContext)
     return;
 
-  // XXX This could be a lot more efficient if we already have an image-compatible
-  // surface
-  // XXX if we ever create an ImageFormatRGB24 surface, make sure that we use
-  // a BGRX program in that case (instead of BGRA)
-  nsRefPtr<gfxImageSurface> imageSurface =
-    new gfxImageSurface(aData.mSize, gfxASurface::ImageFormatARGB32);
-  nsRefPtr<gfxContext> context = new gfxContext(imageSurface);
-
-  context->SetSource(aData.mSurface);
-  context->Paint();
-
-  gl->fTexSubImage2D(LOCAL_GL_TEXTURE_2D, 0,
-                     0, 0, mSize.width, mSize.height,
-                     LOCAL_GL_RGBA,
-                     LOCAL_GL_UNSIGNED_BYTE,
-                     imageSurface->Data());
+  mLayerProgram =
+    gl->UploadSurfaceToTexture(aData.mSurface,
+                               nsIntRect(0,0, mSize.width, mSize.height),
+                               tex);
 }
 
 
