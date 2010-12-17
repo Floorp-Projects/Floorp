@@ -1263,6 +1263,161 @@ GLContext::BlitTextureImage(TextureImage *aSrc, const nsIntRect& aSrcRect,
     PopViewportRect();
 }
 
+
+ShaderProgramType 
+GLContext::UploadSurfaceToTexture(gfxASurface *aSurface, 
+                                  const nsIntRect& aSrcRect,
+                                  GLuint& aTexture,
+                                  bool aOverwrite,
+                                  const nsIntPoint& aDstPoint)
+{
+  bool textureInited = aOverwrite ? false : true;
+  MakeCurrent();
+  fActiveTexture(LOCAL_GL_TEXTURE0);
+
+  if (!aTexture) {
+    fGenTextures(1, &aTexture);
+    fBindTexture(LOCAL_GL_TEXTURE_2D, aTexture);
+    fTexParameteri(LOCAL_GL_TEXTURE_2D, 
+                   LOCAL_GL_TEXTURE_MIN_FILTER, 
+                   LOCAL_GL_LINEAR);
+    fTexParameteri(LOCAL_GL_TEXTURE_2D, 
+                   LOCAL_GL_TEXTURE_MAG_FILTER, 
+                   LOCAL_GL_LINEAR);
+    fTexParameteri(LOCAL_GL_TEXTURE_2D, 
+                   LOCAL_GL_TEXTURE_WRAP_S, 
+                   LOCAL_GL_CLAMP_TO_EDGE);
+    fTexParameteri(LOCAL_GL_TEXTURE_2D, 
+                   LOCAL_GL_TEXTURE_WRAP_T, 
+                   LOCAL_GL_CLAMP_TO_EDGE);
+    textureInited = false;
+  } else {
+    fBindTexture(LOCAL_GL_TEXTURE_2D, aTexture);
+  }
+
+  nsRefPtr<gfxImageSurface> imageSurface = aSurface->GetAsImageSurface();
+  unsigned char* data;
+
+  if (!imageSurface || 
+      (imageSurface->Format() != gfxASurface::ImageFormatARGB32 &&
+       imageSurface->Format() != gfxASurface::ImageFormatRGB24 &&
+       imageSurface->Format() != gfxASurface::ImageFormatRGB16_565)) {
+    // We can't get suitable pixel data for the surface, make a copy
+    imageSurface = 
+      new gfxImageSurface(gfxIntSize(aSrcRect.width, aSrcRect.height), 
+                          gfxASurface::ImageFormatARGB32);
+  
+    nsRefPtr<gfxContext> context = new gfxContext(imageSurface);
+
+    context->Translate(-gfxPoint(aSrcRect.x, aSrcRect.y));
+    context->SetSource(aSurface);
+    context->Paint();
+    data = imageSurface->Data();
+  } else {
+    data = imageSurface->Data();
+    data += aSrcRect.y * imageSurface->Stride();
+    data += aSrcRect.x * 4;
+  }
+
+  GLenum format;
+  GLenum internalformat;
+  GLenum type;
+  PRInt32 pixelSize = gfxASurface::BytePerPixelFromFormat(imageSurface->Format());
+  ShaderProgramType shader;
+
+  switch (imageSurface->Format()) {
+    case gfxASurface::ImageFormatARGB32:
+      format = LOCAL_GL_RGBA;
+      type = LOCAL_GL_UNSIGNED_BYTE;
+      shader = BGRALayerProgramType;
+      break;
+    case gfxASurface::ImageFormatRGB24:
+      // Treat RGB24 surfaces as RGBA32 except for the shader
+      // program used.
+      format = LOCAL_GL_RGBA;
+      type = LOCAL_GL_UNSIGNED_BYTE;
+      shader = BGRXLayerProgramType;
+      break;
+    case gfxASurface::ImageFormatRGB16_565:
+      format = LOCAL_GL_RGB;
+      type = LOCAL_GL_UNSIGNED_SHORT_5_6_5;
+      shader = RGBALayerProgramType;
+      break;
+    default:
+      NS_ASSERTION(false, "Unhandled image surface format!");
+  }
+
+#ifndef USE_GLES2
+  fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, 
+               imageSurface->Stride() / pixelSize);
+
+  internalformat = LOCAL_GL_RGBA;
+#else
+  internalformat = format;
+
+  if (imageSurface->Stride() != aSrcRect.width * pixelSize) {
+    // Not using the whole row of texture data and GLES doesn't 
+    // support GL_UNPACK_ROW_LENGTH. We need to upload each row
+    // separately.
+    if (!textureInited) {
+      fTexImage2D(LOCAL_GL_TEXTURE_2D,
+                  0,
+                  internalformat,
+                  aSrcRect.width,
+                  aSrcRect.height,
+                  0,
+                  format,
+                  type,
+                  NULL);
+    }
+
+    for (int h = 0; h < aSrcRect.height; h++) {
+      fTexSubImage2D(LOCAL_GL_TEXTURE_2D,
+                     0,
+                     aDstPoint.x,
+                     aDstPoint.y+h,
+                     aSrcRect.width,
+                     1,
+                     format,
+                     type,
+                     data);
+      data += imageSurface->Stride();
+    }
+
+    return shader;
+  }
+#endif
+
+
+  if (textureInited) {
+    fTexSubImage2D(LOCAL_GL_TEXTURE_2D,
+                   0,
+                   aDstPoint.x,
+                   aDstPoint.y,
+                   aSrcRect.width,
+                   aSrcRect.height,
+                   format,
+                   type,
+                   data);
+  } else {
+    fTexImage2D(LOCAL_GL_TEXTURE_2D,
+                0,
+                internalformat,
+                aSrcRect.width,
+                aSrcRect.height,
+                0,
+                format,
+                type,
+                data);
+  }
+
+#ifndef USE_GLES2
+  fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, 0);
+#endif
+
+  return shader;
+}
+
 void
 GLContext::RectTriangles::addRect(GLfloat x0, GLfloat y0, GLfloat x1, GLfloat y1,
                                   GLfloat tx0, GLfloat ty0, GLfloat tx1, GLfloat ty1)
