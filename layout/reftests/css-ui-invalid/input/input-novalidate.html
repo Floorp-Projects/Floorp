@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- When the form has @novalidate, :-moz-ui-invalid doesn't apply. -->
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <body onload="document.getElementById('i').value = '';
+                document.documentElement.className = '';">
+    <form novalidate>
+      <input id='i' class='notinvalid' required>
+    </form>
+  </body>
+</html>
