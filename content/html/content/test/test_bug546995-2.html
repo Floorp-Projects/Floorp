@@ -12,7 +12,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=546995
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=546995">Mozilla Bug 546995</a>
 <p id="display"></p>
-<iframe id="iframe"></iframe>
 <div id='content'>
 </div>
 <pre id="test">
@@ -29,19 +28,22 @@ var gElement = "";
 
 function runTests()
 {
-  var iframe = document.getElementById("iframe");
-  var iframeCw = iframe.contentWindow;
-
   // TODO: keygen should be added when correctly implemented, see bug 101019.
   var elements = ["input", "textarea", "select", "button"];
 
   for each(element in elements) {
+    var iframe = document.createElement("iframe");
+    document.getElementById('content').appendChild(iframe);
+    var iframeCw = iframe.contentWindow;
+
     gElement = element;
     iframeCw.location = "file_bug546995.html";
     yield;
     is(iframe.contentDocument.activeElement,
        iframe.contentDocument.getElementById('a'),
        "The first inserted element with autofocus should be focused");
+
+    document.getElementById('content').removeChild(iframe);
   }
 
   // Now we want to focus the body element.

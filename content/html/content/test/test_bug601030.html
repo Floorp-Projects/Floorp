@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=601030
+-->
+<head>
+  <title>Test for Bug 601030</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=601030">Mozilla Bug 601030</a>
+<p id="display"></p>
+<div id="content">
+  <iframe src="data:text/html,<input autofocus>"></iframe>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 601030 **/
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  var f = document.createElement("iframe");
+
+  f.addEventListener("load", function() {
+    f.removeEventListener("load", arguments.callee, false);
+    SimpleTest.executeSoon(function() {
+      isnot(document.activeElement, f,
+            "autofocus should not work when another frame is inserted in the document");
+      SimpleTest.finish();
+    });
+  }, false);
+
+  f.src = "data:text/html,<input autofocus>";
+  document.getElementById('content').appendChild(f);
+});
+
+</script>
+</pre>
+</body>
+</html>

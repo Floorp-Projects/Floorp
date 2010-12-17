@@ -200,6 +200,14 @@ public:
 
     // Do not autofocus if an sub-window is focused.
     nsPIDOMWindow* window = document->GetWindow();
+
+    // Trying to found the top window (equivalent to window.top).
+    nsCOMPtr<nsIDOMWindow> top;
+    window->GetTop(getter_AddRefs(top));
+    if (top) {
+      window = static_cast<nsPIDOMWindow*>(top.get());
+    }
+
     if (window && window->GetFocusedNode()) {
       return NS_OK;
     }
