@@ -210,10 +210,7 @@ function runTest(testNum) {
         nextTestPrivledged = true;
         break;
     case 15:
-        // XXX even with patch the popup is still opened.
-        // the keypress triggers a form input oninput / onchange
-        todo(false, "popup should be closed");
-        checkPopupOpen(true, -1);
+        checkPopupOpen(false);
         checkForm("v");
         break;
     // try a space
@@ -222,8 +219,7 @@ function runTest(testNum) {
         nextTestPrivledged = true;
         break;
     case 17:
-        todo(false, "popup should be closed");
-        checkPopupOpen(true, -1);
+        checkPopupOpen(false);
         checkForm("v ");
         break;
     // backspace
@@ -232,17 +228,15 @@ function runTest(testNum) {
         nextTestPrivledged = true;
         break;
     case 19:
-        todo(false, "popup should be closed");
-        checkPopupOpen(true, -1);
+        checkPopupOpen(false);
         checkForm("v");
         nextTestPrivledged = true;
         break;
     case 20:
         // We're privledged for this test, so open the popup.
-        todo(false, "popup should be closed");
-        checkPopupOpen(true, -1);
+        checkPopupOpen(false);
         checkForm("v");
-//        doKey("down");
+        doKey("down");
         nextTestPrivledged = true;
         break;
     case 21:
@@ -331,7 +325,7 @@ function runTest(testNum) {
         break;
     case 203:
         // XXX we should ignore this input while popup is open?
-        checkPopupOpen(true, -1);
+        checkPopupOpen(true, 0);
         checkForm("v ");
         break;
     // backspace
@@ -341,13 +335,12 @@ function runTest(testNum) {
         break;
     case 205:
         // XXX we should ignore this input while popup is open?
-        checkPopupOpen(true, -1);
+        checkPopupOpen(true, 0);
         checkForm("v");
         nextTestPrivledged = true;
         break;
-    // Oops, reselect 1st entry
     case 206:
-        doKey("down");
+        // (this space intentionally left blank)
         nextTestPrivledged = true;
         break;
     case 207:
@@ -371,7 +364,7 @@ function runTest(testNum) {
         break;
     case 211:
         checkPopupOpen(false);
-        checkForm("v");
+        checkForm("");
 
 
         SimpleTest.finish();
