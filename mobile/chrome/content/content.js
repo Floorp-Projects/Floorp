@@ -293,6 +293,7 @@ function Content() {
   addMessageListener("Browser:Blur", this);
   addMessageListener("Browser:KeyEvent", this);
   addMessageListener("Browser:MouseDown", this);
+  addMessageListener("Browser:MouseOver", this);
   addMessageListener("Browser:MouseUp", this);
   addMessageListener("Browser:SaveAs", this);
   addMessageListener("Browser:ZoomToPoint", this);
@@ -377,6 +378,7 @@ Content.prototype = {
       case "Browser:Blur":
         gFocusManager.clearFocus(content);
         break;
+
       case "Browser:KeyEvent":
         let utils = Util.getWindowUtils(content);
         let defaultAction;
@@ -399,20 +401,32 @@ Content.prototype = {
         if (!element)
           return;
 
-        let highlightRects = null;
-        if (element.mozMatchesSelector("*:link,*:visited,*[role=button],button,input,option,select,textarea,label"))
-          highlightRects = getContentClientRects(element);
-        else if (element.mozMatchesSelector("*:link *, *:visited *"))
-          highlightRects = getContentClientRects(element.parentNode);
-
-        if (highlightRects)
-          sendAsyncMessage("Browser:Highlight", { rects: highlightRects, messageId: json.messageId });
-
         ContextHandler.messageId = json.messageId;
 
         let event = content.document.createEvent("PopupEvents");
         event.initEvent("contextmenu", true, true);
         element.dispatchEvent(event);
+        break;
+      }
+
+      case "Browser:MouseOver": {
+        let element = elementFromPoint(x, y);
+        if (!element)
+          return;
+
+        // Sending a mousemove force the dispatching of mouseover/mouseout
+        this._sendMouseEvent("mousemove", element, x, y);
+
+        // XXX Could we replace all this javascript code by something CSS based
+        // using a mix on some -moz-focus-ring/-moz-focus-inner rules
+        let highlightRects = null;
+        if (element.mozMatchesSelector("*:-moz-any-link, *[role=button],button,input,option,select,textarea,label"))
+          highlightRects = getContentClientRects(element);
+        else if (element.mozMatchesSelector("*:-moz-any-link *"))
+          highlightRects = getContentClientRects(element.parentNode);
+
+        if (highlightRects)
+          sendAsyncMessage("Browser:Highlight", { rects: highlightRects, messageId: json.messageId });
         break;
       }
 
@@ -488,7 +502,7 @@ Content.prototype = {
         sendAsyncMessage("Browser:ZoomToPoint:Return", { x: x, y: y, rect: rect });
         break;
       }
-      
+
       case "Browser:MozApplicationCache:Fetch": {
         let currentURI = Services.io.newURI(json.location, json.charset, null);
         let manifestURI = Services.io.newURI(json.manifest, json.charset, currentURI);
