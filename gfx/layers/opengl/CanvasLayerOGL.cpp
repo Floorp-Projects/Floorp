@@ -331,8 +331,7 @@ ShadowCanvasLayerOGL::RenderLayer(int aPreviousFrameBuffer,
   gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
   gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexImage->Texture());
   ColorTextureLayerProgram *program =
-    mOGLManager->GetBasicLayerProgram(CanUseOpaqueSurface(),
-                                      mTexImage->IsRGB());
+    mOGLManager->GetColorTextureLayerProgram(mTexImage->GetShaderProgramType());
 
   ApplyFilter(mFilter);
 

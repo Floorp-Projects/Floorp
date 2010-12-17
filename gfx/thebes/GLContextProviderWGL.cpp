@@ -464,24 +464,6 @@ protected:
         return gfxPlatform::GetPlatform()->CreateOffscreenSurface(aSize, gfxASurface::ContentFromFormat(aFmt));
     }
 
-    virtual already_AddRefed<gfxImageSurface>
-    GetImageForUpload(gfxASurface* aUpdateSurface)
-    {
-        nsRefPtr<gfxImageSurface> uploadImage;
-
-        if (aUpdateSurface->GetType() == gfxASurface::SurfaceTypeWin32) {
-            uploadImage = aUpdateSurface->GetAsImageSurface();
-        } else {
-            uploadImage = new gfxImageSurface(mUpdateSize, mUpdateFormat);
-            nsRefPtr<gfxContext> cx(new gfxContext(uploadImage));
-            cx->SetSource(aUpdateSurface);
-            cx->SetOperator(gfxContext::OPERATOR_SOURCE);
-            cx->Paint();
-        }
-
-        return uploadImage.forget();
-    }
-
 private:
     TextureImageWGL(GLuint aTexture,
                     const nsIntSize& aSize,
