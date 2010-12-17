@@ -376,6 +376,36 @@ nsHTMLFormElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                        aNotify);
 }
 
+nsresult
+nsHTMLFormElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                const nsAString* aValue, PRBool aNotify)
+{
+  if (aName == nsGkAtoms::novalidate && aNameSpaceID == kNameSpaceID_None) {
+    // Update all form elements states because they might be [no longer]
+    // affected by :-moz-ui-valid or :-moz-ui-invalid.
+    nsIDocument* doc = GetCurrentDoc();
+    if (doc) {
+      MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+
+      for (PRUint32 i = 0, length = mControls->mElements.Length();
+           i < length; ++i) {
+        doc->ContentStatesChanged(mControls->mElements[i], nsnull,
+                                  NS_EVENT_STATE_MOZ_UI_VALID |
+                                  NS_EVENT_STATE_MOZ_UI_INVALID);
+      }
+
+      for (PRUint32 i = 0, length = mControls->mNotInElements.Length();
+           i < length; ++i) {
+        doc->ContentStatesChanged(mControls->mNotInElements[i], nsnull,
+                                  NS_EVENT_STATE_MOZ_UI_VALID |
+                                  NS_EVENT_STATE_MOZ_UI_INVALID);
+      }
+    }
+  }
+
+  return nsGenericHTMLElement::AfterSetAttr(aNameSpaceID, aName, aValue, aNotify);
+}
+
 NS_IMPL_STRING_ATTR(nsHTMLFormElement, AcceptCharset, acceptcharset)
 NS_IMPL_ACTION_ATTR(nsHTMLFormElement, Action, action)
 NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLFormElement, Autocomplete, autocomplete,

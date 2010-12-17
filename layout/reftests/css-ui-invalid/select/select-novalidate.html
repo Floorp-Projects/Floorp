@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <body onload="document.getElementById('s').setCustomValidity('foo');
+                document.documentElement.className = '';">
+    <form novalidate>
+      <select id='s' class='notinvalid'></select>
+    </form>
+  </body>
+</html>

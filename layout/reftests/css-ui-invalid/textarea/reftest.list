@@ -15,3 +15,4 @@
 == textarea-required-invalid-changed.html textarea-ref.html
 == textarea-disabled-fieldset-1.html textarea-fieldset-ref.html
 == textarea-disabled-fieldset-2.html textarea-fieldset-ref.html
+== textarea-novalidate.html textarea-ref.html
