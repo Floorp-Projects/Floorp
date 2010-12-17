@@ -420,11 +420,6 @@ protected:
   }
 
   /**
-   * Fire the onChange event
-   */
-  void FireOnChange();
-
-  /**
    * Visit the group of radio buttons this radio belongs to
    * @param aVisitor the visitor to visit with
    */
