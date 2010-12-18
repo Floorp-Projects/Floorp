@@ -319,7 +319,15 @@ protected:
   void RemoveDependentIDsFor(nsAccessible* aRelProvider,
                              nsIAtom* aRelAttr = nsnull);
 
-    static void ScrollTimerCallback(nsITimer *aTimer, void *aClosure);
+  /**
+   * Update or recreate an accessible depending on a changed attribute.
+   *
+   * @param aElement   [in] the element the attribute was changed on
+   * @param aAttribute [in] the changed attribute
+   * @return            true if an action was taken on the attribute change
+   */
+  bool UpdateAccessibleOnAttrChange(mozilla::dom::Element* aElement,
+                                    nsIAtom* aAttribute);
 
     /**
      * Fires accessible events when attribute is changed.
@@ -386,6 +394,14 @@ protected:
    *                      child/parent refs in
    */
   void ShutdownChildrenInSubtree(nsAccessible *aAccessible);
+
+  /**
+   * Used to fire scrolling end event after page scroll.
+   *
+   * @param aTimer    [in] the timer object
+   * @param aClosure  [in] the document accessible where scrolling happens
+   */
+  static void ScrollTimerCallback(nsITimer* aTimer, void* aClosure);
 
   /**
    * Cache of accessibles within this document accessible.
