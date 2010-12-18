@@ -258,10 +258,6 @@ nsPresContext::~nsPresContext()
   NS_PRECONDITION(!mShell, "Presshell forgot to clear our mShell pointer");
   SetShell(nsnull);
 
-  if (mTransitionManager) {
-    mTransitionManager->Disconnect();
-  }
-
   // Disconnect the refresh driver *after* the transition manager, which
   // needs it.
   if (mRefreshDriver && mRefreshDriver->PresContext() == this) {
@@ -1046,6 +1042,11 @@ nsPresContext::SetShell(nsIPresShell* aShell)
     for (PRUint32 i = 0; i < IMAGE_LOAD_TYPE_COUNT; ++i) {
       mImageLoaders[i].Enumerate(destroy_loads, nsnull);
       mImageLoaders[i].Clear();
+    }
+
+    if (mTransitionManager) {
+      mTransitionManager->Disconnect();
+      mTransitionManager = nsnull;
     }
   }
 }
