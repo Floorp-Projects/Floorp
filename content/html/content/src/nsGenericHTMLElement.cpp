@@ -208,6 +208,11 @@ public:
       window = static_cast<nsPIDOMWindow*>(top.get());
     }
 
+    nsCOMPtr<nsIDocument> topDoc = do_QueryInterface(window->GetExtantDocument());
+    if (topDoc && topDoc->GetReadyStateEnum() == nsIDocument::READYSTATE_COMPLETE) {
+      return NS_OK;
+    }
+
     if (window && window->GetFocusedNode()) {
       return NS_OK;
     }
@@ -2499,8 +2504,6 @@ nsGenericHTMLFormElement::BindToTree(nsIDocument* aDocument,
   // the document should not be already loaded and the "browser.autofocus"
   // preference should be 'true'.
   if (AcceptAutofocus() && HasAttr(kNameSpaceID_None, nsGkAtoms::autofocus) &&
-      aDocument &&
-      aDocument->GetReadyStateEnum() != nsIDocument::READYSTATE_COMPLETE &&
       nsContentUtils::GetBoolPref("browser.autofocus", PR_TRUE)) {
     nsCOMPtr<nsIRunnable> event = new nsAutoFocusEvent(this);
     rv = NS_DispatchToCurrentThread(event);

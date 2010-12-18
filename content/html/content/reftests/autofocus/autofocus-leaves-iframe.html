@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <script>
+    function frameLoadHandler()
+    {
+      var i = document.createElement('input');
+      i.autofocus = true;
+      document.body.appendChild(i);
+      setTimeout(document.documentElement.removeAttribute('class'), 0);
+    }
+  </script>
+  <body>
+    <iframe onload="frameLoadHandler();" src="data:text/html,<input autofocus>"></iframe>
+  </body>
+</html>
