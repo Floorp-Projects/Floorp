@@ -342,7 +342,7 @@ struct JITScript {
     }
 
     void nukeScriptDependentICs();
-    void sweepCallICs();
+    void sweepCallICs(bool purgeAll);
     void purgeMICs();
     void purgePICs();
 };
