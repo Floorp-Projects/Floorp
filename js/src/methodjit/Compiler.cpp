@@ -540,6 +540,12 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
             cics[i].oolJumpOffset = offset;
             JS_ASSERT(cics[i].oolJumpOffset == offset);
 
+            /* Compute the start of the OOL IC call. */
+            offset = stubCode.locationOf(callICs[i].icCall) -
+                     stubCode.locationOf(callICs[i].slowPathStart);
+            cics[i].icCallOffset = offset;
+            JS_ASSERT(cics[i].icCallOffset == offset);
+
             /* Compute the slow join point offset. */
             offset = stubCode.locationOf(callICs[i].slowJoinPoint) -
                      stubCode.locationOf(callICs[i].slowPathStart);
@@ -2702,6 +2708,7 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew)
         Jump toPatch = stubcc.masm.jump();
         toPatch.linkTo(stubcc.masm.label(), &stubcc.masm);
         callIC.oolJump = toPatch;
+        callIC.icCall = stubcc.masm.label();
 
         /*
          * At this point the function is definitely scripted, so we try to
@@ -4783,7 +4790,8 @@ mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slow)
             return false;
     }
 #else
-    if (!addTraceHints || target >= PC || JSOp(*target) != JSOP_TRACE
+    if (!addTraceHints || target >= PC ||
+        (JSOp(*target) != JSOP_TRACE && JSOp(*target) != JSOP_NOTRACE)
 #ifdef JS_MONOIC
         || GET_UINT16(target) == BAD_TRACEIC_INDEX
 #endif
@@ -4791,10 +4799,8 @@ mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slow)
     {
         if (!jumpInScript(j, target))
             return false;
-        if (slow) {
-            if (!stubcc.jumpInScript(*slow, target))
-                stubcc.jumpInScript(*slow, target);
-        }
+        if (slow && !stubcc.jumpInScript(*slow, target))
+            return false;
         return true;
     }
 
@@ -4816,9 +4822,21 @@ mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slow)
 
     Label traceStart = stubcc.masm.label();
 
-    stubcc.linkExitDirect(j, traceStart);
-    if (slow)
-        slow->linkTo(traceStart, &stubcc.masm);
+    /*
+     * We make a trace IC even if the trace is currently disabled, in case it is
+     * enabled later, but set up the jumps so that InvokeTracer is initially skipped.
+     */
+    if (JSOp(*target) == JSOP_TRACE) {
+        stubcc.linkExitDirect(j, traceStart);
+        if (slow)
+            slow->linkTo(traceStart, &stubcc.masm);
+    } else {
+        if (!jumpInScript(j, target))
+            return false;
+        if (slow && !stubcc.jumpInScript(*slow, target))
+            return false;
+    }
+
 # if JS_MONOIC
     ic.addrLabel = stubcc.masm.moveWithPatch(ImmPtr(NULL), Registers::ArgReg1);
     traceICs[index] = ic;
