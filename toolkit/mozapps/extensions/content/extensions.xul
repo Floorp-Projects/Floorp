@@ -630,10 +630,6 @@
 #endif
                             command="cmd_showItemPreferences"/>
                     <spacer flex="1"/>
-                    <button id="detail-uninstall-btn" class="addon-control remove"
-                            label="&cmd.uninstallAddon.label;"
-                            accesskey="&cmd.uninstallAddon.accesskey;"
-                            command="cmd_uninstallItem"/>
                     <button id="detail-enable-btn" class="addon-control enable"
                             label="&cmd.enableAddon.label;"
                             accesskey="&cmd.enableAddon.accesskey;"
@@ -642,6 +638,10 @@
                             label="&cmd.disableAddon.label;"
                             accesskey="&cmd.disableAddon.accesskey;"
                             command="cmd_disableItem"/>
+                    <button id="detail-uninstall-btn" class="addon-control remove"
+                            label="&cmd.uninstallAddon.label;"
+                            accesskey="&cmd.uninstallAddon.accesskey;"
+                            command="cmd_uninstallItem"/>
                     <button id="detail-install-btn" class="addon-control install"
                             label="&cmd.installAddon.label;"
                             accesskey="&cmd.installAddon.accesskey;"
