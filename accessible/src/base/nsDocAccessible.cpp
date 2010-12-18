@@ -966,11 +966,21 @@ nsDocAccessible::AttributeChanged(nsIDocument *aDocument,
                                   PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                                   PRInt32 aModType)
 {
-  AttributeChangedImpl(aElement, aNameSpaceID, aAttribute);
-
-  nsAccessible* accessible = GetCachedAccessible(aElement);
-  if (!accessible)
+  // Proceed even if the element is not accessible because element may become
+  // accessible if it gets certain attribute.
+  if (UpdateAccessibleOnAttrChange(aElement, aAttribute))
     return;
+
+  // Ignore attribute change if the element doesn't have an accessible (at all
+  // or still) iff the element is not a root content of this document accessible
+  // (which is treated as attribute change on this document accessible).
+  nsAccessible* accessible = GetCachedAccessible(aElement);
+  if (!accessible && (mContent != aElement))
+    return;
+
+  // Fire accessible events iff there's an accessible, otherwise we consider
+  // the accessible state wasn't changed, i.e. its state is initial state.
+  AttributeChangedImpl(aElement, aNameSpaceID, aAttribute);
 
   // Update dependent IDs cache. Take care of accessible elements because no
   // accessible element means either the element is not accessible at all or
@@ -1060,29 +1070,6 @@ nsDocAccessible::AttributeChangedImpl(nsIContent* aContent, PRInt32 aNameSpaceID
     }
   }
 
-  if (aAttribute == nsAccessibilityAtoms::role) {
-    if (mContent == aContent) {
-      // It is common for js libraries to set the role of the body element after
-      // the doc has loaded. In this case we just update the role map entry. 
-      SetRoleMapEntry(nsAccUtils::GetRoleMapEntry(aContent));
-    }
-    else {
-      // Recreate the accessible when role is changed because we might require a
-      // different accessible class for the new role or the accessible may
-      // expose a different sets of interfaces (COM restriction).
-      RecreateAccessible(aContent);
-    }
-  }
-
-  if (aAttribute == nsAccessibilityAtoms::href ||
-      aAttribute == nsAccessibilityAtoms::onclick) {
-    // Not worth the expense to ensure which namespace these are in
-    // It doesn't kill use to recreate the accessible even if the attribute was used
-    // in the wrong namespace or an element that doesn't support it
-    RecreateAccessible(aContent);
-    return;
-  }
-  
   if (aAttribute == nsAccessibilityAtoms::alt ||
       aAttribute == nsAccessibilityAtoms::title ||
       aAttribute == nsAccessibilityAtoms::aria_label ||
@@ -1245,15 +1232,6 @@ nsDocAccessible::ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute)
             eCaseMatters)))) {
     FireDelayedAccessibleEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE,
                                aContent);
-    return;
-  }
-
-  if (aAttribute == nsAccessibilityAtoms::aria_multiselectable &&
-      aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::role)) {
-    // This affects whether the accessible supports SelectAccessible.
-    // COM says we cannot change what interfaces are supported on-the-fly,
-    // so invalidate this object. A new one will be created on demand.
-    RecreateAccessible(aContent);
     return;
   }
 }
@@ -1743,6 +1721,46 @@ nsDocAccessible::RemoveDependentIDsFor(nsAccessible* aRelProvider,
     if (aRelAttr)
       break;
   }
+}
+
+bool
+nsDocAccessible::UpdateAccessibleOnAttrChange(dom::Element* aElement,
+                                              nsIAtom* aAttribute)
+{
+  if (aAttribute == nsAccessibilityAtoms::role) {
+    // It is common for js libraries to set the role on the body element after
+    // the document has loaded. In this case we just update the role map entry.
+    if (mContent == aElement) {
+      SetRoleMapEntry(nsAccUtils::GetRoleMapEntry(aElement));
+      return true;
+    }
+
+    // Recreate the accessible when role is changed because we might require a
+    // different accessible class for the new role or the accessible may expose
+    // a different sets of interfaces (COM restriction).
+    RecreateAccessible(aElement);
+    return true;
+  }
+
+  if (aAttribute == nsAccessibilityAtoms::href ||
+      aAttribute == nsAccessibilityAtoms::onclick) {
+    // Not worth the expense to ensure which namespace these are in
+    // It doesn't kill use to recreate the accessible even if the attribute was used
+    // in the wrong namespace or an element that doesn't support it
+    RecreateAccessible(aElement);
+    return true;
+  }
+
+  if (aAttribute == nsAccessibilityAtoms::aria_multiselectable &&
+      aElement->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::role)) {
+    // This affects whether the accessible supports SelectAccessible.
+    // COM says we cannot change what interfaces are supported on-the-fly,
+    // so invalidate this object. A new one will be created on demand.
+    RecreateAccessible(aElement);
+    return true;
+  }
+
+  return false;
 }
 
 void
