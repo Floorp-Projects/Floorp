@@ -828,19 +828,25 @@ const gFormSubmitObserver = {
 
     element.focus();
 
-    // If the user type something or blur the element, we want to remove the popup.
+    // If the user interacts with the element and makes it valid or leaves it,
+    // we want to remove the popup.
     // We could check for clicks but a click is already removing the popup.
-    let eventHandler = function(e) {
+    function blurHandler() {
       gFormSubmitObserver.panel.hidePopup();
     };
-    element.addEventListener("input", eventHandler, false);
-    element.addEventListener("blur", eventHandler, false);
+    function inputHandler(e) {
+      if (e.originalTarget.validity.valid) {
+        gFormSubmitObserver.panel.hidePopup();
+      }
+    };
+    element.addEventListener("input", inputHandler, false);
+    element.addEventListener("blur", blurHandler, false);
 
-    // One event to bring them all and in the darkness bind them all.
+    // One event to bring them all and in the darkness bind them.
     this.panel.addEventListener("popuphiding", function(aEvent) {
       aEvent.target.removeEventListener("popuphiding", arguments.callee, false);
-      element.removeEventListener("input", eventHandler, false);
-      element.removeEventListener("blur", eventHandler, false);
+      element.removeEventListener("input", inputHandler, false);
+      element.removeEventListener("blur", blurHandler, false);
     }, false);
 
     this.panel.hidden = false;
