@@ -1024,8 +1024,15 @@ EvalCacheLookup(JSContext *cx, JSLinearString *str, JSStackFrame *caller, uintN 
      * An eval cache entry should never be considered a hit unless its
      * strictness matches that of the new eval code. The existing code takes
      * care of this, because hits are qualified by the function from which
-     * eval was called, whose strictness doesn't change. Scripts produced by
-     * calls to eval from global code are not cached.
+     * eval was called, whose strictness doesn't change. (We don't cache evals
+     * in eval code, so the calling function corresponds to the calling script,
+     * and its strictness never varies.) Scripts produced by calls to eval from
+     * global code aren't cached.
+     *
+     * FIXME bug 620141: Qualify hits by calling script rather than function.
+     * Then we wouldn't need the unintuitive !isEvalFrame() hack in EvalKernel
+     * to avoid caching nested evals in functions (thus potentially mismatching
+     * on strict mode), and we could cache evals in global code if desired.
      */
     uintN count = 0;
     JSScript **scriptp = bucket;
@@ -1227,7 +1234,7 @@ EvalKernel(JSContext *cx, uintN argc, Value *vp, EvalType evalType, JSStackFrame
 
     JSScript *script = NULL;
     JSScript **bucket = EvalCacheHash(cx, linearStr);
-    if (evalType == DIRECT_EVAL && caller->isFunctionFrame())
+    if (evalType == DIRECT_EVAL && caller->isFunctionFrame() && !caller->isEvalFrame())
         script = EvalCacheLookup(cx, linearStr, caller, staticLevel, principals, scopeobj, bucket);
 
     /*
