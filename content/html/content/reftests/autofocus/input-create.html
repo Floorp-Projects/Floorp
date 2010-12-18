@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <body>
+    <script>
+      var body = document.body;
+
+      var i = document.createElement('input');
+      i.autofocus = false;
+      body.appendChild(i);
+
+      i = document.createElement('input');
+      i.autofocus = true;
+      i.onfocus = function() { setTimeout(document.documentElement.removeAttribute('class'), 0); };
+      body.appendChild(i);
+
+      i = document.createElement('input');
+      i.autofocus = true;
+      i.onfocus = function() { setTimeout(document.documentElement.removeAttribute('class'), 0); };
+      body.appendChild(i);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,7 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <body onload="document.getElementsByTagName('select')[1].focus();">
+    <select></select><select onfocus="document.documentElement.removeAttribute('class');"></select><select></select>
+  </body>
+</html>
