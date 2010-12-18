@@ -7194,7 +7194,7 @@ TraceRecorder::monitorRecording(JSOp op)
         pendingGuardCondition = NULL;
     }
 
-    /* Handle one-shot request to unbox the result of a property get or ObjectToIterator. */
+    /* Handle one-shot request to unbox the result of a property get. */
     if (pendingUnboxSlot) {
         LIns* val_ins = get(pendingUnboxSlot);
         /*
@@ -14365,16 +14365,18 @@ TraceRecorder::record_JSOP_IMACOP()
 }
 
 static JSBool FASTCALL
-ObjectToIterator(JSContext* cx, JSObject *obj, int32 flags, Value* vp)
+ObjectToIterator(JSContext* cx, JSObject *obj, int32 flags, JSObject **objp)
 {
-    bool ok = js_ValueToIterator(cx, flags, vp);
+    AutoValueRooter tvr(cx, ObjectValue(*obj));
+    bool ok = js_ValueToIterator(cx, flags, tvr.addr());
     if (!ok) {
         SetBuiltinError(cx);
         return false;
     }
+    *objp = &tvr.value().toObject();
     return cx->tracerState->builtinStatus == 0;
 }
-JS_DEFINE_CALLINFO_4(static, BOOL_FAIL, ObjectToIterator, CONTEXT, OBJECT, INT32, VALUEPTR,
+JS_DEFINE_CALLINFO_4(static, BOOL_FAIL, ObjectToIterator, CONTEXT, OBJECT, INT32, OBJECTPTR,
                      0, ACCSET_STORE_ANY)
 
 JS_REQUIRES_STACK AbortableRecordingStatus
@@ -14391,22 +14393,17 @@ TraceRecorder::record_JSOP_ITER()
 
     enterDeepBailCall();
 
-    LIns* vp_ins = w.allocp(sizeof(Value));
-    LIns* args[] = { vp_ins, w.immi(flags), obj_ins, cx_ins };
+    LIns* objp_ins = w.allocp(sizeof(JSObject*));
+    LIns* args[] = { objp_ins, w.immi(flags), obj_ins, cx_ins };
     LIns* ok_ins = w.call(&ObjectToIterator_ci, args);
 
     // We need to guard on ok_ins, but this requires a snapshot of the state
     // after this op. monitorRecording will do it for us.
     pendingGuardCondition = ok_ins;
 
-    // ObjectToIterator can deep-bail without throwing, leaving a value of
-    // unknown type in *vp (it can be either a function or a non-function
-    // object). Use the same mechanism as finishGetProp to arrange for
-    // LeaveTree to deal with this value.
-    pendingUnboxSlot = cx->regs->sp - 1;
-    set(pendingUnboxSlot, w.name(w.lddAlloc(vp_ins), "iterval"));
-
     leaveDeepBailCall();
+
+    stack(-1, w.name(w.ldpAlloc(objp_ins), "iterobj"));
 
     return ARECORD_CONTINUE;
 }
