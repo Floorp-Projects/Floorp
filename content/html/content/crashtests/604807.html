@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<script>
+try {
+  var selectElem = document.createElementNS("http://www.w3.org/1999/xhtml", "select");
+  selectElem.QueryInterface(Components.interfaces.nsISelectElement);
+  selectElem.getOptionIndex(null, 0, true);
+} catch (e) {
+}
+</script>
