@@ -1,0 +1,11 @@
+== input-load.html input-ref.html
+== input-create.html input-ref.html
+== button-load.html button-ref.html
+== button-create.html button-ref.html
+== textarea-load.html textarea-ref.html
+== textarea-create.html textarea-ref.html
+== select-load.html select-ref.html
+== select-create.html select-ref.html
+== autofocus-after-load.html autofocus-after-load-ref.html
+== autofocus-leaves-iframe.html autofocus-leaves-iframe-ref.html
+== autofocus-after-body-focus.html autofocus-after-body-focus-ref.html

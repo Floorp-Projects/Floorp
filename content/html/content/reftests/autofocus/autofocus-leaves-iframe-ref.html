@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <script>
+    function loadHandler()
+    {
+      frames[0].document.getElementsByTagName('input')[0].onfocus = function() {
+        document.documentElement.removeAttribute('class');
+      }
+      frames[0].document.getElementsByTagName('input')[0].focus();
+    }
+  </script>
+  <body onload="loadHandler();">
+    <iframe src="data:text/html,<input>"></iframe>
+    <input></input>
+  </body>
+</html>

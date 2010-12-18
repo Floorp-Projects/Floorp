@@ -23,18 +23,30 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=601030
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
   var f = document.createElement("iframe");
+  var content = document.getElementById('content');
 
   f.addEventListener("load", function() {
     f.removeEventListener("load", arguments.callee, false);
     SimpleTest.executeSoon(function() {
       isnot(document.activeElement, f,
             "autofocus should not work when another frame is inserted in the document");
-      SimpleTest.finish();
+
+      content.removeChild(f);
+      content.removeChild(document.getElementsByTagName('iframe')[0]);
+      f = document.createElement('iframe');
+      f.addEventListener("load", function() {
+        f.removeEventListener("load", arguments.callee, false);
+        isnot(document.activeElement, f,
+              "autofocus should not work in a frame if the top document is already loaded");
+        SimpleTest.finish();
+      }, false);
+      f.src = "data:text/html,<input autofocus>";
+      content.appendChild(f);
     });
   }, false);
 
   f.src = "data:text/html,<input autofocus>";
-  document.getElementById('content').appendChild(f);
+  content.appendChild(f);
 });
 
 </script>
