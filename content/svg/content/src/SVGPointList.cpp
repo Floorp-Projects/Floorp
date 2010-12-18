@@ -107,23 +107,34 @@ SVGPointList::SetValueFromString(const nsAString& aValue)
   while (tokenizer.hasMoreTokens()) {
     CopyUTF16toUTF8(tokenizer.nextToken(), str1);
     const char *token1 = str1.get();
-    if (*token1 == '\0' || !tokenizer.hasMoreTokens()) {
+    if (*token1 == '\0') {
       rv = NS_ERROR_DOM_SYNTAX_ERR;
       break;
     }
-    CopyUTF16toUTF8(tokenizer.nextToken(), str2);
-    const char *token2 = str2.get();
-    if (*token2 == '\0') {
-      rv = NS_ERROR_DOM_SYNTAX_ERR;
-      break;
-    }
-
     char *end;
     float x = float(PR_strtod(token1, &end));
-    if (*end != '\0' || !NS_FloatIsFinite(x)) {
+    if (end == token1 || !NS_FloatIsFinite(x)) {
       rv = NS_ERROR_DOM_SYNTAX_ERR;
       break;
     }
+    const char *token2;
+    if (*end == '-') {
+      // It's possible for the token to be 10-30 which has
+      // no separator but needs to be parsed as 10, -30
+      token2 = end;
+    } else {
+      if (!tokenizer.hasMoreTokens()) {
+        rv = NS_ERROR_DOM_SYNTAX_ERR;
+        break;
+      }
+      CopyUTF16toUTF8(tokenizer.nextToken(), str2);
+      token2 = str2.get();
+      if (*token2 == '\0') {
+        rv = NS_ERROR_DOM_SYNTAX_ERR;
+        break;
+      }
+    }
+
     float y = float(PR_strtod(token2, &end));
     if (*end != '\0' || !NS_FloatIsFinite(y)) {
       rv = NS_ERROR_DOM_SYNTAX_ERR;
