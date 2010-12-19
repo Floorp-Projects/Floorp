@@ -6,7 +6,6 @@
 
 #include "tests.h"
 #include "jswrapper.h"
-#include "jsobjinlines.h"
 
 struct OuterWrapper : JSWrapper
 {
@@ -50,7 +49,7 @@ Wrap(JSContext *cx, JSObject *obj, JSObject *proto, JSObject *parent, uintN flag
 
 BEGIN_TEST(testBug604087)
 {
-    JSObject *outerObj = JSWrapper::New(cx, global, global->getProto(), global,
+    JSObject *outerObj = JSWrapper::New(cx, global, JS_GetPrototype(cx, global), global,
                                         &OuterWrapper::singleton);
     JSObject *compartment2 = JS_NewCompartmentAndGlobalObject(cx, getGlobalClass(), NULL);
     JSObject *compartment3 = JS_NewCompartmentAndGlobalObject(cx, getGlobalClass(), NULL);
@@ -73,7 +72,7 @@ BEGIN_TEST(testBug604087)
     {
         JSAutoEnterCompartment ac;
         CHECK(ac.enter(cx, compartment2));
-        next = JSWrapper::New(cx, compartment2, compartment2->getProto(), compartment2,
+        next = JSWrapper::New(cx, compartment2, JS_GetPrototype(compartment2), compartment2,
                               &OuterWrapper::singleton);
         CHECK(next);
     }
