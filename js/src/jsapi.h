@@ -1965,14 +1965,7 @@ extern JS_PUBLIC_API(JSObject *)
 JS_NewCompartmentAndGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *principals);
 
 extern JS_PUBLIC_API(JSObject *)
-JS_NewObjectWithType(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent,
-                     JSTypeObject *type);
-
-static JS_ALWAYS_INLINE JSObject*
-JS_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
-{
-    return JS_NewObjectWithType(cx, clasp, proto, parent, NULL);
-}
+JS_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent);
 
 /* Queries the [[Extensible]] property of the object. */
 extern JS_PUBLIC_API(JSBool)
@@ -1983,16 +1976,8 @@ JS_IsExtensible(JSObject *obj);
  * proto if proto's actual parameter value is null.
  */
 extern JS_PUBLIC_API(JSObject *)
-JS_NewObjectWithGivenProtoAndType(JSContext *cx, JSClass *clasp,
-                                  JSObject *proto, JSObject *parent,
-                                  JSTypeObject *type);
-
-static JS_ALWAYS_INLINE JSObject*
 JS_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
-                           JSObject *parent)
-{
-    return JS_NewObjectWithGivenProtoAndType(cx, clasp, proto, parent, NULL);
-}
+                           JSObject *parent);
 
 /*
  * Freeze obj, and all objects it refers to, recursively. This will not recurse
@@ -2009,37 +1994,15 @@ extern JS_PUBLIC_API(JSBool)
 JS_FreezeObject(JSContext *cx, JSObject *obj);
 
 extern JS_PUBLIC_API(JSObject *)
-JS_ConstructObjectWithType(JSContext *cx, JSClass *clasp, JSObject *proto,
-                           JSObject *parent, JSTypeObject *type);
-
-static JS_ALWAYS_INLINE JSObject*
 JS_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
-                   JSObject *parent)
-{
-    return JS_ConstructObjectWithType(cx, clasp, proto, parent, NULL);
-}
+                   JSObject *parent);
 
 extern JS_PUBLIC_API(JSObject *)
-JS_ConstructObjectWithArgumentsAndType(JSContext *cx, JSClass *clasp, JSObject *proto,
-                                       JSObject *parent, JSTypeObject *type,
-                                       uintN argc, jsval *argv);
-
-static JS_ALWAYS_INLINE JSObject*
 JS_ConstructObjectWithArguments(JSContext *cx, JSClass *clasp, JSObject *proto,
-                                JSObject *parent, uintN argc, jsval *argv)
-{
-    return JS_ConstructObjectWithArgumentsAndType(cx, clasp, proto, parent,
-                                                  NULL, argc, argv);
-}
+                                JSObject *parent, uintN argc, jsval *argv);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_New(JSContext *cx, JSObject *ctor, uintN argc, jsval *argv);
-
-extern JS_PUBLIC_API(JSTypeObject *)
-JS_MakeTypeObject(JSContext *cx, const char *name, JSBool unknownProperties, JSTypeObject *proto);
-
-extern JS_PUBLIC_API(JSTypeObject *)
-JS_MakeTypeFunction(JSContext *cx, const char *name, JSTypeHandler handler);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_DefineObject(JSContext *cx, JSObject *obj, const char *name, JSClass *clasp,
@@ -2303,14 +2266,7 @@ JS_DeleteUCProperty2(JSContext *cx, JSObject *obj,
                      jsval *rval);
 
 extern JS_PUBLIC_API(JSObject *)
-JS_NewArrayObjectWithType(JSContext *cx, jsint length, jsval *vector,
-                          JSTypeObject *type);
-
-static JS_ALWAYS_INLINE JSObject*
-JS_NewArrayObject(JSContext *cx, jsint length, jsval *vector)
-{
-    return JS_NewArrayObjectWithType(cx, length, vector, NULL);
-}
+JS_NewArrayObject(JSContext *cx, jsint length, jsval *vector);
 
 extern JS_PUBLIC_API(JSBool)
 JS_IsArrayObject(JSContext *cx, JSObject *obj);
@@ -2508,7 +2464,7 @@ JS_DefineFunctionsWithPrefix(JSContext *cx, JSObject *obj, JSFunctionSpec *fs,
 static JS_ALWAYS_INLINE JSBool
 JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
 {
-    return JS_DefineFunctionsWithPrefix(cx, obj, fs, NULL);
+    return JS_DefineFunctionsWithPrefix(cx, obj, fs, "Unknown");
 }
 
 extern JS_PUBLIC_API(JSFunction *)
@@ -3677,68 +3633,6 @@ JS_IsConstructing_PossiblyWithGivenThisObject(JSContext *cx, const jsval *vp,
  */
 extern JS_PUBLIC_API(JSObject *)
 JS_NewObjectForConstructor(JSContext *cx, const jsval *vp);
-
-/************************************************************************/
-
-/*
- * Defines to tag type information for objects with the file/line at which
- * they were allocated, helpful for debugging.
- */
-
-#if JS_TYPE_INFERENCE && DEBUG
-
-#define JS_TYPE_FUNCTION_LINE(CX)                                             \
-    ({ size_t len = strlen(__FILE__) + 10;                                    \
-       char *name = (char*) alloca(len);                                      \
-       snprintf(name, len, "%s:%d", __FILE__, __LINE__);                      \
-       name; })
-
-#define JS_TYPE_OBJECT_LINE(CX)                                               \
-    ({ size_t len = strlen(__FILE__) + 10;                                    \
-       char *name = (char*) alloca(len);                                      \
-       snprintf(name, len, "%s:%d", __FILE__, __LINE__);                      \
-       JS_MakeTypeObject(CX, name, JS_FALSE, JS_FALSE); })
-
-#define JS_NewObject(cx,clasp,proto,parent)                                   \
-    JS_NewObjectWithType(cx, clasp, proto, parent, JS_TYPE_OBJECT_LINE(cx))
-
-#define JS_NewObjectWithGivenProto(cx,clasp,proto,parent)                     \
-    JS_NewObjectWithGivenProtoAndType(cx, clasp, proto, parent,               \
-                                      JS_TYPE_OBJECT_LINE(cx))
-
-#define JS_ConstructObject(cx,clasp,proto,parent)                             \
-    JS_ConstructObjectWithType(cx, clasp, proto, parent,                      \
-                               JS_TYPE_OBJECT_LINE(cx))
-
-#define JS_ConstructObjectWithArguments(cx,clasp,proto,parent,argc,argv)      \
-    JS_ConstructObjectWithArgumentsAndType(cx, clasp, proto, parent,          \
-                                           JS_TYPE_OBJECT_LINE(cx),           \
-                                           argc, argv);
-
-#define JS_NewArrayObject(cx,length,vector)                                   \
-    JS_NewArrayObjectWithType(cx, length, vector, JS_TYPE_OBJECT_LINE(cx))
-
-#define JS_NewFunction(cx,call,nargs,flags,parent,name)                       \
-    JS_NewFunctionWithType(cx, call, nargs, flags, parent, name,              \
-                           NULL, JS_TYPE_FUNCTION_LINE(cx))
-
-#define JS_DefineFunction(cx,obj,name,call,nargs,attrs)                       \
-    JS_DefineFunctionWithType(cx, obj, name, call, nargs, attrs,              \
-                              NULL, JS_TYPE_FUNCTION_LINE(cx))
-
-#define JS_DefineUCFunction(cx,obj,name,namelen,call,nargs,attrs)             \
-    JS_DefineUCFunctionWithType(cx, obj, name, namelen, call, nargs, attrs,   \
-                                NULL, JS_TYPE_FUNCTION_LINE(cx))
-
-#define JS_DefineFunctions(cx,obj,fs)                                         \
-    JS_DefineFunctionsWithPrefix(cx, obj, fs, JS_TYPE_FUNCTION_LINE(cx))
-
-#else /* JS_TYPE_INFERENCE && DEBUG */
-
-#define JS_TYPE_FUNCTION_LINE(cx) NULL
-#define JS_TYPE_OBJECT_LINE(cx) NULL
-
-#endif /* JS_TYPE_INFERENCE && DEBUG */
 
 /************************************************************************/
 

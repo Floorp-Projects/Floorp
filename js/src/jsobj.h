@@ -259,10 +259,12 @@ class ValidateWriter;
  * 64 bytes on 64-bit systems. The JSFunction struct is an extension of this
  * struct allocated from a larger GC size-class.
  *
- * The clasp member stores the js::Class pointer for this object. We do *not*
- * synchronize updates of clasp or flags -- API clients must take care.
+ * The clasp member stores the js::Class pointer for this object.
  *
- * An object is a delegate if it is on another object's prototype (the proto
+ * The type member stores the type of the object, which contains its prototype
+ * object and the possible types of its properties.
+ *
+ * An object is a delegate if it is on another object's prototype (type->proto
  * field) or scope chain (the parent field), and therefore the delegate might
  * be asked implicitly to get or set a property on behalf of another object.
  * Delegates may be accessed directly too, as may any object, but only those
@@ -362,39 +364,19 @@ struct JSObject : js::gc::Cell {
     uint32      objShape;                   /* copy of lastProp->shape, or override if different */
 
     union {
-        /* If prototype, lazily filled array of empty shapes for each object size. */
-        js::EmptyShape **emptyShapes;
+        /* If prototype, type of values using this as their prototype. */
+        js::types::TypeObject *newType;
 
         /* If dense array, initialized length of the array. */
         jsuword initializedLength;
     };
 
-    JSObject    *proto;                     /* object's prototype */
+    js::types::TypeObject *type;            /* object's type and prototype */
     JSObject    *parent;                    /* object's parent */
     void        *privateData;               /* private data */
     jsuword     capacity;                   /* capacity of slots */
     js::Value   *slots;                     /* dynamically allocated slots,
                                                or pointer to fixedSlots() */
-
-#ifdef JS_TYPE_INFERENCE
-    /* Type information for this object. */
-    js::types::TypeObject *typeObject;
-
-#if JS_BITS_PER_WORD == 32
-    void *padding;
-#endif
-#endif
-
-    /*
-     * Return an immutable, shareable, empty shape with the same clasp as this
-     * and the same slotSpan as this had when empty.
-     *
-     * If |this| is the scope of an object |proto|, the resulting scope can be
-     * used as the scope of a new object whose prototype is |proto|.
-     */
-    inline bool canProvideEmptyShape(js::Class *clasp);
-    inline js::EmptyShape *getEmptyShape(JSContext *cx, js::Class *aclasp,
-                                         /* gc::FinalizeKind */ unsigned kind);
 
     bool isNative() const       { return map->isNative(); }
 
@@ -673,10 +655,14 @@ struct JSObject : js::gc::Cell {
     /* Extend this object to have shape as its last-added property. */
     inline void extend(JSContext *cx, const js::Shape *shape, bool isDefinitelyAtom = false);
 
-    JSObject *getProto() const  { return proto; }
-    void clearProto()           { proto = NULL; }
+    js::types::TypeObject* getType() const { return type; }
 
-    inline void setProto(JSContext *cx, JSObject *newProto);
+    inline void clearType(JSContext *cx);
+    inline void setType(js::types::TypeObject *newType);
+    inline JSObject *getProto() const;
+
+    inline js::types::TypeObject *getNewType(JSContext *cx);
+    void makeNewType(JSContext *cx);
 
     JSObject *getParent() const {
         return parent;
@@ -710,22 +696,6 @@ struct JSObject : js::gc::Cell {
         JS_ASSERT(getClass()->flags & JSCLASS_HAS_PRIVATE);
         privateData = data;
     }
-
-    /* Get the type information for this object. */
-    js::types::TypeObject* getTypeObject()
-    {
-#ifdef JS_TYPE_INFERENCE
-        return typeObject;
-#else
-        return NULL;
-#endif
-    }
-
-    /* Get the type of objects which use this as their prototype. */
-    inline js::types::TypeObject *getTypePrototypeNewObject(JSContext *cx);
-
-    /* Get the type of the default prototype of this function object. */
-    inline js::types::TypeObject *getTypePrototype(JSContext *cx);
 
     /*
      * ES5 meta-object properties and operations.
@@ -1030,8 +1000,8 @@ struct JSObject : js::gc::Cell {
     inline bool isCallable();
 
     /* The map field is not initialized here and should be set separately. */
-    void init(JSContext *cx, js::Class *aclasp, JSObject *proto, JSObject *parent,
-              js::types::TypeObject *type, void *priv, bool useHoles);
+    void init(JSContext *cx, js::Class *aclasp, js::types::TypeObject *type,
+              JSObject *parent, void *priv, bool useHoles);
 
     inline void finish(JSContext *cx);
     JS_ALWAYS_INLINE void finalize(JSContext *cx);
@@ -1042,9 +1012,8 @@ struct JSObject : js::gc::Cell {
      */
     inline bool initSharingEmptyShape(JSContext *cx,
                                       js::Class *clasp,
-                                      JSObject *proto,
-                                      JSObject *parent,
                                       js::types::TypeObject *type,
+                                      JSObject *parent,
                                       void *priv,
                                       /* gc::FinalizeKind */ unsigned kind);
 
@@ -1322,18 +1291,6 @@ inline bool JSObject::isBlock() const  { return getClass() == &js_BlockClass; }
 static const uint32 JSSLOT_BLOCK_DEPTH = 0;
 static const uint32 JSSLOT_BLOCK_FIRST_FREE_SLOT = JSSLOT_BLOCK_DEPTH + 1;
 
-inline bool
-JSObject::isStaticBlock() const
-{
-    return isBlock() && !getProto();
-}
-
-inline bool
-JSObject::isClonedBlock() const
-{
-    return isBlock() && !!getProto();
-}
-
 static const uint32 JSSLOT_WITH_THIS = 1;
 
 #define OBJ_BLOCK_COUNT(cx,obj)                                               \
@@ -1355,11 +1312,7 @@ extern JS_REQUIRES_STACK JSObject *
 js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth);
 
 inline JSObject *
-js_UnwrapWithObject(JSContext *cx, JSObject *withobj)
-{
-    JS_ASSERT(withobj->getClass() == &js_WithClass);
-    return withobj->getProto();
-}
+js_UnwrapWithObject(JSContext *cx, JSObject *withobj);
 
 /*
  * Create a new block scope object not linked to any proto or parent object.
@@ -1479,8 +1432,7 @@ js_FindClassObject(JSContext *cx, JSObject *start, JSProtoKey key,
 
 extern JSObject *
 js_ConstructObject(JSContext *cx, js::Class *clasp, JSObject *proto,
-                   JSObject *parent, js::types::TypeObject *type,
-                   uintN argc, js::Value *argv);
+                   JSObject *parent, uintN argc, js::Value *argv);
 
 // Specialized call for constructing |this| with a known function callee,
 // and a known prototype.

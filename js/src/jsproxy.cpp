@@ -1102,9 +1102,8 @@ NewProxyObject(JSContext *cx, JSProxyHandler *handler, const Value &priv, JSObje
         clasp = &FunctionProxyClass;
     else
         clasp = handler->isOuterWindow() ? &OuterWindowProxyClass : &ObjectProxyClass;
-    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_PROXY);
 
-    JSObject *obj = NewNonFunction<WithProto::Given>(cx, clasp, proto, parent, type);
+    JSObject *obj = NewNonFunction<WithProto::Given>(cx, clasp, proto, parent);
     if (!obj || !obj->ensureInstanceReservedSlots(cx, 0))
         return NULL;
     obj->setSlot(JSSLOT_PROXY_HANDLER, PrivateValue(handler));
@@ -1295,8 +1294,7 @@ callable_Construct(JSContext *cx, uintN argc, Value *vp)
                 return false;
         }
 
-        TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_PROXY);
-        JSObject *newobj = NewNativeClassInstance(cx, &js_ObjectClass, proto, proto->getParent(), type);
+        JSObject *newobj = NewNativeClassInstance(cx, &js_ObjectClass, proto, proto->getParent());
         if (!newobj)
             return false;
 
@@ -1364,9 +1362,8 @@ FixProxy(JSContext *cx, JSObject *proxy, JSBool *bp)
      * Make a blank object from the recipe fix provided to us.  This must have
      * number of fixed slots as the proxy so that we can swap their contents.
      */
-    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_PROXY);
     gc::FinalizeKind kind = gc::FinalizeKind(proxy->arena()->header()->thingKind);
-    JSObject *newborn = NewNonFunction<WithProto::Given>(cx, clasp, proto, parent, type, kind);
+    JSObject *newborn = NewNonFunction<WithProto::Given>(cx, clasp, proto, parent, kind);
     if (!newborn)
         return false;
     AutoObjectRooter tvr2(cx, newborn);
@@ -1409,10 +1406,15 @@ Class js_ProxyClass = {
 JS_FRIEND_API(JSObject *)
 js_InitProxyClass(JSContext *cx, JSObject *obj)
 {
-    TypeObject *type = cx->getTypeObject(js_ProxyClass.name, NULL);
-    JSObject *module = NewNonFunction<WithProto::Class>(cx, &js_ProxyClass, NULL, obj, type);
+    JSObject *module = NewNonFunction<WithProto::Class>(cx, &js_ProxyClass, NULL, obj);
     if (!module)
         return NULL;
+
+    TypeObject *type = cx->newTypeObject(js_ProxyClass.name, module->getProto());
+    if (!type)
+        return NULL;
+    module->setType(type);
+
     if (!JS_DefinePropertyWithType(cx, obj, "Proxy", OBJECT_TO_JSVAL(module),
                                    JS_PropertyStub, JS_PropertyStub, 0)) {
         return NULL;

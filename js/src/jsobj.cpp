@@ -1562,8 +1562,10 @@ js_obj_defineGetter(JSContext *cx, uintN argc, Value *vp)
     if (!CheckAccess(cx, obj, id, JSACC_WATCH, &junk, &attrs))
         return JS_FALSE;
 
-    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_GETSET);
-    cx->addTypePropertyId(obj->getTypeObject(), id, (jstype) type);
+    TypeObject *type = cx->getTypeGetSet();
+    if (!type)
+        return JS_FALSE;
+    cx->addTypePropertyId(obj->getType(), id, (jstype) type);
 
     vp->setUndefined();
     return obj->defineProperty(cx, id, UndefinedValue(), getter, PropertyStub,
@@ -1596,8 +1598,10 @@ js_obj_defineSetter(JSContext *cx, uintN argc, Value *vp)
     if (!CheckAccess(cx, obj, id, JSACC_WATCH, &junk, &attrs))
         return JS_FALSE;
 
-    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_GETSET);
-    cx->addTypePropertyId(obj->getTypeObject(), id, (jstype) type);
+    TypeObject *type = cx->getTypeGetSet();
+    if (!type)
+        return JS_FALSE;
+    cx->addTypePropertyId(obj->getType(), id, (jstype) type);
 
     vp->setUndefined();
     return obj->defineProperty(cx, id, UndefinedValue(), PropertyStub, setter,
@@ -1679,8 +1683,7 @@ js_NewPropertyDescriptorObject(JSContext *cx, jsid id, uintN attrs,
                                const Value &value, Value *vp)
 {
     /* We have our own property, so start creating the descriptor. */
-    TypeObject *descType = cx->getFixedTypeObject(TYPE_OBJECT_PROPERTY_DESCRIPTOR);
-    JSObject *desc = NewBuiltinClassInstance(cx, &js_ObjectClass, descType);
+    JSObject *desc = NewBuiltinClassInstance(cx, &js_ObjectClass);
     if (!desc)
         return false;
     vp->setObject(*desc);    /* Root and return. */
@@ -1820,11 +1823,8 @@ obj_keys(JSContext *cx, uintN argc, Value *vp)
         }
     }
 
-    TypeObject *aobjType = cx->getFixedTypeObject(TYPE_OBJECT_PROPERTY_ARRAY);
-    cx->addTypeProperty(aobjType, NULL, TYPE_STRING);
-
     JS_ASSERT(props.length() <= UINT32_MAX);
-    JSObject *aobj = js_NewArrayObject(cx, jsuint(vals.length()), vals.begin(), aobjType);
+    JSObject *aobj = js_NewArrayObject(cx, jsuint(vals.length()), vals.begin());
     if (!aobj)
         return false;
     vp->setObject(*aobj);
@@ -2332,7 +2332,7 @@ DefineProperty(JSContext *cx, JSObject *obj, const PropDesc &desc, bool throwErr
 {
     /* Add this to the type information for the object.
      * TODO: handle getters and setters. */
-    cx->addTypePropertyId(obj->getTypeObject(), desc.id, desc.value);
+    cx->addTypePropertyId(obj->getType(), desc.id, desc.value);
 
     if (obj->isArray())
         return DefinePropertyOnArray(cx, obj, desc, throwError, rval);
@@ -2468,15 +2468,12 @@ obj_create(JSContext *cx, uintN argc, Value *vp)
         return JS_FALSE;
     }
 
-    TypeObject *type = cx->getTypeCallerInitObject(false);
-    cx->markTypeObjectUnknownProperties(type);
-
     /*
      * Use the callee's global as the parent of the new object to avoid dynamic
      * scoping (i.e., using the caller's global).
      */
     JSObject *obj = NewNonFunction<WithProto::Given>(cx, &js_ObjectClass, v.toObjectOrNull(),
-                                                     vp->toObject().getGlobal(), type);
+                                                        vp->toObject().getGlobal());
     if (!obj)
         return JS_FALSE;
     vp->setObject(*obj); /* Root and prepare for eventual return. */
@@ -2544,10 +2541,7 @@ obj_getOwnPropertyNames(JSContext *cx, uintN argc, Value *vp)
          }
     }
 
-    TypeObject *aobjType = cx->getFixedTypeObject(TYPE_OBJECT_PROPERTY_ARRAY);
-    cx->addTypeProperty(aobjType, NULL, TYPE_STRING);
-
-    JSObject *aobj = js_NewArrayObject(cx, vals.length(), vals.begin(), aobjType);
+    JSObject *aobj = js_NewArrayObject(cx, vals.length(), vals.begin());
     if (!aobj)
         return false;
 
@@ -2779,11 +2773,12 @@ js_Object(JSContext *cx, uintN argc, Value *vp)
     if (!obj) {
         /* Make an object whether this was called with 'new' or not. */
         JS_ASSERT(!argc || vp[2].isNull() || vp[2].isUndefined());
-        TypeObject *type = cx->getTypeCallerInitObject(false);
         gc::FinalizeKind kind = NewObjectGCKind(cx, &js_ObjectClass);
-        obj = NewBuiltinClassInstance(cx, &js_ObjectClass, type, kind);
+        obj = NewBuiltinClassInstance(cx, &js_ObjectClass, kind);
         if (!obj)
             return JS_FALSE;
+        TypeObject *type = cx->getTypeCallerInitObject(false);
+        obj->setType(type);
     }
     vp->setObject(*obj);
     return JS_TRUE;
@@ -2807,19 +2802,8 @@ js_CreateThis(JSContext *cx, JSObject *callee)
 
     JSObject *proto = protov.isObjectOrNull() ? protov.toObjectOrNull() : NULL;
     JSObject *parent = callee->getParent();
-
-    TypeObject *type = NULL;
-#ifdef JS_TYPE_INFERENCE
-    if (proto) {
-        type = proto->getTypePrototypeNewObject(cx);
-    } else {
-        JS_ASSERT(newclasp == &js_ObjectClass);
-        type = cx->getFixedTypeObject(TYPE_OBJECT_OBJECT_PROTOTYPE)->getNewObject(cx);
-    }
-#endif
-
     gc::FinalizeKind kind = NewObjectGCKind(cx, newclasp);
-    JSObject *obj = NewObject<WithProto::Class>(cx, newclasp, proto, parent, type, kind);
+    JSObject *obj = NewObject<WithProto::Class>(cx, newclasp, proto, parent, kind);
     if (obj)
         obj->syncSpecialEquality();
     return obj;
@@ -2828,9 +2812,8 @@ js_CreateThis(JSContext *cx, JSObject *callee)
 JSObject *
 js_CreateThisForFunctionWithProto(JSContext *cx, JSObject *callee, JSObject *proto)
 {
-    TypeObject *type = proto ? proto->getTypePrototypeNewObject(cx) : NULL;
     gc::FinalizeKind kind = NewObjectGCKind(cx, &js_ObjectClass);
-    return NewNonFunction<WithProto::Class>(cx, &js_ObjectClass, proto, callee->getParent(), type, kind);
+    return NewNonFunction<WithProto::Class>(cx, &js_ObjectClass, proto, callee->getParent(), kind);
 }
 
 JSObject *
@@ -2855,12 +2838,15 @@ NewObjectWithClassProto(JSContext *cx, Class *clasp, JSObject *proto,
     JS_ASSERT(clasp->isNative());
     gc::FinalizeKind kind = gc::FinalizeKind(_kind);
 
+    TypeObject *type = proto->getNewType(cx);
+    if (!type)
+        return NULL;
+
     JSObject* obj = js_NewGCObject(cx, kind);
     if (!obj)
         return NULL;
 
-    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_UNKNOWN_OBJECT);
-    if (!obj->initSharingEmptyShape(cx, clasp, proto, proto->getParent(), type, NULL, kind))
+    if (!obj->initSharingEmptyShape(cx, clasp, type, proto->getParent(), NULL, kind))
         return NULL;
     return obj;
 }
@@ -2884,7 +2870,9 @@ js_InitializerObject(JSContext* cx, JSObject *proto, JSObject *baseobj)
         return NewObjectWithClassProto(cx, &js_ObjectClass, proto, kind);
     }
 
-    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_UNKNOWN_OBJECT);
+    /* :FIXME: new Objects do not have the right type when created on trace. */
+    TypeObject *type = proto->getNewType(cx);
+
     return CopyInitializerObject(cx, baseobj, type);
 }
 
@@ -2924,7 +2912,8 @@ js_CreateThisFromTrace(JSContext *cx, Class *clasp, JSObject *ctor)
         proto = &pval.toObject();
     } else {
         /* A hole or a primitive: either way, we need to get Object.prototype. */
-        if (!js_GetClassPrototype(cx, parent, JSProto_Object, &proto))
+        JSObject *objProto;
+        if (!js_GetClassPrototype(cx, parent, JSProto_Object, &objProto))
             return NULL;
 
         if (pval.isMagic(JS_GENERIC_MAGIC)) {
@@ -2932,10 +2921,15 @@ js_CreateThisFromTrace(JSContext *cx, Class *clasp, JSObject *ctor)
              * No ctor.prototype was set, so we inline-expand and optimize
              * fun_resolve's prototype creation code.
              */
-            TypeObject *typeProto = ctor->getTypePrototype(cx);
-            proto = NewNativeClassInstance(cx, clasp, proto, parent, typeProto);
+            proto = NewNativeClassInstance(cx, clasp, objProto, parent);
             if (!proto)
                 return NULL;
+
+            TypeObject *protoType = cx->newTypeObject(ctor->getType()->name(), "prototype", objProto);
+            if (!protoType)
+                return NULL;
+            proto->setType(protoType);
+
             if (!js_SetClassPrototype(cx, ctor, proto, JSPROP_ENUMERATE | JSPROP_PERMANENT))
                 return NULL;
         } else {
@@ -2950,10 +2944,8 @@ js_CreateThisFromTrace(JSContext *cx, Class *clasp, JSObject *ctor)
      * FIXME: 561785 at least. Quasi-natives including XML objects prevent us
      * from easily or unconditionally calling NewNativeClassInstance here.
      */
-    JS_ASSERT(proto);
-    TypeObject *type = proto->getTypePrototypeNewObject(cx);
     gc::FinalizeKind kind = NewObjectGCKind(cx, clasp);
-    return NewNonFunction<WithProto::Given>(cx, clasp, proto, parent, type, kind);
+    return NewNonFunction<WithProto::Given>(cx, clasp, proto, parent, kind);
 }
 
 JS_DEFINE_CALLINFO_3(extern, CONSTRUCTOR_RETRY, js_CreateThisFromTrace, CONTEXT, CLASS, OBJECT, 0,
@@ -3175,14 +3167,17 @@ js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth)
 {
     JSObject *obj;
 
+    TypeObject *type = proto->getNewType(cx);
+    if (!type)
+        return NULL;
+
     obj = js_NewGCObject(cx, FINALIZE_OBJECT2);
     if (!obj)
         return NULL;
 
-    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_WITH);
     JSStackFrame *priv = js_FloatingFrameIfGenerator(cx, cx->fp());
 
-    obj->init(cx, &js_WithClass, proto, parent, type, priv, false);
+    obj->init(cx, &js_WithClass, type, parent, priv, false);
     obj->setMap(cx->runtime->emptyWithShape);
     OBJ_SET_BLOCK_DEPTH(cx, obj, depth);
 
@@ -3208,8 +3203,7 @@ js_NewBlockObject(JSContext *cx)
     if (!blockObj)
         return NULL;
 
-    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_BLOCK);
-    blockObj->init(cx, &js_BlockClass, NULL, NULL, type, NULL, false);
+    blockObj->init(cx, &js_BlockClass, cx->emptyTypeObject(), NULL, NULL, false);
     blockObj->setMap(cx->runtime->emptyBlockShape);
     return blockObj;
 }
@@ -3222,15 +3216,18 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, JSStackFrame *fp)
     size_t count = OBJ_BLOCK_COUNT(cx, proto);
     gc::FinalizeKind kind = gc::GetGCObjectKind(count + 1);
 
+    TypeObject *type = proto->getNewType(cx);
+    if (!type)
+        return NULL;
+
     JSObject *clone = js_NewGCObject(cx, kind);
     if (!clone)
         return NULL;
 
-    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_BLOCK);
     JSStackFrame *priv = js_FloatingFrameIfGenerator(cx, fp);
 
     /* The caller sets parent on its own. */
-    clone->init(cx, &js_BlockClass, proto, NULL, type, priv, false);
+    clone->init(cx, &js_BlockClass, type, NULL, priv, false);
 
     clone->setMap(proto->map);
     if (!clone->ensureInstanceReservedSlots(cx, count + 1))
@@ -3425,10 +3422,11 @@ JSObject::clone(JSContext *cx, JSObject *proto, JSObject *parent)
         }
     }
     JSObject *clone = NewObject<WithProto::Given>(cx, getClass(),
-                                                  proto, parent, getTypeObject(),
+                                                  proto, parent,
                                                   gc::FinalizeKind(finalizeKind()));
     if (!clone)
         return NULL;
+    clone->setType(getType());
     if (isNative()) {
         if (clone->isFunction() && (compartment() != clone->compartment())) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -3725,6 +3723,9 @@ js_InitObjectClass(JSContext *cx, JSObject *obj)
     if (!js_DefineFunction(cx, obj, id, eval, 1, JSFUN_STUB_GSOPS, JS_TypeHandlerDynamic, js_eval_str))
         return NULL;
 
+    /* The default 'new' object for Object.prototype has unknown properties. */
+    cx->markTypeObjectUnknownProperties(proto->getNewType(cx));
+
     return proto;
 }
 
@@ -3774,7 +3775,6 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
     JSProtoKey key;
     JSFunction *fun;
     bool named = false;
-    const char *prefix;
 
     atom = js_Atomize(cx, clasp->name, strlen(clasp->name), 0);
     if (!atom)
@@ -3801,23 +3801,6 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
         return NULL;
     }
 
-    /* Create type information for the prototype object. */
-    TypeObject *protoType = NULL;
-#ifdef JS_TYPE_INFERENCE
-    size_t protoLen = strlen(clasp->name) + 15;
-    char *protoName = (char*) alloca(protoLen);
-    JS_snprintf(protoName, protoLen, "%s:prototype", clasp->name);
-    if (clasp == &js_FunctionClass) {
-        TypeObject *protoProto = cx->getFixedTypeObject(TYPE_OBJECT_OBJECT_PROTOTYPE);
-        protoType = cx->getTypeFunctionHandler(protoName, JS_TypeHandlerVoid, protoProto);
-    } else if (clasp == &js_ObjectClass) {
-        protoType = cx->compartment->types.getTypeObject(cx, NULL, protoName, false, NULL);
-    } else {
-        TypeObject *protoProto = cx->getFixedTypeObject(TYPE_OBJECT_OBJECT_PROTOTYPE);
-        protoType = cx->compartment->types.getTypeObject(cx, NULL, protoName, false, protoProto);
-    }
-#endif
-
     /*
      * Create a prototype object for this class.
      *
@@ -3839,8 +3822,20 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
      * (3) is not enough without addressing the bootstrapping dependency on (1)
      * and (2).
      */
-    JSObject *proto = NewObject<WithProto::Class>(cx, clasp, parent_proto, obj, protoType);
+    JSObject *proto = NewObject<WithProto::Class>(cx, clasp, parent_proto, obj);
     if (!proto)
+        return NULL;
+
+    TypeObject *protoType = cx->newTypeObject(clasp->name, "prototype", parent_proto);
+    if (!protoType)
+        return NULL;
+    proto->setType(protoType);
+
+    if (clasp == &js_ArrayClass && !proto->makeDenseArraySlow(cx))
+        return NULL;
+
+    TypeObject *type = proto->getNewType(cx);
+    if (!type)
         return NULL;
 
     proto->syncSpecialEquality();
@@ -3877,8 +3872,7 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
         if (!fun)
             return NULL;
 
-        cx->markTypeBuiltinFunction(fun->getTypeObject());
-        cx->addTypePropertyId(obj->getTypeObject(), ATOM_TO_JSID(atom), ObjectValue(*fun));
+        cx->addTypePropertyId(obj->getType(), ATOM_TO_JSID(atom), ObjectValue(*fun));
 
         AutoValueRooter tvr2(cx, ObjectValue(*fun));
         if (!DefineStandardSlot(cx, obj, key, atom, tvr2.value(), 0, named))
@@ -3904,8 +3898,12 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
                                                 0, NULL, &rval)) {
                 goto bad;
             }
-            if (rval.isObject() && &rval.toObject() != proto)
+            if (rval.isObject() && &rval.toObject() != proto) {
                 proto = &rval.toObject();
+                type = proto->getNewType(cx);
+                if (!type)
+                    goto bad;
+            }
         }
 
         /* Connect constructor and prototype by named properties. */
@@ -3916,36 +3914,14 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
 
         /* Bootstrap Function.prototype (see also JS_InitStandardClasses). */
         if (ctor->getClass() == clasp)
-            ctor->setProto(cx, proto);
-
-#ifdef JS_TYPE_INFERENCE
-        if (clasp == &js_FunctionClass) {
-            /*
-             * Fixup the type information for the prototype class. protoType
-             * was ignored when proto was constructed.
-             */
-            proto->typeObject = protoType;
-            cx->markTypeBuiltinFunction(proto->getTypeObject());
-
-            cx->setTypeFunctionPrototype(fun->getTypeObject(), protoType);
-        } else {
-            cx->setTypeFunctionPrototype(fun->getTypeObject(), protoType);
-        }
-#endif
+            ctor->getType()->splicePrototype(proto);
     }
-
-    /* Get the type prefix for the class methods. This is normally the
-     * class name, with an exception for the Iterator class which is folded
-     * together with Generator. */
-    prefix = clasp->name;
-    if (clasp == &js_GeneratorClass)
-        prefix = js_IteratorClass.name;
 
     /* Add properties and methods to the prototype and the constructor. */
     if ((ps && !JS_DefineProperties(cx, proto, ps)) ||
-        (fs && !JS_DefineFunctionsWithPrefix(cx, proto, fs, prefix)) ||
+        (fs && !JS_DefineFunctionsWithPrefix(cx, proto, fs, clasp->name)) ||
         (static_ps && !JS_DefineProperties(cx, ctor, static_ps)) ||
-        (static_fs && !JS_DefineFunctionsWithPrefix(cx, ctor, static_fs, prefix))) {
+        (static_fs && !JS_DefineFunctionsWithPrefix(cx, ctor, static_fs, clasp->name))) {
         goto bad;
     }
 
@@ -3958,9 +3934,13 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
     if (ctor != proto && static_fs && !ctor->brand(cx))
         goto bad;
 
+    type = proto->getNewType(cx);
+    if (!type)
+        goto bad;
+
     /*
      * Make sure proto's emptyShape is available to be shared by objects of
-     * this class.  JSObject::emptyShape is a one-slot cache. If we omit this,
+     * this class.  TypeObject::emptyShape is a one-slot cache. If we omit this,
      * some other class could snap it up. (The risk is particularly great for
      * Object.prototype.)
      *
@@ -3971,7 +3951,7 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
      */
     JS_ASSERT_IF(proto->clasp != clasp,
                  clasp == &js_ArrayClass && proto->clasp == &js_SlowArrayClass);
-    if (!proto->getEmptyShape(cx, proto->clasp, FINALIZE_OBJECT0))
+    if (!type->getEmptyShape(cx, proto->clasp, FINALIZE_OBJECT0))
         goto bad;
 
     if (clasp->flags & (JSCLASS_FREEZE_PROTO|JSCLASS_FREEZE_CTOR)) {
@@ -4152,9 +4132,25 @@ SetProto(JSContext *cx, JSObject *obj, JSObject *proto, bool checkForCycles)
         oldproto = oldproto->getProto();
     }
 
+    TypeObject *type;
+    if (proto) {
+        type = proto->getNewType(cx);
+        if (!type)
+            return false;
+    } else {
+        type = cx->emptyTypeObject();
+    }
+
+    /*
+     * Setting __proto__ on an object that has escaped and may be referenced by
+     * other heap objects can only be done if the properties of both objects are unknown.
+     */
+    cx->markTypeObjectUnknownProperties(obj->getType());
+    cx->markTypeObjectUnknownProperties(type);
+
     if (!proto || !checkForCycles) {
-        obj->setProto(cx, proto);
-    } else if (!SetProtoCheckingForCycles(cx, obj, proto)) {
+        obj->setType(type);
+    } else if (!SetTypeCheckingForCycles(cx, obj, type)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CYCLIC_VALUE, js_proto_str);
         return false;
     }
@@ -4301,7 +4297,7 @@ js_FindClassObject(JSContext *cx, JSObject *start, JSProtoKey protoKey,
 
 JSObject *
 js_ConstructObject(JSContext *cx, Class *clasp, JSObject *proto, JSObject *parent,
-                   TypeObject *type, uintN argc, Value *argv)
+                   uintN argc, Value *argv)
 {
     AutoArrayRooter argtvr(cx, argc, argv);
 
@@ -4335,7 +4331,7 @@ js_ConstructObject(JSContext *cx, Class *clasp, JSObject *proto, JSObject *paren
             proto = rval.toObjectOrNull();
     }
 
-    JSObject *obj = NewObject<WithProto::Class>(cx, clasp, proto, parent, type);
+    JSObject *obj = NewObject<WithProto::Class>(cx, clasp, proto, parent);
     if (!obj)
         return NULL;
 
@@ -6143,6 +6139,9 @@ js_GetClassPrototype(JSContext *cx, JSObject *scopeobj, JSProtoKey protoKey,
 JSBool
 js_SetClassPrototype(JSContext *cx, JSObject *ctor, JSObject *proto, uintN attrs)
 {
+    cx->addTypePropertyId(ctor->getType(), ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom),
+                          ObjectOrNullValue(proto));
+
     /*
      * Use the given attributes for the prototype property of the constructor,
      * as user-defined constructors have a DontDelete prototype (which may be
@@ -6169,21 +6168,16 @@ js_PrimitiveToObject(JSContext *cx, Value *vp)
     JS_ASSERT(v.isPrimitive());
 
     Class *clasp;
-    FixedTypeObjectName name;
     if (v.isNumber()) {
         clasp = &js_NumberClass;
-        name = TYPE_OBJECT_NEW_NUMBER;
     } else if (v.isString()) {
         clasp = &js_StringClass;
-        name = TYPE_OBJECT_NEW_STRING;
     } else {
         JS_ASSERT(v.isBoolean());
         clasp = &js_BooleanClass;
-        name = TYPE_OBJECT_NEW_BOOLEAN;
     }
 
-    TypeObject *type = cx->getFixedTypeObject(name);
-    JSObject *obj = NewBuiltinClassInstance(cx, clasp, type);
+    JSObject *obj = NewBuiltinClassInstance(cx, clasp);
     if (!obj)
         return JS_FALSE;
 

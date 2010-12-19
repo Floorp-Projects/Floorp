@@ -193,8 +193,7 @@ class NodeBuilder
     }
 
     bool newObject(JSObject **dst) {
-        types::TypeObject *type = cx->getFixedTypeObject(types::TYPE_OBJECT_REFLECT_OBJECT);
-        JSObject *nobj = NewNonFunction<WithProto::Class>(cx, &js_ObjectClass, NULL, NULL, type);
+        JSObject *nobj = NewNonFunction<WithProto::Class>(cx, &js_ObjectClass, NULL, NULL);
         if (!nobj)
             return false;
 
@@ -497,8 +496,7 @@ NodeBuilder::newNode(ASTType type, TokenPos *pos, JSObject **dst)
 
     Value tv;
 
-    types::TypeObject *nodeType = cx->getFixedTypeObject(types::TYPE_OBJECT_REFLECT_OBJECT);
-    JSObject *node = NewNonFunction<WithProto::Class>(cx, &js_ObjectClass, NULL, NULL, nodeType);
+    JSObject *node = NewNonFunction<WithProto::Class>(cx, &js_ObjectClass, NULL, NULL);
     if (!node ||
         !setNodeLoc(node, pos) ||
         !atomValue(nodeTypeNames[type], &tv) ||
@@ -513,8 +511,7 @@ NodeBuilder::newNode(ASTType type, TokenPos *pos, JSObject **dst)
 bool
 NodeBuilder::newArray(NodeVector &elts, Value *dst)
 {
-    types::TypeObject *type = cx->getFixedTypeObject(types::TYPE_OBJECT_REFLECT_ARRAY);
-    JSObject *array = js_NewArrayObject(cx, 0, NULL, type);
+    JSObject *array = js_NewArrayObject(cx, 0, NULL);
     if (!array)
         return false;
 
@@ -2885,10 +2882,14 @@ static JSFunctionSpec static_methods[] = {
 JSObject *
 js_InitReflectClass(JSContext *cx, JSObject *obj)
 {
-    types::TypeObject *type = cx->getTypeObject(js_ReflectClass.name, NULL);
-    JSObject *Reflect = NewNonFunction<WithProto::Class>(cx, &js_ReflectClass, NULL, obj, type);
+    JSObject *Reflect = NewNonFunction<WithProto::Class>(cx, &js_ReflectClass, NULL, obj);
     if (!Reflect)
         return NULL;
+
+    types::TypeObject *type = cx->newTypeObject(js_ReflectClass.name, Reflect->getProto());
+    if (!type)
+        return NULL;
+    Reflect->setType(type);
 
     if (!JS_DefineProperty(cx, obj, js_Reflect_str, OBJECT_TO_JSVAL(Reflect),
                            JS_PropertyStub, JS_PropertyStub, 0)) {

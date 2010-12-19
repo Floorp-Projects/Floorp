@@ -72,10 +72,8 @@ struct JS_FRIEND_API(JSCompartment) {
     js::gc::JSGCArenaStats       compartmentStats[js::gc::FINALIZE_LIMIT];
 #endif
 
-#ifdef JS_TYPE_INFERENCE
     /* Type information about the scripts and objects in this compartment. */
     js::types::TypeCompartment   types;
-#endif
 
     void                         *data;
     bool                         marked;
@@ -152,22 +150,6 @@ class SwitchToCompartment : public PreserveCompartment {
     }
 };
 
-}
-
-inline js::types::TypeObject *
-JSContext::getFixedTypeObject(js::types::FixedTypeObjectName which)
-{
-#ifdef JS_TYPE_INFERENCE
-    JS_ASSERT(which < js::types::TYPE_OBJECT_FIXED_LIMIT);
-    js::types::TypeObject *type = compartment->types.fixedTypeObjects[which];
-    if (type)
-        return type;
-    type = compartment->types.makeFixedTypeObject(this, which);
-    compartment->types.fixedTypeObjects[which] = type;
-    return type;
-#else
-    return NULL;
-#endif
 }
 
 #endif /* jscompartment_h___ */

@@ -736,8 +736,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
      * Create arguments early and define it to root it, so it's safe from any
      * GC calls nested below, and so it is available to -f <file> arguments.
      */
-    js::types::TypeObject *argstype = cx->getFixedTypeObject(js::types::TYPE_OBJECT_ARGUMENTS);
-    argsObj = js_NewArrayObject(cx, 0, NULL, argstype);
+    argsObj = js_NewArrayObject(cx, 0, NULL);
     if (!argsObj)
         return 1;
 

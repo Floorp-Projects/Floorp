@@ -222,7 +222,7 @@ struct TypeSet
 
     void setPool(JSArenaPool *pool)
     {
-#ifdef DEBUG
+#if defined DEBUG && defined JS_TYPE_INFERENCE
         this->id_ = ++typesetCount;
         this->pool = pool;
 #endif
@@ -246,6 +246,7 @@ struct TypeSet
     void addSetProperty(JSContext *cx, analyze::Bytecode *code, TypeSet *target, jsid id);
     void addGetElem(JSContext *cx, analyze::Bytecode *code, TypeSet *object, TypeSet *target);
     void addSetElem(JSContext *cx, analyze::Bytecode *code, TypeSet *object, TypeSet *target);
+    void addNewObject(JSContext *cx, JSArenaPool &pool, TypeSet *target);
     void addCall(JSContext *cx, TypeCallsite *site);
     void addArith(JSContext *cx, JSArenaPool &pool, analyze::Bytecode *code,
                   TypeSet *target, TypeSet *other = NULL);
@@ -407,37 +408,36 @@ struct Property
 /* Type information about an object accessed by a script. */
 struct TypeObject
 {
-    /*
-     * Name of this object.  This is unique among all objects in the compartment;
-     * if someone tries to make an object with the same name, they will get back
-     * this object instead.
-     */
-    jsid name;
+#ifdef DEBUG
+    /* Name of this object. */
+    jsid name_;
+#endif
+
+    /* Prototype shared by objects using this type. */
+    JSObject *proto;
+
+    /* Lazily filled array of empty shapes for each size of objects with this type. */
+    js::EmptyShape **emptyShapes;
 
     /* Whether this is a function object, and may be cast into TypeFunction. */
     bool isFunction;
 
+    /* Mark bit for GC. */
+    bool marked;
+
     /*
-     * Properties of this object. This is filled in lazily for function objects
-     * to avoid unnecessary prototype and new object creation.
+     * Properties of this object. This may contain JSID_VOID, representing the types
+     * of all integer indexes of the object, and/or JSID_EMPTY, representing the types
+     * of new objects that can be created with different instances of this type.
      */
     Property **propertySet;
     unsigned propertyCount;
-
-    /*
-     * Prototype of this object. This is immutable; setting or changing the __proto__
-     * property of an object causes its properties to become unknown.
-     */
-    TypeObject *prototype;
 
     /* List of objects using this one as their prototype. */
     TypeObject *instanceList;
 
     /* Chain for objects sharing the same prototype. */
     TypeObject *instanceNext;
-
-    /* Object to use in ConstructThis with this as the prototype. :XXX: fuse with instance. */
-    TypeObject *newObject;
 
     /*
      * Pool in which this object was allocated, and link in the list of objects
@@ -462,8 +462,10 @@ struct TypeObject
      */
     bool possiblePackedArray;
 
+    TypeObject() {}
+
     /* Make an object with the specified name. */
-    TypeObject(JSContext *cx, JSArenaPool *pool, jsid id, TypeObject *prototype);
+    inline TypeObject(JSArenaPool *pool, jsid id, JSObject *proto);
 
     /* Coerce this object to a function. */
     TypeFunction* asFunction()
@@ -473,6 +475,17 @@ struct TypeObject
     }
 
     /*
+     * Return an immutable, shareable, empty shape with the same clasp as this
+     * and the same slotSpan as this had when empty.
+     *
+     * If |this| is the scope of an object |proto|, the resulting scope can be
+     * used as the scope of a new object whose prototype is |proto|.
+     */
+    inline bool canProvideEmptyShape(js::Class *clasp);
+    inline js::EmptyShape *getEmptyShape(JSContext *cx, js::Class *aclasp,
+                                         /* gc::FinalizeKind */ unsigned kind);
+
+    /*
      * Get or create a property of this object. Only call this for properties which
      * a script accesses explicitly. 'assign' indicates whether this is for an
      * assignment, and the own types of the property will be used instead of
@@ -480,8 +493,10 @@ struct TypeObject
      */
     inline TypeSet *getProperty(JSContext *cx, jsid id, bool assign);
 
-    /* Whether this type has Array.prototype in its prototype chain. */
-    inline bool isArray(JSContext *cx);
+    inline const char * name();
+
+    /* Mark proto as the prototype of this object and all instances. */
+    void splicePrototype(JSObject *proto);
 
     /* Helpers */
 
@@ -489,9 +504,9 @@ struct TypeObject
     void addProperty(JSContext *cx, jsid id, Property *&prop);
     void markUnknown(JSContext *cx);
     void storeToInstances(JSContext *cx, Property *base);
-    TypeObject *getNewObject(JSContext *cx);
 
     void print(JSContext *cx);
+    void trace(JSTracer *trc);
 };
 
 /* Type information about an interpreted or native function. */
@@ -503,20 +518,11 @@ struct TypeFunction : public TypeObject
     /* If this function is interpreted, the corresponding script. */
     JSScript *script;
 
-    /* Default prototype object of this function. */
-    TypeObject *prototypeObject;
-
     /*
      * For interpreted functions and functions with dynamic handlers, the possible
      * return types of the function.
      */
     TypeSet returnTypes;
-
-    /*
-     * Whether this is the constructor for a builtin class, whose prototype must
-     * be specified manually.
-     */
-    bool isBuiltin;
 
     /*
      * Whether this is a generic native handler, and treats its first parameter
@@ -525,74 +531,8 @@ struct TypeFunction : public TypeObject
      */
     bool isGeneric;
 
-    TypeFunction(JSContext *cx, JSArenaPool *pool, jsid id, TypeObject *prototype);
+    inline TypeFunction(JSArenaPool *pool, jsid id, JSObject *proto);
 };
-
-/*
- * Singleton type objects referred to at various points in the system.
- * At most one of these will exist for each compartment, though many JSObjects
- * may use them for type information.
- */
-enum FixedTypeObjectName
-{
-    /* Functions. */
-    TYPE_OBJECT_OBJECT,
-    TYPE_OBJECT_FUNCTION,
-    TYPE_OBJECT_ARRAY,
-    TYPE_OBJECT_FUNCTION_PROTOTYPE,
-    TYPE_OBJECT_EMPTY_FUNCTION,
-
-    /* Builtin prototypes and 'new' objects. */
-    TYPE_OBJECT_OBJECT_PROTOTYPE,
-    TYPE_OBJECT_ARRAY_PROTOTYPE,
-    TYPE_OBJECT_NEW_BOOLEAN,
-    TYPE_OBJECT_NEW_NUMBER,
-    TYPE_OBJECT_NEW_STRING,
-    TYPE_OBJECT_NEW_REGEXP,
-    TYPE_OBJECT_NEW_ITERATOR,
-    TYPE_OBJECT_NEW_GENERATOR,
-    TYPE_OBJECT_NEW_ARRAYBUFFER,
-
-    /* Builtin objects with unknown properties. */
-    TYPE_OBJECT_XML,
-    TYPE_OBJECT_ARGUMENTS,
-    TYPE_OBJECT_NOSUCHMETHOD,
-    TYPE_OBJECT_NOSUCHMETHOD_ARGUMENTS,
-    TYPE_OBJECT_PROPERTY_DESCRIPTOR,
-    TYPE_OBJECT_KEY_VALUE_PAIR,
-    TYPE_OBJECT_JSON,
-    TYPE_OBJECT_PROXY,
-
-    /* Builtin Array objects. */
-    TYPE_OBJECT_REGEXP_MATCH_ARRAY,
-    TYPE_OBJECT_STRING_SPLIT_ARRAY,
-    TYPE_OBJECT_UNKNOWN_ARRAY,
-    TYPE_OBJECT_CLONE_ARRAY,
-    TYPE_OBJECT_PROPERTY_ARRAY,
-    TYPE_OBJECT_REFLECT_ARRAY,
-
-    /* Builtin Object objects. */
-    TYPE_OBJECT_UNKNOWN_OBJECT,
-    TYPE_OBJECT_CLONE_OBJECT,
-    TYPE_OBJECT_REFLECT_OBJECT,
-    TYPE_OBJECT_XML_SETTINGS,
-
-    /* Objects which probably can't escape to scripts. Maybe condense these. */
-    TYPE_OBJECT_GETSET,  /* For properties with a scripted getter/setter. */
-    TYPE_OBJECT_REGEXP_STATICS,
-    TYPE_OBJECT_CALL,
-    TYPE_OBJECT_DECLENV,
-    TYPE_OBJECT_SHARP_ARRAY,
-    TYPE_OBJECT_WITH,
-    TYPE_OBJECT_BLOCK,
-    TYPE_OBJECT_NULL_CLOSURE,
-    TYPE_OBJECT_PROPERTY_ITERATOR,
-    TYPE_OBJECT_SCRIPT,
-
-    TYPE_OBJECT_FIXED_LIMIT
-};
-
-extern const char* const fixedTypeObjectNames[];
 
 /* Type information for a compartment. */
 struct TypeCompartment
@@ -604,46 +544,17 @@ struct TypeCompartment
     JSArenaPool pool;
     TypeObject *objects;
 
-    TypeObject *fixedTypeObjects[TYPE_OBJECT_FIXED_LIMIT];
-
     /* Number of scripts in this compartment. */
     unsigned scriptCount;
 
     /* Whether the interpreter is currently active (we are not inferring types). */
     bool interpreting;
 
-    /* Object containing all global variables. root of all parent chains. */
-    TypeObject *globalObject;
+    /* Object to use throughout the compartment as the default type of objects with no prototype. */
+    TypeObject emptyObject;
 
-    struct IdHasher
-    {
-        typedef jsid Lookup;
-        static uint32 hashByte(uint32 hash, uint8 byte) {
-            hash = (hash << 4) + byte;
-            uint32 x = hash & 0xF0000000L;
-            if (x)
-                hash ^= (x >> 24);
-            return hash & ~x;
-        }
-        static uint32 hash(jsid id) {
-            /* Do an ELF hash of the lower four bytes of the ID. */
-            uint32 hash = 0, v = uint32(JSID_BITS(id));
-            hash = hashByte(hash, v & 0xff);
-            v >>= 8;
-            hash = hashByte(hash, v & 0xff);
-            v >>= 8;
-            hash = hashByte(hash, v & 0xff);
-            v >>= 8;
-            return hashByte(hash, v & 0xff);
-        }
-        static bool match(jsid id0, jsid id1) {
-            return id0 == id1;
-        }
-    };
-
-    /* Map from object names to the object. */
-    typedef HashMap<jsid, TypeObject*, IdHasher, SystemAllocPolicy> ObjectNameTable;
-    ObjectNameTable *objectNameTable;
+    /* Dummy object added to properties which can have scripted getters/setters. */
+    TypeObject *typeGetSet;
 
     /* Pending recompilations to perform before execution of JIT code can resume. */
     Vector<JSScript*> *pendingRecompiles;
@@ -700,8 +611,6 @@ struct TypeCompartment
 #endif
     }
 
-    TypeObject *makeFixedTypeObject(JSContext *cx, FixedTypeObjectName which);
-
     /* Add a type to register with a list of constraints. */
     inline void addPending(JSContext *cx, TypeConstraint *constraint, TypeSet *source, jstype type);
     void growPendingArray();
@@ -712,9 +621,9 @@ struct TypeCompartment
     /* Prints results of this compartment if spew is enabled, checks for warnings. */
     void finish(JSContext *cx, JSCompartment *compartment);
 
-    /* Get a function or non-function object associated with an optional script. */
-    TypeObject *getTypeObject(JSContext *cx, analyze::Script *script,
-                              const char *name, bool isFunction, TypeObject *prototype);
+    /* Make a function or non-function object associated with an optional script. */
+    TypeObject *newTypeObject(JSContext *cx, analyze::Script *script,
+                              const char *name, bool isFunction, JSObject *proto);
 
     /*
      * Add the specified type to the specified set, do any necessary reanalysis
@@ -731,7 +640,7 @@ struct TypeCompartment
     /* Monitor future effects on a bytecode. */
     void monitorBytecode(JSContext *cx, analyze::Bytecode *code);
 
-    void trace(JSTracer *trc);
+    void sweep(JSContext *cx);
 };
 
 enum SpewChannel {

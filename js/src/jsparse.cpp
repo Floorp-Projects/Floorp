@@ -1052,7 +1052,7 @@ Compiler::defineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *scrip
         }
 
         if (!rval.isUndefined()) {
-            cx->addTypePropertyId(globalObj->getTypeObject(), id, rval);
+            cx->addTypePropertyId(globalObj->getType(), id, rval);
             if (rval.isObject() && rval.toObject().isFunction()) {
                 JSFunction *fun = rval.toObject().getFunctionPrivate();
                 if (fun->isInterpreted())
@@ -1847,7 +1847,7 @@ Parser::newFunction(JSTreeContext *tc, JSAtom *atom, uintN lambda)
     fun = js_NewFunction(context, NULL, NULL, 0, JSFUN_INTERPRETED | lambda, parent, atom, NULL, NULL);
     if (fun && !tc->compileAndGo()) {
         FUN_OBJECT(fun)->clearParent();
-        FUN_OBJECT(fun)->clearProto();
+        FUN_OBJECT(fun)->clearType(context);
     }
     return fun;
 }
@@ -8717,7 +8717,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
             return NULL;
         if (!tc->compileAndGo()) {
             obj->clearParent();
-            obj->clearProto();
+            obj->clearType(context);
         }
 
         pn->pn_objbox = tc->parser->newObjectBox(obj);

@@ -2552,13 +2552,10 @@ js_Date(JSContext *cx, uintN argc, Value *vp)
 static void type_NewDate(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 {
 #ifdef JS_TYPE_INFERENCE
-    TypeCallsite *site = Valueify(jssite);
-    if (site->isNew) {
-        TypeObject *object = Valueify(jsfun)->prototypeObject->getNewObject(cx);
-        site->returnTypes->addType(cx, (jstype) object);
-    } else {
+    if (Valueify(jssite)->isNew)
+        JS_TypeHandlerNew(cx, jsfun, jssite);
+    else
         JS_TypeHandlerString(cx, jsfun, jssite);
-    }
 #endif
 }
 
@@ -2591,7 +2588,7 @@ js_InitDateClass(JSContext *cx, JSObject *obj)
                            PropertyStub, PropertyStub, 0)) {
         return NULL;
     }
-    cx->addTypePropertyId(proto->getTypeObject(), toGMTStringId, toUTCStringFun.value());
+    cx->addTypePropertyId(proto->getType(), toGMTStringId, toUTCStringFun.value());
 
     return proto;
 }
@@ -2599,7 +2596,7 @@ js_InitDateClass(JSContext *cx, JSObject *obj)
 JS_FRIEND_API(JSObject *)
 js_NewDateObjectMsec(JSContext *cx, jsdouble msec_time)
 {
-    JSObject *obj = NewBuiltinClassInstance(cx, &js_DateClass, NULL);
+    JSObject *obj = NewBuiltinClassInstance(cx, &js_DateClass);
     if (!obj || !obj->ensureSlots(cx, JSObject::DATE_CLASS_RESERVED_SLOTS))
         return NULL;
     if (!SetUTCTime(cx, obj, msec_time))

@@ -4329,7 +4329,8 @@ mjit::Compiler::iter(uintN flags)
     stubcc.linkExit(mismatchedObject, Uses(1));
 
     /* Compare shape of object's prototype with iterator. */
-    masm.loadPtr(Address(reg, offsetof(JSObject, proto)), T1);
+    masm.loadPtr(Address(reg, offsetof(JSObject, type)), T1);
+    masm.loadPtr(Address(T1, offsetof(types::TypeObject, proto)), T1);
     masm.loadShape(T1, T1);
     masm.loadPtr(Address(nireg, offsetof(NativeIterator, shapes_array)), T2);
     masm.load32(Address(T2, sizeof(uint32)), T2);
@@ -4342,8 +4343,10 @@ mjit::Compiler::iter(uintN flags)
      * (i.e. it must be a plain object), so we do not need to generate
      * a loop here.
      */
-    masm.loadPtr(Address(reg, offsetof(JSObject, proto)), T1);
-    masm.loadPtr(Address(T1, offsetof(JSObject, proto)), T1);
+    masm.loadPtr(Address(reg, offsetof(JSObject, type)), T1);
+    masm.loadPtr(Address(T1, offsetof(types::TypeObject, proto)), T1);
+    masm.loadPtr(Address(T1, offsetof(JSObject, type)), T1);
+    masm.loadPtr(Address(T1, offsetof(types::TypeObject, proto)), T1);
     Jump overlongChain = masm.branchPtr(Assembler::NonZero, T1, T1);
     stubcc.linkExit(overlongChain, Uses(1));
 
@@ -4904,11 +4907,11 @@ mjit::Compiler::jsop_instanceof()
     if (!lhs->isTypeKnown())
         isFalse = frame.testPrimitive(Assembler::Equal, lhs);
 
-    Address protoAddr(obj, offsetof(JSObject, proto));
     Label loop = masm.label();
 
     /* Walk prototype chain, break out on NULL or hit. */
-    masm.loadPayload(protoAddr, obj);
+    masm.loadPtr(Address(obj, offsetof(JSObject, type)), obj);
+    masm.loadPtr(Address(obj, offsetof(types::TypeObject, proto)), obj);
     Jump isFalse2 = masm.branchTestPtr(Assembler::Zero, obj, obj);
     Jump isTrue = masm.branchPtr(Assembler::NotEqual, obj, proto);
     isTrue.linkTo(loop, &masm);
@@ -5460,10 +5463,16 @@ bool
 mjit::Compiler::arrayPrototypeHasIndexedProperty()
 {
 #ifdef JS_TYPE_INFERENCE
-    types::TypeSet *arrayTypes =
-        cx->getFixedTypeObject(types::TYPE_OBJECT_ARRAY_PROTOTYPE)->getProperty(cx, JSID_VOID, false);
-    types::TypeSet *objectTypes =
-        cx->getFixedTypeObject(types::TYPE_OBJECT_OBJECT_PROTOTYPE)->getProperty(cx, JSID_VOID, false);
+    /*
+     * Get the types of Array.prototype and Object.prototype to use. :XXX: This is broken
+     * in the presence of multiple global objects, we should figure out the possible
+     * prototype(s) from the objects in the type set that triggered this call.
+     */
+    JSObject *proto;
+    if (!js_GetClassPrototype(cx, NULL, JSProto_Array, &proto, NULL))
+        return false;
+    types::TypeSet *arrayTypes = proto->getType()->getProperty(cx, JSID_VOID, false);
+    types::TypeSet *objectTypes = proto->getProto()->getType()->getProperty(cx, JSID_VOID, false);
     return arrayTypes->knownNonEmpty(cx, script)
         || objectTypes->knownNonEmpty(cx, script);
 #endif

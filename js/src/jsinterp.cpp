@@ -584,7 +584,6 @@ js_OnUnknownMethod(JSContext *cx, Value *vp)
                 vp[0] = IdToValue(id);
         }
 #endif
-        TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NOSUCHMETHOD);
         obj = js_NewGCObject(cx, FINALIZE_OBJECT2);
         if (!obj)
             return false;
@@ -596,7 +595,7 @@ js_OnUnknownMethod(JSContext *cx, Value *vp)
          * NoSuchMethod helper objects own no manually allocated resources.
          */
         obj->map = NULL;
-        obj->init(cx, &js_NoSuchMethodClass, NULL, NULL, type, NULL, false);
+        obj->init(cx, &js_NoSuchMethodClass, cx->emptyTypeObject(), NULL, NULL, false);
         obj->setSlot(JSSLOT_FOUND_FUNCTION, tvr.value());
         obj->setSlot(JSSLOT_SAVED_ID, vp[0]);
         vp[0].setObject(*obj);
@@ -618,12 +617,10 @@ NoSuchMethod(JSContext *cx, uintN argc, Value *vp, uint32 flags)
     JSObject *obj = &vp[0].toObject();
     JS_ASSERT(obj->getClass() == &js_NoSuchMethodClass);
 
-    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NOSUCHMETHOD_ARGUMENTS);
-
     args.callee() = obj->getSlot(JSSLOT_FOUND_FUNCTION);
     args.thisv() = vp[1];
     args[0] = obj->getSlot(JSSLOT_SAVED_ID);
-    JSObject *argsobj = js_NewArrayObject(cx, argc, vp + 2, type);
+    JSObject *argsobj = js_NewArrayObject(cx, argc, vp + 2);
     if (!argsobj)
         return JS_FALSE;
     args[1].setObject(*argsobj);
@@ -4012,7 +4009,7 @@ do_incop:
             goto error;
         if (!regs.sp[-1].isInt32()) {
             script->typeMonitorOverflow(cx, regs.pc, 0);
-            cx->addTypePropertyId(obj->getTypeObject(), id, TYPE_DOUBLE);
+            cx->addTypePropertyId(obj->getType(), id, TYPE_DOUBLE);
         }
         regs.fp->setAssigning();
         JSBool ok = obj->setProperty(cx, id, &regs.sp[-1], script->strictModeCode);
@@ -4580,7 +4577,7 @@ BEGIN_CASE(JSOP_GETELEM)
     assertSameCompartment(cx, regs.sp[-1]);
     if (copyFrom->isUndefined() || !rref.isInt32()) {
         if (rref.isInt32())
-            cx->addTypeProperty(obj->getTypeObject(), NULL, TYPE_UNDEFINED);
+            cx->addTypeProperty(obj->getType(), NULL, TYPE_UNDEFINED);
         script->typeMonitorResult(cx, regs.pc, 0, *copyFrom);
     }
 }
@@ -5968,17 +5965,21 @@ BEGIN_CASE(JSOP_NEWINIT)
 
     JS_ASSERT(i == JSProto_Array || i == JSProto_Object);
     JSObject *obj;
-    TypeObject *type = script->getTypeInitObject(cx, regs.pc, i == JSProto_Array);
 
     if (i == JSProto_Array) {
-        obj = js_NewArrayObject(cx, 0, NULL, type);
+        obj = js_NewArrayObject(cx, 0, NULL);
     } else {
         gc::FinalizeKind kind = GuessObjectGCKind(0, false);
-        obj = NewBuiltinClassInstance(cx, &js_ObjectClass, type, kind);
+        obj = NewBuiltinClassInstance(cx, &js_ObjectClass, kind);
     }
 
     if (!obj)
         goto error;
+
+    TypeObject *type = script->getTypeInitObject(cx, regs.pc, i == JSProto_Array);
+    if (!type)
+        goto error;
+    obj->setType(type);
 
     PUSH_OBJECT(*obj);
     CHECK_INTERRUPT_HANDLER();
@@ -5988,12 +5989,16 @@ END_CASE(JSOP_NEWINIT)
 BEGIN_CASE(JSOP_NEWARRAY)
 {
     unsigned count = GET_UINT24(regs.pc);
-    TypeObject *type = script->getTypeInitObject(cx, regs.pc, true);
-    JSObject *obj = js_NewArrayObject(cx, count, NULL, type);
+    JSObject *obj = js_NewArrayObject(cx, count, NULL);
 
     /* Avoid ensureDenseArrayElements to skip sparse array checks there. */
     if (!obj || !obj->ensureSlots(cx, count))
         goto error;
+
+    TypeObject *type = script->getTypeInitObject(cx, regs.pc, true);
+    if (!type)
+        goto error;
+    obj->setType(type);
 
     PUSH_OBJECT(*obj);
     CHECK_INTERRUPT_HANDLER();
@@ -6154,8 +6159,7 @@ BEGIN_CASE(JSOP_DEFSHARP)
         obj = &lref.toObject();
     } else {
         JS_ASSERT(lref.isUndefined());
-        TypeObject *objType = cx->getFixedTypeObject(TYPE_OBJECT_SHARP_ARRAY);
-        obj = js_NewArrayObject(cx, 0, NULL, objType);
+        obj = js_NewArrayObject(cx, 0, NULL);
         if (!obj)
             goto error;
         regs.fp->slots()[slot].setObject(*obj);

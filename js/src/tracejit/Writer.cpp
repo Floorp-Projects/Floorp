@@ -41,6 +41,7 @@
 #include "jstl.h"
 #include "Writer.h"
 #include "nanojit.h"
+#include "jsobjinlines.h"
 
 namespace js {
 namespace tjit {
@@ -287,7 +288,9 @@ void ValidateWriter::checkAccSet(LOpcode op, LIns *base, int32_t disp, AccSet ac
 {
     bool ok;
 
-    NanoAssert(accSet != ACCSET_NONE);
+    // accesses to ACCSET_NONE are on immutable state
+    if (accSet == ACCSET_NONE)
+        return;
 
     #define dispWithin(Struct) \
         (0 <= disp && disp < int32_t(sizeof(Struct)))
@@ -393,8 +396,8 @@ void ValidateWriter::checkAccSet(LOpcode op, LIns *base, int32_t disp, AccSet ac
         ok = OK_OBJ_FIELD(LIR_ldi, objShape);
         break;
 
-      case ACCSET_OBJ_PROTO:
-        ok = OK_OBJ_FIELD(LIR_ldp, proto);
+      case ACCSET_OBJ_TYPE:
+        ok = OK_OBJ_FIELD(LIR_ldp, type);
         break;
 
       case ACCSET_OBJ_PARENT:
