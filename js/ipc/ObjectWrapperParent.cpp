@@ -46,7 +46,6 @@
 #include "jsobj.h"
 #include "jsfun.h"
 #include "jsutil.h"
-#include "jsobjinlines.h"
 
 using namespace mozilla::jsipc;
 
@@ -229,7 +228,7 @@ static ObjectWrapperParent*
 Unwrap(JSContext* cx, JSObject* obj)
 {
     while (obj->getClass() != &ObjectWrapperParent::sCPOW_JSClass)
-        if (!(obj = obj->getProto()))
+        if (!(obj = JS_GetPrototype(cx, obj)))
             return NULL;
     
     ObjectWrapperParent* self =

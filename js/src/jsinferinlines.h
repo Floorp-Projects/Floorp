@@ -180,15 +180,23 @@ JSContext::setTypeFunctionScript(JSFunction *fun, JSScript *script)
 inline js::types::TypeObject *
 JSContext::getTypeCallerInitObject(bool isArray)
 {
+#ifdef JS_TYPE_INFERENCE
+    /* :FIXME: this code is broken when a native reenters JS by calling Call/New. */
     JSStackFrame *caller = js_GetScriptedCaller(this, NULL);
-    return caller->script()->getTypeInitObject(this, caller->pc(this), isArray);
+    if (caller)
+        return caller->script()->getTypeInitObject(this, caller->pc(this), isArray);
+#endif
+    return getTypeNewObject(isArray ? JSProto_Array : JSProto_Object);
 }
 
 inline bool
 JSContext::isTypeCallerMonitored()
 {
 #ifdef JS_TYPE_INFERENCE
+    /* :FIXME: this code is broken when a native reenters JS by calling Call/New. */
     JSStackFrame *caller = js_GetScriptedCaller(this, NULL);
+    if (!caller)
+        return true;
     js::analyze::Script *analysis = caller->script()->analysis;
     return analysis->failed() || analysis->getCode(caller->pc(this)).monitorNeeded;
 #else
@@ -200,7 +208,10 @@ inline void
 JSContext::markTypeCallerUnexpected(js::types::jstype type)
 {
 #ifdef JS_TYPE_INFERENCE
+    /* :FIXME: this code is broken when a native reenters JS by calling Call/New. */
     JSStackFrame *caller = js_GetScriptedCaller(this, NULL);
+    if (!caller)
+        return;
     caller->script()->typeMonitorResult(this, caller->pc(this), 0, type);
 #endif
 }
@@ -208,9 +219,7 @@ JSContext::markTypeCallerUnexpected(js::types::jstype type)
 inline void
 JSContext::markTypeCallerUnexpected(const js::Value &value)
 {
-#ifdef JS_TYPE_INFERENCE
     markTypeCallerUnexpected(js::types::GetValueType(this, value));
-#endif
 }
 
 inline void
@@ -600,6 +609,7 @@ Bytecode::setFixed(JSContext *cx, unsigned num, types::jstype type)
 inline types::TypeObject *
 Bytecode::getInitObject(JSContext *cx, bool isArray)
 {
+#ifdef JS_TYPE_INFERENCE
     types::TypeObject *&object = isArray ? initArray : initObject;
     if (!object) {
         char *name = NULL;
@@ -613,6 +623,10 @@ Bytecode::getInitObject(JSContext *cx, bool isArray)
         object = cx->compartment->types.newTypeObject(cx, script, name, false, proto);
     }
     return object;
+#else
+    JS_NOT_REACHED("Call to Bytecode::getInitObject");
+    return NULL;
+#endif
 }
 
 /////////////////////////////////////////////////////////////////////

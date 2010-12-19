@@ -46,7 +46,6 @@
 
 #include "jsapi.h"
 #include "jsobj.h"
-#include "jsobjinlines.h"
 #include "jscntxt.h"
 
 #include "mozilla/unused.h"
@@ -201,7 +200,7 @@ private:
   static Handle*
   Unwrap(JSContext* cx, JSObject* obj) {
     while (obj && obj->getJSClass() != &sHandle_JSClass)
-      obj = obj->getProto();
+      obj = JS_GetPrototype(cx, obj);
 
     if (!obj)
       return NULL;
