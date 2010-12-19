@@ -50,6 +50,7 @@
 #include "nsINode.h"
 #include "xpcquickstubs.h"
 #include "jsproxy.h"
+#include "jsobjinlines.h"
 #include "AccessCheck.h"
 #include "WrapperFactory.h"
 
