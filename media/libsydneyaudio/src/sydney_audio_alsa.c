@@ -183,12 +183,26 @@ sa_stream_open(sa_stream_t *s) {
   snd_pcm_hw_params_current(s->output_unit, hwparams);
   snd_pcm_hw_params_get_period_size(hwparams, &period, &dir);
 
+  pthread_mutex_unlock(&sa_alsa_mutex);
+
+  return SA_SUCCESS;
+}
+
+
+int
+sa_stream_get_min_write(sa_stream_t *s, size_t *samples) {
+  int r;
+  snd_pcm_uframes_t threshold;
+  snd_pcm_sw_params_t* swparams;
+  if (s == NULL || s->output_unit == NULL) {
+    return SA_ERROR_NO_INIT;
+  }
   snd_pcm_sw_params_alloca(&swparams);
   snd_pcm_sw_params_current(s->output_unit, swparams);
-  snd_pcm_sw_params_set_start_threshold(s->output_unit, swparams, period);
-  snd_pcm_sw_params(s->output_unit, swparams);
-
-  pthread_mutex_unlock(&sa_alsa_mutex);
+  r = snd_pcm_sw_params_get_start_threshold(swparams, &threshold);
+  if (r < 0)
+    return SA_ERROR_NO_INIT;
+  *samples = threshold;
 
   return SA_SUCCESS;
 }
@@ -367,6 +381,23 @@ sa_stream_drain(sa_stream_t *s)
   if (s == NULL || s->output_unit == NULL) {
     return SA_ERROR_NO_INIT;
   }
+
+  if (snd_pcm_state(s->output_unit) == SND_PCM_STATE_PREPARED) {
+    size_t min_samples = 0;
+    size_t min_bytes = 0;
+
+    if (sa_stream_get_min_write(s, &min_samples) < 0)
+      return SA_ERROR_SYSTEM;
+    min_bytes = snd_pcm_frames_to_bytes(s->output_unit, min_samples);    
+
+    void* buf = malloc(min_bytes);
+    if (!buf)
+      return SA_ERROR_SYSTEM;
+    memset(buf, 0, min_bytes);
+    sa_stream_write(s, buf, min_bytes);
+    free(buf);
+  }
+
   if (snd_pcm_state(s->output_unit) != SND_PCM_STATE_RUNNING) {
     return SA_ERROR_INVALID;
   }
