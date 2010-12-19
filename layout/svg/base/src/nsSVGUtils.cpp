@@ -1013,7 +1013,7 @@ nsSVGUtils::PaintFrameWithEffects(nsSVGRenderState *aContext,
   PRBool isTrivialClip = clipPathFrame ? clipPathFrame->IsTrivial() : PR_TRUE;
 
   if (!isOK) {
-    // Some resource is missing. We shouldn't paint anything.
+    // Some resource is invalid. We shouldn't paint anything.
     return;
   }
   

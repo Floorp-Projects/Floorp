@@ -86,12 +86,12 @@ public:
   // react.
   void NotifyEvictedFromRenderingObserverList();
 
-  nsIFrame* GetReferencedFrame();
   PRBool IsInObserverList() const { return mInObserverList; }
 
+  nsIFrame* GetReferencedFrame();
   /**
    * @param aOK this is only for the convenience of callers. We set *aOK to false
-   * if this function returns null.
+   * if the frame is the wrong type
    */
   nsIFrame* GetReferencedFrame(nsIAtom* aFrameType, PRBool* aOK);
 
@@ -307,16 +307,16 @@ public:
 
     /**
      * @return the clip-path frame, or null if there is no clip-path frame
-     * @param aOK if a clip-path was specified but the designated element
-     * does not exist or is an element of the wrong type, *aOK is set
-     * to false. Otherwise *aOK is untouched.
+     * @param aOK if a clip-path was specified and the designated element
+     * exists but is an element of the wrong type, *aOK is set to false.
+     * Otherwise *aOK is untouched.
      */
     nsSVGClipPathFrame *GetClipPathFrame(PRBool *aOK);
     /**
      * @return the mask frame, or null if there is no mask frame
-     * @param aOK if a mask was specified but the designated element
-     * does not exist or is an element of the wrong type, *aOK is set
-     * to false. Otherwise *aOK is untouched.
+     * @param aOK if a mask was specified and the designated element
+     * exists but is an element of the wrong type, *aOK is set to false.
+     * Otherwise *aOK is untouched.
      */
     nsSVGMaskFrame *GetMaskFrame(PRBool *aOK);
     /**
