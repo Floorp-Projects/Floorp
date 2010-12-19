@@ -6956,7 +6956,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     wrapper->GetJSObject(&realObj);
 
     if (obj == realObj) {
-      JSObject *proto = obj->getProto();
+      JSObject *proto = JS_GetPrototype(cx, obj);
       if (proto) {
         JSObject *pobj = NULL;
         jsval val;
@@ -8652,7 +8652,7 @@ nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JSObject *obj,
   }
 
   while (obj->getJSClass() != &sHTMLDocumentAllClass) {
-    obj = obj->getProto();
+    obj = JS_GetPrototype(cx, obj);
 
     if (!obj) {
       NS_ERROR("The JS engine lies!");
