@@ -79,7 +79,7 @@ class PICLinker : public LinkerHelper
         JSC::ExecutablePool *pool = LinkerHelper::init(cx);
         if (!pool)
             return false;
-        if (!ic.execPools.append(pool)) {
+        if (!ic.addPool(cx, pool)) {
             pool->release();
             js_ReportOutOfMemory(cx);
             return false;
