@@ -39,7 +39,6 @@
 
 #include "jsobj.h"
 #include "jsvalue.h"
-#include "jsobjinlines.h"
 
 #include "WrapperFactory.h"
 #include "CrossOriginWrapper.h"
@@ -288,7 +287,7 @@ WrapperFactory::WrapLocationObject(JSContext *cx, JSObject *obj)
     JSObject *xrayHolder = LW::createHolder(cx, obj, obj->getParent());
     if (!xrayHolder)
         return NULL;
-    JSObject *wrapperObj = JSWrapper::New(cx, obj, obj->getProto(), obj->getParent(),
+    JSObject *wrapperObj = JSWrapper::New(cx, obj, JS_GetPrototype(cx, obj), obj->getParent(),
                                           &LW::singleton);
     if (!wrapperObj)
         return NULL;
@@ -346,7 +345,7 @@ JSObject *
 WrapperFactory::WrapSOWObject(JSContext *cx, JSObject *obj)
 {
     JSObject *wrapperObj =
-        JSWrapper::New(cx, obj, obj->getProto(), obj->getGlobal(),
+        JSWrapper::New(cx, obj, JS_GetPrototype(cx, obj), obj->getGlobal(),
                        &FilteringWrapper<JSWrapper,
                                          OnlyIfSubjectIsSystem>::singleton);
     return wrapperObj;

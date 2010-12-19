@@ -64,7 +64,6 @@
 #include "prmem.h"
 #include "jsapi.h"              // for JSAutoRequest
 #include "jsdbgapi.h"           // for JS_ClearWatchPointsForObject
-#include "jsobjinlines.h"
 #include "nsReadableUtils.h"
 #include "nsDOMClassInfo.h"
 #include "nsContentUtils.h"
@@ -772,7 +771,7 @@ NS_NewOuterWindowProxy(JSContext *cx, JSObject *parent)
     return nsnull;
   }
 
-  JSObject *obj = JSWrapper::New(cx, parent, parent->getProto(), parent,
+  JSObject *obj = JSWrapper::New(cx, parent, JS_GetPrototype(cx, parent), parent,
                                  &nsOuterWindowProxy::singleton);
   NS_ASSERTION(obj->getClass()->ext.innerObject, "bad class");
   return obj;
