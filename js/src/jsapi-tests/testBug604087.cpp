@@ -72,7 +72,7 @@ BEGIN_TEST(testBug604087)
     {
         JSAutoEnterCompartment ac;
         CHECK(ac.enter(cx, compartment2));
-        next = JSWrapper::New(cx, compartment2, JS_GetPrototype(compartment2), compartment2,
+        next = JSWrapper::New(cx, compartment2, JS_GetPrototype(cx, compartment2), compartment2,
                               &OuterWrapper::singleton);
         CHECK(next);
     }
