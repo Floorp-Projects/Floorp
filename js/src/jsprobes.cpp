@@ -43,6 +43,7 @@
 #include "jsobj.h"
 #include "jsscript.h"
 #include "jsstr.h"
+#include "jsobjinlines.h"
 
 #include "jsprobes.h"
 #include <sys/types.h>

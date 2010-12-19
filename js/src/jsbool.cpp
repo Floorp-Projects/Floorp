@@ -138,8 +138,7 @@ Boolean(JSContext *cx, uintN argc, Value *vp)
     bool b = argc != 0 ? js_ValueToBoolean(argv[0]) : false;
 
     if (IsConstructing(vp)) {
-        TypeObject *objType = cx->getFixedTypeObject(TYPE_OBJECT_NEW_BOOLEAN);
-        JSObject *obj = NewBuiltinClassInstance(cx, &js_BooleanClass, objType);
+        JSObject *obj = NewBuiltinClassInstance(cx, &js_BooleanClass);
         if (!obj)
             return false;
         obj->setPrimitiveThis(BooleanValue(b));
@@ -153,13 +152,10 @@ Boolean(JSContext *cx, uintN argc, Value *vp)
 static void type_NewBoolean(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 {
 #ifdef JS_TYPE_INFERENCE
-    TypeCallsite *site = Valueify(jssite);
-    if (site->isNew) {
-        TypeObject *object = cx->getFixedTypeObject(TYPE_OBJECT_NEW_BOOLEAN);
-        site->returnTypes->addType(cx, (jstype) object);
-    } else {
+    if (Valueify(jssite)->isNew)
+        JS_TypeHandlerNew(cx, jsfun, jssite);
+    else
         JS_TypeHandlerBool(cx, jsfun, jssite);
-    }
 #endif
 }
 

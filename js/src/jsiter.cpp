@@ -168,8 +168,7 @@ NewKeyValuePair(JSContext *cx, jsid id, const Value &val, Value *rval)
     Value vec[2] = { IdToValue(id), val };
     AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(vec), vec);
 
-    TypeObject *aobjType = cx->getFixedTypeObject(TYPE_OBJECT_KEY_VALUE_PAIR);
-    JSObject *aobj = js_NewArrayObject(cx, 2, vec, aobjType);
+    JSObject *aobj = js_NewArrayObject(cx, 2, vec);
     if (!aobj)
         return false;
     rval->setObject(*aobj);
@@ -436,8 +435,7 @@ GetCustomIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
      */
     if (!(flags & JSITER_OWNONLY)) {
         JS_ASSERT(JSOp(*cx->regs->pc) == JSOP_ITER);
-        cx->fp()->script()->typeMonitorResult(cx, cx->regs->pc, 0,
-            (jstype) cx->getFixedTypeObject(TYPE_OBJECT_NEW_ITERATOR));
+        cx->fp()->script()->typeMonitorResult(cx, cx->regs->pc, 0, (jstype) cx->getTypeGetSet());
     }
     return true;
 }
@@ -464,8 +462,6 @@ Compare(T *a, T *b, size_t c)
 static inline JSObject *
 NewIteratorObject(JSContext *cx, uintN flags)
 {
-    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NEW_ITERATOR);
-
     if (flags & JSITER_ENUMERATE) {
         /*
          * Non-escaping native enumerator objects do not need map, proto, or
@@ -478,12 +474,12 @@ NewIteratorObject(JSContext *cx, uintN flags)
         JSObject *obj = js_NewGCObject(cx, FINALIZE_OBJECT0);
         if (!obj)
             return false;
-        obj->init(cx, &js_IteratorClass, NULL, NULL, type, NULL, false);
+        obj->init(cx, &js_IteratorClass, cx->emptyTypeObject(), NULL, NULL, false);
         obj->setMap(cx->runtime->emptyEnumeratorShape);
         return obj;
     }
 
-    return NewBuiltinClassInstance(cx, &js_IteratorClass, type);
+    return NewBuiltinClassInstance(cx, &js_IteratorClass);
 }
 
 NativeIterator *
@@ -1204,8 +1200,7 @@ RebaseRegsFromTo(JSFrameRegs *regs, JSStackFrame *from, JSStackFrame *to)
 JS_REQUIRES_STACK JSObject *
 js_NewGenerator(JSContext *cx)
 {
-    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NEW_GENERATOR);
-    JSObject *obj = NewBuiltinClassInstance(cx, &js_GeneratorClass, type);
+    JSObject *obj = NewBuiltinClassInstance(cx, &js_GeneratorClass);
     if (!obj)
         return NULL;
 
@@ -1507,17 +1502,6 @@ static JSFunctionSpec generator_methods[] = {
 
 #endif /* JS_HAS_GENERATORS */
 
-static void type_GeneratorNew(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
-{
-#ifdef JS_TYPE_INFERENCE
-    TypeCallsite *site = Valueify(jssite);
-
-    TypeObject *generator = cx->getFixedTypeObject(TYPE_OBJECT_NEW_ITERATOR);
-    if (site->returnTypes)
-        site->returnTypes->addType(cx, (types::jstype) generator);
-#endif
-}
-
 JSObject *
 js_InitIteratorClasses(JSContext *cx, JSObject *obj)
 {
@@ -1529,7 +1513,7 @@ js_InitIteratorClasses(JSContext *cx, JSObject *obj)
     if (stop)
         return stop;
 
-    proto = js_InitClass(cx, obj, NULL, &js_IteratorClass, Iterator, 2, type_GeneratorNew,
+    proto = js_InitClass(cx, obj, NULL, &js_IteratorClass, Iterator, 2, JS_TypeHandlerNew,
                          NULL, iterator_methods, NULL, NULL);
     if (!proto)
         return NULL;
@@ -1547,7 +1531,7 @@ js_InitIteratorClasses(JSContext *cx, JSObject *obj)
     if (!proto)
         return NULL;
 
-    cx->addTypeProperty(obj->getTypeObject(), js_StopIteration_str, ObjectValue(*proto));
+    cx->addTypeProperty(obj->getType(), js_StopIteration_str, ObjectValue(*proto));
 
     return proto;
 }

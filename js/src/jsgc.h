@@ -1036,14 +1036,14 @@ namespace gc {
 #endif
 
 /*
- * Set object's prototype while checking that doing so would not create
+ * Set object's type/prototype while checking that doing so would not create
  * a cycle in the proto chain. The cycle check and proto change are done
  * only when all other requests are finished or suspended to ensure exclusive
  * access to the chain. If there is a cycle, return false without reporting
  * an error. Otherwise, set the proto and return true.
  */
 extern bool
-SetProtoCheckingForCycles(JSContext *cx, JSObject *obj, JSObject *proto);
+SetTypeCheckingForCycles(JSContext *cx, JSObject *obj, types::TypeObject *type);
 
 JSCompartment *
 NewCompartment(JSContext *cx, JSPrincipals *principals);

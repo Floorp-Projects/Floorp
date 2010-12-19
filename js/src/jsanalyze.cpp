@@ -43,6 +43,221 @@
 #include "jscntxt.h"
 
 #include "jsinferinlines.h"
+#include "jsobjinlines.h"
+
+/////////////////////////////////////////////////////////////////////
+// TypeCompartment
+/////////////////////////////////////////////////////////////////////
+
+/*
+ * These are the definitions needed for skeleton TypeCompartments and TypeObjects
+ * as used when type inference is disabled.
+ */
+
+namespace js {
+namespace types {
+
+void
+TypeCompartment::init()
+{
+    PodZero(this);
+    JS_InitArenaPool(&pool, "typeinfer", 512, 8, NULL);
+
+#ifdef DEBUG
+    emptyObject.name_ = JSID_VOID;
+#endif
+    emptyObject.unknownProperties = true;
+    emptyObject.pool = &pool;
+}
+
+TypeCompartment::~TypeCompartment()
+{
+    JS_FinishArenaPool(&pool);
+}
+
+types::TypeObject *
+TypeCompartment::newTypeObject(JSContext *cx, analyze::Script *script, const char *name,
+                               bool isFunction, JSObject *proto)
+{
+    JSArenaPool &pool = script ? script->pool : this->pool;
+
+#ifdef DEBUG
+    jsid id = ATOM_TO_JSID(js_Atomize(cx, name, strlen(name), ATOM_PINNED));
+#else
+    jsid id = JSID_VOID;
+#endif
+
+    TypeObject *object;
+    if (isFunction)
+        object = ArenaNew<TypeFunction>(pool, &pool, id, proto);
+    else
+        object = ArenaNew<TypeObject>(pool, &pool, id, proto);
+
+#ifdef JS_TYPE_INFERENCE
+    TypeObject *&objects = script ? script->objects : this->objects;
+    object->next = objects;
+    objects = object;
+#else
+    object->next = this->objects;
+    this->objects = object;
+#endif
+
+    return object;
+}
+
+const char *
+TypeIdStringImpl(jsid id)
+{
+    if (JSID_IS_VOID(id))
+        return "(index)";
+    if (JSID_IS_EMPTY(id))
+        return "(new)";
+    static char bufs[4][100];
+    static unsigned which = 0;
+    which = (which + 1) & 3;
+    PutEscapedString(bufs[which], 100, JSID_TO_STRING(id), 0);
+    return bufs[which];
+}
+
+void
+TypeObject::splicePrototype(JSObject *proto)
+{
+    JS_ASSERT(!this->proto);
+    this->proto = proto;
+    this->instanceNext = proto->getType()->instanceList;
+    proto->getType()->instanceList = this;
+}
+
+} } /* namespace js::types */
+
+js::types::TypeFunction *
+JSContext::newTypeFunction(const char *name, JSObject *proto)
+{
+    return (js::types::TypeFunction *) compartment->types.newTypeObject(this, NULL, name, true, proto);
+}
+
+js::types::TypeObject *
+JSContext::newTypeObject(const char *name, JSObject *proto)
+{
+    return compartment->types.newTypeObject(this, NULL, name, false, proto);
+}
+
+js::types::TypeObject *
+JSContext::newTypeObject(const char *base, const char *postfix, JSObject *proto)
+{
+    char *name = NULL;
+#ifdef DEBUG
+    unsigned len = strlen(base) + strlen(postfix) + 5;
+    name = (char *)alloca(len);
+    JS_snprintf(name, len, "%s:%s", base, postfix);
+#endif
+    return compartment->types.newTypeObject(this, NULL, name, false, proto);
+}
+
+void
+JSObject::makeNewType(JSContext *cx)
+{
+    JS_ASSERT(!newType);
+    setDelegate();
+    newType = cx->newTypeObject(getType()->name(), "new", this);
+
+#ifdef JS_TYPE_INFERENCE
+    if (!getType()->unknownProperties) {
+        /* Update the possible 'new' types for all prototype objects sharing the same type object. */
+        js::types::TypeSet *types = getType()->getProperty(cx, JSID_EMPTY, true);
+        cx->compartment->types.addDynamicType(cx, types, (js::types::jstype) newType);
+    }
+#endif
+}
+
+/////////////////////////////////////////////////////////////////////
+// Tracing
+/////////////////////////////////////////////////////////////////////
+
+namespace js {
+
+void
+types::TypeObject::trace(JSTracer *trc)
+{
+    JS_ASSERT(!marked);
+
+    /*
+     * Only mark types if the Mark/Sweep GC is running; the bit won't be cleared
+     * by the cycle collector.
+     */
+    if (trc->context->runtime->gcMarkAndSweep)
+        marked = true;
+
+    if (emptyShapes) {
+        int count = gc::FINALIZE_OBJECT_LAST - gc::FINALIZE_OBJECT0 + 1;
+        for (int i = 0; i < count; i++) {
+            if (emptyShapes[i])
+                emptyShapes[i]->trace(trc);
+        }
+    }
+
+    if (proto)
+        gc::MarkObject(trc, *proto, "type_proto");
+}
+
+void
+analyze::Script::trace(JSTracer *trc)
+{
+#ifdef JS_TYPE_INFERENCE
+    /* If a script is live, so are all type objects within it. */
+    types::TypeObject *object = objects;
+    while (object) {
+        if (!object->marked)
+            object->trace(trc);
+        object = object->next;
+    }
+#endif
+}
+
+static inline void
+SweepObjectList(JSContext *cx, types::TypeObject *objects)
+{
+    types::TypeObject *object = objects;
+    while (object) {
+        if (object->marked) {
+            object->marked = false;
+        } else {
+            object->proto = NULL;
+            if (object->emptyShapes) {
+                cx->free(object->emptyShapes);
+                object->emptyShapes = NULL;
+            }
+        }
+        object = object->next;
+    }
+}
+
+void
+analyze::Script::sweep(JSContext *cx)
+{
+#ifdef JS_TYPE_INFERENCE
+    SweepObjectList(cx, objects);
+#endif
+}
+
+void
+analyze::Script::detach()
+{
+    /* :FIXME: bug 613221 should unlink incoming type constraints and destroy the analysis. */
+    script = NULL;
+#ifdef JS_TYPE_INFERENCE
+    fun = NULL;
+    localNames = NULL;
+#endif
+}
+
+void
+types::TypeCompartment::sweep(JSContext *cx)
+{
+    SweepObjectList(cx, objects);
+}
+
+} /* namespace js */
 
 namespace js {
 namespace analyze {

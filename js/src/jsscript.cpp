@@ -1161,15 +1161,6 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
                 }
                 fun->freezeLocalNames(cx);
                 fun->u.i.script = empty;
-
-#ifdef JS_TYPE_INFERENCE
-                /* Set type information for the script and function. */
-                if (!empty->analysis)
-                    empty->makeAnalysis(cx);
-                fun->typeObject = cx->getFixedTypeObject(types::TYPE_OBJECT_EMPTY_FUNCTION);
-                if (!fun->typeObject->asFunction()->script)
-                    fun->typeObject->asFunction()->script = empty;
-#endif
             }
 
 #ifdef DEBUG
@@ -1301,7 +1292,16 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
         fun->freezeLocalNames(cx);
         fun->u.i.script = script;
 
+#ifdef JS_TYPE_INFERENCE
+        char *name = NULL;
+#ifdef DEBUG
+        name = (char *) alloca(10);
+        JS_snprintf(name, 10, "#%u", script->analysis->id);
+#endif
+        types::TypeObject *type = cx->newTypeFunction(name, fun->getProto());
+        fun->setType(type);
         cx->setTypeFunctionScript(fun, script);
+#endif
 
 #ifdef CHECK_SCRIPT_OWNER
         script->owner = NULL;
@@ -1440,6 +1440,10 @@ DestroyScript(JSContext *cx, JSScript *script, JSThreadData *data)
 #if defined(JS_METHODJIT)
     mjit::ReleaseScriptCode(cx, script);
 #endif
+
+    if (script->analysis)
+        script->analysis->detach();
+
     JS_REMOVE_LINK(&script->links);
 
     cx->free(script);
@@ -1502,10 +1506,8 @@ js_TraceScript(JSTracer *trc, JSScript *script)
     if (IS_GC_MARKING_TRACER(trc) && script->filename)
         js_MarkScriptFilename(script->filename);
 
-#ifdef JS_TYPE_INFERENCE
     if (script->analysis)
         script->analysis->trace(trc);
-#endif
 }
 
 JSBool
@@ -1516,18 +1518,17 @@ js_NewScriptObject(JSContext *cx, JSScript *script)
     JS_ASSERT(!script->u.object);
     JS_ASSERT(script != JSScript::emptyScript());
 
-    types::TypeObject *type = cx->getFixedTypeObject(types::TYPE_OBJECT_SCRIPT);
-    JSObject *obj = NewNonFunction<WithProto::Class>(cx, &js_ScriptClass, NULL, NULL, type);
+    JSObject *obj = NewNonFunction<WithProto::Class>(cx, &js_ScriptClass, NULL, NULL);
     if (!obj)
         return JS_FALSE;
     obj->setPrivate(script);
     script->u.object = obj;
 
     /*
-     * Clear the object's proto, to avoid entraining stuff. Once we no longer use the parent
+     * Clear the object's type/proto, to avoid entraining stuff. Once we no longer use the parent
      * for security checks, then we can clear the parent, too.
      */
-    obj->clearProto();
+    obj->clearType(cx);
 
 #ifdef CHECK_SCRIPT_OWNER
     script->owner = NULL;

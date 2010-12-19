@@ -78,9 +78,7 @@ JSCompartment::init()
 #ifdef JS_GCMETER
     memset(&compartmentStats, 0, sizeof(JSGCArenaStats) * FINALIZE_LIMIT);
 #endif
-#ifdef JS_TYPE_INFERENCE
     types.init();
-#endif
     if (!crossCompartmentWrappers.init())
         return false;
 
@@ -241,7 +239,6 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
 
     vp->setObject(*wrapper);
 
-    wrapper->setProto(cx, proto);
     if (!crossCompartmentWrappers.put(wrapper->getProxyPrivate(), *vp))
         return false;
 
@@ -346,13 +343,17 @@ JSCompartment::sweep(JSContext *cx)
         }
     }
 
-#if defined JS_METHODJIT && defined JS_MONOIC
     for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
         JSScript *script = reinterpret_cast<JSScript *>(cursor);
+#if defined JS_METHODJIT && defined JS_MONOIC
         if (script->hasJITCode())
             mjit::ic::SweepCallICs(script);
-    }
 #endif
+        if (script->analysis)
+            script->analysis->sweep(cx);
+    }
+
+    types.sweep(cx);
 }
 
 void

@@ -2394,38 +2394,29 @@ private:
 
 public:
 
-    /*
-     * Definitions for type inference.  The implementations of these are no-ops
-     * when inference is not enabled.
-     */
+    /* Make a type function or object with the specified name. */
+    js::types::TypeFunction *newTypeFunction(const char *name, JSObject *proto);
+    js::types::TypeObject   *newTypeObject(const char *name, JSObject *proto);
 
-    /* Get the type object shared by all globals in the compartment. */
-    inline js::types::TypeObject *
-    getGlobalTypeObject();
+    /* Make a type object whose name is that of base followed by postfix. */
+    js::types::TypeObject *newTypeObject(const char *base, const char *postfix, JSObject *proto);
 
-    /* Get a fixed singleton type object. */
-    inline js::types::TypeObject *
-    getFixedTypeObject(js::types::FixedTypeObjectName which);
+    /* Get the default 'new' object for a given standard class. */
+    inline js::types::TypeObject *getTypeNewObject(JSProtoKey key);
 
     /*
-     * Get a type object or function with the specified name.  Fetching the same
-     * name repeatedly will produce the same value.
+     * Get the type of the global object to use. :XXX: This function is probably
+     * totally broken when analyzing code involved with multiple global objects.
+     * It uses cx->globalObject even if that's not the global object attached to the
+     * COMPILE_N_GO script being analyzed.
      */
+    inline js::types::TypeObject *globalTypeObject();
 
-    /* Get a function or non-function object. */
-    inline js::types::TypeObject *getTypeFunction(const char *name,
-                                                  js::types::TypeObject *prototype = NULL);
-    inline js::types::TypeObject *getTypeObject(const char *name,
-                                                js::types::TypeObject *prototype);
-
-    /* Get a function with the specified handler. */
-    inline js::types::TypeFunction *
-    getTypeFunctionHandler(const char *name, JSTypeHandler handler,
-                           js::types::TypeObject *prototype = NULL);
+    /* Get a singleton type object to use for objects with no prototype. */
+    inline js::types::TypeObject *emptyTypeObject();
 
     /* Set the type information for fun to the specified script. */
-    inline void
-    setTypeFunctionScript(JSFunction *fun, JSScript *script);
+    inline void setTypeFunctionScript(JSFunction *fun, JSScript *script);
 
     /* Get a type object for the immediate allocation site in this context. */
     inline js::types::TypeObject *
@@ -2448,21 +2439,14 @@ public:
     inline void typeMonitorEntry(JSScript *script);
     inline void typeMonitorEntry(JSScript *script, const js::Value &thisv);
 
-    /*
-     * Mark a function as the constructor for a builtin class, whose 'prototype'
-     * field is specified manually with setTypeFunctionPrototype.
-     */
-    inline void markTypeBuiltinFunction(js::types::TypeObject *fun);
-
-    /* Add proto as the 'prototype' field of a function. */
-    inline void setTypeFunctionPrototype(js::types::TypeObject *fun,
-                                         js::types::TypeObject *proto);
-
     /* Add a possible value for the named property of obj. */
     inline void addTypeProperty(js::types::TypeObject *obj, const char *name, js::types::jstype type);
     inline void addTypeProperty(js::types::TypeObject *obj, const char *name, const js::Value &value);
     inline void addTypePropertyId(js::types::TypeObject *obj, jsid id, js::types::jstype type);
     inline void addTypePropertyId(js::types::TypeObject *obj, jsid id, const js::Value &value);
+
+    /* Get the type to add for properties which can be scripted getters/setters. */
+    inline js::types::TypeObject *getTypeGetSet();
 
     /* Alias two properties in the type information for obj. */
     inline void aliasTypeProperties(js::types::TypeObject *obj, jsid first, jsid second);

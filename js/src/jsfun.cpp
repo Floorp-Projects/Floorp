@@ -185,6 +185,10 @@ NewArguments(JSContext *cx, JSObject *parent, uint32 argc, JSObject &callee)
     if (!js_GetClassPrototype(cx, parent, JSProto_Object, &proto))
         return NULL;
 
+    TypeObject *type = proto->getNewType(cx);
+    if (!type)
+        return NULL;
+
     JS_STATIC_ASSERT(JSObject::ARGS_CLASS_RESERVED_SLOTS == 2);
     JSObject *argsobj = js_NewGCObject(cx, FINALIZE_OBJECT2);
     if (!argsobj)
@@ -197,11 +201,10 @@ NewArguments(JSContext *cx, JSObject *parent, uint32 argc, JSObject &callee)
     SetValueRangeToUndefined(data->slots, argc);
 
     /* Can't fail from here on, so initialize everything in argsobj. */
-    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_ARGUMENTS);
     argsobj->init(cx, callee.getFunctionPrivate()->inStrictMode()
                   ? &StrictArgumentsClass
                   : &js_ArgumentsClass,
-                  proto, parent, type, NULL, false);
+                  type, parent, NULL, false);
 
     argsobj->setMap(cx->runtime->emptyArgumentsShape);
 
@@ -365,9 +368,10 @@ WrapEscapingClosure(JSContext *cx, JSStackFrame *fp, JSFunction *fun)
     if (!scopeChain)
         return NULL;
 
-    JSObject *wfunobj = NewFunction(cx, scopeChain, fun->getTypeObject());
+    JSObject *wfunobj = NewFunction(cx, scopeChain);
     if (!wfunobj)
         return NULL;
+    wfunobj->setType(fun->getType());
     AutoObjectRooter tvr(cx, wfunobj);
 
     JSFunction *wfun = (JSFunction *) wfunobj;
@@ -965,14 +969,12 @@ NewCallObject(JSContext *cx, JSFunction *fun, JSObject &scopeChain, JSObject &ca
     size_t slots = JSObject::CALL_RESERVED_SLOTS + vars;
     gc::FinalizeKind kind = gc::GetGCObjectKind(slots);
 
-    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_CALL);
-
     JSObject *callobj = js_NewGCObject(cx, kind);
     if (!callobj)
         return NULL;
 
     /* Init immediately to avoid GC seeing a half-init'ed object. */
-    callobj->init(cx, &js_CallClass, NULL, &scopeChain, type, NULL, false);
+    callobj->init(cx, &js_CallClass, cx->emptyTypeObject(), &scopeChain, NULL, false);
     callobj->setMap(fun->u.i.names);
 
     /* This must come after callobj->lastProp has been set. */
@@ -996,13 +998,11 @@ NewCallObject(JSContext *cx, JSFunction *fun, JSObject &scopeChain, JSObject &ca
 static inline JSObject *
 NewDeclEnvObject(JSContext *cx, JSStackFrame *fp)
 {
-    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_DECLENV);
-
     JSObject *envobj = js_NewGCObject(cx, FINALIZE_OBJECT2);
     if (!envobj)
         return NULL;
 
-    envobj->init(cx, &js_DeclEnvClass, NULL, &fp->scopeChain(), type, fp, false);
+    envobj->init(cx, &js_DeclEnvClass, cx->emptyTypeObject(), &fp->scopeChain(), fp, false);
     envobj->setMap(cx->runtime->emptyDeclEnvShape);
     return envobj;
 }
@@ -1616,6 +1616,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         break;
     }
 
+    cx->addTypePropertyId(obj->getType(), id, *vp);
     return true;
 }
 
@@ -1721,13 +1722,18 @@ fun_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
          * as the function object itself.
          */
         JSObject *parent = obj->getParent();
-        JSObject *proto;
-        if (!js_GetClassPrototype(cx, parent, JSProto_Object, &proto))
+        JSObject *objProto;
+        if (!js_GetClassPrototype(cx, parent, JSProto_Object, &objProto))
             return false;
-        TypeObject *typeProto = obj->getTypePrototype(cx);
-        proto = NewNativeClassInstance(cx, &js_ObjectClass, proto, parent, typeProto);
+        JSObject *proto = NewNativeClassInstance(cx, &js_ObjectClass, objProto, parent);
         if (!proto)
             return false;
+
+        /* Make a new type for the prototype object. */
+        TypeObject *protoType = cx->newTypeObject(obj->getType()->name(), "prototype", objProto);
+        if (!protoType)
+            return false;
+        proto->setType(protoType);
 
         /*
          * ECMA (15.3.5.2) says that constructor.prototype is DontDelete for
@@ -1745,6 +1751,7 @@ fun_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 
     if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
         JS_ASSERT(!IsInternalFunctionObject(obj));
+        cx->addTypePropertyId(obj->getType(), id, types::TYPE_INT32);
         if (!js_DefineNativeProperty(cx, obj, id, Int32Value(fun->nargs),
                                      PropertyStub, PropertyStub,
                                      JSPROP_PERMANENT | JSPROP_READONLY, 0, 0, NULL)) {
@@ -1848,7 +1855,7 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
         if (!fun)
             return false;
         FUN_OBJECT(fun)->clearParent();
-        FUN_OBJECT(fun)->clearProto();
+        FUN_OBJECT(fun)->clearType(cx);
 #ifdef __GNUC__
         nvars = nargs = nupvars = 0;    /* quell GCC uninitialized warning */
 #endif
@@ -2499,7 +2506,7 @@ static JSFunctionSpec function_methods[] = {
 static JSBool
 Function(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj = NewFunction(cx, NULL, NULL);
+    JSObject *obj = NewFunction(cx, NULL);
     if (!obj)
         return JS_FALSE;
 
@@ -2736,28 +2743,11 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
     if (!proto)
         return NULL;
 
-    /*
-     * Remember the prototype's type information as js_NewFunction will overwrite it.
-     * we also need to attach any lazy properties. :TODO: these are also own properties
-     * of individual functions, but we don't add them to the ownTypes of those objects.
-     * This is OK as ownTypes vs. prototype types are used only when the property
-     * holds a singleton object, but needs to be cleaned up and clarified.
-     */
-    TypeObject *protoFunc = proto->getTypeObject();
-    cx->addTypeProperty(protoFunc, "name", TYPE_STRING);
-    cx->addTypeProperty(protoFunc, "length", TYPE_INT32);
-    cx->addTypeProperty(protoFunc, "arguments",
-                        (jstype) cx->getFixedTypeObject(TYPE_OBJECT_ARGUMENTS));
-
     JSFunction *fun = js_NewFunction(cx, proto, NULL, 0, JSFUN_INTERPRETED, obj, NULL, NULL, NULL);
     if (!fun)
         return NULL;
     fun->flags |= JSFUN_PROTOTYPE;
     fun->u.i.script = JSScript::emptyScript();
-
-#ifdef JS_TYPE_INFERENCE
-    fun->typeObject = protoFunc;
-#endif
 
     if (obj->getClass()->flags & JSCLASS_IS_GLOBAL) {
         /* ES5 13.2.3: Construct the unique [[ThrowTypeError]] function object. */
@@ -2785,10 +2775,16 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, uintN nargs,
         JS_ASSERT(funobj->isFunction());
         funobj->setParent(parent);
     } else {
-        TypeObject *funType = handler ? cx->getTypeFunctionHandler(fullName, handler) : NULL;
-        funobj = NewFunction(cx, parent, funType);
+        funobj = NewFunction(cx, parent);
         if (!funobj)
             return NULL;
+        if (handler) {
+            TypeFunction *type = cx->newTypeFunction(fullName, funobj->getProto());
+            if (!type)
+                return NULL;
+            type->handler = handler;
+            funobj->setType(type);
+        }
     }
     JS_ASSERT(!funobj->getPrivate());
     fun = (JSFunction *) funobj;
@@ -2842,18 +2838,20 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
          * The cloned function object does not need the extra JSFunction members
          * beyond JSObject as it points to fun via the private slot.
          */
-        clone = NewNativeClassInstance(cx, &js_FunctionClass, proto, parent, fun->getTypeObject());
+        clone = NewNativeClassInstance(cx, &js_FunctionClass, proto, parent);
         if (!clone)
             return NULL;
         clone->setPrivate(fun);
+        clone->setType(fun->getType());
     } else {
         /*
          * Across compartments we have to deep copy JSFunction and clone the
          * script (for interpreted functions).
          */
-        clone = NewFunction(cx, parent, fun->getTypeObject());
+        clone = NewFunction(cx, parent);
         if (!clone)
             return NULL;
+        clone->setType(fun->getType());
         JSFunction *cfun = (JSFunction *) clone;
         cfun->nargs = fun->nargs;
         cfun->flags = fun->flags;
@@ -2960,8 +2958,12 @@ js_DefineFunction(JSContext *cx, JSObject *obj, jsid id, Native native,
     PropertyOp gsop;
     JSFunction *fun;
 
-    if (!handler)
+    if (!handler) {
         handler = JS_TypeHandlerMissing;
+        if (!fullName)
+            fullName = "Unknown";
+    }
+    JS_ASSERT(fullName);
 
     if (attrs & JSFUN_STUB_GSOPS) {
         /*
@@ -3032,7 +3034,7 @@ js_DefineFunction(JSContext *cx, JSObject *obj, jsid id, Native native,
     if (!obj->defineProperty(cx, id, ObjectValue(*fun), gsop, gsop, attrs & ~JSFUN_FLAGS_MASK))
         return NULL;
 
-    cx->addTypePropertyId(obj->getTypeObject(), id, ObjectValue(*fun));
+    cx->addTypePropertyId(obj->getType(), id, ObjectValue(*fun));
     return fun;
 }
 

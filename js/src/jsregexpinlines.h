@@ -62,8 +62,7 @@ extern Class regexp_statics_class;
 static inline JSObject *
 regexp_statics_construct(JSContext *cx, JSObject *parent)
 {
-    types::TypeObject *type = cx->getFixedTypeObject(types::TYPE_OBJECT_REGEXP_STATICS);
-    JSObject *obj = NewObject<WithProto::Given>(cx, &regexp_statics_class, NULL, parent, type);
+    JSObject *obj = NewObject<WithProto::Given>(cx, &regexp_statics_class, parent, NULL);
     if (!obj)
         return NULL;
     RegExpStatics *res = cx->create<RegExpStatics>();
@@ -235,6 +234,19 @@ RegExp::checkMatchPairs(JSString *input, int *buf, size_t matchItemCount)
 #endif
 }
 
+inline types::TypeObject *
+GetRegExpMatchType(JSContext *cx)
+{
+    types::TypeObject *type = cx->getTypeCallerInitObject(true);
+
+    cx->addTypeProperty(type, NULL, types::TYPE_STRING);
+    cx->addTypeProperty(type, "index", types::TYPE_INT32);
+    cx->addTypeProperty(type, "input", types::TYPE_STRING);
+    cx->markTypeArrayNotPacked(type, true);
+
+    return type;
+}
+
 inline JSObject *
 RegExp::createResult(JSContext *cx, JSString *input, int *buf, size_t matchItemCount)
 {
@@ -243,10 +255,14 @@ RegExp::createResult(JSContext *cx, JSString *input, int *buf, size_t matchItemC
      *  0:              matched string
      *  1..pairCount-1: paren matches
      */
-    types::TypeObject *arrayType = cx->getFixedTypeObject(types::TYPE_OBJECT_REGEXP_MATCH_ARRAY);
-    JSObject *array = js_NewSlowArrayObject(cx, arrayType);
+    JSObject *array = js_NewSlowArrayObject(cx);
     if (!array)
         return NULL;
+    types::TypeObject *type = GetRegExpMatchType(cx);
+    if (!type)
+        return NULL;
+    array->setType(type);
+    cx->markTypeArrayNotPacked(type, true);
 
     RegExpMatchBuilder builder(cx, array);
     for (size_t i = 0; i < matchItemCount; i += 2) {
@@ -392,8 +408,7 @@ RegExp::createObjectNoStatics(JSContext *cx, const jschar *chars, size_t length,
     RegExp *re = RegExp::create(cx, str, flags);
     if (!re)
         return NULL;
-    types::TypeObject *objType = cx->getFixedTypeObject(types::TYPE_OBJECT_NEW_REGEXP);
-    JSObject *obj = NewBuiltinClassInstance(cx, &js_RegExpClass, objType);
+    JSObject *obj = NewBuiltinClassInstance(cx, &js_RegExpClass);
     if (!obj) {
         re->decref(cx);
         return NULL;

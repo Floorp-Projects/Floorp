@@ -903,10 +903,15 @@ js_IsMathFunction(JSNative native)
 JSObject *
 js_InitMathClass(JSContext *cx, JSObject *obj)
 {
-    types::TypeObject *type = cx->getTypeObject(js_Math_str, NULL);
-    JSObject *Math = NewNonFunction<WithProto::Class>(cx, &js_MathClass, NULL, obj, type);
+    JSObject *Math = NewNonFunction<WithProto::Class>(cx, &js_MathClass, NULL, obj);
     if (!Math)
         return NULL;
+
+    types::TypeObject *type = cx->newTypeObject(js_Math_str, Math->getProto());
+    if (!type)
+        return NULL;
+    Math->setType(type);
+
     if (!JS_DefinePropertyWithType(cx, obj, js_Math_str, OBJECT_TO_JSVAL(Math),
                                    JS_PropertyStub, JS_PropertyStub, 0)) {
         return NULL;

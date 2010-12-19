@@ -548,8 +548,7 @@ Number(JSContext *cx, uintN argc, Value *vp)
     if (!isConstructing)
         return true;
 
-    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NEW_NUMBER);
-    JSObject *obj = NewBuiltinClassInstance(cx, &js_NumberClass, type);
+    JSObject *obj = NewBuiltinClassInstance(cx, &js_NumberClass);
     if (!obj)
         return false;
     obj->setPrimitiveThis(vp[0]);
@@ -1045,15 +1044,10 @@ js_FinishRuntimeNumberState(JSContext *cx)
 
 static void type_NewNumber(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 {
-#ifdef JS_TYPE_INFERENCE
-    TypeCallsite *site = Valueify(jssite);
-    if (site->isNew) {
-        TypeObject *object = cx->getFixedTypeObject(TYPE_OBJECT_NEW_NUMBER);
-        site->returnTypes->addType(cx, (jstype) object);
-    } else {
+    if (Valueify(jssite)->isNew)
+        JS_TypeHandlerNew(cx, jsfun, jssite);
+    else
         JS_TypeHandlerFloat(cx, jsfun, jssite);
-    }
-#endif
 }
 
 JSObject *

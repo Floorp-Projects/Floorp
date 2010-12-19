@@ -117,7 +117,7 @@ ArrayBuffer::create(JSContext *cx, uintN argc, Value *argv, Value *rval)
 {
     /* N.B. there may not be an argv[-2]/argv[-1]. */
 
-    JSObject *obj = NewBuiltinClassInstance(cx, &ArrayBuffer::jsclass, NULL);
+    JSObject *obj = NewBuiltinClassInstance(cx, &ArrayBuffer::jsclass);
     if (!obj)
         return false;
 
@@ -726,7 +726,7 @@ class TypedArrayTemplate
     {
         /* N.B. there may not be an argv[-2]/argv[-1]. */
 
-        JSObject *obj = NewBuiltinClassInstance(cx, slowClass(), NULL);
+        JSObject *obj = NewBuiltinClassInstance(cx, slowClass());
         if (!obj)
             return false;
 
@@ -871,7 +871,7 @@ class TypedArrayTemplate
         // note the usage of NewObject here -- we don't want the
         // constructor to be called!
         JS_ASSERT(slowClass() != &js_FunctionClass);
-        JSObject *nobj = NewNonFunction<WithProto::Class>(cx, slowClass(), NULL, NULL, NULL);
+        JSObject *nobj = NewNonFunction<WithProto::Class>(cx, slowClass(), NULL, NULL);
         if (!nobj) {
             delete ntarray;
             return false;
@@ -1535,11 +1535,9 @@ do {                                                                           \
                          NULL, NULL);                                          \
     if (!proto)                                                                \
         return NULL;                                                           \
-    cx->addTypeProperty(proto->getTypeObject(), "buffer",                      \
-        (types::jstype) cx->getFixedTypeObject(TYPE_OBJECT_NEW_ARRAYBUFFER));  \
-    cx->addTypeProperty(proto->getTypeObject(), NULL, types::TYPE_INT32);      \
+    cx->addTypeProperty(proto->getType(), NULL, types::TYPE_INT32);            \
     if (_typedArray::ArrayElementTypeMayBeDouble())                            \
-        cx->addTypeProperty(proto->getTypeObject(), NULL, types::TYPE_DOUBLE); \
+        cx->addTypeProperty(proto->getType(), NULL, types::TYPE_DOUBLE);       \
     JSObject *ctor = JS_GetConstructor(cx, proto);                             \
     if (!ctor ||                                                               \
         !JS_DefinePropertyWithType(cx, ctor, "BYTES_PER_ELEMENT",              \
@@ -1770,14 +1768,24 @@ js_ReparentTypedArrayToScope(JSContext *cx, JSObject *obj, JSObject *scope)
     if (!js_GetClassPrototype(cx, scope, key, &proto))
         return JS_FALSE;
 
-    obj->setProto(cx, proto);
+    /*
+     * :XXX: This is changing the type of a previous object, which will mess up
+     * type information if this has any expando properties (possible?).
+     */
+    TypeObject *type = proto->getNewType(cx);
+    if (!type)
+        return JS_FALSE;
+    obj->setType(type);
     obj->setParent(scope);
 
     key = JSCLASS_CACHED_PROTO_KEY(&ArrayBuffer::jsclass);
     if (!js_GetClassPrototype(cx, scope, key, &proto))
         return JS_FALSE;
 
-    buffer->setProto(cx, proto);
+    type = proto->getNewType(cx);
+    if (!type)
+        return JS_FALSE;
+    buffer->setType(type);
     buffer->setParent(scope);
 
     return JS_TRUE;

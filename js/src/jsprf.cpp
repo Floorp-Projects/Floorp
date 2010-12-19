@@ -51,6 +51,7 @@
 #include "jsutil.h"
 #include "jspubtd.h"
 #include "jsstr.h"
+#include "jsobjinlines.h"
 
 /*
 ** Note: on some platforms va_list is defined as an array,

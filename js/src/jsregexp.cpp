@@ -132,8 +132,7 @@ js_CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *proto)
     JS_ASSERT(obj->getClass() == &js_RegExpClass);
     JS_ASSERT(proto);
     JS_ASSERT(proto->getClass() == &js_RegExpClass);
-    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NEW_REGEXP);
-    JSObject *clone = NewNativeClassInstance(cx, &js_RegExpClass, proto, proto->getParent(), type);
+    JSObject *clone = NewNativeClassInstance(cx, &js_RegExpClass, proto, proto->getParent());
     if (!clone)
         return NULL;
     RegExpStatics *res = cx->regExpStatics();
@@ -509,12 +508,11 @@ js_XDRRegExpObject(JSXDRState *xdr, JSObject **objp)
     if (!JS_XDRString(xdr, &source) || !JS_XDRUint32(xdr, &flagsword))
         return false;
     if (xdr->mode == JSXDR_DECODE) {
-        TypeObject *type = xdr->cx->getFixedTypeObject(TYPE_OBJECT_NEW_REGEXP);
-        JSObject *obj = NewBuiltinClassInstance(xdr->cx, &js_RegExpClass, type);
+        JSObject *obj = NewBuiltinClassInstance(xdr->cx, &js_RegExpClass);
         if (!obj)
             return false;
         obj->clearParent();
-        obj->clearProto();
+        obj->clearType(xdr->cx);
         RegExp *re = RegExp::create(xdr->cx, source, flagsword);
         if (!re)
             return false;
@@ -882,8 +880,7 @@ regexp_construct(JSContext *cx, uintN argc, Value *vp)
     }
 
     /* Otherwise, replace obj with a new RegExp object. */
-    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NEW_REGEXP);
-    JSObject *obj = NewBuiltinClassInstance(cx, &js_RegExpClass, type);
+    JSObject *obj = NewBuiltinClassInstance(cx, &js_RegExpClass);
     if (!obj)
         return false;
 
@@ -925,18 +922,14 @@ js_InitRegExpClass(JSContext *cx, JSObject *obj)
         return NULL;
     }
 
-    TypeObject *regexpType = cx->getFixedTypeObject(TYPE_OBJECT_NEW_REGEXP);
+    TypeObject *regexpType = proto->getNewType(cx);
+    JS_ASSERT(regexpType);
+
     cx->addTypeProperty(regexpType, "source", TYPE_STRING);
     cx->addTypeProperty(regexpType, "global", TYPE_BOOLEAN);
     cx->addTypeProperty(regexpType, "ignoreCase", TYPE_BOOLEAN);
     cx->addTypeProperty(regexpType, "multiline", TYPE_BOOLEAN);
     cx->addTypeProperty(regexpType, "lastIndex", TYPE_INT32);
-
-    TypeObject *arrayType = cx->getFixedTypeObject(TYPE_OBJECT_REGEXP_MATCH_ARRAY);
-    cx->addTypeProperty(arrayType, NULL, TYPE_STRING);
-    cx->addTypeProperty(arrayType, "index", TYPE_INT32);
-    cx->addTypeProperty(arrayType, "input", TYPE_STRING);
-    cx->markTypeArrayNotPacked(arrayType, true);
 
     return proto;
 }

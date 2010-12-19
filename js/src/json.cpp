@@ -558,8 +558,7 @@ js_Stringify(JSContext *cx, Value *vp, JSObject *replacer, const Value &space,
     if (!scx.initializeGap(cx, space) || !scx.initializeStack())
         return JS_FALSE;
 
-    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_JSON);
-    JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass, type);
+    JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass);
     if (!obj)
         return JS_FALSE;
 
@@ -663,8 +662,7 @@ JSONParseError(JSONParser *jp, JSContext *cx)
 static bool
 Revive(JSContext *cx, const Value &reviver, Value *vp)
 {
-    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_JSON);
-    JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass, type);
+    JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass);
     if (!obj)
         return false;
 
@@ -683,8 +681,7 @@ js_BeginJSONParse(JSContext *cx, Value *rootVal, bool suppressErrors /*= false*/
     if (!cx)
         return NULL;
 
-    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_JSON);
-    JSObject *arr = js_NewArrayObject(cx, 0, NULL, type);
+    JSObject *arr = js_NewArrayObject(cx, 0, NULL);
     if (!arr)
         return NULL;
 
@@ -849,9 +846,7 @@ PushObject(JSContext *cx, JSONParser *jp, JSObject *obj)
 static JSBool
 OpenObject(JSContext *cx, JSONParser *jp)
 {
-    // TODO: need better type objects following the structure of the JSON.
-    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_JSON);
-    JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass, type);
+    JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass);
     if (!obj)
         return JS_FALSE;
 
@@ -862,8 +857,7 @@ static JSBool
 OpenArray(JSContext *cx, JSONParser *jp)
 {
     // Add an array to an existing array or object
-    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_JSON);
-    JSObject *arr = js_NewArrayObject(cx, 0, NULL, type);
+    JSObject *arr = js_NewArrayObject(cx, 0, NULL);
     if (!arr)
         return JS_FALSE;
 
@@ -1256,10 +1250,15 @@ static JSFunctionSpec json_static_methods[] = {
 JSObject *
 js_InitJSONClass(JSContext *cx, JSObject *obj)
 {
-    TypeObject *type = cx->getTypeObject(js_JSON_str, NULL);
-    JSObject *JSON = NewNonFunction<WithProto::Class>(cx, &js_JSONClass, NULL, obj, type);
+    JSObject *JSON = NewNonFunction<WithProto::Class>(cx, &js_JSONClass, NULL, obj);
     if (!JSON)
         return NULL;
+
+    TypeObject *type = cx->newTypeObject(js_JSON_str, JSON->getProto());
+    if (!type)
+        return NULL;
+    JSON->setType(type);
+
     if (!JS_DefinePropertyWithType(cx, obj, js_JSON_str, OBJECT_TO_JSVAL(JSON),
                                    JS_PropertyStub, JS_PropertyStub, 0))
         return NULL;

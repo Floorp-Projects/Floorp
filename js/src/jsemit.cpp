@@ -6881,8 +6881,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         JSObject *obj = NULL;
         if (!cg->hasSharps() && cg->compileAndGo()) {
             gc::FinalizeKind kind = GuessObjectGCKind(pn->pn_count, false);
-            types::TypeObject *type = cx->getFixedTypeObject(types::TYPE_OBJECT_UNKNOWN_OBJECT);
-            obj = NewBuiltinClassInstance(cx, &js_ObjectClass, type, kind);
+            obj = NewBuiltinClassInstance(cx, &js_ObjectClass, kind);
             if (!obj)
                 return JS_FALSE;
         }

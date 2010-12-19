@@ -248,18 +248,12 @@ MarkChildren(JSTracer *trc, JSObject *obj)
         return;
 
     /* Trace universal (ops-independent) members. */
-    if (JSObject *proto = obj->getProto())
-        MarkObject(trc, *proto, "proto");
+    if (!obj->type->marked)
+        obj->type->trace(trc);
+    if (!obj->isDenseArray() && obj->newType && !obj->newType->marked)
+        obj->newType->trace(trc);
     if (JSObject *parent = obj->getParent())
         MarkObject(trc, *parent, "parent");
-
-    if (!obj->isDenseArray() && obj->emptyShapes) {
-        int count = FINALIZE_OBJECT_LAST - FINALIZE_OBJECT0 + 1;
-        for (int i = 0; i < count; i++) {
-            if (obj->emptyShapes[i])
-                obj->emptyShapes[i]->trace(trc);
-        }
-    }
 
     /* Delegate to ops or the native marking op. */
     TraceOp op = obj->getOps()->trace;

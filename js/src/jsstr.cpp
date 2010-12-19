@@ -1874,10 +1874,16 @@ BuildFlatMatchArray(JSContext *cx, JSString *textstr, const FlatMatch &fm, Value
     }
 
     /* For this non-global match, produce a RegExp.exec-style array. */
-    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_REGEXP_MATCH_ARRAY);
-    JSObject *obj = js_NewSlowArrayObject(cx, type);
+    JSObject *obj = js_NewSlowArrayObject(cx);
     if (!obj)
         return false;
+
+    TypeObject *type = GetRegExpMatchType(cx);
+    if (!type)
+        return false;
+    obj->setType(type);
+    cx->markTypeArrayNotPacked(type, true);
+
     vp->setObject(*obj);
 
     return obj->defineProperty(cx, INT_TO_JSID(0), StringValue(fm.pattern())) &&
@@ -1900,10 +1906,14 @@ MatchCallback(JSContext *cx, RegExpStatics *res, size_t count, void *p)
 
     JSObject *&arrayobj = *static_cast<MatchArgType>(p);
     if (!arrayobj) {
-        TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_REGEXP_MATCH_ARRAY);
-        arrayobj = js_NewArrayObject(cx, 0, NULL, type);
+        arrayobj = js_NewArrayObject(cx, 0, NULL);
         if (!arrayobj)
             return false;
+
+        TypeObject *type = GetRegExpMatchType(cx);
+        if (!type)
+            return false;
+        arrayobj->setType(type);
     }
 
     Value v;
@@ -2722,13 +2732,17 @@ str_split(JSContext *cx, uintN argc, Value *vp)
     JSString *str;
     NORMALIZE_THIS(cx, vp, str);
 
-    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_STRING_SPLIT_ARRAY);
+    TypeObject *type = cx->getTypeCallerInitObject(true);
+    if (!type)
+        return false;
+    cx->addTypeProperty(type, NULL, types::TYPE_STRING);
 
     if (argc == 0) {
         Value v = StringValue(str);
-        JSObject *aobj = js_NewArrayObject(cx, 1, &v, type);
+        JSObject *aobj = js_NewArrayObject(cx, 1, &v);
         if (!aobj)
             return false;
+        aobj->setType(type);
         vp->setObject(*aobj);
         return true;
     }
@@ -2809,9 +2823,10 @@ str_split(JSContext *cx, uintN argc, Value *vp)
     if (j == -2)
         return false;
 
-    JSObject *aobj = js_NewArrayObject(cx, splits.length(), splits.begin(), type);
+    JSObject *aobj = js_NewArrayObject(cx, splits.length(), splits.begin());
     if (!aobj)
         return false;
+    aobj->setType(type);
     vp->setObject(*aobj);
     return true;
 }
@@ -3143,7 +3158,7 @@ static void type_StringMatch(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsit
     if (!site->returnTypes)
         return;
 
-    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_REGEXP_MATCH_ARRAY);
+    TypeObject *type = site->getInitObject(cx, true);
     cx->addTypeProperty(type, NULL, TYPE_STRING);
     cx->addTypeProperty(type, "index", TYPE_INT32);
     cx->addTypeProperty(type, "input", TYPE_STRING);
@@ -3161,7 +3176,7 @@ static void type_StringSplit(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsit
     if (!site->returnTypes)
         return;
 
-    TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_STRING_SPLIT_ARRAY);
+    TypeObject *type = site->getInitObject(cx, true);
     cx->addTypeProperty(type, NULL, TYPE_STRING);
 
     site->returnTypes->addType(cx, (jstype) type);
@@ -3409,8 +3424,7 @@ js_String(JSContext *cx, uintN argc, Value *vp)
     }
 
     if (IsConstructing(vp)) {
-        TypeObject *type = cx->getFixedTypeObject(TYPE_OBJECT_NEW_STRING);
-        JSObject *obj = NewBuiltinClassInstance(cx, &js_StringClass, type);
+        JSObject *obj = NewBuiltinClassInstance(cx, &js_StringClass);
         if (!obj)
             return false;
         obj->setPrimitiveThis(StringValue(str));
@@ -3488,13 +3502,10 @@ static JSFunctionSpec string_static_methods[] = {
 static void type_NewString(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 {
 #ifdef JS_TYPE_INFERENCE
-    TypeCallsite *site = Valueify(jssite);
-    if (site->isNew) {
-        TypeObject *object = cx->getFixedTypeObject(TYPE_OBJECT_NEW_STRING);
-        site->returnTypes->addType(cx, (jstype) object);
-    } else {
+    if (Valueify(jssite)->isNew)
+        JS_TypeHandlerNew(cx, jsfun, jssite);
+    else
         JS_TypeHandlerString(cx, jsfun, jssite);
-    }
 #endif
 }
 
@@ -3522,9 +3533,8 @@ js_InitStringClass(JSContext *cx, JSObject *obj)
         return JS_FALSE;
     }
 
-    cx->addTypePropertyId(proto->getTypeObject(), lengthId, TYPE_INT32);
-    TypeObject *stringType = cx->getFixedTypeObject(TYPE_OBJECT_NEW_STRING);
-    cx->addTypeProperty(stringType, NULL, TYPE_STRING);
+    cx->addTypePropertyId(proto->getType(), lengthId, TYPE_INT32);
+    cx->addTypeProperty(proto->getNewType(cx), NULL, TYPE_STRING);
 
     return proto;
 }
