@@ -2842,7 +2842,17 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
         if (!clone)
             return NULL;
         clone->setPrivate(fun);
-        clone->setType(fun->getType());
+
+        /*
+         * In COMPILE_N_GO code the existing prototype will be correct, so we can
+         * reuse the type. In non-COMPILE_N_GO code the proto is NULL, but since
+         * we don't run type inference on such code we can use the default new
+         * Function type.
+         */
+        if (fun->getProto() == proto)
+            clone->setType(fun->getType());
+        else
+            clone->setType(proto->getNewType(cx));
     } else {
         /*
          * Across compartments we have to deep copy JSFunction and clone the
@@ -2851,7 +2861,12 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
         clone = NewFunction(cx, parent);
         if (!clone)
             return NULL;
-        clone->setType(fun->getType());
+
+        if (fun->getProto() == proto)
+            clone->setType(fun->getType());
+        else
+            clone->setType(proto->getNewType(cx));
+
         JSFunction *cfun = (JSFunction *) clone;
         cfun->nargs = fun->nargs;
         cfun->flags = fun->flags;
