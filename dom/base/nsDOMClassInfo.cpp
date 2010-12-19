@@ -42,7 +42,6 @@
 #include "jsprvtd.h"    // we are using private JS typedefs...
 #include "jscntxt.h"
 #include "jsobj.h"
-#include "jsobjinlines.h"
 #include "jsdbgapi.h"
 #include "WrapperFactory.h"
 #include "AccessCheck.h"
@@ -1643,14 +1642,14 @@ static const JSClass *sObjectClass = nsnull;
  * Set our JSClass pointer for the Object class
  */
 static void
-FindObjectClass(JSObject* aGlobalObject)
+FindObjectClass(JSContext *cx, JSObject* aGlobalObject)
 {
   NS_ASSERTION(!sObjectClass,
                "Double set of sObjectClass");
   JSObject *obj, *proto = aGlobalObject;
   do {
     obj = proto;
-    proto = obj->getProto();
+    proto = JS_GetPrototype(cx, obj);
   } while (proto);
 
   sObjectClass = obj->getJSClass();
@@ -4662,7 +4661,7 @@ nsDOMClassInfo::PostCreatePrototype(JSContext * cx, JSObject * proto)
   // sObjectClass, so compute it here. We assume that nobody has had a
   // chance to monkey around with proto's prototype chain before this.
   if (!sObjectClass) {
-    FindObjectClass(proto);
+    FindObjectClass(cx, proto);
     NS_ASSERTION(sObjectClass && !strcmp(sObjectClass->name, "Object"),
                  "Incorrect object class!");
   }
