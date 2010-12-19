@@ -61,7 +61,7 @@ static int gPassedTests = 0;
     if (aCondition) { \
       gPassedTests++; \
     } else { \
-      fail("Expected true, got false at %s:%d!", __FILE__, __LINE__); \
+      fail("%s | Expected true, got false at line %d", __FILE__, __LINE__); \
     } \
   PR_END_MACRO
 
@@ -71,7 +71,7 @@ static int gPassedTests = 0;
     if (!aCondition) { \
       gPassedTests++; \
     } else { \
-      fail("Expected false, got true at %s:%d!", __FILE__, __LINE__); \
+      fail("%s | Expected false, got true at line %d", __FILE__, __LINE__); \
     } \
   PR_END_MACRO
 
@@ -93,8 +93,8 @@ static int gPassedTests = 0;
       gPassedTests++; \
     } else { \
       std::ostringstream temp; \
-      temp << "Expected '" << aExpected << "', got '" << aActual <<"' at "; \
-      temp << __FILE__ << ":" << __LINE__ << "!"; \
+      temp << __FILE__ << " | Expected '" << aExpected << "', got '"; \
+      temp << aActual <<"' at line " << __LINE__; \
       fail(temp.str().c_str()); \
     } \
   PR_END_MACRO
