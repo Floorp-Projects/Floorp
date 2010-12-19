@@ -125,12 +125,13 @@ MakeTypeId(JSContext *cx, jsid id)
     return JSID_VOID;
 }
 
+const char * TypeIdStringImpl(jsid id);
+
 /* Convert an id for printing during debug. */
 static inline const char *
 TypeIdString(jsid id)
 {
 #ifdef DEBUG
-    const char * TypeIdStringImpl(jsid id);
     return TypeIdStringImpl(id);
 #else
     return "(missing)";

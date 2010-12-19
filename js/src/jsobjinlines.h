@@ -52,6 +52,7 @@
 #include "jspropertytree.h"
 #include "jsscope.h"
 #include "jsstaticcheck.h"
+#include "jsstdint.h"
 #include "jsxml.h"
 
 /* Headers included for inline implementations used by this header. */
