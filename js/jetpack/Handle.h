@@ -46,6 +46,7 @@
 
 #include "jsapi.h"
 #include "jsobj.h"
+#include "jsobjinlines.h"
 #include "jscntxt.h"
 
 #include "mozilla/unused.h"
