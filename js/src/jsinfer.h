@@ -45,6 +45,7 @@
 #include "jsarena.h"
 #include "jstl.h"
 #include "jsprvtd.h"
+#include "jsvalue.h"
 
 #ifndef _MSC_VER
 #include <sys/time.h>

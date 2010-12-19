@@ -49,6 +49,7 @@
  * is reference counted and the slot vector is malloc'ed.
  */
 #include "jsapi.h"
+#include "jsinfer.h"
 #include "jshash.h"
 #include "jspubtd.h"
 #include "jsprvtd.h"
@@ -659,10 +660,13 @@ struct JSObject : js::gc::Cell {
 
     inline void clearType(JSContext *cx);
     inline void setType(js::types::TypeObject *newType);
-    inline JSObject *getProto() const;
 
     inline js::types::TypeObject *getNewType(JSContext *cx);
     void makeNewType(JSContext *cx);
+
+    JSObject * getProto() const {
+        return type->proto;
+    }
 
     JSObject *getParent() const {
         return parent;

@@ -200,7 +200,7 @@ private:
   static Handle*
   Unwrap(JSContext* cx, JSObject* obj) {
     while (obj && obj->getJSClass() != &sHandle_JSClass)
-      obj = JS_GetPrototype(cx, obj);
+      obj = obj->getProto();
 
     if (!obj)
       return NULL;

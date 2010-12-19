@@ -612,12 +612,6 @@ JSObject::getNewType(JSContext *cx)
     return newType;
 }
 
-inline JSObject *
-JSObject::getProto() const
-{
-    return type->proto;
-}
-
 inline void
 JSObject::clearType(JSContext *cx)
 {

@@ -2352,6 +2352,8 @@ array_splice(JSContext *cx, uintN argc, Value *vp)
          * result of the call so mark it at the callsite.
          */
         type = cx->getTypeCallerInitObject(true);
+        if (!type)
+            return JS_FALSE;
         cx->markTypeObjectUnknownProperties(type);
         cx->markTypeCallerUnexpected((jstype) type);
     }
@@ -2552,6 +2554,8 @@ array_concat(JSContext *cx, uintN argc, Value *vp)
 
     /* Get the type object to use for the result. */
     TypeObject *ntype = cx->getTypeCallerInitObject(true);
+    if (!ntype)
+        return JS_FALSE;
     if (cx->isTypeCallerMonitored())
         cx->markTypeObjectUnknownProperties(ntype);
 
@@ -2665,6 +2669,8 @@ array_slice(JSContext *cx, uintN argc, Value *vp)
          * result of the call so mark it at the callsite.
          */
         type = cx->getTypeCallerInitObject(true);
+        if (!type)
+            return JS_FALSE;
         cx->markTypeObjectUnknownProperties(type);
         cx->markTypeCallerUnexpected((jstype) type);
     }
@@ -2868,6 +2874,8 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, Value *vp)
         if (!newarr)
             return JS_FALSE;
         newtype = cx->getTypeCallerInitObject(true);
+        if (!newtype)
+            return JS_FALSE;
         newarr->setType(newtype);
         vp->setObject(*newarr);
         break;
@@ -3335,6 +3343,8 @@ js_Array(JSContext *cx, uintN argc, Value *vp)
     const Value *vector;
 
     TypeObject *type = cx->getTypeCallerInitObject(true);
+    if (!type)
+        return JS_FALSE;
 
     if (argc == 0) {
         length = 0;
@@ -3632,7 +3642,6 @@ js_CloneDensePrimitiveArray(JSContext *cx, JSObject *obj, JSObject **clone)
     *clone = js_NewArrayObject(cx, initlen, vector.begin());
     if (!*clone)
         return JS_FALSE;
-    (*clone)->setType(obj->getType());
     (*clone)->setArrayLength(cx, length);
 
     return JS_TRUE;

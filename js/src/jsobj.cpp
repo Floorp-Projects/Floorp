@@ -2778,6 +2778,8 @@ js_Object(JSContext *cx, uintN argc, Value *vp)
         if (!obj)
             return JS_FALSE;
         TypeObject *type = cx->getTypeCallerInitObject(false);
+        if (!type)
+            return JS_FALSE;
         obj->setType(type);
     }
     vp->setObject(*obj);
@@ -3426,7 +3428,8 @@ JSObject::clone(JSContext *cx, JSObject *proto, JSObject *parent)
                                                   gc::FinalizeKind(finalizeKind()));
     if (!clone)
         return NULL;
-    clone->setType(getType());
+    if (getProto() == proto)
+        clone->setType(getType());
     if (isNative()) {
         if (clone->isFunction() && (compartment() != clone->compartment())) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
