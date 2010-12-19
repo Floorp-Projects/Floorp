@@ -371,7 +371,8 @@ WrapEscapingClosure(JSContext *cx, JSStackFrame *fp, JSFunction *fun)
     JSObject *wfunobj = NewFunction(cx, scopeChain);
     if (!wfunobj)
         return NULL;
-    wfunobj->setType(fun->getType());
+    if (fun->getProto() == wfunobj->getProto())
+        wfunobj->setType(fun->getType());
     AutoObjectRooter tvr(cx, wfunobj);
 
     JSFunction *wfun = (JSFunction *) wfunobj;

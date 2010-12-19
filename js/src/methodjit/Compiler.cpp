@@ -4985,7 +4985,10 @@ mjit::Compiler::jsop_newinit()
 
     prepareStubCall(Uses(0));
 
-    types::TypeObject *type = script->getTypeInitObject(cx, PC, isArray);
+    /* Don't bake in types for non-compileAndGo scripts. */
+    types::TypeObject *type = NULL;
+    if (script->compileAndGo)
+        type = script->getTypeInitObject(cx, PC, isArray);
     masm.storePtr(ImmPtr(type), FrameAddress(offsetof(VMFrame, scratch)));
 
     if (isArray) {
