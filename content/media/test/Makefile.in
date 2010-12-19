@@ -202,6 +202,7 @@ _TEST_FILES += \
 		short-video.ogv \
 		small-shot.ogg \
 		sound.ogg \
+		spacestorm-1000Hz-100ms.ogg \
 		video-overhang.ogg \
 		file_a4_tone.ogg \
 		$(NULL)

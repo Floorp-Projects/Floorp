@@ -116,6 +116,10 @@ public:
   // Returns PR_TRUE when the audio stream is paused.
   virtual PRBool IsPaused() = 0;
 
+  // Returns the minimum number of samples which must be written before
+  // you can be sure that something will be played.
+  virtual PRInt32 GetMinWriteSamples() = 0;
+
 protected:
   nsCOMPtr<nsIThread> mAudioPlaybackThread;
 };

@@ -112,6 +112,11 @@ var gPlayTests = [
   
   // Test playback of a raw file
   { name:"seek.yuv", type:"video/x-raw-yuv", duration:1.833 },
+  
+  // A really short, low sample rate, single channel file. This tests whether
+  // we can handle playing files when only push very little audio data to the
+  // hardware.
+  { name:"spacestorm-1000Hz-100ms.ogg", type:"audio/ogg", duration:0.099 },
 
   { name:"bogus.duh", type:"bogus/duh", duration:Number.NaN }
   
