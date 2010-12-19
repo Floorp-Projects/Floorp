@@ -323,7 +323,8 @@ class SetPropCompiler : public PICStubCompiler
             JSObject *proto = obj->getProto();
             RegisterID lastReg = pic.objReg;
             while (proto) {
-                masm.loadPtr(Address(lastReg, offsetof(JSObject, proto)), pic.shapeReg);
+                masm.loadPtr(Address(lastReg, offsetof(JSObject, type)), pic.shapeReg);
+                masm.loadPtr(Address(pic.shapeReg, offsetof(types::TypeObject, proto)), pic.shapeReg);
                 Jump protoGuard = masm.guardShape(pic.shapeReg, proto);
                 if (!otherGuards.append(protoGuard))
                     return error();
@@ -2338,7 +2339,7 @@ ic::GetElement(VMFrame &f, ic::GetElementIC *ic)
         THROW();
     if (f.regs.sp[-2].isUndefined()) {
         if (idval.isInt32())
-            cx->addTypeProperty(obj->getTypeObject(), NULL, types::TYPE_UNDEFINED);
+            cx->addTypeProperty(obj->getType(), NULL, types::TYPE_UNDEFINED);
         f.script()->typeMonitorUndefined(cx, f.regs.pc, 0);
     }
 }

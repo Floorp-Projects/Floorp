@@ -60,13 +60,11 @@ js::Shape::freeTable(JSContext *cx)
 }
 
 inline js::EmptyShape *
-JSObject::getEmptyShape(JSContext *cx, js::Class *aclasp,
-                        /* gc::FinalizeKind */ unsigned kind)
+js::types::TypeObject::getEmptyShape(JSContext *cx, js::Class *aclasp,
+                                     /* gc::FinalizeKind */ unsigned kind)
 {
     JS_ASSERT(kind >= js::gc::FINALIZE_OBJECT0 && kind <= js::gc::FINALIZE_OBJECT_LAST);
     int i = kind - js::gc::FINALIZE_OBJECT0;
-
-    JS_ASSERT(!isDenseArray());
 
     if (!emptyShapes) {
         emptyShapes = (js::EmptyShape**)
@@ -98,9 +96,8 @@ JSObject::getEmptyShape(JSContext *cx, js::Class *aclasp,
 }
 
 inline bool
-JSObject::canProvideEmptyShape(js::Class *aclasp)
+js::types::TypeObject::canProvideEmptyShape(js::Class *aclasp)
 {
-    JS_ASSERT(!isDenseArray());
     return !emptyShapes || emptyShapes[0]->getClass() == aclasp;
 }
 

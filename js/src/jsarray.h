@@ -78,7 +78,7 @@ JSObject::setDenseArrayNotPacked(JSContext *cx)
     JS_ASSERT(isDenseArray());
     if (flags & PACKED_ARRAY) {
         flags ^= PACKED_ARRAY;
-        cx->markTypeArrayNotPacked(getTypeObject(), false);
+        cx->markTypeArrayNotPacked(getType(), false);
     }
 }
 
@@ -224,11 +224,8 @@ JSObject::isArray() const
  * Callers of js_GetProtoIfDenseArray must take care to use the original object
  * (obj) for the |this| value of a getter, setter, or method call (bug 476447).
  */
-static JS_INLINE JSObject *
-js_GetProtoIfDenseArray(JSObject *obj)
-{
-    return obj->isDenseArray() ? obj->getProto() : obj;
-}
+inline JSObject *
+js_GetProtoIfDenseArray(JSObject *obj);
 
 extern JSObject *
 js_InitArrayClass(JSContext *cx, JSObject *obj);
@@ -237,11 +234,11 @@ extern bool
 js_InitContextBusyArrayTable(JSContext *cx);
 
 extern JSObject *
-js_NewArrayObject(JSContext *cx, jsuint length, const js::Value *vector, js::types::TypeObject *type);
+js_NewArrayObject(JSContext *cx, jsuint length, const js::Value *vector);
 
 /* Create an array object that starts out already made slow/sparse. */
 extern JSObject *
-js_NewSlowArrayObject(JSContext *cx, js::types::TypeObject *type);
+js_NewSlowArrayObject(JSContext *cx);
 
 extern JSBool
 js_GetLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp);
@@ -359,8 +356,7 @@ js_Array(JSContext *cx, uintN argc, js::Value *vp);
  * It would be useful to find out what is causing this insanity.
  */
 JS_FRIEND_API(JSObject *)
-js_NewArrayObjectWithCapacity(JSContext *cx, uint32_t capacity, jsval **vector,
-                              js::types::TypeObject *type);
+js_NewArrayObjectWithCapacity(JSContext *cx, uint32_t capacity, jsval **vector);
 
 /*
  * Makes a fast clone of a dense array as long as the array only contains

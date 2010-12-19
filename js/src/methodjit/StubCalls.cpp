@@ -517,7 +517,7 @@ stubs::GetElem(VMFrame &f)
     f.regs.sp[-2] = *copyFrom;
     if (copyFrom->isUndefined() || !rref.isInt32()) {
         if (rref.isInt32())
-            cx->addTypeProperty(obj->getTypeObject(), NULL, TYPE_UNDEFINED);
+            cx->addTypeProperty(obj->getType(), NULL, TYPE_UNDEFINED);
         f.script()->typeMonitorResult(cx, regs.pc, 0, *copyFrom);
     }
 }
@@ -1407,13 +1407,13 @@ stubs::NewInitArray(VMFrame &f, uint32 count)
 {
     JSContext *cx = f.cx;
 
-    TypeObject *type = (TypeObject *) f.scratch;
     gc::FinalizeKind kind = GuessObjectGCKind(count, true);
-
-    JSObject *obj = NewArrayWithKind(cx, type, kind);
+    JSObject *obj = NewArrayWithKind(cx, kind);
     if (!obj || !obj->ensureSlots(cx, count))
         THROWV(NULL);
 
+    TypeObject *type = (TypeObject *) f.scratch;
+    obj->setType(type);
     obj->setArrayLength(cx, count);
     return obj;
 }
@@ -1426,9 +1426,10 @@ stubs::NewInitObject(VMFrame &f, JSObject *baseobj)
 
     if (!baseobj) {
         gc::FinalizeKind kind = GuessObjectGCKind(0, false);
-        JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass, type, kind);
+        JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass, kind);
         if (!obj)
             THROWV(NULL);
+        obj->setType(type);
         return obj;
     }
 
@@ -1709,7 +1710,7 @@ ObjIncOp(VMFrame &f, JSObject *obj, jsid id)
         }
         if (!v.setNumber(d)) {
             f.script()->typeMonitorOverflow(cx, f.regs.pc, 0);
-            cx->addTypePropertyId(obj->getTypeObject(), id, TYPE_DOUBLE);
+            cx->addTypePropertyId(obj->getType(), id, TYPE_DOUBLE);
         }
         f.script()->typeMonitorAssign(cx, f.regs.pc, obj, id, v);
         fp->setAssigning();

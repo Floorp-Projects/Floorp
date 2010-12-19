@@ -1712,25 +1712,6 @@ MarkRuntime(JSTracer *trc)
         }
     }
 #endif
-
-#ifdef JS_TYPE_INFERENCE
-    /* Mark all scripts which have analysis information. :FIXME: bug 613221 */
-    JSCompartment **read = rt->compartments.begin();
-    JSCompartment **end = rt->compartments.end();
-    while (read < end) {
-        JSCompartment *compartment = (*read++);
-        if (compartment->marked) {
-            for (JSCList *cursor = compartment->scripts.next;
-                 cursor != &compartment->scripts;
-                 cursor = cursor->next) {
-                JSScript *script = reinterpret_cast<JSScript *>(cursor);
-                if (script->analysis)
-                    js_TraceScript(trc, script);
-            }
-            compartment->types.trace(trc);
-        }
-    }
-#endif
 }
 
 void
@@ -2571,7 +2552,7 @@ namespace js {
 namespace gc {
 
 bool
-SetProtoCheckingForCycles(JSContext *cx, JSObject *obj, JSObject *proto)
+SetTypeCheckingForCycles(JSContext *cx, JSObject *obj, types::TypeObject *type)
 {
     /*
      * This function cannot be called during the GC and always requires a
@@ -2594,7 +2575,7 @@ SetProtoCheckingForCycles(JSContext *cx, JSObject *obj, JSObject *proto)
     AutoUnlockGC unlock(rt);
 
     bool cycle = false;
-    for (JSObject *obj2 = proto; obj2;) {
+    for (JSObject *obj2 = type->proto; obj2;) {
         if (obj2 == obj) {
             cycle = true;
             break;
@@ -2602,7 +2583,7 @@ SetProtoCheckingForCycles(JSContext *cx, JSObject *obj, JSObject *proto)
         obj2 = obj2->getProto();
     }
     if (!cycle)
-        obj->setProto(cx, proto);
+        obj->setType(type);
 
     return !cycle;
 }

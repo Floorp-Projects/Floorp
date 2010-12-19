@@ -719,8 +719,7 @@ Exception(JSContext *cx, uintN argc, Value *vp)
         return JS_FALSE;
 
     JSObject *errProto = &protov.toObject();
-    TypeObject *type = errProto->getTypePrototypeNewObject(cx);
-    JSObject *obj = NewNativeClassInstance(cx, &js_ErrorClass, errProto, errProto->getParent(), type);
+    JSObject *obj = NewNativeClassInstance(cx, &js_ErrorClass, errProto, errProto->getParent());
     if (!obj)
         return JS_FALSE;
 
@@ -993,7 +992,6 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
 {
     jsval roots[3];
     JSObject *obj_proto, *error_proto;
-    TypeObject *obj_type, *error_type;
 
     /*
      * If lazy class initialization occurs for any Error subclass, then all
@@ -1008,14 +1006,11 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
     if (!js_GetClassPrototype(cx, obj, JSProto_Object, &obj_proto))
         return NULL;
 
-    obj_type = cx->getTypeObject("Error:prototype:new", NULL);
-
     PodArrayZero(roots);
     AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(roots), Valueify(roots));
 
 #ifdef __GNUC__
     error_proto = NULL;   /* quell GCC overwarning */
-    error_type = NULL;
 #endif
 
     jsval empty = STRING_TO_JSVAL(cx->runtime->emptyString);
@@ -1023,16 +1018,12 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
     /* Initialize the prototypes first. */
     for (intN i = JSEXN_ERR; i != JSEXN_LIMIT; i++) {
         /* Make the prototype for the current constructor name. */
-        TypeObject *protoType = (i != JSEXN_ERR) ? error_type : obj_type;
         JSObject *proto =
-            NewNonFunction<WithProto::Class>(cx, &js_ErrorClass,
-                                             (i != JSEXN_ERR) ? error_proto : obj_proto,
-                                             obj, protoType);
+            NewNonFunction<WithProto::Class>(cx, &js_ErrorClass, (i != JSEXN_ERR) ? error_proto : obj_proto, obj);
         if (!proto)
             return NULL;
         if (i == JSEXN_ERR) {
             error_proto = proto;
-            error_type = proto->getTypePrototypeNewObject(cx);
             roots[0] = OBJECT_TO_JSVAL(proto);
         } else {
             // We cannot share the root for error_proto and other prototypes
@@ -1047,21 +1038,12 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
         JSProtoKey protoKey = GetExceptionProtoKey(i);
         const char *fullName = js_common_atom_names[1 + 2 + JSTYPE_LIMIT + 1 + protoKey];
 
-        /*
-         * Mark the function as a builtin before constructing and adding it to the global
-         * object, which could trigger accesses on its properties.
-         */
-        cx->markTypeBuiltinFunction(cx->getTypeFunction(fullName));
-        
         jsid id = ATOM_TO_JSID(cx->runtime->atomState.classAtoms[protoKey]);
         JSFunction *fun = js_DefineFunction(cx, obj, id, Exception, 1, JSFUN_CONSTRUCTOR,
                                             JS_TypeHandlerNew, fullName);
         if (!fun)
             return NULL;
         roots[2] = OBJECT_TO_JSVAL(FUN_OBJECT(fun));
-
-        /* This is a builtin class, specify its 'prototype' field for inference. */
-        cx->setTypeFunctionPrototype(fun->getTypeObject(), protoType);
 
         /* Make this constructor make objects of class Exception. */
         FUN_CLASP(fun) = &js_ErrorClass;
@@ -1137,7 +1119,6 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
     jsval tv[4];
     JSBool ok;
     JSObject *errProto, *errObject;
-    TypeObject *type;
     JSString *messageStr, *filenameStr;
 
     /*
@@ -1196,8 +1177,7 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
         goto out;
     tv[0] = OBJECT_TO_JSVAL(errProto);
 
-    type = errProto->getTypePrototypeNewObject(cx);
-    errObject = NewNativeClassInstance(cx, &js_ErrorClass, errProto, errProto->getParent(), type);
+    errObject = NewNativeClassInstance(cx, &js_ErrorClass, errProto, errProto->getParent());
     if (!errObject) {
         ok = JS_FALSE;
         goto out;

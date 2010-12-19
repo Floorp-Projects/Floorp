@@ -6,6 +6,7 @@
 
 #include "tests.h"
 #include "jswrapper.h"
+#include "jsobjinlines.h"
 
 struct OuterWrapper : JSWrapper
 {
