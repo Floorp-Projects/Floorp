@@ -5805,6 +5805,7 @@ BEGIN_CASE(JSOP_LAMBDA)
             goto error;
     } while (0);
 
+    JS_ASSERT(obj->getProto());
     PUSH_OBJECT(*obj);
 }
 END_CASE(JSOP_LAMBDA)
