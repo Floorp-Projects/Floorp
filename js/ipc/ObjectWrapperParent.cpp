@@ -46,6 +46,7 @@
 #include "jsobj.h"
 #include "jsfun.h"
 #include "jsutil.h"
+#include "jsobjinlines.h"
 
 using namespace mozilla::jsipc;
 

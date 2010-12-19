@@ -42,6 +42,7 @@
 #include "jsprvtd.h"    // we are using private JS typedefs...
 #include "jscntxt.h"
 #include "jsobj.h"
+#include "jsobjinlines.h"
 #include "jsdbgapi.h"
 #include "WrapperFactory.h"
 #include "AccessCheck.h"

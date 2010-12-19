@@ -39,6 +39,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "xpcprivate.h"
+#include "jsobjinlines.h"
 
 #ifdef TAB
 #undef TAB

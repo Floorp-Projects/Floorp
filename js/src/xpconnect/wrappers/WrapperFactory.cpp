@@ -39,6 +39,7 @@
 
 #include "jsobj.h"
 #include "jsvalue.h"
+#include "jsobjinlines.h"
 
 #include "WrapperFactory.h"
 #include "CrossOriginWrapper.h"
