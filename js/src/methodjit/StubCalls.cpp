@@ -1413,7 +1413,9 @@ stubs::NewInitArray(VMFrame &f, uint32 count)
         THROWV(NULL);
 
     TypeObject *type = (TypeObject *) f.scratch;
-    obj->setType(type);
+    if (type)
+        obj->setType(type);
+
     obj->setArrayLength(cx, count);
     return obj;
 }
@@ -1429,10 +1431,12 @@ stubs::NewInitObject(VMFrame &f, JSObject *baseobj)
         JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass, kind);
         if (!obj)
             THROWV(NULL);
-        obj->setType(type);
+        if (type)
+            obj->setType(type);
         return obj;
     }
 
+    JS_ASSERT(type);
     JSObject *obj = CopyInitializerObject(cx, baseobj, type);
 
     if (!obj)

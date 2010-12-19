@@ -238,6 +238,8 @@ inline types::TypeObject *
 GetRegExpMatchType(JSContext *cx)
 {
     types::TypeObject *type = cx->getTypeCallerInitObject(true);
+    if (!type)
+        return NULL;
 
     cx->addTypeProperty(type, NULL, types::TYPE_STRING);
     cx->addTypeProperty(type, "index", types::TYPE_INT32);

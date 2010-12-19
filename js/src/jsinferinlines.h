@@ -489,6 +489,8 @@ JSScript::getTypeInitObject(JSContext *cx, const jsbytecode *pc, bool isArray)
 #ifdef JS_TYPE_INFERENCE
     /* :FIXME: */
     JS_ASSERT(!analysis->failed());
+    if (compileAndGo)
+        return cx->getTypeNewObject(isArray ? JSProto_Array : JSProto_Object);
     return analysis->getCode(pc).getInitObject(cx, isArray);
 #else
     return cx->getTypeNewObject(isArray ? JSProto_Array : JSProto_Object);

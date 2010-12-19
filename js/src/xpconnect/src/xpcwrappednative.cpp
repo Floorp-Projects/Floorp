@@ -53,9 +53,6 @@
 #include "AccessCheck.h"
 #include "WrapperFactory.h"
 
-#include "mozilla/mozalloc_undef_macro_wrappers.h"
-#include "jsobjinlines.h"
-
 /***************************************************************************/
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(XPCWrappedNative)
