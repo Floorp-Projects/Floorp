@@ -79,8 +79,6 @@ class SVGAnimatedPointList;
 class SVGAnimatedPathSegList;
 class SVGAnimatedPreserveAspectRatio;
 }
-// XXXdholbert TEMPORARY TYPEDEF
-typedef mozilla::SVGAnimatedPreserveAspectRatio nsSVGPreserveAspectRatio;
 
 typedef nsStyledElement nsSVGElementBase;
 
@@ -99,6 +97,7 @@ public:
   typedef mozilla::SVGAnimatedLengthList SVGAnimatedLengthList;
   typedef mozilla::SVGAnimatedPointList SVGAnimatedPointList;
   typedef mozilla::SVGAnimatedPathSegList SVGAnimatedPathSegList;
+  typedef mozilla::SVGAnimatedPreserveAspectRatio SVGAnimatedPreserveAspectRatio;
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -466,7 +465,7 @@ protected:
   // We assume all viewboxes and preserveAspectRatios are alike
   // so we don't need to wrap the class
   virtual nsSVGViewBox *GetViewBox();
-  virtual nsSVGPreserveAspectRatio *GetPreserveAspectRatio();
+  virtual SVGAnimatedPreserveAspectRatio *GetPreserveAspectRatio();
   virtual NumberListAttributesInfo GetNumberListInfo();
   virtual LengthListAttributesInfo GetLengthListInfo();
   virtual StringAttributesInfo GetStringInfo();

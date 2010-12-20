@@ -243,7 +243,4 @@ public:
 
 } // namespace mozilla
 
-// XXXdholbert TEMPORARY TYPEDEF
-typedef mozilla::SVGAnimatedPreserveAspectRatio nsSVGPreserveAspectRatio;
-
 #endif //__NS_SVGPRESERVEASPECTRATIO_H__

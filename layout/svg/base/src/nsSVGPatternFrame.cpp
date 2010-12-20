@@ -56,6 +56,7 @@
 #include "gfxPattern.h"
 #include "gfxMatrix.h"
 
+using namespace mozilla;
 
 //----------------------------------------------------------------------
 // Implementation
@@ -383,7 +384,7 @@ nsSVGPatternFrame::GetViewBox()
   return patternElement->mViewBox;
 }
 
-const nsSVGPreserveAspectRatio &
+const SVGAnimatedPreserveAspectRatio &
 nsSVGPatternFrame::GetPreserveAspectRatio()
 {
   nsSVGPatternElement *patternElement =
