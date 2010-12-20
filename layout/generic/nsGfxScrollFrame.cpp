@@ -1067,20 +1067,40 @@ nsXULScrollFrame::InvalidateInternal(const nsRect& aDamageRect,
                                      PRUint32 aFlags)
 {
   if (aForChild == mInner.mScrolledFrame) {
-    // restrict aDamageRect to the scrollable view's bounds
-    nsRect damage = aDamageRect + nsPoint(aX, aY) +
-      GetScrollPosition() - mInner.mScrollPosAtLastPaint;
-    nsRect r;
-    r.IntersectRect(damage, mInner.mScrollPort);
-    PRBool seperateThebes = IsScrollingActive() &&
-      !(aFlags & INVALIDATE_NO_THEBES_LAYERS) && r != damage;
-    if (seperateThebes) {
-      nsBoxFrame::InvalidateInternal(damage, 0, 0, aForChild,
-        aFlags | INVALIDATE_ONLY_THEBES_LAYERS);
-    }
-    if (!r.IsEmpty()) {
-      nsBoxFrame::InvalidateInternal(r, 0, 0, aForChild,
-        aFlags | (seperateThebes ? INVALIDATE_NO_THEBES_LAYERS : 0));
+    nsRect damage = aDamageRect + nsPoint(aX, aY);
+    // This is the damage rect that we're going to pass up to our parent.
+    nsRect parentDamage;
+    parentDamage.IntersectRect(damage, mInner.mScrollPort);
+
+    if (IsScrollingActive()) {
+      // This is the damage rect that we're going to pass up and
+      // only request invalidation of ThebesLayers for.
+      // damage is now in our coordinate system, which means it was
+      // translated using the current scroll position. Adjust it to
+      // reflect the scroll position at last paint, since that's what
+      // the ThebesLayers are currently set up for.
+      // This should not be clipped to the scrollport since ThebesLayers
+      // can contain content outside the scrollport that may need to be
+      // invalidated.
+      nsRect thebesLayerDamage = damage + GetScrollPosition() - mInner.mScrollPosAtLastPaint;
+      if (parentDamage == thebesLayerDamage) {
+        // This single call will take care of both rects
+        nsBoxFrame::InvalidateInternal(parentDamage, 0, 0, aForChild, aFlags);
+      } else {
+        // Invalidate rects separately
+        if (!(aFlags & INVALIDATE_NO_THEBES_LAYERS)) {
+          nsBoxFrame::InvalidateInternal(thebesLayerDamage, 0, 0, aForChild,
+                                         aFlags | INVALIDATE_ONLY_THEBES_LAYERS);
+        }
+        if (!(aFlags & INVALIDATE_ONLY_THEBES_LAYERS) && !parentDamage.IsEmpty()) {
+          nsBoxFrame::InvalidateInternal(parentDamage, 0, 0, aForChild,
+                                         aFlags | INVALIDATE_NO_THEBES_LAYERS);
+        }
+      }
+    } else {
+      if (!parentDamage.IsEmpty()) {
+        nsBoxFrame::InvalidateInternal(parentDamage, 0, 0, aForChild, aFlags);
+      }
     }
     return;
   }
