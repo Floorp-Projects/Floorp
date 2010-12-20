@@ -1702,15 +1702,36 @@ nsObjectFrame::GetImageContainer()
   return mImageContainer;
 }
 
+class AsyncPaintWaitEvent : public nsRunnable
+{
+public:
+  AsyncPaintWaitEvent(nsIContent* aContent, PRBool aFinished) :
+    mContent(aContent), mFinished(aFinished)
+  {
+  }
+
+  NS_IMETHOD Run()
+  {
+    nsContentUtils::DispatchTrustedEvent(mContent->GetOwnerDoc(), mContent,
+        mFinished ? NS_LITERAL_STRING("MozPaintWaitFinished") : NS_LITERAL_STRING("MozPaintWait"),
+        PR_TRUE, PR_TRUE);
+    return NS_OK;
+  }
+
+private:
+  nsCOMPtr<nsIContent> mContent;
+  PRPackedBool         mFinished;
+};
+
 void
 nsPluginInstanceOwner::NotifyPaintWaiter(nsDisplayListBuilder* aBuilder)
 {
   // This is notification for reftests about async plugin paint start
   if (!mWaitingForPaint && !IsUpToDate() && aBuilder->ShouldSyncDecodeImages()) {
-    nsContentUtils::DispatchTrustedEvent(mContent->GetOwnerDoc(), mContent,
-                                         NS_LITERAL_STRING("MozPaintWait"),
-                                         PR_TRUE, PR_TRUE);
-    mWaitingForPaint = PR_TRUE;
+    nsCOMPtr<nsIRunnable> event = new AsyncPaintWaitEvent(mContent, PR_FALSE);
+    // Run this event as soon as it's safe to do so, since listeners need to
+    // receive it immediately
+    mWaitingForPaint = nsContentUtils::AddScriptRunner(event);
   }
 }
 
@@ -2852,6 +2873,13 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
   PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG,
          ("nsPluginInstanceOwner %p deleted\n", this));
 
+  if (mWaitingForPaint) {
+    // We don't care when the event is dispatched as long as it's "soon",
+    // since whoever needs it will be wwaiting for it
+    nsCOMPtr<nsIRunnable> event = new AsyncPaintWaitEvent(mContent, PR_TRUE);
+    NS_DispatchToMainThread(event);
+  }
+
 #ifdef MAC_CARBON_PLUGINS
   CancelTimer();
 #endif
@@ -3112,9 +3140,16 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetDocument(nsIDocument* *aDocument)
 
 NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRect(NPRect *invalidRect)
 {
+  if (mWaitingForPaint && IsUpToDate()) {
+    // We don't care when the event is dispatched as long as it's "soon",
+    // since whoever needs it will be wwaiting for it
+    nsCOMPtr<nsIRunnable> event = new AsyncPaintWaitEvent(mContent, PR_TRUE);
+    NS_DispatchToMainThread(event);
+    mWaitingForPaint = false;
+  }
+
   if (!mObjectFrame || !invalidRect || !mWidgetVisible)
     return NS_ERROR_FAILURE;
-
 
   // Each time an asynchronously-drawing plugin sends a new surface to display,
   // InvalidateRect is called. We notify reftests that painting is up to
@@ -3122,13 +3157,6 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRect(NPRect *invalidRect)
   nsRefPtr<ImageContainer> container = mObjectFrame->GetImageContainer();
   if (container) {
     SetCurrentImage(container);
-  }
-
-  if (mWaitingForPaint && IsUpToDate()) {
-    nsContentUtils::DispatchTrustedEvent(mContent->GetOwnerDoc(), mContent,
-                                         NS_LITERAL_STRING("MozPaintWaitFinished"),
-                                         PR_TRUE, PR_TRUE);
-    mWaitingForPaint = false;
   }
 
 #ifdef MOZ_USE_IMAGE_EXPOSE
