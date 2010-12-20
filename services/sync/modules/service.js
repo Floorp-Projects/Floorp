@@ -673,6 +673,7 @@ WeaveSvc.prototype = {
   _fetchInfo: function _fetchInfo(url, logout) {
     let infoURL = url || this.infoURL;
     
+    this._log.trace("In _fetchInfo: " + infoURL);
     let info = new Resource(infoURL).get();
     if (!info.success) {
       if (info.status == 401) {
