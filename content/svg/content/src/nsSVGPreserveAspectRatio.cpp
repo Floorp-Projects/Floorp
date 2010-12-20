@@ -46,41 +46,46 @@
 using namespace mozilla;
 
 ////////////////////////////////////////////////////////////////////////
-// nsSVGPreserveAspectRatio class
+// SVGAnimatedPreserveAspectRatio class
 
 NS_SVG_VAL_IMPL_CYCLE_COLLECTION(
-  nsSVGPreserveAspectRatio::DOMBaseVal, mSVGElement)
+  SVGAnimatedPreserveAspectRatio::DOMBaseVal, mSVGElement)
 NS_SVG_VAL_IMPL_CYCLE_COLLECTION(
-  nsSVGPreserveAspectRatio::DOMAnimVal, mSVGElement)
+  SVGAnimatedPreserveAspectRatio::DOMAnimVal, mSVGElement)
 NS_SVG_VAL_IMPL_CYCLE_COLLECTION(
-  nsSVGPreserveAspectRatio::DOMAnimPAspectRatio, mSVGElement)
+  SVGAnimatedPreserveAspectRatio::DOMAnimPAspectRatio, mSVGElement)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsSVGPreserveAspectRatio::DOMBaseVal)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsSVGPreserveAspectRatio::DOMBaseVal)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(SVGAnimatedPreserveAspectRatio::DOMBaseVal)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(SVGAnimatedPreserveAspectRatio::DOMBaseVal)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsSVGPreserveAspectRatio::DOMAnimVal)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsSVGPreserveAspectRatio::DOMAnimVal)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(SVGAnimatedPreserveAspectRatio::DOMAnimVal)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(SVGAnimatedPreserveAspectRatio::DOMAnimVal)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsSVGPreserveAspectRatio::DOMAnimPAspectRatio)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsSVGPreserveAspectRatio::DOMAnimPAspectRatio)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(
+  SVGAnimatedPreserveAspectRatio::DOMAnimPAspectRatio)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(
+  SVGAnimatedPreserveAspectRatio::DOMAnimPAspectRatio)
 
-DOMCI_DATA(SVGPreserveAspectRatio, nsSVGPreserveAspectRatio::DOMBaseVal)
+DOMCI_DATA(SVGPreserveAspectRatio, SVGAnimatedPreserveAspectRatio::DOMBaseVal)
 DOMCI_DATA(SVGAnimatedPreserveAspectRatio,
-           nsSVGPreserveAspectRatio::DOMAnimPAspectRatio)
+           SVGAnimatedPreserveAspectRatio::DOMAnimPAspectRatio)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSVGPreserveAspectRatio::DOMBaseVal)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(
+  SVGAnimatedPreserveAspectRatio::DOMBaseVal)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGPreserveAspectRatio)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGPreserveAspectRatio)
 NS_INTERFACE_MAP_END
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSVGPreserveAspectRatio::DOMAnimVal)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(
+  SVGAnimatedPreserveAspectRatio::DOMAnimVal)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGPreserveAspectRatio)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGPreserveAspectRatio)
 NS_INTERFACE_MAP_END
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSVGPreserveAspectRatio::DOMAnimPAspectRatio)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(
+  SVGAnimatedPreserveAspectRatio::DOMAnimPAspectRatio)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGAnimatedPreserveAspectRatio)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGAnimatedPreserveAspectRatio)
@@ -145,8 +150,9 @@ GetMeetOrSliceString(nsAString& aMeetOrSliceString, PRUint16 aMeetOrSlice)
 }
 
 nsresult
-nsSVGPreserveAspectRatio::ToDOMBaseVal(nsIDOMSVGPreserveAspectRatio **aResult,
-                                       nsSVGElement *aSVGElement)
+SVGAnimatedPreserveAspectRatio::ToDOMBaseVal(
+  nsIDOMSVGPreserveAspectRatio **aResult,
+  nsSVGElement *aSVGElement)
 {
   *aResult = new DOMBaseVal(this, aSVGElement);
   if (!*aResult)
@@ -157,8 +163,9 @@ nsSVGPreserveAspectRatio::ToDOMBaseVal(nsIDOMSVGPreserveAspectRatio **aResult,
 }
 
 nsresult
-nsSVGPreserveAspectRatio::ToDOMAnimVal(nsIDOMSVGPreserveAspectRatio **aResult,
-                                       nsSVGElement *aSVGElement)
+SVGAnimatedPreserveAspectRatio::ToDOMAnimVal(
+  nsIDOMSVGPreserveAspectRatio **aResult,
+  nsSVGElement *aSVGElement)
 {
   *aResult = new DOMAnimVal(this, aSVGElement);
   if (!*aResult)
@@ -170,7 +177,7 @@ nsSVGPreserveAspectRatio::ToDOMAnimVal(nsIDOMSVGPreserveAspectRatio **aResult,
 
 static nsresult
 ToPreserveAspectRatio(const nsAString &aString,
-                      nsSVGPreserveAspectRatio::PreserveAspectRatio *aValue)
+                      SVGPreserveAspectRatio *aValue)
 {
   if (aString.IsEmpty() || NS_IsAsciiWhitespace(aString[0])) {
     return NS_ERROR_DOM_SYNTAX_ERR;
@@ -183,7 +190,7 @@ ToPreserveAspectRatio(const nsAString &aString,
   const nsAString &token = tokenizer.nextToken();
 
   nsresult rv;
-  nsSVGPreserveAspectRatio::PreserveAspectRatio val;
+  SVGPreserveAspectRatio val;
 
   val.SetDefer(token.EqualsLiteral("defer"));
 
@@ -218,11 +225,12 @@ ToPreserveAspectRatio(const nsAString &aString,
 }
 
 nsresult
-nsSVGPreserveAspectRatio::SetBaseValueString(const nsAString &aValueAsString,
-                                             nsSVGElement *aSVGElement,
-                                             PRBool aDoSetAttr)
+SVGAnimatedPreserveAspectRatio::SetBaseValueString(
+  const nsAString &aValueAsString,
+  nsSVGElement *aSVGElement,
+  PRBool aDoSetAttr)
 {
-  PreserveAspectRatio val;
+  SVGPreserveAspectRatio val;
   nsresult res = ToPreserveAspectRatio(aValueAsString, &val);
   if (NS_FAILED(res)) {
     return res;
@@ -245,7 +253,7 @@ nsSVGPreserveAspectRatio::SetBaseValueString(const nsAString &aValueAsString,
 }
 
 void
-nsSVGPreserveAspectRatio::GetBaseValueString(nsAString & aValueAsString)
+SVGAnimatedPreserveAspectRatio::GetBaseValueString(nsAString & aValueAsString)
 {
   nsAutoString tmpString;
 
@@ -268,8 +276,8 @@ nsSVGPreserveAspectRatio::GetBaseValueString(nsAString & aValueAsString)
 }
 
 nsresult
-nsSVGPreserveAspectRatio::SetBaseAlign(PRUint16 aAlign,
-                                       nsSVGElement *aSVGElement)
+SVGAnimatedPreserveAspectRatio::SetBaseAlign(PRUint16 aAlign,
+                                             nsSVGElement *aSVGElement)
 {
   nsresult rv = mBaseVal.SetAlign(aAlign);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -286,8 +294,8 @@ nsSVGPreserveAspectRatio::SetBaseAlign(PRUint16 aAlign,
 }
 
 nsresult
-nsSVGPreserveAspectRatio::SetBaseMeetOrSlice(PRUint16 aMeetOrSlice,
-                                             nsSVGElement *aSVGElement)
+SVGAnimatedPreserveAspectRatio::SetBaseMeetOrSlice(PRUint16 aMeetOrSlice,
+                                                   nsSVGElement *aSVGElement)
 {
   nsresult rv = mBaseVal.SetMeetOrSlice(aMeetOrSlice);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -304,7 +312,8 @@ nsSVGPreserveAspectRatio::SetBaseMeetOrSlice(PRUint16 aMeetOrSlice,
 }
 
 void
-nsSVGPreserveAspectRatio::SetAnimValue(PRUint64 aPackedValue, nsSVGElement *aSVGElement)
+SVGAnimatedPreserveAspectRatio::SetAnimValue(PRUint64 aPackedValue,
+                                             nsSVGElement *aSVGElement)
 {
   mAnimVal.SetDefer(((aPackedValue & 0xff0000) >> 16) ? PR_TRUE : PR_FALSE);
   mAnimVal.SetAlign(PRUint16((aPackedValue & 0xff00) >> 8));
@@ -314,7 +323,7 @@ nsSVGPreserveAspectRatio::SetAnimValue(PRUint64 aPackedValue, nsSVGElement *aSVG
 }
 
 nsresult
-nsSVGPreserveAspectRatio::ToDOMAnimatedPreserveAspectRatio(
+SVGAnimatedPreserveAspectRatio::ToDOMAnimatedPreserveAspectRatio(
   nsIDOMSVGAnimatedPreserveAspectRatio **aResult,
   nsSVGElement *aSVGElement)
 {
@@ -328,13 +337,13 @@ nsSVGPreserveAspectRatio::ToDOMAnimatedPreserveAspectRatio(
 
 #ifdef MOZ_SMIL
 nsISMILAttr*
-nsSVGPreserveAspectRatio::ToSMILAttr(nsSVGElement *aSVGElement)
+SVGAnimatedPreserveAspectRatio::ToSMILAttr(nsSVGElement *aSVGElement)
 {
   return new SMILPreserveAspectRatio(this, aSVGElement);
 }
 
 static PRUint64
-PackPreserveAspectRatio(const nsSVGPreserveAspectRatio::PreserveAspectRatio& par)
+PackPreserveAspectRatio(const SVGPreserveAspectRatio& par)
 {
   // All preserveAspectRatio values are enum values (do not interpolate), so we
   // can safely collate them and treat them as a single enum as for SMIL.
@@ -345,14 +354,17 @@ PackPreserveAspectRatio(const nsSVGPreserveAspectRatio::PreserveAspectRatio& par
   return packed;
 }
 
+// typedef for inner class, to make function signatures shorter below:
+typedef SVGAnimatedPreserveAspectRatio::SMILPreserveAspectRatio
+  SMILPreserveAspectRatio;
+
 nsresult
-nsSVGPreserveAspectRatio::SMILPreserveAspectRatio
-                        ::ValueFromString(const nsAString& aStr,
-                                          const nsISMILAnimationElement* /*aSrcElement*/,
-                                          nsSMILValue& aValue,
-                                          PRBool& aPreventCachingOfSandwich) const
+SMILPreserveAspectRatio::ValueFromString(const nsAString& aStr,
+                                         const nsISMILAnimationElement* /*aSrcElement*/,
+                                         nsSMILValue& aValue,
+                                         PRBool& aPreventCachingOfSandwich) const
 {
-  PreserveAspectRatio par;
+  SVGPreserveAspectRatio par;
   nsresult res = ToPreserveAspectRatio(aStr, &par);
   NS_ENSURE_SUCCESS(res, res);
 
@@ -364,7 +376,7 @@ nsSVGPreserveAspectRatio::SMILPreserveAspectRatio
 }
 
 nsSMILValue
-nsSVGPreserveAspectRatio::SMILPreserveAspectRatio::GetBaseValue() const
+SMILPreserveAspectRatio::GetBaseValue() const
 {
   nsSMILValue val(&SMILEnumType::sSingleton);
   val.mU.mUint = PackPreserveAspectRatio(mVal->GetBaseValue());
@@ -372,16 +384,17 @@ nsSVGPreserveAspectRatio::SMILPreserveAspectRatio::GetBaseValue() const
 }
 
 void
-nsSVGPreserveAspectRatio::SMILPreserveAspectRatio::ClearAnimValue()
+SMILPreserveAspectRatio::ClearAnimValue()
 {
   if (mVal->mIsAnimated) {
-    mVal->SetAnimValue(PackPreserveAspectRatio(mVal->GetBaseValue()), mSVGElement);
+    mVal->SetAnimValue(PackPreserveAspectRatio(mVal->GetBaseValue()),
+                       mSVGElement);
     mVal->mIsAnimated = PR_FALSE;
   }
 }
 
 nsresult
-nsSVGPreserveAspectRatio::SMILPreserveAspectRatio::SetAnimValue(const nsSMILValue& aValue)
+SMILPreserveAspectRatio::SetAnimValue(const nsSMILValue& aValue)
 {
   NS_ASSERTION(aValue.mType == &SMILEnumType::sSingleton,
                "Unexpected type to assign animated value");

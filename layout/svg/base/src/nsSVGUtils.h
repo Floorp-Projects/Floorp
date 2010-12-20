@@ -62,7 +62,6 @@ class nsIDOMSVGElement;
 class nsIDOMSVGLength;
 class nsIURI;
 class nsSVGOuterSVGFrame;
-class nsSVGPreserveAspectRatio;
 class nsIAtom;
 class nsSVGLength2;
 class nsSVGElement;
@@ -81,10 +80,14 @@ class nsSVGGeometryFrame;
 class nsSVGDisplayContainerFrame;
 
 namespace mozilla {
+class SVGAnimatedPreserveAspectRatio;
 namespace dom {
 class Element;
 } // namespace dom
 } // namespace mozilla
+
+// XXXdholbert TEMPORARY TYPEDEF
+typedef mozilla::SVGAnimatedPreserveAspectRatio nsSVGPreserveAspectRatio;
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846

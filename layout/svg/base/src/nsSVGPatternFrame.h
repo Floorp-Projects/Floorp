@@ -43,12 +43,17 @@
 #include "nsSVGPaintServerFrame.h"
 #include "gfxMatrix.h"
 
-class nsSVGPreserveAspectRatio;
 class nsIFrame;
 class nsSVGLength2;
 class nsSVGElement;
 class gfxContext;
 class gfxASurface;
+
+// XXXdholbert TEMPORARY TYPEDEF
+namespace mozilla {
+class SVGAnimatedPreserveAspectRatio;
+}
+typedef mozilla::SVGAnimatedPreserveAspectRatio nsSVGPreserveAspectRatio;
 
 typedef nsSVGPaintServerFrame  nsSVGPatternFrameBase;
 
