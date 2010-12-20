@@ -5615,7 +5615,6 @@ HUDConsoleObserver = {
       case "XBL Prototype Handler":
       case "XBL Content Sink":
       case "xbl javascript":
-      case "FrameConstructor":
         return;
 
       default:

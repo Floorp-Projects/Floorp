@@ -141,6 +141,24 @@ _BROWSER_TEST_PAGES = \
 	test-bug-595934-html.html \
 	test-bug-595934-malformedxml.xhtml \
 	test-bug-595934-svg.xhtml \
+	test-bug-595934-workers.html \
+	test-bug-595934-workers.js \
+	test-bug-595934-dom-html-external.html \
+	test-bug-595934-dom-html-external.js \
+	test-bug-595934-dom-events-external.html \
+	test-bug-595934-dom-events-external.js \
+	test-bug-595934-dom-events-external2.html \
+	test-bug-595934-dom-events-external2.js \
+	test-bug-595934-canvas.html \
+	test-bug-595934-canvas.js \
+	test-bug-595934-css-parser.html \
+	test-bug-595934-css-parser.css \
+	test-bug-595934-canvas-css.html \
+	test-bug-595934-canvas-css.js \
+	test-bug-595934-malformedxml-external.html \
+	test-bug-595934-malformedxml-external.xml \
+	test-bug-595934-empty-getelementbyid.html \
+	test-bug-595934-empty-getelementbyid.js \
 	test-bug-597136-external-script-errors.html \
 	test-bug-597136-external-script-errors.js \
 	test-bug-613013-console-api-iframe.html \
