@@ -217,7 +217,11 @@ ImageContainerD3D9::GetCurrentSize()
 PRBool
 ImageContainerD3D9::SetLayerManager(LayerManager *aManager)
 {
-  // we can't do anything here for now
+  if (aManager->GetBackendType() == LayerManager::LAYERS_D3D9) {
+    mManager = aManager;
+    return PR_TRUE;
+  }
+
   return PR_FALSE;
 }
 
@@ -236,7 +240,35 @@ ImageLayerD3D9::RenderLayer()
 
   nsRefPtr<Image> image = GetContainer()->GetCurrentImage();
 
-  if (image->GetFormat() == Image::PLANAR_YCBCR) {
+  if (Manager() != GetContainer()->Manager()) {
+    GetContainer()->SetLayerManager(Manager());
+  }
+  
+  SetShaderTransformAndOpacity();
+
+  if (Manager() != GetContainer()->Manager()) {
+    gfxIntSize size;
+    nsRefPtr<gfxASurface> surface =
+      GetContainer()->GetCurrentAsSurface(&size);
+    nsRefPtr<IDirect3DTexture9> texture =
+      SurfaceToTexture(device(), surface, size);
+
+    device()->SetVertexShaderConstantF(CBvLayerQuad,
+                                       ShaderConstantRect(0,
+                                                          0,
+                                                          size.width,
+                                                          size.height),
+                                       1);
+
+    if (surface->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA) {
+      mD3DManager->SetShaderMode(DeviceManagerD3D9::RGBALAYER);
+    } else {
+      mD3DManager->SetShaderMode(DeviceManagerD3D9::RGBLAYER);
+    }
+
+    device()->SetTexture(0, texture);
+    device()->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
+  } else if (image->GetFormat() == Image::PLANAR_YCBCR) {
     PlanarYCbCrImageD3D9 *yuvImage =
       static_cast<PlanarYCbCrImageD3D9*>(image.get());
 
@@ -251,8 +283,6 @@ ImageLayerD3D9::RenderLayer()
                                                           yuvImage->mSize.width,
                                                           yuvImage->mSize.height),
                                        1);
-
-    SetShaderTransformAndOpacity();
 
     mD3DManager->SetShaderMode(DeviceManagerD3D9::YCBCRLAYER);
 
@@ -312,8 +342,6 @@ ImageLayerD3D9::RenderLayer()
                                                           cairoImage->GetSize().width,
                                                           cairoImage->GetSize().height),
                                        1);
-
-    SetShaderTransformAndOpacity();
 
     if (cairoImage->HasAlpha()) {
       mD3DManager->SetShaderMode(DeviceManagerD3D9::RGBALAYER);
