@@ -47,6 +47,7 @@ const Cr = Components.results;
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/FileUtils.jsm");
 Components.utils.import("resource://gre/modules/AddonManager.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 const TOOLKIT_ID                      = "toolkit@mozilla.org"
 const KEY_PROFILEDIR                  = "ProfD";
@@ -637,10 +638,25 @@ Blocklist.prototype = {
       }
 
       var childNodes = doc.documentElement.childNodes;
-      this._addonEntries = this._processItemNodes(childNodes, "em",
-                                                  this._handleEmItemNode);
-      this._pluginEntries = this._processItemNodes(childNodes, "plugin",
-                                                   this._handlePluginItemNode);
+      for (var i = 0; i < childNodes.length; ++i) {
+        var element = childNodes[i];
+        if (!(element instanceof Ci.nsIDOMElement))
+          continue;
+        switch (element.localName) {
+        case "emItems":
+          this._processItemNodes(element.childNodes, "em",
+                                 this._handleEmItemNode);
+          break;
+        case "pluginItems":
+          this._processItemNodes(element.childNodes, "plugin",
+                                 this._handleEmItemNode);
+          break;
+        default:
+          Services.obs.notifyObservers(element,
+                                       "blocklist-data-" + element.localName,
+                                       null);
+        }
+      }
     }
     catch (e) {
       LOG("Blocklist::_loadBlocklistFromFile: Error constructing blocklist " + e);
@@ -649,21 +665,8 @@ Blocklist.prototype = {
     fileStream.close();
   },
 
-  _processItemNodes: function(deChildNodes, prefix, handler) {
+  _processItemNodes: function(itemNodes, prefix, handler) {
     var result = [];
-    var itemNodes;
-    var containerName = prefix + "Items";
-    for (var i = 0; i < deChildNodes.length; ++i) {
-      var emItemsElement = deChildNodes.item(i);
-      if (emItemsElement instanceof Ci.nsIDOMElement &&
-          emItemsElement.localName == containerName) {
-        itemNodes = emItemsElement.childNodes;
-        break;
-      }
-    }
-    if (!itemNodes)
-      return result;
-
     var itemName = prefix + "Item";
     for (var i = 0; i < itemNodes.length; ++i) {
       var blocklistElement = itemNodes.item(i);
