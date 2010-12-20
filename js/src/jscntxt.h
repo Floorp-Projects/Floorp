@@ -1322,6 +1322,7 @@ struct JSRuntime {
     uint32              gcNumber;
     js::GCMarker        *gcMarkingTracer;
     uint32              gcTriggerFactor;
+    int64               gcJitReleaseTime;
     volatile JSBool     gcIsNeeded;
 
     /*
@@ -1369,7 +1370,7 @@ struct JSRuntime {
     js::Value           negativeInfinityValue;
     js::Value           positiveInfinityValue;
 
-    JSString            *emptyString;
+    JSFlatString        *emptyString;
 
     /* List of active contexts sharing this runtime; protected by gcLock. */
     JSCList             contextList;
@@ -1654,6 +1655,13 @@ struct JSRuntime {
         updateMallocCounter(bytes);
         void *p = ::js_calloc(bytes);
         return JS_LIKELY(!!p) ? p : onOutOfMemory(reinterpret_cast<void *>(1), bytes, cx);
+    }
+
+    void* realloc(void* p, size_t oldBytes, size_t newBytes, JSContext *cx = NULL) {
+        JS_ASSERT(oldBytes < newBytes);
+        updateMallocCounter(newBytes - oldBytes);
+        void *p2 = ::js_realloc(p, newBytes);
+        return JS_LIKELY(!!p2) ? p2 : onOutOfMemory(p, newBytes, cx);
     }
 
     void* realloc(void* p, size_t bytes, JSContext *cx = NULL) {
@@ -2295,6 +2303,10 @@ struct JSContext
         return runtime->realloc(p, bytes, this);
     }
 
+    inline void* realloc(void* p, size_t oldBytes, size_t newBytes) {
+        return runtime->realloc(p, oldBytes, newBytes, this);
+    }
+
     inline void free(void* p) {
 #ifdef JS_THREADSAFE
         if (gcBackgroundFree) {
@@ -2375,10 +2387,10 @@ struct JSContext
 #ifdef XP_WIN
     volatile DollarPath *dollarPath;
     volatile JSSubString *sub;
-    volatile jschar *blackBox;
-    volatile jschar **repstrChars;
-    volatile jschar **repstrDollar;
-    volatile jschar **repstrDollarEnd;
+    volatile const jschar *blackBox;
+    volatile const jschar **repstrChars;
+    volatile const jschar **repstrDollar;
+    volatile const jschar **repstrDollarEnd;
     volatile size_t *peekLen;
 #endif
 

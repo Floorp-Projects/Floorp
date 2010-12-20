@@ -109,18 +109,18 @@ AccessCheck::getPrincipal(JSCompartment *compartment)
 #define NAME(ch, str, cases)                                                  \
     case ch: if (!strcmp(name, str)) switch (propChars[0]) { cases }; break;
 #define PROP(ch, actions) case ch: { actions }; break;
-#define RW(str) if (JS_MatchStringAndAscii(prop, str)) return true;
-#define R(str) if (!set && JS_MatchStringAndAscii(prop, str)) return true;
-#define W(str) if (set && JS_MatchStringAndAscii(prop, str)) return true;
+#define RW(str) if (JS_FlatStringEqualsAscii(prop, str)) return true;
+#define R(str) if (!set && JS_FlatStringEqualsAscii(prop, str)) return true;
+#define W(str) if (set && JS_FlatStringEqualsAscii(prop, str)) return true;
 
 // Hardcoded policy for cross origin property access. This was culled from the
 // preferences file (all.js). We don't want users to overwrite highly sensitive
 // security policies.
 static bool
-IsPermitted(const char *name, JSString *prop, bool set)
+IsPermitted(const char *name, JSFlatString *prop, bool set)
 {
     size_t propLength;
-    const jschar *propChars = JS_GetStringCharsAndLength(prop, &propLength);
+    const jschar *propChars = JS_GetInternedStringCharsAndLength(prop, &propLength);
     if (!propLength)
         return false;
     switch(name[0]) {
@@ -183,8 +183,7 @@ IsFrameId(JSContext *cx, JSObject *obj, jsid id)
     if (JSID_IS_INT(id)) {
         col->Item(JSID_TO_INT(id), getter_AddRefs(domwin));
     } else if (JSID_IS_ATOM(id)) {
-        nsAutoString str(reinterpret_cast<PRUnichar *>
-                         (JS_GetStringChars(ATOM_TO_STRING(JSID_TO_ATOM(id)))));
+        nsAutoString str(JS_GetInternedStringChars(JSID_TO_STRING(id)));
         col->NamedItem(str, getter_AddRefs(domwin));
     } else {
         return false;
@@ -291,7 +290,7 @@ AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, JSObject *wrapper, jsid
         name = clasp->name;
 
     if (JSID_IS_ATOM(id)) {
-        if (IsPermitted(name, JSID_TO_STRING(id), act == JSWrapper::SET))
+        if (IsPermitted(name, JSID_TO_FLAT_STRING(id), act == JSWrapper::SET))
             return true;
     }
 
@@ -418,7 +417,9 @@ AccessCheck::deny(JSContext *cx, jsid id)
         JSString *str = JS_ValueToString(cx, idval);
         if (!str)
             return;
-        JS_ReportError(cx, "Permission denied to access property '%hs'", JS_GetStringChars(str));
+        const jschar *chars = JS_GetStringCharsZ(cx, str);
+        if (chars)
+            JS_ReportError(cx, "Permission denied to access property '%hs'", chars);
     }
 }
 
@@ -480,8 +481,11 @@ ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapper, jsid id, JSWrappe
     }
 
     JSString *str = JSVAL_TO_STRING(desc.value);
-    const jschar *chars = JS_GetStringChars(str);
-    size_t length = JS_GetStringLength(str);
+    size_t length;
+    const jschar *chars = JS_GetStringCharsAndLength(cx, str, &length);
+    if (!chars)
+        return false;
+
     for (size_t i = 0; i < length; ++i) {
         switch (chars[i]) {
         case 'r':

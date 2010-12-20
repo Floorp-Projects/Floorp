@@ -174,7 +174,8 @@ FinalizeXPCOMUCString(JSContext *cx, JSString *str)
     NS_ASSERTION(sXPCOMUCStringFinalizerIndex != -1,
                  "XPCConvert: XPCOM Unicode string finalizer called uninitialized!");
 
-    jschar* buffer = JS_GetStringChars(str);
+    jschar* buffer = const_cast<jschar *>(JS_GetStringCharsZ(cx, str));
+    NS_ASSERTION(buffer, "How could this OOM if we allocated the memory?");
     nsMemory::Free(buffer);
 }
 
@@ -613,25 +614,35 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
             {
                 return JS_FALSE;
             }
-            jschar ch = JS_GetStringLength(str) ? JS_GetStringChars(str)[0] : 0;
+            size_t length;
+            const jschar* chars = JS_GetStringCharsAndLength(cx, str, &length);
+            if (!chars)
+            {
+                return JS_FALSE;
+            }
+            jschar ch = length ? chars[0] : 0;
             NS_ASSERTION(!ILLEGAL_RANGE(ch), "U+0080/U+0100 - U+FFFF data lost");
             *((char*)d) = char(ch);
             break;
         }
     case nsXPTType::T_WCHAR  :
         {
-            const jschar* chars=nsnull;
             JSString* str;
             if(!(str = JS_ValueToString(cx, s)))
             {
                 return JS_FALSE;
             }
-            if(JS_GetStringLength(str) == 0)
+            size_t length;
+            const jschar* chars = JS_GetStringCharsAndLength(cx, str, &length);
+            if (!chars)
+            {
+                return JS_FALSE;
+            }
+            if(length == 0)
             {
                 *((uint16*)d) = 0;
                 break;
             }
-            chars = JS_GetStringChars(str);
             *((uint16*)d) = (uint16) chars[0];
             break;
         }
@@ -729,7 +740,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
                 length = (PRUint32) JS_GetStringLength(str);
                 if(length)
                 {
-                    chars = (const PRUnichar*) JS_GetStringChars(str);
+                    chars = JS_GetStringCharsZ(cx, str);
                     if(!chars)
                         return JS_FALSE;
                     if(STRING_TO_JSVAL(str) != s)
@@ -747,8 +758,13 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
                 // XXX extra string copy when isNewString
                 if(str && !isNewString)
                 {
+                    size_t strLength;
+                    const jschar *strChars = JS_GetStringCharsZAndLength(cx, str, &strLength);
+                    if (!strChars)
+                        return JS_FALSE;
+
                     XPCReadableJSStringWrapper *wrapper =
-                        XPCStringConvert::JSStringToReadable(ccx, str);
+                        ccx.NewStringWrapper(strChars, strLength);
                     if(!wrapper)
                         return JS_FALSE;
 
@@ -815,12 +831,12 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
                 return JS_FALSE;
             }
 #ifdef DEBUG
-            jschar* chars=nsnull;
-            if(nsnull != (chars = JS_GetStringChars(str)))
+            const jschar* chars=nsnull;
+            if(nsnull != (chars = JS_GetStringCharsZ(cx, str)))
             {
                 PRBool legalRange = PR_TRUE;
                 int len = JS_GetStringLength(str);
-                jschar* t;
+                const jschar* t;
                 PRInt32 i=0;
                 for(t=chars; (i< len) && legalRange ; i++,t++) {
                   if(ILLEGAL_RANGE(*t))
@@ -869,7 +885,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
             }
             if(useAllocator)
             {
-                if(!(chars = JS_GetStringChars(str)))
+                if(!(chars = JS_GetStringCharsZ(cx, str)))
                 {
                     return JS_FALSE;
                 }
@@ -898,7 +914,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
 
         case nsXPTType::T_UTF8STRING:            
         {
-            jschar* chars;
+            const jschar* chars;
             PRUint32 length;
             JSString* str;
 
@@ -925,7 +941,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
             // The JS val is neither null nor void...
 
             if(!(str = JS_ValueToString(cx, s))||
-               !(chars = JS_GetStringChars(str)))
+               !(chars = JS_GetStringCharsZ(cx, str)))
             {
                 return JS_FALSE;
             }
@@ -1029,8 +1045,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
             {
                 // We're trying to pass a string as an nsIAtom.  Let's atomize!
                 JSString* str = JSVAL_TO_STRING(s);
-                PRUnichar* chars =
-                    reinterpret_cast<PRUnichar*>(JS_GetStringChars(str));
+                const PRUnichar* chars = JS_GetStringCharsZ(cx, str);
                 if (!chars) {
                     if (pErr)
                         *pErr = NS_ERROR_XPC_BAD_CONVERT_JS_NULL_REF;
@@ -2412,7 +2427,7 @@ XPCConvert::JSStringWithSize2Native(XPCCallContext& ccx, void* d, jsval s,
 
             if(useAllocator)
             {
-                if(!(chars = JS_GetStringChars(str)))
+                if(!(chars = JS_GetStringCharsZ(cx, str)))
                 {
                     return JS_FALSE;
                 }

@@ -552,11 +552,11 @@ TestArgFormatter(JSContext* jscontext, JSObject* glob, nsIXPConnect* xpc)
     const char*                  e_in = "another meaningless chunck of text";
     
 
-    JSString*               a_out;
+    JSBool                  a_match;
     nsCOMPtr<nsISupports>   b_out;
     nsCOMPtr<nsIVariant>    c_out;
     nsAutoString            d_out;
-    JSString*               e_out;
+    JSBool                  e_match;
 
     nsCOMPtr<nsITestXPCFoo> specified;
     PRInt32                 val;
@@ -588,6 +588,7 @@ TestArgFormatter(JSContext* jscontext, JSObject* glob, nsIXPConnect* xpc)
             return;
         }
 
+        JSString *a_out, *e_out;
         ok = JS_ConvertArguments(jscontext, 5, argv, "S %ip %iv %is S",
                                 &a_out, 
                                 static_cast<nsISupports**>(getter_AddRefs(b_out)), 
@@ -604,11 +605,13 @@ TestArgFormatter(JSContext* jscontext, JSObject* glob, nsIXPConnect* xpc)
         TAF_CHECK(c_out, " JS to native for %%iv returned NULL -- FAILED!\n");
         TAF_CHECK(NS_SUCCEEDED(c_out->GetAsInt32(&val)) && val == 5, " JS to native for %%iv holds wrong value -- FAILED!\n");
         TAF_CHECK(d_in.Equals(d_out), " JS to native for %%is returned the wrong value -- FAILED!\n");
+        TAF_CHECK(JS_StringEqualsAscii(jscontext, a_out, a_in, &a_match), " oom -- FAILED!\n");
+        TAF_CHECK(JS_StringEqualsAscii(jscontext, e_out, e_in, &e_match), " oom -- FAILED!\n");
     } while (0);
     if (!ok)
         return;
 
-    if(JS_MatchStringAndAscii(a_out, a_in) && JS_MatchStringAndAscii(e_out, e_in))
+    if(a_match && e_match)
         printf("passed\n");
     else
         printf(" conversion OK, but surrounding was mangled -- FAILED!\n");

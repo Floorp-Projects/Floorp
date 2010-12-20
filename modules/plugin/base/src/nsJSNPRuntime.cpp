@@ -463,8 +463,13 @@ JSValToNPVariant(NPP npp, JSContext *cx, jsval val, NPVariant *variant)
       }
     } else if (JSVAL_IS_STRING(val)) {
       JSString *jsstr = JSVAL_TO_STRING(val);
-      nsDependentString str((PRUnichar *)::JS_GetStringChars(jsstr),
-                            ::JS_GetStringLength(jsstr));
+      size_t length;
+      const jschar *chars = ::JS_GetStringCharsZAndLength(cx, jsstr, &length);
+      if (!chars) {
+          return false;
+      }
+
+      nsDependentString str(chars, length);
 
       PRUint32 len;
       char *p = ToNewUTF8String(str, &len);
@@ -603,16 +608,9 @@ nsJSObjWrapper::NP_Invalidate(NPObject *npobj)
 static JSBool
 GetProperty(JSContext *cx, JSObject *obj, NPIdentifier id, jsval *rval)
 {
-  if (NPIdentifierIsString(id)) {
-    JSString *str = NPIdentifierToString(id);
-
-    return ::JS_GetUCProperty(cx, obj, ::JS_GetStringChars(str),
-                              ::JS_GetStringLength(str), rval);
-  }
-
-  NS_ASSERTION(NPIdentifierIsInt(id), "id must be either string or int!\n");
-
-  return ::JS_GetElement(cx, obj, NPIdentifierToInt(id), rval);
+  NS_ASSERTION(NPIdentifierIsInt(id) || NPIdentifierIsString(id),
+               "id must be either string or int!\n");
+  return ::JS_GetPropertyById(cx, obj, NPIdentifierToJSId(id), rval);
 }
 
 // static
@@ -796,17 +794,9 @@ nsJSObjWrapper::NP_HasProperty(NPObject *npobj, NPIdentifier id)
   if (!ac.enter(cx, npjsobj->mJSObj))
     return PR_FALSE;
 
-  if (NPIdentifierIsString(id)) {
-    JSString *str = NPIdentifierToString(id);
-
-    ok = ::JS_HasUCProperty(cx, npjsobj->mJSObj, ::JS_GetStringChars(str),
-                            ::JS_GetStringLength(str), &found);
-  } else {
-    NS_ASSERTION(NPIdentifierIsInt(id), "id must be either string or int!\n");
-
-    ok = ::JS_HasElement(cx, npjsobj->mJSObj, NPIdentifierToInt(id), &found);
-  }
-
+  NS_ASSERTION(NPIdentifierIsInt(id) || NPIdentifierIsString(id),
+               "id must be either string or int!\n");
+  ok = ::JS_HasPropertyById(cx, npjsobj->mJSObj, NPIdentifierToJSId(id), &found);
   return ok && found;
 }
 
@@ -877,16 +867,9 @@ nsJSObjWrapper::NP_SetProperty(NPObject *npobj, NPIdentifier id,
   jsval v = NPVariantToJSVal(npp, cx, value);
   js::AutoValueRooter tvr(cx, v);
 
-  if (NPIdentifierIsString(id)) {
-    JSString *str = NPIdentifierToString(id);
-
-    ok = ::JS_SetUCProperty(cx, npjsobj->mJSObj, ::JS_GetStringChars(str),
-                            ::JS_GetStringLength(str), &v);
-  } else {
-    NS_ASSERTION(NPIdentifierIsInt(id), "id must be either string or int!\n");
-
-    ok = ::JS_SetElement(cx, npjsobj->mJSObj, NPIdentifierToInt(id), &v);
-  }
+  NS_ASSERTION(NPIdentifierIsInt(id) || NPIdentifierIsString(id),
+               "id must be either string or int!\n");
+  ok = ::JS_SetPropertyById(cx, npjsobj->mJSObj, NPIdentifierToJSId(id), &v);
 
   // return ok == JS_TRUE to quiet down compiler warning, even if
   // return ok is what we really want.
@@ -923,45 +906,21 @@ nsJSObjWrapper::NP_RemoveProperty(NPObject *npobj, NPIdentifier id)
   if (!ac.enter(cx, npjsobj->mJSObj))
     return PR_FALSE;
 
-  if (NPIdentifierIsString(id)) {
-    JSString *str = NPIdentifierToString(id);
+  NS_ASSERTION(NPIdentifierIsInt(id) || NPIdentifierIsString(id),
+               "id must be either string or int!\n");
+  ok = ::JS_DeletePropertyById2(cx, npjsobj->mJSObj, NPIdentifierToJSId(id), &deleted);
+  if (ok && deleted == JSVAL_TRUE) {
+    // FIXME: See bug 425823, we shouldn't need to do this, and once
+    // that bug is fixed we can remove this code.
 
-    ok = ::JS_DeleteUCProperty2(cx, npjsobj->mJSObj, ::JS_GetStringChars(str),
-                                ::JS_GetStringLength(str), &deleted);
+    JSBool hasProp;
+    ok = ::JS_HasPropertyById(cx, npjsobj->mJSObj, NPIdentifierToJSId(id), &hasProp);
 
-    if (ok && deleted == JSVAL_TRUE) {
-      // FIXME: See bug 425823, we shouldn't need to do this, and once
-      // that bug is fixed we can remove this code.
+    if (ok && hasProp) {
+      // The property might have been deleted, but it got
+      // re-resolved, so no, it's not really deleted.
 
-      JSBool hasProp;
-      ok = ::JS_HasUCProperty(cx, npjsobj->mJSObj, ::JS_GetStringChars(str),
-                              ::JS_GetStringLength(str), &hasProp);
-
-      if (ok && hasProp) {
-        // The property might have been deleted, but it got
-        // re-resolved, so no, it's not really deleted.
-
-        deleted = JSVAL_FALSE;
-      }
-    }
-  } else {
-    NS_ASSERTION(NPIdentifierIsInt(id), "id must be either string or int!\n");
-
-    ok = ::JS_DeleteElement2(cx, npjsobj->mJSObj, NPIdentifierToInt(id), &deleted);
-
-    if (ok && deleted == JSVAL_TRUE) {
-      // FIXME: See bug 425823, we shouldn't need to do this, and once
-      // that bug is fixed we can remove this code.
-
-      JSBool hasProp;
-      ok = ::JS_HasElement(cx, npjsobj->mJSObj, NPIdentifierToInt(id), &hasProp);
-
-      if (ok && hasProp) {
-        // The property might have been deleted, but it got
-        // re-resolved, so no, it's not really deleted.
-
-        deleted = JSVAL_FALSE;
-      }
+      deleted = JSVAL_FALSE;
     }
   }
 
@@ -1027,14 +986,12 @@ nsJSObjWrapper::NP_Enumerate(NPObject *npobj, NPIdentifier **idarray,
 
     NPIdentifier id;
     if (JSVAL_IS_STRING(v)) {
-      JSString *str = JSVAL_TO_STRING(v);
+      JSString *str = JS_InternJSString(cx, JSVAL_TO_STRING(v));
+      if (!str) {
+          ::JS_DestroyIdArray(cx, ida);
+          PR_Free(*idarray);
 
-      if (!JS_InternUCStringN(cx, ::JS_GetStringChars(str),
-                              ::JS_GetStringLength(str))) {
-        ::JS_DestroyIdArray(cx, ida);
-        PR_Free(*idarray);
-
-        return PR_FALSE;
+          return PR_FALSE;
       }
       id = StringToNPIdentifier(str);
     } else {
@@ -1693,21 +1650,11 @@ NPObjWrapper_NewResolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
     return JS_FALSE;
 
   if (hasProperty) {
-    JSBool ok;
-
-    if (JSID_IS_STRING(id)) {
-      JSString *str = JSID_TO_STRING(id);
-
-      ok = ::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
-                                 ::JS_GetStringLength(str), JSVAL_VOID, nsnull,
-                                 nsnull, JSPROP_ENUMERATE);
-    } else {
-      ok = ::JS_DefineElement(cx, obj, JSID_TO_INT(id), JSVAL_VOID, nsnull,
-                              nsnull, JSPROP_ENUMERATE);
-    }
-
-    if (!ok) {
-      return JS_FALSE;
+    NS_ASSERTION(JSID_IS_STRING(id) || JSID_IS_INT(id),
+                 "id must be either string or int!\n");
+    if (!::JS_DefinePropertyById(cx, obj, id, JSVAL_VOID, nsnull,
+                                 nsnull, JSPROP_ENUMERATE)) {
+        return JS_FALSE;
     }
 
     *objp = obj;
@@ -1720,29 +1667,11 @@ NPObjWrapper_NewResolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
     return JS_FALSE;
 
   if (hasMethod) {
-    JSString *str = nsnull;
+    NS_ASSERTION(JSID_IS_STRING(id) || JSID_IS_INT(id),
+                 "id must be either string or int!\n");
 
-    if (JSID_IS_STRING(id)) {
-      str = JSID_TO_STRING(id);
-    } else {
-      NS_ASSERTION(JSID_IS_INT(id), "id must be either string or int!\n");
-
-      jsval idval;
-      if (!JS_IdToValue(cx, id, &idval))
-          return JS_FALSE;
-
-      str = ::JS_ValueToString(cx, idval);
-      if (!str) {
-        // OOM. The JS engine throws exceptions for us in this case.
-
-        return JS_FALSE;
-      }
-    }
-
-    JSFunction *fnc =
-      ::JS_DefineUCFunction(cx, obj, ::JS_GetStringChars(str),
-                            ::JS_GetStringLength(str), CallNPMethod, 0,
-                            JSPROP_ENUMERATE);
+    JSFunction *fnc = ::JS_DefineFunctionById(cx, obj, id, CallNPMethod, 0,
+                                              JSPROP_ENUMERATE);
 
     *objp = obj;
 

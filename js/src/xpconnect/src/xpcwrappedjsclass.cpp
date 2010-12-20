@@ -452,10 +452,13 @@ nsXPCWrappedJSClass::BuildPropertyEnumerator(XPCCallContext& ccx,
         if(!name)
             goto out;
 
+        size_t length;
+        const jschar *chars = JS_GetStringCharsAndLength(cx, name, &length);
+        if (!chars)
+            goto out;
+
         nsCOMPtr<nsIProperty> property = 
-            new xpcProperty((const PRUnichar*) JS_GetStringChars(name), 
-                            (PRUint32) JS_GetStringLength(name),
-                            value);
+            new xpcProperty(chars, (PRUint32) length, value);
         if(!property)
             goto out;
 

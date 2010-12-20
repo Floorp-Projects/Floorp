@@ -70,6 +70,7 @@
 #include "nsExceptionHandler.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
+#include "nsJSUtils.h"
 #include "nsWidgetsCID.h"
 #include "nsXREDirProvider.h"
 
@@ -677,8 +678,9 @@ XRE_SendTestShellCommand(JSContext* aCx,
     TestShellParent* tsp = GetOrCreateTestShellParent();
     NS_ENSURE_TRUE(tsp, false);
 
-    nsDependentString command((PRUnichar*)JS_GetStringChars(aCommand),
-                              JS_GetStringLength(aCommand));
+    nsDependentJSString command;
+    NS_ENSURE_TRUE(command.init(aCx, aCommand), NS_ERROR_FAILURE);
+
     if (!aCallback) {
         return tsp->SendExecuteCommand(command);
     }

@@ -78,7 +78,7 @@ interface jsdIActivationCallback;
  * Debugger service.  It's not a good idea to have more than one active client of
  * the debugger service.
  */
-[scriptable, uuid(01769775-c77c-47f9-8848-0abbab404215)]
+[scriptable, uuid(1ad86ef3-5eca-4ed7-81c5-a757d1957dff)]
 interface jsdIDebuggerService : nsISupports
 {
     /** Internal use only. */
@@ -512,7 +512,7 @@ interface jsdIFilterEnumerator : nsISupports
 /**
  * Pass an instance of one of these to jsdIDebuggerService::enumerateScripts.
  */
-[scriptable, uuid(5ba76b99-acb1-4ed8-a4e4-a716a7d9097e)]
+[scriptable, uuid(4eef60c2-9bbc-48fa-b196-646a832c6c81)]
 interface jsdIScriptEnumerator : nsISupports
 {
     /**
@@ -525,7 +525,7 @@ interface jsdIScriptEnumerator : nsISupports
 /**
  * Pass an instance of one of these to jsdIDebuggerService::enumerateContexts.
  */
-[scriptable, uuid(d96af02e-3379-4db5-885d-fee28d178701)]
+[scriptable, uuid(57d18286-550c-4ca9-ac33-56f12ebba91e)]
 interface jsdIContextEnumerator : nsISupports
 {
     /**
@@ -538,7 +538,7 @@ interface jsdIContextEnumerator : nsISupports
 /**
  * Set jsdIDebuggerService::scriptHook to an instance of one of these.
  */
-[scriptable, uuid(cf7ecc3f-361b-44af-84a7-4b0d6cdca204)]
+[scriptable, uuid(bb722893-0f63-45c5-b547-7a0947c7b6b6)]
 interface jsdIScriptHook : nsISupports
 {
     /**
@@ -556,7 +556,7 @@ interface jsdIScriptHook : nsISupports
  * Hook instances of this interface up to the
  * jsdIDebuggerService::functionHook and toplevelHook properties.
  */
-[scriptable, uuid(191d2738-22e8-4756-b366-6c878c87d73b)]
+[scriptable, uuid(3eff1314-7ae3-4cf8-833b-c33c24a55633)]
 interface jsdICallHook : nsISupports
 {
     /**
@@ -588,7 +588,7 @@ interface jsdICallHook : nsISupports
     void onCall (in jsdIStackFrame frame, in unsigned long type);
 };
 
-[scriptable, uuid(cea9ab1a-4b5d-416f-a197-9ffa7046f2ce)]
+[scriptable, uuid(e6b45eee-d974-4d85-9d9e-f5a67218deb4)]
 interface jsdIErrorHook : nsISupports
 {
     /**
@@ -880,7 +880,7 @@ interface jsdIStackFrame : jsdIEphemeral
  * Script object.  In JavaScript engine terms, there's a single script for each
  * function, and one for the top level script.
  */
-[scriptable, uuid(7e6fb9ed-4382-421d-9a14-c80a486e983b)]
+[scriptable, uuid(e7935220-7def-4c8e-832f-fbc948a97490)]
 interface jsdIScript : jsdIEphemeral
 {
     /** Internal use only. */
@@ -1038,6 +1038,10 @@ interface jsdIScript : jsdIEphemeral
      * Clear all breakpoints set in this script.
      */
     void clearAllBreakpoints ();
+    /**
+     * Call interrupt hook at least once per source line
+     */
+    void enableSingleStepInterrupts (in PRBool mode);
 };
 
 /**
@@ -1046,7 +1050,7 @@ interface jsdIScript : jsdIEphemeral
  * jsdIValue adds a root for the underlying JavaScript value, so don't keep it
  * if you don't need to.
  */
-[scriptable, uuid(9cab158f-dc78-41dd-9d11-79e05cb3f2bd)]
+[scriptable, uuid(fd1311f7-096c-44a3-847b-9d478c8176c3)]
 interface jsdIValue : jsdIEphemeral
 {
     /** Internal use only. */
@@ -1192,7 +1196,7 @@ interface jsdIValue : jsdIEphemeral
  * functions from jsdIValue should move to this interface.  We could inherit from
  * jsdIValue or use interface flattening or something.
  */
-[scriptable, uuid(a735a94c-9d41-4997-8fcb-cfa8b649a5b7)]
+[scriptable, uuid(87d86308-7a27-4255-b23c-ce2394f02473)]
 interface jsdIObject : nsISupports
 {
     /** Internal use only. */
@@ -1228,7 +1232,7 @@ interface jsdIObject : nsISupports
  * Representation of a property of an object.  When an instance is invalid, all
  * method and property access will result in a NS_UNAVAILABLE error.
  */
-[scriptable, uuid(4491ecd4-fb6b-43fb-bd6f-5d1473f1df24)]
+[scriptable, uuid(09332485-1419-42bc-ba1f-070815ed4b82)]
 interface jsdIProperty : jsdIEphemeral
 {
     /** Internal use only. */

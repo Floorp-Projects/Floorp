@@ -147,19 +147,17 @@ js_CheckKeyword(const jschar *str, size_t length)
 }
 
 JSBool
-js_IsIdentifier(JSString *str)
+js_IsIdentifier(JSLinearString *str)
 {
-    size_t length;
-    jschar c;
-    const jschar *chars, *end;
+    const jschar *chars = str->chars();
+    size_t length = str->length();
 
-    str->getCharsAndLength(chars, length);
     if (length == 0)
         return JS_FALSE;
-    c = *chars;
+    jschar c = *chars;
     if (!JS_ISIDSTART(c))
         return JS_FALSE;
-    end = chars + length;
+    const jschar *end = chars + length;
     while (++chars != end) {
         c = *chars;
         if (!JS_ISIDENT(c))
@@ -738,28 +736,47 @@ TokenStream::getXMLEntity()
 #endif /* JS_HAS_XML_SUPPORT */
 
 /*
- * We have encountered a '\': check for a Unicode escape sequence after it,
- * returning the character code value if we found a Unicode escape sequence.
- * Otherwise, non-destructively return the original '\'.
+ * We have encountered a '\': check for a Unicode escape sequence after it.
+ * Return 'true' and the character code value (by value) if we found a
+ * Unicode escape sequence.  Otherwise, return 'false'.  In both cases, do not
+ * advance along the buffer.
  */
-int32
-TokenStream::getUnicodeEscape()
+bool
+TokenStream::peekUnicodeEscape(int *result)
 {
     jschar cp[5];
-    int32 c;
 
     if (peekChars(5, cp) && cp[0] == 'u' &&
         JS7_ISHEX(cp[1]) && JS7_ISHEX(cp[2]) &&
         JS7_ISHEX(cp[3]) && JS7_ISHEX(cp[4]))
     {
-        c = (((((JS7_UNHEX(cp[1]) << 4)
+        *result = (((((JS7_UNHEX(cp[1]) << 4)
                 + JS7_UNHEX(cp[2])) << 4)
               + JS7_UNHEX(cp[3])) << 4)
             + JS7_UNHEX(cp[4]);
-        skipChars(5);
-        return c;
+        return true;
     }
-    return '\\';
+    return false;
+}
+
+bool
+TokenStream::matchUnicodeEscapeIdStart(int32 *cp)
+{
+    if (peekUnicodeEscape(cp) && JS_ISIDSTART(*cp)) {
+        skipChars(5);
+        return true;
+    }
+    return false;
+}
+
+bool
+TokenStream::matchUnicodeEscapeIdent(int32 *cp)
+{
+    if (peekUnicodeEscape(cp) && JS_ISIDENT(*cp)) {
+        skipChars(5);
+        return true;
+    }
+    return false;
 }
 
 Token *
@@ -795,7 +812,7 @@ TokenStream::getTokenInternal()
     int c, qc;
     Token *tp;
     JSAtom *atom;
-    JSBool hadUnicodeEscape;
+    bool hadUnicodeEscape;
     const struct keyword *kw;
 #if JS_HAS_XML_SUPPORT
     JSBool inTarget;
@@ -993,11 +1010,9 @@ TokenStream::getTokenInternal()
      * Look for an identifier.
      */
 
-    hadUnicodeEscape = JS_FALSE;
+    hadUnicodeEscape = false;
     if (JS_ISIDSTART(c) ||
-        (c == '\\' &&
-         (qc = getUnicodeEscape(),
-          hadUnicodeEscape = JS_ISIDSTART(qc))))
+        (c == '\\' && (hadUnicodeEscape = matchUnicodeEscapeIdStart(&qc))))
     {
         if (hadUnicodeEscape)
             c = qc;
@@ -1007,11 +1022,10 @@ TokenStream::getTokenInternal()
                 goto error;
             c = getChar();
             if (c == '\\') {
-                qc = getUnicodeEscape();
-                if (!JS_ISIDENT(qc))
+                if (!matchUnicodeEscapeIdent(&qc))
                     break;
                 c = qc;
-                hadUnicodeEscape = JS_TRUE;
+                hadUnicodeEscape = true;
             } else {
                 if (!JS_ISIDENT(c))
                     break;
@@ -1192,6 +1206,7 @@ TokenStream::getTokenInternal()
                                                            JSMSG_DEPRECATED_OCTAL)) {
                                     goto error;
                                 }
+                                setOctalCharacterEscape();
                             }
                             if ('0' <= c && c < '8') {
                                 val = 8 * val + JS7_UNDEC(c);
@@ -1586,7 +1601,7 @@ TokenStream::getTokenInternal()
                             }
                         }
                         filenameBuf[i] = '\0';
-                        if (c == '\n') {
+                        if (c == EOF || c == '\n') {
                             if (i > 0) {
                                 if (flags & TSF_OWNFILENAME)
                                     cx->free((void *) filename);

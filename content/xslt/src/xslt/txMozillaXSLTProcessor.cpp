@@ -67,6 +67,7 @@
 #include "txExprParser.h"
 #include "nsIErrorService.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsJSUtils.h"
 
 using namespace mozilla::dom;
 
@@ -1465,10 +1466,8 @@ txVariable::Convert(nsIVariant *aValue, txAExprResult** aResult)
                 JSString *str = JS_ValueToString(cx, OBJECT_TO_JSVAL(jsobj));
                 NS_ENSURE_TRUE(str, NS_ERROR_FAILURE);
 
-                const PRUnichar *strChars =
-                    reinterpret_cast<const PRUnichar*>
-                                    (::JS_GetStringChars(str));
-                nsDependentString value(strChars, ::JS_GetStringLength(str));
+                nsDependentJSString value;
+                NS_ENSURE_TRUE(value.init(cx, str), NS_ERROR_FAILURE);
 
                 *aResult = new StringResult(value, nsnull);
                 if (!*aResult) {

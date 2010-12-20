@@ -251,7 +251,7 @@ struct TypeSet
     void addCall(JSContext *cx, TypeCallsite *site);
     void addArith(JSContext *cx, JSArenaPool &pool, analyze::Bytecode *code,
                   TypeSet *target, TypeSet *other = NULL);
-    void addTransformThis(JSContext *cx, JSArenaPool &pool, TypeSet *target);
+    void addTransformThis(JSContext *cx, analyze::Bytecode *code, TypeSet *target);
     void addFilterPrimitives(JSContext *cx, JSArenaPool &pool, TypeSet *target, bool onlyNullVoid);
     void addMonitorRead(JSContext *cx, JSArenaPool &pool, analyze::Bytecode *code, TypeSet *target);
 
@@ -363,6 +363,8 @@ struct TypeCallsite
 
     /* Pool which handlers on this call site should use. */
     inline JSArenaPool & pool();
+
+    inline bool compileAndGo();
 };
 
 /* Type information about a variable. */
@@ -510,7 +512,11 @@ struct TypeObject
     void trace(JSTracer *trc);
 };
 
-/* Type information about an interpreted or native function. */
+/*
+ * Type information about an interpreted or native function. Note: it is possible for
+ * a function JSObject to have a type which is not a TypeFunction. This happens when
+ * we are not able to statically model the type of a function due to non-compileAndGo code.
+ */
 struct TypeFunction : public TypeObject
 {
     /* If this function is native, the handler to use at calls to it. */

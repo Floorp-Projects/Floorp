@@ -76,6 +76,7 @@ CPPSRCS = \
   testUTF8.cpp \
   testVersion.cpp \
   testXDR.cpp \
+  testCustomIterator.cpp \
   $(NULL)
 
 DEFINES         += -DEXPORT_JS_API

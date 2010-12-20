@@ -136,7 +136,7 @@ AsyncStatementJSHelper::GetProperty(nsIXPConnectWrappedNative *aWrapper,
   }
 #endif
 
-  if (::JS_MatchStringAndAscii(JSID_TO_STRING(aId), "params"))
+  if (::JS_FlatStringEqualsAscii(JSID_TO_FLAT_STRING(aId), "params"))
     return getParams(stmt, aCtx, aScopeObj, _result);
 
   return NS_OK;

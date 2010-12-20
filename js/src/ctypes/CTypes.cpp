@@ -1292,7 +1292,10 @@ StringToInteger(JSContext* cx, JSString* string, IntegerType* result)
 {
   JS_STATIC_ASSERT(numeric_limits<IntegerType>::is_exact);
 
-  const jschar* cp = string->chars();
+  const jschar* cp = string->getChars(NULL);
+  if (!cp)
+    return false;
+
   const jschar* end = cp + string->length();
   if (cp == end)
     return false;
@@ -1780,9 +1783,10 @@ ImplicitConvert(JSContext* cx,
       JSString* str = JSVAL_TO_STRING(val);                                    \
       if (str->length() != 1)                                                  \
         return TypeError(cx, #name, val);                                      \
-                                                                               \
-      result = str->chars()[0];                                                \
-                                                                               \
+      const jschar *chars = str->getChars(cx);                                 \
+      if (!chars)                                                              \
+        return false;                                                          \
+      result = chars[0];                                                       \
     } else if (!jsvalToInteger(cx, val, &result)) {                            \
       return TypeError(cx, #name, val);                                        \
     }                                                                          \
@@ -1824,8 +1828,10 @@ ImplicitConvert(JSContext* cx,
       // which the caller assumes ownership of.
       // TODO: Extend this so we can safely convert strings at other times also.
       JSString* sourceString = JSVAL_TO_STRING(val);
-      const jschar* sourceChars = sourceString->chars();
       size_t sourceLength = sourceString->length();
+      const jschar* sourceChars = sourceString->getChars(cx);
+      if (!sourceChars)
+        return false;
 
       switch (CType::GetTypeCode(cx, baseType)) {
       case TYPE_char:
@@ -1879,8 +1885,10 @@ ImplicitConvert(JSContext* cx,
 
     if (JSVAL_IS_STRING(val)) {
       JSString* sourceString = JSVAL_TO_STRING(val);
-      const jschar* sourceChars = sourceString->chars();
       size_t sourceLength = sourceString->length();
+      const jschar* sourceChars = sourceString->getChars(cx);
+      if (!sourceChars)
+        return false;
 
       switch (CType::GetTypeCode(cx, baseType)) {
       case TYPE_char:
@@ -1989,21 +1997,18 @@ ImplicitConvert(JSContext* cx,
         if (JSID_IS_VOID(id))
           break;
 
-        js::AutoValueRooter fieldVal(cx);
-        JS_IdToValue(cx, id, fieldVal.jsval_addr());
-        if (!JSVAL_IS_STRING(fieldVal.jsval_value())) {
+        if (!JSID_IS_STRING(id)) {
           JS_ReportError(cx, "property name is not a string");
           return false;
         }
 
-        const FieldInfo* field = StructType::LookupField(cx, targetType,
-                                                         JSVAL_TO_STRING(fieldVal.jsval_value()));
+        JSFlatString *name = JSID_TO_FLAT_STRING(id);
+        const FieldInfo* field = StructType::LookupField(cx, targetType, name);
         if (!field)
           return false;
 
-        JSString* name = JSVAL_TO_STRING(fieldVal.jsval_value());
         js::AutoValueRooter prop(cx);
-        if (!JS_GetUCProperty(cx, obj, name->chars(), name->length(), prop.jsval_addr()))
+        if (!JS_GetPropertyById(cx, obj, id, prop.jsval_addr()))
           return false;
 
         // Convert the field via ImplicitConvert().
@@ -3567,8 +3572,10 @@ ArrayType::ConstructData(JSContext* cx,
       // We were given a string. Size the array to the appropriate length,
       // including space for the terminator.
       JSString* sourceString = JSVAL_TO_STRING(argv[0]);
-      const jschar* sourceChars = sourceString->chars();
       size_t sourceLength = sourceString->length();
+      const jschar* sourceChars = sourceString->getChars(cx);
+      if (!sourceChars)
+        return false;
 
       switch (CType::GetTypeCode(cx, baseType)) {
       case TYPE_char:
@@ -3871,7 +3878,7 @@ ArrayType::AddressOfElement(JSContext* cx, uintN argc, jsval* vp)
 
 // For a struct field descriptor 'val' of the form { name : type }, extract
 // 'name' and 'type'.
-static JSString*
+static JSFlatString*
 ExtractStructField(JSContext* cx, jsval val, JSObject** typeObj)
 {
   if (JSVAL_IS_PRIMITIVE(val)) {
@@ -3885,23 +3892,21 @@ ExtractStructField(JSContext* cx, jsval val, JSObject** typeObj)
     return NULL;
   js::AutoObjectRooter iterroot(cx, iter);
 
-  jsid id;
-  if (!JS_NextProperty(cx, iter, &id))
+  jsid nameid;
+  if (!JS_NextProperty(cx, iter, &nameid))
     return NULL;
-  if (JSID_IS_VOID(id)) {
+  if (JSID_IS_VOID(nameid)) {
     JS_ReportError(cx, "struct field descriptors require a valid name and type");
     return NULL;
   }
 
-  js::AutoValueRooter nameVal(cx);
-  JS_IdToValue(cx, id, nameVal.jsval_addr());
-  if (!JSVAL_IS_STRING(nameVal.jsval_value())) {
+  if (!JSID_IS_STRING(nameid)) {
     JS_ReportError(cx, "struct field descriptors require a valid name and type");
     return NULL;
   }
-  JSString* name = JSVAL_TO_STRING(nameVal.jsval_value());
 
   // make sure we have one, and only one, property
+  jsid id;
   if (!JS_NextProperty(cx, iter, &id))
     return NULL;
   if (!JSID_IS_VOID(id)) {
@@ -3910,7 +3915,7 @@ ExtractStructField(JSContext* cx, jsval val, JSObject** typeObj)
   }
 
   js::AutoValueRooter propVal(cx);
-  if (!JS_GetUCProperty(cx, obj, name->chars(), name->length(), propVal.jsval_addr()))
+  if (!JS_GetPropertyById(cx, obj, nameid, propVal.jsval_addr()))
     return NULL;
 
   if (propVal.value().isPrimitive() ||
@@ -3929,7 +3934,7 @@ ExtractStructField(JSContext* cx, jsval val, JSObject** typeObj)
     return NULL;
   }
 
-  return name;
+  return JSID_TO_FLAT_STRING(nameid);
 }
 
 // For a struct field with 'name' and 'type', add an element of the form
@@ -3937,7 +3942,7 @@ ExtractStructField(JSContext* cx, jsval val, JSObject** typeObj)
 static JSBool
 AddFieldToArray(JSContext* cx,
                 jsval* element,
-                JSString* name,
+                JSFlatString* name,
                 JSObject* typeObj)
 {
   JSObject* fieldObj = JS_NewObject(cx, NULL, NULL, NULL);
@@ -4048,7 +4053,7 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj, JSObject* fieldsObj
         return JS_FALSE;
 
       JSObject* fieldType = NULL;
-      JSString* name = ExtractStructField(cx, item.jsval_value(), &fieldType);
+      JSFlatString* name = ExtractStructField(cx, item.jsval_value(), &fieldType);
       if (!name)
         return JS_FALSE;
       fieldRootsArray[i] = OBJECT_TO_JSVAL(fieldType);
@@ -4321,7 +4326,7 @@ StructType::GetFieldInfo(JSContext* cx, JSObject* obj)
 }
 
 const FieldInfo*
-StructType::LookupField(JSContext* cx, JSObject* obj, JSString *name)
+StructType::LookupField(JSContext* cx, JSObject* obj, JSFlatString *name)
 {
   JS_ASSERT(CType::IsCType(cx, obj));
   JS_ASSERT(CType::GetTypeCode(cx, obj) == TYPE_struct);
@@ -4417,7 +4422,7 @@ StructType::FieldGetter(JSContext* cx, JSObject* obj, jsid idval, jsval* vp)
     return JS_FALSE;
   }
 
-  const FieldInfo* field = LookupField(cx, typeObj, JSID_TO_STRING(idval));
+  const FieldInfo* field = LookupField(cx, typeObj, JSID_TO_FLAT_STRING(idval));
   if (!field)
     return JS_FALSE;
 
@@ -4439,7 +4444,7 @@ StructType::FieldSetter(JSContext* cx, JSObject* obj, jsid idval, jsval* vp)
     return JS_FALSE;
   }
 
-  const FieldInfo* field = LookupField(cx, typeObj, JSID_TO_STRING(idval));
+  const FieldInfo* field = LookupField(cx, typeObj, JSID_TO_FLAT_STRING(idval));
   if (!field)
     return JS_FALSE;
 
@@ -4467,8 +4472,11 @@ StructType::AddressOfField(JSContext* cx, uintN argc, jsval* vp)
     return JS_FALSE;
   }
 
-  const FieldInfo* field = LookupField(cx, typeObj,
-                                       JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]));
+  JSFlatString *str = JS_FlattenString(cx, JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]));
+  if (!str)
+    return JS_FALSE;
+
+  const FieldInfo* field = LookupField(cx, typeObj, str);
   if (!field)
     return JS_FALSE;
 
@@ -4611,18 +4619,23 @@ PrepareReturnType(JSContext* cx, jsval type)
   return result;
 }
 
-static JS_ALWAYS_INLINE bool
-IsEllipsis(jsval v)
+static JS_ALWAYS_INLINE JSBool
+IsEllipsis(JSContext* cx, jsval v, bool* isEllipsis)
 {
+  *isEllipsis = false;
   if (!JSVAL_IS_STRING(v))
-    return false;
+    return true;
   JSString* str = JSVAL_TO_STRING(v);
   if (str->length() != 3)
+    return true;
+  const jschar* chars = str->getChars(cx);
+  if (!chars)
     return false;
-  const jschar* chars = str->chars(), dot('.');
-  return (chars[0] == dot &&
-          chars[1] == dot &&
-          chars[2] == dot);
+  jschar dot = '.';
+  *isEllipsis = (chars[0] == dot &&
+                 chars[1] == dot &&
+                 chars[2] == dot);
+  return true;
 }
 
 static JSBool
@@ -4737,7 +4750,10 @@ NewFunctionInfo(JSContext* cx,
   fninfo->mIsVariadic = false;
 
   for (JSUint32 i = 0; i < argLength; ++i) {
-    if (IsEllipsis(argTypes[i])) {
+    bool isEllipsis;
+    if (!IsEllipsis(cx, argTypes[i], &isEllipsis))
+      return false;
+    if (isEllipsis) {
       fninfo->mIsVariadic = true;
       if (i < 1) {
         JS_ReportError(cx, "\"...\" may not be the first and only parameter "

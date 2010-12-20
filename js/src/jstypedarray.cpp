@@ -1225,7 +1225,7 @@ class TypedArrayTemplate
     bool
     copyFromWithOverlap(JSContext *cx, TypedArray *tarray, jsuint offset = 0)
     {
-        JS_ASSERT(offset < length);
+        JS_ASSERT(offset <= length);
 
         NativeType *dest = static_cast<NativeType*>(data) + offset;
 

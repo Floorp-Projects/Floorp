@@ -62,7 +62,7 @@ BEGIN_TEST(testTrap_gc)
 
     JS_GC(cx);
 
-    CHECK(JS_MatchStringAndAscii(trapClosure, trapClosureText));
+    CHECK(JS_FlatStringEqualsAscii(JS_ASSERT_STRING_IS_FLAT(trapClosure), trapClosureText));
 
     // execute
     CHECK(JS_ExecuteScript(cx, global, script, v2.addr()));
@@ -70,7 +70,7 @@ BEGIN_TEST(testTrap_gc)
 
     JS_GC(cx);
 
-    CHECK(JS_MatchStringAndAscii(trapClosure, trapClosureText));
+    CHECK(JS_FlatStringEqualsAscii(JS_ASSERT_STRING_IS_FLAT(trapClosure), trapClosureText));
 
     return true;
 }

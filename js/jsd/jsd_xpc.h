@@ -288,6 +288,8 @@ class jsdService : public jsdIDebuggerService
     virtual ~jsdService();
     
     static jsdService *GetService ();
+
+    PRBool CheckInterruptHook() { return !!mInterruptHook; }
     
   private:
     PRBool      mOn;

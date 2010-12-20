@@ -335,7 +335,14 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
 
         if (!isUndefined && NS_SUCCEEDED(rv)) {
             NS_ASSERTION(JSVAL_IS_STRING(rval), "evalInSandbox is broken");
-            result = nsDependentJSString(JSVAL_TO_STRING(rval));
+
+            nsDependentJSString depStr;
+            if (!depStr.init(cx, JSVAL_TO_STRING(rval))) {
+                JS_ReportPendingException(cx);
+                isUndefined = PR_TRUE;
+            } else {
+                result = depStr;
+            }
         }
 
         stack->Pop(nsnull);

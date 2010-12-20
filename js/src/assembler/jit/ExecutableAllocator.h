@@ -170,6 +170,13 @@ public:
 
     size_t available() const { return (m_pools.length() > 1) ? 0 : m_end - m_freePtr; }
 
+    // Flag for downstream use, whether to try to release references to this pool.
+    bool m_destroy;
+
+    // GC number in which the m_destroy flag was most recently set. Used downstream to
+    // remember whether m_destroy was computed for the currently active GC.
+    size_t m_gcNumber;
+
 private:
     // On OOM, this will return an Allocation where pages is NULL.
     static Allocation systemAlloc(size_t n);
@@ -393,7 +400,7 @@ private:
 
 // This constructor can fail due to OOM. If it does, m_freePtr will be
 // set to NULL. 
-inline ExecutablePool::ExecutablePool(size_t n) : m_refCount(1)
+inline ExecutablePool::ExecutablePool(size_t n) : m_refCount(1), m_destroy(false), m_gcNumber(0)
 {
     size_t allocSize = roundUpAllocationSize(n, JIT_ALLOCATOR_PAGE_SIZE);
     if (allocSize == OVERSIZE_ALLOCATION) {

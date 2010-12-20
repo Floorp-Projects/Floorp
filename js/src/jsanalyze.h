@@ -82,6 +82,9 @@ struct Bytecode
     /* Whether this is in a try block. */
     bool inTryBlock : 1;
 
+    /* Method JIT safe point. */
+    bool safePoint : 1;
+
     /*
      * For type inference, whether this bytecode needs to have its effects monitored dynamically.
      * This is limited to property/name sets and calls.

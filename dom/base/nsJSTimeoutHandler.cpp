@@ -109,7 +109,7 @@ private:
   nsCOMPtr<nsIArray> mArgv;
 
   // The JS expression to evaluate or function to call, if !mExpr
-  JSString *mExpr;
+  JSFlatString *mExpr;
   JSObject *mFunObj;
 };
 
@@ -134,10 +134,10 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsJSScriptTimeoutHandler)
     else if (tmp->mFunObj) {
       JSFunction* fun = (JSFunction*)tmp->mFunObj->getPrivate();
       if (fun->atom) {
-        size_t size = 1 + JS_PutEscapedString(NULL, 0, ATOM_TO_STRING(fun->atom), 0);
+        size_t size = 1 + JS_PutEscapedFlatString(NULL, 0, ATOM_TO_STRING(fun->atom), 0);
         char *name = new char[size];
         if (name) {
-          JS_PutEscapedString(name, size, ATOM_TO_STRING(fun->atom), 0);
+          JS_PutEscapedFlatString(name, size, ATOM_TO_STRING(fun->atom), 0);
           foo.AppendLiteral(" [");
           foo.Append(name);
           delete[] name;
@@ -232,7 +232,7 @@ nsJSScriptTimeoutHandler::Init(nsGlobalWindow *aWindow, PRBool *aIsInterval,
   ncc->GetArgc(&argc);
   ncc->GetArgvPtr(&argv);
 
-  JSString *expr = nsnull;
+  JSFlatString *expr = nsnull;
   JSObject *funobj = nsnull;
   int32 interval = 0;
 
@@ -264,10 +264,17 @@ nsJSScriptTimeoutHandler::Init(nsGlobalWindow *aWindow, PRBool *aIsInterval,
 
   case JSTYPE_STRING:
   case JSTYPE_OBJECT:
-    expr = ::JS_ValueToString(cx, argv[0]);
-    if (!expr)
-      return NS_ERROR_OUT_OF_MEMORY;
-    argv[0] = STRING_TO_JSVAL(expr);
+    {
+      JSString *str = ::JS_ValueToString(cx, argv[0]);
+      if (!str)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+      expr = ::JS_FlattenString(cx, str);
+      if (!expr)
+          return NS_ERROR_OUT_OF_MEMORY;
+
+      argv[0] = STRING_TO_JSVAL(str);
+    }
     break;
 
   default:
@@ -370,8 +377,7 @@ const PRUnichar *
 nsJSScriptTimeoutHandler::GetHandlerText()
 {
   NS_ASSERTION(mExpr, "No expression, so no handler text!");
-  return reinterpret_cast<const PRUnichar *>
-                         (::JS_GetStringChars(mExpr));
+  return ::JS_GetFlatStringChars(mExpr);
 }
 
 nsresult NS_CreateJSTimeoutHandler(nsGlobalWindow *aWindow,

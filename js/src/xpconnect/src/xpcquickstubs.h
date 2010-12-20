@@ -439,7 +439,9 @@ public:
 class xpc_qsACString : public xpc_qsBasicString<nsACString, nsCString>
 {
 public:
-    xpc_qsACString(JSContext *cx, jsval v, jsval *pval);
+    xpc_qsACString(JSContext *cx, jsval v, jsval *pval,
+                   StringificationBehavior nullBehavior = eNull,
+                   StringificationBehavior undefinedBehavior = eNull);
 };
 
 /**
@@ -459,18 +461,6 @@ struct xpc_qsSelfRef
     ~xpc_qsSelfRef() { NS_IF_RELEASE(ptr); }
 
     nsISupports* ptr;
-};
-
-template<size_t N>
-struct xpc_qsArgValArray
-{
-    xpc_qsArgValArray(JSContext *cx) : tvr(cx, N, array)
-    {
-        memset(array, 0, N * sizeof(jsval));
-    }
-
-    js::AutoArrayRooter tvr;
-    jsval array[N];
 };
 
 /**

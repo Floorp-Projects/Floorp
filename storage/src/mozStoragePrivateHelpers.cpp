@@ -49,6 +49,7 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/CondVar.h"
 #include "nsThreadUtils.h"
+#include "nsJSUtils.h"
 
 #include "Variant.h"
 #include "mozStoragePrivateHelpers.h"
@@ -151,10 +152,9 @@ convertJSValToVariant(
 
   if (JSVAL_IS_STRING(aValue)) {
     JSString *str = JSVAL_TO_STRING(aValue);
-    nsDependentString value(
-      reinterpret_cast<PRUnichar *>(::JS_GetStringChars(str)),
-      ::JS_GetStringLength(str)
-    );
+    nsDependentJSString value;
+    if (!value.init(aCtx, str))
+        return nsnull;
     return new TextVariant(value);
   }
 

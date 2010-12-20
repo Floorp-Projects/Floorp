@@ -292,13 +292,51 @@ namespace mjit {
 
 struct CallSite;
 
+struct NativeMapEntry {
+    size_t          bcOff;  /* bytecode offset in script */
+    void            *ncode; /* pointer to native code */
+};
+
 struct JITScript {
     typedef JSC::MacroAssemblerCodeRef CodeRef;
     CodeRef         code;       /* pool & code addresses */
-    void            **nmap;     /* pc -> JIT code map, sparse */
 
+    NativeMapEntry  *nmap;      /* array of NativeMapEntrys, sorted by .bcOff.
+                                   .ncode values may not be NULL. */
+    size_t          nNmapPairs; /* number of entries in nmap */
+
+    void            *invokeEntry;       /* invoke address */
+    void            *fastEntry;         /* cached entry, fastest */
+    void            *arityCheckEntry;   /* arity check address */
+
+    /* To minimize the size of this struct on 64-bit, put uint32s after all pointers. */
     js::mjit::CallSite *callSites;
-    uint32          nCallSites;
+
+#ifdef JS_MONOIC
+    ic::MICInfo     *mics;      /* MICs in this script. */
+    ic::CallICInfo  *callICs;   /* CallICs in this script. */
+    ic::EqualityICInfo *equalityICs;
+    ic::TraceICInfo *traceICs;
+#endif
+#ifdef JS_POLYIC
+    ic::PICInfo     *pics;      /* PICs in this script */
+    ic::GetElementIC *getElems;
+    ic::SetElementIC *setElems;
+#endif
+
+    uint32          nCallSites:31;
+    bool            singleStepMode:1;   /* compiled in "single step mode" */
+#ifdef JS_MONOIC
+    uint32          nMICs;      /* number of MonoICs */
+    uint32          nCallICs;   /* number of call ICs */
+    uint32          nEqualityICs;
+    uint32          nTraceICs;
+#endif
+#ifdef JS_POLYIC
+    uint32          nPICs;      /* number of PolyICs */
+    uint32          nGetElems;
+    uint32          nSetElems;
+#endif
 
     /*
      * Number of on-stack recompilations of this JIT script. Reset to zero if the
@@ -306,33 +344,14 @@ struct JITScript {
      */
     uint32          recompilations;
 
+    /* List of inline caches jumping to the fastEntry. */
+    JSCList          callers;
+
 #ifdef JS_MONOIC
-    ic::MICInfo     *mics;      /* MICs in this script. */
-    uint32          nMICs;      /* number of MonoICs */
-    ic::CallICInfo  *callICs;   /* CallICs in this script. */
-    uint32          nCallICs;   /* number of call ICs */
-    ic::EqualityICInfo *equalityICs;
-    uint32          nEqualityICs;
-    ic::TraceICInfo *traceICs;
-    uint32          nTraceICs;
-
-    JSCList          callers;  /* List of inline caches jumping to the fastEntry. */
-
     // Additional ExecutablePools that IC stubs were generated into.
     typedef Vector<JSC::ExecutablePool *, 0, SystemAllocPolicy> ExecPoolVector;
     ExecPoolVector execPools;
 #endif
-#ifdef JS_POLYIC
-    ic::PICInfo     *pics;      /* PICs in this script */
-    uint32          nPICs;      /* number of PolyICs */
-    ic::GetElementIC *getElems;
-    uint32           nGetElems;
-    ic::SetElementIC *setElems;
-    uint32           nSetElems;
-#endif
-    void            *invokeEntry;       /* invoke address */
-    void            *fastEntry;         /* cached entry, fastest */
-    void            *arityCheckEntry;   /* arity check address */
 
     ~JITScript();
 
@@ -343,7 +362,7 @@ struct JITScript {
     }
 
     void nukeScriptDependentICs();
-    void sweepCallICs();
+    void sweepCallICs(bool purgeAll);
     void purgeMICs();
     void purgePICs();
 };
@@ -426,6 +445,27 @@ EnableTraceHint(JSScript *script, jsbytecode *pc, uint16_t index);
 uintN
 GetCallTargetCount(JSScript *script, jsbytecode *pc);
 
+inline void * bsearch_nmap(NativeMapEntry *nmap, size_t nPairs, size_t bcOff)
+{
+    size_t lo = 1, hi = nPairs;
+    while (1) {
+        /* current unsearched space is from lo-1 to hi-1, inclusive. */
+        if (lo > hi)
+            return NULL; /* not found */
+        size_t mid       = (lo + hi) / 2;
+        size_t bcOff_mid = nmap[mid-1].bcOff;
+        if (bcOff < bcOff_mid) {
+            hi = mid-1;
+            continue;
+        } 
+        if (bcOff > bcOff_mid) {
+            lo = mid+1;
+            continue;
+        }
+        return nmap[mid-1].ncode;
+    }
+}
+
 } /* namespace mjit */
 
 } /* namespace js */
@@ -437,22 +477,17 @@ JSScript::maybeNativeCodeForPC(bool constructing, jsbytecode *pc)
     if (!jit)
         return NULL;
     JS_ASSERT(pc >= code && pc < code + length);
-    return jit->nmap[pc - code];
-}
-
-inline void **
-JSScript::nativeMap(bool constructing)
-{
-    return getJIT(constructing)->nmap;
+    return bsearch_nmap(jit->nmap, jit->nNmapPairs, (size_t)(pc - code));
 }
 
 inline void *
 JSScript::nativeCodeForPC(bool constructing, jsbytecode *pc)
 {
-    void **nmap = nativeMap(constructing);
+    js::mjit::JITScript *jit = getJIT(constructing);
     JS_ASSERT(pc >= code && pc < code + length);
-    JS_ASSERT(nmap[pc - code]);
-    return nmap[pc - code];
+    void* native = bsearch_nmap(jit->nmap, jit->nNmapPairs, (size_t)(pc - code));
+    JS_ASSERT(native);
+    return native;
 }
 
 #ifdef _MSC_VER
