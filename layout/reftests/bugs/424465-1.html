@@ -15,15 +15,17 @@
     <script type="text/javascript">
     //<![CDATA[
 
-    window.addEventListener("MozReftestInvalidate",
-      function() {
-        showBug();
+    window.addEventListener("MozReftestInvalidate", showBug, false);
+
+    function imageLoaded()
+    {
         document.documentElement.className = "";
-      }, false);
+    }
 
     function showBug()
     {
-		document.getElementById("hiddenColumnBugged").innerHTML = "<div>.: See the bug ? :.<br /><img src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANwAAAATCAIAAAB0hvS3AAAABGdBTUEAALGOfPtRkwAAACBjSFJNAAB6JQAAgIMAAPn/AACA6AAAdTAAAOpgAAA6lwAAF2+XqZnUAAAAuUlEQVR4nGJkYPjPMApGwWACAAHENNAOGAWjAB0ABNBoohwFgw4ABNBoohwFgw4ABNBoohwFgw4ABNBoohwFgw4ABNBoohwFgw4ABNBoohwFgw4ABNBoohwFgw4ABNBoohwFgw4ABNBoohwFgw4ABNBoohwFgw4ABNBoohwFgw4ABNBoohwFgw4ABNBoohwFgw4ABNBoohwFgw4ABNBoohwFgw4ABNBoohwFgw4ABNBoohwFgw4ABBgAsywBJafN/+UAAAAASUVORK5CYII=' /><\/div>";
+		document.getElementById("hiddenColumnBugged").innerHTML =
+            "<div>.: See the bug ? :.<br /><img onload='imageLoaded()' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANwAAAATCAIAAAB0hvS3AAAABGdBTUEAALGOfPtRkwAAACBjSFJNAAB6JQAAgIMAAPn/AACA6AAAdTAAAOpgAAA6lwAAF2+XqZnUAAAAuUlEQVR4nGJkYPjPMApGwWACAAHENNAOGAWjAB0ABNBoohwFgw4ABNBoohwFgw4ABNBoohwFgw4ABNBoohwFgw4ABNBoohwFgw4ABNBoohwFgw4ABNBoohwFgw4ABNBoohwFgw4ABNBoohwFgw4ABNBoohwFgw4ABNBoohwFgw4ABNBoohwFgw4ABNBoohwFgw4ABNBoohwFgw4ABNBoohwFgw4ABNBoohwFgw4ABNBoohwFgw4ABBgAsywBJafN/+UAAAAASUVORK5CYII=' /><\/div>";
     }
 
     //]]>
