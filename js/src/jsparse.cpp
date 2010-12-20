@@ -433,7 +433,9 @@ RecycleTree(JSParseNode *pn, JSTreeContext *tc)
         pn->pn_next = NULL;
         RecycleFuncNameKids(pn, tc);
     } else {
-        UnlinkFunctionBoxes(pn, tc);
+        /* We don't recycle funboxes, so just drop it. No need to unlink. */
+        pn->pn_funbox = NULL;
+
         head = &tc->parser->nodeList;
         pn->pn_next = *head;
         *head = pn;
