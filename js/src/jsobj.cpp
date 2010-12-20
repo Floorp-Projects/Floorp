@@ -3829,7 +3829,7 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
     if (!proto)
         return NULL;
 
-    TypeObject *protoType = cx->newTypeObject(clasp->name, "prototype", parent_proto);
+    TypeObject *protoType = cx->newTypeObject(clasp->name, "prototype", proto->getProto());
     if (!protoType)
         return NULL;
     proto->setType(protoType);
