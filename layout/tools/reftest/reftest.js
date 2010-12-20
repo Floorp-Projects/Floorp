@@ -1146,6 +1146,10 @@ function WaitForTestEnd() {
     gExplicitPendingPaintsCompleteHook = ExplicitPaintsCompleteListener;
     gTimeoutHook = RemoveListeners;
 
+    // Take a full snapshot now that all our listeners are set up. This
+    // ensures it's impossible for us to miss updates between taking the snapshot
+    // and adding our listeners.
+    InitCurrentCanvasWithSnapshot();
     MakeProgress();
 }
 
@@ -1197,10 +1201,7 @@ function OnDocumentLoad(event)
         // unsuppressed, after the onload event has finished dispatching.
         gFailureReason = "timed out waiting for test to complete (trying to get into WaitForTestEnd)";
         LogInfo("OnDocumentLoad triggering WaitForTestEnd");
-        setTimeout(function() {
-            InitCurrentCanvasWithSnapshot();
-            WaitForTestEnd();
-        }, 0);
+        setTimeout(WaitForTestEnd, 0);
     } else {
         // Since we can't use a bubbling-phase load listener from chrome,
         // this is a capturing phase listener.  So do setTimeout twice, the
@@ -1276,7 +1277,9 @@ function InitCurrentCanvasWithSnapshot()
         return;
     }
 
-    gCurrentCanvas = AllocateCanvas();
+    if (!gCurrentCanvas) {
+        gCurrentCanvas = AllocateCanvas();
+    }
 
     var ctx = gCurrentCanvas.getContext("2d");
     DoDrawWindow(ctx, 0, 0, gCurrentCanvas.width, gCurrentCanvas.height);
