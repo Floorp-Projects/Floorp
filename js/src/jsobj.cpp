@@ -2975,6 +2975,7 @@ js_CreateThisFromTrace(JSContext *cx, Class *clasp, JSObject *ctor)
              * A primitive value in .prototype means to use Object.prototype
              * for proto. See ES5 13.2.2 step 7.
              */
+            proto = objProto;
         }
     }
 
