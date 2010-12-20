@@ -1218,7 +1218,7 @@ nsPluginHost::TagForPlugin(nsNPAPIPlugin* aPlugin)
     }
   }
   // a plugin should never exist without a corresponding tag
-  NS_ASSERTION(PR_FALSE, "TagForPlugin has failed");
+  NS_ERROR("TagForPlugin has failed");
   return nsnull;
 }
 
@@ -3216,9 +3216,11 @@ nsPluginHost::StopPluginInstance(nsIPluginInstance* aInstance)
   PLUGIN_LOG(PLUGIN_LOG_NORMAL,
   ("nsPluginHost::StopPluginInstance called instance=%p\n",aInstance));
 
-  aInstance->Stop();
-
   nsNPAPIPluginInstance* instance = static_cast<nsNPAPIPluginInstance*>(aInstance);
+  if (instance->HasStartedDestroying())
+    return NS_OK;
+
+  aInstance->Stop();
 
   // if the plugin does not want to be 'cached' just remove it
   PRBool doCache = PR_TRUE;

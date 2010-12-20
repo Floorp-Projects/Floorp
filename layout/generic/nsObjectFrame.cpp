@@ -2523,11 +2523,9 @@ DoStopPlugin(nsPluginInstanceOwner *aInstanceOwner, PRBool aDelayedStop)
     aInstanceOwner->HidePluginWindow();
 #endif
 
-    inst->Stop();
-
     nsCOMPtr<nsIPluginHost> pluginHost = do_GetService(MOZ_PLUGIN_HOST_CONTRACTID);
-    if (pluginHost)
-      pluginHost->StopPluginInstance(inst);
+    NS_ASSERTION(pluginHost, "Without a pluginHost, how can we have an instance to destroy?");
+    pluginHost->StopPluginInstance(inst);
 
     // the frame is going away along with its widget so tell the
     // window to forget its widget too
