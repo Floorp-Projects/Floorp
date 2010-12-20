@@ -1121,9 +1121,7 @@ toolbar[iconsize="small"] #feed-button {
 
 /* Notification popup */
 #notification-popup {
-  margin: 4px 0;
   min-width: 280px;
-  padding: 10px;
 }
 
 .popup-notification-icon {
@@ -1330,10 +1328,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 
 /* Bookmarking panel */
-#editBookmarkPanel {
-  padding: 4px;
-}
-
 #editBookmarkPanelStarIcon {
   list-style-image: url("chrome://browser/skin/places/starred48.png");
   width: 48px;
