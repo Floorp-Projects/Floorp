@@ -846,7 +846,8 @@ class CallCompiler : public BaseCompiler
 
     void *update()
     {
-        JITScript *jit = f.jit();
+        JSStackFrame *fp = f.fp();
+        JITScript *jit = fp->jit();
         uint32 recompilations = jit->recompilations;
 
         stubs::UncachedCallResult ucr;
@@ -855,10 +856,11 @@ class CallCompiler : public BaseCompiler
         else
             stubs::UncachedCallHelper(f, ic.frameSize.getArgc(f), &ucr);
 
-        // if the helper invoked the function, it may have triggered recompilation
-        // of this script, invaliding the IC.
-        if (!ucr.codeAddr && f.jit()->recompilations != recompilations)
-            return NULL;
+        // Watch out in case the IC was invalidated by a recompilation on the calling
+        // script. This can happen either if the callee is executed or if it compiles
+        // and the compilation has a static overflow.
+        if (fp->jit()->recompilations != recompilations)
+            return ucr.codeAddr;
 
         // If the function cannot be jitted (generally unjittable or empty script),
         // patch this site to go to a slow path always.
