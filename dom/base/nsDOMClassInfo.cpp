@@ -1681,12 +1681,12 @@ PrintWarningOnConsole(JSContext *cx, const char *stringBundleProperty)
   }
 
   nsCOMPtr<nsIConsoleService> consoleService
-    (do_GetService("@mozilla.org/consoleservice;1"));
+    (do_GetService(NS_CONSOLESERVICE_CONTRACTID));
   if (!consoleService) {
     return;
   }
 
-  nsCOMPtr<nsIScriptError> scriptError =
+  nsCOMPtr<nsIScriptError2> scriptError =
     do_CreateInstance(NS_SCRIPTERROR_CONTRACTID);
   if (!scriptError) {
     return;
@@ -1709,15 +1709,19 @@ PrintWarningOnConsole(JSContext *cx, const char *stringBundleProperty)
       }
     }
   }
-  nsresult rv = scriptError->Init(msg.get(),
-                                  sourcefile.get(),
-                                  EmptyString().get(),
-                                  lineno,
-                                  0, // column for error is not available
-                                  nsIScriptError::warningFlag,
-                                  "DOM:HTML");
+
+  nsresult rv = scriptError->InitWithWindowID(msg.get(),
+                                              sourcefile.get(),
+                                              EmptyString().get(),
+                                              lineno,
+                                              0, // column for error is not available
+                                              nsIScriptError::warningFlag,
+                                              "DOM:HTML",
+                                              nsJSUtils::GetCurrentlyRunningCodeWindowID(cx));
+
   if (NS_SUCCEEDED(rv)){
-    consoleService->LogMessage(scriptError);
+    nsCOMPtr<nsIScriptError> logError = do_QueryInterface(scriptError);
+    consoleService->LogMessage(logError);
   }
 }
 

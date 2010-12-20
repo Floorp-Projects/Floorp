@@ -167,6 +167,9 @@ private:
 
   const nsCatalogData* mCatalogData; // weak
   nsString         mURISpec;
+
+  // Used for error reporting.
+  PRUint64         mWindowID;
 };
 
 #endif
