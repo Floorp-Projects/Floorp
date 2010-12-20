@@ -220,6 +220,15 @@ sa_stream_open(sa_stream_t *s) {
                        s->bufferSize,
                        MODE_STREAM);
 
+  jthrowable exception = (*jenv)->ExceptionOccurred(jenv);
+  if (exception) {
+    (*jenv)->ExceptionDescribe(jenv);
+    (*jenv)->ExceptionClear(jenv);
+    (*jenv)->DeleteGlobalRef(jenv, s->at_class);
+    (*jenv)->PopLocalFrame(jenv, NULL);
+    return SA_ERROR_INVALID;
+  }
+
   if (!obj) {
     (*jenv)->DeleteGlobalRef(jenv, s->at_class);
     (*jenv)->PopLocalFrame(jenv, NULL);
