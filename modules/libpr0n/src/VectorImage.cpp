@@ -687,6 +687,7 @@ VectorImage::OnStopRequest(nsIRequest* aRequest, nsISupports* aCtxt,
     observer->OnStopFrame(nsnull, 0);
     observer->OnStopDecode(nsnull, NS_OK, nsnull);
   }
+  EvaluateAnimation();
 
   return rv;
 }
