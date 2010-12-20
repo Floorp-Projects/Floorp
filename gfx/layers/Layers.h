@@ -482,7 +482,6 @@ public:
      */
     CONTENT_OPAQUE = 0x01,
     /**
-     * ThebesLayers only!
      * If this is set, the caller is promising that the visible region
      * contains no text over transparent pixels (any text, if present,
      * is over fully opaque pixels).
@@ -738,7 +737,7 @@ protected:
     mPrevSibling(nsnull),
     mImplData(aImplData),
     mOpacity(1.0),
-    mContentFlags(0),
+    mContentFlags(CONTENT_NO_TEXT_OVER_TRANSPARENT),
     mUseClipRect(PR_FALSE)
     {}
 
@@ -832,7 +831,9 @@ protected:
     , mValidRegion()
     , mXResolution(1.0)
     , mYResolution(1.0)
-  {}
+  {
+    mContentFlags = 0; // Clear NO_TEXT, NO_TEXT_OVER_TRANSPARENT
+  }
 
   virtual nsACString& PrintInfo(nsACString& aTo, const char* aPrefix);
 
@@ -920,7 +921,9 @@ protected:
       mFirstChild(nsnull),
       mLastChild(nsnull),
       mUseIntermediateSurface(PR_FALSE)
-  {}
+  {
+    mContentFlags = 0; // Clear NO_TEXT, NO_TEXT_OVER_TRANSPARENT
+  }
 
   /**
    * A default implementation of ComputeEffectiveTransforms for use by OpenGL

@@ -148,8 +148,11 @@ public:
    * mThebesLayerDataStack, then sets the children of the container layer
    * to be all the layers in mNewChildLayers in that order and removes any
    * layers as children of the container that aren't in mNewChildLayers.
+   * @param aTextContentFlags if all child layers have CONTENT_NO_TEXT, adds
+   * CONTENT_NO_TEXT to *aTextContentFlags.
+   * Likewise for CONTENT_NO_TEXT_OVER_TRANSPARENT.
    */
-  void Finish();
+  void Finish(PRUint32 *aTextContentFlags);
 
 protected:
   /**
@@ -1267,11 +1270,13 @@ ContainerState::CollectOldLayers()
 }
 
 void
-ContainerState::Finish()
+ContainerState::Finish(PRUint32* aTextContentFlags)
 {
   while (!mThebesLayerDataStack.IsEmpty()) {
     PopThebesLayerData();
   }
+
+  PRUint32 textContentFlags = Layer::CONTENT_NO_TEXT_OVER_TRANSPARENT;
 
   for (PRUint32 i = 0; i <= mNewChildLayers.Length(); ++i) {
     // An invariant of this loop is that the layers in mNewChildLayers
@@ -1279,6 +1284,9 @@ ContainerState::Finish()
     Layer* layer;
     if (i < mNewChildLayers.Length()) {
       layer = mNewChildLayers[i];
+      if (!layer->GetVisibleRegion().IsEmpty()) {
+        textContentFlags &= layer->GetContentFlags();
+      }
       if (!layer->GetParent()) {
         // This is not currently a child of the container, so just add it
         // now.
@@ -1307,6 +1315,8 @@ ContainerState::Finish()
     // If non-null, 'layer' is now in the right place in the list, so we
     // can just move on to the next one.
   }
+
+  *aTextContentFlags = textContentFlags;
 }
 
 static void
@@ -1395,11 +1405,18 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
 
   Clip clip;
   state.ProcessDisplayItems(aChildren, clip);
-  state.Finish();
 
-  PRUint32 flags = aChildren.IsOpaque() && 
-                   !aChildren.NeedsTransparentSurface() ? Layer::CONTENT_OPAQUE : 0;
+  // Set CONTENT_NO_TEXT_OVER_TRANSPARENT if any of our children have it.
+  // This is suboptimal ... a child could have text that's over transparent
+  // pixels in its own layer, but over opaque parts of previous siblings.
+  PRUint32 flags;
+  state.Finish(&flags);
+
+  if (aChildren.IsOpaque() && !aChildren.NeedsTransparentSurface()) {
+    flags |= Layer::CONTENT_OPAQUE;
+  }
   containerLayer->SetContentFlags(flags);
+
   return containerLayer.forget();
 }
 
