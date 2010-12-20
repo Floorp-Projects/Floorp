@@ -449,6 +449,15 @@ DeviceManagerD3D9::CreateSwapChain(HWND hWnd)
 {
   nsRefPtr<SwapChainD3D9> swapChain = new SwapChainD3D9(this);
   
+  // See bug 604647. This line means that if we create a window while the
+  // device is lost LayerManager initialization will fail, this window
+  // will be permanently unaccelerated. This should be a rare situation
+  // though and the need for a low-risk fix for this bug outweighs the
+  // downside.
+  if (!VerifyReadyForRendering()) {
+    return nsnull;
+  }
+
   if (!swapChain->Init(hWnd)) {
     return nsnull;
   }
