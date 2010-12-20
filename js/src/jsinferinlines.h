@@ -538,10 +538,10 @@ JSScript::typeMonitorUndefined(JSContext *cx, const jsbytecode *pc, unsigned ind
 
 inline void
 JSScript::typeMonitorAssign(JSContext *cx, const jsbytecode *pc,
-                            JSObject *obj, jsid id, const js::Value &rval)
+                            JSObject *obj, jsid id, const js::Value &rval, bool force)
 {
 #ifdef JS_TYPE_INFERENCE
-    if (!analysis->failed()) {
+    if (!force && !analysis->failed()) {
         js::analyze::Bytecode &code = analysis->getCode(pc);
         if (!code.monitorNeeded)
             return;
