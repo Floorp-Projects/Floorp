@@ -484,17 +484,10 @@ public:
     /**
      * ThebesLayers only!
      * If this is set, the caller is promising that the visible region
-     * contains no text at all. If this is set,
-     * CONTENT_NO_TEXT_OVER_TRANSPARENT will also be set.
-     */
-    CONTENT_NO_TEXT = 0x02,
-    /**
-     * ThebesLayers only!
-     * If this is set, the caller is promising that the visible region
      * contains no text over transparent pixels (any text, if present,
      * is over fully opaque pixels).
      */
-    CONTENT_NO_TEXT_OVER_TRANSPARENT = 0x04
+    CONTENT_NO_TEXT_OVER_TRANSPARENT = 0x02
   };
   /**
    * CONSTRUCTION PHASE ONLY
