@@ -4066,10 +4066,16 @@ nsTypedSelection::GetIndicesForInterval(nsINode* aBeginNode,
                                         PRInt32 *aStartIndex,
                                         PRInt32 *aEndIndex)
 {
-  if (aStartIndex)
-    *aStartIndex = -1;
-  if (aEndIndex)
-    *aEndIndex = -1;
+  PRInt32 startIndex;
+  PRInt32 endIndex;
+
+  if (!aStartIndex)
+    aStartIndex = &startIndex;
+  if (!aEndIndex)
+    aEndIndex = &endIndex;
+
+  *aStartIndex = -1;
+  *aEndIndex = -1;
 
   if (mRanges.Length() == 0)
     return;
