@@ -115,6 +115,8 @@ public:
     { return mBaseVal; }
   const SVGPreserveAspectRatio &GetAnimValue() const
     { return mAnimVal; }
+  PRBool IsAnimated() const
+    { return mIsAnimated; }
 
   nsresult ToDOMAnimatedPreserveAspectRatio(
     nsIDOMSVGAnimatedPreserveAspectRatio **aResult,

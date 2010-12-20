@@ -46,6 +46,7 @@
 #include "gfxMatrix.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "gfxPlatform.h"
+#include "nsSVGSVGElement.h"
 
 class nsSVGImageFrame;
 
@@ -263,8 +264,8 @@ nsSVGImageFrame::PaintSVG(nsSVGRenderState *aContext,
     return NS_OK;
 
   float x, y, width, height;
-  nsSVGElement *element = static_cast<nsSVGElement*>(mContent);
-  element->GetAnimatedLengthValues(&x, &y, &width, &height, nsnull);
+  nsSVGImageElement *imgElem = static_cast<nsSVGImageElement*>(mContent);
+  imgElem->GetAnimatedLengthValues(&x, &y, &width, &height, nsnull);
   if (width <= 0 || height <= 0)
     return NS_OK;
 
@@ -320,6 +321,26 @@ nsSVGImageFrame::PaintSVG(nsSVGRenderState *aContext,
     PRUint32 drawFlags = imgIContainer::FLAG_SYNC_DECODE;
 
     if (mImageContainer->GetType() == imgIContainer::TYPE_VECTOR) {
+      nsIFrame* imgRootFrame = mImageContainer->GetRootLayoutFrame();
+      if (!imgRootFrame) {
+        // bad image (e.g. XML parse error in image's SVG file)
+        return NS_OK;
+      }
+
+      // Grab root node (w/ sanity-check to make sure it exists & is <svg>)
+      nsSVGSVGElement* rootSVGElem =
+        static_cast<nsSVGSVGElement*>(imgRootFrame->GetContent());
+      if (!rootSVGElem || rootSVGElem->GetNameSpaceID() != kNameSpaceID_SVG ||
+          rootSVGElem->Tag() != nsGkAtoms::svg) {
+        NS_ABORT_IF_FALSE(PR_FALSE, "missing or non-<svg> root node!!");
+        return PR_FALSE;
+      }
+
+      // Override preserveAspectRatio in our helper document
+      // XXXdholbert We should technically be overriding the helper doc's clip
+      // and overflow properties here, too. See bug 272288 comment 36.
+      rootSVGElem->SetImageOverridePreserveAspectRatio(
+        imgElem->mPreserveAspectRatio.GetAnimValue());
       nsRect destRect(0, 0,
                       appUnitsPerDevPx * width,
                       appUnitsPerDevPx * height);
@@ -334,6 +355,8 @@ nsSVGImageFrame::PaintSVG(nsSVGRenderState *aContext,
         destRect,
         aDirtyRect ? dirtyRect : destRect,
         drawFlags);
+
+      rootSVGElem->ClearImageOverridePreserveAspectRatio();
     } else { // mImageContainer->GetType() == TYPE_RASTER
       nsLayoutUtils::DrawSingleUnscaledImage(
         aContext->GetRenderingContext(this),
