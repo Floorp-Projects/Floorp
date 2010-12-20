@@ -10,3 +10,17 @@ function foo() {
 }
 Array.prototype["undefined"] = "twelve";
 foo();
+
+function fna() {
+  var a = {};
+  a[true] = 1;
+  assertEq(a["true"], 1);
+}
+fna();
+
+function fnb() {
+  var a = [];
+  a[1.1] = 2;
+  assertEq(a["1.1"], 2);
+}
+fnb();
