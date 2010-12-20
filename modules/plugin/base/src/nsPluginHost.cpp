@@ -240,7 +240,7 @@ NS_IMPL_ISUPPORTS0(nsInvalidPluginTag)
 nsInvalidPluginTag::nsInvalidPluginTag(const char* aFullPath, PRInt64 aLastModifiedTime)
 : mFullPath(aFullPath),
   mLastModifiedTime(aLastModifiedTime),
-  mSeen(PR_FALSE)
+  mSeen(false)
 {
   
 }
@@ -2070,7 +2070,7 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile * pluginsDir,
       }
     }
     
-    bool isKnownInvalidPlugin = PR_FALSE;
+    bool isKnownInvalidPlugin = false;
     for (nsRefPtr<nsInvalidPluginTag> invalidPlugins = mInvalidPlugins;
          invalidPlugins; invalidPlugins = invalidPlugins->mNext) {
       // If already marked as invalid, ignore it
@@ -2103,7 +2103,7 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile * pluginsDir,
         pluginFile.FreePluginInfo(info);
         
         if (aCreatePluginList) {
-          invalidTag->mSeen = PR_TRUE;
+          invalidTag->mSeen = true;
         }
         invalidTag->mNext = mInvalidPlugins;
         if (mInvalidPlugins) {
@@ -2447,7 +2447,7 @@ nsresult nsPluginHost::FindPlugins(PRBool aCreatePluginList, PRBool * aPluginsCh
       invalidPlugin->mNext = NULL;
     }
     else {
-      invalidPlugins->mSeen = PR_FALSE;
+      invalidPlugins->mSeen = false;
       invalidPlugins = invalidPlugins->mNext;
     }
   }
