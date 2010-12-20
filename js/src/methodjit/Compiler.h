@@ -115,7 +115,7 @@ class Compiler : public BaseCompiler
         Label stubEntry;
         DataLabelPtr addrLabel;
         jsbytecode *jumpTarget;
-        bool trampoline;
+        bool fastTrampoline;
         Label trampolineStart;
         Jump traceHint;
         MaybeJump slowTraceHint;

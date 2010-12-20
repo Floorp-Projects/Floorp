@@ -705,13 +705,14 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
             if (!traceICs[i].initialized)
                 continue;
 
-            if (traceICs[i].trampoline) {
-                scriptTICs[i].jumpTarget = stubCode.locationOf(traceICs[i].trampolineStart);
+            if (traceICs[i].fastTrampoline) {
+                scriptTICs[i].fastTarget = stubCode.locationOf(traceICs[i].trampolineStart);
             } else {
                 uint32 offs = uint32(traceICs[i].jumpTarget - script->code);
                 JS_ASSERT(jumpMap[offs].isValid());
-                scriptTICs[i].jumpTarget = fullCode.locationOf(jumpMap[offs]);
+                scriptTICs[i].fastTarget = fullCode.locationOf(jumpMap[offs]);
             }
+            scriptTICs[i].slowTarget = stubCode.locationOf(traceICs[i].trampolineStart);
             scriptTICs[i].traceHint = fullCode.locationOf(traceICs[i].traceHint);
             scriptTICs[i].stubEntry = stubCode.locationOf(traceICs[i].stubEntry);
             scriptTICs[i].traceData = NULL;
@@ -5097,6 +5098,8 @@ mjit::Compiler::finishLoop(jsbytecode *head)
 bool
 mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slow, bool *trampoline)
 {
+    bool consistent = frame.consistentRegisters(target);
+
     if (trampoline)
         *trampoline = false;
 
@@ -5109,7 +5112,7 @@ mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slow, bool *tramp
         lvtarget = ArenaNew<RegisterAllocation>(liveness.pool, false);
         if (!lvtarget)
             return false;
-        JS_ASSERT(frame.consistentRegisters(target));
+        JS_ASSERT(consistent);
     }
 
     if (!addTraceHints || target >= PC ||
@@ -5120,13 +5123,13 @@ mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slow, bool *tramp
         )
     {
         if (lvtarget->synced()) {
-            JS_ASSERT(frame.consistentRegisters(target));
+            JS_ASSERT(consistent);
             if (!jumpInScript(j, target))
                 return false;
             if (slow && !stubcc.jumpInScript(*slow, target))
                 return false;
         } else {
-            if (frame.consistentRegisters(target)) {
+            if (consistent) {
                 if (!jumpInScript(j, target))
                     return false;
             } else {
@@ -5180,20 +5183,9 @@ mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slow, bool *tramp
 
     Label traceStart = stubcc.masm.label();
 
-    /*
-     * We make a trace IC even if the trace is currently disabled, in case it is
-     * enabled later, but set up the jumps so that InvokeTracer is initially skipped.
-     */
-    if (JSOp(*target) == JSOP_TRACE) {
-        stubcc.linkExitDirect(j, traceStart);
-        if (slow)
-            slow->linkTo(traceStart, &stubcc.masm);
-    } else {
-        if (!jumpInScript(j, target))
-            return false;
-        if (slow && !stubcc.jumpInScript(*slow, target))
-            return false;
-    }
+    stubcc.linkExitDirect(j, traceStart);
+    if (slow)
+        slow->linkTo(traceStart, &stubcc.masm);
 
 # if JS_MONOIC
     ic.addrLabel = stubcc.masm.moveWithPatch(ImmPtr(NULL), Registers::ArgReg1);
@@ -5217,15 +5209,26 @@ mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slow, bool *tramp
 
 #ifdef JS_MONOIC
     ic.jumpTarget = target;
-    ic.trampoline = false;
-
-    if (!frame.consistentRegisters(target)) {
-        ic.trampoline = true;
-        ic.trampolineStart = stubcc.masm.label();
-    }
+    ic.fastTrampoline = !consistent;
+    ic.trampolineStart = stubcc.masm.label();
 
     traceICs[index] = ic;
 #endif
+
+    /*
+     * Jump past the tracer call if the trace has been blacklisted. We still make
+     * a trace IC in such cases, in case it is un-blacklisted later.
+     */
+    if (JSOp(*target) == JSOP_NOTRACE) {
+        if (consistent) {
+            if (!jumpInScript(j, target))
+                return false;
+        } else {
+            stubcc.linkExitDirect(j, stubcc.masm.label());
+        }
+        if (slow)
+            slow->linkTo(stubcc.masm.label(), &stubcc.masm);
+    }
 
     /*
      * Reload any registers needed at the head of the loop. Note that we didn't
