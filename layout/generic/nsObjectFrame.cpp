@@ -1093,7 +1093,7 @@ nsObjectFrame::FixupWindow(const nsSize& aSize)
 }
 
 nsresult
-nsObjectFrame::CallSetWindow()
+nsObjectFrame::CallSetWindow(PRBool aCheckIsHidden)
 {
   NPWindow *win = nsnull;
  
@@ -1111,7 +1111,7 @@ nsObjectFrame::CallSetWindow()
   mInstanceOwner->FixUpPluginWindow(ePluginPaintDisable);
 #endif
 
-  if (IsHidden())
+  if (aCheckIsHidden && IsHidden())
     return NS_ERROR_FAILURE;
 
   // refresh the plugin port as well
@@ -3335,7 +3335,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::SetEventModel(PRInt32 eventModel)
 NS_IMETHODIMP nsPluginInstanceOwner::SetWindow()
 {
   NS_ENSURE_TRUE(mObjectFrame, NS_ERROR_NULL_POINTER);
-  return mObjectFrame->CallSetWindow();
+  return mObjectFrame->CallSetWindow(PR_FALSE);
 }
 
 NPError nsPluginInstanceOwner::ShowNativeContextMenu(NPMenu* menu, void* event)

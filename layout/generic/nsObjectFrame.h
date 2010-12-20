@@ -221,7 +221,7 @@ protected:
   /**
    * Sets up the plugin window and calls SetWindow on the plugin.
    */
-  nsresult CallSetWindow();
+  nsresult CallSetWindow(PRBool aCheckIsHidden = PR_TRUE);
 
   PRBool IsFocusable(PRInt32 *aTabIndex = nsnull, PRBool aWithMouse = PR_FALSE);
 
