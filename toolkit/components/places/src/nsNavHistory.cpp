@@ -5967,18 +5967,6 @@ nsNavHistory::ResultsAsList(mozIStorageStatement* statement,
   return NS_OK;
 }
 
-static PRInt64
-GetAgeInDays(PRTime aNormalizedNow, PRTime aDate)
-{
-  PRTime dateMidnight = NormalizeTimeRelativeToday(aDate);
-  // if the visit time is in the future
-  // treat as "today" see bug #385867
-  if (dateMidnight > aNormalizedNow)
-    return 0;
-  else
-    return ((aNormalizedNow - dateMidnight) / USECS_PER_DAY);
-}
-
 const PRInt64 UNDEFINED_URN_VALUE = -1;
 
 // Create a urn (like
