@@ -1176,12 +1176,15 @@ PluginInstanceChild::PluginWindowProc(HWND hWnd,
         return 0;
     }
 
+    LRESULT res = CallWindowProc(self->mPluginWndProc, hWnd, message, wParam,
+                                 lParam);
+
     // Make sure capture is released by the child on mouse events. Fixes a
     // problem with flash full screen mode mouse input. Appears to be
     // caused by a bug in flash, since we are not setting the capture
     // on the window. (In non-oopp land, we would set and release via
     // widget for other reasons.)
-    switch(message) {    
+    switch (message) {
       case WM_LBUTTONDOWN:
       case WM_MBUTTONDOWN:
       case WM_RBUTTONDOWN:
@@ -1191,9 +1194,6 @@ PluginInstanceChild::PluginWindowProc(HWND hWnd,
       ReleaseCapture();
       break;
     }
-
-    LRESULT res = CallWindowProc(self->mPluginWndProc, hWnd, message, wParam,
-                                 lParam);
 
     if (message == WM_CLOSE)
         self->DestroyPluginWindow();
