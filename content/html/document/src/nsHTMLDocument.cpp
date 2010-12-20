@@ -2524,11 +2524,10 @@ nsHTMLDocument::GetSelection(nsAString& aReturn)
 {
   aReturn.Truncate();
 
-  nsCOMPtr<nsIConsoleService> consoleService
-    (do_GetService("@mozilla.org/consoleservice;1"));
-
-  if (consoleService) {
-    consoleService->LogStringMessage(NS_LITERAL_STRING("Deprecated method document.getSelection() called.  Please use window.getSelection() instead.").get());
+  nsCOMPtr<nsIJSContextStack> stack = do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+  JSContext* ccx = nsnull;
+  if (stack && NS_SUCCEEDED(stack->Peek(&ccx)) && ccx) {
+    JS_ReportWarning(ccx, "Deprecated method document.getSelection() called.  Please use window.getSelection() instead.");
   }
 
   nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(GetScopeObject());
