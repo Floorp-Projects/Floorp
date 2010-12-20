@@ -896,10 +896,10 @@ static void
 DisableTraceHint(VMFrame &f, ic::TraceICInfo &tic)
 {
     Repatcher repatcher(f.jit());
-    UpdateTraceHintSingle(repatcher, tic.traceHint, tic.jumpTarget);
+    UpdateTraceHintSingle(repatcher, tic.traceHint, tic.fastTarget);
 
     if (tic.hasSlowTraceHint)
-        UpdateTraceHintSingle(repatcher, tic.slowTraceHint, tic.jumpTarget);
+        UpdateTraceHintSingle(repatcher, tic.slowTraceHint, tic.slowTarget);
 }
 
 static void

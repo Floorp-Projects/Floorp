@@ -143,7 +143,8 @@ struct TraceICInfo {
     TraceICInfo() {}
 
     JSC::CodeLocationLabel stubEntry;
-    JSC::CodeLocationLabel jumpTarget;
+    JSC::CodeLocationLabel fastTarget;
+    JSC::CodeLocationLabel slowTarget;
     JSC::CodeLocationJump traceHint;
     JSC::CodeLocationJump slowTraceHint;
 #ifdef DEBUG
