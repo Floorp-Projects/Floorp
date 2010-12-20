@@ -8679,20 +8679,22 @@ JS_REQUIRES_STACK RecordingStatus
 TraceRecorder::inc(Value& v, jsint incr, bool pre)
 {
     LIns* v_ins = get(&v);
-    CHECK_STATUS(inc(v, v_ins, incr, pre));
+    Value dummy;
+    CHECK_STATUS(inc(v, v_ins, dummy, incr, pre));
     set(&v, v_ins);
     return RECORD_CONTINUE;
 }
 
 /*
  * On exit, v_ins is the incremented unboxed value, and the appropriate value
- * (pre- or post-increment as described by pre) is stacked.
+ * (pre- or post-increment as described by pre) is stacked.  v_out is set to
+ * the value corresponding to v_ins.
  */
 JS_REQUIRES_STACK RecordingStatus
-TraceRecorder::inc(const Value &v, LIns*& v_ins, jsint incr, bool pre)
+TraceRecorder::inc(const Value &v, LIns*& v_ins, Value &v_out, jsint incr, bool pre)
 {
     LIns* v_after;
-    CHECK_STATUS(incHelper(v, v_ins, v_after, incr));
+    CHECK_STATUS(incHelper(v, v_ins, v_out, v_after, incr));
 
     const JSCodeSpec& cs = js_CodeSpec[*cx->regs->pc];
     JS_ASSERT(cs.ndefs == 1);
@@ -8703,9 +8705,13 @@ TraceRecorder::inc(const Value &v, LIns*& v_ins, jsint incr, bool pre)
 
 /*
  * Do an increment operation without storing anything to the stack.
+ *
+ * v_after is an out param whose value corresponds to the instruction the
+ * v_ins_after out param gets set to.
  */
 JS_REQUIRES_STACK RecordingStatus
-TraceRecorder::incHelper(const Value &v, LIns*& v_ins, LIns*& v_after, jsint incr)
+TraceRecorder::incHelper(const Value &v, LIns*& v_ins, Value &v_after,
+                         LIns*& v_ins_after, jsint incr)
 {
     // FIXME: Bug 606071 on making this work for objects.
     if (!v.isPrimitive())
@@ -8714,10 +8720,12 @@ TraceRecorder::incHelper(const Value &v, LIns*& v_ins, LIns*& v_after, jsint inc
     // We need to modify |v_ins| the same way relational() modifies
     // its RHS and LHS.
     if (v.isUndefined()) {
-        v_after = w.immd(js_NaN);
+        v_ins_after = w.immd(js_NaN);
+        v_after.setDouble(js_NaN);
         v_ins = w.immd(js_NaN);
     } else if (v.isNull()) {
-        v_after = w.immd(incr);
+        v_ins_after = w.immd(incr);
+        v_after.setDouble(incr);
         v_ins = w.immd(0.0);
     } else {
         if (v.isBoolean()) {
@@ -8737,7 +8745,8 @@ TraceRecorder::incHelper(const Value &v, LIns*& v_ins, LIns*& v_after, jsint inc
         AutoValueRooter tvr(cx);
         *tvr.addr() = v;
         ValueToNumber(cx, tvr.value(), &num);
-        v_after = alu(LIR_addd, num, incr, v_ins, w.immd(incr));
+        v_ins_after = alu(LIR_addd, num, incr, v_ins, w.immd(incr));
+        v_after.setDouble(num + incr);
     }
 
     return RECORD_CONTINUE;
@@ -8761,10 +8770,11 @@ TraceRecorder::incProp(jsint incr, bool pre)
         RETURN_STOP_A("incProp on invalid slot");
 
     Value& v = obj->getSlotRef(slot);
-    CHECK_STATUS_A(inc(v, v_ins, incr, pre));
+    Value v_after;
+    CHECK_STATUS_A(inc(v, v_ins, v_after, incr, pre));
 
     LIns* slots_ins = NULL;
-    stobj_set_slot(obj, obj_ins, slot, slots_ins, v, v_ins);
+    stobj_set_slot(obj, obj_ins, slot, slots_ins, v_after, v_ins);
     return ARECORD_CONTINUE;
 }
 
@@ -8782,8 +8792,9 @@ TraceRecorder::incElem(jsint incr, bool pre)
         CHECK_STATUS(denseArrayElement(l, r, vp, v_ins, addr_ins, snapshot(BRANCH_EXIT)));
         if (!addr_ins) // if we read a hole, abort
             return RECORD_STOP;
-        CHECK_STATUS(inc(*vp, v_ins, incr, pre));
-        box_value_into(*vp, v_ins, DSlotsAddress(addr_ins));
+        Value v_after;
+        CHECK_STATUS(inc(*vp, v_ins, v_after, incr, pre));
+        box_value_into(v_after, v_ins, DSlotsAddress(addr_ins));
         return RECORD_CONTINUE;
     }
 
@@ -11787,24 +11798,25 @@ TraceRecorder::incName(jsint incr, bool pre)
 {
     Value* vp;
     LIns* v_ins;
-    LIns* v_after;
+    LIns* v_ins_after;
     NameResult nr;
 
     CHECK_STATUS_A(name(vp, v_ins, nr));
     Value v = nr.tracked ? *vp : nr.v;
-    CHECK_STATUS_A(incHelper(v, v_ins, v_after, incr));
-    LIns* v_result = pre ? v_after : v_ins;
+    Value v_after;
+    CHECK_STATUS_A(incHelper(v, v_ins, v_after, v_ins_after, incr));
+    LIns* v_ins_result = pre ? v_ins_after : v_ins;
     if (nr.tracked) {
-        set(vp, v_after);
-        stack(0, v_result);
+        set(vp, v_ins_after);
+        stack(0, v_ins_result);
         return ARECORD_CONTINUE;
     }
 
     if (!nr.obj->isCall())
         RETURN_STOP_A("incName on unsupported object class");
 
-    CHECK_STATUS_A(setCallProp(nr.obj, nr.obj_ins, nr.shape, v_after, v));
-    stack(0, v_result);
+    CHECK_STATUS_A(setCallProp(nr.obj, nr.obj_ins, nr.shape, v_ins_after, v_after));
+    stack(0, v_ins_result);
     return ARECORD_CONTINUE;
 }
 
