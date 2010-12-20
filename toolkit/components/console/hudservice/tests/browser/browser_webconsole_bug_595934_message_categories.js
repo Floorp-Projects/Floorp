@@ -94,6 +94,16 @@ const TESTS = [
     category: "CSS Parser",
     matchString: "foobarCanvasCssParser",
   },
+  { // #17
+    file: "test-bug-595934-getselection.html",
+    category: "content javascript",
+    matchString: "getSelection",
+  },
+  { // #18
+    file: "test-bug-595934-image.html",
+    category: "Image",
+    matchString: "corrupt",
+  },
 ];
 
 let pos = -1;

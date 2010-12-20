@@ -159,6 +159,10 @@ _BROWSER_TEST_PAGES = \
 	test-bug-595934-malformedxml-external.xml \
 	test-bug-595934-empty-getelementbyid.html \
 	test-bug-595934-empty-getelementbyid.js \
+	test-bug-595934-getselection.html \
+	test-bug-595934-getselection.js \
+	test-bug-595934-image.html \
+	test-bug-595934-image.jpg \
 	test-bug-597136-external-script-errors.html \
 	test-bug-597136-external-script-errors.js \
 	test-bug-613013-console-api-iframe.html \

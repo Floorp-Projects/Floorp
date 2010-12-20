@@ -120,6 +120,14 @@ public:
   nsresult UnlockImage();
   nsresult RequestDecode();
 
+  inline void SetWindowID(PRUint64 aWindowId) {
+    mWindowId = aWindowId;
+  }
+
+  inline PRUint64 WindowID() const {
+    return mWindowId;
+  }
+
 private:
   friend class imgCacheEntry;
   friend class imgRequestProxy;
@@ -224,6 +232,10 @@ private:
   nsCategoryCache<nsIContentSniffer> mImageSniffers;
   nsCOMPtr<nsIAsyncVerifyRedirectCallback> mRedirectCallback;
   nsCOMPtr<nsIChannel> mNewRedirectChannel;
+
+  // Originating outer window ID. Used for error reporting.
+  PRUint64 mWindowId;
+
   // Sometimes consumers want to do things before the image is ready. Let them,
   // and apply the action when the image becomes available.
   PRPackedBool mDecodeRequested : 1;
