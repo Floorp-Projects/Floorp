@@ -1228,7 +1228,7 @@ nsSVGSVGElement::DidAnimatePreserveAspectRatio()
   InvalidateTransformNotifyFrame();
 }
 
-nsSVGPreserveAspectRatio *
+SVGAnimatedPreserveAspectRatio *
 nsSVGSVGElement::GetPreserveAspectRatio()
 {
   return &mPreserveAspectRatio;

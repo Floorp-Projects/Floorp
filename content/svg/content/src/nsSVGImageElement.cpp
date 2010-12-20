@@ -44,6 +44,8 @@
 #include "imgIDecoderObserver.h"
 #include "gfxContext.h"
 
+using namespace mozilla;
+
 nsSVGElement::LengthInfo nsSVGImageElement::sLengthInfo[4] =
 {
   { &nsGkAtoms::x, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, nsSVGUtils::X },
@@ -258,7 +260,7 @@ nsSVGImageElement::GetLengthInfo()
                               NS_ARRAY_LENGTH(sLengthInfo));
 }
 
-nsSVGPreserveAspectRatio *
+SVGAnimatedPreserveAspectRatio *
 nsSVGImageElement::GetPreserveAspectRatio()
 {
   return &mPreserveAspectRatio;

@@ -44,6 +44,8 @@
 #include "nsSVGPatternElement.h"
 #include "nsIFrame.h"
 
+using namespace mozilla;
+
 //--------------------- Patterns ------------------------
 
 nsSVGElement::LengthInfo nsSVGPatternElement::sLengthInfo[4] =
@@ -271,7 +273,7 @@ nsSVGPatternElement::GetViewBox()
   return &mViewBox;
 }
 
-nsSVGPreserveAspectRatio *
+SVGAnimatedPreserveAspectRatio *
 nsSVGPatternElement::GetPreserveAspectRatio()
 {
   return &mPreserveAspectRatio;
