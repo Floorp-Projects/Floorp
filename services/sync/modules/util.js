@@ -1310,10 +1310,25 @@ let Utils = {
   normalizePassphrase: function normalizePassphrase(pp) {
     // Short var name... have you seen the lines below?!
     pp = pp.toLowerCase();
-    if (pp.length == 31 && [1, 7, 13, 19, 25].every(function(i) pp[i] == '-'))
+
+    // 20-char sync key.
+    if (pp.length == 23 &&
+        [5, 11, 17].every(function(i) pp[i] == '-')) {
+
+      return pp.slice(0, 5) + pp.slice(6, 11)
+             + pp.slice(12, 17) + pp.slice(18, 23);
+    }
+
+    // "Modern" 26-char key.
+    if (pp.length == 31 &&
+        [1, 7, 13, 19, 25].every(function(i) pp[i] == '-')) {
+
       return pp.slice(0, 1) + pp.slice(2, 7)
              + pp.slice(8, 13) + pp.slice(14, 19)
              + pp.slice(20, 25) + pp.slice(26, 31);
+    }
+
+    // Something else -- just return.
     return pp;
   },
 

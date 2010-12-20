@@ -44,11 +44,15 @@ function run_test() {
               "a-bcdef-ghijk-mnpab-cdefg-");
   // Cuts off.
   do_check_eq(Utils.hyphenatePartialPassphrase("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa").length, 31);
-        
-  
 
   _("Normalize passphrase recognizes hyphens.");
   do_check_eq(Utils.normalizePassphrase(hyphenated), pp);
+  
+  _("Normalizing 20-char passphrases.");
+  do_check_eq(Utils.normalizePassphrase("abcde-abcde-abcde-abcde"),
+              "abcdeabcdeabcdeabcde");
+  do_check_eq(Utils.normalizePassphrase("a-bcde-abcde-abcde-abcde"),
+              "a-bcde-abcde-abcde-abcde");
 
   _("Passphrase strength calculated according to the NIST algorithm.");
   do_check_eq(Utils.passphraseStrength(""), 0);
