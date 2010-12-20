@@ -5274,6 +5274,8 @@ PresShell::RenderDocument(const nsRect& aRect, PRUint32 aFlags,
 
   NS_ENSURE_TRUE(!(aFlags & RENDER_IS_UNTRUSTED), NS_ERROR_NOT_IMPLEMENTED);
 
+  nsAutoScriptBlocker blockScripts;
+
   // Set up the rectangle as the path in aThebesContext
   gfxRect r(0, 0,
             nsPresContext::AppUnitsToFloatCSSPixels(aRect.width),
