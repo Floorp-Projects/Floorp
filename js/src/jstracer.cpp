@@ -10476,8 +10476,8 @@ TraceRecorder::newArguments(LIns* callee_ins, bool strict)
     if (strict) {
         LIns* argsData_ins = w.getObjPrivatizedSlot(argsobj_ins, JSObject::JSSLOT_ARGS_DATA);
         ptrdiff_t slotsOffset = offsetof(ArgumentsData, slots);
-        cx->fp()->forEachCanonicalActualArg(BoxArg(this, ArgsSlotsAddress(argsData_ins,
-                                                                          slotsOffset)));
+        cx->fp()->forEachCanonicalActualArg(BoxArg(this, ArgsSlotOffsetAddress(argsData_ins,
+                                                                               slotsOffset)));
     }
 
     return argsobj_ins;
@@ -12586,7 +12586,8 @@ TraceRecorder::guardNotHole(LIns *argsobj_ins, LIns *idx_ins)
     LIns* vp_ins = w.addp(argsData_ins, slotOffset_ins);
 
     guard(false,
-          w.name(is_boxed_magic(ArgsSlotsAddress(vp_ins), JS_ARGS_HOLE), "guard(not deleted arg)"),
+          w.name(is_boxed_magic(ArgsSlotOffsetAddress(vp_ins), JS_ARGS_HOLE),
+                 "guard(not deleted arg)"),
           MISMATCH_EXIT);
 }
 
