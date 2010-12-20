@@ -1006,11 +1006,6 @@ function WaitForTestEnd() {
             !gWindowUtils.isMozAfterPaintPending) {
             LogWarning("Internal error: descendant frame generated a MozAfterPaint event, but the root document doesn't have one!");
         }
-
-        // XXX this should not be necessary!
-        var utils = gBrowser.contentWindow.QueryInterface(CI.nsIInterfaceRequestor)
-                    .getInterface(CI.nsIDOMWindowUtils);
-        utils.processUpdates();
     }
 
     function AfterPaintListener(event) {
