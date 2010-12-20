@@ -304,34 +304,43 @@ struct JITScript {
                                    .ncode values may not be NULL. */
     size_t          nNmapPairs; /* number of entries in nmap */
 
+    void            *invokeEntry;       /* invoke address */
+    void            *fastEntry;         /* cached entry, fastest */
+    void            *arityCheckEntry;   /* arity check address */
+
+    /* To minimize the size of this struct on 64-bit, put uint32s after all pointers. */
     js::mjit::CallSite *callSites;
-    uint32          nCallSites;
 #ifdef JS_MONOIC
     ic::MICInfo     *mics;      /* MICs in this script. */
-    uint32          nMICs;      /* number of MonoICs */
     ic::CallICInfo  *callICs;   /* CallICs in this script. */
-    uint32          nCallICs;   /* number of call ICs */
     ic::EqualityICInfo *equalityICs;
-    uint32          nEqualityICs;
     ic::TraceICInfo *traceICs;
-    uint32          nTraceICs;
+#endif
+#ifdef JS_POLYIC
+    ic::PICInfo     *pics;      /* PICs in this script */
+    ic::GetElementIC *getElems;
+    ic::SetElementIC *setElems;
+#endif
 
+    uint32          nCallSites:31;
+    bool            singleStepMode:1;   /* compiled in "single step mode" */
+#ifdef JS_MONOIC
+    uint32          nMICs;      /* number of MonoICs */
+    uint32          nCallICs;   /* number of call ICs */
+    uint32          nEqualityICs;
+    uint32          nTraceICs;
+#endif
+#ifdef JS_POLYIC
+    uint32          nPICs;      /* number of PolyICs */
+    uint32          nGetElems;
+    uint32          nSetElems;
+#endif
+
+#ifdef JS_MONOIC
     // Additional ExecutablePools that IC stubs were generated into.
     typedef Vector<JSC::ExecutablePool *, 0, SystemAllocPolicy> ExecPoolVector;
     ExecPoolVector execPools;
 #endif
-#ifdef JS_POLYIC
-    ic::PICInfo     *pics;      /* PICs in this script */
-    uint32          nPICs;      /* number of PolyICs */
-    ic::GetElementIC *getElems;
-    uint32           nGetElems;
-    ic::SetElementIC *setElems;
-    uint32           nSetElems;
-#endif
-    void            *invokeEntry;       /* invoke address */
-    void            *fastEntry;         /* cached entry, fastest */
-    void            *arityCheckEntry;   /* arity check address */
-    bool            singleStepMode;     /* compiled in "single step mode" */
 
     ~JITScript();
 
