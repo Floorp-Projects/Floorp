@@ -1309,7 +1309,8 @@ let Utils = {
 
   normalizePassphrase: function normalizePassphrase(pp) {
     // Short var name... have you seen the lines below?!
-    pp = pp.toLowerCase();
+    // Allow leading and trailing whitespace.
+    pp = pp.toLowerCase().replace(/^\s+/, "").replace(/\s+$/, "");
 
     // 20-char sync key.
     if (pp.length == 23 &&

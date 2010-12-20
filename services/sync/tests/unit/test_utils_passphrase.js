@@ -47,12 +47,25 @@ function run_test() {
 
   _("Normalize passphrase recognizes hyphens.");
   do_check_eq(Utils.normalizePassphrase(hyphenated), pp);
-  
+
+  _("Skip whitespace.");
+  do_check_eq("aaaaaaaaaaaaaaaaaaaaaaaaaa", Utils.normalizePassphrase("aaaaaaaaaaaaaaaaaaaaaaaaaa  "));
+  do_check_eq("aaaaaaaaaaaaaaaaaaaaaaaaaa", Utils.normalizePassphrase("	 aaaaaaaaaaaaaaaaaaaaaaaaaa"));
+  do_check_eq("aaaaaaaaaaaaaaaaaaaaaaaaaa", Utils.normalizePassphrase("    aaaaaaaaaaaaaaaaaaaaaaaaaa  "));
+  do_check_eq("aaaaaaaaaaaaaaaaaaaaaaaaaa", Utils.normalizePassphrase("    a-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa  "));
+  do_check_true(Utils.isPassphrase("aaaaaaaaaaaaaaaaaaaaaaaaaa  "));
+  do_check_true(Utils.isPassphrase("	 aaaaaaaaaaaaaaaaaaaaaaaaaa"));          
+  do_check_true(Utils.isPassphrase("    aaaaaaaaaaaaaaaaaaaaaaaaaa  "));       
+  do_check_true(Utils.isPassphrase("    a-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa  "));  
+  do_check_false(Utils.isPassphrase("    -aaaaa-aaaaa-aaaaa-aaaaa-aaaaa  "));  
+
   _("Normalizing 20-char passphrases.");
   do_check_eq(Utils.normalizePassphrase("abcde-abcde-abcde-abcde"),
               "abcdeabcdeabcdeabcde");
   do_check_eq(Utils.normalizePassphrase("a-bcde-abcde-abcde-abcde"),
               "a-bcde-abcde-abcde-abcde");
+  do_check_eq(Utils.normalizePassphrase(" abcde-abcde-abcde-abcde "),
+              "abcdeabcdeabcdeabcde");
 
   _("Passphrase strength calculated according to the NIST algorithm.");
   do_check_eq(Utils.passphraseStrength(""), 0);
