@@ -325,10 +325,10 @@ ReportUseOfDeprecatedMethod(nsIDocument *aDoc, const char* aWarning)
   nsContentUtils::ReportToConsole(nsContentUtils::eDOM_PROPERTIES,
                                   aWarning,
                                   nsnull, 0,
-                                  aDoc->GetDocumentURI(),
+                                  nsnull,
                                   EmptyString(), 0, 0,
                                   nsIScriptError::warningFlag,
-                                  "DOM3 Load");
+                                  "DOM3 Load", aDoc);
 }
 
 NS_IMETHODIMP
