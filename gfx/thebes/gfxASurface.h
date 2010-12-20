@@ -160,39 +160,6 @@ public:
       return nsnull;
     }
 
-    enum TextQuality {
-        /**
-         * TEXT_QUALITY_OK means that text is always rendered to a
-         * transparent surface just as well as it would be rendered to an
-         * opaque surface. This would normally only be true if
-         * subpixel antialiasing is disabled or if the platform's
-         * transparent surfaces support component alpha.
-         */
-        TEXT_QUALITY_OK,
-        /**
-         * TEXT_QUALITY_OK_OVER_OPAQUE_PIXELS means that text is rendered
-         * to a transparent surface just as well as it would be rendered to an
-         * opaque surface, but only if all the pixels the text is drawn
-         * over already have opaque alpha values.
-         */
-        TEXT_QUALITY_OK_OVER_OPAQUE_PIXELS,
-        /**
-         * TEXT_QUALITY_BAD means that text is rendered
-         * to a transparent surface worse than it would be rendered to an
-         * opaque surface, even if all the pixels the text is drawn
-         * over already have opaque alpha values.
-         */
-        TEXT_QUALITY_BAD
-    };
-    /**
-     * Determine how well text would be rendered in transparent surfaces that
-     * are similar to this surface.
-     */
-    virtual TextQuality GetTextQualityInTransparentSurfaces()
-    {
-        return TEXT_QUALITY_BAD;
-    }
-
     int CairoStatus();
 
     /* Make sure that the given dimensions don't overflow a 32-bit signed int
