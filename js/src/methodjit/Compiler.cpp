@@ -5345,7 +5345,7 @@ mjit::Compiler::jsop_callelem_slow()
  * For any locals or stack values which we know to be integers but are treated as
  * doubles by the type inference, convert to double.  These will be assumed to be
  * doubles at control flow join points.  This function must be called before branching
- * to another opcode, and before any jumps to the slow path.
+ * to another opcode.
  */
 void
 mjit::Compiler::fixDoubleTypes(Uses uses)
