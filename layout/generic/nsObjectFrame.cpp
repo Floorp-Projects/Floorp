@@ -1251,6 +1251,12 @@ nsDisplayPlugin::GetBounds(nsDisplayListBuilder* aBuilder)
 {
   nsRect r = mFrame->GetContentRect() - mFrame->GetPosition() +
     ToReferenceFrame();
+  if (aBuilder->IsForPluginGeometry()) {
+    // Return the geometry we want, not the geometry we have (which is based
+    // on the surface the plugin last gave us)
+    return r;
+  }
+
   nsObjectFrame* f = static_cast<nsObjectFrame*>(mFrame);
   if (mozilla::LAYER_ACTIVE == f->GetLayerState(aBuilder, nsnull)) {
     ImageContainer* c = f->GetImageContainer();
