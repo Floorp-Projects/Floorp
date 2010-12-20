@@ -399,11 +399,14 @@ nsResizerFrame::AdjustDimensions(PRInt32* aPos, PRInt32* aSize,
 {
   switch(aResizerDirection)
   {
-    case -1: // only move the window when the direction is top and/or left
+    case -1:
+      // only move the window when the direction is top and/or left
       *aPos+= aMovement;
-    case 1: // falling through: the window is resized in both cases
+      // falling through: the window is resized in both cases
+    case 1:
       *aSize+= aResizerDirection*aMovement;
-      if (*aSize < 1) // use one as a minimum size or the element could disappear
+      // use one as a minimum size or the element could disappear
+      if (*aSize < 1)
         *aSize = 1;
   }
 }
