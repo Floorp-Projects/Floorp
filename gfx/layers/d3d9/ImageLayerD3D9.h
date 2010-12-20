@@ -100,7 +100,7 @@ class THEBES_API PlanarYCbCrImageD3D9 : public PlanarYCbCrImage,
                                         public ImageD3D9
 {
 public:
-  PlanarYCbCrImageD3D9(LayerManagerD3D9 *aManager);
+  PlanarYCbCrImageD3D9();
   ~PlanarYCbCrImageD3D9() {}
 
   virtual void SetData(const Data &aData);
@@ -109,7 +109,7 @@ public:
    * Upload the data from out mData into our textures. For now we use this to
    * make sure the textures are created and filled on the main thread.
    */
-  void AllocateTextures();
+  void AllocateTextures(IDirect3DDevice9 *aDevice);
   /*
    * XXX
    * Free the textures, we call this from the main thread when we're done
