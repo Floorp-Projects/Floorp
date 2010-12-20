@@ -13,7 +13,7 @@ div {
 var i = 32;
 function test() {
   document.getElementById("a").style.width = (i*10)+'px';
-  document.getElementById("b").style.opacity = i/64.0 + 0.5;
+  document.getElementById("b").style.opacity = 0.999 - i/64.0;
   i--;
   if (i >= 0) {
     setTimeout(test, 10);
