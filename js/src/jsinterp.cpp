@@ -4632,7 +4632,7 @@ BEGIN_CASE(JSOP_SETELEM)
     jsid id;
     FETCH_ELEMENT_ID(obj, -2, id);
     Value rval;
-    script->typeMonitorAssign(cx, regs.pc, obj, id, regs.sp[-1]);
+    script->typeMonitorAssign(cx, regs.pc, obj, id, regs.sp[-1], !JSID_IS_INT(id));
     do {
         if (obj->isDenseArray() && JSID_IS_INT(id)) {
             jsuint length = obj->getDenseArrayInitializedLength();

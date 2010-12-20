@@ -590,7 +590,7 @@ stubs::SetElem(VMFrame &f)
     if (!FetchElementId(f, obj, idval, id, &regs.sp[-2]))
         THROW();
 
-    f.script()->typeMonitorAssign(cx, regs.pc, obj, id, retval);
+    f.script()->typeMonitorAssign(cx, regs.pc, obj, id, retval, !JSID_IS_INT(id));
 
     do {
         if (obj->isDenseArray() && JSID_IS_INT(id)) {

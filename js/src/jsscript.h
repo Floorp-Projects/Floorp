@@ -311,7 +311,7 @@ struct JSScript {
 
     /* Monitor a bytecode assigning to an object's property, if necessary. */
     inline void typeMonitorAssign(JSContext *cx, const jsbytecode *pc,
-                                  JSObject *obj, jsid id, const js::Value &rval);
+                                  JSObject *obj, jsid id, const js::Value &rval, bool force = false);
 
     /* Override the value of an argument to this script by assigning to arguments[...]. */
     inline void typeSetArgument(JSContext *cx, unsigned arg, const js::Value &value);
