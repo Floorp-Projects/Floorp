@@ -443,9 +443,6 @@ Layer::PrintInfo(nsACString& aTo, const char* aPrefix)
   if (GetContentFlags() & CONTENT_OPAQUE) {
     aTo += " [opaqueContent]";
   }
-  if (GetContentFlags() & CONTENT_NO_TEXT) {
-    aTo += " [noText]";
-  }
   if (GetContentFlags() & CONTENT_NO_TEXT_OVER_TRANSPARENT) {
     aTo += " [noTextOverTransparent]";
   }
