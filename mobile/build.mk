@@ -52,7 +52,7 @@ tier_app_dirs += extensions
 endif
 
 ifdef MOZ_SERVICES_SYNC
-tier_app_dirs += services/sync
+tier_app_dirs += services
 endif
 
 tier_app_dirs += \
