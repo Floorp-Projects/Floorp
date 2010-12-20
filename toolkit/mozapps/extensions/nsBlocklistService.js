@@ -644,12 +644,12 @@ Blocklist.prototype = {
           continue;
         switch (element.localName) {
         case "emItems":
-          this._processItemNodes(element.childNodes, "em",
-                                 this._handleEmItemNode);
+          this._addonEntries = this._processItemNodes(element.childNodes, "em",
+                                                      this._handleEmItemNode);
           break;
         case "pluginItems":
-          this._processItemNodes(element.childNodes, "plugin",
-                                 this._handleEmItemNode);
+          this._pluginEntries = this._processItemNodes(element.childNodes, "plugin",
+                                                       this._handlePluginItemNode);
           break;
         default:
           Services.obs.notifyObservers(element,
