@@ -138,6 +138,14 @@ public:
    */
   void UpdateViewportBounds(const nsIntSize& aViewportSize);
 
+  /**
+   * If an SVG image's helper document has a pending notification for an
+   * override on the root node's "preserveAspectRatio" attribute, then this
+   * method will flush that notification so that the image can paint correctly.
+   * (First, though, it sets the mIgnoreInvalidation flag so that we won't
+   * notify the image's observers and trigger unwanted repaint-requests.)
+   */
+  void FlushPreserveAspectRatioOverride();
 
   /**
    * Returns a PRBool indicating whether the document has any SMIL animations.
