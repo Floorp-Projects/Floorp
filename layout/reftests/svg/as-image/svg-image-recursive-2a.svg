@@ -1,0 +1,10 @@
+<!-- The SVG file referenced in our <image> tag uses itself as an <image>.
+     Currently, we don't paint recursively-referenced images beyond the first
+     level.  So, the <image> element inside our helper document doesn't get
+     painted, and we end up only showing one blue circle. -->
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="100" height="100">
+  <image width="100" height="100"
+         xlink:href="svg-image-recursive-1a.svg"/>
+</svg>
