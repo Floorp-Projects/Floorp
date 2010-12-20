@@ -468,7 +468,7 @@ BasicThebesLayer::Paint(gfxContext* aContext,
   float opacity = GetEffectiveOpacity();
 
   if (!BasicManager()->IsRetained() ||
-      (opacity == 1.0 && !canUseOpaqueSurface &&
+      (!canUseOpaqueSurface &&
        !(mContentFlags & CONTENT_NO_TEXT_OVER_TRANSPARENT) &&
        !MustRetainContent())) {
     mValidRegion.SetEmpty();
