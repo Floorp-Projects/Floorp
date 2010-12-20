@@ -55,7 +55,9 @@ CPPSRCS		= \
 		xptcstubs.cpp \
 		$(NULL)
 LOCAL_INCLUDES	= -I$(srcdir)/../unix
+ifneq ($(TARGET_CPU),x86_64)
 DEFINES		+= -DMOZ_USE_STDCALL -DMOZ_NEED_LEADING_UNDERSCORE
+endif
 else
 
 # FIXME: bug 413019
