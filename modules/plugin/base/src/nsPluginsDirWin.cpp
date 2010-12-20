@@ -160,18 +160,14 @@ static void FreeStringArray(PRUint32 variants, char ** array)
   PR_Free(array);
 }
 
-PRBool CanLoadPlugin(const char* binaryPath)
+static PRBool CanLoadPlugin(const PRUnichar* aBinaryPath)
 {
 #if defined(_M_IX86) || defined(_M_X64) || defined(_M_IA64)
   PRBool canLoad = PR_FALSE;
 
-  int len = MultiByteToWideChar(CP_UTF8, 0, binaryPath, -1, NULL, 0);
-  WCHAR *wBinaryPath = new WCHAR[len];
-  MultiByteToWideChar(CP_UTF8, 0, binaryPath, -1, wBinaryPath, len);
-  HANDLE file = CreateFileW(wBinaryPath, GENERIC_READ,
+  HANDLE file = CreateFileW(aBinaryPath, GENERIC_READ,
                             FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
                             OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-  delete[] wBinaryPath;
   if (file != INVALID_HANDLE_VALUE) {
     HANDLE map = CreateFileMappingW(file, NULL, PAGE_READONLY, 0,
                                     GetFileSize(file, NULL), NULL);
@@ -329,16 +325,12 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info, PRLibrary **outLibrary)
   if (!mPlugin)
     return NS_ERROR_NULL_POINTER;
 
-  nsCAutoString fullPathUTF8;
-  if (NS_FAILED(rv = mPlugin->GetNativePath(fullPathUTF8)))
-    return rv;
-  
-  if (!CanLoadPlugin(fullPathUTF8.get()))
-    return NS_ERROR_FAILURE;
-
   nsAutoString fullPath;
   if (NS_FAILED(rv = mPlugin->GetPath(fullPath)))
     return rv;
+
+  if (!CanLoadPlugin(fullPath.get()))
+    return NS_ERROR_FAILURE;
 
   nsAutoString fileName;
   if (NS_FAILED(rv = mPlugin->GetLeafName(fileName)))
@@ -371,7 +363,7 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info, PRLibrary **outLibrary)
     info.fMimeTypeArray = MakeStringArray(info.fVariantCount, mimeType);
     info.fMimeDescriptionArray = MakeStringArray(info.fVariantCount, mimeDescription);
     info.fExtensionArray = MakeStringArray(info.fVariantCount, extensions);
-    info.fFullPath = PL_strdup(fullPathUTF8.get());
+    info.fFullPath = PL_strdup(NS_ConvertUTF16toUTF8(fullPath).get());
     info.fFileName = PL_strdup(NS_ConvertUTF16toUTF8(fileName).get());
     info.fVersion = GetVersion(verbuf);
 
