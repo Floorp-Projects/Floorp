@@ -196,6 +196,11 @@ SVGDocumentWrapper::IsAnimated()
 void
 SVGDocumentWrapper::StartAnimation()
 {
+  // Can be called for animated images during shutdown, after we've
+  // already Observe()'d XPCOM shutdown and cleared out our mViewer pointer.
+  if (!mViewer)
+    return;
+
   nsIDocument* doc = mViewer->GetDocument();
   if (doc) {
 #ifdef MOZ_SMIL
@@ -208,10 +213,8 @@ SVGDocumentWrapper::StartAnimation()
 void
 SVGDocumentWrapper::StopAnimation()
 {
-  // This method gets called for animated images during shutdown, after we've
+  // Can be called for animated images during shutdown, after we've
   // already Observe()'d XPCOM shutdown and cleared out our mViewer pointer.
-  // When that happens, we need to bail out early, or else the
-  // mViewer->GetDocument() call below will crash on a null pointer.
   if (!mViewer)
     return;
 
