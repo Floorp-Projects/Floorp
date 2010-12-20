@@ -148,6 +148,9 @@ public:
 
   virtual already_AddRefed<gfxASurface> GetAsSurface();
 
+  IDirect3DDevice9 *device() { return mDevice; }
+  void SetDevice(IDirect3DDevice9 *aDevice);
+
   /**
    * Uploading a texture may fail if the screen is locked. If this happens,
    * we need to save the backing surface and retry when we are asked to paint.
