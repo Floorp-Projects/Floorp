@@ -82,7 +82,10 @@ function generateImageElementForParams(aX, aY, aWidth, aHeight,
 // Returns a <g> element filled with a grid of <image> elements which each
 // have the specified aWidth & aHeight and which use all possible values of
 // preserveAspectRatio.
-function generateImageGrid(aHref, aWidth, aHeight) {
+//
+// The final "aBonusPARVal" argument (if specified) is used as the
+// preserveAspectRatio value on a bonus <image> element, added at the end.
+function generateImageGrid(aHref, aWidth, aHeight, aBonusPARVal) {
   var grid = document.createElementNS(SVGNS, "g");
   var y = 0;
   var x = 0;
@@ -105,6 +108,18 @@ function generateImageGrid(aHref, aWidth, aHeight) {
       x += IMAGE_OFFSET;
     }
   }
+
+  if (aBonusPARVal) {
+    // Add one final entry with "bonus" pAR value.
+    y += IMAGE_OFFSET;
+    x = 0;
+    var border = generateBorderRect(x, y, aWidth, aHeight);
+    var image  = generateImageElementForParams(x, y, aWidth, aHeight,
+                                               aHref, aBonusPARVal, "");
+    grid.appendChild(border);
+    grid.appendChild(image);
+  }
+
   return grid;
 }
 
@@ -136,11 +151,15 @@ function generateUseElementForParams(aTargetURI, aX, aY, aWidth, aHeight) {
   use.setAttribute("height", aHeight);
   return use;
 }
+
 // Returns a <g> element filled with a grid of <use> elements which each
 // have the specified aWidth & aHeight and which reference <symbol> elements
 // with all possible values of preserveAspectRatio.  Each <symbol> contains
 // a <use> that links to the given URI, aHref.
-function generateSymbolGrid(aHref, aWidth, aHeight) {
+//
+// The final "aBonusPARVal" argument (if specified) is used as the
+// preserveAspectRatio value on a bonus <symbol> element, added at the end.
+function generateSymbolGrid(aHref, aWidth, aHeight, aBonusPARVal) {
   var grid = document.createElementNS(SVGNS, "g");
   var y = 0;
   var x = 0;
@@ -167,5 +186,21 @@ function generateSymbolGrid(aHref, aWidth, aHeight) {
       x += IMAGE_OFFSET;
     }
   }
+
+  if (aBonusPARVal) {
+    // Add one final entry with "bonus" pAR value.
+    y += IMAGE_OFFSET;
+    x = 0;
+    var border = generateBorderRect(x, y, aWidth, aHeight);
+    var symbolID = "symbol_Bonus";
+    var symbol = generateSymbolElementForParams(symbolID, aHref,
+                                                aBonusPARVal, "");
+    var use = generateUseElementForParams("#" + symbolID,
+                                          x, y, aWidth, aHeight);
+    grid.appendChild(symbol); // This isn't painted
+    grid.appendChild(border);
+    grid.appendChild(use);
+  }
+
   return grid;
 }
