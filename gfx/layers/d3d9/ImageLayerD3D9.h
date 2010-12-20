@@ -158,6 +158,11 @@ public:
   virtual IDirect3DTexture9* GetOrCreateTexture();
   const gfxIntSize& GetSize() { return mSize; }
 
+  bool HasAlpha() {
+    return mCachedSurface->GetContentType() ==
+      gfxASurface::CONTENT_COLOR_ALPHA;
+  }
+
 private:
   gfxIntSize mSize;
   nsRefPtr<gfxASurface> mCachedSurface;

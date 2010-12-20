@@ -315,7 +315,11 @@ ImageLayerD3D9::RenderLayer()
 
     SetShaderTransformAndOpacity();
 
-    mD3DManager->SetShaderMode(DeviceManagerD3D9::RGBALAYER);
+    if (cairoImage->HasAlpha()) {
+      mD3DManager->SetShaderMode(DeviceManagerD3D9::RGBALAYER);
+    } else {
+      mD3DManager->SetShaderMode(DeviceManagerD3D9::RGBLAYER);
+    }
 
     device()->SetTexture(0, cairoImage->GetOrCreateTexture());
     device()->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
