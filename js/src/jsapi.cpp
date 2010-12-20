@@ -4118,8 +4118,10 @@ JS_NewArrayObject(JSContext *cx, jsint length, jsval *vector)
     assertSameCompartment(cx, JSValueArray(vector, vector ? (jsuint)length : 0));
 
 #ifdef DEBUG
-    for (int i = 0; i < length; i++)
-        JS_ASSERT(!Valueify(vector[i]).isMagic(JS_ARRAY_HOLE));
+    if (vector) {
+        for (int i = 0; i < length; i++)
+            JS_ASSERT(!Valueify(vector[i]).isMagic(JS_ARRAY_HOLE));
+    }
 #endif
 
     return NewDenseCopiedArray(cx, (jsuint)length, Valueify(vector));

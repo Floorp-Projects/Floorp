@@ -3475,10 +3475,13 @@ NewDenseCopiedArray(JSContext *cx, uintN length, Value *vp, JSObject *proto)
     JSObject* obj = NewArray<true>(cx, length, proto);
     JS_ASSERT(obj->getDenseArrayCapacity() >= length);
 
-    if (vp)
+    if (vp) {
         memcpy(obj->getDenseArrayElements(), vp, length * sizeof(Value));
+        obj->setDenseArrayInitializedLength(length);
+    } else {
+        obj->setDenseArrayInitializedLength(0);
+    }
 
-    obj->setDenseArrayInitializedLength(length);
     return obj;
 }
 
