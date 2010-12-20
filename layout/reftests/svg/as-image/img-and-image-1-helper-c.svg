@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="300" height="200">
+  <!-- FIRST COLUMN: image "a" (has animated preserveAspectRatio val) -->
+  <g>
+    <g>
+      <image xlink:href="img-and-image-1-helper-a.svg" width="100" height="40"
+             preserveAspectRatio="xMinYMin slice"/>
+    </g>
+    <g transform="translate(0,50)">
+      <image xlink:href="img-and-image-1-helper-a.svg" width="100" height="40"
+             preserveAspectRatio="none"/>
+    </g>
+    <g transform="translate(0,100)">
+      <image xlink:href="img-and-image-1-helper-a.svg" width="80" height="40"
+             preserveAspectRatio="xMaxYMax meet"/>
+    </g>
+    <g transform="translate(0,150)">
+      <image xlink:href="img-and-image-1-helper-a.svg" width="80" height="40"
+             preserveAspectRatio="defer xMinYMin meet"/>
+    </g>
+  </g>
+  <!-- SECOND COLUMN: image "b" (has static preserveAspectRatio val) -->
+  <g transform="translate(150,0)">
+    <g>
+      <image xlink:href="img-and-image-1-helper-b.svg" width="100" height="40"
+             preserveAspectRatio="xMinYMin slice"/>
+    </g>
+    <g transform="translate(0,50)">
+      <image xlink:href="img-and-image-1-helper-b.svg" width="100" height="40"
+             preserveAspectRatio="none"/>
+    </g>
+    <g transform="translate(0,100)">
+      <image xlink:href="img-and-image-1-helper-b.svg" width="80" height="40"
+             preserveAspectRatio="xMaxYMax meet"/>
+    </g>
+    <g transform="translate(0,150)">
+      <image xlink:href="img-and-image-1-helper-b.svg" width="80" height="40"
+             preserveAspectRatio="defer xMinYMin meet"/>
+    </g>
+  </g>
+</svg>
