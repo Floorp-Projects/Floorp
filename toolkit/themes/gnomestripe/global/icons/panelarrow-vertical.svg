@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="34"
+     height="17">
+  <path d="M 0,17 L 17,0 34,17 z"
+        fill="-moz-Dialog"/>
+</svg>
