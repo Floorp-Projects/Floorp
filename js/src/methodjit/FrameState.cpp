@@ -651,20 +651,25 @@ FrameState::syncForBranch(jsbytecode *target, Uses uses)
         if (!freeRegs.hasReg(reg))
             relocateReg(reg, alloc, uses);
 
+        /*
+         * It is possible that the fe is known to be a double currently but is not
+         * known to be a double at the join point (it may have non-double values
+         * assigned elsewhere in the script). It is *not* possible for the fe to
+         * be a non-double currently but a double at the join point --- the Compiler
+         * must have called fixDoubleTypes before branching.
+         */
+
         if (reg.isReg()) {
-            JS_ASSERT_IF(fe->isType(JSVAL_TYPE_DOUBLE), fe->isConstant());
+            if (fe->isType(JSVAL_TYPE_DOUBLE)) {
+                syncFe(fe);
+                forgetAllRegs(fe);
+                fe->resetSynced();
+            }
 
             RegisterID nreg = reg.reg();
             if (fe->data.inMemory()) {
                 masm.loadPayload(addressOf(fe), nreg);
             } else if (fe->isConstant()) {
-                if (fe->isType(JSVAL_TYPE_DOUBLE)) {
-                    /*
-                     * At the join point we will forget this is a double and won't have
-                     * the full type tag anymore, so make sure the type is synced.
-                     */
-                    syncFe(fe);
-                }
                 masm.loadValuePayload(fe->getValue(), nreg);
             } else {
                 JS_ASSERT(fe->data.inRegister() && fe->data.reg() != nreg);

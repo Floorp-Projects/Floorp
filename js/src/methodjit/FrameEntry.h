@@ -255,8 +255,8 @@ class FrameEntry
 
     inline bool dataInRegister(AnyRegisterID reg) const {
         JS_ASSERT(!copy);
-        return (data.inRegister() && data.reg() == reg.reg())
-            || (data.inFPRegister() && data.fpreg() == reg.fpreg());
+        return (data.inRegister() && reg.isReg() && data.reg() == reg.reg())
+            || (data.inFPRegister() && !reg.isReg() && data.fpreg() == reg.fpreg());
     }
 
   private:
