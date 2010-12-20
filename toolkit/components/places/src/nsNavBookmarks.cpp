@@ -118,6 +118,45 @@ SearchBookmarkForKeyword(nsTrimInt64HashKey::KeyType aKey,
   return PL_DHASH_NEXT;
 }
 
+template<typename Method, typename DataType>
+class AsyncGetBookmarksForURI : public AsyncStatementCallback
+{
+public:
+  AsyncGetBookmarksForURI(nsNavBookmarks* aBookmarksSvc,
+                          Method aCallback,
+                          DataType aData)
+  : mBookmarksSvc(aBookmarksSvc)
+  , mCallback(aCallback)
+  , mData(aData)
+  {
+    nsCOMPtr<mozIStorageStatement> stmt =
+      aBookmarksSvc->GetStatementById(DB_GET_BOOKMARKS_FOR_URI);
+    if (stmt) {
+      (void)URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), aData.uri);
+      nsCOMPtr<mozIStoragePendingStatement> pendingStmt;
+      (void)stmt->ExecuteAsync(this, getter_AddRefs(pendingStmt));
+    }
+  }
+
+  NS_IMETHOD HandleResult(mozIStorageResultSet* aResultSet)
+  {
+    nsCOMPtr<mozIStorageRow> row;
+    while (NS_SUCCEEDED(aResultSet->GetNextRow(getter_AddRefs(row))) && row) {
+      nsresult rv = row->GetInt64(0, &mData.itemId);
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (mCallback) {
+        ((*mBookmarksSvc).*mCallback)(mData);
+      }
+    }
+    return NS_OK;
+  }
+
+private:
+  nsRefPtr<nsNavBookmarks> mBookmarksSvc;
+  Method mCallback;
+  DataType mData;
+};
+
 } // Anonymous namespace.
 
 
@@ -2868,8 +2907,24 @@ nsNavBookmarks::RemoveObserver(nsINavBookmarkObserver* aObserver)
   return mObservers.RemoveWeakElement(aObserver);
 }
 
+void
+nsNavBookmarks::NotifyItemVisited(ItemVisitData aData)
+{
+  NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers, nsINavBookmarkObserver,
+                   OnItemVisited(aData.itemId, aData.visitId, aData.time));
+}
 
-// nsNavBookmarks::nsINavHistoryObserver
+void
+nsNavBookmarks::NotifyItemChanged(ItemChangeData aData)
+{
+  NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers, nsINavBookmarkObserver,
+                   OnItemChanged(aData.itemId, aData.property,
+                                 aData.isAnnotation, aData.newValue,
+                                 aData.lastModified, aData.itemType));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//// nsNavBookmarks::nsINavHistoryObserver
 
 NS_IMETHODIMP
 nsNavBookmarks::OnBeginUpdateBatch()
@@ -2895,27 +2950,18 @@ nsNavBookmarks::OnEndUpdateBatch()
 
 
 NS_IMETHODIMP
-nsNavBookmarks::OnVisit(nsIURI* aURI, PRInt64 aVisitID, PRTime aTime,
+nsNavBookmarks::OnVisit(nsIURI* aURI, PRInt64 aVisitId, PRTime aTime,
                         PRInt64 aSessionID, PRInt64 aReferringID,
                         PRUint32 aTransitionType, PRUint32* aAdded)
 {
-  // If the page is bookmarked, we need to notify observers
-  PRBool bookmarked = PR_FALSE;
-  IsBookmarked(aURI, &bookmarked);
-  if (bookmarked) {
-    // query for all bookmarks for that URI, notify for each
-    nsTArray<PRInt64> bookmarks;
+  // If the page is bookmarked, notify observers for each associated bookmark.
+  ItemVisitData visitData;
+  visitData.uri = aURI;
+  visitData.visitId = aVisitId;
+  visitData.time = aTime;
 
-    nsresult rv = GetBookmarkIdsForURITArray(aURI, bookmarks);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (bookmarks.Length()) {
-      for (PRUint32 i = 0; i < bookmarks.Length(); i++)
-        NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                         nsINavBookmarkObserver,
-                         OnItemVisited(bookmarks[i], aVisitID, aTime));
-    }
-  }
+  nsRefPtr< AsyncGetBookmarksForURI<ItemVisitMethod, ItemVisitData> > notifier =
+    new AsyncGetBookmarksForURI<ItemVisitMethod, ItemVisitData>(this, &nsNavBookmarks::NotifyItemVisited, visitData);
   return NS_OK;
 }
 
@@ -2930,26 +2976,16 @@ nsNavBookmarks::OnBeforeDeleteURI(nsIURI* aURI)
 NS_IMETHODIMP
 nsNavBookmarks::OnDeleteURI(nsIURI* aURI)
 {
-  // If the page is bookmarked, we need to notify observers
-  PRBool bookmarked = PR_FALSE;
-  IsBookmarked(aURI, &bookmarked);
-  if (bookmarked) {
-    // query for all bookmarks for that URI, notify for each 
-    nsTArray<PRInt64> bookmarks;
+  // If the page is bookmarked, notify observers for each associated bookmark.
+  ItemChangeData changeData;
+  changeData.uri = aURI;
+  changeData.property = NS_LITERAL_CSTRING("cleartime");
+  changeData.isAnnotation = PR_FALSE;
+  changeData.lastModified = 0;
+  changeData.itemType = TYPE_BOOKMARK;
 
-    nsresult rv = GetBookmarkIdsForURITArray(aURI, bookmarks);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (bookmarks.Length()) {
-      for (PRUint32 i = 0; i < bookmarks.Length(); i ++)
-        NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                         nsINavBookmarkObserver,
-                         OnItemChanged(bookmarks[i],
-                                       NS_LITERAL_CSTRING("cleartime"),
-                                       PR_FALSE, EmptyCString(), 0,
-                                       TYPE_BOOKMARK));
-    }
-  }
+  nsRefPtr< AsyncGetBookmarksForURI<ItemChangeMethod, ItemChangeData> > notifier =
+    new AsyncGetBookmarksForURI<ItemChangeMethod, ItemChangeData>(this, &nsNavBookmarks::NotifyItemChanged, changeData);
   return NS_OK;
 }
 
@@ -2977,6 +3013,14 @@ nsNavBookmarks::OnPageChanged(nsIURI* aURI, PRUint32 aWhat,
 {
   nsresult rv;
   if (aWhat == nsINavHistoryObserver::ATTRIBUTE_FAVICON) {
+    ItemChangeData changeData;
+    changeData.uri = aURI;
+    changeData.property = NS_LITERAL_CSTRING("favicon");
+    changeData.isAnnotation = PR_FALSE;
+    changeData.newValue = NS_ConvertUTF16toUTF8(aValue);
+    changeData.lastModified = 0;
+    changeData.itemType = TYPE_BOOKMARK;
+
     // Favicons may be set to either pure URIs or to folder URIs
     PRBool isPlaceURI;
     rv = aURI->SchemeIs("place", &isPlaceURI);
@@ -2994,33 +3038,14 @@ nsNavBookmarks::OnPageChanged(nsIURI* aURI, PRUint32 aWhat,
       rv = history->QueryStringToQueryArray(spec, &queries, getter_AddRefs(options));
       NS_ENSURE_SUCCESS(rv, rv);
 
-      NS_ENSURE_STATE(queries.Count() == 1);
-      NS_ENSURE_STATE(queries[0]->Folders().Length() == 1);
-
-      NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                       nsINavBookmarkObserver,
-                       OnItemChanged(queries[0]->Folders()[0],
-                                     NS_LITERAL_CSTRING("favicon"),
-                                     PR_FALSE,
-                                     NS_ConvertUTF16toUTF8(aValue),
-                                     0, TYPE_BOOKMARK));
+      if (queries.Count() == 1 && queries[0]->Folders().Length() == 1) {
+        changeData.itemId = queries[0]->Folders()[0];
+        NotifyItemChanged(changeData);
+      }
     }
     else {
-      // query for all bookmarks for that URI, notify for each 
-      nsTArray<PRInt64> bookmarks;
-      rv = GetBookmarkIdsForURITArray(aURI, bookmarks);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      if (bookmarks.Length()) {
-        for (PRUint32 i = 0; i < bookmarks.Length(); i ++)
-          NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                           nsINavBookmarkObserver,
-                           OnItemChanged(bookmarks[i],
-                                         NS_LITERAL_CSTRING("favicon"),
-                                         PR_FALSE,
-                                         NS_ConvertUTF16toUTF8(aValue),
-                                         0, TYPE_BOOKMARK));
-      }
+      nsRefPtr< AsyncGetBookmarksForURI<ItemChangeMethod, ItemChangeData> > notifier =
+        new AsyncGetBookmarksForURI<ItemChangeMethod, ItemChangeData>(this, &nsNavBookmarks::NotifyItemChanged, changeData);
     }
   }
   return NS_OK;
