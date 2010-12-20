@@ -44,6 +44,9 @@
 
 #include "nsString.h"
 #include "nsCOMPtr.h"
+#include "mozilla/css/Loader.h"
+#include "nsCSSStyleSheet.h"
+
 class nsIUnicharInputStream;
 
 // XXX turn this off for minimo builds
@@ -142,7 +145,8 @@ class nsCSSScanner {
   // Either aInput or (aBuffer and aCount) must be set.
   void Init(nsIUnicharInputStream* aInput, 
             const PRUnichar *aBuffer, PRUint32 aCount,
-            nsIURI* aURI, PRUint32 aLineNumber);
+            nsIURI* aURI, PRUint32 aLineNumber,
+            nsCSSStyleSheet* aSheet, mozilla::css::Loader* aLoader);
   void Close();
 
   static PRBool InitGlobals();
@@ -244,6 +248,10 @@ protected:
   PRUint32 mErrorLineNumber, mColNumber, mErrorColNumber;
   nsFixedString mError;
   PRUnichar mErrorBuf[200];
+  PRUint64 mWindowID;
+  PRBool mWindowIDCached;
+  nsCSSStyleSheet* mSheet;
+  mozilla::css::Loader* mLoader;
 #endif
 };
 

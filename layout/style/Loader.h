@@ -330,6 +330,11 @@ public:
   void SetEnabled(PRBool aEnabled) { mEnabled = aEnabled; }
 
   /**
+   * Get the document we live for. May return null.
+   */
+  nsIDocument* GetDocument() const { return mDocument; }
+
+  /**
    * Return true if this loader has pending loads (ones that would send
    * notifications to an nsICSSLoaderObserver attached to this loader).
    * If called from inside nsICSSLoaderObserver::StyleSheetLoaded, this will
