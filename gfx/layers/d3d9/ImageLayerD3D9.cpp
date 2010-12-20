@@ -589,7 +589,8 @@ CairoImageD3D9::GetOrCreateTexture()
 already_AddRefed<gfxASurface>
 CairoImageD3D9::GetAsSurface()
 {
-  return nsnull;
+  nsRefPtr<gfxASurface> surface = mCachedSurface;
+  return surface.forget();
 }
 
 } /* layers */
