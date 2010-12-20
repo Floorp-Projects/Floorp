@@ -944,7 +944,9 @@ function shouldWaitForExplicitPaintWaiters() {
 }
 
 function shouldWaitForPendingPaints() {
-    return gWindowUtils.isMozAfterPaintPending;
+    // if gCurrentCanvas is null, we're not taking snapshots so there is
+    // no need to wait for pending paints to be flushed.
+    return gCurrentCanvas && gWindowUtils.isMozAfterPaintPending;
 }
 
 function shouldWaitForReftestWaitRemoval() {
