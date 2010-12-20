@@ -91,6 +91,7 @@
 #include "mozilla/dom/Element.h"
 #include "gfxUtils.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 gfxASurface *nsSVGUtils::gThebesComputationalSurface = nsnull;
@@ -779,7 +780,7 @@ nsSVGUtils::GetViewBoxTransform(nsSVGElement* aElement,
                                 float aViewportWidth, float aViewportHeight,
                                 float aViewboxX, float aViewboxY,
                                 float aViewboxWidth, float aViewboxHeight,
-                                const nsSVGPreserveAspectRatio &aPreserveAspectRatio)
+                                const SVGAnimatedPreserveAspectRatio &aPreserveAspectRatio)
 {
   NS_ASSERTION(aViewboxWidth > 0, "viewBox width must be greater than zero!");
   NS_ASSERTION(aViewboxHeight > 0, "viewBox height must be greater than zero!");

@@ -44,6 +44,8 @@
 #include "nsSVGMarkerElement.h"
 #include "gfxMatrix.h"
 
+using namespace mozilla;
+
 nsSVGElement::LengthInfo nsSVGMarkerElement::sLengthInfo[4] =
 {
   { &nsGkAtoms::refX, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, nsSVGUtils::X },
@@ -371,7 +373,7 @@ nsSVGMarkerElement::GetViewBox()
   return &mViewBox;
 }
 
-nsSVGPreserveAspectRatio *
+SVGAnimatedPreserveAspectRatio *
 nsSVGMarkerElement::GetPreserveAspectRatio()
 {
   return &mPreserveAspectRatio;

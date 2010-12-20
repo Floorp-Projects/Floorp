@@ -86,9 +86,6 @@ class Element;
 } // namespace dom
 } // namespace mozilla
 
-// XXXdholbert TEMPORARY TYPEDEF
-typedef mozilla::SVGAnimatedPreserveAspectRatio nsSVGPreserveAspectRatio;
-
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
@@ -222,6 +219,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGFilterProperty, NS_ISVGFILTERPROPERTY_IID)
 class nsSVGUtils
 {
 public:
+  typedef mozilla::SVGAnimatedPreserveAspectRatio SVGAnimatedPreserveAspectRatio;
+
   /*
    * Get the parent element of an nsIContent
    */
@@ -386,7 +385,7 @@ public:
                       float aViewportWidth, float aViewportHeight,
                       float aViewboxX, float aViewboxY,
                       float aViewboxWidth, float aViewboxHeight,
-                      const nsSVGPreserveAspectRatio &aPreserveAspectRatio);
+                      const SVGAnimatedPreserveAspectRatio &aPreserveAspectRatio);
 
   /* Paint SVG frame with SVG effects - aDirtyRect is the area being
    * redrawn, in device pixel coordinates relative to the outer svg */

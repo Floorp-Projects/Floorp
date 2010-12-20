@@ -49,11 +49,9 @@ class nsSVGElement;
 class gfxContext;
 class gfxASurface;
 
-// XXXdholbert TEMPORARY TYPEDEF
 namespace mozilla {
 class SVGAnimatedPreserveAspectRatio;
-}
-typedef mozilla::SVGAnimatedPreserveAspectRatio nsSVGPreserveAspectRatio;
+} // namespace mozilla
 
 typedef nsSVGPaintServerFrame  nsSVGPatternFrameBase;
 
@@ -78,6 +76,8 @@ public:
                           const gfxRect *aOverrideBounds);
 
 public:
+  typedef mozilla::SVGAnimatedPreserveAspectRatio SVGAnimatedPreserveAspectRatio;
+
   // nsSVGContainerFrame methods:
   virtual gfxMatrix GetCanvasTM();
 
@@ -127,7 +127,7 @@ protected:
   gfxMatrix GetPatternTransform();
 
   const nsSVGViewBox &GetViewBox();
-  const nsSVGPreserveAspectRatio &GetPreserveAspectRatio();
+  const SVGAnimatedPreserveAspectRatio &GetPreserveAspectRatio();
 
 
   nsresult PaintPattern(gfxASurface **surface,
