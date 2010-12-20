@@ -10,11 +10,7 @@
 static JSBool
 stringToId(JSContext *cx, const char *s, jsid *idp)
 {
-    char *buf = JS_strdup(cx, s);
-    if (!buf)
-        return false;
-
-    JSString *str = JS_NewString(cx, buf, strlen(s));
+    JSString *str = JS_NewStringCopyZ(cx, s);
     if (!str)
         return false;
 

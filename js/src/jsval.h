@@ -268,8 +268,9 @@ typedef enum JSWhyMagic
     JS_GENERIC_MAGIC             /* for local use */
 } JSWhyMagic;
 
-typedef struct JSString JSString;
-typedef struct JSObject JSObject;
+typedef struct JSString     JSString;
+typedef struct JSFlatString JSFlatString;
+typedef struct JSObject     JSObject;
 
 #if defined(IS_LITTLE_ENDIAN)
 # if JS_BITS_PER_WORD == 32
@@ -353,7 +354,7 @@ typedef union jsval_layout
 static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_DOUBLE_IMPL(jsval_layout l)
 {
-    return (uint32)l.s.tag < (uint32)JSVAL_TAG_CLEAR;
+    return (uint32)l.s.tag <= (uint32)JSVAL_TAG_CLEAR;
 }
 
 static JS_ALWAYS_INLINE jsval_layout
@@ -791,10 +792,10 @@ extern "C++"
 # endif /* defined(__cplusplus) */
 
 /* Internal helper macros */
-#define JSVAL_BITS(v)    (v.asBits)
+#define JSVAL_BITS(v)    ((v).asBits)
 #define JSVAL_FROM_LAYOUT(l) (l)
 #define IMPL_TO_JSVAL(v) (v)
-#define JSID_BITS(id)    (id.asBits)
+#define JSID_BITS(id)    ((id).asBits)
 
 #else /* defined(JS_USE_JSVAL_JSID_STRUCT_TYPES) */
 

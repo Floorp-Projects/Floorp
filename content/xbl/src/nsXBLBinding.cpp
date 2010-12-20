@@ -1094,78 +1094,85 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
             nsCxPusher pusher;
             pusher.Push(cx);
 
-            nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
-            jsval v;
+            nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
+            nsIXPConnect *xpc = nsContentUtils::XPConnect();
             nsresult rv =
-              nsContentUtils::WrapNative(cx, scope, mBoundElement, &v,
-                                         getter_AddRefs(wrapper));
+              xpc->GetWrappedNativeOfNativeObject(cx, scope, mBoundElement,
+                                                  NS_GET_IID(nsISupports),
+                                                  getter_AddRefs(wrapper));
             if (NS_FAILED(rv))
               return;
 
-            JSObject* scriptObject = JSVAL_TO_OBJECT(v);
+            JSObject* scriptObject;
+            if (wrapper)
+                wrapper->GetJSObject(&scriptObject);
+            else
+                scriptObject = nsnull;
 
-            // XXX Stay in sync! What if a layered binding has an
-            // <interface>?!
-            // XXXbz what does that comment mean, really?  It seems to date
-            // back to when there was such a thing as an <interface>, whever
-            // that was...
+            if (scriptObject) {
+              // XXX Stay in sync! What if a layered binding has an
+              // <interface>?!
+              // XXXbz what does that comment mean, really?  It seems to date
+              // back to when there was such a thing as an <interface>, whever
+              // that was...
 
-            // Find the right prototype.
-            JSObject* base = scriptObject;
-            JSObject* proto;
-            JSAutoRequest ar(cx);
-            JSAutoEnterCompartment ac;
-            if (!ac.enter(cx, scriptObject)) {
-              return;
-            }
+              // Find the right prototype.
+              JSObject* base = scriptObject;
+              JSObject* proto;
+              JSAutoRequest ar(cx);
+              JSAutoEnterCompartment ac;
+              if (!ac.enter(cx, scriptObject)) {
+                return;
+              }
 
-            for ( ; true; base = proto) { // Will break out on null proto
-              proto = ::JS_GetPrototype(cx, base);
-              if (!proto) {
+              for ( ; true; base = proto) { // Will break out on null proto
+                proto = ::JS_GetPrototype(cx, base);
+                if (!proto) {
+                  break;
+                }
+
+                JSClass* clazz = ::JS_GET_CLASS(cx, proto);
+                if (!clazz ||
+                    (~clazz->flags &
+                     (JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS)) ||
+                    JSCLASS_RESERVED_SLOTS(clazz) != 1 ||
+                    clazz->resolve != (JSResolveOp)XBLResolve ||
+                    clazz->finalize != XBLFinalize) {
+                  // Clearly not the right class
+                  continue;
+                }
+
+                nsRefPtr<nsXBLDocumentInfo> docInfo =
+                  static_cast<nsXBLDocumentInfo*>(::JS_GetPrivate(cx, proto));
+                if (!docInfo) {
+                  // Not the proto we seek
+                  continue;
+                }
+
+                jsval protoBinding;
+                if (!::JS_GetReservedSlot(cx, proto, 0, &protoBinding)) {
+                  NS_ERROR("Really shouldn't happen");
+                  continue;
+                }
+
+                if (JSVAL_TO_PRIVATE(protoBinding) != mPrototypeBinding) {
+                  // Not the right binding
+                  continue;
+                }
+
+                // Alright!  This is the right prototype.  Pull it out of the
+                // proto chain.
+                JSObject* grandProto = ::JS_GetPrototype(cx, proto);
+                ::JS_SetPrototype(cx, base, grandProto);
                 break;
               }
 
-              JSClass* clazz = ::JS_GET_CLASS(cx, proto);
-              if (!clazz ||
-                  (~clazz->flags &
-                   (JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS)) ||
-                  JSCLASS_RESERVED_SLOTS(clazz) != 1 ||
-                  clazz->resolve != (JSResolveOp)XBLResolve ||
-                  clazz->finalize != XBLFinalize) {
-                // Clearly not the right class
-                continue;
-              }
+              mPrototypeBinding->UndefineFields(cx, scriptObject);
 
-              nsRefPtr<nsXBLDocumentInfo> docInfo =
-                static_cast<nsXBLDocumentInfo*>(::JS_GetPrivate(cx, proto));
-              if (!docInfo) {
-                // Not the proto we seek
-                continue;
-              }
-              
-              jsval protoBinding;
-              if (!::JS_GetReservedSlot(cx, proto, 0, &protoBinding)) {
-                NS_ERROR("Really shouldn't happen");
-                continue;
-              }
-
-              if (JSVAL_TO_PRIVATE(protoBinding) != mPrototypeBinding) {
-                // Not the right binding
-                continue;
-              }
-
-              // Alright!  This is the right prototype.  Pull it out of the
-              // proto chain.
-              JSObject* grandProto = ::JS_GetPrototype(cx, proto);
-              ::JS_SetPrototype(cx, base, grandProto);
-              break;
+              // Don't remove the reference from the document to the
+              // wrapper here since it'll be removed by the element
+              // itself when that's taken out of the document.
             }
-
-            mPrototypeBinding->UndefineFields(cx, scriptObject);
-
-            // Don't remove the reference from the document to the
-            // wrapper here since it'll be removed by the element
-            // itself when that's taken out of the document.
           }
         }
       }

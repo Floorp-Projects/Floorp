@@ -230,6 +230,9 @@ struct CallICInfo {
     /* Jump to patch for out-of-line scripted calls. */
     uint32 oolJumpOffset   : 16;
 
+    /* Label for out-of-line call to IC function. */
+    uint32 icCallOffset    : 16;
+
     /* Offset for deep-fun check to rejoin at. */
     uint32 hotPathOffset   : 16;
 
@@ -278,7 +281,7 @@ void JS_FASTCALL NativeCall(VMFrame &f, ic::CallICInfo *ic);
 JSBool JS_FASTCALL SplatApplyArgs(VMFrame &f);
 
 void PurgeMICs(JSContext *cx, JSScript *script);
-void SweepCallICs(JSScript *script);
+void SweepCallICs(JSScript *script, bool purgeAll);
 
 } /* namespace ic */
 } /* namespace mjit */

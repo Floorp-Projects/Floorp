@@ -95,9 +95,10 @@ StatementParams::SetProperty(nsIXPConnectWrappedNative *aWrapper,
   }
   else if (JSID_IS_STRING(aId)) {
     JSString *str = JSID_TO_STRING(aId);
-    NS_ConvertUTF16toUTF8 name(reinterpret_cast<const PRUnichar *>
-                                   (::JS_GetStringChars(str)),
-                               ::JS_GetStringLength(str));
+    size_t length;
+    const jschar *chars = JS_GetStringCharsAndLength(aCtx, str, &length);
+    NS_ENSURE_TRUE(chars, NS_ERROR_UNEXPECTED);
+    NS_ConvertUTF16toUTF8 name(chars, length);
 
     // check to see if there's a parameter with this name
     nsCOMPtr<nsIVariant> variant(convertJSValToVariant(aCtx, *_vp));
@@ -211,8 +212,9 @@ StatementParams::NewResolve(nsIXPConnectWrappedNative *aWrapper,
   }
   else if (JSID_IS_STRING(aId)) {
     JSString *str = JSID_TO_STRING(aId);
-    jschar *nameChars = ::JS_GetStringChars(str);
-    size_t nameLength = ::JS_GetStringLength(str);
+    size_t nameLength;
+    const jschar *nameChars = JS_GetStringCharsAndLength(aCtx, str, &nameLength);
+    NS_ENSURE_TRUE(nameChars, NS_ERROR_UNEXPECTED);
 
     // Check to see if there's a parameter with this name, and if not, let
     // the rest of the prototype chain be checked.

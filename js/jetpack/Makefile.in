@@ -74,6 +74,11 @@ CPPSRCS = \
   JetpackActorCommon.cpp \
   $(NULL)
 
+# For nsDependentJSString
+LOCAL_INCLUDES += \
+  -I$(topsrcdir)/dom/base \
+  $(NULL)
+
 ifdef ENABLE_TESTS
 TOOL_DIRS += tests
 endif

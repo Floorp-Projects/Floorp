@@ -1385,6 +1385,18 @@ JSObject::methodShapeChange(JSContext *cx, const Shape &shape)
         }
     }
 
+    if (branded()) {
+        uintN thrashCount = getMethodThrashCount();
+        if (thrashCount < JSObject::METHOD_THRASH_COUNT_MAX) {
+            ++thrashCount;
+            setMethodThrashCount(thrashCount);
+            if (thrashCount == JSObject::METHOD_THRASH_COUNT_MAX) {
+                unbrand(cx);
+                return true;
+            }
+        }
+    }
+
     generateOwnShape(cx);
     return true;
 }
@@ -1441,8 +1453,8 @@ PrintPropertyGetterOrSetter(JSTracer *trc, char *buf, size_t bufsize)
     name = trc->debugPrintIndex ? js_setter_str : js_getter_str;
 
     if (JSID_IS_ATOM(id)) {
-        n = PutEscapedString(buf, bufsize - 1, JSID_TO_STRING(id), 0);
-        if (n < bufsize - 1)
+        n = PutEscapedString(buf, bufsize, JSID_TO_ATOM(id), 0);
+        if (n < bufsize)
             JS_snprintf(buf + n, bufsize - n, " %s", name);
     } else if (JSID_IS_INT(shape->id)) {
         JS_snprintf(buf, bufsize, "%d %s", JSID_TO_INT(id), name);
@@ -1464,8 +1476,8 @@ PrintPropertyMethod(JSTracer *trc, char *buf, size_t bufsize)
     JS_ASSERT(!JSID_IS_VOID(id));
 
     JS_ASSERT(JSID_IS_ATOM(id));
-    n = PutEscapedString(buf, bufsize - 1, JSID_TO_STRING(id), 0);
-    if (n < bufsize - 1)
+    n = PutEscapedString(buf, bufsize, JSID_TO_ATOM(id), 0);
+    if (n < bufsize)
         JS_snprintf(buf + n, bufsize - n, " method");
 }
 #endif

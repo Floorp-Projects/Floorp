@@ -492,6 +492,13 @@ js_GCThingIsMarked(void *thing, uint32 color = BLACK)
     return reinterpret_cast<Cell *>(thing)->isMarked(color);
 }
 
+/*
+ * 1/8 life for JIT code. After this number of microseconds have passed, 1/8 of all
+ * JIT code is discarded in inactive compartments, regardless of how often that
+ * code runs.
+ */
+static const int64 JIT_SCRIPT_EIGHTH_LIFETIME = 120 * 1000 * 1000;
+
 JSBool
 js_InitGC(JSRuntime *rt, uint32 maxbytes)
 {
@@ -538,6 +545,8 @@ js_InitGC(JSRuntime *rt, uint32 maxbytes)
      * (during JS engine start).
      */
     rt->setGCLastBytes(8192);
+
+    rt->gcJitReleaseTime = PRMJ_Now() + JIT_SCRIPT_EIGHTH_LIFETIME;
 
     METER(PodZero(&rt->gcStats));
     return true;
@@ -1435,8 +1444,10 @@ js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
         MarkObject(trc, fp->callObj(), "call");
     if (fp->hasArgsObj())
         MarkObject(trc, fp->argsObj(), "arguments");
-    if (fp->isScriptFrame())
+    if (fp->isScriptFrame()) {
         js_TraceScript(trc, fp->script());
+        fp->script()->compartment->active = true;
+    }
 
     MarkValue(trc, fp->returnValue(), "rval");
 }
@@ -1773,7 +1784,7 @@ js_FinalizeStringRT(JSRuntime *rt, JSString *str)
         JS_ASSERT(IsFinalizableStringKind(thingKind));
 
         /* A stillborn string has null chars, so is not valid. */
-        jschar *chars = str->flatChars();
+        jschar *chars = const_cast<jschar *>(str->flatChars());
         if (!chars)
             return;
         if (thingKind == FINALIZE_STRING) {
@@ -2035,12 +2046,29 @@ SweepCompartments(JSContext *cx, JSGCInvocationKind gckind)
     /* Delete defaultCompartment only during runtime shutdown */
     rt->defaultCompartment->marked = true;
 
+    /*
+     * Figure out how much JIT code should be released from inactive compartments.
+     * If multiple eighth-lifes have passed, compound the release interval linearly;
+     * if enough time has passed, all inactive JIT code will be released.
+     */
+    uint32 releaseInterval = 0;
+    int64 now = PRMJ_Now();
+    if (now >= rt->gcJitReleaseTime) {
+        releaseInterval = 8;
+        while (now >= rt->gcJitReleaseTime) {
+            if (--releaseInterval == 1)
+                rt->gcJitReleaseTime = now;
+            rt->gcJitReleaseTime += JIT_SCRIPT_EIGHTH_LIFETIME;
+        }
+    }
+
     while (read < end) {
         JSCompartment *compartment = (*read++);
         if (compartment->marked) {
             compartment->marked = false;
             *write++ = compartment;
-            compartment->sweep(cx);
+            /* Remove dead wrappers from the compartment map. */
+            compartment->sweep(cx, releaseInterval);
         } else {
             JS_ASSERT(compartment->freeLists.isEmpty());
             if (compartment->arenaListsAreEmpty() || gckind == GC_LAST_CONTEXT) {
@@ -2052,7 +2080,7 @@ SweepCompartments(JSContext *cx, JSGCInvocationKind gckind)
             } else {
                 compartment->marked = false;
                 *write++ = compartment;
-                compartment->sweep(cx);
+                compartment->sweep(cx, releaseInterval);
             }
         }
     }

@@ -77,6 +77,7 @@ struct JS_FRIEND_API(JSCompartment) {
 
     void                         *data;
     bool                         marked;
+    bool                         active;  // GC flag, whether there are active frames
     js::WrapperMap               crossCompartmentWrappers;
 
 #ifdef JS_METHODJIT
@@ -110,7 +111,7 @@ struct JS_FRIEND_API(JSCompartment) {
     bool wrap(JSContext *cx, js::AutoIdVector &props);
     bool wrapException(JSContext *cx);
 
-    void sweep(JSContext *cx);
+    void sweep(JSContext *cx, uint32 releaseInterval);
     void purge(JSContext *cx);
     void finishArenaLists();
     bool arenaListsAreEmpty();

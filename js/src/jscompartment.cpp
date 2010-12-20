@@ -54,7 +54,7 @@ using namespace js;
 using namespace js::gc;
 
 JSCompartment::JSCompartment(JSRuntime *rt)
-  : rt(rt), principals(NULL), data(NULL), marked(false), debugMode(rt->debugMode),
+  : rt(rt), principals(NULL), data(NULL), marked(false), active(false), debugMode(rt->debugMode),
     anynameObject(NULL), functionNamespaceObject(NULL)
 {
     JS_INIT_CLIST(&scripts);
@@ -205,7 +205,10 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
     if (vp->isString()) {
         Value orig = *vp;
         JSString *str = vp->toString();
-        JSString *wrapped = js_NewStringCopyN(cx, str->chars(), str->length());
+        const jschar *chars = str->getChars(cx);
+        if (!chars)
+            return false;
+        JSString *wrapped = js_NewStringCopyN(cx, chars, str->length());
         if (!wrapped)
             return false;
         vp->setString(wrapped);
@@ -328,8 +331,33 @@ JSCompartment::wrapException(JSContext *cx)
     return true;
 }
 
+/*
+ * Check if the pool containing the code for jit should be destroyed, per the
+ * heuristics in JSCompartment::sweep.
+ */
+static inline bool
+ScriptPoolDestroyed(JSContext *cx, mjit::JITScript *jit,
+                    uint32 releaseInterval, uint32 &counter)
+{
+    JSC::ExecutablePool *pool = jit->code.m_executablePool;
+    if (pool->m_gcNumber != cx->runtime->gcNumber) {
+        /*
+         * The m_destroy flag may have been set in a previous GC for a pool which had
+         * references we did not remove (e.g. from the compartment's ExecutableAllocator)
+         * and is still around. Forget we tried to destroy it in such cases.
+         */
+        pool->m_destroy = false;
+        pool->m_gcNumber = cx->runtime->gcNumber;
+        if (--counter == 0) {
+            pool->m_destroy = true;
+            counter = releaseInterval;
+        }
+    }
+    return pool->m_destroy;
+}
+
 void
-JSCompartment::sweep(JSContext *cx)
+JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
 {
     chunk = NULL;
     /* Remove dead wrappers from the table. */
@@ -343,17 +371,41 @@ JSCompartment::sweep(JSContext *cx)
         }
     }
 
+    /*
+     * The release interval is the frequency with which we should try to destroy
+     * executable pools by releasing all JIT code in them, zero to never destroy pools.
+     * Initialize counter so that the first pool will be destroyed, and eventually drive
+     * the amount of JIT code in never-used compartments to zero. Don't discard anything
+     * for compartments which currently have active stack frames.
+     */
+    uint32 counter = 1;
+    bool discardScripts = !active && releaseInterval != 0;
+
     for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
         JSScript *script = reinterpret_cast<JSScript *>(cursor);
-#if defined JS_METHODJIT && defined JS_MONOIC
-        if (script->hasJITCode())
-            mjit::ic::SweepCallICs(script);
-#endif
         if (script->analysis)
             script->analysis->sweep(cx);
+
+#if defined JS_METHODJIT && defined JS_MONOIC
+        if (script->hasJITCode()) {
+            mjit::ic::SweepCallICs(script, discardScripts);
+            if (discardScripts) {
+                if (script->jitNormal &&
+                    ScriptPoolDestroyed(cx, script->jitNormal, releaseInterval, counter)) {
+                    mjit::ReleaseScriptCode(cx, script);
+                    continue;
+                }
+                if (script->jitCtor &&
+                    ScriptPoolDestroyed(cx, script->jitCtor, releaseInterval, counter)) {
+                    mjit::ReleaseScriptCode(cx, script);
+                }
+            }
+        }
+#endif
     }
 
     types.sweep(cx);
+    active = false;
 }
 
 void
@@ -371,8 +423,8 @@ JSCompartment::purge(JSContext *cx)
 # endif
 # if defined JS_MONOIC
             /*
-             * MICs do not refer to data which can be GC'ed, but are sensitive
-             * to shape regeneration.
+             * MICs do not refer to data which can be GC'ed and do not generate stubs
+             * which might need to be discarded, but are sensitive to shape regeneration.
              */
             if (cx->runtime->gcRegenShapes)
                 mjit::ic::PurgeMICs(cx, script);

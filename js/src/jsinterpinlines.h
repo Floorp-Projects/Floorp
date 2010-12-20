@@ -713,10 +713,11 @@ ScriptEpilogue(JSContext *cx, JSStackFrame *fp, JSBool ok)
     if (!fp->isExecuteFrame())
         Probes::exitJSFun(cx, fp->maybeFun(), fp->maybeScript());
 
-    JSInterpreterHook hook = cx->debugHooks->callHook;
-    void* hookData;
+    JSInterpreterHook hook =
+        fp->isExecuteFrame() ? cx->debugHooks->executeHook : cx->debugHooks->callHook;
 
-    if (hook && (hookData = fp->maybeHookData()) && !fp->isExecuteFrame())
+    void* hookData;
+    if (JS_UNLIKELY(hook != NULL) && (hookData = fp->maybeHookData()))
         hook(cx, fp, JS_FALSE, &ok, hookData);
 
     /*
@@ -731,7 +732,7 @@ ScriptEpilogue(JSContext *cx, JSStackFrame *fp, JSBool ok)
      * If inline-constructing, replace primitive rval with the new object
      * passed in via |this|, and instrument this constructor invocation.
      */
-    if (fp->isConstructing()) {
+    if (fp->isConstructing() && ok) {
         if (fp->returnValue().isPrimitive())
             fp->setReturnValue(ObjectValue(fp->constructorThis()));
         JS_RUNTIME_METER(cx->runtime, constructs);

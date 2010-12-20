@@ -570,11 +570,17 @@ public:
     static nsresult Base64Encode(const nsAString &aString,
                                  nsAString &aBinaryData);
 
+    // If this returns JS_FALSE then an exception will be set on cx.
+    static JSBool Base64Encode(JSContext *cx, jsval val, jsval *out);
+
     static nsresult Base64Decode(const nsACString &aBinaryData,
                                  nsACString &aString);
 
     static nsresult Base64Decode(const nsAString &aBinaryData,
                                  nsAString &aString);
+
+    // If this returns JS_FALSE then an exception will be set on cx.
+    static JSBool Base64Decode(JSContext *cx, jsval val, jsval *out);
 
     // nsCycleCollectionParticipant
     NS_IMETHOD RootAndUnlinkJSObjects(void *p);
@@ -1010,10 +1016,17 @@ public:
         nsDependentString(char_traits::sEmptyBuffer, char_traits::sEmptyBuffer)
     { SetIsVoid(PR_TRUE); }
 
-    explicit XPCReadableJSStringWrapper(JSString *str) :
-        nsDependentString(reinterpret_cast<const PRUnichar *>(::JS_GetStringChars(str)),
-                          str->length())
-    { }
+    JSBool init(JSContext* aContext, JSString* str)
+    {
+        size_t length;
+        const jschar* chars = JS_GetStringCharsZAndLength(aContext, str, &length);
+        if (!chars)
+            return JS_FALSE;
+
+        NS_ASSERTION(IsEmpty(), "init() on initialized string");
+        new(static_cast<nsDependentString *>(this)) nsDependentString(chars, length);
+        return JS_TRUE;
+    }
 };
 
 // No virtuals
@@ -1127,7 +1140,7 @@ public:
 
     operator JSContext*() const {return GetJSContext();}
 
-    XPCReadableJSStringWrapper *NewStringWrapper(PRUnichar *str, PRUint32 len);
+    XPCReadableJSStringWrapper *NewStringWrapper(const PRUnichar *str, PRUint32 len);
     void DeleteString(nsAString *string);
 
 #ifdef XPC_IDISPATCH_SUPPORT
@@ -3330,9 +3343,6 @@ public:
     // assigned.
     static jsval ReadableToJSVal(JSContext *cx, const nsAString &readable,
                                  nsStringBuffer** sharedBuffer);
-
-    static XPCReadableJSStringWrapper *JSStringToReadable(XPCCallContext& ccx,
-                                                          JSString *str);
 
     static void ShutdownDOMStringFinalizer();
 

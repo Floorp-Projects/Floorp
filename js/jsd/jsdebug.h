@@ -804,6 +804,12 @@ JSD_SetInterruptHook(JSDContext*           jsdc,
                      void*                 callerdata);
 
 /*
+* Call the interrupt hook at least once per source line
+*/
+extern JSD_PUBLIC_API(JSBool)
+JSD_EnableSingleStepInterrupts(JSDContext* jsdc, JSDScript *jsdscript, JSBool enable);
+
+/*
 * Clear the current interrupt hook.
 */
 extern JSD_PUBLIC_API(JSBool)

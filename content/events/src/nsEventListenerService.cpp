@@ -140,7 +140,10 @@ nsEventListenerInfo::ToSource(nsAString& aResult)
         if (GetJSVal(&v)) {
           JSString* str = JS_ValueToSource(cx, v);
           if (str) {
-            aResult.Assign(nsDependentJSString(str));
+            nsDependentJSString depStr;
+            if (depStr.init(cx, str)) {
+              aResult.Assign(depStr);
+            }
           }
         }
       }

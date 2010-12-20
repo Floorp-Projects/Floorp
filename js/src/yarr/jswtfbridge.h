@@ -50,7 +50,7 @@
 #include "jstl.h"
 
 typedef jschar UChar;
-typedef JSString UString;
+typedef JSLinearString UString;
 
 template <typename T>
 class ValueDeleter

@@ -482,20 +482,21 @@ TypeSet::addArith(JSContext *cx, JSArenaPool &pool, analyze::Bytecode *code,
 class TypeConstraintTransformThis : public TypeConstraint
 {
 public:
+    analyze::Bytecode *code;
     TypeSet *target;
 
-    TypeConstraintTransformThis(TypeSet *target)
-        : TypeConstraint("transformthis"), target(target)
+    TypeConstraintTransformThis(analyze::Bytecode *code, TypeSet *target)
+        : TypeConstraint("transformthis"), code(code), target(target)
     {}
 
     void newType(JSContext *cx, TypeSet *source, jstype type);
 };
 
 void
-TypeSet::addTransformThis(JSContext *cx, JSArenaPool &pool, TypeSet *target)
+TypeSet::addTransformThis(JSContext *cx, analyze::Bytecode *code, TypeSet *target)
 {
-    JS_ASSERT(this->pool == &pool);
-    add(cx, ArenaNew<TypeConstraintTransformThis>(pool, target));
+    JS_ASSERT(this->pool == &code->pool());
+    add(cx, ArenaNew<TypeConstraintTransformThis>(code->pool(), code, target));
 }
 
 /* Subset constraint which filters out primitive types. */
@@ -676,7 +677,8 @@ PropertyAccess(JSContext *cx, analyze::Bytecode *code, TypeObject *object,
 void
 TypeConstraintProp::newType(JSContext *cx, TypeSet *source, jstype type)
 {
-    if (type == TYPE_UNKNOWN) {
+    if (type == TYPE_UNKNOWN ||
+        (!TypeIsObject(type) && !code->script->getScript()->compileAndGo)) {
         /*
          * Access on an unknown object.  Reads produce an unknown result, writes
          * need to be monitored.  Note: this isn't a problem for handling overflows
@@ -788,7 +790,7 @@ TypeConstraintCall::newType(JSContext *cx, TypeSet *source, jstype type)
              */
 
             TypeSet *thisTypes = TypeSet::make(cx, pool, "genericthis");
-            callsite->argumentTypes[0]->addTransformThis(cx, pool, thisTypes);
+            callsite->argumentTypes[0]->addTransformThis(cx, callsite->code, thisTypes);
 
             TypeCallsite *newSite = ArenaNew<TypeCallsite>(pool, callsite->code, callsite->isNew,
                                                            callsite->argumentCount - 1);
@@ -932,6 +934,11 @@ TypeConstraintTransformThis::newType(JSContext *cx, TypeSet *source, jstype type
 {
     if (type == TYPE_UNKNOWN || TypeIsObject(type)) {
         target->addType(cx, type);
+        return;
+    }
+
+    if (!code->script->getScript()->compileAndGo) {
+        target->addType(cx, TYPE_UNKNOWN);
         return;
     }
 
@@ -1852,6 +1859,15 @@ Script::addVariable(JSContext *cx, jsid id, types::Variable *&var)
     JS_ASSERT(!var);
     var = ArenaNew<types::Variable>(pool, &pool, id);
 
+    /* Augment with builtin types for the 'arguments' variable. */
+    if (fun && id == id_arguments(cx)) {
+        TypeSet *types = &var->types;
+        if (script->compileAndGo)
+            types->addType(cx, (jstype) cx->getTypeNewObject(JSProto_Object));
+        else
+            types->addType(cx, TYPE_UNKNOWN);
+    }
+
     InferSpew(ISpewOps, "addVariable: #%lu %s T%u",
               this->id, TypeIdString(id), var->types.id());
 }
@@ -1974,7 +1990,10 @@ SearchScope(JSContext *cx, Script *script, TypeStack *stack, jsid id)
         /* Function scripts have 'arguments' local variables. */
         if (id == id_arguments(cx) && script->fun) {
             TypeSet *types = script->getVariable(cx, id);
-            types->addType(cx, (jstype) cx->getTypeNewObject(JSProto_Object));
+            if (script->getScript()->compileAndGo)
+                types->addType(cx, (jstype) cx->getTypeNewObject(JSProto_Object));
+            else
+                types->addType(cx, TYPE_UNKNOWN);
             return script;
         }
 
@@ -2263,7 +2282,10 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, AnalyzeState &state)
         code->setFixed(cx, 0, TYPE_NULL);
         break;
       case JSOP_REGEXP:
-        code->setFixed(cx, 0, (jstype) cx->getTypeNewObject(JSProto_RegExp));
+        if (script->compileAndGo)
+            code->setFixed(cx, 0, (jstype) cx->getTypeNewObject(JSProto_RegExp));
+        else
+            code->setFixed(cx, 0, TYPE_UNKNOWN);
         break;
 
       case JSOP_STOP:
@@ -2566,25 +2588,14 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, AnalyzeState &state)
       }
 
       case JSOP_ARGUMENTS: {
-        /*
-         * This can show up either when the arguments array is being accessed
-         * or when there is a local variable named arguments.
-         */
-        JS_ASSERT(fun);
         TypeSet *types = getVariable(cx, id_arguments(cx));
-        types->addType(cx, (jstype) cx->getTypeNewObject(JSProto_Object));
         MergePushed(cx, pool, code, 0, types);
         break;
       }
 
-      case JSOP_ARGCNT: {
-        JS_ASSERT(fun);
-        TypeSet *types = getVariable(cx, id_arguments(cx));
-        types->addType(cx, (jstype) cx->getTypeNewObject(JSProto_Object));
-
-        types->addGetProperty(cx, code, code->pushed(0), id_length(cx));
+      case JSOP_ARGCNT:
+        code->setFixed(cx, 0, TYPE_UNKNOWN);
         break;
-      }
 
       case JSOP_SETPROP:
       case JSOP_SETMETHOD: {
@@ -2621,7 +2632,7 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, AnalyzeState &state)
 
         /* Need a new type set to model conversion of NULL to the global object. */
         TypeSet *newTypes = TypeSet::make(cx, pool, "thisprop");
-        thisTypes.addTransformThis(cx, pool, newTypes);
+        thisTypes.addTransformThis(cx, code, newTypes);
         newTypes->addGetProperty(cx, code, code->pushed(0), id);
 
         CheckNextTest(cx, code, pc);
@@ -2691,7 +2702,7 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, AnalyzeState &state)
         break;
 
       case JSOP_THIS:
-        thisTypes.addTransformThis(cx, pool, code->pushed(0));
+        thisTypes.addTransformThis(cx, code, code->pushed(0));
 
         /* 'this' refers to the parent global/scope object in non-function scripts. */
         if (!fun)
@@ -2761,10 +2772,14 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, AnalyzeState &state)
             }
         }
 
-        if (res)
-            res->addType(cx, (jstype) function);
-        else
+        if (res) {
+            if (script->compileAndGo)
+                res->addType(cx, (jstype) function);
+            else
+                res->addType(cx, TYPE_UNKNOWN);
+        } else {
             cx->compartment->types.monitorBytecode(cx, code);
+        }
         break;
       }
 
@@ -2791,51 +2806,56 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, AnalyzeState &state)
 
       case JSOP_NEWINIT:
       case JSOP_NEWARRAY:
-      case JSOP_NEWOBJECT: {
-        TypeObject *object;
-        if (op == JSOP_NEWARRAY || (op == JSOP_NEWINIT && pc[1] == JSProto_Array)) {
-            object = code->initArray;
-            jsbytecode *next = pc + GetBytecodeLength(pc);
-            if (JSOp(*next) != JSOP_ENDINIT)
-                object->possiblePackedArray = true;
+      case JSOP_NEWOBJECT:
+        if (script->compileAndGo) {
+            TypeObject *object;
+            if (op == JSOP_NEWARRAY || (op == JSOP_NEWINIT && pc[1] == JSProto_Array)) {
+                object = code->initArray;
+                jsbytecode *next = pc + GetBytecodeLength(pc);
+                if (JSOp(*next) != JSOP_ENDINIT)
+                    object->possiblePackedArray = true;
+            } else {
+                object = code->initObject;
+            }
+            code->pushed(0)->addType(cx, (jstype) object);
         } else {
-            object = code->initObject;
+            code->setFixed(cx, 0, TYPE_UNKNOWN);
         }
-
-        code->pushed(0)->addType(cx, (jstype) object);
         break;
-      }
 
       case JSOP_ENDINIT:
         break;
 
-      case JSOP_INITELEM: {
-        TypeObject *object = code->initObject;
-        JS_ASSERT(object);
+      case JSOP_INITELEM:
+        if (script->compileAndGo) {
+            TypeObject *object = code->initObject;
+            JS_ASSERT(object);
 
-        code->pushed(0)->addType(cx, (jstype) object);
+            code->pushed(0)->addType(cx, (jstype) object);
 
-        TypeSet *types;
-        if (state.popped(1).hasDouble) {
-            Value val = DoubleValue(state.popped(1).doubleValue);
-            jsid id;
-            if (!js_InternNonIntElementId(cx, NULL, val, &id))
-                JS_NOT_REACHED("Bad");
-            types = object->getProperty(cx, id, true);
+            TypeSet *types;
+            if (state.popped(1).hasDouble) {
+                Value val = DoubleValue(state.popped(1).doubleValue);
+                jsid id;
+                if (!js_InternNonIntElementId(cx, NULL, val, &id))
+                    JS_NOT_REACHED("Bad");
+                types = object->getProperty(cx, id, true);
+            } else {
+                types = object->getProperty(cx, JSID_VOID, true);
+            }
+
+            if (state.hasGetSet)
+                types->addType(cx, (jstype) cx->getTypeGetSet());
+            else if (state.hasHole)
+                cx->markTypeArrayNotPacked(object, false);
+            else
+                code->popped(0)->addSubset(cx, pool, types);
         } else {
-            types = object->getProperty(cx, JSID_VOID, true);
+            code->setFixed(cx, 0, TYPE_UNKNOWN);
         }
-
-        if (state.hasGetSet)
-            types->addType(cx, (jstype) cx->getTypeGetSet());
-        else if (state.hasHole)
-            cx->markTypeArrayNotPacked(object, false);
-        else
-            code->popped(0)->addSubset(cx, pool, types);
         state.hasGetSet = false;
         state.hasHole = false;
         break;
-      }
 
       case JSOP_GETTER:
       case JSOP_SETTER:
@@ -2847,25 +2867,28 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, AnalyzeState &state)
         break;
 
       case JSOP_INITPROP:
-      case JSOP_INITMETHOD: {
-        TypeObject *object = code->initObject;
-        JS_ASSERT(object);
+      case JSOP_INITMETHOD:
+        if (script->compileAndGo) {
+            TypeObject *object = code->initObject;
+            JS_ASSERT(object);
 
-        code->pushed(0)->addType(cx, (jstype) object);
+            code->pushed(0)->addType(cx, (jstype) object);
 
-        jsid id = GetAtomId(cx, this, pc, 0);
-        TypeSet *types = object->getProperty(cx, id, true);
+            jsid id = GetAtomId(cx, this, pc, 0);
+            TypeSet *types = object->getProperty(cx, id, true);
 
-        if (id == id___proto__(cx) || id == id_prototype(cx))
-            cx->compartment->types.monitorBytecode(cx, code);
-        else if (state.hasGetSet)
-            types->addType(cx, (jstype) cx->getTypeGetSet());
-        else
-            code->popped(0)->addSubset(cx, pool, types);
+            if (id == id___proto__(cx) || id == id_prototype(cx))
+                cx->compartment->types.monitorBytecode(cx, code);
+            else if (state.hasGetSet)
+                types->addType(cx, (jstype) cx->getTypeGetSet());
+            else
+                code->popped(0)->addSubset(cx, pool, types);
+        } else {
+            code->setFixed(cx, 0, TYPE_UNKNOWN);
+        }
         state.hasGetSet = false;
         JS_ASSERT(!state.hasHole);
         break;
-      }
 
       case JSOP_ENTERWITH:
         /*
@@ -2995,8 +3018,12 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, AnalyzeState &state)
 
       case JSOP_GENERATOR:
         if (fun) {
-            TypeObject *object = cx->getTypeNewObject(JSProto_Generator);
-            function()->returnTypes.addType(cx, (jstype) object);
+            if (script->compileAndGo) {
+                TypeObject *object = cx->getTypeNewObject(JSProto_Generator);
+                function()->returnTypes.addType(cx, (jstype) object);
+            } else {
+                function()->returnTypes.addType(cx, TYPE_UNKNOWN);
+            }
         }
         break;
 
@@ -3077,7 +3104,10 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, AnalyzeState &state)
       }
 
       case JSOP_CALLEE:
-        code->setFixed(cx, 0, (jstype) function());
+        if (script->compileAndGo)
+            code->setFixed(cx, 0, (jstype) function());
+        else
+            code->setFixed(cx, 0, TYPE_UNKNOWN);
         break;
 
       default:

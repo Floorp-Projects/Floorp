@@ -45,7 +45,9 @@
 #include "jscntxt.h"
 #include "jsprvtd.h"
 #include "jspubtd.h"
+#include "jsatom.h"
 #include "jsobj.h"
+#include "jsstr.h"
 
 /* Small arrays are dense, no matter what. */
 const uintN MIN_SPARSE_INDEX = 256;
@@ -145,8 +147,8 @@ JSObject::ensureDenseArrayElements(JSContext *cx, uintN index, uintN extra)
     return ED_OK;
 }
 
-extern JSBool
-js_StringIsIndex(JSString *str, jsuint *indexp);
+extern bool
+js_StringIsIndex(JSLinearString *str, jsuint *indexp);
 
 inline JSBool
 js_IdIsIndex(jsid id, jsuint *indexp)
@@ -163,26 +165,36 @@ js_IdIsIndex(jsid id, jsuint *indexp)
     if (JS_UNLIKELY(!JSID_IS_STRING(id)))
         return JS_FALSE;
 
-    return js_StringIsIndex(JSID_TO_STRING(id), indexp);
+    return js_StringIsIndex(JSID_TO_ATOM(id), indexp);
 }
 
 /* XML really wants to pretend jsvals are jsids. */
-inline JSBool
-js_IdValIsIndex(jsval id, jsuint *indexp)
+inline bool
+js_IdValIsIndex(JSContext *cx, jsval id, jsuint *indexp, bool *isIndex)
 {
     if (JSVAL_IS_INT(id)) {
         jsint i;
         i = JSVAL_TO_INT(id);
-        if (i < 0)
-            return JS_FALSE;
+        if (i < 0) {
+            *isIndex = false;
+            return true;
+        }
         *indexp = (jsuint)i;
-        return JS_TRUE;
+        *isIndex = true;
+        return true;
     }
 
-    if (!JSVAL_IS_STRING(id))
-        return JS_FALSE;
+    if (!JSVAL_IS_STRING(id)) {
+        *isIndex = false;
+        return true;
+    }
 
-    return js_StringIsIndex(JSVAL_TO_STRING(id), indexp);
+    JSLinearString *str = JSVAL_TO_STRING(id)->ensureLinear(cx);
+    if (!str)
+        return false;
+
+    *isIndex = js_StringIsIndex(str, indexp);
+    return true;
 }
 
 extern js::Class js_ArrayClass, js_SlowArrayClass;
@@ -233,12 +245,41 @@ js_InitArrayClass(JSContext *cx, JSObject *obj);
 extern bool
 js_InitContextBusyArrayTable(JSContext *cx);
 
-extern JSObject *
-js_NewArrayObject(JSContext *cx, jsuint length, const js::Value *vector);
+namespace js
+{
 
-/* Create an array object that starts out already made slow/sparse. */
+/* Create a dense array with no capacity allocated, length set to 0. */
+extern JSObject * JS_FASTCALL
+NewDenseEmptyArray(JSContext *cx, JSObject *proto=NULL);
+
+/* Create a dense array with length and capacity == 'length', initialized length set to 0. */
+extern JSObject * JS_FASTCALL
+NewDenseAllocatedArray(JSContext *cx, uint length, JSObject *proto=NULL);
+
+/*
+ * Create a dense array with length, capacity and initialized length == 'length', and filled with holes.
+ * This is a kludge, as the tracer doesn't yet track/update initialized length when initializing
+ * array elements.
+ */
+extern JSObject * JS_FASTCALL
+NewDenseAllocatedEmptyArray(JSContext *cx, uint length, JSObject *proto=NULL);
+
+/*
+ * Create a dense array with a set length, but without allocating space for the
+ * contents. This is useful, e.g., when accepting length from the user.
+ */
+extern JSObject * JS_FASTCALL
+NewDenseUnallocatedArray(JSContext *cx, uint length, JSObject *proto=NULL);
+
+/* Create a dense array with a copy of vp. */
 extern JSObject *
-js_NewSlowArrayObject(JSContext *cx);
+NewDenseCopiedArray(JSContext *cx, uint length, Value *vp, JSObject *proto=NULL);
+
+/* Create a sparse array. */
+extern JSObject *
+NewSlowEmptyArray(JSContext *cx);
+
+}
 
 extern JSBool
 js_GetLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp);
@@ -338,25 +379,6 @@ js_GetDenseArrayElementValue(JSContext *cx, JSObject *obj, jsid id,
 /* Array constructor native. Exposed only so the JIT can know its address. */
 JSBool
 js_Array(JSContext *cx, uintN argc, js::Value *vp);
-
-/*
- * Friend api function that allows direct creation of an array object with a
- * given capacity.  Non-null return value means allocation of the internal
- * buffer for a capacity of at least |capacity| succeeded.  A pointer to the
- * first element of this internal buffer is returned in the |vector| out
- * parameter.  The caller promises to fill in the first |capacity| values
- * starting from that pointer immediately after this function returns and
- * without triggering GC (so this method is allowed to leave those
- * uninitialized) and to set them to non-JS_ARRAY_HOLE-magic-why values, so
- * that the resulting array has length and count both equal to |capacity|.
- *
- * FIXME: for some strange reason, when this file is included from
- * dom/ipc/TabParent.cpp in MSVC, jsuint resolves to a slightly different
- * builtin than when mozjs.dll is built, resulting in a link error in xul.dll.
- * It would be useful to find out what is causing this insanity.
- */
-JS_FRIEND_API(JSObject *)
-js_NewArrayObjectWithCapacity(JSContext *cx, uint32_t capacity, jsval **vector);
 
 /*
  * Makes a fast clone of a dense array as long as the array only contains

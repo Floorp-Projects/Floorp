@@ -263,6 +263,7 @@ enum TokenStreamFlags
     TSF_XMLTAGMODE = 0x200,     /* scanning within an XML tag in E4X */
     TSF_XMLTEXTMODE = 0x400,    /* scanning XMLText terminal from E4X */
     TSF_XMLONLYMODE = 0x800,    /* don't scan {expr} within text/tag */
+    TSF_OCTAL_CHAR = 0x1000,    /* observed a octal character escape */
 
     /*
      * To handle the hard case of contiguous HTML comments, we want to clear the
@@ -333,12 +334,15 @@ class TokenStream
     void setXMLTagMode(bool enabled = true) { setFlag(enabled, TSF_XMLTAGMODE); }
     void setXMLOnlyMode(bool enabled = true) { setFlag(enabled, TSF_XMLONLYMODE); }
     void setUnexpectedEOF(bool enabled = true) { setFlag(enabled, TSF_UNEXPECTED_EOF); }
+    void setOctalCharacterEscape(bool enabled = true) { setFlag(enabled, TSF_OCTAL_CHAR); }
+
     bool isStrictMode() { return !!(flags & TSF_STRICT_MODE_CODE); }
     bool isXMLTagMode() { return !!(flags & TSF_XMLTAGMODE); }
     bool isXMLOnlyMode() { return !!(flags & TSF_XMLONLYMODE); }
     bool isUnexpectedEOF() { return !!(flags & TSF_UNEXPECTED_EOF); }
     bool isEOF() const { return !!(flags & TSF_EOF); }
     bool isError() const { return !!(flags & TSF_ERROR); }
+    bool hasOctalCharacterEscape() const { return flags & TSF_OCTAL_CHAR; }
 
     /* Mutators. */
     bool reportCompileErrorNumberVA(JSParseNode *pn, uintN flags, uintN errorNumber, va_list ap);
@@ -458,7 +462,9 @@ class TokenStream
     void ungetChar(int32 c);
     void ungetCharIgnoreEOL(int32 c);
     Token *newToken(ptrdiff_t adjust);
-    int32 getUnicodeEscape();
+    bool peekUnicodeEscape(int32 *c);
+    bool matchUnicodeEscapeIdStart(int32 *c);
+    bool matchUnicodeEscapeIdent(int32 *c);
     JSBool peekChars(intN n, jschar *cp);
     JSBool getXMLEntity();
     jschar *findEOL();
@@ -531,7 +537,7 @@ typedef void (*JSMapKeywordFun)(const char *);
  * check if str is a JS keyword.
  */
 extern JSBool
-js_IsIdentifier(JSString *str);
+js_IsIdentifier(JSLinearString *str);
 
 /*
  * Steal one JSREPORT_* bit (see jsapi.h) to tell that arguments to the error

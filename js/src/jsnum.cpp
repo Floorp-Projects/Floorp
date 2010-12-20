@@ -317,7 +317,10 @@ num_parseFloat(JSContext *cx, uintN argc, Value *vp)
     str = js_ValueToString(cx, vp[2]);
     if (!str)
         return JS_FALSE;
-    str->getCharsAndEnd(bp, end);
+    bp = str->getChars(cx);
+    if (!bp)
+        return JS_FALSE;
+    end = bp + str->length();
     if (!js_strtod(cx, bp, end, &ep, &d))
         return JS_FALSE;
     if (ep == bp) {
@@ -332,12 +335,15 @@ num_parseFloat(JSContext *cx, uintN argc, Value *vp)
 static jsdouble FASTCALL
 ParseFloat(JSContext* cx, JSString* str)
 {
-    const jschar* bp;
-    const jschar* end;
-    const jschar* ep;
-    jsdouble d;
+    const jschar *bp = str->getChars(cx);
+    if (!bp) {
+        SetBuiltinError(cx);
+        return js_NaN;
+    }
+    const jschar *end = bp + str->length();
 
-    str->getCharsAndEnd(bp, end);
+    const jschar *ep;
+    double d;
     if (!js_strtod(cx, bp, end, &ep, &d) || ep == bp)
         return js_NaN;
     return d;
@@ -457,8 +463,10 @@ num_parseInt(JSContext *cx, uintN argc, Value *vp)
     }
 
     /* Steps 2-5, 9-14. */
-    const jschar *ws, *end;
-    inputString->getCharsAndEnd(ws, end);
+    const jschar *ws = inputString->getChars(cx);
+    if (!ws)
+        return false;
+    const jschar *end = ws + inputString->length();
 
     jsdouble number;
     if (!ParseIntStringHelper(cx, ws, end, radix, stripPrefix, &number))
@@ -475,8 +483,12 @@ num_parseInt(JSContext *cx, uintN argc, Value *vp)
 static jsdouble FASTCALL
 ParseInt(JSContext* cx, JSString* str)
 {
-    const jschar *start, *end;
-    str->getCharsAndEnd(start, end);
+    const jschar *start = str->getChars(cx);
+    if (!start) {
+        SetBuiltinError(cx);
+        return js_NaN;
+    }
+    const jschar *end = start + str->length();
 
     jsdouble d;
     if (!ParseIntStringHelper(cx, start, end, 0, true, &d)) {
@@ -507,7 +519,7 @@ JS_DEFINE_TRCINFO_2(num_parseInt,
     (1, (static, DOUBLE, ParseIntDouble, DOUBLE,        1, nanojit::ACCSET_NONE)))
 
 JS_DEFINE_TRCINFO_1(num_parseFloat,
-    (2, (static, DOUBLE, ParseFloat, CONTEXT, STRING,   1, nanojit::ACCSET_NONE)))
+    (2, (static, DOUBLE_FAIL, ParseFloat, CONTEXT, STRING,   1, nanojit::ACCSET_NONE)))
 
 #endif /* JS_TRACER */
 
@@ -820,11 +832,10 @@ num_toLocaleString(JSContext *cx, uintN argc, Value *vp)
     if (cx->localeCallbacks && cx->localeCallbacks->localeToUnicode)
         return cx->localeCallbacks->localeToUnicode(cx, buf, Jsvalify(vp));
 
-    str = JS_NewString(cx, buf, size);
-    if (!str) {
-        cx->free(buf);
+    str = js_NewStringCopyN(cx, buf, size);
+    cx->free(buf);
+    if (!str)
         return JS_FALSE;
-    }
 
     vp->setString(str);
     return JS_TRUE;
@@ -1202,6 +1213,14 @@ js_NumberToString(JSContext *cx, jsdouble d)
     return js_NumberToStringWithBase(cx, d, 10);
 }
 
+JSFlatString *
+js::NumberToString(JSContext *cx, jsdouble d)
+{
+    if (JSString *str = js_NumberToStringWithBase(cx, d, 10))
+        return str->assertIsFlat();
+    return NULL;
+}
+
 JSBool JS_FASTCALL
 js_NumberValueToCharBuffer(JSContext *cx, const Value &v, JSCharBuffer &cb)
 {
@@ -1250,13 +1269,8 @@ ValueToNumberSlow(JSContext *cx, Value v, double *out)
             return true;
         }
       skip_int_double:
-        if (v.isString()) {
-            jsdouble d = StringToNumberType<jsdouble>(cx, v.toString());
-            if (JSDOUBLE_IS_NaN(d))
-                break;
-            *out = d;
-            return true;
-        }
+        if (v.isString())
+            return StringToNumberType<jsdouble>(cx, v.toString(), out);
         if (v.isBoolean()) {
             if (v.toBoolean()) {
                 *out = 1.0;

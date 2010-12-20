@@ -180,6 +180,9 @@ struct Address
 
     Address(Address addr, int32 offset)
       : base(addr.base), offset(addr.offset + offset), accSet(addr.accSet) {}
+
+  public:
+    Address() {}
 };
 
 
@@ -597,14 +600,14 @@ class Writer
     }
 
     nj::LIns *ldpStringLengthAndFlags(nj::LIns *str) const {
-        return name(lir->insLoad(nj::LIR_ldp, str, offsetof(JSString, mLengthAndFlags),
+        return name(lir->insLoad(nj::LIR_ldp, str, JSString::offsetOfLengthAndFlags(),
                                  ACCSET_STRING),
-                    "mLengthAndFlags");
+                    "lengthAndFlags");
     }
 
     nj::LIns *ldpStringChars(nj::LIns *str) const {
-        return name(lir->insLoad(nj::LIR_ldp, str, offsetof(JSString, mChars), ACCSET_STRING),
-                    "mChars");
+        return name(lir->insLoad(nj::LIR_ldp, str, JSString::offsetOfChars(), ACCSET_STRING),
+                    "chars");
     }
 
     nj::LIns *lduc2uiConstTypeMapEntry(nj::LIns *typemap, nj::LIns *index) const {
@@ -1187,7 +1190,7 @@ class Writer
     }
 
     nj::LIns *getStringLength(nj::LIns *str) const {
-        return name(rshupN(ldpStringLengthAndFlags(str), JSString::FLAGS_LENGTH_SHIFT),
+        return name(rshupN(ldpStringLengthAndFlags(str), JSString::LENGTH_SHIFT),
                     "strLength");
     }
 

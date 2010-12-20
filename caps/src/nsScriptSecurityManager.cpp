@@ -114,7 +114,7 @@ static inline const PRUnichar *
 IDToString(JSContext *cx, jsid id)
 {
     if (JSID_IS_STRING(id))
-        return reinterpret_cast<PRUnichar*>(JS_GetStringChars(JSID_TO_STRING(id)));
+        return JS_GetInternedStringChars(JSID_TO_STRING(id));
 
     JSAutoRequest ar(cx);
     jsval idval;
@@ -123,7 +123,7 @@ IDToString(JSContext *cx, jsid id)
     JSString *str = JS_ValueToString(cx, idval);
     if(!str)
         return nsnull;
-    return reinterpret_cast<PRUnichar*>(JS_GetStringChars(str));
+    return JS_GetStringCharsZ(cx, str);
 }
 
 class nsAutoInPrincipalDomainOriginSetter {

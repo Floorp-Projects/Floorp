@@ -121,12 +121,15 @@ js_json_parse(JSContext *cx, uintN argc, Value *vp)
     if (!JS_ConvertArguments(cx, argc, Jsvalify(argv), "S / v", &s, reviver.addr()))
         return JS_FALSE;
 
+    JSLinearString *linearStr = s->ensureLinear(cx);
+    if (!linearStr)
+        return JS_FALSE;
+
     JSONParser *jp = js_BeginJSONParse(cx, vp);
     JSBool ok = jp != NULL;
     if (ok) {
-        const jschar *chars;
-        size_t length;
-        s->getCharsAndLength(chars, length);
+        const jschar *chars = linearStr->chars();
+        size_t length = linearStr->length();
         ok = js_ConsumeJSONText(cx, jp, chars, length);
         ok &= !!js_FinishJSONParse(cx, jp, reviver.value());
     }
@@ -405,9 +408,11 @@ JO(JSContext *cx, Value *vp, StringifyContext *scx)
         if (!s)
             return JS_FALSE;
 
-        const jschar *chars;
-        size_t length;
-        s->getCharsAndLength(chars, length);
+        size_t length = s->length();
+        const jschar *chars = s->getChars(cx);
+        if (!chars)
+            return JS_FALSE;
+
         if (!write_string(cx, scx->cb, chars, length) ||
             !scx->cb.append(':') ||
             !(scx->gap.empty() || scx->cb.append(' ')) ||
@@ -507,9 +512,11 @@ Str(JSContext *cx, jsid id, JSObject *holder, StringifyContext *scx, Value *vp, 
     }
 
     if (vp->isString()) {
-        const jschar *chars;
-        size_t length;
-        vp->toString()->getCharsAndLength(chars, length);
+        JSString *str = vp->toString();
+        size_t length = str->length();
+        const jschar *chars = str->getChars(cx);
+        if (!chars)
+            return JS_FALSE;
         return write_string(cx, scx->cb, chars, length);
     }
 
@@ -681,7 +688,7 @@ js_BeginJSONParse(JSContext *cx, Value *rootVal, bool suppressErrors /*= false*/
     if (!cx)
         return NULL;
 
-    JSObject *arr = js_NewArrayObject(cx, 0, NULL);
+    JSObject *arr = NewDenseEmptyArray(cx);
     if (!arr)
         return NULL;
 
@@ -857,7 +864,7 @@ static JSBool
 OpenArray(JSContext *cx, JSONParser *jp)
 {
     // Add an array to an existing array or object
-    JSObject *arr = js_NewArrayObject(cx, 0, NULL);
+    JSObject *arr = NewDenseEmptyArray(cx);
     if (!arr)
         return JS_FALSE;
 

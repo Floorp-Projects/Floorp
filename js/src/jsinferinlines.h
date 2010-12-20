@@ -108,8 +108,8 @@ MakeTypeId(JSContext *cx, jsid id)
      * and overflowing integers.
      */
     if (JSID_IS_STRING(id)) {
-        JSString *str = JSID_TO_STRING(id);
-        jschar *cp = str->chars();
+        JSFlatString *str = JSID_TO_FLAT_STRING(id);
+        const jschar *cp = str->getCharsZ(cx);
         if (JS7_ISDEC(*cp) || *cp == '-') {
             cp++;
             while (JS7_ISDEC(*cp))
@@ -352,24 +352,22 @@ JSContext::typeMonitorCall(JSScript *caller, const jsbytecode *callerpc,
 #ifdef JS_TYPE_INFERENCE
     if (!args.callee().isObject() || !args.callee().toObject().isFunction())
         return;
-    JSObject *callee = &args.callee().toObject();
-    js::types::TypeFunction *fun = callee->getType()->asFunction();
+    JSFunction *callee = args.callee().toObject().getFunctionPrivate();
 
     /*
      * Don't do anything on calls to native functions.  If the call is monitored
      * then the return value is unknown, and when cx->isTypeCallerMonitored() natives
      * should inform inference of any side effects not on the return value.
      */
-    if (!fun->script)
+    if (!callee->isInterpreted())
         return;
-    js::analyze::Script *script = fun->script->analysis;
 
     if (!force) {
         if (caller->analysis->failed() || caller->analysis->getCode(callerpc).monitorNeeded)
             force = true;
     }
 
-    typeMonitorEntry(fun->script);
+    typeMonitorEntry(callee->script());
 
     /* Don't need to do anything if this is at a non-monitored callsite. */
     if (!force)
@@ -382,6 +380,8 @@ JSContext::typeMonitorCall(JSScript *caller, const jsbytecode *callerpc,
     } else {
         type = js::types::GetValueType(this, args.thisv());
     }
+
+    js::analyze::Script *script = callee->script()->analysis;
 
     if (!constructing) {
         if (!script->thisTypes.hasType(type)) {
@@ -489,7 +489,7 @@ JSScript::getTypeInitObject(JSContext *cx, const jsbytecode *pc, bool isArray)
 #ifdef JS_TYPE_INFERENCE
     /* :FIXME: */
     JS_ASSERT(!analysis->failed());
-    if (compileAndGo)
+    if (!compileAndGo)
         return cx->getTypeNewObject(isArray ? JSProto_Array : JSProto_Object);
     return analysis->getCode(pc).getInitObject(cx, isArray);
 #else
@@ -612,6 +612,7 @@ Bytecode::setFixed(JSContext *cx, unsigned num, types::jstype type)
 inline types::TypeObject *
 Bytecode::getInitObject(JSContext *cx, bool isArray)
 {
+    JS_ASSERT(script->script->compileAndGo);
 #ifdef JS_TYPE_INFERENCE
     types::TypeObject *&object = isArray ? initArray : initObject;
     if (!object) {
@@ -1094,6 +1095,12 @@ inline JSArenaPool &
 TypeCallsite::pool()
 {
     return code->pool();
+}
+
+inline bool
+TypeCallsite::compileAndGo()
+{
+    return code->script->getScript()->compileAndGo;
 }
 
 /////////////////////////////////////////////////////////////////////
