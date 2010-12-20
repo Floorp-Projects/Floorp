@@ -44,52 +44,56 @@
 #include "nsSVGElement.h"
 #include "nsDOMError.h"
 
-class nsSVGPreserveAspectRatio
+namespace mozilla {
+
+class SVGAnimatedPreserveAspectRatio;
+
+class SVGPreserveAspectRatio
 {
+  friend class SVGAnimatedPreserveAspectRatio;
+
 public:
-  class PreserveAspectRatio
-  {
-  friend class nsSVGPreserveAspectRatio;
-
-  public:
-    nsresult SetAlign(PRUint16 aAlign) {
-      if (aAlign < nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_NONE ||
-          aAlign > nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMAX)
-        return NS_ERROR_FAILURE;
-      mAlign = static_cast<PRUint8>(aAlign);
-      return NS_OK;
-    };
-
-    PRUint16 GetAlign() const {
-      return mAlign;
-    };
-
-    nsresult SetMeetOrSlice(PRUint16 aMeetOrSlice) {
-      if (aMeetOrSlice < nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET ||
-          aMeetOrSlice > nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_SLICE)
-        return NS_ERROR_FAILURE;
-      mMeetOrSlice = static_cast<PRUint8>(aMeetOrSlice);
-      return NS_OK;
-    };
-
-    PRUint16 GetMeetOrSlice() const {
-      return mMeetOrSlice;
-    };
-
-    void SetDefer(PRBool aDefer) {
-      mDefer = aDefer;
-    };
-
-    PRBool GetDefer() const {
-      return mDefer;
-    };
-
-  private:
-    PRUint8 mAlign;
-    PRUint8 mMeetOrSlice;
-    PRPackedBool mDefer;
+  nsresult SetAlign(PRUint16 aAlign) {
+    if (aAlign < nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_NONE ||
+        aAlign > nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMAX)
+      return NS_ERROR_FAILURE;
+    mAlign = static_cast<PRUint8>(aAlign);
+    return NS_OK;
   };
 
+  PRUint16 GetAlign() const {
+    return mAlign;
+  };
+
+  nsresult SetMeetOrSlice(PRUint16 aMeetOrSlice) {
+    if (aMeetOrSlice < nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET ||
+        aMeetOrSlice > nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_SLICE)
+      return NS_ERROR_FAILURE;
+    mMeetOrSlice = static_cast<PRUint8>(aMeetOrSlice);
+    return NS_OK;
+  };
+
+  PRUint16 GetMeetOrSlice() const {
+    return mMeetOrSlice;
+  };
+
+  void SetDefer(PRBool aDefer) {
+    mDefer = aDefer;
+  };
+
+  PRBool GetDefer() const {
+    return mDefer;
+  };
+
+private:
+  PRUint8 mAlign;
+  PRUint8 mMeetOrSlice;
+  PRPackedBool mDefer;
+};
+
+class SVGAnimatedPreserveAspectRatio
+{
+public:
   void Init() {
     mBaseVal.mAlign = nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMID;
     mBaseVal.mMeetOrSlice = nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET;
@@ -107,9 +111,9 @@ public:
   nsresult SetBaseMeetOrSlice(PRUint16 aMeetOrSlice, nsSVGElement *aSVGElement);
   void SetAnimValue(PRUint64 aPackedValue, nsSVGElement *aSVGElement);
 
-  const PreserveAspectRatio &GetBaseValue() const
+  const SVGPreserveAspectRatio &GetBaseValue() const
     { return mBaseVal; }
-  const PreserveAspectRatio &GetAnimValue() const
+  const SVGPreserveAspectRatio &GetAnimValue() const
     { return mAnimVal; }
 
   nsresult ToDOMAnimatedPreserveAspectRatio(
@@ -122,8 +126,8 @@ public:
 
 private:
 
-  PreserveAspectRatio mAnimVal;
-  PreserveAspectRatio mBaseVal;
+  SVGPreserveAspectRatio mAnimVal;
+  SVGPreserveAspectRatio mBaseVal;
   PRPackedBool mIsAnimated;
 
   nsresult ToDOMBaseVal(nsIDOMSVGPreserveAspectRatio **aResult,
@@ -137,10 +141,10 @@ public:
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_CLASS(DOMBaseVal)
 
-    DOMBaseVal(nsSVGPreserveAspectRatio* aVal, nsSVGElement *aSVGElement)
+    DOMBaseVal(SVGAnimatedPreserveAspectRatio* aVal, nsSVGElement *aSVGElement)
       : mVal(aVal), mSVGElement(aSVGElement) {}
     
-    nsSVGPreserveAspectRatio* mVal; // kept alive because it belongs to mSVGElement
+    SVGAnimatedPreserveAspectRatio* mVal; // kept alive because it belongs to mSVGElement
     nsRefPtr<nsSVGElement> mSVGElement;
     
     NS_IMETHOD GetAlign(PRUint16* aAlign)
@@ -159,10 +163,10 @@ public:
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_CLASS(DOMAnimVal)
 
-    DOMAnimVal(nsSVGPreserveAspectRatio* aVal, nsSVGElement *aSVGElement)
+    DOMAnimVal(SVGAnimatedPreserveAspectRatio* aVal, nsSVGElement *aSVGElement)
       : mVal(aVal), mSVGElement(aSVGElement) {}
     
-    nsSVGPreserveAspectRatio* mVal; // kept alive because it belongs to mSVGElement
+    SVGAnimatedPreserveAspectRatio* mVal; // kept alive because it belongs to mSVGElement
     nsRefPtr<nsSVGElement> mSVGElement;
     
     // Script may have modified animation parameters or timeline -- DOM getters
@@ -195,10 +199,13 @@ public:
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_CLASS(DOMAnimPAspectRatio)
 
-    DOMAnimPAspectRatio(nsSVGPreserveAspectRatio* aVal, nsSVGElement *aSVGElement)
+    DOMAnimPAspectRatio(SVGAnimatedPreserveAspectRatio* aVal,
+                        nsSVGElement *aSVGElement)
       : mVal(aVal), mSVGElement(aSVGElement) {}
-    
-    nsSVGPreserveAspectRatio* mVal; // kept alive because it belongs to content
+
+    // kept alive because it belongs to content:
+    SVGAnimatedPreserveAspectRatio* mVal;
+
     nsRefPtr<nsSVGElement> mSVGElement;
 
     NS_IMETHOD GetBaseVal(nsIDOMSVGPreserveAspectRatio **aBaseVal)
@@ -212,13 +219,14 @@ public:
   struct SMILPreserveAspectRatio : public nsISMILAttr
   {
   public:
-    SMILPreserveAspectRatio(nsSVGPreserveAspectRatio* aVal, nsSVGElement* aSVGElement)
+    SMILPreserveAspectRatio(SVGAnimatedPreserveAspectRatio* aVal,
+                            nsSVGElement* aSVGElement)
       : mVal(aVal), mSVGElement(aSVGElement) {}
 
     // These will stay alive because a nsISMILAttr only lives as long
     // as the Compositing step, and DOM elements don't get a chance to
     // die during that.
-    nsSVGPreserveAspectRatio* mVal;
+    SVGAnimatedPreserveAspectRatio* mVal;
     nsSVGElement* mSVGElement;
 
     // nsISMILAttr methods
@@ -232,5 +240,10 @@ public:
   };
 #endif // MOZ_SMIL
 };
+
+} // namespace mozilla
+
+// XXXdholbert TEMPORARY TYPEDEF
+typedef mozilla::SVGAnimatedPreserveAspectRatio nsSVGPreserveAspectRatio;
 
 #endif //__NS_SVGPRESERVEASPECTRATIO_H__

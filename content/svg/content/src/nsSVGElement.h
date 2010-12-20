@@ -68,7 +68,6 @@ class nsSVGBoolean;
 class nsSVGEnum;
 struct nsSVGEnumMapping;
 class nsSVGViewBox;
-class nsSVGPreserveAspectRatio;
 class nsSVGString;
 struct gfxMatrix;
 namespace mozilla {
@@ -78,7 +77,10 @@ class SVGAnimatedLengthList;
 class SVGUserUnitList;
 class SVGAnimatedPointList;
 class SVGAnimatedPathSegList;
+class SVGAnimatedPreserveAspectRatio;
 }
+// XXXdholbert TEMPORARY TYPEDEF
+typedef mozilla::SVGAnimatedPreserveAspectRatio nsSVGPreserveAspectRatio;
 
 typedef nsStyledElement nsSVGElementBase;
 
