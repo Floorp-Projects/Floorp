@@ -766,16 +766,20 @@ void
 mjit::Compiler::jsop_neg()
 {
     FrameEntry *fe = frame.peek(-1);
+    JSValueType type = knownPushedType(0);
 
     if (fe->isTypeKnown() && fe->getKnownType() > JSVAL_UPPER_INCL_TYPE_OF_NUMBER_SET) {
         prepareStubCall(Uses(1));
         INLINE_STUBCALL(stubs::Neg);
         frame.pop();
-        frame.pushSynced(knownPushedType(0));
+        frame.pushSynced(type);
         return;
     }
 
     JS_ASSERT(!fe->isConstant());
+
+    if (type == JSVAL_TYPE_DOUBLE)
+        frame.ensureDouble(fe);
 
     if (fe->isType(JSVAL_TYPE_DOUBLE)) {
         FPRegisterID fpreg = frame.tempFPRegForData(fe);
@@ -852,7 +856,7 @@ mjit::Compiler::jsop_neg()
     OOL_STUBCALL(stubs::Neg);
 
     frame.pop();
-    frame.pushSynced(knownPushedType(0));
+    frame.pushSynced(type);
 
     /* Link jumps. */
     if (jmpNotDbl.isSet())
