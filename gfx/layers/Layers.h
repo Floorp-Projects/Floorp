@@ -482,11 +482,13 @@ public:
      */
     CONTENT_OPAQUE = 0x01,
     /**
-     * If this is set, the caller is promising that the visible region
-     * contains no text over transparent pixels (any text, if present,
-     * is over fully opaque pixels).
+     * If this is set, the caller is notifying that the contents of this layer
+     * require per-component alpha for optimal fidelity. However, there is no
+     * guarantee that component alpha will be supported for this layer at
+     * paint time.
+     * This should never be set at the same time as CONTENT_OPAQUE.
      */
-    CONTENT_NO_TEXT_OVER_TRANSPARENT = 0x02
+    CONTENT_COMPONENT_ALPHA = 0x02
   };
   /**
    * CONSTRUCTION PHASE ONLY
@@ -496,6 +498,9 @@ public:
    */
   void SetContentFlags(PRUint32 aFlags)
   {
+    NS_ASSERTION((aFlags & (CONTENT_OPAQUE | CONTENT_COMPONENT_ALPHA)) !=
+                 (CONTENT_OPAQUE | CONTENT_COMPONENT_ALPHA),
+                 "Can't be opaque and require component alpha");
     mContentFlags = aFlags;
     Mutated();
   }
@@ -737,7 +742,7 @@ protected:
     mPrevSibling(nsnull),
     mImplData(aImplData),
     mOpacity(1.0),
-    mContentFlags(CONTENT_NO_TEXT_OVER_TRANSPARENT),
+    mContentFlags(0),
     mUseClipRect(PR_FALSE)
     {}
 
