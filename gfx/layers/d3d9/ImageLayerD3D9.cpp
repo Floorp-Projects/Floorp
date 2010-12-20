@@ -65,7 +65,7 @@ ImageContainerD3D9::CreateImage(const Image::Format *aFormats,
   if (aFormats[0] == Image::PLANAR_YCBCR) {
     img = new PlanarYCbCrImageD3D9(static_cast<LayerManagerD3D9*>(mManager));
   } else if (aFormats[0] == Image::CAIRO_SURFACE) {
-    img = new CairoImageD3D9(static_cast<LayerManagerD3D9*>(mManager));
+    img = new CairoImageD3D9(static_cast<LayerManagerD3D9*>(mManager)->device());
   }
   return img.forget();
 }
@@ -494,18 +494,22 @@ CairoImageD3D9::GetOrCreateTexture()
   context->SetSource(mCachedSurface);
   context->Paint();
 
-  if (mManager->deviceManager()->IsD3D9Ex()) {
+  nsRefPtr<IDirect3DDevice9Ex> deviceEx;
+  mDevice->QueryInterface(__uuidof(IDirect3DDevice9Ex),
+                          getter_AddRefs(deviceEx));
+
+  if (deviceEx) {
     // D3D9Ex doesn't support managed textures. We could use dynamic textures
     // here but since Images are immutable that probably isn't such a great
     // idea.
-    if (FAILED(mManager->device()->
+    if (FAILED(mDevice->
                CreateTexture(mSize.width, mSize.height,
                              1, 0, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT,
                              getter_AddRefs(mTexture), NULL)))
       return NULL;
 
     nsRefPtr<IDirect3DSurface9> surface;
-    if (FAILED(mManager->device()->
+    if (FAILED(mDevice->
                CreateOffscreenPlainSurface(mSize.width,
                                            mSize.height,
                                            D3DFMT_A8R8G8B8,
@@ -526,9 +530,9 @@ CairoImageD3D9::GetOrCreateTexture()
     surface->UnlockRect();
     nsRefPtr<IDirect3DSurface9> dstSurface;
     mTexture->GetSurfaceLevel(0, getter_AddRefs(dstSurface));
-    mManager->device()->UpdateSurface(surface, NULL, dstSurface, NULL);
+    mDevice->UpdateSurface(surface, NULL, dstSurface, NULL);
   } else {
-    if (FAILED(mManager->device()->
+    if (FAILED(mDevice->
                CreateTexture(mSize.width, mSize.height,
                              1, 0, D3DFMT_A8R8G8B8, D3DPOOL_MANAGED,
                              getter_AddRefs(mTexture), NULL)))
