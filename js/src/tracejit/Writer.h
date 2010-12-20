@@ -244,10 +244,10 @@ struct FCSlotsAddress : Address
       : Address(base, slot * sizeof(Value), ACCSET_FCSLOTS) {}
 };
 
-struct ArgsSlotsAddress : Address
+struct ArgsSlotOffsetAddress : Address
 {
-    ArgsSlotsAddress(nj::LIns *base, unsigned slot = 0)
-      : Address(base, slot * sizeof(Value), ACCSET_ARGS_DATA) {}
+    ArgsSlotOffsetAddress(nj::LIns *base, unsigned offset = 0)
+      : Address(base, offset, ACCSET_ARGS_DATA) {}
 };
 
 struct AnyAddress : Address
