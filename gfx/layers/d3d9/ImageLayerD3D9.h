@@ -138,9 +138,9 @@ class THEBES_API CairoImageD3D9 : public CairoImage,
                                   public ImageD3D9
 {
 public:
-  CairoImageD3D9(LayerManagerD3D9 *aManager)
+  CairoImageD3D9(IDirect3DDevice9 *aDevice)
     : CairoImage(static_cast<ImageD3D9*>(this))
-    , mManager(aManager)
+    , mDevice(aDevice)
   { }
   ~CairoImageD3D9();
 
@@ -158,6 +158,7 @@ public:
 private:
   gfxIntSize mSize;
   nsRefPtr<gfxASurface> mCachedSurface;
+  nsRefPtr<IDirect3DDevice9> mDevice;
   nsRefPtr<IDirect3DTexture9> mTexture;
   LayerManagerD3D9 *mManager;
 };
