@@ -3990,7 +3990,6 @@ nsDocument::BeginLoad()
   NS_DOCUMENT_NOTIFY_OBSERVERS(BeginLoad, (this));
 }
 
-// static
 void
 nsDocument::ReportEmptyGetElementByIdArg()
 {
@@ -4000,7 +3999,7 @@ nsDocument::ReportEmptyGetElementByIdArg()
                                   nsnull,
                                   EmptyString(), 0, 0,
                                   nsIScriptError::warningFlag,
-                                  "DOM");
+                                  "DOM", this);
 }
 
 Element*
@@ -5296,11 +5295,10 @@ nsDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
     nsContentUtils::ReportToConsole(nsContentUtils::eDOM_PROPERTIES,
                                     "UseOfGetBoxObjectForWarning",
                                     nsnull, 0,
-                                    static_cast<nsIDocument*>(this)->
-                                      GetDocumentURI(),
+                                    nsnull,
                                     EmptyString(), 0, 0,
                                     nsIScriptError::warningFlag,
-                                    "BoxObjects");
+                                    "BoxObjects", this);
   }
 
   *aResult = nsnull;

@@ -213,11 +213,10 @@ ReportUseOfDeprecatedMethod(nsHTMLDocument* aDoc, const char* aWarning)
   nsContentUtils::ReportToConsole(nsContentUtils::eDOM_PROPERTIES,
                                   aWarning,
                                   nsnull, 0,
-                                  static_cast<nsIDocument*>(aDoc)->
-                                    GetDocumentURI(),
+                                  nsnull,
                                   EmptyString(), 0, 0,
                                   nsIScriptError::warningFlag,
-                                  "DOM Events");
+                                  "DOM Events", aDoc);
 }
 
 static nsresult
@@ -2151,7 +2150,7 @@ nsHTMLDocument::WriteCommon(const nsAString& aText,
                                       mDocumentURI,
                                       EmptyString(), 0, 0,
                                       nsIScriptError::warningFlag,
-                                      "DOM Events");
+                                      "DOM Events", this);
       return NS_OK;
     }
     mWriteState = eDocumentClosed;
@@ -2168,7 +2167,7 @@ nsHTMLDocument::WriteCommon(const nsAString& aText,
                                       mDocumentURI,
                                       EmptyString(), 0, 0,
                                       nsIScriptError::warningFlag,
-                                      "DOM Events");
+                                      "DOM Events", this);
       return NS_OK;
     }
     rv = Open();
