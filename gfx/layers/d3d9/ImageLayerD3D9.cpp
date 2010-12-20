@@ -48,6 +48,86 @@ namespace layers {
 
 using mozilla::MutexAutoLock;
 
+static already_AddRefed<IDirect3DTexture9>
+SurfaceToTexture(IDirect3DDevice9 *aDevice,
+                 gfxASurface *aSurface,
+                 const gfxIntSize &aSize)
+{
+  nsRefPtr<gfxImageSurface> imageSurface =
+    new gfxImageSurface(aSize, gfxASurface::ImageFormatARGB32);
+
+  nsRefPtr<gfxContext> context = new gfxContext(imageSurface);
+
+  context->SetSource(aSurface);
+  context->Paint();
+
+  nsRefPtr<IDirect3DTexture9> texture;
+  nsRefPtr<IDirect3DDevice9Ex> deviceEx;
+  aDevice->QueryInterface(__uuidof(IDirect3DDevice9Ex),
+                          (void**)getter_AddRefs(deviceEx));
+
+  if (deviceEx) {
+    // D3D9Ex doesn't support managed textures. We could use dynamic textures
+    // here but since Images are immutable that probably isn't such a great
+    // idea.
+    if (FAILED(aDevice->
+               CreateTexture(aSize.width, aSize.height,
+                             1, 0, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT,
+                             getter_AddRefs(texture), NULL)))
+    {
+      return NULL;
+    }
+
+    nsRefPtr<IDirect3DSurface9> surface;
+    if (FAILED(aDevice->
+               CreateOffscreenPlainSurface(aSize.width,
+                                           aSize.height,
+                                           D3DFMT_A8R8G8B8,
+                                           D3DPOOL_SYSTEMMEM,
+                                           getter_AddRefs(surface),
+                                           NULL)))
+    {
+      return NULL;
+    }
+
+    D3DLOCKED_RECT lockedRect;
+    surface->LockRect(&lockedRect, NULL, 0);
+    for (int y = 0; y < aSize.height; y++) {
+      memcpy((char*)lockedRect.pBits + lockedRect.Pitch * y,
+             imageSurface->Data() + imageSurface->Stride() * y,
+             aSize.width * 4);
+    }
+    surface->UnlockRect();
+    nsRefPtr<IDirect3DSurface9> dstSurface;
+    texture->GetSurfaceLevel(0, getter_AddRefs(dstSurface));
+    aDevice->UpdateSurface(surface, NULL, dstSurface, NULL);
+  } else {
+    if (FAILED(aDevice->
+               CreateTexture(aSize.width, aSize.height,
+                             1, 0, D3DFMT_A8R8G8B8, D3DPOOL_MANAGED,
+                             getter_AddRefs(texture), NULL)))
+    {
+      return NULL;
+    }
+
+    D3DLOCKED_RECT lockrect;
+    /* lock the entire texture */
+    texture->LockRect(0, &lockrect, NULL, 0);
+
+    // copy over data. If we don't need to do any swaping we can
+    // use memcpy
+    for (int y = 0; y < aSize.height; y++) {
+      memcpy((char*)lockrect.pBits + lockrect.Pitch * y,
+             imageSurface->Data() + imageSurface->Stride() * y,
+             aSize.width * 4);
+    }
+
+    texture->UnlockRect(0);
+  }
+
+  return texture.forget();
+}
+
 ImageContainerD3D9::ImageContainerD3D9(LayerManagerD3D9 *aManager)
   : ImageContainer(aManager)
   , mActiveImageLock("mozilla.layers.ImageContainerD3D9.mActiveImageLock")
@@ -486,74 +566,8 @@ CairoImageD3D9::GetOrCreateTexture()
   if (mTexture)
     return mTexture;
 
-  nsRefPtr<gfxImageSurface> imageSurface =
-    new gfxImageSurface(mSize, gfxASurface::ImageFormatARGB32);
+  mTexture = SurfaceToTexture(mDevice, mCachedSurface, mSize);
 
-  nsRefPtr<gfxContext> context = new gfxContext(imageSurface);
-
-  context->SetSource(mCachedSurface);
-  context->Paint();
-
-  nsRefPtr<IDirect3DDevice9Ex> deviceEx;
-  mDevice->QueryInterface(__uuidof(IDirect3DDevice9Ex),
-                          getter_AddRefs(deviceEx));
-
-  if (deviceEx) {
-    // D3D9Ex doesn't support managed textures. We could use dynamic textures
-    // here but since Images are immutable that probably isn't such a great
-    // idea.
-    if (FAILED(mDevice->
-               CreateTexture(mSize.width, mSize.height,
-                             1, 0, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT,
-                             getter_AddRefs(mTexture), NULL)))
-      return NULL;
-
-    nsRefPtr<IDirect3DSurface9> surface;
-    if (FAILED(mDevice->
-               CreateOffscreenPlainSurface(mSize.width,
-                                           mSize.height,
-                                           D3DFMT_A8R8G8B8,
-                                           D3DPOOL_SYSTEMMEM,
-                                           getter_AddRefs(surface),
-                                           NULL))) {
-      mTexture = NULL;
-      return NULL;
-    }
-
-    D3DLOCKED_RECT lockedRect;
-    surface->LockRect(&lockedRect, NULL, 0);
-    for (int y = 0; y < mSize.height; y++) {
-      memcpy((char*)lockedRect.pBits + lockedRect.Pitch * y,
-             imageSurface->Data() + imageSurface->Stride() * y,
-             mSize.width * 4);
-    }
-    surface->UnlockRect();
-    nsRefPtr<IDirect3DSurface9> dstSurface;
-    mTexture->GetSurfaceLevel(0, getter_AddRefs(dstSurface));
-    mDevice->UpdateSurface(surface, NULL, dstSurface, NULL);
-  } else {
-    if (FAILED(mDevice->
-               CreateTexture(mSize.width, mSize.height,
-                             1, 0, D3DFMT_A8R8G8B8, D3DPOOL_MANAGED,
-                             getter_AddRefs(mTexture), NULL)))
-      return NULL;
-
-    D3DLOCKED_RECT lockrect;
-    /* lock the entire texture */
-    mTexture->LockRect(0, &lockrect, NULL, 0);
-
-    // copy over data. If we don't need to do any swaping we can
-    // use memcpy
-    for (int y = 0; y < mSize.height; y++) {
-      memcpy((char*)lockrect.pBits + lockrect.Pitch * y,
-             imageSurface->Data() + imageSurface->Stride() * y,
-             mSize.width * 4);
-    }
-
-    mTexture->UnlockRect(0);
-  }
-
-  NS_ASSERTION(mTexture, "Should have succeeded by now.");
   // Release our no-longer-needed mCachedSurface
   mCachedSurface = NULL;
   return mTexture;
