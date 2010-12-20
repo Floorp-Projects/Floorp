@@ -50,7 +50,7 @@
 #include "nsSVGLength2.h"
 #include "nsSVGEnum.h"
 #include "nsSVGViewBox.h"
-#include "nsSVGPreserveAspectRatio.h"
+#include "SVGAnimatedPreserveAspectRatio.h"
 #include "mozilla/dom/FromParser.h"
 
 #ifdef MOZ_SMIL

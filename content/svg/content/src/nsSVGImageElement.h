@@ -45,7 +45,7 @@
 #include "nsImageLoadingContent.h"
 #include "nsSVGString.h"
 #include "nsSVGLength2.h"
-#include "nsSVGPreserveAspectRatio.h"
+#include "SVGAnimatedPreserveAspectRatio.h"
 
 typedef nsSVGPathGeometryElement nsSVGImageElementBase;
 

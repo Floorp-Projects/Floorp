@@ -36,8 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __NS_SVGPRESERVEASPECTRATIO_H__
-#define __NS_SVGPRESERVEASPECTRATIO_H__
+#ifndef MOZILLA_SVGANIMATEDPRESERVEASPECTRATIO_H__
+#define MOZILLA_SVGANIMATEDPRESERVEASPECTRATIO_H__
 
 #include "nsIDOMSVGPresAspectRatio.h"
 #include "nsIDOMSVGAnimPresAspRatio.h"
@@ -243,4 +243,4 @@ public:
 
 } // namespace mozilla
 
-#endif //__NS_SVGPRESERVEASPECTRATIO_H__
+#endif // MOZILLA_SVGANIMATEDPRESERVEASPECTRATIO_H__
