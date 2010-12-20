@@ -58,6 +58,7 @@ const NS_XREAPPINFO_CONTRACTID =
           "@mozilla.org/xre/app-info;1";
 
 var gLoadTimeout = 0;
+var gTimeoutHook = null;
 var gRemote = false;
 var gTotalChunks = 0;
 var gThisChunk = 0;
@@ -68,7 +69,7 @@ const BLANK_URL_FOR_CLEARING = "data:text/html,%3C%21%2D%2DCLEAR%2D%2D%3E";
 var gBrowser;
 var gCanvas1, gCanvas2;
 // gCurrentCanvas is non-null between InitCurrentCanvasWithSnapshot and the next
-// DocumentLoaded.
+// RecordResult.
 var gCurrentCanvas = null;
 var gURLs;
 // Map from URI spec to the number of times it remains to be used
@@ -95,19 +96,15 @@ var gTestResults = {
 };
 var gTotalTests = 0;
 var gState;
-// Plugin layers are painting asynchronously, and to make sure that all
-// layer surfaces have right content, we should listen for async
-// paint-"begin"/"end" events ("MozPaintWait" and "MozPaintWaitFinished").
-// If plugin layer surface is dirty(just created) and layout
-// builder->ShouldSyncDecodeImages == true, then "MozPaintWait" event will be
-// fired and gExplicitPendingPaintCounter increased.
-// When plugin layer surface fully painted and "MozPaintWait" has been fired
-// before, then "MozPaintWaitFinished" fired and gExplicitPendingPaintCounter
-// decreased. Reftest snapshot can be taken only when gExplicitPendingPaintCounter == 0
-var gExplicitPendingPaintCounter = 0;
-var gTestContainsAsyncPaintObjects = false;
-var gRunningReftestWaitTest = false;
-var gAttrListenerFunc = null;
+// Plugin layers can be updated asynchronously, so to make sure that all
+// layer surfaces have the right content, we need to listen for explicit
+// "MozPaintWait" and "MozPaintWaitFinished" events that signal when it's OK
+// to take snapshots. We cannot take a snapshot while the number of
+// "MozPaintWait" events fired exceeds the number of "MozPaintWaitFinished"
+// events fired. We count the number of such excess events here. When
+// the counter reaches zero we call gExplicitPendingPaintsCompleteHook.
+var gExplicitPendingPaintCount = 0;
+var gExplicitPendingPaintsCompleteHook;
 var gCurrentURL;
 var gFailureTimeout = null;
 var gFailureReason;
@@ -175,31 +172,19 @@ function ReleaseCanvas(canvas)
         gRecycledCanvases.push(canvas);
 }
 
-function PaintWaitListener()
+function PaintWaitListener(event)
 {
-    // Increate paint wait counter
-    // prevent snapshots taking with not up to dated content
-    gExplicitPendingPaintCounter++;
+    gExplicitPendingPaintCount++;
 }
 
-function PaintWaitFinishedListener()
+function PaintWaitFinishedListener(event)
 {
-    gExplicitPendingPaintCounter--;
-    if (gExplicitPendingPaintCounter == 0) {
-        if (gRunningReftestWaitTest) {
-            // tests with reftest-wait class already waiting
-            // and we just need take snapshot and finish reftest
-            gAttrListenerFunc();
-        } else if (gTestContainsAsyncPaintObjects) {
-            gTestContainsAsyncPaintObjects = false;
-            // tests without reftest-wait class
-            // and with detected async rendering objects rendering
-            // need to do mini restart of the test
-            setTimeout(setTimeout, 0, DocumentLoaded, 0);
-        }
+    gExplicitPendingPaintCount--;
+    if (gExplicitPendingPaintCount == 0 &&
+        gExplicitPendingPaintsCompleteHook) {
+        gExplicitPendingPaintsCompleteHook();
     }
 }
-
 
 function OnRefTestLoad()
 {
@@ -816,9 +801,9 @@ function StartCurrentURI(aState)
         (gURLs[0].type == TYPE_REFTEST_EQUAL ||
          gURLs[0].type == TYPE_REFTEST_NOTEQUAL) &&
         gURLs[0].maxAsserts == 0) {
-        // Pretend the document loaded --- DocumentLoaded will notice
+        // Pretend the document loaded --- RecordResult will notice
         // there's already a canvas for this URL
-        setTimeout(DocumentLoaded, 0);
+        setTimeout(RecordResult, 0);
     } else {
         gDumpLog("REFTEST TEST-START | " + gCurrentURL + "\n");
         gBrowser.loadURI(gCurrentURL);
@@ -878,6 +863,185 @@ function resetZoom() {
     gBrowser.markupDocumentViewer.fullZoom = 1.0;
 }
 
+function doPrintMode(contentRootElement) {
+    // use getAttribute because className works differently in HTML and SVG
+    return contentRootElement &&
+           contentRootElement.hasAttribute('class') &&
+           contentRootElement.getAttribute('class').split(/\s+/)
+                             .indexOf("reftest-print") != -1;
+}
+
+function setupPrintMode() {
+   var PSSVC = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
+               .getService(Components.interfaces.nsIPrintSettingsService);
+   var ps = PSSVC.newPrintSettings;
+   ps.paperWidth = 5;
+   ps.paperHeight = 3;
+
+   // Override any os-specific unwriteable margins
+   ps.unwriteableMarginTop = 0;
+   ps.unwriteableMarginLeft = 0;
+   ps.unwriteableMarginBottom = 0;
+   ps.unwriteableMarginRight = 0;
+
+   ps.headerStrLeft = "";
+   ps.headerStrCenter = "";
+   ps.headerStrRight = "";
+   ps.footerStrLeft = "";
+   ps.footerStrCenter = "";
+   ps.footerStrRight = "";
+   gBrowser.docShell.contentViewer.setPageMode(true, ps);
+}
+
+function shouldWaitForExplicitPaintWaiters() {
+    return gExplicitPendingPaintCount > 0;
+}
+
+function shouldWaitForPendingPaints() {
+    return gWindowUtils.isMozAfterPaintPending;
+}
+
+function shouldWaitForReftestWaitRemoval() {
+    var contentRootElement = gBrowser.contentDocument.documentElement;
+    // use getAttribute because className works differently in HTML and SVG
+    return contentRootElement &&
+           contentRootElement.hasAttribute('class') &&
+           contentRootElement.getAttribute('class').split(/\s+/)
+                             .indexOf("reftest-wait") != -1;
+}
+
+// Initial state. When the document has loaded and all MozAfterPaint events and
+// all explicit paint waits are flushed, we can fire the MozReftestInvalidate
+// event and move to the next state.
+const STATE_WAITING_TO_FIRE_INVALIDATE_EVENT = 0;
+// When reftest-wait has been removed from the root element, we can move to the
+// next state.
+const STATE_WAITING_FOR_REFTEST_WAIT_REMOVAL = 1;
+// When all MozAfterPaint events and all explicit paint waits are flushed, we're
+// done and can move to the COMPLETED state.
+const STATE_WAITING_TO_FINISH = 2;
+const STATE_COMPLETED = 3;
+
+function WaitForTestEnd() {
+    var contentRootElement = gBrowser.contentDocument.documentElement;
+
+    var stopAfterPaintReceived = false;
+    var currentDoc = gBrowser.contentDocument;
+    var utils = gBrowser.contentWindow.QueryInterface(CI.nsIInterfaceRequestor)
+        .getInterface(CI.nsIDOMWindowUtils);
+    var state = STATE_WAITING_TO_FIRE_INVALIDATE_EVENT;
+    gFailureReason = "timed out waiting for pending paint count to reach zero";
+
+    function FlushRendering() {
+        function flushWindow(win) {
+            try {
+                win.document.documentElement.getBoundingClientRect();
+            } catch (e) {}
+            for (var i = 0; i < win.frames.length; ++i) {
+                flushWindow(win.frames[i]);
+            }
+        }
+              
+        // Flush pending restyles and reflows
+        flushWindow(contentRootElement.ownerDocument.defaultView);
+        // Flush out invalidation
+        utils.processUpdates();
+    }
+
+    function AfterPaintListener(event) {
+        if (event.target.document != document) {
+            // ignore paint events for subframes or old documents in the window.
+            // Invalidation in subframes will cause invalidation in the toplevel document anyway.
+            return;
+        }
+        UpdateCurrentCanvasForEvent(event);
+        // These events are fired immediately after a paint. Don't
+        // confuse ourselves by firing synchronously if we triggered the
+        // paint ourselves.
+        setTimeout(MakeProgress, 0);
+    }
+
+    function AttrModifiedListener() {
+        // Wait for the next return-to-event-loop before continuing --- for
+        // example, the attribute may have been modified in an subdocument's
+        // load event handler, in which case we need load event processing
+        // to complete and unsuppress painting before we check isMozAfterPaintPending.
+        setTimeout(MakeProgress, 0);
+    }
+
+    function ExplicitPaintsCompleteListener() {
+        // Since this can fire while painting, don't confuse ourselves by
+        // firing synchronously. It's fine to do this asynchronously.
+        setTimeout(MakeProgress, 0);
+    }
+
+    function RemoveListeners() {
+        // OK, we can end the test now.
+        window.removeEventListener("MozAfterPaint", AfterPaintListener, false);
+        contentRootElement.removeEventListener("DOMAttrModified", AttrModifiedListener, false);
+        gExplicitPendingPaintsCompleteHook = null;
+        gTimeoutHook = null;
+        // Make sure we're in the COMPLETED state just in case
+        // (this may be called via the test-timeout hook)
+        state = STATE_COMPLETED;
+    }
+
+    // Everything that could cause shouldWaitForXXX() to
+    // change from returning true to returning false is monitored via some kind
+    // of event listener which eventually calls this function.
+    function MakeProgress() {
+        if (state >= STATE_COMPLETED)
+            return;
+
+        FlushRendering();
+
+        switch (state) {
+        case STATE_WAITING_TO_FIRE_INVALIDATE_EVENT:
+            if (shouldWaitForExplicitPaintWaiters() || shouldWaitForPendingPaints())
+                return;
+            state = STATE_WAITING_FOR_REFTEST_WAIT_REMOVAL;
+            gFailureReason = "timed out waiting for reftest-wait to be removed";
+            // Notify the test document that now is a good time to test some invalidation
+            var notification = document.createEvent("Events");
+            notification.initEvent("MozReftestInvalidate", true, false);
+            contentRootElement.dispatchEvent(notification);
+            // Try next state
+            MakeProgress();
+            return;
+
+        case STATE_WAITING_FOR_REFTEST_WAIT_REMOVAL:
+            if (shouldWaitForReftestWaitRemoval())
+                return;
+            state = STATE_WAITING_TO_FINISH;
+            gFailureReason = "timed out waiting for pending paint count to " +
+                "reach zero (after reftest-wait removed and switch to print mode)";
+            if (doPrintMode(contentRootElement)) {
+                setupPrintMode();
+                didPrintMode = true;
+            }
+            // Try next state
+            MakeProgress();
+            return;
+
+        case STATE_WAITING_TO_FINISH:
+            if (shouldWaitForExplicitPaintWaiters() || shouldWaitForPendingPaints())
+                return;
+            state = STATE_COMPLETED;
+            gFailureReason = "timed out while taking snapshot (bug in harness?)";
+            RemoveListeners();
+            setTimeout(RecordResult, 0);
+            return;
+        }
+    }
+
+    window.addEventListener("MozAfterPaint", AfterPaintListener, false);
+    contentRootElement.addEventListener("DOMAttrModified", AttrModifiedListener, false);
+    gExplicitPendingPaintsCompleteHook = ExplicitPaintsCompleteListener;
+    gTimeoutHook = RemoveListeners;
+
+    MakeProgress();
+}
+
 function OnDocumentLoad(event)
 {
     if (event.target != gBrowser.contentDocument)
@@ -896,184 +1060,41 @@ function OnDocumentLoad(event)
 
     var contentRootElement = gBrowser.contentDocument.documentElement;
 
-    function shouldWait() {
-        // use getAttribute because className works differently in HTML and SVG
-        return contentRootElement &&
-               contentRootElement.hasAttribute('class') &&
-               contentRootElement.getAttribute('class').split(/\s+/)
-                                 .indexOf("reftest-wait") != -1;
-    }
-
-    function doPrintMode() {
-        // use getAttribute because className works differently in HTML and SVG
-        return contentRootElement &&
-               contentRootElement.hasAttribute('class') &&
-               contentRootElement.getAttribute('class').split(/\s+/)
-                                 .indexOf("reftest-print") != -1;
-    }
-
-    function setupPrintMode() {
-       var PSSVC = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
-                  .getService(Components.interfaces.nsIPrintSettingsService);
-       var ps = PSSVC.newPrintSettings;
-       ps.paperWidth = 5;
-       ps.paperHeight = 3;
-
-       // Override any os-specific unwriteable margins
-       ps.unwriteableMarginTop = 0;
-       ps.unwriteableMarginLeft = 0;
-       ps.unwriteableMarginBottom = 0;
-       ps.unwriteableMarginRight = 0;
-
-       ps.headerStrLeft = "";
-       ps.headerStrCenter = "";
-       ps.headerStrRight = "";
-       ps.footerStrLeft = "";
-       ps.footerStrCenter = "";
-       ps.footerStrRight = "";
-       gBrowser.docShell.contentViewer.setPageMode(true, ps);
-    }
-
     setupZoom(contentRootElement);
 
-    if (shouldWait()) {
-        gRunningReftestWaitTest = true;
-        // The testcase will let us know when the test snapshot should be made.
-        // Register a mutation listener to know when the 'reftest-wait' class
-        // gets removed.
-        gFailureReason = "timed out waiting for reftest-wait to be removed (after onload fired)"
-
-        var stopAfterPaintReceived = false;
-        var currentDoc = gBrowser.contentDocument;
-        var utils = gBrowser.contentWindow.QueryInterface(CI.nsIInterfaceRequestor)
-            .getInterface(CI.nsIDOMWindowUtils);
-
-        function FlushRendering() {
-            function flushWindow(win) {
-                try {
-                    win.document.documentElement.getBoundingClientRect();
-                } catch (e) {}
-                for (var i = 0; i < win.frames.length; ++i) {
-                    flushWindow(win.frames[i]);
-                }
-            }
-                
-            // Flush pending restyles and reflows
-            flushWindow(contentRootElement.ownerDocument.defaultView);
-            // Flush out invalidation
-            utils.processUpdates();
-        }
-
-        function WhenMozAfterPaintFlushed(continuation) {
-            if (gWindowUtils.isMozAfterPaintPending) {
-                function handler() {
-                    window.removeEventListener("MozAfterPaint", handler, false);
-                    continuation();
-                }
-                window.addEventListener("MozAfterPaint", handler, false);
-            } else {
-                continuation();
-            }
-        }
-
-        function AfterPaintListener(event) {
-            if (event.target.document != document) {
-                // ignore paint events for subframes or old documents in the window.
-                // Invalidation in subframes will cause invalidation in the toplevel document anyway.
-                return;
-            }
-
-            FlushRendering();
-            UpdateCurrentCanvasForEvent(event);
-            // When stopAfteraintReceived is set, we can stop --- but we should keep going as long
-            // as there are paint events coming (there probably shouldn't be any, but it doesn't
-            // hurt to process them)
-            if (stopAfterPaintReceived && !gWindowUtils.isMozAfterPaintPending &&
-                !gExplicitPendingPaintCounter) {
-                FinishWaitingForTestEnd();
-            }
-        }
-
-        function FinishWaitingForTestEnd() {
-            window.removeEventListener("MozAfterPaint", AfterPaintListener, false);
-            setTimeout(DocumentLoaded, 0);
-        }
-
-        function AttrModifiedListener() {
-            if (shouldWait())
-                return;
-
-            // We don't want to be notified again
-            contentRootElement.removeEventListener("DOMAttrModified", AttrModifiedListener, false);
-            // Wait for the next return-to-event-loop before continuing to flush rendering and
-            // check isMozAfterPaintPending --- for example, the attribute may have been modified
-            // in an subdocument's load event handler, in which case we need load event processing
-            // to complete and unsuppress painting before we check isMozAfterPaintPending.
-            setTimeout(AttrModifiedListenerContinuation, 0);
-        }
-        // Set global pointer to this function to be able call it from PaintWaitFinishedListener
-        gAttrListenerFunc = AttrModifiedListener;
-
-        function AttrModifiedListenerContinuation() {
-            if (gExplicitPendingPaintCounter) {
-                return;
-            }
-
-            if (doPrintMode())
-                setupPrintMode();
-            FlushRendering();
-
-            if (gWindowUtils.isMozAfterPaintPending) {
-                // Wait for the last invalidation to have happened and been snapshotted before
-                // we stop the test
-                stopAfterPaintReceived = true;
-            } else {
-                // Nothing to wait for, so stop now
-                FinishWaitingForTestEnd();
-            }
-        }
-
-        function StartWaitingForTestEnd() {
-            FlushRendering();
-
-            function continuation() {
-                window.addEventListener("MozAfterPaint", AfterPaintListener, false);
-                contentRootElement.addEventListener("DOMAttrModified", AttrModifiedListener, false);
-
-                // Take a snapshot of the window in its current state
-                InitCurrentCanvasWithSnapshot();
-
-                if (!shouldWait()) {
-                    // reftest-wait was already removed (during the interval between OnDocumentLoaded
-                    // calling setTimeout(StartWaitingForTestEnd,0) below, and this function
-                    // actually running), so let's fake a direct notification of the attribute
-                    // change.
-                    AttrModifiedListener();
-                    return;
-                }
-
-                // Notify the test document that now is a good time to test some invalidation
-                var notification = document.createEvent("Events");
-                notification.initEvent("MozReftestInvalidate", true, false);
-                contentRootElement.dispatchEvent(notification);
-            }
-            WhenMozAfterPaintFlushed(continuation);
-        }
-
-        // After this load event has finished being dispatched, painting is normally
-        // unsuppressed, which invalidates the entire window. So ensure
-        // StartWaitingForTestEnd runs after that invalidation has been requested.
-        setTimeout(StartWaitingForTestEnd, 0);
-    } else {
-        gRunningReftestWaitTest = false;
-        if (doPrintMode())
+    function AfterOnLoadScripts() {
+        if (doPrintMode(contentRootElement))
             setupPrintMode();
 
+        // Take a snapshot now. We need to do this before we check whether
+        // we should wait, since this might trigger dispatching of
+        // MozPaintWait events and make shouldWaitForExplicitPaintWaiters() true
+        // below.
+        InitCurrentCanvasWithSnapshot();
+
+        if (shouldWaitForExplicitPaintWaiters()) {
+            // Go into reftest-wait mode belatedly.
+            WaitForTestEnd();
+        } else {
+            RecordResult();
+        }
+    }
+
+    if (shouldWaitForReftestWaitRemoval() || shouldWaitForExplicitPaintWaiters()) {
+        // Go into reftest-wait mode immediately after painting has been
+        // unsuppressed, after the onload event has finished dispatching.
+        gFailureReason = "timed out waiting for test to complete (trying to get into WaitForTestEnd)";
+        setTimeout(function() {
+            InitCurrentCanvasWithSnapshot();
+            WaitForTestEnd();
+        }, 0);
+    } else {
         // Since we can't use a bubbling-phase load listener from chrome,
         // this is a capturing phase listener.  So do setTimeout twice, the
         // first to get us after the onload has fired in the content, and
         // the second to get us after any setTimeout(foo, 0) in the content.
-        setTimeout(setTimeout, 0, DocumentLoaded, 0);
+        gFailureReason = "timed out waiting for test to complete (waiting for onload scripts to complete)";
+        setTimeout(setTimeout, 0, AfterOnLoadScripts, 0);
     }
 }
 
@@ -1173,7 +1194,7 @@ function UpdateCurrentCanvasForEvent(event)
     }
 }
 
-function DocumentLoaded()
+function RecordResult()
 {
     // Keep track of which test was slowest, and how long it took.
     var currentTestRunTime = Date.now() - gCurrentTestStartTime;
@@ -1284,16 +1305,6 @@ function DocumentLoaded()
 
     if (gURICanvases[gCurrentURL]) {
         gCurrentCanvas = gURICanvases[gCurrentURL];
-    } else if (gCurrentCanvas == null) {
-        InitCurrentCanvasWithSnapshot();
-        if (gExplicitPendingPaintCounter) {
-            // reftest contain elements wich are waiting paint to be finished
-            // lets cancel this reftest run, and let "MozPaintWaitFinished"-listener
-            // know that we need to restart reftest when all paints are finished
-            gTestContainsAsyncPaintObjects = true;
-            gCurrentCanvas = null;
-            return;
-        }
     }
     if (gState == 1) {
         gCanvas1 = gCurrentCanvas;
@@ -1374,6 +1385,9 @@ function DocumentLoaded()
 
 function LoadFailed()
 {
+    if (gTimeoutHook) {
+        gTimeoutHook();
+    }
     gFailureTimeout = null;
     ++gTestResults.FailedLoad;
     gDumpLog("REFTEST TEST-UNEXPECTED-FAIL | " +
