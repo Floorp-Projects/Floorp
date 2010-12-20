@@ -168,18 +168,22 @@ js_DoubleToUint32(jsdouble d)
 JS_DEFINE_CALLINFO_1(extern, UINT32, js_DoubleToUint32, DOUBLE, 1, ACCSET_NONE)
 
 jsdouble FASTCALL
-js_StringToNumber(JSContext* cx, JSString* str)
+js_StringToNumber(JSContext* cx, JSString* str, JSBool *ok)
 {
-    return StringToNumberType<jsdouble>(cx, str);
+    double out = 0;  /* silence warnings. */
+    *ok = StringToNumberType<jsdouble>(cx, str, &out);
+    return out;
 }
-JS_DEFINE_CALLINFO_2(extern, DOUBLE, js_StringToNumber, CONTEXT, STRING, 1, ACCSET_NONE)
+JS_DEFINE_CALLINFO_3(extern, DOUBLE, js_StringToNumber, CONTEXT, STRING, BOOLPTR, 1, ACCSET_NONE)
 
 int32 FASTCALL
-js_StringToInt32(JSContext* cx, JSString* str)
+js_StringToInt32(JSContext* cx, JSString* str, JSBool *ok)
 {
-    return StringToNumberType<int32>(cx, str);
+    int32 out = 0;  /* silence warnings. */
+    *ok = StringToNumberType<int32>(cx, str, &out);
+    return out;
 }
-JS_DEFINE_CALLINFO_2(extern, INT32, js_StringToInt32, CONTEXT, STRING, 1, ACCSET_NONE)
+JS_DEFINE_CALLINFO_3(extern, INT32, js_StringToInt32, CONTEXT, STRING, BOOLPTR, 1, ACCSET_NONE)
 
 /* Nb: it's always safe to set isDefinitelyAtom to false if you're unsure or don't know. */
 static inline JSBool

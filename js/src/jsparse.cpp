@@ -641,9 +641,9 @@ NameNode::initCommon(JSTreeContext *tc)
 {
     pn_expr = NULL;
     pn_cookie.makeFree();
-    pn_dflags = tc->atTopLevel() ? PND_TOPLEVEL : 0;
-    if (!tc->topStmt || tc->topStmt->type == STMT_BLOCK)
-        pn_dflags |= PND_BLOCKCHILD;
+    pn_dflags = (!tc->topStmt || tc->topStmt->type == STMT_BLOCK)
+                ? PND_BLOCKCHILD
+                : 0;
     pn_blockid = tc->blockid();
 }
 
@@ -866,6 +866,7 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *calle
 #endif
 
     inDirectivePrologue = true;
+    tokenStream.setOctalCharacterEscape(false);
     for (;;) {
         tt = tokenStream.peekToken(TSF_OPERAND);
         if (tt <= TOK_EOF) {
@@ -880,8 +881,8 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *calle
             goto out;
         JS_ASSERT(!cg.blockNode);
 
-        if (inDirectivePrologue)
-            inDirectivePrologue = parser.recognizeDirectivePrologue(pn);
+        if (inDirectivePrologue && !parser.recognizeDirectivePrologue(pn, &inDirectivePrologue))
+            goto out;
 
         if (!js_FoldConstants(cx, pn, &cg))
             goto out;
@@ -979,7 +980,7 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *calle
     JS_DumpArenaStats(stdout);
 #endif
     script = JSScript::NewScriptFromCG(cx, &cg);
-    if (script && funbox && script != script->emptyScript())
+    if (script && funbox)
         script->savedCallerFun = true;
 
 #ifdef JS_SCOPE_DEPTH_METER
@@ -1079,7 +1080,7 @@ Compiler::defineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *scrip
         JSScript *inner = worklist.back();
         worklist.popBack();
 
-        if (inner->objectsOffset != 0) {
+        if (JSScript::isValidOffset(inner->objectsOffset)) {
             JSObjectArray *arr = inner->objects();
             for (size_t i = 0; i < arr->length; i++) {
                 JSObject *obj = arr->vector[i];
@@ -1088,14 +1089,16 @@ Compiler::defineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *scrip
                 JSFunction *fun = obj->getFunctionPrivate();
                 JS_ASSERT(fun->isInterpreted());
                 JSScript *inner = fun->u.i.script;
-                if (inner->globalsOffset == 0 && inner->objectsOffset == 0)
+                if (!JSScript::isValidOffset(inner->globalsOffset) &&
+                    !JSScript::isValidOffset(inner->objectsOffset)) {
                     continue;
+                }
                 if (!worklist.append(inner))
                     return false;
             }
         }
 
-        if (inner->globalsOffset == 0)
+        if (!JSScript::isValidOffset(inner->globalsOffset))
             continue;
 
         GlobalSlotArray *globalUses = inner->globals();
@@ -1489,6 +1492,8 @@ Define(JSParseNode *pn, JSAtom *atom, JSTreeContext *tc, bool let = false)
     ALE_SET_DEFN(ale, pn);
     pn->pn_defn = true;
     pn->pn_dflags &= ~PND_PLACEHOLDER;
+    if (!tc->parent)
+        pn->pn_dflags |= PND_TOPLEVEL;
     return true;
 }
 
@@ -1570,7 +1575,6 @@ MakeDefIntoUse(JSDefinition *dn, JSParseNode *pn, JSAtom *atom, JSTreeContext *t
 
         dn->pn_op = (js_CodeSpec[dn->pn_op].format & JOF_SET) ? JSOP_SETNAME : JSOP_NAME;
     } else if (dn->kind() == JSDefinition::FUNCTION) {
-        JS_ASSERT(dn->isTopLevel());
         JS_ASSERT(dn->pn_op == JSOP_NOP);
         dn->pn_type = TOK_NAME;
         dn->pn_arity = PN_NAME;
@@ -2553,8 +2557,6 @@ LeaveFunction(JSParseNode *fn, JSTreeContext *funtc, JSAtom *funAtom = NULL,
     funbox->tcflags |= funtc->flags & (TCF_FUN_FLAGS | TCF_COMPILE_N_GO | TCF_RETURN_EXPR);
 
     fn->pn_dflags |= PND_INITIALIZED;
-    JS_ASSERT_IF(tc->atTopLevel() && lambda == 0 && funAtom,
-                 fn->pn_dflags & PND_TOPLEVEL);
     if (!tc->topStmt || tc->topStmt->type == STMT_BLOCK)
         fn->pn_dflags |= PND_BLOCKCHILD;
 
@@ -2874,12 +2876,12 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
      * If a lambda, give up on JSOP_{GET,CALL}UPVAR usage unless this function
      * is immediately applied (we clear PND_FUNARG if so -- see memberExpr).
      *
-     * Also treat function sub-statements (non-lambda, non-top-level functions)
-     * as escaping funargs, since we can't statically analyze their definitions
+     * Treat function sub-statements (non-lambda, non-body-level functions) as
+     * escaping funargs, since we can't statically analyze their definitions
      * and uses.
      */
-    bool topLevel = tc->atTopLevel();
-    pn->pn_dflags = (lambda || !topLevel) ? PND_FUNARG : 0;
+    bool bodyLevel = tc->atBodyLevel();
+    pn->pn_dflags = (lambda || !bodyLevel) ? PND_FUNARG : 0;
 
     /*
      * Record names for function statements in tc->decls so we know when to
@@ -2907,7 +2909,7 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
                 }
             }
 
-            if (topLevel) {
+            if (bodyLevel) {
                 ALE_SET_DEFN(ale, pn);
                 pn->pn_defn = true;
                 pn->dn_uses = dn;               /* dn->dn_uses is now pn_link */
@@ -2915,7 +2917,7 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
                 if (!MakeDefIntoUse(dn, pn, funAtom, tc))
                     return NULL;
             }
-        } else if (topLevel) {
+        } else if (bodyLevel) {
             /*
              * If this function was used before it was defined, claim the
              * pre-created definition node for this function that primaryExpr
@@ -2944,43 +2946,36 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
         }
 
         /*
-         * A function nested at top level inside another's body needs only a
-         * local variable to bind its name to its value, and not an activation
-         * object property (it might also need the activation property, if the
-         * outer function contains with statements, e.g., but the stack slot
-         * wins when jsemit.c's BindNameToSlot can optimize a JSOP_NAME into a
+         * A function directly inside another's body needs only a local
+         * variable to bind its name to its value, and not an activation object
+         * property (it might also need the activation property, if the outer
+         * function contains with statements, e.g., but the stack slot wins
+         * when jsemit.cpp's BindNameToSlot can optimize a JSOP_NAME into a
          * JSOP_GETLOCAL bytecode).
          */
-        if (topLevel) {
-            pn->pn_dflags |= PND_TOPLEVEL;
+        if (bodyLevel && tc->inFunction()) {
+            /*
+             * Define a local in the outer function so that BindNameToSlot
+             * can properly optimize accesses. Note that we need a local
+             * variable, not an argument, for the function statement. Thus
+             * we add a variable even if a parameter with the given name
+             * already exists.
+             */
+            uintN index;
+            switch (tc->fun()->lookupLocal(context, funAtom, &index)) {
+              case JSLOCAL_NONE:
+              case JSLOCAL_ARG:
+                index = tc->fun()->u.i.nvars;
+                if (!tc->fun()->addLocal(context, funAtom, JSLOCAL_VAR))
+                    return NULL;
+                /* FALL THROUGH */
 
-            if (tc->inFunction()) {
-                JSLocalKind localKind;
-                uintN index;
+              case JSLOCAL_VAR:
+                pn->pn_cookie.set(tc->staticLevel, index);
+                pn->pn_dflags |= PND_BOUND;
+                break;
 
-                /*
-                 * Define a local in the outer function so that BindNameToSlot
-                 * can properly optimize accesses. Note that we need a local
-                 * variable, not an argument, for the function statement. Thus
-                 * we add a variable even if a parameter with the given name
-                 * already exists.
-                 */
-                localKind = tc->fun()->lookupLocal(context, funAtom, &index);
-                switch (localKind) {
-                  case JSLOCAL_NONE:
-                  case JSLOCAL_ARG:
-                    index = tc->fun()->u.i.nvars;
-                    if (!tc->fun()->addLocal(context, funAtom, JSLOCAL_VAR))
-                        return NULL;
-                    /* FALL THROUGH */
-
-                  case JSLOCAL_VAR:
-                    pn->pn_cookie.set(tc->staticLevel, index);
-                    pn->pn_dflags |= PND_BOUND;
-                    break;
-
-                  default:;
-                }
+              default:;
             }
         }
     }
@@ -3114,11 +3109,12 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
         outertc->flags |= TCF_FUN_HEAVYWEIGHT;
     } else {
         /*
-         * If this function is a named statement function not at top-level
-         * (i.e. not a top-level function definiton or expression), then our
-         * enclosing function, if any, must be heavyweight.
+         * If this function is not at body level of a program or function (i.e.
+         * it is a function statement that is not a direct child of a program
+         * or function), then our enclosing function, if any, must be
+         * heavyweight.
          */
-        if (!topLevel && lambda == 0 && funAtom)
+        if (!bodyLevel && lambda == 0 && funAtom)
             outertc->flags |= TCF_FUN_HEAVYWEIGHT;
     }
 
@@ -3144,7 +3140,7 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
         result->pn_pos = pn->pn_pos;
         result->pn_kid = pn;
         op = JSOP_LAMBDA;
-    } else if (!topLevel) {
+    } else if (!bodyLevel) {
         /*
          * ECMA ed. 3 extension: a function expression statement not at the
          * top level, e.g., in a compound statement such as the "then" part
@@ -3166,10 +3162,9 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
         pn->pn_body = body;
     }
 
-    if (!outertc->inFunction() && topLevel && funAtom && !lambda &&
-        outertc->compiling()) {
+    if (!outertc->inFunction() && bodyLevel && funAtom && !lambda && outertc->compiling()) {
         JS_ASSERT(pn->pn_cookie.isFree());
-        if (!DefineGlobal(pn, (JSCodeGenerator *)outertc, funAtom))
+        if (!DefineGlobal(pn, outertc->asCodeGenerator(), funAtom))
             return false;
     }
 
@@ -3235,13 +3230,33 @@ Parser::functionExpr()
  * if it can't possibly be a directive, now or in the future.
  */
 bool
-Parser::recognizeDirectivePrologue(JSParseNode *pn)
+Parser::recognizeDirectivePrologue(JSParseNode *pn, bool *isDirectivePrologueMember)
 {
-    if (!pn->isDirectivePrologueMember())
-        return false;
+    *isDirectivePrologueMember = pn->isDirectivePrologueMember();
+    if (!*isDirectivePrologueMember)
+        return true;
     if (pn->isDirective()) {
         JSAtom *directive = pn->pn_kid->pn_atom;
         if (directive == context->runtime->atomState.useStrictAtom) {
+            /*
+             * Unfortunately, Directive Prologue members in general may contain
+             * escapes, even while "use strict" directives may not.  Therefore
+             * we must check whether an octal character escape has been seen in
+             * any previous directives whenever we encounter a "use strict"
+             * directive, so that the octal escape is properly treated as a
+             * syntax error.  An example of this case:
+             *
+             *   function error()
+             *   {
+             *     "\145"; // octal escape
+             *     "use strict"; // retroactively makes "\145" a syntax error
+             *   }
+             */
+            if (tokenStream.hasOctalCharacterEscape()) {
+                reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_DEPRECATED_OCTAL);
+                return false;
+            }
+
             tc->flags |= TCF_STRICT_MODE_CODE;
             tokenStream.setStrictMode();
         }
@@ -3259,7 +3274,6 @@ Parser::statements()
 {
     JSParseNode *pn, *pn2, *saveBlock;
     TokenKind tt;
-    bool inDirectivePrologue = tc->atTopLevel();
 
     JS_CHECK_RECURSION(context, return NULL);
 
@@ -3272,6 +3286,8 @@ Parser::statements()
     saveBlock = tc->blockNode;
     tc->blockNode = pn;
 
+    bool inDirectivePrologue = tc->atBodyLevel();
+    tokenStream.setOctalCharacterEscape(false);
     for (;;) {
         tt = tokenStream.peekToken(TSF_OPERAND);
         if (tt <= TOK_EOF || tt == TOK_RC) {
@@ -3289,20 +3305,20 @@ Parser::statements()
             return NULL;
         }
 
-        if (inDirectivePrologue)
-            inDirectivePrologue = recognizeDirectivePrologue(pn2);
+        if (inDirectivePrologue && !recognizeDirectivePrologue(pn2, &inDirectivePrologue))
+            return NULL;
 
         if (pn2->pn_type == TOK_FUNCTION) {
             /*
-             * PNX_FUNCDEFS notifies the emitter that the block contains top-
+             * PNX_FUNCDEFS notifies the emitter that the block contains body-
              * level function definitions that should be processed before the
              * rest of nodes.
              *
              * TCF_HAS_FUNCTION_STMT is for the TOK_LC case in Statement. It
-             * is relevant only for function definitions not at top-level,
+             * is relevant only for function definitions not at body-level,
              * which we call function statements.
              */
-            if (tc->atTopLevel())
+            if (tc->atBodyLevel())
                 pn->pn_xflags |= PNX_FUNCDEFS;
             else
                 tc->flags |= TCF_HAS_FUNCTION_STMT;
@@ -3372,10 +3388,10 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
     jsint n;
 
     /*
-     * Top-level 'let' is the same as 'var' currently -- this may change in a
-     * successor standard to ES3.1 that specifies 'let'.
+     * Body-level 'let' is the same as 'var' currently -- this may change in a
+     * successor standard to ES5 that specifies 'let'.
      */
-    JS_ASSERT(!tc->atTopLevel());
+    JS_ASSERT(!tc->atBodyLevel());
 
     pn = data->pn;
     if (!CheckStrictBinding(cx, tc, atom, pn))
@@ -3593,7 +3609,7 @@ BindGvar(JSParseNode *pn, JSTreeContext *tc)
     if (!tc->compiling() || tc->parser->callerFrame)
         return true;
 
-    JSCodeGenerator *cg = (JSCodeGenerator *) tc;
+    JSCodeGenerator *cg = tc->asCodeGenerator();
 
     if (pn->pn_dflags & PND_CONST)
         return true;
@@ -7997,11 +8013,9 @@ Parser::xmlElementOrList(JSBool allowList)
                 return NULL;
             }
             if (endAtom && startAtom && endAtom != startAtom) {
-                JSString *str = ATOM_TO_STRING(startAtom);
-
                 /* End vs. start tag name mismatch: point to the tag name. */
                 reportErrorNumber(pn2, JSREPORT_UC | JSREPORT_ERROR, JSMSG_XML_TAG_NAME_MISMATCH,
-                                  str->chars());
+                                  startAtom->chars());
                 return NULL;
             }
 
@@ -8670,15 +8684,12 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
 #if JS_HAS_XML_SUPPORT
         if (tokenStream.matchToken(TOK_DBLCOLON)) {
             if (afterDot) {
-                JSString *str;
-
                 /*
                  * Here primaryExpr is called after . or .. followed by a name
                  * followed by ::. This is the only case where a keyword after
                  * . or .. is not treated as a property name.
                  */
-                str = ATOM_TO_STRING(pn->pn_atom);
-                tt = js_CheckKeyword(str->chars(), str->length());
+                tt = js_CheckKeyword(pn->pn_atom->chars(), pn->pn_atom->length());
                 if (tt == TOK_FUNCTION) {
                     pn->pn_arity = PN_NULLARY;
                     pn->pn_type = TOK_FUNCTION;
@@ -9418,6 +9429,7 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
             chars = (jschar *) cx->malloc((length + 1) * sizeof(jschar));
             if (!chars)
                 return JS_FALSE;
+            chars[length] = 0;
             str = js_NewString(cx, chars, length);
             if (!str) {
                 cx->free(chars);
@@ -9431,7 +9443,7 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
                 js_strncpy(chars, str2->flatChars(), length2);
                 chars += length2;
             }
-            *chars = 0;
+            JS_ASSERT(*chars == 0);
 
             /* Atomize the result string and mutate pn to refer to it. */
             pn->pn_atom = js_AtomizeString(cx, str, 0);

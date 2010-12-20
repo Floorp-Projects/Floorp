@@ -312,7 +312,7 @@ js_IsXMLName(JSContext *cx, jsval v);
 extern JSBool
 js_ToAttributeName(JSContext *cx, js::Value *vp);
 
-extern JSString *
+extern JSLinearString *
 js_EscapeAttributeValue(JSContext *cx, JSString *str, JSBool quote);
 
 extern JSString *

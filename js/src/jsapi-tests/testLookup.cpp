@@ -41,7 +41,10 @@ document_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags, JSObject **
         return false;
     if (JSVAL_IS_STRING(v.value())) {
         JSString *str = JSVAL_TO_STRING(v.value());
-        if (JS_MatchStringAndAscii(str, "all") && !(flags & JSRESOLVE_DETECTING)) {
+        JSFlatString *flatStr = JS_FlattenString(cx, str);
+        if (!flatStr)
+            return false;
+        if (JS_FlatStringEqualsAscii(flatStr, "all") && !(flags & JSRESOLVE_DETECTING)) {
             JSBool ok = JS_DefinePropertyById(cx, obj, id, JSVAL_TRUE, NULL, NULL, 0);
             *objp = ok ? obj : NULL;
             return ok;

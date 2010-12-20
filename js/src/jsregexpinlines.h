@@ -76,7 +76,7 @@ regexp_statics_construct(JSContext *cx, JSObject *parent)
 class RegExp
 {
     jsrefcount                  refCount;
-    JSString                    *source;
+    JSLinearString              *source;
 #if ENABLE_YARR_JIT
     JSC::Yarr::RegexCodeBlock   compiled;
 #else
@@ -85,9 +85,9 @@ class RegExp
     unsigned                    parenCount;
     uint32                      flags;
 
-    RegExp(JSString *source, uint32 flags)
+    RegExp(JSLinearString *source, uint32 flags)
       : refCount(1), source(source), compiled(), parenCount(0), flags(flags) {}
-    bool compileHelper(JSContext *cx, UString &pattern);
+    bool compileHelper(JSContext *cx, JSLinearString &pattern);
     bool compile(JSContext *cx);
     static const uint32 allFlags = JSREG_FOLD | JSREG_GLOB | JSREG_MULTILINE | JSREG_STICKY;
     void handlePCREError(JSContext *cx, int error);
@@ -154,7 +154,7 @@ class RegExp
     void decref(JSContext *cx);
 
     /* Accessors. */
-    JSString *getSource() const { return source; }
+    JSLinearString *getSource() const { return source; }
     size_t getParenCount() const { return parenCount; }
     bool ignoreCase() const { return flags & JSREG_FOLD; }
     bool global() const { return flags & JSREG_GLOB; }
@@ -257,7 +257,7 @@ RegExp::createResult(JSContext *cx, JSString *input, int *buf, size_t matchItemC
      *  0:              matched string
      *  1..pairCount-1: paren matches
      */
-    JSObject *array = js_NewSlowArrayObject(cx);
+    JSObject *array = NewSlowEmptyArray(cx);
     if (!array)
         return NULL;
     types::TypeObject *type = GetRegExpMatchType(cx);
@@ -294,7 +294,7 @@ RegExp::createResult(JSContext *cx, JSString *input, int *buf, size_t matchItemC
 }
 
 inline bool
-RegExp::executeInternal(JSContext *cx, RegExpStatics *res, JSString *input,
+RegExp::executeInternal(JSContext *cx, RegExpStatics *res, JSString *inputstr,
                         size_t *lastIndex, bool test, Value *rval)
 {
 #if !ENABLE_YARR_JIT
@@ -319,8 +319,12 @@ RegExp::executeInternal(JSContext *cx, RegExpStatics *res, JSString *input,
     for (int *it = buf; it != buf + matchItemCount; ++it)
         *it = -1;
 
-    const jschar *chars = input->chars();
+    JSLinearString *input = inputstr->ensureLinear(cx);
+    if (!input)
+        return false;
+
     size_t len = input->length();
+    const jschar *chars = input->chars();
 
     /* 
      * inputOffset emulates sticky mode by matching from this offset into the char buf and
@@ -380,11 +384,14 @@ RegExp::executeInternal(JSContext *cx, RegExpStatics *res, JSString *input,
 inline RegExp *
 RegExp::create(JSContext *cx, JSString *source, uint32 flags)
 {
+    JSLinearString *flatSource = source->ensureLinear(cx);
+    if (!flatSource)
+        return NULL;
     RegExp *self;
     void *mem = cx->malloc(sizeof(*self));
     if (!mem)
         return NULL;
-    self = new (mem) RegExp(source, flags);
+    self = new (mem) RegExp(flatSource, flags);
     if (!self->compile(cx)) {
         cx->destroy<RegExp>(self);
         return NULL;
@@ -438,7 +445,7 @@ YarrJITIsBroken(JSContext *cx)
 #endif  /* ANDROID */
 
 inline bool
-RegExp::compileHelper(JSContext *cx, UString &pattern)
+RegExp::compileHelper(JSContext *cx, JSLinearString &pattern)
 {
 #if ENABLE_YARR_JIT
     bool fellBack = false;
@@ -472,8 +479,13 @@ RegExp::compileHelper(JSContext *cx, UString &pattern)
 inline bool
 RegExp::compile(JSContext *cx)
 {
+    /* Flatten source early for the rest of compilation. */
+    if (!source->ensureLinear(cx))
+        return false;
+
     if (!sticky())
         return compileHelper(cx, *source);
+
     /*
      * The sticky case we implement hackily by prepending a caret onto the front
      * and relying on |::execute| to pseudo-slice the string when it sees a sticky regexp.
@@ -485,10 +497,10 @@ RegExp::compile(JSContext *cx)
     if (!cb.reserve(JS_ARRAY_LENGTH(prefix) + source->length() + JS_ARRAY_LENGTH(postfix)))
         return false;
     JS_ALWAYS_TRUE(cb.append(prefix, JS_ARRAY_LENGTH(prefix)));
-    JS_ALWAYS_TRUE(cb.append(source->chars(), source->length()));
+    JS_ALWAYS_TRUE(cb.append(source->flatChars(), source->length()));
     JS_ALWAYS_TRUE(cb.append(postfix, JS_ARRAY_LENGTH(postfix)));
 
-    JSString *fakeySource = js_NewStringFromCharBuffer(cx, cb);
+    JSLinearString *fakeySource = js_NewStringFromCharBuffer(cx, cb);
     if (!fakeySource)
         return false;
     return compileHelper(cx, *fakeySource);

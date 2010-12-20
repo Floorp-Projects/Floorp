@@ -214,7 +214,8 @@ _dumpJSDScript(JSDContext* jsdc, JSDScript* jsdscript, const char* leadingtext)
         if (fun) {
             n += size_t(snprintf(Buf + n, sizeof(Buf) - n, "%s", "no fun"));
         } else {
-            n += JS_PutEscapedString(Buf + n, sizeof(Buf) - n, fun, 0);
+            n += JS_PutEscapedFlatString(Buf + n, sizeof(Buf) - n,
+                                         JS_ASSERT_STRING_IS_FLAT(fun), 0);
             Buf[sizeof(Buf) - 1] = '\0';
         }
         if (n + 1 < sizeof(Buf))
@@ -587,6 +588,17 @@ jsd_GetScriptHook(JSDContext* jsdc, JSD_ScriptHookProc* hook, void** callerdata)
     return JS_TRUE;
 }    
 
+JSBool
+jsd_EnableSingleStepInterrupts(JSDContext* jsdc, JSDScript* jsdscript, JSBool enable)
+{
+    JSBool rv;
+    JSD_LOCK();
+    rv = JS_SetSingleStepMode(jsdc->dumbContext, jsdscript->script, enable);
+    JSD_UNLOCK();
+    return rv;
+}
+
+
 /***************************************************************************/
 
 void
@@ -751,7 +763,7 @@ jsd_TrapHandler(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
     }
 
     JSD_ASSERT_VALID_EXEC_HOOK(jsdhook);
-    JS_ASSERT(jsdhook->pc == (jsuword)pc);
+    JS_ASSERT(!jsdhook->pc || jsdhook->pc == (jsuword)pc);
     JS_ASSERT(jsdhook->jsdscript->script == script);
     JS_ASSERT(jsdhook->jsdscript->jsdc == jsdc);
 

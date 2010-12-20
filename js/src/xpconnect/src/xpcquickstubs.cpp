@@ -701,21 +701,32 @@ xpc_qsDOMString::xpc_qsDOMString(JSContext *cx, jsval v, jsval *pval,
     if (!s)
         return;
 
-    size_t len = s->length();
-    const PRUnichar* chars =
-        (len == 0 ? traits::sEmptyBuffer :
-                    reinterpret_cast<const PRUnichar*>(JS_GetStringChars(s)));
+    size_t len;
+    const jschar *chars = JS_GetStringCharsZAndLength(cx, s, &len);
+    if (!chars)
+        return;
+
     new(mBuf) implementation_type(chars, len);
     mValid = JS_TRUE;
 }
 
-xpc_qsACString::xpc_qsACString(JSContext *cx, jsval v, jsval *pval)
+xpc_qsACString::xpc_qsACString(JSContext *cx, jsval v, jsval *pval,
+                               StringificationBehavior nullBehavior,
+                               StringificationBehavior undefinedBehavior)
 {
     typedef implementation_type::char_traits traits;
     // From the T_CSTRING case in XPCConvert::JSData2Native.
-    JSString *s = InitOrStringify<traits>(cx, v, pval, eNull, eNull);
+    JSString *s = InitOrStringify<traits>(cx, v, pval, nullBehavior,
+                                          undefinedBehavior);
     if (!s)
         return;
+
+    size_t len = JS_GetStringEncodingLength(cx, s);
+    if(len == size_t(-1))
+    {
+        mValid = JS_FALSE;
+        return;
+    }
 
     JSAutoByteString bytes(cx, s);
     if(!bytes)
@@ -724,7 +735,7 @@ xpc_qsACString::xpc_qsACString(JSContext *cx, jsval v, jsval *pval)
         return;
     }
 
-    new(mBuf) implementation_type(bytes.ptr(), strlen(bytes.ptr()));
+    new(mBuf) implementation_type(bytes.ptr(), len);
     mValid = JS_TRUE;
 }
 
@@ -736,9 +747,10 @@ xpc_qsAUTF8String::xpc_qsAUTF8String(JSContext *cx, jsval v, jsval *pval)
     if (!s)
         return;
 
-    size_t len = s->length();
-    const PRUnichar* chars =
-        reinterpret_cast<const PRUnichar*>(JS_GetStringChars(s));
+    size_t len;
+    const PRUnichar *chars = JS_GetStringCharsZAndLength(cx, s, &len);
+    if (!chars)
+        return;
 
     new(mBuf) implementation_type(chars, len);
     mValid = JS_TRUE;
@@ -1023,8 +1035,12 @@ xpc_qsJsvalToWcharStr(JSContext *cx, jsval v, jsval *pval, PRUnichar **pstr)
         *pval = STRING_TO_JSVAL(str);  // Root the new string.
     }
 
+    const jschar *chars = JS_GetStringCharsZ(cx, str);
+    if (!chars)
+        return JS_FALSE;
+
     // XXXbz this is casting away constness too...  That seems like a bad idea.
-    *pstr = (PRUnichar*)JS_GetStringChars(str);
+    *pstr = const_cast<jschar *>(chars);
     return JS_TRUE;
 }
 

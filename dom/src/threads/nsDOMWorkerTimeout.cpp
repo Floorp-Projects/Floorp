@@ -196,10 +196,9 @@ nsDOMWorkerTimeout::ExpressionCallback::Run(nsDOMWorkerTimeout* aTimeout,
   JSString* expression = JS_ValueToString(aCx, mExpression);
   NS_ENSURE_TRUE(expression, NS_ERROR_FAILURE);
 
-  jschar* string = JS_GetStringChars(expression);
+  size_t stringLength;
+  const jschar* string = JS_GetStringCharsAndLength(aCx, expression, &stringLength);
   NS_ENSURE_TRUE(string, NS_ERROR_FAILURE);
-
-  size_t stringLength = JS_GetStringLength(expression);
 
   jsval rval;
   PRBool success = JS_EvaluateUCScriptForPrincipals(aCx, global, principal,

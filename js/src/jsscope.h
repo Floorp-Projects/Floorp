@@ -285,6 +285,11 @@ CastAsPropertyOp(js::Class *clasp)
     return JS_DATA_TO_FUNC_PTR(PropertyOp, clasp);
 }
 
+/*
+ * Reuse the API-only JSPROP_INDEX attribute to mean shadowability.
+ */
+#define JSPROP_SHADOWABLE       JSPROP_INDEX
+
 struct Shape : public JSObjectMap
 {
     friend struct ::JSObject;
@@ -593,6 +598,17 @@ struct Shape : public JSObjectMap
     }
     bool isAccessorDescriptor() const {
         return (attrs & (JSPROP_SETTER | JSPROP_GETTER)) != 0;
+    }
+
+    /*
+     * For ES5 compatibility, we allow properties with JSPropertyOp-flavored
+     * setters to be shadowed when set. The "own" property thereby created in
+     * the directly referenced object will have the same getter and setter as
+     * the prototype property. See bug 552432.
+     */
+    bool shadowable() const {
+        JS_ASSERT_IF(isDataDescriptor(), writable());
+        return hasSlot() || (attrs & JSPROP_SHADOWABLE);
     }
 
     uint32 entryCount() const {

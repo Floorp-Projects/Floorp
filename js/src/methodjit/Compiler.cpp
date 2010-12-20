@@ -42,6 +42,7 @@
 #include "MethodJIT.h"
 #include "jsnum.h"
 #include "jsbool.h"
+#include "jsemit.h"
 #include "jsiter.h"
 #include "Compiler.h"
 #include "StubCalls.h"
@@ -130,7 +131,6 @@ mjit::Compiler::Compiler(JSContext *cx, JSStackFrame *fp)
 CompileStatus
 mjit::Compiler::compile()
 {
-    JS_ASSERT(!script->isEmpty());
     JS_ASSERT_IF(isConstructing, !script->jitCtor);
     JS_ASSERT_IF(!isConstructing, !script->jitNormal);
 
@@ -498,8 +498,15 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
     JSC::LinkBuffer fullCode(result, totalSize);
     JSC::LinkBuffer stubCode(result + masm.size(), stubcc.size());
 
+    size_t nNmapLive = 0;
+    for (size_t i = 0; i < script->length; i++) {
+        analyze::Bytecode *opinfo = analysis->maybeCode(i);
+        if (opinfo && opinfo->safePoint)
+            nNmapLive++;
+    }
+
     size_t totalBytes = sizeof(JITScript) +
-                        sizeof(void *) * script->length +
+                        sizeof(NativeMapEntry) * nNmapLive +
 #if defined JS_MONOIC
                         sizeof(ic::MICInfo) * mics.length() +
                         sizeof(ic::CallICInfo) * callICs.length() +
@@ -525,22 +532,26 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
     jit->code = JSC::MacroAssemblerCodeRef(result, execPool, masm.size() + stubcc.size());
     jit->nCallSites = callSites.length();
     jit->invokeEntry = result;
+    jit->singleStepMode = script->singleStepMode;
 
     /* Build the pc -> ncode mapping. */
-    void **nmap = (void **)cursor;
-    cursor += sizeof(void *) * script->length;
+    NativeMapEntry *nmap = (NativeMapEntry *)cursor;
+    cursor += sizeof(NativeMapEntry) * nNmapLive;
 
-    for (size_t i = 0; i < script->length; i++) {
-        Label L = jumpMap[i];
-        analyze::Bytecode *opinfo = analysis->maybeCode(i);
-        if (!opinfo)
-            continue;
-        if (opinfo->exceptionEntry || opinfo->switchTarget ||
-            JSOp(script->code[i]) == JSOP_TRAP) {
-            JS_ASSERT(L.isValid());
-            nmap[i] = (uint8 *)(result + masm.distanceOf(L));
+    size_t ix = 0;
+    if (nNmapLive > 0) {
+        for (size_t i = 0; i < script->length; i++) {
+            analyze::Bytecode *opinfo = analysis->maybeCode(i);
+            if (opinfo && opinfo->safePoint) {
+                Label L = jumpMap[i];
+                JS_ASSERT(L.isValid());
+                nmap[ix].bcOff = i;
+                nmap[ix].ncode = (uint8 *)(result + masm.distanceOf(L));
+                ix++;
+            }
         }
     }
+    JS_ASSERT(ix == nNmapLive);
 
     if (fun) {
         jit->arityCheckEntry = stubCode.locationOf(arityLabel).executableAddress();
@@ -621,6 +632,12 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
                      stubCode.locationOf(callICs[i].slowPathStart);
             cics[i].oolJumpOffset = offset;
             JS_ASSERT(cics[i].oolJumpOffset == offset);
+
+            /* Compute the start of the OOL IC call. */
+            offset = stubCode.locationOf(callICs[i].icCall) -
+                     stubCode.locationOf(callICs[i].slowPathStart);
+            cics[i].icCallOffset = offset;
+            JS_ASSERT(cics[i].icCallOffset == offset);
 
             /* Compute the slow join point offset. */
             offset = stubCode.locationOf(callICs[i].slowJoinPoint) -
@@ -870,10 +887,37 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
     JS_ASSERT(size_t(cursor - (uint8*)jit) == totalBytes);
 
     jit->nmap = nmap;
+    jit->nNmapPairs = nNmapLive;
     *jitp = jit;
 
     return Compile_Okay;
 }
+
+class SrcNoteLineScanner {
+    ptrdiff_t offset;
+    jssrcnote *sn;
+
+public:
+    SrcNoteLineScanner(jssrcnote *sn) : offset(0), sn(sn) {}
+
+    bool firstOpInLine(ptrdiff_t relpc) {
+        while ((offset < relpc) && !SN_IS_TERMINATOR(sn)) {
+            offset += SN_DELTA(sn);
+            sn = SN_NEXT(sn);
+        }
+
+        while ((offset == relpc) && !SN_IS_TERMINATOR(sn)) {
+            JSSrcNoteType type = (JSSrcNoteType) SN_TYPE(sn);
+            if (type == SRC_SETLINE || type == SRC_NEWLINE)
+                return true;
+                
+            offset += SN_DELTA(sn);
+            sn = SN_NEXT(sn);
+        }
+
+        return false;
+    }
+};
 
 #ifdef DEBUG
 #define SPEW_OPCODE()                                                         \
@@ -899,19 +943,22 @@ CompileStatus
 mjit::Compiler::generateMethod()
 {
     mjit::AutoScriptRetrapper trapper(cx, script);
+    SrcNoteLineScanner scanner(script->notes());
 
     /* For join points, whether there was fallthrough from the previous opcode. */
     bool fallthrough = true;
 
     for (;;) {
         JSOp op = JSOp(*PC);
-        bool trap = (op == JSOP_TRAP);
-
-        if (trap) {
+        int trap = stubs::JSTRAP_NONE;
+        if (op == JSOP_TRAP) {
             if (!trapper.untrap(PC))
                 return Compile_Error;
             op = JSOp(*PC);
+            trap |= stubs::JSTRAP_TRAP;
         }
+        if (script->singleStepMode && scanner.firstOpInLine(PC - script->code))
+            trap |= stubs::JSTRAP_SINGLESTEP;
 
         analyze::Bytecode *opinfo = analysis->maybeCode(PC);
 
@@ -962,7 +1009,7 @@ mjit::Compiler::generateMethod()
 
         if (trap) {
             prepareStubCall(Uses(0));
-            masm.move(ImmPtr(PC), Registers::ArgReg1);
+            masm.move(Imm32(trap), Registers::ArgReg1);
             Call cl = emitStubCall(JS_FUNC_TO_DATA_PTR(void *, stubs::Trap));
             InternalCallSite site(masm.callReturnOffset(cl), PC,
                                   CallSite::MAGIC_TRAP_ID, true, false);
@@ -2895,6 +2942,7 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew)
         Jump toPatch = stubcc.masm.jump();
         toPatch.linkTo(stubcc.masm.label(), &stubcc.masm);
         callIC.oolJump = toPatch;
+        callIC.icCall = stubcc.masm.label();
 
         /*
          * At this point the function is definitely scripted, so we try to
@@ -3028,7 +3076,8 @@ mjit::Compiler::compareTwoValues(JSContext *cx, JSOp op, const Value &lhs, const
     JS_ASSERT(rhs.isPrimitive());
 
     if (lhs.isString() && rhs.isString()) {
-        int cmp = js_CompareStrings(lhs.toString(), rhs.toString());
+        int32 cmp;
+        CompareStrings(cx, lhs.toString(), rhs.toString(), &cmp);
         switch (op) {
           case JSOP_LT:
             return cmp < 0;
@@ -3161,8 +3210,8 @@ mjit::Compiler::jsop_length()
             frame.push(v);
         } else {
             RegisterID str = frame.ownRegForData(top);
-            masm.loadPtr(Address(str, offsetof(JSString, mLengthAndFlags)), str);
-            masm.rshiftPtr(Imm32(JSString::FLAGS_LENGTH_SHIFT), str);
+            masm.loadPtr(Address(str, JSString::offsetOfLengthAndFlags()), str);
+            masm.rshiftPtr(Imm32(JSString::LENGTH_SHIFT), str);
             frame.pop();
             frame.pushTypedPayload(JSVAL_TYPE_INT32, str);
         }
@@ -5063,7 +5112,8 @@ mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slow, bool *tramp
         JS_ASSERT(frame.consistentRegisters(target));
     }
 
-    if (!addTraceHints || target >= PC || JSOp(*target) != JSOP_TRACE
+    if (!addTraceHints || target >= PC ||
+        (JSOp(*target) != JSOP_TRACE && JSOp(*target) != JSOP_NOTRACE)
 #ifdef JS_MONOIC
         || GET_UINT16(target) == BAD_TRACEIC_INDEX
 #endif
@@ -5130,9 +5180,21 @@ mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slow, bool *tramp
 
     Label traceStart = stubcc.masm.label();
 
-    stubcc.linkExitDirect(j, traceStart);
-    if (slow)
-        slow->linkTo(traceStart, &stubcc.masm);
+    /*
+     * We make a trace IC even if the trace is currently disabled, in case it is
+     * enabled later, but set up the jumps so that InvokeTracer is initially skipped.
+     */
+    if (JSOp(*target) == JSOP_TRACE) {
+        stubcc.linkExitDirect(j, traceStart);
+        if (slow)
+            slow->linkTo(traceStart, &stubcc.masm);
+    } else {
+        if (!jumpInScript(j, target))
+            return false;
+        if (slow && !stubcc.jumpInScript(*slow, target))
+            return false;
+    }
+
 # if JS_MONOIC
     ic.addrLabel = stubcc.masm.moveWithPatch(ImmPtr(NULL), Registers::ArgReg1);
 # endif

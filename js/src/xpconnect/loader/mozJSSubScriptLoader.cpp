@@ -219,6 +219,13 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * aURL
     // can properly wrap the result later.
     JSObject *result_obj = target_obj;
 
+    // We unwrap wrappers here. This is a little weird, but it's what's being
+    // asked of us.
+    if (target_obj->isWrapper())
+    {
+        target_obj = target_obj->unwrap();
+    }
+
     // Innerize the target_obj so that we compile the loaded script in the
     // correct (inner) scope.
     if (JSObjectOp op = target_obj->getClass()->ext.innerObject)
@@ -228,10 +235,6 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * aURL
 #ifdef DEBUG_rginda
         fprintf (stderr, "Final global: %p\n", target_obj);
 #endif
-    }
-    else if (target_obj->isWrapper())
-    {
-        target_obj = target_obj->unwrap();
     }
 
     JSAutoEnterCompartment ac;

@@ -337,8 +337,6 @@ GetDerivedTrap(JSContext *cx, JSObject *handler, JSAtom *atom, Value *fvalp)
 static bool
 Trap(JSContext *cx, JSObject *handler, Value fval, uintN argc, Value* argv, Value *rval)
 {
-    JS_CHECK_RECURSION(cx, return false);
-
     return ExternalInvoke(cx, handler, fval, argc, argv, rval);
 }
 
@@ -674,6 +672,7 @@ bool
 JSProxy::getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set,
                                PropertyDescriptor *desc)
 {
+    JS_CHECK_RECURSION(cx, return false);
     AutoPendingProxyOperation pending(cx, proxy);
     return proxy->getProxyHandler()->getPropertyDescriptor(cx, proxy, id, set, desc);
 }
@@ -681,6 +680,7 @@ JSProxy::getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set
 bool
 JSProxy::getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set, Value *vp)
 {
+    JS_CHECK_RECURSION(cx, return false);
     AutoPendingProxyOperation pending(cx, proxy);
     AutoPropertyDescriptorRooter desc(cx);
     return JSProxy::getPropertyDescriptor(cx, proxy, id, set, &desc) &&
@@ -691,6 +691,7 @@ bool
 JSProxy::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set,
                                   PropertyDescriptor *desc)
 {
+    JS_CHECK_RECURSION(cx, return false);
     AutoPendingProxyOperation pending(cx, proxy);
     return proxy->getProxyHandler()->getOwnPropertyDescriptor(cx, proxy, id, set, desc);
 }
@@ -698,6 +699,7 @@ JSProxy::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool 
 bool
 JSProxy::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set, Value *vp)
 {
+    JS_CHECK_RECURSION(cx, return false);
     AutoPendingProxyOperation pending(cx, proxy);
     AutoPropertyDescriptorRooter desc(cx);
     return JSProxy::getOwnPropertyDescriptor(cx, proxy, id, set, &desc) &&
@@ -707,6 +709,7 @@ JSProxy::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool 
 bool
 JSProxy::defineProperty(JSContext *cx, JSObject *proxy, jsid id, PropertyDescriptor *desc)
 {
+    JS_CHECK_RECURSION(cx, return false);
     AutoPendingProxyOperation pending(cx, proxy);
     return proxy->getProxyHandler()->defineProperty(cx, proxy, id, desc);
 }
@@ -714,6 +717,7 @@ JSProxy::defineProperty(JSContext *cx, JSObject *proxy, jsid id, PropertyDescrip
 bool
 JSProxy::defineProperty(JSContext *cx, JSObject *proxy, jsid id, const Value &v)
 {
+    JS_CHECK_RECURSION(cx, return false);
     AutoPendingProxyOperation pending(cx, proxy);
     AutoPropertyDescriptorRooter desc(cx);
     return ParsePropertyDescriptorObject(cx, proxy, id, v, &desc) &&
@@ -723,6 +727,7 @@ JSProxy::defineProperty(JSContext *cx, JSObject *proxy, jsid id, const Value &v)
 bool
 JSProxy::getOwnPropertyNames(JSContext *cx, JSObject *proxy, AutoIdVector &props)
 {
+    JS_CHECK_RECURSION(cx, return false);
     AutoPendingProxyOperation pending(cx, proxy);
     return proxy->getProxyHandler()->getOwnPropertyNames(cx, proxy, props);
 }
@@ -730,6 +735,7 @@ JSProxy::getOwnPropertyNames(JSContext *cx, JSObject *proxy, AutoIdVector &props
 bool
 JSProxy::delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 {
+    JS_CHECK_RECURSION(cx, return false);
     AutoPendingProxyOperation pending(cx, proxy);
     return proxy->getProxyHandler()->delete_(cx, proxy, id, bp);
 }
@@ -737,6 +743,7 @@ JSProxy::delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 bool
 JSProxy::enumerate(JSContext *cx, JSObject *proxy, AutoIdVector &props)
 {
+    JS_CHECK_RECURSION(cx, return false);
     AutoPendingProxyOperation pending(cx, proxy);
     return proxy->getProxyHandler()->enumerate(cx, proxy, props);
 }
@@ -744,6 +751,7 @@ JSProxy::enumerate(JSContext *cx, JSObject *proxy, AutoIdVector &props)
 bool
 JSProxy::fix(JSContext *cx, JSObject *proxy, Value *vp)
 {
+    JS_CHECK_RECURSION(cx, return false);
     AutoPendingProxyOperation pending(cx, proxy);
     return proxy->getProxyHandler()->fix(cx, proxy, vp);
 }
@@ -751,6 +759,7 @@ JSProxy::fix(JSContext *cx, JSObject *proxy, Value *vp)
 bool
 JSProxy::has(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 {
+    JS_CHECK_RECURSION(cx, return false);
     AutoPendingProxyOperation pending(cx, proxy);
     return proxy->getProxyHandler()->has(cx, proxy, id, bp);
 }
@@ -758,6 +767,7 @@ JSProxy::has(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 bool
 JSProxy::hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 {
+    JS_CHECK_RECURSION(cx, return false);
     AutoPendingProxyOperation pending(cx, proxy);
     return proxy->getProxyHandler()->hasOwn(cx, proxy, id, bp);
 }
@@ -765,6 +775,7 @@ JSProxy::hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 bool
 JSProxy::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, Value *vp)
 {
+    JS_CHECK_RECURSION(cx, return false);
     AutoPendingProxyOperation pending(cx, proxy);
     return proxy->getProxyHandler()->get(cx, proxy, receiver, id, vp);
 }
@@ -772,6 +783,7 @@ JSProxy::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, Value 
 bool
 JSProxy::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, Value *vp)
 {
+    JS_CHECK_RECURSION(cx, return false);
     AutoPendingProxyOperation pending(cx, proxy);
     return proxy->getProxyHandler()->set(cx, proxy, receiver, id, vp);
 }
@@ -779,6 +791,7 @@ JSProxy::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, Value 
 bool
 JSProxy::enumerateOwn(JSContext *cx, JSObject *proxy, AutoIdVector &props)
 {
+    JS_CHECK_RECURSION(cx, return false);
     AutoPendingProxyOperation pending(cx, proxy);
     return proxy->getProxyHandler()->enumerateOwn(cx, proxy, props);
 }
@@ -786,6 +799,7 @@ JSProxy::enumerateOwn(JSContext *cx, JSObject *proxy, AutoIdVector &props)
 bool
 JSProxy::iterate(JSContext *cx, JSObject *proxy, uintN flags, Value *vp)
 {
+    JS_CHECK_RECURSION(cx, return false);
     AutoPendingProxyOperation pending(cx, proxy);
     return proxy->getProxyHandler()->iterate(cx, proxy, flags, vp);
 }
@@ -793,6 +807,7 @@ JSProxy::iterate(JSContext *cx, JSObject *proxy, uintN flags, Value *vp)
 bool
 JSProxy::call(JSContext *cx, JSObject *proxy, uintN argc, Value *vp)
 {
+    JS_CHECK_RECURSION(cx, return false);
     AutoPendingProxyOperation pending(cx, proxy);
     return proxy->getProxyHandler()->call(cx, proxy, argc, vp);
 }
@@ -800,6 +815,7 @@ JSProxy::call(JSContext *cx, JSObject *proxy, uintN argc, Value *vp)
 bool
 JSProxy::construct(JSContext *cx, JSObject *proxy, uintN argc, Value *argv, Value *rval)
 {
+    JS_CHECK_RECURSION(cx, return false);
     AutoPendingProxyOperation pending(cx, proxy);
     return proxy->getProxyHandler()->construct(cx, proxy, argc, argv, rval);
 }
@@ -807,6 +823,7 @@ JSProxy::construct(JSContext *cx, JSObject *proxy, uintN argc, Value *argv, Valu
 bool
 JSProxy::hasInstance(JSContext *cx, JSObject *proxy, const js::Value *vp, bool *bp)
 {
+    JS_CHECK_RECURSION(cx, return false);
     AutoPendingProxyOperation pending(cx, proxy);
     return proxy->getProxyHandler()->hasInstance(cx, proxy, vp, bp);
 }
@@ -814,6 +831,8 @@ JSProxy::hasInstance(JSContext *cx, JSObject *proxy, const js::Value *vp, bool *
 JSType
 JSProxy::typeOf(JSContext *cx, JSObject *proxy)
 {
+    // FIXME: API doesn't allow us to report error (bug 618906).
+    JS_CHECK_RECURSION(cx, return JSTYPE_OBJECT);
     AutoPendingProxyOperation pending(cx, proxy);
     return proxy->getProxyHandler()->typeOf(cx, proxy);
 }
@@ -821,6 +840,7 @@ JSProxy::typeOf(JSContext *cx, JSObject *proxy)
 JSString *
 JSProxy::obj_toString(JSContext *cx, JSObject *proxy)
 {
+    JS_CHECK_RECURSION(cx, return NULL);
     AutoPendingProxyOperation pending(cx, proxy);
     return proxy->getProxyHandler()->obj_toString(cx, proxy);
 }
@@ -828,6 +848,7 @@ JSProxy::obj_toString(JSContext *cx, JSObject *proxy)
 JSString *
 JSProxy::fun_toString(JSContext *cx, JSObject *proxy, uintN indent)
 {
+    JS_CHECK_RECURSION(cx, return NULL);
     AutoPendingProxyOperation pending(cx, proxy);
     return proxy->getProxyHandler()->fun_toString(cx, proxy, indent);
 }

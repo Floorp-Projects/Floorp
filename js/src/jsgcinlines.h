@@ -266,8 +266,6 @@ MarkChildren(JSTracer *trc, JSString *str)
     if (str->isDependent())
         MarkString(trc, str->dependentBase(), "base");
     else if (str->isRope()) {
-        if (str->isInteriorNode())
-            MarkString(trc, str->interiorNodeParent(), "parent");
         MarkString(trc, str->ropeLeft(), "left child");
         MarkString(trc, str->ropeRight(), "right child");
     }
@@ -344,28 +342,108 @@ TypedMarker(JSTracer *trc, JSShortString *thing)
     thing->asCell()->markIfUnmarked();
 }
 
-static JS_ALWAYS_INLINE void
-TypedMarker(JSTracer *trc, JSString *thing)
+}  /* namespace gc */
+
+namespace detail {
+
+static JS_ALWAYS_INLINE JSString *
+Tag(JSString *str)
 {
+    JS_ASSERT(!(size_t(str) & 1));
+    return (JSString *)(size_t(str) | 1);
+}
+
+static JS_ALWAYS_INLINE bool
+Tagged(JSString *str)
+{
+    return (size_t(str) & 1) != 0;
+}
+
+static JS_ALWAYS_INLINE JSString *
+Untag(JSString *str)
+{
+    JS_ASSERT((size_t(str) & 1) == 1);
+    return (JSString *)(size_t(str) & ~size_t(1));
+}
+
+static JS_ALWAYS_INLINE void
+NonRopeTypedMarker(JSString *str)
+{
+    JS_ASSERT(!str->isRope());
+    if (JSString::isStatic(str) ||
+        !str->asCell()->markIfUnmarked() ||
+        !str->isDependent()) {
+        return;
+    }
+    JSString *base = str->dependentBase();
+    if (JSString::isStatic(base))
+        return;
+    base->asCell()->markIfUnmarked();
+}
+
+}  /* namespace detail */
+
+namespace gc {
+
+static JS_ALWAYS_INLINE void
+TypedMarker(JSTracer *trc, JSString *str)
+{
+    using namespace detail;
+
+    if (!str->isRope()) {
+        NonRopeTypedMarker(str);
+        return;
+    }
+
     /*
-     * Iterate through all nodes and leaves in the rope if this is part of a
-     * rope; otherwise, we only iterate once: on the string itself.
+     * This function must not fail, so a simple stack-based traversal must not
+     * be used (since it may oom if the stack grows large). Instead, strings
+     * are temporarily mutated to embed parent pointers as they are traversed.
+     * This algorithm is homomorphic to JSString::flatten.
      */
-    JSRopeNodeIterator iter(thing);
-    JSString *str = iter.init();
-    do {
-        for (;;) {
-            if (JSString::isStatic(str))
-                break;
-            JS_ASSERT(JSTRACE_STRING == GetFinalizableTraceKind(str->asCell()->arena()->header()->thingKind));
-            if (!str->asCell()->markIfUnmarked())
-                break;
-            if (!str->isDependent())
-                break;
-            str = str->dependentBase();
+    JSString *parent = NULL;
+    first_visit_node: {
+        if (!str->asCell()->markIfUnmarked())
+            goto finish_node;
+        JSString *left = str->ropeLeft();
+        if (left->isRope()) {
+            JS_ASSERT(!Tagged(str->u.left) && !Tagged(str->s.right));
+            str->u.left = Tag(parent);
+            parent = str;
+            str = left;
+            goto first_visit_node;
         }
-        str = iter.next();
-    } while (str);
+        NonRopeTypedMarker(left);
+    }
+    visit_right_child: {
+        JSString *right = str->ropeRight();
+        if (right->isRope()) {
+            JS_ASSERT(!Tagged(str->u.left) && !Tagged(str->s.right));
+            str->s.right = Tag(parent);
+            parent = str;
+            str = right;
+            goto first_visit_node;
+        }
+        NonRopeTypedMarker(right);
+    }
+    finish_node: {
+        if (!parent)
+            return;
+        if (Tagged(parent->u.left)) {
+            JS_ASSERT(!Tagged(parent->s.right));
+            JSString *nextParent = Untag(parent->u.left);
+            parent->u.left = str;
+            str = parent;
+            parent = nextParent;
+            goto visit_right_child;
+        }
+        JS_ASSERT(Tagged(parent->s.right));
+        JSString *nextParent = Untag(parent->s.right);
+        parent->s.right = str;
+        str = parent;
+        parent = nextParent;
+        goto finish_node;
+    }
 }
 
 static inline void

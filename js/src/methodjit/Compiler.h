@@ -144,6 +144,7 @@ class Compiler : public BaseCompiler
         DataLabelPtr addrLabel1;
         DataLabelPtr addrLabel2;
         Jump         oolJump;
+        Label        icCall;
         RegisterID   funObjReg;
         RegisterID   funPtrReg;
         FrameSize    frameSize;

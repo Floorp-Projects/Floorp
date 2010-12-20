@@ -614,10 +614,11 @@ StackTraceToString(JSContext *cx, JSExnPrivate *priv)
 #define APPEND_STRING_TO_STACK(str)                                           \
     JS_BEGIN_MACRO                                                            \
         JSString *str_ = str;                                                 \
-        const jschar *chars_;                                                 \
-        size_t length_;                                                       \
+        size_t length_ = str_->length();                                      \
+        const jschar *chars_ = str_->getChars(cx);                            \
+        if (!chars_)                                                          \
+            goto bad;                                                         \
                                                                               \
-        str_->getCharsAndLength(chars_, length_);                             \
         if (length_ > stackmax - stacklen) {                                  \
             void *ptr_;                                                       \
             if (stackmax >= STACK_LENGTH_LIMIT ||                             \
@@ -815,11 +816,17 @@ exn_toString(JSContext *cx, uintN argc, Value *vp)
             return JS_FALSE;
 
         if (name_length) {
-            js_strncpy(cp, name->chars(), name_length);
+            const jschar *name_chars = name->getChars(cx);
+            if (!name_chars)
+                return JS_FALSE;
+            js_strncpy(cp, name_chars, name_length);
             cp += name_length;
             *cp++ = ':'; *cp++ = ' ';
         }
-        js_strncpy(cp, message->chars(), message_length);
+        const jschar *message_chars = message->getChars(cx);
+        if (!message_chars)
+            return JS_FALSE;
+        js_strncpy(cp, message_chars, message_length);
         cp += message_length;
         *cp = 0;
 
@@ -919,18 +926,27 @@ exn_toSource(JSContext *cx, uintN argc, Value *vp)
             return false;
 
         *cp++ = '('; *cp++ = 'n'; *cp++ = 'e'; *cp++ = 'w'; *cp++ = ' ';
-        js_strncpy(cp, name->chars(), name_length);
+        const jschar *name_chars = name->getChars(cx);
+        if (!name_chars)
+            return false;
+        js_strncpy(cp, name_chars, name_length);
         cp += name_length;
         *cp++ = '(';
+        const jschar *message_chars = message->getChars(cx);
+        if (!message_chars)
+            return false;
         if (message_length != 0) {
-            js_strncpy(cp, message->chars(), message_length);
+            js_strncpy(cp, message_chars, message_length);
             cp += message_length;
         }
 
         if (filename_length != 0) {
             /* append filename as ``, {filename}'' */
             *cp++ = ','; *cp++ = ' ';
-            js_strncpy(cp, filename->chars(), filename_length);
+            const jschar *filename_chars = filename->getChars(cx);
+            if (!filename_chars)
+                return false;
+            js_strncpy(cp, filename_chars, filename_length);
             cp += filename_length;
         } else {
             if (lineno_as_str) {
@@ -944,7 +960,10 @@ exn_toSource(JSContext *cx, uintN argc, Value *vp)
         if (lineno_as_str) {
             /* append lineno as ``, {lineno_as_str}'' */
             *cp++ = ','; *cp++ = ' ';
-            js_strncpy(cp, lineno_as_str->chars(), lineno_length);
+            const jschar *lineno_chars = lineno_as_str->getChars(cx);
+            if (!lineno_chars)
+                return false;
+            js_strncpy(cp, lineno_chars, lineno_length);
             cp += lineno_length;
         }
 

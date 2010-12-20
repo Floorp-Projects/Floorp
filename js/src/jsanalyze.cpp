@@ -115,7 +115,7 @@ TypeIdStringImpl(jsid id)
     static char bufs[4][100];
     static unsigned which = 0;
     which = (which + 1) & 3;
-    PutEscapedString(bufs[which], 100, JSID_TO_STRING(id), 0);
+    PutEscapedString(bufs[which], 100, JSID_TO_FLAT_STRING(id), 0);
     return bufs[which];
 }
 
@@ -634,6 +634,9 @@ Script::analyze(JSContext *cx)
         if (forwardCatch)
             code->inTryBlock = true;
 
+        if (untrap.trap)
+            code->safePoint = true;
+
         unsigned stackDepth = code->stackDepth;
         uint32 *defineArray = code->defineArray;
         unsigned defineCount = code->defineCount;
@@ -693,8 +696,10 @@ Script::analyze(JSContext *cx)
             bool newArray = (op == JSOP_NEWARRAY) || (op == JSOP_NEWINIT && pc[1] == JSProto_Array);
 
             types::TypeObject *object;
-            if (initializerStack && initializerStack->initObject &&
-                initializerStack->initArray == newArray) {
+            if (!script->compileAndGo) {
+                object = NULL;
+            } else if (initializerStack && initializerStack->initObject &&
+                       initializerStack->initArray == newArray) {
                 object = initializerStack->initObject;
                 if (newArray)
                     code->initArray = object;
@@ -762,6 +767,7 @@ Script::analyze(JSContext *cx)
                 return;
             }
             getCode(defaultOffset).switchTarget = true;
+            getCode(defaultOffset).safePoint = true;
 
             for (jsint i = low; i <= high; i++) {
                 unsigned targetOffset = offset + GetJumpOffset(pc, pc2);
@@ -772,6 +778,7 @@ Script::analyze(JSContext *cx)
                     }
                 }
                 getCode(targetOffset).switchTarget = true;
+                getCode(targetOffset).safePoint = true;
                 pc2 += jmplen;
             }
             break;
@@ -791,6 +798,7 @@ Script::analyze(JSContext *cx)
                 return;
             }
             getCode(defaultOffset).switchTarget = true;
+            getCode(defaultOffset).safePoint = true;
 
             while (npairs) {
                 pc2 += INDEX_LEN;
@@ -800,6 +808,7 @@ Script::analyze(JSContext *cx)
                     return;
                 }
                 getCode(targetOffset).switchTarget = true;
+                getCode(targetOffset).safePoint = true;
                 pc2 += jmplen;
                 npairs--;
             }
@@ -830,6 +839,7 @@ Script::analyze(JSContext *cx)
                             return;
                         }
                         getCode(catchOffset).exceptionEntry = true;
+                        getCode(catchOffset).safePoint = true;
                     }
                 }
             }

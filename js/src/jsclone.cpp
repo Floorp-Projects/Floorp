@@ -350,9 +350,10 @@ JS_STATIC_ASSERT(JSString::MAX_LENGTH < UINT32_MAX);
 bool
 JSStructuredCloneWriter::writeString(uint32_t tag, JSString *str)
 {
-    const jschar *chars;
-    size_t length;
-    str->getCharsAndLength(chars, length);
+    size_t length = str->length();
+    const jschar *chars = str->getChars(context());
+    if (!chars)
+        return false;
     return out.writePair(tag, uint32_t(length)) && out.writeChars(chars, length);
 }
 
@@ -604,9 +605,14 @@ class Chars {
 
     bool allocate(JSContext *cx, size_t len) {
         JS_ASSERT(!p);
-        p = (jschar *) cx->malloc(len * sizeof(jschar));
+        // We're going to null-terminate!
+        p = (jschar *) cx->malloc((len + 1) * sizeof(jschar));
         this->cx = cx;
-        return p != NULL;
+        if (p) {
+            p[len] = jschar(0);
+            return true;
+        }
+        return false;
     }
     jschar *get() { return p; }
     void forget() { p = NULL; }
@@ -745,9 +751,10 @@ JSStructuredCloneReader::startRead(Value *vp)
         JSString *str = readString(nchars);
         if (!str)
             return false;
-        const jschar *chars;
-        size_t length;
-        str->getCharsAndLength(chars, length);
+        size_t length = str->length();
+        const jschar *chars = str->getChars(context());
+        if (!chars)
+            return false;
         JSObject *obj = RegExp::createObjectNoStatics(context(), chars, length, data);
         if (!obj)
             return false;
@@ -755,16 +762,11 @@ JSStructuredCloneReader::startRead(Value *vp)
         break;
       }
 
-      case SCTAG_ARRAY_OBJECT: {
-        JSObject *obj = js_NewArrayObject(context(), 0, NULL);
-        if (!obj || !objs.append(ObjectValue(*obj)))
-            return false;
-        vp->setObject(*obj);
-        break;
-      }
-
+      case SCTAG_ARRAY_OBJECT:
       case SCTAG_OBJECT_OBJECT: {
-        JSObject *obj = NewBuiltinClassInstance(context(), &js_ObjectClass);
+        JSObject *obj = (tag == SCTAG_ARRAY_OBJECT)
+                        ? NewDenseEmptyArray(context())
+                        : NewBuiltinClassInstance(context(), &js_ObjectClass);
         if (!obj || !objs.append(ObjectValue(*obj)))
             return false;
         vp->setObject(*obj);

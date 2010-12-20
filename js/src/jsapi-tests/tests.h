@@ -192,7 +192,8 @@ class JSAPITest
     bool checkSame(jsval actual, jsval expected,
                    const char *actualExpr, const char *expectedExpr,
                    const char *filename, int lineno) {
-        return JS_SameValue(cx, actual, expected) ||
+        JSBool same;
+        return (JS_SameValue(cx, actual, expected, &same) && same) ||
                fail(JSAPITestString("CHECK_SAME failed: expected JS_SameValue(cx, ") +
                     actualExpr + ", " + expectedExpr + "), got !JS_SameValue(cx, " +
                     toSource(actual) + ", " + toSource(expected) + ")", filename, lineno);

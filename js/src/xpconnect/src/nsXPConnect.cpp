@@ -64,6 +64,8 @@
 
 #include "jsdIDebuggerService.h"
 
+#include "xpcquickstubs.h"
+
 NS_IMPL_THREADSAFE_ISUPPORTS6(nsXPConnect,
                               nsIXPConnect,
                               nsISupportsWeakReference,
@@ -719,8 +721,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
                 JSString* str = JS_GetFunctionId(fun);
                 if(str)
                 {
-                    NS_ConvertUTF16toUTF8
-                        fname(reinterpret_cast<const PRUnichar*>(JS_GetStringChars(str)));
+                    NS_ConvertUTF16toUTF8 fname(JS_GetInternedStringChars(str));
                     JS_snprintf(name, sizeof(name),
                                 "JS Object (Function - %s)", fname.get());
                 }
@@ -1146,7 +1147,7 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
     // Note: This call cooperates with a call to wrapper->RefreshPrototype()
-    // in nsJSEnvironment::CreateOuterObject in order to ensure that the
+    // in nsJSEnvironment::SetOuterObject in order to ensure that the
     // prototype defines its constructor on the right global object.
     if(wrapper->GetProto()->GetScriptableInfo())
         scope->RemoveWrappedNativeProtos();
@@ -2615,8 +2616,7 @@ nsXPConnect::GetCaller(JSContext **aJSContext, JSObject **aObj)
 
 // static
 nsresult
-nsXPConnect::Base64Encode(const nsACString &aBinaryData,
-                          nsACString &aString)
+nsXPConnect::Base64Encode(const nsACString &aBinaryData, nsACString &aString)
 {
   // Check for overflow.
   if(aBinaryData.Length() > (PR_UINT32_MAX / 4) * 3)
@@ -2645,8 +2645,7 @@ nsXPConnect::Base64Encode(const nsACString &aBinaryData,
 
 // static
 nsresult
-nsXPConnect::Base64Encode(const nsAString &aString,
-                          nsAString &aBinaryData)
+nsXPConnect::Base64Encode(const nsAString &aString, nsAString &aBinaryData)
 {
     NS_LossyConvertUTF16toASCII string(aString);
     nsCAutoString binaryData;
@@ -2661,9 +2660,36 @@ nsXPConnect::Base64Encode(const nsAString &aString,
 }
 
 // static
+JSBool
+nsXPConnect::Base64Encode(JSContext *cx, jsval val, jsval *out)
+{
+    NS_ASSERTION(cx, "Null context!");
+    NS_ASSERTION(out, "Null jsval pointer!");
+
+    jsval root = val;
+    xpc_qsACString encodedString(cx, root, &root, xpc_qsACString::eNull,
+                                 xpc_qsACString::eStringify);
+    if(!encodedString.IsValid())
+        return JS_FALSE;
+
+    nsCAutoString result;
+    if(NS_FAILED(nsXPConnect::Base64Encode(encodedString, result)))
+    {
+        JS_ReportError(cx, "Failed to encode base64 data!");
+        return JS_FALSE;
+    }
+
+    JSString *str = JS_NewStringCopyN(cx, result.get(), result.Length());
+    if (!str)
+        return JS_FALSE;
+
+    *out = STRING_TO_JSVAL(str);
+    return JS_TRUE;
+}
+
+// static
 nsresult
-nsXPConnect::Base64Decode(const nsACString &aString,
-                          nsACString &aBinaryData)
+nsXPConnect::Base64Decode(const nsACString &aString, nsACString &aBinaryData)
 {
   // Check for overflow.
   if(aString.Length() > PR_UINT32_MAX / 3)
@@ -2700,8 +2726,7 @@ nsXPConnect::Base64Decode(const nsACString &aString,
 
 // static
 nsresult
-nsXPConnect::Base64Decode(const nsAString &aBinaryData,
-                          nsAString &aString)
+nsXPConnect::Base64Decode(const nsAString &aBinaryData, nsAString &aString)
 {
     NS_LossyConvertUTF16toASCII binaryData(aBinaryData);
     nsCAutoString string;
@@ -2713,6 +2738,34 @@ nsXPConnect::Base64Decode(const nsAString &aBinaryData,
         aString.Truncate();
 
     return rv;
+}
+
+// static
+JSBool
+nsXPConnect::Base64Decode(JSContext *cx, jsval val, jsval *out)
+{
+    NS_ASSERTION(cx, "Null context!");
+    NS_ASSERTION(out, "Null jsval pointer!");
+
+    jsval root = val;
+    xpc_qsACString encodedString(cx, root, &root, xpc_qsACString::eNull,
+                                 xpc_qsACString::eNull);
+    if(!encodedString.IsValid())
+        return JS_FALSE;
+
+    nsCAutoString result;
+    if(NS_FAILED(nsXPConnect::Base64Decode(encodedString, result)))
+    {
+        JS_ReportError(cx, "Failed to decode base64 string!");
+        return JS_FALSE;
+    }
+
+    JSString *str = JS_NewStringCopyN(cx, result.get(), result.Length());
+    if(!str)
+        return JS_FALSE;
+
+    *out = STRING_TO_JSVAL(str);
+    return JS_TRUE;
 }
 
 NS_IMETHODIMP

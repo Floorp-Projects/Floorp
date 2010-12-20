@@ -83,9 +83,11 @@ CPPSRCS = \
   VacuumManager.cpp \
   $(NULL)
 
+# For nsDependentJSString
 LOCAL_INCLUDES = \
   $(SQLITE_CFLAGS) \
   -I$(topsrcdir)/db/sqlite3/src \
+  -I$(topsrcdir)/dom/base \
   $(NULL)
 
 # This is the default value.  If we ever change it when compiling sqlite, we
