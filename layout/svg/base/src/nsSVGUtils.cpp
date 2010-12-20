@@ -94,8 +94,6 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-gfxASurface *nsSVGUtils::gThebesComputationalSurface = nsnull;
-
 // c = n / 255
 // (c <= 0.0031308 ? c * 12.92 : 1.055 * pow(c, 1 / 2.4) - 0.055) * 255 + 0.5
 static const PRUint8 glinearRGBTosRGBMap[256] = {
@@ -796,7 +794,9 @@ nsSVGUtils::GetViewBoxTransform(nsSVGElement* aElement,
                                 float aViewboxWidth, float aViewboxHeight,
                                 const SVGPreserveAspectRatio &aPreserveAspectRatio)
 {
-  NS_ASSERTION(aViewboxWidth > 0, "viewBox width must be greater than zero!");
+  NS_ASSERTION(aViewportWidth  >= 0, "viewport width must be nonnegative!");
+  NS_ASSERTION(aViewportHeight >= 0, "viewport height must be nonnegative!");
+  NS_ASSERTION(aViewboxWidth  > 0, "viewBox width must be greater than zero!");
   NS_ASSERTION(aViewboxHeight > 0, "viewBox height must be greater than zero!");
 
   PRUint16 align = aPreserveAspectRatio.GetAlign();
