@@ -611,10 +611,6 @@ public:
    * builds, it will trigger a PR_FALSE return-value as a safe fallback.)
    */
   static PRBool RootSVGElementHasViewbox(const nsIContent *aRootSVGElem);
-
-private:
-  /* Computational (nil) surfaces */
-  static gfxASurface *gThebesComputationalSurface;
 };
 
 #endif
