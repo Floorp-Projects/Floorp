@@ -3028,8 +3028,11 @@ static void array_TypeSort(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite 
 
     site->forceThisTypes(cx);
 
-    if (site->returnTypes)
+    if (site->returnTypes) {
+        if (site->isNew)
+            site->returnTypes->addType(cx, TYPE_UNKNOWN);
         site->thisTypes->addSubset(cx, site->pool(), site->returnTypes);
+    }
 
     if (site->argumentCount == 0)
         return;
@@ -3057,6 +3060,8 @@ static void array_TypeInsert(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsit
 
     if (site->returnTypes) {
         /* The return type is an integer (array length). */
+        if (site->isNew)
+            site->returnTypes->addType(cx, TYPE_UNKNOWN);
         site->returnTypes->addType(cx, TYPE_INT32);
     }
 
@@ -3075,8 +3080,10 @@ static void array_TypeRemove(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsit
     if (!site->returnTypes)
         return;
 
-    site->forceThisTypes(cx);
+    if (site->isNew)
+        site->returnTypes->addType(cx, TYPE_UNKNOWN);
 
+    site->forceThisTypes(cx);
     site->thisTypes->addGetProperty(cx, site->code, site->returnTypes, JSID_VOID);
     site->returnTypes->addType(cx, TYPE_UNDEFINED);
 #endif
@@ -3091,6 +3098,8 @@ static void array_TypeSplice(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsit
 
     if (site->returnTypes) {
         /* Treat the returned array the same as the 'this' array. */
+        if (site->isNew)
+            site->returnTypes->addType(cx, TYPE_UNKNOWN);
         site->thisTypes->addSubset(cx, site->pool(), site->returnTypes);
     }
 
@@ -3116,8 +3125,11 @@ static void array_TypeConcat(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsit
 
     site->forceThisTypes(cx);
 
-    if (site->returnTypes)
+    if (site->returnTypes) {
+        if (site->isNew)
+            site->returnTypes->addType(cx, TYPE_UNKNOWN);
         site->returnTypes->addType(cx, (jstype) object);
+    }
 
     /* Propagate elements of the 'this' array to the result. */
     TypeSet *indexTypes = object->getProperty(cx, JSID_VOID, false);
@@ -3153,6 +3165,9 @@ static void array_TypeExtra(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite
 
     site->forceThisTypes(cx);
     site->forceReturnTypes(cx);
+
+    if (site->isNew)
+        site->returnTypes->addType(cx, TYPE_UNKNOWN);
 
     site->thisTypes->addGetProperty(cx, code, elemTypes, JSID_VOID);
 
