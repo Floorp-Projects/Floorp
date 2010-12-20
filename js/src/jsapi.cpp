@@ -4346,8 +4346,11 @@ JS_PUBLIC_API(void) JS_TypeHandlerVoid(JSContext *cx, JSTypeFunction *jsfun, JST
 {
 #ifdef JS_TYPE_INFERENCE
     TypeCallsite *site = Valueify(jssite);
-    if (site->returnTypes)
+    if (site->returnTypes) {
+        if (site->isNew)
+            site->returnTypes->addType(cx, TYPE_UNKNOWN);
         site->returnTypes->addType(cx, TYPE_UNDEFINED);
+    }
 #endif
 }
 
@@ -4355,8 +4358,11 @@ JS_PUBLIC_API(void) JS_TypeHandlerNull(JSContext *cx, JSTypeFunction *jsfun, JST
 {
 #ifdef JS_TYPE_INFERENCE
     TypeCallsite *site = Valueify(jssite);
-    if (site->returnTypes)
+    if (site->returnTypes) {
+        if (site->isNew)
+            site->returnTypes->addType(cx, TYPE_UNKNOWN);
         site->returnTypes->addType(cx, TYPE_NULL);
+    }
 #endif
 }
 
@@ -4364,8 +4370,11 @@ JS_PUBLIC_API(void) JS_TypeHandlerBool(JSContext *cx, JSTypeFunction *jsfun, JST
 {
 #ifdef JS_TYPE_INFERENCE
     TypeCallsite *site = Valueify(jssite);
-    if (site->returnTypes)
+    if (site->returnTypes) {
+        if (site->isNew)
+            site->returnTypes->addType(cx, TYPE_UNKNOWN);
         site->returnTypes->addType(cx, TYPE_BOOLEAN);
+    }
 #endif
 }
 
@@ -4373,8 +4382,11 @@ JS_PUBLIC_API(void) JS_TypeHandlerInt(JSContext *cx, JSTypeFunction *jsfun, JSTy
 {
 #ifdef JS_TYPE_INFERENCE
     TypeCallsite *site = Valueify(jssite);
-    if (site->returnTypes)
+    if (site->returnTypes) {
+        if (site->isNew)
+            site->returnTypes->addType(cx, TYPE_UNKNOWN);
         site->returnTypes->addType(cx, TYPE_INT32);
+    }
 #endif
 }
 
@@ -4382,8 +4394,11 @@ JS_PUBLIC_API(void) JS_TypeHandlerFloat(JSContext *cx, JSTypeFunction *jsfun, JS
 {
 #ifdef JS_TYPE_INFERENCE
     TypeCallsite *site = Valueify(jssite);
-    if (site->returnTypes)
+    if (site->returnTypes) {
+        if (site->isNew)
+            site->returnTypes->addType(cx, TYPE_UNKNOWN);
         site->returnTypes->addType(cx, TYPE_DOUBLE);
+    }
 #endif
 }
 
@@ -4391,8 +4406,11 @@ JS_PUBLIC_API(void) JS_TypeHandlerString(JSContext *cx, JSTypeFunction *jsfun, J
 {
 #ifdef JS_TYPE_INFERENCE
     TypeCallsite *site = Valueify(jssite);
-    if (site->returnTypes)
+    if (site->returnTypes) {
+        if (site->isNew)
+            site->returnTypes->addType(cx, TYPE_UNKNOWN);
         site->returnTypes->addType(cx, TYPE_STRING);
+    }
 #endif
 }
 
@@ -4419,6 +4437,8 @@ JS_TypeHandlerThis(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
     TypeCallsite *site = Valueify(jssite);
 
     if (site->returnTypes) {
+        if (site->isNew)
+            site->returnTypes->addType(cx, TYPE_UNKNOWN);
         if (site->thisTypes)
             site->thisTypes->addSubset(cx, site->pool(), site->returnTypes);
         else
