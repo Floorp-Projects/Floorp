@@ -782,11 +782,25 @@ nsSVGUtils::GetViewBoxTransform(nsSVGElement* aElement,
                                 float aViewboxWidth, float aViewboxHeight,
                                 const SVGAnimatedPreserveAspectRatio &aPreserveAspectRatio)
 {
+  return GetViewBoxTransform(aElement,
+                             aViewportWidth, aViewportHeight,
+                             aViewboxX, aViewboxY,
+                             aViewboxWidth, aViewboxHeight,
+                             aPreserveAspectRatio.GetAnimValue());
+}
+
+gfxMatrix
+nsSVGUtils::GetViewBoxTransform(nsSVGElement* aElement,
+                                float aViewportWidth, float aViewportHeight,
+                                float aViewboxX, float aViewboxY,
+                                float aViewboxWidth, float aViewboxHeight,
+                                const SVGPreserveAspectRatio &aPreserveAspectRatio)
+{
   NS_ASSERTION(aViewboxWidth > 0, "viewBox width must be greater than zero!");
   NS_ASSERTION(aViewboxHeight > 0, "viewBox height must be greater than zero!");
 
-  PRUint16 align = aPreserveAspectRatio.GetAnimValue().GetAlign();
-  PRUint16 meetOrSlice = aPreserveAspectRatio.GetAnimValue().GetMeetOrSlice();
+  PRUint16 align = aPreserveAspectRatio.GetAlign();
+  PRUint16 meetOrSlice = aPreserveAspectRatio.GetMeetOrSlice();
 
   // default to the defaults
   if (align == nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_UNKNOWN)

@@ -81,6 +81,7 @@ class nsSVGDisplayContainerFrame;
 
 namespace mozilla {
 class SVGAnimatedPreserveAspectRatio;
+class SVGPreserveAspectRatio;
 namespace dom {
 class Element;
 } // namespace dom
@@ -220,6 +221,7 @@ class nsSVGUtils
 {
 public:
   typedef mozilla::SVGAnimatedPreserveAspectRatio SVGAnimatedPreserveAspectRatio;
+  typedef mozilla::SVGPreserveAspectRatio SVGPreserveAspectRatio;
 
   /*
    * Get the parent element of an nsIContent
@@ -379,13 +381,20 @@ public:
   GetOuterSVGFrameAndCoveredRegion(nsIFrame* aFrame, nsRect* aRect);
 
   /* Generate a viewbox to viewport tranformation matrix */
-  
+
   static gfxMatrix
   GetViewBoxTransform(nsSVGElement* aElement,
                       float aViewportWidth, float aViewportHeight,
                       float aViewboxX, float aViewboxY,
                       float aViewboxWidth, float aViewboxHeight,
                       const SVGAnimatedPreserveAspectRatio &aPreserveAspectRatio);
+
+  static gfxMatrix
+  GetViewBoxTransform(nsSVGElement* aElement,
+                      float aViewportWidth, float aViewportHeight,
+                      float aViewboxX, float aViewboxY,
+                      float aViewboxWidth, float aViewboxHeight,
+                      const SVGPreserveAspectRatio &aPreserveAspectRatio);
 
   /* Paint SVG frame with SVG effects - aDirtyRect is the area being
    * redrawn, in device pixel coordinates relative to the outer svg */
