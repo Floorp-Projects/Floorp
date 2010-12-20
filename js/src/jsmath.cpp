@@ -859,6 +859,9 @@ static void math_TypeArith(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite 
     if (!site->returnTypes)
         return;
 
+    if (site->isNew)
+        site->returnTypes->addType(cx, types::TYPE_UNKNOWN);
+
     // the zero-argument case will be handled as an overflow in the actual natives.
     for (size_t ind = 0; ind < site->argumentCount; ind++)
         site->argumentTypes[ind]->addArith(cx, site->pool(), site->code, site->returnTypes);

@@ -3093,6 +3093,9 @@ static void type_StringMatch(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsit
         return;
     }
 
+    if (site->isNew)
+        site->returnTypes->addType(cx, TYPE_UNKNOWN);
+
     TypeObject *type = site->getInitObject(cx, true);
     cx->addTypeProperty(type, NULL, TYPE_STRING);
     cx->addTypeProperty(type, "index", TYPE_INT32);
@@ -3115,6 +3118,9 @@ static void type_StringSplit(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsit
         site->returnTypes->addType(cx, TYPE_UNKNOWN);
         return;
     }
+
+    if (site->isNew)
+        site->returnTypes->addType(cx, TYPE_UNKNOWN);
 
     TypeObject *type = site->getInitObject(cx, true);
     cx->addTypeProperty(type, NULL, TYPE_STRING);
