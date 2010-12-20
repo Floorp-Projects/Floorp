@@ -48,7 +48,7 @@
 #include "nsSVGEnum.h"
 #include "nsSVGString.h"
 #include "nsSVGViewBox.h"
-#include "nsSVGPreserveAspectRatio.h"
+#include "SVGAnimatedPreserveAspectRatio.h"
 
 //--------------------- Patterns ------------------------
 
