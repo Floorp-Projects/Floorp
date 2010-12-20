@@ -44,7 +44,7 @@
 #include "nsSVGEnum.h"
 #include "nsSVGAngle.h"
 #include "nsSVGViewBox.h"
-#include "nsSVGPreserveAspectRatio.h"
+#include "SVGAnimatedPreserveAspectRatio.h"
 
 class nsSVGOrientType
 {
