@@ -78,6 +78,7 @@
 #include "jsdbgapi.h"
 #include "json.h"
 #include "jswrapper.h"
+#include "jstl.h"
 
 #include "jsinterpinlines.h"
 #include "jsscopeinlines.h"
@@ -2818,10 +2819,51 @@ js_CreateThis(JSContext *cx, JSObject *callee)
     return obj;
 }
 
+static uintN
+GuessObjectSizeFromConstructor(JSObject *callee)
+{
+    JSFunction *fun = callee->getFunctionPrivate();
+    JSScript *script = fun->script();
+    jsbytecode *pc = script->code;
+    jsbytecode *end = script->code + script->length;
+    uintN count = 0;
+    
+    while (pc < end) {
+        if (JSOp(*pc) == JSOP_SETPROP)
+            count++;
+
+        const JSCodeSpec *cs = &js_CodeSpec[JSOp(*pc)];
+        ptrdiff_t oplen = cs->length;
+        if (oplen < 0)
+            oplen = js_GetVariableBytecodeLength(pc);
+        pc += oplen;
+    }
+
+    return count;
+}
+
+static gc::FinalizeKind
+GuessObjectGCKindByFlags(JSContext *cx, JSObject *callee, JSObject *proto, Class *clasp)
+{
+    gc::FinalizeKind kind;
+    if (proto && clasp == &js_ObjectClass) {
+        if (proto->hasStoredGCKind()) {
+            kind = gc::FinalizeKind(proto->getStoredGCKind());
+        } else {
+            uintN count = GuessObjectSizeFromConstructor(callee);
+            kind = gc::GetGCObjectKind(count);
+            proto->setStoredGCKind(kind);
+        }
+    } else {
+        kind = NewObjectGCKind(cx, clasp);
+    }
+    return kind;
+}
+
 JSObject *
 js_CreateThisForFunctionWithProto(JSContext *cx, JSObject *callee, JSObject *proto)
 {
-    gc::FinalizeKind kind = NewObjectGCKind(cx, &js_ObjectClass);
+    gc::FinalizeKind kind = GuessObjectGCKindByFlags(cx, callee, proto, &js_ObjectClass);
     return NewNonFunction<WithProto::Class>(cx, &js_ObjectClass, proto, callee->getParent(), kind);
 }
 
@@ -2939,7 +2981,7 @@ js_CreateThisFromTrace(JSContext *cx, Class *clasp, JSObject *ctor)
      * FIXME: 561785 at least. Quasi-natives including XML objects prevent us
      * from easily or unconditionally calling NewNativeClassInstance here.
      */
-    gc::FinalizeKind kind = NewObjectGCKind(cx, clasp);
+    gc::FinalizeKind kind = GuessObjectGCKindByFlags(cx, ctor, proto, &js_ObjectClass);
     return NewNonFunction<WithProto::Given>(cx, clasp, proto, parent, kind);
 }
 
@@ -3969,6 +4011,17 @@ JSObject::growSlots(JSContext *cx, size_t newcap)
     if (actualCapacity >= NSLOTS_LIMIT) {
         JS_ReportOutOfMemory(cx);
         return false;
+    }
+
+    /* This is a heuristic to make later constructor invocations use a larger size. */
+    if (clasp == &js_ObjectClass && proto) {
+        uint32 stored;
+        if (proto->hasStoredGCKind())
+            stored = GetGCKindSlots(gc::FinalizeKind(proto->getStoredGCKind()));
+        else
+            stored = actualCapacity;
+        uint32 slots = Max(actualCapacity, stored);
+        proto->setStoredGCKind(GetGCObjectKind(slots));
     }
 
     /* If nothing was allocated yet, treat it as initial allocation. */

@@ -634,7 +634,7 @@ JSObject::init(JSContext *cx, js::Class *aclasp, JSObject *proto, JSObject *pare
                void *priv, bool useHoles)
 {
     clasp = aclasp;
-    flags = 0;
+    flags = INITIAL_FLAGS;
 
 #ifdef DEBUG
     /*
