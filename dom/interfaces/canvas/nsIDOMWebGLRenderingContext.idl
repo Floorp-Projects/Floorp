@@ -274,7 +274,14 @@ interface nsIDOMWebGLRenderingContext : nsISupports
   const unsigned long STENCIL_BACK_REF               = 0x8CA3;
   const unsigned long STENCIL_BACK_VALUE_MASK        = 0x8CA4;
   const unsigned long STENCIL_BACK_WRITEMASK         = 0x8CA5;
-  const unsigned long VIEWPORT_RECT                  = 0x0BA2;
+  // This is defined using a scriptable helper in nsDOMClassInfo.h,
+  // because otherwise the case conflicts with the viewport()
+  // method.  WebIDL is case-sensitive, but our current IDL parser
+  // is not.  Once this is fixed, the WebGL context can go back to
+  // using nsDOMGenericSH instead of nsWebGLViewportHandlerSH.
+  // It is not visible to non-JS languages, but the constant value
+  // can just be used.
+  //const unsigned long VIEWPORT                       = 0x0BA2;
   const unsigned long SCISSOR_BOX                    = 0x0C10;
   /*      GL_SCISSOR_TEST */
   const unsigned long COLOR_CLEAR_VALUE              = 0x0C22;
