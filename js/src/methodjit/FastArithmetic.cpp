@@ -370,9 +370,7 @@ mjit::Compiler::jsop_binary_double(FrameEntry *lhs, FrameEntry *rhs, JSOp op,
         isDouble.linkTo(masm.label(), &masm);
     }
 
-    if (type == JSVAL_TYPE_UNKNOWN) {
-        masm.storeDouble(fpLeft, frame.addressOf(lhs));
-    } else if (type == JSVAL_TYPE_INT32) {
+    if (type == JSVAL_TYPE_INT32) {
         /*
          * Integer conversion failed, but the result is expected to be an integer.
          * Call a stub and try harder to convert to int32, or failing that trigger
@@ -380,6 +378,8 @@ mjit::Compiler::jsop_binary_double(FrameEntry *lhs, FrameEntry *rhs, JSOp op,
          */
         JS_ASSERT(op == JSOP_DIV);
         stubcc.linkExit(masm.jump(), Uses(2));
+    } else if (type != JSVAL_TYPE_DOUBLE) {
+        masm.storeDouble(fpLeft, frame.addressOf(lhs));
     }
 
     if (done.isSet())
@@ -393,13 +393,9 @@ mjit::Compiler::jsop_binary_double(FrameEntry *lhs, FrameEntry *rhs, JSOp op,
 
     frame.popn(2);
 
-    if (type == JSVAL_TYPE_UNKNOWN) {
-        frame.freeReg(fpLeft);
-        frame.pushSynced(type);
-    } else if (type == JSVAL_TYPE_DOUBLE) {
+    if (type == JSVAL_TYPE_DOUBLE) {
         frame.pushDouble(fpLeft);
     } else {
-        JS_ASSERT(op == JSOP_DIV && type == JSVAL_TYPE_INT32);
         frame.freeReg(fpLeft);
         frame.pushSynced(type);
     }
