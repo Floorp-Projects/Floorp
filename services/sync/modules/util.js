@@ -1249,6 +1249,12 @@ let Utils = {
     return Utils.encodeKeyBase32(Utils.generateRandomBytes(16));
   },
 
+  trim: function trim(s) {
+    if (s)
+      return s.replace(/^\s+/, "").replace(/\s+$/, "");
+    return s;
+  },
+  
   /**
    * The following are the methods supported for UI use:
    *
@@ -1264,6 +1270,8 @@ let Utils = {
    *     take a presentable passphrase and reduce it to a normalized
    *     representation for storage. normalizePassphrase can safely be called
    *     on normalized input.
+   * * normalizeAccount:
+   *     take user input for account/username, cleaning up appropriately.
    */
 
   isPassphrase: function(s) {
@@ -1310,7 +1318,7 @@ let Utils = {
   normalizePassphrase: function normalizePassphrase(pp) {
     // Short var name... have you seen the lines below?!
     // Allow leading and trailing whitespace.
-    pp = pp.toLowerCase().replace(/^\s+/, "").replace(/\s+$/, "");
+    pp = Utils.trim(pp.toLowerCase());
 
     // 20-char sync key.
     if (pp.length == 23 &&
@@ -1331,6 +1339,10 @@ let Utils = {
 
     // Something else -- just return.
     return pp;
+  },
+  
+  normalizeAccount: function normalizeAccount(acc) {
+    return Utils.trim(acc);
   },
 
   // WeaveCrypto returns bad base64 strings. Truncate excess padding
