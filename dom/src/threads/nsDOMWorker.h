@@ -308,15 +308,15 @@ private:
     return mPrincipal;
   }
 
-  void SetPrincipal(nsIPrincipal* aPrincipal) {
-    mPrincipal = aPrincipal;
+  void SetPrincipal(nsIPrincipal* aPrincipal);
+
+  nsIURI* GetBaseURI() {
+    return mBaseURI;
   }
 
-  nsIURI* GetURI() {
-    return mURI;
-  }
+  nsresult SetBaseURI(nsIURI* aURI);
 
-  nsresult SetURI(nsIURI* aURI);
+  void ClearBaseURI();
 
   nsresult FireCloseRunnable(PRIntervalTime aTimeoutInterval,
                              PRBool aClearQueue,
@@ -364,7 +364,7 @@ private:
   nsIXPConnectWrappedNative* mWrappedNative;
 
   nsCOMPtr<nsIPrincipal> mPrincipal;
-  nsCOMPtr<nsIURI> mURI;
+  nsCOMPtr<nsIURI> mBaseURI;
 
   PRInt32 mErrorHandlerRecursionCount;
 
