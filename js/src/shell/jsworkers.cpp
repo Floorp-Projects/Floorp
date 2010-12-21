@@ -294,8 +294,7 @@ class Event
     }
 
     bool deserializeData(JSContext *cx, jsval *vp) {
-        return !!JS_ReadStructuredClone(cx, data, nbytes, JS_STRUCTURED_CLONE_VERSION, vp,
-                                        NULL, NULL);
+        return !!JS_ReadStructuredClone(cx, data, nbytes, JS_STRUCTURED_CLONE_VERSION, vp);
     }
 
     virtual Result process(JSContext *cx) = 0;
@@ -308,7 +307,7 @@ class Event
     {
         uint64 *data;
         size_t nbytes;
-        if (!JS_WriteStructuredClone(cx, v, &data, &nbytes, NULL, NULL))
+        if (!JS_WriteStructuredClone(cx, v, &data, &nbytes))
             return NULL;
 
         EventType *event = new EventType;

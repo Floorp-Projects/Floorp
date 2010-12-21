@@ -234,12 +234,6 @@ public:
     return mPrivilegeModel == CHROME;
   }
 
-  static JSObject* ReadStructuredClone(JSContext* aCx,
-                                       JSStructuredCloneReader* aReader,
-                                       uint32 aTag,
-                                       uint32 aData,
-                                       void* aClosure);
-
   /**
    * Use this chart to help figure out behavior during each of the closing
    * statuses. Details below.
@@ -314,15 +308,15 @@ private:
     return mPrincipal;
   }
 
-  void SetPrincipal(nsIPrincipal* aPrincipal);
-
-  nsIURI* GetBaseURI() {
-    return mBaseURI;
+  void SetPrincipal(nsIPrincipal* aPrincipal) {
+    mPrincipal = aPrincipal;
   }
 
-  nsresult SetBaseURI(nsIURI* aURI);
+  nsIURI* GetURI() {
+    return mURI;
+  }
 
-  void ClearBaseURI();
+  nsresult SetURI(nsIURI* aURI);
 
   nsresult FireCloseRunnable(PRIntervalTime aTimeoutInterval,
                              PRBool aClearQueue,
@@ -370,7 +364,7 @@ private:
   nsIXPConnectWrappedNative* mWrappedNative;
 
   nsCOMPtr<nsIPrincipal> mPrincipal;
-  nsCOMPtr<nsIURI> mBaseURI;
+  nsCOMPtr<nsIURI> mURI;
 
   PRInt32 mErrorHandlerRecursionCount;
 

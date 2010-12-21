@@ -3207,28 +3207,15 @@ JS_FinishJSONParse(JSContext *cx, JSONParser *jp, jsval reviver);
 /* The maximum supported structured-clone serialization format version. */
 #define JS_STRUCTURED_CLONE_VERSION 1
 
-struct JSStructuredCloneCallbacks {
-    ReadStructuredCloneOp read;
-    WriteStructuredCloneOp write;
-    StructuredCloneErrorOp reportError;
-};
-
 JS_PUBLIC_API(JSBool)
-JS_ReadStructuredClone(JSContext *cx, const uint64 *data, size_t nbytes,
-                       uint32 version, jsval *vp,
-                       const JSStructuredCloneCallbacks *optionalCallbacks,
-                       void *closure);
+JS_ReadStructuredClone(JSContext *cx, const uint64 *data, size_t nbytes, uint32 version, jsval *vp);
 
 /* Note: On success, the caller is responsible for calling js_free(*datap). */
 JS_PUBLIC_API(JSBool)
-JS_WriteStructuredClone(JSContext *cx, jsval v, uint64 **datap, size_t *nbytesp,
-                        const JSStructuredCloneCallbacks *optionalCallbacks,
-                        void *closure);
+JS_WriteStructuredClone(JSContext *cx, jsval v, uint64 **datap, size_t *nbytesp);
 
 JS_PUBLIC_API(JSBool)
-JS_StructuredClone(JSContext *cx, jsval v, jsval *vp,
-                   const JSStructuredCloneCallbacks *optionalCallbacks,
-                   void *closure);
+JS_StructuredClone(JSContext *cx, jsval v, jsval *vp);
 
 #ifdef __cplusplus
 /* RAII sugar for JS_WriteStructuredClone. */
@@ -3293,24 +3280,18 @@ class JSAutoStructuredCloneBuffer {
         version_ = 0;
     }
 
-    bool read(jsval *vp, JSContext *cx=NULL,
-              const JSStructuredCloneCallbacks *optionalCallbacks=NULL,
-              void *closure=NULL) const {
+    bool read(jsval *vp, JSContext *cx=NULL) const {
         if (!cx)
             cx = cx_;
         JS_ASSERT(cx);
         JS_ASSERT(data_);
-        return !!JS_ReadStructuredClone(cx, data_, nbytes_, version_, vp,
-                                        optionalCallbacks, closure);
+        return !!JS_ReadStructuredClone(cx, data_, nbytes_, version_, vp);
     }
 
-    bool write(JSContext *cx, jsval v,
-               const JSStructuredCloneCallbacks *optionalCallbacks=NULL,
-               void *closure=NULL) {
+    bool write(JSContext *cx, jsval v) {
         clear(cx);
         cx_ = cx;
-        bool ok = !!JS_WriteStructuredClone(cx, v, &data_, &nbytes_,
-                                            optionalCallbacks, closure);
+        bool ok = !!JS_WriteStructuredClone(cx, v, &data_, &nbytes_);
         if (!ok) {
             data_ = NULL;
             nbytes_ = 0;
@@ -3353,6 +3334,12 @@ class JSAutoStructuredCloneBuffer {
 #define JS_SCTAG_USER_MAX  ((uint32) 0xFFFFFFFF)
 
 #define JS_SCERR_RECURSION 0
+
+struct JSStructuredCloneCallbacks {
+    ReadStructuredCloneOp read;
+    WriteStructuredCloneOp write;
+    StructuredCloneErrorOp reportError;
+};
 
 JS_PUBLIC_API(void)
 JS_SetStructuredCloneCallbacks(JSRuntime *rt, const JSStructuredCloneCallbacks *callbacks);
