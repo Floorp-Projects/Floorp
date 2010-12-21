@@ -405,21 +405,22 @@ TypeSet::addSetElem(JSContext *cx, analyze::Bytecode *code, TypeSet *object, Typ
 /* Constraints for determining the 'this' object at sites invoked using 'new'. */
 class TypeConstraintNewObject : public TypeConstraint
 {
+    TypeFunction *fun;
     TypeSet *target;
 
   public:
-    TypeConstraintNewObject(TypeSet *target)
-        : TypeConstraint("newObject"), target(target)
+    TypeConstraintNewObject(TypeFunction *fun, TypeSet *target)
+        : TypeConstraint("newObject"), fun(fun), target(target)
     {}
 
     void newType(JSContext *cx, TypeSet *source, jstype type);
 };
 
 void
-TypeSet::addNewObject(JSContext *cx, JSArenaPool &pool, TypeSet *target)
+TypeSet::addNewObject(JSContext *cx, TypeFunction *fun, TypeSet *target)
 {
-    JS_ASSERT(this->pool == &pool);
-    add(cx, ArenaNew<TypeConstraintNewObject>(pool, target));
+    JS_ASSERT(this->pool == fun->pool);
+    add(cx, ArenaNew<TypeConstraintNewObject>(*fun->pool, fun, target));
 }
 
 /*
@@ -737,11 +738,19 @@ TypeConstraintNewObject::newType(JSContext *cx, TypeSet *source, jstype type)
         return;
     }
 
-    /* :FIXME: Handle non-object prototype case dynamically. */
     if (TypeIsObject(type)) {
         TypeObject *object = (TypeObject *) type;
         TypeSet *newTypes = object->getProperty(cx, JSID_EMPTY, true);
         newTypes->addSubset(cx, *object->pool, target);
+    } else if (!fun->script) {
+        /*
+         * This constraint should only be used for native constructors with
+         * immutable non-primitive prototypes. Disregard primitives here.
+         */
+    } else if (!fun->script->compileAndGo) {
+        target->addType(cx, TYPE_UNKNOWN);
+    } else {
+        target->addType(cx, (jstype) cx->getTypeNewObject(JSProto_Object));
     }
 }
 
@@ -841,7 +850,7 @@ TypeConstraintCall::newType(JSContext *cx, TypeSet *source, jstype type)
             script->thisTypes.addType(cx, TYPE_UNKNOWN);
         } else {
             TypeSet *prototypeTypes = function->getProperty(cx, id_prototype(cx), false);
-            prototypeTypes->addNewObject(cx, *function->pool, &script->thisTypes);
+            prototypeTypes->addNewObject(cx, function, &script->thisTypes);
         }
 
         /*
@@ -1300,6 +1309,22 @@ TypeSet::knownNonEmpty(JSContext *cx, JSScript *script)
     return false;
 }
 
+static bool
+HasUnknownObject(TypeSet *types)
+{
+    if (types->objectCount >= 2) {
+        unsigned objectCapacity = HashSetCapacity(types->objectCount);
+        for (unsigned i = 0; i < objectCapacity; i++) {
+            TypeObject *object = types->objectSet[i];
+            if (object && object->unknownProperties)
+                return true;
+        }
+    } else if (types->objectCount == 1 && ((TypeObject*)types->objectSet)->unknownProperties) {
+        return true;
+    }
+    return false;
+}
+
 /////////////////////////////////////////////////////////////////////
 // TypeCompartment
 /////////////////////////////////////////////////////////////////////
@@ -1316,7 +1341,8 @@ TypeCompartment::growPendingArray()
 void
 TypeCompartment::addDynamicType(JSContext *cx, TypeSet *types, jstype type)
 {
-    JS_ASSERT(!types->hasType(type));
+    JS_ASSERT_IF(type == TYPE_UNKNOWN, !types->unknown());
+    JS_ASSERT_IF(type != TYPE_UNKNOWN, !types->hasType(type));
 
     interpreting = false;
     uint64_t startTime = currentTime();
@@ -1482,6 +1508,7 @@ TypeCompartment::monitorBytecode(JSContext *cx, analyze::Bytecode *code)
     switch (op) {
       case JSOP_SETNAME:
       case JSOP_SETGNAME:
+      case JSOP_SETXMLNAME:
       case JSOP_SETELEM:
       case JSOP_SETPROP:
       case JSOP_SETMETHOD:
@@ -1818,10 +1845,21 @@ JSScript::typeCheckBytecode(JSContext *cx, const jsbytecode *pc, const js::Value
             continue;
 
         js::types::jstype type = js::types::GetValueType(cx, val);
+
+        /*
+         * If this is a type for an object with unknown properties, match any object
+         * in the type set which also has unknown properties. This avoids failure
+         * on objects whose prototype (and thus type) changes dynamically, which will
+         * mark the old and new type objects as unknown.
+         */
+        if (js::types::TypeIsObject(type) && ((js::types::TypeObject*)type)->unknownProperties &&
+            js::types::HasUnknownObject(types)) {
+            continue;
+        }
+
         if (!types->hasType(type)) {
             js::types::TypeFailure(cx, "Missing type at #%u:%05u popped %u: %s",
                                    analysis->id, code.offset, i, js::types::TypeString(type));
-            return;
         }
 
         if (js::types::TypeIsObject(type)) {
@@ -2330,12 +2368,11 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, AnalyzeState &state)
             id = GetGlobalId(cx, this, pc);
             scope = SCOPE_GLOBAL;
             break;
-          case JSOP_GETGNAME:
-          case JSOP_CALLGNAME:
-            id = GetAtomId(cx, this, pc, 0);
-            scope = SCOPE_GLOBAL;
-            break;
           default:
+            /*
+             * Search the scope to mirror the interpreter's behavior, and to workaround
+             * cases where GNAME is broken, :FIXME: bug 605200.
+             */
             id = GetAtomId(cx, this, pc, 0);
             scope = SearchScope(cx, this, code->inStack, id);
             break;
@@ -2410,10 +2447,15 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, AnalyzeState &state)
         break;
       }
 
+      case JSOP_INCGNAME:
+      case JSOP_DECGNAME:
+      case JSOP_GNAMEINC:
+      case JSOP_GNAMEDEC:
       case JSOP_INCNAME:
       case JSOP_DECNAME:
       case JSOP_NAMEINC:
       case JSOP_NAMEDEC: {
+        /* Same issue for searching scope as JSOP_GNAME/CALLGNAME. :FIXME: bug 605200 */
         jsid id = GetAtomId(cx, this, pc, 0);
 
         Script *scope = SearchScope(cx, this, code->inStack, id);
@@ -2459,16 +2501,6 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, AnalyzeState &state)
         MergePushed(cx, cx->compartment->types.pool, code, 0, types);
         if (code->hasIncDecOverflow)
             types->addType(cx, TYPE_DOUBLE);
-        break;
-      }
-
-      case JSOP_INCGNAME:
-      case JSOP_DECGNAME:
-      case JSOP_GNAMEINC:
-      case JSOP_GNAMEDEC: {
-        jsid id = GetAtomId(cx, this, pc, 0);
-        PropertyAccess(cx, code, cx->globalTypeObject(), true, NULL, id);
-        PropertyAccess(cx, code, cx->globalTypeObject(), false, code->pushed(0), id);
         break;
       }
 
@@ -3040,6 +3072,7 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, AnalyzeState &state)
 
       case JSOP_SETXMLNAME:
         cx->compartment->types.monitorBytecode(cx, code);
+        MergePushed(cx, pool, code, 0, code->popped(0));
         break;
 
       case JSOP_BINDXMLNAME:
@@ -3063,8 +3096,6 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, AnalyzeState &state)
         /* Note: the second value pushed by filter is a hole, and not modelled. */
         MergePushed(cx, pool, code, 0, code->popped(0));
         code->pushedArray[0].group()->boundWith = true;
-
-        /* Name binding inside filters is currently broken :FIXME: bug 605200. */
         break;
 
       case JSOP_ENDFILTER:
@@ -3134,13 +3165,9 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, AnalyzeState &state)
     }
 
     switch (op) {
-      case JSOP_BINDGNAME: {
-        AnalyzeStateStack &stack = state.popped(0);
-        stack.scope = SCOPE_GLOBAL;
-        break;
-      }
-
+      case JSOP_BINDGNAME:
       case JSOP_BINDNAME: {
+        /* Same issue for searching scope as JSOP_GNAME/JSOP_CALLGNAME. :FIXME: bug 605200 */
         jsid id = GetAtomId(cx, this, pc, 0);
         AnalyzeStateStack &stack = state.popped(0);
         stack.scope = SearchScope(cx, this, code->inStack, id);

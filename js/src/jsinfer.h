@@ -234,6 +234,8 @@ struct TypeSet
     /* Whether this set contains a specific type. */
     inline bool hasType(jstype type);
 
+    bool unknown() { return typeFlags & TYPE_FLAG_UNKNOWN; }
+
     /*
      * Add a type to this set, calling any constraint handlers if this is a new
      * possible type.
@@ -247,7 +249,7 @@ struct TypeSet
     void addSetProperty(JSContext *cx, analyze::Bytecode *code, TypeSet *target, jsid id);
     void addGetElem(JSContext *cx, analyze::Bytecode *code, TypeSet *object, TypeSet *target);
     void addSetElem(JSContext *cx, analyze::Bytecode *code, TypeSet *object, TypeSet *target);
-    void addNewObject(JSContext *cx, JSArenaPool &pool, TypeSet *target);
+    void addNewObject(JSContext *cx, TypeFunction *fun, TypeSet *target);
     void addCall(JSContext *cx, TypeCallsite *site);
     void addArith(JSContext *cx, JSArenaPool &pool, analyze::Bytecode *code,
                   TypeSet *target, TypeSet *other = NULL);
