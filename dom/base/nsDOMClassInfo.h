@@ -1801,4 +1801,34 @@ public:
   }
 };
 
+class nsWebGLViewportHandlerSH : public nsDOMGenericSH
+{
+protected:
+  nsWebGLViewportHandlerSH(nsDOMClassInfoData *aData) : nsDOMGenericSH(aData)
+  {
+  }
+
+  virtual ~nsWebGLViewportHandlerSH()
+  {
+  }
+
+public:
+  NS_IMETHOD PostCreatePrototype(JSContext * cx, JSObject * proto) {
+    nsresult rv = nsDOMGenericSH::PostCreatePrototype(cx, proto);
+    if (NS_SUCCEEDED(rv)) {
+      if (!::JS_DefineProperty(cx, proto, "VIEWPORT", INT_TO_JSVAL(0x0BA2),
+                               nsnull, nsnull, JSPROP_ENUMERATE))
+      {
+        return NS_ERROR_UNEXPECTED;
+      }
+    }
+    return rv;
+  }
+
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
+  {
+    return new nsWebGLViewportHandlerSH(aData);
+  }
+};
+
 #endif /* nsDOMClassInfo_h___ */
