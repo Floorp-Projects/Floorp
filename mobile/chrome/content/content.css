@@ -48,11 +48,19 @@
   */
 }
 
-*:link:focus, *:visited:focus {
+*:-moz-any-link:focus {
   outline-offset: -2px;
 }
 
 /* Style the scrollbars */
+html xul|scrollbar {
+  display: none;
+}
+
+xul|window xul|scrollbar {
+  display: block;
+}
+
 xul|scrollbar[orient="vertical"] {
   -moz-appearance: none !important;
   opacity: 0;
@@ -61,6 +69,12 @@ xul|scrollbar[orient="vertical"] {
   min-width: 8px;
   background-color: transparent !important;
   background-image: none !important;
+  border: 0px solid transparent !important;
+}
+
+xul|scrollbar[orient="vertical"] xul|thumb {
+  max-width: 6px !important;
+  min-width: 6px !important;
 }
 
 xul|scrollbar[orient="horizontal"] {
@@ -71,19 +85,16 @@ xul|scrollbar[orient="horizontal"] {
   margin-top: -8px;
   background-color: transparent !important;
   background-image: none !important;
-}
-
-xul|*[panning="true"] xul|scrollbar {
-  opacity: 1;
-}
-
-
-xul|scrollbar[orient="vertical"] xul|thumb {
-  max-width: 6px !important;
+  border: 0px solid transparent !important;
 }
 
 xul|scrollbar[orient="horizontal"] xul|thumb {
   max-height: 6px !important;
+  min-height: 6px !important;
+}
+
+xul|*[panning="true"] xul|scrollbar {
+  opacity: 1;
 }
 
 xul|scrollbox {
@@ -92,8 +103,15 @@ xul|scrollbox {
 }
 
 xul|scrollbarbutton {
+  min-height: 8px !important;
+  min-width: 8px !important;
   -moz-appearance: none !important;
-  display: none !important;
+  visibility: hidden;
+}
+
+xul|scrollbarbutton[sbattr="scrollbar-up-top"],
+xul|scrollbarbutton[sbattr="scrollbar-bottom-top"] {
+  display: none;
 }
 
 xul|thumb {
@@ -110,7 +128,9 @@ select:not([size]):not([multiple]) > xul|scrollbar,
 select[size="1"] > xul|scrollbar,
 select:not([size]):not([multiple]) xul|scrollbarbutton,
 select[size="1"] xul|scrollbarbutton {
-  display: block !important;
+  display: block;
+  margin-left: 0;
+  min-width: 16px;
 }
 
 /* Override inverse OS themes */
