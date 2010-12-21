@@ -1096,11 +1096,11 @@ nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
             // Yep?  Resize the window
             //Maybe, the toplevel has moved
 
-            // Note that if the widget needs to be shown because it
-            // was previously insane in Resize(x,y,w,h), then we need
+            // Note that if the widget needs to be positioned because its
+            // size was previously insane in Resize(x,y,w,h), then we need
             // to set the x and y here too, because the widget wasn't
             // moved back then
-            if (mIsTopLevel || mNeedsShow)
+            if (mNeedsMove)
                 NativeResize(mBounds.x, mBounds.y,
                              mBounds.width, mBounds.height, aRepaint);
             else
@@ -1155,6 +1155,7 @@ nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
     mBounds.y = aY;
     mBounds.SizeTo(GetSafeWindowSize(nsIntSize(aWidth, aHeight)));
 
+    mNeedsMove = PR_TRUE;
     mPlaced = PR_TRUE;
 
     if (!mCreated)
@@ -1198,7 +1199,6 @@ nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
         }
         else {
             mNeedsResize = PR_TRUE;
-            mNeedsMove = PR_TRUE;
         }
     }
 
