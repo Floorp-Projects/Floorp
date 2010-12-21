@@ -42,6 +42,7 @@
 #include "IDBIndex.h"
 
 #include "nsIIDBKeyRange.h"
+#include "nsIJSContextStack.h"
 
 #include "nsDOMClassInfo.h"
 #include "nsEventDispatcher.h"
@@ -97,8 +98,14 @@ public:
   nsresult DoDatabaseWork(mozIStorageConnection* aConnection);
   nsresult OnSuccess(nsIDOMEventTarget* aTarget);
 
+  void ReleaseMainThreadObjects()
+  {
+    IDBObjectStore::ClearStructuredCloneBuffer(mCloneBuffer);
+    GetKeyHelper::ReleaseMainThreadObjects();
+  }
+
 protected:
-  nsString mValue;
+  JSAutoStructuredCloneBuffer mCloneBuffer;
 };
 
 class GetAllKeysHelper : public GetKeyHelper
@@ -134,9 +141,17 @@ public:
   nsresult DoDatabaseWork(mozIStorageConnection* aConnection);
   nsresult OnSuccess(nsIDOMEventTarget* aTarget);
 
+  void ReleaseMainThreadObjects()
+  {
+    for (PRUint32 index = 0; index < mCloneBuffers.Length(); index++) {
+      IDBObjectStore::ClearStructuredCloneBuffer(mCloneBuffers[index]);
+    }
+    GetKeyHelper::ReleaseMainThreadObjects();
+  }
+
 protected:
   const PRUint32 mLimit;
-  nsTArray<nsString> mValues;
+  nsTArray<JSAutoStructuredCloneBuffer> mCloneBuffers;
 };
 
 class OpenKeyCursorHelper : public AsyncConnectionHelper
@@ -203,6 +218,7 @@ public:
   void ReleaseMainThreadObjects()
   {
     mIndex = nsnull;
+    IDBObjectStore::ClearStructuredCloneBuffer(mCloneBuffer);
     AsyncConnectionHelper::ReleaseMainThreadObjects();
   }
 
@@ -218,7 +234,7 @@ private:
   // Out-params.
   Key mKey;
   Key mObjectKey;
-  nsString mValue;
+  JSAutoStructuredCloneBuffer mCloneBuffer;
   nsCString mContinueQuery;
   nsCString mContinueToQuery;
   Key mRangeKey;
@@ -749,11 +765,9 @@ GetHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   if (hasResult) {
-    rv = stmt->GetString(0, mValue);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-  }
-  else {
-    mValue.SetIsVoid(PR_TRUE);
+    rv = IDBObjectStore::GetStructuredCloneDataFromStatement(stmt, 0,
+                                                             mCloneBuffer);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   return NS_OK;
@@ -762,7 +776,7 @@ GetHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 nsresult
 GetHelper::OnSuccess(nsIDOMEventTarget* aTarget)
 {
-  nsRefPtr<GetSuccessEvent> event(new GetSuccessEvent(mValue));
+  nsRefPtr<GetSuccessEvent> event(new GetSuccessEvent(mCloneBuffer));
   nsresult rv = event->Init(mRequest, mTransaction);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
@@ -901,7 +915,7 @@ GetAllHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
   NS_ASSERTION(aConnection, "Passed a null connection!");
 
-  if (!mValues.SetCapacity(50)) {
+  if (!mCloneBuffers.SetCapacity(50)) {
     NS_ERROR("Out of memory!");
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
@@ -978,27 +992,18 @@ GetAllHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
   PRBool hasResult;
   while(NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
-    if (mValues.Capacity() == mValues.Length()) {
-      if (!mValues.SetCapacity(mValues.Capacity() * 2)) {
+    if (mCloneBuffers.Capacity() == mCloneBuffers.Length()) {
+      if (!mCloneBuffers.SetCapacity(mCloneBuffers.Capacity() * 2)) {
         NS_ERROR("Out of memory!");
         return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
       }
     }
 
-    nsString* value = mValues.AppendElement();
-    NS_ASSERTION(value, "This shouldn't fail!");
+    JSAutoStructuredCloneBuffer* buffer = mCloneBuffers.AppendElement();
+    NS_ASSERTION(buffer, "This shouldn't fail!");
 
-#ifdef DEBUG
-    {
-      PRInt32 keyType;
-      NS_ASSERTION(NS_SUCCEEDED(stmt->GetTypeOfIndex(0, &keyType)) &&
-                   keyType == mozIStorageStatement::VALUE_TYPE_TEXT,
-                   "Bad SQLITE type!");
-    }
-#endif
-
-    rv = stmt->GetString(0, *value);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+    rv = IDBObjectStore::GetStructuredCloneDataFromStatement(stmt, 0, *buffer);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
@@ -1008,9 +1013,10 @@ GetAllHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 nsresult
 GetAllHelper::OnSuccess(nsIDOMEventTarget* aTarget)
 {
-  nsRefPtr<GetAllSuccessEvent> event(new GetAllSuccessEvent(mValues));
+  NS_ASSERTION(mCloneBuffers.Length() <= mLimit, "Too many results!");
 
-  NS_ASSERTION(mValues.IsEmpty(), "Should have swapped!");
+  nsRefPtr<GetAllSuccessEvent> event = new GetAllSuccessEvent(mCloneBuffers);
+  NS_ASSERTION(mCloneBuffers.IsEmpty(), "Should have swapped!");
 
   nsresult rv = event->Init(mRequest, mTransaction);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
@@ -1421,17 +1427,9 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     NS_NOTREACHED("Bad SQLite type!");
   }
 
-#ifdef DEBUG
-  {
-    PRInt32 valueType;
-    NS_ASSERTION(NS_SUCCEEDED(stmt->GetTypeOfIndex(2, &valueType)) &&
-                 valueType == mozIStorageStatement::VALUE_TYPE_TEXT,
-                 "Bad value type!");
-  }
-#endif
-
-  rv = stmt->GetString(2, mValue);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  rv = IDBObjectStore::GetStructuredCloneDataFromStatement(stmt, 2,
+                                                           mCloneBuffer);
+  NS_ENSURE_SUCCESS(rv, rv);
 
 /*
   SELECT index_data.value, object_data.key_value, object_data.data
@@ -1541,7 +1539,7 @@ OpenCursorHelper::GetSuccessResult(nsIWritableVariant* aResult)
   nsRefPtr<IDBCursor> cursor =
     IDBCursor::Create(mRequest, mTransaction, mIndex, mDirection, mRangeKey,
                       mContinueQuery, mContinueToQuery, mKey, mObjectKey,
-                      mValue);
+                      mCloneBuffer);
   NS_ENSURE_TRUE(cursor, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   aResult->SetAsISupports(cursor);
