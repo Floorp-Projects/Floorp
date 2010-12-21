@@ -234,6 +234,12 @@ public:
     return mPrivilegeModel == CHROME;
   }
 
+  static JSObject* ReadStructuredClone(JSContext* aCx,
+                                       JSStructuredCloneReader* aReader,
+                                       uint32 aTag,
+                                       uint32 aData,
+                                       void* aClosure);
+
   /**
    * Use this chart to help figure out behavior during each of the closing
    * statuses. Details below.
