@@ -82,7 +82,7 @@ public class AlertNotification
             // Custom view
             int layout = aAlertText.length() > 0 ? R.layout.notification_progress_text : R.layout.notification_progress;
 
-            RemoteViews view = new RemoteViews("org.mozilla." + GeckoApp.mAppContext.getAppName(), layout);
+            RemoteViews view = new RemoteViews(GeckoApp.mAppContext.getPackageName(), layout);
             view.setImageViewResource(R.id.notificationImage, mIcon);
             view.setTextViewText(R.id.notificationTitle, mTitle);
             contentView = view;

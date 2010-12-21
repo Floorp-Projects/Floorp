@@ -439,7 +439,7 @@ static void * mozload(const char * path, void *zip,
 
   if (extractLibs) {
     char fullpath[256];
-    snprintf(fullpath, 256, "/data/data/org.mozilla.fennec/%s", path + 4);
+    snprintf(fullpath, 256, "/data/data/" ANDROID_PACKAGE_NAME "/%s", path + 4);
     __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "resolved %s to %s", path, fullpath);
     extractFile(fullpath, entry, data);
     handle = __wrap_dlopen(fullpath, RTLD_LAZY);
@@ -560,7 +560,7 @@ extern "C" void simple_linker_init(void);
 static void
 loadLibs(const char *apkName)
 {
-  chdir("/data/data/org.mozilla.fennec");
+  chdir("/data/data/" ANDROID_PACKAGE_NAME);
 
   simple_linker_init();
 

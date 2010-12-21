@@ -409,7 +409,7 @@ abstract public class GeckoApp
         return false;
     }
 
-    abstract public String getAppName();
+    abstract public String getPackageName();
     abstract public String getContentProcessName();
 
     protected void unpackComponents()
@@ -418,7 +418,7 @@ abstract public class GeckoApp
         ZipFile zip;
         InputStream listStream;
 
-        File componentsDir = new File("/data/data/org.mozilla." + getAppName() +
+        File componentsDir = new File("/data/data/" + getPackageName() +
                                       "/components");
         componentsDir.mkdir();
         zip = new ZipFile(getApplication().getPackageResourcePath());
@@ -451,7 +451,7 @@ abstract public class GeckoApp
             throw new FileNotFoundException("Can't find " + name + " in " +
                                             zip.getName());
 
-        File outFile = new File("/data/data/org.mozilla." + getAppName() +
+        File outFile = new File("/data/data/" + getPackageName() +
                                 "/" + name);
         if (outFile.exists() &&
             outFile.lastModified() == fileEntry.getTime() &&
@@ -493,10 +493,10 @@ abstract public class GeckoApp
 
     public void doRestart() {
         try {
-            String action = "org.mozilla.gecko.restart" + getAppName();
+            String action = "org.mozilla.gecko.restart";
             Intent intent = new Intent(action);
-            intent.setClassName("org.mozilla." + getAppName(),
-                                "org.mozilla." + getAppName() + ".Restarter");
+            intent.setClassName(getPackageName(),
+                                getPackageName() + ".Restarter");
             addEnvToIntent(intent);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK |
                             Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
@@ -530,7 +530,7 @@ abstract public class GeckoApp
         Log.i("GeckoAppJava", "Update is available!");
 
         // Launch APK
-        File updateFileToRun = new File(updateDir + getAppName() + "-update.apk");
+        File updateFileToRun = new File(updateDir + getPackageName() + "-update.apk");
         try {
             if (updateFile.renameTo(updateFileToRun)) {
                 String amCmd = "/system/bin/am start -a android.intent.action.VIEW " +
@@ -612,8 +612,8 @@ abstract public class GeckoApp
                     File.createTempFile("tmp_" + 
                                         (int)Math.floor(1000 * Math.random()), 
                                         fileExt, 
-                                        new File("/data/data/org.mozilla." +
-                                                 getAppName()));
+                                        new File("/data/data/" +
+                                                 getPackageName()));
                 
                 FileOutputStream fos = new FileOutputStream(file);
                 InputStream is = cr.openInputStream(uri);
