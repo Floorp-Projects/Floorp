@@ -49,10 +49,12 @@
 namespace js {
 
 bool
-WriteStructuredClone(JSContext *cx, const Value &v, uint64_t **bufp, size_t *nbytesp);
+WriteStructuredClone(JSContext *cx, const Value &v, uint64_t **bufp, size_t *nbytesp,
+                     const JSStructuredCloneCallbacks *cb, void *cbClosure);
 
 bool
-ReadStructuredClone(JSContext *cx, const uint64_t *data, size_t nbytes, Value *vp);
+ReadStructuredClone(JSContext *cx, const uint64_t *data, size_t nbytes, Value *vp,
+                    const JSStructuredCloneCallbacks *cb, void *cbClosure);
 
 struct SCOutput {
   public:
@@ -109,8 +111,9 @@ struct SCInput {
 
 struct JSStructuredCloneReader {
   public:
-    explicit JSStructuredCloneReader(js::SCInput &in)
-        : in(in), objs(in.context()) {}
+    explicit JSStructuredCloneReader(js::SCInput &in, const JSStructuredCloneCallbacks *cb,
+                                     void *cbClosure)
+        : in(in), objs(in.context()), callbacks(cb), closure(cbClosure) { }
 
     js::SCInput &input() { return in; }
     bool read(js::Value *vp);
@@ -129,13 +132,20 @@ struct JSStructuredCloneReader {
 
     // Stack of objects with properties remaining to be read.
     js::AutoValueVector objs;
+
+    // The user defined callbacks that will be used for cloning.
+    const JSStructuredCloneCallbacks *callbacks;
+
+    // Any value passed to JS_ReadStructuredClone.
+    void *closure;
 };
 
 struct JSStructuredCloneWriter {
   public:
-    explicit JSStructuredCloneWriter(js::SCOutput &out)
+    explicit JSStructuredCloneWriter(js::SCOutput &out, const JSStructuredCloneCallbacks *cb,
+                                     void *cbClosure)
         : out(out), objs(out.context()), counts(out.context()), ids(out.context()),
-          memory(out.context()) {}
+          memory(out.context()), callbacks(cb), closure(cbClosure) { }
 
     bool init() { return memory.init(); }
 
@@ -170,6 +180,12 @@ struct JSStructuredCloneWriter {
     // The "memory" list described in the HTML5 internal structured cloning algorithm.
     // memory has the same elements as objs.
     js::HashSet<JSObject *> memory;
+
+    // The user defined callbacks that will be used for cloning.
+    const JSStructuredCloneCallbacks *callbacks;
+
+    // Any value passed to JS_WriteStructuredClone.
+    void *closure;
 };
 
 #endif /* jsclone_h___ */

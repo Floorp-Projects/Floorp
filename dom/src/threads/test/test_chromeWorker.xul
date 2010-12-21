@@ -64,6 +64,25 @@
         worker.terminate();
         SimpleTest.finish();
       }
+
+      // Test passing a non-threadsafe wrapped native to the worker.
+      var isupports =
+        Components.classes["@mozilla.org/supports-PRBool;1"]
+                  .createInstance(Components.interfaces.nsISupportsPRBool);
+
+      try {
+        worker.postMessage(isupports);
+        ok(false, "Passing non-threadsafe thing should throw!");
+      }
+      catch (e) {
+        ok(true, "Passing non-threadsafe thing threw");
+      }
+
+      // Test passing a wrapped native to the worker.
+      var thread = Components.classes["@mozilla.org/thread-manager;1"]
+                             .getService().newThread(0);
+
+      worker.postMessage(thread);
     }
 
   ]]>

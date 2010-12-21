@@ -4071,7 +4071,8 @@ static JSObject*
 DOMReadStructuredClone(JSContext* cx,
                        JSStructuredCloneReader* reader,
                        uint32 tag,
-                       uint32 data)
+                       uint32 data,
+                       void* closure)
 {
   // We don't currently support any extensions to structured cloning.
   nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_DOM_DATA_CLONE_ERR);
@@ -4081,7 +4082,8 @@ DOMReadStructuredClone(JSContext* cx,
 static JSBool
 DOMWriteStructuredClone(JSContext* cx,
                         JSStructuredCloneWriter* writer,
-                        JSObject* obj)
+                        JSObject* obj,
+                        void *closure)
 {
   // We don't currently support any extensions to structured cloning.
   nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_DOM_DATA_CLONE_ERR);
