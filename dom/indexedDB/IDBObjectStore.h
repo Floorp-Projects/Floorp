@@ -86,10 +86,11 @@ public:
                   jsval* aKeyVal);
 
   static nsresult
-  GetKeyPathValueFromJSON(const nsAString& aJSON,
-                          const nsAString& aKeyPath,
-                          JSContext** aCx,
-                          Key& aValue);
+  GetKeyPathValueFromStructuredData(const PRUint8* aData,
+                                    PRUint32 aDataLength,
+                                    const nsAString& aKeyPath,
+                                    JSContext** aCx,
+                                    Key& aValue);
 
   static nsresult
   GetIndexUpdateInfo(ObjectStoreInfo* aObjectStoreInfo,
@@ -105,6 +106,14 @@ public:
                 bool aOverwrite,
                 PRInt64 aObjectDataId,
                 const nsTArray<IndexUpdateInfo>& aUpdateInfoArray);
+
+  static nsresult
+  GetStructuredCloneDataFromStatement(mozIStorageStatement* aStatement,
+                                      PRUint32 aIndex,
+                                      JSAutoStructuredCloneBuffer& aBuffer);
+
+  static void
+  ClearStructuredCloneBuffer(JSAutoStructuredCloneBuffer& aBuffer);
 
   const nsString& Name() const
   {
@@ -144,7 +153,7 @@ protected:
   nsresult GetAddInfo(JSContext* aCx,
                       jsval aValue,
                       jsval aKeyVal,
-                      nsString& aJSON,
+                      JSAutoStructuredCloneBuffer& aCloneBuffer,
                       Key& aKey,
                       nsTArray<IndexUpdateInfo>& aUpdateInfoArray);
 
@@ -166,6 +175,7 @@ private:
   nsString mKeyPath;
   PRBool mAutoIncrement;
   PRUint32 mDatabaseId;
+  PRUint32 mStructuredCloneVersion;
 
   nsTArray<nsRefPtr<IDBIndex> > mCreatedIndexes;
 
