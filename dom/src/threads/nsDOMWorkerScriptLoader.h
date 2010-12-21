@@ -103,12 +103,11 @@ public:
 
   nsresult LoadScripts(JSContext* aCx,
                        const nsTArray<nsString>& aURLs,
-                       PRBool aExecute);
+                       PRBool aForWorker);
 
-  nsresult LoadWorkerScript(JSContext* aCx,
-                            const nsString& aURL);
-
-  nsresult ExecuteScripts(JSContext* aCx);
+  nsresult LoadScript(JSContext* aCx,
+                      const nsString& aURL,
+                      PRBool aForWorker);
 
   virtual void Cancel();
 
@@ -118,6 +117,7 @@ private:
 
   nsresult DoRunLoop(JSContext* aCx);
   nsresult VerifyScripts(JSContext* aCx);
+  nsresult ExecuteScripts(JSContext* aCx);
 
   nsresult RunInternal();
 

@@ -397,23 +397,22 @@ nsDOMWorkerXHRProxy::InitInternal()
   NS_ASSERTION(!mXHR, "InitInternal shouldn't be called twice!");
 
   nsDOMWorker* worker = mWorkerXHR->mWorker;
+  nsRefPtr<nsDOMWorkerPool> pool = worker->Pool();
+
   if (worker->IsCanceled()) {
     return NS_ERROR_ABORT;
   }
 
-  NS_ASSERTION(worker->GetPrincipal(), "Must have a principal!");
-  NS_ASSERTION(worker->GetBaseURI(), "Must have a URI!");
-
-  nsIScriptGlobalObject* sgo = worker->Pool()->ScriptGlobalObject();
-  nsIScriptContext* scriptContext = sgo ? sgo->GetContext() : nsnull;
-
-  nsCOMPtr<nsPIDOMWindow> ownerWindow = do_QueryInterface(sgo);
+  nsIPrincipal* nodePrincipal = pool->ParentDocument()->NodePrincipal();
+  nsIScriptContext* scriptContext = pool->ScriptGlobalObject()->GetContext();
+  nsCOMPtr<nsPIDOMWindow> ownerWindow =
+    do_QueryInterface( pool->ScriptGlobalObject());
 
   nsRefPtr<nsXMLHttpRequest> xhrConcrete = new nsXMLHttpRequest();
   NS_ENSURE_TRUE(xhrConcrete, NS_ERROR_OUT_OF_MEMORY);
 
-  nsresult rv = xhrConcrete->Init(worker->GetPrincipal(), scriptContext,
-                                  ownerWindow, worker->GetBaseURI());
+  nsresult rv = xhrConcrete->Init(nodePrincipal, scriptContext, ownerWindow,
+                                  worker->GetURI());
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Call QI manually here to avoid keeping up with the cast madness of

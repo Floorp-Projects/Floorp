@@ -215,8 +215,7 @@ public:
   ~nsDOMWorkerMessageEvent();
 
   nsresult SetJSData(JSContext* aCx,
-                     JSAutoStructuredCloneBuffer& aBuffer,
-                     nsTArray<nsCOMPtr<nsISupports> >& aWrappedNatives);
+                     JSAutoStructuredCloneBuffer& aBuffer);
 
 protected:
   nsString mOrigin;
@@ -225,7 +224,6 @@ protected:
   nsAutoJSValHolder mDataVal;
   uint64* mData;
   size_t mDataLen;
-  nsTArray<nsCOMPtr<nsISupports> > mWrappedNatives;
 };
 
 class nsDOMWorkerProgressEvent : public nsDOMWorkerEvent,

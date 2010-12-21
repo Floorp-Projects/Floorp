@@ -4169,7 +4169,7 @@ Serialize(JSContext *cx, uintN argc, jsval *vp)
     jsval v = argc > 0 ? JS_ARGV(cx, vp)[0] : JSVAL_VOID;
     uint64 *datap;
     size_t nbytes;
-    if (!JS_WriteStructuredClone(cx, v, &datap, &nbytes, NULL, NULL))
+    if (!JS_WriteStructuredClone(cx, v, &datap, &nbytes))
         return false;
 
     JSObject *arrayobj = js_CreateTypedArray(cx, TypedArray::TYPE_UINT8, nbytes);
@@ -4201,7 +4201,7 @@ Deserialize(JSContext *cx, uintN argc, jsval *vp)
     }
 
     if (!JS_ReadStructuredClone(cx, (uint64 *) array->data, array->byteLength,
-                                JS_STRUCTURED_CLONE_VERSION, &v, NULL, NULL)) {
+                                JS_STRUCTURED_CLONE_VERSION, &v)) {
         return false;
     }
     JS_SET_RVAL(cx, vp, v);
