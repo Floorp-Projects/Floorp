@@ -177,6 +177,18 @@
         ]]></getter>
       </property>
 
+      <method name="updateWindowResizers">
+        <body><![CDATA[
+          if (!window.gShowPageResizers)
+            return;
+
+          var show = document.getElementById("addon-bar").collapsed;
+          for (let i = 0; i < this.browsers.length; i++) {
+            this.browsers[i].showWindowResizer = show;
+          }
+        ]]></body>
+      </method>
+
       <method name="pinTab">
         <parameter name="aTab"/>
         <body><![CDATA[
@@ -1236,6 +1248,11 @@
             b.setAttribute("message", "true");
             b.setAttribute("contextmenu", this.getAttribute("contentcontextmenu"));
             b.setAttribute("tooltip", this.getAttribute("contenttooltip"));
+
+            if (window.gShowPageResizers && document.getElementById("addon-bar").collapsed) {
+              b.setAttribute("showresizer", "true");
+            }
+
             if (this.hasAttribute("autocompletepopup"))
               b.setAttribute("autocompletepopup", this.getAttribute("autocompletepopup"));
             b.setAttribute("autoscrollpopup", this._autoScrollPopup.id);
@@ -2428,6 +2445,7 @@
           this.appendChild(this._autoScrollPopup);
           this.mCurrentBrowser.setAttribute("autoscrollpopup", this._autoScrollPopup.id);
           this.mCurrentBrowser.droppedLinkHandler = handleDroppedLink;
+          this.updateWindowResizers();
         ]]>
       </constructor>
 
