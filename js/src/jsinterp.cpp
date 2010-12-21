@@ -3469,7 +3469,7 @@ END_CASE(JSOP_NE)
         JSBool equal;                                                         \
         if (!StrictlyEqual(cx, lref, rref, &equal))                           \
             goto error;                                                       \
-        COND = equal OP true;                                                 \
+        COND = equal OP JS_TRUE;                                              \
         regs.sp--;                                                            \
     JS_END_MACRO
 

@@ -1025,7 +1025,7 @@ FreeLists::purge()
         *p = NULL;
 }
 
-struct JSShortString;
+class JSShortString;
 
 ArenaList *
 GetFinalizableArenaList(JSCompartment *c, unsigned thingKind) {
