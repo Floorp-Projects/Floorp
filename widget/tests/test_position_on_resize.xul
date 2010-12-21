@@ -1,0 +1,96 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window title="Window Position On Resize Test"
+        onload="startTest()"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript" 
+          src="chrome://mochikit/content/MochiKit/packed.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+<script class="testbody" type="application/javascript"><![CDATA[
+  SimpleTest.waitForExplicitFinish();
+  let win, x, y;
+
+  function startTest() {
+    win = window.openDialog("about:blank",
+                            null,
+                            "chrome,dialog=no,outerHeight=170,outerWidth=200");
+    waitForSuccess(function() { return win.mozPaintCount },
+                   "No paint received", checkInitialSize);
+  }
+
+  function checkInitialSize() {
+    let runtime = Components.classes["@mozilla.org/xre/app-info;1"]
+                            .getService(Components.interfaces.nsIXULRuntime);
+    let test = runtime.widgetToolkit == "windows" ? todo_is : is; // bug 602745
+    test(win.outerHeight,170, "initial outerHeight");
+    test(win.outerWidth, 200, "initial outerWidth");
+    x = win.screenX;
+    y = win.screenY;
+    shrink();
+  }
+  function shrink() {
+    win.resizeTo(180, 160);
+    waitForSuccess(function() { return win.outerHeight == 160 },
+                   "outerHeight did not change to 160", checkShrink);
+  }
+  function checkShrink() {
+    is(win.outerWidth, 180, "resized outerWidth");
+    is(win.screenY, y, "resized window top should not change");
+    y = win.screenY;
+    restore();
+  }
+  function restore() {
+    win.resizeBy(20, 10);
+    waitForSuccess(function() { return win.outerHeight == 170 },
+                   "outerHeight did not change to 170", checkRestore);
+  }
+  function checkRestore() {
+    is(win.outerWidth, 200, "restored outerWidth");
+    is(win.screenX, x, "restored window left should not change");
+    is(win.screenY, y, "restored window top should not change");
+    done();
+  }
+  function done() {
+    win.close();
+    SimpleTest.finish();
+  }
+
+  function waitForSuccess(testForSuccess, failureMsg, nextFunc) {
+    var waitCount = 0;
+
+    function repeatWait() {
+      ++waitCount;
+
+      if (testForSuccess()) {
+        nextFunc();
+      }
+      else if (waitCount > 50) {
+        ok(false, failureMsg);
+        nextFunc();
+      } else {
+        setTimeout(repeatWait, 100);
+      }
+    }
+
+    repeatWait();
+  }
+]]></script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display">
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+</window>
