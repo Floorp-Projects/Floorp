@@ -197,7 +197,7 @@ jsds_InvalidateAllEphemerals (LiveEphemeral **listHead)
     LiveEphemeral *lv_record = 
         reinterpret_cast<LiveEphemeral *>
                         (PR_NEXT_LINK(&(*listHead)->links));
-    while (*listHead)
+    do
     {
         LiveEphemeral *next =
             reinterpret_cast<LiveEphemeral *>
@@ -205,6 +205,7 @@ jsds_InvalidateAllEphemerals (LiveEphemeral **listHead)
         lv_record->value->Invalidate();
         lv_record = next;
     }
+    while (*listHead);
 }
 
 void
