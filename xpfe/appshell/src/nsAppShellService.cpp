@@ -184,15 +184,6 @@ nsAppShellService::CreateHiddenWindow(nsIAppShell* aAppShell)
 
   mHiddenWindow.swap(newWindow);
 
-#ifdef XP_MACOSX
-  // hide the hidden window by launching it into outer space. This
-  // way, we can keep it visible and let the OS send it activates
-  // to keep menus happy. This will cause it to show up in window
-  // lists under osx, but I think that's ok.
-  mHiddenWindow->SetPosition ( -32000, -32000 );
-  mHiddenWindow->SetVisibility ( PR_TRUE );
-#endif
-
   // Set XPConnect's fallback JSContext (used for JS Components)
   // to the DOM JSContext for this thread, so that DOM-to-XPConnect
   // conversions get the JSContext private magic they need to

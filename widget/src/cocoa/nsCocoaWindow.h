@@ -247,9 +247,10 @@ public:
     NS_IMETHOD              MakeFullScreen(PRBool aFullScreen);
     NS_IMETHOD              Resize(PRInt32 aWidth,PRInt32 aHeight, PRBool aRepaint);
     NS_IMETHOD              Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint);
+    NS_IMETHOD              GetClientBounds(nsIntRect &aRect);
     NS_IMETHOD              GetScreenBounds(nsIntRect &aRect);
     void                    ReportMoveEvent();
-    void                    ReportSizeEvent(NSRect *overrideRect = nsnull);
+    void                    ReportSizeEvent();
     NS_IMETHOD              SetCursor(nsCursor aCursor);
     NS_IMETHOD              SetCursor(imgIContainer* aCursor, PRUint32 aHotspotX, PRUint32 aHotspotY);
 
@@ -316,6 +317,7 @@ protected:
   void                 AdjustWindowShadow();
   void                 SetUpWindowFilter();
   void                 CleanUpWindowFilter();
+  void                 UpdateBounds();
 
   virtual already_AddRefed<nsIWidget>
   AllocateChildPopupWidget()
