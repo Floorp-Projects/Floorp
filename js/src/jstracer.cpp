@@ -15752,13 +15752,13 @@ TraceRecorder::record_JSOP_CALLELEM()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_STOP()
 {
+    JSStackFrame *fp = cx->fp();
+
     /* A return from callDepth 0 terminates the current loop, except for recursion. */
-    if (callDepth == 0) {
+    if (callDepth == 0 && !fp->hasImacropc()) {
         AUDIT(returnLoopExits);
         return endLoop();
     }
-
-    JSStackFrame *fp = cx->fp();
 
     if (fp->hasImacropc()) {
         /*
