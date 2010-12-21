@@ -1701,7 +1701,14 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
     if (!obj->getProperty(f.cx, ATOM_TO_JSID(atom), &v))
         THROW();
 
-    if (v.isUndefined())
+    /*
+     * Ignore undefined reads for the 'prototype' property in constructors,
+     * which will be at the start of the script and are never holes due to fun_resolve.
+     * Any undefined value was explicitly stored here, and is known by inference.
+     * :FIXME: looking under the usePropCache abstraction, which is only unset for
+     * reads of the prototype.
+     */
+    if (v.isUndefined() && pic->usePropCache)
         f.script()->typeMonitorUndefined(f.cx, f.regs.pc, 0);
 
     f.regs.sp[-1] = v;

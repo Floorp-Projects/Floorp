@@ -358,6 +358,7 @@ JSContext::typeMonitorCall(JSScript *caller, const jsbytecode *callerpc,
      * Don't do anything on calls to native functions.  If the call is monitored
      * then the return value is unknown, and when cx->isTypeCallerMonitored() natives
      * should inform inference of any side effects not on the return value.
+     * :FIXME: bug 619693 audit to make sure they do.
      */
     if (!callee->isInterpreted())
         return;
@@ -373,17 +374,16 @@ JSContext::typeMonitorCall(JSScript *caller, const jsbytecode *callerpc,
     if (!force)
         return;
 
-    js::types::jstype type;
-    if (constructing) {
-        /* Don't duplicate the logic in js_CreateThis, just mark 'this' as unknown. */
-        type = js::types::TYPE_UNKNOWN;
-    } else {
-        type = js::types::GetValueType(this, args.thisv());
-    }
-
     js::analyze::Script *script = callee->script()->analysis;
 
-    if (!constructing) {
+    if (constructing) {
+        if (!script->thisTypes.unknown()) {
+            /* Don't duplicate the logic in js_CreateThis, just mark 'this' as unknown. */
+            js::types::InferSpew(js::types::ISpewDynamic, "UnknownThis: #%u", script->id);
+            compartment->types.addDynamicType(this, &script->thisTypes, js::types::TYPE_UNKNOWN);
+        }
+    } else {
+        js::types::jstype type = js::types::GetValueType(this, args.thisv());
         if (!script->thisTypes.hasType(type)) {
             js::types::InferSpew(js::types::ISpewDynamic, "AddThis: #%u: %s",
                                  script->id, js::types::TypeString(type));
@@ -947,7 +947,7 @@ struct TypeObjectKey {
 inline bool
 TypeSet::hasType(jstype type)
 {
-    if (typeFlags & TYPE_FLAG_UNKNOWN)
+    if (unknown())
         return true;
 
     if (TypeIsPrimitive(type)) {
@@ -962,10 +962,10 @@ inline void
 TypeSet::addType(JSContext *cx, jstype type)
 {
     JS_ASSERT(type);
-    JS_ASSERT_IF(typeFlags & TYPE_FLAG_UNKNOWN, typeFlags == TYPE_FLAG_UNKNOWN);
+    JS_ASSERT_IF(unknown(), typeFlags == TYPE_FLAG_UNKNOWN);
     InferSpew(ISpewOps, "addType: T%u %s", id(), TypeString(type));
 
-    if (typeFlags & TYPE_FLAG_UNKNOWN)
+    if (unknown())
         return;
 
     if (type == TYPE_UNKNOWN) {
@@ -1168,10 +1168,20 @@ inline TypeObject::TypeObject(JSArenaPool *pool, jsid name, JSObject *proto)
 
     if (proto) {
         TypeObject *prototype = proto->getType();
-        if (prototype->unknownProperties)
+        if (prototype->unknownProperties) {
             unknownProperties = true;
-        else if (proto->isArray())
+        } else if (proto->isArray()) {
+            /*
+             * Note: this check is insufficient for determining whether new objects
+             * are dense arrays, as they may not themselves be arrays but simply
+             * have an array or Array.prototype as their prototype. We can't use
+             * a clasp here as type does not determine the clasp of an object, so we
+             * intercept at the places where a non-Array can have an Array as its
+             * prototype --- scripted 'new', reassignments to __proto__, Object.create
+             * and through the API.
+             */
             isDenseArray = isPackedArray = true;
+        }
         instanceNext = prototype->instanceList;
         prototype->instanceList = this;
     }
