@@ -707,6 +707,12 @@ protected:
   void EnsureReflowFlushAndPaint();
   nsresult CheckSecurityWidthAndHeight(PRInt32* width, PRInt32* height);
   nsresult CheckSecurityLeftAndTop(PRInt32* left, PRInt32* top);
+
+  // Arguments to this function should have values in app units
+  nsresult SetCSSViewportWidthAndHeight(nscoord width, nscoord height);
+  // Arguments to this function should have values in device pixels
+  nsresult SetDocShellWidthAndHeight(PRInt32 width, PRInt32 height);
+
   static PRBool CanSetProperty(const char *aPrefName);
 
   static void MakeScriptDialogTitle(nsAString &aOutTitle);
