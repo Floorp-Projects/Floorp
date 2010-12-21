@@ -82,7 +82,7 @@
       is(db.version, "1", "Correct version");
       is(db.objectStoreNames.length, 0, "Correct objectStoreNames length");
 
-      let objectStore = db.createObjectStore("foo", "");
+      let objectStore = db.createObjectStore("foo");
 
       is(db.objectStoreNames.length, 1, "Correct objectStoreNames length");
       ok(db.objectStoreNames.contains("foo"), "Has correct objectStore");

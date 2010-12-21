@@ -31,7 +31,7 @@
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
 
-      let objectStore = db.createObjectStore("foo", "", true);
+      let objectStore = db.createObjectStore("foo", { autoIncrement: true });
 
       request = objectStore.add({});
       request.onerror = errorHandler;
@@ -89,7 +89,7 @@
         ok(true, "remove with no key threw");
       }
 
-      objectStore = db.createObjectStore("bar", "", false);
+      objectStore = db.createObjectStore("bar");
 
       try {
         objectStore.add({});
@@ -123,7 +123,7 @@
         ok(true, "remove with no key threw");
       }
 
-      objectStore = db.createObjectStore("baz", "id", false);
+      objectStore = db.createObjectStore("baz", { keyPath: "id" });
 
       try {
         objectStore.add({});
@@ -225,7 +225,8 @@
         ok(true, "remove with null key threw");
       }
 
-      objectStore = db.createObjectStore("bazing", "id", true);
+      objectStore = db.createObjectStore("bazing", { keyPath: "id",
+                                                     autoIncrement: true });
 
       request = objectStore.add({});
       request.onerror = errorHandler;

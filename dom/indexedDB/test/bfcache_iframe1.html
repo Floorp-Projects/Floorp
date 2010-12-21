@@ -13,7 +13,7 @@ moz_indexedDB.open(parent.location).onsuccess = function(e) {
     if (db.objectStoreNames.contains("mystore")) {
       db.deleteObjectStore("mystore");
     }
-    var store = db.createObjectStore("mystore", "");
+    var store = db.createObjectStore("mystore");
     store.add({ hello: "world" }, 42);
     trans.oncomplete = function() {
       parent.postMessage("go", "http://mochi.test:8888");

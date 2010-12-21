@@ -28,7 +28,7 @@
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
 
-      let objectStore = db.createObjectStore("foo", "");
+      let objectStore = db.createObjectStore("foo", { keyPath: "" });
       let key = 10;
 
       request = objectStore.add({}, key);

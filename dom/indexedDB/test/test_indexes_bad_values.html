@@ -38,7 +38,7 @@
       ];
 
       const indexData = [
-        { name: "weight", keyPath: "weight", unique: false }
+        { name: "weight", keyPath: "weight", options: { unique: false } }
       ];
 
       const objectStoreDataWeightSort = [
@@ -61,7 +61,7 @@
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      let objectStore = db.createObjectStore(objectStoreName, "");
+      let objectStore = db.createObjectStore(objectStoreName, { } );
 
       let addedData = 0;
       for (let i in objectStoreData) {
@@ -78,7 +78,7 @@
 
       for (let i in indexData) {
         objectStore.createIndex(indexData[i].name, indexData[i].keyPath,
-                                indexData[i].unique);
+                                indexData[i].options);
       }
 
       addedData = 0;

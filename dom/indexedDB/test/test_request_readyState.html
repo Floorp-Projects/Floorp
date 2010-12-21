@@ -39,7 +39,7 @@
 
       is(request.readyState, DONE, "Correct readyState");
 
-      let objectStore = db.createObjectStore("foo", "");
+      let objectStore = db.createObjectStore("foo");
       let key = 10;
 
       request = objectStore.add({}, key);

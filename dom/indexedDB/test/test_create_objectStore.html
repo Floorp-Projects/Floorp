@@ -19,15 +19,17 @@
       const name = window.location.pathname;
       const description = "My Test Database";
       const objectStoreInfo = [
-        { name: "1", keyPath: "" },
-        { name: "2", keyPath: "", autoIncrement: true },
-        { name: "3", keyPath: "", autoIncrement: false },
-        { name: "4", keyPath: "" },
-        { name: "5", keyPath: null },
-        { name: "6", keyPath: "foo" },
-        { name: "7" },
-        { name: "8", autoIncrement: true },
-        { name: "9", autoIncrement: false }
+        { name: "1", options: { keyPath: "" } },
+        { name: "2", options: { keyPath: "", autoIncrement: true } },
+        { name: "3", options: { keyPath: "", autoIncrement: false } },
+        { name: "4", options: { keyPath: "" } },
+        { name: "5", options: { keyPath: "foo" } },
+        { name: "6" },
+        { name: "7", options: null },
+        { name: "8", options: { autoIncrement: true } },
+        { name: "9", options: { autoIncrement: false } },
+        { name: "10", options: { keyPath: "foo", autoIncrement: false } },
+        { name: "11", options: { keyPath: "foo", autoIncrement: true } }
       ];
 
       let request = moz_indexedDB.open(name, description);
@@ -64,29 +66,29 @@
         ok(true, "createObjectStore with empty name should throw");
       }
 
+      try {
+        db.createObjectStore("foo", "bar");
+        ok(false, "createObjectStore with bad options should throw");
+      }
+      catch(e) {
+        ok(true, "createObjectStore with bad options");
+      }
+
+      try {
+        db.createObjectStore("foo", { foo: "" });
+        ok(false, "createObjectStore with bad options should throw");
+      }
+      catch(e) {
+        ok(true, "createObjectStore with bad options");
+      }
+
       for (let index in objectStoreInfo) {
         index = parseInt(index);
         const info = objectStoreInfo[index];
 
-        let objectStore;
-        if (info.hasOwnProperty("keyPath")) {
-          if (info.hasOwnProperty("autoIncrement")) {
-            objectStore = db.createObjectStore(info.name, info.keyPath,
-                                               info.autoIncrement);
-          }
-          else {
-            objectStore = db.createObjectStore(info.name, info.keyPath);
-          }
-        }
-        else {
-          if (info.hasOwnProperty("autoIncrement")) {
-            objectStore = db.createObjectStore(info.name, null,
-                                               info.autoIncrement);
-          }
-          else {
-            objectStore = db.createObjectStore(info.name);
-          }
-        }
+        let objectStore = info.hasOwnProperty("options") ?
+                          db.createObjectStore(info.name, info.options) :
+                          db.createObjectStore(info.name);
 
         is(db.objectStoreNames.length, index + 1,
            "updated objectStoreNames list");
@@ -101,7 +103,8 @@
         is(found, true, "objectStoreNames contains name");
 
         is(objectStore.name, info.name, "Bad name");
-        is(objectStore.keyPath, info.keyPath ? info.keyPath : "",
+        is(objectStore.keyPath, info.options && info.options.keyPath ?
+                                info.options.keyPath : "",
            "Bad keyPath");
         if(objectStore.indexNames.length, 0, "Bad indexNames");
 

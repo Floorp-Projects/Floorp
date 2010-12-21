@@ -27,9 +27,9 @@
       ];
 
       const indexData = [
-        { name: "name", keyPath: "name", unique: true },
-        { name: "height", keyPath: "height", unique: false },
-        { name: "weight", keyPath: "weight", unique: false }
+        { name: "name", keyPath: "name", options: { unique: true } },
+        { name: "height", keyPath: "height", options: { unique: false } },
+        { name: "weight", keyPath: "weight", options: { unique: false } }
       ];
 
       const objectStoreDataNameSort = [
@@ -70,7 +70,7 @@
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      let objectStore = db.createObjectStore(objectStoreName, "");
+      let objectStore = db.createObjectStore(objectStoreName);
 
       // First, add all our data to the object store.
       let addedData = 0;
@@ -90,7 +90,7 @@
       // Now create the indexes.
       for (let i in indexData) {
         objectStore.createIndex(indexData[i].name, indexData[i].keyPath,
-                                indexData[i].unique);
+                                indexData[i].options);
       }
 
       is(objectStore.indexNames.length, indexData.length, "Good index count");

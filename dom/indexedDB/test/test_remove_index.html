@@ -32,7 +32,7 @@
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      let objectStore = db.createObjectStore("test store", "foo");
+      let objectStore = db.createObjectStore("test store", { keyPath: "foo" });
       is(db.objectStoreNames.length, 1, "Correct objectStoreNames list");
       is(db.objectStoreNames.item(0), objectStore.name, "Correct name");
 
