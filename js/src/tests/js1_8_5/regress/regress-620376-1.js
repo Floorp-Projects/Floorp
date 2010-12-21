@@ -4,6 +4,7 @@
  * Contributors: Igor Bukanov
  */
 
+// Test that we can terminate looping array enumeration
 function test() {
     if (typeof timeout != "function")
 	return;
@@ -19,3 +20,4 @@ function test() {
 }
 
 test();
+reportCompare(0, 0, "ok");
