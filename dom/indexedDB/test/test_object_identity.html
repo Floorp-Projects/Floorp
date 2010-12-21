@@ -27,7 +27,7 @@
 
       let transaction = event.transaction;
 
-      let objectStore1 = db.createObjectStore("foo", "");
+      let objectStore1 = db.createObjectStore("foo");
       let objectStore2 = transaction.objectStore("foo");
       ok(objectStore1 === objectStore2, "Got same objectStores");
 

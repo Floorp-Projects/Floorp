@@ -21,13 +21,13 @@
       const START_DATA = "hi";
       const END_DATA = "bye";
       const objectStoreInfo = [
-        { name: "1", keyPath: "", key: 1,
+        { name: "1", options: { keyPath: "" }, key: 1,
           entry: { data: START_DATA } },
-        { name: "2", keyPath: "foo",
+        { name: "2", options: { keyPath: "foo" },
           entry: { foo: 1, data: START_DATA } },
-        { name: "3", keyPath: "", autoIncrement: true,
+        { name: "3", options: { keyPath: "", autoIncrement: true },
           entry: { data: START_DATA } },
-        { name: "4", keyPath: "foo", autoIncrement: true,
+        { name: "4", options: { keyPath: "foo", autoIncrement: true },
           entry: { data: START_DATA } },
       ];
 
@@ -49,14 +49,15 @@
         event = yield;
 
         ok(true, "2");
-        let objectStore = info.hasOwnProperty("autoIncrement") ?
-                          db.createObjectStore(info.name, info.keyPath,
-                                               info.autoIncrement) :
-                          db.createObjectStore(info.name, info.keyPath);
+        let objectStore = info.hasOwnProperty("options") ?
+                          db.createObjectStore(info.name, info.options) :
+                          db.createObjectStore(info.name);
 
         // Create the indexes on 'data' on the object store.
-        let index = objectStore.createIndex("data_index", "data", false);
-        let uniqueIndex = objectStore.createIndex("unique_data_index", "data", true);
+        let index = objectStore.createIndex("data_index", "data",
+                                            { unique: false });
+        let uniqueIndex = objectStore.createIndex("unique_data_index", "data",
+                                                  { unique: true });
 
         // Populate the object store with one entry of data.
         request = info.hasOwnProperty("key") ?

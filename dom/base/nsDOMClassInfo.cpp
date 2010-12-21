@@ -1636,6 +1636,9 @@ jsid nsDOMClassInfo::sOnbeforescriptexecute_id = JSID_VOID;
 jsid nsDOMClassInfo::sOnafterscriptexecute_id = JSID_VOID;
 jsid nsDOMClassInfo::sWrappedJSObject_id = JSID_VOID;
 jsid nsDOMClassInfo::sURL_id             = JSID_VOID;
+jsid nsDOMClassInfo::sKeyPath_id         = JSID_VOID;
+jsid nsDOMClassInfo::sAutoIncrement_id   = JSID_VOID;
+jsid nsDOMClassInfo::sUnique_id          = JSID_VOID;
 
 static const JSClass *sObjectClass = nsnull;
 
@@ -1866,6 +1869,9 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
 #endif // MOZ_MEDIA
   SET_JSID_TO_STRING(sWrappedJSObject_id, cx, "wrappedJSObject");
   SET_JSID_TO_STRING(sURL_id,             cx, "URL");
+  SET_JSID_TO_STRING(sKeyPath_id,         cx, "keyPath");
+  SET_JSID_TO_STRING(sAutoIncrement_id,   cx, "autoIncrement");
+  SET_JSID_TO_STRING(sUnique_id,          cx, "unique");
 
   return NS_OK;
 }
@@ -4927,6 +4933,9 @@ nsDOMClassInfo::ShutDown()
   sOnbeforescriptexecute_id = JSID_VOID;
   sOnafterscriptexecute_id = JSID_VOID;
   sWrappedJSObject_id = JSID_VOID;
+  sKeyPath_id         = JSID_VOID;
+  sAutoIncrement_id   = JSID_VOID;
+  sUnique_id          = JSID_VOID;
 
   NS_IF_RELEASE(sXPConnect);
   NS_IF_RELEASE(sSecMan);
