@@ -200,15 +200,18 @@
       <method name="_updateWidth">
         <body>
           <![CDATA[
+            // XXX we can do better than using a constant
+            const COLUMN_MARGIN = 20;
             let firstBox = this.children.firstChild.getBoundingClientRect();
             let lastBox = this.children.lastChild.getBoundingClientRect();
 
             // XXX we can do better than using a constant here
             let columnsCount = Math.ceil(this.children.childNodes.length / Math.floor(this.children.getBoundingClientRect().height / (firstBox.height + 4)));
-            if (this._columnsCount != columnsCount) {
+            if (this._columnsCount != columnsCount && (firstBox.left != lastBox.left)) {
               let width = Math.max(lastBox.right - firstBox.left, firstBox.right - lastBox.left);
-              // XXX we can do better than using a constant
-              this.children.style.width = (width + 20) + "px";
+              width -= this._columnsCount * COLUMN_MARGIN;
+
+              this.children.style.width = (width + columnsCount * COLUMN_MARGIN) + "px";
               this._columnsCount = columnsCount;
             }
           ]]>
