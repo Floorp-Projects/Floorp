@@ -94,7 +94,7 @@ GeckoStart(void *data)
 
     nsresult rv;
     nsCOMPtr<nsILocalFile> appini;
-    rv = NS_NewLocalFile(NS_LITERAL_STRING("/data/data/org.mozilla." MOZ_APP_NAME "/application.ini"),
+    rv = NS_NewLocalFile(NS_LITERAL_STRING("/data/data/" ANDROID_PACKAGE_NAME "/application.ini"),
                          PR_FALSE,
                          getter_AddRefs(appini));
     if (NS_FAILED(rv)) {
@@ -105,12 +105,12 @@ GeckoStart(void *data)
     nsXREAppData *appData;
     rv = XRE_CreateAppData(appini, &appData);
     if (NS_FAILED(rv)) {
-        LOG("Failed to load application.ini from /data/data/org.mozilla." MOZ_APP_NAME "/application.ini\n");
+        LOG("Failed to load application.ini from /data/data/" ANDROID_PACKAGE_NAME "/application.ini\n");
         return 0;
     }
 
     nsCOMPtr<nsILocalFile> xreDir;
-    rv = NS_NewLocalFile(NS_LITERAL_STRING("/data/data/org.mozilla." MOZ_APP_NAME),
+    rv = NS_NewLocalFile(NS_LITERAL_STRING("/data/data/" ANDROID_PACKAGE_NAME),
                          PR_FALSE,
                          getter_AddRefs(xreDir));
     if (NS_FAILED(rv)) {
