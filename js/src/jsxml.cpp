@@ -2577,7 +2577,7 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
     if (!cb.append('<'))
         goto out;
 
-    if (prefix && !prefix->empty()) {
+    if (!prefix->empty()) {
         if (!AppendString(cb, prefix) || !cb.append(':'))
             goto out;
     }
