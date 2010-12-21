@@ -3972,16 +3972,16 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
           // Use a caret (collapsed selection) at the start of the anchor
           sel->CollapseToStart();
         }
-      }  
 
-      if (selectAnchor && xpointerResult) {
-        // Select the rest (if any) of the ranges in XPointerResult
-        PRUint32 count, i;
-        xpointerResult->GetLength(&count);
-        for (i = 1; i < count; i++) { // jumpToRange is i = 0
-          nsCOMPtr<nsIDOMRange> range;
-          xpointerResult->Item(i, getter_AddRefs(range));
-          sel->AddRange(range);
+        if (selectAnchor && xpointerResult) {
+          // Select the rest (if any) of the ranges in XPointerResult
+          PRUint32 count, i;
+          xpointerResult->GetLength(&count);
+          for (i = 1; i < count; i++) { // jumpToRange is i = 0
+            nsCOMPtr<nsIDOMRange> range;
+            xpointerResult->Item(i, getter_AddRefs(range));
+            sel->AddRange(range);
+          }
         }
       }
       // Selection is at anchor.
