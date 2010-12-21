@@ -1108,7 +1108,6 @@ toolbar[iconsize="small"] #feed-button {
 /* Identity popup bounding box */
 #identity-popup-container {
   min-width: 280px;
-  padding: 10px;
 }
 
 /* Invalid form popup */
