@@ -511,6 +511,9 @@ class nsIWidget : public nsISupports {
     /**
      * Move this widget.
      *
+     * Coordinates refer to the top-left of the widget.  For toplevel windows
+     * with decorations, this is the top-left of the titlebar and frame .
+     *
      * @param aX the new x position expressed in the parent's coordinate system
      * @param aY the new y position expressed in the parent's coordinate system
      *
