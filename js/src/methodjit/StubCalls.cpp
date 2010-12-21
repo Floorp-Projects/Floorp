@@ -2315,7 +2315,7 @@ stubs::StrictEq(VMFrame &f)
     if (!StrictlyEqual(f.cx, lhs, rhs, &equal))
         THROW();
     f.regs.sp--;
-    f.regs.sp[-1].setBoolean(equal == true);
+    f.regs.sp[-1].setBoolean(equal == JS_TRUE);
 }
 
 void JS_FASTCALL
@@ -2327,7 +2327,7 @@ stubs::StrictNe(VMFrame &f)
     if (!StrictlyEqual(f.cx, lhs, rhs, &equal))
         THROW();
     f.regs.sp--;
-    f.regs.sp[-1].setBoolean(equal != true);
+    f.regs.sp[-1].setBoolean(equal != JS_TRUE);
 }
 
 void JS_FASTCALL
