@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for DOM Worker Threads</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+  var worker = new Worker("xpcom_worker.js");
+  worker.onmessage = function(event) {
+    is(event.data, "Done", "Correct message");
+    SimpleTest.finish();
+  };
+  worker.onerror = function(event) {
+    ok(false, "Worker had an error: " + event.message);
+    SimpleTest.finish();
+  };
+
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+  // Test passing a wrapped native to the worker.
+  var thread = Components.classes["@mozilla.org/thread-manager;1"]
+                         .getService().newThread(0);
+
+  try {
+    worker.postMessage(thread);
+    ok(false, "postMessage with a wrapped native should fail!");
+  }
+  catch(e) {
+    ok(true, "postMessage with a wrapped native failed");
+  }
+
+  worker.postMessage("Hi");
+
+  SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>
+
