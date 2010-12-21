@@ -2,23 +2,25 @@ let testURL = chromeRoot + "browser_forms.html";
 messageManager.loadFrameScript(chromeRoot + "remote_forms.js", true);
 
 let newTab = null;
-let isLoading = function() {
-  return !newTab.isLoading() && newTab.browser.currentURI.spec != "about:blank";
-};
 
 function test() {
   // This test is async
   waitForExplicitFinish();
 
+  // Need to wait until the page is loaded
+  messageManager.addMessageListener("pageshow", function(aMessage) {
+    if (newTab.browser.currentURI.spec != "about:blank") {
+      messageManager.removeMessageListener(aMessage.name, arguments.callee);
+      setTimeout(onTabLoaded, 0);
+    }
+  });
+
   // Add new tab to hold the <FormAssistant> page
   newTab = Browser.addTab(testURL, true);
-  BrowserUI.closeAutoComplete(true);
-
-  // Wait for the tab to load, then do the test
-  waitFor(onTabLoaded, isLoading);
 }
 
 function onTabLoaded() {
+  BrowserUI.closeAutoComplete(true);
   testMouseEvents();
 }
 
