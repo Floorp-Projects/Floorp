@@ -355,9 +355,13 @@ IDBSuccessEvent::GetTransaction(nsIIDBTransaction** aTransaction)
 
 GetSuccessEvent::~GetSuccessEvent()
 {
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
   if (mValueRooted) {
     NS_DROP_JS_OBJECTS(this, GetSuccessEvent);
   }
+
+  IDBObjectStore::ClearStructuredCloneBuffer(mCloneBuffer);
 }
 
 nsresult
@@ -381,26 +385,22 @@ NS_IMETHODIMP
 GetSuccessEvent::GetResult(JSContext* aCx,
                            jsval* aResult)
 {
-  if (mValue.IsVoid()) {
-    *aResult = JSVAL_VOID;
-    return NS_OK;
-  }
-
   if (!mValueRooted) {
     RootCachedValue();
 
-    nsString jsonValue = mValue;
-    mValue.Truncate();
+    if (mCloneBuffer.data()) {
+      JSAutoRequest ar(aCx);
 
-    JSAutoRequest ar(aCx);
+      if (!mCloneBuffer.read(&mCachedValue, aCx)) {
+        mCachedValue = JSVAL_VOID;
+        NS_ERROR("Failed to decode!");
+        return NS_ERROR_DOM_DATA_CLONE_ERR;
+      }
 
-    nsCOMPtr<nsIJSON> json(new nsJSON());
-    nsresult rv = json->DecodeToJSVal(jsonValue, aCx, &mCachedValue);
-    if (NS_FAILED(rv)) {
-      mCachedValue = JSVAL_VOID;
-
-      NS_ERROR("Failed to decode!");
-      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+      mCloneBuffer.clear();
+    }
+    else {
+      NS_ASSERTION(JSVAL_IS_VOID(mCachedValue), "Should be undefined!");
     }
   }
 
@@ -449,22 +449,28 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(GetSuccessEvent)
 NS_INTERFACE_MAP_END_INHERITING(IDBSuccessEvent)
 
+GetAllSuccessEvent::~GetAllSuccessEvent()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  for (PRUint32 index = 0; index < mCloneBuffers.Length(); index++) {
+    IDBObjectStore::ClearStructuredCloneBuffer(mCloneBuffers[index]);
+  }
+}
+
 NS_IMETHODIMP
 GetAllSuccessEvent::GetResult(JSContext* aCx,
                               jsval* aResult)
 {
   if (!mValueRooted) {
-    RootCachedValue();
-
-    JSAutoRequest ar(aCx);
-
-    // Swap into a stack array so that we don't hang on to the strings if
+    // Swap into a stack array so that we don't hang on to the buffers if
     // something fails.
-    nsTArray<nsString> values;
-    if (!mValues.SwapElements(values)) {
+    nsTArray<JSAutoStructuredCloneBuffer> cloneBuffers;
+    if (!mCloneBuffers.SwapElements(cloneBuffers)) {
       NS_ERROR("Failed to swap elements!");
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
+
+    JSAutoRequest ar(aCx);
 
     JSObject* array = JS_NewArrayObject(aCx, 0, NULL);
     if (!array) {
@@ -472,32 +478,32 @@ GetAllSuccessEvent::GetResult(JSContext* aCx,
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
 
+    RootCachedValue();
+
     mCachedValue = OBJECT_TO_JSVAL(array);
 
-    if (!values.IsEmpty()) {
-      if (!JS_SetArrayLength(aCx, array, jsuint(values.Length()))) {
+    if (!cloneBuffers.IsEmpty()) {
+      if (!JS_SetArrayLength(aCx, array, jsuint(cloneBuffers.Length()))) {
         mCachedValue = JSVAL_VOID;
         NS_ERROR("Failed to set array length!");
         return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
       }
 
-      nsCOMPtr<nsIJSON> json(new nsJSON());
-      js::AutoValueRooter value(aCx);
-
-      jsint count = jsint(values.Length());
+      jsint count = jsint(cloneBuffers.Length());
 
       for (jsint index = 0; index < count; index++) {
-        nsString jsonValue = values[index];
-        values[index].Truncate();
+        JSAutoStructuredCloneBuffer& buffer = cloneBuffers[index];
 
-        nsresult rv = json->DecodeToJSVal(jsonValue, aCx, value.jsval_addr());
-        if (NS_FAILED(rv)) {
+        jsval val;
+        if (!buffer.read(&val, aCx)) {
           mCachedValue = JSVAL_VOID;
           NS_ERROR("Failed to decode!");
-          return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+          return NS_ERROR_DOM_DATA_CLONE_ERR;
         }
 
-        if (!JS_SetElement(aCx, array, index, value.jsval_addr())) {
+        buffer.clear(aCx);
+
+        if (!JS_SetElement(aCx, array, index, &val)) {
           mCachedValue = JSVAL_VOID;
           NS_ERROR("Failed to set array element!");
           return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
@@ -515,10 +521,6 @@ GetAllKeySuccessEvent::GetResult(JSContext* aCx,
                                  jsval* aResult)
 {
   if (!mValueRooted) {
-    RootCachedValue();
-
-    JSAutoRequest ar(aCx);
-
     // Swap into a stack array so that we don't hang on to the strings if
     // something fails.
     nsTArray<Key> keys;
@@ -527,11 +529,15 @@ GetAllKeySuccessEvent::GetResult(JSContext* aCx,
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
 
+    JSAutoRequest ar(aCx);
+
     JSObject* array = JS_NewArrayObject(aCx, 0, NULL);
     if (!array) {
       NS_ERROR("Failed to make array!");
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
+
+    RootCachedValue();
 
     mCachedValue = OBJECT_TO_JSVAL(array);
 
@@ -550,11 +556,12 @@ GetAllKeySuccessEvent::GetResult(JSContext* aCx,
         const Key& key = keys[index];
         NS_ASSERTION(!key.IsUnset(), "Bad key!");
 
-        nsresult rv = IDBObjectStore::GetJSValFromKey(key, aCx, value.jsval_addr());
+        nsresult rv = IDBObjectStore::GetJSValFromKey(key, aCx,
+                                                      value.jsval_addr());
         if (NS_FAILED(rv)) {
           mCachedValue = JSVAL_VOID;
           NS_WARNING("Failed to get jsval for key!");
-          return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+          return rv;
         }
 
         if (!JS_SetElement(aCx, array, index, value.jsval_addr())) {
