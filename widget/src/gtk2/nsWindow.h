@@ -373,9 +373,6 @@ protected:
     PRPackedBool        mEnabled;
     // has the native window for this been created yet?
     PRPackedBool        mCreated;
-    // Has anyone set an x/y location for this widget yet? Toplevels
-    // shouldn't be automatically set to 0,0 for first show.
-    PRPackedBool        mPlaced;
 
 private:
     void               DestroyChildWindows();
