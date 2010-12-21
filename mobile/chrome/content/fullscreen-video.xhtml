@@ -116,7 +116,8 @@ function init() {
 
   video.addEventListener("seeked", hideUI, false);
   video.addEventListener("seeking", showUI, false);
-  video.addEventListener("pause", showUI, false);
+  video.addEventListener("pause", pause, false);
+  video.addEventListener("play", play, false);
   video.addEventListener("ended", showUI, false);
 
   window.addEventListener("click", function () {
@@ -169,6 +170,20 @@ function cancelAutoClose() {
   video.removeEventListener("ended", close, false);
   window.removeEventListener("click", cancelAutoClose, false);
   window.removeEventListener("keypress", cancelAutoClose, false);
+}
+
+function play() {
+  let event = document.createEvent("Events");
+  event.initEvent("PlayVideo", true, true);
+  window.dispatchEvent(event);
+}
+
+function pause() {
+  showUI();
+
+  let event = document.createEvent("Events");
+  event.initEvent("PauseVideo", true, true);
+  window.dispatchEvent(event);
 }
 
 var idleTimer;
