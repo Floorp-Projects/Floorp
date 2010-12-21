@@ -380,7 +380,7 @@ var loginManager = {
         // Locate the username field in the form by searching backwards
         // from the first passwordfield, assume the first text field is the
         // username. We might not find a username field if the user is
-        // already logged in to the site. 
+        // already logged in to the site.
         for (var i = pwFields[0].index - 1; i >= 0; i--) {
             if (form.elements[i].type == "text") {
                 usernameField = form.elements[i];
@@ -443,7 +443,7 @@ var loginManager = {
     },
 
 
-    /* ---------- Private methods ---------- */ 
+    /* ---------- Private methods ---------- */
 
 
     /*
@@ -708,7 +708,8 @@ var loginManager = {
     _observer : {
         _pwmgr : null,
 
-        QueryInterface : XPCOMUtils.generateQI([Ci.nsIFormSubmitObserver,
+        QueryInterface : XPCOMUtils.generateQI([Ci.nsIObserver,
+                                                Ci.nsIFormSubmitObserver,
                                                 Ci.nsISupportsWeakReference]),
 
 
@@ -732,6 +733,11 @@ var loginManager = {
 
             return true; // Always return true, or form submit will be canceled.
         },
+
+        observe : function (aSubject, aTopic, aData) {
+          this._pwmgr._debug    = Services.prefs.getBoolPref("signon.debug");
+          this._pwmgr._remember = Services.prefs.getBoolPref("signon.rememberSignons");
+        }
     },
 
 
