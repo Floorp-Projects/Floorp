@@ -2096,8 +2096,8 @@ Disassemble(JSContext *cx, uintN argc, jsval *vp)
         JSFlatString *flatStr = JS_FlattenString(cx, str);
         if (!flatStr)
             return JS_FALSE;
-        lines |= JS_FlatStringEqualsAscii(flatStr, "-l");
-        recursive |= JS_FlatStringEqualsAscii(flatStr, "-r");
+        lines |= !!JS_FlatStringEqualsAscii(flatStr, "-l");
+        recursive |= !!JS_FlatStringEqualsAscii(flatStr, "-r");
         if (!lines && !recursive)
             break;
         argv++, argc--;
