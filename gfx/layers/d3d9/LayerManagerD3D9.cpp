@@ -44,6 +44,7 @@
 #include "CanvasLayerD3D9.h"
 #include "gfxWindowsPlatform.h"
 #include "nsIGfxInfo.h"
+#include "nsServiceManagerUtils.h"
 
 #ifdef CAIRO_HAS_D2D_SURFACE
 #include "gfxD2DSurface.h"

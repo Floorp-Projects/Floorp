@@ -63,7 +63,7 @@ SurfaceToTexture(IDirect3DDevice9 *aDevice,
 
   nsRefPtr<IDirect3DTexture9> texture;
   nsRefPtr<IDirect3DDevice9Ex> deviceEx;
-  aDevice->QueryInterface(__uuidof(IDirect3DDevice9Ex),
+  aDevice->QueryInterface(IID_IDirect3DDevice9Ex,
                           (void**)getter_AddRefs(deviceEx));
 
   if (deviceEx) {
@@ -450,7 +450,7 @@ PlanarYCbCrImageD3D9::AllocateTextures(IDirect3DDevice9 *aDevice)
   nsRefPtr<IDirect3DSurface9> tmpSurfaceCr;
 
   nsRefPtr<IDirect3DDevice9Ex> deviceEx;
-  aDevice->QueryInterface(__uuidof(IDirect3DDevice9Ex),
+  aDevice->QueryInterface(IID_IDirect3DDevice9Ex,
                           getter_AddRefs(deviceEx));
 
   bool isD3D9Ex = deviceEx;
