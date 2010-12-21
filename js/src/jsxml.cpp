@@ -7173,7 +7173,7 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
     TypeObject *type = proto->getNewType(cx);
     if (!type)
         return NULL;
-    type->markUnknown(cx);
+    cx->markTypeObjectUnknownProperties(type);
 
     xml = js_NewXML(cx, JSXML_CLASS_TEXT);
     if (!xml)
