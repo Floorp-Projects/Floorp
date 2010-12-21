@@ -38,8 +38,9 @@ function testSteps()
   request.onsuccess = grabEventAndContinueHandler;
   event = yield;
 
-  let objectStore = db.createObjectStore(test.name, test.keyName,
-                                         test.autoIncrement);
+  let objectStore = db.createObjectStore(test.name,
+                                         { keyPath: test.keyName,
+                                           autoIncrement: test.autoIncrement });
 
   request = objectStore.add(test.storedObject);
   request.onerror = errorHandler;

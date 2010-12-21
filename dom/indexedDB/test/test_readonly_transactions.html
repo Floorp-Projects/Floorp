@@ -33,7 +33,7 @@
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      db.createObjectStore(osName, "", true);
+      db.createObjectStore(osName, { autoIncrement: "true" });
 
       let key1, key2;
 

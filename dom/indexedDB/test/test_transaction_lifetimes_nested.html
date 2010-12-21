@@ -25,7 +25,7 @@
       event = yield;
 
       event.transaction.oncomplete = continueToNextStep;
-      db.createObjectStore("foo", "");
+      db.createObjectStore("foo");
       yield;
 
       let transaction1 = db.transaction("foo");

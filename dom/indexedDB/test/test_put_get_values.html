@@ -32,7 +32,8 @@
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      let objectStore = db.createObjectStore(objectStoreName, "", false);
+      let objectStore = db.createObjectStore(objectStoreName,
+                                             { autoIncrement: 0 });
 
       request = objectStore.add(testString.value, testString.key);
       request.onerror = errorHandler;

@@ -34,7 +34,8 @@
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      let objectStore = db.createObjectStore(objectStoreName, "foo");
+      let objectStore = db.createObjectStore(objectStoreName,
+                                             { keyPath: "foo" });
 
       let addedCount = 0;
 
@@ -60,7 +61,7 @@
       db.deleteObjectStore(objectStore.name);
       is(db.objectStoreNames.length, 0, "Correct objectStores list");
 
-      objectStore = db.createObjectStore(objectStoreName, "foo");
+      objectStore = db.createObjectStore(objectStoreName, { keyPath: "foo" });
       is(db.objectStoreNames.length, 1, "Correct objectStoreNames list");
       is(db.objectStoreNames.item(0), objectStoreName, "Correct name");
 
@@ -83,7 +84,7 @@
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      objectStore = db.createObjectStore(objectStoreName, "foo");
+      objectStore = db.createObjectStore(objectStoreName, { keyPath: "foo" });
 
       request = objectStore.add({foo:"bar"});
       request.onerror = errorHandler;

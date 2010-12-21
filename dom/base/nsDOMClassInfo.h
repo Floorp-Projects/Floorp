@@ -282,6 +282,7 @@ protected:
   static PRBool sDisableDocumentAllSupport;
   static PRBool sDisableGlobalScopePollutionSupport;
 
+public:
   static jsid sTop_id;
   static jsid sParent_id;
   static jsid sScrollbars_id;
@@ -391,7 +392,11 @@ protected:
   static jsid sOnafterscriptexecute_id;
   static jsid sWrappedJSObject_id;
   static jsid sURL_id;
+  static jsid sKeyPath_id;
+  static jsid sAutoIncrement_id;
+  static jsid sUnique_id;
 
+protected:
   static JSPropertyOp sXPCNativeWrapperGetPropertyOp;
   static JSPropertyOp sXrayWrapperPropertyHolderGetPropertyOp;
 };
