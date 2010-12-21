@@ -1784,15 +1784,11 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up:-moz-locale-dir(ltr),
 .tabbrowser-arrowscrollbox > .scrollbutton-down:-moz-locale-dir(rtl) {
-  border-right: 2px solid;
-  -moz-border-right-colors: rgba(0,0,0,0.25) rgba(255,255,255,0.15);
   list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-left.png");
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-down:-moz-locale-dir(ltr),
 .tabbrowser-arrowscrollbox > .scrollbutton-up:-moz-locale-dir(rtl) {
-  border-left: 2px solid;
-  -moz-border-left-colors: rgba(0,0,0,0.25) rgba(255,255,255,0.15);
   list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-right.png");
 }
 
@@ -1830,11 +1826,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 :-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1:not([type="menu-button"]),
 :-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-button,
 :-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
-  -moz-border-start: 2px solid !important;
-  -moz-border-end: none !important;
-  -moz-border-left-colors: rgba(0,0,0,0.25) rgba(255,255,255,0.15) !important;
-  -moz-border-right-colors: rgba(0,0,0,0.25) rgba(255,255,255,0.15) !important;
-  background-clip: padding-box;
   margin: 0;
   padding: 0 1px;
 }
