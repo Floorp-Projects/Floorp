@@ -1,1 +1,2 @@
 MOZ_APP_DISPLAYNAME=Firefox
+ANDROID_PACKAGE_NAME=org.mozilla.firefox
