@@ -135,6 +135,7 @@ endif
 
 ifeq ($(OS_TARGET),Android)
 CPPSRCS += nsAndroidStartup.cpp
+DEFINES += -DANDROID_PACKAGE_NAME='"$(ANDROID_PACKAGE_NAME)"'
 endif
 
 SHARED_LIBRARY_LIBS += ../profile/src/$(LIB_PREFIX)profile_s.$(LIB_SUFFIX)
