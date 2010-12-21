@@ -92,9 +92,11 @@ Java_org_mozilla_gecko_GeckoAppShell_setSurfaceView(JNIEnv *jenv, jclass, jobjec
 NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_onLowMemory(JNIEnv *jenv, jclass jc)
 {
-    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-    if (os)
-        os->NotifyObservers(nsnull, "memory-pressure", NS_LITERAL_STRING("low-memory").get());
+    if (nsAppShell::gAppShell) {
+        nsAppShell::gAppShell->NotifyObservers(nsnull,
+                                               "memory-pressure",
+                                               NS_LITERAL_STRING("low-memory").get());
+    }
 }
 
 NS_EXPORT void JNICALL
