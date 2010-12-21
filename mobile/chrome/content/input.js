@@ -199,7 +199,7 @@ MouseModule.prototype = {
     if (this._kinetic.isActive() && this._dragger != dragger)
       this._kinetic.end();
 
-    this._targetScrollbox = targetScrollbox;
+    this._targetScrollbox = targetScrollInterface ? targetScrollInterface.element : targetScrollbox;
     this._targetScrollInterface = targetScrollInterface;
 
     // Do tap
@@ -590,18 +590,17 @@ var ScrollUtils = {
     },
 
     dragStart: function dragStart(cx, cy, target, scroller) {
-      scroller.element.setAttribute("panning", "true");
+      scroller.element.addEventListener("PanBegin", this._showScrollbars, false);
     },
 
-    dragStop : function dragStop(dx, dy, scroller) {
-      scroller.element.removeAttribute("panning");
+    dragStop: function dragStop(dx, dy, scroller) {
+      scroller.element.removeEventListener("PanBegin", this._showScrollbars, false);
       return this.dragMove(dx, dy, scroller);
     },
 
-    dragMove : function dragMove(dx, dy, scroller) {
+    dragMove: function dragMove(dx, dy, scroller) {
       if (scroller.getPosition) {
         try {
-
           let oldX = {}, oldY = {};
           scroller.getPosition(oldX, oldY);
 
@@ -616,8 +615,19 @@ var ScrollUtils = {
       }
 
       return false;
+    },
+
+    _showScrollbars: function _showScrollbars(aEvent) {
+      let scrollbox = aEvent.target;
+      scrollbox.setAttribute("panning", "true");
+
+      // Wait for panning to be completely finished before removing scrollbars
+      scrollbox.addEventListener("PanFinished", function(aEvent) {
+        scrollbox.removeEventListener("PanFinished", arguments.callee, false);
+        scrollbox.removeAttribute("panning");
+      }, false);
     }
-  },
+  }
 };
 
 /**
