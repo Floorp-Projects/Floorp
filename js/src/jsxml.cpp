@@ -7119,7 +7119,6 @@ js_GetXMLObject(JSContext *cx, JSXML *xml)
 JSObject *
 js_InitNamespaceClass(JSContext *cx, JSObject *obj)
 {
-    /* :FIXME: handler is broken here and below when called with other object as 'this'. */
     return js_InitClass(cx, obj, NULL, &js_NamespaceClass, Namespace, 2, JS_TypeHandlerDynamic,
                         namespace_props, namespace_methods, NULL, NULL);
 }
@@ -7169,6 +7168,12 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
                          xml_static_props, xml_static_methods);
     if (!proto)
         return NULL;
+
+    /* Properties of XML objects are not modeled by type inference. */
+    TypeObject *type = proto->getNewType(cx);
+    if (!type)
+        return NULL;
+    type->markUnknown(cx);
 
     xml = js_NewXML(cx, JSXML_CLASS_TEXT);
     if (!xml)

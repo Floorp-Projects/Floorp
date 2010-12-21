@@ -3055,8 +3055,10 @@ JS_NewObject(JSContext *cx, JSClass *jsclasp, JSObject *proto, JSObject *parent)
     JS_ASSERT(!(clasp->flags & JSCLASS_IS_GLOBAL));
 
     JSObject *obj = NewNonFunction<WithProto::Class>(cx, clasp, proto, parent);
-    if (obj)
+    if (obj) {
         obj->syncSpecialEquality();
+        cx->markTypeObjectUnknownProperties(obj->getType());
+    }
 
     JS_ASSERT_IF(obj, obj->getParent());
     return obj;
@@ -3077,8 +3079,10 @@ JS_NewObjectWithGivenProto(JSContext *cx, JSClass *jsclasp, JSObject *proto, JSO
     JS_ASSERT(!(clasp->flags & JSCLASS_IS_GLOBAL));
 
     JSObject *obj = NewNonFunction<WithProto::Given>(cx, clasp, proto, parent);
-    if (obj)
+    if (obj) {
         obj->syncSpecialEquality();
+        cx->markTypeObjectUnknownProperties(obj->getType());
+    }
     return obj;
 }
 
@@ -4428,7 +4432,7 @@ JS_TypeHandlerNew(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 
     TypeSet *prototypeTypes =
         fun->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom), true);
-    prototypeTypes->addNewObject(cx, *fun->pool, site->returnTypes);
+    prototypeTypes->addNewObject(cx, fun, site->returnTypes);
 #endif
 }
 

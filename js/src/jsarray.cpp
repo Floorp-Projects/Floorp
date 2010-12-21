@@ -3366,6 +3366,10 @@ js_Array(JSContext *cx, uintN argc, Value *vp)
     if (cx->isTypeCallerMonitored())
         cx->markTypeObjectUnknownProperties(type);
 
+    /* If the length calculation overflowed, make sure that is marked for the new type. */
+    if (obj->getArrayLength() > INT32_MAX)
+        obj->setArrayLength(cx, obj->getArrayLength());
+
     vp->setObject(*obj);
     return JS_TRUE;
 }
