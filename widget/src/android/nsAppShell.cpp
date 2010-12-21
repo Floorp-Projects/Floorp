@@ -425,6 +425,40 @@ nsAppShell::RemoveObserver(const nsAString &aObserverKey)
     mObserversHash.Remove(aObserverKey);
 }
 
+// NotifyObservers support.  NotifyObservers only works on main thread.
+
+class NotifyObserversCaller : public nsRunnable {
+public:
+    NotifyObserversCaller(nsISupports *aSupports,
+                          const char *aTopic, const PRUnichar *aData) :
+         mSupports(aSupports), mTopic(aTopic), mData(aData) {
+    }
+
+    NS_IMETHOD Run() {
+        nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+        if (os)
+            os->NotifyObservers(mSupports, mTopic.get(), mData.get());
+
+        return NS_OK;
+    }
+
+private:
+    nsCOMPtr<nsISupports> mSupports;
+    nsCString mTopic;
+    nsString mData;
+};
+
+void
+nsAppShell::NotifyObservers(nsISupports *aSupports,
+                            const char *aTopic,
+                            const PRUnichar *aData)
+{
+    // This isn't main thread, so post this to main thread
+    nsCOMPtr<nsIRunnable> caller =
+        new NotifyObserversCaller(aSupports, aTopic, aData);
+    NS_DispatchToMainThread(caller);
+}
+
 // Used by IPC code
 namespace mozilla {
 
