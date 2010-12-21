@@ -111,6 +111,7 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_597460_filter_scroll.js \
 	browser_webconsole_console_extras.js \
 	browser_webconsole_bug_598357_jsterm_output.js \
+	browser_webconsole_bug_603750_websocket.js \
 	head.js \
 	$(NULL)
 
@@ -172,6 +173,8 @@ _BROWSER_TEST_PAGES = \
 	test-bug-601177-log-levels.html \
 	test-bug-601177-log-levels.js \
 	test-console-extras.html \
+	test-bug-603750-websocket.html \
+	test-bug-603750-websocket.js \
 	$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)
