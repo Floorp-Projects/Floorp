@@ -2922,18 +2922,56 @@ var FullScreenVideo = {
   init: function fsv_init() {
     messageManager.addMessageListener("Browser:FullScreenVideo:Start", this.show.bind(this));
     messageManager.addMessageListener("Browser:FullScreenVideo:Close", this.hide.bind(this));
+    messageManager.addMessageListener("Browser:FullScreenVideo:Play", this.play.bind(this));
+    messageManager.addMessageListener("Browser:FullScreenVideo:Pause", this.pause.bind(this));
+
+    // If the screen supports brightness locks, we will utilize that, see checkBrightnessLocking()
+    try {
+      this.screen = null;
+      let screenManager = Cc["@mozilla.org/gfx/screenmanager;1"].getService(Ci.nsIScreenManager);
+      let screen = screenManager.primaryScreen.QueryInterface(Ci.nsIScreen_MOZILLA_2_0_BRANCH);
+      this.screen = screen;
+    }
+    catch (e) {} // The screen does not support brightness locks
+  },
+
+  play: function() {
+    this.playing = true;
+    this.checkBrightnessLocking();
+  },
+
+  pause: function() {
+    this.playing = false;
+    this.checkBrightnessLocking();
+  },
+
+  // We lock the screen brightness - prevent it from dimming or turning off - when
+  // we are fullscreen, and are playing (and the screen supports that feature).
+  checkBrightnessLocking: function() {
+    var shouldLock = !!this.screen && !!window.fullScreen && !!this.playing;
+    var locking = !!this.brightnessLocked;
+    if (shouldLock == locking)
+      return;
+
+    if (shouldLock)
+      this.screen.lockMinimumBrightness(this.screen.BRIGHTNESS_FULL);
+    else
+      this.screen.unlockMinimumBrightness(this.screen.BRIGHTNESS_FULL);
+    this.brightnessLocked = shouldLock;
   },
 
   show: function fsv_show() {
     this.createBrowser();
     window.fullScreen = true;
     BrowserUI.pushPopup(this, this.browser);
+    this.checkBrightnessLocking();
   },
 
   hide: function fsv_hide() {
     this.destroyBrowser();
     window.fullScreen = false;
     BrowserUI.popPopup(this);
+    this.checkBrightnessLocking();
   },
 
   createBrowser: function fsv_createBrowser() {
