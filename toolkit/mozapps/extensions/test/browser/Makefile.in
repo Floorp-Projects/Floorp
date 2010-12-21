@@ -98,6 +98,7 @@ _TEST_RESOURCES = \
   browser_install.xml \
   browser_install1_3.xpi \
   browser_eula.xml \
+  discovery.html \
   redirect.sjs \
   releaseNotes.xhtml \
   $(NULL)
