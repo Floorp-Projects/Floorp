@@ -82,4 +82,8 @@ function run_test() {
   do_check_eq(Utils.passphraseStrength("1"), 10);
   do_check_eq(Utils.passphraseStrength("12"), 12);
   do_check_eq(Utils.passphraseStrength("a1"), 12);
+  
+  _("Normalizing username.");
+  do_check_eq(Utils.normalizeAccount("   QA1234+boo@mozilla.com	"), "QA1234+boo@mozilla.com");
+  do_check_eq(Utils.normalizeAccount("QA1234+boo@mozilla.com"), "QA1234+boo@mozilla.com");
 }
