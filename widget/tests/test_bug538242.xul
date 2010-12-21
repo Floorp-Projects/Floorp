@@ -29,6 +29,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=538242
 SimpleTest.waitForExplicitFinish();
 
 SimpleTest.waitForFocus(function () {
+  if (navigator.platform.indexOf("Lin") != -1) {
+    ok(true, "This test is disabled on Linux because it expects moving windows to be synchronous which is not guaranteed on Linux.");
+    SimpleTest.finish();
+    return;
+  }
+
   var win = window.open("window_bug538242.xul", "_blank", 
                         "chrome=1,width=400,height=300,left=100,top=100");
   SimpleTest.waitForFocus(function () {
