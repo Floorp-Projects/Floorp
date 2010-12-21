@@ -567,9 +567,11 @@ private:
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Now that it should be in the database, we need to obtain the id of the
-    // visit we just added.
+    // place we just added.
     bool visited = FetchVisitInfo(_place);
-    NS_ASSERTION(!visited, "Not visited after adding a visit!");
+    if (visited) {
+      NS_NOTREACHED("Not visited after adding a visit!");
+    }
 
     return NS_OK;
   }
