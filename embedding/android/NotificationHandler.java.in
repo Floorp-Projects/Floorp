@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #filter substitution
-package org.mozilla.@MOZ_APP_NAME@;
+package @ANDROID_PACKAGE_NAME@;
 
 import android.app.Activity;
 import android.app.NotificationManager;

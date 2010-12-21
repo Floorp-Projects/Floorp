@@ -330,6 +330,9 @@ if test "$target" = "arm-android-eabi" ; then
     ANDROID_SDK="${android_sdk}"
     ANDROID_TOOLS="${android_tools}"
     ANDROID_VERSION="${android_version}"
+    if test -z "$ANDROID_PACKAGE_NAME" ; then
+        ANDROID_PACKAGE_NAME='org.mozilla.$(MOZ_APP_NAME)'
+    fi
 
     AC_DEFINE(ANDROID)
     AC_DEFINE_UNQUOTED(ANDROID_VERSION, $android_version)
@@ -344,6 +347,7 @@ AC_SUBST(ANDROID_TOOLCHAIN)
 AC_SUBST(ANDROID_PLATFORM)
 AC_SUBST(ANDROID_SDK)
 AC_SUBST(ANDROID_TOOLS)
+AC_SUBST(ANDROID_PACKAGE_NAME)
 
 dnl ========================================================
 dnl Checks for compilers.

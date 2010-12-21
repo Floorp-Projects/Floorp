@@ -705,6 +705,8 @@ ANDROID_SDK       = @ANDROID_SDK@
 ANDROID_TOOLS     = @ANDROID_TOOLS@
 ANDROID_VERSION   = @ANDROID_VERSION@
 
+ANDROID_PACKAGE_NAME = @ANDROID_PACKAGE_NAME@
+
 JS_SHARED_LIBRARY = @JS_SHARED_LIBRARY@
 
 # We only want to do the pymake sanity on Windows, other os's can cope

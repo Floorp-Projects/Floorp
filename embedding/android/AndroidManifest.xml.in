@@ -1,7 +1,7 @@
 #filter substitution
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-      package="org.mozilla.@MOZ_APP_NAME@"
+      package="@ANDROID_PACKAGE_NAME@"
       android:installLocation="auto"
       android:versionCode="1"
       android:versionName="@MOZ_APP_VERSION@"
@@ -76,7 +76,7 @@
         <activity android:name="Restarter"
                   android:theme="@android:style/Theme.Light.NoTitleBar">
           <intent-filter>
-            <action android:name="org.mozilla.gecko.restart@MOZ_APP_NAME@" 
+            <action android:name="org.mozilla.gecko.restart" 
 		    android:process="@MOZ_APP_NAME@Restarter"/>
           </intent-filter>
         </activity>
