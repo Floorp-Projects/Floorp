@@ -151,10 +151,14 @@ public:
    */
   PRBool IsForEventDelivery() { return mMode == EVENT_DELIVERY; }
   /**
-   * @return PR_TRUE if the display list is being build to compute geometry
+   * @return PR_TRUE if the display list is being built to compute geometry
    * for plugins.
    */
   PRBool IsForPluginGeometry() { return mMode == PLUGIN_GEOMETRY; }
+  /**
+   * @return PR_TRUE if the display list is being built for painting.
+   */
+  PRBool IsForPainting() { return mMode == PAINTING; }
   /**
    * @return PR_TRUE if "painting is suppressed" during page load and we
    * should paint only the background of the document.
