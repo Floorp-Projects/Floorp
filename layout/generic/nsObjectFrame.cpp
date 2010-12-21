@@ -1469,7 +1469,7 @@ nsObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   nsDisplayList replacedContent;
 
-  if (mInstanceOwner && mInstanceOwner->UseLayers()) {
+  if (aBuilder->IsForPainting() && mInstanceOwner && mInstanceOwner->UseLayers()) {
     NPWindow* window = nsnull;
     mInstanceOwner->GetWindow(window);
     PRBool isVisible = window && window->width > 0 && window->height > 0;
