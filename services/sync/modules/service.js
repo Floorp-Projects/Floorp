@@ -529,7 +529,6 @@ WeaveSvc.prototype = {
         this._handleSyncError();
         if (Status.sync == CREDENTIALS_CHANGED) {
           this.logout();
-          Utils.delay(function() this.login(), 0, this);
         }
         break;
       case "weave:service:sync:finish":
@@ -951,7 +950,6 @@ WeaveSvc.prototype = {
       CollectionKeys.clear();
 
       /* Login and sync. This also generates new keys. */
-      this.login();
       this.sync(true);
       return true;
     }))(),
@@ -991,9 +989,23 @@ WeaveSvc.prototype = {
   },
 
   _autoConnect: let (attempts = 0) function _autoConnect() {
-    let reason = 
-      Utils.mpLocked() ? "master password still locked"
-                       : this._checkSync([kSyncNotLoggedIn, kFirstSyncChoiceNotMade]);
+    let isLocked = Utils.mpLocked();
+    if (isLocked) {
+      // There's no reason to back off if we're locked: we'll just try to login
+      // during sync. Clear our timer, see if we should go ahead and sync, then
+      // just return.
+      this._log.trace("Autoconnect skipped: master password still locked.");
+      
+      if (this._autoTimer)
+        this._autoTimer.clear();
+      
+      this._checkSyncStatus();
+      Svc.Prefs.set("autoconnect", true);
+      
+      return;
+    }
+    
+    let reason = this._checkSync([kSyncNotLoggedIn, kFirstSyncChoiceNotMade]);
 
     // Can't autoconnect if we're missing these values.
     if (!reason) {
@@ -1316,6 +1328,19 @@ WeaveSvc.prototype = {
   },
 
   /**
+   * Return whether we should attempt login at the start of a sync.
+   * 
+   * Note that this function has strong ties to _checkSync: callers 
+   * of this function should typically use _checkSync to verify that
+   * any necessary login took place.
+   */
+  _shouldLogin: function _shouldLogin() {
+    return this.enabled &&
+           !Svc.IO.offline &&
+           !this.isLoggedIn;
+  },
+  
+  /**
    * Determine if a sync should run.
    * 
    * @param ignore [optional]
@@ -1366,7 +1391,16 @@ WeaveSvc.prototype = {
   _checkSyncStatus: function WeaveSvc__checkSyncStatus() {
     // Should we be syncing now, if not, cancel any sync timers and return
     // if we're in backoff, we'll schedule the next sync
-    if (this._checkSync([kSyncBackoffNotMet])) {
+    let ignore = [kSyncBackoffNotMet];
+    
+    // We're ready to sync even if we're not logged in... so long as the 
+    // master password isn't locked.
+    if (Utils.mpLocked())
+      ignore.push(kSyncNotLoggedIn);
+    
+    let skip = this._checkSync(ignore);
+    this._log.trace("_checkSync returned \"" + skip + "\".");
+    if (skip) {
       this._clearSyncTriggers();
       return;
     }
@@ -1527,7 +1561,15 @@ WeaveSvc.prototype = {
   // see Bug 616568.
   sync: function sync() {
     try {
-      return this._lockedSync();
+      // Make sure we're logged in.
+      if (this._shouldLogin()) {
+        this._log.trace("In sync: should login.");
+        this.login();
+      }
+      else {
+        this._log.trace("In sync: no need to login.");
+      }
+      return this._lockedSync.apply(this, arguments);
     } catch (ex) {
       this._log.debug("Exception: " + Utils.exceptionStr(ex));
       if (Utils.isLockException(ex)) {
