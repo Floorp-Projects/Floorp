@@ -100,6 +100,11 @@ function testCompletion() {
   jsterm.execute();
   is(jsterm.completeNode.value, "", "clear completion on execute()");
 
+  // Test multi-line completion works
+  input.value =                 "console.log('one');\nconsol";
+  jsterm.complete(jsterm.COMPLETE_HINT_ONLY);
+  is(jsterm.completeNode.value, "                   \n      e", "multi-line completion");
+
   HUD = jsterm = input = null;
   finishTest();
 }
