@@ -964,7 +964,7 @@ struct JSThreadData {
     unsigned            iterationCounter;
 
     /* Maximum size of the tracer's code cache before we start flushing. */
-    uint32                  maxCodeCacheBytes;
+    uint32              maxCodeCacheBytes;
 #endif
 
     /* State used by dtoa.c. */
