@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #filter substitution
-package org.mozilla.@MOZ_APP_NAME@;
+package @ANDROID_PACKAGE_NAME@;
 
 import android.app.*;
 import android.content.*;
@@ -59,7 +59,7 @@ public class Restarter extends Activity {
                 Log.i("Restarter", "pid: " + new Integer(android.os.Process.myPid()).toString());
                 while((line = psOut.readLine()) != null) {
                     Log.i("Restarter", "ps: " + line);
-                    if (line.contains("org.mozilla.@MOZ_APP_NAME@")){
+                    if (line.contains("@ANDROID_PACKAGE_NAME@")){
                         if (!line.contains(new Integer(android.os.Process.myPid()).toString())){
                             Log.i("Restarter", "app still running, wait a bit");
                             stillRunning = true;
@@ -81,8 +81,8 @@ public class Restarter extends Activity {
         try {
             String action = "android.intent.action.MAIN";
             Intent intent = new Intent(action);
-            intent.setClassName("org.mozilla.@MOZ_APP_NAME@",
-                                "org.mozilla.@MOZ_APP_NAME@.App");
+            intent.setClassName("@ANDROID_PACKAGE_NAME@",
+                                "@ANDROID_PACKAGE_NAME@.App");
             Bundle b = getIntent().getExtras();
             if (b != null)
                 intent.putExtras(b);
