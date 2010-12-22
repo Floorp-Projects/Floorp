@@ -6647,53 +6647,51 @@ nsNavHistory::GetAgeInDaysString(PRInt32 aInt, const PRUnichar *aName,
                                  nsACString& aResult)
 {
   nsIStringBundle *bundle = GetBundle();
-  if (!bundle)
-    aResult.Truncate(0);
-  else {
+  if (bundle) {
     nsAutoString intString;
     intString.AppendInt(aInt);
     const PRUnichar* strings[1] = { intString.get() };
     nsXPIDLString value;
     nsresult rv = bundle->FormatStringFromName(aName, strings,
                                                1, getter_Copies(value));
-    if (NS_SUCCEEDED(rv))
+    if (NS_SUCCEEDED(rv)) {
       CopyUTF16toUTF8(value, aResult);
-    else
-      aResult.Truncate(0);
+      return;
+    }
   }
+  CopyUTF16toUTF8(nsDependentString(aName), aResult);
 }
 
 void
 nsNavHistory::GetStringFromName(const PRUnichar *aName, nsACString& aResult)
 {
   nsIStringBundle *bundle = GetBundle();
-  if (!bundle)
-    aResult.Truncate(0);
-
-  nsXPIDLString value;
-  nsresult rv = bundle->GetStringFromName(aName, getter_Copies(value));
-  if (NS_SUCCEEDED(rv))
-    CopyUTF16toUTF8(value, aResult);
-  else
-    aResult.Truncate(0);
+  if (bundle) {
+    nsXPIDLString value;
+    nsresult rv = bundle->GetStringFromName(aName, getter_Copies(value));
+    if (NS_SUCCEEDED(rv)) {
+      CopyUTF16toUTF8(value, aResult);
+      return;
+    }
+  }
+  CopyUTF16toUTF8(nsDependentString(aName), aResult);
 }
 
 void
 nsNavHistory::GetMonthName(PRInt32 aIndex, nsACString& aResult)
 {
   nsIStringBundle *bundle = GetDateFormatBundle();
-  if (!bundle)
-    aResult.Truncate(0);
-  else {
+  if (bundle) {
     nsCString name = nsPrintfCString("month.%d.name", aIndex);
     nsXPIDLString value;
     nsresult rv = bundle->GetStringFromName(NS_ConvertUTF8toUTF16(name).get(),
                                             getter_Copies(value));
-    if (NS_SUCCEEDED(rv))
+    if (NS_SUCCEEDED(rv)) {
       CopyUTF16toUTF8(value, aResult);
-    else
-      aResult.Truncate(0);
+      return;
+    }
   }
+  aResult = nsPrintfCString("[%d]", aIndex);
 }
 
 // nsNavHistory::SetPageTitleInternal
