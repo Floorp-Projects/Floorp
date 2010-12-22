@@ -976,7 +976,7 @@ protected:
   // Override from nsINode
   virtual nsINode::nsSlots* CreateSlots();
 
-  nsDOMSlots *GetDOMSlots()
+  nsDOMSlots *DOMSlots()
   {
     return static_cast<nsDOMSlots*>(GetSlots());
   }
