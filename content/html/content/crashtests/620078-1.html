@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var frame = document.getElementById("f");
+  var frameRoot = frame.contentDocument.documentElement;
+  document.body.removeChild(frame);
+  var i = document.createElementNS("http://www.w3.org/1999/xhtml", "input");
+  i.setAttribute("autofocus", "true"); 
+  frameRoot.appendChild(i);
+}
+
+</script>
+</head>
+
+<body onload="boom();"><iframe id="f" src="data:text/html,"></iframe></body>
+</html>
