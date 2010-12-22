@@ -52,6 +52,7 @@
 #include "jslock.h"
 #include "jsnum.h"
 #include "jsvector.h"
+#include "jscompartment.h"
 #include "Writer.h"
 
 namespace js {
@@ -1691,7 +1692,7 @@ extern void
 PurgeScriptFragments(TraceMonitor* tm, JSScript* script);
 
 extern bool
-OverfullJITCache(TraceMonitor* tm);
+OverfullJITCache(JSContext *cx, TraceMonitor* tm);
 
 extern void
 FlushJITCache(JSContext* cx);
