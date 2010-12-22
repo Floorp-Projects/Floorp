@@ -43,9 +43,6 @@
           input.blur();
           input.focus();
 
-          if (val)
-            input.selectionStart = input.selectionEnd = input.textLength;
-
           return val;
         ]]></setter>
       </property>
@@ -110,6 +107,12 @@
         <![CDATA[
           // Bug 583341 - suppress disconnect of autocomplete controller
           this._dontBlur = true;
+        ]]>
+      </handler>
+
+      <handler event="TapDouble" phase="capturing">
+        <![CDATA[
+          this.select();
         ]]>
       </handler>
 
