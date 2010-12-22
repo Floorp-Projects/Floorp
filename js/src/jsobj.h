@@ -349,21 +349,8 @@ struct JSObject : js::gc::Cell {
         HAS_EQUALITY              = 0x200,
         METHOD_THRASH_COUNT_MASK  = 0xc00,
         METHOD_THRASH_COUNT_SHIFT =    10,
-        METHOD_THRASH_COUNT_MAX   = METHOD_THRASH_COUNT_MASK >> METHOD_THRASH_COUNT_SHIFT,
-
-        GCKIND_BIT0     = 0x20000000,
-        GCKIND_BIT1     = 0x40000000,
-        GCKIND_BIT2     = 0x80000000
+        METHOD_THRASH_COUNT_MAX   = METHOD_THRASH_COUNT_MASK >> METHOD_THRASH_COUNT_SHIFT
     };
-
-    const static int32 FLAGS_GCKIND_SHIFT = 29;
-    const static uint32 FLAGS_GCKIND_MASK = 0xe0000000;
-    const static uint32 FLAGS_GCKIND_INITIAL = FLAGS_GCKIND_MASK;
-
-    const static uint32 INITIAL_FLAGS = FLAGS_GCKIND_INITIAL;
-    
-    JS_STATIC_ASSERT(GCKIND_BIT0 == 1 << FLAGS_GCKIND_SHIFT);
-    JS_STATIC_ASSERT(FLAGS_GCKIND_MASK == (GCKIND_BIT0 | GCKIND_BIT1 | GCKIND_BIT2));
 
     /*
      * Impose a sane upper bound, originally checked only for dense arrays, on
@@ -466,13 +453,6 @@ struct JSObject : js::gc::Cell {
 
     /* Sets an object's HAS_EQUALITY flag based on its clasp. */
     inline void syncSpecialEquality();
-
-    bool hasStoredGCKind() { return (flags & FLAGS_GCKIND_MASK) != FLAGS_GCKIND_INITIAL; }
-    unsigned /* gc::FinalizeKind */ getStoredGCKind() { return flags >> FLAGS_GCKIND_SHIFT; }
-    void setStoredGCKind(unsigned /* gc::FinalizeKind */ kind) {
-        flags = (flags & ~FLAGS_GCKIND_MASK) | (kind << FLAGS_GCKIND_SHIFT);
-        JS_ASSERT(getStoredGCKind() == kind);
-    }
 
   private:
     void generateOwnShape(JSContext *cx);
@@ -603,7 +583,7 @@ struct JSObject : js::gc::Cell {
 
   public:
     /* Minimum size for dynamically allocated slots. */
-    static const uint32 SLOT_CAPACITY_MIN = 2;
+    static const uint32 SLOT_CAPACITY_MIN = 8;
 
     bool allocSlots(JSContext *cx, size_t nslots);
     bool growSlots(JSContext *cx, size_t nslots);
