@@ -207,11 +207,8 @@
 
             // XXX we can do better than using a constant here
             let columnsCount = Math.ceil(this.children.childNodes.length / Math.floor(this.children.getBoundingClientRect().height / (firstBox.height + 4)));
-            if (this._columnsCount != columnsCount && (firstBox.left != lastBox.left)) {
-              let width = Math.max(lastBox.right - firstBox.left, firstBox.right - lastBox.left);
-              width -= this._columnsCount * COLUMN_MARGIN;
-
-              this.children.style.width = (width + columnsCount * COLUMN_MARGIN) + "px";
+            if (this._columnsCount != columnsCount && window.innerWidth > 1) { // > 1 to ignore column resizing while the main window is loading
+              this.children.style.width = (columnsCount * (COLUMN_MARGIN + firstBox.width)) + "px";
               this._columnsCount = columnsCount;
             }
           ]]>
