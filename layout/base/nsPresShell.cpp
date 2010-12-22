@@ -6070,8 +6070,7 @@ PresShell::Paint(nsIView*           aDisplayRoot,
                            NSCoordToFloat(bounds__.YMost()));
 #endif
 
-  nsPresContext* presContext = GetPresContext();
-  AUTO_LAYOUT_PHASE_ENTRY_POINT(presContext, Paint);
+  AUTO_LAYOUT_PHASE_ENTRY_POINT(GetPresContext(), Paint);
 
   NS_ASSERTION(!mIsDestroying, "painting a destroyed PresShell");
   NS_ASSERTION(aDisplayRoot, "null view");
