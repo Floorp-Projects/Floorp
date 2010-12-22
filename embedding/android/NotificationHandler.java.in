@@ -89,7 +89,7 @@ public class NotificationHandler
         if (App.ACTION_ALERT_CLICK.equals(action)) {
             // Start or bring to front the main activity
             Intent appIntent = new Intent(Intent.ACTION_MAIN);
-            appIntent.setClassName(context, "org.mozilla.@MOZ_APP_NAME@.App");
+            appIntent.setClassName(context, "@ANDROID_PACKAGE_NAME@.App");
             appIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             try {
                 context.startActivity(appIntent);
