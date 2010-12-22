@@ -2499,6 +2499,13 @@ array_concat(JSContext *cx, uintN argc, Value *vp)
     /* Treat our |this| object as the first argument; see ECMA 15.4.4.4. */
     Value *p = JS_ARGV(cx, vp) - 1;
 
+    /* Get the type object to use for the result. */
+    TypeObject *ntype = cx->getTypeCallerInitObject(true);
+    if (!ntype)
+        return JS_FALSE;
+    if (cx->isTypeCallerMonitored())
+        cx->markTypeObjectUnknownProperties(ntype);
+
     /* Create a new Array object and root it using *vp. */
     JSObject *aobj = ComputeThisFromVp(cx, vp);
     JSObject *nobj;
@@ -2510,6 +2517,7 @@ array_concat(JSContext *cx, uintN argc, Value *vp)
         if (!nobj)
             return JS_FALSE;
         nobj->setArrayLength(cx, length);
+        nobj->setType(ntype);
         vp->setObject(*nobj);
         if (argc == 0)
             return JS_TRUE;
@@ -2519,17 +2527,10 @@ array_concat(JSContext *cx, uintN argc, Value *vp)
         nobj = NewDenseEmptyArray(cx);
         if (!nobj)
             return JS_FALSE;
+        nobj->setType(ntype);
         vp->setObject(*nobj);
         length = 0;
     }
-
-    /* Get the type object to use for the result. */
-    TypeObject *ntype = cx->getTypeCallerInitObject(true);
-    if (!ntype)
-        return JS_FALSE;
-    nobj->setType(ntype);
-    if (cx->isTypeCallerMonitored())
-        cx->markTypeObjectUnknownProperties(ntype);
 
     if (aobj->isDenseArray() && !aobj->isPackedDenseArray())
         nobj->setDenseArrayNotPacked(cx);
@@ -3040,9 +3041,8 @@ static void array_TypeSort(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite 
     TypeSet *funTypes = site->argumentTypes[0];
 
     /* Make a callsite for the calls to the sorting function this will perform. */
-    jstype globalType = (jstype) cx->globalTypeObject();
     TypeCallsite *sortSite = ArenaNew<TypeCallsite>(site->pool(), site->code, false, 2);
-    sortSite->thisType = globalType;
+    sortSite->thisType = TYPE_UNDEFINED;
 
     /* Both arguments to the argument function are array elements. */
     TypeSet *argTypes = sortSite->argumentTypes[0] = sortSite->argumentTypes[1] =
@@ -3178,7 +3178,7 @@ static void array_TypeExtra(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite
     if (site->argumentCount > 1 && !REDUCE_MODE(mode))
         extraSite->thisTypes = site->argumentTypes[1];
     else
-        extraSite->thisType = (jstype) cx->globalTypeObject();
+        extraSite->thisType = TYPE_UNDEFINED;
 
     switch (mode) {
 

@@ -154,12 +154,6 @@ JSContext::getTypeNewObject(JSProtoKey key)
 }
 
 inline js::types::TypeObject *
-JSContext::globalTypeObject()
-{
-    return globalObject->getType();
-}
-
-inline js::types::TypeObject *
 JSContext::emptyTypeObject()
 {
     return &compartment->types.emptyObject;
@@ -178,11 +172,15 @@ JSContext::setTypeFunctionScript(JSFunction *fun, JSScript *script)
 #endif
 }
 
+/*
+ * :FIXME: bug 619693 the following TypeCaller functions may produce wrong behavior
+ * when natives call other natives.
+ */
+
 inline js::types::TypeObject *
 JSContext::getTypeCallerInitObject(bool isArray)
 {
 #ifdef JS_TYPE_INFERENCE
-    /* :FIXME: this code is broken when a native reenters JS by calling Call/New. */
     JSStackFrame *caller = js_GetScriptedCaller(this, NULL);
     if (caller)
         return caller->script()->getTypeInitObject(this, caller->pc(this), isArray);
@@ -194,7 +192,6 @@ inline bool
 JSContext::isTypeCallerMonitored()
 {
 #ifdef JS_TYPE_INFERENCE
-    /* :FIXME: this code is broken when a native reenters JS by calling Call/New. */
     JSStackFrame *caller = js_GetScriptedCaller(this, NULL);
     if (!caller)
         return true;
@@ -209,7 +206,6 @@ inline void
 JSContext::markTypeCallerUnexpected(js::types::jstype type)
 {
 #ifdef JS_TYPE_INFERENCE
-    /* :FIXME: this code is broken when a native reenters JS by calling Call/New. */
     JSStackFrame *caller = js_GetScriptedCaller(this, NULL);
     if (!caller)
         return;
@@ -277,6 +273,28 @@ JSContext::addTypePropertyId(js::types::TypeObject *obj, jsid id, const js::Valu
 {
 #ifdef JS_TYPE_INFERENCE
     addTypePropertyId(obj, id, js::types::GetValueType(this, value));
+#endif
+}
+
+inline void
+JSContext::markTypePropertyUnknown(js::types::TypeObject *obj, jsid id)
+{
+#ifdef JS_TYPE_INFERENCE
+    /* Convert string index properties into the common index property. */
+    id = js::types::MakeTypeId(this, id);
+
+    js::types::TypeSet *types = obj->getProperty(this, id, true);
+
+    if (types->unknown())
+        return;
+
+    if (compartment->types.interpreting) {
+        js::types::InferSpew(js::types::ISpewDynamic, "AddUnknown: %s %s",
+                             obj->name(), js::types::TypeIdString(id));
+        compartment->types.addDynamicType(this, types, js::types::TYPE_UNKNOWN);
+    } else {
+        types->addType(this, js::types::TYPE_UNKNOWN);
+    }
 #endif
 }
 
@@ -487,9 +505,7 @@ inline js::types::TypeObject *
 JSScript::getTypeInitObject(JSContext *cx, const jsbytecode *pc, bool isArray)
 {
 #ifdef JS_TYPE_INFERENCE
-    /* :FIXME: */
-    JS_ASSERT(!analysis->failed());
-    if (!compileAndGo)
+    if (!compileAndGo || analysis->failed())
         return cx->getTypeNewObject(isArray ? JSProto_Array : JSProto_Object);
     return analysis->getCode(pc).getInitObject(cx, isArray);
 #else
@@ -612,7 +628,6 @@ Bytecode::setFixed(JSContext *cx, unsigned num, types::jstype type)
 inline types::TypeObject *
 Bytecode::getInitObject(JSContext *cx, bool isArray)
 {
-    JS_ASSERT(script->script->compileAndGo);
 #ifdef JS_TYPE_INFERENCE
     types::TypeObject *&object = isArray ? initArray : initObject;
     if (!object) {
@@ -622,7 +637,8 @@ Bytecode::getInitObject(JSContext *cx, bool isArray)
         JS_snprintf(name, 32, "#%u:%u:%s", script->id, offset, isArray ? "Array" : "Object");
 #endif
         JSObject *proto;
-        if (!js_GetClassPrototype(cx, NULL, isArray ? JSProto_Array : JSProto_Object, &proto, NULL))
+        JSProtoKey key = isArray ? JSProto_Array : JSProto_Object;
+        if (!js_GetClassPrototype(cx, script->getGlobal(), key, &proto, NULL))
             return NULL;
         object = cx->compartment->types.newTypeObject(cx, script, name, false, proto);
     }
@@ -636,6 +652,44 @@ Bytecode::getInitObject(JSContext *cx, bool isArray)
 /////////////////////////////////////////////////////////////////////
 // analyze::Script
 /////////////////////////////////////////////////////////////////////
+
+inline JSObject *
+Script::getGlobal()
+{
+    JS_ASSERT(script->compileAndGo);
+    if (global)
+        return global;
+
+    /*
+     * Nesting parents of this script must also be compileAndGo for the same global.
+     * The parser must have set the global object for the analysis at the root
+     * global script.
+     */
+    JSScript *nested = parent;
+    while (true) {
+        if (nested->analysis->global) {
+            global = nested->analysis->global;
+            return global;
+        }
+        nested = nested->analysis->parent;
+    }
+    return NULL;
+}
+
+inline types::TypeObject *
+Script::getGlobalType()
+{
+    return getGlobal()->getType();
+}
+
+inline types::TypeObject *
+Script::getTypeNewObject(JSContext *cx, JSProtoKey key)
+{
+    JSObject *proto;
+    if (!js_GetClassPrototype(cx, getGlobal(), key, &proto, NULL))
+        return NULL;
+    return proto->getNewType(cx);
+}
 
 inline jsid
 Script::getLocalId(unsigned index, Bytecode *code)
@@ -1177,8 +1231,8 @@ inline TypeObject::TypeObject(JSArenaPool *pool, jsid name, JSObject *proto)
              * have an array or Array.prototype as their prototype. We can't use
              * a clasp here as type does not determine the clasp of an object, so we
              * intercept at the places where a non-Array can have an Array as its
-             * prototype --- scripted 'new', reassignments to __proto__, Object.create
-             * and through the API.
+             * prototype --- scripted 'new', reassignments to __proto__, particular
+             * natives and through the API.
              */
             isDenseArray = isPackedArray = true;
         }

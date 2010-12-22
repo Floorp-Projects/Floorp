@@ -1435,7 +1435,8 @@ Class ArrayBuffer::jsclass = {
 JSPropertySpec ArrayBuffer::jsprops[] = {
     { "byteLength",
       -1, JSPROP_SHARED | JSPROP_PERMANENT | JSPROP_READONLY,
-      Jsvalify(ArrayBuffer::prop_getByteLength), Jsvalify(ArrayBuffer::prop_getByteLength) },
+      Jsvalify(ArrayBuffer::prop_getByteLength), Jsvalify(ArrayBuffer::prop_getByteLength),
+      JS_TypeHandlerInt },
     {0,0,0,0,0}
 };
 
@@ -1538,6 +1539,8 @@ do {                                                                           \
     cx->addTypeProperty(proto->getType(), NULL, types::TYPE_INT32);            \
     if (_typedArray::ArrayElementTypeMayBeDouble())                            \
         cx->addTypeProperty(proto->getType(), NULL, types::TYPE_DOUBLE);       \
+    cx->addTypeProperty(proto->getType(), "buffer",                            \
+                        (types::jstype) bufferType);                           \
     JSObject *ctor = JS_GetConstructor(cx, proto);                             \
     if (!ctor ||                                                               \
         !JS_DefinePropertyWithType(cx, ctor, "BYTES_PER_ELEMENT",              \
@@ -1600,6 +1603,14 @@ js_InitTypedArrayClasses(JSContext *cx, JSObject *obj)
 
     JSObject *proto;
 
+    proto = js_InitClass(cx, obj, NULL, &ArrayBuffer::jsclass,
+                         ArrayBuffer::class_constructor, 1, JS_TypeHandlerNew,
+                         ArrayBuffer::jsprops, NULL, NULL, NULL);
+    if (!proto)
+        return NULL;
+
+    TypeObject *bufferType = proto->getNewType(cx);
+
     INIT_TYPED_ARRAY_CLASS(Int8Array,TYPE_INT8);
     INIT_TYPED_ARRAY_CLASS(Uint8Array,TYPE_UINT8);
     INIT_TYPED_ARRAY_CLASS(Int16Array,TYPE_INT16);
@@ -1609,12 +1620,6 @@ js_InitTypedArrayClasses(JSContext *cx, JSObject *obj)
     INIT_TYPED_ARRAY_CLASS(Float32Array,TYPE_FLOAT32);
     INIT_TYPED_ARRAY_CLASS(Float64Array,TYPE_FLOAT64);
     INIT_TYPED_ARRAY_CLASS(Uint8ClampedArray,TYPE_UINT8_CLAMPED);
-
-    proto = js_InitClass(cx, obj, NULL, &ArrayBuffer::jsclass,
-                         ArrayBuffer::class_constructor, 1, JS_TypeHandlerNew,
-                         ArrayBuffer::jsprops, NULL, NULL, NULL);
-    if (!proto)
-        return NULL;
 
     proto->setPrivate(NULL);
     return proto;

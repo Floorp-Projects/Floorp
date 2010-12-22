@@ -2879,7 +2879,7 @@ reflect_parse(JSContext *cx, uint32 argc, jsval *vp)
 }
 
 static JSFunctionSpec static_methods[] = {
-    JS_FN("parse", reflect_parse, 1, 0),
+    JS_FN_TYPE("parse", reflect_parse, 1, 0, JS_TypeHandlerDynamic),
     JS_FS_END
 };
 
@@ -2896,12 +2896,12 @@ js_InitReflectClass(JSContext *cx, JSObject *obj)
         return NULL;
     Reflect->setType(type);
 
-    if (!JS_DefineProperty(cx, obj, js_Reflect_str, OBJECT_TO_JSVAL(Reflect),
-                           JS_PropertyStub, JS_PropertyStub, 0)) {
+    if (!JS_DefinePropertyWithType(cx, obj, js_Reflect_str, OBJECT_TO_JSVAL(Reflect),
+                                   JS_PropertyStub, JS_PropertyStub, 0)) {
         return NULL;
     }
 
-    if (!JS_DefineFunctions(cx, Reflect, static_methods))
+    if (!JS_DefineFunctionsWithPrefix(cx, Reflect, static_methods, "Reflect"))
         return NULL;
 
     return Reflect;

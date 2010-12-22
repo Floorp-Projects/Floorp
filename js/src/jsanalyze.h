@@ -212,10 +212,7 @@ class Script
      */
     ~Script() { destroy(); }
 
-    /* Whether we ran out of memory during analysis. */
     bool OOM() { return outOfMemory; }
-
-    /* Whether the script was analyzed successfully. */
     bool failed() { return hadFailure; }
 
     /* Whether there are POPV/SETRVAL bytecodes which can write to the frame's rval. */
@@ -224,10 +221,7 @@ class Script
     /* Whether there are NAME bytecodes which can access the frame's scope chain. */
     bool usesScopeChain() const { return usesScope; }
 
-    /* Whether the script has been analyzed. */
     bool hasAnalyzed() const { return !!codeArray; }
-
-    /* Script/function being analyzed. */
     JSScript *getScript() const { return script; }
 
     /* Accessors for bytecode information. */
@@ -322,6 +316,9 @@ class Script
     /* Function this script is the body for, if there is one. */
     JSFunction *fun;
 
+    /* Global object for this script, if compileAndGo. */
+    JSObject *global;
+
     /* List of objects associated with this script. */
     types::TypeObject *objects;
 
@@ -347,14 +344,14 @@ class Script
 
     void setFunction(JSContext *cx, JSFunction *fun);
 
-    /* Whether this is eval code. */
     bool isEval() { return parent && !fun; }
-
-    /* Whether this is global code, including from a global-scope eval(). */
     bool isGlobal() { return !parent || (!fun && !parent->analysis->parent); }
 
     unsigned argCount() { return fun ? fun->nargs : 0; }
     types::TypeFunction *function() { return fun->getType()->asFunction(); }
+
+    inline JSObject *getGlobal();
+    inline types::TypeObject *getGlobalType();
 
     /*
      * Get the non-eval script which this one is nested in, returning this script
@@ -466,24 +463,21 @@ class Script
     /* Analyzes a bytecode, generating type constraints describing its behavior. */
     void analyzeTypes(JSContext *cx, Bytecode *code, AnalyzeState &state);
 
-    /* Get the name to use for the local with specified index. */
-    inline jsid getLocalId(unsigned index, Bytecode *code);
+    /* Get the default 'new' object for a given standard class, per the script's global. */
+    inline js::types::TypeObject *getTypeNewObject(JSContext *cx, JSProtoKey key);
 
-    /* Get the name to use for the argument with the specified index. */
+    inline jsid getLocalId(unsigned index, Bytecode *code);
     inline jsid getArgumentId(unsigned index);
 
-    /* Get or make type information for the specified local/argument variable. */
     inline types::TypeSet *getVariable(JSContext *cx, jsid id);
 
     /* Get the type set to use for a stack slot at a fixed stack depth. */
     inline types::TypeSet *getStackTypes(unsigned index, Bytecode *code);
 
-    /* Get any known type tag for an argument or local variable. */
     inline JSValueType knownArgumentTypeTag(JSContext *cx, JSScript *script, unsigned arg);
     inline JSValueType knownLocalTypeTag(JSContext *cx, JSScript *script, unsigned local);
 
-    /* Helpers */
-
+  private:
     void addVariable(JSContext *cx, jsid id, types::Variable *&var);
 
 #endif /* JS_TYPE_INFERENCE */

@@ -2467,6 +2467,7 @@ DumpHeap(JSContext *cx, uintN argc, jsval *vp)
                      maxDepth, thingToIgnore);
     if (dumpFile != stdout)
         fclose(dumpFile);
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return ok;
 
   not_traceable_arg:
@@ -3007,6 +3008,8 @@ static JSBool
 split_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags, JSObject **objp)
 {
     ComplexObject *cpx;
+
+    cx->markTypePropertyUnknown(obj->getType(), id);
 
     if (JSID_IS_ATOM(id) && JS_FlatStringEqualsAscii(JSID_TO_FLAT_STRING(id), "isInner")) {
         *objp = obj;
