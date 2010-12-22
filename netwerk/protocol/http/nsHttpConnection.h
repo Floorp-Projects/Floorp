@@ -165,6 +165,9 @@ private:
     nsCOMPtr<nsIInputStream>        mSSLProxyConnectStream;
     nsCOMPtr<nsIInputStream>        mRequestStream;
 
+    // mTransaction only points to mTransactionReference if the
+    // transaction is open, otherwise it is null.
+    nsRefPtr<nsAHttpTransaction>    mTransactionReference;
     nsAHttpTransaction             *mTransaction; // hard ref
     nsHttpConnectionInfo           *mConnInfo;    // hard ref
 
@@ -179,6 +182,7 @@ private:
     PRPackedBool                    mSupportsPipelining;
     PRPackedBool                    mIsReused;
     PRPackedBool                    mCompletedSSLConnect;
+    PRPackedBool                    mResetCallbackOnActivation;
 
     PRUint32                        mActivationCount;
 
