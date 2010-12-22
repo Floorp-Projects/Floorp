@@ -182,8 +182,6 @@ struct JSFunction : public JSObject_Slots2
 
     inline bool inStrictMode() const;
 
-    bool acceptsPrimitiveThis() const { return flags & JSFUN_PRIMITIVE_THIS; }
-
     uintN countVars() const {
         JS_ASSERT(FUN_INTERPRETED(this));
         return u.i.nvars;
