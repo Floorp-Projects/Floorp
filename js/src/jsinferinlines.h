@@ -393,20 +393,28 @@ JSContext::typeMonitorCall(JSScript *caller, const jsbytecode *callerpc,
         return;
 
     js::analyze::Script *script = callee->script()->analysis;
+    js::types::jstype type;
 
     if (constructing) {
-        if (!script->thisTypes.unknown()) {
-            /* Don't duplicate the logic in js_CreateThis, just mark 'this' as unknown. */
-            js::types::InferSpew(js::types::ISpewDynamic, "UnknownThis: #%u", script->id);
-            compartment->types.addDynamicType(this, &script->thisTypes, js::types::TYPE_UNKNOWN);
+        js::Value protov;
+        if (!callee->getProperty(this, ATOM_TO_JSID(runtime->atomState.classPrototypeAtom), &protov))
+            return;  /* :FIXME: */
+        if (protov.isObject()) {
+            js::types::TypeObject *otype = protov.toObject().getNewType(this);
+            if (!otype)
+                return;  /* :FIXME: */
+            type = (js::types::jstype) otype;
+        } else {
+            type = (js::types::jstype) getTypeNewObject(JSProto_Object);
         }
     } else {
-        js::types::jstype type = js::types::GetValueType(this, args.thisv());
-        if (!script->thisTypes.hasType(type)) {
-            js::types::InferSpew(js::types::ISpewDynamic, "AddThis: #%u: %s",
-                                 script->id, js::types::TypeString(type));
-            compartment->types.addDynamicType(this, &script->thisTypes, type);
-        }
+        type = js::types::GetValueType(this, args.thisv());
+    }
+
+    if (!script->thisTypes.hasType(type)) {
+        js::types::InferSpew(js::types::ISpewDynamic, "AddThis: #%u: %s",
+                             script->id, js::types::TypeString(type));
+        compartment->types.addDynamicType(this, &script->thisTypes, type);
     }
 
     unsigned arg = 0;
@@ -1177,14 +1185,14 @@ TypeObject::getProperty(JSContext *cx, jsid id, bool assign)
 } /* namespace types */
 
 inline types::TypeSet *
-analyze::Script::getVariable(JSContext *cx, jsid id)
+analyze::Script::getVariable(JSContext *cx, jsid id, bool localName)
 {
     JS_ASSERT(JSID_IS_STRING(id) && JSID_TO_STRING(id) != NULL);
 
     types::Variable *&var = types::HashSetInsert<jsid,types::Variable,types::Variable>
         (cx, variableSet, variableCount, id);
     if (!var)
-        addVariable(cx, id, var);
+        addVariable(cx, id, var, localName);
 
     return &var->types;
 }
