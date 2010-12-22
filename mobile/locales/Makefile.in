@@ -123,6 +123,9 @@ chrome-%:
 	@$(MAKE) -B searchplugins AB_CD=$*
 	@$(MAKE) chrome AB_CD=$*
 	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales chrome AB_CD=$*
+ifeq ($(OS_TARGET),Android)
+	@$(MAKE) -C $(DEPTH)/embedding/android chrome AB_CD=$*
+endif
 
 # This is a generic target that will make a langpack and repack tarball
 # builds. It is called from the tinderbox scripts. Alter it with caution.
