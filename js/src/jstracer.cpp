@@ -8474,6 +8474,23 @@ TraceRecorder::makeNumberInt32(LIns* d, LIns** out)
     return guard(true, w.eqd(d, w.i2d(*out)), MISMATCH_EXIT, /* abortIfAlwaysExits = */true);
 }
 
+JS_REQUIRES_STACK RecordingStatus
+TraceRecorder::makeNumberUint32(LIns* d, LIns** out)
+{
+    JS_ASSERT(d->isD());
+    if (IsPromoteUint(d)) {
+        *out = w.demote(d);
+        return RECORD_CONTINUE;
+    }
+
+    // This means "convert double to uint if it's integral, otherwise
+    // exit".  We first convert the double to an unsigned int, then
+    // convert it back and exit if the two doubles don't match.  If
+    // 'f' is a non-integral immediate we'll end up aborting.
+    *out = d2u(d);
+    return guard(true, w.eqd(d, w.ui2d(*out)), MISMATCH_EXIT, /* abortIfAlwaysExits = */true);
+}
+
 JS_REQUIRES_STACK LIns*
 TraceRecorder::stringify(const Value& v)
 {
@@ -10965,7 +10982,9 @@ TraceRecorder::newArray(JSObject* ctor, uint32 argc, Value* argv, Value* rval)
 
     } else if (argc == 1 && argv[0].isNumber()) {
         /* Abort on RangeError if the double doesn't fit in a uint. */
-        LIns *args[] = { proto_ins, d2i(get(argv)), cx_ins };
+        LIns *len_ins;
+        CHECK_STATUS(makeNumberUint32(get(argv), &len_ins));
+        LIns *args[] = { proto_ins, len_ins, cx_ins };
         arr_ins = w.call(&js::NewDenseUnallocatedArray_ci, args);
         guard(false, w.eqp0(arr_ins), OOM_EXIT);
 
