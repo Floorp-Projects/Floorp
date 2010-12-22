@@ -2555,6 +2555,10 @@ WebGLContext::ReadPixels_base(WebGLint x, WebGLint y, WebGLsizei width, WebGLsiz
     if (width < 0 || height < 0)
         return ErrorInvalidValue("ReadPixels: negative size passed");
 
+    // there's nothing to do in this case, since we won't read any pixels
+    if (width == 0 || height == 0)
+        return NS_OK;
+
     WebGLsizei boundWidth = mBoundFramebuffer ? mBoundFramebuffer->width() : mWidth;
     WebGLsizei boundHeight = mBoundFramebuffer ? mBoundFramebuffer->height() : mHeight;
 
@@ -2670,7 +2674,8 @@ WebGLContext::ReadPixels_base(WebGLint x, WebGLint y, WebGLsizei width, WebGLsiz
         delete [] subrect_data;
     }
 
-    // if we're reading alpha, we may need to do fixup
+    // if we're reading alpha, we may need to do fixup.  Note that we don't allow
+    // GL_ALPHA to readpixels currently, but we had the code written for it already.
     if (format == LOCAL_GL_ALPHA ||
         format == LOCAL_GL_RGBA)
     {
