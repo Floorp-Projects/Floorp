@@ -100,17 +100,20 @@ gfxGDIShaper::InitTextRun(gfxContext *aContext,
     PRInt32 lastWidth = 0;
     PRUint32 appUnitsPerDevPixel = aTextRun->GetAppUnitsPerDevUnit();
     for (i = 0; i < aRunLength; ++i) {
+        PRUint32 offset = aRunStart + i;
         PRInt32 advancePixels = partialWidthArray[i] - lastWidth;
         lastWidth = partialWidthArray[i];
         PRInt32 advanceAppUnits = advancePixels*appUnitsPerDevPixel;
         WCHAR glyph = glyphs[i];
-        NS_ASSERTION(!gfxFontGroup::IsInvalidChar(
-                         aTextRun->GetChar(aRunStart + i)),
+        NS_ASSERTION(!gfxFontGroup::IsInvalidChar(aTextRun->GetChar(offset)),
                      "Invalid character detected!");
+        PRBool atClusterStart = aTextRun->IsClusterStart(offset);
         if (advanceAppUnits >= 0 &&
             gfxTextRun::CompressedGlyph::IsSimpleAdvance(advanceAppUnits) &&
-            gfxTextRun::CompressedGlyph::IsSimpleGlyphID(glyph)) {
-            aTextRun->SetSimpleGlyph(aRunStart + i,
+            gfxTextRun::CompressedGlyph::IsSimpleGlyphID(glyph) &&
+            atClusterStart)
+        {
+            aTextRun->SetSimpleGlyph(offset,
                                      g.SetSimpleGlyph(advanceAppUnits, glyph));
         } else {
             gfxTextRun::DetailedGlyph details;
@@ -118,8 +121,8 @@ gfxGDIShaper::InitTextRun(gfxContext *aContext,
             details.mAdvance = advanceAppUnits;
             details.mXOffset = 0;
             details.mYOffset = 0;
-            aTextRun->SetGlyphs(aRunStart + i,
-                                g.SetComplex(PR_TRUE, PR_TRUE, 1),
+            aTextRun->SetGlyphs(offset,
+                                g.SetComplex(atClusterStart, PR_TRUE, 1),
                                 &details);
         }
     }
