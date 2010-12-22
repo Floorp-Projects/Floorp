@@ -8,6 +8,18 @@ let new_tab_03;
 let new_tab_04;
 let new_tab_05;
 
+// XXX This is synced with the value of the COLUMN_MARGIN const in chrome/content/tabs.xml
+const COLUMN_MARGIN = 20;
+
+function checkExpectedSize() {
+  let tabs = document.getElementById("tabs");
+  let tabRect = tabs.children.firstChild.getBoundingClientRect();
+  let expectedSize = (tabs._columnsCount * (COLUMN_MARGIN + tabRect.width));
+
+  let tabsRect = tabs.children.getBoundingClientRect();
+  is(tabsRect.width, expectedSize, "Tabs container size should be equal to the number of columns and margins");
+}
+
 //------------------------------------------------------------------------------
 // Entry point (must be named "test")
 function test() {
@@ -17,6 +29,12 @@ function test() {
   //Add new tab
   var new_tab = Browser.addTab(testURL_01,true);
   ok(new_tab, "Tab Opened");	
+
+  // Ensure columnsCount is not equal to 0
+  isnot(document.getElementById("tabs")._columnsCount, 0, "Tabs columns count should not be equal to 0");
+
+  // Check the size of the tabs container sidebar
+  checkExpectedSize();
 
   //Check currentURI.spec
   new_tab.browser.addEventListener("load", load_tabs , true);
@@ -35,6 +53,7 @@ function load_tabs() {
 
   //Add new tab
   new_tab_01 = Browser.addTab(testURL_01,false);
+  checkExpectedSize();
 
   //Check tab switch
   new_tab_01.browser.addEventListener("load", tab_switch_01, true);
@@ -47,6 +66,8 @@ function tab_switch_01() {
 
   //Add new tab
   new_tab_02 =  Browser.addTab(testURL_02,false);
+  checkExpectedSize();
+
   new_tab_02.browser.addEventListener("load", tab_switch_02, true);
   is(Browser.selectedTab.notification, Elements.browsers.selectedPanel, "Deck has correct browser");
 }
@@ -62,6 +83,7 @@ function tab_switch_02() {
 
   //Add new tab
   new_tab_03 = Browser.addTab(testURL_03, true, new_tab_01);
+  checkExpectedSize();
   new_tab_03.browser.addEventListener("load", tab_switch_03, true);
 }
 
@@ -75,6 +97,7 @@ function tab_switch_03() {
   is(Browser.selectedTab.notification, Elements.browsers.selectedPanel, "Deck has correct browser");
 
   new_tab_03 = Browser.addTab(testURL_03, true, new_tab_01);
+  checkExpectedSize();
   new_tab_03.browser.addEventListener("load", tab_switch_04, true);
 }
 
@@ -90,6 +113,7 @@ function tab_switch_04() {
 
   // Add a tab then close it
   new_tab_04 = Browser.addTab("about:home", true);
+  checkExpectedSize();
   new_tab_04.browser.addEventListener("load", function() {
     new_tab_04.browser.removeEventListener("load", arguments.callee, true);
     Browser.closeTab(new_tab_04);
@@ -104,6 +128,7 @@ function tab_undo() {
   undoBox.firstChild._onUndo();
   new_tab_04 = Browser.selectedTab;
   new_tab_05 = Browser.addTab("about:blank", true);
+  checkExpectedSize();
   tab_on_undo();
 }
 
@@ -119,6 +144,7 @@ function tab_on_undo() {
   Browser.closeTab(new_tab_03);
   Browser.closeTab(new_tab_04);
   Browser.closeTab(new_tab_05);
+  checkExpectedSize();
 
   tab_about_empty();
 }
