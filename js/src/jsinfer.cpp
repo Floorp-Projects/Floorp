@@ -1888,18 +1888,24 @@ namespace analyze {
 using namespace types;
 
 void
-Script::addVariable(JSContext *cx, jsid id, types::Variable *&var)
+Script::addVariable(JSContext *cx, jsid id, types::Variable *&var, bool localName)
 {
     JS_ASSERT(!var);
     var = ArenaNew<types::Variable>(pool, &pool, id);
 
-    /* Augment with builtin types for the 'arguments' variable. */
-    if (fun && id == id_arguments(cx)) {
-        TypeSet *types = &var->types;
-        if (script->compileAndGo)
-            types->addType(cx, (jstype) getTypeNewObject(cx, JSProto_Object));
-        else
-            types->addType(cx, TYPE_UNKNOWN);
+    /* Variables which are definitely arguments or locals do not pull in builtin types. */
+    if (!localName) {
+        /* Augment with types for the 'arguments' variable. */
+        if (fun && id == id_arguments(cx)) {
+            if (script->compileAndGo)
+                var->types.addType(cx, (jstype) getTypeNewObject(cx, JSProto_Object));
+            else
+                var->types.addType(cx, TYPE_UNKNOWN);
+        }
+
+        /* Augment with types for the function itself. */
+        if (fun && id == ATOM_TO_JSID(fun->atom))
+            var->types.addType(cx, (jstype) function());
     }
 
     InferSpew(ISpewOps, "addVariable: #%lu %s T%u",
@@ -1932,24 +1938,30 @@ Script::setFunction(JSContext *cx, JSFunction *fun)
         function()->returnTypes.addType(cx, TYPE_UNDEFINED);
 
     /*
-     * Construct the arguments and locals of this function, and mark them as
-     * definitely declared for scope lookups.  Note that we don't do this for the
-     * global script (don't need to, everything not in another scope is global),
-     * nor for eval scripts --- if an eval declares a variable the declaration
-     * will be merged with any declaration in the context the eval occurred in,
-     * and definitions information will be cleared for any scripts that could use
-     * the declared variable.
+     * :FIXME: bug 613221 atoms in localNames are not pinned and may be destroyed if the
+     * script is GC'ed while constraints are still reachable.
      */
     if (fun->hasLocalNames())
         localNames = fun->getLocalNameArray(cx, &pool);
 
-    /* Make a local variable for the function. */
-    if (fun->atom) {
-        TypeSet *var = getVariable(cx, ATOM_TO_JSID(fun->atom));
-        if (script->compileAndGo)
-            var->addType(cx, (jstype) function());
-        else
-            var->addType(cx, TYPE_UNKNOWN);
+    /*
+     * Get variables for all arguments and non-let variables. Construct these so that if
+     * there is a local variable or argument named 'arguments' or with the name of the
+     * function itself, it does not pull in the default type of that variable.
+     */
+
+    unsigned nargs = argCount();
+    for (unsigned i = 0; i < nargs; i++) {
+        jsid id = getArgumentId(i);
+        if (!JSID_IS_VOID(id))
+            getVariable(cx, id, true);
+    }
+
+    unsigned nfixed = script->nfixed;
+    for (unsigned i = 0; i < nfixed; i++) {
+        jsid id = getLocalId(i, NULL);
+        if (!JSID_IS_VOID(id))
+            getVariable(cx, id, true);
     }
 }
 
@@ -2028,18 +2040,13 @@ SearchScope(JSContext *cx, Script *script, TypeStack *stack, jsid id)
 
         /* Function scripts have 'arguments' local variables. */
         if (id == id_arguments(cx) && script->fun) {
-            TypeSet *types = script->getVariable(cx, id);
-            if (script->getScript()->compileAndGo)
-                types->addType(cx, (jstype) script->getTypeNewObject(cx, JSProto_Object));
-            else
-                types->addType(cx, TYPE_UNKNOWN);
+            script->getVariable(cx, id);
             return script;
         }
 
         /* Function scripts with names have local variables of that name. */
         if (script->fun && id == ATOM_TO_JSID(script->fun->atom)) {
-            TypeSet *types = script->getVariable(cx, id);
-            types->addType(cx, (jstype) script->function());
+            script->getVariable(cx, id);
             return script;
         }
 
