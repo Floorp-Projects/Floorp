@@ -141,10 +141,18 @@ nsJSUtils::GetStaticScriptGlobal(JSContext* aContext, JSObject* aObj)
     return nsnull;
   }
 
-  nsCOMPtr<nsIXPConnectWrappedNative> wrapper(do_QueryInterface(supports));
-  NS_ENSURE_TRUE(wrapper, nsnull);
-
-  nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryWrappedNative(wrapper));
+  // We might either have a window directly (e.g. if the global is a
+  // sandbox whose script object principal pointer is a window), or an
+  // XPCWrappedNative for a window.  We could also have other
+  // sandbox-related script object principals, but we can't do much
+  // about those short of trying to walk the proto chain of |glob|
+  // looking for a window or something.
+  nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(supports));
+  if (!sgo) {
+    nsCOMPtr<nsIXPConnectWrappedNative> wrapper(do_QueryInterface(supports));
+    NS_ENSURE_TRUE(wrapper, nsnull);
+    sgo = do_QueryWrappedNative(wrapper);
+  }
 
   // We're returning a pointer to something that's about to be
   // released, but that's ok here.
