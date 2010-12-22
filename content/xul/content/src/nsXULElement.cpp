@@ -1848,9 +1848,7 @@ NS_IMETHODIMP
 nsXULElement::GetControllers(nsIControllers** aResult)
 {
     if (! Controllers()) {
-        nsDOMSlots* slots = GetDOMSlots();
-        if (!slots)
-          return NS_ERROR_OUT_OF_MEMORY;
+        nsDOMSlots* slots = DOMSlots();
 
         nsresult rv;
         rv = NS_NewXULControllers(nsnull, NS_GET_IID(nsIControllers),
