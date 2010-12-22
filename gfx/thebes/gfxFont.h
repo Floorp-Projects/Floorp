@@ -1784,10 +1784,11 @@ public:
             return *this;
         }
         /**
-         * Missing glyphs are treated as cluster and ligature group starts.
+         * Missing glyphs are treated as ligature group starts; don't mess with
+         * the cluster-start flag (see bugs 618870 and 619286).
          */
         CompressedGlyph& SetMissing(PRUint32 aGlyphCount) {
-            mValue = (mValue & FLAG_CAN_BREAK_BEFORE) |
+            mValue = (mValue & (FLAG_CAN_BREAK_BEFORE | FLAG_NOT_CLUSTER_START)) |
                 (aGlyphCount << GLYPH_COUNT_SHIFT);
             return *this;
         }
