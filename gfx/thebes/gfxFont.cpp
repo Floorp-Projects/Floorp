@@ -4027,7 +4027,7 @@ gfxTextRun::CopyGlyphDataFrom(gfxTextRun *aSource, PRUint32 aStart,
         g.SetCanBreakBefore(mCharacterGlyphs[i + aDest].CanBreakBefore());
         mCharacterGlyphs[i + aDest] = g;
         if (aStealData) {
-            aSource->mCharacterGlyphs[i + aStart].SetMissing(0);
+            aSource->mCharacterGlyphs[i + aStart] = CompressedGlyph();
         }
     }
 
