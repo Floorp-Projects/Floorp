@@ -4196,7 +4196,9 @@ Snarf(JSContext *cx, uintN argc, jsval *vp)
         }
         fclose(file);
     }
+#ifdef XP_UNIX
     JS_free(cx, (void*)pathname);
+#endif
     if (!ok) {
         JS_free(cx, buf);
         return ok;
