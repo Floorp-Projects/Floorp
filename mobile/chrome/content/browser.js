@@ -492,11 +492,15 @@ var Browser = {
     window.controllers.removeController(BrowserUI);
   },
 
-  getHomePage: function () {
+  getHomePage: function (aOptions) {
+    aOptions = aOptions || { useDefault: false };
+
     let url = "about:home";
     try {
-      url = Services.prefs.getComplexValue("browser.startup.homepage", Ci.nsIPrefLocalizedString).data;
-    } catch (e) { }
+      let prefs = aOptions.useDefault ? Services.prefs.getDefaultBranch(null) : Services.prefs;
+      url = prefs.getComplexValue("browser.startup.homepage", Ci.nsIPrefLocalizedString).data;
+    }
+    catch(e) { }
 
     return url;
   },
@@ -839,15 +843,7 @@ var Browser = {
     let json = aMessage.json;
     if (json.action == "leave") {
       // Get the start page from the *default* pref branch, not the user's
-      let defaultPrefs = Services.prefs.getDefaultBranch(null);
-      let url = "about:blank";
-      try {
-        url = defaultPrefs.getComplexValue("browser.startup.homepage", Ci.nsIPrefLocalizedString).data;
-        // If url is a pipe-delimited set of pages, just take the first one.
-        if (url.indexOf("|") != -1)
-          url = url.split("|")[0];
-      } catch (e) { /* Fall back on about blank */ }
-
+      let url = Browser.getHomePage({ useDefault: true });
       this.loadURI(url);
     } else {
       // Handle setting an cert exception and reloading the page
@@ -2093,8 +2089,7 @@ var PopupBlockerObserver = {
         // being "http://www.netscape.com", which isn't really the URI of
         // the popup they're trying to show).  This isn't going to be
         // useful to the user, so we won't create a menu item for it.
-        if (popupURIspec == "" || popupURIspec == "about:blank" ||
-            popupURIspec == uri.spec)
+        if (popupURIspec == "" || popupURIspec == "about:blank" || popupURIspec == uri.spec)
           continue;
 
         let popupFeatures = pageReport[i].popupWindowFeatures;
@@ -2258,8 +2253,11 @@ var ContentCrashObserver = {
       } else {
         // If this is the only tab, we need to pre-fab a new tab. We should never
         // have zero open tabs
-        if (Browser.tabs.length == 1)
-          Browser.addTab(Browser.getHomePage(), false, null, { getAttention: false });
+        if (Browser.tabs.length == 1) {
+          // Get the start page from the *default* pref branch, not the user's
+          let fallbackURL = Browser.getHomePage({ useDefault: true });
+          Browser.addTab(fallbackURL, false, null, { getAttention: false });
+        }
 
         // Close this tab, it could be the reason we crashed. The undo-close-tab
         // system will pick it up.
@@ -2807,12 +2805,12 @@ Tab.prototype = {
     let session = { data: dead.__SS_data, extra: dead.__SS_extdata };
 
     // We need this data to correctly create and position the new browser
-    let currentURI = dead.currentURI.spec;
+    let currentURL = dead.currentURI.spec;
     let sibling = dead.nextSibling;
 
     // Destory and re-create the browser
     this._destroyBrowser();
-    let browser = this._createBrowser(currentURI, sibling);
+    let browser = this._createBrowser(currentURL, sibling);
 
     // Reattach session store data and flag this browser so it is restored on select
     browser.__SS_data = session.data;
