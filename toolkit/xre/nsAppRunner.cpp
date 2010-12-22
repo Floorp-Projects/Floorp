@@ -3059,12 +3059,15 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   }
 
 #ifdef XP_WIN
-  // If the shift key is pressed during startup start in safe mode. GetKeyState
-  // returns a short and the high order bit will be 1 if the shift key is
-  // pressed. By masking the returned short with 0x8000 the result will be 0 if
-  // the key is not pressed and non-zero otherwise.
-  if (GetKeyState(VK_SHIFT) & 0x8000)
+  // If the shift key is pressed and the ctrl and / or alt keys are not pressed
+  // during startup start in safe mode. GetKeyState returns a short and the high
+  // order bit will be 1 if the key is pressed. By masking the returned short
+  // with 0x8000 the result will be 0 if the key is not pressed and non-zero
+  // otherwise.
+  if (GetKeyState(VK_SHIFT) & 0x8000 &&
+      !(GetKeyState(VK_CONTROL) & 0x8000) && !(GetKeyState(VK_MENU) & 0x8000)) {
     gSafeMode = PR_TRUE;
+  }
 #endif
 
 #ifdef XP_MACOSX
