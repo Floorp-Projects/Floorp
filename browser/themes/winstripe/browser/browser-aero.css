@@ -158,9 +158,9 @@
     -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbar-drag");
   }
 
-  #browser:not(:-moz-lwtheme),
   #browser-bottombox:not(:-moz-lwtheme) {
     background-color: -moz-dialog;
+    background-clip: padding-box;
   }
 
   #main-menubar:not(:-moz-lwtheme):not(:-moz-window-inactive) {
