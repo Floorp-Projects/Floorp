@@ -559,7 +559,7 @@ stubs::SetElem(VMFrame &f)
 
     Value &objval = regs.sp[-3];
     Value &idval  = regs.sp[-2];
-    Value retval  = regs.sp[-1];
+    Value rval    = regs.sp[-1];
 
     JSObject *obj;
     jsid id;
@@ -582,19 +582,19 @@ stubs::SetElem(VMFrame &f)
                     if ((jsuint)i >= obj->getArrayLength())
                         obj->setArrayLength(i + 1);
                 }
-                obj->setDenseArrayElement(i, regs.sp[-1]);
+                obj->setDenseArrayElement(i, rval);
                 goto end_setelem;
             }
         }
     } while (0);
-    if (!obj->setProperty(cx, id, &retval, strict))
+    if (!obj->setProperty(cx, id, &rval, strict))
         THROW();
   end_setelem:
     /* :FIXME: Moving the assigned object into the lowest stack slot
      * is a temporary hack. What we actually want is an implementation
      * of popAfterSet() that allows popping more than one value;
      * this logic can then be handled in Compiler.cpp. */
-    regs.sp[-3] = retval;
+    regs.sp[-3] = regs.sp[-1];
 }
 
 template void JS_FASTCALL stubs::SetElem<true>(VMFrame &f);
