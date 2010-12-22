@@ -80,7 +80,7 @@
         </activity>
 #if MOZ_CRASHREPORTER
 	<activity android:name="CrashReporter"
-                  android:label="@MOZ_APP_DISPLAYNAME@ Crash Reporter"
+                  android:label="@string/crash_reporter_title"
 		  android:icon="@drawable/crash_reporter" >
           <intent-filter>
             <action android:name="org.mozilla.gecko.reportCrash" />
