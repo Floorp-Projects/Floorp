@@ -371,8 +371,6 @@ WrapEscapingClosure(JSContext *cx, JSStackFrame *fp, JSFunction *fun)
     JSObject *wfunobj = NewFunction(cx, scopeChain);
     if (!wfunobj)
         return NULL;
-    if (fun->getProto() == wfunobj->getProto())
-        wfunobj->setType(fun->getType());
     AutoObjectRooter tvr(cx, wfunobj);
 
     JSFunction *wfun = (JSFunction *) wfunobj;
@@ -500,9 +498,6 @@ WrapEscapingClosure(JSContext *cx, JSStackFrame *fp, JSFunction *fun)
         JSPRINCIPALS_HOLD(cx, wscript->principals);
 #ifdef CHECK_SCRIPT_OWNER
     wscript->owner = script->owner;
-#endif
-#ifdef JS_TYPE_INFERENCE
-    wscript->analysis = script->analysis;
 #endif
 
     /* Deoptimize wfun from FUN_{FLAT,NULL}_CLOSURE to FUN_INTERPRETED. */
