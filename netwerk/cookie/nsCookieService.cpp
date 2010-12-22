@@ -1512,7 +1512,7 @@ nsCookieService::SetCookieStringInternal(nsIURI          *aHostURI,
   // e.g. for "www.bbc.co.uk", this would be "bbc.co.uk".
   // file:// URI's (i.e. with an empty host) are allowed, but any other
   // scheme must have a non-empty host. A trailing dot in the host
-  // is acceptable, and will be stripped.
+  // is acceptable.
   PRBool requireHostMatch;
   nsCAutoString baseDomain;
   nsresult rv = GetBaseDomain(aHostURI, baseDomain, requireHostMatch);
@@ -2344,7 +2344,7 @@ nsCookieService::GetCookieStringInternal(nsIURI *aHostURI,
   // e.g. for "www.bbc.co.uk", the base domain would be "bbc.co.uk".
   // file:// URI's (i.e. with an empty host) are allowed, but any other
   // scheme must have a non-empty host. A trailing dot in the host
-  // is acceptable, and will be stripped.
+  // is acceptable.
   PRBool requireHostMatch;
   nsCAutoString baseDomain, hostFromURI, pathFromURI;
   nsresult rv = GetBaseDomain(aHostURI, baseDomain, requireHostMatch);
@@ -2352,9 +2352,6 @@ nsCookieService::GetCookieStringInternal(nsIURI *aHostURI,
     rv = aHostURI->GetAsciiHost(hostFromURI);
   if (NS_SUCCEEDED(rv))
     rv = aHostURI->GetPath(pathFromURI);
-  // trim any trailing dot
-  if (!hostFromURI.IsEmpty() && hostFromURI.Last() == '.')
-    hostFromURI.Truncate(hostFromURI.Length() - 1);
   if (NS_FAILED(rv)) {
     COOKIE_LOGFAILURE(GET_COOKIE, aHostURI, nsnull, "invalid host/path from URI");
     return;
@@ -2973,10 +2970,10 @@ nsCookieService::ParseAttributes(nsDependentCString &aCookieHeader,
 
 // Get the base domain for aHostURI; e.g. for "www.bbc.co.uk", this would be
 // "bbc.co.uk". Only properly-formed URI's are tolerated, though a trailing
-// dot may be present (and will be stripped). If aHostURI is an IP address,
-// an alias such as 'localhost', an eTLD such as 'co.uk', or the empty string,
-// aBaseDomain will be the exact host, and aRequireHostMatch will be true to
-// indicate that substring matches should not be performed.
+// dot may be present. If aHostURI is an IP address, an alias such as
+// 'localhost', an eTLD such as 'co.uk', or the empty string, aBaseDomain will
+// be the exact host, and aRequireHostMatch will be true to indicate that
+// substring matches should not be performed.
 nsresult
 nsCookieService::GetBaseDomain(nsIURI    *aHostURI,
                                nsCString &aBaseDomain,
@@ -2995,9 +2992,9 @@ nsCookieService::GetBaseDomain(nsIURI    *aHostURI,
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // aHost (and thus aBaseDomain) may contain a trailing dot; if so, trim it.
-  if (!aBaseDomain.IsEmpty() && aBaseDomain.Last() == '.')
-    aBaseDomain.Truncate(aBaseDomain.Length() - 1);
+  // aHost (and thus aBaseDomain) may be the string '.'. If so, fail.
+  if (aBaseDomain.Length() == 1 && aBaseDomain.Last() == '.')
+    return NS_ERROR_INVALID_ARG;
 
   // block any URIs without a host that aren't file:// URIs.
   if (aBaseDomain.IsEmpty()) {
@@ -3013,7 +3010,7 @@ nsCookieService::GetBaseDomain(nsIURI    *aHostURI,
 // Get the base domain for aHost; e.g. for "www.bbc.co.uk", this would be
 // "bbc.co.uk". This is done differently than GetBaseDomain(): it is assumed
 // that aHost is already normalized, and it may contain a leading dot
-// (indicating that it represents a domain). A trailing dot must not be present.
+// (indicating that it represents a domain). A trailing dot may be present.
 // If aHost is an IP address, an alias such as 'localhost', an eTLD such as
 // 'co.uk', or the empty string, aBaseDomain will be the exact host, and a
 // leading dot will be treated as an error.
@@ -3021,8 +3018,8 @@ nsresult
 nsCookieService::GetBaseDomainFromHost(const nsACString &aHost,
                                        nsCString        &aBaseDomain)
 {
-  // aHost must not contain a trailing dot, or be the string '.'.
-  if (!aHost.IsEmpty() && aHost.Last() == '.')
+  // aHost must not be the string '.'.
+  if (aHost.Length() == 1 && aHost.Last() == '.')
     return NS_ERROR_INVALID_ARG;
 
   // aHost may contain a leading dot; if so, strip it now.
@@ -3051,7 +3048,7 @@ nsCookieService::GetBaseDomainFromHost(const nsACString &aHost,
 
 // Normalizes the given hostname, component by component. ASCII/ACE
 // components are lower-cased, and UTF-8 components are normalized per
-// RFC 3454 and converted to ACE. Any trailing dot is stripped.
+// RFC 3454 and converted to ACE.
 nsresult
 nsCookieService::NormalizeHost(nsCString &aHost)
 {
@@ -3064,17 +3061,12 @@ nsCookieService::NormalizeHost(nsCString &aHost)
     aHost = host;
   }
 
-  // Only strip the trailing dot if it wouldn't result in the empty string;
-  // in that case, treat it like a leading dot.
-  if (aHost.Length() > 1 && aHost.Last() == '.')
-    aHost.Truncate(aHost.Length() - 1);
-
   ToLowerCase(aHost);
   return NS_OK;
 }
 
 // returns PR_TRUE if 'a' is equal to or a subdomain of 'b',
-// assuming no leading or trailing dots are present.
+// assuming no leading dots are present.
 static inline PRBool IsSubdomainOf(const nsCString &a, const nsCString &b)
 {
   if (a == b)
@@ -3158,15 +3150,13 @@ nsCookieService::CheckDomain(nsCookieAttributes &aCookieAttributes,
   nsCAutoString hostFromURI;
   aHostURI->GetAsciiHost(hostFromURI);
 
-  // trim any trailing dot
-  if (!hostFromURI.IsEmpty() && hostFromURI.Last() == '.')
-    hostFromURI.Truncate(hostFromURI.Length() - 1);
-
   // if a domain is given, check the host has permission
   if (!aCookieAttributes.host.IsEmpty()) {
-    // Tolerate leading '.' characters.
-    if (aCookieAttributes.host.First() == '.')
+    // Tolerate leading '.' characters, but not if it's otherwise an empty host.
+    if (aCookieAttributes.host.Length() > 1 &&
+        aCookieAttributes.host.First() == '.') {
       aCookieAttributes.host.Cut(0, 1);
+    }
 
     // switch to lowercase now, to avoid case-insensitive compares everywhere
     ToLowerCase(aCookieAttributes.host);
