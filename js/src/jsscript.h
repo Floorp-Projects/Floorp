@@ -297,6 +297,12 @@ struct JSScript {
     /* Mark this script as having been created at the specified script/pc. */
     inline void setTypeNesting(JSScript *parent, const jsbytecode *pc);
 
+    /*
+     * Throw away all upvar information in this script and its children, and detach from
+     * any parent it is nested in. For reparenting functions to arbitrary objects.
+     */
+    inline void nukeUpvarTypes(JSContext *cx);
+
     /* Get a type object for an allocation site in this script. */
     inline js::types::TypeObject *
     getTypeInitObject(JSContext *cx, const jsbytecode *pc, bool isArray);

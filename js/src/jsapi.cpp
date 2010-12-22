@@ -4287,8 +4287,20 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
     }
 
     JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
+    if (!fun->isInterpreted())
+        return CloneFunctionObject(cx, fun, parent);
+
+    if (fun->script()->compileAndGo) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_BAD_CLONE_FUNOBJ_SCOPE);
+        return NULL;
+    }
+
     if (!FUN_FLAT_CLOSURE(fun))
         return CloneFunctionObject(cx, fun, parent);
+
+    /* Throw away all inferred types about upvars in this script and its children. */
+    fun->script()->nukeUpvarTypes(cx);
 
     /*
      * A flat closure carries its own environment, so why clone it? In case
