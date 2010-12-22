@@ -86,6 +86,7 @@ nsHttpConnection::nsHttpConnection()
     , mSupportsPipelining(PR_FALSE) // assume low-grade server
     , mIsReused(PR_FALSE)
     , mCompletedSSLConnect(PR_FALSE)
+    , mResetCallbackOnActivation(PR_FALSE)
     , mActivationCount(0)
 {
     LOG(("Creating nsHttpConnection @%x\n", this));
@@ -110,7 +111,6 @@ nsHttpConnection::~nsHttpConnection()
     }
     
     NS_IF_RELEASE(mConnInfo);
-    NS_IF_RELEASE(mTransaction);
 
     if (mLock) {
         PR_DestroyLock(mLock);
@@ -193,9 +193,18 @@ nsHttpConnection::Activate(nsAHttpTransaction *trans, PRUint8 caps)
     NS_ENSURE_TRUE(!mTransaction, NS_ERROR_IN_PROGRESS);
 
     // take ownership of the transaction
+    mTransactionReference = trans;
     mTransaction = trans;
-    NS_ADDREF(mTransaction);
     mActivationCount++;
+
+    if (mResetCallbackOnActivation) {
+        mResetCallbackOnActivation = PR_FALSE;
+
+        rv = mSocketTransport->SetEventSink(this, nsnull);
+        NS_ENSURE_SUCCESS(rv, rv);
+        rv = mSocketTransport->SetSecurityCallbacks(this);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
 
     // set mKeepAlive according to what will be requested
     mKeepAliveMask = mKeepAlive = (caps & NS_HTTP_ALLOW_KEEPALIVE);
@@ -226,8 +235,10 @@ nsHttpConnection::Activate(nsAHttpTransaction *trans, PRUint8 caps)
     }
     
 failed_activation:
-    if (NS_FAILED(rv))
-        NS_RELEASE(mTransaction);
+    if (NS_FAILED(rv)) {
+        mTransaction = nsnull;
+        mTransactionReference = nsnull;
+    }
     return rv;
 }
 
@@ -648,10 +659,8 @@ nsHttpConnection::AssignTransport(nsISocketTransport *sock,
                                   nsIAsyncOutputStream *outs,
                                   nsIAsyncInputStream *ins)
 {
-    nsresult rv = sock->SetEventSink(this, nsnull);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv =sock->SetSecurityCallbacks(this);
-    NS_ENSURE_SUCCESS(rv, rv);
+    mResetCallbackOnActivation = PR_TRUE;
+
     mSocketTransport = sock;
     mSocketOut = outs;
     mSocketIn = ins;
@@ -672,9 +681,7 @@ nsHttpConnection::CloseTransaction(nsAHttpTransaction *trans, nsresult reason)
         reason = NS_OK;
 
     mTransaction->Close(reason);
-
-    NS_RELEASE(mTransaction);
-    mTransaction = 0;
+    mTransaction = nsnull;
 
     if (NS_FAILED(reason))
         Close(reason);
@@ -930,6 +937,9 @@ nsHttpConnection::ReleaseBackupTransport(nsISocketTransport *sock,
 void
 nsHttpConnection::SelectPrimaryTransport(nsIAsyncOutputStream *out)
 {
+    LOG(("nsHttpConnection::SelectPrimaryTransport(out=%p), mSocketOut1=%p, mSocketOut2=%p, mSocketOut=%p",
+         out, mSocketOut1.get(), mSocketOut2.get(), mSocketOut.get()));
+
     if (!mSocketOut) {
         // Setup the Main Socket
         
@@ -1030,17 +1040,17 @@ nsHttpConnection::OnOutputStreamReady(nsIAsyncOutputStream *out)
 {
     NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
 
-    // if the transaction was dropped...
-    if (!mTransaction) {
-        LOG(("  no transaction; ignoring event\n"));
-        return NS_OK;
-    }
-
     NS_ABORT_IF_FALSE(out == mSocketOut  ||
                       out == mSocketOut1 ||
                       out == mSocketOut2    , "unexpected socket");
     if (out != mSocketOut)
         SelectPrimaryTransport(out);
+
+    // if the transaction was dropped...
+    if (!mTransaction) {
+        LOG(("  no transaction; ignoring event\n"));
+        return NS_OK;
+    }
 
     if (mSocketOut == out) {
         NS_ABORT_IF_FALSE(!mIdleSynTimer,"IdleSynTimer should not be set");
@@ -1081,9 +1091,9 @@ nsHttpConnection::GetInterface(const nsIID &iid, void **result)
     //       part-way through this function call.  See CloseTransaction.
     NS_ASSERTION(PR_GetCurrentThread() != gSocketThread, "wrong thread");
  
-    if (mTransaction) {
+    if (mTransactionReference) {
         nsCOMPtr<nsIInterfaceRequestor> callbacks;
-        mTransaction->GetSecurityCallbacks(getter_AddRefs(callbacks));
+        mTransactionReference->GetSecurityCallbacks(getter_AddRefs(callbacks));
         if (callbacks)
             return callbacks->GetInterface(iid, result);
     }
