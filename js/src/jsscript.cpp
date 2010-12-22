@@ -1036,6 +1036,9 @@ JSScript::NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natom
     script->owner = cx->thread;
 #endif
 
+    /* Make empty analysis information for the script. */
+    script->makeAnalysis(cx);
+
     JS_APPEND_LINK(&script->links, &cx->compartment->scripts);
     return script;
 }
@@ -1130,9 +1133,6 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     }
 
 #ifdef JS_TYPE_INFERENCE
-    /* Make empty type information for the script. */
-    script->makeAnalysis(cx);
-
     /* Set global for compileAndGo scripts. */
     if (script->compileAndGo) {
         GlobalScope *globalScope = cg->compiler()->globalScope;
