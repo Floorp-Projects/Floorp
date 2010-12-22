@@ -1355,8 +1355,7 @@ nsNSElementTearoff::GetNextElementSibling(nsIDOMElement** aResult)
 nsContentList*
 nsGenericElement::GetChildrenList()
 {
-  nsGenericElement::nsDOMSlots *slots = GetDOMSlots();
-  NS_ENSURE_TRUE(slots, nsnull);
+  nsGenericElement::nsDOMSlots *slots = DOMSlots();
 
   if (!slots->mChildrenList) {
     slots->mChildrenList = new nsContentList(this, kNameSpaceID_Wildcard, 
@@ -1384,8 +1383,7 @@ nsGenericElement::GetClassList(nsresult *aResult)
 {
   *aResult = NS_ERROR_OUT_OF_MEMORY;
 
-  nsGenericElement::nsDOMSlots *slots = GetDOMSlots();
-  NS_ENSURE_TRUE(slots, nsnull);
+  nsGenericElement::nsDOMSlots *slots = DOMSlots();
 
   if (!slots->mClassList) {
     nsCOMPtr<nsIAtom> classAttr = GetClassAttributeName();
@@ -2315,11 +2313,7 @@ NS_IMETHODIMP
 nsGenericElement::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
 {
   NS_ENSURE_ARG_POINTER(aAttributes);
-  nsDOMSlots *slots = GetDOMSlots();
-
-  if (!slots) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  nsDOMSlots *slots = DOMSlots();
 
   if (!slots->mAttributeMap) {
     slots->mAttributeMap = new nsDOMAttributeMap(this);
@@ -2862,11 +2856,7 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 #endif
   {
     if (aBindingParent) {
-      nsDOMSlots *slots = GetDOMSlots();
-
-      if (!slots) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
+      nsDOMSlots *slots = DOMSlots();
 
       slots->mBindingParent = aBindingParent; // Weak, so no addref happens.
     }
@@ -3292,8 +3282,7 @@ nsGenericElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 nsresult
 nsGenericElement::GetSMILOverrideStyle(nsIDOMCSSStyleDeclaration** aStyle)
 {
-  nsGenericElement::nsDOMSlots *slots = GetDOMSlots();
-  NS_ENSURE_TRUE(slots, NS_ERROR_OUT_OF_MEMORY);
+  nsGenericElement::nsDOMSlots *slots = DOMSlots();
 
   if (!slots->mSMILOverrideStyle) {
     slots->mSMILOverrideStyle = new nsDOMCSSAttributeDeclaration(this, PR_TRUE);
@@ -3316,8 +3305,7 @@ nsresult
 nsGenericElement::SetSMILOverrideStyleRule(nsICSSStyleRule* aStyleRule,
                                            PRBool aNotify)
 {
-  nsGenericElement::nsDOMSlots *slots = GetDOMSlots();
-  NS_ENSURE_TRUE(slots, NS_ERROR_OUT_OF_MEMORY);
+  nsGenericElement::nsDOMSlots *slots = DOMSlots();
 
   slots->mSMILOverrideStyleRule = aStyleRule;
 

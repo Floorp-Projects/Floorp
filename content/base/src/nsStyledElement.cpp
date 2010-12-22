@@ -256,7 +256,7 @@ nsStyledElement::GetStyle(nsresult* retval)
     }
   }
     
-  nsGenericElement::nsDOMSlots *slots = GetDOMSlots();
+  nsGenericElement::nsDOMSlots *slots = DOMSlots();
 
   if (!slots->mStyle) {
     // Just in case...
