@@ -362,6 +362,8 @@ class Script
     /* Bytecode where this script is nested. */
     inline Bytecode *parentCode();
 
+    void nukeUpvarTypes(JSContext *cx);
+
     /* Gather statistics off this script and print it if necessary. */
     void finish(JSContext *cx);
 
@@ -529,6 +531,26 @@ GetDefCount(JSScript *script, unsigned offset)
         return js_CodeSpec[*pc].ndefs;
     }
 }
+
+/* Untrap a single PC, and retrap it at scope exit. */
+struct UntrapOpcode
+{
+    jsbytecode *pc;
+    bool trap;
+
+    UntrapOpcode(JSContext *cx, JSScript *script, jsbytecode *pc)
+        : pc(pc), trap(JSOp(*pc) == JSOP_TRAP)
+    {
+        if (trap)
+            *pc = JS_GetTrapOpcode(cx, script, pc);
+    }
+
+    ~UntrapOpcode()
+    {
+        if (trap)
+            *pc = JSOP_TRAP;
+    }
+};
 
 /*
  * Lifetime analysis. The goal of this analysis is to make a single backwards pass

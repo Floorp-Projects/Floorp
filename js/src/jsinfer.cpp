@@ -2784,10 +2784,6 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, AnalyzeState &state)
       case JSOP_DEFFUN_FC:
       case JSOP_DEFLOCALFUN:
       case JSOP_DEFLOCALFUN_FC: {
-        unsigned funOffset = 0;
-        if (op == JSOP_DEFLOCALFUN || op == JSOP_DEFLOCALFUN_FC)
-            funOffset = SLOTNO_LEN;
-
         unsigned off = (op == JSOP_DEFLOCALFUN || op == JSOP_DEFLOCALFUN_FC) ? SLOTNO_LEN : 0;
         JSObject *obj = GetScriptObject(cx, script, pc, off);
         TypeFunction *function = obj->getType()->asFunction();
@@ -3225,6 +3221,68 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, AnalyzeState &state)
         break;
 
       default:;
+    }
+}
+
+void
+Script::nukeUpvarTypes(JSContext *cx)
+{
+    JS_ASSERT(parent && !getScript()->compileAndGo);
+
+    if (!hasAnalyzed())
+        analyze(cx);
+
+    parent = NULL;
+    parentpc = NULL;
+
+    unsigned offset = 0;
+    while (offset < script->length) {
+        Bytecode *code = maybeCode(offset);
+
+        jsbytecode *pc = script->code + offset;
+        analyze::UntrapOpcode untrap(cx, script, pc);
+
+        offset += GetBytecodeLength(pc);
+
+        if (!code)
+            continue;
+
+        JSOp op = JSOp(*pc);
+        switch (op) {
+          case JSOP_GETUPVAR:
+          case JSOP_CALLUPVAR:
+          case JSOP_GETFCSLOT:
+          case JSOP_CALLFCSLOT:
+          case JSOP_GETXPROP:
+          case JSOP_NAME:
+          case JSOP_CALLNAME:
+            code->setFixed(cx, 0, TYPE_UNKNOWN);
+            break;
+
+          case JSOP_SETNAME:
+          case JSOP_FORNAME:
+          case JSOP_INCNAME:
+          case JSOP_DECNAME:
+          case JSOP_NAMEINC:
+          case JSOP_NAMEDEC:
+            cx->compartment->types.monitorBytecode(cx, code);
+            break;
+
+          case JSOP_LAMBDA:
+          case JSOP_LAMBDA_FC:
+          case JSOP_DEFFUN:
+          case JSOP_DEFFUN_FC:
+          case JSOP_DEFLOCALFUN:
+          case JSOP_DEFLOCALFUN_FC: {
+            unsigned off = (op == JSOP_DEFLOCALFUN || op == JSOP_DEFLOCALFUN_FC) ? SLOTNO_LEN : 0;
+            JSObject *obj = GetScriptObject(cx, script, pc, off);
+            TypeFunction *function = obj->getType()->asFunction();
+            function->script->nukeUpvarTypes(cx);
+            break;
+          }
+
+          default:;
+        }
     }
 }
 

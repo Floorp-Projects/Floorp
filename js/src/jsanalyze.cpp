@@ -469,26 +469,6 @@ BytecodeNoFallThrough(JSOp op)
     }
 }
 
-/* Untrap a single PC, and retrap it at scope exit. */
-struct UntrapOpcode
-{
-    jsbytecode *pc;
-    bool trap;
-
-    UntrapOpcode(JSContext *cx, JSScript *script, jsbytecode *pc)
-        : pc(pc), trap(JSOp(*pc) == JSOP_TRAP)
-    {
-        if (trap)
-            *pc = JS_GetTrapOpcode(cx, script, pc);
-    }
-
-    ~UntrapOpcode()
-    {
-        if (trap)
-            *pc = JSOP_TRAP;
-    }
-};
-
 #ifdef JS_TYPE_INFERENCE
 
 /*

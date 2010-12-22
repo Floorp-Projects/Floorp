@@ -509,6 +509,15 @@ JSScript::setTypeNesting(JSScript *parent, const jsbytecode *pc)
 #endif
 }
 
+inline void
+JSScript::nukeUpvarTypes(JSContext *cx)
+{
+#ifdef JS_TYPE_INFERENCE
+    if (analysis->parent)
+        analysis->nukeUpvarTypes(cx);
+#endif
+}
+
 inline js::types::TypeObject *
 JSScript::getTypeInitObject(JSContext *cx, const jsbytecode *pc, bool isArray)
 {
