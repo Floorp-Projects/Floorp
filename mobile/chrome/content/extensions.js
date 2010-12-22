@@ -570,7 +570,7 @@ var ExtensionsView = {
       item = item.nextSibling;
     }
 
-    // Hide the "See More" button if there are no more to show
+    // Hide the "Show More" button if there are no more to show
     if (item == this._list.lastChild)
       item.setAttribute("hidepage", "true");
   },
@@ -619,14 +619,17 @@ var ExtensionsView = {
     aBrowseAddons.sort(ratingCompare);
 
     // We only show extra browse add-ons if the recommended count is small. Otherwise, the user
-    // can see more by pressing the "See More" button
+    // can see more by pressing the "Show More" button
     this.appendSearchResults(aRecommendedAddons, false, aRecommendedAddons.length);
     this.appendSearchResults(aBrowseAddons, true, (aRecommendedAddons.length >= kAddonPageSize ? 0 : kAddonPageSize));
+
+    let totalAddons = aRecommendedAddons.length + aBrowseAddons.length;
 
     let showmore = document.createElement("richlistitem");
     showmore.setAttribute("typeName", "showmore");
     showmore.setAttribute("pagelabel", strings.getString("addonsBrowseAll.seeMore"));
     showmore.setAttribute("onpagecommand", "ExtensionsView.showMoreSearchResults();");
+    showmore.setAttribute("hidepage", totalAddons > kAddonPageSize ? "false" : "true");
     showmore.setAttribute("sitelabel", strings.getString("addonsBrowseAll.browseSite"));
     showmore.setAttribute("onsitecommand", "ExtensionsView.showMoreResults('" + browseURL + "');");
     this._list.appendChild(showmore);
