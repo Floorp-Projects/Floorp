@@ -2276,7 +2276,7 @@ public:
         JSHashNumber hash = JS_HashString(filename);
         JSHashEntry **hep = JS_HashTableRawLookup(traceVisScriptTable, hash, filename);
         if (*hep != NULL)
-            return JS_FALSE;
+            return NULL;
 
         JS_HashTableRawAdd(traceVisScriptTable, hep, hash, filename, this);
 
