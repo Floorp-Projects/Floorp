@@ -5,7 +5,7 @@
       android:installLocation="auto"
       android:versionCode="@ANDROID_VERSION_CODE@"
       android:versionName="@MOZ_APP_VERSION@"
-      android:sharedUserId="org.mozilla.sharedID">
+      android:sharedUserId="@ANDROID_PACKAGE_NAME@.sharedID">
     <uses-sdk android:minSdkVersion="5"
               android:targetSdkVersion="5"/>
 
