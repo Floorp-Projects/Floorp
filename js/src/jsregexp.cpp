@@ -358,19 +358,6 @@ regexp_resolve(JSContext *cx, JSObject *obj, jsid id, uint32 flags, JSObject **o
         return true;
     }
 
-    static const struct LazyProp {
-        const char *name;
-        uint16 atomOffset;
-        PropertyOp getter;
-        jstype type;
-    } lazyRegExpProps[] = {
-        { js_source_str,     ATOM_OFFSET(source),     source_getter, TYPE_STRING },
-        { js_global_str,     ATOM_OFFSET(global),     global_getter, TYPE_BOOLEAN },
-        { js_ignoreCase_str, ATOM_OFFSET(ignoreCase), ignoreCase_getter, TYPE_BOOLEAN },
-        { js_multiline_str,  ATOM_OFFSET(multiline),  multiline_getter, TYPE_BOOLEAN },
-        { js_sticky_str,     ATOM_OFFSET(sticky),     sticky_getter, TYPE_BOOLEAN }
-    };
-
     for (size_t i = 0; i < JS_ARRAY_LENGTH(lazyRegExpProps); i++) {
         const LazyProp &lazy = lazyRegExpProps[i];
         JSAtom *atom = OFFSET_TO_ATOM(cx->runtime, lazy.atomOffset);
@@ -936,6 +923,7 @@ js_InitRegExpClass(JSContext *cx, JSObject *obj)
     cx->addTypeProperty(regexpType, "global", TYPE_BOOLEAN);
     cx->addTypeProperty(regexpType, "ignoreCase", TYPE_BOOLEAN);
     cx->addTypeProperty(regexpType, "multiline", TYPE_BOOLEAN);
+    cx->addTypeProperty(regexpType, "sticky", TYPE_BOOLEAN);
     cx->addTypeProperty(regexpType, "lastIndex", TYPE_INT32);
 
     return proto;

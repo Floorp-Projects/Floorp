@@ -599,9 +599,8 @@ js_OnUnknownMethod(JSContext *cx, Value *vp)
         obj->setSlot(JSSLOT_FOUND_FUNCTION, tvr.value());
         obj->setSlot(JSSLOT_SAVED_ID, vp[0]);
         vp[0].setObject(*obj);
-
-        cx->fp()->script()->typeMonitorResult(cx, cx->regs->pc, 0, *vp);
     }
+    cx->fp()->script()->typeMonitorResult(cx, cx->regs->pc, 0, *vp);
     return true;
 }
 

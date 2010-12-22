@@ -1524,7 +1524,7 @@ js_InitIteratorClasses(JSContext *cx, JSObject *obj)
     if (stop)
         return stop;
 
-    proto = js_InitClass(cx, obj, NULL, &js_IteratorClass, Iterator, 2, JS_TypeHandlerNew,
+    proto = js_InitClass(cx, obj, NULL, &js_IteratorClass, Iterator, 2, JS_TypeHandlerDynamic,
                          NULL, iterator_methods, NULL, NULL);
     if (!proto)
         return NULL;
