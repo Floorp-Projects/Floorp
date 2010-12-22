@@ -15720,7 +15720,7 @@ TraceRecorder::record_JSOP_CALLPROP()
     if (pcval.isFunObj()) {
         if (l.isPrimitive()) {
             JSFunction* fun = GET_FUNCTION_PRIVATE(cx, &pcval.toFunObj());
-            if (!PrimitiveThisTest(fun, l))
+            if (fun->isInterpreted() && !fun->inStrictMode())
                 RETURN_STOP_A("callee does not accept primitive |this|");
         }
         set(&l, w.immpObjGC(&pcval.toFunObj()));

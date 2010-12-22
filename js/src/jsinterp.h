@@ -857,13 +857,6 @@ ComputeThisFromVpInPlace(JSContext *cx, js::Value *vp)
     return ComputeThisFromArgv(cx, vp + 2);
 }
 
-/* Return true if |fun| would accept |v| as its |this|, without being wrapped. */
-JS_ALWAYS_INLINE bool
-PrimitiveThisTest(JSFunction *fun, const Value &v)
-{
-    return !v.isPrimitive() || fun->acceptsPrimitiveThis();
-}
-
 /*
  * Abstracts the layout of the stack passed to natives from the engine and from
  * natives to js::Invoke.
