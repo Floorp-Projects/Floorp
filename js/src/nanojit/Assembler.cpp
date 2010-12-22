@@ -2036,12 +2036,20 @@ namespace nanojit
                     countlir_call();
                     for (int i = 0, argc = ins->argc(); i < argc; i++)
                         ins->arg(i)->setResultLive();
-                    // It must be impure or pure-and-extant -- it couldn't be
-                    // pure-and-not-extant, because there's no way the codegen
+
+                    // You might think that a call cannot be pure, live,
+                    // and-not-extant, because there's no way the codegen
                     // for a call can be folded into the codegen of another
-                    // LIR instruction.
-                    NanoAssert(!ins->callInfo()->_isPure || ins->isExtant());
-                    asm_call(ins);
+                    // LIR instruction.  However, it's possible that a pure
+                    // call, C, has a result that is only be used (directly
+                    // or indirectly) in a section of code that is unreachable,
+                    // e.g. due to an always-taken branch.  C is dead, but the
+                    // assembly pass doesn't realize is dead.  So C may end
+                    // up non-extant, in which case we don't generate code
+                    // for it.  See bug 620406 for an example.
+                    if (!ins->callInfo()->_isPure || ins->isExtant()) {
+                        asm_call(ins);
+                    }
                     break;
 
                 #ifdef VMCFG_VTUNE
