@@ -71,6 +71,8 @@ function FormAssistant() {
 
   addEventListener("keyup", this, false);
   addEventListener("focus", this, true);
+  addEventListener("DOMWindowCreated", this, false);
+  addEventListener("pageshow", this, false);
 
   this._enabled = Services.prefs.getBoolPref("formhelper.enabled");
 };
@@ -254,10 +256,16 @@ FormAssistant.prototype = {
 
   focusSync: false,
   handleEvent: function formHelperHandleEvent(aEvent) {
-    if (!this._enabled || (!this.currentElement && (aEvent.type != "focus" || !this.focusSync)))
+    if (!this._enabled || (!this.currentElement && aEvent.type != "focus") || (aEvent.type == "focus" && !this.focusSync))
       return;
 
     switch (aEvent.type) {
+      case "DOMWindowCreated":
+        this.focusSync = false;
+        break;
+      case "pageshow":
+        this.focusSync = true;
+        break;
       case "focus":
         let focusedElement = gFocusManager.getFocusedElementForWindow(content, true, {}) || aEvent.target;
 

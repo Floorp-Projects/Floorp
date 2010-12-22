@@ -246,7 +246,8 @@ let DOMEvents =  {
         // Clear onload focus to prevent the VKB to be shown unexpectingly
         // but only if the location has really changed and not only the
         // fragment identifier
-        if (!WebProgressListener.hashChanged) {
+        let contentWindowID = content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
+        if (!WebProgressListener.hashChanged && contentWindowID == util.currentInnerWindowID) {
           let focusManager = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
           focusManager.clearFocus(content);
         }
