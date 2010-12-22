@@ -612,10 +612,10 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
   crashReporterPath = ToNewCString(crashReporterPath_temp);
 #else
   // On Android, we launch using the application package name
-  // instead of a filename, so use MOZ_APP_NAME to do that here.
+  // instead of a filename, so use ANDROID_PACKAGE_NAME to do that here.
   //TODO: don't hardcode org.mozilla here, so other vendors can
   // ship XUL apps with different package names on Android?
-  nsCString package("org.mozilla." MOZ_APP_NAME "/.CrashReporter");
+  nsCString package(ANDROID_PACKAGE_NAME "/.CrashReporter");
   crashReporterPath = ToNewCString(package);
 #endif
 
