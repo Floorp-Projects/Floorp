@@ -49,6 +49,8 @@
 #include "jsstr.h"
 #include "methodjit/MethodJIT.h"
 
+#include "jsfuninlines.h"
+
 inline void
 JSStackFrame::initPrev(JSContext *cx)
 {
@@ -356,7 +358,7 @@ JSStackFrame::computeThis(JSContext *cx)
     if (thisv.isObject())
         return true;
     if (isFunctionFrame()) {
-        if (fun()->acceptsPrimitiveThis())
+        if (fun()->inStrictMode())
             return true;
         /*
          * Eval function frames have their own |this| slot, which is a copy of the function's

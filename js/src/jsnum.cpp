@@ -929,15 +929,15 @@ JS_DEFINE_TRCINFO_2(num_toString,
 
 static JSFunctionSpec number_methods[] = {
 #if JS_HAS_TOSOURCE
-    JS_FN(js_toSource_str,       num_toSource,          0, JSFUN_PRIMITIVE_THIS),
+    JS_FN(js_toSource_str,       num_toSource,          0, 0),
 #endif
-    JS_TN(js_toString_str,       num_toString,          1, JSFUN_PRIMITIVE_THIS, &num_toString_trcinfo),
-    JS_FN(js_toLocaleString_str, num_toLocaleString,    0, JSFUN_PRIMITIVE_THIS),
-    JS_FN(js_valueOf_str,        js_num_valueOf,        0, JSFUN_PRIMITIVE_THIS),
-    JS_FN(js_toJSON_str,         js_num_valueOf,        0, JSFUN_PRIMITIVE_THIS),
-    JS_FN("toFixed",             num_toFixed,           1, JSFUN_PRIMITIVE_THIS),
-    JS_FN("toExponential",       num_toExponential,     1, JSFUN_PRIMITIVE_THIS),
-    JS_FN("toPrecision",         num_toPrecision,       1, JSFUN_PRIMITIVE_THIS),
+    JS_TN(js_toString_str,       num_toString,          1, 0, &num_toString_trcinfo),
+    JS_FN(js_toLocaleString_str, num_toLocaleString,    0, 0),
+    JS_FN(js_valueOf_str,        js_num_valueOf,        0, 0),
+    JS_FN(js_toJSON_str,         js_num_valueOf,        0, 0),
+    JS_FN("toFixed",             num_toFixed,           1, 0),
+    JS_FN("toExponential",       num_toExponential,     1, 0),
+    JS_FN("toPrecision",         num_toPrecision,       1, 0),
     JS_FS_END
 };
 

@@ -3163,9 +3163,6 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
     if (!LeaveFunction(pn, &funtc, funAtom, lambda))
         return NULL;
 
-    if (funtc.inStrictMode())
-        fun->flags |= JSFUN_PRIMITIVE_THIS;
-
     /* If the surrounding function is not strict code, reset the lexer. */
     if (!outertc->inStrictMode())
         tokenStream.setStrictMode(false);

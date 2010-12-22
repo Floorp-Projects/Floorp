@@ -120,11 +120,11 @@ bool_valueOf(JSContext *cx, uintN argc, Value *vp)
 
 static JSFunctionSpec boolean_methods[] = {
 #if JS_HAS_TOSOURCE
-    JS_FN(js_toSource_str,  bool_toSource,  0, JSFUN_PRIMITIVE_THIS),
+    JS_FN(js_toSource_str,  bool_toSource,  0, 0),
 #endif
-    JS_FN(js_toString_str,  bool_toString,  0, JSFUN_PRIMITIVE_THIS),
-    JS_FN(js_valueOf_str,   bool_valueOf,   0, JSFUN_PRIMITIVE_THIS),
-    JS_FN(js_toJSON_str,    bool_valueOf,   0, JSFUN_PRIMITIVE_THIS),
+    JS_FN(js_toString_str,  bool_toString,  0, 0),
+    JS_FN(js_valueOf_str,   bool_valueOf,   0, 0),
+    JS_FN(js_toJSON_str,    bool_valueOf,   0, 0),
     JS_FS_END
 };
 

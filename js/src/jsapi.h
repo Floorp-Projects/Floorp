@@ -500,7 +500,7 @@ extern JS_PUBLIC_DATA(jsid) JSID_EMPTY;
 
 #define JSFUN_HEAVYWEIGHT_TEST(f)  ((f) & JSFUN_HEAVYWEIGHT)
 
-#define JSFUN_PRIMITIVE_THIS  0x0100    /* |this| may be a primitive value */
+/* 0x0100 is unused */
 #define JSFUN_CONSTRUCTOR     0x0200    /* native that can be called as a ctor
                                            without creating a this object */
 
