@@ -478,10 +478,13 @@ toolbarbutton.choice-remotetabs {
   }
 }
 
-.addon-image {
+.addon-image,
+.searchplugin-image {
   list-style-image: url("chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png");
   width: 32px;
   height: 32px;
+  -moz-margin-start: 8px;
+  -moz-margin-end: 8px;
 }
 
 .addon-rating[rating] {
@@ -514,16 +517,13 @@ toolbarbutton.choice-remotetabs {
   -moz-image-region: rect(90px 78px 108px 0px);
 }
 
-.addon-showmore-image {
-  width: 32px;
-  height: 32px;
-  list-style-image: url("chrome://browser/skin/images/addons-32.png");
-}
-
+.addon-showmore-image,
 .addon-banner-image {
   width: 32px;
   height: 32px;
   list-style-image: url("chrome://browser/skin/images/addons-32.png");
+  -moz-margin-start: 8px;
+  -moz-margin-end: 8px;
 }
 
 richlistitem[isDisabled="true"] .title {
