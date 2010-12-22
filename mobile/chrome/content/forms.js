@@ -709,8 +709,15 @@ SelectWrapper.prototype = {
   },
 
   select: function(aIndex, aSelected, aClearAll) {
-    let selectElement = this._control.QueryInterface(Ci.nsISelectElement);
-    selectElement.setOptionsSelectedByIndex(aIndex, aIndex, aSelected, aClearAll, false, true);
+    let options = this._control.options;
+    options[aIndex].selected = aSelected;
+
+    if (aClearAll) {
+      for (let i = 0; i < options.length; i++) {
+        if (i != aIndex)
+          options.item(i).selected = false;
+      }
+    }
   },
 
   fireOnChange: function() {
