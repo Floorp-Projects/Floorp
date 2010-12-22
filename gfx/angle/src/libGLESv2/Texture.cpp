@@ -987,7 +987,7 @@ void Texture::copyNonRenderable(Image *image, GLenum internalFormat, GLint xoffs
               case D3DFMT_L8:
                 for(int y = 0; y < height; y++)
                 {
-                    for(int x = 0; x < height; x++)
+                    for(int x = 0; x < width; x++)
                     {
                         dest[x] = source[x * 4 + 2];
                     }
@@ -999,7 +999,7 @@ void Texture::copyNonRenderable(Image *image, GLenum internalFormat, GLint xoffs
               case D3DFMT_A8L8:
                 for(int y = 0; y < height; y++)
                 {
-                    for(int x = 0; x < height; x++)
+                    for(int x = 0; x < width; x++)
                     {
                         dest[x * 2 + 0] = source[x * 4 + 2];
                         dest[x * 2 + 1] = source[x * 4 + 3];
@@ -1019,10 +1019,44 @@ void Texture::copyNonRenderable(Image *image, GLenum internalFormat, GLint xoffs
               case D3DFMT_L8:
                 for(int y = 0; y < height; y++)
                 {
-                    for(int x = 0; x < height; x++)
+                    for(int x = 0; x < width; x++)
                     {
                         unsigned char red = source[x * 2 + 1] & 0xF8;
                         dest[x] = red | (red >> 5);
+                    }
+
+                    source += sourceLock.Pitch;
+                    dest += destLock.Pitch;
+                }
+                break;
+              default:
+                UNREACHABLE();
+            }
+            break;
+          case D3DFMT_A1R5G5B5:
+            switch(getD3DFormat())
+            {
+              case D3DFMT_L8:
+                for(int y = 0; y < height; y++)
+                {
+                    for(int x = 0; x < width; x++)
+                    {
+                        unsigned char red = source[x * 2 + 1] & 0x7C;
+                        dest[x] = (red << 1) | (red >> 4);
+                    }
+
+                    source += sourceLock.Pitch;
+                    dest += destLock.Pitch;
+                }
+                break;
+              case D3DFMT_A8L8:
+                for(int y = 0; y < height; y++)
+                {
+                    for(int x = 0; x < width; x++)
+                    {
+                        unsigned char red = source[x * 2 + 1] & 0x7C;
+                        dest[x * 2 + 0] = (red << 1) | (red >> 4);
+                        dest[x * 2 + 1] = (signed char)source[x * 2 + 1] >> 7;
                     }
 
                     source += sourceLock.Pitch;
