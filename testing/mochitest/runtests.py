@@ -463,11 +463,27 @@ class Mochitest(object):
     """
     return self.getFullPath(logFile)
 
+  def installSpecialPowersExtension(self, options):
+    """ install the Special Powers extension for special testing capabilities """
+    extensionSource = os.path.normpath(os.path.join(self.SCRIPT_DIRECTORY, "specialpowers"))
+    self.automation.log.info("INFO | runtests.py | Installing extension at %s to %s." % 
+                             (extensionSource, options.profilePath))
+
+    self.automation.installExtension(extensionSource, options.profilePath, "special-powers@mozilla.org")
+    self.automation.log.info("INFO | runtests.py | Done installing extension.")
+
   def buildProfile(self, options):
     """ create the profile and add optional chrome bits and files if requested """
     self.automation.initializeProfile(options.profilePath, options.extraPrefs, useServerLocations = True)
     manifest = self.addChromeToProfile(options)
     self.copyExtraFilesToProfile(options)
+
+    # We only need special powers in non-chrome harnesses
+    if (not options.browserChrome and
+        not options.chrome and
+        not options.a11y):
+      self.installSpecialPowersExtension(options)
+
     return manifest
 
   def buildBrowserEnv(self, options):
@@ -579,6 +595,7 @@ class Mochitest(object):
     manifest = self.buildProfile(options)
     if manifest is None:
       return 1
+
     self.startWebServer(options)
     self.startWebSocketServer(options)
 
