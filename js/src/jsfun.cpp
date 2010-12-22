@@ -1554,6 +1554,8 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         continue;
     }
 
+    JSAtom *atom;
+
     switch (slot) {
       case FUN_ARGUMENTS:
         /* Warn if strict about f.arguments or equivalent unqualified uses. */
@@ -1570,16 +1572,23 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         } else {
             vp->setNull();
         }
+        atom = cx->runtime->atomState.argumentsAtom;
         break;
 
       case FUN_LENGTH:
+        vp->setInt32(fun->nargs);
+        atom = cx->runtime->atomState.lengthAtom;
+        break;
+
       case FUN_ARITY:
         vp->setInt32(fun->nargs);
+        atom = cx->runtime->atomState.arityAtom;
         break;
 
       case FUN_NAME:
         vp->setString(fun->atom ? ATOM_TO_STRING(fun->atom)
                                 : cx->runtime->emptyString);
+        atom = cx->runtime->atomState.nameAtom;
         break;
 
       case FUN_CALLER:
@@ -1599,16 +1608,20 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
                 return false;
             }
         }
+        atom = cx->runtime->atomState.callerAtom;
         break;
 
       default:
         /* XXX fun[0] and fun.arguments[0] are equivalent. */
         if (fp && fp->isFunctionFrame() && uint16(slot) < fp->numFormalArgs())
             *vp = fp->formalArg(slot);
+        atom = NULL;
         break;
     }
 
-    cx->addTypePropertyId(obj->getType(), id, *vp);
+    jsid nameid = atom ? ATOM_TO_JSID(atom) : JSID_VOID;
+    cx->addTypePropertyId(obj->getType(), nameid, *vp);
+
     return true;
 }
 
@@ -2715,7 +2728,7 @@ Function(JSContext *cx, uintN argc, Value *vp)
         return JS_FALSE;
     JSBool res = Compiler::compileFunctionBody(cx, fun, principals, chars, length,
                                                filename, lineno);
-    if (res)
+    if (res && fun->u.i.script->compileAndGo)
         fun->u.i.script->setTypeNesting(caller->script(), caller->pc(cx));
     return res;
 }

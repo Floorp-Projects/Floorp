@@ -2413,16 +2413,11 @@ public:
     /* Make a type object whose name is that of base followed by postfix. */
     js::types::TypeObject *newTypeObject(const char *base, const char *postfix, JSObject *proto);
 
-    /* Get the default 'new' object for a given standard class. */
-    inline js::types::TypeObject *getTypeNewObject(JSProtoKey key);
-
     /*
-     * Get the type of the global object to use. :XXX: This function is probably
-     * totally broken when analyzing code involved with multiple global objects.
-     * It uses cx->globalObject even if that's not the global object attached to the
-     * COMPILE_N_GO script being analyzed.
+     * Get the default 'new' object for a given standard class, per the currently
+     * active global.
      */
-    inline js::types::TypeObject *globalTypeObject();
+    inline js::types::TypeObject *getTypeNewObject(JSProtoKey key);
 
     /* Get a singleton type object to use for objects with no prototype. */
     inline js::types::TypeObject *emptyTypeObject();
@@ -2456,6 +2451,7 @@ public:
     inline void addTypeProperty(js::types::TypeObject *obj, const char *name, const js::Value &value);
     inline void addTypePropertyId(js::types::TypeObject *obj, jsid id, js::types::jstype type);
     inline void addTypePropertyId(js::types::TypeObject *obj, jsid id, const js::Value &value);
+    inline void markTypePropertyUnknown(js::types::TypeObject *obj, jsid id);
 
     /* Get the type to add for properties which can be scripted getters/setters. */
     inline js::types::TypeObject *getTypeGetSet();

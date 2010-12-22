@@ -1135,6 +1135,10 @@ NewProxyObject(JSContext *cx, JSProxyHandler *handler, const Value &priv, JSObje
             obj->setSlot(JSSLOT_PROXY_CONSTRUCT, ObjectValue(*construct));
         }
     }
+
+    /* Don't track types of properties of proxies. */
+    cx->markTypeObjectUnknownProperties(obj->getType());
+
     return obj;
 }
 

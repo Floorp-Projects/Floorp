@@ -82,6 +82,13 @@ TypeCompartment::newTypeObject(JSContext *cx, analyze::Script *script, const cha
     JSArenaPool &pool = script ? script->pool : this->pool;
 
 #ifdef DEBUG
+#if 1 /* Define to get unique printed names, including when there are multiple globals. */
+    static unsigned nameCount = 0;
+    unsigned len = strlen(name) + 15;
+    char *newName = (char *) alloca(len);
+    JS_snprintf(newName, len, "%u:%s", ++nameCount, name);
+    name = newName;
+#endif
     jsid id = ATOM_TO_JSID(js_Atomize(cx, name, strlen(name), ATOM_PINNED));
 #else
     jsid id = JSID_VOID;
