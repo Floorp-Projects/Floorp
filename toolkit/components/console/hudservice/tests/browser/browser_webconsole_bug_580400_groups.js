@@ -58,22 +58,30 @@ function testGroups() {
   let jsterm = HUD.jsterm;
   let outputNode = jsterm.outputNode;
 
+  // We test for one group by testing for zero "new" groups. The
+  // "webconsole-new-group" class creates a divider. Thus one group is
+  // indicated by zero new groups, two groups are indicated by one new group,
+  // and so on.
+
   let timestamp0 = Date.now();
   jsterm.execute("0");
-  is(outputNode.querySelectorAll(".hud-group").length, 1,
-    "one group exists after the first console message");
+  is(outputNode.querySelectorAll(".webconsole-new-group").length, 0,
+     "no group dividers exist after the first console message");
 
   jsterm.execute("1");
   let timestamp1 = Date.now();
   if (timestamp1 - timestamp0 < 5000) {
-    is(outputNode.querySelectorAll(".hud-group").length, 1,
-      "only one group still exists after the second console message");
+    is(outputNode.querySelectorAll(".webconsole-new-group").length, 0,
+       "no group dividers exist after the second console message");
   }
 
-  HUD.HUDBox.lastTimestamp = 0;   // a "far past" value
+  for (let i = 0; i < outputNode.itemCount; i++) {
+    outputNode.getItemAtIndex(i).timestamp = 0;   // a "far past" value
+  }
+
   jsterm.execute("2");
-  is(outputNode.querySelectorAll(".hud-group").length, 2,
-    "two groups exist after the third console message");
+  is(outputNode.querySelectorAll(".webconsole-new-group").length, 1,
+     "one group divider exists after the third console message");
 
   jsterm.clearOutput();
   jsterm.history.splice(0);   // workaround for bug 592552

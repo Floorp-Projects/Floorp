@@ -48,7 +48,7 @@ function test() {
 }
 
 function checkResult(msg, desc, lines) {
-  let labels = jsterm.outputNode.querySelectorAll(".jsterm-output-line");
+  let labels = jsterm.outputNode.querySelectorAll(".webconsole-msg-output");
   is(labels.length, lines, "correct number of results shown for " + desc);
   is(labels[lines-1].textContent.trim(), msg, "correct message shown for " +
     desc);
@@ -95,21 +95,21 @@ function testJSTerm()
 
   jsterm.clearOutput();
   jsterm.execute("help()");
-  let output = jsterm.outputNode.querySelector(".jsterm-output-line");
+  let output = jsterm.outputNode.querySelector(".webconsole-msg-output");
   ok(!group, "help() worked");
 
   jsterm.execute("help");
-  output = jsterm.outputNode.querySelector(".jsterm-output-line");
+  output = jsterm.outputNode.querySelector(".webconsole-msg-output");
   ok(!output, "help worked");
 
   jsterm.execute("?");
-  output = jsterm.outputNode.querySelector(".jsterm-output-line");
+  output = jsterm.outputNode.querySelector(".webconsole-msg-output");
   ok(!output, "? worked");
 
   jsterm.clearOutput();
   jsterm.execute("pprint({b:2, a:1})");
   // Doesn't conform to checkResult format
-  let label = jsterm.outputNode.querySelector(".jsterm-output-line");
+  let label = jsterm.outputNode.querySelector(".webconsole-msg-output");
   is(label.textContent.trim(), "a: 1\n  b: 2", "pprint() worked");
 
   // check instanceof correctness, bug 599940
@@ -124,25 +124,25 @@ function testJSTerm()
   // check for occurrences of Object XRayWrapper, bug 604430
   jsterm.clearOutput();
   jsterm.execute("document");
-  let label = jsterm.outputNode.querySelector(".jsterm-output-line");
+  let label = jsterm.outputNode.querySelector(".webconsole-msg-output");
   is(label.textContent.trim().search(/\[object XrayWrapper/), -1,
     "check for non-existence of [object XrayWrapper ");
 
   // check that pprint(window) and keys(window) don't throw, bug 608358
   jsterm.clearOutput();
   jsterm.execute("pprint(window)");
-  let labels = jsterm.outputNode.querySelectorAll(".jsterm-output-line");
+  let labels = jsterm.outputNode.querySelectorAll(".webconsole-msg-output");
   is(labels.length, 1, "one line of output for pprint(window)");
 
   jsterm.clearOutput();
   jsterm.execute("keys(window)");
-  labels = jsterm.outputNode.querySelectorAll(".jsterm-output-line");
+  labels = jsterm.outputNode.querySelectorAll(".webconsole-msg-output");
   is(labels.length, 1, "one line of output for keys(window)");
 
   jsterm.clearOutput();
   jsterm.execute("pprint('hi')");
   // Doesn't conform to checkResult format, bug 614561
-  let label = jsterm.outputNode.querySelector(".jsterm-output-line");
+  let label = jsterm.outputNode.querySelector(".webconsole-msg-output");
   is(label.textContent.trim(), '0: "h"\n  1: "i"', 'pprint("hi") worked');
 
   finishTest();
