@@ -566,6 +566,14 @@ js_SetLengthProperty(JSContext *cx, JSObject *obj, jsdouble length)
 
     v.setNumber(length);
     id = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
+
+    /*
+     * Arrays are already known to have lengths (if the length overflows, it will
+     * be caught by setArrayLength).
+     */
+    if (!obj->isArray())
+        cx->addTypePropertyId(obj->getType(), id, v);
+
     /* We don't support read-only array length yet. */
     return obj->setProperty(cx, id, &v, false);
 }
@@ -2031,11 +2039,9 @@ array_push_slowly(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *
     jsdouble newlength = length + jsdouble(argc);
     rval->setNumber(newlength);
 
-    /* watch for length overflowing to a double, and report to type inference. */
-    if (!rval->isInt32()) {
+    /* watch for length overflowing to a double. */
+    if (!rval->isInt32())
         cx->markTypeCallerOverflow();
-        cx->addTypeProperty(obj->getType(), "length", *rval);
-    }
 
     return js_SetLengthProperty(cx, obj, newlength);
 }
@@ -2303,6 +2309,11 @@ array_unshift(JSContext *cx, uintN argc, Value *vp)
 
     /* Follow Perl by returning the new array length. */
     vp->setNumber(newlen);
+
+    /* watch for length overflowing to a double. */
+    if (!vp->isInt32())
+        cx->markTypeCallerOverflow();
+
     return JS_TRUE;
 }
 
@@ -2317,16 +2328,20 @@ array_splice(JSContext *cx, uintN argc, Value *vp)
     /* Get the type of the result object. */
     TypeObject *type;
     if (obj && obj->isArray()) {
+        /*
+         * :FIXME: This is getting a type whose prototype is that of the
+         * argument, even if it is the Array.prototype on a different
+         * global than the current frame.
+         */
         type = obj->getType();
     } else {
         /*
          * Make a new type object for the return value.  This is an unexpected
          * result of the call so mark it at the callsite.
          */
-        type = cx->getTypeCallerInitObject(true);
+        type = cx->getTypeNewObject(JSProto_Array);
         if (!type)
             return JS_FALSE;
-        cx->markTypeObjectUnknownProperties(type);
         cx->markTypeCallerUnexpected((jstype) type);
     }
 
@@ -2638,16 +2653,16 @@ array_slice(JSContext *cx, uintN argc, Value *vp)
     /* Get the type object for the returned array. */
     TypeObject *type;
     if (obj->isArray()) {
+        /* :FIXME: Same issue as array_splice. */
         type = obj->getType();
     } else {
         /*
          * Make a new type object for the return value.  This is an unexpected
          * result of the call so mark it at the callsite.
          */
-        type = cx->getTypeCallerInitObject(true);
+        type = cx->getTypeNewObject(JSProto_Array);
         if (!type)
             return JS_FALSE;
-        cx->markTypeObjectUnknownProperties(type);
         cx->markTypeCallerUnexpected((jstype) type);
     }
 
@@ -3019,8 +3034,11 @@ array_every(JSContext *cx, uintN argc, Value *vp)
 }
 #endif
 
-// TODO: these handlers only deal with receiver types of arrays.
-// need to generalize to other array-like objects (strings, what else?).
+/*
+ * These handlers deal with objects of type other than arrays, except for updates
+ * of the 'length' property. Sets of length on non-arrays and overflowing length
+ * on arrays are both handled by write barriers within the natives.
+ */
 
 static void array_TypeSort(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 {
