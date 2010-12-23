@@ -92,6 +92,9 @@ struct TraceMonitor {
      */
     JSContext               *tracecx;
 
+    /* Counts the number of iterations run by the currently executing trace. */
+    unsigned                iterationCounter;
+
     /*
      * Cached storage to use when executing on trace. While we may enter nested
      * traces, we always reuse the outer trace's storage, so never need more
