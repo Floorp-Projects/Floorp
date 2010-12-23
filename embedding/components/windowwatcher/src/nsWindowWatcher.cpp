@@ -520,7 +520,7 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
 
   nsCOMPtr<nsIContentUtils> utils =
     do_GetService("@mozilla.org/content/contentutils;1");
-  if (!utils->IsSafeToRunScript()) {
+  if (utils && !utils->IsSafeToRunScript()) {
     return NS_ERROR_FAILURE;
   }
 
