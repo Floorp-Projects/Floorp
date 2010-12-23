@@ -70,7 +70,7 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_live_filtering_of_message_types.js \
 	browser_webconsole_live_filtering_on_search_strings.js \
 	browser_warn_user_about_replaced_api.js \
-	browser_webconsole_bug_586142_insert_newlines.js \
+	browser_webconsole_copying_multiple_messages_inserts_newlines_in_between.js \
 	browser_webconsole_bug_586388_select_all.js  \
 	browser_webconsole_bug_588967_input_expansion.js \
 	browser_webconsole_log_node_classes.js \
@@ -107,11 +107,12 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_597756_reopen_closed_tab.js \
 	browser_webconsole_bug_600183_charset.js \
 	browser_webconsole_bug_601177_log_levels.js \
-	browser_webconsole_bug_587615_lastTimestamp.js \
 	browser_webconsole_bug_597460_filter_scroll.js \
 	browser_webconsole_console_extras.js \
 	browser_webconsole_bug_598357_jsterm_output.js \
 	browser_webconsole_bug_603750_websocket.js \
+	browser_webconsole_abbreviate_source_url.js \
+	browser_webconsole_view_source.js \
 	head.js \
 	$(NULL)
 
