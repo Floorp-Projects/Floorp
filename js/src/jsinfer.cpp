@@ -1020,21 +1020,6 @@ TypeConstraintGenerator::newType(JSContext *cx, TypeSet *source, jstype type)
     }
 }
 
-/* Constraint marking incoming arrays as possibly packed. */
-class TypeConstraintPossiblyPacked : public TypeConstraint
-{
-public:
-    TypeConstraintPossiblyPacked() : TypeConstraint("possiblyPacked") {}
-
-    void newType(JSContext *cx, TypeSet *source, jstype type)
-    {
-        if (type != TYPE_UNKNOWN && TypeIsObject(type)) {
-            TypeObject *object = (TypeObject *) type;
-            object->possiblePackedArray = true;
-        }
-    }
-};
-
 /////////////////////////////////////////////////////////////////////
 // Freeze constraints
 /////////////////////////////////////////////////////////////////////
@@ -1117,18 +1102,6 @@ TypeSet::getKnownTypeTag(JSContext *cx, JSScript *script)
 static inline ObjectKind
 CombineObjectKind(TypeObject *object, ObjectKind kind)
 {
-    /*
-     * Our initial guess is that all arrays are packed, but if the array is
-     * created through [], Array() or Array(N) and we don't see later code
-     * which looks to be filling it in starting at zero, consider it not packed.
-     * All requests for the kind of an object go through here, so there are
-     * no FreezeObjectKind constraints to update if we unset isPackedArray here.
-     */
-    if (object->isPackedArray && !object->possiblePackedArray) {
-        InferSpew(ISpewDynamic, "Possible unpacked array: %s", object->name());
-        object->isPackedArray = false;
-    }
-
     ObjectKind nkind;
     if (object->isFunction)
         nkind = object->asFunction()->script ? OBJECT_SCRIPTED_FUNCTION : OBJECT_NATIVE_FUNCTION;
@@ -2183,6 +2156,10 @@ CheckNextTest(JSContext *cx, Bytecode *code, jsbytecode *pc)
       case JSOP_IFEQ:
       case JSOP_IFNE:
       case JSOP_NOT:
+      case JSOP_OR:
+      case JSOP_ORX:
+      case JSOP_AND:
+      case JSOP_ANDX:
       case JSOP_TYPEOF:
       case JSOP_TYPEOFEXPR:
         code->pushed(0)->addType(cx, TYPE_UNDEFINED);
@@ -2593,10 +2570,6 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, AnalyzeState &state)
         }
 
         if (op == JSOP_SETLOCAL || op == JSOP_SETLOCALPOP) {
-            state.clearLocal(local);
-            if (state.popped(0).isConstant)
-                state.addConstLocal(local, state.popped(0).isZero);
-
             code->popped(0)->addSubset(cx, this->pool, types);
         } else {
             /*
@@ -2618,8 +2591,6 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, AnalyzeState &state)
       case JSOP_LOCALDEC: {
         uint32 local = GET_SLOTNO(pc);
         jsid id = getLocalId(local, code);
-
-        state.clearLocal(local);
 
         TypeSet *types = evalParent()->getVariable(cx, id);
         types->addArith(cx, evalParent()->pool, code, types);
@@ -2721,18 +2692,6 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, AnalyzeState &state)
         break;
 
       case JSOP_SETELEM:
-        if (state.popped(1).isZero) {
-            /*
-             * Initializing the array with what looks like it could be zero.
-             * This is sensitive to the order in which bytecodes are emitted
-             * for common loop forms: '(for i = 0;; i++) a[i] = ...' and
-             * 'i = 0; while () { a[i] = ...; i++ }. In the bytecode the increment
-             * will appear after the initialization, and we are looking for arrays
-             * initialized between the two statements.
-             */
-            code->popped(2)->add(cx, ArenaNew<TypeConstraintPossiblyPacked>(pool));
-        }
-
         code->popped(1)->addSetElem(cx, code, code->popped(2), code->popped(0));
         MergePushed(cx, pool, code, 0, code->popped(0));
         break;
@@ -2849,14 +2808,10 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, AnalyzeState &state)
       case JSOP_NEWOBJECT:
         if (script->compileAndGo) {
             TypeObject *object;
-            if (op == JSOP_NEWARRAY || (op == JSOP_NEWINIT && pc[1] == JSProto_Array)) {
+            if (op == JSOP_NEWARRAY || (op == JSOP_NEWINIT && pc[1] == JSProto_Array))
                 object = code->initArray;
-                jsbytecode *next = pc + GetBytecodeLength(pc);
-                if (JSOp(*next) != JSOP_ENDINIT)
-                    object->possiblePackedArray = true;
-            } else {
+            else
                 object = code->initObject;
-            }
             code->pushed(0)->addType(cx, (jstype) object);
         } else {
             code->setFixed(cx, 0, TYPE_UNKNOWN);
@@ -3200,25 +3155,6 @@ Script::analyzeTypes(JSContext *cx, Bytecode *code, AnalyzeState &state)
         stack.doubleValue = GetScriptConst(cx, script, pc).toDouble();
         break;
       }
-
-      case JSOP_ZERO:
-        state.popped(0).isZero = true;
-        /* FALLTHROUGH */
-      case JSOP_ONE:
-      case JSOP_INT8:
-      case JSOP_INT32:
-      case JSOP_UINT16:
-      case JSOP_UINT24:
-        state.popped(0).isConstant = true;
-        break;
-
-      case JSOP_GETLOCAL:
-        if (state.maybeLocalConst(GET_SLOTNO(pc), false)) {
-            state.popped(0).isConstant = true;
-            if (state.maybeLocalConst(GET_SLOTNO(pc), true))
-                state.popped(0).isZero = true;
-        }
-        break;
 
       default:;
     }

@@ -460,13 +460,6 @@ struct TypeObject
     /* Whether all objects this represents are packed arrays (implies isDenseArray). */
     bool isPackedArray;
 
-    /*
-     * Whether this object is thought to be a possible packed array: either it came
-     * from a [a,b,c] initializer, an Array(a,b,c) call, or is another array for
-     * which we've seen what looks like initialization code. This is purely heuristic.
-     */
-    bool possiblePackedArray;
-
     TypeObject() {}
 
     /* Make an object with the specified name. */
