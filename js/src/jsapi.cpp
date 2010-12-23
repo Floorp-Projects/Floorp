@@ -1449,9 +1449,9 @@ js_InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj)
         return NULL;
 
     /* Function.prototype and the global object delegate to Object.prototype. */
-    fun_proto->getType()->splicePrototype(obj_proto);
+    fun_proto->getType()->splicePrototype(cx, obj_proto);
     if (!obj->getProto())
-        obj->getType()->splicePrototype(obj_proto);
+        obj->getType()->splicePrototype(cx, obj_proto);
 
     return fun_proto;
 }
