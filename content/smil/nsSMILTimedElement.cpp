@@ -264,39 +264,6 @@ nsSMILTimedElement::BeginElementAt(double aOffsetSeconds)
   nsSMILTime currentTime = container->GetCurrentTime();
   AddInstanceTimeFromCurrentTime(currentTime, aOffsetSeconds, PR_TRUE);
 
-  // After we've added the instance time we must do a local resample.
-  //
-  // The reason for this can be explained by considering the following sequence
-  // of calls in a script block
-  //
-  //   BeginElementAt(0)
-  //   BeginElementAt(-1)
-  //   GetStartTime() <-- should return the time from the first call to
-  //                      BeginElementAt
-  //
-  // After BeginElementAt(0) is called a new begin instance time is added to the
-  // list. Depending on the restart mode this may generate a new interval,
-  // possiblying ending the current interval early.
-  //
-  // Intuitively this change should take effect before the subsequent call to
-  // BeginElementAt however to get this to take effect we need to drive the
-  // state engine through its sequence active-waiting-active by calling Sample.
-  //
-  // When we get the second call to BeginElementAt the element should be in the
-  // active state and hence the new begin instance time will be ignored because
-  // it is before the beginning of the (new) current interval. SMIL says we do
-  // not change the begin of a current interval once it is active.
-  //
-  // See also:
-  // http://www.w3.org/TR/SMIL3/smil-timing.html#Timing-BeginEnd-Restart
-
-  // If we haven't started yet, then there's no point in trying to force the
-  // sample. A series of calls to BeginElementAt before the document starts
-  // should probably just add a series of instance times.
-  if (mElementState != STATE_STARTUP) {
-    DoSampleAt(currentTime, PR_FALSE); // Regular sample, not end sample
-  }
-
   return NS_OK;
 }
 
@@ -309,9 +276,6 @@ nsSMILTimedElement::EndElementAt(double aOffsetSeconds)
 
   nsSMILTime currentTime = container->GetCurrentTime();
   AddInstanceTimeFromCurrentTime(currentTime, aOffsetSeconds, PR_FALSE);
-  if (mElementState != STATE_STARTUP) {
-    DoSampleAt(currentTime, PR_FALSE); // Regular sample, not end sample
-  }
 
   return NS_OK;
 }

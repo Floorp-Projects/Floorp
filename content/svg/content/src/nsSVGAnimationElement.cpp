@@ -448,6 +448,9 @@ nsSVGAnimationElement::BeginElementAt(float offset)
 {
   NS_ENSURE_FINITE(offset, NS_ERROR_ILLEGAL_VALUE);
 
+  // Make sure the timegraph is up-to-date
+  FlushAnimations();
+
   // This will fail if we're not attached to a time container (SVG document
   // fragment).
   nsresult rv = mTimedElement.BeginElementAt(offset);
@@ -455,6 +458,9 @@ nsSVGAnimationElement::BeginElementAt(float offset)
     return rv;
 
   AnimationNeedsResample();
+  // Force synchronous sample so that events resulting from this call arrive in
+  // the expected order and we get an up-to-date paint.
+  FlushAnimations();
 
   return NS_OK;
 }
@@ -472,11 +478,16 @@ nsSVGAnimationElement::EndElementAt(float offset)
 {
   NS_ENSURE_FINITE(offset, NS_ERROR_ILLEGAL_VALUE);
 
+  // Make sure the timegraph is up-to-date
+  FlushAnimations();
+
   nsresult rv = mTimedElement.EndElementAt(offset);
   if (NS_FAILED(rv))
     return rv;
 
   AnimationNeedsResample();
+  // Force synchronous sample
+  FlushAnimations();
  
   return NS_OK;
 }
