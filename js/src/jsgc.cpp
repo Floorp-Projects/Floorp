@@ -786,16 +786,18 @@ ConservativeGCThreadData::recordStackTop()
     jsuword dummy;
     nativeStackTop = &dummy;
 
-    /* Update the register snapshot with the latest values. */
+    /*
+     * To record and update the register snapshot for the conservative
+     * scanning with the latest values we use setjmp.
+     */
 #if defined(_MSC_VER)
 # pragma warning(push)
 # pragma warning(disable: 4611)
 #endif
-    setjmp(registerSnapshot.jmpbuf);
+    (void) setjmp(registerSnapshot.jmpbuf);
 #if defined(_MSC_VER)
 # pragma warning(pop)
 #endif
-
 }
 
 static inline void
