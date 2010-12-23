@@ -1837,8 +1837,8 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   padding: 0;
   border: none;
   border-radius: 0;
-  background: none;
-  box-shadow: none;
+  background: none !important;
+  box-shadow: none !important;
 }
 
 :-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1:not([type="menu-button"]),
