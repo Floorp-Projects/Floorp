@@ -381,12 +381,6 @@ class Script
         /* Any value pushed by a JSOP_DOUBLE. */
         bool hasDouble;
         double doubleValue;
-
-        /* Whether this is or could be the constant zero. */
-        bool isZero;
-
-        /* Whether this is another constant. */
-        bool isConstant;
     };
 
     struct AnalyzeState {
@@ -401,13 +395,8 @@ class Script
         /* Last opcode was JSOP_HOLE. */
         bool hasHole;
 
-        /* Locals thought to be zero/constants. */
-        bool zeroLocals[4];
-        uint32 constLocals[4];
-        unsigned numConstLocals;
-
         AnalyzeState()
-            : stack(NULL), stackDepth(0), hasGetSet(false), hasHole(false), numConstLocals(0)
+            : stack(NULL), stackDepth(0), hasGetSet(false), hasHole(false)
         {}
 
         bool init(JSContext *cx, JSScript *script)
@@ -433,32 +422,6 @@ class Script
         const AnalyzeStateStack &popped(unsigned i) const {
             JS_ASSERT(i < stackDepth);
             return stack[stackDepth - 1 - i];
-        }
-
-        void addConstLocal(uint32 local, bool zero) {
-            if (numConstLocals == JS_ARRAY_LENGTH(constLocals))
-                return;
-            if (maybeLocalConst(local, false))
-                return;
-            zeroLocals[numConstLocals] = zero;
-            constLocals[numConstLocals++] = local;
-        }
-
-        bool maybeLocalConst(uint32 local, bool zero) {
-            for (unsigned i = 0; i < numConstLocals; i++) {
-                if (constLocals[i] == local)
-                    return !zero || zeroLocals[i];
-            }
-            return false;
-        }
-
-        void clearLocal(uint32 local) {
-            for (unsigned i = 0; i < numConstLocals; i++) {
-                if (constLocals[i] == local) {
-                    constLocals[i] = constLocals[--numConstLocals];
-                    return;
-                }
-            }
         }
     };
 
