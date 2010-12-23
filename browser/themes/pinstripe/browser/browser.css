@@ -1837,6 +1837,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   padding: 0;
   border: none;
   border-radius: 0;
+  /* !important flags needed because of bug 561154: */
   background: none !important;
   box-shadow: none !important;
 }
