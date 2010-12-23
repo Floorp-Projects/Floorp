@@ -865,6 +865,11 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
             stringName.AssignLiteral("CallMethodDeniedOrigins");
         }
 
+        // Null out objectPrincipal for now, so we don't leak information about
+        // it.  Whenever we can report different error strings to content and
+        // the UI we can take this out again.
+        objectPrincipal = nsnull;
+
         NS_ConvertUTF8toUTF16 className(classInfoData.GetName());
         nsCAutoString subjectOrigin;
         nsCAutoString subjectDomain;
