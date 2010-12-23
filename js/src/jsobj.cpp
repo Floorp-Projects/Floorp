@@ -3973,7 +3973,7 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
 
         /* Bootstrap Function.prototype (see also JS_InitStandardClasses). */
         if (ctor->getClass() == clasp)
-            ctor->getType()->splicePrototype(proto);
+            ctor->getType()->splicePrototype(cx, proto);
     }
 
     /* Add properties and methods to the prototype and the constructor. */
