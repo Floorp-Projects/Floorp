@@ -734,7 +734,7 @@ num_toLocaleString(JSContext *cx, uintN argc, Value *vp)
     const char *num, *end, *tmpSrc;
     char *buf, *tmpDest;
     const char *nint;
-    int digits, size, remainder, nrepeat;
+    int digits, buflen, remainder, nrepeat;
 
     /*
      * Create the string, move back to bytes to make string twiddling
@@ -769,9 +769,9 @@ num_toLocaleString(JSContext *cx, uintN argc, Value *vp)
     decimalLength = strlen(rt->decimalSeparator);
 
     /* Figure out how long resulting string will be. */
-    size = digits + (*nint ? strlen(nint + 1) + 1 : 0);
+    buflen = digits + (*nint ? strlen(nint + 1) : 0);
     if (*nint == '.')
-        size += decimalLength;
+        buflen += decimalLength;
 
     numGrouping = tmpGroup = rt->numGrouping;
     remainder = digits;
@@ -781,20 +781,20 @@ num_toLocaleString(JSContext *cx, uintN argc, Value *vp)
     while (*tmpGroup != CHAR_MAX && *tmpGroup != '\0') {
         if (*tmpGroup >= remainder)
             break;
-        size += thousandsLength;
+        buflen += thousandsLength;
         remainder -= *tmpGroup;
         tmpGroup++;
     }
     if (*tmpGroup == '\0' && *numGrouping != '\0') {
         nrepeat = (remainder - 1) / tmpGroup[-1];
-        size += thousandsLength * nrepeat;
+        buflen += thousandsLength * nrepeat;
         remainder -= nrepeat * tmpGroup[-1];
     } else {
         nrepeat = 0;
     }
     tmpGroup--;
 
-    buf = (char *)cx->malloc(size + 1);
+    buf = (char *)cx->malloc(buflen + 1);
     if (!buf)
         return JS_FALSE;
 
@@ -824,7 +824,7 @@ num_toLocaleString(JSContext *cx, uintN argc, Value *vp)
     if (cx->localeCallbacks && cx->localeCallbacks->localeToUnicode)
         return cx->localeCallbacks->localeToUnicode(cx, buf, Jsvalify(vp));
 
-    str = js_NewStringCopyN(cx, buf, size);
+    str = js_NewStringCopyN(cx, buf, buflen);
     cx->free(buf);
     if (!str)
         return JS_FALSE;
