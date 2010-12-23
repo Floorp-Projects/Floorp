@@ -41,8 +41,7 @@
 
 #include "jsd.h"
 #include "jsapi.h"
-#include "jspubtd.h"
-#include "jsprvtd.h"
+#include "jsfriendapi.h"
 
 #ifdef DEBUG
 void JSD_ASSERT_VALID_VALUE(JSDValue* jsdval)
@@ -273,8 +272,10 @@ jsd_GetValueFunctionName(JSDContext* jsdc, JSDValue* jsdval)
         if(!fun)
             return NULL;
         jsdval->funName = JS_GetFunctionId(fun);
+
+        /* For compatibility we return "anonymous", not an empty string here. */
         if (!jsdval->funName)
-            jsdval->funName = JS_GetEmptyString(jsdc->jsrt);
+            jsdval->funName = JS_GetAnonymousString(jsdc->jsrt);
     }
     return jsdval->funName;
 }
