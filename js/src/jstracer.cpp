@@ -2345,7 +2345,13 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
          * thread and cannot outlive the corresponding JSThreadData.
          */
         w.comment("begin-interruptFlags-check");
-        LIns* flagptr = w.nameImmpNonGC((void *) &JS_THREAD_DATA(cx)->interruptFlags);
+        /* FIXME: See bug 621140 for moving interruptCounter to the compartment. */
+#ifdef JS_THREADSAFE
+        void *interrupt = (void*) &cx->runtime->interruptCounter;
+#else
+        void *interrupt = (void*) &JS_THREAD_DATA(cx)->interruptFlags;
+#endif
+        LIns* flagptr = w.nameImmpNonGC(interrupt);
         LIns* x = w.ldiVolatile(flagptr);
         guard(true, w.eqi0(x), TIMEOUT_EXIT);
         w.comment("end-interruptFlags-check");
