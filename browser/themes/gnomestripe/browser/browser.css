@@ -723,6 +723,10 @@ toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   -moz-image-region: rect(0px 168px 24px 144px);
 }
 
+#feed-button[disabled="true"] > .toolbarbutton-icon {
+  opacity: .3;
+}
+
 /* 16px primary toolbar buttons */
 toolbar[iconsize="small"] .toolbarbutton-1:not([type="menu-button"]) {
   -moz-box-orient: vertical;
