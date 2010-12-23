@@ -1580,10 +1580,13 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
             /* Censor the caller if it is from another compartment. */
             if (caller.getCompartment() != cx->compartment) {
                 vp->setNull();
-            } else if (caller.isFunction() && caller.getFunctionPrivate()->inStrictMode()) {
-                JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage, NULL,
-                                             JSMSG_CALLER_IS_STRICT);
-                return false;
+            } else if (caller.isFunction()) {
+                JSFunction *callerFun = caller.getFunctionPrivate();
+                if (callerFun->isInterpreted() && callerFun->inStrictMode()) {
+                    JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage, NULL,
+                                                 JSMSG_CALLER_IS_STRICT);
+                    return false;
+                }
             }
         }
         break;
@@ -1753,7 +1756,7 @@ fun_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 
             PropertyOp getter, setter;
             uintN attrs = JSPROP_PERMANENT;
-            if (fun->inStrictMode() || obj->isBoundFunction()) {
+            if (fun->isInterpreted() ? fun->inStrictMode() : obj->isBoundFunction()) {
                 JSObject *throwTypeError = obj->getThrowTypeError();
 
                 getter = CastAsPropertyOp(throwTypeError);

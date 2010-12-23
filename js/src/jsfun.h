@@ -180,6 +180,7 @@ struct JSFunction : public JSObject_Slots2
 
     bool isFunctionPrototype() const { return flags & JSFUN_PROTOTYPE; }
 
+    /* Returns the strictness of this function, which must be interpreted. */
     inline bool inStrictMode() const;
 
     uintN countVars() const {
