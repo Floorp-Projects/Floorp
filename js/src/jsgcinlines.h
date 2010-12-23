@@ -345,7 +345,12 @@ TypedMarker(JSTracer *trc, JSFunction *thing)
 static JS_ALWAYS_INLINE void
 TypedMarker(JSTracer *trc, JSShortString *thing)
 {
-    thing->asCell()->markIfUnmarked();
+    /*
+     * A short string cannot refer to other GC things so we don't have
+     * anything to mark if the string was unmarked and ignore the
+     * markIfUnmarked result.
+     */
+    (void) thing->asCell()->markIfUnmarked();
 }
 
 }  /* namespace gc */
