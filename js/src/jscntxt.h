@@ -960,9 +960,6 @@ struct JSThreadData {
     js::PropertyCache   propertyCache;
 
 #ifdef JS_TRACER
-    /* Counts the number of iterations run by a trace. */
-    unsigned            iterationCounter;
-
     /* Maximum size of the tracer's code cache before we start flushing. */
     uint32              maxCodeCacheBytes;
 #endif
