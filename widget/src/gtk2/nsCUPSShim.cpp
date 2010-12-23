@@ -88,9 +88,3 @@ nsCUPSShim::Init()
     }
     return PR_TRUE;
 }
-
-nsCUPSShim::~nsCUPSShim()
-{
-    if (mCupsLib)
-        PR_UnloadLibrary(mCupsLib);
-}
