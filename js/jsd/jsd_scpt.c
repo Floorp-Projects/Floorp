@@ -40,6 +40,7 @@
  */
 
 #include "jsd.h"
+#include "jsfriendapi.h"
 
 /* Comment this out to disable (NT specific) dumping as we go */
 /*
@@ -504,7 +505,9 @@ jsd_GetScriptFunctionName(JSDContext* jsdc, JSDScript *jsdscript)
     if( ! jsdscript->function )
         return NULL;
     str = JS_GetFunctionId(jsdscript->function);
-    return str ? str : JS_GetEmptyString(jsdc->jsrt);
+
+    /* For compatibility we return "anonymous", not an empty string here. */
+    return str ? str : JS_GetAnonymousString(jsdc->jsrt);
 }
 
 uintN
