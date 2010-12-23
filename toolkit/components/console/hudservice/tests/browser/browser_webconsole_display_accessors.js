@@ -53,8 +53,6 @@ function testDisplayAccessors() {
 
   openConsole();
 
-  var allHuds = HUDService.displays();
-  ok(typeof allHuds == "object", "allHuds is an object");
   var idx = HUDService.displaysIndex();
 
   let hudId = idx[0];
