@@ -1934,6 +1934,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   // manually.
 
   tmp->mInUnlinkOrDeletion = PR_FALSE;
+
+  tmp->mIdentifierMap.Clear();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 
@@ -7082,10 +7084,6 @@ nsDocument::Destroy()
   // XXX We really should let cycle collection do this, but that currently still
   //     leaks (see https://bugzilla.mozilla.org/show_bug.cgi?id=406684).
   nsContentUtils::ReleaseWrapper(static_cast<nsINode*>(this), this);
-
-  // Try really really hard to make sure we don't leak things through
-  // mIdentifierMap
-  mIdentifierMap.Clear();
 }
 
 void
