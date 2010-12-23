@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <!-- This test should not leak. -->
+    <iframe src="data:text/html,
+      <script>
+        var elem = document.createElement('span');
+        document.mozSetImageElement('foo', elem);
+        elem.foo = document;
+      </script>"></iframe>
+  </body>
+</html>
