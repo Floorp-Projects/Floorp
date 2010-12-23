@@ -1227,7 +1227,7 @@ inline TypeObject::TypeObject(JSArenaPool *pool, jsid name, JSObject *proto)
     : proto(proto), emptyShapes(NULL), isFunction(false), marked(false),
       propertySet(NULL), propertyCount(0),
       instanceList(NULL), instanceNext(NULL), pool(pool), next(NULL), unknownProperties(false),
-      isDenseArray(false), isPackedArray(false), possiblePackedArray(false)
+      isDenseArray(false), isPackedArray(false)
 {
 #ifdef DEBUG
     this->name_ = name;

@@ -3399,7 +3399,6 @@ static void array_TypeNew(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *
     if (site->argumentCount > 1) {
         for (size_t ind = 0; ind < site->argumentCount; ind++)
             site->argumentTypes[ind]->addSubset(cx, site->pool(), indexTypes);
-        object->possiblePackedArray = true;
     }
 #endif
 }
