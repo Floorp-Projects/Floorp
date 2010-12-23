@@ -2289,7 +2289,7 @@ panel[dimmed="true"] {
   -moz-appearance: none;
 }
 
-#addon-bar {
+#addon-bar:not(:-moz-lwtheme) {
   -moz-appearance: statusbar;
 }
 
