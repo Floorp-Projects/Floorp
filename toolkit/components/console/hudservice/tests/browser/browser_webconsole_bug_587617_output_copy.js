@@ -38,12 +38,8 @@ function tabLoaded() {
 
     console.log("Hello world!");
 
-    let range = top.document.createRange();
-    let selectedNode = outputNode.querySelector(".hud-group > label:last-child");
-    range.selectNode(selectedNode);
-    selection.addRange(range);
-
-    selectedNode.focus();
+    outputNode.selectedIndex = 0;
+    outputNode.focus();
 
     goUpdateCommand("cmd_copy");
 
@@ -51,38 +47,40 @@ function tabLoaded() {
       getControllerForCommand("cmd_copy");
     is(controller.isCommandEnabled("cmd_copy"), true, "cmd_copy is enabled");
 
-    waitForClipboard(selectedNode.textContent, clipboard_setup,
-      clipboard_copy_done, clipboard_copy_done);
-    };
+    let selectedNode = outputNode.getItemAtIndex(0);
+    waitForClipboard(getExpectedClipboardText(selectedNode), clipboardSetup,
+                     testContextMenuCopy, testContextMenuCopy);
+  };
 
-    let clipboard_setup = function () {
-      goDoCommand("cmd_copy");
-    };
-
-    let clipboard_copy_done = function () {
-      selection.removeAllRanges();
-      finishTest();
-    };
-
-    // Check if we first need to clear any existing selections.
-    if (selection.rangeCount > 0 || contentSelection.rangeCount > 0 ||
-        jstermInput.selectionStart != jstermInput.selectionEnd) {
-      if (jstermInput.selectionStart != jstermInput.selectionEnd) {
-        jstermInput.selectionStart = jstermInput.selectionEnd = 0;
-      }
-
-      if (selection.rangeCount > 0) {
-        selection.removeAllRanges();
-      }
-
-      if (contentSelection.rangeCount > 0) {
-        contentSelection.removeAllRanges();
-      }
-
-      goUpdateCommand("cmd_copy");
-        make_selection();
-    }
-    else {
-      make_selection();
-    }
+  make_selection();
 }
+
+// Test that the context menu "Copy" (which has a different code path) works
+// properly as well.
+function testContextMenuCopy() {
+  let contextMenuId = outputNode.getAttribute("context");
+  let contextMenu = document.getElementById(contextMenuId);
+  ok(contextMenu, "the output node has a context menu");
+
+  let copyItem = contextMenu.querySelector("*[buttonType=\"copy\"]");
+  ok(copyItem, "the context menu on the output node has a \"Copy\" item");
+
+  let commandEvent = document.createEvent("XULCommandEvent");
+  commandEvent.initCommandEvent("command", true, true, window, 0, false, false,
+                                false, false, null);
+  copyItem.dispatchEvent(commandEvent);
+
+  let selectedNode = outputNode.getItemAtIndex(0);
+  waitForClipboard(getExpectedClipboardText(selectedNode), clipboardSetup,
+    finishTest, finishTest);
+}
+
+function getExpectedClipboardText(aItem) {
+  return "[" + ConsoleUtils.timestampString(aItem.timestamp) + "] " +
+         aItem.clipboardText;
+}
+
+function clipboardSetup() {
+  goDoCommand("cmd_copy");
+}
+

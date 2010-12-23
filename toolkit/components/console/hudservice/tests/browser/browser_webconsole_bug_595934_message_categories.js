@@ -13,7 +13,7 @@ const TESTS = [
   { // #0
     file: "test-bug-595934-css-loader.html",
     category: "CSS Loader",
-    matchString: "CSS Loader",
+    matchString: "text/css",
   },
   { // #1
     file: "test-bug-595934-dom-events.html",
@@ -28,7 +28,7 @@ const TESTS = [
   { // #3
     file: "test-bug-595934-imagemap.html",
     category: "ImageMap",
-    matchString: "ImageMap",
+    matchString: "shape=\"rect\"",
   },
   { // #4
     file: "test-bug-595934-html.html",
@@ -42,7 +42,7 @@ const TESTS = [
   { // #5
     file: "test-bug-595934-malformedxml.xhtml",
     category: "malformed-xml",
-    matchString: "malformed-xml",
+    matchString: "no element found",
   },
   { // #6
     file: "test-bug-595934-svg.xhtml",
@@ -82,7 +82,7 @@ const TESTS = [
   { // #13
     file: "test-bug-595934-malformedxml-external.html",
     category: "malformed-xml",
-    matchString: "malformed-xml",
+    matchString: "</html>",
   },
   { // #14
     file: "test-bug-595934-empty-getelementbyid.html",
