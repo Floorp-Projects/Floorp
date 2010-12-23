@@ -322,6 +322,8 @@ public:
   static jsid sOnsubmit_id;
   static jsid sOnreset_id;
   static jsid sOnchange_id;
+  static jsid sOninput_id;
+  static jsid sOninvalid_id;
   static jsid sOnselect_id;
   static jsid sOnload_id;
   static jsid sOnpopstate_id;

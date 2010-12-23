@@ -1566,6 +1566,8 @@ jsid nsDOMClassInfo::sOnblur_id          = JSID_VOID;
 jsid nsDOMClassInfo::sOnsubmit_id        = JSID_VOID;
 jsid nsDOMClassInfo::sOnreset_id         = JSID_VOID;
 jsid nsDOMClassInfo::sOnchange_id        = JSID_VOID;
+jsid nsDOMClassInfo::sOninput_id         = JSID_VOID;
+jsid nsDOMClassInfo::sOninvalid_id       = JSID_VOID;
 jsid nsDOMClassInfo::sOnselect_id        = JSID_VOID;
 jsid nsDOMClassInfo::sOnload_id          = JSID_VOID;
 jsid nsDOMClassInfo::sOnpopstate_id      = JSID_VOID;
@@ -1797,6 +1799,8 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSID_TO_STRING(sOnsubmit_id,        cx, "onsubmit");
   SET_JSID_TO_STRING(sOnreset_id,         cx, "onreset");
   SET_JSID_TO_STRING(sOnchange_id,        cx, "onchange");
+  SET_JSID_TO_STRING(sOninput_id,         cx, "oninput");
+  SET_JSID_TO_STRING(sOninvalid_id,       cx, "oninvalid");
   SET_JSID_TO_STRING(sOnselect_id,        cx, "onselect");
   SET_JSID_TO_STRING(sOnload_id,          cx, "onload");
   SET_JSID_TO_STRING(sOnpopstate_id,      cx, "onpopstate");
@@ -4866,6 +4870,8 @@ nsDOMClassInfo::ShutDown()
   sOnsubmit_id        = JSID_VOID;
   sOnreset_id         = JSID_VOID;
   sOnchange_id        = JSID_VOID;
+  sOninput_id         = JSID_VOID;
+  sOninvalid_id       = JSID_VOID;
   sOnselect_id        = JSID_VOID;
   sOnload_id          = JSID_VOID;
   sOnbeforeunload_id  = JSID_VOID;
@@ -7503,6 +7509,9 @@ nsEventReceiverSH::ReallyIsEventName(jsid id, jschar aFirstChar)
     return id == sOnfocus_id;
   case 'h' :
     return id == sOnhashchange_id;
+  case 'i' :
+    return (id == sOninput_id ||
+            id == sOninvalid_id);
   case 'k' :
     return (id == sOnkeydown_id      ||
             id == sOnkeypress_id     ||
