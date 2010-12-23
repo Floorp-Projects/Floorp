@@ -209,6 +209,10 @@ static AnnotationTable* crashReporterAPIData_Hash;
 static nsCString* crashReporterAPIData = nsnull;
 static nsCString* notesField = nsnull;
 
+#if defined(XP_WIN)
+static HMODULE dbghelp = NULL;
+#endif
+
 #if defined(MOZ_IPC)
 // OOP crash reporting
 static CrashGenerationServer* crashServer; // chrome process has this
@@ -717,6 +721,25 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
   }
 #endif
 
+#ifdef XP_WIN
+  // Try to determine what version of dbghelp.dll we're using.
+  // MinidumpWithFullMemoryInfo is only available in 6.2 or newer.
+  dbghelp = LoadLibraryW(L"dbghelp.dll");
+  MINIDUMP_TYPE minidump_type = MiniDumpNormal;
+  if (dbghelp) {
+    typedef LPAPI_VERSION (WINAPI *ImagehlpApiVersionPtr)(void);
+    ImagehlpApiVersionPtr imagehlp_api_version =
+      (ImagehlpApiVersionPtr)GetProcAddress(dbghelp, "ImagehlpApiVersion");
+    if (imagehlp_api_version) {
+      LPAPI_VERSION api_version = imagehlp_api_version();
+      if (api_version->MajorVersion > 6 ||
+          (api_version->MajorVersion == 6 && api_version->MinorVersion > 1)) {
+        minidump_type = MiniDumpWithFullMemoryInfo;
+      }
+    }
+  }
+#endif
+
   // now set the exception handler
   gExceptionHandler = new google_breakpad::
     ExceptionHandler(tempPath.get(),
@@ -728,7 +751,10 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
                      MinidumpCallback,
                      nsnull,
 #if defined(XP_WIN32)
-                     google_breakpad::ExceptionHandler::HANDLER_ALL);
+                     google_breakpad::ExceptionHandler::HANDLER_ALL,
+                     minidump_type,
+                     NULL,
+                     NULL);
 #else
                      true
 #if defined(XP_MACOSX)
@@ -997,6 +1023,12 @@ static void OOPDeinit();
 nsresult UnsetExceptionHandler()
 {
   delete gExceptionHandler;
+
+#if defined(XP_WIN)
+  if (dbghelp) {
+    FreeLibrary(dbghelp);
+  }
+#endif
 
   // do this here in the unlikely case that we succeeded in allocating
   // our strings but failed to allocate gExceptionHandler.
