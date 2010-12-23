@@ -1617,6 +1617,20 @@ TypeObject::storeToInstances(JSContext *cx, Property *base)
 }
 
 void
+TypeObject::getFromPrototypes(JSContext *cx, Property *base)
+{
+     JSObject *obj = proto;
+     while (obj) {
+         TypeObject *object = obj->getType();
+         Property *p =
+             HashSetLookup<jsid,Property,Property>(object->propertySet, object->propertyCount, base->id);
+         if (p)
+             p->ownTypes.addSubset(cx, *object->pool, &base->types);
+         obj = obj->getProto();
+     }
+}
+
+void
 TypeObject::addProperty(JSContext *cx, jsid id, Property *&base)
 {
     JS_ASSERT(!base);
@@ -1641,15 +1655,7 @@ TypeObject::addProperty(JSContext *cx, jsid id, Property *&base)
         storeToInstances(cx, base);
 
     /* Pull in this property from all prototypes up the chain. */
-    JSObject *obj = proto;
-    while (obj) {
-        TypeObject *object = obj->getType();
-        Property *p =
-            HashSetLookup<jsid,Property,Property>(object->propertySet, object->propertyCount, id);
-        if (p)
-            p->ownTypes.addSubset(cx, *object->pool, &base->types);
-        obj = obj->getProto();
-    }
+    getFromPrototypes(cx, base);
 }
 
 void

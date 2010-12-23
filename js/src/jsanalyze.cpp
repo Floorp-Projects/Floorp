@@ -127,12 +127,32 @@ TypeIdStringImpl(jsid id)
 }
 
 void
-TypeObject::splicePrototype(JSObject *proto)
+TypeObject::splicePrototype(JSContext *cx, JSObject *proto)
 {
     JS_ASSERT(!this->proto);
     this->proto = proto;
     this->instanceNext = proto->getType()->instanceList;
     proto->getType()->instanceList = this;
+
+    /*
+     * Note: we require (but do not assert) that any property in the prototype
+     * or its own prototypes must not share a name with a property already
+     * added to an instance of this object.
+     */
+
+#ifdef JS_TYPE_INFERENCE
+    if (propertyCount >= 2) {
+        unsigned capacity = HashSetCapacity(propertyCount);
+        for (unsigned i = 0; i < capacity; i++) {
+            Property *prop = propertySet[i];
+            if (prop)
+                getFromPrototypes(cx, prop);
+        }
+    } else if (propertyCount == 1) {
+        Property *prop = (Property *) propertySet;
+        getFromPrototypes(cx, prop);
+    }
+#endif
 }
 
 } } /* namespace js::types */
