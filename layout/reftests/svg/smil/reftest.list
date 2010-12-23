@@ -134,6 +134,9 @@ asserts(9) == anim-use-href-01.svg lime.svg  # the asserts here are bug 563481
 == anim-fill-overpaintserver-1.svg lime.svg
 == anim-fill-overpaintserver-2.svg lime.svg
 
+# animate where we fallback from 'additive' animation to non-additive
+== anim-additive-fallback-1.svg anim-standard-ref.svg
+
 == anim-remove-1.svg anim-standard-ref.svg
 == anim-remove-2.svg anim-standard-ref.svg
 == anim-remove-3.svg anim-standard-ref.svg
