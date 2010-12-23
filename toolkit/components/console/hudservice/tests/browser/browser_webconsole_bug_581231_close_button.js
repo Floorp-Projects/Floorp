@@ -35,7 +35,7 @@ function testCloseButton() {
     EventUtils.synthesizeMouse(closeButton, 0, 0, {});
 
     executeSoon(function (){
-      ok(!(hudId in HUDService.windowRegistry), "the console is closed when " +
+      ok(!(hudId in HUDService.hudReferences), "the console is closed when " +
          "the close button is pressed");
       closeButton = null;
       finishTest();
