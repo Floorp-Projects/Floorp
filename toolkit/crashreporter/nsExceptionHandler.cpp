@@ -728,10 +728,7 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
                      MinidumpCallback,
                      nsnull,
 #if defined(XP_WIN32)
-                     google_breakpad::ExceptionHandler::HANDLER_ALL,
-                     MiniDumpWithFullMemoryInfo,
-                     NULL,
-                     NULL);
+                     google_breakpad::ExceptionHandler::HANDLER_ALL);
 #else
                      true
 #if defined(XP_MACOSX)
