@@ -107,6 +107,7 @@ notification[type="critical"] .messageImage {
     -moz-padding-start: 8px;
     -moz-padding-end: 5px;
     -moz-border-end: none;
+    background-color: transparent;
   }
 
   .popup-notification-menubutton > .button-menubutton-dropmarker {

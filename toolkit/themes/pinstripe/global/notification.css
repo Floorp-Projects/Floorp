@@ -118,6 +118,8 @@ notification[type="critical"] .messageImage {
 }
 
 .popup-notification-menubutton > .button-menubutton-button {
+  -moz-appearance: none;
+  margin: 0;
   padding-top: 2px;
   padding-bottom: 2px;
   -moz-padding-start: 8px;
