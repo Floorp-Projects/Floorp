@@ -213,11 +213,10 @@ ReportUseOfDeprecatedMethod(nsHTMLDocument* aDoc, const char* aWarning)
   nsContentUtils::ReportToConsole(nsContentUtils::eDOM_PROPERTIES,
                                   aWarning,
                                   nsnull, 0,
-                                  static_cast<nsIDocument*>(aDoc)->
-                                    GetDocumentURI(),
+                                  nsnull,
                                   EmptyString(), 0, 0,
                                   nsIScriptError::warningFlag,
-                                  "DOM Events");
+                                  "DOM Events", aDoc);
 }
 
 static nsresult
@@ -2151,7 +2150,7 @@ nsHTMLDocument::WriteCommon(const nsAString& aText,
                                       mDocumentURI,
                                       EmptyString(), 0, 0,
                                       nsIScriptError::warningFlag,
-                                      "DOM Events");
+                                      "DOM Events", this);
       return NS_OK;
     }
     mWriteState = eDocumentClosed;
@@ -2168,7 +2167,7 @@ nsHTMLDocument::WriteCommon(const nsAString& aText,
                                       mDocumentURI,
                                       EmptyString(), 0, 0,
                                       nsIScriptError::warningFlag,
-                                      "DOM Events");
+                                      "DOM Events", this);
       return NS_OK;
     }
     rv = Open();
@@ -2525,11 +2524,10 @@ nsHTMLDocument::GetSelection(nsAString& aReturn)
 {
   aReturn.Truncate();
 
-  nsCOMPtr<nsIConsoleService> consoleService
-    (do_GetService("@mozilla.org/consoleservice;1"));
-
-  if (consoleService) {
-    consoleService->LogStringMessage(NS_LITERAL_STRING("Deprecated method document.getSelection() called.  Please use window.getSelection() instead.").get());
+  nsCOMPtr<nsIJSContextStack> stack = do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+  JSContext* ccx = nsnull;
+  if (stack && NS_SUCCEEDED(stack->Peek(&ccx)) && ccx) {
+    JS_ReportWarning(ccx, "Deprecated method document.getSelection() called.  Please use window.getSelection() instead.");
   }
 
   nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(GetScopeObject());

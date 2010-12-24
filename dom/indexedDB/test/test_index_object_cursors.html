@@ -14,15 +14,15 @@
     function testSteps()
     {
       const objectStoreData = [
-        { name: "3", keyPath: "id", autoIncrement: true },
-        { name: "1", keyPath: "ss", autoIncrement: false },
-        { name: "2", keyPath: "", autoIncrement: false },
-        { name: "4", keyPath: "", autoIncrement: true },
+        { name: "3", options: { keyPath: "id", autoIncrement: true } },
+        { name: "1", options: { keyPath: "ss" } },
+        { name: "2", options: { } },
+        { name: "4", options: { autoIncrement: true } },
       ];
 
       const indexData = [
-        { name: "name", keyPath: "name", unique: true },
-        { name: "height", keyPath: "height", unique: false }
+        { name: "name", keyPath: "name", options: { unique: true } },
+        { name: "height", keyPath: "height", options: { } }
       ];
 
       const data = [
@@ -46,13 +46,12 @@
       for (let objectStoreIndex in objectStoreData) {
         const objectStoreInfo = objectStoreData[objectStoreIndex];
         let objectStore = db.createObjectStore(objectStoreInfo.name,
-                                               objectStoreInfo.keyPath,
-                                               objectStoreInfo.autoIncrement);
+                                               objectStoreInfo.options);
         for (let indexIndex in indexData) {
           const indexInfo = indexData[indexIndex];
           let index = objectStore.createIndex(indexInfo.name,
                                               indexInfo.keyPath,
-                                              indexInfo.unique);
+                                              indexInfo.options);
         }
       }
       yield;
@@ -74,7 +73,7 @@
           for (let dataIndex in data) {
             const obj = data[dataIndex];
             let key;
-            if (!info.keyPath && !info.autoIncrement) {
+            if (!info.options.keyPath && !info.options.autoIncrement) {
               key = obj.ss;
             }
             objectStore.add(obj, key);

@@ -66,6 +66,33 @@
 using namespace js;
 using namespace js::gc;
 
+static bool
+ValueIsLength(JSContext *cx, const Value &v, jsuint *len)
+{
+    if (v.isInt32()) {
+        int32_t i = v.toInt32();
+        if (i < 0)
+            return false;
+        *len = i;
+        return true;
+    }
+
+    if (v.isDouble()) {
+        jsdouble d = v.toDouble();
+        if (JSDOUBLE_IS_NaN(d))
+            return false;
+
+        jsuint length = jsuint(d);
+        if (d != jsdouble(length))
+            return false;
+
+        *len = length;
+        return true;
+    }
+
+    return false;
+}
+
 /*
  * ArrayBuffer
  *
@@ -724,18 +751,12 @@ class TypedArrayTemplate
 
         // figure out the type of the first argument;
         // no args is treated like an int arg of 0.
-        if (argc == 0 || argv[0].isInt32()) {
-            int32 len = 0;
+        jsuint len = 0;
+        bool hasLen = true;
+        if (argc > 0)
+            hasLen = ValueIsLength(cx, argv[0], &len);
 
-            if (argc != 0)
-                len = argv[0].toInt32();
-
-            if (len < 0) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                     JSMSG_BAD_ARRAY_LENGTH);
-                return false;
-            }
-
+        if (hasLen) {
             tarray = new ThisTypeArray();
             if (!tarray) {
                 JS_ReportOutOfMemory(cx);

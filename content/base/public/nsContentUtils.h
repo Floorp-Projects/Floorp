@@ -807,6 +807,8 @@ public:
    *   @param aColumnNumber Column number within resource containing error.
    *   @param aErrorFlags See nsIScriptError.
    *   @param aCategory Name of module reporting error.
+   *   @param [aWindowId=0] (Optional) The window ID of the outer window the
+   *          message originates from.
    */
   enum PropertiesFile {
     eCSS_PROPERTIES,
@@ -832,7 +834,36 @@ public:
                                   PRUint32 aLineNumber,
                                   PRUint32 aColumnNumber,
                                   PRUint32 aErrorFlags,
-                                  const char *aCategory);
+                                  const char *aCategory,
+                                  PRUint64 aWindowId = 0);
+
+  /**
+   * Report a localized error message to the error console.
+   *   @param aFile Properties file containing localized message.
+   *   @param aMessageName Name of localized message.
+   *   @param aParams Parameters to be substituted into localized message.
+   *   @param aParamsLength Length of aParams.
+   *   @param aURI URI of resource containing error (may be null).
+   *   @param aSourceLine The text of the line that contains the error (may be
+              empty).
+   *   @param aLineNumber Line number within resource containing error.
+   *   @param aColumnNumber Column number within resource containing error.
+   *   @param aErrorFlags See nsIScriptError.
+   *   @param aCategory Name of module reporting error.
+   *   @param aDocument Reference to the document which triggered the message.
+              If aURI is null, then aDocument->GetDocumentURI() is used.
+   */
+  static nsresult ReportToConsole(PropertiesFile aFile,
+                                  const char *aMessageName,
+                                  const PRUnichar **aParams,
+                                  PRUint32 aParamsLength,
+                                  nsIURI* aURI,
+                                  const nsAFlatString& aSourceLine,
+                                  PRUint32 aLineNumber,
+                                  PRUint32 aColumnNumber,
+                                  PRUint32 aErrorFlags,
+                                  const char *aCategory,
+                                  nsIDocument* aDocument);
 
   /**
    * Get the localized string named |aKey| in properties file |aFile|.

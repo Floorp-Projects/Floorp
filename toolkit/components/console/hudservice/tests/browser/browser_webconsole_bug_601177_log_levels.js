@@ -16,24 +16,24 @@ function onContentLoaded()
 {
   let hudId = HUDService.getHudIdByWindow(content);
   let HUD = HUDService.hudReferences[hudId];
-  msgs = HUD.outputNode.querySelectorAll(".hud-group > *");
+  msgs = HUD.outputNode.querySelectorAll(".hud-msg-node");
 
-  ok(findEntry("hud-info", "test-bug-601177-log-levels.html"),
+  ok(findEntry("hud-networkinfo", "test-bug-601177-log-levels.html"),
     "found test-bug-601177-log-levels.html");
 
-  ok(findEntry("hud-info", "test-bug-601177-log-levels.js"),
+  ok(findEntry("hud-networkinfo", "test-bug-601177-log-levels.js"),
     "found test-bug-601177-log-levels.js");
 
-  ok(findEntry("hud-info", "test-image.png"),
+  ok(findEntry("hud-networkinfo", "test-image.png"),
     "found test-image.png");
 
-  ok(findEntry("hud-error", "foobar-known-to-fail.png"),
+  ok(findEntry("hud-network", "foobar-known-to-fail.png"),
     "found foobar-known-to-fail.png");
 
   ok(findEntry("hud-exception", "foobarBug601177exception"),
     "found exception");
 
-  ok(findEntry("hud-warn", "undefinedPropertyBug601177"),
+  ok(findEntry("hud-jswarn", "undefinedPropertyBug601177"),
     "found strict warning");
 
   msgs = null;

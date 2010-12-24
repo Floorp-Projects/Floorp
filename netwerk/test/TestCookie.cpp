@@ -309,11 +309,11 @@ main(PRInt32 argc, char *argv[])
       GetACookie(cookieService, "http://www.basic.com/testPath/testfile.txt", nsnull, getter_Copies(cookie));
       rv[1] = CheckResult(cookie.get(), MUST_EQUAL, "test=basic");
       GetACookie(cookieService, "http://www.basic.com./", nsnull, getter_Copies(cookie));
-      rv[2] = CheckResult(cookie.get(), MUST_EQUAL, "test=basic");
+      rv[2] = CheckResult(cookie.get(), MUST_BE_NULL);
       GetACookie(cookieService, "http://www.basic.com.", nsnull, getter_Copies(cookie));
-      rv[3] = CheckResult(cookie.get(), MUST_EQUAL, "test=basic");
+      rv[3] = CheckResult(cookie.get(), MUST_BE_NULL);
       GetACookie(cookieService, "http://www.basic.com./testPath/testfile.txt", nsnull, getter_Copies(cookie));
-      rv[4] = CheckResult(cookie.get(), MUST_EQUAL, "test=basic");
+      rv[4] = CheckResult(cookie.get(), MUST_BE_NULL);
       GetACookie(cookieService, "http://www.basic2.com/", nsnull, getter_Copies(cookie));
       rv[5] = CheckResult(cookie.get(), MUST_BE_NULL);
       SetACookie(cookieService, "http://www.basic.com", nsnull, "test=basic; max-age=-1", nsnull);
@@ -332,7 +332,7 @@ main(PRInt32 argc, char *argv[])
       GetACookie(cookieService, "http://domain.com", nsnull, getter_Copies(cookie));
       rv[0] = CheckResult(cookie.get(), MUST_EQUAL, "test=domain");
       GetACookie(cookieService, "http://domain.com.", nsnull, getter_Copies(cookie));
-      rv[1] = CheckResult(cookie.get(), MUST_EQUAL, "test=domain");
+      rv[1] = CheckResult(cookie.get(), MUST_BE_NULL);
       GetACookie(cookieService, "http://www.domain.com", nsnull, getter_Copies(cookie));
       rv[2] = CheckResult(cookie.get(), MUST_EQUAL, "test=domain");
       GetACookie(cookieService, "http://foo.domain.com", nsnull, getter_Copies(cookie));

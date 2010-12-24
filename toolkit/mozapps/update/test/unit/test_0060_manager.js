@@ -128,9 +128,6 @@ function run_test() {
   do_check_eq(update.detailsURL, "http://details2/");
   do_check_eq(update.billboardURL, "http://details2/");
   do_check_eq(update.licenseURL, null);
-  do_check_true(update.showPrompt);
-  do_check_true(update.showNeverForVersion);
-  do_check_false(update.showSurvey);
   do_check_eq(update.serviceURL, "http://service2/");
   do_check_eq(update.installDate, "1238441400314");
   do_check_eq(update.statusText, getString("patchApplyFailure"));
@@ -197,15 +194,15 @@ function run_test() {
   do_check_eq(update.detailsURL, "http://details/");
   do_check_eq(update.billboardURL, "http://billboard/");
   do_check_eq(update.licenseURL, "http://license/");
-  do_check_true(update.showPrompt);
-  do_check_true(update.showNeverForVersion);
-  do_check_true(update.showSurvey);
   do_check_eq(update.serviceURL, "http://service/");
   do_check_eq(update.installDate, "1238441400314");
   do_check_eq(update.statusText, getString("installSuccess"));
   do_check_eq(update.buildID, "20080811053724");
   do_check_true(update.isCompleteUpdate);
   do_check_eq(update.channel, "test_channel");
+  do_check_true(update.showPrompt);
+  do_check_true(update.showNeverForVersion);
+  do_check_true(update.showSurvey);
   do_check_eq(update.previousAppVersion, "3.0");
 
   patch = update.selectedPatch;
@@ -227,15 +224,15 @@ function run_test() {
   do_check_eq(update.detailsURL, "http://details/");
   do_check_eq(update.billboardURL, null);
   do_check_eq(update.licenseURL, null);
-  do_check_false(update.showPrompt);
-  do_check_false(update.showNeverForVersion);
-  do_check_false(update.showSurvey);
   do_check_eq(update.serviceURL, "http://service/");
   do_check_eq(update.installDate, "1238441400314");
   do_check_eq(update.statusText, getString("patchApplyFailure"));
   do_check_eq(update.buildID, "20080811053724");
   do_check_true(update.isCompleteUpdate);
   do_check_eq(update.channel, "test_channel");
+  do_check_false(update.showPrompt);
+  do_check_false(update.showNeverForVersion);
+  do_check_false(update.showSurvey);
   do_check_eq(update.previousAppVersion, null);
 
   patch = update.selectedPatch;

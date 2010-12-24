@@ -240,7 +240,7 @@ NS_IMPL_ISUPPORTS0(nsInvalidPluginTag)
 nsInvalidPluginTag::nsInvalidPluginTag(const char* aFullPath, PRInt64 aLastModifiedTime)
 : mFullPath(aFullPath),
   mLastModifiedTime(aLastModifiedTime),
-  mSeen(PR_FALSE)
+  mSeen(false)
 {
   
 }
@@ -2070,7 +2070,7 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile * pluginsDir,
       }
     }
     
-    bool isKnownInvalidPlugin = PR_FALSE;
+    bool isKnownInvalidPlugin = false;
     for (nsRefPtr<nsInvalidPluginTag> invalidPlugins = mInvalidPlugins;
          invalidPlugins; invalidPlugins = invalidPlugins->mNext) {
       // If already marked as invalid, ignore it
@@ -2103,7 +2103,7 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile * pluginsDir,
         pluginFile.FreePluginInfo(info);
         
         if (aCreatePluginList) {
-          invalidTag->mSeen = PR_TRUE;
+          invalidTag->mSeen = true;
         }
         invalidTag->mNext = mInvalidPlugins;
         if (mInvalidPlugins) {
@@ -2327,6 +2327,7 @@ nsresult nsPluginHost::FindPlugins(PRBool aCreatePluginList, PRBool * aPluginsCh
     // no need to proceed if changes are detected
     if (!aCreatePluginList && *aPluginsChanged) {
       NS_ITERATIVE_UNREF_LIST(nsRefPtr<nsPluginTag>, mCachedPlugins, mNext);
+      NS_ITERATIVE_UNREF_LIST(nsRefPtr<nsInvalidPluginTag>, mInvalidPlugins, mNext);
       return NS_OK;
     }
   }
@@ -2353,6 +2354,7 @@ nsresult nsPluginHost::FindPlugins(PRBool aCreatePluginList, PRBool * aPluginsCh
       // no need to proceed if changes are detected
       if (!aCreatePluginList && *aPluginsChanged) {
         NS_ITERATIVE_UNREF_LIST(nsRefPtr<nsPluginTag>, mCachedPlugins, mNext);
+        NS_ITERATIVE_UNREF_LIST(nsRefPtr<nsInvalidPluginTag>, mInvalidPlugins, mNext);
         return NS_OK;
       }
     }
@@ -2401,6 +2403,7 @@ nsresult nsPluginHost::FindPlugins(PRBool aCreatePluginList, PRBool * aPluginsCh
       // no need to proceed if changes are detected
       if (!aCreatePluginList && *aPluginsChanged) {
         NS_ITERATIVE_UNREF_LIST(nsRefPtr<nsPluginTag>, mCachedPlugins, mNext);
+        NS_ITERATIVE_UNREF_LIST(nsRefPtr<nsInvalidPluginTag>, mInvalidPlugins, mNext);
         return NS_OK;
       }
     }
@@ -2447,7 +2450,7 @@ nsresult nsPluginHost::FindPlugins(PRBool aCreatePluginList, PRBool * aPluginsCh
       invalidPlugin->mNext = NULL;
     }
     else {
-      invalidPlugins->mSeen = PR_FALSE;
+      invalidPlugins->mSeen = false;
       invalidPlugins = invalidPlugins->mNext;
     }
   }
@@ -2455,6 +2458,7 @@ nsresult nsPluginHost::FindPlugins(PRBool aCreatePluginList, PRBool * aPluginsCh
   // if we are not creating the list, there is no need to proceed
   if (!aCreatePluginList) {
     NS_ITERATIVE_UNREF_LIST(nsRefPtr<nsPluginTag>, mCachedPlugins, mNext);
+    NS_ITERATIVE_UNREF_LIST(nsRefPtr<nsInvalidPluginTag>, mInvalidPlugins, mNext);
     return NS_OK;
   }
 
@@ -2465,6 +2469,7 @@ nsresult nsPluginHost::FindPlugins(PRBool aCreatePluginList, PRBool * aPluginsCh
 
   // No more need for cached plugins. Clear it up.
   NS_ITERATIVE_UNREF_LIST(nsRefPtr<nsPluginTag>, mCachedPlugins, mNext);
+  NS_ITERATIVE_UNREF_LIST(nsRefPtr<nsInvalidPluginTag>, mInvalidPlugins, mNext);
 
   // reverse our list of plugins
   nsRefPtr<nsPluginTag> next;
@@ -2489,6 +2494,7 @@ nsPluginHost::UpdatePluginInfo(nsPluginTag* aPluginTag)
   ReadPluginInfo();
   WritePluginInfo();
   NS_ITERATIVE_UNREF_LIST(nsRefPtr<nsPluginTag>, mCachedPlugins, mNext);
+  NS_ITERATIVE_UNREF_LIST(nsRefPtr<nsInvalidPluginTag>, mInvalidPlugins, mNext);
 
   if (!aPluginTag || aPluginTag->IsEnabled())
     return NS_OK;
@@ -2934,7 +2940,7 @@ nsPluginHost::ReadPluginInfo()
     if (!ReadSectionHeader(reader, "INVALID")) {
       return rv;
     }
-    
+
     while (reader.NextLine()) {
       const char *fullpath = reader.LinePtr();
       if (!reader.NextLine()) {

@@ -22,8 +22,8 @@
       ];
 
       const indexes = [
-        { name: "a", unique: false },
-        { name: "b", unique: true }
+        { name: "a", options: { } },
+        { name: "b", options: { unique: true } }
       ];
 
       let request = moz_indexedDB.open(name, description);
@@ -40,11 +40,12 @@
         let event = yield;
 
         let objectStore =
-          db.createObjectStore(objectStores[i].name, "id",
-                              objectStores[i].autoIncrement);
+          db.createObjectStore(objectStores[i].name,
+                               { keyPath: "id",
+                                 autoIncrement: objectStores[i].autoIncrement });
 
         for (let j in indexes) {
-          objectStore.createIndex(indexes[j].name, "name", indexes[j].unique);
+          objectStore.createIndex(indexes[j].name, "name", indexes[j].options);
         }
 
         let data = { name: "Ben" };

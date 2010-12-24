@@ -203,18 +203,20 @@ let UI = {
       });
 
       // ___ setup observer to save canvas images
-      var observer = {
-        observe : function(subject, topic, data) {
-          if (topic == "quit-application-requested") {
-            if (self.isTabViewVisible()) {
-              GroupItems.removeHiddenGroups();
-              TabItems.saveAll(true);
-            }
-            self._save();
-          }
+      function quitObserver(subject, topic, data) {
+        if (topic == "quit-application-requested") {
+          if (self.isTabViewVisible())
+            GroupItems.removeHiddenGroups();
+
+          TabItems.saveAll(true);
+          self._save();
         }
-      };
-      Services.obs.addObserver(observer, "quit-application-requested", false);
+      }
+      Services.obs.addObserver(
+        quitObserver, "quit-application-requested", false);
+      this._cleanupFunctions.push(function() {
+        Services.obs.removeObserver(quitObserver, "quit-application-requested");
+      });
 
       // ___ Done
       this._frameInitialized = true;
@@ -237,7 +239,6 @@ let UI = {
     this._cleanupFunctions.forEach(function(func) {
       func();
     });
-
     this._cleanupFunctions = [];
 
     // additional clean up

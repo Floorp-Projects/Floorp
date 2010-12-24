@@ -139,6 +139,10 @@ typedef struct CapturingContentInfo {
  { 0xd1978bee, 0x43b9, 0x40de, \
     { 0x95, 0x47, 0x85, 0x06, 0x5e, 0x02, 0xec, 0xb4 } }
 
+#define NS_IPRESSHELL_MOZILLA_2_0_BRANCH_IID     \
+ { 0x5e445910, 0xfbee, 0x11df, \
+    { 0x8c, 0xff, 0x08, 0x00, 0x20, 0x0c, 0x9a, 0x66 } }
+
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
 #define NS_PRESSHELL_SCROLL_BOTTOM   100
@@ -165,7 +169,17 @@ enum nsRectVisibility {
   nsRectVisibility_kBelowViewport, 
   nsRectVisibility_kLeftOfViewport, 
   nsRectVisibility_kRightOfViewport
-}; 
+};
+
+class nsIPresShell_MOZILLA_2_0_BRANCH : public nsISupports {
+public:  
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPRESSHELL_MOZILLA_2_0_BRANCH_IID)
+
+  virtual PRBool GetIsViewportOverridden() = 0;
+};
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIPresShell_MOZILLA_2_0_BRANCH,
+                              NS_IPRESSHELL_MOZILLA_2_0_BRANCH_IID)
 
 /**
  * Presentation shell interface. Presentation shells are the

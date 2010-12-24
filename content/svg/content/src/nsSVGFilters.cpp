@@ -650,9 +650,6 @@ nsSVGFEGaussianBlurElement::GetDXY(PRUint32 *aDX, PRUint32 *aDY,
   if (stdX < 0 || stdY < 0)
     return NS_ERROR_FAILURE;
 
-  if (stdX == 0 || stdY == 0)
-    return NS_ERROR_UNEXPECTED;
-
   // If the box size is greater than twice the temporary surface size
   // in an axis, then each pixel will be set to the average of all the
   // other pixel values.
@@ -775,8 +772,6 @@ nsSVGFEGaussianBlurElement::Filter(nsSVGFilterInstance* aInstance,
 {
   PRUint32 dx, dy;
   nsresult rv = GetDXY(&dx, &dy, *aInstance);
-  if (rv == NS_ERROR_UNEXPECTED) // zero std deviation
-    return NS_OK;
   if (NS_FAILED(rv))
     return rv;
 

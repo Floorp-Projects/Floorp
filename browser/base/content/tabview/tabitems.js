@@ -750,6 +750,7 @@ let TabItems = {
   _heartbeatTiming: 100, // milliseconds between _checkHeartbeat() calls
   _lastUpdateTime: Date.now(),
   _eventListeners: [],
+  _pauseUpdateForTest: false,
   tempCanvas: null,
 
   // ----------
@@ -874,6 +875,9 @@ let TabItems = {
   // Takes in a xul:tab.
   _update: function TabItems__update(tab) {
     try {
+      if (this._pauseUpdateForTest)
+        return;
+
       Utils.assertThrow(tab, "tab");
 
       // ___ remove from waiting list if needed

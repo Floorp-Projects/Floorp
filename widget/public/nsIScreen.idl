@@ -53,3 +53,34 @@ interface nsIScreen : nsISupports
 %{ C++
 
 %}
+
+[scriptable, uuid(f7c93d20-c4e4-4628-b343-cb5530b04f15)]
+interface nsIScreen_MOZILLA_2_0_BRANCH : nsISupports {
+  /**
+   * Levels of brightness for the screen, from off to full brightness.
+   */
+  const unsigned long BRIGHTNESS_DIM = 0;
+  const unsigned long BRIGHTNESS_FULL = 1;
+
+  /* The number of different brightness levels */
+  const unsigned long BRIGHTNESS_LEVELS = 2;
+
+  /**
+   * Locks the minimum brightness of the screen, forcing it to be at
+   * least as bright as a certain brightness level. Each call to this
+   * function must eventually be followed by a corresponding call to
+   * unlockMinimumBrightness, with the same brightness level.
+   *
+   * @param brightness A brightness level, one of the above constants.
+   */
+  void lockMinimumBrightness(in unsigned long brightness);
+
+  /**
+   * Releases a lock on the screen brightness. This must be called
+   * (eventually) after a corresponding call to lockMinimumBrightness.
+   *
+   * @param brightness A brightness level, one of the above constants.
+   */
+  void unlockMinimumBrightness(in unsigned long brightness);
+};
+

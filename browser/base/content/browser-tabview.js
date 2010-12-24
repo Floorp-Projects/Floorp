@@ -79,6 +79,12 @@ let TabView = {
   },
 
   // ----------
+  uninit: function TabView_uninit() {
+    if (this._window)
+      Services.obs.removeObserver(this, "quit-application-requested");
+  },
+
+  // ----------
   // Creates the frame and calls the callback once it's loaded. 
   // If the frame already exists, calls the callback immediately. 
   _initFrame: function TabView__initFrame(callback) {
@@ -103,19 +109,20 @@ let TabView = {
       this._window = iframe.contentWindow;
 
       // ___ visibility storage handler
-      let self = this;
-      function observer(subject, topic, data) {
-        if (topic == "quit-application-requested") {
-          let data = (self.isVisible() ? "true" : "false");
-          self._sessionstore.setWindowValue(window, self._visibilityID, data);
-        }
-      }
-      Services.obs.addObserver(observer, "quit-application-requested", false);
+      Services.obs.addObserver(this, "quit-application-requested", false);
 
       if (this._tabShowEventListener) {
         gBrowser.tabContainer.removeEventListener(
           "TabShow", this._tabShowEventListener, true);
       }
+    }
+  },
+
+  // ----------
+  observe: function TabView_observe(subject, topic, data) {
+    if (topic == "quit-application-requested") {
+      let data = (this.isVisible() ? "true" : "false");
+      this._sessionstore.setWindowValue(window, this._visibilityID, data);
     }
   },
 

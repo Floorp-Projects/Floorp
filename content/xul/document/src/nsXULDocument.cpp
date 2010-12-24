@@ -3330,16 +3330,15 @@ nsXULDocument::ReportMissingOverlay(nsIURI* aURI)
 
     NS_ConvertUTF8toUTF16 utfSpec(spec);
     const PRUnichar* params[] = { utfSpec.get() };
-
     nsContentUtils::ReportToConsole(nsContentUtils::eXUL_PROPERTIES,
                                     "MissingOverlay",
                                     params, NS_ARRAY_LENGTH(params),
-                                    mDocumentURI,
+                                    nsnull,
                                     EmptyString(), /* source line */
                                     0, /* line number */
                                     0, /* column number */
                                     nsIScriptError::warningFlag,
-                                    "XUL Document");
+                                    "XUL Document", this);
 }
 
 nsresult

@@ -723,6 +723,10 @@ toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   -moz-image-region: rect(0px 168px 24px 144px);
 }
 
+#feed-button[disabled="true"] > .toolbarbutton-icon {
+  opacity: .3;
+}
+
 /* 16px primary toolbar buttons */
 toolbar[iconsize="small"] .toolbarbutton-1:not([type="menu-button"]) {
   -moz-box-orient: vertical;
@@ -1108,7 +1112,6 @@ toolbar[iconsize="small"] #feed-button {
 /* Identity popup bounding box */
 #identity-popup-container {
   min-width: 280px;
-  padding: 10px;
 }
 
 /* Invalid form popup */
@@ -1121,9 +1124,7 @@ toolbar[iconsize="small"] #feed-button {
 
 /* Notification popup */
 #notification-popup {
-  margin: 4px 0;
   min-width: 280px;
-  padding: 10px;
 }
 
 .popup-notification-icon {
@@ -1330,10 +1331,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 
 /* Bookmarking panel */
-#editBookmarkPanel {
-  padding: 4px;
-}
-
 #editBookmarkPanelStarIcon {
   list-style-image: url("chrome://browser/skin/places/starred48.png");
   width: 48px;

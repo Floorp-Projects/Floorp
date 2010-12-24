@@ -32,7 +32,7 @@
       request.onsuccess = function(event) {
         event.transaction.oncomplete = grabEventAndContinueHandler;
         for (let i in objectStores) {
-          db.createObjectStore(objectStores[i], "", true);
+          db.createObjectStore(objectStores[i], { autoIncrement: true });
         }
       };
       yield;

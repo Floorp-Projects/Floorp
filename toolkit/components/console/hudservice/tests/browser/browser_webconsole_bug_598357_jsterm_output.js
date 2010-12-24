@@ -137,7 +137,8 @@ function testNext() {
   HUD.jsterm.setInputValue("print(" + inputValue + ")");
   HUD.jsterm.execute();
 
-  outputItem = HUD.outputNode.querySelector(".jsterm-output-line:last-child");
+  outputItem = HUD.outputNode.querySelector(".webconsole-msg-output:" +
+                                            "last-child");
   ok(outputItem,
     "found the jsterm print() output line for inputValues[" + cpos + "]");
   ok(outputItem.textContent.indexOf(printOutput) > -1,
@@ -173,19 +174,24 @@ function testNext() {
   HUD.jsterm.setInputValue(inputValue);
   HUD.jsterm.execute();
 
-  outputItem = HUD.outputNode.querySelector(".jsterm-output-line:last-child");
+  outputItem = HUD.outputNode.querySelector(".webconsole-msg-output:" +
+                                            "last-child");
   ok(outputItem, "found the jsterm output line for inputValues[" + cpos + "]");
   ok(outputItem.textContent.indexOf(expectedOutput) > -1,
     "jsterm output is correct for inputValues[" + cpos + "]");
 
-  outputItem.addEventListener("click", function(aEvent) {
+  let messageBody = outputItem.querySelector(".webconsole-msg-body");
+  ok(messageBody, "we have the message body for inputValues[" + cpos + "]");
+
+  messageBody.addEventListener("click", function(aEvent) {
     this.removeEventListener(aEvent.type, arguments.callee, false);
     executeSoon(testNext);
   }, false);
 
   // Send the mousedown, mouseup and click events to check if the property
   // panel opens.
-  EventUtils.synthesizeMouse(outputItem, 1, 1, {}, window);
+  EventUtils.sendMouseEvent({ type: "mousedown" }, messageBody, window);
+  EventUtils.sendMouseEvent({ type: "click" }, messageBody, window);
 }
 
 function testEnd() {

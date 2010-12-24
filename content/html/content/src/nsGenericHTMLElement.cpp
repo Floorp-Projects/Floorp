@@ -198,8 +198,10 @@ public:
       return NS_OK;
     }
 
-    // Do not autofocus if an sub-window is focused.
     nsPIDOMWindow* window = document->GetWindow();
+    if (!window) {
+      return NS_OK;
+    }
 
     // Trying to found the top window (equivalent to window.top).
     nsCOMPtr<nsIDOMWindow> top;
@@ -208,12 +210,12 @@ public:
       window = static_cast<nsPIDOMWindow*>(top.get());
     }
 
-    nsCOMPtr<nsIDocument> topDoc = do_QueryInterface(window->GetExtantDocument());
-    if (topDoc && topDoc->GetReadyStateEnum() == nsIDocument::READYSTATE_COMPLETE) {
+    if (window->GetFocusedNode()) {
       return NS_OK;
     }
 
-    if (window && window->GetFocusedNode()) {
+    nsCOMPtr<nsIDocument> topDoc = do_QueryInterface(window->GetExtantDocument());
+    if (topDoc && topDoc->GetReadyStateEnum() == nsIDocument::READYSTATE_COMPLETE) {
       return NS_OK;
     }
 
