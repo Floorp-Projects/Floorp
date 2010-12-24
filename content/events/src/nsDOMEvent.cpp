@@ -440,10 +440,10 @@ ReportUseOfDeprecatedMethod(nsEvent* aEvent, nsIDOMEvent* aDOMEvent,
   nsContentUtils::ReportToConsole(nsContentUtils::eDOM_PROPERTIES,
                                   aWarning,
                                   strings, NS_ARRAY_LENGTH(strings),
-                                  doc ? doc->GetDocumentURI() : nsnull,
+                                  nsnull,
                                   EmptyString(), 0, 0,
                                   nsIScriptError::warningFlag,
-                                  "DOM Events");
+                                  "DOM Events", doc);
 }
 
 NS_IMETHODIMP

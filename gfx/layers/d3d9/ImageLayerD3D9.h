@@ -100,7 +100,7 @@ class THEBES_API PlanarYCbCrImageD3D9 : public PlanarYCbCrImage,
                                         public ImageD3D9
 {
 public:
-  PlanarYCbCrImageD3D9(LayerManagerD3D9 *aManager);
+  PlanarYCbCrImageD3D9();
   ~PlanarYCbCrImageD3D9() {}
 
   virtual void SetData(const Data &aData);
@@ -109,7 +109,7 @@ public:
    * Upload the data from out mData into our textures. For now we use this to
    * make sure the textures are created and filled on the main thread.
    */
-  void AllocateTextures();
+  void AllocateTextures(IDirect3DDevice9 *aDevice);
   /*
    * XXX
    * Free the textures, we call this from the main thread when we're done
@@ -138,15 +138,18 @@ class THEBES_API CairoImageD3D9 : public CairoImage,
                                   public ImageD3D9
 {
 public:
-  CairoImageD3D9(LayerManagerD3D9 *aManager)
+  CairoImageD3D9(IDirect3DDevice9 *aDevice)
     : CairoImage(static_cast<ImageD3D9*>(this))
-    , mManager(aManager)
+    , mDevice(aDevice)
   { }
   ~CairoImageD3D9();
 
   virtual void SetData(const Data &aData);
 
   virtual already_AddRefed<gfxASurface> GetAsSurface();
+
+  IDirect3DDevice9 *device() { return mDevice; }
+  void SetDevice(IDirect3DDevice9 *aDevice);
 
   /**
    * Uploading a texture may fail if the screen is locked. If this happens,
@@ -155,9 +158,15 @@ public:
   virtual IDirect3DTexture9* GetOrCreateTexture();
   const gfxIntSize& GetSize() { return mSize; }
 
+  bool HasAlpha() {
+    return mCachedSurface->GetContentType() ==
+      gfxASurface::CONTENT_COLOR_ALPHA;
+  }
+
 private:
   gfxIntSize mSize;
   nsRefPtr<gfxASurface> mCachedSurface;
+  nsRefPtr<IDirect3DDevice9> mDevice;
   nsRefPtr<IDirect3DTexture9> mTexture;
   LayerManagerD3D9 *mManager;
 };

@@ -33,7 +33,8 @@
 
       ok(event.source === db, "correct event.source");
 
-      var objectStore = db.createObjectStore(objectStoreName, null, true);
+      var objectStore = db.createObjectStore(objectStoreName,
+                                             { autoIncrement: true });
       request = objectStore.add({});
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;

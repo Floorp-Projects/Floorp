@@ -81,11 +81,9 @@ typedef int (PR_CALLBACK *CupsAddOptionType)(const char    *name,
 
 struct PRLibrary;
 
+/* Note: this class relies on static initialization. */
 class nsCUPSShim {
     public:
-        nsCUPSShim() : mCupsLib(nsnull) { }
-        ~nsCUPSShim();
-
         /**
          * Initialize this object. Attempt to load the CUPS shared
          * library and find function pointers for the supported

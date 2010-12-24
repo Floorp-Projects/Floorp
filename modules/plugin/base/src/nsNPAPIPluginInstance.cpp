@@ -1126,6 +1126,9 @@ nsNPAPIPluginInstance::GetDOMElement(nsIDOMElement* *result)
 NS_IMETHODIMP
 nsNPAPIPluginInstance::InvalidateRect(NPRect *invalidRect)
 {
+  if (RUNNING != mRunning)
+    return NS_OK;
+
   nsCOMPtr<nsIPluginInstanceOwner> owner;
   GetOwner(getter_AddRefs(owner));
   if (!owner)
@@ -1137,6 +1140,9 @@ nsNPAPIPluginInstance::InvalidateRect(NPRect *invalidRect)
 NS_IMETHODIMP
 nsNPAPIPluginInstance::InvalidateRegion(NPRegion invalidRegion)
 {
+  if (RUNNING != mRunning)
+    return NS_OK;
+
   nsCOMPtr<nsIPluginInstanceOwner> owner;
   GetOwner(getter_AddRefs(owner));
   if (!owner)
@@ -1148,6 +1154,9 @@ nsNPAPIPluginInstance::InvalidateRegion(NPRegion invalidRegion)
 NS_IMETHODIMP
 nsNPAPIPluginInstance::ForceRedraw()
 {
+  if (RUNNING != mRunning)
+    return NS_OK;
+
   nsCOMPtr<nsIPluginInstanceOwner> owner;
   GetOwner(getter_AddRefs(owner));
   if (!owner)

@@ -269,8 +269,9 @@ public:
         const PRUint32 appUnitsPerDevUnit = aRun->GetAppUnitsPerDevUnit();
         while (offset < mItemLength) {
             PRUint32 runOffset = offsetInRun + offset;
+            PRBool atClusterStart = aRun->IsClusterStart(runOffset);
             if (offset > 0 && mClusters[offset] == mClusters[offset - 1]) {
-                g.SetComplex(aRun->IsClusterStart(runOffset), PR_FALSE, 0);
+                g.SetComplex(atClusterStart, PR_FALSE, 0);
                 aRun->SetGlyphs(runOffset, g, nsnull);
             } else {
                 // Count glyphs for this character
@@ -307,7 +308,9 @@ public:
                 } else if (glyphCount == 1 && advance >= 0 &&
                     mOffsets[k].dv == 0 && mOffsets[k].du == 0 &&
                     gfxTextRun::CompressedGlyph::IsSimpleAdvance(advance) &&
-                    gfxTextRun::CompressedGlyph::IsSimpleGlyphID(glyph)) {
+                    gfxTextRun::CompressedGlyph::IsSimpleGlyphID(glyph) &&
+                    atClusterStart)
+                {
                     aRun->SetSimpleGlyph(runOffset, g.SetSimpleGlyph(advance, glyph));
                 } else {
                     if (detailedGlyphs.Length() < glyphCount) {
@@ -323,7 +326,9 @@ public:
                         details->mYOffset = - float(mOffsets[k + i].dv)*appUnitsPerDevUnit;
                     }
                     aRun->SetGlyphs(runOffset,
-                        g.SetComplex(PR_TRUE, PR_TRUE, glyphCount), detailedGlyphs.Elements());
+                                    g.SetComplex(atClusterStart, PR_TRUE,
+                                                 glyphCount),
+                                    detailedGlyphs.Elements());
                 }
             }
             ++offset;

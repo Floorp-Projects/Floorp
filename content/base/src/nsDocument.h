@@ -992,7 +992,7 @@ protected:
    * service if it is.
    * @returns PR_TRUE if aId looks correct, PR_FALSE otherwise.
    */
-  static inline PRBool CheckGetElementByIdArg(const nsAString& aId)
+  inline PRBool CheckGetElementByIdArg(const nsAString& aId)
   {
     if (aId.IsEmpty()) {
       ReportEmptyGetElementByIdArg();
@@ -1001,7 +1001,7 @@ protected:
     return PR_TRUE;
   }
 
-  static void ReportEmptyGetElementByIdArg();
+  void ReportEmptyGetElementByIdArg();
 
   void DispatchContentLoadedEvents();
 

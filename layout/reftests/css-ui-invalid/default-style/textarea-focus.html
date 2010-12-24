@@ -1,0 +1,13 @@
+<!DOCTYPE>
+<html class="reftest-wait">
+  <script>
+    function onloadHandler()
+    {
+      document.getElementById('e').setCustomValidity('foo');
+      document.getElementById('e').focus();
+    }
+  </script>
+  <body onload="onloadHandler();">
+    <textarea id='e' onfocus="document.documentElement.className='';"></textarea>
+  </body>
+</html>

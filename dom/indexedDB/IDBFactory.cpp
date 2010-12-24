@@ -70,7 +70,7 @@
 
 #define BAD_TLS_INDEX (PRUintn)-1
 
-#define DB_SCHEMA_VERSION 3
+#define DB_SCHEMA_VERSION 4
 
 USING_INDEXEDDB_NAMESPACE
 
@@ -143,6 +143,7 @@ private:
   // Out-params.
   nsTArray<nsAutoPtr<ObjectStoreInfo> > mObjectStores;
   nsString mVersion;
+  PRUint32 mDataVersion;
   nsString mDatabaseFilePath;
   PRUint32 mDatabaseId;
   PRInt64 mLastObjectStoreId;
@@ -160,7 +161,8 @@ CreateTables(mozIStorageConnection* aDBConn)
   nsresult rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "CREATE TABLE database ("
       "name TEXT NOT NULL, "
-      "version TEXT DEFAULT NULL"
+      "version TEXT DEFAULT NULL, "
+      "dataVersion INTEGER NOT NULL"
     ");"
   ));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -183,7 +185,7 @@ CreateTables(mozIStorageConnection* aDBConn)
     "CREATE TABLE object_data ("
       "id INTEGER, "
       "object_store_id INTEGER NOT NULL, "
-      "data TEXT NOT NULL, "
+      "data BLOB NOT NULL, "
       "key_value DEFAULT NULL, " // NONE affinity
       "PRIMARY KEY (id), "
       "FOREIGN KEY (object_store_id) REFERENCES object_store(id) ON DELETE "
@@ -203,7 +205,7 @@ CreateTables(mozIStorageConnection* aDBConn)
     "CREATE TABLE ai_object_data ("
       "id INTEGER PRIMARY KEY AUTOINCREMENT, "
       "object_store_id INTEGER NOT NULL, "
-      "data TEXT NOT NULL, "
+      "data BLOB NOT NULL, "
       "FOREIGN KEY (object_store_id) REFERENCES object_store(id) ON DELETE "
         "CASCADE"
     ");"
@@ -328,12 +330,16 @@ CreateMetaData(mozIStorageConnection* aConnection,
 
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
-    "INSERT OR REPLACE INTO database (name) "
-    "VALUES (:name)"
+    "INSERT OR REPLACE INTO database (name, dataVersion) "
+    "VALUES (:name, :dataVersion)"
   ), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = stmt->BindStringByName(NS_LITERAL_CSTRING("name"), aName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("dataVersion"),
+                             JS_STRUCTURED_CLONE_VERSION);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return stmt->Execute();
@@ -549,7 +555,7 @@ IDBFactory::GetConnection(const nsAString& aDatabaseFilePath)
   }
 #endif
 
-  // Turn on foreign key constraints in debug builds to catch bugs!
+  // Turn on foreign key constraints!
   rv = connection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "PRAGMA foreign_keys = ON;"
   ));
@@ -726,7 +732,6 @@ IDBFactory::LoadDatabaseInformation(mozIStorageConnection* aConnection,
   if (version.IsVoid()) {
     version.SetIsVoid(PR_FALSE);
   }
-
   aVersion = version;
   return NS_OK;
 }
@@ -883,6 +888,37 @@ OpenDatabaseHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   nsresult rv = CreateDatabaseConnection(mASCIIOrigin, mName, mDatabaseFilePath,
                                          getter_AddRefs(connection));
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  // Get the data version.
+  nsCOMPtr<mozIStorageStatement> stmt;
+  rv = connection->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT dataVersion "
+    "FROM database"
+  ), getter_AddRefs(stmt));
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  PRBool hasResult;
+  rv = stmt->ExecuteStep(&hasResult);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  if (!hasResult) {
+    NS_ERROR("Database has no dataVersion!");
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+  }
+
+  PRInt64 dataVersion;
+  rv = stmt->GetInt64(0, &dataVersion);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  if (dataVersion > JS_STRUCTURED_CLONE_VERSION) {
+    NS_ERROR("Bad data version!");
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+  }
+
+  if (dataVersion < JS_STRUCTURED_CLONE_VERSION) {
+    // Need to upgrade the database, here, before returning to the main thread.
+    NS_NOTYETIMPLEMENTED("Implement me!");
+  }
 
   mDatabaseId = HashString(mDatabaseFilePath);
   NS_ASSERTION(mDatabaseId, "HashString gave us 0?!");

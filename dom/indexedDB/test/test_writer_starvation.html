@@ -35,7 +35,7 @@
 
       is(event.transaction.mode, VERSION_CHANGE, "Correct mode");
 
-      let objectStore = db.createObjectStore("foo", "", true);
+      let objectStore = db.createObjectStore("foo", { autoIncrement: true });
 
       request = objectStore.add({});
       request.onerror = errorHandler;

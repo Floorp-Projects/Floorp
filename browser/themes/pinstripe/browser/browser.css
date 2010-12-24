@@ -79,29 +79,47 @@
 
 #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar) {
   -moz-box-align: center;
-  padding: 2px 4px 4px;
+  padding: 2px 4px;
 }
 
-#PersonalToolbar:not(:-moz-lwtheme),
-#navigator-toolbox[tabsontop="true"] > toolbar:not(#TabsToolbar):not(:-moz-lwtheme) {
+#nav-bar {
+  padding-bottom: 4px !important;
+}
+
+#PersonalToolbar {
   -moz-appearance: none;
   margin-top: -1px; /* overlay the bottom border of the toolbar above us */
+  padding-top: 0 !important;
   background-color: -moz-mac-chrome-active;
   border-bottom: 1px solid rgba(0, 0, 0, 0.57);
-}
-
-#PersonalToolbar:not(:-moz-lwtheme):-moz-window-inactive,
-#navigator-toolbox[tabsontop="true"] > toolbar:not(#TabsToolbar):not(:-moz-lwtheme):-moz-window-inactive {
-  background-color: -moz-mac-chrome-inactive;
-  border-bottom-color: rgba(0, 0, 0, 0.32);
 }
 
 #navigator-toolbox[tabsontop="true"] > #nav-bar,
 #navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + toolbar,
 #navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + #customToolbars + #PersonalToolbar {
-  margin-top: 0 !important; /* don't overlay the bottom border of the tabs toolbar */
+  -moz-appearance: none;
+  margin-top: 0; /* don't overlay the bottom border of the tabs toolbar */
   padding-top: 4px !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.57);
+  background-color: -moz-mac-chrome-active;
   background-image: -moz-linear-gradient(rgba(255,255,255,.43), rgba(255,255,255,0)) !important; /* override lwtheme style */
+  background-origin: border-box !important;
+}
+
+#PersonalToolbar:-moz-lwtheme,
+#navigator-toolbox[tabsontop="true"] > #nav-bar:-moz-lwtheme,
+#navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + toolbar:-moz-lwtheme,
+#navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + #customToolbars + #PersonalToolbar:-moz-lwtheme {
+  background-color: transparent;
+  border-bottom-color: transparent;
+}
+
+#PersonalToolbar:not(:-moz-lwtheme):-moz-window-inactive,
+#navigator-toolbox[tabsontop="true"] > #nav-bar:not(:-moz-lwtheme):-moz-window-inactive,
+#navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + toolbar:not(:-moz-lwtheme):-moz-window-inactive,
+#navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + #customToolbars + #PersonalToolbar:not(:-moz-lwtheme):-moz-window-inactive {
+  background-color: -moz-mac-chrome-inactive;
+  border-bottom-color: rgba(0, 0, 0, 0.32);
 }
 
 /* ----- BOOKMARK TOOLBAR ----- */
@@ -1784,15 +1802,11 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up:-moz-locale-dir(ltr),
 .tabbrowser-arrowscrollbox > .scrollbutton-down:-moz-locale-dir(rtl) {
-  border-right: 2px solid;
-  -moz-border-right-colors: rgba(0,0,0,0.25) rgba(255,255,255,0.15);
   list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-left.png");
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-down:-moz-locale-dir(ltr),
 .tabbrowser-arrowscrollbox > .scrollbutton-up:-moz-locale-dir(rtl) {
-  border-left: 2px solid;
-  -moz-border-left-colors: rgba(0,0,0,0.25) rgba(255,255,255,0.15);
   list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-right.png");
 }
 
@@ -1823,18 +1837,14 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   padding: 0;
   border: none;
   border-radius: 0;
-  background: none;
-  box-shadow: none;
+  /* !important flags needed because of bug 561154: */
+  background: none !important;
+  box-shadow: none !important;
 }
 
 :-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1:not([type="menu-button"]),
 :-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-button,
 :-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
-  -moz-border-start: 2px solid !important;
-  -moz-border-end: none !important;
-  -moz-border-left-colors: rgba(0,0,0,0.25) rgba(255,255,255,0.15) !important;
-  -moz-border-right-colors: rgba(0,0,0,0.25) rgba(255,255,255,0.15) !important;
-  background-clip: padding-box;
   margin: 0;
   padding: 0 1px;
 }
@@ -2280,7 +2290,7 @@ panel[dimmed="true"] {
   -moz-appearance: none;
 }
 
-#addon-bar {
+#addon-bar:not(:-moz-lwtheme) {
   -moz-appearance: statusbar;
 }
 

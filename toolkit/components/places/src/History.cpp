@@ -567,9 +567,11 @@ private:
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Now that it should be in the database, we need to obtain the id of the
-    // visit we just added.
+    // place we just added.
     bool visited = FetchVisitInfo(_place);
-    NS_ASSERTION(!visited, "Not visited after adding a visit!");
+    if (visited) {
+      NS_NOTREACHED("Not visited after adding a visit!");
+    }
 
     return NS_OK;
   }
@@ -841,13 +843,13 @@ private:
 History* History::gService = NULL;
 
 History::History()
-: mShuttingDown(false)
-, syncStatements(mDBConn)
+  : syncStatements(mDBConn)
+  , mShuttingDown(false)
 {
   NS_ASSERTION(!gService, "Ruh-roh!  This service has already been created!");
   gService = this;
 
-  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
   NS_WARN_IF_FALSE(os, "Observer service was not found!");
   if (os) {
     (void)os->AddObserver(this, TOPIC_PLACES_SHUTDOWN, PR_FALSE);

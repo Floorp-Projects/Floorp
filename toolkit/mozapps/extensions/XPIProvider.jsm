@@ -83,6 +83,7 @@ const DIR_XPI_STAGE                   = "staged-xpis";
 const DIR_TRASH                       = "trash";
 
 const FILE_OLD_DATABASE               = "extensions.rdf";
+const FILE_OLD_CACHE                  = "extensions.cache";
 const FILE_DATABASE                   = "extensions.sqlite";
 const FILE_INSTALL_MANIFEST           = "install.rdf";
 const FILE_XPI_ADDONS_LIST            = "extensions.ini";
@@ -1759,7 +1760,7 @@ var XPIProvider = {
         try {
           var addonInstallLocation = aLocation.installAddon(id, stageDirEntry,
                                                             existingAddonID);
-          if (id in aManifests[aLocation.name])
+          if (aManifests[aLocation.name][id])
             aManifests[aLocation.name][id]._sourceBundle = addonInstallLocation;
         }
         catch (e) {
@@ -2374,12 +2375,20 @@ var XPIProvider = {
         }
       }
 
-      // When upgrading the app and using a custom skin make sure it is still
-      // compatible otherwise switch back the default
-      if (aAppChanged && this.currentSkin != this.defaultSkin) {
-        let oldSkin = XPIDatabase.getVisibleAddonForInternalName(this.currentSkin);
-        if (!oldSkin || oldSkin.appDisabled)
-          this.enableDefaultTheme();
+      if (aAppChanged) {
+        // When upgrading the app and using a custom skin make sure it is still
+        // compatible otherwise switch back the default
+        if (this.currentSkin != this.defaultSkin) {
+          let oldSkin = XPIDatabase.getVisibleAddonForInternalName(this.currentSkin);
+          if (!oldSkin || oldSkin.appDisabled)
+            this.enableDefaultTheme();
+        }
+
+        // When upgrading remove the old extensions cache to force older
+        // versions to rescan the entire list of extensions
+        let oldCache = FileUtils.getFile(KEY_PROFILEDIR, [FILE_OLD_CACHE], true);
+        if (oldCache.exists())
+          oldCache.remove(true);
       }
 
       // If the application crashed before completing any pending operations then
@@ -3570,7 +3579,6 @@ var XPIDatabase = {
         }
         catch (e) {
           ERROR("Error processing file changes", e);
-          dump(e.stack);
           this.rollbackTransaction();
         }
       }

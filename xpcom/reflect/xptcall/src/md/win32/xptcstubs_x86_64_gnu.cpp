@@ -38,7 +38,6 @@
 
 #include "xptcprivate.h"
 #include "xptiprivate.h"
-#include "../unix/xptc_gcc_x86_unix.h"
 
 /*
  * This is for Windows 64 bit (x86_64) using GCC syntax
@@ -213,7 +212,7 @@ PrepareAndDispatch(nsXPTCStubBase * self, PRUint32 methodIndex,
 
 __asm__ (
   ".text\n"
-  ".intel_syntax\n"                     /* switch to Intel syntax to look like the MSVC assembly */
+  ".intel_syntax noprefix\n"            /* switch to Intel syntax to look like the MSVC assembly */
   ".globl SharedStub\n"
   ".def SharedStub ; .scl 3 ; .type 46 ; .endef \n"
   "SharedStub:\n"
@@ -262,7 +261,7 @@ __asm__ (
 
   /* 1st parameter (this) (rcx) */
 
-  "call    _PrepareAndDispatch\n"
+  "call    PrepareAndDispatch\n"
 
   /* restore rcx */
 
@@ -284,34 +283,33 @@ __asm__ (
 
   /* back to AT&T syntax */
   ".att_syntax\n"
-
 );
 
 #define STUB_ENTRY(n) \
-asm(".intel_syntax\n" /* this is in intel syntax */ \
+asm(".intel_syntax noprefix\n" /* this is in intel syntax */ \
     ".text\n" \
     ".align 2\n" \
     ".if        " #n " < 10\n" \
-    ".globl     " SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase5Stub" #n "Ev@4\n" \
-    ".def       " SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase5Stub" #n "Ev@4\n" \
+    ".globl       _ZN14nsXPTCStubBase5Stub" #n "Ev@4\n" \
+    ".def         _ZN14nsXPTCStubBase5Stub" #n "Ev@4\n" \
     ".scl         3\n" /* private */ \
     ".type        46\n" /* function returning unsigned int */ \
     ".endef\n" \
-    SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase5Stub" #n "Ev@4:\n" \
+    "_ZN14nsXPTCStubBase5Stub" #n "Ev@4:\n" \
     ".elseif    " #n " < 100\n" \
-    ".globl     " SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase6Stub" #n "Ev@4\n" \
-    ".def       " SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase6Stub" #n "Ev@4\n" \
+    ".globl       _ZN14nsXPTCStubBase6Stub" #n "Ev@4\n" \
+    ".def         _ZN14nsXPTCStubBase6Stub" #n "Ev@4\n" \
     ".scl         3\n" /* private */\
     ".type        46\n" /* function returning unsigned int */ \
     ".endef\n" \
-    SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase6Stub" #n "Ev@4:\n" \
+    "_ZN14nsXPTCStubBase6Stub" #n "Ev@4:\n" \
     ".elseif    " #n " < 1000\n" \
-    ".globl     " SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase7Stub" #n "Ev@4\n" \
-    ".def       " SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase7Stub" #n "Ev@4\n" \
+    ".globl       _ZN14nsXPTCStubBase7Stub" #n "Ev@4\n" \
+    ".def         _ZN14nsXPTCStubBase7Stub" #n "Ev@4\n" \
     ".scl         3\n" /* private */ \
     ".type        46\n" /* function returning unsigned int */ \
     ".endef\n" \
-    SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase7Stub" #n "Ev@4:\n" \
+    "_ZN14nsXPTCStubBase7Stub" #n "Ev@4:\n" \
     ".else\n" \
     ".err       \"stub number " #n " >= 1000 not yet supported\"\n" \
     ".endif\n" \

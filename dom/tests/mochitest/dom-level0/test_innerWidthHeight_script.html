@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Bug 602580 - Test getting and setting innerWidth and Height after using setCSSViewport</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <!--
+    This acts funny when run in the normal content frame
+    so instead We load it in a separate window.
+  -->
+</head>
+<body onload="runTest()">
+  <script class="testbody" type="text/javascript">
+  SimpleTest.waitForExplicitFinish();
+  var newWin = null;
+  function runTest() {
+     newWin = window.open("innerWidthHeight_script.html", '_new', 'width=600,height=400');
+  }
+
+  function finish() {
+    newWin.close();
+    SimpleTest.finish();
+  }
+  </script>
+</body>
+</html>

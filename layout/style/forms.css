@@ -629,6 +629,10 @@ input[type="file"] > input[type="text"] {
   box-shadow: 0 0 1.5px 1px red;
 }
 
+:not(output):-moz-ui-invalid:-moz-focusring {
+  box-shadow: 0 0 2px 2px rgba(255,0,0,0.4);
+}
+
 output:-moz-ui-invalid {
   color: red;
 }

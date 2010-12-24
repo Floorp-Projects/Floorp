@@ -2088,7 +2088,7 @@ nsPresContext::FireDOMPaintEvent()
       // something happened in a subdocument. Tell only the chrome event handler.
       // (Events sent to the window get propagated to the chrome event handler
       // automatically.)
-      dispatchTarget = do_QueryInterface(ourWindow->GetChromeEventHandler());
+      dispatchTarget = do_QueryInterface(ourWindow->GetParentTarget());
       if (!dispatchTarget) {
         return;
       }

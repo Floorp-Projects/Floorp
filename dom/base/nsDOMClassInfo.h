@@ -282,6 +282,7 @@ protected:
   static PRBool sDisableDocumentAllSupport;
   static PRBool sDisableGlobalScopePollutionSupport;
 
+public:
   static jsid sTop_id;
   static jsid sParent_id;
   static jsid sScrollbars_id;
@@ -321,6 +322,8 @@ protected:
   static jsid sOnsubmit_id;
   static jsid sOnreset_id;
   static jsid sOnchange_id;
+  static jsid sOninput_id;
+  static jsid sOninvalid_id;
   static jsid sOnselect_id;
   static jsid sOnload_id;
   static jsid sOnpopstate_id;
@@ -391,7 +394,11 @@ protected:
   static jsid sOnafterscriptexecute_id;
   static jsid sWrappedJSObject_id;
   static jsid sURL_id;
+  static jsid sKeyPath_id;
+  static jsid sAutoIncrement_id;
+  static jsid sUnique_id;
 
+protected:
   static JSPropertyOp sXPCNativeWrapperGetPropertyOp;
   static JSPropertyOp sXrayWrapperPropertyHolderGetPropertyOp;
 };
@@ -1798,6 +1805,36 @@ public:
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
     return new nsFileListSH(aData);
+  }
+};
+
+class nsWebGLViewportHandlerSH : public nsDOMGenericSH
+{
+protected:
+  nsWebGLViewportHandlerSH(nsDOMClassInfoData *aData) : nsDOMGenericSH(aData)
+  {
+  }
+
+  virtual ~nsWebGLViewportHandlerSH()
+  {
+  }
+
+public:
+  NS_IMETHOD PostCreatePrototype(JSContext * cx, JSObject * proto) {
+    nsresult rv = nsDOMGenericSH::PostCreatePrototype(cx, proto);
+    if (NS_SUCCEEDED(rv)) {
+      if (!::JS_DefineProperty(cx, proto, "VIEWPORT", INT_TO_JSVAL(0x0BA2),
+                               nsnull, nsnull, JSPROP_ENUMERATE))
+      {
+        return NS_ERROR_UNEXPECTED;
+      }
+    }
+    return rv;
+  }
+
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
+  {
+    return new nsWebGLViewportHandlerSH(aData);
   }
 };
 

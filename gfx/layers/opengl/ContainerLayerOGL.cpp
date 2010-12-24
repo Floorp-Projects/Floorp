@@ -160,6 +160,7 @@ ContainerRender(Container* aContainer,
   float opacity = aContainer->GetEffectiveOpacity();
   const gfx3DMatrix& transform = aContainer->GetEffectiveTransform();
   bool needsFramebuffer = aContainer->UseIntermediateSurface();
+  gfxMatrix contTransform;
   if (needsFramebuffer) {
     aManager->CreateFBOWithTexture(visibleRect.width,
                                    visibleRect.height,
@@ -176,6 +177,11 @@ ContainerRender(Container* aContainer,
     aContainer->gl()->fClear(LOCAL_GL_COLOR_BUFFER_BIT);
   } else {
     frameBuffer = aPreviousFrameBuffer;
+#ifdef DEBUG
+    PRBool is2d =
+#endif
+    transform.Is2D(&contTransform);
+    NS_ASSERTION(is2d, "Transform must be 2D");
   }
 
   /**
@@ -197,6 +203,14 @@ ContainerRender(Container* aContainer,
         continue;
       }
       scissorRect = *clipRect;
+      if (!needsFramebuffer) {
+        gfxRect r(scissorRect.x, scissorRect.y, scissorRect.width, scissorRect.height);
+        gfxRect trScissor = contTransform.TransformBounds(r);
+        trScissor.Round();
+        if (!gfxUtils::GfxRectToIntRect(trScissor, &scissorRect)) {
+          scissorRect = visibleRect;
+        }
+      }
     }
 
     if (needsFramebuffer) {

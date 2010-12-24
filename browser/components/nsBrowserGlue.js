@@ -257,7 +257,9 @@ BrowserGlue.prototype = {
         if (data == "post-update-notification") {
           if (Services.prefs.prefHasUserValue("app.update.postupdate"))
             this._showUpdateNotification();
-          break;
+        }
+        else if (data == "force-ui-migration") {
+          this._migrateUI();
         }
         break;
     }
@@ -997,7 +999,8 @@ BrowserGlue.prototype = {
   },
 
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 4;
+    const UI_VERSION = 5;
+    const BROWSER_DOCURL = "chrome://browser/content/browser.xul#";
     let currentUIVersion = 0;
     try {
       currentUIVersion = Services.prefs.getIntPref("browser.migration.version");
@@ -1014,7 +1017,7 @@ BrowserGlue.prototype = {
       let currentsetResource = this._rdf.GetResource("currentset");
       let toolbars = ["nav-bar", "toolbar-menubar", "PersonalToolbar"];
       for (let i = 0; i < toolbars.length; i++) {
-        let toolbar = this._rdf.GetResource("chrome://browser/content/browser.xul#" + toolbars[i]);
+        let toolbar = this._rdf.GetResource(BROWSER_DOCURL + toolbars[i]);
         let currentset = this._getPersist(toolbar, currentsetResource);
         if (!currentset) {
           // toolbar isn't customized
@@ -1039,7 +1042,7 @@ BrowserGlue.prototype = {
     if (currentUIVersion < 2) {
       // This code adds the customizable bookmarks button.
       let currentsetResource = this._rdf.GetResource("currentset");
-      let toolbarResource = this._rdf.GetResource("chrome://browser/content/browser.xul#nav-bar");
+      let toolbarResource = this._rdf.GetResource(BROWSER_DOCURL + "nav-bar");
       let currentset = this._getPersist(toolbarResource, currentsetResource);
       // Need to migrate only if toolbar is customized and the element is not found.
       if (currentset &&
@@ -1058,7 +1061,7 @@ BrowserGlue.prototype = {
     if (currentUIVersion < 3) {
       // This code merges the reload/stop/go button into the url bar.
       let currentsetResource = this._rdf.GetResource("currentset");
-      let toolbarResource = this._rdf.GetResource("chrome://browser/content/browser.xul#nav-bar");
+      let toolbarResource = this._rdf.GetResource(BROWSER_DOCURL + "nav-bar");
       let currentset = this._getPersist(toolbarResource, currentsetResource);
       // Need to migrate only if toolbar is customized and all 3 elements are found.
       if (currentset &&
@@ -1077,7 +1080,7 @@ BrowserGlue.prototype = {
     if (currentUIVersion < 4) {
       // This code moves the home button to the immediate left of the bookmarks menu button.
       let currentsetResource = this._rdf.GetResource("currentset");
-      let toolbarResource = this._rdf.GetResource("chrome://browser/content/browser.xul#nav-bar");
+      let toolbarResource = this._rdf.GetResource(BROWSER_DOCURL + "nav-bar");
       let currentset = this._getPersist(toolbarResource, currentsetResource);
       // Need to migrate only if toolbar is customized and the elements are found.
       if (currentset &&
@@ -1087,6 +1090,34 @@ BrowserGlue.prototype = {
                                .replace(/(^|,)bookmarks-menu-button-container($|,)/,
                                         "$1home-button,bookmarks-menu-button-container$2");
         this._setPersist(toolbarResource, currentsetResource, currentset);
+      }
+    }
+
+    if (currentUIVersion < 5) {
+      // This code uncollapses PersonalToolbar if its collapsed status is not
+      // persisted, and user customized it or changed default bookmarks.
+      let toolbarResource = this._rdf.GetResource(BROWSER_DOCURL + "PersonalToolbar");
+      let collapsedResource = this._rdf.GetResource("collapsed");
+      let collapsed = this._getPersist(toolbarResource, collapsedResource);
+      // If the user does not have a persisted value for the toolbar's
+      // "collapsed" attribute, try to determine whether it's customized.
+      if (collapsed === null) {
+        // We consider the toolbar customized if it has more than
+        // 3 children, or if it has a persisted currentset value.
+        let currentsetResource = this._rdf.GetResource("currentset");
+        let toolbarIsCustomized = !!this._getPersist(toolbarResource,
+                                                     currentsetResource);
+        function getToolbarFolderCount() {
+          let toolbarFolder =
+            PlacesUtils.getFolderContents(PlacesUtils.toolbarFolderId).root;
+          let toolbarChildCount = toolbarFolder.childCount;
+          toolbarFolder.containerOpen = false;
+          return toolbarChildCount;
+        }
+
+        if (toolbarIsCustomized || getToolbarFolderCount() > 3) {
+          this._setPersist(toolbarResource, collapsedResource, "false");
+        }
       }
     }
 
@@ -1119,6 +1150,15 @@ BrowserGlue.prototype = {
       }
       else {
         this._dataSource.Assert(aSource, aProperty, this._rdf.GetLiteral(aTarget), true);
+      }
+
+      // Add the entry to the persisted set for this document if it's not there.
+      // This code is mostly borrowed from nsXULDocument::Persist.
+      let docURL = aSource.ValueUTF8.split("#")[0];
+      let docResource = this._rdf.GetResource(docURL);
+      let persistResource = this._rdf.GetResource("http://home.netscape.com/NC-rdf#persist");
+      if (!this._dataSource.HasAssertion(docResource, persistResource, aSource, true)) {
+        this._dataSource.Assert(docResource, persistResource, aSource, true);
       }
     }
     catch(ex) {}

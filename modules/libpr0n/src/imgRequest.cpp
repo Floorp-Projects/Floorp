@@ -189,7 +189,7 @@ NS_IMPL_ISUPPORTS8(imgRequest,
 imgRequest::imgRequest() : 
   mCacheId(0), mValidator(nsnull), mImageSniffers("image-sniffing-services"),
   mDecodeRequested(PR_FALSE), mIsMultiPartChannel(PR_FALSE),
-  mGotData(PR_FALSE), mIsInCache(PR_FALSE)
+  mGotData(PR_FALSE), mIsInCache(PR_FALSE), mWindowId(0)
 {}
 
 imgRequest::~imgRequest()
@@ -1025,6 +1025,7 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
     } else {
       mImage = new RasterImage(mStatusTracker.forget());
     }
+    mImage->SetWindowID(mWindowId);
     imageType = mImage->GetType();
 
     // Notify any imgRequestProxys that are observing us that we have an Image.

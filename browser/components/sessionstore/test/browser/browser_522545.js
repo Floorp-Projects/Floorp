@@ -251,19 +251,19 @@ function test() {
       is(browser.userTypedValue, null, "userTypedValue is empty to start");
       is(browser.userTypedClear, 0, "userTypedClear is 0 to start");
 
-      gURLBar.value = "mozilla.org";
+      gURLBar.value = "example.org";
       let event = document.createEvent("Events");
       event.initEvent("input", true, false);
       gURLBar.dispatchEvent(event);
 
-      is(browser.userTypedValue, "mozilla.org",
+      is(browser.userTypedValue, "example.org",
          "userTypedValue was set when changing gURLBar.value");
       is(browser.userTypedClear, 0,
          "userTypedClear was not changed when changing gURLBar.value");
 
       // Now make sure ss gets these values too
       let newState = JSON.parse(ss.getBrowserState());
-      is(newState.windows[0].tabs[0].userTypedValue, "mozilla.org",
+      is(newState.windows[0].tabs[0].userTypedValue, "example.org",
          "sessionstore got correct userTypedValue");
       is(newState.windows[0].tabs[0].userTypedClear, 0,
          "sessionstore got correct userTypedClear");

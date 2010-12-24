@@ -424,6 +424,7 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect &aRect,
     // This can happen when the window is not on the primary screen.
     [mWindow setFrame:wantedFrame display:NO];
   }
+  UpdateBounds();
 
   if (mWindowType == eWindowType_invisible) {
     [mWindow setLevel:kCGDesktopWindowLevelKey];
@@ -988,8 +989,6 @@ NS_IMETHODIMP nsCocoaWindow::Move(PRInt32 aX, PRInt32 aY)
   if (!mWindow || (mBounds.x == aX && mBounds.y == aY))
     return NS_OK;
 
-  mBounds.MoveTo(aX, aY);
-
   // The point we have is in Gecko coordinates (origin top-left). Convert
   // it to Cocoa ones (origin bottom-left).
   NSPoint coord = {aX, nsCocoaUtils::FlippedScreenY(aY)};
@@ -1129,15 +1128,13 @@ NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRIn
   nsIntRect newBounds = nsIntRect(aX, aY, aWidth, aHeight);
   FitRectToVisibleAreaForScreen(newBounds, [mWindow screen]);
 
-  nsIntRect windowBounds(nsCocoaUtils::CocoaRectToGeckoRect([mWindow frame]));
-  BOOL isMoving = (windowBounds.x != newBounds.x || windowBounds.y != newBounds.y);
-  BOOL isResizing = (windowBounds.width != newBounds.width || windowBounds.height != newBounds.height);
+  BOOL isMoving = (mBounds.x != newBounds.x || mBounds.y != newBounds.y);
+  BOOL isResizing = (mBounds.width != newBounds.width || mBounds.height != newBounds.height);
 
   if (!mWindow || (!isMoving && !isResizing))
     return NS_OK;
-  
-  mBounds = newBounds;
-  NSRect newFrame = nsCocoaUtils::GeckoRectToCocoaRect(mBounds);
+
+  NSRect newFrame = nsCocoaUtils::GeckoRectToCocoaRect(newBounds);
 
   // We ignore aRepaint -- we have to call display:YES, otherwise the
   // title bar doesn't immediately get repainted and is displayed in
@@ -1153,18 +1150,42 @@ NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRep
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
   
-  nsIntRect windowBounds(nsCocoaUtils::CocoaRectToGeckoRect([mWindow frame]));
-  return Resize(windowBounds.x, windowBounds.y, aWidth, aHeight, aRepaint);
+  return Resize(mBounds.x, mBounds.y, aWidth, aHeight, aRepaint);
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
+NS_IMETHODIMP nsCocoaWindow::GetClientBounds(nsIntRect &aRect)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  if ([mWindow isKindOfClass:[ToolbarWindow class]] &&
+      [(ToolbarWindow*)mWindow drawsContentsIntoWindowFrame]) {
+    aRect = nsCocoaUtils::CocoaRectToGeckoRect([mWindow frame]);
+  } else {
+    NSRect contentRect = [mWindow contentRectForFrameRect:[mWindow frame]];
+    aRect = nsCocoaUtils::CocoaRectToGeckoRect(contentRect);
+  }
+
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
+void
+nsCocoaWindow::UpdateBounds()
+{
+  mBounds = nsCocoaUtils::CocoaRectToGeckoRect([mWindow frame]);
 }
 
 NS_IMETHODIMP nsCocoaWindow::GetScreenBounds(nsIntRect &aRect)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  aRect = nsCocoaUtils::CocoaRectToGeckoRect([mWindow frame]);
-  // printf("GetScreenBounds: output: %d,%d,%d,%d\n", aRect.x, aRect.y, aRect.width, aRect.height);
+  NS_ASSERTION(mBounds == nsCocoaUtils::CocoaRectToGeckoRect([mWindow frame]),
+               "mBounds out of sync!");
+
+  aRect = mBounds;
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
@@ -1319,16 +1340,19 @@ GetWindowSizeMode(NSWindow* aWindow) {
 void
 nsCocoaWindow::ReportMoveEvent()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  UpdateBounds();
+
   // Dispatch the move event to Gecko
   nsGUIEvent guiEvent(PR_TRUE, NS_MOVE, this);
-  nsIntRect rect;
-  GetScreenBounds(rect);
-  mBounds.MoveTo(rect.TopLeft());
-  guiEvent.refPoint.x = rect.x;
-  guiEvent.refPoint.y = rect.y;
+  guiEvent.refPoint.x = mBounds.x;
+  guiEvent.refPoint.y = mBounds.y;
   guiEvent.time = PR_IntervalNow();
   nsEventStatus status = nsEventStatus_eIgnore;
   DispatchEvent(&guiEvent, status);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 void
@@ -1343,32 +1367,18 @@ nsCocoaWindow::DispatchSizeModeEvent()
 }
 
 void
-nsCocoaWindow::ReportSizeEvent(NSRect *r)
+nsCocoaWindow::ReportSizeEvent()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  NSRect windowFrame = [mWindow frame];
-  if (!r)
-    r = &windowFrame;
-
-  mBounds.width  = nscoord(r->size.width);
-  mBounds.height = nscoord(r->size.height);
-
-  if ([mWindow isKindOfClass:[ToolbarWindow class]] &&
-      [(ToolbarWindow*)mWindow drawsContentsIntoWindowFrame]) {
-    // Report the frame rect instead of the content rect. This will make our
-    // root widget NSView bigger than the window's content view, and since it's
-    // anchored at the bottom, it will extend upwards into the titlebar.
-    windowFrame = *r;
-  } else {
-    windowFrame = [mWindow contentRectForFrameRect:(*r)];
-  }
+  UpdateBounds();
 
   nsSizeEvent sizeEvent(PR_TRUE, NS_SIZE, this);
   sizeEvent.time = PR_IntervalNow();
 
-  nsIntRect rect = nsCocoaUtils::CocoaRectToGeckoRect(windowFrame);
-  sizeEvent.windowSize = &rect;
+  nsIntRect innerBounds;
+  GetClientBounds(innerBounds);
+  sizeEvent.windowSize = &innerBounds;
   sizeEvent.mWinWidth  = mBounds.width;
   sizeEvent.mWinHeight = mBounds.height;
 
@@ -1423,11 +1433,10 @@ nsIntPoint nsCocoaWindow::GetClientOffset()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
-  NSSize windowSize = [mWindow frame].size;
-  NSRect contentRect = [mWindow contentRectForFrameRect:[mWindow frame]];
+  nsIntRect clientRect;
+  GetClientBounds(clientRect);
 
-  return nsIntPoint(NSToIntRound(windowSize.width - contentRect.size.width),
-                    NSToIntRound(windowSize.height - contentRect.size.height));
+  return clientRect.TopLeft() - mBounds.TopLeft();
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(nsIntPoint(0, 0));
 }

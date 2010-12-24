@@ -193,6 +193,17 @@ static const char kTimeSinceLastCrashParameter[] = "SecondsSinceLastCrash=";
 static const int kTimeSinceLastCrashParameterLen =
                                      sizeof(kTimeSinceLastCrashParameter)-1;
 
+static const char kSysMemoryParameter[] = "SystemMemoryUsePercentage=";
+static const int kSysMemoryParameterLen = sizeof(kSysMemoryParameter)-1;
+
+static const char kTotalVirtualMemoryParameter[] = "TotalVirtualMemory=";
+static const int kTotalVirtualMemoryParameterLen =
+  sizeof(kTotalVirtualMemoryParameter)-1;
+
+static const char kAvailableVirtualMemoryParameter[] = "AvailableVirtualMemory=";
+static const int kAvailableVirtualMemoryParameterLen =
+  sizeof(kAvailableVirtualMemoryParameter)-1;
+
 // this holds additional data sent via the API
 static AnnotationTable* crashReporterAPIData_Hash;
 static nsCString* crashReporterAPIData = nsnull;
@@ -417,6 +428,34 @@ bool MinidumpCallback(const XP_CHAR* dump_path,
                   &nBytes, NULL);
         WriteFile(hFile, "\n", 1, &nBytes, NULL);
       }
+      // Try to get some information about memory.
+      MEMORYSTATUSEX statex;
+      statex.dwLength = sizeof(statex);
+      if (GlobalMemoryStatusEx(&statex)) {
+        char buffer[128];
+        int bufferLen;
+        WriteFile(hFile, kSysMemoryParameter,
+                  kSysMemoryParameterLen, &nBytes, NULL);
+        ltoa(statex.dwMemoryLoad, buffer, 10);
+        bufferLen = strlen(buffer);
+        WriteFile(hFile, buffer, bufferLen,
+                  &nBytes, NULL);
+        WriteFile(hFile, "\n", 1, &nBytes, NULL);
+        WriteFile(hFile, kTotalVirtualMemoryParameter,
+                  kTotalVirtualMemoryParameterLen, &nBytes, NULL);
+        _ui64toa(statex.ullTotalVirtual, buffer, 10);
+        bufferLen = strlen(buffer);
+        WriteFile(hFile, buffer, bufferLen,
+                  &nBytes, NULL);
+        WriteFile(hFile, "\n", 1, &nBytes, NULL);
+        WriteFile(hFile, kAvailableVirtualMemoryParameter,
+                  kAvailableVirtualMemoryParameterLen, &nBytes, NULL);
+        _ui64toa(statex.ullAvailVirtual, buffer, 10);
+        bufferLen = strlen(buffer);
+        WriteFile(hFile, buffer, bufferLen,
+                  &nBytes, NULL);
+        WriteFile(hFile, "\n", 1, &nBytes, NULL);
+      }
       CloseHandle(hFile);
     }
   }
@@ -612,10 +651,10 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
   crashReporterPath = ToNewCString(crashReporterPath_temp);
 #else
   // On Android, we launch using the application package name
-  // instead of a filename, so use MOZ_APP_NAME to do that here.
+  // instead of a filename, so use ANDROID_PACKAGE_NAME to do that here.
   //TODO: don't hardcode org.mozilla here, so other vendors can
   // ship XUL apps with different package names on Android?
-  nsCString package("org.mozilla." MOZ_APP_NAME "/.CrashReporter");
+  nsCString package(ANDROID_PACKAGE_NAME "/.CrashReporter");
   crashReporterPath = ToNewCString(package);
 #endif
 
