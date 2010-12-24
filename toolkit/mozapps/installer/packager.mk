@@ -201,7 +201,8 @@ endif
 
 PKG_SUFFIX      = .apk
 INNER_MAKE_PACKAGE	= \
-  rm -f $(_ABS_DIST)/gecko.ap_ && \
+  make -C ../embedding/android gecko.ap_ && \
+  cp ../embedding/android/gecko.ap_ $(_ABS_DIST) && \
   ( cd $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH) && \
     rm -rf lib && \
     mkdir -p lib/$(ABI_DIR) && \
@@ -212,6 +213,8 @@ INNER_MAKE_PACKAGE	= \
     do \
       printf "`basename $$SOMELIB`:`$(_ABS_DIST)/host/bin/file_id $$SOMELIB`\n" >> lib.id ; \
     done && \
+    unzip -o $(_ABS_DIST)/gecko.ap_ && \
+    rm $(_ABS_DIST)/gecko.ap_ && \
     $(ZIP) -r9D $(_ABS_DIST)/gecko.ap_ $(DIST_FILES) -x $(NON_DIST_FILES) ) && \
   rm -f $(_ABS_DIST)/gecko.apk && \
   $(APKBUILDER) $(_ABS_DIST)/gecko.apk -v $(APKBUILDER_FLAGS) -z $(_ABS_DIST)/gecko.ap_ -f $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/classes.dex && \

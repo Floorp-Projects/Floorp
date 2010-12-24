@@ -32,7 +32,8 @@
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
 
-      let objectStore = db.createObjectStore("autoIncrement", "", true);
+      let objectStore = db.createObjectStore("autoIncrement",
+                                             { autoIncrement: true });
 
       request = objectStore.openCursor();
       request.onerror = errorHandler;
@@ -42,7 +43,9 @@
       }
       yield;
 
-      objectStore = db.createObjectStore("autoIncrementKeyPath", "foo", true);
+      objectStore = db.createObjectStore("autoIncrementKeyPath",
+                                         { keyPath: "foo",
+                                           autoIncrement: true });
 
       request = objectStore.openCursor();
       request.onerror = errorHandler;
@@ -52,7 +55,7 @@
       }
       yield;
 
-      objectStore = db.createObjectStore("keyPath", "foo");
+      objectStore = db.createObjectStore("keyPath", { keyPath: "foo" });
 
       request = objectStore.openCursor();
       request.onerror = errorHandler;
@@ -62,7 +65,7 @@
       }
       yield;
 
-      objectStore = db.createObjectStore("foo", "");
+      objectStore = db.createObjectStore("foo");
 
       request = objectStore.openCursor();
       request.onerror = errorHandler;

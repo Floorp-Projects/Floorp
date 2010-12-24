@@ -1598,9 +1598,9 @@ nsDOMWorker::PostMessageInternal(PRBool aToInner)
 
   JSAutoRequest ar(cx);
 
-  JSAutoStructuredCloneBuffer buffer(cx);
+  JSAutoStructuredCloneBuffer buffer;
 
-  if (!buffer.write(argv[0])) {
+  if (!buffer.write(cx, argv[0])) {
     return NS_ERROR_DOM_DATA_CLONE_ERR;
   }
 

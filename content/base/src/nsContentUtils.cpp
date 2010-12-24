@@ -3115,7 +3115,8 @@ nsContentUtils::ReportToConsole(PropertiesFile aFile,
                                 PRUint32 aLineNumber,
                                 PRUint32 aColumnNumber,
                                 PRUint32 aErrorFlags,
-                                const char *aCategory)
+                                const char *aCategory,
+                                PRUint64 aWindowId)
 {
   NS_ASSERTION((aParams && aParamsLength) || (!aParams && !aParamsLength),
                "Supply either both parameters and their number or no"
@@ -3141,17 +3142,46 @@ nsContentUtils::ReportToConsole(PropertiesFile aFile,
   if (aURI)
     aURI->GetSpec(spec);
 
-  nsCOMPtr<nsIScriptError> errorObject =
+  nsCOMPtr<nsIScriptError2> errorObject =
       do_CreateInstance(NS_SCRIPTERROR_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = errorObject->Init(errorText.get(),
-                         NS_ConvertUTF8toUTF16(spec).get(), // file name
-                         aSourceLine.get(),
-                         aLineNumber, aColumnNumber,
-                         aErrorFlags, aCategory);
+
+  rv = errorObject->InitWithWindowID(errorText.get(),
+                                     NS_ConvertUTF8toUTF16(spec).get(), // file name
+                                     aSourceLine.get(),
+                                     aLineNumber, aColumnNumber,
+                                     aErrorFlags, aCategory, aWindowId);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return sConsoleService->LogMessage(errorObject);
+  nsCOMPtr<nsIScriptError> logError = do_QueryInterface(errorObject);
+  return sConsoleService->LogMessage(logError);
+}
+
+/* static */ nsresult
+nsContentUtils::ReportToConsole(PropertiesFile aFile,
+                                const char *aMessageName,
+                                const PRUnichar **aParams,
+                                PRUint32 aParamsLength,
+                                nsIURI* aURI,
+                                const nsAFlatString& aSourceLine,
+                                PRUint32 aLineNumber,
+                                PRUint32 aColumnNumber,
+                                PRUint32 aErrorFlags,
+                                const char *aCategory,
+                                nsIDocument* aDocument)
+{
+  nsIURI* uri = aURI;
+  PRUint64 windowID = 0;
+  if (aDocument) {
+    if (!uri) {
+      uri = aDocument->GetDocumentURI();
+    }
+    windowID = aDocument->OuterWindowID();
+  }
+
+  return ReportToConsole(aFile, aMessageName, aParams, aParamsLength, uri,
+                         aSourceLine, aLineNumber, aColumnNumber, aErrorFlags,
+                         aCategory, windowID);
 }
 
 PRBool

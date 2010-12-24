@@ -68,6 +68,8 @@ _CHROME_FILES =	test_bug343416.xul \
 		test_bug478536.xul \
 		window_bug478536.xul \
 		test_bug517396.xul \
+		test_bug538242.xul \
+		window_bug538242.xul \
 		test_bug593307.xul \
 		window_bug593307_offscreen.xul \
 		window_bug593307_centerscreen.xul \
@@ -80,6 +82,7 @@ _CHROME_FILES =	test_bug343416.xul \
 		test_composition_text_querycontent.xul \
 		window_composition_text_querycontent.xul \
 		test_input_events_on_deactive_window.xul \
+		test_position_on_resize.xul \
 		$(NULL)
 		
 # test_bug413277.html mac-only based on 604789, 605178

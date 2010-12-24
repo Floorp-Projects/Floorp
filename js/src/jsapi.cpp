@@ -5499,8 +5499,8 @@ JS_WriteStructuredClone(JSContext *cx, jsval v, uint64 **bufp, size_t *nbytesp)
 JS_PUBLIC_API(JSBool)
 JS_StructuredClone(JSContext *cx, jsval v, jsval *vp)
 {
-    JSAutoStructuredCloneBuffer buf(cx);
-    return buf.write(v) && buf.read(vp);
+    JSAutoStructuredCloneBuffer buf;
+    return buf.write(cx, v) && buf.read(vp);
 }
 
 JS_PUBLIC_API(void)

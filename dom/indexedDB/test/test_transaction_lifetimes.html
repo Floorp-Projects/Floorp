@@ -26,7 +26,7 @@
 
       event.transaction.oncomplete = continueToNextStep;
 
-      db.createObjectStore("foo", "", true);
+      db.createObjectStore("foo", { autoIncrement: true });
       yield;
 
       let transaction = db.transaction("foo");

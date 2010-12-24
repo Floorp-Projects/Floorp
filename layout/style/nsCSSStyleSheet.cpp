@@ -1247,6 +1247,41 @@ nsCSSStyleSheet::SetOwningDocument(nsIDocument* aDocument)
   }
 }
 
+/* virtual */ PRUint64
+nsCSSStyleSheet::FindOwningWindowID() const
+{
+  PRUint64 windowID = 0;
+  if (mDocument) {
+    windowID = mDocument->OuterWindowID();
+  }
+
+  if (windowID == 0 && mOwningNode) {
+    nsCOMPtr<nsIContent> node = do_QueryInterface(mOwningNode);
+    if (node) {
+      nsIDocument* doc = node->GetOwnerDoc();
+      if (doc) {
+        windowID = doc->OuterWindowID();
+      }
+    }
+  }
+
+  if (windowID == 0 && mOwnerRule) {
+    nsCOMPtr<nsIStyleSheet> sheet = mOwnerRule->GetStyleSheet();
+    if (sheet) {
+      nsRefPtr<nsCSSStyleSheet> cssSheet = do_QueryObject(sheet);
+      if (cssSheet) {
+        windowID = cssSheet->FindOwningWindowID();
+      }
+    }
+  }
+
+  if (windowID == 0 && mParent) {
+    windowID = mParent->FindOwningWindowID();
+  }
+
+  return windowID;
+}
+
 void
 nsCSSStyleSheet::AppendStyleSheet(nsCSSStyleSheet* aSheet)
 {

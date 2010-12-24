@@ -46,7 +46,8 @@ Image::Image(imgStatusTracker* aStatusTracker) :
   mAnimationMode(kNormalAnimMode),
   mInitialized(PR_FALSE),
   mAnimating(PR_FALSE),
-  mError(PR_FALSE)
+  mError(PR_FALSE),
+  mWindowId(0)
 {
   if (aStatusTracker) {
     mStatusTracker = aStatusTracker;

@@ -55,7 +55,7 @@ interface nsIDOMDOMStringList;
  * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-nsIIDBObjectStore
  * for more information.
  */
-[scriptable, uuid(64f34805-d3e3-4305-91f8-b2cafac3d33c)]
+[scriptable, uuid(6a65dc92-66e3-407a-a370-590a6c54664a)]
 interface nsIIDBObjectStore : nsISupports
 {
   readonly attribute DOMString name;
@@ -104,11 +104,17 @@ interface nsIIDBObjectStore : nsISupports
   openCursor([optional /* null */] in nsIIDBKeyRange range,
              [optional /* NEXT */] in unsigned short direction);
 
-  // Returns object immediately
+  /**
+   * Optional arguments:
+   *   - unique (boolean):
+   *       Specifies whether values in the index must be unique. Defaults to
+   *       false.
+   */
+  [implicit_jscontext]
   nsIIDBIndex
   createIndex(in AString name,
               in AString keyPath,
-              [optional /* false */] in boolean unique);
+              [optional /* none */] in jsval options);
 
   // Returns object immediately
   nsIIDBIndex

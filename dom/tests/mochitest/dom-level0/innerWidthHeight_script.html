@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Bug 602580 - Test getting and setting innerWidth and Height after using setCSSViewport</title>
+  <script class="testbody" type="text/javascript">
+  function runSubTest()
+  {
+    // get ability to set innerWidth and height without setting a pref
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+    // Firefox doesn't support the metaviewport tag, so we force a css viewport
+    // here using nsIDomWindowUtils
+    var cwu = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+                     getInterface(Components.interfaces.nsIDOMWindowUtils);
+    cwu.setCSSViewport(320, 320);
+
+    var oldWidth = window.innerWidth;
+    var oldHeight = window.innerHeight;
+
+    /* Test that return values are now from viewport */
+    window.opener.is(window.innerWidth, 320, "innerWidth is css viewport width");
+    window.opener.is(window.innerHeight, 320, "innerHeight is css viewport height");
+
+    window.innerWidth = 300;
+    window.opener.is(window.innerWidth, 300, "innerWidth returns value that was set");
+    window.innerWidth = oldWidth;
+
+    window.innerHeight = 300;
+    window.opener.is(window.innerHeight, 300, "innerHeight returns value that was set");
+    window.innerHeight = oldHeight;
+
+    window.opener.finish();
+  }
+  </script>
+</head>
+<body onload="runSubTest()">
+</body>
+</html>

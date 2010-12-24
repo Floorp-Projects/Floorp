@@ -294,6 +294,12 @@ nsSVGPatternFrame::PaintPattern(gfxASurface** surface,
     patternFrame->AddStateBits(NS_FRAME_DRAWING_AS_PAINTSERVER);
     for (nsIFrame* kid = firstKid; kid;
          kid = kid->GetNextSibling()) {
+      // The CTM of each frame referencing us can be different
+      nsISVGChildFrame* SVGFrame = do_QueryFrame(kid);
+      if (SVGFrame) {
+        SVGFrame->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |
+                                   nsISVGChildFrame::TRANSFORM_CHANGED);
+      }
       nsSVGUtils::PaintFrameWithEffects(&tmpState, nsnull, kid);
     }
     patternFrame->RemoveStateBits(NS_FRAME_DRAWING_AS_PAINTSERVER);

@@ -245,6 +245,32 @@ function runUpdate(aTestID) {
 }
 
 /**
+ * Gets the platform specific shell binary that is launched using nsIProcess and
+ * in turn launches the updater.
+ *
+ * @return  nsIFile for the shell binary to launch using nsIProcess.
+ * @throws  if the shell binary doesn't exist.
+ */
+function getLaunchBin() {
+  let launchBin;
+  if (IS_WIN) {
+    launchBin = Services.dirsvc.get("WinD", AUS_Ci.nsIFile);
+    launchBin.append("System32");
+    launchBin.append("cmd.exe");
+  }
+  else {
+    launchBin = AUS_Cc["@mozilla.org/file/local;1"].
+                createInstance(AUS_Ci.nsILocalFile);
+    launchBin.initWithPath("/bin/sh");
+  }
+
+  if (!launchBin.exists())
+    do_throw(launchBin.path + " must exist to run this test!");
+
+  return launchBin;
+}
+
+/**
  * Helper function for updater tests for setting up the files and directories
  * used by the updater tests.
  *

@@ -41,7 +41,7 @@
       event = yield;
 
       transaction = event.transaction;
-      objectStore = db.createObjectStore("foo", "", true);
+      objectStore = db.createObjectStore("foo", { autoIncrement: true });
 
       is(transaction.db, db, "Correct database");
       is(transaction.readyState, LOADING, "Correct readyState");

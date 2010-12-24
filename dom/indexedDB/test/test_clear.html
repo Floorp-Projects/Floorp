@@ -33,7 +33,7 @@
 
       event.transaction.oncomplete = continueToNextStep;
 
-      let objectStore = db.createObjectStore("foo", "", true);
+      let objectStore = db.createObjectStore("foo", { autoIncrement: true });
 
       let firstKey;
       for (let i = 0; i < entryCount; i++) {

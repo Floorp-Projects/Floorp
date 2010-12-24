@@ -111,7 +111,7 @@
 
       event.transaction.oncomplete = grabEventAndContinueHandler;
 
-      db.createObjectStore("foo", "", true);
+      db.createObjectStore("foo", { autoIncrement: true });
       yield;
 
       let transaction = db.transaction("foo", IDBTransaction.READ_WRITE);

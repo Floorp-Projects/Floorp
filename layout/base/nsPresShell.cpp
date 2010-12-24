@@ -699,7 +699,8 @@ class nsAutoCauseReflowNotifier;
 class PresShell : public nsIPresShell, public nsIViewObserver,
                   public nsStubDocumentObserver,
                   public nsISelectionController, public nsIObserver,
-                  public nsSupportsWeakReference
+                  public nsSupportsWeakReference,
+                  public nsIPresShell_MOZILLA_2_0_BRANCH
 {
 public:
   PresShell();
@@ -967,6 +968,8 @@ public:
   virtual nscolor ComputeBackstopColor(nsIView* aDisplayRoot);
 
   virtual NS_HIDDEN_(nsresult) SetIsActive(PRBool aIsActive);
+
+  virtual PRBool GetIsViewportOverridden() { return mViewportOverridden; }
 
 protected:
   virtual ~PresShell();
@@ -1670,10 +1673,10 @@ PresShell::PresShell()
   sLiveShells->PutEntry(this);
 }
 
-NS_IMPL_ISUPPORTS8(PresShell, nsIPresShell, nsIDocumentObserver,
+NS_IMPL_ISUPPORTS9(PresShell, nsIPresShell, nsIDocumentObserver,
                    nsIViewObserver, nsISelectionController,
                    nsISelectionDisplay, nsIObserver, nsISupportsWeakReference,
-                   nsIMutationObserver)
+                   nsIMutationObserver, nsIPresShell_MOZILLA_2_0_BRANCH)
 
 PresShell::~PresShell()
 {
@@ -3969,16 +3972,16 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
           // Use a caret (collapsed selection) at the start of the anchor
           sel->CollapseToStart();
         }
-      }  
 
-      if (selectAnchor && xpointerResult) {
-        // Select the rest (if any) of the ranges in XPointerResult
-        PRUint32 count, i;
-        xpointerResult->GetLength(&count);
-        for (i = 1; i < count; i++) { // jumpToRange is i = 0
-          nsCOMPtr<nsIDOMRange> range;
-          xpointerResult->Item(i, getter_AddRefs(range));
-          sel->AddRange(range);
+        if (selectAnchor && xpointerResult) {
+          // Select the rest (if any) of the ranges in XPointerResult
+          PRUint32 count, i;
+          xpointerResult->GetLength(&count);
+          for (i = 1; i < count; i++) { // jumpToRange is i = 0
+            nsCOMPtr<nsIDOMRange> range;
+            xpointerResult->Item(i, getter_AddRefs(range));
+            sel->AddRange(range);
+          }
         }
       }
       // Selection is at anchor.

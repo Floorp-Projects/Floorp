@@ -171,6 +171,7 @@ ContainerLayerD3D10::RenderLayer()
 
   gfx3DMatrix oldViewMatrix;
 
+  gfxMatrix contTransform;
   if (useIntermediate) {
     device()->OMGetRenderTargets(1, getter_AddRefs(previousRTView), NULL);
  
@@ -203,6 +204,12 @@ ContainerLayerD3D10::RenderLayer()
 
     previousViewportSize = mD3DManager->GetViewport();
     mD3DManager->SetViewport(nsIntSize(visibleRect.Size()));
+  } else {
+#ifdef DEBUG
+    PRBool is2d =
+#endif
+    GetEffectiveTransform().Is2D(&contTransform);
+    NS_ASSERTION(is2d, "Transform must be 2D");
   }
 
   /*
@@ -239,6 +246,24 @@ ContainerLayerD3D10::RenderLayer()
 
       D3D10_RECT d3drect;
       if (!useIntermediate) {
+        if (clipRect) {
+          gfxRect cliprect(r.left, r.top, r.right - r.left, r.bottom - r.top);
+          gfxRect trScissor = contTransform.TransformBounds(cliprect);
+          trScissor.Round();
+          nsIntRect trIntScissor;
+          if (gfxUtils::GfxRectToIntRect(trScissor, &trIntScissor)) {
+            r.left = trIntScissor.x;
+            r.top = trIntScissor.y;
+            r.right = trIntScissor.XMost();
+            r.bottom = trIntScissor.YMost();
+          } else {
+            r.left = 0;
+            r.top = 0;
+            r.right = visibleRect.width;
+            r.bottom = visibleRect.height;
+            clipRect = nsnull;
+          }
+        }
         // Scissor rect should be an intersection of the old and current scissor.
         r.left = NS_MAX<PRInt32>(oldScissor.left, r.left);
         r.right = NS_MIN<PRInt32>(oldScissor.right, r.right);

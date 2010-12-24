@@ -117,6 +117,7 @@ function run_test() {
   // Expire all expirable pages.
   setMaxPages(0);
 
+  let now = Date.now() * 1000;
   // Add some bookmarked page and timed annotations for each.
   for (let i = 0; i < 5; i++) {
     let pageURI = uri("http://item_anno." + i + ".mozilla.org/");
@@ -146,7 +147,6 @@ function run_test() {
   }
 
   // Add some visited page and timed annotations for each.
-  let now = Date.now() * 1000;
   for (let i = 0; i < 5; i++) {
     let pageURI = uri("http://page_anno." + i + ".mozilla.org/");
     hs.addVisit(pageURI, now++, null, hs.TRANSITION_TYPED, false, 0);

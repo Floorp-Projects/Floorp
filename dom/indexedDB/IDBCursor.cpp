@@ -47,7 +47,6 @@
 #include "nsContentUtils.h"
 #include "nsDOMClassInfo.h"
 #include "nsEventDispatcher.h"
-#include "nsJSON.h"
 #include "nsJSUtils.h"
 #include "nsThreadUtils.h"
 
@@ -91,6 +90,7 @@ public:
   void ReleaseMainThreadObjects()
   {
     mCursor = nsnull;
+    mCloneBuffer.clear();
     AsyncConnectionHelper::ReleaseMainThreadObjects();
   }
 
@@ -105,7 +105,7 @@ protected:
   nsRefPtr<IDBCursor> mCursor;
   Key mKey;
   Key mObjectKey;
-  nsString mValue;
+  JSAutoStructuredCloneBuffer mCloneBuffer;
 };
 
 class ContinueObjectStoreHelper : public ContinueHelper
@@ -155,7 +155,7 @@ IDBCursor::Create(IDBRequest* aRequest,
                   const nsACString& aContinueQuery,
                   const nsACString& aContinueToQuery,
                   const Key& aKey,
-                  const nsAString& aValue)
+                  JSAutoStructuredCloneBuffer& aCloneBuffer)
 {
   NS_ASSERTION(aObjectStore, "Null pointer!");
   NS_ASSERTION(!aKey.IsUnset(), "Bad key!");
@@ -168,7 +168,7 @@ IDBCursor::Create(IDBRequest* aRequest,
   cursor->mObjectStore = aObjectStore;
   cursor->mType = OBJECTSTORE;
   cursor->mKey = aKey;
-  cursor->mValue = aValue;
+  cursor->mCloneBuffer.swap(aCloneBuffer);
 
   return cursor.forget();
 }
@@ -214,7 +214,7 @@ IDBCursor::Create(IDBRequest* aRequest,
                   const nsACString& aContinueToQuery,
                   const Key& aKey,
                   const Key& aObjectKey,
-                  const nsAString& aValue)
+                  JSAutoStructuredCloneBuffer& aCloneBuffer)
 {
   NS_ASSERTION(aIndex, "Null pointer!");
   NS_ASSERTION(!aKey.IsUnset(), "Bad key!");
@@ -230,7 +230,7 @@ IDBCursor::Create(IDBRequest* aRequest,
   cursor->mType = INDEXOBJECT;
   cursor->mKey = aKey;
   cursor->mObjectKey = aObjectKey;
-  cursor->mValue = aValue;
+  cursor->mCloneBuffer.swap(aCloneBuffer);
 
   return cursor.forget();
 }
@@ -285,6 +285,7 @@ IDBCursor::~IDBCursor()
   if (mValueRooted) {
     NS_DROP_JS_OBJECTS(this, IDBCursor);
   }
+  IDBObjectStore::ClearStructuredCloneBuffer(mCloneBuffer);
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(IDBCursor)
@@ -411,17 +412,19 @@ IDBCursor::GetValue(JSContext* aCx,
   }
 
   if (!mHaveCachedValue) {
-    JSAutoRequest ar(aCx);
-
-    nsCOMPtr<nsIJSON> json(new nsJSON());
-    rv = json->DecodeToJSVal(mValue, aCx, &mCachedValue);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_DATA_CLONE_ERR);
-
     if (!mValueRooted) {
       NS_HOLD_JS_OBJECTS(this, IDBCursor);
       mValueRooted = true;
     }
 
+    JSAutoRequest ar(aCx);
+
+    if (!mCloneBuffer.read(&mCachedValue, aCx)) {
+      mCachedValue = JSVAL_VOID;
+      return NS_ERROR_DOM_DATA_CLONE_ERR;
+    }
+
+    mCloneBuffer.clear(aCx);
     mHaveCachedValue = true;
   }
 
@@ -668,7 +671,8 @@ ContinueHelper::GetSuccessResult(nsIWritableVariant* aResult)
   // And set new values.
   mCursor->mKey = mKey;
   mCursor->mObjectKey = mObjectKey;
-  mCursor->mValue = mValue;
+  mCursor->mCloneBuffer.clear();
+  mCursor->mCloneBuffer.swap(mCloneBuffer);
   mCursor->mContinueToKey = Key::UNSETKEY;
 
   rv = aResult->SetAsISupports(mCursor);
@@ -744,17 +748,9 @@ ContinueObjectStoreHelper::GatherResultsFromStatement(
     NS_NOTREACHED("Bad SQLite type!");
   }
 
-#ifdef DEBUG
-  {
-    PRInt32 valueType;
-    NS_ASSERTION(NS_SUCCEEDED(aStatement->GetTypeOfIndex(1, &valueType)) &&
-                 valueType == mozIStorageStatement::VALUE_TYPE_TEXT,
-                 "Bad value type!");
-  }
-#endif
-
-  rv = aStatement->GetString(1, mValue);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  rv = IDBObjectStore::GetStructuredCloneDataFromStatement(aStatement, 1,
+                                                           mCloneBuffer);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
@@ -912,17 +908,9 @@ ContinueIndexObjectHelper::GatherResultsFromStatement(
     NS_NOTREACHED("Bad SQLite type!");
   }
 
-#ifdef DEBUG
-  {
-    PRInt32 valueType;
-    NS_ASSERTION(NS_SUCCEEDED(aStatement->GetTypeOfIndex(2, &valueType)) &&
-                 valueType == mozIStorageStatement::VALUE_TYPE_TEXT,
-                 "Bad value type!");
-  }
-#endif
-
-  rv = aStatement->GetString(2, mValue);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  rv = IDBObjectStore::GetStructuredCloneDataFromStatement(aStatement, 2,
+                                                           mCloneBuffer);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }

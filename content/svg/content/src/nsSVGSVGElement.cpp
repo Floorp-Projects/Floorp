@@ -539,25 +539,20 @@ nsSVGSVGElement::SetCurrentTime(float seconds)
 #ifdef MOZ_SMIL
   if (NS_SMILEnabled()) {
     if (mTimedDocumentRoot) {
+      // Make sure the timegraph is up-to-date
+      FlushAnimations();
       double fMilliseconds = double(seconds) * PR_MSEC_PER_SEC;
       // Round to nearest whole number before converting, to avoid precision
       // errors
       nsSMILTime lMilliseconds = PRInt64(NS_round(fMilliseconds));
       mTimedDocumentRoot->SetCurrentTime(lMilliseconds);
-      // Force a resample now
-      //
-      // It's not sufficient to just request a resample here because calls to
-      // BeginElement etc. expect to operate on an up-to-date timegraph or else
-      // instance times may be incorrectly discarded.
-      //
-      // See the mochitest: test_smilSync.xhtml:testSetCurrentTime()
-      nsIDocument* doc = GetCurrentDoc();
-      if (doc) {
-        nsSMILAnimationController* smilController = doc->GetAnimationController();
-        if (smilController) {
-          smilController->Resample();
-        }
-      }
+      AnimationNeedsResample();
+      // Trigger synchronous sample now, to:
+      //  - Make sure we get an up-to-date paint after this method
+      //  - re-enable event firing (it got disabled during seeking, and it
+      //  doesn't get re-enabled until the first sample after the seek -- so
+      //  let's make that happen now.)
+      FlushAnimations();
     } // else we're not the outermost <svg> or not bound to a tree, so silently
       // fail
     return NS_OK;
