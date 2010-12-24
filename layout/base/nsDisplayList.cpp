@@ -1653,7 +1653,8 @@ PRBool nsDisplayClipRoundedRect::TryMerge(nsDisplayListBuilder* aBuilder, nsDisp
     return PR_FALSE;
   nsDisplayClipRoundedRect* other =
     static_cast<nsDisplayClipRoundedRect*>(aItem);
-  if (mClip != other->mClip || mRadii != other->mRadii)
+  if (mClip != other->mClip ||
+      memcmp(mRadii, other->mRadii, sizeof(mRadii)) != 0)
     return PR_FALSE;
   mList.AppendToBottom(&other->mList);
   return PR_TRUE;
