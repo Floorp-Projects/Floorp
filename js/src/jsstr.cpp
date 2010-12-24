@@ -174,7 +174,7 @@ JSString::flatten(JSContext *maybecx)
 
     wholeCapacity = RopeCapacityFor(wholeLength);
     wholeChars = AllocChars(maybecx, wholeCapacity);
-    if (!wholeCapacity)
+    if (!wholeChars)
         return NULL;
     pos = wholeChars;
     first_visit_node: {
