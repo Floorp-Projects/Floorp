@@ -5200,8 +5200,7 @@ function handleLinkClick(event, href, linkNode) {
   }
 
   urlSecurityCheck(href, doc.nodePrincipal);
-  openLinkIn(href, where, { fromContent: true,
-                            referrerURI: doc.documentURIObject,
+  openLinkIn(href, where, { referrerURI: doc.documentURIObject,
                             charset: doc.characterSet });
   event.preventDefault();
   return true;
