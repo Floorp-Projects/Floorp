@@ -1872,19 +1872,22 @@ Script::addVariable(JSContext *cx, jsid id, types::Variable *&var, bool localNam
     JS_ASSERT(!var);
     var = ArenaNew<types::Variable>(pool, &pool, id);
 
-    /* Variables which are definitely arguments or locals do not pull in builtin types. */
-    if (!localName) {
-        /* Augment with types for the 'arguments' variable. */
-        if (fun && id == id_arguments(cx)) {
-            if (script->compileAndGo)
-                var->types.addType(cx, (jstype) getTypeNewObject(cx, JSProto_Object));
-            else
-                var->types.addType(cx, TYPE_UNKNOWN);
-        }
+    /*
+     * Augment with types for the function itself, unless this is an argument or
+     * local variable of the function.
+     */
+    if (!localName && fun && id == ATOM_TO_JSID(fun->atom))
+        var->types.addType(cx, (jstype) function());
 
-        /* Augment with types for the function itself. */
-        if (fun && id == ATOM_TO_JSID(fun->atom))
-            var->types.addType(cx, (jstype) function());
+    /*
+     * Augment with types for the 'arguments' variable, even if there is a local
+     * variable named 'arguments'
+     */
+    if (fun && id == id_arguments(cx)) {
+        if (script->compileAndGo)
+            var->types.addType(cx, (jstype) getTypeNewObject(cx, JSProto_Object));
+        else
+            var->types.addType(cx, TYPE_UNKNOWN);
     }
 
     InferSpew(ISpewOps, "addVariable: #%lu %s T%u",
