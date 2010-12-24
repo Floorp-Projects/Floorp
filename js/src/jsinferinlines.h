@@ -397,7 +397,8 @@ JSContext::typeMonitorCall(JSScript *caller, const jsbytecode *callerpc,
 
     if (constructing) {
         js::Value protov;
-        if (!callee->getProperty(this, ATOM_TO_JSID(runtime->atomState.classPrototypeAtom), &protov))
+        jsid id = ATOM_TO_JSID(runtime->atomState.classPrototypeAtom);
+        if (!args.callee().toObject().getProperty(this, id, &protov))
             return;  /* :FIXME: */
         if (protov.isObject()) {
             js::types::TypeObject *otype = protov.toObject().getNewType(this);
