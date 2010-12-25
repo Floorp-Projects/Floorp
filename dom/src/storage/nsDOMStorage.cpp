@@ -271,6 +271,12 @@ nsDOMStorageManager::Initialize()
 
   NS_ADDREF(gStorageManager);
 
+#ifdef MOZ_IPC
+  // No observers needed in non-chrome
+  if (XRE_GetProcessType() != GeckoProcessType_Default)
+    return NS_OK;
+#endif
+
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (!os)
     return NS_OK;
