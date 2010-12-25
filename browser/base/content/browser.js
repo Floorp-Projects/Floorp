@@ -1241,9 +1241,6 @@ function BrowserStartup() {
     document.documentElement.setAttribute("height", defaultHeight);
   }
 
-  if (!gShowPageResizers)
-    document.getElementById("status-bar").setAttribute("hideresizer", "true");
-
   if (!window.toolbar.visible) {
     // adjust browser UI for popups
     if (gURLBar) {
@@ -2754,7 +2751,6 @@ var PrintPreviewListener = {
     var addonBar = document.getElementById("addon-bar");
     this._chromeState.addonBarOpen = !addonBar.collapsed;
     addonBar.collapsed = true;
-    gBrowser.updateWindowResizers();
 
     this._chromeState.findOpen = gFindBarInitialized && !gFindBar.hidden;
     if (gFindBarInitialized)
@@ -2771,10 +2767,8 @@ var PrintPreviewListener = {
     if (this._chromeState.notificationsOpen)
       gBrowser.getNotificationBox().notificationsHidden = false;
 
-    if (this._chromeState.addonBarOpen) {
+    if (this._chromeState.addonBarOpen)
       document.getElementById("addon-bar").collapsed = false;
-      gBrowser.updateWindowResizers();
-    }
 
     if (this._chromeState.findOpen)
       gFindBar.open();
@@ -4725,7 +4719,6 @@ function setToolbarVisibility(toolbar, isVisible) {
 
   PlacesToolbarHelper.init();
   BookmarksMenuButton.updatePosition();
-  gBrowser.updateWindowResizers();
 
 #ifdef MENUBAR_CAN_AUTOHIDE
   updateAppButtonDisplay();
@@ -8212,15 +8205,3 @@ let AddonsMgrListener = {
       setToolbarVisibility(this.addonBar, false);
   }
 };
-
-XPCOMUtils.defineLazyGetter(window, "gShowPageResizers", function () {
-#ifdef XP_WIN
-  // Only show resizers on Windows 2000 and XP
-  let sysInfo = Components.classes["@mozilla.org/system-info;1"]
-                          .getService(Components.interfaces.nsIPropertyBag2);
-  return parseFloat(sysInfo.getProperty("version")) < 6;
-#else
-  return false;
-#endif
-});
-
