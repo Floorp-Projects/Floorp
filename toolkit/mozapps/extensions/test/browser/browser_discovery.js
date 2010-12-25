@@ -5,6 +5,7 @@
 // Tests that the discovery view loads properly
 
 const PREF_BACKGROUND_UPDATE = "extensions.update.enabled";
+const PREF_DISCOVERURL = "extensions.webservice.discoverURL";
 const MAIN_URL = "https://example.com/" + RELATIVE_DIR + "discovery.html";
 
 var gManagerWindow;
