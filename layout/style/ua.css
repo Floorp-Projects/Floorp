@@ -167,7 +167,6 @@
 
 *|*::-moz-viewport-scroll {
   overflow: auto;
-  resize: both;
 }
 
 *|*::-moz-column-content { 

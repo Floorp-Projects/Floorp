@@ -120,7 +120,6 @@
                 type="content-primary"
                 tabcontainer="tabbrowser-tabs"
                 flex="1"/>
-    <toolbar id="addon-bar"/>
   </vbox>
 
 </window>
