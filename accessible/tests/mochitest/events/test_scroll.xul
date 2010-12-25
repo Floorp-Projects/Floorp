@@ -128,7 +128,6 @@
                   tabcontainer="tabbrowser-tabs"
                   flex="1"/>
     </vbox>
-    <toolbar id="addon-bar"/>
   </hbox>
 
 </window>
