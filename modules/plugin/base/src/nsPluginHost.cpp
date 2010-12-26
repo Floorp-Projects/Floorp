@@ -3429,7 +3429,7 @@ nsPluginHost::HandleBadPlugin(PRLibrary* aLibrary, nsIPluginInstance *aInstance)
       pluginname = pluginTag->mFileName;
     }
   } else {
-    pluginname.AppendLiteral("???");'
+    pluginname.AppendLiteral("???");
   }
 
   NS_ConvertUTF8toUTF16 msg(pluginname);
