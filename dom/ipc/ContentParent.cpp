@@ -165,8 +165,23 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
         kungFuDeathGrip(static_cast<nsIThreadObserver*>(this));
     nsCOMPtr<nsIObserverService>
         obs(do_GetService("@mozilla.org/observer-service;1"));
-    if (obs)
+    if (obs) {
         obs->RemoveObserver(static_cast<nsIObserver*>(this), "xpcom-shutdown");
+        obs->RemoveObserver(static_cast<nsIObserver*>(this), "memory-pressure");
+        obs->RemoveObserver(static_cast<nsIObserver*>(this),
+                           NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC);
+    }
+
+    // remove the global remote preferences observers
+    nsCOMPtr<nsIPrefBranch2> prefs 
+            (do_GetService(NS_PREFSERVICE_CONTRACTID));
+    if (prefs) { 
+        prefs->RemoveObserver("", this);
+    }
+
+    RecvRemoveGeolocationListener();
+    RecvRemoveAccelerometerListener();
+
     nsCOMPtr<nsIThreadInternal>
         threadInt(do_QueryInterface(NS_GetCurrentThread()));
     if (threadInt)
@@ -347,17 +362,6 @@ ContentParent::Observe(nsISupports* aSubject,
                        const PRUnichar* aData)
 {
     if (!strcmp(aTopic, "xpcom-shutdown") && mSubprocess) {
-        // remove the global remote preferences observers
-        nsCOMPtr<nsIPrefBranch2> prefs 
-            (do_GetService(NS_PREFSERVICE_CONTRACTID));
-        if (prefs) { 
-            if (gSingleton) {
-                prefs->RemoveObserver("", this);
-            }
-        }
-
-        RecvRemoveGeolocationListener();
-            
         Close();
         NS_ASSERTION(!mSubprocess, "Close should have nulled mSubprocess");
     }
