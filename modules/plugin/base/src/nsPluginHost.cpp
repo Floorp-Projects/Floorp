@@ -3422,10 +3422,14 @@ nsPluginHost::HandleBadPlugin(PRLibrary* aLibrary, nsIPluginInstance *aInstance)
 
   // add plugin name to the message
   nsCString pluginname;
-  if (!pluginTag->mName.IsEmpty()) {
-    pluginname = pluginTag->mName;
+  if (pluginTag) {
+    if (!pluginTag->mName.IsEmpty()) {
+      pluginname = pluginTag->mName;
+    } else {
+      pluginname = pluginTag->mFileName;
+    }
   } else {
-    pluginname = pluginTag->mFileName;
+    pluginname.AppendLiteral("???");'
   }
 
   NS_ConvertUTF8toUTF16 msg(pluginname);
