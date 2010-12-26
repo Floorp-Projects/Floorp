@@ -260,7 +260,7 @@ Base64urlEncode(const PRUint8* aBytes,
 // Included here because windows.h conflicts with the use of mozIStorageError
 // above.
 #include <windows.h>
-#include <Wincrypt.h>
+#include <wincrypt.h>
 #endif
 
 static
