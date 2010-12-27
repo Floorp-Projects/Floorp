@@ -178,3 +178,9 @@ interface nsISHistory: nsISupports
    */
    readonly attribute nsISimpleEnumerator SHistoryEnumerator;
 };
+
+[scriptable, uuid(ac8b3eb3-2051-4cce-8303-d6e7938501dd)]
+interface nsISHistory_2_0_BRANCH: nsISHistory
+{
+  void reloadCurrentEntry();
+};

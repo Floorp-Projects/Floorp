@@ -62,7 +62,7 @@ class nsIDocShell;
 class nsSHEnumerator;
 class nsSHistoryObserver;
 class nsSHistory: public PRCList,
-                  public nsISHistory,
+                  public nsISHistory_2_0_BRANCH,
                   public nsISHistoryInternal,
                   public nsIWebNavigation
 {
@@ -73,6 +73,7 @@ public:
   NS_DECL_NSISHISTORY
   NS_DECL_NSISHISTORYINTERNAL
   NS_DECL_NSIWEBNAVIGATION
+  NS_DECL_NSISHISTORY_2_0_BRANCH
 
   // One time initialization method called upon docshell module construction
   static nsresult Startup();
