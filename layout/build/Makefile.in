@@ -60,15 +60,7 @@ LIBXUL_LIBRARY	= 1
 
 ifndef MOZ_ENABLE_LIBXUL
 EXTRA_DSO_LIBS	= gkgfx
-
-ifneq ($(OS_ARCH),Linux)
 EXTRA_DSO_LIBS += angle
-else
-ifdef FORCE_BUILD_ANGLE
-EXTRA_DSO_LIBS += angle
-endif
-endif
-
 endif
 
 EXTRA_DSO_LIBS	+= thebes ycbcr
