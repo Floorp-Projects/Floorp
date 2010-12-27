@@ -858,12 +858,6 @@ var BrowserUI = {
       case "mousedown":
         if (!this._isEventInsidePopup(aEvent))
           this._hidePopup();
-
-        let selectAll = Services.prefs.getBoolPref("browser.urlbar.doubleClickSelectsAll");
-        if (aEvent.detail == 2 && aEvent.button == 0 && selectAll && aEvent.target == this._edit) {
-          this._edit.editor.selectAll();
-          aEvent.preventDefault();
-        }
         break;
       // Favicon events
       case "error":

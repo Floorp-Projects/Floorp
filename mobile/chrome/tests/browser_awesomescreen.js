@@ -191,17 +191,13 @@ gTests.push({
   desc: "Test opening the awesome panel and checking the urlbar selection",
 
   run: function() {
-    info("is nav panel open: " + BrowserUI.isAutoCompleteOpen())
     BrowserUI.closeAutoComplete(true);
-    info("opening new tab")
     this._currentTab = BrowserUI.newTab(testURL_01);
 
     // Need to wait until the page is loaded
     messageManager.addMessageListener("pageshow",
     function(aMessage) {
-      info("got a pageshow: " + gCurrentTest._currentTab.browser.currentURI.spec)
       if (gCurrentTest._currentTab.browser.currentURI.spec != "about:blank") {
-        info("got the right pageshow")
         messageManager.removeMessageListener(aMessage.name, arguments.callee);
         setTimeout(gCurrentTest.onPageReady, 0);
       }
@@ -211,7 +207,6 @@ gTests.push({
   onPageReady: function() {
     waitForNavigationPanel(gCurrentTest.onPopupReady);
 
-    info("opening nav panel")
     AllPagesList.doCommand();
   },
 
@@ -223,8 +218,11 @@ gTests.push({
       ok(edit.selectionStart ==  edit.selectionEnd, "urlbar text should not be selected on a simple show");
       edit.click();
       ok(edit.selectionStart == 0 && edit.selectionEnd == edit.textLength, "urlbar text should be selected on a click");
-
     });
+
+    // We are disabling it early, otherwise calling edit.click(); quickly made input.js though this is a double click (sigh)
+    let oldDoubleClickSelectsAll = Services.prefs.getBoolPref("browser.urlbar.doubleClickSelectsAll");
+    Services.prefs.setBoolPref("browser.urlbar.doubleClickSelectsAll", false);
 
     let oldClickSelectsAll = edit.clickSelectsAll;
     edit.clickSelectsAll = false;
@@ -234,6 +232,25 @@ gTests.push({
       edit.click();
       ok(edit.selectionStart == edit.selectionEnd, "urlbar text should not be selected on a click");
     });
+
+    Panels.forEach(function(aPanel) {
+      aPanel.doCommand();
+      ok(edit.selectionStart == edit.selectionEnd, "urlbar text should not be selected on a simple show");
+      edit.click();
+      edit.click();
+      ok(edit.selectionStart == edit.selectionEnd, "urlbar text should not be selected on a double click");
+    });
+
+    Services.prefs.setBoolPref("browser.urlbar.doubleClickSelectsAll", oldDoubleClickSelectsAll);
+
+    Panels.forEach(function(aPanel) {
+      aPanel.doCommand();
+      ok(edit.selectionStart == edit.selectionEnd, "urlbar text should not be selected on a simple show");
+      edit.click();
+      edit.click();
+      ok(edit.selectionStart == 0 && edit.selectionEnd == edit.textLength, "urlbar text should be selected on a double click");
+    });
+
     edit.clickSelectsAll = oldClickSelectsAll;
 
     BrowserUI.closeTab(this._currentTab);
@@ -241,8 +258,9 @@ gTests.push({
     BrowserUI.activePanel = null;
     runNextTest();
   }
-});         //------------------------------------------------------------------------------
-// Case: Test opening the awesome panel and checking the urlbar selection
+});
+
+// Case: Test context clicks on awesome panel
 gTests.push({
   desc: "Test context clicks on awesome panel",
 
