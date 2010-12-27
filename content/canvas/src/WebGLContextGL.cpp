@@ -2400,8 +2400,14 @@ NS_IMETHODIMP
 WebGLContext::IsBuffer(nsIWebGLBuffer *bobj, WebGLboolean *retval)
 {
     PRBool isDeleted;
-    *retval = CanGetConcreteObject<WebGLBuffer>("isBuffer", bobj, 0, &isDeleted) && !isDeleted;
+    WebGLuint obj;
+    PRBool ok = GetGLName<WebGLBuffer>("isBuffer", bobj, &obj, 0, &isDeleted) && !isDeleted;
+    if (ok) {
+        MakeContextCurrent();
+        ok = gl->fIsBuffer(obj);
+    }
 
+    *retval = ok;
     return NS_OK;
 }
 
@@ -2409,8 +2415,14 @@ NS_IMETHODIMP
 WebGLContext::IsFramebuffer(nsIWebGLFramebuffer *fbobj, WebGLboolean *retval)
 {
     PRBool isDeleted;
-    *retval = CanGetConcreteObject<WebGLFramebuffer>("isFramebuffer", fbobj, 0, &isDeleted) && !isDeleted;
+    WebGLuint obj;
+    PRBool ok = GetGLName<WebGLFramebuffer>("isFramebuffer", fbobj, &obj, 0, &isDeleted) && !isDeleted;
+    if (ok) {
+        MakeContextCurrent();
+        ok = gl->fIsFramebuffer(obj);
+    }
 
+    *retval = ok;
     return NS_OK;
 }
 
@@ -2427,8 +2439,14 @@ NS_IMETHODIMP
 WebGLContext::IsRenderbuffer(nsIWebGLRenderbuffer *rbobj, WebGLboolean *retval)
 {
     PRBool isDeleted;
-    *retval = CanGetConcreteObject<WebGLRenderbuffer>("isRenderBuffer", rbobj, 0, &isDeleted) && !isDeleted;
+    WebGLuint obj;
+    PRBool ok = GetGLName<WebGLRenderbuffer>("isRenderBuffer", rbobj, &obj, 0, &isDeleted) && !isDeleted;
+    if (ok) {
+        MakeContextCurrent();
+        ok = gl->fIsRenderbuffer(obj);
+    }
 
+    *retval = ok;
     return NS_OK;
 }
 
@@ -2445,8 +2463,14 @@ NS_IMETHODIMP
 WebGLContext::IsTexture(nsIWebGLTexture *tobj, WebGLboolean *retval)
 {
     PRBool isDeleted;
-    *retval = CanGetConcreteObject<WebGLTexture>("isTexture", tobj, 0, &isDeleted) && !isDeleted;
+    WebGLuint obj;
+    PRBool ok = GetGLName<WebGLTexture>("isTexture", tobj, &obj, 0, &isDeleted) && !isDeleted;
+    if (ok) {
+        MakeContextCurrent();
+        ok = gl->fIsTexture(obj);
+    }
 
+    *retval = ok;
     return NS_OK;
 }
 
