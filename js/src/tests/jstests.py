@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # Test harness for JSTests, controlled by manifest files.
 
 import datetime, os, sys, subprocess
