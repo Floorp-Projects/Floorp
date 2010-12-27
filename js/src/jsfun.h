@@ -214,6 +214,11 @@ struct JSFunction : public JSObject_Slots2
     const js::Shape *lastVar() const;
     const js::Shape *lastUpvar() const { return u.i.names; }
 
+    /*
+     * The parser builds shape paths for functions, usable by Call objects at
+     * runtime, by calling addLocal. All locals of ARG kind must be addLocal'ed
+     * before any VAR kind, and VAR before UPVAR.
+     */
     bool addLocal(JSContext *cx, JSAtom *atom, JSLocalKind kind);
 
     /*
