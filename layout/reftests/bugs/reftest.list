@@ -266,7 +266,7 @@ random == 99850-1b.html 99850-1-ref.html # bug 471629
 == 283686-2.html 283686-2-ref.html
 == 283686-3.html about:blank
 == 289384-1.xhtml 289384-ref.xhtml
-fails-if(d2d) HTTP == 289480.html#top 289480-ref.html # basically-verbatim acid2 test, HTTP for a 404 page -- bug 409329 for the non-Mac failures
+random-if(d2d) HTTP == 289480.html#top 289480-ref.html # basically-verbatim acid2 test, HTTP for a 404 page -- bug 578114 for the d2d failures
 asserts(1) == 290129-1.html 290129-1-ref.html # bug 315549/460637
 == 291078-1.html 291078-1-ref.html
 == 291078-2.html 291078-2-ref.html
