@@ -148,6 +148,10 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
 {
   MOZ_LAYERS_LOG(("[ParentSide] recieved txn with %d edits", cset.Length()));
 
+  if (layer_manager()->IsDestroyed()) {
+    return true;
+  }
+
   EditReplyVector replyv;
 
   layer_manager()->BeginTransactionWithTarget(NULL);
