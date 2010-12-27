@@ -1007,7 +1007,11 @@ SessionStoreService.prototype = {
   onTabLoad: function sss_onTabLoad(aWindow, aBrowser, aEvent) { 
     // react on "load" and solitary "pageshow" events (the first "pageshow"
     // following "load" is too late for deleting the data caches)
-    if (aEvent.type != "load" && !aEvent.persisted) {
+    // It's possible to get a load event after calling stop on a browser (when
+    // overwriting tabs). We want to return early if the tab hasn't been restored yet.
+    if ((aEvent.type != "load" && !aEvent.persisted) ||
+        (aBrowser.__SS_restoreState &&
+         aBrowser.__SS_restoreState == TAB_STATE_NEEDS_RESTORE)) {
       return;
     }
     
