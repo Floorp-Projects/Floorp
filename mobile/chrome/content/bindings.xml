@@ -43,6 +43,9 @@
           input.blur();
           input.focus();
 
+          if (val)
+            input.selectionStart = input.selectionEnd = input.textLength;
+
           return val;
         ]]></setter>
       </property>
@@ -112,7 +115,9 @@
 
       <handler event="TapDouble" phase="capturing">
         <![CDATA[
-          this.select();
+          let selectAll = Services.prefs.getBoolPref("browser.urlbar.doubleClickSelectsAll");
+          if (selectAll)
+            this.select();
         ]]>
       </handler>
 
