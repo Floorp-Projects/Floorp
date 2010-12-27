@@ -74,17 +74,8 @@ CPPSRCS += \
 	WebGLContextValidate.cpp \
 	$(NULL)
 
-# We can't build ANGLE on linux until build bug 560894 and related
-# are fixed.
-ifneq ($(OS_ARCH),Linux)
 DEFINES += -DUSE_ANGLE
 USE_ANGLE=1
-else
-ifdef FORCE_BUILD_ANGLE
-DEFINES += -DUSE_ANGLE
-USE_ANGLE=1
-endif
-endif
 
 else
 
