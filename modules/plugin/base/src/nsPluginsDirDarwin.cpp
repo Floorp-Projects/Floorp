@@ -118,45 +118,7 @@ PRBool nsPluginsDir::IsPluginFile(nsIFile* file)
     NS_WARNING("Preventing load of VerifiedDownloadPlugin.plugin (see bug 436575)");
     return PR_FALSE;
   }
-    
-  CFURLRef pluginURL = NULL;
-  if (NS_FAILED(toCFURLRef(file, pluginURL)))
-    return PR_FALSE;
-  
-  PRBool isPluginFile = PR_FALSE;
-
-  CFBundleRef pluginBundle = ::CFBundleCreate(kCFAllocatorDefault, pluginURL);
-  if (pluginBundle) {
-    UInt32 packageType, packageCreator;
-    ::CFBundleGetPackageInfo(pluginBundle, &packageType, &packageCreator);
-    if (packageType == 'BRPL' || packageType == 'IEPL' || packageType == 'NSPL') {
-#ifdef MOZ_IPC
-      // Get path to plugin as a C string.
-      char executablePath[PATH_MAX];
-      executablePath[0] = '\0';
-      if (!::CFURLGetFileSystemRepresentation(pluginURL, true, (UInt8*)&executablePath, PATH_MAX)) {
-        executablePath[0] = '\0';
-      }
-
-      uint32 pluginLibArchitectures;
-      nsresult rv = mozilla::ipc::GeckoChildProcessHost::GetArchitecturesForBinary(executablePath, &pluginLibArchitectures);
-      if (NS_FAILED(rv)) {
-        return PR_FALSE;
-      }
-
-      uint32 containerArchitectures = mozilla::ipc::GeckoChildProcessHost::GetSupportedArchitecturesForProcessType(GeckoProcessType_Plugin);
-
-      // Consider the plugin architecture valid if there is any overlap in the masks.
-      isPluginFile = !!(containerArchitectures & pluginLibArchitectures);
-#else
-      isPluginFile = !!::CFBundlePreflightExecutable(pluginBundle, NULL);
-#endif
-    }
-    ::CFRelease(pluginBundle);
-  }
-
-  ::CFRelease(pluginURL);
-  return isPluginFile;
+  return PR_TRUE;
 }
 
 // Caller is responsible for freeing returned buffer.
@@ -485,6 +447,48 @@ private:
 };
 #endif
 
+static PRBool IsCompatibleArch(nsIFile *file)
+{
+  CFURLRef pluginURL = NULL;
+  if (NS_FAILED(toCFURLRef(file, pluginURL)))
+    return PR_FALSE;
+  
+  PRBool isPluginFile = PR_FALSE;
+
+  CFBundleRef pluginBundle = ::CFBundleCreate(kCFAllocatorDefault, pluginURL);
+  if (pluginBundle) {
+    UInt32 packageType, packageCreator;
+    ::CFBundleGetPackageInfo(pluginBundle, &packageType, &packageCreator);
+    if (packageType == 'BRPL' || packageType == 'IEPL' || packageType == 'NSPL') {
+#ifdef MOZ_IPC
+      // Get path to plugin as a C string.
+      char executablePath[PATH_MAX];
+      executablePath[0] = '\0';
+      if (!::CFURLGetFileSystemRepresentation(pluginURL, true, (UInt8*)&executablePath, PATH_MAX)) {
+        executablePath[0] = '\0';
+      }
+
+      uint32 pluginLibArchitectures;
+      nsresult rv = mozilla::ipc::GeckoChildProcessHost::GetArchitecturesForBinary(executablePath, &pluginLibArchitectures);
+      if (NS_FAILED(rv)) {
+        return PR_FALSE;
+      }
+
+      uint32 containerArchitectures = mozilla::ipc::GeckoChildProcessHost::GetSupportedArchitecturesForProcessType(GeckoProcessType_Plugin);
+
+      // Consider the plugin architecture valid if there is any overlap in the masks.
+      isPluginFile = !!(containerArchitectures & pluginLibArchitectures);
+#else
+      isPluginFile = !!::CFBundlePreflightExecutable(pluginBundle, NULL);
+#endif
+    }
+    ::CFRelease(pluginBundle);
+  }
+
+  ::CFRelease(pluginURL);
+  return isPluginFile;
+}
+
 /**
  * Obtains all of the information currently available for this plugin.
  */
@@ -493,6 +497,10 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info, PRLibrary **outLibrary)
   *outLibrary = nsnull;
 
   nsresult rv = NS_OK;
+
+  if (!IsCompatibleArch(mPlugin)) {
+      return NS_ERROR_FAILURE;
+  }
 
   // clear out the info, except for the first field.
   memset(&info, 0, sizeof(info));
