@@ -3777,6 +3777,13 @@ js_EmitFunctionScript(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body)
         CG_SWITCH_TO_MAIN(cg);
     }
 
+    /*
+     * Strict mode functions' arguments objects copy initial parameter values.
+     * We create arguments objects lazily -- but that doesn't work for strict
+     * mode functions where a parameter might be modified and arguments might
+     * be accessed. For such functions we synthesize an access to arguments to
+     * initialize it with the original parameter values.
+     */
     if (cg->needsEagerArguments()) {
         CG_SWITCH_TO_PROLOG(cg);
         if (js_Emit1(cx, cg, JSOP_ARGUMENTS) < 0 || js_Emit1(cx, cg, JSOP_POP) < 0)
