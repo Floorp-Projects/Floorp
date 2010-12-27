@@ -63,7 +63,7 @@ function test() {
     let uniq = r();
     let tabData = {
       entries: [{ url: "http://example.com/#" + i }],
-      extData: { "uniq": uniq }
+      extData: { "uniq": uniq, "baz": "qux" }
     };
     state.windows[0].tabs.push(tabData);
     wasLoaded[uniq] = false;
@@ -118,6 +118,17 @@ function test() {
       // to test setting a value "early".
       uniq2[actualUniq] = r();
       ss.setTabValue(tab, "uniq2", uniq2[actualUniq]);
+
+      // Delete the value we have for "baz". This tests that deleteTabValue
+      // will delete "early access" values (c.f. bug 617175). If this doesn't throw
+      // then the test is successful.
+      try {
+        ss.deleteTabValue(tab, "baz");
+      }
+      catch (e) {
+        ok(false, "no error calling deleteTabValue - " + e);
+      }
+
       // This will be used in the final comparison to make sure we checked the
       // same number as we set.
       uniq2Count++;
@@ -136,6 +147,7 @@ function test() {
         checked++;
       }
     }
+    ok(uniq2Count > 0, "at least 1 tab properly checked 'early access'");
     is(checked, uniq2Count, "checked the same number of uniq2 as we set");
   }
 

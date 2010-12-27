@@ -1333,8 +1333,19 @@ SessionStoreService.prototype = {
   },
 
   deleteTabValue: function sss_deleteTabValue(aTab, aKey) {
-    if (aTab.__SS_extdata && aTab.__SS_extdata[aKey])
-      delete aTab.__SS_extdata[aKey];
+    // We want to make sure that if data is accessed early, we attempt to delete
+    // that data from __SS_data as well. Otherwise we'll throw in cases where
+    // data can be set or read.
+    let deleteFrom;
+    if (aTab.__SS_extdata) {
+      deleteFrom = aTab.__SS_extdata;
+    }
+    else if (aTab.linkedBrowser.__SS_data && aTab.linkedBrowser.__SS_data.extData) {
+      deleteFrom = aTab.linkedBrowser.__SS_data.extData;
+    }
+
+    if (deleteFrom && deleteFrom[aKey])
+      delete deleteFrom[aKey];
     else
       throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
   },
