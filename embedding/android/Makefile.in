@@ -102,6 +102,8 @@ RES_LAYOUT = \
   res/layout/notification_progress_text.xml \
   $(NULL)
 
+RES_VALUES = res/values/colors.xml
+
 JAVA_CLASSPATH = $(ANDROID_SDK)/android.jar
 
 DEFAULT_BRANDPATH = $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales/en-US/brand.dtd
@@ -157,10 +159,14 @@ $(RES_LAYOUT): $(subst res/,$(srcdir)/resources/,$(RES_LAYOUT))
 	$(NSINSTALL) -D res/layout
 	$(NSINSTALL) $(srcdir)/resources/layout/* res/layout/
 
-R.java: $(MOZ_APP_ICON) $(RES_LAYOUT) $(RES_DRAWABLE) res/drawable/icon.png res/drawable-hdpi/icon.png res/values/strings.xml AndroidManifest.xml
+$(RES_VALUES): $(subst res/,$(srcdir)/resources/,$(RES_VALUES))
+	$(NSINSTALL) -D res/values
+	$(NSINSTALL) $(srcdir)/resources/values/* res/values/
+
+R.java: $(MOZ_APP_ICON) $(RES_LAYOUT) $(RES_DRAWABLE) $(RES_VALUES) res/drawable/icon.png res/drawable-hdpi/icon.png res/values/strings.xml AndroidManifest.xml
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar -S res -J . --custom-package org.mozilla.gecko
 
-gecko.ap_: AndroidManifest.xml res/drawable/icon.png res/drawable-hdpi/icon.png $(RES_LAYOUT) $(RES_DRAWABLE) res/values/strings.xml FORCE
+gecko.ap_: AndroidManifest.xml res/drawable/icon.png res/drawable-hdpi/icon.png $(RES_LAYOUT) $(RES_DRAWABLE) $(RES_VALUES) res/values/strings.xml FORCE
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar  -S res -F $@
 
 res/values/strings.xml: $(DEFAULT_BRANDPATH) $(DEFAULT_STRINGSPATH)
