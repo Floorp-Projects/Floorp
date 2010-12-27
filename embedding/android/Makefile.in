@@ -104,7 +104,7 @@ RES_LAYOUT = \
 
 JAVA_CLASSPATH = $(ANDROID_SDK)/android.jar
 
-DEFAULT_BRANDPATH = $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/locales/en-US/brand.dtd
+DEFAULT_BRANDPATH = $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales/en-US/brand.dtd
 DEFAULT_STRINGSPATH = locales/en-US/android_strings.dtd
 LOCALIZED_BRANDPATH = $(DEPTH)/dist/bin/chrome/$(AB_CD)/locale/branding/brand.dtd
 LOCALIZED_STRINGSPATH = $(DEPTH)/dist/bin/chrome/android-res/res/values-$(AB_CD)/android_strings.dtd
