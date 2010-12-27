@@ -8750,6 +8750,8 @@ nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JSObject *obj,
 
     result = node;
     cache = node;
+  } else {
+    result = nsnull;
   }
 
   if (result) {
