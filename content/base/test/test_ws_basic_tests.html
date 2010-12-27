@@ -164,7 +164,7 @@ function testWebSocket5() {
     is(this.bufferedAmount, 0, "Shouldn't have anything buffered");
     var msg = "some data";
     this.send(msg);
-    ok(this.bufferedAmount, msg.length, "Should have some data buffered");
+    is(this.bufferedAmount, msg.length, "Should have some data buffered");
     finishWSTest();
   }
   ws.onerror = function(e) {
