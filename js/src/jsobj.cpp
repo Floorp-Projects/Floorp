@@ -2950,8 +2950,11 @@ js_CreateThisFromTrace(JSContext *cx, Class *clasp, JSObject *ctor)
             proto = NewNativeClassInstance(cx, clasp, proto, parent);
             if (!proto)
                 return NULL;
-            if (!js_SetClassPrototype(cx, ctor, proto, JSPROP_ENUMERATE | JSPROP_PERMANENT))
-                return NULL;
+            JSFunction *fun = ctor->getFunctionPrivate();
+            if (!fun->isNative() && !fun->isFunctionPrototype()) {
+                if (!js_SetClassPrototype(cx, ctor, proto, JSPROP_ENUMERATE | JSPROP_PERMANENT))
+                    return NULL;
+            }
         } else {
             /*
              * A primitive value in .prototype means to use Object.prototype
