@@ -56,6 +56,8 @@ import android.graphics.*;
 import android.widget.*;
 import android.hardware.*;
 import android.location.*;
+import android.graphics.drawable.*;
+import android.content.res.*;
 
 import android.util.*;
 
@@ -95,11 +97,37 @@ class GeckoSurfaceView
         super.finalize();
     }
 
+    void drawSplashScreen(SurfaceHolder holder, int width, int height) {
+        Canvas c = holder.lockCanvas();
+        if (c == null) {
+            Log.i("GeckoSurfaceView", "canvas is null");
+            return;
+        }
+        Resources res = getResources();
+        c.drawColor(res.getColor(R.color.splash_background));
+        Drawable drawable = res.getDrawable(R.drawable.splash);
+        int w = drawable.getIntrinsicWidth();
+        int h = drawable.getIntrinsicHeight();
+        int x = (width - w)/2;
+        int y = (height - h)/2;
+        drawable.setBounds(x, y, x + w, y + h);
+        drawable.draw(c);
+        Paint p = new Paint();
+        p.setTextAlign(Paint.Align.CENTER);
+        p.setTextSize(32f);
+        p.setAntiAlias(true);
+        p.setColor(res.getColor(R.color.splash_font));
+        c.drawText(res.getString(R.string.splash_screen_label), width/2, y + h + 32, p);
+        holder.unlockCanvasAndPost(c);
+    }
+
     /*
      * Called on main thread
      */
 
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+        if (mShowingSplashScreen)
+            drawSplashScreen(holder, width, height);
         mSurfaceLock.lock();
 
         try {
@@ -132,7 +160,7 @@ class GeckoSurfaceView
                 GeckoAppShell.scheduleRedraw();
 
             if (!doSyncDraw) {
-                if (mDrawMode == DRAW_GLES_2)
+                if (mDrawMode == DRAW_GLES_2 || mShowingSplashScreen)
                     return;
                 Canvas c = holder.lockCanvas();
                 c.drawARGB(255, 255, 255, 255);
@@ -502,6 +530,8 @@ class GeckoSurfaceView
 
     // True if gecko requests a buffer
     int mDrawMode;
+
+    static boolean mShowingSplashScreen = true;
 
     // let's not change stuff around while we're in the middle of
     // starting drawing, ending drawing, or changing surface

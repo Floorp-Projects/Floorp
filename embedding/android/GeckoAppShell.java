@@ -635,10 +635,7 @@ class GeckoAppShell
     }
 
     public static void hideProgressDialog() {
-        if (GeckoApp.mAppContext.mProgressDialog != null) {
-            GeckoApp.mAppContext.mProgressDialog.dismiss();
-            GeckoApp.mAppContext.mProgressDialog = null;
-        }
+        GeckoApp.surfaceView.mShowingSplashScreen = false;
     }
 
     public static void setKeepScreenOn(final boolean on) {

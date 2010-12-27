@@ -69,7 +69,6 @@ abstract public class GeckoApp
     public static GeckoSurfaceView surfaceView;
     public static GeckoApp mAppContext;
     public static boolean mFullscreen = false;
-    ProgressDialog mProgressDialog;
 
     enum LaunchState {PreLaunch, Launching, WaitButton,
                       Launched, GeckoRunning, GeckoExiting};
@@ -134,11 +133,6 @@ abstract public class GeckoApp
                 showErrorDialog(getString(R.string.error_loading_file));
             return false;
         }
-
-        mProgressDialog = 
-            ProgressDialog.show(GeckoApp.this, "",
-                                getString(R.string.splash_screen_label),
-                                true);
 
         // and then fire us up
         if (i == null)
