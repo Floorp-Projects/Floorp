@@ -3145,54 +3145,21 @@ JSFunction::addLocal(JSContext *cx, JSAtom *atom, JSLocalKind kind)
         return false;
     }
 
-    Shape **listp = &u.i.names;
-    Shape *parent = *listp;
     jsid id;
-
-    /*
-     * The destructuring formal parameter parser adds a null atom, which we
-     * encode as an INT id. The parser adds such locals after adding vars for
-     * the destructured-to parameter bindings -- those must be vars to avoid
-     * aliasing arguments[i] for any i -- so we must switch u.i.names to a
-     * dictionary list to cope with insertion "in the middle" of an index-named
-     * shape for the object or array argument.
-     */
-    bool findArgInsertionPoint = false;
     if (!atom) {
         JS_ASSERT(kind == JSLOCAL_ARG);
-        if (u.i.nvars != 0) {
-            /*
-             * A dictionary list needed only if the destructing pattern wasn't
-             * empty, i.e., there were vars for its destructured-to bindings.
-             */
-            if (!parent->inDictionary() && !(parent = Shape::newDictionaryList(cx, listp)))
-                return false;
-            findArgInsertionPoint = true;
-        }
         id = INT_TO_JSID(nargs);
     } else {
-        if (kind == JSLOCAL_ARG && parent->inDictionary())
-            findArgInsertionPoint = true;
         id = ATOM_TO_JSID(atom);
-    }
-
-    if (findArgInsertionPoint) {
-        while (parent->parent && parent->getter() != GetCallArg) {
-            ++parent->slot;
-            JS_ASSERT(parent->slot == parent->slotSpan);
-            ++parent->slotSpan;
-            listp = &parent->parent;
-            parent = *listp;
-        }
     }
 
     Shape child(id, getter, setter, slot, attrs, Shape::HAS_SHORTID, *indexp);
 
-    Shape *shape = parent->getChild(cx, child, listp);
+    Shape *shape = u.i.names->getChild(cx, child, &u.i.names);
     if (!shape)
         return false;
 
-    JS_ASSERT_IF(!shape->inDictionary(), u.i.names == shape);
+    JS_ASSERT(u.i.names == shape);
     ++*indexp;
     return true;
 }
