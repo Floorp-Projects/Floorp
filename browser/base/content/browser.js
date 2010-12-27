@@ -5036,41 +5036,23 @@ function hrefAndLinkNodeForClickEvent(event)
 {
   function isHTMLLink(aNode)
   {
-    return aNode instanceof HTMLAnchorElement ||
-           aNode instanceof HTMLAreaElement ||
-           aNode instanceof HTMLLinkElement;
+    // Be consistent with what nsContextMenu.js does.
+    return ((aNode instanceof HTMLAnchorElement && aNode.href) ||
+            (aNode instanceof HTMLAreaElement && aNode.href) ||
+            aNode instanceof HTMLLinkElement);
   }
 
-  let linkNode;
-  if (isHTMLLink(event.target)) {
-    // This is a hack to work around Gecko bug 266932.
-    // Walk up the DOM looking for a parent link node, to match the existing
-    // behaviour for left click.
-    // TODO: this is no more needed and should be removed in bug 325652.
-    let node = event.target;
-    while (node) {
-      if (isHTMLLink(node) && node.hasAttribute("href"))
-        linkNode = node;
-      node = node.parentNode;
-    }
-  }
-  else {
-    let node = event.originalTarget;
-    while (node && !(node instanceof HTMLAnchorElement)) {
-      node = node.parentNode;
-    }
-    // <a> cannot be nested.  So if we find an anchor without an
-    // href, there is no useful <a> around the target.
-    if (node && node.hasAttribute("href"))
-      linkNode = node;
+  let node = event.target;
+  while (node && !isHTMLLink(node)) {
+    node = node.parentNode;
   }
 
-  if (linkNode)
-    return [linkNode.href, linkNode];
+  if (node)
+    return [node.href, node];
 
   // If there is no linkNode, try simple XLink.
   let href, baseURI;
-  let node = event.target;
+  node = event.target;
   while (node) {
     if (node.nodeType == Node.ELEMENT_NODE) {
       href = node.getAttributeNS("http://www.w3.org/1999/xlink", "href");

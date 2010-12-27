@@ -2307,6 +2307,7 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
                 nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this),
                                             aVisitor.mPresContext, &event,
                                             nsnull, &status);
+                aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
               } // case
             } // switch
           }
@@ -2473,6 +2474,7 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
               // Hold a strong ref while dispatching
               nsRefPtr<nsHTMLFormElement> form(mForm);
               presShell->HandleDOMEventWithTarget(mForm, &event, &status);
+              aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
             }
           }
           break;

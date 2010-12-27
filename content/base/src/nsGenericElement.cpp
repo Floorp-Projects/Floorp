@@ -5208,7 +5208,8 @@ nsGenericElement::CheckHandleEventForLinksPrecondition(nsEventChainVisitor& aVis
 {
   if (aVisitor.mEventStatus == nsEventStatus_eConsumeNoDefault ||
       !NS_IS_TRUSTED_EVENT(aVisitor.mEvent) ||
-      !aVisitor.mPresContext) {
+      !aVisitor.mPresContext ||
+      (aVisitor.mEvent->flags & NS_EVENT_FLAG_PREVENT_ANCHOR_ACTIONS)) {
     return PR_FALSE;
   }
 
@@ -5253,6 +5254,8 @@ nsGenericElement::PreHandleEventForLinks(nsEventChainPreVisitor& aVisitor)
       GetLinkTarget(target);
       nsContentUtils::TriggerLink(this, aVisitor.mPresContext, absURI, target,
                                   PR_FALSE, PR_TRUE);
+      // Make sure any ancestor links don't also TriggerLink
+      aVisitor.mEvent->flags |= NS_EVENT_FLAG_PREVENT_ANCHOR_ACTIONS;
     }
     break;
 
@@ -5261,6 +5264,9 @@ nsGenericElement::PreHandleEventForLinks(nsEventChainPreVisitor& aVisitor)
     // FALL THROUGH
   case NS_BLUR_CONTENT:
     rv = LeaveLink(aVisitor.mPresContext);
+    if (NS_SUCCEEDED(rv)) {
+      aVisitor.mEvent->flags |= NS_EVENT_FLAG_PREVENT_ANCHOR_ACTIONS;
+    }
     break;
 
   default:
@@ -5307,6 +5313,7 @@ nsGenericElement::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
         if (handler && document) {
           nsIFocusManager* fm = nsFocusManager::GetFocusManager();
           if (fm) {
+            aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
             nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(this);
             fm->SetFocus(elem, nsIFocusManager::FLAG_BYMOUSE |
                                nsIFocusManager::FLAG_NOSCROLL);
@@ -5338,16 +5345,25 @@ nsGenericElement::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
                            NS_UI_ACTIVATE, 1);
 
         rv = shell->HandleDOMEventWithTarget(this, &actEvent, &status);
+        if (NS_SUCCEEDED(rv)) {
+          aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
+        }
       }
     }
     break;
 
   case NS_UI_ACTIVATE:
     {
-      nsAutoString target;
-      GetLinkTarget(target);
-      nsContentUtils::TriggerLink(this, aVisitor.mPresContext, absURI, target,
-                                  PR_TRUE, PR_TRUE);
+      nsCOMPtr<nsIContent> targetContent;
+      aVisitor.mPresContext->EventStateManager()->
+        GetEventTargetContent(aVisitor.mEvent, getter_AddRefs(targetContent));
+      if (targetContent == this) {
+        nsAutoString target;
+        GetLinkTarget(target);
+        nsContentUtils::TriggerLink(this, aVisitor.mPresContext, absURI, target,
+                                    PR_TRUE, PR_TRUE);
+        aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
+      }
     }
     break;
 

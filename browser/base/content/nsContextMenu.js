@@ -541,6 +541,8 @@ nsContextMenu.prototype = {
       if (elem.nodeType == Node.ELEMENT_NODE) {
         // Link?
         if (!this.onLink &&
+            // Be consistent with what hrefAndLinkNodeForClickEvent
+            // does in browser.js
              ((elem instanceof HTMLAnchorElement && elem.href) ||
               (elem instanceof HTMLAreaElement && elem.href) ||
               elem instanceof HTMLLinkElement ||
@@ -549,24 +551,8 @@ nsContextMenu.prototype = {
           // Target is a link or a descendant of a link.
           this.onLink = true;
 
-          // xxxmpc: this is kind of a hack to work around a Gecko bug (see bug 266932)
-          // we're going to walk up the DOM looking for a parent link node,
-          // this shouldn't be necessary, but we're matching the existing behaviour for left click
-          var realLink = elem;
-          var parent = elem;
-          while ((parent = parent.parentNode) &&
-                 (parent.nodeType == Node.ELEMENT_NODE)) {
-            try {
-              if ((parent instanceof HTMLAnchorElement && parent.href) ||
-                  (parent instanceof HTMLAreaElement && parent.href) ||
-                  parent instanceof HTMLLinkElement ||
-                  parent.getAttributeNS("http://www.w3.org/1999/xlink", "type") == "simple")
-                realLink = parent;
-            } catch (e) { }
-          }
-
           // Remember corresponding element.
-          this.link = realLink;
+          this.link = elem;
           this.linkURL = this.getLinkURL();
           this.linkURI = this.getLinkURI();
           this.linkProtocol = this.getLinkProtocol();
