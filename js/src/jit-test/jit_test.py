@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # jit_test.py -- Python harness for JavaScript trace tests.
 
 import datetime, os, re, sys, tempfile, traceback
