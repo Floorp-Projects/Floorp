@@ -309,6 +309,21 @@ public:
   virtual void EndTransaction(DrawThebesLayerCallback aCallback,
                               void* aCallbackData) = 0;
 
+  /**
+   * Attempts to perform an "empty transaction", i.e., a BeginTransaction()
+   * followed by no changes to the layer tree and an EndTransaction with no
+   * ThebesLayer drawing callback. This will only work if no ThebesLayers
+   * need to be updated (i.e. the visible region of each ThebesLayer is already
+   * fully retained). Since this cannot be predicted in advance,
+   * DoEmptyTransaction is allowed to fail and return false. When
+   * DoEmptyTransaction fails it must be immediately (within the same paint
+   * event) followed by a normal BeginTransaction/EndTransaction pair.
+   */
+  virtual bool DoEmptyTransaction()
+  {
+    return false;
+  }
+
   PRBool IsSnappingEffectiveTransforms() { return mSnapEffectiveTransforms; } 
 
   /**
