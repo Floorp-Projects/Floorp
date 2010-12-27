@@ -7,6 +7,8 @@ Local patches:
 
     angle-fixes.patch - fix angle issues 51 & 52
 
+    angle-nspr-misc.patch - don't bother with ANGLE_OS detection with NSPR
+
 == Visual Studio Solution Files ==
 
 The VS solution/project files that are used to build ANGLE are built
