@@ -1697,6 +1697,8 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
         }
     }
 
+    bool usePropCache = pic->usePropCache;
+
     Value v;
     if (!obj->getProperty(f.cx, ATOM_TO_JSID(atom), &v))
         THROW();
@@ -1708,7 +1710,7 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
      * :FIXME: looking under the usePropCache abstraction, which is only unset for
      * reads of the prototype.
      */
-    if (v.isUndefined() && pic->usePropCache)
+    if (v.isUndefined() && usePropCache)
         f.script()->typeMonitorUndefined(f.cx, f.regs.pc, 0);
 
     f.regs.sp[-1] = v;

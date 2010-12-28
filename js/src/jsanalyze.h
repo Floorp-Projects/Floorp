@@ -85,12 +85,6 @@ struct Bytecode
     /* Method JIT safe point. */
     bool safePoint : 1;
 
-    /*
-     * For type inference, whether this bytecode needs to have its effects monitored dynamically.
-     * This is limited to property/name sets and calls.
-     */
-    bool monitorNeeded : 1;
-
     /* Stack depth before this opcode. */
     uint32 stackDepth;
 
@@ -104,17 +98,11 @@ struct Bytecode
     Bytecode(Script *script, unsigned offset)
     {
         PodZero(this);
-
-#ifdef JS_TYPE_INFERENCE
-        this->script = script;
-        this->offset = offset;
-#endif
     }
 
   private:
     bool mergeDefines(JSContext *cx, Script *script, bool initial,
-                      uint32 newDepth, types::TypeStack *newStack,
-                      uint32 *newArray, uint32 newCount);
+                      uint32 newDepth, uint32 *newArray, uint32 newCount);
 
     /* Whether a local variable is in the define set at this bytecode. */
     bool isDefined(uint32 slot)
@@ -126,53 +114,6 @@ struct Bytecode
         }
         return false;
     }
-
-#ifdef JS_TYPE_INFERENCE
-  public:
-
-    Script *script;
-    unsigned offset;
-
-    /* Contents of the stack when this instruction is executed. */
-    types::TypeStack *inStack;
-
-    /* Array of stack nodes pushed by this instruction. */
-    types::TypeStack *pushedArray;
-
-    /* Any new Array or Object created at this bytecode. */
-    types::TypeObject *initArray;
-    types::TypeObject *initObject;
-
-    /*
-     * For inc/dec operations, whether the operation dynamically overflowed to double.
-     * Should one of these overflow, we reanalyze the affected bytecode.
-     */
-    bool hasIncDecOverflow : 1;
-
-    /* Pool which constraints on this instruction should use. */
-    inline JSArenaPool &pool();
-
-    /* Get the type set for the Nth value popped by this instruction. */
-    inline types::TypeSet *popped(unsigned num);
-
-    /* Get the type set for the Nth value pushed by this instruction. */
-    inline types::TypeSet *pushed(unsigned num);
-
-    /* Mark a trivially determined fixed type for a value pushed by this instruction. */
-    inline void setFixed(JSContext *cx, unsigned num, types::jstype type);
-
-    /*
-     * Get the new object at this bytecode. propagation will be performed from
-     * either Object or Array, per isArray.
-     */
-    inline types::TypeObject* getInitObject(JSContext *cx, bool isArray);
-
-#ifdef DEBUG
-    void print(JSContext *cx);
-#endif
-
-#endif /* JS_TYPE_INFERENCE */
-
 };
 
 /* Information about a script. */
@@ -202,15 +143,10 @@ class Script
     /* Pool for allocating analysis structures which will not outlive this script. */
     JSArenaPool pool;
 
-    void init(JSScript *script);
-    void analyze(JSContext *cx);
-    void destroy();
+    Script();
+    ~Script();
 
-    /*
-     * For analysis scripts allocated on the stack.  Scripts don't have constructors,
-     * and must be zeroed out before being used.
-     */
-    ~Script() { destroy(); }
+    void analyze(JSContext *cx, JSScript *script);
 
     bool OOM() { return outOfMemory; }
     bool failed() { return hadFailure; }
@@ -244,9 +180,6 @@ class Script
         return codeArray[offset] && codeArray[offset]->jumpTarget;
     }
     bool jumpTarget(const jsbytecode *pc) { return jumpTarget(pc - script->code); }
-
-    bool monitored(uint32 offset) { return getCode(offset).monitorNeeded; }
-    bool monitored(const jsbytecode *pc) { return getCode(pc).monitorNeeded; }
 
     /* Accessors for local variable information. */
 
@@ -288,10 +221,6 @@ class Script
         return false;
     }
 
-    void trace(JSTracer *trc);
-    void sweep(JSContext *cx);
-    void detach();
-
   private:
     void setOOM(JSContext *cx) {
         if (!outOfMemory)
@@ -302,150 +231,9 @@ class Script
 
     inline bool addJump(JSContext *cx, unsigned offset,
                         unsigned *currentOffset, unsigned *forwardJump,
-                        unsigned stackDepth, types::TypeStack *stack,
-                        uint32 *defineArray, unsigned defineCount);
+                        unsigned stackDepth, uint32 *defineArray, unsigned defineCount);
 
     inline void setLocal(uint32 local, uint32 offset);
-
-#ifdef JS_TYPE_INFERENCE
-  public:
-
-    /* Unique identifier within the compartment. */
-    unsigned id;
-
-    /* Function this script is the body for, if there is one. */
-    JSFunction *fun;
-
-    /* Global object for this script, if compileAndGo. */
-    JSObject *global;
-
-    /* List of objects associated with this script. */
-    types::TypeObject *objects;
-
-    /*
-     * Location where the definition of this script occurs, representing any
-     * nesting for scope lookups.  NULL for global scripts.
-     */
-    JSScript *parent;
-    const jsbytecode *parentpc;
-
-    /*
-     * Variables defined by this script.  This includes local variables defined
-     * with 'var' or 'let' and formal arguments.
-     */
-    types::Variable **variableSet;
-    unsigned variableCount;
-
-    /* Types of the 'this' variable in this script. */
-    types::TypeSet thisTypes;
-
-    /* Array of local variable names, computed by js_GetLocalNameArray. */
-    jsuword *localNames;
-
-    void setFunction(JSContext *cx, JSFunction *fun);
-
-    bool isEval() { return parent && !fun; }
-    bool isGlobal() { return !parent || (!fun && !parent->analysis->parent); }
-
-    unsigned argCount() { return fun ? fun->nargs : 0; }
-    types::TypeFunction *function() { return fun->getType()->asFunction(); }
-
-    inline JSObject *getGlobal();
-    inline types::TypeObject *getGlobalType();
-
-    /*
-     * Get the non-eval script which this one is nested in, returning this script
-     * if it was not produced as the result of an eval.
-     */
-    inline Script *evalParent();
-
-    /* Bytecode where this script is nested. */
-    inline Bytecode *parentCode();
-
-    void nukeUpvarTypes(JSContext *cx);
-
-    /* Gather statistics off this script and print it if necessary. */
-    void finish(JSContext *cx);
-
-    /* Helpers */
-
-    /* Inference state destroyed after the initial pass through the function. */
-
-    struct AnalyzeStateStack {
-        /* Whether this node is the iterator for a 'for each' loop. */
-        bool isForEach;
-
-        /* Scope for any name binding pushed on this stack node, per SearchScope. */
-        Script *scope;
-
-        /* Any value pushed by a JSOP_DOUBLE. */
-        bool hasDouble;
-        double doubleValue;
-    };
-
-    struct AnalyzeState {
-        AnalyzeStateStack *stack;
-
-        /* Current stack depth. */
-        unsigned stackDepth;
-
-        /* Last opcode was JSOP_GETTER or JSOP_SETTER. */
-        bool hasGetSet;
-
-        /* Last opcode was JSOP_HOLE. */
-        bool hasHole;
-
-        AnalyzeState()
-            : stack(NULL), stackDepth(0), hasGetSet(false), hasHole(false)
-        {}
-
-        bool init(JSContext *cx, JSScript *script)
-        {
-            if (script->nslots) {
-                stack = (AnalyzeStateStack *)
-                    cx->calloc(script->nslots * sizeof(AnalyzeStateStack));
-                return (stack != NULL);
-            }
-            return true;
-        }
-
-        void destroy(JSContext *cx)
-        {
-            cx->free(stack);
-        }
-
-        AnalyzeStateStack &popped(unsigned i) {
-            JS_ASSERT(i < stackDepth);
-            return stack[stackDepth - 1 - i];
-        }
-
-        const AnalyzeStateStack &popped(unsigned i) const {
-            JS_ASSERT(i < stackDepth);
-            return stack[stackDepth - 1 - i];
-        }
-    };
-
-    /* Analyzes a bytecode, generating type constraints describing its behavior. */
-    void analyzeTypes(JSContext *cx, Bytecode *code, AnalyzeState &state);
-
-    /* Get the default 'new' object for a given standard class, per the script's global. */
-    inline js::types::TypeObject *getTypeNewObject(JSContext *cx, JSProtoKey key);
-
-    inline jsid getLocalId(unsigned index, Bytecode *code);
-    inline jsid getArgumentId(unsigned index);
-
-    inline types::TypeSet *getVariable(JSContext *cx, jsid id, bool localName = false);
-
-    /* Get the type set to use for a stack slot at a fixed stack depth. */
-    inline types::TypeSet *getStackTypes(unsigned index, Bytecode *code);
-
-    inline JSValueType knownArgumentTypeTag(JSContext *cx, JSScript *script, unsigned arg);
-    inline JSValueType knownLocalTypeTag(JSContext *cx, JSScript *script, unsigned local);
-
-  private:
-    void addVariable(JSContext *cx, jsid id, types::Variable *&var, bool localName);
-
-#endif /* JS_TYPE_INFERENCE */
 };
 
 static inline unsigned

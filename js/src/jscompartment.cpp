@@ -383,8 +383,10 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
 
     for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
         JSScript *script = reinterpret_cast<JSScript *>(cursor);
-        if (script->analysis)
-            script->analysis->sweep(cx);
+#ifdef JS_TYPE_INFERENCE
+        if (script->types)
+            script->types->sweep(cx);
+#endif
 
 #if defined JS_METHODJIT && defined JS_MONOIC
         if (script->hasJITCode()) {

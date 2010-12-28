@@ -2680,15 +2680,6 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent);
 extern JS_PUBLIC_API(void)
 JS_TypeHandlerDynamic(JSContext*, JSTypeFunction*, JSTypeCallsite*);
 
-/*
- * As for TypeHandlerDynamic, but emits a warning when a call to the function
- * is found in some script.  For functions which do something interesting
- * but don't have a correct handler yet, or functions which scripts should
- * not be able to invoke.
- */
-extern JS_PUBLIC_API(void)
-JS_TypeHandlerMissing(JSContext*, JSTypeFunction*, JSTypeCallsite*);
-
 /* Handlers whose return types are particular primitives. */
 
 extern JS_PUBLIC_API(void)

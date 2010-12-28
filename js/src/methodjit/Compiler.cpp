@@ -129,7 +129,7 @@ mjit::Compiler::Compiler(JSContext *cx, JSStackFrame *fp)
 }
 
 CompileStatus
-mjit::Compiler::compile()
+mjit::Compiler::compile(const Vector<JSStackFrame*> *frames)
 {
     JS_ASSERT_IF(isConstructing, !script->jitCtor);
     JS_ASSERT_IF(!isConstructing, !script->jitNormal);
@@ -139,7 +139,7 @@ mjit::Compiler::compile()
                        ? &script->jitArityCheckCtor
                        : &script->jitArityCheckNormal;
 
-    CompileStatus status = performCompilation(jit);
+    CompileStatus status = performCompilation(jit, frames);
     if (status == Compile_Okay) {
         // Global scripts don't have an arity check entry. That's okay, we
         // just need a pointer so the VM can quickly decide whether this
@@ -163,37 +163,15 @@ mjit::Compiler::compile()
     JS_END_MACRO
 
 CompileStatus
-mjit::Compiler::performCompilation(JITScript **jitp)
+mjit::Compiler::performCompilation(JITScript **jitp, const Vector<JSStackFrame*> *frames)
 {
     JaegerSpew(JSpew_Scripts, "compiling script (file \"%s\") (line \"%d\") (length \"%d\")\n",
                script->filename, script->lineno, script->length);
 
-#ifdef JS_TYPE_INFERENCE
-    this->analysis = script->analyze(cx);
-
-    /* Fill in known types of arguments and locals. */
-
-    uint32 nargs = fun ? fun->nargs : 0;
-    if (!argumentTypes.reserve(nargs))
-        return Compile_Error;
-    for (unsigned i = 0; i < nargs; i++)
-        argumentTypes.append(analysis->knownArgumentTypeTag(cx, script, i));
-
-    if (!localTypes.reserve(script->nfixed))
-        return Compile_Error;
-    for (unsigned i = 0; i < script->nfixed; i++)
-        localTypes.append(analysis->knownLocalTypeTag(cx, script, i));
-
-#else /* JS_TYPE_INFERENCE */
-
     analyze::Script analysis_;
-    PodZero(&analysis_);
-    analysis_.init(script);
-    analysis_.analyze(cx);
+    analysis_.analyze(cx, script);
 
     this->analysis = &analysis_;
-
-#endif /* JS_TYPE_INFERENCE */
 
     if (analysis->OOM())
         return Compile_Error;
@@ -207,6 +185,89 @@ mjit::Compiler::performCompilation(JITScript **jitp)
         js_ReportOutOfMemory(cx);
         return Compile_Error;
     }
+
+#ifdef JS_TYPE_INFERENCE
+    /*
+     * Fill in known types of arguments and locals, and patch up doubles for
+     * arguments and locals in existing frames. Any value assumed to be a double
+     * in this compilation may instead be an int in earlier compilation and stack
+     * frames. We handle this by patching up all hold stack frames to ensure that
+     * arguments, locals, and stack values we treat as doubles actually are doubles.
+     */
+    JS_ASSERT(script->types);
+
+    uint32 nargs = fun ? fun->nargs : 0;
+    if (!argumentTypes.reserve(nargs))
+        return Compile_Error;
+    for (unsigned i = 0; i < nargs; i++) {
+        JSValueType type = JSVAL_TYPE_UNKNOWN;
+        if (!analysis->argEscapes(i))
+            type = script->types->argTypes(i)->getKnownTypeTag(cx, script);
+        argumentTypes.append(type);
+        if (type == JSVAL_TYPE_DOUBLE && frames) {
+            for (unsigned j = 0; j < frames->length(); j++) {
+                Value *vp = (*frames)[j]->formalArgs() + i;
+                if (vp->isInt32())
+                    vp->setDouble((double)vp->toInt32());
+            }
+        }
+    }
+
+    if (!localTypes.reserve(script->nfixed))
+        return Compile_Error;
+    for (unsigned i = 0; i < script->nfixed; i++) {
+        JSValueType type = JSVAL_TYPE_UNKNOWN;
+        if (!analysis->localHasUseBeforeDef(i))
+            type = script->types->localTypes(i)->getKnownTypeTag(cx, script);
+        localTypes.append(type);
+        if (type == JSVAL_TYPE_DOUBLE && frames) {
+            for (unsigned j = 0; j < frames->length(); j++) {
+                Value *vp = (*frames)[j]->slots() + i;
+                if (vp->isInt32())
+                    vp->setDouble((double)vp->toInt32());
+            }
+        }
+    }
+
+    /*
+     * Patch up stack values in other frames which need to be doubles. We only
+     * keep track of the types of things pushed by a particular opcode, so can't
+     * quickly figure out what the inferred type is for the entire stack at a
+     * given point. For each active frame, work backwards to the start of the
+     * current basic block looking for known pushed doubles. We don't need to
+     * go back before the start of the basic block, as nothing is assumed about
+     * stack values at the start of basic blocks.
+     */
+    for (unsigned i = 0; frames && i < frames->length(); i++) {
+        uint32 offset = (*frames)[i]->pc(cx) - script->code;
+        uint32 stackDepth = analysis->getCode(offset).stackDepth;
+        if (!stackDepth)
+            continue;
+        JS_ASSERT(offset);
+        while (offset--) {
+            analyze::Bytecode *code = analysis->maybeCode(offset);
+            if (!code)
+                continue;
+
+            uint32 startDepth = code->stackDepth - analyze::GetUseCount(script, offset);
+            if (startDepth < stackDepth) {
+                for (unsigned j = startDepth; j < stackDepth; j++) {
+                    types::TypeSet *types = script->types->pushed(offset, j - startDepth);
+                    JSValueType type = types->getKnownTypeTag(cx, NULL);
+                    if (type == JSVAL_TYPE_DOUBLE) {
+                        Value *vp = (*frames)[i]->slots() + script->nfixed + j;
+                        if (vp->isInt32())
+                            vp->setDouble((double)vp->toInt32());
+                    }
+                }
+                stackDepth = startDepth;
+            }
+
+            if (code->jumpTarget)
+                break;
+        }
+    }
+#endif
 
 #ifdef JS_METHODJIT_SPEW
     if (IsJaegerSpewChannelActive(JSpew_Regalloc)) {
@@ -296,7 +357,7 @@ mjit::TryCompile(JSContext *cx, JSStackFrame *fp)
     CompileStatus status = Compile_Overflow;
     for (unsigned i = 0; status == Compile_Overflow && i < 5; i++) {
         Compiler cc(cx, fp);
-        status = cc.compile();
+        status = cc.compile(NULL);
     }
 
     return status;
@@ -1143,19 +1204,25 @@ mjit::Compiler::generateMethod()
                 applyTricks = LazyArgsObj;
             else
                 jsop_arguments();
-            frame.pushSynced(knownPushedType(0));
+            pushSyncedEntry(0);
           END_CASE(JSOP_ARGUMENTS)
 
           BEGIN_CASE(JSOP_FORARG)
+          {
+            uint32 arg = GET_SLOTNO(PC);
             iterNext();
-            frame.storeArg(GET_SLOTNO(PC), true);
+            frame.storeArg(arg, knownArgumentType(arg), NULL, true);
             frame.pop();
+          }
           END_CASE(JSOP_FORARG)
 
           BEGIN_CASE(JSOP_FORLOCAL)
+          {
+            uint32 slot = GET_SLOTNO(PC);
             iterNext();
-            frame.storeLocal(GET_SLOTNO(PC), true);
+            frame.storeLocal(slot, knownLocalType(slot), NULL, true, true);
             frame.pop();
+          }
           END_CASE(JSOP_FORLOCAL)
 
           BEGIN_CASE(JSOP_DUP)
@@ -1380,7 +1447,7 @@ mjit::Compiler::generateMethod()
             prepareStubCall(Uses(0));
             masm.move(ImmPtr(atom), Registers::ArgReg1);
             INLINE_STUBCALL(stubs::DelName);
-            frame.pushSynced(knownPushedType(0));
+            pushSyncedEntry(0);
           }
           END_CASE(JSOP_DELNAME)
 
@@ -1393,7 +1460,7 @@ mjit::Compiler::generateMethod()
             masm.move(ImmPtr(atom), Registers::ArgReg1);
             INLINE_STUBCALL(STRICT_VARIANT(stubs::DelProp));
             frame.pop();
-            frame.pushSynced(knownPushedType(0));
+            pushSyncedEntry(0);
           }
           END_CASE(JSOP_DELPROP) 
 
@@ -1401,7 +1468,7 @@ mjit::Compiler::generateMethod()
             prepareStubCall(Uses(2));
             INLINE_STUBCALL(STRICT_VARIANT(stubs::DelElem));
             frame.popn(2);
-            frame.pushSynced(knownPushedType(0));
+            pushSyncedEntry(0);
           END_CASE(JSOP_DELELEM)
 
           BEGIN_CASE(JSOP_TYPEOF)
@@ -1501,32 +1568,40 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_GETTHISPROP)
             /* Push thisv onto stack. */
             jsop_this();
-            if (!jsop_getprop(script->getAtom(fullAtomIndex(PC)), knownPushedType(0)))
+          if (!jsop_getprop(script->getAtom(fullAtomIndex(PC)),
+                            knownPushedType(0), pushedTypeSet(0))) {
                 return Compile_Error;
+          }
           END_CASE(JSOP_GETTHISPROP);
 
           BEGIN_CASE(JSOP_GETARGPROP)
           {
             /* Push arg onto stack. */
             uint32 arg = GET_SLOTNO(PC);
-            frame.pushArg(arg, knownArgumentType(arg));
-            if (!jsop_getprop(script->getAtom(fullAtomIndex(&PC[ARGNO_LEN])), knownPushedType(0)))
+            frame.pushArg(arg, knownArgumentType(arg), argTypeSet(arg));
+            if (!jsop_getprop(script->getAtom(fullAtomIndex(&PC[ARGNO_LEN])),
+                              knownPushedType(0), pushedTypeSet(0))) {
                 return Compile_Error;
+            }
           }
           END_CASE(JSOP_GETARGPROP)
 
           BEGIN_CASE(JSOP_GETLOCALPROP)
           {
             uint32 local = GET_SLOTNO(PC);
-            frame.pushLocal(local, knownLocalType(local));
-            if (!jsop_getprop(script->getAtom(fullAtomIndex(&PC[SLOTNO_LEN])), knownPushedType(0)))
+            frame.pushLocal(local, knownLocalType(local), localTypeSet(local));
+            if (!jsop_getprop(script->getAtom(fullAtomIndex(&PC[SLOTNO_LEN])),
+                              knownPushedType(0), pushedTypeSet(0))) {
                 return Compile_Error;
+            }
           }
           END_CASE(JSOP_GETLOCALPROP)
 
           BEGIN_CASE(JSOP_GETPROP)
-            if (!jsop_getprop(script->getAtom(fullAtomIndex(PC)), knownPushedType(0)))
+            if (!jsop_getprop(script->getAtom(fullAtomIndex(PC)),
+                              knownPushedType(0), pushedTypeSet(0))) {
                 return Compile_Error;
+            }
           END_CASE(JSOP_GETPROP)
 
           BEGIN_CASE(JSOP_LENGTH)
@@ -1548,8 +1623,8 @@ mjit::Compiler::generateMethod()
             prepareStubCall(Uses(0));
             masm.move(Imm32(fullAtomIndex(PC)), Registers::ArgReg1);
             INLINE_STUBCALL(stubs::CallName);
-            frame.pushSynced(knownPushedType(0));
-            frame.pushSynced(knownPushedType(1));
+            pushSyncedEntry(0);
+            pushSyncedEntry(1);
           END_CASE(JSOP_CALLNAME)
 
           BEGIN_CASE(JSOP_EVAL)
@@ -1571,7 +1646,7 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_CALL)
 
           BEGIN_CASE(JSOP_NAME)
-            jsop_name(script->getAtom(fullAtomIndex(PC)), knownPushedType(0));
+            jsop_name(script->getAtom(fullAtomIndex(PC)), knownPushedType(0), pushedTypeSet(0));
           END_CASE(JSOP_NAME)
 
           BEGIN_CASE(JSOP_DOUBLE)
@@ -1706,7 +1781,7 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_CALLARG)
           {
             uint32 arg = GET_SLOTNO(PC);
-            frame.pushArg(arg, knownArgumentType(arg));
+            frame.pushArg(arg, knownArgumentType(arg), argTypeSet(arg));
             if (op == JSOP_CALLARG)
                 frame.push(UndefinedValue());
           }
@@ -1718,10 +1793,10 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_SETARG)
           {
+            uint32 arg = GET_SLOTNO(PC);
             jsbytecode *next = &PC[JSOP_SETLOCAL_LENGTH];
             bool pop = JSOp(*next) == JSOP_POP && !analysis->jumpTarget(next);
-            JSValueType type = knownArgumentType(GET_SLOTNO(PC));
-            frame.storeArg(GET_SLOTNO(PC), pop, type);
+            frame.storeArg(arg, knownArgumentType(arg), argTypeSet(arg), pop);
             if (pop) {
                 frame.pop();
                 PC += JSOP_SETARG_LENGTH + JSOP_POP_LENGTH;
@@ -1733,16 +1808,16 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_GETLOCAL)
           {
             uint32 slot = GET_SLOTNO(PC);
-            frame.pushLocal(slot, knownPushedType(0));
+            frame.pushLocal(slot, knownPushedType(0), localTypeSet(slot));
           }
           END_CASE(JSOP_GETLOCAL)
 
           BEGIN_CASE(JSOP_SETLOCAL)
           {
+            uint32 slot = GET_SLOTNO(PC);
             jsbytecode *next = &PC[JSOP_SETLOCAL_LENGTH];
             bool pop = JSOp(*next) == JSOP_POP && !analysis->jumpTarget(next);
-            JSValueType type = knownLocalType(GET_SLOTNO(PC));
-            frame.storeLocal(GET_SLOTNO(PC), pop, type);
+            frame.storeLocal(slot, knownLocalType(slot), localTypeSet(slot), pop, true);
             if (pop) {
                 frame.pop();
                 PC += JSOP_SETLOCAL_LENGTH + JSOP_POP_LENGTH;
@@ -1753,8 +1828,8 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_SETLOCALPOP)
           {
-            JSValueType type = knownLocalType(GET_SLOTNO(PC));
-            frame.storeLocal(GET_SLOTNO(PC), true, type);
+            uint32 slot = GET_SLOTNO(PC);
+            frame.storeLocal(slot, knownLocalType(slot), localTypeSet(slot), true, true);
             frame.pop();
           }
           END_CASE(JSOP_SETLOCALPOP)
@@ -1891,7 +1966,7 @@ mjit::Compiler::generateMethod()
             INLINE_STUBCALL(stubs::In);
             frame.popn(2);
             frame.takeReg(Registers::ReturnReg);
-            frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, Registers::ReturnReg);
+            frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, Registers::ReturnReg, NULL);
           END_CASE(JSOP_IN)
 
           BEGIN_CASE(JSOP_INSTANCEOF)
@@ -1908,7 +1983,7 @@ mjit::Compiler::generateMethod()
 
             Address excn(reg, offsetof(JSContext, exception));
             frame.freeReg(reg);
-            frame.push(excn, knownPushedType(0));
+            frame.push(excn, JSVAL_TYPE_UNKNOWN, NULL);
           }
           END_CASE(JSOP_EXCEPTION)
 
@@ -2003,8 +2078,8 @@ mjit::Compiler::generateMethod()
             masm.move(ImmPtr(fun), Registers::ArgReg1);
             INLINE_STUBCALL(stubs::DefLocalFun_FC);
             frame.takeReg(Registers::ReturnReg);
-            frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
-            frame.storeLocal(slot, true);
+            frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg, NULL);
+            frame.storeLocal(slot, JSVAL_TYPE_OBJECT, NULL, true);
             frame.pop();
           }
           END_CASE(JSOP_DEFLOCALFUN_FC)
@@ -2046,7 +2121,7 @@ mjit::Compiler::generateMethod()
             }
 
             frame.takeReg(Registers::ReturnReg);
-            frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
+            frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg, NULL);
           }
           END_CASE(JSOP_LAMBDA)
 
@@ -2070,7 +2145,8 @@ mjit::Compiler::generateMethod()
             masm.loadPrivate(upvarAddress, reg);
             // push ((Value *) reg)[index]
             frame.freeReg(reg);
-            frame.push(Address(reg, index * sizeof(Value)), knownPushedType(0));
+            frame.push(Address(reg, index * sizeof(Value)),
+                       knownPushedType(0), pushedTypeSet(0));
             if (op == JSOP_CALLFCSLOT)
                 frame.push(UndefinedValue());
           }
@@ -2080,13 +2156,13 @@ mjit::Compiler::generateMethod()
             prepareStubCall(Uses(0));
             masm.move(Imm32(GET_ARGNO(PC)), Registers::ArgReg1);
             INLINE_STUBCALL(stubs::ArgSub);
-            frame.pushSynced(knownPushedType(0));
+            pushSyncedEntry(0);
           END_CASE(JSOP_ARGSUB)
 
           BEGIN_CASE(JSOP_ARGCNT)
             prepareStubCall(Uses(0));
             INLINE_STUBCALL(stubs::ArgCnt);
-            frame.pushSynced(knownPushedType(0));
+            pushSyncedEntry(0);
           END_CASE(JSOP_ARGCNT)
 
           BEGIN_CASE(JSOP_DEFLOCALFUN)
@@ -2097,8 +2173,8 @@ mjit::Compiler::generateMethod()
             masm.move(ImmPtr(fun), Registers::ArgReg1);
             INLINE_STUBCALL(stubs::DefLocalFun);
             frame.takeReg(Registers::ReturnReg);
-            frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
-            frame.storeLocal(slot, true);
+            frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg, NULL);
+            frame.storeLocal(slot, JSVAL_TYPE_OBJECT, NULL, true);
             frame.pop();
           }
           END_CASE(JSOP_DEFLOCALFUN)
@@ -2109,7 +2185,7 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_GETGNAME)
           BEGIN_CASE(JSOP_CALLGNAME)
-            jsop_getgname(fullAtomIndex(PC), knownPushedType(0));
+            jsop_getgname(fullAtomIndex(PC), knownPushedType(0), pushedTypeSet(0));
             if (op == JSOP_CALLGNAME)
                 frame.push(UndefinedValue());
           END_CASE(JSOP_GETGNAME)
@@ -2125,7 +2201,7 @@ mjit::Compiler::generateMethod()
             masm.move(ImmPtr(regex), Registers::ArgReg1);
             INLINE_STUBCALL(stubs::RegExp);
             frame.takeReg(Registers::ReturnReg);
-            frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
+            frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg, NULL);
           }
           END_CASE(JSOP_REGEXP)
 
@@ -2144,7 +2220,7 @@ mjit::Compiler::generateMethod()
             prepareStubCall(Uses(0));
             masm.move(Imm32(uva->vector[index].asInteger()), Registers::ArgReg1);
             INLINE_STUBCALL(stubs::GetUpvar);
-            frame.pushSynced(knownPushedType(0));
+            pushSyncedEntry(0);
             if (op == JSOP_CALLUPVAR)
                 frame.push(UndefinedValue());
           }
@@ -2177,8 +2253,11 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_LEAVEBLOCK)
 
           BEGIN_CASE(JSOP_CALLLOCAL)
-            frame.pushLocal(GET_SLOTNO(PC), knownPushedType(0));
+          {
+            uint32 slot = GET_SLOTNO(PC);
+            frame.pushLocal(slot, knownPushedType(0), localTypeSet(slot));
             frame.push(UndefinedValue());
+          }
           END_CASE(JSOP_CALLLOCAL)
 
           BEGIN_CASE(JSOP_INT8)
@@ -2200,7 +2279,7 @@ mjit::Compiler::generateMethod()
             masm.move(ImmPtr(fun), Registers::ArgReg1);
             INLINE_STUBCALL(stubs::FlatLambda);
             frame.takeReg(Registers::ReturnReg);
-            frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
+            frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg, NULL);
           }
           END_CASE(JSOP_LAMBDA_FC)
 
@@ -2372,7 +2451,7 @@ mjit::Compiler::jsop_getglobal(uint32 index)
 
     RegisterID reg = frame.allocReg();
     Address address = masm.objSlotRef(globalObj, reg, slot);
-    frame.push(address, knownPushedType(0));
+    frame.push(address, knownPushedType(0), pushedTypeSet(0));
     frame.freeReg(reg);
 
     /*
@@ -2633,7 +2712,7 @@ mjit::Compiler::emitUncachedCall(uint32 argc, bool callingNew)
 
     frame.takeReg(JSReturnReg_Type);
     frame.takeReg(JSReturnReg_Data);
-    frame.pushRegs(JSReturnReg_Type, JSReturnReg_Data, knownPushedType(0));
+    frame.pushRegs(JSReturnReg_Type, JSReturnReg_Data, knownPushedType(0), pushedTypeSet(0));
 
     stubcc.linkExitDirect(notCompiled, stubcc.masm.label());
     stubcc.rejoin(Changes(1));
@@ -2803,7 +2882,7 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew)
      * optimize. This lets us assume that callee/this have regs below.
      */
 #ifdef JS_MONOIC
-    if (debugMode() || analysis->monitored(PC) ||
+    if (debugMode() || monitored(PC) ||
         origCallee->isConstant() || origCallee->isNotType(JSVAL_TYPE_OBJECT) ||
         (lowerFunCallOrApply &&
          (origThis->isConstant() || origThis->isNotType(JSVAL_TYPE_OBJECT)))) {
@@ -2811,7 +2890,7 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew)
         if (applyTricks == LazyArgsObj) {
             /* frame.pop() above reset us to pre-JSOP_ARGUMENTS state */
             jsop_arguments();
-            frame.pushSynced(JSVAL_TYPE_UNKNOWN);
+            frame.pushSynced(JSVAL_TYPE_UNKNOWN, NULL);
         }
         emitUncachedCall(callImmArgc, callingNew);
         return;
@@ -3022,7 +3101,8 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew)
     frame.popn(speculatedArgc + 2);
     frame.takeReg(JSReturnReg_Type);
     frame.takeReg(JSReturnReg_Data);
-    FPRegisterID fpreg = frame.pushRegs(JSReturnReg_Type, JSReturnReg_Data, type);
+    FPRegisterID fpreg = frame.pushRegs(JSReturnReg_Type, JSReturnReg_Data,
+                                        type, pushedTypeSet(0));
 
     /*
      * Now that the frame state is set, generate the rejoin path. Note that, if
@@ -3145,7 +3225,7 @@ mjit::Compiler::emitStubCmpOp(BoolStub stub, jsbytecode *target, JSOp fused)
 
     if (!target) {
         frame.takeReg(Registers::ReturnReg);
-        frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, Registers::ReturnReg);
+        frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, Registers::ReturnReg, NULL);
         return true;
     }
 
@@ -3182,7 +3262,7 @@ mjit::Compiler::jsop_getprop_slow(JSAtom *atom, bool usePropCache)
         INLINE_STUBCALL(stubs::GetPropNoCache);
     }
     frame.pop();
-    frame.pushSynced(JSVAL_TYPE_UNKNOWN);
+    frame.pushSynced(JSVAL_TYPE_UNKNOWN, NULL);
 }
 
 bool
@@ -3192,8 +3272,8 @@ mjit::Compiler::jsop_callprop_slow(JSAtom *atom)
     masm.move(ImmPtr(atom), Registers::ArgReg1);
     INLINE_STUBCALL(stubs::CallProp);
     frame.pop();
-    frame.pushSynced(knownPushedType(0));
-    frame.pushSynced(knownPushedType(1));
+    pushSyncedEntry(0);
+    pushSyncedEntry(1);
     return true;
 }
 
@@ -3214,18 +3294,19 @@ mjit::Compiler::jsop_length()
             masm.loadPtr(Address(str, JSString::offsetOfLengthAndFlags()), str);
             masm.rshiftPtr(Imm32(JSString::LENGTH_SHIFT), str);
             frame.pop();
-            frame.pushTypedPayload(JSVAL_TYPE_INT32, str);
+            frame.pushTypedPayload(JSVAL_TYPE_INT32, str, NULL);
         }
         return true;
     }
 
 #if defined JS_POLYIC
-    return jsop_getprop(cx->runtime->atomState.lengthAtom, knownPushedType(0));
+    return jsop_getprop(cx->runtime->atomState.lengthAtom,
+                        knownPushedType(0), pushedTypeSet(0));
 #else
     prepareStubCall(Uses(1));
     INLINE_STUBCALL(stubs::Length);
     frame.pop();
-    frame.pushSynced(knownPushedType(0));
+    pushSyncedEntry(0);
     return true;
 #endif
 }
@@ -3246,7 +3327,8 @@ mjit::Compiler::passICAddress(BaseICInfo *ic)
 }
 
 bool
-mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType, bool doTypeCheck, bool usePropCache)
+mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType, types::TypeSet *typeSet,
+                             bool doTypeCheck, bool usePropCache)
 {
     FrameEntry *top = frame.peek(-1);
 
@@ -3365,7 +3447,7 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType, bool doTypeChe
     /* GETPROP_INLINE_TYPE_GUARD's validity is asserted above. */
 
     pic.objReg = objReg;
-    frame.pushRegs(shapeReg, objReg, knownType);
+    frame.pushRegs(shapeReg, objReg, knownType, typeSet);
 
     stubcc.rejoin(Changes(1));
 
@@ -3444,8 +3526,8 @@ mjit::Compiler::jsop_callprop_generic(JSAtom *atom)
 
     /* Adjust the frame. None of this will generate code. */
     frame.pop();
-    frame.pushRegs(shapeReg, objReg, knownPushedType(0));
-    frame.pushSynced(knownPushedType(1));
+    frame.pushRegs(shapeReg, objReg, knownPushedType(0), pushedTypeSet(0));
+    pushSyncedEntry(1);
 
     /* Load dslots. */
 #if defined JS_NUNBOX32
@@ -3515,10 +3597,10 @@ mjit::Compiler::jsop_callprop_str(JSAtom *atom)
     RegisterID reg = frame.allocReg();
 
     masm.move(ImmPtr(obj), reg);
-    frame.pushTypedPayload(JSVAL_TYPE_OBJECT, reg);
+    frame.pushTypedPayload(JSVAL_TYPE_OBJECT, reg, NULL);
 
     /* Get the property. */
-    if (!jsop_getprop(atom, knownPushedType(0)))
+    if (!jsop_getprop(atom, knownPushedType(0), pushedTypeSet(0)))
         return false;
 
     /* Perform a swap. */
@@ -3540,7 +3622,7 @@ mjit::Compiler::jsop_callprop_str(JSAtom *atom)
         strReg = frame.ownRegForData(strFe);
     }
     frame.pop();
-    frame.pushTypedPayload(JSVAL_TYPE_STRING, strReg);
+    frame.pushTypedPayload(JSVAL_TYPE_STRING, strReg, NULL);
     frame.forgetType(frame.peek(-1));
 
     return true;
@@ -3618,7 +3700,7 @@ mjit::Compiler::jsop_callprop_obj(JSAtom *atom)
      * is the resulting vp[1].
      */
     frame.dup();
-    frame.pushRegs(shapeReg, objReg, knownPushedType(0));
+    frame.pushRegs(shapeReg, objReg, knownPushedType(0), pushedTypeSet(0));
     frame.shift(-2);
 
     /* 
@@ -3675,8 +3757,7 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache)
     FrameEntry *rhs = frame.peek(-1);
 
     /* If the incoming type will never PIC, take slow path. */
-    if (analysis->monitored(PC) ||
-        (lhs->isTypeKnown() && lhs->getKnownType() != JSVAL_TYPE_OBJECT)) {
+    if (monitored(PC) || (lhs->isTypeKnown() && lhs->getKnownType() != JSVAL_TYPE_OBJECT)) {
         jsop_setprop_slow(atom, usePropCache);
         return true;
     }
@@ -3808,7 +3889,7 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache)
 }
 
 void
-mjit::Compiler::jsop_name(JSAtom *atom, JSValueType type)
+mjit::Compiler::jsop_name(JSAtom *atom, JSValueType type, types::TypeSet *typeSet)
 {
     PICGenInfo pic(ic::PICInfo::NAME, JSOp(*PC), true);
 
@@ -3830,7 +3911,7 @@ mjit::Compiler::jsop_name(JSAtom *atom, JSValueType type)
     }
 
     pic.fastPathRejoin = masm.label();
-    frame.pushRegs(pic.shapeReg, pic.objReg, type);
+    frame.pushRegs(pic.shapeReg, pic.objReg, type, typeSet);
 
     /* Always test for undefined. */
     Jump undefinedGuard = masm.testUndefined(Assembler::Equal, pic.shapeReg);
@@ -3854,7 +3935,7 @@ mjit::Compiler::jsop_xname(JSAtom *atom)
 
     FrameEntry *fe = frame.peek(-1);
     if (fe->isNotType(JSVAL_TYPE_OBJECT)) {
-        return jsop_getprop(atom, knownPushedType(0));
+        return jsop_getprop(atom, knownPushedType(0), pushedTypeSet(0));
     }
 
     if (!fe->isTypeKnown()) {
@@ -3881,7 +3962,7 @@ mjit::Compiler::jsop_xname(JSAtom *atom)
 
     pic.fastPathRejoin = masm.label();
     frame.pop();
-    frame.pushRegs(pic.shapeReg, pic.objReg, knownPushedType(0));
+    frame.pushRegs(pic.shapeReg, pic.objReg, knownPushedType(0), pushedTypeSet(0));
 
     /* Always test for undefined. */
     Jump undefinedGuard = masm.testUndefined(Assembler::Equal, pic.shapeReg);
@@ -3937,7 +4018,7 @@ mjit::Compiler::jsop_bindname(uint32 index, bool usePropCache)
     }
 
     pic.fastPathRejoin = masm.label();
-    frame.pushTypedPayload(JSVAL_TYPE_OBJECT, pic.objReg);
+    frame.pushTypedPayload(JSVAL_TYPE_OBJECT, pic.objReg, NULL);
     frame.freeReg(pic.shapeReg);
 
 #if defined JS_NUNBOX32
@@ -3955,21 +4036,22 @@ mjit::Compiler::jsop_bindname(uint32 index, bool usePropCache)
 #else /* JS_POLYIC */
 
 void
-mjit::Compiler::jsop_name(JSAtom *atom, JSValueType type)
+mjit::Compiler::jsop_name(JSAtom *atom, JSValueType type, types::TypeSet *typeSet)
 {
     prepareStubCall(Uses(0));
     INLINE_STUBCALL(stubs::Name);
-    frame.pushSynced(type);
+    frame.pushSynced(type, typeSet);
 }
 
 bool
 mjit::Compiler::jsop_xname(JSAtom *atom)
 {
-    return jsop_getprop(atom, knownPushedType(0));
+    return jsop_getprop(atom, knownPushedType(0), pushedTypeSet(0));
 }
 
 bool
-mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType, bool typecheck, bool usePropCache)
+mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType, types::TypeSet *typeSet,
+                             bool typecheck, bool usePropCache)
 {
     jsop_getprop_slow(atom, usePropCache);
     return true;
@@ -4057,7 +4139,7 @@ mjit::Compiler::jsop_gnameinc(JSOp op, VoidStubAtom stub, uint32 index)
     if (pop || (op == JSOP_INCGNAME || op == JSOP_DECGNAME)) {
         /* These cases are easy, the original value is not observed. */
 
-        jsop_getgname(index, JSVAL_TYPE_UNKNOWN);
+        jsop_getgname(index, JSVAL_TYPE_UNKNOWN, NULL);
         // V
 
         frame.push(Int32Value(amt));
@@ -4087,7 +4169,7 @@ mjit::Compiler::jsop_gnameinc(JSOp op, VoidStubAtom stub, uint32 index)
     } else {
         /* The pre-value is observed, making this more tricky. */
 
-        jsop_getgname(index, JSVAL_TYPE_UNKNOWN);
+        jsop_getgname(index, JSVAL_TYPE_UNKNOWN, NULL);
         // V
 
         jsop_pos();
@@ -4146,27 +4228,19 @@ mjit::Compiler::jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index)
     if (pop || (op == JSOP_INCNAME || op == JSOP_DECNAME)) {
         /* These cases are easy, the original value is not observed. */
 
-        jsop_name(atom, JSVAL_TYPE_UNKNOWN);
-        // V
+        jsop_bindname(index, false);
+        // OBJ
+
+        jsop_name(atom, JSVAL_TYPE_UNKNOWN, NULL);
+        // OBJ V
 
         frame.push(Int32Value(amt));
-        // V 1
+        // OBJ V 1
 
         /* Use sub since it calls ValueToNumber instead of string concat. */
+        frame.syncAt(-3);
         jsop_binary(JSOP_SUB, stubs::Sub, JSVAL_TYPE_UNKNOWN);
-        // N+1
-
-        jsop_bindname(index, false);
-        // V+1 OBJ
-
-        frame.dup2();
-        // V+1 OBJ V+1 OBJ
-
-        frame.shift(-3);
-        // OBJ OBJ V+1
-
-        frame.shift(-1);
-        // OBJ V+1
+        // OBJ N+1
 
         if (!jsop_setprop(atom, false))
             return false;
@@ -4177,31 +4251,23 @@ mjit::Compiler::jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index)
     } else {
         /* The pre-value is observed, making this more tricky. */
 
-        jsop_name(atom, JSVAL_TYPE_UNKNOWN);
+        jsop_name(atom, JSVAL_TYPE_UNKNOWN, NULL);
         // V
 
         jsop_pos();
         // N
 
-        frame.dup();
-        // N N
+        jsop_bindname(index, false);
+        // N OBJ
+
+        frame.dupAt(-2);
+        // N OBJ N
 
         frame.push(Int32Value(-amt));
-        // N N 1
+        // N OBJ N 1
 
+        frame.syncAt(-3);
         jsop_binary(JSOP_ADD, stubs::Add, JSVAL_TYPE_UNKNOWN);
-        // N N+1
-
-        jsop_bindname(index, false);
-        // N N+1 OBJ
-
-        frame.dup2();
-        // N N+1 OBJ N+1 OBJ
-
-        frame.shift(-3);
-        // N OBJ OBJ N+1
-
-        frame.shift(-1);
         // N OBJ N+1
 
         if (!jsop_setprop(atom, false))
@@ -4237,20 +4303,32 @@ mjit::Compiler::jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index)
         int amt = (op == JSOP_PROPINC || op == JSOP_INCPROP) ? -1 : 1;
 
         if (pop || (op == JSOP_INCPROP || op == JSOP_DECPROP)) {
-            /* These cases are easy, the original value is not observed. */
+            /*
+             * These cases are easier, the original value is not observed.
+             * Use a consistent stack layout for the value as the observed case,
+             * so that if the operation overflows the stub will be able to find
+             * the modified object.
+             */
 
             frame.dup();
             // OBJ OBJ
 
-            if (!jsop_getprop(atom, JSVAL_TYPE_UNKNOWN))
+            frame.dup();
+            // OBJ * OBJ
+
+            if (!jsop_getprop(atom, JSVAL_TYPE_UNKNOWN, NULL))
                 return false;
-            // OBJ V
+            // OBJ * V
 
             frame.push(Int32Value(amt));
-            // OBJ V 1
+            // OBJ * V 1
 
             /* Use sub since it calls ValueToNumber instead of string concat. */
+            frame.syncAt(-4);
             jsop_binary(JSOP_SUB, stubs::Sub, JSVAL_TYPE_UNKNOWN);
+            // OBJ * V+1
+
+            frame.shimmy(1);
             // OBJ V+1
 
             if (!jsop_setprop(atom, false))
@@ -4265,7 +4343,7 @@ mjit::Compiler::jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index)
             frame.dup();
             // OBJ OBJ 
 
-            if (!jsop_getprop(atom, JSVAL_TYPE_UNKNOWN))
+            if (!jsop_getprop(atom, JSVAL_TYPE_UNKNOWN, NULL))
                 return false;
             // OBJ V
 
@@ -4278,6 +4356,7 @@ mjit::Compiler::jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index)
             frame.push(Int32Value(-amt));
             // OBJ N N 1
 
+            frame.syncAt(-4);
             jsop_binary(JSOP_ADD, stubs::Add, JSVAL_TYPE_UNKNOWN);
             // OBJ N N+1
 
@@ -4306,7 +4385,7 @@ mjit::Compiler::jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index)
         masm.move(ImmPtr(atom), Registers::ArgReg1);
         INLINE_STUBCALL(stub);
         frame.pop();
-        frame.pushSynced(knownPushedType(0));
+        pushSyncedEntry(0);
     }
 
     PC += JSOP_PROPINC_LENGTH;
@@ -4327,7 +4406,7 @@ mjit::Compiler::iter(uintN flags)
         masm.move(Imm32(flags), Registers::ArgReg1);
         INLINE_STUBCALL(stubs::Iter);
         frame.pop();
-        frame.pushSynced(JSVAL_TYPE_UNKNOWN);
+        frame.pushSynced(JSVAL_TYPE_UNKNOWN, NULL);
         return;
     }
 
@@ -4423,7 +4502,7 @@ mjit::Compiler::iter(uintN flags)
 
     /* Push the iterator object. */
     frame.pop();
-    frame.pushTypedPayload(JSVAL_TYPE_OBJECT, ioreg);
+    frame.pushTypedPayload(JSVAL_TYPE_OBJECT, ioreg, NULL);
 
     stubcc.rejoin(Changes(1));
 }
@@ -4591,7 +4670,7 @@ mjit::Compiler::jsop_eleminc(JSOp op, VoidStub stub)
     prepareStubCall(Uses(2));
     INLINE_STUBCALL(stub);
     frame.popn(2);
-    frame.pushSynced(knownPushedType(0));
+    pushSyncedEntry(0);
 }
 
 void
@@ -4599,7 +4678,7 @@ mjit::Compiler::jsop_getgname_slow(uint32 index)
 {
     prepareStubCall(Uses(0));
     INLINE_STUBCALL(stubs::GetGlobalName);
-    frame.pushSynced(JSVAL_TYPE_UNKNOWN);
+    frame.pushSynced(JSVAL_TYPE_UNKNOWN, NULL);
 }
 
 void
@@ -4614,11 +4693,11 @@ mjit::Compiler::jsop_bindgname()
     prepareStubCall(Uses(0));
     INLINE_STUBCALL(stubs::BindGlobalName);
     frame.takeReg(Registers::ReturnReg);
-    frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
+    frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg, NULL);
 }
 
 void
-mjit::Compiler::jsop_getgname(uint32 index, JSValueType type)
+mjit::Compiler::jsop_getgname(uint32 index, JSValueType type, types::TypeSet *typeSet)
 {
     /* Optimize undefined, NaN and Infinity. */
     JSAtom *atom = script->getAtom(index);
@@ -4712,7 +4791,7 @@ mjit::Compiler::jsop_getgname(uint32 index, JSValueType type)
     JS_ASSERT(mic.patchValueOffset == masm.differenceBetween(mic.load, inlineValueLoadLabel));
 # endif
 
-    frame.pushRegs(treg, dreg, type);
+    frame.pushRegs(treg, dreg, type, typeSet);
 
     stubcc.rejoin(Changes(1));
     mics.append(mic);
@@ -4739,13 +4818,13 @@ mjit::Compiler::jsop_setgname_slow(uint32 index, bool usePropertyCache)
     else
         INLINE_STUBCALL(STRICT_VARIANT(stubs::SetGlobalNameNoCache));
     frame.popn(2);
-    frame.pushSynced(knownPushedType(0));
+    pushSyncedEntry(0);
 }
 
 void
 mjit::Compiler::jsop_setgname(uint32 index, bool usePropertyCache)
 {
-    if (analysis->monitored(PC)) {
+    if (monitored(PC)) {
         jsop_setgname_slow(index, usePropertyCache);
         return;
     }
@@ -4862,9 +4941,9 @@ mjit::Compiler::jsop_setgname(uint32 index, bool usePropertyCache)
         frame.push(v);
     } else {
         if (mic.u.name.typeConst)
-            frame.pushTypedPayload(typeTag, dataReg);
+            frame.pushTypedPayload(typeTag, dataReg, NULL);
         else
-            frame.pushRegs(typeReg, dataReg, knownPushedType(0));
+            frame.pushRegs(typeReg, dataReg, knownPushedType(0), pushedTypeSet(0));
     }
 
     stubcc.rejoin(Changes(1));
@@ -4881,7 +4960,7 @@ mjit::Compiler::jsop_setelem_slow()
     prepareStubCall(Uses(3));
     INLINE_STUBCALL(STRICT_VARIANT(stubs::SetElem));
     frame.popn(3);
-    frame.pushSynced(JSVAL_TYPE_UNKNOWN);
+    frame.pushSynced(JSVAL_TYPE_UNKNOWN, NULL);
 }
 
 void
@@ -4890,7 +4969,7 @@ mjit::Compiler::jsop_getelem_slow()
     prepareStubCall(Uses(2));
     INLINE_STUBCALL(stubs::GetElem);
     frame.popn(2);
-    frame.pushSynced(knownPushedType(0));
+    pushSyncedEntry(0);
 }
 
 void
@@ -4912,7 +4991,7 @@ mjit::Compiler::jsop_instanceof()
         INLINE_STUBCALL(stubs::InstanceOf);
         frame.popn(2);
         frame.takeReg(Registers::ReturnReg);
-        frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, Registers::ReturnReg);
+        frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, Registers::ReturnReg, NULL);
         return true;
     }
 
@@ -4940,7 +5019,7 @@ mjit::Compiler::jsop_instanceof()
     /* This is sadly necessary because the error case needs the object. */
     frame.dup();
 
-    if (!jsop_getprop(cx->runtime->atomState.classPrototypeAtom, JSVAL_TYPE_UNKNOWN, false))
+    if (!jsop_getprop(cx->runtime->atomState.classPrototypeAtom, JSVAL_TYPE_UNKNOWN, NULL, false))
         return false;
 
     /* Primitive prototypes are invalid. */
@@ -4981,7 +5060,7 @@ mjit::Compiler::jsop_instanceof()
     OOL_STUBCALL(stubs::FastInstanceOf);
 
     frame.popn(3);
-    frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, temp);
+    frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, temp, NULL);
 
     if (firstSlow.isSet())
         firstSlow.getJump().linkTo(stubcc.masm.label(), &stubcc.masm);
@@ -5000,7 +5079,7 @@ mjit::Compiler::emitEval(uint32 argc)
     masm.move(Imm32(argc), Registers::ArgReg1);
     INLINE_STUBCALL(stubs::Eval);
     frame.popn(argc + 2);
-    frame.pushSynced(knownPushedType(0));
+    pushSyncedEntry(0);
 }
 
 void
@@ -5307,7 +5386,7 @@ mjit::Compiler::constructThis()
     frame.pushCallee();
 
     // Get callee.prototype.
-    if (!jsop_getprop(cx->runtime->atomState.classPrototypeAtom, JSVAL_TYPE_UNKNOWN, false, false))
+    if (!jsop_getprop(cx->runtime->atomState.classPrototypeAtom, JSVAL_TYPE_UNKNOWN, NULL, false, false))
         return false;
 
     // Reach into the proto Value and grab a register for its data.
@@ -5340,8 +5419,8 @@ mjit::Compiler::jsop_callelem_slow()
     prepareStubCall(Uses(2));
     INLINE_STUBCALL(stubs::CallElem);
     frame.popn(2);
-    frame.pushSynced(knownPushedType(0));
-    frame.pushSynced(knownPushedType(1));
+    pushSyncedEntry(0);
+    pushSyncedEntry(1);
 }
 
 /*
@@ -5371,18 +5450,6 @@ mjit::Compiler::fixDoubleTypes(Uses uses)
                 frame.ensureDouble(fe);
         }
     }
-
-    /* Skip fixing for the top 'uses' values on the stack, which will be popped before branching. */
-    analyze::Bytecode &opinfo = analysis->getCode(PC);
-    for (uint32 i = 0; i < opinfo.stackDepth - uses.nuses; i++) {
-        types::TypeSet *types = analysis->getStackTypes(script->nfixed + i, &opinfo);
-        JSValueType type = types->getKnownTypeTag(cx, script);
-        if (type == JSVAL_TYPE_DOUBLE) {
-            FrameEntry *fe = frame.getLocal(script->nfixed + i);
-            if (!fe->isType(JSVAL_TYPE_DOUBLE))
-                frame.ensureDouble(fe);
-        }
-    }
 #endif
 }
 
@@ -5407,16 +5474,6 @@ mjit::Compiler::restoreAnalysisTypes(uint32 stackDepth)
             frame.learnType(fe, type, false);
         }
     }
-    types::TypeStack *stack = analysis->getCode(PC).inStack;
-    for (unsigned depth = stackDepth - 1; depth < stackDepth; depth--) {
-        JSValueType type = stack->types.getKnownTypeTag(cx, script);
-        if (type != JSVAL_TYPE_UNKNOWN && !stack->ignoreTypeTag) {
-            FrameEntry *fe = frame.getLocal(script->nfixed + depth);
-            JS_ASSERT(!fe->isTypeKnown());
-            frame.learnType(fe, type, false);
-        }
-        stack = stack->group()->innerStack;
-    }
 #endif
 }
 
@@ -5427,7 +5484,7 @@ mjit::Compiler::knownThisType()
     if (hasThisType)
         return thisType;
     hasThisType = true;
-    thisType = analysis->thisTypes.getKnownTypeTag(cx, script);
+    thisType = script->types->thisTypes.getKnownTypeTag(cx, script);
     return thisType;
 #endif
     return JSVAL_TYPE_UNKNOWN;
@@ -5447,10 +5504,9 @@ void
 mjit::Compiler::markArgumentOverflow(uint32 arg)
 {
 #ifdef JS_TYPE_INFERENCE
-    jsid id = analysis->getArgumentId(arg);
-    types::TypeSet *types = analysis->getVariable(cx, id);
+    types::TypeSet *types = script->types->argTypes(arg);
     JS_ASSERT(!types->hasType(types::TYPE_DOUBLE));
-    types::InferSpew(types::ISpewDynamic, "StaticOverflow: #%u", analysis->id);
+    types::InferSpew(types::ISpewDynamic, "StaticOverflow: #%u", script->id());
     cx->compartment->types.addDynamicType(cx, types, types::TYPE_DOUBLE);
 #endif
 }
@@ -5470,10 +5526,9 @@ void
 mjit::Compiler::markLocalOverflow(uint32 local)
 {
 #ifdef JS_TYPE_INFERENCE
-    jsid id = analysis->getLocalId(local, NULL);
-    types::TypeSet *types = analysis->getVariable(cx, id);
+    types::TypeSet *types = script->types->localTypes(local);
     JS_ASSERT(!types->hasType(types::TYPE_DOUBLE));
-    types::InferSpew(types::ISpewDynamic, "StaticOverflow: #%u", analysis->id);
+    types::InferSpew(types::ISpewDynamic, "StaticOverflow: #%u", script->id());
     cx->compartment->types.addDynamicType(cx, types, types::TYPE_DOUBLE);
 #endif
 }
@@ -5482,7 +5537,7 @@ JSValueType
 mjit::Compiler::knownPushedType(uint32 pushed)
 {
 #ifdef JS_TYPE_INFERENCE
-    types::TypeSet *types = analysis->getCode(PC).pushed(pushed);
+    types::TypeSet *types = script->types->pushed(PC - script->code, pushed);
     return types->getKnownTypeTag(cx, script);
 #endif
     return JSVAL_TYPE_UNKNOWN;
@@ -5498,7 +5553,7 @@ mjit::Compiler::mayPushUndefined(uint32 pushed)
      * If this returns false and undefined subsequently becomes a feasible
      * value pushed by the bytecode, recompilation will *NOT* be triggered.
      */
-    types::TypeSet *types = analysis->getCode(PC).pushed(pushed);
+    types::TypeSet *types = script->types->pushed(PC - script->code, pushed);
     return types->hasType(types::TYPE_UNDEFINED);
 #else
     JS_NOT_REACHED("mayPushUndefined without JS_TYPE_INFERENCE");
@@ -5506,25 +5561,59 @@ mjit::Compiler::mayPushUndefined(uint32 pushed)
 #endif
 }
 
+types::TypeSet *
+mjit::Compiler::argTypeSet(uint32 arg)
+{
+#ifdef JS_TYPE_INFERENCE
+    return script->types->argTypes(arg);
+#endif
+    return NULL;
+}
+
+types::TypeSet *
+mjit::Compiler::localTypeSet(uint32 local)
+{
+#ifdef JS_TYPE_INFERENCE
+    if (local >= script->nfixed)
+        return NULL;
+    return script->types->localTypes(local);
+#endif
+    return NULL;
+}
+
+types::TypeSet *
+mjit::Compiler::pushedTypeSet(uint32 pushed)
+{
+#ifdef JS_TYPE_INFERENCE
+    return script->types->pushed(PC - script->code, pushed);
+#endif
+    return NULL;
+}
+
+bool
+mjit::Compiler::monitored(jsbytecode *pc)
+{
+#ifdef JS_TYPE_INFERENCE
+    return script->types->monitored(pc - script->code);
+#endif
+    return false;
+}
+
+void
+mjit::Compiler::pushSyncedEntry(uint32 pushed)
+{
+    frame.pushSynced(knownPushedType(pushed), pushedTypeSet(pushed));
+}
+
 void
 mjit::Compiler::markPushedOverflow(uint32 pushed)
 {
 #ifdef JS_TYPE_INFERENCE
-    types::TypeSet *types = analysis->getCode(PC).pushed(pushed);
+    types::TypeSet *types = script->types->pushed(PC - script->code, pushed);
     JS_ASSERT(!types->hasType(types::TYPE_DOUBLE));
-    types::InferSpew(types::ISpewDynamic, "StaticOverflow: #%u", analysis->id);
+    types::InferSpew(types::ISpewDynamic, "StaticOverflow: #%u", script->id());
     cx->compartment->types.addDynamicType(cx, types, types::TYPE_DOUBLE);
 #endif
-}
-
-types::ObjectKind
-mjit::Compiler::knownPoppedObjectKind(uint32 popped)
-{
-#ifdef JS_TYPE_INFERENCE
-    types::TypeSet *types = analysis->getCode(PC).popped(popped);
-    return types->getKnownObjectKind(cx, script);
-#endif
-    return types::OBJECT_UNKNOWN;
 }
 
 bool

@@ -3924,7 +3924,7 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
         ctor = proto;
     } else {
         if (!ctorHandler)
-            ctorHandler = JS_TypeHandlerMissing;
+            ctorHandler = JS_TypeHandlerDynamic;
 
         fun = js_NewFunction(cx, NULL, constructor, nargs, JSFUN_CONSTRUCTOR, obj, atom,
                              ctorHandler, clasp->name);

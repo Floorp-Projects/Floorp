@@ -1016,7 +1016,7 @@ mjit::Compiler::jsop_localinc(JSOp op, uint32 slot, bool popped)
 
         // Before: 
         // After:  V
-        frame.pushLocal(slot, type);
+        frame.pushLocal(slot, type, NULL);
 
         // Before: V
         // After:  V 1
@@ -1032,7 +1032,7 @@ mjit::Compiler::jsop_localinc(JSOp op, uint32 slot, bool popped)
 
         // Before: N+1
         // After:  N+1
-        frame.storeLocal(slot, popped, type);
+        frame.storeLocal(slot, type, NULL, popped, true);
 
         if (popped)
             frame.pop();
@@ -1041,7 +1041,7 @@ mjit::Compiler::jsop_localinc(JSOp op, uint32 slot, bool popped)
 
         // Before:
         // After: V
-        frame.pushLocal(slot, type);
+        frame.pushLocal(slot, type, NULL);
 
         // Before: V
         // After:  N
@@ -1064,7 +1064,7 @@ mjit::Compiler::jsop_localinc(JSOp op, uint32 slot, bool popped)
 
         // Before: N N+1
         // After:  N N+1
-        frame.storeLocal(slot, true, type);
+        frame.storeLocal(slot, type, NULL, true, true);
 
         // Before: N N+1
         // After:  N
@@ -1084,7 +1084,7 @@ mjit::Compiler::jsop_arginc(JSOp op, uint32 slot, bool popped)
 
         // Before: 
         // After:  V
-        frame.pushArg(slot, type);
+        frame.pushArg(slot, type, NULL);
 
         // Before: V
         // After:  V 1
@@ -1100,7 +1100,7 @@ mjit::Compiler::jsop_arginc(JSOp op, uint32 slot, bool popped)
 
         // Before: N+1
         // After:  N+1
-        frame.storeArg(slot, popped, type);
+        frame.storeArg(slot, type, NULL, popped);
 
         if (popped)
             frame.pop();
@@ -1109,7 +1109,7 @@ mjit::Compiler::jsop_arginc(JSOp op, uint32 slot, bool popped)
 
         // Before:
         // After: V
-        frame.pushArg(slot, type);
+        frame.pushArg(slot, type, NULL);
 
         // Before: V
         // After:  N
@@ -1132,7 +1132,7 @@ mjit::Compiler::jsop_arginc(JSOp op, uint32 slot, bool popped)
 
         // Before: N N+1
         // After:  N N+1
-        frame.storeArg(slot, true, type);
+        frame.storeArg(slot, type, NULL, true);
 
         // Before: N N+1
         // After:  N
@@ -1272,12 +1272,14 @@ mjit::Compiler::jsop_setelem()
     FrameEntry *id = frame.peek(-2);
     FrameEntry *value = frame.peek(-1);
 
-    if (!IsCacheableSetElem(obj, id, value) || analysis->monitored(PC)) {
+    if (!IsCacheableSetElem(obj, id, value) || monitored(PC)) {
         jsop_setelem_slow();
         return true;
     }
 
-    types::ObjectKind kind = knownPoppedObjectKind(2);
+#ifdef JS_TYPE_INFERENCE
+    types::TypeSet *types = obj->getTypeSet();
+    types::ObjectKind kind = types ? types->getKnownObjectKind(cx, script) : types::OBJECT_UNKNOWN;
     if (id->mightBeType(JSVAL_TYPE_INT32) &&
         (kind == types::OBJECT_DENSE_ARRAY || kind == types::OBJECT_PACKED_ARRAY) &&
         !arrayPrototypeHasIndexedProperty()) {
@@ -1286,6 +1288,7 @@ mjit::Compiler::jsop_setelem()
         jsop_setelem_dense();
         return true;
     }
+#endif
 
     SetElementICInfo ic = SetElementICInfo(JSOp(*PC));
 
@@ -1464,6 +1467,7 @@ mjit::Compiler::jsop_getelem_dense(bool isPacked)
     }
 
     JSValueType type = knownPushedType(0);
+    types::TypeSet *typeSet = pushedTypeSet(0);
 
     // Allocate registers.
 
@@ -1523,9 +1527,9 @@ mjit::Compiler::jsop_getelem_dense(bool isPacked)
     frame.popn(2);
 
     if (type == JSVAL_TYPE_UNKNOWN || type == JSVAL_TYPE_DOUBLE)
-        frame.pushRegs(typeReg.reg(), dataReg, type);
+        frame.pushRegs(typeReg.reg(), dataReg, type, typeSet);
     else
-        frame.pushTypedPayload(type, dataReg);
+        frame.pushTypedPayload(type, dataReg, typeSet);
 
     stubcc.rejoin(Changes(2));
 
@@ -1556,7 +1560,9 @@ mjit::Compiler::jsop_getelem(bool isCall)
         return true;
     }
 
-    types::ObjectKind kind = knownPoppedObjectKind(1);
+#ifdef JS_TYPE_INFERENCE
+    types::TypeSet *types = obj->getTypeSet();
+    types::ObjectKind kind = types ? types->getKnownObjectKind(cx, script) : types::OBJECT_UNKNOWN;
 
     if (!isCall && id->mightBeType(JSVAL_TYPE_INT32) &&
         (kind == types::OBJECT_DENSE_ARRAY || kind == types::OBJECT_PACKED_ARRAY) &&
@@ -1566,6 +1572,7 @@ mjit::Compiler::jsop_getelem(bool isCall)
         jsop_getelem_dense(kind == types::OBJECT_PACKED_ARRAY);
         return true;
     }
+#endif
 
     GetElementICInfo ic = GetElementICInfo(JSOp(*PC));
 
@@ -1680,7 +1687,7 @@ mjit::Compiler::jsop_getelem(bool isCall)
     ic.fastPathRejoin = masm.label();
 
     frame.popn(2);
-    frame.pushRegs(ic.typeReg, ic.objReg, knownPushedType(0));
+    frame.pushRegs(ic.typeReg, ic.objReg, knownPushedType(0), pushedTypeSet(0));
     if (isCall)
         frame.pushSynced(knownPushedType(1));
 

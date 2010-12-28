@@ -81,3 +81,12 @@ function elem(v, f)
   assertEq(v.f, 2147483732);
 }
 elem({f: 0x7ffffff0}, "f");
+
+function name()
+{
+  var v = 0x7ffffff0;
+  var i;
+  eval("for (i = 0; i < 100; i++) v++");
+  assertEq(v + 10, 2147483742);
+}
+name();
