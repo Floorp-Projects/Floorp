@@ -317,7 +317,7 @@ class Compiler : public BaseCompiler
     Compiler(JSContext *cx, JSStackFrame *fp);
     ~Compiler();
 
-    CompileStatus compile();
+    CompileStatus compile(const Vector<JSStackFrame*> *frames);
 
     jsbytecode *getPC() { return PC; }
     Label getLabel() { return masm.label(); }
@@ -331,7 +331,7 @@ class Compiler : public BaseCompiler
     bool debugMode() { return debugMode_; }
 
   private:
-    CompileStatus performCompilation(JITScript **jitp);
+    CompileStatus performCompilation(JITScript **jitp, const Vector<JSStackFrame*> *frames);
     CompileStatus generatePrologue();
     CompileStatus generateMethod();
     CompileStatus generateEpilogue();
@@ -344,14 +344,18 @@ class Compiler : public BaseCompiler
     JSValueType knownArgumentType(uint32 arg);
     JSValueType knownLocalType(uint32 local);
     JSValueType knownPushedType(uint32 pushed);
-    js::types::ObjectKind knownPoppedObjectKind(uint32 popped);
     bool arrayPrototypeHasIndexedProperty();
     bool mayPushUndefined(uint32 pushed);
+    types::TypeSet *argTypeSet(uint32 arg);
+    types::TypeSet *localTypeSet(uint32 local);
+    types::TypeSet *pushedTypeSet(uint32 pushed);
+    bool monitored(jsbytecode *pc);
     void markPushedOverflow(uint32 pushed);
     void markLocalOverflow(uint32 local);
     void markArgumentOverflow(uint32 arg);
 
     /* Non-emitting helpers. */
+    void pushSyncedEntry(uint32 pushed);
     uint32 fullAtomIndex(jsbytecode *pc);
     bool jumpInScript(Jump j, jsbytecode *pc);
     bool compareTwoValues(JSContext *cx, JSOp op, const Value &lhs, const Value &rhs);
@@ -411,7 +415,7 @@ class Compiler : public BaseCompiler
     bool jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index);
     bool jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index);
     void jsop_eleminc(JSOp op, VoidStub);
-    void jsop_getgname(uint32 index, JSValueType type);
+    void jsop_getgname(uint32 index, JSValueType type, types::TypeSet *typeSet);
     void jsop_getgname_slow(uint32 index);
     void jsop_setgname(uint32 index, bool usePropertyCache);
     void jsop_setgname_slow(uint32 index, bool usePropertyCache);
@@ -420,7 +424,8 @@ class Compiler : public BaseCompiler
     void jsop_getelem_slow();
     void jsop_callelem_slow();
     void jsop_unbrand();
-    bool jsop_getprop(JSAtom *atom, JSValueType type, bool typeCheck = true, bool usePropCache = true);
+    bool jsop_getprop(JSAtom *atom, JSValueType type, types::TypeSet *typeSet,
+                      bool typeCheck = true, bool usePropCache = true);
     bool jsop_length();
     bool jsop_setprop(JSAtom *atom, bool usePropCache = true);
     void jsop_setprop_slow(JSAtom *atom, bool usePropCache = true);
@@ -430,7 +435,7 @@ class Compiler : public BaseCompiler
     bool jsop_callprop_str(JSAtom *atom);
     bool jsop_callprop_generic(JSAtom *atom);
     bool jsop_instanceof();
-    void jsop_name(JSAtom *atom, JSValueType type);
+    void jsop_name(JSAtom *atom, JSValueType type, types::TypeSet *typeSet);
     bool jsop_xname(JSAtom *atom);
     void enterBlock(JSObject *obj);
     void leaveBlock();

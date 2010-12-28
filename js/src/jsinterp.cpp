@@ -792,6 +792,27 @@ InvokeSessionGuard::start(JSContext *cx, const Value &calleev, const Value &this
         fp->initCallFrame(cx, calleev.toObject(), fun, argc, flags);
         stack.pushInvokeFrame(cx, args_, &frame_);
 
+#ifdef JS_TYPE_INFERENCE
+        cx->typeMonitorEntry(script_);
+
+        /* Mark the shared 'this' type. */
+        jstype type = GetValueType(cx, thisv);
+        if (!script_->types->thisTypes.hasType(type)) {
+            InferSpew(ISpewDynamic, "AddThis: #%u: %s",
+                      script_->id(), TypeString(type));
+            cx->compartment->types.addDynamicType(cx, &script_->types->thisTypes, type);
+        }
+
+        /* Mark all formal arguments as unknown. */
+        for (unsigned arg = 0; arg < fun->nargs; arg++) {
+            TypeSet *types = script_->types->argTypes(arg);
+            if (!types->unknown()) {
+                InferSpew(ISpewDynamic, "AddArgUnknown: #%u %u", script_->id(), arg);
+                cx->compartment->types.addDynamicType(cx, types, TYPE_UNKNOWN);
+            }
+        }
+#endif
+
 #ifdef JS_METHODJIT
         /* Hoist dynamic checks from RunScript. */
         mjit::CompileStatus status = mjit::CanMethodJIT(cx, script_, fp);
@@ -2221,6 +2242,19 @@ ScriptPrologue(JSContext *cx, JSStackFrame *fp)
     return true;
 }
 
+/*
+ * For bytecodes which push values and then fall through, make sure the
+ * types of the pushed values are consistent with type inference information.
+ */
+static inline void
+TypeCheckNextBytecode(JSContext *cx, JSScript *script, unsigned n, const JSFrameRegs &regs)
+{
+#if defined JS_TYPE_INFERENCE && DEBUG
+    if (n == analyze::GetBytecodeLength(regs.pc))
+        script->typeCheckBytecode(cx, regs.pc, regs.sp);
+#endif
+}
+
 namespace js {
 
 JS_REQUIRES_STACK JS_NEVER_INLINE bool
@@ -2292,6 +2326,7 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
                             JS_END_MACRO
 # define DO_NEXT_OP(n)      JS_BEGIN_MACRO                                    \
                                 METER_OP_PAIR(op, JSOp(regs.pc[n]));          \
+                                TypeCheckNextBytecode(cx, script, n, regs);   \
                                 op = (JSOp) *(regs.pc += (n));                \
                                 METER_REPR(cx);                               \
                                 DO_OP();                                      \
@@ -2306,17 +2341,6 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
                                 DO_OP();
 
 # define END_EMPTY_CASES
-
-/* Instrument every opcode to record popped types or cross check inferred types. */
-#ifdef JS_TYPE_INFERENCE
-#undef DO_OP
-#define DO_OP()                                                         \
-    JS_BEGIN_MACRO                                                      \
-        script->typeCheckBytecode(cx, regs.pc, regs.sp);                \
-        CHECK_RECORDER();                                               \
-        JS_EXTENSION_(goto *jumpTable[op]);                             \
-    JS_END_MACRO
-#endif
 
 #else /* !JS_THREADED_INTERP */
 
@@ -4016,13 +4040,9 @@ do_incop:
         PUSH_NULL();
         if (!js_DoIncDec(cx, cs, &regs.sp[-2], &regs.sp[-1]))
             goto error;
-        if (!regs.sp[-1].isInt32()) {
-            script->typeMonitorOverflow(cx, regs.pc, 0);
-            cx->addTypePropertyId(obj->getType(), id, TYPE_DOUBLE);
-        }
         regs.fp->setAssigning();
         JSBool ok = obj->setProperty(cx, id, &regs.sp[-1], script->strictModeCode);
-        script->typeMonitorAssign(cx, regs.pc, obj, id, regs.sp[-1]);
+        script->typeMonitorAssign(cx, regs.pc, obj, id, regs.sp[-1], !regs.sp[-1].isInt32());
         regs.fp->clearAssigning();
         if (!ok)
             goto error;

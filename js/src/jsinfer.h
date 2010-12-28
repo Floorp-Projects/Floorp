@@ -245,17 +245,22 @@ struct TypeSet
     /* Add specific kinds of constraints to this set. */
     inline void add(JSContext *cx, TypeConstraint *constraint, bool callExisting = true);
     void addSubset(JSContext *cx, JSArenaPool &pool, TypeSet *target);
-    void addGetProperty(JSContext *cx, analyze::Bytecode *code, TypeSet *target, jsid id);
-    void addSetProperty(JSContext *cx, analyze::Bytecode *code, TypeSet *target, jsid id);
-    void addGetElem(JSContext *cx, analyze::Bytecode *code, TypeSet *object, TypeSet *target);
-    void addSetElem(JSContext *cx, analyze::Bytecode *code, TypeSet *object, TypeSet *target);
+    void addGetProperty(JSContext *cx, JSScript *script, const jsbytecode *pc,
+                        TypeSet *target, jsid id);
+    void addSetProperty(JSContext *cx, JSScript *script, const jsbytecode *pc,
+                        TypeSet *target, jsid id);
+    void addGetElem(JSContext *cx, JSScript *script, const jsbytecode *pc,
+                    TypeSet *object, TypeSet *target);
+    void addSetElem(JSContext *cx, JSScript *script, const jsbytecode *pc,
+                    TypeSet *object, TypeSet *target);
     void addNewObject(JSContext *cx, TypeFunction *fun, TypeSet *target);
     void addCall(JSContext *cx, TypeCallsite *site);
-    void addArith(JSContext *cx, JSArenaPool &pool, analyze::Bytecode *code,
+    void addArith(JSContext *cx, JSArenaPool &pool,
                   TypeSet *target, TypeSet *other = NULL);
-    void addTransformThis(JSContext *cx, analyze::Bytecode *code, TypeSet *target);
-    void addFilterPrimitives(JSContext *cx, JSArenaPool &pool, TypeSet *target, bool onlyNullVoid);
-    void addMonitorRead(JSContext *cx, JSArenaPool &pool, analyze::Bytecode *code, TypeSet *target);
+    void addTransformThis(JSContext *cx, JSScript *script, TypeSet *target);
+    void addFilterPrimitives(JSContext *cx, JSArenaPool &pool,
+                             TypeSet *target, bool onlyNullVoid);
+    void addMonitorRead(JSContext *cx, JSArenaPool &pool, TypeSet *target);
 
     /*
      * Make an intermediate type set with the specified debugging name,
@@ -277,117 +282,6 @@ struct TypeSet
 
     /* Get whether this type set is non-empty. */
     bool knownNonEmpty(JSContext *cx, JSScript *script);
-};
-
-/*
- * Type information for a value pushed onto the stack at some execution point.
- * Stack nodes form equivalence classes: if at any time two stack nodes might
- * be at the same depth in the stack, they are considered equivalent.
- */
-struct TypeStack
-{
-    /*
-     * Unique node for the equivalence class of this stack node, NULL if this
-     * is the class node itself.  These are collected as a union find structure.
-     * If non-NULL the remainder of this structure is empty.
-     */
-    TypeStack *mergedGroup;
-
-    /* Equivalence class for the node beneath this one in the stack. */
-    TypeStack *innerStack;
-
-    /* Possible types for values at this stack node. */
-    TypeSet types;
-
-    /*
-     * Any let variable associated with this stack node, and whether the values
-     * at this node are bound by a 'with'.  For resolving ambiguous cross-script
-     * local variable lookups. :TODO: remove.
-     */
-    jsid letVariable;
-    bool boundWith;
-
-    /*
-     * Whether to ignore the type tag of this stack entry downstream; it may not
-     * represent the actual values in this slot.
-     */
-    bool ignoreTypeTag;
-
-#ifdef DEBUG
-    /* Identifier for this class within the script. Filled in during printing. */
-    int id;
-#endif
-
-    /* Get the representative node for the equivalence class of this node. */
-    inline TypeStack* group();
-
-    /* Set the inner stack of this node. */
-    inline void setInnerStack(TypeStack *inner);
-
-    /* Merge the equivalence classes for two stack nodes together. */
-    static void merge(JSContext *cx, TypeStack *one, TypeStack *two);
-};
-
-/*
- * Type information about a callsite. this is separated from the bytecode
- * information itself so we can handle higher order functions not called
- * directly via a bytecode.
- */
-struct TypeCallsite
-{
-    /* Bytecode this call came from. */
-    analyze::Bytecode *code;
-
-    /* Whether the bytecode is a 'NEW' operator. */
-    bool isNew;
-
-    /* Types of particular arguments to the call. */
-    TypeSet **argumentTypes;
-    unsigned argumentCount;
-
-    /* Types of the this variable. */
-    TypeSet *thisTypes;
-
-    /* Any definite type for 'this'. */
-    jstype thisType;
-
-    /* Type set receiving the return value of this call. pushed by code. */
-    TypeSet *returnTypes;
-
-    inline TypeCallsite(analyze::Bytecode *code, bool isNew, unsigned argumentCount);
-
-    /* Force creation of thisTypes or returnTypes. */
-    inline void forceThisTypes(JSContext *cx);
-    inline void forceReturnTypes(JSContext *cx);
-
-    /* Get the new object at this callsite, per Bytecode::getInitObject. */
-    inline TypeObject* getInitObject(JSContext *cx, bool isArray);
-
-    /* Pool which handlers on this call site should use. */
-    inline JSArenaPool & pool();
-
-    inline bool compileAndGo();
-};
-
-/* Type information about a variable. */
-struct Variable
-{
-    /* Variable identifier. */
-    jsid id;
-
-    /*
-     * Possible types for this variable.  This does not account for the initial
-     * undefined value of the variable, though if the variable is explicitly
-     * assigned a possibly-undefined value then this set will contain that type.
-     */
-    TypeSet types;
-
-    Variable(JSArenaPool *pool, jsid id)
-        : id(id), types(pool)
-    {}
-
-    static uint32 keyBits(jsid id) { return (uint32) JSID_BITS(id); }
-    static jsid getKey(Variable *v) { return v->id; }
 };
 
 /* Type information about a property. */
@@ -429,6 +323,14 @@ struct TypeObject
 
     /* Mark bit for GC. */
     bool marked;
+
+    /*
+     * Whether this is an Object or Array keyed to an offset in the script containing
+     * this in its objects list.
+     */
+    bool initializerObject;
+    bool initializerArray;
+    uint32 initializerOffset;
 
     /*
      * Properties of this object. This may contain JSID_VOID, representing the types
@@ -537,6 +439,96 @@ struct TypeFunction : public TypeObject
     inline TypeFunction(JSArenaPool *pool, jsid id, JSObject *proto);
 };
 
+/*
+ * Type information about a callsite. this is separated from the bytecode
+ * information itself so we can handle higher order functions not called
+ * directly via a bytecode.
+ */
+struct TypeCallsite
+{
+    JSScript *script;
+    const jsbytecode *pc;
+
+    /* Whether this is a 'NEW' call. */
+    bool isNew;
+
+    /* Types of each argument to the call. */
+    TypeSet **argumentTypes;
+    unsigned argumentCount;
+
+    /* Types of the this variable. */
+    TypeSet *thisTypes;
+
+    /* Any definite type for 'this'. */
+    jstype thisType;
+
+    /* Type set receiving the return value of this call. */
+    TypeSet *returnTypes;
+
+    inline TypeCallsite(JSScript *script, const jsbytecode *pc,
+                        bool isNew, unsigned argumentCount);
+
+    /* Force creation of thisTypes or returnTypes. */
+    inline void forceThisTypes(JSContext *cx);
+    inline void forceReturnTypes(JSContext *cx);
+
+    /* Get the new object at this callsite. */
+    inline TypeObject* getInitObject(JSContext *cx, bool isArray);
+
+    /* Pool which handlers on this call site should use. */
+    inline JSArenaPool & pool();
+
+    inline bool compileAndGo();
+};
+
+/* Type information for a script, result of AnalyzeTypes. */
+struct TypeScript
+{
+#ifdef DEBUG
+    JSScript *script;
+#endif
+
+    /*
+     * Pool into which type sets, constraints, and type objects associated with this
+     * script are allocated.
+     */
+    JSArenaPool pool;
+    TypeObject *objects;
+
+    /*
+     * Stack values pushed by all bytecodes in the script. Low bit is set for
+     * bytecodes which are monitored (side effects were not determined statically).
+     */
+    TypeSet **pushedArray;
+
+    /* Types of the 'this' variable, arguments and locals in this script. */
+    TypeSet thisTypes;
+    TypeSet *argTypes_;
+    TypeSet *localTypes_;
+
+    void nukeUpvarTypes(JSContext *cx, JSScript *script);
+
+    /* Gather statistics off this script and print it if necessary. */
+    void finish(JSContext *cx, JSScript *script);
+
+    inline bool monitored(uint32 offset);
+    inline void setMonitored(uint32 offset);
+
+    inline TypeSet *pushed(uint32 offset);
+    inline TypeSet *pushed(uint32 offset, uint32 index);
+
+    inline void addType(JSContext *cx, uint32 offset, uint32 index, jstype type);
+
+    inline TypeSet *argTypes(uint32 arg);
+    inline TypeSet *localTypes(uint32 local);
+
+    void trace(JSTracer *trc);
+    void sweep(JSContext *cx);
+};
+
+/* Analyzes all types in script, constructing its TypeScript. */
+void AnalyzeTypes(JSContext *cx, JSScript *script);
+
 /* Type information for a compartment. */
 struct TypeCompartment
 {
@@ -625,15 +617,22 @@ struct TypeCompartment
     void finish(JSContext *cx, JSCompartment *compartment);
 
     /* Make a function or non-function object associated with an optional script. */
-    TypeObject *newTypeObject(JSContext *cx, analyze::Script *script,
+    TypeObject *newTypeObject(JSContext *cx, TypeScript *script,
                               const char *name, bool isFunction, JSObject *proto);
+
+#ifdef JS_TYPE_INFERENCE
+    /* Make an initializer object. */
+    TypeObject *newInitializerTypeObject(JSContext *cx, JSScript *script,
+                                         uint32 offset, bool isArray);
+#endif
 
     /*
      * Add the specified type to the specified set, do any necessary reanalysis
      * stemming from the change and recompile any affected scripts.
      */
     void addDynamicType(JSContext *cx, TypeSet *types, jstype type);
-    void addDynamicPush(JSContext *cx, analyze::Bytecode &code, unsigned index, jstype type);
+    void addDynamicPush(JSContext *cx, JSScript *script, uint32 offset,
+                        unsigned index, jstype type);
     void dynamicAssign(JSContext *cx, JSObject *obj, jsid id, const Value &rval);
 
     inline bool hasPendingRecompiles() { return pendingRecompiles != NULL; }
@@ -641,7 +640,7 @@ struct TypeCompartment
     void addPendingRecompile(JSContext *cx, JSScript *script);
 
     /* Monitor future effects on a bytecode. */
-    void monitorBytecode(JSContext *cx, analyze::Bytecode *code);
+    void monitorBytecode(JSContext *cx, JSScript *script, uint32 offset);
 
     void sweep(JSContext *cx);
 };

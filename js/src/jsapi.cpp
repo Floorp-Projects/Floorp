@@ -4242,7 +4242,7 @@ JS_NewFunctionWithType(JSContext *cx, JSNative native, uintN nargs, uintN flags,
             return NULL;
     }
     if (!handler) {
-        handler = JS_TypeHandlerMissing;
+        handler = JS_TypeHandlerDynamic;
         if (!fullName)
             fullName = "Unknown";
     }
@@ -4345,19 +4345,6 @@ JS_PUBLIC_API(void)
 JS_TypeHandlerDynamic(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
 {
     JS_NOT_REACHED("Call to dynamic type handler");
-}
-
-JS_PUBLIC_API(void)
-JS_TypeHandlerMissing(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
-{
-#ifdef JS_TYPE_INFERENCE
-    TypeFunction *fun = Valueify(jsfun);
-    TypeCallsite *site = Valueify(jssite);
-
-    /* Don't mark the return type as anything, and add a warning. */
-    TypeFailure(cx, "Call to unimplemented handler at #%u:%05u: %s",
-                site->code->script->id, site->code->offset, fun->name());
-#endif
 }
 
 JS_PUBLIC_API(void) JS_TypeHandlerVoid(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
