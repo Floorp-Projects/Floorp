@@ -118,7 +118,7 @@ libs-%:
 # Tailored target to just add the chrome processing for multi-locale builds
 chrome-%:
 	@$(MAKE) -C $(DEPTH)/toolkit/locales chrome-$*
-	@$(MAKE) -C $(DEPTH)/services/sync/locales AB_CD=$* XPI_NAME=locale-$* BOTH_MANIFESTS=1
+	@$(MAKE) -C $(DEPTH)/services/sync/locales chrome AB_CD=$*
 	@$(MAKE) -B bookmarks.json AB_CD=$*
 	@$(MAKE) -B searchplugins AB_CD=$*
 	@$(MAKE) chrome AB_CD=$*
