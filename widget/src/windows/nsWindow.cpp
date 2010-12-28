@@ -625,12 +625,50 @@ nsWindow::Create(nsIWidget *aParent,
   if (mWindowType != eWindowType_plugin &&
       mWindowType != eWindowType_invisible &&
       UseTrackPointHack()) {
-    // Ugly Thinkpad Driver Hack (Bug 507222)
-    // We create an invisible scrollbar to trick the 
-    // Trackpoint driver into sending us scrolling messages
-    ::CreateWindowW(L"SCROLLBAR", L"FAKETRACKPOINTSCROLLBAR", 
-                    WS_CHILD | WS_VISIBLE, 0,0,0,0, mWnd, NULL,
-                    nsToolkit::mDllInstance, NULL);
+    // Ugly Thinkpad Driver Hack (Bugs 507222 and 594977)
+    //
+    // We create two zero-sized windows as descendants of the top-level window,
+    // like so:
+    //
+    //   Top-level window (MozillaWindowClass)
+    //     FAKETRACKPOINTSCROLLCONTAINER (MozillaWindowClass)
+    //       FAKETRACKPOINTSCROLLABLE (MozillaWindowClass)
+    //
+    // We need to have the middle window, otherwise the Trackpoint driver
+    // will fail to deliver scroll messages.  WM_MOUSEWHEEL messages are
+    // sent to the FAKETRACKPOINTSCROLLABLE, which then propagate up the
+    // window hierarchy until they are handled by nsWindow::WindowProc.
+    // WM_HSCROLL messages are also sent to the FAKETRACKPOINTSCROLLABLE,
+    // but these do not propagate automatically, so we have the window
+    // procedure pretend that they were dispatched to the top-level window
+    // instead.
+    //
+    // The FAKETRACKPOINTSCROLLABLE needs to have the specific window styles it
+    // is given below so that it catches the Trackpoint driver's heuristics.
+    HWND scrollContainerWnd = ::CreateWindowW
+      (className.get(), L"FAKETRACKPOINTSCROLLCONTAINER",
+       WS_CHILD | WS_VISIBLE,
+       0, 0, 0, 0, mWnd, NULL, nsToolkit::mDllInstance, NULL);
+    HWND scrollableWnd = ::CreateWindowW
+      (className.get(), L"FAKETRACKPOINTSCROLLABLE",
+       WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | 0x30,
+       0, 0, 0, 0, scrollContainerWnd, NULL, nsToolkit::mDllInstance, NULL);
+
+    // Give the FAKETRACKPOINTSCROLLABLE window a specific ID so that
+    // WindowProcInternal can distinguish it from the top-level window
+    // easily.
+    ::SetWindowLongPtrW(scrollableWnd, GWLP_ID, eFakeTrackPointScrollableID);
+
+    // Make FAKETRACKPOINTSCROLLABLE use nsWindow::WindowProc, and store the
+    // old window procedure in its "user data".
+    WNDPROC oldWndProc;
+    if (mUnicodeWidget)
+      oldWndProc = (WNDPROC)::SetWindowLongPtrW(scrollableWnd, GWLP_WNDPROC,
+                                                (LONG_PTR)nsWindow::WindowProc);
+    else
+      oldWndProc = (WNDPROC)::SetWindowLongPtrA(scrollableWnd, GWLP_WNDPROC,
+                                                (LONG_PTR)nsWindow::WindowProc);
+    ::SetWindowLongPtrW(scrollableWnd, GWLP_USERDATA, (LONG_PTR)oldWndProc);
   }
 
   // call the event callback to notify about creation
@@ -4421,6 +4459,18 @@ LRESULT CALLBACK nsWindow::WindowProcInternal(HWND hWnd, UINT msg, WPARAM wParam
   NS_TIME_FUNCTION_MIN_FMT(5.0, "%s (line %d) (hWnd: %p, msg: %p, wParam: %p, lParam: %p",
                            MOZ_FUNCTION_NAME, __LINE__, hWnd, msg,
                            wParam, lParam);
+
+  if (::GetWindowLongPtrW(hWnd, GWLP_ID) == eFakeTrackPointScrollableID) {
+    // This message was sent to the FAKETRACKPOINTSCROLLABLE.
+    if (msg == WM_HSCROLL) {
+      // Route WM_HSCROLL messages to the main window.
+      hWnd = ::GetParent(::GetParent(hWnd));
+    } else {
+      // Handle all other messages with its original window procedure.
+      WNDPROC prevWindowProc = (WNDPROC)::GetWindowLongPtr(hWnd, GWLP_USERDATA);
+      return ::CallWindowProcW(prevWindowProc, hWnd, msg, wParam, lParam);
+    }
+  }
 
   // Get the window which caused the event and ask it to process the message
   nsWindow *someWindow = GetNSWindowPtr(hWnd);
@@ -8620,13 +8670,13 @@ IsObsoleteSynapticsDriver()
 {
   HKEY key;
   LONG result = ::RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-      L"Software\\Synaptics\\SynTP\\Install\\DriverVersion", 0, KEY_READ, &key);
+      L"Software\\Synaptics\\SynTP\\Install", 0, KEY_READ, &key);
   if (result != ERROR_SUCCESS)
     return PR_FALSE;
   DWORD type;
   PRUnichar buf[40];
   DWORD buflen = sizeof(buf);
-  result = ::RegQueryValueExW(key, NULL, NULL, &type, (BYTE*)buf, &buflen);
+  result = ::RegQueryValueExW(key, L"DriverVersion", NULL, &type, (BYTE*)buf, &buflen);
   ::RegCloseKey(key);
   if (result != ERROR_SUCCESS || type != REG_SZ)
     return PR_FALSE;
