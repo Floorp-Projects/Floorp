@@ -4,6 +4,7 @@ dump("###################################### content loaded\n");
 let Cc = Components.classes;
 let Ci = Components.interfaces;
 let Cu = Components.utils;
+let Cr = Components.results;
 
 Cu.import("resource://gre/modules/Services.jsm");
 
@@ -270,7 +271,7 @@ ProgressController.prototype = {
         return this;
     }
 
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
   start: function start() {
@@ -297,6 +298,7 @@ function Content() {
   addMessageListener("Browser:MouseUp", this);
   addMessageListener("Browser:SaveAs", this);
   addMessageListener("Browser:ZoomToPoint", this);
+  addMessageListener("Browser:ResetZoom", this);
   addMessageListener("Browser:MozApplicationCache:Fetch", this);
 
   if (Util.isParentProcess())
@@ -304,6 +306,7 @@ function Content() {
 
   addEventListener("MozApplicationManifest", this, false);
   addEventListener("command", this, false);
+  addEventListener("pagehide", this, false);
 
   this._progressController = new ProgressController(this);
   this._progressController.start();
@@ -336,14 +339,15 @@ Content.prototype = {
         });
         break;
       }
+
       case "command": {
         // Don't trust synthetic events
         if (!aEvent.isTrusted)
           return;
-    
+
         let ot = aEvent.originalTarget;
         let errorDoc = ot.ownerDocument;
-    
+
         // If the event came from an ssl error page, it is probably either the "Add
         // Exception…" or "Get me out of here!" button
         if (/^about:certerror\?e=nssBadCert/.test(errorDoc.documentURI)) {
@@ -365,6 +369,11 @@ Content.prototype = {
         }
         break;
       }
+
+      case "pagehide":
+        if (aEvent.target == content.document)
+          this._setTextZoom(1);
+        break;
     }
   },
 
@@ -497,11 +506,17 @@ Content.prototype = {
         let win = element.ownerDocument.defaultView;
         while (element && win.getComputedStyle(element,null).display == "inline")
           element = element.parentNode;
-        if (element)
+        if (element) {
           rect = getBoundingContentRect(element);
+          this._setTextZoom(Math.max(1, rect.width / json.width));
+        }
         sendAsyncMessage("Browser:ZoomToPoint:Return", { x: x, y: y, rect: rect });
         break;
       }
+
+      case "Browser:ResetZoom":
+        this._setTextZoom(1);
+        break;
 
       case "Browser:MozApplicationCache:Fetch": {
         let currentURI = Services.io.newURI(json.location, json.charset, null);
@@ -539,6 +554,11 @@ Content.prototype = {
     let scrollOffset = Util.getScrollOffset(content);
     let windowUtils = Util.getWindowUtils(content);
     windowUtils.sendMouseEventToWindow(aName, aX - scrollOffset.x, aY - scrollOffset.y, 0, 1, 0, true);
+  },
+
+  _setTextZoom: function _setTextZoom(aZoom) {
+    let viewer = docShell.contentViewer.QueryInterface(Ci.nsIMarkupDocumentViewer);
+    viewer.textZoom = aZoom;
   },
 
   startLoading: function startLoading() {
@@ -885,7 +905,7 @@ var FormSubmitObserver = {
     if (!aIID.equals(Ci.nsIFormSubmitObserver) &&
         !aIID.equals(Ci.nsISupportsWeakReference) &&
         !aIID.equals(Ci.nsISupports))
-      throw Components.results.NS_ERROR_NO_INTERFACE;
+      throw Cr.NS_ERROR_NO_INTERFACE;
     return this;
   }
 };
