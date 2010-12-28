@@ -2270,7 +2270,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         }
 
         /* Optimize accesses to undeclared globals. */
-        if (!TryConvertToGname(cg, pn, &op))
+        if (!cg->mightAliasLocals() && !TryConvertToGname(cg, pn, &op))
             return JS_TRUE;
 
         ale = cg->atomList.add(cg->parser, atom);
