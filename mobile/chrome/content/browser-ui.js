@@ -928,7 +928,7 @@ var BrowserUI = {
         // downloads dir, we save it to the tmp dir and then move it here
         let dlFile = download.targetFile;
         if (!dlFile.exists())
-          dlFile.create(file.NORMAL_FILE_TYPE, 0x666);
+          dlFile.create(file.NORMAL_FILE_TYPE, 0666);
         let tmpDir = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties).get("TmpD", Ci.nsIFile);  
         let tmpFile = tmpDir.clone();
         tmpFile.append(dlFile.leafName);
@@ -1359,7 +1359,7 @@ var PageActions = {
     file.append(fileName);
     // The filename is used below to save the file to a temp location in 
     // the content process. Make sure it's up to date.
-    file.createUnique(file.NORMAL_FILE_TYPE, 0x666);
+    file.createUnique(file.NORMAL_FILE_TYPE, 0666);
     fileName = file.leafName;
 #else
     let strings = Elements.browserBundle;
