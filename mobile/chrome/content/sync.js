@@ -162,10 +162,10 @@ let WeaveGlue = {
 
     // Save current setup data
     this.setupData = {
-      account: this._elements.account.value,
-      password: this._elements.password.value,
-      synckey: Weave.Utils.normalizePassphrase(this._elements.synckey.value),
-      serverURL: this._validateServer(this._elements.customserver.value)
+      account: this._elements.account.value.trim(),
+      password: this._elements.password.value.trim(),
+      synckey: Weave.Utils.normalizePassphrase(this._elements.synckey.value.trim()),
+      serverURL: this._validateServer(this._elements.customserver.value.trim())
     };
 
     // Clear the UI so it's ready for next time
