@@ -456,7 +456,7 @@
                     <button label="&sync.connect;" oncommand="WeaveGlue.open();" />
                   </setting>
                   <setting id="sync-connected" class="setting-group" title="&sync.connected;" type="control" collapsed="true">
-                    <button id="sync-details" label="&sync.details;" type="checkbox" autocheck="true" checked="false" oncommand="WeaveGlue.showDetails();" />
+                    <button id="sync-details" label="&sync.details;" type="checkbox" autocheck="false" checked="false" oncommand="WeaveGlue.showDetails();" />
                   </setting>
                   <setting id="sync-sync" class="setting-subgroup" type="control" collapsed="true">
                     <button id="sync-syncButton" label="&sync.syncNow;" oncommand="WeaveGlue.sync();"/>

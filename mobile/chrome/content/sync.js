@@ -18,6 +18,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Mark Finkle <mfinkle@mozila.com>
+ *  Matt Brubeck <mbrubeck@mozila.com>
  *  Jono DiCarlo <jdicarlo@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -82,7 +84,7 @@ let WeaveGlue = {
   open: function open() {
     // Clear up any previous JPAKE codes
     this.abortEasySetup();
-    
+
     // Show the connect UI
     document.getElementById("syncsetup-container").hidden = false;
     document.getElementById("syncsetup-jpake").hidden = false;
@@ -126,7 +128,7 @@ let WeaveGlue = {
 
   openManual: function openManual() {
     this.abortEasySetup();
-    
+
     // Reset the scroll since the previous page might have been scrolled
     let scrollbox = document.getElementById("syncsetup-scrollbox").boxObject.QueryInterface(Ci.nsIScrollBoxObject);
     scrollbox.scrollTo(0, 0);
@@ -153,7 +155,7 @@ let WeaveGlue = {
       }
     }
   },
-  
+
   close: function close() {
     let scrollbox = document.getElementById("syncsetup-scrollbox").boxObject.QueryInterface(Ci.nsIScrollBoxObject);
     scrollbox.scrollTo(0, 0);
@@ -185,10 +187,11 @@ let WeaveGlue = {
     if (!useCustomServer)
       this._elements.customserver.value = "";
   },
-  
+
   showDetails: function showDetails() {
     // Show the connect UI detail settings
-    let show = this._elements.details.checked;
+    let show = this._elements.sync.collapsed;
+    this._elements.details.checked = show;
     this._elements.sync.collapsed = !show;
     this._elements.device.collapsed = !show;
     this._elements.disconnect.collapsed = !show;
@@ -407,7 +410,7 @@ let WeaveGlue = {
         serverURL = "";
       this.setupData.serverURL = serverURL;
     }
-    
+
     // Reset the auto-connect flag after the first attempted login
     if (aTopic == "weave:service:login:finish" || aTopic == "weave:service:login:error")
       this.autoConnect = false;
