@@ -76,7 +76,7 @@ TypeCompartment::~TypeCompartment()
 }
 
 types::TypeObject *
-TypeCompartment::newTypeObject(JSContext *cx, analyze::Script *script, const char *name,
+TypeCompartment::newTypeObject(JSContext *cx, types::TypeScript *script, const char *name,
                                bool isFunction, JSObject *proto)
 {
     JSArenaPool &pool = script ? script->pool : this->pool;
@@ -111,6 +111,33 @@ TypeCompartment::newTypeObject(JSContext *cx, analyze::Script *script, const cha
 
     return object;
 }
+
+#ifdef JS_TYPE_INFERENCE
+TypeObject *
+TypeCompartment::newInitializerTypeObject(JSContext *cx, JSScript *script,
+                                          uint32 offset, bool isArray)
+{
+    char *name = NULL;
+#ifdef DEBUG
+    name = (char *) alloca(40);
+    JS_snprintf(name, 40, "#%lu:%lu:%s", script->id(), offset, isArray ? "Array" : "Object");
+#endif
+
+    JSObject *proto;
+    JSProtoKey key = isArray ? JSProto_Array : JSProto_Object;
+    if (!js_GetClassPrototype(cx, script->getGlobal(), key, &proto, NULL))
+        return NULL;
+
+    TypeObject *res = newTypeObject(cx, script->types, name, false, proto);
+    if (isArray)
+        res->initializerArray = true;
+    else
+        res->initializerObject = true;
+    res->initializerOffset = offset;
+
+    return res;
+}
+#endif
 
 const char *
 TypeIdStringImpl(jsid id)
@@ -228,7 +255,7 @@ types::TypeObject::trace(JSTracer *trc)
 }
 
 void
-analyze::Script::trace(JSTracer *trc)
+types::TypeScript::trace(JSTracer *trc)
 {
 #ifdef JS_TYPE_INFERENCE
     /* If a script is live, so are all type objects within it. */
@@ -260,21 +287,10 @@ SweepObjectList(JSContext *cx, types::TypeObject *objects)
 }
 
 void
-analyze::Script::sweep(JSContext *cx)
+types::TypeScript::sweep(JSContext *cx)
 {
 #ifdef JS_TYPE_INFERENCE
     SweepObjectList(cx, objects);
-#endif
-}
-
-void
-analyze::Script::detach()
-{
-    /* :FIXME: bug 613221 should unlink incoming type constraints and destroy the analysis. */
-    script = NULL;
-#ifdef JS_TYPE_INFERENCE
-    fun = NULL;
-    localNames = NULL;
 #endif
 }
 
@@ -293,8 +309,13 @@ namespace analyze {
 // Script
 /////////////////////////////////////////////////////////////////////
 
-void
-Script::destroy()
+Script::Script()
+{
+    PodZero(this);
+    JS_InitArenaPool(&pool, "script_analyze", 256, 8, NULL);
+}
+
+Script::~Script()
 {
     JS_FinishArenaPool(&pool);
 }
@@ -305,8 +326,7 @@ Script::destroy()
 
 bool
 Bytecode::mergeDefines(JSContext *cx, Script *script, bool initial,
-                       unsigned newDepth, types::TypeStack *newStack,
-                       uint32 *newArray, unsigned newCount)
+                       unsigned newDepth, uint32 *newArray, unsigned newCount)
 {
     if (initial) {
         /*
@@ -316,15 +336,8 @@ Bytecode::mergeDefines(JSContext *cx, Script *script, bool initial,
         stackDepth = newDepth;
         defineArray = newArray;
         defineCount = newCount;
-#ifdef JS_TYPE_INFERENCE
-        inStack = newStack;
-#endif
         return true;
     }
-
-#ifdef JS_TYPE_INFERENCE
-    types::TypeStack::merge(cx, newStack, inStack);
-#endif
 
     /*
      * This bytecode has multiple incoming edges, intersect the new array with any
@@ -394,8 +407,7 @@ Bytecode::mergeDefines(JSContext *cx, Script *script, bool initial,
 inline bool
 Script::addJump(JSContext *cx, unsigned offset,
                 unsigned *currentOffset, unsigned *forwardJump,
-                unsigned stackDepth, types::TypeStack *stack,
-                uint32 *defineArray, unsigned defineCount)
+                unsigned stackDepth, uint32 *defineArray, unsigned defineCount)
 {
     JS_ASSERT(offset < script->length);
 
@@ -409,7 +421,7 @@ Script::addJump(JSContext *cx, unsigned offset,
         }
     }
 
-    if (!code->mergeDefines(cx, this, initial, stackDepth, stack, defineArray, defineCount))
+    if (!code->mergeDefines(cx, this, initial, stackDepth, defineArray, defineCount))
         return false;
     code->jumpTarget = true;
 
@@ -489,46 +501,11 @@ BytecodeNoFallThrough(JSOp op)
     }
 }
 
-#ifdef JS_TYPE_INFERENCE
-
-/*
- * Information about a currently active static initializer.  We keep the stack
- * of initializers around during analysis so we can reuse objects when
- * processing arrays of arrays or arrays of objects.
- */
-struct InitializerInfo
-{
-    /* Object being initialized. */
-    types::TypeObject *object;
-
-    /* Whether this object is an array. */
-    bool isArray;
-
-    /* Any object to use for initializers appearing in the array's elements. */
-    types::TypeObject *initObject;
-
-    /* Whether initObject is an array vs. object. */
-    bool initArray;
-
-    /* Outer initializer, the one this initializer is nested in. */
-    InitializerInfo *outer;
-
-    InitializerInfo() { PodZero(this); }
-};
-
-#endif /* JS_TYPE_INFERENCE */
-
 void
-Script::init(JSScript *script)
-{
-    this->script = script;
-    JS_InitArenaPool(&pool, "script_analyze", 256, 8, NULL);
-}
-
-void
-Script::analyze(JSContext *cx)
+Script::analyze(JSContext *cx, JSScript *script)
 {
     JS_ASSERT(script && !codeArray && !locals);
+    this->script = script;
 
     unsigned length = script->length;
     unsigned nfixed = localCount();
@@ -581,11 +558,6 @@ Script::analyze(JSContext *cx)
      * catch/finally/enditer.
      */
     unsigned forwardCatch = 0;
-
-#ifdef JS_TYPE_INFERENCE
-    /* Stack of active initializers. */
-    InitializerInfo *initializerStack = NULL;
-#endif
 
     /* Fill in stack depth and definitions at initial bytecode. */
     Bytecode *startcode = ArenaNew<Bytecode>(pool, this, 0);
@@ -677,67 +649,6 @@ Script::analyze(JSContext *cx)
         stackDepth -= nuses;
         stackDepth += ndefs;
 
-        types::TypeStack *stack = NULL;
-
-#ifdef JS_TYPE_INFERENCE
-
-        stack = code->inStack;
-
-        for (unsigned i = 0; i < nuses; i++)
-            stack = stack->group()->innerStack;
-
-        code->pushedArray = ArenaArray<types::TypeStack>(pool, ndefs);
-        PodZero(code->pushedArray, ndefs);
-
-        for (unsigned i = 0; i < ndefs; i++) {
-            code->pushedArray[i].types.setPool(&pool);
-            code->pushedArray[i].setInnerStack(stack);
-            stack = &code->pushedArray[i];
-
-            types::InferSpew(types::ISpewOps, "pushed #%u:%05u %u T%u",
-                             id, offset, i, stack->types.id());
-        }
-
-        /* Track the initializer stack and compute new objects for encountered initializers. */
-        if (op == JSOP_NEWINIT || op == JSOP_NEWARRAY || op == JSOP_NEWOBJECT) {
-            bool newArray = (op == JSOP_NEWARRAY) || (op == JSOP_NEWINIT && pc[1] == JSProto_Array);
-
-            types::TypeObject *object;
-            if (!script->compileAndGo) {
-                object = NULL;
-            } else if (initializerStack && initializerStack->initObject &&
-                       initializerStack->initArray == newArray) {
-                object = initializerStack->initObject;
-                if (newArray)
-                    code->initArray = object;
-                else
-                    code->initObject = object;
-            } else {
-                object = code->getInitObject(cx, newArray);
-
-                if (initializerStack && initializerStack->isArray) {
-                    initializerStack->initObject = object;
-                    initializerStack->initArray = newArray;
-                }
-            }
-
-            InitializerInfo *info = (InitializerInfo *) cx->calloc(sizeof(InitializerInfo));
-            info->outer = initializerStack;
-            info->object = object;
-            info->isArray = newArray;
-            initializerStack = info;
-        } else if (op == JSOP_INITELEM || op == JSOP_INITPROP || op == JSOP_INITMETHOD) {
-            JS_ASSERT(initializerStack);
-            code->initObject = initializerStack->object;
-        } else if (op == JSOP_ENDINIT) {
-            JS_ASSERT(initializerStack);
-            InitializerInfo *info = initializerStack;
-            initializerStack = initializerStack->outer;
-            cx->free(info);
-        }
-
-#endif /* JS_TYPE_INFERENCE */
-
         switch (op) {
 
           case JSOP_SETRVAL:
@@ -770,7 +681,7 @@ Script::analyze(JSContext *cx)
             pc2 += JUMP_OFFSET_LEN;
 
             if (!addJump(cx, defaultOffset, &nextOffset, &forwardJump,
-                         stackDepth, stack, defineArray, defineCount)) {
+                         stackDepth, defineArray, defineCount)) {
                 return;
             }
             getCode(defaultOffset).switchTarget = true;
@@ -780,7 +691,7 @@ Script::analyze(JSContext *cx)
                 unsigned targetOffset = offset + GetJumpOffset(pc, pc2);
                 if (targetOffset != offset) {
                     if (!addJump(cx, targetOffset, &nextOffset, &forwardJump,
-                                 stackDepth, stack, defineArray, defineCount)) {
+                                 stackDepth, defineArray, defineCount)) {
                         return;
                     }
                 }
@@ -801,7 +712,7 @@ Script::analyze(JSContext *cx)
             pc2 += UINT16_LEN;
 
             if (!addJump(cx, defaultOffset, &nextOffset, &forwardJump,
-                         stackDepth, stack, defineArray, defineCount)) {
+                         stackDepth, defineArray, defineCount)) {
                 return;
             }
             getCode(defaultOffset).switchTarget = true;
@@ -811,7 +722,7 @@ Script::analyze(JSContext *cx)
                 pc2 += INDEX_LEN;
                 unsigned targetOffset = offset + GetJumpOffset(pc, pc2);
                 if (!addJump(cx, targetOffset, &nextOffset, &forwardJump,
-                             stackDepth, stack, defineArray, defineCount)) {
+                             stackDepth, defineArray, defineCount)) {
                     return;
                 }
                 getCode(targetOffset).switchTarget = true;
@@ -842,7 +753,7 @@ Script::analyze(JSContext *cx)
 
                     if (tn->kind != JSTRY_ITER) {
                         if (!addJump(cx, catchOffset, &nextOffset, &forwardJump,
-                                     stackDepth, stack, defineArray, defineCount)) {
+                                     stackDepth, defineArray, defineCount)) {
                             return;
                         }
                         getCode(catchOffset).exceptionEntry = true;
@@ -918,7 +829,6 @@ Script::analyze(JSContext *cx)
         if (type == JOF_JUMP || type == JOF_JUMPX) {
             /* Some opcodes behave differently on their branching path. */
             unsigned newStackDepth = stackDepth;
-            types::TypeStack *newStack = stack;
 
             switch (op) {
               case JSOP_OR:
@@ -931,18 +841,12 @@ Script::analyze(JSContext *cx)
                  * for the fallthrough case.
                  */
                 stackDepth--;
-#ifdef JS_TYPE_INFERENCE
-                stack = stack->group()->innerStack;
-#endif
                 break;
 
               case JSOP_CASE:
               case JSOP_CASEX:
                 /* Case instructions do not push the lvalue back when branching. */
                 newStackDepth--;
-#ifdef JS_TYPE_INFERENCE
-                newStack = newStack->group()->innerStack;
-#endif
                 break;
 
               default:;
@@ -950,7 +854,7 @@ Script::analyze(JSContext *cx)
 
             unsigned targetOffset = offset + GetJumpOffset(pc, pc);
             if (!addJump(cx, targetOffset, &nextOffset, &forwardJump,
-                         newStackDepth, newStack, defineArray, defineCount)) {
+                         newStackDepth, defineArray, defineCount)) {
                 return;
             }
         }
@@ -973,7 +877,7 @@ Script::analyze(JSContext *cx)
             if (type == JOF_JUMP || type == JOF_JUMPX)
                 nextcode->jumpFallthrough = true;
 
-            if (!nextcode->mergeDefines(cx, this, initial, stackDepth, stack,
+            if (!nextcode->mergeDefines(cx, this, initial, stackDepth,
                                         defineArray, defineCount)) {
                 return;
             }
@@ -988,29 +892,6 @@ Script::analyze(JSContext *cx)
 
     JS_ASSERT(!failed());
     JS_ASSERT(forwardJump == 0 && forwardCatch == 0);
-
-#ifdef JS_TYPE_INFERENCE
-    /* Generate type constraints for the script. */
-
-    AnalyzeState state;
-    state.init(cx, script);
-
-    offset = 0;
-    while (offset < script->length) {
-        Bytecode *code = maybeCode(offset);
-
-        jsbytecode *pc = script->code + offset;
-        UntrapOpcode untrap(cx, script, pc);
-
-        offset += GetBytecodeLength(pc);
-
-        if (code && code->analyzed)
-            analyzeTypes(cx, code, state);
-    }
-
-    state.destroy(cx);
-
-#endif /* JS_TYPE_INFERENCE */
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -1135,7 +1016,8 @@ LifetimeScript::analyze(JSContext *cx, analyze::Script *analysis, JSScript *scri
           }
 
           case JSOP_SETLOCAL:
-          case JSOP_SETLOCALPOP: {
+          case JSOP_SETLOCALPOP:
+          case JSOP_DEFLOCALFUN: {
             unsigned local = GET_SLOTNO(pc);
             if (!analysis->localEscapes(local))
                 killVariable(cx, locals[local], offset);

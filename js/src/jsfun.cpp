@@ -577,7 +577,8 @@ ArgSetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
             if (fp) {
                 JSScript *script = fp->functionScript();
                 if (script->usesArguments) {
-                    script->typeSetArgument(cx, arg, *vp);
+                    if (arg < fp->numFormalArgs())
+                        script->typeSetArgument(cx, arg, *vp);
                     fp->canonicalActualArg(arg) = *vp;
                 }
                 return true;
@@ -1205,6 +1206,24 @@ CallPropertyOp(JSContext *cx, JSObject *obj, jsid id, Value *vp,
             }
             return true;
         }
+
+#ifdef JS_TYPE_INFERENCE
+        JSScript *script = fun->script();
+        if (setter && script->types) {
+            jstype type = GetValueType(cx, *vp);
+            TypeSet *types = NULL;
+            if (kind == JSCPK_ARG)
+                types = script->types->argTypes(i);
+            else if (kind == JSCPK_VAR)
+                types = script->types->localTypes(i);
+            if (types && !types->hasType(type)) {
+                InferSpew(ISpewDynamic, "AddCallProperty: #%u %s%u: %s",
+                          script->id(), kind == JSCPK_ARG ? "arg" : "local", i,
+                          TypeString(type));
+                cx->compartment->types.addDynamicType(cx, types, type);
+            }
+        }
+#endif
 
         if (!fp) {
             i += JSObject::CALL_RESERVED_SLOTS;
@@ -2984,7 +3003,7 @@ js_DefineFunction(JSContext *cx, JSObject *obj, jsid id, Native native,
     JSFunction *fun;
 
     if (!handler) {
-        handler = JS_TypeHandlerMissing;
+        handler = JS_TypeHandlerDynamic;
         if (!fullName)
             fullName = "Unknown";
     }

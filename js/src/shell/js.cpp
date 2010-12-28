@@ -4759,7 +4759,7 @@ its_bindMethod(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSFunctionSpec its_methods[] = {
-    {"bindMethod",      its_bindMethod, 2,0, JS_TypeHandlerMissing},
+    {"bindMethod",      its_bindMethod, 2,0, JS_TypeHandlerDynamic},
     {NULL,NULL,0,0}
 };
 

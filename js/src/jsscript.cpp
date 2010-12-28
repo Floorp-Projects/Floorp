@@ -1036,8 +1036,9 @@ JSScript::NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natom
     script->owner = cx->thread;
 #endif
 
-    /* Make empty analysis information for the script. */
-    script->makeAnalysis(cx);
+#if defined JS_TYPE_INFERENCE && DEBUG
+    script->id_ = ++cx->compartment->types.scriptCount;
+#endif
 
     JS_APPEND_LINK(&script->links, &cx->compartment->scripts);
     return script;
@@ -1136,7 +1137,7 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     /* Set global for compileAndGo scripts. */
     if (script->compileAndGo) {
         GlobalScope *globalScope = cg->compiler()->globalScope;
-        script->analysis->global = globalScope->globalObj;
+        script->global = globalScope->globalObj;
     }
 #endif
 
@@ -1172,7 +1173,7 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
         char *name = NULL;
 #ifdef DEBUG
         name = (char *) alloca(10);
-        JS_snprintf(name, 10, "#%u", script->analysis->id);
+        JS_snprintf(name, 10, "#%u", script->id());
 #endif
         types::TypeObject *type = cx->newTypeFunction(name, fun->getProto());
         fun->setType(type);
@@ -1320,9 +1321,6 @@ DestroyScript(JSContext *cx, JSScript *script, JSThreadData *data)
     mjit::ReleaseScriptCode(cx, script);
 #endif
 
-    if (script->analysis)
-        script->analysis->detach();
-
     JS_REMOVE_LINK(&script->links);
 
     cx->free(script);
@@ -1385,8 +1383,20 @@ js_TraceScript(JSTracer *trc, JSScript *script)
     if (IS_GC_MARKING_TRACER(trc) && script->filename)
         js_MarkScriptFilename(script->filename);
 
-    if (script->analysis)
-        script->analysis->trace(trc);
+#ifdef JS_TYPE_INFERENCE
+    if (script->types)
+        script->types->trace(trc);
+
+    if (script->fun) {
+        JS_SET_TRACING_NAME(trc, "script_fun");
+        Mark(trc, script->fun);
+    }
+
+    if (script->parent) {
+        JS_SET_TRACING_NAME(trc, "script_parent");
+        js_TraceScript(trc, script->parent);
+    }
+#endif
 }
 
 JSBool
@@ -1700,41 +1710,4 @@ void
 JSScript::copyClosedSlotsTo(JSScript *other)
 {
     memcpy(other->closedSlots, closedSlots, nClosedArgs + nClosedVars);
-}
-
-js::analyze::Script *
-JSScript::analyze(JSContext *cx)
-{
-    if (!analysis)
-        makeAnalysis(cx);
-    if (!analysis)
-        return NULL;
-    if (!analysis->hasAnalyzed()) {
-        analysis->analyze(cx);
-#ifdef JS_TYPE_INFERENCE
-        if (cx->compartment->types.hasPendingRecompiles())
-            cx->compartment->types.processPendingRecompiles(cx);
-#endif
-    }
-    return analysis;
-}
-
-js::analyze::Script *
-JSScript::makeAnalysis(JSContext *cx)
-{
-    JS_ASSERT(!analysis);
-    analysis = (js::analyze::Script *) cx->calloc(sizeof(js::analyze::Script));
-    if (!analysis)
-        return NULL;
-
-    analysis->init(this);
-
-#ifdef JS_TYPE_INFERENCE
-    analysis->id = ++cx->compartment->types.scriptCount;
-    analysis->thisTypes.setPool(&analysis->pool);
-
-    types::InferSpew(types::ISpewOps, "newScript: #%u", analysis->id);
-#endif /* JS_TYPE_INFERENCE */
-
-    return analysis;
 }

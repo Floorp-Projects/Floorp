@@ -234,33 +234,33 @@ FrameState::push(const Value &v)
 }
 
 inline void
-FrameState::pushSynced(JSValueType type)
+FrameState::pushSynced(JSValueType type, types::TypeSet *typeSet)
 {
     FrameEntry *fe = rawPush();
 
     fe->resetSynced();
     if (type != JSVAL_TYPE_UNKNOWN) {
-        fe->setType(type);
+        fe->setType(type, typeSet);
         if (type == JSVAL_TYPE_DOUBLE)
             masm.ensureInMemoryDouble(addressOf(fe));
     }
 }
 
 inline void
-FrameState::pushSynced(JSValueType type, RegisterID reg)
+FrameState::pushSynced(JSValueType type, RegisterID reg, types::TypeSet *typeSet)
 {
     FrameEntry *fe = rawPush();
 
     fe->resetUnsynced();
     fe->type.sync();
     fe->data.sync();
-    fe->setType(type);
+    fe->setType(type, typeSet);
     fe->data.setRegister(reg);
     regstate(reg).associate(fe, RematInfo::DATA);
 }
 
 inline void
-FrameState::push(Address address, JSValueType knownType)
+FrameState::push(Address address, JSValueType knownType, types::TypeSet *typeSet)
 {
     if (knownType == JSVAL_TYPE_DOUBLE) {
         FPRegisterID fpreg = allocFPReg();
@@ -287,7 +287,7 @@ FrameState::push(Address address, JSValueType knownType)
         if (free)
             freeRegs.putReg(address.base);
         masm.loadPayload(address, dataReg);
-        pushTypedPayload(knownType, dataReg);
+        pushTypedPayload(knownType, dataReg, typeSet);
         return;
     }
 
@@ -305,11 +305,11 @@ FrameState::push(Address address, JSValueType knownType)
     masm.loadPayload(address, dataReg);
 #endif
 
-    pushRegs(typeReg, dataReg, knownType);
+    pushRegs(typeReg, dataReg, knownType, typeSet);
 }
 
 inline JSC::MacroAssembler::FPRegisterID
-FrameState::pushRegs(RegisterID type, RegisterID data, JSValueType knownType)
+FrameState::pushRegs(RegisterID type, RegisterID data, JSValueType knownType, types::TypeSet *typeSet)
 {
     JS_ASSERT(!freeRegs.hasReg(type) && !freeRegs.hasReg(data));
 
@@ -333,12 +333,12 @@ FrameState::pushRegs(RegisterID type, RegisterID data, JSValueType knownType)
     }
 
     freeReg(type);
-    pushTypedPayload(knownType, data);
+    pushTypedPayload(knownType, data, typeSet);
     return Registers::FPConversionTemp;
 }
 
 inline void
-FrameState::pushTypedPayload(JSValueType type, RegisterID payload)
+FrameState::pushTypedPayload(JSValueType type, RegisterID payload, types::TypeSet *typeSet)
 {
     JS_ASSERT(type != JSVAL_TYPE_DOUBLE);
     JS_ASSERT(!freeRegs.hasReg(payload));
@@ -346,7 +346,7 @@ FrameState::pushTypedPayload(JSValueType type, RegisterID payload)
     FrameEntry *fe = rawPush();
 
     fe->resetUnsynced();
-    fe->setType(type);
+    fe->setType(type, typeSet);
     fe->data.setRegister(payload);
     regstate(payload).associate(fe, RematInfo::DATA);
 }
@@ -389,7 +389,7 @@ FrameState::pushInt32(RegisterID payload)
 inline void
 FrameState::pushInitializerObject(RegisterID payload, bool array, JSObject *baseobj)
 {
-    pushTypedPayload(JSVAL_TYPE_OBJECT, payload);
+    pushTypedPayload(JSVAL_TYPE_OBJECT, payload, NULL);
 
     FrameEntry *fe = peek(-1);
     fe->initArray = array;
@@ -812,7 +812,7 @@ FrameState::learnType(FrameEntry *fe, JSValueType type, bool unsync)
     JS_ASSERT(!fe->isType(JSVAL_TYPE_DOUBLE));
     if (fe->type.inRegister())
         forgetReg(fe->type.reg());
-    fe->setType(type);
+    fe->setType(type, NULL);
     if (unsync)
         fe->type.unsync();
 }
@@ -828,6 +828,7 @@ FrameState::learnType(FrameEntry *fe, JSValueType type, RegisterID data)
 
     fe->type.setConstant();
     fe->knownType = type;
+    fe->typeSet = NULL;
 
     fe->data.setRegister(data);
     regstate(data).associate(fe, RematInfo::DATA);
@@ -972,7 +973,7 @@ FrameState::getCallee()
     if (!callee_->isTracked()) {
         addToTracker(callee_);
         callee_->resetSynced();
-        callee_->setType(JSVAL_TYPE_OBJECT);
+        callee_->setType(JSVAL_TYPE_OBJECT, NULL);
     }
     return callee_;
 }
@@ -1032,7 +1033,15 @@ FrameState::dupAt(int32 n)
 }
 
 inline void
-FrameState::pushLocal(uint32 n, JSValueType knownType)
+FrameState::syncAt(int32 n)
+{
+    JS_ASSERT(n < 0);
+    FrameEntry *fe = peek(n);
+    syncFe(fe);
+}
+
+inline void
+FrameState::pushLocal(uint32 n, JSValueType knownType, types::TypeSet *typeSet)
 {
     FrameEntry *fe = getLocal(n);
     if (!isClosedVar(n)) {
@@ -1050,12 +1059,12 @@ FrameState::pushLocal(uint32 n, JSValueType knownType)
             JS_ASSERT(fe->data.inMemory());
         }
 #endif
-        push(addressOf(fe), knownType);
+        push(addressOf(fe), knownType, typeSet);
     }
 }
 
 inline void
-FrameState::pushArg(uint32 n, JSValueType knownType)
+FrameState::pushArg(uint32 n, JSValueType knownType, types::TypeSet *typeSet)
 {
     FrameEntry *fe = getArg(n);
     if (!isClosedArg(n)) {
@@ -1066,7 +1075,7 @@ FrameState::pushArg(uint32 n, JSValueType knownType)
         if (fe->isTracked())
             JS_ASSERT(fe->data.inMemory());
 #endif
-        push(addressOf(fe), knownType);
+        push(addressOf(fe), knownType, typeSet);
     }
 }
 
@@ -1160,12 +1169,13 @@ FrameState::giveOwnRegs(FrameEntry *fe)
     RegisterID data = copyDataIntoReg(fe);
     if (fe->isTypeKnown()) {
         JSValueType type = fe->getKnownType();
+        types::TypeSet *typeSet = fe->getTypeSet();
         pop();
-        pushTypedPayload(type, data);
+        pushTypedPayload(type, data, typeSet);
     } else {
         RegisterID type = copyTypeIntoReg(fe);
         pop();
-        pushRegs(type, data, JSVAL_TYPE_UNKNOWN);
+        pushRegs(type, data, JSVAL_TYPE_UNKNOWN, NULL);
     }
 }
 

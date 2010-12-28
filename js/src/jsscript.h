@@ -238,6 +238,8 @@ struct JSScript {
     bool            warnedAboutTwoArgumentEval:1; /* have warned about use of
                                                      obsolete eval(s, o) in
                                                      this script */
+    bool            dynamicScoping:1; /* script is dynamically scoped: uses
+                                       * 'with', 'let', DEFFUN or DEFVAR. */
 #ifdef JS_METHODJIT
     bool            debugMode:1;      /* script was compiled in debug mode */
     bool            singleStepMode:1; /* compile script in single-step mode */
@@ -282,17 +284,42 @@ struct JSScript {
 
   public:
 
-    /* Analysis and type information for this script. */
-    js::analyze::Script *analysis;
+#ifdef JS_TYPE_INFERENCE
+#ifdef DEBUG
+    /* Unique identifier within the compartment for this script. */
+    unsigned id_;
+    unsigned id() { return id_; }
+#else
+    unsigned id() { return 0; }
+#endif
 
-    /* Analyze this script if not already done. */
-    js::analyze::Script *analyze(JSContext *cx);
+    /* Function this script is the body for, if there is one. */
+    JSFunction *fun;
 
-    /* Get empty analysis information for this script. */
-    js::analyze::Script *makeAnalysis(JSContext *cx);
+    /* Global object for this script, if compileAndGo. */
+    JSObject *global;
 
-    /* Check that correct types were inferred for the values popped by this bytecode. */
+    /*
+     * Location where the definition of this script occurs, representing any
+     * nesting for scope lookups. NULL for global scripts.
+     */
+    JSScript *parent;
+
+    /* Type inference information for this script. */
+    js::types::TypeScript *types;
+
+    inline JSObject *getGlobal();
+    inline js::types::TypeObject *getGlobalType();
+
+    /* Whether this code is global or is in an eval called at global scope. */
+    bool isGlobal() { return !parent || (!fun && !parent->parent); }
+
+    /* Check that correct types were inferred for the values pushed by this bytecode. */
     void typeCheckBytecode(JSContext *cx, const jsbytecode *pc, const js::Value *sp);
+
+    /* Get the default 'new' object for a given standard class, per the script's global. */
+    inline js::types::TypeObject *getTypeNewObject(JSContext *cx, JSProtoKey key);
+#endif
 
     /* Mark this script as having been created at the specified script/pc. */
     inline void setTypeNesting(JSScript *parent, const jsbytecode *pc);

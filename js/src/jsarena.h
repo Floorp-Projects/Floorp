@@ -345,6 +345,15 @@ ArenaNew(JSArenaPool &pool, const A &a, const B &b, const C &c, const D &d)
     return new (v) T(a, b, c, d);
 }
 
+template <typename T, typename A, typename B, typename C, typename D, typename E>
+inline T *
+ArenaNew(JSArenaPool &pool, const A &a, const B &b, const C &c, const D &d, const E &e)
+{
+    void *v;
+    JS_ARENA_ALLOCATE(v, &pool, sizeof(T));
+    return new (v) T(a, b, c, d, e);
+}
+
 } /* namespace js */
 
 #endif /* jsarena_h___ */

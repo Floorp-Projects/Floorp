@@ -2958,6 +2958,7 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, Value *vp)
             *vp = rval;
             break;
           case MAP:
+            cx->addTypePropertyId(newarr->getType(), JSID_VOID, rval);
             ok = SetArrayElement(cx, newarr, i, rval);
             if (!ok)
                 goto out;
@@ -2966,6 +2967,7 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, Value *vp)
             if (!cond)
                 break;
             /* The element passed the filter, so push it onto our result. */
+            cx->addTypePropertyId(newarr->getType(), JSID_VOID, tvr.value());
             ok = SetArrayElement(cx, newarr, newlen++, tvr.value());
             if (!ok)
                 goto out;
@@ -3052,22 +3054,6 @@ static void array_TypeSort(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite 
             site->returnTypes->addType(cx, TYPE_UNKNOWN);
         site->thisTypes->addSubset(cx, site->pool(), site->returnTypes);
     }
-
-    if (site->argumentCount == 0)
-        return;
-
-    TypeSet *funTypes = site->argumentTypes[0];
-
-    /* Make a callsite for the calls to the sorting function this will perform. */
-    TypeCallsite *sortSite = ArenaNew<TypeCallsite>(site->pool(), site->code, false, 2);
-    sortSite->thisType = TYPE_UNDEFINED;
-
-    /* Both arguments to the argument function are array elements. */
-    TypeSet *argTypes = sortSite->argumentTypes[0] = sortSite->argumentTypes[1] =
-        TypeSet::make(cx, site->pool(), "ArraySort");
-    site->thisTypes->addGetProperty(cx, site->code, argTypes, JSID_VOID);
-
-    funTypes->addCall(cx, sortSite);
 #endif
 }
 
@@ -3085,8 +3071,10 @@ static void array_TypeInsert(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsit
 
     site->forceThisTypes(cx);
 
-    for (size_t ind = 0; ind < site->argumentCount; ind++)
-        site->thisTypes->addSetProperty(cx, site->code, site->argumentTypes[ind], JSID_VOID);
+    for (size_t ind = 0; ind < site->argumentCount; ind++) {
+        site->thisTypes->addSetProperty(cx, site->script, site->pc,
+                                        site->argumentTypes[ind], JSID_VOID);
+    }
 #endif
 }
 
@@ -3102,7 +3090,7 @@ static void array_TypeRemove(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsit
         site->returnTypes->addType(cx, TYPE_UNKNOWN);
 
     site->forceThisTypes(cx);
-    site->thisTypes->addGetProperty(cx, site->code, site->returnTypes, JSID_VOID);
+    site->thisTypes->addGetProperty(cx, site->script, site->pc, site->returnTypes, JSID_VOID);
     site->returnTypes->addType(cx, TYPE_UNDEFINED);
 #endif
 }
@@ -3122,8 +3110,10 @@ static void array_TypeSplice(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsit
     }
 
     /* All arguments beyond the first two are new array elements. */
-    for (size_t ind = 2; ind < site->argumentCount; ind++)
-        site->thisTypes->addSetProperty(cx, site->code, site->argumentTypes[ind], JSID_VOID);
+    for (size_t ind = 2; ind < site->argumentCount; ind++) {
+        site->thisTypes->addSetProperty(cx, site->script, site->pc,
+                                        site->argumentTypes[ind], JSID_VOID);
+    }
 #endif
 }
 
@@ -3151,11 +3141,13 @@ static void array_TypeConcat(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsit
 
     /* Propagate elements of the 'this' array to the result. */
     TypeSet *indexTypes = object->getProperty(cx, JSID_VOID, false);
-    site->thisTypes->addGetProperty(cx, site->code, indexTypes, JSID_VOID);
+    site->thisTypes->addGetProperty(cx, site->script, site->pc, indexTypes, JSID_VOID);
 
     /* Ditto for all arguments to the call. */
-    for (size_t ind = 0; ind < site->argumentCount; ind++)
-        site->argumentTypes[ind]->addGetProperty(cx, site->code, indexTypes, JSID_VOID);
+    for (size_t ind = 0; ind < site->argumentCount; ind++) {
+        site->argumentTypes[ind]->addGetProperty(cx, site->script, site->pc,
+                                                 indexTypes, JSID_VOID);
+    }
 #endif
 }
 
@@ -3165,38 +3157,12 @@ static void array_TypeExtra(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite
 {
 #ifdef JS_TYPE_INFERENCE
     TypeCallsite *site = Valueify(jssite);
-    analyze::Bytecode *code = site->code;
 
-    JSArenaPool &pool = site->pool();
-
-    if (site->argumentCount == 0)
+    if (!site->returnTypes)
         return;
-    TypeSet *funTypes = site->argumentTypes[0];
-
-    /*
-     * Get a type set of all possible element types of this array, and the singleton
-     * type of array indexes.
-     */
-    TypeSet *elemTypes = TypeSet::make(cx, pool, "array_extra");
-    TypeSet *intTypes = TypeSet::make(cx, pool, "array_extra_int");
-    intTypes->addType(cx, TYPE_INT32);
-
-    site->forceThisTypes(cx);
-    site->forceReturnTypes(cx);
 
     if (site->isNew)
         site->returnTypes->addType(cx, TYPE_UNKNOWN);
-
-    site->thisTypes->addGetProperty(cx, code, elemTypes, JSID_VOID);
-
-    /* Make the call site to use for the higher order function. */
-    TypeCallsite *extraSite = ArenaNew<TypeCallsite>(pool, code, false, REDUCE_MODE(mode) ? 4 : 3);
-
-    /* Figure out the 'this' type passed to the higher order function. */
-    if (site->argumentCount > 1 && !REDUCE_MODE(mode))
-        extraSite->thisTypes = site->argumentTypes[1];
-    else
-        extraSite->thisType = TYPE_UNDEFINED;
 
     switch (mode) {
 
@@ -3204,47 +3170,15 @@ static void array_TypeExtra(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite
         site->returnTypes->addType(cx, TYPE_UNDEFINED);
         break;
 
-      case REDUCE: {
-        /* The return value of the function is also the return value of the reduce call. */
-        extraSite->returnTypes = site->returnTypes;
-
-        /*
-         * The first argument of the function is either its own return value, the second
-         * argument of reduce, or the array element type (if there is no second argument
-         * of reduce).
-         */
-        extraSite->argumentTypes[0] = TypeSet::make(cx, pool, "ArrayReduce");
-        site->returnTypes->addSubset(cx, pool, extraSite->argumentTypes[0]);
-
-        TypeSet *initialTypes = NULL;
-        if (site->argumentCount >= 2)
-            initialTypes = site->argumentTypes[1];
-        else
-            initialTypes = elemTypes;
-        initialTypes->addSubset(cx, pool, extraSite->argumentTypes[0]);
-        initialTypes->addSubset(cx, pool, site->returnTypes);
+      case REDUCE:
+        site->returnTypes->addType(cx, TYPE_UNKNOWN);
         break;
-      }
 
       case MAP:
-        if (site->compileAndGo()) {
-            /* Makes a new array whose element type is the return value of the argument function. */
-            TypeObject *object = site->getInitObject(cx, true);
-            extraSite->returnTypes = object->getProperty(cx, JSID_VOID, true);
-            site->returnTypes->addType(cx, (jstype) object);
-        } else {
-            site->returnTypes->addType(cx, TYPE_UNKNOWN);
-        }
-        break;
-
       case FILTER:
         if (site->compileAndGo()) {
-            /*
-             * Makes a new array, whose element type is the same as the element type
-             * of the 'this' array.
-             */
+            /* Makes a new array whose element type will be filled in as the code runs. */
             TypeObject *object = site->getInitObject(cx, true);
-            elemTypes->addSubset(cx, pool, object->getProperty(cx, JSID_VOID, true));
             site->returnTypes->addType(cx, (jstype) object);
         } else {
             site->returnTypes->addType(cx, TYPE_UNKNOWN);
@@ -3258,18 +3192,6 @@ static void array_TypeExtra(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite
       default:
         JS_NOT_REACHED("Unexpected ArrayExtraMode");
     }
-
-    /*
-     * Fill in the remaining argument types. regardless of mode, the last three
-     * arguments are the element value, element index, and array itself.
-     */
-    size_t argind = (mode == REDUCE) ? 1 : 0;
-    extraSite->argumentTypes[argind++] = elemTypes;
-    extraSite->argumentTypes[argind++] = intTypes;
-    extraSite->argumentTypes[argind++] = site->thisTypes;
-    JS_ASSERT(argind == extraSite->argumentCount);
-
-    funTypes->addCall(cx, extraSite);
 #endif
 }
 

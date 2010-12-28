@@ -864,7 +864,7 @@ static void math_TypeArith(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite 
 
     // the zero-argument case will be handled as an overflow in the actual natives.
     for (size_t ind = 0; ind < site->argumentCount; ind++)
-        site->argumentTypes[ind]->addArith(cx, site->pool(), site->code, site->returnTypes);
+        site->argumentTypes[ind]->addArith(cx, site->pool(), site->returnTypes);
 #endif
 }
 

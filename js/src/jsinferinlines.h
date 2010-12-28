@@ -166,9 +166,7 @@ JSContext::setTypeFunctionScript(JSFunction *fun, JSScript *script)
     js::types::TypeFunction *typeFun = fun->getType()->asFunction();
 
     typeFun->script = script;
-    fun->type = typeFun;
-
-    script->analysis->setFunction(this, fun);
+    script->fun = fun;
 #endif
 }
 
@@ -195,8 +193,8 @@ JSContext::isTypeCallerMonitored()
     JSStackFrame *caller = js_GetScriptedCaller(this, NULL);
     if (!caller)
         return true;
-    js::analyze::Script *analysis = caller->script()->analysis;
-    return analysis->failed() || analysis->getCode(caller->pc(this)).monitorNeeded;
+    JSScript *script = caller->script();
+    return !script->types || script->types->monitored(caller->pc(this) - script->code);
 #else
     return false;
 #endif
@@ -381,18 +379,16 @@ JSContext::typeMonitorCall(JSScript *caller, const jsbytecode *callerpc,
     if (!callee->isInterpreted())
         return;
 
-    if (!force) {
-        if (caller->analysis->failed() || caller->analysis->getCode(callerpc).monitorNeeded)
-            force = true;
-    }
+    JSScript *script = callee->script();
+    typeMonitorEntry(script);
 
-    typeMonitorEntry(callee->script());
+    if (!force && caller->types->monitored(callerpc - caller->code))
+        force = true;
 
     /* Don't need to do anything if this is at a non-monitored callsite. */
-    if (!force)
+    if (!script->types || !force)
         return;
 
-    js::analyze::Script *script = callee->script()->analysis;
     js::types::jstype type;
 
     if (constructing) {
@@ -412,42 +408,34 @@ JSContext::typeMonitorCall(JSScript *caller, const jsbytecode *callerpc,
         type = js::types::GetValueType(this, args.thisv());
     }
 
-    if (!script->thisTypes.hasType(type)) {
+    if (!script->types->thisTypes.hasType(type)) {
         js::types::InferSpew(js::types::ISpewDynamic, "AddThis: #%u: %s",
-                             script->id, js::types::TypeString(type));
-        compartment->types.addDynamicType(this, &script->thisTypes, type);
+                             script->id(), js::types::TypeString(type));
+        compartment->types.addDynamicType(this, &script->types->thisTypes, type);
     }
 
+    /*
+     * Add constraints going up to the minimum of the actual and formal count.
+     * If there are more actuals than formals the later values can only be
+     * accessed through the arguments object, which is monitored.
+     */
     unsigned arg = 0;
-    for (; arg < args.argc(); arg++) {
+    for (; arg < args.argc() && arg < callee->nargs; arg++) {
         js::types::jstype type = js::types::GetValueType(this, args[arg]);
-
-        jsid id = script->getArgumentId(arg);
-        if (!JSID_IS_VOID(id)) {
-            js::types::TypeSet *types = script->getVariable(this, id);
-            if (!types->hasType(type)) {
-                js::types::InferSpew(js::types::ISpewDynamic, "AddArg: #%u %u: %s",
-                                     script->id, arg, js::types::TypeString(type));
-                compartment->types.addDynamicType(this, types, type);
-            }
-        } else {
-            /*
-             * More actuals than formals to this call.  We can ignore this case,
-             * the value can only be accessed through the arguments object, which
-             * is monitored.
-             */
+        js::types::TypeSet *types = script->types->argTypes(arg);
+        if (!types->hasType(type)) {
+            js::types::InferSpew(js::types::ISpewDynamic, "AddArg: #%u %u: %s",
+                                 script->id(), arg, js::types::TypeString(type));
+            compartment->types.addDynamicType(this, types, type);
         }
     }
 
     /* Watch for fewer actuals than formals to the call. */
-    for (; arg < script->argCount(); arg++) {
-        jsid id = script->getArgumentId(arg);
-        JS_ASSERT(!JSID_IS_VOID(id));
-
-        js::types::TypeSet *types = script->getVariable(this, id);
+    for (; arg < callee->nargs; arg++) {
+        js::types::TypeSet *types = script->types->argTypes(arg);
         if (!types->hasType(js::types::TYPE_UNDEFINED)) {
             js::types::InferSpew(js::types::ISpewDynamic,
-                                 "UndefinedArg: #%u %u:", script->id, arg);
+                                 "UndefinedArg: #%u %u:", script->id(), arg);
             compartment->types.addDynamicType(this, types, js::types::TYPE_UNDEFINED);
         }
     }
@@ -458,16 +446,13 @@ inline void
 JSContext::typeMonitorEntry(JSScript *script)
 {
 #ifdef JS_TYPE_INFERENCE
-    js::analyze::Script *analysis = script->analysis;
-    JS_ASSERT(analysis);
-
-    if (!analysis->hasAnalyzed()) {
+    if (!script->types) {
         compartment->types.interpreting = false;
         uint64_t startTime = compartment->types.currentTime();
 
-        js::types::InferSpew(js::types::ISpewDynamic, "EntryPoint: #%lu", analysis->id);
+        js::types::InferSpew(js::types::ISpewDynamic, "EntryPoint: #%lu", script->id());
 
-        analysis->analyze(this);
+        js::types::AnalyzeTypes(this, script);
 
         uint64_t endTime = compartment->types.currentTime();
         compartment->types.analysisTime += (endTime - startTime);
@@ -483,14 +468,15 @@ inline void
 JSContext::typeMonitorEntry(JSScript *script, const js::Value &thisv)
 {
 #ifdef JS_TYPE_INFERENCE
-    js::analyze::Script *analysis = script->analysis;
-    JS_ASSERT(analysis);
+    typeMonitorEntry(script);
+    if (!script->types)
+        return;
 
     js::types::jstype type = js::types::GetValueType(this, thisv);
-    if (!analysis->thisTypes.hasType(type)) {
+    if (!script->types->thisTypes.hasType(type)) {
         js::types::InferSpew(js::types::ISpewDynamic, "AddThis: #%u: %s",
-                             analysis->id, js::types::TypeString(type));
-        compartment->types.addDynamicType(this, &analysis->thisTypes, type);
+                             script->id(), js::types::TypeString(type));
+        compartment->types.addDynamicType(this, &script->types->thisTypes, type);
     }
 
     typeMonitorEntry(script);
@@ -501,12 +487,54 @@ JSContext::typeMonitorEntry(JSScript *script, const js::Value &thisv)
 // JSScript
 /////////////////////////////////////////////////////////////////////
 
+#ifdef JS_TYPE_INFERENCE
+
+inline JSObject *
+JSScript::getGlobal()
+{
+    JS_ASSERT(compileAndGo);
+    if (global)
+        return global;
+
+    /*
+     * Nesting parents of this script must also be compileAndGo for the same global.
+     * The parser must have set the global object for the analysis at the root
+     * global script.
+     */
+    JSScript *nested = parent;
+    while (true) {
+        JS_ASSERT(nested->compileAndGo);
+        if (nested->global) {
+            global = nested->global;
+            return global;
+        }
+        nested = nested->parent;
+    }
+    return NULL;
+}
+
+inline js::types::TypeObject *
+JSScript::getGlobalType()
+{
+    return getGlobal()->getType();
+}
+
+inline js::types::TypeObject *
+JSScript::getTypeNewObject(JSContext *cx, JSProtoKey key)
+{
+    JSObject *proto;
+    if (!js_GetClassPrototype(cx, getGlobal(), key, &proto, NULL))
+        return NULL;
+    return proto->getNewType(cx);
+}
+
+#endif /* JS_TYPE_INFERENCE */
+
 inline void
 JSScript::setTypeNesting(JSScript *parent, const jsbytecode *pc)
 {
 #ifdef JS_TYPE_INFERENCE
-    analysis->parent = parent;
-    analysis->parentpc = pc;
+    this->parent = parent;
 #endif
 }
 
@@ -514,8 +542,11 @@ inline void
 JSScript::nukeUpvarTypes(JSContext *cx)
 {
 #ifdef JS_TYPE_INFERENCE
-    if (analysis->parent)
-        analysis->nukeUpvarTypes(cx);
+    if (this->parent) {
+        if (!types)
+            js::types::AnalyzeTypes(cx, this);
+        types->nukeUpvarTypes(cx, this);
+    }
 #endif
 }
 
@@ -523,9 +554,28 @@ inline js::types::TypeObject *
 JSScript::getTypeInitObject(JSContext *cx, const jsbytecode *pc, bool isArray)
 {
 #ifdef JS_TYPE_INFERENCE
-    if (!compileAndGo || analysis->failed())
+    if (!compileAndGo || !types)
         return cx->getTypeNewObject(isArray ? JSProto_Array : JSProto_Object);
-    return analysis->getCode(pc).getInitObject(cx, isArray);
+
+    uint32 offset = pc - code;
+    js::types::TypeObject *prev = NULL, *obj = types->objects;
+    while (obj) {
+        if (isArray ? obj->initializerArray : obj->initializerObject) {
+            if (obj->initializerOffset == offset) {
+                /* Move this to the head of the objects list, maintain LRU order. */
+                if (prev) {
+                    prev->next = obj->next;
+                    obj->next = types->objects;
+                    types->objects = obj;
+                }
+                return obj;
+            }
+        }
+        prev = obj;
+        obj = obj->next;
+    }
+
+    return cx->compartment->types.newInitializerTypeObject(cx, this, offset, isArray);
 #else
     return cx->getTypeNewObject(isArray ? JSProto_Array : JSProto_Object);
 #endif
@@ -536,16 +586,14 @@ JSScript::typeMonitorResult(JSContext *cx, const jsbytecode *pc, unsigned index,
                             js::types::jstype type)
 {
 #ifdef JS_TYPE_INFERENCE
-    if (analysis->failed())
+    if (!types)
         return;
 
-    js::analyze::Bytecode &code = analysis->getCode(pc);
-    js::types::TypeSet *stackTypes = code.pushed(index);
-    if (stackTypes->hasType(type))
-        return;
+    JS_ASSERT(index < js::analyze::GetDefCount(this, pc - code));
+    js::types::TypeSet *types = this->types->pushed(pc - code, index);
 
-    if (!stackTypes->hasType(type))
-        cx->compartment->types.addDynamicPush(cx, code, index, type);
+    if (!types->hasType(type))
+        cx->compartment->types.addDynamicPush(cx, this, pc - code, index, type);
 #endif
 }
 
@@ -575,13 +623,10 @@ JSScript::typeMonitorAssign(JSContext *cx, const jsbytecode *pc,
                             JSObject *obj, jsid id, const js::Value &rval, bool force)
 {
 #ifdef JS_TYPE_INFERENCE
-    if (!force && !analysis->failed()) {
-        js::analyze::Bytecode &code = analysis->getCode(pc);
-        if (!code.monitorNeeded)
-            return;
-    }
+    if (!force && types && !types->monitored(pc - code))
+        return;
 
-    if (!obj->getType()->unknownProperties || obj->isCall() || obj->isBlock() || obj->isWith())
+    if (!obj->getType()->unknownProperties || obj->isWith())
         cx->compartment->types.dynamicAssign(cx, obj, id, rval);
 #endif
 }
@@ -590,219 +635,26 @@ inline void
 JSScript::typeSetArgument(JSContext *cx, unsigned arg, const js::Value &value)
 {
 #ifdef JS_TYPE_INFERENCE
-    jsid id = analysis->getArgumentId(arg);
-    if (!JSID_IS_VOID(id)) {
-        js::types::TypeSet *argTypes = analysis->getVariable(cx, id);
-        js::types::jstype type = js::types::GetValueType(cx, value);
-        if (!argTypes->hasType(type)) {
-            js::types::InferSpew(js::types::ISpewDynamic, "SetArgument: #%u %s: %s",
-                                 analysis->id, js::types::TypeIdString(id),
-                                 js::types::TypeString(type));
-            cx->compartment->types.addDynamicType(cx, argTypes, type);
-        }
+    if (!types)
+        return;
+    js::types::TypeSet *argTypes = types->argTypes(arg);
+    js::types::jstype type = js::types::GetValueType(cx, value);
+    if (!argTypes->hasType(type)) {
+        js::types::InferSpew(js::types::ISpewDynamic, "SetArgument: #%u %u: %s",
+                             id(), arg, js::types::TypeString(type));
+        cx->compartment->types.addDynamicType(cx, argTypes, type);
     }
 #endif
 }
-
-/////////////////////////////////////////////////////////////////////
-// analyze::Bytecode
-/////////////////////////////////////////////////////////////////////
 
 #ifdef JS_TYPE_INFERENCE
 
 namespace js {
-namespace analyze {
-
-inline JSArenaPool &
-Bytecode::pool()
-{
-    return script->pool;
-}
-
-inline types::TypeSet *
-Bytecode::popped(unsigned num)
-{
-    JS_ASSERT(num < GetUseCount(script->script, offset));
-    types::TypeStack *stack = inStack->group();
-    for (unsigned i = 0; i < num; i++)
-        stack = stack->innerStack->group();
-    JS_ASSERT(stack);
-    return &stack->types;
-}
-
-inline types::TypeSet *
-Bytecode::pushed(unsigned num)
-{
-    JS_ASSERT(num < GetDefCount(script->script, offset));
-    return &pushedArray[num].group()->types;
-}
-
-inline void
-Bytecode::setFixed(JSContext *cx, unsigned num, types::jstype type)
-{
-    pushed(num)->addType(cx, type);
-}
-
-inline types::TypeObject *
-Bytecode::getInitObject(JSContext *cx, bool isArray)
-{
-#ifdef JS_TYPE_INFERENCE
-    types::TypeObject *&object = isArray ? initArray : initObject;
-    if (!object) {
-        char *name = NULL;
-#ifdef DEBUG
-        name = (char *) alloca(32);
-        JS_snprintf(name, 32, "#%u:%u:%s", script->id, offset, isArray ? "Array" : "Object");
-#endif
-        JSObject *proto;
-        JSProtoKey key = isArray ? JSProto_Array : JSProto_Object;
-        if (!js_GetClassPrototype(cx, script->getGlobal(), key, &proto, NULL))
-            return NULL;
-        object = cx->compartment->types.newTypeObject(cx, script, name, false, proto);
-    }
-    return object;
-#else
-    JS_NOT_REACHED("Call to Bytecode::getInitObject");
-    return NULL;
-#endif
-}
-
-/////////////////////////////////////////////////////////////////////
-// analyze::Script
-/////////////////////////////////////////////////////////////////////
-
-inline JSObject *
-Script::getGlobal()
-{
-    JS_ASSERT(script->compileAndGo);
-    if (global)
-        return global;
-
-    /*
-     * Nesting parents of this script must also be compileAndGo for the same global.
-     * The parser must have set the global object for the analysis at the root
-     * global script.
-     */
-    JSScript *nested = parent;
-    while (true) {
-        if (nested->analysis->global) {
-            global = nested->analysis->global;
-            return global;
-        }
-        nested = nested->analysis->parent;
-    }
-    return NULL;
-}
-
-inline types::TypeObject *
-Script::getGlobalType()
-{
-    return getGlobal()->getType();
-}
-
-inline types::TypeObject *
-Script::getTypeNewObject(JSContext *cx, JSProtoKey key)
-{
-    JSObject *proto;
-    if (!js_GetClassPrototype(cx, getGlobal(), key, &proto, NULL))
-        return NULL;
-    return proto->getNewType(cx);
-}
-
-inline jsid
-Script::getLocalId(unsigned index, Bytecode *code)
-{
-    if (index >= script->nfixed) {
-        /*
-         * This is an access on a let variable, we need the stack to figure out
-         * the name of the accessed variable.  If multiple let variables have
-         * the same name, we flatten their types together.
-         */
-        if (!code)
-            return JSID_VOID;
-
-        JS_ASSERT(index - script->nfixed < code->stackDepth);
-        unsigned diff = code->stackDepth - (index - script->nfixed);
-        types::TypeStack *stack = code->inStack;
-        for (unsigned i = 1; i < diff; i++)
-            stack = stack->group()->innerStack;
-        JS_ASSERT(stack);
-
-        if (stack && JSID_TO_STRING(stack->letVariable) != NULL)
-            return stack->letVariable;
-
-        /*
-         * This can show up when the accessed value is not from a 'var' or 'let'
-         * but is just an access to a fixed slot.  There is no name, get the
-         * types using getLocalTypes below.
-         */
-        return JSID_VOID;
-    }
-
-    if (!localNames || !localNames[argCount() + index])
-        return JSID_VOID;
-
-    return ATOM_TO_JSID(JS_LOCAL_NAME_TO_ATOM(localNames[argCount() + index]));
-}
-
-inline jsid
-Script::getArgumentId(unsigned index)
-{
-    JS_ASSERT(fun);
-
-    /*
-     * If the index is out of bounds of the number of declared arguments, it can
-     * only be accessed through the 'arguments' array and will be handled separately.
-     */
-    if (index >= argCount() || !localNames[index])
-        return JSID_VOID;
-
-    return ATOM_TO_JSID(JS_LOCAL_NAME_TO_ATOM(localNames[index]));
-}
-
-inline types::TypeSet*
-Script::getStackTypes(unsigned index, Bytecode *code)
-{
-    JS_ASSERT(index >= script->nfixed);
-    JS_ASSERT(index - script->nfixed < code->stackDepth);
-
-    types::TypeStack *stack = code->inStack;
-    unsigned diff = code->stackDepth - (index - script->nfixed) - 1;
-    for (unsigned i = 0; i < diff; i++)
-        stack = stack->group()->innerStack;
-    return &stack->group()->types;
-}
-
-inline JSValueType
-Script::knownArgumentTypeTag(JSContext *cx, JSScript *script, unsigned arg)
-{
-    jsid id = getArgumentId(arg);
-    if (!JSID_IS_VOID(id) && !argEscapes(arg)) {
-        types::TypeSet *types = getVariable(cx, id);
-        return types->getKnownTypeTag(cx, script);
-    }
-    return JSVAL_TYPE_UNKNOWN;
-}
-
-inline JSValueType
-Script::knownLocalTypeTag(JSContext *cx, JSScript *script, unsigned local)
-{
-    jsid id = getLocalId(local, NULL);
-    if (!localHasUseBeforeDef(local) && !JSID_IS_VOID(id)) {
-        JS_ASSERT(!localEscapes(local));
-        types::TypeSet *types = getVariable(cx, id);
-        return types->getKnownTypeTag(cx, script);
-    }
-    return JSVAL_TYPE_UNKNOWN;
-}
-
-} /* namespace analyze */
+namespace types {
 
 /////////////////////////////////////////////////////////////////////
 // TypeCompartment
 /////////////////////////////////////////////////////////////////////
-
-namespace types {
 
 inline void
 TypeCompartment::addPending(JSContext *cx, TypeConstraint *constraint, TypeSet *source, jstype type)
@@ -1107,37 +959,16 @@ TypeSet::make(JSContext *cx, JSArenaPool &pool, const char *name)
 }
 
 /////////////////////////////////////////////////////////////////////
-// TypeStack
-/////////////////////////////////////////////////////////////////////
-
-inline TypeStack *
-TypeStack::group()
-{
-    TypeStack *res = this;
-    while (res->mergedGroup)
-        res = res->mergedGroup;
-    if (mergedGroup && mergedGroup != res)
-        mergedGroup = res;
-    return res;
-}
-
-inline void
-TypeStack::setInnerStack(TypeStack *inner)
-{
-    JS_ASSERT(!mergedGroup);
-    innerStack = inner;
-}
-
-/////////////////////////////////////////////////////////////////////
 // TypeCallsite
 /////////////////////////////////////////////////////////////////////
 
 inline
-TypeCallsite::TypeCallsite(analyze::Bytecode *code, bool isNew, unsigned argumentCount)
-    : code(code), isNew(isNew), argumentCount(argumentCount),
+TypeCallsite::TypeCallsite(JSScript *script, const jsbytecode *pc,
+                           bool isNew, unsigned argumentCount)
+    : script(script), pc(pc), isNew(isNew), argumentCount(argumentCount),
       thisTypes(NULL), thisType(0), returnTypes(NULL)
 {
-    argumentTypes = ArenaArray<TypeSet*>(code->pool(), argumentCount);
+    argumentTypes = ArenaArray<TypeSet*>(script->types->pool, argumentCount);
 }
 
 inline void
@@ -1145,7 +976,7 @@ TypeCallsite::forceThisTypes(JSContext *cx)
 {
     if (thisTypes)
         return;
-    thisTypes = TypeSet::make(cx, code->pool(), "site_this");
+    thisTypes = TypeSet::make(cx, script->types->pool, "site_this");
     thisTypes->addType(cx, thisType);
 }
 
@@ -1154,25 +985,25 @@ TypeCallsite::forceReturnTypes(JSContext *cx)
 {
     if (returnTypes)
         return;
-    returnTypes = TypeSet::make(cx, code->pool(), "site_return");
+    returnTypes = TypeSet::make(cx, script->types->pool, "site_return");
 }
 
 inline TypeObject *
 TypeCallsite::getInitObject(JSContext *cx, bool isArray)
 {
-    return code->getInitObject(cx, isArray);
+    return script->getTypeInitObject(cx, pc, isArray);
 }
 
 inline JSArenaPool &
 TypeCallsite::pool()
 {
-    return code->pool();
+    return script->types->pool;
 }
 
 inline bool
 TypeCallsite::compileAndGo()
 {
-    return code->script->getScript()->compileAndGo;
+    return script->compileAndGo;
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -1192,22 +1023,61 @@ TypeObject::getProperty(JSContext *cx, jsid id, bool assign)
     return assign ? &prop->ownTypes : &prop->types;
 }
 
-} /* namespace types */
+/////////////////////////////////////////////////////////////////////
+// TypeScript
+/////////////////////////////////////////////////////////////////////
 
-inline types::TypeSet *
-analyze::Script::getVariable(JSContext *cx, jsid id, bool localName)
+inline bool
+TypeScript::monitored(uint32 offset)
 {
-    JS_ASSERT(JSID_IS_STRING(id) && JSID_TO_STRING(id) != NULL);
-
-    types::Variable *&var = types::HashSetInsert<jsid,types::Variable,types::Variable>
-        (cx, variableSet, variableCount, id);
-    if (!var)
-        addVariable(cx, id, var, localName);
-
-    return &var->types;
+    JS_ASSERT(offset < script->length);
+    return 0x1 & (size_t) pushedArray[offset];
 }
 
-} /* namespace js */
+inline void
+TypeScript::setMonitored(uint32 offset)
+{
+    JS_ASSERT(offset < script->length);
+    pushedArray[offset] = (TypeSet *) (0x1 | (size_t) pushedArray[offset]);
+}
+
+inline TypeSet *
+TypeScript::pushed(uint32 offset)
+{
+    JS_ASSERT(offset < script->length);
+    return (TypeSet *) (~0x1 & (size_t) pushedArray[offset]);
+}
+
+inline TypeSet *
+TypeScript::pushed(uint32 offset, uint32 index)
+{
+    JS_ASSERT(offset < script->length);
+    JS_ASSERT(index < js::analyze::GetDefCount(script, offset));
+    return pushed(offset) + index;
+}
+
+inline TypeSet *
+TypeScript::argTypes(uint32 arg)
+{
+    JS_ASSERT(script->fun && arg < script->fun->nargs);
+    return &argTypes_[arg];
+}
+
+inline TypeSet *
+TypeScript::localTypes(uint32 local)
+{
+    JS_ASSERT(local < script->nfixed);
+    return &localTypes_[local];
+}
+
+inline void
+TypeScript::addType(JSContext *cx, uint32 offset, uint32 index, jstype type)
+{
+    TypeSet *types = pushed(offset, index);
+    types->addType(cx, type);
+}
+
+} } /* namespace js::types */
 
 #endif /* JS_TYPE_INFERENCE */
 
@@ -1226,6 +1096,7 @@ TypeObject::name()
 
 inline TypeObject::TypeObject(JSArenaPool *pool, jsid name, JSObject *proto)
     : proto(proto), emptyShapes(NULL), isFunction(false), marked(false),
+      initializerObject(false), initializerArray(false), initializerOffset(0),
       propertySet(NULL), propertyCount(0),
       instanceList(NULL), instanceNext(NULL), pool(pool), next(NULL), unknownProperties(false),
       isDenseArray(false), isPackedArray(false)

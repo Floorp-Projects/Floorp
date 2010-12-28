@@ -738,7 +738,7 @@ FrameState::discardForJoin(jsbytecode *target, uint32 stackDepth)
         if (reg.isReg()) {
             fe->data.setRegister(reg.reg());
         } else {
-            fe->setType(JSVAL_TYPE_DOUBLE);
+            fe->setType(JSVAL_TYPE_DOUBLE, NULL);
             fe->data.setFPRegister(reg.fpreg());
         }
 
@@ -1644,7 +1644,7 @@ FrameState::pushDouble(FPRegisterID fpreg)
 {
     FrameEntry *fe = rawPush();
     fe->resetUnsynced();
-    fe->setType(JSVAL_TYPE_DOUBLE);
+    fe->setType(JSVAL_TYPE_DOUBLE, NULL);
     fe->data.setFPRegister(fpreg);
     regstate(fpreg).associate(fe, RematInfo::DATA);
 }
@@ -1678,6 +1678,7 @@ FrameState::ensureDouble(FrameEntry *fe)
         /* The backing was converted to double already. */
         fe->type.setConstant();
         fe->knownType = JSVAL_TYPE_DOUBLE;
+        fe->typeSet = NULL;
         return;
     }
 
@@ -1698,7 +1699,7 @@ FrameState::ensureDouble(FrameEntry *fe)
 
     forgetAllRegs(fe);
     fe->resetUnsynced();
-    fe->setType(JSVAL_TYPE_DOUBLE);
+    fe->setType(JSVAL_TYPE_DOUBLE, NULL);
     fe->data.setFPRegister(fpreg);
     regstate(fpreg).associate(fe, RematInfo::DATA);
 
@@ -1717,7 +1718,7 @@ FrameState::pushCopyOf(uint32 index)
         fe->setConstant(Jsvalify(backing->getValue()));
     } else {
         if (backing->isTypeKnown())
-            fe->setType(backing->getKnownType());
+            fe->setType(backing->getKnownType(), backing->getTypeSet());
         else
             fe->type.invalidate();
         fe->data.invalidate();
@@ -1925,7 +1926,8 @@ FrameState::hasOnlyCopy(FrameEntry *backing, FrameEntry *fe)
 }
 
 void
-FrameState::storeLocal(uint32 n, bool popGuaranteed, JSValueType type)
+FrameState::storeLocal(uint32 n, JSValueType type, types::TypeSet *typeSet,
+                       bool popGuaranteed, bool fixedType)
 {
     FrameEntry *local = getLocal(n);
 
@@ -1935,12 +1937,13 @@ FrameState::storeLocal(uint32 n, bool popGuaranteed, JSValueType type)
         return;
     }
 
-    storeTop(local, popGuaranteed, type);
+    storeTop(local, type, typeSet, popGuaranteed);
 
     if (activeLoop)
         local->lastLoop = activeLoop->head;
 
-    if (type != JSVAL_TYPE_UNKNOWN && type != JSVAL_TYPE_DOUBLE && !local->type.synced()) {
+    if (type != JSVAL_TYPE_UNKNOWN && type != JSVAL_TYPE_DOUBLE &&
+        fixedType && !local->type.synced()) {
         /* Known types are always in sync for locals. */
         local->type.sync();
     }
@@ -1950,7 +1953,7 @@ FrameState::storeLocal(uint32 n, bool popGuaranteed, JSValueType type)
 }
 
 void
-FrameState::storeArg(uint32 n, bool popGuaranteed, JSValueType type)
+FrameState::storeArg(uint32 n, JSValueType type, types::TypeSet *typeSet, bool popGuaranteed)
 {
     // Note that args are always immediately synced, because they can be
     // aliased (but not written to) via f.arguments.
@@ -1962,7 +1965,7 @@ FrameState::storeArg(uint32 n, bool popGuaranteed, JSValueType type)
         return;
     }
 
-    storeTop(arg, popGuaranteed, type);
+    storeTop(arg, type, typeSet, popGuaranteed);
 
     if (activeLoop)
         arg->lastLoop = activeLoop->head;
@@ -1988,7 +1991,7 @@ FrameState::forgetEntry(FrameEntry *fe)
 }
 
 void
-FrameState::storeTop(FrameEntry *target, bool popGuaranteed, JSValueType type)
+FrameState::storeTop(FrameEntry *target, JSValueType type, types::TypeSet *typeSet, bool popGuaranteed)
 {
     /* Detect something like (x = x) which is a no-op. */
     FrameEntry *top = peek(-1);
@@ -2035,7 +2038,7 @@ FrameState::storeTop(FrameEntry *target, bool popGuaranteed, JSValueType type)
             target->setNotCopied();
             target->setCopyOf(backing);
             if (backing->isTypeKnown())
-                target->setType(backing->getKnownType());
+                target->setType(backing->getKnownType(), backing->getTypeSet());
             else
                 target->type.invalidate();
             target->data.invalidate();
@@ -2094,7 +2097,7 @@ FrameState::storeTop(FrameEntry *target, bool popGuaranteed, JSValueType type)
             regstate(fpreg).reassociate(target);
         }
 
-        target->setType(JSVAL_TYPE_DOUBLE);
+        target->setType(JSVAL_TYPE_DOUBLE, NULL);
     } else {
         /*
          * Move the backing store down - we spill registers here, but we could be
@@ -2106,7 +2109,7 @@ FrameState::storeTop(FrameEntry *target, bool popGuaranteed, JSValueType type)
 
         if (type == JSVAL_TYPE_UNKNOWN) {
             if (backing->isTypeKnown()) {
-                target->setType(backing->getKnownType());
+                target->setType(backing->getKnownType(), backing->getTypeSet());
             } else {
                 RegisterID reg = tempRegForType(backing);
                 target->type.setRegister(reg);
@@ -2124,8 +2127,8 @@ FrameState::storeTop(FrameEntry *target, bool popGuaranteed, JSValueType type)
 
             forgetAllRegs(backing);
 
-            backing->setType(JSVAL_TYPE_DOUBLE);
-            target->setType(JSVAL_TYPE_DOUBLE);
+            backing->setType(JSVAL_TYPE_DOUBLE, NULL);
+            target->setType(JSVAL_TYPE_DOUBLE, NULL);
             target->data.setFPRegister(fpreg);
             regstate(fpreg).associate(target, RematInfo::DATA);
         } else {
@@ -2136,7 +2139,7 @@ FrameState::storeTop(FrameEntry *target, bool popGuaranteed, JSValueType type)
             JS_ASSERT_IF(backing->isTypeKnown(), backing->isType(type));
             if (!backing->isTypeKnown())
                 learnType(backing, type);
-            target->setType(type);
+            target->setType(type, typeSet);
         }
     }
 
@@ -2165,7 +2168,7 @@ FrameState::shimmy(uint32 n)
 {
     JS_ASSERT(sp - n >= spBase);
     int32 depth = 0 - int32(n);
-    storeTop(peek(depth - 1), true);
+    storeTop(peek(depth - 1), JSVAL_TYPE_UNKNOWN, NULL, true);
     popn(n);
 }
 
@@ -2174,7 +2177,7 @@ FrameState::shift(int32 n)
 {
     JS_ASSERT(n < 0);
     JS_ASSERT(sp + n - 1 >= spBase);
-    storeTop(peek(n - 1), true);
+    storeTop(peek(n - 1), JSVAL_TYPE_UNKNOWN, NULL, true);
     pop();
 }
 
