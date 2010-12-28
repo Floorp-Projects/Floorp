@@ -253,14 +253,20 @@ var FullZoom = {
       return;
     }
 
-    var self = this;
-    Services.contentPrefs.getPref(aURI, this.name, function (aResult) {
-      // Check that we're still where we expect to be in case this took a while.
-      let browser = aBrowser || gBrowser.selectedBrowser;
-      if (aURI.equals(browser.currentURI)) {
-        self._applyPrefToSetting(aResult, browser);
-      }
-    });
+    let browser = aBrowser || gBrowser.selectedBrowser;
+
+    if (Services.contentPrefs.hasCachedPref(aURI, this.name)) {
+      let zoomValue = Services.contentPrefs.getPref(aURI, this.name);
+      this._applyPrefToSetting(zoomValue, browser);
+    } else {
+      var self = this;
+      Services.contentPrefs.getPref(aURI, this.name, function (aResult) {
+        // Check that we're still where we expect to be in case this took a while.
+        if (aURI.equals(browser.currentURI)) {
+          self._applyPrefToSetting(aResult, browser);
+        }
+      });
+    }
   },
 
   // update state of zoom type menu item
