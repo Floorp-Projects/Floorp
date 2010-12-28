@@ -4626,7 +4626,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         if (!cg2->init())
             return JS_FALSE;
 
-        cg2->flags = pn->pn_funbox->tcflags | TCF_COMPILING | TCF_IN_FUNCTION;
+        cg2->flags = pn->pn_funbox->tcflags | TCF_COMPILING | TCF_IN_FUNCTION |
+                     (cg->flags & TCF_FUN_MIGHT_ALIAS_LOCALS);
 #if JS_HAS_SHARP_VARS
         if (cg2->flags & TCF_HAS_SHARPS) {
             cg2->sharpSlotBase = fun->sharpSlotBase(cx);

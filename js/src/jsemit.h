@@ -252,10 +252,8 @@ struct JSStmtInfo {
 #define TCF_COMPILE_FOR_EVAL     0x2000000
 
 /*
- * The function has broken or incorrect def-use information, and it cannot
- * safely optimize free variables to global names. This can happen because
- * of a named function statement not at the top level (emitting a DEFFUN),
- * or a variable declaration inside a "with".
+ * The function or a function that encloses it may define new local names
+ * at runtime through means other than calling eval.
  */
 #define TCF_FUN_MIGHT_ALIAS_LOCALS  0x4000000
 
