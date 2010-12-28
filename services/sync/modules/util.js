@@ -1249,12 +1249,6 @@ let Utils = {
     return Utils.encodeKeyBase32(Utils.generateRandomBytes(16));
   },
 
-  trim: function trim(s) {
-    if (s)
-      return s.replace(/^\s+/, "").replace(/\s+$/, "");
-    return s;
-  },
-  
   /**
    * The following are the methods supported for UI use:
    *
@@ -1318,7 +1312,7 @@ let Utils = {
   normalizePassphrase: function normalizePassphrase(pp) {
     // Short var name... have you seen the lines below?!
     // Allow leading and trailing whitespace.
-    pp = Utils.trim(pp.toLowerCase());
+    pp = pp.trim().toLowerCase();
 
     // 20-char sync key.
     if (pp.length == 23 &&
@@ -1342,7 +1336,7 @@ let Utils = {
   },
   
   normalizeAccount: function normalizeAccount(acc) {
-    return Utils.trim(acc);
+    return acc.trim();
   },
 
   // WeaveCrypto returns bad base64 strings. Truncate excess padding
