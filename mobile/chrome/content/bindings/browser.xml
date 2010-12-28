@@ -957,7 +957,8 @@
         <parameter name="scale"/>
         <body>
           <![CDATA[
-            if (scale <= 0) throw "Bad scale given.";
+            if (scale <= 0 || scale == this._scale)
+              return;
 
             this._scale = scale;
             this._frameLoader.setViewportScale(scale, scale);
