@@ -958,8 +958,8 @@ var PlacesStarButton = {
     this._uri = gBrowser.currentURI;
     this._itemIds = [];
 
-    // Hide the star while we update its state.
-    this._starIcon.hidden = true;
+    // Ignore clicks on the star while we update its state.
+    this._ignoreClicks = true;
 
     // We can load about:blank before the actual page, but there is no point in handling that page.
     if (this._uri.spec == "about:blank") {
@@ -980,8 +980,8 @@ var PlacesStarButton = {
         }
       }
 
-      // Finally show the star.
-      this._starIcon.hidden = false;
+      // Finally re-enable the star.
+      this._ignoreClicks = false;
     }, this);
   },
 
@@ -1004,7 +1004,7 @@ var PlacesStarButton = {
 
   onClick: function PSB_onClick(aEvent)
   {
-    if (aEvent.button == 0) {
+    if (aEvent.button == 0 && !this._ignoreClicks) {
       PlacesCommandHook.bookmarkCurrentPage(this._itemIds.length > 0);
     }
     // Don't bubble to the textbox, to avoid unwanted selection of the address.
