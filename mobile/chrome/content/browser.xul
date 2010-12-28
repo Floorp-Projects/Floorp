@@ -23,6 +23,7 @@
    - Contributor(s):
    -   Brad Lassey <blassey@mozilla.com>
    -   Mark Finkle <mfinkle@mozila.com>
+   -   Matt Brubeck <mbrubeck@mozila.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -474,6 +475,7 @@
                   </setting>
                 </settings>
                 <settings id="prefs-content" label="&content.title;">
+                  <setting pref="browser.ui.zoom.reflow" title="&reflowZoom.title;" type="bool"/>
                   <setting pref="permissions.default.image" title="&showImages.title;" type="boolint" on="1" off="2"/>
                   <setting pref="javascript.enabled" type="bool" title="&enableJavaScript.title;"/>
                 </settings>

@@ -508,7 +508,8 @@ Content.prototype = {
           element = element.parentNode;
         if (element) {
           rect = getBoundingContentRect(element);
-          this._setTextZoom(Math.max(1, rect.width / json.width));
+          if (Services.prefs.getBoolPref("browser.ui.zoom.reflow"))
+            this._setTextZoom(Math.max(1, rect.width / json.width));
         }
         sendAsyncMessage("Browser:ZoomToPoint:Return", { x: x, y: y, rect: rect });
         break;

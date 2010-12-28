@@ -19,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Matt Brubeck <mbrubeck@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -374,6 +375,7 @@ pref("browser.ui.kinetic.swipeLength", 160);
 // zooming
 pref("browser.ui.zoom.pageFitGranularity", 5); // don't zoom to fit by less than 1/5 (20%)
 pref("browser.ui.zoom.animationDuration", 200); // ms duration of double-tap zoom animation
+pref("browser.ui.zoom.reflow", true); // Change text wrapping on double-tap
 
 // pinch gesture
 pref("browser.ui.pinch.maxGrowth", 150);     // max pinch distance growth
