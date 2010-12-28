@@ -4431,6 +4431,10 @@ ResetJITImpl(JSContext* cx)
         JS_ASSERT_NOT_ON_TRACE(cx);
         AbortRecording(cx, "flush cache");
     }
+#if JS_METHODJIT
+    if (tm->profile)
+        AbortProfiling(cx);
+#endif
     if (ProhibitFlush(cx)) {
         debug_only_print0(LC_TMTracer, "Deferring JIT flush due to deep bail.\n");
         tm->needFlush = JS_TRUE;
