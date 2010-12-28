@@ -1028,7 +1028,9 @@ nsDOMThreadService::CreateJSContext()
   JS_SetNativeStackQuota(cx, 256*1024);
   JS_SetScriptStackQuota(cx, 100*1024*1024);
 
-  JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_JIT | JSOPTION_ANONFUNFIX);
+  JS_SetOptions(cx,
+    JS_GetOptions(cx) | JSOPTION_METHODJIT | JSOPTION_JIT |
+    JSOPTION_PROFILING | JSOPTION_ANONFUNFIX);
   JS_SetGCParameterForThread(cx, JSGC_MAX_CODE_CACHE_BYTES, 1 * 1024 * 1024);
 
   return cx.forget();
