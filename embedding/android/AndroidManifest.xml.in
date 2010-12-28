@@ -14,6 +14,10 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT"/>
 
+    <uses-feature android:name="android.hardware.location" android:required="false"/>
+    <uses-feature android:name="android.hardware.location.gps" android:required="false"/>
+    <uses-feature android:name="android.hardware.touchscreen"/>
+
     <application android:label="@MOZ_APP_DISPLAYNAME@"
 		 android:icon="@drawable/icon"
 		 android:debuggable="true">
