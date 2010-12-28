@@ -44,25 +44,30 @@ let testURL_blank = baseURI + "browser_blank_01.html";
 function testURL(n) {
   return baseURI + "browser_viewport.sjs?" + encodeURIComponent(gTestData[n].metadata);
 }
+
 function scaleRatio(n) {
   if ("scaleRatio" in gTestData[n])
     return gTestData[n].scaleRatio;
   return 150; // Default value matches our main target hardware (N900, Nexus One, etc.)
 }
 
-let working_tab;
+let currentTab;
 
-let loadUrl = function loadUrl(tab, url, callback) {
-  messageManager.addMessageListener("MozScrolledAreaChanged", function(msg) {
-    if (working_tab.browser.currentURI.spec == url) {
-      messageManager.removeMessageListener(msg.name, arguments.callee);
+let loadURL = function loadURL(aPageURL, aCallback, aScale) {
+  messageManager.addMessageListener("MozScrolledAreaChanged", function(aMessage) {
+    if (aMessage.target.currentURI.spec == aPageURL) {
+      messageManager.removeMessageListener(aMessage.name, arguments.callee);
+
       // HACK: Sometimes there are two MozScrolledAreaChanged messages in a
-      // row, and this setTimeout is the only way I found to make sure the
+      // row, and this waitFor is the only way founded to make sure the
       // browser responds to both of them before we do.
-      setTimeout(callback, 0);
+      waitFor(aCallback, function() {
+        return aScale == aMessage.target.scale;
+      });
     }
   });
-  BrowserUI.goToURI(url);
+
+  BrowserUI.goToURI(aPageURL);
 };
 
 let gTestData = [
@@ -99,28 +104,28 @@ function test() {
   waitForExplicitFinish();
   requestLongerTimeout(2);
 
-  working_tab = Browser.addTab("about:blank", true);
-  ok(working_tab, "Tab Opened");
+  currentTab = Browser.addTab("about:blank", true);
+  ok(currentTab, "Tab Opened");
 
   startTest(0);
 }
 
 function startTest(n) {
   BrowserUI.goToURI(testURL_blank);
-  loadUrl(working_tab, testURL_blank, verifyBlank(n));
+  loadURL(testURL_blank, verifyBlank(n), 1);
   Services.prefs.setIntPref("browser.viewport.scaleRatio", scaleRatio(n));
 }
 
 function verifyBlank(n) {
   return function() {
     // Do sanity tests
-    var uri = working_tab.browser.currentURI.spec;
-    is(uri, testURL_blank, "URL Matches blank page "+n);
+    let uri = currentTab.browser.currentURI.spec;
+    is(uri, testURL_blank, "URL Matches blank page " + n);
 
     // Check viewport settings
-    is(working_tab.browser.contentWindowWidth, 980, "Normal 'browser' width is 980 pixels");
+    is(currentTab.browser.contentWindowWidth, 980, "Normal 'browser' width is 980 pixels");
 
-    loadUrl(working_tab, testURL(n), verifyTest(n));
+    loadURL(testURL(n), verifyTest(n), gTestData[n].scale);
   }
 }
 
@@ -134,11 +139,11 @@ function verifyTest(n) {
     is(window.innerWidth, 800, "Test assumes window width is 800px");
 
     // Do sanity tests
-    var uri = working_tab.browser.currentURI.spec;
-    is(uri, testURL(n), "URL is "+testURL(n));
+    let uri = currentTab.browser.currentURI.spec;
+    is(uri, testURL(n), "URL is " + testURL(n));
 
     let data = gTestData[n];
-    let actualWidth = working_tab.browser.contentWindowWidth;
+    let actualWidth = currentTab.browser.contentWindowWidth;
     is_approx(actualWidth, parseFloat(data.width), .01, "Viewport width=" + data.width);
 
     let zoomLevel = getBrowser().scale;
@@ -146,7 +151,7 @@ function verifyTest(n) {
 
     // Test zooming
     if (data.disableZoom) {
-      ok(!working_tab.allowZoom, "Zoom disabled");
+      ok(!currentTab.allowZoom, "Zoom disabled");
 
       Browser.zoom(-1);
       is(getBrowser().scale, zoomLevel, "Zoom in does nothing");
@@ -181,10 +186,10 @@ function verifyTest(n) {
 
 function finishTest(n) {
   Services.prefs.clearUserPref("browser.viewport.scaleRatio");
-  if (n+1 < gTestData.length) {
-    startTest(n+1);
+  if (n + 1 < gTestData.length) {
+    startTest(n + 1);
   } else {
-    Browser.closeTab(working_tab);
+    Browser.closeTab(currentTab);
     finish();
   }
 }
