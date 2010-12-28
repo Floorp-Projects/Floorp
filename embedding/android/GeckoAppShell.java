@@ -64,7 +64,8 @@ class GeckoAppShell
     // static members only
     private GeckoAppShell() { }
 
-    static private GeckoEvent gPendingResize = null;
+    static private LinkedList<GeckoEvent> gPendingEvents =
+        new LinkedList<GeckoEvent>();
 
     static private boolean gRestartScheduled = false;
 
@@ -143,16 +144,20 @@ class GeckoAppShell
 
     private static GeckoEvent mLastDrawEvent;
 
+    private static void sendPendingEventsToGecko() {
+        try {
+            while (!gPendingEvents.isEmpty()) {
+                GeckoEvent e = gPendingEvents.removeFirst();
+                notifyGeckoOfEvent(e);
+            }
+        } catch (NoSuchElementException e) {}
+    }
+ 
     public static void sendEventToGecko(GeckoEvent e) {
         if (GeckoApp.checkLaunchState(GeckoApp.LaunchState.GeckoRunning)) {
-            if (gPendingResize != null) {
-                notifyGeckoOfEvent(gPendingResize);
-                gPendingResize = null;
-            }
             notifyGeckoOfEvent(e);
         } else {
-            if (e.mType == GeckoEvent.SIZE_CHANGED)
-                gPendingResize = e;
+            gPendingEvents.addLast(e);
         }
     }
 
@@ -335,10 +340,7 @@ class GeckoAppShell
     {
         // mLaunchState can only be Launched at this point
         GeckoApp.setLaunchState(GeckoApp.LaunchState.GeckoRunning);
-        if (gPendingResize != null) {
-            notifyGeckoOfEvent(gPendingResize);
-            gPendingResize = null;
-        }
+        sendPendingEventsToGecko();
     }
 
     static void onXreExit() {
