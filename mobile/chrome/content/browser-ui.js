@@ -448,6 +448,7 @@ var BrowserUI = {
     tabs.addEventListener("TabOpen", NewTabPopup, true);
 
     Elements.browsers.addEventListener("PanFinished", this, true);
+    Elements.browsers.addEventListener("SizeChanged", this, true);
 
     // listen content messages
     messageManager.addMessageListener("DOMLinkAdded", this);
@@ -514,7 +515,6 @@ var BrowserUI = {
   uninit: function() {
     ExtensionsView.uninit();
     ConsoleView.uninit();
-    FormHelperUI.uninit();
   },
 
   update: function(aState) {
@@ -831,6 +831,10 @@ var BrowserUI = {
         let [tabsVisibility,,,] = Browser.computeSidebarVisibility();
         if (tabsVisibility == 0.0)
           document.getElementById("tabs").removeClosedTab();
+        break;
+      case "SizeChanged":
+        if (aEvent.detail)
+          this.sizeControls(ViewableAreaObserver.height, ViewableAreaObserver.width);
         break;
       // Window events
       case "keypress":
@@ -1841,26 +1845,11 @@ var FormHelperUI = {
     return Services.prefs.getBoolPref("formhelper.enabled");
   },
   
-  _visibleScreenArea: null,
-  get visibleScreenArea() {
-    let visibleRect = Rect.fromRect(this._currentBrowser.getBoundingClientRect());
-    let visibleScreenArea = visibleRect;
-    if (this._visibleScreenArea) {
-      visibleScreenArea = this._visibleScreenArea.clone();
-      visibleScreenArea.x = visibleRect.x;
-      visibleScreenArea.y = visibleRect.y;
-      visibleScreenArea.width = visibleRect.width;
-      visibleScreenArea.height = visibleRect.height - this._container.getBoundingClientRect().height;
-    }
-    return visibleScreenArea;
-  },
-
   init: function formHelperInit() {
     this._container = document.getElementById("content-navigator");
     this._autofillContainer = document.getElementById("form-helper-autofill");
     this._cmdPrevious = document.getElementById(this.commands.previous);
     this._cmdNext = document.getElementById(this.commands.next);
-    this._visibleScreenArea = new Rect(0, 0, 0, 0);
 
     // Listen for form assistant messages from content
     messageManager.addMessageListener("FormAssist:Show", this);
@@ -1874,17 +1863,12 @@ var FormHelperUI = {
     tabs.addEventListener("TabSelect", this, true);
     tabs.addEventListener("TabClose", this, true);
     Elements.browsers.addEventListener("URLChanged", this, true);
+    Elements.browsers.addEventListener("SizeChanged", this, true);
     window.addEventListener("resize", this, true);
 
     // Listen for modal dialog to show/hide the UI
     messageManager.addMessageListener("DOMWillOpenModalDialog", this);
     messageManager.addMessageListener("DOMModalDialogClosed", this);
-
-    Services.obs.addObserver(this, "softkb-change", false);
-  },
-
-  uninit: function formHelperUninit() {
-    Services.obs.removeObserver(this, "softkb-change");
   },
 
   _currentBrowser: null,
@@ -1931,6 +1915,9 @@ var FormHelperUI = {
     this._open = false;
   },
 
+  // for VKB that does not resize the window
+  _currentCaretRect: null,
+  _currentElementRect: null,
   handleEvent: function formHelperHandleEvent(aEvent) {
     if (!this._open)
       return;
@@ -1951,6 +1938,11 @@ var FormHelperUI = {
           SelectHelperUI.resize();
           self._container.contentHasChanged();
         }, 0, this);
+        break;
+
+      case "SizeChanged":
+        if (aEvent.detail)
+          this._zoom(this._currentElementRect, this._currentCaretRect);
         break;
     }
   },
@@ -2000,20 +1992,6 @@ var FormHelperUI = {
         }
         break;
     }
-  },
-
-  // for VKB that does not resize the window
-  _currentCaretRect: null,
-  _currentElementRect: null,
-  observe: function formHelperObserve(aSubject, aTopic, aData) {
-    let rect = Rect.fromRect(JSON.parse(aData));
-    rect.height = rect.bottom - rect.top;
-    rect.width  = rect.right - rect.left;
-
-    this._visibleScreenArea = rect;
-    BrowserUI.sizeControls(rect.width, rect.height);
-    if (this.open)
-      this._zoom(this._currentElementRect, this._currentCaretRect);
   },
 
   goToPrevious: function formHelperGoToPrevious() {
@@ -2123,8 +2101,8 @@ var FormHelperUI = {
 
   /** Zoom and move viewport so that element is legible and touchable. */
   _zoom: function _formHelperZoom(aElementRect, aCaretRect) {
-    let zoomRect = this.visibleScreenArea;
     let browser = getBrowser();
+    let zoomRect = Rect.fromRect(browser.getBoundingClientRect());
 
     // Zoom to a specified Rect
     if (aElementRect && Browser.selectedTab.allowZoom && Services.prefs.getBoolPref("formhelper.autozoom")) {
@@ -2132,7 +2110,7 @@ var FormHelperUI = {
       // Zoom to an element by keeping the caret into view
       let zoomLevel = Browser.selectedTab.clampZoomLevel(this._getZoomLevelForRect(aElementRect));
 
-      zoomRect = this._getZoomRectForPoint(aElementRect.center().x, aElementRect.y, zoomLevel);
+      zoomRect = Browser._getZoomRectForPoint(aElementRect.center().x, aElementRect.y, zoomLevel);
       Browser.animatedZoomTo(zoomRect);
     }
 
@@ -2155,7 +2133,7 @@ var FormHelperUI = {
     }
 
     let browser = getBrowser();
-    let zoomRect = this.visibleScreenArea;
+    let zoomRect = Rect.fromRect(browser.getBoundingClientRect());
 
     this._currentCaretRect = aCaretRect;
     let caretRect = aCaretRect.scale(browser.scale, browser.scale);
@@ -2193,26 +2171,9 @@ var FormHelperUI = {
     Browser.pageScrollboxScroller.scrollTo(restore.pageScrollOffset.x, restore.pageScrollOffset.y);
   },
 
-  _getZoomRectForPoint: function _getZoomRectForPoint(x, y, zoomLevel) {
-    let browser = getBrowser();
-    x = x * browser.scale;
-    y = y * browser.scale;
-
-    let vis = this.visibleScreenArea
-    zoomLevel = Math.min(ZoomManager.MAX, zoomLevel);
-    let oldScale = browser.scale;
-    let zoomRatio = zoomLevel / oldScale;
-    let newVisW = vis.width / zoomRatio, newVisH = vis.height / zoomRatio;
-    let result = new Rect(x - newVisW / 2, y - newVisH / 2, newVisW, newVisH);
-
-    // Make sure rectangle doesn't poke out of viewport
-    return result.translateInside(new Rect(0, 0, browser.contentDocumentWidth * oldScale,
-                                                 browser.contentDocumentHeight * oldScale));
-  },
-
   _getZoomLevelForRect: function _getZoomLevelForRect(aRect) {
     const margin = 30;
-    let zoomLevel = this.visibleScreenArea.width / (aRect.width + margin);
+    let zoomLevel = getBrowser().getBoundingClientRect().width / (aRect.width + margin);
     return Util.clamp(zoomLevel, kBrowserFormZoomLevelMin, kBrowserFormZoomLevelMax);
   },
 
