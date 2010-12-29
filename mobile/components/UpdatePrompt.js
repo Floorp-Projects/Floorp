@@ -40,6 +40,7 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 
 const UPDATE_NOTIFICATION_NAME = "update-app";
+const UPDATE_NOTIFICATION_ICON = "drawable://alert_download_progress";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -114,8 +115,7 @@ UpdatePrompt.prototype = {
         let aus = Cc["@mozilla.org/updates/update-service;1"].getService(Ci.nsIApplicationUpdateService);
         if (aus.downloadUpdate(aUpdate, true) != "failed") {
           let title = gBrowserBundle.formatStringFromName("alertDownloadsStart", [aUpdate.name], 1);
-          let imageUrl = "drawable://alert_download_progress";
-          this._showNotification(aUpdate, title, "", imageUrl, "download");
+          this._showNotification(aUpdate, title, "", UPDATE_NOTIFICATION_ICON, "download");
 
           // Add this UI as a listener for active downloads
           aus.addDownloadListener(this);
@@ -144,9 +144,25 @@ UpdatePrompt.prototype = {
   // -------------------------
   // nsIUpdatePrompt interface
   // -------------------------
-  
+
+  // Right now this is used only to check for updates in progress
   checkForUpdates: function UP_checkForUpdates() {
-    // NOT IMPL
+    if (!this._enabled)
+      return;
+
+    let aus = Cc["@mozilla.org/updates/update-service;1"].getService(Ci.nsIApplicationUpdateService);
+    if (!aus.isDownloading)
+      return;
+
+    let updateManager = Cc["@mozilla.org/updates/update-manager;1"].getService(Ci.nsIUpdateManager);
+
+    let updateName = updateManager.activeUpdate ? updateManager.activeUpdate.name : gBrandBundle.GetStringFromName("brandShortName");
+    let title = gBrowserBundle.formatStringFromName("alertDownloadsStart", [updateName], 1);
+
+    this._showNotification(updateManager.activeUpdate, title, "", UPDATE_NOTIFICATION_ICON, "downloading");
+
+    aus.removeDownloadListener(this); // just in case it's already added
+    aus.addDownloadListener(this);
   },
 
   showUpdateAvailable: function UP_showUpdateAvailable(aUpdate) {
