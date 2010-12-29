@@ -238,7 +238,7 @@ var Browser = {
     pageScrollbox.customDragger = controlsScrollbox.customDragger;
 
     let stylesheet = document.styleSheets[0];
-    for each (let style in ["window-width", "window-height", "toolbar-height"]) {
+    for each (let style in ["window-width", "window-height", "viewable-height", "viewable-width", "toolbar-height"]) {
       let index = stylesheet.insertRule("." + style + " {}", stylesheet.cssRules.length);
       this.styles[style] = stylesheet.cssRules[index].style;
     }
@@ -278,6 +278,7 @@ var Browser = {
       Browser.styles["window-width"].width = w + "px";
       Browser.styles["window-height"].height = h + "px";
       Browser.styles["toolbar-height"].height = toolbarHeight + "px";
+      ViewableAreaObserver.update();
 
       // Tell the UI to resize the browser controls
       BrowserUI.sizeControls(w, h);
@@ -347,6 +348,12 @@ var Browser = {
     os.addObserver(ContentCrashObserver, "ipc:content-shutdown", false);
     os.addObserver(MemoryObserver, "memory-pressure", false);
     os.addObserver(BrowserSearch, "browser-search-engine-modified", false);
+
+    // Listens for change in the viewable area
+    os.addObserver(ViewableAreaObserver, "softkb-change", false);
+    Elements.contentNavigator.addEventListener("SizeChanged", function() {
+      ViewableAreaObserver.update();
+    }, false);
 
     window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow = new nsBrowserAccess();
 
@@ -1235,8 +1242,10 @@ Browser.MainDragger.prototype = {
     if (doffset.x > 0 && rect.left > 0)
       x = Math.min(doffset.x, rect.left);
 
+    // XXX could we use getBrowser().getBoundingClientRect().height here?
     let height = Elements.contentViewport.getBoundingClientRect().height;
     height -= Elements.contentNavigator.getBoundingClientRect().height;
+
     rect = Rect.fromRect(Browser.contentScrollbox.getBoundingClientRect()).map(Math.round);
     if (doffset.y < 0 && rect.bottom < height)
       y = Math.max(doffset.y, rect.bottom - height);
@@ -2825,7 +2834,7 @@ Tab.prototype = {
 
     // Create the browser using the current width the dynamically size the height
     let browser = this._browser = document.createElement("browser");
-    browser.setAttribute("class", "window-width window-height");
+    browser.setAttribute("class", "viewable-width viewable-height");
     this._chromeTab.linkedBrowser = browser;
 
     browser.setAttribute("type", "content");
@@ -3022,4 +3031,33 @@ function rendererFactory(aBrowser, aCanvas) {
   }
 
   return wrapper;
-}
+};
+
+var ViewableAreaObserver = {
+  get width() {
+    return this._width || window.innerWidth;
+  },
+
+  get height() {
+    return this._height || window.innerHeight;
+  },
+
+  observe: function va_observe(aSubject, aTopic, aData) {
+    let rect = Rect.fromRect(JSON.parse(aData));
+    this._height = rect.bottom - rect.top;
+    this._width = rect.right - rect.left;
+    this._update(aIsVKB);
+  },
+
+  update: function va_update(aIsVKB) {
+    Browser.styles["viewable-height"].height = (this.height - Elements.contentNavigator.getBoundingClientRect().height) + "px";
+    Browser.styles["viewable-width"].width = this.width + "px";
+
+    // setTimeout 0 to ensure the resize event handler is well finished
+    setTimeout(function() {
+      let event = document.createEvent("UIEvents");
+      event.initUIEvent("SizeChanged", true, false, window, aIsVKB);
+      Elements.browsers.dispatchEvent(event);
+    }, 0);
+  }
+};
