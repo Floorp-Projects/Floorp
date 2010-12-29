@@ -128,8 +128,9 @@ SurfaceToTexture(IDirect3DDevice9 *aDevice,
   return texture.forget();
 }
 
-ImageContainerD3D9::ImageContainerD3D9(LayerManagerD3D9 *aManager)
-  : ImageContainer(aManager)
+ImageContainerD3D9::ImageContainerD3D9(IDirect3DDevice9 *aDevice)
+  : ImageContainer(nsnull)
+  , mDevice(aDevice)
   , mActiveImageLock("mozilla.layers.ImageContainerD3D9.mActiveImageLock")
 {
 }
@@ -138,12 +139,6 @@ already_AddRefed<Image>
 ImageContainerD3D9::CreateImage(const Image::Format *aFormats,
                                PRUint32 aNumFormats)
 {
-  if (mManager->GetBackendType() != GetBackendType()) {
-    // Whoops, we've got a valid layer manager but it's not the same type as us!
-    // Better to fail than crash.
-    return nsnull;
-  }
-
   if (!aNumFormats) {
     return nsnull;
   }
@@ -151,7 +146,7 @@ ImageContainerD3D9::CreateImage(const Image::Format *aFormats,
   if (aFormats[0] == Image::PLANAR_YCBCR) {
     img = new PlanarYCbCrImageD3D9();
   } else if (aFormats[0] == Image::CAIRO_SURFACE) {
-    img = new CairoImageD3D9(static_cast<LayerManagerD3D9*>(mManager)->device());
+    img = new CairoImageD3D9(mDevice);
   }
   return img.forget();
 }
@@ -224,7 +219,6 @@ PRBool
 ImageContainerD3D9::SetLayerManager(LayerManager *aManager)
 {
   if (aManager->GetBackendType() == LayerManager::LAYERS_D3D9) {
-    mManager = aManager;
     return PR_TRUE;
   }
 
@@ -245,15 +239,10 @@ ImageLayerD3D9::RenderLayer()
   }
 
   nsRefPtr<Image> image = GetContainer()->GetCurrentImage();
-
-  if (Manager() != GetContainer()->Manager()) {
-    GetContainer()->SetLayerManager(Manager());
-  }
   
   SetShaderTransformAndOpacity();
 
-  if (Manager() != GetContainer()->Manager() ||
-      GetContainer()->GetBackendType() != LayerManager::LAYERS_D3D9)
+  if (GetContainer()->GetBackendType() != LayerManager::LAYERS_D3D9)
   {
     gfxIntSize size;
     nsRefPtr<gfxASurface> surface =
@@ -339,6 +328,13 @@ ImageLayerD3D9::RenderLayer()
   } else if (image->GetFormat() == Image::CAIRO_SURFACE) {
     CairoImageD3D9 *cairoImage =
       static_cast<CairoImageD3D9*>(image.get());
+    ImageContainerD3D9 *container =
+      static_cast<ImageContainerD3D9*>(GetContainer());
+
+    if (container->device() != device()) {
+      // Ensure future images get created with the right device.
+      container->SetDevice(device());
+    }
 
     if (cairoImage->device() != device()) {
       cairoImage->SetDevice(device());
