@@ -1353,6 +1353,7 @@ var PageActions = {
     let browser = Browser.selectedBrowser;
     let fileName = getDefaultFileName(browser.contentTitle, browser.documentURI, null, null);
     fileName = fileName.trim() + ".pdf";
+    let displayName = fileName;
 #ifdef MOZ_PLATFORM_MAEMO
     fileName = fileName.replace(/[\*\:\?]+/g, " ");
 #endif
@@ -1362,12 +1363,27 @@ var PageActions = {
 
 #ifdef ANDROID
     // Create the final destination file location
-    let file = downloadsDir.clone();
-    file.append(fileName);
-    // The filename is used below to save the file to a temp location in 
-    // the content process. Make sure it's up to date.
-    file.createUnique(file.NORMAL_FILE_TYPE, 0666);
-    fileName = file.leafName;
+    // Try the intended filename, and if that doesn't work, try a safer one
+    // (the intended one may have special characters)
+    let file = null;
+    [fileName, 'download.pdf'].forEach(function(potentialName, i) {
+      if (file) return;
+      let attemptedFile = downloadsDir.clone();
+      attemptedFile.append(potentialName);
+      // The filename is used below to save the file to a temp location in 
+      // the content process. Make sure it's up to date.
+      try {
+        attemptedFile.createUnique(attemptedFile.NORMAL_FILE_TYPE, 0666);
+      } catch (e) {
+        // The first try may fail if the filename has special characters. If so
+        // we will try with a safer name.
+        if (i != 0)
+          throw e;
+        return;
+      }
+      file = attemptedFile;
+      fileName = file.leafName;
+    });
 #else
     let strings = Elements.browserBundle;
     let picker = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
@@ -1394,7 +1410,7 @@ var PageActions = {
     );
 
     let current = browser.currentURI.spec;
-    stmt.params.name = file.leafName;
+    stmt.params.name = displayName;
     stmt.params.source = current;
     stmt.params.target = Services.io.newFileURI(file).spec;
     stmt.params.startTime = Date.now() * 1000;
@@ -1417,7 +1433,7 @@ var PageActions = {
     
     file = tmpDir.clone();
     file.append(fileName);
- 
+
 #endif
 
     let data = {
