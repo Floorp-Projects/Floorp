@@ -212,13 +212,16 @@ ImageLayerD3D10::RenderLayer()
   }
 
   if (GetContainer()->Manager() != Manager() ||
+      GetContainer()->GetBackendType() != LayerManager::LAYERS_D3D10 ||
       image->GetFormat() == Image::CAIRO_SURFACE)
   {
     gfxIntSize size;
     bool hasAlpha;
     nsRefPtr<ID3D10ShaderResourceView> srView;
 
-    if (GetContainer()->Manager() != Manager()) {
+    if (GetContainer()->Manager() != Manager() ||
+        GetContainer()->GetBackendType() != LayerManager::LAYERS_D3D10)
+    {
       nsRefPtr<gfxASurface> surf = GetContainer()->GetCurrentAsSurface(&size);
       
       nsRefPtr<ID3D10Texture2D> texture = SurfaceToTexture(device(), surf, size);
