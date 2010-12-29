@@ -642,7 +642,10 @@ var BrowserUI = {
 
     let engine = Services.search.getEngineByName(aName);
     let submission = engine.getSubmission(searchValue, null);
+    Browser.selectedBrowser.userTypedValue = submission.uri.spec;
     Browser.loadURI(submission.uri.spec, { postData: submission.postData });
+
+    this._titleChanged(Browser.selectedBrowser);
   },
 
   updateUIFocus: function _updateUIFocus() {
