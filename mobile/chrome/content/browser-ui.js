@@ -508,6 +508,12 @@ var BrowserUI = {
       PageActions.init();
       FullScreenVideo.init();
       NewTabPopup.init();
+
+#ifdef MOZ_UPDATER
+      // Check for updates in progress
+      let updatePrompt = Cc["@mozilla.org/updates/update-prompt;1"].createInstance(Ci.nsIUpdatePrompt);
+      updatePrompt.checkForUpdates();
+#endif
     }, false);
   },
 
