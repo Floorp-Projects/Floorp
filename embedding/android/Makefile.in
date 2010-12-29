@@ -104,6 +104,8 @@ RES_LAYOUT = \
 
 RES_VALUES = res/values/colors.xml
 
+AB_rCD = $(shell echo $(AB_CD) | sed -e s/-/-r/)
+
 JAVA_CLASSPATH = $(ANDROID_SDK)/android.jar
 
 DEFAULT_BRANDPATH = $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales/en-US/brand.dtd
@@ -124,7 +126,7 @@ MOZ_ANDROID_DRAWABLES += $(shell if test -e $(topsrcdir)/$(MOZ_BRANDING_DIRECTOR
 include $(topsrcdir)/config/rules.mk
 
 ifneq ($(AB_CD),en-US)
-LOCALIZED_STRINGS_XML = res/values-$(AB_CD)/strings.xml
+LOCALIZED_STRINGS_XML = res/values-$(AB_rCD)/strings.xml
 endif
 
 # Override the Java settings with some specific android settings
@@ -177,8 +179,8 @@ res/values/strings.xml: $(DEFAULT_BRANDPATH) $(DEFAULT_STRINGSPATH)
 	  $(srcdir)/strings.xml.in \
 	  > $@
 
-res/values-$(AB_CD)/strings.xml: $(LOCALIZED_BRANDPATH) $(LOCALIZED_STRINGSPATH)
-	mkdir -p res/values-$(AB_CD)
+res/values-$(AB_rCD)/strings.xml: $(LOCALIZED_BRANDPATH) $(LOCALIZED_STRINGSPATH)
+	mkdir -p res/values-$(AB_rCD)
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) \
 	  -DBRANDPATH="$(call core_abspath,$(LOCALIZED_BRANDPATH))" \
 	  -DSTRINGSPATH="$(call core_abspath,$(LOCALIZED_STRINGSPATH))" \
