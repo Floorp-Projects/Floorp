@@ -504,8 +504,14 @@
             if (!tabBrowser || tabBrowser.mCurrentBrowser == this)
               this.fastFind.setDocShell(this.docShell);
 
-            if (this._scrollable)
-              this._autoScrollPopup.hidePopup();
+            
+            if (this._scrollable) {
+              var doc =
+                this._scrollable.ownerDocument || this._scrollable.document;
+              if (doc == aEvent.target) {
+                this._autoScrollPopup.hidePopup();
+              }
+            }
          ]]>
         </body>
       </method>
