@@ -998,14 +998,7 @@ var Browser = {
   _getZoomRectForRect: function _getZoomRectForRect(rect, y) {
     let oldZoomLevel = getBrowser().scale;
     let zoomLevel = this._getZoomLevelForRect(rect);
-    let zoomRatio = oldZoomLevel / zoomLevel;
-
-    // Don't zoom in a marginal amount.
-    let zoomTolerance = .95;
-    if (zoomRatio >= zoomTolerance)
-      return null;
-    else
-      return this._getZoomRectForPoint(rect.center().x, y, zoomLevel);
+    return this._getZoomRectForPoint(rect.center().x, y, zoomLevel);
   },
 
   /**
@@ -1137,10 +1130,10 @@ var Browser = {
         break;
 
       case "Browser:ZoomToPoint:Return":
-        // JSON-ified rect needs to be recreated so the methods exist
-        let rect = Rect.fromRect(json.rect);
-        if (!this.zoomToPoint(json.x, json.y, rect)) {
-          browser.messageManager.sendAsyncMessage("Browser:ResetZoom", {});
+        if (json.zoomTo) {
+          let rect = Rect.fromRect(json.zoomTo);
+          this.zoomToPoint(json.x, json.y, rect);
+        } else {
           this.zoomFromPoint(json.x, json.y);
         }
         break;

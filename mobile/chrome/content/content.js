@@ -291,6 +291,8 @@ ProgressController.prototype = {
 
 /** Can't think of a good description of this class.  It probably does too much? */
 function Content() {
+  this._isZoomedToElement = false;
+
   addMessageListener("Browser:Blur", this);
   addMessageListener("Browser:KeyEvent", this);
   addMessageListener("Browser:MouseDown", this);
@@ -298,7 +300,6 @@ function Content() {
   addMessageListener("Browser:MouseUp", this);
   addMessageListener("Browser:SaveAs", this);
   addMessageListener("Browser:ZoomToPoint", this);
-  addMessageListener("Browser:ResetZoom", this);
   addMessageListener("Browser:MozApplicationCache:Fetch", this);
 
   if (Util.isParentProcess())
@@ -371,8 +372,10 @@ Content.prototype = {
       }
 
       case "pagehide":
-        if (aEvent.target == content.document)
+        if (aEvent.target == content.document) {
+          this._isZoomedToElement = false;
           this._setTextZoom(1);
+        }
         break;
     }
   },
@@ -502,22 +505,26 @@ Content.prototype = {
 
       case "Browser:ZoomToPoint": {
         let rect = null;
-        let element = elementFromPoint(x, y);
-        let win = element.ownerDocument.defaultView;
-        while (element && win.getComputedStyle(element,null).display == "inline")
-          element = element.parentNode;
-        if (element) {
-          rect = getBoundingContentRect(element);
-          if (Services.prefs.getBoolPref("browser.ui.zoom.reflow"))
-            this._setTextZoom(Math.max(1, rect.width / json.width));
+        if (this._isZoomedToElement) {
+          this._isZoomedToElement = false;
+          this._setTextZoom(1);
+        } else {
+          this._isZoomedToElement = true;
+          let element = elementFromPoint(x, y);
+          let win = element.ownerDocument.defaultView;
+          while (element && win.getComputedStyle(element,null).display == "inline")
+            element = element.parentNode;
+          if (element) {
+            rect = getBoundingContentRect(element);
+            if (Services.prefs.getBoolPref("browser.ui.zoom.reflow")) {
+              this._setTextZoom(Math.max(1, rect.width / json.width));
+              rect = getBoundingContentRect(element);
+            }
+          }
         }
-        sendAsyncMessage("Browser:ZoomToPoint:Return", { x: x, y: y, rect: rect });
+        sendAsyncMessage("Browser:ZoomToPoint:Return", { x: x, y: y, zoomTo: rect });
         break;
       }
-
-      case "Browser:ResetZoom":
-        this._setTextZoom(1);
-        break;
 
       case "Browser:MozApplicationCache:Fetch": {
         let currentURI = Services.io.newURI(json.location, json.charset, null);
