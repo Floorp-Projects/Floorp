@@ -654,10 +654,12 @@ var BrowserUI = {
   },
 
   updateStar: function() {
-    if (PlacesUtils.getMostRecentBookmarkForURI(Browser.selectedBrowser.currentURI) != -1)
-      this.starButton.setAttribute("starred", "true");
-    else
-      this.starButton.removeAttribute("starred");
+    PlacesUtils.asyncGetBookmarkIds(getBrowser().currentURI, function (aItemIds) {
+      if (aItemIds.length)
+        this.starButton.setAttribute("starred", "true");
+      else
+        this.starButton.removeAttribute("starred");
+    }, this);
   },
 
   newTab: function newTab(aURI, aOwner) {
