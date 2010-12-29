@@ -535,7 +535,10 @@ Content.prototype = {
             rect = getBoundingContentRect(element);
             if (Services.prefs.getBoolPref("browser.ui.zoom.reflow")) {
               this._setTextZoom(Math.max(1, rect.width / json.width));
+
+              let oldRect = rect;
               rect = getBoundingContentRect(element);
+              y += rect.top - oldRect.top;
             }
           }
         }
