@@ -193,11 +193,15 @@ nsVideoFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
     container->SetLayerManager(aManager);
   }
 
-  // If we have a container with the right layer manager already, we don't
-  // need to do anything here. Otherwise we need to set up a temporary
+  // If we have a container of the correct type already, we don't need
+  // to do anything here. Otherwise we need to set up a temporary
   // ImageContainer, capture the video data and store it in the temp
-  // container.
-  if (!container || container->Manager() != aManager) {
+  // container. For now we also check if the manager is equal since not all
+  // image containers are manager independent yet.
+  if (!container || 
+      (container->Manager() && container->Manager() != aManager) ||
+      container->GetBackendType() != aManager->GetBackendType())
+  {
     nsRefPtr<ImageContainer> tmpContainer = aManager->CreateImageContainer();
     if (!tmpContainer)
       return nsnull;
