@@ -1802,15 +1802,22 @@ BindDestructuringArg(JSContext *cx, BindData *data, JSAtom *atom,
         return JS_FALSE;
     }
 
+    JSParseNode *pn = data->pn;
+
     /*
      * Distinguish destructured-to binding nodes as vars, not args, by setting
      * pn_op to JSOP_SETLOCAL. Parser::functionDef checks for this pn_op value
      * when processing the destructuring-assignment AST prelude induced by such
      * destructuring args in Parser::functionArguments.
+     *
+     * We must set the PND_BOUND flag too to prevent pn_op from being reset to
+     * JSOP_SETNAME by BindDestructuringVar. The only field not initialized is
+     * pn_cookie; it gets set in functionDef in the first "if (prelude)" block.
      */
-    data->pn->pn_op = JSOP_SETLOCAL;
+    pn->pn_op = JSOP_SETLOCAL;
+    pn->pn_dflags |= PND_BOUND;
 
-    return Define(data->pn, atom, tc);
+    return Define(pn, atom, tc);
 }
 #endif /* JS_HAS_DESTRUCTURING */
 
@@ -3012,7 +3019,6 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
             if (!BindLocalVariable(context, fun, apn->pn_atom, JSLOCAL_VAR, true))
                 return NULL;
             apn->pn_cookie.set(funtc.staticLevel, index);
-            apn->pn_dflags |= PND_BOUND;
         }
     }
 #endif
