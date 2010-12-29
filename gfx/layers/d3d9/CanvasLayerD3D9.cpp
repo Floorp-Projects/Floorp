@@ -250,6 +250,10 @@ CanvasLayerD3D9::RenderLayer()
 
   mD3DManager->SetShaderMode(DeviceManagerD3D9::RGBALAYER);
 
+  if (mFilter == gfxPattern::FILTER_NEAREST) {
+    device()->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_POINT);
+    device()->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_POINT);
+  }
   if (!mDataIsPremultiplied) {
     device()->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
     device()->SetRenderState(D3DRS_SEPARATEALPHABLENDENABLE, TRUE);
@@ -259,6 +263,10 @@ CanvasLayerD3D9::RenderLayer()
   if (!mDataIsPremultiplied) {
     device()->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
     device()->SetRenderState(D3DRS_SEPARATEALPHABLENDENABLE, FALSE);
+  }
+  if (mFilter == gfxPattern::FILTER_NEAREST) {
+    device()->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
+    device()->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
   }
 }
 
