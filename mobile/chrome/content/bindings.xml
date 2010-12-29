@@ -1687,7 +1687,11 @@
           if (hasData && (!aTextbox.readOnly || aIgnoreReadOnly))
             json.types.push("paste");
 
-          ContextHelper.showPopup({ target: aTextbox, json: json });
+          if (ContextHelper.showPopup({ target: aTextbox, json: json })) {
+            let event = document.createEvent("Events");
+            event.initEvent("CancelTouchSequence", true, false);
+            document.dispatchEvent(event);
+          }
         ]]></body>
       </method>
     </implementation>
