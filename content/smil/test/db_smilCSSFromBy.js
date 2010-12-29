@@ -85,9 +85,6 @@ var _fromByTestLists =
   paint: [
     // The "none" keyword & URI values aren't addiditve, so the animations in
     // these testcases are expected to have no effect.
-    // XXXdholbert Of course, we don't support animation between URI values yet
-    // (bug 520487), so the testcases that use URIs currently have no effect
-    // for that reason, too.
     new AnimTestcaseFromBy("none", "none",  { noEffect: 1 }),
     new AnimTestcaseFromBy("url(#gradA)", "url(#gradB)", { noEffect: 1 }),
     new AnimTestcaseFromBy("url(#gradA)", "url(#gradB) red", { noEffect: 1 }),
