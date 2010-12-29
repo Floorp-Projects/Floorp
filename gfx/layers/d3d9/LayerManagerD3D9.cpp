@@ -206,7 +206,7 @@ LayerManagerD3D9::CreateCanvasLayer()
 already_AddRefed<ImageContainer>
 LayerManagerD3D9::CreateImageContainer()
 {
-  nsRefPtr<ImageContainer> container = new ImageContainerD3D9(this);
+  nsRefPtr<ImageContainer> container = new ImageContainerD3D9(device());
   return container.forget();
 }
 
