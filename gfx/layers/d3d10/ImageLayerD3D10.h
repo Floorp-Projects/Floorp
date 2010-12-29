@@ -65,6 +65,8 @@ public:
 
   virtual PRBool SetLayerManager(LayerManager *aManager);
 
+  virtual LayerManager::LayersBackend GetBackendType() { return LayerManager::LAYERS_D3D10; }
+
 private:
   typedef mozilla::Mutex Mutex;
 
