@@ -819,56 +819,73 @@ js_str_toString(JSContext *cx, uintN argc, Value *vp)
 /*
  * Java-like string native methods.
  */
-
-static JSString *
-SubstringTail(JSContext *cx, JSString *str, jsdouble length, jsdouble begin, jsdouble end)
+ 
+JS_ALWAYS_INLINE bool
+ValueToIntegerRange(JSContext *cx, const Value &v, int32 *out)
 {
-    if (begin < 0)
-        begin = 0;
-    else if (begin > length)
-        begin = length;
+    if (v.isInt32()) {
+        *out = v.toInt32();
+    } else {
+        double d;
 
-    if (end < 0)
-        end = 0;
-    else if (end > length)
-        end = length;
-    if (end < begin) {
-        /* ECMA emulates old JDK1.0 java.lang.String.substring. */
-        jsdouble tmp = begin;
-        begin = end;
-        end = tmp;
+        if (!ValueToNumber(cx, v, &d))
+            return false;
+
+        d = js_DoubleToInteger(d);
+        if (d > INT32_MAX)
+            *out = INT32_MAX;
+        else if (d < INT32_MIN)
+            *out = INT32_MIN;
+        else 
+            *out = int32(d);
     }
 
-    return js_NewDependentString(cx, str, (size_t)begin, (size_t)(end - begin));
+    return true;
 }
 
 static JSBool
 str_substring(JSContext *cx, uintN argc, Value *vp)
 {
     JSString *str;
-    jsdouble d;
-    jsdouble length, begin, end;
+    int32 length, begin, end;
 
     NORMALIZE_THIS(cx, vp, str);
-    if (argc != 0) {
-        if (!ValueToNumber(cx, vp[2], &d))
-            return JS_FALSE;
-        length = str->length();
-        begin = js_DoubleToInteger(d);
-        if (argc == 1 || vp[3].isUndefined()) {
-            end = length;
-        } else {
-            if (!ValueToNumber(cx, vp[3], &d))
-                return JS_FALSE;
-            end = js_DoubleToInteger(d);
+
+    if (argc > 0) {
+        end = length = int32(str->length());
+
+        if (!ValueToIntegerRange(cx, vp[2], &begin))
+            return false;
+
+        if (begin < 0)
+            begin = 0;
+        else if (begin > length)
+            begin = length;
+
+        if (argc > 1 && !vp[3].isUndefined()) {
+            if (!ValueToIntegerRange(cx, vp[3], &end))
+                return false;
+
+            if (end > length) {
+                end = length;
+            } else {
+                if (end < 0)
+                    end = 0;
+                if (end < begin) {
+                    int32_t tmp = begin;
+                    begin = end;
+                    end = tmp;
+                }
+            }
         }
 
-        str = SubstringTail(cx, str, length, begin, end);
+        str = js_NewDependentString(cx, str, size_t(begin), size_t(end - begin));
         if (!str)
-            return JS_FALSE;
+            return false;
     }
+
     vp->setString(str);
-    return JS_TRUE;
+    return true;
 }
 
 JSString* JS_FASTCALL
@@ -2746,44 +2763,48 @@ static JSBool
 str_substr(JSContext *cx, uintN argc, Value *vp)
 {
     JSString *str;
-    jsdouble d;
-    jsdouble length, begin, end;
+    int32 length, len, begin;
 
     NORMALIZE_THIS(cx, vp, str);
-    if (argc != 0) {
-        if (!ValueToNumber(cx, vp[2], &d))
-            return JS_FALSE;
-        length = str->length();
-        begin = js_DoubleToInteger(d);
+
+    if (argc > 0) {
+        length = int32(str->length());
+        if (!ValueToIntegerRange(cx, vp[2], &begin))
+            return false;
+
+        if (begin >= length) {
+            str = cx->runtime->emptyString;
+            goto out;
+        }
         if (begin < 0) {
-            begin += length;
+            begin += length; /* length + INT_MIN will always be less then 0 */
             if (begin < 0)
                 begin = 0;
-        } else if (begin > length) {
-            begin = length;
         }
 
         if (argc == 1 || vp[3].isUndefined()) {
-            end = length;
+            len = length - begin;
         } else {
-            if (!ValueToNumber(cx, vp[3], &d))
-                return JS_FALSE;
-            end = js_DoubleToInteger(d);
-            if (end < 0)
-                end = 0;
-            end += begin;
-            if (end > length)
-                end = length;
+            if (!ValueToIntegerRange(cx, vp[3], &len))  
+                return false;
+
+            if (len <= 0) {
+                str = cx->runtime->emptyString;
+                goto out;
+            }
+
+            if (uint32(length) < uint32(begin + len))
+                len = length - begin;
         }
 
-        str = js_NewDependentString(cx, str,
-                                    (size_t)begin,
-                                    (size_t)(end - begin));
+        str = js_NewDependentString(cx, str, size_t(begin), size_t(len));
         if (!str)
-            return JS_FALSE;
+            return false;
     }
+
+out:
     vp->setString(str);
-    return JS_TRUE;
+    return true;
 }
 #endif /* JS_HAS_PERL_SUBSTR */
 
