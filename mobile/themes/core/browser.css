@@ -925,6 +925,7 @@ documenttab[selected="true"] {
   opacity: 0.5;
 }
 
+documenttab:hover:active > stack > .documenttab-thumbnail,
 documenttab[selected="true"] > stack > .documenttab-thumbnail {
   opacity: 1.0;
 }
