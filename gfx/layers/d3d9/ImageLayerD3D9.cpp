@@ -246,7 +246,9 @@ ImageLayerD3D9::RenderLayer()
   
   SetShaderTransformAndOpacity();
 
-  if (Manager() != GetContainer()->Manager()) {
+  if (Manager() != GetContainer()->Manager() ||
+      GetContainer()->GetBackendType() != LayerManager::LAYERS_D3D9)
+  {
     gfxIntSize size;
     nsRefPtr<gfxASurface> surface =
       GetContainer()->GetCurrentAsSurface(&size);
