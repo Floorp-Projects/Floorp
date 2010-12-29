@@ -176,6 +176,7 @@ MouseModule.prototype = {
 
     this._targetScrollbox = null;
     this._targetScrollInterface = null;
+    this._inputField = null;
 
     this._cleanClickBuffer();
   },
