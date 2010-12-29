@@ -195,6 +195,13 @@ public:
    */
   virtual void SetScaleHint(const gfxIntSize& /* aScaleHint */) { }
 
+  /**
+   * Get the layer manager type this image container was created with,
+   * presumably its users might want to do something special if types do not
+   * match.
+   */
+  virtual LayerManager::LayersBackend GetBackendType() = 0;
+
 protected:
   LayerManager* mManager;
 

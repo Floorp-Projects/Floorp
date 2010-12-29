@@ -305,6 +305,7 @@ public:
   virtual PRBool SetLayerManager(LayerManager *aManager);
   virtual void SetScaleHint(const gfxIntSize& aScaleHint);
   void SetOffscreenFormat(gfxImageFormat aFormat) { mOffscreenFormat = aFormat; }
+  virtual LayerManager::LayersBackend GetBackendType() { return LayerManager::LAYERS_BASIC; }
 
 protected:
   Monitor mMonitor;
