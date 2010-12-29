@@ -138,6 +138,12 @@ already_AddRefed<Image>
 ImageContainerD3D9::CreateImage(const Image::Format *aFormats,
                                PRUint32 aNumFormats)
 {
+  if (mManager->GetBackendType() != GetBackendType()) {
+    // Whoops, we've got a valid layer manager but it's not the same type as us!
+    // Better to fail than crash.
+    return nsnull;
+  }
+
   if (!aNumFormats) {
     return nsnull;
   }
