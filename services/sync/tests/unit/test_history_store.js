@@ -131,6 +131,22 @@ function run_test() {
 
   }, function (next) {
 
+    _("Make sure we handle a null title gracefully (it can happen in some cases, e.g. for resource:// URLs)");
+    let resguid = Utils.makeGUID();
+    let resuri = Utils.makeURI("unknown://title");
+    store.create({id: resguid,
+                  histUri: resuri.spec,
+                  title: null,
+                  visits: [{date: TIMESTAMP3,
+                            type: Ci.nsINavHistoryService.TRANSITION_TYPED}]});
+    do_check_eq([id for (id in store.getAllIDs())].length, 3);
+    let queryres = queryHistoryVisits(resuri);
+    do_check_eq(queryres.length, 1);
+    do_check_eq(queryres[0].time, TIMESTAMP3);
+    next();
+
+  }, function (next) {
+
     _("Make sure we handle invalid URLs in places databases gracefully.");
     let table = store._haveTempTables ? "moz_places_temp" : "moz_places";
     let query = "INSERT INTO " + table + " "
@@ -138,7 +154,7 @@ function run_test() {
       + "VALUES ('invalid-uri', 'Invalid URI', '.', 1, " + TIMESTAMP3 + ")";
     let stmt = Utils.createStatement(Svc.History.DBConnection, query);
     let result = Utils.queryAsync(stmt);    
-    do_check_eq([id for (id in store.getAllIDs())].length, 3);
+    do_check_eq([id for (id in store.getAllIDs())].length, 4);
 
     _("Remove a record from the store.");
     store.remove({id: fxguid});
