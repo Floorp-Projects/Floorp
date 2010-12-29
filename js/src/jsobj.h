@@ -795,25 +795,50 @@ struct JSObject : js::gc::Cell {
 
   private:
     /*
-     * Reserved slot structure for Arguments objects:
+     * We represent arguments objects using js_ArgumentsClass and
+     * js::StrictArgumentsClass. The two are structured similarly, and methods
+     * valid on arguments objects of one class are also generally valid on
+     * arguments objects of the other.
      *
-     * private              - the function's stack frame until the function
-     *                        returns; also, JS_ARGUMENTS_OBJECT_ON_TRACE if
-     *                        arguments was created on trace
+     * Arguments objects of either class store arguments length in a slot:
+     *
      * JSSLOT_ARGS_LENGTH   - the number of actual arguments and a flag
      *                        indicating whether arguments.length was
      *                        overwritten. This slot is not used to represent
      *                        arguments.length after that property has been
      *                        assigned, even if the new value is integral: it's
      *                        always the original length.
-     * JSSLOT_ARGS_DATA     - pointer to an ArgumentsData structure containing
-     *                        the arguments.callee value or JSVAL_HOLE if that
-     *                        was overwritten, and the values of all arguments
-     *                        once the function has returned (or as soon as a
-     *                        strict arguments object has been created).
      *
-     * Argument index i is stored in ArgumentsData.slots[i], accessible via
-     * {get,set}ArgsElement().
+     * Both arguments classes use a slot for storing arguments data:
+     *
+     * JSSLOT_ARGS_DATA     - pointer to an ArgumentsData structure
+     *
+     * ArgumentsData for normal arguments stores the value of arguments.callee,
+     * as long as that property has not been overwritten. If arguments.callee
+     * is overwritten, the corresponding value in ArgumentsData is set to
+     * MagicValue(JS_ARGS_HOLE). Strict arguments do not store this value
+     * because arguments.callee is a poison pill for strict mode arguments.
+     *
+     * The ArgumentsData structure also stores argument values. For normal
+     * arguments this occurs after the corresponding function has returned, and
+     * for strict arguments this occurs when the arguments object is created,
+     * or sometimes shortly after (but not observably so). arguments[i] is
+     * stored in ArgumentsData.slots[i], accessible via getArgsElement() and
+     * setArgsElement(). Deletion of arguments[i] overwrites that slot with
+     * MagicValue(JS_ARGS_HOLE); subsequent redefinition of arguments[i] will
+     * use a normal property to store the value, ignoring the slot.
+     *
+     * Non-strict arguments have a private:
+     *
+     * private              - the function's stack frame until the function
+     *                        returns, when it is replaced with null; also,
+     *                        JS_ARGUMENTS_OBJECT_ON_TRACE while on trace, if
+     *                        arguments was created on trace
+     *
+     * Technically strict arguments have a private, but it's always null.
+     * Conceptually it would be better to remove this oddity, but preserving it
+     * allows us to work with arguments objects of either kind more abstractly,
+     * so we keep it for now.
      */
     static const uint32 JSSLOT_ARGS_DATA = 1;
 
