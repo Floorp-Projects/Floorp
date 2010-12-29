@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <marker id="m1">
+    <rect/>
+    <marker>
+      <line id="z" marker-end="url(#m1)"/>
+    </marker>
+  </marker>
+  <script>
+    function boom()
+    {
+      document.getElementById("z").getBoundingClientRect();
+    }
+    window.addEventListener("load", boom, false);
+  </script>
+
+</svg>
