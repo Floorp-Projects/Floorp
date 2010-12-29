@@ -919,10 +919,6 @@ struct JSFunctionMeter {
 #endif
 
 
-#define NATIVE_ITER_CACHE_LOG2  8
-#define NATIVE_ITER_CACHE_MASK  JS_BITMASK(NATIVE_ITER_CACHE_LOG2)
-#define NATIVE_ITER_CACHE_SIZE  JS_BIT(NATIVE_ITER_CACHE_LOG2)
-
 struct JSPendingProxyOperation {
     JSPendingProxyOperation *next;
     JSObject *object;
@@ -980,12 +976,6 @@ struct JSThreadData {
         jsint    base;
         JSString *s;        // if s==NULL, d and base are not valid
     } dtoaCache;
-
-    /* Cached native iterators. */
-    JSObject            *cachedNativeIterators[NATIVE_ITER_CACHE_SIZE];
-
-    /* Native iterator most recently started. */
-    JSObject            *lastNativeIterator;
 
     /* Base address of the native stack for the current thread. */
     jsuword             *nativeStackBase;
