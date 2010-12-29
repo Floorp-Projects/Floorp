@@ -120,10 +120,21 @@ gTests.push({
 
     // Send the string and press return
     EventUtils.synthesizeString(testURL_02, window);
-    EventUtils.synthesizeKey("VK_RETURN", {}, window);
 
-    // Wait for the tab to load, then do the test
-    waitFor(gCurrentTest.onPageFinish, pageLoaded(testURL_02));
+    // It looks like there is a race condition somewhere that result having
+    // testURL_01 concatenate with testURL_02 as a urlbar value, so to
+    // workaround that we're waiting for the readonly state to be fully updated
+    function URLIsReadWrite() {
+      return BrowserUI._edit.readOnly == false;
+    }
+
+    waitFor(function() {
+      is(BrowserUI._edit.value, testURL_02, "URL value should be equal to the string sent via synthesizeString");
+      EventUtils.synthesizeKey("VK_RETURN", {}, window);
+
+      // Wait for the tab to load, then do the test
+      waitFor(gCurrentTest.onPageFinish, pageLoaded(testURL_02));
+    }, URLIsReadWrite);
   },
 
   onPageFinish: function() {
