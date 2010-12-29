@@ -801,7 +801,7 @@ FrameState::prepareForJump(jsbytecode *target, Assembler &masm, bool synced)
 
         const FrameEntry *fe = getOrTrack(alloc->slot(reg));
         if (synced || !fe->backing()->dataInRegister(reg)) {
-            JS_ASSERT(fe->data.synced());
+            JS_ASSERT_IF(!synced, fe->data.synced());
             if (reg.isReg())
                 masm.loadPayload(addressOf(fe), reg.reg());
             else

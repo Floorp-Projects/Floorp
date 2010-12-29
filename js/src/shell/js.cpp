@@ -4390,7 +4390,7 @@ static JSFunctionSpec shell_functions[] = {
 #endif
 #ifdef JS_THREADSAFE
     JS_FN_TYPE("sleep",          Sleep_fn,       1,0, JS_TypeHandlerVoid),
-    JS_FN_TYPE("scatter",        Scatter,        1,0, JS_TypeHandlerMissing),
+    JS_FN_TYPE("scatter",        Scatter,        1,0, JS_TypeHandlerDynamic),
 #endif
     JS_FN_TYPE("snarf",          Snarf,          0,0, JS_TypeHandlerString),
     JS_FN_TYPE("read",           Snarf,          0,0, JS_TypeHandlerString),
