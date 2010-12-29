@@ -478,6 +478,8 @@ pref("app.update.url.manual", "http://www.mozilla.com/%LOCALE%/m/");
 pref("app.update.url.details", "http://www.mozilla.com/%LOCALE%/mobile/releases/");
 #else
 pref("app.update.interval", 28800);
+pref("app.update.url.manual", "http://www.mozilla.com/%LOCALE%/mobile/");
+pref("app.update.url.details", "http://www.mozilla.com/%LOCALE%/mobile/");
 #endif
 #endif
 
