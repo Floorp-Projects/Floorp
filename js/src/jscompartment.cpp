@@ -448,6 +448,8 @@ JSCompartment::purge(JSContext *cx)
     /* Destroy eval'ed scripts. */
     js_DestroyScriptsToGC(cx, this);
 
+    nativeIterCache.purge();
+
 #ifdef JS_TRACER
     /*
      * If we are about to regenerate shapes, we have to flush the JIT cache,

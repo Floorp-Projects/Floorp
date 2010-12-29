@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -222,6 +222,43 @@ struct JSEvalCacheMeter {
 # undef identity
 #endif
 
+namespace js {
+
+class NativeIterCache {
+    static const size_t SIZE = size_t(1) << 8;
+    
+    /* Cached native iterators. */
+    JSObject            *data[SIZE];
+
+    static size_t getIndex(uint32 key) {
+        return size_t(key) % SIZE;
+    }
+
+  public:
+    /* Native iterator most recently started. */
+    JSObject            *last;
+
+    NativeIterCache()
+      : last(NULL) {
+        PodArrayZero(data);
+    }
+
+    void purge() {
+        PodArrayZero(data);
+        last = NULL;
+    }
+
+    JSObject *get(uint32 key) const {
+        return data[getIndex(key)];
+    }
+
+    void set(uint32 key, JSObject *iterobj) {
+        data[getIndex(key)] = iterobj;
+    }
+};
+
+} /* namespace js */
+
 struct JS_FRIEND_API(JSCompartment) {
     JSRuntime                    *rt;
     JSPrincipals                 *principals;
@@ -236,14 +273,14 @@ struct JS_FRIEND_API(JSCompartment) {
 
 #ifdef JS_TRACER
     /* Trace-tree JIT recorder/interpreter state. */
-    js::TraceMonitor traceMonitor;
+    js::TraceMonitor             traceMonitor;
 #endif
 
-    /* Lock-free hashed lists of scripts created by eval to garbage-collect. */
+    /* Hashed lists of scripts created by eval to garbage-collect. */
     JSScript                     *scriptsToGC[JS_EVAL_CACHE_SIZE];
 
 #ifdef DEBUG
-    JSEvalCacheMeter    evalCacheMeter;
+    JSEvalCacheMeter             evalCacheMeter;
 #endif
 
     void                         *data;
@@ -267,6 +304,8 @@ struct JS_FRIEND_API(JSCompartment) {
      */
     JSObject                     *anynameObject;
     JSObject                     *functionNamespaceObject;
+
+    js::NativeIterCache          nativeIterCache;
 
     JSCompartment(JSRuntime *cx);
     ~JSCompartment();

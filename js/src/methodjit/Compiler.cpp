@@ -4089,18 +4089,8 @@ mjit::Compiler::iter(uintN flags)
     RegisterID T2 = frame.allocReg();
     frame.unpinReg(reg);
 
-    /*
-     * Fetch the most recent iterator. TODO: bake this pointer in when
-     * iterator caches become per-compartment.
-     */
-    masm.loadPtr(FrameAddress(offsetof(VMFrame, cx)), T1);
-#ifdef JS_THREADSAFE
-    masm.loadPtr(Address(T1, offsetof(JSContext, thread)), T1);
-    masm.loadPtr(Address(T1, offsetof(JSThread, data.lastNativeIterator)), ioreg);
-#else
-    masm.loadPtr(Address(T1, offsetof(JSContext, runtime)), T1);
-    masm.loadPtr(Address(T1, offsetof(JSRuntime, threadData.lastNativeIterator)), ioreg);
-#endif
+    /* Fetch the most recent iterator. */
+    masm.loadPtr(&script->compartment->nativeIterCache.last, ioreg);
 
     /* Test for NULL. */
     Jump nullIterator = masm.branchTest32(Assembler::Zero, ioreg, ioreg);
