@@ -183,6 +183,22 @@ function getBoundingContentRect(aElement) {
   return new Rect(r.left + offset.x, r.top + offset.y, r.width, r.height);
 }
 
+function getOverflowContentBoundingRect(aElement) {
+  let r = getBoundingContentRect(aElement);
+
+  // If the overflow is hidden don't bother calculating it
+  let computedStyle = aElement.ownerDocument.defaultView.getComputedStyle(aElement);
+  let blockDisplays = ["block", "inline-block", "list-item"];
+  if (blockDisplays.indexOf(computedStyle.getPropertyValue("display")) != -1 &&
+      computedStyle.getPropertyValue("overflow") == "hidden")
+    return r;
+
+  for (let i = 0; i < aElement.childElementCount; i++)
+    r = r.union(getBoundingContentRect(aElement.children[i]));
+
+  return r;
+}
+
 function getContentClientRects(aElement) {
   let offset = Util.getScrollOffset(content);
   let nativeRects = aElement.getClientRects();
@@ -206,7 +222,6 @@ function getContentClientRects(aElement) {
   }
   return result;
 };
-
 
 /**
  * Responsible for sending messages about security, location, and page load state.
@@ -429,16 +444,18 @@ Content.prototype = {
         // Sending a mousemove force the dispatching of mouseover/mouseout
         this._sendMouseEvent("mousemove", element, x, y);
 
-        // XXX Could we replace all this javascript code by something CSS based
-        // using a mix on some -moz-focus-ring/-moz-focus-inner rules
-        let highlightRects = null;
+        // Calculate the rect of the active area
+        let targetElement = null;
         if (element.mozMatchesSelector("*:-moz-any-link, *[role=button],button,input,option,select,textarea,label"))
-          highlightRects = getContentClientRects(element);
+          targetElement = element;
         else if (element.mozMatchesSelector("*:-moz-any-link *"))
-          highlightRects = getContentClientRects(element.parentNode);
+          targetElement = element.parentNode;
 
-        if (highlightRects)
+        if (targetElement) {
+          let rect = getOverflowContentBoundingRect(targetElement);
+          let highlightRects = [{ left: rect.x, top: rect.y, width: rect.width, height: rect.height }];
           sendAsyncMessage("Browser:Highlight", { rects: highlightRects, messageId: json.messageId });
+        }
         break;
       }
 
