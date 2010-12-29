@@ -313,12 +313,15 @@ ImageLayerD3D9::RenderLayer()
       }
     }
 
-    // Linear scaling is default here, adhering to mFilter is difficult since
-    // presumably even with point filtering we'll still want chroma upsampling
-    // to be linear. In the current approach we can't.
     device()->SetTexture(0, yuvImage->mYTexture);
+    device()->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
+    device()->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
     device()->SetTexture(1, yuvImage->mCbTexture);
+    device()->SetSamplerState(1, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
+    device()->SetSamplerState(1, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
     device()->SetTexture(2, yuvImage->mCrTexture);
+    device()->SetSamplerState(2, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
+    device()->SetSamplerState(2, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
 
     device()->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
 
@@ -350,16 +353,8 @@ ImageLayerD3D9::RenderLayer()
       mD3DManager->SetShaderMode(DeviceManagerD3D9::RGBLAYER);
     }
 
-    if (mFilter == gfxPattern::FILTER_NEAREST) {
-      device()->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_POINT);
-      device()->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_POINT);
-    }
     device()->SetTexture(0, cairoImage->GetOrCreateTexture());
     device()->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
-    if (mFilter == gfxPattern::FILTER_NEAREST) {
-      device()->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
-      device()->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
-    }
   }
 }
 
