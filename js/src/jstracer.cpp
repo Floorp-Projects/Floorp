@@ -16997,7 +16997,7 @@ LoopProfile::decide(JSContext *cx)
         /* don't trace */
     } else if (count(OP_EVAL)) {
         /* don't trace */
-    } else if (numInnerLoops > 3) {
+    } else if (numInnerLoops > 7) {
         /* don't trace */
     } else if (shortLoop) {
         /* don't trace */
