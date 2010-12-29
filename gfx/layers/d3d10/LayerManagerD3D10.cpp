@@ -289,7 +289,7 @@ LayerManagerD3D10::CreateCanvasLayer()
 already_AddRefed<ImageContainer>
 LayerManagerD3D10::CreateImageContainer()
 {
-  nsRefPtr<ImageContainer> layer = new ImageContainerD3D10(this);
+  nsRefPtr<ImageContainer> layer = new ImageContainerD3D10(device());
   return layer.forget();
 }
 

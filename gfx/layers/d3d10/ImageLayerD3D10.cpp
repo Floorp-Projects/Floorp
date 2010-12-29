@@ -91,9 +91,9 @@ SurfaceToTexture(ID3D10Device *aDevice,
   return texture.forget();
 }
 
-ImageContainerD3D10::ImageContainerD3D10(LayerManagerD3D10 *aManager)
-  : ImageContainer(aManager)
-  , mDevice(aManager->device())
+ImageContainerD3D10::ImageContainerD3D10(ID3D10Device1 *aDevice)
+  : ImageContainer(nsnull)
+  , mDevice(aDevice)
   , mActiveImageLock("mozilla.layers.ImageContainerD3D10.mActiveImageLock")
 {
 }
@@ -182,7 +182,6 @@ PRBool
 ImageContainerD3D10::SetLayerManager(LayerManager *aManager)
 {
   if (aManager->GetBackendType() == LayerManager::LAYERS_D3D10) {
-    mManager = aManager;
     return PR_TRUE;
   }
   return PR_FALSE;
@@ -207,20 +206,14 @@ ImageLayerD3D10::RenderLayer()
 
   ID3D10EffectTechnique *technique;
 
-  if (GetContainer()->Manager() != Manager()) {
-    GetContainer()->SetLayerManager(Manager());
-  }
-
-  if (GetContainer()->Manager() != Manager() ||
-      GetContainer()->GetBackendType() != LayerManager::LAYERS_D3D10 ||
+  if (GetContainer()->GetBackendType() != LayerManager::LAYERS_D3D10 ||
       image->GetFormat() == Image::CAIRO_SURFACE)
   {
     gfxIntSize size;
     bool hasAlpha;
     nsRefPtr<ID3D10ShaderResourceView> srView;
 
-    if (GetContainer()->Manager() != Manager() ||
-        GetContainer()->GetBackendType() != LayerManager::LAYERS_D3D10)
+    if (GetContainer()->GetBackendType() != LayerManager::LAYERS_D3D10)
     {
       nsRefPtr<gfxASurface> surf = GetContainer()->GetCurrentAsSurface(&size);
       
@@ -230,6 +223,12 @@ ImageLayerD3D10::RenderLayer()
       
       device()->CreateShaderResourceView(texture, NULL, getter_AddRefs(srView));
     } else {
+      ImageContainerD3D10 *container =
+        static_cast<ImageContainerD3D10*>(GetContainer());
+      if (container->device() != device()) {
+        container->SetDevice(device());
+      }
+
       // image->GetFormat() == Image::CAIRO_SURFACE
       CairoImageD3D10 *cairoImage =
         static_cast<CairoImageD3D10*>(image.get());
