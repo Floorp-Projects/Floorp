@@ -140,7 +140,7 @@ nsTypeAheadFind::Init(nsIDocShell* aDocShell)
   SetDocShell(aDocShell);
 
   // ----------- Listen to prefs ------------------
-  nsresult rv = prefInternal->AddObserver("accessibility.browsewithcaret", this, PR_FALSE);
+  nsresult rv = prefInternal->AddObserver("accessibility.browsewithcaret", this, PR_TRUE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // ----------- Get initial preferences ----------
