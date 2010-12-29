@@ -685,6 +685,9 @@ nsWindow::SetBackgroundColor(const nscolor &aColor)
 NS_IMETHODIMP
 nsWindow::SetCursor(nsCursor aCursor)
 {
+    if (mCursor == aCursor)
+        return NS_OK;
+
     mCursor = aCursor;
     if (mWidget)
         mWidget->SetCursor(mCursor);
