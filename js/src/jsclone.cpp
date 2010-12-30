@@ -350,9 +350,10 @@ JS_STATIC_ASSERT(JSString::MAX_LENGTH < UINT32_MAX);
 bool
 JSStructuredCloneWriter::writeString(uint32_t tag, JSString *str)
 {
-    const jschar *chars;
-    size_t length;
-    str->getCharsAndLength(chars, length);
+    size_t length = str->length();
+    const jschar *chars = str->getChars(context());
+    if (!chars)
+        return false;
     return out.writePair(tag, uint32_t(length)) && out.writeChars(chars, length);
 }
 
@@ -750,9 +751,10 @@ JSStructuredCloneReader::startRead(Value *vp)
         JSString *str = readString(nchars);
         if (!str)
             return false;
-        const jschar *chars;
-        size_t length;
-        str->getCharsAndLength(chars, length);
+        size_t length = str->length();
+        const jschar *chars = str->getChars(context());
+        if (!chars)
+            return false;
         JSObject *obj = RegExp::createObjectNoStatics(context(), chars, length, data);
         if (!obj)
             return false;

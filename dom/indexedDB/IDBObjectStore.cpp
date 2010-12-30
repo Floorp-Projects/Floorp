@@ -366,7 +366,7 @@ GetKeyFromObject(JSContext* aCx,
   JSBool ok = JS_GetUCProperty(aCx, aObj, keyPathChars, keyPathLen, &key);
   NS_ENSURE_TRUE(ok, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  nsresult rv = IDBObjectStore::GetKeyFromJSVal(key, aKey);
+  nsresult rv = IDBObjectStore::GetKeyFromJSVal(key, aCx, aKey);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -448,13 +448,18 @@ IDBObjectStore::GetKeyFromVariant(nsIVariant* aKeyVariant,
 // static
 nsresult
 IDBObjectStore::GetKeyFromJSVal(jsval aKeyVal,
+                                JSContext* aCx,
                                 Key& aKey)
 {
   if (JSVAL_IS_VOID(aKeyVal)) {
     aKey = Key::UNSETKEY;
   }
   else if (JSVAL_IS_STRING(aKeyVal)) {
-    aKey = nsDependentJSString(aKeyVal);
+    nsDependentJSString depStr;
+    if (!depStr.init(aCx, JSVAL_TO_STRING(aKeyVal))) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    aKey = depStr;
   }
   else if (JSVAL_IS_INT(aKeyVal)) {
     aKey = JSVAL_TO_INT(aKeyVal);
@@ -548,7 +553,7 @@ IDBObjectStore::GetKeyPathValueFromStructuredData(const PRUint8* aData,
   JSBool ok = JS_GetUCProperty(cx, obj, keyPathChars, keyPathLen, &keyVal);
   NS_ENSURE_TRUE(ok, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  rv = GetKeyFromJSVal(keyVal, aValue);
+  rv = GetKeyFromJSVal(keyVal, *aCx, aValue);
   if (NS_FAILED(rv)) {
     // If the object doesn't have a value that we can use for our index then we
     // leave it unset.
@@ -589,7 +594,7 @@ IDBObjectStore::GetIndexUpdateInfo(ObjectStoreInfo* aObjectStoreInfo,
       NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
       Key value;
-      nsresult rv = GetKeyFromJSVal(keyPathValue, value);
+      nsresult rv = GetKeyFromJSVal(keyPathValue, aCx, value);
       if (NS_FAILED(rv) || value.IsUnset()) {
         // Not a value we can do anything with, ignore it.
         continue;
@@ -819,7 +824,7 @@ IDBObjectStore::GetAddInfo(JSContext* aCx,
 
   if (mKeyPath.IsEmpty()) {
     // Out-of-line keys must be passed in.
-    rv = GetKeyFromJSVal(aKeyVal, aKey);
+    rv = GetKeyFromJSVal(aKeyVal, aCx, aKey);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   else {
@@ -1140,7 +1145,7 @@ IDBObjectStore::Delete(const jsval& aKey,
   }
 
   Key key;
-  nsresult rv = GetKeyFromJSVal(aKey, key);
+  nsresult rv = GetKeyFromJSVal(aKey, aCx, key);
   if (NS_FAILED(rv)) {
     return rv;
   }

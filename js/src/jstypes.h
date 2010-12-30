@@ -221,6 +221,14 @@
 # endif
 #endif
 
+#ifndef JS_WARN_UNUSED_RESULT
+# if defined __GNUC__
+#  define JS_WARN_UNUSED_RESULT __attribute__((warn_unused_result))
+# else
+#  define JS_WARN_UNUSED_RESULT
+# endif
+#endif
+
 #ifdef NS_STATIC_CHECKING
 /*
  * Attributes for static analysis. Functions declared with JS_REQUIRES_STACK

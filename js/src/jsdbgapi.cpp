@@ -145,7 +145,7 @@ js_SetDebugMode(JSContext *cx, JSBool debug)
     for (JSScript *script = (JSScript *)cx->compartment->scripts.next;
          &script->links != &cx->compartment->scripts;
          script = (JSScript *)script->links.next) {
-        if (script->debugMode != (bool) debug &&
+        if (script->debugMode != !!debug &&
             script->hasJITCode() &&
             !IsScriptLive(cx, script)) {
             /*
@@ -182,6 +182,30 @@ JS_SetDebugMode(JSContext *cx, JSBool debug)
     return js_SetDebugMode(cx, debug);
 }
 
+JS_FRIEND_API(JSBool)
+js_SetSingleStepMode(JSContext *cx, JSScript *script, JSBool singleStep)
+{
+    if (!script->singleStepMode == !singleStep)
+        return JS_TRUE;
+
+    JS_ASSERT_IF(singleStep, cx->compartment->debugMode);
+
+#ifdef JS_METHODJIT
+    /* request the next recompile to inject single step interrupts */
+    script->singleStepMode = !!singleStep;
+
+    js::mjit::JITScript *jit = script->jitNormal ? script->jitNormal : script->jitCtor;
+    if (jit && script->singleStepMode != jit->singleStepMode) {
+        js::mjit::Recompiler recompiler(cx, script);
+        if (!recompiler.recompile()) {
+            script->singleStepMode = !singleStep;
+            return JS_FALSE;
+        }
+    }
+#endif
+    return JS_TRUE;
+}
+
 static JSBool
 CheckDebugMode(JSContext *cx)
 {
@@ -196,6 +220,15 @@ CheckDebugMode(JSContext *cx)
                                      NULL, JSMSG_NEED_DEBUG_MODE);
     }
     return debugMode;
+}
+
+JS_PUBLIC_API(JSBool)
+JS_SetSingleStepMode(JSContext *cx, JSScript *script, JSBool singleStep)
+{
+    if (!CheckDebugMode(cx))
+        return JS_FALSE;
+
+    return js_SetSingleStepMode(cx, script, singleStep);
 }
 
 /*
@@ -485,17 +518,6 @@ JITInhibitingHookChange(JSRuntime *rt, bool wasInhibited)
             js_ContextFromLinkField(cl)->traceJitEnabled = false;
     }
 }
-
-static void
-LeaveTraceRT(JSRuntime *rt)
-{
-    JSThreadData *data = js_CurrentThreadData(rt);
-    JSContext *cx = data ? data->traceMonitor.tracecx : NULL;
-    JS_UNLOCK_GC(rt);
-
-    if (cx)
-        LeaveTrace(cx);
-}
 #endif
 
 JS_PUBLIC_API(JSBool)
@@ -511,7 +533,6 @@ JS_SetInterrupt(JSRuntime *rt, JSInterruptHook hook, void *closure)
 #ifdef JS_TRACER
         JITInhibitingHookChange(rt, wasInhibited);
     }
-    LeaveTraceRT(rt);
 #endif
     return JS_TRUE;
 }
@@ -1672,8 +1693,6 @@ JS_SetCallHook(JSRuntime *rt, JSInterpreterHook hook, void *closure)
 #ifdef JS_TRACER
         JITInhibitingHookChange(rt, wasInhibited);
     }
-    if (hook)
-        LeaveTraceRT(rt);
 #endif
     return JS_TRUE;
 }
@@ -1995,15 +2014,13 @@ JS_FRIEND_API(JSBool)
 js_DumpCallgrind(JSContext *cx, uintN argc, jsval *vp)
 {
     JSString *str;
-    char *cstr;
 
     jsval *argv = JS_ARGV(cx, vp);
     if (argc > 0 && JSVAL_IS_STRING(argv[0])) {
         str = JSVAL_TO_STRING(argv[0]);
-        cstr = js_DeflateString(cx, str->chars(), str->length());
-        if (cstr) {
-            CALLGRIND_DUMP_STATS_AT(cstr);
-            cx->free(cstr);
+        JSAutoByteString bytes(cx, str);
+        if (!!bytes) {
+            CALLGRIND_DUMP_STATS_AT(bytes.ptr());
             return JS_TRUE;
         }
     }
@@ -2245,7 +2262,7 @@ public:
         JSHashNumber hash = JS_HashString(filename);
         JSHashEntry **hep = JS_HashTableRawLookup(traceVisScriptTable, hash, filename);
         if (*hep != NULL)
-            return JS_FALSE;
+            return NULL;
 
         JS_HashTableRawAdd(traceVisScriptTable, hep, hash, filename, this);
 

@@ -480,13 +480,14 @@ Shape::dump(JSContext *cx, FILE *fp) const
     if (JSID_IS_INT(id)) {
         fprintf(fp, "[%ld]", (long) JSID_TO_INT(id));
     } else {
-        JSString *str;
+        JSLinearString *str;
         if (JSID_IS_ATOM(id)) {
-            str = JSID_TO_STRING(id);
+            str = JSID_TO_ATOM(id);
         } else {
             JS_ASSERT(JSID_IS_OBJECT(id));
-            str = js_ValueToString(cx, IdToValue(id));
+            JSString *s = js_ValueToString(cx, IdToValue(id));
             fputs("object ", fp);
+            str = s ? s->ensureLinear(cx) : NULL;
         }
         if (!str)
             fputs("<error>", fp);

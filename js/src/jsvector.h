@@ -265,6 +265,10 @@ class Vector : AllocPolicy
 
     /* accessors */
 
+    const AllocPolicy &allocPolicy() const {
+        return *this;
+    }
+
     enum { InlineLength = N };
 
     size_t length() const {
@@ -341,6 +345,8 @@ class Vector : AllocPolicy
     template <class U, size_t O, class BP> bool append(const Vector<U,O,BP> &other);
 
     void popBack();
+
+    T popCopy();
 
     /*
      * Transfers ownership of the internal buffer used by Vector to the caller.
@@ -688,6 +694,15 @@ Vector<T,N,AP>::popBack()
     JS_ASSERT(!empty());
     --mLength;
     endNoCheck()->~T();
+}
+
+template <class T, size_t N, class AP>
+JS_ALWAYS_INLINE T
+Vector<T,N,AP>::popCopy()
+{
+    T ret = back();
+    popBack();
+    return ret;
 }
 
 template <class T, size_t N, class AP>

@@ -79,7 +79,7 @@ class PICLinker : public LinkerHelper
         JSC::ExecutablePool *pool = LinkerHelper::init(cx);
         if (!pool)
             return false;
-        if (!ic.execPools.append(pool)) {
+        if (!ic.addPool(cx, pool)) {
             pool->release();
             js_ReportOutOfMemory(cx);
             return false;
@@ -977,9 +977,9 @@ class GetPropCompiler : public PICStubCompiler
         Assembler masm;
         Jump notString = masm.branchPtr(Assembler::NotEqual, pic.typeReg(),
                                         ImmType(JSVAL_TYPE_STRING));
-        masm.loadPtr(Address(pic.objReg, offsetof(JSString, mLengthAndFlags)), pic.objReg);
+        masm.loadPtr(Address(pic.objReg, JSString::offsetOfLengthAndFlags()), pic.objReg);
         // String length is guaranteed to be no more than 2**28, so the 32-bit operation is OK.
-        masm.urshift32(Imm32(JSString::FLAGS_LENGTH_SHIFT), pic.objReg);
+        masm.urshift32(Imm32(JSString::LENGTH_SHIFT), pic.objReg);
         masm.move(ImmType(JSVAL_TYPE_INT32), pic.shapeReg);
         Jump done = masm.jump();
 
@@ -2136,7 +2136,7 @@ GetElementIC::attachGetProp(JSContext *cx, JSObject *obj, const Value &v, jsid i
 
     CodeLocationLabel cs = buffer.finalize();
 #if DEBUG
-    char *chars = js_DeflateString(cx, v.toString()->chars(), v.toString()->length());
+    char *chars = js_DeflateString(cx, v.toString()->nonRopeChars(), v.toString()->length());
     JaegerSpew(JSpew_PICs, "generated %s stub at %p for atom 0x%x (\"%s\") shape 0x%x (%s: %d)\n",
                js_CodeName[op], cs.executableAddress(), id, chars, holder->shape(),
                cx->fp()->script()->filename, js_FramePCToLineNumber(cx, cx->fp()));

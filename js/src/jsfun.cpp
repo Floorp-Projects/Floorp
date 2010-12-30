@@ -598,27 +598,30 @@ args_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
     JS_ASSERT(obj->isNormalArguments());
 
     *objp = NULL;
-    bool valid = false;
-    uintN attrs = JSPROP_SHARED;
+
+    uintN attrs = JSPROP_SHARED | JSPROP_SHADOWABLE;
     if (JSID_IS_INT(id)) {
         uint32 arg = uint32(JSID_TO_INT(id));
-        attrs = JSPROP_ENUMERATE | JSPROP_SHARED;
-        if (arg < obj->getArgsInitialLength() && !obj->getArgsElement(arg).isMagic(JS_ARGS_HOLE))
-            valid = true;
+        if (arg >= obj->getArgsInitialLength() || obj->getArgsElement(arg).isMagic(JS_ARGS_HOLE))
+            return true;
+
+        attrs |= JSPROP_ENUMERATE;
     } else if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
-        if (!obj->isArgsLengthOverridden())
-            valid = true;
-    } else if (JSID_IS_ATOM(id, cx->runtime->atomState.calleeAtom)) {
-        if (!obj->getArgsCallee().isMagic(JS_ARGS_HOLE))
-            valid = true;
+        if (obj->isArgsLengthOverridden())
+            return true;
+    } else {
+        if (!JSID_IS_ATOM(id, cx->runtime->atomState.calleeAtom))
+            return true;
+
+        if (obj->getArgsCallee().isMagic(JS_ARGS_HOLE))
+            return true;
     }
 
-    if (valid) {
-        Value tmp = UndefinedValue();
-        if (!js_DefineProperty(cx, obj, id, &tmp, ArgGetter, ArgSetter, attrs))
-            return JS_FALSE;
-        *objp = obj;
-    }
+    Value undef = UndefinedValue();
+    if (!js_DefineProperty(cx, obj, id, &undef, ArgGetter, ArgSetter, attrs))
+        return JS_FALSE;
+
+    *objp = obj;
     return true;
 }
 
@@ -707,47 +710,35 @@ strictargs_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags, JSObject 
     JS_ASSERT(obj->isStrictArguments());
 
     *objp = NULL;
-    bool valid = false;
-    uintN attrs = JSPROP_SHARED;
+
+    uintN attrs = JSPROP_SHARED | JSPROP_SHADOWABLE;
+    PropertyOp getter = StrictArgGetter;
+    PropertyOp setter = StrictArgSetter;
+
     if (JSID_IS_INT(id)) {
         uint32 arg = uint32(JSID_TO_INT(id));
-        attrs = JSPROP_SHARED | JSPROP_ENUMERATE;
-        if (arg < obj->getArgsInitialLength() && !obj->getArgsElement(arg).isMagic(JS_ARGS_HOLE))
-            valid = true;
-    } else if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
-        if (!obj->isArgsLengthOverridden())
-            valid = true;
-    } else if (JSID_IS_ATOM(id, cx->runtime->atomState.calleeAtom)) {
-        Value tmp = UndefinedValue();
-        PropertyOp throwTypeError = CastAsPropertyOp(obj->getThrowTypeError());
-        uintN attrs = JSPROP_PERMANENT | JSPROP_GETTER | JSPROP_SETTER | JSPROP_SHARED;
-        if (!js_DefineProperty(cx, obj, id, &tmp, throwTypeError, throwTypeError, attrs))
-            return false;
+        if (arg >= obj->getArgsInitialLength() || obj->getArgsElement(arg).isMagic(JS_ARGS_HOLE))
+            return true;
 
-        *objp = obj;
-        return true;
-    } else if (JSID_IS_ATOM(id, cx->runtime->atomState.callerAtom)) {
-        /*
-         * Strict mode arguments objects have an immutable poison-pill caller
-         * property that throws a TypeError on getting or setting.
-         */
-        PropertyOp throwTypeError = CastAsPropertyOp(obj->getThrowTypeError());
-        Value tmp = UndefinedValue();
-        if (!js_DefineProperty(cx, obj, id, &tmp, throwTypeError, throwTypeError,
-                               JSPROP_PERMANENT | JSPROP_GETTER | JSPROP_SETTER | JSPROP_SHARED)) {
-            return false;
+        attrs |= JSPROP_ENUMERATE;
+    } else if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
+        if (obj->isArgsLengthOverridden())
+            return true;
+    } else {
+        if (!JSID_IS_ATOM(id, cx->runtime->atomState.calleeAtom) &&
+            !JSID_IS_ATOM(id, cx->runtime->atomState.callerAtom)) {
+            return true;
         }
 
-        *objp = obj;
-        return true;
+        attrs = JSPROP_PERMANENT | JSPROP_GETTER | JSPROP_SETTER | JSPROP_SHARED;
+        getter = setter = CastAsPropertyOp(obj->getThrowTypeError());
     }
 
-    if (valid) {
-        Value tmp = UndefinedValue();
-        if (!js_DefineProperty(cx, obj, id, &tmp, StrictArgGetter, StrictArgSetter, attrs))
-            return false;
-        *objp = obj;
-    }
+    Value undef = UndefinedValue();
+    if (!js_DefineProperty(cx, obj, id, &undef, getter, setter, attrs))
+        return false;
+
+    *objp = obj;
     return true;
 }
 
@@ -1589,10 +1580,13 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
             /* Censor the caller if it is from another compartment. */
             if (caller.getCompartment() != cx->compartment) {
                 vp->setNull();
-            } else if (caller.isFunction() && caller.getFunctionPrivate()->inStrictMode()) {
-                JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage, NULL,
-                                             JSMSG_CALLER_IS_STRICT);
-                return false;
+            } else if (caller.isFunction()) {
+                JSFunction *callerFun = caller.getFunctionPrivate();
+                if (callerFun->isInterpreted() && callerFun->inStrictMode()) {
+                    JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage, NULL,
+                                                 JSMSG_CALLER_IS_STRICT);
+                    return false;
+                }
             }
         }
         break;
@@ -1762,7 +1756,7 @@ fun_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 
             PropertyOp getter, setter;
             uintN attrs = JSPROP_PERMANENT;
-            if (fun->inStrictMode() || obj->isBoundFunction()) {
+            if (fun->isInterpreted() ? fun->inStrictMode() : obj->isBoundFunction()) {
                 JSObject *throwTypeError = obj->getThrowTypeError();
 
                 getter = CastAsPropertyOp(throwTypeError);
@@ -2060,7 +2054,7 @@ fun_finalize(JSContext *cx, JSObject *obj)
      * very early.
      */
     if (FUN_INTERPRETED(fun) && fun->u.i.script)
-        js_DestroyScriptFromGC(cx, fun->u.i.script, NULL);
+        js_DestroyScriptFromGC(cx, fun->u.i.script);
 }
 
 int
@@ -2603,7 +2597,12 @@ Function(JSContext *cx, uintN argc, Value *vp)
         for (uintN i = 0; i < n; i++) {
             JSString *arg = argv[i].toString();
             size_t arg_length = arg->length();
-            (void) js_strncpy(cp, arg->chars(), arg_length);
+            const jschar *arg_chars = arg->getChars(cx);
+            if (!arg_chars) {
+                JS_ARENA_RELEASE(&cx->tempPool, mark);
+                return JS_FALSE;
+            }
+            (void) js_strncpy(cp, arg_chars, arg_length);
             cp += arg_length;
 
             /* Add separating comma or terminating 0. */
@@ -2690,8 +2689,11 @@ Function(JSContext *cx, uintN argc, Value *vp)
         str = cx->runtime->emptyString;
     }
 
-    return Compiler::compileFunctionBody(cx, fun, principals,
-                                         str->chars(), str->length(),
+    size_t length = str->length();
+    const jschar *chars = str->getChars(cx);
+    if (!chars)
+        return JS_FALSE;
+    return Compiler::compileFunctionBody(cx, fun, principals, chars, length,
                                          filename, lineno);
 }
 
@@ -3143,54 +3145,21 @@ JSFunction::addLocal(JSContext *cx, JSAtom *atom, JSLocalKind kind)
         return false;
     }
 
-    Shape **listp = &u.i.names;
-    Shape *parent = *listp;
     jsid id;
-
-    /*
-     * The destructuring formal parameter parser adds a null atom, which we
-     * encode as an INT id. The parser adds such locals after adding vars for
-     * the destructured-to parameter bindings -- those must be vars to avoid
-     * aliasing arguments[i] for any i -- so we must switch u.i.names to a
-     * dictionary list to cope with insertion "in the middle" of an index-named
-     * shape for the object or array argument.
-     */
-    bool findArgInsertionPoint = false;
     if (!atom) {
         JS_ASSERT(kind == JSLOCAL_ARG);
-        if (u.i.nvars != 0) {
-            /*
-             * A dictionary list needed only if the destructing pattern wasn't
-             * empty, i.e., there were vars for its destructured-to bindings.
-             */
-            if (!parent->inDictionary() && !(parent = Shape::newDictionaryList(cx, listp)))
-                return false;
-            findArgInsertionPoint = true;
-        }
         id = INT_TO_JSID(nargs);
     } else {
-        if (kind == JSLOCAL_ARG && parent->inDictionary())
-            findArgInsertionPoint = true;
         id = ATOM_TO_JSID(atom);
-    }
-
-    if (findArgInsertionPoint) {
-        while (parent->parent && parent->getter() != GetCallArg) {
-            ++parent->slot;
-            JS_ASSERT(parent->slot == parent->slotSpan);
-            ++parent->slotSpan;
-            listp = &parent->parent;
-            parent = *listp;
-        }
     }
 
     Shape child(id, getter, setter, slot, attrs, Shape::HAS_SHORTID, *indexp);
 
-    Shape *shape = parent->getChild(cx, child, listp);
+    Shape *shape = u.i.names->getChild(cx, child, &u.i.names);
     if (!shape)
         return false;
 
-    JS_ASSERT_IF(!shape->inDictionary(), u.i.names == shape);
+    JS_ASSERT(u.i.names == shape);
     ++*indexp;
     return true;
 }

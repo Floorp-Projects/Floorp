@@ -52,6 +52,7 @@
 #include "jslock.h"
 #include "jsnum.h"
 #include "jsvector.h"
+#include "jscompartment.h"
 #include "Writer.h"
 
 namespace js {
@@ -819,16 +820,13 @@ public:
  */
 typedef enum BuiltinStatus {
     BUILTIN_BAILED = 1,
-    BUILTIN_ERROR = 2,
-    BUILTIN_NO_FIXUP_NEEDED = 4,
-
-    BUILTIN_ERROR_NO_FIXUP_NEEDED = BUILTIN_ERROR | BUILTIN_NO_FIXUP_NEEDED
+    BUILTIN_ERROR = 2
 } BuiltinStatus;
 
 static JS_INLINE void
-SetBuiltinError(JSContext *cx, BuiltinStatus status = BUILTIN_ERROR)
+SetBuiltinError(JSContext *cx)
 {
-    cx->tracerState->builtinStatus |= status;
+    cx->tracerState->builtinStatus |= BUILTIN_ERROR;
 }
 
 #ifdef DEBUG_RECORDING_STATUS_NOT_BOOL
@@ -1106,6 +1104,9 @@ class TraceRecorder
     /* Carry a guard condition to the beginning of the next monitorRecording. */
     nanojit::LIns*                  pendingGuardCondition;
 
+    /* See AbortRecordingIfUnexpectedGlobalWrite. */
+    int                             pendingGlobalSlotToSet;
+
     /* Carry whether we have an always-exit from emitIf to checkTraceEnd. */
     bool                            pendingLoop;
 
@@ -1278,6 +1279,7 @@ class TraceRecorder
     nanojit::LIns* d2i(nanojit::LIns* f, bool resultCanBeImpreciseIfFractional = false);
     nanojit::LIns* d2u(nanojit::LIns* d);
     JS_REQUIRES_STACK RecordingStatus makeNumberInt32(nanojit::LIns* d, nanojit::LIns** num_ins);
+    JS_REQUIRES_STACK RecordingStatus makeNumberUint32(nanojit::LIns* d, nanojit::LIns** num_ins);
     JS_REQUIRES_STACK nanojit::LIns* stringify(const Value& v);
 
     JS_REQUIRES_STACK nanojit::LIns* newArguments(nanojit::LIns* callee_ins, bool strict);
@@ -1292,15 +1294,18 @@ class TraceRecorder
     JS_REQUIRES_STACK AbortableRecordingStatus tableswitch();
 #endif
     JS_REQUIRES_STACK RecordingStatus inc(Value& v, jsint incr, bool pre = true);
-    JS_REQUIRES_STACK RecordingStatus inc(const Value &v, nanojit::LIns*& v_ins, jsint incr,
-                                            bool pre = true);
+    JS_REQUIRES_STACK RecordingStatus inc(const Value &v, nanojit::LIns*& v_ins,
+                                          Value &v_out, jsint incr,
+                                          bool pre = true);
     JS_REQUIRES_STACK RecordingStatus incHelper(const Value &v, nanojit::LIns*& v_ins,
-                                                  nanojit::LIns*& v_after, jsint incr);
+                                                Value &v_after,
+                                                nanojit::LIns*& v_ins_after,
+                                                jsint incr);
     JS_REQUIRES_STACK AbortableRecordingStatus incProp(jsint incr, bool pre = true);
     JS_REQUIRES_STACK RecordingStatus incElem(jsint incr, bool pre = true);
     JS_REQUIRES_STACK AbortableRecordingStatus incName(jsint incr, bool pre = true);
 
-    JS_REQUIRES_STACK void strictEquality(bool equal, bool cmpCase);
+    JS_REQUIRES_STACK RecordingStatus strictEquality(bool equal, bool cmpCase);
     JS_REQUIRES_STACK AbortableRecordingStatus equality(bool negate, bool tryBranchAfterCond);
     JS_REQUIRES_STACK AbortableRecordingStatus equalityHelper(Value& l, Value& r,
                                                                 nanojit::LIns* l_ins, nanojit::LIns* r_ins,
@@ -1595,6 +1600,18 @@ class TraceRecorder
     JS_REQUIRES_STACK AbortableRecordingStatus record_NativeCallComplete();
     void forgetGuardedShapesForObject(JSObject* obj);
 
+    bool globalSetExpected(unsigned slot) {
+        if (pendingGlobalSlotToSet != (int)slot) {
+            /*
+             * Do slot arithmetic manually to avoid getSlotRef assertions which
+             * do not need to be satisfied for this purpose.
+             */
+            return !tracker.has(globalObj->getSlots() + slot);
+        }
+        pendingGlobalSlotToSet = -1;
+        return true;
+    }
+
 #ifdef DEBUG
     /* Debug printing functionality to emit printf() on trace. */
     JS_REQUIRES_STACK void tprint(const char *format, int count, nanojit::LIns *insa[]);
@@ -1675,7 +1692,7 @@ extern void
 PurgeScriptFragments(TraceMonitor* tm, JSScript* script);
 
 extern bool
-OverfullJITCache(TraceMonitor* tm);
+OverfullJITCache(JSContext *cx, TraceMonitor* tm);
 
 extern void
 FlushJITCache(JSContext* cx);
@@ -1827,5 +1844,30 @@ struct TraceVisStateObj {
 #define TRACE_2(x,a,b)          ((void)0)
 
 #endif /* !JS_TRACER */
+
+namespace js {
+
+/*
+ * While recording, the slots of the global object may change payload or type.
+ * This is fine as long as the recorder expects this change (and therefore has
+ * generated the corresponding LIR, snapshots, etc). The recorder indicates
+ * that it expects a write to a global slot by setting pendingGlobalSlotToSet
+ * in the recorder, before the write is made by the interpreter, and clearing
+ * pendingGlobalSlotToSet before recording the next op. Any global slot write
+ * that has not been whitelisted in this manner is therefore unexpected and, if
+ * the global slot is actually being tracked, recording must be aborted.
+ */
+static JS_INLINE void
+AbortRecordingIfUnexpectedGlobalWrite(JSContext *cx, JSObject *obj, unsigned slot)
+{
+#ifdef JS_TRACER
+    if (TraceRecorder *tr = TRACE_RECORDER(cx)) {
+        if (!obj->parent && !tr->globalSetExpected(slot))
+            AbortRecording(cx, "Global slot written outside tracer supervision");
+    }
+#endif
+}
+
+}  /* namespace js */
 
 #endif /* jstracer_h___ */

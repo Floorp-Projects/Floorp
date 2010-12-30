@@ -502,7 +502,9 @@ newdtoa(void)
 	DtoaState *state = (DtoaState *) MALLOC(sizeof(DtoaState));
 	if (state) {
 		memset(state, 0, sizeof(DtoaState));
+#ifndef Omit_Private_Memory
 		state->pmem_next = state->private_mem;
+#endif
 		}
 	return state;
 }

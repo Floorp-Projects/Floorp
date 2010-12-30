@@ -992,17 +992,21 @@ struct JSObject : js::gc::Cell {
     static const uint32 NAMESPACE_CLASS_RESERVED_SLOTS = 3;
     static const uint32 QNAME_CLASS_RESERVED_SLOTS     = 3;
 
-    inline jsval getNamePrefix() const;
-    inline void setNamePrefix(jsval prefix);
+    inline JSLinearString *getNamePrefix() const;
+    inline jsval getNamePrefixVal() const;
+    inline void setNamePrefix(JSLinearString *prefix);
+    inline void clearNamePrefix();
 
-    inline jsval getNameURI() const;
-    inline void setNameURI(jsval uri);
+    inline JSLinearString *getNameURI() const;
+    inline jsval getNameURIVal() const;
+    inline void setNameURI(JSLinearString *uri);
 
     inline jsval getNamespaceDeclared() const;
     inline void setNamespaceDeclared(jsval decl);
 
-    inline jsval getQNameLocalName() const;
-    inline void setQNameLocalName(jsval decl);
+    inline JSLinearString *getQNameLocalName() const;
+    inline jsval getQNameLocalNameVal() const;
+    inline void setQNameLocalName(JSLinearString *name);
 
     /*
      * Proxy-specific getters and setters.
