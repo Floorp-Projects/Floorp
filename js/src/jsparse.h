@@ -513,6 +513,7 @@ public:
                                               arguments occurs before function
                                               body */
 #define PNX_HOLEY      0x400            /* array initialiser has holes */
+#define PNX_NONCONST   0x800            /* initialiser has non-constants */
 
     uintN frameLevel() const {
         JS_ASSERT(pn_arity == PN_FUNC || pn_arity == PN_NAME);
@@ -660,6 +661,9 @@ public:
         pn_tail = &pn->pn_next;
         pn_count++;
     }
+
+    bool getConstantValue(JSContext *cx, bool strictChecks, js::Value *vp);
+    inline bool isConstant();
 };
 
 namespace js {

@@ -4239,12 +4239,13 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 
               case JSOP_OBJECT:
                 LOAD_OBJECT(0);
-                LOCAL_ASSERT(obj->getClass() == &js_RegExpClass);
-                goto do_regexp;
+                str = js_ValueToSource(cx, ObjectValue(*obj));
+                if (!str)
+                    return NULL;
+                goto sprint_string;
 
               case JSOP_REGEXP:
                 GET_REGEXP_FROM_BYTECODE(jp->script, pc, 0, obj);
-              do_regexp:
                 if (!js_regexp_toString(cx, obj, Valueify(&val)))
                     return NULL;
                 str = JSVAL_TO_STRING(val);
