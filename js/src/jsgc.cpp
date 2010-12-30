@@ -1741,7 +1741,7 @@ js_DestroyScriptsToGC(JSContext *cx, JSCompartment *comp)
         while ((script = *listp) != NULL) {
             *listp = script->u.nextToGC;
             script->u.nextToGC = NULL;
-            js_DestroyScriptFromGC(cx, script, comp);
+            js_DestroyScriptFromGC(cx, script);
         }
     }
 }
@@ -2175,12 +2175,6 @@ MarkAndSweep(JSContext *cx, JSGCInvocationKind gckind GCTIMER_PARAM)
 #ifdef DEBUG
     /* Save the pre-sweep count of scope-mapped properties. */
     rt->liveObjectPropsPreSweep = rt->liveObjectProps;
-#endif
-
-#ifdef JS_TRACER
-    for (JSCompartment **comp = rt->compartments.begin(); comp != rt->compartments.end(); comp++) {
-        (*comp)->traceMonitor.sweep();
-    }
 #endif
 
     /*
