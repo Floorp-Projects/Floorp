@@ -1048,23 +1048,32 @@ var BrowserUI = {
         break;
       case "cmd_star":
       {
-        let bookmarkURI = browser.currentURI;
-        let autoClose = false;
-
-        if (PlacesUtils.getMostRecentBookmarkForURI(bookmarkURI) == -1) {
-          let bookmarkTitle = browser.contentTitle || bookmarkURI.spec;
-          let bookmarkService = PlacesUtils.bookmarks;
-          let bookmarkId = bookmarkService.insertBookmark(BookmarkList.panel.mobileRoot, bookmarkURI,
-                                                          bookmarkService.DEFAULT_INDEX,
-                                                          bookmarkTitle);
-          this.updateStar();
-
-          // autoclose the bookmark popup
-          autoClose = true;
+        BookmarkPopup.toggle();
+        if (!this.starButton.hasAttribute("starred")) {
+          this.starButton.setAttribute("starred", "true");
+          BookmarkPopup.autoHide();
         }
 
-        // Show/hide bookmark popup
-        BookmarkPopup.toggle(autoClose);
+        let bookmarkURI = browser.currentURI;
+        PlacesUtils.asyncGetBookmarkIds(bookmarkURI, function (aItemIds) {
+          if (!aItemIds.length) {
+            let bookmarkTitle = browser.contentTitle || bookmarkURI.spec;
+            try {
+              let bookmarkService = PlacesUtils.bookmarks;
+              let bookmarkId = bookmarkService.insertBookmark(BookmarkList.panel.mobileRoot, bookmarkURI,
+                                                              bookmarkService.DEFAULT_INDEX,
+                                                              bookmarkTitle);
+            } catch (e) {
+              // Insert failed; reset the star state.
+              this.updateStar();
+            }
+
+            // XXX Used for browser-chrome tests
+            let event = document.createEvent("Events");
+            event.initEvent("BookmarkCreated", true, false);
+            window.dispatchEvent(event);
+          }
+        }, this);
         break;
       }
       case "cmd_opensearch":
@@ -1619,24 +1628,27 @@ var BookmarkPopup = {
     BrowserUI.popPopup(this);
   },
 
-  show : function show(aAutoClose) {
+  show : function show() {
     this.box.hidden = false;
     this.box.anchorTo(BrowserUI.starButton);
-
-    if (aAutoClose) {
-      this._bookmarkPopupTimeout = setTimeout(function (self) {
-        self._bookmarkPopupTimeout = -1;
-        self.hide();
-      }, 2000, this);
-    }
 
     // include starButton here, so that click-to-dismiss works as expected
     BrowserUI.pushPopup(this, [this.box, BrowserUI.starButton]);
   },
 
-  toggle : function toggle(aAutoClose) {
+  autoHide: function autoHide() {
+    if (this._bookmarkPopupTimeout != -1 || this.box.hidden)
+      return;
+
+    this._bookmarkPopupTimeout = setTimeout(function (self) {
+      self._bookmarkPopupTimeout = -1;
+      self.hide();
+    }, 2000, this);
+  },
+
+  toggle : function toggle() {
     if (this.box.hidden)
-      this.show(aAutoClose);
+      this.show();
     else
       this.hide();
   }
