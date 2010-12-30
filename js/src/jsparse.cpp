@@ -1813,6 +1813,15 @@ BindDestructuringArg(JSContext *cx, BindData *data, JSAtom *atom,
      * We must set the PND_BOUND flag too to prevent pn_op from being reset to
      * JSOP_SETNAME by BindDestructuringVar. The only field not initialized is
      * pn_cookie; it gets set in functionDef in the first "if (prelude)" block.
+     * We have to wait to set the cookie until we can call JSFunction::addLocal
+     * with kind = JSLOCAL_VAR, after all JSLOCAL_ARG locals have been added.
+     *
+     * Thus a destructuring formal parameter binds an ARG (as in arguments[i]
+     * element) with a null atom name for the object or array passed in to be
+     * destructured, and zero or more VARs (as in named local variables) for
+     * the destructured-to identifiers in the property value positions within
+     * the object or array destructuring pattern, and all ARGs for the formal
+     * parameter list bound as locals before any VAR for a destructured name.
      */
     pn->pn_op = JSOP_SETLOCAL;
     pn->pn_dflags |= PND_BOUND;
