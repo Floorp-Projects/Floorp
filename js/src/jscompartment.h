@@ -282,10 +282,28 @@ struct JS_FRIEND_API(JSCompartment) {
     void purge(JSContext *cx);
     void finishArenaLists();
     bool arenaListsAreEmpty();
+
+  private:
+    js::MathCache                *mathCache;
+
+    js::MathCache *allocMathCache(JSContext *cx);
+
+  public:
+    js::MathCache *getMathCache(JSContext *cx) {
+        return mathCache ? mathCache : allocMathCache(cx);
+    }
 };
 
 #define JS_TRACE_MONITOR(cx)    (cx->compartment->traceMonitor)
 #define JS_SCRIPTS_TO_GC(cx)    (cx->compartment->scriptsToGC)
+
+namespace js {
+static inline MathCache *
+GetMathCache(JSContext *cx)
+{
+    return cx->compartment->getMathCache(cx);
+}
+}
 
 #ifdef DEBUG
 # define EVAL_CACHE_METER(x)    (cx->compartment->evalCacheMeter.x++)
