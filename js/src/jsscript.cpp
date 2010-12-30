@@ -136,7 +136,7 @@ Bindings::add(JSContext *cx, JSAtom *name, BindingKind kind)
         slot += nargs + nvars;
     }
 
-    if (*indexp == JS_BITMASK(16)) {
+    if (*indexp == BINDING_COUNT_LIMIT) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              (kind == ARGUMENT)
                              ? JSMSG_TOO_MANY_FUN_ARGS
@@ -376,6 +376,9 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
 
     /* XDR arguments, local vars, and upvars. */
     uint16 nargs, nvars, nupvars;
+#if defined(DEBUG) || defined(__GNUC__) /* quell GCC overwarning */
+    nargs = nvars = nupvars = Bindings::BINDING_COUNT_LIMIT;
+#endif
     uint32 argsVars, paddingUpvars;
     if (xdr->mode == JSXDR_ENCODE) {
         nargs = script->bindings.countArgs();
@@ -392,6 +395,9 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
         JS_ASSERT((paddingUpvars >> 16) == 0);
         nupvars = paddingUpvars & 0xFFFF;
     }
+    JS_ASSERT(nargs != Bindings::BINDING_COUNT_LIMIT);
+    JS_ASSERT(nvars != Bindings::BINDING_COUNT_LIMIT);
+    JS_ASSERT(nupvars != Bindings::BINDING_COUNT_LIMIT);
 
     Bindings bindings(cx);
     uint32 nameCount = nargs + nvars + nupvars;
