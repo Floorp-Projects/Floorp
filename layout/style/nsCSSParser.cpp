@@ -4359,6 +4359,18 @@ CSSParserImpl::ParseVariant(nsCSSValue& aValue,
       }
     }
   }
+  // Check VARIANT_NUMBER and VARIANT_INTEGER before VARIANT_LENGTH or
+  // VARIANT_ZERO_ANGLE.
+  if (((aVariantMask & VARIANT_NUMBER) != 0) &&
+      (eCSSToken_Number == tk->mType)) {
+    aValue.SetFloatValue(tk->mNumber, eCSSUnit_Number);
+    return PR_TRUE;
+  }
+  if (((aVariantMask & VARIANT_INTEGER) != 0) &&
+      (eCSSToken_Number == tk->mType) && tk->mIntegerValid) {
+    aValue.SetIntValue(tk->mInteger, eCSSUnit_Integer);
+    return PR_TRUE;
+  }
   if (((aVariantMask & (VARIANT_LENGTH | VARIANT_ANGLE |
                         VARIANT_FREQUENCY | VARIANT_TIME)) != 0 &&
        eCSSToken_Dimension == tk->mType) ||
@@ -4375,16 +4387,6 @@ CSSParserImpl::ParseVariant(nsCSSValue& aValue,
   if (((aVariantMask & VARIANT_PERCENT) != 0) &&
       (eCSSToken_Percentage == tk->mType)) {
     aValue.SetPercentValue(tk->mNumber);
-    return PR_TRUE;
-  }
-  if (((aVariantMask & VARIANT_NUMBER) != 0) &&
-      (eCSSToken_Number == tk->mType)) {
-    aValue.SetFloatValue(tk->mNumber, eCSSUnit_Number);
-    return PR_TRUE;
-  }
-  if (((aVariantMask & VARIANT_INTEGER) != 0) &&
-      (eCSSToken_Number == tk->mType) && tk->mIntegerValid) {
-    aValue.SetIntValue(tk->mInteger, eCSSUnit_Integer);
     return PR_TRUE;
   }
   if (mNavQuirkMode && !IsParsingCompoundProperty()) { // NONSTANDARD: Nav interprets unitless numbers as px

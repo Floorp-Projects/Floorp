@@ -112,7 +112,7 @@ var _pacedTestLists =
     new AnimTestcasePaced("2; 0; 4",
                           { comp0:   "2",
                             comp1_6: "1",
-                            comp1_3: "0px",  // 0 acts like 0px
+                            comp1_3: "0",
                             comp2_3: "2",
                             comp1:   "4"
                           }),
@@ -125,8 +125,8 @@ var _pacedTestLists =
                           }),
   ],
   lengthPx : [
-    new AnimTestcasePaced("0; 2px; 6px",
-                          { comp0:   "0px", // 0 acts like 0px
+    new AnimTestcasePaced("0px; 2px; 6px",
+                          { comp0:   "0px",
                             comp1_6: "1px",
                             comp1_3: "2px",
                             comp2_3: "4px",
