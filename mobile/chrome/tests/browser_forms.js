@@ -28,11 +28,10 @@ function testMouseEvents() {
   // Sending a synthesized event directly on content should not work - we
   // don't want web content to be able to open the form helper without the
   // user consent, so we have to pass throught the canvas tile-container
-/*
   AsyncTests.waitFor("Test:Click", {}, function(json) {
     is(json.result, false, "Form Assistant should stay closed");
   });
-*/
+
   AsyncTests.waitFor("Test:Open", { value: "*[tabindex='0']" }, function(json) {
     ok(FormHelperUI._open, "Form Assistant should be open");
     testShowUIForElements();
