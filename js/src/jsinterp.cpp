@@ -4969,7 +4969,6 @@ BEGIN_CASE(JSOP_OBJECT)
 {
     JSObject *obj;
     LOAD_OBJECT(0, obj);
-    /* Only XML and RegExp objects are emitted. */
     PUSH_OBJECT(*obj);
 }
 END_CASE(JSOP_OBJECT)

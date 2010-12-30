@@ -69,6 +69,7 @@
 #include "jsautooplen.h"        // generated headers last
 #include "jsstaticcheck.h"
 
+#include "jsatominlines.h"
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
 
@@ -4540,6 +4541,110 @@ EmitEndInit(JSContext *cx, JSCodeGenerator *cg, uint32 count)
     return js_Emit1(cx, cg, JSOP_ENDINIT) >= 0;
 }
 
+bool
+JSParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
+{
+    switch (pn_type) {
+      case TOK_NUMBER:
+        vp->setNumber(pn_dval);
+        return true;
+      case TOK_STRING:
+        vp->setString(ATOM_TO_STRING(pn_atom));
+        return true;
+      case TOK_PRIMARY:
+        switch (pn_op) {
+          case JSOP_NULL:
+            vp->setNull();
+            return true;
+          case JSOP_FALSE:
+            vp->setBoolean(false);
+            return true;
+          case JSOP_TRUE:
+            vp->setBoolean(true);
+            return true;
+          default:
+            JS_NOT_REACHED("Unexpected node");
+            return false;
+        }
+      case TOK_RB: {
+        JS_ASSERT((pn_op == JSOP_NEWINIT) && !(pn_xflags & PNX_NONCONST));
+ 
+        JSObject *obj = NewDenseAllocatedArray(cx, pn_count);
+        if (!obj || !obj->ensureSlots(cx, pn_count))
+            return false;
+
+        unsigned idx = 0;
+        for (JSParseNode *pn = pn_head; pn; idx++, pn = pn->pn_next) {
+            Value value;
+            if (!pn->getConstantValue(cx, strictChecks, &value))
+                return false;
+            obj->setDenseArrayElement(idx, value);
+        }
+        JS_ASSERT(idx == pn_count);
+
+        vp->setObject(*obj);
+        return true;
+      }
+      case TOK_RC: {
+        JS_ASSERT((pn_op == JSOP_NEWINIT) && !(pn_xflags & PNX_NONCONST));
+
+        gc::FinalizeKind kind = GuessObjectGCKind(pn_count, false);
+        JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass, kind);
+        if (!obj)
+            return false;
+
+        for (JSParseNode *pn = pn_head; pn; pn = pn->pn_next) {
+            Value value;
+            if (!pn->pn_right->getConstantValue(cx, strictChecks, &value))
+                return false;
+
+            JSParseNode *pnid = pn->pn_left;
+            if (pnid->pn_type == TOK_NUMBER) {
+                Value idvalue = NumberValue(pnid->pn_dval);
+                jsid id;
+                if (idvalue.isInt32() && INT_FITS_IN_JSID(idvalue.toInt32()))
+                    id = INT_TO_JSID(idvalue.toInt32());
+                else if (!js_InternNonIntElementId(cx, obj, idvalue, &id))
+                    return false;
+                if (!obj->defineProperty(cx, id, value, NULL, NULL, JSPROP_ENUMERATE))
+                    return false;
+            } else {
+                JS_ASSERT(pnid->pn_type == TOK_NAME ||
+                          pnid->pn_type == TOK_STRING);
+                jsid id = ATOM_TO_JSID(pnid->pn_atom);
+                if (!((pnid->pn_atom == cx->runtime->atomState.protoAtom)
+                      ? js_SetPropertyHelper(cx, obj, id, 0, &value, strictChecks)
+                      : js_DefineNativeProperty(cx, obj, id, value, NULL, NULL,
+                                                JSPROP_ENUMERATE, 0, 0, NULL, 0))) {
+                    return false;
+                }
+            }
+        }
+
+        vp->setObject(*obj);
+        return true;
+      }
+      default:
+        JS_NOT_REACHED("Unexpected node");
+    }
+    return false;
+}
+
+static bool
+EmitSingletonInitialiser(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
+{
+    Value value;
+    if (!pn->getConstantValue(cx, cg->needStrictChecks(), &value))
+        return false;
+
+    JS_ASSERT(value.isObject());
+    JSObjectBox *objbox = cg->parser->newObjectBox(&value.toObject());
+    if (!objbox)
+        return false;
+
+    return EmitObjectOp(cx, objbox, JSOP_OBJECT, cg);
+}
+
 /* See the SRC_FOR source note offsetBias comments later in this file. */
 JS_STATIC_ASSERT(JSOP_NOP_LENGTH == 1);
 JS_STATIC_ASSERT(JSOP_POP_LENGTH == 1);
@@ -6839,6 +6944,12 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         }
 #endif /* JS_HAS_GENERATORS */
 
+        if (!cg->hasSharps() && !(pn->pn_xflags & PNX_NONCONST) && cg->checkSingletonContext()) {
+            if (!EmitSingletonInitialiser(cx, cg, pn))
+                return JS_FALSE;
+            break;
+        }
+
         /* Use the slower NEWINIT for arrays in scripts containing sharps. */
         if (cg->hasSharps()) {
             if (!EmitNewInit(cx, cg, JSProto_Array, pn, sharpnum))
@@ -6892,6 +7003,13 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             return JS_FALSE;
         }
 #endif
+
+        if (!cg->hasSharps() && !(pn->pn_xflags & PNX_NONCONST) && cg->checkSingletonContext()) {
+            if (!EmitSingletonInitialiser(cx, cg, pn))
+                return JS_FALSE;
+            break;
+        }
+
         /*
          * Emit code for {p:a, '%q':b, 2:c} that is equivalent to constructing
          * a new object and in source order evaluating each property value and
@@ -7064,29 +7182,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         break;
 
       case TOK_REGEXP: {
-        /*
-         * If the regexp's script is one-shot and the regexp is not used in a
-         * loop, we can avoid the extra fork-on-exec costs of JSOP_REGEXP by
-         * selecting JSOP_OBJECT. Otherwise, to avoid incorrect proto, parent,
-         * and lastIndex sharing, select JSOP_REGEXP.
-         */
         JS_ASSERT(pn->pn_op == JSOP_REGEXP);
-        bool singleton = !(cg->inFunction() ? cg->fun() : cg->scopeChain()) && cg->compileAndGo();
-        if (singleton) {
-            for (JSStmtInfo *stmt = cg->topStmt; stmt; stmt = stmt->down) {
-                if (STMT_IS_LOOP(stmt)) {
-                    singleton = false;
-                    break;
-                }
-            }
-        }
-        if (singleton) {
-            ok = EmitObjectOp(cx, pn->pn_objbox, JSOP_OBJECT, cg);
-        } else {
-            ok = EmitIndexOp(cx, JSOP_REGEXP,
-                             cg->regexpList.index(pn->pn_objbox),
-                             cg);
-        }
+        ok = EmitIndexOp(cx, JSOP_REGEXP,
+                         cg->regexpList.index(pn->pn_objbox),
+                         cg);
         break;
       }
 

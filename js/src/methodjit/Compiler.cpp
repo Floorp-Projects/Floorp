@@ -1919,6 +1919,15 @@ mjit::Compiler::generateMethod()
           }
           END_CASE(JSOP_REGEXP)
 
+          BEGIN_CASE(JSOP_OBJECT)
+          {
+            JSObject *object = script->getObject(fullAtomIndex(PC));
+            RegisterID reg = frame.allocReg();
+            masm.move(ImmPtr(object), reg);
+            frame.pushTypedPayload(JSVAL_TYPE_OBJECT, reg);
+          }
+          END_CASE(JSOP_OBJECT)
+
           BEGIN_CASE(JSOP_CALLPROP)
             if (!jsop_callprop(script->getAtom(fullAtomIndex(PC))))
                 return Compile_Error;

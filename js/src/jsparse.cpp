@@ -8181,6 +8181,30 @@ BlockIdInScope(uintN blockid, JSTreeContext *tc)
 }
 #endif
 
+bool
+JSParseNode::isConstant()
+{
+    switch (pn_type) {
+      case TOK_NUMBER:
+      case TOK_STRING:
+        return true;
+      case TOK_PRIMARY:
+        switch (pn_op) {
+          case JSOP_NULL:
+          case JSOP_FALSE:
+          case JSOP_TRUE:
+            return true;
+          default:
+            return false;
+        }
+      case TOK_RB:
+      case TOK_RC:
+        return (pn_op == JSOP_NEWINIT) && !(pn_xflags & PNX_NONCONST);
+      default:
+        return false;
+    }
+}
+
 JSParseNode *
 Parser::primaryExpr(TokenKind tt, JSBool afterDot)
 {
@@ -8242,9 +8266,11 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
                     /* So CURRENT_TOKEN gets TOK_COMMA and not TOK_LB. */
                     tokenStream.matchToken(TOK_COMMA);
                     pn2 = NullaryNode::create(tc);
-                    pn->pn_xflags |= PNX_HOLEY;
+                    pn->pn_xflags |= PNX_HOLEY | PNX_NONCONST;
                 } else {
                     pn2 = assignExpr();
+                    if (pn2 && !pn2->isConstant())
+                        pn->pn_xflags |= PNX_NONCONST;
                 }
                 if (!pn2)
                     return NULL;
@@ -8409,6 +8435,8 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
                         goto property_name;
                     }
 
+                    pn->pn_xflags |= PNX_NONCONST;
+
                     /* NB: Getter function in { get x(){} } is unnamed. */
                     pn2 = functionDef(NULL, op == JSOP_SETTER ? SETTER : GETTER, JSFUN_LAMBDA);
                     pn2 = JSParseNode::newBinaryOrAppend(TOK_COLON, op, pn3, pn2, tc);
@@ -8433,6 +8461,8 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
             tt = tokenStream.getToken();
             if (tt == TOK_COLON) {
                 pnval = assignExpr();
+                if (pnval && !pnval->isConstant())
+                    pn->pn_xflags |= PNX_NONCONST;
             } else {
 #if JS_HAS_DESTRUCTURING_SHORTHAND
                 if (tt != TOK_COMMA && tt != TOK_RC) {
@@ -8447,7 +8477,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
                  * for |var {x: x, y: y} = o|, per proposed JS2/ES4 for JS1.8.
                  */
                 tokenStream.ungetToken();
-                pn->pn_xflags |= PNX_DESTRUCT;
+                pn->pn_xflags |= PNX_DESTRUCT | PNX_NONCONST;
                 pnval = pn3;
                 if (pnval->pn_type == TOK_NAME) {
                     pnval->pn_arity = PN_NAME;

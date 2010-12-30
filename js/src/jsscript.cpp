@@ -81,7 +81,6 @@ enum ScriptBits {
     HasSharps,
     StrictModeCode,
     UsesEval,
-    CompileAndGo,
     UsesArguments
 };
 
@@ -173,12 +172,12 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
             scriptBits |= (1 << HasSharps);
         if (script->strictModeCode)
             scriptBits |= (1 << StrictModeCode);
-        if (script->compileAndGo)
-            scriptBits |= (1 << CompileAndGo);
         if (script->usesEval)
             scriptBits |= (1 << UsesEval);
         if (script->usesArguments)
             scriptBits |= (1 << UsesArguments);
+        JS_ASSERT(!script->compileAndGo);
+        JS_ASSERT(!script->hasSingletons);
     }
 
     if (!JS_XDRUint32(xdr, &prologLength))
@@ -238,8 +237,6 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
             script->hasSharps = true;
         if (scriptBits & (1 << StrictModeCode))
             script->strictModeCode = true;
-        if (scriptBits & (1 << CompileAndGo))
-            script->compileAndGo = true;
         if (scriptBits & (1 << UsesEval))
             script->usesEval = true;
         if (scriptBits & (1 << UsesArguments))
@@ -1115,6 +1112,8 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
         script->usesEval = true;
     if (cg->flags & TCF_FUN_USES_ARGUMENTS)
         script->usesArguments = true;
+    if (cg->flags & TCF_HAS_SINGLETONS)
+        script->hasSingletons = true;
 
     if (cg->upvarList.count != 0) {
         JS_ASSERT(cg->upvarList.count <= cg->upvarMap.length);
