@@ -443,15 +443,19 @@ OPDEF(JSOP_NOTRACE,       182,"notrace",    NULL,     3,  0,  0,  0,  JOF_UINT16
 OPDEF(JSOP_XMLCDATA,      183,"xmlcdata",   NULL,     3,  0,  1, 19,  JOF_ATOM)
 OPDEF(JSOP_XMLCOMMENT,    184,"xmlcomment", NULL,     3,  0,  1, 19,  JOF_ATOM)
 OPDEF(JSOP_XMLPI,         185,"xmlpi",      NULL,     3,  1,  1, 19,  JOF_ATOM)
-OPDEF(JSOP_CALLPROP,      186,"callprop",   NULL,     3,  1,  2, 18,  JOF_ATOM|JOF_PROP|JOF_CALLOP|JOF_TMPSLOT3)
+OPDEF(JSOP_DELDESC,       186,"deldesc",    NULL,     1,  2,  1, 15,  JOF_BYTE|JOF_ELEM|JOF_DEL)
+
+OPDEF(JSOP_CALLPROP,      187,"callprop",   NULL,     3,  1,  2, 18,  JOF_ATOM|JOF_PROP|JOF_CALLOP|JOF_TMPSLOT3)
 
 /*
- * Get a display (free) variable from the closure's reserved slots.
+ * These opcodes contain a reference to the current blockChain object.
+ * They are emitted directly after instructions, such as DEFFUN, that need fast access to
+ * the blockChain. The special NULLBLOCKCHAIN is needed because the JOF_OBJECT
+ * does not permit NULL object references, since it stores an index into a table of
+ * objects.
  */
-OPDEF(JSOP_GETUPVAR,      187,"getupvar",   NULL,     3,  0,  1, 19,  JOF_UINT16|JOF_NAME)
-OPDEF(JSOP_CALLUPVAR,     188,"callupvar",  NULL,     3,  0,  2, 19,  JOF_UINT16|JOF_NAME|JOF_CALLOP)
-
-OPDEF(JSOP_DELDESC,       189,"deldesc",    NULL,     1,  2,  1, 15,  JOF_BYTE|JOF_ELEM|JOF_DEL)
+OPDEF(JSOP_BLOCKCHAIN,    188,"blockchain",    NULL,  3,  0,  0,  0, JOF_OBJECT)
+OPDEF(JSOP_NULLBLOCKCHAIN,189,"nullblockchain",NULL,  1,  0,  0,  0, JOF_BYTE)
 
 /*
  * Opcode to hold 24-bit immediate integer operands.
@@ -586,7 +590,7 @@ OPDEF(JSOP_OBJTOP,        228,"objtop",        NULL,  3,  0,  0,  0,  JOF_UINT16
 OPDEF(JSOP_TRACE,         229, "trace",         NULL,  3,  0,  0,  0,  JOF_UINT16)
 
 /*
- * Debugger versions of JSOP_{GET,CALL}UPVAR and the flat closure (_FC) ops.
+ * Debugger versions of the flat closure (_FC) ops.
  */
 OPDEF(JSOP_GETUPVAR_DBG,  230,"getupvar_dbg",  NULL,  3,  0,  1, 19,  JOF_UINT16|JOF_NAME)
 OPDEF(JSOP_CALLUPVAR_DBG, 231,"callupvar_dbg", NULL,  3,  0,  2, 19,  JOF_UINT16|JOF_NAME|JOF_CALLOP)
@@ -614,15 +618,5 @@ OPDEF(JSOP_GLOBALDEC,     245,"globaldec",     NULL,  3,  0,  1, 15,  JOF_GLOBAL
 OPDEF(JSOP_CALLGLOBAL,    246,"callglobal",    NULL,  3,  0,  2, 19,  JOF_GLOBAL|JOF_NAME|JOF_CALLOP)
 OPDEF(JSOP_FORGLOBAL,     247,"forglobal",     NULL,  3,  1,  1, 19,  JOF_GLOBAL|JOF_NAME|JOF_FOR|JOF_TMPSLOT)
 
-/*
- * These opcodes contain a reference to the current blockChain object.
- * They are emitted directly after instructions, such as DEFFUN, that need fast access to
- * the blockChain. The special NULLBLOCKCHAIN is needed because the JOF_OBJECT
- * does not permit NULL object references, since it stores an index into a table of
- * objects.
- */
-OPDEF(JSOP_BLOCKCHAIN,    248,"blockchain",    NULL,  3,  0,  0,  0, JOF_OBJECT)
-OPDEF(JSOP_NULLBLOCKCHAIN,249,"nullblockchain",NULL,  1,  0,  0,  0, JOF_BYTE)
-
 /* Like JSOP_FUNAPPLY but for f.call instead of f.apply. */
-OPDEF(JSOP_FUNCALL,       250,"funcall",       NULL,  3, -1,  1, 18,  JOF_UINT16|JOF_INVOKE)
+OPDEF(JSOP_FUNCALL,       248,"funcall",       NULL,  3, -1,  1, 18,  JOF_UINT16|JOF_INVOKE)

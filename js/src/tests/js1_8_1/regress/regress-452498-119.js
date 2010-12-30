@@ -78,7 +78,7 @@ function test()
     function f() {
     var x;
     (function(){})();
-    eval("if(x|=[]) {const x; }");
+    eval("if(x|=[]) {var x; }");
   }
   f();
 

@@ -485,10 +485,10 @@ Shape::getChild(JSContext *cx, const js::Shape &child, Shape **listp)
 
                 /*
                  * Beware duplicate formal parameters, allowed by ECMA-262 in
-                 * non-strict mode. Otherwise we know that JSFunction::addLocal
-                 * (our caller) won't pass an id already in the table to us. In
-                 * the case of duplicate formals, the last one wins, so while
-                 * we must not overcount entries, we must store newShape.
+                 * non-strict mode. Otherwise we know that Bindings::add (our
+                 * caller) won't pass an id already in the table to us. In the
+                 * case of duplicate formals, the last one wins, so while we
+                 * must not overcount entries, we must store newShape.
                  */
                 if (!SHAPE_FETCH(spp))
                     ++table->entryCount;
