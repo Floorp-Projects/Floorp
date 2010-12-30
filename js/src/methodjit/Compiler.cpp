@@ -2695,6 +2695,12 @@ mjit::Compiler::emitUncachedCall(uint32 argc, bool callingNew)
     masm.move(Imm32(argc), Registers::ArgReg1);
     INLINE_STUBCALL(stub);
 
+    if (recompiling) {
+        /* In case we recompiled this call to an uncached call. */
+        OOL_STUBCALL(JS_FUNC_TO_DATA_PTR(void *, callingNew ? ic::New : ic::Call));
+        stubcc.crossJump(stubcc.masm.jump(), masm.label());
+    }
+
     Jump notCompiled = masm.branchTestPtr(Assembler::Zero, r0, r0);
 
     masm.loadPtr(FrameAddress(offsetof(VMFrame, regs.fp)), JSFrameReg);
@@ -2717,12 +2723,6 @@ mjit::Compiler::emitUncachedCall(uint32 argc, bool callingNew)
     stubcc.linkExitDirect(notCompiled, stubcc.masm.label());
     stubcc.rejoin(Changes(1));
     callPatches.append(callPatch);
-
-    if (recompiling) {
-        /* In case we recompiled this call to an uncached call. */
-        OOL_STUBCALL(JS_FUNC_TO_DATA_PTR(void *, callingNew ? ic::New : ic::Call));
-        stubcc.rejoin(Changes(1));
-    }
 }
 
 static bool
