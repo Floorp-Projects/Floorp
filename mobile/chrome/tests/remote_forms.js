@@ -2,6 +2,49 @@ dump("====================== Content Script Loaded =======================\n");
 
 let assistant = contentObject._formAssistant;
 
+// Copied from http://mxr.mozilla.org/mozilla-central/source/testing/mochitest/tests/SimpleTest/EventUtils.js
+// except the netscape.security.PrivilegeManager.enablePrivilege call
+function sendMouseEvent(aEvent, aTarget, aWindow) {
+  if (['click', 'mousedown', 'mouseup', 'mouseover', 'mouseout'].indexOf(aEvent.type) == -1) {
+    throw new Error("sendMouseEvent doesn't know about event type '" + aEvent.type + "'");
+  }
+
+  if (!aWindow) {
+    aWindow = window;
+  }
+
+  if (!(aTarget instanceof Element)) {
+    aTarget = aWindow.document.getElementById(aTarget);
+  }
+
+  let event = aWindow.document.createEvent('MouseEvent');
+
+  let typeArg          = aEvent.type;
+  let canBubbleArg     = true;
+  let cancelableArg    = true;
+  let viewArg          = aWindow;
+  let detailArg        = aEvent.detail        || (aEvent.type == 'click'     ||
+                                                  aEvent.type == 'mousedown' ||
+                                                  aEvent.type == 'mouseup' ? 1 : 0);
+  let screenXArg       = aEvent.screenX       || 0;
+  let screenYArg       = aEvent.screenY       || 0;
+  let clientXArg       = aEvent.clientX       || 0;
+  let clientYArg       = aEvent.clientY       || 0;
+  let ctrlKeyArg       = aEvent.ctrlKey       || false;
+  let altKeyArg        = aEvent.altKey        || false;
+  let shiftKeyArg      = aEvent.shiftKey      || false;
+  let metaKeyArg       = aEvent.metaKey       || false;
+  let buttonArg        = aEvent.button        || 0;
+  let relatedTargetArg = aEvent.relatedTarget || null;
+
+  event.initMouseEvent(typeArg, canBubbleArg, cancelableArg, viewArg, detailArg,
+                       screenXArg, screenYArg, clientXArg, clientYArg,
+                       ctrlKeyArg, altKeyArg, shiftKeyArg, metaKeyArg,
+                       buttonArg, relatedTargetArg);
+
+  aTarget.dispatchEvent(event);
+}
+
 AsyncTests.add("Test:Click", function(aMessage, aJson) {
   sendMouseEvent({type: "click"}, "root", content);
   return assistant._open;
