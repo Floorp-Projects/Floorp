@@ -234,9 +234,9 @@ struct JSStmtInfo {
 /*
  * Flag to prevent a non-escaping function from being optimized into a null
  * closure (i.e., a closure that needs only its global object for free variable
- * resolution, thanks to JSOP_{GET,CALL}UPVAR), because this function contains
- * a closure that needs one or more scope objects surrounding it (i.e., Call
- * object for a heavyweight outer function). See bug 560234.
+ * resolution), because this function contains a closure that needs one or more
+ * scope objects surrounding it (i.e., a Call object for an outer heavyweight
+ * function). See bug 560234.
  */
 #define TCF_FUN_ENTRAINS_SCOPES 0x400000
 

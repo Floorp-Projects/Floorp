@@ -1954,22 +1954,6 @@ mjit::Compiler::generateMethod()
                 return Compile_Error;
           END_CASE(JSOP_CALLPROP)
 
-          BEGIN_CASE(JSOP_GETUPVAR)
-          BEGIN_CASE(JSOP_CALLUPVAR)
-          {
-            uint32 index = GET_UINT16(PC);
-            JSUpvarArray *uva = script->upvars();
-            JS_ASSERT(index < uva->length);
-
-            prepareStubCall(Uses(0));
-            masm.move(Imm32(uva->vector[index].asInteger()), Registers::ArgReg1);
-            INLINE_STUBCALL(stubs::GetUpvar);
-            frame.pushSynced();
-            if (op == JSOP_CALLUPVAR)
-                frame.push(UndefinedValue());
-          }
-          END_CASE(JSOP_CALLUPVAR)
-
           BEGIN_CASE(JSOP_UINT24)
             frame.push(Value(Int32Value((int32_t) GET_UINT24(PC))));
           END_CASE(JSOP_UINT24)

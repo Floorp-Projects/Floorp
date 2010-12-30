@@ -73,7 +73,7 @@ namespace js {
  *
  * TODO: consider giving more bits to the slot value and takings ome from the level.
  */
-class UpvarCookie 
+class UpvarCookie
 {
     uint32 value;
 
@@ -206,11 +206,11 @@ class Bindings {
     inline const js::Shape *lastShape() const;
 
     enum {
-       /*
-        * A script may have no more than this many arguments, variables, or
-        * upvars.
-        */
-       BINDING_COUNT_LIMIT = 0xFFFF
+        /*
+         * A script may have no more than this many arguments, variables, or
+         * upvars.
+         */
+        BINDING_COUNT_LIMIT = 0xFFFF
     };
 
     /*
@@ -224,11 +224,10 @@ class Bindings {
      * which must deal with such cases.)  Pass null for name when indicating a
      * destructuring argument.  Return true on success.
      *
-     *
      * The parser builds shape paths for functions, usable by Call objects at
-     * runtime, by calling addLocal. All ARGUMENT bindings must be added before
-     * before any VARIABLE or CONSTANT bindings, which themselves must be added
-     * before all UPVAR bindings.
+     * runtime, by calling an "add" method. All ARGUMENT bindings must be added
+     * before before any VARIABLE or CONSTANT bindings, which themselves must
+     * be added before all UPVAR bindings.
      */
     bool add(JSContext *cx, JSAtom *name, BindingKind kind);
 
@@ -431,7 +430,7 @@ struct JSScript {
          *   JS_CompileFile, etc.) have these objects.
          * - Function scripts never have script objects; such scripts are owned
          *   by their function objects.
-         * - Temporary scripts created by obj_eval, JS_EvaluateScript, and 
+         * - Temporary scripts created by obj_eval, JS_EvaluateScript, and
          *   similar functions never have these objects; such scripts are
          *   explicitly destroyed by the code that created them.
          * Debugging API functions (JSDebugHooks::newScriptHook;

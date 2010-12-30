@@ -40,6 +40,10 @@ script regress-586482-4.js
 script regress-586482-5.js
 script regress-588339.js
 script regress-yarr-regexp.js
+script regress-592202-1.js
+script regress-592202-2.js
+script regress-592202-3.js
+script regress-592202-4.js
 script regress-592217.js
 script regress-592556-c35.js
 script regress-593256.js
