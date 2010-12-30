@@ -781,7 +781,8 @@ Script::analyze(JSContext *cx, JSScript *script)
           case JSOP_INCLOCAL:
           case JSOP_DECLOCAL:
           case JSOP_LOCALINC:
-          case JSOP_LOCALDEC: {
+          case JSOP_LOCALDEC:
+          case JSOP_GETLOCALPROP: {
             uint32 local = GET_SLOTNO(pc);
             if (local < nfixed && !localDefined(local, offset))
                 setLocal(local, LOCAL_USE_BEFORE_DEF);
