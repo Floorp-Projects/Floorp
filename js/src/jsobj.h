@@ -176,21 +176,15 @@ typedef Vector<PropDesc, 1> PropDescArray;
 } /* namespace js */
 
 struct JSObjectMap {
-    uint32 startMarker; /* start marker for diagnostics */
     uint32 shape;       /* shape identifier */
     uint32 slotSpan;    /* one more than maximum live slot number */
 
     static JS_FRIEND_DATA(const JSObjectMap) sharedNonNative;
 
-    JSObjectMap(uint32 startMarker, uint32 shape, uint32 slotSpan)
-        : startMarker(startMarker), shape(shape), slotSpan(slotSpan) {}
+    explicit JSObjectMap(uint32 shape) : shape(shape), slotSpan(0) {}
+    JSObjectMap(uint32 shape, uint32 slotSpan) : shape(shape), slotSpan(slotSpan) {}
 
     enum { INVALID_SHAPE = 0x8fffffff, SHAPELESS = 0xffffffff };
-    enum { NON_NATIVE_START_MARKER = 0xeaeaeaea,
-           SHAPE_START_MARKER      = 0xebebebeb,
-           SHAPE_MARKER_1          = 0xecececec,
-           SHAPE_MARKER_2          = 0xedededed,
-           SHAPE_END_MARKER        = 0xefefefef };
 
     bool isNative() const { return this != &sharedNonNative; }
 
