@@ -55,12 +55,18 @@ using namespace js;
 using namespace js::gc;
 
 JSCompartment::JSCompartment(JSRuntime *rt)
-  : rt(rt), principals(NULL), data(NULL), marked(false), debugMode(rt->debugMode),
-    anynameObject(NULL), functionNamespaceObject(NULL)
+  : rt(rt),
+    principals(NULL),
+    data(NULL),
+    marked(false),
+    debugMode(rt->debugMode),
+    anynameObject(NULL),
+    functionNamespaceObject(NULL),
+    mathCache(NULL)
 {
     JS_INIT_CLIST(&scripts);
 
-    memset(scriptsToGC, 0, sizeof(scriptsToGC));
+    PodArrayZero(scriptsToGC);
 }
 
 JSCompartment::~JSCompartment()
@@ -71,6 +77,8 @@ JSCompartment::~JSCompartment()
 #ifdef JS_METHODJIT
     delete jaegerCompartment;
 #endif
+
+    delete mathCache;
 
 #ifdef DEBUG
     for (size_t i = 0; i != JS_ARRAY_LENGTH(scriptsToGC); ++i)
@@ -413,4 +421,14 @@ JSCompartment::purge(JSContext *cx)
         }
     }
 #endif
+}
+
+MathCache *
+JSCompartment::allocMathCache(JSContext *cx)
+{
+    JS_ASSERT(!mathCache);
+    mathCache = new MathCache;
+    if (!mathCache)
+        js_ReportOutOfMemory(cx);
+    return mathCache;
 }
