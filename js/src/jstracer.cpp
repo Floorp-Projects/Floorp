@@ -13257,30 +13257,6 @@ TraceRecorder::stackLoad(Address addr, uint8 type)
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_GETUPVAR()
-{
-    uintN index = GET_UINT16(cx->regs->pc);
-    JSScript *script = cx->fp()->script();
-    JSUpvarArray* uva = script->upvars();
-    JS_ASSERT(index < uva->length);
-
-    Value v;
-    LIns* upvar_ins = upvar(script, uva, index, v);
-    if (!upvar_ins)
-        return ARECORD_STOP;
-    stack(0, upvar_ins);
-    return ARECORD_CONTINUE;
-}
-
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_CALLUPVAR()
-{
-    CHECK_STATUS_A(record_JSOP_GETUPVAR());
-    stack(1, w.immiUndefined());
-    return ARECORD_CONTINUE;
-}
-
-JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_GETFCSLOT()
 {
     JSObject& callee = cx->fp()->callee();

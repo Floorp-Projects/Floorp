@@ -1909,8 +1909,8 @@ Parser::analyzeFunctions(JSFunctionBox *funbox, uint32& tcflags)
  * but without this extra marking phase, function g will not be marked as a
  * funarg since it is called from within its parent scope. But g reaches up to
  * f's parameter p, so if o_m escapes f's activation scope, g does too and
- * cannot use JSOP_GETUPVAR to reach p. In contast function h neither escapes
- * nor uses an upvar "above" o_m's level.
+ * cannot assume that p's stack slot is still alive. In contast function h
+ * neither escapes nor uses an upvar "above" o_m's level.
  *
  * If function g itself contained lambdas that contained non-lambdas that reach
  * up above its level, then those non-lambdas would have to be marked too. This
@@ -2050,9 +2050,8 @@ Parser::markFunArgs(JSFunctionBox *funbox, uintN tcflags)
                      PN_OP(lexdep) == JSOP_CALLEE)) {
                     /*
                      * Mark this formerly-Algol-like function as an escaping
-                     * function (i.e., as a funarg), because it is used from a
-                     * funarg and therefore can not use JSOP_{GET,CALL}UPVAR to
-                     * access upvars.
+                     * function (i.e., as a funarg), because it is used from
+                     * another funarg.
                      *
                      * Progress is guaranteed because we set the funarg flag
                      * here, which suppresses revisiting this function (thanks
@@ -2372,26 +2371,8 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32& tcflags)
 
             if (!fn->isFunArg()) {
                 /*
-                 * This function is Algol-like, it never escapes. So long as it
-                 * does not assign to outer variables, it needs only an upvars
-                 * array in its script and JSOP_{GET,CALL}UPVAR opcodes in its
-                 * bytecode to reach up the frame stack at runtime based on
-                 * those upvars' cookies.
+                 * This function is Algol-like, it never escapes.
                  *
-                 * Any assignments to upvars from functions called by this one
-                 * will be coherent because of the JSOP_{GET,CALL}UPVAR ops,
-                 * which load from stack homes when interpreting or from native
-                 * stack slots when executing a trace.
-                 *
-                 * We could add JSOP_SETUPVAR, etc., but it is uncommon for a
-                 * nested function to assign to an outer lexical variable, so
-                 * we defer adding yet more code footprint in the absence of
-                 * evidence motivating these opcodes.
-                 */
-                bool mutation = !!(funbox->tcflags & TCF_FUN_SETS_OUTER_NAME);
-                uintN nupvars = 0;
-
-                /*
                  * Check that at least one outer lexical binding was assigned
                  * to (global variables don't count). This is conservative: we
                  * could limit assignments to those in the current function,
@@ -2404,30 +2385,13 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32& tcflags)
 
                     if (!lexdep->isFreeVar()) {
                         JS_ASSERT(lexdep->frameLevel() <= funbox->level);
-                        ++nupvars;
-                        if (lexdep->isAssigned())
-                            break;
+                        break;
                     }
                 }
-                if (!ale)
-                    mutation = false;
 
-                if (nupvars == 0) {
+                if (!ale) {
                     FUN_METER(onlyfreevar);
                     FUN_SET_KIND(fun, JSFUN_NULL_CLOSURE);
-                } else if (!mutation &&
-                           !(funbox->tcflags & (TCF_FUN_IS_GENERATOR | TCF_FUN_ENTRAINS_SCOPES))) {
-                    /*
-                     * Algol-like functions can read upvars using the dynamic
-                     * link (cx->fp/fp->down), optimized using the cx->display
-                     * lookup table indexed by static level. They do not need
-                     * to entrain and search their environment objects.
-                     */
-                    FUN_METER(display);
-                    FUN_SET_KIND(fun, JSFUN_NULL_CLOSURE);
-                } else {
-                    if (!(funbox->tcflags & TCF_FUN_IS_GENERATOR))
-                        FUN_METER(setupvar);
                 }
             } else {
                 uintN nupvars = 0, nflattened = 0;
@@ -2902,8 +2866,8 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
     pn->pn_cookie.makeFree();
 
     /*
-     * If a lambda, give up on JSOP_{GET,CALL}UPVAR usage unless this function
-     * is immediately applied (we clear PND_FUNARG if so -- see memberExpr).
+     * If a lambda, mark this function as escaping (as a "funarg") unless it is
+     * immediately applied (we clear PND_FUNARG if so -- see memberExpr).
      *
      * Treat function sub-statements (non-lambda, non-body-level functions) as
      * escaping funargs, since we can't statically analyze their definitions
