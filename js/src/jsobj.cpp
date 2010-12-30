@@ -1044,6 +1044,7 @@ EvalCacheLookup(JSContext *cx, JSLinearString *str, JSStackFrame *caller, uintN 
         if (script->savedCallerFun &&
             script->staticLevel == staticLevel &&
             script->version == version &&
+            !script->hasSingletons &&
             (script->principals == principals ||
              (principals->subsume(principals, script->principals) &&
               script->principals->subsume(script->principals, principals)))) {

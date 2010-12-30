@@ -224,7 +224,7 @@ OPDEF(JSOP_ENDITER,   77, "enditer",    NULL,         1,  1,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_FUNAPPLY,  78, "funapply",   NULL,         3, -1,  1, 18,  JOF_UINT16|JOF_INVOKE)
 OPDEF(JSOP_SWAP,      79, "swap",       NULL,         1,  2,  2,  0,  JOF_BYTE)
 
-/* Push object literal. */
+/* Push object literal: either an XML object or initialiser object. */
 OPDEF(JSOP_OBJECT,    80, "object",     NULL,         3,  0,  1, 19,  JOF_OBJECT)
 
 /* Pop value and discard it. */

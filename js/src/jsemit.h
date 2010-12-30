@@ -258,6 +258,11 @@ struct JSStmtInfo {
 #define TCF_FUN_MIGHT_ALIAS_LOCALS  0x4000000
 
 /*
+ * The script contains singleton initialiser JSOP_OBJECT.
+ */
+#define TCF_HAS_SINGLETONS       0x8000000
+
+/*
  * Flags to check for return; vs. return expr; in a function.
  */
 #define TCF_RETURN_FLAGS        (TCF_RETURN_EXPR | TCF_RETURN_VOID)
@@ -651,6 +656,17 @@ struct JSCodeGenerator : public JSTreeContext
     bool compilingForEval() { return !!(flags & TCF_COMPILE_FOR_EVAL); }
 
     bool shouldNoteClosedName(JSParseNode *pn);
+
+    bool checkSingletonContext() {
+        if (!compileAndGo() || inFunction())
+            return false;
+        for (JSStmtInfo *stmt = topStmt; stmt; stmt = stmt->down) {
+            if (STMT_IS_LOOP(stmt))
+                return false;
+        }
+        flags |= TCF_HAS_SINGLETONS;
+        return true;
+    }
 };
 
 #define CG_TS(cg)               TS((cg)->parser)
