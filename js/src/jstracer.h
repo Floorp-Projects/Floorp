@@ -231,8 +231,8 @@ public:
 #ifdef NJ_NO_VARIADIC_MACROS
 
 #define debug_only_stmt(action)            /* */
-static void debug_only_printf(int mask, const char *fmt, ...) {}
-#define debug_only_print0(mask, str)       /* */
+static void debug_only_printf(int mask, const char *fmt, ...) JS_BEGIN_MACRO JS_END_MACRO
+#define debug_only_print0(mask, str)       JS_BEGIN_MACRO JS_END_MACRO
 
 #elif defined(JS_JIT_SPEW)
 
@@ -265,8 +265,8 @@ extern void FragProfiling_FragFinalizer(nanojit::Fragment* f, TraceMonitor*);
 #else
 
 #define debug_only_stmt(action)            /* */
-#define debug_only_printf(mask, fmt, ...)  /* */
-#define debug_only_print0(mask, str)       /* */
+#define debug_only_printf(mask, fmt, ...)  JS_BEGIN_MACRO JS_END_MACRO
+#define debug_only_print0(mask, str)       JS_BEGIN_MACRO JS_END_MACRO
 
 #endif
 
