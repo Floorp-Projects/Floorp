@@ -5167,6 +5167,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v_in,
     }
 
     {
+        jsbytecode* pc = cx->regs->pc;
         jsbytecode* savedImacropc = fp->maybeImacropc();
         if (savedImacropc) {
             JS_ASSERT(cx->hasfp());
@@ -5186,7 +5187,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v_in,
 
         if (savedImacropc) {
             JS_ASSERT(cx->hasfp());
-            cx->regs->pc = savedImacropc;
+            cx->regs->pc = pc;
             fp->setImacropc(savedImacropc);
         }
 
