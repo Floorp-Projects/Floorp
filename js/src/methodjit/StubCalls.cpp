@@ -559,7 +559,7 @@ stubs::SetElem(VMFrame &f)
 
     Value &objval = regs.sp[-3];
     Value &idval  = regs.sp[-2];
-    Value retval  = regs.sp[-1];
+    Value rval    = regs.sp[-1];
 
     JSObject *obj;
     jsid id;
@@ -582,19 +582,19 @@ stubs::SetElem(VMFrame &f)
                     if ((jsuint)i >= obj->getArrayLength())
                         obj->setArrayLength(i + 1);
                 }
-                obj->setDenseArrayElement(i, regs.sp[-1]);
+                obj->setDenseArrayElement(i, rval);
                 goto end_setelem;
             }
         }
     } while (0);
-    if (!obj->setProperty(cx, id, &retval, strict))
+    if (!obj->setProperty(cx, id, &rval, strict))
         THROW();
   end_setelem:
     /* :FIXME: Moving the assigned object into the lowest stack slot
      * is a temporary hack. What we actually want is an implementation
      * of popAfterSet() that allows popping more than one value;
      * this logic can then be handled in Compiler.cpp. */
-    regs.sp[-3] = retval;
+    regs.sp[-3] = regs.sp[-1];
 }
 
 template void JS_FASTCALL stubs::SetElem<true>(VMFrame &f);
@@ -940,7 +940,10 @@ template void JS_FASTCALL stubs::DefFun<false>(VMFrame &f, JSFunction *fun);
             DEFAULT_VALUE(cx, -1, JSTYPE_NUMBER, rval);                       \
         if (lval.isString() && rval.isString()) {                             \
             JSString *l = lval.toString(), *r = rval.toString();              \
-            cond = js_CompareStrings(l, r) OP 0;                              \
+            JSBool cmp;                                                       \
+            if (!CompareStrings(cx, l, r, &cmp))                              \
+                THROWV(JS_FALSE);                                             \
+            cond = cmp OP 0;                                                  \
         } else {                                                              \
             double l, r;                                                      \
             if (!ValueToNumber(cx, lval, &l) ||                               \
@@ -1006,7 +1009,10 @@ StubEqualityOp(VMFrame &f)
     if (lval.isString() && rval.isString()) {
         JSString *l = lval.toString();
         JSString *r = rval.toString();
-        cond = js_EqualStrings(l, r) == EQ;
+        JSBool equal;
+        if (!EqualStrings(cx, l, r, &equal))
+            return false;
+        cond = equal == EQ;
     } else
 #if JS_HAS_XML_SUPPORT
     if ((lval.isObject() && lval.toObject().isXML()) ||
@@ -1066,7 +1072,10 @@ StubEqualityOp(VMFrame &f)
             if (lval.isString() && rval.isString()) {
                 JSString *l = lval.toString();
                 JSString *r = rval.toString();
-                cond = js_EqualStrings(l, r) == EQ;
+                JSBool equal;
+                if (!EqualStrings(cx, l, r, &equal))
+                    return false;
+                cond = equal == EQ;
             } else {
                 double l, r;
                 if (!ValueToNumber(cx, lval, &l) ||
@@ -1316,11 +1325,32 @@ stubs::Interrupt(VMFrame &f, jsbytecode *pc)
 }
 
 void JS_FASTCALL
-stubs::Trap(VMFrame &f, jsbytecode *pc)
+stubs::Trap(VMFrame &f, uint32 trapTypes)
 {
     Value rval;
+    jsbytecode *pc = f.cx->regs->pc;
 
-    switch (JS_HandleTrap(f.cx, f.cx->fp()->script(), pc, Jsvalify(&rval))) {
+    /*
+     * Trap may be called for a single-step interrupt trap and/or a
+     * regular trap. Try the single-step first, and if it lets control
+     * flow through or does not exist, do the regular trap.
+     */
+    JSTrapStatus result = JSTRAP_CONTINUE;
+    if (trapTypes & JSTRAP_SINGLESTEP) {
+        /*
+         * single step mode may be paused without recompiling by
+         * setting the interruptHook to NULL.
+         */
+        JSInterruptHook hook = f.cx->debugHooks->interruptHook;
+        if (hook)
+            result = hook(f.cx, f.cx->fp()->script(), pc, Jsvalify(&rval),
+                          f.cx->debugHooks->interruptHookData);
+    }
+
+    if (result == JSTRAP_CONTINUE && (trapTypes & JSTRAP_TRAP))
+        result = JS_HandleTrap(f.cx, f.cx->fp()->script(), pc, Jsvalify(&rval));
+
+    switch (result) {
       case JSTRAP_THROW:
         f.cx->throwing = JS_TRUE;
         f.cx->exception = rval;
@@ -2281,9 +2311,11 @@ stubs::StrictEq(VMFrame &f)
 {
     const Value &rhs = f.regs.sp[-1];
     const Value &lhs = f.regs.sp[-2];
-    const bool b = StrictlyEqual(f.cx, lhs, rhs) == true;
+    JSBool equal;
+    if (!StrictlyEqual(f.cx, lhs, rhs, &equal))
+        THROW();
     f.regs.sp--;
-    f.regs.sp[-1].setBoolean(b);
+    f.regs.sp[-1].setBoolean(equal == JS_TRUE);
 }
 
 void JS_FASTCALL
@@ -2291,9 +2323,11 @@ stubs::StrictNe(VMFrame &f)
 {
     const Value &rhs = f.regs.sp[-1];
     const Value &lhs = f.regs.sp[-2];
-    const bool b = StrictlyEqual(f.cx, lhs, rhs) != true;
+    JSBool equal;
+    if (!StrictlyEqual(f.cx, lhs, rhs, &equal))
+        THROW();
     f.regs.sp--;
-    f.regs.sp[-1].setBoolean(b);
+    f.regs.sp[-1].setBoolean(equal != JS_TRUE);
 }
 
 void JS_FASTCALL
@@ -2466,13 +2500,15 @@ stubs::LookupSwitch(VMFrame &f, jsbytecode *pc)
     JS_ASSERT(npairs);
 
     if (lval.isString()) {
-        JSString *str = lval.toString();
+        JSLinearString *str = lval.toString()->ensureLinear(f.cx);
+        if (!str)
+            THROWV(NULL);
         for (uint32 i = 1; i <= npairs; i++) {
             Value rval = script->getConst(GET_INDEX(pc));
             pc += INDEX_LEN;
             if (rval.isString()) {
-                JSString *rhs = rval.toString();
-                if (rhs == str || js_EqualStrings(str, rhs)) {
+                JSLinearString *rhs = rval.toString()->assertIsLinear();
+                if (rhs == str || EqualStrings(str, rhs)) {
                     void* native = script->nativeCodeForPC(ctor,
                                                            jpc + GET_JUMP_OFFSET(pc));
                     JS_ASSERT(native);

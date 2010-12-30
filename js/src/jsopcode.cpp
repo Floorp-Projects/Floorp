@@ -239,6 +239,38 @@ js_GetEnterBlockStackDefs(JSContext *cx, JSScript *script, jsbytecode *pc)
     return OBJ_BLOCK_COUNT(cx, obj);
 }
 
+class AutoScriptUntrapper {
+    JSContext *cx;
+    JSScript *script;
+    jsbytecode *origPC;
+    jsbytecode *newPC;
+
+public:
+    AutoScriptUntrapper(JSContext *cx, JSScript *script, jsbytecode **pc)
+        : cx(cx), script(script), origPC(*pc)
+    {
+        jsbytecode *newCode = js_UntrapScriptCode(cx, script);
+        if (newCode == script->code) {
+            // No change needed
+            newPC = origPC;
+        } else {
+            script->main += newCode - script->code;
+            *pc = newPC = origPC + (newCode - script->code);
+            script->code = newCode;
+        }
+    }
+    ~AutoScriptUntrapper()
+    {
+        ptrdiff_t delta = newPC - origPC;
+        if (delta) {
+            jsbytecode *oldCode = script->code - delta;
+            cx->free(script->code);
+            script->code = oldCode;
+            script->main -= delta;
+        }
+    }
+};
+
 #ifdef DEBUG
 
 /* If pc != NULL, includes a prefix indicating whether the PC is at the current line. */
@@ -354,6 +386,8 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
     jsval v;
     jsint i;
 
+    AutoScriptUntrapper untrapper(cx, script, &pc);
+
     op = (JSOp)*pc;
     if (op >= JSOP_LIMIT) {
         char numBuf1[12], numBuf2[12];
@@ -372,10 +406,6 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
     type = JOF_TYPE(cs->format);
     switch (type) {
       case JOF_BYTE:
-        if (op == JSOP_TRAP) {
-            op = JS_GetTrapOpcode(cx, script, pc);
-            len = (ptrdiff_t) js_CodeSpec[op].length;
-        }
         break;
 
       case JOF_JUMP:
@@ -625,19 +655,16 @@ SprintCString(Sprinter *sp, const char *s)
 static ptrdiff_t
 SprintString(Sprinter *sp, JSString *str)
 {
-    const jschar *chars;
-    size_t length, size;
-    ptrdiff_t offset;
+    size_t length = str->length();
+    const jschar *chars = str->getChars(sp->context);
+    if (!chars)
+        return -1;
 
-    str->getCharsAndLength(chars, length);
-    if (length == 0)
-        return sp->offset;
-
-    size = js_GetDeflatedStringLength(sp->context, chars, length);
+    size_t size = js_GetDeflatedStringLength(sp->context, chars, length);
     if (size == (size_t)-1 || !SprintEnsureBuffer(sp, size))
         return -1;
 
-    offset = sp->offset;
+    ptrdiff_t offset = sp->offset;
     sp->offset += size;
     js_DeflateStringToBuffer(sp->context, chars, length, sp->base + offset,
                              &size);
@@ -683,39 +710,36 @@ const char js_EscapeMap[] = {
 static char *
 QuoteString(Sprinter *sp, JSString *str, uint32 quote)
 {
-    JSBool dontEscape, ok;
-    jschar qc, c;
-    ptrdiff_t off, len;
-    const jschar *s, *t, *z;
-    const char *e;
-    char *bp;
-
     /* Sample off first for later return value pointer computation. */
-    dontEscape = (quote & DONT_ESCAPE) != 0;
-    qc = (jschar) quote;
-    off = sp->offset;
+    JSBool dontEscape = (quote & DONT_ESCAPE) != 0;
+    jschar qc = (jschar) quote;
+    ptrdiff_t off = sp->offset;
     if (qc && Sprint(sp, "%c", (char)qc) < 0)
         return NULL;
 
+    const jschar *s = str->getChars(sp->context);
+    if (!s)
+        return NULL;
+    const jschar *z = s + str->length();
+
     /* Loop control variables: z points at end of string sentinel. */
-    str->getCharsAndEnd(s, z);
-    for (t = s; t < z; s = ++t) {
+    for (const jschar *t = s; t < z; s = ++t) {
         /* Move t forward from s past un-quote-worthy characters. */
-        c = *t;
+        jschar c = *t;
         while (JS_ISPRINT(c) && c != qc && c != '\\' && c != '\t' &&
                !(c >> 8)) {
             c = *++t;
             if (t == z)
                 break;
         }
-        len = t - s;
+        ptrdiff_t len = t - s;
 
         /* Allocate space for s, including the '\0' at the end. */
         if (!SprintEnsureBuffer(sp, len))
             return NULL;
 
         /* Advance sp->offset and copy s into sp's buffer. */
-        bp = sp->base + sp->offset;
+        char *bp = sp->base + sp->offset;
         sp->offset += len;
         while (--len >= 0)
             *bp++ = (char) *s++;
@@ -725,6 +749,8 @@ QuoteString(Sprinter *sp, JSString *str, uint32 quote)
             break;
 
         /* Use js_EscapeMap, \u, or \x only if necessary. */
+        bool ok;
+        const char *e;
         if (!(c >> 8) && (e = strchr(js_EscapeMap, (int)c)) != NULL) {
             ok = dontEscape
                  ? Sprint(sp, "%c", (char)c) >= 0
@@ -1550,7 +1576,6 @@ DecompileDestructuring(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc)
     const char *lval;
     JSAtom *atom;
     jssrcnote *sn;
-    JSString *str;
     JSBool hole;
 
     LOCAL_ASSERT(*pc == JSOP_DUP);
@@ -1631,18 +1656,19 @@ DecompileDestructuring(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc)
           case JSOP_GETPROP:
             LOAD_ATOM(0);
           do_destructure_atom:
+          {
             *OFF2STR(&ss->sprinter, head) = '{';
-            str = ATOM_TO_STRING(atom);
 #if JS_HAS_DESTRUCTURING_SHORTHAND
             nameoff = ss->sprinter.offset;
 #endif
-            if (!QuoteString(&ss->sprinter, str,
-                             js_IsIdentifier(str) ? 0 : (jschar)'\'')) {
+            if (!QuoteString(&ss->sprinter, atom,
+                             js_IsIdentifier(atom) ? 0 : (jschar)'\'')) {
                 return NULL;
             }
             if (SprintPut(&ss->sprinter, ": ", 2) < 0)
                 return NULL;
             break;
+          }
 
           default:
             LOCAL_ASSERT(0);
@@ -4814,14 +4840,15 @@ DecompileCode(JSPrinter *jp, JSScript *script, jsbytecode *pc, uintN len,
     void *mark;
     JSBool ok;
     JSScript *oldscript;
-    jsbytecode *oldcode, *oldmain, *code;
     char *last;
 
     depth = StackDepth(script);
     JS_ASSERT(pcdepth <= depth);
+    cx = jp->sprinter.context;
+
+    AutoScriptUntrapper untrapper(cx, script, &pc);
 
     /* Initialize a sprinter for use with the offset stack. */
-    cx = jp->sprinter.context;
     mark = JS_ARENA_MARK(&cx->tempPool);
     ok = InitSprintStack(cx, &ss, jp, depth);
     if (!ok)
@@ -4849,21 +4876,7 @@ DecompileCode(JSPrinter *jp, JSScript *script, jsbytecode *pc, uintN len,
     /* Call recursive subroutine to do the hard work. */
     oldscript = jp->script;
     jp->script = script;
-    oldcode = jp->script->code;
-    oldmain = jp->script->main;
-    code = js_UntrapScriptCode(cx, jp->script);
-    if (code != oldcode) {
-        jp->script->code = code;
-        jp->script->main = code + (oldmain - oldcode);
-        pc = code + (pc - oldcode);
-    }
-
     ok = Decompile(&ss, pc, len, JSOP_NOP) != NULL;
-    if (code != oldcode) {
-        cx->free(jp->script->code);
-        jp->script->code = oldcode;
-        jp->script->main = oldmain;
-    }
     jp->script = oldscript;
 
     /* If the given code didn't empty the stack, do it now. */
@@ -4969,6 +4982,7 @@ js_DecompileFunction(JSPrinter *jp)
 
         /* Print the parameters. */
         pc = script->main;
+        AutoScriptUntrapper untrapper(jp->sprinter.context, script, &pc);
         endpc = pc + script->length;
         ok = JS_TRUE;
 
@@ -5180,14 +5194,17 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v_in,
         if (!fallback)
             return NULL;
     }
-    return js_DeflateString(cx, fallback->chars(), fallback->length());
+    size_t length = fallback->length();
+    const jschar *chars = fallback->getChars(cx);
+    if (!chars)
+        return NULL;
+    return js_DeflateString(cx, chars, length);
 }
 
 static char *
 DecompileExpression(JSContext *cx, JSScript *script, JSFunction *fun,
                     jsbytecode *pc)
 {
-    jsbytecode *code, *oldcode, *oldmain;
     JSOp op;
     const JSCodeSpec *cs;
     jsbytecode *begin, *end;
@@ -5201,17 +5218,7 @@ DecompileExpression(JSContext *cx, JSScript *script, JSFunction *fun,
     JS_ASSERT(script->code <= pc && pc < script->code + script->length);
 
     pcstack = NULL;
-    oldcode = script->code;
-    oldmain = script->main;
-
-    MUST_FLOW_THROUGH("out");
-    code = js_UntrapScriptCode(cx, script);
-    if (code != oldcode) {
-        script->code = code;
-        script->main = code + (oldmain - oldcode);
-        pc = code + (pc - oldcode);
-    }
-
+    AutoScriptUntrapper untrapper(cx, script, &pc);
     op = (JSOp) *pc;
 
     /* None of these stack-writing ops generates novel values. */
@@ -5306,13 +5313,7 @@ DecompileExpression(JSContext *cx, JSScript *script, JSFunction *fun,
         js_DestroyPrinter(jp);
     }
 
-  out:
-    if (code != oldcode) {
-        cx->free(script->code);
-        script->code = oldcode;
-        script->main = oldmain;
-    }
-
+out:
     cx->free(pcstack);
     return name;
 }

@@ -626,8 +626,6 @@ UpdateNativeIterator(NativeIterator *ni, JSObject *obj)
 bool
 GetIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
 {
-    uint32 hash;
-    JSObject **hp;
     Vector<uint32, 8> shapes(cx);
     uint32 key = 0;
 
@@ -651,7 +649,7 @@ GetIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
              * objects here, as they are not inserted into the cache and
              * will result in a miss.
              */
-            JSObject *last = JS_THREAD_DATA(cx)->lastNativeIterator;
+            JSObject *last = cx->compartment->nativeIterCache.last;
             JSObject *proto = obj->getProto();
             if (last) {
                 NativeIterator *lastni = last->getNativeIterator();
@@ -689,9 +687,7 @@ GetIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
                 pobj = pobj->getProto();
             } while (pobj);
 
-            hash = key % JS_ARRAY_LENGTH(JS_THREAD_DATA(cx)->cachedNativeIterators);
-            hp = &JS_THREAD_DATA(cx)->cachedNativeIterators[hash];
-            JSObject *iterobj = *hp;
+            JSObject *iterobj = cx->compartment->nativeIterCache.get(key);
             if (iterobj) {
                 NativeIterator *ni = iterobj->getNativeIterator();
                 if (!(ni->flags & JSITER_ACTIVE) &&
@@ -703,7 +699,7 @@ GetIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
                     UpdateNativeIterator(ni, obj);
                     RegisterEnumerator(cx, iterobj, ni);
                     if (shapes.length() == 2)
-                        JS_THREAD_DATA(cx)->lastNativeIterator = iterobj;
+                        cx->compartment->nativeIterCache.last = iterobj;
                     return true;
                 }
             }
@@ -738,14 +734,11 @@ GetIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
     JSObject *iterobj = &vp->toObject();
 
     /* Cache the iterator object if possible. */
-    if (shapes.length()) {
-        uint32 hash = key % NATIVE_ITER_CACHE_SIZE;
-        JSObject **hp = &JS_THREAD_DATA(cx)->cachedNativeIterators[hash];
-        *hp = iterobj;
-    }
+    if (shapes.length())
+        cx->compartment->nativeIterCache.set(key, iterobj);
 
     if (shapes.length() == 2)
-        JS_THREAD_DATA(cx)->lastNativeIterator = iterobj;
+        cx->compartment->nativeIterCache.last = iterobj;
     return true;
 }
 

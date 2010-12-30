@@ -41,8 +41,7 @@
 
 #include "jsd.h"
 #include "jsapi.h"
-#include "jspubtd.h"
-#include "jsprvtd.h"
+#include "jsfriendapi.h"
 
 #ifdef DEBUG
 void JSD_ASSERT_VALID_VALUE(JSDValue* jsdval)
@@ -273,8 +272,10 @@ jsd_GetValueFunctionName(JSDContext* jsdc, JSDValue* jsdval)
         if(!fun)
             return NULL;
         jsdval->funName = JS_GetFunctionId(fun);
+
+        /* For compatibility we return "anonymous", not an empty string here. */
         if (!jsdval->funName)
-            jsdval->funName = JS_GetEmptyString(jsdc->jsrt);
+            jsdval->funName = JS_GetAnonymousString(jsdc->jsrt);
     }
     return jsdval->funName;
 }
@@ -298,7 +299,7 @@ jsd_NewValue(JSDContext* jsdc, jsval val)
         call = JS_EnterCrossCompartmentCall(jsdc->dumbContext, jsdc->glob);
         if(!call) {
             JS_EndRequest(jsdc->dumbContext);
-
+            free(jsdval);
             return NULL;
         }
 
@@ -562,8 +563,11 @@ jsd_GetValueProperty(JSDContext* jsdc, JSDValue* jsdval, JSString* name)
     while(NULL != (jsdprop = jsd_IterateProperties(jsdc, jsdval, &iter)))
     {
         JSString* propName = jsd_GetValueString(jsdc, jsdprop->name);
-        if(propName && !JS_CompareStrings(propName, name))
-            return jsdprop;
+        if(propName) {
+            intN result;
+            if (JS_CompareStrings(cx, propName, name, &result) && !result)
+                return jsdprop;
+        }
         JSD_DropProperty(jsdc, jsdprop);
     }
     /* Not found in property list, look it up explicitly */
@@ -571,8 +575,8 @@ jsd_GetValueProperty(JSDContext* jsdc, JSDValue* jsdval, JSString* name)
     if(!(obj = JSVAL_TO_OBJECT(jsdval->val)))
         return NULL;
 
-    nameChars = JS_GetStringChars(name);
-    nameLen   = JS_GetStringLength(name);
+    if (!(nameChars = JS_GetStringCharsZAndLength(cx, name, &nameLen)))
+        return NULL;
 
     JS_BeginRequest(cx);
     call = JS_EnterCrossCompartmentCall(cx, obj);

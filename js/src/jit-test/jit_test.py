@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # jit_test.py -- Python harness for JavaScript trace tests.
 
 import datetime, os, re, sys, tempfile, traceback
@@ -349,8 +351,8 @@ def main(argv):
                   help='Enable the |valgrind| flag, if valgrind is in $PATH.')
     op.add_option('--valgrind-all', dest='valgrind_all', action='store_true',
                   help='Run all tests with valgrind, if valgrind is in $PATH.')
-    op.add_option('--jitflags', dest='jitflags', default='j',
-                  help='Example: --jitflags=j,mj to run each test with -j and -m -j')
+    op.add_option('--jitflags', dest='jitflags', default='mjp',
+                  help='Example: --jitflags=j,mj,mjp to run each test with -j, -m -j, -m -j -p [default=%default]')
     op.add_option('--avoid-stdio', dest='avoid_stdio', action='store_true',
                   help='Use js-shell file indirection instead of piping stdio.')
     op.add_option('--write-failure-output', dest='write_failure_output', action='store_true',

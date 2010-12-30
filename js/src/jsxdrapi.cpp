@@ -456,13 +456,12 @@ JS_XDRString(JSXDRState *xdr, JSString **strp)
     if (!JS_XDRUint32(xdr, &nchars))
         return JS_FALSE;
 
-    if (xdr->mode == JSXDR_DECODE) {
+    if (xdr->mode == JSXDR_DECODE)
         chars = (jschar *) xdr->cx->malloc((nchars + 1) * sizeof(jschar));
-        if (!chars)
-            return JS_FALSE;
-    } else {
-        chars = (*strp)->chars();
-    }
+    else
+        chars = const_cast<jschar *>((*strp)->getChars(xdr->cx));
+    if (!chars)
+        return JS_FALSE;
 
     if (!XDRChars(xdr, chars, nchars))
         goto bad;
