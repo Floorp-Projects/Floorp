@@ -44,6 +44,7 @@
 #include "jsiter.h"
 #include "jsproxy.h"
 #include "jsscope.h"
+#include "jstracer.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/PolyIC.h"
 #include "methodjit/MonoIC.h"
@@ -58,12 +59,22 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     anynameObject(NULL), functionNamespaceObject(NULL)
 {
     JS_INIT_CLIST(&scripts);
+
+    memset(scriptsToGC, 0, sizeof(scriptsToGC));
 }
 
 JSCompartment::~JSCompartment()
 {
+#if defined JS_TRACER
+    FinishJIT(&traceMonitor);
+#endif
 #ifdef JS_METHODJIT
     delete jaegerCompartment;
+#endif
+
+#ifdef DEBUG
+    for (size_t i = 0; i != JS_ARRAY_LENGTH(scriptsToGC); ++i)
+        JS_ASSERT(!scriptsToGC[i]);
 #endif
 }
 
@@ -81,9 +92,19 @@ JSCompartment::init()
     if (!crossCompartmentWrappers.init())
         return false;
 
-#ifdef JS_METHODJIT
-    if (!(jaegerCompartment = new mjit::JaegerCompartment))
+#ifdef JS_TRACER
+    if (!InitJIT(&traceMonitor)) {
         return false;
+    }
+#endif
+
+#ifdef JS_METHODJIT
+    if (!(jaegerCompartment = new mjit::JaegerCompartment)) {
+#ifdef JS_TRACER
+        FinishJIT(&traceMonitor);
+#endif
+        return false;
+    }
     return jaegerCompartment->Initialize();
 #else
     return true;
@@ -356,6 +377,18 @@ void
 JSCompartment::purge(JSContext *cx)
 {
     freeLists.purge();
+
+    /* Destroy eval'ed scripts. */
+    js_DestroyScriptsToGC(cx, this);
+
+#ifdef JS_TRACER
+    /*
+     * If we are about to regenerate shapes, we have to flush the JIT cache,
+     * which will eventually abort any current recording.
+     */
+    if (cx->runtime->gcRegenShapes)
+        traceMonitor.needFlush = JS_TRUE;
+#endif
 
 #ifdef JS_METHODJIT
     for (JSScript *script = (JSScript *)scripts.next;

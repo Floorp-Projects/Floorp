@@ -42,6 +42,7 @@
 #define jscntxtinlines_h___
 
 #include "jscntxt.h"
+#include "jscompartment.h"
 #include "jsparse.h"
 #include "jsstaticcheck.h"
 #include "jsxml.h"
@@ -751,6 +752,36 @@ CallSetter(JSContext *cx, JSObject *obj, jsid id, PropertyOp op, uintN attrs, ui
     if (attrs & JSPROP_SHORTID)
         id = INT_TO_JSID(shortid);
     return CallJSPropertyOpSetter(cx, op, obj, id, vp);
+}
+
+#ifdef JS_TRACER
+/*
+ * Reconstruct the JS stack and clear cx->tracecx. We must be currently in a
+ * _FAIL builtin from trace on cx or another context on the same thread. The
+ * machine code for the trace remains on the C stack when js_DeepBail returns.
+ *
+ * Implemented in jstracer.cpp.
+ */
+JS_FORCES_STACK JS_FRIEND_API(void)
+DeepBail(JSContext *cx);
+#endif
+
+static JS_INLINE void
+LeaveTraceIfGlobalObject(JSContext *cx, JSObject *obj)
+{
+    if (!obj->parent)
+        LeaveTrace(cx);
+}
+
+static JS_INLINE JSBool
+CanLeaveTrace(JSContext *cx)
+{
+    JS_ASSERT(JS_ON_TRACE(cx));
+#ifdef JS_TRACER
+    return cx->bailExit != NULL;
+#else
+    return JS_FALSE;
+#endif
 }
 
 }  /* namespace js */

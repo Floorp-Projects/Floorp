@@ -60,6 +60,7 @@
 #include "jsarray.h"
 #include "jsbool.h"
 #include "jscntxt.h"
+#include "jscompartment.h"
 #include "jsdate.h"
 #include "jsdbgapi.h"
 #include "jsemit.h"
@@ -2430,7 +2431,7 @@ TraceRecorder::finishSuccessfully()
     delete this;
 
     /* Catch OOM that occurred during recording. */
-    if (localtm->outOfMemory() || OverfullJITCache(localtm)) {
+    if (localtm->outOfMemory() || OverfullJITCache(localcx, localtm)) {
         ResetJIT(localcx, FR_OOM);
         return ARECORD_ABORTED;
     }
@@ -2480,7 +2481,7 @@ TraceRecorder::finishAbort(const char* reason)
 
     localtm->recorder = NULL;
     delete this;
-    if (localtm->outOfMemory() || OverfullJITCache(localtm)) {
+    if (localtm->outOfMemory() || OverfullJITCache(localcx, localtm)) {
         ResetJIT(localcx, FR_OOM);
         return JIT_RESET;
     }
@@ -5522,7 +5523,7 @@ TraceRecorder::startRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* f,
                                      expectedInnerExit, outerScript, outerPC, outerArgc,
                                      speculate);
 
-    if (!tm->recorder || tm->outOfMemory() || OverfullJITCache(tm)) {
+    if (!tm->recorder || tm->outOfMemory() || OverfullJITCache(cx, tm)) {
         ResetJIT(cx, FR_OOM);
         return false;
     }
@@ -5647,9 +5648,9 @@ RecordTree(JSContext* cx, TreeFragment* first, JSScript* outerScript, jsbytecode
     AUDIT(recorderStarted);
 
     if (tm->outOfMemory() ||
-        OverfullJITCache(tm) ||
+        OverfullJITCache(cx, tm) ||
         !tm->tracedScripts.put(cx->fp()->script())) {
-        if (!OverfullJITCache(tm))
+        if (!OverfullJITCache(cx, tm))
             js_ReportOutOfMemory(cx);
         Backoff(cx, (jsbytecode*) f->root->ip);
         ResetJIT(cx, FR_OOM);
@@ -7257,7 +7258,7 @@ TraceRecorder::monitorRecording(JSOp op)
             return status == ARECORD_ERROR ? ARECORD_ERROR : ARECORD_ABORTED;
         }
 
-        if (outOfMemory() || OverfullJITCache(&localtm)) {
+        if (outOfMemory() || OverfullJITCache(cx, &localtm)) {
             ResetJIT(cx, FR_OOM);
 
             /*
@@ -7526,18 +7527,21 @@ disable_debugger_exceptions() { }
 void
 SetMaxCodeCacheBytes(JSContext* cx, uint32 bytes)
 {
-    TraceMonitor* tm = &JS_THREAD_DATA(cx)->traceMonitor;
+    TraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     JS_ASSERT(tm->codeAlloc && tm->dataAlloc && tm->traceAlloc);
     if (bytes > 1 G)
         bytes = 1 G;
     if (bytes < 128 K)
         bytes = 128 K;
-    tm->maxCodeCacheBytes = bytes;
+    JS_THREAD_DATA(cx)->maxCodeCacheBytes = bytes;
 }
 
 bool
 InitJIT(TraceMonitor *tm)
 {
+    // InitJIT expects this area to be zero'd
+    memset(tm, 0, sizeof(*tm));
+
 #if defined JS_JIT_SPEW
     tm->profAlloc = NULL;
     /* Set up debug logging. */
@@ -7581,9 +7585,6 @@ InitJIT(TraceMonitor *tm)
         did_we_check_processor_features = true;
     }
 
-    /* Set the default size for the code cache to 16MB. */
-    tm->maxCodeCacheBytes = 16 M;
-
     tm->oracle = new Oracle();
 
     tm->profile = NULL;
@@ -7598,7 +7599,6 @@ InitJIT(TraceMonitor *tm)
 
     tm->flushEpoch = 0;
     
-    JS_ASSERT(!tm->dataAlloc && !tm->traceAlloc && !tm->codeAlloc);
     tm->dataAlloc = new VMAllocator();
     tm->traceAlloc = new VMAllocator();
     tm->tempAlloc = new VMAllocator();
@@ -7793,7 +7793,7 @@ PurgeScriptFragments(TraceMonitor* tm, JSScript* script)
 }
 
 bool
-OverfullJITCache(TraceMonitor* tm)
+OverfullJITCache(JSContext *cx, TraceMonitor* tm)
 {
     /*
      * You might imagine the outOfMemory flag on the allocator is sufficient
@@ -7829,7 +7829,7 @@ OverfullJITCache(TraceMonitor* tm)
      * handled by the (few) callers of this function.
      *
      */
-    jsuint maxsz = tm->maxCodeCacheBytes;
+    jsuint maxsz = JS_THREAD_DATA(cx)->maxCodeCacheBytes;
     VMAllocator *dataAlloc = tm->dataAlloc;
     VMAllocator *traceAlloc = tm->traceAlloc;
     CodeAlloc *codeAlloc = tm->codeAlloc;
