@@ -17052,10 +17052,11 @@ LoopProfile::decide(JSContext *cx)
                  */
                 prof->profiled = true;
                 prof->traceOK = true;
-                if (IsBlacklisted(loop.top))
+                if (IsBlacklisted(loop.top)) {
                     debug_only_printf(LC_TMProfiler, "Unblacklisting at %d\n",
                                       js_PCToLineNumber(cx, loop.script, loop.top));
-                Unblacklist(loop.script, loop.top);
+                    Unblacklist(loop.script, loop.top);
+                }
             }
         }
     }
