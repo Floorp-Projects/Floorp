@@ -250,6 +250,12 @@ struct JSStackFrame
         return slots() + script()->nfixed;
     }
 
+    js::Value &varSlot(uintN i) {
+        JS_ASSERT(i < script()->nfixed);
+        JS_ASSERT_IF(maybeFun(), i < script()->bindings.countVars());
+        return slots()[i];
+    }
+
     /*
      * Script
      *

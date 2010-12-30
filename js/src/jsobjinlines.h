@@ -432,6 +432,13 @@ JSObject::setArgsElement(uint32 i, const js::Value &v)
     getArgsData()->slots[i] = v;
 }
 
+inline JSStackFrame *
+JSObject::maybeCallObjStackFrame() const
+{
+    JS_ASSERT(isCall());
+    return reinterpret_cast<JSStackFrame *>(getPrivate());
+}
+
 inline void
 JSObject::setCallObjCallee(JSObject &callee)
 {
@@ -469,6 +476,40 @@ JSObject::setCallObjArguments(const js::Value &v)
 }
 
 inline const js::Value &
+JSObject::callObjArg(uintN i) const
+{
+    JS_ASSERT(isCall());
+    JS_ASSERT(i < getCallObjCalleeFunction()->nargs);
+    return getSlot(JSObject::CALL_RESERVED_SLOTS + i);
+}
+
+inline js::Value &
+JSObject::callObjArg(uintN i)
+{
+    JS_ASSERT(isCall());
+    JS_ASSERT(i < getCallObjCalleeFunction()->nargs);
+    return getSlotRef(JSObject::CALL_RESERVED_SLOTS + i);
+}
+
+inline const js::Value &
+JSObject::callObjVar(uintN i) const
+{
+    JSFunction *fun = getCallObjCalleeFunction();
+    JS_ASSERT(fun->nargs == fun->script()->bindings.countArgs());
+    JS_ASSERT(i < fun->script()->bindings.countVars());
+    return getSlot(JSObject::CALL_RESERVED_SLOTS + fun->nargs + i);
+}
+
+inline js::Value &
+JSObject::callObjVar(uintN i)
+{
+    JSFunction *fun = getCallObjCalleeFunction();
+    JS_ASSERT(fun->nargs == fun->script()->bindings.countArgs());
+    JS_ASSERT(i < fun->script()->bindings.countVars());
+    return getSlotRef(JSObject::CALL_RESERVED_SLOTS + fun->nargs + i);
+}
+
+inline const js::Value &
 JSObject::getDateUTCTime() const
 {
     JS_ASSERT(isDate());
@@ -485,13 +526,23 @@ JSObject::setDateUTCTime(const js::Value &time)
 inline js::Value *
 JSObject::getFlatClosureUpvars() const
 {
-    JS_ASSERT(isFunction());
-    JS_ASSERT(FUN_FLAT_CLOSURE(getFunctionPrivate()));
+#ifdef DEBUG
+    JSFunction *fun = getFunctionPrivate();
+    JS_ASSERT(fun->isFlatClosure());
+    JS_ASSERT(fun->script()->bindings.countUpvars() == fun->script()->upvars()->length);
+#endif
     return (js::Value *) getSlot(JSSLOT_FLAT_CLOSURE_UPVARS).toPrivate();
 }
 
 inline js::Value
 JSObject::getFlatClosureUpvar(uint32 i) const
+{
+    JS_ASSERT(i < getFunctionPrivate()->script()->bindings.countUpvars());
+    return getFlatClosureUpvars()[i];
+}
+
+inline js::Value &
+JSObject::getFlatClosureUpvar(uint32 i)
 {
     JS_ASSERT(i < getFunctionPrivate()->script()->bindings.countUpvars());
     return getFlatClosureUpvars()[i];
