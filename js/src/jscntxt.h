@@ -998,16 +998,6 @@ struct JSThreadData {
 
     js::ConservativeGCThreadData conservativeGC;
 
-  private:
-    js::MathCache       *mathCache;
-
-    js::MathCache *allocMathCache(JSContext *cx);
-  public:
-
-    js::MathCache *getMathCache(JSContext *cx) {
-        return mathCache ? mathCache : allocMathCache(cx);
-    }
-
     bool init();
     void finish();
     void mark(JSTracer *trc);
