@@ -1732,16 +1732,16 @@ TriggerGC(JSRuntime *rt)
 } /* namespace js */
 
 void
-js_DestroyScriptsToGC(JSContext *cx, JSThreadData *data)
+js_DestroyScriptsToGC(JSContext *cx, JSCompartment *comp)
 {
     JSScript **listp, *script;
 
-    for (size_t i = 0; i != JS_ARRAY_LENGTH(data->scriptsToGC); ++i) {
-        listp = &data->scriptsToGC[i];
+    for (size_t i = 0; i != JS_ARRAY_LENGTH(comp->scriptsToGC); ++i) {
+        listp = &comp->scriptsToGC[i];
         while ((script = *listp) != NULL) {
             *listp = script->u.nextToGC;
             script->u.nextToGC = NULL;
-            js_DestroyScriptFromGC(cx, script, data);
+            js_DestroyScriptFromGC(cx, script, comp);
         }
     }
 }
@@ -2178,8 +2178,9 @@ MarkAndSweep(JSContext *cx, JSGCInvocationKind gckind GCTIMER_PARAM)
 #endif
 
 #ifdef JS_TRACER
-    for (ThreadDataIter i(rt); !i.empty(); i.popFront())
-        i.threadData()->traceMonitor.sweep();
+    for (JSCompartment **comp = rt->compartments.begin(); comp != rt->compartments.end(); comp++) {
+        (*comp)->traceMonitor.sweep();
+    }
 #endif
 
     /*
