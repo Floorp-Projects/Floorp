@@ -1954,7 +1954,7 @@ var FormHelperUI = {
           SelectHelperUI.resize();
           self._container.contentHasChanged();
 
-          this._zoom(this._currentElementRect, this._currentCaretRect);
+          self._zoom(this._currentElementRect, this._currentCaretRect);
         }, 0, this);
         break;
     }
