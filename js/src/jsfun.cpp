@@ -1146,138 +1146,102 @@ js_PutCallObjectOnTrace(JSContext *cx, JSObject *callobj, uint32 nargs, Value *a
 JS_DEFINE_CALLINFO_6(extern, BOOL, js_PutCallObjectOnTrace, CONTEXT, OBJECT, UINT32, VALUEPTR,
                      UINT32, VALUEPTR, 0, nanojit::ACCSET_STORE_ANY)
 
-enum JSCallPropertyKind {
-    JSCPK_ARGUMENTS,
-    JSCPK_ARG,
-    JSCPK_VAR,
-    JSCPK_UPVAR
-};
-
-static JSBool
-CallPropertyOp(JSContext *cx, JSObject *obj, jsid id, Value *vp,
-               JSCallPropertyKind kind, JSBool setter = false)
-{
-    JS_ASSERT(obj->isCall());
-
-    uintN i = 0;
-    if (kind != JSCPK_ARGUMENTS) {
-        JS_ASSERT((int16) JSID_TO_INT(id) == JSID_TO_INT(id));
-        i = (uint16) JSID_TO_INT(id);
-    }
-
-    Value *array;
-    if (kind == JSCPK_UPVAR) {
-        JSObject &callee = obj->getCallObjCallee();
-
-#ifdef DEBUG
-        JSFunction *calleeFun = callee.getFunctionPrivate();
-        JS_ASSERT(calleeFun->isFlatClosure());
-        JS_ASSERT(calleeFun->script()->bindings.countUpvars() == calleeFun->script()->upvars()->length);
-        JS_ASSERT(i < calleeFun->script()->bindings.countUpvars());
-#endif
-
-        array = callee.getFlatClosureUpvars();
-    } else {
-        JSFunction *fun = obj->getCallObjCalleeFunction();
-        JS_ASSERT(fun->nargs == fun->script()->bindings.countArgs());
-        JS_ASSERT_IF(kind == JSCPK_ARG, i < fun->nargs);
-        JS_ASSERT_IF(kind == JSCPK_VAR, i < fun->script()->bindings.countVars());
-
-        JSStackFrame *fp = (JSStackFrame *) obj->getPrivate();
-
-        if (kind == JSCPK_ARGUMENTS) {
-            if (setter) {
-                if (fp)
-                    fp->setOverriddenArgs();
-                obj->setCallObjArguments(*vp);
-            } else {
-                if (fp && !fp->hasOverriddenArgs()) {
-                    JSObject *argsobj;
-
-                    argsobj = js_GetArgsObject(cx, fp);
-                    if (!argsobj)
-                        return false;
-                    vp->setObject(*argsobj);
-                } else {
-                    *vp = obj->getCallObjArguments();
-                }
-            }
-            return true;
-        }
-
-        if (!fp) {
-            i += JSObject::CALL_RESERVED_SLOTS;
-            if (kind == JSCPK_VAR)
-                i += fun->nargs;
-            else
-                JS_ASSERT(kind == JSCPK_ARG);
-
-            array = obj->getSlots();
-        } else if (kind == JSCPK_ARG) {
-            array = fp->formalArgs();
-        } else {
-            JS_ASSERT(kind == JSCPK_VAR);
-            array = fp->slots();
-        }
-    }
-
-    if (setter) {
-        GC_POKE(cx, array[i]);
-        array[i] = *vp;
-    } else {
-        *vp = array[i];
-    }
-    return true;
-}
-
 namespace js {
 
 static JSBool
 GetCallArguments(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
-    return CallPropertyOp(cx, obj, id, vp, JSCPK_ARGUMENTS);
+    JSStackFrame *fp = obj->maybeCallObjStackFrame();
+    if (fp && !fp->hasOverriddenArgs()) {
+        JSObject *argsobj = js_GetArgsObject(cx, fp);
+        if (!argsobj)
+            return false;
+        vp->setObject(*argsobj);
+    } else {
+        *vp = obj->getCallObjArguments();
+    }
+    return true;
 }
 
 static JSBool
 SetCallArguments(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
-    return CallPropertyOp(cx, obj, id, vp, JSCPK_ARGUMENTS, true);
+    if (JSStackFrame *fp = obj->maybeCallObjStackFrame())
+        fp->setOverriddenArgs();
+    obj->setCallObjArguments(*vp);
+    return true;
 }
 
 JSBool
 GetCallArg(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
-    return CallPropertyOp(cx, obj, id, vp, JSCPK_ARG);
+    JS_ASSERT((int16) JSID_TO_INT(id) == JSID_TO_INT(id));
+    uintN i = (uint16) JSID_TO_INT(id);
+
+    if (JSStackFrame *fp = obj->maybeCallObjStackFrame())
+        *vp = fp->formalArg(i);
+    else
+        *vp = obj->callObjArg(i);
+    return true;
 }
 
 JSBool
 SetCallArg(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
-    return CallPropertyOp(cx, obj, id, vp, JSCPK_ARG, true);
+    JS_ASSERT((int16) JSID_TO_INT(id) == JSID_TO_INT(id));
+    uintN i = (uint16) JSID_TO_INT(id);
+
+    Value *argp;
+    if (JSStackFrame *fp = obj->maybeCallObjStackFrame())
+        argp = &fp->formalArg(i);
+    else
+        argp = &obj->callObjArg(i);
+
+    GC_POKE(cx, *argp);
+    *argp = *vp;
+    return true;
 }
 
 JSBool
 GetFlatUpvar(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
-    return CallPropertyOp(cx, obj, id, vp, JSCPK_UPVAR);
+    JS_ASSERT((int16) JSID_TO_INT(id) == JSID_TO_INT(id));
+    uintN i = (uint16) JSID_TO_INT(id);
+
+    *vp = obj->getCallObjCallee().getFlatClosureUpvar(i);
+    return true;
 }
 
 JSBool
 SetFlatUpvar(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
-    return CallPropertyOp(cx, obj, id, vp, JSCPK_UPVAR, true);
+    JS_ASSERT((int16) JSID_TO_INT(id) == JSID_TO_INT(id));
+    uintN i = (uint16) JSID_TO_INT(id);
+
+    Value *upvarp = &obj->getCallObjCallee().getFlatClosureUpvar(i);
+    GC_POKE(cx, *upvarp);
+    *upvarp = *vp;
+    return true;
 }
 
 JSBool
 GetCallVar(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
-    return CallPropertyOp(cx, obj, id, vp, JSCPK_VAR);
+    JS_ASSERT((int16) JSID_TO_INT(id) == JSID_TO_INT(id));
+    uintN i = (uint16) JSID_TO_INT(id);
+
+    if (JSStackFrame *fp = obj->maybeCallObjStackFrame())
+        *vp = fp->varSlot(i);
+    else
+        *vp = obj->callObjVar(i);
+
+    return true;
 }
 
 JSBool
 GetCallVarChecked(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
-    if (!CallPropertyOp(cx, obj, id, vp, JSCPK_VAR))
+    if (!GetCallVar(cx, obj, id, vp))
         return false;
 
     return CheckForEscapingClosure(cx, obj, vp);
@@ -1286,7 +1250,20 @@ GetCallVarChecked(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 JSBool
 SetCallVar(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
-    return CallPropertyOp(cx, obj, id, vp, JSCPK_VAR, true);
+    JS_ASSERT(obj->isCall());
+
+    JS_ASSERT((int16) JSID_TO_INT(id) == JSID_TO_INT(id));
+    uintN i = (uint16) JSID_TO_INT(id);
+
+    Value *varp;
+    if (JSStackFrame *fp = obj->maybeCallObjStackFrame())
+        varp = &fp->varSlot(i);
+    else
+        varp = &obj->callObjVar(i);
+
+    GC_POKE(cx, *varp);
+    *varp = *vp;
+    return true;
 }
 
 } // namespace js
@@ -1296,7 +1273,7 @@ JSBool JS_FASTCALL
 js_SetCallArg(JSContext *cx, JSObject *obj, jsid slotid, ValueArgType arg)
 {
     Value argcopy = ValueArgToConstRef(arg);
-    return CallPropertyOp(cx, obj, slotid, &argcopy, JSCPK_ARG, true);
+    return SetCallArg(cx, obj, slotid, &argcopy);
 }
 JS_DEFINE_CALLINFO_4(extern, BOOL, js_SetCallArg, CONTEXT, OBJECT, JSID, VALUE, 0,
                      nanojit::ACCSET_STORE_ANY)
@@ -1305,7 +1282,7 @@ JSBool JS_FASTCALL
 js_SetCallVar(JSContext *cx, JSObject *obj, jsid slotid, ValueArgType arg)
 {
     Value argcopy = ValueArgToConstRef(arg);
-    return CallPropertyOp(cx, obj, slotid, &argcopy, JSCPK_VAR, true);
+    return SetCallVar(cx, obj, slotid, &argcopy);
 }
 JS_DEFINE_CALLINFO_4(extern, BOOL, js_SetCallVar, CONTEXT, OBJECT, JSID, VALUE, 0,
                      nanojit::ACCSET_STORE_ANY)
