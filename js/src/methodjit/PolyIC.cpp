@@ -826,7 +826,8 @@ class GetPropCompiler : public PICStubCompiler
         masm.load32(Address(pic.objReg, JSObject::JSSLOT_ARGS_LENGTH * sizeof(Value)),
                     pic.objReg);
         masm.move(pic.objReg, pic.shapeReg);
-        Jump overridden = masm.branchTest32(Assembler::NonZero, pic.shapeReg, Imm32(1));
+        Jump overridden = masm.branchTest32(Assembler::NonZero, pic.shapeReg,
+                                            Imm32(JSObject::ARGS_LENGTH_OVERRIDDEN_BIT));
         masm.rshift32(Imm32(JSObject::ARGS_PACKED_BITS_COUNT), pic.objReg);
         
         masm.move(ImmType(JSVAL_TYPE_INT32), pic.shapeReg);
@@ -890,6 +891,41 @@ class GetPropCompiler : public PICStubCompiler
         patchPreviousToHere(start);
 
         disable("array length done");
+
+        return Lookup_Cacheable;
+    }
+
+    LookupStatus generateStringObjLengthStub()
+    {
+        Assembler masm;
+
+        Jump notStringObj = masm.testObjClass(Assembler::NotEqual, pic.objReg, obj->getClass());
+        masm.loadPayload(Address(pic.objReg, JSObject::getFixedSlotOffset(
+                         JSObject::JSSLOT_PRIMITIVE_THIS)), pic.objReg);
+        masm.loadPtr(Address(pic.objReg, JSString::offsetOfLengthAndFlags()), pic.objReg);
+        masm.urshift32(Imm32(JSString::LENGTH_SHIFT), pic.objReg);
+        masm.move(ImmType(JSVAL_TYPE_INT32), pic.shapeReg);
+        Jump done = masm.jump();
+
+        PICLinker buffer(masm, pic);
+        if (!buffer.init(cx))
+            return error();
+
+        if (!buffer.verifyRange(pic.lastCodeBlock(f.jit())) ||
+            !buffer.verifyRange(f.jit())) {
+            return disable("code memory is out of range");
+        }
+
+        buffer.link(notStringObj, pic.slowPathStart);
+        buffer.link(done, pic.fastPathRejoin);
+
+        CodeLocationLabel start = buffer.finalize();
+        JaegerSpew(JSpew_PICs, "generate string object length stub at %p\n",
+                   start.executableAddress());
+
+        patchPreviousToHere(start);
+
+        disable("string object length done");
 
         return Lookup_Cacheable;
     }
@@ -1662,7 +1698,8 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
             return;
         } else if (!f.regs.sp[-1].isPrimitive()) {
             JSObject *obj = &f.regs.sp[-1].toObject();
-            if (obj->isArray() || (obj->isArguments() && !obj->isArgsLengthOverridden())) {
+            if (obj->isArray() || (obj->isArguments() && !obj->isArgsLengthOverridden()) ||
+                obj->isString()) {
                 GetPropCompiler cc(f, script, obj, *pic, NULL, DisabledLengthIC);
                 if (obj->isArray()) {
                     LookupStatus status = cc.generateArrayLengthStub();
@@ -1674,6 +1711,12 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
                     if (status == Lookup_Error)
                         THROW();
                     f.regs.sp[-1].setInt32(int32_t(obj->getArgsInitialLength()));
+                } else if (obj->isString()) {
+                    LookupStatus status = cc.generateStringObjLengthStub();
+                    if (status == Lookup_Error)
+                        THROW();
+                    JSString *str = obj->getPrimitiveThis().toString();
+                    f.regs.sp[-1].setInt32(str->length());
                 }
                 return;
             }
