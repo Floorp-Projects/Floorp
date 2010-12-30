@@ -829,14 +829,6 @@ extern JS_FRIEND_DATA(JSScopeStats) js_scope_stats;
 
 namespace js {
 
-inline static volatile int *vcopy(volatile int *dst, int *src, size_t bytes)
-{
-    int *end = src + bytes / sizeof(int);
-    for (; src < end; ++src, ++dst)
-        *dst = *src;
-    return dst;
-}
-
 JS_ALWAYS_INLINE js::Shape **
 Shape::search(js::Shape **startp, jsid id, bool adding)
 {
@@ -859,13 +851,6 @@ Shape::search(js::Shape **startp, jsid id, bool adding)
         }
         METER(misses);
         return spp;
-    }
-    {
-        char blackbox[sizeof(Shape) + 8];
-        volatile int *p = (int *) blackbox;
-        *p++ = 0xfcfcfcfc;
-        p = vcopy(p, (int *) *startp, sizeof(Shape));
-        *p = 0xfdfdfdfd;
     }
     return (*startp)->table->search(id, adding);
 }
