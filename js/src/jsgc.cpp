@@ -2524,10 +2524,10 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
 # if JS_STACK_GROWTH_DIRECTION > 0
     /* cx->stackLimit is set to jsuword(-1) by default. */
     JS_ASSERT_IF(cx->stackLimit != jsuword(-1),
-                 JS_CHECK_STACK_SIZE(cx->stackLimit + 4096, &stackDummy));
+                 JS_CHECK_STACK_SIZE(cx->stackLimit + (1 << 14), &stackDummy));
 # else
-    /* -4k because it is possible to perform a GC during an overrecursion report. */
-    JS_ASSERT_IF(cx->stackLimit, JS_CHECK_STACK_SIZE(cx->stackLimit - 4096, &stackDummy));
+    /* -16k because it is possible to perform a GC during an overrecursion report. */
+    JS_ASSERT_IF(cx->stackLimit, JS_CHECK_STACK_SIZE(cx->stackLimit - (1 << 14), &stackDummy));
 # endif
 #endif
 
