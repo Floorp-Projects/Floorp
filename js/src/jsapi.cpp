@@ -2662,7 +2662,7 @@ JS_GetGCParameterForThread(JSContext *cx, JSGCParamKey key)
 {
     JS_ASSERT(key == JSGC_MAX_CODE_CACHE_BYTES);
 #ifdef JS_TRACER
-    return JS_THREAD_DATA(cx)->traceMonitor.maxCodeCacheBytes;
+    return JS_THREAD_DATA(cx)->maxCodeCacheBytes;
 #else
     return 0;
 #endif

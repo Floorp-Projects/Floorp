@@ -2060,7 +2060,7 @@ fun_finalize(JSContext *cx, JSObject *obj)
      * very early.
      */
     if (FUN_INTERPRETED(fun) && fun->u.i.script)
-        js_DestroyScriptFromGC(cx, fun->u.i.script, NULL);
+        js_DestroyScriptFromGC(cx, fun->u.i.script, obj->compartment());
 }
 
 int

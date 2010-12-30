@@ -502,7 +502,7 @@ js_DestroyScript(JSContext *cx, JSScript *script);
  * from that thread.
  */
 extern void
-js_DestroyScriptFromGC(JSContext *cx, JSScript *script, JSThreadData *data);
+js_DestroyScriptFromGC(JSContext *cx, JSScript *script, JSCompartment *comp);
 
 extern void
 js_TraceScript(JSTracer *trc, JSScript *script);

@@ -827,7 +827,7 @@ js_WaitForGC(JSRuntime *rt);
 #endif
 
 extern void
-js_DestroyScriptsToGC(JSContext *cx, JSThreadData *data);
+js_DestroyScriptsToGC(JSContext *cx, JSCompartment *comp);
 
 namespace js {
 
