@@ -205,6 +205,14 @@ class Bindings {
     /* Returns the shape lineage generated for these bindings. */
     inline const js::Shape *lastShape() const;
 
+    enum {
+       /*
+        * A script may have no more than this many arguments, variables, or
+        * upvars.
+        */
+       BINDING_COUNT_LIMIT = 0xFFFF
+    };
+
     /*
      * Add a local binding for the given name, of the given type, for the code
      * being compiled.  If fun is non-null, this binding set is being created
