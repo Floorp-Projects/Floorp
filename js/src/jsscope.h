@@ -292,7 +292,6 @@ struct Shape : public JSObjectMap
     friend class js::PropertyTree;
     friend bool HasUnreachableGCThings(TreeFragment *f);
 
-    uint32                    marker1;
   protected:
     mutable js::PropertyTable *table;
 
@@ -331,7 +330,6 @@ struct Shape : public JSObjectMap
                                            null if shape->hasSetterValue() */
     };
 
-    uint32              marker2;
   public:
     uint32              slot;           /* abstract index in object slots */
   private:
@@ -350,7 +348,6 @@ struct Shape : public JSObjectMap
                                            either to shape->parent if not last,
                                            else to obj->lastProp */
     };
-    uint32               endMarker;     /* end marker for diagnostics */
 
     static inline js::Shape **search(js::Shape **startp, jsid id, bool adding = false);
     static js::Shape *newDictionaryShape(JSContext *cx, const js::Shape &child, js::Shape **listp);
@@ -650,24 +647,9 @@ struct EmptyShape : public js::Shape
 #define SHAPE_STORE_PRESERVING_COLLISION(spp, shape)                          \
     (*(spp) = (js::Shape *) (jsuword(shape) | SHAPE_HAD_COLLISION(*(spp))))
 
-inline static volatile int *vcopy(volatile int *dst, int *src, size_t bytes)
-{
-    int *end = src + bytes / sizeof(int);
-    for (; src < end; ++src, ++dst)
-        *dst = *src;
-    return dst;
-}
-
 inline js::Shape **
 JSObject::nativeSearch(jsid id, bool adding)
 {
-    {
-        char blackbox[sizeof(JSObject) + 8];
-        volatile int *p = (int *) blackbox;
-        *p++ = 0xacacacac;
-        p = vcopy(p, (int *) this, sizeof(JSObject));
-        *p = 0xadadadad;
-    }
     return js::Shape::search(&lastProp, id, adding);
 }
 
@@ -846,6 +828,14 @@ extern JS_FRIEND_DATA(JSScopeStats) js_scope_stats;
 #endif
 
 namespace js {
+
+inline static volatile int *vcopy(volatile int *dst, int *src, size_t bytes)
+{
+    int *end = src + bytes / sizeof(int);
+    for (; src < end; ++src, ++dst)
+        *dst = *src;
+    return dst;
+}
 
 JS_ALWAYS_INLINE js::Shape **
 Shape::search(js::Shape **startp, jsid id, bool adding)
