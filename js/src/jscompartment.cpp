@@ -364,6 +364,10 @@ JSCompartment::sweep(JSContext *cx)
         }
     }
 
+#ifdef JS_TRACER
+    traceMonitor.sweep();
+#endif
+
 #if defined JS_METHODJIT && defined JS_MONOIC
     for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
         JSScript *script = reinterpret_cast<JSScript *>(cursor);
