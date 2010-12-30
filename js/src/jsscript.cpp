@@ -422,7 +422,7 @@ script_finalize(JSContext *cx, JSObject *obj)
 {
     JSScript *script = (JSScript *) obj->getPrivate();
     if (script)
-        js_DestroyScriptFromGC(cx, script, obj->compartment());
+        js_DestroyScriptFromGC(cx, script);
 }
 
 static void
@@ -1218,7 +1218,7 @@ js_CallDestroyScriptHook(JSContext *cx, JSScript *script)
 }
 
 static void
-DestroyScript(JSContext *cx, JSScript *script, JSCompartment *comp)
+DestroyScript(JSContext *cx, JSScript *script)
 {
 #ifdef DEBUG
     if (script->isEmpty())
@@ -1277,7 +1277,7 @@ DestroyScript(JSContext *cx, JSScript *script, JSCompartment *comp)
     }
 
 #ifdef JS_TRACER
-    PurgeScriptFragments(&comp->traceMonitor, script);
+    PurgeScriptFragments(&script->compartment->traceMonitor, script);
 #endif
 
 #if defined(JS_METHODJIT)
@@ -1292,14 +1292,14 @@ void
 js_DestroyScript(JSContext *cx, JSScript *script)
 {
     JS_ASSERT(!cx->runtime->gcRunning);
-    DestroyScript(cx, script, cx->compartment);
+    DestroyScript(cx, script);
 }
 
 void
-js_DestroyScriptFromGC(JSContext *cx, JSScript *script, JSCompartment *comp)
+js_DestroyScriptFromGC(JSContext *cx, JSScript *script)
 {
     JS_ASSERT(cx->runtime->gcRunning);
-    DestroyScript(cx, script, comp);
+    DestroyScript(cx, script);
 }
 
 void

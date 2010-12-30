@@ -75,13 +75,13 @@ typedef HashSet<JSScript *,
                 SystemAllocPolicy> TracedScriptSet;
 
 /*
- * Trace monitor. Every JSThread (if JS_THREADSAFE) or JSRuntime (if not
- * JS_THREADSAFE) has an associated trace monitor that keeps track of loop
- * frequencies for all JavaScript code loaded into that runtime.
+ * Trace monitor. Every JSCompartment has an associated trace monitor
+ * that keeps track of loop frequencies for all JavaScript code loaded
+ * into that runtime.
  */
 struct TraceMonitor {
     /*
-     * The context currently executing JIT-compiled code on this thread, or
+     * The context currently executing JIT-compiled code in this compartment, or
      * NULL if none. Among other things, this can in certain cases prevent
      * last-ditch GC and suppress calls to JS_ReportOutOfMemory.
      *
