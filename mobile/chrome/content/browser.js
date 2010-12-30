@@ -353,7 +353,7 @@ var Browser = {
     os.addObserver(ViewableAreaObserver, "softkb-change", false);
     Elements.contentNavigator.addEventListener("SizeChanged", function() {
       ViewableAreaObserver.update();
-    }, false);
+    }, true);
 
     window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow = new nsBrowserAccess();
 
@@ -3046,18 +3046,22 @@ var ViewableAreaObserver = {
     let rect = Rect.fromRect(JSON.parse(aData));
     this._height = rect.bottom - rect.top;
     this._width = rect.right - rect.left;
-    this._update(aIsVKB);
+    this.update();
   },
 
-  update: function va_update(aIsVKB) {
-    Browser.styles["viewable-height"].height = (this.height - Elements.contentNavigator.getBoundingClientRect().height) + "px";
-    Browser.styles["viewable-width"].width = this.width + "px";
+  update: function va_update() {
+    let oldHeight = parseInt(Browser.styles["viewable-height"].height);
+    let newHeight = this.height - Elements.contentNavigator.getBoundingClientRect().height;
+    if (newHeight != oldHeight) {
+      Browser.styles["viewable-height"].height = newHeight + "px";
+      Browser.styles["viewable-width"].width = this.width + "px";
 
-    // setTimeout 0 to ensure the resize event handler is well finished
-    setTimeout(function() {
-      let event = document.createEvent("UIEvents");
-      event.initUIEvent("SizeChanged", true, false, window, aIsVKB);
-      Elements.browsers.dispatchEvent(event);
-    }, 0);
+      // setTimeout(callback, 0) to ensure the resize event handler dispatch is finished
+      setTimeout(function() {
+        let event = document.createEvent("Events");
+        event.initEvent("SizeChanged", true, false);
+        Elements.browsers.dispatchEvent(event);
+      }, 0);
+    }
   }
 };

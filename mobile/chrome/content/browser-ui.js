@@ -835,8 +835,7 @@ var BrowserUI = {
           document.getElementById("tabs").removeClosedTab();
         break;
       case "SizeChanged":
-        if (aEvent.detail)
-          this.sizeControls(ViewableAreaObserver.height, ViewableAreaObserver.width);
+        this.sizeControls(ViewableAreaObserver.width, ViewableAreaObserver.height);
         break;
       // Window events
       case "keypress":
@@ -1882,7 +1881,6 @@ var FormHelperUI = {
     tabs.addEventListener("TabClose", this, true);
     Elements.browsers.addEventListener("URLChanged", this, true);
     Elements.browsers.addEventListener("SizeChanged", this, true);
-    window.addEventListener("resize", this, true);
 
     // Listen for modal dialog to show/hide the UI
     messageManager.addMessageListener("DOMWillOpenModalDialog", this);
@@ -1951,16 +1949,13 @@ var FormHelperUI = {
           this.hide();
         break;
 
-      case "resize":
+      case "SizeChanged":
         setTimeout(function(self) {
           SelectHelperUI.resize();
           self._container.contentHasChanged();
-        }, 0, this);
-        break;
 
-      case "SizeChanged":
-        if (aEvent.detail)
           this._zoom(this._currentElementRect, this._currentCaretRect);
+        }, 0, this);
         break;
     }
   },
