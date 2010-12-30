@@ -78,13 +78,15 @@ gTests.push({
   onPageReady: function() {
     let starbutton = document.getElementById("tool-star");
     starbutton.click();
+    window.addEventListener("BookmarkCreated", function(aEvent) {
+      window.removeEventListener(aEvent.type, arguments.callee, false);
+      let bookmark = PlacesUtils.getMostRecentBookmarkForURI(makeURI(testURL_01));
+      ok(bookmark != -1, testURL_01 + " should be added.");
 
-    let bookmark = PlacesUtils.getMostRecentBookmarkForURI(makeURI(testURL_01));
-    ok(bookmark != -1, testURL_01 + " should be added.");
+      Browser.closeTab(gCurrentTest._currentTab);
 
-    Browser.closeTab(gCurrentTest._currentTab);
-
-    runNextTest();
+      runNextTest();
+    }, false);
   }
 });
 

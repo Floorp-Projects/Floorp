@@ -62,12 +62,15 @@ gTests.push({
     let starbutton = document.getElementById("tool-star");
     starbutton.click();
 
-    let bookmarkItem = PlacesUtils.getMostRecentBookmarkForURI(makeURI(testURL_02));
-    ok(bookmarkItem != -1, testURL_02 + " should be added.");
+    window.addEventListener("BookmarkCreated", function(aEvent) {
+      window.removeEventListener(aEvent.type, arguments.callee, false);
+      let bookmarkItem = PlacesUtils.getMostRecentBookmarkForURI(makeURI(testURL_02));
+      ok(bookmarkItem != -1, testURL_02 + " should be added.");
 
-    // Wait for the bookmarks to load, then do the test
-    window.addEventListener("NavigationPanelShown", gCurrentTest.onBookmarksReady, false);
-    BrowserUI.doCommand("cmd_bookmarks");
+      // Wait for the bookmarks to load, then do the test
+      window.addEventListener("NavigationPanelShown", gCurrentTest.onBookmarksReady, false);
+      BrowserUI.doCommand("cmd_bookmarks");
+    }, false);
   },
 
   onBookmarksReady: function() {
