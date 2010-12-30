@@ -242,6 +242,7 @@ struct JSScript {
                                                      this script */
 #ifdef JS_METHODJIT
     bool            debugMode:1;      /* script was compiled in debug mode */
+    bool            singleStepMode:1; /* compile script in single-step mode */
 #endif
 
     jsbytecode      *main;      /* main entry point, after predef'ing prolog */
@@ -502,7 +503,7 @@ js_DestroyScript(JSContext *cx, JSScript *script);
  * from that thread.
  */
 extern void
-js_DestroyScriptFromGC(JSContext *cx, JSScript *script, JSThreadData *data);
+js_DestroyScriptFromGC(JSContext *cx, JSScript *script);
 
 extern void
 js_TraceScript(JSTracer *trc, JSScript *script);

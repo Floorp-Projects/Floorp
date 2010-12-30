@@ -49,6 +49,8 @@
 #include "jsstr.h"
 #include "methodjit/MethodJIT.h"
 
+#include "jsfuninlines.h"
+
 inline void
 JSStackFrame::initPrev(JSContext *cx)
 {
@@ -356,7 +358,7 @@ JSStackFrame::computeThis(JSContext *cx)
     if (thisv.isObject())
         return true;
     if (isFunctionFrame()) {
-        if (fun()->acceptsPrimitiveThis())
+        if (fun()->inStrictMode())
             return true;
         /*
          * Eval function frames have their own |this| slot, which is a copy of the function's
@@ -713,10 +715,11 @@ ScriptEpilogue(JSContext *cx, JSStackFrame *fp, JSBool ok)
     if (!fp->isExecuteFrame())
         Probes::exitJSFun(cx, fp->maybeFun(), fp->maybeScript());
 
-    JSInterpreterHook hook = cx->debugHooks->callHook;
-    void* hookData;
+    JSInterpreterHook hook =
+        fp->isExecuteFrame() ? cx->debugHooks->executeHook : cx->debugHooks->callHook;
 
-    if (hook && (hookData = fp->maybeHookData()) && !fp->isExecuteFrame())
+    void* hookData;
+    if (JS_UNLIKELY(hook != NULL) && (hookData = fp->maybeHookData()))
         hook(cx, fp, JS_FALSE, &ok, hookData);
 
     /*

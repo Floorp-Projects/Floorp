@@ -500,7 +500,7 @@ extern JS_PUBLIC_DATA(jsid) JSID_EMPTY;
 
 #define JSFUN_HEAVYWEIGHT_TEST(f)  ((f) & JSFUN_HEAVYWEIGHT)
 
-#define JSFUN_PRIMITIVE_THIS  0x0100    /* |this| may be a primitive value */
+/* 0x0100 is unused */
 #define JSFUN_CONSTRUCTOR     0x0200    /* native that can be called as a ctor
                                            without creating a this object */
 
@@ -702,10 +702,10 @@ extern JS_PUBLIC_API(const char *)
 JS_GetTypeName(JSContext *cx, JSType type);
 
 extern JS_PUBLIC_API(JSBool)
-JS_StrictlyEqual(JSContext *cx, jsval v1, jsval v2);
+JS_StrictlyEqual(JSContext *cx, jsval v1, jsval v2, JSBool *equal);
 
 extern JS_PUBLIC_API(JSBool)
-JS_SameValue(JSContext *cx, jsval v1, jsval v2);
+JS_SameValue(JSContext *cx, jsval v1, jsval v2, JSBool *same);
 
 /************************************************************************/
 
@@ -979,6 +979,9 @@ JS_SetWrapObjectCallbacks(JSRuntime *rt,
 extern JS_PUBLIC_API(JSCrossCompartmentCall *)
 JS_EnterCrossCompartmentCall(JSContext *cx, JSObject *target);
 
+extern JS_PUBLIC_API(JSCrossCompartmentCall *)
+JS_EnterCrossCompartmentCallScript(JSContext *cx, JSScript *target);
+
 extern JS_PUBLIC_API(void)
 JS_LeaveCrossCompartmentCall(JSCrossCompartmentCall *call);
 
@@ -1008,6 +1011,8 @@ class JS_PUBLIC_API(JSAutoEnterCompartment)
     JSAutoEnterCompartment() : call(NULL) {}
 
     bool enter(JSContext *cx, JSObject *target);
+
+    bool enter(JSContext *cx, JSScript *target);
 
     void enterAndIgnoreErrors(JSContext *cx, JSObject *target);
 
@@ -2932,6 +2937,9 @@ extern JS_PUBLIC_API(JSString *)
 JS_NewStringCopyZ(JSContext *cx, const char *s);
 
 extern JS_PUBLIC_API(JSString *)
+JS_InternJSString(JSContext *cx, JSString *str);
+
+extern JS_PUBLIC_API(JSString *)
 JS_InternString(JSContext *cx, const char *s);
 
 extern JS_PUBLIC_API(JSString *)
@@ -2949,36 +2957,106 @@ JS_InternUCStringN(JSContext *cx, const jschar *s, size_t length);
 extern JS_PUBLIC_API(JSString *)
 JS_InternUCString(JSContext *cx, const jschar *s);
 
+extern JS_PUBLIC_API(JSBool)
+JS_CompareStrings(JSContext *cx, JSString *str1, JSString *str2, int32 *result);
+
+extern JS_PUBLIC_API(JSBool)
+JS_StringEqualsAscii(JSContext *cx, JSString *str, const char *asciiBytes, JSBool *match);
+
+extern JS_PUBLIC_API(size_t)
+JS_PutEscapedString(JSContext *cx, char *buffer, size_t size, JSString *str, char quote);
+
+extern JS_PUBLIC_API(JSBool)
+JS_FileEscapedString(FILE *fp, JSString *str, char quote);
+
 /*
- * Deprecated. Use JS_GetStringCharsZ() instead.
+ * Extracting string characters and length.
+ *
+ * While getting the length of a string is infallible, getting the chars can
+ * fail. As indicated by the lack of a JSContext parameter, there are two
+ * special cases where getting the chars is infallible:
+ *
+ * The first case is interned strings, i.e., strings from JS_InternString or
+ * JSID_TO_STRING(id), using JS_GetInternedStringChars*.
+ *
+ * The second case is "flat" strings that have been explicitly prepared in a
+ * fallible context by JS_FlattenString. To catch errors, a separate opaque
+ * JSFlatString type is returned by JS_FlattenString and expected by
+ * JS_GetFlatStringChars. Note, though, that this is purely a syntactic
+ * distinction: the input and output of JS_FlattenString are the same actual
+ * GC-thing so only one needs to be rooted. If a JSString is known to be flat,
+ * JS_ASSERT_STRING_IS_FLAT can be used to make a debug-checked cast. Example:
+ *
+ *   // in a fallible context
+ *   JSFlatString *fstr = JS_FlattenString(cx, str);
+ *   if (!fstr)
+ *     return JS_FALSE;
+ *   JS_ASSERT(fstr == JS_ASSERT_STRING_IS_FLAT(str));
+ *
+ *   // in an infallible context, for the same 'str'
+ *   const jschar *chars = JS_GetFlatStringChars(fstr)
+ *   JS_ASSERT(chars);
+ *
+ * The CharsZ APIs guarantee that the returned array has a null character at
+ * chars[length]. This can require additional copying so clients should prefer
+ * APIs without CharsZ if possible. The infallible functions also return
+ * null-terminated arrays. (There is no additional cost or non-Z alternative
+ * for the infallible functions, so 'Z' is left out of the identifier.)
  */
-extern JS_PUBLIC_API(jschar *)
-JS_GetStringChars(JSString *str);
 
 extern JS_PUBLIC_API(size_t)
 JS_GetStringLength(JSString *str);
 
-/*
- * Return the char array and length for this string. The array is not
- * null-terminated.
- */
 extern JS_PUBLIC_API(const jschar *)
-JS_GetStringCharsAndLength(JSString *str, size_t *lengthp);
+JS_GetStringCharsAndLength(JSContext *cx, JSString *str, size_t *length);
+
+extern JS_PUBLIC_API(const jschar *)
+JS_GetInternedStringChars(JSString *str);
+
+extern JS_PUBLIC_API(const jschar *)
+JS_GetInternedStringCharsAndLength(JSString *str, size_t *length);
 
 extern JS_PUBLIC_API(const jschar *)
 JS_GetStringCharsZ(JSContext *cx, JSString *str);
 
-extern JS_PUBLIC_API(intN)
-JS_CompareStrings(JSString *str1, JSString *str2);
+extern JS_PUBLIC_API(const jschar *)
+JS_GetStringCharsZAndLength(JSContext *cx, JSString *str, size_t *length);
+
+extern JS_PUBLIC_API(JSFlatString *)
+JS_FlattenString(JSContext *cx, JSString *str);
+
+extern JS_PUBLIC_API(const jschar *)
+JS_GetFlatStringChars(JSFlatString *str);
+
+static JS_ALWAYS_INLINE JSFlatString *
+JSID_TO_FLAT_STRING(jsid id)
+{
+    JS_ASSERT(JSID_IS_STRING(id));
+    return (JSFlatString *)(JSID_BITS(id));
+}
+
+static JS_ALWAYS_INLINE JSFlatString *
+JS_ASSERT_STRING_IS_FLAT(JSString *str)
+{
+    JS_ASSERT(JS_GetFlatStringChars((JSFlatString *)str));
+    return (JSFlatString *)str;
+}
+
+static JS_ALWAYS_INLINE JSString *
+JS_FORGET_STRING_FLATNESS(JSFlatString *fstr)
+{
+    return (JSString *)fstr;
+}
+
+/*
+ * Additional APIs that avoid fallibility when given a flat string.
+ */
 
 extern JS_PUBLIC_API(JSBool)
-JS_MatchStringAndAscii(JSString *str, const char *asciiBytes);
+JS_FlatStringEqualsAscii(JSFlatString *str, const char *asciiBytes);
 
 extern JS_PUBLIC_API(size_t)
-JS_PutEscapedString(char *buffer, size_t size, JSString *str, char quote);
-
-extern JS_PUBLIC_API(JSBool)
-JS_FileEscapedString(FILE *fp, JSString *str, char quote);
+JS_PutEscapedFlatString(char *buffer, size_t size, JSFlatString *str, char quote);
 
 /*
  * This function is now obsolete and behaves the same as JS_NewUCString.  Use

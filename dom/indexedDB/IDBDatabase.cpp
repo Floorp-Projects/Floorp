@@ -590,7 +590,12 @@ IDBDatabase::CreateObjectStore(const nsAString& aName,
           NS_WARNING("JS_ValueToString failed!");
           return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
         }
-        keyPath = nsDependentJSString(str);
+        nsDependentJSString dependentKeyPath;
+        if (!dependentKeyPath.init(aCx, str)) {
+          NS_WARNING("Initializing keyPath failed!");
+          return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+        }
+        keyPath = dependentKeyPath;
       }
       else if (id == nsDOMClassInfo::sAutoIncrement_id) {
         JSBool boolVal;

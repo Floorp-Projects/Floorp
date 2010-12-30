@@ -315,7 +315,10 @@ num_parseFloat(JSContext *cx, uintN argc, Value *vp)
     str = js_ValueToString(cx, vp[2]);
     if (!str)
         return JS_FALSE;
-    str->getCharsAndEnd(bp, end);
+    bp = str->getChars(cx);
+    if (!bp)
+        return JS_FALSE;
+    end = bp + str->length();
     if (!js_strtod(cx, bp, end, &ep, &d))
         return JS_FALSE;
     if (ep == bp) {
@@ -330,12 +333,15 @@ num_parseFloat(JSContext *cx, uintN argc, Value *vp)
 static jsdouble FASTCALL
 ParseFloat(JSContext* cx, JSString* str)
 {
-    const jschar* bp;
-    const jschar* end;
-    const jschar* ep;
-    jsdouble d;
+    const jschar *bp = str->getChars(cx);
+    if (!bp) {
+        SetBuiltinError(cx);
+        return js_NaN;
+    }
+    const jschar *end = bp + str->length();
 
-    str->getCharsAndEnd(bp, end);
+    const jschar *ep;
+    double d;
     if (!js_strtod(cx, bp, end, &ep, &d) || ep == bp)
         return js_NaN;
     return d;
@@ -451,8 +457,10 @@ num_parseInt(JSContext *cx, uintN argc, Value *vp)
     }
 
     /* Steps 2-5, 9-14. */
-    const jschar *ws, *end;
-    inputString->getCharsAndEnd(ws, end);
+    const jschar *ws = inputString->getChars(cx);
+    if (!ws)
+        return false;
+    const jschar *end = ws + inputString->length();
 
     jsdouble number;
     if (!ParseIntStringHelper(cx, ws, end, radix, stripPrefix, &number))
@@ -467,8 +475,12 @@ num_parseInt(JSContext *cx, uintN argc, Value *vp)
 static jsdouble FASTCALL
 ParseInt(JSContext* cx, JSString* str)
 {
-    const jschar *start, *end;
-    str->getCharsAndEnd(start, end);
+    const jschar *start = str->getChars(cx);
+    if (!start) {
+        SetBuiltinError(cx);
+        return js_NaN;
+    }
+    const jschar *end = start + str->length();
 
     jsdouble d;
     if (!ParseIntStringHelper(cx, start, end, 0, true, &d)) {
@@ -499,7 +511,7 @@ JS_DEFINE_TRCINFO_2(num_parseInt,
     (1, (static, DOUBLE, ParseIntDouble, DOUBLE,        1, nanojit::ACCSET_NONE)))
 
 JS_DEFINE_TRCINFO_1(num_parseFloat,
-    (2, (static, DOUBLE, ParseFloat, CONTEXT, STRING,   1, nanojit::ACCSET_NONE)))
+    (2, (static, DOUBLE_FAIL, ParseFloat, CONTEXT, STRING,   1, nanojit::ACCSET_NONE)))
 
 #endif /* JS_TRACER */
 
@@ -722,7 +734,7 @@ num_toLocaleString(JSContext *cx, uintN argc, Value *vp)
     const char *num, *end, *tmpSrc;
     char *buf, *tmpDest;
     const char *nint;
-    int digits, size, remainder, nrepeat;
+    int digits, buflen, remainder, nrepeat;
 
     /*
      * Create the string, move back to bytes to make string twiddling
@@ -757,9 +769,9 @@ num_toLocaleString(JSContext *cx, uintN argc, Value *vp)
     decimalLength = strlen(rt->decimalSeparator);
 
     /* Figure out how long resulting string will be. */
-    size = digits + (*nint ? strlen(nint + 1) + 1 : 0);
+    buflen = digits + (*nint ? strlen(nint + 1) : 0);
     if (*nint == '.')
-        size += decimalLength;
+        buflen += decimalLength;
 
     numGrouping = tmpGroup = rt->numGrouping;
     remainder = digits;
@@ -769,20 +781,20 @@ num_toLocaleString(JSContext *cx, uintN argc, Value *vp)
     while (*tmpGroup != CHAR_MAX && *tmpGroup != '\0') {
         if (*tmpGroup >= remainder)
             break;
-        size += thousandsLength;
+        buflen += thousandsLength;
         remainder -= *tmpGroup;
         tmpGroup++;
     }
     if (*tmpGroup == '\0' && *numGrouping != '\0') {
         nrepeat = (remainder - 1) / tmpGroup[-1];
-        size += thousandsLength * nrepeat;
+        buflen += thousandsLength * nrepeat;
         remainder -= nrepeat * tmpGroup[-1];
     } else {
         nrepeat = 0;
     }
     tmpGroup--;
 
-    buf = (char *)cx->malloc(size + 1);
+    buf = (char *)cx->malloc(buflen + 1);
     if (!buf)
         return JS_FALSE;
 
@@ -815,7 +827,7 @@ num_toLocaleString(JSContext *cx, uintN argc, Value *vp)
         return ok;
     }
 
-    str = js_NewStringCopyN(cx, buf, size);
+    str = js_NewStringCopyN(cx, buf, buflen);
     cx->free(buf);
     if (!str)
         return JS_FALSE;
@@ -920,15 +932,15 @@ JS_DEFINE_TRCINFO_2(num_toString,
 
 static JSFunctionSpec number_methods[] = {
 #if JS_HAS_TOSOURCE
-    JS_FN(js_toSource_str,       num_toSource,          0, JSFUN_PRIMITIVE_THIS),
+    JS_FN(js_toSource_str,       num_toSource,          0, 0),
 #endif
-    JS_TN(js_toString_str,       num_toString,          1, JSFUN_PRIMITIVE_THIS, &num_toString_trcinfo),
-    JS_FN(js_toLocaleString_str, num_toLocaleString,    0, JSFUN_PRIMITIVE_THIS),
-    JS_FN(js_valueOf_str,        js_num_valueOf,        0, JSFUN_PRIMITIVE_THIS),
-    JS_FN(js_toJSON_str,         js_num_valueOf,        0, JSFUN_PRIMITIVE_THIS),
-    JS_FN("toFixed",             num_toFixed,           1, JSFUN_PRIMITIVE_THIS),
-    JS_FN("toExponential",       num_toExponential,     1, JSFUN_PRIMITIVE_THIS),
-    JS_FN("toPrecision",         num_toPrecision,       1, JSFUN_PRIMITIVE_THIS),
+    JS_TN(js_toString_str,       num_toString,          1, 0, &num_toString_trcinfo),
+    JS_FN(js_toLocaleString_str, num_toLocaleString,    0, 0),
+    JS_FN(js_valueOf_str,        js_num_valueOf,        0, 0),
+    JS_FN(js_toJSON_str,         js_num_valueOf,        0, 0),
+    JS_FN("toFixed",             num_toFixed,           1, 0),
+    JS_FN("toExponential",       num_toExponential,     1, 0),
+    JS_FN("toPrecision",         num_toPrecision,       1, 0),
     JS_FS_END
 };
 
@@ -1187,6 +1199,14 @@ js_NumberToString(JSContext *cx, jsdouble d)
     return js_NumberToStringWithBase(cx, d, 10);
 }
 
+JSFlatString *
+js::NumberToString(JSContext *cx, jsdouble d)
+{
+    if (JSString *str = js_NumberToStringWithBase(cx, d, 10))
+        return str->assertIsFlat();
+    return NULL;
+}
+
 JSBool JS_FASTCALL
 js_NumberValueToCharBuffer(JSContext *cx, const Value &v, JSCharBuffer &cb)
 {
@@ -1235,13 +1255,8 @@ ValueToNumberSlow(JSContext *cx, Value v, double *out)
             return true;
         }
       skip_int_double:
-        if (v.isString()) {
-            jsdouble d = StringToNumberType<jsdouble>(cx, v.toString());
-            if (JSDOUBLE_IS_NaN(d))
-                break;
-            *out = d;
-            return true;
-        }
+        if (v.isString())
+            return StringToNumberType<jsdouble>(cx, v.toString(), out);
         if (v.isBoolean()) {
             if (v.toBoolean()) {
                 *out = 1.0;

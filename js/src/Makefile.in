@@ -134,17 +134,18 @@ CPPSRCS		= \
 		jsbool.cpp \
 		jsclone.cpp \
 		jscntxt.cpp \
+		jscompartment.cpp \
 		jsdate.cpp \
 		jsdbgapi.cpp \
 		jsdhash.cpp \
 		jsdtoa.cpp \
 		jsemit.cpp \
 		jsexn.cpp \
+		jsfriendapi.cpp \
 		jsfun.cpp \
 		jsgc.cpp \
 		jsgcchunk.cpp \
 		jsgcstats.cpp \
-		jscompartment.cpp \
 		jshash.cpp \
 		jsinterp.cpp \
 		jsinvoke.cpp \
@@ -199,6 +200,7 @@ INSTALLED_HEADERS = \
 		jsdtoa.h \
 		jsemit.h \
 		jsfun.h \
+		jsfriendapi.h \
 		jsgc.h \
 		jscell.h \
 		jsgcchunk.h \
@@ -572,11 +574,11 @@ ifdef ENABLE_TRACEJIT
 ifndef WINCE
 check::
 	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/jit-test/jit_test.py \
-	        --no-slow --no-progress --tinderbox $(DIST)/bin/js$(BIN_SUFFIX)
+	        --no-slow --no-progress --tinderbox --jitflags=m,j,mj,mjp,mjd $(DIST)/bin/js$(BIN_SUFFIX)
 
 check-valgrind::
 	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/jit-test/jit_test.py \
-	        --valgrind --no-slow --no-progress --tinderbox $(DIST)/bin/js$(BIN_SUFFIX)
+	        --valgrind --no-slow --no-progress --tinderbox --jitflags=m,j,mj,mjp,mjd $(DIST)/bin/js$(BIN_SUFFIX)
 endif
 endif
 

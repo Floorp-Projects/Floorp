@@ -141,7 +141,10 @@ void
 AppendString(Vector<jschar, N, AP> &v, JSString* str)
 {
   JS_ASSERT(str);
-  v.append(str->chars(), str->length());
+  const jschar *chars = str->getChars(NULL);
+  if (!chars)
+    return;
+  v.append(chars, str->length());
 }
 
 template <size_t N, class AP>
@@ -154,8 +157,12 @@ AppendString(Vector<char, N, AP> &v, JSString* str)
   if (!v.resize(vlen + alen))
     return;
 
+  const jschar *chars = str->getChars(NULL);
+  if (!chars)
+    return;
+
   for (size_t i = 0; i < alen; ++i)
-    v[i + vlen] = char(str->chars()[i]);
+    v[i + vlen] = char(chars[i]);
 }
 
 template <class T, size_t N, class AP, size_t ArrayLength>
@@ -186,33 +193,15 @@ PrependString(Vector<jschar, N, AP> &v, JSString* str)
   if (!v.resize(vlen + alen))
     return;
 
+  const jschar *chars = str->getChars(NULL);
+  if (!chars)
+    return;
+
   // Move vector data forward. This is safe since we've already resized.
   memmove(v.begin() + alen, v.begin(), vlen * sizeof(jschar));
 
   // Copy data to insert.
-  memcpy(v.begin(), str->chars(), alen * sizeof(jschar));
-}
-
-template <class T, size_t N, size_t M, class AP>
-bool
-StringsEqual(Vector<T, N, AP> &v, Vector<T, M, AP> &w)
-{
-  if (v.length() != w.length())
-    return false;
-
-  return memcmp(v.begin(), w.begin(), v.length() * sizeof(T)) == 0;
-}
-
-template <size_t N, class AP>
-bool
-StringsEqual(Vector<jschar, N, AP> &v, JSString* str)
-{
-  JS_ASSERT(str);
-  size_t length = str->length();
-  if (v.length() != length)
-    return false;
-
-  return memcmp(v.begin(), str->chars(), length * sizeof(jschar)) == 0;
+  memcpy(v.begin(), chars, alen * sizeof(jschar));
 }
 
 /*******************************************************************************
@@ -274,7 +263,7 @@ struct FieldInfo
 // Hash policy for FieldInfos.
 struct FieldHashPolicy
 {
-  typedef JSString* Key;
+  typedef JSFlatString* Key;
   typedef Key Lookup;
 
   static uint32 hash(const Lookup &l) {
@@ -297,7 +286,7 @@ struct FieldHashPolicy
   }
 };
 
-typedef HashMap<JSString*, FieldInfo, FieldHashPolicy, SystemAllocPolicy> FieldInfoHash;
+typedef HashMap<JSFlatString*, FieldInfo, FieldHashPolicy, SystemAllocPolicy> FieldInfoHash;
 
 // Descriptor of ABI, return type, argument types, and variadicity for a
 // FunctionType.
@@ -482,7 +471,7 @@ namespace StructType {
   JSBool DefineInternal(JSContext* cx, JSObject* typeObj, JSObject* fieldsObj);
 
   const FieldInfoHash* GetFieldInfo(JSContext* cx, JSObject* obj);
-  const FieldInfo* LookupField(JSContext* cx, JSObject* obj, JSString *name);
+  const FieldInfo* LookupField(JSContext* cx, JSObject* obj, JSFlatString *name);
   JSObject* BuildFieldsArray(JSContext* cx, JSObject* obj);
   ffi_type* BuildFFIType(JSContext* cx, JSObject* obj);
 }

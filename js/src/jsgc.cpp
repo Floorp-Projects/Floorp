@@ -492,6 +492,13 @@ js_GCThingIsMarked(void *thing, uint32 color = BLACK)
     return reinterpret_cast<Cell *>(thing)->isMarked(color);
 }
 
+/*
+ * 1/8 life for JIT code. After this number of microseconds have passed, 1/8 of all
+ * JIT code is discarded in inactive compartments, regardless of how often that
+ * code runs.
+ */
+static const int64 JIT_SCRIPT_EIGHTH_LIFETIME = 120 * 1000 * 1000;
+
 JSBool
 js_InitGC(JSRuntime *rt, uint32 maxbytes)
 {
@@ -538,6 +545,8 @@ js_InitGC(JSRuntime *rt, uint32 maxbytes)
      * (during JS engine start).
      */
     rt->setGCLastBytes(8192);
+
+    rt->gcJitReleaseTime = PRMJ_Now() + JIT_SCRIPT_EIGHTH_LIFETIME;
 
     METER(PodZero(&rt->gcStats));
     return true;
@@ -777,16 +786,18 @@ ConservativeGCThreadData::recordStackTop()
     jsuword dummy;
     nativeStackTop = &dummy;
 
-    /* Update the register snapshot with the latest values. */
+    /*
+     * To record and update the register snapshot for the conservative
+     * scanning with the latest values we use setjmp.
+     */
 #if defined(_MSC_VER)
 # pragma warning(push)
 # pragma warning(disable: 4611)
 #endif
-    setjmp(registerSnapshot.jmpbuf);
+    (void) setjmp(registerSnapshot.jmpbuf);
 #if defined(_MSC_VER)
 # pragma warning(pop)
 #endif
-
 }
 
 static inline void
@@ -1016,7 +1027,7 @@ FreeLists::purge()
         *p = NULL;
 }
 
-struct JSShortString;
+class JSShortString;
 
 ArenaList *
 GetFinalizableArenaList(JSCompartment *c, unsigned thingKind) {
@@ -1435,8 +1446,10 @@ js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
         MarkObject(trc, fp->callObj(), "call");
     if (fp->hasArgsObj())
         MarkObject(trc, fp->argsObj(), "arguments");
-    if (fp->isScriptFrame())
+    if (fp->isScriptFrame()) {
         js_TraceScript(trc, fp->script());
+        fp->script()->compartment->active = true;
+    }
 
     MarkValue(trc, fp->returnValue(), "rval");
 }
@@ -1732,16 +1745,16 @@ TriggerGC(JSRuntime *rt)
 } /* namespace js */
 
 void
-js_DestroyScriptsToGC(JSContext *cx, JSThreadData *data)
+js_DestroyScriptsToGC(JSContext *cx, JSCompartment *comp)
 {
     JSScript **listp, *script;
 
-    for (size_t i = 0; i != JS_ARRAY_LENGTH(data->scriptsToGC); ++i) {
-        listp = &data->scriptsToGC[i];
+    for (size_t i = 0; i != JS_ARRAY_LENGTH(comp->scriptsToGC); ++i) {
+        listp = &comp->scriptsToGC[i];
         while ((script = *listp) != NULL) {
             *listp = script->u.nextToGC;
             script->u.nextToGC = NULL;
-            js_DestroyScriptFromGC(cx, script, data);
+            js_DestroyScriptFromGC(cx, script);
         }
     }
 }
@@ -1767,7 +1780,7 @@ js_FinalizeStringRT(JSRuntime *rt, JSString *str)
         JS_ASSERT(IsFinalizableStringKind(thingKind));
 
         /* A stillborn string has null chars, so is not valid. */
-        jschar *chars = str->flatChars();
+        jschar *chars = const_cast<jschar *>(str->flatChars());
         if (!chars)
             return;
         if (thingKind == FINALIZE_STRING) {
@@ -2029,13 +2042,29 @@ SweepCompartments(JSContext *cx, JSGCInvocationKind gckind)
     /* Delete defaultCompartment only during runtime shutdown */
     rt->defaultCompartment->marked = true;
 
+    /*
+     * Figure out how much JIT code should be released from inactive compartments.
+     * If multiple eighth-lifes have passed, compound the release interval linearly;
+     * if enough time has passed, all inactive JIT code will be released.
+     */
+    uint32 releaseInterval = 0;
+    int64 now = PRMJ_Now();
+    if (now >= rt->gcJitReleaseTime) {
+        releaseInterval = 8;
+        while (now >= rt->gcJitReleaseTime) {
+            if (--releaseInterval == 1)
+                rt->gcJitReleaseTime = now;
+            rt->gcJitReleaseTime += JIT_SCRIPT_EIGHTH_LIFETIME;
+        }
+    }
+
     while (read < end) {
         JSCompartment *compartment = (*read++);
         if (compartment->marked) {
             compartment->marked = false;
             *write++ = compartment;
             /* Remove dead wrappers from the compartment map. */
-            compartment->sweep(cx);
+            compartment->sweep(cx, releaseInterval);
         } else {
             JS_ASSERT(compartment->freeLists.isEmpty());
             if (compartment->arenaListsAreEmpty() || gckind == GC_LAST_CONTEXT) {
@@ -2047,7 +2076,7 @@ SweepCompartments(JSContext *cx, JSGCInvocationKind gckind)
             } else {
                 compartment->marked = false;
                 *write++ = compartment;
-                compartment->sweep(cx);
+                compartment->sweep(cx, releaseInterval);
             }
         }
     }
@@ -2175,11 +2204,6 @@ MarkAndSweep(JSContext *cx, JSGCInvocationKind gckind GCTIMER_PARAM)
 #ifdef DEBUG
     /* Save the pre-sweep count of scope-mapped properties. */
     rt->liveObjectPropsPreSweep = rt->liveObjectProps;
-#endif
-
-#ifdef JS_TRACER
-    for (ThreadDataIter i(rt); !i.empty(); i.popFront())
-        i.threadData()->traceMonitor.sweep();
 #endif
 
     /*
@@ -2589,6 +2613,7 @@ NewCompartment(JSContext *cx, JSPrincipals *principals)
     JSRuntime *rt = cx->runtime;
     JSCompartment *compartment = new JSCompartment(rt);
     if (!compartment || !compartment->init()) {
+        delete compartment;
         JS_ReportOutOfMemory(cx);
         return NULL;
     }

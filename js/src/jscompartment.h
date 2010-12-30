@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -55,10 +55,209 @@
 #endif
 
 namespace js {
+
+/* Holds the number of recording attemps for an address. */
+typedef HashMap<jsbytecode*,
+                size_t,
+                DefaultHasher<jsbytecode*>,
+                SystemAllocPolicy> RecordAttemptMap;
+
+/* Holds the profile data for loops. */
+typedef HashMap<jsbytecode*,
+                LoopProfile*,
+                DefaultHasher<jsbytecode*>,
+                SystemAllocPolicy> LoopProfileMap;
+
+class Oracle;
+
+typedef HashSet<JSScript *,
+                DefaultHasher<JSScript *>,
+                SystemAllocPolicy> TracedScriptSet;
+
+/*
+ * Trace monitor. Every JSCompartment has an associated trace monitor
+ * that keeps track of loop frequencies for all JavaScript code loaded
+ * into that runtime.
+ */
+struct TraceMonitor {
+    /*
+     * The context currently executing JIT-compiled code in this compartment, or
+     * NULL if none. Among other things, this can in certain cases prevent
+     * last-ditch GC and suppress calls to JS_ReportOutOfMemory.
+     *
+     * !tracecx && !recorder: not on trace
+     * !tracecx && recorder: recording
+     * tracecx && !recorder: executing a trace
+     * tracecx && recorder: executing inner loop, recording outer loop
+     */
+    JSContext               *tracecx;
+
+    /* Counts the number of iterations run by the currently executing trace. */
+    unsigned                iterationCounter;
+
+    /*
+     * Cached storage to use when executing on trace. While we may enter nested
+     * traces, we always reuse the outer trace's storage, so never need more
+     * than of these.
+     */
+    TraceNativeStorage      *storage;
+
+    /*
+     * There are 4 allocators here.  This might seem like overkill, but they
+     * have different lifecycles, and by keeping them separate we keep the
+     * amount of retained memory down significantly.  They are flushed (ie.
+     * all the allocated memory is freed) periodically.
+     *
+     * - dataAlloc has the lifecycle of the monitor.  It's flushed only when
+     *   the monitor is flushed.  It's used for fragments.
+     *
+     * - traceAlloc has the same flush lifecycle as the dataAlloc, but it is
+     *   also *marked* when a recording starts and rewinds to the mark point
+     *   if recording aborts.  So you can put things in it that are only
+     *   reachable on a successful record/compile cycle like GuardRecords and
+     *   SideExits.
+     *
+     * - tempAlloc is flushed after each recording, successful or not.  It's
+     *   used to store LIR code and for all other elements in the LIR
+     *   pipeline.
+     *
+     * - codeAlloc has the same lifetime as dataAlloc, but its API is
+     *   different (CodeAlloc vs. VMAllocator).  It's used for native code.
+     *   It's also a good idea to keep code and data separate to avoid I-cache
+     *   vs. D-cache issues.
+     */
+    VMAllocator*            dataAlloc;
+    VMAllocator*            traceAlloc;
+    VMAllocator*            tempAlloc;
+    nanojit::CodeAlloc*     codeAlloc;
+    nanojit::Assembler*     assembler;
+    FrameInfoCache*         frameCache;
+
+    /* This gets incremented every time the monitor is flushed. */
+    uintN                   flushEpoch;
+
+    Oracle*                 oracle;
+    TraceRecorder*          recorder;
+
+    /* If we are profiling a loop, this tracks the current profile. Otherwise NULL. */
+    LoopProfile*            profile;
+
+    GlobalState             globalStates[MONITOR_N_GLOBAL_STATES];
+    TreeFragment*           vmfragments[FRAGMENT_TABLE_SIZE];
+    RecordAttemptMap*       recordAttempts;
+
+    /* A hashtable mapping PC values to loop profiles for those loops. */
+    LoopProfileMap*         loopProfiles;
+
+    /*
+     * Maximum size of the code cache before we start flushing. 1/16 of this
+     * size is used as threshold for the regular expression code cache.
+     */
+    uint32                  maxCodeCacheBytes;
+
+    /*
+     * If nonzero, do not flush the JIT cache after a deep bail. That would
+     * free JITted code pages that we will later return to. Instead, set the
+     * needFlush flag so that it can be flushed later.
+     */
+    JSBool                  needFlush;
+
+    /*
+     * Fragment map for the regular expression compiler.
+     */
+    REHashMap*              reFragments;
+
+    // Cached temporary typemap to avoid realloc'ing every time we create one.
+    // This must be used in only one place at a given time. It must be cleared
+    // before use.
+    TypeMap*                cachedTempTypeMap;
+
+    /* Scripts with recorded fragments. */
+    TracedScriptSet         tracedScripts;
+
+#ifdef DEBUG
+    /* Fields needed for fragment/guard profiling. */
+    nanojit::Seq<nanojit::Fragment*>* branches;
+    uint32                  lastFragID;
+    /*
+     * profAlloc has a lifetime which spans exactly from js_InitJIT to
+     * js_FinishJIT.
+     */
+    VMAllocator*            profAlloc;
+    FragStatsMap*           profTab;
+#endif
+
+    bool ontrace() const {
+        return !!tracecx;
+    }
+
+    /* Flush the JIT cache. */
+    void flush();
+
+    /* Sweep any cache entry pointing to dead GC things. */
+    void sweep();
+
+    bool outOfMemory() const;
+};
+
 namespace mjit {
 class JaegerCompartment;
 }
 }
+
+/* Number of potentially reusable scriptsToGC to search for the eval cache. */
+#ifndef JS_EVAL_CACHE_SHIFT
+# define JS_EVAL_CACHE_SHIFT        6
+#endif
+#define JS_EVAL_CACHE_SIZE          JS_BIT(JS_EVAL_CACHE_SHIFT)
+
+#ifdef DEBUG
+# define EVAL_CACHE_METER_LIST(_)   _(probe), _(hit), _(step), _(noscope)
+# define identity(x)                x
+
+struct JSEvalCacheMeter {
+    uint64 EVAL_CACHE_METER_LIST(identity);
+};
+
+# undef identity
+#endif
+
+namespace js {
+
+class NativeIterCache {
+    static const size_t SIZE = size_t(1) << 8;
+    
+    /* Cached native iterators. */
+    JSObject            *data[SIZE];
+
+    static size_t getIndex(uint32 key) {
+        return size_t(key) % SIZE;
+    }
+
+  public:
+    /* Native iterator most recently started. */
+    JSObject            *last;
+
+    NativeIterCache()
+      : last(NULL) {
+        PodArrayZero(data);
+    }
+
+    void purge() {
+        PodArrayZero(data);
+        last = NULL;
+    }
+
+    JSObject *get(uint32 key) const {
+        return data[getIndex(key)];
+    }
+
+    void set(uint32 key, JSObject *iterobj) {
+        data[getIndex(key)] = iterobj;
+    }
+};
+
+} /* namespace js */
 
 struct JS_FRIEND_API(JSCompartment) {
     JSRuntime                    *rt;
@@ -72,8 +271,21 @@ struct JS_FRIEND_API(JSCompartment) {
     js::gc::JSGCArenaStats       compartmentStats[js::gc::FINALIZE_LIMIT];
 #endif
 
+#ifdef JS_TRACER
+    /* Trace-tree JIT recorder/interpreter state. */
+    js::TraceMonitor             traceMonitor;
+#endif
+
+    /* Hashed lists of scripts created by eval to garbage-collect. */
+    JSScript                     *scriptsToGC[JS_EVAL_CACHE_SIZE];
+
+#ifdef DEBUG
+    JSEvalCacheMeter             evalCacheMeter;
+#endif
+
     void                         *data;
     bool                         marked;
+    bool                         active;  // GC flag, whether there are active frames
     js::WrapperMap               crossCompartmentWrappers;
 
 #ifdef JS_METHODJIT
@@ -93,6 +305,8 @@ struct JS_FRIEND_API(JSCompartment) {
     JSObject                     *anynameObject;
     JSObject                     *functionNamespaceObject;
 
+    js::NativeIterCache          nativeIterCache;
+
     JSCompartment(JSRuntime *cx);
     ~JSCompartment();
 
@@ -107,11 +321,38 @@ struct JS_FRIEND_API(JSCompartment) {
     bool wrap(JSContext *cx, js::AutoIdVector &props);
     bool wrapException(JSContext *cx);
 
-    void sweep(JSContext *cx);
+    void sweep(JSContext *cx, uint32 releaseInterval);
     void purge(JSContext *cx);
     void finishArenaLists();
     bool arenaListsAreEmpty();
+
+  private:
+    js::MathCache                *mathCache;
+
+    js::MathCache *allocMathCache(JSContext *cx);
+
+  public:
+    js::MathCache *getMathCache(JSContext *cx) {
+        return mathCache ? mathCache : allocMathCache(cx);
+    }
 };
+
+#define JS_TRACE_MONITOR(cx)    (cx->compartment->traceMonitor)
+#define JS_SCRIPTS_TO_GC(cx)    (cx->compartment->scriptsToGC)
+
+namespace js {
+static inline MathCache *
+GetMathCache(JSContext *cx)
+{
+    return cx->compartment->getMathCache(cx);
+}
+}
+
+#ifdef DEBUG
+# define EVAL_CACHE_METER(x)    (cx->compartment->evalCacheMeter.x++)
+#else
+# define EVAL_CACHE_METER(x)    ((void) 0)
+#endif
 
 #ifdef _MSC_VER
 #pragma warning(pop)

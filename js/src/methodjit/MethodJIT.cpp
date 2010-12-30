@@ -138,7 +138,7 @@ SetVMFrameRegs(VMFrame &f)
     f.cx->setCurrentRegs(&f.regs);
 }
 
-#if defined(__APPLE__) || defined(XP_WIN) || defined(XP_OS2)
+#if defined(__APPLE__) || (defined(XP_WIN) && !defined(JS_CPU_X64)) || defined(XP_OS2)
 # define SYMBOL_STRING(name) "_" #name
 #else
 # define SYMBOL_STRING(name) #name

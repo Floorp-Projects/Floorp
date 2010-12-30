@@ -407,14 +407,14 @@ ArrayToIdVector(JSContext *cx, const Value &array, AutoIdVector &props)
 
     JSObject *obj = &array.toObject();
     jsuint length;
-    if (!js_GetLengthProperty(cx, obj, &length)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_ARRAY_LENGTH);
+    if (!js_GetLengthProperty(cx, obj, &length))
         return false;
-    }
 
     AutoIdRooter idr(cx);
     AutoValueRooter tvr(cx);
     for (jsuint n = 0; n < length; ++n) {
+        if (!JS_CHECK_OPERATION_LIMIT(cx))
+            return false;
         if (!js_IndexToId(cx, n, idr.addr()))
             return false;
         if (!obj->getProperty(cx, idr.id(), tvr.addr()))

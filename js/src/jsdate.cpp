@@ -750,7 +750,7 @@ ndigits(size_t n, size_t *result, const jschar *s, size_t* i, size_t limit)
  */
 
 static JSBool
-date_parseISOString(JSString *str, jsdouble *result, JSContext *cx)
+date_parseISOString(JSLinearString *str, jsdouble *result, JSContext *cx)
 {
     jsdouble msec;
 
@@ -792,7 +792,8 @@ date_parseISOString(JSString *str, jsdouble *result, JSContext *cx)
         if (!ndigits(n, &field, s, &i, limit)) { goto syntax; }     \
     JS_END_MACRO 
 
-    str->getCharsAndLength(s, limit);
+    s = str->chars();
+    limit = str->length();
 
     if (PEEK('+') || PEEK('-')) {
         if (PEEK('-'))
@@ -883,7 +884,7 @@ date_parseISOString(JSString *str, jsdouble *result, JSContext *cx)
 }
 
 static JSBool
-date_parseString(JSString *str, jsdouble *result, JSContext *cx)
+date_parseString(JSLinearString *str, jsdouble *result, JSContext *cx)
 {
     jsdouble msec;
 
@@ -907,7 +908,8 @@ date_parseString(JSString *str, jsdouble *result, JSContext *cx)
     if (date_parseISOString(str, result, cx))
         return JS_TRUE;
 
-    str->getCharsAndLength(s, limit);
+    s = str->chars();
+    limit = str->length();
     if (limit == 0)
         goto syntax;
     while (i < limit) {
@@ -1167,7 +1169,11 @@ date_parse(JSContext *cx, uintN argc, Value *vp)
     if (!str)
         return JS_FALSE;
     vp[2].setString(str);
-    if (!date_parseString(str, &result, cx)) {
+    JSLinearString *linearStr = str->ensureLinear(cx);
+    if (!linearStr)
+        return false;
+
+    if (!date_parseString(linearStr, &result, cx)) {
         vp->setDouble(js_NaN);
         return true;
     }
@@ -2377,8 +2383,6 @@ date_toString(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 date_valueOf(JSContext *cx, uintN argc, Value *vp)
 {
-    JSString *str, *number_str;
-
     /* It is an error to call date_valueOf on a non-date object, but we don't
      * need to check for that explicitly here because every path calls
      * GetUTCTime, which does the check.
@@ -2389,11 +2393,14 @@ date_valueOf(JSContext *cx, uintN argc, Value *vp)
         return date_getTime(cx, argc, vp);
 
     /* Convert to number only if the hint was given, otherwise favor string. */
-    str = js_ValueToString(cx, vp[2]);
+    JSString *str = js_ValueToString(cx, vp[2]);
     if (!str)
         return JS_FALSE;
-    number_str = ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[JSTYPE_NUMBER]);
-    if (js_EqualStrings(str, number_str))
+    JSLinearString *linear_str = str->ensureLinear(cx);
+    if (!linear_str)
+        return JS_FALSE;
+    JSAtom *number_str = cx->runtime->atomState.typeAtoms[JSTYPE_NUMBER];
+    if (EqualStrings(linear_str, number_str))
         return date_getTime(cx, argc, vp);
     return date_toString(cx, argc, vp);
 }
@@ -2487,8 +2494,11 @@ js_Date(JSContext *cx, uintN argc, Value *vp)
             if (!str)
                 return false;
             argv[0].setString(str);
+            JSLinearString *linearStr = str->ensureLinear(cx);
+            if (!linearStr)
+                return false;
 
-            if (!date_parseString(str, &d, cx))
+            if (!date_parseString(linearStr, &d, cx))
                 d = js_NaN;
             else
                 d = TIMECLIP(d);

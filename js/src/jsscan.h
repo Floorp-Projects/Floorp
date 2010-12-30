@@ -462,7 +462,9 @@ class TokenStream
     void ungetChar(int32 c);
     void ungetCharIgnoreEOL(int32 c);
     Token *newToken(ptrdiff_t adjust);
-    int32 getUnicodeEscape();
+    bool peekUnicodeEscape(int32 *c);
+    bool matchUnicodeEscapeIdStart(int32 *c);
+    bool matchUnicodeEscapeIdent(int32 *c);
     JSBool peekChars(intN n, jschar *cp);
     JSBool getXMLEntity();
     jschar *findEOL();
@@ -535,7 +537,7 @@ typedef void (*JSMapKeywordFun)(const char *);
  * check if str is a JS keyword.
  */
 extern JSBool
-js_IsIdentifier(JSString *str);
+js_IsIdentifier(JSLinearString *str);
 
 /*
  * Steal one JSREPORT_* bit (see jsapi.h) to tell that arguments to the error

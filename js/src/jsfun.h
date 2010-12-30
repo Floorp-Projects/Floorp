@@ -180,9 +180,8 @@ struct JSFunction : public JSObject_Slots2
 
     bool isFunctionPrototype() const { return flags & JSFUN_PROTOTYPE; }
 
+    /* Returns the strictness of this function, which must be interpreted. */
     inline bool inStrictMode() const;
-
-    bool acceptsPrimitiveThis() const { return flags & JSFUN_PRIMITIVE_THIS; }
 
     uintN countVars() const {
         JS_ASSERT(FUN_INTERPRETED(this));
@@ -215,6 +214,11 @@ struct JSFunction : public JSObject_Slots2
     const js::Shape *lastVar() const;
     const js::Shape *lastUpvar() const { return u.i.names; }
 
+    /*
+     * The parser builds shape paths for functions, usable by Call objects at
+     * runtime, by calling addLocal. All locals of ARG kind must be addLocal'ed
+     * before any VAR kind, and VAR before UPVAR.
+     */
     bool addLocal(JSContext *cx, JSAtom *atom, JSLocalKind kind);
 
     /*
@@ -433,6 +437,14 @@ IsFunctionObject(const js::Value &v, JSFunction **fun)
     if (b)
         *fun = funobj->getFunctionPrivate();
     return b;
+}
+
+extern JS_ALWAYS_INLINE bool
+SameTraceType(const Value &lhs, const Value &rhs)
+{
+    return SameType(lhs, rhs) &&
+           (lhs.isPrimitive() ||
+            lhs.toObject().isFunction() == rhs.toObject().isFunction());
 }
 
 /*

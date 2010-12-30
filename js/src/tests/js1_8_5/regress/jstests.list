@@ -11,6 +11,7 @@ script regress-546615.js
 script regress-551763-0.js
 script regress-551763-1.js
 script regress-551763-2.js
+script regress-552432.js
 script regress-553778.js
 script regress-555246-0.js
 script regress-555246-1.js
@@ -56,5 +57,9 @@ script regress-610026.js
 script regress-609617.js
 script regress-617405-1.js
 script regress-617405-2.js
+script regress-618572.js
 skip-if(!xulRuntime.shell) script regress-618576.js  # uses evalcx
 fails-if(!xulRuntime.shell) script regress-618652.js
+script regress-619003.js
+script regress-620376-1.js
+script regress-620376-2.js

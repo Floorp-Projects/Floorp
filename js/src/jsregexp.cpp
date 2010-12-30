@@ -243,9 +243,11 @@ RegExp::handlePCREError(JSContext *cx, int error)
 bool
 RegExp::parseFlags(JSContext *cx, JSString *flagStr, uint32 &flagsOut)
 {
-    const jschar *s;
-    size_t n;
-    flagStr->getCharsAndLength(s, n);
+    size_t n = flagStr->length();
+    const jschar *s = flagStr->getChars(cx);
+    if (!s)
+        return false;
+
     flagsOut = 0;
     for (size_t i = 0; i < n; i++) {
 #define HANDLE_FLAG(__name)                                             \
@@ -578,9 +580,12 @@ js_regexp_toString(JSContext *cx, JSObject *obj, Value *vp)
         return true;
     }
 
-    const jschar *source;
-    size_t length;
-    re->getSource()->getCharsAndLength(source, length);
+    JSLinearString *src = re->getSource();
+    size_t length = src->length();
+    const jschar *source = src->getChars(cx);
+    if (!source)
+        return false;
+
     if (length == 0) {
         source = empty_regexp_ucstr;
         length = JS_ARRAY_LENGTH(empty_regexp_ucstr) - 1;
@@ -632,9 +637,11 @@ regexp_toString(JSContext *cx, uintN argc, Value *vp)
 static JSString *
 EscapeNakedForwardSlashes(JSContext *cx, JSString *unescaped)
 {
-    const jschar *oldChars;
-    size_t oldLen;
-    unescaped->getCharsAndLength(oldChars, oldLen);
+    size_t oldLen = unescaped->length();
+    const jschar *oldChars = unescaped->getChars(cx);
+    if (!oldChars)
+        return NULL;
+
     js::Vector<jschar, 128> newChars(cx);
     for (const jschar *it = oldChars; it < oldChars + oldLen; ++it) {
         if (*it == '/' && (it == oldChars || it[-1] != '\\')) {

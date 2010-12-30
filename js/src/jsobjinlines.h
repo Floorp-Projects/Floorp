@@ -530,32 +530,55 @@ JSObject::setNativeIterator(js::NativeIterator *ni)
     setPrivate(ni);
 }
 
-inline jsval
+inline JSLinearString *
 JSObject::getNamePrefix() const
+{
+    JS_ASSERT(isNamespace() || isQName());
+    const js::Value &v = getSlot(JSSLOT_NAME_PREFIX);
+    return !v.isUndefined() ? v.toString()->assertIsLinear() : NULL;
+}
+
+inline jsval
+JSObject::getNamePrefixVal() const
 {
     JS_ASSERT(isNamespace() || isQName());
     return js::Jsvalify(getSlot(JSSLOT_NAME_PREFIX));
 }
 
 inline void
-JSObject::setNamePrefix(jsval prefix)
+JSObject::setNamePrefix(JSLinearString *prefix)
 {
     JS_ASSERT(isNamespace() || isQName());
-    setSlot(JSSLOT_NAME_PREFIX, js::Valueify(prefix));
+    setSlot(JSSLOT_NAME_PREFIX, prefix ? js::StringValue(prefix) : js::UndefinedValue());
+}
+
+inline void
+JSObject::clearNamePrefix()
+{
+    JS_ASSERT(isNamespace() || isQName());
+    setSlot(JSSLOT_NAME_PREFIX, js::UndefinedValue());
+}
+
+inline JSLinearString *
+JSObject::getNameURI() const
+{
+    JS_ASSERT(isNamespace() || isQName());
+    const js::Value &v = getSlot(JSSLOT_NAME_URI);
+    return !v.isUndefined() ? v.toString()->assertIsLinear() : NULL;
 }
 
 inline jsval
-JSObject::getNameURI() const
+JSObject::getNameURIVal() const
 {
     JS_ASSERT(isNamespace() || isQName());
     return js::Jsvalify(getSlot(JSSLOT_NAME_URI));
 }
 
 inline void
-JSObject::setNameURI(jsval uri)
+JSObject::setNameURI(JSLinearString *uri)
 {
     JS_ASSERT(isNamespace() || isQName());
-    setSlot(JSSLOT_NAME_URI, js::Valueify(uri));
+    setSlot(JSSLOT_NAME_URI, uri ? js::StringValue(uri) : js::UndefinedValue());
 }
 
 inline jsval
@@ -572,18 +595,26 @@ JSObject::setNamespaceDeclared(jsval decl)
     setSlot(JSSLOT_NAMESPACE_DECLARED, js::Valueify(decl));
 }
 
-inline jsval
+inline JSLinearString *
 JSObject::getQNameLocalName() const
+{
+    JS_ASSERT(isQName());
+    const js::Value &v = getSlot(JSSLOT_QNAME_LOCAL_NAME);
+    return !v.isUndefined() ? v.toString()->assertIsLinear() : NULL;
+}
+
+inline jsval
+JSObject::getQNameLocalNameVal() const
 {
     JS_ASSERT(isQName());
     return js::Jsvalify(getSlot(JSSLOT_QNAME_LOCAL_NAME));
 }
 
 inline void
-JSObject::setQNameLocalName(jsval name)
+JSObject::setQNameLocalName(JSLinearString *name)
 {
     JS_ASSERT(isQName());
-    setSlot(JSSLOT_QNAME_LOCAL_NAME, js::Valueify(name));
+    setSlot(JSSLOT_QNAME_LOCAL_NAME, name ? js::StringValue(name) : js::UndefinedValue());
 }
 
 inline JSObject *

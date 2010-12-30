@@ -447,7 +447,7 @@ IDBCursor::Continue(const jsval &aKey,
   }
 
   Key key;
-  nsresult rv = IDBObjectStore::GetKeyFromJSVal(aKey, key);
+  nsresult rv = IDBObjectStore::GetKeyFromJSVal(aKey, aCx, key);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!key.IsUnset()) {
@@ -555,7 +555,7 @@ IDBCursor::Update(const jsval& aValue,
     NS_ENSURE_TRUE(ok, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
     Key key;
-    rv = IDBObjectStore::GetKeyFromJSVal(prop, key);
+    rv = IDBObjectStore::GetKeyFromJSVal(prop, aCx, key);
     if (NS_FAILED(rv)) {
       return rv;
     }
