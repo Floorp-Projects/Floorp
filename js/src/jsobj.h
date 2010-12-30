@@ -300,6 +300,7 @@ struct JSObject : js::gc::Cell {
      */
     friend class js::TraceRecorder;
     friend class nanojit::ValidateWriter;
+    friend class GetPropCompiler;
 
     /*
      * Private pointer to the last added property and methods to manipulate the
