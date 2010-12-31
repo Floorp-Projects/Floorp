@@ -191,10 +191,14 @@ ShadowLayerForwarder::CreatedThebesBuffer(ShadowableLayer* aThebes,
                                           const nsIntRect& aBufferRect,
                                           const SurfaceDescriptor& aTempFrontBuffer)
 {
+  OptionalThebesBuffer buffer = null_t();
+  if (SurfaceDescriptor::T__None != aTempFrontBuffer.type()) {
+    buffer = ThebesBuffer(aTempFrontBuffer,
+                          aBufferRect,
+                          nsIntPoint(0, 0));
+  }
   mTxn->AddEdit(OpCreateThebesBuffer(NULL, Shadow(aThebes),
-                                     ThebesBuffer(aTempFrontBuffer,
-                                                  aBufferRect,
-                                                  nsIntPoint(0, 0)),
+                                     buffer,
                                      aFrontValidRegion,
                                      aXResolution,
                                      aYResolution));
@@ -427,26 +431,33 @@ ShadowLayerForwarder::AllocDoubleBuffer(const gfxIntSize& aSize,
                                         gfxSharedImageSurface** aFrontBuffer,
                                         gfxSharedImageSurface** aBackBuffer)
 {
-  NS_ABORT_IF_FALSE(HasShadowManager(), "no manager to forward to");
-
-  gfxASurface::gfxImageFormat format = OptimalFormatFor(aContent);
-  SharedMemory::SharedMemoryType shmemType = OptimalShmemType();
-
-  nsRefPtr<gfxSharedImageSurface> front = new gfxSharedImageSurface();
-  nsRefPtr<gfxSharedImageSurface> back = new gfxSharedImageSurface();
-  if (!front->InitUnsafe(mShadowManager, aSize, format, shmemType) ||
-      !back->InitUnsafe(mShadowManager, aSize, format, shmemType))
-    return PR_FALSE;
-
-  *aFrontBuffer = NULL;       *aBackBuffer = NULL;
-  front.swap(*aFrontBuffer);  back.swap(*aBackBuffer);
-  return PR_TRUE;
+  return AllocBuffer(aSize, aContent, aFrontBuffer) &&
+         AllocBuffer(aSize, aContent, aBackBuffer);
 }
 
 void
 ShadowLayerForwarder::DestroySharedSurface(gfxSharedImageSurface* aSurface)
 {
   mShadowManager->DeallocShmem(aSurface->GetShmem());
+}
+
+PRBool
+ShadowLayerForwarder::AllocBuffer(const gfxIntSize& aSize,
+                                  gfxASurface::gfxContentType aContent,
+                                  gfxSharedImageSurface** aBuffer)
+{
+  NS_ABORT_IF_FALSE(HasShadowManager(), "no manager to forward to");
+
+  gfxASurface::gfxImageFormat format = OptimalFormatFor(aContent);
+  SharedMemory::SharedMemoryType shmemType = OptimalShmemType();
+
+  nsRefPtr<gfxSharedImageSurface> back = new gfxSharedImageSurface();
+  if (!back->InitUnsafe(mShadowManager, aSize, format, shmemType))
+    return PR_FALSE;
+
+  *aBuffer = nsnull;
+  back.swap(*aBuffer);
+  return PR_TRUE;
 }
 
 PRBool
@@ -473,6 +484,29 @@ ShadowLayerForwarder::AllocDoubleBuffer(const gfxIntSize& aSize,
 
   *aFrontBuffer = front->GetShmem();
   *aBackBuffer = back->GetShmem();
+  return PR_TRUE;
+}
+
+PRBool
+ShadowLayerForwarder::AllocBuffer(const gfxIntSize& aSize,
+                                  gfxASurface::gfxContentType aContent,
+                                  SurfaceDescriptor* aBuffer)
+{
+  PRBool tryPlatformSurface = PR_TRUE;
+#ifdef DEBUG
+  tryPlatformSurface = !PR_GetEnv("MOZ_LAYERS_FORCE_SHMEM_SURFACES");
+#endif
+  if (tryPlatformSurface &&
+      PlatformAllocBuffer(aSize, aContent, aBuffer)) {
+    return PR_TRUE;
+  }
+
+  nsRefPtr<gfxSharedImageSurface> buffer;
+  if (!AllocBuffer(aSize, aContent,
+                   getter_AddRefs(buffer)))
+    return PR_FALSE;
+
+  *aBuffer = buffer->GetShmem();
   return PR_TRUE;
 }
 
@@ -556,6 +590,14 @@ ShadowLayerForwarder::PlatformAllocDoubleBuffer(const gfxIntSize&,
                                                 gfxASurface::gfxContentType,
                                                 SurfaceDescriptor*,
                                                 SurfaceDescriptor*)
+{
+  return PR_FALSE;
+}
+
+PRBool
+ShadowLayerForwarder::PlatformAllocBuffer(const gfxIntSize&,
+                                          gfxASurface::gfxContentType,
+                                          SurfaceDescriptor*)
 {
   return PR_FALSE;
 }
