@@ -769,9 +769,9 @@ num_toLocaleString(JSContext *cx, uintN argc, Value *vp)
     decimalLength = strlen(rt->decimalSeparator);
 
     /* Figure out how long resulting string will be. */
-    buflen = digits + (*nint ? strlen(nint + 1) : 0);
+    buflen = strlen(num);
     if (*nint == '.')
-        buflen += decimalLength;
+        buflen += decimalLength - 1; /* -1 to account for existing '.' */
 
     numGrouping = tmpGroup = rt->numGrouping;
     remainder = digits;
@@ -801,11 +801,15 @@ num_toLocaleString(JSContext *cx, uintN argc, Value *vp)
     tmpDest = buf;
     tmpSrc = num;
 
-    while (*tmpSrc == '-' || remainder--)
+    while (*tmpSrc == '-' || remainder--) {
+        JS_ASSERT(tmpDest - buf < buflen);
         *tmpDest++ = *tmpSrc++;
+    }
     while (tmpSrc < end) {
+        JS_ASSERT(tmpDest - buf + ptrdiff_t(thousandsLength) <= buflen);
         strcpy(tmpDest, rt->thousandsSeparator);
         tmpDest += thousandsLength;
+        JS_ASSERT(tmpDest - buf + *tmpGroup <= buflen);
         memcpy(tmpDest, tmpSrc, *tmpGroup);
         tmpDest += *tmpGroup;
         tmpSrc += *tmpGroup;
@@ -814,10 +818,13 @@ num_toLocaleString(JSContext *cx, uintN argc, Value *vp)
     }
 
     if (*nint == '.') {
+        JS_ASSERT(tmpDest - buf + ptrdiff_t(decimalLength) <= buflen);
         strcpy(tmpDest, rt->decimalSeparator);
         tmpDest += decimalLength;
+        JS_ASSERT(tmpDest - buf + ptrdiff_t(strlen(nint + 1)) <= buflen);
         strcpy(tmpDest, nint + 1);
     } else {
+        JS_ASSERT(tmpDest - buf + ptrdiff_t(strlen(nint)) <= buflen);
         strcpy(tmpDest, nint);
     }
 
