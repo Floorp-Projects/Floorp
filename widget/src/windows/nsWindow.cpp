@@ -7081,6 +7081,27 @@ CreateHRGNFromArray(const nsTArray<nsIntRect>& aRects)
   return ::ExtCreateRegion(NULL, buf.Length(), data);
 }
 
+static const nsIntRegion
+RegionFromArray(const nsTArray<nsIntRect>& aRects)
+{
+  nsIntRegion region;
+  for (PRUint32 i = 0; i < aRects.Length(); ++i) {
+    region.Or(region, aRects[i]);
+  }
+  return region;
+}
+
+static const nsTArray<nsIntRect>
+ArrayFromRegion(const nsIntRegion& aRegion)
+{
+  nsTArray<nsIntRect> rects;
+  const nsIntRect* r;
+  for (nsIntRegionRectIterator iter(aRegion); (r = iter.Next());) {
+    rects.AppendElement(*r);
+  }
+  return rects;
+}
+
 nsresult
 nsWindow::SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
                               PRBool aIntersectWithExisting)
@@ -7096,6 +7117,22 @@ nsWindow::SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
                sizeof(nsIntRect)*mClipRectCount) == 0) {
       return NS_OK;
     }
+
+    // get current rects
+    nsTArray<nsIntRect> currentRects;
+    GetWindowClipRegion(&currentRects);
+    // create region from them
+    nsIntRegion currentRegion = RegionFromArray(currentRects);
+    // create region from new rects
+    nsIntRegion newRegion = RegionFromArray(aRects);
+    // intersect regions
+    nsIntRegion intersection;
+    intersection.And(currentRegion, newRegion);
+    // create int rect array from intersection
+    nsTArray<nsIntRect> rects = ArrayFromRegion(intersection);
+    // store
+    if (!StoreWindowClipRegion(rects))
+      return NS_OK;
   }
 
   HRGN dest = CreateHRGNFromArray(aRects);
