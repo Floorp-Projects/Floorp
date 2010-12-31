@@ -68,10 +68,6 @@ notification[type="critical"] .messageImage {
   display: none;
 }
 
-.messageCloseButton > .toolbarbutton-icon {
-  padding: 0;
-}
-
 .messageCloseButton:hover {
   list-style-image: url("chrome://global/skin/icons/closetab-hover.png");
 }
