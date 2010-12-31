@@ -629,8 +629,7 @@ public:
    * so implementations of nsDisplayItem::ComputeVisibility do not
    * need to do these things.
    * nsDisplayList::ComputeVisibility will already have set mVisibleRect on
-   * this item to the intersection of *aVisibleRegion (unioned with
-   * *aVisibleRegionBeforeMove, if that's non-null) and this item's bounds.
+   * this item to the intersection of *aVisibleRegion and this item's bounds.
    * We rely on that, so this should only be called by
    * nsDisplayList::ComputeVisibility or nsDisplayItem::RecomputeVisibility.
    * 
