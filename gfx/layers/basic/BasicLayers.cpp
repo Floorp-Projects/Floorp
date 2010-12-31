@@ -1696,11 +1696,20 @@ BasicShadowableThebesLayer::CreateBuffer(Buffer::ContentType aType,
 
   // XXX error handling
   SurfaceDescriptor tmpFront;
-  if (!BasicManager()->AllocDoubleBuffer(gfxIntSize(aSize.width, aSize.height),
-                                         aType,
-                                         &tmpFront,
-                                         &mBackBuffer))
-    NS_RUNTIMEABORT("creating ThebesLayer 'back buffer' failed!");
+  if (BasicManager()->ShouldDoubleBuffer()) {
+    if (!BasicManager()->AllocDoubleBuffer(gfxIntSize(aSize.width, aSize.height),
+                                           aType,
+                                           &tmpFront,
+                                           &mBackBuffer)) {
+      NS_RUNTIMEABORT("creating ThebesLayer 'back buffer' failed!");
+    }
+  } else {
+    if (!BasicManager()->AllocBuffer(gfxIntSize(aSize.width, aSize.height),
+                                     aType,
+                                     &mBackBuffer)) {
+      NS_RUNTIMEABORT("creating ThebesLayer 'back buffer' failed!");
+    }
+  }
 
   NS_ABORT_IF_FALSE(!mIsNewBuffer,
                     "Bad! Did we create a buffer twice without painting?");
@@ -1992,7 +2001,7 @@ public:
     MOZ_COUNT_DTOR(BasicShadowThebesLayer);
   }
 
-  virtual void SetFrontBuffer(const ThebesBuffer& aNewFront,
+  virtual void SetFrontBuffer(const OptionalThebesBuffer& aNewFront,
                               const nsIntRegion& aValidRegion,
                               float aXResolution, float aYResolution);
 
@@ -2057,22 +2066,27 @@ private:
 };
 
 void
-BasicShadowThebesLayer::SetFrontBuffer(const ThebesBuffer& aNewFront,
+BasicShadowThebesLayer::SetFrontBuffer(const OptionalThebesBuffer& aNewFront,
                                        const nsIntRegion& aValidRegion,
                                        float aXResolution, float aYResolution)
 {
   mValidRegion = mOldValidRegion = aValidRegion;
   mXResolution = mOldXResolution = aXResolution;
   mYResolution = mOldYResolution = aYResolution;
+
+  NS_ABORT_IF_FALSE(OptionalThebesBuffer::Tnull_t != aNewFront.type(),
+                    "aNewFront must be valid here!");
+
+  const ThebesBuffer newFront = aNewFront.get_ThebesBuffer();
   nsRefPtr<gfxASurface> newFrontBuffer =
-    BasicManager()->OpenDescriptor(aNewFront.buffer());
+    BasicManager()->OpenDescriptor(newFront.buffer());
 
   nsRefPtr<gfxASurface> unused;
   nsIntRect unusedRect;
   nsIntPoint unusedRotation;
-  mFrontBuffer.Swap(newFrontBuffer, aNewFront.rect(), aNewFront.rotation(),
+  mFrontBuffer.Swap(newFrontBuffer, newFront.rect(), newFront.rotation(),
                     getter_AddRefs(unused), &unusedRect, &unusedRotation);
-  mFrontBufferDescriptor = aNewFront.buffer();
+  mFrontBufferDescriptor = newFront.buffer();
 }
 
 void
