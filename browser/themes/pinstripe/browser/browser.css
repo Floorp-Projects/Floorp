@@ -197,7 +197,6 @@ toolbarbutton.bookmark-item > menupopup {
   width: 16px;
   min-height: 16px;
   max-height: 16px;
-  padding: 0;
 }
 
 .bookmark-item > .toolbarbutton-icon[label]:not([label=""]),
@@ -323,12 +322,11 @@ toolbar:not([mode="icons"]) #restore-button {
   min-width: 0;
 }
 
-.toolbarbutton-1 > .toolbarbutton-icon,
-.toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
-#restore-button > .toolbarbutton-icon {
-  padding: 0;
-  height: 20px;
-  width: 20px;
+.toolbarbutton-1:not(:-moz-any(@primaryToolbarButtons@)) > .toolbarbutton-icon,
+.toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
+  margin: 2px;
+  height: 16px;
+  width: 16px;
 }
 
 .toolbarbutton-1[disabled="true"] > .toolbarbutton-icon,
@@ -1762,7 +1760,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 .tab-close-button > .toolbarbutton-icon {
   -moz-margin-end: 0px !important;
-  padding: 0;
 }
 
 .tab-close-button {
@@ -1847,12 +1844,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 :-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
   margin: 0;
   padding: 0 1px;
-}
-
-.tabs-newtab-button > .toolbarbutton-icon,
-:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1 > .toolbarbutton-icon,
-:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
-  padding: 0;
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled="true"]):hover,
