@@ -444,6 +444,13 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
   return true;
 }
 
+bool
+ShadowLayersParent::RecvGetParentType(LayersBackend* aBackend)
+{
+  *aBackend = layer_manager()->GetBackendType();
+  return true;
+}
+
 PLayerParent*
 ShadowLayersParent::AllocPLayer()
 {
