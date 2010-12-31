@@ -605,6 +605,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
 
     if (ic::TraceICInfo *scriptTICs = jit->traceICs) {
         for (size_t i = 0; i < traceICs.length(); i++) {
+            scriptTICs[i].initialized = traceICs[i].initialized;
             if (!traceICs[i].initialized)
                 continue;
 
