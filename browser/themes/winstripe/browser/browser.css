@@ -1645,14 +1645,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   -moz-transition: none;
 }
 
-.tabs-newtab-button > .toolbarbutton-icon,
-#TabsToolbar > #new-tab-button > .toolbarbutton-icon,
-#TabsToolbar > toolbarpaletteitem > #new-tab-button > .toolbarbutton-icon,
-#alltabs-button > .toolbarbutton-icon {
-  width: auto;
-  height: auto;
-}
-
 .tabs-newtab-button > .toolbarbutton-icon {
   margin-top: -1px;
   margin-bottom: -1px;
