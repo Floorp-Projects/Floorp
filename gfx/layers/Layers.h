@@ -232,10 +232,12 @@ class THEBES_API LayerManager {
 
 public:
   enum LayersBackend {
-    LAYERS_BASIC = 0,
+    LAYERS_NONE = 0,
+    LAYERS_BASIC,
     LAYERS_OPENGL,
     LAYERS_D3D9,
-    LAYERS_D3D10
+    LAYERS_D3D10,
+    LAYERS_LAST
   };
 
   LayerManager() : mDestroyed(PR_FALSE), mSnapEffectiveTransforms(PR_TRUE)
