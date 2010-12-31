@@ -123,7 +123,9 @@ struct AutoTxnEnd {
   Transaction* mTxn;
 };
 
-ShadowLayerForwarder::ShadowLayerForwarder() : mShadowManager(NULL)
+ShadowLayerForwarder::ShadowLayerForwarder()
+ : mShadowManager(NULL)
+ , mParentBackend(LayerManager::LAYERS_NONE)
 {
   mTxn = new Transaction();
 }
@@ -370,6 +372,18 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies)
 
   MOZ_LAYERS_LOG(("[LayersForwarder] ... done"));
   return PR_TRUE;
+}
+
+LayersBackend
+ShadowLayerForwarder::GetParentBackendType()
+{
+  if (mParentBackend == LayerManager::LAYERS_NONE) {
+    LayersBackend backend;
+    if (mShadowManager->SendGetParentType(&backend)) {
+      mParentBackend = backend;
+    }
+  }
+  return mParentBackend;
 }
 
 static gfxASurface::gfxImageFormat

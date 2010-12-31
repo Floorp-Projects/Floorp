@@ -111,6 +111,8 @@ class Transaction;
 class ShadowLayerForwarder
 {
 public:
+  typedef LayerManager::LayersBackend LayersBackend;
+
   virtual ~ShadowLayerForwarder();
 
   /**
@@ -305,6 +307,8 @@ public:
    */
   PLayerChild* ConstructShadowFor(ShadowableLayer* aLayer);
 
+  LayersBackend GetParentBackendType();
+
 protected:
   ShadowLayerForwarder();
 
@@ -324,6 +328,7 @@ private:
   static void PlatformSyncBeforeUpdate();
 
   Transaction* mTxn;
+  LayersBackend mParentBackend;
 };
 
 
