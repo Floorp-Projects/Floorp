@@ -490,43 +490,66 @@ CallReplacerFunction(JSContext *cx, jsid id, JSObject *holder, StringifyContext 
     return JS_TRUE;
 }
 
+/* ES5 15.12.3 Str. */
 static JSBool
 Str(JSContext *cx, jsid id, JSObject *holder, StringifyContext *scx, Value *vp, bool callReplacer)
 {
-    JS_CHECK_RECURSION(cx, return JS_FALSE);
+    JS_CHECK_RECURSION(cx, return false);
 
+    /*
+     * This method implements the Str algorithm in ES5 15.12.3, but we move
+     * property retrieval into the caller to stream the stringification process
+     * and avoid constantly copying strings.
+     */
+
+    /* Step 2. */
     if (vp->isObject() && !js_TryJSON(cx, vp))
-        return JS_FALSE;
+        return false;
 
+    /* Step 3. */
     if (callReplacer && !CallReplacerFunction(cx, id, holder, scx, vp))
-        return JS_FALSE;
+        return false;
 
-    // catches string and number objects with no toJSON
+    /* Step 4. */
     if (vp->isObject()) {
         JSObject *obj = &vp->toObject();
         Class *clasp = obj->getClass();
-        if (clasp == &js_StringClass || clasp == &js_NumberClass)
+        if (clasp == &js_NumberClass) {
+            double d;
+            if (!ValueToNumber(cx, *vp, &d))
+                return false;
+            vp->setNumber(d);
+        } else if (clasp == &js_StringClass) {
+            JSString *str = js_ValueToString(cx, *vp);
+            if (!str)
+                return false;
+            vp->setString(str);
+        } else if (clasp == &js_BooleanClass) {
             *vp = obj->getPrimitiveThis();
+        }
     }
 
+    /* Step 8. */
     if (vp->isString()) {
         JSString *str = vp->toString();
         size_t length = str->length();
         const jschar *chars = str->getChars(cx);
         if (!chars)
-            return JS_FALSE;
+            return false;
         return write_string(cx, scx->cb, chars, length);
     }
 
-    if (vp->isNull()) {
+    /* Step 5. */
+    if (vp->isNull())
         return js_AppendLiteral(scx->cb, "null");
-    }
 
+    /* Steps 6-7. */
     if (vp->isBoolean()) {
         return vp->toBoolean() ? js_AppendLiteral(scx->cb, "true")
                                : js_AppendLiteral(scx->cb, "false");
     }
 
+    /* Step 9. */
     if (vp->isNumber()) {
         if (vp->isDouble()) {
             jsdouble d = vp->toDouble();
@@ -536,11 +559,12 @@ Str(JSContext *cx, jsid id, JSObject *holder, StringifyContext *scx, Value *vp, 
 
         JSCharBuffer cb(cx);
         if (!js_NumberValueToCharBuffer(cx, *vp, cb))
-            return JS_FALSE;
+            return false;
 
         return scx->cb.append(cb.begin(), cb.length());
     }
 
+    /* Step 10. */
     if (vp->isObject() && !IsFunctionObject(*vp) && !IsXML(*vp)) {
         JSBool ok;
 
@@ -551,8 +575,9 @@ Str(JSContext *cx, jsid id, JSObject *holder, StringifyContext *scx, Value *vp, 
         return ok;
     }
 
+    /* Step 11. */
     vp->setUndefined();
-    return JS_TRUE;
+    return true;
 }
 
 JSBool
