@@ -287,6 +287,10 @@ public:
                            gfxSharedImageSurface** aBackBuffer);
   void DestroySharedSurface(gfxSharedImageSurface* aSurface);
 
+  PRBool AllocBuffer(const gfxIntSize& aSize,
+                     gfxASurface::gfxContentType aContent,
+                     gfxSharedImageSurface** aBuffer);
+
   /**
    * In the absence of platform-specific buffers these fall back to
    * Shmem/gfxSharedImageSurface.
@@ -295,6 +299,10 @@ public:
                            gfxASurface::gfxContentType aContent,
                            SurfaceDescriptor* aFrontBuffer,
                            SurfaceDescriptor* aBackBuffer);
+
+  PRBool AllocBuffer(const gfxIntSize& aSize,
+                     gfxASurface::gfxContentType aContent,
+                     SurfaceDescriptor* aBuffer);
 
   static already_AddRefed<gfxASurface>
   OpenDescriptor(const SurfaceDescriptor& aSurface);
@@ -309,6 +317,12 @@ public:
 
   LayersBackend GetParentBackendType();
 
+  /*
+   * No need to use double buffer in system memory with GPU rendering,
+   * texture used as front buffer.
+   */
+  bool ShouldDoubleBuffer() { return GetParentBackendType() == LayerManager::LAYERS_BASIC; }
+
 protected:
   ShadowLayerForwarder();
 
@@ -319,6 +333,10 @@ private:
                                    gfxASurface::gfxContentType aContent,
                                    SurfaceDescriptor* aFrontBuffer,
                                    SurfaceDescriptor* aBackBuffer);
+
+  PRBool PlatformAllocBuffer(const gfxIntSize& aSize,
+                             gfxASurface::gfxContentType aContent,
+                             SurfaceDescriptor* aBuffer);
 
   static already_AddRefed<gfxASurface>
   PlatformOpenDescriptor(const SurfaceDescriptor& aDescriptor);
@@ -473,7 +491,7 @@ public:
    * Override the front buffer and its valid region with the specified
    * values.  This is called when a new buffer has been created.
    */
-  virtual void SetFrontBuffer(const ThebesBuffer& aNewFront,
+  virtual void SetFrontBuffer(const OptionalThebesBuffer& aNewFront,
                               const nsIntRegion& aValidRegion,
                               float aXResolution, float aYResolution) = 0;
 

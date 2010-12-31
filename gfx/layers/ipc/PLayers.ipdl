@@ -92,7 +92,7 @@ union OptionalThebesBuffer { ThebesBuffer; null_t; };
 
 struct OpCreateThebesBuffer {
   PLayer layer;
-  ThebesBuffer initialFront;
+  OptionalThebesBuffer initialFront;
   nsIntRegion frontValidRegion;
   float xResolution;
   float yResolution;

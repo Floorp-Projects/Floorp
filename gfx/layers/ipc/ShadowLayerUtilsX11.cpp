@@ -103,6 +103,15 @@ ShadowLayerForwarder::PlatformAllocDoubleBuffer(const gfxIntSize& aSize,
                                                 SurfaceDescriptor* aFrontBuffer,
                                                 SurfaceDescriptor* aBackBuffer)
 {
+  return (PlatformAllocBuffer(aSize, aContent, aFrontBuffer) &&
+          PlatformAllocBuffer(aSize, aContent, aBackBuffer));
+}
+
+PRBool
+ShadowLayerForwarder::PlatformAllocBuffer(const gfxIntSize& aSize,
+                                          gfxASurface::gfxContentType aContent,
+                                          SurfaceDescriptor* aBuffer)
+{
   if (!UsingXCompositing()) {
     // If we're not using X compositing, we're probably compositing on
     // the client side, in which case X surfaces would just slow
@@ -111,23 +120,18 @@ ShadowLayerForwarder::PlatformAllocDoubleBuffer(const gfxIntSize& aSize,
   }
 
   gfxPlatform* platform = gfxPlatform::GetPlatform();
-  nsRefPtr<gfxASurface> front = platform->CreateOffscreenSurface(aSize, aContent);
-  nsRefPtr<gfxASurface> back = platform->CreateOffscreenSurface(aSize, aContent);
-  if (!front || !back ||
-      front->GetType() != gfxASurface::SurfaceTypeXlib ||
-      back->GetType() != gfxASurface::SurfaceTypeXlib) {
+  nsRefPtr<gfxASurface> buffer = platform->CreateOffscreenSurface(aSize, aContent);
+  if (!buffer ||
+      buffer->GetType() != gfxASurface::SurfaceTypeXlib) {
     NS_ERROR("creating Xlib front/back surfaces failed!");
     return PR_FALSE;
   }
 
-  gfxXlibSurface* frontX = static_cast<gfxXlibSurface*>(front.get());
-  gfxXlibSurface* backX = static_cast<gfxXlibSurface*>(back.get());
+  gfxXlibSurface* bufferX = static_cast<gfxXlibSurface*>(buffer.get());
   // Release Pixmap ownership to the layers model
-  frontX->ReleasePixmap();
-  backX->ReleasePixmap();
+  bufferX->ReleasePixmap();
 
-  *aFrontBuffer = SurfaceDescriptorX11(frontX);
-  *aBackBuffer = SurfaceDescriptorX11(backX);
+  *aBuffer = SurfaceDescriptorX11(bufferX);
   return PR_TRUE;
 }
 
