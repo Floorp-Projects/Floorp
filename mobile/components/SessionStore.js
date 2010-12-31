@@ -111,6 +111,12 @@ SessionStore.prototype = {
     // Disable crash recovery if it has been turned off
     if (!Services.prefs.getBoolPref("browser.sessionstore.resume_from_crash"))
       this._shouldRestore = false;
+
+    // Do we need to restore session just this once, in case of a restart?
+    if (Services.prefs.getBoolPref("browser.sessionstore.resume_session_once")) {
+      Services.prefs.setBoolPref("browser.sessionstore.resume_session_once", false);
+      this._shouldRestore = true;
+    }
   },
   
   observe: function ss_observe(aSubject, aTopic, aData) {
@@ -167,6 +173,10 @@ SessionStore.prototype = {
         this._loadState = STATE_QUITTING;
         break;
       case "quit-application":
+        // If we are restarting, lets restore the tabs
+        if (aData == "restart")
+          Services.prefs.setBoolPref("browser.sessionstore.resume_session_once", true);
+
         // Freeze the data at what we've got (ignoring closing windows)
         this._loadState = STATE_QUITTING;
 
