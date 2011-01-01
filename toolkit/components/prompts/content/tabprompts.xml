@@ -203,6 +203,7 @@
                 if (event.getPreventDefault())
                     return;
 
+                event.stopPropagation();
                 if (action == "default") {
                     let bnum = this.args.defaultButtonNum || 0;
                     let button = this.ui["button" + bnum];
