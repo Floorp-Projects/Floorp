@@ -8423,13 +8423,15 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
         JSParseNode *pnval;
 
         /*
-         * A map from property names we've seen thus far to bit masks.
-         * (We use ALE_INDEX/ALE_SET_INDEX).  An atom's mask includes
-         * JSPROP_SETTER if we've seen a setter for it, JSPROP_GETTER
-         * if we've seen as getter, and both of those if we've just
-         * seen an ordinary value.
+         * A map from property names we've seen thus far to a mask of property
+         * assignment types, stored and retrieved with ALE_SET_INDEX/ALE_INDEX.
          */
         JSAutoAtomList seen(tc->parser);
+        enum AssignmentType {
+            GET     = 0x1,
+            SET     = 0x2,
+            VALUE   = 0x4 | GET | SET
+        };
 
         pn = ListNode::create(tc);
         if (!pn)
@@ -8448,16 +8450,8 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
                 if (!pn3)
                     return NULL;
                 pn3->pn_dval = tokenStream.currentToken().t_dval;
-                if (tc->needStrictChecks()) {
-                    /*
-                     * Use string-valued atoms for detecting duplicate
-                     * properties so that 1 and "1" properly collide.
-                     */
-                    if (!js_ValueToAtom(context, DoubleValue(pn3->pn_dval), &atom))
-                        return NULL;
-                } else {
-                    atom = NULL; /* for the compiler */
-                }
+                if (!js_ValueToAtom(context, DoubleValue(pn3->pn_dval), &atom))
+                    return NULL;
                 break;
               case TOK_NAME:
                 {
@@ -8480,16 +8474,8 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
                         if (!pn3)
                             return NULL;
                         pn3->pn_dval = tokenStream.currentToken().t_dval;
-                        if (tc->needStrictChecks()) {
-                            /*
-                             * Use string-valued atoms for detecting duplicate
-                             * properties so that 1 and "1" properly collide.
-                             */
-                            if (!js_ValueToAtom(context, DoubleValue(pn3->pn_dval), &atom))
-                                return NULL;
-                        } else {
-                            atom = NULL; /* for the compiler */
-                        }
+                        if (!js_ValueToAtom(context, DoubleValue(pn3->pn_dval), &atom))
+                            return NULL;
                     } else {
                         tokenStream.ungetToken();
                         goto property_name;
@@ -8553,40 +8539,49 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
             pn->append(pn2);
 
             /*
-             * In strict mode code, check for duplicate property names.  Treat
-             * getters and setters as distinct attributes of each property.  A
-             * plain old value conflicts with a getter or a setter.
+             * Check for duplicate property names.  Duplicate data properties
+             * only conflict in strict mode.  Duplicate getter or duplicate
+             * setter halves always conflict.  A data property conflicts with
+             * any part of an accessor property.
              */
-            if (tc->needStrictChecks()) {
-                unsigned attributesMask;
-                if (op == JSOP_INITPROP) {
-                    attributesMask = JSPROP_GETTER | JSPROP_SETTER;
-                } else if (op == JSOP_GETTER) {
-                    attributesMask = JSPROP_GETTER;
-                } else if (op == JSOP_SETTER) {
-                    attributesMask = JSPROP_SETTER;
-                } else {
-                    JS_NOT_REACHED("bad opcode in object initializer");
-                    attributesMask = 0;
-                }
+            AssignmentType assignType;
+            if (op == JSOP_INITPROP) {
+                assignType = VALUE;
+            } else if (op == JSOP_GETTER) {
+                assignType = GET;
+            } else if (op == JSOP_SETTER) {
+                assignType = SET;
+            } else {
+                JS_NOT_REACHED("bad opcode in object initializer");
+                assignType = VALUE; /* try to error early */
+            }
 
-                JSAtomListElement *ale = seen.lookup(atom);
-                if (ale) {
-                    if (ALE_INDEX(ale) & attributesMask) {
-                        JSAutoByteString name;
-                        if (!js_AtomToPrintableString(context, atom, &name) ||
-                            !ReportStrictModeError(context, &tokenStream, tc, NULL,
-                                                   JSMSG_DUPLICATE_PROPERTY, name.ptr())) {
-                            return NULL;
-                        }
-                    }
-                    ALE_SET_INDEX(ale, attributesMask | ALE_INDEX(ale));
-                } else {
-                    ale = seen.add(tc->parser, atom);
-                    if (!ale)
+            if (JSAtomListElement *ale = seen.lookup(atom)) {
+                AssignmentType oldAssignType = AssignmentType(ALE_INDEX(ale));
+                if ((oldAssignType & assignType) &&
+                    (oldAssignType != VALUE || assignType != VALUE || tc->needStrictChecks()))
+                {
+                    JSAutoByteString name;
+                    if (!js_AtomToPrintableString(context, atom, &name))
                         return NULL;
-                    ALE_SET_INDEX(ale, attributesMask);
+
+                    uintN flags = (oldAssignType == VALUE &&
+                                   assignType == VALUE &&
+                                   !tc->inStrictMode())
+                                  ? JSREPORT_WARNING
+                                  : JSREPORT_ERROR;
+                    if (!ReportCompileErrorNumber(context, &tokenStream, NULL, flags,
+                                                  JSMSG_DUPLICATE_PROPERTY, name.ptr()))
+                    {
+                        return NULL;
+                    }
                 }
+                ALE_SET_INDEX(ale, assignType | oldAssignType);
+            } else {
+                ale = seen.add(tc->parser, atom);
+                if (!ale)
+                    return NULL;
+                ALE_SET_INDEX(ale, assignType);
             }
 
             tt = tokenStream.getToken();
