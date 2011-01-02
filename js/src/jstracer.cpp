@@ -3063,10 +3063,11 @@ public:
             if (frameobj) {
                 JS_ASSERT_IF(fp->hasArgsObj(), frameobj == &fp->argsObj());
                 fp->setArgsObj(*frameobj);
+                JS_ASSERT(frameobj->isArguments());
                 if (frameobj->isNormalArguments())
                     frameobj->setPrivate(fp);
                 else
-                    JS_ASSERT(frameobj->isStrictArguments());
+                    JS_ASSERT(!frameobj->getPrivate());
                 debug_only_printf(LC_TMTracer,
                                   "argsobj<%p> ",
                                   (void *)frameobj);
