@@ -268,7 +268,12 @@ JSStackFrame::stealFrameAndSlots(js::Value *vp, JSStackFrame *otherfp,
         }
     }
     if (hasArgsObj()) {
-        argsObj().setPrivate(this);
+        JSObject &args = argsObj();
+        JS_ASSERT(args.isArguments());
+        if (args.isNormalArguments())
+            args.setPrivate(this);
+        else
+            JS_ASSERT(!args.getPrivate());
         otherfp->flags_ &= ~JSFRAME_HAS_ARGS_OBJ;
     }
 }
