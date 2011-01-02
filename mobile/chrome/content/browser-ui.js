@@ -476,9 +476,11 @@ var BrowserUI = {
 
       messageManager.removeMessageListener("pageshow", arguments.callee, true);
 
-      let event = document.createEvent("Events");
-      event.initEvent("UIReadyDelayed", true, false);
-      window.dispatchEvent(event);
+      setTimeout(function() {
+        let event = document.createEvent("Events");
+        event.initEvent("UIReadyDelayed", true, false);
+        window.dispatchEvent(event);
+      }, 0);
     });
 
     // Delay the panel UI and Sync initialization.
