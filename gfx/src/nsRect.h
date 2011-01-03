@@ -292,8 +292,9 @@ struct NS_GFX nsIntRect {
 
   PRBool Contains(const nsIntRect& aRect) const
   {
-    return (PRBool) ((aRect.x >= x) && (aRect.y >= y) &&
-                     (aRect.XMost() <= XMost()) && (aRect.YMost() <= YMost()));
+    return aRect.IsEmpty() ||
+        (PRBool) ((aRect.x >= x) && (aRect.y >= y) &&
+                  (aRect.XMost() <= XMost()) && (aRect.YMost() <= YMost()));
   }
   PRBool Contains(PRInt32 aX, PRInt32 aY) const
   {
