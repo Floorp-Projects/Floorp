@@ -121,10 +121,6 @@ function MouseModule() {
 MouseModule.prototype = {
   handleEvent: function handleEvent(aEvent) {
     switch (aEvent.type) {
-      case "MozBeforePaint":
-        this._waitingForPaint = false;
-        removeEventListener("MozBeforePaint", this, false);
-        break;
       case "contextmenu":
         // bug 598965 - chrome UI should should stop to be pannable once the
         // context menu has appeared
@@ -160,6 +156,10 @@ MouseModule.prototype = {
         }
       }
     }
+  },
+
+  onBeforePaint: function onBeforePaint(aTimeStamp) {
+    this._waitingForPaint = false;
   },
 
   /**
@@ -388,8 +388,7 @@ MouseModule.prototype = {
     let dragged = this._dragger.dragMove(dX, dY, this._targetScrollInterface);
     if (dragged && !this._waitingForPaint) {
       this._waitingForPaint = true;
-      mozRequestAnimationFrame();
-      addEventListener("MozBeforePaint", this, false);
+      mozRequestAnimationFrame(this);
     }
     return dragged;
   },
@@ -812,17 +811,13 @@ function KineticController(aPanBy, aEndCallback) {
 
 KineticController.prototype = {
   _reset: function _reset() {
-    if (this._callback) {
-      removeEventListener("MozBeforePaint", this._callback, false);
-      this._callback = null;
-    }
-
+    this._active = false;
     this.momentumBuffer = [];
     this._velocity.set(0, 0);
   },
 
   isActive: function isActive() {
-    return !!this._callback;
+    return this._active;
   },
 
   _startTimer: function _startTimer() {
@@ -857,15 +852,14 @@ KineticController.prototype = {
     let self = this;
 
     let callback = {
-      handleEvent: function kineticHandleEvent(event) {
-
+      onBeforePaint: function kineticHandleEvent(timeStamp) {
         if (!self.isActive())  // someone called end() on us between timer intervals
           return;
 
         // To make animation end fast enough but to keep smoothness, average the ideal
         // time frame (smooth animation) with the actual time lapse (end fast enough).
         // Animation will never take longer than 2 times the ideal length of time.
-        let realt = event.timeStamp - self._initialTime;
+        let realt = timeStamp - self._initialTime;
         self._time += self._updateInterval;
         let t = (self._time + realt) / 2;
 
@@ -898,13 +892,12 @@ KineticController.prototype = {
         if (!panned)
           self.end();
         else
-          mozRequestAnimationFrame();
+          mozRequestAnimationFrame(this);
       }
     };
 
-    this._callback = callback;
-    addEventListener("MozBeforePaint", callback, false);
-    mozRequestAnimationFrame();
+    this._active = true;
+    mozRequestAnimationFrame(callback);
   },
 
   start: function start() {
