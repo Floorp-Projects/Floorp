@@ -791,4 +791,27 @@ private:
     gfxMatrix   mMatrix;
 };
 
+
+class THEBES_API gfxContextAutoDisableSubpixelAntialiasing {
+public:
+    gfxContextAutoDisableSubpixelAntialiasing(gfxContext *aContext, PRBool aDisable)
+    {
+        if (aDisable) {
+            mSurface = aContext->CurrentSurface();
+            mSubpixelAntialiasingEnabled = mSurface->GetSubpixelAntialiasingEnabled();
+            mSurface->SetSubpixelAntialiasingEnabled(PR_FALSE);
+        }
+    }
+    ~gfxContextAutoDisableSubpixelAntialiasing()
+    {
+        if (mSurface) {
+            mSurface->SetSubpixelAntialiasingEnabled(mSubpixelAntialiasingEnabled);
+        }
+    }
+
+private:
+    nsRefPtr<gfxASurface> mSurface;
+    PRPackedBool mSubpixelAntialiasingEnabled;
+};
+
 #endif /* GFX_CONTEXT_H */
