@@ -457,9 +457,23 @@ CairoImageD3D10::SetData(const CairoImage::Data &aData)
 already_AddRefed<gfxASurface>
 CairoImageD3D10::GetAsSurface()
 {
+  nsRefPtr<ID3D10Texture2D> surfTexture;
+
+  // Make a copy of the texture since our current texture is not suitable for
+  // drawing with Direct2D.
+  D3D10_TEXTURE2D_DESC texDesc;
+  mTexture->GetDesc(&texDesc);
+  texDesc.Usage = D3D10_USAGE_DEFAULT;
+  texDesc.BindFlags = D3D10_BIND_RENDER_TARGET | D3D10_BIND_SHADER_RESOURCE;
+  texDesc.MiscFlags = D3D10_RESOURCE_MISC_GDI_COMPATIBLE;
+
+  mDevice->CreateTexture2D(&texDesc, NULL, getter_AddRefs(surfTexture));
+
+  mDevice->CopyResource(surfTexture, mTexture);
+
   nsRefPtr<gfxASurface> surf =
-    new gfxD2DSurface(mTexture, mHasAlpha ? gfxASurface::CONTENT_COLOR_ALPHA :
-                                            gfxASurface::CONTENT_COLOR);
+    new gfxD2DSurface(surfTexture, mHasAlpha ? gfxASurface::CONTENT_COLOR_ALPHA :
+                                               gfxASurface::CONTENT_COLOR);
   return surf.forget();
 }
 
