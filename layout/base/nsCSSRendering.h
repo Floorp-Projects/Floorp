@@ -257,6 +257,17 @@ struct nsCSSRendering {
                                     nsRect* aBGClipRect = nsnull);
 
   /**
+   * Returns the rectangle covered by the given background layer image, taking
+   * into account background positioning, sizing, and repetition, but not
+   * clipping.
+   */
+  static nsRect GetBackgroundLayerRect(nsPresContext* aPresContext,
+                                       nsIFrame* aForFrame,
+                                       const nsRect& aBorderArea,
+                                       const nsStyleBackground& aBackground,
+                                       const nsStyleBackground::Layer& aLayer);
+
+  /**
    * Called by the presShell when painting is finished, so we can clear our
    * inline background data cache.
    */
