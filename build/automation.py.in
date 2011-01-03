@@ -867,7 +867,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
       # create certificate database for the profile
       certificateStatus = self.fillCertificateDB(profileDir, certPath, utilityPath, xrePath)
       if certificateStatus != 0:
-        self.log.info("TEST-UNEXPECTED FAIL | automation.py | Certificate integration failed")
+        self.log.info("TEST-UNEXPECTED-FAIL | automation.py | Certificate integration failed")
         return certificateStatus
 
       # start ssltunnel to provide https:// URLs capability
