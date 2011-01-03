@@ -21,6 +21,7 @@
  * Contributor(s):
  *   Gavin Sharp <gavin@gavinsharp.com>
  *   Sylvain Pasche <sylvain.pasche@gmail.com>
+ *   Drew Willcoxon <adw@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -92,13 +93,20 @@ function runNextTest() {
       info("[Test #" + gTestIndex + "] popup shown");
       nextTest.onShown(this);
     });
-  
+
+    // We allow multiple onHidden functions to be defined in an array.  They're
+    // called in the order they appear.
+    let onHiddenArray = nextTest.onHidden instanceof Array ?
+                        nextTest.onHidden :
+                        [nextTest.onHidden];
     doOnPopupEvent("popuphidden", function () {
-      info("[Test #" + gTestIndex + "] popup hidden");
-      nextTest.onHidden(this);
-  
-      goNext();
-    });
+      let onHidden = onHiddenArray.shift();
+      info("[Test #" + gTestIndex + "] popup hidden (" + onHiddenArray.length + " hides remaining)");
+      onHidden.call(nextTest, this);
+      if (!onHiddenArray.length)
+        goNext();
+    }, onHiddenArray.length);
+
     info("[Test #" + gTestIndex + "] added listeners; panel state: " + PopupNotifications.isPanelOpen);
   }
 
@@ -106,12 +114,16 @@ function runNextTest() {
   nextTest.run();
 }
 
-function doOnPopupEvent(eventName, callback) {
+function doOnPopupEvent(eventName, callback, numExpected) {
   gActiveListeners[eventName] = function (event) {
     if (event.target != PopupNotifications.panel)
       return;
-    PopupNotifications.panel.removeEventListener(eventName, gActiveListeners[eventName], false);
-    delete gActiveListeners[eventName];
+    if (typeof(numExpected) === "number")
+      numExpected--;
+    if (!numExpected) {
+      PopupNotifications.panel.removeEventListener(eventName, gActiveListeners[eventName], false);
+      delete gActiveListeners[eventName];
+    }
 
     callback.call(PopupNotifications.panel);
   }
@@ -335,11 +347,15 @@ var tests = [
          "geo anchor shouldn't be visible");
       dismissNotification(popup);
     },
-    onHidden: function (popup) {
-      // Remove the first notification
-      this.firstNotification.remove();
-      ok(this.notifyObj.removedCallbackTriggered, "removed callback triggered");
-    }
+    onHidden: [
+      function (popup) {
+        // Remove the first notification
+        this.firstNotification.remove();
+        ok(this.notifyObj.removedCallbackTriggered, "removed callback triggered");
+      },
+      // The removal triggers another popuphidden event.
+      function (popup) {}
+    ],
   },
   // Test optional params
   { // Test #10
