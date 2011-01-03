@@ -425,10 +425,16 @@ abstract public class GeckoApp
         Log.i("GeckoAppJava", "Checking for an update");
 
         int statusCode = 8; // UNEXPECTED_ERROR
+        File downloadDir = null;
+        if (Build.VERSION.SDK_INT >= 8)
+            downloadDir = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
+        else
+            downloadDir = new File(Environment.getExternalStorageDirectory().getPath(), "download");
 
-        String updateDir = Environment.getExternalStorageDirectory().getPath() + "/downloads/updates/0/";
-        File updateFile = new File(updateDir + "update.apk");
-        File statusFile = new File(updateDir + "update.status");
+        File updateDir = new File(new File(downloadDir, "updates"),"0");
+
+        File updateFile = new File(updateDir, "update.apk");
+        File statusFile = new File(updateDir, "update.status");
 
         if (!statusFile.exists() || !readUpdateStatus(statusFile).equals("pending"))
             return;
