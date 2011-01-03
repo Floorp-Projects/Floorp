@@ -873,6 +873,44 @@ nsDisplayBackground::ComputeVisibility(nsDisplayListBuilder* aBuilder,
 }
 
 nsRegion
+nsDisplayBackground::GetInsideClipRegion(PRUint8 aClip, const nsRect& aRect)
+{
+  nsRegion result;
+  if (aRect.IsEmpty())
+    return result;
+
+  nscoord radii[8];
+  nsRect clipRect;
+  PRBool haveRadii;
+  switch (aClip) {
+  case NS_STYLE_BG_CLIP_BORDER:
+    haveRadii = mFrame->GetBorderRadii(radii);
+    clipRect = nsRect(ToReferenceFrame(), mFrame->GetSize());
+    break;
+  case NS_STYLE_BG_CLIP_PADDING:
+    haveRadii = mFrame->GetPaddingBoxBorderRadii(radii);
+    clipRect = mFrame->GetPaddingRect() - mFrame->GetPosition() + ToReferenceFrame();
+    break;
+  case NS_STYLE_BG_CLIP_CONTENT:
+    haveRadii = mFrame->GetContentBoxBorderRadii(radii);
+    clipRect = mFrame->GetContentRect() - mFrame->GetPosition() + ToReferenceFrame();
+    break;
+  default:
+    NS_NOTREACHED("Unknown clip type");
+    return result;
+  }
+
+  if (haveRadii) {
+    result = nsLayoutUtils::RoundedRectIntersectRect(clipRect, radii, aRect);
+  } else {
+    nsRect r;
+    r.IntersectRect(clipRect, aRect);
+    result = r;
+  }
+  return result;
+}
+
+nsRegion
 nsDisplayBackground::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                                      PRBool* aForceTransparentSurface) {
   nsRegion result;
@@ -893,26 +931,35 @@ nsDisplayBackground::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
   }
 
   nsStyleContext* bgSC;
+  nsPresContext* presContext = mFrame->PresContext();
   if (!nsCSSRendering::FindBackground(mFrame->PresContext(), mFrame, &bgSC))
     return result;
   const nsStyleBackground* bg = bgSC->GetStyleBackground();
   const nsStyleBackground::Layer& bottomLayer = bg->BottomLayer();
 
-  // bottom layer's clip is used for the color
-  if (bottomLayer.mClip != NS_STYLE_BG_CLIP_BORDER ||
-      nsLayoutUtils::HasNonZeroCorner(mFrame->GetStyleBorder()->mBorderRadius))
-    return result;
-
+  nsRect borderBox = nsRect(ToReferenceFrame(), mFrame->GetSize());
   if (NS_GET_A(bg->mBackgroundColor) == 255 &&
       !nsCSSRendering::IsCanvasFrame(mFrame)) {
-    result = GetBounds(aBuilder);
-    return result;
+    result = GetInsideClipRegion(bottomLayer.mClip, borderBox);
   }
 
-  if (bottomLayer.mRepeat == NS_STYLE_BG_REPEAT_XY &&
-      bottomLayer.mImage.IsOpaque()) {
-    result = GetBounds(aBuilder);
+  // For policies other than EACH_BOX, don't try to optimize here, since
+  // this could easily lead to O(N^2) behavior inside InlineBackgroundData,
+  // which expects frames to be sent to it in content order, not reverse
+  // content order which we'll produce here.
+  // Of course, if there's only one frame in the flow, it doesn't matter.
+  if (bg->mBackgroundInlinePolicy == NS_STYLE_BG_INLINE_POLICY_EACH_BOX ||
+      (!mFrame->GetPrevContinuation() && !mFrame->GetNextContinuation())) {
+    NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, bg) {
+      const nsStyleBackground::Layer& layer = bg->mLayers[i];
+      if (layer.mImage.IsOpaque()) {
+        nsRect r = nsCSSRendering::GetBackgroundLayerRect(presContext, mFrame,
+            borderBox, *bg, layer);
+        result.Or(result, GetInsideClipRegion(layer.mClip, r));
+      }
+    }
   }
+
   return result;
 }
 
