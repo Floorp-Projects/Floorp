@@ -615,6 +615,11 @@ placelabel:-moz-locale-dir(rtl) {
   background-position: 2% 50%, top left;
 }
 
+placelabel:hover:active {
+  background-image: url(images/arrowup-16.png);
+  background-color: #8db8d8;
+}
+
 /* folder bookmarks row */
 placeitem[type="folder"] {
   -moz-box-pack: center;
