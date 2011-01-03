@@ -951,12 +951,19 @@ public:
    */
   PRBool HasMultipleChildren();
 
+  /**
+   * Returns true if this container supports children with component alpha.
+   * Should only be called while painting a child of this layer.
+   */
+  PRBool SupportsComponentAlphaChildren() { return mSupportsComponentAlphaChildren; }
+
 protected:
   ContainerLayer(LayerManager* aManager, void* aImplData)
     : Layer(aManager, aImplData),
       mFirstChild(nsnull),
       mLastChild(nsnull),
-      mUseIntermediateSurface(PR_FALSE)
+      mUseIntermediateSurface(PR_FALSE),
+      mSupportsComponentAlphaChildren(PR_FALSE)
   {
     mContentFlags = 0; // Clear NO_TEXT, NO_TEXT_OVER_TRANSPARENT
   }
@@ -978,6 +985,7 @@ protected:
   Layer* mLastChild;
   FrameMetrics mFrameMetrics;
   PRPackedBool mUseIntermediateSurface;
+  PRPackedBool mSupportsComponentAlphaChildren;
 };
 
 /**

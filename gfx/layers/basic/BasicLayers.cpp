@@ -162,6 +162,7 @@ public:
     ContainerLayer(aManager, static_cast<BasicImplData*>(this))
   {
     MOZ_COUNT_CTOR(BasicContainerLayer);
+    mSupportsComponentAlphaChildren = PR_TRUE;
   }
   virtual ~BasicContainerLayer();
 
