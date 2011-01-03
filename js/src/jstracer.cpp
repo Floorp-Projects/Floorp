@@ -14502,12 +14502,11 @@ TraceRecorder::record_JSOP_MOREITER()
 
         LIns* vp_ins = w.allocp(sizeof(Value));
         LIns* args[] = { vp_ins, iterobj_ins, cx_ins };
-        LIns* ok_ins = w.call(&IteratorMore_ci, args);
+        pendingGuardCondition = w.call(&IteratorMore_ci, args);
 
-        pendingGuardCondition = w.eqi0(ok_ins);
         leaveDeepBailCall();
 
-        cond_ins = w.eqi0(w.eqi0(is_boxed_true(AllocSlotsAddress(vp_ins))));
+        cond_ins = is_boxed_true(AllocSlotsAddress(vp_ins));
     }
 
     stack(0, cond_ins);
