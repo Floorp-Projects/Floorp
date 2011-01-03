@@ -692,6 +692,7 @@ gfxContext::GetDeviceColor(gfxRGBA& c)
 void
 gfxContext::SetSource(gfxASurface *surface, const gfxPoint& offset)
 {
+    NS_ASSERTION(surface->GetAllowUseAsSource(), "Surface not allowed to be used as source!");
     cairo_set_source_surface(mCairo, surface->CairoSurface(), offset.x, offset.y);
 }
 
