@@ -2945,7 +2945,7 @@ cairo_pattern_get_surface (cairo_pattern_t *pattern,
 	return pattern->status;
 
     if (pattern->type != CAIRO_PATTERN_TYPE_SURFACE)
-	return _cairo_error (CAIRO_STATUS_PATTERN_TYPE_MISMATCH);
+	return CAIRO_STATUS_PATTERN_TYPE_MISMATCH;
 
     if (surface)
 	*surface = spat->surface;
