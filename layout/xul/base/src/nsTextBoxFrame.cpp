@@ -333,7 +333,9 @@ class nsDisplayXULTextBox : public nsDisplayItem {
 public:
   nsDisplayXULTextBox(nsDisplayListBuilder* aBuilder,
                       nsTextBoxFrame* aFrame) :
-    nsDisplayItem(aBuilder, aFrame) {
+    nsDisplayItem(aBuilder, aFrame),
+    mDisableSubpixelAA(PR_FALSE)
+  {
     MOZ_COUNT_CTOR(nsDisplayXULTextBox);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -348,12 +350,18 @@ public:
   NS_DISPLAY_DECL_NAME("XULTextBox", TYPE_XUL_TEXT_BOX)
 
   virtual PRBool HasText() { return PR_TRUE; }
+
+  virtual void DisableComponentAlpha() { mDisableSubpixelAA = PR_TRUE; }
+
+  PRPackedBool mDisableSubpixelAA;
 };
 
 void
 nsDisplayXULTextBox::Paint(nsDisplayListBuilder* aBuilder,
                            nsIRenderingContext* aCtx)
 {
+  gfxContextAutoDisableSubpixelAntialiasing disable(aCtx->ThebesContext(),
+                                                    mDisableSubpixelAA);
   static_cast<nsTextBoxFrame*>(mFrame)->
     PaintTitle(*aCtx, mVisibleRect, ToReferenceFrame());
 }
