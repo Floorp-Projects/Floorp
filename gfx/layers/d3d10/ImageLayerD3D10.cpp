@@ -460,7 +460,8 @@ CairoImageD3D10::GetAsSurface()
   nsRefPtr<ID3D10Texture2D> surfTexture;
 
   // Make a copy of the texture since our current texture is not suitable for
-  // drawing with Direct2D.
+  // drawing with Direct2D because it is immutable and cannot be bound as a
+  // render target.
   D3D10_TEXTURE2D_DESC texDesc;
   mTexture->GetDesc(&texDesc);
   texDesc.Usage = D3D10_USAGE_DEFAULT;
