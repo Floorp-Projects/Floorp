@@ -335,6 +335,24 @@ typedef union jsval_layout
     double asDouble;
     void *asPtr;
 } jsval_layout;
+# elif JS_BITS_PER_WORD == 64
+typedef union jsval_layout
+{
+    uint64 asBits;
+    struct {
+        JSValueTag         tag : 17;
+        uint64             payload47 : 47;
+    } debugView;
+    struct {
+        union {
+            int32          i32;
+            uint32         u32;
+            JSWhyMagic     why;
+        } payload;
+    } s;
+    double asDouble;
+    void *asPtr;
+} jsval_layout;
 # endif /* JS_BITS_PER_WORD */
 #endif  /* defined(IS_LITTLE_ENDIAN) */
 
