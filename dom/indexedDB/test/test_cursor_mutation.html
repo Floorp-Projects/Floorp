@@ -30,7 +30,7 @@
       // Post-add and post-remove data ordered by name.
       const objectStoreDataNameSort = [ 1, 4, 5, 2, 3 ];
 
-      let request = moz_indexedDB.open(window.location.pathname);
+      let request = mozIndexedDB.open(window.location.pathname);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
