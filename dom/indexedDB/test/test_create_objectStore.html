@@ -32,12 +32,12 @@
         { name: "11", options: { keyPath: "foo", autoIncrement: true } }
       ];
 
-      let request = moz_indexedDB.open(name, description);
+      let request = mozIndexedDB.open(name, description);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
 
-      ok(event.source === moz_indexedDB, "event.source is correct");
+      ok(event.source === mozIndexedDB, "event.source is correct");
       let db = event.result;
 
       let count = db.objectStoreNames.length;

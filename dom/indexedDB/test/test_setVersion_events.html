@@ -16,7 +16,7 @@
       const name = window.location.pathname;
       const description = "My Test Database";
 
-      let request = moz_indexedDB.open(name, description);
+      let request = mozIndexedDB.open(name, description);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
@@ -34,7 +34,7 @@
         db1.close();
       }, false);
 
-      request = moz_indexedDB.open(name, description);
+      request = mozIndexedDB.open(name, description);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
@@ -63,7 +63,7 @@
       ok(event.result === event.transaction, "Good result");
       is(event.transaction.mode, IDBTransaction.VERSION_CHANGE, "Correct mode");
 
-      request = moz_indexedDB.open(name, description);
+      request = mozIndexedDB.open(name, description);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
