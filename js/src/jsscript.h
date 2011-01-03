@@ -158,7 +158,7 @@ struct GlobalSlotArray {
     uint32          length;
 };
 
-class Shape;
+struct Shape;
 
 enum BindingKind { NONE, ARGUMENT, VARIABLE, CONSTANT, UPVAR };
 
