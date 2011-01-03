@@ -923,6 +923,35 @@ nsLayoutUtils::RoundGfxRectToAppRect(const gfxRect &aRect, float aFactor)
                 nscoord(scaledRect.size.width), nscoord(scaledRect.size.height));
 }
 
+
+nsRegion
+nsLayoutUtils::RoundedRectIntersectRect(const nsRect& aRoundedRect,
+                                        const nscoord aRadii[8],
+                                        const nsRect& aContainedRect)
+{
+  // rectFullHeight and rectFullWidth together will approximately contain
+  // the total area of the frame minus the rounded corners.
+  nsRect rectFullHeight = aRoundedRect;
+  nscoord xDiff = NS_MAX(aRadii[NS_CORNER_TOP_LEFT_X], aRadii[NS_CORNER_BOTTOM_LEFT_X]);
+  rectFullHeight.x += xDiff;
+  rectFullHeight.width -= NS_MAX(aRadii[NS_CORNER_TOP_RIGHT_X],
+                                 aRadii[NS_CORNER_BOTTOM_RIGHT_X]) + xDiff;
+  nsRect r1;
+  r1.IntersectRect(rectFullHeight, aContainedRect);
+
+  nsRect rectFullWidth = aRoundedRect;
+  nscoord yDiff = NS_MAX(aRadii[NS_CORNER_TOP_LEFT_Y], aRadii[NS_CORNER_TOP_RIGHT_Y]);
+  rectFullWidth.y += yDiff;
+  rectFullWidth.height -= NS_MAX(aRadii[NS_CORNER_BOTTOM_LEFT_Y],
+                                 aRadii[NS_CORNER_BOTTOM_RIGHT_Y]) + yDiff;
+  nsRect r2;
+  r2.IntersectRect(rectFullWidth, aContainedRect);
+
+  nsRegion result;
+  result.Or(r1, r2);
+  return result;
+}
+
 nsRect
 nsLayoutUtils::MatrixTransformRect(const nsRect &aBounds,
                                    const gfxMatrix &aMatrix, float aFactor)

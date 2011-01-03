@@ -1486,8 +1486,10 @@ namespace {
 nsRect nsRegion::GetLargestRectangle () const {
   nsRect bestRect;
 
-  if (!mRectCount)
+  if (mRectCount <= 1) {
+    bestRect = mBoundRect;
     return bestRect;
+  }
 
   AxisPartition xaxis, yaxis;
 
