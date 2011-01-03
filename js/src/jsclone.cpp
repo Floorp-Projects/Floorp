@@ -280,17 +280,10 @@ ReinterpretPairAsDouble(uint32_t tag, uint32_t data)
     return ReinterpretUInt64AsDouble(PairToUInt64(tag, data));
 }
 
-static inline bool
-IsNonCanonicalizedNaN(jsdouble d)
-{
-    return ReinterpretDoubleAsUInt64(d) != ReinterpretDoubleAsUInt64(JS_CANONICALIZE_NAN(d));
-}
-
 bool
 SCOutput::writeDouble(jsdouble d)
 {
-    JS_ASSERT(!IsNonCanonicalizedNaN(d));
-    return write(ReinterpretDoubleAsUInt64(d));
+    return write(ReinterpretDoubleAsUInt64(JS_CANONICALIZE_NAN(d)));
 }
 
 template <class T>
@@ -588,7 +581,9 @@ JSStructuredCloneWriter::write(const Value &v)
 bool
 JSStructuredCloneReader::checkDouble(jsdouble d)
 {
-    if (IsNonCanonicalizedNaN(d)) {
+    jsval_layout l;
+    l.asDouble = d;
+    if (!JSVAL_IS_DOUBLE(JSVAL_FROM_LAYOUT(l))) {
         JS_ReportErrorNumber(context(), js_GetErrorMessage, NULL,
                              JSMSG_SC_BAD_SERIALIZED_DATA, "unrecognized NaN");
         return false;
