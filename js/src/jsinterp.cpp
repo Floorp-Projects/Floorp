@@ -766,10 +766,6 @@ InvokeSessionGuard::start(JSContext *cx, const Value &calleev, const Value &this
     savedThis_ = args_.thisv() = thisv;
 
     do {
-        /* In debug mode, script->getJIT(fp->isConstructing()) can change. */
-        if (cx->compartment->debugMode)
-            break;
-
         /* Hoist dynamic checks from scripted Invoke. */
         if (!calleev.isObject())
             break;
@@ -798,7 +794,7 @@ InvokeSessionGuard::start(JSContext *cx, const Value &calleev, const Value &this
             return false;
         if (status != mjit::Compile_Okay)
             break;
-        code_ = script_->getJIT(fp->isConstructing())->invokeEntry;
+        /* Cannot also cache the raw code pointer; it can change. */
 
         /* Hoist dynamic checks from CheckStackAndEnterMethodJIT. */
         JS_CHECK_RECURSION(cx, return JS_FALSE);
