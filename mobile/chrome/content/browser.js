@@ -391,11 +391,11 @@ var Browser = {
     if (Services.prefs.prefHasUserValue("extensions.disabledAddons")) {
       let addons = Services.prefs.getCharPref("extensions.disabledAddons").split(",");
       if (addons.length > 0) {
-        let disabledStrings = Elements.browserBundle.getString("alertAddonsDisabled");
+        let disabledStrings = Strings.browser.GetStringFromName("alertAddonsDisabled");
         let label = PluralForm.get(addons.length, disabledStrings).replace("#1", addons.length);
 
         let alerts = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
-        alerts.showAlertNotification(URI_GENERIC_ICON_XPINSTALL, Elements.browserBundle.getString("alertAddons"),
+        alerts.showAlertNotification(URI_GENERIC_ICON_XPINSTALL, Strings.browser.GetStringFromName("alertAddons"),
                                      label, false, "", null);
       }
       Services.prefs.clearUserPref("extensions.disabledAddons");
@@ -431,12 +431,12 @@ var Browser = {
         // Default to true: if it were false, we wouldn't get this far
         let warnOnClose = { value: true };
 
-        let messageBase = Elements.browserBundle.getString("tabs.closeWarning");
+        let messageBase = Strings.browser.GetStringFromName("tabs.closeWarning");
         let message = PluralForm.get(numTabs, messageBase).replace("#1", numTabs);
 
-        let title = Elements.browserBundle.getString("tabs.closeWarningTitle");
-        let closeText = Elements.browserBundle.getString("tabs.closeButton");
-        let checkText = Elements.browserBundle.getString("tabs.closeWarningPromptMe");
+        let title = Strings.browser.GetStringFromName("tabs.closeWarningTitle");
+        let closeText = Strings.browser.GetStringFromName("tabs.closeButton");
+        let checkText = Strings.browser.GetStringFromName("tabs.closeWarningPromptMe");
         let buttons = (prompt.BUTTON_TITLE_IS_STRING * prompt.BUTTON_POS_0) +
                       (prompt.BUTTON_TITLE_CANCEL * prompt.BUTTON_POS_1);
 
@@ -1746,13 +1746,13 @@ ContentCustomKeySender.prototype = {
 function IdentityHandler() {
   this._staticStrings = {};
   this._staticStrings[this.IDENTITY_MODE_DOMAIN_VERIFIED] = {
-    encryption_label: Elements.browserBundle.getString("identity.encrypted2")
+    encryption_label: Strings.browser.GetStringFromName("identity.encrypted2")
   };
   this._staticStrings[this.IDENTITY_MODE_IDENTIFIED] = {
-    encryption_label: Elements.browserBundle.getString("identity.encrypted2")
+    encryption_label: Strings.browser.GetStringFromName("identity.encrypted2")
   };
   this._staticStrings[this.IDENTITY_MODE_UNKNOWN] = {
-    encryption_label: Elements.browserBundle.getString("identity.unencrypted2")
+    encryption_label: Strings.browser.GetStringFromName("identity.unencrypted2")
   };
 
   // Close the popup when reloading the page
@@ -1852,7 +1852,7 @@ IdentityHandler.prototype = {
    * @param newMode The newly set identity mode.  Should be one of the IDENTITY_MODE_* constants.
    */
   setIdentityMessages: function(newMode) {
-    let strings = Elements.browserBundle;
+    let strings = Strings.browser;
 
     if (newMode == this.IDENTITY_MODE_DOMAIN_VERIFIED) {
       var iData = this.getIdentityData();
@@ -1869,21 +1869,19 @@ IdentityHandler.prototype = {
 
       // Verifier is either the CA Org, for a normal cert, or a special string
       // for certs that are trusted because of a security exception.
-      var tooltip = strings.getFormattedString("identity.identified.verifier",
-                                               [iData.caOrg]);
+      var tooltip = strings.formatStringFromName("identity.identified.verifier", [iData.caOrg], 1);
 
       // Check whether this site is a security exception.
       if (iData.isException)
-        tooltip = strings.getString("identity.identified.verified_by_you");
+        tooltip = strings.GetStringFromName("identity.identified.verified_by_you");
     }
     else if (newMode == this.IDENTITY_MODE_IDENTIFIED) {
       // If it's identified, then we can populate the dialog with credentials
       iData = this.getIdentityData();
-      tooltip = strings.getFormattedString("identity.identified.verifier",
-                                           [iData.caOrg]);
+      tooltip = strings.formatStringFromName("identity.identified.verifier", [iData.caOrg], 1);
     }
     else {
-      tooltip = strings.getString("identity.unknown.tooltip");
+      tooltip = strings.GetStringFromName("identity.unknown.tooltip");
     }
 
     // Push the appropriate strings out to the UI
@@ -1908,12 +1906,10 @@ IdentityHandler.prototype = {
     var supplemental = "";
     var verifier = "";
 
-    let strings = Elements.browserBundle;
-
     if (newMode == this.IDENTITY_MODE_DOMAIN_VERIFIED) {
       var iData = this.getIdentityData();
       var host = this.getEffectiveHost();
-      var owner = strings.getString("identity.ownerUnknown2");
+      var owner = strings.GetStringFromName("identity.ownerUnknown2");
       verifier = this._identityBox.tooltipText;
       supplemental = "";
     }
@@ -1928,14 +1924,12 @@ IdentityHandler.prototype = {
       if (iData.city)
         supplemental += iData.city + " ";
       if (iData.state && iData.country)
-        supplemental += strings.getFormattedString("identity.identified.state_and_country",
-                                                   [iData.state, iData.country]);
+        supplemental += Strings.browser.formatStringFromName("identity.identified.state_and_country", [iData.state, iData.country], 2);
       else if (iData.state) // State only
         supplemental += iData.state;
       else if (iData.country) // Country only
         supplemental += iData.country;
-    }
-    else {
+    } else {
       // These strings will be hidden in CSS anyhow
       host = "";
       owner = "";
@@ -2044,16 +2038,15 @@ var PopupBlockerObserver = {
     // it.
     if (!cBrowser.pageReport.reported) {
       if (Services.prefs.getBoolPref("privacy.popups.showBrowserMessage")) {
-        var brandBundle = document.getElementById("bundle_brand");
-        var brandShortName = brandBundle.getString("brandShortName");
+        var brandShortName = Strings.brand.GetStringFromName("brandShortName");
         var message;
         var popupCount = cBrowser.pageReport.length;
 
-        let strings = Elements.browserBundle;
+        let strings = Strings.browser;
         if (popupCount > 1)
-          message = strings.getFormattedString("popupWarningMultiple", [brandShortName, popupCount]);
+          message = strings.formatStringFromName("popupWarningMultiple", [brandShortName, popupCount], 2);
         else
-          message = strings.getFormattedString("popupWarning", [brandShortName]);
+          message = strings.formatStringFromName("popupWarning", [brandShortName], 1);
 
         var notificationBox = Browser.getNotificationBox();
         var notification = notificationBox.getNotificationWithValue("popup-blocked");
@@ -2063,17 +2056,17 @@ var PopupBlockerObserver = {
         else {
           var buttons = [
             {
-              label: strings.getString("popupButtonAllowOnce"),
+              label: strings.GetStringFromName("popupButtonAllowOnce"),
               accessKey: null,
               callback: function() { PopupBlockerObserver.showPopupsForSite(); }
             },
             {
-              label: strings.getString("popupButtonAlwaysAllow2"),
+              label: strings.GetStringFromName("popupButtonAlwaysAllow2"),
               accessKey: null,
               callback: function() { PopupBlockerObserver.allowPopupsForSite(true); }
             },
             {
-              label: strings.getString("popupButtonNeverWarn2"),
+              label: strings.GetStringFromName("popupButtonNeverWarn2"),
               accessKey: null,
               callback: function() { PopupBlockerObserver.allowPopupsForSite(false); }
             }
@@ -2127,18 +2120,17 @@ var PopupBlockerObserver = {
 var XPInstallObserver = {
   observe: function xpi_observer(aSubject, aTopic, aData)
   {
-    var brandBundle = document.getElementById("bundle_brand");
     switch (aTopic) {
       case "addon-install-started":
-        var messageString = Elements.browserBundle.getString("alertAddonsDownloading");
+        var messageString = Strings.browser.GetStringFromName("alertAddonsDownloading");
         ExtensionsView.showAlert(messageString);
         break;
       case "addon-install-blocked":
         var installInfo = aSubject.QueryInterface(Ci.amIWebInstallInfo);
         var host = installInfo.originatingURI.host;
-        var brandShortName = brandBundle.getString("brandShortName");
+        var brandShortName = Strings.brand.GetStringFromName("brandShortName");
         var notificationName, messageString, buttons;
-        var strings = Elements.browserBundle;
+        var strings = Strings.browser;
         var enabled = true;
         try {
           enabled = Services.prefs.getBoolPref("xpinstall.enabled");
@@ -2147,14 +2139,13 @@ var XPInstallObserver = {
         if (!enabled) {
           notificationName = "xpinstall-disabled";
           if (Services.prefs.prefIsLocked("xpinstall.enabled")) {
-            messageString = strings.getString("xpinstallDisabledMessageLocked");
+            messageString = strings.GetStringFromName("xpinstallDisabledMessageLocked");
             buttons = [];
           }
           else {
-            messageString = strings.getFormattedString("xpinstallDisabledMessage",
-                                                             [brandShortName, host]);
+            messageString = strings.formatStringFromName("xpinstallDisabledMessage", [brandShortName, host], 2);
             buttons = [{
-              label: strings.getString("xpinstallDisabledButton"),
+              label: strings.GetStringFromName("xpinstallDisabledButton"),
               accessKey: null,
               popup: null,
               callback: function editPrefs() {
@@ -2166,11 +2157,10 @@ var XPInstallObserver = {
         }
         else {
           notificationName = "xpinstall";
-          messageString = strings.getFormattedString("xpinstallPromptWarning",
-                                                           [brandShortName, host]);
+          messageString = strings.formatStringFromName("xpinstallPromptWarning", [brandShortName, host], 2);
 
           buttons = [{
-            label: strings.getString("xpinstallPromptAllowButton"),
+            label: strings.GetStringFromName("xpinstallPromptAllowButton"),
             accessKey: null,
             popup: null,
             callback: function() {
@@ -2252,11 +2242,11 @@ var ContentCrashObserver = {
     setTimeout(function(self) {
       // Ask the user if we should reload or close the current tab. Other tabs
       // will be reloaded when selected.
-      let title = Elements.browserBundle.getString("tabs.crashWarningTitle");
-      let message = Elements.browserBundle.getString("tabs.crashWarningMsg");
-      let submitText = Elements.browserBundle.getString("tabs.crashSubmitReport");
-      let reloadText = Elements.browserBundle.getString("tabs.crashReload");
-      let closeText = Elements.browserBundle.getString("tabs.crashClose");
+      let title = Strings.browser.GetStringFromName("tabs.crashWarningTitle");
+      let message = Strings.browser.GetStringFromName("tabs.crashWarningMsg");
+      let submitText = Strings.browser.GetStringFromName("tabs.crashSubmitReport");
+      let reloadText = Strings.browser.GetStringFromName("tabs.crashReload");
+      let closeText = Strings.browser.GetStringFromName("tabs.crashClose");
       let buttons = Ci.nsIPrompt.BUTTON_POS_1_DEFAULT +
                     (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_0) +
                     (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_1);
@@ -2593,34 +2583,33 @@ var OfflineApps = {
     let notificationBox = Browser.getNotificationBox();
 
     let notification = notificationBox.getNotificationWithValue(notificationID);
-    let strings = Elements.browserBundle;
+    let strings = Strings.browser;
     if (notification) {
       notification.documents.push(aRequest);
     } else {
       let buttons = [{
-        label: strings.getString("offlineApps.allow"),
+        label: strings.GetStringFromName("offlineApps.allow"),
         accessKey: null,
         callback: function() {
           for (let i = 0; i < notification.documents.length; i++)
             OfflineApps.allowSite(notification.documents[i], aTarget);
         }
       },{
-        label: strings.getString("offlineApps.never"),
+        label: strings.GetStringFromName("offlineApps.never"),
         accessKey: null,
         callback: function() {
           for (let i = 0; i < notification.documents.length; i++)
             OfflineApps.disallowSite(notification.documents[i]);
         }
       },{
-        label: strings.getString("offlineApps.notNow"),
+        label: strings.GetStringFromName("offlineApps.notNow"),
         accessKey: null,
         callback: function() { /* noop */ }
       }];
 
       const priority = notificationBox.PRIORITY_INFO_LOW;
-      let message = strings.getFormattedString("offlineApps.available", [host]);
-      notification = notificationBox.appendNotification(message, notificationID,
-                                                        "", priority, buttons);
+      let message = strings.formatStringFromName("offlineApps.available", [host], 1);
+      notification = notificationBox.appendNotification(message, notificationID, "", priority, buttons);
       notification.documents = [aRequest];
     }
   },

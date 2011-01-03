@@ -117,7 +117,7 @@ var DownloadsView = {
   _ifEmptyShowMessage: function dv__ifEmptyShowMessage() {
     // The header row is not counted in the list itemCount
     if (this._list.itemCount == 0) {
-      let emptyString = Elements.browserBundle.getString("downloadsEmpty");
+      let emptyString = Strings.browser.GetStringFromName("downloadsEmpty");
       let emptyItem = this._list.appendItem(emptyString);
       emptyItem.id = "dl-empty-message";
     }
@@ -294,21 +294,21 @@ var DownloadsView = {
   },
 
   _updateStatus: function dv__updateStatus(aItem) {
-    let strings = Elements.browserBundle;
+    let strings = Strings.browser;
 
     let status = "";
 
     // Display the file size, but show "Unknown" for negative sizes
     let fileSize = Number(aItem.getAttribute("maxBytes"));
-    let sizeText = strings.getString("downloadsUnknownSize");
+    let sizeText = strings.GetStringFromName("downloadsUnknownSize");
     if (fileSize >= 0) {
       let [size, unit] = DownloadUtils.convertByteUnits(fileSize);
-      sizeText = this._replaceInsert(strings.getString("downloadsKnownSize"), 1, size);
+      sizeText = this._replaceInsert(strings.GetStringFromName("downloadsKnownSize"), 1, size);
       sizeText = this._replaceInsert(sizeText, 2, unit);
     }
 
     // Insert 1 is the download size
-    status = this._replaceInsert(strings.getString("downloadsStatus"), 1, sizeText);
+    status = this._replaceInsert(strings.GetStringFromName("downloadsStatus"), 1, sizeText);
 
     // Insert 2 is the eTLD + 1 or other variations of the host
     let [displayHost, fullHost] = DownloadUtils.getURIHost(this._getReferrerOrSource(aItem));
@@ -323,7 +323,7 @@ var DownloadsView = {
       let leftTime = totalTime - passedTime;
       let [time, lastTime] = DownloadUtils.getTimeLeft(leftTime);
 
-      let stringTime = this._replaceInsert(strings.getString("downloadsTime"), 1, time);
+      let stringTime = this._replaceInsert(strings.GetStringFromName("downloadsTime"), 1, time);
       status = status + " " + stringTime;
     } 
       
@@ -344,7 +344,7 @@ var DownloadsView = {
     // Get the end time to display
     let end = new Date(parseInt(aItem.getAttribute("endTime")));
 
-    let strings = Elements.browserBundle;
+    let strings = Strings.browser;
 
     // Figure out if the end time is from today, yesterday, this week, etc.
     let dateTime;
@@ -354,7 +354,7 @@ var DownloadsView = {
     }
     else if (today - end < (24 * 60 * 60 * 1000)) {
       // Download finished after yesterday started, show yesterday
-      dateTime = strings.getString("donwloadsYesterday");
+      dateTime = strings.GetStringFromName("donwloadsYesterday");
     }
     else if (today - end < (6 * 24 * 60 * 60 * 1000)) {
       // Download finished after last week started, show day of week
@@ -365,7 +365,7 @@ var DownloadsView = {
       let month = end.toLocaleFormat("%B");
       // Remove leading 0 by converting the date string to a number
       let date = Number(end.toLocaleFormat("%d"));
-      dateTime = this._replaceInsert(strings.getString("downloadsMonthDate"), 1, month);
+      dateTime = this._replaceInsert(strings.GetStringFromName("downloadsMonthDate"), 1, month);
       dateTime = this._replaceInsert(dateTime, 2, date);
     }
 
@@ -390,9 +390,8 @@ var DownloadsView = {
   },
 
   removeDownload: function dv_removeDownload(aItem) {
-    let strings = Elements.browserBundle;
     let f = this._getLocalFile(aItem.getAttribute("file"));
-    let res = Services.prompt.confirm(null, strings.getString("downloadsDeleteTitle"), f.leafName);
+    let res = Services.prompt.confirm(null, Strings.browser.GetStringFromName("downloadsDeleteTitle"), f.leafName);
     if(res) {
       this._dlmgr.removeDownload(aItem.getAttribute("downloadID"));
       if (f.exists())
@@ -439,10 +438,9 @@ var DownloadsView = {
           BrowserUI.showPanel("downloads-container");
       }
     };
-    let strings = Elements.browserBundle;
-    
+
     if (!aTitle)
-      aTitle = strings.getString("alertDownloads");
+      aTitle = Strings.browser.GetStringFromName("alertDownloads");
     if (!aIcon)
       aIcon = URI_GENERIC_ICON_DOWNLOAD;
 
@@ -468,7 +466,6 @@ var DownloadsView = {
     }
     else {
       let download = aSubject.QueryInterface(Ci.nsIDownload);
-      let strings = Elements.browserBundle;
       let msgKey = "";
 
       if (aTopic == "dl-start") {
@@ -485,7 +482,7 @@ var DownloadsView = {
 
       if (msgKey)
         this.showAlert(download.target.spec.replace("file:", "download:"),
-                       strings.getFormattedString(msgKey, [download.displayName]));
+                       Strings.browser.formatStringFromName(msgKey, [download.displayName], 1));
     }
   },
 
@@ -593,7 +590,7 @@ AlertDownloadProgressListener.prototype = {
   //////////////////////////////////////////////////////////////////////////////
   //// nsIDownloadProgressListener
   onProgressChange: function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress, aDownload) {
-    let strings = Elements.browserBundle;
+    let strings = Strings.browser;
     let availableSpace = -1;
     try {
       // diskSpaceAvailable is not implemented on all systems
@@ -602,8 +599,8 @@ AlertDownloadProgressListener.prototype = {
     let contentLength = aDownload.size;
     if (availableSpace > 0 && contentLength > 0 && contentLength > availableSpace) {
       DownloadsView.showAlert(aDownload.target.spec.replace("file:", "download:"),
-                              strings.getString("alertDownloadsNoSpace"),
-                              strings.getString("alertDownloadsSize"));
+                              strings.GetStringFromName("alertDownloadsNoSpace"),
+                              strings.GetStringFromName("alertDownloadsSize"));
 
       Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager).cancelDownload(aDownload.id);
     }

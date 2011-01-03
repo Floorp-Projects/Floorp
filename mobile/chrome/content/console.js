@@ -50,7 +50,7 @@ let ConsoleView = {
 
     this._list = document.getElementById("console-box");
     this._evalTextbox = document.getElementById("console-eval-textbox");
-    this._bundle = Elements.browserBundle;
+    this._bundle = Strings.browser;
 
     this._count = 0;
     this.limit = 250;
@@ -142,7 +142,7 @@ let ConsoleView = {
     let warning = aObject.flags & nsIScriptError.warningFlag != 0;
 
     let typetext = warning ? "typeWarning" : "typeError";
-    row.setAttribute("typetext", this._bundle.getString(typetext));
+    row.setAttribute("typetext", this._bundle.GetStringFromName(typetext));
     row.setAttribute("type", warning ? "warning" : "error");
     row.setAttribute("msg", aObject.errorMessage);
     row.setAttribute("category", aObject.category);

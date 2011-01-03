@@ -159,10 +159,10 @@ var ExtensionsView = {
 
     if (this._msg) {
       this.hideAlerts();
-      let strings = Elements.browserBundle;
+      let strings = Strings.browser;
       let message = "notificationRestart." + aMode;
-      this.showMessage(strings.getString(message), "restart-app",
-                       strings.getString("notificationRestart.button"), false, "addons-restart-app");
+      this.showMessage(strings.GetStringFromName(message), "restart-app",
+                       strings.GetStringFromName("notificationRestart.button"), false, "addons-restart-app");
     }
   },
 
@@ -251,11 +251,11 @@ var ExtensionsView = {
       this._restartCount--; // showRestart() always increments
     }
 
-    let strings = Elements.browserBundle;
-    this._strings["addonType.extension"] = strings.getString("addonType.2");
-    this._strings["addonType.theme"] = strings.getString("addonType.4");
-    this._strings["addonType.locale"] = strings.getString("addonType.8");
-    this._strings["addonType.search"] = strings.getString("addonType.1024");
+    let strings = Strings.browser;
+    this._strings["addonType.extension"] = strings.GetStringFromName("addonType.2");
+    this._strings["addonType.theme"] = strings.GetStringFromName("addonType.4");
+    this._strings["addonType.locale"] = strings.GetStringFromName("addonType.8");
+    this._strings["addonType.search"] = strings.GetStringFromName("addonType.1024");
 
     let self = this;
     setTimeout(function() {
@@ -283,7 +283,7 @@ var ExtensionsView = {
 
     let self = this;
     AddonManager.getAddonsByTypes(["extension", "theme", "locale"], function(items) {
-      let strings = Elements.browserBundle;
+      let strings = Strings.browser;
       let anyUpdateable = false;
       for (let i = 0; i < items.length; i++) {
         let addon = items[i];
@@ -295,13 +295,13 @@ var ExtensionsView = {
         let blocked = "";
         switch(addon.blocklistState) {
           case Ci.nsIBlocklistService.STATE_BLOCKED:
-            blocked = strings.getString("addonBlocked.blocked")
+            blocked = strings.GetStringFromName("addonBlocked.blocked")
             break;
           case Ci.nsIBlocklistService.STATE_SOFTBLOCKED:
-            blocked = strings.getString("addonBlocked.softBlocked");
+            blocked = strings.GetStringFromName("addonBlocked.softBlocked");
             break;
           case Ci.nsIBlocklistService.STATE_OUTDATED:
-            blocked = srings.getString("addonBlocked.outdated");
+            blocked = srings.GetStringFromName("addonBlocked.outdated");
             break;
         }            
 
@@ -328,7 +328,7 @@ var ExtensionsView = {
       function isDefault(aEngine)
         defaults.indexOf(aEngine.name) != -1
 
-      let defaultDescription = strings.getString("addonsSearchEngine.description");
+      let defaultDescription = strings.GetStringFromName("addonsSearchEngine.description");
 
       let engines = Services.search.getEngines({ });
       for (let e = 0; e < engines.length; e++) {
@@ -353,7 +353,7 @@ var ExtensionsView = {
       }
 
       if (engines.length + items.length == 0)
-        self.displaySectionMessage("local", strings.getString("addonsLocalNone.label"), null, true);
+        self.displaySectionMessage("local", strings.GetStringFromName("addonsLocalNone.label"), null, true);
 
       if (!anyUpdateable)
         document.getElementById("addons-update-all").disabled = true;
@@ -499,14 +499,14 @@ var ExtensionsView = {
     if (AddonRepository.isSearching)
       AddonRepository.cancelSearch();
 
-    let strings = Elements.browserBundle;
+    let strings = Strings.browser;
     if (aTerms) {
       AddonSearchResults.selectFirstResult = aSelectFirstResult;
-      this.displaySectionMessage("repo", strings.getString("addonsSearchStart.label"), strings.getString("addonsSearchStart.button"), false);
+      this.displaySectionMessage("repo", strings.GetStringFromName("addonsSearchStart.label"), strings.GetStringFromName("addonsSearchStart.button"), false);
       AddonRepository.searchAddons(aTerms, Services.prefs.getIntPref(PREF_GETADDONS_MAXRESULTS), AddonSearchResults);
     }
     else {
-      this.displaySectionMessage("repo", strings.getString("addonsSearchStart.label"), strings.getString("addonsSearchStart.button"), false);
+      this.displaySectionMessage("repo", strings.GetStringFromName("addonsSearchStart.label"), strings.GetStringFromName("addonsSearchStart.button"), false);
       AddonRepository.retrieveRecommendedAddons(Services.prefs.getIntPref(PREF_GETADDONS_MAXRESULTS), RecommendedSearchResults);
     }
   },
@@ -581,25 +581,24 @@ var ExtensionsView = {
     let formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].getService(Ci.nsIURLFormatter);
     let browseURL = formatter.formatURLPref("extensions.getAddons.browseAddons");
 
-    let strings = Elements.browserBundle;
-    let brandBundle = document.getElementById("bundle_brand");
-    let brandShortName = brandBundle.getString("brandShortName");
+    let strings = Strings.browser;
+    let brandShortName = Strings.brand.GetStringFromName("brandShortName");
 
     let whatare = document.createElement("richlistitem");
     whatare.setAttribute("typeName", "banner");
-    whatare.setAttribute("label", strings.getString("addonsWhatAre.label"));
+    whatare.setAttribute("label", strings.GetStringFromName("addonsWhatAre.label"));
 
-    let desc = strings.getString("addonsWhatAre.description");
+    let desc = strings.GetStringFromName("addonsWhatAre.description");
     desc = desc.replace(/#1/g, brandShortName);
     whatare.setAttribute("description", desc);
 
-    whatare.setAttribute("button", strings.getString("addonsWhatAre.button"));
+    whatare.setAttribute("button", strings.GetStringFromName("addonsWhatAre.button"));
     whatare.setAttribute("onbuttoncommand", "BrowserUI.newTab('" + browseURL + "');");
     this._list.appendChild(whatare);
 
     if (aRecommendedAddons.length == 0 && aBrowseAddons.length == 0) {
-      let msg = strings.getString("addonsSearchNone.recommended");
-      let button = strings.getString("addonsSearchNone.button");
+      let msg = strings.GetStringFromName("addonsSearchNone.recommended");
+      let button = strings.GetStringFromName("addonsSearchNone.button");
       let item = this.displaySectionMessage("repo", msg, button, true);
 
       this._list.scrollBoxObject.scrollToElement(item);
@@ -627,10 +626,10 @@ var ExtensionsView = {
 
     let showmore = document.createElement("richlistitem");
     showmore.setAttribute("typeName", "showmore");
-    showmore.setAttribute("pagelabel", strings.getString("addonsBrowseAll.seeMore"));
+    showmore.setAttribute("pagelabel", strings.GetStringFromName("addonsBrowseAll.seeMore"));
     showmore.setAttribute("onpagecommand", "ExtensionsView.showMoreSearchResults();");
     showmore.setAttribute("hidepage", totalAddons > kAddonPageSize ? "false" : "true");
-    showmore.setAttribute("sitelabel", strings.getString("addonsBrowseAll.browseSite"));
+    showmore.setAttribute("sitelabel", strings.GetStringFromName("addonsBrowseAll.browseSite"));
     showmore.setAttribute("onsitecommand", "ExtensionsView.showMoreResults('" + browseURL + "');");
     this._list.appendChild(showmore);
 
@@ -642,10 +641,10 @@ var ExtensionsView = {
   displaySearchResults: function ev_displaySearchResults(aAddons, aTotalResults, aSelectFirstResult) {
     this.clearSection("repo");
 
-    let strings = Elements.browserBundle;
+    let strings = Strings.browser;
     if (aAddons.length == 0) {
-      let msg = strings.getString("addonsSearchNone.search");
-      let button = strings.getString("addonsSearchSuccess2.button");
+      let msg = strings.GetStringFromName("addonsSearchNone.search");
+      let button = strings.GetStringFromName("addonsSearchSuccess2.button");
       let item = this.displaySectionMessage("repo", msg, button, true);
 
       if (aSelectFirstResult)
@@ -666,7 +665,7 @@ var ExtensionsView = {
       showmore.setAttribute("typeName", "showmore");
       showmore.setAttribute("hidepage", "true");
 
-      let labelBase = strings.getString("addonsSearchMore.label");
+      let labelBase = strings.GetStringFromName("addonsSearchMore.label");
       let label = PluralForm.get(aTotalResults, labelBase).replace("#1", aTotalResults);
 
       showmore.setAttribute("sitelabel", label);
@@ -678,7 +677,7 @@ var ExtensionsView = {
       this._list.appendChild(showmore);
     }
 
-    this.displaySectionMessage("repo", null, strings.getString("addonsSearchSuccess2.button"), true);
+    this.displaySectionMessage("repo", null, strings.GetStringFromName("addonsSearchSuccess2.button"), true);
   },
 
   showPage: function ev_showPage(aItem) {
@@ -722,7 +721,7 @@ var ExtensionsView = {
     let json = aSubject.QueryInterface(Ci.nsISupportsString).data;
     let update = JSON.parse(json);
 
-    let strings = Elements.browserBundle;
+    let strings = Strings.browser;
     let element = this.getElementForAddon(update.id);
     if (!element)
       return;
@@ -731,31 +730,31 @@ var ExtensionsView = {
 
     switch (aTopic) {
       case "addon-update-started":
-        element.setAttribute("updateStatus", strings.getString("addonUpdate.checking"));
+        element.setAttribute("updateStatus", strings.GetStringFromName("addonUpdate.checking"));
         break;
       case "addon-update-ended":
         let updateable = false;
         let statusMsg = null;
         switch (aData) {
           case "update":
-            statusMsg = strings.getFormattedString("addonUpdate.updating", [update.version]);
+            statusMsg = strings.formatStringFromName("addonUpdate.updating", [update.version], 1);
             updateable = true;
             break;
           case "compatibility":
-            statusMsg = strings.getString("addonUpdate.compatibility");
+            statusMsg = strings.GetStringFromName("addonUpdate.compatibility");
             if (addon.pendingOperations & AddonManager.PENDING_INSTALL || addon.pendingOperations & AddonManager.PENDING_UPGRADE)
               updateable = true;
             break;
           case "error":
-            statusMsg = strings.getString("addonUpdate.error");
+            statusMsg = strings.GetStringFromName("addonUpdate.error");
             break;
           case "no-update":
             // Ignore if no updated was found. Just let the message go blank.
-            //statusMsg = strings.getString("addonUpdate.noupdate");
+            //statusMsg = strings.GetStringFromName("addonUpdate.noupdate");
             break;
           default:
             // Ignore if no updated was found. Just let the message go blank.
-            //statusMsg = strings.getString("addonUpdate.noupdate");
+            //statusMsg = strings.GetStringFromName("addonUpdate.noupdate");
         }
 
         if (statusMsg)
@@ -769,11 +768,12 @@ var ExtensionsView = {
         break;
     }
   },
+
   showAlert: function ev_showAlert(aMessage) {
     if (this.visible)
       return;
 
-    let strings = Elements.browserBundle;
+    let strings = Strings.browser;
 
     let observer = {
       observe: function (aSubject, aTopic, aData) {
@@ -783,7 +783,7 @@ var ExtensionsView = {
     };
 
     let alerts = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
-    alerts.showAlertNotification(URI_GENERIC_ICON_XPINSTALL, strings.getString("alertAddons"),
+    alerts.showAlertNotification(URI_GENERIC_ICON_XPINSTALL, strings.GetStringFromName("alertAddons"),
                                  aMessage, true, "", observer, "addons");
   },
 
@@ -800,12 +800,12 @@ var ExtensionsView = {
 function searchFailed() {
   ExtensionsView.clearSection("repo");
 
-  let strings = Elements.browserBundle;
-  let brand = document.getElementById("bundle_brand");
+  let strings = Strings.browser;
+  let brand = Strings.brand;
 
-  let failLabel = strings.getFormattedString("addonsSearchFail.label",
-                                             [brand.getString("brandShortName")]);
-  let failButton = strings.getString("addonsSearchFail.button");
+  let failLabel = strings.formatStringFromName("addonsSearchFail.label",
+                                             [brand.GetStringFromName("brandShortName")], 1);
+  let failButton = strings.GetStringFromName("addonsSearchFail.button");
   ExtensionsView.displaySectionMessage("repo", failLabel, failButton, true);
 }
 
@@ -866,8 +866,8 @@ AddonInstallListener.prototype = {
   
       // If we are updating an add-on, change the status
       if (element.hasAttribute("updating")) {
-        let strings = Elements.browserBundle;
-        element.setAttribute("updateStatus", strings.getFormattedString("addonUpdate.updated", [aAddon.version]));
+        let strings = Strings.browser;
+        element.setAttribute("updateStatus", strings.formatStringFromName("addonUpdate.updated", [aAddon.version], 1));
         element.removeAttribute("updating");
       }
     }
@@ -931,9 +931,9 @@ AddonInstallListener.prototype = {
   },
 
   onDownloadCancelled: function(aInstall, aAddon) {
-    let strings = Elements.browserBundle;
-    let brandBundle = document.getElementById("bundle_brand");
-    let brandShortName = brandBundle.getString("brandShortName");
+    let strings = Strings.browser;
+    let brandBundle = Strings.brand;
+    let brandShortName = brandBundle.GetStringFromName("brandShortName");
     let host = (aInstall.originatingURI instanceof Ci.nsIStandardURL) && aInstall.originatingURI.host;
     if (!host)
       host = (aInstall.sourceURI instanceof Ci.nsIStandardURL) && aInstall.sourceURI.host;
@@ -950,7 +950,7 @@ AddonInstallListener.prototype = {
       return; // no need to show anything in this case
     }
 
-    let messageString = strings.getString(error);
+    let messageString = strings.GetStringFromName(error);
     messageString = messageString.replace("#1", aInstall.name);
     if (host)
       messageString = messageString.replace("#2", host);
@@ -961,9 +961,9 @@ AddonInstallListener.prototype = {
   },
 
   _showInstallCompleteAlert: function xpidm_showAlert(aSucceeded) {
-    let strings = Elements.browserBundle;
-    let msg = aSucceeded ? strings.getString("alertAddonsInstalled") :
-                           strings.getString("alertAddonsFail");
+    let strings = Strings.browser;
+    let msg = aSucceeded ? strings.GetStringFromName("alertAddonsInstalled") :
+                           strings.GetStringFromName("alertAddonsFail");
     ExtensionsView.showAlert(msg);
   },
 };

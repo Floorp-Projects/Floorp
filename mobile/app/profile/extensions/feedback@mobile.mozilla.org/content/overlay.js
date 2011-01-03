@@ -93,8 +93,6 @@ var Feedback = {
   updateRestart: function updateRestart() {
     let msg = document.getElementById("feedback-messages");
     if (msg) {
-      let strings = Elements.browserBundle;
-
       let value = "restart-app";
       let notification = msg.getNotificationWithValue(value);
       if (notification) {
@@ -122,13 +120,15 @@ var Feedback = {
         }
       };
 
+      let strings = Strings.browser;
+
       let buttons = [ {
-        label: strings.getString("notificationRestart.button"),
+        label: strings.GetStringFromName("notificationRestart.button"),
         accessKey: "",
         callback: restartCallback
       } ];
   
-      let message = strings.getString("notificationRestart.normal");
+      let message = strings.GetStringFromName("notificationRestart.normal");
       msg.appendNotification(message, value, "", msg.PRIORITY_WARNING_LOW, buttons);
     }
   }

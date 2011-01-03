@@ -320,7 +320,7 @@
           let children = items.childNodes;
           let iterCount = Math.max(children.length, matchCount);
 
-          let searchSubtitle = Elements.browserBundle.stringBundle.formatStringFromName("opensearch.searchFor", [searchString], 1);
+          let searchSubtitle = Strings.browser.formatStringFromName("opensearch.searchFor", [searchString], 1);
 
           for (let i = 0; i < iterCount; ++i) {
             let item = children.item(i);
@@ -929,7 +929,7 @@
       <field name="_desktopFolder"><![CDATA[
         ({
           itemId: this._desktopFolderId, tags: "", uri: "",
-          title: Elements.browserBundle.getString("bookmarkList.desktop"),
+          title: Strings.browser.GetStringFromName("bookmarkList.desktop"),
           type: Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER
         })
       ]]></field>
