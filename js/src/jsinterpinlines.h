@@ -540,7 +540,6 @@ class InvokeSessionGuard
     Value *formals_, *actuals_;
     unsigned nformals_;
     JSScript *script_;
-    void *code_;
     Value *stackLimit_;
     jsbytecode *stop_;
 
@@ -583,7 +582,8 @@ InvokeSessionGuard::invoke(JSContext *cx) const
     formals_[-2] = savedCallee_;
     formals_[-1] = savedThis_;
 
-    if (!optimized())
+    void *code;
+    if (!optimized() || !(code = script_->getJIT(false /* !constructing */)->invokeEntry))
         return Invoke(cx, args_, 0);
 
     /* Clear any garbage left from the last Invoke. */
@@ -597,11 +597,8 @@ InvokeSessionGuard::invoke(JSContext *cx) const
         AutoPreserveEnumerators preserve(cx);
         Probes::enterJSFun(cx, fp->fun(), script_);
 #ifdef JS_METHODJIT
-        if (code_ != script_->getJIT(fp->isConstructing())->invokeEntry)
-            *(volatile int *)0x101 = 0;
-
         AutoInterpPreparer prepareInterp(cx, script_);
-        ok = mjit::EnterMethodJIT(cx, fp, code_, stackLimit_);
+        ok = mjit::EnterMethodJIT(cx, fp, code, stackLimit_);
         cx->regs->pc = stop_;
 #else
         cx->regs->pc = script_->code;
