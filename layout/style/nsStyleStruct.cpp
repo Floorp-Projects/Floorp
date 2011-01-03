@@ -1373,6 +1373,16 @@ nsStyleGradient::nsStyleGradient(void)
 {
 }
 
+PRBool
+nsStyleGradient::IsOpaque()
+{
+  for (PRUint32 i = 0; i < mStops.Length(); i++) {
+    if (NS_GET_A(mStops[i].mColor) < 255)
+      return PR_FALSE;
+  }
+  return PR_TRUE;
+}
+
 // --------------------
 // nsStyleImage
 //
@@ -1608,10 +1618,8 @@ nsStyleImage::IsOpaque() const
   if (!IsComplete())
     return PR_FALSE;
 
-  if (mType == eStyleImageType_Gradient) {
-    // We could check if every stop color of the gradient is non-transparent.
-    return PR_FALSE;
-  }
+  if (mType == eStyleImageType_Gradient)
+    return mGradient->IsOpaque();
 
   if (mType == eStyleImageType_Element)
     return PR_FALSE;
