@@ -366,8 +366,10 @@ var Browser = {
     // Make sure we're online before attempting to load
     Util.forceOnline();
 
-    let homeURL = this.getHomePage();
-    let commandURL;
+    // If this is an intial window launch the commandline handler passes us the default
+    // page as an argument. commandURL _should_ never be empty, but we protect against it
+    // below. However, we delay trying to get the fallback homepage until we really need it.
+    let commandURL = null;
     if (window.arguments && window.arguments[0])
       commandURL = window.arguments[0];
 
@@ -375,10 +377,12 @@ var Browser = {
     let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
     if (ss.shouldRestore()) {
       ss.restoreLastSession();
-      if (commandURL)
+
+      // Also open any commandline URLs, except the homepage
+      if (commandURL && commandURL != this.getHomePage())
         this.addTab(commandURL, true);
     } else {
-      this.addTab(commandURL || homeURL, true);
+      this.addTab(commandURL || this.getHomePage(), true);
     }
 
     // JavaScript Error Console
