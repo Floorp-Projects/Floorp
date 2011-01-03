@@ -1875,7 +1875,7 @@ var FormHelperUI = {
   get enabled() {
     return Services.prefs.getBoolPref("formhelper.enabled");
   },
-  
+
   init: function formHelperInit() {
     this._container = document.getElementById("content-navigator");
     this._autofillContainer = document.getElementById("form-helper-autofill");
@@ -2252,6 +2252,8 @@ var SelectHelperUI = {
     this._selectedIndexes = this._getSelectedIndexes();
     let firstSelected = null;
 
+    // Using a fragment prevent us to hang on huge list
+    let fragment = document.createDocumentFragment();
     let choices = aList.choices;
     for (let i = 0; i < choices.length; i++) {
       let choice = choices[i];
@@ -2260,7 +2262,7 @@ var SelectHelperUI = {
       item.setAttribute("label", choice.text);
       choice.disabled ? item.setAttribute("disabled", choice.disabled)
                       : item.removeAttribute("disabled");
-      this._container.appendChild(item);
+      fragment.appendChild(item);
 
       if (choice.group) {
         item.classList.add("optgroup");
@@ -2278,6 +2280,7 @@ var SelectHelperUI = {
         firstSelected = firstSelected || item;
       }
     }
+    this._container.appendChild(fragment);
 
     this._panel.hidden = false;
     this._panel.height = this._panel.getBoundingClientRect().height;
