@@ -1409,11 +1409,8 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
   PRUint32 flags = nsDisplayList::PAINT_DEFAULT;
   if (aFlags & PAINT_WIDGET_LAYERS) {
     flags |= nsDisplayList::PAINT_USE_WIDGET_LAYERS;
-    nsIWidget *widget = aFrame->GetNearestWidget();
-    PRInt32 pixelRatio = presContext->AppUnitsPerDevPixel();
-    nsIntRegion visibleWindowRegion(visibleRegion.ToOutsidePixels(pixelRatio));
-    nsIntRegion dirtyWindowRegion(aDirtyRegion.ToOutsidePixels(pixelRatio));
 
+    nsIWidget *widget = aFrame->GetNearestWidget();
     if (willFlushRetainedLayers) {
       // The caller wanted to paint from retained layers, but set up
       // the paint in such a way that we can't use them.  We're going
@@ -1426,6 +1423,10 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
     } else if (widget && !(aFlags & PAINT_DOCUMENT_RELATIVE)) {
       // XXX we should simplify this API now that dirtyWindowRegion always
       // covers the entire window
+      PRInt32 pixelRatio = presContext->AppUnitsPerDevPixel();
+      nsIntRegion visibleWindowRegion(visibleRegion.ToOutsidePixels(pixelRatio));
+      nsIntRegion dirtyWindowRegion(aDirtyRegion.ToOutsidePixels(pixelRatio));
+      builder.SetFinalTransparentRegion(visibleRegion);
       widget->UpdatePossiblyTransparentRegion(dirtyWindowRegion, visibleWindowRegion);
     }
   }

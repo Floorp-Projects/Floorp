@@ -895,6 +895,29 @@ ContainerState::PopThebesLayerData()
   mThebesLayerDataStack.RemoveElementAt(lastIndex);
 }
 
+static PRBool
+SuppressComponentAlpha(nsDisplayListBuilder* aBuilder,
+                       nsDisplayItem* aItem)
+{
+  const nsRegion* windowTransparentRegion = aBuilder->GetFinalTransparentRegion();
+  if (!windowTransparentRegion || windowTransparentRegion->IsEmpty())
+    return PR_FALSE;
+
+  // Suppress component alpha for items in the toplevel window that are over
+  // the window translucent area
+  nsIFrame* f = aItem->GetUnderlyingFrame();
+  nsIFrame* ref = aBuilder->ReferenceFrame();
+  if (f->PresContext() != ref->PresContext())
+    return PR_FALSE;
+
+  for (nsIFrame* t = f; t; t = t->GetParent()) {
+    if (t->IsTransformed())
+      return PR_FALSE;
+  }
+
+  return windowTransparentRegion->Intersects(aItem->GetBounds(aBuilder));
+}
+
 void
 ContainerState::ThebesLayerData::Accumulate(nsDisplayListBuilder* aBuilder,
                                             nsDisplayItem* aItem,
@@ -937,7 +960,11 @@ ContainerState::ThebesLayerData::Accumulate(nsDisplayListBuilder* aBuilder,
     }
   } else if (aItem->HasText()) {
     if (!mOpaqueRegion.Contains(aVisibleRect)) {
-      mNeedComponentAlpha = PR_TRUE;
+      if (SuppressComponentAlpha(aBuilder, aItem)) {
+        aItem->DisableComponentAlpha();
+      } else {
+        mNeedComponentAlpha = PR_TRUE;
+      }
     }
   }
   mForceTransparentSurface = mForceTransparentSurface || forceTransparentSurface;
