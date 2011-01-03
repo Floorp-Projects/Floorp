@@ -1138,12 +1138,37 @@ toolbar[iconsize="small"] #feed-button {
 }
 
 .popup-notification-icon[popupid="xpinstall-disabled"],
+.popup-notification-icon[popupid="addon-progress"],
+.popup-notification-icon[popupid="addon-install-cancelled"],
 .popup-notification-icon[popupid="addon-install-blocked"],
 .popup-notification-icon[popupid="addon-install-failed"],
 .popup-notification-icon[popupid="addon-install-complete"] {
   list-style-image: url(chrome://mozapps/skin/extensions/extensionGeneric.png);
   width: 32px;
   height: 32px;
+}
+
+.addon-progress-description {
+  width: 350px;
+  max-width: 350px;
+}
+
+.popup-progress-label,
+.popup-progress-meter {
+  -moz-margin-start: 0;
+  -moz-margin-end: 0;
+}
+
+.popup-progress-cancel {
+  -moz-appearance: none;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  -moz-margin-start: 5px;
+  min-height: 0;
+  min-width: 0;
+  list-style-image: url("moz-icon://stock/gtk-cancel?size=menu");
 }
 
 .popup-notification-icon[popupid="indexedDB-permissions-prompt"],
