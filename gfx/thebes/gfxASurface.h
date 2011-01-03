@@ -202,6 +202,22 @@ public:
 
     virtual const gfxIntSize GetSize() const { return gfxIntSize(-1, -1); }
 
+    void SetOpaqueRect(const gfxRect& aRect) {
+        if (aRect.IsEmpty()) {
+            mOpaqueRect = nsnull;
+        } else if (mOpaqueRect) {
+            *mOpaqueRect = aRect;
+        } else {
+            mOpaqueRect = new gfxRect(aRect);
+        }
+    }
+    const gfxRect& GetOpaqueRect() {
+        if (mOpaqueRect)
+            return *mOpaqueRect;
+        static const gfxRect empty(0, 0, 0, 0);
+        return empty;
+    }
+
     virtual PRBool SupportsSelfCopy() { return PR_TRUE; }
 
 protected:
@@ -223,6 +239,7 @@ protected:
     }
 
     cairo_surface_t *mSurface;
+    nsAutoPtr<gfxRect> mOpaqueRect;
 
 private:
     static void SurfaceDestroyFunc(void *data);
