@@ -64,6 +64,12 @@ body[dir="rtl"] #update {
   margin-top: -32px;
 }
 
+body[dir="rtl"] #update-message-checking,
+body[dir="rtl"] #update-message-none,
+body[dir="rtl"] #update-message-found {
+  float: left;
+}
+
 #aboutLinks {
   background-color: white;
   padding: 5px;

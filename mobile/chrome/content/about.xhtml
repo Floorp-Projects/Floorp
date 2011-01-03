@@ -71,7 +71,7 @@
     <span id="update-message-checking">&aboutPage.checkForUpdates.checking;</span>
     <span id="update-message-none">&aboutPage.checkForUpdates.none;</span>
     <span id="update-message-found">&aboutPage.checkForUpdates.found;</span>
-  
+
     <ul id="aboutLinks">
       <li><a id="faqURL">&aboutPage.faq.label;</a></li>
       <li><a id="supportURL">&aboutPage.support.label;</a></li>
@@ -80,19 +80,19 @@
       <li><a id="releaseNotesURL">&aboutPage.relNotes.label;</a></li>
       <li><a id="creditsURL">&aboutPage.credits.label;</a></li>
     </ul>
-  
+
     <div id="aboutDetails">
       <p id="license"><a href="about:license">&aboutPage.licenseLink;</a>&aboutPage.licenseLinkSuffix; &logoTrademark;</p>
       <p id="aboutUA"/>
     </div>
-  
+
     <script type="application/javascript;version=1.8"><![CDATA[
       let Ci = Components.interfaces, Cc = Components.classes, Cu = Components.utils, Cr = Components.results;
 
       // get URLs from prefs
       try {
         let formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].getService(Ci.nsIURLFormatter);
-  
+
         let links = [
           {id: "releaseNotesURL", pref: "app.releaseNotesURL"},
           {id: "supportURL",      pref: "app.support.baseURL"},
@@ -100,14 +100,14 @@
           {id: "privacyURL",      pref: "app.privacyURL"},
           {id: "creditsURL",      pref: "app.creditsURL"},
         ];
-        
+
         links.forEach(function (link) {
           let url = formatter.formatURLPref(link.pref);
           let element = document.getElementById(link.id);
           element.setAttribute("href", url);
         });
       } catch (ex) {}
-  
+
       let ua = navigator.userAgent;
       if (ua) {
         let uaP = document.getElementById("aboutUA");
@@ -132,7 +132,7 @@
         startUpdate: function() {
           if (!this.update)
             this.update = this.um.activeUpdate;
-      
+
           this.aus.pauseDownload();
 
           let updateTimerCallback = this.aus.QueryInterface(Ci.nsITimerCallback);
