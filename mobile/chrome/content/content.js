@@ -15,6 +15,8 @@ let XULDocument = Ci.nsIDOMXULDocument;
 let HTMLHtmlElement = Ci.nsIDOMHTMLHtmlElement;
 let HTMLIFrameElement = Ci.nsIDOMHTMLIFrameElement;
 let HTMLFrameElement = Ci.nsIDOMHTMLFrameElement;
+let HTMLSelectElement = Ci.nsIDOMHTMLSelectElement;
+let HTMLOptionElement = Ci.nsIDOMHTMLOptionElement;
 
 // Blindly copied from Safari documentation for now.
 const kViewportMinScale  = 0;
@@ -189,8 +191,7 @@ function getOverflowContentBoundingRect(aElement) {
   // If the overflow is hidden don't bother calculating it
   let computedStyle = aElement.ownerDocument.defaultView.getComputedStyle(aElement);
   let blockDisplays = ["block", "inline-block", "list-item"];
-  if (blockDisplays.indexOf(computedStyle.getPropertyValue("display")) != -1 &&
-      computedStyle.getPropertyValue("overflow") == "hidden")
+  if ((blockDisplays.indexOf(computedStyle.getPropertyValue("display")) != -1 && computedStyle.getPropertyValue("overflow") == "hidden") || aElement instanceof HTMLSelectElement)
     return r;
 
   for (let i = 0; i < aElement.childElementCount; i++)
@@ -443,6 +444,11 @@ Content.prototype = {
 
         // Sending a mousemove force the dispatching of mouseover/mouseout
         this._sendMouseEvent("mousemove", element, x, y);
+
+        // There is no need to have a feedback for disabled element
+        let isDisabled = element instanceof HTMLOptionElement ? (element.disabled || element.parentNode.disabled) : element.disabled;
+        if (isDisabled)
+          return;
 
         // Calculate the rect of the active area
         let targetElement = null;

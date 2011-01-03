@@ -301,8 +301,14 @@ button[disabled="true"] {
   background: transparent -moz-linear-gradient(top, rgba(255,255,255,0.4) 0, rgba(235,235,235,0.4) 3px, rgba(185,185,185,0.4) 100%);
 }
 
+input[type="radio"][disabled],
+input[type="radio"][disabled]:active,
+input[type="radio"][disabled]:hover,
+input[type="radio"][disabled]:hover:active,
 input[type="checkbox"][disabled],
-input[type="radio"][disabled] {
+input[type="checkbox"][disabled]:active,
+input[type="checkbox"][disabled]:hover,
+input[type="checkbox"][disabled]:hover:active {
   border:1px solid rgba(125,125,125,0.4) !important;
 }
 
