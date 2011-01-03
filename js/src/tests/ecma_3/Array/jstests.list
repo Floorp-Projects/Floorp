@@ -15,3 +15,4 @@ script regress-390598.js
 script regress-421325.js
 script regress-430717.js
 script regress-488989.js
+script regress-619970.js

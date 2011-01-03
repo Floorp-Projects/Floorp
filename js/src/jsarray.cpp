@@ -363,7 +363,7 @@ GetElement(JSContext *cx, JSObject *obj, jsdouble index, JSBool *hole, Value *vp
     }
     if (obj->isArguments() &&
         index < obj->getArgsInitialLength() &&
-        !(*vp = obj->getArgsElement(uint32(index))).isMagic(JS_ARRAY_HOLE)) {
+        !(*vp = obj->getArgsElement(uint32(index))).isMagic(JS_ARGS_HOLE)) {
         *hole = JS_FALSE;
         JSStackFrame *fp = (JSStackFrame *)obj->getPrivate();
         if (fp != JS_ARGUMENTS_OBJECT_ON_TRACE) {
