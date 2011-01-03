@@ -631,6 +631,20 @@ public:
   // quality.
   PRBool CanUseOpaqueSurface();
 
+  enum SurfaceMode {
+    SURFACE_OPAQUE,
+    SURFACE_SINGLE_CHANNEL_ALPHA,
+    SURFACE_COMPONENT_ALPHA
+  };
+  SurfaceMode GetSurfaceMode()
+  {
+    if (CanUseOpaqueSurface())
+      return SURFACE_OPAQUE;
+    if (mContentFlags & CONTENT_COMPONENT_ALPHA)
+      return SURFACE_COMPONENT_ALPHA;
+    return SURFACE_SINGLE_CHANNEL_ALPHA;
+  }
+
   /**
    * This setter can be used anytime. The user data for all keys is
    * initially null. Ownership pases to the layer manager.
