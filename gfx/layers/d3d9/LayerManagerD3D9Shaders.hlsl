@@ -8,6 +8,7 @@ rect vLayerQuad;
 
 texture tex0;
 sampler s2D;
+sampler s2DWhite;
 sampler s2DY;
 sampler s2DCb;
 sampler s2DCr;
@@ -55,6 +56,22 @@ VS_OUTPUT LayerQuadVS(const VS_INPUT aVertex)
   outp.vTexCoords.y = position.y + aVertex.vPosition.y * size.y;
 
   return outp;
+}
+
+float4 ComponentPass1Shader(const VS_OUTPUT aVertex) : COLOR
+{
+  float4 src = tex2D(s2D, aVertex.vTexCoords);
+  float4 alphas = 1.0 - tex2D(s2DWhite, aVertex.vTexCoords) + src;
+  alphas.a = alphas.g;
+  return alphas * fLayerOpacity;
+}
+
+float4 ComponentPass2Shader(const VS_OUTPUT aVertex) : COLOR
+{
+  float4 src = tex2D(s2D, aVertex.vTexCoords);
+  float4 alphas = 1.0 - tex2D(s2DWhite, aVertex.vTexCoords) + src;
+  src.a = alphas.g;
+  return src * fLayerOpacity;
 }
 
 float4 RGBAShader(const VS_OUTPUT aVertex) : COLOR
