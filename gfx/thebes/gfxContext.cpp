@@ -746,20 +746,32 @@ gfxContext::PushGroup(gfxASurface::gfxContentType content)
     cairo_push_group_with_content(mCairo, (cairo_content_t) content);
 }
 
+static gfxRect
+GetRoundOutDeviceClipExtents(gfxContext* aCtx)
+{
+    gfxContextMatrixAutoSaveRestore save(aCtx);
+    aCtx->IdentityMatrix();
+    gfxRect r = aCtx->GetClipExtents();
+    r.RoundOut();
+    return r;
+}
+
 void
 gfxContext::PushGroupAndCopyBackground(gfxASurface::gfxContentType content)
 {
     if (content == gfxASurface::CONTENT_COLOR_ALPHA) {
-        cairo_surface_t *s = cairo_get_group_target(mCairo);
-        if (cairo_surface_get_content(s) == CAIRO_CONTENT_COLOR) {
+        nsRefPtr<gfxASurface> s = CurrentSurface();
+        if (s->GetContentType() == gfxASurface::CONTENT_COLOR ||
+            s->GetOpaqueRect().Contains(GetRoundOutDeviceClipExtents(this))) {
             cairo_push_group_with_content(mCairo, CAIRO_CONTENT_COLOR);
-            cairo_surface_t *d = cairo_get_group_target(mCairo);
+            nsRefPtr<gfxASurface> d = CurrentSurface();
 
-            cairo_t *cr = cairo_create(d);
-            cairo_set_source_surface(cr, s, 0, 0);
+            cairo_t *cr = cairo_create(d->CairoSurface());
+            cairo_set_source_surface(cr, s->CairoSurface(), 0, 0);
             cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
             cairo_paint(cr);
             cairo_destroy(cr);
+            d->SetOpaqueRect(s->GetOpaqueRect());
             return;
         }
     }
