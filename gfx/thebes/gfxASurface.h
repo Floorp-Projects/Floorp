@@ -177,6 +177,9 @@ public:
     static gfxContentType ContentFromFormat(gfxImageFormat format);
     static gfxImageFormat FormatFromContent(gfxContentType format);
 
+    void SetSubpixelAntialiasingEnabled(PRBool aEnabled);
+    PRBool GetSubpixelAntialiasingEnabled();
+
     /**
      * Record number of bytes for given surface type.  Use positive bytes
      * for allocations and negative bytes for deallocations.

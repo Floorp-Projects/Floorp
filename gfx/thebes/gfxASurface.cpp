@@ -432,6 +432,23 @@ gfxASurface::FormatFromContent(gfxASurface::gfxContentType type)
     }
 }
 
+void
+gfxASurface::SetSubpixelAntialiasingEnabled(PRBool aEnabled)
+{
+    if (!mSurfaceValid)
+        return;
+    cairo_surface_set_subpixel_antialiasing(mSurface,
+        aEnabled ? CAIRO_SUBPIXEL_ANTIALIASING_ENABLED : CAIRO_SUBPIXEL_ANTIALIASING_DISABLED);
+}
+
+PRBool
+gfxASurface::GetSubpixelAntialiasingEnabled()
+{
+    if (!mSurfaceValid)
+      return PR_FALSE;
+    return cairo_surface_get_subpixel_antialiasing(mSurface) == CAIRO_SUBPIXEL_ANTIALIASING_ENABLED;
+}
+
 PRInt32
 gfxASurface::BytePerPixelFromFormat(gfxImageFormat format)
 {
