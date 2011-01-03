@@ -1415,6 +1415,12 @@
 
           this.removeAttribute("actiontype");
 
+          // The ellipses are hidden via their visibility so that they always
+          // take up space and don't pop in on top of text when shown.  For
+          // keyword searches, however, the title ellipsis should not take up
+          // space when hidden.  Setting the hidden property accomplishes that.
+          this._titleOverflowEllipsis.hidden = false;
+
           // If the type includes an action, set up the item appropriately.
           var types = type.split(/\s+/);
           var actionIndex = types.indexOf("action");
@@ -1459,6 +1465,9 @@
             this._extraBox.childNodes[1].hidden = false;
             this._extraBox.pack = "start";
             this._titleBox.flex = 0;
+
+            // Hide the ellipsis so it doesn't take up space.
+            this._titleOverflowEllipsis.hidden = true;
 
             // Put the parameters next to the title if we have any
             let search = this.getAttribute("text");
