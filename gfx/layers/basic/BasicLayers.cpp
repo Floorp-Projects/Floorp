@@ -488,7 +488,7 @@ BasicThebesLayer::Paint(gfxContext* aContext,
       target->Save();
       gfxUtils::ClipToRegionSnapped(target, toDraw);
       if (opacity != 1.0) {
-        target->PushGroup(contentType);
+        target->PushGroupAndCopyBackground(contentType);
       }
       aCallback(this, target, toDraw, nsIntRegion(), aCallbackData);
       if (opacity != 1.0) {
@@ -1306,7 +1306,7 @@ BasicLayerManager::PaintLayer(Layer* aLayer,
 
     gfxASurface::gfxContentType type = aLayer->CanUseOpaqueSurface()
         ? gfxASurface::CONTENT_COLOR : gfxASurface::CONTENT_COLOR_ALPHA;
-    mTarget->PushGroup(type);
+    mTarget->PushGroupAndCopyBackground(type);
   }
 
   /* Only paint ourself, or our children - This optimization relies on this! */
