@@ -240,8 +240,6 @@ ContainerLayerD3D9::RenderLayer()
 #endif
     GetEffectiveTransform().Is2D(&contTransform);
     NS_ASSERTION(is2d, "Transform must be 2D");
-    mSupportsComponentAlphaChildren = (GetContentFlags() & CONTENT_OPAQUE) ||
-        (mParent && mParent->SupportsComponentAlphaChildren());
   }
 
   /*
