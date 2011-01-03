@@ -454,6 +454,19 @@ IntersectWithClip(const nsIntRegion& aRegion, gfxContext* aContext)
   return result;
 }
 
+static void
+SetAntialiasingFlags(Layer* aLayer, gfxContext* aTarget)
+{
+  nsRefPtr<gfxASurface> surface = aTarget->CurrentSurface();
+  if (surface->GetContentType() != gfxASurface::CONTENT_COLOR_ALPHA) {
+    // Destination doesn't have alpha channel; no need to set any special flags
+    return;
+  }
+
+  surface->SetSubpixelAntialiasingEnabled(
+      !(aLayer->GetContentFlags() & Layer::CONTENT_COMPONENT_ALPHA));
+}
+
 void
 BasicThebesLayer::Paint(gfxContext* aContext,
                         LayerManager::DrawThebesLayerCallback aCallback,
@@ -490,6 +503,7 @@ BasicThebesLayer::Paint(gfxContext* aContext,
       if (opacity != 1.0) {
         target->PushGroupAndCopyBackground(contentType);
       }
+      SetAntialiasingFlags(this, target);
       aCallback(this, target, toDraw, nsIntRegion(), aCallbackData);
       if (opacity != 1.0) {
         target->PopGroupToSource();
@@ -515,6 +529,7 @@ BasicThebesLayer::Paint(gfxContext* aContext,
       state.mRegionToInvalidate.And(state.mRegionToInvalidate, mVisibleRegion);
       mXResolution = paintXRes;
       mYResolution = paintYRes;
+      SetAntialiasingFlags(this, state.mContext);
       PaintBuffer(state.mContext,
                   state.mRegionToDraw, state.mRegionToInvalidate,
                   aCallback, aCallbackData);
