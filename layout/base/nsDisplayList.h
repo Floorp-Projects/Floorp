@@ -339,6 +339,19 @@ public:
   FrameLayerBuilder* LayerBuilder() { return &mLayerBuilder; }
 
   /**
+   * Get the area of the final transparent region.
+   */
+  const nsRegion* GetFinalTransparentRegion() { return mFinalTransparentRegion; }
+  /**
+   * Record the area of the final transparent region after all visibility
+   * calculations were performed.
+   */
+  void SetFinalTransparentRegion(const nsRegion& aFinalTransparentRegion)
+  {
+    mFinalTransparentRegion = &aFinalTransparentRegion;
+  }
+
+  /**
    * Returns true if we need to descend into this frame when building
    * the display list, even though it doesn't intersect the dirty
    * rect, because it may have out-of-flows that do so.
@@ -422,6 +435,7 @@ private:
   nsAutoTArray<PresShellState,8> mPresShellStates;
   nsAutoTArray<nsIFrame*,100>    mFramesMarkedForDisplay;
   nsDisplayTableItem*            mCurrentTableItem;
+  const nsRegion*                mFinalTransparentRegion;
   Mode                           mMode;
   PRPackedBool                   mBuildCaret;
   PRPackedBool                   mIgnoreSuppression;
@@ -701,6 +715,11 @@ public:
    * be rendered with subpixel antialiasing.
    */
   virtual PRBool HasText() { return PR_FALSE; }
+
+  /**
+   * Disable usage of component alpha. Currently only relevant for items that have text.
+   */
+  virtual void DisableComponentAlpha() {}
 
 protected:
   friend class nsDisplayList;
