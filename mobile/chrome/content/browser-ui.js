@@ -1243,7 +1243,7 @@ var TapHighlightHelper = {
 
 var PageActions = {
   init: function init() {
-    document.getElementById("pageactions-container").addEventListener("click", this, false);
+    document.getElementById("pageactions-container").addEventListener("click", this, true);
 
     this.register("pageaction-reset", this.updatePagePermissions, this);
     this.register("pageaction-password", this.updateForgetPassword, this);
