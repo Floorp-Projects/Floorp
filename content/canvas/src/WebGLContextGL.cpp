@@ -2980,7 +2980,8 @@ WebGLContext::ConvertImage(size_t width, size_t height, size_t srcStride, size_t
         const PRUint8* src_end = src + height * srcStride;
 
         PRUint8* dst_row = mPixelStoreFlipY ? dst + (height-1) * dstStride : dst;
-        ptrdiff_t dst_delta = mPixelStoreFlipY ? -dstStride : dstStride;
+        ptrdiff_t dstStrideSigned(dstStride);
+        ptrdiff_t dst_delta = mPixelStoreFlipY ? -dstStrideSigned : dstStrideSigned;
 
         while(src_row != src_end) {
             memcpy(dst_row, src_row, row_size);
