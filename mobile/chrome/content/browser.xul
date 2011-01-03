@@ -94,11 +94,6 @@
   <script type="application/javascript" src="chrome://browser/content/sync.js"/>
 #endif
 
-  <stringbundleset id="stringbundleset">
-    <stringbundle id="bundle_browser" src="chrome://browser/locale/browser.properties"/>
-    <stringbundle id="bundle_brand" src="chrome://branding/locale/brand.properties"/>
-  </stringbundleset>
-
   <broadcasterset id="broadcasterset">
     <broadcaster id="bcast_contentShowing"/>
     <broadcaster id="bcast_urlbarState" mode="view"/>

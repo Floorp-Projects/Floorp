@@ -82,9 +82,9 @@ var PreferencesView = {
     this._restartCount++;
 
     if (this._msg) {
-      let strings = Elements.browserBundle;
-      this.showMessage(strings.getString("notificationRestart.normal"), "restart-app",
-                       strings.getString("notificationRestart.button"), false, "prefs-restart-app");
+      let strings = Strings.browser;
+      this.showMessage(strings.GetStringFromName("notificationRestart.normal"), "restart-app",
+                       strings.GetStringFromName("notificationRestart.button"), false, "prefs-restart-app");
     }
   },
 
@@ -228,7 +228,7 @@ var PreferencesView = {
     let options = document.getElementById("prefs-homepage-options");
     if (value == "custom") {
       // Make sure nothing is selected and just use a label to show the state
-      options.appendItem(Elements.browserBundle.getString("homepage.custom2"), "custom");
+      options.appendItem(Strings.browser.GetStringFromName("homepage.custom2"), "custom");
     }
 
     // Select the right menulist item
@@ -291,7 +291,7 @@ var PreferencesView = {
       // If the helper item is not already in the list, we need to put it there
       // (this can happen when changing from one custom page to another)
       if (!helper)
-        helper = options.appendItem(Elements.browserBundle.getString("homepage.custom2"), "custom");
+        helper = options.appendItem(Strings.browser.GetStringFromName("homepage.custom2"), "custom");
 
       options.selectedItem = helper;
     } else {

@@ -75,7 +75,6 @@ XPCOMUtils.defineLazyServiceGetter(window, "gFocusManager", "@mozilla.org/focus-
 let Elements = {};
 
 [
-  ["browserBundle",      "bundle_browser"],
   ["contentShowing",     "bcast_contentShowing"],
   ["urlbarState",        "bcast_urlbarState"],
   ["stack",              "stack"],
@@ -90,6 +89,20 @@ let Elements = {};
   let [name, id] = aElementGlobal;
   XPCOMUtils.defineLazyGetter(Elements, name, function() {
     return document.getElementById(id);
+  });
+});
+
+/**
+ * Cache of commonly used string bundles.
+ */
+var Strings = {};
+[
+  ["browser",    "chrome://browser/locale/browser.properties"],
+  ["brand",      "chrome://branding/locale/brand.properties"]
+].forEach(function (aStringBundle) {
+  let [name, bundle] = aStringBundle;
+  XPCOMUtils.defineLazyGetter(Strings, name, function() {
+    return Services.strings.createBundle(bundle);
   });
 });
 
@@ -1111,9 +1124,8 @@ var BrowserUI = {
         break;
       case "cmd_sanitize":
       {
-        let strings = Elements.browserBundle;
-        let title = strings.getString("clearPrivateData.title");
-        let message = strings.getString("clearPrivateData.message");
+        let title = Strings.browser.GetStringFromName("clearPrivateData.title");
+        let message = Strings.browser.GetStringFromName("clearPrivateData.message");
         let clear = Services.prompt.confirm(window, title, message);
         if (clear) {
           // disable the button temporarily to indicate something happened
@@ -1152,10 +1164,10 @@ var BrowserUI = {
         let locked = Services.prefs.getBoolPref("toolkit.screen.lock");
         Services.prefs.setBoolPref("toolkit.screen.lock", !locked);
 
-        let strings = Elements.browserBundle;
+        let strings = Strings.browser;
         let alerts = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
-        alerts.showAlertNotification(null, strings.getString("alertLockScreen"),
-                                     strings.getString("alertLockScreen." + (!locked ? "locked" : "unlocked")), false, "", null);
+        alerts.showAlertNotification(null, strings.GetStringFromName("alertLockScreen"),
+                                     strings.GetStringFromName("alertLockScreen." + (!locked ? "locked" : "unlocked")), false, "", null);
         break;
       }
     }
@@ -1320,7 +1332,7 @@ var PageActions = {
         permissions.push("pageactions.password");
     }
 
-    let descriptions = permissions.map(function(s) Elements.browserBundle.getString(s));
+    let descriptions = permissions.map(function(s) Strings.browser.GetStringFromName(s));
     aNode.setAttribute("description", descriptions.join(", "));
 
     return (permissions.length > 0);
@@ -1397,9 +1409,8 @@ var PageActions = {
       fileName = file.leafName;
     });
 #else
-    let strings = Elements.browserBundle;
     let picker = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-    picker.init(window, strings.getString("pageactions.saveas.pdf"), Ci.nsIFilePicker.modeSave);
+    picker.init(window, Strings.browser.GetStringFromName("pageactions.saveas.pdf"), Ci.nsIFilePicker.modeSave);
     picker.appendFilter("PDF", "*.pdf");
     picker.defaultExtension = "pdf";
 
@@ -1506,7 +1517,7 @@ var NewTabPopup = {
   },
 
   _updateLabel: function nt_updateLabel() {
-    let newtabStrings = Elements.browserBundle.getString("newtabpopup.opened");
+    let newtabStrings = Strings.browser.GetStringFromName("newtabpopup.opened");
     let label = PluralForm.get(this._tabs.length, newtabStrings).replace("#1", this._tabs.length);
 
     this.box.firstChild.setAttribute("value", label);

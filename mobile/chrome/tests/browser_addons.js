@@ -61,7 +61,7 @@ var gPendingTests = [];
 var gTestsRun = 0;
 var gTestStart = null;
 var gDate = new Date(2010, 7, 1);
-var gApp = document.getElementById("bundle_brand").getString("brandShortName");
+var gApp = Strings.brand.GetStringFromName("brandShortName");
 var gCategoryUtilities;
 var gSearchCount = 0;
 var gProvider = null;
