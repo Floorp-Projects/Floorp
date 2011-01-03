@@ -512,6 +512,15 @@ public:
    */
   static nsRect RoundGfxRectToAppRect(const gfxRect &aRect, float aFactor);
 
+  /**
+   * Returns a subrectangle of aContainedRect that is entirely inside the rounded
+   * rect. Complex cases are handled conservatively by returning a smaller
+   * rect than necessary.
+   */
+  static nsRegion RoundedRectIntersectRect(const nsRect& aRoundedRect,
+                                           const nscoord aRadii[8],
+                                           const nsRect& aContainedRect);
+
   enum {
     PAINT_IN_TRANSFORM = 0x01,
     PAINT_SYNC_DECODE_IMAGES = 0x02,

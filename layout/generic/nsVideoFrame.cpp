@@ -375,10 +375,10 @@ public:
   
   NS_DISPLAY_DECL_NAME("Video", TYPE_VIDEO)
 
-  // It would be great if we could override IsOpaque to return false here,
+  // It would be great if we could override GetOpaqueRegion to return nonempty here,
   // but it's probably not safe to do so in general. Video frames are
   // updated asynchronously from decoder threads, and it's possible that
-  // we might have an opaque video frame when IsOpaque is called, but
+  // we might have an opaque video frame when GetOpaqueRegion is called, but
   // when we come to paint, the video frame is transparent or has gone
   // away completely (e.g. because of a decoder error). The problem would
   // be especially acute if we have off-main-thread rendering.
