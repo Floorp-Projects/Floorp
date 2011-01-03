@@ -3776,6 +3776,13 @@ bad:
 JSBool
 js_EmitFunctionScript(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body)
 {
+    /*
+     * The decompiler has assumptions about what may occur immediately after
+     * script->main (e.g., in the case of destructuring params). Thus, put the
+     * following ops into the range [script->code, script->main). Note:
+     * execution starts from script->code, so this has no semantic effect.
+     */
+
     if (cg->flags & TCF_FUN_IS_GENERATOR) {
         /* JSOP_GENERATOR must be the first instruction. */
         CG_SWITCH_TO_PROLOG(cg);
@@ -3800,8 +3807,10 @@ js_EmitFunctionScript(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body)
     }
 
     if (cg->flags & TCF_FUN_UNBRAND_THIS) {
+        CG_SWITCH_TO_PROLOG(cg);
         if (js_Emit1(cx, cg, JSOP_UNBRANDTHIS) < 0)
             return false;
+        CG_SWITCH_TO_MAIN(cg);
     }
 
     return js_EmitTree(cx, cg, body) &&
