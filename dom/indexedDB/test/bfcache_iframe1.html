@@ -2,7 +2,7 @@
 <html>
 <head>
   <script>
-moz_indexedDB.open(parent.location).onsuccess = function(e) {
+mozIndexedDB.open(parent.location).onsuccess = function(e) {
   var db = e.result;
   // This should never be called
   db.onversionchange = function(e) {

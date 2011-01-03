@@ -60,7 +60,7 @@
                 .add(uri, "indexedDB",
                      Components.interfaces.nsIPermissionManager.ALLOW_ACTION);
 
-      let request = moz_indexedDB.open(window.location.pathname);
+      let request = mozIndexedDB.open(window.location.pathname);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;

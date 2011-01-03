@@ -19,7 +19,7 @@ function testSteps()
   const name = window.location.pathname;
   const description = "My Test Database";
 
-  var request = moz_indexedDB.open(name, description);
+  var request = mozIndexedDB.open(name, description);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   var event = yield;
