@@ -118,8 +118,13 @@ class GeckoAppShell
         GeckoAppShell.putenv("TMPDIR=" + f.getPath());
 
         f = Environment.getDownloadCacheDirectory();
-        GeckoAppShell.putenv("EXTERNAL_STORAGE" + f.getPath());
-
+        GeckoAppShell.putenv("EXTERNAL_STORAGE=" + f.getPath());
+        File downloadDir = null;
+        if (Build.VERSION.SDK_INT >= 8)
+            downloadDir = GeckoApp.mAppContext.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
+        else
+            downloadDir = new File(Environment.getExternalStorageDirectory().getPath(), "download");
+        GeckoAppShell.putenv("DOWNLOADS_DIRECTORY=" + downloadDir.getPath());
         GeckoAppShell.putenv("LANG=" + Locale.getDefault().toString());
 
         loadLibs(apkName);
