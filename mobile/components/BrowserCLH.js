@@ -105,6 +105,16 @@ function needHomepageOverride() {
   return "none";
 }
 
+function getHomePage() {
+  let url = "about:home";
+  try {
+    url = Services.prefs.getComplexValue("browser.startup.homepage", Ci.nsIPrefLocalizedString).data;
+  } catch (e) { }
+
+  return url;
+}
+
+
 function BrowserCLH() { }
 
 BrowserCLH.prototype = {
@@ -172,7 +182,8 @@ BrowserCLH.prototype = {
     try {
       win = Services.wm.getMostRecentWindow("navigator:browser");
       if (!win) {
-        let defaultURL;
+        // Default to the saved homepage
+        let defaultURL = getHomePage();
 
         // Override the default if we have a new profile
         if (needHomepageOverride() == "new profile")
@@ -195,6 +206,8 @@ BrowserCLH.prototype = {
 
     // Assumption: All remaining command line arguments have been sent remotely (browser is already running)
     // Action: Open any URLs we find into an existing browser window
+    if (uris.length == 0)
+      return;
 
     // First, get a browserDOMWindow object
     while (!win.browserDOMWindow)
@@ -202,8 +215,7 @@ BrowserCLH.prototype = {
 
     // Open any URIs into new tabs
     for (let i = 0; i < uris.length; i++)
-      win.browserDOMWindow.openURI(uris[i], null, Ci.nsIBrowserDOMWindow.OPEN_NEWTAB,
-                                   Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
+      win.browserDOMWindow.openURI(uris[i], null, Ci.nsIBrowserDOMWindow.OPEN_NEWTAB, Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
   },
 
   // QI
