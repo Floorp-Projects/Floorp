@@ -120,6 +120,10 @@ var TestPilotTask = {
     return this._id;
   },
 
+  get version() {
+    return this._versionNumber;
+  },
+
   get taskType() {
     return null;
   },
@@ -919,8 +923,7 @@ TestPilotBuiltinSurvey.prototype = {
       return null;
     } else {
       this._logger.info("Trying to json.parse this: " + surveyResults);
-      let surveyJson = sanitizeJSONStrings( JSON.parse(surveyResults) );
-      return surveyJson["answers"];
+      return sanitizeJSONStrings( JSON.parse(surveyResults) );
     }
   },
 
