@@ -2894,10 +2894,12 @@ js_ReportIsNotFunction(JSContext *cx, const Value *vp, uintN flags)
      * most recent interpreted stack frame. Note that additional values, not
      * directly produced by the script, may have been pushed onto the frame's
      * expression stack (e.g. by pushInvokeArgs) thereby incrementing sp past
-     * the depth simulated by ReconstructPCStack. Since we must pass an offset
-     * from the top of the simulated stack to js_ReportValueError3, it is
-     * important to do bounds checking using the simulated, rather than actual,
-     * stack depth.
+     * the depth simulated by ReconstructPCStack.
+     *
+     * Conversely, values may have been popped from the stack in preparation
+     * for a call (e.g., by SplatApplyArgs). Since we must pass an offset from
+     * the top of the simulated stack to js_ReportValueError3, we do bounds
+     * checking using the minimum of both the simulated and actual stack depth.
      */
     ptrdiff_t spindex = 0;
 
@@ -2908,8 +2910,7 @@ js_ReportIsNotFunction(JSContext *cx, const Value *vp, uintN flags)
     if (!i.done()) {
         uintN depth = js_ReconstructStackDepth(cx, i.fp()->script(), i.pc());
         Value *simsp = i.fp()->base() + depth;
-        JS_ASSERT(simsp <= i.sp());
-        if (i.fp()->base() <= vp && vp < simsp)
+        if (i.fp()->base() <= vp && vp < Min(simsp, i.sp()))
             spindex = vp - simsp;
     }
 
