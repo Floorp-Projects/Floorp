@@ -57,6 +57,7 @@ function testWebSocket () {
   }
   ws.onclose = function(e) {
     is(results.length, 0, "All the messages should have been processed!");
+    ok(e.wasClean, "Connection closed cleanly");
     testWebSocket2();
   }
   ws.onerror = function(e) {
@@ -83,6 +84,7 @@ function testWebSocket2() {
   }
   ws.onclose = function(e) {
     is(messageCount, testCount, "Didn't receive all the messages!");
+    ok(e.wasClean, "Connection closed cleanly");
     testWebSocket3();
   }
   ws.onerror = function(e) {
@@ -113,6 +115,7 @@ function testWebSocket3() {
   }
   ws.onclose = function(e) {
     is(messageCount, testCount, "Didn't receive all the messages!");
+    ok(e.wasClean, "Connection closed cleanly");
     testWebSocket4();
   }
   ws.onerror = function(e) {
@@ -140,7 +143,7 @@ function testWebSocket4() {
   }
   ws.onclose = function(e) {
     is(this, ws, "'this' should point to the WebSocket. (2)");
-    //ok(e.wasClean, "Connection should have closed cleanly.");
+    ok(e.wasClean, "Connection closed cleanly");
     testWebSocket5();
   }
   ws.onerror = function(e) {
@@ -163,7 +166,7 @@ function testWebSocket5() {
     this.close();
   }
   ws.onclose = function(e) {
-    //ok(e.wasClean, "Connection should have closed cleanly.");
+    ok(e.wasClean, "Connection closed cleanly");
     is(this.bufferedAmount, 0, "Shouldn't have anything buffered");
     var msg = "some data";
     this.send(msg);
