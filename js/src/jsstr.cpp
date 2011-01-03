@@ -157,6 +157,8 @@ JSString::flatten(JSContext *maybecx)
      * copying the left-hand side. Clearing the 'extensible' bit turns off this
      * optimization. This is necessary, e.g., when the JSAPI hands out the raw
      * null-terminated char array of a flat string.
+     *
+     * N.B. This optimization can create chains of dependent strings.
      */
     const size_t wholeLength = length();
     size_t wholeCapacity;
