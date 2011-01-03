@@ -899,7 +899,8 @@ ContainerState::PopThebesLayerData()
 
 static PRBool
 SuppressComponentAlpha(nsDisplayListBuilder* aBuilder,
-                       nsDisplayItem* aItem)
+                       nsDisplayItem* aItem,
+                       const nsRect& aComponentAlphaBounds)
 {
   const nsRegion* windowTransparentRegion = aBuilder->GetFinalTransparentRegion();
   if (!windowTransparentRegion || windowTransparentRegion->IsEmpty())
@@ -917,7 +918,7 @@ SuppressComponentAlpha(nsDisplayListBuilder* aBuilder,
       return PR_FALSE;
   }
 
-  return windowTransparentRegion->Intersects(aItem->GetBounds(aBuilder));
+  return windowTransparentRegion->Intersects(aComponentAlphaBounds);
 }
 
 void
@@ -968,9 +969,12 @@ ContainerState::ThebesLayerData::Accumulate(nsDisplayListBuilder* aBuilder,
       }
     }
   }
-  if (aItem->HasText()) {
-    if (!mOpaqueRegion.Contains(aVisibleRect)) {
-      if (SuppressComponentAlpha(aBuilder, aItem)) {
+  nsRect componentAlpha = aItem->GetComponentAlphaBounds(aBuilder);
+  componentAlpha.IntersectRect(componentAlpha, aItem->GetVisibleRect());
+  if (!componentAlpha.IsEmpty()) {
+    nscoord appUnitsPerDevPixel = AppUnitsPerDevPixel(aItem);
+    if (!mOpaqueRegion.Contains(componentAlpha.ToOutsidePixels(appUnitsPerDevPixel))) {
+      if (SuppressComponentAlpha(aBuilder, aItem, componentAlpha)) {
         aItem->DisableComponentAlpha();
       } else {
         mNeedComponentAlpha = PR_TRUE;
