@@ -77,14 +77,18 @@ public:
 
   NS_DISPLAY_DECL_NAME("nsDisplayCanvas", TYPE_CANVAS)
 
-  virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder,
-                          PRBool* aForceTransparentSurface = nsnull) {
+  virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
+                                   PRBool* aForceTransparentSurface = nsnull) {
     if (aForceTransparentSurface) {
       *aForceTransparentSurface = PR_FALSE;
     }
     nsIFrame* f = GetUnderlyingFrame();
     nsHTMLCanvasElement *canvas = CanvasElementFromContent(f->GetContent());
-    return canvas->GetIsOpaque();
+    nsRegion result;
+    if (canvas->GetIsOpaque()) {
+      result = GetBounds(aBuilder);
+    }
+    return result;
   }
 
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder) {

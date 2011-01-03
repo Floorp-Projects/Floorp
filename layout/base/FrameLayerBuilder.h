@@ -317,6 +317,11 @@ public:
     // or clearing of other clips must be done by the caller.
     void ApplyTo(gfxContext* aContext, nsPresContext* aPresContext);
 
+    // Return a rectangle contained in the intersection of aRect with this
+    // clip region. Tries to return the largest possible rectangle, but may
+    // not succeed.
+    nsRect ApproximateIntersect(const nsRect& aRect) const;
+
     bool operator==(const Clip& aOther) const {
       return mHaveClipRect == aOther.mHaveClipRect &&
              (!mHaveClipRect || mClipRect == aOther.mClipRect) &&
