@@ -406,7 +406,7 @@
                 </richlistitem>
                 <richlistitem id="addons-repo" class="section-header" nohighlight="true">
                   <label value="&addonsRepo.label;" flex="1"/>
-                  <textbox id="addons-search-text" class="search-bar" placeholder="&addonsSearch2.emptytext;" type="search" searchbutton="false"
+                  <textbox id="addons-search-text" flex="1" class="search-bar" placeholder="&addonsSearch2.emptytext;" type="search" searchbutton="false"
                            oncommand="ExtensionsView.getAddonsFromRepo(this.value);" onkeypress="if (event.keyCode == event.DOM_VK_RETURN) this.blur();"/>
                 </richlistitem>
               </richlistbox>
