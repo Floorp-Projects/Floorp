@@ -220,8 +220,17 @@ public:
 
     virtual PRBool SupportsSelfCopy() { return PR_TRUE; }
 
+    /**
+     * Mark the surface as being allowed/not allowed to be used as a source.
+     * This currently has no effect other than triggering assertions in some
+     * cases.
+     */
+    void SetAllowUseAsSource(PRBool aAllow) { mAllowUseAsSource = aAllow; }
+    PRBool GetAllowUseAsSource() { return mAllowUseAsSource; }
+
 protected:
-    gfxASurface() : mSurface(nsnull), mFloatingRefs(0), mBytesRecorded(0), mSurfaceValid(PR_FALSE)
+    gfxASurface() : mSurface(nsnull), mFloatingRefs(0), mBytesRecorded(0),
+                    mSurfaceValid(PR_FALSE), mAllowUseAsSource(PR_TRUE)
     {
         MOZ_COUNT_CTOR(gfxASurface);
     }
@@ -249,6 +258,7 @@ private:
 
 protected:
     PRPackedBool mSurfaceValid;
+    PRPackedBool mAllowUseAsSource;
 };
 
 /**
