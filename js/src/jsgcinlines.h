@@ -380,16 +380,13 @@ Untag(JSString *str)
 static JS_ALWAYS_INLINE void
 NonRopeTypedMarker(JSString *str)
 {
+    /* N.B. The base of a dependent string is not necessarily flat. */
     JS_ASSERT(!str->isRope());
-    if (JSString::isStatic(str) ||
-        !str->asCell()->markIfUnmarked() ||
-        !str->isDependent()) {
-        return;
+    while (!JSString::isStatic(str) &&
+           str->asCell()->markIfUnmarked() &&
+           str->isDependent()) {
+        str = str->dependentBase();
     }
-    JSString *base = str->dependentBase();
-    if (JSString::isStatic(base))
-        return;
-    base->asCell()->markIfUnmarked();
 }
 
 }  /* namespace detail */
