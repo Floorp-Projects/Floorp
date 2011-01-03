@@ -475,7 +475,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
             if (xdr->mode == JSXDR_DECODE) {
                 BindingKind kind = (i < nargs)
                                    ? ARGUMENT
-                                   : (i < nargs + nvars)
+                                   : (i < uintN(nargs + nvars))
                                    ? (bitmap[i >> JS_BITS_PER_UINT32_LOG2] &
                                       JS_BIT(i & (JS_BITS_PER_UINT32 - 1))
                                       ? CONSTANT
