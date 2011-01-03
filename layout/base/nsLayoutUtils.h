@@ -660,13 +660,17 @@ public:
    */
   static nsRect GetAllInFlowRectsUnion(nsIFrame* aFrame, nsIFrame* aRelativeTo);
 
+  enum {
+    EXCLUDE_BLUR_SHADOWS = 0x01
+  };
   /**
    * Takes a text-shadow array from the style properties of a given nsIFrame and
    * computes the union of those shadows along with the given initial rect.
    * If there are no shadows, the initial rect is returned.
    */
   static nsRect GetTextShadowRectsUnion(const nsRect& aTextAndDecorationsRect,
-                                        nsIFrame* aFrame);
+                                        nsIFrame* aFrame,
+                                        PRUint32 aFlags = 0);
 
   /**
    * Get the font metrics corresponding to the frame's style data.

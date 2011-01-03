@@ -1377,14 +1377,13 @@ PRBool nsDisplayWrapList::ChildrenCanBeInactive(nsDisplayListBuilder* aBuilder,
   return PR_TRUE;
 }
 
-PRBool nsDisplayWrapList::HasText()
+nsRect nsDisplayWrapList::GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder)
 {
+  nsRect bounds;
   for (nsDisplayItem* i = mList.GetBottom(); i; i = i->GetAbove()) {
-    if (i->HasText()) {
-      return PR_TRUE;
-    }
+    bounds.UnionRect(bounds, i->GetComponentAlphaBounds(aBuilder));
   }
-  return PR_FALSE;
+  return bounds;
 }
 
 static nsresult

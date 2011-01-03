@@ -1651,7 +1651,8 @@ nsLayoutUtils::GetAllInFlowRectsUnion(nsIFrame* aFrame, nsIFrame* aRelativeTo) {
 
 nsRect
 nsLayoutUtils::GetTextShadowRectsUnion(const nsRect& aTextAndDecorationsRect,
-                                       nsIFrame* aFrame)
+                                       nsIFrame* aFrame,
+                                       PRUint32 aFlags)
 {
   const nsStyleText* textStyle = aFrame->GetStyleText();
   if (!textStyle->mTextShadow)
@@ -1660,12 +1661,15 @@ nsLayoutUtils::GetTextShadowRectsUnion(const nsRect& aTextAndDecorationsRect,
   nsRect resultRect = aTextAndDecorationsRect;
   PRInt32 A2D = aFrame->PresContext()->AppUnitsPerDevPixel();
   for (PRUint32 i = 0; i < textStyle->mTextShadow->Length(); ++i) {
-    nsRect tmpRect(aTextAndDecorationsRect);
     nsCSSShadowItem* shadow = textStyle->mTextShadow->ShadowAt(i);
+    nsMargin blur = nsContextBoxBlur::GetBlurRadiusMargin(shadow->mRadius, A2D);
+    if ((aFlags & EXCLUDE_BLUR_SHADOWS) && blur != nsMargin(0, 0, 0, 0))
+      continue;
+
+    nsRect tmpRect(aTextAndDecorationsRect);
 
     tmpRect.MoveBy(nsPoint(shadow->mXOffset, shadow->mYOffset));
-    tmpRect.Inflate(
-      nsContextBoxBlur::GetBlurRadiusMargin(shadow->mRadius, A2D));
+    tmpRect.Inflate(blur);
 
     resultRect.UnionRect(resultRect, tmpRect);
   }
