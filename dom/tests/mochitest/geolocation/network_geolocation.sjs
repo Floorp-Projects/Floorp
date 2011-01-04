@@ -17,7 +17,7 @@ function parseQueryString(str)
   return params;
 }
 
-function getPosition()
+function getPosition(action)
 {  
     // this isn't the w3c data structure, it is the network location provider structure.
 
@@ -39,7 +39,7 @@ function getPosition()
     longitude: -122.08769,
 
     altitude: 42,
-    accuracy: 42,
+    accuracy: (action == "worse-accuracy") ? 100 : 42,
     altitude_accuracy: 42,
   };
   
@@ -58,7 +58,7 @@ function handleRequest(request, response)
       return;
   }
 
-  var position = getPosition();
+  var position = getPosition(params.action);
 
   if (params.action == "respond-garbage") {
      // better way?
