@@ -4872,7 +4872,6 @@ js_LookupPropertyWithFlagsInline(JSContext *cx, JSObject *obj, jsid id, uintN fl
         if (!proto->isNative()) {
             if (!proto->lookupProperty(cx, id, objp, propp))
                 return -1;
-            JS_ASSERT_IF(*propp, !(*objp)->isNative());
             return protoIndex + 1;
         }
 
