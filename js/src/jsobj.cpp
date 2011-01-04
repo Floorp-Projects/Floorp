@@ -4882,6 +4882,21 @@ js_LookupPropertyWithFlagsInline(JSContext *cx, JSObject *obj, jsid id, uintN fl
         if (!proto->isNative()) {
             if (!proto->lookupProperty(cx, id, objp, propp))
                 return -1;
+#ifdef DEBUG
+            /*
+             * Non-native objects must have either non-native lookup results,
+             * or else native results from the non-native's prototype chain.
+             *
+             * See JSStackFrame::getValidCalleeObject, where we depend on this
+             * fact to force a prototype-delegated joined method accessed via
+             * arguments.callee through the delegating |this| object's method
+             * read barrier.
+             */
+            if (*propp && (*objp)->isNative()) {
+                while ((proto = proto->getProto()) != *objp)
+                    JS_ASSERT(proto);
+            }
+#endif
             return protoIndex + 1;
         }
 
@@ -5816,9 +5831,15 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool str
                     for (JSStackFrame *fp = cx->maybefp(); fp; fp = fp->prev()) {
                         if (fp->isFunctionFrame() &&
                             &fp->callee() == &fun->compiledFunObj() &&
-                            fp->thisValue().isObject() &&
-                            &fp->thisValue().toObject() == obj) {
-                            fp->calleeValue().setObject(*funobj);
+                            fp->thisValue().isObject())
+                        {
+                            JSObject *tmp = &fp->thisValue().toObject();
+                            do {
+                                if (tmp == obj) {
+                                    fp->calleeValue().setObject(*funobj);
+                                    break;
+                                }
+                            } while ((tmp = tmp->getProto()) != NULL);
                         }
                     }
                 }
