@@ -75,24 +75,11 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml">
 
-  <script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
-  <script type="application/javascript" src="chrome://global/content/contentAreaUtils.js"/>
-  <script type="application/javascript" src="chrome://global/content/viewZoomOverlay.js"/>
-  <script type="application/javascript" src="chrome://browser/content/commandUtil.js"/>
-  <script type="application/javascript" src="chrome://browser/content/exceptions.js"/>
   <script type="application/javascript" src="chrome://browser/content/browser.js"/>
   <script type="application/javascript" src="chrome://browser/content/browser-ui.js"/>
-  <script type="application/javascript" src="chrome://browser/content/sanitize.js"/>
-  <script type="application/javascript" src="chrome://browser/content/preferences.js"/>
-  <script type="application/javascript" src="chrome://browser/content/extensions.js"/>
-  <script type="application/javascript" src="chrome://browser/content/downloads.js"/>
-  <script type="application/javascript" src="chrome://browser/content/console.js"/>
+  <script type="application/javascript" src="chrome://browser/content/browser-scripts.js"/>
   <script type="application/javascript" src="chrome://browser/content/Util.js"/>
   <script type="application/javascript" src="chrome://browser/content/input.js"/>
-  <script type="application/javascript" src="chrome://browser/content/AnimatedZoom.js"/>
-#ifdef MOZ_SERVICES_SYNC
-  <script type="application/javascript" src="chrome://browser/content/sync.js"/>
-#endif
 
   <broadcasterset id="broadcasterset">
     <broadcaster id="bcast_contentShowing"/>
