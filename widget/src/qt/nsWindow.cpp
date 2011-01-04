@@ -2590,6 +2590,11 @@ nsWindow::createQWidget(MozQWidget *parent, nsWidgetInitData *aInitData)
         // Top level widget is just container, and should not be painted
         widget->setFlag(QGraphicsItem::ItemHasNoContents);
 #endif
+
+#ifdef MOZ_X11
+        XSetWindowBackgroundPixmap(QX11Info::display(),
+                                   newView->effectiveWinId(), None);
+#endif
     } else if (eWindowType_dialog == mWindowType && parent)
         parent->scene()->addItem(widget);
 
