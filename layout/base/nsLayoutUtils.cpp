@@ -1428,13 +1428,6 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
 
   list.ComputeVisibilityForRoot(&builder, &visibleRegion);
 
-#ifdef DEBUG
-  if (gDumpPaintList) {
-    fprintf(stderr, "Painting --- after optimization:\n");
-    nsFrame::PrintDisplayList(&builder, list);
-  }
-#endif
-
   PRUint32 flags = nsDisplayList::PAINT_DEFAULT;
   if (aFlags & PAINT_WIDGET_LAYERS) {
     flags |= nsDisplayList::PAINT_USE_WIDGET_LAYERS;
@@ -1464,6 +1457,9 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
 
 #ifdef DEBUG
   if (gDumpPaintList) {
+    fprintf(stderr, "Painting --- after optimization:\n");
+    nsFrame::PrintDisplayList(&builder, list);
+
     fprintf(stderr, "Painting --- retained layer tree:\n");
     builder.LayerBuilder()->DumpRetainedLayerTree();
   }
