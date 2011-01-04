@@ -1639,6 +1639,9 @@ ASTSerializer::switchStatement(JSParseNode *pn, Value *dst)
 
     for (JSParseNode *next = listNode->pn_head; next; next = next->pn_next) {
         Value child;
+#ifdef __GNUC__ /* quell GCC overwarning */
+        child = UndefinedValue();
+#endif
         if (!switchCase(next, &child))
             return false;
         JS_ALWAYS_TRUE(cases.append(child)); /* space check above */
