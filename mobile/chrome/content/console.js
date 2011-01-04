@@ -43,6 +43,7 @@ let ConsoleView = {
   _evalCode: "",
   _bundle: null,
   _showChromeErrors: -1,
+  _enabledPref: "devtools.errorconsole.enabled",
 
   init: function cv_init() {
     if (this._list)
@@ -64,6 +65,18 @@ let ConsoleView = {
                                 self._delayedInit();
                             },
                             false);
+
+    try {
+      // update users using the legacy pref
+      if (Services.prefs.getBoolPref("browser.console.showInPanel")) {
+        Services.prefs.setBoolPref(this._enabledPref, true);
+        Services.prefs.clearUserPref("browser.console.showInPanel");
+      }
+    } catch(ex) {
+      // likely don't have an old pref
+    }
+    this.updateVisibility();
+    Services.prefs.addObserver(this._enabledPref, this, false);
   },
 
   _delayedInit: function cv__delayedInit() {
@@ -88,10 +101,24 @@ let ConsoleView = {
   uninit: function cv_uninit() {
     if (this._inited)
       Services.console.unregisterListener(this);
+
+    Services.prefs.removeObserver(this._enabledPref, this, false);
   },
 
-  observe: function(aObject) {
-    this.appendItem(aObject);
+  get enabled() {
+    return Services.prefs.getBoolPref(this._enabledPref);
+  },
+
+  updateVisibility: function ec_updateVisibility(aVal, aPref) {
+    let button = document.getElementById("tool-console");
+    button.hidden = !this.enabled;
+  },
+
+  observe: function(aSubject, aTopic, aData) {
+    if (aTopic == "nsPref:changed")
+      this.updateVisibility();
+    else
+      this.appendItem(aSubject);
   },
 
   showChromeErrors: function() {

@@ -385,12 +385,6 @@ var Browser = {
       this.addTab(commandURL || this.getHomePage(), true);
     }
 
-    // JavaScript Error Console
-    if (Services.prefs.getBoolPref("browser.console.showInPanel")){
-      let button = document.getElementById("tool-console");
-      button.hidden = false;
-    }
-
     // If some add-ons were disabled during during an application update, alert user
     if (Services.prefs.prefHasUserValue("extensions.disabledAddons")) {
       let addons = Services.prefs.getCharPref("extensions.disabledAddons").split(",");
