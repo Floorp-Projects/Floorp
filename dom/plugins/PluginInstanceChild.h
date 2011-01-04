@@ -498,6 +498,11 @@ private:
     // supports NPPVpluginTransparentAlphaBool (which is not part of NPAPI yet)
     bool mDoAlphaExtraction;
 
+    // true when the plugin has painted at least once. We use this to ensure
+    // that we ask a plugin to paint at least once even if it's invisible;
+    // some plugin (instances) rely on this in order to work properly.
+    bool mHasPainted;
+
     // Cached rectangle rendered to previous surface(mBackSurface)
     // Used for reading back to current surface and syncing data,
     // in plugin coordinates.
