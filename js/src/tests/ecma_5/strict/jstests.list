@@ -39,3 +39,4 @@ script unbrand-this.js
 script this-for-function-expression-recursion.js
 script assign-to-callee-name.js
 script directive-prologue-01.js
+script eval-variable-environment.js

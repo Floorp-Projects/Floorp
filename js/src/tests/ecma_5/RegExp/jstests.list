@@ -2,3 +2,4 @@ url-prefix ../../jsreftest.html?test=ecma_5/RegExp/
 script 7.8.5-01.js
 script 15.10.5-01.js
 script 15.10.7.5-01.js
+script empty-lookahead.js
