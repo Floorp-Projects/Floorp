@@ -41,6 +41,7 @@
 #include "nsIFrame.h"
 #include "nsGUIEvent.h"
 #include "nsIDOMNSUIEvent.h"
+#include "nsMenuBarFrame.h"
 #include "nsMenuBarListener.h"
 #include "nsMenuFrame.h"
 #include "nsMenuPopupFrame.h"
@@ -156,6 +157,28 @@ NS_IMETHODIMP nsMenuBoxObject::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent, PRBool*
       return NS_OK;
   }
 }
+
+NS_IMETHODIMP
+nsMenuBoxObject::GetOpenedWithKey(PRBool* aOpenedWithKey)
+{
+  *aOpenedWithKey = PR_FALSE;
+
+  nsIFrame* frame = GetFrame(PR_FALSE);
+  if (!frame || frame->GetType() != nsGkAtoms::menuFrame)
+    return NS_OK;
+
+  frame = frame->GetParent();
+  while (frame) {
+    if (frame->GetType() == nsGkAtoms::menuBarFrame) {
+      *aOpenedWithKey = (static_cast<nsMenuBarFrame *>(frame))->IsActiveByKeyboard();
+      return NS_OK;
+    }
+    frame = frame->GetParent();
+  }
+
+  return NS_OK;
+}
+
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////
 

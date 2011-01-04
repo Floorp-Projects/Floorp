@@ -103,6 +103,9 @@ public:
   // needs to be closed.
   nsMenuFrame* ToggleMenuActiveState();
 
+  PRBool IsActiveByKeyboard() { return mActiveByKeyboard; }
+  void SetActiveByKeyboard() { mActiveByKeyboard = PR_TRUE; }
+
   // indicate that a menu on the menubar was closed. Returns true if the caller
   // may deselect the menuitem.
   virtual PRBool MenuClosed();
@@ -137,6 +140,10 @@ protected:
   PRPackedBool mStayActive;
 
   PRPackedBool mIsActive; // Whether or not the menu bar is active (a menu item is highlighted or shown).
+
+  // whether the menubar was made active via the keyboard.
+  PRPackedBool mActiveByKeyboard;
+
   // The current menu that is active (highlighted), which may not be open. This will
   // be null if no menu is active.
   nsMenuFrame* mCurrentMenu;
