@@ -36,6 +36,7 @@ EXPORTS	= \
 	gfxTypes.h \
 	gfxTextRunCache.h \
 	gfxTextRunWordCache.h \
+	gfxUnicodeProperties.h \
 	gfxUtils.h \
 	gfxUserFontSet.h \
 	GLDefs.h \

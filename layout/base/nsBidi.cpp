@@ -1116,15 +1116,15 @@ void nsBidi::AdjustWSLevels()
     }
   }
 }
-#ifdef FULL_BIDI_ENGINE
-
-/* -------------------------------------------------------------------------- */
 
 nsresult nsBidi::GetDirection(nsBidiDirection* aDirection)
 {
   *aDirection = mDirection;
   return NS_OK;
 }
+#ifdef FULL_BIDI_ENGINE
+
+/* -------------------------------------------------------------------------- */
 
 nsresult nsBidi::GetLength(PRInt32* aLength)
 {
