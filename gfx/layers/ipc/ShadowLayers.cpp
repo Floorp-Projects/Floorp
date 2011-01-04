@@ -451,8 +451,9 @@ ShadowLayerForwarder::AllocBuffer(const gfxIntSize& aSize,
   gfxASurface::gfxImageFormat format = OptimalFormatFor(aContent);
   SharedMemory::SharedMemoryType shmemType = OptimalShmemType();
 
-  nsRefPtr<gfxSharedImageSurface> back = new gfxSharedImageSurface();
-  if (!back->InitUnsafe(mShadowManager, aSize, format, shmemType))
+  nsRefPtr<gfxSharedImageSurface> back =
+    gfxSharedImageSurface::CreateUnsafe(mShadowManager, aSize, format, shmemType);
+  if (!back)
     return PR_FALSE;
 
   *aBuffer = nsnull;
@@ -520,7 +521,7 @@ ShadowLayerForwarder::OpenDescriptor(const SurfaceDescriptor& aSurface)
 
   switch (aSurface.type()) {
   case SurfaceDescriptor::TShmem: {
-    surf = new gfxSharedImageSurface(aSurface.get_Shmem());
+    surf = gfxSharedImageSurface::Open(aSurface.get_Shmem());
     return surf.forget();
   }
   default:
