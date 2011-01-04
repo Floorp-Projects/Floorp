@@ -2106,6 +2106,25 @@ cairo_surface_show_page (cairo_surface_t *surface);
 cairo_public cairo_bool_t
 cairo_surface_has_show_text_glyphs (cairo_surface_t *surface);
 
+/**
+ * _cairo_subpixel_antialiasing_t:
+ * @CAIRO_SUBPIXEL_ANTIALIASING_ENABLED: subpixel antialiasing is enabled
+ * for this surface.
+ * @CAIRO_SUBPIXEL_ANTIALIASING_DISABLED: subpixel antialiasing is disabled
+ * for this surface.
+ */
+typedef enum _cairo_subpixel_antialiasing_t {
+    CAIRO_SUBPIXEL_ANTIALIASING_ENABLED,
+    CAIRO_SUBPIXEL_ANTIALIASING_DISABLED
+} cairo_subpixel_antialiasing_t;
+
+cairo_public void
+cairo_surface_set_subpixel_antialiasing (cairo_surface_t *surface,
+                                         cairo_subpixel_antialiasing_t enabled);
+
+cairo_public cairo_subpixel_antialiasing_t
+cairo_surface_get_subpixel_antialiasing (cairo_surface_t *surface);
+
 /* Image-surface functions */
 
 /**

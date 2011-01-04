@@ -21,32 +21,38 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=573588
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-click_was_called = false;
-
-force_prompt(true);
-force_click_on_notification(true);
-
-SimpleTest.waitForExplicitFinish();
-
-ok(navigator.mozNotification, "test for notification.");
-
-var notification = navigator.mozNotification.createNotification("test", "test");
-ok(notification, "test to ensure we can create a notification");
-
-notification.onclose =  function() {
-  ok(true, "notification was display and is now closing");
-  ok(click_was_called, "was notification clicked?");
-
-  reset_prompt();
+if (is_feature_enabled() == false) {
   SimpleTest.finish();
-};
-
-notification.onclick =  function() {
-  ok(true, "Click was called.  Good.");
-  click_was_called = true;
 }
+else
+{
+    click_was_called = false;
 
-notification.show();
+    force_prompt(true);
+    force_click_on_notification(true);
+
+    SimpleTest.waitForExplicitFinish();
+
+    ok(navigator.mozNotification, "test for notification.");
+
+    var notification = navigator.mozNotification.createNotification("test", "test");
+    ok(notification, "test to ensure we can create a notification");
+
+    notification.onclose =  function() {
+        ok(true, "notification was display and is now closing");
+        ok(click_was_called, "was notification clicked?");
+
+        reset_prompt();
+        SimpleTest.finish();
+    };
+
+    notification.onclick =  function() {
+        ok(true, "Click was called.  Good.");
+        click_was_called = true;
+    }
+
+    notification.show();
+}
 
 </script>
 </pre>

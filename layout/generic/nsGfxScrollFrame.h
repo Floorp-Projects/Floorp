@@ -223,7 +223,7 @@ public:
   nsMargin GetDesiredScrollbarSizes(nsBoxLayoutState* aState);
   PRBool IsLTR() const;
   PRBool IsScrollbarOnRight() const;
-  PRBool IsScrollingActive() const;
+  PRBool IsScrollingActive() const { return mScrollingActive; }
   // adjust the scrollbar rectangle aRect to account for any visible resizer.
   // aHasResizer specifies if there is a content resizer, however this method
   // will also check if a widget resizer is present as well.
@@ -239,6 +239,7 @@ public:
 
   PRBool IsAlwaysActive() const;
   void MarkActive();
+  void MarkInactive();
   nsExpirationState* GetExpirationState() { return &mActivityExpirationState; }
 
   // owning references to the nsIAnonymousContentCreator-built content

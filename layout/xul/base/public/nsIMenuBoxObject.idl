@@ -41,7 +41,7 @@
 interface nsIDOMElement;
 interface nsIDOMKeyEvent;
 
-[scriptable, uuid(F5099746-5049-4e81-A03E-945D5110FEE2)]
+[scriptable, uuid(3931F141-D640-48AB-A792-719D62CF1736)]
 interface nsIMenuBoxObject : nsISupports
 {
   void openMenu(in boolean openFlag);
@@ -49,6 +49,9 @@ interface nsIMenuBoxObject : nsISupports
   attribute nsIDOMElement activeChild;
 
   boolean handleKeyPress(in nsIDOMKeyEvent keyEvent);
+
+  // true if the menu or menubar was opened via a keypress.
+  readonly attribute boolean openedWithKey;
 };
 
 %{C++

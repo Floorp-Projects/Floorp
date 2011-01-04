@@ -923,6 +923,35 @@ nsLayoutUtils::RoundGfxRectToAppRect(const gfxRect &aRect, float aFactor)
                 nscoord(scaledRect.size.width), nscoord(scaledRect.size.height));
 }
 
+
+nsRegion
+nsLayoutUtils::RoundedRectIntersectRect(const nsRect& aRoundedRect,
+                                        const nscoord aRadii[8],
+                                        const nsRect& aContainedRect)
+{
+  // rectFullHeight and rectFullWidth together will approximately contain
+  // the total area of the frame minus the rounded corners.
+  nsRect rectFullHeight = aRoundedRect;
+  nscoord xDiff = NS_MAX(aRadii[NS_CORNER_TOP_LEFT_X], aRadii[NS_CORNER_BOTTOM_LEFT_X]);
+  rectFullHeight.x += xDiff;
+  rectFullHeight.width -= NS_MAX(aRadii[NS_CORNER_TOP_RIGHT_X],
+                                 aRadii[NS_CORNER_BOTTOM_RIGHT_X]) + xDiff;
+  nsRect r1;
+  r1.IntersectRect(rectFullHeight, aContainedRect);
+
+  nsRect rectFullWidth = aRoundedRect;
+  nscoord yDiff = NS_MAX(aRadii[NS_CORNER_TOP_LEFT_Y], aRadii[NS_CORNER_TOP_RIGHT_Y]);
+  rectFullWidth.y += yDiff;
+  rectFullWidth.height -= NS_MAX(aRadii[NS_CORNER_BOTTOM_LEFT_Y],
+                                 aRadii[NS_CORNER_BOTTOM_RIGHT_Y]) + yDiff;
+  nsRect r2;
+  r2.IntersectRect(rectFullWidth, aContainedRect);
+
+  nsRegion result;
+  result.Or(r1, r2);
+  return result;
+}
+
 nsRect
 nsLayoutUtils::MatrixTransformRect(const nsRect &aBounds,
                                    const gfxMatrix &aMatrix, float aFactor)
@@ -1399,21 +1428,11 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
 
   list.ComputeVisibilityForRoot(&builder, &visibleRegion);
 
-#ifdef DEBUG
-  if (gDumpPaintList) {
-    fprintf(stderr, "Painting --- after optimization:\n");
-    nsFrame::PrintDisplayList(&builder, list);
-  }
-#endif
-
   PRUint32 flags = nsDisplayList::PAINT_DEFAULT;
   if (aFlags & PAINT_WIDGET_LAYERS) {
     flags |= nsDisplayList::PAINT_USE_WIDGET_LAYERS;
-    nsIWidget *widget = aFrame->GetNearestWidget();
-    PRInt32 pixelRatio = presContext->AppUnitsPerDevPixel();
-    nsIntRegion visibleWindowRegion(visibleRegion.ToOutsidePixels(pixelRatio));
-    nsIntRegion dirtyWindowRegion(aDirtyRegion.ToOutsidePixels(pixelRatio));
 
+    nsIWidget *widget = aFrame->GetNearestWidget();
     if (willFlushRetainedLayers) {
       // The caller wanted to paint from retained layers, but set up
       // the paint in such a way that we can't use them.  We're going
@@ -1426,6 +1445,10 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
     } else if (widget && !(aFlags & PAINT_DOCUMENT_RELATIVE)) {
       // XXX we should simplify this API now that dirtyWindowRegion always
       // covers the entire window
+      PRInt32 pixelRatio = presContext->AppUnitsPerDevPixel();
+      nsIntRegion visibleWindowRegion(visibleRegion.ToOutsidePixels(pixelRatio));
+      nsIntRegion dirtyWindowRegion(aDirtyRegion.ToOutsidePixels(pixelRatio));
+      builder.SetFinalTransparentRegion(visibleRegion);
       widget->UpdatePossiblyTransparentRegion(dirtyWindowRegion, visibleWindowRegion);
     }
   }
@@ -1434,6 +1457,9 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
 
 #ifdef DEBUG
   if (gDumpPaintList) {
+    fprintf(stderr, "Painting --- after optimization:\n");
+    nsFrame::PrintDisplayList(&builder, list);
+
     fprintf(stderr, "Painting --- retained layer tree:\n");
     builder.LayerBuilder()->DumpRetainedLayerTree();
   }
@@ -1621,7 +1647,8 @@ nsLayoutUtils::GetAllInFlowRectsUnion(nsIFrame* aFrame, nsIFrame* aRelativeTo) {
 
 nsRect
 nsLayoutUtils::GetTextShadowRectsUnion(const nsRect& aTextAndDecorationsRect,
-                                       nsIFrame* aFrame)
+                                       nsIFrame* aFrame,
+                                       PRUint32 aFlags)
 {
   const nsStyleText* textStyle = aFrame->GetStyleText();
   if (!textStyle->mTextShadow)
@@ -1630,12 +1657,15 @@ nsLayoutUtils::GetTextShadowRectsUnion(const nsRect& aTextAndDecorationsRect,
   nsRect resultRect = aTextAndDecorationsRect;
   PRInt32 A2D = aFrame->PresContext()->AppUnitsPerDevPixel();
   for (PRUint32 i = 0; i < textStyle->mTextShadow->Length(); ++i) {
-    nsRect tmpRect(aTextAndDecorationsRect);
     nsCSSShadowItem* shadow = textStyle->mTextShadow->ShadowAt(i);
+    nsMargin blur = nsContextBoxBlur::GetBlurRadiusMargin(shadow->mRadius, A2D);
+    if ((aFlags & EXCLUDE_BLUR_SHADOWS) && blur != nsMargin(0, 0, 0, 0))
+      continue;
+
+    nsRect tmpRect(aTextAndDecorationsRect);
 
     tmpRect.MoveBy(nsPoint(shadow->mXOffset, shadow->mYOffset));
-    tmpRect.Inflate(
-      nsContextBoxBlur::GetBlurRadiusMargin(shadow->mRadius, A2D));
+    tmpRect.Inflate(blur);
 
     resultRect.UnionRect(resultRect, tmpRect);
   }

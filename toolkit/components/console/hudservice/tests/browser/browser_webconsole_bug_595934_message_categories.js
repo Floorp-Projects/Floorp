@@ -108,6 +108,11 @@ const TESTS = [
 
 let pos = -1;
 
+let foundCategory = false;
+let foundText = false;
+let output = null;
+let jsterm = null;
+
 let TestObserver = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
 
@@ -121,10 +126,13 @@ let TestObserver = {
       "test #" + pos + ": error category '" + TESTS[pos].category + "'");
 
     if (aSubject.category == TESTS[pos].category) {
-      executeSoon(performTest);
+      foundCategory = true;
+      if (foundText) {
+        executeSoon(testNext);
+      }
     }
     else {
-      testEnd();
+      executeSoon(finish);
     }
   }
 };
@@ -135,7 +143,10 @@ function tabLoad(aEvent) {
   openConsole();
 
   let hudId = HUDService.getHudIdByWindow(content);
-  hud = HUDService.hudReferences[hudId];
+  let hud = HUDService.hudReferences[hudId];
+  output = hud.outputNode;
+  output.addEventListener("DOMNodeInserted", onDOMNodeInserted, false);
+  jsterm = hud.jsterm;
 
   Services.console.registerListener(TestObserver);
 
@@ -143,7 +154,9 @@ function tabLoad(aEvent) {
 }
 
 function testNext() {
-  hud.jsterm.clearOutput();
+  jsterm.clearOutput();
+  foundCategory = false;
+  foundText = false;
 
   pos++;
   if (pos < TESTS.length) {
@@ -157,24 +170,32 @@ function testNext() {
     content.location = TESTS_PATH + TESTS[pos].file;
   }
   else {
-    testEnd();
+    executeSoon(finish);
   }
 }
 
 function testEnd() {
   Services.console.unregisterListener(TestObserver);
+  output.removeEventListener("DOMNodeInserted", onDOMNodeInserted, false);
+  output = jsterm = null;
   finishTest();
 }
 
-function performTest() {
-  let textContent = hud.outputNode.textContent;
-  isnot(textContent.indexOf(TESTS[pos].matchString), -1,
-    "test #" + pos + ": message found '" + TESTS[pos].matchString + "'");
+function onDOMNodeInserted(aEvent) {
+  let textContent = output.textContent;
+  foundText = textContent.indexOf(TESTS[pos].matchString) > -1;
+  if (foundText) {
+    ok(foundText, "test #" + pos + ": message found '" + TESTS[pos].matchString + "'");
+  }
 
-  testNext();
+  if (foundCategory) {
+    executeSoon(testNext);
+  }
 }
 
 function test() {
+  registerCleanupFunction(testEnd);
+
   addTab("data:text/html,Web Console test for bug 595934 - message categories coverage.");
   browser.addEventListener("load", tabLoad, true);
 }

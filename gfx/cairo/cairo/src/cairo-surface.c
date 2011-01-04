@@ -54,7 +54,8 @@ const cairo_surface_t name = {					\
     0,					/* unique id */		\
     FALSE,				/* finished */		\
     TRUE,				/* is_clear */		\
-    FALSE,				/* has_font_options */	\
+    FALSE,                             /* has_font_options */	\
+    FALSE,                             /* permit_subpixel_antialiasing */ \
     { 0, 0, 0, NULL, },			/* user_data */		\
     { 0, 0, 0, NULL, },			/* mime_data */         \
     { 1.0, 0.0, 0.0, 1.0, 0.0, 0.0 },   /* device_transform */	\
@@ -347,6 +348,8 @@ _cairo_surface_init (cairo_surface_t			*surface,
     surface->unique_id = _cairo_surface_allocate_unique_id ();
     surface->finished = FALSE;
     surface->is_clear = FALSE;
+    surface->has_font_options = FALSE;
+    surface->permit_subpixel_antialiasing = TRUE;
 
     _cairo_user_data_array_init (&surface->user_data);
     _cairo_user_data_array_init (&surface->mime_data);
@@ -362,8 +365,6 @@ _cairo_surface_init (cairo_surface_t			*surface,
 
     _cairo_array_init (&surface->snapshots, sizeof (cairo_surface_t *));
     surface->snapshot_of = NULL;
-
-    surface->has_font_options = FALSE;
 }
 
 static void
@@ -376,6 +377,8 @@ _cairo_surface_copy_similar_properties (cairo_surface_t *surface,
 	cairo_surface_get_font_options (other, &options);
 	_cairo_surface_set_font_options (surface, &options);
     }
+
+    surface->permit_subpixel_antialiasing = other->permit_subpixel_antialiasing;
 
     cairo_surface_set_fallback_resolution (surface,
 					   other->x_fallback_resolution,
@@ -2486,6 +2489,57 @@ cairo_surface_has_show_text_glyphs (cairo_surface_t	    *surface)
 	return surface->backend->show_text_glyphs != NULL;
 }
 slim_hidden_def (cairo_surface_has_show_text_glyphs);
+
+/**
+ * cairo_surface_set_subpixel_antialiasing:
+ * @surface: a #cairo_surface_t
+ *
+ * Sets whether the surface permits subpixel antialiasing. By default,
+ * surfaces permit subpixel antialiasing.
+ *
+ * Enabling subpixel antialiasing for CONTENT_COLOR_ALPHA surfaces generally
+ * requires that the pixels in the areas under a subpixel antialiasing
+ * operation already be opaque.
+ *
+ * Since: 1.12
+ **/
+void
+cairo_surface_set_subpixel_antialiasing (cairo_surface_t *surface,
+                                         cairo_subpixel_antialiasing_t enabled)
+{
+    if (surface->status)
+        return;
+
+    if (surface->finished) {
+        _cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_FINISHED);
+        return;
+    }
+
+    surface->permit_subpixel_antialiasing =
+        enabled == CAIRO_SUBPIXEL_ANTIALIASING_ENABLED;
+}
+slim_hidden_def (cairo_surface_set_subpixel_antialiasing);
+
+/**
+ * cairo_surface_get_subpixel_antialiasing:
+ * @surface: a #cairo_surface_t
+ *
+ * Gets whether the surface supports subpixel antialiasing. By default,
+ * CAIRO_CONTENT_COLOR surfaces support subpixel antialiasing but other
+ * surfaces do not.
+ *
+ * Since: 1.12
+ **/
+cairo_subpixel_antialiasing_t
+cairo_surface_get_subpixel_antialiasing (cairo_surface_t *surface)
+{
+    if (surface->status)
+        return CAIRO_SUBPIXEL_ANTIALIASING_DISABLED;
+
+    return surface->permit_subpixel_antialiasing ?
+        CAIRO_SUBPIXEL_ANTIALIASING_ENABLED : CAIRO_SUBPIXEL_ANTIALIASING_DISABLED;
+}
+slim_hidden_def (cairo_surface_get_subpixel_antialiasing);
 
 /* Note: the backends may modify the contents of the glyph array as long as
  * they do not return %CAIRO_INT_STATUS_UNSUPPORTED. This makes it possible to

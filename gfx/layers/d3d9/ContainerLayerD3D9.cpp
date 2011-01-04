@@ -153,6 +153,16 @@ GetNextSiblingD3D9(LayerD3D9* aLayer)
                  : nsnull;
 }
 
+static PRBool
+HasOpaqueAncestorLayer(Layer* aLayer)
+{
+  for (Layer* l = aLayer->GetParent(); l; l = l->GetParent()) {
+    if (l->GetContentFlags() & Layer::CONTENT_OPAQUE)
+      return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
 void
 ContainerLayerD3D9::RenderLayer()
 {
@@ -166,6 +176,7 @@ ContainerLayerD3D9::RenderLayer()
   nsIntRect visibleRect = mVisibleRegion.GetBounds();
   PRBool useIntermediate = UseIntermediateSurface();
 
+  mSupportsComponentAlphaChildren = PR_FALSE;
   gfxMatrix contTransform;
   if (useIntermediate) {
     device()->GetRenderTarget(0, getter_AddRefs(previousRenderTarget));
@@ -176,7 +187,36 @@ ContainerLayerD3D9::RenderLayer()
     nsRefPtr<IDirect3DSurface9> renderSurface;
     renderTexture->GetSurfaceLevel(0, getter_AddRefs(renderSurface));
     device()->SetRenderTarget(0, renderSurface);
-    device()->Clear(0, 0, D3DCLEAR_TARGET, D3DCOLOR_RGBA(0, 0, 0, 0), 0, 0);
+
+    if (mVisibleRegion.GetNumRects() == 1 && (GetContentFlags() & CONTENT_OPAQUE)) {
+      // don't need a background, we're going to paint all opaque stuff
+      mSupportsComponentAlphaChildren = PR_TRUE;
+    } else {
+      const gfx3DMatrix& transform3D = GetEffectiveTransform();
+      gfxMatrix transform;
+      // If we have an opaque ancestor layer, then we can be sure that
+      // all the pixels we draw into are either opaque already or will be
+      // covered by something opaque. Otherwise copying up the background is
+      // not safe.
+      HRESULT hr = E_FAIL;
+      if (HasOpaqueAncestorLayer(this) &&
+          transform3D.Is2D(&transform) && !transform.HasNonIntegerTranslation()) {
+        // Copy background up from below
+        RECT dest = { 0, 0, visibleRect.width, visibleRect.height };
+        RECT src = dest;
+        ::OffsetRect(&src,
+                     visibleRect.x + PRInt32(transform.x0),
+                     visibleRect.y + PRInt32(transform.y0));
+        hr = device()->
+          StretchRect(previousRenderTarget, &src, renderSurface, &dest, D3DTEXF_NONE);
+      }
+      if (hr == S_OK) {
+        mSupportsComponentAlphaChildren = PR_TRUE;
+      } else {
+        device()->Clear(0, 0, D3DCLEAR_TARGET, D3DCOLOR_RGBA(0, 0, 0, 0), 0, 0);
+      }
+    }
+
     device()->GetVertexShaderConstantF(CBvRenderTargetOffset, previousRenderTargetOffset, 1);
     renderTargetOffset[0] = (float)visibleRect.x;
     renderTargetOffset[1] = (float)visibleRect.y;
@@ -200,6 +240,8 @@ ContainerLayerD3D9::RenderLayer()
 #endif
     GetEffectiveTransform().Is2D(&contTransform);
     NS_ASSERTION(is2d, "Transform must be 2D");
+    mSupportsComponentAlphaChildren = (GetContentFlags() & CONTENT_OPAQUE) ||
+        (mParent && mParent->SupportsComponentAlphaChildren());
   }
 
   /*

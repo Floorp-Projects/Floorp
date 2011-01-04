@@ -258,6 +258,8 @@ SimpleTest.showReport = function() {
     addNode(SPAN(null, " "));
     addNode(toggleTodo);
     addNode(SimpleTest.report());
+    // Add a separator from the test content.
+    addNode(HR());
 };
 
 /**

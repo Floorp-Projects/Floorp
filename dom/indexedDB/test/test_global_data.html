@@ -18,7 +18,7 @@
       const objectStore =  { name: "Objects",
                              options: { keyPath: "id", autoIncrement: true } };
 
-      let request = moz_indexedDB.open(name, description);
+      let request = mozIndexedDB.open(name, description);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
@@ -37,7 +37,7 @@
       continueToNextStep();
       yield;
 
-      request = moz_indexedDB.open(name, description);
+      request = mozIndexedDB.open(name, description);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;

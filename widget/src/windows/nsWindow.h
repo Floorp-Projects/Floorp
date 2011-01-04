@@ -287,6 +287,10 @@ public:
   NS_IMETHOD              ReparentNativeWidget(nsIWidget* aNewParent);
 protected:
 
+  // A magic number to identify the FAKETRACKPOINTSCROLLABLE window created
+  // when the trackpoint hack is enabled.
+  enum { eFakeTrackPointScrollableID = 0x46545053 };
+
   /**
    * Callbacks
    */
@@ -460,12 +464,6 @@ protected:
   void                    StopFlashing();
   static PRBool           IsTopLevelMouseExit(HWND aWnd);
   static void             SetupKeyModifiersSequence(nsTArray<KeyPair>* aArray, PRUint32 aModifiers);
-  /*
-   * If aIntersectWithExisting is true then the stored clip region isn't
-   * updated (only the actual clip on the window) so this should be called
-   * again soon afterward with aIntersectWithExisting false so the stored clip
-   * region does get updated.
-   */
   nsresult                SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
                                               PRBool aIntersectWithExisting);
   nsIntRegion             GetRegionToPaint(PRBool aForceFullRepaint, 

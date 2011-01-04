@@ -17,12 +17,12 @@
       const description = "My Test Database";
       const objectStoreName = "Objects";
 
-      var request = moz_indexedDB.open(name, description);
+      var request = mozIndexedDB.open(name, description);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       var event = yield;
 
-      ok(event.source === moz_indexedDB, "correct event.source");
+      ok(event.source === mozIndexedDB, "correct event.source");
 
       var db = event.result;
 

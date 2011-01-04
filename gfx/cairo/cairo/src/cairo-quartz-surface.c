@@ -2478,6 +2478,7 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
 
     cairo_bool_t isClipping = FALSE;
     cairo_bool_t didForceFontSmoothing = FALSE;
+    cairo_antialias_t effective_antialiasing;
 
     if (IS_EMPTY(surface))
 	return CAIRO_STATUS_SUCCESS;
@@ -2518,6 +2519,12 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
     cgfref = _cairo_quartz_scaled_font_get_cg_font_ref (scaled_font);
     CGContextSetFont (state.context, cgfref);
     CGContextSetFontSize (state.context, 1.0);
+
+    effective_antialiasing = scaled_font->options.antialias;
+    if (effective_antialiasing == CAIRO_ANTIALIAS_SUBPIXEL &&
+        !surface->base.permit_subpixel_antialiasing) {
+        effective_antialiasing = CAIRO_ANTIALIAS_GRAY;
+    }
 
     switch (scaled_font->options.antialias) {
 	case CAIRO_ANTIALIAS_SUBPIXEL:

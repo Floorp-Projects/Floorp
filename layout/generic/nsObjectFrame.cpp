@@ -1290,13 +1290,14 @@ nsDisplayPlugin::ComputeVisibility(nsDisplayListBuilder* aBuilder,
   return nsDisplayItem::ComputeVisibility(aBuilder, aVisibleRegion);
 }
 
-PRBool
-nsDisplayPlugin::IsOpaque(nsDisplayListBuilder* aBuilder,
-                          PRBool* aForceTransparentSurface)
+nsRegion
+nsDisplayPlugin::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
+                                 PRBool* aForceTransparentSurface)
 {
   if (aForceTransparentSurface) {
     *aForceTransparentSurface = PR_FALSE;
   }
+  nsRegion result;
   nsObjectFrame* f = static_cast<nsObjectFrame*>(mFrame);
   if (!aBuilder->IsForPluginGeometry()) {
     nsIWidget* widget = f->GetWidget();
@@ -1310,11 +1311,14 @@ nsDisplayPlugin::IsOpaque(nsDisplayListBuilder* aBuilder,
         // Something has clipped us unexpectedly. Perhaps there is a translucent
         // chrome element overlaying us that forced us to be clipped away. Treat
         // us as non-opaque since we may have holes.
-    	return PR_FALSE;
+    	return result;
       }
     }
   }
-  return f->IsOpaque();
+  if (f->IsOpaque()) {
+    result = GetBounds(aBuilder);
+  }
+  return result;
 }
 
 void
@@ -1469,7 +1473,7 @@ nsObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   nsDisplayList replacedContent;
 
-  if (mInstanceOwner && mInstanceOwner->UseLayers()) {
+  if (aBuilder->IsForPainting() && mInstanceOwner && mInstanceOwner->UseLayers()) {
     NPWindow* window = nsnull;
     mInstanceOwner->GetWindow(window);
     PRBool isVisible = window && window->width > 0 && window->height > 0;
@@ -2523,11 +2527,9 @@ DoStopPlugin(nsPluginInstanceOwner *aInstanceOwner, PRBool aDelayedStop)
     aInstanceOwner->HidePluginWindow();
 #endif
 
-    inst->Stop();
-
     nsCOMPtr<nsIPluginHost> pluginHost = do_GetService(MOZ_PLUGIN_HOST_CONTRACTID);
-    if (pluginHost)
-      pluginHost->StopPluginInstance(inst);
+    NS_ASSERTION(pluginHost, "Without a pluginHost, how can we have an instance to destroy?");
+    pluginHost->StopPluginInstance(inst);
 
     // the frame is going away along with its widget so tell the
     // window to forget its widget too

@@ -197,7 +197,6 @@ toolbarbutton.bookmark-item > menupopup {
   width: 16px;
   min-height: 16px;
   max-height: 16px;
-  padding: 0;
 }
 
 .bookmark-item > .toolbarbutton-icon[label]:not([label=""]),
@@ -323,12 +322,11 @@ toolbar:not([mode="icons"]) #restore-button {
   min-width: 0;
 }
 
-.toolbarbutton-1 > .toolbarbutton-icon,
-.toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
-#restore-button > .toolbarbutton-icon {
-  padding: 0;
-  height: 20px;
-  width: 20px;
+.toolbarbutton-1:not(:-moz-any(@primaryToolbarButtons@)) > .toolbarbutton-icon,
+.toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
+  margin: 2px;
+  height: 16px;
+  width: 16px;
 }
 
 .toolbarbutton-1[disabled="true"] > .toolbarbutton-icon,
@@ -1762,7 +1760,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 .tab-close-button > .toolbarbutton-icon {
   -moz-margin-end: 0px !important;
-  padding: 0;
 }
 
 .tab-close-button {
@@ -1847,12 +1844,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 :-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
   margin: 0;
   padding: 0 1px;
-}
-
-.tabs-newtab-button > .toolbarbutton-icon,
-:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1 > .toolbarbutton-icon,
-:-moz-any(#TabsToolbar, #addon-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
-  padding: 0;
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled="true"]):hover,
@@ -2065,12 +2056,45 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 .popup-notification-icon[popupid="xpinstall-disabled"],
+.popup-notification-icon[popupid="addon-progress"],
+.popup-notification-icon[popupid="addon-install-cancelled"],
 .popup-notification-icon[popupid="addon-install-blocked"],
 .popup-notification-icon[popupid="addon-install-failed"],
 .popup-notification-icon[popupid="addon-install-complete"] {
   list-style-image: url(chrome://mozapps/skin/extensions/extensionGeneric.png);
   width: 32px;
   height: 32px;
+}
+
+.addon-progress-description {
+  width: 350px;
+  max-width: 350px;
+}
+
+.popup-progress-label,
+.popup-progress-meter {
+  -moz-margin-start: 0;
+  -moz-margin-end: 0;
+}
+
+.popup-progress-cancel {
+  -moz-appearance: none;
+  min-height: 16px;
+  min-width: 16px;
+  max-height: 16px;
+  max-width: 16px;
+  padding: 0;
+  margin: 0 1px 0 1px;
+  list-style-image: url(chrome://mozapps/skin/downloads/buttons.png);
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
+}
+
+.popup-progress-cancel:hover {
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
+}
+
+.popup-progress-cancel:active {
+  -moz-image-region: rect(0px, 48px, 16px, 32px);
 }
 
 #indexedDB-notification-icon {

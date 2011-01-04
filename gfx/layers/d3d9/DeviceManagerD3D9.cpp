@@ -363,6 +363,20 @@ DeviceManagerD3D9::Init()
     return false;
   }
 
+  hr = mDevice->CreatePixelShader((DWORD*)ComponentPass1ShaderPS,
+                                  getter_AddRefs(mComponentPass1PS));
+
+  if (FAILED(hr)) {
+    return false;
+  }
+
+  hr = mDevice->CreatePixelShader((DWORD*)ComponentPass2ShaderPS,
+                                  getter_AddRefs(mComponentPass2PS));
+
+  if (FAILED(hr)) {
+    return false;
+  }
+
   hr = mDevice->CreatePixelShader((DWORD*)YCbCrShaderPS,
                                   getter_AddRefs(mYCbCrPS));
 
@@ -482,6 +496,14 @@ DeviceManagerD3D9::SetShaderMode(ShaderMode aMode)
     case RGBALAYER:
       mDevice->SetVertexShader(mLayerVS);
       mDevice->SetPixelShader(mRGBAPS);
+      break;
+    case COMPONENTLAYERPASS1:
+      mDevice->SetVertexShader(mLayerVS);
+      mDevice->SetPixelShader(mComponentPass1PS);
+      break;
+    case COMPONENTLAYERPASS2:
+      mDevice->SetVertexShader(mLayerVS);
+      mDevice->SetPixelShader(mComponentPass2PS);
       break;
     case YCBCRLAYER:
       mDevice->SetVertexShader(mLayerVS);

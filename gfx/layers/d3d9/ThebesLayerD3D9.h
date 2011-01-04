@@ -52,9 +52,6 @@ public:
   ThebesLayerD3D9(LayerManagerD3D9 *aManager);
   virtual ~ThebesLayerD3D9();
 
-  /* Layer implementation */
-  void SetVisibleRegion(const nsIntRegion& aRegion);
-
   /* ThebesLayer implementation */
   void InvalidateRegion(const nsIntRegion& aRegion);
 
@@ -70,20 +67,43 @@ private:
    * D3D9 texture
    */
   nsRefPtr<IDirect3DTexture9> mTexture;
+  /*
+   * D3D9 texture for render-on-white when doing component alpha
+   */
+  nsRefPtr<IDirect3DTexture9> mTextureOnWhite;
+  /**
+   * Visible region bounds used when we drew the contents of the textures
+   */
+  nsIntRect mTextureRect;
 
-  /* Checks if our D2D surface has the right content type */
-  void VerifyContentType();
+  bool HaveTextures(SurfaceMode aMode)
+  {
+    return mTexture && (aMode != SURFACE_COMPONENT_ALPHA || mTextureOnWhite);
+  }
 
-  /* This contains the D2D surface if we have one */
-  nsRefPtr<gfxASurface> mD2DSurface;
+  /* Checks if our surface has the right content type */
+  void VerifyContentType(SurfaceMode aMode);
 
-  bool mD2DSurfaceInitialized;
+  /* Ensures we have the necessary texture object(s) and that they correspond
+   * to mVisibleRegion.GetBounds(). This creates new texture objects as
+   * necessary and also copies existing valid texture data if necessary.
+   */
+  void UpdateTextures(SurfaceMode aMode);
+
+  /* Render the rectangles of mVisibleRegion with D3D9 using the currently
+   * bound textures, target, shaders, etc.
+   */
+  void RenderVisibleRegion();
 
   /* Have a region of our layer drawn */
-  void DrawRegion(const nsIntRegion &aRegion);
+  void DrawRegion(const nsIntRegion &aRegion, SurfaceMode aMode);
 
   /* Create a new texture */
-  void CreateNewTexture(const gfxIntSize &aSize);
+  void CreateNewTextures(const gfxIntSize &aSize, SurfaceMode aMode);
+
+  void CopyRegion(IDirect3DTexture9* aSrc, const nsIntPoint &aSrcOffset,
+                  IDirect3DTexture9* aDest, const nsIntPoint &aDestOffset,
+                  const nsIntRegion &aCopyRegion, nsIntRegion* aValidRegion);
 };
 
 } /* layers */

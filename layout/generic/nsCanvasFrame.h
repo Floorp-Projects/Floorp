@@ -177,14 +177,15 @@ public:
     return NS_GET_A(mExtraBackgroundColor) > 0 ||
            nsDisplayBackground::ComputeVisibility(aBuilder, aVisibleRegion);
   }
-  virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder,
-                          PRBool* aForceTransparentSurface = nsnull)
+  virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
+                                   PRBool* aForceTransparentSurface = nsnull)
   {
     if (aForceTransparentSurface) {
       *aForceTransparentSurface = PR_FALSE;
     }
-    return NS_GET_A(mExtraBackgroundColor) == 255 ||
-           nsDisplayBackground::IsOpaque(aBuilder);
+    if (NS_GET_A(mExtraBackgroundColor) == 255)
+      return nsRegion(GetBounds(aBuilder));
+    return nsDisplayBackground::GetOpaqueRegion(aBuilder);
   }
   virtual PRBool IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor)
   {
