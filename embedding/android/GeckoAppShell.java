@@ -42,6 +42,7 @@ import java.util.*;
 import java.util.zip.*;
 import java.nio.*;
 import java.lang.reflect.*;
+import java.text.*;
 
 import android.os.*;
 import android.app.*;
@@ -125,9 +126,23 @@ class GeckoAppShell
         else
             downloadDir = new File(Environment.getExternalStorageDirectory().getPath(), "download");
         GeckoAppShell.putenv("DOWNLOADS_DIRECTORY=" + downloadDir.getPath());
-        GeckoAppShell.putenv("LANG=" + Locale.getDefault().toString());
+
+        putLocaleEnv();
 
         loadLibs(apkName);
+    }
+
+    private static void putLocaleEnv() {
+        GeckoAppShell.putenv("LANG=" + Locale.getDefault().toString());
+        NumberFormat nf = NumberFormat.getInstance();
+        if (nf instanceof DecimalFormat) {
+            DecimalFormat df = (DecimalFormat)nf;
+            DecimalFormatSymbols dfs = df.getDecimalFormatSymbols();
+
+            GeckoAppShell.putenv("LOCALE_DECIMAL_POINT=" + dfs.getDecimalSeparator());
+            GeckoAppShell.putenv("LOCALE_THOUSANDS_SEP=" + dfs.getGroupingSeparator());
+            GeckoAppShell.putenv("LOCALE_GROUPING=" + (char)df.getGroupingSize());
+        }
     }
 
     public static void runGecko(String apkPath, String args, String url) {
