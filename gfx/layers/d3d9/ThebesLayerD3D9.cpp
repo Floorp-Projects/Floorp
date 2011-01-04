@@ -258,6 +258,7 @@ ThebesLayerD3D9::CleanResources()
 {
   mTexture = nsnull;
   mTextureOnWhite = nsnull;
+  mValidRegion.SetEmpty();
 }
 
 void
