@@ -427,7 +427,9 @@ HistoryStore.prototype = {
       if (curvisits.every(function(cur) cur.date != date))
         Svc.History.addVisit(uri, date, null, type, type == 5 || type == 6, 0);
 
-    this._hsvc.setPageTitle(uri, record.title);
+    if (record.title) {
+      this._hsvc.setPageTitle(uri, record.title);
+    }
   },
 
   itemExists: function HistStore_itemExists(id) {
