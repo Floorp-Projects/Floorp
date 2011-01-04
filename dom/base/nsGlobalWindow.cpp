@@ -10722,6 +10722,12 @@ nsNavigator::RefreshMIMEArray()
   return rv;
 }
 
+bool
+nsNavigator::HasDesktopNotificationSupport()
+{
+  return nsContentUtils::GetBoolPref("notification.feature.enabled", PR_FALSE);
+}
+
 //*****************************************************************************
 //    nsNavigator::nsIDOMClientInformation
 //*****************************************************************************

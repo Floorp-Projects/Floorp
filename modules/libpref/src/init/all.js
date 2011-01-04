@@ -3278,3 +3278,6 @@ pref("extensions.alwaysUnpack", false);
 
 pref("network.buffer.cache.count", 24);
 pref("network.buffer.cache.size",  32768);
+
+// Desktop Notification
+pref("notification.feature.enabled", false);
