@@ -4510,6 +4510,15 @@ MOZ_ARG_HEADER(External Packages)
 dnl ========================================================
 dnl = Find the right NSPR to use.
 dnl ========================================================
+MOZ_ARG_WITH_BOOL(system-nspr,
+[  --with-system-nspr      Use an NSPR that is already built and installed.
+                          Use the 'nspr-config' script in the current path,
+                          or look for the script in the directories given with
+                          --with-nspr-exec-prefix or --with-nspr-prefix.
+                          (Those flags are only checked if you specify
+                          --with-system-nspr.)],
+    _USE_SYSTEM_NSPR=1 )
+
 MOZ_ARG_WITH_STRING(nspr-cflags,
 [  --with-nspr-cflags=FLAGS
                           Pass FLAGS to CC when building code that uses NSPR.
@@ -4526,13 +4535,19 @@ MOZ_ARG_WITH_STRING(nspr-libs,
 AC_SUBST(NSPR_CFLAGS)
 AC_SUBST(NSPR_LIBS)
 
-dnl Top-level Mozilla switched to requiring NSPR 4.8.6 (bug 560582), but JS only needs NSPR 4.7.
-dnl If not using a provided nspr, use one installed on the system.
-if test -z "$NSPR_CFLAGS" -a -z "$NSPR_LIBS"; then
+dnl Pass either --with-system-nspr or (--with-nspr-cflags and
+dnl --with-nspr-libs), but not both.
+if test "$_USE_SYSTEM_NSPR" && (test "$NSPR_CFLAGS" -o "$NSPR_LIBS"); then
+    AC_MSG_ERROR([--with-system-nspr and --with-nspr-libs/cflags are mutually exclusive.
+See 'configure --help'.])
+fi
+
+dnl Top-level Mozilla switched to requiring NSPR 4.8.6 (bug 560582), but we don't need it in JS.
+if test -n "$_USE_SYSTEM_NSPR"; then
     MOZ_NATIVE_NSPR=
     AM_PATH_NSPR(4.7.0, [MOZ_NATIVE_NSPR=1])
     if test -z "$MOZ_NATIVE_NSPR"; then
-        AC_MSG_ERROR([NSPR 4.7.0 or later is required, but configure could not find a suitable NSPR.
+        AC_MSG_ERROR([--with-system-nspr given, but configure could not find a suitable NSPR.
 Pass --with-nspr-exec-prefix, --with-nspr-prefix, or --with-nspr-cflags/libs.
 See 'configure --help'.])
     fi
@@ -5820,8 +5835,9 @@ elif test "$OS_ARCH" != "WINNT" -a "$OS_ARCH" != "OS2" -a "$OS_ARCH" != "WINCE";
   AC_DEFINE(UNIX_ASYNC_DNS)
 fi
 
-dnl --enable-threadsafe used to be an option, but is forced on since FF4.
-AC_DEFINE(JS_THREADSAFE)
+AC_ARG_ENABLE(threadsafe,
+              [  --enable-threadsafe     Enable support for multiple threads.],
+              [AC_DEFINE(JS_THREADSAFE)],)
 
 if test "$MOZ_DEBUG"; then
     AC_DEFINE(MOZ_REFLOW_PERF)
