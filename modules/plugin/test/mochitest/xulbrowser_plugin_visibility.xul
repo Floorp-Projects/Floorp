@@ -14,6 +14,7 @@
       <browser id="browser2" type="content-primary" flex="1" src="about:blank"/>
     </tabpanels>
   </tabbox>
+  <script type="application/javascript" src="utils.js"/>
   <script type="application/javascript"><![CDATA[
     const ok = window.opener.wrappedJSObject.ok;
     const is = window.opener.wrappedJSObject.is;
@@ -24,19 +25,6 @@
     const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
 
     const kURI = 'http://mochi.test:8888/chrome/modules/plugin/test/plugin_visibility_loader.html';
-
-    function doubleForDoublePass() {
-      if (SimpleTest.testPluginIsOOP())
-        return 1;
-
-      try {
-        if (Components.classes["@mozilla.org/gfx/info;1"].getService(Components.interfaces.nsIGfxInfo).D2DEnabled)
-          return 2;
-      }
-      catch (e) { }
-
-      return 1;
-    }
 
     function ProgressListener() {
     }
@@ -100,12 +88,10 @@
       clearInterval(paintInterval);
 
       ok(true, "Plugin in tab 1 should be visible.");
-      is(plugin1.getPaintCount(), 1 * doubleForDoublePass(),
-         "Plugin in tab 1 should have painted once.");
+      paintCountIs(plugin1, 1, "Plugin in tab 1 should have painted once.");
 
       ok(!plugin2.isVisible(), "Plugin in tab 2 should not be visible.");
-      is(plugin2.getPaintCount(), 0,
-         "Plugin in tab 2 should not have painted.");
+      paintCountIs(plugin2, 0, "Plugin in tab 2 should not have painted.");
 
       tabbox.selectedIndex = 1;
       paintGiveUp = Date.now() + kTimeout;
@@ -125,12 +111,10 @@
       clearInterval(paintInterval);
 
       ok(true, "Plugin in tab 2 became visible.");
-      is(plugin2.getPaintCount(), 1 * doubleForDoublePass(),
-         "Plugin in tab 2 should have painted once.");
+      paintCountIs(plugin2, 1, "Plugin in tab 2 should have painted once.");
 
       ok(!plugin1.isVisible(), "Plugin in tab 1 should have become invisible.");
-      is(plugin1.getPaintCount(), 1 * doubleForDoublePass(),
-         "Plugin in tab 1 should not have repainted.");
+      paintCountIs(plugin1, 1, "Plugin in tab 1 should have painted once.");
 
       // Setcolor invalidates
       plugin1.setColor('FF00FF00');
@@ -140,10 +124,10 @@
     }
 
     function part3() {
-      is(plugin1.getPaintCount(), 1 * doubleForDoublePass(),
-         "Plugin in tab 1 should not have repainted after invalidate.");
-      is(plugin2.getPaintCount(), 2 * doubleForDoublePass(),
-         "Plugin in tab 2 should have repainted after invalidate.");
+      paintCountIs(plugin1, 1,
+                   "Plugin in tab 1 should not have repainted after invalidate.");
+      paintCountIs(plugin2, 2,
+                   "Plugin in tab 2 should have repainted after invalidate.");
       done();
     }
   ]]></script>
