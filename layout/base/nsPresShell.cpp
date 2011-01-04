@@ -5354,6 +5354,9 @@ PresShell::RenderDocument(const nsRect& aRect, PRUint32 aFlags,
 
   PRBool wouldFlushRetainedLayers = PR_FALSE;
   PRUint32 flags = nsLayoutUtils::PAINT_IGNORE_SUPPRESSION;
+  if (aThebesContext->CurrentMatrix().HasNonIntegerTranslation()) {
+    flags |= nsLayoutUtils::PAINT_IN_TRANSFORM;
+  }
   if (!(aFlags & RENDER_ASYNC_DECODE_IMAGES)) {
     flags |= nsLayoutUtils::PAINT_SYNC_DECODE_IMAGES;
   }
