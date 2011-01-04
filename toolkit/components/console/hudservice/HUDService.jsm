@@ -215,6 +215,9 @@ const MINIMUM_PAGE_HEIGHT = 50;
 // The default console height, as a ratio from the content window inner height.
 const DEFAULT_CONSOLE_HEIGHT = 0.33;
 
+// Constant used when checking the typeof objects.
+const TYPEOF_FUNCTION = "function";
+
 const ERRORS = { LOG_MESSAGE_MISSING_ARGS:
                  "Missing arguments: aMessage, aConsoleNode and aMessageNode are required.",
                  CANNOT_GET_HUD: "Cannot getHeads Up Display with provided ID",
@@ -3682,6 +3685,11 @@ function JSTermHelper(aJSTerm)
       aJSTerm.console.error(HUDService.getStr("helperFuncUnsupportedTypeError"));
       return;
     }
+    else if (typeof aObject === TYPEOF_FUNCTION) {
+      aJSTerm.writeOutput(aObject + "\n", CATEGORY_OUTPUT, SEVERITY_LOG);
+      return;
+    }
+
     let output = [];
     let pairs = namesAndValuesOf(unwrap(aObject));
 
