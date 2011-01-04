@@ -143,6 +143,7 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface)
     , mCurrentAsyncSetWindowTask(nsnull)
     , mPendingPluginCall(false)
     , mDoAlphaExtraction(false)
+    , mHasPainted(false)
     , mSurfaceDifferenceRect(0,0,0,0)
 #if (MOZ_PLATFORM_MAEMO == 5) || (MOZ_PLATFORM_MAEMO == 6)
     , mMaemoImageRendering(PR_FALSE)
@@ -2472,7 +2473,8 @@ PluginInstanceChild::UpdateWindowAttributes(bool aForceSetWindow)
         WINDOWPOS winpos = {
             0, 0,
             mWindow.x, mWindow.y,
-            mWindow.width, mWindow.height
+            mWindow.width, mWindow.height,
+            0
         };
         NPEvent pluginEvent = {
             WM_WINDOWPOSCHANGED, 0,
@@ -2718,6 +2720,7 @@ PluginInstanceChild::ShowPluginFrame()
     } else {
         PaintRectToSurface(rect, mCurrentSurface, gfxRGBA(0.0, 0.0, 0.0, 0.0));
     }
+    mHasPainted = true;
 
     NPRect r = { (uint16_t)rect.y, (uint16_t)rect.x,
                  (uint16_t)rect.YMost(), (uint16_t)rect.XMost() };
@@ -2815,7 +2818,7 @@ PluginInstanceChild::InvalidateRectDelayed(void)
     }
 
     mCurrentInvalidateTask = nsnull;
-    if (mAccumulatedInvalidRect.IsEmpty() || !IsVisible()) {
+    if (mAccumulatedInvalidRect.IsEmpty() || (mHasPainted && !IsVisible())) {
         return;
     }
 
@@ -2827,7 +2830,7 @@ PluginInstanceChild::InvalidateRectDelayed(void)
 void
 PluginInstanceChild::AsyncShowPluginFrame(void)
 {
-    if (mCurrentInvalidateTask || !IsVisible()) {
+    if (mCurrentInvalidateTask || (mHasPainted && !IsVisible())) {
         return;
     }
 
