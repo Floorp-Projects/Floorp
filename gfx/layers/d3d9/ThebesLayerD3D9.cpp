@@ -384,7 +384,6 @@ ThebesLayerD3D9::DrawRegion(const nsIntRegion &aRegion, SurfaceMode aMode)
 {
   HRESULT hr;
   nsIntRect visibleRect = mVisibleRegion.GetBounds();
-  nsRefPtr<gfxContext> context;
 
   nsRefPtr<gfxASurface> destinationSurface;
   nsIntRect bounds = aRegion.GetBounds();
@@ -436,10 +435,12 @@ ThebesLayerD3D9::DrawRegion(const nsIntRegion &aRegion, SurfaceMode aMode)
     }
   }
 
-  context = new gfxContext(destinationSurface);
-  context->Translate(gfxPoint(-bounds.x, -bounds.y));
-  LayerManagerD3D9::CallbackInfo cbInfo = mD3DManager->GetCallbackInfo();
-  cbInfo.Callback(this, context, aRegion, nsIntRegion(), cbInfo.CallbackData);
+  if (destinationSurface) {
+    nsRefPtr<gfxContext> context = new gfxContext(destinationSurface);
+    context->Translate(gfxPoint(-bounds.x, -bounds.y));
+    LayerManagerD3D9::CallbackInfo cbInfo = mD3DManager->GetCallbackInfo();
+    cbInfo.Callback(this, context, aRegion, nsIntRegion(), cbInfo.CallbackData);
+  }
 
   nsAutoTArray<IDirect3DTexture9*,2> srcTextures;
   nsAutoTArray<IDirect3DTexture9*,2> destTextures;
@@ -462,10 +463,12 @@ ThebesLayerD3D9::DrawRegion(const nsIntRegion &aRegion, SurfaceMode aMode)
                             r.Pitch,
                             gfxASurface::ImageFormatARGB32);
 
-      context = new gfxContext(imgSurface);
-      context->SetSource(destinationSurface);
-      context->SetOperator(gfxContext::OPERATOR_SOURCE);
-      context->Paint();
+      if (destinationSurface) {
+        nsRefPtr<gfxContext> context = new gfxContext(imgSurface);
+        context->SetSource(destinationSurface);
+        context->SetOperator(gfxContext::OPERATOR_SOURCE);
+        context->Paint();
+      }
 
       imgSurface = NULL;
 
