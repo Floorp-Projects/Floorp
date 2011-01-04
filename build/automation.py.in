@@ -926,9 +926,11 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
   def installExtension(self, extensionSource, profileDir, extensionID):
     if (not os.path.exists(extensionSource)):
       self.log.info("INFO | automation.py | Cannot install extension no source at: %s", extensionSource) 
+      return
       
     if (not os.path.exists(profileDir)):
       self.log.info("INFO | automation.py | Cannot install extension invalid profileDir at: %s", profileDir)
+      return
 
     # See if we have an XPI or a directory
     if (os.path.isfile(extensionSource)):
