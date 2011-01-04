@@ -39,8 +39,9 @@
 #define GFX_UNICODEPROPERTIES_H
 
 #include "prtypes.h"
+#include "gfxTypes.h"
 
-class gfxUnicodeProperties
+class THEBES_API gfxUnicodeProperties
 {
 public:
     static PRUint32 GetMirroredChar(PRUint32 aCh);
