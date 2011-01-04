@@ -1312,8 +1312,7 @@ public:
 
   virtual void NotifyExpired(nsGfxScrollFrameInner *aObject) {
     RemoveObject(aObject);
-    aObject->mScrollingActive = PR_FALSE;
-    aObject->mOuter->InvalidateFrameSubtree();
+    aObject->MarkInactive();
   }
 };
 
@@ -1543,6 +1542,9 @@ CanScrollWithBlitting(nsIFrame* aFrame)
       return PR_FALSE;
     }
 #endif
+    nsIScrollableFrame* sf = do_QueryFrame(f);
+    if (sf && nsLayoutUtils::HasNonZeroCorner(f->GetStyleBorder()->mBorderRadius))
+      return PR_FALSE;
     if (nsLayoutUtils::IsPopup(f))
       break;
   }
@@ -1609,6 +1611,15 @@ PRBool nsGfxScrollFrameInner::IsAlwaysActive() const
   return mIsRoot && mOuter->PresContext()->IsRootContentDocument();
 }
 
+void nsGfxScrollFrameInner::MarkInactive()
+{
+  if (IsAlwaysActive() || !mScrollingActive)
+    return;
+
+  mScrollingActive = PR_FALSE;
+  mOuter->InvalidateFrameSubtree();
+}
+
 void nsGfxScrollFrameInner::MarkActive()
 {
   if (IsAlwaysActive())
@@ -1638,10 +1649,17 @@ void nsGfxScrollFrameInner::ScrollVisual()
   // We need to call this after fixing up the view positions
   // to be consistent with the frame hierarchy.
   PRUint32 flags = nsIFrame::INVALIDATE_REASON_SCROLL_REPAINT;
-  if (IsScrollingActive() && CanScrollWithBlitting(mOuter)) {
-    flags |= nsIFrame::INVALIDATE_NO_THEBES_LAYERS;
+  PRBool canScrollWithBlitting = CanScrollWithBlitting(mOuter);
+  if (IsScrollingActive()) {
+    if (!canScrollWithBlitting) {
+      MarkInactive();
+    } else {
+      flags |= nsIFrame::INVALIDATE_NO_THEBES_LAYERS;
+    }
   }
-  MarkActive();
+  if (canScrollWithBlitting) {
+    MarkActive();
+  }
   mOuter->InvalidateWithFlags(mScrollPort, flags);
 
   if (flags & nsIFrame::INVALIDATE_NO_THEBES_LAYERS) {
@@ -1777,6 +1795,9 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   if (aBuilder->IsPaintingToWindow()) {
     mScrollPosAtLastPaint = GetScrollPosition();
+    if (IsScrollingActive() && !CanScrollWithBlitting(mOuter)) {
+      MarkInactive();
+    }
   }
 
   if (aBuilder->GetIgnoreScrollFrame() == mOuter) {
