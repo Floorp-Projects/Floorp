@@ -1347,8 +1347,7 @@ nsGfxScrollFrameInner::nsGfxScrollFrameInner(nsContainerFrame* aOuter,
     mVerticalOverflow(PR_FALSE),
     mPostedReflowCallback(PR_FALSE),
     mMayHaveDirtyFixedChildren(PR_FALSE),
-    mUpdateScrollbarAttributes(PR_FALSE),
-    mScrollingActive(PR_FALSE)
+    mUpdateScrollbarAttributes(PR_FALSE)
 {
   // lookup if we're allowed to overlap the content from the look&feel object
   PRBool canOverlap;
@@ -1356,6 +1355,7 @@ nsGfxScrollFrameInner::nsGfxScrollFrameInner(nsContainerFrame* aOuter,
   presContext->LookAndFeel()->
     GetMetric(nsILookAndFeel::eMetric_ScrollbarsCanOverlapContent, canOverlap);
   mScrollbarsCanOverlapContent = canOverlap;
+  mScrollingActive = IsAlwaysActive();
 }
 
 nsGfxScrollFrameInner::~nsGfxScrollFrameInner()
@@ -1530,7 +1530,7 @@ static void AdjustViews(nsIFrame* aFrame)
 }
 
 static PRBool
-CanScrollWithBlitting(nsIFrame* aFrame, nsIFrame* aDisplayRoot)
+CanScrollWithBlitting(nsIFrame* aFrame)
 {
   for (nsIFrame* f = aFrame; f;
        f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
@@ -1543,7 +1543,7 @@ CanScrollWithBlitting(nsIFrame* aFrame, nsIFrame* aDisplayRoot)
       return PR_FALSE;
     }
 #endif
-    if (f == aDisplayRoot)
+    if (nsLayoutUtils::IsPopup(f))
       break;
   }
   return PR_TRUE;
@@ -1609,11 +1609,6 @@ PRBool nsGfxScrollFrameInner::IsAlwaysActive() const
   return mIsRoot && mOuter->PresContext()->IsRootContentDocument();
 }
 
-PRBool nsGfxScrollFrameInner::IsScrollingActive() const
-{
-  return mScrollingActive || IsAlwaysActive();
-}
-
 void nsGfxScrollFrameInner::MarkActive()
 {
   if (IsAlwaysActive())
@@ -1643,14 +1638,14 @@ void nsGfxScrollFrameInner::ScrollVisual()
   // We need to call this after fixing up the view positions
   // to be consistent with the frame hierarchy.
   PRUint32 flags = nsIFrame::INVALIDATE_REASON_SCROLL_REPAINT;
-  nsIFrame* displayRoot = nsLayoutUtils::GetDisplayRootFrame(mOuter);
-  if (IsScrollingActive() && CanScrollWithBlitting(mOuter, displayRoot)) {
+  if (IsScrollingActive() && CanScrollWithBlitting(mOuter)) {
     flags |= nsIFrame::INVALIDATE_NO_THEBES_LAYERS;
   }
   MarkActive();
   mOuter->InvalidateWithFlags(mScrollPort, flags);
 
   if (flags & nsIFrame::INVALIDATE_NO_THEBES_LAYERS) {
+    nsIFrame* displayRoot = nsLayoutUtils::GetDisplayRootFrame(mOuter);
     nsRect update =
       GetScrollPortRect() + mOuter->GetOffsetToCrossDoc(displayRoot);
     update = update.ConvertAppUnitsRoundOut(
