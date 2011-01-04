@@ -69,7 +69,7 @@ function initialize() {
 }
 
 function show() {
-  is(clipped.getPaintCount(), 0, "fully clipped plugin not painted");
+  is(clipped.getPaintCount(), 1, "fully clipped plugin painted exactly once");
 
   clip.style.height = "10px";
 
@@ -94,9 +94,9 @@ function doubleForDoublePass() {
 }
 
 function invalidate() {
-  var paintCount = 1 * doubleForDoublePass();
+  var paintCount = 2 * doubleForDoublePass();
 
-  is(clipped.getPaintCount(), paintCount, "partially clipped plugin painted once");  
+  is(clipped.getPaintCount(), paintCount, "partially clipped plugin painted twice");  
   
   clipped.setColor("FF00FF00"); // plugin invalidates
 
@@ -104,7 +104,7 @@ function invalidate() {
 }
 
 function done() {
-  var paintCount = 2 * doubleForDoublePass();
+  var paintCount = 3 * doubleForDoublePass();
   is(clipped.getPaintCount(), paintCount, "painted after invalidate");
 
   SimpleTest.finish();  
