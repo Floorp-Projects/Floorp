@@ -137,6 +137,36 @@ function server_headers(metadata, response) {
   response.bodyOutputStream.write(body, body.length);
 }
 
+/*
+ * Utility to allow us to fake a bad cached response within AsyncResource.
+ * Swap out the _onComplete handler, pretending to throw before setting
+ * status to non-zero. Return an empty response.
+ *
+ * This should prompt Res_get to retry once.
+ *
+ * Set FAKE_ZERO_COUNTER accordingly.
+ */
+let FAKE_ZERO_COUNTER = 0;
+function fake_status_failure() {
+  _("Switching in status-0 _onComplete handler.");
+  let c = AsyncResource.prototype._onComplete;
+  AsyncResource.prototype._onComplete = function(error, data) {
+    if (FAKE_ZERO_COUNTER > 0) {
+      _("Faking status 0 return...");
+      FAKE_ZERO_COUNTER--;
+      let ret = new String(data);
+      ret.headers = {};
+      ret.status = 0;
+      ret.success = false;
+      Utils.lazy2(ret, "obj", function() JSON.parse(ret));
+
+      this._callback(null, ret);
+    }
+    else {
+      c.apply(this, arguments);
+    }
+  };
+}
 
 function run_test() {
   do_test_pending();
@@ -410,6 +440,36 @@ function run_test() {
   do_check_true(did401);
   do_check_eq(content, "This path exists and is protected - failed");
   do_check_eq(content.status, 401);
+  do_check_false(content.success);
+
+  // Faking problems.
+  fake_status_failure();
+
+  // POST doesn't do our inner retry, so we get a status 0.
+  FAKE_ZERO_COUNTER = 1;
+  let res14 = new Resource("http://localhost:8080/open");
+  content = res14.post("hello");
+  do_check_eq(content.status, 0);
+  do_check_false(content.success);
+
+  // And now we succeed...
+  let res15 = new Resource("http://localhost:8080/open");
+  content = res15.post("hello");
+  do_check_eq(content.status, 405);
+  do_check_false(content.success);
+
+  // Now check that GET silent failures get retried.
+  FAKE_ZERO_COUNTER = 1;
+  let res16 = new Resource("http://localhost:8080/open");
+  content = res16.get();
+  do_check_eq(content.status, 200);
+  do_check_true(content.success);
+
+  // ... but only once.
+  FAKE_ZERO_COUNTER = 2;
+  let res17 = new Resource("http://localhost:8080/open");
+  content = res17.get();
+  do_check_eq(content.status, 0);
   do_check_false(content.success);
 
   server.stop(do_test_finished);
