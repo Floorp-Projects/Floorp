@@ -1298,7 +1298,7 @@ call_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
     if (!JSID_IS_ATOM(id))
         return JS_TRUE;
 
-    JS_ASSERT(!obj->getCallObjCalleeFunction()->script()->bindings.hasBinding(JSID_TO_ATOM(id)));
+    JS_ASSERT(!obj->getCallObjCalleeFunction()->script()->bindings.hasBinding(cx, JSID_TO_ATOM(id)));
 
     /*
      * Resolve arguments so that we never store a particular Call object's
@@ -2476,7 +2476,7 @@ Function(JSContext *cx, uintN argc, Value *vp)
                 JSAtom *atom = ts.currentToken().t_atom;
 
                 /* Check for a duplicate parameter name. */
-                if (bindings.hasBinding(atom)) {
+                if (bindings.hasBinding(cx, atom)) {
                     JSAutoByteString name;
                     if (!js_AtomToPrintableString(cx, atom, &name)) {
                         state = BAD;

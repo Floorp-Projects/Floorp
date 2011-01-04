@@ -1721,7 +1721,7 @@ LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
              * nor can prop be deleted.
              */
             if (cg->inFunction()) {
-                if (cg->bindings.hasBinding(atom))
+                if (cg->bindings.hasBinding(cx, atom))
                     break;
             } else {
                 JS_ASSERT(cg->compileAndGo());
@@ -2022,7 +2022,7 @@ MakeUpvarForEval(JSParseNode *pn, JSCodeGenerator *cg)
     JSAtom *atom = pn->pn_atom;
 
     uintN index;
-    BindingKind kind = fun->script()->bindings.lookup(atom, &index);
+    BindingKind kind = fun->script()->bindings.lookup(cx, atom, &index);
     if (kind == NONE)
         return true;
 
@@ -4834,7 +4834,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 #ifdef DEBUG
             BindingKind kind =
 #endif
-                cg->bindings.lookup(fun->atom, &slot);
+                cg->bindings.lookup(cx, fun->atom, &slot);
             JS_ASSERT(kind == VARIABLE || kind == CONSTANT);
             JS_ASSERT(index < JS_BIT(20));
             pn->pn_index = index;

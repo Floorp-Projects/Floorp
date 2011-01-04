@@ -258,11 +258,11 @@ class Bindings {
      * exists, *indexp will receive the index of the corresponding argument or
      * variable.
      */
-    BindingKind lookup(JSAtom *name, uintN *indexp) const;
+    BindingKind lookup(JSContext *cx, JSAtom *name, uintN *indexp) const;
 
     /* Convenience method to check for any binding for a name. */
-    bool hasBinding(JSAtom *name) const {
-        return lookup(name, NULL) != NONE;
+    bool hasBinding(JSContext *cx, JSAtom *name) const {
+        return lookup(cx, name, NULL) != NONE;
     }
 
     /*
