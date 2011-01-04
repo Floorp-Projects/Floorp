@@ -497,7 +497,7 @@ PluginInstanceParent::RecvShow(const NPRect& updatedRect,
             NS_WARNING("back surface not readable");
             return false;
         }
-        surface = new gfxSharedImageSurface(newSurface.get_Shmem());
+        surface = gfxSharedImageSurface::Open(newSurface.get_Shmem());
     }
 #ifdef MOZ_X11
     else if (newSurface.type() == SurfaceDescriptor::TSurfaceDescriptorX11) {

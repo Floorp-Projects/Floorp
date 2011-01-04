@@ -2292,9 +2292,9 @@ PluginInstanceChild::CreateOptSurface(void)
 #endif
 
     // Make common shmem implementation working for any platform
-    mCurrentSurface = new gfxSharedImageSurface();
-    return static_cast<gfxSharedImageSurface*>(mCurrentSurface.get())->
-        InitUnsafe(this, gfxIntSize(mWindow.width, mWindow.height), format);
+    mCurrentSurface =
+        gfxSharedImageSurface::CreateUnsafe(this, gfxIntSize(mWindow.width, mWindow.height), format);
+    return !!mCurrentSurface;
 }
 
 bool

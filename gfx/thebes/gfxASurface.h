@@ -238,6 +238,9 @@ protected:
     static gfxASurface* GetSurfaceWrapper(cairo_surface_t *csurf);
     static void SetSurfaceWrapper(cairo_surface_t *csurf, gfxASurface *asurf);
 
+    // NB: Init() *must* be called from within subclass's
+    // constructors.  It's unsafe to call it after the ctor finishes;
+    // leaks and use-after-frees are possible.
     void Init(cairo_surface_t *surface, PRBool existingSurface = PR_FALSE);
 
     virtual ~gfxASurface()
