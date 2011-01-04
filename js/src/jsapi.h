@@ -725,7 +725,7 @@ extern JS_PUBLIC_API(JSRuntime *)
 JS_NewRuntime(uint32 maxbytes);
 
 /* Deprecated. */
-#define JS_CommenceRuntimeShutDown(rt) ((void) 0) 
+#define JS_CommenceRuntimeShutDown(rt) ((void) 0)
 
 extern JS_PUBLIC_API(void)
 JS_DestroyRuntime(JSRuntime *rt);
@@ -832,7 +832,7 @@ class JSAutoCheckRequest {
 #endif
         JS_GUARD_OBJECT_NOTIFIER_INIT;
     }
-    
+
     ~JSAutoCheckRequest() {
 #if defined JS_THREADSAFE && defined DEBUG
         JS_ASSERT(JS_IsInRequest(mContext));
@@ -1281,7 +1281,7 @@ namespace js {
 
 /*
  * Protecting non-jsval, non-JSObject *, non-JSString * values from collection
- * 
+ *
  * Most of the time, the garbage collector's conservative stack scanner works
  * behind the scenes, finding all live values and protecting them from being
  * collected. However, when JSAPI client code obtains a pointer to data the
@@ -1367,7 +1367,7 @@ class Anchor: AnchorPermitted<T> {
 #ifdef __GNUC__
 template<typename T>
 inline Anchor<T>::~Anchor() {
-    /* 
+    /*
      * No code is generated for this. But because this is marked 'volatile', G++ will
      * assume it has important side-effects, and won't delete it. (G++ never looks at
      * the actual text and notices it's empty.) And because we have passed |hold| to
