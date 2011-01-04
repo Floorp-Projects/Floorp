@@ -163,6 +163,8 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface)
     InitPopupMenuHook();
 #endif // OS_WIN
 #ifdef MOZ_X11
+    // Maemo flash can render plugin with any provided rectangle and not require this quirk.
+#ifndef MOZ_PLATFORM_MAEMO
     const char *description = NULL;
     mPluginIface->getvalue(GetNPP(), NPPVpluginDescriptionString,
                            &description);
@@ -172,6 +174,7 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface)
           PluginModuleChild::current()->AddQuirk(PluginModuleChild::QUIRK_FLASH_EXPOSE_COORD_TRANSLATION);
         }
     }
+#endif
 #endif
 }
 
