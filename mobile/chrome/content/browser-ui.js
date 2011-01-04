@@ -40,21 +40,6 @@
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "PluralForm", function() {
-  Cu.import("resource://gre/modules/PluralForm.jsm");
-  return PluralForm;
-});
-
-XPCOMUtils.defineLazyGetter(this, "PlacesUtils", function() {
-  Cu.import("resource://gre/modules/PlacesUtils.jsm");
-  return PlacesUtils;
-});
-
-XPCOMUtils.defineLazyServiceGetter(window, "gHistSvc", "@mozilla.org/browser/nav-history-service;1", "nsINavHistoryService", "nsIBrowserHistory");
-XPCOMUtils.defineLazyServiceGetter(window, "gURIFixup", "@mozilla.org/docshell/urifixup;1", "nsIURIFixup");
-XPCOMUtils.defineLazyServiceGetter(window, "gFaviconService", "@mozilla.org/browser/favicon-service;1", "nsIFaviconService");
-XPCOMUtils.defineLazyServiceGetter(window, "gFocusManager", "@mozilla.org/focus-manager;1", "nsIFocusManager");
-
 [
   ["AllPagesList", "popup_autocomplete", "cmd_openLocation"],
   ["HistoryList", "history-items", "cmd_history"],
@@ -1105,7 +1090,7 @@ var BrowserUI = {
         this.activePanel = RemoteTabsList;
         break;
       case "cmd_quit":
-        goQuitApplication();
+        GlobalOverlay.goQuitApplication();
         break;
       case "cmd_close":
         this._closeOrQuit();
@@ -1375,7 +1360,7 @@ var PageActions = {
 
   savePageAsPDF: function saveAsPDF() {
     let browser = Browser.selectedBrowser;
-    let fileName = getDefaultFileName(browser.contentTitle, browser.documentURI, null, null);
+    let fileName = ContentAreaUtils.getDefaultFileName(browser.contentTitle, browser.documentURI, null, null);
     fileName = fileName.trim() + ".pdf";
     let displayName = fileName;
 #ifdef MOZ_PLATFORM_MAEMO
