@@ -1302,6 +1302,10 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
   if (aFlags & PAINT_IGNORE_SUPPRESSION) {
     builder.IgnorePaintSuppression();
   }
+  if (aRenderingContext &&
+      aRenderingContext->ThebesContext()->GetFlags() & gfxContext::FLAG_DISABLE_SNAPPING) {
+    builder.SetSnappingEnabled(PR_FALSE);
+  }
   nsRect canvasArea(nsPoint(0, 0), aFrame->GetSize());
   if (ignoreViewportScrolling) {
     NS_ASSERTION(!aFrame->GetParent(), "must have root frame");
