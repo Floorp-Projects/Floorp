@@ -79,13 +79,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 
-// Because the QPainter backend has some problems with glyphs rendering
-// it is better to use image or xlib cairo backends by default
-#if (MOZ_PLATFORM_MAEMO == 6)
-#define DEFAULT_RENDER_MODE RENDER_BUFFERED
-#else
 #define DEFAULT_RENDER_MODE RENDER_DIRECT
-#endif
 
 static QPaintEngine::Type sDefaultQtPaintEngineType = QPaintEngine::X11;
 gfxFontconfigUtils *gfxQtPlatform::sFontconfigUtils = nsnull;
