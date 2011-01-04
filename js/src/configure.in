@@ -642,35 +642,31 @@ case "$target" in
         if test "$_CC_MAJOR_VERSION" != "$_CXX_MAJOR_VERSION"; then
             AC_MSG_ERROR([The major versions of \$CC and \$CXX do not match.])
         fi
-        if test "$_CC_MAJOR_VERSION" = "13"; then
-            _CC_SUITE=7
-        elif test "$_CC_MAJOR_VERSION" = "14"; then
+
+        if test "$_CC_MAJOR_VERSION" = "14"; then
+            dnl Require VC8SP1 or newer.
+            dnl VC8 is 14.00.50727.42, VC8SP1 is 14.00.50727.762.
+            if test "$_CC_RELEASE" -lt 50727 -o \
+                    \( "$_CC_RELEASE" -eq 50727 -a "$_CC_BUILD" -lt 762 \); then
+              AC_MSG_ERROR([This version ($CC_VERSION) of the MSVC compiler is unsupported. You probably need to install Service Pack 1 of Visual Studio 2005. See https://developer.mozilla.org/en/Windows_Build_Prerequisites.])
+            fi
+
             _CC_SUITE=8
             CXXFLAGS="$CXXFLAGS -Zc:wchar_t-"
-            dnl -DYNAMICBASE is only supported on VC8SP1 or newer,
-            dnl so be very specific here!
-            dnl VC8 is 14.00.50727.42, VC8SP1 is 14.00.50727.762
-            if test $_CC_RELEASE -gt 50727; then
-               _USE_DYNAMICBASE=1
-            elif test $_CC_BUILD -ge 762; then
-               _USE_DYNAMICBASE=1
-            fi
             AC_DEFINE(_CRT_SECURE_NO_DEPRECATE)
             AC_DEFINE(_CRT_NONSTDC_NO_DEPRECATE)
         elif test "$_CC_MAJOR_VERSION" = "15"; then
             _CC_SUITE=9
             CXXFLAGS="$CXXFLAGS -Zc:wchar_t-"
-            _USE_DYNAMICBASE=1
             AC_DEFINE(_CRT_SECURE_NO_WARNINGS)
             AC_DEFINE(_CRT_NONSTDC_NO_WARNINGS)
         elif test "$_CC_MAJOR_VERSION" = "16"; then
             _CC_SUITE=10
             CXXFLAGS="$CXXFLAGS -Zc:wchar_t-"
-            _USE_DYNAMICBASE=1
             AC_DEFINE(_CRT_SECURE_NO_WARNINGS)
             AC_DEFINE(_CRT_NONSTDC_NO_WARNINGS)
         else
-            AC_MSG_ERROR([This version of the MSVC compiler, $CC_VERSION , is unsupported.])
+            AC_MSG_ERROR([This version ($CC_VERSION) of the MSVC compiler is unsupported. See https://developer.mozilla.org/en/Windows_Build_Prerequisites.])
         fi
 
         _MOZ_RTTI_FLAGS_ON='-GR'
@@ -681,26 +677,24 @@ case "$target" in
         if test -n "$WIN32_REDIST_DIR"; then
             WIN32_REDIST_DIR=`cd "$WIN32_REDIST_DIR" && pwd`
         fi
-	
-        # bug #249782
-        # ensure that mt.exe is Microsoft (R) Manifest Tool and not magnetic tape manipulation utility (or something else)
-        if test "$_CC_SUITE" -ge "8"; then
-                changequote(,)
-                _MSMT_VER_FILTER='s|.* \([0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\).*|\1|p'
-                changequote([,])
 
-                MSMT_TOOL=`mt 2>&1|grep 'Microsoft (R) Manifest Tool'`
-                if test -n "$MSMT_TOOL"; then
-                        MSMANIFEST_TOOL_VERSION=`echo ${MSMT_TOOL}|sed -ne "$_MSMT_VER_FILTER"`
-                        if test -z "$MSMANIFEST_TOOL_VERSION"; then
-                                AC_MSG_WARN([Unknown version of the Microsoft (R) Manifest Tool.])
-                        fi
-                        MSMANIFEST_TOOL=1
-                        unset MSMT_TOOL
-                else
-                        AC_MSG_ERROR([Microsoft (R) Manifest Tool must be in your \$PATH.])
-                fi
+        dnl Ensure that mt.exe is 'Microsoft (R) Manifest Tool',
+        dnl not something else like "magnetic tape manipulation utility".
+        MSMT_TOOL=`mt 2>&1|grep 'Microsoft (R) Manifest Tool'`
+        if test -z "$MSMT_TOOL"; then
+          AC_MSG_ERROR([Microsoft (R) Manifest Tool must be in your \$PATH.])
         fi
+
+        changequote(,)
+        _MSMT_VER_FILTER='s|.* \([0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\).*|\1|p'
+        changequote([,])
+        MSMANIFEST_TOOL_VERSION=`echo ${MSMT_TOOL}|sed -ne "$_MSMT_VER_FILTER"`
+        if test -z "$MSMANIFEST_TOOL_VERSION"; then
+          AC_MSG_WARN([Unknown version of the Microsoft (R) Manifest Tool.])
+        fi
+
+        MSMANIFEST_TOOL=1
+        unset MSMT_TOOL
 
         # Check linker version
         _LD_FULL_VERSION=`"${LD}" -v 2>&1 | sed -nre "$_MSVC_VER_FILTER"`
@@ -708,6 +702,7 @@ case "$target" in
         if test "$_LD_MAJOR_VERSION" != "$_CC_SUITE"; then
             AC_MSG_ERROR([The linker major version, $_LD_FULL_VERSION,  does not match the compiler suite version, $_CC_SUITE.])
         fi
+
         INCREMENTAL_LINKER=1
 
         # Identify which version of the SDK we're building with
@@ -2420,9 +2415,7 @@ ia64*-hpux*)
             dnl XXX: should be -LTCG:PGOPTIMIZE, but that fails on libxul.
             dnl Probably also a compiler bug, but what can you do?
             PROFILE_USE_LDFLAGS="-LTCG:PGUPDATE"
-            if test -n "$_USE_DYNAMICBASE"; then
-               LDFLAGS="$LDFLAGS -DYNAMICBASE"
-            fi
+            LDFLAGS="$LDFLAGS -DYNAMICBASE"
         fi
     fi
     AC_DEFINE(HAVE_SNPRINTF)
@@ -2481,7 +2474,7 @@ ia64*-hpux*)
 
     case "$host_os" in
     cygwin*|msvc*|mks*)
-        AC_MSG_WARN([Using a cygwin build environment is unsupported. Configure cannot check for the presence of necessary headers. Please upgrade to MozillaBuild; see http://developer.mozilla.org/en/docs/Windows_Build_Prerequisites])
+        AC_MSG_WARN([Using a cygwin build environment is unsupported. Configure cannot check for the presence of necessary headers. Please upgrade to MozillaBuild; see https://developer.mozilla.org/en/Windows_Build_Prerequisites.])
         ;;
     esac
 
