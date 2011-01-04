@@ -562,8 +562,8 @@ inline bool
 JSObject::hasMethodObj(const JSObject& obj) const
 {
     return JSSLOT_FUN_METHOD_OBJ < numSlots() &&
-        getSlot(JSSLOT_FUN_METHOD_OBJ).isObject() &&
-        &getSlot(JSSLOT_FUN_METHOD_OBJ).toObject() == &obj;
+           getSlot(JSSLOT_FUN_METHOD_OBJ).isObject() &&
+           &getSlot(JSSLOT_FUN_METHOD_OBJ).toObject() == &obj;
 }
 
 inline void

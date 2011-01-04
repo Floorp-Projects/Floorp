@@ -1439,60 +1439,78 @@ JSStackFrame::getValidCalleeObject(JSContext *cx, Value *vp)
 
         if (&fun->compiledFunObj() == &funobj && fun->methodAtom()) {
             JSObject *thisp = &thisv.toObject();
-            JS_ASSERT(thisp->canHaveMethodBarrier());
+            JSObject *first_barriered_thisp = NULL;
 
-            if (thisp->hasMethodBarrier()) {
-                const Shape *shape = thisp->nativeLookup(ATOM_TO_JSID(fun->methodAtom()));
-
+            do {
                 /*
-                 * The method property might have been deleted while the method
-                 * barrier flag stuck, so we must lookup and test here.
-                 *
-                 * Two cases follow: the method barrier was not crossed yet, so
-                 * we cross it here; the method barrier *was* crossed, in which
-                 * case we must fetch and validate the cloned (unjoined) funobj
-                 * in the method property's slot.
-                 *
-                 * In either case we must allow for the method property to have
-                 * been replaced, or its value to have been overwritten.
+                 * While a non-native object is responsible for handling its
+                 * entire prototype chain, notable non-natives including dense
+                 * and typed arrays have native prototypes, so keep going.
                  */
-                if (shape) {
-                    if (shape->isMethod() && &shape->methodObject() == &funobj) {
-                        if (!thisp->methodReadBarrier(cx, *shape, vp))
-                            return false;
-                        calleeValue().setObject(vp->toObject());
-                        return true;
-                    }
-                    if (shape->hasSlot()) {
-                        Value v = thisp->getSlot(shape->slot);
-                        JSObject *clone;
+                if (!thisp->isNative())
+                    continue;
 
-                        if (IsFunctionObject(v, &clone) &&
-                            GET_FUNCTION_PRIVATE(cx, clone) == fun &&
-                            clone->hasMethodObj(*thisp)) {
-                            JS_ASSERT(clone != &funobj);
-                            *vp = v;
-                            calleeValue().setObject(*clone);
+                if (thisp->hasMethodBarrier()) {
+                    const Shape *shape = thisp->nativeLookup(ATOM_TO_JSID(fun->methodAtom()));
+                    if (shape) {
+                        /*
+                         * Two cases follow: the method barrier was not crossed
+                         * yet, so we cross it here; the method barrier *was*
+                         * crossed but after the call, in which case we fetch
+                         * and validate the cloned (unjoined) funobj from the
+                         * method property's slot.
+                         *
+                         * In either case we must allow for the method property
+                         * to have been replaced, or its value overwritten.
+                         */
+                        if (shape->isMethod() && &shape->methodObject() == &funobj) {
+                            if (!thisp->methodReadBarrier(cx, *shape, vp))
+                                return false;
+                            calleeValue().setObject(vp->toObject());
                             return true;
                         }
-                    }
-                }
 
-                /*
-                 * If control flows here, we can't find an already-existing
-                 * clone (or force to exist a fresh clone) created via thisp's
-                 * method read barrier, so we must clone fun and store it in
-                 * fp's callee to avoid re-cloning upon repeated foo.caller
-                 * access. It seems that there are no longer any properties
-                 * referring to fun.
-                 */
-                JSObject *newfunobj = CloneFunctionObject(cx, fun, fun->getParent());
-                if (!newfunobj)
-                    return false;
-                newfunobj->setMethodObj(*thisp);
-                calleeValue().setObject(*newfunobj);
+                        if (shape->hasSlot()) {
+                            Value v = thisp->getSlot(shape->slot);
+                            JSObject *clone;
+
+                            if (IsFunctionObject(v, &clone) &&
+                                GET_FUNCTION_PRIVATE(cx, clone) == fun &&
+                                clone->hasMethodObj(*thisp)) {
+                                JS_ASSERT(clone != &funobj);
+                                *vp = v;
+                                calleeValue().setObject(*clone);
+                                return true;
+                            }
+                        }
+                    }
+
+                    if (!first_barriered_thisp)
+                        first_barriered_thisp = thisp;
+                }
+            } while ((thisp = thisp->getProto()) != NULL);
+
+            if (!first_barriered_thisp)
                 return true;
-            }
+
+            /*
+             * At this point, we couldn't find an already-existing clone (or
+             * force to exist a fresh clone) created via thisp's method read
+             * barrier, so we must clone fun and store it in fp's callee to
+             * avoid re-cloning upon repeated foo.caller access.
+             *
+             * This must mean the code in js_DeleteProperty could not find this
+             * stack frame on the stack when the method was deleted. We've lost
+             * track of the method, so we associate it with the first barriered
+             * object found starting from thisp on the prototype chain.
+             */
+            JSObject *newfunobj = CloneFunctionObject(cx, fun, fun->getParent());
+            if (!newfunobj)
+                return false;
+            newfunobj->setMethodObj(*first_barriered_thisp);
+            calleeValue().setObject(*newfunobj);
+            vp->setObject(*newfunobj);
+            return true;
         }
     }
 
