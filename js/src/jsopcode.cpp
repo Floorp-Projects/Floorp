@@ -4129,7 +4129,15 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     jp->script = inner;
                     jp->fun = fun;
                     jp->localNames = innerLocalNames;
-                    ok = Decompile(&ss2, inner->code, inner->length, JSOP_NOP) != NULL;
+
+                    /*
+                     * Decompile only the main bytecode, to avoid tripping over
+                     * new prolog ops that have stack effects.
+                     */
+                    ok = Decompile(&ss2, inner->main,
+                                   inner->length - (inner->main - inner->code),
+                                   JSOP_NOP)
+                         != NULL;
                     jp->script = outer;
                     jp->fun = outerfun;
                     jp->localNames = outerLocalNames;
