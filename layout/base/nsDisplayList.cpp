@@ -703,7 +703,7 @@ PRBool nsDisplayItem::RecomputeVisibility(nsDisplayListBuilder* aBuilder,
 
   PRBool forceTransparentBackground;
   nsRegion opaque = TreatAsOpaque(this, aBuilder, &forceTransparentBackground);
-  aVisibleRegion->Sub(*aVisibleRegion, opaque);
+  aBuilder->SubtractFromVisibleRegion(aVisibleRegion, opaque);
   return PR_TRUE;
 }
 
