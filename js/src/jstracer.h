@@ -1201,16 +1201,17 @@ class TraceRecorder
                                                nanojit::LIns* d1, VMSideExit* exit);
 
     nanojit::LIns* writeBack(nanojit::LIns* i, nanojit::LIns* base, ptrdiff_t offset,
-                             bool demote);
+                             bool shouldDemoteToInt32);
 
 #ifdef DEBUG
     bool isValidFrameObjPtr(void *obj);
 #endif
     void assertInsideLoop();
 
-    JS_REQUIRES_STACK void setImpl(void* p, nanojit::LIns* l, bool demote = true);
-    JS_REQUIRES_STACK void set(Value* p, nanojit::LIns* l, bool demote = true);
-    JS_REQUIRES_STACK void setFrameObjPtr(void* p, nanojit::LIns* l, bool demote = true);
+    JS_REQUIRES_STACK void setImpl(void* p, nanojit::LIns* l, bool shouldDemoteToInt32 = true);
+    JS_REQUIRES_STACK void set(Value* p, nanojit::LIns* l, bool shouldDemoteToInt32 = true);
+    JS_REQUIRES_STACK void setFrameObjPtr(void* p, nanojit::LIns* l,
+                                          bool shouldDemoteToInt32 = true);
     nanojit::LIns* getFromTrackerImpl(const void *p);
     nanojit::LIns* getFromTracker(const Value* p);
     JS_REQUIRES_STACK nanojit::LIns* getImpl(const void* p);
