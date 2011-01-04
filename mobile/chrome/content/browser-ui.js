@@ -2143,12 +2143,17 @@ var FormHelperUI = {
     let zoomRect = Rect.fromRect(browser.getBoundingClientRect());
 
     // Zoom to a specified Rect
-    if (aElementRect && Browser.selectedTab.allowZoom && Services.prefs.getBoolPref("formhelper.autozoom")) {
+    let autozoomEnabled = Services.prefs.getBoolPref("formhelper.autozoom");
+    if (aElementRect && Browser.selectedTab.allowZoom && autozoomEnabled) {
       this._currentElementRect = aElementRect;
       // Zoom to an element by keeping the caret into view
       let zoomLevel = Browser.selectedTab.clampZoomLevel(this._getZoomLevelForRect(aElementRect));
 
       zoomRect = Browser._getZoomRectForPoint(aElementRect.center().x, aElementRect.y, zoomLevel);
+      Browser.animatedZoomTo(zoomRect);
+    } else if (aElementRect && !Browser.selectedTab.allowZoom && autozoomEnabled) {
+      // Even if zooming is disabled we could need to reposition the view in
+      // order to keep the element on-screen
       Browser.animatedZoomTo(zoomRect);
     }
 
