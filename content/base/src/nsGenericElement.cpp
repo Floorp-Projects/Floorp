@@ -5354,10 +5354,7 @@ nsGenericElement::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
 
   case NS_UI_ACTIVATE:
     {
-      nsCOMPtr<nsIContent> targetContent;
-      aVisitor.mPresContext->EventStateManager()->
-        GetEventTargetContent(aVisitor.mEvent, getter_AddRefs(targetContent));
-      if (targetContent == this) {
+      if (aVisitor.mEvent->originalTarget == this) {
         nsAutoString target;
         GetLinkTarget(target);
         nsContentUtils::TriggerLink(this, aVisitor.mPresContext, absURI, target,

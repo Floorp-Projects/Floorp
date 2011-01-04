@@ -175,7 +175,7 @@ class GeckoSurfaceView
         try {
             bb = mSyncBuf.take();
         } catch (InterruptedException ie) {
-            Log.e("GeckoAppJava", "Threw exception while getting sync buf: " + ie);
+            Log.e("GeckoAppJava", "Threw exception while getting sync buf: ", ie);
         }
         if (bb != null && bb.capacity() == (width * height * 2)) {
             mSoftwareBitmap = Bitmap.createBitmap(mWidth, mHeight, Bitmap.Config.RGB_565);
@@ -289,7 +289,7 @@ class GeckoSurfaceView
                 try {
                     mSyncBuf.put(buffer);
                 } catch (InterruptedException ie) {
-                    Log.e("GeckoAppJava", "Threw exception while getting sync buf: " + ie);
+                    Log.e("GeckoAppJava", "Threw exception while getting sync buf: ", ie);
                 }
                 return;
             }

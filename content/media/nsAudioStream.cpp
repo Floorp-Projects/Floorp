@@ -301,10 +301,12 @@ void nsAudioStream::ShutdownLibrary()
 {
 }
 
-
 nsIThread *
 nsAudioStream::GetThread()
 {
+  if (!mAudioPlaybackThread) {
+    NS_NewThread(getter_AddRefs(mAudioPlaybackThread));
+  }
   return mAudioPlaybackThread;
 }
 
@@ -318,6 +320,23 @@ nsAudioStream* nsAudioStream::AllocateStream()
   return new nsAudioStreamLocal();
 }
 
+class AsyncShutdownPlaybackThread : public nsRunnable
+{
+public:
+  AsyncShutdownPlaybackThread(nsIThread* aThread) : mThread(aThread) {}
+  NS_IMETHODIMP Run() { return mThread->Shutdown(); }
+private:
+  nsCOMPtr<nsIThread> mThread;
+};
+
+nsAudioStream::~nsAudioStream()
+{
+  if (mAudioPlaybackThread) {
+    nsCOMPtr<nsIRunnable> event = new AsyncShutdownPlaybackThread(mAudioPlaybackThread);
+    NS_DispatchToMainThread(event);
+  }
+}
+
 nsAudioStreamLocal::nsAudioStreamLocal() :
   mVolume(1.0),
   mAudioHandle(0),
@@ -327,12 +346,6 @@ nsAudioStreamLocal::nsAudioStreamLocal() :
   mPaused(PR_FALSE),
   mInError(PR_FALSE)
 {
-#ifdef MOZ_IPC
-  // We only need this thread in the main process.
-  if (XRE_GetProcessType() == GeckoProcessType_Default) {
-    NS_NewThread(getter_AddRefs(mAudioPlaybackThread));
-  }
-#endif
 }
 
 nsAudioStreamLocal::~nsAudioStreamLocal()

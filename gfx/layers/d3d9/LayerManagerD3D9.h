@@ -51,8 +51,6 @@
 namespace mozilla {
 namespace layers {
 
-extern cairo_user_data_key_t gKeyD3D9Texture;
-
 class LayerD3D9;
 class ThebesLayerD3D9;
 
@@ -150,10 +148,6 @@ public:
   virtual already_AddRefed<CanvasLayer> CreateCanvasLayer();
 
   virtual already_AddRefed<ImageContainer> CreateImageContainer();
-
-  virtual already_AddRefed<gfxASurface>
-    CreateOptimalSurface(const gfxIntSize &aSize,
-                         gfxASurface::gfxImageFormat imageFormat);
 
   virtual LayersBackend GetBackendType() { return LAYERS_D3D9; }
   virtual void GetBackendName(nsAString& name) { name.AssignLiteral("Direct3D 9"); }

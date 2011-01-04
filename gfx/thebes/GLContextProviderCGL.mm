@@ -298,6 +298,7 @@ public:
     ~TextureImageCGL()
     {
         if (mPixelBuffer) {
+            mGLContext->MakeCurrent();
             mGLContext->fDeleteBuffers(1, &mPixelBuffer);
         }
     }
@@ -306,6 +307,7 @@ protected:
     already_AddRefed<gfxASurface>
     GetSurfaceForUpdate(const gfxIntSize& aSize, ImageFormat aFmt)
     {
+        mGLContext->MakeCurrent();
         if (!mGLContext->IsExtensionSupported(GLContext::ARB_pixel_buffer_object)) {
             return gfxPlatform::GetPlatform()->
                 CreateOffscreenSurface(aSize, gfxASurface::ContentFromFormat(aFmt));
@@ -339,6 +341,7 @@ protected:
     bool FinishedSurfaceUpdate()
     {
         if (mPixelBuffer) {
+            mGLContext->MakeCurrent();
             mGLContext->fUnmapBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER);
             return true;
         }
@@ -348,6 +351,7 @@ protected:
     void FinishedSurfaceUpload()
     {
         if (mPixelBuffer) {
+            mGLContext->MakeCurrent();
             mGLContext->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, 0);
         }
     }

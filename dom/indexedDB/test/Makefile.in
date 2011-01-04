@@ -101,6 +101,7 @@ BROWSER_TEST_FILES = \
   browser_permissionsPrompt.html \
   browser_permissionsPromptAllow.js \
   browser_permissionsPromptDeny.js \
+  browser_privateBrowsing.js \
   browser_quotaPrompt.html \
   browser_quotaPromptAllow.js \
   browser_quotaPromptDeny.js \

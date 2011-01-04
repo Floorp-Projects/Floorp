@@ -523,8 +523,9 @@ JetpackActorCommon::RecList::remove(jsval v)
     if (node->value() == v) {
       prev->down = node->down;
       delete node;
-    }
-    node = (prev = node)->down;
+    } else
+      prev = node;
+    node = prev->down;
   }
 }
 

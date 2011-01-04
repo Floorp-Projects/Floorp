@@ -4971,7 +4971,8 @@ AddonInstall.prototype = {
                                                this.listeners, this.wrapper);
       break;
     default:
-      throw new Error("Cannot cancel from this state");
+      throw new Error("Cannot cancel install of " + this.sourceURI.spec +
+                      " from this state (" + this.state + ")");
     }
   },
 

@@ -54,7 +54,7 @@
 #include "gfxASurface.h"
 #include "gfxPattern.h"
 #include "gfxPlatform.h"
-
+#include "gfxTeeSurface.h"
 
 gfxContext::gfxContext(gfxASurface *surface) :
     mSurface(surface)
@@ -692,6 +692,7 @@ gfxContext::GetDeviceColor(gfxRGBA& c)
 void
 gfxContext::SetSource(gfxASurface *surface, const gfxPoint& offset)
 {
+    NS_ASSERTION(surface->GetAllowUseAsSource(), "Surface not allowed to be used as source!");
     cairo_set_source_surface(mCairo, surface->CairoSurface(), offset.x, offset.y);
 }
 
@@ -743,6 +744,56 @@ gfxContext::Paint(gfxFloat alpha)
 void
 gfxContext::PushGroup(gfxASurface::gfxContentType content)
 {
+    cairo_push_group_with_content(mCairo, (cairo_content_t) content);
+}
+
+static gfxRect
+GetRoundOutDeviceClipExtents(gfxContext* aCtx)
+{
+    gfxContextMatrixAutoSaveRestore save(aCtx);
+    aCtx->IdentityMatrix();
+    gfxRect r = aCtx->GetClipExtents();
+    r.RoundOut();
+    return r;
+}
+
+static void
+CopySurface(gfxASurface* aSrc, gfxASurface* aDest)
+{
+  cairo_t *cr = cairo_create(aDest->CairoSurface());
+  cairo_set_source_surface(cr, aSrc->CairoSurface(), 0, 0);
+  cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+  cairo_paint(cr);
+  cairo_destroy(cr);
+}
+
+void
+gfxContext::PushGroupAndCopyBackground(gfxASurface::gfxContentType content)
+{
+    if (content == gfxASurface::CONTENT_COLOR_ALPHA) {
+        nsRefPtr<gfxASurface> s = CurrentSurface();
+        if (s->GetContentType() == gfxASurface::CONTENT_COLOR ||
+            s->GetOpaqueRect().Contains(GetRoundOutDeviceClipExtents(this))) {
+            cairo_push_group_with_content(mCairo, CAIRO_CONTENT_COLOR);
+            nsRefPtr<gfxASurface> d = CurrentSurface();
+
+            if (d->GetType() == gfxASurface::SurfaceTypeTee) {
+                NS_ASSERTION(s->GetType() == gfxASurface::SurfaceTypeTee, "Mismatched types");
+                nsAutoTArray<nsRefPtr<gfxASurface>,2> ss;
+                nsAutoTArray<nsRefPtr<gfxASurface>,2> ds;
+                static_cast<gfxTeeSurface*>(s.get())->GetSurfaces(&ss);
+                static_cast<gfxTeeSurface*>(d.get())->GetSurfaces(&ds);
+                NS_ASSERTION(ss.Length() == ds.Length(), "Mismatched lengths");
+                for (PRUint32 i = 0; i < ss.Length(); ++i) {
+                    CopySurface(ss[i], ds[i]);
+                }
+            } else {
+                CopySurface(s, d);
+            }
+            d->SetOpaqueRect(s->GetOpaqueRect());
+            return;
+        }
+    }
     cairo_push_group_with_content(mCairo, (cairo_content_t) content);
 }
 

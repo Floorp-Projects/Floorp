@@ -215,6 +215,9 @@ const MINIMUM_PAGE_HEIGHT = 50;
 // The default console height, as a ratio from the content window inner height.
 const DEFAULT_CONSOLE_HEIGHT = 0.33;
 
+// Constant used when checking the typeof objects.
+const TYPEOF_FUNCTION = "function";
+
 const ERRORS = { LOG_MESSAGE_MISSING_ARGS:
                  "Missing arguments: aMessage, aConsoleNode and aMessageNode are required.",
                  CANNOT_GET_HUD: "Cannot getHeads Up Display with provided ID",
@@ -715,25 +718,27 @@ NetworkPanel.prototype =
 
       /**
        * The following code creates the HTML:
-       *
-       * <span class="property-name">${line}:</span>
-       * <span class="property-value">${aList[line]}</span><br>
-       *
+       * <tr>
+       * <th scope="row" class="property-name">${line}:</th>
+       * <td class="property-value">${aList[line]}</td>
+       * </tr>
        * and adds it to parent.
        */
+      let row = doc.createElement("tr");
       let textNode = doc.createTextNode(key + ":");
-      let span = doc.createElement("span");
-      span.setAttribute("class", "property-name");
-      span.appendChild(textNode);
-      parent.appendChild(span);
+      let th = doc.createElement("th");
+      th.setAttribute("scope", "row");
+      th.setAttribute("class", "property-name");
+      th.appendChild(textNode);
+      row.appendChild(th);
 
       textNode = doc.createTextNode(sortedList[key]);
-      span = doc.createElement("span");
-      span.setAttribute("class", "property-value");
-      span.appendChild(textNode);
-      parent.appendChild(span);
+      let td = doc.createElement("td");
+      td.setAttribute("class", "property-value");
+      td.appendChild(textNode);
+      row.appendChild(td);
 
-      parent.appendChild(doc.createElement("br"));
+      parent.appendChild(row);
     }
   },
 
@@ -1966,7 +1971,7 @@ HUD_SERVICE.prototype =
 
     let panel = netPanel.panel;
     panel.openPopup(aNode, "after_pointer", 0, 0, false, false);
-    panel.sizeTo(350, 400);
+    panel.sizeTo(450, 500);
     aHttpActivity.panels.push(Cu.getWeakReference(netPanel));
     return netPanel;
   },
@@ -2362,23 +2367,29 @@ HUD_SERVICE.prototype =
     return sequencer(aInt);
   },
 
+  // See jsapi.h (JSErrorReport flags):
+  // http://mxr.mozilla.org/mozilla-central/source/js/src/jsapi.h#3429
   scriptErrorFlags: {
-    0: "error",
-    1: "warn",
-    2: "exception",
-    4: "error", // strict error
-    5: "warn", // strict warning
+    0: "error", // JSREPORT_ERROR
+    1: "warn", // JSREPORT_WARNING
+    2: "exception", // JSREPORT_EXCEPTION
+    4: "error", // JSREPORT_STRICT | JSREPORT_ERROR
+    5: "warn", // JSREPORT_STRICT | JSREPORT_WARNING
+    8: "error", // JSREPORT_STRICT_MODE_ERROR
+    13: "warn", // JSREPORT_STRICT_MODE_ERROR | JSREPORT_WARNING | JSREPORT_ERROR
   },
 
   /**
    * replacement strings (L10N)
    */
   scriptMsgLogLevel: {
-    0: "typeError",
-    1: "typeWarning",
-    2: "typeException",
-    4: "typeError", // strict error
-    5: "typeStrict", // strict warning
+    0: "typeError", // JSREPORT_ERROR
+    1: "typeWarning", // JSREPORT_WARNING
+    2: "typeException", // JSREPORT_EXCEPTION
+    4: "typeError", // JSREPORT_STRICT | JSREPORT_ERROR
+    5: "typeStrict", // JSREPORT_STRICT | JSREPORT_WARNING
+    8: "typeError", // JSREPORT_STRICT_MODE_ERROR
+    13: "typeWarning", // JSREPORT_STRICT_MODE_ERROR | JSREPORT_WARNING | JSREPORT_ERROR
   },
 
   /**
@@ -3055,6 +3066,10 @@ HeadsUpDisplay.prototype = {
     let menuPopup = this.makeXULNode("menupopup");
     let id = this.hudId + "-output-contextmenu";
     menuPopup.setAttribute("id", id);
+    menuPopup.addEventListener("popupshowing", function() {
+      saveBodiesItem.setAttribute("checked",
+        HUDService.saveRequestAndResponseBodies);
+    }, true);
 
     let saveBodiesItem = this.makeXULNode("menuitem");
     saveBodiesItem.setAttribute("label", this.getStr("saveBodies.label"));
@@ -3682,6 +3697,11 @@ function JSTermHelper(aJSTerm)
       aJSTerm.console.error(HUDService.getStr("helperFuncUnsupportedTypeError"));
       return;
     }
+    else if (typeof aObject === TYPEOF_FUNCTION) {
+      aJSTerm.writeOutput(aObject + "\n", CATEGORY_OUTPUT, SEVERITY_LOG);
+      return;
+    }
+
     let output = [];
     let pairs = namesAndValuesOf(unwrap(aObject));
 

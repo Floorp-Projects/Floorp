@@ -55,7 +55,7 @@
         window.addEventListener("indexedDB-addMore", onAddMore, true);
         window.addEventListener("indexedDB-done", onDone, true);
 
-        let request = moz_indexedDB.open(name, description);
+        let request = mozIndexedDB.open(name, description);
         request.onerror = errorHandler;
         request.onsuccess = grabEventAndContinueHandler;
         let event = yield;

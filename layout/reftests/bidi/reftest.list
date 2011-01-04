@@ -9,6 +9,11 @@
 == bidi-005.html bidi-005-ref.html
 == bidi-006.html bidi-006-ref.html
 == bidi-006-j.html bidi-006-ref.html
+== bidiSVG-01.svg bidiSVG-01-ref.svg
+== bidiSVG-02.svg bidiSVG-02-ref.svg
+== bidiSVG-03.svg bidiSVG-03-ref.svg
+== bidiSVG-04.svg bidiSVG-04-ref.svg
+== bidiSVG-05.svg bidiSVG-05-ref.svg
 random-if(layersGPUAccelerated) == visualmarquee.html marquee-ref.html
 random-if(layersGPUAccelerated) == logicalmarquee.html marquee-ref.html
 == visualmarquee.html logicalmarquee.html

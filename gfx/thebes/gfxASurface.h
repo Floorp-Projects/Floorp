@@ -177,6 +177,9 @@ public:
     static gfxContentType ContentFromFormat(gfxImageFormat format);
     static gfxImageFormat FormatFromContent(gfxContentType format);
 
+    void SetSubpixelAntialiasingEnabled(PRBool aEnabled);
+    PRBool GetSubpixelAntialiasingEnabled();
+
     /**
      * Record number of bytes for given surface type.  Use positive bytes
      * for allocations and negative bytes for deallocations.
@@ -199,10 +202,35 @@ public:
 
     virtual const gfxIntSize GetSize() const { return gfxIntSize(-1, -1); }
 
+    void SetOpaqueRect(const gfxRect& aRect) {
+        if (aRect.IsEmpty()) {
+            mOpaqueRect = nsnull;
+        } else if (mOpaqueRect) {
+            *mOpaqueRect = aRect;
+        } else {
+            mOpaqueRect = new gfxRect(aRect);
+        }
+    }
+    const gfxRect& GetOpaqueRect() {
+        if (mOpaqueRect)
+            return *mOpaqueRect;
+        static const gfxRect empty(0, 0, 0, 0);
+        return empty;
+    }
+
     virtual PRBool SupportsSelfCopy() { return PR_TRUE; }
 
+    /**
+     * Mark the surface as being allowed/not allowed to be used as a source.
+     * This currently has no effect other than triggering assertions in some
+     * cases.
+     */
+    void SetAllowUseAsSource(PRBool aAllow) { mAllowUseAsSource = aAllow; }
+    PRBool GetAllowUseAsSource() { return mAllowUseAsSource; }
+
 protected:
-    gfxASurface() : mSurface(nsnull), mFloatingRefs(0), mBytesRecorded(0), mSurfaceValid(PR_FALSE)
+    gfxASurface() : mSurface(nsnull), mFloatingRefs(0), mBytesRecorded(0),
+                    mSurfaceValid(PR_FALSE), mAllowUseAsSource(PR_TRUE)
     {
         MOZ_COUNT_CTOR(gfxASurface);
     }
@@ -210,6 +238,9 @@ protected:
     static gfxASurface* GetSurfaceWrapper(cairo_surface_t *csurf);
     static void SetSurfaceWrapper(cairo_surface_t *csurf, gfxASurface *asurf);
 
+    // NB: Init() *must* be called from within subclass's
+    // constructors.  It's unsafe to call it after the ctor finishes;
+    // leaks and use-after-frees are possible.
     void Init(cairo_surface_t *surface, PRBool existingSurface = PR_FALSE);
 
     virtual ~gfxASurface()
@@ -220,6 +251,7 @@ protected:
     }
 
     cairo_surface_t *mSurface;
+    nsAutoPtr<gfxRect> mOpaqueRect;
 
 private:
     static void SurfaceDestroyFunc(void *data);
@@ -229,6 +261,7 @@ private:
 
 protected:
     PRPackedBool mSurfaceValid;
+    PRPackedBool mAllowUseAsSource;
 };
 
 /**

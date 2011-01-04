@@ -113,6 +113,8 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_603750_websocket.js \
 	browser_webconsole_abbreviate_source_url.js \
 	browser_webconsole_view_source.js \
+	browser_webconsole_bug_602572_log_bodies_checkbox.js \
+	browser_webconsole_bug_614793_jsterm_scroll.js \
 	head.js \
 	$(NULL)
 

@@ -23,6 +23,7 @@
  *  Julian Viereck <jviereck@mozilla.com>
  *  Patrick Walton <pcwalton@mozilla.com>
  *  Rob Campbell <rcampbell@mozilla.com>
+ *  Mihai Șucan <mihai.sucan@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -144,6 +145,13 @@ function testJSTerm()
   // Doesn't conform to checkResult format, bug 614561
   let label = jsterm.outputNode.querySelector(".webconsole-msg-output");
   is(label.textContent.trim(), '0: "h"\n  1: "i"', 'pprint("hi") worked');
+
+  // check that pprint(function) shows function source, bug 618344
+  jsterm.clearOutput();
+  jsterm.execute("pprint(print)");
+  label = jsterm.outputNode.querySelector(".webconsole-msg-output");
+  isnot(label.textContent.indexOf("SEVERITY_LOG"), -1,
+        "pprint(function) shows function source");
 
   finishTest();
 }

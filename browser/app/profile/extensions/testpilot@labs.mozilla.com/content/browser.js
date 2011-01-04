@@ -152,7 +152,7 @@ var TestPilotMenuUtils;
        * whether they opened with Firefox on startup or were opened later. */
       TestPilotWindowHandlers.setUpToolbarFeedbackButton();
 
-      if (TestPilotSetup.startupComplete) {
+      if (TestPilotSetup && TestPilotSetup.startupComplete) {
         TestPilotSetup.onWindowLoad(window);
       } else {
         let observerSvc = Cc["@mozilla.org/observer-service;1"]

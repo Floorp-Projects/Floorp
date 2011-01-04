@@ -197,6 +197,10 @@ public:
   }
 #endif
 
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder)
+  {
+    return mFrame->GetVisualOverflowRect() + ToReferenceFrame();
+  }
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames) {
     aOutFrames->AppendElement(mFrame);
@@ -205,7 +209,10 @@ public:
                      nsIRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("Bullet", TYPE_BULLET)
 
-  virtual PRBool HasText() { return PR_TRUE; }
+  virtual nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder)
+  {
+    return GetBounds(aBuilder);
+  }
 };
 
 void nsDisplayBullet::Paint(nsDisplayListBuilder* aBuilder,

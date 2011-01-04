@@ -44,5 +44,6 @@
 
 void EnsureUseCocoaDockAPI(void);
 void SetupMacApplicationDelegate(void);
+void ProcessPendingGetURLAppleEvents(void);
 
 #endif

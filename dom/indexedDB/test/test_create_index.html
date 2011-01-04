@@ -28,7 +28,7 @@
         { name: "3", keyPath: "value", options: { unique: false } },
       ];
 
-      let request = moz_indexedDB.open(name, description);
+      let request = mozIndexedDB.open(name, description);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
