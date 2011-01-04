@@ -58,27 +58,31 @@ public:
     LIns *ins2(LOpcode v, LIns *s0, LIns *s1)
     {
         if (s0 == s1 && v == LIR_eqd) {
-            if (IsPromote(s0)) {
-                // double(int) and double(uint) cannot be nan
+            // 'eqd x, x' will always succeed if 'x' cannot be NaN
+            if (IsPromotedInt32OrUint32(s0)) {
+                // x = <a number that fits in int32 or uint32>      # cannot be NaN
+                // c = eqd x, x
                 return insImmI(1);
             }
-            if (s0->isop(LIR_muld) || s0->isop(LIR_subd) || s0->isop(LIR_addd)) {
+            if (s0->isop(LIR_addd) || s0->isop(LIR_subd) || s0->isop(LIR_muld)) {
                 LIns *lhs = s0->oprnd1();
                 LIns *rhs = s0->oprnd2();
-                if (IsPromote(lhs) && IsPromote(rhs)) {
-                    // add/sub/mul promoted ints can't be nan
+                if (IsPromotedInt32OrUint32(lhs) && IsPromotedInt32OrUint32(rhs)) {
+                    // a = <a number that fits in int32 or uint32>  # cannot be NaN
+                    // b = <a number that fits in int32 or uint32>  # cannot be NaN
+                    // x = addd/subd/muld a, b                      # cannot be NaN
+                    // c = eqd x, x
                     return insImmI(1);
                 }
             }
         } else if (isCmpDOpcode(v)) {
-            if (IsPromoteInt(s0) && IsPromoteInt(s1)) {
-                // demote fcmp to cmp
+            if (IsPromotedInt32(s0) && IsPromotedInt32(s1)) {
                 v = cmpOpcodeD2I(v);
-                return out->ins2(v, Demote(out, s0), Demote(out, s1));
-            } else if (IsPromoteUint(s0) && IsPromoteUint(s1)) {
+                return out->ins2(v, DemoteToInt32(out, s0), DemoteToInt32(out, s1));
+            } else if (IsPromotedUint32(s0) && IsPromotedUint32(s1)) {
                 // uint compare
                 v = cmpOpcodeD2UI(v);
-                return out->ins2(v, Demote(out, s0), Demote(out, s1));
+                return out->ins2(v, DemoteToUint32(out, s0), DemoteToUint32(out, s1));
             }
         }
         return out->ins2(v, s0, s1);
@@ -103,7 +107,6 @@ Writer::init(LogControl *logc_)
     if (logc->lcbits & LC_TMRecorder)
        lir = new (alloc) VerboseWriter(*alloc, lir, lirbuf->printer, logc);
 #endif
-    // CseFilter must be downstream of SoftFloatFilter (see bug 527754 for why).
     if (avmplus::AvmCore::config.cseopt)
         lir = cse = new (alloc) CseFilter(lir, TM_NUM_USED_ACCS, *alloc);
     lir = new (alloc) ExprFilter(lir);
@@ -116,7 +119,7 @@ Writer::init(LogControl *logc_)
 }
 
 bool
-IsPromoteInt(LIns* ins)
+IsPromotedInt32(LIns* ins)
 {
     if (ins->isop(LIR_i2d))
         return true;
@@ -128,7 +131,7 @@ IsPromoteInt(LIns* ins)
 }
 
 bool
-IsPromoteUint(LIns* ins)
+IsPromotedUint32(LIns* ins)
 {
     if (ins->isop(LIR_ui2d))
         return true;
@@ -140,23 +143,29 @@ IsPromoteUint(LIns* ins)
 }
 
 bool
-IsPromote(LIns* ins)
+IsPromotedInt32OrUint32(LIns* ins)
 {
-    return IsPromoteInt(ins) || IsPromoteUint(ins);
+    return IsPromotedInt32(ins) || IsPromotedUint32(ins);
 }
 
 LIns *
-Demote(LirWriter *out, LIns *ins)
+DemoteToInt32(LirWriter *out, LIns *ins)
 {
-    JS_ASSERT(ins->isD());
-    if (ins->isCall())
-        return ins->callArgN(0);
-    if (ins->isop(LIR_i2d) || ins->isop(LIR_ui2d))
+    JS_ASSERT(IsPromotedInt32(ins));
+    if (ins->isop(LIR_i2d))
         return ins->oprnd1();
     JS_ASSERT(ins->isImmD());
-    double cf = ins->immD();
-    int32_t ci = cf > 0x7fffffff ? uint32_t(cf) : int32_t(cf);
-    return out->insImmI(ci);
+    return out->insImmI(int32_t(ins->immD()));
+}
+
+LIns *
+DemoteToUint32(LirWriter *out, LIns *ins)
+{
+    JS_ASSERT(IsPromotedUint32(ins));
+    if (ins->isop(LIR_ui2d))
+        return ins->oprnd1();
+    JS_ASSERT(ins->isImmD());
+    return out->insImmI(uint32_t(ins->immD()));
 }
 
 }   /* namespace tjit */

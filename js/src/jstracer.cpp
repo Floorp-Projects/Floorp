@@ -3682,7 +3682,7 @@ TraceRecorder::lazilyImportGlobalSlot(unsigned slot)
 
 /* Write back a value onto the stack or global frames. */
 LIns*
-TraceRecorder::writeBack(LIns* ins, LIns* base, ptrdiff_t offset, bool shouldDemote)
+TraceRecorder::writeBack(LIns* ins, LIns* base, ptrdiff_t offset, bool shouldDemoteToInt32)
 {
     /*
      * Sink all type casts targeting the stack into the side exit by simply storing the original
@@ -3690,8 +3690,8 @@ TraceRecorder::writeBack(LIns* ins, LIns* base, ptrdiff_t offset, bool shouldDem
      * last stores to every stack location, so it's safe to not perform them on-trace.
      */
     JS_ASSERT(base == lirbuf->sp || base == eos_ins);
-    if (shouldDemote && IsPromoteInt(ins))
-        ins = w.demote(ins);
+    if (shouldDemoteToInt32 && IsPromotedInt32(ins))
+        ins = w.demoteToInt32(ins);
 
     Address addr;
     if (base == lirbuf->sp) {
@@ -3706,7 +3706,7 @@ TraceRecorder::writeBack(LIns* ins, LIns* base, ptrdiff_t offset, bool shouldDem
 
 /* Update the tracker, then issue a write back store. */
 JS_REQUIRES_STACK void
-TraceRecorder::setImpl(void* p, LIns* i, bool demote)
+TraceRecorder::setImpl(void* p, LIns* i, bool shouldDemoteToInt32)
 {
     JS_ASSERT(i != NULL);
     checkForGlobalObjectReallocation();
@@ -3721,9 +3721,9 @@ TraceRecorder::setImpl(void* p, LIns* i, bool demote)
     LIns* x = nativeFrameTracker.get(p);
     if (!x) {
         if (isVoidPtrGlobal(p))
-            x = writeBack(i, eos_ins, nativeGlobalOffset((Value *)p), demote);
+            x = writeBack(i, eos_ins, nativeGlobalOffset((Value *)p), shouldDemoteToInt32);
         else
-            x = writeBack(i, lirbuf->sp, nativespOffsetImpl(p), demote);
+            x = writeBack(i, lirbuf->sp, nativespOffsetImpl(p), shouldDemoteToInt32);
         nativeFrameTracker.set(p, x);
     } else {
 #if defined NANOJIT_64BIT
@@ -3746,21 +3746,21 @@ TraceRecorder::setImpl(void* p, LIns* i, bool demote)
                             ? nativespOffsetImpl(p)
                             : nativeGlobalOffset((Value *)p)));
 
-        writeBack(i, base, disp, demote);
+        writeBack(i, base, disp, shouldDemoteToInt32);
     }
 }
 
 JS_REQUIRES_STACK inline void
-TraceRecorder::set(Value* p, LIns* i, bool demote)
+TraceRecorder::set(Value* p, LIns* i, bool shouldDemoteToInt32)
 {
-    return setImpl(p, i, demote);
+    return setImpl(p, i, shouldDemoteToInt32);
 }
 
 JS_REQUIRES_STACK void
-TraceRecorder::setFrameObjPtr(void* p, LIns* i, bool demote)
+TraceRecorder::setFrameObjPtr(void* p, LIns* i, bool shouldDemoteToInt32)
 {
     JS_ASSERT(isValidFrameObjPtr(p));
-    return setImpl(p, i, demote);
+    return setImpl(p, i, shouldDemoteToInt32);
 }
 
 JS_REQUIRES_STACK LIns*
@@ -3929,7 +3929,7 @@ public:
     JS_REQUIRES_STACK JS_ALWAYS_INLINE void
     visitGlobalSlot(Value *vp, unsigned n, unsigned slot) {
         LIns *ins = mRecorder.get(vp);
-        bool isPromote = IsPromoteInt(ins);
+        bool isPromote = IsPromotedInt32(ins);
         if (isPromote && *mTypeMap == JSVAL_TYPE_DOUBLE) {
             mRecorder.w.st(mRecorder.get(vp),
                            EosAddress(mRecorder.eos_ins, mRecorder.nativeGlobalOffset(vp)));
@@ -3971,7 +3971,7 @@ public:
         /* N.B. vp may actually point to a JSObject*. */
         for (size_t i = 0; i < count; ++i) {
             LIns *ins = mRecorder.get(vp);
-            bool isPromote = IsPromoteInt(ins);
+            bool isPromote = IsPromotedInt32(ins);
             if (isPromote && *mTypeMap == JSVAL_TYPE_DOUBLE) {
                 mRecorder.w.st(ins, StackAddress(mLirbuf->sp, mRecorder.nativespOffset(vp)));
                 /*
@@ -4021,7 +4021,7 @@ TraceRecorder::determineSlotType(Value* vp)
         LIns *i = getFromTracker(vp);
         JSValueType t;
         if (i) {
-            t = IsPromoteInt(i) ? JSVAL_TYPE_INT32 : JSVAL_TYPE_DOUBLE;
+            t = IsPromotedInt32(i) ? JSVAL_TYPE_INT32 : JSVAL_TYPE_DOUBLE;
         } else if (isGlobal(vp)) {
             int offset = tree->globalSlots->offsetOf(uint16(nativeGlobalSlot(vp)));
             JS_ASSERT(offset != -1);
@@ -4543,19 +4543,20 @@ class SlotMap : public SlotVisitorBase
     struct SlotInfo
     {
         SlotInfo()
-          : vp(NULL), promoteInt(false), lastCheck(TypeCheck_Bad)
+          : vp(NULL), isPromotedInt32(false), lastCheck(TypeCheck_Bad)
         {}
-        SlotInfo(Value* vp, bool promoteInt)
-          : vp(vp), promoteInt(promoteInt), lastCheck(TypeCheck_Bad), type(getCoercedType(*vp))
+        SlotInfo(Value* vp, bool isPromotedInt32)
+          : vp(vp), isPromotedInt32(isPromotedInt32), lastCheck(TypeCheck_Bad),
+            type(getCoercedType(*vp))
         {}
         SlotInfo(JSValueType t)
-          : vp(NULL), promoteInt(false), lastCheck(TypeCheck_Bad), type(t)
+          : vp(NULL), isPromotedInt32(false), lastCheck(TypeCheck_Bad), type(t)
         {}
         SlotInfo(Value* vp, JSValueType t)
-          : vp(vp), promoteInt(t == JSVAL_TYPE_INT32), lastCheck(TypeCheck_Bad), type(t)
+          : vp(vp), isPromotedInt32(t == JSVAL_TYPE_INT32), lastCheck(TypeCheck_Bad), type(t)
         {}
         void            *vp;
-        bool            promoteInt;
+        bool            isPromotedInt32;
         TypeCheckResult lastCheck;
         JSValueType     type;
     };
@@ -4628,21 +4629,21 @@ class SlotMap : public SlotVisitorBase
     JS_REQUIRES_STACK JS_ALWAYS_INLINE void
     addSlot(Value* vp)
     {
-        bool promoteInt = false;
+        bool isPromotedInt32 = false;
         if (vp->isNumber()) {
             if (LIns* i = mRecorder.getFromTracker(vp)) {
-                promoteInt = IsPromoteInt(i);
+                isPromotedInt32 = IsPromotedInt32(i);
             } else if (mRecorder.isGlobal(vp)) {
                 int offset = mRecorder.tree->globalSlots->offsetOf(uint16(mRecorder.nativeGlobalSlot(vp)));
                 JS_ASSERT(offset != -1);
-                promoteInt = mRecorder.importTypeMap[mRecorder.importStackSlots + offset] ==
-                             JSVAL_TYPE_INT32;
+                isPromotedInt32 = mRecorder.importTypeMap[mRecorder.importStackSlots + offset] ==
+                                  JSVAL_TYPE_INT32;
             } else {
-                promoteInt = mRecorder.importTypeMap[mRecorder.nativeStackSlot(vp)] ==
-                             JSVAL_TYPE_INT32;
+                isPromotedInt32 = mRecorder.importTypeMap[mRecorder.nativeStackSlot(vp)] ==
+                                  JSVAL_TYPE_INT32;
             }
         }
-        slots.add(SlotInfo(vp, promoteInt));
+        slots.add(SlotInfo(vp, isPromotedInt32));
     }
 
     JS_REQUIRES_STACK JS_ALWAYS_INLINE void
@@ -4682,7 +4683,7 @@ class SlotMap : public SlotVisitorBase
             JS_ASSERT(info.type == JSVAL_TYPE_INT32 || info.type == JSVAL_TYPE_DOUBLE);
             /*
              * This should only happen if the slot has a trivial conversion, i.e.
-             * IsPromoteInt() is true.  We check this.  
+             * IsPromotedInt32() is true.  We check this.  
              *
              * Note that getFromTracker() will return NULL if the slot was
              * never used, in which case we don't do the check.  We could
@@ -4691,7 +4692,7 @@ class SlotMap : public SlotVisitorBase
              * Not checking unused slots isn't so bad.
              */
             LIns* ins = mRecorder.getFromTrackerImpl(info.vp);
-            JS_ASSERT_IF(ins, IsPromoteInt(ins));
+            JS_ASSERT_IF(ins, IsPromotedInt32(ins));
         } else 
 #endif
         if (info.lastCheck == TypeCheck_Demote) {
@@ -4708,26 +4709,27 @@ class SlotMap : public SlotVisitorBase
     checkType(unsigned i, JSValueType t)
     {
         debug_only_printf(LC_TMTracer,
-                          "checkType slot %d: interp=%c typemap=%c isNum=%d promoteInt=%d\n",
+                          "checkType slot %d: interp=%c typemap=%c isNum=%d isPromotedInt32=%d\n",
                           i,
                           TypeToChar(slots[i].type),
                           TypeToChar(t),
                           slots[i].type == JSVAL_TYPE_INT32 || slots[i].type == JSVAL_TYPE_DOUBLE,
-                          slots[i].promoteInt);
+                          slots[i].isPromotedInt32);
         switch (t) {
           case JSVAL_TYPE_INT32:
             if (slots[i].type != JSVAL_TYPE_INT32 && slots[i].type != JSVAL_TYPE_DOUBLE)
                 return TypeCheck_Bad; /* Not a number? Type mismatch. */
             /* This is always a type mismatch, we can't close a double to an int. */
-            if (!slots[i].promoteInt)
+            if (!slots[i].isPromotedInt32)
                 return TypeCheck_Undemote;
             /* Looks good, slot is an int32, the last instruction should be promotable. */
-            JS_ASSERT_IF(slots[i].vp, hasInt32Repr(*(const Value *)slots[i].vp) && slots[i].promoteInt);
+            JS_ASSERT_IF(slots[i].vp,
+                         hasInt32Repr(*(const Value *)slots[i].vp) && slots[i].isPromotedInt32);
             return slots[i].vp ? TypeCheck_Promote : TypeCheck_Okay;
           case JSVAL_TYPE_DOUBLE:
             if (slots[i].type != JSVAL_TYPE_INT32 && slots[i].type != JSVAL_TYPE_DOUBLE)
                 return TypeCheck_Bad; /* Not a number? Type mismatch. */
-            if (slots[i].promoteInt)
+            if (slots[i].isPromotedInt32)
                 return slots[i].vp ? TypeCheck_Demote : TypeCheck_Bad;
             return TypeCheck_Okay;
           default:
@@ -6183,7 +6185,7 @@ public:
         debug_only_printf(LC_TMTracer, "global%d=", n);
         if (!IsEntryTypeCompatible(*vp, *mTypeMap)) {
             mOk = false;
-        } else if (!IsPromoteInt(mRecorder.get(vp)) && *mTypeMap == JSVAL_TYPE_INT32) {
+        } else if (!IsPromotedInt32(mRecorder.get(vp)) && *mTypeMap == JSVAL_TYPE_INT32) {
             mOracle->markGlobalSlotUndemotable(mCx, slot);
             mOk = false;
         } else if (vp->isInt32() && *mTypeMap == JSVAL_TYPE_DOUBLE) {
@@ -6205,7 +6207,7 @@ public:
             debug_only_printf(LC_TMTracer, "%s%u=", stackSlotKind(), unsigned(i));
             if (!IsEntryTypeCompatible(*vp, *mTypeMap)) {
                 mOk = false;
-            } else if (!IsPromoteInt(mRecorder.get(vp)) && *mTypeMap == JSVAL_TYPE_INT32) {
+            } else if (!IsPromotedInt32(mRecorder.get(vp)) && *mTypeMap == JSVAL_TYPE_INT32) {
                 mOracle->markStackSlotUndemotable(mCx, mStackSlotNum);
                 mOk = false;
             } else if (vp->isInt32() && *mTypeMap == JSVAL_TYPE_DOUBLE) {
@@ -8257,7 +8259,7 @@ TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
      * instruction.
      */
     if (!oracle || oracle->isInstructionUndemotable(cx->regs->pc) ||
-        !IsPromoteInt(s0) || !IsPromoteInt(s1)) {
+        !IsPromotedInt32(s0) || !IsPromotedInt32(s1)) {
     out:
         if (v == LIR_modd) {
             LIns* args[] = { s1, s0 };
@@ -8304,8 +8306,8 @@ TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
     if (jsint(r) != r || JSDOUBLE_IS_NEGZERO(r))
         goto out;
 
-    LIns* d0 = w.demote(s0);
-    LIns* d1 = w.demote(s1);
+    LIns* d0 = w.demoteToInt32(s0);
+    LIns* d1 = w.demoteToInt32(s1);
 
     /*
      * Speculatively emit an integer operation, betting that at runtime we
@@ -8425,15 +8427,32 @@ TraceRecorder::d2i(LIns* d, bool resultCanBeImpreciseIfFractional)
 {
     if (d->isImmD())
         return w.immi(js_DoubleToECMAInt32(d->immD()));
-    if (d->isop(LIR_i2d) || d->isop(LIR_ui2d))
+    if (d->isop(LIR_i2d) || d->isop(LIR_ui2d)) {
+        // The d2i(i2d(i)) case is obviously a no-op.  (Unlike i2d(d2i(d))!)
+        // The d2i(ui2d(ui)) case is less obvious, but it is also a no-op.
+        // For example, 4294967295U has the bit pattern 0xffffffff, and
+        // d2i(ui2d(4294967295U)) is -1, which also has the bit pattern
+        // 0xffffffff.  Another way to think about it:  d2i(ui2d(ui)) is
+        // equivalent to ui2i(ui);  ui2i doesn't exist, but it would be a
+        // no-op if it did.
+        // (Note that the above reasoning depends on the fact that d2i()
+        // always succeeds, ie. it never aborts).
         return d->oprnd1();
+    }
     if (d->isop(LIR_addd) || d->isop(LIR_subd)) {
+        // If 'i32ad' and 'i32bd' are integral doubles that fit in int32s, and
+        // 'i32ai' and 'i32bi' are int32s with the equivalent values, then
+        // this is true:
+        //
+        //   d2i(addd(i32ad, i32bd)) == addi(i32ai, i32bi)
+        //
+        // If the RHS doesn't overflow, this is obvious.  If it does overflow,
+        // the result will truncate.  And the LHS will truncate in exactly the
+        // same way.  So they're always equal.
         LIns* lhs = d->oprnd1();
         LIns* rhs = d->oprnd2();
-        if (IsPromote(lhs) && IsPromote(rhs)) {
-            LOpcode op = arithOpcodeD2I(d->opcode());
-            return w.ins2(op, w.demote(lhs), w.demote(rhs));
-        }
+        if (IsPromotedInt32(lhs) && IsPromotedInt32(rhs))
+            return w.ins2(arithOpcodeD2I(d->opcode()), w.demoteToInt32(lhs), w.demoteToInt32(rhs));
     }
     if (d->isCall()) {
         const CallInfo* ci = d->callInfo();
@@ -8478,8 +8497,8 @@ JS_REQUIRES_STACK RecordingStatus
 TraceRecorder::makeNumberInt32(LIns* d, LIns** out)
 {
     JS_ASSERT(d->isD());
-    if (IsPromote(d)) {
-        *out = w.demote(d);
+    if (IsPromotedInt32(d)) {
+        *out = w.demoteToInt32(d);
         return RECORD_CONTINUE;
     }
 
@@ -8495,8 +8514,8 @@ JS_REQUIRES_STACK RecordingStatus
 TraceRecorder::makeNumberUint32(LIns* d, LIns** out)
 {
     JS_ASSERT(d->isD());
-    if (IsPromoteUint(d)) {
-        *out = w.demote(d);
+    if (IsPromotedUint32(d)) {
+        *out = w.demoteToUint32(d);
         return RECORD_CONTINUE;
     }
 
@@ -9747,8 +9766,8 @@ TraceRecorder::box_value_into(const Value &v, LIns *v_ins, Address addr)
         if (fcallinfo(v_ins) == &js_UnboxDouble_ci) {
             w.stiValueTag(v_ins->callArgN(0), addr);
             w.stiValuePayload(v_ins->callArgN(1), addr);
-        } else if (IsPromoteInt(v_ins)) {
-            LIns *int_ins = w.demote(v_ins);
+        } else if (IsPromotedInt32(v_ins)) {
+            LIns *int_ins = w.demoteToInt32(v_ins);
             w.stiValueTag(w.nameImmui(JSVAL_TAG_INT32), addr);
             w.stiValuePayload(int_ins, addr);
         } else {
@@ -9898,8 +9917,8 @@ TraceRecorder::box_value_for_native_call(const Value &v, LIns *v_ins)
         JS_ASSERT(v_ins->isD());
         if (fcallinfo(v_ins) == &js_UnboxDouble_ci)
             return v_ins->callArgN(0);
-        if (IsPromoteInt(v_ins)) {
-            return w.orq(w.ui2uq(w.demote(v_ins)),
+        if (IsPromotedInt32(v_ins)) {
+            return w.orq(w.ui2uq(w.demoteToInt32(v_ins)),
                          w.nameImmq(JSVAL_SHIFTED_TAG_INT32));
         }
         return w.dasq(v_ins);
@@ -10795,13 +10814,13 @@ TraceRecorder::record_JSOP_NEG()
          */
         if (oracle &&
             !oracle->isInstructionUndemotable(cx->regs->pc) &&
-            IsPromoteInt(a) &&
+            IsPromotedInt32(a) &&
             (!v.isInt32() || v.toInt32() != 0) &&
             (!v.isDouble() || v.toDouble() != 0) &&
             -v.toNumber() == (int)-v.toNumber())
         {
             VMSideExit* exit = snapshot(OVERFLOW_EXIT);
-            a = guard_xov(LIR_subi, w.immi(0), w.demote(a), exit);
+            a = guard_xov(LIR_subi, w.immi(0), w.demoteToInt32(a), exit);
             if (!a->isImmI() && a->isop(LIR_subxovi)) {
                 guard(false, w.eqiN(a, 0), exit); // make sure we don't lose a -0
             }
@@ -11310,7 +11329,7 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
             if (native == js_math_ceil || native == js_math_floor || native == js_math_round) {
                 LIns* a = get(&vp[2]);
                 int32 result;
-                if (IsPromote(a)) {
+                if (IsPromotedInt32OrUint32(a)) {
                     set(&vp[0], a);
                     pendingSpecializedNative = IGNORE_NATIVE_CALL_COMPLETE_CALLBACK;
                     return RECORD_CONTINUE;
@@ -11327,8 +11346,8 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
                 }
             } else if (native == js_math_abs) {
                 LIns* a = get(&vp[2]);
-                if (IsPromoteInt(a) && vp[2].toNumber() != INT_MIN) {
-                    a = w.demote(a);
+                if (IsPromotedInt32(a) && vp[2].toNumber() != INT_MIN) {
+                    a = w.demoteToInt32(a);
                     /* abs(INT_MIN) can't be done using integers;  exit if we see it. */
                     LIns* intMin_ins = w.name(w.immi(0x80000000), "INT_MIN");
                     LIns* isIntMin_ins = w.name(w.eqi(a, intMin_ins), "isIntMin");
@@ -11426,11 +11445,19 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
             (native == js_math_min || native == js_math_max)) {
             LIns* a = get(&vp[2]);
             LIns* b = get(&vp[3]);
-            if (IsPromote(a) && IsPromote(b)) {
-                a = w.demote(a);
-                b = w.demote(b);
+            if (IsPromotedInt32(a) && IsPromotedInt32(b)) {
+                a = w.demoteToInt32(a);
+                b = w.demoteToInt32(b);
                 LIns* cmp = (native == js_math_min) ? w.lti(a, b) : w.gti(a, b);
                 set(&vp[0], w.i2d(w.cmovi(cmp, a, b)));
+                pendingSpecializedNative = IGNORE_NATIVE_CALL_COMPLETE_CALLBACK;
+                return RECORD_CONTINUE;
+            }
+            if (IsPromotedUint32(a) && IsPromotedUint32(b)) {
+                a = w.demoteToUint32(a);
+                b = w.demoteToUint32(b);
+                LIns* cmp = (native == js_math_min) ? w.ltui(a, b) : w.gtui(a, b);
+                set(&vp[0], w.ui2d(w.cmovi(cmp, a, b)));
                 pendingSpecializedNative = IGNORE_NATIVE_CALL_COMPLETE_CALLBACK;
                 return RECORD_CONTINUE;
             }
@@ -12064,7 +12091,7 @@ TraceRecorder::setUpwardTrackedVar(Value* stackVp, const Value &v, LIns* v_ins)
     bool promote = true;
 
     if (stackT != otherT) {
-        if (stackT == JSVAL_TYPE_DOUBLE && otherT == JSVAL_TYPE_INT32 && IsPromoteInt(v_ins))
+        if (stackT == JSVAL_TYPE_DOUBLE && otherT == JSVAL_TYPE_INT32 && IsPromotedInt32(v_ins))
             promote = false;
         else
             RETURN_STOP("can't trace this upvar mutation");
@@ -12990,8 +13017,8 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
             typed_v_ins = d2u(typed_v_ins);
             break;
           case js::TypedArray::TYPE_UINT8_CLAMPED:
-            if (IsPromoteInt(typed_v_ins)) {
-                typed_v_ins = w.demote(typed_v_ins);
+            if (IsPromotedInt32(typed_v_ins)) {
+                typed_v_ins = w.demoteToInt32(typed_v_ins);
                 typed_v_ins = w.cmovi(w.ltiN(typed_v_ins, 0),
                                       w.immi(0),
                                       w.cmovi(w.gtiN(typed_v_ins, 0xff),
