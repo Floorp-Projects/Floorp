@@ -183,9 +183,6 @@ PuppetWidget::Resize(PRInt32 aWidth,
                      PRInt32 aHeight,
                      PRBool  aRepaint)
 {
-  NS_ASSERTION(mEnabled && mVisible,
-               "does it make sense to Resize() a disabled or hidden widget?");
-
   nsIntRect oldBounds = mBounds;
   mBounds.SizeTo(nsIntSize(aWidth, aHeight));
 
