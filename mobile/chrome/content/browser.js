@@ -247,7 +247,9 @@ var Browser = {
     window.cachedWidth = window.innerWidth;
 
     // Saved the scrolls values before the resizing of the window, to restore
-    // the scrollbox position once the resize has finished
+    // the scrollbox position once the resize has finished.
+    // The last parameter of addEventListener is true to be sure we performed
+    // the computation before something else could happened (bug 622121)
     window.addEventListener("MozBeforeResize", function(aEvent) {
       if (aEvent.target != window)
         return;
@@ -259,7 +261,7 @@ var Browser = {
       let shouldHideSidebars = Browser.controlsPosition ? Browser.controlsPosition.hideSidebars : true;
       Browser.controlsPosition = { x: x1, y: y2, hideSidebars: shouldHideSidebars,
                                    leftSidebar: leftWidth, rightSidebar: rightWidth };
-    }, false);
+    }, true);
 
     function resizeHandler(e) {
       if (e.target != window)
