@@ -76,12 +76,13 @@ using namespace js::gc;
 namespace js {
 
 BindingKind
-Bindings::lookup(JSAtom *name, uintN *indexp) const
+Bindings::lookup(JSContext *cx, JSAtom *name, uintN *indexp) const
 {
     JS_ASSERT(lastBinding);
 
     Shape *shape =
-        SHAPE_FETCH(Shape::search(const_cast<Shape **>(&lastBinding), ATOM_TO_JSID(name)));
+        SHAPE_FETCH(Shape::search(cx->runtime, const_cast<Shape **>(&lastBinding),
+                    ATOM_TO_JSID(name)));
     if (!shape)
         return NONE;
 
@@ -289,7 +290,7 @@ Bindings::sharpSlotBase(JSContext *cx)
 #ifdef DEBUG
         BindingKind kind =
 #endif
-            lookup(name, &index);
+            lookup(cx, name, &index);
         JS_ASSERT(kind == VARIABLE);
         return int(index);
     }

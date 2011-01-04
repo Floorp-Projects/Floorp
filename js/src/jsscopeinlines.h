@@ -170,8 +170,8 @@ inline
 Shape::Shape(jsid id, js::PropertyOp getter, js::PropertyOp setter, uint32 slot, uintN attrs,
              uintN flags, intN shortid, uint32 shape, uint32 slotSpan)
   : JSObjectMap(shape, slotSpan),
-    table(NULL), id(id), rawGetter(getter), rawSetter(setter), slot(slot), attrs(uint8(attrs)),
-    flags(uint8(flags)), shortid(int16(shortid)), parent(NULL)
+    numSearches(0), table(NULL), id(id), rawGetter(getter), rawSetter(setter), slot(slot),
+    attrs(uint8(attrs)), flags(uint8(flags)), shortid(int16(shortid)), parent(NULL)
 {
     JS_ASSERT_IF(slotSpan != SHAPE_INVALID_SLOT, slotSpan < JSObject::NSLOTS_LIMIT);
     JS_ASSERT_IF(getter && (attrs & JSPROP_GETTER), getterObj->isCallable());
@@ -181,7 +181,7 @@ Shape::Shape(jsid id, js::PropertyOp getter, js::PropertyOp setter, uint32 slot,
 
 inline
 Shape::Shape(JSContext *cx, Class *aclasp)
-  : JSObjectMap(js_GenerateShape(cx, false), JSSLOT_FREE(aclasp)), table(NULL),
+  : JSObjectMap(js_GenerateShape(cx, false), JSSLOT_FREE(aclasp)), numSearches(0), table(NULL),
     id(JSID_EMPTY), clasp(aclasp), rawSetter(NULL), slot(SHAPE_INVALID_SLOT), attrs(0),
     flags(SHARED_EMPTY), shortid(0), parent(NULL)
 {
