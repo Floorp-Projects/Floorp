@@ -278,7 +278,8 @@ protected:
   void InvalidateForLayerChange(nsDisplayItem* aItem, Layer* aNewLayer);
   /**
    * Try to determine whether the ThebesLayer at aThebesLayerIndex
-   * has an opaque single color covering the visible area behind it.
+   * has a single opaque color behind it, over the entire bounds of its visible
+   * region.
    * If successful, return that color, otherwise return NS_RGBA(0,0,0,0).
    */
   nscolor FindOpaqueBackgroundColorFor(PRInt32 aThebesLayerIndex);
@@ -346,6 +347,10 @@ public:
   ThebesDisplayItemLayerUserData() :
     mForcedBackgroundColor(NS_RGBA(0,0,0,0)) {}
 
+  /**
+   * A color that should be painted over the bounds of the layer's visible
+   * region before any other content is painted.
+   */
   nscolor mForcedBackgroundColor;
 };
 
@@ -1637,8 +1642,11 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
       (aLayer->GetUserData(&gThebesDisplayItemLayerUserData));
   NS_ASSERTION(userData, "where did our user data go?");
   if (NS_GET_A(userData->mForcedBackgroundColor) > 0) {
+    nsIntRect r = aLayer->GetVisibleRegion().GetBounds();
+    aContext->NewPath();
+    aContext->Rectangle(gfxRect(r.x, r.y, r.width, r.height));
     aContext->SetColor(gfxRGBA(userData->mForcedBackgroundColor));
-    aContext->Paint();
+    aContext->Fill();
   }
 
   gfxMatrix transform;
