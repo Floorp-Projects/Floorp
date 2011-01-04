@@ -30,7 +30,7 @@
         { ss: "237-23-7733", name: "Bob", height: 65 }
       ];
 
-      let request = moz_indexedDB.open(window.location.pathname);
+      let request = mozIndexedDB.open(window.location.pathname);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;

@@ -3575,6 +3575,7 @@ typedef struct _cairo_xlib_font_glyphset_info {
 
 typedef struct _cairo_xlib_surface_font_private {
     cairo_scaled_font_t		    *scaled_font;
+    cairo_scaled_font_t         *grayscale_font;
     cairo_xlib_hook_t                close_display_hook;
     cairo_xlib_display_t	    *display;
     cairo_xlib_font_glyphset_info_t  glyphset_info[NUM_GLYPHSETS];
@@ -3603,6 +3604,10 @@ _cairo_xlib_surface_remove_scaled_font (cairo_xlib_display_t	*display,
     if (font_private != NULL) {
 	Display *dpy;
 	int i;
+
+    if (font_private->grayscale_font) {
+        cairo_scaled_font_destroy (font_private->grayscale_font);
+    }
 
 	dpy = _cairo_xlib_display_get_dpy (display);
 	for (i = 0; i < NUM_GLYPHSETS; i++) {
@@ -3634,6 +3639,7 @@ _cairo_xlib_surface_font_init (Display		    *dpy,
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     font_private->scaled_font = scaled_font;
+    font_private->grayscale_font = NULL;
     status = _cairo_xlib_display_get (dpy, &font_private->display);
     if (unlikely (status)) {
 	free (font_private);
@@ -3675,6 +3681,10 @@ _cairo_xlib_surface_scaled_font_fini (cairo_scaled_font_t *scaled_font)
     if (font_private != NULL) {
 	cairo_xlib_display_t *display;
 	int i;
+
+	if (font_private->grayscale_font) {
+        cairo_scaled_font_destroy (font_private->grayscale_font);
+	}
 
 	display = font_private->display;
 	_cairo_xlib_remove_close_display_hook (display,
@@ -4422,6 +4432,52 @@ _cairo_xlib_surface_owns_font (cairo_xlib_surface_t *dst,
     return TRUE;
 }
 
+/* Gets a grayscale version of scaled_font. The grayscale version is cached
+ * in our surface_private data.
+ */
+static cairo_scaled_font_t *
+_cairo_xlib_get_grayscale_font (cairo_xlib_surface_t *dst,
+                                cairo_scaled_font_t *scaled_font)
+{
+    cairo_xlib_surface_font_private_t *font_private = scaled_font->surface_private;
+    cairo_bool_t needs_font;
+
+    if (font_private == NULL) {
+        cairo_status_t status = _cairo_xlib_surface_font_init (dst->dpy, scaled_font);
+        if (unlikely (status))
+            return _cairo_scaled_font_create_in_error (status);
+        font_private = scaled_font->surface_private;
+    }
+
+    CAIRO_MUTEX_LOCK (scaled_font->mutex);
+    needs_font = !font_private->grayscale_font;
+    CAIRO_MUTEX_UNLOCK (scaled_font->mutex);
+
+    if (needs_font) {
+        cairo_font_options_t options;
+        cairo_scaled_font_t *new_font;
+
+        options = scaled_font->options;
+        options.antialias = CAIRO_ANTIALIAS_GRAY;
+        new_font = cairo_scaled_font_create (scaled_font->font_face,
+                                             &scaled_font->font_matrix,
+                                             &scaled_font->ctm, &options);
+
+        CAIRO_MUTEX_LOCK (scaled_font->mutex);
+        if (!font_private->grayscale_font) {
+            font_private->grayscale_font = new_font;
+            new_font = NULL;
+        }
+        CAIRO_MUTEX_UNLOCK (scaled_font->mutex);
+
+        if (new_font) {
+            cairo_scaled_font_destroy (new_font);
+        }
+    }
+
+    return font_private->grayscale_font;
+}
+
 static cairo_int_status_t
 _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 				 cairo_operator_t     op,
@@ -4479,6 +4535,11 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 
     if (! _cairo_xlib_surface_owns_font (dst, scaled_font))
 	return UNSUPPORTED ("unowned font");
+
+    if (!dst->base.permit_subpixel_antialiasing &&
+        scaled_font->options.antialias == CAIRO_ANTIALIAS_SUBPIXEL) {
+        scaled_font = _cairo_xlib_get_grayscale_font (dst, scaled_font);
+    }
 
     X_DEBUG ((dst->dpy, "show_glyphs (dst=%x)", (unsigned int) dst->drawable));
 

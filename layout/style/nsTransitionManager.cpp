@@ -122,9 +122,9 @@ ElementPropertyTransition::ValuePortionFor(TimeStamp aRefreshTime) const
     // When duration is zero, we can still have a transition when delay
     // is nonzero.  mStartTime already incorporates delay.
     if (aRefreshTime >= mStartTime) {
-      timePortion = 0.0;
-    } else {
       timePortion = 1.0;
+    } else {
+      timePortion = 0.0;
     }
   } else {
     timePortion = (aRefreshTime - mStartTime).ToSeconds() / duration;

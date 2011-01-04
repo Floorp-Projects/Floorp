@@ -705,6 +705,23 @@ const gXPInstallObserver = {
       PopupNotifications.show(browser, notificationID, messageString, anchorID,
                               action, null, options);
       break;
+    case "addon-install-started":
+      function needsDownload(aInstall) {
+        return aInstall.state != AddonManager.STATE_DOWNLOADED;
+      }
+      // If all installs have already been downloaded then there is no need to
+      // show the download progress
+      if (!installInfo.installs.some(needsDownload))
+        return;
+      notificationID = "addon-progress";
+      messageString = gNavigatorBundle.getString("addonDownloading");
+      messageString = PluralForm.get(installInfo.installs.length, messageString);
+      options.installs = installInfo.installs;
+      options.contentWindow = browser.contentWindow;
+      options.sourceURI = browser.currentURI;
+      PopupNotifications.show(browser, notificationID, messageString, anchorID,
+                              null, null, options);
+      break;
     case "addon-install-failed":
       // TODO This isn't terribly ideal for the multiple failure case
       installInfo.installs.forEach(function(aInstall) {
@@ -1384,6 +1401,7 @@ function prepareForStartup() {
 function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   Services.obs.addObserver(gSessionHistoryObserver, "browser:purge-session-history", false);
   Services.obs.addObserver(gXPInstallObserver, "addon-install-disabled", false);
+  Services.obs.addObserver(gXPInstallObserver, "addon-install-started", false);
   Services.obs.addObserver(gXPInstallObserver, "addon-install-blocked", false);
   Services.obs.addObserver(gXPInstallObserver, "addon-install-failed", false);
   Services.obs.addObserver(gXPInstallObserver, "addon-install-complete", false);
@@ -1626,6 +1644,7 @@ function BrowserShutdown()
 
   Services.obs.removeObserver(gSessionHistoryObserver, "browser:purge-session-history");
   Services.obs.removeObserver(gXPInstallObserver, "addon-install-disabled");
+  Services.obs.removeObserver(gXPInstallObserver, "addon-install-started");
   Services.obs.removeObserver(gXPInstallObserver, "addon-install-blocked");
   Services.obs.removeObserver(gXPInstallObserver, "addon-install-failed");
   Services.obs.removeObserver(gXPInstallObserver, "addon-install-complete");

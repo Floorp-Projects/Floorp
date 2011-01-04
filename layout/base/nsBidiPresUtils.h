@@ -318,6 +318,24 @@ public:
                        nscoord*               aWidth);
 
   /**
+   * Make a copy of a string, converting from logical to visual order
+   *
+   * @param aSource the source string
+   * @param aDest the destination string
+   * @param aBaseDirection the base direction of the string
+   *       (NSBIDI_LTR or NSBIDI_RTL to force the base direction;
+   *        NSBIDI_DEFAULT_LTR or NSBIDI_DEFAULT_RTL to let the bidi engine
+   *        determine the direction from rules P2 and P3 of the bidi algorithm.
+   *  @see nsBidi::GetPara
+   * @param aOverride if TRUE, the text has a bidi override, according to
+   *                    the direction in aDir
+   */
+  void CopyLogicalToVisual(const nsAString& aSource,
+                           nsAString& aDest,
+                           nsBidiLevel aBaseDirection,
+                           PRBool aOverride);
+
+  /**
    * Guess at how much memory is being used by this nsBidiPresUtils instance,
    * including memory used by nsBidi.
    */
@@ -477,6 +495,17 @@ private:
   
   void StripBidiControlCharacters(PRUnichar* aText,
                                   PRInt32&   aTextLength) const;
+
+  static PRBool WriteLogicalToVisual(const PRUnichar* aSrc,
+                                     PRUint32 aSrcLength,
+                                     PRUnichar* aDest,
+                                     nsBidiLevel aBaseDirection,
+                                     nsBidi* aBidiEngine);
+
+ static void WriteReverse(const PRUnichar* aSrc,
+                          PRUint32 aSrcLength,
+                          PRUnichar* aDest);
+
   nsAutoString    mBuffer;
   nsTArray<nsIFrame*> mLogicalFrames;
   nsTArray<nsIFrame*> mVisualFrames;

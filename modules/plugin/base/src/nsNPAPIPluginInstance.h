@@ -109,6 +109,9 @@ public:
   bool IsRunning() {
     return RUNNING == mRunning;
   }
+  bool HasStartedDestroying() {
+    return mRunning >= DESTROYING;
+  }
 
   // Indicates whether the plugin is running normally or being shut down
   bool CanFireNotifications() {

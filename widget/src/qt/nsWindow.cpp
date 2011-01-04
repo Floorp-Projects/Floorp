@@ -685,6 +685,9 @@ nsWindow::SetBackgroundColor(const nscolor &aColor)
 NS_IMETHODIMP
 nsWindow::SetCursor(nsCursor aCursor)
 {
+    if (mCursor == aCursor)
+        return NS_OK;
+
     mCursor = aCursor;
     if (mWidget)
         mWidget->SetCursor(mCursor);
@@ -2589,6 +2592,11 @@ nsWindow::createQWidget(MozQWidget *parent, nsWidgetInitData *aInitData)
 #if (QT_VERSION >= QT_VERSION_CHECK(4, 6, 0))
         // Top level widget is just container, and should not be painted
         widget->setFlag(QGraphicsItem::ItemHasNoContents);
+#endif
+
+#ifdef MOZ_X11
+        XSetWindowBackgroundPixmap(QX11Info::display(),
+                                   newView->effectiveWinId(), None);
 #endif
     } else if (eWindowType_dialog == mWindowType && parent)
         parent->scene()->addItem(widget);

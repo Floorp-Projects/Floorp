@@ -151,10 +151,14 @@ public:
    */
   PRBool IsForEventDelivery() { return mMode == EVENT_DELIVERY; }
   /**
-   * @return PR_TRUE if the display list is being build to compute geometry
+   * @return PR_TRUE if the display list is being built to compute geometry
    * for plugins.
    */
   PRBool IsForPluginGeometry() { return mMode == PLUGIN_GEOMETRY; }
+  /**
+   * @return PR_TRUE if the display list is being built for painting.
+   */
+  PRBool IsForPainting() { return mMode == PAINTING; }
   /**
    * @return PR_TRUE if "painting is suppressed" during page load and we
    * should paint only the background of the document.
@@ -335,6 +339,19 @@ public:
   FrameLayerBuilder* LayerBuilder() { return &mLayerBuilder; }
 
   /**
+   * Get the area of the final transparent region.
+   */
+  const nsRegion* GetFinalTransparentRegion() { return mFinalTransparentRegion; }
+  /**
+   * Record the area of the final transparent region after all visibility
+   * calculations were performed.
+   */
+  void SetFinalTransparentRegion(const nsRegion& aFinalTransparentRegion)
+  {
+    mFinalTransparentRegion = &aFinalTransparentRegion;
+  }
+
+  /**
    * Returns true if we need to descend into this frame when building
    * the display list, even though it doesn't intersect the dirty
    * rect, because it may have out-of-flows that do so.
@@ -418,6 +435,7 @@ private:
   nsAutoTArray<PresShellState,8> mPresShellStates;
   nsAutoTArray<nsIFrame*,100>    mFramesMarkedForDisplay;
   nsDisplayTableItem*            mCurrentTableItem;
+  const nsRegion*                mFinalTransparentRegion;
   Mode                           mMode;
   PRPackedBool                   mBuildCaret;
   PRPackedBool                   mIgnoreSuppression;
@@ -541,16 +559,16 @@ public:
     return nsRect(ToReferenceFrame(), GetUnderlyingFrame()->GetSize());
   }
   /**
-   * @return PR_TRUE if the item is definitely opaque --- i.e., paints
-   * every pixel within its bounds opaquely
+   * @return a region of the item that is opaque --- every pixel painted
+   * with an opaque color.
    */
-  virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder,
-                          PRBool* aForceTransparentSurface = nsnull)
+  virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
+                                   PRBool* aForceTransparentSurface = nsnull)
   {
     if (aForceTransparentSurface) {
       *aForceTransparentSurface = PR_FALSE;
     }
-    return PR_FALSE;
+    return nsRegion();
   }
   /**
    * If this returns true, then aColor is set to the uniform color
@@ -623,14 +641,12 @@ public:
    * On entry, aVisibleRegion contains the region (relative to ReferenceFrame())
    * which may be visible. If the display item opaquely covers an area, it
    * can remove that area from aVisibleRegion before returning.
-   * nsDisplayList::ComputeVisibility automatically subtracts the bounds
-   * of items that return true from IsOpaque(), and automatically
-   * removes items whose bounds do not intersect the visible area,
-   * so implementations of nsDisplayItem::ComputeVisibility do not
-   * need to do these things.
+   * nsDisplayList::ComputeVisibility automatically subtracts the region
+   * returned by GetOpaqueRegion, and automatically removes items whose bounds
+   * do not intersect the visible area, so implementations of
+   * nsDisplayItem::ComputeVisibility do not need to do these things.
    * nsDisplayList::ComputeVisibility will already have set mVisibleRect on
-   * this item to the intersection of *aVisibleRegion (unioned with
-   * *aVisibleRegionBeforeMove, if that's non-null) and this item's bounds.
+   * this item to the intersection of *aVisibleRegion and this item's bounds.
    * We rely on that, so this should only be called by
    * nsDisplayList::ComputeVisibility or nsDisplayItem::RecomputeVisibility.
    * 
@@ -694,10 +710,17 @@ public:
   }
 
   /**
-   * Checks if this display item (or any children) contains text that might 
-   * be rendered with subpixel antialiasing.
+   * Checks if this display item (or any children) contains content that might
+   * be rendered with component alpha (e.g. subpixel antialiasing). Returns the
+   * bounds of the area that needs component alpha, or an empty rect if nothing
+   * in the item does.
    */
-  virtual PRBool HasText() { return PR_FALSE; }
+  virtual nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder) { return nsRect(); }
+
+  /**
+   * Disable usage of component alpha. Currently only relevant for items that have text.
+   */
+  virtual void DisableComponentAlpha() {}
 
 protected:
   friend class nsDisplayList;
@@ -1169,13 +1192,12 @@ public:
   }
   NS_DISPLAY_DECL_NAME(mName, mType)
 
-  virtual PRBool HasText() {
-    if (mType == nsDisplayItem::TYPE_HEADER_FOOTER) {
-      return PR_TRUE;
-    } else {
-      return PR_FALSE;
-    }
+  virtual nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder) {
+    if (mType == nsDisplayItem::TYPE_HEADER_FOOTER)
+      return GetBounds(aBuilder);
+    return nsRect();
   }
+
 protected:
   PaintCallback mPaint;
 #ifdef DEBUG
@@ -1338,12 +1360,16 @@ public:
 
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder) { return mBounds; }
 
-  virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder,
-                          PRBool* aOutTransparentBackground = nsnull) {
+  virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
+                                   PRBool* aOutTransparentBackground = nsnull) {
     if (aOutTransparentBackground) {
       *aOutTransparentBackground = PR_FALSE;
     }
-    return (NS_GET_A(mColor) == 255);
+    nsRegion result;
+    if (NS_GET_A(mColor) == 255) {
+      result = GetBounds(aBuilder);
+    }
+    return result;
   }
 
   virtual PRBool IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor)
@@ -1378,8 +1404,8 @@ public:
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames);
   virtual PRBool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                    nsRegion* aVisibleRegion);
-  virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder,
-                          PRBool* aForceTransparentSurface = nsnull);
+  virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
+                                   PRBool* aForceTransparentSurface = nsnull);
   virtual PRBool IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuilder,
                                                 nsIFrame* aFrame);
   virtual PRBool IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor);
@@ -1388,6 +1414,8 @@ public:
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("Background", TYPE_BACKGROUND)
 protected:
+  nsRegion GetInsideClipRegion(PRUint8 aClip, const nsRect& aRect);
+
   /* Used to cache mFrame->IsThemed() since it isn't a cheap call */
   PRPackedBool mIsThemed;
   nsITheme::Transparency mThemeTransparency;
@@ -1514,8 +1542,8 @@ public:
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames);
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
-  virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder,
-                          PRBool* aForceTransparentSurface = nsnull);
+  virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
+                                   PRBool* aForceTransparentSurface = nsnull);
   virtual PRBool IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor);
   virtual PRBool IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuilder,
                                                 nsIFrame* aFrame);
@@ -1528,7 +1556,7 @@ public:
   }
   NS_DISPLAY_DECL_NAME("WrapList", TYPE_WRAP_LIST)
 
-  virtual PRBool HasText();
+  virtual nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder);
                                     
   virtual nsDisplayList* GetList() { return &mList; }
   
@@ -1598,8 +1626,8 @@ public:
   virtual ~nsDisplayOpacity();
 #endif
   
-  virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder,
-                          PRBool* aForceTransparentSurface = nsnull);
+  virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
+                                   PRBool* aForceTransparentSurface = nsnull);
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager);
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
@@ -1696,8 +1724,8 @@ public:
   virtual ~nsDisplayClipRoundedRect();
 #endif
 
-  virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder,
-                          PRBool* aForceTransparentSurface = nsnull);
+  virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
+                                   PRBool* aForceTransparentSurface = nsnull);
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames);
   virtual PRBool ComputeVisibility(nsDisplayListBuilder* aBuilder,
@@ -1766,8 +1794,8 @@ public:
   virtual ~nsDisplaySVGEffects();
 #endif
   
-  virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder,
-                          PRBool* aForceTransparentSurface = nsnull);
+  virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
+                                   PRBool* aForceTransparentSurface = nsnull);
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames);
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder) {
@@ -1816,7 +1844,12 @@ public:
 
   NS_DISPLAY_DECL_NAME("nsDisplayTransform", TYPE_TRANSFORM);
 
-  virtual PRBool HasText() { return mStoredList.HasText(); }
+  virtual nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder)
+  {
+    if (mStoredList.GetComponentAlphaBounds(aBuilder).IsEmpty())
+      return nsRect();
+    return GetBounds(aBuilder);
+  }
 
 #ifdef NS_DEBUG
   nsDisplayWrapList* GetStoredList() { return &mStoredList; }
@@ -1825,8 +1858,8 @@ public:
   virtual void HitTest(nsDisplayListBuilder *aBuilder, const nsRect& aRect,
                        HitTestState *aState, nsTArray<nsIFrame*> *aOutFrames);
   virtual nsRect GetBounds(nsDisplayListBuilder *aBuilder);
-  virtual PRBool IsOpaque(nsDisplayListBuilder *aBuilder,
-                          PRBool* aForceTransparentSurface = nsnull);
+  virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder *aBuilder,
+                                   PRBool* aForceTransparentSurface = nsnull);
   virtual PRBool IsUniform(nsDisplayListBuilder *aBuilder, nscolor* aColor);
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager);

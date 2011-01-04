@@ -36,6 +36,9 @@ function onContentLoaded()
   ok(findEntry("hud-jswarn", "undefinedPropertyBug601177"),
     "found strict warning");
 
+  ok(findEntry("hud-jswarn", "foobarBug601177strictError"),
+    "found strict error");
+
   msgs = null;
   Services.prefs.setBoolPref("javascript.options.strict", false);
   finishTest();

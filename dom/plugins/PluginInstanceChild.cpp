@@ -163,6 +163,8 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface)
     InitPopupMenuHook();
 #endif // OS_WIN
 #ifdef MOZ_X11
+    // Maemo flash can render plugin with any provided rectangle and not require this quirk.
+#ifndef MOZ_PLATFORM_MAEMO
     const char *description = NULL;
     mPluginIface->getvalue(GetNPP(), NPPVpluginDescriptionString,
                            &description);
@@ -172,6 +174,7 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface)
           PluginModuleChild::current()->AddQuirk(PluginModuleChild::QUIRK_FLASH_EXPOSE_COORD_TRANSLATION);
         }
     }
+#endif
 #endif
 }
 
@@ -2289,9 +2292,9 @@ PluginInstanceChild::CreateOptSurface(void)
 #endif
 
     // Make common shmem implementation working for any platform
-    mCurrentSurface = new gfxSharedImageSurface();
-    return static_cast<gfxSharedImageSurface*>(mCurrentSurface.get())->
-        Init(this, gfxIntSize(mWindow.width, mWindow.height), format);
+    mCurrentSurface =
+        gfxSharedImageSurface::CreateUnsafe(this, gfxIntSize(mWindow.width, mWindow.height), format);
+    return !!mCurrentSurface;
 }
 
 bool
@@ -2774,10 +2777,11 @@ PluginInstanceChild::ReadbackDifferenceRect(const nsIntRect& rect)
     if (!mBackSurface)
         return false;
 
-    // We can read safely from XSurface and SharedDIBSurface, because
-    // PluginHost is not able to modify that surface
+    // We can read safely from XSurface,SharedDIBSurface and Unsafe SharedMemory,
+    // because PluginHost is not able to modify that surface
 #if defined(MOZ_X11)
-    if (mBackSurface->GetType() != gfxASurface::SurfaceTypeXlib)
+    if (mBackSurface->GetType() != gfxASurface::SurfaceTypeXlib &&
+        !gfxSharedImageSurface::IsSharedImage(mBackSurface))
         return false;
 #elif defined(XP_WIN)
     if (!SharedDIBSurface::IsSharedDIBSurface(mBackSurface))

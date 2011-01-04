@@ -432,7 +432,7 @@ nsMacShellService::OpenApplicationWithURI(nsILocalFile* aApplication, const nsAC
     ::CFRelease(uri);
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  
+
   LSLaunchURLSpec launchSpec;
   launchSpec.appURL = appURL;
   launchSpec.itemURLs = uris;

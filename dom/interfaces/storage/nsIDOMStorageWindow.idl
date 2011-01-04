@@ -71,5 +71,5 @@ interface nsIDOMStorageWindow : nsISupports
   /**
    * Indexed Databases for the current browsing context.
    */
-  readonly attribute nsIIDBFactory moz_indexedDB;
+  readonly attribute nsIIDBFactory mozIndexedDB;
 };

@@ -43,6 +43,10 @@ var gBadComputed = {
   // These values are treated as auto.
   "page-break-after": [ "avoid" ],
   "page-break-before": [ "avoid" ],
+
+  // This is the only SVG-length property (i.e., length allowing
+  // unitless lengths) whose initial value is zero.
+  "stroke-dashoffset": [ "0" ],
 };
 
 var gBadComputedNoFrame = {
@@ -68,7 +72,7 @@ var gBadComputedNoFrame = {
   "margin-top": [ "0%", "-moz-calc(0% + 0px)" ],
   "min-height": [ "-moz-calc(-1%)" ],
   "min-width": [ "-moz-calc(-1%)" ],
-  "padding": [ "0% 0px 0em 0pt", "-moz-calc(0) -moz-calc(0em) -moz-calc(-2px) -moz-calc(-1%)" ],
+  "padding": [ "0% 0px 0em 0pt", "-moz-calc(0px) -moz-calc(0em) -moz-calc(-2px) -moz-calc(-1%)" ],
   "padding-bottom": [ "0%", "-moz-calc(0% + 0px)", "-moz-calc(-1%)" ],
   "padding-left": [ "0%", "-moz-calc(0% + 0px)", "-moz-calc(-1%)" ],
   "padding-right": [ "0%", "-moz-calc(0% + 0px)", "-moz-calc(-1%)" ],

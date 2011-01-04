@@ -123,9 +123,11 @@ abstract public class GeckoApp
         try {
             unpackComponents();
         } catch (FileNotFoundException fnfe) {
+            Log.e("GeckoApp", "error unpacking components", fnfe);
             showErrorDialog(getString(R.string.error_loading_file));
             return false;
         } catch (IOException ie) {
+            Log.e("GeckoApp", "error unpacking components", ie);
             String msg = ie.getMessage();
             if (msg.equalsIgnoreCase("No space left on device"))
                 showErrorDialog(getString(R.string.no_space_to_start_error));
@@ -412,7 +414,7 @@ abstract public class GeckoApp
             Log.i("GeckoAppJava", intent.toString());
             startActivity(intent);
         } catch (Exception e) {
-            Log.i("GeckoAppJava", e.toString());
+            Log.i("GeckoAppJava", "error doing restart", e);
         }
         finish();
     }
@@ -425,10 +427,16 @@ abstract public class GeckoApp
         Log.i("GeckoAppJava", "Checking for an update");
 
         int statusCode = 8; // UNEXPECTED_ERROR
+        File downloadDir = null;
+        if (Build.VERSION.SDK_INT >= 8)
+            downloadDir = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
+        else
+            downloadDir = new File(Environment.getExternalStorageDirectory().getPath(), "download");
 
-        String updateDir = Environment.getExternalStorageDirectory().getPath() + "/downloads/updates/0/";
-        File updateFile = new File(updateDir + "update.apk");
-        File statusFile = new File(updateDir + "update.status");
+        File updateDir = new File(new File(downloadDir, "updates"),"0");
+
+        File updateFile = new File(updateDir, "update.apk");
+        File statusFile = new File(updateDir, "update.status");
 
         if (!statusFile.exists() || !readUpdateStatus(statusFile).equals("pending"))
             return;
@@ -453,7 +461,7 @@ abstract public class GeckoApp
                 statusCode = 7; // WRITE_ERROR
             }
         } catch (Exception e) {
-            Log.i("GeckoAppJava", e.toString());
+            Log.i("GeckoAppJava", "error launching installer to update", e);
         }
 
         // Update the status file
@@ -466,7 +474,7 @@ abstract public class GeckoApp
             outStream.write(buf, 0, buf.length);
             outStream.close();
         } catch (Exception e) {
-            Log.i("GeckoAppJava", e.toString());
+            Log.i("GeckoAppJava", "error writing status file", e);
         }
 
         if (statusCode == 0)
@@ -480,7 +488,7 @@ abstract public class GeckoApp
             status = reader.readLine();
             reader.close();
         } catch (Exception e) {
-            Log.i("GeckoAppJava", e.toString());
+            Log.i("GeckoAppJava", "error reading update status", e);
         }
         return status;
     }
@@ -500,7 +508,7 @@ abstract public class GeckoApp
         try {
             filePickerResult = mFilePickerResult.take();
         } catch (InterruptedException e) {
-            Log.i("GeckoApp", "error: " + e);
+            Log.i("GeckoApp", "showing file picker ",  e);
         }
         
         return filePickerResult;
@@ -535,13 +543,13 @@ abstract public class GeckoApp
                 fos.close();
                 filePickerResult =  file.getAbsolutePath();
             }catch (Exception e) {
-                Log.e("GeckoApp", "error : "+ e);
+                Log.e("GeckoApp", "showing file picker", e);
             }
         }
         try {
             mFilePickerResult.put(filePickerResult);
         } catch (InterruptedException e) {
-            Log.i("GeckoApp", "error: " + e);
+            Log.i("GeckoApp", "error returning file picker result", e);
         }
     }
 }

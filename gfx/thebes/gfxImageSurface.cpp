@@ -149,24 +149,24 @@ gfxImageSurface::~gfxImageSurface()
         free(mData);
 }
 
-long
-gfxImageSurface::ComputeStride() const
+/*static*/ long
+gfxImageSurface::ComputeStride(const gfxIntSize& aSize, gfxImageFormat aFormat)
 {
     long stride;
 
-    if (mFormat == ImageFormatARGB32)
-        stride = mSize.width * 4;
-    else if (mFormat == ImageFormatRGB24)
-        stride = mSize.width * 4;
-    else if (mFormat == ImageFormatRGB16_565)
-        stride = mSize.width * 2;
-    else if (mFormat == ImageFormatA8)
-        stride = mSize.width;
-    else if (mFormat == ImageFormatA1) {
-        stride = (mSize.width + 7) / 8;
+    if (aFormat == ImageFormatARGB32)
+        stride = aSize.width * 4;
+    else if (aFormat == ImageFormatRGB24)
+        stride = aSize.width * 4;
+    else if (aFormat == ImageFormatRGB16_565)
+        stride = aSize.width * 2;
+    else if (aFormat == ImageFormatA8)
+        stride = aSize.width;
+    else if (aFormat == ImageFormatA1) {
+        stride = (aSize.width + 7) / 8;
     } else {
         NS_WARNING("Unknown format specified to gfxImageSurface!");
-        stride = mSize.width * 4;
+        stride = aSize.width * 4;
     }
 
     stride = ((stride + 3) / 4) * 4;

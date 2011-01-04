@@ -232,10 +232,12 @@ class THEBES_API LayerManager {
 
 public:
   enum LayersBackend {
-    LAYERS_BASIC = 0,
+    LAYERS_NONE = 0,
+    LAYERS_BASIC,
     LAYERS_OPENGL,
     LAYERS_D3D9,
-    LAYERS_D3D10
+    LAYERS_D3D10,
+    LAYERS_LAST
   };
 
   LayerManager() : mDestroyed(PR_FALSE), mSnapEffectiveTransforms(PR_TRUE)
@@ -629,6 +631,20 @@ public:
   // quality.
   PRBool CanUseOpaqueSurface();
 
+  enum SurfaceMode {
+    SURFACE_OPAQUE,
+    SURFACE_SINGLE_CHANNEL_ALPHA,
+    SURFACE_COMPONENT_ALPHA
+  };
+  SurfaceMode GetSurfaceMode()
+  {
+    if (CanUseOpaqueSurface())
+      return SURFACE_OPAQUE;
+    if (mContentFlags & CONTENT_COMPONENT_ALPHA)
+      return SURFACE_COMPONENT_ALPHA;
+    return SURFACE_SINGLE_CHANNEL_ALPHA;
+  }
+
   /**
    * This setter can be used anytime. The user data for all keys is
    * initially null. Ownership pases to the layer manager.
@@ -935,12 +951,19 @@ public:
    */
   PRBool HasMultipleChildren();
 
+  /**
+   * Returns true if this container supports children with component alpha.
+   * Should only be called while painting a child of this layer.
+   */
+  PRBool SupportsComponentAlphaChildren() { return mSupportsComponentAlphaChildren; }
+
 protected:
   ContainerLayer(LayerManager* aManager, void* aImplData)
     : Layer(aManager, aImplData),
       mFirstChild(nsnull),
       mLastChild(nsnull),
-      mUseIntermediateSurface(PR_FALSE)
+      mUseIntermediateSurface(PR_FALSE),
+      mSupportsComponentAlphaChildren(PR_FALSE)
   {
     mContentFlags = 0; // Clear NO_TEXT, NO_TEXT_OVER_TRANSPARENT
   }
@@ -962,6 +985,7 @@ protected:
   Layer* mLastChild;
   FrameMetrics mFrameMetrics;
   PRPackedBool mUseIntermediateSurface;
+  PRPackedBool mSupportsComponentAlphaChildren;
 };
 
 /**

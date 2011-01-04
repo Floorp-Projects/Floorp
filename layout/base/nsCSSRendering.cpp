@@ -2134,6 +2134,51 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
   }
 }
 
+/**
+ * A struct representing all the information needed to paint a background
+ * image to some target, taking into account all CSS background-* properties.
+ * See PrepareBackgroundLayer.
+ */
+struct BackgroundLayerState {
+  /**
+   * @param aFlags some combination of nsCSSRendering::PAINTBG_* flags
+   */
+  BackgroundLayerState(nsIFrame* aForFrame, const nsStyleImage* aImage, PRUint32 aFlags)
+    : mImageRenderer(aForFrame, aImage, aFlags) {}
+
+  /**
+   * The ImageRenderer that will be used to draw the background.
+   */
+  ImageRenderer mImageRenderer;
+  /**
+   * A rectangle that one copy of the image tile is mapped onto. Same
+   * coordinate system as aBorderArea/aBGClipRect passed into
+   * PrepareBackgroundLayer.
+   */
+  nsRect mDestArea;
+  /**
+   * The actual rectangle that should be filled with (complete or partial)
+   * image tiles. Same coordinate system as aBorderArea/aBGClipRect passed into
+   * PrepareBackgroundLayer.
+   */
+  nsRect mFillArea;
+  /**
+   * The anchor point that should be snapped to a pixel corner. Same
+   * coordinate system as aBorderArea/aBGClipRect passed into
+   * PrepareBackgroundLayer.
+   */
+  nsPoint mAnchor;
+};
+
+static BackgroundLayerState
+PrepareBackgroundLayer(nsPresContext* aPresContext,
+                       nsIFrame* aForFrame,
+                       PRUint32 aFlags,
+                       const nsRect& aBorderArea,
+                       const nsRect& aBGClipRect,
+                       const nsStyleBackground& aBackground,
+                       const nsStyleBackground::Layer& aLayer);
+
 void
 nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
                                       nsIRenderingContext& aRenderingContext,
@@ -2304,9 +2349,13 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
         }
       }
       if (!dirtyRectGfx.IsEmpty()) {
-        PaintBackgroundLayer(aPresContext, aRenderingContext, aForFrame, aFlags,
-                             dirtyRect, aBorderArea, bgClipArea, *bg,
-                             layer);
+        BackgroundLayerState state = PrepareBackgroundLayer(aPresContext, aForFrame,
+            aFlags, aBorderArea, bgClipArea, *bg, layer);
+        if (!state.mFillArea.IsEmpty()) {
+          state.mImageRenderer.Draw(aPresContext, aRenderingContext,
+                                    state.mDestArea, state.mFillArea,
+                                    state.mAnchor + aBorderArea.TopLeft(), dirtyRect);
+        }
       }
     }
   }
@@ -2333,16 +2382,14 @@ ScaleDimension(const nsStyleBackground::Size::Dimension& aDimension,
   }
 }
 
-static void
-PaintBackgroundLayer(nsPresContext* aPresContext,
-                     nsIRenderingContext& aRenderingContext,
-                     nsIFrame* aForFrame,
-                     PRUint32 aFlags,
-                     const nsRect& aDirtyRect, // intersected with aBGClipRect
-                     const nsRect& aBorderArea,
-                     const nsRect& aBGClipRect,
-                     const nsStyleBackground& aBackground,
-                     const nsStyleBackground::Layer& aLayer)
+static BackgroundLayerState
+PrepareBackgroundLayer(nsPresContext* aPresContext,
+                       nsIFrame* aForFrame,
+                       PRUint32 aFlags,
+                       const nsRect& aBorderArea,
+                       const nsRect& aBGClipRect,
+                       const nsStyleBackground& aBackground,
+                       const nsStyleBackground::Layer& aLayer)
 {
   /*
    * The background properties we need to keep in mind when drawing background
@@ -2400,12 +2447,14 @@ PaintBackgroundLayer(nsPresContext* aPresContext,
    */
 
   PRUint32 irFlags = 0;
-  if (aFlags & nsCSSRendering::PAINTBG_SYNC_DECODE_IMAGES)
+  if (aFlags & nsCSSRendering::PAINTBG_SYNC_DECODE_IMAGES) {
     irFlags |= ImageRenderer::FLAG_SYNC_DECODE_IMAGES;
-  ImageRenderer imageRenderer(aForFrame, &aLayer.mImage, irFlags);
-  if (!imageRenderer.PrepareImage()) {
+  }
+
+  BackgroundLayerState state(aForFrame, &aLayer.mImage, irFlags);
+  if (!state.mImageRenderer.PrepareImage()) {
     // There's no image or it's not ready to be painted.
-    return;
+    return state;
   }
 
   // Compute background origin area relative to aBorderArea now as we may need
@@ -2469,7 +2518,7 @@ PaintBackgroundLayer(nsPresContext* aPresContext,
   //
   // relative to aBorderArea.TopLeft() (which is where the top-left
   // of aForFrame's border-box will be rendered)
-  nsPoint imageTopLeft, anchor;
+  nsPoint imageTopLeft;
   if (NS_STYLE_BG_ATTACHMENT_FIXED == aLayer.mAttachment) {
     aPresContext->SetHasFixedBackgroundFrame();
 
@@ -2514,9 +2563,9 @@ PaintBackgroundLayer(nsPresContext* aPresContext,
     }
   }
 
-  nsSize imageSize = imageRenderer.ComputeSize(bgPositioningArea.Size());
+  nsSize imageSize = state.mImageRenderer.ComputeSize(bgPositioningArea.Size());
   if (imageSize.width <= 0 || imageSize.height <= 0)
-    return;
+    return state;
 
   // Scale the image as specified for background-size and as required for
   // proper background positioning when background-position is defined with
@@ -2564,27 +2613,38 @@ PaintBackgroundLayer(nsPresContext* aPresContext,
   // Compute the position of the background now that the background's size is
   // determined.
   ComputeBackgroundAnchorPoint(aLayer, bgPositioningArea.Size(), imageSize,
-                               &imageTopLeft, &anchor);
+                               &imageTopLeft, &state.mAnchor);
   imageTopLeft += bgPositioningArea.TopLeft();
-  anchor += bgPositioningArea.TopLeft();
+  state.mAnchor += bgPositioningArea.TopLeft();
 
-  nsRect destArea(imageTopLeft + aBorderArea.TopLeft(), imageSize);
-  nsRect fillArea = destArea;
+  state.mDestArea = nsRect(imageTopLeft + aBorderArea.TopLeft(), imageSize);
+  state.mFillArea = state.mDestArea;
   PRIntn repeat = aLayer.mRepeat;
   PR_STATIC_ASSERT(NS_STYLE_BG_REPEAT_XY ==
                    (NS_STYLE_BG_REPEAT_X | NS_STYLE_BG_REPEAT_Y));
   if (repeat & NS_STYLE_BG_REPEAT_X) {
-    fillArea.x = bgClipRect.x;
-    fillArea.width = bgClipRect.width;
+    state.mFillArea.x = bgClipRect.x;
+    state.mFillArea.width = bgClipRect.width;
   }
   if (repeat & NS_STYLE_BG_REPEAT_Y) {
-    fillArea.y = bgClipRect.y;
-    fillArea.height = bgClipRect.height;
+    state.mFillArea.y = bgClipRect.y;
+    state.mFillArea.height = bgClipRect.height;
   }
-  fillArea.IntersectRect(fillArea, bgClipRect);
+  state.mFillArea.IntersectRect(state.mFillArea, bgClipRect);
+  return state;
+}
 
-  imageRenderer.Draw(aPresContext, aRenderingContext, destArea, fillArea,
-                     anchor + aBorderArea.TopLeft(), aDirtyRect);
+nsRect
+nsCSSRendering::GetBackgroundLayerRect(nsPresContext* aPresContext,
+                                       nsIFrame* aForFrame,
+                                       const nsRect& aBorderArea,
+                                       const nsStyleBackground& aBackground,
+                                       const nsStyleBackground::Layer& aLayer)
+{
+  BackgroundLayerState state =
+      PrepareBackgroundLayer(aPresContext, aForFrame, 0, aBorderArea,
+                             aBorderArea, aBackground, aLayer);
+  return state.mFillArea;
 }
 
 static void

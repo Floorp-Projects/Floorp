@@ -19,7 +19,7 @@
       const LOADING = Components.interfaces.nsIIDBRequest.LOADING;
       const DONE = Components.interfaces.nsIIDBRequest.DONE;
 
-      let request = moz_indexedDB.open(name, description);
+      let request = mozIndexedDB.open(name, description);
       is(request.readyState, LOADING, "Correct readyState");
 
       request.onerror = errorHandler;
