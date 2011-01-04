@@ -32,23 +32,83 @@ function testMouseEvents() {
     is(json.result, false, "Form Assistant should stay closed");
   });
 
-  AsyncTests.waitFor("Test:Open", { value: "*[tabindex='0']" }, function(json) {
-    ok(FormHelperUI._open, "Form Assistant should be open");
-    testShowUIForElements();
+  AsyncTests.waitFor("Test:Focus", { value: "#root" }, function(json) {
+    is(json.result, false, "Form Assistant should stay closed");
+  });
+
+  AsyncTests.waitFor("Test:FocusRedirect", { value: "*[tabindex='0']" }, function(json) {
+    is(json.result, false, "Form Assistant should stay closed");
+    testOpenUIWithSyncFocus();
   });
 };
+
+function testOpenUIWithSyncFocus() {
+  AsyncTests.waitFor("Test:Open", { value: "*[tabindex='0']" }, function(json) {
+    ok(FormHelperUI._open, "Form Assistant should be open");
+    testOpenUI();
+  });
+};
+
+function testOpenUI() {
+  AsyncTests.waitFor("Test:Open", { value: "*[tabindex='0']" }, function(json) {
+    ok(FormHelperUI._open, "Form Assistant should be open");
+    testOpenUIWithFocusRedirect();
+  });
+};
+
+function testOpenUIWithFocusRedirect() {
+  AsyncTests.waitFor("Test:OpenWithFocusRedirect", { value: "*[tabindex='0']" }, function(json) {
+    ok(FormHelperUI._open, "Form Assistant should be open");
+    testShowUIForSelect();
+  });
+};
+
+function testShowUIForSelect() {
+  AsyncTests.waitFor("Test:CanShowUI", { value: "#select"}, function(json) {
+    ok(json.result, "canShowUI for select element'");
+  });
+
+  AsyncTests.waitFor("Test:CanShowUI", { value: "#select", disabled: true }, function(json) {
+    is(json.result, false, "!canShowUI for disabled select element'");
+  });
+
+  AsyncTests.waitFor("Test:CanShowUI", { value: "#option"}, function(json) {
+    ok(json.result, "canShowUI for option element'");
+  });
+
+  AsyncTests.waitFor("Test:CanShowUISelect", { value: "#option", disabled: true }, function(json) {
+    is(json.result, false, "!canShowUI for option element with a disabled parent select element'");
+  });
+
+  AsyncTests.waitFor("Test:CanShowUI", { value: "#option", disabled: true }, function(json) {
+    is(json.result, false, "!canShowUI for disabled option element'");
+    testShowUIForElements();
+  });
+}
 
 function testShowUIForElements() {
   AsyncTests.waitFor("Test:CanShowUI", { value: "*[tabindex='1']" }, function(json) {
     ok(json.result, "canShowUI for input type='text'");
   });
 
+  AsyncTests.waitFor("Test:CanShowUI", { value: "*[tabindex='1']", disabled: true }, function(json) {
+    is(json.result, false, "!canShowUI for disabled input type='text'");
+  });
+
   AsyncTests.waitFor("Test:CanShowUI", { value: "*[tabindex='2']" }, function(json) {
     ok(json.result, "canShowUI for input type='password'");
   });
 
+  AsyncTests.waitFor("Test:CanShowUI", { value: "*[tabindex='2']", disabled: true }, function(json) {
+    is(json.result, false, "!canShowUI for disabled input type='password'");
+  });
+
   AsyncTests.waitFor("Test:CanShowUI", { value: "*[tabindex='8']" }, function(json) {
     ok(json.result, "canShowUI for contenteditable div");
+  });
+
+  AsyncTests.waitFor("Test:CanShowUI", { value: "*[tabindex='8']", disabled: true }, function(json) {
+    is(json.result, false, "!canShowUI for disabled contenteditable div");
   });
 
   AsyncTests.waitFor("Test:CanShowUI", { value: "*[tabindex='3']" }, function(json) {
@@ -112,7 +172,7 @@ function testTabIndexNavigation() {
   let ids = ["next", "select", "dumb", "reset", "checkbox", "radio0", "radio4", "last", "last"];
   for (let i = 0; i < ids.length; i++) {
     let id = ids[i];
-    AsyncTests.waitFor("Test:Next", { value: "*[id='" + id + "']" }, function(json) {
+    AsyncTests.waitFor("Test:Next", { value: "#" + id }, function(json) {
       is(json.result, true, "Focus should be on element with #id: " + id + "");
     });
   };
@@ -121,9 +181,26 @@ function testTabIndexNavigation() {
   let container = document.getElementById("content-navigator");
   is(container.hidden, true, "Form Assistant should be close");
 
-
-  loadNestedIFrames();
+  AsyncTests.waitFor("Test:Open", { value: "*[tabindex='0']" }, function(json) {
+    ok(FormHelperUI._open, "Form Assistant should be open");
+    testFocusChanges();
+  });
 };
+
+function testFocusChanges() {
+  AsyncTests.waitFor("Test:Focus", { value: "*[tabindex='1']" }, function(json) {
+    ok(json.result, "Form Assistant should be open");
+  });
+
+  AsyncTests.waitFor("Test:Focus", { value: "#select" }, function(json) {
+    ok(json.result, "Form Assistant should stay open");
+  });
+
+  AsyncTests.waitFor("Test:Focus", { value: "*[type='hidden']" }, function(json) {
+    ok(json.result, "Form Assistant should stay open");
+    loadNestedIFrames();
+  });
+}
 
 function loadNestedIFrames() {
   AsyncTests.waitFor("Test:Iframe", { }, function(json) {
