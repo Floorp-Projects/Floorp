@@ -832,9 +832,9 @@ RoundedBorderIntersectsRect(nsIFrame* aFrame,
                             const nsPoint& aFrameToReferenceFrame,
                             const nsRect& aTestRect)
 {
-  NS_ABORT_IF_FALSE(nsRect(aFrameToReferenceFrame,
-                           aFrame->GetSize()).Intersects(aTestRect),
-                    "must intersect non-rounded rect");
+  if (!nsRect(aFrameToReferenceFrame, aFrame->GetSize()).Intersects(aTestRect))
+    return PR_FALSE;
+
   nscoord radii[8];
   return !aFrame->GetBorderRadii(radii) ||
          RoundedRectIntersectsRect(nsRect(aFrameToReferenceFrame,
@@ -861,9 +861,8 @@ nsDisplayBackground::HitTest(nsDisplayListBuilder* aBuilder,
                              HitTestState* aState,
                              nsTArray<nsIFrame*> *aOutFrames)
 {
-  // Note that we have to check !mIsThemed here to avoid triggering the
-  // assertion in RoundedBorderIntersectsRect, since when mIsThemed, our
-  // bounds can be different from the frame bounds.
+  // For theme backgrounds, assume that any point in our bounds is a hit.
+  // We don't know the true hit region of the theme background.
   if (!mIsThemed &&
       !RoundedBorderIntersectsRect(mFrame, ToReferenceFrame(), aRect)) {
     // aRect doesn't intersect our border-radius curve.
