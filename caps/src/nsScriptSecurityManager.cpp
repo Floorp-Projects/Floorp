@@ -2177,6 +2177,9 @@ nsScriptSecurityManager::GetFunctionObjectPrincipal(JSContext *cx,
                                                     nsresult *rv)
 {
     NS_PRECONDITION(rv, "Null out param");
+
+    *rv = NS_OK;
+
     if (!JS_ObjectIsFunction(cx, obj))
     {
         // Protect against pseudo-functions (like SJOWs).
@@ -2188,8 +2191,6 @@ nsScriptSecurityManager::GetFunctionObjectPrincipal(JSContext *cx,
 
     JSFunction *fun = GET_FUNCTION_PRIVATE(cx, obj);
     JSScript *script = JS_GetFunctionScript(cx, fun);
-
-    *rv = NS_OK;
 
     if (!script)
     {
