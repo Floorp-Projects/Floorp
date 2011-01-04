@@ -2365,23 +2365,29 @@ HUD_SERVICE.prototype =
     return sequencer(aInt);
   },
 
+  // See jsapi.h (JSErrorReport flags):
+  // http://mxr.mozilla.org/mozilla-central/source/js/src/jsapi.h#3429
   scriptErrorFlags: {
-    0: "error",
-    1: "warn",
-    2: "exception",
-    4: "error", // strict error
-    5: "warn", // strict warning
+    0: "error", // JSREPORT_ERROR
+    1: "warn", // JSREPORT_WARNING
+    2: "exception", // JSREPORT_EXCEPTION
+    4: "error", // JSREPORT_STRICT | JSREPORT_ERROR
+    5: "warn", // JSREPORT_STRICT | JSREPORT_WARNING
+    8: "error", // JSREPORT_STRICT_MODE_ERROR
+    13: "warn", // JSREPORT_STRICT_MODE_ERROR | JSREPORT_WARNING | JSREPORT_ERROR
   },
 
   /**
    * replacement strings (L10N)
    */
   scriptMsgLogLevel: {
-    0: "typeError",
-    1: "typeWarning",
-    2: "typeException",
-    4: "typeError", // strict error
-    5: "typeStrict", // strict warning
+    0: "typeError", // JSREPORT_ERROR
+    1: "typeWarning", // JSREPORT_WARNING
+    2: "typeException", // JSREPORT_EXCEPTION
+    4: "typeError", // JSREPORT_STRICT | JSREPORT_ERROR
+    5: "typeStrict", // JSREPORT_STRICT | JSREPORT_WARNING
+    8: "typeError", // JSREPORT_STRICT_MODE_ERROR
+    13: "typeWarning", // JSREPORT_STRICT_MODE_ERROR | JSREPORT_WARNING | JSREPORT_ERROR
   },
 
   /**
