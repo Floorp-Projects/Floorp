@@ -72,3 +72,7 @@ function force_click_on_notification(val) {
   prefs.setBoolPref("notification.prompt.testing.click_on_notification", val);
 }
 
+function is_feature_enabled() {
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+  return prefs.getBoolPref("notification.feature.enabled");
+}
