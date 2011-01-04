@@ -111,6 +111,68 @@ function run_test() {
     Service.logout();
     do_check_false(Service.isLoggedIn);
     do_check_false(Svc.Prefs.get("autoconnect"));
+    
+    /*
+     * Testing login-on-sync.
+     */
+    
+    _("Sync calls login.");
+    let oldLogin = Service.login;
+    let loginCalled = false;
+    Service.login = function() {
+      loginCalled = true;
+      Status.login = LOGIN_SUCCEEDED;
+      this._loggedIn = false;           // So that sync aborts.
+      return true;
+    }
+    try {
+      Service.sync();
+    } catch (ex) {}
+    
+    do_check_true(loginCalled);
+    Service.login = oldLogin;
+    
+    // Stub mpLocked.
+    let mpLockedF = Utils.mpLocked;
+    let mpLocked = true;
+    Utils.mpLocked = function() mpLocked;
+    
+    // Stub scheduleNextSync. This gets called within checkSyncStatus if we're
+    // ready to sync, so use it as an indicator.
+    let scheduleNextSyncF = Service._scheduleNextSync;
+    let scheduleCalled = false;
+    Service._scheduleNextSync = function(wait) {
+      scheduleCalled = true;
+      scheduleNextSyncF.call(this, wait);
+    }
+    
+    // Autoconnect still tries to connect in the background (useful behavior:
+    // for non-MP users and unlocked MPs, this will detect version expiry
+    // earlier).
+    // 
+    // Consequently, non-MP users will be logged in as in the pre-Bug 543784 world,
+    // and checkSyncStatus reflects that by waiting for login.
+    // 
+    // This process doesn't apply if your MP is still locked, so we make
+    // checkSyncStatus accept a locked MP in place of being logged in.
+    // 
+    // This test exercises these two branches.
+    
+    _("We're ready to sync if locked.");
+    Service.enabled = true;
+    Svc.IO.offline = false;
+    Service._checkSyncStatus();
+    do_check_true(scheduleCalled);
+    
+    scheduleCalled = false;
+    mpLocked = false;
+    
+    _("... and not if not.");
+    Service._checkSyncStatus();
+    do_check_false(scheduleCalled);
+    Service._scheduleNextSync = scheduleNextSyncF;
+    
+    // TODO: need better tests around master password prompting. See Bug 620583.
 
   } finally {
     Svc.Prefs.resetBranch("");
