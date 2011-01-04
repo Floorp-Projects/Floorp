@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* vim: set sw=4 ts=8 et tw=80 : */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et tw=80 : */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -89,6 +89,24 @@ class AudioPauseEvent : public nsRunnable
     PRBool mPause;
 };
 
+class AudioStreamShutdownEvent : public nsRunnable
+{
+ public:
+  AudioStreamShutdownEvent(nsAudioStream* owner)
+  {
+    mOwner = owner;
+  }
+
+  NS_IMETHOD Run()
+  {
+    mOwner->Shutdown();
+    return NS_OK;
+  }
+
+ private:
+    nsRefPtr<nsAudioStream> mOwner;
+};
+
 class AudioDrainDoneEvent : public nsRunnable
 {
  public:
@@ -134,20 +152,24 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(AudioParent, nsITimerCallback)
 nsresult
 AudioParent::Notify(nsITimer* timer)
 {
-  if (!mIPCOpen || !mStream) {
+  if (!mIPCOpen) {
     timer->Cancel();
     return NS_ERROR_FAILURE;
   }
 
+  NS_ASSERTION(mStream, "AudioStream not initialized.");
   PRInt64 offset = mStream->GetSampleOffset();
   SendSampleOffsetUpdate(offset, PR_IntervalNow());
   return NS_OK;
 }
+
 bool
 AudioParent::RecvWrite(
         const nsCString& data,
         const PRUint32& count)
 {
+  if (!mStream)
+    return false;
   nsCOMPtr<nsIRunnable> event = new AudioWriteEvent(mStream, data, count);
   nsCOMPtr<nsIThread> thread = mStream->GetThread();
   thread->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);
@@ -157,14 +179,17 @@ AudioParent::RecvWrite(
 bool
 AudioParent::RecvSetVolume(const float& aVolume)
 {
-  if (mStream)
-    mStream->SetVolume(aVolume);
+  if (!mStream)
+      return false;
+  mStream->SetVolume(aVolume);
   return true;
 }
 
 bool
 AudioParent::RecvDrain()
 {
+  if (!mStream)
+    return false;
   nsCOMPtr<nsIRunnable> event = new AudioDrainEvent(this, mStream);
   nsCOMPtr<nsIThread> thread = mStream->GetThread();
   thread->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);
@@ -174,6 +199,8 @@ AudioParent::RecvDrain()
 bool
 AudioParent::RecvPause()
 {
+  if (!mStream)
+    return false;
   nsCOMPtr<nsIRunnable> event = new AudioPauseEvent(mStream, PR_TRUE);
   nsCOMPtr<nsIThread> thread = mStream->GetThread();
   thread->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);
@@ -183,6 +210,8 @@ AudioParent::RecvPause()
 bool
 AudioParent::RecvResume()
 {
+  if (!mStream)
+    return false;
   nsCOMPtr<nsIRunnable> event = new AudioPauseEvent(mStream, PR_FALSE);
   nsCOMPtr<nsIThread> thread = mStream->GetThread();
   thread->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);
@@ -192,15 +221,18 @@ AudioParent::RecvResume()
 bool
 AudioParent::Recv__delete__()
 {
-  if (mStream) {
-    mStream->Shutdown();
-    mStream = nsnull;
-  }
-
   if (mTimer) {
     mTimer->Cancel();
     mTimer = nsnull;
   }
+
+  if (mStream) {
+      nsCOMPtr<nsIRunnable> event = new AudioStreamShutdownEvent(mStream);
+      nsCOMPtr<nsIThread> thread = mStream->GetThread();
+      thread->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);
+      mStream = nsnull;
+  }
+
   return true;
 }
 
@@ -208,12 +240,14 @@ AudioParent::AudioParent(PRInt32 aNumChannels, PRInt32 aRate, PRInt32 aFormat)
   : mIPCOpen(PR_TRUE)
 {
   mStream = nsAudioStream::AllocateStream();
-  if (mStream)
-    mStream->Init(aNumChannels,
-                  aRate,
-                  (nsAudioStream::SampleFormat) aFormat);
-  if (!mStream)
-    return; 
+  NS_ASSERTION(mStream, "AudioStream allocation failed.");
+  if (NS_FAILED(mStream->Init(aNumChannels,
+                              aRate,
+                              (nsAudioStream::SampleFormat) aFormat))) {
+      NS_WARNING("AudioStream initialization failed.");
+      mStream = nsnull;
+      return;
+  }
 
   mTimer = do_CreateInstance("@mozilla.org/timer;1");
   mTimer->InitWithCallback(this, 1000, nsITimer::TYPE_REPEATING_SLACK);
