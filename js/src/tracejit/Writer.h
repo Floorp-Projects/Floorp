@@ -267,10 +267,11 @@ struct OffsetAddress : Address
       : Address(addr, offset) {}
 };
 
-bool IsPromoteInt(nj::LIns *ins);
-bool IsPromoteUint(nj::LIns *ins);
-bool IsPromote(nj::LIns *ins);
-nj::LIns *Demote(nj::LirWriter *out, nj::LIns *ins);
+bool IsPromotedInt32(nj::LIns *ins);
+bool IsPromotedUint32(nj::LIns *ins);
+bool IsPromotedInt32OrUint32(nj::LIns *ins);
+nj::LIns *DemoteToInt32(nj::LirWriter *out, nj::LIns *ins);
+nj::LIns *DemoteToUint32(nj::LirWriter *out, nj::LIns *ins);
 
 /* These would be private to class Writer if they weren't used in AccSet checking. */
 static const size_t sPayloadOffset = offsetof(jsval_layout, s.payload);
@@ -903,6 +904,10 @@ class Writer
         return lir->ins2ImmI(nj::LIR_ltui, x, imm);
     }
 
+    nj::LIns *gtui(nj::LIns *x, nj::LIns *y) const {
+        return lir->ins2(nj::LIR_gtui, x, y);
+    }
+
     nj::LIns *leui(nj::LIns *x, nj::LIns *y) const {
         return lir->ins2(nj::LIR_leui, x, y);
     }
@@ -1127,8 +1132,12 @@ class Writer
     }
 #endif
 
-    nj::LIns *demote(nj::LIns *ins) const {
-        return Demote(lir, ins);
+    nj::LIns *demoteToInt32(nj::LIns *ins) const {
+        return DemoteToInt32(lir, ins);
+    }
+
+    nj::LIns *demoteToUint32(nj::LIns *ins) const {
+        return DemoteToUint32(lir, ins);
     }
 
     /* Overflow arithmetic */
