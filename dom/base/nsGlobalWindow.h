@@ -1056,6 +1056,8 @@ public:
   void LoadingNewDocument();
   nsresult RefreshMIMEArray();
 
+  static bool HasDesktopNotificationSupport();
+
 protected:
   nsRefPtr<nsMimeTypeArray> mMimeTypes;
   nsRefPtr<nsPluginArray> mPlugins;
