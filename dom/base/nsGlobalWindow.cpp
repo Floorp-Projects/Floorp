@@ -1108,11 +1108,8 @@ nsGlobalWindow::CleanUp(PRBool aIgnoreModalDialog)
     inner->CleanUp(aIgnoreModalDialog);
   }
 
-  if (mHasAcceleration) {
-    nsCOMPtr<nsIAccelerometer> ac = do_GetService(NS_ACCELEROMETER_CONTRACTID);
-    if (ac)
-      ac->RemoveWindowListener(this);
-  }
+  DisableAccelerationUpdates();
+  mHasAcceleration = PR_FALSE;
 
   if (mIsChrome && static_cast<nsGlobalChromeWindow*>(this)->mMessageManager) {
     static_cast<nsFrameMessageManager*>(
@@ -7350,6 +7347,31 @@ void nsGlobalWindow::UpdateTouchState()
   }
 }
 
+
+void
+nsGlobalWindow::EnableAccelerationUpdates()
+{
+  if (mHasAcceleration) {
+    nsCOMPtr<nsIAccelerometer> ac =
+      do_GetService(NS_ACCELEROMETER_CONTRACTID);
+    if (ac) {
+      ac->AddWindowListener(this);
+    }
+  }
+}
+
+void
+nsGlobalWindow::DisableAccelerationUpdates()
+{
+  if (mHasAcceleration) {
+    nsCOMPtr<nsIAccelerometer> ac =
+      do_GetService(NS_ACCELEROMETER_CONTRACTID);
+    if (ac) {
+      ac->RemoveWindowListener(this);
+    }
+  }
+}
+
 void
 nsGlobalWindow::SetChromeEventHandler(nsPIDOMEventTarget* aChromeEventHandler)
 {
@@ -9656,6 +9678,8 @@ nsGlobalWindow::SuspendTimeouts(PRUint32 aIncrease,
   mTimeoutsSuspendDepth += aIncrease;
 
   if (!suspended) {
+    DisableAccelerationUpdates();
+
     nsDOMThreadService* dts = nsDOMThreadService::get();
     if (dts) {
       dts->SuspendWorkersForGlobal(static_cast<nsIScriptGlobalObject*>(this));
@@ -9730,6 +9754,8 @@ nsGlobalWindow::ResumeTimeouts(PRBool aThawChildren)
   nsresult rv;
 
   if (shouldResume) {
+    EnableAccelerationUpdates();
+
     nsDOMThreadService* dts = nsDOMThreadService::get();
     if (dts) {
       dts->ResumeWorkersForGlobal(static_cast<nsIScriptGlobalObject*>(this));
@@ -9847,13 +9873,8 @@ nsGlobalWindow::SetScriptTypeID(PRUint32 aScriptType)
 void
 nsGlobalWindow::SetHasOrientationEventListener()
 {
-  nsCOMPtr<nsIAccelerometer> ac = 
-    do_GetService(NS_ACCELEROMETER_CONTRACTID);
-
-  if (ac) {
-    mHasAcceleration = PR_TRUE;
-    ac->AddWindowListener(this);
-  }
+  mHasAcceleration = PR_TRUE;
+  EnableAccelerationUpdates();
 }
 
 NS_IMETHODIMP
