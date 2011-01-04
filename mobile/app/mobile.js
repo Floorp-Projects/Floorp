@@ -365,7 +365,7 @@ pref("dom.max_chrome_script_run_time", 0); // disable slow script dialog for chr
 pref("dom.max_script_run_time", 20);
 
 // JS error console
-pref("browser.console.showInPanel", false);
+pref("devtools.errorconsole.enabled", false);
 
 // kinetic tweakables
 pref("browser.ui.kinetic.updateInterval", 30);
@@ -511,3 +511,4 @@ pref("ui.dragThreshold", 24);
 
 pref("layers.accelerate-all", false);
 
+pref("notification.feature.enabled", true);
