@@ -3064,6 +3064,10 @@ HeadsUpDisplay.prototype = {
     let menuPopup = this.makeXULNode("menupopup");
     let id = this.hudId + "-output-contextmenu";
     menuPopup.setAttribute("id", id);
+    menuPopup.addEventListener("popupshowing", function() {
+      saveBodiesItem.setAttribute("checked",
+        HUDService.saveRequestAndResponseBodies);
+    }, true);
 
     let saveBodiesItem = this.makeXULNode("menuitem");
     saveBodiesItem.setAttribute("label", this.getStr("saveBodies.label"));
