@@ -58,7 +58,9 @@ let AsyncTests = {
       this._tests[aMessage] = [];
 
     this._tests[aMessage].push(aCallback || function() {});
-    Browser.selectedBrowser.messageManager.sendAsyncMessage(aMessage, aData || { });
+    setTimeout(function() {
+      Browser.selectedBrowser.messageManager.sendAsyncMessage(aMessage, aData || { });
+    }, 0);
   },
 
   receiveMessage: function(aMessage) {

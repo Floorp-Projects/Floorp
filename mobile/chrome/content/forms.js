@@ -71,8 +71,8 @@ function FormAssistant() {
 
   addEventListener("keyup", this, false);
   addEventListener("focus", this, true);
-  addEventListener("DOMWindowCreated", this, false);
   addEventListener("pageshow", this, false);
+  addEventListener("pagehide", this, false);
 
   this._enabled = Services.prefs.getBoolPref("formhelper.enabled");
 };
@@ -93,10 +93,8 @@ FormAssistant.prototype = {
   set currentIndex(aIndex) {
     let element = this._elements[aIndex];
     if (element) {
-      this.focusSync = false;
-      gFocusManager.setFocus(element, Ci.nsIFocusManager.FLAG_NOSCROLL);
-      this.focusSync = true;
       this._currentIndex = aIndex;
+      gFocusManager.setFocus(element, Ci.nsIFocusManager.FLAG_NOSCROLL);
       sendAsyncMessage("FormAssist:Show", this._getJSON());
     }
     return element;
@@ -105,7 +103,7 @@ FormAssistant.prototype = {
   _open: false,
   open: function formHelperOpen(aElement) {
     // if the click is on an option element we want to check if the parent is a valid target
-    if (aElement instanceof HTMLOptionElement && aElement.parentNode instanceof HTMLSelectElement) {
+    if (aElement instanceof HTMLOptionElement && aElement.parentNode instanceof HTMLSelectElement && !aElement.disabled) {
       aElement = aElement.parentNode;
     }
 
@@ -119,10 +117,7 @@ FormAssistant.prototype = {
           passiveButtons[aElement.type] && !aElement.disabled)
         return false;
 
-      sendAsyncMessage("FormAssist:Hide", { });
-      this._currentIndex = -1;
-      this._elements = [];
-      return this._open = false;
+      return this.close();
     }
 
     // Look for a top editable element
@@ -144,23 +139,19 @@ FormAssistant.prototype = {
       // it we need to inform the UI of such a change to keep in sync with the
       // new selected options once the event is finished
       if (aElement instanceof HTMLSelectElement) {
-        let self = this;
-        let timer = new Util.Timeout(function() {
+        this._executeDelayed(function(self) {
           sendAsyncMessage("FormAssist:Show", self._getJSON());
         });
-        timer.once(0);
       }
 
       return false;
     }
 
-    // If form assistant is disabled but the element of a type of choice list
+    // If form assistant is disabled but the element is a type of choice list
     // we still want to show the simple select list
     this._enabled = Services.prefs.getBoolPref("formhelper.enabled");
-    if (!this._enabled && !this._isSelectElement(aElement)) {
-      sendAsyncMessage("FormAssist:Hide", { });
-      return this._open = false;
-    }
+    if (!this._enabled && !this._isSelectElement(aElement))
+      return this.close();
 
     if (this._enabled) {
       this._elements = [];
@@ -172,6 +163,17 @@ FormAssistant.prototype = {
     }
 
     return this._open = true;
+  },
+
+  close: function close() {
+    if (this._open) {
+      this._currentIndex = -1;
+      this._elements = [];
+      sendAsyncMessage("FormAssist:Hide", { });
+      this._open = false;
+    }
+
+    return this._open;
   },
 
   receiveMessage: function receiveMessage(aMessage) {
@@ -210,8 +212,7 @@ FormAssistant.prototype = {
         // reconstruct the inner elements array and to take care of possible
         // focus change, this is why we use "self.currentElement" instead of 
         // using directly "currentElement".
-        let self = this;
-        let timer = new Util.Timeout(function() {
+        this._executeDelayed(function(self) {
           let currentElement = self.currentElement;
           if (!currentElement)
             return;
@@ -219,7 +220,6 @@ FormAssistant.prototype = {
           self._elements = [];
           self._currentIndex = self._getAllElements(currentElement);
         });
-        timer.once(0);
         break;
       }
 
@@ -256,43 +256,44 @@ FormAssistant.prototype = {
 
   focusSync: false,
   handleEvent: function formHelperHandleEvent(aEvent) {
-    if (!this._enabled || (!this.currentElement && aEvent.type != "focus") || (aEvent.type == "focus" && !this.focusSync))
+    // focus changes should be taken into account only if the user has done a
+    // manual operation like manually clicking
+    let shouldIgnoreFocus = (aEvent.type == "focus" && !this._open && !this.focusSync);
+    if ((!this._open && aEvent.type != "focus") || shouldIgnoreFocus)
       return;
 
     switch (aEvent.type) {
-      case "DOMWindowCreated":
-        this.focusSync = false;
-        break;
+      case "pagehide":
       case "pageshow":
-        this.focusSync = true;
+        // When reacting to a page show/hide, if the focus is different this
+        // could mean the web page has dramatically changed because of
+        // an Ajax change based on fragment identifier
+        if (gFocusManager.focusedElement != this.currentElement)
+          this.close();
         break;
       case "focus":
         let focusedElement = gFocusManager.getFocusedElementForWindow(content, true, {}) || aEvent.target;
 
         // If a body element is editable and the body is the child of an
-        // iframe we can assume this is an advanced HTML editor, so let's 
+        // iframe we can assume this is an advanced HTML editor, so let's
         // redirect the form helper selection to the iframe element
         if (focusedElement && this._isEditable(focusedElement)) {
           let editableElement = this._getTopLevelEditable(focusedElement);
           if (this._isValidElement(editableElement)) {
-            let self = this;
-            let timer = new Util.Timeout(function() {
+            this._executeDelayed(function(self) {
               self.open(editableElement);
             });
-            timer.once(0);
           }
           return;
         }
 
         // if an element is focused while we're closed but the element can be handle
-        // by the assistant, try to activate it
+        // by the assistant, try to activate it (only during mouseup)
         if (!this.currentElement) {
           if (focusedElement && this._isValidElement(focusedElement)) {
-            let self = this;
-            let timer = new Util.Timeout(function() {
+            this._executeDelayed(function(self) {
               self.open(focusedElement);
             });
-            timer.once(0);
           }
           return;
         }
@@ -350,6 +351,14 @@ FormAssistant.prototype = {
     }
   },
 
+  _executeDelayed: function formHelperExecuteSoon(aCallback) {
+    let self = this;
+    let timer = new Util.Timeout(function() {
+      aCallback(self);
+    });
+    timer.once(0);
+  },
+
   _filterEditables: function formHelperFilterEditables(aNodes) {
     let result = [];
     for (let i = 0; i < aNodes.length; i++) {
@@ -367,7 +376,7 @@ FormAssistant.prototype = {
     }
     return result;
   },
-  
+
   _isEditable: function formHelperIsEditable(aElement) {
     let canEdit = false;
 

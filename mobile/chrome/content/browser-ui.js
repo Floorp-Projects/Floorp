@@ -1986,6 +1986,9 @@ var FormHelperUI = {
   },
 
   receiveMessage: function formHelperReceiveMessage(aMessage) {
+    if (!this._open && aMessage.name != "FormAssist:Show" && aMessage.name != "FormAssist:Hide")
+      return;
+
     let json = aMessage.json;
     switch (aMessage.name) {
       case "FormAssist:Show":
@@ -1996,13 +1999,14 @@ var FormHelperUI = {
                      : SelectHelperUI.show(json.current.choices);
         break;
 
+      case "FormAssist:Hide":
+        this.enabled ? this.hide()
+                     : SelectHelperUI.hide();
+        break;
+
       case "FormAssist:Resize":
         let element = json.current;
         this._zoom(Rect.fromRect(element.rect), Rect.fromRect(element.caretRect));
-        break;
-
-      case "FormAssist:Hide":
-        this.hide();
         break;
 
       case "FormAssist:AutoComplete":
@@ -2017,14 +2021,14 @@ var FormHelperUI = {
         break;
 
       case "DOMWillOpenModalDialog":
-        if (this._open && aMessage.target == Browser.selectedBrowser) {
+        if (aMessage.target == Browser.selectedBrowser) {
           this._container.style.display = "none";
           this._container._spacer.hidden = true;
         }
         break;
 
       case "DOMModalDialogClosed":
-        if (this._open && aMessage.target == Browser.selectedBrowser) {
+        if (aMessage.target == Browser.selectedBrowser) {
           this._container.style.display = "-moz-box";
           this._container._spacer.hidden = false;
         }
