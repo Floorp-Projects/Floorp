@@ -1767,7 +1767,7 @@ mjit::Compiler::generateMethod()
             uint32 index = fullAtomIndex(PC);
             JSFunction *innerFun = script->getFunction(index);
 
-            if (fun && script->bindings.hasBinding(innerFun->atom))
+            if (fun && script->bindings.hasBinding(cx, innerFun->atom))
                 frame.syncAndForgetEverything();
 
             prepareStubCall(Uses(0));
@@ -1793,7 +1793,7 @@ mjit::Compiler::generateMethod()
             uint32 index = fullAtomIndex(PC);
             JSAtom *atom = script->getAtom(index);
 
-            if (fun && script->bindings.hasBinding(atom))
+            if (fun && script->bindings.hasBinding(cx, atom))
                 frame.syncAndForgetEverything();
 
             prepareStubCall(Uses(1));

@@ -2991,7 +2991,7 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
              * already exists.
              */
             uintN index;
-            switch (tc->bindings.lookup(funAtom, &index)) {
+            switch (tc->bindings.lookup(context, funAtom, &index)) {
               case NONE:
               case ARGUMENT:
                 index = tc->bindings.countVars();
@@ -3824,7 +3824,7 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
         return JS_TRUE;
     }
 
-    BindingKind kind = tc->bindings.lookup(atom, NULL);
+    BindingKind kind = tc->bindings.lookup(cx, atom, NULL);
     if (kind == NONE) {
         /*
          * Property not found in current variable scope: we have not seen this
