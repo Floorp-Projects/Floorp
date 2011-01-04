@@ -239,6 +239,7 @@ public:
 
   PRBool IsAlwaysActive() const;
   void MarkActive();
+  void MarkInactive();
   nsExpirationState* GetExpirationState() { return &mActivityExpirationState; }
 
   // owning references to the nsIAnonymousContentCreator-built content
