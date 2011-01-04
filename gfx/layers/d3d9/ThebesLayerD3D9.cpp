@@ -39,9 +39,6 @@
 #include "gfxPlatform.h"
 
 #include "gfxWindowsPlatform.h"
-#ifdef CAIRO_HAS_D2D_SURFACE
-#include "gfxD2DSurface.h"
-#endif
 #include "gfxTeeSurface.h"
 #include "gfxUtils.h"
 
@@ -51,7 +48,6 @@ namespace layers {
 ThebesLayerD3D9::ThebesLayerD3D9(LayerManagerD3D9 *aManager)
   : ThebesLayer(aManager, NULL)
   , LayerD3D9(aManager)
-  , mD2DSurfaceInitialized(false)
 {
   mImplData = static_cast<LayerD3D9*>(this);
   aManager->deviceManager()->mLayersWithResources.AppendElement(this);
@@ -246,11 +242,6 @@ ThebesLayerD3D9::RenderLayer()
     device()->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
     device()->SetTexture(1, NULL);
   } else {
-#ifdef CAIRO_HAS_D2D_SURFACE
-    if (mD2DSurface && CanUseOpaqueSurface()) {
-      mD3DManager->SetShaderMode(DeviceManagerD3D9::RGBLAYER);
-    } else
-#endif
     mD3DManager->SetShaderMode(DeviceManagerD3D9::RGBALAYER);
     device()->SetTexture(0, mTexture);
     RenderVisibleRegion();
@@ -291,24 +282,6 @@ ThebesLayerD3D9::IsEmpty()
 void
 ThebesLayerD3D9::VerifyContentType(SurfaceMode aMode)
 {
-#ifdef CAIRO_HAS_D2D_SURFACE
-  if (mD2DSurface) {
-    NS_ASSERTION(!mTextureOnWhite, "No component-alpha textures should be around with D2D");
-
-    gfxASurface::gfxContentType type = CanUseOpaqueSurface() ?
-      gfxASurface::CONTENT_COLOR : gfxASurface::CONTENT_COLOR_ALPHA;
-
-    if (type != mD2DSurface->GetContentType()) {
-      // We could choose to recreate only the D2D surface, but since we can't
-      // use retention the synchronisation overhead probably isn't worth it.
-      mD2DSurface = nsnull;
-      mTexture = nsnull;
-      mValidRegion.SetEmpty();
-    }
-    return;
-  }
-#endif
-
   if (!mTexture)
     return;
 
@@ -411,39 +384,6 @@ ThebesLayerD3D9::DrawRegion(const nsIntRegion &aRegion, SurfaceMode aMode)
   HRESULT hr;
   nsIntRect visibleRect = mVisibleRegion.GetBounds();
   nsRefPtr<gfxContext> context;
-
-#ifdef CAIRO_HAS_D2D_SURFACE
-  if (mD2DSurface) {
-    context = new gfxContext(mD2DSurface);
-    nsIntRegionRectIterator iter(aRegion);
-
-    context->Translate(gfxPoint(-visibleRect.x, -visibleRect.y));
-    context->NewPath();
-    const nsIntRect *iterRect;
-    while ((iterRect = iter.Next())) {
-      context->Rectangle(gfxRect(iterRect->x, iterRect->y, iterRect->width, iterRect->height));      
-    }
-    context->Clip();
-    if (!mD2DSurfaceInitialized || 
-        mD2DSurface->GetContentType() != gfxASurface::CONTENT_COLOR) {
-      context->SetOperator(gfxContext::OPERATOR_CLEAR);
-      context->Paint();
-      context->SetOperator(gfxContext::OPERATOR_OVER);
-      mD2DSurfaceInitialized = true;
-    }
-
-    LayerManagerD3D9::CallbackInfo cbInfo = mD3DManager->GetCallbackInfo();
-    cbInfo.Callback(this, context, aRegion, nsIntRegion(), cbInfo.CallbackData);
-    mD2DSurface->Flush();
-
-    // XXX - This call is quite expensive, we may want to consider doing our
-    // drawing in a seperate 'validation' iteration. And then flushing once for
-    // all the D2D surfaces we might have drawn, before doing our D3D9 rendering
-    // loop.
-    cairo_d2d_finish_device(gfxWindowsPlatform::GetPlatform()->GetD2DDevice());
-    return;
-  }
-#endif
 
   nsRefPtr<gfxASurface> destinationSurface;
   nsIntRect bounds = aRegion.GetBounds();
@@ -581,39 +521,15 @@ ThebesLayerD3D9::CreateNewTextures(const gfxIntSize &aSize,
 
   mTexture = nsnull;
   mTextureOnWhite = nsnull;
-#ifdef CAIRO_HAS_D2D_SURFACE
-  if (gfxWindowsPlatform::GetPlatform()->GetRenderMode() ==
-      gfxWindowsPlatform::RENDER_DIRECT2D) {
-        if (mD3DManager->deviceManager()->IsD3D9Ex()) {
-          // We should have D3D9Ex where we have D2D.
-          HANDLE sharedHandle = 0;
-          device()->CreateTexture(aSize.width, aSize.height, 1,
-                                  D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8,
-                                  D3DPOOL_DEFAULT, getter_AddRefs(mTexture), &sharedHandle);
-
-          mD2DSurfaceInitialized = false;
-          mD2DSurface = new gfxD2DSurface(sharedHandle, aMode == SURFACE_OPAQUE ?
-            gfxASurface::CONTENT_COLOR : gfxASurface::CONTENT_COLOR_ALPHA);
-
-          // If there's an error, go on and do what we always do.
-          if (mD2DSurface->CairoStatus()) {
-            mD2DSurface = nsnull;
-            mTexture = nsnull;
-          }
-        }
-  }
-#endif
-  if (!mTexture) {
+  device()->CreateTexture(aSize.width, aSize.height, 1,
+                          D3DUSAGE_RENDERTARGET,
+                          aMode != SURFACE_SINGLE_CHANNEL_ALPHA ? D3DFMT_X8R8G8B8 : D3DFMT_A8R8G8B8,
+                          D3DPOOL_DEFAULT, getter_AddRefs(mTexture), NULL);
+  if (aMode == SURFACE_COMPONENT_ALPHA) {
     device()->CreateTexture(aSize.width, aSize.height, 1,
                             D3DUSAGE_RENDERTARGET,
-                            aMode != SURFACE_SINGLE_CHANNEL_ALPHA ? D3DFMT_X8R8G8B8 : D3DFMT_A8R8G8B8,
-                            D3DPOOL_DEFAULT, getter_AddRefs(mTexture), NULL);
-    if (aMode == SURFACE_COMPONENT_ALPHA) {
-      device()->CreateTexture(aSize.width, aSize.height, 1,
-                              D3DUSAGE_RENDERTARGET,
-                              D3DFMT_X8R8G8B8,
-                              D3DPOOL_DEFAULT, getter_AddRefs(mTextureOnWhite), NULL);
-    }
+                            D3DFMT_X8R8G8B8,
+                            D3DPOOL_DEFAULT, getter_AddRefs(mTextureOnWhite), NULL);
   }
 }
 
