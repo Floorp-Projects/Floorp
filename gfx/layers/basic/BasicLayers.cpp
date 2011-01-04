@@ -1820,8 +1820,6 @@ BasicShadowableImageLayer::Paint(gfxContext* aContext,
     return;
 
   if (oldSize != mSize) {
-    NS_ASSERTION(oldSize == gfxIntSize(-1, -1), "video changed size?");
-
     if (mBackSurface) {
       BasicManager()->ShadowLayerForwarder::DestroySharedSurface(mBackSurface);
       mBackSurface = nsnull;
