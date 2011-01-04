@@ -1649,6 +1649,32 @@ void nsRegion::SimplifyOutward (PRUint32 aMaxRects)
   if (mRectCount <= aMaxRects)
     return;
 
+  // Try combining rects in horizontal bands into a single rect
+  RgnRect* pRect = mRectListHead.next;
+  while (pRect != &mRectListHead)
+  {
+    // Combine with the following rectangle if they have the same YMost
+    // or if they overlap vertically. This ensures that all overlapping
+    // rectangles are merged, preserving the invariant that rectangles
+    // don't overlap.
+    // The goal here is to try to keep groups of rectangles that are vertically
+    // discontiguous as separate rectangles in the final region. This is
+    // simple and fast to implement and page contents tend to vary more
+    // vertically than horizontally (which is why our rectangles are stored
+    // sorted by y-coordinate, too).
+    while (pRect->next != &mRectListHead &&
+           pRect->YMost () >= pRect->next->y)
+    {
+      pRect->UnionRect(*pRect, *pRect->next);
+      delete Remove (pRect->next);
+    }
+
+    pRect = pRect->next;
+  }
+
+  if (mRectCount <= aMaxRects)
+    return;
+
   *this = GetBounds();
 }
 
