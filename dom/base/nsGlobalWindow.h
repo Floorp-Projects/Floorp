@@ -574,6 +574,13 @@ public:
     return sOuterWindowsById ? sOuterWindowsById->Get(aWindowID) : nsnull;
   }
 
+private:
+  // Enable updates for the accelerometer.
+  void EnableAccelerationUpdates();
+
+  // Disables updates for the accelerometer.
+  void DisableAccelerationUpdates();
+
 protected:
   // Object Management
   virtual ~nsGlobalWindow();
@@ -869,7 +876,7 @@ protected:
   PRPackedBool           mFocusByKeyOccurred : 1;
 
   // Indicates whether this window is getting acceleration change events
-  PRPackedBool           mHasAcceleration  : 1;
+  PRPackedBool           mHasAcceleration : 1;
 
   // whether we've sent the destroy notification for our window id
   PRPackedBool           mNotifiedIDDestroyed : 1;
