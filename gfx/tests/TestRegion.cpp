@@ -131,6 +131,24 @@ class TestLargestRegion {
     }
     return success;
   }
+  static PRBool TestContainsSpecifiedRect() {
+    nsRegion r(nsRect(0, 0, 100, 100));
+    r.Or(r, nsRect(0, 300, 50, 50));
+    if (r.GetLargestRectangle(nsRect(0, 300, 10, 10)) != nsRect(0, 300, 50, 50)) {
+      fail("Chose wrong rectangle");
+      return PR_FALSE;
+    }
+    return PR_TRUE;
+  }
+  static PRBool TestContainsSpecifiedOverflowingRect() {
+    nsRegion r(nsRect(0, 0, 100, 100));
+    r.Or(r, nsRect(0, 300, 50, 50));
+    if (r.GetLargestRectangle(nsRect(0, 290, 10, 20)) != nsRect(0, 300, 50, 50)) {
+      fail("Chose wrong rectangle");
+      return PR_FALSE;
+    }
+    return PR_TRUE;
+  }
 public:
   static PRBool Test() {
     if (!TestSingleRect(nsRect(0, 52, 720, 480)) ||
@@ -142,6 +160,10 @@ public:
     if (!TestNonRectangular())
       return PR_FALSE;
     if (!TwoRectTest())
+      return PR_FALSE;
+    if (!TestContainsSpecifiedRect())
+      return PR_FALSE;
+    if (!TestContainsSpecifiedOverflowingRect())
       return PR_FALSE;
     passed("TestLargestRegion");
     return PR_TRUE;
