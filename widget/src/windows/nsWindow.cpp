@@ -2542,6 +2542,8 @@ void nsWindow::SetTransparencyMode(nsTransparencyMode aMode)
   GetTopLevelWindow(PR_TRUE)->SetWindowTranslucencyInner(aMode);
 }
 
+static const PRInt32 kGlassMarginAdjustment = 2;
+
 void nsWindow::UpdatePossiblyTransparentRegion(const nsIntRegion &aDirtyRegion,
                                                const nsIntRegion &aPossiblyTransparentRegion) {
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
@@ -2572,8 +2574,28 @@ void nsWindow::UpdatePossiblyTransparentRegion(const nsIntRegion &aDirtyRegion,
     margins.cxLeftWidth = margins.cxRightWidth = 
       margins.cyTopHeight = margins.cyBottomHeight = -1;
   } else {
-    // Find the largest rectangle and use that to calculate the inset
-    nsIntRect largest = opaqueRegion.GetLargestRectangle();
+    nsIntRect pluginBounds;
+    for (nsIWidget* child = GetFirstChild(); child; child = child->GetNextSibling()) {
+      nsWindowType type;
+      child->GetWindowType(type);
+      if (type == eWindowType_plugin) {
+        nsIntRect childBounds;
+        child->GetBounds(childBounds);
+        if (mTransparencyMode == eTransparencyBorderlessGlass) {
+          // We shrink the margins by kGlassMarginAdjustment in UpdateGlass.
+          // So here, try to ensure that the shrunk margin will still contain
+          // the plugin bounds. Of course there's no guarantee that we'll
+          // find an opaque rectangle including this enlarged area, for example
+          // if the plugin is already at the edge of the window.
+          childBounds.Inflate(kGlassMarginAdjustment, kGlassMarginAdjustment);
+        }
+        pluginBounds.UnionRect(pluginBounds, childBounds);
+      }
+    }
+
+    // Find the largest rectangle and use that to calculate the inset. Our top
+    // priority is to include the bounds of all plugins.
+    nsIntRect largest = opaqueRegion.GetLargestRectangle(pluginBounds);
     margins.cxLeftWidth = largest.x;
     margins.cxRightWidth = clientBounds.width - largest.XMost();
     margins.cyBottomHeight = clientBounds.height - largest.YMost();
@@ -2610,7 +2632,6 @@ void nsWindow::UpdateGlass()
   case eTransparencyBorderlessGlass:
     // Only adjust if there is some opaque rectangle
     if (margins.cxLeftWidth >= 0) {
-      const PRInt32 kGlassMarginAdjustment = 2;
       margins.cxLeftWidth += kGlassMarginAdjustment;
       margins.cyTopHeight += kGlassMarginAdjustment;
       margins.cxRightWidth += kGlassMarginAdjustment;
