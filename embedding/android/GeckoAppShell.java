@@ -79,6 +79,8 @@ class GeckoAppShell
     static private final int NOTIFY_IME_CANCELCOMPOSITION = 2;
     static private final int NOTIFY_IME_FOCUSCHANGE = 3;
 
+    static private final long kFreeSpaceThreshold = 19660800L; // 150Mb
+
     /* The Android-side API: API methods that Android calls */
 
     // Initialization methods
@@ -92,7 +94,7 @@ class GeckoAppShell
     public static native void onLowMemory();
     public static native void callObserver(String observerKey, String topic, String data);
     public static native void removeObserver(String observerKey);
-    public static native void loadLibs(String apkName);
+    public static native void loadLibs(String apkName, boolean shouldExtract);
 
     // java-side stuff
     public static void loadGeckoLibs(String apkName) {
@@ -120,6 +122,13 @@ class GeckoAppShell
 
         f = Environment.getDownloadCacheDirectory();
         GeckoAppShell.putenv("EXTERNAL_STORAGE=" + f.getPath());
+        File cacheFile = GeckoApp.mAppContext.getCacheDir();
+        GeckoAppShell.putenv("CACHE_PATH=" + cacheFile.getPath());
+
+        // gingerbread introduces File.getUsableSpace(). We should use that.
+        StatFs cacheStats = new StatFs(cacheFile.getPath());
+        long freeSpace = cacheStats.getFreeBlocks() * cacheStats.getBlockSize();
+
         File downloadDir = null;
         if (Build.VERSION.SDK_INT >= 8)
             downloadDir = GeckoApp.mAppContext.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
@@ -129,7 +138,17 @@ class GeckoAppShell
 
         putLocaleEnv();
 
-        loadLibs(apkName);
+        boolean shouldExtact = freeSpace > kFreeSpaceThreshold;
+        if (!shouldExtact) {
+            // remove any previously extracted libs since we're apparently low
+            Iterator cacheFiles = Arrays.asList(cacheFile.listFiles()).iterator();
+            while (cacheFiles.hasNext()) {
+                File libFile = (File)cacheFiles.next();
+                if (libFile.getName().endsWith(".so"))
+                    libFile.delete();
+            }
+        }
+        loadLibs(apkName, shouldExtact);
     }
 
     private static void putLocaleEnv() {

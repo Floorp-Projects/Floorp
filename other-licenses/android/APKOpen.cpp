@@ -439,7 +439,7 @@ static void * mozload(const char * path, void *zip,
 
   if (extractLibs) {
     char fullpath[256];
-    snprintf(fullpath, 256, "/data/data/" ANDROID_PACKAGE_NAME "/%s", path + 4);
+    snprintf(fullpath, 256, "%s/%s", getenv("CACHE_PATH"), path + 4);
     __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "resolved %s to %s", path, fullpath);
     extractFile(fullpath, entry, data);
     handle = __wrap_dlopen(fullpath, RTLD_LAZY);
@@ -640,8 +640,10 @@ loadLibs(const char *apkName)
 }
 
 extern "C" NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_loadLibs(JNIEnv *jenv, jclass jGeckoAppShellClass, jstring jApkName)
+Java_org_mozilla_gecko_GeckoAppShell_loadLibs(JNIEnv *jenv, jclass jGeckoAppShellClass, jstring jApkName, jboolean jShouldExtract)
 {
+  if (jShouldExtract)
+    extractLibs = 1;
   const char* str;
   // XXX: java doesn't give us true UTF8, we should figure out something 
   // better to do here
