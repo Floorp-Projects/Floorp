@@ -85,9 +85,16 @@ function checkNodeContent(aPanel, aId, aContent) {
 function checkNodeKeyValue(aPanel, aId, aKey, aValue) {
   let node = aPanel.document.getElementById(aId);
 
-  let testHTML = '<span xmlns="http://www.w3.org/1999/xhtml" class="property-name">' + aKey + ':</span>';
-  testHTML += '<span xmlns="http://www.w3.org/1999/xhtml" class="property-value">' + aValue + '</span>';
-  isnot(node.innerHTML.indexOf(testHTML), -1, "checking content of " + aId);
+  let headers = node.querySelectorAll("th");
+  for (let i = 0; i < headers.length; i++) {
+    if (headers[i].textContent == (aKey + ":")) {
+      is(headers[i].nextElementSibling.textContent, aValue,
+         "checking content of " + aId + " for key " + aKey);
+      return;
+    }
+  }
+
+  ok(false, "content check failed for " + aId + ", key " + aKey);
 }
 
 function testGen() {
