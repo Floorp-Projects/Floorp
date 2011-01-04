@@ -228,6 +228,22 @@ for (var d = -4; d <= 4; ++d) {
     delay_tests[d] = p;
 }
 
+// Test transition-delay values of -4s through 4s on a 4s transition
+// with duration of zero.
+var delay_zero_tests = {};
+for (var d = -4; d <= 4; ++d) {
+    var p = document.createElement("p");
+    var delay = d + "s";
+    var t = document.createTextNode("transition-delay: " + delay);
+    p.appendChild(t);
+    p.style.marginLeft = "0px";
+    p.style.MozTransition = "0s margin-left linear " + delay;
+    div.appendChild(p);
+    is(getComputedStyle(p, "").marginLeft, "0px",
+       "should be zero before changing value");
+    delay_zero_tests[d] = p;
+}
+
 // Test that changing the value on an already-running transition to the
 // value it currently happens to have resets the transition.
 function make_reset_test(transition, description)
@@ -404,6 +420,10 @@ for (var test in interrupt_tests) {
 }
 for (var d in delay_tests) {
     var p = delay_tests[d];
+    p.style.marginLeft = "100px";
+}
+for (var d in delay_zero_tests) {
+    var p = delay_zero_tests[d];
     p.style.marginLeft = "100px";
 }
 reset_test.style.marginLeft = "100px";
@@ -583,6 +603,29 @@ function check_delay_test(time)
 check_delay_test(0);
 for (var i = 1; i <= 8; ++i) {
     add_future_call(i, check_delay_test);
+}
+
+function check_delay_zero_test(time)
+{
+    for (var d in delay_zero_tests) {
+        var p = delay_zero_tests[d];
+
+        time_range = [ px_to_num(earlyrefcs.textIndent) / 125,
+                       px_to_num(laterefcs.textIndent) / 125 ];
+        var m = getComputedStyle(p, "").marginLeft;
+        var desc = "delay_zero test for delay " + d + "s";
+        if (time_range[0] < d && time_range[1] < d) {
+            is(m, "0px", desc);
+        } else if ((time_range[0] > d && time_range[1] > d) ||
+                   (d == 0 && time == 0)) {
+            is(m, "100px", desc);
+        }
+    }
+}
+
+check_delay_zero_test(0);
+for (var i = 1; i <= 8; ++i) {
+    add_future_call(i, check_delay_zero_test);
 }
 
 function reset_reset_test(time)
