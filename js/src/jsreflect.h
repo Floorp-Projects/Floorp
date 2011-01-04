@@ -50,7 +50,7 @@ namespace js {
 
 enum ASTType {
     AST_ERROR = -1,
-#define ASTDEF(ast, str) ast,
+#define ASTDEF(ast, str, method) ast,
 #include "jsast.tbl"
 #undef ASTDEF
     AST_LIMIT
