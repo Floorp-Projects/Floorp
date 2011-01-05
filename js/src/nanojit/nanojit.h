@@ -337,14 +337,15 @@ namespace nanojit {
            and below, so that callers can use bits 16 and above for
            themselves. */
         // TODO: add entries for the writer pipeline
-        LC_FragProfile = 1<<7, // collect per-frag usage counts
-        LC_Liveness    = 1<<6, // show LIR liveness analysis
-        LC_ReadLIR     = 1<<5, // as read from LirBuffer
-        LC_AfterSF     = 1<<4, // after StackFilter
-        LC_AfterDCE    = 1<<3, // after dead code elimination
-        LC_Native      = 1<<2, // final native code
-        LC_RegAlloc    = 1<<1, // stuff to do with reg alloc
-        LC_Activation  = 1<<0  // enable printActivationState
+        LC_FragProfile      = 1<<8, // collect per-frag usage counts
+        LC_Liveness         = 1<<7, // show LIR liveness analysis
+        LC_ReadLIR          = 1<<6, // as read from LirBuffer
+        LC_AfterSF          = 1<<5, // after StackFilter
+        LC_AfterDCE         = 1<<4, // after dead code elimination
+        LC_Bytes            = 1<<3, // byte values of native instruction
+        LC_Native           = 1<<2, // final native code
+        LC_RegAlloc         = 1<<1, // stuff to do with reg alloc
+        LC_Activation       = 1<<0  // enable printActivationState
     };
 
     class LogControl
