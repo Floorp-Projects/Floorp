@@ -1,4 +1,4 @@
-/* 
+/*
  * Check VKB show/hide behavior
  */
 let testURL_01 = chromeRoot + "browser_forms.html";
@@ -55,16 +55,20 @@ function waitForVKBChange(aCallback, aState) {
       VKBStateHasChanged = false;
       return true;
     }
-      
+
     return VKBStateHasChanged;
   });
 }
 
-
 let newTab = null;
 
-let isLoading = function() {
-  return !newTab.isLoading() && newTab.browser.currentURI.spec != "about:blank";
+function waitForPageShow(aPageURL, aCallback) {
+  messageManager.addMessageListener("pageshow", function(aMessage) {
+    if (aMessage.target.currentURI.spec == aPageURL) {
+      messageManager.removeMessageListener("pageshow", arguments.callee);
+      setTimeout(function() { aCallback(); }, 0);
+    }
+  });
 };
 
 function dragElement(element, x1, y1, x2, y2) {
@@ -77,17 +81,17 @@ function dragElement(element, x1, y1, x2, y2) {
 // Case: Test interactions with a VKB from content
 gTests.push({
   desc: "Test interactions with a VKB from content",
-
   run: function() {
+    waitForPageShow(testURL_01, gCurrentTest.focusContentInputField);
+
     newTab = Browser.addTab(testURL_01, true);
-    ok(newTab, "Tab Opened");	
-    waitFor(gCurrentTest.focusContentInputField, isLoading);
+    ok(newTab, "Tab Opened");
   },
 
   focusContentInputField: function() {
     is(VKBObserver._enabled, false, "Initially the VKB should be closed");
 
-    AsyncTests.waitFor("Test:Focus", {}, function(json) {
+    AsyncTests.waitFor("Test:FocusRoot", {}, function(json) {
       waitForVKBChange(gCurrentTest.showLeftSidebar);
     })
   },
@@ -123,7 +127,7 @@ gTests.push({
 
     // Give back the focus to the content input and launch and check
     // interaction with the right panel
-    AsyncTests.waitFor("Test:Focus", {}, function(json) {
+    AsyncTests.waitFor("Test:FocusRoot", {}, function(json) {
       waitForVKBChange(gCurrentTest.openRightPanel);
     });
   },
