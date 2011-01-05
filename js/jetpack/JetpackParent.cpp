@@ -169,7 +169,6 @@ public:
 
 private:
   nsCOMPtr<nsIJSContextStack> mCXStack;
-  JSContext* mCX;
 };
 
 // We have to delete the JetpackProcessParent on the I/O thread after event
