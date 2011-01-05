@@ -72,10 +72,6 @@ textbox {
   background-color: white;
 }
 
-#default-tooltip {
-  visibility: hidden; /* disabled in Fennec */
-}
-
 /* textboxes --------------------------------------------------------------- */
 textbox:not([type="number"]) {
   min-height: @textbox_height@;
