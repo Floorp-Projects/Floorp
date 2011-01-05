@@ -361,7 +361,8 @@ namespace nanojit
             void        getBaseIndexScale(LIns* addp, LIns** base, LIns** index, int* scale);
 
             void        codeAlloc(NIns *&start, NIns *&end, NIns *&eip
-                                  verbose_only(, size_t &nBytes));
+                                  verbose_only(, size_t &nBytes)
+                                  , size_t byteLimit=0);
 
             // These instructions don't have to be saved & reloaded to spill,
             // they can just be recalculated cheaply.
