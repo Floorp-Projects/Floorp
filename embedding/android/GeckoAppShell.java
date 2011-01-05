@@ -260,6 +260,7 @@ class GeckoAppShell
 
         switch (type) {
         case NOTIFY_IME_RESETINPUTSTATE:
+            GeckoApp.surfaceView.inputConnection.finishComposingText();
             IMEStateUpdater.resetIME();
             // keep current enabled state
             IMEStateUpdater.enableIME();
