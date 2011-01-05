@@ -1955,6 +1955,8 @@ gfxFontGroup::gfxFontGroup(const nsAString& aFamilies, const gfxFontStyle *aStyl
     mUserFontSet = nsnull;
     SetUserFontSet(aUserFontSet);
 
+    mSkipDrawing = PR_FALSE;
+
     mPageLang = gfxPlatform::GetFontPrefLangFor(mStyle.language);
     BuildFontList();
 }
@@ -2035,14 +2037,20 @@ gfxFontGroup::FindPlatformFont(const nsAString& aName,
     gfxFontGroup *fontGroup = static_cast<gfxFontGroup*>(aClosure);
     const gfxFontStyle *fontStyle = fontGroup->GetStyle();
 
-
     PRBool needsBold;
     gfxFontEntry *fe = nsnull;
 
     // first, look up in the user font set
     gfxUserFontSet *fs = fontGroup->GetUserFontSet();
     if (fs) {
-        fe = fs->FindFontEntry(aName, *fontStyle, needsBold);
+        // if the fontSet matches the family, but the font has not yet finished
+        // loading (nor has its load timeout fired), the fontGroup should wait
+        // for the download, and not actually draw its text yet
+        PRBool waitForUserFont = PR_FALSE;
+        fe = fs->FindFontEntry(aName, *fontStyle, needsBold, waitForUserFont);
+        if (!fe && waitForUserFont) {
+            fontGroup->mSkipDrawing = PR_TRUE;
+        }
     }
 
     // nothing in the user font set ==> check system fonts
@@ -2240,15 +2248,21 @@ gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
                 ResolveData data(fc, gf, closure);
                 PRBool aborted = PR_FALSE, needsBold;
                 nsresult rv;
-
-                if (mUserFontSet && mUserFontSet->FindFontEntry(family, mStyle, needsBold)) {
+                PRBool waitForUserFont = PR_FALSE;
+                if (mUserFontSet &&
+                    mUserFontSet->FindFontEntry(family, mStyle, needsBold,
+                                                waitForUserFont))
+                {
                     gfxFontGroup::FontResolverProc(family, &data);
                     rv = NS_OK;
                 } else {
+                    if (waitForUserFont) {
+                        mSkipDrawing = PR_TRUE;
+                    }
                     gfxPlatform *pf = gfxPlatform::GetPlatform();
                     rv = pf->ResolveFontName(family,
-                                                  gfxFontGroup::FontResolverProc,
-                                                  &data, aborted);
+                                             gfxFontGroup::FontResolverProc,
+                                             &data, aborted);
                 }
                 if (NS_FAILED(rv) || aborted)
                     return PR_FALSE;
@@ -2650,6 +2664,7 @@ gfxFontGroup::UpdateFontList()
         // xxx - can probably improve this to detect when all fonts were found, so no need to update list
         mFonts.Clear();
         mUnderlineOffset = UNDERLINE_OFFSET_NOT_SET;
+        mSkipDrawing = PR_FALSE;
 
         // bug 548184 - need to clean up FT2, OS/2 platform code to use BuildFontList
 #if defined(XP_MACOSX) || defined(XP_WIN)
@@ -3043,6 +3058,7 @@ gfxTextRun::gfxTextRun(const gfxTextRunFactory::Parameters *aParams, const void 
 #endif
 
     mUserFontSetGeneration = mFontGroup->GetGeneration();
+    mSkipDrawing = mFontGroup->ShouldSkipDrawing();
 }
 
 gfxTextRun::~gfxTextRun()
@@ -3472,6 +3488,21 @@ gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt,
     NS_ASSERTION(aStart + aLength <= mCharacterCount, "Substring out of range");
 
     gfxFloat direction = GetDirection();
+
+    if (mSkipDrawing) {
+        // We're waiting for a user font to finish downloading;
+        // but if the caller wants advance width, we need to compute it here
+        if (aAdvanceWidth) {
+            gfxTextRun::Metrics metrics = MeasureText(aStart, aLength,
+                                                      gfxFont::LOOSE_INK_EXTENTS,
+                                                      aContext, aProvider);
+            *aAdvanceWidth = metrics.mAdvanceWidth * direction;
+        }
+
+        // return without drawing
+        return;
+    }
+
     gfxPoint pt = aPt;
 
     // synthetic bolding draws glyphs twice ==> colors with opacity won't draw correctly unless first drawn without alpha
@@ -4087,6 +4118,10 @@ gfxTextRun::CopyGlyphDataFrom(gfxTextRun *aSource, PRUint32 aStart,
                  "Source substring out of range");
     NS_ASSERTION(aDest + aLength <= GetLength(),
                  "Destination substring out of range");
+
+    if (aSource->mSkipDrawing) {
+        mSkipDrawing = PR_TRUE;
+    }
 
     // Copy base glyph data, and DetailedGlyph data where present
     for (PRUint32 i = 0; i < aLength; ++i) {

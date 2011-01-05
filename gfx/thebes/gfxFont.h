@@ -2195,6 +2195,10 @@ private:
     PRUint32          mCharacterCount;
     PRUint32          mHashCode;
     PRUint64          mUserFontSetGeneration; // user font set generation when text run created
+
+    PRBool            mSkipDrawing; // true if the font group we used had a user font
+                                    // download that's in progress, so we should hide text
+                                    // until the download completes (or timeout fires)
 };
 
 class THEBES_API gfxFontGroup : public gfxTextRunFactory {
@@ -2322,6 +2326,10 @@ public:
     // caches need updating.
     virtual void UpdateFontList();
 
+    PRBool ShouldSkipDrawing() const {
+        return mSkipDrawing;
+    }
+
 protected:
     nsString mFamilies;
     gfxFontStyle mStyle;
@@ -2335,8 +2343,12 @@ protected:
     nsRefPtr<gfxFontFamily> mLastPrefFamily;
     nsRefPtr<gfxFont>       mLastPrefFont;
     eFontPrefLang           mLastPrefLang;       // lang group for last pref font
-    PRBool                  mLastPrefFirstFont;  // is this the first font in the list of pref fonts for this lang group?
     eFontPrefLang           mPageLang;
+    PRPackedBool            mLastPrefFirstFont;  // is this the first font in the list of pref fonts for this lang group?
+
+    PRPackedBool            mSkipDrawing; // hide text while waiting for a font
+                                          // download to complete (or fallback
+                                          // timer to fire)
 
     // Used for construction/destruction.  Not intended to change the font set
     // as invalidation of font lists and caches is not considered.
