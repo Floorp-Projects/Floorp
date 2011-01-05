@@ -51,6 +51,7 @@
 #include "netCore.h"
 #include "nsNetCID.h"
 #include "nsAutoLock.h"
+#include "nsProxyRelease.h"
 #include "prmem.h"
 
 #ifdef DEBUG
@@ -98,19 +99,15 @@ nsHttpConnection::nsHttpConnection()
 nsHttpConnection::~nsHttpConnection()
 {
     LOG(("Destroying nsHttpConnection @%x\n", this));
- 
-    if (mIdleSynTimer) {
-        mIdleSynTimer->Cancel();
-        mIdleSynTimer = nsnull;
-    }
 
+    CancelSynTimer();
     if (mBackupConnection) {
         gHttpHandler->ReclaimConnection(mBackupConnection);
         mBackupConnection = nsnull;
     }
-    
+
+    ReleaseCallbacks();
     NS_IF_RELEASE(mConnInfo);
-    NS_IF_RELEASE(mTransaction);
 
     if (mLock) {
         PR_DestroyLock(mLock);
@@ -120,6 +117,25 @@ nsHttpConnection::~nsHttpConnection()
     // release our reference to the handler
     nsHttpHandler *handler = gHttpHandler;
     NS_RELEASE(handler);
+}
+
+void
+nsHttpConnection::ReleaseCallbacks()
+{
+    if (mCallbacks) {
+        nsIInterfaceRequestor *cbs = nsnull;
+        mCallbacks.swap(cbs);
+        NS_ProxyRelease(mCallbackTarget, cbs);
+    }
+}
+
+void
+nsHttpConnection::CancelSynTimer()
+{
+    if (mIdleSynTimer) {
+        mIdleSynTimer->Cancel();
+        mIdleSynTimer = nsnull;
+    }
 }
 
 nsresult
@@ -159,6 +175,11 @@ nsHttpConnection::IdleSynTimeout(nsITimer *timer, void *closure)
 
         LOG(("SocketTransport hit idle timer - starting backup socket"));
 
+        // if we have already cleared ::CloseTransaction, then we do not
+        // need to create the backup connection
+        if (!self->mTransaction)
+            return;
+
         gHttpHandler->ConnMgr()->GetConnection(self->mConnInfo,
                                                self->mSocketCaps,
                                                getter_AddRefs(
@@ -172,6 +193,10 @@ nsHttpConnection::IdleSynTimeout(nsITimer *timer, void *closure)
                                   getter_AddRefs(self->mSocketOut2));
         if (NS_SUCCEEDED(rv)) {
             sCreateTransport2++;
+            self->mTransaction->
+                GetSecurityCallbacks(
+                    getter_AddRefs(self->mCallbacks),
+                    getter_AddRefs(self->mCallbackTarget));
             self->mSocketOut2->AsyncWait(self, 0, 0, nsnull);
         }
     }
@@ -194,8 +219,8 @@ nsHttpConnection::Activate(nsAHttpTransaction *trans, PRUint8 caps)
 
     // take ownership of the transaction
     mTransaction = trans;
-    NS_ADDREF(mTransaction);
     mActivationCount++;
+    ReleaseCallbacks();
 
     // set mKeepAlive according to what will be requested
     mKeepAliveMask = mKeepAlive = (caps & NS_HTTP_ALLOW_KEEPALIVE);
@@ -219,15 +244,22 @@ nsHttpConnection::Activate(nsAHttpTransaction *trans, PRUint8 caps)
         // we already have a socket that means the socket was created
         // speculatively in the past, not used at that time, and
         // given to the connection manager.
-        if (mActivationCount == 1)
+        if (mActivationCount == 1) {
             sWastedReuseCount++;
-
+            rv = mSocketTransport->SetEventSink(this, nsnull);
+            NS_ENSURE_SUCCESS(rv, rv);
+            rv = mSocketTransport->SetSecurityCallbacks(this);
+            NS_ENSURE_SUCCESS(rv, rv);
+        }
         rv = mSocketOut->AsyncWait(this, 0, 0, nsnull);
     }
     
 failed_activation:
-    if (NS_FAILED(rv))
-        NS_RELEASE(mTransaction);
+    if (NS_FAILED(rv)) {
+        mTransaction = nsnull;
+        CancelSynTimer();
+    }
+
     return rv;
 }
 
@@ -486,7 +518,7 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
             // processing a transaction pipeline until after the first HTTP/1.1
             // response.
             nsHttpTransaction *trans =
-                    static_cast<nsHttpTransaction *>(mTransaction);
+                     static_cast<nsHttpTransaction *>(mTransaction.get());
             trans->SetSSLConnectFailed();
         }
     }
@@ -648,10 +680,6 @@ nsHttpConnection::AssignTransport(nsISocketTransport *sock,
                                   nsIAsyncOutputStream *outs,
                                   nsIAsyncInputStream *ins)
 {
-    nsresult rv = sock->SetEventSink(this, nsnull);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv =sock->SetSecurityCallbacks(this);
-    NS_ENSURE_SUCCESS(rv, rv);
     mSocketTransport = sock;
     mSocketOut = outs;
     mSocketIn = ins;
@@ -672,9 +700,7 @@ nsHttpConnection::CloseTransaction(nsAHttpTransaction *trans, nsresult reason)
         reason = NS_OK;
 
     mTransaction->Close(reason);
-
-    NS_RELEASE(mTransaction);
-    mTransaction = 0;
+    mTransaction = nsnull;
 
     if (NS_FAILED(reason))
         Close(reason);
@@ -885,7 +911,8 @@ nsHttpConnection::SetupSSLProxyConnect()
 
     // NOTE: this cast is valid since this connection cannot be processing a
     // transaction pipeline until after the first HTTP/1.1 response.
-    nsHttpTransaction *trans = static_cast<nsHttpTransaction *>(mTransaction);
+    nsHttpTransaction *trans =
+        static_cast<nsHttpTransaction *>(mTransaction.get());
     
     val = trans->RequestHead()->PeekHeader(nsHttp::Host);
     if (val) {
@@ -930,14 +957,14 @@ nsHttpConnection::ReleaseBackupTransport(nsISocketTransport *sock,
 void
 nsHttpConnection::SelectPrimaryTransport(nsIAsyncOutputStream *out)
 {
+    LOG(("nsHttpConnection::SelectPrimaryTransport(out=%p), mSocketOut1=%p, mSocketOut2=%p, mSocketOut=%p",
+         out, mSocketOut1.get(), mSocketOut2.get(), mSocketOut.get()));
+
     if (!mSocketOut) {
         // Setup the Main Socket
-        
-        if (mIdleSynTimer) {
-            mIdleSynTimer->Cancel();
-            mIdleSynTimer = nsnull;
-        }
-        
+
+        CancelSynTimer();
+
         if (out == mSocketOut1) {
             sSuccessTransport1++;
             mSocketTransport.swap(mSocketTransport1);
@@ -1030,17 +1057,17 @@ nsHttpConnection::OnOutputStreamReady(nsIAsyncOutputStream *out)
 {
     NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
 
-    // if the transaction was dropped...
-    if (!mTransaction) {
-        LOG(("  no transaction; ignoring event\n"));
-        return NS_OK;
-    }
-
     NS_ABORT_IF_FALSE(out == mSocketOut  ||
                       out == mSocketOut1 ||
                       out == mSocketOut2    , "unexpected socket");
     if (out != mSocketOut)
         SelectPrimaryTransport(out);
+
+    // if the transaction was dropped...
+    if (!mTransaction) {
+        LOG(("  no transaction; ignoring event\n"));
+        return NS_OK;
+    }
 
     if (mSocketOut == out) {
         NS_ABORT_IF_FALSE(!mIdleSynTimer,"IdleSynTimer should not be set");
@@ -1080,13 +1107,12 @@ nsHttpConnection::GetInterface(const nsIID &iid, void **result)
     //       have to worry about the possibility of mTransaction going away
     //       part-way through this function call.  See CloseTransaction.
     NS_ASSERTION(PR_GetCurrentThread() != gSocketThread, "wrong thread");
- 
-    if (mTransaction) {
-        nsCOMPtr<nsIInterfaceRequestor> callbacks;
-        mTransaction->GetSecurityCallbacks(getter_AddRefs(callbacks));
-        if (callbacks)
-            return callbacks->GetInterface(iid, result);
-    }
+        
+    nsCOMPtr<nsIInterfaceRequestor> callbacks = mCallbacks;
+    if (!callbacks && mTransaction)
+        mTransaction->GetSecurityCallbacks(getter_AddRefs(callbacks), nsnull);
+    if (callbacks)
+        return callbacks->GetInterface(iid, result);
 
     return NS_ERROR_NO_INTERFACE;
 }

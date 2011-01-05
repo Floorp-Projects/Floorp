@@ -53,6 +53,7 @@
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIEventTarget.h"
 #include "nsITimer.h"
 
 //-----------------------------------------------------------------------------
@@ -154,6 +155,8 @@ private:
     void         ReleaseBackupTransport(nsISocketTransport *sock,
                                         nsIAsyncOutputStream *outs,
                                         nsIAsyncInputStream *ins);
+    void         CancelSynTimer();
+    void         ReleaseCallbacks();
 private:
     nsCOMPtr<nsISocketTransport>    mSocketTransport;
     nsCOMPtr<nsIAsyncInputStream>   mSocketIn;
@@ -165,7 +168,16 @@ private:
     nsCOMPtr<nsIInputStream>        mSSLProxyConnectStream;
     nsCOMPtr<nsIInputStream>        mRequestStream;
 
-    nsAHttpTransaction             *mTransaction; // hard ref
+    // mTransaction only points to the HTTP Transaction callbacks if the
+    // transaction is open, otherwise it is null.
+    nsRefPtr<nsAHttpTransaction>    mTransaction;
+
+    // The security callbacks are only stored if we initiate a
+    // backup connection because they need to be proxy released
+    // on the main thread.
+    nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
+    nsCOMPtr<nsIEventTarget>        mCallbackTarget;
+
     nsHttpConnectionInfo           *mConnInfo;    // hard ref
 
     PRLock                         *mLock;
