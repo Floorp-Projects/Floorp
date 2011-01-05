@@ -510,7 +510,10 @@ protected:
 
     WebGLObjectRefPtr<WebGLBuffer> mBoundArrayBuffer;
     WebGLObjectRefPtr<WebGLBuffer> mBoundElementArrayBuffer;
-    WebGLObjectRefPtr<WebGLProgram> mCurrentProgram;
+    // note nsRefPtr -- this stays alive even after being deleted,
+    // and is only explicitly removed from the current state via
+    // a call to UseProgram.
+    nsRefPtr<WebGLProgram> mCurrentProgram;
 
     PRUint32 mMaxFramebufferColorAttachments;
 
@@ -1145,7 +1148,7 @@ public:
     WebGLShader(WebGLContext *context, WebGLuint name, WebGLenum stype) :
         WebGLContextBoundObject(context),
         mName(name), mDeleted(PR_FALSE), mType(stype),
-        mNeedsTranslation(true)
+        mNeedsTranslation(true), mAttachCount(0)
     { }
 
     void Delete() {
@@ -1155,9 +1158,13 @@ public:
         mDeleted = PR_TRUE;
     }
 
-    PRBool Deleted() { return mDeleted; }
+    PRBool Deleted() { return mDeleted && mAttachCount == 0; }
     WebGLuint GLName() { return mName; }
     WebGLenum ShaderType() { return mType; }
+
+    PRUint32 AttachCount() { return mAttachCount; }
+    void IncrementAttachCount() { mAttachCount++; }
+    void DecrementAttachCount() { mAttachCount--; }
 
     void SetSource(const nsCString& src) {
         // XXX do some quick gzip here maybe -- getting this will be very rare
@@ -1189,6 +1196,7 @@ protected:
     nsCString mSource;
     nsCString mTranslationLog;
     bool mNeedsTranslation;
+    PRUint32 mAttachCount;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(WebGLShader, WEBGLSHADER_PRIVATE_IID)
@@ -1205,7 +1213,8 @@ public:
 
     WebGLProgram(WebGLContext *context, WebGLuint name) :
         WebGLContextBoundObject(context),
-        mName(name), mDeleted(PR_FALSE), mLinkStatus(PR_FALSE), mGeneration(0),
+        mName(name), mDeleted(PR_FALSE), mDeletePending(PR_FALSE),
+        mLinkStatus(PR_FALSE), mGeneration(0),
         mUniformMaxNameLength(0), mAttribMaxNameLength(0),
         mUniformCount(0), mAttribCount(0)
     {
@@ -1219,7 +1228,18 @@ public:
         mDeleted = PR_TRUE;
     }
 
-    PRBool Deleted() { return mDeleted; }
+    void DetachShaders() {
+        for (PRUint32 i = 0; i < mAttachedShaders.Length(); ++i) {
+            mAttachedShaders[i]->DecrementAttachCount();
+        }
+        mAttachedShaders.Clear();
+    }
+
+    PRBool Deleted() { return mDeleted && !mDeletePending; }
+    void SetDeletePending() { mDeletePending = PR_TRUE; }
+    void ClearDeletePending() { mDeletePending = PR_FALSE; }
+    PRBool HasDeletePending() { return mDeletePending; }
+
     WebGLuint GLName() { return mName; }
     const nsTArray<WebGLShader*>& AttachedShaders() const { return mAttachedShaders; }
     PRBool LinkStatus() { return mLinkStatus; }
@@ -1235,12 +1255,17 @@ public:
         if (ContainsShader(shader))
             return PR_FALSE;
         mAttachedShaders.AppendElement(shader);
+        shader->IncrementAttachCount();
         return PR_TRUE;
     }
 
     // return true if the shader was found and removed
     PRBool DetachShader(WebGLShader *shader) {
-        return mAttachedShaders.RemoveElement(shader);
+        if (mAttachedShaders.RemoveElement(shader)) {
+            shader->DecrementAttachCount();
+            return PR_TRUE;
+        }
+        return PR_FALSE;
     }
 
     PRBool HasAttachedShaderOfType(GLenum shaderType) {
@@ -1285,10 +1310,14 @@ public:
 protected:
     WebGLuint mName;
     PRPackedBool mDeleted;
+    PRPackedBool mDeletePending;
     PRPackedBool mLinkStatus;
+    // attached shaders of the program object
     nsTArray<WebGLShader*> mAttachedShaders;
-    nsRefPtrHashtable<nsUint32HashKey, WebGLUniformLocation> mMapUniformLocations;
     CheckedUint32 mGeneration;
+
+    // post-link data
+    nsRefPtrHashtable<nsUint32HashKey, WebGLUniformLocation> mMapUniformLocations;
     GLint mUniformMaxNameLength;
     GLint mAttribMaxNameLength;
     GLint mUniformCount;

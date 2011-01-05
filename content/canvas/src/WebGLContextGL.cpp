@@ -169,6 +169,8 @@ WebGLContext::AttachShader(nsIWebGLProgram *pobj, nsIWebGLShader *shobj)
 
     gl->fAttachShader(progname, shadername);
 
+    printf_stderr("AttachShader: %p AttachCount after attach %d\n", shader, shader->AttachCount());
+
     return NS_OK;
 }
 
@@ -869,6 +871,13 @@ WebGLContext::DeleteProgram(nsIWebGLProgram *pobj)
     MakeContextCurrent();
 
     gl->fDeleteProgram(progname);
+
+    if (prog == mCurrentProgram) {
+        prog->SetDeletePending();
+    } else {
+        prog->DetachShaders();
+    }
+
     prog->Delete();
     mMapPrograms.Remove(progname);
 
@@ -890,6 +899,7 @@ WebGLContext::DeleteShader(nsIWebGLShader *sobj)
     MakeContextCurrent();
 
     gl->fDeleteShader(shadername);
+    printf_stderr("DeleteShader: shader %p AttachCount in delete %d\n", shader, shader->AttachCount());
     shader->Delete();
     mMapShaders.Remove(shadername);
 
@@ -902,10 +912,13 @@ WebGLContext::DetachShader(nsIWebGLProgram *pobj, nsIWebGLShader *shobj)
     WebGLuint progname, shadername;
     WebGLProgram *program;
     WebGLShader *shader;
+    PRBool shaderDeleted;
     if (!GetConcreteObjectAndGLName("detachShader: program", pobj, &program, &progname) ||
-        !GetConcreteObjectAndGLName("detachShader: shader", shobj, &shader, &shadername))
+        !GetConcreteObjectAndGLName("detachShader: shader", shobj, &shader, &shadername, nsnull, &shaderDeleted))
         return NS_OK;
 
+    // shaderDeleted is ignored -- it's valid to attempt to detach a
+    // deleted shader, since it's still a shader
     if (!program->DetachShader(shader))
         return ErrorInvalidOperation("DetachShader: shader is not attached");
 
@@ -1426,7 +1439,7 @@ WebGLContext::GetAttachedShaders(nsIWebGLProgram *pobj, nsIVariant **retval)
     MakeContextCurrent();
 
     if (isNull) {
-        wrval->SetAsVoid();
+        wrval->SetAsEmpty();
         // note no return, we still want to return the variant
         ErrorInvalidValue("getAttachedShaders: invalid program");
     } else if (prog->AttachedShaders().Length() == 0) {
@@ -1956,7 +1969,8 @@ WebGLContext::GetProgramParameter(nsIWebGLProgram *pobj, PRUint32 pname, nsIVari
     *retval = nsnull;
 
     WebGLuint progname;
-    if (!GetGLName<WebGLProgram>("getProgramParameter: program", pobj, &progname))
+    PRBool isDeleted;
+    if (!GetGLName<WebGLProgram>("getProgramParameter: program", pobj, &progname, nsnull, &isDeleted))
         return NS_OK;
 
     nsCOMPtr<nsIWritableVariant> wrval = do_CreateInstance("@mozilla.org/variant;1");
@@ -2430,7 +2444,18 @@ NS_IMETHODIMP
 WebGLContext::IsProgram(nsIWebGLProgram *pobj, WebGLboolean *retval)
 {
     PRBool isDeleted;
-    *retval = CanGetConcreteObject<WebGLProgram>("isProgram", pobj, 0, &isDeleted) && !isDeleted;
+    WebGLProgram *prog = nsnull;
+    PRBool ok = GetConcreteObject("isProgram", pobj, &prog, 0, &isDeleted, PR_FALSE);
+    if (!ok) {
+        *retval = PR_FALSE;
+        return NS_OK;
+    }
+
+    if (isDeleted) {
+        *retval = PR_FALSE;
+    } else {
+        *retval = PR_TRUE;
+    }
 
     return NS_OK;
 }
@@ -2454,7 +2479,18 @@ NS_IMETHODIMP
 WebGLContext::IsShader(nsIWebGLShader *sobj, WebGLboolean *retval)
 {
     PRBool isDeleted;
-    *retval = CanGetConcreteObject<WebGLShader>("isShader", sobj, 0, &isDeleted) && !isDeleted;
+    WebGLShader *shader = nsnull;
+    PRBool ok = GetConcreteObject("isShader", sobj, &shader, 0, &isDeleted, PR_FALSE);
+    if (!ok) {
+        *retval = PR_FALSE;
+        return NS_OK;
+    }
+
+    if (isDeleted) {
+        *retval = PR_FALSE;
+    } else {
+        *retval = PR_TRUE;
+    }
 
     return NS_OK;
 }
@@ -3332,15 +3368,17 @@ WebGLContext::UseProgram(nsIWebGLProgram *pobj)
 
     MakeContextCurrent();
 
-    if (isNull) {
-        gl->fUseProgram(0);
-        mCurrentProgram = nsnull;
-    } else {
-        if (!prog->LinkStatus())
-            return ErrorInvalidOperation("UseProgram: program was not linked successfully");
-        gl->fUseProgram(progname);
-        mCurrentProgram = prog;
+    if (prog && !prog->LinkStatus())
+        return ErrorInvalidOperation("UseProgram: program was not linked successfully");
+
+    gl->fUseProgram(progname);
+
+    if (mCurrentProgram && mCurrentProgram->HasDeletePending()) {
+        mCurrentProgram->DetachShaders();
+        mCurrentProgram->ClearDeletePending();
     }
+
+    mCurrentProgram = prog;
 
     return NS_OK;
 }
@@ -3419,6 +3457,9 @@ WebGLContext::CompileShader(nsIWebGLShader *sobj)
     WebGLuint shadername;
     if (!GetConcreteObjectAndGLName("compileShader", sobj, &shader, &shadername))
         return NS_OK;
+
+    printf_stderr("CompileShader: shader %p AttachCount %d\n", shader, shader->AttachCount());
+
     MakeContextCurrent();
 
 #if defined(USE_ANGLE)
