@@ -204,10 +204,7 @@ var RecommendedSearchResults = {
     this._writeFile(file, JSON.stringify(json));
   },
   
-  searchFailed: function searchFailed() {
-    let loading = document.getElementById("newAddons");
-    loading.parentNode.removeChild(loading);
-  },
+  searchFailed: function searchFailed() { },
   
   search: function() {
     const kAddonsMaxDisplay = 2;
