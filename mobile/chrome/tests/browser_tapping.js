@@ -35,14 +35,6 @@ function checkEvents(aEvents) {
 }
 
 let gContextTypes = "";
-function dumpMessages(aMessage) {
-  if (aMessage.name == "Browser:ContextMenu") {
-    aMessage.json.types.forEach(function(aType) {
-      gContextTypes.push(aType);
-    })
-  }  
-}
-
 function clearContextTypes() {
   gContextTypes = [];
 
@@ -67,6 +59,22 @@ function checkContextTypes(aTypes) {
   return true;
 }
 
+function waitForContextMenu(aCallback, aNextTest) {
+  clearContextTypes();
+
+  let browser = gCurrentTab.browser;
+  browser.messageManager.addMessageListener("Browser:ContextMenu", function(aMessage) {
+    browser.messageManager.removeMessageListener(aMessage.name, arguments.callee);
+    aMessage.json.types.forEach(function(aType) {
+      gContextTypes.push(aType);
+    });
+    setTimeout(function() {
+      aCallback(aMessage.json);
+      clearContextTypes();
+      aNextTest();
+    }, 0);
+  });
+}
 
 function test() {
   // The "runNextTest" approach is async, so we need to call "waitForExplicitFinish()"
@@ -80,7 +88,7 @@ function test() {
   window.addEventListener("TapSingle", dumpEvents, true);
   window.addEventListener("TapDouble", dumpEvents, true);
   window.addEventListener("TapLong", dumpEvents, true);
-  
+
   // Wait for the tab to load, then do the tests
   messageManager.addMessageListener("pageshow", function() {
   if (gCurrentTab.browser.currentURI.spec == testURL) {
@@ -120,14 +128,17 @@ gTests.push({
     let height = browser.getBoundingClientRect().height;
 
     // Should fire "TapSingle"
-    // XXX not working? WTF?
     info("Test good single tap");
     clearEvents();
     EventUtils.synthesizeMouse(browser, width / 2, height / 2, {});
-    todo(checkEvents(["TapSingle"]), "Fired a good single tap");
-    clearEvents();
 
-    setTimeout(function() { gCurrentTest.doubleTapTest(); }, 500);
+    // We wait a bit because of the delay allowed for double clicking on device
+    // where it is not native
+    setTimeout(function() {
+      ok(checkEvents(["TapSingle"]), "Fired a good single tap");
+      clearEvents();
+      gCurrentTest.doubleTapTest();
+    }, kDoubleClickInterval);
   },
 
   doubleTapTest: function() {
@@ -173,7 +184,7 @@ gTests.push({
     EventUtils.synthesizeMouse(browser, width / 2, height * 3 / 4, { type: "mouseup" });
     ok(checkEvents([]), "Fired a pan which should be seen as a non event");
     clearEvents();
-    
+
     setTimeout(function() { gCurrentTest.longTapFailTest(); }, 500);
   },
 
@@ -200,76 +211,63 @@ gTests.push({
     let width = browser.getBoundingClientRect().width;
     let height = browser.getBoundingClientRect().height;
 
-    info("Test a good long pan");
-    clearEvents();
-    EventUtils.synthesizeMouse(browser, width / 2, height / 4, { type: "mousedown" });
-    setTimeout(function() {
+    window.addEventListener("TapLong", function() {
+      window.removeEventListener("TapLong", arguments.callee, true);
       EventUtils.synthesizeMouse(browser, width / 2, height / 4, { type: "mouseup" });
       ok(checkEvents(["TapLong"]), "Fired a good long tap");
       clearEvents();
+    }, true);
 
-      gCurrentTest.contextPlainLinkTest();
-    }, 500);
+    browser.messageManager.addMessageListener("Browser:ContextMenu", function(aMessage) {
+      browser.messageManager.removeMessageListener(aMessage.name, arguments.callee);
+      setTimeout(gCurrentTest.contextPlainLinkTest, 0);
+    });
+
+    info("Test a good long pan");
+    clearEvents();
+    EventUtils.synthesizeMouse(browser, width / 2, height / 4, { type: "mousedown" });
   },
 
   contextPlainLinkTest: function() {
+    waitForContextMenu(function(aJSON) {
+      is(aJSON.linkTitle, "A blank page - nothing interesting", "Text content should be the content of the second link");
+      ok(checkContextTypes(["link","link-saveable","link-openable"]), "Plain link context types");
+    }, gCurrentTest.contextPlainImageTest);
+
     let browser = gCurrentTab.browser;
-    browser.messageManager.addMessageListener("Browser:ContextMenu", dumpMessages);
+    let linkDisabled = browser.contentDocument.getElementById("link-disabled");
+    let event = content.document.createEvent("PopupEvents");
+    event.initEvent("contextmenu", true, true);
+    linkDisabled.dispatchEvent(event);
 
     let link = browser.contentDocument.getElementById("link-single");
-    let linkRect = link.getBoundingClientRect();
-
-    clearContextTypes();
-    EventUtils.synthesizeMouseForContent(link, linkRect.width/2, linkRect.height/4, { type: "mousedown" }, window);
-    setTimeout(function() {
-      EventUtils.synthesizeMouseForContent(link, linkRect.width/2, linkRect.height/4, { type: "mouseup" }, window);
-      ok(checkContextTypes(["link","link-saveable","link-openable"]), "Plain link context types");
-      clearContextTypes();
-
-      gCurrentTest.contextPlainImageTest();
-    }, 500);
+    let event = content.document.createEvent("PopupEvents");
+    event.initEvent("contextmenu", true, true);
+    link.dispatchEvent(event);
   },
 
   contextPlainImageTest: function() {
-    let browser = gCurrentTab.browser;
-    browser.messageManager.addMessageListener("Browser:ContextMenu", dumpMessages);
-
-    let img = browser.contentDocument.getElementById("img-single");
-    let imgRect = img.getBoundingClientRect();
-
-    clearContextTypes();
-    EventUtils.synthesizeMouseForContent(img, imgRect.width/2, imgRect.height/2, { type: "mousedown" }, window);
-    setTimeout(function() {
-      EventUtils.synthesizeMouseForContent(img, 1, 1, { type: "mouseup" }, window);
+    waitForContextMenu(function() {
       ok(checkContextTypes(["image","image-shareable","image-loaded"]), "Plain image context types");
-      clearContextTypes();
+    }, gCurrentTest.contextNestedImageTest);
 
-      gCurrentTest.contextNestedImageTest();
-    }, 500);
+    let browser = gCurrentTab.browser;
+    let img = browser.contentDocument.getElementById("img-single");
+    let event = content.document.createEvent("PopupEvents");
+    event.initEvent("contextmenu", true, true);
+    img.dispatchEvent(event);
   },
 
   contextNestedImageTest: function() {
-    let browser = gCurrentTab.browser;
-    browser.messageManager.addMessageListener("Browser:ContextMenu", dumpMessages);
-
-    let img = browser.contentDocument.getElementById("img-nested");
-    let imgRect = img.getBoundingClientRect();
-
-    clearContextTypes();
-    EventUtils.synthesizeMouseForContent(img, 1, 1, { type: "mousedown" }, window);
-    setTimeout(function() {
-      EventUtils.synthesizeMouseForContent(img, 1, 1, { type: "mouseup" }, window);
+    waitForContextMenu(function() {
       ok(checkContextTypes(["link","link-saveable","image","image-shareable","image-loaded","link-openable"]), "Nested image context types");
-      clearContextTypes();
+    }, runNextTest);
 
-      gCurrentTest.lastTest();
-    }, 500);
-  },
-
-  lastTest: function() {
-    gCurrentTab.browser.messageManager.removeMessageListener("Browser:ContextMenu", dumpMessages);
-
-    runNextTest();
+    let browser = gCurrentTab.browser;
+    let img = browser.contentDocument.getElementById("img-nested");
+    let event = content.document.createEvent("PopupEvents");
+    event.initEvent("contextmenu", true, true);
+    img.dispatchEvent(event);
   }
 });
 

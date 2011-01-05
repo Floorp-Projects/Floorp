@@ -311,8 +311,8 @@ function Content() {
 
   addMessageListener("Browser:Blur", this);
   addMessageListener("Browser:KeyEvent", this);
-  addMessageListener("Browser:MouseDown", this);
   addMessageListener("Browser:MouseOver", this);
+  addMessageListener("Browser:MouseLong", this);
   addMessageListener("Browser:MouseUp", this);
   addMessageListener("Browser:SaveAs", this);
   addMessageListener("Browser:ZoomToPoint", this);
@@ -424,19 +424,6 @@ Content.prototype = {
         }
         break;
 
-      case "Browser:MouseDown": {
-        let element = elementFromPoint(x, y);
-        if (!element)
-          return;
-
-        ContextHandler.messageId = json.messageId;
-
-        let event = content.document.createEvent("PopupEvents");
-        event.initEvent("contextmenu", true, true);
-        element.dispatchEvent(event);
-        break;
-      }
-
       case "Browser:MouseOver": {
         let element = elementFromPoint(x, y);
         if (!element)
@@ -462,6 +449,19 @@ Content.prototype = {
           let highlightRects = [{ left: rect.x, top: rect.y, width: rect.width, height: rect.height }];
           sendAsyncMessage("Browser:Highlight", { rects: highlightRects, messageId: json.messageId });
         }
+        break;
+      }
+
+      case "Browser:MouseLong": {
+        let element = elementFromPoint(x, y);
+        if (!element)
+          return;
+
+        ContextHandler.messageId = json.messageId;
+
+        let event = content.document.createEvent("PopupEvents");
+        event.initEvent("contextmenu", true, true);
+        element.dispatchEvent(event);
         break;
       }
 
