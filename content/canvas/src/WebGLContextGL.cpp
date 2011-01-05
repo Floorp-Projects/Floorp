@@ -1272,10 +1272,10 @@ WebGLContext::EnableVertexAttribArray(WebGLuint index)
 NS_IMETHODIMP
 WebGLContext::FramebufferRenderbuffer(WebGLenum target, WebGLenum attachment, WebGLenum rbtarget, nsIWebGLRenderbuffer *rbobj)
 {
-    if (mBoundFramebuffer)
-        return mBoundFramebuffer->FramebufferRenderbuffer(target, attachment, rbtarget, rbobj);
-    else
+    if (!mBoundFramebuffer)
         return ErrorInvalidOperation("framebufferRenderbuffer: cannot modify framebuffer 0");
+
+    return mBoundFramebuffer->FramebufferRenderbuffer(target, attachment, rbtarget, rbobj);
 }
 
 NS_IMETHODIMP
@@ -1781,6 +1781,7 @@ WebGLContext::GetFramebufferAttachmentParameter(WebGLenum target, WebGLenum atta
         case LOCAL_GL_COLOR_ATTACHMENT0:
         case LOCAL_GL_DEPTH_ATTACHMENT:
         case LOCAL_GL_STENCIL_ATTACHMENT:
+        case LOCAL_GL_DEPTH_STENCIL_ATTACHMENT:
             break;
         default:
             return ErrorInvalidEnumInfo("GetFramebufferAttachmentParameter: attachment", attachment);
@@ -1791,57 +1792,46 @@ WebGLContext::GetFramebufferAttachmentParameter(WebGLenum target, WebGLenum atta
 
     MakeContextCurrent();
 
-    GLint atype = 0;
-    gl->fGetFramebufferAttachmentParameteriv(target, attachment, LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE, &atype);
+    const WebGLFramebufferAttachment& fba = mBoundFramebuffer->GetAttachment(attachment);
 
-    if (atype == LOCAL_GL_RENDERBUFFER) {
+    if (fba.Renderbuffer()) {
         switch (pname) {
             case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE:
-                wrval->SetAsInt32(atype);
+                wrval->SetAsInt32(LOCAL_GL_RENDERBUFFER);
                 break;
 
-            case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME: {
-                GLint i = 0;
-                gl->fGetFramebufferAttachmentParameteriv(target, attachment, pname, &i);
-                WebGLRenderbuffer *rb = mMapRenderbuffers.GetWeak(PRUint32(i));
-                NS_ASSERTION(rb, "Expected to find renderbuffer in table, but it's not there?");
-                wrval->SetAsISupports(rb);
-            }
+            case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME:
+                wrval->SetAsISupports(fba.Renderbuffer());
                 break;
 
             default:
                 return ErrorInvalidEnumInfo("GetFramebufferAttachmentParameter: pname", pname);
         }
-    } else if (atype == LOCAL_GL_TEXTURE) {
+    } else if (fba.Texture()) {
         switch (pname) {
             case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE:
-                wrval->SetAsInt32(atype);
+                wrval->SetAsInt32(LOCAL_GL_TEXTURE);
                 break;
 
-            case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME: {
-                GLint i = 0;
-                gl->fGetFramebufferAttachmentParameteriv(target, attachment, pname, &i);
-                WebGLTexture *tex = mMapTextures.GetWeak(PRUint32(i));
-                NS_ASSERTION(tex, "Expected to find texture in table, but it's not there?");
-                wrval->SetAsISupports(tex);
-            }
+            case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME:
+                wrval->SetAsISupports(fba.Texture());
                 break;
 
             case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL:
-            case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE: {
-                GLint i = 0;
-                gl->fGetFramebufferAttachmentParameteriv(target, attachment, pname, &i);
-                wrval->SetAsInt32(i);
-            }
+                wrval->SetAsInt32(fba.TextureLevel());
+                break;
+
+            case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE:
+                wrval->SetAsInt32(fba.TextureCubeMapFace());
                 break;
 
             default:
                 return ErrorInvalidEnumInfo("GetFramebufferAttachmentParameter: pname", pname);
         }
-    } else if (atype == LOCAL_GL_NONE) {
+    } else {
         switch (pname) {
             case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE:
-                wrval->SetAsInt32(atype);
+                wrval->SetAsInt32(LOCAL_GL_NONE);
                 break;
 
             case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME:
@@ -1851,8 +1841,6 @@ WebGLContext::GetFramebufferAttachmentParameter(WebGLenum target, WebGLenum atta
             default:
                 return ErrorInvalidEnumInfo("GetFramebufferAttachmentParameter: pname", pname);
         }
-    } else { // GL bug? should never happen
-        return NS_ERROR_FAILURE;
     }
 
     *retval = wrval.forget().get();

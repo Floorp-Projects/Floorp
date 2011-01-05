@@ -1380,6 +1380,8 @@ class WebGLFramebufferAttachment
     nsRefPtr<WebGLTexture> mTexturePtr;
     nsRefPtr<WebGLRenderbuffer> mRenderbufferPtr;
     WebGLenum mAttachmentPoint;
+    WebGLint mTextureLevel;
+    WebGLenum mTextureCubeMapFace;
 
 public:
     WebGLFramebufferAttachment(WebGLenum aAttachmentPoint)
@@ -1403,9 +1405,11 @@ public:
                format == LOCAL_GL_RGB5_A1;
     }
 
-    void SetTexture(WebGLTexture *tex) {
+    void SetTexture(WebGLTexture *tex, WebGLint level, WebGLenum face) {
         mTexturePtr = tex;
         mRenderbufferPtr = nsnull;
+        mTextureLevel = level;
+        mTextureCubeMapFace = face;
     }
     void SetRenderbuffer(WebGLRenderbuffer *rb) {
         mTexturePtr = nsnull;
@@ -1416,6 +1420,12 @@ public:
     }
     WebGLRenderbuffer *Renderbuffer() const {
         return mRenderbufferPtr.get();
+    }
+    WebGLint TextureLevel() const {
+        return mTextureLevel;
+    }
+    WebGLenum TextureCubeMapFace() const {
+        return mTextureCubeMapFace;
     }
 
     PRBool IsIncompatibleWithAttachmentPoint() const
@@ -1522,7 +1532,12 @@ public:
         }
 
         mContext->MakeContextCurrent();
-        mContext->gl->fFramebufferRenderbuffer(target, attachment, rbtarget, renderbuffername);
+        if (attachment == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
+            mContext->gl->fFramebufferRenderbuffer(target, LOCAL_GL_DEPTH_ATTACHMENT, rbtarget, renderbuffername);
+            mContext->gl->fFramebufferRenderbuffer(target, LOCAL_GL_STENCIL_ATTACHMENT, rbtarget, renderbuffername);
+        } else {
+            mContext->gl->fFramebufferRenderbuffer(target, attachment, rbtarget, renderbuffername);
+        }
 
         return NS_OK;
     }
@@ -1554,15 +1569,16 @@ public:
         if (!isNull && level > 0)
             return mContext->ErrorInvalidValue("framebufferTexture2D: level must be 0");
 
+        WebGLint face = (textarget == LOCAL_GL_TEXTURE_2D) ? 0 : textarget;
         switch (attachment) {
         case LOCAL_GL_DEPTH_ATTACHMENT:
-            mDepthAttachment.SetTexture(wtex);
+            mDepthAttachment.SetTexture(wtex, level, face);
             break;
         case LOCAL_GL_STENCIL_ATTACHMENT:
-            mStencilAttachment.SetTexture(wtex);
+            mStencilAttachment.SetTexture(wtex, level, face);
             break;
         case LOCAL_GL_DEPTH_STENCIL_ATTACHMENT:
-            mDepthStencilAttachment.SetTexture(wtex);
+            mDepthStencilAttachment.SetTexture(wtex, level, face);
             break;
         default:
             if (attachment != LOCAL_GL_COLOR_ATTACHMENT0)
@@ -1571,12 +1587,17 @@ public:
             // keep data for readPixels, function only uses COLOR_ATTACHMENT0
             setDimensions(wtex);
 
-            mColorAttachment.SetTexture(wtex);
+            mColorAttachment.SetTexture(wtex, level, face);
             break;
         }
 
         mContext->MakeContextCurrent();
-        mContext->gl->fFramebufferTexture2D(target, attachment, textarget, texturename, level);
+        if (attachment == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
+            mContext->gl->fFramebufferTexture2D(target, LOCAL_GL_DEPTH_ATTACHMENT, textarget, texturename, level);
+            mContext->gl->fFramebufferTexture2D(target, LOCAL_GL_STENCIL_ATTACHMENT, textarget, texturename, level);
+        } else {
+            mContext->gl->fFramebufferTexture2D(target, attachment, textarget, texturename, level);
+        }
 
         return NS_OK;
     }
@@ -1618,7 +1639,31 @@ public:
         else return PR_FALSE;
     }
 
-    const WebGLFramebufferAttachment ColorAttachment() const {
+    const WebGLFramebufferAttachment& ColorAttachment() const {
+        return mColorAttachment;
+    }
+
+    const WebGLFramebufferAttachment& DepthAttachment() const {
+        return mDepthAttachment;
+    }
+
+    const WebGLFramebufferAttachment& StencilAttachment() const {
+        return mStencilAttachment;
+    }
+
+    const WebGLFramebufferAttachment& DepthStencilAttachment() const {
+        return mDepthStencilAttachment;
+    }
+
+    const WebGLFramebufferAttachment& GetAttachment(WebGLenum attachment) const {
+        if (attachment == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT)
+            return mDepthStencilAttachment;
+        if (attachment == LOCAL_GL_DEPTH_ATTACHMENT)
+            return mDepthAttachment;
+        if (attachment == LOCAL_GL_STENCIL_ATTACHMENT)
+            return mStencilAttachment;
+
+        NS_ASSERTION(attachment == LOCAL_GL_COLOR_ATTACHMENT0, "bad attachment!");
         return mColorAttachment;
     }
 
