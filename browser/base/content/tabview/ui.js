@@ -106,6 +106,10 @@ let UI = {
     transitionMode: "",
     wasInTabView: false 
   },
+  
+  // Variable: _storageBusyCount
+  // Used to keep track of how many calls to storageBusy vs storageReady.
+  _storageBusyCount: 0,
 
   // ----------
   // Function: init
@@ -510,25 +514,52 @@ let UI = {
 #endif
 
   // ----------
+  // Function: storageBusy
+  // Pauses the storage activity that conflicts with sessionstore updates and 
+  // private browsing mode switches. Calls can be nested. 
+  storageBusy: function UI_storageBusy() {
+    if (!this._storageBusyCount)
+      TabItems.pauseReconnecting();
+    
+    this._storageBusyCount++;
+  },
+  
+  // ----------
+  // Function: storageReady
+  // Resumes the activity paused by storageBusy, and updates for any new group
+  // information in sessionstore. Calls can be nested. 
+  storageReady: function UI_storageReady() {
+    this._storageBusyCount--;
+    if (!this._storageBusyCount) {
+      let hasGroupItemsData = GroupItems.load();
+      if (!hasGroupItemsData)
+        this.reset(false);
+  
+      TabItems.resumeReconnecting();
+    }
+  },
+
+  // ----------
   // Function: _addTabActionHandlers
   // Adds handlers to handle tab actions.
   _addTabActionHandlers: function UI__addTabActionHandlers() {
     var self = this;
 
-    // session restore
-    function srObserver(aSubject, aTopic, aData) {
-      if (aTopic != "sessionstore-browser-state-restored")
-        return;
-        
-      let hasGroupItemsData = GroupItems.load();
-      if (!hasGroupItemsData)
-        self.reset(false);
+    // session restore events
+    function handleSSWindowStateBusy() {
+      self.storageBusy();
     }
-
-    Services.obs.addObserver(srObserver, "sessionstore-browser-state-restored", false);
+    
+    function handleSSWindowStateReady() {
+      self.storageReady();
+    }
+    
+    gWindow.addEventListener("SSWindowStateBusy", handleSSWindowStateBusy, false);
+    gWindow.addEventListener("SSWindowStateReady", handleSSWindowStateReady, false);
 
     this._cleanupFunctions.push(function() {
-      Services.obs.removeObserver(srObserver, "sessionstore-browser-state-restored");
+      gWindow.removeEventListener("SSWindowStateBusy", handleSSWindowStateBusy, false);
+      gWindow.removeEventListener("SSWindowStateReady", handleSSWindowStateReady, false);
     });
 
     // Private Browsing:
@@ -551,7 +582,7 @@ let UI = {
         if (aData == "enter" || aData == "exit") {
           self._privateBrowsing.transitionMode = aData;
           GroupItems.pauseUpdatingTabBar();
-          TabItems.pauseReconnecting();
+          self.storageBusy();
         }
       } else if (aTopic == "private-browsing-transition-complete") {
         // We use .transitionMode here, as aData is empty.
@@ -560,7 +591,7 @@ let UI = {
           self.showTabView(false);
 
         self._privateBrowsing.transitionMode = "";
-        TabItems.resumeReconnecting();
+        self.storageReady();
         GroupItems.resumeUpdatingTabBar();
       }
     }

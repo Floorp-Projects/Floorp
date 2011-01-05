@@ -1747,18 +1747,35 @@ let GroupItems = {
       }
 
       if (groupItemData) {
+        var toClose = this.groupItems.concat();
         for (var id in groupItemData) {
-          let groupItem = groupItemData[id];
-          if (this.groupItemStorageSanity(groupItem)) {
-            var options = {
-              dontPush: true,
-              immediately: true
-            };
-
-            new GroupItem([], Utils.extend({}, groupItem, options));
+          let data = groupItemData[id];
+          if (this.groupItemStorageSanity(data)) {
+            let groupItem = this.groupItem(data.id); 
+            if (groupItem) {
+              groupItem.userSize = data.userSize;
+              groupItem.setTitle(data.title);
+              groupItem.setBounds(data.bounds, true);
+              
+              let index = toClose.indexOf(groupItem);
+              if (index != -1)
+                toClose.splice(index, 1);
+            } else {
+              var options = {
+                dontPush: true,
+                immediately: true
+              };
+  
+              new GroupItem([], Utils.extend({}, data, options));
+            }
           }
         }
+
+        toClose.forEach(function(groupItem) {
+          groupItem.close();
+        });
       }
+
       // set active group item
       if (activeGroupId) {
         let activeGroupItem = this.groupItem(activeGroupId);
@@ -1778,11 +1795,6 @@ let GroupItems = {
   // Loads the storage data for groups. 
   // Returns true if there was global group data.
   load: function GroupItems_load() {
-    var toClose = this.groupItems.concat();
-    toClose.forEach(function(groupItem) {
-      groupItem.close();
-    });
-
     let groupItemsData = Storage.readGroupItemsData(gWindow);
     let groupItemData = Storage.readGroupItemData(gWindow);
     this.reconstitute(groupItemsData, groupItemData);
