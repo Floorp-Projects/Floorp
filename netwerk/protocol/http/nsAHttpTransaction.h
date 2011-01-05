@@ -44,6 +44,7 @@ class nsAHttpConnection;
 class nsAHttpSegmentReader;
 class nsAHttpSegmentWriter;
 class nsIInterfaceRequestor;
+class nsIEventTarget;
 
 //----------------------------------------------------------------------------
 // Abstract base class for a HTTP transaction:
@@ -62,7 +63,8 @@ public:
 
     // called by the connection to get security callbacks to set on the 
     // socket transport.
-    virtual void GetSecurityCallbacks(nsIInterfaceRequestor **) = 0;
+    virtual void GetSecurityCallbacks(nsIInterfaceRequestor **,
+                                      nsIEventTarget **) = 0;
 
     // called to report socket status (see nsITransportEventSink)
     virtual void OnTransportStatus(nsresult status, PRUint64 progress) = 0;
@@ -88,7 +90,8 @@ public:
 
 #define NS_DECL_NSAHTTPTRANSACTION \
     void SetConnection(nsAHttpConnection *); \
-    void GetSecurityCallbacks(nsIInterfaceRequestor **); \
+    void GetSecurityCallbacks(nsIInterfaceRequestor **, \
+                              nsIEventTarget **);       \
     void OnTransportStatus(nsresult status, PRUint64 progress); \
     PRBool   IsDone(); \
     nsresult Status(); \
