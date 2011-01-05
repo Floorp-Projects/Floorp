@@ -401,6 +401,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
     JS_ASSERT(nupvars != Bindings::BINDING_COUNT_LIMIT);
 
     Bindings bindings(cx);
+    AutoBindingsRooter rooter(cx, bindings);
     uint32 nameCount = nargs + nvars + nupvars;
     if (nameCount > 0) {
         struct AutoMark {
