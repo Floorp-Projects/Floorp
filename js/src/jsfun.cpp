@@ -1269,6 +1269,19 @@ SetCallVar(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     JS_ASSERT((int16) JSID_TO_INT(id) == JSID_TO_INT(id));
     uintN i = (uint16) JSID_TO_INT(id);
 
+    /*
+     * As documented in TraceRecorder::attemptTreeCall(), when recording an
+     * inner tree call, the recorder assumes the inner tree does not mutate
+     * any tracked upvars. The abort here is a pessimistic precaution against
+     * bug 620662, where an inner tree setting a closed stack variable in an
+     * outer tree is illegal, and runtime would fall off trace.
+     */
+#ifdef JS_TRACER
+    TraceMonitor *tm = &JS_TRACE_MONITOR(cx);
+    if (tm->recorder && tm->tracecx)
+        AbortRecording(cx, "upvar write in nested tree");
+#endif
+
     Value *varp;
     if (JSStackFrame *fp = obj->maybeCallObjStackFrame())
         varp = &fp->varSlot(i);
