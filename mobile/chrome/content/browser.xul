@@ -688,6 +688,4 @@
     </hbox>
   </stack>
 
-  <tooltip default="true" id="default-tooltip"/>
-
 </window>

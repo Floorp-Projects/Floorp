@@ -554,4 +554,7 @@ pref("layers.acceleration.disabled", true);
 #endif
 
 pref("notification.feature.enabled", true);
+
+// prevent tooltips from showing up
+pref("browser.chrome.toolbar_tips", false);
 pref("indexedDB.feature.enabled", false);
