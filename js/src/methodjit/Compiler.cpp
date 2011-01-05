@@ -417,6 +417,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
             nNmapLive++;
     }
 
+    /* Please keep in sync with JITScript::scriptDataSize! */
     size_t totalBytes = sizeof(JITScript) +
                         sizeof(NativeMapEntry) * nNmapLive +
 #if defined JS_MONOIC
@@ -817,6 +818,9 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
     jit->nmap = nmap;
     jit->nNmapPairs = nNmapLive;
     *jitp = jit;
+
+    /* We tolerate a race in the stats. */
+    cx->runtime->mjitMemoryUsed += totalSize + totalBytes;
 
     return Compile_Okay;
 }
