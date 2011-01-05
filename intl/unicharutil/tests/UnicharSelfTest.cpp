@@ -489,8 +489,10 @@ static void FuzzOneInvalidCaseConversion()
     bBuf[i] = rand() & 0xff;
   }
 
-  CaseInsensitiveCompare((char*)aBuf, (char*)bBuf, aLen, bLen);
-  CharByCharCompareEqual((char*)aBuf, (char*)bBuf, aLen, bLen);
+  if (!CaseInsensitiveCompare((char*)aBuf, (char*)bBuf, aLen, bLen))
+    printf("\tSurprise, two random strings compared insensitively as equal!\n");
+  if (CharByCharCompareEqual((char*)aBuf, (char*)bBuf, aLen, bLen))
+    printf("\tSurprise, two random strings compared as exactly equal!\n");
 
   free(aBuf);
   free(bBuf);
