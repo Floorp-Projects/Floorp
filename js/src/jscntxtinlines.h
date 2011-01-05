@@ -773,6 +773,13 @@ LeaveTraceIfGlobalObject(JSContext *cx, JSObject *obj)
         LeaveTrace(cx);
 }
 
+static JS_INLINE void
+LeaveTraceIfArgumentsObject(JSContext *cx, JSObject *obj)
+{
+    if (obj->isArguments())
+        LeaveTrace(cx);
+}
+
 static JS_INLINE JSBool
 CanLeaveTrace(JSContext *cx)
 {
