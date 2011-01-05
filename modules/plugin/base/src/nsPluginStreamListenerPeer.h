@@ -38,6 +38,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef nsPluginStreamListenerPeer_h_
+#define nsPluginStreamListenerPeer_h_
+
 #include "nscore.h"
 #include "nsIFile.h"
 #include "nsIStreamListener.h"
@@ -129,8 +132,8 @@ private:
   nsCOMPtr<nsIURI> mURL;
   nsCString mURLSpec; // Have to keep this member because GetURL hands out char*
   nsCOMPtr<nsIPluginInstanceOwner> mOwner;
-  nsCOMPtr<nsIPluginStreamListener> mPStreamListener;
-  
+  nsRefPtr<nsNPAPIPluginStreamListener> mPStreamListener;
+
   // Set to PR_TRUE if we request failed (like with a HTTP response of 404)
   PRPackedBool            mRequestFailed;
   
@@ -165,3 +168,5 @@ public:
   nsWeakPtr               mWeakPtrChannelCallbacks;
   nsWeakPtr               mWeakPtrChannelLoadGroup;
 };
+
+#endif // nsPluginStreamListenerPeer_h_
