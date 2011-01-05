@@ -190,7 +190,8 @@ public:
     // lookup a font entry for a given style, returns null if not loaded
     gfxFontEntry *FindFontEntry(const nsAString& aName, 
                                 const gfxFontStyle& aFontStyle, 
-                                PRBool& aNeedsBold);
+                                PRBool& aNeedsBold,
+                                PRBool& aWaitForUserFont);
                                 
     // initialize the process that loads external font data, which upon 
     // completion will call OnLoadComplete method
@@ -211,13 +212,13 @@ public:
     // incremented so that the change can be recognized 
     PRUint64 GetGeneration() { return mGeneration; }
 
+    // increment the generation on font load
+    void IncrementGeneration();
+
 protected:
     // for a given proxy font entry, attempt to load the next resource
     // in the src list
     LoadStatus LoadNext(gfxProxyFontEntry *aProxyEntry);
-
-    // increment the generation on font load
-    void IncrementGeneration();
 
     gfxMixedFontFamily *GetFamily(const nsAString& aName) const;
 
@@ -249,9 +250,19 @@ public:
 
     virtual gfxFont *CreateFontInstance(const gfxFontStyle *aFontStyle, PRBool aNeedsBold);
 
-    PRPackedBool                           mIsLoading;
-    nsTArray<gfxFontFaceSrc>               mSrcList;
-    PRUint32                               mSrcIndex; // index of loading src item
+    // note that code depends on the ordering of these values!
+    enum LoadingState {
+        NOT_LOADING = 0,     // not started to load any font resources yet
+        LOADING_STARTED,     // loading has started; hide fallback font
+        LOADING_ALMOST_DONE, // timeout happened but we're nearly done,
+                             // so keep hiding fallback font
+        LOADING_SLOWLY       // timeout happened and we're not nearly done,
+                             // so use the fallback font
+    };
+    LoadingState             mLoadingState;
+
+    nsTArray<gfxFontFaceSrc> mSrcList;
+    PRUint32                 mSrcIndex; // index of loading src item
 };
 
 
