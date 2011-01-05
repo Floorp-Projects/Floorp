@@ -580,8 +580,20 @@ PluginModuleChild::AnswerNP_Shutdown(NPError *rv)
 }
 
 void
+PluginModuleChild::QuickExit()
+{
+    NS_WARNING("plugin process _exit()ing");
+    _exit(0);
+}
+
+void
 PluginModuleChild::ActorDestroy(ActorDestroyReason why)
 {
+    if (AbnormalShutdown == why) {
+        NS_WARNING("shutting down early because of crash!");
+        QuickExit();
+    }
+
     // doesn't matter why we're being destroyed; it's up to us to
     // initiate (clean) shutdown
     XRE_ShutdownChildProcess();
