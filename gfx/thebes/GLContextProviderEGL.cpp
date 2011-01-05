@@ -987,8 +987,8 @@ public:
         // then they went away when the contex was deleted, because it
         // was the only one that had access to it.
         if (ctx && !ctx->IsDestroyed()) {
-            mGLContext->MakeCurrent();
-            mGLContext->fDeleteTextures(1, &mTexture);
+            ctx->MakeCurrent();
+            ctx->fDeleteTextures(1, &mTexture);
             ReleaseTexImage();
             DestroyEGLSurface();
         }
