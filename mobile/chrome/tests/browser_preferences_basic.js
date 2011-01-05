@@ -151,24 +151,28 @@ gTests.push({
     EventUtils.synthesizeMouse(prefsList, x1, y1, { type: "mousedown" });
     EventUtils.synthesizeMouse(prefsList, x2, y2, { type: "mousemove" });
 
-    // Check whether it is moved up to the correct view
-    let distance = y1 - y2;
-    gCurrentTest._prefsScrollbox.getPosition(x, y);
-    ok((x.value == 0 && y.value == distance), "Preferences pane is panned up", "Got " + x.value + " " + y.value + ", expected 0," + distance);
-
     // Need to wait for a paint event before another
     window.addEventListener("MozAfterPaint", function(aEvent) {
       window.removeEventListener("MozAfterPaint", arguments.callee, false);
-
-      // Move preferences pane down
-      EventUtils.synthesizeMouse(prefsList, x1, y1, { type: "mousemove" });
-      EventUtils.synthesizeMouse(prefsList, x1, y1, { type: "mouseup" });
-
-      // Check whether it goes back to old position
+      // Check whether it is moved up to the correct view
+      let distance = y1 - y2;
       gCurrentTest._prefsScrollbox.getPosition(x, y);
-      ok((x.value == 0 && y.value == 0), "Preferences pane is panned down", "Got " + x.value + " " + y.value + ", expected 0,0");
+      ok((x.value == 0 && y.value == distance), "Preferences pane is panned up", "Got " + x.value + " " + y.value + ", expected 0," + distance);
 
-      gCurrentTest.finish();
+      // Need to wait for a paint event before another
+      window.addEventListener("MozAfterPaint", function(aEvent) {
+        window.removeEventListener("MozAfterPaint", arguments.callee, false);
+
+        // Move preferences pane down
+        EventUtils.synthesizeMouse(prefsList, x1, y1, { type: "mousemove" });
+        EventUtils.synthesizeMouse(prefsList, x1, y1, { type: "mouseup" });
+
+        // Check whether it goes back to old position
+        gCurrentTest._prefsScrollbox.getPosition(x, y);
+        ok((x.value == 0 && y.value == 0), "Preferences pane is panned down", "Got " + x.value + " " + y.value + ", expected 0,0");
+
+        gCurrentTest.finish();
+      }, false);
     }, false);
   },
 
