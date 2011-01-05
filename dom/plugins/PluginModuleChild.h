@@ -140,6 +140,8 @@ protected:
     virtual void
     ActorDestroy(ActorDestroyReason why);
 
+    NS_NORETURN void QuickExit();
+
 public:
     PluginModuleChild();
     virtual ~PluginModuleChild();
