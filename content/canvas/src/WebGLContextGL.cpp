@@ -3686,19 +3686,19 @@ WebGLContext::VertexAttribPointer(WebGLuint index, WebGLint size, WebGLenum type
         return ErrorInvalidValue("VertexAttribPointer: invalid element size");
 
     if (stride < 0 || stride > 255) // see WebGL spec section 6.6 "Vertex Attribute Data Stride"
-        return ErrorInvalidValue("VertexAttribPointer: negative stride");
+        return ErrorInvalidValue("VertexAttribPointer: negative or too large stride");
 
     if (byteOffset < 0)
         return ErrorInvalidValue("VertexAttribPointer: negative offset");
 
     if (stride & requiredAlignmentMask) {
-        return ErrorInvalidValue("VertexAttribPointer: stride doesn't satisfy the alignment "
-                                 "requirement of given type");
+        return ErrorInvalidOperation("VertexAttribPointer: stride doesn't satisfy the alignment "
+                                     "requirement of given type");
     }
 
     if (byteOffset & requiredAlignmentMask) {
-        return ErrorInvalidValue("VertexAttribPointer: byteOffset doesn't satisfy the alignment "
-                                 "requirement of given type");
+        return ErrorInvalidOperation("VertexAttribPointer: byteOffset doesn't satisfy the alignment "
+                                     "requirement of given type");
 
     }
     
