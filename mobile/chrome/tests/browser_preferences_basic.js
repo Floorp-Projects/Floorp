@@ -74,16 +74,14 @@ gTests.push({
     ok((x.value == initialDragOffset && y.value == 0), "The right sidebar must be invisible",
       "Got " + x.value + " " + y.value + ", expected " + initialDragOffset + ",0");
 
-    /* XXX For some reasons reavealing the sidebars this way let the test hang, we need to find why and fix that
     // Reveal right sidebar
     let w = controls.clientWidth;
     let h = controls.clientHeight;
     dragElement(controls, w / 2, h / 2, w / 4, h / 2);
-    */
 
     // check whether the right sidebar has appeared
     gCurrentTest._contentScrollbox.getPosition(x,y);
-    todo((x.value == finalDragOffset && y.value == 0), "The right sidebar must be visible",
+    ok(x.value == finalDragOffset && y.value == 0, "The right sidebar must be visible",
       "Got " + x.value + " " + y.value + ", expected " + finalDragOffset + ",0");
 
     // check to see if the preference open button is visible and not depressed
@@ -97,7 +95,9 @@ gTests.push({
     // click on the prefs button to go the preferences pane
     var prefsClick = document.getElementById("tool-panel-open");
     prefsClick.click();
-    waitFor(gCurrentTest.onPrefsView, BrowserUI.isPanelVisible);
+    waitFor(function() {
+      setTimeout(gCurrentTest.onPrefsView, 0);
+    }, BrowserUI.isPanelVisible);
   },
 
   onPrefsView: function() {
@@ -156,9 +156,9 @@ gTests.push({
     gCurrentTest._prefsScrollbox.getPosition(x, y);
     ok((x.value == 0 && y.value == distance), "Preferences pane is panned up", "Got " + x.value + " " + y.value + ", expected 0," + distance);
 
-    // Need to wait for a paint event before another 
-    addEventListener("MozBeforePaint", function(aEvent) {
-      removeEventListener("MozBeforePaint", arguments.callee, false);
+    // Need to wait for a paint event before another
+    window.addEventListener("MozAfterPaint", function(aEvent) {
+      window.removeEventListener("MozAfterPaint", arguments.callee, false);
 
       // Move preferences pane down
       EventUtils.synthesizeMouse(prefsList, x1, y1, { type: "mousemove" });
@@ -181,11 +181,11 @@ gTests.push({
 
     //check if the right sidebar is still visible
     gCurrentTest._contentScrollbox.getPosition(x, y);
-    todo((x.value == finalDragOffset && y.value == 0), "The right sidebar is still visible",
+    ok(x.value == finalDragOffset && y.value == 0, "The right sidebar is still visible",
        "Got " + x.value + " " + y.value + ", expected " + finalDragOffset + ",0");
 
     // check whether the preferences open button is not depressed
-    var prefsOpen = document.getElementById("tool-panel-open");
+    let prefsOpen = document.getElementById("tool-panel-open");
     is(prefsOpen.checked, false, "Preferences open button must not be depressed");
 
     // Reset the UI before the next test starts.
