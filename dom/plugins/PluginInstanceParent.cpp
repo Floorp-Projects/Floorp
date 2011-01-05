@@ -80,6 +80,14 @@ UINT gOOPPStopNativeLoopEvent =
 
 using namespace mozilla::plugins;
 
+bool
+StreamNotifyParent::RecvRedirectNotifyResponse(const bool& allow)
+{
+  PluginInstanceParent* instance = static_cast<PluginInstanceParent*>(Manager());
+  instance->mNPNIface->urlredirectresponse(instance->mNPP, this, static_cast<NPBool>(allow));
+  return true;
+}
+
 PluginInstanceParent::PluginInstanceParent(PluginModuleParent* parent,
                                            NPP npp,
                                            const nsCString& aMimeType,
@@ -726,6 +734,17 @@ PluginInstanceParent::NPP_SetValue(NPNVariable variable, void* value)
                 (int) variable, NPNVariableToString(variable)));
         return NPERR_GENERIC_ERROR;
     }
+}
+
+void
+PluginInstanceParent::NPP_URLRedirectNotify(const char* url, int32_t status,
+                                            void* notifyData)
+{
+  if (!notifyData)
+    return;
+
+  PStreamNotifyParent* streamNotify = static_cast<PStreamNotifyParent*>(notifyData);
+  unused << streamNotify->SendRedirectNotify(NullableString(url), status);
 }
 
 int16_t

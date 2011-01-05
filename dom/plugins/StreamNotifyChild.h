@@ -69,6 +69,8 @@ public:
 private:
   NS_OVERRIDE virtual bool Recv__delete__(const NPReason& reason);
 
+  bool RecvRedirectNotify(const nsCString& url, const int32_t& status);
+
   /**
    * If a stream is created for this this URLNotify, we associate the objects
    * so that the NPP_URLNotify call is not fired before the stream data is

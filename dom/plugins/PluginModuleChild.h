@@ -108,6 +108,7 @@ protected:
     }
 
     // Implement the PPluginModuleChild interface
+    virtual bool AnswerNP_GetEntryPoints(NPError* rv);
     virtual bool AnswerNP_Initialize(NativeThreadId* tid, NPError* rv);
 
     virtual PPluginIdentifierChild*
@@ -136,6 +137,9 @@ protected:
                                      NPError* rv);
     virtual bool
     AnswerNP_Shutdown(NPError *rv);
+
+    virtual bool
+    AnswerURLRedirectNotifySupported(bool *aBoolVal);
 
     virtual void
     ActorDestroy(ActorDestroyReason why);

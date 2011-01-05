@@ -69,6 +69,10 @@ both:
                           int32_t aInt);
 
 child:
+  // Forces the child process to update its plugin function table.
+  rpc NP_GetEntryPoints()
+    returns (NPError rv);
+
   // Return the plugin's thread ID, if it can be found.
   rpc NP_Initialize()
     returns (NativeThreadId tid, NPError rv);
@@ -81,6 +85,9 @@ child:
 
   rpc NP_Shutdown()
     returns (NPError rv);
+
+  rpc URLRedirectNotifySupported()
+    returns (bool aBoolVal);
 
 parent:
   /**

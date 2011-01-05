@@ -183,7 +183,7 @@ static NPNetscapeFuncs sBrowserFuncs = {
   _convertpoint,
   NULL, // handleevent, unimplemented
   NULL, // unfocusinstance, unimplemented
-  NULL  // urlredirectresponse, unimplemented
+  _urlredirectresponse
 };
 
 static PRLock *sPluginThreadAsyncCallLock = nsnull;
@@ -612,12 +612,15 @@ MakeNewNPAPIStreamInternal(NPP npp, const char *relativeURL, const char *target,
   // Set aCallNotify here to false.  If pluginHost->GetURL or PostURL fail,
   // the listener's destructor will do the notification while we are about to
   // return a failure code.
-  // Call SetCallNotify(true) bellow after we are sure we cannot return a failure 
+  // Call SetCallNotify(true) below after we are sure we cannot return a failure 
   // code.
-  if (!target)
-    ((nsNPAPIPluginInstance*)inst)->NewNotifyStream(getter_AddRefs(listener),
-                                                    notifyData,
-                                                    PR_FALSE, relativeURL);
+  if (!target) {
+    inst->NewStreamListener(relativeURL, notifyData,
+                            getter_AddRefs(listener));
+    if (listener) {
+      static_cast<nsNPAPIPluginStreamListener*>(listener.get())->SetCallNotify(PR_FALSE);
+    }
+  }
 
   switch (type) {
   case eNPPStreamTypeInternal_Get:
@@ -628,8 +631,7 @@ MakeNewNPAPIStreamInternal(NPP npp, const char *relativeURL, const char *target,
     }
   case eNPPStreamTypeInternal_Post:
     {
-      if (NS_FAILED(pluginHost->PostURL(inst, relativeURL, len, buf, file, target,
-                                listener)))
+      if (NS_FAILED(pluginHost->PostURL(inst, relativeURL, len, buf, file, target, listener)))
         return NPERR_GENERIC_ERROR;
       break;
     }
@@ -639,11 +641,7 @@ MakeNewNPAPIStreamInternal(NPP npp, const char *relativeURL, const char *target,
 
   if (listener) {
     // SetCallNotify(bDoNotify) here, see comment above.
-    // XXX Not sure of this cast here, we should probably have an interface API
-    // for this.
-    nsNPAPIPluginStreamListener* npAPIPluginStreamListener = 
-      static_cast<nsNPAPIPluginStreamListener*>(listener.get());
-    npAPIPluginStreamListener->SetCallNotify(bDoNotify);
+    static_cast<nsNPAPIPluginStreamListener*>(listener.get())->SetCallNotify(bDoNotify);
   }
 
   return NPERR_NO_ERROR;
@@ -2722,6 +2720,17 @@ _convertpoint(NPP instance, double sourceX, double sourceY, NPCoordinateSpace so
     return PR_FALSE;
 
   return inst->ConvertPoint(sourceX, sourceY, sourceSpace, destX, destY, destSpace);
+}
+
+void NP_CALLBACK
+_urlredirectresponse(NPP instance, void* notifyData, NPBool allow)
+{
+  nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)instance->ndata;
+  if (!inst) {
+    return;
+  }
+
+  inst->URLRedirectResponse(notifyData, allow);
 }
 
 } /* namespace parent */
