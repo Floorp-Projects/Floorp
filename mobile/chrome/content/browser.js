@@ -1385,129 +1385,6 @@ nsBrowserAccess.prototype = {
 };
 
 
-const BrowserSearch = {
-  get _popup() {
-    delete this._popup;
-    return this._popup = document.getElementById("search-engines-popup");
-  },
-
-  get _list() {
-    delete this._list;
-    return this._list = document.getElementById("search-engines-list");
-  },
-
-  get _button() {
-    delete this._button;
-    return this._button = document.getElementById("tool-search");
-  },
-
-  toggle: function bs_toggle() {
-    if (this._popup.hidden)
-      this.show();
-    else
-      this.hide();
-  },
-
-  show: function bs_show() {
-    let popup = this._popup;
-    let list = this._list;
-    while (list.lastChild)
-      list.removeChild(list.lastChild);
-
-    this.engines.forEach(function(aEngine) {
-      let button = document.createElement("button");
-      button.className = "prompt-button";
-      button.setAttribute("label", aEngine.name);
-      button.setAttribute("crop", "end");
-      button.setAttribute("pack", "start");
-      button.setAttribute("image", aEngine.iconURI ? aEngine.iconURI.spec : null);
-      button.onclick = function() {
-        popup.hidden = true;
-        BrowserUI.doOpenSearch(aEngine.name);
-      }
-      list.appendChild(button);
-    });
-
-    popup.hidden = false;
-    popup.top = BrowserUI.toolbarH - popup.offset;
-    popup.anchorTo(document.getElementById("tool-search"));
-
-    document.getElementById("urlbar-icons").setAttribute("open", "true");
-    BrowserUI.pushPopup(this, [popup, this._button]);
-  },
-
-  hide: function bs_hide() {
-    this._popup.hidden = true;
-    document.getElementById("urlbar-icons").removeAttribute("open");
-    BrowserUI.popPopup(this);
-  },
-
-  observe: function bs_observe(aSubject, aTopic, aData) {
-    if (aTopic != "browser-search-engine-modified")
-      return;
-
-    switch (aData) {
-      case "engine-added":
-      case "engine-removed":
-        // force a rebuild of the prefs list, if needed
-        // XXX this is inefficient, shouldn't have to rebuild the entire list
-        if (ExtensionsView._list)
-          ExtensionsView.getAddonsFromLocal();
-
-        // fall through
-      case "engine-changed":
-        // XXX we should probably also update the ExtensionsView list here once
-        // that's efficient, since the icon can change (happen during an async
-        // installs from the web)
-
-        // blow away our cache
-        this._engines = null;
-        break;
-      case "engine-current":
-        // Not relevant
-        break;
-    }
-  },
-
-  get engines() {
-    if (this._engines)
-      return this._engines;
-
-    this._engines = Services.search.getVisibleEngines({ });
-    return this._engines;
-  },
-
-  updatePageSearchEngines: function updatePageSearchEngines(aNode) {
-    let items = Browser.selectedBrowser.searchEngines.filter(this.isPermanentSearchEngine);
-    if (!items.length)
-      return false;
-
-    // XXX limit to the first search engine for now
-    let engine = items[0];
-    aNode.setAttribute("description", engine.title);
-    aNode.onclick = function(aEvent) {
-      BrowserSearch.addPermanentSearchEngine(engine);
-      PageActions.hideItem(aNode);
-      aEvent.stopPropagation(); // Don't hide the site menu.
-    };
-    return true;
-  },
-
-  addPermanentSearchEngine: function addPermanentSearchEngine(aEngine) {
-    let iconURL = BrowserUI._favicon.src;
-    Services.search.addEngine(aEngine.href, Ci.nsISearchEngine.DATA_XML, iconURL, false);
-
-    this._engines = null;
-  },
-
-  isPermanentSearchEngine: function isPermanentSearchEngine(aEngine) {
-    return !BrowserSearch.engines.some(function(item) {
-      return aEngine.title == item.name;
-    });
-  }
-};
-
-
 /** Watches for mouse events in chrome and sends them to content. */
 const ContentTouchHandler = {
   // Use lightweight transactions so that old context menus and tap
@@ -2342,77 +2219,6 @@ function showDownloadManager(aWindowContext, aID, aReason) {
   // TODO: select the download with aID
 }
 
-var AlertsHelper = {
-  _timeoutID: -1,
-  _listener: null,
-  _cookie: "",
-  _clickable: false,
-  get container() {
-    delete this.container;
-    let container = document.getElementById("alerts-container");
-
-    // Move the popup on the other side if we are in RTL
-    let [leftSidebar, rightSidebar] = [Elements.tabs.getBoundingClientRect(), Elements.controls.getBoundingClientRect()];
-    if (leftSidebar.left > rightSidebar.left) {
-      container.removeAttribute("right");
-      container.setAttribute("left", "0");
-    }
-
-    let self = this;
-    container.addEventListener("transitionend", function() {
-      self.alertTransitionOver();
-    }, true);
-
-    return this.container = container;
-  },
-
-  showAlertNotification: function ah_show(aImageURL, aTitle, aText, aTextClickable, aCookie, aListener) {
-    this._clickable = aTextClickable || false;
-    this._listener = aListener || null;
-    this._cookie = aCookie || "";
-
-    document.getElementById("alerts-image").setAttribute("src", aImageURL);
-    document.getElementById("alerts-title").value = aTitle;
-    document.getElementById("alerts-text").textContent = aText;
-
-    let container = this.container;
-    container.hidden = false;
-    container.height = container.getBoundingClientRect().height;
-    container.classList.add("showing");
-
-    let timeout = Services.prefs.getIntPref("alerts.totalOpenTime");
-    let self = this;
-    if (this._timeoutID)
-      clearTimeout(this._timeoutID);
-    this._timeoutID = setTimeout(function() { self._timeoutAlert(); }, timeout);
-  },
-
-  _timeoutAlert: function ah__timeoutAlert() {
-    this._timeoutID = -1;
-
-    this.container.classList.remove("showing");
-    if (this._listener)
-      this._listener.observe(null, "alertfinished", this._cookie);
-  },
-
-  alertTransitionOver: function ah_alertTransitionOver() {
-    let container = this.container;
-    if (!container.classList.contains("showing")) {
-      container.height = 0;
-      container.hidden = true;
-    }
-  },
-
-  click: function ah_click(aEvent) {
-    if (this._clickable && this._listener)
-      this._listener.observe(null, "alertclickcallback", this._cookie);
-
-    if (this._timeoutID != -1) {
-      clearTimeout(this._timeoutID);
-      this._timeoutAlert();
-    }
-  }
-};
 
 function ProgressController(tab) {
   this._tab = tab;
@@ -3050,5 +2856,82 @@ var ViewableAreaObserver = {
         Elements.browsers.dispatchEvent(event);
       }, 0);
     }
+  }
+};
+
+var TapHighlightHelper = {
+  get _overlay() {
+    if (Browser.selectedTab)
+      return Browser.selectedTab.overlay;
+    return null;
+  },
+
+  show: function show(aRects) {
+    let overlay = this._overlay;
+    if (!overlay)
+      return;
+
+    let browser = getBrowser();
+    let scroll = browser.getPosition();
+
+    let canvasArea = aRects.reduce(function(a, b) {
+      return a.expandToContain(b);
+    }, new Rect(0, 0, 0, 0)).map(function(val) val * browser.scale)
+                            .translate(-scroll.x, -scroll.y);
+
+    overlay.setAttribute("width", canvasArea.width);
+    overlay.setAttribute("height", canvasArea.height);
+
+    let ctx = overlay.getContext("2d");
+    ctx.save();
+    ctx.translate(-canvasArea.left, -canvasArea.top);
+    ctx.scale(browser.scale, browser.scale);
+
+    overlay.setAttribute("left", canvasArea.left);
+    overlay.setAttribute("top", canvasArea.top);
+    ctx.clearRect(0, 0, canvasArea.width, canvasArea.height);
+    ctx.fillStyle = "rgba(0, 145, 255, .5)";
+    for (let i = aRects.length - 1; i >= 0; i--) {
+      let rect = aRects[i];
+      ctx.fillRect(rect.left - scroll.x / browser.scale, rect.top - scroll.y / browser.scale, rect.width, rect.height);
+    }
+    ctx.restore();
+    overlay.style.display = "block";
+
+    mozRequestAnimationFrame(this);
+  },
+
+  /**
+   * Hide the highlight. aGuaranteeShowMsecs specifies how many milliseconds the
+   * highlight should be shown before it disappears.
+   */
+  hide: function hide(aGuaranteeShowMsecs) {
+    if (!this._overlay || this._overlay.style.display == "none")
+      return;
+
+    this._guaranteeShow = Math.max(0, aGuaranteeShowMsecs);
+    if (this._guaranteeShow) {
+      // _shownAt is set once highlight has been painted
+      if (this._shownAt)
+        setTimeout(this._hide.bind(this), Math.max(0, this._guaranteeShow - (mozAnimationStartTime - this._shownAt)));
+    } else {
+      this._hide();
+    }
+  },
+
+  /** Helper function that hides popup immediately. */
+  _hide: function _hide() {
+    this._shownAt = 0;
+    this._guaranteeShow = 0;
+    this._overlay.style.display = "none";
+  },
+
+  onBeforePaint: function handleEvent(aTimeStamp) {
+    this._shownAt = aTimeStamp;
+
+    // hide has been called, so hide the tap highlight after it has
+    // been shown for a moment.
+    if (this._guaranteeShow)
+      this.hide(this._guaranteeShow);
   }
 };

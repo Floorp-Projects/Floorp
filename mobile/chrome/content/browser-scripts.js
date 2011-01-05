@@ -53,6 +53,40 @@ XPCOMUtils.defineLazyGetter(this, "PlacesUtils", function() {
 });
 
 /**
+ * Delay load some objects from a common script. We only load the script once,
+ * into a namespace, then access each object from the namespace.
+ */
+XPCOMUtils.defineLazyGetter(this, "CommonUI", function() {
+  let CommonUI = {};
+  Services.scriptloader.loadSubScript("chrome://browser/content/common-ui.js", CommonUI);
+  return CommonUI;
+});
+
+[
+  ["AppMenu"],
+  ["FullScreenVideo"],
+  ["BadgeHandlers"],
+  ["SharingUI"],
+  ["ContextHelper"],
+  ["ContextCommands"],
+  ["SelectHelperUI"],
+  ["MenuListHelperUI"],
+  ["FormHelperUI"],
+  ["FindHelperUI"],
+  ["BookmarkHelper"],
+  ["BookmarkPopup"],
+  ["AwesomePanel"],
+  ["NewTabPopup"],
+  ["PageActions"],
+  ["BrowserSearch"],
+  ["AlertsHelper"]
+].forEach(function (aObject) {
+  XPCOMUtils.defineLazyGetter(window, aObject, function() {
+    return CommonUI[aObject];
+  });
+});
+
+/**
  * Delay load some browser scripts
  */
 [
