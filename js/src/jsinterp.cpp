@@ -2470,6 +2470,8 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
 # define LEAVE_ON_SAFE_POINT()                                                \
     do {                                                                      \
         JS_ASSERT_IF(leaveOnSafePoint, !TRACE_RECORDER(cx));                  \
+        JS_ASSERT_IF(leaveOnSafePoint, !TRACE_PROFILER(cx));                  \
+        JS_ASSERT_IF(leaveOnSafePoint, interpMode != JSINTERP_NORMAL);        \
         if (leaveOnSafePoint && !regs.fp->hasImacropc() &&                    \
             script->maybeNativeCodeForPC(regs.fp->isConstructing(), regs.pc)) { \
             JS_ASSERT(!TRACE_RECORDER(cx));                                   \
@@ -2578,6 +2580,7 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
      */
     if (interpMode == JSINTERP_RECORD) {
         JS_ASSERT(TRACE_RECORDER(cx));
+        JS_ASSERT(!TRACE_PROFILER(cx));
         ENABLE_INTERRUPTS();
     } else if (interpMode == JSINTERP_PROFILE) {
         ENABLE_INTERRUPTS();
@@ -2689,11 +2692,14 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
 #ifdef JS_TRACER
 #ifdef JS_METHODJIT
         if (LoopProfile *prof = TRACE_PROFILER(cx)) {
+            JS_ASSERT(!TRACE_RECORDER(cx));
             LoopProfile::ProfileAction act = prof->profileOperation(cx, op);
             switch (act) {
                 case LoopProfile::ProfComplete:
-                    leaveOnSafePoint = true;
-                    LEAVE_ON_SAFE_POINT();
+                    if (interpMode != JSINTERP_NORMAL) {
+                        leaveOnSafePoint = true;
+                        LEAVE_ON_SAFE_POINT();
+                    }
                     break;
                 default:
                     moreInterrupts = true;
@@ -2702,6 +2708,7 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
         }
 #endif
         if (TraceRecorder* tr = TRACE_RECORDER(cx)) {
+            JS_ASSERT(!TRACE_PROFILER(cx));
             AbortableRecordingStatus status = tr->monitorRecording(op);
             JS_ASSERT_IF(cx->throwing, status == ARECORD_ERROR);
 
