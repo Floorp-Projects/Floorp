@@ -408,6 +408,7 @@ namespace nanojit
             NIns*       _nExitIns;              // current instruction in current exit code chunk
                                                 // note: _nExitIns == NULL until the first side exit is seen.
         #ifdef NJ_VERBOSE
+            NIns*       _nInsAfter;             // next instruction (ascending) in current normal/exit code chunk (for verbose output)
             size_t      codeBytes;              // bytes allocated in normal code chunks
             size_t      exitBytes;              // bytes allocated in exit code chunks
         #endif

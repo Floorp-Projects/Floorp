@@ -288,6 +288,7 @@ namespace nanojit
         verbose_only( nBytes += (end - start) * sizeof(NIns); )
         NanoAssert(uintptr_t(end) - uintptr_t(start) >= (size_t)LARGEST_UNDERRUN_PROT);
         eip = end;
+        verbose_only( _nInsAfter = eip; )
     }
 
     void Assembler::clearNInsPtrs()
@@ -856,6 +857,7 @@ namespace nanojit
 
         swapCodeChunks();
         _inExit = true;
+        verbose_only( _nInsAfter = _nIns; )
 
 #ifdef NANOJIT_IA32
         debug_only( _sv_fpuStkDepth = _fpuStkDepth; _fpuStkDepth = 0; )
@@ -879,6 +881,7 @@ namespace nanojit
         // swap back pointers, effectively storing the last location used in the exit path
         swapCodeChunks();
         _inExit = false;
+        verbose_only( _nInsAfter = _nIns; )
 
         //verbose_only( verbose_outputf("         LIR_xt/xf swapCodeChunks, _nIns is now %08X(%08X), _nExitIns is now %08X(%08X)",_nIns, *_nIns,_nExitIns,*_nExitIns) );
         verbose_only( verbose_outputf("%p:", jmpTarget);)
@@ -1061,6 +1064,7 @@ namespace nanojit
         if (error()) return;
 
         _epilogue = NULL;
+        verbose_only( _nInsAfter = _nIns; )
 
         nBeginAssembly();
     }
