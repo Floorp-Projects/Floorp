@@ -671,7 +671,10 @@ public:
     };
 
     /* The script in which the loop header lives. */
-    JSScript *script;
+    JSScript *entryScript;
+
+    /* The stack frame where we started profiling. Only valid while profiling! */
+    JSStackFrame *entryfp;
 
     /* The bytecode locations of the loop header and the back edge. */
     jsbytecode *top, *bottom;
@@ -728,13 +731,13 @@ public:
      * and how many iterations we execute it.
      */
     struct InnerLoop {
-        JSScript *script;
+        JSStackFrame *entryfp;
         jsbytecode *top, *bottom;
         uintN iters;
 
         InnerLoop() {}
-        InnerLoop(JSScript *script, jsbytecode *top, jsbytecode *bottom)
-            : script(script), top(top), bottom(bottom), iters(0) {}
+        InnerLoop(JSStackFrame *entryfp, jsbytecode *top, jsbytecode *bottom)
+            : entryfp(entryfp), top(top), bottom(bottom), iters(0) {}
     };
 
     /* These two variables track all the inner loops seen while profiling (up to a limit). */
@@ -784,7 +787,7 @@ public:
             return StackValue(false);
     }
     
-    LoopProfile(JSScript *script, jsbytecode *top, jsbytecode *bottom);
+    LoopProfile(JSStackFrame *entryfp, jsbytecode *top, jsbytecode *bottom);
 
     void reset();
 
