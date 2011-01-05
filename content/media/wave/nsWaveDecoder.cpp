@@ -470,7 +470,7 @@ nsWaveStateMachine::Seek(float aTime)
   } else if (mState != STATE_SEEKING) {
     if (mState == STATE_ENDED) {
       mNextState = mPaused ? STATE_PAUSED : STATE_PLAYING;
-    } else {
+    } else if (mState != STATE_BUFFERING) {
       mNextState = mState;
     }
     ChangeState(STATE_SEEKING);
@@ -635,9 +635,9 @@ nsWaveStateMachine::Run()
 
         PRInt64 availableOffset = mStream->GetCachedDataEnd(mPlaybackPosition);
 
-        // don't buffer if we're at the end of the stream, or if the
+        // Don't buffer if we're at the end of the stream, or if the
         // load has been suspended by the cache (in the latter case
-        // we need to advance playback to free up cache space)
+        // we need to advance playback to free up cache space).
         if (mState != STATE_ENDED &&
             availableOffset < mPlaybackPosition + len &&
             !mStream->IsSuspendedByCache()) {
