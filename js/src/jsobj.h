@@ -897,6 +897,9 @@ struct JSObject : js::gc::Cell {
     /* Number of reserved slots. */
     static const uint32 CALL_RESERVED_SLOTS = 2;
 
+    /* True if this is for a strict mode eval frame or for a function call. */
+    inline bool callIsForEval() const;
+
     /* The stack frame for this Call object, if the frame is still active. */
     inline JSStackFrame *maybeCallObjStackFrame() const;
 
