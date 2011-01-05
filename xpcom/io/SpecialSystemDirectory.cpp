@@ -508,12 +508,11 @@ GetUnixXDGUserDirectory(SystemDirectories aSystemDirectory,
 
         rv = file->AppendNative(NS_LITERAL_CSTRING(".documents"));
     }
-#else
+#endif
     else {
       // no fallback for the other XDG dirs
       rv = NS_ERROR_FAILURE;
     }
-#endif
 
     if (NS_FAILED(rv))
         return rv;
