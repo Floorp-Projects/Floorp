@@ -73,7 +73,8 @@ gfxProxyFontEntry::gfxProxyFontEntry(const nsTArray<gfxFontFaceSrc>& aFontFaceSr
              const nsTArray<gfxFontFeature>& aFeatureSettings,
              PRUint32 aLanguageOverride,
              gfxSparseBitSet *aUnicodeRanges)
-    : gfxFontEntry(NS_LITERAL_STRING("Proxy"), aFamily), mIsLoading(PR_FALSE)
+    : gfxFontEntry(NS_LITERAL_STRING("Proxy"), aFamily),
+      mLoadingState(NOT_LOADING)
 {
     mIsProxy = PR_TRUE;
     mSrcList = aFontFaceSrcList;
@@ -162,25 +163,32 @@ gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
 gfxFontEntry*
 gfxUserFontSet::FindFontEntry(const nsAString& aName, 
                               const gfxFontStyle& aFontStyle, 
-                              PRBool& aNeedsBold)
+                              PRBool& aNeedsBold,
+                              PRBool& aWaitForUserFont)
 {
+    aWaitForUserFont = PR_FALSE;
     gfxMixedFontFamily *family = GetFamily(aName);
 
     // no user font defined for this name
-    if (!family)
+    if (!family) {
         return nsnull;
+    }
 
     gfxFontEntry* fe = family->FindFontForStyle(aFontStyle, aNeedsBold);
 
     // if not a proxy, font has already been loaded
-    if (!fe->mIsProxy)
+    if (!fe->mIsProxy) {
         return fe;
+    }
 
     gfxProxyFontEntry *proxyEntry = static_cast<gfxProxyFontEntry*> (fe);
 
     // if currently loading, return null for now
-    if (proxyEntry->mIsLoading)
+    if (proxyEntry->mLoadingState > gfxProxyFontEntry::NOT_LOADING) {
+        aWaitForUserFont =
+            (proxyEntry->mLoadingState < gfxProxyFontEntry::LOADING_SLOWLY);
         return nsnull;
+    }
 
     // hasn't been loaded yet, start the load process
     LoadStatus status;
@@ -189,10 +197,13 @@ gfxUserFontSet::FindFontEntry(const nsAString& aName,
 
     // if the load succeeded immediately, the font entry was replaced so
     // search again
-    if (status == STATUS_LOADED)
+    if (status == STATUS_LOADED) {
         return family->FindFontForStyle(aFontStyle, aNeedsBold);
+    }
 
     // if either loading or an error occurred, return null
+    aWaitForUserFont =
+        (proxyEntry->mLoadingState < gfxProxyFontEntry::LOADING_SLOWLY);
     return nsnull;
 }
 
@@ -568,14 +579,12 @@ gfxUserFontSet::OnLoadComplete(gfxFontEntry *aFontToLoad,
     LoadStatus status;
 
     status = LoadNext(pe);
-    if (status == STATUS_LOADED) {
-        // load may succeed if external font resource followed by
-        // local font, in this case need to bump generation
-        IncrementGeneration();
-        return PR_TRUE;
-    }
 
-    return PR_FALSE;
+    // Even if loading failed, we need to bump the font-set generation
+    // and return true in order to trigger reflow, so that fallback
+    // will be used where the text was "masked" by the pending download
+    IncrementGeneration();
+    return PR_TRUE;
 }
 
 
@@ -586,10 +595,13 @@ gfxUserFontSet::LoadNext(gfxProxyFontEntry *aProxyEntry)
 
     NS_ASSERTION(aProxyEntry->mSrcIndex < numSrc, "already at the end of the src list for user font");
 
-    if (aProxyEntry->mIsLoading) {
-        aProxyEntry->mSrcIndex++;
+    if (aProxyEntry->mLoadingState == gfxProxyFontEntry::NOT_LOADING) {
+        aProxyEntry->mLoadingState = gfxProxyFontEntry::LOADING_STARTED;
     } else {
-        aProxyEntry->mIsLoading = PR_TRUE;
+        // we were already loading; move to the next source,
+        // but don't reset state - if we've already timed out,
+        // that counts against the new download
+        aProxyEntry->mSrcIndex++;
     }
 
     // load each src entry in turn, until a local face is found or a download begins successfully
