@@ -786,6 +786,8 @@ public:
     
     LoopProfile(JSScript *script, jsbytecode *top, jsbytecode *bottom);
 
+    void reset();
+
     enum ProfileAction {
         ProfContinue,
         ProfComplete
