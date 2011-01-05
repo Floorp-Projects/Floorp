@@ -11712,6 +11712,7 @@ static JSBool JS_FASTCALL
 DeleteIntKey(JSContext* cx, JSObject* obj, int32 i, JSBool strict)
 {
     LeaveTraceIfGlobalObject(cx, obj);
+    LeaveTraceIfArgumentsObject(cx, obj);
     Value v = BooleanValue(false);
     jsid id;
     if (INT_FITS_IN_JSID(i)) {
@@ -11734,6 +11735,7 @@ static JSBool JS_FASTCALL
 DeleteStrKey(JSContext* cx, JSObject* obj, JSString* str, JSBool strict)
 {
     LeaveTraceIfGlobalObject(cx, obj);
+    LeaveTraceIfArgumentsObject(cx, obj);
     Value v = BooleanValue(false);
     jsid id;
 
@@ -11780,6 +11782,8 @@ TraceRecorder::record_JSOP_DELELEM()
         RETURN_STOP_A("JSOP_DELELEM on primitive base expression");
     if (&lval.toObject() == globalObj)
         RETURN_STOP_A("JSOP_DELELEM on global property");
+    if (lval.toObject().isArguments())
+        RETURN_STOP_A("JSOP_DELELEM on the |arguments| object");
 
     Value& idx = stackval(-1);
     LIns* rval_ins;
