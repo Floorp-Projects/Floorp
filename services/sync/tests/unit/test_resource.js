@@ -472,5 +472,51 @@ function run_test() {
   do_check_eq(content.status, 0);
   do_check_false(content.success);
 
+  _("Checking handling of errors in onProgress.");
+  let res18 = new Resource("http://localhost:8080/json");
+  let onProgress = function(rec) {
+    // Provoke an XPC exception without a Javascript wrapper.
+    Svc.IO.newURI("::::::::", null, null);
+  };
+  res18._onProgress = onProgress;
+  let oldWarn = res18._log.warn;
+  let warnings = [];
+  res18._log.warn = function(msg) { warnings.push(msg) };
+  error = undefined;
+  try {
+    content = res18.get();
+  } catch (ex) {
+    error = ex;
+  }
+
+  // It throws and logs.
+  do_check_eq(error, "Error: NS_ERROR_MALFORMED_URI");
+  do_check_eq(warnings.pop(),
+              "Got exception calling onProgress handler during fetch of " +
+              "http://localhost:8080/json");
+  
+  // And this is what happens if JS throws an exception.
+  res18 = new Resource("http://localhost:8080/json");
+  onProgress = function(rec) {
+    throw "BOO!";
+  };
+  res18._onProgress = onProgress;
+  oldWarn = res18._log.warn;
+  warnings = [];
+  res18._log.warn = function(msg) { warnings.push(msg) };
+  error = undefined;
+  try {
+    content = res18.get();
+  } catch (ex) {
+    error = ex;
+  }
+
+  // It throws and logs.
+  do_check_eq(error, "Error: NS_ERROR_XPC_JS_THREW_STRING");
+  do_check_eq(warnings.pop(),
+              "Got exception calling onProgress handler during fetch of " +
+              "http://localhost:8080/json");
+  
+  
   server.stop(do_test_finished);
 }

@@ -452,9 +452,24 @@ ChannelListener.prototype = {
     let siStream = Cc["@mozilla.org/scriptableinputstream;1"].
       createInstance(Ci.nsIScriptableInputStream);
     siStream.init(stream);
-
-    this._data += siStream.read(count);
-    this._onProgress();
+    try {
+      this._data += siStream.read(count);
+    } catch (ex) {
+      this._log.warn("Exception thrown reading " + count +
+                     " bytes from " + siStream + ".");
+      throw ex;
+    }
+    
+    try {
+      this._onProgress();
+    } catch (ex) {
+      this._log.warn("Got exception calling onProgress handler during fetch of "
+                     + req.URI.spec);
+      this._log.debug(Utils.stackTrace(ex));
+      this._log.trace("Rethrowing; expect a failure code from the HTTP channel.");
+      throw ex;
+    }
+    
     this.delayAbort();
   },
 
