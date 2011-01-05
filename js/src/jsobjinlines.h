@@ -432,6 +432,16 @@ JSObject::setArgsElement(uint32 i, const js::Value &v)
     getArgsData()->slots[i] = v;
 }
 
+inline bool
+JSObject::callIsForEval() const
+{
+    JS_ASSERT(isCall());
+    JS_ASSERT(getSlot(JSSLOT_CALL_CALLEE).isObjectOrNull());
+    JS_ASSERT_IF(getSlot(JSSLOT_CALL_CALLEE).isObject(),
+                 getSlot(JSSLOT_CALL_CALLEE).toObject().isFunction());
+    return getSlot(JSSLOT_CALL_CALLEE).isNull();
+}
+
 inline JSStackFrame *
 JSObject::maybeCallObjStackFrame() const
 {
@@ -465,7 +475,7 @@ inline const js::Value &
 JSObject::getCallObjArguments() const
 {
     JS_ASSERT(isCall());
-    JS_ASSERT(getCallObjCallee() != NULL);
+    JS_ASSERT(!callIsForEval());
     return getSlot(JSSLOT_CALL_ARGUMENTS);
 }
 
@@ -473,7 +483,7 @@ inline void
 JSObject::setCallObjArguments(const js::Value &v)
 {
     JS_ASSERT(isCall());
-    JS_ASSERT(getCallObjCallee() != NULL);
+    JS_ASSERT(!callIsForEval());
     setSlot(JSSLOT_CALL_ARGUMENTS, v);
 }
 
