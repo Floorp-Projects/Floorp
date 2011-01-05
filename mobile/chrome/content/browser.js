@@ -690,7 +690,7 @@ var Browser = {
     return null;
   },
 
-  addTab: function(aURI, aBringFront, aOwner, aParams) {
+  addTab: function browser_addTab(aURI, aBringFront, aOwner, aParams) {
     let params = aParams || {};
     let newTab = new Tab(aURI, params);
     newTab.owner = aOwner || null;
@@ -1369,12 +1369,12 @@ nsBrowserAccess.prototype = {
     return browser;
   },
 
-  openURI: function(aURI, aOpener, aWhere, aContext) {
+  openURI: function browser_openURI(aURI, aOpener, aWhere, aContext) {
     let browser = this._getBrowser(aURI, aOpener, aWhere, aContext);
     return browser ? browser.contentWindow : null;
   },
 
-  openURIInFrame: function(aURI, aOpener, aWhere, aContext) {
+  openURIInFrame: function browser_openURIInFrame(aURI, aOpener, aWhere, aContext) {
     let browser = this._getBrowser(aURI, aOpener, aWhere, aContext);
     return browser ? browser.QueryInterface(Ci.nsIFrameLoaderOwner) : null;
   },

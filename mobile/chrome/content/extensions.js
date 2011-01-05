@@ -278,6 +278,42 @@ var ExtensionsView = {
       this.hideOptions();
   },
 
+  _createLocalAddon: function ev__createLocalAddon(aAddon) {
+    let strings = Elements.browserBundle;
+
+    let appManaged = (aAddon.scope == AddonManager.SCOPE_APPLICATION);
+    let opType = this._getOpTypeForOperations(aAddon.pendingOperations);
+    let updateable = (aAddon.permissions & AddonManager.PERM_CAN_UPGRADE) > 0;
+    let uninstallable = (aAddon.permissions & AddonManager.PERM_CAN_UNINSTALL) > 0;
+
+    let blocked = "";
+    switch(aAddon.blocklistState) {
+      case Ci.nsIBlocklistService.STATE_BLOCKED:
+        blocked = strings.getString("addonBlocked.blocked")
+        break;
+      case Ci.nsIBlocklistService.STATE_SOFTBLOCKED:
+        blocked = strings.getString("addonBlocked.softBlocked");
+        break;
+      case Ci.nsIBlocklistService.STATE_OUTDATED:
+        blocked = srings.getString("addonBlocked.outdated");
+        break;
+    }            
+
+    let listitem = this._createItem(aAddon, "local");
+    listitem.setAttribute("isDisabled", !aAddon.isActive);
+    listitem.setAttribute("appDisabled", aAddon.appDisabled);
+    listitem.setAttribute("appManaged", appManaged);
+    listitem.setAttribute("description", aAddon.description);
+    listitem.setAttribute("optionsURL", aAddon.optionsURL);
+    listitem.setAttribute("opType", opType);
+    listitem.setAttribute("updateable", updateable);
+    listitem.setAttribute("isReadonly", !uninstallable);
+    if (blocked)
+      listitem.setAttribute("blockedStatus", blocked);
+    listitem.addon = aAddon;
+    return listitem;
+  },
+
   getAddonsFromLocal: function ev_getAddonsFromLocal() {
     this.clearSection("local");
 
@@ -286,41 +322,11 @@ var ExtensionsView = {
       let strings = Strings.browser;
       let anyUpdateable = false;
       for (let i = 0; i < items.length; i++) {
-        let addon = items[i];
-        let appManaged = (addon.scope == AddonManager.SCOPE_APPLICATION);
-        let opType = self._getOpTypeForOperations(addon.pendingOperations);
-        let updateable = (addon.permissions & AddonManager.PERM_CAN_UPGRADE) > 0;
-        let uninstallable = (addon.permissions & AddonManager.PERM_CAN_UNINSTALL) > 0;
-
-        let blocked = "";
-        switch(addon.blocklistState) {
-          case Ci.nsIBlocklistService.STATE_BLOCKED:
-            blocked = strings.GetStringFromName("addonBlocked.blocked")
-            break;
-          case Ci.nsIBlocklistService.STATE_SOFTBLOCKED:
-            blocked = strings.GetStringFromName("addonBlocked.softBlocked");
-            break;
-          case Ci.nsIBlocklistService.STATE_OUTDATED:
-            blocked = srings.GetStringFromName("addonBlocked.outdated");
-            break;
-        }            
-
-        if (updateable)
+        let listitem = self._createLocalAddon(items[i]);
+        if ((items[i].permissions & AddonManager.PERM_CAN_UPGRADE) > 0)
           anyUpdateable = true;
 
-        let listitem = self._createItem(addon, "local");
-        listitem.setAttribute("isDisabled", !addon.isActive);
-        listitem.setAttribute("appDisabled", addon.appDisabled);
-        listitem.setAttribute("appManaged", appManaged);
-        listitem.setAttribute("description", addon.description);
-        listitem.setAttribute("optionsURL", addon.optionsURL ? addon.optionsURL : "");
-        listitem.setAttribute("opType", opType);
-        listitem.setAttribute("updateable", updateable);
-        listitem.setAttribute("isReadonly", !uninstallable);
-        if (blocked)
-          listitem.setAttribute("blockedStatus", blocked);
-        listitem.addon = addon;
-        self._list.insertBefore(listitem, self._repoItem);
+        self.addItem(listitem);
       }
 
       // Load the search engines
@@ -349,7 +355,7 @@ var ExtensionsView = {
         listitem.setAttribute("optionsURL", "");
         listitem.setAttribute("opType", engine.hidden ? "needs-disable" : "");
         listitem.setAttribute("updateable", "false");
-        self._list.insertBefore(listitem, self._repoItem);
+        self.addItem(listitem);
       }
 
       if (engines.length + items.length == 0)
@@ -358,6 +364,19 @@ var ExtensionsView = {
       if (!anyUpdateable)
         document.getElementById("addons-update-all").disabled = true;
     });
+  },
+
+  addItem : function ev_addItem(aItem, aPosition) {
+    if (aPosition == "repo")
+      return this._list.appendChild(aItem);
+    else if (aPosition == "local")
+      return this._list.insertBefore(aItem, this._localItem.nextSibling);
+    else
+      return this._list.insertBefore(aItem, this._repoItem);
+  },
+
+  removeItem : function ev_moveItem(aItem) {
+    this._list.removeChild(aItem);
   },
 
   enable: function ev_enable(aItem) {
@@ -386,10 +405,13 @@ var ExtensionsView = {
       aItem.addon.userDisabled = false;
       opType = this._getOpTypeForOperations(aItem.addon.pendingOperations);
 
-      if (opType == "needs-enable")
+      if (aItem.addon.pendingOperations & AddonManager.PENDING_ENABLE) {
         this.showRestart();
-      else
-        this.hideRestart();
+      } else {
+        aItem.removeAttribute("isDisabled");
+        if (aItem.getAttribute("opType") == "needs-disable")
+          this.hideRestart();
+      };
     }
 
     aItem.setAttribute("opType", opType);
@@ -408,10 +430,13 @@ var ExtensionsView = {
       aItem.addon.userDisabled = true;
       opType = this._getOpTypeForOperations(aItem.addon.pendingOperations);
 
-      if (opType == "needs-disable")
+      if (aItem.addon.pendingOperations & AddonManager.PENDING_DISABLE) {
         this.showRestart();
-      else
-        this.hideRestart();
+      } else {
+        aItem.setAttribute("isDisabled", !aItem.addon.isActive);
+        if (aItem.getAttribute("opType") == "needs-enable")
+          this.hideRestart();
+      }
     }
 
     aItem.setAttribute("opType", opType);
@@ -427,18 +452,26 @@ var ExtensionsView = {
       // the search-engine-modified observer in browser.js will take care of
       // updating the list
     } else {
+      if (!aItem.addon) {
+        this._list.removeChild(aItem);
+        return;
+      }
+
       aItem.addon.uninstall();
       opType = this._getOpTypeForOperations(aItem.addon.pendingOperations);
 
-      if (opType == "needs-uninstall")
+      if (aItem.addon.pendingOperations & AddonManager.PENDING_UNINSTALL) {
         this.showRestart();
 
-      // A disabled addon doesn't need a restart so it has no pending ops and
-      // can't be cancelled
-      if (!aItem.addon.isActive && opType == "")
-        opType = "needs-uninstall";
-
-      aItem.setAttribute("opType", opType);
+        // A disabled addon doesn't need a restart so it has no pending ops and
+        // can't be cancelled
+        if (!aItem.addon.isActive && opType == "")
+          opType = "needs-uninstall";
+  
+        aItem.setAttribute("opType", opType);
+      } else {
+        this._list.removeChild(aItem);
+      }
     }
   },
 
@@ -482,10 +515,7 @@ var ExtensionsView = {
       item.setAttribute("hidebutton", "true");
     item.setAttribute("hidethrobber", aHideThrobber);
 
-    if (aSection == "repo")
-      this._list.appendChild(item);
-    else
-      this._list.insertBefore(item, this._repoItem);
+    this.addItem(item, aSection);
 
     return item;
   },
@@ -544,7 +574,7 @@ var ExtensionsView = {
       if (aShowRating)
         listitem.setAttribute("rating", addon.averageRating);
 
-      let item = this._list.appendChild(listitem);
+      let item = this.addItem(listitem, "repo");
 
       // Hide any overflow add-ons. The user can see them later by pressing the
       // "See More" button
@@ -594,7 +624,7 @@ var ExtensionsView = {
 
     whatare.setAttribute("button", strings.GetStringFromName("addonsWhatAre.button"));
     whatare.setAttribute("onbuttoncommand", "BrowserUI.newTab('" + browseURL + "');");
-    this._list.appendChild(whatare);
+    this.addItem(whatare, "repo");
 
     if (aRecommendedAddons.length == 0 && aBrowseAddons.length == 0) {
       let msg = strings.GetStringFromName("addonsSearchNone.recommended");
@@ -631,7 +661,7 @@ var ExtensionsView = {
     showmore.setAttribute("hidepage", totalAddons > kAddonPageSize ? "false" : "true");
     showmore.setAttribute("sitelabel", strings.GetStringFromName("addonsBrowseAll.browseSite"));
     showmore.setAttribute("onsitecommand", "ExtensionsView.showMoreResults('" + browseURL + "');");
-    this._list.appendChild(showmore);
+    this.addItem(showmore, "repo");
 
     let evt = document.createEvent("Events");
     evt.initEvent("ViewChanged", true, false);
@@ -674,7 +704,7 @@ var ExtensionsView = {
       url = url.replace(/%TERMS%/g, encodeURIComponent(this.searchBox.value));
       url = formatter.formatURL(url);
       showmore.setAttribute("onsitecommand", "ExtensionsView.showMoreResults('" + url + "');");
-      this._list.appendChild(showmore);
+      this.addItem(showmore, "repo");
     }
 
     this.displaySectionMessage("repo", null, strings.GetStringFromName("addonsSearchSuccess2.button"), true);
@@ -854,24 +884,53 @@ function AddonInstallListener() {
 AddonInstallListener.prototype = {
 
   onInstallEnded: function(aInstall, aAddon) {
-    if (aInstall.existingAddon && (aInstall.existingAddon.pendingOperations & AddonManager.PENDING_UPGRADE))
-      ExtensionsView.showRestart("update");
-    else if (aAddon.pendingOperations & AddonManager.PENDING_INSTALL)
-      ExtensionsView.showRestart("normal");
+    let needsRestart = false;
+    let mode = "";
+    if (aInstall.existingAddon && (aInstall.existingAddon.pendingOperations & AddonManager.PENDING_UPGRADE)) {
+      needsRestart = true;
+      mode = "update";
+    } else if (aAddon.pendingOperations & AddonManager.PENDING_INSTALL) {
+      needsRestart = true;
+      mode = "normal";
+    }
+
+    // if we already have a mode, then we need to show a restart notification
+    // otherwise, we are likely a bootstrapped addon
+    if (needsRestart)
+      ExtensionsView.showRestart(mode);
+    this._showInstallCompleteAlert(true, needsRestart);
+
+    // only do this if the view has already been inited
+    if (!ExtensionsView._list)
+      return;
 
     let element = ExtensionsView.getElementForAddon(aAddon.id);
-    if (element) {  
+    if (!element) {
+      element = ExtensionsView._createLocalAddon(aAddon);
+      ExtensionsView.addItem(element, "local");
+    }
+
+    if (needsRestart) {
       element.setAttribute("opType", "needs-restart");
-      element.setAttribute("status", "success");
-  
-      // If we are updating an add-on, change the status
-      if (element.hasAttribute("updating")) {
-        let strings = Strings.browser;
-        element.setAttribute("updateStatus", strings.formatStringFromName("addonUpdate.updated", [aAddon.version], 1));
-        element.removeAttribute("updating");
+    } else {
+      if (element.getAttribute("typeName") == "search") {
+        if (aAddon.permissions & AddonManager.PERM_CAN_UPGRADE)
+          document.getElementById("addons-update-all").disabled = false;
+
+        ExtensionsView.removeItem(element);
+        element = ExtensionsView._createLocalAddon(aAddon);
+        ExtensionsView.addItem(element, "local");
       }
     }
-    this._showInstallCompleteAlert(true);
+
+    element.setAttribute("status", "success");
+
+    // If we are updating an add-on, change the status
+    if (element.hasAttribute("updating")) {
+      let strings = Elements.browserBundle;
+      element.setAttribute("updateStatus", strings.getFormattedString("addonUpdate.updated", [aAddon.version]));
+      element.removeAttribute("updating");
+    }
   },
 
   onInstallFailed: function(aInstall, aError) {
@@ -930,7 +989,7 @@ AddonInstallListener.prototype = {
     this.onInstallFailed(aInstall, aError);
   },
 
-  onDownloadCancelled: function(aInstall, aAddon) {
+  onDownloadCancelled: function(aInstall) {
     let strings = Strings.browser;
     let brandBundle = Strings.brand;
     let brandShortName = brandBundle.GetStringFromName("brandShortName");
@@ -941,9 +1000,9 @@ AddonInstallListener.prototype = {
     let error = (host || aInstall.error == 0) ? "addonError" : "addonLocalError";
     if (aInstall.error != 0)
       error += aInstall.error;
-    else if (aInstall.addon.blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED)
+    else if (aInstall.addon && aInstall.addon.blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED)
       error += "Blocklisted";
-    else if (!aInstall.addon.isCompatible || !aInstall.addon.isPlatformCompatible)
+    else if (aInstall.addon && (!aInstall.addon.isCompatible || !aInstall.addon.isPlatformCompatible))
       error += "Incompatible";
     else {
       ExtensionsView.hideAlerts();
@@ -960,10 +1019,14 @@ AddonInstallListener.prototype = {
     ExtensionsView.showAlert(messageString);
   },
 
-  _showInstallCompleteAlert: function xpidm_showAlert(aSucceeded) {
+  _showInstallCompleteAlert: function xpidm_showAlert(aSucceeded, aNeedsRestart) {
     let strings = Strings.browser;
-    let msg = aSucceeded ? strings.GetStringFromName("alertAddonsInstalled") :
-                           strings.GetStringFromName("alertAddonsFail");
-    ExtensionsView.showAlert(msg);
+    let stringName = "alertAddonsFail";
+    if (aSucceeded) {
+      stringName = "alertAddonsInstalled";
+      if (!aNeedsRestart)
+        stringName += "NoRestart";
+    }
+    ExtensionsView.showAlert(strings.GetStringFromName(stringName));
   },
 };
