@@ -20,6 +20,7 @@ const PREF_GETADDONS_GETRECOMMENDED      = "extensions.getAddons.recommended.url
 const PREF_GETADDONS_BROWSERECOMMENDED   = "extensions.getAddons.recommended.browseURL";
 const PREF_GETADDONS_UPDATE              = "extensions.update.url";
 const SEARCH_URL = TESTROOT + "browser_details.xml";
+const ADDON_IMG = "chrome://browser/skin/images/alert-addons-30.png";
 
 var addons = [{
   id: "addon1@tests.mozilla.org",
@@ -64,7 +65,8 @@ var gDate = new Date(2010, 7, 1);
 var gApp = Strings.brand.GetStringFromName("brandShortName");
 var gCategoryUtilities;
 var gSearchCount = 0;
-var gProvider = null;
+var gTestURL = TESTROOT + "browser_blank_01.html";
+var gCurrentTab = null;
 
 function test() {
   waitForExplicitFinish();
@@ -152,19 +154,100 @@ function isRestartShown(aShown, isUpdate, aCallback) {
   }
 }
 
-function checkAddonListing(aAddon, elt) {
+function checkInstallAlert(aShown, aCallback) {
+  checkAlert(null, "xpinstall", null, aShown, function(aNotifyBox, aNotification) {
+    if (aShown) {
+      let button = aNotification.childNodes[0];
+      ok(!!button, "Notification has button");
+      if (button)
+        button.click();
+    }
+    aNotifyBox.removeAllNotifications(true);
+    if (aCallback)
+      aCallback();
+  });
+}
+
+function checkDownloadNotification(aCallback) {
+  let msg = /download/i;
+  checkNotification(/Add-ons/, msg, ADDON_IMG, aCallback);
+}
+
+function checkInstallNotification(aRestart, aCallback) {
+  let msg = null;
+  if (aRestart)
+    msg = /restart/i;
+  checkNotification(/Add-ons/, msg, ADDON_IMG, aCallback);
+}
+
+function checkNotification(aTitle, aMessage, aIcon, aCallback) {
+  let doTest = function() {
+    ok(document.getElementById("alerts-container").classList.contains("showing"), "Alert shown");
+    let title = document.getElementById("alerts-title").value;
+    let msg   = document.getElementById("alerts-text").textContent;
+    let img   = document.getElementById("alerts-image").getAttribute("src");
+
+    if (aTitle)
+      ok(aTitle.test(title), "Correct title alert shown: " + title);
+    if (aMessage)
+      ok(aMessage.test(msg), "Correct message shown: " + msg);
+    if (aIcon)
+      is(img, aIcon, "Correct image shown: " + aIcon);
+
+    // make sure this is hidden before another test asks about it
+    AlertsHelper.container.classList.remove("showing");
+    AlertsHelper.container.height = 0;
+    AlertsHelper.container.hidden = true;
+    aCallback();
+  };
+
+  waitFor(doTest, function() { return AlertsHelper.container.hidden == false; });
+}
+
+function checkAlert(aId, aName, aLabel, aShown, aCallback) {
+  let msg = null;
+  if (aId)
+    msg = document.getElementById(aId);
+  else 
+    msg = window.getNotificationBox(gCurrentTab.browser);
+  ok(!!msg, "Have notification box");
+
+  let haveNotification = function(notify) {
+    is(!!notify, aShown, "Notification alert exists = " + aShown);
+    if (notify && aLabel)
+      ok(aLabel.test(notify.label), "Notification shows correct message");
+    if (aCallback)
+      aCallback(msg, notify);
+  }
+
+  let notification = msg.getNotificationWithValue(aName);
+  if (!notification && aShown) {
+    window.addEventListener("AlertActive", function() {
+      window.removeEventListener("AlertActive", arguments.callee, true);
+      notification = msg.getNotificationWithValue(aName);
+      haveNotification(notification);
+    }, true);
+  } else {
+    haveNotification(notification);
+  }
+}
+
+function checkAddonListing(aAddon, elt, aType) {
   ok(!!elt, "Element exists for addon");
   checkAttribute(elt, "id", "urn:mozilla:item:" + aAddon.id);
   checkAttribute(elt, "addonID", aAddon.id);
-  checkAttribute(elt, "typeName", "search");
+  checkAttribute(elt, "typeName", aType);
   checkAttribute(elt, "name", aAddon.name);
   checkAttribute(elt, "version", aAddon.version);
-  checkAttribute(elt, "iconURL", aAddon.iconURL);
-  checkAttribute(elt, "description", aAddon.description)
-  checkAttribute(elt, "homepageURL", aAddon.homepageURL);
-  checkAttribute(elt, "sourceURL", aAddon.sourceURL);
-  ok(elt.install, "Extension has install property");
+  if (aType == "search") {
+    checkAttribute(elt, "iconURL", aAddon.iconURL);
+    checkAttribute(elt, "description", aAddon.description)
+    checkAttribute(elt, "homepageURL", aAddon.homepageURL);
+    checkAttribute(elt, "sourceURL", aAddon.sourceURL);
+    ok(elt.install, "Extension has install property");
+  }
 }
+
 function checkUpdate(aSettings) {
   let os = Services.obs;
   let ul = new updateListener(aSettings);
@@ -189,7 +272,7 @@ function open_manager(aView, aCallback) {
   }, true);
 }
 
-function close_manager() {
+function close_manager(aCallback) {
   var prefsButton = document.getElementById("tool-preferences");
   prefsButton.click();
  
@@ -198,6 +281,110 @@ function close_manager() {
   ExtensionsView._list = null;
   ExtensionsView._restartCount = 0;
   BrowserUI.hidePanel();
+
+  if (aCallback)
+    aCallback();
+}
+
+function loadUrl(aURL, aCallback, aNewTab) {
+  messageManager.addMessageListener("pageshow", function() {
+    if (gCurrentTab.browser.currentURI.spec == aURL) {
+      messageManager.removeMessageListener("pageshow", arguments.callee);
+      if (aCallback)
+        aCallback();
+    }
+  });
+  if (aNewTab)
+    gCurrentTab = Browser.addTab(aURL, true);
+  else
+    Browser.loadURI(aURL);
+}
+function checkInstallPopup(aName, aCallback) {
+  testPrompt("Installing Add-on", aName, [ {label: "Install", click: true}, {label: "Cancel", click: false}], aCallback);
+}
+
+function testPrompt(aTitle, aMessage, aButtons, aCallback) {
+  function doTest() {
+    let prompt = document.getElementById("prompt-confirm-dialog");
+    ok(!!prompt, "Prompt shown");
+
+    if (prompt) {
+      let title = document.getElementById("prompt-confirm-title");
+      let message = document.getElementById("prompt-confirm-message");
+      is(aTitle, title.value, "Correct title shown");
+      is(aMessage, message.textContent, "Correct message shown");
+  
+     let buttons = document.getElementsByClassName("prompt-button");
+      let clickButton = null;
+      ok(buttons.length == aButtons.length, "Prompt has correct number of buttons");
+      if (buttons.length == aButtons.length) {
+        for (let i = 0; i < buttons.length; i++) {
+          is(buttons[i].label, aButtons[i].label, "Button has correct label");
+          if (aButtons[i].click)
+            clickButton = buttons[i];
+        }
+      }
+      if (clickButton)
+        clickButton.click();
+    }
+    if (aCallback)
+      aCallback();
+  }
+
+  if (!document.getElementById("prompt-confirm-dialog")) {
+    window.addEventListener("DOMWillOpenModalDialog", function() {
+      window.removeEventListener("DOMWillOpenModalDialog", arguments.callee, true);
+      // without this timeout, this can cause the prompt service to fail
+      setTimeout(doTest, 500);
+    }, true);
+  } else {
+    doTest();
+  }
+}
+
+// Installs an addon via the urlbar.
+function installFromURLBar(aAddon) {
+  return function() {
+    loadUrl(gTestURL, function() {
+      loadUrl(aAddon.sourceURL, null, false);
+      checkInstallAlert(true, function() {
+        checkDownloadNotification(function() {
+          checkInstallPopup(aAddon.name, function() {
+            checkInstallNotification(!aAddon.bootstrapped, function() {
+              open_manager(true, function() {
+                isRestartShown(!aAddon.bootstrapped, false, function() {
+                  let elt = get_addon_element(aAddon.id);
+                  if (aAddon.bootstrapped) {
+                    checkAddonListing(aAddon, elt, "local");
+                    var button = document.getAnonymousElementByAttribute(elt, "anonid", "uninstall-button");
+                    ok(!!button, "Extension has uninstall button");
+      
+                    var updateButton = document.getElementById("addons-update-all");
+                    is(updateButton.disabled, false, "Update button is enabled");
+      
+                    ExtensionsView.uninstall(elt);
+                    elt = get_addon_element(aAddon.id);
+                    ok(!elt, "Addon element removed during uninstall");
+                    Browser.closeTab(gCurrentTab);
+                    close_manager(run_next_test);
+                  } else {
+                    ok(!elt, "Extension not in list");
+                    AddonManager.getAllInstalls(function(aInstalls) {
+                      for(var i = 0; i < aInstalls.length; i++) {
+                        aInstalls[i].cancel();
+                      }
+                      Browser.closeTab(gCurrentTab);
+                      close_manager(run_next_test);
+                    });
+                  }
+                });
+              });
+            });
+          });
+        });
+      });
+    }, true);
+  };
 }
 
 // Installs an addon from the addons pref pane, and then
@@ -229,6 +416,8 @@ function installFromAddonsPage(aAddon, aDoUpdate) {
   }
 }
 
+add_test(installFromURLBar(addons[0]));
+add_test(installFromURLBar(addons[1]));
 add_test(installFromAddonsPage(addons[0], true));
 add_test(installFromAddonsPage(addons[1], false));
 
