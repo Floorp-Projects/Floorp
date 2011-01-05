@@ -169,8 +169,6 @@ WebGLContext::AttachShader(nsIWebGLProgram *pobj, nsIWebGLShader *shobj)
 
     gl->fAttachShader(progname, shadername);
 
-    printf_stderr("AttachShader: %p AttachCount after attach %d\n", shader, shader->AttachCount());
-
     return NS_OK;
 }
 
@@ -899,7 +897,6 @@ WebGLContext::DeleteShader(nsIWebGLShader *sobj)
     MakeContextCurrent();
 
     gl->fDeleteShader(shadername);
-    printf_stderr("DeleteShader: shader %p AttachCount in delete %d\n", shader, shader->AttachCount());
     shader->Delete();
     mMapShaders.Remove(shadername);
 
@@ -3445,8 +3442,6 @@ WebGLContext::CompileShader(nsIWebGLShader *sobj)
     WebGLuint shadername;
     if (!GetConcreteObjectAndGLName("compileShader", sobj, &shader, &shadername))
         return NS_OK;
-
-    printf_stderr("CompileShader: shader %p AttachCount %d\n", shader, shader->AttachCount());
 
     MakeContextCurrent();
 
