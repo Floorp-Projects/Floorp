@@ -45,8 +45,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 const PIN_PART_LENGTH = 4;
 
 const ADD_DEVICE_PAGE       = 0;
-const DEVICE_CONNECTED_PAGE = 1;
-const SYNC_KEY_PAGE         = 2;
+const SYNC_KEY_PAGE         = 1;
+const DEVICE_CONNECTED_PAGE = 2;
 
 let gSyncAddDevice = {
 
@@ -70,21 +70,21 @@ let gSyncAddDevice = {
       case ADD_DEVICE_PAGE:
         this.wizard.canAdvance = false;
         this.wizard.canRewind = false;
+        this.wizard.getButton("next").hidden = false;
         this.pin1.focus();
+        break;
+      case SYNC_KEY_PAGE:
+        this.wizard.canAdvance = false;
+        this.wizard.canRewind = true;
+        this.wizard.getButton("back").hidden = false;
+        this.wizard.getButton("next").hidden = true;
+        document.getElementById("weavePassphrase").value =
+          Weave.Utils.hyphenatePassphrase(Weave.Service.passphrase);
         break;
       case DEVICE_CONNECTED_PAGE:
         this.wizard.canAdvance = true;
         this.wizard.canRewind = false;
-        this.wizard.getButton("next").hidden = true;
         this.wizard.getButton("cancel").hidden = true;
-        this.wizard.getButton("finish").hidden = false;
-        break;
-      case SYNC_KEY_PAGE:
-        this.wizard.canAdvance = true;
-        this.wizard.canRewind = true;
-        this.wizard.getButton("back").hidden = false;
-        document.getElementById("weavePassphrase").value =
-          Weave.Utils.hyphenatePassphrase(Weave.Service.passphrase);
         break;
     }
   },
