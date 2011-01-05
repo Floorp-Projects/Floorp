@@ -1601,6 +1601,11 @@ AutoGCRooter::trace(JSTracer *trc)
         MarkIdRange(trc, vector.length(), vector.begin(), "js::AutoIdVector.vector");
         return;
       }
+
+      case BINDINGS: {
+        static_cast<js::AutoBindingsRooter *>(this)->bindings.trace(trc);
+        return;
+      }
     }
 
     JS_ASSERT(tag >= 0);
