@@ -595,8 +595,9 @@ pref("javascript.options.jitprofiling.chrome",  false);
 // This preference limits the memory usage of javascript.
 // If you want to change these values for your device,
 // please find Bug 417052 comment 17 and Bug 456721
-// Comment 32.
-pref("javascript.options.mem.high_water_mark", 32);
+// Comment 32 and Bug 613551.
+pref("javascript.options.mem.high_water_mark", 128);
+pref("javascript.options.mem.max", -1);
 pref("javascript.options.mem.gc_frequency",   300);
 
 // advanced prefs
