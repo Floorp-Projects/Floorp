@@ -777,8 +777,6 @@ var gSyncSetup = {
               "strftime('%s','now','localtime','utc') - " +
               "( " +
                 "SELECT visit_date FROM moz_historyvisits " +
-                "UNION ALL " +
-                "SELECT visit_date FROM moz_historyvisits_temp " +
                 "ORDER BY visit_date ASC LIMIT 1 " +
                 ")/1000000 " +
               ")/86400) AS daysOfHistory ");
