@@ -9,14 +9,23 @@ using NPReason;
 namespace mozilla {
 namespace plugins {
 
-/**
- * This empty protocol exists only to be constructed and destroyed.
- */
 rpc protocol PStreamNotify
 {
   manager PPluginInstance;
 
+parent:
+
+  /**
+   * Represents NPN_URLRedirectResponse
+   */
+  async RedirectNotifyResponse(bool allow);
+
 child:
+  /**
+   * Represents NPP_URLRedirectNotify
+   */
+  async RedirectNotify(nsCString url, int32_t status);
+
   /**
    * Represents NPP_URLNotify
    */
