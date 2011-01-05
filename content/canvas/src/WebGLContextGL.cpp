@@ -2189,7 +2189,7 @@ WebGLContext::GetUniform(nsIWebGLProgram *pobj, nsIWebGLUniformLocation *ploc, n
         return ErrorInvalidValue("GetUniform: this uniform location corresponds to another program");
 
     if (location->ProgramGeneration() != prog->Generation())
-        return ErrorInvalidValue("GetUniform: this uniform location is obsolete since the program has been relinked");
+        return ErrorInvalidOperation("GetUniform: this uniform location is obsolete since the program has been relinked");
 
     nsCOMPtr<nsIWritableVariant> wrval = do_CreateInstance("@mozilla.org/variant;1");
     NS_ENSURE_TRUE(wrval, NS_ERROR_FAILURE);

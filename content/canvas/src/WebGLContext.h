@@ -1377,8 +1377,9 @@ NS_DEFINE_STATIC_IID_ACCESSOR(WebGLRenderbuffer, WEBGLRENDERBUFFER_PRIVATE_IID)
 
 class WebGLFramebufferAttachment
 {
-    nsRefPtr<WebGLTexture> mTexturePtr;
-    nsRefPtr<WebGLRenderbuffer> mRenderbufferPtr;
+    // deleting a texture or renderbuffer immediately detaches it
+    WebGLObjectRefPtr<WebGLTexture> mTexturePtr;
+    WebGLObjectRefPtr<WebGLRenderbuffer> mRenderbufferPtr;
     WebGLenum mAttachmentPoint;
     WebGLint mTextureLevel;
     WebGLenum mTextureCubeMapFace;
