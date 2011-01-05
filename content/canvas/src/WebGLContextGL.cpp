@@ -1568,7 +1568,7 @@ WebGLContext::GetParameter(PRUint32 pname, nsIVariant **retval)
             wrval->SetAsInt32(0);
             break;
         case LOCAL_GL_COMPRESSED_TEXTURE_FORMATS:
-            wrval->SetAsVoid(); // the spec says we must return null
+            wrval->SetAsEmpty(); // the spec says we must return null
             break;
 
 // unsigned int. here we may have to return very large values like 2^32-1 that can't be represented as
@@ -2271,12 +2271,12 @@ WebGLContext::GetUniform(nsIWebGLProgram *pobj, nsIWebGLUniformLocation *ploc, n
         GLint iv[16] = { 0 };
         gl->fGetUniformiv(progname, location->Location(), iv);
         if (unitSize == 1) {
-            wrval->SetAsBool(PRBool(iv[0]));
+            wrval->SetAsBool(iv[0] ? PR_TRUE : PR_FALSE);
         } else {
-            PRUint8 uv[16] = { 0 };
+            PRBool uv[16] = { 0 };
             for (int k = 0; k < unitSize; k++)
-                uv[k] = PRUint8(iv[k]);
-            wrval->SetAsArray(nsIDataType::VTYPE_UINT8, nsnull,
+                uv[k] = iv[k] ? PR_TRUE : PR_FALSE;
+            wrval->SetAsArray(nsIDataType::VTYPE_BOOL, nsnull,
                               unitSize, static_cast<void*>(uv));
         }
     } else {
