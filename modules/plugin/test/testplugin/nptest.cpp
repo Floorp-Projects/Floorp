@@ -287,7 +287,9 @@ static NPVariant sPluginPropertyValues[ARRAY_LENGTH(sPluginPropertyIdentifierNam
 struct URLNotifyData
 {
   const char* cookie;
-  NPObject* callback;
+  NPObject* writeCallback;
+  NPObject* notifyCallback;
+  bool allowRedirects;
   uint32_t size;
   char* data;
 };
@@ -295,6 +297,8 @@ struct URLNotifyData
 static URLNotifyData kNotifyData = {
   "static-cookie",
   NULL,
+  NULL,
+  false,
   0,
   NULL
 };
@@ -589,6 +593,7 @@ static bool fillPluginFunctionTable(NPPluginFuncs* pFuncs)
   pFuncs->urlnotify = testplugin_URLNotify;
   pFuncs->getvalue = NPP_GetValue;
   pFuncs->setvalue = NPP_SetValue;
+  pFuncs->urlredirectnotify = NPP_URLRedirectNotify;
 
   return true;
 }
@@ -1118,6 +1123,16 @@ NPP_Write(NPP instance, NPStream* stream, int32_t offset, int32_t len, void* buf
   }
 
   URLNotifyData* nd = static_cast<URLNotifyData*>(stream->notifyData);
+
+  if (nd && nd->writeCallback) {
+    NPVariant args[1];
+    STRINGN_TO_NPVARIANT(stream->url, strlen(stream->url), args[0]);
+
+    NPVariant result;
+    NPN_InvokeDefault(instance, nd->writeCallback, args, 1, &result);
+    NPN_ReleaseVariantValue(&result);
+  }
+
   if (nd && nd != &kNotifyData) {
     uint32_t newsize = nd->size + len;
     nd->data = (char*) realloc(nd->data, newsize);
@@ -1255,11 +1270,14 @@ testplugin_URLNotify(NPP instance, const char* url, NPReason reason, void* notif
     else
       STRINGN_TO_NPVARIANT("", 0, args[1]);
 
-    NPN_InvokeDefault(instance, ndata->callback, args, 2, &result);
+    NPN_InvokeDefault(instance, ndata->notifyCallback, args, 2, &result);
     NPN_ReleaseVariantValue(&result);
 
     // clean up the URLNotifyData
-    NPN_ReleaseObject(ndata->callback);
+    if (ndata->writeCallback) {
+      NPN_ReleaseObject(ndata->writeCallback);
+    }
+    NPN_ReleaseObject(ndata->notifyCallback);
     free(ndata->data);
     delete ndata;
   }
@@ -1297,6 +1315,17 @@ NPP_SetValue(NPP instance, NPNVariable variable, void* value)
     return NPERR_NO_ERROR;
   }
   return NPERR_GENERIC_ERROR;
+}
+
+void
+NPP_URLRedirectNotify(NPP instance, const char* url, int32_t status, void* notifyData)
+{
+  if (notifyData) {
+    NPN_URLRedirectResponse(instance, notifyData,
+                            static_cast<URLNotifyData*>(notifyData)->allowRedirects);
+    return;
+  }
+  NPN_URLRedirectResponse(instance, notifyData, true);
 }
 
 //
@@ -1573,6 +1602,12 @@ void
 NPN_PluginThreadAsyncCall(NPP plugin, void (*func)(void*), void* userdata)
 {
   return sBrowserFuncs->pluginthreadasynccall(plugin, func, userdata);
+}
+
+void
+NPN_URLRedirectResponse(NPP instance, void* notifyData, NPBool allow)
+{
+  return sBrowserFuncs->urlredirectresponse(instance, notifyData, allow);
 }
 
 //
@@ -2284,8 +2319,8 @@ convertPointY(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVaria
 static bool
 streamTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
 {
-  // .streamTest(url, doPost, doNull, callback)
-  if (4 != argCount)
+  // .streamTest(url, doPost, doNull, writeCallback, notifyCallback, allowRedirects)
+  if (6 != argCount)
     return false;
 
   NPP npp = static_cast<TestNPObject*>(npobj)->npp;
@@ -2308,15 +2343,31 @@ streamTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant*
     return false;
   }
 
-  if (!NPVARIANT_IS_OBJECT(args[3]))
+  NPObject* writeCallback = NULL;
+  if (NPVARIANT_IS_NULL(args[3])) {
+  }
+  else if (NPVARIANT_IS_OBJECT(args[3])) {
+    writeCallback = NPVARIANT_TO_OBJECT(args[3]);
+  }
+  else {
     return false;
-  NPObject* callback = NPVARIANT_TO_OBJECT(args[3]);
+  }
+
+  if (!NPVARIANT_IS_OBJECT(args[4]))
+    return false;
+  NPObject* notifyCallback = NPVARIANT_TO_OBJECT(args[4]);
+
+  if (!NPVARIANT_IS_BOOLEAN(args[5]))
+    return false;
+  bool allowRedirects = NPVARIANT_TO_BOOLEAN(args[5]);
 
   URLNotifyData* ndata = new URLNotifyData;
   ndata->cookie = "dynamic-cookie";
-  ndata->callback = callback;
+  ndata->writeCallback = writeCallback;
+  ndata->notifyCallback = notifyCallback;
   ndata->size = 0;
   ndata->data = NULL;
+  ndata->allowRedirects = allowRedirects;
 
   /* null-terminate "url" */
   char* urlstr = (char*) malloc(url.UTF8Length + 1);
@@ -2336,7 +2387,10 @@ streamTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant*
   free(urlstr);
 
   if (NPERR_NO_ERROR == err) {
-    NPN_RetainObject(ndata->callback);
+    if (ndata->writeCallback) {
+      NPN_RetainObject(ndata->writeCallback);
+    }
+    NPN_RetainObject(ndata->notifyCallback);
     BOOLEAN_TO_NPVARIANT(true, *result);
   }
   else {
@@ -3161,7 +3215,6 @@ bool getWindowPosition(NPObject* npobj, const NPVariant* args, uint32_t argCount
   INT32_TO_NPVARIANT(id->window.width, elements[2]);
   INT32_TO_NPVARIANT(id->window.height, elements[3]);
 
-  NPObject* resultArray = NULL;
   ok = NPN_InvokeDefault(npp, arrayFunction, elements, 4, result);
 
   NPN_ReleaseObject(arrayFunction);
