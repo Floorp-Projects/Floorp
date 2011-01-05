@@ -68,7 +68,7 @@ let gSyncAddDevice = {
 
     switch (this.wizard.pageIndex) {
       case ADD_DEVICE_PAGE:
-        this.wizard.canAdvance = false;
+        this.onTextBoxInput();
         this.wizard.canRewind = false;
         this.wizard.getButton("next").hidden = false;
         this.pin1.focus();
@@ -152,7 +152,7 @@ let gSyncAddDevice = {
   },
 
   onTextBoxInput: function onTextBoxInput(textbox) {
-    if (textbox.value.length == PIN_PART_LENGTH)
+    if (textbox && textbox.value.length == PIN_PART_LENGTH)
       this.nextFocusEl[textbox.id].focus();
 
     this.wizard.canAdvance = (this.pin1.value.length == PIN_PART_LENGTH
