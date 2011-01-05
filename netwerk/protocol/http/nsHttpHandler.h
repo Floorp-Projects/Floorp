@@ -326,6 +326,9 @@ private:
 
     // Persistent HTTPS caching flag
     PRPackedBool   mEnablePersistentHttpsCaching;
+
+    // For broadcasting the preference to not be tracked
+    PRPackedBool   mDoNotTrackEnabled;
 };
 
 //-----------------------------------------------------------------------------
