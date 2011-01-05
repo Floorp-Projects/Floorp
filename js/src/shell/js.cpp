@@ -4299,6 +4299,13 @@ DefGlobalPropIf(JSContext *cx, uintN argc, jsval *vp)
     return global && JS_DefineOwnProperty(cx, global, id, argv[2], &ignore);
 }
 
+JSBool
+MJitStats(JSContext *cx, uintN argc, jsval *vp)
+{
+    JS_SET_RVAL(cx, vp, INT_TO_JSVAL(cx->runtime->mjitMemoryUsed));
+    return true;
+}
+
 /* We use a mix of JS_FS and JS_FN to test both kinds of natives. */
 static JSFunctionSpec shell_functions[] = {
     JS_FN("version",        Version,        0,0),
@@ -4398,6 +4405,9 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN("deserialize",    Deserialize,    1,0),
     JS_FN("setGlobalPropIf",SetGlobalPropIf,3,0),
     JS_FN("defGlobalPropIf",DefGlobalPropIf,3,0),
+#ifdef JS_METHODJIT
+    JS_FN("mjitstats",      MJitStats,      0,0),
+#endif
     JS_FS_END
 };
 
@@ -4530,6 +4540,9 @@ static const char *const shell_help_messages[] = {
 "setGlobalPropIf(b,id,v)  If b, get the global object o and perform o[id] = v.\n",
 "defGlobalPropIf(b,id,dsc)If b, get the global object o and perform\n"
 "                         Object.defineProperty(o, id, dsc).\n"
+#ifdef JS_METHODJIT
+,"mjitstats()             Return stats on mjit memory usage.\n"
+#endif
 };
 
 /* Help messages must match shell functions. */

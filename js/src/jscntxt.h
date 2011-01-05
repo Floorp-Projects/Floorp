@@ -1435,6 +1435,10 @@ struct JSRuntime {
     JSWrapObjectCallback wrapObjectCallback;
     JSPreWrapCallback    preWrapObjectCallback;
 
+#ifdef JS_METHODJIT
+    uint32               mjitMemoryUsed;
+#endif
+
     JSRuntime();
     ~JSRuntime();
 

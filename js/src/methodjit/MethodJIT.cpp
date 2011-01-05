@@ -838,23 +838,48 @@ mjit::JITScript::~JITScript()
 #endif
 }
 
+/* Please keep in sync with Compiler::finishThisUp! */
+size_t
+mjit::JITScript::scriptDataSize()
+{
+    return sizeof(JITScript) +
+        sizeof(NativeMapEntry) * nNmapPairs +
+#if defined JS_MONOIC
+        sizeof(ic::MICInfo) * nMICs +
+        sizeof(ic::CallICInfo) * nCallICs +
+        sizeof(ic::EqualityICInfo) * nEqualityICs +
+        sizeof(ic::TraceICInfo) * nTraceICs +
+#endif
+#if defined JS_POLYIC
+        sizeof(ic::PICInfo) * nPICs +
+        sizeof(ic::GetElementIC) * nGetElems +
+        sizeof(ic::SetElementIC) * nSetElems +
+#endif
+        sizeof(CallSite) * nCallSites;
+}
+
 void
 mjit::ReleaseScriptCode(JSContext *cx, JSScript *script)
 {
     // NB: The recompiler may call ReleaseScriptCode, in which case it
     // will get called again when the script is destroyed, so we
     // must protect against calling ReleaseScriptCode twice.
+    JITScript *jscr;
 
-    if (script->jitNormal) {
-        script->jitNormal->~JITScript();
-        cx->free(script->jitNormal);
+    if ((jscr = script->jitNormal)) {
+        cx->runtime->mjitMemoryUsed -= jscr->scriptDataSize() + jscr->mainCodeSize();
+
+        jscr->~JITScript();
+        cx->free(jscr);
         script->jitNormal = NULL;
         script->jitArityCheckNormal = NULL;
     }
 
-    if (script->jitCtor) {
-        script->jitCtor->~JITScript();
-        cx->free(script->jitCtor);
+    if ((jscr = script->jitCtor)) {
+        cx->runtime->mjitMemoryUsed -= jscr->scriptDataSize() + jscr->mainCodeSize();
+
+        jscr->~JITScript();
+        cx->free(jscr);
         script->jitCtor = NULL;
         script->jitArityCheckCtor = NULL;
     }
