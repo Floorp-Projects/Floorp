@@ -1527,9 +1527,9 @@ const ContentTouchHandler = {
     document.addEventListener("CancelTouchSequence", this, false);
 
     // Context menus have the following flow:
-    //   [parent] mousedown -> TapDown -> Browser:MouseDown
-    //   [child]  Browser:MouseDown -> contextmenu -> Browser:ContextMenu
-    //   [parent] Browser:ContextMenu -> ...* -> TapLong
+    //   [parent] mousedown -> TapLong -> Browser:MouseLong
+    //   [child]  Browser:MouseLong -> contextmenu -> Browser:ContextMenu
+    //   [parent] Browser:ContextMenu -> ...*
     //
     // * = Here some time will elapse. Although we get the context menu we need
     //     ASAP, we do not act on the context menu until we receive a LongTap.
@@ -1583,7 +1583,7 @@ const ContentTouchHandler = {
             this.tapDouble(aEvent.clientX, aEvent.clientY, aEvent.modifiers);
             break;
           case "TapLong":
-            this.tapLong();
+            this.tapLong(aEvent.clientX, aEvent.clientY);
             break;
         }
       }
@@ -1597,7 +1597,13 @@ const ContentTouchHandler = {
     switch (aMessage.name) {
       case "Browser:ContextMenu":
         // Long tap
-        this._contextMenu = { name: aMessage.name, json: aMessage.json, target: aMessage.target };
+        let contextMenu = { name: aMessage.name, json: aMessage.json, target: aMessage.target };
+        if (ContextHelper.showPopup(contextMenu)) {
+          // Stop all input sequences
+          let event = document.createEvent("Events");
+          event.initEvent("CancelTouchSequence", true, false);
+          document.dispatchEvent(event);
+        }
         break;
 
       case "Browser:Highlight": {
@@ -1679,16 +1685,8 @@ const ContentTouchHandler = {
     this._dispatchMouseEvent("Browser:ZoomToPoint", aX, aY, { width: width });
   },
 
-  tapLong: function tapLong() {
-    if (this._contextMenu) {
-      if (ContextHelper.showPopup(this._contextMenu)) {
-        // Stop all input sequences
-        let event = document.createEvent("Events");
-        event.initEvent("CancelTouchSequence", true, false);
-        document.dispatchEvent(event);
-      }
-      this._contextMenu = null;
-    }
+  tapLong: function tapLong(aX, aY) {
+    this._dispatchMouseEvent("Browser:MouseLong", aX, aY);
   },
 
   toString: function toString() {
