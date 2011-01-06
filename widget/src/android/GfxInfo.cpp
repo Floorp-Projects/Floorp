@@ -42,6 +42,8 @@
 #include "prprf.h"
 #include "EGLUtils.h"
 
+#include "AndroidBridge.h"
+
 #if defined(MOZ_CRASHREPORTER) && defined(MOZ_ENABLE_LIBXUL)
 #include "nsExceptionHandler.h"
 #include "nsICrashReporter.h"
@@ -80,6 +82,19 @@ NS_IMETHODIMP
 GfxInfo::GetAdapterDescription(nsAString & aAdapterDescription)
 {
   aAdapterDescription.AssignASCII(mozilla::gl::GetVendor());
+  if (mozilla::AndroidBridge::Bridge()) {
+      nsAutoString str;
+      aAdapterDescription.Append(NS_LITERAL_STRING(" "));
+      if (mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "MODEL", str))
+        aAdapterDescription.Append(str);
+      aAdapterDescription.Append(NS_LITERAL_STRING(" "));
+      if (mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "MANUFACTURER", str))
+        aAdapterDescription.Append(str);
+      aAdapterDescription.Append(NS_LITERAL_STRING(" "));
+      if (mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "HARDWARE", str))
+        aAdapterDescription.Append(str);
+  }
+
   return NS_OK;
 }
 
