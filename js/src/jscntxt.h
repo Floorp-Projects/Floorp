@@ -2677,16 +2677,16 @@ class AutoUnlockDefaultCompartment {
       JSContext *cx;
   public:
     AutoUnlockDefaultCompartment(JSContext *cx) : cx(cx) {
-        JS_UNLOCK(cx, &cx->runtime->atomState.lock);
 #ifdef JS_THREADSAFE
         cx->runtime->defaultCompartmentIsLocked = false;
 #endif
+        JS_UNLOCK(cx, &cx->runtime->atomState.lock);
     }
     ~AutoUnlockDefaultCompartment() {
+        JS_LOCK(cx, &cx->runtime->atomState.lock);
 #ifdef JS_THREADSAFE
         cx->runtime->defaultCompartmentIsLocked = true;
 #endif
-        JS_LOCK(cx, &cx->runtime->atomState.lock);
     }
 };
 
