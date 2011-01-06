@@ -82,6 +82,7 @@ private:
   PRPackedBool mDataIsPremultiplied;
   PRPackedBool mNeedsYFlip;
   PRPackedBool mIsD2DTexture;
+  PRPackedBool mUsingSharedTexture;
 };
 
 } /* layers */
