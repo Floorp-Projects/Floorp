@@ -2650,10 +2650,10 @@ class AutoLockDefaultCompartment {
 #endif
     }
     ~AutoLockDefaultCompartment() {
-        JS_UNLOCK(cx, &cx->runtime->atomState.lock);
 #ifdef JS_THREADSAFE
         cx->runtime->defaultCompartmentIsLocked = false;
 #endif
+        JS_UNLOCK(cx, &cx->runtime->atomState.lock);
     }
 };
 
@@ -2668,10 +2668,10 @@ class AutoUnlockDefaultCompartment {
 #endif
     }
     ~AutoUnlockDefaultCompartment() {
-        JS_LOCK(cx, &cx->runtime->atomState.lock);
 #ifdef JS_THREADSAFE
         cx->runtime->defaultCompartmentIsLocked = true;
 #endif
+        JS_LOCK(cx, &cx->runtime->atomState.lock);
     }
 };
 
