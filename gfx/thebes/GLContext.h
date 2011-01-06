@@ -496,6 +496,11 @@ public:
     const ContextFormat& ActualFormat() { return mActualFormat; }
 
     /**
+     * If this GL context has a D3D texture share handle, returns non-null.
+     */
+    virtual void *GetD3DShareHandle() { return nsnull; }
+
+    /**
      * If this context is double-buffered, returns TRUE.
      */
     virtual PRBool IsDoubleBuffered() { return PR_FALSE; }
