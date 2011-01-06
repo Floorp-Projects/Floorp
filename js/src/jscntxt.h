@@ -1927,7 +1927,7 @@ struct JSContext
      * - The newest scripted frame's version, if there is such a frame. 
      * - The default verion.
      *
-     * @note    If this ever shows up in a profile, just add caching!
+     * Note: if this ever shows up in a profile, just add caching!
      */
     JSVersion findVersion() const {
         if (hasVersionOverride)
@@ -2746,6 +2746,38 @@ class AutoLocalNameArray {
     uint32      count;
 
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+template <class RefCountable>
+class AutoRefCount {
+    JSContext       * const cx;
+    RefCountable    *obj;
+
+  public:
+    explicit AutoRefCount(JSContext *cx) : cx(cx), obj(NULL) {}
+
+    AutoRefCount(JSContext *cx, RefCountable *obj) : cx(cx), obj(NULL) {
+        reset(obj);
+    }
+
+    ~AutoRefCount() {
+        if (obj)
+            obj->decref(cx);
+    }
+
+    void reset(RefCountable *aobj) {
+        if (obj)
+            obj->decref(cx);
+
+        obj = aobj;
+
+        if (obj)
+            obj->incref(cx);
+    }
+
+    RefCountable *get() {
+        return obj;
+    }
 };
 
 } /* namespace js */
