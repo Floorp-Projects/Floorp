@@ -1,10 +1,12 @@
 Cu.import("resource://services-sync/engines/forms.js");
 Cu.import("resource://services-sync/util.js");
+Cu.import("resource://services-sync/log4moz.js");
 
 function run_test() {
   _("Verify we've got an empty tracker to work with.");
   let tracker = new FormEngine()._tracker;
   do_check_eq([id for (id in tracker.changedIDs)].length, 0);
+  Log4Moz.repository.rootLogger.addAppender(new Log4Moz.DumpAppender());
 
   try {
     _("Create an entry. Won't show because we haven't started tracking yet");
@@ -32,6 +34,11 @@ function run_test() {
     Svc.Obs.notify("weave:engine:stop-tracking");
     Svc.Form.removeEntry("email", "john@doe.com");
     do_check_eq([id for (id in tracker.changedIDs)].length, 0);
+  
+    _("Test error detection.");
+    // This throws an exception without the fix for Bug 597400.
+    tracker.trackEntry("foo", "bar");
+    
   } finally {
     _("Clean up.");
     Svc.Form.removeAllEntries();
