@@ -208,14 +208,25 @@ SafeMoveOperation.prototype = {
 
     let entries = aDirectory.directoryEntries
                             .QueryInterface(Ci.nsIDirectoryEnumerator);
+    let cacheEntries = [];
     try {
       let entry;
       while (entry = entries.nextFile)
-        this._moveDirEntry(entry, newDir);
+        cacheEntries.push(entry);
     }
     finally {
       entries.close();
     }
+
+    cacheEntries.forEach(function(aEntry) {
+      try {
+        this._moveDirEntry(aEntry, newDir);
+      }
+      catch (e) {
+        ERROR("Failed to move entry " + aEntry.path, e);
+        throw e;
+      }
+    }, this);
 
     // The directory should be empty by this point. If it isn't this will throw
     // and all of the operations will be rolled back
