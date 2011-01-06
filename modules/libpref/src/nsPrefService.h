@@ -67,7 +67,13 @@ public:
   virtual ~nsPrefService();
 
   nsresult Init();
-                           
+
+  /**
+   * Checks to make sure we are on the main thread and log if we are not.
+   *
+   * @returns true if on the main thread, and false otherwise.
+   */
+  static bool CheckAndLogBackgroundThreadUse();
 protected:
   nsresult NotifyServiceObservers(const char *aSubject);
   nsresult UseDefaultPrefFile();
