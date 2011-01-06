@@ -99,11 +99,6 @@ notification[type="critical"] .messageImage {
   }
 
   .popup-notification-menubutton > .button-menubutton-button {
-%ifdef WINSTRIPE_AERO
-    padding: 0;
-%else
-    padding: 2px 0;
-%endif
     -moz-padding-start: 8px;
     -moz-padding-end: 5px;
     -moz-border-end: none;
