@@ -1472,7 +1472,7 @@ class TraceRecorder
                                                                            nanojit::LIns* obj_ins,
                                                                            VMSideExit *exit);
     JS_REQUIRES_STACK RecordingStatus guardNativeConversion(Value& v);
-    JS_REQUIRES_STACK void clearCurrentFrameSlotsFromTracker(Tracker& which);
+    JS_REQUIRES_STACK void clearReturningFrameFromNativeveTracker();
     JS_REQUIRES_STACK void putActivationObjects();
     JS_REQUIRES_STACK RecordingStatus guardCallee(Value& callee);
     JS_REQUIRES_STACK JSStackFrame      *guardArguments(JSObject *obj, nanojit::LIns* obj_ins,
