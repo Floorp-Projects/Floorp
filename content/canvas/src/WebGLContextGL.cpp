@@ -637,7 +637,7 @@ WebGLContext::CopyTexImage2D(WebGLenum target,
                                      "but the framebuffer doesn't have one");
 
     if (!CanvasUtils::CheckSaneSubrectSize(x,y,width, height, mWidth, mHeight))
-        return ErrorInvalidOperation("CopyTexImage2D: copied rectangle out of bounds");
+        return ErrorInvalidValue("CopyTexImage2D: copied rectangle out of bounds");
 
 
     if (mBoundFramebuffer && !mBoundFramebuffer->CheckAndInitializeRenderbuffers())
@@ -695,7 +695,7 @@ WebGLContext::CopyTexSubImage2D(WebGLenum target,
                                      "but the framebuffer doesn't have one");
 
     if (!CanvasUtils::CheckSaneSubrectSize(x,y,width, height, mWidth, mHeight))
-        return ErrorInvalidOperation("CopyTexSubImage2D: copied rectangle out of bounds");
+        return ErrorInvalidValue("CopyTexSubImage2D: copied rectangle out of bounds");
 
     if (mBoundFramebuffer && !mBoundFramebuffer->CheckAndInitializeRenderbuffers())
         return NS_OK;
@@ -1167,7 +1167,7 @@ WebGLContext::DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type, Web
     if (type == LOCAL_GL_UNSIGNED_SHORT) {
         checked_byteCount = 2 * CheckedUint32(count);
         if (byteOffset % 2 != 0)
-            return ErrorInvalidValue("DrawElements: invalid byteOffset for UNSIGNED_SHORT (must be a multiple of 2)");
+            return ErrorInvalidOperation("DrawElements: invalid byteOffset for UNSIGNED_SHORT (must be a multiple of 2)");
     } else if (type == LOCAL_GL_UNSIGNED_BYTE) {
         checked_byteCount = count;
     } else {
@@ -3428,7 +3428,7 @@ NS_IMETHODIMP
 WebGLContext::Viewport(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei height)
 {
     if (width < 0 || height < 0)
-        return ErrorInvalidOperation("Viewport: negative size");
+        return ErrorInvalidValue("Viewport: negative size");
 
     MakeContextCurrent();
     gl->fViewport(x, y, width, height);
