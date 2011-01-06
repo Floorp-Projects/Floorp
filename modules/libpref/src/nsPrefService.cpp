@@ -350,9 +350,21 @@ NS_IMETHODIMP nsPrefService::ReadExtensionPrefs(nsILocalFile *aFile)
   return rv;
 }
 
+NS_IMETHODIMP nsPrefService::PrefHasUserValue(const nsACString& aPrefName,
+                                              PRBool* aHasValue)
+{
+  *aHasValue = PREF_HasUserPref(aPrefName.BeginReading());
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsPrefService::SetPreference(const PrefTuple *aPref)
 {
   return pref_SetPrefTuple(*aPref, PR_TRUE);
+}
+
+NS_IMETHODIMP nsPrefService::ClearContentPref(const nsACString& aPrefName)
+{
+  return PREF_ClearUserPref(aPrefName.BeginReading());
 }
 
 NS_IMETHODIMP nsPrefService::MirrorPreference(const nsACString& aPrefName,
