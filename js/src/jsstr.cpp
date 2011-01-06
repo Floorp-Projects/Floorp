@@ -1563,8 +1563,8 @@ class FlatMatch
     size_t patternLength() const { return patlen; }
 
     /*
-     * @note    The match is -1 when the match is performed successfully,
-     *          but no match is found.
+     * Note: The match is -1 when the match is performed successfully,
+     * but no match is found.
      */
     int32 match() const { return match_; }
 };
@@ -1572,16 +1572,32 @@ class FlatMatch
 /* A regexp and optional associated object. */
 class RegExpPair
 {
-    JSObject    *reobj_;
-    RegExp      *re_;
+    AutoRefCount<RegExp>    arc;
+    JSObject                *reobj_;
+    RegExp                  *re_;
 
-    explicit RegExpPair(RegExp *re): re_(re) {}
-    friend class RegExpGuard;
+    explicit RegExpPair(RegExpPair &);
 
   public:
-    /* @note    May be null. */
+    explicit RegExpPair(JSContext *cx, RegExp *re) : arc(cx, re), re_(re) {}
+
+    void reset(JSObject &reobj) {
+        reobj_ = &reobj;
+        re_ = RegExp::extractFrom(&reobj);
+        JS_ASSERT(re_);
+        arc.reset(re_);
+    }
+
+    void reset(RegExp &re) {
+        re_ = &re;
+        reobj_ = NULL;
+        arc.reset(re_);
+    }
+
+    /* Note: May be null. */
     JSObject *reobj() const { return reobj_; }
     RegExp &re() const { JS_ASSERT(re_); return *re_; }
+    bool hasRegExp() const { return !!re_; }
 };
 
 /*
@@ -1627,21 +1643,15 @@ class RegExpGuard
     }
 
   public:
-    explicit RegExpGuard(JSContext *cx) : cx(cx), rep(NULL) {}
-
-    ~RegExpGuard() {
-        if (rep.re_)
-            rep.re_->decref(cx);
-    }
+    explicit RegExpGuard(JSContext *cx) : cx(cx), rep(cx, NULL) {}
+    ~RegExpGuard() {}
 
     /* init must succeed in order to call tryFlatMatch or normalizeRegExp. */
     bool
     init(uintN argc, Value *vp)
     {
         if (argc != 0 && VALUE_IS_REGEXP(cx, vp[2])) {
-            rep.reobj_ = &vp[2].toObject();
-            rep.re_ = RegExp::extractFrom(rep.reobj_);
-            rep.re_->incref(cx);
+            rep.reset(vp[2].toObject());
         } else {
             fm.patstr = ArgToRootedString(cx, argc, vp, 0);
             if (!fm.patstr)
@@ -1663,7 +1673,7 @@ class RegExpGuard
     tryFlatMatch(JSContext *cx, JSString *textstr, uintN optarg, uintN argc,
                  bool checkMetaChars = true)
     {
-        if (rep.re_)
+        if (rep.hasRegExp())
             return NULL;
 
         fm.pat = fm.patstr->chars();
@@ -1696,10 +1706,10 @@ class RegExpGuard
     const RegExpPair *
     normalizeRegExp(bool flat, uintN optarg, uintN argc, Value *vp)
     {
-        /* If we don't have a RegExp, build RegExp from pattern string. */
-        if (rep.re_)
+        if (rep.hasRegExp())
             return &rep;
 
+        /* Build RegExp from pattern string. */
         JSString *opt;
         if (optarg < argc) {
             opt = js_ValueToString(cx, vp[2 + optarg]);
@@ -1719,15 +1729,15 @@ class RegExpGuard
         }
         JS_ASSERT(patstr);
 
-        rep.re_ = RegExp::createFlagged(cx, patstr, opt);
-        if (!rep.re_)
+        RegExp *re = RegExp::createFlagged(cx, patstr, opt);
+        if (!re)
             return NULL;
-        rep.reobj_ = NULL;
+        rep.reset(*re);
         return &rep;
     }
 
 #if DEBUG
-    bool hasRegExpPair() const { return rep.re_; }
+    bool hasRegExpPair() const { return rep.hasRegExp(); }
 #endif
 };
 
