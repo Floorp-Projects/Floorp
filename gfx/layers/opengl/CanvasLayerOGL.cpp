@@ -302,6 +302,12 @@ ShadowCanvasLayerOGL::DestroyFrontBuffer()
 }
 
 void
+ShadowCanvasLayerOGL::Disconnect()
+{
+  Destroy();
+}
+
+void
 ShadowCanvasLayerOGL::Destroy()
 {
   if (!mDestroyed) {
