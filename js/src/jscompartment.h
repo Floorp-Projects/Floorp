@@ -377,6 +377,7 @@ class PreserveCompartment {
   public:
      PreserveCompartment(JSContext *cx JS_GUARD_OBJECT_NOTIFIER_PARAM) : cx(cx) {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
+        JS_ASSERT(!cx->isExceptionPending());
         oldCompartment = cx->compartment;
     }
 

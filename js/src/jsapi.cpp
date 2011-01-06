@@ -5173,7 +5173,8 @@ JS_IsRunning(JSContext *cx)
     VOUCH_DOES_NOT_REQUIRE_STACK();
 
 #ifdef JS_TRACER
-    JS_ASSERT_IF(JS_TRACE_MONITOR(cx).tracecx == cx, cx->hasfp());
+    JS_ASSERT_IF(cx->compartment &&
+                 JS_TRACE_MONITOR(cx).tracecx == cx, cx->hasfp());
 #endif
     JSStackFrame *fp = cx->maybefp();
     while (fp && fp->isDummyFrame())
@@ -5846,16 +5847,17 @@ JS_GetLocaleCallbacks(JSContext *cx)
 JS_PUBLIC_API(JSBool)
 JS_IsExceptionPending(JSContext *cx)
 {
-    return (JSBool) cx->throwing;
+    return (JSBool) cx->isExceptionPending();
 }
 
 JS_PUBLIC_API(JSBool)
 JS_GetPendingException(JSContext *cx, jsval *vp)
 {
     CHECK_REQUEST(cx);
-    if (!cx->throwing)
+    if (!cx->isExceptionPending())
         return JS_FALSE;
-    Valueify(*vp) = cx->exception;
+    Valueify(*vp) = cx->getPendingException();
+    assertSameCompartment(cx, *vp);
     return JS_TRUE;
 }
 
@@ -5864,14 +5866,13 @@ JS_SetPendingException(JSContext *cx, jsval v)
 {
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, v);
-    SetPendingException(cx, Valueify(v));
+    cx->setPendingException(Valueify(v));
 }
 
 JS_PUBLIC_API(void)
 JS_ClearPendingException(JSContext *cx)
 {
-    cx->throwing = JS_FALSE;
-    cx->exception.setUndefined();
+    cx->clearPendingException();
 }
 
 JS_PUBLIC_API(JSBool)

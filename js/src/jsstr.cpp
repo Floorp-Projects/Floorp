@@ -1667,7 +1667,7 @@ class RegExpGuard
      * @param checkMetaChars    Look for regexp metachars in the pattern string.
      * @return                  Whether flat matching could be used.
      *
-     * N.B. tryFlatMatch returns NULL on OOM, so the caller must check cx->throwing.
+     * N.B. tryFlatMatch returns NULL on OOM, so the caller must check cx->isExceptionPending().
      */
     const FlatMatch *
     tryFlatMatch(JSContext *cx, JSString *textstr, uintN optarg, uintN argc,
@@ -1856,7 +1856,7 @@ str_match(JSContext *cx, uintN argc, Value *vp)
         return false;
     if (const FlatMatch *fm = g.tryFlatMatch(cx, str, 1, argc))
         return BuildFlatMatchArray(cx, str, *fm, vp);
-    if (cx->throwing)  /* from tryFlatMatch */
+    if (cx->isExceptionPending())  /* from tryFlatMatch */
         return false;
 
     const RegExpPair *rep = g.normalizeRegExp(false, 1, argc, vp);
@@ -1888,7 +1888,7 @@ str_search(JSContext *cx, uintN argc, Value *vp)
         vp->setInt32(fm->match());
         return true;
     }
-    if (cx->throwing)  /* from tryFlatMatch */
+    if (cx->isExceptionPending())  /* from tryFlatMatch */
         return false;
     const RegExpPair *rep = g.normalizeRegExp(false, 1, argc, vp);
     if (!rep)
@@ -2501,7 +2501,7 @@ js::str_replace(JSContext *cx, uintN argc, Value *vp)
 
     const FlatMatch *fm = rdata.g.tryFlatMatch(cx, rdata.str, optarg, argc, false);
     if (!fm) {
-        if (cx->throwing)  /* oom in RopeMatch in tryFlatMatch */
+        if (cx->isExceptionPending())  /* oom in RopeMatch in tryFlatMatch */
             return false;
         JS_ASSERT_IF(!rdata.g.hasRegExpPair(), argc > optarg);
         return str_replace_regexp(cx, argc, vp, rdata);

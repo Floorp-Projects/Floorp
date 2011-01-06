@@ -1357,7 +1357,7 @@ js_ReportOutOfMemory(JSContext *cx)
      * exception if any now so the hooks can replace the out-of-memory error
      * by a script-catchable exception.
      */
-    cx->throwing = JS_FALSE;
+    cx->clearPendingException();
     if (onError) {
         JSDebugErrorHook hook = cx->debugHooks->debugErrorHook;
         if (hook &&
@@ -2005,27 +2005,37 @@ JSContext::resetCompartment()
         scopeobj = &fp()->scopeChain();
     } else {
         scopeobj = globalObject;
-        if (!scopeobj) {
-            compartment = runtime->defaultCompartment;
-            return;
-        }
+        if (!scopeobj)
+            goto error;
 
         /*
          * Innerize. Assert, but check anyway, that this succeeds. (It
          * can only fail due to bugs in the engine or embedding.)
          */
         OBJ_TO_INNER_OBJECT(this, scopeobj);
-        if (!scopeobj) {
-            /*
-             * Bug. Return NULL, not defaultCompartment, to crash rather
-             * than open a security hole.
-             */
-            JS_ASSERT(0);
-            compartment = NULL;
-            return;
-        }
+        if (!scopeobj)
+            goto error;
     }
-    compartment = scopeobj->getCompartment();
+
+    compartment = scopeobj->compartment();
+
+    /*
+     * If wrapException fails, it overrides this->exception and
+     * reports OOM. The upshot is that we silently turn the exception
+     * into an uncatchable OOM error. A bit surprising, but the
+     * caller is just going to return false either way.
+     */
+    if (isExceptionPending())
+        (void) compartment->wrapException(this);
+    return;
+
+error:
+
+    /*
+     * If we try to use the context without a selected compartment,
+     * we will crash.
+     */
+    compartment = NULL;
 }
 
 void
@@ -2287,13 +2297,6 @@ LeaveTrace(JSContext *cx)
     if (JS_ON_TRACE(cx))
         DeepBail(cx);
 #endif
-}
-
-void
-SetPendingException(JSContext *cx, const Value &v)
-{
-    cx->throwing = JS_TRUE;
-    cx->exception = v;
 }
 
 } /* namespace js */
