@@ -888,7 +888,7 @@ private:
  * executing.  cx must be a context on the current thread.
  */
 #ifdef JS_TRACER
-# define JS_ON_TRACE(cx)            (JS_TRACE_MONITOR(cx).ontrace())
+# define JS_ON_TRACE(cx)            (cx->compartment && JS_TRACE_MONITOR(cx).ontrace())
 #else
 # define JS_ON_TRACE(cx)            false
 #endif
@@ -1700,6 +1700,10 @@ struct JSContext
     JSVersion           versionOverride;     /* supercedes defaultVersion when valid */
     bool                hasVersionOverride;
 
+    /* Exception state -- the exception member is a GC root by definition. */
+    JSBool              throwing;           /* is there a pending exception? */
+    js::Value           exception;          /* most-recently-thrown exception */
+
   public:
     /* Per-context options. */
     uint32              options;            /* see jsapi.h for JSOPTION_* */
@@ -1720,10 +1724,6 @@ struct JSContext
      * NB: generatingError packs with throwing below.
      */
     JSPackedBool        generatingError;
-
-    /* Exception state -- the exception member is a GC root by definition. */
-    JSBool              throwing;           /* is there a pending exception? */
-    js::Value           exception;          /* most-recently-thrown exception */
 
     /* Limit pointer for checking native stack consumption during recursion. */
     jsuword             stackLimit;
@@ -2167,6 +2167,22 @@ struct JSContext
 #else
     void assertValidStackDepth(uintN /*depth*/) {}
 #endif
+
+    bool isExceptionPending() {
+        return throwing;
+    }
+
+    js::Value getPendingException() {
+        JS_ASSERT(throwing);
+        return exception;
+    }
+
+    void setPendingException(js::Value v);
+
+    void clearPendingException() {
+        this->throwing = false;
+        this->exception.setUndefined();
+    }
 
   private:
     /*
@@ -3146,9 +3162,6 @@ extern bool
 js_CurrentPCIsInImacro(JSContext *cx);
 
 namespace js {
-
-extern void
-SetPendingException(JSContext *cx, const Value &v);
 
 class RegExpStatics;
 
