@@ -3308,7 +3308,7 @@ nsHTMLDocument::EditingStateChanged()
 
     // If we're entering the design mode, put the selection at the beginning of
     // the document for compatibility reasons.
-    if (designMode) {
+    if (designMode && oldState == eOff) {
       rv = editor->BeginningOfDocument();
       NS_ENSURE_SUCCESS(rv, rv);
     }
