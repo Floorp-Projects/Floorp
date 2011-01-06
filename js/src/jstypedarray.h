@@ -157,6 +157,27 @@ struct JS_FRIEND_API(TypedArray) {
     uint32 type;
 
     void *data;
+
+    inline int slotWidth() const {
+        switch (type) {
+          case js::TypedArray::TYPE_INT8:
+          case js::TypedArray::TYPE_UINT8:
+          case js::TypedArray::TYPE_UINT8_CLAMPED:
+            return 1;
+          case js::TypedArray::TYPE_INT16:
+          case js::TypedArray::TYPE_UINT16:
+            return 2;
+          case js::TypedArray::TYPE_INT32:
+          case js::TypedArray::TYPE_UINT32:
+          case js::TypedArray::TYPE_FLOAT32:
+            return 4;
+          case js::TypedArray::TYPE_FLOAT64:
+            return 8;
+          default:
+            JS_NOT_REACHED("invalid typed array");
+            return 0;
+        }
+    }
 };
 
 } // namespace js
@@ -209,5 +230,8 @@ js_CreateTypedArrayWithBuffer(JSContext *cx, jsint atype, JSObject *bufArg,
  */
 JS_FRIEND_API(JSBool)
 js_ReparentTypedArrayToScope(JSContext *cx, JSObject *obj, JSObject *scope);
+
+extern int32 JS_FASTCALL
+js_TypedArray_uint8_clamp_double(const double x);
 
 #endif /* jstypedarray_h */

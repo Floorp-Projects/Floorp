@@ -1231,7 +1231,7 @@ IsCacheableSetElem(FrameEntry *obj, FrameEntry *id, FrameEntry *value)
 }
 
 bool
-mjit::Compiler::jsop_setelem()
+mjit::Compiler::jsop_setelem(bool popGuaranteed)
 {
     FrameEntry *obj = frame.peek(-3);
     FrameEntry *id = frame.peek(-2);
@@ -1354,6 +1354,33 @@ mjit::Compiler::jsop_setelem()
 #endif
 
     ic.fastPathRejoin = masm.label();
+
+    // When generating typed array stubs, it may be necessary to call
+    // js_DoubleToECMAInt32(), which would clobber registers. To deal with
+    // this, we tell the IC exactly which registers need to be saved
+    // across calls.
+    ic.volatileMask = frame.regsInUse() & Registers::TempRegs;
+
+    // If the RHS will be popped, and doesn't overlap any live values, then
+    // there's no need to save it across calls. Note that this is not true of
+    // |obj| or |key|, which will be used to compute the LHS reference for
+    // assignment.
+    //
+    // Note that the IC wants to clobber |vr.dataReg| to convert for typed
+    // arrays. If this clobbering is necessary, we must preserve dataReg,
+    // even if it's not in a volatile register.
+    if (popGuaranteed &&
+        !ic.vr.isConstant() &&
+        !value->isCopy() &&
+        !frame.haveSameBacking(value, obj) &&
+        !frame.haveSameBacking(value, id))
+    {
+        ic.volatileMask &= ~Registers::maskReg(ic.vr.dataReg());
+        if (!ic.vr.isTypeKnown())
+            ic.volatileMask &= ~Registers::maskReg(ic.vr.typeReg());
+    } else if (!ic.vr.isConstant()) {
+        ic.volatileMask |= Registers::maskReg(ic.vr.dataReg());
+    }
 
     frame.freeReg(ic.objReg);
     frame.shimmy(2);

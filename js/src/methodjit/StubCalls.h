@@ -222,6 +222,9 @@ void JS_FASTCALL FastInstanceOf(VMFrame &f);
 void JS_FASTCALL ArgCnt(VMFrame &f);
 void JS_FASTCALL Unbrand(VMFrame &f);
 
+template <bool strict> int32 JS_FASTCALL ConvertToTypedInt(JSContext *cx, Value *vp);
+void JS_FASTCALL ConvertToTypedFloat(JSContext *cx, Value *vp);
+
 } /* namespace stubs */
 
 /* 

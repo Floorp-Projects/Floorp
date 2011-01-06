@@ -386,6 +386,56 @@ public:
         return DataLabel32(this);
     }
 
+    void store8(RegisterID src, Address address)
+    {
+        m_assembler.movb_rm(src, address.offset, address.base);
+    }
+
+    void store8(RegisterID src, BaseIndex address)
+    {
+        m_assembler.movb_rm(src, address.offset, address.base, address.index, address.scale);
+    }
+
+    void store16(RegisterID src, Address address)
+    {
+        m_assembler.movw_rm(src, address.offset, address.base);
+    }
+
+    void store16(RegisterID src, BaseIndex address)
+    {
+        m_assembler.movw_rm(src, address.offset, address.base, address.index, address.scale);
+    }
+
+    void load8ZeroExtend(BaseIndex address, RegisterID dest)
+    {
+        m_assembler.movzbl_mr(address.offset, address.base, address.index, address.scale, dest);
+    }
+    
+    void load8ZeroExtend(Address address, RegisterID dest)
+    {
+        m_assembler.movzbl_mr(address.offset, address.base, dest);
+    }
+
+    void load8SignExtend(BaseIndex address, RegisterID dest)
+    {
+        m_assembler.movxbl_mr(address.offset, address.base, address.index, address.scale, dest);
+    }
+    
+    void load8SignExtend(Address address, RegisterID dest)
+    {
+        m_assembler.movxbl_mr(address.offset, address.base, dest);
+    }
+
+    void load16SignExtend(BaseIndex address, RegisterID dest)
+    {
+        m_assembler.movxwl_mr(address.offset, address.base, address.index, address.scale, dest);
+    }
+    
+    void load16SignExtend(Address address, RegisterID dest)
+    {
+        m_assembler.movxwl_mr(address.offset, address.base, dest);
+    }
+
     void load16(BaseIndex address, RegisterID dest)
     {
         m_assembler.movzwl_mr(address.offset, address.base, address.index, address.scale, dest);
@@ -407,19 +457,39 @@ public:
         m_assembler.movl_rm(src, address.offset, address.base);
     }
 
-    void store32(Imm32 imm, BaseIndex address)
-    {
-        m_assembler.movl_i32m(imm.m_value, address.offset, address.base, address.index, address.scale);
-    }
-
     void store32(RegisterID src, BaseIndex address)
     {
         m_assembler.movl_rm(src, address.offset, address.base, address.index, address.scale);
     }
 
+    void store32(Imm32 imm, BaseIndex address)
+    {
+        m_assembler.movl_i32m(imm.m_value, address.offset, address.base, address.index, address.scale);
+    }
+
+    void store16(Imm32 imm, BaseIndex address)
+    {
+        m_assembler.movw_i16m(imm.m_value, address.offset, address.base, address.index, address.scale);
+    }
+
+    void store8(Imm32 imm, BaseIndex address)
+    {
+        m_assembler.movb_i8m(imm.m_value, address.offset, address.base, address.index, address.scale);
+    }
+
     void store32(Imm32 imm, ImplicitAddress address)
     {
         m_assembler.movl_i32m(imm.m_value, address.offset, address.base);
+    }
+
+    void store16(Imm32 imm, ImplicitAddress address)
+    {
+        m_assembler.movw_i16m(imm.m_value, address.offset, address.base);
+    }
+
+    void store8(Imm32 imm, ImplicitAddress address)
+    {
+        m_assembler.movb_i8m(imm.m_value, address.offset, address.base);
     }
 
 
@@ -433,16 +503,80 @@ public:
         m_assembler.movsd_rr(src, dest);
     }
 
+    void loadFloat(ImplicitAddress address, FPRegisterID dest)
+    {
+        ASSERT(isSSE2Present());
+        m_assembler.movss_mr(address.offset, address.base, dest);
+        m_assembler.cvtss2sd_rr(dest, dest);
+    }
+
+    void loadFloat(BaseIndex address, FPRegisterID dest)
+    {
+        ASSERT(isSSE2Present());
+        m_assembler.movss_mr(address.offset, address.base, address.index, address.scale, dest);
+        m_assembler.cvtss2sd_rr(dest, dest);
+    }
+
+    void convertDoubleToFloat(FPRegisterID src, FPRegisterID dest)
+    {
+        ASSERT(isSSE2Present());
+        m_assembler.cvtsd2ss_rr(src, dest);
+    }
+
     void loadDouble(ImplicitAddress address, FPRegisterID dest)
     {
         ASSERT(isSSE2Present());
         m_assembler.movsd_mr(address.offset, address.base, dest);
     }
 
+    void loadDouble(BaseIndex address, FPRegisterID dest)
+    {
+        ASSERT(isSSE2Present());
+        m_assembler.movsd_mr(address.offset, address.base, address.index, address.scale, dest);
+    }
+
+    void storeFloat(ImmDouble imm, Address address)
+    {
+        union {
+            float f;
+            uint32 u32;
+        } u;
+        u.f = imm.u.d;
+        store32(Imm32(u.u32), address);
+    }
+
+    void storeFloat(ImmDouble imm, BaseIndex address)
+    {
+        union {
+            float f;
+            uint32 u32;
+        } u;
+        u.f = imm.u.d;
+        store32(Imm32(u.u32), address);
+    }
+
     void storeDouble(FPRegisterID src, ImplicitAddress address)
     {
         ASSERT(isSSE2Present());
         m_assembler.movsd_rm(src, address.offset, address.base);
+    }
+
+    void storeFloat(FPRegisterID src, ImplicitAddress address)
+    {
+        ASSERT(isSSE2Present());
+        m_assembler.movss_rm(src, address.offset, address.base);
+    }
+
+    void storeDouble(FPRegisterID src, BaseIndex address)
+    {
+        ASSERT(isSSE2Present());
+        m_assembler.movsd_rm(src, address.offset, address.base, address.index, address.scale);
+    }
+
+    void storeFloat(FPRegisterID src, BaseIndex address)
+    {
+        ASSERT(isSSE2Present());
+        m_assembler.movss_rm(src, address.offset, address.base, address.index, address.scale);
     }
 
     void addDouble(FPRegisterID src, FPRegisterID dest)
