@@ -1607,13 +1607,8 @@ class TraceRecorder
     void forgetGuardedShapesForObject(JSObject* obj);
 
     bool globalSetExpected(unsigned slot) {
-        if (pendingGlobalSlotToSet != (int)slot) {
-            /*
-             * Do slot arithmetic manually to avoid getSlotRef assertions which
-             * do not need to be satisfied for this purpose.
-             */
-            return !tracker.has(globalObj->getSlots() + slot);
-        }
+        if (pendingGlobalSlotToSet != (int)slot)
+            return false;
         pendingGlobalSlotToSet = -1;
         return true;
     }
