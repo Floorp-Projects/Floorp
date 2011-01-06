@@ -1612,7 +1612,20 @@ class TraceRecorder
              * Do slot arithmetic manually to avoid getSlotRef assertions which
              * do not need to be satisfied for this purpose.
              */
-            return !tracker.has(globalObj->getSlots() + slot);
+            Value *vp = globalObj->getSlots() + slot;
+
+            /* If this global is definitely being tracked, then the write is unexpected. */
+            if (tracker.has(vp))
+                return false;
+            
+            /*
+             * Otherwise, only abort if the global is not present in the
+             * import typemap. Just deep aborting false here is not acceptable,
+             * because the recorder does not guard on every operation that
+             * could lazily resolve. Since resolving adds properties to
+             * reserved slots, the tracer will never have imported them.
+             */
+            return tree->globalSlots->offsetOf(nativeGlobalSlot(vp)) == -1;
         }
         pendingGlobalSlotToSet = -1;
         return true;
