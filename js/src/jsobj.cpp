@@ -3467,6 +3467,13 @@ TradeGuts(JSObject *a, JSObject *b)
     JS_ASSERT(a->compartment() == b->compartment());
     JS_ASSERT(a->isFunction() == b->isFunction());
 
+    /*
+     * Regexp guts are more complicated -- we would need to migrate the
+     * refcounted JIT code blob for them across compartments instead of just
+     * swapping guts.
+     */
+    JS_ASSERT(!a->isRegExp() && !b->isRegExp());
+
     bool aInline = !a->hasSlotsArray();
     bool bInline = !b->hasSlotsArray();
 
