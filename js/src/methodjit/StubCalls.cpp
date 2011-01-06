@@ -2770,3 +2770,59 @@ stubs::In(VMFrame &f)
 template void JS_FASTCALL stubs::DelElem<true>(VMFrame &f);
 template void JS_FASTCALL stubs::DelElem<false>(VMFrame &f);
 
+template <bool Clamped>
+int32 JS_FASTCALL
+stubs::ConvertToTypedInt(JSContext *cx, Value *vp)
+{
+    JS_ASSERT(!vp->isInt32());
+
+    if (vp->isDouble()) {
+        if (Clamped)
+            return js_TypedArray_uint8_clamp_double(vp->toDouble());
+        return js_DoubleToECMAInt32(vp->toDouble());
+    }
+
+    if (vp->isNull() || vp->isObject() || vp->isUndefined())
+        return 0;
+
+    if (vp->isBoolean())
+        return vp->toBoolean() ? 1 : 0;
+
+    JS_ASSERT(vp->isString());
+
+    int32 i32;
+#ifdef DEBUG
+    bool success = 
+#endif
+        StringToNumberType<jsint>(cx, vp->toString(), &i32);
+    JS_ASSERT(success);
+
+    return i32;
+}
+
+template int32 JS_FASTCALL stubs::ConvertToTypedInt<true>(JSContext *, Value *);
+template int32 JS_FASTCALL stubs::ConvertToTypedInt<false>(JSContext *, Value *);
+
+void JS_FASTCALL
+stubs::ConvertToTypedFloat(JSContext *cx, Value *vp)
+{
+    JS_ASSERT(!vp->isDouble() && !vp->isInt32());
+
+    if (vp->isNull()) {
+        vp->setDouble(0);
+    } else if (vp->isObject() || vp->isUndefined()) {
+        vp->setDouble(js_NaN);
+    } else if (vp->isBoolean()) {
+        vp->setDouble(vp->toBoolean() ? 1 : 0);
+    } else {
+        JS_ASSERT(vp->isString());
+        double d;
+#ifdef DEBUG
+        bool success = 
+#endif
+            StringToNumberType<double>(cx, vp->toString(), &d);
+        JS_ASSERT(success);
+        vp->setDouble(d);
+    }
+}
+
