@@ -345,3 +345,4 @@ MSG_DEF(JSMSG_SC_RECURSION,           262, 0, JSEXN_INTERNALERR, "recursive obje
 MSG_DEF(JSMSG_CANT_WRAP_XML_OBJECT,   263, 0, JSEXN_TYPEERR, "can't wrap XML objects")
 MSG_DEF(JSMSG_BAD_CLONE_VERSION,      264, 0, JSEXN_ERR, "unsupported structured clone version")
 MSG_DEF(JSMSG_CANT_CLONE_OBJECT,      265, 0, JSEXN_TYPEERR, "can't clone object")
+MSG_DEF(JSMSG_NON_NATIVE_SCOPE,       266, 0, JSEXN_TYPEERR, "non-native scope object")
