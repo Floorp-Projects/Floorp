@@ -132,6 +132,16 @@ ShadowLayersParent::~ShadowLayersParent()
   MOZ_COUNT_DTOR(ShadowLayersParent);
 }
 
+void
+ShadowLayersParent::Destroy()
+{
+  for (size_t i = 0; i < ManagedPLayerParent().Length(); ++i) {
+    ShadowLayerParent* slp =
+      static_cast<ShadowLayerParent*>(ManagedPLayerParent()[i]);
+    slp->Destroy();
+  }
+}
+
 bool
 ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
                                InfallibleTArray<EditReply>* reply)

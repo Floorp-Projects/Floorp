@@ -111,6 +111,21 @@ TabParent::SetOwnerElement(nsIDOMElement* aElement)
 }
 
 void
+TabParent::Destroy()
+{
+  // If this fails, it's most likely due to a content-process crash,
+  // and auto-cleanup will kick in.  Otherwise, the child side will
+  // destroy itself and send back __delete__().
+  unused << SendDestroy();
+
+  for (size_t i = 0; i < ManagedPRenderFrameParent().Length(); ++i) {
+    RenderFrameParent* rfp =
+      static_cast<RenderFrameParent*>(ManagedPRenderFrameParent()[i]);
+    rfp->Destroy();
+  }
+}
+
+void
 TabParent::ActorDestroy(ActorDestroyReason why)
 {
   nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
