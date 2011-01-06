@@ -647,12 +647,6 @@ JSRuntime::init(uint32 maxbytes)
     if (!js_InitGC(this, maxbytes) || !js_InitAtomState(this))
         return false;
 
-#if ENABLE_YARR_JIT
-    regExpAllocator = JSC::ExecutableAllocator::create();
-    if (!regExpAllocator)
-        return false;
-#endif
-
     wrapObjectCallback = js::TransparentObjectWrapper;
 
 #ifdef JS_THREADSAFE
@@ -698,9 +692,6 @@ JSRuntime::~JSRuntime()
     js_FreeRuntimeScriptState(this);
     js_FinishAtomState(this);
 
-#if ENABLE_YARR_JIT
-    delete regExpAllocator;
-#endif
     js_FinishGC(this);
 #ifdef JS_THREADSAFE
     if (gcLock)

@@ -434,7 +434,7 @@ RegExp::compileHelper(JSContext *cx, JSLinearString &pattern)
 #if ENABLE_YARR_JIT
     bool fellBack = false;
     int error = 0;
-    jitCompileRegex(*cx->runtime->regExpAllocator, compiled, pattern, parenCount, error, fellBack, ignoreCase(), multiline()
+    jitCompileRegex(*cx->compartment->regExpAllocator, compiled, pattern, parenCount, error, fellBack, ignoreCase(), multiline()
 #ifdef ANDROID
                     /* Temporary gross hack to work around buggy kernels. */
                     , YarrJITIsBroken(cx)
