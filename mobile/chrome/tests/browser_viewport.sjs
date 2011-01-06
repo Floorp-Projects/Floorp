@@ -40,6 +40,7 @@ function handleRequest(request, response) {
   response.setHeader("Content-Type", "text/html", false);
 
   let metadata = "";
+  let style = "";
   let xhtml = false;
   let query = decodeURIComponent(request.queryString || "");
 
@@ -51,12 +52,19 @@ function handleRequest(request, response) {
       metadata = query;
       break;
   }
+  if (/^style/.test(query))
+    style = query.replace("style=", "");
 
   if (xhtml) {
     response.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
     response.write("<!DOCTYPE html PUBLIC \"-//WAPFORUM//DTD XHTML Mobile 1.0//EN\" \"http://www.wapforum.org/DTD/xhtml-mobile10.dtd\">");
   }
   response.write("<html xmlns=\"http://www.w3.org/1999/xhtml\"><head><title>Browser Viewport Test</title>");
-  response.write("<meta name=\"viewport\" content=\"" + metadata + "\"/>");
-  response.write("</head><body>" + query + "</body></html>");
+  if (metadata)
+    response.write("<meta name=\"viewport\" content=\"" + metadata + "\"/>");
+  response.write("</head><body");
+
+  if (style)
+    response.write(" style=\"" + style + "\"");
+  response.write(">" + query + "</body></html>");
 }
