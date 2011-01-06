@@ -186,8 +186,10 @@ JS_SetDebugMode(JSContext *cx, JSBool debug)
 JS_FRIEND_API(JSBool)
 js_SetSingleStepMode(JSContext *cx, JSScript *script, JSBool singleStep)
 {
+#ifdef JS_METHODJIT
     if (!script->singleStepMode == !singleStep)
         return JS_TRUE;
+#endif
 
     JS_ASSERT_IF(singleStep, cx->compartment->debugMode);
 

@@ -501,9 +501,11 @@ JSThreadData::init()
     }
     nativeStackBase = GetNativeStackBase();
 
+#ifdef JS_TRACER
     /* Set the default size for the code cache to 16MB. */
     maxCodeCacheBytes = 16 * 1024 * 1024;
-    
+#endif
+
     return true;
 }
 
