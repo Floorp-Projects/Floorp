@@ -51,6 +51,7 @@ MOCHI_TESTS = \
     test_modal_select.html \
     test_modal_prompts.html \
     test_bug619644.html \
+    test_bug620145.html \
     $(NULL)
 
 MOCHI_CONTENT = \
