@@ -1784,7 +1784,7 @@ IdentityHandler.prototype = {
     if (newMode == this.IDENTITY_MODE_DOMAIN_VERIFIED) {
       var iData = this.getIdentityData();
       var host = this.getEffectiveHost();
-      var owner = strings.GetStringFromName("identity.ownerUnknown2");
+      var owner = Strings.browser.GetStringFromName("identity.ownerUnknown2");
       verifier = this._identityBox.tooltipText;
       supplemental = "";
     }
