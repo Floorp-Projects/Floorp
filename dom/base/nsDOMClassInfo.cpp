@@ -6115,8 +6115,19 @@ GetXPCProto(nsIXPConnect *aXPConnect, JSContext *cx, nsGlobalWindow *aWin,
   }
   NS_ENSURE_TRUE(ci, NS_ERROR_UNEXPECTED);
 
-  return aXPConnect->GetWrappedNativePrototype(cx, aWin->GetGlobalJSObject(),
-                                               ci, aProto);
+  nsresult rv =
+    aXPConnect->GetWrappedNativePrototype(cx, aWin->GetGlobalJSObject(), ci,
+                                          aProto);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  JSObject *proto_obj;
+  (*aProto)->GetJSObject(&proto_obj);
+  if (!JS_WrapObject(cx, &proto_obj)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  NS_IF_RELEASE(*aProto);
+  return aXPConnect->HoldObject(cx, proto_obj, aProto);
 }
 
 // Either ci_data must be non-null or name_struct must be non-null and of type

@@ -59,6 +59,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=500931
            saw0 = true;
    }
    ok(saw0, "properly enumerated the 0 value");
+
+   ok(win.XPathEvaluator.toString().indexOf("XPathEvaluator") >= 0,
+      "Can access content window.XPathEvaluator");
   }
 
   SimpleTest.waitForExplicitFinish();
