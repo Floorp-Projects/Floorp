@@ -2249,15 +2249,8 @@ ProgressController.prototype = {
     }
 
     if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT) {
-      if (aStateFlags & Ci.nsIWebProgressListener.STATE_START) {
-#ifdef MOZ_CRASH_REPORTER
-        if (aRequest instanceof Ci.nsIChannel && CrashReporter.enabled)
-          CrashReporter.annotateCrashReport("URL", aRequest.URI.spec);
-#endif
-      }
-      else if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
+      if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP)
         this._documentStop();
-      }
     }
   },
 
@@ -2289,6 +2282,10 @@ ProgressController.prototype = {
       Browser.getNotificationBox(this.browser).removeTransientNotifications();
       this._tab.resetZoomLevel();
 
+#ifdef MOZ_CRASH_REPORTER
+      if (CrashReporter.enabled)
+        CrashReporter.annotateCrashReport("URL", spec);
+#endif
       if (this._tab == Browser.selectedTab) {
         // We're about to have new page content, so scroll the content area
         // to the top so the new paints will draw correctly.
