@@ -1551,6 +1551,10 @@ x86_64 | ia64)
 arm*)
     CPU_ARCH=arm
     ;;
+
+mips|mipsel)
+    CPU_ARCH="mips"
+    ;;
 esac
 
 if test -z "$OS_TARGET"; then
