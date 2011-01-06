@@ -109,6 +109,10 @@ pref("network.http.max-persistent-connections-per-proxy", 4);
 pref("network.autodial-helper.enabled", true);
 #endif
 
+// See bug 545869 for details on why these are set the way they are
+pref("network.buffer.cache.count", 24);
+pref("network.buffer.cache.size",  16384);
+
 /* history max results display */
 pref("browser.display.history.maxresults", 100);
 
@@ -497,10 +501,6 @@ pref("font.default.x-unicode", "SwissA");
 pref("font.default.x-user-def", "SwissA");
 pref("font.default.x-western", "SwissA");
 #endif
-
-// See bug 545869 for details on why these are set the way they are
-pref("network.buffer.cache.count", 24);
-pref("network.buffer.cache.size",  16384);
 
 // sync service
 pref("services.sync.client.type", "mobile");
