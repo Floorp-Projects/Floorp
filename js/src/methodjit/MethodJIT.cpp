@@ -741,8 +741,12 @@ mjit::EnterMethodJIT(JSContext *cx, JSStackFrame *fp, void *code, Value *stackLi
     JS_ASSERT(cx->regs->fp  == fp);
     JSFrameRegs *oldRegs = cx->regs;
 
-    JSAutoResolveFlags rf(cx, JSRESOLVE_INFER);
-    JSBool ok = JaegerTrampoline(cx, fp, code, stackLimit);
+    JSBool ok;
+    {
+        AssertCompartmentUnchanged pcc(cx);
+        JSAutoResolveFlags rf(cx, JSRESOLVE_INFER);
+        ok = JaegerTrampoline(cx, fp, code, stackLimit);
+    }
 
     cx->setCurrentRegs(oldRegs);
     JS_ASSERT(fp == cx->fp());
