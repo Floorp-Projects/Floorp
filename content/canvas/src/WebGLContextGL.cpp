@@ -580,6 +580,103 @@ GL_SAME_METHOD_1(ClearStencil, ClearStencil, WebGLint)
 
 GL_SAME_METHOD_4(ColorMask, ColorMask, WebGLboolean, WebGLboolean, WebGLboolean, WebGLboolean)
 
+nsresult
+WebGLContext::CopyTexSubImage2D_base(WebGLenum target,
+                                     WebGLint level,
+                                     WebGLenum internalformat,
+                                     WebGLint xoffset,
+                                     WebGLint yoffset,
+                                     WebGLint x,
+                                     WebGLint y,
+                                     WebGLsizei width,
+                                     WebGLsizei height,
+                                     bool sub)
+{
+
+    WebGLsizei framebufferWidth =  mBoundFramebuffer ? mBoundFramebuffer->width() : mWidth;
+    WebGLsizei framebufferHeight = mBoundFramebuffer ? mBoundFramebuffer->height() : mHeight;
+
+    const char *info = sub ? "copyTexSubImage2D" : "copyTexImage2D";
+
+    MakeContextCurrent();
+
+    if (CanvasUtils::CheckSaneSubrectSize(x, y, width, height, framebufferWidth, framebufferHeight)) {
+        if (sub)
+          gl->fCopyTexSubImage2D(target, level, xoffset, yoffset, x, y, width, height);
+        else
+          gl->fCopyTexImage2D(target, level, internalformat, x, y, width, height, 0);
+    } else {
+
+        // the rect doesn't fit in the framebuffer
+
+        /*** first, we initialize the texture as black ***/
+
+        // first, compute the size of the buffer we should allocate to initialize the texture as black
+
+        PRUint32 texelSize = 0;
+        if (!ValidateTexFormatAndType(internalformat, LOCAL_GL_UNSIGNED_BYTE, &texelSize, info))
+            return NS_OK;
+
+        CheckedUint32 checked_plainRowSize = CheckedUint32(width) * texelSize;
+
+        PRUint32 unpackAlignment = mPixelStoreUnpackAlignment;
+
+        // alignedRowSize = row size rounded up to next multiple of packAlignment
+        CheckedUint32 checked_alignedRowSize
+            = ((checked_plainRowSize + unpackAlignment-1) / unpackAlignment) * unpackAlignment;
+
+        CheckedUint32 checked_neededByteLength
+            = (height-1) * checked_alignedRowSize + checked_plainRowSize;
+
+        if (!checked_neededByteLength.valid())
+            return ErrorInvalidOperation("%s: integer overflow computing the needed buffer size", info);
+
+        PRUint32 bytesNeeded = checked_neededByteLength.value();
+
+        // now that the size is known, create the buffer
+
+        // We need some zero pages, because GL doesn't guarantee the
+        // contents of a texture allocated with NULL data.
+        // Hopefully calloc will just mmap zero pages here.
+        void *tempZeroData = calloc(1, bytesNeeded);
+        if (!tempZeroData)
+            return SynthesizeGLError(LOCAL_GL_OUT_OF_MEMORY, "%s: could not allocate %d bytes (for zero fill)", info, bytesNeeded);
+
+        // now initialize the texture as black
+
+        if (sub)
+          gl->fTexSubImage2D(target, level, 0, 0, width, height, internalformat, LOCAL_GL_UNSIGNED_BYTE, tempZeroData);
+        else
+          gl->fTexImage2D(target, level, internalformat, width, height, 0, internalformat, LOCAL_GL_UNSIGNED_BYTE, tempZeroData);
+
+        free(tempZeroData);
+
+        // if we are completely outside of the framebuffer, we can exit now with our black texture
+        if (   x >= framebufferWidth
+            || x+width <= 0
+            || y >= framebufferHeight
+            || y+height <= 0)
+        {
+            // we are completely outside of range, can exit now with buffer filled with zeros
+            return NS_OK;
+        }
+
+        GLint   actual_x             = PR_MIN(framebufferWidth, PR_MAX(0, x));
+        GLint   actual_x_plus_width  = PR_MIN(framebufferWidth, PR_MAX(0, x + width));
+        GLsizei actual_width   = actual_x_plus_width  - actual_x;
+        GLint   actual_xoffset = xoffset + actual_x - x;
+
+        GLint   actual_y             = PR_MIN(framebufferHeight, PR_MAX(0, y));
+        GLint   actual_y_plus_height = PR_MIN(framebufferHeight, PR_MAX(0, y + height));
+        GLsizei actual_height  = actual_y_plus_height - actual_y;
+        GLint   actual_yoffset = yoffset + actual_y - y;
+
+        gl->fCopyTexSubImage2D(target, level, actual_xoffset, actual_yoffset, actual_x, actual_y, actual_width, actual_height);
+    }
+
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 WebGLContext::CopyTexImage2D(WebGLenum target,
                              WebGLint level,
@@ -618,6 +715,9 @@ WebGLContext::CopyTexImage2D(WebGLenum target,
     if (border != 0)
         return ErrorInvalidValue("copyTexImage2D: border must be 0");
 
+    if (width < 0 || height < 0)
+        return ErrorInvalidValue("copyTexImage2D: width and height may not be negative");
+
     if (level < 0)
         return ErrorInvalidValue("copyTexImage2D: level may not be negative");
 
@@ -636,10 +736,6 @@ WebGLContext::CopyTexImage2D(WebGLenum target,
         return ErrorInvalidOperation("copyTexImage2D: texture format requires an alpha channel "
                                      "but the framebuffer doesn't have one");
 
-    if (!CanvasUtils::CheckSaneSubrectSize(x,y,width, height, mWidth, mHeight))
-        return ErrorInvalidValue("CopyTexImage2D: copied rectangle out of bounds");
-
-
     if (mBoundFramebuffer && !mBoundFramebuffer->CheckAndInitializeRenderbuffers())
         return NS_OK;
 
@@ -649,11 +745,7 @@ WebGLContext::CopyTexImage2D(WebGLenum target,
 
     tex->SetImageInfo(target, level, width, height);
 
-    MakeContextCurrent();
-
-    gl->fCopyTexImage2D(target, level, internalformat, x, y, width, height, border);
-
-    return NS_OK;
+    return CopyTexSubImage2D_base(target, level, internalformat, 0, 0, x, y, width, height, false);
 }
 
 NS_IMETHODIMP
@@ -679,11 +771,29 @@ WebGLContext::CopyTexSubImage2D(WebGLenum target,
             return ErrorInvalidEnumInfo("CopyTexSubImage2D: target", target);
     }
 
+    if (level < 0)
+        return ErrorInvalidValue("copyTexSubImage2D: level may not be negative");
+
+    if (width < 0 || height < 0)
+        return ErrorInvalidValue("copyTexSubImage2D: width and height may not be negative");
+
+    if (xoffset < 0 || yoffset < 0)
+        return ErrorInvalidValue("copyTexSubImage2D: xoffset and yoffset may not be negative");
+
     WebGLTexture *tex = activeBoundTextureForTarget(target);
     if (!tex)
         return ErrorInvalidOperation("copyTexSubImage2D: no texture bound to this target");
 
-    WebGLenum format = tex->ImageInfoAt(0,0).mFormat;
+    WebGLsizei texWidth = tex->ImageInfoAt(level,0).mWidth;
+    WebGLsizei texHeight = tex->ImageInfoAt(level,0).mHeight;
+
+    if (xoffset + width > texWidth || xoffset + width < 0)
+      return ErrorInvalidValue("copyTexSubImage2D: xoffset+width is too large");
+
+    if (yoffset + height > texHeight || yoffset + height < 0)
+      return ErrorInvalidValue("copyTexSubImage2D: yoffset+height is too large");
+
+    WebGLenum format = tex->ImageInfoAt(level,0).mFormat;
     PRBool texFormatRequiresAlpha = format == LOCAL_GL_RGBA ||
                                     format == LOCAL_GL_ALPHA ||
                                     format == LOCAL_GL_LUMINANCE_ALPHA;
@@ -694,17 +804,10 @@ WebGLContext::CopyTexSubImage2D(WebGLenum target,
         return ErrorInvalidOperation("copyTexSubImage2D: texture format requires an alpha channel "
                                      "but the framebuffer doesn't have one");
 
-    if (!CanvasUtils::CheckSaneSubrectSize(x,y,width, height, mWidth, mHeight))
-        return ErrorInvalidValue("CopyTexSubImage2D: copied rectangle out of bounds");
-
     if (mBoundFramebuffer && !mBoundFramebuffer->CheckAndInitializeRenderbuffers())
         return NS_OK;
 
-    MakeContextCurrent();
-
-    gl->fCopyTexSubImage2D(target, level, xoffset, yoffset, x, y, width, height);
-
-    return NS_OK;
+    return CopyTexSubImage2D_base(target, level, format, xoffset, yoffset, x, y, width, height, true);
 }
 
 
