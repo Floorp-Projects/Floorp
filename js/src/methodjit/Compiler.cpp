@@ -4886,8 +4886,12 @@ mjit::Compiler::enterBlock(JSObject *obj)
     // VMFrame::fp to the correct fp for the entry point. We need to copy
     // that value here to FpReg so that FpReg also has the correct sp.
     // Otherwise, we would simply be using a stale FpReg value.
-    if (analysis->getCode(PC).exceptionEntry)
+    // Additionally, we check the interrupt flag to allow interrupting
+    // deeply nested exception handling.
+    if (analysis->getCode(PC).exceptionEntry) {
         restoreFrameRegs(masm);
+        interruptCheckHelper();
+    }
 
     uint32 oldFrameDepth = frame.localSlots();
 
