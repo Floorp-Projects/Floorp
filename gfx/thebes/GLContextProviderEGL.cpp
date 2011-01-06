@@ -172,6 +172,15 @@ typedef void *GLeglImageOES;
 
 #define EGL_DISPLAY()        sEGLLibrary.Display()
 
+#define ADD_ATTR_2(_array, _k, _v) do {         \
+    (_array).AppendElement(_k);                 \
+    (_array).AppendElement(_v);                 \
+} while (0)
+
+#define ADD_ATTR_1(_array, _k) do {             \
+    (_array).AppendElement(_k);                 \
+} while (0)
+
 EGLSurface
 CreateSurfaceForWindow(nsIWidget *aWidget, EGLConfig config);
 EGLConfig
@@ -880,18 +889,20 @@ PRBool
 GLContextEGL::ResizeOffscreen(const gfxIntSize& aNewSize)
 {
     if (mIsPBuffer) {
-        EGLint pbattrs[] = {
-            LOCAL_EGL_WIDTH, 0,
-            LOCAL_EGL_HEIGHT, 0,
-            LOCAL_EGL_TEXTURE_TARGET, LOCAL_EGL_TEXTURE_2D,
+        nsTArray<EGLint> pbattrs;
 
-            LOCAL_EGL_TEXTURE_FORMAT,
-            mCreationFormat.minAlpha ?
-              LOCAL_EGL_TEXTURE_RGBA :
-              LOCAL_EGL_TEXTURE_RGB,
+        ADD_ATTR_2(pbattrs, LOCAL_EGL_WIDTH, 0);
+        ADD_ATTR_2(pbattrs, LOCAL_EGL_HEIGHT, 0);
 
-            LOCAL_EGL_NONE
-        };
+        if (!sEGLLibrary.IsANGLE()) {
+            ADD_ATTR_2(pbattrs, LOCAL_EGL_TEXTURE_TARGET, LOCAL_EGL_TEXTURE_2D);
+            ADD_ATTR_2(pbattrs, LOCAL_EGL_TEXTURE_FORMAT,
+                       mCreationFormat.minAlpha ?
+                       LOCAL_EGL_TEXTURE_RGBA :
+                       LOCAL_EGL_TEXTURE_RGB);
+        }
+
+        ADD_ATTR_1(pbattrs, LOCAL_EGL_NONE);
 
         EGLSurface surface = nsnull;
         gfxIntSize pbsize(aNewSize);
@@ -900,7 +911,7 @@ TRY_AGAIN_POWER_OF_TWO:
         pbattrs[1] = pbsize.width;
         pbattrs[3] = pbsize.height;
 
-        surface = sEGLLibrary.fCreatePbufferSurface(EGL_DISPLAY(), mConfig, pbattrs);
+        surface = sEGLLibrary.fCreatePbufferSurface(EGL_DISPLAY(), mConfig, &pbattrs[0]);
         if (!surface) {
             if (!is_power_of_two(pbsize.width) ||
                 !is_power_of_two(pbsize.height))
@@ -1736,32 +1747,26 @@ GLContextEGL::CreateEGLPBufferOffscreenContext(const gfxIntSize& aSize,
 
     gfxIntSize pbsize(aSize);
 
-    EGLint pbattrs[] = {
-        LOCAL_EGL_WIDTH, 0,
-        LOCAL_EGL_HEIGHT, 0,
+    nsTArray<EGLint> pbattrs;
 
-        LOCAL_EGL_TEXTURE_TARGET, LOCAL_EGL_TEXTURE_2D,
-        LOCAL_EGL_TEXTURE_FORMAT,
-        aFormat.minAlpha ?
-          LOCAL_EGL_TEXTURE_RGBA :
-          LOCAL_EGL_TEXTURE_RGB,
+    ADD_ATTR_2(pbattrs, LOCAL_EGL_WIDTH, 0);
+    ADD_ATTR_2(pbattrs, LOCAL_EGL_HEIGHT, 0);
 
-        LOCAL_EGL_NONE
-    };
-
-    // if under ANGLE, then TEXTURE_TARGET/TEXTURE_FORMAT
-    // need to be stripped out (we don't support bind-to-texture,
-    // and just do d3d interop)
-    if (sEGLLibrary.IsANGLE()) {
-        pbattrs[4] = LOCAL_EGL_NONE;
-        pbattrs[5] = LOCAL_EGL_NONE;
+    if (!sEGLLibrary.IsANGLE()) {
+        ADD_ATTR_2(pbattrs, LOCAL_EGL_TEXTURE_TARGET, LOCAL_EGL_TEXTURE_2D);
+        ADD_ATTR_2(pbattrs, LOCAL_EGL_TEXTURE_FORMAT,
+                   aFormat.minAlpha ?
+                   LOCAL_EGL_TEXTURE_RGBA :
+                   LOCAL_EGL_TEXTURE_RGB);
     }
+
+    ADD_ATTR_1(pbattrs, LOCAL_EGL_NONE);
 
 TRY_AGAIN_POWER_OF_TWO:
     pbattrs[1] = pbsize.width;
     pbattrs[3] = pbsize.height;
 
-    surface = sEGLLibrary.fCreatePbufferSurface(EGL_DISPLAY(), config, pbattrs);
+    surface = sEGLLibrary.fCreatePbufferSurface(EGL_DISPLAY(), config, &pbattrs[0]);
     if (!surface) {
         if (!is_power_of_two(pbsize.width) ||
             !is_power_of_two(pbsize.height))
@@ -1911,7 +1916,7 @@ GLContextEGL::CreateEGLPixmapOffscreenContext(const gfxIntSize& aSize,
         return nsnull;
     }
 
-    EGLSurface surface;
+    EGLSurface surface = 0;
     EGLConfig config = 0;
 
 #ifdef MOZ_X11
