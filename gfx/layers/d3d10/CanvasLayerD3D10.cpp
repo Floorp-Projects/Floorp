@@ -76,23 +76,34 @@ CanvasLayerD3D10::Initialize(const Data& aData)
     void *data = mSurface->GetData(&gKeyD3D10Texture);
     if (data) {
       mTexture = static_cast<ID3D10Texture2D*>(data);
-      mIsD2DTexture = true;
+      mIsD2DTexture = PR_TRUE;
       device()->CreateShaderResourceView(mTexture, NULL, getter_AddRefs(mSRView));
       return;
     }
   }
 
-  mIsD2DTexture = false;
+  mIsD2DTexture = PR_FALSE;
+  mUsingSharedTexture = PR_FALSE;
 
-  CD3D10_TEXTURE2D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM, mBounds.width, mBounds.height, 1, 1);
-  desc.Usage = D3D10_USAGE_DYNAMIC;
-  desc.CPUAccessFlags = D3D10_CPU_ACCESS_WRITE;
-
-  HRESULT hr = device()->CreateTexture2D(&desc, NULL, getter_AddRefs(mTexture));
-  if (FAILED(hr)) {
-    NS_WARNING("Failed to create texture for CanvasLayer!");
-    return;
+  HANDLE shareHandle = mGLContext ? mGLContext->GetD3DShareHandle() : nsnull;
+  if (shareHandle) {
+    HRESULT hr = device()->OpenSharedResource(shareHandle, __uuidof(ID3D10Texture2D), getter_AddRefs(mTexture));
+    if (SUCCEEDED(hr))
+      mUsingSharedTexture = PR_TRUE;
   }
+
+  if (!mUsingSharedTexture) {
+    CD3D10_TEXTURE2D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM, mBounds.width, mBounds.height, 1, 1);
+    desc.Usage = D3D10_USAGE_DYNAMIC;
+    desc.CPUAccessFlags = D3D10_CPU_ACCESS_WRITE;
+
+    HRESULT hr = device()->CreateTexture2D(&desc, NULL, getter_AddRefs(mTexture));
+    if (FAILED(hr)) {
+      NS_WARNING("Failed to create texture for CanvasLayer!");
+      return;
+    }
+  }
+
   device()->CreateShaderResourceView(mTexture, NULL, getter_AddRefs(mSRView));
 }
 
@@ -101,6 +112,15 @@ CanvasLayerD3D10::Updated(const nsIntRect& aRect)
 {
   if (mIsD2DTexture) {
     mSurface->Flush();
+    return;
+  }
+
+  if (mUsingSharedTexture) {
+    // need to sync on the d3d9 device
+    if (mGLContext) {
+      mGLContext->MakeCurrent();
+      mGLContext->fFinish();
+    }
     return;
   }
 
