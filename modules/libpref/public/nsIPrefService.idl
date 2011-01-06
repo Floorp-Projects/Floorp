@@ -163,7 +163,7 @@ interface nsIPrefService : nsISupports
 
 };
 
-[scriptable, uuid(37577836-e3fc-4a5e-b5d1-92a17fe0e7f7)]
+[scriptable, uuid(08c8cd2f-8345-45ee-938d-37ee6d3661b2)]
 interface nsIPrefServiceInternal : nsISupports
 {
   /**
@@ -181,7 +181,9 @@ interface nsIPrefServiceInternal : nsISupports
 
   [noscript] void mirrorPreferences(in nsPreferencesArrayPtr aArray);
   [noscript] void mirrorPreference(in ACString aPrefName, in nsPreferencePtr aPref);
+  [noscript] boolean prefHasUserValue(in ACString aPrefName);
   [noscript] void setPreference(in nsPreferencePtrConst aPref);
+  [noscript] void clearContentPref(in ACString aPrefName);
 };
 
 %{C++

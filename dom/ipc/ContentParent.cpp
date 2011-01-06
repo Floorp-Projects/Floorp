@@ -372,14 +372,26 @@ ContentParent::Observe(nsISupports* aSubject,
         // We know prefs are ASCII here.
         NS_LossyConvertUTF16toASCII strData(aData);
 
-        PrefTuple pref;
         nsCOMPtr<nsIPrefServiceInternal> prefService =
           do_GetService("@mozilla.org/preferences-service;1");
 
-        prefService->MirrorPreference(strData, &pref);
-
-        if (!SendPreferenceUpdate(pref))
-            return NS_ERROR_NOT_AVAILABLE;
+        PRBool prefHasValue;
+        prefService->PrefHasUserValue(strData, &prefHasValue);
+        if (prefHasValue) {
+            // Pref was created, or previously existed and its value
+            // changed.
+            PrefTuple pref;
+            nsresult rv = prefService->MirrorPreference(strData, &pref);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "Pref has value but can't mirror?");
+            if (!SendPreferenceUpdate(pref)) {
+                return NS_ERROR_NOT_AVAILABLE;
+            }
+        } else {
+            // Pref wasn't found.  It was probably removed.
+            if (!SendClearUserPreference(strData)) {
+                return NS_ERROR_NOT_AVAILABLE;
+            }
+        }
     }
     else if (!strcmp(aTopic, NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC)) {
       NS_ConvertUTF16toUTF8 dataStr(aData);
