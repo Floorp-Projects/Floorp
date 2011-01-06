@@ -710,6 +710,9 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
         to.inlineHoleGuard = inlineHoleGuard;
         JS_ASSERT(to.inlineHoleGuard == inlineHoleGuard);
 
+        to.volatileMask = from.volatileMask;
+        JS_ASSERT(to.volatileMask == from.volatileMask);
+
         stubCode.patch(from.paramAddr, &to);
     }
 
@@ -1365,8 +1368,12 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_GETELEM)
 
           BEGIN_CASE(JSOP_SETELEM)
-            if (!jsop_setelem())
+          {
+            jsbytecode *next = &PC[JSOP_SETELEM_LENGTH];
+            bool pop = (JSOp(*next) == JSOP_POP && !analysis->jumpTarget(next));
+            if (!jsop_setelem(pop))
                 return Compile_Error;
+          }
           END_CASE(JSOP_SETELEM);
 
           BEGIN_CASE(JSOP_CALLNAME)
@@ -1744,7 +1751,7 @@ mjit::Compiler::generateMethod()
 
             // Before: VALUE OBJ ID VALUE
             // After:  VALUE VALUE
-            if (!jsop_setelem())
+            if (!jsop_setelem(true))
                 return Compile_Error;
 
             // Before: VALUE VALUE

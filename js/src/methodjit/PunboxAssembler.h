@@ -43,6 +43,7 @@
 #include "assembler/assembler/MacroAssembler.h"
 #include "methodjit/MachineRegs.h"
 #include "methodjit/RematInfo.h"
+#include "jsnum.h"
 
 namespace js {
 namespace mjit {
@@ -309,6 +310,26 @@ class PunboxAssembler : public JSC::MacroAssembler
     Jump testString(Condition cond, Address address) {
         loadTypeTag(address, Registers::ValueReg);
         return testString(cond, Registers::ValueReg);
+    }
+
+    void breakDouble(FPRegisterID srcDest, RegisterID typeReg, RegisterID dataReg) {
+        m_assembler.movq_rr(srcDest, typeReg);
+        move(Registers::PayloadMaskReg, dataReg);
+        andPtr(typeReg, dataReg);
+        xorPtr(dataReg, typeReg);
+    }
+
+    void fastLoadDouble(RegisterID dataReg, RegisterID typeReg, FPRegisterID fpReg) {
+        move(typeReg, Registers::ValueReg);
+        orPtr(dataReg, Registers::ValueReg);
+        m_assembler.movq_rr(Registers::ValueReg, fpReg);
+    }
+
+    void loadStaticDouble(const double *dp, FPRegisterID dest, RegisterID scratch) {
+        jsdpun du;
+        du.d = *dp;
+        move(ImmPtr(reinterpret_cast<void*>(du.u64)), scratch);
+        m_assembler.movq_rr(scratch, dest);
     }
 
     template <typename T>
