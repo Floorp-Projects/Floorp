@@ -947,6 +947,13 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
         if (!innerizedChain)
             return false;
 
+        /* If we were handed a non-native object, complain bitterly. */
+        if (!innerizedChain->isNative()) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                 JSMSG_NON_NATIVE_SCOPE);
+            return false;
+        }
+
         /* Initialize frame. */
         frame.fp()->initGlobalFrame(script, *innerizedChain, flags);
 
