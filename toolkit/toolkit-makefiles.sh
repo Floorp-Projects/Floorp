@@ -718,7 +718,7 @@ MAKEFILES_xulapp="
   toolkit/xre/Makefile
 "
 
-MAKEFILES_ctypes="
+MAKEFILES_jsctypes="
   toolkit/components/ctypes/Makefile
   toolkit/components/ctypes/tests/Makefile
 "
