@@ -2361,27 +2361,6 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
 
 #endif /* !JS_THREADED_INTERP */
 
-    /* Check for too deep of a native thread stack. */
-#ifdef JS_TRACER
-#ifdef JS_METHODJIT
-    JS_CHECK_RECURSION(cx, do {
-            if (TRACE_RECORDER(cx))
-                AbortRecording(cx, "too much recursion");
-            if (TRACE_PROFILER(cx))
-                AbortProfiling(cx);
-            return JS_FALSE;
-        } while (0););
-#else
-    JS_CHECK_RECURSION(cx, do {
-            if (TRACE_RECORDER(cx))
-                AbortRecording(cx, "too much recursion");
-            return JS_FALSE;
-        } while (0););
-#endif
-#else
-    JS_CHECK_RECURSION(cx, return JS_FALSE);
-#endif
-
 #define LOAD_ATOM(PCOFF, atom)                                                \
     JS_BEGIN_MACRO                                                            \
         JS_ASSERT(regs.fp->hasImacropc()                                      \
@@ -2516,9 +2495,6 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
             ENABLE_INTERRUPTS();                                              \
     JS_END_MACRO
 
-    /* Check for too deep of a native thread stack. */
-    JS_CHECK_RECURSION(cx, return JS_FALSE);
-
     JSFrameRegs regs = *cx->regs;
 
     /* Repoint cx->regs to a local variable for faster access. */
@@ -2625,6 +2601,28 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
     JSOp op;
     jsint len;
     len = 0;
+
+    /* Check for too deep of a native thread stack. */
+#ifdef JS_TRACER
+#ifdef JS_METHODJIT
+    JS_CHECK_RECURSION(cx, do {
+            if (TRACE_RECORDER(cx))
+                AbortRecording(cx, "too much recursion");
+            if (TRACE_PROFILER(cx))
+                AbortProfiling(cx);
+            goto error;
+        } while (0););
+#else
+    JS_CHECK_RECURSION(cx, do {
+            if (TRACE_RECORDER(cx))
+                AbortRecording(cx, "too much recursion");
+            goto error;
+        } while (0););
+#endif
+#else
+    JS_CHECK_RECURSION(cx, return JS_FALSE);
+#endif
+
 #if JS_THREADED_INTERP
     DO_NEXT_OP(len);
 #else
