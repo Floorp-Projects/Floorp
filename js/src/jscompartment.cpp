@@ -72,6 +72,10 @@ JSCompartment::JSCompartment(JSRuntime *rt)
 
 JSCompartment::~JSCompartment()
 {
+#if ENABLE_YARR_JIT
+    delete regExpAllocator;
+#endif
+
 #if defined JS_TRACER
     FinishJIT(&traceMonitor);
 #endif
@@ -105,6 +109,12 @@ JSCompartment::init()
     if (!InitJIT(&traceMonitor)) {
         return false;
     }
+#endif
+
+#if ENABLE_YARR_JIT
+    regExpAllocator = JSC::ExecutableAllocator::create();
+    if (!regExpAllocator)
+        return false;
 #endif
 
 #ifdef JS_METHODJIT
