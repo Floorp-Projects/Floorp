@@ -30,6 +30,7 @@
           window.addEventListener("resize", this, true);
           scrollbox.addEventListener("overflow", this, true);
         }
+        setTimeout(this.load.bind(this), 0);
       ]]></constructor>
 
       <method name="handleEvent">
@@ -50,6 +51,15 @@
                                parseInt(style.marginBottom);
               scrollbox.style.minHeight = Math.min(window.innerHeight / 2, newHeight) + "px";
               break;
+          }
+        ]]></body>
+      </method>
+
+      <method name="load">
+        <body><![CDATA[
+          if (this.hasAttribute("onload")) {
+            let func = new Function(this.getAttribute("onload"));
+            func.call(this);
           }
         ]]></body>
       </method>
