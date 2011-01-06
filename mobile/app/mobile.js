@@ -379,7 +379,7 @@ pref("browser.ui.kinetic.speedSensitivity", 80);
 pref("browser.ui.kinetic.swipeLength", 160);
 
 // zooming
-pref("browser.ui.zoom.pageFitGranularity", 5); // don't zoom to fit by less than 1/5 (20%)
+pref("browser.ui.zoom.pageFitGranularity", 9); // don't zoom to fit by less than 1/9 (11%)
 pref("browser.ui.zoom.animationDuration", 200); // ms duration of double-tap zoom animation
 pref("browser.ui.zoom.reflow", true); // Change text wrapping on double-tap
 
