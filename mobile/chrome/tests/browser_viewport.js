@@ -41,6 +41,8 @@
 let baseURI = "http://mochi.test:8888/browser/mobile/chrome/";
 let testURL_blank = baseURI + "browser_blank_01.html";
 
+const DEFAULT_WIDTH = 800;
+
 function testURL(n) {
   return baseURI + "browser_viewport.sjs?" + encodeURIComponent(gTestData[n].metadata);
 }
@@ -71,7 +73,7 @@ let loadURL = function loadURL(aPageURL, aCallback, aScale) {
 };
 
 let gTestData = [
-  { metadata: "", width: 980, scale: 1 },
+  { metadata: "", width: DEFAULT_WIDTH, scale: 1 },
   { metadata: "width=device-width, initial-scale=1", width: 533.33, scale: 1.5 },
   { metadata: "width=device-width", width: 533.33, scale: 1.5 },
   { metadata: "width=device-width, initial-scale=1", scaleRatio: 100, width: 800, scale: 1 },
@@ -92,7 +94,11 @@ let gTestData = [
   { metadata: "width = 2000 , minimum-scale=0.75", width: 2000, scale: 1.125 },
   { metadata: "width = 2000 , minimum-scale =0.75", width: 2000, scale: 1.125 },
   { metadata: "width = 2000 , minimum-scale = 0.75", width: 2000, scale: 1.125 },
-  { metadata: "width =  2000   ,    minimum-scale      =       0.75", width: 2000, scale: 1.125 }
+  { metadata: "width =  2000   ,    minimum-scale      =       0.75", width: 2000, scale: 1.125 },
+  /* testing opening and switching between pages without a viewport */
+  { metadata: "style=width:400px;margin:0px;", width: DEFAULT_WIDTH, scale: 1 },
+  { metadata: "style=width:1000px;margin:0px;", width: 980, scale: window.innerWidth/1000 },
+  { metadata: "style=width:800px;margin:0px;", width: DEFAULT_WIDTH, scale: 1 },
 ];
 
 
@@ -123,9 +129,13 @@ function verifyBlank(n) {
     is(uri, testURL_blank, "URL Matches blank page " + n);
 
     // Check viewport settings
-    is(currentTab.browser.contentWindowWidth, 980, "Normal 'browser' width is 980 pixels");
-
-    loadURL(testURL(n), verifyTest(n), gTestData[n].scale);
+    waitFor(function() {
+      is(currentTab.browser.contentWindowWidth, DEFAULT_WIDTH, "Normal 'browser' width is " + DEFAULT_WIDTH + " pixels");
+      loadURL(testURL(n), verifyTest(n), gTestData[n].scale);
+    }, function() {
+      return currentTab.browser.scale == 1;
+    })
+    
   }
 }
 
