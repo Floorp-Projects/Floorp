@@ -388,6 +388,22 @@ class SwitchToCompartment : public PreserveCompartment {
     }
 };
 
+class AssertCompartmentUnchanged {
+  protected:
+    JSContext * const cx;
+    JSCompartment * const oldCompartment;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+  public:
+     AssertCompartmentUnchanged(JSContext *cx JS_GUARD_OBJECT_NOTIFIER_PARAM)
+     : cx(cx), oldCompartment(cx->compartment) {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    ~AssertCompartmentUnchanged() {
+        JS_ASSERT(cx->compartment == oldCompartment);
+    }
+};
+
 }
 
 #endif /* jscompartment_h___ */
