@@ -4,7 +4,7 @@
      xmlns:em="http://www.mozilla.org/2004/em-rdf#">
   <Description about="urn:mozilla:install-manifest">
     <em:id>feedback@mobile.mozilla.org</em:id>
-    <em:version>1.0.0</em:version>
+    <em:version>1.0.1</em:version>
     <em:type>2</em:type>
 
     <!-- Target Application this extension can install into, 
@@ -18,7 +18,7 @@
     </em:targetApplication>
    
     <!-- Front End MetaData -->
-    <em:name>Beta Tester Tools</em:name>
+    <em:name>Feedback</em:name>
     <em:description>Help make Firefox better by giving feedback.</em:description>
     <em:creator>Mozilla Corporation</em:creator>
     <em:iconURL>chrome://feedback/skin/dino-32.png</em:iconURL>
