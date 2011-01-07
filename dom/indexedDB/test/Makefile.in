@@ -86,6 +86,7 @@ TEST_FILES = \
   test_remove_objectStore.html \
   test_request_readyState.html \
   test_success_events_after_abort.html \
+  test_third_party.html \
   test_transaction_abort.html \
   test_transaction_lifetimes.html \
   test_transaction_lifetimes_nested.html \
@@ -93,6 +94,8 @@ TEST_FILES = \
   test_setVersion_abort.html \
   test_setVersion_events.html \
   test_writer_starvation.html \
+  third_party_iframe1.html \
+  third_party_iframe2.html \
   $(NULL)
 
 ifeq (browser,$(MOZ_BUILD_APP))
