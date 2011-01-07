@@ -349,8 +349,7 @@
              accesskey="&signIn.syncKey.accesskey;"
              control="existingPassphrase"/>
       <textbox id="existingPassphrase"
-               onkeyup="gSyncSetup.onPassphraseKeyUp(event)"
-               onchange="gSyncSetup.checkFields()"/>
+               oninput="gSyncSetup.checkFields()"/>
       <hbox id="login-throbber" hidden="true">
         <image/>
         <label value="&verifying.label;"/>
