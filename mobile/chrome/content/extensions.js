@@ -47,6 +47,7 @@ const URI_GENERIC_ICON_XPINSTALL = "drawable://alertaddons";
 #else
 const URI_GENERIC_ICON_XPINSTALL = "chrome://browser/skin/images/alert-addons-30.png";
 #endif
+const ADDONS_NOTIFICATION_NAME = "addons";
 
 XPCOMUtils.defineLazyGetter(this, "AddonManager", function() {
   Cu.import("resource://gre/modules/AddonManager.jsm");
@@ -232,6 +233,12 @@ var ExtensionsView = {
                                 self._delayedInit();
                             },
                             false);
+
+    // Hide the notification
+    let alertsService = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
+    let progressListener = alertsService.QueryInterface(Ci.nsIAlertsProgressListener);
+    if (progressListener)
+      progressListener.onCancel(ADDONS_NOTIFICATION_NAME);
   },
 
   _delayedInit: function ev__delayedInit() {
@@ -814,7 +821,7 @@ var ExtensionsView = {
 
     let alerts = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
     alerts.showAlertNotification(URI_GENERIC_ICON_XPINSTALL, strings.GetStringFromName("alertAddons"),
-                                 aMessage, true, "", observer, "addons");
+                                 aMessage, true, "", observer, ADDONS_NOTIFICATION_NAME);
   },
 
   hideAlerts: function ev_hideAlerts() {
