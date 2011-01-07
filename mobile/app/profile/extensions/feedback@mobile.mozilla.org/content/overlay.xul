@@ -55,7 +55,7 @@
     <vbox id="feedback-container" flex="1" hidden="true">
       <notificationbox id="feedback-messages" flex="1">
         <richlistbox id="feedback-list" flex="1" onselect="this.ensureSelectedElementIsVisible()">
-          <label id="feedback-list-header" class="panel-header" value="&feedbackHeader.label;"/>
+          <label id="feedback-list-header" class="panel-header" value="&feedbackHeader2.label;"/>
           <settings id="feedback-communicate" label="&feedback.communicate.title;">
             <setting title="&feedback.feedback.title;" type="control">
               <button id="feedback-feedback-happy" oncommand="Feedback.openFeedback('happy');"/>
