@@ -2336,6 +2336,12 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
             emitReturnValue(&stubcc.masm, fe);
             emitFinalReturn(stubcc.masm);
         }
+    } else {
+        if (fp->isEvalFrame() && script->strictModeCode) {
+            /* There will always be a call object. */
+            prepareStubCall(Uses(fe ? 1 : 0));
+            INLINE_STUBCALL(stubs::PutStrictEvalCallObject);
+        }
     }
 
     emitReturnValue(&masm, fe);
