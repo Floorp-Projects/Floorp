@@ -2436,7 +2436,6 @@ Function(JSContext *cx, uintN argc, Value *vp)
     }
 
     Bindings bindings(cx);
-    AutoBindingsRooter root(cx, bindings);
 
     Value *argv = vp + 2;
     uintN n = argc ? argc - 1 : 0;
