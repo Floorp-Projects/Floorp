@@ -1279,7 +1279,7 @@ gfxFontUtils::ValidateSFNTHeaders(const PRUint8 *aFontData,
 
 nsresult
 gfxFontUtils::RenameFont(const nsAString& aName, const PRUint8 *aFontData, 
-                         PRUint32 aFontDataLength, nsTArray<PRUint8> *aNewFont)
+                         PRUint32 aFontDataLength, FallibleTArray<PRUint8> *aNewFont)
 {
     NS_ASSERTION(aNewFont, "null font data array");
     
@@ -1437,14 +1437,14 @@ enum {
 };    
 
 nsresult
-gfxFontUtils::ReadNames(nsTArray<PRUint8>& aNameTable, PRUint32 aNameID, 
+gfxFontUtils::ReadNames(FallibleTArray<PRUint8>& aNameTable, PRUint32 aNameID, 
                         PRInt32 aPlatformID, nsTArray<nsString>& aNames)
 {
     return ReadNames(aNameTable, aNameID, LANG_ALL, aPlatformID, aNames);
 }
 
 nsresult
-gfxFontUtils::ReadCanonicalName(nsTArray<PRUint8>& aNameTable, PRUint32 aNameID, 
+gfxFontUtils::ReadCanonicalName(FallibleTArray<PRUint8>& aNameTable, PRUint32 aNameID, 
                                 nsString& aName)
 {
     nsresult rv;
@@ -1682,7 +1682,7 @@ gfxFontUtils::DecodeFontName(const PRUint8 *aNameData, PRInt32 aByteLen,
 }
 
 nsresult
-gfxFontUtils::ReadNames(nsTArray<PRUint8>& aNameTable, PRUint32 aNameID, 
+gfxFontUtils::ReadNames(FallibleTArray<PRUint8>& aNameTable, PRUint32 aNameID, 
                         PRInt32 aLangID, PRInt32 aPlatformID,
                         nsTArray<nsString>& aNames)
 {
@@ -1869,7 +1869,8 @@ DumpEOTHeader(PRUint8 *aHeader, PRUint32 aHeaderLen)
 
 nsresult
 gfxFontUtils::MakeEOTHeader(const PRUint8 *aFontData, PRUint32 aFontDataLength,
-                            nsTArray<PRUint8> *aHeader, FontDataOverlay *aOverlay)
+                            FallibleTArray<PRUint8> *aHeader,
+                            FontDataOverlay *aOverlay)
 {
     NS_ASSERTION(aFontData && aFontDataLength != 0, "null font data");
     NS_ASSERTION(aHeader, "null header");
