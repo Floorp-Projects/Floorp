@@ -178,6 +178,9 @@ JSString::flatten(JSContext *maybecx)
     wholeChars = AllocChars(maybecx, wholeCapacity);
     if (!wholeChars)
         return NULL;
+
+    if (maybecx)
+        maybecx->runtime->stringMemoryUsed += wholeLength * 2;
     pos = wholeChars;
     first_visit_node: {
         JSString *left = str->u.left;           /* Read before clobbered. */
@@ -302,6 +305,7 @@ JSString::undepend(JSContext *cx)
         if (!s)
             return NULL;
 
+        cx->runtime->stringMemoryUsed += size;
         js_strncpy(s, dependentChars(), n);
         s[n] = 0;
         initFlat(s, n);
@@ -3415,6 +3419,7 @@ js_NewString(JSContext *cx, jschar *chars, size_t length)
     if (!str)
         return NULL;
     str->initFlat(chars, length);
+    cx->runtime->stringMemoryUsed += length * 2;
 #ifdef DEBUG
   {
     JSRuntime *rt = cx->runtime;
