@@ -2286,8 +2286,7 @@ class AutoGCRooter {
         VALVECTOR =   -12, /* js::AutoValueVector */
         DESCRIPTOR =  -13, /* js::AutoPropertyDescriptorRooter */
         STRING =      -14, /* js::AutoStringRooter */
-        IDVECTOR =    -15, /* js::AutoIdVector */
-        BINDINGS =    -16  /* js::Bindings */
+        IDVECTOR =    -15  /* js::AutoIdVector */
     };
 
     private:
@@ -2604,11 +2603,9 @@ class AutoEnumStateRooter : private AutoGCRooter
 #ifdef JS_HAS_XML_SUPPORT
 class AutoXMLRooter : private AutoGCRooter {
   public:
-    AutoXMLRooter(JSContext *cx, JSXML *xml
-                  JS_GUARD_OBJECT_NOTIFIER_PARAM)
+    AutoXMLRooter(JSContext *cx, JSXML *xml)
       : AutoGCRooter(cx, XML), xml(xml)
     {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
         JS_ASSERT(xml);
     }
 
@@ -2617,69 +2614,30 @@ class AutoXMLRooter : private AutoGCRooter {
 
   private:
     JSXML * const xml;
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 #endif /* JS_HAS_XML_SUPPORT */
 
-class AutoBindingsRooter : private AutoGCRooter {
-  public:
-    AutoBindingsRooter(JSContext *cx, Bindings &bindings
-                       JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoGCRooter(cx, BINDINGS), bindings(bindings)
-    {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
-    friend void AutoGCRooter::trace(JSTracer *trc);
-
-  private:
-    Bindings &bindings;
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
 class AutoLockGC {
-  public:
-    explicit AutoLockGC(JSRuntime *rt
-                        JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : rt(rt)
-    {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
-        JS_LOCK_GC(rt);
-    }
-    ~AutoLockGC() { JS_UNLOCK_GC(rt); }
-
-  private:
+private:
     JSRuntime *rt;
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+public:
+    explicit AutoLockGC(JSRuntime *rt) : rt(rt) { JS_LOCK_GC(rt); }
+    ~AutoLockGC() { JS_UNLOCK_GC(rt); }
 };
 
 class AutoUnlockGC {
-  private:
+private:
     JSRuntime *rt;
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
-
-  public:
-    explicit AutoUnlockGC(JSRuntime *rt
-                          JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : rt(rt)
-    {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
-        JS_UNLOCK_GC(rt);
-    }
+public:
+    explicit AutoUnlockGC(JSRuntime *rt) : rt(rt) { JS_UNLOCK_GC(rt); }
     ~AutoUnlockGC() { JS_LOCK_GC(rt); }
 };
 
 class AutoLockDefaultCompartment {
   private:
-    JSContext *cx;
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
-
+      JSContext *cx;
   public:
-    AutoLockDefaultCompartment(JSContext *cx
-                               JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : cx(cx)
-    {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    AutoLockDefaultCompartment(JSContext *cx) : cx(cx) {
         JS_LOCK(cx, &cx->runtime->atomState.lock);
 #ifdef JS_THREADSAFE
         cx->runtime->defaultCompartmentIsLocked = true;
@@ -2695,15 +2653,9 @@ class AutoLockDefaultCompartment {
 
 class AutoUnlockDefaultCompartment {
   private:
-    JSContext *cx;
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
-
+      JSContext *cx;
   public:
-    AutoUnlockDefaultCompartment(JSContext *cx
-                                 JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : cx(cx)
-    {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    AutoUnlockDefaultCompartment(JSContext *cx) : cx(cx) {
         JS_UNLOCK(cx, &cx->runtime->atomState.lock);
 #ifdef JS_THREADSAFE
         cx->runtime->defaultCompartmentIsLocked = false;
@@ -2719,31 +2671,16 @@ class AutoUnlockDefaultCompartment {
 
 class AutoKeepAtoms {
     JSRuntime *rt;
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
-
   public:
-    explicit AutoKeepAtoms(JSRuntime *rt
-                           JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : rt(rt)
-    {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
-        JS_KEEP_ATOMS(rt);
-    }
+    explicit AutoKeepAtoms(JSRuntime *rt) : rt(rt) { JS_KEEP_ATOMS(rt); }
     ~AutoKeepAtoms() { JS_UNKEEP_ATOMS(rt); }
 };
 
 class AutoArenaAllocator {
     JSArenaPool *pool;
     void        *mark;
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
-
   public:
-    explicit AutoArenaAllocator(JSArenaPool *pool
-                                JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : pool(pool), mark(JS_ARENA_MARK(pool))
-    {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
-    }
+    explicit AutoArenaAllocator(JSArenaPool *pool) : pool(pool) { mark = JS_ARENA_MARK(pool); }
     ~AutoArenaAllocator() { JS_ARENA_RELEASE(pool, mark); }
 
     template <typename T>
@@ -2757,17 +2694,9 @@ class AutoArenaAllocator {
 class AutoReleasePtr {
     JSContext   *cx;
     void        *ptr;
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
-
     AutoReleasePtr operator=(const AutoReleasePtr &other);
-
   public:
-    explicit AutoReleasePtr(JSContext *cx, void *ptr
-                            JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : cx(cx), ptr(ptr)
-    {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
-    }
+    explicit AutoReleasePtr(JSContext *cx, void *ptr) : cx(cx), ptr(ptr) {}
     ~AutoReleasePtr() { cx->free(ptr); }
 };
 
@@ -2777,17 +2706,9 @@ class AutoReleasePtr {
 class AutoReleaseNullablePtr {
     JSContext   *cx;
     void        *ptr;
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
-
     AutoReleaseNullablePtr operator=(const AutoReleaseNullablePtr &other);
-
   public:
-    explicit AutoReleaseNullablePtr(JSContext *cx, void *ptr
-                                    JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : cx(cx), ptr(ptr)
-    {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
-    }
+    explicit AutoReleaseNullablePtr(JSContext *cx, void *ptr) : cx(cx), ptr(ptr) {}
     void reset(void *ptr2) {
         if (ptr)
             cx->free(ptr);
