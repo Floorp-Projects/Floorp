@@ -905,8 +905,9 @@ class GetPropCompiler : public PICStubCompiler
         Assembler masm;
 
         Jump notStringObj = masm.testObjClass(Assembler::NotEqual, pic.objReg, obj->getClass());
-        masm.loadPayload(Address(pic.objReg, JSObject::getFixedSlotOffset(
-                         JSObject::JSSLOT_PRIMITIVE_THIS)), pic.objReg);
+        masm.loadPtr(Address(pic.objReg, offsetof(JSObject, slots)), pic.objReg);
+        masm.loadPayload(Address(pic.objReg, JSObject::JSSLOT_PRIMITIVE_THIS * sizeof(Value)),
+                         pic.objReg);
         masm.loadPtr(Address(pic.objReg, JSString::offsetOfLengthAndFlags()), pic.objReg);
         masm.urshift32(Imm32(JSString::LENGTH_SHIFT), pic.objReg);
         masm.move(ImmType(JSVAL_TYPE_INT32), pic.shapeReg);
