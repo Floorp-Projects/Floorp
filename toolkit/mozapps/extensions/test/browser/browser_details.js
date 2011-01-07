@@ -76,6 +76,8 @@ function test() {
     creator: { name: "Mozilla", url: null },
     type: "extension",
     iconURL: "chrome://foo/skin/icon.png",
+    contributionURL: "http://foo.com",
+    contributionAmount: null,
     updateDate: gDate,
     permissions: 0,
     screenshots: [{url: "http://example.com/screenshot"}],
@@ -153,6 +155,7 @@ add_test(function() {
     is(get("detail-desc").textContent, "Longer description", "Description should be correct");
 
     is_element_visible(get("detail-contributions"), "Contributions section should be visible");
+    is_element_visible(get("detail-contrib-suggested"), "Contributions amount should be visible");
     ok(get("detail-contrib-suggested").value, "$0.99");
 
     is_element_hidden(get("detail-dateUpdated"), "Update date should be hidden");
@@ -256,7 +259,8 @@ add_test(function() {
     is(get("detail-screenshot").src, "http://example.com/screenshot", "Should be showing the full sized screenshot");
     is(get("detail-desc").textContent, "Short description", "Description should be correct");
 
-    is_element_hidden(get("detail-contributions"), "Contributions section should be hidden");
+    is_element_visible(get("detail-contributions"), "Contributions section should be visible");
+    is_element_hidden(get("detail-contrib-suggested"), "Contributions amount should be hidden");
 
     is_element_visible(get("detail-dateUpdated"), "Update date should not be hidden");
     is(Date.parse(get("detail-dateUpdated").value), gDate.getTime(), "Update date should be correct");
