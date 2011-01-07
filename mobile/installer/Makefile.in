@@ -87,9 +87,16 @@ DEFINES += -DJAREXT=$(JAREXT)
 include $(topsrcdir)/ipc/app/defs.mk
 DEFINES += -DMOZ_CHILD_PROCESS_NAME=$(MOZ_CHILD_PROCESS_NAME)
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-_BINPATH = /$(_APPNAME)/Contents/Resources
+ifdef MOZ_PKG_MANIFEST_P
+MOZ_PKG_MANIFEST = package-manifest
 endif
+
+libs::
+	find $(DIST)/bin/chrome -type f -name *.dtd -exec sed -i '/<!--.*-->/d' {} \;
+	find $(DIST)/bin/chrome -type f -name *.dtd -exec sed -i '/<!--/,/-->/d' {} \;
+	find $(DIST)/bin/chrome -type f -name *.properties -exec sed -i '/^#/d' {} \;
+
+include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
 
 ifeq (bundle, $(MOZ_FS_LAYOUT))
 BINPATH = $(_BINPATH)
@@ -101,8 +108,6 @@ endif
 DEFINES += -DBINPATH=$(BINPATH)
 
 ifdef MOZ_PKG_MANIFEST_P
-MOZ_PKG_MANIFEST = package-manifest
-
 $(MOZ_PKG_MANIFEST): $(MOZ_PKG_MANIFEST_P) FORCE
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $< > $@
 ifdef MOZ_CHROME_MULTILOCALE
@@ -124,13 +129,6 @@ else
 PACKAGE_XULRUNNER = package-xulrunner
 UNPACKAGE = $(LIBXUL_DIST)/xulrunner*$(PKG_SUFFIX)
 endif
-
-libs::
-	find $(DIST)/bin/chrome -type f -name *.dtd -exec sed -i '/<!--.*-->/d' {} \;
-	find $(DIST)/bin/chrome -type f -name *.dtd -exec sed -i '/<!--/,/-->/d' {} \;
-	find $(DIST)/bin/chrome -type f -name *.properties -exec sed -i '/^#/d' {} \;
-
-include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
 
 ifdef LIBXUL_SDK
 MOZ_GRE_PKG_DIR=$(MOZ_PKG_DIR)/xulrunner
