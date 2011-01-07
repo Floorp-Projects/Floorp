@@ -533,7 +533,7 @@ IDBObjectStore::GetKeyPathValueFromStructuredData(const PRUint8* aData,
   jsval clone;
   if (!JS_ReadStructuredClone(cx, reinterpret_cast<const uint64*>(aData),
                               aDataLength, JS_STRUCTURED_CLONE_VERSION,
-                              &clone)) {
+                              &clone, NULL, NULL)) {
     return NS_ERROR_DOM_DATA_CLONE_ERR;
   }
 

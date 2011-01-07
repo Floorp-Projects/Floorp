@@ -755,6 +755,9 @@ nsDOMThreadService::Init()
   success = mPools.Init();
   NS_ENSURE_TRUE(success, NS_ERROR_OUT_OF_MEMORY);
 
+  success = mThreadsafeContractIDs.Init();
+  NS_ENSURE_TRUE(success, NS_ERROR_OUT_OF_MEMORY);
+
   success = mJSContexts.SetCapacity(THREADPOOL_THREAD_CAP);
   NS_ENSURE_TRUE(success, NS_ERROR_OUT_OF_MEMORY);
 
@@ -1214,6 +1217,43 @@ nsDOMThreadService::ChangeThreadPoolMaxThreads(PRInt16 aDelta)
   }
 
   return NS_OK;
+}
+
+void
+nsDOMThreadService::NoteThreadsafeContractId(const nsACString& aContractId,
+                                             PRBool aIsThreadsafe)
+{
+  NS_ASSERTION(!aContractId.IsEmpty(), "Empty contract id!");
+
+  nsAutoMonitor mon(mMonitor);
+
+#ifdef DEBUG
+  {
+    PRBool isThreadsafe;
+    if (mThreadsafeContractIDs.Get(aContractId, &isThreadsafe)) {
+      NS_ASSERTION(aIsThreadsafe == isThreadsafe, "Inconsistent threadsafety!");
+    }
+  }
+#endif
+
+  if (!mThreadsafeContractIDs.Put(aContractId, aIsThreadsafe)) {
+    NS_WARNING("Out of memory!");
+  }
+}
+
+ThreadsafeStatus
+nsDOMThreadService::GetContractIdThreadsafeStatus(const nsACString& aContractId)
+{
+  NS_ASSERTION(!aContractId.IsEmpty(), "Empty contract id!");
+
+  nsAutoMonitor mon(mMonitor);
+
+  PRBool isThreadsafe;
+  if (mThreadsafeContractIDs.Get(aContractId, &isThreadsafe)) {
+    return isThreadsafe ? Threadsafe : NotThreadsafe;
+  }
+
+  return Unknown;
 }
 
 // static
