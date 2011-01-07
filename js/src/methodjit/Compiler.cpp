@@ -1720,9 +1720,16 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_INSTANCEOF)
 
           BEGIN_CASE(JSOP_EXCEPTION)
-            prepareStubCall(Uses(0));
-            INLINE_STUBCALL(stubs::Exception);
-            frame.pushSynced();
+          {
+            JS_STATIC_ASSERT(sizeof(cx->throwing) == 4);
+            RegisterID reg = frame.allocReg();
+            masm.loadPtr(FrameAddress(offsetof(VMFrame, cx)), reg);
+            masm.store32(Imm32(JS_FALSE), Address(reg, offsetof(JSContext, throwing)));
+
+            Address excn(reg, offsetof(JSContext, exception));
+            frame.freeReg(reg);
+            frame.push(excn);
+          }
           END_CASE(JSOP_EXCEPTION)
 
           BEGIN_CASE(JSOP_LINENO)
