@@ -225,7 +225,7 @@ gfxDWriteFontEntry::IsSymbolFont()
 
 nsresult
 gfxDWriteFontEntry::GetFontTable(PRUint32 aTableTag,
-                                 nsTArray<PRUint8> &aBuffer)
+                                 FallibleTArray<PRUint8> &aBuffer)
 {
     nsRefPtr<IDWriteFontFace> fontFace;
     HRESULT hr;
@@ -399,7 +399,7 @@ gfxDWriteFontList::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
         return nsnull;
     }
 
-    nsTArray<PRUint8> newFontData;
+    FallibleTArray<PRUint8> newFontData;
 
     rv = gfxFontUtils::RenameFont(uniqueName, aFontData, aLength, &newFontData);
     NS_Free((void*)aFontData);
