@@ -141,8 +141,6 @@ StartupCache::Init()
   mWriteObjectMap.Init();
 #endif
 
-  mZipW = do_CreateInstance("@mozilla.org/zipwriter;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIFile> file;
   rv = NS_GetSpecialDirectory("ProfLDS",
                               getter_AddRefs(file));
@@ -188,14 +186,7 @@ StartupCache::Init()
     NS_WARNING("Failed to load startupcache file correctly, removing!");
     InvalidateCache();
   }
-
-  mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  // Wait for 10 seconds, then write out the cache.
-  rv = mTimer->InitWithFuncCallback(StartupCache::WriteTimeout, this, 600000,
-                                    nsITimer::TYPE_ONE_SHOT);
-
-  return rv;
+  return NS_OK;
 }
 
 nsresult
@@ -244,8 +235,6 @@ StartupCache::GetBuffer(const char* id, char** outbuf, PRUint32* length)
 nsresult
 StartupCache::PutBuffer(const char* id, const char* inbuf, PRUint32 len) 
 {
-  nsresult rv;
-
   if (StartupCache::gShutdownInitiated) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -254,66 +243,29 @@ StartupCache::PutBuffer(const char* id, const char* inbuf, PRUint32 len)
   memcpy(data, inbuf, len);
 
   nsDependentCString idStr(id);
-  if (!mStartupWriteInitiated) {
-    // Cache it for now, we'll write all together later.
-    CacheEntry* entry; 
-
+  // Cache it for now, we'll write all together later.
+  CacheEntry* entry; 
+  
 #ifdef DEBUG
-    mTable.Get(idStr, &entry);
-    NS_ASSERTION(entry == nsnull, "Existing entry in StartupCache.");
-
-    if (mArchive) {
-      nsZipItem* zipItem = mArchive->GetItem(id);
-      NS_ASSERTION(zipItem == nsnull, "Existing entry in disk StartupCache.");
-    }
-#endif
-
-    entry = new CacheEntry(data.forget(), len);
-    mTable.Put(idStr, entry);
-    return NS_OK;
+  mTable.Get(idStr, &entry);
+  NS_ASSERTION(entry == nsnull, "Existing entry in StartupCache.");
+  
+  if (mArchive) {
+    nsZipItem* zipItem = mArchive->GetItem(id);
+    NS_ASSERTION(zipItem == nsnull, "Existing entry in disk StartupCache.");
   }
-  
-  rv = mZipW->Open(mFile, PR_RDWR | PR_CREATE_FILE);
-  NS_ENSURE_SUCCESS(rv, rv);  
-
-  // XXX We need to think about whether to write this out every time,
-  // or somehow detect a good time to write.  We need to finish writing
-  // before shutdown though, and writing also requires a reload of the
-  // reader's archive, which probably can't handle having the underlying
-  // file change underneath it. Potentially could reload on the next
-  // read request, if this is a problem. See Bug 586859.
-#ifdef DEBUG
-  PRBool hasEntry;
-  rv = mZipW->HasEntry(idStr, &hasEntry);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ASSERTION(hasEntry == PR_FALSE, "Existing entry in disk StartupCache.");
 #endif
-
-  nsCOMPtr<nsIStringInputStream> stream
-    = do_CreateInstance("@mozilla.org/io/string-input-stream;1",
-                        &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = stream->AdoptData(data, len);
-  NS_ENSURE_SUCCESS(rv, rv);
-  data.forget();
   
-  rv = mZipW->AddEntryStream(idStr, 0, 0, stream, false);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Close the archive so Windows doesn't choke.
-  mArchive = NULL;
-  rv = mZipW->Close();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // our reader's view of the archive is outdated now, reload it.
-  return LoadArchive();
+  entry = new CacheEntry(data.forget(), len);
+  mTable.Put(idStr, entry);
+  return ResetStartupWriteTimer();
 }
 
 struct CacheWriteHolder
 {
   nsCOMPtr<nsIZipWriter> writer;
   nsCOMPtr<nsIStringInputStream> stream;
+  PRTime time;
 };
 
 PLDHashOperator
@@ -334,7 +286,7 @@ CacheCloseHelper(const nsACString& key, nsAutoPtr<CacheEntry>& data,
   NS_ASSERTION(NS_SUCCEEDED(rv) && hasEntry == PR_FALSE, 
                "Existing entry in disk StartupCache.");
 #endif
-  rv = writer->AddEntryStream(key, 0, 0, stream, false);
+  rv = writer->AddEntryStream(key, holder->time, PR_TRUE, stream, false);
   
   if (NS_FAILED(rv)) {
     NS_WARNING("cache entry deleted but not written to disk.");
@@ -351,7 +303,11 @@ StartupCache::WriteToDisk()
   if (mTable.Count() == 0)
     return;
 
-  rv = mZipW->Open(mFile, PR_RDWR | PR_CREATE_FILE);
+  nsCOMPtr<nsIZipWriter> zipW = do_CreateInstance("@mozilla.org/zipwriter;1");
+  if (!zipW)
+    return;
+
+  rv = zipW->Open(mFile, PR_RDWR | PR_CREATE_FILE);
   if (NS_FAILED(rv)) {
     NS_WARNING("could not open zipfile for write");
     return;
@@ -366,13 +322,14 @@ StartupCache::WriteToDisk()
 
   CacheWriteHolder holder;
   holder.stream = stream;
-  holder.writer = mZipW;
+  holder.writer = zipW;
+  holder.time = PR_Now();
 
   mTable.Enumerate(CacheCloseHelper, &holder);
 
   // Close the archive so Windows doesn't choke.
   mArchive = NULL;
-  mZipW->Close();
+  zipW->Close();
       
   // our reader's view of the archive is outdated now, reload it.
   LoadArchive();
@@ -385,10 +342,6 @@ StartupCache::InvalidateCache()
 {
   mTable.Clear();
   mArchive = NULL;
-
-  // This is usually closed, but it's possible to get into
-  // an inconsistent state.
-  mZipW->Close();
   mFile->Remove(false);
   LoadArchive();
 }
@@ -431,6 +384,22 @@ StartupCache::GetDebugObjectOutputStream(nsIObjectOutputStream* aStream,
   NS_ADDREF(*aOutStream = aStream);
 #endif
   
+  return NS_OK;
+}
+
+nsresult
+StartupCache::ResetStartupWriteTimer()
+{
+  mStartupWriteInitiated = PR_FALSE;
+  nsresult rv;
+  if (!mTimer)
+    mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
+  else
+    rv = mTimer->Cancel();
+  NS_ENSURE_SUCCESS(rv, rv);
+  // Wait for 10 seconds, then write out the cache.
+  mTimer->InitWithFuncCallback(StartupCache::WriteTimeout, this, 60000,
+                               nsITimer::TYPE_ONE_SHOT);
   return NS_OK;
 }
 
@@ -586,7 +555,7 @@ StartupCacheWrapper::GetDebugObjectOutputStream(nsIObjectOutputStream* stream,
 
 nsresult
 StartupCacheWrapper::StartupWriteComplete(PRBool *complete)
-{  
+{
   StartupCache* sc = StartupCache::GetSingleton();
   if (!sc) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -599,16 +568,7 @@ nsresult
 StartupCacheWrapper::ResetStartupWriteTimer()
 {
   StartupCache* sc = StartupCache::GetSingleton();
-  if (!sc) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-  sc->mStartupWriteInitiated = PR_FALSE;
-  
-  // Init with a shorter timer, for testing convenience.
-  sc->mTimer->Cancel();
-  sc->mTimer->InitWithFuncCallback(StartupCache::WriteTimeout, sc, 10000,
-                                   nsITimer::TYPE_ONE_SHOT);
-  return NS_OK;
+  return sc ? sc->ResetStartupWriteTimer() : NS_ERROR_NOT_INITIALIZED;
 }
 
 nsresult
