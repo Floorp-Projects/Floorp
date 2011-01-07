@@ -98,7 +98,7 @@
           <label id="passphraseLabel" control="passphraseBox"/>
           <textbox id="passphraseBox"
                    onfocus="this.select()"
-                   onkeyup="Change.validate(event)"/>
+                   oninput="Change.validate()"/>
           <label id="generatePassphraseButton"
                  value="&syncKeyGenerate.label;"
                  class="text-link inline-link"
