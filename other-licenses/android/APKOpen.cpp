@@ -464,6 +464,16 @@ static void * mozload(const char * path, void *zip,
   if (letoh16(file->compression) == DEFLATE) {
     int cache_fd = lookupLibCacheFd(path + 4);
     fd = cache_fd;
+    if (fd < 0) {
+      char fullpath[256];
+      snprintf(fullpath, 256, "%s/%s", getenv("CACHE_PATH"), path + 4);
+      fd = open(fullpath, O_RDWR);
+      struct stat status;
+      if (stat(fullpath, &status) ||
+          status.st_size != lib_size ||
+          apk_mtime > status.st_mtime)
+        fd = -1;
+    }
     if (fd < 0)
       fd = createAshmem(lib_size);
 #ifdef DEBUG
@@ -644,6 +654,7 @@ Java_org_mozilla_gecko_GeckoAppShell_loadLibs(JNIEnv *jenv, jclass jGeckoAppShel
 {
   if (jShouldExtract)
     extractLibs = 1;
+
   const char* str;
   // XXX: java doesn't give us true UTF8, we should figure out something 
   // better to do here
