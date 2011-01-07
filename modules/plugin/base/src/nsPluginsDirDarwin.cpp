@@ -212,22 +212,7 @@ static CFDictionaryRef ParsePlistForMIMETypesFilename(CFBundleRef bundle)
   if (::CFGetTypeID(propertyList) != ::CFDictionaryGetTypeID()) {
     return NULL;
   }
-  
-  CFTypeRef localizedName = ::CFDictionaryGetValue(static_cast<CFDictionaryRef>(propertyList), CFSTR("WebPluginLocalizationName"));
-  if (!localizedName || ::CFGetTypeID(localizedName) != ::CFStringGetTypeID()) {
-    return NULL;
-  }
-  
-  CFLocaleRef currentLocale = ::CFLocaleCopyCurrent();
-  if (!currentLocale) {
-    return NULL;
-  }
-  
-  AutoCFTypeObject currentLocaleAutorelease(currentLocale);
-  if (::CFStringCompare(static_cast<CFStringRef>(localizedName), ::CFLocaleGetIdentifier(currentLocale), 0) != kCFCompareEqualTo) {
-    return NULL;
-  }
-  
+
   CFTypeRef mimeTypes = ::CFDictionaryGetValue(static_cast<CFDictionaryRef>(propertyList), CFSTR("WebPluginMIMETypes"));
   if (!mimeTypes || ::CFGetTypeID(mimeTypes) != ::CFDictionaryGetTypeID() || ::CFDictionaryGetCount(static_cast<CFDictionaryRef>(mimeTypes)) == 0) {
     return NULL;
