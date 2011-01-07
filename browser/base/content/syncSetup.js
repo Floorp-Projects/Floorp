@@ -333,6 +333,7 @@ var gSyncSetup = {
         this.wizard.getButton("next").hidden = false;
         this.wizard.getButton("back").hidden = false;
         this.wizard.getButton("extra1").hidden = false;
+        this.wizard.canAdvance = false;
         this.wizard.canRewind = true;
         this.startEasySetup();
         break;
