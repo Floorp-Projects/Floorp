@@ -155,12 +155,12 @@ private:
   nsresult LoadArchive();
   nsresult Init();
   void WriteToDisk();
+  nsresult ResetStartupWriteTimer();
 
   static nsresult InitSingleton();
   static void WriteTimeout(nsITimer *aTimer, void *aClosure);
 
   nsClassHashtable<nsCStringHashKey, CacheEntry> mTable;
-  nsCOMPtr<nsIZipWriter> mZipW;
   nsAutoPtr<nsZipArchive> mArchive;
   nsCOMPtr<nsILocalFile> mFile;
   
