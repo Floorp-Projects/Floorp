@@ -94,7 +94,11 @@ struct nsTArrayInfallibleAllocator
 };
 #endif
 
+#if defined(MOZALLOC_HAVE_XMALLOC)
+struct nsTArrayDefaultAllocator : public nsTArrayInfallibleAllocator { };
+#else
 struct nsTArrayDefaultAllocator : public nsTArrayFallibleAllocator { };
+#endif
 
 // nsTArray_base stores elements into the space allocated beyond
 // sizeof(*this).  This is done to minimize the size of the nsTArray
