@@ -2785,19 +2785,20 @@
 
       <method name="_positionPinnedTabs">
         <body><![CDATA[
-          var width = 0;
-          var pinnedOnly = (this.tabbrowser._numPinnedTabs == this.tabbrowser.visibleTabs.length);
+          var numPinned = this.tabbrowser._numPinnedTabs;
+          var pinnedOnly = (numPinned == this.tabbrowser.visibleTabs.length);
 
           if (pinnedOnly)
-            this.tabbrowser.tabContainer.setAttribute("pinnedonly", "true");
+            this.setAttribute("pinnedonly", "true");
           else
-            this.tabbrowser.tabContainer.removeAttribute("pinnedonly");
+            this.removeAttribute("pinnedonly");
 
           var scrollButtonWidth = (this.getAttribute("overflow") != "true" || pinnedOnly) ? 0 :
                                   this.mTabstrip._scrollButtonDown.scrollWidth;
           var paddingStart = this.mTabstrip.scrollboxPaddingStart;
+          var width = 0;
 
-          for (var i = this.tabbrowser._numPinnedTabs - 1; i >= 0; i--) {
+          for (var i = numPinned - 1; i >= 0; i--) {
             let tab = this.childNodes[i];
             width += pinnedOnly ? 0 : tab.scrollWidth;
             if (this.getAttribute("overflow") != "true")
