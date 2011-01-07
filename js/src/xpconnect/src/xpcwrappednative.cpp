@@ -1851,14 +1851,16 @@ XPCWrappedNative::FindTearOff(XPCCallContext& ccx,
                 if(needJSObject && !to->GetJSObject())
                 {
                     AutoMarkingWrappedNativeTearOffPtr tearoff(ccx, to);
-                    rv = InitTearOffJSObject(ccx, to);
+                    JSBool ok = InitTearOffJSObject(ccx, to);
                     // During shutdown, we don't sweep tearoffs.  So make sure
                     // to unmark manually in case the auto-marker marked us.
                     // We shouldn't ever be getting here _during_ our
                     // Mark/Sweep cycle, so this should be safe.
                     to->Unmark();
-                    if(NS_FAILED(rv))
+                    if(!ok) {
                         to = nsnull;
+                        rv = NS_ERROR_OUT_OF_MEMORY;
+                    }
                 }
                 goto return_result;
             }

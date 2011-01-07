@@ -1890,6 +1890,9 @@ PropDesc::initialize(JSContext* cx, jsid id, const Value &origval)
     bool found;
 
     /* 8.10.5 step 3 */
+#ifdef __GNUC__ /* quell GCC overwarning */
+    found = false;
+#endif
     if (!HasProperty(cx, desc, ATOM_TO_JSID(cx->runtime->atomState.enumerableAtom), &v, &found))
         return false;
     if (found) {
@@ -3464,6 +3467,13 @@ TradeGuts(JSObject *a, JSObject *b)
     JS_ASSERT(a->compartment() == b->compartment());
     JS_ASSERT(a->isFunction() == b->isFunction());
 
+    /*
+     * Regexp guts are more complicated -- we would need to migrate the
+     * refcounted JIT code blob for them across compartments instead of just
+     * swapping guts.
+     */
+    JS_ASSERT(!a->isRegExp() && !b->isRegExp());
+
     bool aInline = !a->hasSlotsArray();
     bool bInline = !b->hasSlotsArray();
 
@@ -4872,6 +4882,21 @@ js_LookupPropertyWithFlagsInline(JSContext *cx, JSObject *obj, jsid id, uintN fl
         if (!proto->isNative()) {
             if (!proto->lookupProperty(cx, id, objp, propp))
                 return -1;
+#ifdef DEBUG
+            /*
+             * Non-native objects must have either non-native lookup results,
+             * or else native results from the non-native's prototype chain.
+             *
+             * See JSStackFrame::getValidCalleeObject, where we depend on this
+             * fact to force a prototype-delegated joined method accessed via
+             * arguments.callee through the delegating |this| object's method
+             * read barrier.
+             */
+            if (*propp && (*objp)->isNative()) {
+                while ((proto = proto->getProto()) != *objp)
+                    JS_ASSERT(proto);
+            }
+#endif
             return protoIndex + 1;
         }
 
@@ -5806,9 +5831,15 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool str
                     for (JSStackFrame *fp = cx->maybefp(); fp; fp = fp->prev()) {
                         if (fp->isFunctionFrame() &&
                             &fp->callee() == &fun->compiledFunObj() &&
-                            fp->thisValue().isObject() &&
-                            &fp->thisValue().toObject() == obj) {
-                            fp->calleeValue().setObject(*funobj);
+                            fp->thisValue().isObject())
+                        {
+                            JSObject *tmp = &fp->thisValue().toObject();
+                            do {
+                                if (tmp == obj) {
+                                    fp->calleeValue().setObject(*funobj);
+                                    break;
+                                }
+                            } while ((tmp = tmp->getProto()) != NULL);
                         }
                     }
                 }
