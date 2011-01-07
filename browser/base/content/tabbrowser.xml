@@ -2638,6 +2638,9 @@
 
           Services.prefs.addObserver("browser.tabs.", this._prefObserver, false);
           window.addEventListener("resize", this, false);
+
+          if (window.TabsInTitlebar)
+            TabsInTitlebar.allowedBy("tabs-visible", this.visible);
         ]]>
       </constructor>
 
@@ -2700,6 +2703,9 @@
       <property name="visible"
                 onget="return !this._container.collapsed;">
         <setter><![CDATA[
+          if (val == this.visible)
+            return val;
+
           this._container.collapsed = !val;
 
           if (val)
@@ -2708,6 +2714,9 @@
           document.getElementById("menu_closeWindow").hidden = !val;
           document.getElementById("menu_close").setAttribute("label",
             this.tabbrowser.mStringBundle.getString(val ? "tabs.closeTab" : "tabs.close"));
+
+          if (window.TabsInTitlebar)
+            TabsInTitlebar.allowedBy("tabs-visible", val);
 
           return val;
         ]]></setter>
