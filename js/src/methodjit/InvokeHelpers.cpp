@@ -480,6 +480,15 @@ stubs::UncachedCallHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr)
 }
 
 void JS_FASTCALL
+stubs::PutStrictEvalCallObject(VMFrame &f)
+{
+    JS_ASSERT(f.fp()->isEvalFrame());
+    JS_ASSERT(f.fp()->script()->strictModeCode);
+    JS_ASSERT(f.fp()->hasCallObj());
+    js_PutCallObject(f.cx, f.fp());
+}
+
+void JS_FASTCALL
 stubs::PutActivationObjects(VMFrame &f)
 {
     JS_ASSERT(f.fp()->hasCallObj() || f.fp()->hasArgsObj());
