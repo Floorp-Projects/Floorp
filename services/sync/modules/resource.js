@@ -465,7 +465,7 @@ ChannelListener.prototype = {
     } catch (ex) {
       this._log.warn("Got exception calling onProgress handler during fetch of "
                      + req.URI.spec);
-      this._log.debug(Utils.stackTrace(ex));
+      this._log.debug(Utils.exceptionStr(ex));
       this._log.trace("Rethrowing; expect a failure code from the HTTP channel.");
       throw ex;
     }
