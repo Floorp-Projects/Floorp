@@ -1593,8 +1593,7 @@ MarkContext(JSTracer *trc, JSContext *acx)
 
     MarkValue(trc, acx->iterValue, "iterValue");
 
-    if (acx->compartment)
-        acx->compartment->marked = true;
+    acx->compartment->marked = true;
 
 #ifdef JS_TRACER
     TracerState* state = acx->tracerState;
