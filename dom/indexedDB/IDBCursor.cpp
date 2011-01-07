@@ -85,7 +85,9 @@ public:
   { }
 
   nsresult DoDatabaseWork(mozIStorageConnection* aConnection);
-  nsresult GetSuccessResult(nsIWritableVariant* aResult);
+  nsresult OnSuccess();
+  nsresult GetSuccessResult(JSContext* aCx,
+                            jsval* aVal);
 
   void ReleaseMainThreadObjects()
   {
@@ -273,7 +275,8 @@ IDBCursor::IDBCursor()
   mCachedValue(JSVAL_VOID),
   mHaveCachedValue(false),
   mValueRooted(false),
-  mContinueCalled(false)
+  mContinueCalled(false),
+  mHaveValue(true)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 }
@@ -308,6 +311,7 @@ NS_IMPL_CYCLE_COLLECTION_ROOT_BEGIN(IDBCursor)
     tmp->mCachedValue = JSVAL_VOID;
     tmp->mHaveCachedValue = false;
     tmp->mValueRooted = false;
+    tmp->mHaveValue = false;
   }
 NS_IMPL_CYCLE_COLLECTION_ROOT_END
 
@@ -366,19 +370,21 @@ IDBCursor::GetKey(nsIVariant** aKey)
       do_CreateInstance(NS_VARIANT_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-    NS_ASSERTION(!mKey.IsUnset(), "Bad key!");
+    NS_ASSERTION(!mKey.IsUnset() || !mHaveValue, "Bad key!");
 
-    if (mKey.IsString()) {
+    if (!mHaveValue) {
+      rv = variant->SetAsVoid();
+    }
+    else if (mKey.IsString()) {
       rv = variant->SetAsAString(mKey.StringValue());
-      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
     }
     else if (mKey.IsInt()) {
       rv = variant->SetAsInt64(mKey.IntValue());
-      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
     }
     else {
       NS_NOTREACHED("Huh?!");
     }
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
     rv = variant->SetWritable(PR_FALSE);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
@@ -399,6 +405,11 @@ IDBCursor::GetValue(JSContext* aCx,
                     jsval* aValue)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  if (!mHaveValue) {
+    *aValue = JSVAL_VOID;
+    return NS_OK;
+  }
 
   nsresult rv;
 
@@ -442,7 +453,7 @@ IDBCursor::Continue(const jsval &aKey,
     return NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR;
   }
 
-  if (mContinueCalled) {
+  if (!mHaveValue || mContinueCalled) {
     return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
@@ -525,7 +536,7 @@ IDBCursor::Update(const jsval& aValue,
     return NS_ERROR_DOM_INDEXEDDB_READ_ONLY_ERR;
   }
 
-  if (mType == INDEXKEY) {
+  if (!mHaveValue || mType == INDEXKEY) {
     return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
@@ -588,7 +599,7 @@ IDBCursor::Delete(JSContext* aCx,
     return NS_ERROR_DOM_INDEXEDDB_READ_ONLY_ERR;
   }
 
-  if (mType == INDEXKEY) {
+  if (!mHaveValue || mType == INDEXKEY) {
     return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
@@ -644,14 +655,38 @@ ContinueHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 }
 
 nsresult
-ContinueHelper::GetSuccessResult(nsIWritableVariant* aResult)
+ContinueHelper::OnSuccess()
 {
-  nsresult rv;
+  // Remove cached stuff from last time.
+  mCursor->mCachedKey = nsnull;
+  mCursor->mCachedObjectKey = nsnull;
+  mCursor->mCachedValue = JSVAL_VOID;
+  mCursor->mHaveCachedValue = false;
+  mCursor->mContinueCalled = false;
 
   if (mKey.IsUnset()) {
-    rv = aResult->SetAsEmpty();
-    NS_ENSURE_SUCCESS(rv, rv);
+    mCursor->mHaveValue = false;
+  }
+  else {
+    // Set new values.
+    mCursor->mKey = mKey;
+    mCursor->mObjectKey = mObjectKey;
+    mCursor->mCloneBuffer.clear();
+    mCursor->mCloneBuffer.swap(mCloneBuffer);
+    mCursor->mContinueToKey = Key::UNSETKEY;
+  }
 
+  // We want an event, with a result, etc. Call the base class method.
+  return AsyncConnectionHelper::OnSuccess();
+}
+
+nsresult
+ContinueHelper::GetSuccessResult(JSContext* aCx,
+                                 jsval* aVal)
+{
+  if (mKey.IsUnset()) {
+    NS_ASSERTION(!mCursor->mHaveValue, "Should have unset this!");
+    *aVal = JSVAL_VOID;
     return NS_OK;
   }
 
@@ -661,24 +696,8 @@ ContinueHelper::GetSuccessResult(nsIWritableVariant* aResult)
   }
 #endif
 
-  // Remove cached stuff from last time.
-  mCursor->mCachedKey = nsnull;
-  mCursor->mCachedObjectKey = nsnull;
-  mCursor->mCachedValue = JSVAL_VOID;
-  mCursor->mHaveCachedValue = false;
-  mCursor->mContinueCalled = false;
-
-  // And set new values.
-  mCursor->mKey = mKey;
-  mCursor->mObjectKey = mObjectKey;
-  mCursor->mCloneBuffer.clear();
-  mCursor->mCloneBuffer.swap(mCloneBuffer);
-  mCursor->mContinueToKey = Key::UNSETKEY;
-
-  rv = aResult->SetAsISupports(mCursor);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
+  NS_ASSERTION(mCursor->mHaveValue, "This should still be set to true!");
+  return WrapNative(aCx, mCursor, aVal);
 }
 
 nsresult

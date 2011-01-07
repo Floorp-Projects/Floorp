@@ -43,10 +43,15 @@
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
 
-      let db = event.result;
+      let db = event.target.result;
       is(db.name, name, "Bad name");
       is(db.version, "", "Bad version");
       is(db.objectStoreNames.length, 0, "Bad objectStores list");
+
+      is(db.name, request.result.name, "Bad name");
+      is(db.version, request.result.version, "Bad version");
+      is(db.objectStoreNames.length, request.result.objectStoreNames.length,
+         "Bad objectStores list");
 
       finishTest();
       yield;

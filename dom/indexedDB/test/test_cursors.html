@@ -25,7 +25,7 @@
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
 
-      let db = event.result;
+      let db = event.target.result;
 
       request = db.setVersion("1");
       request.onerror = errorHandler;
@@ -38,7 +38,7 @@
       request = objectStore.openCursor();
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
-        ok(!event.result, "No results");
+        ok(!event.target.result, "No results");
         testGenerator.next();
       }
       yield;
@@ -50,7 +50,7 @@
       request = objectStore.openCursor();
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
-        ok(!event.result, "No results");
+        ok(!event.target.result, "No results");
         testGenerator.next();
       }
       yield;
@@ -60,7 +60,7 @@
       request = objectStore.openCursor();
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
-        ok(!event.result, "No results");
+        ok(!event.target.result, "No results");
         testGenerator.next();
       }
       yield;
@@ -70,7 +70,7 @@
       request = objectStore.openCursor();
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
-        ok(!event.result, "No results");
+        ok(!event.target.result, "No results");
         testGenerator.next();
       }
       yield;
@@ -93,7 +93,7 @@
       request = objectStore.openCursor();
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
-        let cursor = event.result;
+        let cursor = event.target.result;
         if (cursor) {
           is(cursor.key, sortedKeys[keyIndex], "Correct key");
           is(cursor.value, "foo", "Correct value");
@@ -128,7 +128,7 @@
       request = objectStore.openCursor(range);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
-        let cursor = event.result;
+        let cursor = event.target.result;
         if (cursor) {
           is(cursor.key, sortedKeys[keyIndex], "Correct key");
           is(cursor.value, "foo", "Correct value");
@@ -153,7 +153,7 @@
       request = objectStore.openCursor();
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
-        let cursor = event.result;
+        let cursor = event.target.result;
         if (cursor) {
           is(cursor.key, sortedKeys[keyIndex], "Correct key");
           is(cursor.value, "foo", "Correct value");
@@ -183,7 +183,7 @@
       request = objectStore.openCursor();
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
-        let cursor = event.result;
+        let cursor = event.target.result;
         if (cursor) {
           is(cursor.key, sortedKeys[keyIndex], "Correct key");
           is(cursor.value, "foo", "Correct value");
@@ -213,7 +213,7 @@
       request = objectStore.openCursor();
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
-        let cursor = event.result;
+        let cursor = event.target.result;
         if (cursor) {
           is(cursor.key, sortedKeys[keyIndex], "Correct key");
           is(cursor.value, "foo", "Correct value");
@@ -243,7 +243,7 @@
       request = objectStore.openCursor();
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
-        let cursor = event.result;
+        let cursor = event.target.result;
         if (cursor) {
           is(cursor.key, sortedKeys[keyIndex], "Correct key");
           is(cursor.value, "foo", "Correct value");
@@ -274,7 +274,7 @@
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      is(event.result, "bar", "Update succeeded");
+      is(event.target.result, "bar", "Update succeeded");
 
       request = objectStore.put("foo", sortedKeys[4]);
       request.onerror = errorHandler;
@@ -289,7 +289,7 @@
       request = objectStore.openCursor(null, IDBCursor.NEXT);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
-        let cursor = event.result;
+        let cursor = event.target.result;
         if (cursor) {
           is(cursor.key, sortedKeys[keyIndex], "Correct key");
           is(cursor.value, "foo", "Correct value");
@@ -298,7 +298,7 @@
             request = cursor.delete();
             request.onerror = errorHandler;
             request.onsuccess = function(event) {
-              is(event.result, sortedKeys[4], "Correct key");
+              is(event.target.result, sortedKeys[4], "Correct key");
               is(keyIndex, 5, "Got result of remove before next continue");
               gotRemoveEvent = true;
             };
@@ -321,7 +321,7 @@
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      is(event.result, undefined, "Entry was deleted");
+      is(event.target.result, undefined, "Entry was deleted");
 
       request = objectStore.add("foo", sortedKeys[4]);
       request.onerror = errorHandler;
@@ -333,7 +333,7 @@
       request = objectStore.openCursor(null, IDBCursor.PREV);
       request.onerror = errorHandler;
       request.onsuccess = function (event) {
-        let cursor = event.result;
+        let cursor = event.target.result;
         if (cursor) {
           is(cursor.key, sortedKeys[keyIndex], "Correct key");
           is(cursor.value, "foo", "Correct value");

@@ -30,7 +30,7 @@
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
 
-      let db = event.result;
+      let db = event.target.result;
 
       let transaction;
       let objectStore;
@@ -40,7 +40,7 @@
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      transaction = event.transaction;
+      transaction = event.target.transaction;
       objectStore = db.createObjectStore("foo", { autoIncrement: true });
 
       is(transaction.db, db, "Correct database");
@@ -166,10 +166,10 @@
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      event.transaction.onabort = function(event) {
+      event.target.transaction.onabort = function(event) {
         ok(false, "Shouldn't see an abort event!");
       };
-      event.transaction.oncomplete = grabEventAndContinueHandler;
+      event.target.transaction.oncomplete = grabEventAndContinueHandler;
       event = yield;
 
       is(event.type, "complete", "Right kind of event");
@@ -181,16 +181,16 @@
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      key = event.result;
+      key = event.target.result;
 
-      event.transaction.onabort = grabEventAndContinueHandler;
-      event.transaction.oncomplete = function(event) {
+      event.target.transaction.onabort = grabEventAndContinueHandler;
+      event.target.transaction.oncomplete = function(event) {
         ok(false, "Shouldn't see a complete event here!");
       };
 
-      is(event.transaction.readyState, LOADING, "Correct readyState");
-      event.transaction.abort();
-      is(event.transaction.readyState, DONE, "Correct readyState");
+      is(event.target.transaction.readyState, LOADING, "Correct readyState");
+      event.target.transaction.abort();
+      is(event.target.transaction.readyState, DONE, "Correct readyState");
 
       event = yield;
 
@@ -201,7 +201,7 @@
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      is(event.result, undefined, "Object was removed");
+      is(event.target.result, undefined, "Object was removed");
 
       SimpleTest.executeSoon(function() { testGenerator.next(); });
       yield;
@@ -213,15 +213,16 @@
       for (let i = 0; i < 10; i++) {
         request = objectStore.add({});
         request.onerror = function(event) {
-          is(event.code, IDBDatabaseException.ABORT_ERR, "Good code");
+          is(event.target.errorCode, IDBDatabaseException.ABORT_ERR,
+             "Good code");
           abortEventCount++;
           event.preventDefault();
         };
         request.onsuccess = function(event) {
-          keys.push(event.result);
+          keys.push(event.target.result);
           if (keys.length == 5) {
-            event.transaction.onabort = grabEventAndContinueHandler;
-            event.transaction.abort();
+            event.target.transaction.onabort = grabEventAndContinueHandler;
+            event.target.transaction.abort();
           }
         };
       }
@@ -237,7 +238,7 @@
         request.onsuccess = grabEventAndContinueHandler;
         event = yield;
 
-        is(event.result, undefined, "Object was removed by abort");
+        is(event.target.result, undefined, "Object was removed by abort");
       }
 
       finishTest();

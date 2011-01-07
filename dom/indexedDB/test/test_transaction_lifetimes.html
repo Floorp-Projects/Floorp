@@ -18,13 +18,13 @@
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
 
-      let db = event.result;
+      let db = event.target.result;
       db.onerror = errorHandler;
 
       db.setVersion("1").onsuccess = grabEventAndContinueHandler;
       let event = yield;
 
-      event.transaction.oncomplete = continueToNextStep;
+      event.target.transaction.oncomplete = continueToNextStep;
 
       db.createObjectStore("foo", { autoIncrement: true });
       yield;
