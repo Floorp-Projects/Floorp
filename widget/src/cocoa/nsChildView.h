@@ -393,6 +393,7 @@ public:
 #endif
 
   virtual gfxASurface* GetThebesSurface();
+  virtual void DrawOver(LayerManager* aManager, nsIntRect aRect);
 
   NS_IMETHOD BeginSecureKeyboardInput();
   NS_IMETHOD EndSecureKeyboardInput();
