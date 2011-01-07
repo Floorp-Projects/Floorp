@@ -62,6 +62,7 @@
 #include "nsIZipReader.h"
 #include "nsWeakReference.h"
 #include "nsZipArchive.h"
+#include "mozilla/FunctionTimer.h"
 
 #ifdef IS_BIG_ENDIAN
 #define SC_ENDIAN "big"
@@ -114,7 +115,7 @@ StartupCache* StartupCache::gStartupCache;
 PRBool StartupCache::gShutdownInitiated;
 
 StartupCache::StartupCache() 
-  : mArchive(NULL), mStartupWriteInitiated(PR_FALSE) { }
+  : mArchive(NULL), mStartupWriteInitiated(PR_FALSE), mWriteThread(NULL) {}
 
 StartupCache::~StartupCache() 
 {
@@ -192,6 +193,7 @@ StartupCache::Init()
 nsresult
 StartupCache::LoadArchive() 
 {
+  WaitOnWriteThread();
   PRBool exists;
   mArchive = NULL;
   nsresult rv = mFile->Exists(&exists);
@@ -207,6 +209,7 @@ StartupCache::LoadArchive()
 nsresult
 StartupCache::GetBuffer(const char* id, char** outbuf, PRUint32* length) 
 {
+  WaitOnWriteThread();
   if (!mStartupWriteInitiated) {
     CacheEntry* entry; 
     nsDependentCString idStr(id);
@@ -235,6 +238,7 @@ StartupCache::GetBuffer(const char* id, char** outbuf, PRUint32* length)
 nsresult
 StartupCache::PutBuffer(const char* id, const char* inbuf, PRUint32 len) 
 {
+  WaitOnWriteThread();
   if (StartupCache::gShutdownInitiated) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -297,6 +301,7 @@ CacheCloseHelper(const nsACString& key, nsAutoPtr<CacheEntry>& data,
 void
 StartupCache::WriteToDisk() 
 {
+  WaitOnWriteThread();
   nsresult rv;
   mStartupWriteInitiated = PR_TRUE;
 
@@ -330,7 +335,7 @@ StartupCache::WriteToDisk()
   // Close the archive so Windows doesn't choke.
   mArchive = NULL;
   zipW->Close();
-      
+
   // our reader's view of the archive is outdated now, reload it.
   LoadArchive();
   
@@ -340,17 +345,53 @@ StartupCache::WriteToDisk()
 void
 StartupCache::InvalidateCache() 
 {
+  WaitOnWriteThread();
   mTable.Clear();
   mArchive = NULL;
   mFile->Remove(false);
   LoadArchive();
 }
 
+/*
+ * WaitOnWriteThread() is called from a main thread to wait for the worker
+ * thread to finish. However since the same code is used in the worker thread and
+ * main thread, the worker thread can also call WaitOnWriteThread() which is a no-op.
+ */
+void
+StartupCache::WaitOnWriteThread()
+{
+  PRThread* writeThread = mWriteThread;
+  if (!writeThread || writeThread == PR_GetCurrentThread())
+    return;
+
+  NS_TIME_FUNCTION_MIN(30);
+  //stick a functiontimer thing here
+  //NS_WARNING("Waiting on startupcache write");
+  PR_JoinThread(writeThread);
+  mWriteThread = NULL;
+}
+
+void 
+StartupCache::ThreadedWrite(void *aClosure)
+{
+  gStartupCache->WriteToDisk();
+}
+
+/*
+ * The write-thread is spawned on a timeout(which is reset with every write). This
+ * can avoid a slow shutdown. After writing out the cache, the zipreader is
+ * reloaded on the worker thread.
+ */
 void
 StartupCache::WriteTimeout(nsITimer *aTimer, void *aClosure)
 {
-  StartupCache* sc = (StartupCache*) aClosure;
-  sc->WriteToDisk();
+  gStartupCache->mWriteThread = PR_CreateThread(PR_USER_THREAD,
+                                                StartupCache::ThreadedWrite,
+                                                NULL,
+                                                PR_PRIORITY_NORMAL,
+                                                PR_LOCAL_THREAD,
+                                                PR_JOINABLE_THREAD,
+                                                0);
 }
 
 // We don't want to refcount StartupCache, so we'll just
@@ -560,6 +601,7 @@ StartupCacheWrapper::StartupWriteComplete(PRBool *complete)
   if (!sc) {
     return NS_ERROR_NOT_INITIALIZED;
   }
+  sc->WaitOnWriteThread();
   *complete = sc->mStartupWriteInitiated && sc->mTable.Count() == 0;
   return NS_OK;
 }
