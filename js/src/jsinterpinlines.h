@@ -731,9 +731,8 @@ ScriptEpilogue(JSContext *cx, JSStackFrame *fp, JSBool ok)
          */
         if (fp->script()->strictModeCode) {
             JS_ASSERT(!fp->isYielding());
-            JS_ASSERT(!fp->hasArgsObj());
             JS_ASSERT(fp->hasCallObj());
-            JS_ASSERT(fp->callObj().callIsForEval());
+            JS_ASSERT(!fp->hasArgsObj());
             js_PutCallObject(cx, fp);
         }
     } else {
@@ -742,10 +741,8 @@ ScriptEpilogue(JSContext *cx, JSStackFrame *fp, JSBool ok)
          * frame's activation objects are transferred to the floating frame,
          * stored in the generator, and thus need not be synced.
          */
-        if (fp->isFunctionFrame() && !fp->isYielding()) {
-            JS_ASSERT_IF(fp->hasCallObj(), !fp->callObj().callIsForEval());
+        if (fp->isFunctionFrame() && !fp->isYielding())
             PutActivationObjects(cx, fp);
-        }
     }
 
     /*

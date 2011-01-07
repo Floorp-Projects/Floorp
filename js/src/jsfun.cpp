@@ -1077,14 +1077,9 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
 {
     JSObject &callobj = fp->callObj();
 
-    /*
-     * Strict mode eval frames have Call objects to put.  Normal eval frames
-     * never put a Call object.
-     */
-    JS_ASSERT(fp->isEvalFrame() == callobj.callIsForEval());
-
     /* Get the arguments object to snapshot fp's actual argument values. */
     if (fp->hasArgsObj()) {
+        JS_ASSERT(!fp->isEvalFrame());
         if (!fp->hasOverriddenArgs())
             callobj.setCallObjArguments(ObjectValue(fp->argsObj()));
         js_PutArgsObject(cx, fp);
@@ -1093,15 +1088,10 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
     JSScript *script = fp->script();
     Bindings &bindings = script->bindings;
 
-    if (callobj.callIsForEval()) {
-        JS_ASSERT(script->strictModeCode);
-        JS_ASSERT(bindings.countArgs() == 0);
-
-        /* This could be optimized as below, but keep it simple for now. */
-        CopyValuesToCallObject(callobj, 0, NULL, bindings.countVars(), fp->slots());
-    } else {
+    JSObject *callee = callobj.getCallObjCallee();
+    if (callee) {
         JSFunction *fun = fp->fun();
-        JS_ASSERT(fun == callobj.getCallObjCalleeFunction());
+        JS_ASSERT(fun == callee->getFunctionPrivate());
         JS_ASSERT(script == fun->script());
 
         if (uintN n = bindings.countArgsAndVars()) {
@@ -1114,9 +1104,9 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
 
             JSScript *script = fun->script();
             if (script->usesEval
-#ifdef JS_METHODJIT
+    #ifdef JS_METHODJIT
                 || script->debugMode
-#endif
+    #endif
                 ) {
                 CopyValuesToCallObject(callobj, nargs, fp->formalArgs(), nvars, fp->slots());
             } else {
@@ -1146,6 +1136,13 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
             JS_ASSERT(env->getPrivate() == fp);
             env->setPrivate(NULL);
         }
+    } else {
+        JS_ASSERT(fp->isEvalFrame());
+        JS_ASSERT(script->strictModeCode);
+        JS_ASSERT(bindings.countArgs() == 0);
+
+        /* This could be optimized as above.  But for now, keep it simple. */
+        CopyValuesToCallObject(callobj, 0, NULL, bindings.countVars(), fp->slots());
     }
 
     callobj.setPrivate(NULL);
