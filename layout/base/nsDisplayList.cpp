@@ -2088,7 +2088,7 @@ void nsDisplayTransform::HitTest(nsDisplayListBuilder *aBuilder,
  */
 nsRect nsDisplayTransform::GetBounds(nsDisplayListBuilder *aBuilder)
 {
-  return mFrame->GetVisualOverflowRect() + ToReferenceFrame();
+  return TransformRect(mStoredList.GetBounds(aBuilder), mFrame, ToReferenceFrame());
 }
 
 /* The transform is opaque iff the transform consists solely of scales and
