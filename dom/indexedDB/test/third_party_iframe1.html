@@ -1,0 +1,28 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Test</title>
+
+  <script type="text/javascript;version=1.7">
+    function messageListener(event) {
+      let message = eval(event.data);
+
+      if (message.source == "parent") {
+        document.getElementById("iframe2").src = message.href;
+      }
+      else if (message.source == "iframe") {
+        parent.postMessage(event.data, "*");
+      }
+    }
+  </script>
+
+</head>
+
+<body onload="window.addEventListener('message', messageListener, false);">
+  <iframe id="iframe2"></iframe>
+</body>
+
+</html>
