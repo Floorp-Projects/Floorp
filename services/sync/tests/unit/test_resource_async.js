@@ -608,6 +608,7 @@ function run_test() {
 
     _("Removing the observer should result in the original 401");
     did401 = false;
+    do_test_pending();
     let res13 = new AsyncResource("http://localhost:8080/protected");
     res13.get(ensureThrows(function (error, content) {
       do_check_eq(error, null);
@@ -622,6 +623,7 @@ function run_test() {
   }, function (next) {
 
     _("Exception handling inside fetches.");
+    do_test_pending();
     let res14 = new AsyncResource("http://localhost:8080/json");
     res14._onProgress = function(rec) {
       // Provoke an XPC exception without a Javascript wrapper.
@@ -631,10 +633,7 @@ function run_test() {
     res14._log.warn = function(msg) { warnings.push(msg) };
 
     res14.get(ensureThrows(function (error, content) {
-      // Check fails on Windows and build box Mac; returns NS_ERROR_ABORT
-      // instead of NS_ERROR_MALFORMED_URI. See Bug 623812.
-      // TODO: figure out why!
-      //do_check_eq(error, "Error: NS_ERROR_MALFORMED_URI");
+      do_check_eq(error, "Error: NS_ERROR_MALFORMED_URI");
       do_check_eq(content, null);
       do_check_eq(warnings.pop(),
                   "Got exception calling onProgress handler during fetch of " +
@@ -647,18 +646,16 @@ function run_test() {
   }, function (next) {
 
     _("JS exception handling inside fetches.");
+    do_test_pending();
     let res15 = new AsyncResource("http://localhost:8080/json");
     res15._onProgress = function(rec) {
       throw "BOO!";
     };
-    warnings = [];
+    let warnings = [];
     res15._log.warn = function(msg) { warnings.push(msg) };
 
     res15.get(ensureThrows(function (error, content) {
-      // Check fails on Windows and build box Mac; returns NS_ERROR_ABORT
-      // instead of NS_ERROR_XPC_JS_THREW_STRING. See Bug 623812.
-      // TODO: figure out why!
-      // do_check_eq(error, "Error: NS_ERROR_XPC_JS_THREW_STRING");
+      do_check_eq(error, "Error: NS_ERROR_XPC_JS_THREW_STRING");
       do_check_eq(content, null);
       do_check_eq(warnings.pop(),
                   "Got exception calling onProgress handler during fetch of " +
