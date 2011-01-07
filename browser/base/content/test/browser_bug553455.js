@@ -114,6 +114,7 @@ function test_blocked_install() {
     EventUtils.synthesizeMouse(notification.button, 20, 10, {});
 
     // Notification should have changed to progress notification
+    ok(PopupNotifications.isPanelOpen, "Notification should still be open");
     notification = aPanel.childNodes[0];
     is(notification.id, "addon-progress-notification", "Should have seen the progress notification");
 
@@ -681,6 +682,18 @@ function test_cancel_restart() {
   wait_for_notification(function(aPanel) {
     let notification = aPanel.childNodes[0];
     is(notification.id, "addon-progress-notification", "Should have seen the progress notification");
+
+    // Close the notification
+    let anchor = document.getElementById("addons-notification-icon");
+    EventUtils.synthesizeMouseAtCenter(anchor, {});
+    // Reopen the notification
+    EventUtils.synthesizeMouseAtCenter(anchor, {});
+
+    ok(PopupNotifications.isPanelOpen, "Notification should still be open");
+    is(PopupNotifications.panel.childNodes.length, 1, "Should be only one notification");
+    isnot(notification, aPanel.childNodes[0], "Should have reconstructed the notification UI");
+    notification = aPanel.childNodes[0];
+    is(notification.id, "addon-progress-notification", "Should have seen the progress notification");
     let button = document.getAnonymousElementByAttribute(notification, "anonid", "cancel");
 
     // Cancel the download
@@ -696,6 +709,8 @@ function test_cancel_restart() {
       EventUtils.synthesizeMouse(notification.button, 20, 10, {});
 
       // Should be back to a progress notification
+      ok(PopupNotifications.isPanelOpen, "Notification should still be open");
+      is(PopupNotifications.panel.childNodes.length, 1, "Should be only one notification");
       notification = aPanel.childNodes[0];
       is(notification.id, "addon-progress-notification", "Should have seen the progress notification");
 
