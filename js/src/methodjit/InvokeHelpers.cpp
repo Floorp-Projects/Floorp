@@ -81,7 +81,7 @@ FindExceptionHandler(JSContext *cx)
     JSScript *script = fp->script();
 
 top:
-    if (cx->isExceptionPending() && JSScript::isValidOffset(script->trynotesOffset)) {
+    if (cx->throwing && JSScript::isValidOffset(script->trynotesOffset)) {
         // The PC is updated before every stub call, so we can use it here.
         unsigned offset = cx->regs->pc - script->main;
 
@@ -119,7 +119,7 @@ top:
 
 #if JS_HAS_GENERATORS
                   /* Catch cannot intercept the closing of a generator. */
-                  if (JS_UNLIKELY(cx->getPendingException().isMagic(JS_GENERATOR_CLOSING)))
+                  if (JS_UNLIKELY(cx->exception.isMagic(JS_GENERATOR_CLOSING)))
                       break;
 #endif
 
@@ -136,9 +136,9 @@ top:
                    * [retsub] should rethrow the exception.
                    */
                   cx->regs->sp[0].setBoolean(true);
-                  cx->regs->sp[1] = cx->getPendingException();
+                  cx->regs->sp[1] = cx->exception;
                   cx->regs->sp += 2;
-                  cx->clearPendingException();
+                  cx->throwing = JS_FALSE;
                   return pc;
 
                 case JSTRY_ITER:
@@ -150,14 +150,15 @@ top:
                    * adjustment and regs.sp[1] after, to save and restore the
                    * pending exception.
                    */
-                  Value v = cx->getPendingException();
+                  AutoValueRooter tvr(cx, cx->exception);
                   JS_ASSERT(js_GetOpcode(cx, fp->script(), pc) == JSOP_ENDITER);
-                  cx->clearPendingException();
+                  cx->throwing = JS_FALSE;
                   ok = !!js_CloseIterator(cx, &cx->regs->sp[-1].toObject());
                   cx->regs->sp -= 1;
                   if (!ok)
                       goto top;
-                  cx->setPendingException(v);
+                  cx->throwing = JS_TRUE;
+                  cx->exception = tvr.value();
                 }
             }
         }
@@ -501,17 +502,17 @@ js_InternalThrow(VMFrame &f)
         switch (handler(cx, cx->fp()->script(), cx->regs->pc, Jsvalify(&rval),
                         cx->debugHooks->throwHookData)) {
           case JSTRAP_ERROR:
-            cx->clearPendingException();
+            cx->throwing = JS_FALSE;
             return NULL;
 
           case JSTRAP_RETURN:
-            cx->clearPendingException();
+            cx->throwing = JS_FALSE;
             cx->fp()->setReturnValue(rval);
             return JS_FUNC_TO_DATA_PTR(void *,
                    cx->jaegerCompartment()->forceReturnTrampoline());
 
           case JSTRAP_THROW:
-            cx->setPendingException(rval);
+            cx->exception = rval;
             break;
 
           default:
@@ -530,7 +531,7 @@ js_InternalThrow(VMFrame &f)
         // but we shouldn't return from a JS function, because we're not in a
         // JS function.
         bool lastFrame = (f.entryfp == f.fp());
-        js_UnwindScope(cx, 0, cx->isExceptionPending());
+        js_UnwindScope(cx, 0, cx->throwing);
 
         // For consistency with Interpret(), always run the script epilogue.
         // This simplifies interactions with RunTracer(), since it can assume
@@ -657,7 +658,7 @@ HandleErrorInExcessFrame(VMFrame &f, JSStackFrame *stopFp, bool searchedTopmostF
         JS_ASSERT(!fp->hasImacropc());
 
         /* If there's an exception and a handler, set the pc and leave. */
-        if (cx->isExceptionPending()) {
+        if (cx->throwing) {
             jsbytecode *pc = FindExceptionHandler(cx);
             if (pc) {
                 cx->regs->pc = pc;
@@ -671,7 +672,7 @@ HandleErrorInExcessFrame(VMFrame &f, JSStackFrame *stopFp, bool searchedTopmostF
             break;
 
         /* Unwind and return. */
-        returnOK &= bool(js_UnwindScope(cx, 0, returnOK || cx->isExceptionPending()));
+        returnOK &= bool(js_UnwindScope(cx, 0, returnOK || cx->throwing));
         returnOK = ScriptEpilogue(cx, fp, returnOK);
         InlineReturn(f);
     }
@@ -972,7 +973,7 @@ RunTracer(VMFrame &f)
 
     // Even though ExecuteTree() bypasses the interpreter, it should propagate
     // error failures correctly.
-    JS_ASSERT_IF(cx->isExceptionPending(), tpa == TPA_Error);
+    JS_ASSERT_IF(cx->throwing, tpa == TPA_Error);
 
 	f.fp() = cx->fp();
     JS_ASSERT(f.fp() == cx->fp());
