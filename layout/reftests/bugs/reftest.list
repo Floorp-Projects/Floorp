@@ -1507,6 +1507,7 @@ random-if(layersGPUAccelerated) == 564991-1.html 564991-1-ref.html
 == 577838-2.html 577838-2-ref.html
 random-if(layersGPUAccelerated) == 579323-1.html 579323-1-ref.html
 == 579349-1.html 579349-1-ref.html
+== 579808-1.html 579808-1-ref.html
 random-if(layersGPUAccelerated) == 579985-1.html 579985-1-ref.html # this bug was only for a regression in BasicLayers anyway
 == 580160-1.html 580160-1-ref.html
 HTTP(..) == 580863-1.html 580863-1-ref.html

@@ -18,8 +18,21 @@ function run_test() {
     pb.setIntPref("Test.IPC.int.new", 23);
     pb.setCharPref("Test.IPC.char.new", "hey");
 
-    run_test_in_child("test_observed_prefs.js");
+    run_test_in_child("test_observed_prefs.js", testPrefClear);
   }
-  else {
-  }
+}
+
+function testPrefClear() {
+  var pb = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
+  pb.clearUserPref("Test.IPC.bool.new");
+
+  sendCommand(
+'var pb = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);\n'+
+'pb.prefHasUserValue("Test.IPC.bool.new");\n',
+    checkWasCleared);
+}
+
+function checkWasCleared(existsStr) {
+    do_check_eq(existsStr, "false");
+    do_test_finished();
 }

@@ -26,6 +26,7 @@ class Surface
 {
   public:
     Surface(Display *display, const egl::Config *config, HWND window);
+    Surface(Display *display, const egl::Config *config, EGLint width, EGLint height);
 
     ~Surface();
 
@@ -41,6 +42,8 @@ class Surface
     virtual IDirect3DSurface9 *getRenderTarget();
     virtual IDirect3DSurface9 *getDepthStencil();
 
+    HANDLE getShareHandle() { return mShareHandle; }
+
     void setSwapInterval(EGLint interval);
     bool checkForOutOfDateSwapChain();   // Returns true if swapchain changed due to resize or interval update
 
@@ -52,6 +55,7 @@ private:
     IDirect3DSurface9 *mBackBuffer;
     IDirect3DSurface9 *mDepthStencil;
     IDirect3DTexture9 *mFlipTexture;
+    HANDLE mShareHandle;
 
     void subclassWindow();
     void unsubclassWindow();

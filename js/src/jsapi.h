@@ -725,7 +725,7 @@ extern JS_PUBLIC_API(JSRuntime *)
 JS_NewRuntime(uint32 maxbytes);
 
 /* Deprecated. */
-#define JS_CommenceRuntimeShutDown(rt) ((void) 0) 
+#define JS_CommenceRuntimeShutDown(rt) ((void) 0)
 
 extern JS_PUBLIC_API(void)
 JS_DestroyRuntime(JSRuntime *rt);
@@ -832,7 +832,7 @@ class JSAutoCheckRequest {
 #endif
         JS_GUARD_OBJECT_NOTIFIER_INIT;
     }
-    
+
     ~JSAutoCheckRequest() {
 #if defined JS_THREADSAFE && defined DEBUG
         JS_ASSERT(JS_IsInRequest(mContext));
@@ -1281,7 +1281,7 @@ namespace js {
 
 /*
  * Protecting non-jsval, non-JSObject *, non-JSString * values from collection
- * 
+ *
  * Most of the time, the garbage collector's conservative stack scanner works
  * behind the scenes, finding all live values and protecting them from being
  * collected. However, when JSAPI client code obtains a pointer to data the
@@ -1367,7 +1367,7 @@ class Anchor: AnchorPermitted<T> {
 #ifdef __GNUC__
 template<typename T>
 inline Anchor<T>::~Anchor() {
-    /* 
+    /*
      * No code is generated for this. But because this is marked 'volatile', G++ will
      * assume it has important side-effects, and won't delete it. (G++ never looks at
      * the actual text and notices it's empty.) And because we have passed |hold| to
@@ -3285,15 +3285,28 @@ JS_FinishJSONParse(JSContext *cx, JSONParser *jp, jsval reviver);
 /* The maximum supported structured-clone serialization format version. */
 #define JS_STRUCTURED_CLONE_VERSION 1
 
+struct JSStructuredCloneCallbacks {
+    ReadStructuredCloneOp read;
+    WriteStructuredCloneOp write;
+    StructuredCloneErrorOp reportError;
+};
+
 JS_PUBLIC_API(JSBool)
-JS_ReadStructuredClone(JSContext *cx, const uint64 *data, size_t nbytes, uint32 version, jsval *vp);
+JS_ReadStructuredClone(JSContext *cx, const uint64 *data, size_t nbytes,
+                       uint32 version, jsval *vp,
+                       const JSStructuredCloneCallbacks *optionalCallbacks,
+                       void *closure);
 
 /* Note: On success, the caller is responsible for calling js_free(*datap). */
 JS_PUBLIC_API(JSBool)
-JS_WriteStructuredClone(JSContext *cx, jsval v, uint64 **datap, size_t *nbytesp);
+JS_WriteStructuredClone(JSContext *cx, jsval v, uint64 **datap, size_t *nbytesp,
+                        const JSStructuredCloneCallbacks *optionalCallbacks,
+                        void *closure);
 
 JS_PUBLIC_API(JSBool)
-JS_StructuredClone(JSContext *cx, jsval v, jsval *vp);
+JS_StructuredClone(JSContext *cx, jsval v, jsval *vp,
+                   const JSStructuredCloneCallbacks *optionalCallbacks,
+                   void *closure);
 
 #ifdef __cplusplus
 /* RAII sugar for JS_WriteStructuredClone. */
@@ -3358,18 +3371,24 @@ class JSAutoStructuredCloneBuffer {
         version_ = 0;
     }
 
-    bool read(jsval *vp, JSContext *cx=NULL) const {
+    bool read(jsval *vp, JSContext *cx=NULL,
+              const JSStructuredCloneCallbacks *optionalCallbacks=NULL,
+              void *closure=NULL) const {
         if (!cx)
             cx = cx_;
         JS_ASSERT(cx);
         JS_ASSERT(data_);
-        return !!JS_ReadStructuredClone(cx, data_, nbytes_, version_, vp);
+        return !!JS_ReadStructuredClone(cx, data_, nbytes_, version_, vp,
+                                        optionalCallbacks, closure);
     }
 
-    bool write(JSContext *cx, jsval v) {
+    bool write(JSContext *cx, jsval v,
+               const JSStructuredCloneCallbacks *optionalCallbacks=NULL,
+               void *closure=NULL) {
         clear(cx);
         cx_ = cx;
-        bool ok = !!JS_WriteStructuredClone(cx, v, &data_, &nbytes_);
+        bool ok = !!JS_WriteStructuredClone(cx, v, &data_, &nbytes_,
+                                            optionalCallbacks, closure);
         if (!ok) {
             data_ = NULL;
             nbytes_ = 0;
@@ -3412,12 +3431,6 @@ class JSAutoStructuredCloneBuffer {
 #define JS_SCTAG_USER_MAX  ((uint32) 0xFFFFFFFF)
 
 #define JS_SCERR_RECURSION 0
-
-struct JSStructuredCloneCallbacks {
-    ReadStructuredCloneOp read;
-    WriteStructuredCloneOp write;
-    StructuredCloneErrorOp reportError;
-};
 
 JS_PUBLIC_API(void)
 JS_SetStructuredCloneCallbacks(JSRuntime *rt, const JSStructuredCloneCallbacks *callbacks);

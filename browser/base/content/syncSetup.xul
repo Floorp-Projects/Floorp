@@ -172,7 +172,7 @@
           <hbox align="center">
             <checkbox id="tos"
                       accesskey="&setup.tosAgree1.accesskey;"
-                      oncommand="gSyncSetup.checkFields();"/>
+                      oncommand="this.focus(); gSyncSetup.checkFields();"/>
             <description id="tosDesc"
                          onclick="document.getElementById('tos').focus();
                                   document.getElementById('tos').click()">
@@ -349,8 +349,7 @@
              accesskey="&signIn.syncKey.accesskey;"
              control="existingPassphrase"/>
       <textbox id="existingPassphrase"
-               onkeyup="gSyncSetup.onPassphraseKeyUp(event)"
-               onchange="gSyncSetup.checkFields()"/>
+               oninput="gSyncSetup.checkFields()"/>
       <hbox id="login-throbber" hidden="true">
         <image/>
         <label value="&verifying.label;"/>

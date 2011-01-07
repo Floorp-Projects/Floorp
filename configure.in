@@ -1551,6 +1551,10 @@ x86_64 | ia64)
 arm*)
     CPU_ARCH=arm
     ;;
+
+mips|mipsel)
+    CPU_ARCH="mips"
+    ;;
 esac
 
 if test -z "$OS_TARGET"; then
@@ -5638,7 +5642,7 @@ dnl ========================================================
 dnl = libproxy support
 dnl ========================================================
 
-if test "$MOZ_ENABLE_GTK2"
+if test "$MOZ_ENABLE_GTK2" -o "$MOZ_ENABLE_QT"
 then
     MOZ_ENABLE_LIBPROXY=
 
@@ -6343,10 +6347,10 @@ if test -n "$MOZ_ANGLE"; then
   if test -z "$MOZ_ANGLE"; then
     # Try again, but try to get the SDK path from the registry.  We're going to hardcode
     # the February 2010 SDK, since that's the one that's installed on the tinderboxen.
-    MOZ_DIRECTX_SDK_PATH=`reg query 'HKLM\Software\Microsoft\DirectX\Microsoft DirectX SDK (February 2010)' //v InstallPath | grep REG_SZ | sed 's,  *, ,g' | cut -d' ' -f4`
+    MOZ_DIRECTX_SDK_PATH=`reg query 'HKLM\Software\Microsoft\DirectX\Microsoft DirectX SDK (February 2010)' //v InstallPath | grep REG_SZ | sed 's,  *, ,g' | cut -d' ' -f4-`
     if test -n "$MOZ_DIRECTX_SDK_PATH" ; then
       if test -f "$MOZ_DIRECTX_SDK_PATH"/include/d3dx9.h && test -f "$MOZ_DIRECTX_SDK_PATH"/lib/x86/dxguid.lib ; then
-        AC_MSG_WARN([Found DirectX SDK in registry, using $MOZ_DIRECTX_SDK])
+        AC_MSG_WARN([Found DirectX SDK in registry, using $MOZ_DIRECTX_SDK_PATH])
         MOZ_ANGLE=1
       fi
     fi

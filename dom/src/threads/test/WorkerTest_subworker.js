@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=2 et sw=2 tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -13,7 +11,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Indexed Database.
+ * The Original Code is DOM Worker Tests.
  *
  * The Initial Developer of the Original Code is
  * The Mozilla Foundation.
@@ -21,7 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Ben Turner <bent.mozilla@gmail.com>
+ *  Ben Turner <bent.mozilla@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,12 +35,42 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIIDBSuccessEvent.idl"
+onmessage = function(event) {
+  let chromeURL = event.data.replace("test_chromeWorkerJSM.xul",
+                                     "WorkerTest_badworker.js");
 
-interface nsIIDBTransaction;
+  let mochitestURL = event.data.replace("test_chromeWorkerJSM.xul",
+                                        "WorkerTest_badworker.js")
+                               .replace("chrome://mochitests/content/chrome",
+                                        "http://mochi.test:8888/tests");
 
-[scriptable, uuid(cdf58757-78b9-4f5f-8559-1bf96e1cdfba)]
-interface nsIIDBTransactionEvent : nsIIDBSuccessEvent
-{
-  readonly attribute nsIIDBTransaction transaction;
+  // We should be able to XHR to anything we want, including a chrome URL.
+  let xhr = new XMLHttpRequest();
+  xhr.open("GET", mochitestURL, false);
+  xhr.send();
+
+  if (!xhr.responseText) {
+    throw "Can't load script file via XHR!";
+  }
+
+  // We shouldn't be able to make a ChromeWorker to a non-chrome URL.
+  let worker = new ChromeWorker(mochitestURL);
+  worker.onmessage = function(event) {
+    throw event.data;
+  };
+  worker.onerror = function(event) {
+    event.preventDefault();
+
+    // And we shouldn't be able to make a regular Worker to a non-chrome URL.
+    worker = new Worker(mochitestURL);
+    worker.onmessage = function(event) {
+      throw event.data;
+    };
+    worker.onerror = function(event) {
+      event.preventDefault();
+      postMessage("Done");
+    };
+    worker.postMessage("Hi");
+  };
+  worker.postMessage("Hi");
 };

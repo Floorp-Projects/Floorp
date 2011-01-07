@@ -937,10 +937,10 @@ CommitHelper::Run()
         }
       }
 
-      event = IDBEvent::CreateGenericEvent(NS_LITERAL_STRING(ABORT_EVT_STR));
+      event = CreateGenericEvent(NS_LITERAL_STRING(ABORT_EVT_STR));
     }
     else {
-      event = IDBEvent::CreateGenericEvent(NS_LITERAL_STRING(COMPLETE_EVT_STR));
+      event = CreateGenericEvent(NS_LITERAL_STRING(COMPLETE_EVT_STR));
     }
     NS_ENSURE_TRUE(event, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 

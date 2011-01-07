@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=2 et sw=2 tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -13,7 +11,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Indexed Database.
+ * The Original Code is DOM Worker Tests.
  *
  * The Initial Developer of the Original Code is
  * The Mozilla Foundation.
@@ -21,7 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Ben Turner <bent.mozilla@gmail.com>
+ *  Ben Turner <bent.mozilla@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,10 +35,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIDOMEvent.idl"
+let EXPORTED_SYMBOLS = [
+  "WorkerTest"
+];
 
-[scriptable, uuid(d5623e5f-e19d-4234-8259-343a5a21c83a)]
-interface nsIIDBEvent : nsIDOMEvent
-{
-  readonly attribute nsISupports source;
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+// Define our lazy getters.
+XPCOMUtils.defineLazyServiceGetter(this, "workerFactory",
+                                   "@mozilla.org/threads/workerfactory;1",
+                                   "nsIWorkerFactory");
+
+const WorkerTest = {
+  go: function(message, messageCallback, errorCallback) {
+    let worker = workerFactory.newChromeWorker("WorkerTest_worker.js");
+    worker.onmessage = messageCallback;
+    worker.onerror = errorCallback;
+    worker.postMessage(message);
+  }
 };

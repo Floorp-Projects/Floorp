@@ -41,6 +41,7 @@
 #endif
 
 #include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
 #include "nsILocale.h"
 #include "nsILocaleService.h"
 #include "nsLocale.h"
@@ -184,10 +185,9 @@ nsLocaleService::nsLocaleService(void)
     nsAutoString xpLocale, platformLocale;
     if (posixConverter) {
         nsAutoString category, category_platform;
-        nsLocale* resultLocale;
         int i;
 
-        resultLocale = new nsLocale();
+        nsRefPtr<nsLocale> resultLocale(new nsLocale());
         if ( resultLocale == NULL ) { 
             return; 
         }
@@ -240,10 +240,9 @@ nsLocaleService::nsLocaleService(void)
     nsAutoString xpLocale;
     if (os2Converter) {
         nsAutoString category;
-        nsLocale* resultLocale;
         int i;
 
-        resultLocale = new nsLocale();
+        nsRefPtr<nsLocale> resultLocale(new nsLocale());
         if ( resultLocale == NULL ) { 
             return; 
         }
@@ -332,17 +331,17 @@ nsLocaleService::NewLocale(const nsAString &aLocale, nsILocale **_retval)
 
     *_retval = nsnull;
 
-    nsLocale* resultLocale = new nsLocale();
+    nsRefPtr<nsLocale> resultLocale(new nsLocale());
     if (!resultLocale) return NS_ERROR_OUT_OF_MEMORY;
 
     for (PRInt32 i = 0; i < LocaleListLength; i++) {
       nsString category; category.AssignWithConversion(LocaleList[i]);
       result = resultLocale->AddCategory(category, aLocale);
-      if (NS_FAILED(result)) { delete resultLocale; return result;}
+      if (NS_FAILED(result)) return result;
 #if (defined(XP_UNIX) && !defined(XP_MACOSX)) || defined(XP_BEOS)
       category.AppendLiteral("##PLATFORM");
       result = resultLocale->AddCategory(category, aLocale);
-      if (NS_FAILED(result)) { delete resultLocale; return result;}
+      if (NS_FAILED(result)) return result;
 #endif
     }
 

@@ -24,7 +24,7 @@
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
 
-      let db = event.result;
+      let db = event.target.result;
       is(db.objectStoreNames.length, 0, "Correct objectStoreNames list");
 
       request = db.setVersion("1");

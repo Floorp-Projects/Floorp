@@ -32,7 +32,7 @@
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
-      let db = event.result;
+      let db = event.target.result;
 
       request = db.setVersion("1");
       request.onerror = errorHandler;
@@ -111,15 +111,16 @@
           }
           ok(found, "Name is on objectStore.indexNames");
 
-          ok(event.transaction, "event has a transaction");
-          ok(event.transaction.db === db, "transaction has the right db");
-          is(event.transaction.readyState, nsIIDBTransaction.LOADING,
+          ok(event.target.transaction, "event has a transaction");
+          ok(event.target.transaction.db === db,
+             "transaction has the right db");
+          is(event.target.transaction.readyState, nsIIDBTransaction.LOADING,
              "transaction has the correct readyState");
-          is(event.transaction.mode, nsIIDBTransaction.VERSION_CHANGE,
+          is(event.target.transaction.mode, nsIIDBTransaction.VERSION_CHANGE,
              "transaction has the correct mode");
-          is(event.transaction.objectStoreNames.length, i + 1,
+          is(event.target.transaction.objectStoreNames.length, i + 1,
              "transaction only has one object store");
-          is(event.transaction.objectStoreNames.item(0), objectStoreName,
+          is(event.target.transaction.objectStoreNames.item(0), objectStoreName,
              "transaction has the correct object store");
         }
       }

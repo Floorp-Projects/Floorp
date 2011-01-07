@@ -834,4 +834,7 @@ interface nsIDOMWebGLRenderingContext : nsISupports
   // Most useful for querying GL_VENDOR/GL_RENDERER for identifying
   // the underlying renderer to the user.
   [noscript] DOMString mozGetUnderlyingParamString(in WebGLenum pname);
+
+  // extensions
+  nsISupports getExtension(in DOMString name);
 };

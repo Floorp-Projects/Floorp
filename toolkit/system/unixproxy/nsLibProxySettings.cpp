@@ -45,7 +45,9 @@
 #include "nsCOMPtr.h"
 #include "nspr.h"
 
+extern "C" {
 #include <proxy.h>
+}
 
 class nsUnixSystemProxySettings : public nsISystemProxySettings {
 public:

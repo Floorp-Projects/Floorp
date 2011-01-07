@@ -18,14 +18,14 @@
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
 
-      let db = event.result;
+      let db = event.target.result;
 
       let request = db.setVersion("1");
       request.onsuccess = grabEventAndContinueHandler;
       request.onerror = errorHandler;
       event = yield;
 
-      event.result.oncomplete = continueToNextStep;
+      event.target.result.oncomplete = continueToNextStep;
 
       let objectStore = db.createObjectStore("foo");
       objectStore.add({}, 1).onerror = errorHandler;
@@ -43,7 +43,7 @@
       request = objectStore.get(1);
       request.onsuccess = unexpectedSuccessHandler;
       request.onerror = function(event) {
-        is(event.code, IDBDatabaseException.ABORT_ERR, "Good code");
+        is(event.target.errorCode, IDBDatabaseException.ABORT_ERR, "Good code");
         sawError = true;
         event.preventDefault();
       }

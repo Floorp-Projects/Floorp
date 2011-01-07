@@ -47,7 +47,7 @@ function continueToNextStep()
 
 function errorHandler(event)
 {
-  ok(false, "indexedDB error (" + event.code + "): " + event.message);
+  ok(false, "indexedDB error, code " + event.target.errorCode);
   finishTest();
 }
 
@@ -70,7 +70,8 @@ function ExpectError(code)
 ExpectError.prototype = {
   handleEvent: function(event)
   {
-    is(this._code, event.code, "Expected error was thrown.");
+    is(event.type, "error", "Got an error event");
+    is(this._code, event.target.errorCode, "Expected error was thrown.");
     event.preventDefault();
     grabEventAndContinueHandler(event);
   }

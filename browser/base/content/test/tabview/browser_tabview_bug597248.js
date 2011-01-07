@@ -202,7 +202,7 @@ function onTabViewShown() {
   tabItems.forEach(function(tabItem) {
     // tabitem might not be connected so use subscriber for those which are not
     // connected.
-    if (tabItem.reconnected) {
+    if (tabItem._reconnected) {
       ok(tabItem.isShowingCachedData(), 
          "Tab item is showing cached data and is already connected. " +
          tabItem.tab.linkedBrowser.currentURI.spec);

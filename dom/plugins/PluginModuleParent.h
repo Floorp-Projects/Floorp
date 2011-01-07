@@ -225,6 +225,8 @@ private:
                                 NPPVariable variable, void *ret_value);
     static NPError NPP_SetValue(NPP instance, NPNVariable variable,
                                 void *value);
+    static void NPP_URLRedirectNotify(NPP instance, const char* url,
+                                      int32_t status, void* notifyData);
 
     virtual bool HasRequiredFunctions();
     virtual nsresult AsyncSetWindow(NPP instance, NPWindow* window);

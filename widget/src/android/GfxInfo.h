@@ -1,5 +1,7 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
+/* vim: se cin sw=2 ts=2 et : */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -15,15 +17,15 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -35,13 +37,40 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsStrBundleConstructors_h__
-#define nsStrBundleConstructors_h__
+#ifndef __mozilla_widget_GfxInfo_h__
+#define __mozilla_widget_GfxInfo_h__
 
-#include "nsStringBundleService.h"
-#include "nsStringBundleTextOverride.h"
+#include <nsIGfxInfo.h>
 
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsStringBundleService, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsStringBundleTextOverride, Init)
+#include "nsString.h"
 
-#endif
+namespace mozilla {
+namespace widget {
+
+class GfxInfo : public nsIGfxInfo
+{
+public:
+  GfxInfo() {Init();}
+  virtual ~GfxInfo() {}
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIGFXINFO
+private:
+
+  void Init();
+  void AddCrashReportAnnotations();
+  nsString mRendererIDsString;
+  nsString mAdapterRAMString;
+
+  nsString mDeviceID;
+  nsString mDriverVersion;
+  nsString mDriverDate;
+  nsString mDeviceKey;
+
+  PRUint32 mRendererIDs[16];
+};
+
+} // namespace widget
+} // namespace mozilla
+
+#endif /* __mozilla_widget_GfxInfo_h__ */

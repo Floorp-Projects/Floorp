@@ -359,7 +359,7 @@ CacheLayoutTablesFromSFNT(const PRUint8* aFontData, PRUint32 aLength,
         case TRUETYPE_TAG('G','D','E','F'):
         case TRUETYPE_TAG('G','P','O','S'):
         case TRUETYPE_TAG('G','S','U','B'): {
-                nsTArray<PRUint8> buffer;
+                FallibleTArray<PRUint8> buffer;
                 if (!buffer.AppendElements(aFontData + dirEntry->offset,
                                            dirEntry->length)) {
                     NS_WARNING("failed to cache font table - out of memory?");
@@ -391,7 +391,7 @@ PreloadTableFromWOFF(const PRUint8* aFontData, PRUint32 aLength,
     PRUint32 status = eWOFF_ok;
     PRUint32 len = woffGetTableSize(aFontData, aLength, aTableTag, &status);
     if (WOFF_SUCCESS(status) && len > 0) {
-        nsTArray<PRUint8> buffer;
+        FallibleTArray<PRUint8> buffer;
         if (!buffer.AppendElements(len)) {
             NS_WARNING("failed to cache font table - out of memory?");
             return;

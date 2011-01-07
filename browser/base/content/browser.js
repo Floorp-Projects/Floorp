@@ -2735,10 +2735,10 @@ var PrintPreviewListener = {
   onExit: function () {
     gBrowser.selectedTab = this._tabBeforePrintPreview;
     this._tabBeforePrintPreview = null;
-    gBrowser.removeTab(this._printPreviewTab);
-    this._printPreviewTab = null;
     gInPrintPreviewMode = false;
     this._toggleAffectedChrome();
+    gBrowser.removeTab(this._printPreviewTab);
+    this._printPreviewTab = null;
   },
   _toggleAffectedChrome: function () {
 #ifdef MENUBAR_CAN_AUTOHIDE

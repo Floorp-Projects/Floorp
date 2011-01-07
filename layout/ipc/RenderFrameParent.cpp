@@ -182,6 +182,20 @@ RenderFrameParent::~RenderFrameParent()
 {}
 
 void
+RenderFrameParent::Destroy()
+{
+  size_t numChildren = ManagedPLayersParent().Length();
+  NS_ABORT_IF_FALSE(0 == numChildren || 1 == numChildren,
+                    "render frame must only have 0 or 1 layer manager");
+
+  if (numChildren) {
+    ShadowLayersParent* layers =
+      static_cast<ShadowLayersParent*>(ManagedPLayersParent()[0]);
+    layers->Destroy();
+  }
+}
+
+void
 RenderFrameParent::ShadowLayersUpdated()
 {
   mFrameLoader->SetCurrentRemoteFrame(this);

@@ -114,18 +114,6 @@
            onclick="gSyncAddDevice.goToSyncKeyPage();"/>
   </wizardpage>
 
-  <wizardpage id="deviceConnectedPage"
-              label="&addDevice.dialog.connected.label;"
-              onpageshow="gSyncAddDevice.onPageShow();">
-    <vbox align="center">
-      <image id="successPageIcon"/>
-    </vbox>
-    <separator/>
-    <description class="normal">
-      &addDevice.dialog.successful.label;
-    </description>
-  </wizardpage>
-
   <!-- Need a non-empty label here, otherwise we get a default label on Mac -->
   <wizardpage id="syncKeyPage"
               label=" "
@@ -140,7 +128,7 @@
              accesskey="&syncKeyEntry.accesskey;"
              control="weavePassphrase"/>
       <textbox id="weavePassphrase"
-               disabled="true"/>
+               readonly="true"/>
     </groupbox>
 
     <groupbox align="center">
@@ -156,6 +144,18 @@
                 oncommand="gSyncUtils.passphraseSave('weavePassphrase');"/>
       </hbox>
     </groupbox>
+  </wizardpage>
+
+  <wizardpage id="deviceConnectedPage"
+              label="&addDevice.dialog.connected.label;"
+              onpageshow="gSyncAddDevice.onPageShow();">
+    <vbox align="center">
+      <image id="successPageIcon"/>
+    </vbox>
+    <separator/>
+    <description class="normal">
+      &addDevice.dialog.successful.label;
+    </description>
   </wizardpage>
 
 </wizard>

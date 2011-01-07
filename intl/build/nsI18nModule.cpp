@@ -36,29 +36,49 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "mozilla/ModuleUtils.h"
-#include "nsCOMPtr.h"
-#include "nsICategoryManager.h"
-#include "nsIServiceManager.h"
 
 // lwbrk
-#include "nsLWBrkConstructors.h"
+#include "nsLWBrkCIID.h"
+#include "nsJISx4501LineBreaker.h"
+#include "nsSampleWordBreaker.h"
+#include "nsLWBRKDll.h"
+
 #include "nsSemanticUnitScanner.h"
 
 // unicharutil
-#include "nsUcharUtilConstructors.h"
+#include "nsCategoryImp.h"
+#include "nsUnicharUtilCIID.h"
+#include "nsCaseConversionImp2.h"
+#include "nsEntityConverter.h"
+#include "nsSaveAsCharset.h"
+#include "nsUnicodeNormalizer.h"
 
 // string bundles (intl)
-#include "nsStrBundleConstructors.h"
+#include "nsStringBundleService.h"
+#include "nsStringBundleTextOverride.h"
 
 // locale
 #include "nsLocaleConstructors.h"
 
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsJISx4051LineBreaker)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSampleWordBreaker)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSemanticUnitScanner)
+
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsStringBundleService, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsStringBundleTextOverride, Init)
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsCaseConversionImp2)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsCategoryImp,
+                                         nsCategoryImp::GetInstance)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsEntityConverter)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSaveAsCharset)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeNormalizer)
 
 NS_DEFINE_NAMED_CID(NS_LBRK_CID);
 NS_DEFINE_NAMED_CID(NS_WBRK_CID);
 NS_DEFINE_NAMED_CID(NS_SEMANTICUNITSCANNER_CID);
+NS_DEFINE_NAMED_CID(NS_UNICHARUTIL_CID);
 NS_DEFINE_NAMED_CID(NS_UNICHARCATEGORY_CID);
 NS_DEFINE_NAMED_CID(NS_ENTITYCONVERTER_CID);
 NS_DEFINE_NAMED_CID(NS_SAVEASCHARSET_CID);
@@ -94,6 +114,7 @@ static const mozilla::Module::CIDEntry kIntlCIDs[] = {
     { &kNS_LBRK_CID, false, NULL, nsJISx4051LineBreakerConstructor },
     { &kNS_WBRK_CID, false, NULL, nsSampleWordBreakerConstructor },
     { &kNS_SEMANTICUNITSCANNER_CID, false, NULL, nsSemanticUnitScannerConstructor },
+    { &kNS_UNICHARUTIL_CID, false, NULL, nsCaseConversionImp2Constructor },
     { &kNS_UNICHARCATEGORY_CID, false, NULL, nsCategoryImpConstructor },
     { &kNS_ENTITYCONVERTER_CID, false, NULL, nsEntityConverterConstructor },
     { &kNS_SAVEASCHARSET_CID, false, NULL, nsSaveAsCharsetConstructor },
@@ -131,6 +152,7 @@ static const mozilla::Module::ContractIDEntry kIntlContracts[] = {
     { NS_LBRK_CONTRACTID, &kNS_LBRK_CID },
     { NS_WBRK_CONTRACTID, &kNS_WBRK_CID },
     { NS_SEMANTICUNITSCANNER_CONTRACTID, &kNS_SEMANTICUNITSCANNER_CID },
+    { NS_UNICHARUTIL_CONTRACTID, &kNS_UNICHARUTIL_CID },
     { NS_UNICHARCATEGORY_CONTRACTID, &kNS_UNICHARCATEGORY_CID },
     { NS_ENTITYCONVERTER_CONTRACTID, &kNS_ENTITYCONVERTER_CID },
     { NS_SAVEASCHARSET_CONTRACTID, &kNS_SAVEASCHARSET_CID },
