@@ -17,7 +17,7 @@
       try {
         let request = mozIndexedDB.open(window.location.pathname);
         request.onsuccess = function(event) {
-          report(!!(event.result instanceof IDBDatabase));
+          report(!!(event.target.result instanceof IDBDatabase));
         }
       }
       catch (e) {

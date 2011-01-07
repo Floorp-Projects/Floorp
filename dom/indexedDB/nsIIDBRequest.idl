@@ -41,13 +41,14 @@
 #include "nsISupports.idl"
 
 interface nsIDOMEventListener;
+interface nsIIDBTransaction;
 
 /**
  * IDBReqeust interface.  See
  * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-IDBRequest for more
  * information.
  */
-[scriptable, uuid(5d55f15e-9521-4c98-ba0f-e8c07783d8d3)]
+[scriptable, uuid(a1e4a0ff-e0b2-431c-89cf-43b078189e27)]
 interface nsIIDBRequest : nsISupports
 {
   const unsigned short LOADING = 1;
@@ -56,7 +57,13 @@ interface nsIIDBRequest : nsISupports
 
   readonly attribute nsISupports source;
 
-  attribute nsIDOMEventListener onsuccess;
+  readonly attribute nsIIDBTransaction transaction;
 
+  [implicit_jscontext]
+  readonly attribute jsval result;
+
+  readonly attribute unsigned short errorCode;
+
+  attribute nsIDOMEventListener onsuccess;
   attribute nsIDOMEventListener onerror;
 };

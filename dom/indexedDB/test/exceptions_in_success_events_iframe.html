@@ -28,7 +28,7 @@
     }
 
     function errorHandler(event) {
-      ok(false, "indexedDB error (" + event.code + "): " + event.message);
+      ok(false, "indexedDB error, code " + event.target.errorCode);
       finishTest();
     }
 
@@ -65,7 +65,7 @@
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
 
-      let db = event.result;
+      let db = event.target.result;
       db.onerror = function(event) {
         event.preventDefault();
       };
@@ -76,8 +76,8 @@
       db.setVersion("1").onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      event.transaction.oncomplete = unexpectedSuccessHandler;
-      event.transaction.onabort = grabEventAndContinueHandler;
+      event.target.transaction.oncomplete = unexpectedSuccessHandler;
+      event.target.transaction.onabort = grabEventAndContinueHandler;
 
       is(db.version, "1", "Correct version");
       is(db.objectStoreNames.length, 0, "Correct objectStoreNames length");

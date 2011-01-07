@@ -35,13 +35,13 @@
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
 
-      let db = event.result;
+      let db = event.target.result;
       db.onerror = errorHandler;
 
       db.setVersion("1").onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      event.result.oncomplete = continueToNextStep;
+      event.target.result.oncomplete = continueToNextStep;
 
       for (let objectStoreIndex in objectStoreData) {
         const objectStoreInfo = objectStoreData[objectStoreIndex];
@@ -85,7 +85,7 @@
           let keyIndex = 0;
 
           index.openCursor().onsuccess = function(event) {
-            let cursor = event.result;
+            let cursor = event.target.result;
             if (!cursor) {
               continueToNextStep();
               return;
@@ -123,7 +123,7 @@
           db.transaction(objectStoreName).objectStore(objectStoreName)
                                          .openCursor()
                                          .onsuccess = function(event) {
-            let cursor = event.result;
+            let cursor = event.target.result;
             if (!cursor) {
               continueToNextStep();
               return;
