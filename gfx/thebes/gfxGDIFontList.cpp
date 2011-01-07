@@ -690,6 +690,15 @@ gfxGDIFontList::EnumFontFamExProc(ENUMLOGFONTEXW *lpelfe,
         nsDependentString faceName(lf.lfFaceName);
         nsRefPtr<gfxFontFamily> family = new GDIFontFamily(faceName);
         fontList->mFontFamilies.Put(name, family);
+
+        // if locale is such that CJK font names are the default coming from
+        // GDI, then if a family name is non-ASCII immediately read in other
+        // family names.  This assures that MS Gothic, MS Mincho are all found
+        // before lookups begin.
+        if (!IsASCII(faceName)) {
+            family->ReadOtherFamilyNames(gfxPlatformFontList::PlatformFontList());
+        }
+
         if (fontList->mBadUnderlineFamilyNames.Contains(name))
             family->SetBadUnderlineFamily();
     }
