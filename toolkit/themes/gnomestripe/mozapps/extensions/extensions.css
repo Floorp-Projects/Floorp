@@ -637,6 +637,8 @@
 
 #detail-screenshot {
   -moz-margin-end: 2em;
+  max-width: 300px;
+  max-height: 300px;
 }
 
 #detail-desc-container {
@@ -649,7 +651,7 @@
      bug 592712*/
   outline: solid transparent;
   white-space: pre-wrap;
-  min-width: 8em;
+  min-width: 10em;
 }
 
 #detail-contributions {
