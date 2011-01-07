@@ -351,7 +351,6 @@ ReportOnCaller(JSCLContextHelper &helper,
     return OutputError(cx, format, ap);
 }
 
-#ifdef MOZ_ENABLE_LIBXUL
 static nsresult
 ReadScriptFromStream(JSContext *cx, nsIObjectInputStream *stream,
                      JSScript **script)
@@ -453,7 +452,6 @@ WriteScriptToStream(JSContext *cx, JSScript *script,
     JS_XDRDestroy(xdr);
     return rv;
 }
-#endif // MOZ_ENABLE_LIBXUL
 
 mozJSComponentLoader::mozJSComponentLoader()
     : mRuntime(nsnull),
