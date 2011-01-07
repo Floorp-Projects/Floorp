@@ -1212,6 +1212,8 @@
             }
 
             this.tabContainer.appendChild(t);
+            if (this.tabContainer.getAttribute("pinnedonly") == "true")
+              this.tabContainer._positionPinnedTabs();
 
             if (this.tabContainer.mTabstrip._isRTLScrollbox) {
               /* In RTL UI, the tab is visually added to the left side of the
