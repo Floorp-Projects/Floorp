@@ -4047,7 +4047,7 @@ class DetermineTypesVisitor : public SlotVisitorBase
 {
     TraceRecorder &mRecorder;
     JSValueType *mTypeMap;
-  public:
+public:
     DetermineTypesVisitor(TraceRecorder &recorder,
                           JSValueType *typeMap) :
         mRecorder(recorder),
