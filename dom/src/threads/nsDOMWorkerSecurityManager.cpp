@@ -43,9 +43,12 @@
 
 // Other includes
 #include "jsapi.h"
+#include "nsDOMError.h"
+#include "nsThreadUtils.h"
 
 // DOMWorker includes
 #include "nsDOMThreadService.h"
+#include "nsDOMWorker.h"
 
 #define LOG(_args) PR_LOG(gDOMThreadsLog, PR_LOG_DEBUG, _args)
 
@@ -73,7 +76,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsDOMWorkerSecurityManager,
                               nsIXPCSecurityManager)
 
 NS_IMETHODIMP
-nsDOMWorkerSecurityManager::CanCreateWrapper(JSContext* aJSContext,
+nsDOMWorkerSecurityManager::CanCreateWrapper(JSContext* aCx,
                                              const nsIID& aIID,
                                              nsISupports* aObj,
                                              nsIClassInfo* aClassInfo,
@@ -83,19 +86,22 @@ nsDOMWorkerSecurityManager::CanCreateWrapper(JSContext* aJSContext,
 }
 
 NS_IMETHODIMP
-nsDOMWorkerSecurityManager::CanCreateInstance(JSContext* aJSContext,
+nsDOMWorkerSecurityManager::CanCreateInstance(JSContext* aCx,
                                               const nsCID& aCID)
 {
-  NS_NOTREACHED("Should not call this!");
-  return NS_ERROR_UNEXPECTED;
+  return CanGetService(aCx, aCID);
 }
 
 NS_IMETHODIMP
-nsDOMWorkerSecurityManager::CanGetService(JSContext* aJSContext,
+nsDOMWorkerSecurityManager::CanGetService(JSContext* aCx,
                                           const nsCID& aCID)
 {
-  NS_NOTREACHED("Should not call this!");
-  return NS_ERROR_UNEXPECTED;
+  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+
+  nsDOMWorker* worker = static_cast<nsDOMWorker*>(JS_GetContextPrivate(aCx));
+  NS_ASSERTION(worker, "This should be set by the DOM thread service!");
+
+  return worker->IsPrivileged() ? NS_OK : NS_ERROR_DOM_XPCONNECT_ACCESS_DENIED;
 }
 
 NS_IMETHODIMP
