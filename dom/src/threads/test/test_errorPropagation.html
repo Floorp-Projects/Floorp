@@ -12,16 +12,6 @@ Tests of DOM Worker Threads
 <body>
 <pre id="test">
 <script class="testbody" type="text/javascript">
-
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
-  const Cc = Components.classes;
-  const Ci = Components.interfaces;
-  const Cr = Components.results;
-
-  var consoleService =
-    Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService);
-
   var errors = [
     "This exception should show up in the JS console",
     "This exception should make it to onerror",
@@ -93,6 +83,15 @@ Tests of DOM Worker Threads
       throw Cr.NS_NOINTERFACE;
     }
   };
+
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+  const Cc = Components.classes;
+  const Ci = Components.interfaces;
+  const Cr = Components.results;
+
+  var consoleService =
+    Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService);
 
   consoleService.reset();
   consoleService.registerListener(consoleListener);
