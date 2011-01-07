@@ -696,6 +696,15 @@ public:
     static already_AddRefed<gfxFcFont>
     GetOrMakeFont(FcPattern *aRequestedPattern, FcPattern *aFontPattern);
 
+    // The PangoFont returned is owned by the gfxFcFont
+    PangoFont *GetPangoFont() {
+        if (!mPangoFont) {
+            MakePangoFont();
+        }
+        return mPangoFont;
+    }
+
+protected:
     virtual PRBool InitTextRun(gfxContext *aContext,
                                gfxTextRun *aTextRun,
                                const PRUnichar *aString,
@@ -708,14 +717,6 @@ public:
                                  const PRUnichar *aString,
                                  PRUint32 aRunStart, PRUint32 aRunLength,
                                  PangoScript aScript);
-
-    // The PangoFont returned is owned by the gfxFcFont
-    PangoFont *GetPangoFont() {
-        if (!mPangoFont) {
-            MakePangoFont();
-        }
-        return mPangoFont;
-    }
 
 private:
     static already_AddRefed<gfxFcFont> GetOrMakeFont(FcPattern *aPattern);
