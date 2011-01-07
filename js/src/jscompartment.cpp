@@ -353,21 +353,6 @@ JSCompartment::wrap(JSContext *cx, AutoIdVector &props)
     return true;
 }
 
-bool
-JSCompartment::wrapException(JSContext *cx)
-{
-    JS_ASSERT(cx->compartment == this);
-
-    if (cx->isExceptionPending()) {
-        Value v = cx->getPendingException();
-        cx->clearPendingException();
-        if (wrap(cx, &v))
-            cx->setPendingException(v);
-        return false;
-    }
-    return true;
-}
-
 #if defined JS_METHODJIT && defined JS_MONOIC
 /*
  * Check if the pool containing the code for jit should be destroyed, per the

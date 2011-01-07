@@ -2019,14 +2019,8 @@ JSContext::resetCompartment()
 
     compartment = scopeobj->compartment();
 
-    /*
-     * If wrapException fails, it overrides this->exception and
-     * reports OOM. The upshot is that we silently turn the exception
-     * into an uncatchable OOM error. A bit surprising, but the
-     * caller is just going to return false either way.
-     */
     if (isExceptionPending())
-        (void) compartment->wrapException(this);
+        wrapPendingException();
     return;
 
 error:
@@ -2036,6 +2030,21 @@ error:
      * we will crash.
      */
     compartment = NULL;
+}
+
+/*
+ * Since this function is only called in the context of a pending exception,
+ * the caller must subsequently take an error path. If wrapping fails, we leave
+ * the exception cleared, which, in the context of an error path, will be
+ * interpreted as an uncatchable exception.
+ */
+void
+JSContext::wrapPendingException()
+{
+    Value v = getPendingException();
+    clearPendingException();
+    if (compartment->wrap(this, &v))
+        setPendingException(v);
 }
 
 void

@@ -348,19 +348,15 @@ AutoCompartment::enter()
     if (origin != destination) {
         LeaveTrace(context);
 
-#ifdef DEBUG
-        JSCompartment *oldCompartment = context->compartment;
-        context->resetCompartment();
-        wasSane = (context->compartment == oldCompartment);
-#endif
+        if (context->isExceptionPending())
+            return false;
 
         context->compartment = destination;
         JSObject *scopeChain = target->getGlobal();
         JS_ASSERT(scopeChain->isNative());
+
         frame.construct();
-        if (!context->stack().pushDummyFrame(context, *scopeChain, &frame.ref()) ||
-            !destination->wrapException(context)) {
-            frame.destroy();
+        if (!context->stack().pushDummyFrame(context, *scopeChain, &frame.ref())) {
             context->compartment = origin;
             return false;
         }
@@ -376,8 +372,6 @@ AutoCompartment::leave()
     if (origin != destination) {
         frame.destroy();
         context->resetCompartment();
-        JS_ASSERT_IF(wasSane && context->hasfp(), context->compartment == origin);
-        context->compartment->wrapException(context);
     }
     entered = false;
 }
@@ -642,8 +636,7 @@ JSCrossCompartmentWrapper::construct(JSContext *cx, JSObject *wrapper, uintN arg
         return false;
 
     call.leave();
-    return call.origin->wrap(cx, rval) &&
-           call.origin->wrapException(cx);
+    return call.origin->wrap(cx, rval);
 }
 
 bool
