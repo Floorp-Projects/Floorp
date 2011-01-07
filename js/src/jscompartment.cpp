@@ -72,6 +72,10 @@ JSCompartment::JSCompartment(JSRuntime *rt)
 
 JSCompartment::~JSCompartment()
 {
+#if ENABLE_YARR_JIT
+    delete regExpAllocator;
+#endif
+
 #if defined JS_TRACER
     FinishJIT(&traceMonitor);
 #endif
@@ -105,6 +109,12 @@ JSCompartment::init()
     if (!InitJIT(&traceMonitor)) {
         return false;
     }
+#endif
+
+#if ENABLE_YARR_JIT
+    regExpAllocator = JSC::ExecutableAllocator::create();
+    if (!regExpAllocator)
+        return false;
 #endif
 
 #ifdef JS_METHODJIT
@@ -348,19 +358,17 @@ JSCompartment::wrapException(JSContext *cx)
 {
     JS_ASSERT(cx->compartment == this);
 
-    if (cx->throwing) {
-        AutoValueRooter tvr(cx, cx->exception);
-        cx->throwing = false;
-        cx->exception.setNull();
-        if (wrap(cx, tvr.addr())) {
-            cx->throwing = true;
-            cx->exception = tvr.value();
-        }
+    if (cx->isExceptionPending()) {
+        Value v = cx->getPendingException();
+        cx->clearPendingException();
+        if (wrap(cx, &v))
+            cx->setPendingException(v);
         return false;
     }
     return true;
 }
 
+#if defined JS_METHODJIT && defined JS_MONOIC
 /*
  * Check if the pool containing the code for jit should be destroyed, per the
  * heuristics in JSCompartment::sweep.
@@ -385,6 +393,7 @@ ScriptPoolDestroyed(JSContext *cx, mjit::JITScript *jit,
     }
     return pool->m_destroy;
 }
+#endif
 
 void
 JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)

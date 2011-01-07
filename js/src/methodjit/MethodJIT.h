@@ -354,6 +354,10 @@ struct JITScript {
     void sweepCallICs(bool purgeAll);
     void purgeMICs();
     void purgePICs();
+
+    size_t scriptDataSize();
+
+    size_t mainCodeSize() { return code.m_size; } /* doesn't account for fragmentation */
 };
 
 /*

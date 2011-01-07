@@ -1577,12 +1577,8 @@ MarkContext(JSTracer *trc, JSContext *acx)
     /* Mark other roots-by-definition in acx. */
     if (acx->globalObject && !JS_HAS_OPTION(acx, JSOPTION_UNROOTED_GLOBAL))
         MarkObject(trc, *acx->globalObject, "global object");
-    if (acx->throwing) {
-        MarkValue(trc, acx->exception, "exception");
-    } else {
-        /* Avoid keeping GC-ed junk stored in JSContext.exception. */
-        acx->exception.setNull();
-    }
+    if (acx->isExceptionPending())
+        MarkValue(trc, acx->getPendingException(), "exception");
 
     for (js::AutoGCRooter *gcr = acx->autoGCRooters; gcr; gcr = gcr->down)
         gcr->trace(trc);
@@ -1592,7 +1588,8 @@ MarkContext(JSTracer *trc, JSContext *acx)
 
     MarkValue(trc, acx->iterValue, "iterValue");
 
-    acx->compartment->marked = true;
+    if (acx->compartment)
+        acx->compartment->marked = true;
 
 #ifdef JS_TRACER
     TracerState* state = acx->tracerState;
@@ -1784,6 +1781,7 @@ js_FinalizeStringRT(JSRuntime *rt, JSString *str)
         if (!chars)
             return;
         if (thingKind == FINALIZE_STRING) {
+            rt->stringMemoryUsed -= str->length() * 2;
             rt->free(chars);
         } else if (thingKind == FINALIZE_EXTERNAL_STRING) {
             ((JSExternalString *)str)->finalize();

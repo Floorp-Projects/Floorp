@@ -135,6 +135,7 @@ JSString::finalize(JSContext *cx) {
          * flatChars for stillborn string is null, but cx->free checks
          * for a null pointer on its own.
          */
+        cx->runtime->stringMemoryUsed -= length() * 2;
         cx->free(const_cast<jschar *>(flatChars()));
     }
 }

@@ -777,6 +777,8 @@ class FrameState
         this->inTryBlock = inTryBlock;
     }
 
+    inline uint32 regsInUse() const { return Registers::AvailRegs & ~freeRegs.freeMask; }
+
   private:
     inline RegisterID allocReg(FrameEntry *fe, RematInfo::RematType type);
     inline void forgetReg(RegisterID reg);

@@ -111,13 +111,18 @@ Class js::regexp_statics_class = {
 };
 
 /*
- * Lock obj and replace its regexp internals with |newRegExp|.
+ * Replace the regexp internals of |obj| with |newRegExp|.
  * Decref the replaced regexp internals.
+ * Note that the refcount of |newRegExp| is unchanged.
  */
 static void
 SwapObjectRegExp(JSContext *cx, JSObject *obj, RegExp &newRegExp)
 {
     RegExp *oldRegExp = RegExp::extractFrom(obj);
+#ifdef DEBUG
+    assertSameCompartment(cx, obj, newRegExp.compartment);
+#endif
+
     obj->setPrivate(&newRegExp);
     obj->zeroRegExpLastIndex();
     if (oldRegExp)
@@ -130,9 +135,17 @@ js_CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *proto)
     JS_ASSERT(obj->getClass() == &js_RegExpClass);
     JS_ASSERT(proto);
     JS_ASSERT(proto->getClass() == &js_RegExpClass);
+
     JSObject *clone = NewNativeClassInstance(cx, &js_RegExpClass, proto, proto->getParent());
     if (!clone)
         return NULL;
+
+    /* 
+     * This clone functionality does not duplicate the JITted code blob, which is necessary for
+     * cross-compartment cloning functionality.
+     */
+    assertSameCompartment(cx, obj, clone);
+
     RegExpStatics *res = cx->regExpStatics();
     RegExp *re = RegExp::extractFrom(obj);
     {
@@ -752,16 +765,19 @@ regexp_compile(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, Value *argv, JSBool test, Value *rval)
 {
-    bool ok = InstanceOf(cx, obj, &js_RegExpClass, argv);
-    if (!ok)
-        return JS_FALSE;
+    if (!InstanceOf(cx, obj, &js_RegExpClass, argv))
+        return false;
 
     RegExp *re = RegExp::extractFrom(obj);
     if (!re)
-        return JS_TRUE;
+        return true;
 
-    /* NB: we must reach out: after this paragraph, in order to drop re. */
-    re->incref(cx);
+    /* 
+     * Code execution under this call could swap out the guts of |obj|, so we
+     * have to take a defensive refcount here.
+     */
+    AutoRefCount<RegExp> arc(cx, re);
+
     jsdouble lastIndex;
     if (re->global() || re->sticky()) {
         const Value v = obj->getRegExpLastIndex();
@@ -778,20 +794,18 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, Value *argv, JSBool te
         lastIndex = 0;
     }
 
-    /* Now that obj is unlocked, it's safe to (potentially) grab the GC lock. */
     RegExpStatics *res = cx->regExpStatics();
-    JSString *str;
+
+    JSString *input;
     if (argc) {
-        str = js_ValueToString(cx, argv[0]);
-        if (!str) {
-            ok = JS_FALSE;
-            goto out;
-        }
-        argv[0] = StringValue(str);
+        input = js_ValueToString(cx, argv[0]);
+        if (!input)
+            return false;
+        argv[0] = StringValue(input);
     } else {
         /* Need to grab input from statics. */
-        str = res->getPendingInput();
-        if (!str) {
+        input = res->getPendingInput();
+        if (!input) {
             JSAutoByteString sourceBytes(cx, re->getSource());
             if (!!sourceBytes) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NO_INPUT,
@@ -801,28 +815,29 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, Value *argv, JSBool te
                                      re->multiline() ? "m" : "",
                                      re->sticky() ? "y" : "");
             }
-            ok = false;
-            goto out;
+            return false;
         }
     }
 
-    if (lastIndex < 0 || str->length() < lastIndex) {
+    if (lastIndex < 0 || input->length() < lastIndex) {
         obj->zeroRegExpLastIndex();
         *rval = NullValue();
-    } else {
-        size_t lastIndexInt = (size_t) lastIndex;
-        ok = re->execute(cx, res, str, &lastIndexInt, !!test, rval);
-        if (ok && (re->global() || (!rval->isNull() && re->sticky()))) {
-            if (rval->isNull())
-                obj->zeroRegExpLastIndex();
-            else
-                obj->setRegExpLastIndex(lastIndexInt);
-        }
+        return true;
     }
 
-  out:
-    re->decref(cx);
-    return ok;
+    size_t lastIndexInt(lastIndex);
+    if (!re->execute(cx, res, input, &lastIndexInt, !!test, rval))
+        return false;
+
+    /* Update lastIndex. */
+    if (re->global() || (!rval->isNull() && re->sticky())) {
+        if (rval->isNull())
+            obj->zeroRegExpLastIndex();
+        else
+            obj->setRegExpLastIndex(lastIndexInt);
+    }
+
+    return true;
 }
 
 JSBool
