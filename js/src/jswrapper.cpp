@@ -358,7 +358,8 @@ AutoCompartment::enter()
         JSObject *scopeChain = target->getGlobal();
         JS_ASSERT(scopeChain->isNative());
         frame.construct();
-        if (!context->stack().pushDummyFrame(context, *scopeChain, &frame.ref())) {
+        if (!context->stack().pushDummyFrame(context, *scopeChain, &frame.ref()) ||
+            !destination->wrapException(context)) {
             frame.destroy();
             context->compartment = origin;
             return false;

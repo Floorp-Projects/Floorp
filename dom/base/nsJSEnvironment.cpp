@@ -1130,7 +1130,7 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
         JS_SetFrameReturnValue(cx, fp, rval);
         return JS_TRUE;
       case JSTRAP_ERROR:
-        cx->throwing = JS_FALSE;
+        JS_ClearPendingException(cx);
         return JS_FALSE;
       case JSTRAP_THROW:
         JS_SetPendingException(cx, rval);

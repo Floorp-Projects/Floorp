@@ -686,13 +686,13 @@ JS_ALWAYS_INLINE bool
 CallJSNative(JSContext *cx, js::Native native, uintN argc, js::Value *vp)
 {
 #ifdef DEBUG
-    JSBool alreadyThrowing = cx->throwing;
+    JSBool alreadyThrowing = cx->isExceptionPending();
 #endif
     assertSameCompartment(cx, ValueArray(vp, argc + 2));
     JSBool ok = native(cx, argc, vp);
     if (ok) {
         assertSameCompartment(cx, vp[0]);
-        JS_ASSERT_IF(!alreadyThrowing, !cx->throwing);
+        JS_ASSERT_IF(!alreadyThrowing, !cx->isExceptionPending());
     }
     return ok;
 }
@@ -799,5 +799,12 @@ CanLeaveTrace(JSContext *cx)
 }
 
 }  /* namespace js */
+
+inline void
+JSContext::setPendingException(js::Value v) {
+    this->throwing = true;
+    this->exception = v;
+    assertSameCompartment(this, v);
+}
 
 #endif /* jscntxtinlines_h___ */
