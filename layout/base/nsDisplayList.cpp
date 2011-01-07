@@ -84,7 +84,8 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mAccurateVisibleRegions(PR_FALSE),
       mInTransform(PR_FALSE),
       mSyncDecodeImages(PR_FALSE),
-      mIsPaintingToWindow(PR_FALSE) {
+      mIsPaintingToWindow(PR_FALSE),
+      mSnappingEnabled(PR_TRUE) {
   MOZ_COUNT_CTOR(nsDisplayListBuilder);
   PL_InitArenaPool(&mPool, "displayListArena", 1024,
                    NS_MAX(NS_ALIGNMENT_OF(void*),NS_ALIGNMENT_OF(double))-1);
@@ -745,7 +746,8 @@ RegisterThemeWidgetGeometry(nsIFrame* aFrame)
 
 nsDisplayBackground::nsDisplayBackground(nsDisplayListBuilder* aBuilder,
                                          nsIFrame* aFrame)
-  : nsDisplayItem(aBuilder, aFrame)
+  : nsDisplayItem(aBuilder, aFrame),
+    mSnappingEnabled(aBuilder->IsSnappingEnabled() && !aBuilder->IsInTransform())
 {
   MOZ_COUNT_CTOR(nsDisplayBackground);
   const nsStyleDisplay* disp = mFrame->GetStyleDisplay();
@@ -830,9 +832,9 @@ RoundedBorderIntersectsRect(nsIFrame* aFrame,
                             const nsPoint& aFrameToReferenceFrame,
                             const nsRect& aTestRect)
 {
-  NS_ABORT_IF_FALSE(nsRect(aFrameToReferenceFrame,
-                           aFrame->GetSize()).Intersects(aTestRect),
-                    "must intersect non-rounded rect");
+  if (!nsRect(aFrameToReferenceFrame, aFrame->GetSize()).Intersects(aTestRect))
+    return PR_FALSE;
+
   nscoord radii[8];
   return !aFrame->GetBorderRadii(radii) ||
          RoundedRectIntersectsRect(nsRect(aFrameToReferenceFrame,
@@ -859,9 +861,8 @@ nsDisplayBackground::HitTest(nsDisplayListBuilder* aBuilder,
                              HitTestState* aState,
                              nsTArray<nsIFrame*> *aOutFrames)
 {
-  // Note that we have to check !mIsThemed here to avoid triggering the
-  // assertion in RoundedBorderIntersectsRect, since when mIsThemed, our
-  // bounds can be different from the frame bounds.
+  // For theme backgrounds, assume that any point in our bounds is a hit.
+  // We don't know the true hit region of the theme background.
   if (!mIsThemed &&
       !RoundedBorderIntersectsRect(mFrame, ToReferenceFrame(), aRect)) {
     // aRect doesn't intersect our border-radius curve.
@@ -886,8 +887,24 @@ nsDisplayBackground::ComputeVisibility(nsDisplayListBuilder* aBuilder,
     nsCSSRendering::FindBackground(mFrame->PresContext(), mFrame, &bgSC);
 }
 
+// Note that even if the rectangle we draw and snap is smaller than aRect,
+// it's OK to call this to get a bounding rect for what we'll draw, because
+// snapping a rectangle which is contained in R always gives you a
+// rectangle which is contained in the snapped R.
+static nsRect
+SnapBounds(PRBool aSnappingEnabled, nsPresContext* aPresContext,
+           const nsRect& aRect) {
+  nsRect r = aRect;
+  if (aSnappingEnabled) {
+    nscoord appUnitsPerDevPixel = aPresContext->AppUnitsPerDevPixel();
+    r = r.ToNearestPixels(appUnitsPerDevPixel).ToAppUnits(appUnitsPerDevPixel);
+  }
+  return r;
+}
+
 nsRegion
-nsDisplayBackground::GetInsideClipRegion(PRUint8 aClip, const nsRect& aRect)
+nsDisplayBackground::GetInsideClipRegion(nsPresContext* aPresContext,
+                                         PRUint8 aClip, const nsRect& aRect)
 {
   nsRegion result;
   if (aRect.IsEmpty())
@@ -914,11 +931,14 @@ nsDisplayBackground::GetInsideClipRegion(PRUint8 aClip, const nsRect& aRect)
     return result;
   }
 
+  nsRect inputRect = SnapBounds(mSnappingEnabled, aPresContext, aRect);
+  clipRect = SnapBounds(mSnappingEnabled, aPresContext, clipRect);
+
   if (haveRadii) {
-    result = nsLayoutUtils::RoundedRectIntersectRect(clipRect, radii, aRect);
+    result = nsLayoutUtils::RoundedRectIntersectRect(clipRect, radii, inputRect);
   } else {
     nsRect r;
-    r.IntersectRect(clipRect, aRect);
+    r.IntersectRect(clipRect, inputRect);
     result = r;
   }
   return result;
@@ -954,7 +974,7 @@ nsDisplayBackground::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
   nsRect borderBox = nsRect(ToReferenceFrame(), mFrame->GetSize());
   if (NS_GET_A(bg->mBackgroundColor) == 255 &&
       !nsCSSRendering::IsCanvasFrame(mFrame)) {
-    result = GetInsideClipRegion(bottomLayer.mClip, borderBox);
+    result = GetInsideClipRegion(presContext, bottomLayer.mClip, borderBox);
   }
 
   // For policies other than EACH_BOX, don't try to optimize here, since
@@ -969,7 +989,7 @@ nsDisplayBackground::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
       if (layer.mImage.IsOpaque()) {
         nsRect r = nsCSSRendering::GetBackgroundLayerRect(presContext, mFrame,
             borderBox, *bg, layer);
-        result.Or(result, GetInsideClipRegion(layer.mClip, r));
+        result.Or(result, GetInsideClipRegion(presContext, layer.mClip, r));
       }
     }
   }
@@ -1089,16 +1109,16 @@ nsDisplayBackground::Paint(nsDisplayListBuilder* aBuilder,
 
 nsRect
 nsDisplayBackground::GetBounds(nsDisplayListBuilder* aBuilder) {
+  nsRect r(nsPoint(0,0), mFrame->GetSize());
+  nsPresContext* presContext = mFrame->PresContext();
+
   if (mIsThemed) {
-    nsRect r(nsPoint(0,0), mFrame->GetSize());
-    nsPresContext* presContext = mFrame->PresContext();
     presContext->GetTheme()->
         GetWidgetOverflow(presContext->DeviceContext(), mFrame,
                           mFrame->GetStyleDisplay()->mAppearance, &r);
-    return r + ToReferenceFrame();
   }
 
-  return nsRect(ToReferenceFrame(), mFrame->GetSize());
+  return SnapBounds(mSnappingEnabled, presContext, r + ToReferenceFrame());
 }
 
 nsRect
@@ -1192,6 +1212,13 @@ nsDisplayBorder::Paint(nsDisplayListBuilder* aBuilder,
                               nsRect(offset, mFrame->GetSize()),
                               mFrame->GetStyleContext(),
                               mFrame->GetSkipSides());
+}
+
+nsRect
+nsDisplayBorder::GetBounds(nsDisplayListBuilder* aBuilder)
+{
+  return SnapBounds(mSnappingEnabled, mFrame->PresContext(),
+                    nsRect(ToReferenceFrame(), mFrame->GetSize()));
 }
 
 // Given a region, compute a conservative approximation to it as a list
@@ -1567,17 +1594,19 @@ nsDisplayOwnLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
 nsDisplayClip::nsDisplayClip(nsDisplayListBuilder* aBuilder,
                              nsIFrame* aFrame, nsDisplayItem* aItem,
                              const nsRect& aRect)
-   : nsDisplayWrapList(aBuilder, aFrame, aItem),
-     mClip(aRect) {
+   : nsDisplayWrapList(aBuilder, aFrame, aItem) {
   MOZ_COUNT_CTOR(nsDisplayClip);
+  mClip = SnapBounds(aBuilder->IsSnappingEnabled() && !aBuilder->IsInTransform(),
+                     aBuilder->CurrentPresContext(), aRect);
 }
 
 nsDisplayClip::nsDisplayClip(nsDisplayListBuilder* aBuilder,
                              nsIFrame* aFrame, nsDisplayList* aList,
                              const nsRect& aRect)
-   : nsDisplayWrapList(aBuilder, aFrame, aList),
-     mClip(aRect) {
+   : nsDisplayWrapList(aBuilder, aFrame, aList) {
   MOZ_COUNT_CTOR(nsDisplayClip);
+  mClip = SnapBounds(aBuilder->IsSnappingEnabled() && !aBuilder->IsInTransform(),
+                     aBuilder->CurrentPresContext(), aRect);
 }
 
 nsRect nsDisplayClip::GetBounds(nsDisplayListBuilder* aBuilder) {
@@ -2059,7 +2088,7 @@ void nsDisplayTransform::HitTest(nsDisplayListBuilder *aBuilder,
  */
 nsRect nsDisplayTransform::GetBounds(nsDisplayListBuilder *aBuilder)
 {
-  return mFrame->GetVisualOverflowRect() + ToReferenceFrame();
+  return TransformRect(mStoredList.GetBounds(aBuilder), mFrame, ToReferenceFrame());
 }
 
 /* The transform is opaque iff the transform consists solely of scales and

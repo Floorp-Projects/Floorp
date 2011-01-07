@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=494924
+-->
+<head>
+  <title>Test for getCurrentPosition </title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="geolocation_common.js"></script>
+
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=494924">Mozilla Bug 494924</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+resume_geolocationProvider();
+force_prompt(true);
+
+function successCallback2(position) {
+  check_geolocation(position);
+  reset_prompt();
+  SimpleTest.finish();
+}
+
+function successCallback1(position) {
+  check_geolocation(position);
+  worse_geolocationProvider();
+  navigator.geolocation.getCurrentPosition(successCallback2, null, { maximumAge: 0 });
+}
+
+navigator.geolocation.getCurrentPosition(successCallback1, null, { maximumAge: 0 });
+
+</script>
+</pre>
+</body>
+</html>
+

@@ -259,6 +259,8 @@ public:
 
   virtual void DestroyFrontBuffer();
 
+  virtual void Disconnect();
+
   // LayerOGL impl
   virtual void Destroy();
 

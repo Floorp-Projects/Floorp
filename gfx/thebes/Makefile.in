@@ -45,6 +45,7 @@ EXPORTS	= \
 	GLContextProvider.h \
 	GLContextProviderImpl.h \
 	nsCoreAnimationSupport.h \
+	EGLUtils.h \
 	$(NULL)
 
 ifdef MOZ_IPC

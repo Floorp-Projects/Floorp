@@ -104,6 +104,7 @@ child:
     async NotifyVisited(URI uri);
 
     PreferenceUpdate(PrefTuple pref);
+    ClearUserPreference(nsCString prefName);
 
     NotifyAlertsObserver(nsCString topic, nsString data);
 

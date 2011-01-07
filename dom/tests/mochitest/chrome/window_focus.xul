@@ -283,12 +283,13 @@ function getTopWindow(win)
 function mouseOnElement(element, expectedElement, focusChanged, testid)
 {
   var expectedWindow = (element.ownerDocument.defaultView == gChildWindow) ? gChildWindow : window;
-  // on Mac, elements are not focused when clicking, except for lists and textboxes.
+  // on Mac, form elements are not focused when clicking, except for lists and textboxes.
   var noFocusOnMouse = (navigator.platform.indexOf("Mac") == 0);
   if (noFocusOnMouse) {
     if (element.namespaceURI == "http://www.w3.org/1999/xhtml") {
       // links are special. They can be focused but show no focus ring
-      if (element.localName == "a" || element.localName == "select" ||
+      if (element.localName == "a" || element.localName == "div" ||
+          element.localName == "select" ||
           element.localName == "input" && (element.type == "text" ||
                                            element.type == "password")) {
         noFocusOnMouse = false;

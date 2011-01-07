@@ -24,7 +24,7 @@ function testSteps()
   request.onsuccess = grabEventAndContinueHandler;
   var event = yield;
 
-  var db = event.result;
+  var db = event.target.result;
 
   var data = [
     { name: "inline key; key generator",
@@ -71,14 +71,14 @@ function testSteps()
     request.onsuccess = grabEventAndContinueHandler;
     event = yield;
 
-    let id = event.result;
+    let id = event.target.result;
     request = objectStore.get(id);
     request.onerror = errorHandler;
     request.onsuccess = grabEventAndContinueHandler;
     event = yield;
 
     // Sanity check!
-    is(test.storedObject.name, event.result.name,
+    is(test.storedObject.name, event.target.result.name,
                   "The correct object was stored.");
 
     request = objectStore.delete(id);
@@ -92,7 +92,7 @@ function testSteps()
     request.onsuccess = grabEventAndContinueHandler;
     event = yield;
 
-    ok(event.result === undefined, "Object was deleted");
+    ok(event.target.result === undefined, "Object was deleted");
   }
 
   finishTest();

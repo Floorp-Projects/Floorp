@@ -212,7 +212,7 @@ MacOSFontEntry::ReadCMAP()
 
     PRUint32 kCMAP = TRUETYPE_TAG('c','m','a','p');
 
-    nsAutoTArray<PRUint8,16384> cmap;
+    AutoFallibleTArray<PRUint8,16384> cmap;
     if (GetFontTable(kCMAP, cmap) != NS_OK)
         return NS_ERROR_FAILURE;
 
@@ -295,7 +295,7 @@ MacOSFontEntry::ReadCMAP()
 }
 
 nsresult
-MacOSFontEntry::GetFontTable(PRUint32 aTableTag, nsTArray<PRUint8>& aBuffer)
+MacOSFontEntry::GetFontTable(PRUint32 aTableTag, FallibleTArray<PRUint8>& aBuffer)
 {
     nsAutoreleasePool localPool;
 
@@ -593,7 +593,7 @@ gfxSingleFaceMacFontFamily::ReadOtherFamilyNames(gfxPlatformFontList *aPlatformF
         return;
 
     const PRUint32 kNAME = TRUETYPE_TAG('n','a','m','e');
-    nsAutoTArray<PRUint8,8192> buffer;
+    AutoFallibleTArray<PRUint8,8192> buffer;
 
     if (fe->GetFontTable(kNAME, buffer) != NS_OK)
         return;

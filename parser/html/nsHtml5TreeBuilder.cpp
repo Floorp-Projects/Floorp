@@ -177,6 +177,7 @@ void
 nsHtml5TreeBuilder::characters(const PRUnichar* buf, PRInt32 start, PRInt32 length)
 {
   if (needToDropLF) {
+    needToDropLF = PR_FALSE;
     if (buf[start] == '\n') {
       start++;
       length--;
@@ -184,7 +185,6 @@ nsHtml5TreeBuilder::characters(const PRUnichar* buf, PRInt32 start, PRInt32 leng
         return;
       }
     }
-    needToDropLF = PR_FALSE;
   }
   switch(mode) {
     case NS_HTML5TREE_BUILDER_IN_BODY:

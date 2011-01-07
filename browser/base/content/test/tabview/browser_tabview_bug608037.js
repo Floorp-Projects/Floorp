@@ -83,17 +83,21 @@ function onTabViewWindowLoaded() {
   is(groupItems[0].getChildren().length, 2, "The group has two tab items");
 
   tabTwo = undoCloseTab(0);
-  ok(TabView.isVisible(), "Tab View is still visible after restoring a tab");
-  is(groupItems[0].getChildren().length, 3, "The group has three tab items");
+  tabTwo.tabItem.addSubscriber(tabTwo, "reconnected", function() {
+    tabTwo.tabItem.removeSubscriber(tabTwo, "reconnected");
 
-  // clean up and finish
-  let endGame = function() {
-    window.removeEventListener("tabviewhidden", endGame, false);
-
-    gBrowser.removeTab(tabOne);
-    gBrowser.removeTab(tabTwo);
-    finish();
-  }
-  window.addEventListener("tabviewhidden", endGame, false);
-  TabView.toggle();
+    ok(TabView.isVisible(), "Tab View is still visible after restoring a tab");
+    is(groupItems[0].getChildren().length, 3, "The group still has three tab items");
+  
+    // clean up and finish
+    let endGame = function() {
+      window.removeEventListener("tabviewhidden", endGame, false);
+  
+      gBrowser.removeTab(tabOne);
+      gBrowser.removeTab(tabTwo);
+      finish();
+    }
+    window.addEventListener("tabviewhidden", endGame, false);
+    TabView.toggle();
+  });
 }

@@ -133,7 +133,7 @@ var htmlElements = [
   "<textarea id='elem' class='canfocus'></textarea>",
   "<select id='elem' class='canfocus'><option>One</select>",
   "<select id='elem' rows='5' class='canfocus'><option>One</select>",
-  "<div id='elem' tabindex='0' style='width: 10px; height: 10px;'></div>",
+  "<div id='elem' tabindex='0' class='canfocus' style='width: 10px; height: 10px;'></div>",
   "<a href='about:blank' class='canfocus' onclick='return false;'>about:blank</a>",
 ];
 

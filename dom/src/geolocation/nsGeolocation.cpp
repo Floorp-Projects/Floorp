@@ -242,6 +242,7 @@ nsGeolocationRequest::nsGeolocationRequest(nsGeolocation* aLocator,
                                            nsIDOMGeoPositionOptions* aOptions)
   : mAllowed(PR_FALSE),
     mCleared(PR_FALSE),
+    mIsFirstUpdate(PR_TRUE),
     mCallback(aCallback),
     mErrorCallback(aErrorCallback),
     mOptions(aOptions),
@@ -418,6 +419,10 @@ nsGeolocationRequest::SetTimeoutTimer()
 void
 nsGeolocationRequest::MarkCleared()
 {
+  if (mTimeoutTimer) {
+    mTimeoutTimer->Cancel();
+    mTimeoutTimer = nsnull;
+  }
   mCleared = PR_TRUE;
 }
 
@@ -450,6 +455,23 @@ nsGeolocationRequest::SendLocation(nsIDOMGeoPosition* aPosition)
   stack->Pop(&cx);
 
   SetTimeoutTimer();
+}
+
+void
+nsGeolocationRequest::Update(nsIDOMGeoPosition* aPosition, PRBool isBetter)
+{
+  // Only dispatch callbacks if this is the first position for this request, or
+  // if the accuracy is as good or improving.
+  //
+  // This ensures that all listeners get at least one position callback, particularly
+  // in the case when newly detected positions are all less accurate than the cached one.
+  //
+  // Fixes bug 596481
+  if (mIsFirstUpdate || isBetter) {
+    mIsFirstUpdate = PR_FALSE;
+    nsCOMPtr<nsIRunnable> ev  = new RequestSendLocationEvent(aPosition, this);
+    NS_DispatchToMainThread(ev);
+  }
 }
 
 void
@@ -636,13 +658,13 @@ nsGeolocationService::Update(nsIDOMGeoPosition *aSomewhere)
   // here we have to determine this aSomewhere is a "better"
   // position than any previously recv'ed.
 
-  if (!IsBetterPosition(aSomewhere))
-    return NS_OK;
-
-  SetCachedPosition(aSomewhere);
+  PRBool isBetter = IsBetterPosition(aSomewhere);
+  if (isBetter) {
+    SetCachedPosition(aSomewhere);
+  }
 
   for (PRUint32 i = 0; i< mGeolocators.Length(); i++)
-    mGeolocators[i]->Update(aSomewhere);
+    mGeolocators[i]->Update(aSomewhere, isBetter);
   return NS_OK;
 }
 
@@ -659,7 +681,7 @@ nsGeolocationService::IsBetterPosition(nsIDOMGeoPosition *aSomewhere)
   nsCOMPtr<nsIDOMGeoPosition> lastPosition = geoService->GetCachedPosition();
   if (!lastPosition)
     return PR_TRUE;
-  
+
   nsresult rv;
   DOMTimeStamp oldTime;
   rv = lastPosition->GetTimestamp(&oldTime);
@@ -974,22 +996,19 @@ nsGeolocation::RemoveRequest(nsGeolocationRequest* aRequest)
 }
 
 void
-nsGeolocation::Update(nsIDOMGeoPosition *aSomewhere)
+nsGeolocation::Update(nsIDOMGeoPosition *aSomewhere, PRBool isBetter)
 {
   if (!WindowOwnerStillExists())
     return Shutdown();
 
   for (PRUint32 i = 0; i< mPendingCallbacks.Length(); i++) {
-    nsCOMPtr<nsIRunnable> ev  = new RequestSendLocationEvent(aSomewhere,
-                                                             mPendingCallbacks[i]);
-    NS_DispatchToMainThread(ev);
+    mPendingCallbacks[i]->Update(aSomewhere, isBetter);
   }
   mPendingCallbacks.Clear();
 
   // notify everyone that is watching
   for (PRUint32 i = 0; i< mWatchingCallbacks.Length(); i++) {
-    nsCOMPtr<nsIRunnable> ev  = new RequestSendLocationEvent(aSomewhere, mWatchingCallbacks[i]);
-    NS_DispatchToMainThread(ev);
+    mWatchingCallbacks[i]->Update(aSomewhere, isBetter);
   }
 }
 

@@ -5553,26 +5553,48 @@ JS_FinishJSONParse(JSContext *cx, JSONParser *jp, jsval reviver)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_ReadStructuredClone(JSContext *cx, const uint64 *buf, size_t nbytes, uint32 version, jsval *vp)
+JS_ReadStructuredClone(JSContext *cx, const uint64 *buf, size_t nbytes,
+                       uint32 version, jsval *vp,
+                       const JSStructuredCloneCallbacks *optionalCallbacks,
+                       void *closure)
 {
     if (version > JS_STRUCTURED_CLONE_VERSION) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_CLONE_VERSION);
         return false;
     }
-    return ReadStructuredClone(cx, buf, nbytes, Valueify(vp));
+    const JSStructuredCloneCallbacks *callbacks =
+        optionalCallbacks ?
+        optionalCallbacks :
+        cx->runtime->structuredCloneCallbacks;
+    return ReadStructuredClone(cx, buf, nbytes, Valueify(vp), callbacks, closure);
 }
 
 JS_PUBLIC_API(JSBool)
-JS_WriteStructuredClone(JSContext *cx, jsval v, uint64 **bufp, size_t *nbytesp)
+JS_WriteStructuredClone(JSContext *cx, jsval v, uint64 **bufp, size_t *nbytesp,
+                        const JSStructuredCloneCallbacks *optionalCallbacks,
+                        void *closure)
 {
-    return WriteStructuredClone(cx, Valueify(v), (uint64_t **) bufp, nbytesp);
+    const JSStructuredCloneCallbacks *callbacks =
+        optionalCallbacks ?
+        optionalCallbacks :
+        cx->runtime->structuredCloneCallbacks;
+    return WriteStructuredClone(cx, Valueify(v), (uint64_t **) bufp, nbytesp,
+                                callbacks, closure);
 }
 
 JS_PUBLIC_API(JSBool)
-JS_StructuredClone(JSContext *cx, jsval v, jsval *vp)
+JS_StructuredClone(JSContext *cx, jsval v, jsval *vp,
+                   ReadStructuredCloneOp optionalReadOp,
+                   const JSStructuredCloneCallbacks *optionalCallbacks,
+                   void *closure)
 {
+    const JSStructuredCloneCallbacks *callbacks =
+        optionalCallbacks ?
+        optionalCallbacks :
+        cx->runtime->structuredCloneCallbacks;
     JSAutoStructuredCloneBuffer buf;
-    return buf.write(cx, v) && buf.read(vp);
+    return buf.write(cx, v, callbacks, closure) &&
+           buf.read(vp, cx, callbacks, closure);
 }
 
 JS_PUBLIC_API(void)

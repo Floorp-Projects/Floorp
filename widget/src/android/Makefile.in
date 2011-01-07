@@ -52,6 +52,7 @@ LIBXUL_LIBRARY  = 1
 
 
 CPPSRCS	= \
+	GfxInfo.cpp \
 	nsWidgetFactory.cpp \
 	nsAppShell.cpp \
 	nsToolkit.cpp \

@@ -68,6 +68,8 @@ public:
   RenderFrameParent(nsFrameLoader* aFrameLoader);
   virtual ~RenderFrameParent();
 
+  void Destroy();
+
   void ShadowLayersUpdated();
 
   already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,

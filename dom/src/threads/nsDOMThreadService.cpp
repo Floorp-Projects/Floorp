@@ -46,8 +46,6 @@
 #include "nsIConsoleService.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMNavigator.h"
-#include "nsIDOMWindowInternal.h"
 #include "nsIEventTarget.h"
 #include "nsIJSContextStack.h"
 #include "nsIJSRuntimeService.h"
@@ -65,6 +63,7 @@
 #include "nsAutoPtr.h"
 #include "nsContentUtils.h"
 #include "nsDeque.h"
+#include "nsGlobalWindow.h"
 #include "nsIClassInfoImpl.h"
 #include "nsStringBuffer.h"
 #include "nsThreadUtils.h"
@@ -756,6 +755,9 @@ nsDOMThreadService::Init()
   success = mPools.Init();
   NS_ENSURE_TRUE(success, NS_ERROR_OUT_OF_MEMORY);
 
+  success = mThreadsafeContractIDs.Init();
+  NS_ENSURE_TRUE(success, NS_ERROR_OUT_OF_MEMORY);
+
   success = mJSContexts.SetCapacity(THREADPOOL_THREAD_CAP);
   NS_ENSURE_TRUE(success, NS_ERROR_OUT_OF_MEMORY);
 
@@ -842,6 +844,9 @@ nsDOMThreadService::Cleanup()
   // This will either be called at 'xpcom-shutdown' or earlier if the call to
   // Init fails somehow. We can therefore assume that all services will still
   // be available here.
+
+  // Cancel all workers that weren't tied to a window.
+  CancelWorkersForGlobal(nsnull);
 
   {
     nsAutoMonitor mon(mMonitor);
@@ -1045,8 +1050,6 @@ already_AddRefed<nsDOMWorkerPool>
 nsDOMThreadService::GetPoolForGlobal(nsIScriptGlobalObject* aGlobalObject,
                                      PRBool aRemove)
 {
-  NS_ASSERTION(aGlobalObject, "Null pointer!");
-
   nsAutoMonitor mon(mMonitor);
 
   nsRefPtr<nsDOMWorkerPool> pool;
@@ -1119,8 +1122,6 @@ nsDOMThreadService::RescheduleSuspendedWorkerForPool(nsDOMWorkerPool* aPool)
 void
 nsDOMThreadService::CancelWorkersForGlobal(nsIScriptGlobalObject* aGlobalObject)
 {
-  NS_ASSERTION(aGlobalObject, "Null pointer!");
-
   nsRefPtr<nsDOMWorkerPool> pool = GetPoolForGlobal(aGlobalObject, PR_TRUE);
   if (pool) {
     pool->Cancel();
@@ -1216,6 +1217,43 @@ nsDOMThreadService::ChangeThreadPoolMaxThreads(PRInt16 aDelta)
   }
 
   return NS_OK;
+}
+
+void
+nsDOMThreadService::NoteThreadsafeContractId(const nsACString& aContractId,
+                                             PRBool aIsThreadsafe)
+{
+  NS_ASSERTION(!aContractId.IsEmpty(), "Empty contract id!");
+
+  nsAutoMonitor mon(mMonitor);
+
+#ifdef DEBUG
+  {
+    PRBool isThreadsafe;
+    if (mThreadsafeContractIDs.Get(aContractId, &isThreadsafe)) {
+      NS_ASSERTION(aIsThreadsafe == isThreadsafe, "Inconsistent threadsafety!");
+    }
+  }
+#endif
+
+  if (!mThreadsafeContractIDs.Put(aContractId, aIsThreadsafe)) {
+    NS_WARNING("Out of memory!");
+  }
+}
+
+ThreadsafeStatus
+nsDOMThreadService::GetContractIdThreadsafeStatus(const nsACString& aContractId)
+{
+  NS_ASSERTION(!aContractId.IsEmpty(), "Empty contract id!");
+
+  nsAutoMonitor mon(mMonitor);
+
+  PRBool isThreadsafe;
+  if (mThreadsafeContractIDs.Get(aContractId, &isThreadsafe)) {
+    return isThreadsafe ? Threadsafe : NotThreadsafe;
+  }
+
+  return Unknown;
 }
 
 // static
@@ -1369,9 +1407,8 @@ nsDOMThreadService::RegisterWorker(nsDOMWorker* aWorker,
                                    nsIScriptGlobalObject* aGlobalObject)
 {
   NS_ASSERTION(aWorker, "Null pointer!");
-  NS_ASSERTION(aGlobalObject, "Null pointer!");
 
-  if (NS_IsMainThread()) {
+  if (aGlobalObject && NS_IsMainThread()) {
     nsCOMPtr<nsPIDOMWindow> domWindow(do_QueryInterface(aGlobalObject));
     NS_ENSURE_TRUE(domWindow, NS_ERROR_NO_INTERFACE);
 
@@ -1404,36 +1441,32 @@ nsDOMThreadService::RegisterWorker(nsDOMWorker* aWorker,
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
     if (!mNavigatorStringsLoaded) {
-      nsCOMPtr<nsIDOMWindowInternal> internal(do_QueryInterface(aGlobalObject));
-      NS_ENSURE_TRUE(internal, NS_ERROR_NO_INTERFACE);
-
-      nsCOMPtr<nsIDOMNavigator> navigator;
-      rv = internal->GetNavigator(getter_AddRefs(navigator));
+      rv = NS_GetNavigatorAppName(mAppName);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      rv = navigator->GetAppName(mAppName);
+      rv = NS_GetNavigatorAppVersion(mAppVersion);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      rv = navigator->GetAppVersion(mAppVersion);
+      rv = NS_GetNavigatorPlatform(mPlatform);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      rv = navigator->GetPlatform(mPlatform);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = navigator->GetUserAgent(mUserAgent);
+      rv = NS_GetNavigatorUserAgent(mUserAgent);
       NS_ENSURE_SUCCESS(rv, rv);
 
       mNavigatorStringsLoaded = PR_TRUE;
     }
 
-    nsCOMPtr<nsPIDOMWindow> domWindow(do_QueryInterface(aGlobalObject));
-    NS_ENSURE_TRUE(domWindow, NS_ERROR_NO_INTERFACE);
+    nsCOMPtr<nsIDocument> document;
+    if (aGlobalObject) {
+      nsCOMPtr<nsPIDOMWindow> domWindow(do_QueryInterface(aGlobalObject));
+      NS_ENSURE_TRUE(domWindow, NS_ERROR_NO_INTERFACE);
 
-    nsIDOMDocument* domDocument = domWindow->GetExtantDocument();
-    NS_ENSURE_STATE(domDocument);
+      nsIDOMDocument* domDocument = domWindow->GetExtantDocument();
+      NS_ENSURE_STATE(domDocument);
 
-    nsCOMPtr<nsIDocument> document(do_QueryInterface(domDocument));
-    NS_ENSURE_STATE(document);
+      document = do_QueryInterface(domDocument);
+      NS_ENSURE_STATE(document);
+    }
 
     pool = new nsDOMWorkerPool(aGlobalObject, document);
     NS_ENSURE_TRUE(pool, NS_ERROR_OUT_OF_MEMORY);

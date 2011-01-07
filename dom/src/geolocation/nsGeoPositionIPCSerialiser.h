@@ -238,12 +238,12 @@ struct ParamTraits<GeoPosition>
     aParam->GetTimestamp(&timeStamp);
     WriteParam(aMsg, timeStamp);
 
-    nsRefPtr<nsIDOMGeoPositionCoords> coords;
+    nsCOMPtr<nsIDOMGeoPositionCoords> coords;
     aParam->GetCoords(getter_AddRefs(coords));
     GeoPositionCoords simpleCoords = coords.get();
     WriteParam(aMsg, simpleCoords);
 
-    nsRefPtr<nsIDOMGeoPositionAddress> address;
+    nsCOMPtr<nsIDOMGeoPositionAddress> address;
     aParam->GetAddress(getter_AddRefs(address));
     GeoPositionAddress simpleAddress = address.get();
     WriteParam(aMsg, simpleAddress);
@@ -262,13 +262,19 @@ struct ParamTraits<GeoPosition>
     }
 
     DOMTimeStamp timeStamp;
-    GeoPositionCoords coords;
+    GeoPositionCoords coords = nsnull;
     GeoPositionAddress address;
 
     // It's not important to us where it fails, but rather if it fails
     if (!(   ReadParam(aMsg, aIter, &timeStamp)
           && ReadParam(aMsg, aIter, &coords   )
-          && ReadParam(aMsg, aIter, &address  ))) return false;
+          && ReadParam(aMsg, aIter, &address  ))) {
+          // note it is fine to do "delete nsnull" in case coords hasn't
+          // been allocated and we will never have a case where address
+          // gets allocated and we end here
+          delete coords;
+          return false;
+      }
 
     *aResult = new nsGeoPosition(coords, address, timeStamp);
 

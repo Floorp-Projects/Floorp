@@ -230,7 +230,7 @@ AsyncResource.prototype = {
     // Set some default values in-case there's no response header
     let headers = {};
     let status = 0;
-    let success = true;
+    let success = false;
     try {
       // Read out the response headers if available
       channel.visitResponseHeaders({
@@ -373,7 +373,13 @@ Resource.prototype = {
   //
   // Perform an asynchronous HTTP GET for this resource.
   get: function Res_get() {
-    return this._request("GET");
+    let response = this._request("GET");
+    if (response.status == 0) {
+      // This must be an erroneously cached response. Try again.
+      this._log.debug("Status 0 in Resource.get: retrying once.");
+      response = this._request("GET");
+    }
+    return response;
   },
 
   // ** {{{ Resource.put }}} **
@@ -446,9 +452,24 @@ ChannelListener.prototype = {
     let siStream = Cc["@mozilla.org/scriptableinputstream;1"].
       createInstance(Ci.nsIScriptableInputStream);
     siStream.init(stream);
-
-    this._data += siStream.read(count);
-    this._onProgress();
+    try {
+      this._data += siStream.read(count);
+    } catch (ex) {
+      this._log.warn("Exception thrown reading " + count +
+                     " bytes from " + siStream + ".");
+      throw ex;
+    }
+    
+    try {
+      this._onProgress();
+    } catch (ex) {
+      this._log.warn("Got exception calling onProgress handler during fetch of "
+                     + req.URI.spec);
+      this._log.debug(Utils.stackTrace(ex));
+      this._log.trace("Rethrowing; expect a failure code from the HTTP channel.");
+      throw ex;
+    }
+    
     this.delayAbort();
   },
 

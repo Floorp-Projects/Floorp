@@ -911,6 +911,103 @@ function check_test_14(install) {
 
     restartManager();
 
+    run_test_15();
+  });
+}
+
+// Test that background update checks doesn't update an add-on that is
+// pending uninstall
+function run_test_15() {
+  // Have an add-on there that will be updated so we see some events from it
+  writeInstallRDFForExtension({
+    id: "addon1@tests.mozilla.org",
+    version: "1.0",
+    updateURL: "http://localhost:4444/data/test_update.rdf",
+    targetApplications: [{
+      id: "xpcshell@tests.mozilla.org",
+      minVersion: "1",
+      maxVersion: "1"
+    }],
+    name: "Test Addon 1",
+  }, profileDir);
+
+  writeInstallRDFForExtension({
+    id: "addon8@tests.mozilla.org",
+    version: "1.0",
+    updateURL: "http://localhost:4444/data/test_update.rdf",
+    targetApplications: [{
+      id: "xpcshell@tests.mozilla.org",
+      minVersion: "1",
+      maxVersion: "1"
+    }],
+    name: "Test Addon 8",
+  }, profileDir);
+  restartManager();
+
+  AddonManager.getAddonByID("addon8@tests.mozilla.org", function(a8) {
+    a8.uninstall();
+    do_check_false(hasFlag(a8.permissions, AddonManager.PERM_CAN_UPGRADE));
+
+    // The background update check will find updates for both add-ons but only
+    // proceed to install one of them.
+    AddonManager.addInstallListener({
+      onNewInstall: function(aInstall) {
+        if (aInstall.existingAddon.id != "addon1@tests.mozilla.org" &&
+            aInstall.existingAddon.id != "addon8@tests.mozilla.org")
+          do_throw("Saw unexpected onNewInstall for " + aInstall.existingAddon.id);
+      },
+
+      onDownloadStarted: function(aInstall) {
+        do_check_eq(aInstall.existingAddon.id, "addon1@tests.mozilla.org");
+      },
+
+      onDownloadEnded: function(aInstall) {
+        do_check_eq(aInstall.existingAddon.id, "addon1@tests.mozilla.org");
+      },
+
+      onDownloadFailed: function(aInstall) {
+        do_throw("Should not have seen onDownloadFailed event");
+      },
+
+      onDownloadCancelled: function(aInstall) {
+        do_throw("Should not have seen onDownloadCancelled event");
+      },
+
+      onInstallStarted: function(aInstall) {
+        do_check_eq(aInstall.existingAddon.id, "addon1@tests.mozilla.org");
+      },
+
+      onInstallEnded: function(aInstall) {
+        do_check_eq(aInstall.existingAddon.id, "addon1@tests.mozilla.org");
+        check_test_15(aInstall);
+      },
+
+      onInstallFailed: function(aInstall) {
+        do_throw("Should not have seen onInstallFailed event");
+      },
+
+      onInstallCancelled: function(aInstall) {
+        do_throw("Should not have seen onInstallCancelled event");
+      },
+    });
+
+    // Fake a timer event
+    gInternalManager.notify(null);
+  });
+}
+
+function check_test_15(aInstall) {
+  restartManager();
+  AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
+                               "addon8@tests.mozilla.org"], function([a1, a8]) {
+    do_check_neq(a1, null);
+    do_check_eq(a1.version, "2.0");
+    a1.uninstall();
+
+    do_check_eq(a8, null);
+
+    restartManager();
+
     end_test();
   });
 }

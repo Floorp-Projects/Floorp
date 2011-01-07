@@ -79,8 +79,9 @@ gfxSharedImageSurface::gfxSharedImageSurface(const gfxIntSize& aSize,
     mFormat = aFormat;
     mStride = ComputeStride(aSize, aFormat);
     mShmem = aShmem;
+    mData = aShmem.get<unsigned char>();
     cairo_surface_t *surface =
-        cairo_image_surface_create_for_data(mShmem.get<unsigned char>(),
+        cairo_image_surface_create_for_data(mData,
                                             (cairo_format_t)mFormat,
                                             mSize.width,
                                             mSize.height,

@@ -76,7 +76,7 @@ ifdef SYSTEM_LIBXUL
 endif
 
 # ELOG prints out failed command when building silently (gmake -s).
-ifneq (,$(findstring -s,$(MAKEFLAGS)))
+ifneq (,$(findstring s, $(filter-out --%, $(MAKEFLAGS))))
   ELOG := $(EXEC) sh $(BUILD_TOOLS)/print-failed-commands.sh
 else
   ELOG :=

@@ -71,7 +71,8 @@ public:
   { }
 
   nsresult DoDatabaseWork(mozIStorageConnection* aConnection);
-  nsresult GetSuccessResult(nsIWritableVariant* aResult);
+  nsresult GetSuccessResult(JSContext* aCx,
+                            jsval* aVal);
 
   void ReleaseMainThreadObjects()
   {
@@ -96,7 +97,8 @@ public:
   { }
 
   nsresult DoDatabaseWork(mozIStorageConnection* aConnection);
-  nsresult OnSuccess(nsIDOMEventTarget* aTarget);
+  nsresult GetSuccessResult(JSContext* aCx,
+                            jsval* aVal);
 
   void ReleaseMainThreadObjects()
   {
@@ -120,7 +122,8 @@ public:
   { }
 
   nsresult DoDatabaseWork(mozIStorageConnection* aConnection);
-  nsresult OnSuccess(nsIDOMEventTarget* aTarget);
+  nsresult GetSuccessResult(JSContext* aCx,
+                            jsval* aVal);
 
 protected:
   const PRUint32 mLimit;
@@ -139,7 +142,8 @@ public:
   { }
 
   nsresult DoDatabaseWork(mozIStorageConnection* aConnection);
-  nsresult OnSuccess(nsIDOMEventTarget* aTarget);
+  nsresult GetSuccessResult(JSContext* aCx,
+                            jsval* aVal);
 
   void ReleaseMainThreadObjects()
   {
@@ -171,7 +175,8 @@ public:
   { }
 
   nsresult DoDatabaseWork(mozIStorageConnection* aConnection);
-  nsresult GetSuccessResult(nsIWritableVariant* aResult);
+  nsresult GetSuccessResult(JSContext* aCx,
+                            jsval* aVal);
 
   void ReleaseMainThreadObjects()
   {
@@ -213,7 +218,8 @@ public:
   { }
 
   nsresult DoDatabaseWork(mozIStorageConnection* aConnection);
-  nsresult GetSuccessResult(nsIWritableVariant* aResult);
+  nsresult GetSuccessResult(JSContext* aCx,
+                            jsval* aVal);
 
   void ReleaseMainThreadObjects()
   {
@@ -712,21 +718,11 @@ GetKeyHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 }
 
 nsresult
-GetKeyHelper::GetSuccessResult(nsIWritableVariant* aResult)
+GetKeyHelper::GetSuccessResult(JSContext* aCx,
+                               jsval* aVal)
 {
-  if (mKey.IsUnset()) {
-    aResult->SetAsEmpty();
-  }
-  else if (mKey.IsString()) {
-    aResult->SetAsAString(mKey.StringValue());
-  }
-  else if (mKey.IsInt()) {
-    aResult->SetAsInt64(mKey.IntValue());
-  }
-  else {
-    NS_NOTREACHED("Unknown key type!");
-  }
-  return NS_OK;
+  NS_ASSERTION(!mKey.IsUnset(), "Badness!");
+  return IDBObjectStore::GetJSValFromKey(mKey, aCx, aVal);
 }
 
 nsresult
@@ -774,15 +770,10 @@ GetHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 }
 
 nsresult
-GetHelper::OnSuccess(nsIDOMEventTarget* aTarget)
+GetHelper::GetSuccessResult(JSContext* aCx,
+                            jsval* aVal)
 {
-  nsRefPtr<GetSuccessEvent> event(new GetSuccessEvent(mCloneBuffer));
-  nsresult rv = event->Init(mRequest, mTransaction);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
-  PRBool dummy;
-  aTarget->DispatchEvent(static_cast<nsDOMEvent*>(event), &dummy);
-  return NS_OK;
+  return ConvertCloneBufferToJSVal(aCx, mCloneBuffer, aVal);
 }
 
 nsresult
@@ -896,17 +887,51 @@ GetAllKeysHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 }
 
 nsresult
-GetAllKeysHelper::OnSuccess(nsIDOMEventTarget* aTarget)
+GetAllKeysHelper::GetSuccessResult(JSContext* aCx,
+                                   jsval* aVal)
 {
-  nsRefPtr<GetAllKeySuccessEvent> event(new GetAllKeySuccessEvent(mKeys));
+  NS_ASSERTION(mKeys.Length() <= mLimit, "Too many results!");
 
-  NS_ASSERTION(mKeys.IsEmpty(), "Should have swapped!");
+  nsTArray<Key> keys;
+  if (!mKeys.SwapElements(keys)) {
+    NS_ERROR("Failed to swap elements!");
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+  }
 
-  nsresult rv = event->Init(mRequest, mTransaction);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  JSAutoRequest ar(aCx);
 
-  PRBool dummy;
-  aTarget->DispatchEvent(static_cast<nsDOMEvent*>(event), &dummy);
+  JSObject* array = JS_NewArrayObject(aCx, 0, NULL);
+  if (!array) {
+    NS_WARNING("Failed to make array!");
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+  }
+
+  if (!keys.IsEmpty()) {
+    if (!JS_SetArrayLength(aCx, array, jsuint(keys.Length()))) {
+      NS_WARNING("Failed to set array length!");
+      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+    }
+
+    jsint count = jsint(keys.Length());
+    for (jsint index = 0; index < count; index++) {
+      const Key& key = keys[index];
+      NS_ASSERTION(!key.IsUnset(), "Bad key!");
+
+      jsval value;
+      nsresult rv = IDBObjectStore::GetJSValFromKey(key, aCx, &value);
+      if (NS_FAILED(rv)) {
+        NS_WARNING("Failed to get jsval for key!");
+        return rv;
+      }
+
+      if (!JS_SetElement(aCx, array, index, &value)) {
+        NS_WARNING("Failed to set array element!");
+        return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+      }
+    }
+  }
+
+  *aVal = OBJECT_TO_JSVAL(array);
   return NS_OK;
 }
 
@@ -1011,19 +1036,11 @@ GetAllHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 }
 
 nsresult
-GetAllHelper::OnSuccess(nsIDOMEventTarget* aTarget)
+GetAllHelper::GetSuccessResult(JSContext* aCx,
+                               jsval* aVal)
 {
   NS_ASSERTION(mCloneBuffers.Length() <= mLimit, "Too many results!");
-
-  nsRefPtr<GetAllSuccessEvent> event = new GetAllSuccessEvent(mCloneBuffers);
-  NS_ASSERTION(mCloneBuffers.IsEmpty(), "Should have swapped!");
-
-  nsresult rv = event->Init(mRequest, mTransaction);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
-  PRBool dummy;
-  aTarget->DispatchEvent(static_cast<nsDOMEvent*>(event), &dummy);
-  return NS_OK;
+  return ConvertCloneBuffersToArray(aCx, mCloneBuffers, aVal);
 }
 
 nsresult
@@ -1248,10 +1265,11 @@ OpenKeyCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 }
 
 nsresult
-OpenKeyCursorHelper::GetSuccessResult(nsIWritableVariant* aResult)
+OpenKeyCursorHelper::GetSuccessResult(JSContext* aCx,
+                                      jsval* aVal)
 {
   if (mKey.IsUnset()) {
-    aResult->SetAsEmpty();
+    *aVal = JSVAL_VOID;
     return NS_OK;
   }
 
@@ -1260,8 +1278,7 @@ OpenKeyCursorHelper::GetSuccessResult(nsIWritableVariant* aResult)
                       mContinueQuery, mContinueToQuery, mKey, mObjectKey);
   NS_ENSURE_TRUE(cursor, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  aResult->SetAsISupports(cursor);
-  return NS_OK;
+  return WrapNative(aCx, cursor, aVal);
 }
 
 nsresult
@@ -1431,15 +1448,6 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
                                                            mCloneBuffer);
   NS_ENSURE_SUCCESS(rv, rv);
 
-/*
-  SELECT index_data.value, object_data.key_value, object_data.data
-  FROM object_data INNER JOIN index_data
-  ON index_data.object_data_id = object_data.id
-  WHERE index_data.index_id = 2 AND index_data.value < 73
-  AND ( ( index_data.value = 65 AND object_data.key_value > "237-23-7736" )
-  OR ( index_data.value > 65 ) )
-  ORDER BY index_data.value ASC, object_data.key_value ASC
-*/
   // Now we need to make the query to get the next match.
   nsCAutoString queryStart = NS_LITERAL_CSTRING("SELECT ") + value +
                              NS_LITERAL_CSTRING(", ") + keyValue +
@@ -1529,10 +1537,11 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 }
 
 nsresult
-OpenCursorHelper::GetSuccessResult(nsIWritableVariant* aResult)
+OpenCursorHelper::GetSuccessResult(JSContext* aCx,
+                                   jsval* aVal)
 {
   if (mKey.IsUnset()) {
-    aResult->SetAsEmpty();
+    *aVal = JSVAL_VOID;
     return NS_OK;
   }
 
@@ -1542,6 +1551,5 @@ OpenCursorHelper::GetSuccessResult(nsIWritableVariant* aResult)
                       mCloneBuffer);
   NS_ENSURE_TRUE(cursor, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  aResult->SetAsISupports(cursor);
-  return NS_OK;
+  return WrapNative(aCx, cursor, aVal);
 }

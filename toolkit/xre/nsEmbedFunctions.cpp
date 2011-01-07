@@ -35,6 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#if defined(MOZ_WIDGET_QT)
+#include "nsQAppInstance.h"
+#endif
+
 #ifdef MOZ_IPC
 #include "base/basictypes.h"
 #endif
@@ -391,6 +395,10 @@ XRE_InitChildProcess(int aArgc,
   
 #if defined(MOZ_WIDGET_GTK2)
   g_thread_init(NULL);
+#endif
+
+#if defined(MOZ_WIDGET_QT)
+  nsQAppInstance::AddRef();
 #endif
 
   if (PR_GetEnv("MOZ_DEBUG_CHILD_PROCESS")) {

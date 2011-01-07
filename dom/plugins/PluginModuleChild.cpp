@@ -579,9 +579,28 @@ PluginModuleChild::AnswerNP_Shutdown(NPError *rv)
     return true;
 }
 
+bool
+PluginModuleChild::AnswerURLRedirectNotifySupported(bool *aBoolVal)
+{
+    *aBoolVal = !!mFunctions.urlredirectnotify;
+    return true;
+}
+
+void
+PluginModuleChild::QuickExit()
+{
+    NS_WARNING("plugin process _exit()ing");
+    _exit(0);
+}
+
 void
 PluginModuleChild::ActorDestroy(ActorDestroyReason why)
 {
+    if (AbnormalShutdown == why) {
+        NS_WARNING("shutting down early because of crash!");
+        QuickExit();
+    }
+
     // doesn't matter why we're being destroyed; it's up to us to
     // initiate (clean) shutdown
     XRE_ShutdownChildProcess();
@@ -810,6 +829,9 @@ _convertpoint(NPP instance,
               double sourceX, double sourceY, NPCoordinateSpace sourceSpace,
               double *destX, double *destY, NPCoordinateSpace destSpace);
 
+static void NP_CALLBACK
+_urlredirectresponse(NPP instance, void* notifyData, NPBool allow);
+
 } /* namespace child */
 } /* namespace plugins */
 } /* namespace mozilla */
@@ -871,7 +893,7 @@ const NPNetscapeFuncs PluginModuleChild::sBrowserFuncs = {
     mozilla::plugins::child::_convertpoint,
     NULL, // handleevent, unimplemented
     NULL, // unfocusinstance, unimplemented
-    NULL  // urlredirectresponse, unimplemented
+    mozilla::plugins::child::_urlredirectresponse
 };
 
 PluginInstanceChild*
@@ -1626,11 +1648,33 @@ _convertpoint(NPP instance,
     return result;
 }
 
+void NP_CALLBACK
+_urlredirectresponse(NPP instance, void* notifyData, NPBool allow)
+{
+    InstCast(instance)->NPN_URLRedirectResponse(notifyData, allow);
+}
+
 } /* namespace child */
 } /* namespace plugins */
 } /* namespace mozilla */
 
 //-----------------------------------------------------------------------------
+
+bool
+PluginModuleChild::AnswerNP_GetEntryPoints(NPError* _retval)
+{
+    PLUGIN_LOG_DEBUG_METHOD;
+    AssertPluginThread();
+
+#if defined(OS_LINUX)
+    return true;
+#elif defined(OS_WIN) || defined(OS_MACOSX)
+    *_retval = mGetEntryPointsFunc(&mFunctions);
+    return true;
+#else
+#  error Please implement me for your platform
+#endif
+}
 
 bool
 PluginModuleChild::AnswerNP_Initialize(NativeThreadId* tid, NPError* _retval)
@@ -1658,24 +1702,8 @@ PluginModuleChild::AnswerNP_Initialize(NativeThreadId* tid, NPError* _retval)
 #if defined(OS_LINUX)
     *_retval = mInitializeFunc(&sBrowserFuncs, &mFunctions);
     return true;
-#elif defined(OS_WIN)
-    nsresult rv = mGetEntryPointsFunc(&mFunctions);
-    if (NS_FAILED(rv)) {
-        return false;
-    }
-    NS_ASSERTION(HIBYTE(mFunctions.version) >= NP_VERSION_MAJOR,
-                 "callback version is less than NP version");
-
+#elif defined(OS_WIN) || defined(OS_MACOSX)
     *_retval = mInitializeFunc(&sBrowserFuncs);
-    return true;
-#elif defined(OS_MACOSX)
-    *_retval = mInitializeFunc(&sBrowserFuncs);
-
-    nsresult rv = mGetEntryPointsFunc(&mFunctions);
-    if (NS_FAILED(rv)) {
-        return false;
-    }
-
     return true;
 #else
 #  error Please implement me for your platform

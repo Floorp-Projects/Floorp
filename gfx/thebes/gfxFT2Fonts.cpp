@@ -268,7 +268,7 @@ FontEntry::ReadCMAP()
     NS_ENSURE_TRUE(status == 0, NS_ERROR_FAILURE);
     NS_ENSURE_TRUE(len != 0, NS_ERROR_FAILURE);
 
-    nsAutoTArray<PRUint8,16384> buffer;
+    AutoFallibleTArray<PRUint8,16384> buffer;
     if (!buffer.AppendElements(len)) {
         return NS_ERROR_FAILURE;
     }

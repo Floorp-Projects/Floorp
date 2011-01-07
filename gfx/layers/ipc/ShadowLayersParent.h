@@ -64,6 +64,8 @@ public:
   ShadowLayersParent(ShadowLayerManager* aManager);
   ~ShadowLayersParent();
 
+  void Destroy();
+
   ShadowLayerManager* layer_manager() const { return mLayerManager; }
 
   ContainerLayer* GetRoot() const { return mRoot; }
