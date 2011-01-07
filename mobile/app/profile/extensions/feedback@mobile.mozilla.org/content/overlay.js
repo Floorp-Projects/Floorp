@@ -41,14 +41,14 @@ var Feedback = {
   _manufacturer: "",
 
   init: function(aEvent) {
-    let appInfo = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo);
-    document.getElementById("feedback-about").setAttribute("desc", appInfo.version);
-
-    // A simple frame script to fill in the referrer page and device info
-    messageManager.loadFrameScript("chrome://feedback/content/content.js", true);
-
     // Delay the widget initialization during startup.
     window.addEventListener("UIReadyDelayed", function(aEvent) {
+      let appInfo = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo);
+      document.getElementById("feedback-about").setAttribute("desc", appInfo.version);
+
+      // A simple frame script to fill in the referrer page and device info
+      messageManager.loadFrameScript("chrome://feedback/content/content.js", true);
+
       window.removeEventListener(aEvent.type, arguments.callee, false);
       document.getElementById("feedback-container").hidden = false;
 

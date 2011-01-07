@@ -1,14 +1,36 @@
 
 function populateFeedback(aMessage) {
-  content.document.getElementById("id_url").value = aMessage.json.referrer;
+  let json = aMessage.json;
 
-  let device = content.document.getElementById("id_device");
-  if (device)
-    device.value = aMessage.json.device || "";
+  let referrer = json.referrer;
+  let URLElem = content.document.getElementById("id_url");
+  if (URLElem)
+    URLElem.value = referrer;
 
-  let manufacturer = content.document.getElementById("id_manufacturer");
-  if (manufacturer)
-    manufacturer.value = aMessage.json.manufacturer || "";
+  let URLElems = content.document.getElementsByClassName("url");
+  URLElems.forEach(function(aElement) {
+    aElement.value = referrer;
+  });
+
+  let device = json.device || "";
+  let deviceElem = content.document.getElementById("id_device");
+  if (deviceElem)
+    deviceElem.value = device;
+
+  let deviceElems = content.document.getElementsByClassName("device");
+  deviceElems.forEach(function(aElement) {
+    aElement.value = device;
+  });
+
+  let manufacturer = json.manufacturer || "";
+  let manufacturerElem = content.document.getElementById("id_manufacturer");
+  if (manufacturerElem)
+    manufacturerElem.value = manufacturer;
+
+  let manufacturerElems = content.document.getElementsByClassName("manufacturer");
+  manufacturerElems.forEach(function(aElement) {
+    aElement.value = manufacturer;
+  });
 }
 
 addMessageListener("Feedback:InitPage", populateFeedback);
