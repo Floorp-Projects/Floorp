@@ -185,6 +185,10 @@ PrintDisplayListTo(nsDisplayListBuilder* aBuilder, const nsDisplayList& aList,
     if (!list || list->DidComputeVisibility()) {
       opaque = i->GetOpaqueRegion(aBuilder);
     }
+    if (i->GetType() == nsDisplayItem::TYPE_TRANSFORM) {
+      nsDisplayTransform* t = static_cast<nsDisplayTransform*>(i);
+      list = t->GetStoredList()->GetList();
+    }
     fprintf(aOutput, "%s %p(%s) (%d,%d,%d,%d)(%d,%d,%d,%d)%s%s",
             i->Name(), (void*)f, NS_ConvertUTF16toUTF8(fName).get(),
             rect.x, rect.y, rect.width, rect.height,
@@ -201,10 +205,6 @@ PrintDisplayListTo(nsDisplayListBuilder* aBuilder, const nsDisplayList& aList,
     fputc('\n', aOutput);
     if (list) {
       PrintDisplayListTo(aBuilder, *list, aIndent + 4, aOutput);
-    }
-    if (i->GetType() == nsDisplayItem::TYPE_TRANSFORM) {
-      nsDisplayTransform* t = static_cast<nsDisplayTransform*>(i);
-      PrintDisplayListTo(aBuilder, *(t->GetStoredList()->GetList()), aIndent + 4, aOutput);
     }
   }
 }
