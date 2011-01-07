@@ -417,6 +417,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
             nNmapLive++;
     }
 
+    /* Please keep in sync with JITScript::scriptDataSize! */
     size_t totalBytes = sizeof(JITScript) +
                         sizeof(NativeMapEntry) * nNmapLive +
 #if defined JS_MONOIC
@@ -710,6 +711,9 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
         to.inlineHoleGuard = inlineHoleGuard;
         JS_ASSERT(to.inlineHoleGuard == inlineHoleGuard);
 
+        to.volatileMask = from.volatileMask;
+        JS_ASSERT(to.volatileMask == from.volatileMask);
+
         stubCode.patch(from.paramAddr, &to);
     }
 
@@ -815,6 +819,9 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
     jit->nNmapPairs = nNmapLive;
     *jitp = jit;
 
+    /* We tolerate a race in the stats. */
+    cx->runtime->mjitMemoryUsed += totalSize + totalBytes;
+
     return Compile_Okay;
 }
 
@@ -823,21 +830,21 @@ class SrcNoteLineScanner {
     jssrcnote *sn;
 
 public:
-    SrcNoteLineScanner(jssrcnote *sn) : offset(0), sn(sn) {}
+    SrcNoteLineScanner(jssrcnote *sn) : offset(SN_DELTA(sn)), sn(sn) {}
 
     bool firstOpInLine(ptrdiff_t relpc) {
         while ((offset < relpc) && !SN_IS_TERMINATOR(sn)) {
-            offset += SN_DELTA(sn);
             sn = SN_NEXT(sn);
+            offset += SN_DELTA(sn);
         }
 
         while ((offset == relpc) && !SN_IS_TERMINATOR(sn)) {
             JSSrcNoteType type = (JSSrcNoteType) SN_TYPE(sn);
             if (type == SRC_SETLINE || type == SRC_NEWLINE)
                 return true;
-                
-            offset += SN_DELTA(sn);
+
             sn = SN_NEXT(sn);
+            offset += SN_DELTA(sn);
         }
 
         return false;
@@ -1365,8 +1372,12 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_GETELEM)
 
           BEGIN_CASE(JSOP_SETELEM)
-            if (!jsop_setelem())
+          {
+            jsbytecode *next = &PC[JSOP_SETELEM_LENGTH];
+            bool pop = (JSOp(*next) == JSOP_POP && !analysis->jumpTarget(next));
+            if (!jsop_setelem(pop))
                 return Compile_Error;
+          }
           END_CASE(JSOP_SETELEM);
 
           BEGIN_CASE(JSOP_CALLNAME)
@@ -1713,16 +1724,9 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_INSTANCEOF)
 
           BEGIN_CASE(JSOP_EXCEPTION)
-          {
-            JS_STATIC_ASSERT(sizeof(cx->throwing) == 4);
-            RegisterID reg = frame.allocReg();
-            masm.loadPtr(FrameAddress(offsetof(VMFrame, cx)), reg);
-            masm.store32(Imm32(JS_FALSE), Address(reg, offsetof(JSContext, throwing)));
-
-            Address excn(reg, offsetof(JSContext, exception));
-            frame.freeReg(reg);
-            frame.push(excn);
-          }
+            prepareStubCall(Uses(0));
+            INLINE_STUBCALL(stubs::Exception);
+            frame.pushSynced();
           END_CASE(JSOP_EXCEPTION)
 
           BEGIN_CASE(JSOP_LINENO)
@@ -1744,7 +1748,7 @@ mjit::Compiler::generateMethod()
 
             // Before: VALUE OBJ ID VALUE
             // After:  VALUE VALUE
-            if (!jsop_setelem())
+            if (!jsop_setelem(true))
                 return Compile_Error;
 
             // Before: VALUE VALUE
@@ -4886,8 +4890,12 @@ mjit::Compiler::enterBlock(JSObject *obj)
     // VMFrame::fp to the correct fp for the entry point. We need to copy
     // that value here to FpReg so that FpReg also has the correct sp.
     // Otherwise, we would simply be using a stale FpReg value.
-    if (analysis->getCode(PC).exceptionEntry)
+    // Additionally, we check the interrupt flag to allow interrupting
+    // deeply nested exception handling.
+    if (analysis->getCode(PC).exceptionEntry) {
         restoreFrameRegs(masm);
+        interruptCheckHelper();
+    }
 
     uint32 oldFrameDepth = frame.localSlots();
 

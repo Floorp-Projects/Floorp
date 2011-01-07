@@ -299,6 +299,37 @@ class NunboxAssembler : public JSC::MacroAssembler
         return branch32(cond, tagOf(address), ImmTag(JSVAL_TAG_STRING));
     }
 
+#ifdef JS_CPU_X86
+    void fastLoadDouble(RegisterID lo, RegisterID hi, FPRegisterID fpReg) {
+        if (MacroAssemblerX86Common::getSSEState() >= HasSSE4_1) {
+            m_assembler.movd_rr(lo, fpReg);
+            m_assembler.pinsrd_rr(hi, fpReg);
+        } else {
+            m_assembler.movd_rr(lo, fpReg);
+            m_assembler.movd_rr(hi, FPRegisters::Temp0);
+            m_assembler.unpcklps_rr(FPRegisters::Temp0, fpReg);
+        }
+    }
+#endif
+
+    void breakDouble(FPRegisterID srcDest, RegisterID typeReg, RegisterID dataReg) {
+#ifdef JS_CPU_X86
+        // Move the low 32-bits of the 128-bit XMM register into dataReg.
+        // Then, right shift the 128-bit XMM register by 4 bytes.
+        // Finally, move the new low 32-bits of the 128-bit XMM register into typeReg.
+        m_assembler.movd_rr(srcDest, dataReg);
+        m_assembler.psrldq_rr(srcDest, 4);
+        m_assembler.movd_rr(srcDest, typeReg);
+#else
+        JS_NOT_REACHED("implement this - push double, pop pop is easiest");
+#endif
+    }
+
+    void loadStaticDouble(const double *dp, FPRegisterID dest, RegisterID scratch) {
+        move(ImmPtr(dp), scratch);
+        loadDouble(Address(scratch), dest);
+    }
+
     template <typename T>
     Jump fastArrayLoadSlot(T address, RegisterID typeReg, RegisterID dataReg) {
         loadTypeTag(address, typeReg);

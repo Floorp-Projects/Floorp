@@ -348,12 +348,13 @@ DefinePropertyIfFound(XPCCallContext& ccx,
             AutoMarkingNativeInterfacePtr iface2(ccx);
             XPCWrappedNativeTearOff* to;
             JSObject* jso;
+            nsresult rv = NS_OK;
 
             if(JSID_IS_STRING(id) &&
                name.encode(ccx, JSID_TO_STRING(id)) &&
                (iface2 = XPCNativeInterface::GetNewOrUsed(ccx, name.ptr()), iface2) &&
                nsnull != (to = wrapperToReflectInterfaceNames->
-                                    FindTearOff(ccx, iface2, JS_TRUE)) &&
+                                    FindTearOff(ccx, iface2, JS_TRUE, &rv)) &&
                nsnull != (jso = to->GetJSObject()))
 
             {
@@ -363,6 +364,10 @@ DefinePropertyIfFound(XPCCallContext& ccx,
                 return JS_DefinePropertyById(ccx, obj, id, OBJECT_TO_JSVAL(jso),
                                              nsnull, nsnull,
                                              propFlags & ~JSPROP_ENUMERATE);
+            }
+            else if(NS_FAILED(rv) && rv != NS_ERROR_NO_INTERFACE)
+            {
+                return Throw(rv, ccx);
             }
         }
 

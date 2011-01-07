@@ -216,6 +216,7 @@ private:
         OP_GROUP1_EvIb                  = 0x83,
         OP_TEST_EvGv                    = 0x85,
         OP_XCHG_EvGv                    = 0x87,
+        OP_MOV_EbGv                     = 0x88,
         OP_MOV_EvGv                     = 0x89,
         OP_MOV_GvEv                     = 0x8B,
         OP_LEA                          = 0x8D,
@@ -226,6 +227,7 @@ private:
         OP_MOV_EAXIv                    = 0xB8,
         OP_GROUP2_EvIb                  = 0xC1,
         OP_RET                          = 0xC3,
+        OP_GROUP11_EvIb                 = 0xC6,
         OP_GROUP11_EvIz                 = 0xC7,
         OP_INT3                         = 0xCC,
         OP_GROUP2_Ev1                   = 0xD1,
@@ -233,6 +235,7 @@ private:
         OP_CALL_rel32                   = 0xE8,
         OP_JMP_rel32                    = 0xE9,
         PRE_SSE_F2                      = 0xF2,
+        PRE_SSE_F3                      = 0xF3,
         OP_HLT                          = 0xF4,
         OP_GROUP3_EbIb                  = 0xF6,
         OP_GROUP3_Ev                    = 0xF7,
@@ -249,15 +252,20 @@ private:
         OP2_UCOMISD_VsdWsd  = 0x2E,
         OP2_ADDSD_VsdWsd    = 0x58,
         OP2_MULSD_VsdWsd    = 0x59,
+        OP2_CVTSS2SD_VsdEd  = 0x5A,
+        OP2_CVTSD2SS_VsdEd  = 0x5A,
         OP2_SUBSD_VsdWsd    = 0x5C,
         OP2_DIVSD_VsdWsd    = 0x5E,
         OP2_SQRTSD_VsdWsd   = 0x51,
         OP2_XORPD_VpdWpd    = 0x57,
         OP2_MOVD_VdEd       = 0x6E,
+        OP2_PSRLDQ_Vd       = 0x73,
         OP2_MOVD_EdVd       = 0x7E,
         OP2_JCC_rel32       = 0x80,
         OP_SETCC            = 0x90,
         OP2_IMUL_GvEv       = 0xAF,
+        OP2_MOVSX_GvEb      = 0xBE,
+        OP2_MOVSX_GvEw      = 0xBF,
         OP2_MOVZX_GvEb      = 0xB6,
         OP2_MOVZX_GvEw      = 0xB7,
         OP2_PEXTRW_GdUdIb   = 0xC5
@@ -1343,6 +1351,15 @@ public:
                        nameIReg(4,src), nameIReg(4,dst));
         m_formatter.oneByteOp(OP_MOV_EvGv, src, dst);
     }
+
+    void movw_rm(RegisterID src, int offset, RegisterID base)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "movw       %s, %s0x%x(%s)\n", MAYBE_PAD,
+                       nameIReg(2,src), PRETTY_PRINT_OFFSET(offset), nameIReg(base));
+        m_formatter.prefix(PRE_OPERAND_SIZE);
+        m_formatter.oneByteOp(OP_MOV_EvGv, src, base, offset);
+    }
     
     void movl_rm(RegisterID src, int offset, RegisterID base)
     {
@@ -1356,6 +1373,15 @@ public:
     {
         FIXME_INSN_PRINTING;
         m_formatter.oneByteOp_disp32(OP_MOV_EvGv, src, base, offset);
+    }
+
+    void movw_rm(RegisterID src, int offset, RegisterID base, RegisterID index, int scale)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "movw       %s, %d(%s,%s,%d)\n", MAYBE_PAD, 
+                       nameIReg(2, src), offset, nameIReg(base), nameIReg(index), scale);
+        m_formatter.prefix(PRE_OPERAND_SIZE);
+        m_formatter.oneByteOp(OP_MOV_EvGv, src, base, index, scale, offset);
     }
 
     void movl_rm(RegisterID src, int offset, RegisterID base, RegisterID index, int scale)
@@ -1408,6 +1434,34 @@ public:
         m_formatter.immediate32(imm);
     }
 
+    void movb_i8m(int imm, int offset, RegisterID base)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "movb       $0x%x, %s0x%x(%s)\n", MAYBE_PAD,
+                       imm, PRETTY_PRINT_OFFSET(offset), nameIReg(base));
+        m_formatter.oneByteOp(OP_GROUP11_EvIb, GROUP11_MOV, base, offset);
+        m_formatter.immediate8(imm);
+    }
+
+    void movb_i8m(int imm, int offset, RegisterID base, RegisterID index, int scale)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "movb       $0x%x, %d(%s,%s,%d)\n", MAYBE_PAD,
+                       imm, offset, nameIReg(base), nameIReg(index), scale);
+        m_formatter.oneByteOp(OP_GROUP11_EvIb, GROUP11_MOV, base, index, scale, offset);
+        m_formatter.immediate8(imm);
+    }
+
+    void movw_i16m(int imm, int offset, RegisterID base)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "movw       $0x%x, %s0x%x(%s)\n", MAYBE_PAD,
+                       imm, PRETTY_PRINT_OFFSET(offset), nameIReg(base));
+        m_formatter.prefix(PRE_OPERAND_SIZE);
+        m_formatter.oneByteOp(OP_GROUP11_EvIz, GROUP11_MOV, base, offset);
+        m_formatter.immediate16(imm);
+    }
+
     void movl_i32m(int imm, int offset, RegisterID base)
     {
         js::JaegerSpew(js::JSpew_Insns,
@@ -1415,6 +1469,16 @@ public:
                        imm, PRETTY_PRINT_OFFSET(offset), nameIReg(base));
         m_formatter.oneByteOp(OP_GROUP11_EvIz, GROUP11_MOV, base, offset);
         m_formatter.immediate32(imm);
+    }
+
+    void movw_i16m(int imm, int offset, RegisterID base, RegisterID index, int scale)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "movw       $0x%x, %d(%s,%s,%d)\n", MAYBE_PAD,
+                       imm, offset, nameIReg(base), nameIReg(index), scale);
+        m_formatter.prefix(PRE_OPERAND_SIZE);
+        m_formatter.oneByteOp(OP_GROUP11_EvIz, GROUP11_MOV, base, index, scale, offset);
+        m_formatter.immediate16(imm);
     }
 
     void movl_i32m(int imm, int offset, RegisterID base, RegisterID index, int scale)
@@ -1577,6 +1641,54 @@ public:
     }
 #endif
 
+    void movb_rm(RegisterID src, int offset, RegisterID base)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "movb       %s, %s0x%x(%s)\n", MAYBE_PAD,
+                       nameIReg(1, src), PRETTY_PRINT_OFFSET(offset), nameIReg(base));
+        m_formatter.oneByteOp8(OP_MOV_EbGv, src, base, offset);
+    }
+
+    void movb_rm(RegisterID src, int offset, RegisterID base, RegisterID index, int scale)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "movb       %s, %d(%s,%s,%d)\n", MAYBE_PAD,
+                       nameIReg(1, src), offset, nameIReg(base), nameIReg(index), scale);
+        m_formatter.oneByteOp8(OP_MOV_EbGv, src, base, index, scale, offset);
+    }
+
+    void movzbl_mr(int offset, RegisterID base, RegisterID dst)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "movzbl     %s0x%x(%s), %s\n", MAYBE_PAD,
+                       PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameIReg(4, dst));
+        m_formatter.twoByteOp(OP2_MOVZX_GvEb, dst, base, offset);
+    }
+
+    void movzbl_mr(int offset, RegisterID base, RegisterID index, int scale, RegisterID dst)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "movzbl     %d(%s,%s,%d), %s\n", MAYBE_PAD,
+                       offset, nameIReg(base), nameIReg(index), scale, nameIReg(dst));
+        m_formatter.twoByteOp(OP2_MOVZX_GvEb, dst, base, index, scale, offset);
+    }
+
+    void movxbl_mr(int offset, RegisterID base, RegisterID dst)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "movxbl     %s0x%x(%s), %s\n", MAYBE_PAD,
+                       PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameIReg(4, dst));
+        m_formatter.twoByteOp(OP2_MOVSX_GvEb, dst, base, offset);
+    }
+
+    void movxbl_mr(int offset, RegisterID base, RegisterID index, int scale, RegisterID dst)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "movxbl     %d(%s,%s,%d), %s\n", MAYBE_PAD,
+                       offset, nameIReg(base), nameIReg(index), scale, nameIReg(dst));
+        m_formatter.twoByteOp(OP2_MOVSX_GvEb, dst, base, index, scale, offset);
+    }
+
     void movzwl_mr(int offset, RegisterID base, RegisterID dst)
     {
         js::JaegerSpew(js::JSpew_Insns,
@@ -1587,8 +1699,26 @@ public:
 
     void movzwl_mr(int offset, RegisterID base, RegisterID index, int scale, RegisterID dst)
     {
-        FIXME_INSN_PRINTING;
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "movzwl     %d(%s,%s,%d), %s\n", MAYBE_PAD,
+                       offset, nameIReg(base), nameIReg(index), scale, nameIReg(dst));
         m_formatter.twoByteOp(OP2_MOVZX_GvEw, dst, base, index, scale, offset);
+    }
+
+    void movxwl_mr(int offset, RegisterID base, RegisterID dst)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "movxwl     %s0x%x(%s), %s\n", MAYBE_PAD,
+                       PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameIReg(4, dst));
+        m_formatter.twoByteOp(OP2_MOVSX_GvEw, dst, base, offset);
+    }
+
+    void movxwl_mr(int offset, RegisterID base, RegisterID index, int scale, RegisterID dst)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "movxwl     %d(%s,%s,%d), %s\n", MAYBE_PAD,
+                       offset, nameIReg(base), nameIReg(index), scale, nameIReg(dst));
+        m_formatter.twoByteOp(OP2_MOVSX_GvEw, dst, base, index, scale, offset);
     }
 
     void movzbl_rr(RegisterID src, RegisterID dst)
@@ -1816,6 +1946,24 @@ public:
         m_formatter.twoByteOp(OP2_ADDSD_VsdWsd, (RegisterID)dst, base, offset);
     }
 
+    void cvtss2sd_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "cvtps2pd   %s, %s\n", MAYBE_PAD,
+                       nameFPReg(src), nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_F3);
+        m_formatter.twoByteOp(OP2_CVTSS2SD_VsdEd, (RegisterID)dst, (RegisterID)src);
+    }
+
+    void cvtsd2ss_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "cvtps2pd   %s, %s\n", MAYBE_PAD,
+                       nameFPReg(src), nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_F2);
+        m_formatter.twoByteOp(OP2_CVTSD2SS_VsdEd, (RegisterID)dst, (RegisterID)src);
+    }
+
     void cvtsi2sd_rr(RegisterID src, XMMRegisterID dst)
     {
         js::JaegerSpew(js::JSpew_Insns,
@@ -1824,6 +1972,17 @@ public:
         m_formatter.prefix(PRE_SSE_F2);
         m_formatter.twoByteOp(OP2_CVTSI2SD_VsdEd, (RegisterID)dst, src);
     }
+
+#if WTF_CPU_X86_64
+    void cvtsq2sd_rr(RegisterID src, XMMRegisterID dst)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "cvtsq2sd   %s, %s\n", MAYBE_PAD,
+                       nameIReg(src), nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_F2);
+        m_formatter.twoByteOp64(OP2_CVTSI2SD_VsdEd, (RegisterID)dst, src);
+    }
+#endif
 
     void cvtsi2sd_mr(int offset, RegisterID base, XMMRegisterID dst)
     {
@@ -1871,6 +2030,25 @@ public:
         m_formatter.twoByteOp(OP2_MOVD_VdEd, (RegisterID)dst, src);
     }
 
+    void psrldq_rr(XMMRegisterID dest, int shift)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "pslldq     %s, %d\n", MAYBE_PAD,
+                       nameFPReg(dest), shift);
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.twoByteOp(OP2_PSRLDQ_Vd, (RegisterID)3, (RegisterID)dest);
+        m_formatter.immediate8(shift);
+    }
+
+    void movd_rr(XMMRegisterID src, RegisterID dst)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "movd       %s, %s\n", MAYBE_PAD,
+                       nameFPReg(src), nameIReg(dst));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.twoByteOp(OP2_MOVD_EdVd, (RegisterID)src, dst);
+    }
+
 #if WTF_CPU_X86_64
     void movq_rr(XMMRegisterID src, RegisterID dst)
     {
@@ -1900,6 +2078,51 @@ public:
         m_formatter.twoByteOp(OP2_MOVSD_WsdVsd, (RegisterID)src, base, offset);
     }
 
+    void movss_rm(XMMRegisterID src, int offset, RegisterID base)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "movss      %s, %s0x%x(%s)\n", MAYBE_PAD,
+                       nameFPReg(src), PRETTY_PRINT_OFFSET(offset), nameIReg(base));
+        m_formatter.prefix(PRE_SSE_F3);
+        m_formatter.twoByteOp(OP2_MOVSD_WsdVsd, (RegisterID)src, base, offset);
+    }
+
+    void movss_mr(int offset, RegisterID base, XMMRegisterID dst)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "movss      %s0x%x(%s), %s\n", MAYBE_PAD,
+                       PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_F3);
+        m_formatter.twoByteOp(OP2_MOVSD_VsdWsd, (RegisterID)dst, base, offset);
+    }
+
+    void movsd_rm(XMMRegisterID src, int offset, RegisterID base, RegisterID index, int scale)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "movsd       %s, %d(%s,%s,%d)\n", MAYBE_PAD, 
+                       nameFPReg(src), offset, nameIReg(base), nameIReg(index), scale);
+        m_formatter.prefix(PRE_SSE_F2);
+        m_formatter.twoByteOp(OP2_MOVSD_WsdVsd, (RegisterID)src, base, index, scale, offset);
+    }
+
+    void movss_rm(XMMRegisterID src, int offset, RegisterID base, RegisterID index, int scale)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "movss       %s, %d(%s,%s,%d)\n", MAYBE_PAD, 
+                       nameFPReg(src), offset, nameIReg(base), nameIReg(index), scale);
+        m_formatter.prefix(PRE_SSE_F3);
+        m_formatter.twoByteOp(OP2_MOVSD_WsdVsd, (RegisterID)src, base, index, scale, offset);
+    }
+
+    void movss_mr(int offset, RegisterID base, RegisterID index, int scale, XMMRegisterID dst)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "movss      %d(%s,%s,%d), %s\n", MAYBE_PAD,
+                       offset, nameIReg(base), nameIReg(index), scale, nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_F3);
+        m_formatter.twoByteOp(OP2_MOVSD_VsdWsd, (RegisterID)dst, base, index, scale, offset);
+    }
+
     void movsd_mr(int offset, RegisterID base, XMMRegisterID dst)
     {
         js::JaegerSpew(js::JSpew_Insns,
@@ -1907,6 +2130,15 @@ public:
                        PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
         m_formatter.prefix(PRE_SSE_F2);
         m_formatter.twoByteOp(OP2_MOVSD_VsdWsd, (RegisterID)dst, base, offset);
+    }
+
+    void movsd_mr(int offset, RegisterID base, RegisterID index, int scale, XMMRegisterID dst)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "movsd      %d(%s,%s,%d), %s\n", MAYBE_PAD,
+                       offset, nameIReg(base), nameIReg(index), scale, nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_F2);
+        m_formatter.twoByteOp(OP2_MOVSD_VsdWsd, (RegisterID)dst, base, index, scale, offset);
     }
 
     void movsd_rr(XMMRegisterID src, XMMRegisterID dst)
@@ -2503,10 +2735,35 @@ private:
 
         void oneByteOp8(OneByteOpcodeID opcode, GroupOpcodeID groupOp, RegisterID rm)
         {
+#if !WTF_CPU_X86_64
+            ASSERT(!byteRegRequiresRex(rm));
+#endif
             m_buffer.ensureSpace(maxInstructionSize);
             emitRexIf(byteRegRequiresRex(rm), 0, 0, rm);
             m_buffer.putByteUnchecked(opcode);
             registerModRM(groupOp, rm);
+        }
+
+        void oneByteOp8(OneByteOpcodeID opcode, int reg, RegisterID base, int offset)
+        {
+#if !WTF_CPU_X86_64
+            ASSERT(!byteRegRequiresRex(reg));
+#endif
+            m_buffer.ensureSpace(maxInstructionSize);
+            emitRexIf(byteRegRequiresRex(reg), reg, 0, base);
+            m_buffer.putByteUnchecked(opcode);
+            memoryModRM(reg, base, offset);
+        }
+
+        void oneByteOp8(OneByteOpcodeID opcode, int reg, RegisterID base, RegisterID index, int scale, int offset)
+        {
+#if !WTF_CPU_X86_64
+            ASSERT(!byteRegRequiresRex(reg));
+#endif
+            m_buffer.ensureSpace(maxInstructionSize);
+            emitRexIf(byteRegRequiresRex(reg), reg, index, base);
+            m_buffer.putByteUnchecked(opcode);
+            memoryModRM(reg, base, index, scale, offset);
         }
 
         void twoByteOp8(TwoByteOpcodeID opcode, RegisterID reg, RegisterID rm)
@@ -2571,6 +2828,12 @@ private:
 
         // Internals; ModRm and REX formatters.
 
+        // Byte operand register spl & above require a REX prefix (to prevent the 'H' registers be accessed).
+        inline bool byteRegRequiresRex(int reg)
+        {
+            return (reg >= X86Registers::esp);
+        }
+
         static const RegisterID noBase = X86Registers::ebp;
         static const RegisterID hasSib = X86Registers::esp;
         static const RegisterID noIndex = X86Registers::esp;
@@ -2582,12 +2845,6 @@ private:
         inline bool regRequiresRex(int reg)
         {
             return (reg >= X86Registers::r8);
-        }
-
-        // Byte operand register spl & above require a REX prefix (to prevent the 'H' registers be accessed).
-        inline bool byteRegRequiresRex(int reg)
-        {
-            return (reg >= X86Registers::esp);
         }
 
         // Format a REX prefix byte.
@@ -2604,9 +2861,14 @@ private:
 
         // Used for operations with byte operands - use byteRegRequiresRex() to check register operands,
         // regRequiresRex() to check other registers (i.e. address base & index).
+        // 
+        // NB: WebKit's use of emitRexIf() is limited such that the reqRequiresRex() checks are
+        // not needed. SpiderMonkey extends oneByteOp8 functionality such that r, x, and b can
+        // all be used.
         inline void emitRexIf(bool condition, int r, int x, int b)
         {
-            if (condition) emitRex(false, r, x, b);
+            if (condition || regRequiresRex(r) || regRequiresRex(x) || regRequiresRex(b))
+                emitRex(false, r, x, b);
         }
 
         // Used for word sized operations, will plant a REX prefix if necessary (if any register is r8 or above).
@@ -2617,7 +2879,6 @@ private:
 #else
         // No REX prefix bytes on 32-bit x86.
         inline bool regRequiresRex(int) { return false; }
-        inline bool byteRegRequiresRex(int) { return false; }
         inline void emitRexIf(bool, int, int, int) {}
         inline void emitRexIfNeeded(int, int, int) {}
 #endif

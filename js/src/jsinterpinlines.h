@@ -188,9 +188,7 @@ JSStackFrame::initEvalFrame(JSContext *cx, JSScript *script, JSStackFrame *prev,
 
     /* Initialize stack frame members. */
     flags_ = flagsArg | JSFRAME_HAS_PREVPC | JSFRAME_HAS_SCOPECHAIN |
-             (prev->flags_ & (JSFRAME_FUNCTION |
-                              JSFRAME_GLOBAL |
-                              JSFRAME_HAS_CALL_OBJ));
+             (prev->flags_ & (JSFRAME_FUNCTION | JSFRAME_GLOBAL | JSFRAME_HAS_CALL_OBJ));
     if (isFunctionFrame()) {
         exec = prev->exec;
         args.script = script;
@@ -268,7 +266,12 @@ JSStackFrame::stealFrameAndSlots(js::Value *vp, JSStackFrame *otherfp,
         }
     }
     if (hasArgsObj()) {
-        argsObj().setPrivate(this);
+        JSObject &args = argsObj();
+        JS_ASSERT(args.isArguments());
+        if (args.isNormalArguments())
+            args.setPrivate(this);
+        else
+            JS_ASSERT(!args.getPrivate());
         otherfp->flags_ &= ~JSFRAME_HAS_ARGS_OBJ;
     }
 }

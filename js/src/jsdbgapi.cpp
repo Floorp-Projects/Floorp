@@ -186,8 +186,10 @@ JS_SetDebugMode(JSContext *cx, JSBool debug)
 JS_FRIEND_API(JSBool)
 js_SetSingleStepMode(JSContext *cx, JSScript *script, JSBool singleStep)
 {
+#ifdef JS_METHODJIT
     if (!script->singleStepMode == !singleStep)
         return JS_TRUE;
+#endif
 
     JS_ASSERT_IF(singleStep, cx->compartment->debugMode);
 
@@ -1543,25 +1545,26 @@ JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
     Shape *shape = (Shape *) sprop;
     pd->id = IdToJsval(shape->id);
 
-    JSBool wasThrowing = cx->throwing;
-    AutoValueRooter lastException(cx, cx->exception);
-    cx->throwing = JS_FALSE;
+    JSBool wasThrowing = cx->isExceptionPending();
+    Value lastException = UndefinedValue();
+    if (wasThrowing)
+        lastException = cx->getPendingException();
+    cx->clearPendingException();
 
     if (!js_GetProperty(cx, obj, shape->id, Valueify(&pd->value))) {
-        if (!cx->throwing) {
+        if (!cx->isExceptionPending()) {
             pd->flags = JSPD_ERROR;
             pd->value = JSVAL_VOID;
         } else {
             pd->flags = JSPD_EXCEPTION;
-            pd->value = Jsvalify(cx->exception);
+            pd->value = Jsvalify(cx->getPendingException());
         }
     } else {
         pd->flags = 0;
     }
 
-    cx->throwing = wasThrowing;
     if (wasThrowing)
-        cx->exception = lastException.value();
+        cx->setPendingException(lastException);
 
     pd->flags |= (shape->enumerable() ? JSPD_ENUMERATE : 0)
               |  (!shape->writable()  ? JSPD_READONLY  : 0)

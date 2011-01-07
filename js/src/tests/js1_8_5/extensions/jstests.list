@@ -24,3 +24,4 @@ skip-if(!xulRuntime.shell) script clone-typed-array.js
 skip-if(!xulRuntime.shell) script clone-errors.js
 skip-if(!xulRuntime.shell) script clone-forge.js
 script set-property-non-extensible.js
+script recursion.js
