@@ -945,7 +945,7 @@ var AddonRepository = {
         case "contribution_data":
           let meetDevelopers = this._getDescendantTextContent(node, "meet_developers");
           let suggestedAmount = this._getDescendantTextContent(node, "suggested_amount");
-          if (meetDevelopers != null && suggestedAmount != null) {
+          if (meetDevelopers != null) {
             addon.contributionURL = meetDevelopers;
             addon.contributionAmount = suggestedAmount;
           }
