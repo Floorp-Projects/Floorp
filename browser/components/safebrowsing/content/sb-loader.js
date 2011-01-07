@@ -35,6 +35,8 @@
 # ***** END LICENSE BLOCK *****
 
 var safebrowsing = {
+  appContext: null,
+
   startup: function() {
     setTimeout(function() {
       safebrowsing.deferredStartup();
