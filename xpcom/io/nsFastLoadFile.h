@@ -56,6 +56,7 @@
 #include "nsIFastLoadService.h"
 #include "nsISeekableStream.h"
 #include "nsISupportsArray.h"
+#include "mozilla/FileUtils.h"
 
 /**
  * FastLoad file Object ID (OID) is an identifier for multiply and cyclicly
@@ -400,6 +401,12 @@ class nsFastLoadFileReader
     PRUint32 mFilePos;  // current position within file
     PRFileMap *mFileMap;// nspr datastructure for mmap
     PRUint8 *mFileData; // pointer to mmaped file
+#ifdef XP_WIN
+    // Using a descriptor avoids having to check for EXCEPTION_IN_PAGE_ERROR
+    // in ComputeChecksum. Combined with FILE_FLAG_SEQUENTIAL_SCAN
+    // this speeds up cold IO via kernel readahead.
+    mozilla::AutoFDClose mFD;
+#endif
 };
 
 NS_COM nsresult
