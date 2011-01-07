@@ -2077,6 +2077,15 @@ nsChildView::GetThebesSurface()
   return mTempThebesSurface;
 }
 
+void
+nsChildView::DrawOver(LayerManager* aManager, nsIntRect aRect)
+{
+  nsCocoaWindow *cocoaWindow = GetXULWindowWidget();
+  if (cocoaWindow) {
+    cocoaWindow->DrawOver(aManager, aRect);
+  }
+}
+
 NS_IMETHODIMP
 nsChildView::BeginSecureKeyboardInput()
 {
