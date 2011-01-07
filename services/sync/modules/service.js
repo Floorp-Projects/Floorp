@@ -479,9 +479,14 @@ WeaveSvc.prototype = {
       verbose.append("verbose-log.txt");
       if (!verbose.exists())
         verbose.create(verbose.NORMAL_FILE_TYPE, PERMS_FILE);
-  
-      let maxSize = 65536; // 64 * 1024 (64KB)
-      this._debugApp = new Log4Moz.RotatingFileAppender(verbose, formatter, maxSize);
+
+      if (Svc.Prefs.get("log.appender.debugLog.rotate", true)) {
+        let maxSize = Svc.Prefs.get("log.appender.debugLog.maxSize");
+        this._debugApp = new Log4Moz.RotatingFileAppender(verbose, formatter,
+                                                          maxSize);
+      } else {
+        this._debugApp = new Log4Moz.FileAppender(verbose, formatter);
+      }
       this._debugApp.level = Log4Moz.Level[Svc.Prefs.get("log.appender.debugLog")];
       root.addAppender(this._debugApp);
     }

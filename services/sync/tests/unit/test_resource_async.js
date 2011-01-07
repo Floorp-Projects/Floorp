@@ -621,6 +621,49 @@ function run_test() {
 
   }, function (next) {
 
+    _("Exception handling inside fetches.");
+    let res14 = new AsyncResource("http://localhost:8080/json");
+    res14._onProgress = function(rec) {
+      // Provoke an XPC exception without a Javascript wrapper.
+      Svc.IO.newURI("::::::::", null, null);
+    };
+    let warnings = [];
+    res14._log.warn = function(msg) { warnings.push(msg) };
+
+    res14.get(ensureThrows(function (error, content) {
+      do_check_eq(error, "Error: NS_ERROR_MALFORMED_URI");
+      do_check_eq(content, null);
+      do_check_eq(warnings.pop(),
+                  "Got exception calling onProgress handler during fetch of " +
+                  "http://localhost:8080/json");
+      
+      do_test_finished();
+      next();
+    }));
+
+  }, function (next) {
+
+    _("JS exception handling inside fetches.");
+    let res15 = new AsyncResource("http://localhost:8080/json");
+    res15._onProgress = function(rec) {
+      throw "BOO!";
+    };
+    warnings = [];
+    res15._log.warn = function(msg) { warnings.push(msg) };
+
+    res15.get(ensureThrows(function (error, content) {
+      do_check_eq(error, "Error: NS_ERROR_XPC_JS_THREW_STRING");
+      do_check_eq(content, null);
+      do_check_eq(warnings.pop(),
+                  "Got exception calling onProgress handler during fetch of " +
+                  "http://localhost:8080/json");
+      
+      do_test_finished();
+      next();
+    }));
+
+  }, function (next) {
+
     // Don't quit test harness before server shuts down.
     server.stop(do_test_finished);
 
