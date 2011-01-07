@@ -548,6 +548,19 @@ var gViewController = {
     this.loadViewInternal(aViewId, this.currentViewId);
   },
 
+  // Replaces the existing view with a new one, rewriting the current history
+  // entry to match.
+  replaceView: function(aViewId) {
+    if (aViewId == this.currentViewId)
+      return;
+
+    gHistory.replaceState({
+      view: aViewId,
+      previousView: null
+    }, document.title);
+    this.loadViewInternal(aViewId, null);
+  },
+
   loadInitialView: function(aViewId) {
     gHistory.replaceState({
       view: aViewId,
@@ -1364,9 +1377,13 @@ var gCategories = {
     });
   },
 
+  get selected() {
+    return this.node.selectedItem ? this.node.selectedItem.value : null;
+  },
+
   select: function(aId, aPreviousView) {
     var view = gViewController.parseViewId(aId);
-    if (view.type == "detail") {
+    if (view.type == "detail" && aPreviousView) {
       aId = aPreviousView;
       view = gViewController.parseViewId(aPreviousView);
     }
@@ -2183,6 +2200,11 @@ var gDetailView = {
 
     this.node.setAttribute("type", aAddon.type);
 
+    // If the search category isn't selected then make sure to select the
+    // correct category
+    if (gCategories.selected != "addons://search/")
+      gCategories.select("addons://list/" + aAddon.type);
+
     document.getElementById("detail-name").textContent = aAddon.name;
     var icon = aAddon.icon64URL ? aAddon.icon64URL : aAddon.iconURL;
     document.getElementById("detail-icon").src = icon ? icon : null;
@@ -2352,7 +2374,10 @@ var gDetailView = {
           return;
         }
 
-        // This case should never happen in normal operation
+        // This might happen due to session restore restoring us back to an
+        // add-on that doesn't exist but otherwise shouldn't normally happen.
+        // Either way just revert to the default view.
+        gViewController.replaceView(VIEW_DEFAULT);
       });
     });
   },
@@ -2360,9 +2385,11 @@ var gDetailView = {
   hide: function() {
     this._updatePrefs.removeObserver("", this);
     this.clearLoading();
-    gEventManager.unregisterAddonListener(this, this._addon.id);
-    gEventManager.unregisterInstallListener(this);
-    this._addon = null;
+    if (this._addon) {
+      gEventManager.unregisterAddonListener(this, this._addon.id);
+      gEventManager.unregisterInstallListener(this);
+      this._addon = null;
+    }
   },
 
   updateState: function() {
