@@ -1186,18 +1186,15 @@ public:
         return mFontEntry->GetUVSGlyph(aCh, aVS); 
     }
 
-    // Default simply calls m[Platform|HarfBuzz]Shaper->InitTextRun().
-    // Override if the font class wants to give special handling
-    // to shaper failure.
-    // Returns PR_FALSE if shaping failed (though currently we
-    // don't have any good way to handle that situation).
-    virtual PRBool InitTextRun(gfxContext *aContext,
+    // call the (virtual) InitTextRun method to do glyph generation/shaping,
+    // limiting the length of text passed by processing the run in multiple
+    // segments if necessary
+    PRBool SplitAndInitTextRun(gfxContext *aContext,
                                gfxTextRun *aTextRun,
                                const PRUnichar *aString,
                                PRUint32 aRunStart,
                                PRUint32 aRunLength,
-                               PRInt32 aRunScript,
-                               PRBool aPreferPlatformShaping = PR_FALSE);
+                               PRInt32 aRunScript);
 
 protected:
     nsRefPtr<gfxFontEntry> mFontEntry;
@@ -1248,6 +1245,19 @@ protected:
     // some fonts have bad metrics, this method sanitize them.
     // if this font has bad underline offset, aIsBadUnderlineFont should be true.
     void SanitizeMetrics(gfxFont::Metrics *aMetrics, PRBool aIsBadUnderlineFont);
+
+    // Default simply calls m[Platform|HarfBuzz]Shaper->InitTextRun().
+    // Override if the font class wants to give special handling
+    // to shaper failure.
+    // Returns PR_FALSE if shaping failed (though currently we
+    // don't have any good way to handle that situation).
+    virtual PRBool InitTextRun(gfxContext *aContext,
+                               gfxTextRun *aTextRun,
+                               const PRUnichar *aString,
+                               PRUint32 aRunStart,
+                               PRUint32 aRunLength,
+                               PRInt32 aRunScript,
+                               PRBool aPreferPlatformShaping = PR_FALSE);
 };
 
 // proportion of ascent used for x-height, if unable to read value from font
@@ -2232,21 +2242,22 @@ protected:
     // you should call this with the *first* bad font.
     void InitMetricsForBadFont(gfxFont* aBadFont);
 
-    // Set up the textrun glyphs, by finding script and font ranges
-    // and calling each font's InitTextRun() as appropriate
+    // Set up the textrun glyphs for an entire text run:
+    // find script runs, and then call InitScriptRun for each
     void InitTextRun(gfxContext *aContext,
                      gfxTextRun *aTextRun,
                      const PRUnichar *aString,
                      PRUint32 aLength);
 
-    // InitTextRun helper to handle a single script run
-    void InitTextRun(gfxContext *aContext,
-                     gfxTextRun *aTextRun,
-                     const PRUnichar *aString,
-                     PRUint32 aTotalLength,
-                     PRUint32 aScriptRunStart,
-                     PRUint32 aScriptRunEnd,
-                     PRInt32 aRunScript);
+    // InitTextRun helper to handle a single script run, by finding font ranges
+    // and calling each font's InitTextRun() as appropriate
+    void InitScriptRun(gfxContext *aContext,
+                       gfxTextRun *aTextRun,
+                       const PRUnichar *aString,
+                       PRUint32 aTotalLength,
+                       PRUint32 aScriptRunStart,
+                       PRUint32 aScriptRunEnd,
+                       PRInt32 aRunScript);
 
     /* If aResolveGeneric is true, then CSS/Gecko generic family names are
      * replaced with preferred fonts.
