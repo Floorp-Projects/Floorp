@@ -63,6 +63,11 @@
           let isReadOnly = this.getAttribute("isReadonly");
           if (isReadOnly == "true")
             document.getAnonymousElementByAttribute(this, "anonid", "uninstall-button").setAttribute("disabled", "true");
+          
+          // no options for themes
+          // use the unlocalized property, not the typeLabel attribute
+          if (this.addon.type == "theme")
+            document.getAnonymousElementByAttribute(this, "anonid", "options-button").hidden = true;
         ]]>
       </constructor>
 
