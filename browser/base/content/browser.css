@@ -87,12 +87,33 @@ toolbar[printpreview="true"] {
 }
 
 %ifdef CAN_DRAW_IN_TITLEBAR
-#main-window[inFullscreen] > #titlebar {
+#main-window[inFullscreen] > #titlebar,
+#main-window[inFullscreen] .titlebar-placeholder,
+#main-window:not([tabsintitlebar]) .titlebar-placeholder {
   display: none;
 }
 
 #titlebar {
   -moz-binding: url("chrome://global/content/bindings/general.xml#windowdragbox");
+}
+
+#main-window[tabsintitlebar] #TabsToolbar {
+  -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbar-drag");
+}
+
+#titlebar-spacer,
+#main-window[tabsintitlebar]:not([inFullscreen]) .tabbrowser-arrowscrollbox > scrollbox > .scrollbox-innerbox {
+  pointer-events: none;
+}
+
+.tabbrowser-tab,
+.tabs-newtab-button {
+  pointer-events: auto;
+}
+
+#main-window[tabsintitlebar] #appmenu-button-container,
+#main-window[tabsintitlebar] #titlebar-buttonbox {
+  position: relative;
 }
 %endif
 

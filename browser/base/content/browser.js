@@ -1286,7 +1286,8 @@ function BrowserStartup() {
 
   BookmarksMenuButton.init();
 
-  // initialize the private browsing UI
+  TabsInTitlebar.init();
+
   gPrivateBrowsingUI.init();
 
   setTimeout(delayedStartup, 0, isLoadingBlank, mustLoadSidebar);
@@ -1677,6 +1678,7 @@ function BrowserShutdown()
   gPrivateBrowsingUI.uninit();
   IndexedDBPromptHelper.uninit();
   AddonManager.removeAddonListener(AddonsMgrListener);
+  TabsInTitlebar.uninit();
 
   var enumerator = Services.wm.getEnumerator(null);
   enumerator.getNext();
@@ -2747,10 +2749,6 @@ var PrintPreviewListener = {
     this._printPreviewTab = null;
   },
   _toggleAffectedChrome: function () {
-#ifdef MENUBAR_CAN_AUTOHIDE
-    updateAppButtonDisplay();
-#endif
-
     gNavToolbox.hidden = gInPrintPreviewMode;
 
     if (gInPrintPreviewMode)
@@ -2760,6 +2758,10 @@ var PrintPreviewListener = {
 
     if (this._chromeState.sidebarOpen)
       toggleSidebar(this._sidebarCommand);
+
+#ifdef MENUBAR_CAN_AUTOHIDE
+    updateAppButtonDisplay();
+#endif
   },
   _hideChrome: function () {
     this._chromeState = {};
@@ -3459,6 +3461,8 @@ function BrowserCustomizeToolbar()
   PlacesToolbarHelper.customizeStart();
   BookmarksMenuButton.customizeStart();
 
+  TabsInTitlebar.allowedBy("customizing-toolbars", false);
+
   var customizeURL = "chrome://global/content/customizeToolbar.xul";
   gCustomizeSheet = getBoolPref("toolbar.customization.usesheet", false);
 
@@ -3528,6 +3532,8 @@ function BrowserToolboxCustomizeDone(aToolboxChanged) {
     XULBrowserWindow.asyncUpdateUI();
     PlacesStarButton.updateState();
   }
+
+  TabsInTitlebar.allowedBy("customizing-toolbars", true);
 
   // Re-enable parts of the UI we disabled during the dialog
   var menubar = document.getElementById("main-menubar");
@@ -4761,6 +4767,7 @@ var TabsOnTop = {
     document.documentElement.setAttribute("tabsontop", enabled);
     document.getElementById("TabsToolbar").setAttribute("tabsontop", enabled);
     gBrowser.tabContainer.setAttribute("tabsontop", enabled);
+    TabsInTitlebar.allowedBy("tabs-on-top", enabled);
   },
   get enabled () {
     return gNavToolbox.getAttribute("tabsontop") == "true";
@@ -4772,6 +4779,115 @@ var TabsOnTop = {
     return val;
   }
 }
+
+var TabsInTitlebar = {
+  init: function () {
+#ifdef CAN_DRAW_IN_TITLEBAR
+    this._readPref();
+    Services.prefs.addObserver(this._prefName, this, false);
+
+    // Don't trust the initial value of the sizemode attribute; wait for the resize event.
+    this.allowedBy("sizemode", false);
+    window.addEventListener("resize", function (event) {
+      if (event.target != window)
+        return;
+      let sizemode = document.documentElement.getAttribute("sizemode");
+      TabsInTitlebar.allowedBy("sizemode",
+                               sizemode == "maximized" || sizemode == "fullscreen");
+    }, false);
+
+    this._initialized = true;
+#endif
+  },
+
+  allowedBy: function (condition, allow) {
+#ifdef CAN_DRAW_IN_TITLEBAR
+    if (allow) {
+      if (condition in this._disallowed) {
+        delete this._disallowed[condition];
+        this._update();
+      }
+    } else {
+      if (!(condition in this._disallowed)) {
+        this._disallowed[condition] = null;
+        this._update();
+      }
+    }
+#endif
+  },
+
+#ifdef CAN_DRAW_IN_TITLEBAR
+  observe: function (subject, topic, data) {
+    if (topic == "nsPref:changed")
+      this._readPref();
+  },
+
+  _initialized: false,
+  _disallowed: {},
+  _prefName: "browser.tabs.drawInTitlebar",
+
+  _readPref: function () {
+    this.allowedBy("pref",
+                   Services.prefs.getBoolPref(this._prefName));
+  },
+
+  _update: function () {
+    if (!this._initialized)
+      return;
+
+    let allowed = true;
+    for (let something in this._disallowed) {
+      allowed = false;
+      break;
+    }
+
+    let docElement = document.documentElement;
+    if (allowed == (docElement.getAttribute("tabsintitlebar") == "true"))
+      return;
+
+    function $(id) document.getElementById(id);
+    let titlebar = $("titlebar");
+
+    if (allowed) {
+      let availTop = screen.availTop;
+      function top(ele)    ele.boxObject.screenY - availTop;
+      function bottom(ele) top(ele) + rect(ele).height;
+      function rect(ele)   ele.getBoundingClientRect();
+
+      let tabsToolbar       = $("TabsToolbar");
+      let appmenuButtonBox  = $("appmenu-button-container");
+      let captionButtonsBox = $("titlebar-buttonbox");
+
+      this._sizePlaceholder("appmenu-button", rect(appmenuButtonBox).width);
+      this._sizePlaceholder("caption-buttons", rect(captionButtonsBox).width);
+
+      let maxMargin = top(gNavToolbox);
+      let tabsBottom = maxMargin + rect(tabsToolbar).height;
+      let titlebarBottom = Math.max(bottom(appmenuButtonBox), bottom(captionButtonsBox));
+      let distance = tabsBottom - titlebarBottom;
+      titlebar.style.marginBottom = - Math.min(distance, maxMargin) + "px";
+
+      docElement.setAttribute("tabsintitlebar", "true");
+    } else {
+      docElement.removeAttribute("tabsintitlebar");
+
+      titlebar.style.marginBottom = "";
+    }
+  },
+
+  _sizePlaceholder: function (type, width) {
+    Array.forEach(document.querySelectorAll(".titlebar-placeholder[type='"+ type +"']"),
+                  function (node) { node.width = width; });
+  },
+#endif
+
+  uninit: function () {
+#ifdef CAN_DRAW_IN_TITLEBAR
+    this._initialized = false;
+    Services.prefs.removeObserver(this._prefName, this);
+#endif
+  }
+};
 
 #ifdef MENUBAR_CAN_AUTOHIDE
 function updateAppButtonDisplay() {
@@ -4787,6 +4903,8 @@ function updateAppButtonDisplay() {
     document.documentElement.setAttribute("chromemargin", "0,-1,-1,-1");
   else
     document.documentElement.removeAttribute("chromemargin");
+
+  TabsInTitlebar.allowedBy("drawing-in-titlebar", displayAppButton);
 #else
   document.getElementById("appmenu-toolbar-button").hidden =
     !displayAppButton;
