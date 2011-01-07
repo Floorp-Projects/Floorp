@@ -1461,7 +1461,7 @@
                 NS_ASSERT(false, "Giving up waiting for the tab closing animation to finish (bug 608589)");
                 tabbrowser._endRemoveTab(tab);
               }
-            }, 2000, aTab, this);
+            }, 3000, aTab, this);
           ]]>
         </body>
       </method>
