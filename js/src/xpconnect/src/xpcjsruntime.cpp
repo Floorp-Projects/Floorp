@@ -1217,6 +1217,19 @@ NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSMethodJitCode,
                              GetJSMethodJitCodeMemoryInUse,
                              NULL)
 
+static PRInt64
+GetJSStringMemoryInUse(void *data)
+{
+    JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->GetJSRuntime();
+    return rt->stringMemoryUsed;
+}
+
+NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSStringMemory,
+                             "js/string-data",
+                             "Memory in use for string data",
+                             GetJSStringMemoryInUse,
+                             NULL)
+
 XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
  : mXPConnect(aXPConnect),
    mJSRuntime(nsnull),
@@ -1279,6 +1292,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
         mJSRuntime->setCustomGCChunkAllocator(&gXPCJSChunkAllocator);
 
         NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSRuntimeGCChunks));
+        NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSStringMemory));
         NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSMethodJitCode));
     }
 

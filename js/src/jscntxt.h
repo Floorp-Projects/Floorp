@@ -1438,6 +1438,7 @@ struct JSRuntime {
 #ifdef JS_METHODJIT
     uint32               mjitMemoryUsed;
 #endif
+    uint32               stringMemoryUsed;
 
     JSRuntime();
     ~JSRuntime();
