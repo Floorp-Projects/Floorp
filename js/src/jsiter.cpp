@@ -767,7 +767,7 @@ js_ThrowStopIteration(JSContext *cx)
 
     JS_ASSERT(!JS_IsExceptionPending(cx));
     if (js_FindClassObject(cx, NULL, JSProto_StopIteration, &v))
-        cx->setPendingException(v);
+        SetPendingException(cx, v);
     return JS_FALSE;
 }
 
@@ -1017,10 +1017,12 @@ js_IteratorMore(JSContext *cx, JSObject *iterobj, Value *rval)
         return false;
     if (!ExternalInvoke(cx, iterobj, *rval, 0, NULL, rval)) {
         /* Check for StopIteration. */
-        if (!cx->isExceptionPending() || !js_ValueIsStopIteration(cx->getPendingException()))
+        if (!cx->throwing || !js_ValueIsStopIteration(cx->exception))
             return false;
 
-        cx->clearPendingException();
+        /* Inline JS_ClearPendingException(cx). */
+        cx->throwing = JS_FALSE;
+        cx->exception.setUndefined();
         cx->iterValue.setMagic(JS_NO_ITER_VALUE);
         rval->setBoolean(false);
         return true;
@@ -1284,13 +1286,13 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
         break;
 
       case JSGENOP_THROW:
-        cx->setPendingException(arg);
+        SetPendingException(cx, arg);
         gen->state = JSGEN_RUNNING;
         break;
 
       default:
         JS_ASSERT(op == JSGENOP_CLOSE);
-        cx->setPendingException(MagicValue(JS_GENERATOR_CLOSING));
+        SetPendingException(cx, MagicValue(JS_GENERATOR_CLOSING));
         gen->state = JSGEN_CLOSING;
         break;
     }
@@ -1348,7 +1350,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
     if (gen->floatingFrame()->isYielding()) {
         /* Yield cannot fail, throw or be called on closing. */
         JS_ASSERT(ok);
-        JS_ASSERT(!cx->isExceptionPending());
+        JS_ASSERT(!cx->throwing);
         JS_ASSERT(gen->state == JSGEN_RUNNING);
         JS_ASSERT(op != JSGENOP_CLOSE);
         genfp->clearYielding();
@@ -1434,7 +1436,7 @@ generator_op(JSContext *cx, JSGeneratorOp op, Value *vp, uintN argc)
           case JSGENOP_SEND:
             return js_ThrowStopIteration(cx);
           case JSGENOP_THROW:
-            cx->setPendingException(argc >= 1 ? vp[2] : UndefinedValue());
+            SetPendingException(cx, argc >= 1 ? vp[2] : UndefinedValue());
             return JS_FALSE;
           default:
             JS_ASSERT(op == JSGENOP_CLOSE);

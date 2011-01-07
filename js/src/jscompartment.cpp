@@ -358,11 +358,14 @@ JSCompartment::wrapException(JSContext *cx)
 {
     JS_ASSERT(cx->compartment == this);
 
-    if (cx->isExceptionPending()) {
-        Value v = cx->getPendingException();
-        cx->clearPendingException();
-        if (wrap(cx, &v))
-            cx->setPendingException(v);
+    if (cx->throwing) {
+        AutoValueRooter tvr(cx, cx->exception);
+        cx->throwing = false;
+        cx->exception.setNull();
+        if (wrap(cx, tvr.addr())) {
+            cx->throwing = true;
+            cx->exception = tvr.value();
+        }
         return false;
     }
     return true;

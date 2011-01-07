@@ -6568,7 +6568,7 @@ ExecuteTree(JSContext* cx, TreeFragment* f, uintN& inlineCallCount,
 
     *lrp = state.innermost;
     bool ok = !(state.builtinStatus & BUILTIN_ERROR);
-    JS_ASSERT_IF(cx->isExceptionPending(), !ok);
+    JS_ASSERT_IF(cx->throwing, !ok);
 
     size_t iters = tm->iterationCounter;
 
@@ -16592,7 +16592,7 @@ RecordTracePoint(JSContext* cx, uintN& inlineCallCount, bool* blacklist, bool ex
     if (!Interpret(cx, fp, inlineCallCount, JSINTERP_RECORD))
         return TPA_Error;
 
-    JS_ASSERT(!cx->isExceptionPending());
+    JS_ASSERT(!cx->throwing);
     
     return TPA_RanStuff;
 }
@@ -16759,7 +16759,7 @@ MonitorTracePoint(JSContext *cx, uintN& inlineCallCount, bool* blacklist,
     if (!Interpret(cx, cx->fp(), inlineCallCount, JSINTERP_PROFILE))
         return TPA_Error;
 
-    JS_ASSERT(!cx->isExceptionPending());
+    JS_ASSERT(!cx->throwing);
     
     return TPA_RanStuff;
 }
