@@ -1683,12 +1683,12 @@ var ContextCommands = {
 
   saveLink: function cc_saveLink() {
     let browser = ContextHelper.popupState.target;
-    saveURL(ContextHelper.popupState.linkURL, null, "SaveLinkTitle", false, true, browser.documentURI);
+    ContentAreaUtils.saveURL(ContextHelper.popupState.linkURL, null, "SaveLinkTitle", false, true, browser.documentURI);
   },
 
   saveImage: function cc_saveImage() {
     let browser = ContextHelper.popupState.target;
-    saveImageURL(ContextHelper.popupState.mediaURL, null, "SaveImageTitle", false, true, browser.documentURI);
+    ContentAreaUtils.saveImageURL(ContextHelper.popupState.mediaURL, null, "SaveImageTitle", false, true, browser.documentURI);
   },
 
   shareLink: function cc_shareLink() {
@@ -1749,6 +1749,7 @@ var SharingUI = {
       }, false);
       bbox.appendChild(button);
     });
+
     this._dialog.waitForClose();
     BrowserUI.popPopup(this);
   },
