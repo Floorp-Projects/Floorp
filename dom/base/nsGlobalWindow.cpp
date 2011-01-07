@@ -2554,7 +2554,7 @@ nsGlobalWindow::AreDialogsBlocked()
 {
   nsGlobalWindow *topWindow = GetTop();
   if (!topWindow) {
-    NS_ERROR("AreDialogsBlocked() called without a top window?");
+    NS_ASSERTION(!mDocShell, "AreDialogsBlocked() called without a top window?");
 
     return true;
   }
