@@ -555,7 +555,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Function: close
   // Closes the groupItem, removing (but not closing) all of its children.
   close: function GroupItem_close() {
-    this.removeAll();
+    this.removeAll({dontClose: true});
     GroupItems.unregister(this);
 
     if (this.hidden) {
@@ -811,9 +811,13 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   //
   //   a - The item to add. Can be an <Item>, a DOM element or an iQ object.
   //       The latter two must refer to the container of an <Item>.
-  //   dropPos - An object with left and top properties referring to the location dropped at.  Optional.
-  //   options - An object with optional settings for this call. Currently this includes dontArrange
-  //       and immediately
+  //   dropPos - An object with left and top properties referring to the 
+  //             location dropped at.  Optional.
+  //   options - An optional object with settings for this call. See below.
+  //
+  // Possible options:
+  //   dontArrange - Don't rearrange the children for the new item
+  //   immediately - Don't animate
   add: function GroupItem_add(a, dropPos, options) {
     try {
       var item;
@@ -931,8 +935,12 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   //
   //   a - The item to remove. Can be an <Item>, a DOM element or an iQ object.
   //       The latter two must refer to the container of an <Item>.
-  //   options - An object with optional settings for this call. Currently this includes
-  //             dontArrange and immediately
+  //   options - An optional object with settings for this call. See below.
+  //
+  // Possible options: 
+  //   dontArrange - don't rearrange the remaining items
+  //   dontClose - don't close the group even if it normally would
+  //   immediately - don't animate
   remove: function GroupItem_remove(a, options) {
     try {
       var $el;
@@ -988,11 +996,16 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // ----------
   // Function: removeAll
   // Removes all of the groupItem's children.
-  removeAll: function GroupItem_removeAll() {
-    var self = this;
-    var toRemove = this._children.concat();
+  // The optional "options" param is passed to each remove call. 
+  removeAll: function GroupItem_removeAll(options) {
+    let self = this;
+    let newOptions = {dontArrange: true};
+    if (options)
+      Utils.extend(newOptions, options);
+      
+    let toRemove = this._children.concat();
     toRemove.forEach(function(child) {
-      self.remove(child, {dontArrange: true});
+      self.remove(child, newOptions);
     });
   },
   
@@ -1546,6 +1559,7 @@ let GroupItems = {
   _arrangePaused: false,
   _arrangesPending: [],
   _removingHiddenGroups: false,
+  _updatingTabBarPaused: false,
 
   // ----------
   // Function: init
@@ -1727,24 +1741,41 @@ let GroupItems = {
 
       if (groupItemsData) {
         if (groupItemsData.nextID)
-          this.nextID = groupItemsData.nextID;
+          this.nextID = Math.max(this.nextID, groupItemsData.nextID);
         if (groupItemsData.activeGroupId)
           activeGroupId = groupItemsData.activeGroupId;
       }
 
       if (groupItemData) {
+        var toClose = this.groupItems.concat();
         for (var id in groupItemData) {
-          var groupItem = groupItemData[id];
-          if (this.groupItemStorageSanity(groupItem)) {
-            var options = {
-              dontPush: true,
-              immediately: true
-            };
-
-            new GroupItem([], Utils.extend({}, groupItem, options));
+          let data = groupItemData[id];
+          if (this.groupItemStorageSanity(data)) {
+            let groupItem = this.groupItem(data.id); 
+            if (groupItem) {
+              groupItem.userSize = data.userSize;
+              groupItem.setTitle(data.title);
+              groupItem.setBounds(data.bounds, true);
+              
+              let index = toClose.indexOf(groupItem);
+              if (index != -1)
+                toClose.splice(index, 1);
+            } else {
+              var options = {
+                dontPush: true,
+                immediately: true
+              };
+  
+              new GroupItem([], Utils.extend({}, data, options));
+            }
           }
         }
+
+        toClose.forEach(function(groupItem) {
+          groupItem.close();
+        });
       }
+
       // set active group item
       if (activeGroupId) {
         let activeGroupItem = this.groupItem(activeGroupId);
@@ -1757,6 +1788,19 @@ let GroupItems = {
     } catch(e) {
       Utils.log("error in recons: "+e);
     }
+  },
+
+  // ----------
+  // Function: load
+  // Loads the storage data for groups. 
+  // Returns true if there was global group data.
+  load: function GroupItems_load() {
+    let groupItemsData = Storage.readGroupItemsData(gWindow);
+    let groupItemData = Storage.readGroupItemData(gWindow);
+    this.reconstitute(groupItemsData, groupItemData);
+    this.killNewTabGroup(); // temporary?
+    
+    return (groupItemsData && !Utils.isEmptyObject(groupItemsData));
   },
 
   // ----------
@@ -1961,12 +2005,34 @@ let GroupItems = {
   },
 
   // ----------
+  // Function: pauseUpdatingTabBar
+  // Don't update the tab bar until resume is called.
+  pauseUpdatingTabBar: function GroupItems_pauseUdatingTabBar() {
+    Utils.assertThrow(!this._updatingTabBarPaused, "shouldn't already be paused");
+
+    this._updatingTabBarPaused = true;
+  },
+  
+  // ----------
+  // Function: resumeUpdatingTabBar
+  // Allows updating the tab bar, and does an update.
+  resumeUpdatingTabBar: function GroupItems_resumeUpdatingTabBar() {
+    Utils.assertThrow(this._updatingTabBarPaused, "should already be paused");
+
+    this._updatingTabBarPaused = false;
+    this._updateTabBar();
+  },
+  
+  // ----------
   // Function: _updateTabBar
   // Hides and shows tabs in the tab bar based on the active groupItem or
   // currently active orphan tabItem
   _updateTabBar: function GroupItems__updateTabBar() {
     if (!window.UI)
       return; // called too soon
+      
+    if (this._updatingTabBarPaused)
+      return;
 
     if (!this._activeGroupItem && !this._activeOrphanTab) {
       Utils.assert(false, "There must be something to show in the tab bar!");

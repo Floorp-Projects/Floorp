@@ -86,6 +86,8 @@ function TabItem(tab, options) {
   this._zoomPrep = false;
   this.sizeExtra = new Point();
   this.keepProportional = true;
+  this._hasBeenDrawn = false;
+  this._reconnected = false;
 
   var self = this;
 
@@ -103,10 +105,6 @@ function TabItem(tab, options) {
 
   // ___ superclass setup
   this._init($div[0]);
-
-  // ___ reconnect to data from Storage
-  this._hasBeenDrawn = false;
-  let reconnected = TabItems.reconnect(this);
 
   // ___ drag/drop
   // override dropOptions with custom tabitem methods
@@ -206,19 +204,15 @@ function TabItem(tab, options) {
     .addClass('expander')
     .appendTo($div);
 
+  this.setResizable(true, options.immediately);
+  this.droppable(true);
   this._updateDebugBounds();
 
   TabItems.register(this);
 
-  if (!this.reconnected)
-    GroupItems.newTab(this, options);
-
-  // tabs which were not reconnected at all or were not immediately added
-  // to a group get the same treatment.
-  if (!this.reconnected || (reconnected && !reconnected.addedToGroup) ) {
-    this.setResizable(true, options.immediately);
-    this.droppable(true);
-  }
+  // ___ reconnect to data from Storage
+  if (!TabItems.reconnectingPaused())
+    this._reconnect();
 };
 
 TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
@@ -325,7 +319,7 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   //   saveImageData - true to include thumbnail pixels (and page title as well); default false
   save: function TabItem_save(saveImageData) {
     try{
-      if (!this.tab || this.tab.parentNode == null || !this.reconnected) // too soon/late to save
+      if (!this.tab || this.tab.parentNode == null || !this._reconnected) // too soon/late to save
         return;
 
       var data = this.getStorageData(saveImageData);
@@ -336,6 +330,48 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     }
   },
 
+  // ----------
+  // Function: _reconnect
+  // Load the reciever's persistent data from storage. If there is none, 
+  // treats it as a new tab. 
+  _reconnect: function TabItem__reconnect() {
+    Utils.assertThrow(!this._reconnected, "shouldn't already be reconnected");
+    Utils.assertThrow(this.tab, "should have a xul:tab");
+    
+    let tabData = Storage.getTabData(this.tab);
+    if (tabData && TabItems.storageSanity(tabData)) {
+      if (this.parent)
+        this.parent.remove(this, {immediately: true});
+
+      this.setBounds(tabData.bounds, true);
+
+      if (Utils.isPoint(tabData.userSize))
+        this.userSize = new Point(tabData.userSize);
+
+      if (tabData.groupID) {
+        var groupItem = GroupItems.groupItem(tabData.groupID);
+        if (groupItem) {
+          groupItem.add(this, null, {immediately: true});
+
+          // if it matches the selected tab or no active tab and the browser 
+          // tab is hidden, the active group item would be set.
+          if (this.tab == gBrowser.selectedTab || 
+              (!GroupItems.getActiveGroupItem() && !this.tab.hidden))
+            GroupItems.setActiveGroupItem(this.parent);
+        }
+      }
+
+      if (tabData.imageData)
+        this.showCachedData(tabData);
+    } else {
+      GroupItems.newTab(this, {immediately: true});
+    }
+
+    this._reconnected = true;  
+    this.save();
+    this._sendToSubscribers("reconnected");
+  },
+  
   // ----------
   // Function: setBounds
   // Moves this item to the specified location and size.
@@ -752,6 +788,7 @@ let TabItems = {
   _eventListeners: [],
   _pauseUpdateForTest: false,
   tempCanvas: null,
+  _reconnectingPaused: false,
 
   // ----------
   // Function: init
@@ -902,10 +939,6 @@ let TabItems = {
       if (tabUrl != tabItem.url) {
         let oldURL = tabItem.url;
         tabItem.url = tabUrl;
-
-        if (!tabItem.reconnected)
-          this.reconnect(tabItem);
-
         tabItem.save();
       }
 
@@ -1060,6 +1093,35 @@ let TabItems = {
   },
 
   // ----------
+  // Function: pauseReconnecting
+  // Don't reconnect any new tabs until resume is called.
+  pauseReconnecting: function TabItems_pauseReconnecting() {
+    Utils.assertThrow(!this._reconnectingPaused, "shouldn't already be paused");
+
+    this._reconnectingPaused = true;
+  },
+  
+  // ----------
+  // Function: resumeReconnecting
+  // Reconnect all of the tabs that were created since we paused.
+  resumeReconnecting: function TabItems_resumeReconnecting() {
+    Utils.assertThrow(this._reconnectingPaused, "should already be paused");
+
+    this._reconnectingPaused = false;
+    this.items.forEach(function(item) {
+      if (!item._reconnected)
+        item._reconnect();
+    });
+  },
+  
+  // ----------
+  // Function: reconnectingPaused
+  // Returns true if reconnecting is paused.
+  reconnectingPaused: function TabItems_reconnectingPaused() {
+    return this._reconnectingPaused;
+  },
+  
+  // ----------
   // Function: register
   // Adds the given <TabItem> to the master list.
   register: function TabItems_register(item) {
@@ -1110,67 +1172,6 @@ let TabItems = {
     }
 
     return sane;
-  },
-
-  // ----------
-  // Function: reconnect
-  // Given a <TabItem>, attempts to load its persistent data from storage.
-  reconnect: function TabItems_reconnect(item) {
-    var found = false;
-
-    try{
-      Utils.assert(item, 'item');
-      Utils.assert(item.tab, 'item.tab');
-
-      if (item.reconnected)
-        return true;
-
-      if (!item.tab)
-        return false;
-
-      let tabData = Storage.getTabData(item.tab);
-      if (tabData && this.storageSanity(tabData)) {
-        if (item.parent)
-          item.parent.remove(item, {immediately: true});
-
-        item.setBounds(tabData.bounds, true);
-
-        if (Utils.isPoint(tabData.userSize))
-          item.userSize = new Point(tabData.userSize);
-
-        if (tabData.groupID) {
-          var groupItem = GroupItems.groupItem(tabData.groupID);
-          if (groupItem) {
-            groupItem.add(item, null, {immediately: true});
-
-            // if it matches the selected tab or no active tab and the browser 
-            // tab is hidden, the active group item would be set.
-            if (item.tab == gBrowser.selectedTab || 
-                (!GroupItems.getActiveGroupItem() && !item.tab.hidden))
-              GroupItems.setActiveGroupItem(item.parent);
-          }
-        }
-
-        if (tabData.imageData)
-          item.showCachedData(tabData);
-
-        item.reconnected = true;
-        found = {addedToGroup: tabData.groupID};
-      } else {
-        // We should never have any orphaned tabs. Therefore, item is not 
-        // connected if it has no parent and GroupItems.newTab() would handle 
-        // the group creation.
-        item.reconnected = (item.parent != null);
-      }
-      item.save();
-
-      if (item.reconnected)
-        item._sendToSubscribers("reconnected");
-    } catch(e) {
-      Utils.log(e);
-    }
-
-    return found;
   }
 };
 

@@ -292,6 +292,16 @@ public:
   void SetInTransform(PRBool aInTransform) { mInTransform = aInTransform; }
 
   /**
+   * Returns true if snapping is enabled for the final drawing context.
+   * The default is true.
+   */
+  PRBool IsSnappingEnabled() { return mSnappingEnabled; }
+  /**
+   * Set if snapping is enabled for the final drawing context.
+   */
+  void SetSnappingEnabled(PRBool aSnappingEnabled) { mSnappingEnabled = aSnappingEnabled; }
+
+  /**
    * @return PR_TRUE if images have been set to decode synchronously.
    */
   PRBool ShouldSyncDecodeImages() { return mSyncDecodeImages; }
@@ -414,6 +424,10 @@ public:
 
   NS_DECLARE_FRAME_PROPERTY(OutOfFlowDirtyRectProperty, nsIFrame::DestroyRect)
 
+  nsPresContext* CurrentPresContext() {
+    return CurrentPresShellState()->mPresShell->GetPresContext();
+  }
+
 private:
   struct PresShellState {
     nsIPresShell* mPresShell;
@@ -449,6 +463,7 @@ private:
   PRPackedBool                   mInTransform;
   PRPackedBool                   mSyncDecodeImages;
   PRPackedBool                   mIsPaintingToWindow;
+  PRPackedBool                   mSnappingEnabled;
 };
 
 class nsDisplayItem;
@@ -1319,7 +1334,8 @@ protected:
 class nsDisplayBorder : public nsDisplayItem {
 public:
   nsDisplayBorder(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame) :
-    nsDisplayItem(aBuilder, aFrame) {
+    nsDisplayItem(aBuilder, aFrame),
+    mSnappingEnabled(aBuilder->IsSnappingEnabled() && !aBuilder->IsInTransform()) {
     MOZ_COUNT_CTOR(nsDisplayBorder);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -1328,10 +1344,14 @@ public:
   }
 #endif
 
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx);
   virtual PRBool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                    nsRegion* aVisibleRegion);
   NS_DISPLAY_DECL_NAME("Border", TYPE_BORDER)
+
+protected:
+  PRPackedBool mSnappingEnabled;
 };
 
 /**
@@ -1414,10 +1434,12 @@ public:
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("Background", TYPE_BACKGROUND)
 protected:
-  nsRegion GetInsideClipRegion(PRUint8 aClip, const nsRect& aRect);
+  nsRegion GetInsideClipRegion(nsPresContext* aPresContext, PRUint8 aClip,
+                               const nsRect& aRect);
 
   /* Used to cache mFrame->IsThemed() since it isn't a cheap call */
   PRPackedBool mIsThemed;
+  PRPackedBool mSnappingEnabled;
   nsITheme::Transparency mThemeTransparency;
 };
 

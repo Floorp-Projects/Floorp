@@ -3,13 +3,13 @@
 <head>
   <script>
 mozIndexedDB.open(parent.location).onsuccess = function(e) {
-  var db = e.result;
+  var db = e.target.result;
   // This should never be called
   db.onversionchange = function(e) {
     db.transaction(["mystore"]).objectStore("mystore").put({ hello: "fail" }, 42);
   }
   db.setVersion("1.0").onsuccess = function(e) {
-    trans = e.transaction;
+    trans = e.target.transaction;
     if (db.objectStoreNames.contains("mystore")) {
       db.deleteObjectStore("mystore");
     }

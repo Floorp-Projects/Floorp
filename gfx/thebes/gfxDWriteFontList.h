@@ -159,7 +159,7 @@ public:
     virtual PRBool IsSymbolFont();
 
     virtual nsresult GetFontTable(PRUint32 aTableTag,
-                                  nsTArray<PRUint8>& aBuffer);
+                                  FallibleTArray<PRUint8>& aBuffer);
 
     nsresult ReadCMAP();
 protected:

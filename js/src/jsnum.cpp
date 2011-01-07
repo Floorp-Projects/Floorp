@@ -1028,9 +1028,16 @@ js_InitRuntimeNumberState(JSContext *cx)
     number_constants[NC_MIN_VALUE].dval = u.d;
 
 #ifndef HAVE_LOCALECONV
-    rt->thousandsSeparator = JS_strdup(cx, "'");
-    rt->decimalSeparator = JS_strdup(cx, ".");
-    rt->numGrouping = JS_strdup(cx, "\3\0");
+    const char* thousands_sep = getenv("LOCALE_THOUSANDS_SEP");
+    const char* decimal_point = getenv("LOCALE_DECIMAL_POINT");
+    const char* grouping = getenv("LOCALE_GROUPING");
+
+    rt->thousandsSeparator =
+        JS_strdup(cx, thousands_sep ? thousands_sep : "'");
+    rt->decimalSeparator =
+        JS_strdup(cx, decimal_point ? decimal_point : ".");
+    rt->numGrouping =
+        JS_strdup(cx, grouping ? grouping : "\3\0");
 #else
     struct lconv *locale = localeconv();
     rt->thousandsSeparator =

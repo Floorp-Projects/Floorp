@@ -44,11 +44,28 @@ function run_test() {
               "a-bcdef-ghijk-mnpab-cdefg-");
   // Cuts off.
   do_check_eq(Utils.hyphenatePartialPassphrase("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa").length, 31);
-        
-  
 
   _("Normalize passphrase recognizes hyphens.");
   do_check_eq(Utils.normalizePassphrase(hyphenated), pp);
+
+  _("Skip whitespace.");
+  do_check_eq("aaaaaaaaaaaaaaaaaaaaaaaaaa", Utils.normalizePassphrase("aaaaaaaaaaaaaaaaaaaaaaaaaa  "));
+  do_check_eq("aaaaaaaaaaaaaaaaaaaaaaaaaa", Utils.normalizePassphrase("	 aaaaaaaaaaaaaaaaaaaaaaaaaa"));
+  do_check_eq("aaaaaaaaaaaaaaaaaaaaaaaaaa", Utils.normalizePassphrase("    aaaaaaaaaaaaaaaaaaaaaaaaaa  "));
+  do_check_eq("aaaaaaaaaaaaaaaaaaaaaaaaaa", Utils.normalizePassphrase("    a-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa  "));
+  do_check_true(Utils.isPassphrase("aaaaaaaaaaaaaaaaaaaaaaaaaa  "));
+  do_check_true(Utils.isPassphrase("	 aaaaaaaaaaaaaaaaaaaaaaaaaa"));          
+  do_check_true(Utils.isPassphrase("    aaaaaaaaaaaaaaaaaaaaaaaaaa  "));       
+  do_check_true(Utils.isPassphrase("    a-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa  "));  
+  do_check_false(Utils.isPassphrase("    -aaaaa-aaaaa-aaaaa-aaaaa-aaaaa  "));  
+
+  _("Normalizing 20-char passphrases.");
+  do_check_eq(Utils.normalizePassphrase("abcde-abcde-abcde-abcde"),
+              "abcdeabcdeabcdeabcde");
+  do_check_eq(Utils.normalizePassphrase("a-bcde-abcde-abcde-abcde"),
+              "a-bcde-abcde-abcde-abcde");
+  do_check_eq(Utils.normalizePassphrase(" abcde-abcde-abcde-abcde "),
+              "abcdeabcdeabcdeabcde");
 
   _("Passphrase strength calculated according to the NIST algorithm.");
   do_check_eq(Utils.passphraseStrength(""), 0);
@@ -65,4 +82,8 @@ function run_test() {
   do_check_eq(Utils.passphraseStrength("1"), 10);
   do_check_eq(Utils.passphraseStrength("12"), 12);
   do_check_eq(Utils.passphraseStrength("a1"), 12);
+  
+  _("Normalizing username.");
+  do_check_eq(Utils.normalizeAccount("   QA1234+boo@mozilla.com	"), "QA1234+boo@mozilla.com");
+  do_check_eq(Utils.normalizeAccount("QA1234+boo@mozilla.com"), "QA1234+boo@mozilla.com");
 }

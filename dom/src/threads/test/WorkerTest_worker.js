@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=2 et sw=2 tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -13,7 +11,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Indexed Database.
+ * The Original Code is DOM Worker Tests.
  *
  * The Initial Developer of the Original Code is
  * The Mozilla Foundation.
@@ -21,7 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Ben Turner <bent.mozilla@gmail.com>
+ *  Ben Turner <bent.mozilla@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,15 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIIDBEvent.idl"
-
-%{C++
-#include "jsapi.h"
-%}
-
-[scriptable, uuid(9275d34f-54e1-4ab0-b4ca-f8d4359eec9c)]
-interface nsIIDBSuccessEvent : nsIIDBEvent
-{
-  [implicit_jscontext]
-  readonly attribute jsval result;
-};
+onmessage = function(event) {
+  let worker = new ChromeWorker("WorkerTest_subworker.js");
+  worker.onmessage = function(event) {
+    postMessage(event.data);
+  }
+  worker.postMessage(event.data);
+}

@@ -94,6 +94,8 @@ _MOCHITEST_FILES = \
   test_bug539565-2.html \
   test_enumerate.html \
   test_npruntime_construct.html \
+  307-xo-redirect.sjs \
+  test_redirect_handling.html \
   $(NULL)
 
 #  test_plugin_scroll_painting.html \ bug 596491

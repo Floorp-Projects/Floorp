@@ -95,6 +95,10 @@ class nsGeolocationRequest
   nsresult Init();
   void Shutdown();
 
+  // Called by the geolocation device to notify that a location has changed.
+  // isBetter: the accuracy is as good or better than the previous position. 
+  void Update(nsIDOMGeoPosition* aPosition, PRBool isBetter);
+
   void SendLocation(nsIDOMGeoPosition* location);
   void MarkCleared();
   PRBool IsActive() {return !mCleared;}
@@ -113,6 +117,7 @@ class nsGeolocationRequest
   void NotifyError(PRInt16 errorCode);
   PRPackedBool mAllowed;
   PRPackedBool mCleared;
+  PRPackedBool mIsFirstUpdate;
 
   nsCOMPtr<nsITimer> mTimeoutTimer;
   nsCOMPtr<nsIDOMGeoPositionCallback> mCallback;
@@ -201,7 +206,8 @@ public:
   nsresult Init(nsIDOMWindow* contentDom=nsnull);
 
   // Called by the geolocation device to notify that a location has changed.
-  void Update(nsIDOMGeoPosition* aPosition);
+  // isBetter: the accuracy is as good or better than the previous position. 
+  void Update(nsIDOMGeoPosition* aPosition, PRBool isBetter);
 
   // Returns true if any of the callbacks are repeating
   PRBool HasActiveCallbacks();

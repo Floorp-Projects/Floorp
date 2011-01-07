@@ -23,7 +23,7 @@
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
 
-      let db = event.result;
+      let db = event.target.result;
       is(db.objectStoreNames.length, 0, "Bad objectStores list");
 
       request = db.setVersion("1");

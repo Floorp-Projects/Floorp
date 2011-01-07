@@ -46,8 +46,11 @@ Cu.import("resource://services-sync/stores.js");
 Cu.import("resource://services-sync/trackers.js");
 Cu.import("resource://services-sync/type_records/forms.js");
 Cu.import("resource://services-sync/util.js");
+Cu.import("resource://services-sync/log4moz.js");
 
 let FormWrapper = {
+  _log: Log4Moz.repository.getLogger('Engine.Forms'),
+    
   getAllEntries: function getAllEntries() {
     // Sort by (lastUsed - minLast) / (maxLast - minLast) * timesUsed / maxTimes
     let query = this.createStatement(
@@ -76,6 +79,16 @@ let FormWrapper = {
 
     // Give the guid if we found one
     let item = Utils.queryAsync(getQuery, "guid")[0];
+    
+    if (!item) {
+      // Shouldn't happen, but Bug 597400...
+      // Might as well just return.
+      this._log.warn("GUID query returned " + item + "; turn on Trace logging for details.");
+      this._log.trace("getGUID(" + JSON.stringify(name) + ", " +
+                      JSON.stringify(value) + ") => " + item);
+      return null;
+    }
+    
     if (item.guid != null)
       return item.guid;
 

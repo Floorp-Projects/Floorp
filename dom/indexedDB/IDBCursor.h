@@ -149,6 +149,7 @@ protected:
   nsCOMPtr<nsIScriptContext> mScriptContext;
   nsCOMPtr<nsPIDOMWindow> mOwner;
 
+  // Not cycle-collected, these are guaranteed to be primitives!
   nsCOMPtr<nsIVariant> mCachedKey;
   nsCOMPtr<nsIVariant> mCachedObjectKey;
 
@@ -157,6 +158,7 @@ protected:
   nsCString mContinueQuery;
   nsCString mContinueToQuery;
 
+  // This one is cycle-collected!
   jsval mCachedValue;
 
   Key mRangeKey;
@@ -169,6 +171,7 @@ protected:
   bool mHaveCachedValue;
   bool mValueRooted;
   bool mContinueCalled;
+  bool mHaveValue;
 };
 
 END_INDEXEDDB_NAMESPACE

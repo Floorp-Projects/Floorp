@@ -493,6 +493,18 @@ ContentChild::RecvPreferenceUpdate(const PrefTuple& aPref)
 }
 
 bool
+ContentChild::RecvClearUserPreference(const nsCString& aPrefName)
+{
+    nsCOMPtr<nsIPrefServiceInternal> prefs = do_GetService("@mozilla.org/preferences-service;1");
+    if (!prefs)
+        return false;
+
+    prefs->ClearContentPref(aPrefName);
+
+    return true;
+}
+
+bool
 ContentChild::RecvNotifyAlertsObserver(const nsCString& aType, const nsString& aData)
 {
     for (PRUint32 i = 0; i < mAlertObservers.Length();
@@ -592,7 +604,7 @@ ContentChild::RecvFlushMemory(const nsString& reason)
     nsCOMPtr<nsIObserverService> os =
         mozilla::services::GetObserverService();
     if (os)
-	os->NotifyObservers(nsnull, "memory-pressure", reason.get());
+        os->NotifyObservers(nsnull, "memory-pressure", reason.get());
   return true;
 }
 

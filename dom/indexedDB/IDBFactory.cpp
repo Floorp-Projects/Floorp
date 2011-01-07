@@ -41,6 +41,7 @@
 
 #include "nsILocalFile.h"
 #include "nsIScriptContext.h"
+#include "mozIThirdPartyUtil.h"
 
 #include "mozilla/storage.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -120,7 +121,6 @@ struct ObjectStoreInfoMap
   ObjectStoreInfo* info;
 };
 
-
 class OpenDatabaseHelper : public AsyncConnectionHelper
 {
 public:
@@ -133,7 +133,8 @@ public:
   { }
 
   nsresult DoDatabaseWork(mozIStorageConnection* aConnection);
-  nsresult GetSuccessResult(nsIWritableVariant* aResult);
+  nsresult GetSuccessResult(JSContext* aCx,
+                            jsval* aVal);
 
 private:
   // In-params.
@@ -846,6 +847,20 @@ IDBFactory::Open(const nsAString& aName,
   }
   NS_ENSURE_TRUE(innerWindow, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
+  nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
+    do_GetService(THIRDPARTYUTIL_CONTRACTID);
+  NS_ENSURE_TRUE(thirdPartyUtil, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  PRBool isThirdPartyWindow;
+  rv = thirdPartyUtil->IsThirdPartyWindow(window, nsnull, &isThirdPartyWindow);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  if (isThirdPartyWindow) {
+    NS_WARNING("IndexedDB is not permitted in a third-party window.");
+    *_retval = nsnull;
+    return NS_OK;
+  }
+
   nsRefPtr<IDBRequest> request = IDBRequest::Create(this, context, innerWindow,
                                                     nsnull);
   NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
@@ -940,7 +955,8 @@ OpenDatabaseHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 }
 
 nsresult
-OpenDatabaseHelper::GetSuccessResult(nsIWritableVariant* aResult)
+OpenDatabaseHelper::GetSuccessResult(JSContext* aCx,
+                                     jsval* aVal)
 {
   DatabaseInfo* dbInfo;
   if (DatabaseInfo::Get(mDatabaseId, &dbInfo)) {
@@ -1027,6 +1043,5 @@ OpenDatabaseHelper::GetSuccessResult(nsIWritableVariant* aResult)
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
-  aResult->SetAsISupports(static_cast<nsPIDOMEventTarget*>(db));
-  return NS_OK;
+  return WrapNative(aCx, static_cast<nsPIDOMEventTarget*>(db), aVal);
 }

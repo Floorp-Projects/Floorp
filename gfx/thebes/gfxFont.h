@@ -266,7 +266,7 @@ public:
         return PR_TRUE;
     }
 
-    virtual nsresult GetFontTable(PRUint32 aTableTag, nsTArray<PRUint8>& aBuffer) {
+    virtual nsresult GetFontTable(PRUint32 aTableTag, FallibleTArray<PRUint8>& aBuffer) {
         return NS_ERROR_FAILURE; // all platform subclasses should reimplement this!
     }
 
@@ -295,12 +295,12 @@ public:
     // Pass NULL for aBuffer to indicate that the table is not present and
     // NULL will be returned.  Also returns NULL on OOM.
     hb_blob_t *ShareFontTableAndGetBlob(PRUint32 aTag,
-                                        nsTArray<PRUint8>* aTable);
+                                        FallibleTArray<PRUint8>* aTable);
 
     // Preload a font table into the cache (used to store layout tables for
     // harfbuzz, when they will be stripped from the actual sfnt being
     // passed to platform font APIs for rasterization)
-    void PreloadFontTable(PRUint32 aTag, nsTArray<PRUint8>& aTable);
+    void PreloadFontTable(PRUint32 aTag, FallibleTArray<PRUint8>& aTable);
 
     nsString         mName;
 
@@ -428,12 +428,12 @@ private:
         // recorded in the hashtable entry so that others may use the same
         // table.
         hb_blob_t *
-        ShareTableAndGetBlob(nsTArray<PRUint8>& aTable,
+        ShareTableAndGetBlob(FallibleTArray<PRUint8>& aTable,
                              nsTHashtable<FontTableHashEntry> *aHashtable);
 
         // Transfer (not copy) elements of aTable to a new hb_blob_t that is
         // owned by the hashtable entry.
-        void SaveTable(nsTArray<PRUint8>& aTable);
+        void SaveTable(FallibleTArray<PRUint8>& aTable);
 
         // Return a strong reference to the blob.
         // Callers must hb_blob_destroy the returned blob.
@@ -559,7 +559,7 @@ protected:
                                        PRBool anItalic, PRInt16 aStretch);
 
     PRBool ReadOtherFamilyNamesForFace(gfxPlatformFontList *aPlatformFontList,
-                                       nsTArray<PRUint8>& aNameTable,
+                                       FallibleTArray<PRUint8>& aNameTable,
                                        PRBool useFullName = PR_FALSE);
 
     // set whether this font family is in "bad" underline offset blacklist.

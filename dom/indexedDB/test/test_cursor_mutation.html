@@ -35,12 +35,12 @@
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
 
-      let db = event.result;
+      let db = event.target.result;
 
       db.setVersion("1").onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      event.transaction.oncomplete = continueToNextStep;
+      event.target.transaction.oncomplete = continueToNextStep;
 
       let objectStore = db.createObjectStore("foo", { keyPath: "ss" });
       objectStore.createIndex("name", "name", { unique: true });
@@ -57,8 +57,8 @@
 
       db.transaction("foo").objectStore("foo").openCursor().onsuccess =
         function(event) {
-          event.transaction.oncomplete = continueToNextStep;
-          let cursor = event.result;
+          event.target.transaction.oncomplete = continueToNextStep;
+          let cursor = event.target.result;
           if (cursor) {
             if (cursor.value.name == objectStoreData[0].name) {
               sawRemoved = true;
@@ -83,8 +83,8 @@
 
       db.transaction("foo", IDBTransaction.READ_WRITE).objectStore("foo")
         .index("name").openCursor().onsuccess = function(event) {
-          event.transaction.oncomplete = continueToNextStep;
-          let cursor = event.result;
+          event.target.transaction.oncomplete = continueToNextStep;
+          let cursor = event.target.result;
           if (cursor) {
             if (cursor.value.name == objectStoreData[0].name) {
               sawRemoved = true;
@@ -99,7 +99,7 @@
                "Correct name");
 
             if (count == 1) {
-              let objectStore = event.transaction.objectStore("foo");
+              let objectStore = event.target.transaction.objectStore("foo");
               objectStore.delete(objectStoreData[0].ss)
                          .onsuccess = function(event) {
                 objectStore.add(objectStoreData[objectStoreData.length - 1])

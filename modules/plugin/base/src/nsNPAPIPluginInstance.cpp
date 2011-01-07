@@ -54,8 +54,8 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"
 #include "nsDirectoryServiceDefs.h"
-
 #include "nsJSNPRuntime.h"
+#include "nsPluginStreamListenerPeer.h"
 
 using namespace mozilla::plugins::parent;
 using mozilla::TimeStamp;
@@ -195,10 +195,10 @@ NS_IMETHODIMP nsNPAPIPluginInstance::Stop()
   OnPluginDestroy(&mNPP);
 
   // clean up open streams
-  while (mPStreamListeners.Length() > 0) {
-    nsRefPtr<nsNPAPIPluginStreamListener> currentListener(mPStreamListeners[0]);
+  while (mStreamListeners.Length() > 0) {
+    nsRefPtr<nsNPAPIPluginStreamListener> currentListener(mStreamListeners[0]);
     currentListener->CleanUpStream(NPRES_USER_BREAK);
-    mPStreamListeners.RemoveElement(currentListener);
+    mStreamListeners.RemoveElement(currentListener);
   }
 
   if (!mPlugin || !mPlugin->GetLibrary())
@@ -292,15 +292,15 @@ nsNPAPIPluginInstance::GetMode(PRInt32 *result)
 }
 
 nsTArray<nsNPAPIPluginStreamListener*>*
-nsNPAPIPluginInstance::PStreamListeners()
+nsNPAPIPluginInstance::StreamListeners()
 {
-  return &mPStreamListeners;
+  return &mStreamListeners;
 }
 
 nsTArray<nsPluginStreamListenerPeer*>*
-nsNPAPIPluginInstance::BStreamListeners()
+nsNPAPIPluginInstance::FileCachedStreamListeners()
 {
-  return &mBStreamListeners;
+  return &mFileCachedStreamListeners;
 }
 
 nsresult
@@ -478,12 +478,11 @@ NS_IMETHODIMP nsNPAPIPluginInstance::SetWindow(NPWindow* window)
   return NS_OK;
 }
 
-/* NOTE: the caller must free the stream listener */
-// Create a normal stream, one without a urlnotify callback
 NS_IMETHODIMP
 nsNPAPIPluginInstance::NewStreamToPlugin(nsIPluginStreamListener** listener)
 {
-  return NewNotifyStream(listener, nsnull, PR_FALSE, nsnull);
+  // This method can be removed at the next opportunity.
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -497,17 +496,14 @@ nsNPAPIPluginInstance::NewStreamFromPlugin(const char* type, const char* target,
   return stream->QueryInterface(kIOutputStreamIID, (void**)result);
 }
 
-// Create a stream that will notify when complete
-nsresult nsNPAPIPluginInstance::NewNotifyStream(nsIPluginStreamListener** listener, 
-                                                void* notifyData,
-                                                PRBool aCallNotify,
-                                                const char* aURL)
+nsresult
+nsNPAPIPluginInstance::NewStreamListener(const char* aURL, void* notifyData,
+                                         nsIPluginStreamListener** listener)
 {
   nsNPAPIPluginStreamListener* stream = new nsNPAPIPluginStreamListener(this, notifyData, aURL);
   NS_ENSURE_TRUE(stream, NS_ERROR_OUT_OF_MEMORY);
 
-  mPStreamListeners.AppendElement(stream);
-  stream->SetCallNotify(aCallNotify); // set flag in stream to call URLNotify
+  mStreamListeners.AppendElement(stream);
 
   return stream->QueryInterface(kIPluginStreamListenerIID, (void**)listener);
 }
@@ -1241,4 +1237,20 @@ nsresult
 nsNPAPIPluginInstance::AsyncSetWindow(NPWindow& window)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+void
+nsNPAPIPluginInstance::URLRedirectResponse(void* notifyData, NPBool allow)
+{
+  if (!notifyData) {
+    return;
+  }
+
+  PRUint32 listenerCount = mStreamListeners.Length();
+  for (PRUint32 i = 0; i < listenerCount; i++) {
+    nsNPAPIPluginStreamListener* currentListener = mStreamListeners[i];
+    if (currentListener->GetNotifyData() == notifyData) {
+      currentListener->URLRedirectResponse(allow);
+    }
+  }
 }

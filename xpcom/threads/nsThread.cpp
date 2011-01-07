@@ -522,8 +522,7 @@ class Canary {
 //XXX ToDo: support nested loops
 public:
   Canary() {
-    if (sOutputFD != 0 && NS_IsMainThread() && 
-        XRE_GetProcessType() == GeckoProcessType_Default) {
+    if (sOutputFD != 0 && EventLatencyIsImportant()) {
       if (sOutputFD == -1) {
         const int flags = O_WRONLY | O_APPEND | O_CREAT | O_NONBLOCK;
         const mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
@@ -540,10 +539,18 @@ public:
   }
 
   ~Canary() {
-    if (sOutputFD != 0 && NS_IsMainThread() && 
-        XRE_GetProcessType() == GeckoProcessType_Default)
+    if (sOutputFD != 0 && EventLatencyIsImportant())
       ualarm(0, 0);
   }
+
+  static bool EventLatencyIsImportant() {
+    return NS_IsMainThread()
+#ifdef MOZ_IPC
+           && XRE_GetProcessType() == GeckoProcessType_Default
+#endif
+    ;
+  }
+
   static int sOutputFD;
 };
 
