@@ -25,7 +25,7 @@ function testSteps()
   request.onsuccess = grabEventAndContinueHandler;
   let event = yield;
 
-  let db = event.result;
+  let db = event.target.result;
 
   // Check default state.
   is(db.version, "", "Correct default version for a new database.");
@@ -44,7 +44,7 @@ function testSteps()
     event = yield;
 
     is(db.version, version, "Database version number updated correctly");
-    is(event.transaction.mode, VERSION_CHANGE, "Correct mode");
+    is(event.target.transaction.mode, VERSION_CHANGE, "Correct mode");
 
     SimpleTest.executeSoon(function() { testGenerator.next(); });
     yield;

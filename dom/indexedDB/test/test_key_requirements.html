@@ -21,7 +21,7 @@
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
 
-      let db = event.result;
+      let db = event.target.result;
       db.addEventListener("error", function(event) {
         event.preventDefault();
       }, false);
@@ -38,14 +38,14 @@
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      let key1 = event.result;
+      let key1 = event.target.result;
 
       request = objectStore.put({}, key1);
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      is(event.result, key1, "put gave the same key back");
+      is(event.target.result, key1, "put gave the same key back");
 
       let key2 = 10;
 
@@ -54,7 +54,7 @@
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      is(event.result, key2, "put gave the same key back");
+      is(event.target.result, key2, "put gave the same key back");
 
       key2 = 100;
 
@@ -63,7 +63,7 @@
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      is(event.result, key2, "put gave the same key back");
+      is(event.target.result, key2, "put gave the same key back");
 
       try {
         objectStore.put({});
@@ -172,21 +172,21 @@
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      is(event.result, key1, "add gave back the same key");
+      is(event.target.result, key1, "add gave back the same key");
 
       request = objectStore.put({id:10});
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      is(event.result, key1, "put gave back the same key");
+      is(event.target.result, key1, "put gave back the same key");
 
       request = objectStore.put({id:10});
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      is(event.result, key1, "put gave back the same key");
+      is(event.target.result, key1, "put gave back the same key");
 
       request = objectStore.add({id:10});
       request.onerror = new ExpectError(IDBDatabaseException.CONSTRAINT_ERR);
@@ -233,14 +233,14 @@
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      key1 = event.result;
+      key1 = event.target.result;
 
       request = objectStore.put({id:key1});
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      is(event.result, key1, "put gave the same key back");
+      is(event.target.result, key1, "put gave the same key back");
 
       key2 = 10;
 
@@ -249,7 +249,7 @@
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      is(event.result, key2, "put gave the same key back");
+      is(event.target.result, key2, "put gave the same key back");
 
       try {
         objectStore.put({});

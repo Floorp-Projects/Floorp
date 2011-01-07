@@ -121,7 +121,6 @@ struct ObjectStoreInfoMap
   ObjectStoreInfo* info;
 };
 
-
 class OpenDatabaseHelper : public AsyncConnectionHelper
 {
 public:
@@ -134,7 +133,8 @@ public:
   { }
 
   nsresult DoDatabaseWork(mozIStorageConnection* aConnection);
-  nsresult GetSuccessResult(nsIWritableVariant* aResult);
+  nsresult GetSuccessResult(JSContext* aCx,
+                            jsval* aVal);
 
 private:
   // In-params.
@@ -955,7 +955,8 @@ OpenDatabaseHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 }
 
 nsresult
-OpenDatabaseHelper::GetSuccessResult(nsIWritableVariant* aResult)
+OpenDatabaseHelper::GetSuccessResult(JSContext* aCx,
+                                     jsval* aVal)
 {
   DatabaseInfo* dbInfo;
   if (DatabaseInfo::Get(mDatabaseId, &dbInfo)) {
@@ -1042,6 +1043,5 @@ OpenDatabaseHelper::GetSuccessResult(nsIWritableVariant* aResult)
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
-  aResult->SetAsISupports(static_cast<nsPIDOMEventTarget*>(db));
-  return NS_OK;
+  return WrapNative(aCx, static_cast<nsPIDOMEventTarget*>(db), aVal);
 }
