@@ -91,6 +91,7 @@
 #include "mozilla/scache/StartupCache.h"
 #include "mozilla/scache/StartupCacheUtils.h"
 #endif
+#include "mozilla/Omnijar.h"
 
 #if defined(MOZ_SHARK) || defined(MOZ_CALLGRIND) || defined(MOZ_VTUNE) || defined(MOZ_TRACEVIS)
 #include "jsdbgapi.h"
@@ -629,16 +630,28 @@ mozJSComponentLoader::LoadModuleFromJAR(nsILocalFile *aJarFile,
 #if !defined(XPCONNECT_STANDALONE)
     nsresult rv;
 
-    nsCAutoString fileSpec;
-    NS_GetURLSpecFromActualFile(aJarFile, fileSpec);
+    nsCAutoString fullSpec;
 
-    nsCAutoString jarSpec("jar:");
-    jarSpec += fileSpec;
-    jarSpec += "!/";
-    jarSpec += aComponentPath;
+#ifdef MOZ_OMNIJAR
+    PRBool equal;
+    rv = aJarFile->Equals(mozilla::OmnijarPath(), &equal);
+    if (NS_SUCCEEDED(rv) && equal) {
+        fullSpec = "resource://gre/";
+    } else {
+#endif
+        nsCAutoString fileSpec;
+        NS_GetURLSpecFromActualFile(aJarFile, fileSpec);
+        fullSpec = "jar:";
+        fullSpec += fileSpec;
+        fullSpec += "!/";
+#ifdef MOZ_OMNIJAR
+    }
+#endif
+
+    fullSpec += aComponentPath;
 
     nsCOMPtr<nsIURI> uri;
-    rv = NS_NewURI(getter_AddRefs(uri), jarSpec);
+    rv = NS_NewURI(getter_AddRefs(uri), fullSpec);
     if (NS_FAILED(rv))
         return NULL;
 
