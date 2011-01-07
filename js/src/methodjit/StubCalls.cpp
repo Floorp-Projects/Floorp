@@ -1291,11 +1291,12 @@ stubs::Debugger(VMFrame &f, jsbytecode *pc)
         switch (handler(f.cx, f.cx->fp()->script(), pc, Jsvalify(&rval),
                         f.cx->debugHooks->debuggerHandlerData)) {
           case JSTRAP_THROW:
-            f.cx->setPendingException(rval);
+            f.cx->throwing = JS_TRUE;
+            f.cx->exception = rval;
             THROW();
 
           case JSTRAP_RETURN:
-            f.cx->clearPendingException();
+            f.cx->throwing = JS_FALSE;
             f.cx->fp()->setReturnValue(rval);
 #if (defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)) || defined(_WIN64)
             *f.returnAddressLocation() = JS_FUNC_TO_DATA_PTR(void *,
@@ -1307,7 +1308,7 @@ stubs::Debugger(VMFrame &f, jsbytecode *pc)
             break;
 
           case JSTRAP_ERROR:
-            f.cx->clearPendingException();
+            f.cx->throwing = JS_FALSE;
             THROW();
 
           default:
@@ -1351,11 +1352,12 @@ stubs::Trap(VMFrame &f, uint32 trapTypes)
 
     switch (result) {
       case JSTRAP_THROW:
-        f.cx->setPendingException(rval);
+        f.cx->throwing = JS_TRUE;
+        f.cx->exception = rval;
         THROW();
 
       case JSTRAP_RETURN:
-        f.cx->clearPendingException();
+        f.cx->throwing = JS_FALSE;
         f.cx->fp()->setReturnValue(rval);
 #if (defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)) || defined(_WIN64)
         *f.returnAddressLocation() = JS_FUNC_TO_DATA_PTR(void *,
@@ -1367,7 +1369,7 @@ stubs::Trap(VMFrame &f, uint32 trapTypes)
         break;
 
       case JSTRAP_ERROR:
-        f.cx->clearPendingException();
+        f.cx->throwing = JS_FALSE;
         THROW();
 
       default:
@@ -2333,8 +2335,9 @@ stubs::Throw(VMFrame &f)
 {
     JSContext *cx = f.cx;
 
-    JS_ASSERT(!cx->isExceptionPending());
-    cx->setPendingException(f.regs.sp[-1]);
+    JS_ASSERT(!cx->throwing);
+    cx->throwing = JS_TRUE;
+    cx->exception = f.regs.sp[-1];
     THROW();
 }
 
@@ -2767,12 +2770,6 @@ stubs::In(VMFrame &f)
 template void JS_FASTCALL stubs::DelElem<true>(VMFrame &f);
 template void JS_FASTCALL stubs::DelElem<false>(VMFrame &f);
 
-void JS_FASTCALL
-stubs::Exception(VMFrame &f)
-{
-    f.regs.sp[0] = f.cx->getPendingException();
-    f.cx->clearPendingException();
-}
 template <bool Clamped>
 int32 JS_FASTCALL
 stubs::ConvertToTypedInt(JSContext *cx, Value *vp)
