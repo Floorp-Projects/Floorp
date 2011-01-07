@@ -2430,7 +2430,7 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
         argv = regs.fp->maybeFormalArgs();                                    \
         atoms = FrameAtomBase(cx, regs.fp);                                   \
         JS_ASSERT(cx->regs == &regs);                                         \
-        if (cx->throwing)                                                     \
+        if (cx->isExceptionPending())                                         \
             goto error;                                                       \
     JS_END_MACRO
 
@@ -2446,7 +2446,7 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
                 CLEAR_LEAVE_ON_TRACE_POINT();                                 \
             }                                                                 \
             RESTORE_INTERP_VARS();                                            \
-            JS_ASSERT_IF(cx->throwing, r == MONITOR_ERROR);                   \
+            JS_ASSERT_IF(cx->isExceptionPending(), r == MONITOR_ERROR);       \
             if (r == MONITOR_ERROR)                                           \
                 goto error;                                                   \
         }                                                                     \
@@ -2572,9 +2572,9 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
 
         /*
          * To support generator_throw and to catch ignored exceptions,
-         * fail if cx->throwing is set.
+         * fail if cx->isExceptionPending() is true.
          */
-        if (cx->throwing)
+        if (cx->isExceptionPending())
             goto error;
     }
 #endif
@@ -2688,8 +2688,7 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
                 interpReturnOK = JS_TRUE;
                 goto forced_return;
               case JSTRAP_THROW:
-                cx->throwing = JS_TRUE;
-                cx->exception = rval;
+                cx->setPendingException(rval);
                 goto error;
               default:;
             }
@@ -2717,7 +2716,7 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
         if (TraceRecorder* tr = TRACE_RECORDER(cx)) {
             JS_ASSERT(!TRACE_PROFILER(cx));
             AbortableRecordingStatus status = tr->monitorRecording(op);
-            JS_ASSERT_IF(cx->throwing, status == ARECORD_ERROR);
+            JS_ASSERT_IF(cx->isExceptionPending(), status == ARECORD_ERROR);
 
             if (interpMode != JSINTERP_NORMAL) {
                 JS_ASSERT(interpMode == JSINTERP_RECORD || JSINTERP_SAFEPOINT);
@@ -5205,8 +5204,7 @@ BEGIN_CASE(JSOP_TRAP)
         interpReturnOK = JS_TRUE;
         goto forced_return;
       case JSTRAP_THROW:
-        cx->throwing = JS_TRUE;
-        cx->exception = rval;
+        cx->setPendingException(rval);
         goto error;
       default:
         break;
@@ -6232,8 +6230,7 @@ BEGIN_CASE(JSOP_RETSUB)
          * be necessary, but it seems clearer.  And it points out a FIXME:
          * 350509, due to Igor Bukanov.
          */
-        cx->throwing = JS_TRUE;
-        cx->exception = rval;
+        cx->setPendingException(rval);
         goto error;
     }
     JS_ASSERT(rval.isInt32());
@@ -6243,9 +6240,8 @@ END_VARLEN_CASE
 }
 
 BEGIN_CASE(JSOP_EXCEPTION)
-    JS_ASSERT(cx->throwing);
-    PUSH_COPY(cx->exception);
-    cx->throwing = JS_FALSE;
+    PUSH_COPY(cx->getPendingException());
+    cx->clearPendingException();
 #if defined(JS_TRACER) && defined(JS_METHODJIT)
     if (interpMode == JSINTERP_PROFILE) {
         leaveOnSafePoint = true;
@@ -6260,19 +6256,24 @@ BEGIN_CASE(JSOP_FINALLY)
 END_CASE(JSOP_FINALLY)
 
 BEGIN_CASE(JSOP_THROWING)
-    JS_ASSERT(!cx->throwing);
-    cx->throwing = JS_TRUE;
-    POP_COPY_TO(cx->exception);
+{
+    JS_ASSERT(!cx->isExceptionPending());
+    Value v;
+    POP_COPY_TO(v);
+    cx->setPendingException(v);
+}
 END_CASE(JSOP_THROWING)
 
 BEGIN_CASE(JSOP_THROW)
-    JS_ASSERT(!cx->throwing);
+{
+    JS_ASSERT(!cx->isExceptionPending());
     CHECK_BRANCH();
-    cx->throwing = JS_TRUE;
-    POP_COPY_TO(cx->exception);
+    Value v;
+    POP_COPY_TO(v);
+    cx->setPendingException(v);
     /* let the code at error try to catch the exception. */
     goto error;
-
+}
 BEGIN_CASE(JSOP_SETLOCALPOP)
 {
     /*
@@ -6348,8 +6349,7 @@ BEGIN_CASE(JSOP_DEBUGGER)
             interpReturnOK = JS_TRUE;
             goto forced_return;
         case JSTRAP_THROW:
-            cx->throwing = JS_TRUE;
-            cx->exception = rval;
+            cx->setPendingException(rval);
             goto error;
         default:;
         }
@@ -6721,7 +6721,7 @@ END_CASE(JSOP_LEAVEBLOCK)
 #if JS_HAS_GENERATORS
 BEGIN_CASE(JSOP_GENERATOR)
 {
-    JS_ASSERT(!cx->throwing);
+    JS_ASSERT(!cx->isExceptionPending());
     regs.pc += JSOP_GENERATOR_LENGTH;
     JSObject *obj = js_NewGenerator(cx);
     if (!obj)
@@ -6735,7 +6735,7 @@ BEGIN_CASE(JSOP_GENERATOR)
 }
 
 BEGIN_CASE(JSOP_YIELD)
-    JS_ASSERT(!cx->throwing);
+    JS_ASSERT(!cx->isExceptionPending());
     JS_ASSERT(regs.fp->isFunctionFrame() && !regs.fp->isEvalFrame());
     if (cx->generatorFor(regs.fp)->state == JSGEN_CLOSING) {
         js_ReportValueError(cx, JSMSG_BAD_GENERATOR_YIELD,
@@ -6831,7 +6831,7 @@ END_CASE(JSOP_ARRAYPUSH)
   error:
     JS_ASSERT(cx->regs == &regs);
 #ifdef JS_TRACER
-    if (regs.fp->hasImacropc() && cx->throwing) {
+    if (regs.fp->hasImacropc() && cx->isExceptionPending()) {
         // Handle exceptions as if they came from the imacro-calling pc.
         regs.pc = regs.fp->imacropc();
         regs.fp->clearImacropc();
@@ -6855,7 +6855,7 @@ END_CASE(JSOP_ARRAYPUSH)
 # endif
 #endif
 
-    if (!cx->throwing) {
+    if (!cx->isExceptionPending()) {
         /* This is an error, not a catchable exception, quit the frame ASAP. */
         interpReturnOK = JS_FALSE;
     } else {
@@ -6873,15 +6873,15 @@ END_CASE(JSOP_ARRAYPUSH)
             switch (handler(cx, script, regs.pc, Jsvalify(&rval),
                             cx->debugHooks->throwHookData)) {
               case JSTRAP_ERROR:
-                cx->throwing = JS_FALSE;
+                cx->clearPendingException();
                 goto error;
               case JSTRAP_RETURN:
-                cx->throwing = JS_FALSE;
+                cx->clearPendingException();
                 regs.fp->setReturnValue(rval);
                 interpReturnOK = JS_TRUE;
                 goto forced_return;
               case JSTRAP_THROW:
-                cx->exception = rval;
+                cx->setPendingException(rval);
               case JSTRAP_CONTINUE:
               default:;
             }
@@ -6944,12 +6944,12 @@ END_CASE(JSOP_ARRAYPUSH)
               case JSTRY_CATCH:
 #if JS_HAS_GENERATORS
                 /* Catch cannot intercept the closing of a generator. */
-                if (JS_UNLIKELY(cx->exception.isMagic(JS_GENERATOR_CLOSING)))
+                  if (JS_UNLIKELY(cx->getPendingException().isMagic(JS_GENERATOR_CLOSING)))
                     break;
 #endif
 
                 /*
-                 * Don't clear cx->throwing to save cx->exception from GC
+                 * Don't clear exceptions to save cx->exception from GC
                  * until it is pushed to the stack via [exception] in the
                  * catch block.
                  */
@@ -6962,22 +6962,21 @@ END_CASE(JSOP_ARRAYPUSH)
                  * [retsub] should rethrow the exception.
                  */
                 PUSH_BOOLEAN(true);
-                PUSH_COPY(cx->exception);
-                cx->throwing = JS_FALSE;
+                PUSH_COPY(cx->getPendingException());
+                cx->clearPendingException();
                 len = 0;
                 DO_NEXT_OP(len);
 
               case JSTRY_ITER: {
                 /* This is similar to JSOP_ENDITER in the interpreter loop. */
                 JS_ASSERT(js_GetOpcode(cx, regs.fp->script(), regs.pc) == JSOP_ENDITER);
-                AutoValueRooter tvr(cx, cx->exception);
-                cx->throwing = false;
+                Value v = cx->getPendingException();
+                cx->clearPendingException();
                 ok = js_CloseIterator(cx, &regs.sp[-1].toObject());
                 regs.sp -= 1;
                 if (!ok)
                     goto error;
-                cx->throwing = true;
-                cx->exception = tvr.value();
+                cx->setPendingException(v);
               }
            }
         } while (++tn != tnlimit);
@@ -6989,9 +6988,9 @@ END_CASE(JSOP_ARRAYPUSH)
          */
         interpReturnOK = JS_FALSE;
 #if JS_HAS_GENERATORS
-        if (JS_UNLIKELY(cx->throwing &&
-                        cx->exception.isMagic(JS_GENERATOR_CLOSING))) {
-            cx->throwing = JS_FALSE;
+        if (JS_UNLIKELY(cx->isExceptionPending() &&
+                        cx->getPendingException().isMagic(JS_GENERATOR_CLOSING))) {
+            cx->clearPendingException();
             interpReturnOK = JS_TRUE;
             regs.fp->clearReturnValue();
         }
@@ -7006,7 +7005,7 @@ END_CASE(JSOP_ARRAYPUSH)
      * When a trap handler returns JSTRAP_RETURN, we jump here with
      * interpReturnOK set to true bypassing any finally blocks.
      */
-    interpReturnOK &= js_UnwindScope(cx, 0, interpReturnOK || cx->throwing);
+    interpReturnOK &= js_UnwindScope(cx, 0, interpReturnOK || cx->isExceptionPending());
     JS_ASSERT(regs.sp == regs.fp->base());
 
 #ifdef DEBUG
