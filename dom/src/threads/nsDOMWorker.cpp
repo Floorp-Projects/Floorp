@@ -291,7 +291,7 @@ nsDOMWorkerFunctions::LoadScripts(JSContext* aCx,
     return JS_FALSE;
   }
 
-  rv = loader->LoadScripts(aCx, urls, PR_FALSE);
+  rv = loader->LoadScripts(aCx, urls, PR_TRUE);
   if (NS_FAILED(rv)) {
     if (!JS_IsExceptionPending(aCx)) {
       JS_ReportError(aCx, "Failed to load scripts");
@@ -441,10 +441,6 @@ nsDOMWorkerFunctions::MakeNewWorker(JSContext* aCx,
   // This pointer is protected by our pool, but it is *not* threadsafe and must
   // not be used in any way other than to pass it along to the Initialize call.
   nsIScriptGlobalObject* owner = worker->Pool()->ScriptGlobalObject();
-  if (!owner) {
-    JS_ReportError(aCx, "Couldn't get owner from pool!");
-    return JS_FALSE;
-  }
 
   nsCOMPtr<nsIXPConnectWrappedNative> wrappedWorker =
     worker->GetWrappedNative();
@@ -1100,7 +1096,7 @@ nsDOMWorker::~nsDOMWorker()
   }
 
   nsIURI* uri;
-  mURI.forget(&uri);
+  mBaseURI.forget(&uri);
   if (uri) {
     NS_ProxyRelease(mainThread, uri, PR_FALSE);
   }
@@ -1302,6 +1298,9 @@ nsDOMWorker::InitializeInternal(nsIScriptGlobalObject* aOwner,
                                 PRUint32 aArgc,
                                 jsval* aArgv)
 {
+  NS_ASSERTION(aCx, "Null context!");
+  NS_ASSERTION(aObj, "Null global object!");
+
   NS_ENSURE_TRUE(aArgc, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
   NS_ENSURE_ARG_POINTER(aArgv);
 
@@ -1314,6 +1313,69 @@ nsDOMWorker::InitializeInternal(nsIScriptGlobalObject* aOwner,
   mScriptURL.Assign(depStr);
   NS_ENSURE_FALSE(mScriptURL.IsEmpty(), NS_ERROR_INVALID_ARG);
 
+  nsresult rv;
+
+  // Figure out the principal and base URI to use if we're on the main thread.
+  // Otherwise this is a sub-worker and it will have its principal set by the
+  // script loader.
+  if (NS_IsMainThread()) {
+    nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+    NS_ASSERTION(ssm, "Should never be null!");
+
+    PRBool isChrome;
+    rv = ssm->IsCapabilityEnabled("UniversalXPConnect", &isChrome);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    NS_ASSERTION(isChrome || aOwner, "How can we have a non-chrome, non-window "
+                 "worker?!");
+
+    // Chrome callers (whether ChromeWorker of Worker) always get the system
+    // principal here as they're allowed to load anything. The script loader may
+    // change the principal later depending on the script uri.
+    if (isChrome) {
+      rv = ssm->GetSystemPrincipal(getter_AddRefs(mPrincipal));
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    if (aOwner) {
+      // We're being created inside a window. Get the document's base URI and
+      // use it as our base URI.
+      nsCOMPtr<nsPIDOMWindow> domWindow = do_QueryInterface(aOwner, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nsIDOMDocument* domDocument = domWindow->GetExtantDocument();
+      NS_ENSURE_STATE(domDocument);
+
+      nsCOMPtr<nsIDocument> document = do_QueryInterface(domDocument, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      mBaseURI = document->GetDocBaseURI();
+
+      if (!mPrincipal) {
+        // Use the document's NodePrincipal as our principal if we're not being
+        // called from chrome.
+        mPrincipal = document->NodePrincipal();
+        NS_ENSURE_STATE(mPrincipal);
+      }
+    }
+    else {
+      // We're being created outside of a window. Need to figure out the script
+      // that is creating us in order for us to use relative URIs later on.
+      JSStackFrame* frame = JS_GetScriptedCaller(aCx, nsnull);
+      if (frame) {
+        JSScript* script = JS_GetFrameScript(aCx, frame);
+        NS_ENSURE_STATE(script);
+
+        const char* filename = JS_GetScriptFilename(aCx, script);
+
+        rv = NS_NewURI(getter_AddRefs(mBaseURI), filename);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+    }
+
+    NS_ASSERTION(mPrincipal, "Should have set the principal!");
+  }
+
   mLock = nsAutoLock::NewLock("nsDOMWorker::mLock");
   NS_ENSURE_TRUE(mLock, NS_ERROR_OUT_OF_MEMORY);
 
@@ -1321,9 +1383,8 @@ nsDOMWorker::InitializeInternal(nsIScriptGlobalObject* aOwner,
 
   nsCOMPtr<nsIXPConnectJSObjectHolder> thisWrapped;
   jsval v;
-  nsresult rv = nsContentUtils::WrapNative(aCx, aObj,
-                                           static_cast<nsIWorker*>(this), &v,
-                                           getter_AddRefs(thisWrapped));
+  rv = nsContentUtils::WrapNative(aCx, aObj, static_cast<nsIWorker*>(this), &v,
+                                  getter_AddRefs(thisWrapped));
   NS_ENSURE_SUCCESS(rv, rv);
 
   NS_ASSERTION(mWrappedNative, "Post-create hook should have set this!");
@@ -1740,7 +1801,7 @@ nsDOMWorker::CompileGlobalObject(JSContext* aCx, nsLazyAutoRequest *aRequest,
   success = JS_DefineFunctions(aCx, global, gDOMWorkerFunctions);
   NS_ENSURE_TRUE(success, PR_FALSE);
 
-  if (mPrivilegeModel == CHROME) {
+  if (IsPrivileged()) {
     // Add chrome functions.
     success = JS_DefineFunctions(aCx, global, gDOMWorkerChromeFunctions);
     NS_ENSURE_TRUE(success, PR_FALSE);
@@ -1765,13 +1826,6 @@ nsDOMWorker::CompileGlobalObject(JSContext* aCx, nsLazyAutoRequest *aRequest,
 
   nsRefPtr<nsDOMWorkerScriptLoader> loader =
     new nsDOMWorkerScriptLoader(this);
-  NS_ASSERTION(loader, "Out of memory!");
-  if (!loader) {
-    mGlobal = NULL;
-    mInnerScope = nsnull;
-    mScopeWN = nsnull;
-    return PR_FALSE;
-  }
 
   rv = AddFeature(loader, aCx);
   if (NS_FAILED(rv)) {
@@ -1781,7 +1835,7 @@ nsDOMWorker::CompileGlobalObject(JSContext* aCx, nsLazyAutoRequest *aRequest,
     return PR_FALSE;
   }
 
-  rv = loader->LoadScript(aCx, mScriptURL, PR_TRUE);
+  rv = loader->LoadWorkerScript(aCx, mScriptURL);
 
   JS_ReportPendingException(aCx);
 
@@ -1792,7 +1846,33 @@ nsDOMWorker::CompileGlobalObject(JSContext* aCx, nsLazyAutoRequest *aRequest,
     return PR_FALSE;
   }
 
-  NS_ASSERTION(mPrincipal && mURI, "Script loader didn't set our principal!");
+  NS_ASSERTION(mPrincipal, "Script loader didn't set our principal!");
+  NS_ASSERTION(mBaseURI, "Script loader didn't set our base uri!");
+
+  // Make sure we kept the system principal.
+  if (IsPrivileged() && !nsContentUtils::IsSystemPrincipal(mPrincipal)) {
+    static const char warning[] = "ChromeWorker attempted to load a "
+                                  "non-chrome worker script!";
+    NS_WARNING(warning);
+
+    JS_ReportError(aCx, warning);
+
+    mGlobal = NULL;
+    mInnerScope = nsnull;
+    mScopeWN = nsnull;
+    return PR_FALSE;
+  }
+
+  rv = loader->ExecuteScripts(aCx);
+
+  JS_ReportPendingException(aCx);
+
+  if (NS_FAILED(rv)) {
+    mGlobal = NULL;
+    mInnerScope = nsnull;
+    mScopeWN = nsnull;
+    return PR_FALSE;
+  }
 
   aRequest->swap(localRequest);
   aComp->swap(localAutoCompartment);
@@ -1946,14 +2026,22 @@ nsDOMWorker::ResumeFeatures()
   }
 }
 
-nsresult
-nsDOMWorker::SetURI(nsIURI* aURI)
+void
+nsDOMWorker::SetPrincipal(nsIPrincipal* aPrincipal)
 {
-  NS_ASSERTION(aURI, "Don't hand me a null pointer!");
-  NS_ASSERTION(!mURI && !mLocation, "Called more than once?!");
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(aPrincipal, "Null pointer!");
 
-  mURI = aURI;
+  mPrincipal = aPrincipal;
+}
+
+nsresult
+nsDOMWorker::SetBaseURI(nsIURI* aURI)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(aURI, "Don't hand me a null pointer!");
+
+  mBaseURI = aURI;
 
   nsCOMPtr<nsIURL> url(do_QueryInterface(aURI));
   NS_ENSURE_TRUE(url, NS_ERROR_NO_INTERFACE);
@@ -1962,6 +2050,14 @@ nsDOMWorker::SetURI(nsIURI* aURI)
   NS_ENSURE_TRUE(mLocation, NS_ERROR_FAILURE);
 
   return NS_OK;
+}
+
+void
+nsDOMWorker::ClearBaseURI()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  mBaseURI = nsnull;
+  mLocation = nsnull;
 }
 
 nsresult
@@ -2006,7 +2102,11 @@ nsDOMWorker::FireCloseRunnable(PRIntervalTime aTimeoutInterval,
   // Our worker has been collected and we want to keep the inner scope alive,
   // so pass that along in the runnable.
   if (aFromFinalize) {
-    NS_ASSERTION(mScopeWN, "This shouldn't be null!");
+    // Make sure that our scope wrapped native exists here, but if the worker
+    // script failed to compile then it will be null already.
+    if (mGlobal) {
+      NS_ASSERTION(mScopeWN, "This shouldn't be null!");
+    }
     runnable->ReplaceWrappedNative(mScopeWN);
   }
 
@@ -2297,19 +2397,19 @@ nsWorkerFactory::NewChromeWorker(nsIWorker** _retval)
 
   // Determine the current script global. We need it to register the worker.
   // NewChromeDOMWorker will check that we are chrome, so no access check.
-  JSObject* globalobj = JS_GetGlobalForScopeChain(cx);
-  NS_ENSURE_TRUE(globalobj, NS_ERROR_UNEXPECTED);
-
-  nsCOMPtr<nsIScriptGlobalObject> global =
-    nsJSUtils::GetStaticScriptGlobal(cx, globalobj);
+  JSObject* global = JS_GetGlobalForScopeChain(cx);
   NS_ENSURE_TRUE(global, NS_ERROR_UNEXPECTED);
+
+  // May be null if we're being called from a JSM or something.
+  nsCOMPtr<nsIScriptGlobalObject> scriptGlobal =
+    nsJSUtils::GetStaticScriptGlobal(cx, global);
 
   // Create, initialize, and return the worker.
   nsRefPtr<nsDOMWorker> chromeWorker;
   rv = nsDOMWorker::NewChromeDOMWorker(getter_AddRefs(chromeWorker));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = chromeWorker->InitializeInternal(global, cx, globalobj, argc, argv);
+  rv = chromeWorker->InitializeInternal(scriptGlobal, cx, global, argc, argv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   chromeWorker.forget(_retval);

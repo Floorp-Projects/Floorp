@@ -1073,6 +1073,11 @@ protected:
   nsIDocShell* mDocShell; // weak reference
 };
 
+nsresult NS_GetNavigatorUserAgent(nsAString& aUserAgent);
+nsresult NS_GetNavigatorPlatform(nsAString& aPlatform);
+nsresult NS_GetNavigatorAppVersion(nsAString& aAppVersion);
+nsresult NS_GetNavigatorAppName(nsAString& aAppName);
+
 class nsIURI;
 
 //*****************************************************************************
