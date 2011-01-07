@@ -354,7 +354,7 @@ gfxFT2LockedFace::GetUVSGlyph(PRUint32 aCharCode, PRUint32 aVariantSelector)
 }
 
 PRBool
-gfxFT2LockedFace::GetFontTable(PRUint32 aTag, nsTArray<PRUint8>& aBuffer)
+gfxFT2LockedFace::GetFontTable(PRUint32 aTag, FallibleTArray<PRUint8>& aBuffer)
 {
     if (!mFace || !FT_IS_SFNT(mFace))
         return PR_FALSE;
@@ -365,7 +365,7 @@ gfxFT2LockedFace::GetFontTable(PRUint32 aTag, nsTArray<PRUint8>& aBuffer)
     if (error != 0)
         return PR_FALSE;
 
-    if (NS_UNLIKELY(length > static_cast<nsTArray<PRUint8>::size_type>(-1))
+    if (NS_UNLIKELY(length > static_cast<FallibleTArray<PRUint8>::size_type>(-1))
         || NS_UNLIKELY(!aBuffer.SetLength(length)))
         return PR_FALSE;
         

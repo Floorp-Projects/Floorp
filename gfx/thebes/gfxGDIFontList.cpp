@@ -235,7 +235,7 @@ GDIFontEntry::ReadCMAP()
     mCmapInitialized = PR_TRUE;
 
     const PRUint32 kCmapTag = TRUETYPE_TAG('c','m','a','p');
-    nsAutoTArray<PRUint8,16384> buffer;
+    AutoFallibleTArray<PRUint8,16384> buffer;
     if (GetFontTable(kCmapTag, buffer) != NS_OK)
         return NS_ERROR_FAILURE;
     PRUint8 *cmap = buffer.Elements();
@@ -270,7 +270,8 @@ GDIFontEntry::CreateFontInstance(const gfxFontStyle* aFontStyle, PRBool aNeedsBo
 }
 
 nsresult
-GDIFontEntry::GetFontTable(PRUint32 aTableTag, nsTArray<PRUint8>& aBuffer)
+GDIFontEntry::GetFontTable(PRUint32 aTableTag,
+                           FallibleTArray<PRUint8>& aBuffer)
 {
     if (!IsTrueType()) {
         return NS_ERROR_FAILURE;
@@ -866,7 +867,7 @@ gfxGDIFontList::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
     // for TTF fonts, first try using the t2embed library
     if (!isCFF) {
         // TrueType-style glyphs, use EOT library
-        nsAutoTArray<PRUint8,2048> eotHeader;
+        AutoFallibleTArray<PRUint8,2048> eotHeader;
         PRUint8 *buffer;
         PRUint32 eotlen;
 
@@ -906,7 +907,7 @@ gfxGDIFontList::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
     // load CFF fonts or fonts that failed with t2embed loader
     if (fontRef == nsnull) {
         // Postscript-style glyphs, swizzle name table, load directly
-        nsTArray<PRUint8> newFontData;
+        FallibleTArray<PRUint8> newFontData;
 
         isEmbedded = PR_FALSE;
         rv = gfxFontUtils::RenameFont(uniqueName, aFontData, aLength, &newFontData);
