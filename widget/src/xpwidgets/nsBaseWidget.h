@@ -118,6 +118,7 @@ public:
   virtual LayerManager*   GetLayerManager(bool *aAllowRetaining = nsnull);
   virtual LayerManager*   GetLayerManager(LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
                                           bool* aAllowRetaining = nsnull);
+  virtual void            DrawOver(LayerManager* aManager, nsIntRect aRect) {}
   virtual gfxASurface*    GetThebesSurface();
   NS_IMETHOD              SetModal(PRBool aModal); 
   NS_IMETHOD              SetWindowClass(const nsAString& xulWinType);
