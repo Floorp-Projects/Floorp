@@ -1781,6 +1781,7 @@ js_FinalizeStringRT(JSRuntime *rt, JSString *str)
         if (!chars)
             return;
         if (thingKind == FINALIZE_STRING) {
+            rt->stringMemoryUsed -= str->length() * 2;
             rt->free(chars);
         } else if (thingKind == FINALIZE_EXTERNAL_STRING) {
             ((JSExternalString *)str)->finalize();
