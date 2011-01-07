@@ -948,6 +948,16 @@ var gViewController = {
       }
     },
 
+    cmd_purchaseItem: {
+      isEnabled: function(aAddon) {
+        if (!aAddon)
+          return false;
+        return !!aAddon.purchaseURL;
+      },
+      doCommand: function(aAddon) {
+        openURL(aAddon.purchaseURL);
+      }
+    },
 
     cmd_uninstallItem: {
       isEnabled: function(aAddon) {
@@ -1181,7 +1191,7 @@ function createItem(aObj, aIsInstall, aIsRemote) {
 
 function sortElements(aElements, aSortBy, aAscending) {
   const DATE_FIELDS = ["updateDate"];
-  const INTEGER_FIELDS = ["size", "relevancescore"];
+  const NUMERIC_FIELDS = ["size", "relevancescore", "purchaseAmount"];
 
   function dateCompare(a, b) {
     var aTime = a.getTime();
@@ -1193,7 +1203,7 @@ function sortElements(aElements, aSortBy, aAscending) {
     return 0;
   }
 
-  function intCompare(a, b) {
+  function numberCompare(a, b) {
     return a - b;
   }
 
@@ -1218,8 +1228,8 @@ function sortElements(aElements, aSortBy, aAscending) {
   var sortFunc = stringCompare;
   if (DATE_FIELDS.indexOf(aSortBy) != -1)
     sortFunc = dateCompare;
-  else if (INTEGER_FIELDS.indexOf(aSortBy) != -1)
-    sortFunc = intCompare;
+  else if (NUMERIC_FIELDS.indexOf(aSortBy) != -1)
+    sortFunc = numberCompare;
 
   aElements.sort(function(a, b) {
     if (!aAscending)
@@ -1736,6 +1746,7 @@ var gSearchView = {
     this.showEmptyNotice(false);
     this.showAllResultsLink(0);
     this.showLoading(true);
+    this._sorters.showprice = false;
 
     gHeader.searchQuery = aQuery;
     aQuery = aQuery.trim().toLocaleLowerCase();
@@ -1770,8 +1781,11 @@ var gSearchView = {
 
         let item = createItem(aObj, aIsInstall, aIsRemote);
         item.setAttribute("relevancescore", score);
-        if (aIsRemote)
+        if (aIsRemote) {
           gCachedAddons[aObj.id] = aObj;
+          if (aObj.purchaseURL)
+            self._sorters.showprice = true;
+        }
 
         elements.push(item);
       });
@@ -2242,6 +2256,14 @@ var gDetailView = {
                                                        1);
     } else {
       contributions.hidden = true;
+    }
+
+    if ("purchaseURL" in aAddon && aAddon.purchaseURL) {
+      var purchase = document.getElementById("detail-purchase-btn");
+      purchase.label = gStrings.ext.formatStringFromName("cmd.purchaseAddon.label",
+                                                         [aAddon.purchaseDisplayAmount],
+                                                         1);
+      purchase.accesskey = gStrings.ext.GetStringFromName("cmd.purchaseAddon.accesskey");
     }
 
     var updateDateRow = document.getElementById("detail-dateUpdated");

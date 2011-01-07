@@ -678,6 +678,96 @@
     <install>http://localhost:4444/addons/test_AddonRepository_2.xpi</install>
   </addon>
 
+  <!-- Passes because the add-on has the right payment info -->
+  <addon>
+    <name>PASS</name>
+    <type id="1">Extension</type>
+    <guid>purchase1@tests.mozilla.org</guid>
+    <version>2.0</version>
+    <authors>
+      <author>
+        <name>Test Creator - Last Passing</name>
+        <link>http://localhost:4444/creatorLastPassing.html</link>
+      </author>
+    </authors>
+    <status id="4">Public</status>
+    <all_compatible_os>
+      <os>ALL</os>
+    </all_compatible_os>
+    <compatible_applications>
+      <application>
+        <appID>xpcshell@tests.mozilla.org</appID>
+        <min_version>1</min_version>
+        <max_version>1</max_version>
+      </application>
+    </compatible_applications>
+    <rating>5</rating>
+    <payment_data>
+      <link>http://localhost:4444/purchaseURL1</link>
+      <amount amount="5">$5</amount>
+    </payment_data>
+  </addon>
+
+  <!-- Passes because the add-on has the right payment info -->
+  <addon>
+    <name>PASS</name>
+    <type id="1">Extension</type>
+    <guid>purchase2@tests.mozilla.org</guid>
+    <version>2.0</version>
+    <authors>
+      <author>
+        <name>Test Creator - Last Passing</name>
+        <link>http://localhost:4444/creatorLastPassing.html</link>
+      </author>
+    </authors>
+    <status id="4">Public</status>
+    <all_compatible_os>
+      <os>XPCShell</os>
+    </all_compatible_os>
+    <compatible_applications>
+      <application>
+        <appID>xpcshell@tests.mozilla.org</appID>
+        <min_version>1</min_version>
+        <max_version>1</max_version>
+      </application>
+    </compatible_applications>
+    <rating>5</rating>
+    <payment_data>
+      <link>http://localhost:4444/purchaseURL2</link>
+      <amount amount="10.0">$10</amount>
+    </payment_data>
+  </addon>
+
+  <!-- Fails because the add-on doesn't match the platform -->
+  <addon>
+    <name>FAIL</name>
+    <type id="1">Extension</type>
+    <guid>purchase3@tests.mozilla.org</guid>
+    <version>2.0</version>
+    <authors>
+      <author>
+        <name>Test Creator - Last Passing</name>
+        <link>http://localhost:4444/creatorLastPassing.html</link>
+      </author>
+    </authors>
+    <status id="4">Public</status>
+    <all_compatible_os>
+      <os>FOO</os>
+    </all_compatible_os>
+    <compatible_applications>
+      <application>
+        <appID>xpcshell@tests.mozilla.org</appID>
+        <min_version>1</min_version>
+        <max_version>1</max_version>
+      </application>
+    </compatible_applications>
+    <rating>5</rating>
+    <payment_data>
+      <link>http://localhost:4444/purchaseURL3</link>
+      <amount amount="10">$10</amount>
+    </payment_data>
+  </addon>
+
   <!-- Passes because the Addon that has a matching XPI URL
        has a state = STATE_AVAILABLE (non-active install). This is the
        last passing add-on. -->

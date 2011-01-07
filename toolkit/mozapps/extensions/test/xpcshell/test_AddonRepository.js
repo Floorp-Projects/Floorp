@@ -35,7 +35,8 @@ var ADDON_PROPERTIES = ["id", "type", "version", "creator", "developers",
                         "supportURL", "contributionURL", "contributionAmount",
                         "averageRating", "reviewCount", "reviewURL",
                         "totalDownloads", "weeklyDownloads", "dailyUsers",
-                        "sourceURI", "repositoryStatus", "size", "updateDate"];
+                        "sourceURI", "repositoryStatus", "size", "updateDate",
+                        "purchaseURL", "purchaseAmount", "purchaseDisplayAmount"];
 
 // Results of getAddonsByIDs
 var GET_RESULTS = [{
@@ -173,6 +174,32 @@ var SEARCH_RESULTS = [{
   size:                   5555,
   updateDate:             new Date(1265033045000)
 }, {
+  id:                     "purchase1@tests.mozilla.org",
+  type:                   "extension",
+  version:                "2.0",
+  creator:                {
+                            name: "Test Creator - Last Passing",
+                            url:  BASE_URL + "/creatorLastPassing.html"
+                          },
+  averageRating:          5,
+  repositoryStatus:       4,
+  purchaseURL:            "http://localhost:4444/purchaseURL1",
+  purchaseAmount:         5,
+  purchaseDisplayAmount:  "$5"
+}, {
+  id:                     "purchase2@tests.mozilla.org",
+  type:                   "extension",
+  version:                "2.0",
+  creator:                {
+                            name: "Test Creator - Last Passing",
+                            url:  BASE_URL + "/creatorLastPassing.html"
+                          },
+  averageRating:          5,
+  repositoryStatus:       4,
+  purchaseURL:            "http://localhost:4444/purchaseURL2",
+  purchaseAmount:         10,
+  purchaseDisplayAmount:  "$10"
+}, {
   id:                     "test-lastPassing@tests.mozilla.org",
   type:                   "extension",
   version:                "2.0",
@@ -243,10 +270,10 @@ function check_results(aActualAddons, aExpectedAddons, aAddonCount, aInstallNull
     if (aActualAddon.name != "PASS")
       do_throw(aActualAddon.id + " - " + "invalid add-on name " + aActualAddon.name);
 
-    do_check_eq(aActualAddon.install == null, !!aInstallNull);
+    do_check_eq(aActualAddon.install == null, !!aInstallNull || !aActualAddon.sourceURI);
 
     // Check that sourceURI property consistent within actual addon
-    if (!aInstallNull)
+    if (aActualAddon.install)
       do_check_eq(aActualAddon.install.sourceURI.spec, aActualAddon.sourceURI.spec);
   });
 }
