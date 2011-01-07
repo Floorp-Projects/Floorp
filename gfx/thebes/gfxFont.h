@@ -513,6 +513,11 @@ public:
     // read in other family names, if any, and use functor to add each into cache
     virtual void ReadOtherFamilyNames(gfxPlatformFontList *aPlatformFontList);
 
+    // set when other family names have been read in
+    void SetOtherFamilyNamesInitialized() {
+        mOtherFamilyNamesInitialized = PR_TRUE;
+    }
+
     // read in other localized family names, fullnames and Postscript names
     // for all faces and append to lookup tables
     virtual void ReadFaceNames(gfxPlatformFontList *aPlatformFontList,

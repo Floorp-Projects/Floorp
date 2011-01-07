@@ -512,7 +512,7 @@ gfxDWriteFontList::InitFontList()
             englishIdx = 0;
         }
 
-        nsAutoTArray<WCHAR, 32> famName;
+        nsAutoTArray<WCHAR, 32> enName;
         UINT32 length;
         
         hr = names->GetStringLength(englishIdx, &length);
@@ -520,30 +520,78 @@ gfxDWriteFontList::InitFontList()
             continue;
         }
         
-        if (!famName.SetLength(length + 1)) {
+        if (!enName.SetLength(length + 1)) {
             // Eeep - running out of memory. Unlikely to end well.
             continue;
         }
 
-        hr = names->GetString(englishIdx, famName.Elements(), length + 1);
+        hr = names->GetString(englishIdx, enName.Elements(), length + 1);
         if (FAILED(hr)) {
             continue;
         }
 
-        nsAutoString name(famName.Elements());
+        nsAutoString name(enName.Elements());
         BuildKeyNameFromFontName(name);
 
-        if (!mFontFamilies.GetWeak(name)) {
-            nsRefPtr<gfxFontFamily> fam = 
-                new gfxDWriteFontFamily(nsDependentString(famName.Elements()),
-                                        family);
-            if (mBadUnderlineFamilyNames.Contains(name)) {
-                fam->SetBadUnderlineFamily();
-            }
-            mFontFamilies.Put(name, fam);
+        nsRefPtr<gfxFontFamily> fam;
+
+        if (mFontFamilies.GetWeak(name)) {
+            continue;
         }
+        
+        nsDependentString familyName(enName.Elements());
+
+        fam = new gfxDWriteFontFamily(familyName, family);
+        if (!fam) {
+            continue;
+        }
+
+        if (mBadUnderlineFamilyNames.Contains(name)) {
+            fam->SetBadUnderlineFamily();
+        }
+        mFontFamilies.Put(name, fam);
+
+        // now add other family name localizations, if present
+        PRUint32 nameCount = names->GetCount();
+        PRUint32 nameIndex;
+
+        for (nameIndex = 0; nameIndex < nameCount; nameIndex++) {
+            UINT32 nameLen;
+            nsAutoTArray<WCHAR, 32> localizedName;
+
+            // only add other names
+            if (nameIndex == englishIdx) {
+                continue;
+            }
+            
+            hr = names->GetStringLength(nameIndex, &nameLen);
+            if (FAILED(hr)) {
+                continue;
+            }
+
+            if (!localizedName.SetLength(nameLen + 1)) {
+                continue;
+            }
+
+            hr = names->GetString(nameIndex, localizedName.Elements(), 
+                                  nameLen + 1);
+            if (FAILED(hr)) {
+                continue;
+            }
+
+            nsDependentString locName(localizedName.Elements());
+
+            if (!familyName.Equals(locName)) {
+                AddOtherFamilyName(fam, locName);
+            }
+
+        }
+
+        // at this point, all family names have been read in
+        fam->SetOtherFamilyNamesInitialized();
     }
 
+    mOtherFamilyNamesInitialized = PR_TRUE;
     GetFontSubstitutes();
 
     StartLoader(kDelayBeforeLoadingFonts, kIntervalBetweenLoadingFonts);
