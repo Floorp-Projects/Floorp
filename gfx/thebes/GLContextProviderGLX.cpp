@@ -602,7 +602,7 @@ CreateOffscreenPixmapContext(const gfxIntSize& aSize,
     }
 
     ScopedXErrorHandler xErrorHandler;
-    GLXPixmap glxpixmap;
+    GLXPixmap glxpixmap = 0;
     bool error = false;
 
     nsRefPtr<gfxXlibSurface> xsurface = gfxXlibSurface::Create(DefaultScreenOfDisplay(display),
