@@ -239,6 +239,7 @@ StartupCache::GetBuffer(const char* id, char** outbuf, PRUint32* length)
     } 
   }
 
+#ifdef MOZ_OMNIJAR
   if (mozilla::OmnijarReader()) {
     // no need to checksum omnijarred entries
     nsZipItemPtr<char> zipItem(mozilla::OmnijarReader(), id);
@@ -248,6 +249,7 @@ StartupCache::GetBuffer(const char* id, char** outbuf, PRUint32* length)
       return NS_OK;
     } 
   }
+#endif
   return NS_ERROR_NOT_AVAILABLE;
 }
 
