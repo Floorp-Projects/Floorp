@@ -124,7 +124,7 @@ var SEARCH_RESULTS = [{
   homepageURL:            BASE_URL + "/learnmore2.html",
   supportURL:             BASE_URL + "/support2.html",
   contributionURL:        BASE_URL + "/meetDevelopers2.html",
-  contributionAmount:     "$11.11",
+  contributionAmount:     null,
   repositoryStatus:       4,
   sourceURI:              BASE_URL + "/test2.xpi"
 }, {
