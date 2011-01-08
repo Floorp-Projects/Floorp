@@ -274,12 +274,6 @@ extern JSObject *
 js_InitQNameClass(JSContext *cx, JSObject *obj);
 
 extern JSObject *
-js_InitAttributeNameClass(JSContext *cx, JSObject *obj);
-
-extern JSObject *
-js_InitAnyNameClass(JSContext *cx, JSObject *obj);
-
-extern JSObject *
 js_InitXMLClass(JSContext *cx, JSObject *obj);
 
 extern JSObject *

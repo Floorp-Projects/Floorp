@@ -7,7 +7,7 @@ eval("\
     for (w in this) {}\
     Object.defineProperty(\
       this, \
-      new AttributeName, \
+      new QName, \
       ({enumerable: true})\
     )\
   }\
