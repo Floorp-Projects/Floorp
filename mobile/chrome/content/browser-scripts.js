@@ -63,23 +63,14 @@ XPCOMUtils.defineLazyGetter(this, "CommonUI", function() {
 });
 
 [
-  ["AppMenu"],
   ["FullScreenVideo"],
   ["BadgeHandlers"],
-  ["SharingUI"],
   ["ContextHelper"],
-  ["ContextCommands"],
-  ["SelectHelperUI"],
-  ["MenuListHelperUI"],
   ["FormHelperUI"],
   ["FindHelperUI"],
-  ["BookmarkHelper"],
-  ["BookmarkPopup"],
-  ["AwesomePanel"],
   ["NewTabPopup"],
   ["PageActions"],
-  ["BrowserSearch"],
-  ["AlertsHelper"]
+  ["BrowserSearch"]
 ].forEach(function (aObject) {
   XPCOMUtils.defineLazyGetter(window, aObject, function() {
     return CommonUI[aObject];
@@ -90,6 +81,15 @@ XPCOMUtils.defineLazyGetter(this, "CommonUI", function() {
  * Delay load some browser scripts
  */
 [
+  ["AwesomePanel", "chrome://browser/content/AwesomePanel.js"],
+  ["AlertsHelper", "chrome://browser/content/AlertsHelper.js"],
+  ["AppMenu", "chrome://browser/content/AppMenu.js"],
+  ["BookmarkHelper", "chrome://browser/content/BookmarkHelper.js"],
+  ["BookmarkPopup", "chrome://browser/content/BookmarkPopup.js"],
+  ["ContextCommands", "chrome://browser/content/ContextCommands.js"],
+  ["MenuListHelperUI", "chrome://browser/content/MenuListHelperUI.js"],
+  ["SelectHelperUI", "chrome://browser/content/SelectHelperUI.js"],
+  ["SharingUI", "chrome://browser/content/SharingUI.js"],
   ["Sanitizer", "chrome://browser/content/sanitize.js"],
   ["ExtensionsView", "chrome://browser/content/extensions.js"],
   ["DownloadsView", "chrome://browser/content/downloads.js"],
