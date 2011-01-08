@@ -65,7 +65,7 @@ function test()
 
   (function (){
     var x;
-    eval("const x; (function ()x)");
+    eval("var x; (function ()x)");
   }
     )();
 

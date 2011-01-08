@@ -722,13 +722,31 @@ ScriptEpilogue(JSContext *cx, JSStackFrame *fp, JSBool ok)
     if (JS_UNLIKELY(hook != NULL) && (hookData = fp->maybeHookData()))
         hook(cx, fp, JS_FALSE, &ok, hookData);
 
-    /*
-     * An eval frame's parent owns its activation objects. A yielding frame's
-     * activation objects are transferred to the floating frame, stored in the
-     * generator.
-     */
-    if (fp->isFunctionFrame() && !fp->isEvalFrame() && !fp->isYielding())
-        PutActivationObjects(cx, fp);
+    if (fp->isEvalFrame()) {
+        /*
+         * The parent (ancestor for nested eval) of a non-strict eval frame
+         * owns its activation objects. Strict mode eval frames own their own
+         * Call objects but never have an arguments object (the first non-eval
+         * parent frame has it).
+         */
+        if (fp->script()->strictModeCode) {
+            JS_ASSERT(!fp->isYielding());
+            JS_ASSERT(!fp->hasArgsObj());
+            JS_ASSERT(fp->hasCallObj());
+            JS_ASSERT(fp->callObj().callIsForEval());
+            js_PutCallObject(cx, fp);
+        }
+    } else {
+        /*
+         * Otherwise only function frames have activation objects. A yielding
+         * frame's activation objects are transferred to the floating frame,
+         * stored in the generator, and thus need not be synced.
+         */
+        if (fp->isFunctionFrame() && !fp->isYielding()) {
+            JS_ASSERT_IF(fp->hasCallObj(), !fp->callObj().callIsForEval());
+            PutActivationObjects(cx, fp);
+        }
+    }
 
     /*
      * If inline-constructing, replace primitive rval with the new object

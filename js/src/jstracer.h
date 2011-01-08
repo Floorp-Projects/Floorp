@@ -1472,7 +1472,7 @@ class TraceRecorder
                                                                            nanojit::LIns* obj_ins,
                                                                            VMSideExit *exit);
     JS_REQUIRES_STACK RecordingStatus guardNativeConversion(Value& v);
-    JS_REQUIRES_STACK void clearCurrentFrameSlotsFromTracker(Tracker& which);
+    JS_REQUIRES_STACK void clearReturningFrameFromNativeveTracker();
     JS_REQUIRES_STACK void putActivationObjects();
     JS_REQUIRES_STACK RecordingStatus guardCallee(Value& callee);
     JS_REQUIRES_STACK JSStackFrame      *guardArguments(JSObject *obj, nanojit::LIns* obj_ins,
@@ -1594,6 +1594,7 @@ class TraceRecorder
     TreeFragment*       getTree() const { return tree; }
     bool                outOfMemory() const { return traceMonitor->outOfMemory(); }
     Oracle*             getOracle() const { return oracle; }
+    JSObject*           getGlobal() const { return globalObj; }
 
     /* Entry points / callbacks from the interpreter. */
     JS_REQUIRES_STACK AbortableRecordingStatus monitorRecording(JSOp op);
@@ -1612,7 +1613,20 @@ class TraceRecorder
              * Do slot arithmetic manually to avoid getSlotRef assertions which
              * do not need to be satisfied for this purpose.
              */
-            return !tracker.has(globalObj->getSlots() + slot);
+            Value *vp = globalObj->getSlots() + slot;
+
+            /* If this global is definitely being tracked, then the write is unexpected. */
+            if (tracker.has(vp))
+                return false;
+            
+            /*
+             * Otherwise, only abort if the global is not present in the
+             * import typemap. Just deep aborting false here is not acceptable,
+             * because the recorder does not guard on every operation that
+             * could lazily resolve. Since resolving adds properties to
+             * reserved slots, the tracer will never have imported them.
+             */
+            return tree->globalSlots->offsetOf(nativeGlobalSlot(vp)) == -1;
         }
         pendingGlobalSlotToSet = -1;
         return true;
@@ -1868,7 +1882,7 @@ AbortRecordingIfUnexpectedGlobalWrite(JSContext *cx, JSObject *obj, unsigned slo
 {
 #ifdef JS_TRACER
     if (TraceRecorder *tr = TRACE_RECORDER(cx)) {
-        if (!obj->parent && !tr->globalSetExpected(slot))
+        if (obj == tr->getGlobal() && !tr->globalSetExpected(slot))
             AbortRecording(cx, "Global slot written outside tracer supervision");
     }
 #endif

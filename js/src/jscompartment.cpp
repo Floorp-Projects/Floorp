@@ -208,17 +208,21 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
             if (obj->getCompartment() == this)
                 return true;
 
-            if (cx->runtime->preWrapObjectCallback)
+            if (cx->runtime->preWrapObjectCallback) {
                 obj = cx->runtime->preWrapObjectCallback(cx, global, obj, flags);
-            if (!obj)
-                return false;
+                if (!obj)
+                    return false;
+            }
 
             vp->setObject(*obj);
             if (obj->getCompartment() == this)
                 return true;
         } else {
-            if (cx->runtime->preWrapObjectCallback)
+            if (cx->runtime->preWrapObjectCallback) {
                 obj = cx->runtime->preWrapObjectCallback(cx, global, obj, flags);
+                if (!obj)
+                    return false;
+            }
 
             JS_ASSERT(!obj->isWrapper() || obj->getClass()->ext.innerObject);
             vp->setObject(*obj);
@@ -349,21 +353,6 @@ JSCompartment::wrap(JSContext *cx, AutoIdVector &props)
     for (size_t n = 0; n < size_t(length); ++n) {
         if (!wrapId(cx, &vector[n]))
             return false;
-    }
-    return true;
-}
-
-bool
-JSCompartment::wrapException(JSContext *cx)
-{
-    JS_ASSERT(cx->compartment == this);
-
-    if (cx->isExceptionPending()) {
-        Value v = cx->getPendingException();
-        cx->clearPendingException();
-        if (wrap(cx, &v))
-            cx->setPendingException(v);
-        return false;
     }
     return true;
 }
