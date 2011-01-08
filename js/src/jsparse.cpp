@@ -3244,6 +3244,13 @@ Parser::functionStmt()
         }
         tokenStream.ungetToken();
     }
+
+    /* We forbid function statements in strict mode code. */
+    if (!tc->atBodyLevel() && tc->inStrictMode()) {
+        reportErrorNumber(NULL, JSREPORT_STRICT_MODE_ERROR, JSMSG_STRICT_FUNCTION_STATEMENT);
+        return NULL;
+    }
+
     return functionDef(name, GENERAL, 0);
 }
 
