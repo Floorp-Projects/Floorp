@@ -139,6 +139,8 @@ static struct {
 /*
  * Random utilities and global functions.
  */
+const char js_AttributeName_str[] = "AttributeName";
+const char js_AnyName_str[]       = "AnyName";
 const char js_isXMLName_str[]     = "isXMLName";
 const char js_XMLList_str[]       = "XMLList";
 const char js_localName_str[]     = "localName";
@@ -393,7 +395,7 @@ JS_FRIEND_DATA(Class) js_AttributeNameClass = {
     js_AttributeName_str,
     JSCLASS_CONSTRUCT_PROTOTYPE |
     JSCLASS_HAS_RESERVED_SLOTS(JSObject::QNAME_CLASS_RESERVED_SLOTS) |
-    JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_AttributeName),
+    JSCLASS_MARK_IS_TRACE | JSCLASS_IS_ANONYMOUS,
     PropertyStub,   /* addProperty */
     PropertyStub,   /* delProperty */
     PropertyStub,   /* getProperty */
@@ -407,7 +409,7 @@ JS_FRIEND_DATA(Class) js_AnyNameClass = {
     js_AnyName_str,
     JSCLASS_CONSTRUCT_PROTOTYPE |
     JSCLASS_HAS_RESERVED_SLOTS(JSObject::QNAME_CLASS_RESERVED_SLOTS) |
-    JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_AnyName),
+    JSCLASS_MARK_IS_TRACE | JSCLASS_IS_ANONYMOUS,
     PropertyStub,   /* addProperty */
     PropertyStub,   /* delProperty */
     PropertyStub,   /* getProperty */
@@ -426,26 +428,12 @@ static JSPropertySpec qname_props[] = {
     {0,0,0,0,0}
 };
 
-static JSBool
-qname_toString(JSContext *cx, uintN argc, Value *vp)
+static JSString *
+ConvertQNameToString(JSContext *cx, JSObject *obj)
 {
-    JSObject *obj;
-    Class *clasp;
-    JSString *uri, *str, *qualstr;
-    size_t length;
-    jschar *chars;
-
-    obj = ComputeThisFromVp(cx, vp);
-    if (!obj)
-        return JS_FALSE;
-    clasp = obj->getClass();
-    if (clasp != &js_AttributeNameClass &&
-        clasp != &js_AnyNameClass &&
-        !JS_InstanceOf(cx, obj, Jsvalify(&js_QNameClass), Jsvalify(vp + 2))) {
-            return JS_FALSE;
-    }
-
-    uri = obj->getNameURI();
+    JS_ASSERT(obj->isQName());
+    JSString *uri = obj->getNameURI();
+    JSString *str;
     if (!uri) {
         /* No uri means wildcard qualifier. */
         str = ATOM_TO_STRING(cx->runtime->atomState.starQualifierAtom);
@@ -453,37 +441,50 @@ qname_toString(JSContext *cx, uintN argc, Value *vp)
         /* Empty string for uri means localName is in no namespace. */
         str = cx->runtime->emptyString;
     } else {
-        qualstr = ATOM_TO_STRING(cx->runtime->atomState.qualifierAtom);
+        JSString *qualstr = ATOM_TO_STRING(cx->runtime->atomState.qualifierAtom);
         str = js_ConcatStrings(cx, uri, qualstr);
         if (!str)
-            return JS_FALSE;
+            return NULL;
     }
     str = js_ConcatStrings(cx, str, obj->getQNameLocalName());
     if (!str)
-        return JS_FALSE;
+        return NULL;
 
-    if (str && clasp == &js_AttributeNameClass) {
-        length = str->length();
-        chars = (jschar *) cx->malloc((length + 2) * sizeof(jschar));
+    if (obj->getClass() == &js_AttributeNameClass) {
+        size_t length = str->length();
+        jschar *chars = (jschar *) cx->malloc((length + 2) * sizeof(jschar));
         if (!chars)
             return JS_FALSE;
         *chars = '@';
         const jschar *strChars = str->getChars(cx);
         if (!strChars) {
             cx->free(chars);
-            return JS_FALSE;
+            return NULL;
         }
         js_strncpy(chars + 1, strChars, length);
         chars[++length] = 0;
         str = js_NewString(cx, chars, length);
         if (!str) {
             cx->free(chars);
-            return JS_FALSE;
+            return NULL;
         }
     }
+    return str;
+}
+
+static JSBool
+qname_toString(JSContext *cx, uintN argc, Value *vp)
+{
+    JSObject *obj = ComputeThisFromVp(cx, vp);
+    if (!obj || !InstanceOf(cx, obj, &js_QNameClass, vp + 2))
+        return false;
+
+    JSString *str = ConvertQNameToString(cx, obj);
+    if (!str)
+        return false;
 
     vp->setString(str);
-    return JS_TRUE;
+    return true;
 }
 
 static JSFunctionSpec qname_methods[] = {
@@ -496,6 +497,7 @@ static void
 InitXMLQName(JSObject *obj, JSLinearString *uri, JSLinearString *prefix,
              JSLinearString *localName)
 {
+    JS_ASSERT(obj->isQName());
     JS_ASSERT(JSVAL_IS_VOID(obj->getNamePrefixVal()));
     JS_ASSERT(JSVAL_IS_VOID(obj->getNameURIVal()));
     JS_ASSERT(JSVAL_IS_VOID(obj->getQNameLocalNameVal()));
@@ -509,9 +511,25 @@ InitXMLQName(JSObject *obj, JSLinearString *uri, JSLinearString *prefix,
 
 static JSObject *
 NewXMLQName(JSContext *cx, JSLinearString *uri, JSLinearString *prefix,
-            JSLinearString *localName, Class *clasp = &js_QNameClass)
+            JSLinearString *localName)
 {
-    JSObject *obj = NewBuiltinClassInstanceXML(cx, clasp);
+    JSObject *obj = NewBuiltinClassInstanceXML(cx, &js_QNameClass);
+    if (!obj)
+        return NULL;
+    InitXMLQName(obj, uri, prefix, localName);
+    METER(xml_stats.qname);
+    return obj;
+}
+
+static JSObject *
+NewXMLAttributeName(JSContext *cx, JSLinearString *uri, JSLinearString *prefix,
+                    JSLinearString *localName)
+{
+    /*
+     * AttributeName is an internal anonymous class which instances are not
+     * exposed to scripts.
+     */
+    JSObject *obj = NewNonFunction<WithProto::Given>(cx, &js_AttributeNameClass, NULL, NULL);
     if (!obj)
         return NULL;
     JS_ASSERT(obj->isQName());
@@ -709,8 +727,7 @@ Namespace(JSContext *cx, uintN argc, Value *vp)
  * if argc is 1 and argv[0] is JSVAL_VOID.
  */
 static JSBool
-QNameHelper(JSContext *cx, JSObject *obj, Class *clasp, intN argc,
-            jsval *argv, jsval *rval)
+QNameHelper(JSContext *cx, JSObject *obj, intN argc, jsval *argv, jsval *rval)
 {
     jsval nameval, nsval;
     JSBool isQName, isNamespace;
@@ -718,8 +735,6 @@ QNameHelper(JSContext *cx, JSObject *obj, Class *clasp, intN argc,
     JSLinearString *uri, *prefix, *name;
     JSObject *obj2;
 
-    JS_ASSERT(clasp == &js_QNameClass ||
-              clasp == &js_AttributeNameClass);
     if (argc <= 0) {
         nameval = JSVAL_VOID;
         isQName = JS_FALSE;
@@ -738,11 +753,8 @@ QNameHelper(JSContext *cx, JSObject *obj, Class *clasp, intN argc,
             return JS_TRUE;
         }
 
-        /*
-         * Create and return a new QName or AttributeName object exactly as if
-         * constructed.
-         */
-        obj = NewBuiltinClassInstanceXML(cx, clasp);
+        /* Create and return a new QName object exactly as if constructed. */
+        obj = NewBuiltinClassInstanceXML(cx, &js_QNameClass);
         if (!obj)
             return JS_FALSE;
     }
@@ -803,9 +815,8 @@ QNameHelper(JSContext *cx, JSObject *obj, Class *clasp, intN argc,
         isNamespace = isQName = JS_FALSE;
         if (!JSVAL_IS_PRIMITIVE(nsval)) {
             obj2 = JSVAL_TO_OBJECT(nsval);
-            clasp = obj2->getClass();
-            isNamespace = (clasp == &js_NamespaceClass);
-            isQName = (clasp == &js_QNameClass);
+            isNamespace = (obj2->getClass() == &js_NamespaceClass);
+            isQName = (obj2->getClass() == &js_QNameClass);
         }
 #ifdef __GNUC__         /* suppress bogus gcc warnings */
         else obj2 = NULL;
@@ -842,15 +853,7 @@ QName(JSContext *cx, uintN argc, Value *vp)
 {
     JSObject *thisobj = NULL;
     (void)IsConstructing_PossiblyWithGivenThisObject(vp, &thisobj);
-    return QNameHelper(cx, thisobj, &js_QNameClass, argc, Jsvalify(vp + 2), Jsvalify(vp));
-}
-
-static JSBool
-AttributeName(JSContext *cx, uintN argc, Value *vp)
-{
-    JSObject *thisobj = NULL;
-    (void)IsConstructing_PossiblyWithGivenThisObject(vp, &thisobj);
-    return QNameHelper(cx, thisobj, &js_AttributeNameClass, argc, Jsvalify(vp + 2), Jsvalify(vp));
+    return QNameHelper(cx, thisobj, argc, Jsvalify(vp + 2), Jsvalify(vp));
 }
 
 /*
@@ -2823,7 +2826,7 @@ ToAttributeName(JSContext *cx, jsval v)
         }
     }
 
-    qn = NewXMLQName(cx, uri, prefix, name, &js_AttributeNameClass);
+    qn = NewXMLAttributeName(cx, uri, prefix, name);
     if (!qn)
         return NULL;
     return qn;
@@ -4061,9 +4064,8 @@ PutProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         if (kid->xml_class == JSXML_CLASS_ATTRIBUTE) {
             nameobj = kid->name;
             if (nameobj->getClass() != &js_AttributeNameClass) {
-                nameobj = NewXMLQName(cx, nameobj->getNameURI(), nameobj->getNamePrefix(),
-                                      nameobj->getQNameLocalName(),
-                                      &js_AttributeNameClass);
+                nameobj = NewXMLAttributeName(cx, nameobj->getNameURI(), nameobj->getNamePrefix(),
+                                              nameobj->getQNameLocalName());
                 if (!nameobj)
                     goto bad;
             }
@@ -6382,10 +6384,8 @@ xml_replace(JSContext *cx, uintN argc, jsval *vp)
          * Call function QName per spec, not ToXMLName, to avoid attribute
          * names.
          */
-        if (!QNameHelper(cx, NULL, &js_QNameClass, argc == 0 ? -1 : 1,
-                         vp + 2, vp)) {
+        if (!QNameHelper(cx, NULL, argc == 0 ? -1 : 1, vp + 2, vp))
             return JS_FALSE;
-        }
         JS_ASSERT(!JSVAL_IS_PRIMITIVE(*vp));
         nameqn = JSVAL_TO_OBJECT(*vp);
 
@@ -7121,23 +7121,6 @@ js_InitQNameClass(JSContext *cx, JSObject *obj)
 }
 
 JSObject *
-js_InitAttributeNameClass(JSContext *cx, JSObject *obj)
-{
-    return js_InitClass(cx, obj, NULL, &js_AttributeNameClass, AttributeName, 2,
-                        qname_props, qname_methods, NULL, NULL);
-}
-
-JSObject *
-js_InitAnyNameClass(JSContext *cx, JSObject *obj)
-{
-    jsid id;
-
-    if (!js_GetAnyName(cx, &id))
-        return NULL;
-    return JSID_TO_OBJECT(id);
-}
-
-JSObject *
 js_InitXMLClass(JSContext *cx, JSObject *obj)
 {
     JSObject *proto, *pobj;
@@ -7205,10 +7188,6 @@ js_InitXMLClasses(JSContext *cx, JSObject *obj)
     if (!js_InitNamespaceClass(cx, obj))
         return NULL;
     if (!js_InitQNameClass(cx, obj))
-        return NULL;
-    if (!js_InitAttributeNameClass(cx, obj))
-        return NULL;
-    if (!js_InitAnyNameClass(cx, obj))
         return NULL;
     return js_InitXMLClass(cx, obj);
 }
@@ -7379,39 +7358,23 @@ js_ValueToXMLString(JSContext *cx, const Value &v)
     return ToXMLString(cx, Jsvalify(v), 0);
 }
 
-static JSBool
-anyname_toString(JSContext *cx, uintN argc, jsval *vp)
-{
-    *vp = ATOM_TO_JSVAL(cx->runtime->atomState.starAtom);
-    return JS_TRUE;
-}
-
 JSBool
 js_GetAnyName(JSContext *cx, jsid *idp)
 {
-    JSObject *obj;
-
-    obj = cx->compartment->anynameObject;
+    JSObject *obj = cx->compartment->anynameObject;
     if (!obj) {
-        JSRuntime *rt = cx->runtime;
-
+        /*
+         * Avoid entraining any Object.prototype found via cx's scope
+         * chain or global object for this internal AnyName object.
+         */
         obj = NewNonFunction<WithProto::Given>(cx, &js_AnyNameClass, NULL, NULL);
         if (!obj)
             return false;
 
+        JSRuntime *rt = cx->runtime;
         InitXMLQName(obj, rt->emptyString, rt->emptyString,
                      ATOM_TO_STRING(rt->atomState.starAtom));
         METER(xml_stats.qname);
-
-        /*
-         * Avoid entraining any Object.prototype found via cx's scope
-         * chain or global object.  This loses the default toString,
-         * but no big deal: we want to customize toString anyway for
-         * clearer diagnostics.
-         */
-        if (!JS_DefineFunction(cx, obj, js_toString_str,
-                               anyname_toString, 0, 0))
-            return false;
 
         JS_ASSERT(!obj->getProto());
         JS_ASSERT(!obj->getParent());
@@ -7488,7 +7451,8 @@ js_FindXMLProperty(JSContext *cx, const Value &nameval, JSObject **objp, jsid *i
     } while ((obj = obj->getParent()) != NULL);
 
     JSAutoByteString printable;
-    if (js_ValueToPrintable(cx, ObjectValue(*nameobj), &printable)) {
+    JSString *str = ConvertQNameToString(cx, nameobj);
+    if (str && js_ValueToPrintable(cx, StringValue(str), &printable)) {
         JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage, NULL,
                                      JSMSG_UNDEFINED_XML_NAME, printable.ptr());
     }

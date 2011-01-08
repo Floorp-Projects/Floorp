@@ -2637,7 +2637,7 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
 #endif
     fun->u.i.script = script;
 
-    if (obj->getClass()->flags & JSCLASS_IS_GLOBAL) {
+    if (obj->isGlobal()) {
         /* ES5 13.2.3: Construct the unique [[ThrowTypeError]] function object. */
         JSObject *throwTypeError =
             js_NewFunction(cx, NULL, reinterpret_cast<Native>(ThrowTypeError), 0,

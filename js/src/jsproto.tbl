@@ -42,15 +42,11 @@
 # define XML_INIT                       js_InitXMLClass
 # define NAMESPACE_INIT                 js_InitNamespaceClass
 # define QNAME_INIT                     js_InitQNameClass
-# define ANYNAME_INIT                   js_InitAnyNameClass
-# define ATTRIBUTE_INIT                 js_InitAttributeNameClass
 # define XMLFILTER_INIT                 js_InitXMLFilterClass
 #else
 # define XML_INIT                       js_InitNullClass
 # define NAMESPACE_INIT                 js_InitNullClass
 # define QNAME_INIT                     js_InitNullClass
-# define ANYNAME_INIT                   js_InitNullClass
-# define ATTRIBUTE_INIT                 js_InitNullClass
 # define XMLFILTER_INIT                 js_InitNullClass
 #endif
 
@@ -79,8 +75,8 @@ JS_PROTO(RegExp,                10,     js_InitRegExpClass)
 JS_PROTO(XML,                   11,     XML_INIT)
 JS_PROTO(Namespace,             12,     NAMESPACE_INIT)
 JS_PROTO(QName,                 13,     QNAME_INIT)
-JS_PROTO(AnyName,               14,     ANYNAME_INIT)
-JS_PROTO(AttributeName,         15,     ATTRIBUTE_INIT)
+JS_PROTO(Reflect,               14,     js_InitReflectClass)
+JS_PROTO(ASTNode,               15,     js_InitReflectClass)
 JS_PROTO(Error,                 16,     js_InitExceptionClasses)
 JS_PROTO(InternalError,         17,     js_InitExceptionClasses)
 JS_PROTO(EvalError,             18,     js_InitExceptionClasses)
@@ -103,12 +99,8 @@ JS_PROTO(Float32Array,          34,     js_InitTypedArrayClasses)
 JS_PROTO(Float64Array,          35,     js_InitTypedArrayClasses)
 JS_PROTO(Uint8ClampedArray,     36,     js_InitTypedArrayClasses)
 JS_PROTO(Proxy,                 37,     js_InitProxyClass)
-JS_PROTO(Reflect,               38,     js_InitReflectClass)
-JS_PROTO(ASTNode,               39,     js_InitReflectClass)
 
 #undef XML_INIT
 #undef NAMESPACE_INIT
 #undef QNAME_INIT
-#undef ANYNAME_INIT
-#undef ATTRIBUTE_INIT
 #undef GENERATOR_INIT

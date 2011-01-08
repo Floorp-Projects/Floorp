@@ -224,7 +224,7 @@ function test() {
     // Ignore properties with object-ids.
     var uri = "http://example.net";
     b = {x: 1, y: 2};
-    Object.defineProperty(b, AttributeName(uri, "x"), {enumerable: true, value: 3});
+    Object.defineProperty(b, QName(uri, "x"), {enumerable: true, value: 3});
     Object.defineProperty(b, QName(uri, "y"), {enumerable: true, value: 5});
     check(b);
 }

@@ -963,7 +963,7 @@ NewBuiltinClassInstance(JSContext *cx, Class *clasp, gc::FinalizeKind kind)
     } else {
         global = cx->fp()->scopeChain().getGlobal();
     }
-    JS_ASSERT(global->getClass()->flags & JSCLASS_IS_GLOBAL);
+    JS_ASSERT(global->isGlobal());
 
     const Value &v = global->getReservedSlot(JSProto_LIMIT + protoKey);
     JSObject *proto;
