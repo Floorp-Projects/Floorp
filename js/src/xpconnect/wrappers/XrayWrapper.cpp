@@ -144,6 +144,8 @@ GetExpandoObject(JSContext *cx, JSObject *holder)
     JSObject *expando = holder->getSlot(JSSLOT_EXPANDO).toObjectOrNull();
     if (!expando) {
         expando =  JS_NewObjectWithGivenProto(cx, nsnull, nsnull, holder->getParent());
+        if (!expando)
+            return NULL;
         holder->setSlot(JSSLOT_EXPANDO, ObjectValue(*expando));
     }
     return expando;

@@ -467,7 +467,7 @@ CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent)
 extern JSObject * JS_FASTCALL
 js_AllocFlatClosure(JSContext *cx, JSFunction *fun, JSObject *scopeChain);
 
-extern JS_REQUIRES_STACK JSObject *
+extern JSObject *
 js_NewFlatClosure(JSContext *cx, JSFunction *fun, JSOp op, size_t oplen);
 
 extern JS_REQUIRES_STACK JSObject *
@@ -526,7 +526,7 @@ extern JSBool
 GetCallVarChecked(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
 
 extern JSBool
-GetFlatUpvar(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
+GetCallUpvar(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
 
 extern JSBool
 SetCallArg(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
@@ -535,7 +535,7 @@ extern JSBool
 SetCallVar(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
 
 extern JSBool
-SetFlatUpvar(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
+SetCallUpvar(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
 
 } // namespace js
 

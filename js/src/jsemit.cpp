@@ -1975,99 +1975,6 @@ EmitLeaveBlock(JSContext *cx, JSCodeGenerator *cg, JSOp op,
 }
 
 /*
- * When eval is called from a function, the eval code or function code it
- * compiles may reference upvars that live in the eval-calling function. The
- * eval-invoked compiler does not have explicit definitions for these upvars
- * and we do not attempt to create them a-priori (by inspecting the function's
- * args and vars) -- we could, but we'd take an avoidable penalty for each
- * function local not referenced by any upvar. Instead, we map such upvars
- * lazily, growing upvarMap.vector by powers of two.
- *
- * This function knows that it is called with pn pointing to a PN_NAME-arity
- * node, and cg->parser->callerFrame having a non-null fun member, and the
- * static level of cg at least one greater than the eval-calling function's
- * static level.
- */
-static bool
-MakeUpvarForEval(JSParseNode *pn, JSCodeGenerator *cg)
-{
-    JSContext *cx = cg->parser->context;
-    JSFunction *fun = cg->parser->callerFrame->fun();
-    uintN upvarLevel = fun->u.i.script->staticLevel;
-
-    JSFunctionBox *funbox = cg->funbox;
-    if (funbox) {
-        /*
-         * Treat top-level function definitions as escaping (i.e., as funargs),
-         * required since we compile each such top level function or statement
-         * and throw away the AST, so we can't yet see all funarg uses of this
-         * function being compiled (cg->funbox->object). See bug 493177.
-         */
-        if (funbox->level == fun->u.i.script->staticLevel + 1U &&
-            !(((JSFunction *) funbox->object)->flags & JSFUN_LAMBDA)) {
-            JS_ASSERT_IF(cx->options & JSOPTION_ANONFUNFIX,
-                         ((JSFunction *) funbox->object)->atom);
-            return true;
-        }
-
-        while (funbox->level >= upvarLevel) {
-            if (funbox->node->pn_dflags & PND_FUNARG)
-                return true;
-            funbox = funbox->parent;
-            if (!funbox)
-                break;
-        }
-    }
-
-    JSAtom *atom = pn->pn_atom;
-
-    uintN index;
-    BindingKind kind = fun->script()->bindings.lookup(cx, atom, &index);
-    if (kind == NONE)
-        return true;
-
-    JS_ASSERT(cg->staticLevel > upvarLevel);
-    if (cg->staticLevel >= UpvarCookie::UPVAR_LEVEL_LIMIT)
-        return true;
-
-    JSAtomListElement *ale = cg->upvarList.lookup(atom);
-    if (!ale) {
-        if (cg->inFunction() && !cg->bindings.addUpvar(cx, atom))
-            return false;
-
-        ale = cg->upvarList.add(cg->parser, atom);
-        if (!ale)
-            return false;
-        JS_ASSERT(ALE_INDEX(ale) == cg->upvarList.count - 1);
-
-        UpvarCookie *vector = cg->upvarMap.vector;
-        uint32 length = cg->upvarMap.length;
-
-        JS_ASSERT(ALE_INDEX(ale) <= length);
-        if (ALE_INDEX(ale) == length) {
-            length = 2 * JS_MAX(2, length);
-            vector = reinterpret_cast<UpvarCookie *>(cx->realloc(vector, length * sizeof *vector));
-            if (!vector)
-                return false;
-            cg->upvarMap.vector = vector;
-            cg->upvarMap.length = length;
-        }
-
-        if (kind != ARGUMENT)
-            index += fun->nargs;
-        JS_ASSERT(index < JS_BIT(16));
-
-        uintN skip = cg->staticLevel - upvarLevel;
-        vector[ALE_INDEX(ale)].set(skip, index);
-    }
-
-    pn->pn_op = JSOP_GETUPVAR;
-    pn->pn_cookie.set(cg->staticLevel, uint16(ALE_INDEX(ale)));
-    pn->pn_dflags |= PND_BOUND;
-    return true;
-}
-
-/*
  * Try to convert a *NAME op to a *GNAME op, which optimizes access to
  * undeclared globals. Return true if a conversion was made.
  *
@@ -2232,63 +2139,11 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 return JS_TRUE;
             }
 
-            if (!caller->isFunctionFrame())
-                return JS_TRUE;
-
             /*
-             * Make sure the variable object used by the compiler to initialize
-             * parent links matches the caller's varobj. Compile-n-go compiler-
-             * created function objects have the top-level cg's scopeChain set
-             * as their parent by Parser::newFunction.
+             * Out of tricks, so we must rely on PICs to optimize named
+             * accesses from direct eval called from function code.
              */
-            JSObject *scopeobj = cg->inFunction()
-                                 ? FUN_OBJECT(cg->fun())->getParent()
-                                 : cg->scopeChain();
-            if (scopeobj != cg->parser->callerVarObj)
-                return JS_TRUE;
-
-            /*
-             * We are compiling eval or debug script inside a function frame
-             * and the scope chain matches the function's variable object.
-             * Optimize access to function's arguments and variable and the
-             * arguments object.
-             */
-            if (op != JSOP_NAME)
-                return JS_TRUE;
-
-            /*
-             * It is illegal to add upvars to heavyweight functions (and
-             * unnecessary, since the optimization avoids creating call
-             * objects). Take the following code as an eval string:
-             *
-             *   (function () {
-             *       $(init);
-             *       function init() {
-             *           $();
-             *       }
-             *    })();
-             *
-             * The first instance of "$" cannot be an upvar, because the
-             * outermost lambda is on "init"'s scope chain, which escapes.
-             *
-             * A similar restriction exists for upvars which do not cross
-             * eval (see the end of BindNameToSlot and bug 616762).
-             */
-            if (cg->flags & TCF_FUN_HEAVYWEIGHT)
-                return JS_TRUE;
-
-            /*
-             * Generator functions may be resumed from any call stack, which
-             * defeats the display optimization to static link searching used
-             * by JSOP_{GET,CALL}UPVAR.
-             */
-            JSFunction *fun = cg->parser->callerFrame->fun();
-            JS_ASSERT(cg->staticLevel >= fun->u.i.script->staticLevel);
-            unsigned skip = cg->staticLevel - fun->u.i.script->staticLevel;
-            if (cg->skipSpansGenerator(skip))
-                return JS_TRUE;
-
-            return MakeUpvarForEval(pn, cg);
+            return JS_TRUE;
         }
 
         /* Optimize accesses to undeclared globals. */
@@ -2348,50 +2203,6 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
     uint16 level = cookie.level();
     JS_ASSERT(cg->staticLevel >= level);
 
-    /*
-     * A JSDefinition witnessed as a declaration by the parser cannot be an
-     * upvar, unless it is the degenerate kind of upvar selected above (in the
-     * code before the PND_GVAR test) for the special case of compile-and-go
-     * code generated from eval called from a function, where the eval code
-     * uses local vars defined in the function. We detect this upvar-for-eval
-     * case by checking dn's op.
-     */
-    if (PN_OP(dn) == JSOP_GETUPVAR) {
-        JS_ASSERT(cg->staticLevel >= level);
-        if (op != JSOP_NAME)
-            return JS_TRUE;
-
-#ifdef DEBUG
-        JSStackFrame *caller = cg->parser->callerFrame;
-#endif
-        JS_ASSERT(caller->isScriptFrame());
-
-        JSTreeContext *tc = cg;
-        while (tc->staticLevel != level)
-            tc = tc->parent;
-
-        JSCodeGenerator *evalcg = tc->asCodeGenerator();
-        JS_ASSERT(evalcg->compileAndGo());
-        JS_ASSERT(caller->isFunctionFrame());
-        JS_ASSERT(cg->parser->callerVarObj == evalcg->scopeChain());
-
-        /*
-         * Don't generate upvars on the left side of a for loop. See
-         * bug 470758 and bug 520513.
-         */
-        if (evalcg->flags & TCF_IN_FOR_INIT)
-            return JS_TRUE;
-
-        if (cg->staticLevel == level) {
-            pn->pn_op = JSOP_GETUPVAR;
-            pn->pn_cookie = cookie;
-            pn->pn_dflags |= PND_BOUND;
-            return JS_TRUE;
-        }
-
-        return MakeUpvarForEval(pn, cg);
-    }
-
     const uintN skip = cg->staticLevel - level;
     if (skip != 0) {
         JS_ASSERT(cg->inFunction());
@@ -2410,29 +2221,8 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         if (cg->flags & TCF_FUN_HEAVYWEIGHT)
             return JS_TRUE;
 
-        if (cg->fun()->isFlatClosure()) {
-            op = JSOP_GETFCSLOT;
-        } else {
-            /*
-             * The function we're compiling may not be heavyweight, but if it
-             * escapes as a funarg, we can't use JSOP_GETUPVAR/JSOP_CALLUPVAR.
-             * Parser::analyzeFunctions has arranged for this function's
-             * enclosing functions to be heavyweight, so we can safely stick
-             * with JSOP_NAME/JSOP_CALLNAME.
-             */
-            if (cg->funbox->node->pn_dflags & PND_FUNARG)
-                return JS_TRUE;
-
-            /*
-             * Generator functions may be resumed from any call stack, which
-             * defeats the display optimization to static link searching used
-             * by JSOP_{GET,CALL}UPVAR.
-             */
-            if (cg->skipSpansGenerator(skip))
-                return JS_TRUE;
-
-            op = JSOP_GETUPVAR;
-        }
+        if (!cg->fun()->isFlatClosure())
+            return JS_TRUE;
 
         ale = cg->upvarList.lookup(atom);
         if (ale) {
@@ -2473,7 +2263,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             vector[index].set(skip, slot);
         }
 
-        pn->pn_op = op;
+        pn->pn_op = JSOP_GETFCSLOT;
         JS_ASSERT((index & JS_BITMASK(16)) == index);
         pn->pn_cookie.set(0, index);
         pn->pn_dflags |= PND_BOUND;
@@ -2851,9 +2641,6 @@ EmitNameOp(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
             break;
           case JSOP_GETLOCAL:
             op = JSOP_CALLLOCAL;
-            break;
-          case JSOP_GETUPVAR:
-            op = JSOP_CALLUPVAR;
             break;
           case JSOP_GETFCSLOT:
             op = JSOP_CALLFCSLOT;
@@ -6070,7 +5857,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * API users may also set the JSOPTION_NO_SCRIPT_RVAL option when
              * calling JS_Compile* to suppress JSOP_POPV.
              */
-            useful = wantval = !(cg->flags & (TCF_IN_FUNCTION | TCF_NO_SCRIPT_RVAL));
+            wantval = !(cg->flags & (TCF_IN_FUNCTION | TCF_NO_SCRIPT_RVAL));
+            useful = wantval || pn->isDirectivePrologueMember();
             if (!useful) {
                 if (!CheckSideEffects(cx, cg, pn2, &useful))
                     return JS_FALSE;
@@ -6266,7 +6054,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                         return JS_FALSE;
                     EMIT_INDEX_OP(JSOP_GETXPROP, atomIndex);
                 } else {
-                    JS_ASSERT(PN_OP(pn2) != JSOP_GETUPVAR);
                     EMIT_UINT16_IMM_OP((PN_OP(pn2) == JSOP_SETGNAME)
                                        ? JSOP_GETGNAME
                                        : (PN_OP(pn2) == JSOP_SETGLOBAL)

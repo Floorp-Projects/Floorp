@@ -300,7 +300,6 @@ TypeToChar(JSValueType type)
       case JSVAL_TYPE_BOXED: return '#';
       case JSVAL_TYPE_STRORNULL: return 's';
       case JSVAL_TYPE_OBJORNULL: return 'o';
-      case JSVAL_TYPE_UNINITIALIZED: return '*';
     }
     return '?';
 }
@@ -3660,7 +3659,6 @@ TraceRecorder::importGlobalSlot(unsigned slot)
         JS_ASSERT(tree->nGlobalTypes() == tree->globalSlots->length());
     } else {
         type = importTypeMap[importStackSlots + index];
-        JS_ASSERT(type != JSVAL_TYPE_UNINITIALIZED);
     }
     import(EosAddress(eos_ins, slot * sizeof(double)), vp, type, "global", index, NULL);
 }
@@ -3809,7 +3807,6 @@ TraceRecorder::getImpl(const void *p)
     } else {
         unsigned slot = nativeStackSlotImpl(p);
         JSValueType type = importTypeMap[slot];
-        JS_ASSERT(type != JSVAL_TYPE_UNINITIALIZED);
         importImpl(StackAddress(lirbuf->sp, -tree->nativeStackBase + slot * sizeof(jsdouble)),
                    p, type, "stack", slot, cx->fp());
     }
@@ -4033,7 +4030,6 @@ TraceRecorder::determineSlotType(Value* vp)
         } else {
             t = importTypeMap[nativeStackSlot(vp)];
         }
-        JS_ASSERT(t != JSVAL_TYPE_UNINITIALIZED);
         JS_ASSERT_IF(t == JSVAL_TYPE_INT32, hasInt32Repr(*vp));
         return t;
     }
@@ -5194,6 +5190,28 @@ TraceRecorder::prepareTreeCall(TreeFragment* inner)
     w.xbarrier(createGuardRecord(exit));
 }
 
+class ClearSlotsVisitor : public SlotVisitorBase
+{
+    Tracker &tracker;
+  public:
+    ClearSlotsVisitor(Tracker &tracker)
+      : tracker(tracker)
+    {}
+
+    JS_ALWAYS_INLINE bool
+    visitStackSlots(Value *vp, size_t count, JSStackFrame *) {
+        for (Value *vpend = vp + count; vp != vpend; ++vp)
+            tracker.set(vp, NULL);
+        return true;
+    }
+
+    JS_ALWAYS_INLINE bool
+    visitFrameObjPtr(void *p, JSStackFrame *) {
+        tracker.set(p, NULL);
+        return true;
+    }
+};
+
 static unsigned
 BuildGlobalTypeMapFromInnerTree(Queue<JSValueType>& typeMap, VMSideExit* inner)
 {
@@ -5275,32 +5293,9 @@ TraceRecorder::emitTreeCall(TreeFragment* inner, VMSideExit* exit)
         JS_ASSERT(map[i] != JSVAL_TYPE_BOXED);
 #endif
 
-    /*
-     * Clear anything from the tracker that the inner tree could have written so
-     * that it will be lazily reloaded from the native stack. The only portion
-     * of the native stack that may be written to by both the inner and outer
-     * tree are the slots associated with the inner tree's entry frame. We may
-     * be certain of this by the following argument:
-     *
-     *  0. The only way for the inner tree to mutate the outer tree's upvars
-     *     is by writing to the call object associated with cx->fp or the
-     *     callDepth frames below it.
-     *  1. To write to a given call object, the innerTree must be executing with
-     *     that call object on its scope chain.
-     *  2. Only function frames' scope chains may contain call objects.
-     *  3. An interpreted function frame's scope chain is set to be the parent
-     *     of the callee when the callee is called.
-     *  4. On trace, there is a guard on the identity of the callee's parent.
-     *  5. From 1, 2, 3 and 4, any call object written to on trace will be the
-     *     exact same call object as was observed at record time.
-     *  6. Inner trees are recorded before outer trees.
-     *  7. From 5 and 6, the only call object created by an outer tree that can
-     *     be written to by an inner tree before the call object's associated
-     *     stack frame is popped is cx->fp->callObj.
-     *  8. setCallProp has an explicit guard against writing to cx->fp->callObj.
-     *  9. From 0, 7 and 8, an inner tree never mutates its outer tree's upvars.
-     */
-    clearCurrentFrameSlotsFromTracker(tracker);
+    /* The inner tree may modify currently-tracked upvars, so flush everything. */
+    ClearSlotsVisitor visitor(tracker);
+    VisitStackSlots(visitor, cx, callDepth);
     SlotList& gslots = *tree->globalSlots;
     for (unsigned i = 0; i < gslots.length(); i++) {
         unsigned slot = gslots[i];
@@ -5310,10 +5305,6 @@ TraceRecorder::emitTreeCall(TreeFragment* inner, VMSideExit* exit)
 
     /* Set stack slots from the innermost frame. */
     importTypeMap.setLength(NativeStackSlots(cx, callDepth));
-#ifdef DEBUG
-    for (unsigned i = importStackSlots; i < importTypeMap.length(); i++)
-        importTypeMap[i] = JSVAL_TYPE_UNINITIALIZED;
-#endif
     unsigned startOfInnerFrame = importTypeMap.length() - exit->numStackSlots;
     for (unsigned i = 0; i < exit->numStackSlots; i++)
         importTypeMap[startOfInnerFrame + i] = exit->stackTypeMap()[i];
@@ -10171,45 +10162,21 @@ TraceRecorder::guardNativeConversion(Value& v)
     return RECORD_CONTINUE;
 }
 
-/*
- * Clear out all slots of this frame in the nativeFrameTracker. Different
- * locations on the VM stack might map to different locations on the native
- * stack depending on the number of arguments (i.e.) of the next call, so we
- * have to make sure we map those in to the cache with the right offsets.
- */
 JS_REQUIRES_STACK void
-TraceRecorder::clearCurrentFrameSlotsFromTracker(Tracker& which)
+TraceRecorder::clearReturningFrameFromNativeveTracker()
 {
-    JSStackFrame *const fp = cx->fp();
-
     /*
-     * Duplicate native stack layout computation: see VisitFrameSlots header comment.
-     * This doesn't do layout arithmetic, but it must clear out all the slots defined as
-     * imported by VisitFrameSlots.
+     * Clear all tracker entries associated with the frame for the same reason
+     * described in record_EnterFrame. Reuse the generic visitor to avoid
+     * duplicating logic. The generic visitor stops at 'sp', whereas we need to
+     * clear up to script->nslots, so finish the job manually.
      */
-    if (fp->isGlobalFrame()) {
-        Value *vp = fp->slots() + fp->globalScript()->nfixed;
-        Value *vpend = fp->slots() + fp->globalScript()->nslots;
-        for (; vp < vpend; ++vp)
-            which.set(vp, (LIns*)0);
-        return;
-    }
-
-    if (!fp->isEvalFrame()) {
-        /* For simplicitly, flush 'em all, even non-canonical arg slots. */
-        Value *vp = fp->actualArgs() - 2 /* callee, this */;
-        Value *vpend = fp->formalArgsEnd();
-        for (; vp < vpend; ++vp)
-            which.set(vp, (LIns*)0);
-    }
-
-    which.set(fp->addressOfArgs(), (LIns*)0);
-    which.set(fp->addressOfScopeChain(), (LIns*)0);
-
-    Value *vp = fp->slots();
-    Value *vpend = fp->slots() + fp->functionScript()->nslots;
+    ClearSlotsVisitor visitor(nativeFrameTracker);
+    VisitStackSlots(visitor, cx, 0);
+    Value *vp = cx->regs->sp;
+    Value *vpend = cx->fp()->slots() + cx->fp()->script()->nslots;
     for (; vp < vpend; ++vp)
-        which.set(vp, (LIns*)0);
+        nativeFrameTracker.set(vp, NULL);
 }
 
 class BoxArg
@@ -10502,7 +10469,7 @@ TraceRecorder::record_JSOP_RETURN()
                       fp->fun()->atom ?
                         js_AtomToPrintableString(cx, fp->fun()->atom, &funBytes) :
                         "<anonymous>");
-    clearCurrentFrameSlotsFromTracker(nativeFrameTracker);
+    clearReturningFrameFromNativeveTracker();
 
     return ARECORD_CONTINUE;
 }
@@ -13290,30 +13257,6 @@ TraceRecorder::stackLoad(Address addr, uint8 type)
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_GETUPVAR()
-{
-    uintN index = GET_UINT16(cx->regs->pc);
-    JSScript *script = cx->fp()->script();
-    JSUpvarArray* uva = script->upvars();
-    JS_ASSERT(index < uva->length);
-
-    Value v;
-    LIns* upvar_ins = upvar(script, uva, index, v);
-    if (!upvar_ins)
-        return ARECORD_STOP;
-    stack(0, upvar_ins);
-    return ARECORD_CONTINUE;
-}
-
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_CALLUPVAR()
-{
-    CHECK_STATUS_A(record_JSOP_GETUPVAR());
-    stack(1, w.immiUndefined());
-    return ARECORD_CONTINUE;
-}
-
-JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_GETFCSLOT()
 {
     JSObject& callee = cx->fp()->callee();
@@ -15885,7 +15828,7 @@ TraceRecorder::record_JSOP_STOP()
     } else {
         rval_ins = w.immiUndefined();
     }
-    clearCurrentFrameSlotsFromTracker(nativeFrameTracker);
+    clearReturningFrameFromNativeveTracker();
     return ARECORD_CONTINUE;
 }
 
