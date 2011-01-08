@@ -1131,7 +1131,16 @@ struct JSRuntime {
     js::GCMarker        *gcMarkingTracer;
     uint32              gcTriggerFactor;
     int64               gcJitReleaseTime;
-    volatile JSBool     gcIsNeeded;
+    volatile bool       gcIsNeeded;
+
+    /*
+     * Compartment that triggered GC. If more than one Compatment need GC,
+     * gcTriggerCompartment is reset to NULL and a global GC is performed. 
+     */
+    JSCompartment       *gcTriggerCompartment;
+
+    /* Compartment that is currently involved in per-compartment GC */
+    JSCompartment       *gcCurrentCompartment;
 
     /*
      * We can pack these flags as only the GC thread writes to them. Atomic
