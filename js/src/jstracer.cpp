@@ -6492,7 +6492,7 @@ ScopeChainCheck(JSContext* cx, TreeFragment* f)
     }
     JS_ASSERT(child == f->globalObj);
 
-    if (!(f->globalObj->getClass()->flags & JSCLASS_IS_GLOBAL)) {
+    if (!f->globalObj->isGlobal()) {
         debug_only_print0(LC_TMTracer, "Blacklist: non-global at root of scope chain.\n");
         Blacklist((jsbytecode*) f->root->ip);
         return false;

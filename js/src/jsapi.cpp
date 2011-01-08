@@ -1592,8 +1592,6 @@ static JSStdName standard_class_names[] = {
     {js_InitExceptionClasses,   EAGER_CLASS_ATOM(URIError), CLASP(Error)},
 
 #if JS_HAS_XML_SUPPORT
-    {js_InitAnyNameClass,       EAGER_ATOM_AND_CLASP(AnyName)},
-    {js_InitAttributeNameClass, EAGER_ATOM_AND_CLASP(AttributeName)},
     {js_InitXMLClass,           LAZY_ATOM(XMLList), CLASP(XML)},
     {js_InitXMLClass,           LAZY_ATOM(isXMLName), CLASP(XML)},
 #endif
@@ -1724,7 +1722,7 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsid id, JSBool *resolved)
          * If this standard class is anonymous, then we don't want to resolve
          * by name.
          */
-        JS_ASSERT(obj->getClass()->flags & JSCLASS_IS_GLOBAL);
+        JS_ASSERT(obj->isGlobal());
         if (stdnm->clasp->flags & JSCLASS_IS_ANONYMOUS)
             return JS_TRUE;
 
@@ -3819,10 +3817,8 @@ JS_ClearScope(JSContext *cx, JSObject *obj)
         js_ClearNative(cx, obj);
 
     /* Clear cached class objects on the global object. */
-    if (obj->getClass()->flags & JSCLASS_IS_GLOBAL) {
-        int key;
-
-        for (key = JSProto_Null; key < JSProto_LIMIT * 3; key++)
+    if (obj->isGlobal()) {
+        for (int key = JSProto_Null; key < JSProto_LIMIT * 3; key++)
             JS_SetReservedSlot(cx, obj, key, JSVAL_VOID);
     }
 
