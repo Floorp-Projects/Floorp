@@ -351,7 +351,7 @@ struct JITScript {
     }
 
     void nukeScriptDependentICs();
-    void sweepCallICs(bool purgeAll);
+    void sweepCallICs(JSContext *cx, bool purgeAll);
     void purgeMICs();
     void purgePICs();
 

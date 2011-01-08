@@ -1580,7 +1580,7 @@ class TraceRecorder
                                              bool *blacklist);
     friend AbortResult AbortRecording(JSContext*, const char*);
     friend class BoxArg;
-    friend void TraceMonitor::sweep();
+    friend void TraceMonitor::sweep(JSContext *cx);
 
   public:
     static bool JS_REQUIRES_STACK

@@ -266,7 +266,7 @@ void JS_FASTCALL NativeCall(VMFrame &f, ic::CallICInfo *ic);
 JSBool JS_FASTCALL SplatApplyArgs(VMFrame &f);
 
 void PurgeMICs(JSContext *cx, JSScript *script);
-void SweepCallICs(JSScript *script, bool purgeAll);
+void SweepCallICs(JSContext *cx, JSScript *script, bool purgeAll);
 
 } /* namespace ic */
 } /* namespace mjit */

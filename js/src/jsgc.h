@@ -70,6 +70,9 @@ js_TraceXML(JSTracer *trc, JSXML* thing);
 #endif
 
 namespace js {
+
+struct Shape;
+
 namespace gc {
 
 /*
@@ -201,6 +204,16 @@ struct ArenaBitmap {
         }
         return true;
     }
+
+#ifdef DEBUG
+    bool noBitsSet() {
+        for (unsigned i = 0; i < BitWords; i++) {
+            if (bitmap[i] != uintptr_t(0))
+                return false;
+        }
+        return true;
+    }
+#endif
 };
 
 /* Ensure that bitmap covers the whole arena. */
@@ -574,6 +587,14 @@ struct ArenaList {
         }
         return false;
     }
+
+    bool markedThingsInArenaList() {
+        for (Arena<FreeCell> *a = (Arena<FreeCell> *) head; a; a = (Arena<FreeCell> *) a->header()->next) {
+            if (!a->bitmap()->noBitsSet())
+                return true;
+        }
+        return false;
+    }
 #endif
 
     inline void insert(Arena<FreeCell> *a) {
@@ -768,7 +789,7 @@ extern void
 js_UnlockGCThingRT(JSRuntime *rt, void *thing);
 
 extern JS_FRIEND_API(bool)
-IsAboutToBeFinalized(void *thing);
+IsAboutToBeFinalized(JSContext *cx, void *thing);
 
 extern JS_FRIEND_API(bool)
 js_GCThingIsMarked(void *thing, uint32 color);
@@ -791,6 +812,13 @@ MarkContext(JSTracer *trc, JSContext *acx);
 extern void
 TriggerGC(JSRuntime *rt);
 
+/* Must be called with GC lock taken. */
+extern void
+TriggerCompartmentGC(JSCompartment *comp);
+
+extern void
+MaybeGC(JSContext *cx);
+
 } /* namespace js */
 
 /*
@@ -807,8 +835,9 @@ typedef enum JSGCInvocationKind {
     GC_LAST_CONTEXT     = 1
 } JSGCInvocationKind;
 
+/* Pass NULL for |comp| to get a full GC. */
 extern void
-js_GC(JSContext *cx, JSGCInvocationKind gckind);
+js_GC(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind);
 
 #ifdef JS_THREADSAFE
 /*
