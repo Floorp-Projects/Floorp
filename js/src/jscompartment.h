@@ -201,7 +201,7 @@ struct TraceMonitor {
     void flush();
 
     /* Sweep any cache entry pointing to dead GC things. */
-    void sweep();
+    void sweep(JSContext *cx);
 
     bool outOfMemory() const;
 };
@@ -273,6 +273,10 @@ struct JS_FRIEND_API(JSCompartment) {
     js::gc::ArenaList            arenas[js::gc::FINALIZE_LIMIT];
     js::gc::FreeLists            freeLists;
 
+    size_t                       gcBytes;
+    size_t                       gcTriggerBytes;
+    size_t                       gcLastBytes;
+
 #ifdef JS_GCMETER
     js::gc::JSGCArenaStats       compartmentStats[js::gc::FINALIZE_LIMIT];
 #endif
@@ -320,6 +324,7 @@ struct JS_FRIEND_API(JSCompartment) {
 
     bool init();
 
+    void mark(JSTracer *trc);
     bool wrap(JSContext *cx, js::Value *vp);
     bool wrap(JSContext *cx, JSString **strp);
     bool wrap(JSContext *cx, JSObject **objp);
@@ -331,7 +336,11 @@ struct JS_FRIEND_API(JSCompartment) {
     void sweep(JSContext *cx, uint32 releaseInterval);
     void purge(JSContext *cx);
     void finishArenaLists();
+    void finalizeObjectArenaLists(JSContext *cx);
+    void finalizeStringArenaLists(JSContext *cx);
     bool arenaListsAreEmpty();
+
+    void setGCLastBytes(size_t lastBytes);
 
   private:
     js::MathCache                *mathCache;
