@@ -1594,6 +1594,7 @@ class TraceRecorder
     TreeFragment*       getTree() const { return tree; }
     bool                outOfMemory() const { return traceMonitor->outOfMemory(); }
     Oracle*             getOracle() const { return oracle; }
+    JSObject*           getGlobal() const { return globalObj; }
 
     /* Entry points / callbacks from the interpreter. */
     JS_REQUIRES_STACK AbortableRecordingStatus monitorRecording(JSOp op);
@@ -1881,7 +1882,7 @@ AbortRecordingIfUnexpectedGlobalWrite(JSContext *cx, JSObject *obj, unsigned slo
 {
 #ifdef JS_TRACER
     if (TraceRecorder *tr = TRACE_RECORDER(cx)) {
-        if (!obj->parent && !tr->globalSetExpected(slot))
+        if (obj == tr->getGlobal() && !tr->globalSetExpected(slot))
             AbortRecording(cx, "Global slot written outside tracer supervision");
     }
 #endif
