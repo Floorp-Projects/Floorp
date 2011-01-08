@@ -422,7 +422,6 @@ public:
     }
 
     virtual ~GLContext() {
-        printf_stderr("~GLContext destructor begin\n");
         NS_ASSERTION(IsDestroyed(), "GLContext implementation must call MarkDestroyed in destructor!");
 #ifdef DEBUG
         if (mSharedContext) {
@@ -433,7 +432,6 @@ public:
             tip->ReportOutstandingNames();
         }
 #endif
-        printf_stderr("~GLContext destructor end\n");
     }
 
     enum GLContextType {
