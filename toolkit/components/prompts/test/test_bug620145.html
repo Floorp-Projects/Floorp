@@ -3,6 +3,7 @@
   <title>Test for Bug 620145</title>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <script type="text/javascript" src="prompt_common.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
@@ -11,18 +12,25 @@
 <pre id="test">
 </pre>
 
-<button id="button" onmouseup="alert('message\n');">Button</button>
+<button id="button" onmouseup="onButton()">Button</button>
 
 <script class="testbody" type="text/javascript">
 SimpleTest.waitForExplicitFinish();
 
 var testNum = 0;
 
+function onButton() {
+  ok(true, "opening alert...");
+  alert("hello!");
+  ok(true, "...alert done.");
+}
+
 function runtest()
 {
+  // The <button> in this test's HTML opens a prompt when clicked.
+  // Here we send the events to simulate clicking it.
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-todo("test disabled, doesn't seem to work.");
-SimpleTest.finish();
+  ok(true, "starting test");
   isTabModal = true;
   startCallbackTimer();
 
@@ -33,18 +41,20 @@ SimpleTest.finish();
   e.initEvent("mousedown", false, false, window, 0, 1, 1, 1, 1,
               false, false, false, false, 0, null);
   utils.dispatchDOMEventViaPresShell($("button"), e, true);
+  ok(true, "mousedown sent");
 
   e = document.createEvent("MouseEvent");
   e.initEvent("mouseup", false, false, window, 0, 1, 1, 1, 1,
               false, false, false, false, 0, null);
   utils.dispatchDOMEventViaPresShell($("button"), e, true);
 
-  ok(true, "dialog closed");
+  ok(true, "mouseup sent");
   SimpleTest.finish();
 }
 
 function handleDialog(ui, testNum)
 {
+  ok(true, "handleDialog sending mouseclick to dialog...");
   synthesizeMouse(ui.button0, 5, 5, { }, ui.button0.ownerDocument.defaultView);
 }
 </script>
