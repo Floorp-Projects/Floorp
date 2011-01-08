@@ -144,6 +144,7 @@ class PropertyTree
 
     static void orphanKids(JSContext *cx, js::Shape *shape);
     static void sweepShapes(JSContext *cx);
+    static void unmarkShapes(JSContext *cx);
 #ifdef DEBUG
     static void meter(JSBasicStats *bs, js::Shape *node);
 #endif

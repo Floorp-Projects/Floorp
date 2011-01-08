@@ -2771,33 +2771,43 @@ TraceMonitor::flush()
 }
 
 inline bool
-HasUnreachableGCThings(TreeFragment *f)
+IsShapeAboutToBeFinalized(JSContext *cx, const js::Shape *shape)
+{
+    JSRuntime *rt = cx->runtime;
+    if (rt->gcCurrentCompartment != NULL)
+        return false;
+
+    return !shape->marked();
+}
+
+inline bool
+HasUnreachableGCThings(JSContext *cx, TreeFragment *f)
 {
     /*
      * We do not check here for dead scripts as JSScript is not a GC thing.
      * Instead PurgeScriptFragments is used to remove dead script fragments.
      * See bug 584860.
      */
-    if (IsAboutToBeFinalized(f->globalObj))
+    if (IsAboutToBeFinalized(cx, f->globalObj))
         return true;
     Value* vp = f->gcthings.data();
     for (unsigned len = f->gcthings.length(); len; --len) {
         Value &v = *vp++;
         JS_ASSERT(v.isMarkable());
-        if (IsAboutToBeFinalized(v.toGCThing()))
+        if (IsAboutToBeFinalized(cx, v.toGCThing()))
             return true;
     }
     const Shape** shapep = f->shapes.data();
     for (unsigned len = f->shapes.length(); len; --len) {
         const Shape* shape = *shapep++;
-        if (!shape->marked())
+        if (IsShapeAboutToBeFinalized(cx, shape))
             return true;
     }
     return false;
 }
 
 void
-TraceMonitor::sweep()
+TraceMonitor::sweep(JSContext *cx)
 {
     JS_ASSERT(!ontrace());
     debug_only_print0(LC_TMTracer, "Purging fragments with dead things");
@@ -2806,7 +2816,7 @@ TraceMonitor::sweep()
     TreeFragment *recorderTree = NULL;
     if (recorder) {
         recorderTree = recorder->getTree();
-        shouldAbortRecording = HasUnreachableGCThings(recorderTree);
+        shouldAbortRecording = HasUnreachableGCThings(cx, recorderTree);
     }
         
     for (size_t i = 0; i < FRAGMENT_TABLE_SIZE; ++i) {
@@ -2814,7 +2824,7 @@ TraceMonitor::sweep()
         while (TreeFragment* frag = *fragp) {
             TreeFragment* peer = frag;
             do {
-                if (HasUnreachableGCThings(peer))
+                if (HasUnreachableGCThings(cx, peer))
                     break;
                 peer = peer->peer;
             } while (peer);
