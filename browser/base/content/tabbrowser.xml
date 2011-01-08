@@ -2735,21 +2735,21 @@
       <method name="adjustTabstrip">
         <body><![CDATA[
           // modes for tabstrip
-          // 0 - activetab  = close button on active tab only
-          // 1 - alltabs    = close buttons on all tabs
-          // 2 - noclose    = no close buttons at all
-          // 3 - closeatend = close button at the end of the tabstrip
+          // 0 - button on active tab only
+          // 1 - close buttons on all tabs
+          // 2 - no close buttons at all
+          // 3 - close button at the end of the tabstrip
           switch (this.mCloseButtons) {
           case 0:
             if (this.childNodes.length == 1 && this._closeWindowWithLastTab)
-              this.setAttribute("closebuttons", "noclose");
+              this.setAttribute("closebuttons", "hidden");
             else
               this.setAttribute("closebuttons", "activetab");
             break;
           case 1:
             if (this.childNodes.length == 1) {
               if (this._closeWindowWithLastTab)
-                this.setAttribute("closebuttons", "noclose");
+                this.setAttribute("closebuttons", "hidden");
               else
                 this.setAttribute("closebuttons", "alltabs");
             } else {
@@ -2762,7 +2762,7 @@
             break;
           case 2:
           case 3:
-            this.setAttribute("closebuttons", "noclose");
+            this.setAttribute("closebuttons", "never");
             break;
           }
           var tabstripClosebutton = document.getElementById("tabs-closebutton");
