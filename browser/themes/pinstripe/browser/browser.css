@@ -1520,6 +1520,11 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   pointer-events: auto;
 }
 
+.tabbrowser-tabs[closebuttons="hidden"] > * > * > * > .tab-close-button:not([pinned]) {
+  display: -moz-box;
+  visibility: hidden;
+}
+
 .tabbrowser-arrowscrollbox > .arrowscrollbox-scrollbox {
   -moz-padding-start: 5px;
   -moz-padding-end: 4px;
