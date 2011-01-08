@@ -108,8 +108,7 @@ JS_ENUM_HEADER(JSValueType, uint8)
     JSVAL_TYPE_STRORNULL           = 0x97,
     JSVAL_TYPE_OBJORNULL           = 0x98,
 
-    JSVAL_TYPE_BOXED               = 0x99,
-    JSVAL_TYPE_UNINITIALIZED       = 0xcd
+    JSVAL_TYPE_BOXED               = 0x99
 } JS_ENUM_FOOTER(JSValueType);
 
 JS_STATIC_ASSERT(sizeof(JSValueType) == 1);

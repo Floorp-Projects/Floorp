@@ -21,3 +21,4 @@ script bug472534.js
 script bug496985.js
 script bug566661.js
 script iterator-in-catch.js
+script strict-function-statements.js

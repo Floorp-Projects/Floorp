@@ -455,8 +455,6 @@ WrapEscapingClosure(JSContext *cx, JSStackFrame *fp, JSFunction *fun)
          * immediate operand.
          */
         switch (op) {
-          case JSOP_GETUPVAR:       *pc = JSOP_GETUPVAR_DBG; break;
-          case JSOP_CALLUPVAR:      *pc = JSOP_CALLUPVAR_DBG; break;
           case JSOP_GETFCSLOT:      *pc = JSOP_GETUPVAR_DBG; break;
           case JSOP_CALLFCSLOT:     *pc = JSOP_CALLUPVAR_DBG; break;
           case JSOP_DEFFUN_FC:      *pc = JSOP_DEFFUN_DBGFC; break;
@@ -1077,6 +1075,12 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
 {
     JSObject &callobj = fp->callObj();
 
+    /*
+     * Strict mode eval frames have Call objects to put.  Normal eval frames
+     * never put a Call object.
+     */
+    JS_ASSERT(fp->isEvalFrame() == callobj.callIsForEval());
+
     /* Get the arguments object to snapshot fp's actual argument values. */
     if (fp->hasArgsObj()) {
         if (!fp->hasOverriddenArgs())
@@ -1084,53 +1088,62 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
         js_PutArgsObject(cx, fp);
     }
 
-    JSFunction *fun = fp->fun();
-    JS_ASSERT(fun == callobj.getCallObjCalleeFunction());
+    JSScript *script = fp->script();
+    Bindings &bindings = script->bindings;
 
-    Bindings &bindings = fun->script()->bindings;
-    uintN n = bindings.countArgsAndVars();
+    if (callobj.callIsForEval()) {
+        JS_ASSERT(script->strictModeCode);
+        JS_ASSERT(bindings.countArgs() == 0);
 
-    if (n != 0) {
-        JS_ASSERT(JSFunction::CLASS_RESERVED_SLOTS + n <= callobj.numSlots());
+        /* This could be optimized as below, but keep it simple for now. */
+        CopyValuesToCallObject(callobj, 0, NULL, bindings.countVars(), fp->slots());
+    } else {
+        JSFunction *fun = fp->fun();
+        JS_ASSERT(fun == callobj.getCallObjCalleeFunction());
+        JS_ASSERT(script == fun->script());
 
-        uint32 nvars = bindings.countVars();
-        uint32 nargs = bindings.countArgs();
-        JS_ASSERT(fun->nargs == nargs);
-        JS_ASSERT(nvars + nargs == n);
+        if (uintN n = bindings.countArgsAndVars()) {
+            JS_ASSERT(JSObject::CALL_RESERVED_SLOTS + n <= callobj.numSlots());
 
-        JSScript *script = fun->script();
-        if (script->usesEval
+            uint32 nvars = bindings.countVars();
+            uint32 nargs = bindings.countArgs();
+            JS_ASSERT(fun->nargs == nargs);
+            JS_ASSERT(nvars + nargs == n);
+
+            JSScript *script = fun->script();
+            if (script->usesEval
 #ifdef JS_METHODJIT
-            || script->debugMode
+                || script->debugMode
 #endif
-            ) {
-            CopyValuesToCallObject(callobj, nargs, fp->formalArgs(), nvars, fp->slots());
-        } else {
-            /*
-             * For each arg & var that is closed over, copy it from the stack
-             * into the call object.
-             */
-            uint32 nclosed = script->nClosedArgs;
-            for (uint32 i = 0; i < nclosed; i++) {
-                uint32 e = script->getClosedArg(i);
-                callobj.setSlot(JSObject::CALL_RESERVED_SLOTS + e, fp->formalArg(e));
-            }
+                ) {
+                CopyValuesToCallObject(callobj, nargs, fp->formalArgs(), nvars, fp->slots());
+            } else {
+                /*
+                 * For each arg & var that is closed over, copy it from the stack
+                 * into the call object.
+                 */
+                uint32 nclosed = script->nClosedArgs;
+                for (uint32 i = 0; i < nclosed; i++) {
+                    uint32 e = script->getClosedArg(i);
+                    callobj.setSlot(JSObject::CALL_RESERVED_SLOTS + e, fp->formalArg(e));
+                }
 
-            nclosed = script->nClosedVars;
-            for (uint32 i = 0; i < nclosed; i++) {
-                uint32 e = script->getClosedVar(i);
-                callobj.setSlot(JSObject::CALL_RESERVED_SLOTS + nargs + e, fp->slots()[e]);
+                nclosed = script->nClosedVars;
+                for (uint32 i = 0; i < nclosed; i++) {
+                    uint32 e = script->getClosedVar(i);
+                    callobj.setSlot(JSObject::CALL_RESERVED_SLOTS + nargs + e, fp->slots()[e]);
+                }
             }
         }
-    }
 
-    /* Clear private pointers to fp, which is about to go away (js_Invoke). */
-    if (js_IsNamedLambda(fun)) {
-        JSObject *env = callobj.getParent();
+        /* Clear private pointers to fp, which is about to go away (js_Invoke). */
+        if (js_IsNamedLambda(fun)) {
+            JSObject *env = callobj.getParent();
 
-        JS_ASSERT(env->getClass() == &js_DeclEnvClass);
-        JS_ASSERT(env->getPrivate() == fp);
-        env->setPrivate(NULL);
+            JS_ASSERT(env->getClass() == &js_DeclEnvClass);
+            JS_ASSERT(env->getPrivate() == fp);
+            env->setPrivate(NULL);
+        }
     }
 
     callobj.setPrivate(NULL);
@@ -1211,30 +1224,25 @@ SetCallArg(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 }
 
 JSBool
-GetFlatUpvar(JSContext *cx, JSObject *obj, jsid id, Value *vp)
+GetCallUpvar(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     JS_ASSERT((int16) JSID_TO_INT(id) == JSID_TO_INT(id));
     uintN i = (uint16) JSID_TO_INT(id);
 
-    JSObject *callee = obj->getCallObjCallee();
-    JS_ASSERT(callee);
-
-    *vp = callee->getFlatClosureUpvar(i);
+    *vp = obj->getCallObjCallee()->getFlatClosureUpvar(i);
     return true;
 }
 
 JSBool
-SetFlatUpvar(JSContext *cx, JSObject *obj, jsid id, Value *vp)
+SetCallUpvar(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     JS_ASSERT((int16) JSID_TO_INT(id) == JSID_TO_INT(id));
     uintN i = (uint16) JSID_TO_INT(id);
 
-    JSObject *callee = obj->getCallObjCallee();
-    JS_ASSERT(callee);
+    Value *up = &obj->getCallObjCallee()->getFlatClosureUpvar(i);
 
-    Value *upvarp = &callee->getFlatClosureUpvar(i);
-    GC_POKE(cx, *upvarp);
-    *upvarp = *vp;
+    GC_POKE(cx, *up);
+    *up = *vp;
     return true;
 }
 
@@ -1360,8 +1368,7 @@ static void
 call_trace(JSTracer *trc, JSObject *obj)
 {
     JS_ASSERT(obj->isCall());
-    JSStackFrame *fp = (JSStackFrame *) obj->getPrivate();
-    if (fp) {
+    if (JSStackFrame *fp = obj->maybeCallObjStackFrame()) {
         /*
          * FIXME: Hide copies of stack values rooted by fp from the Cycle
          * Collector, which currently lacks a non-stub Unlink implementation
@@ -1370,7 +1377,7 @@ call_trace(JSTracer *trc, JSObject *obj)
          * hiding hack.
          */
         uintN first = JSObject::CALL_RESERVED_SLOTS;
-        uintN count = fp->fun()->script()->bindings.countArgsAndVars();
+        uintN count = fp->script()->bindings.countArgsAndVars();
 
         JS_ASSERT(obj->numSlots() >= first + count);
         SetValueRangeToUndefined(obj->getSlots() + first, count);
@@ -2780,16 +2787,20 @@ js_AllocFlatClosure(JSContext *cx, JSFunction *fun, JSObject *scopeChain)
 JS_DEFINE_CALLINFO_3(extern, OBJECT, js_AllocFlatClosure,
                      CONTEXT, FUNCTION, OBJECT, 0, nanojit::ACCSET_STORE_ANY)
 
-JS_REQUIRES_STACK JSObject *
+JSObject *
 js_NewFlatClosure(JSContext *cx, JSFunction *fun, JSOp op, size_t oplen)
 {
     /*
-     * Flat closures can be partial, they may need to search enclosing scope
-     * objects via JSOP_NAME, etc.
+     * Flat closures cannot yet be partial, that is, all upvars must be copied,
+     * or the closure won't be flattened. Therefore they do not need to search
+     * enclosing scope objects via JSOP_NAME, etc.
+     *
+     * FIXME: bug 545759 proposes to enable partial flat closures. Fixing this
+     * bug requires a GetScopeChainFast call here, along with JS_REQUIRES_STACK
+     * annotations on this function's prototype and definition.
      */
-    JSObject *scopeChain = GetScopeChainFast(cx, cx->fp(), op, oplen);
-    if (!scopeChain)
-        return NULL;
+    VOUCH_DOES_NOT_REQUIRE_STACK();
+    JSObject *scopeChain = &cx->fp()->scopeChain();
 
     JSObject *closure = js_AllocFlatClosure(cx, fun, scopeChain);
     if (!closure || !fun->script()->bindings.hasUpvars())

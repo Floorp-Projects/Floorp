@@ -966,12 +966,12 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
         initialVarObj = (cx->options & JSOPTION_VAROBJFIX) ? chain->getGlobal() : chain;
     }
 
-#if 0 /* to be reenabled shortly when this works */
     /*
      * Strict mode eval code receives its own, fresh lexical environment; thus
      * strict mode eval can't mutate its calling frame's binding set.
      */
-    if (script->strictModeCode) {
+    if ((flags & JSFRAME_EVAL) && script->strictModeCode) {
+        AutoScriptRooter root(cx, script);
         initialVarObj = NewCallObject(cx, &script->bindings, *initialVarObj, NULL);
         if (!initialVarObj)
             return false;
@@ -982,7 +982,6 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
             frame.fp()->clearCallObj();
         frame.fp()->setScopeChainAndCallObj(*initialVarObj);
     }
-#endif
     JS_ASSERT(!initialVarObj->getOps()->defineProperty);
 
 #if JS_HAS_SHARP_VARS
@@ -2132,9 +2131,8 @@ AssertValidPropertyCacheHit(JSContext *cx, JSScript *script, JSFrameRegs& regs,
  * same way as non-call bytecodes.
  */
 JS_STATIC_ASSERT(JSOP_NAME_LENGTH == JSOP_CALLNAME_LENGTH);
-JS_STATIC_ASSERT(JSOP_GETUPVAR_LENGTH == JSOP_CALLUPVAR_LENGTH);
+JS_STATIC_ASSERT(JSOP_GETUPVAR_DBG_LENGTH == JSOP_GETFCSLOT_LENGTH);
 JS_STATIC_ASSERT(JSOP_GETUPVAR_DBG_LENGTH == JSOP_CALLUPVAR_DBG_LENGTH);
-JS_STATIC_ASSERT(JSOP_GETUPVAR_DBG_LENGTH == JSOP_GETUPVAR_LENGTH);
 JS_STATIC_ASSERT(JSOP_GETFCSLOT_LENGTH == JSOP_CALLFCSLOT_LENGTH);
 JS_STATIC_ASSERT(JSOP_GETARG_LENGTH == JSOP_CALLARG_LENGTH);
 JS_STATIC_ASSERT(JSOP_GETLOCAL_LENGTH == JSOP_CALLLOCAL_LENGTH);
@@ -5289,22 +5287,6 @@ BEGIN_CASE(JSOP_SETLOCAL)
     regs.fp->slots()[slot] = regs.sp[-1];
 }
 END_SET_CASE(JSOP_SETLOCAL)
-
-BEGIN_CASE(JSOP_GETUPVAR)
-BEGIN_CASE(JSOP_CALLUPVAR)
-{
-    JSUpvarArray *uva = script->upvars();
-
-    uintN index = GET_UINT16(regs.pc);
-    JS_ASSERT(index < uva->length);
-
-    const Value &rval = GetUpvar(cx, script->staticLevel, uva->vector[index]);
-    PUSH_COPY(rval);
-
-    if (op == JSOP_CALLUPVAR)
-        PUSH_UNDEFINED();
-}
-END_CASE(JSOP_GETUPVAR)
 
 BEGIN_CASE(JSOP_GETUPVAR_DBG)
 BEGIN_CASE(JSOP_CALLUPVAR_DBG)

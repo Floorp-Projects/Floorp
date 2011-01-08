@@ -2996,6 +2996,8 @@ NewArray(JSContext *cx, jsuint length, JSObject *proto)
 
     gc::FinalizeKind kind = GuessObjectGCKind(length, true);
     JSObject *obj = detail::NewObject<WithProto::Class, false>(cx, &js_ArrayClass, proto, NULL, kind);
+    if (!obj)
+        return NULL;
 
     obj->setArrayLength(length);
 
@@ -3027,6 +3029,9 @@ JSObject *
 NewDenseCopiedArray(JSContext *cx, uintN length, Value *vp, JSObject *proto)
 {
     JSObject* obj = NewArray<true>(cx, length, proto);
+    if (!obj)
+        return NULL;
+
     JS_ASSERT(obj->getDenseArrayCapacity() >= length);
 
     if (vp)
