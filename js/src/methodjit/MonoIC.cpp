@@ -1118,7 +1118,7 @@ JITScript::nukeScriptDependentICs()
 }
 
 void
-JITScript::sweepCallICs(bool purgeAll)
+JITScript::sweepCallICs(JSContext *cx, bool purgeAll)
 {
     Repatcher repatcher(this);
 
@@ -1137,9 +1137,9 @@ JITScript::sweepCallICs(bool purgeAll)
          * precisely GC call ICs while keeping the identity guard safe.
          */
         bool fastFunDead = ic.fastGuardedObject &&
-            (purgeAll || IsAboutToBeFinalized(ic.fastGuardedObject));
+            (purgeAll || IsAboutToBeFinalized(cx, ic.fastGuardedObject));
         bool nativeDead = ic.fastGuardedNative &&
-            (purgeAll || IsAboutToBeFinalized(ic.fastGuardedNative));
+            (purgeAll || IsAboutToBeFinalized(cx, ic.fastGuardedNative));
 
         if (fastFunDead) {
             repatcher.repatch(ic.funGuard, NULL);
@@ -1189,12 +1189,12 @@ JITScript::sweepCallICs(bool purgeAll)
 }
 
 void
-ic::SweepCallICs(JSScript *script, bool purgeAll)
+ic::SweepCallICs(JSContext *cx, JSScript *script, bool purgeAll)
 {
     if (script->jitNormal)
-        script->jitNormal->sweepCallICs(purgeAll);
+        script->jitNormal->sweepCallICs(cx, purgeAll);
     if (script->jitCtor)
-        script->jitCtor->sweepCallICs(purgeAll);
+        script->jitCtor->sweepCallICs(cx, purgeAll);
 }
 
 #endif /* JS_MONOIC */

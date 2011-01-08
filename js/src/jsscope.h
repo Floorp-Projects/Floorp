@@ -296,7 +296,7 @@ struct Shape : public JSObjectMap
     friend struct ::JSFunction;
     friend class js::PropertyTree;
     friend class js::Bindings;
-    friend bool HasUnreachableGCThings(TreeFragment *f);
+    friend bool IsShapeAboutToBeFinalized(JSContext *cx, const js::Shape *shape);
 
   protected:
     mutable uint32 numSearches;     /* Only updated until it reaches HASH_MIN_SEARCHES. */

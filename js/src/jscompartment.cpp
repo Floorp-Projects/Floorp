@@ -57,6 +57,9 @@ using namespace js::gc;
 JSCompartment::JSCompartment(JSRuntime *rt)
   : rt(rt),
     principals(NULL),
+    gcBytes(0),
+    gcTriggerBytes(0),
+    gcLastBytes(0),
     data(NULL),
     marked(false),
     active(false),
@@ -385,22 +388,29 @@ ScriptPoolDestroyed(JSContext *cx, mjit::JITScript *jit,
 #endif
 
 void
+JSCompartment::mark(JSTracer *trc)
+{
+    for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront())
+        MarkValue(trc, e.front().key, "cross-compartment wrapper");
+}
+
+void
 JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
 {
     chunk = NULL;
     /* Remove dead wrappers from the table. */
     for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
-        JS_ASSERT_IF(IsAboutToBeFinalized(e.front().key.toGCThing()) &&
-                     !IsAboutToBeFinalized(e.front().value.toGCThing()),
+        JS_ASSERT_IF(IsAboutToBeFinalized(cx, e.front().key.toGCThing()) &&
+                     !IsAboutToBeFinalized(cx, e.front().value.toGCThing()),
                      e.front().key.isString());
-        if (IsAboutToBeFinalized(e.front().key.toGCThing()) ||
-            IsAboutToBeFinalized(e.front().value.toGCThing())) {
+        if (IsAboutToBeFinalized(cx, e.front().key.toGCThing()) ||
+            IsAboutToBeFinalized(cx, e.front().value.toGCThing())) {
             e.removeFront();
         }
     }
 
 #ifdef JS_TRACER
-    traceMonitor.sweep();
+    traceMonitor.sweep(cx);
 #endif
 
 #if defined JS_METHODJIT && defined JS_MONOIC
@@ -418,7 +428,7 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
     for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
         JSScript *script = reinterpret_cast<JSScript *>(cursor);
         if (script->hasJITCode()) {
-            mjit::ic::SweepCallICs(script, discardScripts);
+            mjit::ic::SweepCallICs(cx, script, discardScripts);
             if (discardScripts) {
                 if (script->jitNormal &&
                     ScriptPoolDestroyed(cx, script->jitNormal, releaseInterval, counter)) {
