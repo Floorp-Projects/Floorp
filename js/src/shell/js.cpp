@@ -4250,7 +4250,11 @@ Deserialize(JSContext *cx, uintN argc, jsval *vp)
 JSBool
 MJitStats(JSContext *cx, uintN argc, jsval *vp)
 {
-    JS_SET_RVAL(cx, vp, INT_TO_JSVAL(cx->runtime->mjitMemoryUsed));
+#ifdef JS_METHODJIT
+     JS_SET_RVAL(cx, vp, INT_TO_JSVAL(cx->runtime->mjitMemoryUsed));
+#else
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+#endif
     return true;
 }
 
