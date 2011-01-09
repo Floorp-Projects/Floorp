@@ -62,6 +62,12 @@ extern "C" {
 #define SA_PER_STREAM_VOLUME 1
 #endif
 
+// Android's audio backend is not available in content processes, so audio must
+// be remoted to the parent chrome process.
+#if defined(ANDROID) && defined(MOZ_IPC)
+#define REMOTE_AUDIO 1
+#endif
+
 using mozilla::TimeStamp;
 
 #ifdef PR_LOGGING
@@ -312,7 +318,7 @@ nsAudioStream::GetThread()
 
 nsAudioStream* nsAudioStream::AllocateStream()
 {
-#ifdef MOZ_IPC
+#if defined(REMOTE_AUDIO)
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     return new nsAudioStreamRemote();
   }
