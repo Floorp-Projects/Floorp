@@ -364,7 +364,7 @@ class Compiler : public BaseCompiler
 
     /* Opcode handlers. */
     bool jumpAndTrace(Jump j, jsbytecode *target, Jump *slow = NULL);
-    void jsop_bindname(uint32 index, bool usePropCache);
+    void jsop_bindname(JSAtom *atom, bool usePropCache);
     void jsop_setglobal(uint32 index);
     void jsop_getglobal(uint32 index);
     void jsop_getprop_slow(JSAtom *atom, bool usePropCache = true);
@@ -391,8 +391,8 @@ class Compiler : public BaseCompiler
     void jsop_eleminc(JSOp op, VoidStub);
     void jsop_getgname(uint32 index);
     void jsop_getgname_slow(uint32 index);
-    void jsop_setgname(uint32 index, bool usePropertyCache);
-    void jsop_setgname_slow(uint32 index, bool usePropertyCache);
+    void jsop_setgname(JSAtom *atom, bool usePropertyCache);
+    void jsop_setgname_slow(JSAtom *atom, bool usePropertyCache);
     void jsop_bindgname();
     void jsop_setelem_slow();
     void jsop_getelem_slow();
@@ -415,6 +415,9 @@ class Compiler : public BaseCompiler
     void emitEval(uint32 argc);
     void jsop_arguments();
     void jsop_tableswitch(jsbytecode *pc);
+    void jsop_forprop(JSAtom *atom);
+    void jsop_forname(JSAtom *atom);
+    void jsop_forgname(JSAtom *atom);
 
     /* Fast arithmetic. */
     void jsop_binary(JSOp op, VoidStub stub);
@@ -452,7 +455,6 @@ class Compiler : public BaseCompiler
     void jsop_rsh_const_unknown(FrameEntry *lhs, FrameEntry *rhs);
     void jsop_rsh_unknown_const(FrameEntry *lhs, FrameEntry *rhs);
     void jsop_rsh_unknown_any(FrameEntry *lhs, FrameEntry *rhs);
-    void jsop_globalinc(JSOp op, uint32 index);
     void jsop_mod();
     void jsop_neg();
     void jsop_bitnot();

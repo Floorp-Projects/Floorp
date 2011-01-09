@@ -1475,7 +1475,6 @@ DecompileDestructuringLHS(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc,
         LOCAL_ASSERT(*pc == JSOP_POP);
         break;
 
-      case JSOP_SETGLOBAL:
       case JSOP_SETARG:
       case JSOP_SETLOCAL:
         LOCAL_ASSERT(pc[oplen] == JSOP_POP || pc[oplen] == JSOP_POPN);
@@ -1487,8 +1486,6 @@ DecompileDestructuringLHS(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc,
         if (op == JSOP_SETARG) {
             atom = GetArgOrVarAtom(jp, GET_SLOTNO(pc));
             LOCAL_ASSERT(atom);
-        } else if (op == JSOP_SETGLOBAL) {
-            atom = jp->script->getGlobalAtom(GET_SLOTNO(pc));
         } else if (IsVarSlot(jp, pc, &i)) {
             atom = GetArgOrVarAtom(jp, i);
             LOCAL_ASSERT(atom);
@@ -3429,10 +3426,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 xval = "&&";
                 goto do_logical_connective;
 
-              case JSOP_FORGLOBAL:
-                atom = jp->script->getGlobalAtom(GET_SLOTNO(pc));
-                goto do_forname;
-
               case JSOP_FORARG:
                 sn = NULL;
                 i = GET_ARGNO(pc);
@@ -3455,9 +3448,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 break;
 
               case JSOP_FORNAME:
+              case JSOP_FORGNAME:
                 LOAD_ATOM(0);
 
-              do_forname:
                 sn = js_GetSrcNote(jp->script, pc);
                 todo = SprintCString(&ss->sprinter, VarPrefix(sn));
                 if (todo < 0 || !QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0))
@@ -3568,10 +3561,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
               case JSOP_SETARG:
                 atom = GetArgOrVarAtom(jp, GET_ARGNO(pc));
                 LOCAL_ASSERT(atom);
-                goto do_setname;
-
-              case JSOP_SETGLOBAL:
-                atom = jp->script->getGlobalAtom(GET_SLOTNO(pc));
                 goto do_setname;
 
               case JSOP_SETCONST:
@@ -3745,11 +3734,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 LOCAL_ASSERT(atom);
                 goto do_incatom;
 
-              case JSOP_INCGLOBAL:
-              case JSOP_DECGLOBAL:
-                atom = jp->script->getGlobalAtom(GET_SLOTNO(pc));
-                goto do_incatom;
-
               case JSOP_INCNAME:
               case JSOP_DECNAME:
               case JSOP_INCGNAME:
@@ -3804,11 +3788,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
               case JSOP_ARGDEC:
                 atom = GetArgOrVarAtom(jp, GET_ARGNO(pc));
                 LOCAL_ASSERT(atom);
-                goto do_atominc;
-
-              case JSOP_GLOBALINC:
-              case JSOP_GLOBALDEC:
-                atom = jp->script->getGlobalAtom(GET_SLOTNO(pc));
                 goto do_atominc;
 
               case JSOP_NAMEINC:

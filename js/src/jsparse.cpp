@@ -3595,18 +3595,7 @@ DefineGlobal(JSParseNode *pn, JSCodeGenerator *cg, JSAtom *atom)
         }
     }
 
-    UpvarCookie cookie;
-    if (!cg->addGlobalUse(atom, ALE_INDEX(ale), &cookie))
-        return false;
-
-    if (!cookie.isFree()) {
-        pn->pn_cookie.set(cookie);
-        pn->pn_dflags |= PND_GVAR;
-        if (pn->pn_type != TOK_FUNCTION) {
-            pn->pn_op = JSOP_GETGLOBAL;
-            pn->pn_dflags |= PND_BOUND;
-        }
-    }
+    pn->pn_dflags |= PND_GVAR;
 
     return true;
 }
@@ -3952,11 +3941,9 @@ BindDestructuringVar(JSContext *cx, BindData *data, JSParseNode *pn,
      * done by the data->binder function.
      */
     if (pn->pn_dflags & PND_BOUND) {
-        JS_ASSERT_IF((pn->pn_dflags & PND_GVAR), PN_OP(pn) == JSOP_GETGLOBAL);
+        JS_ASSERT(!(pn->pn_dflags & PND_GVAR));
         pn->pn_op = (pn->pn_op == JSOP_ARGUMENTS)
                     ? JSOP_SETNAME
-                    : (pn->pn_dflags & PND_GVAR)
-                    ? JSOP_SETGLOBAL
                     : JSOP_SETLOCAL;
     } else {
         pn->pn_op = (data->op == JSOP_DEFCONST)
@@ -6276,12 +6263,10 @@ Parser::variables(bool inLetHead)
                 pn2->pn_expr = init;
             }
 
-            JS_ASSERT_IF((pn2->pn_dflags & PND_GVAR), PN_OP(pn2) == JSOP_GETGLOBAL);
+            JS_ASSERT_IF(pn2->pn_dflags & PND_GVAR, !(pn2->pn_dflags & PND_BOUND));
 
             pn2->pn_op = (PN_OP(pn2) == JSOP_ARGUMENTS)
                          ? JSOP_SETNAME
-                         : (pn2->pn_dflags & PND_GVAR)
-                         ? JSOP_SETGLOBAL
                          : (pn2->pn_dflags & PND_BOUND)
                          ? JSOP_SETLOCAL
                          : (data.op == JSOP_DEFCONST)
