@@ -1626,7 +1626,7 @@ class TraceRecorder
              * could lazily resolve. Since resolving adds properties to
              * reserved slots, the tracer will never have imported them.
              */
-            return tree->globalSlots->offsetOf(nativeGlobalSlot(vp)) == -1;
+            return tree->globalSlots->offsetOf((uint16)nativeGlobalSlot(vp)) == -1;
         }
         pendingGlobalSlotToSet = -1;
         return true;
