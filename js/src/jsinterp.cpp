@@ -3154,6 +3154,7 @@ BEGIN_CASE(JSOP_FORLOCAL)
 END_CASE(JSOP_FORLOCAL)
 
 BEGIN_CASE(JSOP_FORNAME)
+BEGIN_CASE(JSOP_FORGNAME)
 {
     JS_ASSERT(regs.sp - 1 >= regs.fp->base());
     JSAtom *atom;
@@ -4043,26 +4044,8 @@ do_incop:
 
 {
     int incr, incr2;
-    Value *vp;
-
-BEGIN_CASE(JSOP_INCGLOBAL)
-    incr =  1; incr2 =  1; goto do_bound_global_incop;
-BEGIN_CASE(JSOP_DECGLOBAL)
-    incr = -1; incr2 = -1; goto do_bound_global_incop;
-BEGIN_CASE(JSOP_GLOBALINC)
-    incr =  1; incr2 =  0; goto do_bound_global_incop;
-BEGIN_CASE(JSOP_GLOBALDEC)
-    incr = -1; incr2 =  0; goto do_bound_global_incop;
-
-  do_bound_global_incop:
     uint32 slot;
-    slot = GET_SLOTNO(regs.pc);
-    slot = script->getGlobalSlot(slot);
-    JSObject *obj;
-    obj = regs.fp->scopeChain().getGlobal();
-    vp = &obj->getSlotRef(slot);
-    goto do_int_fast_incop;
-END_CASE(JSOP_INCGLOBAL)
+    Value *vp;
 
     /* Position cases so the most frequent i++ does not need a jump. */
 BEGIN_CASE(JSOP_DECARG)
@@ -4075,7 +4058,6 @@ BEGIN_CASE(JSOP_ARGINC)
     incr =  1; incr2 =  0;
 
   do_arg_incop:
-    // If we initialize in the declaration, MSVC complains that the labels skip init.
     slot = GET_ARGNO(regs.pc);
     JS_ASSERT(slot < regs.fp->numFormalArgs());
     METER_SLOT_OP(op, slot);
@@ -5355,31 +5337,6 @@ BEGIN_CASE(JSOP_CALLGLOBAL)
         PUSH_UNDEFINED();
 }
 END_CASE(JSOP_GETGLOBAL)
-
-BEGIN_CASE(JSOP_FORGLOBAL)
-{
-    Value rval;
-    if (!IteratorNext(cx, &regs.sp[-1].toObject(), &rval))
-        goto error;
-    PUSH_COPY(rval);
-    uint32 slot = script->getGlobalSlot(GET_SLOTNO(regs.pc));
-    JSObject *obj = regs.fp->scopeChain().getGlobal();
-    if (!obj->methodWriteBarrier(cx, slot, rval))
-        goto error;
-    obj->nativeSetSlot(slot, rval);
-    regs.sp--;
-}
-END_CASE(JSOP_FORGLOBAL)
-
-BEGIN_CASE(JSOP_SETGLOBAL)
-{
-    uint32 slot = script->getGlobalSlot(GET_SLOTNO(regs.pc));
-    JSObject *obj = regs.fp->scopeChain().getGlobal();
-    if (!obj->methodWriteBarrier(cx, slot, regs.sp[-1]))
-        goto error;
-    obj->nativeSetSlot(slot, regs.sp[-1]);
-}
-END_SET_CASE(JSOP_SETGLOBAL)
 
 BEGIN_CASE(JSOP_DEFCONST)
 BEGIN_CASE(JSOP_DEFVAR)

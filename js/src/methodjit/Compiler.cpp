@@ -1655,32 +1655,15 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_LOCALDEC)
 
           BEGIN_CASE(JSOP_FORNAME)
-            // Before: ITER
-            // After:  ITER SCOPEOBJ
-            jsop_bindname(fullAtomIndex(PC), false);
+            jsop_forname(script->getAtom(fullAtomIndex(PC)));
+          END_CASE(JSOP_FORNAME)
 
-            // Fall through to FORPROP.
+          BEGIN_CASE(JSOP_FORGNAME)
+            jsop_forgname(script->getAtom(fullAtomIndex(PC)));
+          END_CASE(JSOP_FORGNAME)
 
           BEGIN_CASE(JSOP_FORPROP)
-            // Before: ITER OBJ
-            // After:  ITER OBJ ITER
-            frame.dupAt(-2);
-
-            // Before: ITER OBJ ITER 
-            // After:  ITER OBJ ITER VALUE
-            iterNext();
-
-            // Before: ITER OBJ ITER VALUE
-            // After:  ITER OBJ VALUE
-            frame.shimmy(1);
-
-            // Before: ITER OBJ VALUE
-            // After:  ITER VALUE
-            jsop_setprop(script->getAtom(fullAtomIndex(PC)), false);
-
-            // Before: ITER VALUE
-            // After:  ITER
-            frame.pop();
+            jsop_forprop(script->getAtom(fullAtomIndex(PC)));
           END_CASE(JSOP_FORPROP)
 
           BEGIN_CASE(JSOP_FORELEM)
@@ -1690,7 +1673,7 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_FORELEM)
 
           BEGIN_CASE(JSOP_BINDNAME)
-            jsop_bindname(fullAtomIndex(PC), true);
+            jsop_bindname(script->getAtom(fullAtomIndex(PC)), true);
           END_CASE(JSOP_BINDNAME)
 
           BEGIN_CASE(JSOP_SETPROP)
@@ -1926,7 +1909,7 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_GETGNAME)
 
           BEGIN_CASE(JSOP_SETGNAME)
-            jsop_setgname(fullAtomIndex(PC), true);
+            jsop_setgname(script->getAtom(fullAtomIndex(PC)), true);
           END_CASE(JSOP_SETGNAME)
 
           BEGIN_CASE(JSOP_REGEXP)
@@ -2040,25 +2023,6 @@ mjit::Compiler::generateMethod()
                 frame.push(UndefinedValue());
           END_CASE(JSOP_GETGLOBAL)
 
-          BEGIN_CASE(JSOP_SETGLOBAL)
-            jsop_setglobal(GET_SLOTNO(PC));
-          END_CASE(JSOP_SETGLOBAL)
-
-          BEGIN_CASE(JSOP_INCGLOBAL)
-          BEGIN_CASE(JSOP_DECGLOBAL)
-          BEGIN_CASE(JSOP_GLOBALINC)
-          BEGIN_CASE(JSOP_GLOBALDEC)
-            /* Advances PC automatically. */
-            jsop_globalinc(op, GET_SLOTNO(PC));
-            break;
-          END_CASE(JSOP_GLOBALINC)
-
-          BEGIN_CASE(JSOP_FORGLOBAL)
-            iterNext();
-            jsop_setglobal(GET_SLOTNO(PC));
-            frame.pop();
-          END_CASE(JSOP_FORGLOBAL)
-
           default:
            /* Sorry, this opcode isn't implemented yet. */
 #ifdef JS_METHODJIT_SPEW
@@ -2142,21 +2106,6 @@ mjit::Compiler::jumpInScript(Jump j, jsbytecode *pc)
         return true;
     }
     return branchPatches.append(BranchPatch(j, pc));
-}
-
-void
-mjit::Compiler::jsop_setglobal(uint32 index)
-{
-    JS_ASSERT(globalObj);
-    uint32 slot = script->getGlobalSlot(index);
-
-    FrameEntry *fe = frame.peek(-1);
-    bool popped = PC[JSOP_SETGLOBAL_LENGTH] == JSOP_POP;
-
-    RegisterID reg = frame.allocReg();
-    Address address = masm.objSlotRef(globalObj, reg, slot);
-    frame.storeTo(fe, address, popped);
-    frame.freeReg(reg);
 }
 
 void
@@ -3672,7 +3621,7 @@ mjit::Compiler::jsop_xname(JSAtom *atom)
 }
 
 void
-mjit::Compiler::jsop_bindname(uint32 index, bool usePropCache)
+mjit::Compiler::jsop_bindname(JSAtom *atom, bool usePropCache)
 {
     PICGenInfo pic(ic::PICInfo::BIND, JSOp(*PC), usePropCache);
 
@@ -3685,7 +3634,7 @@ mjit::Compiler::jsop_bindname(uint32 index, bool usePropCache)
     pic.shapeReg = frame.allocReg();
     pic.objReg = frame.allocReg();
     pic.typeReg = Registers::ReturnReg;
-    pic.atom = script->getAtom(index);
+    pic.atom = atom;
     pic.hasTypeCheck = false;
     pic.fastPathStart = masm.label();
 
@@ -3761,7 +3710,7 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache)
 }
 
 void
-mjit::Compiler::jsop_bindname(uint32 index, bool usePropCache)
+mjit::Compiler::jsop_bindname(JSAtom *atom, bool usePropCache)
 {
     RegisterID reg = frame.allocReg();
     Address scopeChain(JSFrameReg, JSStackFrame::offsetOfScopeChain());
@@ -3776,7 +3725,7 @@ mjit::Compiler::jsop_bindname(uint32 index, bool usePropCache)
     if (usePropCache) {
         OOL_STUBCALL(stubs::BindName);
     } else {
-        stubcc.masm.move(ImmPtr(script->getAtom(index)), Registers::ArgReg1);
+        stubcc.masm.move(ImmPtr(atom), Registers::ArgReg1);
         OOL_STUBCALL(stubs::BindNameNoCache);
     }
 
@@ -3818,6 +3767,8 @@ mjit::Compiler::jsop_this()
 void
 mjit::Compiler::jsop_gnameinc(JSOp op, VoidStubAtom stub, uint32 index)
 {
+    JSAtom *atom = script->getAtom(index);
+
 #if defined JS_MONOIC
     jsbytecode *next = &PC[JSOP_GNAMEINC_LENGTH];
     bool pop = (JSOp(*next) == JSOP_POP) && !analysis->jumpTarget(next);
@@ -3848,7 +3799,7 @@ mjit::Compiler::jsop_gnameinc(JSOp op, VoidStubAtom stub, uint32 index)
         frame.shift(-1);
         // OBJ V+1
 
-        jsop_setgname(index, false);
+        jsop_setgname(atom, false);
         // V+1
 
         if (pop)
@@ -3883,7 +3834,7 @@ mjit::Compiler::jsop_gnameinc(JSOp op, VoidStubAtom stub, uint32 index)
         frame.shift(-1);
         // N OBJ N+1
 
-        jsop_setgname(index, false);
+        jsop_setgname(atom, false);
         // N N+1
 
         frame.pop();
@@ -3893,7 +3844,6 @@ mjit::Compiler::jsop_gnameinc(JSOp op, VoidStubAtom stub, uint32 index)
     if (pop)
         PC += JSOP_POP_LENGTH;
 #else
-    JSAtom *atom = script->getAtom(index);
     prepareStubCall(Uses(0));
     masm.move(ImmPtr(atom), Registers::ArgReg1);
     INLINE_STUBCALL(stub);
@@ -3925,7 +3875,7 @@ mjit::Compiler::jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index)
         jsop_binary(JSOP_SUB, stubs::Sub);
         // N+1
 
-        jsop_bindname(index, false);
+        jsop_bindname(atom, false);
         // V+1 OBJ
 
         frame.dup2();
@@ -3961,7 +3911,7 @@ mjit::Compiler::jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index)
         jsop_binary(JSOP_ADD, stubs::Add);
         // N N+1
 
-        jsop_bindname(index, false);
+        jsop_bindname(atom, false);
         // N N+1 OBJ
 
         frame.dup2();
@@ -4478,9 +4428,8 @@ mjit::Compiler::jsop_getgname(uint32 index)
 }
 
 void
-mjit::Compiler::jsop_setgname_slow(uint32 index, bool usePropertyCache)
+mjit::Compiler::jsop_setgname_slow(JSAtom *atom, bool usePropertyCache)
 {
-    JSAtom *atom = script->getAtom(index);
     prepareStubCall(Uses(2));
     masm.move(ImmPtr(atom), Registers::ArgReg1);
     if (usePropertyCache)
@@ -4492,7 +4441,7 @@ mjit::Compiler::jsop_setgname_slow(uint32 index, bool usePropertyCache)
 }
 
 void
-mjit::Compiler::jsop_setgname(uint32 index, bool usePropertyCache)
+mjit::Compiler::jsop_setgname(JSAtom *atom, bool usePropertyCache)
 {
 #if defined JS_MONOIC
     FrameEntry *objFe = frame.peek(-2);
@@ -4612,7 +4561,7 @@ mjit::Compiler::jsop_setgname(uint32 index, bool usePropertyCache)
 
     mics.append(mic);
 #else
-    jsop_setgname_slow(index, usePropertyCache);
+    jsop_setgname_slow(atom, usePropertyCache);
 #endif
 }
 
@@ -5061,5 +5010,66 @@ mjit::Compiler::jsop_callelem_slow()
     frame.popn(2);
     frame.pushSynced();
     frame.pushSynced();
+}
+
+void
+mjit::Compiler::jsop_forprop(JSAtom *atom)
+{
+    // Before: ITER OBJ
+    // After:  ITER OBJ ITER
+    frame.dupAt(-2);
+
+    // Before: ITER OBJ ITER 
+    // After:  ITER OBJ ITER VALUE
+    iterNext();
+
+    // Before: ITER OBJ ITER VALUE
+    // After:  ITER OBJ VALUE
+    frame.shimmy(1);
+
+    // Before: ITER OBJ VALUE
+    // After:  ITER VALUE
+    jsop_setprop(atom, false);
+
+    // Before: ITER VALUE
+    // After:  ITER
+    frame.pop();
+}
+
+void
+mjit::Compiler::jsop_forname(JSAtom *atom)
+{
+    // Before: ITER
+    // After:  ITER SCOPEOBJ
+    jsop_bindname(atom, false);
+    jsop_forprop(atom);
+}
+
+void
+mjit::Compiler::jsop_forgname(JSAtom *atom)
+{
+    // Before: ITER
+    // After:  ITER GLOBAL
+    jsop_bindgname();
+
+    // Before: ITER GLOBAL
+    // After:  ITER GLOBAL ITER
+    frame.dupAt(-2);
+
+    // Before: ITER GLOBAL ITER 
+    // After:  ITER GLOBAL ITER VALUE
+    iterNext();
+
+    // Before: ITER GLOBAL ITER VALUE
+    // After:  ITER GLOBAL VALUE
+    frame.shimmy(1);
+
+    // Before: ITER GLOBAL VALUE
+    // After:  ITER VALUE
+    jsop_setgname(atom, false);
+
+    // Before: ITER VALUE
+    // After:  ITER
+    frame.pop();
 }
 

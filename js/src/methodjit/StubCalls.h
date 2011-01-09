@@ -176,15 +176,6 @@ void JS_FASTCALL ArgSub(VMFrame &f, uint32 n);
 void JS_FASTCALL EnterBlock(VMFrame &f, JSObject *obj);
 void JS_FASTCALL LeaveBlock(VMFrame &f, JSObject *blockChain);
 
-void JS_FASTCALL VpInc(VMFrame &f, Value *vp);
-void JS_FASTCALL VpDec(VMFrame &f, Value *vp);
-void JS_FASTCALL DecVp(VMFrame &f, Value *vp);
-void JS_FASTCALL IncVp(VMFrame &f, Value *vp);
-void JS_FASTCALL LocalInc(VMFrame &f, uint32 slot);
-void JS_FASTCALL LocalDec(VMFrame &f, uint32 slot);
-void JS_FASTCALL IncLocal(VMFrame &f, uint32 slot);
-void JS_FASTCALL DecLocal(VMFrame &f, uint32 slot);
-
 JSBool JS_FASTCALL LessThan(VMFrame &f);
 JSBool JS_FASTCALL LessEqual(VMFrame &f);
 JSBool JS_FASTCALL GreaterThan(VMFrame &f);
