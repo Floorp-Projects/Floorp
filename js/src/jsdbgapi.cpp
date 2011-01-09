@@ -116,10 +116,10 @@ JS_SetRuntimeDebugMode(JSRuntime *rt, JSBool debug)
     rt->debugMode = debug;
 }
 
+#ifdef JS_METHODJIT
 static void
 PurgeCallICs(JSContext *cx, JSScript *start)
 {
-#ifdef JS_METHODJIT
     for (JSScript *script = start;
          &script->links != &cx->compartment->scripts;
          script = (JSScript *)script->links.next)
@@ -135,8 +135,8 @@ PurgeCallICs(JSContext *cx, JSScript *start)
         if (script->jitCtor)
             script->jitCtor->nukeScriptDependentICs();
     }
-#endif
 }
+#endif
 
 JS_FRIEND_API(JSBool)
 js_SetDebugMode(JSContext *cx, JSBool debug)
