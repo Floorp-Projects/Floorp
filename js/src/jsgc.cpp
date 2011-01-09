@@ -1609,7 +1609,7 @@ AutoGCRooter::trace(JSTracer *trc)
 
 namespace js {
 
-void
+JS_FRIEND_API(void)
 MarkContext(JSTracer *trc, JSContext *acx)
 {
     /* Stack frames and slots are traced by StackSpace::mark. */
