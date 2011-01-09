@@ -2282,7 +2282,7 @@ class AutoGCRooter {
 #ifdef __GNUC__
 # pragma GCC visibility push(default)
 #endif
-    friend void MarkContext(JSTracer *trc, JSContext *acx);
+    friend JS_FRIEND_API(void) MarkContext(JSTracer *trc, JSContext *acx);
     friend void MarkRuntime(JSTracer *trc);
 #ifdef __GNUC__
 # pragma GCC visibility pop
