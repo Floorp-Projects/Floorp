@@ -319,6 +319,7 @@ class OpaqueRenderer {
 public:
   OpaqueRenderer(const nsIntRegion& aUpdateRegion) :
     mUpdateRegion(aUpdateRegion), mDC(NULL) {}
+  ~OpaqueRenderer() { End(); }
   already_AddRefed<gfxWindowsSurface> Begin(LayerD3D9* aLayer);
   void End();
   IDirect3DTexture9* GetTexture() { return mTmpTexture; }
@@ -365,7 +366,11 @@ OpaqueRenderer::Begin(LayerD3D9* aLayer)
 void
 OpaqueRenderer::End()
 {
-  mSurface->ReleaseDC(mDC);
+  if (mSurface && mDC) {
+    mSurface->ReleaseDC(mDC);
+    mSurface = NULL;
+    mDC = NULL;
+  }
 }
 
 static void
@@ -437,12 +442,13 @@ ThebesLayerD3D9::DrawRegion(const nsIntRegion &aRegion, SurfaceMode aMode)
     }
   }
 
-  if (destinationSurface) {
-    nsRefPtr<gfxContext> context = new gfxContext(destinationSurface);
-    context->Translate(gfxPoint(-bounds.x, -bounds.y));
-    LayerManagerD3D9::CallbackInfo cbInfo = mD3DManager->GetCallbackInfo();
-    cbInfo.Callback(this, context, aRegion, nsIntRegion(), cbInfo.CallbackData);
-  }
+  if (!destinationSurface)
+    return;
+
+  nsRefPtr<gfxContext> context = new gfxContext(destinationSurface);
+  context->Translate(gfxPoint(-bounds.x, -bounds.y));
+  LayerManagerD3D9::CallbackInfo cbInfo = mD3DManager->GetCallbackInfo();
+  cbInfo.Callback(this, context, aRegion, nsIntRegion(), cbInfo.CallbackData);
 
   nsAutoTArray<IDirect3DTexture9*,2> srcTextures;
   nsAutoTArray<IDirect3DTexture9*,2> destTextures;
