@@ -1162,7 +1162,7 @@ SessionStoreService.prototype = {
     this.restoreHistoryPrecursor(window, [aTab], [tabState], 0, 0, 0);
   },
 
-  duplicateTab: function sss_duplicateTab(aWindow, aTab) {
+  duplicateTab: function sss_duplicateTab(aWindow, aTab, aDelta) {
     if (!aTab.ownerDocument || !aTab.ownerDocument.defaultView.__SSi ||
         !aWindow.getBrowser)
       throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
@@ -1170,6 +1170,8 @@ SessionStoreService.prototype = {
     var tabState = this._collectTabData(aTab, true);
     var sourceWindow = aTab.ownerDocument.defaultView;
     this._updateTextAndScrollDataForTab(sourceWindow, aTab.linkedBrowser, tabState, true);
+    tabState.index += aDelta;
+    tabState.index = Math.max(1, Math.min(tabState.index, tabState.entries.length));
 
     this._sendWindowStateEvent(aWindow, "Busy");
     let newTab = aTab == aWindow.gBrowser.selectedTab ?
