@@ -43,6 +43,9 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
+// Seconds between maintenance runs.
+const MAINTENANCE_INTERVAL_SECONDS = 7 * 86400;
+
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 /**
@@ -61,9 +64,16 @@ PlacesCategoriesStarter.prototype = {
   {
     switch (aTopic) {
       case "idle-daily":
-        // Run places.sqlite maintenance tasks.
-        Components.utils.import("resource://gre/modules/PlacesDBUtils.jsm");
-        PlacesDBUtils.maintenanceOnIdle();
+        // Once a week run places.sqlite maintenance tasks.
+        let lastMaintenance = 0;
+        try {
+          lastMaintenance = Services.prefs.getIntPref("places.database.lastMaintenance");
+        } catch (ex) {}
+        let nowSeconds = parseInt(Date.now() / 1000);
+        if (lastMaintenance < nowSeconds - MAINTENANCE_INTERVAL_SECONDS) {
+          Components.utils.import("resource://gre/modules/PlacesDBUtils.jsm");
+          PlacesDBUtils.maintenanceOnIdle();
+        }
         break;
       default:
         throw new Error("Trying to handle an unknown category.");
