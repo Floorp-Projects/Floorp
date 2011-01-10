@@ -49,6 +49,7 @@
 
 #include "mozilla/X11Util.h"
 
+#include "prenv.h"
 #include "GLContextProvider.h"
 #include "nsDebug.h"
 #include "nsIWidget.h"
@@ -233,6 +234,15 @@ public:
                     PRBool deleteDrawable,
                     gfxXlibSurface *pixmap = nsnull)
     {
+        const char *glxVendorString = sGLXLibrary.xQueryServerString(display, DefaultScreen(display), GLX_VENDOR);
+        if (strcmp(glxVendorString, "NVIDIA Corporation") &&
+            !PR_GetEnv("MOZ_GLX_IGNORE_BLACKLIST"))
+        {
+          printf("[GLX] currently only allowing the NVIDIA proprietary driver, as other drivers are giving too many crashes. "
+                 "To bypass this, define the MOZ_GLX_IGNORE_BLACKLIST environment variable.\n");
+          return nsnull;
+        }
+
         int db = 0, err;
         err = sGLXLibrary.xGetFBConfigAttrib(display, cfg,
                                              GLX_DOUBLEBUFFER, &db);
