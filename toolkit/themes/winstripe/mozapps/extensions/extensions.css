@@ -510,10 +510,6 @@
   -moz-border-bottom-colors: rgba(0, 0, 0, 0.1) rgba(255, 255, 255, 0.1);
 }
 
-.addon[status="installing"] {
-  -moz-box-align: center;
-}
-
 .details {
   cursor: pointer;
   margin: 0;
@@ -549,8 +545,7 @@
   list-style-image: url("chrome://mozapps/skin/plugins/pluginGeneric.png");
 }
 
-.name-container,
-.addon[status="installing"] .name {
+.name-container {
   font-size: 150%;
   font-weight: bold;
   color: #3F3F3F;
