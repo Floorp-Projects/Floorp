@@ -15,7 +15,7 @@ script regress-394709.js
 skip script regress-415721.js
 skip script regress-417131.js
 skip script regress-417817.js
-script regress-419091.js
+skip script regress-419091.js
 script regress-422269.js
 skip script regress-445818.js
 skip script regress-446169-01.js
