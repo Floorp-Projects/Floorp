@@ -964,17 +964,26 @@ RunTracer(VMFrame &f)
     uintN inlineCallCount = 0;
     void **traceData;
     uintN *traceEpoch;
+    uint32 *loopCounter;
+    uint32 hits;
 #if JS_MONOIC
     traceData = &tic.traceData;
     traceEpoch = &tic.traceEpoch;
+    loopCounter = &tic.loopCounter;
+    *loopCounter = 1;
+    hits = tic.loopCounterStart;
 #else
     traceData = NULL;
     traceEpoch = NULL;
+    loopCounter = NULL;
+    hits = 1;
 #endif
-    tpa = MonitorTracePoint(f.cx, inlineCallCount, &blacklist, traceData, traceEpoch);
+    tpa = MonitorTracePoint(f.cx, inlineCallCount, &blacklist, traceData, traceEpoch,
+                            loopCounter, hits);
     JS_ASSERT(!TRACE_RECORDER(cx));
 
 #if JS_MONOIC
+    tic.loopCounterStart = *loopCounter;
     if (blacklist)
         DisableTraceHint(f, tic);
 #endif

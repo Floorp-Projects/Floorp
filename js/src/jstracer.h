@@ -685,6 +685,9 @@ public:
     /* Whether we have run a complete profile of the loop. */
     bool profiled;
 
+    /* Sometimes we can't decide in one profile run whether to trace, so we set undecided. */
+    bool undecided;
+
     /* If we have profiled the loop, this saves the decision of whether to trace it. */
     bool traceOK;
 
@@ -1697,7 +1700,7 @@ RecordTracePoint(JSContext*, uintN& inlineCallCount, bool* blacklist);
 
 extern JS_REQUIRES_STACK TracePointAction
 MonitorTracePoint(JSContext*, uintN& inlineCallCount, bool* blacklist,
-                  void** traceData, uintN *traceEpoch);
+                  void** traceData, uintN *traceEpoch, uint32 *loopCounter, uint32 hits);
 
 extern JS_REQUIRES_STACK TraceRecorder::AbortResult
 AbortRecording(JSContext* cx, const char* reason);

@@ -58,6 +58,7 @@
 #include "jscompartment.h"
 #include "jsobjinlines.h"
 #include "jsopcodeinlines.h"
+#include "jshotloop.h"
 
 #include "jsautooplen.h"
 
@@ -625,6 +626,10 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
             scriptTICs[i].hasSlowTraceHint = traceICs[i].slowTraceHint.isSet();
             if (traceICs[i].slowTraceHint.isSet())
                 scriptTICs[i].slowTraceHint = stubCode.locationOf(traceICs[i].slowTraceHint.get());
+#ifdef JS_TRACER
+            scriptTICs[i].loopCounterStart = GetHotloop(cx);
+#endif
+            scriptTICs[i].loopCounter = scriptTICs[i].loopCounterStart;
             
             stubCode.patch(traceICs[i].addrLabel, &scriptTICs[i]);
         }
@@ -4804,6 +4809,11 @@ mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slow)
 # if JS_MONOIC
     ic.addrLabel = stubcc.masm.moveWithPatch(ImmPtr(NULL), Registers::ArgReg1);
     traceICs[index] = ic;
+
+    Jump nonzero = stubcc.masm.branchSub32(Assembler::NonZero, Imm32(1),
+                                           Address(Registers::ArgReg1,
+                                                   offsetof(TraceICInfo, loopCounter)));
+    stubcc.jumpInScript(nonzero, target);
 # endif
 
     /* Save and restore compiler-tracked PC, so cx->regs is right in InvokeTracer. */
@@ -4818,11 +4828,10 @@ mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slow)
 
     Jump no = stubcc.masm.branchTestPtr(Assembler::Zero, Registers::ReturnReg,
                                         Registers::ReturnReg);
+    if (!stubcc.jumpInScript(no, target))
+        return false;
     restoreFrameRegs(stubcc.masm);
     stubcc.masm.jump(Registers::ReturnReg);
-    no.linkTo(stubcc.masm.label(), &stubcc.masm);
-    if (!stubcc.jumpInScript(stubcc.masm.jump(), target))
-        return false;
 #endif
     return true;
 }
