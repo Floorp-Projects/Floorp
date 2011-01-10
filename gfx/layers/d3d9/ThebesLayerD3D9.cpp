@@ -423,14 +423,16 @@ ThebesLayerD3D9::DrawRegion(const nsIntRegion &aRegion, SurfaceMode aMode)
     case SURFACE_COMPONENT_ALPHA: {
       nsRefPtr<gfxWindowsSurface> onBlack = opaqueRenderer.Begin(this);
       nsRefPtr<gfxWindowsSurface> onWhite = opaqueRendererOnWhite.Begin(this);
-      FillSurface(onBlack, aRegion, bounds.TopLeft(), gfxRGBA(0.0, 0.0, 0.0, 1.0));
-      FillSurface(onWhite, aRegion, bounds.TopLeft(), gfxRGBA(1.0, 1.0, 1.0, 1.0));
-      gfxASurface* surfaces[2] = { onBlack.get(), onWhite.get() };
-      destinationSurface = new gfxTeeSurface(surfaces, NS_ARRAY_LENGTH(surfaces));
-      // Using this surface as a source will likely go horribly wrong, since
-      // only the onBlack surface will really be used, so alpha information will
-      // be incorrect.
-      destinationSurface->SetAllowUseAsSource(PR_FALSE);
+      if (onBlack && onWhite) {
+        FillSurface(onBlack, aRegion, bounds.TopLeft(), gfxRGBA(0.0, 0.0, 0.0, 1.0));
+        FillSurface(onWhite, aRegion, bounds.TopLeft(), gfxRGBA(1.0, 1.0, 1.0, 1.0));
+        gfxASurface* surfaces[2] = { onBlack.get(), onWhite.get() };
+        destinationSurface = new gfxTeeSurface(surfaces, NS_ARRAY_LENGTH(surfaces));
+        // Using this surface as a source will likely go horribly wrong, since
+        // only the onBlack surface will really be used, so alpha information will
+        // be incorrect.
+        destinationSurface->SetAllowUseAsSource(PR_FALSE);
+      }
       break;
     }
   }
