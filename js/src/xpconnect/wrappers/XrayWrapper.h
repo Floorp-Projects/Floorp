@@ -87,7 +87,7 @@ class XrayWrapper : public Base {
                      js::Value *vp);
     virtual bool has(JSContext *cx, JSObject *wrapper, jsid id, bool *bp);
     virtual bool hasOwn(JSContext *cx, JSObject *wrapper, jsid id, bool *bp);
-    virtual bool enumerateOwn(JSContext *cx, JSObject *wrapper, js::AutoIdVector &props);
+    virtual bool keys(JSContext *cx, JSObject *wrapper, js::AutoIdVector &props);
     virtual bool iterate(JSContext *cx, JSObject *wrapper, uintN flags, js::Value *vp);
 
     static JSObject *createHolder(JSContext *cx, JSObject *wrappedNative, JSObject *parent);

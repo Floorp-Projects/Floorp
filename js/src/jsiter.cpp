@@ -328,7 +328,7 @@ Snapshot(JSContext *cx, JSObject *obj, uintN flags, typename EnumPolicy::ResultV
             if (pobj->isProxy()) {
                 AutoIdVector proxyProps(cx);
                 if (flags & JSITER_OWNONLY) {
-                    if (!JSProxy::enumerateOwn(cx, pobj, proxyProps))
+                    if (!JSProxy::keys(cx, pobj, proxyProps))
                         return false;
                 } else {
                     if (!JSProxy::enumerate(cx, pobj, proxyProps))

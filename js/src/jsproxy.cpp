@@ -174,7 +174,7 @@ JSProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id,
 }
 
 bool
-JSProxyHandler::enumerateOwn(JSContext *cx, JSObject *proxy, AutoIdVector &props)
+JSProxyHandler::keys(JSContext *cx, JSObject *proxy, AutoIdVector &props)
 {
     JS_ASSERT(OperationInProgress(cx, proxy));
     JS_ASSERT(props.length() == 0);
@@ -206,7 +206,7 @@ JSProxyHandler::iterate(JSContext *cx, JSObject *proxy, uintN flags, Value *vp)
     JS_ASSERT(OperationInProgress(cx, proxy));
     AutoIdVector props(cx);
     if ((flags & JSITER_OWNONLY)
-        ? !enumerateOwn(cx, proxy, props)
+        ? !keys(cx, proxy, props)
         : !enumerate(cx, proxy, props)) {
         return false;
     }
@@ -326,7 +326,7 @@ GetDerivedTrap(JSContext *cx, JSObject *handler, JSAtom *atom, Value *fvalp)
               atom == ATOM(hasOwn) ||
               atom == ATOM(get) ||
               atom == ATOM(set) ||
-              atom == ATOM(enumerateOwn) ||
+              atom == ATOM(keys) ||
               atom == ATOM(iterate));
 
     return GetTrap(cx, handler, atom, fvalp);
@@ -451,7 +451,7 @@ class JSScriptedProxyHandler : public JSProxyHandler {
     virtual bool hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
     virtual bool get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, Value *vp);
     virtual bool set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, Value *vp);
-    virtual bool enumerateOwn(JSContext *cx, JSObject *proxy, AutoIdVector &props);
+    virtual bool keys(JSContext *cx, JSObject *proxy, AutoIdVector &props);
     virtual bool iterate(JSContext *cx, JSObject *proxy, uintN flags, Value *vp);
 
     static JSScriptedProxyHandler singleton;
@@ -623,14 +623,14 @@ JSScriptedProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiver, 
 }
 
 bool
-JSScriptedProxyHandler::enumerateOwn(JSContext *cx, JSObject *proxy, AutoIdVector &props)
+JSScriptedProxyHandler::keys(JSContext *cx, JSObject *proxy, AutoIdVector &props)
 {
     JSObject *handler = GetProxyHandlerObject(cx, proxy);
     AutoValueRooter tvr(cx);
-    if (!GetDerivedTrap(cx, handler, ATOM(enumerateOwn), tvr.addr()))
+    if (!GetDerivedTrap(cx, handler, ATOM(keys), tvr.addr()))
         return false;
     if (!js_IsCallable(tvr.value()))
-        return JSProxyHandler::enumerateOwn(cx, proxy, props);
+        return JSProxyHandler::keys(cx, proxy, props);
     return Trap(cx, handler, tvr.value(), 0, NULL, tvr.addr()) &&
            ArrayToIdVector(cx, tvr.value(), props);
 }
@@ -787,11 +787,11 @@ JSProxy::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, Value 
 }
 
 bool
-JSProxy::enumerateOwn(JSContext *cx, JSObject *proxy, AutoIdVector &props)
+JSProxy::keys(JSContext *cx, JSObject *proxy, AutoIdVector &props)
 {
     JS_CHECK_RECURSION(cx, return false);
     AutoPendingProxyOperation pending(cx, proxy);
-    return proxy->getProxyHandler()->enumerateOwn(cx, proxy, props);
+    return proxy->getProxyHandler()->keys(cx, proxy, props);
 }
 
 bool
