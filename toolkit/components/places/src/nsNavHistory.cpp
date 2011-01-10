@@ -126,6 +126,8 @@ using namespace mozilla::places;
 
 #define PREF_CACHE_TO_MEMORY_PERCENTAGE         "database.cache_to_memory_percentage"
 
+#define PREF_FORCE_DATABASE_REPLACEMENT         "database.replaceOnStartup"
+
 // Default integer value for PREF_CACHE_TO_MEMORY_PERCENTAGE.
 // This is 6% of machine memory, giving 15MB for a user with 256MB of memory.
 // Out of this cache, SQLite will use at most the size of the database file.
@@ -574,11 +576,9 @@ nsNavHistory::Init()
 nsresult
 nsNavHistory::InitDBFile(PRBool aForceInit)
 {
-  if (aForceInit) {
-    NS_ASSERTION(mDBConn,
-                 "When forcing initialization, a database connection must exist!");
-    NS_ASSERTION(mDBService,
-                 "When forcing initialization, the database service must exist!");
+  if (!mDBService) {
+    mDBService = do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID);
+    NS_ENSURE_STATE(mDBService);
   }
 
   // Get database file handle.
@@ -606,10 +606,12 @@ nsNavHistory::InitDBFile(PRBool aForceInit)
     }
 
     // Close database connection if open.
-    // If there's any not finalized statement or this fails for any reason
-    // we won't be able to remove the database.
-    rv = mDBConn->Close();
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (mDBConn) {
+      // If there's any not finalized statement or this fails for any reason
+      // we won't be able to remove the database.
+      rv = mDBConn->Close();
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
 
     // Remove the broken database.
     rv = mDBFile->Remove(PR_FALSE);
@@ -636,14 +638,28 @@ nsNavHistory::InitDBFile(PRBool aForceInit)
     rv = mDBFile->Exists(&dbExists);
     NS_ENSURE_SUCCESS(rv, rv);
     // If the database didn't previously exist, we create it.
-    if (!dbExists)
+    if (!dbExists) {
       mDatabaseStatus = DATABASE_STATUS_CREATE;
+    }
+    else {
+      // Check if maintenance required a database replacement.
+      PRBool forceDatabaseReplacement;
+      if (NS_SUCCEEDED(mPrefBranch->GetBoolPref(PREF_FORCE_DATABASE_REPLACEMENT,
+                                                &forceDatabaseReplacement)) &&
+          forceDatabaseReplacement) {
+        // Be sure to clear the pref to avoid handling it more than once.
+        rv = mPrefBranch->ClearUserPref(PREF_FORCE_DATABASE_REPLACEMENT);
+        NS_ENSURE_SUCCESS(rv, rv);
+        // Re-enter this same method, forcing the replacement.
+        rv = InitDBFile(PR_TRUE);
+        NS_ENSURE_SUCCESS(rv, rv);
+        return NS_OK;
+      }
+    }
   }
 
   // Open the database file.  If it does not exist a new one will be created.
-  mDBService = do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  // Open un unshared connection, both for safety and speed.
+  // Use a unshared connection, both for safety and performance.
   rv = mDBService->OpenUnsharedDatabase(mDBFile, getter_AddRefs(mDBConn));
   if (rv == NS_ERROR_FILE_CORRUPTED) {
     // The database is corrupt, try to create a new one.
