@@ -1098,9 +1098,9 @@ let UI = {
       iQ(window).unbind("mousemove", updateSize);
       item.container.removeClass("dragRegion");
       dragOutInfo.stop();
-      if (phantom.css("opacity") != 1)
-        collapse();
-      else {
+      box = item.getBounds();
+      if (box.width > minMinSize && box.height > minMinSize &&
+         (box.width > minSize || box.height > minSize)) {
         var bounds = item.getBounds();
 
         // Add all of the orphaned tabs that are contained inside the new groupItem
@@ -1116,6 +1116,8 @@ let UI = {
         GroupItems.setActiveGroupItem(groupItem);
         phantom.remove();
         dragOutInfo = null;
+      } else {
+        collapse();
       }
     }
 
