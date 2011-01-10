@@ -49,40 +49,55 @@ let Keys = { meta: false };
 // Class: UI
 // Singleton top-level UI manager.
 let UI = {
+  // Constant: DBLCLICK_INTERVAL
+  // Defines the maximum time (in ms) between two clicks for it to count as
+  // a double click.
+  DBLCLICK_INTERVAL: 500,
+
+  // Constant: DBLCLICK_OFFSET
+  // Defines the maximum offset (in pixels) between two clicks for it to count as
+  // a double click.
+  DBLCLICK_OFFSET: 5,
+
   // Variable: _frameInitialized
   // True if the Tab View UI frame has been initialized.
   _frameInitialized: false,
 
   // Variable: _pageBounds
   // Stores the page bounds.
-  _pageBounds : null,
+  _pageBounds: null,
 
   // Variable: _closedLastVisibleTab
   // If true, the last visible tab has just been closed in the tab strip.
-  _closedLastVisibleTab : false,
+  _closedLastVisibleTab: false,
 
   // Variable: _closedSelectedTabInTabView
   // If true, a select tab has just been closed in TabView.
-  _closedSelectedTabInTabView : false,
+  _closedSelectedTabInTabView: false,
 
   // Variable: restoredClosedTab
   // If true, a closed tab has just been restored.
-  restoredClosedTab : false,
+  restoredClosedTab: false,
 
   // Variable: _reorderTabItemsOnShow
   // Keeps track of the <GroupItem>s which their tab items' tabs have been moved
   // and re-orders the tab items when switching to TabView.
-  _reorderTabItemsOnShow : [],
+  _reorderTabItemsOnShow: [],
 
   // Variable: _reorderTabsOnHide
   // Keeps track of the <GroupItem>s which their tab items have been moved in
   // TabView UI and re-orders the tabs when switcing back to main browser.
-  _reorderTabsOnHide : [],
+  _reorderTabsOnHide: [],
 
   // Variable: _currentTab
   // Keeps track of which xul:tab we are currently on.
   // Used to facilitate zooming down from a previous tab.
-  _currentTab : null,
+  _currentTab: null,
+
+  // Variable: _lastClick
+  // Keeps track of the time of last click event to detect double click.
+  // Used to create tabs on double-click since we cannot attach 'dblclick'
+  _lastClick: 0,
 
   // Variable: _eventListeners
   // Keeps track of event listeners added to the AllTabs object.
@@ -151,8 +166,38 @@ let UI = {
               element.blur();
           });
         }
-        if (e.originalTarget.id == "content")
-          self._createGroupItemOnDrag(e)
+        if (e.originalTarget.id == "content") {
+          // Create an orphan tab on double click
+          if (Date.now() - self._lastClick <= self.DBLCLICK_INTERVAL && 
+              (self._lastClickPositions.x - self.DBLCLICK_OFFSET) <= e.clientX &&
+              (self._lastClickPositions.x + self.DBLCLICK_OFFSET) >= e.clientX &&
+              (self._lastClickPositions.y - self.DBLCLICK_OFFSET) <= e.clientY &&
+              (self._lastClickPositions.y + self.DBLCLICK_OFFSET) >= e.clientY) {
+            GroupItems.setActiveGroupItem(null);
+            TabItems.creatingNewOrphanTab = true;
+
+            let newTab = 
+              gBrowser.loadOneTab("about:blank", { inBackground: true });
+
+            let box = 
+              new Rect(e.clientX - Math.floor(TabItems.tabWidth/2),
+                       e.clientY - Math.floor(TabItems.tabHeight/2),
+                       TabItems.tabWidth, TabItems.tabHeight);
+            newTab._tabViewTabItem.setBounds(box, true);
+            newTab._tabViewTabItem.pushAway(true);
+            GroupItems.setActiveOrphanTab(newTab._tabViewTabItem);
+
+            TabItems.creatingNewOrphanTab = false;
+            newTab._tabViewTabItem.zoomIn(true);
+
+            self._lastClick = 0;
+            self._lastClickPositions = null;
+          } else {
+            self._lastClick = Date.now();
+            self._lastClickPositions = new Point(e.clientX, e.clientY);
+            self._createGroupItemOnDrag(e);
+          }
+        }
       });
 
       iQ(window).bind("beforeunload", function() {

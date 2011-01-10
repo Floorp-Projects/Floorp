@@ -364,7 +364,9 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       if (tabData.imageData)
         this.showCachedData(tabData);
     } else {
-      GroupItems.newTab(this, {immediately: true});
+      // create tab by double click is handled in UI_init().
+      if (!TabItems.creatingNewOrphanTab)
+        GroupItems.newTab(this, {immediately: true});
     }
 
     this._reconnected = true;  
@@ -787,6 +789,7 @@ let TabItems = {
   _lastUpdateTime: Date.now(),
   _eventListeners: [],
   _pauseUpdateForTest: false,
+  creatingNewOrphanTab: false,
   tempCanvas: null,
   _reconnectingPaused: false,
 
