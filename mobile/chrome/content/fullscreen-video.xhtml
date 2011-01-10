@@ -104,8 +104,7 @@ function init() {
     showUI();
     resetIdleTimer();
 
-    video.controls = true;
-    video.play();
+    sendStartEvent(video);
   }, false);
 
   // Automatically close this window when the playback ended, unless the user
@@ -126,6 +125,12 @@ function init() {
   }, false);
 
   video.mozLoadFrom(contentVideo);
+}
+
+function sendStartEvent(aElt) {
+  let event = document.createEvent("Event");
+  event.initEvent("StartVideo", true, true);
+  aElt.dispatchEvent(event);
 }
 
 window.addEventListener("unload", function () {
@@ -221,6 +226,6 @@ function hideUI() {
 </head>
 <body class="loadingdata" onload="init();">
   <span id="close"/>
-  <video/>
+  <video controls="true"/>
 </body>
 </html>
