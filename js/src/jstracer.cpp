@@ -16495,7 +16495,8 @@ LoopProfile::LoopProfile(JSStackFrame *entryfp, jsbytecode *top, jsbytecode *bot
       entryfp(entryfp),
       top(top),
       bottom(bottom),
-      hits(0)
+      hits(0),
+      undecided(false)
 {
     reset();
 }
@@ -16608,9 +16609,21 @@ LookupOrAddProfile(JSContext *cx, TraceMonitor *tm, void** traceData, uintN *tra
     return prof;
 }
 
+static LoopProfile *
+LookupLoopProfile(JSContext *cx, jsbytecode *pc)
+{
+    TraceMonitor* tm = &JS_TRACE_MONITOR(cx);
+    LoopProfileMap &table = *tm->loopProfiles;
+    if (LoopProfileMap::Ptr p = table.lookup(pc)) {
+        JS_ASSERT(p->value->top == pc);
+        return p->value;
+    } else
+        return NULL;
+}
+
 JS_REQUIRES_STACK TracePointAction
 MonitorTracePoint(JSContext *cx, uintN& inlineCallCount, bool* blacklist,
-                  void** traceData, uintN *traceEpoch)
+                  void** traceData, uintN *traceEpoch, uint32 *loopCounter, uint32 hits)
 {
     if (!cx->profilingEnabled)
         return RecordTracePoint(cx, inlineCallCount, blacklist, true);
@@ -16625,13 +16638,15 @@ MonitorTracePoint(JSContext *cx, uintN& inlineCallCount, bool* blacklist,
     if (tm->profile)
         return TPA_Nothing;
 
+    jsbytecode* pc = cx->regs->pc;
     LoopProfile *prof = LookupOrAddProfile(cx, tm, traceData, traceEpoch);
     if (!prof) {
         *blacklist = true;
         return TPA_Nothing;
     }
 
-    if (prof->hits++ < PROFILE_HOTLOOP)
+    prof->hits += hits;
+    if (prof->hits < PROFILE_HOTLOOP)
         return TPA_Nothing;
 
     AutoRetBlacklist autoRetBlacklist(cx->regs->pc, blacklist);
@@ -16653,7 +16668,14 @@ MonitorTracePoint(JSContext *cx, uintN& inlineCallCount, bool* blacklist,
         return TPA_Error;
 
     JS_ASSERT(!cx->isExceptionPending());
-    
+
+    /* Look it up again since a reset may have happened during Interpret. */
+    prof = LookupLoopProfile(cx, pc);
+    if (prof && prof->undecided) {
+        *loopCounter = 3000;
+        prof->reset();
+    }
+
     return TPA_RanStuff;
 }
 
@@ -16855,18 +16877,6 @@ LoopProfile::profileOperation(JSContext* cx, JSOp op)
     return ProfContinue;
 }
 
-static LoopProfile *
-LookupLoopProfile(JSContext *cx, jsbytecode *pc)
-{
-    TraceMonitor* tm = &JS_TRACE_MONITOR(cx);
-    LoopProfileMap &table = *tm->loopProfiles;
-    if (LoopProfileMap::Ptr p = table.lookup(pc)) {
-        JS_ASSERT(p->value->top == pc);
-        return p->value;
-    } else
-        return NULL;
-}
-
 /*
  * Returns true if the loop would probably take a long time to
  * compile.
@@ -16876,6 +16886,9 @@ LoopProfile::isCompilationExpensive(JSContext *cx, uintN depth)
 {
     if (depth == 0)
         return true;
+
+    if (!profiled)
+        return false;
 
     /* Too many ops to compile? */
     if (numSelfOps == MAX_PROFILE_OPS)
@@ -16888,7 +16901,7 @@ LoopProfile::isCompilationExpensive(JSContext *cx, uintN depth)
     /* Ensure that inner loops aren't too expensive. */
     for (uintN i=0; i<numInnerLoops; i++) {
         LoopProfile *prof = LookupLoopProfile(cx, innerLoops[i].top);
-        if (prof && prof->isCompilationExpensive(cx, depth-1))
+        if (!prof || prof->isCompilationExpensive(cx, depth-1))
             return true;
     }
 
@@ -16907,13 +16920,16 @@ LoopProfile::isCompilationUnprofitable(JSContext *cx, uintN depth)
     if (depth == 0)
         return true;
 
+    if (!profiled)
+        return false;
+
     if (numAllOps < 15 && allOps[OP_FWDJUMP])
         return true;
     
     /* Ensure that inner loops aren't fleeting. */
     for (uintN i=0; i<numInnerLoops; i++) {
         LoopProfile *prof = LookupLoopProfile(cx, innerLoops[i].top);
-        if (prof && prof->isCompilationUnprofitable(cx, depth-1))
+        if (!prof || prof->isCompilationUnprofitable(cx, depth-1))
             return true;
     }
 
@@ -16924,7 +16940,12 @@ LoopProfile::isCompilationUnprofitable(JSContext *cx, uintN depth)
 void
 LoopProfile::decide(JSContext *cx)
 {
+    bool wasUndecided = undecided;
+    bool wasTraceOK = traceOK;
+    
     profiled = true;
+    traceOK = false;
+    undecided = false;
 
 #ifdef DEBUG
     uintN line = js_PCToLineNumber(cx, entryScript, top);
@@ -16956,7 +16977,6 @@ LoopProfile::decide(JSContext *cx)
     debug_only_printf(LC_TMProfiler, "FEATURE selfOpsMult %g\n", numSelfOpsMult);
 #endif
 
-    traceOK = false;
     if (count(OP_RECURSIVE)) {
         debug_only_print0(LC_TMProfiler, "NOTRACE: recursive\n");
     } else if (count(OP_EVAL)) {
@@ -16968,12 +16988,17 @@ LoopProfile::decide(JSContext *cx)
     } else if (isCompilationExpensive(cx, 4)) {
         debug_only_print0(LC_TMProfiler, "NOTRACE: expensive\n");
     } else if (maybeShortLoop && numInnerLoops < 2) {
-        debug_only_print0(LC_TMProfiler, "NOTRACE: maybe short\n");
+        if (wasUndecided) {
+            debug_only_print0(LC_TMProfiler, "NOTRACE: maybe short\n");
+        } else {
+            debug_only_print0(LC_TMProfiler, "UNDECIDED: maybe short\n");
+            undecided = true; /* Profile the loop again to see if it's still short. */
+        }
     } else {
         uintN goodOps = 0;
 
         /* The tracer handles these ops well because of type specialization. */
-        goodOps += count(OP_FLOAT)*10 + count(OP_BIT)*10 + count(OP_INT)*5;
+        goodOps += count(OP_FLOAT)*10 + count(OP_BIT)*11 + count(OP_INT)*5;
 
         /* The tracer handles these ops well because of inlining. */
         goodOps += (count(OP_CALL) + count(OP_NEW))*20;
@@ -17002,7 +17027,6 @@ LoopProfile::decide(JSContext *cx)
                  * if we trace the inner loop, we will never call that trace
                  * on its own. We'll only call it from this trace.
                  */
-                prof->profiled = true;
                 prof->traceOK = true;
                 if (IsBlacklisted(loop.top)) {
                     debug_only_printf(LC_TMProfiler, "Unblacklisting at %d\n",
@@ -17013,14 +17037,15 @@ LoopProfile::decide(JSContext *cx)
         }
     }
 
-    if (!traceOK) {
+    execOK = traceOK;
+    traceOK = wasTraceOK || traceOK;
+
+    if (!traceOK && !undecided) {
         debug_only_printf(LC_TMProfiler, "Blacklisting at %d\n", line);
         Blacklist(top);
     }
 
     debug_only_print0(LC_TMProfiler, "\n");
-
-    execOK = traceOK;
 }
 
 JS_REQUIRES_STACK MonitorResult
