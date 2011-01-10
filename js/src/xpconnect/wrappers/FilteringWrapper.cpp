@@ -122,9 +122,9 @@ FilteringWrapper<Base, Policy>::enumerate(JSContext *cx, JSObject *wrapper, Auto
 
 template <typename Base, typename Policy>
 bool
-FilteringWrapper<Base, Policy>::enumerateOwn(JSContext *cx, JSObject *wrapper, AutoIdVector &props)
+FilteringWrapper<Base, Policy>::keys(JSContext *cx, JSObject *wrapper, AutoIdVector &props)
 {
-    return Base::enumerateOwn(cx, wrapper, props) &&
+    return Base::keys(cx, wrapper, props) &&
            Filter<Policy>(cx, wrapper, props);
 }
 

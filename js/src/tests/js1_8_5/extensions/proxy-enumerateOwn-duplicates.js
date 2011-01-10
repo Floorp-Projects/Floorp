@@ -12,12 +12,12 @@ print(BUGNUMBER + ": " + summary);
  * BEGIN TEST *
  **************/
 
-var x = Proxy.create({ enumerateOwn: function() { return ["0","0"]; } }, [1,2]);
+var x = Proxy.create({ keys: function() { return ["0","0"]; } }, [1,2]);
 var ax = Object.getOwnPropertyNames(x);
 assertEq(ax.length, 1, "array: " + ax);
 assertEq(ax[0], "0");
 
-var p = Proxy.create({ enumerateOwn: function() { return ["1","1"]; } }, null);
+var p = Proxy.create({ keys: function() { return ["1","1"]; } }, null);
 var ap = Object.getOwnPropertyNames(p);
 assertEq(ap.length, 1, "array: " + ap);
 assertEq(ap[0], "1");
