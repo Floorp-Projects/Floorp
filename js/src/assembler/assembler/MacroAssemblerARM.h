@@ -662,6 +662,13 @@ public:
         return Jump(m_assembler.jmp(ARMCondition(cond)));
     }
 
+    Jump branchSub32(Condition cond, Imm32 imm, Address dest)
+    {
+        ASSERT((cond == Overflow) || (cond == Signed) || (cond == Zero) || (cond == NonZero));
+        sub32(imm, dest);
+        return Jump(m_assembler.jmp(ARMCondition(cond)));
+    }
+
     Jump branchNeg32(Condition cond, RegisterID srcDest)
     {
         ASSERT((cond == Overflow) || (cond == Signed) || (cond == Zero) || (cond == NonZero));
