@@ -312,6 +312,7 @@ function Content() {
   addMessageListener("Browser:Blur", this);
   addMessageListener("Browser:KeyEvent", this);
   addMessageListener("Browser:MouseOver", this);
+  addMessageListener("Browser:MouseDown", this);
   addMessageListener("Browser:MouseLong", this);
   addMessageListener("Browser:MouseUp", this);
   addMessageListener("Browser:SaveAs", this);
@@ -431,6 +432,13 @@ Content.prototype = {
 
         // Sending a mousemove force the dispatching of mouseover/mouseout
         this._sendMouseEvent("mousemove", element, x, y);
+        break;
+      }
+
+      case "Browser:MouseDown": {
+        let element = elementFromPoint(x, y);
+        if (!element)
+          return;
 
         // There is no need to have a feedback for disabled element
         let isDisabled = element instanceof HTMLOptionElement ? (element.disabled || element.parentNode.disabled) : element.disabled;
