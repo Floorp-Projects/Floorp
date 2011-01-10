@@ -3054,6 +3054,11 @@ split_mark(JSContext *cx, JSObject *obj, void *arg)
         JS_MarkGCThing(cx, OBJECT_TO_JSVAL(cpx->inner), "ComplexObject.inner", arg);
     }
 
+    if (cpx->isInner && cpx->outer) {
+        /* Mark the inner object. */
+        JS_MarkGCThing(cx, OBJECT_TO_JSVAL(cpx->outer), "ComplexObject.outer", arg);
+    }
+
     return 0;
 }
 
