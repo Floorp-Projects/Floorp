@@ -133,9 +133,11 @@ interface nsISessionStore : nsISupports
    *
    * @param aWindow is the browser window into which the tab will be duplicated.
    * @param aTab    is the tabbrowser tab to duplicate (can be from a different window).
+   * @param aDelta  is the offset to the history entry to load in the duplicated tab.
    * @returns a reference to the newly created tab.
    */
-  nsIDOMNode duplicateTab(in nsIDOMWindow aWindow, in nsIDOMNode aTab);
+  nsIDOMNode duplicateTab(in nsIDOMWindow aWindow, in nsIDOMNode aTab,
+                          [optional] in long aDelta);
 
   /**
    * Get the number of restore-able tabs for a browser window
