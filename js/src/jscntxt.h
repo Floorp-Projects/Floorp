@@ -1131,6 +1131,7 @@ struct JSRuntime {
     js::GCMarker        *gcMarkingTracer;
     uint32              gcTriggerFactor;
     int64               gcJitReleaseTime;
+    JSGCMode            gcMode;
     volatile bool       gcIsNeeded;
 
     /*

@@ -4019,6 +4019,16 @@ SetMemoryGCFrequencyPrefChangedCallback(const char* aPrefName, void* aClosure)
   return 0;
 }
 
+static int
+SetMemoryGCModePrefChangedCallback(const char* aPrefName, void* aClosure)
+{
+  PRBool enableCompartmentGC = nsContentUtils::GetBoolPref(aPrefName);
+  JS_SetGCParameter(nsJSRuntime::sRuntime, JSGC_MODE, enableCompartmentGC
+                                                      ? JSGC_MODE_COMPARTMENT
+                                                      : JSGC_MODE_GLOBAL);
+  return 0;
+}
+
 static JSPrincipals *
 ObjectPrincipalFinder(JSContext *cx, JSObject *obj)
 {
@@ -4158,6 +4168,12 @@ nsJSRuntime::Init()
                                        nsnull);
   SetMemoryGCFrequencyPrefChangedCallback("javascript.options.mem.gc_frequency",
                                           nsnull);
+
+  nsContentUtils::RegisterPrefCallback("javascript.options.mem.gc_per_compartment",
+                                       SetMemoryGCModePrefChangedCallback,
+                                       nsnull);
+  SetMemoryGCModePrefChangedCallback("javascript.options.mem.gc_per_compartment",
+                                     nsnull);
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (!obs)

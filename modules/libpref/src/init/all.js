@@ -599,6 +599,7 @@ pref("javascript.options.jitprofiling.chrome",  false);
 pref("javascript.options.mem.high_water_mark", 128);
 pref("javascript.options.mem.max", -1);
 pref("javascript.options.mem.gc_frequency",   300);
+pref("javascript.options.mem.gc_per_compartment", true);
 
 // advanced prefs
 pref("advanced.mailftp",                    false);
