@@ -27,8 +27,10 @@
 @BINPATH@/defaults/profile/localstore.rdf
 @BINPATH@/defaults/profile/mimeTypes.rdf
 @BINPATH@/defaults/profile/chrome/*
+#ifdef MOZ_UPDATER
 @BINPATH@/update.locale
 @BINPATH@/updater.ini
+#endif
 @BINPATH@/dictionaries/*
 #ifdef XP_WIN32
 #ifndef WINCE
@@ -255,7 +257,9 @@
 #endif
 @BINPATH@/components/uconv.xpt
 @BINPATH@/components/unicharutil.xpt
+#ifdef MOZ_UPDATER
 @BINPATH@/components/update.xpt
+#endif
 @BINPATH@/components/uriloader.xpt
 @BINPATH@/components/urlformatter.xpt
 @BINPATH@/components/webBrowser_core.xpt
@@ -551,10 +555,12 @@ bin/libfreebl_32int64_3.so
 
 ; [Updater]
 ;
+#ifdef MOZ_UPDATER
 #ifdef XP_MACOSX
 @BINPATH@/updater.app/
 #else
 @BINPATH@/updater@BIN_SUFFIX@
+#endif
 #endif
 
 ; [Crash Reporter]
@@ -629,7 +635,9 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/components/PromptService.js
 @BINPATH@/components/SessionStore.js
 @BINPATH@/components/Sidebar.js
+#ifdef MOZ_UPDATER
 @BINPATH@/components/UpdatePrompt.js
+#endif
 @BINPATH@/components/XPIDialogService.js
 #ifndef ANDROID
 @BINPATH@/components/@DLL_PREFIX@mozphone@DLL_SUFFIX@

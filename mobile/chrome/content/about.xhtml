@@ -67,10 +67,12 @@
       <img src="about:logo" alt="&brandShortName;"/>
 #expand <p id="version">&about.version; __MOZ_APP_VERSION__</p>
     </div>
+#ifdef MOZ_UPDATER
     <button id="update" onclick="checkForUpdates();">&aboutPage.checkForUpdates.button;</button>
     <span id="update-message-checking">&aboutPage.checkForUpdates.checking;</span>
     <span id="update-message-none">&aboutPage.checkForUpdates.none;</span>
     <span id="update-message-found">&aboutPage.checkForUpdates.found;</span>
+#endif
 
     <ul id="aboutLinks">
       <li><a id="faqURL">&aboutPage.faq.label;</a></li>
@@ -117,6 +119,7 @@
       Cu.import("resource://gre/modules/XPCOMUtils.jsm");
       Cu.import("resource://gre/modules/Services.jsm");
 
+#ifdef MOZ_UPDATER
       let Updater = {
         isChecking: false,
         update: null,
@@ -227,6 +230,7 @@
           updateButton.style.display = "block";
         }, 2000);
       }
+#endif
     ]]></script>
   </div>
 </body>

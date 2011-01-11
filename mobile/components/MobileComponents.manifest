@@ -102,6 +102,8 @@ contract @mozilla.org/login-manager/prompter;1 {97d12931-abe2-11df-94e2-0800200c
 component {4e6ea350-b09a-11df-94e2-0800200c9a66} BlocklistPrompt.js
 contract @mozilla.org/addons/blocklist-prompt;1 {4e6ea350-b09a-11df-94e2-0800200c9a66}
 
+#ifdef MOZ_UPDATER
 # UpdatePrompt.js
 component {88b3eb21-d072-4e3b-886d-f89d8c49fe59} UpdatePrompt.js
 contract @mozilla.org/updates/update-prompt;1 {88b3eb21-d072-4e3b-886d-f89d8c49fe59}
+#endif
