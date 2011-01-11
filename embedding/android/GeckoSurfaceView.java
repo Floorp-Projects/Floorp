@@ -116,7 +116,7 @@ class GeckoSurfaceView
         int w = drawable.getIntrinsicWidth();
         int h = drawable.getIntrinsicHeight();
         int x = (width - w)/2;
-        int y = (height - h)/2;
+        int y = (height - h)/2 - 16;
         drawable.setBounds(x, y, x + w, y + h);
         drawable.draw(c);
         Paint p = new Paint();
@@ -124,7 +124,7 @@ class GeckoSurfaceView
         p.setTextSize(32f);
         p.setAntiAlias(true);
         p.setColor(res.getColor(R.color.splash_font));
-        c.drawText(GeckoSurfaceView.mSplashStatusMsg, width/2, y + h + 32, p);
+        c.drawText(GeckoSurfaceView.mSplashStatusMsg, width/2, y + h + 16, p);
         holder.unlockCanvasAndPost(c);
     }
 
