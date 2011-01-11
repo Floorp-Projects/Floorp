@@ -691,6 +691,9 @@ public:
     /* If we have profiled the loop, this saves the decision of whether to trace it. */
     bool traceOK;
 
+    /* Memoized value of isCompilationUnprofitable. */
+    bool unprofitable;
+
     /*
      * Sometimes loops are not good tracing opportunities, but they are nested inside
      * loops that we want to trace. In that case, we set their traceOK flag to true,
@@ -817,7 +820,7 @@ public:
 
     /* Once a loop's profile is done, these decide whether it should be traced. */
     bool isCompilationExpensive(JSContext *cx, uintN depth);
-    bool isCompilationUnprofitable(JSContext *cx, uintN depth);
+    bool isCompilationUnprofitable(JSContext *cx, uintN goodOps);
     void decide(JSContext *cx);
 };
 
