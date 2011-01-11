@@ -415,6 +415,10 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       nsRefPtr<gfxSharedImageSurface> newFront =
         gfxSharedImageSurface::Open(op.newFrontBuffer());
       nsRefPtr<gfxSharedImageSurface> newBack = canvas->Swap(newFront);
+      if (newFront == newBack) {
+        newFront.forget();
+      }
+
       canvas->Updated(op.updated());
 
       replyv.push_back(OpBufferSwap(shadow, NULL,
@@ -433,6 +437,9 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       nsRefPtr<gfxSharedImageSurface> newFront =
         gfxSharedImageSurface::Open(op.newFrontBuffer());
       nsRefPtr<gfxSharedImageSurface> newBack = image->Swap(newFront);
+      if (newFront == newBack) {
+        newFront.forget();
+      }
 
       replyv.push_back(OpBufferSwap(shadow, NULL,
                                     newBack->GetShmem()));
