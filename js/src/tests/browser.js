@@ -876,6 +876,8 @@ function unregisterDialogCloser()
 {
   dlog('unregisterDialogCloser: start');
 
+  gczeal(0);
+
   if (!gDialogCloserObserver || !gDialogCloser)
   {
     return;
