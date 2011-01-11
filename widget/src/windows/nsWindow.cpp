@@ -3309,9 +3309,7 @@ nsWindow::GetLayerManager(LayerManagerPersistence aPersistence, bool* aAllowReta
     PRBool preferOpenGL = PR_FALSE;
     PRBool preferD3D9 = PR_FALSE;
     if (prefs) {
-      prefs->GetBoolPref("layers.accelerate-all",
-                         &accelerateByDefault);
-      prefs->GetBoolPref("layers.accelerate-none",
+      prefs->GetBoolPref("layers.acceleration.disabled",
                          &disableAcceleration);
       prefs->GetBoolPref("layers.prefer-opengl",
                          &preferOpenGL);
