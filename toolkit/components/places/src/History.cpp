@@ -352,23 +352,7 @@ public:
 
     bool known = mHistory->FetchPageInfo(mPlace);
 
-    // If we had a referrer, we want to know about its last visit to put this
-    // new visit into the same session.
-    if (!mReferrer.spec.IsEmpty()) {
-      bool recentVisit = FetchVisitInfo(mReferrer, mPlace.visitTime);
-      // At this point, we know the referrer's session id, which this new visit
-      // should also share.
-      if (recentVisit) {
-        mPlace.sessionId = mReferrer.sessionId;
-      }
-      // However, if it isn't recent enough, we don't care to log anything about
-      // the referrer and we'll start a new session.
-      else {
-        // This is sufficient to ignore our referrer.  This behavior has test
-        // coverage, so if this invariant changes, we'll know.
-        mReferrer.visitId = 0;
-      }
-    }
+    FetchReferrerInfo(mReferrer, mPlace);
 
     mozStorageTransaction transaction(mDBConn, PR_FALSE,
                                       mozIStorageConnection::TRANSACTION_IMMEDIATE);
@@ -462,6 +446,41 @@ private:
     }
 
     return false;
+  }
+
+  /**
+   * Fetches information about a referrer and sets the session id for aPlace if
+   * it was a recent visit or not.
+   *
+   * @param aReferrer
+   *        The VisitData for the referrer.  This will be populated with
+   *        FetchVisitInfo.
+   * @param aPlace
+   *        The VisitData for the visit we will eventually add.
+   *
+   */
+  void FetchReferrerInfo(VisitData& aReferrer,
+                         VisitData& aPlace)
+  {
+    if (aReferrer.spec.IsEmpty()) {
+      return;
+    }
+
+    // If we had a referrer, we want to know about its last visit to put this
+    // new visit into the same session.
+    bool recentVisit = FetchVisitInfo(aReferrer, aPlace.visitTime);
+    // At this point, we know the referrer's session id, which this new visit
+    // should also share.
+    if (recentVisit) {
+      aPlace.sessionId = aReferrer.sessionId;
+    }
+    // However, if it isn't recent enough, we don't care to log anything about
+    // the referrer and we'll start a new session.
+    else {
+      // This is sufficient to ignore our referrer.  This behavior has test
+      // coverage, so if this invariant changes, we'll know.
+      aReferrer.visitId = 0;
+    }
   }
 
   /**
