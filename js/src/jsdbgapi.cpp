@@ -1861,6 +1861,14 @@ JS_MakeSystemObject(JSContext *cx, JSObject *obj)
 
 /************************************************************************/
 
+JS_PUBLIC_API(JSObject *)
+JS_UnwrapObject(JSContext *cx, JSObject *obj)
+{
+    return obj->unwrap();
+}
+
+/************************************************************************/
+
 JS_FRIEND_API(void)
 js_RevertVersion(JSContext *cx)
 {

@@ -1124,6 +1124,14 @@ JSD_GetValueFunctionName(JSDContext* jsdc, JSDValue* jsdval)
     return jsd_GetValueFunctionName(jsdc, jsdval);
 }
 
+JSD_PUBLIC_API(JSFunction*)
+JSD_GetValueFunction(JSDContext* jsdc, JSDValue* jsdval)
+{
+    JSD_ASSERT_VALID_CONTEXT(jsdc);
+    JSD_ASSERT_VALID_VALUE(jsdval);
+    return jsd_GetValueFunction(jsdc, jsdval);
+}
+
 /**************************************************/
 
 JSD_PUBLIC_API(uintN)

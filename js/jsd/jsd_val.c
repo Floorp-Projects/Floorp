@@ -142,14 +142,13 @@ JSBool
 jsd_IsValueFunction(JSDContext* jsdc, JSDValue* jsdval)
 {
     return !JSVAL_IS_PRIMITIVE(jsdval->val) &&
-           JS_ObjectIsFunction(jsdc->dumbContext, JSVAL_TO_OBJECT(jsdval->val));
+           JS_ObjectIsCallable(jsdc->dumbContext, JSVAL_TO_OBJECT(jsdval->val));
 }
 
 JSBool
 jsd_IsValueNative(JSDContext* jsdc, JSDValue* jsdval)
 {
     JSContext* cx = jsdc->dumbContext;
-    jsval val = jsdval->val;
     JSFunction* fun;
     JSExceptionState* exceptionState;
     JSCrossCompartmentCall *call = NULL;
@@ -158,7 +157,7 @@ jsd_IsValueNative(JSDContext* jsdc, JSDValue* jsdval)
     {
         JSBool ok = JS_FALSE;
         JS_BeginRequest(cx);
-        call = JS_EnterCrossCompartmentCall(jsdc->dumbContext, JSVAL_TO_OBJECT(val));
+        call = JS_EnterCrossCompartmentCall(jsdc->dumbContext, JSVAL_TO_OBJECT(jsdval->val));
         if(!call) {
             JS_EndRequest(cx);
 
@@ -166,7 +165,7 @@ jsd_IsValueNative(JSDContext* jsdc, JSDValue* jsdval)
         }
 
         exceptionState = JS_SaveExceptionState(cx);
-        fun = JS_ValueToFunction(cx, val);
+        fun = JSD_GetValueFunction(jsdc, jsdval);
         JS_RestoreExceptionState(cx, exceptionState);
         if(fun)
             ok = JS_GetFunctionScript(cx, fun) ? JS_FALSE : JS_TRUE;
@@ -175,7 +174,7 @@ jsd_IsValueNative(JSDContext* jsdc, JSDValue* jsdval)
         JS_ASSERT(fun);
         return ok;
     }
-    return !JSVAL_IS_PRIMITIVE(val);
+    return !JSVAL_IS_PRIMITIVE(jsdval->val);
 }
 
 /***************************************************************************/
@@ -265,7 +264,7 @@ jsd_GetValueFunctionName(JSDContext* jsdc, JSDValue* jsdval)
         }
 
         exceptionState = JS_SaveExceptionState(cx);
-        fun = JS_ValueToFunction(cx, jsdval->val);
+        fun = JSD_GetValueFunction(jsdc, jsdval);
         JS_RestoreExceptionState(cx, exceptionState);
         JS_LeaveCrossCompartmentCall(call);
         JS_EndRequest(cx);
@@ -637,6 +636,30 @@ jsd_GetValueProperty(JSDContext* jsdc, JSDValue* jsdval, JSString* name)
     return _newProperty(jsdc, &pd, JSDPD_HINTED);
 }
 
+/*
+ * Retrieve a JSFunction* from a JSDValue*. This differs from
+ * JS_ValueToFunction by fully unwrapping the object first.
+ */
+JSFunction*
+jsd_GetValueFunction(JSDContext* jsdc, JSDValue* jsdval)
+{
+    JSObject *obj;
+    JSFunction *fun;
+    JSCrossCompartmentCall *call = NULL;
+    if (!JSVAL_IS_OBJECT(jsdval->val))
+        return NULL;
+    if(!(obj = JSVAL_TO_OBJECT(jsdval->val)))
+        return NULL;
+    obj = JS_UnwrapObject(jsdc->dumbContext, obj);
+
+    call = JS_EnterCrossCompartmentCall(jsdc->dumbContext, obj);
+    if (!call)
+        return NULL;
+    fun = JS_ValueToFunction(jsdc->dumbContext, OBJECT_TO_JSVAL(obj));
+    JS_LeaveCrossCompartmentCall(call);
+
+    return fun;
+}
 
 JSDValue*
 jsd_GetValuePrototype(JSDContext* jsdc, JSDValue* jsdval)
@@ -797,7 +820,7 @@ jsd_GetScriptForValue(JSDContext* jsdc, JSDValue* jsdval)
     }
 
     exceptionState = JS_SaveExceptionState(cx);
-    fun = JS_ValueToFunction(cx, val);
+    fun = JSD_GetValueFunction(jsdc, jsdval);
     JS_RestoreExceptionState(cx, exceptionState);
     if (fun)
         script = JS_GetFunctionScript(cx, fun);
