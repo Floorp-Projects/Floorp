@@ -295,7 +295,7 @@ let UI = {
     items.forEach(function(item) {
       if (item.parent)
         item.parent.remove(item);
-      groupItem.add(item, null, {immediately: true});
+      groupItem.add(item, {immediately: true});
     });
     
     if (firstTime) {
