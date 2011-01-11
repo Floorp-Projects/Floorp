@@ -4,68 +4,49 @@ let Ci = Components.interfaces;
 dump("!! remote browser loaded\n")
 
 let WebProgressListener = {
-  _notifyFlags: [],
-  _calculatedNotifyFlags: 0,
   _lastLocation: null,
 
   init: function() {
-    let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebProgress);
-    webProgress.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_ALL);
+    let flags = Ci.nsIWebProgress.NOTIFY_LOCATION |
+                Ci.nsIWebProgress.NOTIFY_SECURITY |
+                Ci.nsIWebProgress.NOTIFY_STATE_ALL;
 
-    addMessageListener("WebProgress:AddProgressListener", this);
-    addMessageListener("WebProgress:RemoveProgressListener", this);
+    let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebProgress);
+    webProgress.addProgressListener(this, flags);
   },
 
   onStateChange: function onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
-    let webProgress = Ci.nsIWebProgressListener;
-    let notifyFlags = 0;
-    if (aStateFlags & webProgress.STATE_IS_REQUEST)
-      notifyFlags |= Ci.nsIWebProgress.NOTIFY_STATE_REQUEST;
-    if (aStateFlags & webProgress.STATE_IS_DOCUMENT)
-      notifyFlags |= Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT;
-    if (aStateFlags & webProgress.STATE_IS_NETWORK)
-      notifyFlags |= Ci.nsIWebProgress.NOTIFY_STATE_NETWORK;
-    if (aStateFlags & webProgress.STATE_IS_WINDOW)
-      notifyFlags |= Ci.nsIWebProgress.NOTIFY_STATE_WINDOW;
+    if (content != aWebProgress.DOMWindow)
+      return;
 
     let json = {
       contentWindowId: content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID,
-      windowId: aWebProgress.DOMWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID,
       stateFlags: aStateFlags,
-      status: aStatus,
-      notifyFlags: notifyFlags
+      status: aStatus
     };
 
-    sendAsyncMessage("WebProgress:StateChange", json);
+    sendAsyncMessage("Content:StateChange", json);
   },
 
   onProgressChange: function onProgressChange(aWebProgress, aRequest, aCurSelf, aMaxSelf, aCurTotal, aMaxTotal) {
-    let json = {
-      contentWindowId: content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID,
-      windowId: aWebProgress.DOMWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID,
-      curSelf: aCurSelf,
-      maxSelf: aMaxSelf,
-      curTotal: aCurTotal,
-      maxTotal: aMaxTotal
-    };
-
-    if (this._calculatedNotifyFlags & Ci.nsIWebProgress.NOTIFY_PROGRESS)
-      sendAsyncMessage("WebProgress:ProgressChange", json);
   },
 
   onLocationChange: function onLocationChange(aWebProgress, aRequest, aLocationURI) {
+    if (content != aWebProgress.DOMWindow)
+      return;
+
     let spec = aLocationURI ? aLocationURI.spec : "";
     let location = spec.split("#")[0];
 
     let json = {
       contentWindowId: content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID,
-      windowId: aWebProgress.DOMWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID,
       documentURI: aWebProgress.DOMWindow.document.documentURIObject.spec,
       location: spec,
       canGoBack: docShell.canGoBack,
       canGoForward: docShell.canGoForward
     };
-    sendAsyncMessage("WebProgress:LocationChange", json);
+
+    sendAsyncMessage("Content:LocationChange", json);
 
     // Keep track of hash changes
     this.hashChanged = (location == this._lastLocation);
@@ -73,45 +54,21 @@ let WebProgressListener = {
   },
 
   onStatusChange: function onStatusChange(aWebProgress, aRequest, aStatus, aMessage) {
-    let json = {
-      contentWindowId: content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID,
-      windowId: aWebProgress.DOMWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID,
-      status: aStatus,
-      message: aMessage
-    };
-
-    if (this._calculatedNotifyFlags & Ci.nsIWebProgress.NOTIFY_STATUS)
-      sendAsyncMessage("WebProgress:StatusChange", json);
   },
 
   onSecurityChange: function onSecurityChange(aWebProgress, aRequest, aState) {
+    if (content != aWebProgress.DOMWindow)
+      return;
+
     let serialization = SecurityUI.getSSLStatusAsString();
 
     let json = {
       contentWindowId: content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID,
-      windowId: aWebProgress.DOMWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID,
       SSLStatusAsString: serialization,
       state: aState
     };
-    sendAsyncMessage("WebProgress:SecurityChange", json);
-  },
 
-  receiveMessage: function(aMessage) {
-    switch (aMessage.name) {
-      case "WebProgress:AddProgressListener":
-        this._notifyFlags.push(aMessage.json.notifyFlags);
-        this._calculatedNotifyFlags |= aMessage.json.notifyFlags;
-        break;
-      case "WebProgress.RemoveProgressListener":
-        let index = this._notifyFlags.indexOf(aMessage.json.notifyFlags);
-        if (index != -1) {
-          this._notifyFlags.splice(index, 1);
-          this._calculatedNotifyFlags = this._notifyFlags.reduce(function(a, b) {
-            return a | b;
-          }, 0);
-        }
-        break;
-    }
+    sendAsyncMessage("Content:SecurityChange", json);
   },
 
   QueryInterface: function QueryInterface(aIID) {

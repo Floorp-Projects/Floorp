@@ -192,145 +192,106 @@
 
       <field name="_webProgress"><![CDATA[
         ({
-          _listeners: [],
           _browser: this,
 
           _init: function() {
-            this._browser.messageManager.addMessageListener("WebProgress:StateChange", this);
-            this._browser.messageManager.addMessageListener("WebProgress:ProgressChange", this);
-            this._browser.messageManager.addMessageListener("WebProgress:LocationChange", this);
-            this._browser.messageManager.addMessageListener("WebProgress:StatusChange", this);
-            this._browser.messageManager.addMessageListener("WebProgress:SecurityChange", this);
+            this._browser.messageManager.addMessageListener("Content:StateChange", this);
+            this._browser.messageManager.addMessageListener("Content:LocationChange", this);
+            this._browser.messageManager.addMessageListener("Content:SecurityChange", this);
           },
-
-          addProgressListener: function(aListener, aNotifyFlags) {
-            function hasFilter(item) {
-              return item.listener == aListener;
-            }
-
-            if (this._listeners.some(hasFilter))
-              return;
-
-            this._listeners.push({
-              listener: aListener,
-              flags: aNotifyFlags
-            });
-
-            this._browser.messageManager.sendAsyncMessage("WebProgress:AddProgressListener", {
-              notifyFlags: aNotifyFlags,
-            });
-          },
-
-          removeProgressListener: function(aListener) {
-            let self = this;
-            function hasFilter(item) {
-              if (item.listener == aListener)
-                self._browser.messageManager.sendAsyncMessage("WebProgress:RemoveProgressListener", {
-                  notifyFlags: item.flags,
-                });
-              return item.listener != aListener;
-            }
-
-            this._listeners = this._listeners.filter(hasFilter);
-          },
-          get DOMWindow() { return null; },
-          get isLoadingDocument() { throw "isLoadingDocument: Invalid"; },
 
           receiveMessage: function(aMessage) {
-            let args;
             let json = aMessage.json;
             switch (aMessage.name) {
-              case "WebProgress:StateChange":
-                args = [
-                  { windowId: json.windowId, browser: this._browser },
-                  {},
-                  json.stateFlags,
-                  json.status
-                ];
-
+              case "Content:StateChange":
                 this._browser.updateWindowId(json.contentWindowId);
-                this._notify(json.notifyFlags, "onStateChange", args);
                 break;
 
-              case "WebProgress:ProgressChange":
-                args = [
-                  { windowId: json.windowId, browser: this._browser },
-                  {},
-                  json.curSelf,
-                  json.maxSelf,
-                  json.curTotal,
-                  json.maxTotal
-                ];
-                this._browser.updateWindowId(json.contentWindowId);
-                this._notify(Components.interfaces.nsIWebProgress.NOTIFY_PROGRESS,
-                             "onProgressChange",
-                             args);
-                break;
-
-              case "WebProgress:LocationChange":
-                let locationURI = this._browser._ios.newURI(json.location, null, null);
-
-                args = [
-                  { windowId: json.windowId, browser: this._browser },
-                  {},
-                  locationURI
-                ];
+              case "Content:LocationChange":
+                try {
+                  let locationURI = this._browser._ios.newURI(json.location, null, null);
+                  this._browser._webNavigation._currentURI = locationURI;
+                  this._browser._webNavigation.canGoBack = json.canGoBack;
+                  this._browser._webNavigation.canGoForward = json.canGoForward;
+                } catch(e) {}
 
                 if (this._browser.updateWindowId(json.contentWindowId)) {
                   this._browser._documentURI = json.documentURI;
                   this._browser._searchEngines = [];
                 }
-                this._notify(Components.interfaces.nsIWebProgress.NOTIFY_LOCATION,
-                             "onLocationChange",
-                             args);
-
                 break;
 
-              case "WebProgress:StatusChange":
-                args = [
-                  { windowId: json.windowId, browser: this._browser },
-                  {},
-                  json.status,
-                  json.message
-                ];
-                this._browser.updateWindowId(json.contentWindowId);
-                this._notify(Components.interfaces.nsIWebProgress.NOTIFY_STATUS,
-                             "onStatusChange",
-                             args);
-                break;
+              case "Content:SecurityChange":
+                let serhelper = Cc["@mozilla.org/network/serialization-helper;1"].getService(Ci.nsISerializationHelper);
+                let SSLStatus = json.SSLStatusAsString ? serhelper.deserializeObject(json.SSLStatusAsString) : null;
+                if (SSLStatus) {
+                  SSLStatus.QueryInterface(Ci.nsISSLStatus);
+                  if (SSLStatus) {
+                    // We must check the Extended Validation (EV) state here, on the chrome
+                    // process, because NSS is needed for that determination.
+                    let ii = SSLStatus.serverCert.QueryInterface(Ci.nsIIdentityInfo);
+                    if (ii && ii.isExtendedValidation)
+                      json.state |= Ci.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL;
+                  }
+                }
 
-              case "WebProgress:SecurityChange":
-                args = [
-                  { windowId: json.windowId, browser: this._browser },
-                  {},
-                  json.state
-                ];
-
+                let data = this._getIdentityData(SSLStatus);
                 this._browser._securityUI = {
-                  SSLStatus: json.SSLStatus,
+                  SSLStatus: SSLStatus ? {serverCert: data} : null,
                   state: json.state
                 }
                 this._browser.updateWindowId(json.contentWindowId);
-                this._notify(Components.interfaces.nsIWebProgress.NOTIFY_SECURITY,
-                             "onSecurityChange",
-                             args);
                 break;
             }
           },
 
-          _notify: function(aFlags, aName, aArguments) {
-            this._listeners.forEach(function(item) {
-              if (item.flags & aFlags) {
-                item.listener[aName].apply(item.listener, aArguments);
+          /**
+           * Helper to parse out the important parts of the SSL cert for use in constructing
+           * identity UI strings
+           */
+          _getIdentityData: function(status) {
+            let result = {};
+
+            if (status) {
+              let cert = status.serverCert;
+
+              // Human readable name of Subject
+              result.subjectOrg = cert.organization;
+
+              // SubjectName fields, broken up for individual access
+              if (cert.subjectName) {
+                result.subjectNameFields = {};
+                cert.subjectName.split(",").forEach(function(v) {
+                  var field = v.split("=");
+                  if (field[1])
+                    this[field[0]] = field[1];
+                }, result.subjectNameFields);
+
+                // Call out city, state, and country specifically
+                result.city = result.subjectNameFields.L;
+                result.state = result.subjectNameFields.ST;
+                result.country = result.subjectNameFields.C;
               }
-            });
+
+              // Human readable name of Certificate Authority
+              result.caOrg =  cert.issuerOrganization || cert.issuerCommonName;
+
+              if (!this._overrideService)
+                this._overrideService = Cc["@mozilla.org/security/certoverride;1"].getService(Ci.nsICertOverrideService);
+
+              // Check whether this site is a security exception.
+              let currentURI = this._browser._webNavigation._currentURI;
+              result.isException = !!this._overrideService.hasMatchingOverride(currentURI.asciiHost, currentURI.port, cert, {}, {});
+            }
+
+            return result;
           }
         })
       ]]></field>
 
       <property name="webProgress"
                 readonly="true"
-                onget="return this._webProgress"/>
+                onget="return null"/>
 
       <method name="onPageShow">
         <parameter name="aMessage"/>
@@ -702,197 +663,6 @@
       <property name="webNavigation"
                 onget="return this._webNavigation;"
                 readonly="true"/>
-
-      <field name="_webProgress"><![CDATA[
-        ({
-          _listeners: [],
-          _browser: this,
-
-          _init: function() {
-            this._browser.messageManager.addMessageListener("WebProgress:StateChange", this);
-            this._browser.messageManager.addMessageListener("WebProgress:ProgressChange", this);
-            this._browser.messageManager.addMessageListener("WebProgress:LocationChange", this);
-            this._browser.messageManager.addMessageListener("WebProgress:StatusChange", this);
-            this._browser.messageManager.addMessageListener("WebProgress:SecurityChange", this);
-          },
-
-          addProgressListener: function(aListener, aNotifyFlags) {
-            function hasFilter(item) {
-              return item.listener == aListener;
-            }
-
-            if (this._listeners.some(hasFilter))
-              return;
-
-            this._listeners.push({
-              listener: aListener,
-              flags: aNotifyFlags
-            });
-          },
-
-          removeProgressListener: function(aListener) {
-            function hasFilter(item) {
-              return item.listener != aListener;
-            }
-
-            this._listeners = this._listeners.filter(hasFilter);
-          },
-          get DOMWindow() { return null; },
-          get isLoadingDocument() { throw "isLoadingDocument: Invalid"; },
-
-          receiveMessage: function(aMessage) {
-            let args;
-            let json = aMessage.json;
-            switch (aMessage.name) {
-              case "WebProgress:StateChange":
-                args = [
-                  { windowId: json.windowId, browser: this._browser },
-                  {},
-                  json.stateFlags,
-                  json.status
-                ];
-
-                this._browser.updateWindowId(json.contentWindowId);
-                this._notify(json.notifyFlags, "onStateChange", args);
-                break;
-
-              case "WebProgress:ProgressChange":
-                args = [
-                  { windowId: json.windowId, browser: this._browser },
-                  {},
-                  json.curSelf,
-                  json.maxSelf,
-                  json.curTotal,
-                  json.maxTotal
-                ];
-                this._browser.updateWindowId(json.contentWindowId);
-                this._notify(Components.interfaces.nsIWebProgress.NOTIFY_PROGRESS,
-                             "onProgressChange",
-                             args);
-                break;
-
-              case "WebProgress:LocationChange":
-                let locationURI = this._browser._ios.newURI(json.location, null, null);
-                this._browser._webNavigation._currentURI = locationURI;
-                this._browser._webNavigation.canGoBack = json.canGoBack;
-                this._browser._webNavigation.canGoForward = json.canGoForward;
-
-                args = [
-                  { windowId: json.windowId, browser: this._browser },
-                  {},
-                  locationURI
-                ];
-
-                if (this._browser.updateWindowId(json.contentWindowId)) {
-                  this._browser._documentURI = json.documentURI;
-                  this._browser._searchEngines = [];
-                }
-
-                this._notify(Components.interfaces.nsIWebProgress.NOTIFY_LOCATION,
-                             "onLocationChange",
-                             args);
-
-                break;
-
-              case "WebProgress:StatusChange":
-                args = [
-                  { windowId: json.windowId, browser: this._browser },
-                  {},
-                  json.status,
-                  json.message
-                ];
-                this._browser.updateWindowId(json.contentWindowId);
-                this._notify(Components.interfaces.nsIWebProgress.NOTIFY_STATUS,
-                             "onStatusChange",
-                             args);
-                break;
-
-              case "WebProgress:SecurityChange":
-                let serhelper = Cc["@mozilla.org/network/serialization-helper;1"]
-                                .getService(Ci.nsISerializationHelper);
-                let SSLStatus = json.SSLStatusAsString ?
-                    serhelper.deserializeObject(json.SSLStatusAsString) : null;
-
-                if (SSLStatus) {
-                  SSLStatus.QueryInterface(Ci.nsISSLStatus);
-                  if (SSLStatus) {
-                    // We must check the Extended Validation (EV) state here, on the chrome
-                    // process, because NSS is needed for that determination.
-                    let ii = SSLStatus.serverCert.QueryInterface(Ci.nsIIdentityInfo);
-                    if (ii && ii.isExtendedValidation)
-                      json.state |= Ci.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL;
-                  }
-                }
-
-                let data = this._getIdentityData(SSLStatus);
-                this._browser._securityUI = {
-                  SSLStatus: SSLStatus ? {serverCert: data} : null,
-                  state: json.state
-                }
-
-                args = [
-                  { windowId: json.windowId, browser: this._browser },
-                  {},
-                  json.state
-                ];
-                this._browser.updateWindowId(json.contentWindowId);
-                this._notify(Components.interfaces.nsIWebProgress.NOTIFY_SECURITY,
-                             "onSecurityChange",
-                             args);
-                break;
-            }
-          },
-
-          _notify: function(aFlags, aName, aArguments) {
-            this._listeners.forEach(function(item) {
-              if (item.flags & aFlags)
-                item.listener[aName].apply(item.listener, aArguments);
-            });
-          },
-
-          /**
-           * Helper to parse out the important parts of the SSL cert for use in constructing
-           * identity UI strings
-           */
-          _getIdentityData: function(status) {
-            let result = {};
-
-            if (status) {
-              let cert = status.serverCert;
-
-              // Human readable name of Subject
-              result.subjectOrg = cert.organization;
-
-              // SubjectName fields, broken up for individual access
-              if (cert.subjectName) {
-                result.subjectNameFields = {};
-                cert.subjectName.split(",").forEach(function(v) {
-                  var field = v.split("=");
-                  if (field[1])
-                    this[field[0]] = field[1];
-                }, result.subjectNameFields);
-
-                // Call out city, state, and country specifically
-                result.city = result.subjectNameFields.L;
-                result.state = result.subjectNameFields.ST;
-                result.country = result.subjectNameFields.C;
-              }
-
-              // Human readable name of Certificate Authority
-              result.caOrg =  cert.issuerOrganization || cert.issuerCommonName;
-
-              if (!this._overrideService)
-                this._overrideService = Cc["@mozilla.org/security/certoverride;1"].getService(Ci.nsICertOverrideService);
-
-              // Check whether this site is a security exception.
-              let currentURI = this._browser._webNavigation._currentURI;
-              result.isException = !!this._overrideService.hasMatchingOverride(currentURI.asciiHost, currentURI.port, cert, {}, {});
-            }
-
-            return result;
-          }
-        })
-      ]]></field>
 
       <property name="contentWindow"
                 readonly="true"

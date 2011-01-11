@@ -224,115 +224,31 @@ function getContentClientRects(aElement) {
   return result;
 };
 
-/**
- * Responsible for sending messages about security, location, and page load state.
- * @param loadingController Object with methods startLoading and stopLoading
- */
-function ProgressController(loadingController) {
-  this._webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
-  this._overrideService = null;
-  this._hostChanged = false;
-  this._state = null;
-  this._loadingController = loadingController || this._defaultLoadingController;
-}
 
-ProgressController.prototype = {
-  // Default loading callbacks do nothing
-  _defaultLoadingController: {
-    startLoading: function() {},
-    stopLoading: function() {}
+let Content = {
+  init: function init() {
+    this._isZoomedToElement = false;
+
+    addMessageListener("Browser:Blur", this);
+    addMessageListener("Browser:KeyEvent", this);
+    addMessageListener("Browser:MouseOver", this);
+    addMessageListener("Browser:MouseLong", this);
+    addMessageListener("Browser:MouseDown", this);
+    addMessageListener("Browser:MouseUp", this);
+    addMessageListener("Browser:SaveAs", this);
+    addMessageListener("Browser:ZoomToPoint", this);
+    addMessageListener("Browser:MozApplicationCache:Fetch", this);
+
+    if (Util.isParentProcess())
+      addEventListener("DOMActivate", this, true);
+
+    addEventListener("MozApplicationManifest", this, false);
+    addEventListener("command", this, false);
+    addEventListener("pagehide", this, false);
+
+    this._formAssistant = new FormAssistant();
   },
 
-  onStateChange: function onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
-    // ignore notification that aren't about the main document (iframes, etc)
-    let win = aWebProgress.DOMWindow;
-    if (win != win.parent)
-      return;
-
-    // If you want to observe other state flags, be sure they're listed in the
-    // Tab._createBrowser's call to addProgressListener
-    if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
-      if (aStateFlags & Ci.nsIWebProgressListener.STATE_START) {
-        this._loadingController.startLoading();
-      }
-      else if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
-        this._loadingController.stopLoading();
-      }
-    }
-  },
-
-  /** This method is called to indicate progress changes for the currently loading page. */
-  onProgressChange: function onProgressChange(aWebProgress, aRequest, aCurSelf, aMaxSelf, aCurTotal, aMaxTotal) {
-  },
-
-  /** This method is called to indicate a change to the current location. */
-  onLocationChange: function onLocationChange(aWebProgress, aRequest, aLocationURI) {
-  },
-
-  /**
-   * This method is called to indicate a status changes for the currently
-   * loading page.  The message is already formatted for display.
-   */
-  onStatusChange: function onStatusChange(aWebProgress, aRequest, aStatus, aMessage) {
-  },
-
-  /** This method is called when the security state of the browser changes. */
-  onSecurityChange: function onSecurityChange(aWebProgress, aRequest, aState) {
-  },
-
-  QueryInterface: function QueryInterface(aIID) {
-    if (aIID.equals(Ci.nsIWebProgressListener) ||
-        aIID.equals(Ci.nsISupportsWeakReference) ||
-        aIID.equals(Ci.nsISupports)) {
-        return this;
-    }
-
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
-
-  start: function start() {
-    let flags = Ci.nsIWebProgress.NOTIFY_STATE_NETWORK;
-    let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIWebProgress);
-    webProgress.addProgressListener(this, flags);
-  },
-
-  stop: function stop() {
-    let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIWebProgress);
-    webProgress.removeProgressListener(this);
-  }
-};
-
-
-/** Can't think of a good description of this class.  It probably does too much? */
-function Content() {
-  this._isZoomedToElement = false;
-
-  addMessageListener("Browser:Blur", this);
-  addMessageListener("Browser:KeyEvent", this);
-  addMessageListener("Browser:MouseOver", this);
-  addMessageListener("Browser:MouseDown", this);
-  addMessageListener("Browser:MouseLong", this);
-  addMessageListener("Browser:MouseUp", this);
-  addMessageListener("Browser:SaveAs", this);
-  addMessageListener("Browser:ZoomToPoint", this);
-  addMessageListener("Browser:MozApplicationCache:Fetch", this);
-
-  if (Util.isParentProcess())
-    addEventListener("DOMActivate", this, true);
-
-  addEventListener("MozApplicationManifest", this, false);
-  addEventListener("command", this, false);
-  addEventListener("pagehide", this, false);
-
-  this._progressController = new ProgressController(this);
-  this._progressController.start();
-
-  this._formAssistant = new FormAssistant();
-}
-
-Content.prototype = {
   handleEvent: function handleEvent(aEvent) {
     switch (aEvent.type) {
       case "DOMActivate": {
@@ -370,7 +286,7 @@ Content.prototype = {
         // Exception…" or "Get me out of here!" button
         if (/^about:certerror\?e=nssBadCert/.test(errorDoc.documentURI)) {
           let perm = errorDoc.getElementById("permanentExceptionButton");
-          let temp = errorDoc.getElementById("temporaryExceptionButton"); 
+          let temp = errorDoc.getElementById("temporaryExceptionButton");
           if (ot == temp || ot == perm) {
             let action = (ot == perm ? "permanent" : "temporary");
             sendAsyncMessage("Browser:CertException", { url: errorDoc.location.href, action: action });
@@ -601,18 +517,10 @@ Content.prototype = {
   _setTextZoom: function _setTextZoom(aZoom) {
     let viewer = docShell.contentViewer.QueryInterface(Ci.nsIMarkupDocumentViewer);
     viewer.textZoom = aZoom;
-  },
-
-  startLoading: function startLoading() {
-    this._loading = true;
-  },
-
-  stopLoading: function stopLoading() {
-    this._loading = false;
-  },
+  }
 };
 
-let contentObject = new Content();
+Content.init();
 
 let ViewportHandler = {
   init: function init() {
