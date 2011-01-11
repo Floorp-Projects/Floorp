@@ -5202,6 +5202,9 @@ js_NativeSet(JSContext *cx, JSObject *obj, const Shape *shape, bool added, Value
         AutoShapeRooter tvr(cx, shape);
         if (!shape->set(cx, obj, vp))
             return false;
+
+        JS_ASSERT_IF(!obj->inDictionaryMode(), shape->slot == slot);
+        slot = shape->slot;
     }
 
     if (obj->containsSlot(slot) &&
