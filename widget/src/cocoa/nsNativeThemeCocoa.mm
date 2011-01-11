@@ -1519,25 +1519,6 @@ nsNativeThemeCocoa::DrawResizer(CGContextRef cgContext, const HIRect& aRect,
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-static PRBool
-IsWindowSpanningToolbar(nsIWidget* aWindow,
-                        PRUint8 aWidgetType,
-                        const nsIntRect& aRect,
-                        ToolbarWindow** aCocoaWindow)
-{
-  nsIWidget* topLevelWidget = aWindow->GetTopLevelWidget();
-  if (!topLevelWidget)
-    return PR_FALSE;
-  NSWindow* win = (NSWindow*)topLevelWidget->GetNativeData(NS_NATIVE_WINDOW);
-  if (!win || ![win isKindOfClass:[ToolbarWindow class]])
-    return PR_FALSE;
-
-  *aCocoaWindow = (ToolbarWindow*)win;
-  return (aWidgetType == NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR ||
-          aWidgetType == NS_THEME_TOOLBAR) &&
-         aRect.x == 0 && aRect.width == [win frame].size.width;
-}
-
 NS_IMETHODIMP
 nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame* aFrame,
                                          PRUint8 aWidgetType, const nsRect& aRect,
@@ -1982,18 +1963,6 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-void
-nsNativeThemeCocoa::RegisterWidgetGeometry(nsIWidget* aWindow,
-                                           PRUint8 aWidgetType,
-                                           const nsIntRect& aRect)
-{
-  ToolbarWindow* cocoaWindow;
-  if (IsWindowSpanningToolbar(aWindow, aWidgetType, aRect, &cocoaWindow) &&
-      ![cocoaWindow drawsContentsIntoWindowFrame]) {
-    [cocoaWindow notifyToolbarAt:aRect.y height:aRect.height];
-  }
-}
-                                         
 nsIntMargin
 nsNativeThemeCocoa::RTLAwareMargin(const nsIntMargin& aMargin, nsIFrame* aFrame)
 {
