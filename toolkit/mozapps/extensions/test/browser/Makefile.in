@@ -50,6 +50,7 @@ _MAIN_TEST_FILES = \
   browser_about.js \
   browser_bug557943.js \
   browser_bug562797.js \
+  browser_bug562854.js \
   browser_bug562890.js \
   browser_bug562899.js \
   browser_bug562992.js \
