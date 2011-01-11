@@ -16771,6 +16771,8 @@ LoopProfile::profileOperation(JSContext* cx, JSOp op)
         Value& lval = cx->regs->sp[op == JSOP_GETELEM ? -2 : -3];
         if (lval.isObject() && js_IsTypedArray(&lval.toObject()))
             increment(OP_TYPED_ARRAY);
+        else if (lval.isObject() && lval.toObject().isDenseArray() && op == JSOP_GETELEM)
+            increment(OP_ARRAY_READ);
     }
 
     if (op == JSOP_CALL) {
@@ -16965,6 +16967,7 @@ LoopProfile::decide(JSContext *cx)
     debug_only_printf(LC_TMProfiler, "FEATURE eval %d\n", allOps[OP_EVAL]);
     debug_only_printf(LC_TMProfiler, "FEATURE new %d\n", allOps[OP_NEW]);
     debug_only_printf(LC_TMProfiler, "FEATURE call %d\n", allOps[OP_CALL]);
+    debug_only_printf(LC_TMProfiler, "FEATURE arrayread %d\n", allOps[OP_ARRAY_READ]);
     debug_only_printf(LC_TMProfiler, "FEATURE typedarray %d\n", allOps[OP_TYPED_ARRAY]);
     debug_only_printf(LC_TMProfiler, "FEATURE fwdjump %d\n", allOps[OP_FWDJUMP]);
     debug_only_printf(LC_TMProfiler, "FEATURE recursive %d\n", allOps[OP_RECURSIVE]);
@@ -16996,13 +16999,16 @@ LoopProfile::decide(JSContext *cx)
         uintN goodOps = 0;
 
         /* The tracer handles these ops well because of type specialization. */
-        goodOps += count(OP_FLOAT)*10 + count(OP_BIT)*11 + count(OP_INT)*5;
+        goodOps += count(OP_FLOAT)*10 + count(OP_BIT)*11 + count(OP_INT)*5 + count(OP_EQ)*15;
 
         /* The tracer handles these ops well because of inlining. */
         goodOps += (count(OP_CALL) + count(OP_NEW))*20;
 
         /* The tracer specialized typed array access. */
         goodOps += count(OP_TYPED_ARRAY)*10;
+
+        /* The methodjit is faster at array writes, but the tracer is faster for reads. */
+        goodOps += count(OP_ARRAY_READ)*15;
 
         debug_only_printf(LC_TMProfiler, "FEATURE goodOps %u\n", goodOps);
 
