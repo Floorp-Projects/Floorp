@@ -1362,7 +1362,7 @@ var XPIProvider = {
     Services.prefs.addObserver(this.checkCompatibilityPref, this, false);
     Services.prefs.addObserver(PREF_EM_CHECK_UPDATE_SECURITY, this, false);
 
-    this.checkForChanges(aAppChanged);
+    let flushCaches = this.checkForChanges(aAppChanged);
 
     // Changes to installed extensions may have changed which theme is selected
     this.applyThemeChange();
@@ -1377,6 +1377,7 @@ var XPIProvider = {
       // Should we show a UI or just pass the list via a pref?
       if (Prefs.getBoolPref(PREF_EM_SHOW_MISMATCH_UI, true)) {
         this.showMismatchWindow();
+        flushCaches = true;
       }
       else if (this.startupChanges.appDisabled.length > 0) {
         // Remember the list of add-ons that were disabled this startup so
@@ -1384,6 +1385,12 @@ var XPIProvider = {
         Services.prefs.setCharPref(PREF_EM_DISABLED_ADDONS_LIST,
                                    this.startupChanges.appDisabled.join(","));
       }
+    }
+
+    if (flushCaches) {
+      // Init this, so it will get the notification.
+      let xulPrototypeCache = Cc["@mozilla.org/xul/xul-prototype-cache;1"].getService(Ci.nsISupports);
+      Services.obs.notifyObservers(null, "startupcache-invalidate", null);
     }
 
     this.enabledAddons = Prefs.getCharPref(PREF_EM_ENABLED_ADDONS, "");
@@ -2268,11 +2275,6 @@ var XPIProvider = {
     cache = JSON.stringify(this.getInstallLocationStates());
     Services.prefs.setCharPref(PREF_INSTALL_CACHE, cache);
 
-    if (changed) {
-      // Init this, so it will get the notification.
-      let xulPrototypeCache = Cc["@mozilla.org/xul/xul-prototype-cache;1"].getService(Ci.nsISupports);
-      Services.obs.notifyObservers(null, "startupcache-invalidate", null);
-    }
     return changed;
   },
 
@@ -2420,7 +2422,7 @@ var XPIProvider = {
         Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, false);
         Services.prefs.setCharPref(PREF_BOOTSTRAP_ADDONS,
                                    JSON.stringify(this.bootstrappedAddons));
-        return;
+        return true;
       }
 
       LOG("No changes found");
@@ -2439,6 +2441,8 @@ var XPIProvider = {
       LOG("Add-ons list is missing, recreating");
       XPIDatabase.writeAddonsList();
     }
+
+    return false;
   },
 
   /**
