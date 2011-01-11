@@ -261,7 +261,9 @@ GenConversionForIntArray(Assembler &masm, js::TypedArray *tarray, const ValueRem
 
     if (!vr.isTypeKnown() || vr.knownType() != JSVAL_TYPE_INT32) {
         // If a conversion is necessary, save registers now.
-        Jump checkInt32 = masm.testInt32(Assembler::Equal, vr.typeReg());
+        MaybeJump checkInt32;
+        if (!vr.isTypeKnown())
+            checkInt32 = masm.testInt32(Assembler::Equal, vr.typeReg());
 
         // Store the value to convert.
         StackMarker vp = masm.allocStack(sizeof(Value), sizeof(double));
@@ -288,7 +290,8 @@ GenConversionForIntArray(Assembler &masm, js::TypedArray *tarray, const ValueRem
         saveForCall.restore();
         masm.freeStack(vp);
 
-        checkInt32.linkTo(masm.label(), &masm);
+        if (checkInt32.isSet())
+            checkInt32.get().linkTo(masm.label(), &masm);
     }
 
     // Performing clamping, if needed.
