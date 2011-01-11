@@ -1,6 +1,6 @@
 dump("====================== Content Script Loaded =======================\n");
 
-let assistant = contentObject._formAssistant;
+let assistant = Content._formAssistant;
 
 // Copied from http://mxr.mozilla.org/mozilla-central/source/testing/mochitest/tests/SimpleTest/EventUtils.js
 // except the netscape.security.PrivilegeManager.enablePrivilege call

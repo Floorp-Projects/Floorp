@@ -362,32 +362,32 @@ gTests.push({
     ok(back.disabled, "Can't go back");
     ok(forward.disabled, "Can't go forward");
 
-    messageManager.addMessageListener("WebProgress:LocationChange", gCurrentTest.onFragmentLoaded);
+    messageManager.addMessageListener("Content:LocationChange", gCurrentTest.onFragmentLoaded);
     Browser.loadURI(testURL_01 + "#fragment");
   },
 
   onFragmentLoaded: function() {
-    messageManager.removeMessageListener("WebProgress:LocationChange", arguments.callee);
+    messageManager.removeMessageListener("Content:LocationChange", arguments.callee);
 
     ok(!back.disabled, "Can go back");
     ok(forward.disabled, "Can't go forward");
 
-    messageManager.addMessageListener("WebProgress:LocationChange", gCurrentTest.onBack);
+    messageManager.addMessageListener("Content:LocationChange", gCurrentTest.onBack);
     CommandUpdater.doCommand("cmd_back");
   },
 
   onBack: function() {
-    messageManager.removeMessageListener("WebProgress:LocationChange", arguments.callee);
+    messageManager.removeMessageListener("Content:LocationChange", arguments.callee);
 
     ok(back.disabled, "Can't go back");
     ok(!forward.disabled, "Can go forward");
 
-    messageManager.addMessageListener("WebProgress:LocationChange", gCurrentTest.onForward);
+    messageManager.addMessageListener("Content:LocationChange", gCurrentTest.onForward);
     CommandUpdater.doCommand("cmd_forward");
   },
 
   onForward: function() {
-    messageManager.removeMessageListener("WebProgress:LocationChange", arguments.callee);
+    messageManager.removeMessageListener("Content:LocationChange", arguments.callee);
 
     ok(!back.disabled, "Can go back");
     ok(forward.disabled, "Can't go forward");

@@ -196,6 +196,9 @@ var Browser = {
     /* handles dispatching clicks on browser into clicks in content or zooms */
     Elements.browsers.customDragger = new Browser.MainDragger();
 
+    /* handles web progress management for open browsers */
+    Elements.browsers.webProgress = new Browser.WebProgress();
+
     let keySender = new ContentCustomKeySender(Elements.browsers);
     let mouseModule = new MouseModule();
     let gestureModule = new GestureModule(Elements.browsers);
@@ -1307,9 +1310,118 @@ Browser.MainDragger.prototype = {
 };
 
 
-function nsBrowserAccess()
-{
-}
+Browser.WebProgress = function WebProgress() {
+  messageManager.addMessageListener("Content:StateChange", this);
+  messageManager.addMessageListener("Content:LocationChange", this);
+  messageManager.addMessageListener("Content:SecurityChange", this);
+};
+
+Browser.WebProgress.prototype = {
+  receiveMessage: function receiveMessage(aMessage) {
+    let json = aMessage.json;
+    let tab = Browser.getTabForBrowser(aMessage.target);
+
+    switch (aMessage.name) {
+      case "Content:StateChange": {
+        if (json.stateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
+          if (json.stateFlags & Ci.nsIWebProgressListener.STATE_START)
+            this._networkStart(tab);
+          else if (json.stateFlags & Ci.nsIWebProgressListener.STATE_STOP)
+            this._networkStop(tab);
+        }
+
+        if (json.stateFlags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT) {
+          if (json.stateFlags & Ci.nsIWebProgressListener.STATE_STOP)
+            this._documentStop(tab);
+        }
+        break;
+      }
+
+      case "Content:LocationChange": {
+        let spec = json.location;
+        let location = spec.split("#")[0]; // Ignore fragment identifier changes.
+
+        if (tab == Browser.selectedTab)
+          BrowserUI.updateURI();
+
+        let locationHasChanged = (location != tab.browser.lastLocation);
+        if (locationHasChanged) {
+          TapHighlightHelper.hide();
+
+          Browser.getNotificationBox(tab.browser).removeTransientNotifications();
+          tab.resetZoomLevel();
+          tab.hostChanged = true;
+          tab.browser.lastLocation = location;
+          tab.browser.userTypedValue = "";
+
+#ifdef MOZ_CRASH_REPORTER
+          if (CrashReporter.enabled)
+            CrashReporter.annotateCrashReport("URL", spec);
+#endif
+          if (tab == Browser.selectedTab) {
+            // We're about to have new page content, so scroll the content area
+            // to the top so the new paints will draw correctly.
+            // (background tabs are delayed scrolled to top in _documentStop)
+            Browser.scrollContentToTop({ x: 0 });
+          }
+
+          tab.useFallbackWidth = false;
+          tab.updateViewportSize();
+        }
+
+        let event = document.createEvent("UIEvents");
+        event.initUIEvent("URLChanged", true, false, window, locationHasChanged);
+        tab.browser.dispatchEvent(event);
+        break;
+      }
+
+      case "Content:SecurityChange": {
+        // Don't need to do anything if the data we use to update the UI hasn't changed
+        if (tab.state == json.state && !tab.hostChanged)
+          return;
+
+        tab.hostChanged = false;
+        tab.state = json.state;
+
+        if (tab == Browser.selectedTab)
+          getIdentityHandler().checkIdentity();
+        break;
+      }
+    }
+  },
+
+  _networkStart: function _networkStart(aTab) {
+    aTab.startLoading();
+
+    if (aTab == Browser.selectedTab) {
+      BrowserUI.update(TOOLBARSTATE_LOADING);
+
+      // We should at least show something in the URLBar until
+      // the load has progressed further along
+      if (aTab.browser.currentURI.spec == "about:blank")
+        BrowserUI.updateURI();
+    }
+  },
+
+  _networkStop: function _networkStop(aTab) {
+    aTab.endLoading();
+
+    if (aTab == Browser.selectedTab)
+      BrowserUI.update(TOOLBARSTATE_LOADED);
+
+    if (aTab.browser.currentURI.spec != "about:blank")
+      aTab.updateThumbnail();
+  },
+
+  _documentStop: function _documentStop(aTab) {
+      // Make sure the URLbar is in view. If this were the selected tab,
+      // onLocationChange would scroll to top.
+      aTab.pageScrollOffset = new Point(0, 0);
+  }
+};
+
+
+function nsBrowserAccess() { }
 
 nsBrowserAccess.prototype = {
   QueryInterface: function(aIID) {
@@ -1529,8 +1641,7 @@ const ContentTouchHandler = {
     browser.focus();
     try {
       fl.activateRemoteFrame();
-    } catch (e) {
-    }
+    } catch (e) {}
     this._dispatchMouseEvent("Browser:MouseDown", aX, aY);
   },
 
@@ -2221,147 +2332,6 @@ function showDownloadManager(aWindowContext, aID, aReason) {
 }
 
 
-function ProgressController(tab) {
-  this._tab = tab;
-
-  // Properties used to cache security state used to update the UI
-  this.state = null;
-  this._hostChanged = false; // onLocationChange will flip this bit
-}
-
-ProgressController.prototype = {
-  get browser() {
-    return this._tab.browser;
-  },
-
-  onStateChange: function onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
-    // Ignore notification that aren't about the main document (iframes, etc)
-    if (aWebProgress.windowId != this._tab.browser.contentWindowId && this._tab.browser.contentWindowId)
-      return;
-
-    // If you want to observe other state flags, be sure they're listed in the
-    // Tab._createBrowser's call to addProgressListener
-    if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
-      if (aStateFlags & Ci.nsIWebProgressListener.STATE_START)
-        this._networkStart();
-      else if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP)
-        this._networkStop();
-    }
-
-    if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT) {
-      if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP)
-        this._documentStop();
-    }
-  },
-
-  /** This method is called to indicate progress changes for the currently loading page. */
-  onProgressChange: function onProgressChange(aWebProgress, aRequest, aCurSelf, aMaxSelf, aCurTotal, aMaxTotal) {
-    // To use this method, add NOTIFY_PROGRESS to the flags in Tab._createBrowser
-  },
-
-  /** This method is called to indicate a change to the current location. */
-  onLocationChange: function onLocationChange(aWebProgress, aRequest, aLocationURI) {
-    // ignore notification that aren't about the main document (iframes, etc)
-    if (aWebProgress.windowId != this._tab.browser.contentWindowId)
-      return;
-
-    let spec = aLocationURI ? aLocationURI.spec : "";
-    let location = spec.split("#")[0]; // Ignore fragment identifier changes.
-
-    this._hostChanged = true;
-
-    if (this._tab == Browser.selectedTab)
-      BrowserUI.updateURI();
-
-    let locationHasChanged = (location != this.browser.lastLocation);
-    if (locationHasChanged) {
-      TapHighlightHelper.hide();
-
-      this.browser.lastLocation = location;
-      this.browser.userTypedValue = "";
-      Browser.getNotificationBox(this.browser).removeTransientNotifications();
-      this._tab.resetZoomLevel();
-
-#ifdef MOZ_CRASH_REPORTER
-      if (CrashReporter.enabled)
-        CrashReporter.annotateCrashReport("URL", spec);
-#endif
-      if (this._tab == Browser.selectedTab) {
-        // We're about to have new page content, so scroll the content area
-        // to the top so the new paints will draw correctly.
-        // (background tabs are delayed scrolled to top in _documentStop)
-        Browser.scrollContentToTop({ x: 0 });
-      }
-      this._tab.useFallbackWidth = false;
-      this._tab.updateViewportSize();
-    }
-
-    let event = document.createEvent("UIEvents");
-    event.initUIEvent("URLChanged", true, false, window, locationHasChanged);
-    this.browser.dispatchEvent(event);
-  },
-
-  /**
-   * This method is called to indicate a status changes for the currently
-   * loading page.  The message is already formatted for display.
-   */
-  onStatusChange: function onStatusChange(aWebProgress, aRequest, aStatus, aMessage) {
-    // To use this method, add NOTIFY_STATUS to the flags in Tab._createBrowser
-  },
-
-  /** This method is called when the security state of the browser changes. */
-  onSecurityChange: function onSecurityChange(aWebProgress, aRequest, aState) {
-    // Don't need to do anything if the data we use to update the UI hasn't changed
-    if (this.state == aState && !this._hostChanged)
-      return;
-
-    this._hostChanged = false;
-    this.state = aState;
-
-    if (this._tab == Browser.selectedTab) {
-      getIdentityHandler().checkIdentity();
-    }
-  },
-
-  QueryInterface: function(aIID) {
-    if (aIID.equals(Ci.nsIWebProgressListener) ||
-        aIID.equals(Ci.nsISupportsWeakReference) ||
-        aIID.equals(Ci.nsISupports))
-      return this;
-
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
-
-  _networkStart: function _networkStart() {
-    this._tab.startLoading();
-
-    if (this._tab == Browser.selectedTab) {
-      BrowserUI.update(TOOLBARSTATE_LOADING);
-
-      // We should at least show something in the URLBar until
-      // the load has progressed further along
-      if (this._tab.browser.currentURI.spec == "about:blank")
-        BrowserUI.updateURI();
-    }
-  },
-
-  _networkStop: function _networkStop() {
-    this._tab.endLoading();
-
-    if (this._tab == Browser.selectedTab)
-      BrowserUI.update(TOOLBARSTATE_LOADED);
-
-    if (this.browser.currentURI.spec != "about:blank")
-      this._tab.updateThumbnail();
-  },
-
-  _documentStop: function _documentStop() {
-      // Make sure the URLbar is in view. If this were the selected tab,
-      // onLocationChange would scroll to top.
-      this._tab.pageScrollOffset = new Point(0, 0);
-  }
-};
-
 var OfflineApps = {
   offlineAppRequested: function(aRequest, aTarget) {
     if (!Services.prefs.getBoolPref("browser.offline-apps.notify"))
@@ -2444,13 +2414,15 @@ function Tab(aURI, aParams) {
   this._id = null;
   this._browser = null;
   this._notification = null;
-  this._state = null;
-  this._listener = null;
   this._loading = false;
   this._chromeTab = null;
   this._metadata = null;
+
   this.useFallbackWidth = false;
   this.owner = null;
+
+  this.hostChanged = false;
+  this.state = null;
 
   // Set to 0 since new tabs that have not been viewed yet are good tabs to
   // toss if app needs more memory.
@@ -2649,14 +2621,6 @@ Tab.prototype = {
       setTimeout(this.scrolledAreaChanged.bind(this), 0);
     }).bind(this));
 
-    // Attach a separate progress listener to the browser
-    let flags = Ci.nsIWebProgress.NOTIFY_LOCATION |
-                Ci.nsIWebProgress.NOTIFY_SECURITY |
-                Ci.nsIWebProgress.NOTIFY_STATE_NETWORK |
-                Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT;
-    this._listener = new ProgressController(this);
-    browser.webProgress.addProgressListener(this._listener, flags);
-
     return browser;
   },
 
@@ -2664,12 +2628,10 @@ Tab.prototype = {
     if (this._browser) {
       let notification = this._notification;
       let browser = this._browser;
-      browser.removeProgressListener(this._listener);
       browser.active = false;
 
       this._notification = null;
       this._browser = null;
-      this._listener = null;
       this._loading = false;
 
       Elements.browsers.removeChild(notification);
