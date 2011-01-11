@@ -191,11 +191,42 @@ struct VisitData {
   : placeId(0)
   , visitId(0)
   , sessionId(0)
-  , hidden(false)
+  , hidden(true)
   , typed(false)
-  , transitionType(-1)
+  , transitionType(PR_UINT32_MAX)
   , visitTime(0)
   {
+  }
+
+  VisitData(nsIURI* aURI)
+  : placeId(0)
+  , visitId(0)
+  , sessionId(0)
+  , hidden(true)
+  , typed(false)
+  , transitionType(PR_UINT32_MAX)
+  , visitTime(0)
+  {
+    (void)aURI->GetSpec(spec);
+    (void)GetReversedHostname(aURI, revHost);
+  }
+
+  /**
+   * Sets the transition type of the visit, as well as if it was typed and
+   * should be hidden (based on the transition type specified).
+   *
+   * @param aTransitionType
+   *        The transition type constant to set.  Must be one of the
+   *        TRANSITION_ constants on nsINavHistoryService.
+   */
+  void SetTransitionType(PRUint32 aTransitionType)
+  {
+    typed = aTransitionType == nsINavHistoryService::TRANSITION_TYPED;
+    bool redirected =
+      aTransitionType == nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY ||
+      aTransitionType == nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT;
+    hidden = GetHiddenState(redirected, aTransitionType);
+    transitionType = aTransitionType;
   }
 
   PRInt64 placeId;
@@ -205,7 +236,7 @@ struct VisitData {
   nsString revHost;
   bool hidden;
   bool typed;
-  PRInt32 transitionType;
+  PRUint32 transitionType;
   PRTime visitTime;
 };
 
@@ -1048,15 +1079,14 @@ History::VisitURI(nsIURI* aURI,
     }
   }
 
-  VisitData place;
-  rv = aURI->GetSpec(place.spec);
-  NS_ENSURE_SUCCESS(rv, rv);
-  (void)GetReversedHostname(aURI, place.revHost);
+  VisitData place(aURI);
+  NS_ENSURE_FALSE(place.spec.IsEmpty(), NS_ERROR_INVALID_ARG);
+
+  place.visitTime = PR_Now();
 
   // Assigns a type to the edge in the visit linked list. Each type will be
   // considered differently when weighting the frecency of a location.
   PRUint32 recentFlags = navHistory->GetRecentFlags(aURI);
-  bool redirected = false;
   bool isFollowedLink = recentFlags & nsNavHistory::RECENT_ACTIVATED;
 
   // Embed visits should never be added to the database, and the same is valid
@@ -1067,34 +1097,28 @@ History::VisitURI(nsIURI* aURI,
 
   if (!(aFlags & IHistory::TOP_LEVEL) && !isFollowedLink) {
     // A frame redirected to a new site without user interaction.
-    place.transitionType = nsINavHistoryService::TRANSITION_EMBED;
+    place.SetTransitionType(nsINavHistoryService::TRANSITION_EMBED);
   }
   else if (aFlags & IHistory::REDIRECT_TEMPORARY) {
-    place.transitionType = nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY;
-    redirected = true;
+    place.SetTransitionType(nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY);
   }
   else if (aFlags & IHistory::REDIRECT_PERMANENT) {
-    place.transitionType = nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT;
-    redirected = true;
+    place.SetTransitionType(nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT);
   }
   else if (recentFlags & nsNavHistory::RECENT_TYPED) {
-    place.transitionType = nsINavHistoryService::TRANSITION_TYPED;
+    place.SetTransitionType(nsINavHistoryService::TRANSITION_TYPED);
   }
   else if (recentFlags & nsNavHistory::RECENT_BOOKMARKED) {
-    place.transitionType = nsINavHistoryService::TRANSITION_BOOKMARK;
+    place.SetTransitionType(nsINavHistoryService::TRANSITION_BOOKMARK);
   }
   else if (!(aFlags & IHistory::TOP_LEVEL) && isFollowedLink) {
     // User activated a link in a frame.
-    place.transitionType = nsINavHistoryService::TRANSITION_FRAMED_LINK;
+    place.SetTransitionType(nsINavHistoryService::TRANSITION_FRAMED_LINK);
   }
   else {
     // User was redirected or link was clicked in the main window.
-    place.transitionType = nsINavHistoryService::TRANSITION_LINK;
+    place.SetTransitionType(nsINavHistoryService::TRANSITION_LINK);
   }
-
-  place.typed = place.transitionType == nsINavHistoryService::TRANSITION_TYPED;
-  place.hidden = GetHiddenState(redirected, place.transitionType);
-  place.visitTime = PR_Now();
 
   // EMBED visits are session-persistent and should not go through the database.
   // They exist only to keep track of isVisited status during the session.
