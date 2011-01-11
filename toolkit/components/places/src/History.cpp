@@ -1093,10 +1093,7 @@ History::VisitURI(nsIURI* aURI,
   }
 
   place.typed = place.transitionType == nsINavHistoryService::TRANSITION_TYPED;
-  place.hidden =
-    place.transitionType == nsINavHistoryService::TRANSITION_FRAMED_LINK ||
-    place.transitionType == nsINavHistoryService::TRANSITION_EMBED ||
-    redirected;
+  place.hidden = GetHiddenState(redirected, place.transitionType);
   place.visitTime = PR_Now();
 
   // EMBED visits are session-persistent and should not go through the database.
