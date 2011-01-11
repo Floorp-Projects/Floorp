@@ -27,6 +27,7 @@ function open_details(aId, aType, aCallback) {
     while (item) {
       if ("mAddon" in item && item.mAddon.id == aId) {
         list.ensureElementIsVisible(item);
+        EventUtils.synthesizeMouseAtCenter(item, { clickCount: 1 }, gManagerWindow);
         EventUtils.synthesizeMouseAtCenter(item, { clickCount: 2 }, gManagerWindow);
         wait_for_view_load(gManagerWindow, aCallback);
         return;

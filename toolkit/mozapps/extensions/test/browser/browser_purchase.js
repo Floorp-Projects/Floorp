@@ -181,6 +181,7 @@ add_test(function() {
   var list = gManagerWindow.document.getElementById("search-list");
   var item = list.firstChild.nextSibling;
   list.ensureElementIsVisible(item);
+  EventUtils.synthesizeMouseAtCenter(item, { clickCount: 1 }, gManagerWindow);
   EventUtils.synthesizeMouseAtCenter(item, { clickCount: 2 }, gManagerWindow);
 
   wait_for_view_load(gManagerWindow, function() {
