@@ -16496,7 +16496,8 @@ LoopProfile::LoopProfile(JSStackFrame *entryfp, jsbytecode *top, jsbytecode *bot
       top(top),
       bottom(bottom),
       hits(0),
-      undecided(false)
+      undecided(false),
+      unprofitable(false)
 {
     reset();
 }
@@ -16915,21 +16916,18 @@ LoopProfile::isCompilationExpensive(JSContext *cx, uintN depth)
  * expensive.
  */
 bool
-LoopProfile::isCompilationUnprofitable(JSContext *cx, uintN depth)
+LoopProfile::isCompilationUnprofitable(JSContext *cx, uintN goodOps)
 {
-    if (depth == 0)
-        return true;
-
     if (!profiled)
         return false;
 
-    if (numAllOps < 15 && allOps[OP_FWDJUMP])
+    if (goodOps <= 22 && allOps[OP_FWDJUMP])
         return true;
     
     /* Ensure that inner loops aren't fleeting. */
     for (uintN i=0; i<numInnerLoops; i++) {
         LoopProfile *prof = LookupLoopProfile(cx, innerLoops[i].top);
-        if (!prof || prof->isCompilationUnprofitable(cx, depth-1))
+        if (!prof || prof->unprofitable)
             return true;
     }
 
@@ -17008,7 +17006,8 @@ LoopProfile::decide(JSContext *cx)
 
         debug_only_printf(LC_TMProfiler, "FEATURE goodOps %u\n", goodOps);
 
-        if (isCompilationUnprofitable(cx, 4))
+        unprofitable = isCompilationUnprofitable(cx, goodOps);
+        if (unprofitable)
             debug_only_print0(LC_TMProfiler, "NOTRACE: unprofitable\n");
         else if (goodOps >= numAllOps)
             traceOK = true;
