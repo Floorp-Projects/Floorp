@@ -1118,6 +1118,7 @@ function check_test_23() {
       AddonManager.getAddonsWithOperationsByTypes(null, function(list) {
         do_check_eq(list.length, 0);
 
+        restartManager();
         b1.uninstall();
         restartManager();
 
