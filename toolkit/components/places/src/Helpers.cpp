@@ -348,5 +348,14 @@ ForceWALCheckpoint(mozIStorageConnection* aDBConn)
   (void)stmt->ExecuteAsync(nsnull, getter_AddRefs(handle));
 }
 
+bool
+GetHiddenState(bool aIsRedirect,
+               PRUint32 aTransitionType)
+{
+  return aTransitionType == nsINavHistoryService::TRANSITION_FRAMED_LINK ||
+         aTransitionType == nsINavHistoryService::TRANSITION_EMBED ||
+         aIsRedirect;
+}
+
 } // namespace places
 } // namespace mozilla
