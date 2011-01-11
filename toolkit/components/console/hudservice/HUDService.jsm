@@ -376,13 +376,28 @@ ResponseListener.prototype =
     }
     catch (ex) { }
 
-    this.setResponseHeader(aRequest);
-
     if (HUDService.saveRequestAndResponseBodies) {
       this.httpActivity.response.body = this.receivedData;
     }
     else {
       this.httpActivity.response.bodyDiscarded = true;
+    }
+
+    // Retrieve the response headers, as they are, from the server.
+    let response = null;
+    for each (let item in HUDService.openResponseHeaders) {
+      if (item.channel === aRequest) {
+        response = item;
+        break;
+      }
+    }
+
+    if (response) {
+      this.httpActivity.response.header = response.headers;
+      delete HUDService.openResponseHeaders[response.id];
+    }
+    else {
+      this.setResponseHeader(aRequest);
     }
 
     if (HUDService.lastFinishedRequestCallback) {
@@ -1692,6 +1707,12 @@ HUD_SERVICE.prototype =
     activityDistributor.removeObserver(this.httpObserver);
     delete this.httpObserver;
 
+    Services.obs.removeObserver(this.httpResponseExaminer,
+                                "http-on-examine-response");
+
+    this.openRequests = {};
+    this.openResponseHeaders = {};
+
     // delete the storage as it holds onto channels
     delete this.storage;
     delete this.defaultFilterPrefs;
@@ -1945,6 +1966,11 @@ HUD_SERVICE.prototype =
    * Requests that haven't finished yet.
    */
   openRequests: {},
+
+  /**
+   * Response headers for requests that haven't finished yet.
+   */
+  openResponseHeaders: {},
 
   /**
    * Assign a function to this property to listen for finished httpRequests.
@@ -2261,6 +2287,58 @@ HUD_SERVICE.prototype =
     this.httpObserver = httpObserver;
 
     activityDistributor.addObserver(httpObserver);
+
+    // This is used to find the correct HTTP response headers.
+    Services.obs.addObserver(this.httpResponseExaminer,
+                             "http-on-examine-response", false);
+  },
+
+  /**
+   * Observe notifications for the http-on-examine-response topic, coming from
+   * the nsIObserver service.
+   *
+   * @param string aTopic
+   * @param nsIHttpChannel aSubject
+   * @returns void
+   */
+  httpResponseExaminer: function HS_httpResponseExaminer(aSubject, aTopic)
+  {
+    if (aTopic != "http-on-examine-response" ||
+        !(aSubject instanceof Ci.nsIHttpChannel)) {
+      return;
+    }
+
+    let channel = aSubject.QueryInterface(Ci.nsIHttpChannel);
+    let win = NetworkHelper.getWindowForRequest(channel);
+    if (!win) {
+      return;
+    }
+    let hudId = HUDService.getHudIdByWindow(win);
+    if (!hudId) {
+      return;
+    }
+
+    let response = {
+      id: HUDService.sequenceId(),
+      hudId: hudId,
+      channel: channel,
+      headers: {},
+    };
+
+    try {
+      channel.visitResponseHeaders({
+        visitHeader: function(aName, aValue) {
+          response.headers[aName] = aValue;
+        }
+      });
+    }
+    catch (ex) {
+      delete response.headers;
+    }
+
+    if (response.headers) {
+      HUDService.openResponseHeaders[response.id] = response;
+    }
   },
 
   /**
