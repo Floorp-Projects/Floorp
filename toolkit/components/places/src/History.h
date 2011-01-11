@@ -54,6 +54,8 @@
 namespace mozilla {
 namespace places {
 
+struct VisitData;
+
 #define NS_HISTORYSERVICE_CID \
   {0x0937a705, 0x91a6, 0x417a, {0x82, 0x92, 0xb2, 0x2e, 0xb1, 0x0d, 0xa8, 0x6c}}
 
@@ -79,6 +81,22 @@ public:
    * Obtains the statement to use to check if a URI is visited or not.
    */
   mozIStorageAsyncStatement* GetIsVisitedStatement();
+
+  /**
+   * Adds an entry in moz_places with the data in aVisitData.
+   *
+   * @param aVisitData
+   *        The visit data to use to populate a new row in moz_places.
+   */
+  nsresult InsertPlace(const VisitData& aVisitData);
+
+  /**
+   * Updates an entry in moz_places with the data in aVisitData.
+   *
+   * @param aVisitData
+   *        The visit data to use to update the existing row in moz_places.
+   */
+  nsresult UpdatePlace(const VisitData& aVisitData);
 
   /**
    * Obtains a pointer to this service.
