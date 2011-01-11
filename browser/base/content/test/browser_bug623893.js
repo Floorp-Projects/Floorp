@@ -16,6 +16,8 @@ function runTests() {
       duplicate(1, "went forward", function () {
         gBrowser.removeCurrentTab();
         gBrowser.removeCurrentTab();
+        gBrowser.addTab();
+        gBrowser.removeCurrentTab();
         finish();
       });
     });
