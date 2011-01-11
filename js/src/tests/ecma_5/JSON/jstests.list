@@ -3,4 +3,3 @@ script cyclic-stringify.js
 script small-codepoints.js
 script trailing-comma.js
 script stringify-gap.js
-script stringify-boxed-primitives.js
