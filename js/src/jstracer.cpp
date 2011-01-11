@@ -16898,7 +16898,7 @@ LoopProfile::isCompilationExpensive(JSContext *cx, uintN depth)
         return true;
 
     /* Is the code too branchy? */
-    if (numSelfOpsMult >= numSelfOps*100000)
+    if (numSelfOpsMult > numSelfOps*100000)
         return true;
 
     /* Ensure that inner loops aren't too expensive. */
@@ -17068,8 +17068,9 @@ AbortProfiling(JSContext *cx)
 {
     debug_only_print0(LC_TMProfiler, "Profiling complete (aborted)\n");
     TraceMonitor *tm = &JS_TRACE_MONITOR(cx);
-    tm->profile->numSelfOps = MAX_PROFILE_OPS;
-    tm->profile->decide(cx);
+    tm->profile->profiled = true;
+    tm->profile->traceOK = false;
+    tm->profile->execOK = false;
     tm->profile = NULL;
 }
 
