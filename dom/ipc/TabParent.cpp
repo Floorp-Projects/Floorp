@@ -89,6 +89,7 @@ NS_IMPL_ISUPPORTS3(TabParent, nsITabParent, nsIAuthPromptProvider, nsISecureBrow
 TabParent::TabParent()
   : mIMEComposing(PR_FALSE)
   , mIMECompositionEnding(PR_FALSE)
+  , mIMESeqno(0)
   , mDPI(0)
 {
 }
