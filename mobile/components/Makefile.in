@@ -74,8 +74,11 @@ EXTRA_COMPONENTS = \
         LoginManager.js \
         LoginManagerPrompter.js \
         BlocklistPrompt.js \
-        UpdatePrompt.js \
-	$(NULL)
+        $(NULL)
+
+ifdef MOZ_UPDATER
+EXTRA_COMPONENTS += UpdatePrompt.js
+endif
 
 ifndef ANDROID
 EXTRA_COMPONENTS += AlertsService.js
