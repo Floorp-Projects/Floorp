@@ -4230,6 +4230,12 @@ JS_ObjectIsFunction(JSContext *cx, JSObject *obj)
     return obj->getClass() == &js_FunctionClass;
 }
 
+JS_PUBLIC_API(JSBool)
+JS_ObjectIsCallable(JSContext *cx, JSObject *obj)
+{
+    return obj->isCallable();
+}
+
 static JSBool
 js_generic_native_method_dispatcher(JSContext *cx, uintN argc, Value *vp)
 {
