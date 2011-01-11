@@ -970,6 +970,10 @@ toolbar:not([iconsize="small"])[mode="icons"] #forward-button:not([disabled="tru
 
 /* ::::: fullscreen window controls ::::: */
 
+#TabsToolbar > #window-controls {
+  -moz-margin-start: 4px;
+}
+
 #minimize-button,
 #restore-button,
 #close-button {

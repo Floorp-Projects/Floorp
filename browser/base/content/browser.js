@@ -3919,6 +3919,25 @@ var FullScreen = {
       document.documentElement.setAttribute("inFullscreen", true);
     }
 
+    // In tabs-on-top mode, move window controls to the tab bar,
+    // and in tabs-on-bottom mode, move them back to the navigation toolbar.
+    // When there is a chance the tab bar may be collapsed, put window
+    // controls on nav bar.
+    var fullscreenflex = document.getElementById("fullscreenflex");
+    var fullscreenctls = document.getElementById("window-controls");
+    var ctlsOnTabbar = TabsOnTop.enabled &&
+                       !gPrefService.getBoolPref("browser.tabs.autoHide");
+    if (fullscreenctls.parentNode.id == "nav-bar" && ctlsOnTabbar) {
+      document.getElementById("TabsToolbar").appendChild(fullscreenctls);
+      // we don't need this space in tabs-on-top mode, so prevent it from 
+      // being shown
+      fullscreenflex.removeAttribute("fullscreencontrol");
+    }
+    else if (fullscreenctls.parentNode.id == "TabsToolbar" && !ctlsOnTabbar) {
+      document.getElementById("nav-bar").appendChild(fullscreenctls);
+      fullscreenflex.setAttribute("fullscreencontrol", "true");
+    }
+
     var controls = document.getElementsByAttribute("fullscreencontrol", "true");
     for (var i = 0; i < controls.length; ++i)
       controls[i].hidden = aShow;
