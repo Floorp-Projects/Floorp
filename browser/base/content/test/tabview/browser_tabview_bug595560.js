@@ -97,7 +97,7 @@ function testThree(contentWindow) {
         "tabviewsearchenabled", onSearchEnabled, false);
 
       let searchBox = contentWindow.iQ("#searchbox");
-      searchBox.val(newTabOne.tabItem.nameEl.innerHTML);
+      searchBox.val(newTabOne._tabViewTabItem.nameEl.innerHTML);
 
       contentWindow.performSearch();
 
