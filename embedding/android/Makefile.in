@@ -107,7 +107,7 @@ RES_LAYOUT = \
   res/layout/notification_progress_text.xml \
   $(NULL)
 
-RES_VALUES = res/values/colors.xml
+RES_VALUES = res/values/colors.xml res/values/themes.xml
 
 AB_rCD = $(shell echo $(AB_CD) | sed -e s/-/-r/)
 
