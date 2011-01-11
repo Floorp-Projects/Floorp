@@ -598,13 +598,9 @@ assertError("for each (const [x,y,z] in foo);", SyntaxError);
 // destructuring in for-in and for-each-in loop heads with initializers
 
 assertStmt("for (var {a:x,b:y,c:z} = 22 in foo);", forInStmt(varDecl([{ id: axbycz, init: lit(22) }]), ident("foo"), emptyStmt));
-assertStmt("for (let {a:x,b:y,c:z} = 22 in foo);", forInStmt(letDecl([{ id: axbycz, init: lit(22) }]), ident("foo"), emptyStmt));
 assertStmt("for (var [x,y,z] = 22 in foo);", forInStmt(varDecl([{ id: xyz, init: lit(22) }]), ident("foo"), emptyStmt));
-assertStmt("for (let [x,y,z] = 22 in foo);", forInStmt(letDecl([{ id: xyz, init: lit(22) }]), ident("foo"), emptyStmt));
 assertStmt("for each (var {a:x,b:y,c:z} = 22 in foo);", forEachInStmt(varDecl([{ id: axbycz, init: lit(22) }]), ident("foo"), emptyStmt));
-assertStmt("for each (let {a:x,b:y,c:z} = 22 in foo);", forEachInStmt(letDecl([{ id: axbycz, init: lit(22) }]), ident("foo"), emptyStmt));
 assertStmt("for each (var [x,y,z] = 22 in foo);", forEachInStmt(varDecl([{ id: xyz, init: lit(22) }]), ident("foo"), emptyStmt));
-assertStmt("for each (let [x,y,z] = 22 in foo);", forEachInStmt(letDecl([{ id: xyz, init: lit(22) }]), ident("foo"), emptyStmt));
 assertError("for (x = 22 in foo);", SyntaxError);
 assertError("for ({a:x,b:y,c:z} = 22 in foo);", SyntaxError);
 assertError("for ([x,y,z] = 22 in foo);", SyntaxError);

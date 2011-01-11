@@ -54,15 +54,6 @@ function test()
 
 // ------- Comment #98 From Gary Kwong [:nth10sd]
 
-  try
-  {
-    for(let [x] = (x) in []) {}
-// Assertion failure: !(pnu->pn_dflags & PND_BOUND), at ../jsemit.cpp:1818
-  }
-  catch(ex)
-  {
-  }
-
   uneval(function(){(Number(0) for each (NaN in []) for each (x4 in this))});
 // Assertion failure: pos == 0, at ../jsopcode.cpp:2963
 

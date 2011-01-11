@@ -87,16 +87,6 @@ function test()
 
 // =====
 
-    try
-    {
-      for(let x = <{x}/> in <y/>) x2;
-    }
-    catch(ex)
-    {
-    }
-
-// =====
-
   for(
     const NaN;
     this.__defineSetter__("x4", function(){});

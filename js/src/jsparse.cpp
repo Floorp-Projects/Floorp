@@ -5133,10 +5133,9 @@ Parser::forStatement()
             pn1->pn_xflags |= PNX_FORINVAR;
 
             /*
-             * Rewrite 'for (<decl> x = i in o)' where <decl> is 'let',
-             * 'var', or 'const' to hoist the initializer or the entire
-             * decl out of the loop head. TOK_VAR is the type for both
-             * 'var' and 'const'.
+             * Rewrite 'for (<decl> x = i in o)' where <decl> is 'var' or
+             * 'const' to hoist the initializer or the entire decl out of
+             * the loop head. TOK_VAR is the type for both 'var' and 'const'.
              */
             pn2 = pn1->pn_head;
             if ((pn2->pn_type == TOK_NAME && pn2->maybeExpr())
@@ -5144,76 +5143,52 @@ Parser::forStatement()
                 || pn2->pn_type == TOK_ASSIGN
 #endif
                 ) {
+#if JS_HAS_BLOCK_SCOPE
+                if (tt == TOK_LET) {
+                    reportErrorNumber(pn2, JSREPORT_ERROR, JSMSG_INVALID_FOR_IN_INIT);
+                    return NULL;
+                }
+#endif /* JS_HAS_BLOCK_SCOPE */
+
                 pnseq = ListNode::create(tc);
                 if (!pnseq)
                     return NULL;
                 pnseq->pn_type = TOK_SEQ;
                 pnseq->pn_pos.begin = pn->pn_pos.begin;
 
-#if JS_HAS_BLOCK_SCOPE
-                if (tt == TOK_LET) {
-                    /*
-                     * Hoist just the 'i' from 'for (let x = i in o)' to
-                     * before the loop, glued together via pnseq.
-                     */
-                    JSParseNode *pn3 = UnaryNode::create(tc);
-                    if (!pn3)
-                        return NULL;
-                    pn3->pn_type = TOK_SEMI;
-                    pn3->pn_op = JSOP_NOP;
-                    JSParseNode *pn4;
+                dflag = PND_INITIALIZED;
+
+                /*
+                 * All of 'var x = i' is hoisted above 'for (x in o)',
+                 * so clear PNX_FORINVAR.
+                 *
+                 * Request JSOP_POP here since the var is for a simple
+                 * name (it is not a destructuring binding's left-hand
+                 * side) and it has an initializer.
+                 */
+                pn1->pn_xflags &= ~PNX_FORINVAR;
+                pn1->pn_xflags |= PNX_POPVAR;
+                pnseq->initList(pn1);
+
 #if JS_HAS_DESTRUCTURING
-                    if (pn2->pn_type == TOK_ASSIGN) {
-                        pn4 = pn2->pn_right;
-                        pn2 = pn1->pn_head = pn2->pn_left;
-                    } else
-#endif
-                    {
-                        pn4 = pn2->pn_expr;
-                        pn2->pn_expr = NULL;
-                    }
-                    if (!RebindLets(pn4, tc))
+                if (pn2->pn_type == TOK_ASSIGN) {
+                    pn1 = CloneParseTree(pn2->pn_left, tc);
+                    if (!pn1)
                         return NULL;
-                    pn3->pn_pos = pn4->pn_pos;
-                    pn3->pn_kid = pn4;
-                    pnseq->initList(pn3);
                 } else
-#endif /* JS_HAS_BLOCK_SCOPE */
-                {
-                    dflag = PND_INITIALIZED;
-
-                    /*
-                     * All of 'var x = i' is hoisted above 'for (x in o)',
-                     * so clear PNX_FORINVAR.
-                     *
-                     * Request JSOP_POP here since the var is for a simple
-                     * name (it is not a destructuring binding's left-hand
-                     * side) and it has an initializer.
-                     */
-                    pn1->pn_xflags &= ~PNX_FORINVAR;
-                    pn1->pn_xflags |= PNX_POPVAR;
-                    pnseq->initList(pn1);
-
-#if JS_HAS_DESTRUCTURING
-                    if (pn2->pn_type == TOK_ASSIGN) {
-                        pn1 = CloneParseTree(pn2->pn_left, tc);
-                        if (!pn1)
-                            return NULL;
-                    } else
 #endif
-                    {
-                        JS_ASSERT(pn2->pn_type == TOK_NAME);
-                        pn1 = NameNode::create(pn2->pn_atom, tc);
-                        if (!pn1)
-                            return NULL;
-                        pn1->pn_type = TOK_NAME;
-                        pn1->pn_op = JSOP_NAME;
-                        pn1->pn_pos = pn2->pn_pos;
-                        if (pn2->pn_defn)
-                            LinkUseToDef(pn1, (JSDefinition *) pn2, tc);
-                    }
-                    pn2 = pn1;
+                {
+                    JS_ASSERT(pn2->pn_type == TOK_NAME);
+                    pn1 = NameNode::create(pn2->pn_atom, tc);
+                    if (!pn1)
+                        return NULL;
+                    pn1->pn_type = TOK_NAME;
+                    pn1->pn_op = JSOP_NAME;
+                    pn1->pn_pos = pn2->pn_pos;
+                    if (pn2->pn_defn)
+                        LinkUseToDef(pn1, (JSDefinition *) pn2, tc);
                 }
+                pn2 = pn1;
             }
         }
 
