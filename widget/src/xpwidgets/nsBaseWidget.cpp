@@ -783,12 +783,15 @@ nsBaseWidget::GetShouldAccelerate()
   nsCOMPtr<nsIPrefBranch2> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
 
   PRBool disableAcceleration = PR_FALSE;
+#if defined(XP_WIN) || defined(XP_MACOSX)
   PRBool accelerateByDefault = PR_TRUE;
+#else
+  PRBool accelerateByDefault = PR_FALSE;
+#endif
 
   if (prefs) {
-    prefs->GetBoolPref("layers.accelerate-all",
-                       &accelerateByDefault);
-    prefs->GetBoolPref("layers.accelerate-none",
+    // we should use AddBoolPrefVarCache
+    prefs->GetBoolPref("layers.acceleration.disabled",
                        &disableAcceleration);
   }
 
@@ -807,6 +810,7 @@ nsBaseWidget::GetShouldAccelerate()
   if (accelerateByDefault)
     return PR_TRUE;
 
+  /* use the window acceleration flag */
   return mUseAcceleratedRendering;
 }
 
