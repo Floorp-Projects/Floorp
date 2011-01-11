@@ -78,9 +78,12 @@ class GeckoSurfaceView
         inputConnection = new GeckoInputConnection(this);
         setFocusable(true);
         setFocusableInTouchMode(true);
-
-        mWidth = 0;
-        mHeight = 0;
+        
+        DisplayMetrics metrics = new DisplayMetrics();
+        GeckoApp.mAppContext.getWindowManager().
+            getDefaultDisplay().getMetrics(metrics);
+        mWidth = metrics.widthPixels;
+        mHeight = metrics.heightPixels;
         mBufferWidth = 0;
         mBufferHeight = 0;
 
@@ -95,6 +98,10 @@ class GeckoSurfaceView
 
     protected void finalize() throws Throwable {
         super.finalize();
+    }
+
+    void drawSplashScreen() {
+        this.drawSplashScreen(getHolder(), mWidth, mHeight);
     }
 
     void drawSplashScreen(SurfaceHolder holder, int width, int height) {
@@ -117,7 +124,7 @@ class GeckoSurfaceView
         p.setTextSize(32f);
         p.setAntiAlias(true);
         p.setColor(res.getColor(R.color.splash_font));
-        c.drawText(res.getString(R.string.splash_screen_label), width/2, y + h + 32, p);
+        c.drawText(GeckoSurfaceView.mSplashStatusMsg, width/2, y + h + 32, p);
         holder.unlockCanvasAndPost(c);
     }
 
@@ -190,6 +197,8 @@ class GeckoSurfaceView
         Log.i("GeckoAppJava", "surface created");
         GeckoEvent e = new GeckoEvent(GeckoEvent.SURFACE_CREATED);
         GeckoAppShell.sendEventToGecko(e);
+        if (mShowingSplashScreen)
+            drawSplashScreen();
     }
 
     public void surfaceDestroyed(SurfaceHolder holder) {
@@ -540,6 +549,7 @@ class GeckoSurfaceView
     int mDrawMode;
 
     static boolean mShowingSplashScreen = true;
+    static String  mSplashStatusMsg = "";
 
     // let's not change stuff around while we're in the middle of
     // starting drawing, ending drawing, or changing surface

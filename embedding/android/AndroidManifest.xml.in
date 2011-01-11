@@ -26,7 +26,7 @@
                   android:configChanges="keyboard|keyboardHidden|mcc|mnc"
                   android:windowSoftInputMode="stateUnspecified|adjustResize"
                   android:launchMode="singleTask"
-                  android:theme="@android:style/Theme.Light.NoTitleBar">
+                  android:theme="@style/GreyTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -76,7 +76,7 @@
         </receiver>
 
         <activity android:name="Restarter"
-                  android:theme="@android:style/Theme.Light.NoTitleBar">
+                  android:theme="@style/GreyTheme">
           <intent-filter>
             <action android:name="org.mozilla.gecko.restart" 
 		    android:process="@MOZ_APP_NAME@Restarter"/>
