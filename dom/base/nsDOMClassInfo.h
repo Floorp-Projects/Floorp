@@ -1702,6 +1702,8 @@ protected:
   }
 
 public:
+  NS_IMETHOD PreCreate(nsISupports *nativeObj, JSContext *cx,
+                       JSObject *globalObj, JSObject **parentObj);
   NS_IMETHOD PostCreatePrototype(JSContext * cx, JSObject * proto)
   {
     return NS_OK;
