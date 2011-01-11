@@ -509,7 +509,8 @@ nsChromeRegistryChrome::SendRegisteredChrome(
 
   mOverrideTable.EnumerateRead(&EnumerateOverride, &overrides);
 
-  bool success = aParent->SendRegisterChrome(packages, resources, overrides);
+  bool success = aParent->SendRegisterChrome(packages, resources, overrides,
+                                             mSelectedLocale);
   NS_ENSURE_TRUE(success, );
 }
 
