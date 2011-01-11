@@ -2410,8 +2410,21 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32& tcflags)
                             ++nflattened;
                             continue;
                         }
-                        if (DeoptimizeUsesWithin(lexdep, funbox->node->pn_body->pn_pos))
-                            FlagHeavyweights(lexdep, funbox, tcflags);
+
+                        /*
+                         * FIXME bug 545759: to test nflattened != 0 instead of
+                         * nflattened == nupvars below, we'll need to avoid n^2
+                         * bugs such as 617430 in uncommenting the following:
+                         *
+                         * if (DeoptimizeUsesWithin(lexdep, funbox->node->pn_body->pn_pos))
+                         *     FlagHeavyweights(lexdep, funbox, tcflags);
+                         *
+                         * For now it's best to avoid this tedious, use-wise
+                         * deoptimization and let fun remain an unoptimized
+                         * closure. This is safe because we leave fun's kind
+                         * set to interpreted, so all functions holding its
+                         * upvars will be flagged as heavyweight.
+                         */
                     }
                 }
 
@@ -2419,7 +2432,6 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32& tcflags)
                     FUN_METER(onlyfreevar);
                     FUN_SET_KIND(fun, JSFUN_NULL_CLOSURE);
                 } else if (nflattened == nupvars) {
-                    /* FIXME bug 545759: to test nflattened != 0 */
                     /*
                      * We made it all the way through the upvar loop, so it's
                      * safe to optimize to a flat closure.
@@ -2589,7 +2601,7 @@ LeaveFunction(JSParseNode *fn, JSTreeContext *funtc, JSAtom *funAtom = NULL,
 
             /*
              * Make sure to deoptimize lexical dependencies that are polluted
-             * by eval or with, to safely statically bind globals (see bug 561923).
+             * by eval or with, to safely bind globals (see bug 561923).
              */
             if (funtc->callsEval() ||
                 (outer_ale && tc->innermostWith &&
