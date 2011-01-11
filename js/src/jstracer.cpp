@@ -15342,10 +15342,18 @@ JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_ARGSUB()
 {
     JSStackFrame* const fp = cx->fp();
-    if (!fp->fun()->isHeavyweight()) {
+
+    /*
+     * The arguments object or its absence in the frame is part of the typemap,
+     * so a record-time check suffices here. We don't bother tracing ARGSUB in
+     * the case of an arguments object exising, because ARGSUB and to a lesser
+     * extent ARGCNT are emitted to avoid arguments object creation.
+     */
+    if (!fp->hasArgsObj() && !fp->fun()->isHeavyweight()) {
         uintN slot = GET_ARGNO(cx->regs->pc);
         if (slot >= fp->numActualArgs())
             RETURN_STOP_A("can't trace out-of-range arguments");
+
         stack(0, get(&cx->fp()->canonicalActualArg(slot)));
         return ARECORD_CONTINUE;
     }
