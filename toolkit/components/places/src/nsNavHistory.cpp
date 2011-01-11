@@ -2726,24 +2726,16 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, nsIURI* aReferringURI,
     stmt->Reset();
     scoper.Abandon();
 
-    // embedded links and redirects will be hidden, but don't hide pages that
-    // are already unhidden.
-    //
-    // Note that we test the redirect flag and not for the redirect transition
-    // type. The transition type refers to how we got here, and whether a page
-    // is shown does not depend on whether you got to it through a redirect.
-    // Rather, we want to hide pages that redirect themselves somewhere
-    // else, which is what the redirect flag means.
-    //
-    // note, we want to unhide any hidden pages that the user explicitly types
-    // (aTransitionType == TRANSITION_TYPED) so that they will appear in
-    // the history UI (sidebar, history menu, url bar autocomplete, etc)
+    // Note that we want to unhide any hidden pages that the user explicitly
+    // types (aTransitionType == TRANSITION_TYPED) so that they will appear in
+    // the history UI (sidebar, history menu, url bar autocomplete, etc).
+    // Additionally, we don't want to hide any pages that are already unhidden.
     hidden = oldHiddenState;
     if (hidden == 1 &&
-        (!aIsRedirect || aTransitionType == TRANSITION_TYPED) &&
-        aTransitionType != TRANSITION_EMBED &&
-        aTransitionType != TRANSITION_FRAMED_LINK)
+        (!GetHiddenState(aIsRedirect, aTransitionType) ||
+         aTransitionType == TRANSITION_TYPED)) {
       hidden = 0; // unhide
+    }
 
     typed = (PRInt32)(oldTypedState == 1 || (aTransitionType == TRANSITION_TYPED));
 
