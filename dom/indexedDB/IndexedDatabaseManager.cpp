@@ -843,14 +843,15 @@ IndexedDatabaseManager::OriginClearRunnable::Run()
 
       mFirstCallback = false;
 
+      nsCOMPtr<nsIThread> thread;
+      mThread.swap(thread);
+
       // Dispatch to the IO thread.
-      if (NS_FAILED(mThread->Dispatch(this, NS_DISPATCH_NORMAL))) {
+      if (NS_FAILED(thread->Dispatch(this, NS_DISPATCH_NORMAL))) {
         NS_WARNING("Failed to dispatch to IO thread!");
         return NS_ERROR_FAILURE;
       }
 
-      // Don't need this any longer.
-      mThread = nsnull;
       return NS_OK;
     }
 
