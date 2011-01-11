@@ -2695,7 +2695,7 @@ stubs::ConvertToTypedInt(JSContext *cx, Value *vp)
 
     JS_ASSERT(vp->isString());
 
-    int32 i32;
+    int32 i32 = 0;
 #ifdef DEBUG
     bool success = 
 #endif
@@ -2721,7 +2721,7 @@ stubs::ConvertToTypedFloat(JSContext *cx, Value *vp)
         vp->setDouble(vp->toBoolean() ? 1 : 0);
     } else {
         JS_ASSERT(vp->isString());
-        double d;
+        double d = 0;
 #ifdef DEBUG
         bool success = 
 #endif

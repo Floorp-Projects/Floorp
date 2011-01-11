@@ -1102,7 +1102,8 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
         JS_ASSERT(fun == callobj.getCallObjCalleeFunction());
         JS_ASSERT(script == fun->script());
 
-        if (uintN n = bindings.countArgsAndVars()) {
+        uintN n = bindings.countArgsAndVars();
+        if (n > 0) {
             JS_ASSERT(JSObject::CALL_RESERVED_SLOTS + n <= callobj.numSlots());
 
             uint32 nvars = bindings.countVars();
