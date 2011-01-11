@@ -2338,7 +2338,7 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32& tcflags)
 
         JSFunction *fun = (JSFunction *) funbox->object;
 
-        JS_ASSERT(fun->isInterpreted());
+        JS_ASSERT(FUN_KIND(fun) == JSFUN_INTERPRETED);
 
         FUN_METER(allfun);
         if (funbox->tcflags & TCF_FUN_HEAVYWEIGHT) {
@@ -2410,21 +2410,8 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32& tcflags)
                             ++nflattened;
                             continue;
                         }
-
-                        /*
-                         * FIXME bug 545759: to test nflattened != 0 instead of
-                         * nflattened == nupvars below, we'll need to avoid n^2
-                         * bugs such as 617430 in uncommenting the following:
-                         *
-                         * if (DeoptimizeUsesWithin(lexdep, funbox->node->pn_body->pn_pos))
-                         *     FlagHeavyweights(lexdep, funbox, tcflags);
-                         *
-                         * For now it's best to avoid this tedious, use-wise
-                         * deoptimization and let fun remain an unoptimized
-                         * closure. This is safe because we leave fun's kind
-                         * set to interpreted, so all functions holding its
-                         * upvars will be flagged as heavyweight.
-                         */
+                        if (DeoptimizeUsesWithin(lexdep, funbox->node->pn_body->pn_pos))
+                            FlagHeavyweights(lexdep, funbox, tcflags);
                     }
                 }
 
@@ -2432,6 +2419,7 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32& tcflags)
                     FUN_METER(onlyfreevar);
                     FUN_SET_KIND(fun, JSFUN_NULL_CLOSURE);
                 } else if (nflattened == nupvars) {
+                    /* FIXME bug 545759: to test nflattened != 0 */
                     /*
                      * We made it all the way through the upvar loop, so it's
                      * safe to optimize to a flat closure.
@@ -2458,7 +2446,7 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32& tcflags)
             }
         }
 
-        if (fun->isInterpreted() && pn->pn_type == TOK_UPVARS) {
+        if (FUN_KIND(fun) == JSFUN_INTERPRETED && pn->pn_type == TOK_UPVARS) {
             /*
              * One or more upvars cannot be safely snapshot into a flat
              * closure's non-reserved slot (see JSOP_GETFCSLOT), so we loop
@@ -2601,7 +2589,7 @@ LeaveFunction(JSParseNode *fn, JSTreeContext *funtc, JSAtom *funAtom = NULL,
 
             /*
              * Make sure to deoptimize lexical dependencies that are polluted
-             * by eval or with, to safely bind globals (see bug 561923).
+             * by eval or with, to safely statically bind globals (see bug 561923).
              */
             if (funtc->callsEval() ||
                 (outer_ale && tc->innermostWith &&
