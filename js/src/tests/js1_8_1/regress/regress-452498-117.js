@@ -74,10 +74,6 @@ function test()
 // =====
     function this ({x}) { function x(){} }
 
-// Assertion failure: cg->stackDepth == stackDepth, at ../jsemit.cpp:3664
-// =====
-  for(let x = [ "" for (y in /x/g ) if (x)] in (""));
-
 // Assertion failure: !(pnu->pn_dflags & PND_BOUND), at ../jsemit.cpp:1818
 // =====
   (function(){const x = 0, y = delete x;})()

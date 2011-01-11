@@ -160,11 +160,6 @@ function test()
   actual = f + '';
   compareSource(expect, actual, summary + ': 21');
 
-  f = (function() { for ( let [a,b]=[c,d] in [3]) { } })
-    expect = 'function() { [c, d]; for ( let [a,b] in [3]) { } }';
-  actual = f + '';
-  compareSource(expect, actual, summary + ': 22');
-
   f = function () { while(1) [a] = [b]; }
   expect = 'function () { while(true) {[a] = [b];} } ';
   actual = f + '';
