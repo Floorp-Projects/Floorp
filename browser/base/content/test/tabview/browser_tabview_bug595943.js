@@ -102,6 +102,6 @@ function onTabViewWindowLoaded() {
   }
 
   window.addEventListener("tabviewhidden", onTabViewHidden, false);
-  EventUtils.sendMouseEvent({ type: "mousedown" }, normalXulTab.tabItem.container, contentWindow);
-  EventUtils.sendMouseEvent({ type: "mouseup" }, normalXulTab.tabItem.container, contentWindow);
+  EventUtils.sendMouseEvent({ type: "mousedown" }, normalXulTab._tabViewTabItem.container, contentWindow);
+  EventUtils.sendMouseEvent({ type: "mouseup" }, normalXulTab._tabViewTabItem.container, contentWindow);
 }

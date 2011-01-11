@@ -147,7 +147,7 @@ function verifyCleanState(mode) {
   let prefix = "we " + (mode || "finish") + " with ";
   is(gBrowser.tabs.length, 1, prefix + "one tab");
   is(contentWindow.GroupItems.groupItems.length, 1, prefix + "1 group");
-  ok(gBrowser.tabs[0].tabItem.parent == contentWindow.GroupItems.groupItems[0], 
+  ok(gBrowser.tabs[0]._tabViewTabItem.parent == contentWindow.GroupItems.groupItems[0], 
       "the tab is in the group");
   ok(!pb.privateBrowsingEnabled, prefix + "private browsing off");
 }
@@ -157,7 +157,7 @@ function verifyPB() {
   ok(pb.privateBrowsingEnabled == true, "private browsing is on");
   is(gBrowser.tabs.length, 1, "we have 1 tab in private browsing");
   is(contentWindow.GroupItems.groupItems.length, 1, "we have 1 group in private browsing");
-  ok(gBrowser.tabs[0].tabItem.parent == contentWindow.GroupItems.groupItems[0], 
+  ok(gBrowser.tabs[0]._tabViewTabItem.parent == contentWindow.GroupItems.groupItems[0], 
       "the tab is in the group");
 
   let browser = gBrowser.tabs[0].linkedBrowser;
@@ -184,7 +184,7 @@ function verifyNormal() {
     let groupItem = contentWindow.GroupItems.groupItems[a];
     is(groupItem.getTitle(), groupTitles[a], prefix + "correct group title");
     
-    ok(tab.tabItem.parent == groupItem,
+    ok(tab._tabViewTabItem.parent == groupItem,
         prefix + "tab " + a + " is in group " + a);
   }
 }
