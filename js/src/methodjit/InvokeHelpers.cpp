@@ -500,6 +500,22 @@ js_InternalThrow(VMFrame &f)
 {
     JSContext *cx = f.cx;
 
+    // It's possible that from within RunTracer(), Interpret() returned with
+    // an error and finished the frame (i.e., called ScriptEpilogue), but has
+    // not yet performed an inline return.
+    //
+    // In this case, RunTracer() has no choice but to propagate the error
+    // up to the method JIT, and thus to this function. But ScriptEpilogue()
+    // has already been called. Detect this, and avoid double-finishing the
+    // frame. See HandleErrorInExcessFrame() and bug 624100.
+    if (f.fp()->finishedInInterpreter()) {
+        // If it's the last frame, just propagate the failure up again.
+        if (f.fp() == f.entryfp)
+            return NULL;
+
+        InlineReturn(f);
+    }
+
     // Make sure sp is up to date.
     JS_ASSERT(cx->regs == &f.regs);
 
@@ -534,20 +550,19 @@ js_InternalThrow(VMFrame &f)
         if (pc)
             break;
 
-        // If on the 'topmost' frame (where topmost means the first frame
-        // called into through js_Interpret). In this case, we still unwind,
-        // but we shouldn't return from a JS function, because we're not in a
-        // JS function.
-        bool lastFrame = (f.entryfp == f.fp());
+        // The JIT guarantees that ScriptEpilogue() has always been run
+        // upon exiting to its caller. This is important for consistency,
+        // where execution modes make similar guarantees about prologues
+        // and epilogues. RunTracer(), Interpret(), and Invoke() all
+        // rely on this property.
+        JS_ASSERT(!f.fp()->finishedInInterpreter());
         js_UnwindScope(cx, 0, cx->isExceptionPending());
-
-        // For consistency with Interpret(), always run the script epilogue.
-        // This simplifies interactions with RunTracer(), since it can assume
-        // no matter how a function exited (error or not), that the epilogue
-        // does not need to be run.
         ScriptEpilogue(f.cx, f.fp(), false);
 
-        if (lastFrame)
+        // Don't remove the last frame, this is the responsibility of
+        // JaegerShot()'s caller. We only guarantee that ScriptEpilogue()
+        // has been run.
+        if (f.entryfp == f.fp())
             break;
 
         JS_ASSERT(f.regs.sp == cx->regs->sp);
@@ -647,9 +662,20 @@ HandleErrorInExcessFrame(VMFrame &f, JSStackFrame *stopFp, bool searchedTopmostF
      */
     JSStackFrame *fp = cx->fp();
     if (searchedTopmostFrame) {
+        /*
+         * This is a special case meaning that fp->finishedInInterpreter() is
+         * true. If so, and fp == stopFp, our only choice is to propagate this
+         * error up, back to the method JIT, and then to js_InternalThrow,
+         * where this becomes a special case. See the comment there and bug
+         * 624100.
+         */
         if (fp == stopFp)
             return false;
 
+        /*
+         * Otherwise, the protocol here (like Invoke) is to assume that the
+         * execution mode finished the frame, and to just pop it.
+         */
         InlineReturn(f);
     }
 
