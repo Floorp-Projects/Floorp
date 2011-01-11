@@ -48,145 +48,145 @@ const MSG_INSTALL_CALLBACK = "WebInstallerInstallCallback";
 var gIoService = Components.classes["@mozilla.org/network/io-service;1"]
                            .getService(Components.interfaces.nsIIOService);
 
-function InstallTrigger(window) {
-  this.window = window;
-}
+function createInstallTrigger(window) {
+  return {
+    window: window,
 
-InstallTrigger.prototype = {
-  __exposedProps__: {
-    SKIN: "r",
-    LOCALE: "r",
-    CONTENT: "r",
-    PACKAGE: "r",
-    enabled: "r",
-    updateEnabled: "r",
-    install: "r",
-    installChrome: "r",
-    startSoftwareUpdate: "r",
-    toSource: "r", // XXX workaround for bug 582100
-  },
+    __exposedProps__: {
+      SKIN: "r",
+      LOCALE: "r",
+      CONTENT: "r",
+      PACKAGE: "r",
+      enabled: "r",
+      updateEnabled: "r",
+      install: "r",
+      installChrome: "r",
+      startSoftwareUpdate: "r",
+      toSource: "r", // XXX workaround for bug 582100
+    },
 
-  // == Public interface ==
+    // == Public interface ==
 
-  SKIN: Ci.amIInstallTrigger.SKIN,
-  LOCALE: Ci.amIInstallTrigger.LOCALE,
-  CONTENT: Ci.amIInstallTrigger.CONTENT,
-  PACKAGE: Ci.amIInstallTrigger.PACKAGE,
+    SKIN: Ci.amIInstallTrigger.SKIN,
+    LOCALE: Ci.amIInstallTrigger.LOCALE,
+    CONTENT: Ci.amIInstallTrigger.CONTENT,
+    PACKAGE: Ci.amIInstallTrigger.PACKAGE,
 
-  /**
-   * @see amIInstallTriggerInstaller.idl
-   */
-  enabled: function() {
-    return sendSyncMessage(MSG_INSTALL_ENABLED, {
-      mimetype: "application/x-xpinstall", referer: this.window.location.href
-    })[0];
-  },
+    /**
+     * @see amIInstallTriggerInstaller.idl
+     */
+    enabled: function() {
+      return sendSyncMessage(MSG_INSTALL_ENABLED, {
+        mimetype: "application/x-xpinstall", referer: this.window.location.href
+      })[0];
+    },
 
-  /**
-   * @see amIInstallTriggerInstaller.idl
-   */
-  updateEnabled: function() {
-    return this.enabled();
-  },
+    /**
+     * @see amIInstallTriggerInstaller.idl
+     */
+    updateEnabled: function() {
+      return this.enabled();
+    },
 
-  /**
-   * @see amIInstallTriggerInstaller.idl
-   */
-  install: function(aArgs, aCallback) {
-    if (!aArgs || typeof aArgs != "object")
-      throw new Error("Incorrect arguments passed to InstallTrigger.install()");
+    /**
+     * @see amIInstallTriggerInstaller.idl
+     */
+    install: function(aArgs, aCallback) {
+      if (!aArgs || typeof aArgs != "object")
+        throw new Error("Incorrect arguments passed to InstallTrigger.install()");
 
-    var params = {
-      installerId: this.installerId,
-      mimetype: "application/x-xpinstall",
-      referer: this.window.location.href,
-      uris: [],
-      hashes: [],
-      names: [],
-      icons: [],
-    };
+      var params = {
+        installerId: this.installerId,
+        mimetype: "application/x-xpinstall",
+        referer: this.window.location.href,
+        uris: [],
+        hashes: [],
+        names: [],
+        icons: [],
+      };
 
-    for (var name in aArgs) {
-      var item = aArgs[name];
-      if (typeof item === 'string') {
-        item = { URL: item };
-      } else if (!("URL" in item) || item.URL === undefined) {
-        throw new Error("Missing URL property for '" + name + "'");
-      }
-
-      // Resolve and validate urls
-      var url = this.resolveURL(item.URL);
-      if (!this.checkLoadURIFromScript(url))
-        throw new Error("insufficient permissions to install: " + url);
-
-      var iconUrl = null;
-      if ("IconURL" in item && item.IconURL !== undefined) {
-        iconUrl = this.resolveURL(item.IconURL);
-        if (!this.checkLoadURIFromScript(iconUrl)) {
-          iconUrl = null; // If page can't load the icon, just ignore it
+      for (var name in aArgs) {
+        var item = aArgs[name];
+        if (typeof item === 'string') {
+          item = { URL: item };
+        } else if (!("URL" in item) || item.URL === undefined) {
+          throw new Error("Missing URL property for '" + name + "'");
         }
+
+        // Resolve and validate urls
+        var url = this.resolveURL(item.URL);
+        if (!this.checkLoadURIFromScript(url))
+          throw new Error("insufficient permissions to install: " + url);
+
+        var iconUrl = null;
+        if ("IconURL" in item && item.IconURL !== undefined) {
+          iconUrl = this.resolveURL(item.IconURL);
+          if (!this.checkLoadURIFromScript(iconUrl)) {
+            iconUrl = null; // If page can't load the icon, just ignore it
+          }
+        }
+        params.uris.push(url.spec);
+        params.hashes.push("Hash" in item ? item.Hash : null);
+        params.names.push(name);
+        params.icons.push(iconUrl ? iconUrl.spec : null);
       }
-      params.uris.push(url.spec);
-      params.hashes.push("Hash" in item ? item.Hash : null);
-      params.names.push(name);
-      params.icons.push(iconUrl ? iconUrl.spec : null);
+      // Add callback Id, done here, so only if we actually got here
+      params.callbackId = manager.addCallback(aCallback, params.uris);
+      // Send message
+      return sendSyncMessage(MSG_INSTALL_ADDONS, params)[0];
+    },
+
+    /**
+     * @see amIInstallTriggerInstaller.idl
+     */
+    startSoftwareUpdate: function(aUrl, aFlags) {
+      var url = gIoService.newURI(aUrl, null, null)
+                          .QueryInterface(Ci.nsIURL).filename;
+      var object = {};
+      object[url] = { "URL": aUrl };
+      return this.install(object);
+    },
+
+    /**
+     * @see amIInstallTriggerInstaller.idl
+     */
+    installChrome: function(aType, aUrl, aSkin) {
+      return this.startSoftwareUpdate(aUrl);
+    },
+
+    /**
+     * Resolves a URL in the context of our current window. We need to do
+     * this before sending URLs to the parent process.
+     *
+     * @param  aUrl
+     *         The url to resolve.
+     *
+     * @return A resolved, absolute nsURI object.
+     */
+    resolveURL: function(aUrl) {
+      return gIoService.newURI(aUrl, null,
+                               this.window.document.documentURIObject);
+    },
+
+    /**
+     * @see amInstallTrigger.cpp
+     * TODO: When e10s lands on m-c, consider removing amInstallTrigger.cpp
+     *       See bug 571166
+     */
+    checkLoadURIFromScript: function(aUri) {
+      var secman = Cc["@mozilla.org/scriptsecuritymanager;1"].
+                   getService(Ci.nsIScriptSecurityManager);
+      var principal = this.window.content.document.nodePrincipal;
+      try {
+        secman.checkLoadURIWithPrincipal(principal, aUri,
+          Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL);
+        return true;
+      }
+      catch(e) {
+        return false;
+      }
     }
-    // Add callback Id, done here, so only if we actually got here
-    params.callbackId = manager.addCallback(aCallback, params.uris);
-    // Send message
-    return sendSyncMessage(MSG_INSTALL_ADDONS, params)[0];
-  },
-
-  /**
-   * @see amIInstallTriggerInstaller.idl
-   */
-  startSoftwareUpdate: function(aUrl, aFlags) {
-    var url = gIoService.newURI(aUrl, null, null)
-                        .QueryInterface(Ci.nsIURL).filename;
-    var object = {};
-    object[url] = { "URL": aUrl };
-    return this.install(object);
-  },
-
-  /**
-   * @see amIInstallTriggerInstaller.idl
-   */
-  installChrome: function(aType, aUrl, aSkin) {
-    return this.startSoftwareUpdate(aUrl);
-  },
-
-  /**
-   * Resolves a URL in the context of our current window. We need to do
-   * this before sending URLs to the parent process.
-   *
-   * @param  aUrl
-   *         The url to resolve.
-   *
-   * @return A resolved, absolute nsURI object.
-   */
-  resolveURL: function(aUrl) {
-    return gIoService.newURI(aUrl, null,
-                             this.window.document.documentURIObject);
-  },
-
-  /**
-   * @see amInstallTrigger.cpp
-   * TODO: When e10s lands on m-c, consider removing amInstallTrigger.cpp
-   *       See bug 571166
-   */
-  checkLoadURIFromScript: function(aUri) {
-    var secman = Cc["@mozilla.org/scriptsecuritymanager;1"].
-                 getService(Ci.nsIScriptSecurityManager);
-    var principal = this.window.content.document.nodePrincipal;
-    try {
-      secman.checkLoadURIWithPrincipal(principal, aUri,
-        Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL);
-      return true;
-    }
-    catch(e) {
-      return false;
-    }
-  },
+  };
 };
 
 /**
@@ -225,28 +225,17 @@ InstallTriggerManager.prototype = {
       return;
     }
 
-    window.wrappedJSObject.__defineGetter__("InstallTrigger", this.createInstallTrigger);
-  },
+    window.wrappedJSObject.__defineGetter__("InstallTrigger", function() {
+      // We do this in a getter, so that we create these objects
+      // only on demand (this is a potential concern, since
+      // otherwise we might add one per iframe, and keep them
+      // alive for as long as the tab is alive).
 
-  createInstallTrigger: function createInstallTrigger() {
-    // We do this in a getter, so that we create these objects
-    // only on demand (this is a potential concern, since
-    // otherwise we might add one per iframe, and keep them
-    // alive for as long as the tab is alive).
-    // In order for this lazy instantiation to work, we need
-    // 'this' to be a window. However, we can get here with the
-    // window being on the prototype chain of our actual 'this'
-    // object (see bug 609794). Note that we need the
-    // XPCNativeWrapper.unwrap because getting the prototype
-    // doesn't respect the .wrappedJSObject unwrapping above.
-    var obj = XPCNativeWrapper.unwrap(this);
-    while (!obj.hasOwnProperty('InstallTrigger')) {
-      obj = XPCNativeWrapper.unwrap(Object.getPrototypeOf(obj));
-    }
-
-    delete obj.InstallTrigger; // remove getter
-    obj.InstallTrigger = new InstallTrigger(this);
-    return obj.InstallTrigger;
+      delete window.wrappedJSObject.InstallTrigger;
+      var installTrigger = createInstallTrigger(window.wrappedJSObject);
+      window.wrappedJSObject.InstallTrigger = installTrigger;
+      return installTrigger;
+    });
   },
 
   /**
