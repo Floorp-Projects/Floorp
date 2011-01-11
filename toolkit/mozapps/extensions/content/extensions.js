@@ -887,7 +887,7 @@ var gViewController = {
       doCommand: function(aAddon) {
         var aboutURL = aAddon.aboutURL;
         if (aboutURL)
-          openDialog(aboutURL, "", "chrome,centerscreen,modal", aAddon);
+          openDialog(aboutURL, "", "chrome,centerscreen,modal");
         else
           openDialog("chrome://mozapps/content/extensions/about.xul",
                      "", "chrome,centerscreen,modal", aAddon);
