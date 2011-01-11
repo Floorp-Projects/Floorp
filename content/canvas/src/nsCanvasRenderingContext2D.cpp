@@ -2576,7 +2576,6 @@ struct NS_STACK_CLASS nsCanvasBidiProcessor : public nsBidiPresUtils::BidiProces
                            0,
                            mTextRun->GetLength(),
                            nsnull,
-                           nsnull,
                            nsnull);
     }
 
@@ -2924,7 +2923,6 @@ nsCanvasRenderingContext2D::MozDrawText(const nsAString& textToDraw)
                   /* offset = */ 0,
                   textToDraw.Length(),
                   nsnull,
-                  nsnull,
                   nsnull);
 
     return Redraw();
@@ -3061,7 +3059,7 @@ nsCanvasRenderingContext2D::MozTextAlongPath(const nsAString& textToDraw, PRBool
         if(stroke) {
             textRun->DrawToPath(mThebes, pt, i, 1, nsnull, nsnull);
         } else {
-            textRun->Draw(mThebes, pt, i, 1, nsnull, nsnull, nsnull);
+            textRun->Draw(mThebes, pt, i, 1, nsnull, nsnull);
         }
         mThebes->SetMatrix(matrix);
     }

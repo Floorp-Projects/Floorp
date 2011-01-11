@@ -603,14 +603,14 @@ nsSVGGlyphFrame::FillCharacters(CharacterIterator *aIter,
 {
   if (aIter->SetupForDirectTextRunDrawing(aContext)) {
     mTextRun->Draw(aContext, gfxPoint(0, 0), 0,
-                   mTextRun->GetLength(), nsnull, nsnull, nsnull);
+                   mTextRun->GetLength(), nsnull, nsnull);
     return;
   }
 
   PRInt32 i;
   while ((i = aIter->NextChar()) >= 0) {
     aIter->SetupForDrawing(aContext);
-    mTextRun->Draw(aContext, gfxPoint(0, 0), i, 1, nsnull, nsnull, nsnull);
+    mTextRun->Draw(aContext, gfxPoint(0, 0), i, 1, nsnull, nsnull);
   }
 }
 
