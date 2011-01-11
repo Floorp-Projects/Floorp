@@ -95,6 +95,7 @@ _BROWSER_FILES = head.js \
                  browser_httphash6.js \
                  browser_badargs.js \
                  browser_badargs2.js \
+                 browser_bug611242.js \
                  unsigned.xpi \
                  signed.xpi \
                  signed2.xpi \
