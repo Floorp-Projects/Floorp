@@ -13994,9 +13994,10 @@ TraceRecorder::typedArrayElement(Value& oval, Value& ival, Value*& vp, LIns*& v_
 
     /* for out-of-range, do the same thing that the interpreter does, which is return undefined */
     if ((jsuint) idx >= tarray->length) {
-        guard(false,
-              w.ltui(idx_ins, w.ldiConstTypedArrayLength(priv_ins)),
-              BRANCH_EXIT);
+        CHECK_STATUS_A(guard(false,
+                             w.ltui(idx_ins, w.ldiConstTypedArrayLength(priv_ins)),
+                             BRANCH_EXIT,
+                             /* abortIfAlwaysExits = */true));
         v_ins = w.immiUndefined();
         return ARECORD_CONTINUE;
     }
