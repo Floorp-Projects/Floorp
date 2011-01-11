@@ -234,11 +234,13 @@ var ExtensionsView = {
                             },
                             false);
 
+#ifdef ANDROID
     // Hide the notification
     let alertsService = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
     let progressListener = alertsService.QueryInterface(Ci.nsIAlertsProgressListener);
     if (progressListener)
       progressListener.onCancel(ADDONS_NOTIFICATION_NAME);
+#endif
   },
 
   _delayedInit: function ev__delayedInit() {
@@ -304,7 +306,7 @@ var ExtensionsView = {
       case Ci.nsIBlocklistService.STATE_OUTDATED:
         blocked = srings.getString("addonBlocked.outdated");
         break;
-    }            
+    }
 
     let listitem = this._createItem(aAddon, "local");
     listitem.setAttribute("isDisabled", !aAddon.isActive);
@@ -474,7 +476,7 @@ var ExtensionsView = {
         // can't be cancelled
         if (!aItem.addon.isActive && opType == "")
           opType = "needs-uninstall";
-  
+
         aItem.setAttribute("opType", opType);
       } else {
         this._list.removeChild(aItem);
@@ -746,7 +748,7 @@ var ExtensionsView = {
   updateAll: function ev_updateAll() {
     let aus = Cc["@mozilla.org/browser/addon-update-service;1"].getService(Ci.nsITimerCallback);
     aus.notify(null);
- 
+
     if (this._list.selectedItem)
       this._list.selectedItem.focus();
   },
@@ -947,7 +949,7 @@ AddonInstallListener.prototype = {
       let element = ExtensionsView.getElementForAddon(aInstall.sourceURI.spec);
       if (!element)
         return;
-  
+
       element.removeAttribute("opType");
       let strings = Services.strings.createBundle("chrome://global/locale/xpinstall/xpinstall.properties");
 
@@ -1022,7 +1024,7 @@ AddonInstallListener.prototype = {
       messageString = messageString.replace("#2", host);
     messageString = messageString.replace("#3", brandShortName);
     messageString = messageString.replace("#4", Services.appinfo.version);
-    
+
     ExtensionsView.showAlert(messageString);
   },
 

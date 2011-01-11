@@ -208,7 +208,7 @@ function checkAlert(aId, aName, aLabel, aShown, aCallback) {
   let msg = null;
   if (aId)
     msg = document.getElementById(aId);
-  else 
+  else
     msg = window.getNotificationBox(gCurrentTab.browser);
   ok(!!msg, "Have notification box");
 
@@ -275,7 +275,7 @@ function open_manager(aView, aCallback) {
 function close_manager(aCallback) {
   var prefsButton = document.getElementById("tool-preferences");
   prefsButton.click();
- 
+
   ExtensionsView.clearSection();
   ExtensionsView.clearSection("local");
   ExtensionsView._list = null;
@@ -287,18 +287,20 @@ function close_manager(aCallback) {
 }
 
 function loadUrl(aURL, aCallback, aNewTab) {
-  messageManager.addMessageListener("pageshow", function() {
-    if (gCurrentTab.browser.currentURI.spec == aURL) {
-      messageManager.removeMessageListener("pageshow", arguments.callee);
-      if (aCallback)
-        aCallback();
-    }
-  });
   if (aNewTab)
     gCurrentTab = Browser.addTab(aURL, true);
   else
     Browser.loadURI(aURL);
+
+  gCurrentTab.browser.messageManager.addMessageListener("pageshow", function(aMessage) {
+    if (gCurrentTab.browser.currentURI.spec == aURL) {
+      gCurrentTab.browser.messageManager.removeMessageListener(aMessage.name, arguments.callee);
+      if (aCallback)
+        setTimeout(aCallback, 0);
+    }
+  });
 }
+
 function checkInstallPopup(aName, aCallback) {
   testPrompt("Installing Add-on", aName, [ {label: "Install", click: true}, {label: "Cancel", click: false}], aCallback);
 }
@@ -313,7 +315,7 @@ function testPrompt(aTitle, aMessage, aButtons, aCallback) {
       let message = document.getElementById("prompt-confirm-message");
       is(aTitle, title.value, "Correct title shown");
       is(aMessage, message.textContent, "Correct message shown");
-  
+
      let buttons = document.getElementsByClassName("prompt-button");
       let clickButton = null;
       ok(buttons.length == aButtons.length, "Prompt has correct number of buttons");
@@ -358,10 +360,10 @@ function installFromURLBar(aAddon) {
                     checkAddonListing(aAddon, elt, "local");
                     var button = document.getAnonymousElementByAttribute(elt, "anonid", "uninstall-button");
                     ok(!!button, "Extension has uninstall button");
-      
+
                     var updateButton = document.getElementById("addons-update-all");
                     is(updateButton.disabled, false, "Update button is enabled");
-      
+
                     ExtensionsView.uninstall(elt);
                     elt = get_addon_element(aAddon.id);
                     ok(!elt, "Addon element removed during uninstall");
@@ -483,7 +485,7 @@ updateListener.prototype = {
           os.removeObserver(this, "addon-update-ended", false);
 
           let element = get_addon_element(update.id);
-          ok(!!element, "Have element for upgrade");  
+          ok(!!element, "Have element for upgrade");
 
           let self = this;
           isRestartShown(!this.addon.bootstrapped, true, function() {
@@ -495,6 +497,3 @@ updateListener.prototype = {
     }
   },
 }
-
-
-
