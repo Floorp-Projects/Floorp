@@ -392,7 +392,7 @@ PropertyTree::getChild(JSContext *cx, Shape *parent, const Shape &child)
 
                                 JS_LOCK_GC(cx->runtime);
                                 if (kidp->isHash()) {
-                                    hash->KidsHash::~KidsHash();
+                                    hash->~KidsHash();
                                     js_free(hash);
                                 } else {
                                     // FIXME unsafe race with kidp->is/toChunk() above.
@@ -661,7 +661,7 @@ js::PropertyTree::orphanKids(JSContext *cx, Shape *shape)
             }
         }
 
-        hash->KidsHash::~KidsHash();
+        hash->~KidsHash();
         js_free(hash);
     }
 
