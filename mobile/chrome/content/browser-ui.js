@@ -942,7 +942,7 @@ var BrowserUI = {
         let dlFile = download.targetFile;
         if (!dlFile.exists())
           dlFile.create(file.NORMAL_FILE_TYPE, 0666);
-        let tmpDir = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties).get("TmpD", Ci.nsIFile);  
+        let tmpDir = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties).get("TmpD", Ci.nsIFile);
         let tmpFile = tmpDir.clone();
         tmpFile.append(dlFile.leafName);
 

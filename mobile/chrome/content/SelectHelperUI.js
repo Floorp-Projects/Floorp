@@ -109,6 +109,9 @@ var SelectHelperUI = {
   },
 
   hide: function selectHelperResize() {
+    if (!this._list)
+      return;
+
     this.showFilter = false;
     this._container.removeEventListener("click", this, false);
     this._panel.removeEventListener("overflow", this, true);
