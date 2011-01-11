@@ -1823,6 +1823,8 @@ var XPIProvider = {
                                                       aMigrateData,
                                                       aActiveBundles) {
     let visibleAddons = {};
+    let oldBootstrappedAddons = this.bootstrappedAddons;
+    this.bootstrappedAddons = {};
 
     /**
      * Updates an add-on's metadata and determines if a restart of the
@@ -1870,12 +1872,8 @@ var XPIProvider = {
         else
           WARN("Could not uninstall invalid item from locked install location");
         // If this was an active add-on then we must force a restart
-        if (aOldAddon.active) {
-          if (aOldAddon.bootstrap)
-            delete XPIProvider.bootstrappedAddons[aOldAddon.id];
-          else
-            return true;
-        }
+        if (aOldAddon.active)
+          return true;
 
         return false;
       }
@@ -1994,20 +1992,18 @@ var XPIProvider = {
             // Update the add-ons active state
             aOldAddon.active = !isDisabled;
             XPIDatabase.updateAddonActive(aOldAddon);
-            if (aOldAddon.active) {
-              XPIProvider.bootstrappedAddons[aOldAddon.id] = {
-                version: aOldAddon.version,
-                descriptor: aAddonState.descriptor
-              };
-            }
-            else {
-              delete XPIProvider.bootstrappedAddons[aOldAddon.id];
-            }
           }
           else {
             changed = true;
           }
         }
+      }
+
+      if (aOldAddon.visible && aOldAddon.active && aOldAddon.bootstrap) {
+        XPIProvider.bootstrappedAddons[aOldAddon.id] = {
+          version: aOldAddon.version,
+          descriptor: aAddonState.descriptor
+        };
       }
 
       return changed;
@@ -2035,16 +2031,9 @@ var XPIProvider = {
         if (aOldAddon.type == "theme")
           XPIProvider.enableDefaultTheme();
 
-        // If this was an active add-on and bootstrapped we must remove it from
-        // the bootstrapped list, otherwise we need to force a restart.
+        // If this was not a bootstrapped add-on then we must force a restart.
         if (!aOldAddon.bootstrap)
           return true;
-
-        // If this is the currently active bootstrapped add-on for this ID then
-        // remove it from the list.
-        if (aOldAddon.id in XPIProvider.bootstrappedAddons &&
-            XPIProvider.bootstrappedAddons[aOldAddon.id].descriptor == aOldAddon._descriptor)
-          XPIProvider.unloadBootstrapScope(aOldAddon.id);
       }
 
       return false;
@@ -2164,8 +2153,9 @@ var XPIProvider = {
         let installReason = BOOTSTRAP_REASONS.ADDON_INSTALL;
 
         // If we're hiding a bootstrapped add-on then call its uninstall method
-        if (newAddon.id in XPIProvider.bootstrappedAddons) {
-          let oldBootstrap = XPIProvider.bootstrappedAddons[newAddon.id];
+        if (newAddon.id in oldBootstrappedAddons) {
+          let oldBootstrap = oldBootstrappedAddons[newAddon.id];
+          XPIProvider.bootstrappedAddons[newAddon.id] = oldBootstrap;
 
           installReason = Services.vc.compare(oldBootstrap.version, newAddon.version) < 0 ?
                           BOOTSTRAP_REASONS.ADDON_UPGRADE :
@@ -2365,6 +2355,24 @@ var XPIProvider = {
       // If the state has changed then we must update the database
       let cache = Prefs.getCharPref(PREF_INSTALL_CACHE, null);
       updateDatabase |= cache != JSON.stringify(state);
+    }
+
+    if (!updateDatabase) {
+      let bootstrapDescriptors = [this.bootstrappedAddons[b].descriptor
+                                  for (b in this.bootstrappedAddons)];
+
+      state.forEach(function(aInstallLocationState) {
+        for (let id in aInstallLocationState.addons) {
+          let pos = bootstrapDescriptors.indexOf(aInstallLocationState.addons[id].descriptor);
+          if (pos != -1)
+            bootstrapDescriptors.splice(pos, 1);
+        }
+      });
+  
+      if (bootstrapDescriptors.length > 0) {
+        WARN("Bootstrap state is invalid (missing add-ons: " + bootstrapDescriptors.toSource() + ")");
+        updateDatabase = true;
+      }
     }
 
     // Catch any errors during the main startup and rollback the database changes
@@ -2898,6 +2906,11 @@ var XPIProvider = {
     let bootstrap = aFile.clone();
     let name = aFile.leafName;
     let spec;
+
+    if (!bootstrap.exists()) {
+      ERROR("Attempted to load bootstrap scope from missing directory " + bootstrap.path);
+      return;
+    }
 
     if (bootstrap.isDirectory()) {
       bootstrap.append("bootstrap.js");

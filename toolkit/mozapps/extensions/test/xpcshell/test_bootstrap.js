@@ -33,6 +33,8 @@ var testserver;
 function resetPrefs() {
   Services.prefs.setIntPref("bootstraptest.active_version", -1);
   Services.prefs.setIntPref("bootstraptest.installed_version", -1);
+  Services.prefs.setIntPref("bootstraptest2.active_version", -1);
+  Services.prefs.setIntPref("bootstraptest2.installed_version", -1);
   Services.prefs.setIntPref("bootstraptest.startup_reason", -1);
   Services.prefs.setIntPref("bootstraptest.shutdown_reason", -1);
   Services.prefs.setIntPref("bootstraptest.install_reason", -1);
@@ -45,6 +47,14 @@ function getActiveVersion() {
 
 function getInstalledVersion() {
   return Services.prefs.getIntPref("bootstraptest.installed_version");
+}
+
+function getActiveVersion2() {
+  return Services.prefs.getIntPref("bootstraptest2.active_version");
+}
+
+function getInstalledVersion2() {
+  return Services.prefs.getIntPref("bootstraptest2.installed_version");
 }
 
 function getStartupReason() {
@@ -1108,8 +1118,53 @@ function check_test_23() {
       AddonManager.getAddonsWithOperationsByTypes(null, function(list) {
         do_check_eq(list.length, 0);
 
-        testserver.stop(do_test_finished);
+        b1.uninstall();
+        restartManager();
+
+        testserver.stop(run_test_24);
       });
     });
+  });
+}
+
+// Tests that we recover from a broken preference
+function run_test_24() {
+  resetPrefs();
+  installAllFiles([do_get_addon("test_bootstrap1_1"), do_get_addon("test_bootstrap2_1")],
+                  function() {
+    do_check_eq(getInstalledVersion(), 1);
+    do_check_eq(getActiveVersion(), 1);
+    do_check_eq(getInstalledVersion2(), 1);
+    do_check_eq(getActiveVersion2(), 1);
+
+    resetPrefs();
+
+    restartManager();
+
+    do_check_eq(getInstalledVersion(), -1);
+    do_check_eq(getActiveVersion(), 1);
+    do_check_eq(getInstalledVersion2(), -1);
+    do_check_eq(getActiveVersion2(), 1);
+
+    shutdownManager();
+
+    do_check_eq(getInstalledVersion(), -1);
+    do_check_eq(getActiveVersion(), 0);
+    do_check_eq(getInstalledVersion2(), -1);
+    do_check_eq(getActiveVersion2(), 0);
+
+    // Break the preferece
+    let bootstrappedAddons = JSON.parse(Services.prefs.getCharPref("extensions.bootstrappedAddons"));
+    bootstrappedAddons["bootstrap1@tests.mozilla.org"].descriptor += "foo";
+    Services.prefs.setCharPref("extensions.bootstrappedAddons", JSON.stringify(bootstrappedAddons));
+
+    startupManager(false);
+
+    do_check_eq(getInstalledVersion(), -1);
+    do_check_eq(getActiveVersion(), 1);
+    do_check_eq(getInstalledVersion2(), -1);
+    do_check_eq(getActiveVersion2(), 1);
+
+    do_test_finished();
   });
 }
