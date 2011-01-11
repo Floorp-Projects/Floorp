@@ -6523,17 +6523,21 @@ function AddonWrapper(aAddon) {
 
   this.__defineGetter__("permissions", function() {
     let permissions = 0;
+
+    // Add-ons that aren't installed cannot be modified in any way
+    if (!(aAddon instanceof DBAddonInternal))
+      return permissions;
+
     if (!aAddon.appDisabled) {
       if (aAddon.userDisabled)
         permissions |= AddonManager.PERM_CAN_ENABLE;
       else if (aAddon.type != "theme")
         permissions |= AddonManager.PERM_CAN_DISABLE;
     }
-    // Add-ons that have no install location (these are add-ons that are pending
-    // installation), are in locked install locations, or are pending uninstall
+
+    // Add-ons that are in locked install locations, or are pending uninstall
     // cannot be upgraded or uninstalled
-    if (aAddon._installLocation && !aAddon._installLocation.locked &&
-        !aAddon.pendingUninstall) {
+    if (!aAddon._installLocation.locked && !aAddon.pendingUninstall) {
       // Add-ons that are installed by a file link cannot be upgraded
       if (!aAddon._installLocation.isLinkedAddon(aAddon.id))
         permissions |= AddonManager.PERM_CAN_UPGRADE;
