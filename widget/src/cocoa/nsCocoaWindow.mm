@@ -2193,15 +2193,15 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
 // Drawing the unified gradient in the titlebar and the toolbar works like this:
 // 1) In the style sheet we set the toolbar's -moz-appearance to -moz-mac-unified-toolbar.
 // 2) When the toolbar is visible and we paint the application chrome
-//    window in nsChildView::drawRect, Gecko calls
-//    nsNativeThemeCocoa::RegisterWidgetGeometry for the widget type
+//    window, the array that Gecko passes nsChildView::UpdateThemeGeometries
+//    will contain an entry for the widget type NS_THEME_TOOLBAR or
 //    NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR.
-// 3) This finds the toolbar frame's ToolbarWindow and passes the toolbar
-//    frame's height to setUnifiedToolbarHeight.
-// 4) If the toolbar height has changed, a titlebar redraw is triggered by
-//    [self display] and the upper part of the unified gradient is drawn in the
-//    titlebar.
-// 5) DrawUnifiedToolbar draws the lower part of the unified gradient in the toolbar.
+// 3) nsChildView::UpdateThemeGeometries finds the toolbar frame's ToolbarWindow
+//    and passes the toolbar frame's height to setUnifiedToolbarHeight.
+// 4) If the toolbar height has changed, a titlebar redraw is triggered and the
+//    upper part of the unified gradient is drawn in the titlebar.
+// 5) The lower part of the unified gradient in the toolbar is drawn during
+//    normal window content painting in nsNativeThemeCocoa::DrawUnifiedToolbar.
 //
 // Whenever the unified gradient is drawn in the titlebar or the toolbar, both
 // titlebar height and toolbar height must be known in order to construct the
@@ -2224,7 +2224,6 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
     mBackgroundColor = [NSColor whiteColor];
 
     mUnifiedToolbarHeight = 0.0f;
-    mInUnifiedToolbarReset = NO;
 
     // setBottomCornerRounded: is a private API call, so we check to make sure
     // we respond to it just in case.
@@ -2268,20 +2267,6 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
   return mBackgroundColor;
 }
 
-// This is called by nsNativeThemeCocoa.mm's RegisterWidgetGeometry.
-// We need to know the toolbar's height in order to draw the correct
-// unified gradient in the titlebar.
-- (void)notifyToolbarAt:(float)aY height:(float)aHeight
-{
-  // Ignore unexpected notifications about the toolbar height
-  if (!mInUnifiedToolbarReset)
-    return;
-
-  if (aY <= 0.0 && aY + aHeight > mUnifiedToolbarHeight) {
-    mUnifiedToolbarHeight = aY + aHeight;
-  }
-}
-
 - (void)setTitlebarNeedsDisplayInRect:(NSRect)aRect
 {
   [self setTitlebarNeedsDisplayInRect:aRect sync:NO];
@@ -2322,27 +2307,20 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
   return frameRect.size.height - [self contentRectForFrameRect:frameRect].size.height;
 }
 
-- (float)beginMaybeResetUnifiedToolbar
+- (void)setUnifiedToolbarHeight:(float)aHeight
 {
-  mInUnifiedToolbarReset = YES;
-  float old = mUnifiedToolbarHeight;
-  mUnifiedToolbarHeight = 0.0;
-  return old;
-}
+  if ([self drawsContentsIntoWindowFrame] || aHeight == mUnifiedToolbarHeight)
+    return;
 
-- (void)endMaybeResetUnifiedToolbar:(float)aOldHeight
-{
-  if (mInUnifiedToolbarReset) {
-    mInUnifiedToolbarReset = NO;
-    if (mUnifiedToolbarHeight == aOldHeight)
-      return;
+  mUnifiedToolbarHeight = aHeight;
 
-    [self setContentBorderThickness:mUnifiedToolbarHeight forEdge:NSMaxYEdge];
+  // Update sheet positioning hint.
+  [self setContentBorderThickness:mUnifiedToolbarHeight forEdge:NSMaxYEdge];
 
-    // Since this function is only called inside painting, the repaint needs to
-    // be synchronous.
-    [self setTitlebarNeedsDisplayInRect:[self titlebarRect] sync:YES];
-  }
+  // Redraw the title bar. If we're inside painting, we'll do it right now,
+  // otherwise we'll just invalidate it.
+  BOOL needSyncRedraw = ([NSView focusView] != nil);
+  [self setTitlebarNeedsDisplayInRect:[self titlebarRect] sync:needSyncRedraw];
 }
 
 - (void)setDrawsContentsIntoWindowFrame:(BOOL)aState
