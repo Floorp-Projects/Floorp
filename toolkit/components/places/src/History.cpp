@@ -74,6 +74,63 @@ namespace places {
 #define URI_VISIT_SAVED "uri-visit-saved"
 
 ////////////////////////////////////////////////////////////////////////////////
+//// VisitData
+
+struct VisitData {
+  VisitData()
+  : placeId(0)
+  , visitId(0)
+  , sessionId(0)
+  , hidden(true)
+  , typed(false)
+  , transitionType(PR_UINT32_MAX)
+  , visitTime(0)
+  {
+  }
+
+  VisitData(nsIURI* aURI)
+  : placeId(0)
+  , visitId(0)
+  , sessionId(0)
+  , hidden(true)
+  , typed(false)
+  , transitionType(PR_UINT32_MAX)
+  , visitTime(0)
+  {
+    (void)aURI->GetSpec(spec);
+    (void)GetReversedHostname(aURI, revHost);
+  }
+
+  /**
+   * Sets the transition type of the visit, as well as if it was typed and
+   * should be hidden (based on the transition type specified).
+   *
+   * @param aTransitionType
+   *        The transition type constant to set.  Must be one of the
+   *        TRANSITION_ constants on nsINavHistoryService.
+   */
+  void SetTransitionType(PRUint32 aTransitionType)
+  {
+    typed = aTransitionType == nsINavHistoryService::TRANSITION_TYPED;
+    bool redirected =
+      aTransitionType == nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY ||
+      aTransitionType == nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT;
+    hidden = GetHiddenState(redirected, aTransitionType);
+    transitionType = aTransitionType;
+  }
+
+  PRInt64 placeId;
+  PRInt64 visitId;
+  PRInt64 sessionId;
+  nsCString spec;
+  nsString revHost;
+  bool hidden;
+  bool typed;
+  PRUint32 transitionType;
+  PRTime visitTime;
+};
+
+////////////////////////////////////////////////////////////////////////////////
 //// Anonymous Helpers
 
 namespace {
@@ -185,61 +242,6 @@ private:
   nsCOMPtr<nsIURI> mURI;
   bool mIsVisited;
 };
-
-struct VisitData {
-  VisitData()
-  : placeId(0)
-  , visitId(0)
-  , sessionId(0)
-  , hidden(true)
-  , typed(false)
-  , transitionType(PR_UINT32_MAX)
-  , visitTime(0)
-  {
-  }
-
-  VisitData(nsIURI* aURI)
-  : placeId(0)
-  , visitId(0)
-  , sessionId(0)
-  , hidden(true)
-  , typed(false)
-  , transitionType(PR_UINT32_MAX)
-  , visitTime(0)
-  {
-    (void)aURI->GetSpec(spec);
-    (void)GetReversedHostname(aURI, revHost);
-  }
-
-  /**
-   * Sets the transition type of the visit, as well as if it was typed and
-   * should be hidden (based on the transition type specified).
-   *
-   * @param aTransitionType
-   *        The transition type constant to set.  Must be one of the
-   *        TRANSITION_ constants on nsINavHistoryService.
-   */
-  void SetTransitionType(PRUint32 aTransitionType)
-  {
-    typed = aTransitionType == nsINavHistoryService::TRANSITION_TYPED;
-    bool redirected =
-      aTransitionType == nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY ||
-      aTransitionType == nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT;
-    hidden = GetHiddenState(redirected, aTransitionType);
-    transitionType = aTransitionType;
-  }
-
-  PRInt64 placeId;
-  PRInt64 visitId;
-  PRInt64 sessionId;
-  nsCString spec;
-  nsString revHost;
-  bool hidden;
-  bool typed;
-  PRUint32 transitionType;
-  PRTime visitTime;
-};
-
 
 /**
  * Notifies observers about a visit.
@@ -365,45 +367,16 @@ public:
     mozStorageTransaction transaction(mDBConn, PR_FALSE,
                                       mozIStorageConnection::TRANSACTION_IMMEDIATE);
     nsresult rv;
-    nsCOMPtr<mozIStorageStatement> stmt;
     // If the page was in moz_places, we need to update the entry.
     if (known) {
-      NS_ASSERTION(mPlace.placeId > 0, "must have a valid place id!");
-
-      stmt = mHistory->syncStatements.GetCachedStatement(
-          "UPDATE moz_places "
-          "SET hidden = :hidden, typed = :typed "
-          "WHERE id = :page_id "
-        );
-      NS_ENSURE_STATE(stmt);
-      rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"), mPlace.placeId);
+      rv = mHistory->UpdatePlace(mPlace);
       NS_ENSURE_SUCCESS(rv, rv);
     }
     // Otherwise, the page was not in moz_places, so now we have to add it.
     else {
-      NS_ASSERTION(mPlace.placeId == 0, "should not have a valid place id!");
-
-      stmt = mHistory->syncStatements.GetCachedStatement(
-          "INSERT INTO moz_places "
-            "(url, rev_host, hidden, typed, guid) "
-          "VALUES (:page_url, :rev_host, :hidden, :typed, GENERATE_GUID()) "
-        );
-      NS_ENSURE_STATE(stmt);
-
-      rv = stmt->BindStringByName(NS_LITERAL_CSTRING("rev_host"),
-                                  mPlace.revHost);
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), mPlace.spec);
+      rv = mHistory->InsertPlace(mPlace);
       NS_ENSURE_SUCCESS(rv, rv);
     }
-    rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("typed"), mPlace.typed);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("hidden"), mPlace.hidden);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    mozStorageStatementScoper scoper(stmt);
-    rv = stmt->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
 
     rv = AddVisit(mPlace, mReferrer);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -965,6 +938,62 @@ History::GetIsVisitedStatement()
   ),  getter_AddRefs(mIsVisitedStatement));
   NS_ENSURE_SUCCESS(rv, nsnull);
   return mIsVisitedStatement;
+}
+
+nsresult
+History::InsertPlace(const VisitData& aPlace)
+{
+  NS_PRECONDITION(aPlace.placeId == 0, "should not have a valid place id!");
+  NS_PRECONDITION(!NS_IsMainThread(), "must be called off of the main thread!");
+
+  nsCOMPtr<mozIStorageStatement> stmt = syncStatements.GetCachedStatement(
+      "INSERT INTO moz_places "
+        "(url, rev_host, hidden, typed, guid) "
+      "VALUES (:page_url, :rev_host, :hidden, :typed, GENERATE_GUID()) "
+    );
+  NS_ENSURE_STATE(stmt);
+  mozStorageStatementScoper scoper(stmt);
+
+  nsresult rv = stmt->BindStringByName(NS_LITERAL_CSTRING("rev_host"),
+                                       aPlace.revHost);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), aPlace.spec);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("typed"), aPlace.typed);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("hidden"), aPlace.hidden);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult
+History::UpdatePlace(const VisitData& aPlace)
+{
+  NS_PRECONDITION(aPlace.placeId > 0, "must have a valid place id!");
+  NS_PRECONDITION(!NS_IsMainThread(), "must be called off of the main thread!");
+
+  nsCOMPtr<mozIStorageStatement> stmt = syncStatements.GetCachedStatement(
+      "UPDATE moz_places "
+      "SET hidden = :hidden, typed = :typed "
+      "WHERE id = :page_id "
+    );
+  NS_ENSURE_STATE(stmt);
+  mozStorageStatementScoper scoper(stmt);
+
+  nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"),
+                                      aPlace.placeId);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("typed"), aPlace.typed);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("hidden"), aPlace.hidden);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
 }
 
 /* static */
