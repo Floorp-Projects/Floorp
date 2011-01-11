@@ -68,6 +68,13 @@
           // use the unlocalized property, not the typeLabel attribute
           if (this.addon.type == "theme")
             document.getAnonymousElementByAttribute(this, "anonid", "options-button").hidden = true;
+
+          // checks if this is a persona but the add-on is not installed...
+          if ((this.addon.id.indexOf("@personas.mozilla.org") > 0) && !("LightWeightThemeWebInstaller" in window)) {
+            document.getAnonymousElementByAttribute(this, "anonid", "enable-button").setAttribute("disabled", "true");
+            document.getAnonymousElementByAttribute(this, "anonid", "enable-button").nextElementSibling.setAttribute("disabled", "true");
+            document.getAnonymousElementByAttribute(this, "anonid", "uninstall-button").setAttribute("disabled", "true");
+          }
         ]]>
       </constructor>
 
