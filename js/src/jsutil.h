@@ -359,7 +359,10 @@ template <class T>
 JS_ALWAYS_INLINE static void
 PodCopy(T *dst, const T *src, size_t nelem)
 {
-    JS_ASSERT(abs(dst - src) >= ptrdiff_t(nelem));
+    /* Cannot find portable word-sized abs(). */
+    JS_ASSERT_IF(dst >= src, size_t(dst - src) >= nelem);
+    JS_ASSERT_IF(src >= dst, size_t(src - dst) >= nelem);
+
     if (nelem < 128) {
         for (const T *srcend = src + nelem; src != srcend; ++src, ++dst)
             *dst = *src;
