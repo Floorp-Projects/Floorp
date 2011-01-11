@@ -1462,7 +1462,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     // TabItems will have handled the new tab and added the tabItem property.
     // We don't have to check if it's an app tab (and therefore wouldn't have a
     // TabItem), since we've just created it.
-    newTab.tabItem.zoomIn(!url);
+    newTab._tabViewTabItem.zoomIn(!url);
   },
 
   // ----------
@@ -1893,15 +1893,15 @@ let GroupItems = {
       // find first visible non-app tab in the tabbar.
       gBrowser.visibleTabs.some(function(tab) {
         if (!tab.pinned && tab != tabItem.tab) {
-          if (tab.tabItem) {
-            if (!tab.tabItem.parent) {
+          if (tab._tabViewTabItem) {
+            if (!tab._tabViewTabItem.parent) {
               // the first visible tab is an orphan tab, set the orphan tab, and 
               // create a new group for orphan tab and new tabItem
-              orphanTabItem = tab.tabItem;
-            } else if (!tab.tabItem.parent.hidden) {
+              orphanTabItem = tab._tabViewTabItem;
+            } else if (!tab._tabViewTabItem.parent.hidden) {
               // the first visible tab belongs to a group, add the new tabItem to 
               // that group
-              targetGroupItem = tab.tabItem.parent;
+              targetGroupItem = tab._tabViewTabItem.parent;
             }
           }
           return true;
@@ -2173,7 +2173,7 @@ let GroupItems = {
     if (tab.pinned)
       return;
 
-    Utils.assertThrow(tab.tabItem, "tab must be linked to a TabItem");
+    Utils.assertThrow(tab._tabViewTabItem, "tab must be linked to a TabItem");
 
     let shouldUpdateTabBar = false;
     let shouldShowTabView = false;
@@ -2198,13 +2198,13 @@ let GroupItems = {
       shouldUpdateTabBar = true
 
     // remove tab item from a groupItem
-    if (tab.tabItem.parent)
-      tab.tabItem.parent.remove(tab.tabItem);
+    if (tab._tabViewTabItem.parent)
+      tab._tabViewTabItem.parent.remove(tab._tabViewTabItem);
 
     // add tab item to a groupItem
     if (groupItemId) {
       groupItem = GroupItems.groupItem(groupItemId);
-      groupItem.add(tab.tabItem);
+      groupItem.add(tab._tabViewTabItem);
       UI.setReorderTabItemsOnShow(groupItem);
     } else {
       let pageBounds = Items.getPageBounds();
@@ -2214,13 +2214,13 @@ let GroupItems = {
       box.width = 250;
       box.height = 200;
 
-      new GroupItem([ tab.tabItem ], { bounds: box });
+      new GroupItem([ tab._tabViewTabItem ], { bounds: box });
     }
 
     if (shouldUpdateTabBar)
       this._updateTabBar();
     else if (shouldShowTabView) {
-      tab.tabItem.setZoomPrep(false);
+      tab._tabViewTabItem.setZoomPrep(false);
       UI.showTabView();
     }
   },

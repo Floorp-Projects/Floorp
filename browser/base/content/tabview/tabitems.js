@@ -53,7 +53,7 @@ function TabItem(tab, options) {
 
   this.tab = tab;
   // register this as the tab's tabItem
-  this.tab.tabItem = this;
+  this.tab._tabViewTabItem = this;
 
   if (!options)
     options = {};
@@ -883,7 +883,7 @@ let TabItems = {
     try {
       Utils.assertThrow(tab, "tab");
       Utils.assertThrow(!tab.pinned, "shouldn't be an app tab");
-      Utils.assertThrow(tab.tabItem, "should already be linked");
+      Utils.assertThrow(tab._tabViewTabItem, "should already be linked");
 
       let shouldDefer = (
         this.isPaintingPaused() ||
@@ -923,8 +923,8 @@ let TabItems = {
         this._tabsWaitingForUpdate.splice(index, 1);
 
       // ___ get the TabItem
-      Utils.assertThrow(tab.tabItem, "must already be linked");
-      let tabItem = tab.tabItem;
+      Utils.assertThrow(tab._tabViewTabItem, "must already be linked");
+      let tabItem = tab._tabViewTabItem;
 
       // ___ icon
       let iconUrl = tab.image;
@@ -979,8 +979,8 @@ let TabItems = {
     try {
       Utils.assertThrow(tab, "tab");
       Utils.assertThrow(!tab.pinned, "shouldn't be an app tab");
-      Utils.assertThrow(!tab.tabItem, "shouldn't already be linked");
-      new TabItem(tab, options); // sets tab.tabItem to itself
+      Utils.assertThrow(!tab._tabViewTabItem, "shouldn't already be linked");
+      new TabItem(tab, options); // sets tab._tabViewTabItem to itself
     } catch(e) {
       Utils.log(e);
     }
@@ -992,16 +992,16 @@ let TabItems = {
   unlink: function TabItems_unlink(tab) {
     try {
       Utils.assertThrow(tab, "tab");
-      Utils.assertThrow(tab.tabItem, "should already be linked");
+      Utils.assertThrow(tab._tabViewTabItem, "should already be linked");
       // note that it's ok to unlink an app tab; see .handleTabUnpin
 
-      this.unregister(tab.tabItem);
-      tab.tabItem._sendToSubscribers("close");
-      iQ(tab.tabItem.container).remove();
-      tab.tabItem.removeTrenches();
-      Items.unsquish(null, tab.tabItem);
+      this.unregister(tab._tabViewTabItem);
+      tab._tabViewTabItem._sendToSubscribers("close");
+      iQ(tab._tabViewTabItem.container).remove();
+      tab._tabViewTabItem.removeTrenches();
+      Items.unsquish(null, tab._tabViewTabItem);
 
-      tab.tabItem = null;
+      tab._tabViewTabItem = null;
       Storage.saveTab(tab, null);
 
       let index = this._tabsWaitingForUpdate.indexOf(tab);
