@@ -2302,28 +2302,25 @@ panel[dimmed="true"] {
   opacity: 0.5;
 }
 
-/* Vertically-center the statusbar compatibility shim, because
-   toolbars, even in small-icon mode, are a bit taller than
-   statusbars. Also turn off the statusbar border. On Windows
-   we have to disable borders on statusbar *and* child statusbar
-   elements. */
-#status-bar {
-  margin-top: 0.3em;
-  -moz-appearance: none;
-}
+/* Add-on bar */
 
-/* Remove all borders from statusbarpanel children of
-   the statusbar. */
-#status-bar > statusbarpanel {
-  border-width: 0;
-  -moz-appearance: none;
+#addon-bar {
+  min-height: 18px;
 }
 
 #addon-bar:not(:-moz-lwtheme) {
   -moz-appearance: statusbar;
 }
 
-/* Add-on bar close button */
+#status-bar {
+  -moz-appearance: none;
+}
+
+#status-bar > statusbarpanel {
+  border-width: 0;
+  -moz-appearance: none;
+}
+
 #addonbar-closebutton {
   padding: 0;
   margin: 0 4px;
