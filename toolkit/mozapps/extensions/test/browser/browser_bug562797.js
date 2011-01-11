@@ -99,6 +99,7 @@ function is_in_detail(aManager, view, canGoBack, canGoForward) {
 function double_click_addon_element(aManager, aId) {
   var addon = get_addon_element(aManager, aId);
   addon.parentNode.ensureElementIsVisible(addon);
+  EventUtils.synthesizeMouseAtCenter(addon, { clickCount: 1 }, aManager);
   EventUtils.synthesizeMouseAtCenter(addon, { clickCount: 2 }, aManager);
 }
 

@@ -1627,8 +1627,20 @@
     </implementation>
 
     <handlers>
-      <handler event="click" button="0" clickcount="2"><![CDATA[
-        this.showInDetailView();
+      <handler event="click" button="0"><![CDATA[
+        switch (event.detail) {
+        case 1:
+          // Prevent double-click where the UI changes on the first click
+          this._lastClickTarget = event.originalTarget;
+          break;
+        case 2:
+          if (event.originalTarget.localName != 'button' &&
+              !event.originalTarget.classList.contains('text-link') &&
+              event.originalTarget == this._lastClickTarget) {
+            this.showInDetailView();
+          }
+          break;
+        }
       ]]></handler>
     </handlers>
   </binding>
