@@ -5083,7 +5083,7 @@ nsTextFrame::DrawText(gfxContext* aCtx, const gfxPoint& aTextBaselinePt,
 {
   // Paint the text and soft-hyphen (if any) onto the given graphics context
   mTextRun->Draw(aCtx, aTextBaselinePt, aOffset, aLength,
-                 aDirtyRect, aProvider, &aAdvanceWidth);
+                 aProvider, &aAdvanceWidth);
 
   if (aDrawSoftHyphen) {
     // Don't use ctx as the context, because we need a reference context here,
@@ -5095,7 +5095,7 @@ nsTextFrame::DrawText(gfxContext* aCtx, const gfxPoint& aTextBaselinePt,
       gfxFloat hyphenBaselineX = aTextBaselinePt.x + mTextRun->GetDirection() * aAdvanceWidth -
         (mTextRun->IsRightToLeft() ? hyphenTextRun->GetAdvanceWidth(0, hyphenTextRun->GetLength(), nsnull) : 0);
       hyphenTextRun->Draw(aCtx, gfxPoint(hyphenBaselineX, aTextBaselinePt.y),
-                          0, hyphenTextRun->GetLength(), aDirtyRect, nsnull, nsnull);
+                          0, hyphenTextRun->GetLength(), nsnull, nsnull);
     }
   }
 }
