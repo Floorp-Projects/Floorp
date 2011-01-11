@@ -86,9 +86,11 @@ struct VisitData {
   , transitionType(PR_UINT32_MAX)
   , visitTime(0)
   {
+    guid.SetIsVoid(PR_TRUE);
   }
 
-  VisitData(nsIURI* aURI)
+  VisitData(nsIURI* aURI,
+            nsIURI* aReferrer = NULL)
   : placeId(0)
   , visitId(0)
   , sessionId(0)
@@ -99,6 +101,10 @@ struct VisitData {
   {
     (void)aURI->GetSpec(spec);
     (void)GetReversedHostname(aURI, revHost);
+    if (aReferrer) {
+      (void)aReferrer->GetSpec(referrerSpec);
+    }
+    guid.SetIsVoid(PR_TRUE);
   }
 
   /**
@@ -120,6 +126,7 @@ struct VisitData {
   }
 
   PRInt64 placeId;
+  nsCString guid;
   PRInt64 visitId;
   PRInt64 sessionId;
   nsCString spec;
@@ -129,6 +136,7 @@ struct VisitData {
   PRUint32 transitionType;
   PRTime visitTime;
   nsString title;
+  nsCString referrerSpec;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -310,18 +318,15 @@ public:
    *        The database connection to use for these operations.
    * @param aPlace
    *        The location to record a visit.
-   * @param [optional] aReferrer
-   *        The page that "referred" us to aPlace.
    */
   static nsresult Start(mozIStorageConnection* aConnection,
-                        VisitData& aPlace,
-                        nsIURI* aReferrer = nsnull)
+                        VisitData& aPlace)
   {
     NS_PRECONDITION(NS_IsMainThread(),
                     "This should be called on the main thread");
 
     nsRefPtr<InsertVisitedURI> event =
-      new InsertVisitedURI(aConnection, aPlace, aReferrer);
+      new InsertVisitedURI(aConnection, aPlace);
 
     // Speculatively get a new session id for our visit.  While it is true that
     // we will use the session id from the referrer if the visit was "recent"
@@ -397,15 +402,12 @@ public:
   }
 private:
   InsertVisitedURI(mozIStorageConnection* aConnection,
-                   VisitData& aPlace,
-                   nsIURI* aReferrer)
+                   VisitData& aPlace)
   : mDBConn(aConnection)
   , mPlace(aPlace)
   , mHistory(History::GetService())
   {
-    if (aReferrer) {
-      (void)aReferrer->GetSpec(mReferrer.spec);
-    }
+    mReferrer.spec = mPlace.referrerSpec;
   }
 
   /**
@@ -1085,7 +1087,7 @@ History::VisitURI(nsIURI* aURI,
     }
   }
 
-  VisitData place(aURI);
+  VisitData place(aURI, aLastVisitedURI);
   NS_ENSURE_FALSE(place.spec.IsEmpty(), NS_ERROR_INVALID_ARG);
 
   place.visitTime = PR_Now();
@@ -1140,7 +1142,7 @@ History::VisitURI(nsIURI* aURI,
     mozIStorageConnection* dbConn = GetDBConn();
     NS_ENSURE_STATE(dbConn);
 
-    rv = InsertVisitedURI::Start(dbConn, place, aLastVisitedURI);
+    rv = InsertVisitedURI::Start(dbConn, place);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
