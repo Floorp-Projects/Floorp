@@ -1117,7 +1117,7 @@ class TraceRecorder
     nanojit::LIns*                  pendingGuardCondition;
 
     /* See AbortRecordingIfUnexpectedGlobalWrite. */
-    int                             pendingGlobalSlotToSet;
+    js::Vector<unsigned>            pendingGlobalSlotsToSet;
 
     /* Carry whether we have an always-exit from emitIf to checkTraceEnd. */
     bool                            pendingLoop;
@@ -1479,7 +1479,7 @@ class TraceRecorder
                                                                            nanojit::LIns* obj_ins,
                                                                            VMSideExit *exit);
     JS_REQUIRES_STACK RecordingStatus guardNativeConversion(Value& v);
-    JS_REQUIRES_STACK void clearReturningFrameFromNativeveTracker();
+    JS_REQUIRES_STACK void clearReturningFrameFromNativeTracker();
     JS_REQUIRES_STACK void putActivationObjects();
     JS_REQUIRES_STACK RecordingStatus guardCallee(Value& callee);
     JS_REQUIRES_STACK JSStackFrame      *guardArguments(JSObject *obj, nanojit::LIns* obj_ins,
@@ -1615,7 +1615,8 @@ class TraceRecorder
     void forgetGuardedShapesForObject(JSObject* obj);
 
     bool globalSetExpected(unsigned slot) {
-        if (pendingGlobalSlotToSet != (int)slot) {
+        unsigned *pi = Find(pendingGlobalSlotsToSet, slot);
+        if (pi == pendingGlobalSlotsToSet.end()) {
             /*
              * Do slot arithmetic manually to avoid getSlotRef assertions which
              * do not need to be satisfied for this purpose.
@@ -1635,7 +1636,7 @@ class TraceRecorder
              */
             return tree->globalSlots->offsetOf((uint16)nativeGlobalSlot(vp)) == -1;
         }
-        pendingGlobalSlotToSet = -1;
+        pendingGlobalSlotsToSet.erase(pi);
         return true;
     }
 
@@ -1878,9 +1879,9 @@ namespace js {
  * While recording, the slots of the global object may change payload or type.
  * This is fine as long as the recorder expects this change (and therefore has
  * generated the corresponding LIR, snapshots, etc). The recorder indicates
- * that it expects a write to a global slot by setting pendingGlobalSlotToSet
+ * that it expects a write to a global slot by setting pendingGlobalSlotsToSet
  * in the recorder, before the write is made by the interpreter, and clearing
- * pendingGlobalSlotToSet before recording the next op. Any global slot write
+ * pendingGlobalSlotsToSet before recording the next op. Any global slot write
  * that has not been whitelisted in this manner is therefore unexpected and, if
  * the global slot is actually being tracked, recording must be aborted.
  */

@@ -2241,7 +2241,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
     pendingSpecializedNative(NULL),
     pendingUnboxSlot(NULL),
     pendingGuardCondition(NULL),
-    pendingGlobalSlotToSet(-1),
+    pendingGlobalSlotsToSet(cx),
     pendingLoop(true),
     generatedSpecializedNative(),
     tempTypeMap(cx),
@@ -3710,8 +3710,8 @@ TraceRecorder::writeBack(LIns* ins, LIns* base, ptrdiff_t offset, bool shouldDem
         addr = StackAddress(base, offset);
     } else {
         addr = EosAddress(base, offset);
-        JS_ASSERT(pendingGlobalSlotToSet == -1);
-        pendingGlobalSlotToSet = offset / sizeof(double);
+        unsigned slot = unsigned(offset / sizeof(double));
+        (void)pendingGlobalSlotsToSet.append(slot);  /* OOM is safe. */
     }
     return w.st(ins, addr);
 }
@@ -7214,7 +7214,7 @@ TraceRecorder::monitorRecording(JSOp op)
      */
     pendingSpecializedNative = NULL;
     newobj_ins = NULL;
-    pendingGlobalSlotToSet = -1;
+    pendingGlobalSlotsToSet.clear();
 
     /* Handle one-shot request from finishGetProp or INSTANCEOF to snapshot post-op state and guard. */
     if (pendingGuardCondition) {
@@ -10173,7 +10173,7 @@ TraceRecorder::guardNativeConversion(Value& v)
 }
 
 JS_REQUIRES_STACK void
-TraceRecorder::clearReturningFrameFromNativeveTracker()
+TraceRecorder::clearReturningFrameFromNativeTracker()
 {
     /*
      * Clear all tracker entries associated with the frame for the same reason
@@ -10479,7 +10479,7 @@ TraceRecorder::record_JSOP_RETURN()
                       fp->fun()->atom ?
                         js_AtomToPrintableString(cx, fp->fun()->atom, &funBytes) :
                         "<anonymous>");
-    clearReturningFrameFromNativeveTracker();
+    clearReturningFrameFromNativeTracker();
 
     return ARECORD_CONTINUE;
 }
@@ -15830,7 +15830,7 @@ TraceRecorder::record_JSOP_STOP()
     } else {
         rval_ins = w.immiUndefined();
     }
-    clearReturningFrameFromNativeveTracker();
+    clearReturningFrameFromNativeTracker();
     return ARECORD_CONTINUE;
 }
 

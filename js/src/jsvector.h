@@ -260,6 +260,8 @@ class Vector : AllocPolicy
     }
 
   public:
+    typedef T ElementType;
+
     Vector(AllocPolicy = AllocPolicy());
     ~Vector();
 
