@@ -3692,7 +3692,7 @@ nsCanvasRenderingContext2D::AsyncDrawXULElement(nsIDOMXULElement* aElem, float a
     if (!loaderOwner)
         return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsFrameLoader> frameloader = loaderOwner->GetFrameLoader();
+    nsRefPtr<nsFrameLoader> frameloader = loaderOwner->GetFrameLoader();
     if (!frameloader)
         return NS_ERROR_FAILURE;
 

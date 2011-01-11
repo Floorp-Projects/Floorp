@@ -3052,7 +3052,7 @@ nsGenericHTMLFrameElement::~nsGenericHTMLFrameElement()
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsGenericHTMLFrameElement)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsGenericHTMLFrameElement,
                                                   nsGenericHTMLElement)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFrameLoader)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mFrameLoader, nsIFrameLoader)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_TABLE_HEAD(nsGenericHTMLFrameElement)

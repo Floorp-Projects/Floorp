@@ -176,3 +176,25 @@ interface nsIFrameLoaderOwner : nsISupports
    */
   void swapFrameLoaders(in nsIFrameLoaderOwner aOtherOwner);
 };
+
+/** Please merge me into something else after 2.0 branches. */
+[scriptable, uuid(e3e2d3f8-1397-4984-abb3-435c29a1ca55)]
+interface nsIFrameLoader_MOZILLA_2_0_BRANCH : nsISupports
+{
+  /** 
+   * The default rendering mode is synchronous scrolling.  In this
+   * mode, it's an error to try to set a target viewport.
+   */
+  const unsigned long RENDER_MODE_DEFAULT        = 0x00000000;
+  /**
+   * When asynchronous scrolling is enabled, a target viewport can be
+   * set to transform content pixels wrt its CSS viewport.
+   *
+   * NB: when async scrolling is enabled, it's the *user's*
+   * responsibility to update the target scroll offset.  In effect,
+   * the platform hands over control of scroll offset to the user.
+   */
+  const unsigned long RENDER_MODE_ASYNC_SCROLL   = 0x00000001;
+
+  attribute unsigned long renderMode;
+};
