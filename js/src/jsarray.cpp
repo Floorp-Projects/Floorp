@@ -1483,9 +1483,18 @@ array_reverse(JSContext *cx, uintN argc, Value *vp)
 
         uint32 lo = 0, hi = len - 1;
         for (; lo < hi; lo++, hi--) {
-            Value tmp = obj->getDenseArrayElement(lo);
-            obj->setDenseArrayElement(lo, obj->getDenseArrayElement(hi));
-            obj->setDenseArrayElement(hi, tmp);
+            Value origlo = obj->getDenseArrayElement(lo);
+            Value orighi = obj->getDenseArrayElement(hi);
+            obj->setDenseArrayElement(lo, orighi);
+            if (orighi.isMagic(JS_ARRAY_HOLE) &&
+                !js_SuppressDeletedProperty(cx, obj, INT_TO_JSID(lo))) {
+                return false;
+            }
+            obj->setDenseArrayElement(hi, origlo);
+            if (origlo.isMagic(JS_ARRAY_HOLE) &&
+                !js_SuppressDeletedProperty(cx, obj, INT_TO_JSID(hi))) {
+                return false;
+            }
         }
 
         /*
@@ -1493,7 +1502,7 @@ array_reverse(JSContext *cx, uintN argc, Value *vp)
          * array has trailing holes (and thus the original array began with
          * holes).
          */
-        return JS_TRUE;
+        return true;
     } while (false);
 
     AutoValueRooter tvr(cx);
@@ -2155,6 +2164,8 @@ array_shift(JSContext *cx, uintN argc, Value *vp)
             memmove(elems, elems + 1, length * sizeof(jsval));
             obj->setDenseArrayElement(length, MagicValue(JS_ARRAY_HOLE));
             obj->setArrayLength(length);
+            if (!js_SuppressDeletedProperty(cx, obj, INT_TO_JSID(length)))
+                return JS_FALSE;
             return JS_TRUE;
         }
 
