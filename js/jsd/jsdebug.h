@@ -1298,6 +1298,14 @@ JSD_GetValueString(JSDContext* jsdc, JSDValue* jsdval);
 extern JSD_PUBLIC_API(JSString *)
 JSD_GetValueFunctionName(JSDContext* jsdc, JSDValue* jsdval);
 
+/*
+* Return function object IFF JSDValue represents a function or an object
+* wrapping a function.
+* *** new for version 1.1 ****
+*/
+extern JSD_PUBLIC_API(JSFunction*)
+JSD_GetValueFunction(JSDContext* jsdc, JSDValue* jsdval);
+
 /**************************************************/
 
 /*
