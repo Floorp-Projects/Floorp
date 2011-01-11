@@ -99,6 +99,15 @@ public:
   nsresult UpdatePlace(const VisitData& aVisitData);
 
   /**
+   * Loads information about the page into _place from moz_places.
+   *
+   * @param _place
+   *        The VisitData for the place we need to know information about.
+   * @return true if the page was recorded in moz_places, false otherwise.
+   */
+  bool FetchPageInfo(VisitData& _place);
+
+  /**
    * Obtains a pointer to this service.
    */
   static History* GetService();
