@@ -972,7 +972,7 @@ asserts(1) == 418574-2.html 418574-2-ref.html # bug 478135
 == 421436-1a.html 421436-1-ref.html
 == 421436-1b.html 421436-1-ref.html
 == 421632-1.html 421632-1-ref.html
-asserts-if(gtk2Widget,4) asserts-if(winWidget,0-4) != 421710-1.html about:blank     # assertion test (and crash test), asserts are bug 602426.
+!= 421710-1.html about:blank
 == 421885-1.xml 421885-1-ref.xml
 == 421955-1.html 421955-1-ref.html
 == 422249-1.html 422249-1-ref.html
