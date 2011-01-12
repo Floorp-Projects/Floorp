@@ -282,7 +282,7 @@ function GroupItem(listOfEls, options) {
 
   // ___ Children
   Array.prototype.forEach.call(listOfEls, function(el) {
-    self.add(el, options);
+    self.add(el, null, options);
   });
 
   // ___ Finish Up
@@ -811,14 +811,14 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   //
   //   a - The item to add. Can be an <Item>, a DOM element or an iQ object.
   //       The latter two must refer to the container of an <Item>.
-  //   options - An object with optional settings for this call.
+  //   dropPos - An object with left and top properties referring to the 
+  //             location dropped at.  Optional.
+  //   options - An optional object with settings for this call. See below.
   //
-  // Options:
-  //
-  //   index - (int) if set, add this tab at this index
-  //   immediately - (bool) if true, no animation will be used
-  //   dontArrange - (bool) if true, will not trigger an arrange on the group
-  add: function GroupItem_add(a, options) {
+  // Possible options:
+  //   dontArrange - Don't rearrange the children for the new item
+  //   immediately - Don't animate
+  add: function GroupItem_add(a, dropPos, options) {
     try {
       var item;
       var $el;
@@ -846,8 +846,48 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         wasAlreadyInThisGroupItem = true;
       }
 
+      // TODO: You should be allowed to drop in the white space at the bottom
+      // and have it go to the end (right now it can match the thumbnail above
+      // it and go there)
+      // Bug 586548
+      function findInsertionPoint(dropPos) {
+        if (self.shouldStack(self._children.length + 1))
+          return 0;
+
+        var best = {dist: Infinity, item: null};
+        var index = 0;
+        var box;
+        self._children.forEach(function(child) {
+          box = child.getBounds();
+          if (box.bottom < dropPos.top || box.top > dropPos.top)
+            return;
+
+          var dist = Math.sqrt(Math.pow((box.top+box.height/2)-dropPos.top,2)
+              + Math.pow((box.left+box.width/2)-dropPos.left,2));
+
+          if (dist <= best.dist) {
+            best.item = child;
+            best.dist = dist;
+            best.index = index;
+          }
+        });
+
+        if (self._children.length) {
+          if (best.item) {
+            box = best.item.getBounds();
+            var insertLeft = dropPos.left <= box.left + box.width/2;
+            if (!insertLeft)
+              return best.index+1;
+            return best.index;
+          }
+          return self._children.length;
+        }
+
+        return 0;
+      }
+
       // Insert the tab into the right position.
-      var index = ("index" in options) ? options.index : this._children.length;
+      var index = dropPos ? findInsertionPoint(dropPos) : this._children.length;
       this._children.splice(index, 0, item);
 
       item.setZ(this.getZ() + 1);
@@ -1080,84 +1120,54 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Lays out all of the children.
   //
   // Parameters:
-  //   options - passed to <Items.arrange> or <_stackArrange>, except those below
-  //
-  // Options:
-  //   addTab - (boolean) if true, we add one to the child count
-  //   oldDropIndex - if set, we will only set any bounds if the dropIndex has
-  //                  changed
-  //   dropPos - (<Point>) a position where a tab is currently positioned, above
-  //             this group.
-  //   animate - (boolean) if true, movement of children will be animated.
-  //
-  // Returns:
-  //   dropIndex - an index value for where an item would be dropped, if 
-  //               options.dropPos is given.
+  //   options - passed to <Items.arrange> or <_stackArrange>
   arrange: function GroupItem_arrange(options) {
-    if (!options)
-      options = {};
-
-    let childrenToArrange = [];
-    this._children.forEach(function(child) {
-      if (child.isDragging)
-        options.addTab = true;
-      else
-        childrenToArrange.push(child);
-    });
-
     if (GroupItems._arrangePaused) {
       GroupItems.pushArrange(this, options);
       return;
     }
-    var dropIndex = false;
     if (this.expanded) {
       this.topChild = null;
       var box = new Rect(this.expanded.bounds);
       box.inset(8, 8);
-      let result = Items.arrange(childrenToArrange, box, Utils.extend({}, options, {z: 99999}));
-      dropIndex = result.dropIndex;
+      Items.arrange(this._children, box, Utils.extend({}, options, {z: 99999}));
     } else {
-      var count = childrenToArrange.length;
       var bb = this.getContentBounds();
-      if (!this.shouldStack(count + (options.addTab ? 1 : 0))) {
-        childrenToArrange.forEach(function(child) {
+      if (!this.shouldStack()) {
+        if (!options)
+          options = {};
+
+        this._children.forEach(function(child) {
           child.removeClass("stacked")
         });
 
         this.topChild = null;
 
-        if (!childrenToArrange.length)
+        if (!this._children.length)
           return;
 
-        var arrangeOptions = Utils.extend({}, options, {
+        var arrangeOptions = Utils.copy(options);
+        Utils.extend(arrangeOptions, {
           columns: this._columns
         });
 
         // Items.arrange will rearrange the children, but also return an array
         // of the Rect's used.
 
-        let result = Items.arrange(childrenToArrange, bb, arrangeOptions);
-        dropIndex = result.dropIndex;
-        if ("oldDropIndex" in options && options.oldDropIndex === dropIndex)
-          return dropIndex;
-        var rects = result.rects;
+        var rects = Items.arrange(this._children, bb, arrangeOptions);
 
-        let index = 0;
-        let self = this;
-        childrenToArrange.forEach(function GroupItem_arrange_children_each(child, i) {
-          // If dropIndex spacing is active and this is a child after index,
-          // bump it up one so we actually use the correct rect
-          // (and skip one for the dropPos)
-          if (self._dropSpaceActive && index === dropIndex)
-            index++;
-          if (!child.locked.bounds) {
-            child.setBounds(rects[index], !options.animate);
-            child.setRotation(0);
-            if (options.z)
-              child.setZ(options.z);
+        // first, find the right of the rightmost tab! luckily, they're in order.
+        var rightMostRight = 0;
+        if (UI.rtl) {
+          rightMostRight = rects[0].right;
+        } else {
+          for each (var rect in rects) {
+            if (rect.right > rightMostRight)
+              rightMostRight = rect.right;
+            else
+              break;
           }
-          index++;
-        });
+        }
 
         this._isStacked = false;
       } else
@@ -1166,8 +1176,6 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
     if (this._isStacked && !this.expanded) this.showExpandControl();
     else this.hideExpandControl();
-    
-    return dropIndex;
   },
 
   // ----------
@@ -1408,87 +1416,15 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Helper routine for the constructor; adds various event handlers to the container.
   _addHandlers: function GroupItem__addHandlers(container) {
     var self = this;
-    var dropIndex = false;
-    var dropSpaceTimer = null;
 
-    // When the _dropSpaceActive flag is turned on on a group, and a tab is
-    // dragged on top, a space will open up.
-    this._dropSpaceActive = false;
-
-    this.dropOptions.over = function GroupItem_dropOptions_over(event) {
+    this.dropOptions.over = function() {
       iQ(this.container).addClass("acceptsDrop");
     };
-    this.dropOptions.move = function GroupItem_dropOptions_move(event) {
-      let oldDropIndex = dropIndex;
-      let dropPos = drag.info.item.getBounds().center();
-      let options = {dropPos: dropPos,
-                     addTab: self._dropSpaceActive && drag.info.item.parent != self,
-                     oldDropIndex: oldDropIndex};
-      newDropIndex = self.arrange(options);
-      // If this is a new drop index, start a timer!
-      if (newDropIndex !== oldDropIndex) {
-        dropIndex = newDropIndex;
-        if (this._dropSpaceActive)
-          return;
-          
-        if (dropSpaceTimer) {
-          clearTimeout(dropSpaceTimer);
-          dropSpaceTimer = null;
-        }
-
-        dropSpaceTimer = setTimeout(function GroupItem_arrange_evaluateDropSpace() {
-          // Note that dropIndex's scope is GroupItem__addHandlers, but
-          // newDropIndex's scope is GroupItem_dropOptions_move. Thus,
-          // dropIndex may change with other movement events before we come
-          // back and check this. If it's still the same dropIndex, activate
-          // drop space display!
-          if (dropIndex === newDropIndex) {
-            self._dropSpaceActive = true;
-            dropIndex = self.arrange({dropPos: dropPos,
-                                      addTab: drag.info.item.parent != self,
-                                      animate: true});
-          }
-          dropSpaceTimer = null;
-        }, 250);
-      }
-    };
-    this.dropOptions.drop = function GroupItem_dropOptions_drop(event) {
+    this.dropOptions.drop = function(event) {
       iQ(this.container).removeClass("acceptsDrop");
-      let options = {};
-      if (this._dropSpaceActive)
-        this._dropSpaceActive = false;
-
-      if (dropSpaceTimer) {
-        clearTimeout(dropSpaceTimer);
-        dropSpaceTimer = null;
-        // If we drop this item before the timed rearrange was executed,
-        // we won't have an accurate dropIndex value. Get that now.
-        let dropPos = drag.info.item.getBounds().center();
-        dropIndex = self.arrange({dropPos: dropPos,
-                                  addTab: drag.info.item.parent != self,
-                                  animate: true});
-      }
-      if (dropIndex !== false)
-        options = {index: dropIndex}
-      this.add(drag.info.$el, options);
+      this.add(drag.info.$el, {left:event.pageX, top:event.pageY});
       GroupItems.setActiveGroupItem(this);
-      dropIndex = false;
     };
-    this.dropOptions.out = function GroupItem_dropOptions_out(event) {
-      dropIndex = false;
-      if (this._dropSpaceActive)
-        this._dropSpaceActive = false;
-
-      if (dropSpaceTimer) {
-        clearTimeout(dropSpaceTimer);
-        dropSpaceTimer = null;
-      }
-      self.arrange();
-      var groupItem = drag.info.item.parent;
-      if (groupItem)
-        groupItem.remove(drag.info.$el, {dontClose: true});
-      iQ(this.container).removeClass("acceptsDrop");
-    }
 
     if (!this.locked.bounds)
       this.draggable();
@@ -1947,7 +1883,7 @@ let GroupItems = {
     // tab in question): make a new group
 
     if (activeGroupItem) {
-      activeGroupItem.add(tabItem, options);
+      activeGroupItem.add(tabItem, null, options);
       return;
     }
 
