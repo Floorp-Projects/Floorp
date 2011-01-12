@@ -1416,7 +1416,7 @@ Unblacklist(JSScript *script, jsbytecode *pc)
 
 #ifdef JS_METHODJIT
         /* This code takes care of unblacklisting in the method JIT. */
-        js::mjit::EnableTraceHint(script, pc, GET_UINT16(pc));
+        js::mjit::ResetTraceHint(script, pc, GET_UINT16(pc), false);
 #endif
     }
 }
@@ -2744,6 +2744,17 @@ TraceMonitor::flush()
     )
 
     flushEpoch++;
+
+#ifdef JS_METHODJIT
+    if (loopProfiles) {
+        for (LoopProfileMap::Enum e(*loopProfiles); !e.empty(); e.popFront()) {
+            jsbytecode *pc = e.front().key;
+            LoopProfile *prof = e.front().value;
+            /* This code takes care of resetting all methodjit state. */
+            js::mjit::ResetTraceHint(prof->entryScript, pc, GET_UINT16(pc), true);
+        }
+    }
+#endif
 
     frameCache->reset();
     dataAlloc->reset();
@@ -7799,6 +7810,11 @@ PurgeScriptFragments(TraceMonitor* tm, JSScript* script)
     JS_ASSERT_IF(tm->recorder, 
                  JS_UPTRDIFF(tm->recorder->getTree()->ip, script->code) >= script->length);
 
+    for (LoopProfileMap::Enum e(*tm->loopProfiles); !e.empty(); e.popFront()) {
+        if (JS_UPTRDIFF(e.front().key, script->code) < script->length)
+            e.removeFront();
+    }
+
     TracedScriptSet::Ptr found = tm->tracedScripts.lookup(script);
     if (!found)
         return;
@@ -7825,11 +7841,6 @@ PurgeScriptFragments(TraceMonitor* tm, JSScript* script)
             }
             fragp = &frag->next;
         }
-    }
-
-    for (LoopProfileMap::Enum e(*tm->loopProfiles); !e.empty(); e.popFront()) {
-        if (JS_UPTRDIFF(e.front().key, script->code) < script->length)
-            e.removeFront();
     }
 
     RecordAttemptMap &table = *tm->recordAttempts;

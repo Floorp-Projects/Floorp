@@ -424,9 +424,12 @@ struct CallSite
     }
 };
 
-/* Re-enables a tracepoint in the method JIT. */
+/*
+ * Re-enables a tracepoint in the method JIT. When full is true, we
+ * also reset the iteration counter.
+ */
 void
-EnableTraceHint(JSScript *script, jsbytecode *pc, uint16_t index);
+ResetTraceHint(JSScript *script, jsbytecode *pc, uint16_t index, bool full);
 
 uintN
 GetCallTargetCount(JSScript *script, jsbytecode *pc);
