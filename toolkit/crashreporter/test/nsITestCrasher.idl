@@ -17,4 +17,5 @@ interface nsITestCrasher : nsISupports
 
   const short CRASH_INVALID_POINTER_DEREF  = 0;
   const short CRASH_PURE_VIRTUAL_CALL      = 1;
+  const short CRASH_RUNTIMEABORT           = 2;
 };
