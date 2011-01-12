@@ -3811,6 +3811,49 @@ nsLayoutUtils::AssertNoDuplicateContinuations(nsIFrame* aContainer,
     }
   }
 }
+
+// Is one of aFrame's ancestors a letter frame?
+static bool
+IsInLetterFrame(nsIFrame *aFrame)
+{
+  for (nsIFrame *f = aFrame->GetParent(); f; f = f->GetParent()) {
+    if (f->GetType() == nsGkAtoms::letterFrame) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/* static */ void
+nsLayoutUtils::AssertTreeOnlyEmptyNextInFlows(nsIFrame *aSubtreeRoot)
+{
+  NS_ASSERTION(aSubtreeRoot->GetPrevInFlow(),
+               "frame tree not empty, but caller reported complete status");
+
+  // Also assert that text frames map no text.
+  PRInt32 start, end;
+  nsresult rv = aSubtreeRoot->GetOffsets(start, end);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "GetOffsets failed");
+  // In some cases involving :first-letter, we'll partially unlink a
+  // continuation in the middle of a continuation chain from its
+  // previous and next continuations before destroying it, presumably so
+  // that we don't also destroy the later continuations.  Once we've
+  // done this, GetOffsets returns incorrect values.
+  // For examples, see list of tests in
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=619021#c29
+  NS_ASSERTION(start == end || IsInLetterFrame(aSubtreeRoot),
+               "frame tree not empty, but caller reported complete status");
+
+  PRInt32 listIndex = 0;
+  nsIAtom* childList = nsnull;
+  do {
+    for (nsIFrame* child = aSubtreeRoot->GetFirstChild(childList); child;
+         child = child->GetNextSibling()) {
+      nsLayoutUtils::AssertTreeOnlyEmptyNextInFlows(child);
+    }
+    childList = aSubtreeRoot->GetAdditionalChildListName(listIndex++);
+  } while (childList);
+}
 #endif
 
 nsSetAttrRunnable::nsSetAttrRunnable(nsIContent* aContent, nsIAtom* aAttrName,
