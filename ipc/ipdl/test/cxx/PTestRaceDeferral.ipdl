@@ -1,0 +1,45 @@
+namespace mozilla {
+namespace _ipdltest {
+
+rpc protocol PTestRaceDeferral {
+parent:
+    rpc Lose();
+
+child:
+    async StartRace();
+    rpc Win();
+    rpc Rpc();
+    async __delete__();
+
+// Test that messages deferred due to race resolution are
+// re-considered when the winner makes later RPCs
+
+// IPDL's type system can't express this protocol because the race
+// resolution causes state to diverge for multiple steps, so we'll
+// leave it "stateless"
+/*
+state START:
+    send StartRace goto DEFER;
+state DEFER:
+    call Win goto PARENT;
+    answer Lose goto CHILD;
+
+state PARENT:
+    // 'Lose' is received here but deferred
+    call Rpc goto PARENT_LOSE;
+state PARENT_LOSE:
+    // Calling 'Rpc' undefers 'Lose', and it wins the "race" with 'Rpc'
+    answer Lose goto DONE;
+
+state CHILD:
+    call Win goto CHILD_RPC;
+state CHILD_RPC:
+    call Rpc goto DONE;
+
+state DONE:
+    send __delete__;
+*/
+};
+
+} // namespace _ipdltest
+} // namespace mozilla
