@@ -820,6 +820,33 @@ private:
   nsRefPtr<History> mHistory;
 };
 
+/**
+ * Stores an embed visit, and notifies observers.
+ *
+ * @param aPlace
+ *        The VisitData of the visit to store as an embed visit.
+ */
+void
+StoreAndNotifyEmbedVisit(VisitData& aPlace)
+{
+  NS_PRECONDITION(aPlace.transitionType == nsINavHistoryService::TRANSITION_EMBED,
+                  "Must only pass TRANSITION_EMBED visits to this!");
+  NS_PRECONDITION(NS_IsMainThread(), "Must be called on the main thread!");
+
+  nsCOMPtr<nsIURI> uri;
+  (void)NS_NewURI(getter_AddRefs(uri), aPlace.spec);
+
+  nsNavHistory* navHistory = nsNavHistory::GetHistoryService();
+  if (!navHistory || !uri) {
+    return;
+  }
+
+  navHistory->registerEmbedVisit(uri, aPlace.visitTime);
+  VisitData noReferrer;
+  nsCOMPtr<nsIRunnable> event = new NotifyVisitObservers(aPlace, noReferrer);
+  (void)NS_DispatchToMainThread(event);
+}
+
 } // anonymous namespace
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1189,12 +1216,7 @@ History::VisitURI(nsIURI* aURI,
   // EMBED visits are session-persistent and should not go through the database.
   // They exist only to keep track of isVisited status during the session.
   if (place.transitionType == nsINavHistoryService::TRANSITION_EMBED) {
-    navHistory->registerEmbedVisit(aURI, place.visitTime);
-    // Finally, enqueue an event to notify observers.
-    VisitData noReferrer;
-    nsCOMPtr<nsIRunnable> event = new NotifyVisitObservers(place, noReferrer);
-    rv = NS_DispatchToMainThread(event);
-    NS_ENSURE_SUCCESS(rv, rv);
+    StoreAndNotifyEmbedVisit(place);
   }
   else {
     mozIStorageConnection* dbConn = GetDBConn();
