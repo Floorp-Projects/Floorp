@@ -140,7 +140,7 @@ function GroupItem(listOfEls, options) {
   // ___ Titlebar
   var html =
     "<div class='title-container'>" +
-      "<input class='name' />" +
+      "<input class='name' placeholder='" + this.defaultName + "'/>" +
       "<div class='title-shield' />" +
     "</div>";
 
@@ -160,31 +160,7 @@ function GroupItem(listOfEls, options) {
   this.$titleContainer = iQ('.title-container', this.$titlebar);
   this.$title = iQ('.name', this.$titlebar);
   this.$titleShield = iQ('.title-shield', this.$titlebar);
-  this.setTitle(options.title || this.defaultName);
-
-  var titleUnfocus = function(immediately) {
-    self.$titleShield.show();
-    if (!self.getTitle()) {
-      self.$title
-        .addClass("defaultName")
-        .val(self.defaultName)
-        .css({"background-image":null, "-moz-padding-start":null});
-    } else {
-      self.$title.css({"background-image":"none"});
-      if (immediately) {
-        self.$title.css({
-            "-moz-padding-start": "1px"
-          });
-      } else {
-        self.$title.animate({
-            "-moz-padding-start": "1px"
-          }, {
-            duration: 200,
-            easing: "tabviewBounce"
-          });
-      }
-    }
-  };
+  this.setTitle(options.title);
 
   var handleKeyDown = function(e) {
     if (e.which == 13 || e.which == 27) { // return & escape
@@ -208,24 +184,18 @@ function GroupItem(listOfEls, options) {
   };
 
   this.$title
-    .css({backgroundRepeat: 'no-repeat'})
-    .blur(titleUnfocus)
+    .blur(function() {
+      self.$titleShield.show();
+    })
     .focus(function() {
       if (self.locked.title) {
         (self.$title)[0].blur();
         return;
       }
       (self.$title)[0].select();
-      if (!self.getTitle()) {
-        self.$title
-          .removeClass("defaultName")
-          .val('');
-      }
     })
     .keydown(handleKeyDown)
     .keyup(handleKeyUp);
-
-  titleUnfocus(immediately);
 
   if (this.locked.title)
     this.$title.addClass('name-locked');
@@ -383,8 +353,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Function: getTitle
   // Returns the title of this groupItem as a string.
   getTitle: function GroupItem_getTitle() {
-    var value = (this.$title ? this.$title.val() : '');
-    return (value == this.defaultName ? '' : value);
+    return this.$title ? this.$title.val() : '';
   },
 
   // ----------
