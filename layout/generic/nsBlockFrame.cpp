@@ -5858,6 +5858,45 @@ nsBlockFrame::ReflowPushedFloats(nsBlockReflowState& aState,
     // float, changing its siblings
     next = f->GetNextSibling();
 
+    // When we push a first-continuation float in a non-initial reflow,
+    // it's possible that we end up with two continuations with the same
+    // parent.  This happens if, on the previous reflow of the block or
+    // a previous reflow of the line containing the block, the float was
+    // split between continuations A and B of the parent, but on the
+    // current reflow, none of the float can fit in A.
+    //
+    // When this happens, we might even have the two continuations
+    // out-of-order due to the management of the pushed floats.  In
+    // particular, if the float's placeholder was in a pushed line that
+    // we reflowed before it was pushed, and we split the float during
+    // that reflow, we might have the continuation of the float before
+    // the float itself.  (In the general case, however, it's correct
+    // for floats in the pushed floats list to come before floats
+    // anchored in pushed lines; however, in this case it's wrong.  We
+    // should probably find a way to fix it somehow, since it leads to
+    // incorrect layout in some cases.)
+    //
+    // When we have these out-of-order continuations, we might hit the
+    // next-continuation before the previous-continuation.  When that
+    // happens, just push it.  When we reflow the next continuation,
+    // we'll either pull all of its content back and destroy it (by
+    // calling DeleteNextInFlowChild), or nsBlockFrame::SplitFloat will
+    // pull it out of its current position and push it again (and
+    // potentially repeat this cycle for the next continuation, although
+    // hopefully then they'll be in the right order).
+    //
+    // We should also need this code for the in-order case if the first
+    // continuation of a float gets moved across more than one
+    // continuation of the containing block.  In this case we'd manage
+    // to push the second continuation without this check, but not the
+    // third and later.
+    nsIFrame *prevContinuation = f->GetPrevContinuation();
+    if (prevContinuation && prevContinuation->GetParent() == f->GetParent()) {
+      mFloats.RemoveFrame(f);
+      aState.AppendPushedFloat(f);
+      continue;
+    }
+
     if (NS_SUBTREE_DIRTY(f) || aState.mReflowState.ShouldReflowAllKids()) {
       // Cache old bounds
       nsRect oldRect = f->GetRect();
