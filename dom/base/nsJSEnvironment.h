@@ -245,7 +245,6 @@ private:
   nsrefcnt GetCCRefcnt();
 
   JSContext *mContext;
-  PRUint32 mNumEvaluations;
 
 protected:
   struct TerminationFuncHolder;
