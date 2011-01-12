@@ -993,17 +993,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   // delete the line with the line cursor.
   ClearLineCursor();
 
-  if (IsFrameTreeTooDeep(aReflowState, aMetrics)) {
-#ifdef DEBUG_kipp
-    {
-      extern char* nsPresShell_ReflowStackPointerTop;
-      char marker;
-      char* newsp = (char*) &marker;
-      printf("XXX: frame tree is too deep; approx stack size = %d\n",
-             nsPresShell_ReflowStackPointerTop - newsp);
-    }
-#endif
-    aStatus = NS_FRAME_COMPLETE;
+  if (IsFrameTreeTooDeep(aReflowState, aMetrics, aStatus)) {
     return NS_OK;
   }
 
@@ -1213,6 +1203,13 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   aStatus = state.mReflowStatus;
 
 #ifdef DEBUG
+  // Between when we drain pushed floats and when we complete reflow,
+  // we're allowed to have multiple continuations of the same float on
+  // our floats list, since a first-in-flow might get pushed to a later
+  // continuation of its containing block.  But it's not permitted
+  // outside that time.
+  nsLayoutUtils::AssertNoDuplicateContinuations(this, mFloats);
+
   if (gNoisyReflow) {
     IndentBy(stdout, gNoiseIndent);
     ListTag(stdout);
@@ -4511,6 +4508,15 @@ nsBlockFrame::DrainOverflowLines(nsBlockReflowState& aState)
 void
 nsBlockFrame::DrainPushedFloats(nsBlockReflowState& aState)
 {
+#ifdef DEBUG
+  // Between when we drain pushed floats and when we complete reflow,
+  // we're allowed to have multiple continuations of the same float on
+  // our floats list, since a first-in-flow might get pushed to a later
+  // continuation of its containing block.  But it's not permitted
+  // outside that time.
+  nsLayoutUtils::AssertNoDuplicateContinuations(this, mFloats);
+#endif
+
   // Take any continuations we need to take from our prev-in-flow.
   nsBlockFrame* prevBlock = static_cast<nsBlockFrame*>(GetPrevInFlow());
   if (!prevBlock)
@@ -4522,15 +4528,6 @@ nsBlockFrame::DrainPushedFloats(nsBlockReflowState& aState)
     }
     delete list;
   }
-
-#ifdef DEBUG
-  for (nsIFrame* f = mFloats.FirstChild(); f ; f = f->GetNextSibling()) {
-    for (nsIFrame* c = f->GetFirstInFlow(); c ; c = c->GetNextInFlow()) {
-      NS_ASSERTION(c == f || c->GetParent() != this || !mFloats.ContainsFrame(c),
-                   "Two floats with same parent in same floats list, expect weird errors.");
-    }
-  }
-#endif
 }
 
 nsLineList*
@@ -5635,6 +5632,11 @@ nsBlockFrame::DeleteNextInFlowChild(nsPresContext* aPresContext,
         aNextInFlow, aDeletingEmptyFrames);
   }
   else {
+#ifdef DEBUG
+    if (aDeletingEmptyFrames) {
+      nsLayoutUtils::AssertTreeOnlyEmptyNextInFlows(aNextInFlow);
+    }
+#endif
     DoRemoveFrame(aNextInFlow,
         aDeletingEmptyFrames ? FRAMES_ARE_EMPTY : 0);
   }
@@ -5850,6 +5852,45 @@ nsBlockFrame::ReflowPushedFloats(nsBlockReflowState& aState,
     // save next sibling now, since reflowing could push the entire
     // float, changing its siblings
     next = f->GetNextSibling();
+
+    // When we push a first-continuation float in a non-initial reflow,
+    // it's possible that we end up with two continuations with the same
+    // parent.  This happens if, on the previous reflow of the block or
+    // a previous reflow of the line containing the block, the float was
+    // split between continuations A and B of the parent, but on the
+    // current reflow, none of the float can fit in A.
+    //
+    // When this happens, we might even have the two continuations
+    // out-of-order due to the management of the pushed floats.  In
+    // particular, if the float's placeholder was in a pushed line that
+    // we reflowed before it was pushed, and we split the float during
+    // that reflow, we might have the continuation of the float before
+    // the float itself.  (In the general case, however, it's correct
+    // for floats in the pushed floats list to come before floats
+    // anchored in pushed lines; however, in this case it's wrong.  We
+    // should probably find a way to fix it somehow, since it leads to
+    // incorrect layout in some cases.)
+    //
+    // When we have these out-of-order continuations, we might hit the
+    // next-continuation before the previous-continuation.  When that
+    // happens, just push it.  When we reflow the next continuation,
+    // we'll either pull all of its content back and destroy it (by
+    // calling DeleteNextInFlowChild), or nsBlockFrame::SplitFloat will
+    // pull it out of its current position and push it again (and
+    // potentially repeat this cycle for the next continuation, although
+    // hopefully then they'll be in the right order).
+    //
+    // We should also need this code for the in-order case if the first
+    // continuation of a float gets moved across more than one
+    // continuation of the containing block.  In this case we'd manage
+    // to push the second continuation without this check, but not the
+    // third and later.
+    nsIFrame *prevContinuation = f->GetPrevContinuation();
+    if (prevContinuation && prevContinuation->GetParent() == f->GetParent()) {
+      mFloats.RemoveFrame(f);
+      aState.AppendPushedFloat(f);
+      continue;
+    }
 
     if (NS_SUBTREE_DIRTY(f) || aState.mReflowState.ShouldReflowAllKids()) {
       // Cache old bounds
