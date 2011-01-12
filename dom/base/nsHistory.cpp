@@ -325,6 +325,9 @@ NS_IMETHODIMP
 nsHistory::Item(PRUint32 aIndex, nsAString& aReturn)
 {
   aReturn.Truncate();
+  if (!nsContentUtils::IsCallerTrustedForRead()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
 
   nsresult rv = NS_OK;
   nsCOMPtr<nsISHistory>  session_history;
@@ -332,8 +335,8 @@ nsHistory::Item(PRUint32 aIndex, nsAString& aReturn)
   GetSessionHistoryFromDocShell(mDocShell, getter_AddRefs(session_history));
   NS_ENSURE_TRUE(session_history, NS_ERROR_FAILURE);
 
- 	nsCOMPtr<nsIHistoryEntry> sh_entry;
- 	nsCOMPtr<nsIURI> uri;
+  nsCOMPtr<nsIHistoryEntry> sh_entry;
+  nsCOMPtr<nsIURI> uri;
 
   rv = session_history->GetEntryAtIndex(aIndex, PR_FALSE,
                                         getter_AddRefs(sh_entry));
