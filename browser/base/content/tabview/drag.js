@@ -296,7 +296,10 @@ Drag.prototype = {
     if (this.parent && this.parent.expanded)
       this.parent.arrange();
 
-    if (this.item && !this.item.parent) {
+    if (this.item.parent)
+      this.item.parent.arrange();
+
+    if (!this.item.parent) {
       this.item.setZ(drag.zIndex);
       drag.zIndex++;
 
