@@ -40,6 +40,7 @@
 #include "gfxD2DSurface.h"
 #include "gfxWindowsSurface.h"
 #include "yuv_convert.h"
+#include "../d3d9/Nv3DVUtils.h"
 
 namespace mozilla {
 namespace layers {
@@ -302,6 +303,39 @@ ImageLayerD3D10::RenderLayer()
     effect()->GetVariableByName("tY")->AsShaderResource()->SetResource(yuvImage->mYView);
     effect()->GetVariableByName("tCb")->AsShaderResource()->SetResource(yuvImage->mCbView);
     effect()->GetVariableByName("tCr")->AsShaderResource()->SetResource(yuvImage->mCrView);
+
+    /*
+     * Send 3d control data and metadata to NV3DVUtils
+     */
+    if (GetNv3DVUtils()) {
+      Nv_Stereo_Mode mode;
+      switch (yuvImage->mData.mStereoMode) {
+      case STEREO_MODE_LEFT_RIGHT:
+        mode = NV_STEREO_MODE_LEFT_RIGHT;
+        break;
+      case STEREO_MODE_RIGHT_LEFT:
+        mode = NV_STEREO_MODE_RIGHT_LEFT;
+        break;
+      case STEREO_MODE_BOTTOM_TOP:
+        mode = NV_STEREO_MODE_BOTTOM_TOP;
+        break;
+      case STEREO_MODE_TOP_BOTTOM:
+        mode = NV_STEREO_MODE_TOP_BOTTOM;
+        break;
+      case STEREO_MODE_MONO:
+        mode = NV_STEREO_MODE_MONO;
+        break;
+      }
+      
+      // Send control data even in mono case so driver knows to leave stereo mode.
+      GetNv3DVUtils()->SendNv3DVControl(mode, true, FIREFOX_3DV_APP_HANDLE);
+
+      if (yuvImage->mData.mStereoMode != STEREO_MODE_MONO) {
+        // Dst resource is optional
+        GetNv3DVUtils()->SendNv3DVMetaData((unsigned int)yuvImage->mSize.width, 
+                                           (unsigned int)yuvImage->mSize.height, (HANDLE)(yuvImage->mYTexture), (HANDLE)(NULL));
+      }
+    }
 
     effect()->GetVariableByName("vLayerQuad")->AsVector()->SetFloatVector(
       ShaderConstantRectD3D10(
