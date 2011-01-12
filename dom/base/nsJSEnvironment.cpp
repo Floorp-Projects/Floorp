@@ -4000,14 +4000,10 @@ SetMemoryHighWaterMarkPrefChangedCallback(const char* aPrefName, void* aClosure)
 static int
 SetMemoryMaxPrefChangedCallback(const char* aPrefName, void* aClosure)
 {
-  PRUint32 max = nsContentUtils::GetIntPref(aPrefName, -1);
-  if (max == -1UL)
-    max = 0xffffffff;
-  else
-    max = max * 1024L * 1024L;
-
-  JS_SetGCParameter(nsJSRuntime::sRuntime, JSGC_MAX_BYTES,
-                    max);
+  PRInt32 pref = nsContentUtils::GetIntPref(aPrefName, -1);
+  // handle overflow and negative pref values
+  PRUint32 max = (pref <= 0 || pref >= 0x1000) ? -1 : (PRUint32)pref * 1024 * 1024;
+  JS_SetGCParameter(nsJSRuntime::sRuntime, JSGC_MAX_BYTES, max);
   return 0;
 }
 
