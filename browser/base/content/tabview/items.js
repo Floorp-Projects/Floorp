@@ -347,7 +347,7 @@ Item.prototype = {
     var itemsToPush = [this];
     this.pushAwayData.generation = 0;
 
-    var pushOne = function(baseItem) {
+    var pushOne = function Item_pushAway_pushOne(baseItem) {
       // the baseItem is an n-generation pushed item. (n could be 0)
       var baseData = baseItem.pushAwayData;
       var bb = new Rect(baseData.bounds);
@@ -357,7 +357,7 @@ Item.prototype = {
       // bbc = center of the base's bounds
       var bbc = bb.center();
 
-      items.forEach(function(item) {
+      items.forEach(function Item_pushAway_pushOne_pushEach(item) {
         if (item == baseItem || item.locked.bounds)
           return;
 
@@ -419,12 +419,12 @@ Item.prototype = {
 
     // ___ Squish!
     var pageBounds = Items.getSafeWindowBounds();
-    items.forEach(function(item) {
+    items.forEach(function Item_pushAway_squish(item) {
       var data = item.pushAwayData;
       if (data.generation == 0 || item.locked.bounds)
         return;
 
-      function apply(item, posStep, posStep2, sizeStep) {
+      let apply = function Item_pushAway_squish_apply(item, posStep, posStep2, sizeStep) {
         var data = item.pushAwayData;
         if (data.generation == 0)
           return;
@@ -434,8 +434,11 @@ Item.prototype = {
         bounds.height -= sizeStep.y;
         bounds.left += posStep.x;
         bounds.top += posStep.y;
-
-        if (!item.isAGroupItem) {
+        
+        if (item.isAGroupItem) {
+          GroupItems.enforceMinSize(bounds);
+        } else {
+          TabItems.enforceMinSize(bounds);
           if (sizeStep.y > sizeStep.x) {
             var newWidth = bounds.height * (TabItems.tabWidth / TabItems.tabHeight);
             bounds.left += (bounds.width - newWidth) / 2;
@@ -463,7 +466,7 @@ Item.prototype = {
         posStep.x = pageBounds.left - bounds.left;
         sizeStep.x = posStep.x / data.generation;
         posStep2.x = -sizeStep.x;
-      } else if (bounds.right > pageBounds.right) {
+      } else if (bounds.right > pageBounds.right) { // this may be less of a problem post-601534
         posStep.x = pageBounds.right - bounds.right;
         sizeStep.x = -posStep.x / data.generation;
         posStep.x += sizeStep.x;
@@ -474,7 +477,7 @@ Item.prototype = {
         posStep.y = pageBounds.top - bounds.top;
         sizeStep.y = posStep.y / data.generation;
         posStep2.y = -sizeStep.y;
-      } else if (bounds.bottom > pageBounds.bottom) {
+      } else if (bounds.bottom > pageBounds.bottom) { // this may be less of a problem post-601534
         posStep.y = pageBounds.bottom - bounds.bottom;
         sizeStep.y = -posStep.y / data.generation;
         posStep.y += sizeStep.y;
@@ -487,7 +490,7 @@ Item.prototype = {
 
     // ___ Unsquish
     var pairs = [];
-    items.forEach(function(item) {
+    items.forEach(function Item_pushAway_setupUnsquish(item) {
       var data = item.pushAwayData;
       pairs.push({
         item: item,
@@ -498,7 +501,7 @@ Item.prototype = {
     Items.unsquish(pairs);
 
     // ___ Apply changes
-    items.forEach(function(item) {
+    items.forEach(function Item_pushAway_setBounds(item) {
       var data = item.pushAwayData;
       var bounds = data.bounds;
       if (!bounds.equals(data.startBounds)) {
