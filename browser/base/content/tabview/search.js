@@ -335,10 +335,12 @@ SearchEventHandlerClass.prototype = {
     });
     
     iQ("#searchbutton").mousedown(function() {
+      self.initiatedBy = "buttonclick";
       ensureSearchShown(null);
       self.switchToInMode();      
     });
     
+    this.initiatedBy = "";
     this.currentHandler = null;
     this.switchToBeforeMode();
   },
@@ -358,6 +360,7 @@ SearchEventHandlerClass.prototype = {
       return;
 
     this.switchToInMode();
+    this.initiatedBy = "keypress";
     ensureSearchShown(event);
   },
 
@@ -367,7 +370,7 @@ SearchEventHandlerClass.prototype = {
   inSearchKeyHandler: function (event) {
     let term = iQ("#searchbox").val();
     if ((event.keyCode == event.DOM_VK_ESCAPE) || 
-        (event.keyCode == event.DOM_VK_BACK_SPACE && term.length <= 1)) {
+        (event.keyCode == event.DOM_VK_BACK_SPACE && term.length <= 1 && this.initiatedBy == "keypress")) {
       hideSearch(event);
       return;
     }
