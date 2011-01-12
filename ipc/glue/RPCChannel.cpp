@@ -193,7 +193,7 @@ RPCChannel::Call(Message* msg, Message* reply)
 
         // now might be the time to process a message deferred because
         // of race resolution
-        MaybeProcessDeferredIncall();
+        MaybeUndeferIncall();
 
         // here we're waiting for something to happen. see long
         // comment about the queue in RPCChannel.h
@@ -315,14 +315,14 @@ RPCChannel::Call(Message* msg, Message* reply)
     return true;
 }
 
-bool
-RPCChannel::MaybeProcessDeferredIncall()
+void
+RPCChannel::MaybeUndeferIncall()
 {
     AssertWorkerThread();
     mMutex.AssertCurrentThreadOwns();
 
     if (mDeferred.empty())
-        return false;
+        return;
 
     size_t stackDepth = StackDepth();
 
@@ -331,9 +331,9 @@ RPCChannel::MaybeProcessDeferredIncall()
                "fatal logic error");
 
     if (mDeferred.top().rpc_remote_stack_depth_guess() < stackDepth)
-        return false;
+        return;
 
-    // time to process this message
+    // maybe time to process this message
     Message call = mDeferred.top();
     mDeferred.pop();
 
@@ -341,14 +341,7 @@ RPCChannel::MaybeProcessDeferredIncall()
     RPC_ASSERT(0 < mRemoteStackDepthGuess, "fatal logic error");
     --mRemoteStackDepthGuess;
 
-    MutexAutoUnlock unlock(mMutex);
-
-    if (LoggingEnabled())
-        fprintf(stderr, "  (processing deferred in-call)\n");
-
-    CxxStackFrame f(*this, IN_MESSAGE, &call);
-    Incall(call, stackDepth);
-    return true;
+    mPending.push(call);
 }
 
 void
@@ -356,6 +349,8 @@ RPCChannel::EnqueuePendingMessages()
 {
     AssertWorkerThread();
     mMutex.AssertCurrentThreadOwns();
+
+    MaybeUndeferIncall();
 
     for (size_t i = 0; i < mDeferred.size(); ++i)
         mWorkerLoop->PostTask(
@@ -412,7 +407,7 @@ RPCChannel::OnMaybeDequeueOne()
         }
 
         if (!mDeferred.empty())
-            return MaybeProcessDeferredIncall();
+            MaybeUndeferIncall();
 
         if (mPending.empty())
             return false;
@@ -482,8 +477,8 @@ RPCChannel::Incall(const Message& call, size_t stackDepth)
         }
 
         if (LoggingEnabled()) {
-            fprintf(stderr, "  (%s won, so we're%sdeferring)\n",
-                    winner, defer ? " " : " not ");
+            fprintf(stderr, "  (%s: %s won, so we're%sdeferring)\n",
+                    mChild ? "child" : "parent", winner, defer ? " " : " not ");
         }
 
         if (defer) {
