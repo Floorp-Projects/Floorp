@@ -178,6 +178,7 @@ img {
 #firstrun ul#recommended li a:active {
   text-decoration: none;
   background: #b5d7e0;
+  outline: none;
 }
 
 #firstrun ul#recommended li b {

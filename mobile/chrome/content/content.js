@@ -7,9 +7,12 @@ let Cu = Components.utils;
 let Cr = Components.results;
 
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-let gFocusManager = Cc["@mozilla.org/focus-manager;1"]
-  .getService(Ci.nsIFocusManager);
+XPCOMUtils.defineLazyServiceGetter(this, "gFocusManager",
+  "@mozilla.org/focus-manager;1", "nsIFocusManager");
+XPCOMUtils.defineLazyServiceGetter(this, "gDOMUtils",
+  "@mozilla.org/inspector/dom-utils;1", "inIDOMUtils");
 
 let XULDocument = Ci.nsIDOMXULDocument;
 let HTMLHtmlElement = Ci.nsIDOMHTMLHtmlElement;
@@ -27,6 +30,8 @@ const kViewportMinHeight = 223;
 const kViewportMaxHeight = 10000;
 
 const kReferenceDpi = 240; // standard "pixel" size used in some preferences
+
+const kStateActive = 0x00000001; // :active pseudoclass for elements
 
 /** Watches for mouse click in content and redirect them to the best found target **/
 const ElementTouchHelper = {
@@ -235,6 +240,7 @@ let Content = {
     addMessageListener("Browser:MouseLong", this);
     addMessageListener("Browser:MouseDown", this);
     addMessageListener("Browser:MouseUp", this);
+    addMessageListener("Browser:MouseCancel", this);
     addMessageListener("Browser:SaveAs", this);
     addMessageListener("Browser:ZoomToPoint", this);
     addMessageListener("Browser:MozApplicationCache:Fetch", this);
@@ -362,17 +368,12 @@ let Content = {
           return;
 
         // Calculate the rect of the active area
-        let targetElement = null;
-        if (element.mozMatchesSelector("*:-moz-any-link, *[role=button],button,input,option,select,textarea,label"))
-          targetElement = element;
-        else if (element.mozMatchesSelector("*:-moz-any-link *"))
-          targetElement = element.parentNode;
+        this._doTapHighlight(element);
+        break;
+      }
 
-        if (targetElement) {
-          let rect = getOverflowContentBoundingRect(targetElement);
-          let highlightRects = [{ left: rect.x, top: rect.y, width: rect.width, height: rect.height }];
-          sendAsyncMessage("Browser:Highlight", { rects: highlightRects, messageId: json.messageId });
-        }
+      case "Browser:MouseCancel": {
+        this._cancelTapHighlight();
         break;
       }
 
@@ -390,6 +391,7 @@ let Content = {
       }
 
       case "Browser:MouseUp": {
+        this._cancelTapHighlight();
         this._formAssistant.focusSync = true;
         let element = elementFromPoint(x, y);
         if (modifiers == Ci.nsIDOMNSEvent.CONTROL_MASK) {
@@ -485,6 +487,14 @@ let Content = {
         break;
       }
     }
+  },
+
+  _doTapHighlight: function _doTapHighlight(aElt) {
+    gDOMUtils.setContentState(aElt, kStateActive);
+  },
+
+  _cancelTapHighlight: function _cancelTapHighlight() {
+    gDOMUtils.setContentState(content.document.documentElement, kStateActive);
   },
 
   _sendMouseEvent: function _sendMouseEvent(aName, aElement, aX, aY) {

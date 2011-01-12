@@ -322,3 +322,15 @@ video > xul|videocontrols,
 audio > xul|videocontrols {
   -moz-binding: url("chrome://global/content/bindings/videocontrols.xml#touchControls");
 }
+
+*:-moz-any-link:active,
+*[role=button]:active,
+button:active,
+input:active,
+option:active,
+select:active,
+label:active,
+textarea:active {
+  background-color: #8db8d8;
+  outline: 2px solid #8db8d8;
+}
