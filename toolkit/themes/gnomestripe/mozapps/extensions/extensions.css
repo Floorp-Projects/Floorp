@@ -588,10 +588,6 @@
   opacity: 0;
 }
 
-#detail-view:not([loading]) .loading {
-  visibility: collapse;
-}
-
 #detail-view[loading-extended] .loading {
   -moz-box-align: center;
   -moz-box-pack: center;
