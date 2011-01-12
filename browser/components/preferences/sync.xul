@@ -108,8 +108,6 @@
                   <menuseparator/>
                   <menuitem label="&resetSync.label;"
                             oncommand="gSyncPane.resetSync();"/>
-                  <menuitem label="&stopUsingAccount.label;"
-                            oncommand="gSyncPane.startOver(true);"/>
                 </menupopup>
               </button>
             </hbox>
@@ -171,6 +169,11 @@
                 </row>
               </rows>
             </grid>
+            <hbox>
+              <label class="text-link"
+                     onclick="gSyncPane.startOver(true); return false;"
+                     value="&deactivateDevice.label;"/>
+            </hbox>
           </groupbox>
           <hbox id="tosPP" pack="center">
             <label class="text-link"
@@ -194,7 +197,7 @@
           </hbox>
           <label class="text-link"
                  onclick="gSyncPane.startOver(true); return false;"
-                 value="&stopUsingAccount.label;"/>
+                 value="&deactivateDevice.label;"/>
         </vbox>
       </deck>
   </prefpane>
