@@ -755,10 +755,6 @@
   opacity: 0;
 }
 
-#detail-view:not([loading]) .alert-container {
-  visibility: collapse;
-}
-
 #detail-view[loading-extended] .loading {
   opacity: 1;
   -moz-transition-property: opacity;
