@@ -551,7 +551,9 @@
                     <label id="detail-creator" class="creator"/>
                   </vbox>
                   <hbox id="detail-desc-container" align="start">
-                    <image id="detail-screenshot" hidden="true"/>
+                    <vbox pack="center"> <!-- Necessary to work around bug 394738 -->
+                      <image id="detail-screenshot" hidden="true"/>
+                    </vbox>
                     <description id="detail-desc" flex="1"/>
                   </hbox>
                   <vbox id="detail-contributions">
