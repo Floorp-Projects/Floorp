@@ -196,8 +196,6 @@ class RegExp
         JS_ASSERT((flags & allFlags) == flags);
         return flags;
     }
-
-    uint32 flagCount() const;
 };
 
 class RegExpMatchBuilder
@@ -543,15 +541,6 @@ RegExp::hasMetaChars(const jschar *chars, size_t length)
             return true;
     }
     return false;
-}
-
-inline uint32
-RegExp::flagCount() const
-{
-    uint32 nflags = 0;
-    for (uint32 tmpFlags = flags; tmpFlags != 0; tmpFlags &= tmpFlags - 1)
-        nflags++;
-    return nflags;
 }
 
 inline void
