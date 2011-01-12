@@ -222,7 +222,8 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
         if (AccessCheck::needsSystemOnlyWrapper(obj)) {
             wrapper = &FilteringWrapper<JSCrossCompartmentWrapper,
                                         OnlyIfSubjectIsSystem>::singleton;
-        } else if (targetdata && targetdata->wantXrays && IS_WN_WRAPPER(obj)) {
+        } else if (targetdata && targetdata->wantXrays &&
+                   (IS_WN_WRAPPER(obj) || obj->getClass()->ext.innerObject)) {
             typedef XrayWrapper<JSCrossCompartmentWrapper, CrossCompartmentXray> Xray;
             wrapper = &Xray::singleton;
             xrayHolder = Xray::createHolder(cx, obj, parent);
