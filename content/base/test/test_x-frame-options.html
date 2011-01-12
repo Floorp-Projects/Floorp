@@ -15,6 +15,44 @@
 <iframe style="width:100%;height:300px;" id="harness"></iframe>
 <script class="testbody" type="text/javascript">
 
+function examiner() {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  var obsvc = Components.classes['@mozilla.org/observer-service;1']
+                        .getService(Components.interfaces.nsIObserverService);
+  obsvc.addObserver(this, "http-on-examine-response", false);
+}
+examiner.prototype  = {
+  observe: function(subject, topic, data) {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    if(!subject.QueryInterface)
+      return;
+
+    if (topic == "http-on-examine-response") {
+      var chan = subject.QueryInterface(Components.interfaces.nsIHttpChannel);
+      var uri = chan.URI
+      if (!uri.path.match(/^\/tests\/content\/base\/test\/file_x-frame-options_page\.sjs/))
+        return;
+      dump(">>>> PATH: "+uri.path+"\n");
+      dump(">>> REQUEST:\n>>> "+chan.requestMethod+" "+uri.asciiSpec+"\n");
+      dump(">>> RESPONSE HEADERS:\n");
+      chan.visitResponseHeaders({
+        visitHeader: function(header, value) {
+          dump(">>> "+header+": "+value+"\n");
+        }
+      });
+    }
+  },
+
+  remove: function() {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    var obsvc = Components.classes['@mozilla.org/observer-service;1']
+                          .getService(Components.interfaces.nsIObserverService);
+    obsvc.removeObserver(this, "http-on-examine-response");
+  }
+}
+
+window.examiner = new examiner();
+
 var path = "/tests/content/base/test/";
 
 var testFramesLoaded = function() {
@@ -81,6 +119,7 @@ var testFrameInDataURI = function() {
     win.close();
 
     // finalize test
+    window.examiner.remove();
     SimpleTest.finish();
    }
   win.location.href = "data:text/html,"+html;
