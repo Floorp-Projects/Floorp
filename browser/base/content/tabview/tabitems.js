@@ -142,7 +142,7 @@ function TabItem(tab, options) {
         position: "absolute",
         zIndex: -99
       })
-      .css(groupItemBounds.css())
+      .css(groupItemBounds)
       .hide()
       .appendTo("body");
 
@@ -155,7 +155,7 @@ function TabItem(tab, options) {
 
     // Utils.log('updatedBounds:',updatedBounds);
     if (updatedBounds)
-      phantom.css(updatedBounds.css());
+      phantom.css(updatedBounds);
 
     phantom.fadeIn();
 
@@ -648,7 +648,7 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
             TabItems.resumePainting();
     
             $tabEl
-              .css(orig.css())
+              .css(orig)
               .removeClass("front");
 
             onZoomDone();
