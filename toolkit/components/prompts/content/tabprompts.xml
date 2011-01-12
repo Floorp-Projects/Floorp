@@ -18,7 +18,9 @@
         <stylesheet src="chrome://global/skin/tabprompts.css"/>
     </resources>
 
-    <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+    <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+                 role="dialog"
+                 aria-describedby="info.body">
 
         <!-- This is based on the guts of commonDialog.xul -->
         <spacer flex="1"/>
