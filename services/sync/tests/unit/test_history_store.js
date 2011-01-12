@@ -156,6 +156,19 @@ function run_test() {
     let result = Utils.queryAsync(stmt);    
     do_check_eq([id for (id in store.getAllIDs())].length, 4);
 
+    _("Make sure we handle records with javascript: URLs gracefully.");
+    store.create({id: Utils.makeGUID(),
+                  histUri: "javascript:''",
+                  title: "javascript:''",
+                  visits: [{date: TIMESTAMP3,
+                            type: Ci.nsINavHistoryService.TRANSITION_EMBED}]});
+
+    _("Make sure we handle records without any visits gracefully.");
+    store.create({id: Utils.makeGUID(),
+                  histUri: "http://getfirebug.com",
+                  title: "Get Firebug!",
+                  visits: []});
+
     _("Remove a record from the store.");
     store.remove({id: fxguid});
     do_check_false(store.itemExists(fxguid));
