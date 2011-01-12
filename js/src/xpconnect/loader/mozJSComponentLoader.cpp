@@ -91,6 +91,7 @@
 #include "mozilla/scache/StartupCache.h"
 #include "mozilla/scache/StartupCacheUtils.h"
 #endif
+#include "mozilla/Omnijar.h"
 
 #if defined(MOZ_SHARK) || defined(MOZ_CALLGRIND) || defined(MOZ_VTUNE) || defined(MOZ_TRACEVIS)
 #include "jsdbgapi.h"
@@ -101,7 +102,6 @@
 static const char kJSRuntimeServiceContractID[] = "@mozilla.org/js/xpc/RuntimeService;1";
 static const char kXPConnectServiceContractID[] = "@mozilla.org/js/xpc/XPConnect;1";
 static const char kObserverServiceContractID[] = "@mozilla.org/observer-service;1";
-static const char kCacheKeyPrefix[] = "jsloader:";
 
 /* Some platforms don't have an implementation of PR_MemMap(). */
 #if !defined(XP_BEOS) && !defined(XP_OS2)
@@ -631,16 +631,28 @@ mozJSComponentLoader::LoadModuleFromJAR(nsILocalFile *aJarFile,
 #if !defined(XPCONNECT_STANDALONE)
     nsresult rv;
 
-    nsCAutoString fileSpec;
-    NS_GetURLSpecFromActualFile(aJarFile, fileSpec);
+    nsCAutoString fullSpec;
 
-    nsCAutoString jarSpec("jar:");
-    jarSpec += fileSpec;
-    jarSpec += "!/";
-    jarSpec += aComponentPath;
+#ifdef MOZ_OMNIJAR
+    PRBool equal;
+    rv = aJarFile->Equals(mozilla::OmnijarPath(), &equal);
+    if (NS_SUCCEEDED(rv) && equal) {
+        fullSpec = "resource://gre/";
+    } else {
+#endif
+        nsCAutoString fileSpec;
+        NS_GetURLSpecFromActualFile(aJarFile, fileSpec);
+        fullSpec = "jar:";
+        fullSpec += fileSpec;
+        fullSpec += "!/";
+#ifdef MOZ_OMNIJAR
+    }
+#endif
+
+    fullSpec += aComponentPath;
 
     nsCOMPtr<nsIURI> uri;
-    rv = NS_NewURI(getter_AddRefs(uri), jarSpec);
+    rv = NS_NewURI(getter_AddRefs(uri), fullSpec);
     if (NS_FAILED(rv))
         return NULL;
 
@@ -831,6 +843,48 @@ class JSScriptHolder
     JSScript *mScript;
 };
 
+/**
+ * PathifyURI transforms mozilla .js uris into useful zip paths
+ * to make it makes it easier to manipulate startup cache entries
+ * using standard zip tools.
+ * Transformations applied:
+ *  * jsloader/<scheme> prefix is used to group mozJSComponentLoader cache entries in
+ *    a top-level zip directory.
+ *  * In MOZ_OMNIJAR case resource:/// and resource://gre/ URIs refer to the same path
+ *    so treat both of them as resource://gre/
+ *  * .bin suffix is added to the end of the path to indicate that jsloader/ entries
+ *     are binary representations of JS source.
+ * For example:
+ *  resource://gre/modules/XPCOMUtils.jsm becomes
+ *  jsloader/resource/gre/modules/XPCOMUtils.jsm.bin
+ */
+static nsresult
+PathifyURI(nsIURI *in, nsACString &out)
+{ 
+   out = "jsloader/";
+   nsCAutoString scheme;
+   nsresult rv = in->GetScheme(scheme);
+   NS_ENSURE_SUCCESS(rv, rv);
+   out.Append(scheme);
+   nsCAutoString host;
+   rv = in->GetHost(host);
+   NS_ENSURE_SUCCESS(rv, rv);
+#ifdef MOZ_OMNIJAR
+   if (scheme.Equals("resource") && host.Length() == 0){
+       host = "gre";
+   }
+#endif
+   if (host.Length()) {
+       out.Append("/");
+       out.Append(host);
+   }
+   nsCAutoString path;
+   rv = in->GetPath(path);
+   NS_ENSURE_SUCCESS(rv, rv);
+   out.Append(path);
+   out.Append(".bin");
+   return NS_OK;
+}
 
 /* static */
 #ifdef MOZ_ENABLE_LIBXUL
@@ -841,9 +895,8 @@ mozJSComponentLoader::ReadScript(StartupCache* cache, nsIURI *uri,
     nsresult rv;
     
     nsCAutoString spec;
-    rv = uri->GetSpec(spec);
+    rv = PathifyURI(uri, spec);
     NS_ENSURE_SUCCESS(rv, rv);
-    spec.Insert(kCacheKeyPrefix, 0);
     
     nsAutoArrayPtr<char> buf;   
     PRUint32 len;
@@ -869,10 +922,8 @@ mozJSComponentLoader::WriteScript(StartupCache* cache, JSScript *script,
     nsresult rv;
 
     nsCAutoString spec;
-    rv = uri->GetSpec(spec);
+    rv = PathifyURI(uri, spec);
     NS_ENSURE_SUCCESS(rv, rv);
-
-    spec.Insert(kCacheKeyPrefix, 0);
 
     LOG(("Writing %s to startupcache\n", spec.get()));
     nsCOMPtr<nsIObjectOutputStream> oos;

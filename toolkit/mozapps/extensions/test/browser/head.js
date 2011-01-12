@@ -472,7 +472,7 @@ MockProvider.prototype = {
   addons: null,
   installs: null,
   started: null,
-  apiDelay: 100,
+  apiDelay: 10,
   callbackTimers: null,
   useAsyncCallbacks: null,
 

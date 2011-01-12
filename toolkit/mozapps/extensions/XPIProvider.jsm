@@ -1362,7 +1362,7 @@ var XPIProvider = {
     Services.prefs.addObserver(this.checkCompatibilityPref, this, false);
     Services.prefs.addObserver(PREF_EM_CHECK_UPDATE_SECURITY, this, false);
 
-    this.checkForChanges(aAppChanged);
+    let flushCaches = this.checkForChanges(aAppChanged);
 
     // Changes to installed extensions may have changed which theme is selected
     this.applyThemeChange();
@@ -1377,6 +1377,7 @@ var XPIProvider = {
       // Should we show a UI or just pass the list via a pref?
       if (Prefs.getBoolPref(PREF_EM_SHOW_MISMATCH_UI, true)) {
         this.showMismatchWindow();
+        flushCaches = true;
       }
       else if (this.startupChanges.appDisabled.length > 0) {
         // Remember the list of add-ons that were disabled this startup so
@@ -1384,6 +1385,12 @@ var XPIProvider = {
         Services.prefs.setCharPref(PREF_EM_DISABLED_ADDONS_LIST,
                                    this.startupChanges.appDisabled.join(","));
       }
+    }
+
+    if (flushCaches) {
+      // Init this, so it will get the notification.
+      let xulPrototypeCache = Cc["@mozilla.org/xul/xul-prototype-cache;1"].getService(Ci.nsISupports);
+      Services.obs.notifyObservers(null, "startupcache-invalidate", null);
     }
 
     this.enabledAddons = Prefs.getCharPref(PREF_EM_ENABLED_ADDONS, "");
@@ -1823,6 +1830,8 @@ var XPIProvider = {
                                                       aMigrateData,
                                                       aActiveBundles) {
     let visibleAddons = {};
+    let oldBootstrappedAddons = this.bootstrappedAddons;
+    this.bootstrappedAddons = {};
 
     /**
      * Updates an add-on's metadata and determines if a restart of the
@@ -1870,12 +1879,8 @@ var XPIProvider = {
         else
           WARN("Could not uninstall invalid item from locked install location");
         // If this was an active add-on then we must force a restart
-        if (aOldAddon.active) {
-          if (aOldAddon.bootstrap)
-            delete XPIProvider.bootstrappedAddons[aOldAddon.id];
-          else
-            return true;
-        }
+        if (aOldAddon.active)
+          return true;
 
         return false;
       }
@@ -1994,20 +1999,18 @@ var XPIProvider = {
             // Update the add-ons active state
             aOldAddon.active = !isDisabled;
             XPIDatabase.updateAddonActive(aOldAddon);
-            if (aOldAddon.active) {
-              XPIProvider.bootstrappedAddons[aOldAddon.id] = {
-                version: aOldAddon.version,
-                descriptor: aAddonState.descriptor
-              };
-            }
-            else {
-              delete XPIProvider.bootstrappedAddons[aOldAddon.id];
-            }
           }
           else {
             changed = true;
           }
         }
+      }
+
+      if (aOldAddon.visible && aOldAddon.active && aOldAddon.bootstrap) {
+        XPIProvider.bootstrappedAddons[aOldAddon.id] = {
+          version: aOldAddon.version,
+          descriptor: aAddonState.descriptor
+        };
       }
 
       return changed;
@@ -2035,16 +2038,9 @@ var XPIProvider = {
         if (aOldAddon.type == "theme")
           XPIProvider.enableDefaultTheme();
 
-        // If this was an active add-on and bootstrapped we must remove it from
-        // the bootstrapped list, otherwise we need to force a restart.
+        // If this was not a bootstrapped add-on then we must force a restart.
         if (!aOldAddon.bootstrap)
           return true;
-
-        // If this is the currently active bootstrapped add-on for this ID then
-        // remove it from the list.
-        if (aOldAddon.id in XPIProvider.bootstrappedAddons &&
-            XPIProvider.bootstrappedAddons[aOldAddon.id].descriptor == aOldAddon._descriptor)
-          XPIProvider.unloadBootstrapScope(aOldAddon.id);
       }
 
       return false;
@@ -2164,8 +2160,9 @@ var XPIProvider = {
         let installReason = BOOTSTRAP_REASONS.ADDON_INSTALL;
 
         // If we're hiding a bootstrapped add-on then call its uninstall method
-        if (newAddon.id in XPIProvider.bootstrappedAddons) {
-          let oldBootstrap = XPIProvider.bootstrappedAddons[newAddon.id];
+        if (newAddon.id in oldBootstrappedAddons) {
+          let oldBootstrap = oldBootstrappedAddons[newAddon.id];
+          XPIProvider.bootstrappedAddons[newAddon.id] = oldBootstrap;
 
           installReason = Services.vc.compare(oldBootstrap.version, newAddon.version) < 0 ?
                           BOOTSTRAP_REASONS.ADDON_UPGRADE :
@@ -2278,11 +2275,6 @@ var XPIProvider = {
     cache = JSON.stringify(this.getInstallLocationStates());
     Services.prefs.setCharPref(PREF_INSTALL_CACHE, cache);
 
-    if (changed) {
-      // Init this, so it will get the notification.
-      let xulPrototypeCache = Cc["@mozilla.org/xul/xul-prototype-cache;1"].getService(Ci.nsISupports);
-      Services.obs.notifyObservers(null, "startupcache-invalidate", null);
-    }
     return changed;
   },
 
@@ -2367,6 +2359,24 @@ var XPIProvider = {
       updateDatabase |= cache != JSON.stringify(state);
     }
 
+    if (!updateDatabase) {
+      let bootstrapDescriptors = [this.bootstrappedAddons[b].descriptor
+                                  for (b in this.bootstrappedAddons)];
+
+      state.forEach(function(aInstallLocationState) {
+        for (let id in aInstallLocationState.addons) {
+          let pos = bootstrapDescriptors.indexOf(aInstallLocationState.addons[id].descriptor);
+          if (pos != -1)
+            bootstrapDescriptors.splice(pos, 1);
+        }
+      });
+  
+      if (bootstrapDescriptors.length > 0) {
+        WARN("Bootstrap state is invalid (missing add-ons: " + bootstrapDescriptors.toSource() + ")");
+        updateDatabase = true;
+      }
+    }
+
     // Catch any errors during the main startup and rollback the database changes
     XPIDatabase.beginTransaction();
     try {
@@ -2412,7 +2422,7 @@ var XPIProvider = {
         Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, false);
         Services.prefs.setCharPref(PREF_BOOTSTRAP_ADDONS,
                                    JSON.stringify(this.bootstrappedAddons));
-        return;
+        return true;
       }
 
       LOG("No changes found");
@@ -2431,6 +2441,8 @@ var XPIProvider = {
       LOG("Add-ons list is missing, recreating");
       XPIDatabase.writeAddonsList();
     }
+
+    return false;
   },
 
   /**
@@ -2898,6 +2910,11 @@ var XPIProvider = {
     let bootstrap = aFile.clone();
     let name = aFile.leafName;
     let spec;
+
+    if (!bootstrap.exists()) {
+      ERROR("Attempted to load bootstrap scope from missing directory " + bootstrap.path);
+      return;
+    }
 
     if (bootstrap.isDirectory()) {
       bootstrap.append("bootstrap.js");
@@ -4029,6 +4046,15 @@ var XPIDatabase = {
     DB_BOOL_METADATA.forEach(function(aProp) {
       addon[aProp] = aRow[aProp] != 0;
     });
+    try {
+      addon._sourceBundle = addon._installLocation.getLocationForID(addon.id);
+    }
+    catch (e) {
+      // An exception will be thrown if the add-on appears in the database but
+      // not on disk. In general this should only happen during startup as
+      // this change is being detected.
+    }
+
     this.addonCache[aRow.internal_id] = Components.utils.getWeakReference(addon);
     return addon;
   },
@@ -4210,6 +4236,14 @@ var XPIDatabase = {
     DB_BOOL_METADATA.forEach(function(aProp) {
       addon[aProp] = aRow.getResultByName(aProp) != 0;
     });
+    try {
+      addon._sourceBundle = addon._installLocation.getLocationForID(addon.id);
+    }
+    catch (e) {
+      // An exception will be thrown if the add-on appears in the database but
+      // not on disk. In general this should only happen during startup as
+      // this change is being detected.
+    }
 
     this.addonCache[internal_id] = Components.utils.getWeakReference(addon);
     addon._pendingCallbacks = [aCallback];
@@ -5668,6 +5702,7 @@ AddonInstall.prototype = {
         cleanStagingDir(stagedAddon.parent, []);
 
         // Update the metadata in the database
+        this.addon._sourceBundle = file;
         this.addon._installLocation = this.installLocation;
         this.addon.updateDate = recursiveLastModifiedTime(file);
         this.addon.visible = true;
@@ -6488,17 +6523,21 @@ function AddonWrapper(aAddon) {
 
   this.__defineGetter__("permissions", function() {
     let permissions = 0;
+
+    // Add-ons that aren't installed cannot be modified in any way
+    if (!(aAddon instanceof DBAddonInternal))
+      return permissions;
+
     if (!aAddon.appDisabled) {
       if (aAddon.userDisabled)
         permissions |= AddonManager.PERM_CAN_ENABLE;
       else if (aAddon.type != "theme")
         permissions |= AddonManager.PERM_CAN_DISABLE;
     }
-    // Add-ons that have no install location (these are add-ons that are pending
-    // installation), are in locked install locations, or are pending uninstall
+
+    // Add-ons that are in locked install locations, or are pending uninstall
     // cannot be upgraded or uninstalled
-    if (aAddon._installLocation && !aAddon._installLocation.locked &&
-        !aAddon.pendingUninstall) {
+    if (!aAddon._installLocation.locked && !aAddon.pendingUninstall) {
       // Add-ons that are installed by a file link cannot be upgraded
       if (!aAddon._installLocation.isLinkedAddon(aAddon.id))
         permissions |= AddonManager.PERM_CAN_UPGRADE;
@@ -6560,14 +6599,7 @@ function AddonWrapper(aAddon) {
   };
 
   this.hasResource = function(aPath) {
-    let bundle = null;
-    if (aAddon instanceof DBAddonInternal) {
-      bundle = aAddon._sourceBundle = aAddon._installLocation
-                                            .getLocationForID(aAddon.id);
-    }
-    else {
-      bundle = aAddon._sourceBundle.clone();
-    }
+    let bundle = aAddon._sourceBundle.clone();
 
     if (bundle.isDirectory()) {
       if (aPath) {
@@ -6587,14 +6619,7 @@ function AddonWrapper(aAddon) {
   },
 
   this.getResourceURI = function(aPath) {
-    let bundle = null;
-    if (aAddon instanceof DBAddonInternal) {
-      bundle = aAddon._sourceBundle = aAddon._installLocation
-                                            .getLocationForID(aAddon.id);
-    }
-    else {
-      bundle = aAddon._sourceBundle.clone();
-    }
+    let bundle = aAddon._sourceBundle.clone();
 
     if (bundle.isDirectory()) {
       if (aPath) {

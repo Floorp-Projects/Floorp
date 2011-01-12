@@ -2756,8 +2756,8 @@ CType::Trace(JSTracer* trc, JSObject* obj)
   JSContext* cx = trc->context;
 
   // Make sure our TypeCode slot is legit. If it's not, bail.
-  jsval slot;
-  if (!JS_GetReservedSlot(cx, obj, SLOT_TYPECODE, &slot) || JSVAL_IS_VOID(slot))
+  jsval slot = js::Jsvalify(obj->getSlot(SLOT_TYPECODE));
+  if (JSVAL_IS_VOID(slot))
     return;
 
   // The contents of our slots depends on what kind of type we are.

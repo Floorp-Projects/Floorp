@@ -783,13 +783,21 @@ nsBaseWidget::GetShouldAccelerate()
   nsCOMPtr<nsIPrefBranch2> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
 
   PRBool disableAcceleration = PR_FALSE;
+  PRBool forceAcceleration = PR_FALSE;
+#if defined(XP_WIN) || defined(XP_MACOSX) || defined(ANDROID)
   PRBool accelerateByDefault = PR_TRUE;
+#else
+  PRBool accelerateByDefault = PR_FALSE;
+#endif
 
   if (prefs) {
-    prefs->GetBoolPref("layers.accelerate-all",
-                       &accelerateByDefault);
-    prefs->GetBoolPref("layers.accelerate-none",
+    // we should use AddBoolPrefVarCache
+    prefs->GetBoolPref("layers.acceleration.disabled",
                        &disableAcceleration);
+
+    prefs->GetBoolPref("layers.acceleration.force-enabled",
+                       &forceAcceleration);
+
   }
 
   const char *acceleratedEnv = PR_GetEnv("MOZ_ACCELERATED");
@@ -804,9 +812,10 @@ nsBaseWidget::GetShouldAccelerate()
   if (disableAcceleration || safeMode)
     return PR_FALSE;
 
-  if (accelerateByDefault)
+  if (accelerateByDefault || forceAcceleration)
     return PR_TRUE;
 
+  /* use the window acceleration flag */
   return mUseAcceleratedRendering;
 }
 

@@ -166,13 +166,12 @@
           <xul:hbox class="end-cap"/>
         </xul:hbox>
         <xul:hbox class="status-container">
-          <xul:button anonid="pause-btn" class="pause"
-                      tooltiptext="&progress.pause.tooltip;"/>
           <xul:spacer flex="1"/>
           <xul:label anonid="status" class="status"/>
           <xul:spacer flex="1"/>
           <xul:button anonid="cancel-btn" class="cancel"
-                      tooltiptext="&progress.cancel.tooltip;"/>
+                      tooltiptext="&progress.cancel.tooltip;"
+                      oncommand="document.getBindingParent(this).cancel();"/>
         </xul:hbox>
       </xul:stack>
     </content>
@@ -187,9 +186,6 @@
 
       <field name="_progress">
         document.getAnonymousElementByAttribute(this, "anonid", "progress");
-      </field>
-      <field name="_pause">
-        document.getAnonymousElementByAttribute(this, "anonid", "pause-btn");
       </field>
       <field name="_cancel">
         document.getAnonymousElementByAttribute(this, "anonid", "cancel-btn");
@@ -234,6 +230,12 @@
           this._status.value = val;
         ]]></setter>
       </property>
+      
+      <method name="cancel">
+        <body><![CDATA[
+          this.mInstall.cancel();
+        ]]></body>
+      </method>
     </implementation>
   </binding>
 
@@ -248,6 +250,10 @@
                   label="&sort.dateUpdated.label;"
                   tooltiptext="&sort.dateUpdated.tooltip;"
                   oncommand="this.parentNode._handleChange('updateDate');"/>
+      <xul:button anonid="price-btn" class="sorter" hidden="true"
+                  label="&sort.price.label;"
+                  tooltiptext="&sort.price.tooltip;"
+                  oncommand="this.parentNode._handleChange('purchaseAmount');"/>
       <xul:button anonid="relevance-btn" class="sorter" hidden="true"
                   label="&sort.relevance.label;"
                   tooltiptext="&sort.relevance.tooltip;"
@@ -262,6 +268,9 @@
         if (this.getAttribute("showrelevance") == "true")
           this._btnRelevance.hidden = false;
 
+        if (this.getAttribute("showprice") == "true")
+          this._btnPrice.hidden = false;
+
         this._refreshState();
       ]]></constructor>
 
@@ -271,6 +280,9 @@
       </field>
       <field name="_btnDate">
         document.getAnonymousElementByAttribute(this, "anonid", "date-btn");
+      </field>
+      <field name="_btnPrice">
+        document.getAnonymousElementByAttribute(this, "anonid", "price-btn");
       </field>
       <field name="_btnRelevance">
         document.getAnonymousElementByAttribute(this, "anonid", "relevance-btn");
@@ -301,6 +313,28 @@
         ]]></setter>
       </property>
 
+      <property name="showrelevance">
+        <getter><![CDATA[
+          return (this.getAttribute("showrelevance") == "true");
+        ]]></getter>
+        <setter><![CDATA[
+          val = !!val;
+          this.setAttribute("showrelevance", val);
+          this._btnRelevance.hidden = !val;
+        ]]></setter>
+      </property>
+
+      <property name="showprice">
+        <getter><![CDATA[
+          return (this.getAttribute("showprice") == "true");
+        ]]></getter>
+        <setter><![CDATA[
+          val = !!val;
+          this.setAttribute("showprice", val);
+          this._btnPrice.hidden = !val;
+        ]]></setter>
+      </property>
+
       <method name="setSort">
         <parameter name="aSort"/>
         <parameter name="aAscending"/>
@@ -325,7 +359,7 @@
       <method name="_handleChange">
         <parameter name="aSort"/>
         <body><![CDATA[
-          const ASCENDING_SORT_FIELDS = ["name"];
+          const ASCENDING_SORT_FIELDS = ["name", "purchaseAmount"];
 
           // Toggle ascending if sort by is not changing, otherwise
           // name sorting defaults to ascending, others to descending
@@ -355,6 +389,14 @@
           } else {
             this._btnDate.checkState = 0;
             this._btnDate.checked = false;
+          }
+
+          if (sortBy == "purchaseAmount") {
+            this._btnPrice.checkState = checkState;
+            this._btnPrice.checked = true;
+          } else {
+            this._btnPrice.checkState = 0;
+            this._btnPrice.checked = false;
           }
 
           if (sortBy == "relevancescore") {
@@ -484,14 +526,13 @@
     <content>
       <xul:label anonid="message"/>
       <xul:progressmeter anonid="progress" class="download-progress"/>
+      <xul:button anonid="purchase-remote-btn" hidden="true"
+                  class="addon-control"
+                  oncommand="document.getBindingParent(this).purchaseRemote();"/>
       <xul:button anonid="install-remote-btn" hidden="true"
                   class="addon-control install" label="&addon.install.label;"
                   tooltiptext="&addon.install.tooltip;"
                   oncommand="document.getBindingParent(this).installRemote();"/>
-      <xul:button anonid="restart-install-btn" hidden="true"
-                  class="addon-control install" label="&addon.install.label;"
-                  tooltiptext="&addon.install.tooltip;"
-                  oncommand="document.getBindingParent(this).restartInstall();"/>
     </content>
 
     <implementation>
@@ -500,7 +541,7 @@
           this.initWithInstall(this.mInstall);
         else if (this.mControl.mAddon.install)
           this.initWithInstall(this.mControl.mAddon.install);
-        else if (this.mAddon)
+        else
           this.refreshState();
       ]]></constructor>
 
@@ -515,6 +556,10 @@
       <field name="_progress">
         document.getAnonymousElementByAttribute(this, "anonid", "progress");
       </field>
+      <field name="_purchaseRemote">
+        document.getAnonymousElementByAttribute(this, "anonid",
+                                                "purchase-remote-btn");
+      </field>
       <field name="_installRemote">
         document.getAnonymousElementByAttribute(this, "anonid",
                                                 "install-remote-btn");
@@ -522,10 +567,6 @@
       <field name="_restartNeeded">
         document.getAnonymousElementByAttribute(this, "anonid",
                                                 "restart-needed");
-      </field>
-      <field name="_restartInstall">
-        document.getAnonymousElementByAttribute(this, "anonid",
-                                                "restart-install-btn");
       </field>
       <field name="_undo">
         document.getAnonymousElementByAttribute(this, "anonid",
@@ -540,6 +581,7 @@
             this.mInstall = null;
           }
           this.mInstall = aInstall;
+          this._progress.mInstall = aInstall;
           this.refreshState();
           this.mInstall.addListener(this);
         ]]></body>
@@ -548,7 +590,7 @@
       <method name="refreshState">
         <body><![CDATA[
           var showInstallRemote = false;
-          var showRestartInstall = false;
+          var showPurchase = false;
 
           if (this.mInstall) {
 
@@ -582,14 +624,24 @@
                 break;
               case AddonManager.STATE_CANCELLED:
                 this.showMessage("installCancelled", true);
-                showRestartInstall = true;
                 break;
             }
 
+          } else if (this.mControl.mAddon.purchaseURL) {
+            this._progress.hidden = true;
+            showPurchase = true;
+            this._purchaseRemote.label =
+              gStrings.ext.formatStringFromName("addon.purchase.label",
+                [this.mControl.mAddon.purchaseDisplayAmount], 1);
+            this._purchaseRemote.tooltiptext =
+              gStrings.ext.GetStringFromName("addon.purchase.tooltip");
           }
 
+          this._purchaseRemote.hidden = !showPurchase;
           this._installRemote.hidden = !showInstallRemote;
-          this._restartInstall.hidden = !showRestartInstall;
+
+          if ("refreshInfo" in this.mControl)
+            this.mControl.refreshInfo();
         ]]></body>
       </method>
 
@@ -605,6 +657,12 @@
             this._message.value = msg;
           else
             this._progress.status = msg;
+        ]]></body>
+      </method>
+
+      <method name="purchaseRemote">
+        <body><![CDATA[
+          openURL(this.mControl.mAddon.purchaseURL);
         ]]></body>
       </method>
 
@@ -627,12 +685,6 @@
           delete this.mControl.mAddon;
           this.mControl.mInstall = this.mInstall;
           this.mControl.setAttribute("status", "installing");
-          this.mInstall.install();
-        ]]></body>
-      </method>
-
-      <method name="restartInstall">
-        <body><![CDATA[
           this.mInstall.install();
         ]]></body>
       </method>
@@ -745,6 +797,7 @@
         <xul:image class="warning-icon"/>
         <xul:label anonid="warning" flex="1"/>
         <xul:label anonid="warning-link" class="text-link"/>
+        <xul:button anonid="warning-btn" class="button-link"/>
         <xul:spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
       </xul:hbox>
       <xul:hbox anonid="error-container" align="center"
@@ -840,7 +893,8 @@
                 <xul:hbox anonid="install-status" class="install-status"
                           hidden="true"/>
               </xul:hbox>
-              <xul:hbox anonid="control-container" class="control-container">
+              <xul:hbox anonid="control-container" class="control-container"
+                        pack="end">
                 <xul:button anonid="preferences-btn"
                             class="addon-control preferences"
 #ifdef XP_WIN
@@ -895,6 +949,10 @@
       <field name="_warningLink">
         document.getAnonymousElementByAttribute(this, "anonid",
                                                 "warning-link");
+      </field>
+      <field name="_warningBtn">
+        document.getAnonymousElementByAttribute(this, "anonid",
+                                                "warning-btn");
       </field>
       <field name="_errorContainer">
         document.getAnonymousElementByAttribute(this, "anonid",
@@ -1116,6 +1174,9 @@
 
       <method name="_updateState">
         <body><![CDATA[
+          if (this.parentNode.selectedItem == this)
+            gViewController.updateCommands();
+
           var pending = this.mAddon.pendingOperations;
           if (pending != AddonManager.PENDING_NONE) {
             this.removeAttribute("notification");
@@ -1135,8 +1196,31 @@
             this.removeAttribute("pending");
 
             var isUpgrade = this.hasAttribute("upgrade");
+            var install = this._installStatus.mInstall;
 
-            if (!isUpgrade && this.mAddon.blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED) {
+            if (install && install.state == AddonManager.STATE_DOWNLOAD_FAILED) {
+              this.setAttribute("notification", "warning");
+              this._warning.textContent = gStrings.ext.formatStringFromName(
+                "notification.downloadError",
+                [this.mAddon.name], 1
+              );
+              this._warningBtn.label = gStrings.ext.GetStringFromName("notification.downloadError.retry");
+              this._warningBtn.tooltipText = gStrings.ext.GetStringFromName("notification.downloadError.retry.tooltip");
+              this._warningBtn.setAttribute("oncommand", "document.getBindingParent(this).retryInstall();");
+              this._warningBtn.hidden = false;
+              this._warningLink.hidden = true;
+            } else if (install && install.state == AddonManager.STATE_INSTALL_FAILED) {
+              this.setAttribute("notification", "warning");
+              this._warning.textContent = gStrings.ext.formatStringFromName(
+                "notification.installError",
+                [this.mAddon.name], 1
+              );
+              this._warningBtn.label = gStrings.ext.GetStringFromName("notification.installError.retry");
+              this._warningBtn.tooltipText = gStrings.ext.GetStringFromName("notification.downloadError.retry.tooltip");
+              this._warningBtn.setAttribute("oncommand", "document.getBindingParent(this).retryInstall();");
+              this._warningBtn.hidden = false;
+              this._warningLink.hidden = true;
+            } else if (!isUpgrade && this.mAddon.blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED) {
               this.setAttribute("notification", "error");
               this._error.textContent = gStrings.ext.formatStringFromName(
                 "notification.blocked",
@@ -1152,6 +1236,7 @@
                 [this.mAddon.name, gStrings.brandShortName, gStrings.appVersion], 3
               );
               this._warningLink.hidden = true;
+              this._warningBtn.hidden = true;
             } else if (!isUpgrade && this.mAddon.blocklistState == Ci.nsIBlocklistService.STATE_SOFTBLOCKED) {
               this.setAttribute("notification", "warning");
               this._warning.textContent = gStrings.ext.formatStringFromName(
@@ -1161,6 +1246,7 @@
               this._warningLink.value = gStrings.ext.GetStringFromName("notification.softblocked.link");
               this._warningLink.href = Services.urlFormatter.formatURLPref("extensions.blocklist.detailsURL");
               this._warningLink.hidden = false;
+              this._warningBtn.hidden = true;
             } else if (!isUpgrade && this.mAddon.blocklistState == Ci.nsIBlocklistService.STATE_OUTDATED) {
               this.setAttribute("notification", "warning");
               this._warning.textContent = gStrings.ext.formatStringFromName(
@@ -1170,6 +1256,7 @@
               this._warningLink.value = gStrings.ext.GetStringFromName("notification.outdated.link");
               this._warningLink.href = Services.urlFormatter.formatURLPref("plugins.update.url");
               this._warningLink.hidden = false;
+              this._warningBtn.hidden = true;
             } else {
               this.removeAttribute("notification");
             }
@@ -1206,8 +1293,8 @@
 
           this.setAttribute("active", this.mAddon.isActive);
 
-          var showProgress = this.mAddon.install &&
-                             this.mAddon.install.state != AddonManager.STATE_INSTALLED;
+          var showProgress = this.mAddon.purchaseURL || (this.mAddon.install &&
+                             this.mAddon.install.state != AddonManager.STATE_INSTALLED);
           this._showStatus(showProgress ? "progress" : "none");
         ]]></body>
       </method>
@@ -1381,6 +1468,18 @@
         ]]></body>
       </method>
 
+      <method name="retryInstall">
+        <body><![CDATA[
+          var install = this._installStatus.mInstall;
+          if (!install)
+            return;
+          if (install.state != AddonManager.STATE_DOWNLOAD_FAILED &&
+              install.state != AddonManager.STATE_INSTALL_FAILED)
+            return;
+          install.install();
+        ]]></body>
+      </method>
+
       <method name="showInDetailView">
         <body><![CDATA[
           gViewController.loadView("addons://detail/" +
@@ -1486,6 +1585,7 @@
       <method name="onDownloadStarted">
         <parameter name="aInstall"/>
         <body><![CDATA[
+          this._updateState();
           this._showStatus("progress");
           this._installStatus.initWithInstall(aInstall);
         ]]></body>
@@ -1494,6 +1594,7 @@
       <method name="onInstallStarted">
         <parameter name="aInstall"/>
         <body><![CDATA[
+          this._updateState();
           this._showStatus("progress");
           this._installStatus.initWithInstall(aInstall);
         ]]></body>
@@ -1511,11 +1612,41 @@
             this._updateState();
         ]]></body>
       </method>
+
+      <method name="onDownloadFailed">
+        <body><![CDATA[
+            this._updateState();
+        ]]></body>
+      </method>
+
+      <method name="onInstallFailed">
+        <body><![CDATA[
+            this._updateState();
+        ]]></body>
+      </method>
+
+      <method name="onInstallCancelled">
+        <body><![CDATA[
+            this._updateState();
+        ]]></body>
+      </method>
     </implementation>
 
     <handlers>
-      <handler event="click" button="0" clickcount="2"><![CDATA[
-        this.showInDetailView();
+      <handler event="click" button="0"><![CDATA[
+        switch (event.detail) {
+        case 1:
+          // Prevent double-click where the UI changes on the first click
+          this._lastClickTarget = event.originalTarget;
+          break;
+        case 2:
+          if (event.originalTarget.localName != 'button' &&
+              !event.originalTarget.classList.contains('text-link') &&
+              event.originalTarget == this._lastClickTarget) {
+            this.showInDetailView();
+          }
+          break;
+        }
       ]]></handler>
     </handlers>
   </binding>
@@ -1634,14 +1765,30 @@
   <binding id="addon-installing"
            extends="chrome://mozapps/content/extensions/extensions.xml#addon-base">
     <content>
-      <xul:vbox pack="center">
-        <xul:vbox align="center" pack="center" class="icon-container">
-          <xul:image anonid="icon" class="icon"/>
+      <xul:hbox anonid="warning-container" align="center"
+                class="warning">
+        <xul:image class="warning-icon"/>
+        <xul:label anonid="warning" flex="1"/>
+        <xul:button anonid="warning-link" class="button-link"
+                   oncommand="document.getBindingParent(this).retryInstall();"/>
+        <xul:spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
+      </xul:hbox>
+      <xul:hbox align="stretch">
+        <xul:vbox pack="start">
+          <xul:vbox align="center" pack="center" class="icon-container">
+            <xul:image anonid="icon" class="icon"/>
+          </xul:vbox>
         </xul:vbox>
-      </xul:vbox>
-      <xul:label anonid="name" class="name"/>
-      <xul:spacer flex="1"/>
-      <xul:hbox anonid="install-status" class="install-status"/>
+        <xul:vbox flex="1" class="fade" align="stretch" pack="center">
+          <xul:hbox class="name-container" align="end">
+            <xul:label anonid="name" class="name"/>
+            <xul:label anonid="version" class="version" hidden="true"/>
+          </xul:hbox>
+        </xul:vbox>
+        <xul:vbox align="end" pack="end">
+          <xul:hbox anonid="install-status" class="install-status"/>
+        </xul:vbox>
+      </xul:hbox>
     </content>
 
     <implementation>
@@ -1656,6 +1803,15 @@
       </field>
       <field name="_name">
         document.getAnonymousElementByAttribute(this, "anonid", "name");
+      </field>
+      <field name="_version">
+        document.getAnonymousElementByAttribute(this, "anonid", "version");
+      </field>
+      <field name="_warning">
+        document.getAnonymousElementByAttribute(this, "anonid", "warning");
+      </field>
+      <field name="_warningLink">
+        document.getAnonymousElementByAttribute(this, "anonid", "warning-link");
       </field>
       <field name="_installStatus">
         document.getAnonymousElementByAttribute(this, "anonid",
@@ -1678,12 +1834,20 @@
             this._icon.src = this.mAddon.iconURL ||
                              (this.mInstall ? this.mInstall.iconURL : "");
             this._name.value = this.mAddon.name;
+            
+            if (this.mAddon.version) {
+              this._version.value = this.mAddon.version;
+              this._version.hidden = false;
+            } else {
+              this._version.hidden = true;
+            }
+
           } else {
             this._icon.src = this.mInstall.iconURL;
             // AddonInstall.name isn't always available - fallback to filename
             if (this.mInstall.name) {
               this._name.value = this.mInstall.name;
-            } else {
+            } else if (this.mInstall.sourceURI) {
               var url = Components.classes["@mozilla.org/network/standard-url;1"]
                                   .createInstance(Components.interfaces.nsIStandardURL);
               url.init(url.URLTYPE_STANDARD, 80, this.mInstall.sourceURI.spec,
@@ -1691,7 +1855,40 @@
               url.QueryInterface(Components.interfaces.nsIURL);
               this._name.value = url.fileName;
             }
+
+            if (this.mInstall.version) {
+              this._version.value = this.mInstall.version;
+              this._version.hidden = false;
+            } else {
+              this._version.hidden = true;
+            }
           }
+
+          if (this.mInstall.state == AddonManager.STATE_DOWNLOAD_FAILED) {
+            this.setAttribute("notification", "warning");
+            this._warning.textContent = gStrings.ext.formatStringFromName(
+              "notification.downloadError",
+              [this._name.value], 1
+            );
+            this._warningLink.label = gStrings.ext.GetStringFromName("notification.downloadError.retry");
+            this._warningLink.tooltipText = gStrings.ext.GetStringFromName("notification.downloadError.retry.tooltip");
+          } else if (this.mInstall.state == AddonManager.STATE_INSTALL_FAILED) {
+            this.setAttribute("notification", "warning");
+            this._warning.textContent = gStrings.ext.formatStringFromName(
+              "notification.installError",
+              [this._name.value], 1
+            );
+            this._warningLink.label = gStrings.ext.GetStringFromName("notification.installError.retry");
+            this._warningLink.tooltipText = gStrings.ext.GetStringFromName("notification.downloadError.retry.tooltip");
+          } else {
+            this.removeAttribute("notification");
+          }
+        ]]></body>
+      </method>
+      
+      <method name="retryInstall">
+        <body><![CDATA[
+          this.mInstall.install();
         ]]></body>
       </method>
     </implementation>

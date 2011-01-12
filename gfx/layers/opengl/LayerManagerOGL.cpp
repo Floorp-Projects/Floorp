@@ -58,6 +58,8 @@
 
 #include "nsIServiceManager.h"
 #include "nsIConsoleService.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch2.h"
 
 #include "nsIGfxInfo.h"
 
@@ -66,7 +68,9 @@ namespace layers {
 
 using namespace mozilla::gl;
 
+#ifdef CHECK_CURRENT_PROGRAM
 int LayerManagerOGLProgram::sCurrentProgramKey = 0;
+#endif
 
 /**
  * LayerManagerOGL
@@ -155,11 +159,20 @@ LayerManagerOGL::Initialize(GLContext *aExistingContext)
     if (mGLContext)
       CleanupResources();
 
+    nsCOMPtr<nsIPrefBranch2> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+
+    PRBool forceAccelerate = PR_FALSE;
+    if (prefs) {
+      // we should use AddBoolPrefVarCache
+      prefs->GetBoolPref("layers.acceleration.force-enabled",
+                         &forceAccelerate);
+    }
+
     nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
     if (gfxInfo) {
       PRInt32 status;
       if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_OPENGL_LAYERS, &status))) {
-        if (status != nsIGfxInfo::FEATURE_NO_INFO) {
+        if (status != nsIGfxInfo::FEATURE_NO_INFO && !forceAccelerate) {
           NS_WARNING("OpenGL-accelerated layers are not supported on this system.");
           return PR_FALSE;
         }
@@ -598,6 +611,8 @@ LayerManagerOGL::Render()
   // Render our layers.
   RootLayer()->RenderLayer(mGLContext->IsDoubleBuffered() && !mTarget ? 0 : mBackBufferFBO,
                            nsIntPoint(0, 0));
+                           
+  static_cast<nsIWidget_MOZILLA_2_0_BRANCH*>(mWidget)->DrawOver(this, rect);
 
   DEBUG_GL_ERROR_CHECK(mGLContext);
 

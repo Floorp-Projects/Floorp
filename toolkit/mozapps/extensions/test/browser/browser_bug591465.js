@@ -16,7 +16,7 @@ var gContextMenu;
 
 function test() {
   waitForExplicitFinish();
-  
+
   gProvider = new MockProvider();
 
   gProvider.createAddons([{
@@ -68,7 +68,7 @@ function check_contextmenu(aIsTheme, aIsEnabled, aIsRemote, aIsDetails, aIsSingl
   else
     is_element_visible(gManagerWindow.document.getElementById("menuitem_enableItem"),
                        "'Enable' should be visible");
-  
+
   if (aIsTheme || !aIsEnabled || aIsRemote)
     is_element_hidden(gManagerWindow.document.getElementById("menuitem_disableItem"),
                        "'Disable' should be hidden");
@@ -82,7 +82,7 @@ function check_contextmenu(aIsTheme, aIsEnabled, aIsRemote, aIsDetails, aIsSingl
   else
     is_element_visible(gManagerWindow.document.getElementById("menuitem_enableTheme"),
                        "'Wear Theme' should be visible");
-  
+
   if (!aIsTheme || !aIsEnabled || aIsRemote || aIsSingleItemCase)
     is_element_hidden(gManagerWindow.document.getElementById("menuitem_disableTheme"),
                        "'Stop Wearing Theme' should be hidden");
@@ -96,19 +96,19 @@ function check_contextmenu(aIsTheme, aIsEnabled, aIsRemote, aIsDetails, aIsSingl
   else
     is_element_hidden(gManagerWindow.document.getElementById("menuitem_installItem"),
                        "'Install' should be hidden");
-                       
+
   if (aIsDetails)
-    is_element_hidden(gManagerWindow.document.getElementById("menuitem_showDetails"), 
+    is_element_hidden(gManagerWindow.document.getElementById("menuitem_showDetails"),
                        "'Show More Information' should be hidden in details view");
   else
-    is_element_visible(gManagerWindow.document.getElementById("menuitem_showDetails"), 
+    is_element_visible(gManagerWindow.document.getElementById("menuitem_showDetails"),
                        "'Show More Information' should be visible in list view");
-                       
+
   if (aIsSingleItemCase)
-    is_element_hidden(gManagerWindow.document.getElementById("addonitem-menuseparator"), 
+    is_element_hidden(gManagerWindow.document.getElementById("addonitem-menuseparator"),
                        "Menu separator should be hidden with only one menu item");
   else
-    is_element_visible(gManagerWindow.document.getElementById("addonitem-menuseparator"), 
+    is_element_visible(gManagerWindow.document.getElementById("addonitem-menuseparator"),
                        "Menu separator should be visible with multiple menu items");
 
 }
@@ -132,6 +132,43 @@ add_test(function() {
   EventUtils.synthesizeMouse(el, 4, 4, { type: "contextmenu", button: 2 }, gManagerWindow);
 });
 
+add_test(function() {
+  var el = get_addon_element(gManagerWindow, "addon1@tests.mozilla.org");
+  isnot(el, null, "Should have found addon element");
+  el.mAddon.userDisabled = true;
+
+  gContextMenu.addEventListener("popupshown", function() {
+    gContextMenu.removeEventListener("popupshown", arguments.callee, false);
+
+    check_contextmenu(false, false, false, false, false);
+
+    gContextMenu.hidePopup();
+    run_next_test();
+  }, false);
+
+  info("Opening context menu on newly disabled extension item");
+  EventUtils.synthesizeMouse(el, 4, 4, { }, gManagerWindow);
+  EventUtils.synthesizeMouse(el, 4, 4, { type: "contextmenu", button: 2 }, gManagerWindow);
+});
+
+add_test(function() {
+  var el = get_addon_element(gManagerWindow, "addon1@tests.mozilla.org");
+  isnot(el, null, "Should have found addon element");
+  el.mAddon.userDisabled = false;
+
+  gContextMenu.addEventListener("popupshown", function() {
+    gContextMenu.removeEventListener("popupshown", arguments.callee, false);
+
+    check_contextmenu(false, true, false, false, false);
+
+    gContextMenu.hidePopup();
+    run_next_test();
+  }, false);
+
+  info("Opening context menu on newly enabled extension item");
+  EventUtils.synthesizeMouse(el, 4, 4, { }, gManagerWindow);
+  EventUtils.synthesizeMouse(el, 4, 4, { type: "contextmenu", button: 2 }, gManagerWindow);
+});
 
 add_test(function() {
   var el = get_addon_element(gManagerWindow, "addon2@tests.mozilla.org");
@@ -155,16 +192,16 @@ add_test(function() {
   gManagerWindow.loadView("addons://list/theme");
   wait_for_view_load(gManagerWindow, function() {
     var el = get_addon_element(gManagerWindow, "theme1@tests.mozilla.org");
-  
+
     gContextMenu.addEventListener("popupshown", function() {
       gContextMenu.removeEventListener("popupshown", arguments.callee, false);
-  
+
     check_contextmenu(true, true, false, false, false);
-  
+
       gContextMenu.hidePopup();
       run_next_test();
     }, false);
-  
+
     info("Opening context menu on enabled theme item");
     EventUtils.synthesizeMouse(el, 4, 4, { }, gManagerWindow);
     EventUtils.synthesizeMouse(el, 4, 4, { type: "contextmenu", button: 2 }, gManagerWindow);
@@ -193,12 +230,12 @@ add_test(function() {
 add_test(function() {
   gManagerWindow.loadView("addons://detail/addon1@tests.mozilla.org");
   wait_for_view_load(gManagerWindow, function() {
-    
+
     gContextMenu.addEventListener("popupshown", function() {
       gContextMenu.removeEventListener("popupshown", arguments.callee, false);
-  
+
       check_contextmenu(false, true, false, true, false);
-  
+
       gContextMenu.hidePopup();
       run_next_test();
     }, false);
@@ -214,12 +251,12 @@ add_test(function() {
 add_test(function() {
   gManagerWindow.loadView("addons://detail/addon2@tests.mozilla.org");
   wait_for_view_load(gManagerWindow, function() {
-    
+
     gContextMenu.addEventListener("popupshown", function() {
       gContextMenu.removeEventListener("popupshown", arguments.callee, false);
-  
+
       check_contextmenu(false, false, false, true, false);
-  
+
       gContextMenu.hidePopup();
       run_next_test();
     }, false);
@@ -235,12 +272,12 @@ add_test(function() {
 add_test(function() {
   gManagerWindow.loadView("addons://detail/theme1@tests.mozilla.org");
   wait_for_view_load(gManagerWindow, function() {
-    
+
     gContextMenu.addEventListener("popupshown", function() {
       gContextMenu.removeEventListener("popupshown", arguments.callee, false);
-  
+
       check_contextmenu(true, true, false, true, false);
-  
+
       gContextMenu.hidePopup();
       run_next_test();
     }, false);
@@ -256,12 +293,12 @@ add_test(function() {
 add_test(function() {
   gManagerWindow.loadView("addons://detail/theme2@tests.mozilla.org");
   wait_for_view_load(gManagerWindow, function() {
-    
+
     gContextMenu.addEventListener("popupshown", function() {
       gContextMenu.removeEventListener("popupshown", arguments.callee, false);
-  
+
       check_contextmenu(true, false, false, true, false);
-  
+
       gContextMenu.hidePopup();
       run_next_test();
     }, false);
@@ -276,12 +313,12 @@ add_test(function() {
 add_test(function() {
   gManagerWindow.loadView("addons://detail/theme3@tests.mozilla.org");
   wait_for_view_load(gManagerWindow, function() {
-    
+
     gContextMenu.addEventListener("popupshown", function() {
       gContextMenu.removeEventListener("popupshown", arguments.callee, false);
-  
+
       check_contextmenu(true, true, false, true, true);
-  
+
       gContextMenu.hidePopup();
       run_next_test();
     }, false);
@@ -309,22 +346,22 @@ add_test(function() {
     var filter = gManagerWindow.document.getElementById("search-filter-remote");
     EventUtils.synthesizeMouseAtCenter(filter, { }, gManagerWindow);
     executeSoon(function() {
-      
+
       var el = get_addon_element(gManagerWindow, "remote1@tests.mozilla.org");
-    
+
       gContextMenu.addEventListener("popupshown", function() {
         gContextMenu.removeEventListener("popupshown", arguments.callee, false);
-    
+
         check_contextmenu(false, false, true, false, false);
-    
+
         gContextMenu.hidePopup();
         run_next_test();
       }, false);
-    
+
       info("Opening context menu on remote extension item");
       EventUtils.synthesizeMouse(el, 4, 4, { }, gManagerWindow);
       EventUtils.synthesizeMouse(el, 4, 4, { type: "contextmenu", button: 2 }, gManagerWindow);
-      
+
     });
   });
 });
@@ -333,14 +370,21 @@ add_test(function() {
 add_test(function() {
   gManagerWindow.loadView("addons://detail/remote1@tests.mozilla.org");
   wait_for_view_load(gManagerWindow, function() {
-    
+
     gContextMenu.addEventListener("popupshown", function() {
       gContextMenu.removeEventListener("popupshown", arguments.callee, false);
-  
+
       check_contextmenu(false, false, true, true, false);
-  
+
       gContextMenu.hidePopup();
-      run_next_test();
+
+      // Delete the created install
+      AddonManager.getAllInstalls(function(aInstalls) {
+        is(aInstalls.length, 1, "Should be one available install");
+        aInstalls[0].cancel();
+
+        run_next_test();
+      });
     }, false);
 
     info("Opening context menu on remote extension, in detail view");

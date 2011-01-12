@@ -449,6 +449,7 @@ add_test(function() {
       var item = get_item_in_list(ID, list);
       isnot(item, null, "Should have found the add-on in the list");
 
+      EventUtils.synthesizeMouseAtCenter(item, { clickCount: 1 }, gManagerWindow);
       EventUtils.synthesizeMouseAtCenter(item, { clickCount: 2 }, gManagerWindow);
       wait_for_view_load(gManagerWindow, function() {
         is(gDocument.getElementById("view-port").selectedPanel.id, "detail-view", "Should be in the detail view");
@@ -512,6 +513,7 @@ add_test(function() {
       var item = get_item_in_list(ID, list);
       isnot(item, null, "Should have found the add-on in the list");
 
+      EventUtils.synthesizeMouseAtCenter(item, { clickCount: 1 }, gManagerWindow);
       EventUtils.synthesizeMouseAtCenter(item, { clickCount: 2 }, gManagerWindow);
       wait_for_view_load(gManagerWindow, function() {
         is(gDocument.getElementById("view-port").selectedPanel.id, "detail-view", "Should be in the detail view");
@@ -578,6 +580,7 @@ add_test(function() {
       var item = get_item_in_list(ID, list);
       isnot(item, null, "Should have found the add-on in the list");
 
+      EventUtils.synthesizeMouseAtCenter(item, { clickCount: 1 }, gManagerWindow);
       EventUtils.synthesizeMouseAtCenter(item, { clickCount: 2 }, gManagerWindow);
       wait_for_view_load(gManagerWindow, function() {
         is(gDocument.getElementById("view-port").selectedPanel.id, "detail-view", "Should be in the detail view");

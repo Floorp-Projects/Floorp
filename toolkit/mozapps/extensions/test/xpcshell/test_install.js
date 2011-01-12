@@ -138,6 +138,10 @@ function check_test_1() {
         do_check_true(iconFile.exists());
       }
 
+      // The pending add-on cannot be disabled or enabled.
+      do_check_false(hasFlag(pendingAddons[0].permissions, AddonManager.PERM_CAN_ENABLE));
+      do_check_false(hasFlag(pendingAddons[0].permissions, AddonManager.PERM_CAN_DISABLE));
+
       restartManager();
 
       AddonManager.getAllInstalls(function(activeInstalls) {

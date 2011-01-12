@@ -127,6 +127,7 @@ class nsDisplayListBuilder {
 public:
   typedef mozilla::FramePropertyDescriptor FramePropertyDescriptor;
   typedef mozilla::FrameLayerBuilder FrameLayerBuilder;
+  typedef nsIWidget::ThemeGeometry ThemeGeometry;
 
   /**
    * @param aReferenceFrame the frame at the root of the subtree; its origin
@@ -371,7 +372,29 @@ public:
       (aFrame->GetStateBits() & NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO) ||
       GetIncludeAllOutOfFlows();
   }
-  
+
+  /**
+   * Notifies the builder that a particular themed widget exists
+   * at the given rectangle within the currently built display list.
+   * For certain appearance values (currently only
+   * NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR and NS_THEME_TOOLBAR) this gets
+   * called during every display list construction, for every themed widget of
+   * the right type within the display list, except for themed widgets which
+   * are transformed or have effects applied to them (e.g. CSS opacity or
+   * filters).
+   *
+   * @param aWidgetType the -moz-appearance value for the themed widget
+   * @param aRect the device-pixel rect relative to the widget's displayRoot
+   * for the themed widget
+   */
+  void RegisterThemeGeometry(PRUint8 aWidgetType,
+                             const nsIntRect& aRect) {
+    if (mIsPaintingToWindow) {
+      ThemeGeometry geometry(aWidgetType, aRect);
+      CurrentPresShellState()->mThemeGeometries.AppendElement(geometry);
+    }
+  }
+
   /**
    * Allocate memory in our arena. It will only be freed when this display list
    * builder is destroyed. This memory holds nsDisplayItems. nsDisplayItem
@@ -434,6 +457,7 @@ private:
     nsIFrame*     mCaretFrame;
     PRUint32      mFirstFrameMarkedForDisplay;
     PRPackedBool  mIsBackgroundOnly;
+    nsAutoTArray<ThemeGeometry,2> mThemeGeometries;
   };
   PresShellState* CurrentPresShellState() {
     NS_ASSERTION(mPresShellStates.Length() > 0,

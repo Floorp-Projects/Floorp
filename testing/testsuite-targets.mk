@@ -45,6 +45,10 @@ else
 TEST_PATH_ARG :=
 endif
 
+# include automation-build.mk to get the path to the binary
+TARGET_DEPTH = $(DEPTH)
+include $(topsrcdir)/build/binary-location.mk
+
 SYMBOLS_PATH := --symbols-path=$(DIST)/crashreporter-symbols
 
 # Usage: |make [TEST_PATH=...] [EXTRA_TEST_ARGS=...] mochitest*|.
@@ -137,6 +141,29 @@ xpcshell-tests:
           $(SYMBOLS_PATH) \
 	  $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS) \
 	  $(DIST)/bin/xpcshell
+
+# install and run the mozmill tests
+$(DEPTH)/_tests/mozmill:
+	$(MAKE) -C $(DEPTH)/testing/mozmill install-develop PKG_STAGE=../../_tests
+	$(PYTHON) $(topsrcdir)/testing/mozmill/installmozmill.py --develop $(DEPTH)/_tests/mozmill
+
+MOZMILL_TEST_PATH = $(DEPTH)/_tests/mozmill/tests/firefox
+mozmill: TEST_PATH?=$(MOZMILL_TEST_PATH)
+mozmill: $(DEPTH)/_tests/mozmill
+	$(SHELL) $(DEPTH)/_tests/mozmill/mozmill.sh -t $(TEST_PATH) -b $(browser_path) --show-all
+
+MOZMILL_RESTART_TEST_PATH = $(DEPTH)/_tests/mozmill/tests/firefox/restartTests
+mozmill-restart: TEST_PATH?=$(MOZMILL_RESTART_TEST_PATH)
+mozmill-restart: $(DEPTH)/_tests/mozmill
+	$(SHELL) $(DEPTH)/_tests/mozmill/mozmill-restart.sh -t $(TEST_PATH) -b $(browser_path) --show-all
+
+# in order to have `mozmill-all` ignore TEST_PATH, if it is set, we shell out to call make
+# again, verbosely overriding the TEST_PATH
+# This isn't as neat as having mozmill and mozmill-restart be dependencies, but it 
+# seems to be the make idiom
+mozmill-all: 
+	$(MAKE) mozmill TEST_PATH=$(MOZMILL_TEST_PATH)
+	$(MAKE) mozmill-restart TEST_PATH=$(MOZMILL_RESTART_TEST_PATH)
 
 # Package up the tests and test harnesses
 include $(topsrcdir)/toolkit/mozapps/installer/package-name.mk

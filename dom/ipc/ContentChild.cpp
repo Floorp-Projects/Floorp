@@ -398,12 +398,13 @@ ContentChild::DeallocPStorage(PStorageChild* aActor)
 bool
 ContentChild::RecvRegisterChrome(const InfallibleTArray<ChromePackage>& packages,
                                  const InfallibleTArray<ResourceMapping>& resources,
-                                 const InfallibleTArray<OverrideMapping>& overrides)
+                                 const InfallibleTArray<OverrideMapping>& overrides,
+                                 const nsCString& locale)
 {
     nsCOMPtr<nsIChromeRegistry> registrySvc = nsChromeRegistry::GetService();
     nsChromeRegistryContent* chromeRegistry =
         static_cast<nsChromeRegistryContent*>(registrySvc.get());
-    chromeRegistry->RegisterRemoteChrome(packages, resources, overrides);
+    chromeRegistry->RegisterRemoteChrome(packages, resources, overrides, locale);
     return true;
 }
 

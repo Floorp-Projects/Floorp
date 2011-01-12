@@ -11,7 +11,7 @@
   display: none;
 }
 
-.tabbrowser-tabs:not([closebuttons="noclose"]):not([closebuttons="closeatend"]) > * > * > * .tab-close-button:not([pinned])[selected="true"],
+.tabbrowser-tabs[closebuttons="activetab"] > * > * > * > .tab-close-button:not([pinned])[selected="true"],
 .tabbrowser-tabs[closebuttons="alltabs"] > * > * > * > .tab-close-button:not([pinned]) {
   display: -moz-box;
 }
