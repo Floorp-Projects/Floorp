@@ -112,11 +112,6 @@
                             oncommand="gSyncPane.startOver(true);"/>
                 </menupopup>
               </button>
-
-              <button id="connectButton"
-                      oncommand="gSyncPane.handleConnectCommand()"/>
-              <image id="connectThrobber"
-                     hidden="true"/>
             </hbox>
 
             <hbox>

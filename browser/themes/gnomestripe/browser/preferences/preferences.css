@@ -176,12 +176,6 @@ radio[pane=paneSync] {
   list-style-image: url("chrome://mozapps/skin/profile/profileicon.png");
 }
 
-#connectThrobber {
-  list-style-image: url("chrome://global/skin/icons/loading_16.png");
-  height: 16px;
-  width: 16px;
-}
-
 #syncAddDeviceLabel {
   margin-top: 1em;
   margin-bottom: 1em;
