@@ -132,6 +132,43 @@ add_test(function() {
   EventUtils.synthesizeMouse(el, 4, 4, { type: "contextmenu", button: 2 }, gManagerWindow);
 });
 
+add_test(function() {
+  var el = get_addon_element(gManagerWindow, "addon1@tests.mozilla.org");
+  isnot(el, null, "Should have found addon element");
+  el.mAddon.userDisabled = true;
+
+  gContextMenu.addEventListener("popupshown", function() {
+    gContextMenu.removeEventListener("popupshown", arguments.callee, false);
+
+    check_contextmenu(false, false, false, false, false);
+
+    gContextMenu.hidePopup();
+    run_next_test();
+  }, false);
+
+  info("Opening context menu on newly disabled extension item");
+  EventUtils.synthesizeMouse(el, 4, 4, { }, gManagerWindow);
+  EventUtils.synthesizeMouse(el, 4, 4, { type: "contextmenu", button: 2 }, gManagerWindow);
+});
+
+add_test(function() {
+  var el = get_addon_element(gManagerWindow, "addon1@tests.mozilla.org");
+  isnot(el, null, "Should have found addon element");
+  el.mAddon.userDisabled = false;
+
+  gContextMenu.addEventListener("popupshown", function() {
+    gContextMenu.removeEventListener("popupshown", arguments.callee, false);
+
+    check_contextmenu(false, true, false, false, false);
+
+    gContextMenu.hidePopup();
+    run_next_test();
+  }, false);
+
+  info("Opening context menu on newly enabled extension item");
+  EventUtils.synthesizeMouse(el, 4, 4, { }, gManagerWindow);
+  EventUtils.synthesizeMouse(el, 4, 4, { type: "contextmenu", button: 2 }, gManagerWindow);
+});
 
 add_test(function() {
   var el = get_addon_element(gManagerWindow, "addon2@tests.mozilla.org");
