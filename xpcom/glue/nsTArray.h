@@ -626,10 +626,10 @@ public:
   elem_type *ReplaceElementsAt(index_type start, size_type count,
                                const Item* array, size_type arrayLen) {
     // Adjust memory allocation up-front to catch errors.
-    if (!EnsureCapacity(Length() + arrayLen - count, sizeof(elem_type)))
+    if (!this->EnsureCapacity(Length() + arrayLen - count, sizeof(elem_type)))
       return nsnull;
     DestructRange(start, count);
-    ShiftData(start, count, arrayLen, sizeof(elem_type));
+    this->ShiftData(start, count, arrayLen, sizeof(elem_type));
     AssignRange(start, arrayLen, array);
     return Elements() + start;
   }
@@ -671,9 +671,9 @@ public:
   // temporaries.
   // @return A pointer to the newly inserted element, or null on OOM.
   elem_type* InsertElementAt(index_type index) {
-    if (!EnsureCapacity(Length() + 1, sizeof(elem_type)))
+    if (!this->EnsureCapacity(Length() + 1, sizeof(elem_type)))
       return nsnull;
-    ShiftData(index, 0, 1, sizeof(elem_type));
+    this->ShiftData(index, 0, 1, sizeof(elem_type));
     elem_type *elem = Elements() + index;
     elem_traits::Construct(elem);
     return elem;
@@ -767,11 +767,11 @@ public:
   //                  the operation failed due to insufficient memory.
   template<class Item>
   elem_type *AppendElements(const Item* array, size_type arrayLen) {
-    if (!EnsureCapacity(Length() + arrayLen, sizeof(elem_type)))
+    if (!this->EnsureCapacity(Length() + arrayLen, sizeof(elem_type)))
       return nsnull;
     index_type len = Length();
     AssignRange(len, arrayLen, array);
-    IncrementLength(arrayLen);
+    this->IncrementLength(arrayLen);
     return Elements() + len;
   }
 
@@ -791,14 +791,14 @@ public:
   // temporaries.
   // @return A pointer to the newly appended elements, or null on OOM.
   elem_type *AppendElements(size_type count) {
-    if (!EnsureCapacity(Length() + count, sizeof(elem_type)))
+    if (!this->EnsureCapacity(Length() + count, sizeof(elem_type)))
       return nsnull;
     elem_type *elems = Elements() + Length();
     size_type i;
     for (i = 0; i < count; ++i) {
       elem_traits::Construct(elems + i);
     }
-    IncrementLength(count);
+    this->IncrementLength(count);
     return elems;
   }
 
@@ -817,10 +817,10 @@ public:
     NS_PRECONDITION(&array != this, "argument must be different array");
     index_type len = Length();
     index_type otherLen = array.Length();
-    if (!EnsureCapacity(len + otherLen, sizeof(elem_type)))
+    if (!this->EnsureCapacity(len + otherLen, sizeof(elem_type)))
       return nsnull;
     memcpy(Elements() + len, array.Elements(), otherLen * sizeof(elem_type));
-    IncrementLength(otherLen);      
+    this->IncrementLength(otherLen);      
     array.ShiftData(0, otherLen, 0, sizeof(elem_type));
     return Elements() + len;
   }
@@ -832,7 +832,7 @@ public:
     NS_ASSERTION(count == 0 || start < Length(), "Invalid start index");
     NS_ASSERTION(start + count <= Length(), "Invalid length");
     DestructRange(start, count);
-    ShiftData(start, count, 0, sizeof(elem_type));
+    this->ShiftData(start, count, 0, sizeof(elem_type));
   }
 
   // A variation on the RemoveElementsAt method defined above.
@@ -894,7 +894,7 @@ public:
   // nsAutoTArray.
   template<class Allocator>
   PRBool SwapElements(nsTArray<E, Allocator>& other) {
-    return SwapArrayElements(other, sizeof(elem_type));
+    return this->SwapArrayElements(other, sizeof(elem_type));
   }
 
   //
@@ -908,7 +908,7 @@ public:
   // @param capacity  The desired capacity of this array.
   // @return True if the operation succeeded; false if we ran out of memory
   PRBool SetCapacity(size_type capacity) {
-    return EnsureCapacity(capacity, sizeof(elem_type));
+    return this->EnsureCapacity(capacity, sizeof(elem_type));
   }
 
   // This method modifies the length of the array.  If the new length is
