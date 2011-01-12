@@ -127,6 +127,7 @@ xhtml|link {
 #detail-view:not([upgrade="true"]) .update-postfix,
 #detail-view[active="true"] .disabled-postfix,
 #detail-view[loading] .detail-view-container,
+#detail-view:not([loading]) .alert-container,
 .detail-row:not([value]),
 #search-list[remote="false"] #search-allresults-link {
   display: none;
@@ -155,4 +156,10 @@ xhtml|link {
 
 .addon .relnotes {
   -moz-user-select: text;
+}
+
+/* Make sure we're not animating hidden images. See bug 623739. */
+#view-port:not([selectedIndex="0"]) #discover-view .loading,
+#discover-view:not([selectedIndex="0"]) .loading {
+  display: none;
 }
