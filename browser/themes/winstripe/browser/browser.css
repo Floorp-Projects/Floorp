@@ -74,6 +74,31 @@
   background-color: -moz-Dialog;
 }
 
+%ifdef WINSTRIPE_AERO
+@media not all and (-moz-windows-compositor) {
+%endif
+  #main-window[tabsintitlebar] #titlebar-content:not(:-moz-lwtheme),
+  #main-window[tabsintitlebar]:not([inFullscreen]) #TabsToolbar:not(:-moz-lwtheme) {
+    background-color: ActiveCaption;
+    color: CaptionText;
+  }
+  #main-window[tabsintitlebar] #titlebar-content:not(:-moz-lwtheme):-moz-window-inactive,
+  #main-window[tabsintitlebar]:not([inFullscreen]) #TabsToolbar:not(:-moz-lwtheme):-moz-window-inactive {
+    background-color: InactiveCaption;
+    color: InactiveCaptionText;
+  }
+
+  #main-window[tabsintitlebar] #titlebar:-moz-lwtheme {
+    visibility: hidden;
+  }
+  #main-window[tabsintitlebar] #titlebar-content:-moz-lwtheme {
+    -moz-binding: url("chrome://global/content/bindings/general.xml#windowdragbox");
+    visibility: visible;
+  }
+%ifdef WINSTRIPE_AERO
+}
+%endif
+
 #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar)[iconsize="small"],
 #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar)[defaulticonsize="small"]:not([iconsize]) {
   padding-top: 1px;
@@ -374,6 +399,14 @@
 
 #main-window[sizemode="maximized"] #titlebar-buttonbox {
   -moz-appearance: -moz-window-button-box-maximized;
+}
+
+.titlebar-placeholder[type="appmenu-button"] {
+  margin-left: 4px;
+}
+
+.titlebar-placeholder[type="caption-buttons"] {
+  margin-left: 10px;
 }
 
 /* titlebar command buttons */
@@ -936,6 +969,10 @@ toolbar:not([iconsize="small"])[mode="icons"] #forward-button:not([disabled="tru
 }
 
 /* ::::: fullscreen window controls ::::: */
+
+#TabsToolbar > #window-controls {
+  -moz-margin-start: 4px;
+}
 
 #minimize-button,
 #restore-button,

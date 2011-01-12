@@ -49,6 +49,7 @@ _MAIN_TEST_FILES = \
   head.js \
   browser_bug557943.js \
   browser_bug562797.js \
+  browser_bug562854.js \
   browser_bug562890.js \
   browser_bug562899.js \
   browser_bug562992.js \
@@ -60,9 +61,11 @@ _MAIN_TEST_FILES = \
   browser_bug587970.js \
   browser_bug591465.js \
   browser_bug591663.js \
+  browser_bug593535.js \
   browser_bug596336.js \
   browser_bug608316.js \
   browser_bug610764.js \
+  browser_bug618502.js \
   browser_details.js \
   browser_discovery.js \
   browser_dragdrop.js \
@@ -76,6 +79,7 @@ _MAIN_TEST_FILES = \
   browser_globalwarnings.js \
   browser_eula.js \
   browser_updateid.js \
+  browser_purchase.js \
   $(NULL)
 
 _TEST_FILES = \
@@ -91,6 +95,7 @@ _TEST_RESOURCES = \
   browser_bug557956_8_2.xpi \
   browser_bug557956_9_2.xpi \
   browser_bug591465.xml \
+  browser_bug593535.xml \
   browser_searching.xml \
   browser_searching_empty.xml \
   browser_updatessl.rdf \
@@ -98,6 +103,7 @@ _TEST_RESOURCES = \
   browser_install.xml \
   browser_install1_3.xpi \
   browser_eula.xml \
+  browser_purchase.xml \
   discovery.html \
   redirect.sjs \
   releaseNotes.xhtml \

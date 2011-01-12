@@ -182,6 +182,21 @@ js_NewGCXML(JSContext *cx)
 namespace js {
 namespace gc {
 
+static JS_ALWAYS_INLINE void
+TypedMarker(JSTracer *trc, JSXML *thing);
+
+static JS_ALWAYS_INLINE void
+TypedMarker(JSTracer *trc, JSObject *thing);
+
+static JS_ALWAYS_INLINE void
+TypedMarker(JSTracer *trc, JSFunction *thing);
+
+static JS_ALWAYS_INLINE void
+TypedMarker(JSTracer *trc, JSShortString *thing);
+
+static JS_ALWAYS_INLINE void
+TypedMarker(JSTracer *trc, JSString *thing);
+
 template<typename T>
 static JS_ALWAYS_INLINE void
 Mark(JSTracer *trc, T *thing)

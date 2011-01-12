@@ -22,7 +22,7 @@ function finishTestNow()
 {
   if (testGenerator) {
     testGenerator.close();
-    delete testGenerator;
+    testGenerator = undefined;
   }
 }
 

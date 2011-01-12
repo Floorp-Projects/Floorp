@@ -61,6 +61,7 @@ const daybefore = today - (DAY_MICROSEC * 2);
 const tomorrow = today + DAY_MICROSEC;
 const old = today - (DAY_MICROSEC * 3);
 const futureday = today + (DAY_MICROSEC * 3);
+const olderthansixmonths = today - (DAY_MICROSEC * 31 * 7);
 
 
 /**

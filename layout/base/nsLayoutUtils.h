@@ -1263,6 +1263,24 @@ public:
       (aPresContext->Type() == nsPresContext::eContext_PrintPreview ||
        aPresContext->Type() == nsPresContext::eContext_PageLayout);
   }
+
+#ifdef DEBUG
+  /**
+   * Assert that there are no duplicate continuations of the same frame
+   * within aFrameList.  Optimize the tests by assuming that all frames
+   * in aFrameList have parent aContainer.
+   */
+  static void
+  AssertNoDuplicateContinuations(nsIFrame* aContainer,
+                                 const nsFrameList& aFrameList);
+
+  /**
+   * Assert that the frame tree rooted at |aSubtreeRoot| is empty, i.e.,
+   * that it contains no first-in-flows.
+   */
+  static void
+  AssertTreeOnlyEmptyNextInFlows(nsIFrame *aSubtreeRoot);
+#endif
 };
 
 class nsSetAttrRunnable : public nsRunnable

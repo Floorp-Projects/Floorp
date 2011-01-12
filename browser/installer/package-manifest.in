@@ -84,6 +84,7 @@
 
 [browser]
 ; [Base Browser Files]
+@BINPATH@/jsloader/
 #ifndef XP_UNIX
 @BINPATH@/@MOZ_APP_NAME@.exe
 #else

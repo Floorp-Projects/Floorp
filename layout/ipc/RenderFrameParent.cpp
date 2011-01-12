@@ -97,20 +97,26 @@ ComputeShadowTreeTransform(nsIFrame* aContainerFrame,
      aContainerFrame->GetContentRect().TopLeft());
   *aShadowTranslation = frameOffset.ToNearestPixels(auPerDevPixel);
 
-  // |aMetrics.mViewportScrollOffset| was the content document's
-  // scroll offset when it was painted (the document pixel at CSS
-  // viewport (0,0)).  |aConfig.mScrollOffset| is what our user
-  // expects, or wants, the content-document scroll offset to be.  So
-  // we set a compensating translation that moves the content document
-  // pixels to where the user wants them to be.
-  nsIntPoint scrollCompensation =
-    (aConfig.mScrollOffset.ToNearestPixels(auPerDevPixel));
-  scrollCompensation.x -= aMetrics.mViewportScrollOffset.x * aConfig.mXScale;
-  scrollCompensation.y -= aMetrics.mViewportScrollOffset.y * aConfig.mYScale;
-  *aShadowTranslation -= scrollCompensation;
+  if (aConfig.AsyncScrollEnabled()) {
+    // |aMetrics.mViewportScrollOffset| was the content document's
+    // scroll offset when it was painted (the document pixel at CSS
+    // viewport (0,0)).  |aConfig.mScrollOffset| is what our user
+    // expects, or wants, the content-document scroll offset to be.  So
+    // we set a compensating translation that moves the content document
+    // pixels to where the user wants them to be.
+    nsIntPoint scrollCompensation =
+      (aConfig.mScrollOffset.ToNearestPixels(auPerDevPixel));
+    scrollCompensation.x -= aMetrics.mViewportScrollOffset.x * aConfig.mXScale;
+    scrollCompensation.y -= aMetrics.mViewportScrollOffset.y * aConfig.mYScale;
+    *aShadowTranslation -= scrollCompensation;
 
-  *aShadowXScale = aConfig.mXScale;
-  *aShadowYScale = aConfig.mYScale;
+    *aShadowXScale = aConfig.mXScale;
+    *aShadowYScale = aConfig.mYScale;
+  } else {
+    *aShadowXScale = 1;
+    *aShadowYScale = 1;
+  }
+           
 }
 
 static void

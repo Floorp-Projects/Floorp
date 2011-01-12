@@ -69,6 +69,7 @@ abstract public class GeckoApp
     public static GeckoSurfaceView surfaceView;
     public static GeckoApp mAppContext;
     public static boolean mFullscreen = false;
+    static Thread mLibLoadThread = null;
 
     enum LaunchState {PreLaunch, Launching, WaitButton,
                       Launched, GeckoRunning, GeckoExiting};
@@ -114,35 +115,51 @@ abstract public class GeckoApp
     }
 
     // Returns true when the intent is going to be handled by gecko launch
-    boolean launch(Intent i)
+    boolean launch(Intent intent)
     {
         if (!checkAndSetLaunchState(LaunchState.Launching, LaunchState.Launched))
             return false;
 
-        // unpack files in the components directory
-        try {
-            unpackComponents();
-        } catch (FileNotFoundException fnfe) {
-            Log.e("GeckoApp", "error unpacking components", fnfe);
-            showErrorDialog(getString(R.string.error_loading_file));
-            return false;
-        } catch (IOException ie) {
-            Log.e("GeckoApp", "error unpacking components", ie);
-            String msg = ie.getMessage();
-            if (msg.equalsIgnoreCase("No space left on device"))
-                showErrorDialog(getString(R.string.no_space_to_start_error));
-            else
-                showErrorDialog(getString(R.string.error_loading_file));
-            return false;
-        }
-
-        // and then fire us up
-        if (i == null)
-            i = getIntent();
-        String env = i.getStringExtra("env0");
-        GeckoAppShell.runGecko(getApplication().getPackageResourcePath(),
-                               i.getStringExtra("args"),
-                               i.getDataString());
+        if (intent == null)
+            intent = getIntent();
+        final Intent i = intent;
+        new Thread() { 
+            public void run() {
+                try {
+                    if (mLibLoadThread != null)
+                        mLibLoadThread.join();
+                } catch (InterruptedException ie) {}
+                surfaceView.mSplashStatusMsg = 
+                    getResources().getString(R.string.splash_screen_label);
+                surfaceView.drawSplashScreen();
+                // unpack files in the components directory
+                try {
+                    unpackComponents();
+                } catch (FileNotFoundException fnfe) {
+                    Log.e("GeckoApp", "error unpacking components", fnfe);
+                    Looper.prepare();
+                    showErrorDialog(getString(R.string.error_loading_file));
+                    Looper.loop();
+                    return;
+                } catch (IOException ie) {
+                    Log.e("GeckoApp", "error unpacking components", ie);
+                    String msg = ie.getMessage();
+                    Looper.prepare();
+                    if (msg.equalsIgnoreCase("No space left on device"))
+                        showErrorDialog(getString(R.string.no_space_to_start_error));
+                    else
+                        showErrorDialog(getString(R.string.error_loading_file));
+                    Looper.loop();
+                    return;
+                }
+        
+                // and then fire us up
+                String env = i.getStringExtra("env0");
+                GeckoAppShell.runGecko(getApplication().getPackageResourcePath(),
+                                       i.getStringExtra("args"),
+                                       i.getDataString());
+            }
+        }.start();
         return true;
     }
 
@@ -178,9 +195,21 @@ abstract public class GeckoApp
             return;
 
         checkAndLaunchUpdate();
-
-        // Load our JNI libs
-        GeckoAppShell.loadGeckoLibs(getApplication().getPackageResourcePath());
+        mLibLoadThread = new Thread(new Runnable() { 
+            public void run() {
+                GeckoAppShell.loadGeckoLibs(
+                    getApplication().getPackageResourcePath());
+            }});
+        File libxulFile = new File(getCacheDir(), "libxul.so");
+        if (!libxulFile.exists() || 
+            libxulFile.lastModified() < 
+            new File(getApplication().getPackageResourcePath()).lastModified())
+            surfaceView.mSplashStatusMsg =
+                getResources().getString(R.string.splash_screen_installing);
+        else
+            surfaceView.mSplashStatusMsg =
+                getResources().getString(R.string.splash_screen_label);
+        mLibLoadThread.start();   
     }
 
     @Override

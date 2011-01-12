@@ -5,7 +5,7 @@
   %videocontrolsDTD;
 ]>
 
-<bindings id="videoContolBindings"
+<bindings id="videoControlBindings"
    xmlns="http://www.mozilla.org/xbl"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:xbl="http://www.mozilla.org/xbl"
@@ -298,15 +298,15 @@
 
                 randomID : 0,
                 videoEvents : ["play", "pause", "ended", "volumechange", "loadeddata",
-                               "loadstart", "durationchange", "timeupdate", "progress",
+                               "loadstart", "timeupdate", "progress",
                                "playing", "waiting", "canplay", "canplaythrough",
                                "seeking", "seeked", "emptied", "loadedmetadata",
                                "error", "suspend"],
 
                 firstFrameShown : false,
                 timeUpdateCount : 0,
-                lastTimeUpdate : 0,
                 maxCurrentTimeSeen : 0,
+                lastDurationSeen : NaN,
                 isAudioOnly : false,
 
                 setupStatusFader : function(immediate) {
@@ -354,7 +354,6 @@
                     // It would be nice to retain maxCurrentTimeSeen, but it would be difficult
                     // to determine if the media source changed while we were detached.
                     this.maxCurrentTimeSeen = currentTime;
-                    this.durationChange(duration);
                     this.showPosition(currentTime, duration);
 
                     // If we have metadata, check if this is a <video> without video data.
@@ -446,6 +445,7 @@
                                 this.isAudioOnly = true;
                                 this.startFadeIn(this.controlBar);
                             }
+                            this.showDuration(Math.round(this.video.duration * 1000));
                             break;
                         case "loadeddata":
                             this.firstFrameShown = true;
@@ -456,10 +456,6 @@
                             this.statusIcon.setAttribute("type", "throbber");
                             this.isAudioOnly = (this.video instanceof HTMLAudioElement);
                             this.setPlayButtonState(true);
-                            break;
-                        case "durationchange":
-                            var duration = Math.round(this.video.duration * 1000); // in ms
-                            this.durationChange(duration);
                             break;
                         case "progress":
                             this.showBuffered();
@@ -493,11 +489,6 @@
                             if (this.scrubber.isDragging)
                                 return;
 
-                            // Timeupdate events are dispatched *every frame*. Reduce workload by
-                            // ignoring position changes that are within 333ms of the current position.
-                            if (Math.abs(currentTime - this.lastTimeUpdate) < 333)
-                                return;
-                            this.lastTimeUpdate = currentTime;
                             this.showPosition(currentTime, duration);
                             break;
                         case "emptied":
@@ -565,9 +556,12 @@
                     return timeString;
                 },
 
-                durationChange : function (duration) {
+                showDuration : function (duration) {
                     if (isNaN(duration))
                         duration = this.maxCurrentTimeSeen;
+                    if (duration == this.lastDurationSeen)
+                        return;
+                    this.lastDurationSeen = duration;
                     this.log("Duration is " + duration + "ms");
 
                     // Format the duration as "h:mm:ss" or "m:ss"
@@ -607,10 +601,9 @@
                     // by using the maximum playback position that's been seen.
                     if (currentTime > this.maxCurrentTimeSeen)
                         this.maxCurrentTimeSeen = currentTime;
-                    if (isNaN(duration)) {
-                        duration = this.maxCurrentTimeSeen;
-                        this.durationChange(duration);
-                    }
+                    if (isNaN(duration))
+                      duration = this.maxCurrentTimeSeen;
+                    this.showDuration(duration);
 
                     this.log("time update @ " + currentTime + "ms of " + duration + "ms");
 
@@ -722,7 +715,7 @@
                         element.setAttribute("hidden", false);
                         // force style resolution, so that transition begins
                         // when we remove the attribute.
-                        getComputedStyle(element, "").display;
+                        element.clientTop;
                         element.removeAttribute("fadeout");
                     } else {
                         element.setAttribute("fadeout", true);
@@ -854,13 +847,13 @@
                                 if (keystroke == "leftArrow")
                                     newval = oldval - 15;
                                 else
-                                    newval = oldval - (this.video.duration || this.maxCurrentTimeSeen) / 10;
+                                    newval = oldval - (this.video.duration || this.maxCurrentTimeSeen / 1000) / 10;
                                 this.video.currentTime = (newval >= 0 ? newval : 0);
                                 break;
                             case "rightArrow": /* Seek forward 15 seconds */
                             case "accel-rightArrow": /* Seek forward 10% */
                                 oldval = this.video.currentTime;
-                                var maxtime = (this.video.duration || this.maxCurrentTimeSeen);
+                                var maxtime = (this.video.duration || this.maxCurrentTimeSeen / 1000);
                                 if (keystroke == "rightArrow")
                                     newval = oldval + 15;
                                 else
@@ -871,7 +864,7 @@
                                 this.video.currentTime = 0;
                                 break;
                             case "end": /* Seek to end */
-                                this.video.currentTime = (this.video.duration || this.maxCurrentTimeSeen);
+                                this.video.currentTime = (this.video.duration || this.maxCurrentTimeSeen / 1000);
                                 break;
                             default:
                                 return;

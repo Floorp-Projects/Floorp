@@ -5405,6 +5405,19 @@ nsSVGFEImageElement::LoadSVGImage(PRBool aForce, PRBool aNotify)
   if (baseURI && !href.IsEmpty())
     NS_MakeAbsoluteURI(href, href, baseURI);
 
+  // Make sure we don't get in a recursive death-spiral
+  nsIDocument* doc = GetOurDocument();
+  if (doc) {
+    nsCOMPtr<nsIURI> hrefAsURI;
+    if (NS_SUCCEEDED(StringToURI(href, doc, getter_AddRefs(hrefAsURI)))) {
+      PRBool isEqual;
+      if (NS_SUCCEEDED(hrefAsURI->Equals(baseURI, &isEqual)) && isEqual) {
+        // Image URI matches our URI exactly! Bail out.
+        return NS_OK;
+      }
+    }
+  }
+
   return LoadImage(href, aForce, aNotify);
 }
 

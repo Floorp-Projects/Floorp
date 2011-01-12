@@ -44,6 +44,7 @@
 #include "nsDiskCacheStreams.h"
 #include "nsCacheService.h"
 #include "mozilla/FileUtils.h"
+#include "nsIDiskCacheStreamInternal.h"
 
 
 
@@ -196,13 +197,16 @@ nsDiskCacheInputStream::IsNonBlocking(PRBool * nonBlocking)
 #pragma mark -
 #pragma mark nsDiskCacheOutputStream
 #endif
-class nsDiskCacheOutputStream : public nsIOutputStream {
+class nsDiskCacheOutputStream : public nsIOutputStream
+                              , public nsIDiskCacheStreamInternal
+{
 public:
     nsDiskCacheOutputStream( nsDiskCacheStreamIO * parent);
     virtual ~nsDiskCacheOutputStream();
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOUTPUTSTREAM
+    NS_DECL_NSIDISKCACHESTREAMINTERNAL
 
     void ReleaseStreamIO() { NS_IF_RELEASE(mStreamIO); }
 
@@ -212,8 +216,9 @@ private:
 };
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsDiskCacheOutputStream,
-                              nsIOutputStream)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsDiskCacheOutputStream,
+                              nsIOutputStream,
+                              nsIDiskCacheStreamInternal)
 
 nsDiskCacheOutputStream::nsDiskCacheOutputStream( nsDiskCacheStreamIO * parent)
     : mStreamIO(parent)
@@ -241,6 +246,16 @@ nsDiskCacheOutputStream::Close()
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDiskCacheOutputStream::CloseInternal()
+{
+    if (!mClosed) {
+        mClosed = PR_TRUE;
+        // tell parent streamIO we are closing
+        mStreamIO->CloseOutputStreamInternal(this);
+    }
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 nsDiskCacheOutputStream::Flush()
@@ -443,6 +458,13 @@ nsresult
 nsDiskCacheStreamIO::CloseOutputStream(nsDiskCacheOutputStream *  outputStream)
 {
     nsCacheServiceAutoLock lock; // grab service lock
+    return CloseOutputStreamInternal(outputStream);
+}
+
+nsresult
+nsDiskCacheStreamIO::CloseOutputStreamInternal(
+    nsDiskCacheOutputStream * outputStream)
+{
     nsresult   rv;
 
     if (outputStream != mOutStream) {

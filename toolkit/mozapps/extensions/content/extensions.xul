@@ -51,7 +51,7 @@
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       xmlns:xhtml="http://www.w3.org/1999/xhtml"
       id="addons-page" title="&addons.windowTitle;" disablechrome="true"
-      role="application" windowtype="Addons:Manager"
+      role="application" windowtype="Addons:Manager" disablefastfind="true"
       ondragenter="gDragDrop.onDragOver(event)"
       ondragover="gDragDrop.onDragOver(event)"
       ondrop="gDragDrop.onDrop(event)">
@@ -136,6 +136,7 @@
     <command id="cmd_enableItem"/>
     <command id="cmd_disableItem"/>
     <command id="cmd_installItem"/>
+    <command id="cmd_purchaseItem"/>
     <command id="cmd_uninstallItem"/>
     <command id="cmd_cancelUninstallItem"/>
     <command id="cmd_cancelOperation"/>
@@ -323,7 +324,7 @@
           <hbox id="search-filter" align="center">
             <label id="search-filter-label" value="&search.filter2.label;"/>
             <radiogroup id="search-filter-radiogroup" orient="horizontal"
-                        align="center" persist="value" value="local">
+                        align="center" persist="value" value="remote">
               <radio id="search-filter-local" class="search-filter-radio"
                      label="&search.filter2.installed.label;" value="local"
                      tooltiptext="&search.filter2.installed.tooltip;"/>
@@ -550,7 +551,9 @@
                     <label id="detail-creator" class="creator"/>
                   </vbox>
                   <hbox id="detail-desc-container" align="start">
-                    <image id="detail-screenshot" hidden="true"/>
+                    <vbox pack="center"> <!-- Necessary to work around bug 394738 -->
+                      <image id="detail-screenshot" hidden="true"/>
+                    </vbox>
                     <description id="detail-desc" flex="1"/>
                   </hbox>
                   <vbox id="detail-contributions">
@@ -642,6 +645,8 @@
                             label="&cmd.uninstallAddon.label;"
                             accesskey="&cmd.uninstallAddon.accesskey;"
                             command="cmd_uninstallItem"/>
+                    <button id="detail-purchase-btn" class="addon-control purchase"
+                            command="cmd_purchaseItem"/>
                     <button id="detail-install-btn" class="addon-control install"
                             label="&cmd.installAddon.label;"
                             accesskey="&cmd.installAddon.accesskey;"

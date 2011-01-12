@@ -3501,15 +3501,18 @@ PlacesSQLQueryBuilder::SelectAsSite()
   // If there are additional conditions the query has to join on visits too.
   nsCAutoString visitsJoin;
   nsCAutoString additionalConditions;
+  nsCAutoString timeConstraints;
   if (!mConditions.IsEmpty()) {
     visitsJoin.AssignLiteral("JOIN moz_historyvisits v ON v.place_id = h.id ");
     additionalConditions.AssignLiteral("{QUERY_OPTIONS_VISITS} "
                                        "{QUERY_OPTIONS_PLACES} "
                                        "{ADDITIONAL_CONDITIONS} ");
+    timeConstraints.AssignLiteral("||'&beginTime='||:begin_time||"
+                                    "'&endTime='||:end_time");
   }
 
   mQueryString = nsPrintfCString(2048,
-    "SELECT null, 'place:type=%ld&sort=%ld&domain=&domainIsHost=true', "
+    "SELECT null, 'place:type=%ld&sort=%ld&domain=&domainIsHost=true'%s, "
            ":localhost, :localhost, null, null, null, null, null, null, null "
     "WHERE EXISTS ( "
       "SELECT h.id FROM moz_places h "
@@ -3522,7 +3525,7 @@ PlacesSQLQueryBuilder::SelectAsSite()
     ") "
     "UNION ALL "
     "SELECT null, "
-           "'place:type=%ld&sort=%ld&domain='||host||'&domainIsHost=true', "
+           "'place:type=%ld&sort=%ld&domain='||host||'&domainIsHost=true'%s, "
            "host, host, null, null, null, null, null, null, null "
     "FROM ( "
       "SELECT get_unreversed_host(h.rev_host) AS host "
@@ -3537,10 +3540,12 @@ PlacesSQLQueryBuilder::SelectAsSite()
     ") ",
     nsINavHistoryQueryOptions::RESULTS_AS_URI,
     mSortingMode,
+    PromiseFlatCString(timeConstraints).get(),
     PromiseFlatCString(visitsJoin).get(),
     PromiseFlatCString(additionalConditions).get(),
     nsINavHistoryQueryOptions::RESULTS_AS_URI,
     mSortingMode,
+    PromiseFlatCString(timeConstraints).get(),
     PromiseFlatCString(visitsJoin).get(),
     PromiseFlatCString(additionalConditions).get()
   );

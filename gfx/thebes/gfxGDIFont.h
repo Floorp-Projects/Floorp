@@ -76,6 +76,14 @@ public:
     /* required for MathML to suppress effects of ClearType "padding" */
     virtual gfxFont* CopyWithAntialiasOption(AntialiasOption anAAOption);
 
+    virtual PRBool ProvidesHintedWidths() const { return PR_TRUE; }
+
+    // get hinted glyph width in pixels as 16.16 fixed-point value
+    virtual PRInt32 GetHintedGlyphWidth(gfxContext *aCtx, PRUint16 aGID);
+
+protected:
+    virtual void CreatePlatformShaper();
+
     /* override to check for uniscribe failure and fall back to GDI */
     virtual PRBool InitTextRun(gfxContext *aContext,
                                gfxTextRun *aTextRun,
@@ -84,14 +92,6 @@ public:
                                PRUint32 aRunLength,
                                PRInt32 aRunScript,
                                PRBool aPreferPlatformShaping = PR_FALSE);
-
-    virtual PRBool ProvidesHintedWidths() const { return PR_TRUE; }
-
-    // get hinted glyph width in pixels as 16.16 fixed-point value
-    virtual PRInt32 GetHintedGlyphWidth(gfxContext *aCtx, PRUint16 aGID);
-
-protected:
-    virtual void CreatePlatformShaper();
 
     void Initialize(); // creates metrics and Cairo fonts
 

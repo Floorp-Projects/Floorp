@@ -1830,5 +1830,23 @@ PRUint32 nsBidiPresUtils::EstimateMemoryUsed()
   return size;
 }
 
+static PLDHashOperator
+TraverseKey(nsISupports *aKey, PRInt32 aData, void *aUserArg)
+{
+  nsCycleCollectionTraversalCallback *cb =
+    static_cast<nsCycleCollectionTraversalCallback*>(aUserArg);
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb, "mContentToFrameIndex key");
+  cb->NoteXPCOMChild(aKey);
+  return PL_DHASH_NEXT;
+}
 
+void nsBidiPresUtils::Traverse(nsCycleCollectionTraversalCallback &cb) const
+{
+  mContentToFrameIndex.EnumerateRead(TraverseKey, &cb);
+}
+
+void nsBidiPresUtils::Unlink()
+{
+  mContentToFrameIndex.Clear();
+}
 #endif // IBMBIDI

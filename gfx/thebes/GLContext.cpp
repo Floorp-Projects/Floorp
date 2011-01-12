@@ -15,7 +15,7 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- *   Mozilla Corporation.
+ * the Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
@@ -1349,6 +1349,9 @@ GLContext::UploadSurfaceToTexture(gfxASurface *aSurface,
       break;
     default:
       NS_ASSERTION(false, "Unhandled image surface format!");
+      format = 0;
+      type = 0;
+      shader = ShaderProgramType(0);
   }
 
 #ifndef USE_GLES2

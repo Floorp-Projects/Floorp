@@ -78,9 +78,12 @@ class GeckoSurfaceView
         inputConnection = new GeckoInputConnection(this);
         setFocusable(true);
         setFocusableInTouchMode(true);
-
-        mWidth = 0;
-        mHeight = 0;
+        
+        DisplayMetrics metrics = new DisplayMetrics();
+        GeckoApp.mAppContext.getWindowManager().
+            getDefaultDisplay().getMetrics(metrics);
+        mWidth = metrics.widthPixels;
+        mHeight = metrics.heightPixels;
         mBufferWidth = 0;
         mBufferHeight = 0;
 
@@ -97,6 +100,10 @@ class GeckoSurfaceView
         super.finalize();
     }
 
+    void drawSplashScreen() {
+        this.drawSplashScreen(getHolder(), mWidth, mHeight);
+    }
+
     void drawSplashScreen(SurfaceHolder holder, int width, int height) {
         Canvas c = holder.lockCanvas();
         if (c == null) {
@@ -109,7 +116,7 @@ class GeckoSurfaceView
         int w = drawable.getIntrinsicWidth();
         int h = drawable.getIntrinsicHeight();
         int x = (width - w)/2;
-        int y = (height - h)/2;
+        int y = (height - h)/2 - 16;
         drawable.setBounds(x, y, x + w, y + h);
         drawable.draw(c);
         Paint p = new Paint();
@@ -117,7 +124,7 @@ class GeckoSurfaceView
         p.setTextSize(32f);
         p.setAntiAlias(true);
         p.setColor(res.getColor(R.color.splash_font));
-        c.drawText(res.getString(R.string.splash_screen_label), width/2, y + h + 32, p);
+        c.drawText(GeckoSurfaceView.mSplashStatusMsg, width/2, y + h + 16, p);
         holder.unlockCanvasAndPost(c);
     }
 
@@ -190,6 +197,8 @@ class GeckoSurfaceView
         Log.i("GeckoAppJava", "surface created");
         GeckoEvent e = new GeckoEvent(GeckoEvent.SURFACE_CREATED);
         GeckoAppShell.sendEventToGecko(e);
+        if (mShowingSplashScreen)
+            drawSplashScreen();
     }
 
     public void surfaceDestroyed(SurfaceHolder holder) {
@@ -540,6 +549,7 @@ class GeckoSurfaceView
     int mDrawMode;
 
     static boolean mShowingSplashScreen = true;
+    static String  mSplashStatusMsg = "";
 
     // let's not change stuff around while we're in the middle of
     // starting drawing, ending drawing, or changing surface

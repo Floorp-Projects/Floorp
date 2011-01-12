@@ -148,8 +148,6 @@ button[disabled="true"] > .button-box {
 
 button[type="menu-button"] {
   -moz-appearance: dualbutton;
-  -moz-box-align: center;
-  -moz-box-pack: center;
 }
 
 .button-menubutton-button {

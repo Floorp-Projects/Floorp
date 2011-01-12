@@ -65,7 +65,7 @@ struct CharacterPosition {
   
 /**
  * This is a do-it-all helper class. It supports iterating through the
- * drawable characters of a string. For each character, it can set up
+ * drawable character clusters of a string. For each cluster, it can set up
  * a graphics context with a transform appropriate for drawing the
  * character, or a transform appropriate for emitting geometry in the
  * text metrics coordinate system (which differs from the drawing
@@ -84,7 +84,6 @@ struct CharacterPosition {
  * the element is in a <defs> section, then the CharacterIterator will
  * behave as if the frame has no drawable characters.
  *
- * XXX should make this iterate clusters instead
  * XXX needs RTL love
  * XXX might want to make AdvanceToCharacter constant time (e.g. by
  * caching advances and/or the CharacterPosition array across DOM
@@ -95,8 +94,8 @@ class CharacterIterator
 {
 public:
   /**
-   * Sets up the iterator so that NextChar will return the first drawable
-   * char.
+   * Sets up the iterator so that NextCluster will return the first drawable
+   * cluster.
    * @param aForceGlobalTransform passed on to EnsureTextRun (see below)
    */
   CharacterIterator(nsSVGGlyphFrame *aSource, PRBool aForceGlobalTransform);
@@ -140,12 +139,19 @@ public:
   }
 
   /**
-   * Returns the index of the next char in the string that should be
-   * drawn, or -1 if there is no such character.
+   * Returns the index of the next cluster in the string that should be
+   * drawn, or -1 if there is no such cluster.
    */
-  PRInt32 NextChar();
+  PRInt32 NextCluster();
+
   /**
-   * Repeated calls NextChar until it returns aIndex (i.e. aIndex is the
+   * Returns the length of the current cluster (usually 1, unless there
+   * are combining marks)
+   */
+  PRInt32 ClusterLength();
+
+  /**
+   * Repeated calls NextCluster until it returns aIndex (i.e. aIndex is the
    * current drawable character). Returns false if that never happens
    * (because aIndex is before or equal to the current character, or
    * out of bounds, or not drawable).
@@ -570,9 +576,10 @@ nsSVGGlyphFrame::AddCharactersToPath(CharacterIterator *aIter,
   }
 
   PRInt32 i;
-  while ((i = aIter->NextChar()) >= 0) {
+  while ((i = aIter->NextCluster()) >= 0) {
     aIter->SetupForDrawing(aContext);
-    mTextRun->DrawToPath(aContext, gfxPoint(0, 0), i, 1, nsnull, nsnull);
+    mTextRun->DrawToPath(aContext, gfxPoint(0, 0), i, aIter->ClusterLength(),
+                         nsnull, nsnull);
   }
 }
 
@@ -589,10 +596,11 @@ nsSVGGlyphFrame::AddBoundingBoxesToPath(CharacterIterator *aIter,
   }
 
   PRInt32 i;
-  while ((i = aIter->NextChar()) >= 0) {
+  while ((i = aIter->NextCluster()) >= 0) {
     aIter->SetupForMetrics(aContext);
     gfxTextRun::Metrics metrics =
-      mTextRun->MeasureText(i, 1, gfxFont::LOOSE_INK_EXTENTS, nsnull, nsnull);
+      mTextRun->MeasureText(i, aIter->ClusterLength(),
+                            gfxFont::LOOSE_INK_EXTENTS, nsnull, nsnull);
     aContext->Rectangle(metrics.mBoundingBox);
   }
 }
@@ -603,14 +611,15 @@ nsSVGGlyphFrame::FillCharacters(CharacterIterator *aIter,
 {
   if (aIter->SetupForDirectTextRunDrawing(aContext)) {
     mTextRun->Draw(aContext, gfxPoint(0, 0), 0,
-                   mTextRun->GetLength(), nsnull, nsnull, nsnull);
+                   mTextRun->GetLength(), nsnull, nsnull);
     return;
   }
 
   PRInt32 i;
-  while ((i = aIter->NextChar()) >= 0) {
+  while ((i = aIter->NextCluster()) >= 0) {
     aIter->SetupForDrawing(aContext);
-    mTextRun->Draw(aContext, gfxPoint(0, 0), i, 1, nsnull, nsnull, nsnull);
+    mTextRun->Draw(aContext, gfxPoint(0, 0), i, aIter->ClusterLength(),
+                   nsnull, nsnull);
   }
 }
 
@@ -1364,14 +1373,8 @@ nsSVGGlyphFrame::GetCharNumAtPosition(nsIDOMSVGPoint *point)
   PRInt32 i;
   PRInt32 last = -1;
   gfxPoint pt(xPos, yPos);
-  while ((i = iter.NextChar()) >= 0) {
-    // iter is the beginning of a cluster (or of the entire run);
-    // look ahead for the next cluster start, then measure the entire cluster
-    PRInt32 limit = i + 1;
-    while (limit < (PRInt32)mTextRun->GetLength() &&
-           !mTextRun->IsClusterStart(limit)) {
-      ++limit;
-    }
+  while ((i = iter.NextCluster()) >= 0) {
+    PRInt32 limit = i + iter.ClusterLength();
     gfxTextRun::Metrics metrics =
       mTextRun->MeasureText(i, limit - i, gfxFont::LOOSE_INK_EXTENTS,
                             nsnull, nsnull);
@@ -1405,11 +1408,6 @@ nsSVGGlyphFrame::GetCharNumAtPosition(nsIDOMSVGPoint *point)
       }
       current += step;
       leftEdge += width;
-    }
-
-    // move iter past any trailing chars of the cluster
-    while (++i < limit) {
-      iter.NextChar();
     }
   }
 
@@ -1483,9 +1481,10 @@ nsSVGGlyphFrame::ContainsPoint(const nsPoint &aPoint)
   iter.SetInitialMatrix(tmpCtx);
   
   PRInt32 i;
-  while ((i = iter.NextChar()) >= 0) {
+  while ((i = iter.NextCluster()) >= 0) {
     gfxTextRun::Metrics metrics =
-      mTextRun->MeasureText(i, 1, gfxFont::LOOSE_INK_EXTENTS, nsnull, nsnull);
+      mTextRun->MeasureText(i, iter.ClusterLength(),
+                            gfxFont::LOOSE_INK_EXTENTS, nsnull, nsnull);
     iter.SetupForMetrics(tmpCtx);
     tmpCtx->Rectangle(metrics.mBoundingBox);
   }
@@ -1702,7 +1701,7 @@ CharacterIterator::SetupForDirectTextRun(gfxContext *aContext, float aScale)
 }
 
 PRInt32
-CharacterIterator::NextChar()
+CharacterIterator::NextCluster()
 {
   if (mInError) {
 #ifdef DEBUG
@@ -1727,15 +1726,33 @@ CharacterIterator::NextChar()
       return -1;
     }
 
-    if (mPositions.IsEmpty() || mPositions[mCurrentChar].draw)
+    if (mSource->mTextRun->IsClusterStart(mCurrentChar) &&
+        (mPositions.IsEmpty() || mPositions[mCurrentChar].draw)) {
       return mCurrentChar;
+    }
   }
+}
+
+PRInt32
+CharacterIterator::ClusterLength()
+{
+  if (mInError) {
+    return 0;
+  }
+
+  PRInt32 i = mCurrentChar;
+  while (++i < mSource->mTextRun->GetLength()) {
+    if (mSource->mTextRun->IsClusterStart(i)) {
+      break;
+    }
+  }
+  return i - mCurrentChar;
 }
 
 PRBool
 CharacterIterator::AdvanceToCharacter(PRInt32 aIndex)
 {
-  while (NextChar() != -1) {
+  while (NextCluster() != -1) {
     if (mCurrentChar == aIndex)
       return PR_TRUE;
   }

@@ -624,6 +624,9 @@ PluginInstanceChild::AnswerNPP_HandleEvent(const NPRemoteEvent& event,
     return true;
 #endif
 
+    // XXX A previous call to mPluginIface->event might block, e.g. right click
+    // for context menu. Still, we might get here again, calling into the plugin
+    // a second time while it's in the previous call.
     if (!mPluginIface->event)
         *handled = false;
     else

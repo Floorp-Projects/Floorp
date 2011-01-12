@@ -972,7 +972,7 @@ asserts(1) == 418574-2.html 418574-2-ref.html # bug 478135
 == 421436-1a.html 421436-1-ref.html
 == 421436-1b.html 421436-1-ref.html
 == 421632-1.html 421632-1-ref.html
-asserts-if(gtk2Widget,4) asserts-if(winWidget,0-4) != 421710-1.html about:blank     # assertion test (and crash test), asserts are bug 602426.
+!= 421710-1.html about:blank
 == 421885-1.xml 421885-1-ref.xml
 == 421955-1.html 421955-1-ref.html
 == 422249-1.html 422249-1-ref.html
@@ -1555,7 +1555,10 @@ fails-if(!haveTestPlugin) == 599476.html 599476-ref.html
 == 613433-3.html 613433-1-ref.html
 == 613433-3.html 613433-2-ref.html
 == 613433-3.html 613433-3-ref.html
+== 614272-1.svg  614272-1-ref.svg
 HTTP(..) == 615121-1.html 615121-1-ref.html
 HTTP(..) != 615121-2.html 615121-2-notref.html
 == 617242-1.html 617242-1-ref.html
 != 618071.html 618071-notref.html
+random-if(winWidget) == 621918-1.svg 621918-1-ref.svg # 1-pixel diacritic positioning discrepancy in rotated text (may depend on platform fonts)
+HTTP(..) == 621918-2.svg 621918-2-ref.svg # http(..) for filters.svg, used to mask antialiasing issues where glyphs touch

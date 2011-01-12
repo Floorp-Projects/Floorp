@@ -1,4 +1,5 @@
 function init() {
+    enableAsyncScrolling();
     messageManager.loadFrameScript(
         "chrome://global/content/test-ipcbrowser-content.js", true
     );
@@ -11,6 +12,12 @@ function browser() {
 function frameLoader() {
     return browser().QueryInterface(Components.interfaces.nsIFrameLoaderOwner)
                     .frameLoader;
+}
+
+function enableAsyncScrolling() {
+    var i = Components.interfaces.nsIFrameLoader_MOZILLA_2_0_BRANCH;
+    var enabler = frameLoader().QueryInterface(i);
+    enabler.renderMode = i.RENDER_MODE_ASYNC_SCROLL;
 }
 
 // Functions affecting the content window.

@@ -109,7 +109,8 @@ public:
 
     virtual bool RecvRegisterChrome(const InfallibleTArray<ChromePackage>& packages,
                                     const InfallibleTArray<ResourceMapping>& resources,
-                                    const InfallibleTArray<OverrideMapping>& overrides);
+                                    const InfallibleTArray<OverrideMapping>& overrides,
+                                    const nsCString& locale);
 
     virtual bool RecvSetOffline(const PRBool& offline);
 

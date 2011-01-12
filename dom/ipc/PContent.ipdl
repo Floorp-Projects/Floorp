@@ -97,7 +97,7 @@ child:
     PTestShell();
 
     RegisterChrome(ChromePackage[] packages, ResourceMapping[] resources,
-                   OverrideMapping[] overrides);
+                   OverrideMapping[] overrides, nsCString locale);
 
     async SetOffline(PRBool offline);
 

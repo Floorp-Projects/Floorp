@@ -5475,7 +5475,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
         if (!pobj->isNative()) {
             if (pobj->isProxy()) {
                 AutoPropertyDescriptorRooter pd(cx);
-                if (!pobj->getProxyHandler()->getPropertyDescriptor(cx, pobj, id, true, &pd))
+                if (!JSProxy::getPropertyDescriptor(cx, pobj, id, true, &pd))
                     return false;
 
                 if (pd.attrs & JSPROP_SHARED)

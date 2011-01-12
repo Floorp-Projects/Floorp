@@ -261,6 +261,17 @@ nsDisplayListBuilder::LeavePresShell(nsIFrame* aReferenceFrame,
     return;
   }
 
+  // If we're finished building display list items for painting of the outermost
+  // pres shell, notify the widget about any toolbars we've encountered.
+  if (mIsPaintingToWindow && mPresShellStates.Length() == 1) {
+    nsIWidget* widget = aReferenceFrame->GetNearestWidget();
+    if (widget) {
+      nsIWidget_MOZILLA_2_0_BRANCH* widget2 =
+        static_cast<nsIWidget_MOZILLA_2_0_BRANCH*>(widget);
+      widget2->UpdateThemeGeometries(CurrentPresShellState()->mThemeGeometries);
+    }
+  }
+
   // Unmark and pop off the frames marked for display in this pres shell.
   PRUint32 firstFrameForShell = CurrentPresShellState()->mFirstFrameMarkedForDisplay;
   for (PRUint32 i = firstFrameForShell;
@@ -715,19 +726,9 @@ void nsDisplaySolidColor::Paint(nsDisplayListBuilder* aBuilder,
 }
 
 static void
-RegisterThemeWidgetGeometry(nsIFrame* aFrame)
+RegisterThemeGeometry(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
 {
-  nsPresContext* presContext = aFrame->PresContext();
-  nsITheme* theme = presContext->GetTheme();
-  if (!theme)
-    return;
-
   nsIFrame* displayRoot = nsLayoutUtils::GetDisplayRootFrame(aFrame);
-  nsIWidget* widget = displayRoot->GetNearestWidget();
-  // If the display root doesn't have a widget, just bail. Something
-  // weird is going on, maybe we're printing?
-  if (!widget)
-    return;
 
   for (nsIFrame* f = aFrame; f; f = f->GetParent()) {
     // Bail out if we're in a transformed subtree
@@ -739,9 +740,8 @@ RegisterThemeWidgetGeometry(nsIFrame* aFrame)
   }
 
   nsRect borderBox(aFrame->GetOffsetTo(displayRoot), aFrame->GetSize());
-  theme->RegisterWidgetGeometry(widget,
-      aFrame->GetStyleDisplay()->mAppearance,
-      borderBox.ToNearestPixels(presContext->AppUnitsPerDevPixel()));
+  aBuilder->RegisterThemeGeometry(aFrame->GetStyleDisplay()->mAppearance,
+      borderBox.ToNearestPixels(aFrame->PresContext()->AppUnitsPerDevPixel()));
 }
 
 nsDisplayBackground::nsDisplayBackground(nsDisplayListBuilder* aBuilder,
@@ -753,11 +753,11 @@ nsDisplayBackground::nsDisplayBackground(nsDisplayListBuilder* aBuilder,
   const nsStyleDisplay* disp = mFrame->GetStyleDisplay();
   mIsThemed = mFrame->IsThemed(disp, &mThemeTransparency);
 
-  // Perform necessary RegisterWidgetGeometry
+  // Perform necessary RegisterThemeGeometry
   if (mIsThemed &&
       (disp->mAppearance == NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR ||
        disp->mAppearance == NS_THEME_TOOLBAR)) {
-    RegisterThemeWidgetGeometry(aFrame);
+    RegisterThemeGeometry(aBuilder, aFrame);
   }
 }
 
