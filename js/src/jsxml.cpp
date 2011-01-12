@@ -178,15 +178,6 @@ xml_isXMLName(JSContext *cx, uintN argc, jsval *vp)
     return JS_TRUE;
 }
 
-static inline bool
-AppendString(JSCharBuffer &cb, JSString *str)
-{
-    const jschar *chars = str->getChars(cb.allocPolicy().context());
-    if (!chars)
-        return false;
-    return cb.append(chars, str->length());
-}
-
 /*
  * This wrapper is needed because NewBuiltinClassInstance doesn't
  * call the constructor, and we need a place to set the
@@ -2001,58 +1992,58 @@ bad:
  * MakeXMLCommentString, and MakeXMLPIString are further factored into a common
  * MakeXMLSpecialString subroutine.
  *
- * These functions mutate cb, leaving it empty.
+ * These functions mutate sb, leaving it empty.
  */
-static JSString *
-MakeXMLSpecialString(JSContext *cx, JSCharBuffer &cb,
+static JSFlatString *
+MakeXMLSpecialString(JSContext *cx, StringBuffer &sb,
                      JSString *str, JSString *str2,
                      const jschar *prefix, size_t prefixlength,
                      const jschar *suffix, size_t suffixlength)
 {
-    if (!cb.append(prefix, prefixlength) || !AppendString(cb, str))
+    if (!sb.append(prefix, prefixlength) || !sb.append(str))
         return NULL;
     if (str2 && !str2->empty()) {
-        if (!cb.append(' ') || !AppendString(cb, str2))
+        if (!sb.append(' ') || !sb.append(str2))
             return NULL;
     }
-    if (!cb.append(suffix, suffixlength))
+    if (!sb.append(suffix, suffixlength))
         return NULL;
 
-    return js_NewStringFromCharBuffer(cx, cb);
+    return sb.finishString();
 }
 
-static JSString *
-MakeXMLCDATAString(JSContext *cx, JSCharBuffer &cb, JSString *str)
+static JSFlatString *
+MakeXMLCDATAString(JSContext *cx, StringBuffer &sb, JSString *str)
 {
     static const jschar cdata_prefix_ucNstr[] = {'<', '!', '[',
                                                  'C', 'D', 'A', 'T', 'A',
                                                  '['};
     static const jschar cdata_suffix_ucNstr[] = {']', ']', '>'};
 
-    return MakeXMLSpecialString(cx, cb, str, NULL,
+    return MakeXMLSpecialString(cx, sb, str, NULL,
                                 cdata_prefix_ucNstr, 9,
                                 cdata_suffix_ucNstr, 3);
 }
 
-static JSString *
-MakeXMLCommentString(JSContext *cx, JSCharBuffer &cb, JSString *str)
+static JSFlatString *
+MakeXMLCommentString(JSContext *cx, StringBuffer &sb, JSString *str)
 {
     static const jschar comment_prefix_ucNstr[] = {'<', '!', '-', '-'};
     static const jschar comment_suffix_ucNstr[] = {'-', '-', '>'};
 
-    return MakeXMLSpecialString(cx, cb, str, NULL,
+    return MakeXMLSpecialString(cx, sb, str, NULL,
                                 comment_prefix_ucNstr, 4,
                                 comment_suffix_ucNstr, 3);
 }
 
-static JSString *
-MakeXMLPIString(JSContext *cx, JSCharBuffer &cb, JSString *name,
+static JSFlatString *
+MakeXMLPIString(JSContext *cx, StringBuffer &sb, JSString *name,
                 JSString *value)
 {
     static const jschar pi_prefix_ucNstr[] = {'<', '?'};
     static const jschar pi_suffix_ucNstr[] = {'?', '>'};
 
-    return MakeXMLSpecialString(cx, cb, name, value,
+    return MakeXMLSpecialString(cx, sb, name, value,
                                 pi_prefix_ucNstr, 2,
                                 pi_suffix_ucNstr, 2);
 }
@@ -2062,21 +2053,21 @@ MakeXMLPIString(JSContext *cx, JSCharBuffer &cb, JSString *name,
  * equals, a double quote, an attribute value, and a closing double quote.
  */
 static bool
-AppendAttributeValue(JSContext *cx, JSCharBuffer &cb, JSString *valstr)
+AppendAttributeValue(JSContext *cx, StringBuffer &sb, JSString *valstr)
 {
-    if (!cb.append('='))
+    if (!sb.append('='))
         return false;
     valstr = js_EscapeAttributeValue(cx, valstr, JS_TRUE);
-    return valstr && AppendString(cb, valstr);
+    return valstr && sb.append(valstr);
 }
 
 /*
  * ECMA-357 10.2.1.1 EscapeElementValue helper method.
 
- * These functions mutate cb, leaving it empty.
+ * These functions mutate sb, leaving it empty.
  */
-static JSString *
-EscapeElementValue(JSContext *cx, JSCharBuffer &cb, JSString *str, uint32 toSourceFlag)
+static JSFlatString *
+EscapeElementValue(JSContext *cx, StringBuffer &sb, JSString *str, uint32 toSourceFlag)
 {
     size_t length = str->length();
     const jschar *start = str->getChars(cx);
@@ -2087,15 +2078,15 @@ EscapeElementValue(JSContext *cx, JSCharBuffer &cb, JSString *str, uint32 toSour
         jschar c = *cp;
         switch (*cp) {
           case '<':
-            if (!js_AppendLiteral(cb, js_lt_entity_str))
+            if (!sb.append(js_lt_entity_str))
                 return NULL;
             break;
           case '>':
-            if (!js_AppendLiteral(cb, js_gt_entity_str))
+            if (!sb.append(js_gt_entity_str))
                 return NULL;
             break;
           case '&':
-            if (!js_AppendLiteral(cb, js_amp_entity_str))
+            if (!sb.append(js_amp_entity_str))
                 return NULL;
             break;
           case '{':
@@ -2104,73 +2095,72 @@ EscapeElementValue(JSContext *cx, JSCharBuffer &cb, JSString *str, uint32 toSour
              * to escape '{'. See bug 463360.
              */
             if (toSourceFlag) {
-                if (!js_AppendLiteral(cb, js_leftcurly_entity_str))
+                if (!sb.append(js_leftcurly_entity_str))
                     return NULL;
                 break;
             }
             /* FALL THROUGH */
           default:
-            if (!cb.append(c))
+            if (!sb.append(c))
                 return NULL;
         }
     }
-    return js_NewStringFromCharBuffer(cx, cb);
+    return sb.finishString();
 }
 
 /*
  * ECMA-357 10.2.1.2 EscapeAttributeValue helper method.
  *
- * These functions mutate cb, leaving it empty.
+ * These functions mutate sb, leaving it empty.
  */
-static JSLinearString *
-EscapeAttributeValue(JSContext *cx, JSCharBuffer &cb, JSString *str,
-                     JSBool quote)
+static JSFlatString *
+EscapeAttributeValue(JSContext *cx, StringBuffer &sb, JSString *str, JSBool quote)
 {
     size_t length = str->length();
     const jschar *start = str->getChars(cx);
     if (!start)
         return NULL;
 
-    if (quote && !cb.append('"'))
+    if (quote && !sb.append('"'))
         return NULL;
 
     for (const jschar *cp = start, *end = start + length; cp != end; ++cp) {
         jschar c = *cp;
         switch (c) {
           case '"':
-            if (!js_AppendLiteral(cb, js_quot_entity_str))
+            if (!sb.append(js_quot_entity_str))
                 return NULL;
             break;
           case '<':
-            if (!js_AppendLiteral(cb, js_lt_entity_str))
+            if (!sb.append(js_lt_entity_str))
                 return NULL;
             break;
           case '&':
-            if (!js_AppendLiteral(cb, js_amp_entity_str))
+            if (!sb.append(js_amp_entity_str))
                 return NULL;
             break;
           case '\n':
-            if (!js_AppendLiteral(cb, "&#xA;"))
+            if (!sb.append("&#xA;"))
                 return NULL;
             break;
           case '\r':
-            if (!js_AppendLiteral(cb, "&#xD;"))
+            if (!sb.append("&#xD;"))
                 return NULL;
             break;
           case '\t':
-            if (!js_AppendLiteral(cb, "&#x9;"))
+            if (!sb.append("&#x9;"))
                 return NULL;
             break;
           default:
-            if (!cb.append(c))
+            if (!sb.append(c))
                 return NULL;
         }
     }
 
-    if (quote && !cb.append('"'))
+    if (quote && !sb.append('"'))
         return NULL;
 
-    return js_NewStringFromCharBuffer(cx, cb);
+    return sb.finishString();
 }
 
 /* 13.3.5.4 [[GetNamespace]]([InScopeNamespaces]) */
@@ -2394,7 +2384,7 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
                uint32 indentLevel)
 {
     JSBool pretty, indentKids;
-    JSCharBuffer cb(cx);
+    StringBuffer sb(cx);
     JSString *str;
     JSLinearString *prefix, *nsuri;
     uint32 i, n, nextIndentLevel;
@@ -2405,7 +2395,7 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
         return NULL;
 
     if (pretty) {
-        if (!cb.appendN(' ', indentLevel & ~TO_SOURCE_FLAG))
+        if (!sb.appendN(' ', indentLevel & ~TO_SOURCE_FLAG))
             return NULL;
     }
 
@@ -2421,20 +2411,20 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
         } else {
             str = xml->xml_value;
         }
-        return EscapeElementValue(cx, cb, str, indentLevel & TO_SOURCE_FLAG);
+        return EscapeElementValue(cx, sb, str, indentLevel & TO_SOURCE_FLAG);
 
       case JSXML_CLASS_ATTRIBUTE:
         /* Step 5. */
-        return EscapeAttributeValue(cx, cb, xml->xml_value,
+        return EscapeAttributeValue(cx, sb, xml->xml_value,
                                     (indentLevel & TO_SOURCE_FLAG) != 0);
 
       case JSXML_CLASS_COMMENT:
         /* Step 6. */
-        return MakeXMLCommentString(cx, cb, xml->xml_value);
+        return MakeXMLCommentString(cx, sb, xml->xml_value);
 
       case JSXML_CLASS_PROCESSING_INSTRUCTION:
         /* Step 7. */
-        return MakeXMLPIString(cx, cb, xml->name->getQNameLocalName(),
+        return MakeXMLPIString(cx, sb, xml->name->getQNameLocalName(),
                                xml->xml_value);
 
       case JSXML_CLASS_LIST:
@@ -2444,20 +2434,20 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
             i = 0;
             while (JSXML *kid = (JSXML *) cursor.getNext()) {
                 if (pretty && i != 0) {
-                    if (!cb.append('\n'))
+                    if (!sb.append('\n'))
                         return NULL;
                 }
 
                 JSString *kidstr = XMLToXMLString(cx, kid, ancestorNSes, indentLevel);
-                if (!kidstr || !AppendString(cb, kidstr))
+                if (!kidstr || !sb.append(kidstr))
                     return NULL;
                 ++i;
             }
         }
 
-        if (cb.empty())
+        if (sb.empty())
             return cx->runtime->emptyString;
-        return js_NewStringFromCharBuffer(cx, cb);
+        return sb.finishString();
 
       default:;
     }
@@ -2576,15 +2566,15 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
         }
     }
 
-    /* Format the element or point-tag into cb. */
-    if (!cb.append('<'))
+    /* Format the element or point-tag into sb. */
+    if (!sb.append('<'))
         goto out;
 
     if (!prefix->empty()) {
-        if (!AppendString(cb, prefix) || !cb.append(':'))
+        if (!sb.append(prefix) || !sb.append(':'))
             goto out;
     }
-    if (!AppendString(cb, xml->name->getQNameLocalName()))
+    if (!sb.append(xml->name->getQNameLocalName()))
         goto out;
 
     /*
@@ -2597,7 +2587,7 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
     {
         JSXMLArrayCursor cursor(&xml->xml_attrs);
         while (JSXML *attr = (JSXML *) cursor.getNext()) {
-            if (!cb.append(' '))
+            if (!sb.append(' '))
                 goto out;
             ns2 = GetNamespace(cx, attr->name, &ancdecls.array);
             if (!ns2)
@@ -2630,16 +2620,16 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
 
             /* 17(b)(iii). */
             if (!prefix->empty()) {
-                if (!AppendString(cb, prefix) || !cb.append(':'))
+                if (!sb.append(prefix) || !sb.append(':'))
                     goto out;
             }
 
             /* 17(b)(iv). */
-            if (!AppendString(cb, attr->name->getQNameLocalName()))
+            if (!sb.append(attr->name->getQNameLocalName()))
                 goto out;
 
             /* 17(d-g). */
-            if (!AppendAttributeValue(cx, cb, attr->xml_value))
+            if (!AppendAttributeValue(cx, sb, attr->xml_value))
                 goto out;
         }
     }
@@ -2650,7 +2640,7 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
         while (JSObject *ns3 = (JSObject *) cursor.getNext()) {
             JS_ASSERT(IsDeclared(ns3));
 
-            if (!js_AppendLiteral(cb, " xmlns"))
+            if (!sb.append(" xmlns"))
                 goto out;
 
             /* 17(c)(ii): NULL means *undefined* here. */
@@ -2664,12 +2654,12 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
 
             /* 17(c)(iii). */
             if (!prefix->empty()) {
-                if (!cb.append(':') || !AppendString(cb, prefix))
+                if (!sb.append(':') || !sb.append(prefix))
                     goto out;
             }
 
             /* 17(d-g). */
-            if (!AppendAttributeValue(cx, cb, ns3->getNameURI()))
+            if (!AppendAttributeValue(cx, sb, ns3->getNameURI()))
                 goto out;
         }
     }
@@ -2677,11 +2667,11 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
     /* Step 18: handle point tags. */
     n = xml->xml_kids.length;
     if (n == 0) {
-        if (!js_AppendLiteral(cb, "/>"))
+        if (!sb.append("/>"))
             goto out;
     } else {
         /* Steps 19 through 25: handle element content, and open the end-tag. */
-        if (!cb.append('>'))
+        if (!sb.append('>'))
             goto out;
         {
             JSXML *kid;
@@ -2703,7 +2693,7 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
             JSXMLArrayCursor cursor(&xml->xml_kids);
             while (JSXML *kid = (JSXML *) cursor.getNext()) {
                 if (pretty && indentKids) {
-                    if (!cb.append('\n'))
+                    if (!sb.append('\n'))
                         goto out;
                 }
 
@@ -2711,32 +2701,32 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
                 if (!kidstr)
                     goto out;
 
-                if (!AppendString(cb, kidstr))
+                if (!sb.append(kidstr))
                     goto out;
             }
         }
 
         if (pretty && indentKids) {
-            if (!cb.append('\n') ||
-                !cb.appendN(' ', indentLevel & ~TO_SOURCE_FLAG))
+            if (!sb.append('\n') ||
+                !sb.appendN(' ', indentLevel & ~TO_SOURCE_FLAG))
                 goto out;
         }
-        if (!js_AppendLiteral(cb, "</"))
+        if (!sb.append("</"))
             goto out;
 
         /* Step 26. */
         prefix = ns->getNamePrefix();
         if (prefix && !prefix->empty()) {
-            if (!AppendString(cb, prefix) || !cb.append(':'))
+            if (!sb.append(prefix) || !sb.append(':'))
                 goto out;
         }
 
         /* Step 27. */
-        if (!AppendString(cb, xml->name->getQNameLocalName()) || !cb.append('>'))
+        if (!sb.append(xml->name->getQNameLocalName()) || !sb.append('>'))
             goto out;
     }
 
-    str = js_NewStringFromCharBuffer(cx, cb);
+    str = sb.finishString();
 out:
     js_LeaveLocalRootScopeWithResult(cx, str);
     return str;
@@ -2761,8 +2751,8 @@ ToXMLString(JSContext *cx, jsval v, uint32 toSourceFlag)
         return js_ValueToString(cx, Valueify(v));
 
     if (JSVAL_IS_STRING(v)) {
-        JSCharBuffer cb(cx);
-        return EscapeElementValue(cx, cb, JSVAL_TO_STRING(v), toSourceFlag);
+        StringBuffer sb(cx);
+        return EscapeElementValue(cx, sb, JSVAL_TO_STRING(v), toSourceFlag);
     }
 
     obj = JSVAL_TO_OBJECT(v);
@@ -2772,8 +2762,8 @@ ToXMLString(JSContext *cx, jsval v, uint32 toSourceFlag)
         str = js_ValueToString(cx, Valueify(v));
         if (!str)
             return NULL;
-        JSCharBuffer cb(cx);
-        return EscapeElementValue(cx, cb, str, toSourceFlag);
+        StringBuffer sb(cx);
+        return EscapeElementValue(cx, sb, str, toSourceFlag);
     }
 
     /* Handle non-element cases in this switch, returning from each case. */
@@ -7303,11 +7293,11 @@ js_ToAttributeName(JSContext *cx, Value *vp)
     return JS_TRUE;
 }
 
-JSLinearString *
+JSFlatString *
 js_EscapeAttributeValue(JSContext *cx, JSString *str, JSBool quote)
 {
-    JSCharBuffer cb(cx);
-    return EscapeAttributeValue(cx, cb, str, quote);
+    StringBuffer sb(cx);
+    return EscapeAttributeValue(cx, sb, str, quote);
 }
 
 JSString *
@@ -7345,11 +7335,11 @@ js_AddAttributePart(JSContext *cx, JSBool isName, JSString *str, JSString *str2)
     return js_NewString(cx, newchars - newlen, newlen);
 }
 
-JSString *
+JSFlatString *
 js_EscapeElementValue(JSContext *cx, JSString *str)
 {
-    JSCharBuffer cb(cx);
-    return EscapeElementValue(cx, cb, str, 0);
+    StringBuffer sb(cx);
+    return EscapeElementValue(cx, sb, str, 0);
 }
 
 JSString *
@@ -7747,22 +7737,22 @@ js_NewXMLSpecialObject(JSContext *cx, JSXMLClass xml_class, JSString *name,
 JSString *
 js_MakeXMLCDATAString(JSContext *cx, JSString *str)
 {
-    JSCharBuffer cb(cx);
-    return MakeXMLCDATAString(cx, cb, str);
+    StringBuffer sb(cx);
+    return MakeXMLCDATAString(cx, sb, str);
 }
 
 JSString *
 js_MakeXMLCommentString(JSContext *cx, JSString *str)
 {
-    JSCharBuffer cb(cx);
-    return MakeXMLCommentString(cx, cb, str);
+    StringBuffer sb(cx);
+    return MakeXMLCommentString(cx, sb, str);
 }
 
 JSString *
 js_MakeXMLPIString(JSContext *cx, JSString *name, JSString *str)
 {
-    JSCharBuffer cb(cx);
-    return MakeXMLPIString(cx, cb, name, str);
+    StringBuffer sb(cx);
+    return MakeXMLPIString(cx, sb, name, str);
 }
 
 #endif /* JS_HAS_XML_SUPPORT */
