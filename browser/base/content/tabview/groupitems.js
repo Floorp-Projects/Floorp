@@ -429,8 +429,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     if (!options)
       options = {};
 
-    rect.width = Math.max(110, rect.width);
-    rect.height = Math.max(125, rect.height);
+    GroupItems.enforceMinSize(rect);
 
     var titleHeight = this.$titlebar.height();
 
@@ -1212,14 +1211,14 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
     var self = this;
     var children = [];
-    this._children.forEach(function(child) {
+    this._children.forEach(function GroupItem__stackArrange_order(child) {
       if (child == self.topChild)
         children.unshift(child);
       else
         children.push(child);
     });
 
-    children.forEach(function(child, index) {
+    children.forEach(function GroupItem__stackArrange_apply(child, index) {
       if (!child.locked.bounds) {
         child.setZ(zIndex);
         zIndex--;
@@ -1509,8 +1508,8 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Function: setResizable
   // Sets whether the groupItem is resizable and updates the UI accordingly.
   setResizable: function GroupItem_setResizable(value, immediately) {
-    this.resizeOptions.minWidth = 110;
-    this.resizeOptions.minHeight = 125;
+    this.resizeOptions.minWidth = GroupItems.minGroupWidth;
+    this.resizeOptions.minHeight = GroupItems.minGroupHeight;
 
     if (value) {
       immediately ? this.$resizer.show() : this.$resizer.fadeIn();
@@ -1628,6 +1627,8 @@ let GroupItems = {
   _arrangePaused: false,
   _arrangesPending: [],
   _removingHiddenGroups: false,
+  minGroupHeight: 110,
+  minGroupWidth: 125,
 
   // ----------
   // Function: init
@@ -2307,6 +2308,18 @@ let GroupItems = {
      });
 
     this._removingHiddenGroups = false;
+  },
+
+  // ----------
+  // Function: enforceMinSize
+  // Takes a <Rect> and modifies that <Rect> in case it is too small to be
+  // the bounds of a <GroupItem>.
+  //
+  // Parameters:
+  //   bounds - (<Rect>) the target bounds of a <GroupItem>
+  enforceMinSize: function GroupItems_enforceMinSize(bounds) {
+    bounds.width = Math.max(bounds.width, this.minGroupWidth);
+    bounds.height = Math.max(bounds.height, this.minGroupHeight);
   },
 
   // ----------

@@ -502,6 +502,7 @@ iQClass.prototype = {
       let elem = this[i];
       for (let key in properties) {
         let value = properties[key];
+
         if (pixels[key] && typeof value != 'string')
           value += 'px';
 
