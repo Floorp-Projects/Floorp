@@ -673,7 +673,7 @@
 
 .detail-row,
 .detail-row-complex {
-  border-top: 1px solid ThreeDHighlight;
+  border-top: 1px solid ThreeDShadow;
   -moz-box-align: center;
 }
 
