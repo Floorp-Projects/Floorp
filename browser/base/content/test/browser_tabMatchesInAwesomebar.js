@@ -137,54 +137,6 @@ var gTestSteps = [
     }, true);
     tab.linkedBrowser.loadURI('about:robots');
   },
-  function() {
-    info("Running step 9 - enter private browsing mode, without keeping session");
-    let ps = Services.prefs;
-    ps.setBoolPref("browser.privatebrowsing.keep_current_session", false);
-    ps.setBoolPref("browser.tabs.warnOnClose", false);
-
-    Services.obs.addObserver(function(aSubject, aTopic, aData) {
-      Services.obs.removeObserver(arguments.callee, "private-browsing-transition-complete");
-
-      for (let i = 0; i < gBrowser.tabs.length; i++)
-        waitForRestoredTab(gBrowser.tabs[i]);
-    }, "private-browsing-transition-complete", false);
-
-    gPrivateBrowsing.privateBrowsingEnabled = true;
-  },
-  function() {
-    info("Running step 10 - open tabs in private browsing mode");
-    for (let i = 0; i < 3; i++) {
-      let tab = gBrowser.addTab();
-      loadTab(tab, TEST_URL_BASES[0] + (++gTabCounter));
-    }
-  },
-  function() {
-    info("Running step 11 - close tabs in private browsing mode");
-    gBrowser.removeCurrentTab();
-    ensure_opentabs_match_db(nextStep);
-  },
-  function() {
-    info("Running step 12 - leave private browsing mode");
-
-    Services.obs.addObserver(function(aSubject, aTopic, aData) {
-      Services.obs.removeObserver(arguments.callee, "private-browsing-transition-complete");
-
-      let ps = Services.prefs;
-      try {
-        ps.clearUserPref("browser.privatebrowsing.keep_current_session");
-      } catch (ex) {}
-      try {
-        ps.clearUserPref("browser.tabs.warnOnClose");
-      } catch (ex) {}
-
-      for (let i = 1; i < gBrowser.tabs.length; i++)
-        waitForRestoredTab(gBrowser.tabs[i]);
-
-    }, "private-browsing-transition-complete", false);
-
-    gPrivateBrowsing.privateBrowsingEnabled = false;
-  }
 ];
 
 
@@ -196,7 +148,7 @@ function test() {
 
 function loadTab(tab, url) {
   // Because adding visits is async, we will not be notified immediately.
-  let visited = gPrivateBrowsing.privateBrowsingEnabled;
+  let visited = false;
   let loaded = false;
 
   function maybeCheckResults() {
@@ -211,36 +163,21 @@ function loadTab(tab, url) {
     maybeCheckResults();
   }, true);
 
-  if (!visited) {
-    Services.obs.addObserver(
-      function (aSubject, aTopic, aData) {
-        if (url != aSubject.QueryInterface(Ci.nsIURI).spec)
-          return;
-        Services.obs.removeObserver(arguments.callee, aTopic);
-        visited = true;
-        maybeCheckResults();
-      },
-      "uri-visit-saved",
-      false
-    );
-  }
+  Services.obs.addObserver(
+    function (aSubject, aTopic, aData) {
+      if (url != aSubject.QueryInterface(Ci.nsIURI).spec)
+        return;
+      Services.obs.removeObserver(arguments.callee, aTopic);
+      visited = true;
+      maybeCheckResults();
+    },
+    "uri-visit-saved",
+    false
+  );
 
   gTabWaitCount++;
-  info("Loading page: " + url);
   tab.linkedBrowser.loadURI(url);
 }
-
-function waitForRestoredTab(tab) {
-  gTabWaitCount++;
-
-  tab.linkedBrowser.addEventListener("load", function () {
-    tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
-    if (--gTabWaitCount == 0) {
-      ensure_opentabs_match_db(nextStep);
-    }
-  }, true);
-}
-
 
 function nextStep() {
   if (gTestSteps.length == 0) {
