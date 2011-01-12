@@ -42,6 +42,7 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 
 const PAGE_NO_ACCOUNT = 0;
 const PAGE_HAS_ACCOUNT = 1;
+const PAGE_NEEDS_UPDATE = 2;
 
 let gSyncPane = {
   _stringBundle: null,
@@ -64,16 +65,12 @@ let gSyncPane = {
     if (this.page == PAGE_NO_ACCOUNT)
       return;
 
-    document.getElementById("loginFeedbackRow").hidden = true;
     document.getElementById("connectThrobber").hidden = false;
   },
 
-  onLoginError: function () {
-    if (this.page == PAGE_NO_ACCOUNT)
-      return;
-
+  needsUpdate: function () {
     document.getElementById("connectThrobber").hidden = true;
-    document.getElementById("loginFeedbackRow").hidden = false;
+    this.page = PAGE_NEEDS_UPDATE;
     let label = document.getElementById("loginError");
     label.value = Weave.Utils.getErrorString(Weave.Status.login);
     label.className = "error";
@@ -87,7 +84,7 @@ let gSyncPane = {
   init: function () {
     let obs = [
       ["weave:service:login:start",   "onLoginStart"],
-      ["weave:service:login:error",   "onLoginError"],
+      ["weave:service:login:error",   "onLoginFinish"],
       ["weave:service:login:finish",  "onLoginFinish"],
       ["weave:service:start-over",    "updateWeavePrefs"],
       ["weave:service:setup-complete","updateWeavePrefs"],
@@ -115,14 +112,15 @@ let gSyncPane = {
 
   updateWeavePrefs: function () {
     if (Weave.Status.service == Weave.CLIENT_NOT_CONFIGURED ||
-        Weave.Svc.Prefs.get("firstSync", "") == "notReady")
+        Weave.Svc.Prefs.get("firstSync", "") == "notReady") {
       this.page = PAGE_NO_ACCOUNT;
-    else {
+    } else if (Weave.Status.login == Weave.LOGIN_FAILED_INVALID_PASSPHRASE ||
+               Weave.Status.login == Weave.LOGIN_FAILED_LOGIN_REJECTED) {
+      this.needsUpdate();
+    } else {
       this.page = PAGE_HAS_ACCOUNT;
-      document.getElementById("currentAccount").value = Weave.Service.account;
+      document.getElementById("accountName").value = Weave.Service.account;
       document.getElementById("syncComputerName").value = Weave.Clients.localName;
-      if (Weave.Status.service == Weave.LOGIN_FAILED)
-        this.onLoginError();
       this.updateConnectButton();
       document.getElementById("tosPP").hidden = this._usingCustomServer;
     }
@@ -155,11 +153,8 @@ let gSyncPane = {
         return;
     }
 
-    this.handleExpanderClick();
     Weave.Service.startOver();
     this.updateWeavePrefs();
-    document.getElementById("manageAccountExpander").className = "expander-down";
-    document.getElementById("manageAccountControls").hidden = true;
   },
 
   updatePass: function () {
@@ -174,26 +169,6 @@ let gSyncPane = {
       gSyncUtils.resetPassword();
     else
       gSyncUtils.resetPassphrase();
-  },
-
-  handleExpanderClick: function () {
-    //XXXzpao Might be fixed in bug 583441, otherwise we'll need a new bug.
-    // ok, this is pretty evil, and likely fragile if the prefwindow
-    // binding changes, but that won't happen in 3.6 *fingers crossed*
-    let prefwindow = document.documentElement;
-    let pane = document.getElementById("paneSync");
-    if (prefwindow._shouldAnimate)
-      prefwindow._currentHeight = pane.contentHeight;
-
-    let expander = document.getElementById("manageAccountExpander");
-    let expand = expander.className == "expander-down";
-    expander.className =
-       expand ? "expander-up" : "expander-down";
-    document.getElementById("manageAccountControls").hidden = !expand;
-
-    // and... shazam
-    if (prefwindow._shouldAnimate)
-      prefwindow.animate("null", pane);
   },
 
   openSetup: function (resetSync) {
