@@ -1003,7 +1003,6 @@
   border-radius: 0 3px 3px 0;
 }
 
-.download-progress .pause,
 .download-progress .cancel {
   -moz-appearance: none;
   background-color: rgba(255, 255, 255, 0.4);
@@ -1014,35 +1013,26 @@
   margin: 3px;
 }
 
-.download-progress .pause:hover,
 .download-progress .cancel:hover {
   background-color: rgba(255, 255, 255, 0.6);
   border: 1px solid rgba(0, 0, 0, 0.8);
 }
 
-.download-progress .pause:active:hover,
 .download-progress .cancel:active:hover {
   box-shadow: inset rgba(0, 0, 0, 0.5) 1px 1px 2px;
 }
 
-.download-progress .pause .button-box,
 .download-progress .cancel .button-box {
   padding: 0;
   border: none;
 }
 
-.download-progress .pause .button-text,
 .download-progress .cancel .button-text {
   display: none;
 }
 
-.download-progress .pause .button-icon,
 .download-progress .cancel .button-icon {
   -moz-margin-start: 0;
-}
-
-.download-progress .pause {
-  list-style-image: url('chrome://mozapps/skin/extensions/pause.png');
 }
 
 .download-progress .cancel {
