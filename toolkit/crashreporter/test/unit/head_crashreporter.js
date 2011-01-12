@@ -22,7 +22,7 @@
  * @param canReturnZero
  *       If true, the subprocess may return with a zero exit code.
  *       Certain types of crashes may not cause the process to
- *       exit with an error. 
+ *       exit with an error.
  */
 function do_crash(setup, callback, canReturnZero)
 {
@@ -81,6 +81,14 @@ function do_crash(setup, callback, canReturnZero)
 
   let extrafile = minidump.clone();
   extrafile.leafName = extrafile.leafName.slice(0, -4) + ".extra";
+
+  // Just in case, don't let these files linger.
+  do_register_cleanup(function() {
+          if (minidump.exists())
+              minidump.remove(false);
+          if (extrafile.exists())
+              extrafile.remove(false);
+      });
   do_check_true(extrafile.exists());
   let extra = parseKeyValuePairsFromFile(extrafile);
 
@@ -129,3 +137,6 @@ function parseKeyValuePairsFromFile(file) {
   fstream.close();
   return parseKeyValuePairs(contents);
 }
+
+// Import binary APIs via js-ctypes.
+Components.utils.import("resource://test/CrashTestUtils.jsm");
