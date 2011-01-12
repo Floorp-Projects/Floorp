@@ -159,10 +159,13 @@ js_CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *proto)
              * flags instead of increffing.
              */
             re = RegExp::create(cx, re->getSource(), origFlags | staticsFlags);
+            if (!re)
+                return NULL;
         } else {
             re->incref(cx);
         }
     }
+    JS_ASSERT(re);
     clone->setPrivate(re);
     clone->zeroRegExpLastIndex();
     return clone;
@@ -573,9 +576,9 @@ js::Class js_RegExpClass = {
 JSBool
 js_regexp_toString(JSContext *cx, JSObject *obj, Value *vp)
 {
-    static const jschar empty_regexp_ucstr[] = {'(', '?', ':', ')', 0};
     if (!InstanceOf(cx, obj, &js_RegExpClass, vp + 2))
         return false;
+
     RegExp *re = RegExp::extractFrom(obj);
     if (!re) {
         *vp = StringValue(cx->runtime->emptyString);
@@ -583,42 +586,29 @@ js_regexp_toString(JSContext *cx, JSObject *obj, Value *vp)
     }
 
     JSLinearString *src = re->getSource();
-    size_t length = src->length();
-    const jschar *source = src->getChars(cx);
-    if (!source)
+    StringBuffer sb(cx);
+    if (size_t len = src->length()) {
+        if (!sb.reserve(len + 2))
+            return false;
+        JS_ALWAYS_TRUE(sb.append('/'));
+        JS_ALWAYS_TRUE(sb.append(src->chars(), len));
+        JS_ALWAYS_TRUE(sb.append('/'));
+    } else {
+        if (!sb.append("/(?:)/"))
+            return false;
+    }
+    if (re->global() && !sb.append('g'))
+        return false;
+    if (re->ignoreCase() && !sb.append('i'))
+        return false;
+    if (re->multiline() && !sb.append('m'))
+        return false;
+    if (re->sticky() && !sb.append('y'))
         return false;
 
-    if (length == 0) {
-        source = empty_regexp_ucstr;
-        length = JS_ARRAY_LENGTH(empty_regexp_ucstr) - 1;
-    }
-    length += 2;
-    uint32 nflags = re->flagCount();
-    jschar *chars = (jschar*) cx->malloc((length + nflags + 1) * sizeof(jschar));
-    if (!chars) {
+    JSFlatString *str = sb.finishString();
+    if (!str)
         return false;
-    }
-
-    chars[0] = '/';
-    js_strncpy(&chars[1], source, length - 2);
-    chars[length - 1] = '/';
-    if (nflags) {
-        if (re->global())
-            chars[length++] = 'g';
-        if (re->ignoreCase())
-            chars[length++] = 'i';
-        if (re->multiline())
-            chars[length++] = 'm';
-        if (re->sticky())
-            chars[length++] = 'y';
-    }
-    chars[length] = 0;
-
-    JSString *str = js_NewString(cx, chars, length);
-    if (!str) {
-        cx->free(chars);
-        return false;
-    }
     *vp = StringValue(str);
     return true;
 }
