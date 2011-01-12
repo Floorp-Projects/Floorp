@@ -2175,6 +2175,10 @@ let GroupItems = {
 
     Utils.assertThrow(tab._tabViewTabItem, "tab must be linked to a TabItem");
 
+    // given tab is already contained in target group
+    if (tab._tabViewTabItem.parent && tab._tabViewTabItem.parent.id == groupItemId)
+      return;
+
     let shouldUpdateTabBar = false;
     let shouldShowTabView = false;
     let groupItem;
