@@ -191,6 +191,17 @@ NS_IMETHODIMP
 GfxInfo::GetFeatureStatus(PRInt32 aFeature, PRInt32 *aStatus)
 {
   PRInt32 status = nsIGfxInfo::FEATURE_NO_INFO;
+
+  if (aFeature == FEATURE_OPENGL_LAYERS) {
+      nsAutoString str;
+      /* Whitelist Galaxy S phones */
+      if (mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "HARDWARE", str)) {
+          if (str != NS_LITERAL_STRING("samsung smdkc110")) {
+            status = FEATURE_BLOCKED_DEVICE;
+          }
+      }
+  }
+
   *aStatus = status;
   return NS_OK;
 }

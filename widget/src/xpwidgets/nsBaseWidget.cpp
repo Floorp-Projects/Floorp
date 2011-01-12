@@ -784,7 +784,7 @@ nsBaseWidget::GetShouldAccelerate()
 
   PRBool disableAcceleration = PR_FALSE;
   PRBool forceAcceleration = PR_FALSE;
-#if defined(XP_WIN) || defined(XP_MACOSX)
+#if defined(XP_WIN) || defined(XP_MACOSX) || defined(ANDROID)
   PRBool accelerateByDefault = PR_TRUE;
 #else
   PRBool accelerateByDefault = PR_FALSE;
