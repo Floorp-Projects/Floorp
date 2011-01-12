@@ -44,13 +44,21 @@
 
 namespace google_breakpad {
 
+#ifdef _WIN32
+#define snprintf _snprintf
+#endif
+
 LogStream::LogStream(std::ostream &stream, Severity severity,
                      const char *file, int line)
     : stream_(stream) {
   time_t clock;
   time(&clock);
   struct tm tm_struct;
+#ifdef _WIN32
+  localtime_s(&tm_struct, &clock);
+#else
   localtime_r(&clock, &tm_struct);
+#endif
   char time_string[20];
   strftime(time_string, sizeof(time_string), "%Y-%m-%d %H:%M:%S", &tm_struct);
 
