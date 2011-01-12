@@ -1322,7 +1322,6 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime)
     ::JS_SetLocaleCallbacks(mContext, &localeCallbacks);
   }
   mIsInitialized = PR_FALSE;
-  mNumEvaluations = 0;
   mTerminations = nsnull;
   mScriptsEnabled = PR_TRUE;
   mOperationCallbackTime = 0;
@@ -3523,17 +3522,11 @@ nsJSContext::ScriptEvaluated(PRBool aTerminated)
     delete start;
   }
 
-  mNumEvaluations++;
-
 #ifdef JS_GC_ZEAL
   if (mContext->runtime->gcZeal >= 2) {
     JS_MaybeGC(mContext);
-  } else
-#endif
-  if (mNumEvaluations > 20) {
-    mNumEvaluations = 0;
-    JS_MaybeGC(mContext);
   }
+#endif
 
   if (aTerminated) {
     mOperationCallbackTime = 0;
