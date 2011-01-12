@@ -126,16 +126,23 @@ struct VisitData {
   }
 
   /**
-   * Determines if this refers to the same url as aOther.
+   * Determines if this refers to the same url as aOther, and updates aOther
+   * with missing information if so.
    *
    * @param aOther
    *        The other place to check against.
    * @return true if this is a visit for the same place as aOther, false
    *         otherwise.
    */
-  bool IsSamePlaceAs(const VisitData& aOther) const
+  bool IsSamePlaceAs(VisitData& aOther)
   {
-    return spec.Equals(aOther.spec);
+    if (!spec.Equals(aOther.spec)) {
+      return false;
+    }
+
+    aOther.placeId = placeId;
+    aOther.guid = guid;
+    return true;
   }
 
   PRInt64 placeId;
@@ -359,7 +366,7 @@ public:
     mozStorageTransaction transaction(mDBConn, PR_FALSE,
                                       mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
-    const VisitData* lastPlace;
+    VisitData* lastPlace;
     nsresult rv;
     for (nsTArray<VisitData>::size_type i = 0; i < mPlaces.Length(); i++) {
       VisitData& place = mPlaces.ElementAt(i);
