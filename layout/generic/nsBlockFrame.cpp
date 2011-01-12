@@ -5642,6 +5642,11 @@ nsBlockFrame::DeleteNextInFlowChild(nsPresContext* aPresContext,
         aNextInFlow, aDeletingEmptyFrames);
   }
   else {
+#ifdef DEBUG
+    if (aDeletingEmptyFrames) {
+      nsLayoutUtils::AssertTreeOnlyEmptyNextInFlows(aNextInFlow);
+    }
+#endif
     DoRemoveFrame(aNextInFlow,
         aDeletingEmptyFrames ? FRAMES_ARE_EMPTY : 0);
   }

@@ -1273,6 +1273,13 @@ public:
   static void
   AssertNoDuplicateContinuations(nsIFrame* aContainer,
                                  const nsFrameList& aFrameList);
+
+  /**
+   * Assert that the frame tree rooted at |aSubtreeRoot| is empty, i.e.,
+   * that it contains no first-in-flows.
+   */
+  static void
+  AssertTreeOnlyEmptyNextInFlows(nsIFrame *aSubtreeRoot);
 #endif
 };
 
