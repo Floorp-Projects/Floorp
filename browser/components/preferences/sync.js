@@ -61,52 +61,34 @@ let gSyncPane = {
     return Weave.Svc.Prefs.isSet("serverURL");
   },
 
-  onLoginStart: function () {
-    if (this.page == PAGE_NO_ACCOUNT)
-      return;
-
-    document.getElementById("connectThrobber").hidden = false;
-  },
-
   needsUpdate: function () {
-    document.getElementById("connectThrobber").hidden = true;
     this.page = PAGE_NEEDS_UPDATE;
     let label = document.getElementById("loginError");
     label.value = Weave.Utils.getErrorString(Weave.Status.login);
     label.className = "error";
   },
 
-  onLoginFinish: function () {
-    document.getElementById("connectThrobber").hidden = true;
-    this.updateWeavePrefs();
-  },
-
   init: function () {
-    let obs = [
-      ["weave:service:login:start",   "onLoginStart"],
-      ["weave:service:login:error",   "onLoginFinish"],
-      ["weave:service:login:finish",  "onLoginFinish"],
-      ["weave:service:start-over",    "updateWeavePrefs"],
-      ["weave:service:setup-complete","updateWeavePrefs"],
-      ["weave:service:logout:finish", "updateWeavePrefs"]];
+    let topics = ["weave:service:login:error",
+                  "weave:service:login:finish",
+                  "weave:service:start-over",
+                  "weave:service:setup-complete",
+                  "weave:service:logout:finish"];
 
     // Add the observers now and remove them on unload
-    let self = this;
-    let addRem = function(add) {
-      obs.forEach(function([topic, func]) {
-        //XXXzpao This should use Services.obs.* but Weave's Obs does nice handling
-        //        of `this`. Fix in a followup. (bug 583347)
-        if (add)
-          Weave.Svc.Obs.add(topic, self[func], self);
-        else
-          Weave.Svc.Obs.remove(topic, self[func], self);
-      });
-    };
-    addRem(true);
-    window.addEventListener("unload", function() addRem(false), false);
+    //XXXzpao This should use Services.obs.* but Weave's Obs does nice handling
+    //        of `this`. Fix in a followup. (bug 583347)
+    topics.forEach(function (topic) {
+      Weave.Svc.Obs.add(topic, this.updateWeavePrefs, this);
+    }, this);
+    window.addEventListener("unload", function() {
+      topics.forEach(function (topic) {
+        Weave.Svc.Obs.remove(topic, this.updateWeavePrefs, this);
+      }, gSyncPane);
+    }, false);
 
     this._stringBundle =
-      Services.strings.createBundle("chrome://browser/locale/preferences/preferences.properties");;
+      Services.strings.createBundle("chrome://browser/locale/preferences/preferences.properties");
     this.updateWeavePrefs();
   },
 
@@ -121,19 +103,8 @@ let gSyncPane = {
       this.page = PAGE_HAS_ACCOUNT;
       document.getElementById("accountName").value = Weave.Service.account;
       document.getElementById("syncComputerName").value = Weave.Clients.localName;
-      this.updateConnectButton();
       document.getElementById("tosPP").hidden = this._usingCustomServer;
     }
-  },
-
-  updateConnectButton: function () {
-    let str = Weave.Service.isLoggedIn ? this._stringBundle.GetStringFromName("disconnect.label")
-                                       : this._stringBundle.GetStringFromName("connect.label");
-    document.getElementById("connectButton").label = str;
-  },
-
-  handleConnectCommand: function () {
-    Weave.Service.isLoggedIn ? Weave.Service.logout() : Weave.Service.login();
   },
 
   startOver: function (showDialog) {
