@@ -917,52 +917,59 @@ UpdateTraceHintSingle(Repatcher &repatcher, JSC::CodeLocationJump jump, JSC::Cod
 }
 
 static void
-DisableTraceHint(VMFrame &f, ic::TraceICInfo &tic)
+DisableTraceHint(VMFrame &f, ic::TraceICInfo &ic)
 {
     Repatcher repatcher(f.jit());
-    UpdateTraceHintSingle(repatcher, tic.traceHint, tic.jumpTarget);
+    UpdateTraceHintSingle(repatcher, ic.traceHint, ic.jumpTarget);
 
-    if (tic.hasSlowTraceHint)
-        UpdateTraceHintSingle(repatcher, tic.slowTraceHint, tic.jumpTarget);
+    if (ic.hasSlowTraceHint)
+        UpdateTraceHintSingle(repatcher, ic.slowTraceHint, ic.jumpTarget);
 }
 
 static void
-EnableTraceHintAt(JSScript *script, js::mjit::JITScript *jit, jsbytecode *pc, uint16_t index)
+ResetTraceHintAt(JSScript *script, js::mjit::JITScript *jit,
+                 jsbytecode *pc, uint16_t index, bool full)
 {
     if (index >= jit->nTraceICs)
         return;
-    ic::TraceICInfo &tic = jit->traceICs[index];
-    if (!tic.initialized)
+    ic::TraceICInfo &ic = jit->traceICs[index];
+    if (!ic.initialized)
         return;
     
-    JS_ASSERT(tic.jumpTargetPC == pc);
+    JS_ASSERT(ic.jumpTargetPC == pc);
 
     JaegerSpew(JSpew_PICs, "Enabling trace IC %u in script %p\n", index, script);
 
     Repatcher repatcher(jit);
 
-    UpdateTraceHintSingle(repatcher, tic.traceHint, tic.stubEntry);
+    UpdateTraceHintSingle(repatcher, ic.traceHint, ic.stubEntry);
 
-    if (tic.hasSlowTraceHint)
-        UpdateTraceHintSingle(repatcher, tic.slowTraceHint, tic.stubEntry);
+    if (ic.hasSlowTraceHint)
+        UpdateTraceHintSingle(repatcher, ic.slowTraceHint, ic.stubEntry);
+
+    if (full) {
+        ic.traceData = NULL;
+        ic.loopCounterStart = 1;
+        ic.loopCounter = ic.loopCounterStart;
+    }
 }
 #endif
 
 void
-js::mjit::EnableTraceHint(JSScript *script, jsbytecode *pc, uint16_t index)
+js::mjit::ResetTraceHint(JSScript *script, jsbytecode *pc, uint16_t index, bool full)
 {
 #if JS_MONOIC
     if (script->jitNormal)
-        EnableTraceHintAt(script, script->jitNormal, pc, index);
+        ResetTraceHintAt(script, script->jitNormal, pc, index, full);
 
     if (script->jitCtor)
-        EnableTraceHintAt(script, script->jitCtor, pc, index);
+        ResetTraceHintAt(script, script->jitCtor, pc, index, full);
 #endif
 }
 
 #if JS_MONOIC
 void *
-RunTracer(VMFrame &f, ic::TraceICInfo &tic)
+RunTracer(VMFrame &f, ic::TraceICInfo &ic)
 #else
 void *
 RunTracer(VMFrame &f)
@@ -993,11 +1000,11 @@ RunTracer(VMFrame &f)
     uint32 *loopCounter;
     uint32 hits;
 #if JS_MONOIC
-    traceData = &tic.traceData;
-    traceEpoch = &tic.traceEpoch;
-    loopCounter = &tic.loopCounter;
+    traceData = &ic.traceData;
+    traceEpoch = &ic.traceEpoch;
+    loopCounter = &ic.loopCounter;
     *loopCounter = 1;
-    hits = tic.loopCounterStart;
+    hits = ic.loopCounterStart;
 #else
     traceData = NULL;
     traceEpoch = NULL;
@@ -1009,9 +1016,9 @@ RunTracer(VMFrame &f)
     JS_ASSERT(!TRACE_RECORDER(cx));
 
 #if JS_MONOIC
-    tic.loopCounterStart = *loopCounter;
+    ic.loopCounterStart = *loopCounter;
     if (blacklist)
-        DisableTraceHint(f, tic);
+        DisableTraceHint(f, ic);
 #endif
 
     // Even though ExecuteTree() bypasses the interpreter, it should propagate
@@ -1094,9 +1101,9 @@ RunTracer(VMFrame &f)
 #if defined JS_TRACER
 # if defined JS_MONOIC
 void *JS_FASTCALL
-stubs::InvokeTracer(VMFrame &f, ic::TraceICInfo *tic)
+stubs::InvokeTracer(VMFrame &f, ic::TraceICInfo *ic)
 {
-    return RunTracer(f, *tic);
+    return RunTracer(f, *ic);
 }
 
 # else
