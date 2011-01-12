@@ -45,32 +45,13 @@
  * Allows access to contextual storage areas.
  */
 
-interface nsIDOMStorageObsolete;
-interface nsIDOMStorage;
-interface nsIDOMStorageList;
 interface nsIIDBFactory;
 
-[scriptable, uuid(b6f6efd8-1bdc-43af-b8ef-6685d6260931)]
-interface nsIDOMStorageWindow : nsISupports
+[scriptable, uuid(d20d48e4-0b94-40c7-a9c7-ba1d6ad44442)]
+interface nsIDOMStorageIndexedDB : nsISupports
 {
   /**
-   * Session storage for the current browsing context.
-   */
-  readonly attribute nsIDOMStorage sessionStorage;
-
-  /**
-   * Global storage, accessible by domain.
-   */
-  readonly attribute nsIDOMStorageList globalStorage;
-
-  /**
-   * Local storage for the current browsing context.
-   */
-  readonly attribute nsIDOMStorage localStorage;
-
-  /**
    * Indexed Databases for the current browsing context.
-   * NOTE: mozIndexedDB should be removed post-2.0. Bug 623316.
    */
-  [noscript] readonly attribute nsIIDBFactory mozIndexedDB;
+  readonly attribute nsIIDBFactory mozIndexedDB;
 };
