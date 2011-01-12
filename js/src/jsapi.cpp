@@ -4736,6 +4736,7 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
         MUST_FLOW_THROUGH("out");
 
         Bindings bindings(cx);
+        AutoBindingsRooter root(cx, bindings);
         for (i = 0; i < nargs; i++) {
             argAtom = js_Atomize(cx, argnames[i], strlen(argnames[i]), 0);
             if (!argAtom) {
