@@ -116,6 +116,8 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_602572_log_bodies_checkbox.js \
 	browser_webconsole_bug_614793_jsterm_scroll.js \
 	browser_webconsole_bug_599725_response_headers.js \
+	browser_webconsole_bug_613642_maintain_scroll.js \
+	browser_webconsole_bug_613642_prune_scroll.js \
 	head.js \
 	$(NULL)
 
