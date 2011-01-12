@@ -537,6 +537,17 @@ LayerManagerD3D10::PaintToTarget()
   readTexture->Unmap(0);
 }
 
+void
+LayerManagerD3D10::ReportFailure(const nsACString &aMsg, HRESULT aCode)
+{
+  // We could choose to abort here when hr == E_OUTOFMEMORY.
+  nsCString msg;
+  msg.Append(aMsg);
+  msg.AppendLiteral(" Error code: ");
+  msg.AppendInt(PRUint32(aCode));
+  NS_WARNING(msg.BeginReading());
+}
+
 LayerD3D10::LayerD3D10(LayerManagerD3D10 *aManager)
   : mD3DManager(aManager)
 {
