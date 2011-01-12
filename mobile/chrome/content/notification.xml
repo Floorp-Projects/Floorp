@@ -19,7 +19,6 @@
       </xul:stack>
       <xul:stack flex="1">
         <children/>
-        <html:canvas anonid="content-overlay"/>
         <html:div flex="1" class="input-overlay" anonid="input-overlay"/>
       </xul:stack>
     </content>
@@ -27,12 +26,6 @@
       <property name="inputHandler">
         <getter>
           return document.getAnonymousElementByAttribute(this, "anonid", "input-overlay");
-        </getter>
-      </property>
-
-      <property name="overlay">
-        <getter>
-          return document.getAnonymousElementByAttribute(this, "anonid", "content-overlay");
         </getter>
       </property>
 
