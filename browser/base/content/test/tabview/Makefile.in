@@ -57,6 +57,7 @@ _BROWSER_FILES = \
                  browser_tabview_bug591706.js \
                  browser_tabview_bug594176.js \
                  browser_tabview_bug595191.js \
+                 browser_tabview_bug595436.js \
                  browser_tabview_bug595518.js \
                  browser_tabview_bug595521.js \
                  browser_tabview_bug595560.js \
