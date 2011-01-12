@@ -174,6 +174,43 @@ function run_test() {
     
     // TODO: need better tests around master password prompting. See Bug 620583.
 
+    mpLocked = true;
+    
+    // Testing exception handling if master password dialog is canceled.
+    // Do this by stubbing out Service.passphrase.
+    let oldPP = Service.__lookupGetter__("passphrase");
+    _("Old passphrase function is " + oldPP);
+    Service.__defineGetter__("passphrase",
+                           function() {
+                             throw "User canceled Master Password entry";
+                           });
+    
+    let oldClearSyncTriggers = Service._clearSyncTriggers;
+    let oldLockedSync = Service._lockedSync;
+    
+    let cSTCalled = false;
+    let lockedSyncCalled = false;
+    
+    Service._clearSyncTriggers = function() { cSTCalled = true; };
+    Service._lockedSync = function() { lockedSyncCalled = true; };
+    
+    _("If master password is canceled, login fails and we report lockage.");
+    do_check_false(!!Service.login());
+    do_check_eq(Status.login, MASTER_PASSWORD_LOCKED);
+    do_check_eq(Status.service, LOGIN_FAILED);
+    _("Locked? " + Utils.mpLocked());
+    _("checkSync reports the correct term.");
+    do_check_eq(Service._checkSync(), kSyncMasterPasswordLocked);
+    
+    _("Sync doesn't proceed and clears triggers if MP is still locked.");
+    Service.sync();
+    
+    do_check_true(cSTCalled);
+    do_check_false(lockedSyncCalled);
+
+    // N.B., a bunch of methods are stubbed at this point. Be careful putting
+    // new tests after this point!
+    
   } finally {
     Svc.Prefs.resetBranch("");
     server.stop(do_test_finished);
