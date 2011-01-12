@@ -352,8 +352,8 @@ public final class ElementName
 //                return "RT_OR_RP";
 //            case TreeBuilder.COMMAND:
 //                return "COMMAND";
-//            case TreeBuilder.PARAM_OR_SOURCE:
-//                return "PARAM_OR_SOURCE";
+//            case TreeBuilder.PARAM_OR_SOURCE_OR_TRACK:
+//                return "PARAM_OR_SOURCE_OR_TRACK";
 //            case TreeBuilder.MGLYPH_OR_MALIGNMARK:
 //                return "MGLYPH_OR_MALIGNMARK";
 //            case TreeBuilder.MI_MO_MN_MS_MTEXT:
@@ -571,7 +571,7 @@ public final class ElementName
     public static final ElementName MTEXT = new ElementName("mtext", "mtext", TreeBuilder.MI_MO_MN_MS_MTEXT | SCOPING_AS_MATHML);
     public static final ElementName NOTIN = new ElementName("notin", "notin", TreeBuilder.OTHER);
     public static final ElementName PIECE = new ElementName("piece", "piece", TreeBuilder.OTHER);
-    public static final ElementName PARAM = new ElementName("param", "param", TreeBuilder.PARAM_OR_SOURCE | SPECIAL);
+    public static final ElementName PARAM = new ElementName("param", "param", TreeBuilder.PARAM_OR_SOURCE_OR_TRACK | SPECIAL);
     public static final ElementName POWER = new ElementName("power", "power", TreeBuilder.OTHER);
     public static final ElementName REALS = new ElementName("reals", "reals", TreeBuilder.OTHER);
     public static final ElementName STYLE = new ElementName("style", "style", TreeBuilder.STYLE | SPECIAL);
@@ -579,6 +579,7 @@ public final class ElementName
     public static final ElementName THEAD = new ElementName("thead", "thead", TreeBuilder.TBODY_OR_THEAD_OR_TFOOT | SPECIAL | FOSTER_PARENTING);
     public static final ElementName TABLE = new ElementName("table", "table", TreeBuilder.TABLE | SPECIAL | FOSTER_PARENTING | SCOPING);
     public static final ElementName TITLE = new ElementName("title", "title", TreeBuilder.TITLE | SPECIAL | SCOPING_AS_SVG);
+    public static final ElementName TRACK = new ElementName("track", "track", TreeBuilder.PARAM_OR_SOURCE_OR_TRACK);
     public static final ElementName TSPAN = new ElementName("tspan", "tspan", TreeBuilder.OTHER);
     public static final ElementName TIMES = new ElementName("times", "times", TreeBuilder.OTHER);
     public static final ElementName TFOOT = new ElementName("tfoot", "tfoot", TreeBuilder.TBODY_OR_THEAD_OR_TFOOT | SPECIAL | FOSTER_PARENTING);
@@ -628,7 +629,7 @@ public final class ElementName
     public static final ElementName OBJECT = new ElementName("object", "object", TreeBuilder.OBJECT | SPECIAL | SCOPING);
     public static final ElementName OUTPUT = new ElementName("output", "output", TreeBuilder.OUTPUT_OR_LABEL);
     public static final ElementName PRIMES = new ElementName("primes", "primes", TreeBuilder.OTHER);
-    public static final ElementName SOURCE = new ElementName("source", "source", TreeBuilder.PARAM_OR_SOURCE);
+    public static final ElementName SOURCE = new ElementName("source", "source", TreeBuilder.PARAM_OR_SOURCE_OR_TRACK);
     public static final ElementName STRIKE = new ElementName("strike", "strike", TreeBuilder.B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
     public static final ElementName STRONG = new ElementName("strong", "strong", TreeBuilder.B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
     public static final ElementName SWITCH = new ElementName("switch", "switch", TreeBuilder.OTHER);
@@ -970,6 +971,7 @@ public final class ElementName
     THEAD,
     TABLE,
     TITLE,
+    TRACK,
     TSPAN,
     TIMES,
     TFOOT,
@@ -1362,6 +1364,7 @@ public final class ElementName
     188875944,
     188919873,
     188920457,
+    189107250,
     189203987,
     189371817,
     189414886,
