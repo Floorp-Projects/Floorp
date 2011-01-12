@@ -87,7 +87,10 @@ SurfaceToTexture(ID3D10Device *aDevice,
   data.SysMemPitch = imageSurface->Stride();
 
   nsRefPtr<ID3D10Texture2D> texture;
-  aDevice->CreateTexture2D(&desc, &data, getter_AddRefs(texture));
+  HRESULT hr = aDevice->CreateTexture2D(&desc, &data, getter_AddRefs(texture));
+
+  LayerManagerD3D10::ReportFailure(NS_LITERAL_CSTRING("Failed to create texture for image surface"),
+                                   hr);
   return texture.forget();
 }
 
@@ -218,6 +221,11 @@ ImageLayerD3D10::RenderLayer()
       nsRefPtr<gfxASurface> surf = GetContainer()->GetCurrentAsSurface(&size);
       
       nsRefPtr<ID3D10Texture2D> texture = SurfaceToTexture(device(), surf, size);
+
+      if (!texture) {
+        NS_WARNING("Failed to create texture for surface.");
+        return;
+      }
       
       hasAlpha = surf->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA;
       
@@ -444,6 +452,11 @@ CairoImageD3D10::SetData(const CairoImage::Data &aData)
                "Invalid content type passed to CairoImageD3D10.");
 
   mTexture = SurfaceToTexture(mDevice, aData.mSurface, mSize);
+
+  if (!mTexture) {
+    NS_WARNING("Failed to create texture for CairoImage.");
+    return;
+  }
 
   if (aData.mSurface->GetContentType() == gfxASurface::CONTENT_COLOR) {
     mHasAlpha = false;
