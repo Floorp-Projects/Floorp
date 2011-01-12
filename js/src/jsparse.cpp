@@ -9015,6 +9015,7 @@ FoldXMLConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
     pnp = &pn->pn_head;
     pn1 = *pnp;
     accum = NULL;
+    str = NULL;
     if ((pn->pn_xflags & PNX_CANTFOLD) == 0) {
         if (tt == TOK_XMLETAGO)
             accum = ATOM_TO_STRING(cx->runtime->atomState.etagoAtom);
