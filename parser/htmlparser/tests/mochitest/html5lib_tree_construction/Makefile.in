@@ -78,6 +78,7 @@ _TEST_FILES =	adoption01.dat \
 		tests22.dat \
 		tests23.dat \
 		tests24.dat \
+		tests25.dat \
 		tests2.dat \
 		tests3.dat \
 		tests4.dat \
