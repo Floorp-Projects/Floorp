@@ -511,7 +511,7 @@ Item.prototype = {
   // This functionality is enabled only by the debug property.
   _updateDebugBounds: function Item__updateDebugBounds() {
     if (this.$debug) {
-      this.$debug.css(this.bounds.css());
+      this.$debug.css(this.bounds);
     }
   },
 
