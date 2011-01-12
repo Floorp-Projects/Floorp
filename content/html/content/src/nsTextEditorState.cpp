@@ -639,7 +639,7 @@ protected:
 
 protected:
 
-  nsTextControlFrame* mFrame;  // weak reference
+  nsWeakFrame mFrame;
 
   nsITextControlElement* const mTxtCtrlElement;
 
@@ -667,8 +667,7 @@ protected:
  */
 
 nsTextInputListener::nsTextInputListener(nsITextControlElement* aTxtCtrlElement)
-: mFrame(nsnull)
-, mTxtCtrlElement(aTxtCtrlElement)
+: mTxtCtrlElement(aTxtCtrlElement)
 , mSelectionWasCollapsed(PR_TRUE)
 , mHadUndoItems(PR_FALSE)
 , mHadRedoItems(PR_FALSE)
@@ -698,7 +697,7 @@ NS_IMETHODIMP
 nsTextInputListener::NotifySelectionChanged(nsIDOMDocument* aDoc, nsISelection* aSel, PRInt16 aReason)
 {
   PRBool collapsed;
-  if (!mFrame || !aDoc || !aSel || NS_FAILED(aSel->GetIsCollapsed(&collapsed)))
+  if (!mFrame.IsAlive() || !aDoc || !aSel || NS_FAILED(aSel->GetIsCollapsed(&collapsed)))
     return NS_OK;
 
   // Fire the select event
@@ -743,7 +742,7 @@ nsTextInputListener::NotifySelectionChanged(nsIDOMDocument* aDoc, nsISelection* 
   
   mSelectionWasCollapsed = collapsed;
 
-  if (!mFrame || !nsContentUtils::IsFocusedContent(mFrame->GetContent()))
+  if (!mFrame.IsAlive() || !nsContentUtils::IsFocusedContent(mFrame->GetContent()))
     return NS_OK;
 
   return UpdateTextInputCommands(NS_LITERAL_STRING("select"));
@@ -794,6 +793,7 @@ DoCommandCallback(const char *aCommand, void *aData)
 NS_IMETHODIMP
 nsTextInputListener::KeyDown(nsIDOMEvent *aDOMEvent)
 {
+  NS_ENSURE_STATE(mFrame.IsAlive());
   nsCOMPtr<nsIDOMKeyEvent> keyEvent(do_QueryInterface(aDOMEvent));
   NS_ENSURE_TRUE(keyEvent, NS_ERROR_INVALID_ARG);
 
@@ -812,6 +812,7 @@ nsTextInputListener::KeyDown(nsIDOMEvent *aDOMEvent)
 NS_IMETHODIMP
 nsTextInputListener::KeyPress(nsIDOMEvent *aDOMEvent)
 {
+  NS_ENSURE_STATE(mFrame.IsAlive());
   nsCOMPtr<nsIDOMKeyEvent> keyEvent(do_QueryInterface(aDOMEvent));
   NS_ENSURE_TRUE(keyEvent, NS_ERROR_INVALID_ARG);
 
@@ -830,6 +831,7 @@ nsTextInputListener::KeyPress(nsIDOMEvent *aDOMEvent)
 NS_IMETHODIMP
 nsTextInputListener::KeyUp(nsIDOMEvent *aDOMEvent)
 {
+  NS_ENSURE_STATE(mFrame.IsAlive());
   nsCOMPtr<nsIDOMKeyEvent> keyEvent(do_QueryInterface(aDOMEvent));
   NS_ENSURE_TRUE(keyEvent, NS_ERROR_INVALID_ARG);
 
@@ -851,11 +853,15 @@ nsTextInputListener::KeyUp(nsIDOMEvent *aDOMEvent)
 NS_IMETHODIMP
 nsTextInputListener::EditAction()
 {
+  NS_ENSURE_STATE(mFrame.IsAlive());
+  nsITextControlFrame* frameBase = do_QueryFrame(mFrame.GetFrame());
+  nsTextControlFrame* frame = static_cast<nsTextControlFrame*> (frameBase);
+  NS_ASSERTION(frame, "Where is our frame?");
   //
   // Update the undo / redo menus
   //
   nsCOMPtr<nsIEditor> editor;
-  mFrame->GetEditor(getter_AddRefs(editor));
+  frame->GetEditor(getter_AddRefs(editor));
 
   nsCOMPtr<nsITransactionManager> manager;
   editor->GetTransactionManager(getter_AddRefs(manager));
@@ -875,9 +881,13 @@ nsTextInputListener::EditAction()
     mHadRedoItems = numRedoItems != 0;
   }
 
+  if (!mFrame.IsAlive()) {
+    return NS_OK;
+  }
+
   // Make sure we know we were changed (do NOT set this to false if there are
   // no undo items; JS could change the value and we'd still need to save it)
-  mFrame->SetValueChanged(PR_TRUE);
+  frame->SetValueChanged(PR_TRUE);
 
   if (!mSettingValue) {
     mTxtCtrlElement->OnValueChanged(PR_TRUE);
@@ -888,7 +898,10 @@ nsTextInputListener::EditAction()
   NS_ASSERTION(editor20, "Something is very wrong!");
   PRBool trusted = PR_FALSE;
   editor20->GetLastKeypressEventTrusted(&trusted);
-  mFrame->FireOnInput(trusted);
+  frame->FireOnInput(trusted);
+
+  // mFrame may be dead after this, but we don't need to check for it, because
+  // we are not uisng it in this function any more.
 
   return NS_OK;
 }
@@ -899,7 +912,7 @@ nsTextInputListener::EditAction()
 nsresult
 nsTextInputListener::UpdateTextInputCommands(const nsAString& commandsToUpdate)
 {
-  NS_ENSURE_STATE(mFrame);
+  NS_ENSURE_STATE(mFrame.IsAlive());
 
   nsIContent* content = mFrame->GetContent();
   NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
