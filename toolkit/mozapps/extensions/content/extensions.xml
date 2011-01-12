@@ -1174,6 +1174,9 @@
 
       <method name="_updateState">
         <body><![CDATA[
+          if (this.parentNode.selectedItem == this)
+            gViewController.updateCommands();
+
           var pending = this.mAddon.pendingOperations;
           if (pending != AddonManager.PENDING_NONE) {
             this.removeAttribute("notification");
