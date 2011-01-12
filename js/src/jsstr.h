@@ -576,6 +576,8 @@ class JSShortString : public js::gc::Cell
 
 namespace js {
 
+class StringBuffer;
+
 /*
  * When an algorithm does not need a string represented as a single linear
  * array of characters, this range utility may be used to traverse the string a
@@ -787,14 +789,6 @@ extern const char js_encodeURIComponent_str[];
 extern JSFlatString *
 js_NewString(JSContext *cx, jschar *chars, size_t length);
 
-/*
- * GC-allocate a string descriptor and steal the char buffer held by |cb|.
- * This function takes responsibility for adding the terminating '\0' required
- * by js_NewString.
- */
-extern JSFlatString *
-js_NewStringFromCharBuffer(JSContext *cx, JSCharBuffer &cb);
-
 extern JSLinearString *
 js_NewDependentString(JSContext *cx, JSString *base, size_t start,
                       size_t length);
@@ -842,15 +836,15 @@ ValueToString_TestForStringInline(JSContext *cx, const Value &v)
     return js_ValueToString(cx, v);
 }
 
-}
-
 /*
  * This function implements E-262-3 section 9.8, toString. Convert the given
  * value to a string of jschars appended to the given buffer. On error, the
  * passed buffer may have partial results appended.
  */
-extern JSBool
-js_ValueToCharBuffer(JSContext *cx, const js::Value &v, JSCharBuffer &cb);
+extern bool
+ValueToStringBuffer(JSContext *cx, const Value &v, StringBuffer &sb);
+
+} /* namespace js */
 
 /*
  * Convert a value to its source expression, returning null after reporting

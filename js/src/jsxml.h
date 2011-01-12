@@ -306,14 +306,14 @@ js_IsXMLName(JSContext *cx, jsval v);
 extern JSBool
 js_ToAttributeName(JSContext *cx, js::Value *vp);
 
-extern JSLinearString *
+extern JSFlatString *
 js_EscapeAttributeValue(JSContext *cx, JSString *str, JSBool quote);
 
 extern JSString *
 js_AddAttributePart(JSContext *cx, JSBool isName, JSString *str,
                     JSString *str2);
 
-extern JSString *
+extern JSFlatString *
 js_EscapeElementValue(JSContext *cx, JSString *str);
 
 extern JSString *
