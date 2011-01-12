@@ -141,6 +141,8 @@ public:
   void SetViewport(const nsIntSize &aViewport);
   const nsIntSize &GetViewport() { return mViewport; }
 
+  static void LayerManagerD3D10::ReportFailure(const nsACString &aMsg, HRESULT aCode);
+
 private:
   void SetupPipeline();
   void UpdateRenderTarget();
