@@ -513,3 +513,4 @@ pref("ui.dragThreshold", 24);
 pref("layers.acceleration.disabled", true);
 
 pref("notification.feature.enabled", true);
+pref("indexedDB.feature.enabled", false);
