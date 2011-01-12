@@ -629,7 +629,7 @@ TokenStream::getXMLEntity()
     char *bytes;
     JSErrNum msg;
 
-    JSCharBuffer &tb = tokenbuf;
+    CharBuffer &tb = tokenbuf;
 
     /* Put the entity, including the '&' already scanned, in tokenbuf. */
     offset = tb.length();
@@ -801,8 +801,8 @@ ScanAsSpace(jschar c)
     return JS_FALSE;
 }
 
-static JS_ALWAYS_INLINE JSAtom *
-atomize(JSContext *cx, JSCharBuffer &cb)
+JS_ALWAYS_INLINE JSAtom *
+TokenStream::atomize(JSContext *cx, CharBuffer &cb)
 {
     return js_AtomizeChars(cx, cb.begin(), cb.length(), 0);
 }
@@ -1484,10 +1484,8 @@ TokenStream::getTokenInternal()
                 if (contentIndex < 0) {
                     atom = cx->runtime->atomState.emptyAtom;
                 } else {
-                    atom = js_AtomizeChars(cx,
-                                           tokenbuf.begin() + contentIndex,
-                                           tokenbuf.length() - contentIndex,
-                                           0);
+                    atom = js_AtomizeChars(cx, tokenbuf.begin() + contentIndex,
+                                           tokenbuf.length() - contentIndex, 0);
                     if (!atom)
                         goto error;
                 }

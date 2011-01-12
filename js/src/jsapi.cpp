@@ -5468,10 +5468,10 @@ JS_Stringify(JSContext *cx, jsval *vp, JSObject *replacer, jsval space,
 {
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, replacer, space);
-    JSCharBuffer cb(cx);
-    if (!js_Stringify(cx, Valueify(vp), replacer, Valueify(space), cb))
+    StringBuffer sb(cx);
+    if (!js_Stringify(cx, Valueify(vp), replacer, Valueify(space), sb))
         return false;
-    return callback(cb.begin(), cb.length(), data);
+    return callback(sb.begin(), sb.length(), data);
 }
 
 JS_PUBLIC_API(JSBool)

@@ -380,20 +380,6 @@ class Vector : AllocPolicy
     void erase(T *t);
 };
 
-/* Helper functions */
-
-/*
- * This helper function is specialized for appending the characters of a string
- * literal to a vector. This could not be done generically since one must take
- * care not to append the terminating '\0'.
- */
-template <class T, size_t N, class AP, size_t ArrayLength>
-JS_ALWAYS_INLINE bool
-js_AppendLiteral(Vector<T,N,AP> &v, const char (&array)[ArrayLength])
-{
-    return v.append(array, array + ArrayLength - 1);
-}
-
 /* This does the re-entrancy check plus several other sanity checks. */
 #define REENTRANCY_GUARD_ET_AL \
     ReentrancyGuard g(*this); \

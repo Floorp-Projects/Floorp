@@ -300,6 +300,8 @@ class TokenStream
     static const uintN ntokensMask = ntokens - 1;
 
   public:
+    typedef Vector<jschar, 32> CharBuffer;
+
     /*
      * To construct a TokenStream, first call the constructor, which is
      * infallible, then call |init|, which can fail. To destroy a TokenStream,
@@ -325,7 +327,7 @@ class TokenStream
     JSContext *getContext() const { return cx; }
     bool onCurrentLine(const TokenPos &pos) const { return lineno == pos.end.lineno; }
     const Token &currentToken() const { return tokens[cursor]; }
-    const JSCharBuffer &getTokenbuf() const { return tokenbuf; }
+    const CharBuffer &getTokenbuf() const { return tokenbuf; }
     const char *getFilename() const { return filename; }
     uintN getLineno() const { return lineno; }
 
@@ -354,6 +356,8 @@ class TokenStream
     }
 
   private:
+    static JSAtom *atomize(JSContext *cx, CharBuffer &cb);
+
     /*
      * Enables flags in the associated tokenstream for the object lifetime.
      * Useful for lexically-scoped flag toggles.
@@ -501,7 +505,7 @@ class TokenStream
     JSSourceHandler     listener;       /* callback for source; eg debugger */
     void                *listenerData;  /* listener 'this' data */
     void                *listenerTSData;/* listener data for this TokenStream */
-    JSCharBuffer        tokenbuf;       /* current token string buffer */
+    CharBuffer          tokenbuf;       /* current token string buffer */
     bool                maybeEOL[256];  /* probabilistic EOL lookup table */
     bool                maybeStrSpecial[256];/* speeds up string scanning */
     JSVersion           version;        /* cached version number for scan */
