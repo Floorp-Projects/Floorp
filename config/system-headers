@@ -1042,7 +1042,7 @@ proxy.h
 #if MOZ_PLATFORM_MAEMO==6
 contentaction/contentaction.h
 #endif
-#ifndef MOZ_TREE_PIXMAN
+#if MOZ_TREE_PIXMAN!=1
 pixman.h
 #endif
 #if MOZ_ENABLE_MEEGOTOUCHSHARE

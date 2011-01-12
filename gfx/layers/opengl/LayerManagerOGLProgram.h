@@ -48,11 +48,16 @@
 namespace mozilla {
 namespace layers {
 
+#if defined(DEBUG) && defined(MOZ_ENABLE_LIBXUL)
+#define CHECK_CURRENT_PROGRAM 1
 #define ASSERT_THIS_PROGRAM                                             \
   do {                                                                  \
     NS_ASSERTION(mGL->GetUserData(&sCurrentProgramKey) == this, \
                  "SetUniform with wrong program active!");              \
   } while (0)
+#else
+#define ASSERT_THIS_PROGRAM
+#endif
 
 struct UniformValue {
   UniformValue() {
@@ -105,7 +110,9 @@ struct UniformValue {
 
 class LayerManagerOGLProgram {
 protected:
+#ifdef CHECK_CURRENT_PROGRAM
   static int sCurrentProgramKey;
+#endif
 
 public:
   typedef mozilla::gl::GLContext GLContext;
@@ -132,7 +139,9 @@ public:
   void Activate() {
     NS_ASSERTION(mProgram != 0, "Attempting to activate a program that's not in use!");
     mGL->fUseProgram(mProgram);
+#if CHECK_CURRENT_PROGRAM
     mGL->SetUserData(&sCurrentProgramKey, this);
+#endif
   }
 
   void SetUniform(GLuint aUniform, float aFloatValue) {

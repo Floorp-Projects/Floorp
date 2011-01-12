@@ -86,7 +86,6 @@
     <support>http://localhost:4444/repo/2/support.html</support>
     <contribution_data>
       <link>http://localhost:4444/repo/2/contribution.html</link>
-      <suggested_amount currency="USD">$11.12</suggested_amount>
       <meet_developers>http://localhost:4444/repo/2/meetDevelopers.html</meet_developers>
     </contribution_data>
     <reviews num="1112">http://localhost:4444/repo/2/review.html</reviews>

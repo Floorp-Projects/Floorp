@@ -1075,31 +1075,6 @@
     </implementation>
   </binding>
 
-  <binding id="splitmenu">
-    <content>
-      <xul:menuitem anonid="item" flex="1"
-                    class="menuitem-tooltip split-menuitem-item"
-                    xbl:inherits="label,key"/>
-      <xul:menu anonid="menu" class="split-menuitem-menu"
-                oncommand="event.stopPropagation();">
-        <children includes="menupopup"/>
-      </xul:menu>
-    </content>
-
-    <implementation>
-      <constructor><![CDATA[
-        if (this.getAttribute("iconic") == "true") {
-          this.item.classList.remove("menuitem-tooltip");
-          this.item.classList.add("menuitem-iconic-tooltip");
-          this.item.classList.add("menuitem-iconic");
-        }
-      ]]></constructor>
-      <field name="item" readonly="true">
-        document.getAnonymousElementByAttribute(this, "anonid", "item");
-      </field>
-    </implementation>
-  </binding>
-
   <binding id="addon-progress-notification" extends="chrome://global/content/bindings/notification.xml#popup-notification">
     <content align="start">
       <xul:image class="popup-notification-icon"
@@ -1165,9 +1140,6 @@
 
       <method name="destroy">
         <body><![CDATA[
-          this.notification.options.browser = null;
-          this.notification.options.contentWindow = null;
-          this.notification.options.sourceURI = null;
           this.notification.options.installs.forEach(function(aInstall) {
             aInstall.removeListener(this);
           }, this);
@@ -1218,7 +1190,7 @@
       <method name="cancel">
         <body><![CDATA[
           // Cache these as cancelling the installs will remove this
-          // notification and call destroy
+          // notification which will drop these references
           let browser = this.notification.browser;
           let contentWindow = this.notification.options.contentWindow;
           let sourceURI = this.notification.options.sourceURI;
@@ -1309,6 +1281,31 @@
           this.updateProgress();
         ]]></body>
       </method>
+    </implementation>
+  </binding>
+
+  <binding id="splitmenu">
+    <content>
+      <xul:menuitem anonid="item" flex="1"
+                    class="menuitem-tooltip split-menuitem-item"
+                    xbl:inherits="label,key"/>
+      <xul:menu anonid="menu" class="split-menuitem-menu"
+                oncommand="event.stopPropagation();">
+        <children includes="menupopup"/>
+      </xul:menu>
+    </content>
+
+    <implementation>
+      <constructor><![CDATA[
+        if (this.getAttribute("iconic") == "true") {
+          this.item.classList.remove("menuitem-tooltip");
+          this.item.classList.add("menuitem-iconic-tooltip");
+          this.item.classList.add("menuitem-iconic");
+        }
+      ]]></constructor>
+      <field name="item" readonly="true">
+        document.getAnonymousElementByAttribute(this, "anonid", "item");
+      </field>
     </implementation>
   </binding>
 

@@ -57,14 +57,6 @@ public:
     ATSFontRef GetATSFontRef() const { return mATSFont; }
     CGFontRef GetCGFontRef() const { return mCGFont; }
 
-    virtual PRBool InitTextRun(gfxContext *aContext,
-                               gfxTextRun *aTextRun,
-                               const PRUnichar *aString,
-                               PRUint32 aRunStart,
-                               PRUint32 aRunLength,
-                               PRInt32 aRunScript,
-                               PRBool aPreferPlatformShaping = PR_FALSE);
-
     /* overrides for the pure virtual methods in gfxFont */
     virtual const gfxFont::Metrics& GetMetrics() {
         return mMetrics;
@@ -82,6 +74,15 @@ public:
 
 protected:
     virtual void CreatePlatformShaper();
+
+    // override to prefer CoreText shaping with fonts that depend on AAT
+    virtual PRBool InitTextRun(gfxContext *aContext,
+                               gfxTextRun *aTextRun,
+                               const PRUnichar *aString,
+                               PRUint32 aRunStart,
+                               PRUint32 aRunLength,
+                               PRInt32 aRunScript,
+                               PRBool aPreferPlatformShaping = PR_FALSE);
 
     void InitMetrics();
     void InitMetricsFromATSMetrics();

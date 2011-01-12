@@ -45,6 +45,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=533596
 
       function checkCrossOriginXrayedSandbox(sandbox)
       {
+        ok(Cu.evalInSandbox("!('windowfoo' in window);", sandbox),
+           "the window itself Xray is an XrayWrapper");
         ok(Cu.evalInSandbox("('wrappedJSObject' in this.document);", sandbox),
            "wrappers inside eIS are Xrays");
         ok(Cu.evalInSandbox("!('foo' in this.document);", sandbox),

@@ -1212,6 +1212,8 @@
             }
 
             this.tabContainer.appendChild(t);
+            if (this.tabContainer.getAttribute("pinnedonly") == "true")
+              this.tabContainer._positionPinnedTabs();
 
             if (this.tabContainer.mTabstrip._isRTLScrollbox) {
               /* In RTL UI, the tab is visually added to the left side of the
@@ -1461,7 +1463,7 @@
                 NS_ASSERT(false, "Giving up waiting for the tab closing animation to finish (bug 608589)");
                 tabbrowser._endRemoveTab(tab);
               }
-            }, 2000, aTab, this);
+            }, 3000, aTab, this);
           ]]>
         </body>
       </method>
@@ -2636,6 +2638,9 @@
 
           Services.prefs.addObserver("browser.tabs.", this._prefObserver, false);
           window.addEventListener("resize", this, false);
+
+          if (window.TabsInTitlebar)
+            TabsInTitlebar.allowedBy("tabs-visible", this.visible);
         ]]>
       </constructor>
 
@@ -2698,6 +2703,9 @@
       <property name="visible"
                 onget="return !this._container.collapsed;">
         <setter><![CDATA[
+          if (val == this.visible)
+            return val;
+
           this._container.collapsed = !val;
 
           if (val)
@@ -2706,6 +2714,9 @@
           document.getElementById("menu_closeWindow").hidden = !val;
           document.getElementById("menu_close").setAttribute("label",
             this.tabbrowser.mStringBundle.getString(val ? "tabs.closeTab" : "tabs.close"));
+
+          if (window.TabsInTitlebar)
+            TabsInTitlebar.allowedBy("tabs-visible", val);
 
           return val;
         ]]></setter>
@@ -2724,21 +2735,21 @@
       <method name="adjustTabstrip">
         <body><![CDATA[
           // modes for tabstrip
-          // 0 - activetab  = close button on active tab only
-          // 1 - alltabs    = close buttons on all tabs
-          // 2 - noclose    = no close buttons at all
-          // 3 - closeatend = close button at the end of the tabstrip
+          // 0 - button on active tab only
+          // 1 - close buttons on all tabs
+          // 2 - no close buttons at all
+          // 3 - close button at the end of the tabstrip
           switch (this.mCloseButtons) {
           case 0:
             if (this.childNodes.length == 1 && this._closeWindowWithLastTab)
-              this.setAttribute("closebuttons", "noclose");
+              this.setAttribute("closebuttons", "hidden");
             else
               this.setAttribute("closebuttons", "activetab");
             break;
           case 1:
             if (this.childNodes.length == 1) {
               if (this._closeWindowWithLastTab)
-                this.setAttribute("closebuttons", "noclose");
+                this.setAttribute("closebuttons", "hidden");
               else
                 this.setAttribute("closebuttons", "alltabs");
             } else {
@@ -2751,7 +2762,7 @@
             break;
           case 2:
           case 3:
-            this.setAttribute("closebuttons", "noclose");
+            this.setAttribute("closebuttons", "never");
             break;
           }
           var tabstripClosebutton = document.getElementById("tabs-closebutton");
@@ -2783,19 +2794,20 @@
 
       <method name="_positionPinnedTabs">
         <body><![CDATA[
-          var width = 0;
-          var pinnedOnly = (this.tabbrowser._numPinnedTabs == this.tabbrowser.visibleTabs.length);
+          var numPinned = this.tabbrowser._numPinnedTabs;
+          var pinnedOnly = (numPinned == this.tabbrowser.visibleTabs.length);
 
           if (pinnedOnly)
-            this.tabbrowser.tabContainer.setAttribute("pinnedonly", "true");
+            this.setAttribute("pinnedonly", "true");
           else
-            this.tabbrowser.tabContainer.removeAttribute("pinnedonly");
+            this.removeAttribute("pinnedonly");
 
           var scrollButtonWidth = (this.getAttribute("overflow") != "true" || pinnedOnly) ? 0 :
                                   this.mTabstrip._scrollButtonDown.scrollWidth;
           var paddingStart = this.mTabstrip.scrollboxPaddingStart;
+          var width = 0;
 
-          for (var i = this.tabbrowser._numPinnedTabs - 1; i >= 0; i--) {
+          for (var i = numPinned - 1; i >= 0; i--) {
             let tab = this.childNodes[i];
             width += pinnedOnly ? 0 : tab.scrollWidth;
             if (this.getAttribute("overflow") != "true")

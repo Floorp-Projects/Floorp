@@ -447,6 +447,7 @@ add_test(function() {
 
       var item = result.item;
       list.ensureElementIsVisible(item);
+      EventUtils.synthesizeMouseAtCenter(item, { clickCount: 1 }, gManagerWindow);
       EventUtils.synthesizeMouseAtCenter(item, { clickCount: 2 }, gManagerWindow);
       wait_for_view_load(gManagerWindow, function() {
         var name = gManagerWindow.document.getElementById("detail-name").textContent;

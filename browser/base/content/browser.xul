@@ -373,7 +373,7 @@
                          class="identity-popup-description"/>
           </hbox>
           <!-- Footer button to open security page info -->
-          <hbox pack="end">
+          <hbox id="identity-popup-button-container" pack="end">
             <button id="identity-popup-more-info-button"
                     label="&identity.moreInfoLinkText;"
                     onblur="gIdentityHandler.hideIdentityPopup();"
@@ -485,6 +485,11 @@
 # hiddenWindow.xul.
 #include browser-menubar.inc
       </toolbaritem>
+
+#ifdef CAN_DRAW_IN_TITLEBAR
+      <hbox class="titlebar-placeholder" type="appmenu-button" ordinal="0"/>
+      <hbox class="titlebar-placeholder" type="caption-buttons" ordinal="1000"/>
+#endif
     </toolbar>
 
     <toolbar id="nav-bar" class="toolbar-primary chromeclass-toolbar"
@@ -850,6 +855,10 @@
                      label="&closeTab.label;"
                      tooltiptext="&closeTab.label;"/>
 
+#ifdef CAN_DRAW_IN_TITLEBAR
+      <hbox class="titlebar-placeholder" type="appmenu-button" ordinal="0"/>
+      <hbox class="titlebar-placeholder" type="caption-buttons" ordinal="1000"/>
+#endif
     </toolbar>
 
     <toolbarpalette id="BrowserToolbarPalette">

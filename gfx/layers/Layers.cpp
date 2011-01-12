@@ -468,8 +468,13 @@ nsACString&
 ContainerLayer::PrintInfo(nsACString& aTo, const char* aPrefix)
 {
   Layer::PrintInfo(aTo, aPrefix);
-  return mFrameMetrics.IsDefault() ?
-    aTo : AppendToString(aTo, mFrameMetrics, " [metrics=", "]");
+  if (!mFrameMetrics.IsDefault()) {
+    AppendToString(aTo, mFrameMetrics, " [metrics=", "]");
+  }
+  if (UseIntermediateSurface()) {
+    aTo += " [usesTmpSurf]";
+  }
+  return aTo;
 }
 
 nsACString&

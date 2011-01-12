@@ -737,11 +737,6 @@ pref("network.http.prompt-temp-redirect", true);
 // Section 4.8 "High-Throughput Data Service Class"
 pref("network.http.qos", 0);
 
-// The number of milliseconds after sending a SYN for an HTTP connection,
-// to wait before trying a different connection. 0 means do not use a second
-// connection.
-pref("network.http.connection-retry-timeout", 250);
-
 // default values for FTP
 // in a DSCP environment this should be 40 (0x28, or AF11), per RFC-4594,
 // Section 4.8 "High-Throughput Data Service Class", and 80 (0x50, or AF22)
@@ -3223,19 +3218,11 @@ pref("mozilla.widget.disable-native-theme", true);
 pref("gfx.color_management.mode", 0);
 #endif
 
-// Default value of acceleration for all widgets.
-#ifdef XP_WIN
-pref("layers.accelerate-all", true);
-#else
-#ifdef XP_MACOSX
-pref("layers.accelerate-all", true);
-#else
-pref("layers.accelerate-all", false);
-#endif
-#endif
+// Whether to disable acceleration for all widgets.
+pref("layers.acceleration.disabled", false);
 
-// Whether to allow acceleration on layers at all.
-pref("layers.accelerate-none", false);
+// Whether to force acceleration on, ignoring blacklists.
+pref("layers.acceleration.force-enabled", false);
 
 #ifdef XP_WIN
 #ifndef WINCE

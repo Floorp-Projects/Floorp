@@ -418,6 +418,7 @@ let UI = {
     gTabViewFrame.style.marginTop = "";
 #endif
     gTabViewDeck.selectedIndex = 1;
+    gWindow.TabsInTitlebar.allowedBy("tabview-open", false);
     gTabViewFrame.contentWindow.focus();
 
     gBrowser.updateTitlebar();
@@ -484,6 +485,7 @@ let UI = {
     gTabViewFrame.style.marginTop = gBrowser.boxObject.y + "px";
 #endif
     gTabViewDeck.selectedIndex = 0;
+    gWindow.TabsInTitlebar.allowedBy("tabview-open", true);
     gBrowser.contentWindow.focus();
 
     gBrowser.updateTitlebar();
@@ -1096,9 +1098,9 @@ let UI = {
       iQ(window).unbind("mousemove", updateSize);
       item.container.removeClass("dragRegion");
       dragOutInfo.stop();
-      if (phantom.css("opacity") != 1)
-        collapse();
-      else {
+      box = item.getBounds();
+      if (box.width > minMinSize && box.height > minMinSize &&
+         (box.width > minSize || box.height > minSize)) {
         var bounds = item.getBounds();
 
         // Add all of the orphaned tabs that are contained inside the new groupItem
@@ -1114,6 +1116,8 @@ let UI = {
         GroupItems.setActiveGroupItem(groupItem);
         phantom.remove();
         dragOutInfo = null;
+      } else {
+        collapse();
       }
     }
 

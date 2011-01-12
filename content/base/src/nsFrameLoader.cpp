@@ -171,12 +171,13 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsFrameLoader)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mChildMessageManager)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsFrameLoader)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsFrameLoader)
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsFrameLoader, nsIFrameLoader)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsFrameLoader, nsIFrameLoader)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsFrameLoader)
   NS_INTERFACE_MAP_ENTRY(nsIFrameLoader)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY(nsIFrameLoader_MOZILLA_2_0_BRANCH)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIFrameLoader)
 NS_INTERFACE_MAP_END
 
 nsFrameLoader*
@@ -1544,12 +1545,34 @@ nsFrameLoader::GetViewportScrollY(float* aViewportScrollY)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFrameLoader::GetRenderMode(PRUint32* aRenderMode)
+{
+  *aRenderMode = mViewportConfig.mRenderMode;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFrameLoader::SetRenderMode(PRUint32 aRenderMode)
+{
+  ViewportConfig config(mViewportConfig);
+  config.mRenderMode = aRenderMode;
+  return UpdateViewportConfig(config);
+}
+
 nsresult
 nsFrameLoader::UpdateViewportConfig(const ViewportConfig& aNewConfig)
 {
   if (aNewConfig == mViewportConfig) {
     return NS_OK;
+  } else if (!mViewportConfig.AsyncScrollEnabled() &&
+             !aNewConfig.AsyncScrollEnabled()) {
+    // The target viewport can't be set in synchronous mode
+    return NS_ERROR_NOT_AVAILABLE;
   }
+  // XXX if we go from disabled->enabled, should we clear out the old
+  // config?  Or what?
+
   mViewportConfig = aNewConfig;
 
   // Viewport changed.  Try to locate our subdoc frame and invalidate

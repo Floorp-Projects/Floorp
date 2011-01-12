@@ -1088,12 +1088,17 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
   // NOTE: this should only happen when a stream was NOT created
   // with GetURL or PostURL (i.e. it's the initial stream we
   // send to the plugin as determined by the SRC or DATA attribute)
-  nsCOMPtr<nsIPluginStreamListener> streamListener;
-  if (!mPStreamListener && mPluginInstance) {
+  if (!mPStreamListener) {
+    if (!mPluginInstance) {
+      return NS_ERROR_FAILURE;
+    }
+
+    nsCOMPtr<nsIPluginStreamListener> streamListener;
     rv = mPluginInstance->NewStreamListener(nsnull, nsnull,
                                             getter_AddRefs(streamListener));
-    if (NS_FAILED(rv) || !streamListener)
+    if (NS_FAILED(rv) || !streamListener) {
       return NS_ERROR_FAILURE;
+    }
 
     mPStreamListener = static_cast<nsNPAPIPluginStreamListener*>(streamListener.get());
   }
@@ -1115,37 +1120,34 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
     // Reassemble the HTTP response status line and provide it to our
     // listener.  Would be nice if we could get the raw status line,
     // but nsIHttpChannel doesn't currently provide that.
-    nsCOMPtr<nsIHTTPHeaderListener> listener = do_QueryInterface(streamListener);
-    if (listener) {
-      // Status code: required; the status line isn't useful without it.
-      PRUint32 statusNum;
-      if (NS_SUCCEEDED(httpChannel->GetResponseStatus(&statusNum)) &&
-          statusNum < 1000) {
-        // HTTP version: provide if available.  Defaults to empty string.
-        nsCString ver;
-        nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal =
-        do_QueryInterface(channel);
-        if (httpChannelInternal) {
-          PRUint32 major, minor;
-          if (NS_SUCCEEDED(httpChannelInternal->GetResponseVersion(&major,
-                                                                   &minor))) {
-            ver = nsPrintfCString("/%lu.%lu", major, minor);
-          }
+    // Status code: required; the status line isn't useful without it.
+    PRUint32 statusNum;
+    if (NS_SUCCEEDED(httpChannel->GetResponseStatus(&statusNum)) &&
+        statusNum < 1000) {
+      // HTTP version: provide if available.  Defaults to empty string.
+      nsCString ver;
+      nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal =
+      do_QueryInterface(channel);
+      if (httpChannelInternal) {
+        PRUint32 major, minor;
+        if (NS_SUCCEEDED(httpChannelInternal->GetResponseVersion(&major,
+                                                                 &minor))) {
+          ver = nsPrintfCString("/%lu.%lu", major, minor);
         }
-        
-        // Status text: provide if available.  Defaults to "OK".
-        nsCString statusText;
-        if (NS_FAILED(httpChannel->GetResponseStatusText(statusText))) {
-          statusText = "OK";
-        }
-        
-        // Assemble everything and pass to listener.
-        nsPrintfCString status(100, "HTTP%s %lu %s", ver.get(), statusNum,
-                               statusText.get());
-        listener->StatusLine(status.get());
       }
+
+      // Status text: provide if available.  Defaults to "OK".
+      nsCString statusText;
+      if (NS_FAILED(httpChannel->GetResponseStatusText(statusText))) {
+        statusText = "OK";
+      }
+
+      // Assemble everything and pass to listener.
+      nsPrintfCString status(100, "HTTP%s %lu %s", ver.get(), statusNum,
+                             statusText.get());
+      static_cast<nsIHTTPHeaderListener*>(mPStreamListener)->StatusLine(status.get());
     }
-    
+
     // Also provide all HTTP response headers to our listener.
     httpChannel->VisitResponseHeaders(this);
     

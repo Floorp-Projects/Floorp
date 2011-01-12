@@ -1,0 +1,10 @@
+<svg
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   height="800px"
+   width="800px">
+  <text style="font-size:24px;" transform="translate(40,100)">
+    <tspan>Fire&#x301;fo&#x302;x</tspan></text>
+  <text style="font-size:24px;" transform="translate(40,140) rotate(45)">
+    <tspan>Fire&#x301;fo&#x302;x</tspan></text>
+</svg>

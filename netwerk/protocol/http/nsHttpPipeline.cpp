@@ -310,20 +310,16 @@ nsHttpPipeline::SetConnection(nsAHttpConnection *conn)
 }
 
 void
-nsHttpPipeline::GetSecurityCallbacks(nsIInterfaceRequestor **result,
-                                     nsIEventTarget        **target)
+nsHttpPipeline::GetSecurityCallbacks(nsIInterfaceRequestor **result)
 {
     NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
 
     // return security callbacks from first request
     nsAHttpTransaction *trans = Request(0);
     if (trans)
-        trans->GetSecurityCallbacks(result, target);
-    else {
+        trans->GetSecurityCallbacks(result);
+    else
         *result = nsnull;
-        if (target)
-            *target = nsnull;
-    }
 }
 
 void

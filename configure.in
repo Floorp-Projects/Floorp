@@ -683,6 +683,7 @@ case "$target" in
         _MOZ_RTTI_FLAGS_OFF='-GR-'
         _MOZ_EXCEPTIONS_FLAGS_ON='-EHsc'
         _MOZ_EXCEPTIONS_FLAGS_OFF=''
+        AC_DEFINE(HAVE_SEH_EXCEPTIONS)
 
         if test -n "$WIN32_REDIST_DIR"; then
             WIN32_REDIST_DIR=`cd "$WIN32_REDIST_DIR" && pwd`

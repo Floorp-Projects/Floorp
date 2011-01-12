@@ -183,15 +183,12 @@ struct UnifiedGradientInfo {
 {
   TitlebarAndBackgroundColor *mColor;
   float mUnifiedToolbarHeight;
-  BOOL mInUnifiedToolbarReset;
   NSColor *mBackgroundColor;
 }
 // Pass nil here to get the default appearance.
 - (void)setTitlebarColor:(NSColor*)aColor forActiveWindow:(BOOL)aActive;
-- (void)notifyToolbarAt:(float)aY height:(float)aHeight;
+- (void)setUnifiedToolbarHeight:(float)aHeight;
 - (float)unifiedToolbarHeight;
-- (float)beginMaybeResetUnifiedToolbar;
-- (void)endMaybeResetUnifiedToolbar:(float)aOldHeight;
 - (float)titlebarHeight;
 - (NSRect)titlebarRect;
 - (void)setTitlebarNeedsDisplayInRect:(NSRect)aRect sync:(BOOL)aSync;
@@ -279,6 +276,7 @@ public:
     void DispatchSizeModeEvent();
 
     virtual gfxASurface* GetThebesSurface();
+    virtual void DrawOver(LayerManager* aManager, nsIntRect aRect);
 
     // be notified that a some form of drag event needs to go into Gecko
     virtual PRBool DragEvent(unsigned int aMessage, Point aMouseGlobal, UInt16 aKeyModifiers);

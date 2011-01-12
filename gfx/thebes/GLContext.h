@@ -422,7 +422,6 @@ public:
     }
 
     virtual ~GLContext() {
-        printf_stderr("~GLContext destructor begin\n");
         NS_ASSERTION(IsDestroyed(), "GLContext implementation must call MarkDestroyed in destructor!");
 #ifdef DEBUG
         if (mSharedContext) {
@@ -433,7 +432,6 @@ public:
             tip->ReportOutstandingNames();
         }
 #endif
-        printf_stderr("~GLContext destructor end\n");
     }
 
     enum GLContextType {
@@ -776,6 +774,19 @@ public:
                                              bool aOverwrite = false,
                                              const nsIntPoint& aDstPoint = nsIntPoint(0, 0),
                                              bool aPixelBuffer = PR_FALSE);
+
+#ifndef MOZ_ENABLE_LIBXUL
+    virtual ShaderProgramType UploadSurfaceToTextureExternal(gfxASurface *aSurface, 
+                                                             const nsIntRect& aSrcRect,
+                                                             GLuint& aTexture,
+                                                             bool aOverwrite = false,
+                                                             const nsIntPoint& aDstPoint = nsIntPoint(0, 0),
+                                                             bool aPixelBuffer = PR_FALSE)
+    {
+      return UploadSurfaceToTexture(aSurface, aSrcRect, aTexture, aOverwrite,
+                                    aDstPoint, aPixelBuffer);
+    }
+#endif
 
     /** Helper for DecomposeIntoNoRepeatTriangles
      */

@@ -381,6 +381,7 @@ pref("browser.tabs.loadDivertedInBackground", false);
 pref("browser.tabs.loadBookmarksInBackground", false);
 pref("browser.tabs.tabClipWidth", 140);
 pref("browser.tabs.animate", true);
+pref("browser.tabs.drawInTitlebar", true);
 
 // Where to show tab close buttons:
 // 0  on active tab only
@@ -477,8 +478,8 @@ pref("network.proxy.share_proxy_settings",  false); // use the same proxy settin
 // simple gestures support
 pref("browser.gesture.swipe.left", "Browser:BackOrBackDuplicate");
 pref("browser.gesture.swipe.right", "Browser:ForwardOrForwardDuplicate");
-pref("browser.gesture.swipe.up", "Browser:HideTabView");
-pref("browser.gesture.swipe.down", "Browser:ShowTabView");
+pref("browser.gesture.swipe.up", "cmd_scrollTop");
+pref("browser.gesture.swipe.down", "cmd_scrollBottom");
 #ifdef XP_MACOSX
 pref("browser.gesture.pinch.latched", true);
 pref("browser.gesture.pinch.threshold", 150);
@@ -486,10 +487,10 @@ pref("browser.gesture.pinch.threshold", 150);
 pref("browser.gesture.pinch.latched", false);
 pref("browser.gesture.pinch.threshold", 25);
 #endif
-pref("browser.gesture.pinch.out", "cmd_fullZoomEnlarge");
-pref("browser.gesture.pinch.in", "cmd_fullZoomReduce");
-pref("browser.gesture.pinch.out.shift", "cmd_fullZoomReset");
-pref("browser.gesture.pinch.in.shift", "cmd_fullZoomReset");
+pref("browser.gesture.pinch.out", "");
+pref("browser.gesture.pinch.in", "");
+pref("browser.gesture.pinch.out.shift", "");
+pref("browser.gesture.pinch.in.shift", "");
 pref("browser.gesture.twist.latched", false);
 pref("browser.gesture.twist.threshold", 25);
 pref("browser.gesture.twist.right", "");

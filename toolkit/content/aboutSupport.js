@@ -274,9 +274,12 @@ function populateGraphicsSection() {
   if (acceleratedWindows)
     msg += " " + mgrType;
 
-  let header = createHeader(bundle.GetStringFromName("acceleratedWindows"));
-
-  appendChildren(graphics_tbody, [ header, createElement("td", msg) ]);
+  appendChildren(graphics_tbody, [
+    createParentElement("tr", [
+      createHeader(bundle.GetStringFromName("acceleratedWindows")),
+      createElement("td", msg),
+    ])
+  ]);
 }
 
 function getPrefValue(aName) {

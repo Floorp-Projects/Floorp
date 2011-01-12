@@ -223,6 +223,7 @@ html[dir=rtl] #search {
   position: absolute;
   right: 20px;
   top: 20px;
+  pointer-events: auto;
 }
 
 html[dir=rtl] #searchbox {
@@ -265,6 +266,7 @@ html[dir=rtl] #actions #searchbutton {
 
 .inlineMatch{
   display: inline-block;
+  pointer-events: auto;
 }
 
 .inlineMatch>span{
