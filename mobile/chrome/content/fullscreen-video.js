@@ -41,9 +41,9 @@ function closeFullScreen() {
 
 function startPlayback(aEvent) {
   let target = aEvent.originalTarget;
-  contentObject._sendMouseEvent("mousedown", target, 0, 0);
-  contentObject._sendMouseEvent("mousemove", target, 0, 0);
-  contentObject._sendMouseEvent("mouseup", target, 0, 0);
+  Content._sendMouseEvent("mousemove", target, 0, 0);
+  Content._sendMouseEvent("mousedown", target, 0, 0);
+  Content._sendMouseEvent("mouseup", target, 0, 0);
 }
 
 addEventListener("click", function(aEvent) {
