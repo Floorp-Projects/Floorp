@@ -287,9 +287,9 @@ ImageLayerD3D10::RenderLayer()
     }
 
     if (yuvImage->mDevice != device()) {
-	// These shader resources were created for an old device! Can't draw
-	// that here.
-	return;
+        // These shader resources were created for an old device! Can't draw
+        // that here.
+        return;
     }
 
     // TODO: At some point we should try to deal with mFilter here, you don't
