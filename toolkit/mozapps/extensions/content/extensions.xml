@@ -166,13 +166,12 @@
           <xul:hbox class="end-cap"/>
         </xul:hbox>
         <xul:hbox class="status-container">
-          <xul:button anonid="pause-btn" class="pause"
-                      tooltiptext="&progress.pause.tooltip;"/>
           <xul:spacer flex="1"/>
           <xul:label anonid="status" class="status"/>
           <xul:spacer flex="1"/>
           <xul:button anonid="cancel-btn" class="cancel"
-                      tooltiptext="&progress.cancel.tooltip;"/>
+                      tooltiptext="&progress.cancel.tooltip;"
+                      oncommand="document.getBindingParent(this).cancel();"/>
         </xul:hbox>
       </xul:stack>
     </content>
@@ -187,9 +186,6 @@
 
       <field name="_progress">
         document.getAnonymousElementByAttribute(this, "anonid", "progress");
-      </field>
-      <field name="_pause">
-        document.getAnonymousElementByAttribute(this, "anonid", "pause-btn");
       </field>
       <field name="_cancel">
         document.getAnonymousElementByAttribute(this, "anonid", "cancel-btn");
@@ -234,6 +230,12 @@
           this._status.value = val;
         ]]></setter>
       </property>
+      
+      <method name="cancel">
+        <body><![CDATA[
+          this.mInstall.cancel();
+        ]]></body>
+      </method>
     </implementation>
   </binding>
 
@@ -579,6 +581,7 @@
             this.mInstall = null;
           }
           this.mInstall = aInstall;
+          this._progress.mInstall = aInstall;
           this.refreshState();
           this.mInstall.addListener(this);
         ]]></body>
