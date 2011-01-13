@@ -65,6 +65,7 @@
 
 static NS_DEFINE_IID(kRegionCID, NS_REGION_CID);
 
+PRTime gFirstPaintTimestamp = 0; // Timestamp of the first paint event
 /**
    XXX TODO XXX
 
@@ -951,6 +952,8 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
       }
 
     case NS_DID_PAINT: {
+      if (!gFirstPaintTimestamp)
+        gFirstPaintTimestamp = PR_Now();
       nsRefPtr<nsViewManager> rootVM = RootViewManager();
       rootVM->CallDidPaintOnObservers();
       break;
