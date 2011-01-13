@@ -67,6 +67,7 @@
 
 using namespace mozilla;
 using namespace mozilla::layers;
+typedef FrameMetrics::ViewID ViewID;
 
 nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
     Mode aMode, PRBool aBuildCaret)
@@ -145,6 +146,38 @@ static void UnmarkFrameForDisplay(nsIFrame* aFrame) {
       return;
     f->RemoveStateBits(NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO);
   }
+}
+
+static void RecordFrameMetrics(nsIFrame* aForFrame,
+                               ContainerLayer* aRoot,
+                               nsRect aVisibleRect,
+                               nsRect aViewport,
+                               ViewID aScrollId) {
+  nsPresContext* presContext = aForFrame->PresContext();
+  nsIPresShell* presShell = presContext->GetPresShell();
+
+  nsIntRect visible = aVisibleRect.ToNearestPixels(presContext->AppUnitsPerDevPixel());
+  aRoot->SetVisibleRegion(nsIntRegion(visible));
+
+  FrameMetrics metrics;
+
+  PRInt32 auPerDevPixel = presContext->AppUnitsPerDevPixel();
+  metrics.mViewport = aViewport.ToNearestPixels(auPerDevPixel);
+  if (presShell->UsingDisplayPort()) {
+    metrics.mDisplayPort =
+      presShell->GetDisplayPort().ToNearestPixels(auPerDevPixel);
+  }
+
+  nsIScrollableFrame* rootScrollableFrame =
+    presShell->GetRootScrollFrameAsScrollable();
+  if (rootScrollableFrame) {
+    metrics.mViewportScrollOffset =
+      rootScrollableFrame->GetScrollPosition().ToNearestPixels(auPerDevPixel);
+    
+    metrics.mScrollId = aScrollId;
+  }
+
+  aRoot->SetFrameMetrics(metrics);
 }
 
 nsDisplayListBuilder::~nsDisplayListBuilder() {
@@ -467,28 +500,10 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
   nsPresContext* presContext = aForFrame->PresContext();
   nsIPresShell* presShell = presContext->GetPresShell();
 
-  nsIntRect visible = mVisibleRect.ToNearestPixels(presContext->AppUnitsPerDevPixel());
-  root->SetVisibleRegion(nsIntRegion(visible));
+  ViewID id = presContext->IsRootContentDocument() ? FrameMetrics::ROOT_SCROLL_ID
+                                                   : FrameMetrics::NULL_SCROLL_ID;
 
-  // Collect frame metrics with which to stamp the root layer.
-  FrameMetrics metrics;
-
-  PRInt32 auPerCSSPixel = nsPresContext::AppUnitsPerCSSPixel();
-  metrics.mViewportSize =
-    presContext->GetVisibleArea().ToNearestPixels(auPerCSSPixel).Size();
-  if (presShell->UsingDisplayPort()) {
-    metrics.mDisplayPort =
-      presShell->GetDisplayPort().ToNearestPixels(auPerCSSPixel);
-  }
-
-  nsIScrollableFrame* rootScrollableFrame =
-    presShell->GetRootScrollFrameAsScrollable();
-  if (rootScrollableFrame) {
-    metrics.mViewportScrollOffset =
-      rootScrollableFrame->GetScrollPosition().ToNearestPixels(auPerCSSPixel);
-  }
-
-  root->SetFrameMetrics(metrics);
+  RecordFrameMetrics(aForFrame, root, mVisibleRect, mVisibleRect, id);
 
   // If the layer manager supports resolution scaling, set that up
   if (LayerManager::LAYERS_BASIC == layerManager->GetBackendType()) {
