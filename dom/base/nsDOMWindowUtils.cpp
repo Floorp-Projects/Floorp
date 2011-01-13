@@ -655,9 +655,6 @@ nsDOMWindowUtils::GarbageCollect(nsICycleCollectorListener *aListener)
   }
 #endif
 
-  if (nsContentUtils::XPConnect()) {
-    nsContentUtils::XPConnect()->GarbageCollect();
-  }
   nsJSContext::CC(aListener);
 
   return NS_OK;
