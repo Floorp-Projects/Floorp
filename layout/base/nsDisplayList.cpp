@@ -1622,7 +1622,7 @@ nsDisplayScrollLayer::nsDisplayScrollLayer(nsDisplayListBuilder* aBuilder,
   , mViewportFrame(aViewportFrame)
 {
 #ifdef NS_BUILD_REFCNT_LOGGING
-  MOZ_COUNT_CTOR(nsDisplayOwnLayer);
+  MOZ_COUNT_CTOR(nsDisplayScrollLayer);
 #endif
 
   NS_ASSERTION(mFrame && mFrame->GetContent(),
