@@ -1313,9 +1313,11 @@ void
 nsFrameLoader::SetOwnerContent(nsIContent* aContent)
 {
   mOwnerContent = aContent;
+#ifdef MOZ_IPC
   if (RenderFrameParent* rfp = GetCurrentRemoteFrame()) {
     rfp->OwnerContentChanged(aContent);
   }
+#endif
 }
 
 #ifdef MOZ_IPC
@@ -2007,6 +2009,7 @@ nsFrameLoader::GetContentViewsIn(float aXPx, float aYPx,
                                  PRUint32* aLength,
                                  nsIContentView*** aResult)
 {
+#ifdef MOZ_IPC
   nscoord x = nsPresContext::CSSPixelsToAppUnits(aXPx - aLeftSize);
   nscoord y = nsPresContext::CSSPixelsToAppUnits(aYPx - aTopSize);
   nscoord w = nsPresContext::CSSPixelsToAppUnits(aLeftSize + aRightSize) + 1;
@@ -2034,6 +2037,10 @@ nsFrameLoader::GetContentViewsIn(float aXPx, float aYPx,
 
   *aResult = result;
   *aLength = ids.Length();
+#else
+  *aResult = nsnull;
+  *aLength = 0;
+#endif
 
   return NS_OK;
 }
@@ -2041,6 +2048,7 @@ nsFrameLoader::GetContentViewsIn(float aXPx, float aYPx,
 NS_IMETHODIMP
 nsFrameLoader::GetRootContentView(nsIContentView** aContentView)
 {
+#ifdef MOZ_IPC
   RenderFrameParent* rfp = GetCurrentRemoteFrame();
   if (!rfp) {
     *aContentView = nsnull;
@@ -2052,6 +2060,10 @@ nsFrameLoader::GetRootContentView(nsIContentView** aContentView)
   nsRefPtr<nsIContentView>(view).forget(aContentView);
 
    return NS_OK;
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+
 }
 
 nsresult
