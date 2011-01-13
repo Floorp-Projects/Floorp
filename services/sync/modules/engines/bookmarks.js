@@ -46,7 +46,6 @@ const Cu = Components.utils;
 
 const GUID_ANNO = "sync/guid";
 const PARENT_ANNO = "sync/parent";
-const CHILDREN_ANNO = "sync/children";
 const SERVICE_NOT_SUPPORTED = "Service not supported on this platform";
 const FOLDER_SORTINDEX = 1000000;
 
@@ -589,9 +588,6 @@ BookmarksStore.prototype = {
       case "feedUri":
         this._ls.setFeedURI(itemId, Utils.makeURI(val));
         break;
-      case "children":
-        Utils.anno(itemId, CHILDREN_ANNO, val.join(","));
-        break;
       }
     }
   },
@@ -614,46 +610,7 @@ BookmarksStore.prototype = {
           this._log.debug("Could not move item " + children[idx] + ": " + ex);
         }
       }
-
-      // Update the children annotation. If there were mismatches due to local
-      // changes, we'll have to regenerate it from scratch, otherwise we can
-      // just use the incoming value.
-      let folderid = this.idForGUID(guid);
-      if (delta) {
-        this._updateChildrenAnno(folderid);
-      } else {
-        Utils.anno(folderid, CHILDREN_ANNO, children.join(","));
-      }
     }
-  },
-
-  _updateChildrenAnno: function _updateChildrenAnno(itemid) {
-    let node = node = this._getNode(itemid);
-    let childids = [];
-
-    if (node.type == node.RESULT_TYPE_FOLDER &&
-        !this._ls.isLivemark(node.itemId)) {
-      node.QueryInterface(Ci.nsINavHistoryQueryResultNode);
-      node.containerOpen = true;
-      for (var i = 0; i < node.childCount; i++)
-        childids.push(node.getChild(i).itemId);
-    }
-    let childGUIDs = childids.map(this.GUIDForId, this);
-    Utils.anno(itemid, CHILDREN_ANNO, childGUIDs.join(","));
-    return childGUIDs;
-  },
-
-  get _removeAllChildrenAnnosStm() {
-    let stmt = this._getStmt(
-      "DELETE FROM moz_items_annos " +
-      "WHERE anno_attribute_id = " +
-        "(SELECT id FROM moz_anno_attributes WHERE name = :anno_name)");
-    stmt.params.anno_name = CHILDREN_ANNO;
-    return stmt;
-  },
-
-  _removeAllChildrenAnnos: function _removeAllChildrenAnnos() {
-    Utils.queryAsync(this._removeAllChildrenAnnosStm);
   },
 
   changeItemID: function BStore_changeItemID(oldID, newID) {
@@ -665,10 +622,6 @@ BookmarksStore.prototype = {
       return;
 
     this._setGUID(itemId, newID);
-
-    // Update parent
-    let parentid = this._bms.getFolderIdForItem(itemId);
-    this._updateChildrenAnno(parentid);
   },
 
   _getNode: function BStore__getNode(folder) {
@@ -708,16 +661,17 @@ BookmarksStore.prototype = {
   },
 
   _getChildGUIDsForId: function _getChildGUIDsForId(itemid) {
-    let anno;
-    try {
-      anno = Utils.anno(itemid, CHILDREN_ANNO);
-    } catch(ex) {
-      // Ignore
-    }
-    if (anno)
-      return anno.split(",");
+    let node = node = this._getNode(itemid);
+    let childids = [];
 
-    return this._updateChildrenAnno(itemid);
+    if (node.type == node.RESULT_TYPE_FOLDER &&
+        !this._ls.isLivemark(node.itemId)) {
+      node.QueryInterface(Ci.nsINavHistoryQueryResultNode);
+      node.containerOpen = true;
+      for (var i = 0; i < node.childCount; i++)
+        childids.push(node.getChild(i).itemId);
+    }
+    return childids.map(this.GUIDForId, this);
   },
 
   // Create a record starting from the weave id (places guid)
@@ -1136,12 +1090,6 @@ BookmarksTracker.prototype = {
         this.__ls = null;
         this.__bms = null;
         break;
-      case "weave:service:start-over":
-        // User has decided to stop syncing, we're going to stop tracking soon.
-        // This means we have to clean up the children annotations so that they
-        // won't be out of sync with reality if/when we start tracking again.
-        Engines.get("bookmarks")._store._removeAllChildrenAnnos();
-        break;
     }
   },
 
@@ -1170,10 +1118,6 @@ BookmarksTracker.prototype = {
   _GUIDForId: function _GUIDForId(item_id) {
     // Isn't indirection fun...
     return Engines.get("bookmarks")._store.GUIDForId(item_id);
-  },
-
-  _updateChildrenAnno: function _updateChildrenAnno(itemid) {
-    return Engines.get("bookmarks")._store._updateChildrenAnno(itemid);
   },
 
   /**
@@ -1238,7 +1182,6 @@ BookmarksTracker.prototype = {
 
     this._log.trace("onItemAdded: " + itemId);
     this._addId(itemId);
-    this._updateChildrenAnno(folder);
     this._addId(folder);
   },
 
@@ -1249,7 +1192,6 @@ BookmarksTracker.prototype = {
     this._log.trace("onBeforeItemRemoved: " + itemId);
     this._addId(itemId);
     let folder = Svc.Bookmark.getFolderIdForItem(itemId);
-    this._updateChildrenAnno(folder);
     this._addId(folder);
   },
 
@@ -1314,11 +1256,9 @@ BookmarksTracker.prototype = {
       return;
 
     this._log.trace("onItemMoved: " + itemId);
-    this._updateChildrenAnno(oldParent);
     this._addId(oldParent);
     if (oldParent != newParent) {
       this._addId(itemId);
-      this._updateChildrenAnno(newParent);
       this._addId(newParent);
     }
 
