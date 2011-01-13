@@ -1635,15 +1635,6 @@ MarkContext(JSTracer *trc, JSContext *acx)
 
     if (acx->compartment)
         acx->compartment->marked = true;
-
-#ifdef JS_TRACER
-    TracerState* state = acx->tracerState;
-    while (state) {
-        if (state->nativeVp)
-            MarkValueRange(trc, state->nativeVpLen, state->nativeVp, "nativeVp");
-        state = state->prev;
-    }
-#endif
 }
 
 JS_REQUIRES_STACK void
@@ -1731,6 +1722,11 @@ MarkRuntime(JSTracer *trc)
     iter = NULL;
     while (JSContext *acx = js_ContextIterator(rt, JS_TRUE, &iter))
         MarkContext(trc, acx);
+
+#ifdef JS_TRACER
+    for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
+        (*c)->traceMonitor.mark(trc);
+#endif
 
     for (ThreadDataIter i(rt); !i.empty(); i.popFront())
         i.threadData()->mark(trc);

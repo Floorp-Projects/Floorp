@@ -1333,7 +1333,7 @@ js_ReportOutOfMemory(JSContext *cx)
      * If we are in a builtin called directly from trace, don't report an
      * error. We will retry in the interpreter instead.
      */
-    if (JS_ON_TRACE(cx) && !cx->bailExit)
+    if (JS_ON_TRACE(cx) && !JS_TRACE_MONITOR(cx).bailExit)
         return;
 #endif
 
@@ -1921,8 +1921,8 @@ js_GetCurrentBytecodePC(JSContext* cx)
 
 #ifdef JS_TRACER
     if (JS_ON_TRACE(cx)) {
-        pc = cx->bailExit->pc;
-        imacpc = cx->bailExit->imacpc;
+        pc = JS_TRACE_MONITOR(cx).bailExit->pc;
+        imacpc = JS_TRACE_MONITOR(cx).bailExit->imacpc;
     } else
 #endif
     {
@@ -1947,7 +1947,7 @@ js_CurrentPCIsInImacro(JSContext *cx)
 #ifdef JS_TRACER
     VOUCH_DOES_NOT_REQUIRE_STACK();
     if (JS_ON_TRACE(cx))
-        return cx->bailExit->imacpc != NULL;
+        return JS_TRACE_MONITOR(cx).bailExit->imacpc != NULL;
     return cx->fp()->hasImacropc();
 #else
     return false;

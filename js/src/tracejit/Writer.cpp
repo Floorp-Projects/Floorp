@@ -39,6 +39,7 @@
 
 #include "jsprf.h"
 #include "jstl.h"
+#include "jscompartment.h"
 #include "Writer.h"
 #include "nanojit.h"
 
@@ -340,6 +341,11 @@ void ValidateWriter::checkAccSet(LOpcode op, LIns *base, int32_t disp, AccSet ac
         ok = dispWithin(JSContext) &&
              match(base, LIR_ldp, ACCSET_STATE, offsetof(TracerState, cx));
         break;
+
+      case ACCSET_TM:
+          // base = immp
+          ok = base->isImmP() && disp == 0;
+          break;
 
       case ACCSET_EOS:
         // base = ldp.state ...[offsetof(TracerState, eos)]

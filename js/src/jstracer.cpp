@@ -227,34 +227,37 @@ nanojit::LInsPrinter::accNames[] = {
     "sp",           // (1 <<  1) == ACCSET_STACK
     "rp",           // (1 <<  2) == ACCSET_RSTACK
     "cx",           // (1 <<  3) == ACCSET_CX
-    "eos",          // (1 <<  4) == ACCSET_EOS
-    "alloc",        // (1 <<  5) == ACCSET_ALLOC
-    "regs",         // (1 <<  6) == ACCSET_FRAMEREGS
-    "sf",           // (1 <<  7) == ACCSET_STACKFRAME
-    "rt",           // (1 <<  8) == ACCSET_RUNTIME
+    "tm",           // (1 <<  4) == ACCSET_TM
+    "eos",          // (1 <<  5) == ACCSET_EOS
+    "alloc",        // (1 <<  6) == ACCSET_ALLOC
+    "regs",         // (1 <<  7) == ACCSET_FRAMEREGS
+    "sf",           // (1 <<  8) == ACCSET_STACKFRAME
+    "rt",           // (1 <<  9) == ACCSET_RUNTIME
 
-    "objclasp",     // (1 <<  9) == ACCSET_OBJ_CLASP
-    "objflags",     // (1 << 10) == ACCSET_OBJ_FLAGS
-    "objshape",     // (1 << 11) == ACCSET_OBJ_SHAPE
-    "objproto",     // (1 << 12) == ACCSET_OBJ_PROTO
-    "objparent",    // (1 << 13) == ACCSET_OBJ_PARENT
-    "objprivate",   // (1 << 14) == ACCSET_OBJ_PRIVATE
-    "objcapacity",  // (1 << 15) == ACCSET_OBJ_CAPACITY
-    "objslots",     // (1 << 16) == ACCSET_OBJ_SLOTS
+    "objclasp",     // (1 << 10) == ACCSET_OBJ_CLASP
+    "objflags",     // (1 << 11) == ACCSET_OBJ_FLAGS
+    "objshape",     // (1 << 12) == ACCSET_OBJ_SHAPE
+    "objproto",     // (1 << 13) == ACCSET_OBJ_PROTO
+    "objparent",    // (1 << 14) == ACCSET_OBJ_PARENT
+    "objprivate",   // (1 << 15) == ACCSET_OBJ_PRIVATE
+    "objcapacity",  // (1 << 16) == ACCSET_OBJ_CAPACITY
+    "objslots",     // (1 << 17) == ACCSET_OBJ_SLOTS
 
-    "slots",        // (1 << 17) == ACCSET_SLOTS
-    "tarray",       // (1 << 18) == ACCSET_TARRAY
-    "tdata",        // (1 << 19) == ACCSET_TARRAY_DATA
-    "iter",         // (1 << 20) == ACCSET_ITER
-    "iterprops",    // (1 << 21) == ACCSET_ITER_PROPS
-    "str",          // (1 << 22) == ACCSET_STRING
-    "strmchars",    // (1 << 23) == ACCSET_STRING_MCHARS
-    "typemap",      // (1 << 24) == ACCSET_TYPEMAP
-    "fcslots",      // (1 << 25) == ACCSET_FCSLOTS
-    "argsdata",     // (1 << 26) == ACCSET_ARGS_DATA
+    "slots",        // (1 << 18) == ACCSET_SLOTS
+    "tarray",       // (1 << 19) == ACCSET_TARRAY
+    "tdata",        // (1 << 20) == ACCSET_TARRAY_DATA
+    "iter",         // (1 << 21) == ACCSET_ITER
+    "iterprops",    // (1 << 22) == ACCSET_ITER_PROPS
+    "str",          // (1 << 23) == ACCSET_STRING
+    "strmchars",    // (1 << 24) == ACCSET_STRING_MCHARS
+    "typemap",      // (1 << 25) == ACCSET_TYPEMAP
+    "fcslots",      // (1 << 26) == ACCSET_FCSLOTS
+    "argsdata",     // (1 << 27) == ACCSET_ARGS_DATA
 
     "?!"            // this entry should never be used, have it just in case
 };
+
+JS_STATIC_ASSERT(JS_ARRAY_LENGTH(nanojit::LInsPrinter::accNames) == TM_NUM_USED_ACCS + 1);
 #endif
 
 } /* namespace nanojit */
@@ -2863,6 +2866,17 @@ TraceMonitor::sweep(JSContext *cx)
         recorder->finishAbort("dead GC things");
 }
 
+void
+TraceMonitor::mark(JSTracer *trc)
+{
+    TracerState* state = tracerState;
+    while (state) {
+        if (state->nativeVp)
+            MarkValueRange(trc, state->nativeVpLen, state->nativeVp, "nativeVp");
+        state = state->prev;
+    }
+}
+
 /*
  * Box a value from the native stack back into the Value format.
  */
@@ -3176,7 +3190,7 @@ template<typename T>
 inline JSValueType
 GetUpvarOnTrace(JSContext* cx, uint32 upvarLevel, int32 slot, uint32 callDepth, double* result)
 {
-    TracerState* state = cx->tracerState;
+    TracerState* state = JS_TRACE_MONITOR(cx).tracerState;
     FrameInfo** fip = state->rp + callDepth;
 
     /*
@@ -3313,7 +3327,7 @@ GetFromClosure(JSContext* cx, JSObject* call, const ClosureVarInfo* cv, double* 
     JS_ASSERT(call->isCall());
 
 #ifdef DEBUG
-    TracerState* state = cx->tracerState;
+    TracerState* state = JS_TRACE_MONITOR(cx).tracerState;
     FrameInfo** fip = state->rp + cv->callDepth;
     int32 stackOffset = StackDepthFromCallStack(state, cv->callDepth);
     while (--fip > state->callstackBase) {
@@ -4425,25 +4439,9 @@ TraceRecorder::copy(VMSideExit* copy)
  * executing native code.
  */
 static inline bool
-ProhibitFlush(JSContext* cx)
+ProhibitFlush(TraceMonitor *tm)
 {
-    if (cx->tracerState) // early out if the given is in native code
-        return true;
-
-    JSCList *cl;
-
-#ifdef JS_THREADSAFE
-    JSThread* thread = cx->thread;
-    for (cl = thread->contextList.next; cl != &thread->contextList; cl = cl->next)
-        if (CX_FROM_THREAD_LINKS(cl)->tracerState)
-            return true;
-#else
-    JSRuntime* rt = cx->runtime;
-    for (cl = rt->contextList.next; cl != &rt->contextList; cl = cl->next)
-        if (js_ContextFromLinkField(cl)->tracerState)
-            return true;
-#endif
-    return false;
+    return !!tm->tracerState; // don't flush if we're running a trace
 }
 
 static void
@@ -4461,7 +4459,7 @@ ResetJITImpl(JSContext* cx)
     if (tm->profile)
         AbortProfiling(cx);
 #endif
-    if (ProhibitFlush(cx)) {
+    if (ProhibitFlush(tm)) {
         debug_only_print0(LC_TMTracer, "Deferring JIT flush due to deep bail.\n");
         tm->needFlush = JS_TRUE;
         return;
@@ -6416,10 +6414,11 @@ TracerState::TracerState(JSContext* cx, TraceMonitor* tm, TreeFragment* f,
     builtinStatus(0),
     nativeVp(NULL)
 {
+    JS_ASSERT(tm == &JS_TRACE_MONITOR(cx));
     JS_ASSERT(!tm->tracecx);
     tm->tracecx = cx;
-    prev = cx->tracerState;
-    cx->tracerState = this;
+    prev = tm->tracerState;
+    tm->tracerState = this;
 
     JS_ASSERT(eos == stackBase + MAX_NATIVE_STACK_SLOTS);
     JS_ASSERT(sp < eos);
@@ -6446,15 +6445,16 @@ TracerState::~TracerState()
 {
     JS_ASSERT(!nativeVp);
 
-    cx->tracerState = prev;
-    JS_TRACE_MONITOR(cx).tracecx = NULL;
+    TraceMonitor *tm = &JS_TRACE_MONITOR(cx);
+    tm->tracerState = prev;
+    tm->tracecx = NULL;
 }
 
 /* Call |f|, return the exit taken. */
 static JS_ALWAYS_INLINE VMSideExit*
 ExecuteTrace(JSContext* cx, Fragment* f, TracerState& state)
 {
-    JS_ASSERT(!cx->bailExit);
+    JS_ASSERT(!JS_TRACE_MONITOR(cx).bailExit);
 #ifdef JS_METHODJIT
     JS_ASSERT(!TRACE_PROFILER(cx));
 #endif
@@ -6466,7 +6466,7 @@ ExecuteTrace(JSContext* cx, Fragment* f, TracerState& state)
 #else
     rec = u.func(&state);
 #endif
-    JS_ASSERT(!cx->bailExit);
+    JS_ASSERT(!JS_TRACE_MONITOR(cx).bailExit);
     return (VMSideExit*)rec->exit;
 }
 
@@ -7905,17 +7905,16 @@ DeepBail(JSContext *cx)
      * one. (Most callers cannot guarantee that it's cx.)
      */
     TraceMonitor *tm = &JS_TRACE_MONITOR(cx);
-    JSContext *tracecx = tm->tracecx;
 
     /* It's a bug if a non-FAIL_STATUS builtin gets here. */
-    JS_ASSERT(tracecx->bailExit);
+    JS_ASSERT(tm->bailExit);
 
     tm->tracecx = NULL;
     debug_only_print0(LC_TMTracer, "Deep bail.\n");
-    LeaveTree(tm, *tracecx->tracerState, tracecx->bailExit);
-    tracecx->bailExit = NULL;
+    LeaveTree(tm, *tm->tracerState, tm->bailExit);
+    tm->bailExit = NULL;
 
-    TracerState* state = tracecx->tracerState;
+    TracerState* state = tm->tracerState;
     state->builtinStatus |= BUILTIN_BAILED;
 
     /*
@@ -11113,7 +11112,7 @@ TraceRecorder::emitNativeCall(JSSpecializedNative* sn, uintN argc, LIns* args[],
         // pendingSpecializedNative before taking this snapshot.
         JS_ASSERT(!pendingSpecializedNative);
 
-        // Take snapshot for DeepBail and store it in cx->bailExit.
+        // Take snapshot for DeepBail and store it in tm->bailExit.
         enterDeepBailCall();
     }
 
@@ -12002,7 +12001,7 @@ static JSBool FASTCALL
 MethodWriteBarrier(JSContext* cx, JSObject* obj, Shape* shape, JSObject* funobj)
 {
     bool ok = obj->methodWriteBarrier(cx, *shape, ObjectValue(*funobj));
-    JS_ASSERT(cx->tracerState->builtinStatus == 0);
+    JS_ASSERT(WasBuiltinSuccessful(cx));
     return ok;
 }
 JS_DEFINE_CALLINFO_4(static, BOOL_RETRY, MethodWriteBarrier, CONTEXT, OBJECT, SHAPE, OBJECT,
@@ -12226,9 +12225,9 @@ TraceRecorder::record_SetPropHit(PropertyCacheEntry* entry, const Shape* shape)
 JS_REQUIRES_STACK VMSideExit*
 TraceRecorder::enterDeepBailCall()
 {
-    // Take snapshot for DeepBail and store it in cx->bailExit.
+    // Take snapshot for DeepBail and store it in tm->bailExit.
     VMSideExit* exit = snapshot(DEEP_BAIL_EXIT);
-    w.stContextField(w.nameImmpNonGC(exit), bailExit);
+    w.stTraceMonitorField(w.nameImmpNonGC(exit), bailExit);
 
     // Tell nanojit not to discard or defer stack writes before this call.
     w.xbarrier(createGuardRecord(exit));
@@ -12241,8 +12240,8 @@ TraceRecorder::enterDeepBailCall()
 JS_REQUIRES_STACK void
 TraceRecorder::leaveDeepBailCall()
 {
-    // Keep cx->bailExit null when it's invalid.
-    w.stContextField(w.immpNull(), bailExit);
+    // Keep tm->bailExit null when it's invalid.
+    w.stTraceMonitorField(w.immpNull(), bailExit);
 }
 
 JS_REQUIRES_STACK void
@@ -12339,14 +12338,14 @@ GetPropertyByName(JSContext* cx, JSObject* obj, JSString** namep, Value* vp, PIC
         bool result = op(cx, obj, obj, id, vp);
         if (!result)
             SetBuiltinError(cx);
-        return cx->tracerState->builtinStatus == 0;
+        return WasBuiltinSuccessful(cx);
     }
 
     /* Try to hit in the cache. */
     uint32 slot;
     if (picTable->scan(obj->shape(), id, &slot)) {
         *vp = obj->getSlot(slot);
-        return cx->tracerState->builtinStatus == 0;
+        return WasBuiltinSuccessful(cx);
     }
 
     const Shape *shape;
@@ -12366,7 +12365,7 @@ GetPropertyByName(JSContext* cx, JSObject* obj, JSString** namep, Value* vp, PIC
         picTable->update(obj->shape(), id, shape->slot);
     }
     
-    return cx->tracerState->builtinStatus == 0;
+    return WasBuiltinSuccessful(cx);
 }
 JS_DEFINE_CALLINFO_5(static, BOOL_FAIL, GetPropertyByName, CONTEXT, OBJECT, STRINGPTR, VALUEPTR,
                      PICTABLE,
@@ -12435,7 +12434,7 @@ GetPropertyByIndex(JSContext* cx, JSObject* obj, int32 index, Value* vp)
         SetBuiltinError(cx);
         return JS_FALSE;
     }
-    return cx->tracerState->builtinStatus == 0;
+    return WasBuiltinSuccessful(cx);
 }
 JS_DEFINE_CALLINFO_4(static, BOOL_FAIL, GetPropertyByIndex, CONTEXT, OBJECT, INT32, VALUEPTR, 0,
                      ACCSET_STORE_ANY)
@@ -12463,7 +12462,7 @@ GetPropertyById(JSContext* cx, JSObject* obj, jsid id, Value* vp)
         SetBuiltinError(cx);
         return JS_FALSE;
     }
-    return cx->tracerState->builtinStatus == 0;
+    return WasBuiltinSuccessful(cx);
 }
 JS_DEFINE_CALLINFO_4(static, BOOL_FAIL, GetPropertyById, CONTEXT, OBJECT, JSID, VALUEPTR,
                      0, ACCSET_STORE_ANY)
@@ -12520,7 +12519,7 @@ GetPropertyWithNativeGetter(JSContext* cx, JSObject* obj, Shape* shape, Value* v
         SetBuiltinError(cx);
         return JS_FALSE;
     }
-    return cx->tracerState->builtinStatus == 0;
+    return WasBuiltinSuccessful(cx);
 }
 JS_DEFINE_CALLINFO_4(static, BOOL_FAIL, GetPropertyWithNativeGetter,
                      CONTEXT, OBJECT, SHAPE, VALUEPTR, 0, ACCSET_STORE_ANY)
@@ -12841,7 +12840,7 @@ SetPropertyByName(JSContext* cx, JSObject* obj, JSString** namep, Value* vp, JSB
         SetBuiltinError(cx);
         return false;
     }
-    return cx->tracerState->builtinStatus == 0;
+    return WasBuiltinSuccessful(cx);
 }
 JS_DEFINE_CALLINFO_5(static, BOOL_FAIL, SetPropertyByName, 
                      CONTEXT, OBJECT, STRINGPTR, VALUEPTR, BOOL,
@@ -12858,7 +12857,7 @@ InitPropertyByName(JSContext* cx, JSObject* obj, JSString** namep, ValueArgType 
         SetBuiltinError(cx);
         return JS_FALSE;
     }
-    return cx->tracerState->builtinStatus == 0;
+    return WasBuiltinSuccessful(cx);
 }
 JS_DEFINE_CALLINFO_4(static, BOOL_FAIL, InitPropertyByName, CONTEXT, OBJECT, STRINGPTR, VALUE,
                      0, ACCSET_STORE_ANY)
@@ -12897,7 +12896,7 @@ SetPropertyByIndex(JSContext* cx, JSObject* obj, int32 index, Value* vp, JSBool 
         SetBuiltinError(cx);
         return false;
     }
-    return cx->tracerState->builtinStatus == 0;
+    return WasBuiltinSuccessful(cx);
 }
 JS_DEFINE_CALLINFO_5(static, BOOL_FAIL, SetPropertyByIndex, CONTEXT, OBJECT, INT32, VALUEPTR, BOOL,
                      0, ACCSET_STORE_ANY)
@@ -12913,7 +12912,7 @@ InitPropertyByIndex(JSContext* cx, JSObject* obj, int32 index, ValueArgType arg)
         SetBuiltinError(cx);
         return JS_FALSE;
     }
-    return cx->tracerState->builtinStatus == 0;
+    return WasBuiltinSuccessful(cx);
 }
 JS_DEFINE_CALLINFO_4(static, BOOL_FAIL, InitPropertyByIndex, CONTEXT, OBJECT, INT32, VALUE,
                      0, ACCSET_STORE_ANY)
@@ -13618,8 +13617,7 @@ TraceRecorder::record_NativeCallComplete()
      */
 
     if (JSTN_ERRTYPE(pendingSpecializedNative) == FAIL_STATUS) {
-        /* Keep cx->bailExit null when it's invalid. */
-        w.stContextField(w.immpNull(), bailExit);
+        leaveDeepBailCall();
 
         LIns* status = w.ldiStateField(builtinStatus);
         if (pendingSpecializedNative == &generatedSpecializedNative) {
@@ -14441,7 +14439,7 @@ ObjectToIterator(JSContext* cx, JSObject *obj, int32 flags, Value* vp)
         SetBuiltinError(cx);
         return false;
     }
-    return cx->tracerState->builtinStatus == 0;
+    return WasBuiltinSuccessful(cx);
 }
 JS_DEFINE_CALLINFO_4(static, BOOL_FAIL, ObjectToIterator, CONTEXT, OBJECT, INT32, VALUEPTR,
                      0, ACCSET_STORE_ANY)
@@ -14487,7 +14485,7 @@ IteratorMore(JSContext *cx, JSObject *iterobj, Value *vp)
         SetBuiltinError(cx);
         return false;
     }
-    return cx->tracerState->builtinStatus == 0;
+    return WasBuiltinSuccessful(cx);
 }
 JS_DEFINE_CALLINFO_3(extern, BOOL_FAIL, IteratorMore, CONTEXT, OBJECT, VALUEPTR,
                      0, ACCSET_STORE_ANY)
@@ -14540,7 +14538,7 @@ CloseIterator(JSContext *cx, JSObject *iterobj)
         SetBuiltinError(cx);
         return false;
     }
-    return cx->tracerState->builtinStatus == 0;
+    return WasBuiltinSuccessful(cx);
 }
 JS_DEFINE_CALLINFO_2(extern, BOOL_FAIL, CloseIterator, CONTEXT, OBJECT, 0, ACCSET_STORE_ANY)
 

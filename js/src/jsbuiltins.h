@@ -163,7 +163,7 @@ struct ClosureVarInfo;
  *         OBJECT_RETRY_NULL: NULL
  *
  *     _RETRY function calls are faster than _FAIL calls.  Each _RETRY call
- *     saves two writes to cx->bailExit and a read from state->builtinStatus.
+ *     saves two writes to tm->bailExit and a read from state->builtinStatus.
  *
  *   - All other traceable natives are infallible (e.g. Date.now, Math.log).
  *

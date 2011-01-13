@@ -792,7 +792,7 @@ CanLeaveTrace(JSContext *cx)
 {
     JS_ASSERT(JS_ON_TRACE(cx));
 #ifdef JS_TRACER
-    return cx->bailExit != NULL;
+    return JS_TRACE_MONITOR(cx).bailExit != NULL;
 #else
     return JS_FALSE;
 #endif
