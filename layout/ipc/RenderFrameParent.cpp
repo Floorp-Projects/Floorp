@@ -49,7 +49,7 @@
 #include "nsViewportFrame.h"
 #include "nsSubDocumentFrame.h"
 
-typedef nsFrameLoader::ViewportConfig ViewportConfig;
+typedef nsContentView::ViewConfig ViewConfig;
 using namespace mozilla::layers;
 
 namespace mozilla {
@@ -85,7 +85,7 @@ AssertValidContainerOfShadowTree(ContainerLayer* aContainer,
 static void
 ComputeShadowTreeTransform(nsIFrame* aContainerFrame,
                            const FrameMetrics& aMetrics,
-                           const ViewportConfig& aConfig,
+                           const ViewConfig& aConfig,
                            nsDisplayListBuilder* aBuilder,
                            nsIntPoint* aShadowTranslation,
                            float* aShadowXScale,
@@ -286,7 +286,7 @@ RenderFrameParent::BuildLayer(nsDisplayListBuilder* aBuilder,
     float shadowXScale, shadowYScale;
     ComputeShadowTreeTransform(aFrame,
                                shadowRoot->GetFrameMetrics(),
-                               mFrameLoader->GetViewportConfig(),
+                               mFrameLoader->GetContentView()->GetViewConfig(),
                                aBuilder,
                                &shadowTranslation,
                                &shadowXScale, &shadowYScale);
