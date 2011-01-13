@@ -34,3 +34,5 @@ try {
     reportCompare(e instanceof InternalError, true, "Internal error due to overallocation is ok.");
 }
 reportCompare(true, true, "No crash occurred.");
+
+print("All tests passed!");
