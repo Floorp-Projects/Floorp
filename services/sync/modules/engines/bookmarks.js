@@ -660,18 +660,44 @@ BookmarksStore.prototype = {
     }
   },
 
-  _getChildGUIDsForId: function _getChildGUIDsForId(itemid) {
-    let node = node = this._getNode(itemid);
-    let childids = [];
-
-    if (node.type == node.RESULT_TYPE_FOLDER &&
-        !this._ls.isLivemark(node.itemId)) {
-      node.QueryInterface(Ci.nsINavHistoryQueryResultNode);
-      node.containerOpen = true;
-      for (var i = 0; i < node.childCount; i++)
-        childids.push(node.getChild(i).itemId);
+  __childGUIDsStm: null,
+  get _childGUIDsStm() {
+    if (this.__childGUIDsStm) {
+      return this.__childGUIDsStm;
     }
-    return childids.map(this.GUIDForId, this);
+
+    let stmt;
+    if (this._haveGUIDColumn) {
+      stmt = this._getStmt(
+        "SELECT id AS item_id, guid " +
+        "FROM moz_bookmarks " +
+        "WHERE parent = :parent " +
+        "ORDER BY position");
+    } else {
+      stmt = this._getStmt(
+        "SELECT b.id AS item_id, " +
+          "(SELECT id FROM moz_anno_attributes WHERE name = '" + GUID_ANNO + "') AS name_id," +
+          "a.content AS guid " +
+        "FROM moz_bookmarks b " +
+        "LEFT JOIN moz_items_annos a ON a.item_id = b.id " +
+                                   "AND a.anno_attribute_id = name_id " +
+        "WHERE b.parent = :parent " +
+        "ORDER BY b.position");
+    }
+    return this.__childGUIDsStm = stmt;
+  },
+
+  _getChildGUIDsForId: function _getChildGUIDsForId(itemid) {
+    let stmt = this._childGUIDsStm;
+    stmt.params.parent = itemid;
+    let rows = Utils.queryAsync(stmt, ["item_id", "guid"]);
+    return rows.map(function (row) {
+      if (row.guid) {
+        return row.guid;
+      }
+      // A GUID hasn't been assigned to this item yet, do this now.
+      return this.GUIDForId(row.item_id);
+    }, this);
   },
 
   // Create a record starting from the weave id (places guid)
