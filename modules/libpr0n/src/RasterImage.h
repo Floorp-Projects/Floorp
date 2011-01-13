@@ -213,7 +213,8 @@ public:
   PRUint32 GetSourceDataSize();
 
   /* Triggers discarding. */
-  void Discard();
+  void Discard(bool force = false);
+  void ForceDiscard() { Discard(/* force = */ true); }
 
   /* Callbacks for decoders */
   nsresult SetFrameDisposalMethod(PRUint32 aFrameNum,
@@ -450,7 +451,17 @@ private:
 private: // data
 
   nsIntSize                  mSize;
-  
+
+  // Whether mFrames below were decoded using any special flags.
+  // Some flags (e.g. unpremultiplied data) may not be compatible
+  // with the browser's needs for displaying the image to the user.
+  // As such, we may need to redecode if we're being asked for
+  // a frame with different flags.  0 indicates default flags.
+  //
+  // Valid flag bits are imgIContainer::FLAG_DECODE_NO_PREMULTIPLY_ALPHA
+  // and imgIContainer::FLAG_DECODE_NO_COLORSPACE_CONVERSION.
+  PRUint32                   mFrameDecodeFlags;
+
   //! All the frames of the image
   // IMPORTANT: if you use mFrames in a method, call EnsureImageIsDecoded() first 
   // to ensure that the frames actually exist (they may have been discarded to save
@@ -530,6 +541,7 @@ private: // data
   // Helpers
   void DoError();
   PRBool CanDiscard();
+  PRBool CanForciblyDiscard();
   PRBool DiscardingActive();
   PRBool StoringSourceData();
 

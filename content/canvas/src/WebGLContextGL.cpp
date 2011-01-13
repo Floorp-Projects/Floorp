@@ -3198,9 +3198,17 @@ WebGLContext::DOMElementToImageSurface(nsIDOMElement *imageOrCanvas,
 {
     gfxImageSurface *surf = nsnull;
 
+    PRUint32 flags =
+        nsLayoutUtils::SFE_WANT_NEW_SURFACE |
+        nsLayoutUtils::SFE_WANT_IMAGE_SURFACE;
+
+    if (mPixelStoreColorspaceConversion == LOCAL_GL_NONE)
+        flags |= nsLayoutUtils::SFE_NO_COLORSPACE_CONVERSION;
+    if (!mPixelStorePremultiplyAlpha)
+        flags |= nsLayoutUtils::SFE_NO_PREMULTIPLY_ALPHA;
+
     nsLayoutUtils::SurfaceFromElementResult res =
-        nsLayoutUtils::SurfaceFromElement(imageOrCanvas,
-                                          nsLayoutUtils::SFE_WANT_NEW_SURFACE | nsLayoutUtils::SFE_WANT_IMAGE_SURFACE);
+        nsLayoutUtils::SurfaceFromElement(imageOrCanvas, flags);
     if (!res.mSurface)
         return NS_ERROR_FAILURE;
 
@@ -4011,7 +4019,7 @@ WebGLContext::TexImage2D_dom(WebGLenum target, WebGLint level, WebGLenum interna
                            isurf->Width(), isurf->Height(), isurf->Stride(), 0,
                            format, type,
                            isurf->Data(), byteLength,
-                           srcFormat, PR_TRUE);
+                           srcFormat, mPixelStorePremultiplyAlpha);
 }
 
 NS_IMETHODIMP

@@ -148,6 +148,13 @@
                     (GFX_PREMULTIPLY(g,a) << 8) |                       \
                     (GFX_PREMULTIPLY(b,a))
 
+/** 
+ * Macro to pack the 4 8-bit channels (A,R,G,B) 
+ * into a 32-bit packed NON-premultiplied pixel.
+ */
+#define GFX_PACKED_PIXEL_NO_PREMULTIPLY(a,r,g,b)                        \
+    (((a) << 24) | ((r) << 16) | ((g) << 8) | (b))
+
 
 /**
  * A color value, storing red, green, blue and alpha components.

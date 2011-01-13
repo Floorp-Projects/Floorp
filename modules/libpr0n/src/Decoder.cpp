@@ -45,7 +45,8 @@ namespace mozilla {
 namespace imagelib {
 
 Decoder::Decoder()
-  : mFrameCount(0)
+  : mDecodeFlags(0)
+  , mFrameCount(0)
   , mFailCode(NS_OK)
   , mInitialized(false)
   , mSizeDecode(false)

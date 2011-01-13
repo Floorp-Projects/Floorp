@@ -123,6 +123,8 @@ public:
   qcms_transform *mTransform;
 
   PRPackedBool mReading;
+
+  PRUint32 mCMSMode;
 };
 
 } // namespace imagelib

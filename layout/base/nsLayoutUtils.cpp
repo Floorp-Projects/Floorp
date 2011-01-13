@@ -3567,6 +3567,11 @@ nsLayoutUtils::SurfaceFromElement(nsIDOMElement *aElement,
   PRBool forceCopy = (aSurfaceFlags & SFE_WANT_NEW_SURFACE) != 0;
   PRBool wantImageSurface = (aSurfaceFlags & SFE_WANT_IMAGE_SURFACE) != 0;
 
+  if (aSurfaceFlags & SFE_NO_PREMULTIPLY_ALPHA) {
+    forceCopy = PR_TRUE;
+    wantImageSurface = PR_TRUE;
+  }
+
   // If it's a <canvas>, we may be able to just grab its internal surface
   nsCOMPtr<nsIDOMHTMLCanvasElement> domCanvas = do_QueryInterface(aElement);
   if (node && domCanvas) {
@@ -3599,6 +3604,12 @@ nsLayoutUtils::SurfaceFromElement(nsIDOMElement *aElement,
       rv = (static_cast<nsICanvasElementExternal*>(canvas))->RenderContextsExternal(ctx, gfxPattern::FILTER_NEAREST);
       if (NS_FAILED(rv))
         return result;
+    }
+
+    if (aSurfaceFlags & SFE_NO_PREMULTIPLY_ALPHA) {
+      // we can modify this surface since we force a copy above when
+      // when NO_PREMULTIPLY_ALPHA is set
+      gfxUtils::UnpremultiplyImageSurface(static_cast<gfxImageSurface*>(surf.get()));
     }
 
     nsCOMPtr<nsIPrincipal> principal = node->NodePrincipal();
@@ -3714,9 +3725,14 @@ nsLayoutUtils::SurfaceFromElement(nsIDOMElement *aElement,
   PRUint32 whichFrame = (aSurfaceFlags & SFE_WANT_FIRST_FRAME)
                         ? (PRUint32) imgIContainer::FRAME_FIRST
                         : (PRUint32) imgIContainer::FRAME_CURRENT;
+  PRUint32 frameFlags = imgIContainer::FLAG_SYNC_DECODE;
+  if (aSurfaceFlags & SFE_NO_COLORSPACE_CONVERSION)
+    frameFlags |= imgIContainer::FLAG_DECODE_NO_COLORSPACE_CONVERSION;
+  if (aSurfaceFlags & SFE_NO_PREMULTIPLY_ALPHA)
+    frameFlags |= imgIContainer::FLAG_DECODE_NO_PREMULTIPLY_ALPHA;
   nsRefPtr<gfxASurface> framesurf;
   rv = imgContainer->GetFrame(whichFrame,
-                              imgIContainer::FLAG_SYNC_DECODE,
+                              frameFlags,
                               getter_AddRefs(framesurf));
   if (NS_FAILED(rv))
     return result;
