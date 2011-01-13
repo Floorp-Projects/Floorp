@@ -2060,7 +2060,7 @@ js_ArrayCompPush_tn(JSContext *cx, JSObject *obj, ValueArgType v)
         return JS_FALSE;
     }
 
-    return cx->tracerState->builtinStatus == 0;
+    return WasBuiltinSuccessful(cx);
 }
 JS_DEFINE_CALLINFO_3(extern, BOOL_FAIL, js_ArrayCompPush_tn, CONTEXT, OBJECT,
                      VALUE, 0, nanojit::ACCSET_STORE_ANY)
