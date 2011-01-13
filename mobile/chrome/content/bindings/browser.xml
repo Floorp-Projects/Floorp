@@ -75,7 +75,7 @@
       <field name="contentWindowId">null</field>
 
       <property name="messageManager"
-                onget="return this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader.messageManager;"
+                onget="return this._frameLoader.messageManager;"
                 readonly="true"/>
 
       <field name="_contentTitle">null</field>
@@ -362,6 +362,7 @@
       </method>
 
       <field name="_frameLoader">null</field>
+      <field name="_contentViewManager">null</field>
 
       <!-- Dimensions of content window -->
       <property name="contentWindowWidth"
@@ -410,13 +411,16 @@
             let cacheX = Math.max(this._pendingThresholdX / this._recacheRatio, bcr.width / 2);
             let cacheY = Math.max(this._pendingThresholdY / this._recacheRatio, bcr.height / 2);
 
-            let frameLoader = this._frameLoader;
+            let rootView = this._contentViewManager.rootContentView;
+            if (!rootView)
+              return;
             this.messageManager.sendAsyncMessage("Content:SetCacheViewport", {
-              x: (frameLoader.viewportScrollX - cacheX + bcr.width  / 2) / scale,
-              y: (frameLoader.viewportScrollY - cacheY + bcr.height / 2) / scale,
+              x: (rootView.scrollX - cacheX + bcr.width  / 2) / scale,
+              y: (rootView.scrollY - cacheY + bcr.height / 2) / scale,
               w: cacheX * 2 / scale,
               h: cacheY * 2 / scale,
-              scale: scale
+              scale: scale,
+              id: rootView.id
             });
 
             this._pendingPixelsX = 0;
@@ -429,10 +433,10 @@
       <method name="_updateCSSViewport">
         <body>
           <![CDATA[
-            let frameLoader = this._frameLoader;
+            let rootView = this._contentViewManager.rootContentView;
             this.messageManager.sendAsyncMessage("Content:ScrollTo", {
-              x: frameLoader.viewportScrollX / this._scale,
-              y: frameLoader.viewportScrollY / this._scale
+              x: rootView.scrollX / this._scale,
+              y: rootView.scrollY / this._scale
             });
           ]]>
         </body>
@@ -521,6 +525,7 @@
       <constructor>
         <![CDATA[
           this._frameLoader = this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader;
+          this._contentViewManager = this._frameLoader.QueryInterface(Components.interfaces.nsIContentViewManager);
 
           let prefService = Components.classes["@mozilla.org/preferences-service;1"]
                                               .getService(Components.interfaces.nsIPrefService)
@@ -731,7 +736,8 @@
               return;
 
             this._scale = scale;
-            this._frameLoader.setViewportScale(scale, scale);
+            let rootView = this._contentViewManager.rootContentView;
+            rootView.setScale(scale, scale);
             this._updateCacheViewport();
 
             let event = document.createEvent("Events");
@@ -747,7 +753,7 @@
         <parameter name="y"/>
         <body>
           <![CDATA[
-            let frameLoader = this._frameLoader;
+            let rootView = this._contentViewManager.rootContentView;
 
             // Bounding content rectangle is in device pixels
             let bcr = this.getBoundingClientRect();
@@ -757,13 +763,13 @@
             let docWidth = this.contentDocumentWidth * this.scale;
             let docHeight = this.contentDocumentHeight * this.scale;
 
-            x = Math.floor(Math.max(0, Math.min(docWidth - viewportWidth, frameLoader.viewportScrollX + x)) - frameLoader.viewportScrollX);
-            y = Math.floor(Math.max(0, Math.min(docHeight - viewportHeight, frameLoader.viewportScrollY + y)) - frameLoader.viewportScrollY);
+            x = Math.floor(Math.max(0, Math.min(docWidth - viewportWidth, rootView.scrollX + x)) - rootView.scrollX);
+            y = Math.floor(Math.max(0, Math.min(docHeight - viewportHeight, rootView.scrollY + y)) - rootView.scrollY);
 
             if (x == 0 && y == 0)
               return;
 
-            frameLoader.scrollViewportBy(x, y);
+            rootView.scrollBy(x, y);
 
             // Add this to the amount of pixels we have "used" from our cache. When this hits the
             // threshold, we will refresh.
@@ -783,8 +789,8 @@
         <parameter name="y"/>
         <body>
           <![CDATA[
-            let frameLoader = this._frameLoader;
-            this.scrollBy(x - frameLoader.viewportScrollX, y - frameLoader.viewportScrollY);
+            let rootView = this._contentViewManager.rootContentView;
+            this.scrollBy(x - rootView.scrollX, y - rootView.scrollY);
           ]]>
         </body>
       </method>
@@ -793,8 +799,8 @@
       <method name="getPosition">
         <body>
           <![CDATA[
-            let frameLoader = this._frameLoader;
-            return { x: frameLoader.viewportScrollX, y: frameLoader.viewportScrollY };
+            let rootView = this._contentViewManager.rootContentView;
+            return { x: rootView.scrollX, y: rootView.scrollY };
           ]]>
         </body>
       </method>

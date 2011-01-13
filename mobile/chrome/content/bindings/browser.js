@@ -291,15 +291,42 @@ let ContentScroll =  {
         break;
 
       case "Content:SetCacheViewport": {
-        let displayport = new Rect(json.x, json.y, json.w, json.h);
-        if (displayport.isEmpty())
+        let rootCwu = Util.getWindowUtils(content);
+        if (json.id == 1)
+          rootCwu.setResolution(json.scale, json.scale);
+
+         let displayport = new Rect(json.x, json.y, json.w, json.h);
+         if (displayport.isEmpty())
+           break;
+ 
+        let cwu20 = rootCwu.QueryInterface(Ci.nsIDOMWindowUtils_MOZILLA_2_0_BRANCH);
+        let element = cwu20.findElementWithViewId(json.id);
+        if (!element)
           break;
 
-        let scrollOffset = Util.getScrollOffset(content);
-        let cwu = Util.getWindowUtils(content);
-        cwu.setResolution(json.scale, json.scale);
-        cwu.setDisplayPort(displayport.x - scrollOffset.x, displayport.y - scrollOffset.y,
-                           displayport.width, displayport.height);
+        let win = element.ownerDocument.defaultView;
+
+        let displayportElement;
+        let scrollOffset;
+
+        if (element.parentNode != element.ownerDocument) {
+          element.scrollLeft = json.scrollX;
+          element.scrollTop = json.scrollY;
+          displayportElement = element;
+          scrollOffset = { x: element.scrollLeft, y: element.scrollTop };
+        } else {
+          if (json.id != 1)
+            win.scrollTo(json.scrollX, json.scrollY);
+          displayportElement = null;
+          scrollOffset = Util.getScrollOffset(win);
+        }
+
+        let winCwu = Util.getWindowUtils(win);
+        winCwu.setDisplayPort(
+          displayport.x - scrollOffset.x, displayport.y - scrollOffset.y,
+          displayport.width, displayport.height,
+          element);
+
         break;
       }
 
@@ -313,10 +340,15 @@ let ContentScroll =  {
 
   handleEvent: function(aEvent) {
     switch (aEvent.type) {
-      case "scroll":
+      case "scroll": {
+        let doc = aEvent.target;
+        if (doc != content.document)
+          return;
+
         let scrollOffset = Util.getScrollOffset(content);
         sendAsyncMessage("scroll", scrollOffset);
         break;
+      }
 
       case "MozScrolledAreaChanged": {
         let doc = aEvent.originalTarget;

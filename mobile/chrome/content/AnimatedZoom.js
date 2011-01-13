@@ -92,8 +92,8 @@ const AnimatedZoom = {
     // There is some bug that I have not yet discovered that make browser.scrollTo
     // not behave correctly and there is no intelligence in browser.scale to keep
     // the actual resolution changes small.
-    getBrowser()._frameLoader.setViewportScale(zoomLevel, zoomLevel);
-    getBrowser()._frameLoader.scrollViewportTo(nextRect.left * zoomRatio, nextRect.top * zoomRatio);
+    getBrowser()._contentViewManager.rootContentView.setScale(zoomLevel, zoomLevel);
+    getBrowser()._contentViewManager.rootContentView.scrollTo(nextRect.left * zoomRatio, nextRect.top * zoomRatio);
     this.zoomRect = nextRect;
   },
 
