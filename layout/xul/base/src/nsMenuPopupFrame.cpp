@@ -900,7 +900,7 @@ nsMenuPopupFrame::AdjustPositionForAnchorAlign(nsRect& anchorRect,
   // flip the anchor and alignment for right-to-left
   PRInt8 popupAnchor(mPopupAnchor);
   PRInt8 popupAlign(mPopupAlignment);
-  if (GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
+  if (IsDirectionRTL()) {
     // no need to flip the centered anchor types
     if (popupAnchor < POPUPALIGNMENT_LEFTCENTER) {
       popupAnchor = -popupAnchor;
@@ -1183,7 +1183,7 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame, PRBool aIsMove)
 
     // mXPos and mYPos specify an additonal offset passed to OpenPopup that
     // should be added to the position
-    if (GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL)
+    if (IsDirectionRTL())
       screenPoint.x -= presContext->CSSPixelsToAppUnits(mXPos);
     else
       screenPoint.x += presContext->CSSPixelsToAppUnits(mXPos);
@@ -1364,7 +1364,7 @@ nsMenuPopupFrame::GetConstraintRect(const nsRect& aAnchorRect,
 void nsMenuPopupFrame::CanAdjustEdges(PRInt8 aHorizontalSide, PRInt8 aVerticalSide, nsIntPoint& aChange)
 {
   PRInt8 popupAlign(mPopupAlignment);
-  if (GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
+  if (IsDirectionRTL()) {
     popupAlign = -popupAlign;
   }
 
