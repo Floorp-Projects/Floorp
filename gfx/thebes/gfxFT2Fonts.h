@@ -49,6 +49,16 @@
 
 typedef struct FT_FaceRec_* FT_Face;
 
+class FileAndIndex {
+public:
+    FileAndIndex(nsCString aFilename, PRUint32 aIndex) :
+        filename(aFilename), index(aIndex) {}
+    FileAndIndex(FileAndIndex* fai) :
+        filename(fai->filename), index(fai->index) {}
+    nsCString filename;
+    PRUint32 index;
+};
+
 /**
  * FontFamily is a class that describes one of the fonts on the users system.  It holds
  * each FontEntry (maps more directly to a font face) which holds font type, charset info
@@ -62,10 +72,13 @@ public:
         gfxFontFamily(aName) { }
 
     FontEntry *FindFontEntry(const gfxFontStyle& aFontStyle);
+    virtual void FindStyleVariations();
+    void AddFontFileAndIndex(nsCString aFilename, PRUint32 aIndex);
 
-protected:
-    virtual PRBool FindWeightsForStyle(gfxFontEntry* aFontsForWeights[],
-                                       PRBool anItalic, PRInt16 aStretch);
+private:
+    // mFilenames are queus of font files that
+    // need to be lazily processed into font entries
+    nsTArray<FileAndIndex> mFilenames;
 };
 
 class FontEntry : public gfxFontEntry

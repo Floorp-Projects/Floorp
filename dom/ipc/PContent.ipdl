@@ -81,6 +81,12 @@ union StorageConstructData
     StorageClone;
 };
 
+struct FontListEntry {
+    nsCString familyName;
+    nsCString filepath;
+    PRUint32  index;
+};
+
 rpc protocol PContent
 {
     manages PAudio;
@@ -143,6 +149,8 @@ parent:
 
     // PrefService message
     sync ReadPrefsArray() returns (PrefTuple[] retValue);
+
+    sync ReadFontList() returns (FontListEntry[] retValue);
 
     sync SyncMessage(nsString aMessage, nsString aJSON)
       returns (nsString[] retval);
