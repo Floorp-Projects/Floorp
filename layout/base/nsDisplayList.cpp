@@ -1612,6 +1612,8 @@ nsDisplayOwnLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
   return layer.forget();
 }
 
+#ifdef MOZ_IPC
+
 nsDisplayScrollLayer::nsDisplayScrollLayer(nsDisplayListBuilder* aBuilder,
                                            nsDisplayList* aList,
                                            nsIFrame* aForFrame,
@@ -1679,6 +1681,8 @@ nsDisplayScrollLayer::~nsDisplayScrollLayer()
 {
   MOZ_COUNT_DTOR(nsDisplayScrollLayer);
 }
+#endif
+
 #endif
 
 nsDisplayClip::nsDisplayClip(nsDisplayListBuilder* aBuilder,
