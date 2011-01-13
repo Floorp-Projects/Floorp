@@ -785,7 +785,7 @@ let TabItems = {
   cachedDataCounter: 0,  // total number of cached data being displayed.
   tabsProgressListener: null,
   _tabsWaitingForUpdate: [],
-  _heartbeatOn: false, // see explanation at startHeartbeat() below
+  _heartbeat: null, // see explanation at startHeartbeat() below
   _heartbeatTiming: 100, // milliseconds between _checkHeartbeat() calls
   _lastUpdateTime: Date.now(),
   _eventListeners: [],
@@ -1053,26 +1053,25 @@ let TabItems = {
   // Start a new heartbeat if there isn't one already started.
   // The heartbeat is a chain of setTimeout calls that allows us to spread
   // out update calls over a period of time.
-  // _heartbeatOn is used to make sure that we don't add multiple 
+  // _heartbeat is used to make sure that we don't add multiple 
   // setTimeout chains.
   startHeartbeat: function TabItems_startHeartbeat() {
-    if (!this._heartbeatOn) {
-      this._heartbeatOn = true;
+    if (!this._heartbeat) {
       let self = this;
-      setTimeout(function() {
+      this._heartbeat = setTimeout(function() {
         self._checkHeartbeat();
       }, this._heartbeatTiming);
     }
   },
-  
+
   // ----------
   // Function: _checkHeartbeat
   // This periodically checks for tabs waiting to be updated, and calls
   // _update on them.
   // Should only be called by startHeartbeat and resumePainting.
   _checkHeartbeat: function TabItems__checkHeartbeat() {
-    this._heartbeatOn = false;
-    
+    this._heartbeat = null;
+
     if (this.isPaintingPaused())
       return;
 
@@ -1094,8 +1093,12 @@ let TabItems = {
    // pausePainting needs to be mirrored with a call to <resumePainting>.
    pausePainting: function TabItems_pausePainting() {
      this.paintingPaused++;
+     if (this._heartbeat) {
+       clearTimeout(this._heartbeat);
+       this._heartbeat = null;
+     }
    },
- 
+
    // ----------
    // Function: resumePainting
    // Undoes a call to <pausePainting>. For instance, if you called
