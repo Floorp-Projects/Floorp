@@ -69,6 +69,8 @@ using namespace mozilla;
 using namespace mozilla::layers;
 typedef FrameMetrics::ViewID ViewID;
 
+static ViewID sScrollIdCounter = FrameMetrics::START_SCROLL_ID;
+
 nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
     Mode aMode, PRBool aBuildCaret)
     : mReferenceFrame(aReferenceFrame),
@@ -1605,6 +1607,86 @@ nsDisplayOwnLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mList);
   return layer.forget();
 }
+
+nsDisplayScrollLayer::nsDisplayScrollLayer(nsDisplayListBuilder* aBuilder,
+                                           nsDisplayList* aList,
+                                           nsIFrame* aForFrame,
+                                           nsIFrame* aViewportFrame)
+  : nsDisplayOwnLayer(aBuilder, aForFrame, aList)
+  , mViewportFrame(aViewportFrame)
+{
+#ifdef NS_BUILD_REFCNT_LOGGING
+  MOZ_COUNT_CTOR(nsDisplayOwnLayer);
+#endif
+
+  NS_ASSERTION(mFrame && mFrame->GetContent(),
+               "Need a child frame with content");
+}
+
+already_AddRefed<Layer>
+nsDisplayScrollLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
+                                 LayerManager* aManager) {
+  nsRefPtr<ContainerLayer> layer = aBuilder->LayerBuilder()->
+    BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mList);
+
+  // Get the already set unique ID for scrolling this content remotely.
+  // Or, if not set, generate a new ID.
+  ViewID scrollId;
+  {
+    nsIContent* content = mFrame->GetContent();
+    void* scrollIdProperty = content->GetProperty(nsGkAtoms::RemoteId);
+    if (scrollIdProperty) {
+      scrollId = *static_cast<ViewID*>(scrollIdProperty);
+    } else {
+      scrollId = sScrollIdCounter++;
+      content->SetProperty(nsGkAtoms::RemoteId, new ViewID(scrollId),
+                           nsINode::DestroyProperty<ViewID>);
+    }
+  }
+
+
+  nsRect viewport = mViewportFrame->GetRect() -
+                    mViewportFrame->GetPosition() +
+                    aBuilder->ToReferenceFrame(mViewportFrame);
+
+  RecordFrameMetrics(mFrame, layer, mVisibleRect, viewport, scrollId);
+
+  return layer.forget();
+}
+
+PRBool
+nsDisplayScrollLayer::ComputeVisibility(nsDisplayListBuilder* aBuilder,
+                                        nsRegion* aVisibleRegion)
+{
+  nsPresContext* presContext = mFrame->PresContext();
+  nsIPresShell* presShell = presContext->GetPresShell();
+
+  if (presShell->UsingDisplayPort()) {
+    // The visible region for the children may be much bigger than the hole we
+    // are viewing the children from, so that the compositor process has enough
+    // content to asynchronously pan while content is being refreshed.
+
+    nsRegion childVisibleRegion = presShell->GetDisplayPort() + aBuilder->ToReferenceFrame(mViewportFrame);
+
+    nsRect boundedRect;
+    boundedRect.IntersectRect(childVisibleRegion.GetBounds(), mList.GetBounds(aBuilder));
+    PRBool visible = mList.ComputeVisibilityForSublist(
+      aBuilder, &childVisibleRegion, boundedRect);
+    mVisibleRect = boundedRect;
+
+    return visible;
+
+  } else {
+    return nsDisplayOwnLayer::ComputeVisibility(aBuilder, aVisibleRegion);
+  }
+}
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+nsDisplayScrollLayer::~nsDisplayScrollLayer()
+{
+  MOZ_COUNT_DTOR(nsDisplayScrollLayer);
+}
+#endif
 
 nsDisplayClip::nsDisplayClip(nsDisplayListBuilder* aBuilder,
                              nsIFrame* aFrame, nsDisplayItem* aItem,

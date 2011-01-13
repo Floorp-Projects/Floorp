@@ -581,6 +581,16 @@ public:
                             nsresult *aStatus = nsnull) const;
 
   /**
+   * Useful template for use with SetProperty.
+   */
+  template <class T>
+  static void DestroyProperty(void* aObject, nsIAtom* aPropertyName,
+                              void* aPropertyValue, void* aData)
+  {
+    delete static_cast<T*>(aPropertyValue);
+  }
+
+  /**
    * Set a property to be associated with this node. This will overwrite an
    * existing value if one exists. The existing value is destroyed using the
    * destructor function given when that value was set.
