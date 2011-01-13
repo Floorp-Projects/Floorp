@@ -1515,6 +1515,17 @@ UpdateService.prototype = {
     AddonManager.getAllAddons(function(addons) {
       self._incompatibleAddons = [];
       addons.forEach(function(addon) {
+        // Protect against code that overrides the add-ons manager and doesn't
+        // implement the isCompatibleWith or the findUpdates method.
+        if (!("isCompatibleWith" in addon) || !("findUpdates" in addon)) {
+          let errMsg = "Add-on doesn't implement either the isCompatibleWith " +
+                       "or the findUpdates method!";
+          if (addon.id)
+            errMsg += " Add-on ID: " + addon.id;
+          Components.utils.reportError(errMsg);
+          return;
+        }
+
         // If an add-on isn't appDisabled and isn't userDisabled then it is
         // either active now or the user expects it to be active after the
         // restart. If that is the case and the add-on is not installed by the
@@ -1524,13 +1535,18 @@ UpdateService.prototype = {
         // checking plugins compatibility information isn't supported and
         // getting the scope property of a plugin breaks in some environments
         // (see bug 566787).
-        if (addon.type != "plugin" &&
-            !addon.appDisabled && !addon.userDisabled &&
-            addon.scope != AddonManager.SCOPE_APPLICATION &&
-            addon.isCompatible &&
-            !addon.isCompatibleWith(self._update.appVersion,
-                                    self._update.platformVersion))
-          self._incompatibleAddons.push(addon);
+        try {
+          if (addon.type != "plugin" &&
+              !addon.appDisabled && !addon.userDisabled &&
+              addon.scope != AddonManager.SCOPE_APPLICATION &&
+              addon.isCompatible &&
+              !addon.isCompatibleWith(self._update.appVersion,
+                                      self._update.platformVersion))
+            self._incompatibleAddons.push(addon);
+        }
+        catch (e) {
+          Components.utils.reportError(e);
+        }
       });
 
       if (self._incompatibleAddons.length > 0) {
