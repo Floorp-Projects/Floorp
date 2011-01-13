@@ -433,7 +433,7 @@
                 </setting>
 #ifdef MOZ_SERVICES_SYNC
                 <settings id="prefs-sync" label="&sync.title;">
-                  <setting id="sync-autosync" pref="browser.sync.enabled" type="bool" title="&sync.synchronize;" oncommand="WeaveGlue.toggleSyncEnabled();"/>
+                  <setting id="sync-autosync" pref="browser.sync.enabled" type="bool" title="&sync.synchronize;" oninputchanged="WeaveGlue.toggleSyncEnabled();"/>
                   <setting id="sync-connect" title="&sync.notconnected;" type="control" collapsed="true">
                     <button label="&sync.connect;" oncommand="WeaveGlue.open();" />
                   </setting>
