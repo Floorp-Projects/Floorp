@@ -237,6 +237,34 @@ nsContentView::GetScrollY(float* aViewScrollY)
 }
 
 NS_IMETHODIMP
+nsContentView::GetViewportWidth(float* aWidth)
+{
+  *aWidth = nsPresContext::AppUnitsToFloatCSSPixels(mViewportSize.width);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsContentView::GetViewportHeight(float* aHeight)
+{
+  *aHeight = nsPresContext::AppUnitsToFloatCSSPixels(mViewportSize.height);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsContentView::GetContentWidth(float* aWidth)
+{
+  *aWidth = nsPresContext::AppUnitsToFloatCSSPixels(mContentSize.width);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsContentView::GetContentHeight(float* aHeight)
+{
+  *aHeight = nsPresContext::AppUnitsToFloatCSSPixels(mContentSize.height);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsContentView::GetId(nsContentViewId* aId)
 {
   NS_ASSERTION(sizeof(nsContentViewId) == sizeof(ViewID),

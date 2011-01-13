@@ -93,6 +93,18 @@ interface nsIContentView : nsISupports
   readonly attribute float scrollY;
 
   /**
+   * Dimensions of the viewport in chrome-document CSS pixels.
+   */
+  readonly attribute float viewportWidth;
+  readonly attribute float viewportHeight;
+
+  /**
+   * Dimensions of scrolled content in chrome-document CSS pixels.
+   */
+  readonly attribute float contentWidth;
+  readonly attribute float contentHeight;
+
+  /**
    * ID that can be used in conjunction with nsIDOMWindowUtils to change
    * the actual document, instead of just how it is transformed.
    */
