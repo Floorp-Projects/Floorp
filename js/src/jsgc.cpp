@@ -560,7 +560,7 @@ js_InitGC(JSRuntime *rt, uint32 maxbytes)
 
     rt->gcTriggerFactor = uint32(100.0f * GC_HEAP_GROWTH_FACTOR);
 
-    rt->defaultCompartment->setGCLastBytes(8192);
+    rt->atomsCompartment->setGCLastBytes(8192);
     
     /*
      * The assigned value prevents GC from running when GC memory is too low
@@ -854,14 +854,14 @@ js_FinishGC(JSRuntime *rt)
         js_DumpGCStats(rt, stdout);
 #endif
 
-    /* Delete all remaining Compartments. Ideally only the defaultCompartment should be left. */
+    /* Delete all remaining Compartments. Ideally only the atomsCompartment should be left. */
     for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c) {
         JSCompartment *comp = *c;
         comp->finishArenaLists();
         delete comp;
     }
     rt->compartments.clear();
-    rt->defaultCompartment = NULL;
+    rt->atomsCompartment = NULL;
 
     for (GCChunkSet::Range r(rt->gcChunkSet.all()); !r.empty(); r.popFront())
         ReleaseGCChunk(rt, r.front());
@@ -1027,7 +1027,7 @@ JSRuntime::setGCTriggerFactor(uint32 factor)
     for (JSCompartment **c = compartments.begin(); c != compartments.end(); ++c) {
         (*c)->setGCLastBytes(gcLastBytes);
     }
-    defaultCompartment->setGCLastBytes(gcLastBytes);
+    atomsCompartment->setGCLastBytes(gcLastBytes);
 }
 
 void
@@ -1108,9 +1108,9 @@ RunLastDitchGC(JSContext *cx)
     JSRuntime *rt = cx->runtime;
     METER(rt->gcStats.lastditch++);
 #ifdef JS_THREADSAFE
-    Conditionally<AutoUnlockDefaultCompartment>
-        unlockDefaultCompartmenIf(cx->compartment == rt->defaultCompartment &&
-                                  rt->defaultCompartmentIsLocked, cx);
+    Conditionally<AutoUnlockAtomsCompartment>
+        unlockAtomsCompartmenIf(cx->compartment == rt->atomsCompartment &&
+                                  rt->atomsCompartmentIsLocked, cx);
 #endif
     /* The last ditch GC preserves all atoms. */
     AutoKeepAtoms keep(rt);
@@ -1794,7 +1794,7 @@ TriggerCompartmentGC(JSCompartment *comp)
     }
 #endif
 
-    if (rt->gcMode != JSGC_MODE_COMPARTMENT || comp == rt->defaultCompartment) {
+    if (rt->gcMode != JSGC_MODE_COMPARTMENT || comp == rt->atomsCompartment) {
         /* We can't do a compartmental GC of the default compartment. */
         TriggerGC(rt);
         return;
@@ -2192,8 +2192,8 @@ SweepCompartments(JSContext *cx, JSGCInvocationKind gckind)
     JSCompartment **end = rt->compartments.end();
     JSCompartment **write = read;
 
-    /* Delete defaultCompartment only during runtime shutdown */
-    rt->defaultCompartment->marked = true;
+    /* Delete atomsCompartment only during runtime shutdown */
+    rt->atomsCompartment->marked = true;
 
     while (read < end) {
         JSCompartment *compartment = (*read++);

@@ -112,7 +112,7 @@ NewFinalizableGCThing(JSContext *cx, unsigned thingKind)
 {
     JS_ASSERT(thingKind < js::gc::FINALIZE_LIMIT);
 #ifdef JS_THREADSAFE
-    JS_ASSERT_IF((cx->compartment == cx->runtime->defaultCompartment),
+    JS_ASSERT_IF((cx->compartment == cx->runtime->atomsCompartment),
                  (thingKind == js::gc::FINALIZE_STRING) ||
                  (thingKind == js::gc::FINALIZE_SHORT_STRING));
 #endif
@@ -413,10 +413,10 @@ NonRopeTypedMarker(JSRuntime *rt, JSString *str)
 
             /* 
              * If we perform single-compartment GC don't mark Strings outside the current compartment.
-             * Dependent Strings are not shared between compartments and they can't be in the defaultCompartment.
+             * Dependent Strings are not shared between compartments and they can't be in the atomsCompartment.
              */
             if (str->asCell()->compartment() != rt->gcCurrentCompartment) {
-                JS_ASSERT(str->asCell()->compartment() == rt->defaultCompartment);
+                JS_ASSERT(str->asCell()->compartment() == rt->atomsCompartment);
                 break;
             }
             if (!str->asCell()->markIfUnmarked())
@@ -460,7 +460,7 @@ TypedMarker(JSTracer *trc, JSString *str)
      */
     JSString *parent = NULL;
     first_visit_node: {
-        JS_ASSERT(strComp == str->asCell()->compartment() || str->asCell()->compartment() == rt->defaultCompartment);
+        JS_ASSERT(strComp == str->asCell()->compartment() || str->asCell()->compartment() == rt->atomsCompartment);
         JS_ASSERT(!JSString::isStatic(str));
         if (!str->asCell()->markIfUnmarked())
             goto finish_node;
@@ -474,7 +474,7 @@ TypedMarker(JSTracer *trc, JSString *str)
         }
         JS_ASSERT_IF(!JSString::isStatic(left), 
                      strComp == left->asCell()->compartment()
-                     || left->asCell()->compartment() == rt->defaultCompartment);
+                     || left->asCell()->compartment() == rt->atomsCompartment);
         NonRopeTypedMarker(rt, left);
     }
     visit_right_child: {
@@ -488,7 +488,7 @@ TypedMarker(JSTracer *trc, JSString *str)
         }
         JS_ASSERT_IF(!JSString::isStatic(right), 
                      strComp == right->asCell()->compartment()
-                     || right->asCell()->compartment() == rt->defaultCompartment);
+                     || right->asCell()->compartment() == rt->atomsCompartment);
         NonRopeTypedMarker(rt, right);
     }
     finish_node: {

@@ -279,8 +279,8 @@ DumpArenaStats(JSGCArenaStats *stp, FILE *fp)
 void
 DumpCompartmentStats(JSCompartment *comp, FILE *fp)
 {
-    if (comp->rt->defaultCompartment == comp)
-        fprintf(fp, "\n**** DefaultCompartment Allocation Statistics: %p ****\n\n", (void *) comp);
+    if (comp->rt->atomsCompartment == comp)
+        fprintf(fp, "\n**** AtomsCompartment Allocation Statistics: %p ****\n\n", (void *) comp);
     else
         fprintf(fp, "\n**** Compartment Allocation Statistics: %p ****\n\n", (void *) comp);
 
