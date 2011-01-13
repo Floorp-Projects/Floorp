@@ -119,6 +119,7 @@ bool nsLayoutUtils::gPreventAssertInCompareTreePosition = false;
 #endif // DEBUG
 
 typedef gfxPattern::GraphicsFilter GraphicsFilter;
+typedef FrameMetrics::ViewID ViewID;
 
 /**
  * A namespace class for static layout utilities.
@@ -1093,6 +1094,40 @@ nsLayoutUtils::CombineBreakType(PRUint8 aOrigBreakType,
 static PRBool gDumpPaintList = getenv("MOZ_DUMP_PAINT_LIST") != 0;
 static PRBool gDumpEventList = PR_FALSE;
 #endif
+
+nsresult
+nsLayoutUtils::GetRemoteContentIds(nsIFrame* aFrame,
+                                   const nsRect& aTarget,
+                                   nsTArray<ViewID> &aOutIDs,
+                                   PRBool aIgnoreRootScrollFrame)
+{
+  nsDisplayListBuilder builder(aFrame, nsDisplayListBuilder::EVENT_DELIVERY,
+                               PR_FALSE);
+  nsDisplayList list;
+
+  if (aIgnoreRootScrollFrame) {
+    nsIFrame* rootScrollFrame =
+      aFrame->PresContext()->PresShell()->GetRootScrollFrame();
+    if (rootScrollFrame) {
+      builder.SetIgnoreScrollFrame(rootScrollFrame);
+    }
+  }
+
+  builder.EnterPresShell(aFrame, aTarget);
+
+  nsresult rv =
+    aFrame->BuildDisplayListForStackingContext(&builder, aTarget, &list);
+
+  builder.LeavePresShell(aFrame, aTarget);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsTArray<nsIFrame*> outFrames;
+  nsDisplayItem::HitTestState hitTestState(&aOutIDs);
+  list.HitTest(&builder, aTarget, &hitTestState, &outFrames);
+  list.DeleteAll();
+
+  return NS_OK;
+}
 
 nsIFrame*
 nsLayoutUtils::GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt,

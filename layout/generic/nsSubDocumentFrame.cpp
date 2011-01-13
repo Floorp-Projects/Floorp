@@ -282,19 +282,7 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (frameLoader) {
     RenderFrameParent* rfp = frameLoader->GetCurrentRemoteFrame();
     if (rfp) {
-      // We're the subdoc for <browser remote="true"> and it has
-      // painted content.  Display its shadow layer tree.
-      nsDisplayList shadowTree;
-      shadowTree.AppendToTop(
-        new (aBuilder) nsDisplayRemote(aBuilder, this, rfp));
-
-      // Clip the shadow layers to subdoc bounds
-      nsPoint offset = GetOffsetToCrossDoc(aBuilder->ReferenceFrame());
-      nsRect bounds = mInnerView->GetBounds() + offset;
-
-      return aLists.Content()->AppendNewToTop(
-        new (aBuilder) nsDisplayClip(aBuilder, this, &shadowTree,
-                                     bounds));
+      return rfp->BuildDisplayList(aBuilder, this, aDirtyRect, aLists);
     }
   }
 #endif
