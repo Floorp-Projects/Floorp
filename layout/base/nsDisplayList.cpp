@@ -173,6 +173,12 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
   nsIScrollableFrame* rootScrollableFrame =
     presShell->GetRootScrollFrameAsScrollable();
   if (rootScrollableFrame) {
+    nsSize contentSize = 
+      rootScrollableFrame->GetScrollRange().Size() +
+      rootScrollableFrame->GetScrollPortRect().Size();
+    metrics.mContentSize = nsIntSize(NSAppUnitsToIntPixels(contentSize.width, auPerDevPixel),
+                                     NSAppUnitsToIntPixels(contentSize.height, auPerDevPixel));
+
     metrics.mViewportScrollOffset =
       rootScrollableFrame->GetScrollPosition().ToNearestPixels(auPerDevPixel);
     

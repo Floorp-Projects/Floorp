@@ -372,6 +372,13 @@ BuildViewMap(ViewMap& oldContentViews, ViewMap& newContentViews,
     view = new nsContentView(aFrameLoader->GetOwnerContent(), scrollId, config);
   }
 
+  view->mViewportSize = nsSize(
+    NSIntPixelsToAppUnits(metrics.mViewport.width, auPerDevPixel) * aXScale,
+    NSIntPixelsToAppUnits(metrics.mViewport.height, auPerDevPixel) * aYScale);
+  view->mContentSize = nsSize(
+    NSIntPixelsToAppUnits(metrics.mContentSize.width, auPerDevPixel) * aXScale,
+    NSIntPixelsToAppUnits(metrics.mContentSize.height, auPerDevPixel) * aYScale);
+
   newContentViews.insert(ViewMap::value_type(scrollId, view));
 
   for (Layer* child = aLayer->GetFirstChild();
