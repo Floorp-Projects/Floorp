@@ -1992,7 +1992,7 @@ DSTOffsetCache::DSTOffsetCache()
 
 JSContext::JSContext(JSRuntime *rt)
   : runtime(rt),
-    compartment(rt->defaultCompartment),
+    compartment(NULL),
     regs(NULL),
     busyArrays(thisInInitializer())
 {}
