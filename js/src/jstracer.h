@@ -838,7 +838,13 @@ typedef enum BuiltinStatus {
 static JS_INLINE void
 SetBuiltinError(JSContext *cx)
 {
-    cx->tracerState->builtinStatus |= BUILTIN_ERROR;
+    JS_TRACE_MONITOR(cx).tracerState->builtinStatus |= BUILTIN_ERROR;
+}
+
+static JS_INLINE bool
+WasBuiltinSuccessful(JSContext *cx)
+{
+    return JS_TRACE_MONITOR(cx).tracerState->builtinStatus == 0;
 }
 
 #ifdef DEBUG_RECORDING_STATUS_NOT_BOOL

@@ -102,6 +102,7 @@ enum LC_TMBits {
  * - ACCSET_STACK:         The stack.
  * - ACCSET_RSTACK:        The return stack.
  * - ACCSET_CX:            All JSContext structs.
+ * - ACCSET_TM:            All TraceMonitor structs.
  * - ACCSET_EOS:           The globals area.
  * - ACCSET_ALLOC:         All memory blocks allocated with LIR_allocp (in
  *                         other words, this region is the AR space).
@@ -131,34 +132,35 @@ static const nanojit::AccSet ACCSET_STATE         = (1 <<  0);
 static const nanojit::AccSet ACCSET_STACK         = (1 <<  1);
 static const nanojit::AccSet ACCSET_RSTACK        = (1 <<  2);
 static const nanojit::AccSet ACCSET_CX            = (1 <<  3);
-static const nanojit::AccSet ACCSET_EOS           = (1 <<  4);
-static const nanojit::AccSet ACCSET_ALLOC         = (1 <<  5);
-static const nanojit::AccSet ACCSET_FRAMEREGS     = (1 <<  6);
-static const nanojit::AccSet ACCSET_STACKFRAME    = (1 <<  7);
-static const nanojit::AccSet ACCSET_RUNTIME       = (1 <<  8);
+static const nanojit::AccSet ACCSET_TM            = (1 <<  4);
+static const nanojit::AccSet ACCSET_EOS           = (1 <<  5);
+static const nanojit::AccSet ACCSET_ALLOC         = (1 <<  6);
+static const nanojit::AccSet ACCSET_FRAMEREGS     = (1 <<  7);
+static const nanojit::AccSet ACCSET_STACKFRAME    = (1 <<  8);
+static const nanojit::AccSet ACCSET_RUNTIME       = (1 <<  9);
 
 // Nb: JSObject::{lastProp,map,flags} don't have an AccSet because they are never accessed on trace
-static const nanojit::AccSet ACCSET_OBJ_CLASP     = (1 <<  9);
-static const nanojit::AccSet ACCSET_OBJ_FLAGS     = (1 << 10);
-static const nanojit::AccSet ACCSET_OBJ_SHAPE     = (1 << 11);
-static const nanojit::AccSet ACCSET_OBJ_PROTO     = (1 << 12);
-static const nanojit::AccSet ACCSET_OBJ_PARENT    = (1 << 13);
-static const nanojit::AccSet ACCSET_OBJ_PRIVATE   = (1 << 14);
-static const nanojit::AccSet ACCSET_OBJ_CAPACITY  = (1 << 15);
-static const nanojit::AccSet ACCSET_OBJ_SLOTS     = (1 << 16);  // the pointer to the slots
+static const nanojit::AccSet ACCSET_OBJ_CLASP     = (1 << 10);
+static const nanojit::AccSet ACCSET_OBJ_FLAGS     = (1 << 11);
+static const nanojit::AccSet ACCSET_OBJ_SHAPE     = (1 << 12);
+static const nanojit::AccSet ACCSET_OBJ_PROTO     = (1 << 13);
+static const nanojit::AccSet ACCSET_OBJ_PARENT    = (1 << 14);
+static const nanojit::AccSet ACCSET_OBJ_PRIVATE   = (1 << 15);
+static const nanojit::AccSet ACCSET_OBJ_CAPACITY  = (1 << 16);
+static const nanojit::AccSet ACCSET_OBJ_SLOTS     = (1 << 17);  // the pointer to the slots
 
-static const nanojit::AccSet ACCSET_SLOTS         = (1 << 17);  // the slots themselves
-static const nanojit::AccSet ACCSET_TARRAY        = (1 << 18);
-static const nanojit::AccSet ACCSET_TARRAY_DATA   = (1 << 19);
-static const nanojit::AccSet ACCSET_ITER          = (1 << 20);
-static const nanojit::AccSet ACCSET_ITER_PROPS    = (1 << 21);
-static const nanojit::AccSet ACCSET_STRING        = (1 << 22);
-static const nanojit::AccSet ACCSET_STRING_MCHARS = (1 << 23);
-static const nanojit::AccSet ACCSET_TYPEMAP       = (1 << 24);
-static const nanojit::AccSet ACCSET_FCSLOTS       = (1 << 25);
-static const nanojit::AccSet ACCSET_ARGS_DATA     = (1 << 26);
+static const nanojit::AccSet ACCSET_SLOTS         = (1 << 18);  // the slots themselves
+static const nanojit::AccSet ACCSET_TARRAY        = (1 << 19);
+static const nanojit::AccSet ACCSET_TARRAY_DATA   = (1 << 20);
+static const nanojit::AccSet ACCSET_ITER          = (1 << 21);
+static const nanojit::AccSet ACCSET_ITER_PROPS    = (1 << 22);
+static const nanojit::AccSet ACCSET_STRING        = (1 << 23);
+static const nanojit::AccSet ACCSET_STRING_MCHARS = (1 << 24);
+static const nanojit::AccSet ACCSET_TYPEMAP       = (1 << 25);
+static const nanojit::AccSet ACCSET_FCSLOTS       = (1 << 26);
+static const nanojit::AccSet ACCSET_ARGS_DATA     = (1 << 27);
 
-static const uint8_t TM_NUM_USED_ACCS = 27; // number of access regions used by TraceMonkey
+static const uint8_t TM_NUM_USED_ACCS = 28; // number of access regions used by TraceMonkey
 
 /*
  * An Address describes everything about a loaded/stored memory location.  One
@@ -430,6 +432,12 @@ class Writer
     }
     #define stContextField(value, fieldname) \
         stContextField((value), cx_ins, offsetof(JSContext, fieldname))
+
+    nj::LIns *stTraceMonitorField(nj::LIns *value, void *dest, const char *destName) const {
+        return lir->insStore(value, name(lir->insImmP(dest), destName), 0, ACCSET_TM);
+    }
+    #define stTraceMonitorField(value, fieldname) \
+        stTraceMonitorField(value, &traceMonitor->fieldname, #fieldname)
 
     nj::LIns *ldiAlloc(nj::LIns *alloc) const {
         return lir->insLoad(nj::LIR_ldi, alloc, 0, ACCSET_ALLOC);
