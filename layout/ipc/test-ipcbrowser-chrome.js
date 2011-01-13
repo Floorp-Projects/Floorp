@@ -9,9 +9,14 @@ function browser() {
     return document.getElementById("content");
 }
 
-function frameLoader() {
+function viewManager() {
     return browser().QueryInterface(Components.interfaces.nsIFrameLoaderOwner)
-                    .frameLoader;
+                    .frameLoader
+                    .QueryInterface(Components.interfaces.nsIContentViewManager);
+}
+
+function rootView() {
+    return viewManager().rootContentView;
 }
 
 function enableAsyncScrolling() {
@@ -55,15 +60,15 @@ function setContentResolution(xres, yres) {
 // Functions affecting <browser>.
 
 function scrollViewportBy(dx, dy) {
-    frameLoader().scrollViewportBy(dx, dy);
+    rootView().scrollBy(dx, dy);
 }
 
 function scrollViewportTo(x, y) {
-    frameLoader().scrollViewportTo(x, y);
+    rootView().scrollTo(x, y);
 }
 
 function setViewportScale(xs, ys) {
-    frameLoader().setViewportScale(xs, ys);
+    rootView().setScale(xs, ys);
 }
 
 var kDelayMs = 100;
@@ -91,7 +96,7 @@ function startAnimatedScrollBy(dx, dy) {
         accumDx += ddx;
         accumDy += ddy;
 
-        frameLoader().scrollViewportBy(ddx, ddy);
+        rootView().scrollBy(ddx, ddy);
 
         if (!sentScrollBy && 100 <= (now - start)) {
             messageManager.sendAsyncMessage("scrollBy",
@@ -102,7 +107,7 @@ function startAnimatedScrollBy(dx, dy) {
         if (now >= end || (accumDx >= dx && accumDy >= dy)) {
             var fixupDx = Math.max(dx - accumDx, 0);
             var fixupDy = Math.max(dy - accumDy, 0);
-            frameLoader().scrollViewportBy(fixupDx, fixupDy);
+            rootView().scrollBy(fixupDx, fixupDy);
 
             scrolling = false;
             removeEventListener("MozBeforePaint", nudgeScroll, false);
