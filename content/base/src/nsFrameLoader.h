@@ -272,8 +272,7 @@ public:
 #endif
   nsFrameMessageManager* GetFrameMessageManager() { return mMessageManager; }
 
-  nsContentView* GetContentView() { return mContentView; }
-
+  nsIContent* GetOwnerContent() { return mOwnerContent; }
   void SetOwnerContent(nsIContent* aContent);
 
 private:
@@ -337,8 +336,6 @@ private:
   RenderFrameParent* mCurrentRemoteFrame;
   TabParent* mRemoteBrowser;
 #endif
-
-  nsRefPtr<nsContentView> mContentView;
 
   // See nsIFrameLoader.idl.  Short story, if !(mRenderMode &
   // RENDER_MODE_ASYNC_SCROLL), all the fields below are ignored in
