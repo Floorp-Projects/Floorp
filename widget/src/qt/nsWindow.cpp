@@ -2261,12 +2261,14 @@ nsWindow::NativeResize(PRInt32 aWidth, PRInt32 aHeight, PRBool  aRepaint)
 
     mNeedsResize = PR_FALSE;
 
+#ifdef MOZ_IPC
 #ifndef MOZ_ENABLE_MEEGOTOUCH
     if (mIsTopLevel && XRE_GetProcessType() == GeckoProcessType_Default) {
         QWidget *widget = GetViewWidget();
         NS_ENSURE_TRUE(widget,);
         widget->resize(aWidth, aHeight);
     }
+#endif
 #endif
 
     mWidget->resize( aWidth, aHeight);
@@ -2286,6 +2288,7 @@ nsWindow::NativeResize(PRInt32 aX, PRInt32 aY,
     mNeedsResize = PR_FALSE;
     mNeedsMove = PR_FALSE;
 
+#ifdef MOZ_IPC
 #ifndef MOZ_ENABLE_MEEGOTOUCH
     if (mIsTopLevel) {
         if (XRE_GetProcessType() == GeckoProcessType_Default) {
@@ -2294,6 +2297,7 @@ nsWindow::NativeResize(PRInt32 aX, PRInt32 aY,
             widget->setGeometry(aX, aY, aWidth, aHeight);
         }
     }
+#endif
 #endif
 
     mWidget->setGeometry(aX, aY, aWidth, aHeight);
@@ -2310,8 +2314,11 @@ nsWindow::NativeShow(PRBool aAction)
         // On e10s, we never want the child process or plugin process
         // to go fullscreen because if we do the window because visible
         // do to disabled Qt-Xembed
-        if ((XRE_GetProcessType() == GeckoProcessType_Default) &&
-            widget && !widget->isVisible())
+        if (widget &&
+#ifdef MOZ_IPC
+            (XRE_GetProcessType() == GeckoProcessType_Default) &&
+#endif
+            !widget->isVisible())
             MakeFullScreen(mSizeMode == nsSizeMode_Fullscreen);
         mWidget->show();
 
@@ -2561,12 +2568,14 @@ nsWindow::createQWidget(MozQWidget *parent, nsWidgetInitData *aInitData)
 
     if (mIsTopLevel) {
         QGraphicsView* newView = nsnull;
-#ifdef MOZ_ENABLE_MEEGOTOUCH
+#if defined MOZ_IPC && defined MOZ_ENABLE_MEEGOTOUCH
         if (XRE_GetProcessType() == GeckoProcessType_Default) {
             newView = new MozMGraphicsView(widget);
         } else
 #else
-        newView = new MozQGraphicsView(widget);
+        {
+            newView = new MozQGraphicsView(widget);
+        }
 #endif
         if (!newView) {
             delete widget;
