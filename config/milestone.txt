@@ -10,4 +10,4 @@
 # hardcoded milestones in the tree from these two files.
 #--------------------------------------------------------
 
-2.0b9pre
+2.0b10pre

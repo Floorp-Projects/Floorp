@@ -100,6 +100,9 @@ TEST_FILES = \
 
 ifeq (browser,$(MOZ_BUILD_APP))
 BROWSER_TEST_FILES = \
+  browser_forgetThisSite.js \
+  browser_forgetThisSiteAdd.html \
+  browser_forgetThisSiteGet.html \
   browserHelpers.js \
   browser_permissionsPrompt.html \
   browser_permissionsPromptAllow.js \

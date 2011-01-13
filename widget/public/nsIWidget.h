@@ -262,6 +262,19 @@ class nsIWidget : public nsISupports {
   public:
     typedef mozilla::layers::LayerManager LayerManager;
 
+    // Used in UpdateThemeGeometries.
+    struct ThemeGeometry {
+      // The -moz-appearance value for the themed widget
+      PRUint8 mWidgetType;
+      // The device-pixel rect within the window for the themed widget
+      nsIntRect mRect;
+
+      ThemeGeometry(PRUint8 aWidgetType, const nsIntRect& aRect)
+       : mWidgetType(aWidgetType)
+       , mRect(aRect)
+      { }
+    };
+
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_IWIDGET_IID)
 
     nsIWidget()
@@ -1407,6 +1420,20 @@ class nsIWidget_MOZILLA_2_0_BRANCH : public nsIWidget {
      * @param aRect Current widget rect that is being drawn.
      */
     virtual void DrawOver(LayerManager* aManager, nsIntRect aRect) = 0;
+
+    /**
+     * Called when Gecko knows which themed widgets exist in this window.
+     * The passed array contains an entry for every themed widget of the right
+     * type (currently only NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR and
+     * NS_THEME_TOOLBAR) within the window, except for themed widgets which are
+     * transformed or have effects applied to them (e.g. CSS opacity or
+     * filters).
+     * This could sometimes be called during display list construction
+     * outside of painting.
+     * If called during painting, it will be called before we actually
+     * paint anything.
+     */
+    virtual void UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIWidget_MOZILLA_2_0_BRANCH, NS_IWIDGET_MOZILLA_2_0_BRANCH_IID)

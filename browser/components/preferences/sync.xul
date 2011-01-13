@@ -84,75 +84,76 @@
           </description>
           <spacer flex="3"/>
         </vbox>
+
         <vbox id="hasAccount">
-          <groupbox>
-            <caption label="&accountGroupboxCaption.label;"/>
-            <grid>
-              <rows>
-                <row align="center">
-                  <label value="&currentAccount.label;" control="currentAccount"/>
-                  <textbox id="currentAccount" readonly="true">
-                    <image/>
-                  </textbox>
-                  <hbox align="center">
-                    <button id="connectButton" oncommand="gSyncPane.handleConnectCommand()"/>
-                    <image id="connectThrobber"
-                           hidden="true"/>
-                  </hbox>
-                </row>
-                <row id="loginFeedbackRow" hidden="true">
-                  <spacer/>
-                  <label id="loginError" value=""/>
-                  <hbox>
-                    <label class="text-link"
-                           onclick="gSyncPane.updatePass(); return false;"
-                           value="&updatePass.label;"/>
-                    <label class="text-link"
-                           onclick="gSyncPane.resetPass(); return false;"
-                           value="&resetPass.label;"/>
-                  </hbox>
-                </row>
-                <!-- XXXzpao We should make this behave like the "details" view in CRH.
-                             do in followup (bug 583441) -->
-                <row id="manageAccountControls" hidden="true">
-                  <spacer/>
-                    <vbox class="indent">
-                     <label class="text-link"
-                             onclick="gSyncPane.openQuotaDialog(); return false;"
-                             value="&viewQuota.label;"/>
-                      <label class="text-link"
-                             onclick="gSyncUtils.changePassword(); return false;"
-                             value="&changePassword.label;"/>
-                      <label class="text-link"
-                             onclick="gSyncUtils.resetPassphrase(); return false;"
-                             value="&mySyncKey.label;"/>
-                      <label class="text-link"
-                             onclick="gSyncPane.resetSync(); return false;"
-                             value="&resetSync.label;"/>
-                      <label class="text-link"
-                             onclick="gSyncPane.startOver(true); return false;"
-                             value="&stopUsingAccount.label;"/>
-                    </vbox>
-                  <spacer/>
-                </row>
-                <row>
-                  <spacer/>
-                  <button id="manageAccountExpander"
-                          class="expander-down"
-                          label="&manageAccount.label;"
-                          accesskey="&manageAccount.accesskey;"
-                          align="left"
-                          oncommand="gSyncPane.handleExpanderClick()"/>
-                  <spacer/>
-                </row>
-              </rows>
-            </grid>
-            <label class="text-link"
-                   onclick="gSyncPane.openAddDevice(); return false;"
-                   value="&addDevice.label;"/>
+          <groupbox class="syncGroupBox">
+            <!-- label is set to account name -->
+            <caption id="accountCaption" align="center">
+              <image id="accountCaptionImage"/>
+              <label id="accountName" value=""/>
+            </caption>
+
+            <hbox>
+              <button type="menu"
+                      label="&manageAccount.label;"
+                      accesskey="&manageAccount.accesskey;">
+                <menupopup>
+                  <menuitem label="&viewQuota.label;"
+                            oncommand="gSyncPane.openQuotaDialog();"/>
+                  <menuseparator/>
+                  <menuitem label="&changePassword.label;"
+                            oncommand="gSyncUtils.changePassword();"/>
+                  <menuitem label="&mySyncKey.label;"
+                            oncommand="gSyncUtils.resetPassphrase();"/>
+                  <menuseparator/>
+                  <menuitem label="&resetSync.label;"
+                            oncommand="gSyncPane.resetSync();"/>
+                </menupopup>
+              </button>
+            </hbox>
+
+            <hbox>
+              <label id="syncAddDeviceLabel"
+                     class="text-link"
+                     onclick="gSyncPane.openAddDevice(); return false;"
+                     value="&addDevice.label;"/>
+            </hbox>
+
+            <vbox>
+              <label value="&syncMy.label;" />
+              <richlistbox id="syncEnginesList"
+                           orient="vertical"
+                           onselect="if (this.selectedCount) this.clearSelection();">
+                <richlistitem>
+                  <checkbox label="&engine.bookmarks.label;"
+                            accesskey="&engine.bookmarks.accesskey;"
+                            preference="engine.bookmarks"/>
+                </richlistitem>
+                <richlistitem>
+                  <checkbox label="&engine.passwords.label;"
+                            accesskey="&engine.passwords.accesskey;"
+                            preference="engine.passwords"/>
+                </richlistitem>
+                <richlistitem>
+                  <checkbox label="&engine.prefs.label;"
+                            accesskey="&engine.prefs.accesskey;"
+                            preference="engine.prefs"/>
+                </richlistitem>
+                <richlistitem>
+                  <checkbox label="&engine.history.label;"
+                            accesskey="&engine.history.accesskey;"
+                            preference="engine.history"/>
+                </richlistitem>
+                <richlistitem>
+                  <checkbox label="&engine.tabs.label;"
+                            accesskey="&engine.tabs.accesskey;"
+                            preference="engine.tabs"/>
+                </richlistitem>
+              </richlistbox>
+            </vbox>
           </groupbox>
-          <groupbox>
-            <caption label="&syncPrefsCaption.label;"/>
+
+          <groupbox class="syncGroupBox">
             <grid>
               <columns>
                 <column/>
@@ -166,29 +167,13 @@
                   <textbox id="syncComputerName"
                            onchange="gSyncUtils.changeName(this)"/>
                 </row>
-                <row>
-                  <label value="&syncMy.label;" />
-                  <vbox>
-                    <checkbox label="&engine.bookmarks.label;"
-                              accesskey="&engine.bookmarks.accesskey;"
-                              preference="engine.bookmarks"/>
-                    <checkbox label="&engine.passwords.label;"
-                              accesskey="&engine.passwords.accesskey;"
-                              preference="engine.passwords"/>
-                    <checkbox label="&engine.prefs.label;"
-                              accesskey="&engine.prefs.accesskey;"
-                              preference="engine.prefs"/>
-                    <checkbox label="&engine.history.label;"
-                              accesskey="&engine.history.accesskey;"
-                              preference="engine.history"/>
-                    <checkbox label="&engine.tabs.label;"
-                              accesskey="&engine.tabs.accesskey;"
-                              preference="engine.tabs"/>
-                  </vbox>
-                </row>
               </rows>
             </grid>
-            <separator/>
+            <hbox>
+              <label class="text-link"
+                     onclick="gSyncPane.startOver(true); return false;"
+                     value="&deactivateDevice.label;"/>
+            </hbox>
           </groupbox>
           <hbox id="tosPP" pack="center">
             <label class="text-link"
@@ -198,6 +183,21 @@
                    onclick="event.stopPropagation();gSyncUtils.openPrivacyPolicy();"
                    value="&prefs.ppLink.label;"/>
           </hbox>
+        </vbox>
+
+        <vbox id="needsUpdate" align="center" pack="center">
+          <hbox>
+            <label id="loginError" value=""/>
+            <label class="text-link"
+                   onclick="gSyncPane.updatePass(); return false;"
+                   value="&updatePass.label;"/>
+            <label class="text-link"
+                   onclick="gSyncPane.resetPass(); return false;"
+                   value="&resetPass.label;"/>
+          </hbox>
+          <label class="text-link"
+                 onclick="gSyncPane.startOver(true); return false;"
+                 value="&deactivateDevice.label;"/>
         </vbox>
       </deck>
   </prefpane>

@@ -110,13 +110,19 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/unused.h"
 
+#include "Layers.h"
+
 #ifdef MOZ_IPC
 #include "ContentParent.h"
 #include "TabParent.h"
+#include "mozilla/layout/RenderFrameParent.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
 #endif
+
+using namespace mozilla::layers;
+typedef FrameMetrics::ViewID ViewID;
 
 #include "jsapi.h"
 
@@ -138,6 +144,134 @@ public:
   }
   nsRefPtr<nsIDocShell> mDocShell;
 };
+
+static void InvalidateFrame(nsIFrame* aFrame)
+{
+  nsRect rect = nsRect(nsPoint(0, 0), aFrame->GetRect().Size());
+  // NB: we pass INVALIDATE_NO_THEBES_LAYERS here to keep view
+  // semantics the same for both in-process and out-of-process
+  // <browser>.  This is just a transform of the layer subtree in
+  // both.
+  aFrame->InvalidateWithFlags(rect, nsIFrame::INVALIDATE_NO_THEBES_LAYERS);
+}
+
+NS_IMPL_ISUPPORTS1(nsContentView, nsIContentView)
+
+bool
+nsContentView::IsRoot() const
+{
+  return mScrollId == FrameMetrics::ROOT_SCROLL_ID;
+}
+
+nsresult
+nsContentView::Update(const ViewConfig& aConfig)
+{
+  if (aConfig == mConfig) {
+    return NS_OK;
+  }
+  mConfig = aConfig;
+
+  // View changed.  Try to locate our subdoc frame and invalidate
+  // it if found.
+  if (!mOwnerContent) {
+    if (IsRoot()) {
+      // Oops, don't have a frame right now.  That's OK; the view
+      // config persists and will apply to the next frame we get, if we
+      // ever get one.
+      return NS_OK;
+    } else {
+      // This view is no longer valid.
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+  }
+
+  nsIFrame* frame = mOwnerContent->GetPrimaryFrame();
+
+  // XXX could be clever here and compute a smaller invalidation
+  // rect
+  InvalidateFrame(frame);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsContentView::ScrollTo(float aXpx, float aYpx)
+{
+  ViewConfig config(mConfig);
+  config.mScrollOffset = nsPoint(nsPresContext::CSSPixelsToAppUnits(aXpx),
+                                 nsPresContext::CSSPixelsToAppUnits(aYpx));
+  return Update(config);
+}
+
+NS_IMETHODIMP
+nsContentView::ScrollBy(float aDXpx, float aDYpx)
+{
+  ViewConfig config(mConfig);
+  config.mScrollOffset.MoveBy(nsPresContext::CSSPixelsToAppUnits(aDXpx),
+                              nsPresContext::CSSPixelsToAppUnits(aDYpx));
+  return Update(config);
+}
+
+NS_IMETHODIMP
+nsContentView::SetScale(float aXScale, float aYScale)
+{
+  ViewConfig config(mConfig);
+  config.mXScale = aXScale;
+  config.mYScale = aYScale;
+  return Update(config);
+}
+
+NS_IMETHODIMP
+nsContentView::GetScrollX(float* aViewScrollX)
+{
+  *aViewScrollX = nsPresContext::AppUnitsToFloatCSSPixels(
+    mConfig.mScrollOffset.x);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsContentView::GetScrollY(float* aViewScrollY)
+{
+  *aViewScrollY = nsPresContext::AppUnitsToFloatCSSPixels(
+    mConfig.mScrollOffset.y);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsContentView::GetViewportWidth(float* aWidth)
+{
+  *aWidth = nsPresContext::AppUnitsToFloatCSSPixels(mViewportSize.width);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsContentView::GetViewportHeight(float* aHeight)
+{
+  *aHeight = nsPresContext::AppUnitsToFloatCSSPixels(mViewportSize.height);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsContentView::GetContentWidth(float* aWidth)
+{
+  *aWidth = nsPresContext::AppUnitsToFloatCSSPixels(mContentSize.width);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsContentView::GetContentHeight(float* aHeight)
+{
+  *aHeight = nsPresContext::AppUnitsToFloatCSSPixels(mContentSize.height);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsContentView::GetId(nsContentViewId* aId)
+{
+  NS_ASSERTION(sizeof(nsContentViewId) == sizeof(ViewID),
+               "ID size for XPCOM ID and internal ID type are not the same!");
+  *aId = mScrollId;
+  return NS_OK;
+}
 
 // Bug 136580: Limit to the number of nested content frames that can have the
 //             same URL. This is to stop content that is recursively loading
@@ -171,13 +305,35 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsFrameLoader)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mChildMessageManager)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsFrameLoader)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsFrameLoader)
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsFrameLoader, nsIFrameLoader)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsFrameLoader, nsIFrameLoader)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsFrameLoader)
   NS_INTERFACE_MAP_ENTRY(nsIFrameLoader)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY(nsIFrameLoader_MOZILLA_2_0_BRANCH)
+  NS_INTERFACE_MAP_ENTRY(nsIContentViewManager)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIFrameLoader)
 NS_INTERFACE_MAP_END
+
+nsFrameLoader::nsFrameLoader(nsIContent *aOwner, PRBool aNetworkCreated)
+  : mOwnerContent(aOwner)
+  , mDepthTooGreat(PR_FALSE)
+  , mIsTopLevelContent(PR_FALSE)
+  , mDestroyCalled(PR_FALSE)
+  , mNeedsAsyncDestroy(PR_FALSE)
+  , mInSwap(PR_FALSE)
+  , mInShow(PR_FALSE)
+  , mHideCalled(PR_FALSE)
+  , mNetworkCreated(aNetworkCreated)
+#ifdef MOZ_IPC
+  , mDelayRemoteDialogs(PR_FALSE)
+  , mRemoteBrowserShown(PR_FALSE)
+  , mRemoteFrame(false)
+  , mCurrentRemoteFrame(nsnull)
+  , mRemoteBrowser(nsnull)
+#endif
+{
+}
 
 nsFrameLoader*
 nsFrameLoader::Create(nsIContent* aOwner, PRBool aNetworkCreated)
@@ -996,8 +1152,8 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
   ourWindow->SetFrameElementInternal(otherFrameElement);
   otherWindow->SetFrameElementInternal(ourFrameElement);
 
-  mOwnerContent = otherContent;
-  aOther->mOwnerContent = ourContent;
+  SetOwnerContent(otherContent);
+  aOther->SetOwnerContent(ourContent);
 
   nsRefPtr<nsFrameMessageManager> ourMessageManager = mMessageManager;
   nsRefPtr<nsFrameMessageManager> otherMessageManager = aOther->mMessageManager;
@@ -1098,7 +1254,7 @@ nsFrameLoader::Destroy()
       doc->SetSubDocumentFor(mOwnerContent, nsnull);
     }
 
-    mOwnerContent = nsnull;
+    SetOwnerContent(nsnull);
   }
   DestroyChild();
 
@@ -1151,6 +1307,15 @@ nsFrameLoader::GetDepthTooGreat(PRBool* aDepthTooGreat)
 {
   *aDepthTooGreat = mDepthTooGreat;
   return NS_OK;
+}
+
+void
+nsFrameLoader::SetOwnerContent(nsIContent* aContent)
+{
+  mOwnerContent = aContent;
+  if (RenderFrameParent* rfp = GetCurrentRemoteFrame()) {
+    rfp->OwnerContentChanged(aContent);
+  }
 }
 
 #ifdef MOZ_IPC
@@ -1504,73 +1669,49 @@ nsFrameLoader::UpdateBaseWindowPositionAndSize(nsIFrame *aIFrame)
 NS_IMETHODIMP
 nsFrameLoader::ScrollViewportTo(float aXpx, float aYpx)
 {
-  ViewportConfig config(mViewportConfig);
-  config.mScrollOffset = nsPoint(nsPresContext::CSSPixelsToAppUnits(aXpx),
-                                nsPresContext::CSSPixelsToAppUnits(aYpx));
-  return UpdateViewportConfig(config);
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsFrameLoader::ScrollViewportBy(float aDXpx, float aDYpx)
 {
-  ViewportConfig config(mViewportConfig);
-  config.mScrollOffset.MoveBy(nsPresContext::CSSPixelsToAppUnits(aDXpx),
-                             nsPresContext::CSSPixelsToAppUnits(aDYpx));
-  return UpdateViewportConfig(config);
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsFrameLoader::SetViewportScale(float aXScale, float aYScale)
 {
-  ViewportConfig config(mViewportConfig);
-  config.mXScale = aXScale;
-  config.mYScale = aYScale;
-  return UpdateViewportConfig(config);
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsFrameLoader::GetViewportScrollX(float* aViewportScrollX)
 {
-  *aViewportScrollX =
-    nsPresContext::AppUnitsToFloatCSSPixels(mViewportConfig.mScrollOffset.x);
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsFrameLoader::GetViewportScrollY(float* aViewportScrollY)
 {
-  *aViewportScrollY =
-    nsPresContext::AppUnitsToFloatCSSPixels(mViewportConfig.mScrollOffset.y);
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFrameLoader::GetRenderMode(PRUint32* aRenderMode)
+{
+  *aRenderMode = mRenderMode;
   return NS_OK;
 }
 
-nsresult
-nsFrameLoader::UpdateViewportConfig(const ViewportConfig& aNewConfig)
+NS_IMETHODIMP
+nsFrameLoader::SetRenderMode(PRUint32 aRenderMode)
 {
-  if (aNewConfig == mViewportConfig) {
-    return NS_OK;
-  }
-  mViewportConfig = aNewConfig;
-
-  // Viewport changed.  Try to locate our subdoc frame and invalidate
-  // it if found.
-  nsIFrame* frame = GetPrimaryFrameOfOwningContent();
-  if (!frame) {
-    // Oops, don't have a frame right now.  That's OK; the viewport
-    // config persists and will apply to the next frame we get, if we
-    // ever get one.
+  if (aRenderMode == mRenderMode) {
     return NS_OK;
   }
 
-  // XXX could be clever here and compute a smaller invalidation
-  // rect
-  nsRect rect = nsRect(nsPoint(0, 0), frame->GetRect().Size());
-  // NB: we pass INVALIDATE_NO_THEBES_LAYERS here to keep viewport
-  // semantics the same for both in-process and out-of-process
-  // <browser>.  This is just a transform of the layer subtree in
-  // both.
-  frame->InvalidateWithFlags(rect, nsIFrame::INVALIDATE_NO_THEBES_LAYERS);
-
+  mRenderMode = aRenderMode;
+  InvalidateFrame(GetPrimaryFrameOfOwningContent());
   return NS_OK;
 }
 
@@ -1857,6 +1998,60 @@ nsFrameLoader::GetMessageManager(nsIChromeFrameMessageManager** aManager)
     CallQueryInterface(mMessageManager, aManager);
   }
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFrameLoader::GetContentViewsIn(float aXPx, float aYPx,
+                                 float aTopSize, float aRightSize,
+                                 float aBottomSize, float aLeftSize,
+                                 PRUint32* aLength,
+                                 nsIContentView*** aResult)
+{
+  nscoord x = nsPresContext::CSSPixelsToAppUnits(aXPx - aLeftSize);
+  nscoord y = nsPresContext::CSSPixelsToAppUnits(aYPx - aTopSize);
+  nscoord w = nsPresContext::CSSPixelsToAppUnits(aLeftSize + aRightSize) + 1;
+  nscoord h = nsPresContext::CSSPixelsToAppUnits(aTopSize + aBottomSize) + 1;
+  nsRect target(x, y, w, h);
+
+  nsIFrame* frame = GetPrimaryFrameOfOwningContent();
+
+  nsTArray<ViewID> ids;
+  nsLayoutUtils::GetRemoteContentIds(frame, target, ids, true);
+  if (ids.Length() == 0 || !GetCurrentRemoteFrame()) {
+    *aResult = nsnull;
+    *aLength = 0;
+    return NS_OK;
+  }
+
+  nsIContentView** result = reinterpret_cast<nsIContentView**>(
+    NS_Alloc(ids.Length() * sizeof(nsIContentView*)));
+
+  for (PRUint32 i = 0; i < ids.Length(); i++) {
+    nsIContentView* view = GetCurrentRemoteFrame()->GetContentView(ids[i]);
+    NS_ABORT_IF_FALSE(view, "Retrieved ID from RenderFrameParent, it should be valid!");
+    nsRefPtr<nsIContentView>(view).forget(&result[i]);
+  }
+
+  *aResult = result;
+  *aLength = ids.Length();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFrameLoader::GetRootContentView(nsIContentView** aContentView)
+{
+  RenderFrameParent* rfp = GetCurrentRemoteFrame();
+  if (!rfp) {
+    *aContentView = nsnull;
+    return NS_OK;
+  }
+
+  nsContentView* view = rfp->GetContentView();
+  NS_ABORT_IF_FALSE(view, "Should always be able to create root scrollable!");
+  nsRefPtr<nsIContentView>(view).forget(aContentView);
+
+   return NS_OK;
 }
 
 nsresult

@@ -52,6 +52,7 @@
 #include "nsIURI.h"
 #include "nsAutoPtr.h"
 #include "nsFrameMessageManager.h"
+#include "Layers.h"
 
 class nsIContent;
 class nsIURI;
@@ -80,47 +81,24 @@ class QX11EmbedContainer;
 #endif
 #endif
 
-class nsFrameLoader : public nsIFrameLoader
+/**
+ * Defines a target configuration for this <browser>'s content
+ * document's view.  If the content document's actual view
+ * doesn't match this nsIContentView, then on paints its pixels
+ * are transformed to compensate for the difference.
+ *
+ * Used to support asynchronous re-paints of content pixels; see
+ * nsIContentView.
+ */
+class nsContentView : public nsIContentView
 {
-  friend class AutoResetInShow;
-#ifdef MOZ_IPC
-  typedef mozilla::dom::PBrowserParent PBrowserParent;
-  typedef mozilla::dom::TabParent TabParent;
-  typedef mozilla::layout::RenderFrameParent RenderFrameParent;
-#endif
-
-protected:
-  nsFrameLoader(nsIContent *aOwner, PRBool aNetworkCreated) :
-    mOwnerContent(aOwner),
-    mDepthTooGreat(PR_FALSE),
-    mIsTopLevelContent(PR_FALSE),
-    mDestroyCalled(PR_FALSE),
-    mNeedsAsyncDestroy(PR_FALSE),
-    mInSwap(PR_FALSE),
-    mInShow(PR_FALSE),
-    mHideCalled(PR_FALSE),
-    mNetworkCreated(aNetworkCreated)
-#ifdef MOZ_IPC
-    , mDelayRemoteDialogs(PR_FALSE)
-    , mRemoteBrowserShown(PR_FALSE)
-    , mRemoteFrame(false)
-    , mCurrentRemoteFrame(nsnull)
-    , mRemoteBrowser(nsnull)
-#endif
-  {}
-
 public:
-  /**
-   * Defines a target configuration for this <browser>'s content
-   * document's viewport.  If the content document's actual viewport
-   * doesn't match a desired ViewportConfig, then on paints its pixels
-   * are transformed to compensate for the difference.
-   *
-   * Used to support asynchronous re-paints of content pixels; see
-   * nsIFrameLoader.scrollViewport* and viewportScale.
-   */
-  struct ViewportConfig {
-    ViewportConfig()
+  typedef mozilla::layers::FrameMetrics::ViewID ViewID;
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSICONTENTVIEW
+ 
+  struct ViewConfig {
+    ViewConfig()
       : mScrollOffset(0, 0)
       , mXScale(1.0)
       , mYScale(1.0)
@@ -128,7 +106,7 @@ public:
 
     // Default copy ctor and operator= are fine
 
-    PRBool operator==(const ViewportConfig& aOther) const
+    PRBool operator==(const ViewConfig& aOther) const
     {
       return (mScrollOffset == aOther.mScrollOffset &&
               mXScale == aOther.mXScale &&
@@ -151,6 +129,55 @@ public:
     float mYScale;
   };
 
+  nsContentView(nsIContent* aOwnerContent, ViewID aScrollId,
+                ViewConfig aConfig = ViewConfig())
+    : mViewportSize(0, 0)
+    , mContentSize(0, 0)
+    , mOwnerContent(aOwnerContent)
+    , mScrollId(aScrollId)
+    , mConfig(aConfig)
+  {}
+
+  bool IsRoot() const;
+
+  ViewID GetId() const
+  {
+    return mScrollId;
+  }
+
+  ViewConfig GetViewConfig() const
+  {
+    return mConfig;
+  }
+
+  nsSize mViewportSize;
+  nsSize mContentSize;
+
+  nsIContent *mOwnerContent; // WEAK
+
+private:
+  nsresult Update(const ViewConfig& aConfig);
+
+  ViewID mScrollId;
+  ViewConfig mConfig;
+};
+
+
+class nsFrameLoader : public nsIFrameLoader,
+                      public nsIFrameLoader_MOZILLA_2_0_BRANCH,
+                      public nsIContentViewManager
+{
+  friend class AutoResetInShow;
+#ifdef MOZ_IPC
+  typedef mozilla::dom::PBrowserParent PBrowserParent;
+  typedef mozilla::dom::TabParent TabParent;
+  typedef mozilla::layout::RenderFrameParent RenderFrameParent;
+#endif
+
+protected:
+  nsFrameLoader(nsIContent *aOwner, PRBool aNetworkCreated);
+
+public:
   ~nsFrameLoader() {
     mNeedsAsyncDestroy = PR_TRUE;
     if (mMessageManager) {
@@ -159,11 +186,18 @@ public:
     nsFrameLoader::Destroy();
   }
 
+  PRBool AsyncScrollEnabled() const
+  {
+    return !!(mRenderMode & RENDER_MODE_ASYNC_SCROLL);
+  }
+
   static nsFrameLoader* Create(nsIContent* aOwner, PRBool aNetworkCreated);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsFrameLoader)
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsFrameLoader, nsIFrameLoader)
   NS_DECL_NSIFRAMELOADER
+  NS_DECL_NSIFRAMELOADER_MOZILLA_2_0_BRANCH
+  NS_DECL_NSICONTENTVIEWMANAGER
   NS_HIDDEN_(nsresult) CheckForRecursiveLoad(nsIURI* aURI);
   nsresult ReallyStartLoading();
   void Finalize();
@@ -248,7 +282,8 @@ public:
 #endif
   nsFrameMessageManager* GetFrameMessageManager() { return mMessageManager; }
 
-  const ViewportConfig& GetViewportConfig() { return mViewportConfig; }
+  nsIContent* GetOwnerContent() { return mOwnerContent; }
+  void SetOwnerContent(nsIContent* aContent);
 
 private:
 
@@ -282,8 +317,6 @@ private:
   bool ShowRemoteFrame(const nsIntSize& size);
 #endif
 
-  nsresult UpdateViewportConfig(const ViewportConfig& aNewConfig);
-
   nsCOMPtr<nsIDocShell> mDocShell;
   nsCOMPtr<nsIURI> mURIToLoad;
   nsIContent *mOwnerContent; // WEAK
@@ -314,7 +347,10 @@ private:
   TabParent* mRemoteBrowser;
 #endif
 
-  ViewportConfig mViewportConfig;
+  // See nsIFrameLoader.idl.  Short story, if !(mRenderMode &
+  // RENDER_MODE_ASYNC_SCROLL), all the fields below are ignored in
+  // favor of what content tells.
+  PRUint32 mRenderMode;
 };
 
 #endif

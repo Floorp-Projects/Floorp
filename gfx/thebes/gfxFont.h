@@ -1467,10 +1467,6 @@ public:
      * Draws a substring. Uses only GetSpacing from aBreakProvider.
      * The provided point is the baseline origin on the left of the string
      * for LTR, on the right of the string for RTL.
-     * @param aDirtyRect if non-null, drawing outside of the rectangle can be
-     * (but does not need to be) dropped. Note that if this is null, we cannot
-     * draw partial ligatures and we will assert if partial ligatures
-     * are detected.
      * @param aAdvanceWidth if non-null, the advance width of the substring
      * is returned here.
      * 
@@ -1490,7 +1486,6 @@ public:
      */
     void Draw(gfxContext *aContext, gfxPoint aPt,
               PRUint32 aStart, PRUint32 aLength,
-              const gfxRect *aDirtyRect,
               PropertyProvider *aProvider,
               gfxFloat *aAdvanceWidth);
 
@@ -2030,8 +2025,8 @@ private:
                                      PropertyProvider *aProvider);
     gfxFloat ComputePartialLigatureWidth(PRUint32 aPartStart, PRUint32 aPartEnd,
                                          PropertyProvider *aProvider);
-    void DrawPartialLigature(gfxFont *aFont, gfxContext *aCtx, PRUint32 aStart,
-                             PRUint32 aEnd, const gfxRect *aDirtyRect, gfxPoint *aPt,
+    void DrawPartialLigature(gfxFont *aFont, gfxContext *aCtx,
+                             PRUint32 aStart, PRUint32 aEnd, gfxPoint *aPt,
                              PropertyProvider *aProvider);
     // Advance aStart to the start of the nearest ligature; back up aEnd
     // to the nearest ligature end; may result in *aStart == *aEnd

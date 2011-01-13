@@ -127,6 +127,7 @@ class nsDisplayListBuilder {
 public:
   typedef mozilla::FramePropertyDescriptor FramePropertyDescriptor;
   typedef mozilla::FrameLayerBuilder FrameLayerBuilder;
+  typedef nsIWidget::ThemeGeometry ThemeGeometry;
 
   /**
    * @param aReferenceFrame the frame at the root of the subtree; its origin
@@ -371,7 +372,29 @@ public:
       (aFrame->GetStateBits() & NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO) ||
       GetIncludeAllOutOfFlows();
   }
-  
+
+  /**
+   * Notifies the builder that a particular themed widget exists
+   * at the given rectangle within the currently built display list.
+   * For certain appearance values (currently only
+   * NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR and NS_THEME_TOOLBAR) this gets
+   * called during every display list construction, for every themed widget of
+   * the right type within the display list, except for themed widgets which
+   * are transformed or have effects applied to them (e.g. CSS opacity or
+   * filters).
+   *
+   * @param aWidgetType the -moz-appearance value for the themed widget
+   * @param aRect the device-pixel rect relative to the widget's displayRoot
+   * for the themed widget
+   */
+  void RegisterThemeGeometry(PRUint8 aWidgetType,
+                             const nsIntRect& aRect) {
+    if (mIsPaintingToWindow) {
+      ThemeGeometry geometry(aWidgetType, aRect);
+      CurrentPresShellState()->mThemeGeometries.AppendElement(geometry);
+    }
+  }
+
   /**
    * Allocate memory in our arena. It will only be freed when this display list
    * builder is destroyed. This memory holds nsDisplayItems. nsDisplayItem
@@ -434,6 +457,7 @@ private:
     nsIFrame*     mCaretFrame;
     PRUint32      mFirstFrameMarkedForDisplay;
     PRPackedBool  mIsBackgroundOnly;
+    nsAutoTArray<ThemeGeometry,2> mThemeGeometries;
   };
   PresShellState* CurrentPresShellState() {
     NS_ASSERTION(mPresShellStates.Length() > 0,
@@ -500,6 +524,7 @@ protected:
  */
 class nsDisplayItem : public nsDisplayItemLink {
 public:
+  typedef mozilla::layers::FrameMetrics::ViewID ViewID;
   typedef mozilla::layers::Layer Layer;
   typedef mozilla::layers::LayerManager LayerManager;
   typedef mozilla::LayerState LayerState;
@@ -523,11 +548,23 @@ public:
 #include "nsDisplayItemTypes.h"
 
   struct HitTestState {
+    typedef nsTArray<ViewID> ShadowArray;
+
+    HitTestState(ShadowArray* aShadows = NULL)
+      : mShadows(aShadows) {
+    }
+
     ~HitTestState() {
       NS_ASSERTION(mItemBuffer.Length() == 0,
                    "mItemBuffer should have been cleared");
     }
+
     nsAutoTArray<nsDisplayItem*, 100> mItemBuffer;
+
+    // It is sometimes useful to hit test for frames that are not in this
+    // process. Display items may append IDs into this array if it is
+    // non-null.
+    ShadowArray* mShadows;
   };
 
   /**
@@ -1686,6 +1723,47 @@ public:
   }
   NS_DISPLAY_DECL_NAME("OwnLayer", TYPE_OWN_LAYER)
 };
+
+#ifdef MOZ_IPC
+/**
+ * This creates a layer for the given list of items, whose visibility is
+ * determined by the displayport for the given frame instead of what is
+ * passed in to ComputeVisibility.
+ *
+ * Here in content, we can use this to render more content than is actually
+ * visible. Then, the compositing process can manipulate the generated layer
+ * through transformations so that asynchronous scrolling can be implemented.
+ *
+ * Note that setting the displayport will not change any hit testing! The
+ * content process will know nothing about what the user is actually seeing,
+ * so it can only do hit testing for what is supposed to be the visible region.
+ */
+class nsDisplayScrollLayer : public nsDisplayOwnLayer
+{
+public:
+  /**
+   * @param aForFrame This will determine what the displayport is. It should be
+   *                  the root content frame of the scrolled area.
+   * @param aViewportFrame The viewport frame you see this content through.
+   */
+  nsDisplayScrollLayer(nsDisplayListBuilder* aBuilder, nsDisplayList* aList,
+                       nsIFrame* aForFrame, nsIFrame* aViewportFrame);
+  NS_DISPLAY_DECL_NAME("ScrollLayer", TYPE_SCROLL_LAYER)
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayScrollLayer();
+#endif
+
+  virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
+                                             LayerManager* aManager);
+
+  virtual PRBool ComputeVisibility(nsDisplayListBuilder* aBuilder,
+                                   nsRegion* aVisibleRegion);
+
+private:
+  nsIFrame* mViewportFrame;
+};
+#endif
 
 /**
  * nsDisplayClip can clip a list of items, but we take a single item

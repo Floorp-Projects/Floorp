@@ -39,6 +39,16 @@
     background-color: @customToolbarColor@;
   }
 
+  .tabbrowser-tab:not(:-moz-lwtheme),
+  .tabs-newtab-button:not(:-moz-lwtheme) {
+    background-image: @genericBgTabTexture@, -moz-linear-gradient(@customToolbarColor@, @customToolbarColor@);
+  }
+
+  .tabbrowser-tab:not(:-moz-lwtheme):hover,
+  .tabs-newtab-button:not(:-moz-lwtheme):hover {
+    background-image: @genericBgTabTextureHover@, -moz-linear-gradient(@customToolbarColor@, @customToolbarColor@);
+  }
+
   .tabbrowser-tab[selected="true"]:not(:-moz-lwtheme) {
     background-image: -moz-linear-gradient(white, @toolbarHighlight@ 30%),
                       -moz-linear-gradient(@customToolbarColor@, @customToolbarColor@);

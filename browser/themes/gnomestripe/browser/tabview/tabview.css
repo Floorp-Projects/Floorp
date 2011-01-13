@@ -405,15 +405,14 @@ input.name {
   margin-bottom: 0;
   -moz-margin-start: 3px;
   padding: 1px;
-  background-image: url(chrome://browser/skin/tabview/edit-light.png);
-  -moz-padding-start: 20px;
 }
 
 html[dir=rtl] input.name {
   background-position: right top;
 }
 
-.title-container:hover input.name {
+.title-container:hover input.name,
+.title-container input.name:focus {
   border: 1px solid #ddd;
 }
 
@@ -426,13 +425,17 @@ input.name:focus {
   color: #555;
 }
 
-input.defaultName {
+input.name:-moz-placeholder {
   font-style: italic !important;
-  background-image-opacity: .1;
   color: transparent;
+  background-image: url(chrome://browser/skin/tabview/edit-light.png);
+  background-image-opacity: .1;
+  background-repeat: no-repeat;
+  -moz-padding-start: 20px;
+  -moz-padding-end: -20px;
 }
 
-.title-container:hover input.defaultName {
+.title-container:hover input.name:-moz-placeholder {
   color: #CCC;
 }
 

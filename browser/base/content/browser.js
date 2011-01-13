@@ -1851,7 +1851,7 @@ function gotoHistoryIndex(aEvent) {
   }
   // Modified click. Go there in a new tab/window.
 
-  duplicateTabIn(gBrowser.selectedTab, where, index);
+  duplicateTabIn(gBrowser.selectedTab, where, index - gBrowser.sessionHistory.index);
   return true;
 }
 
@@ -1866,8 +1866,7 @@ function BrowserForward(aEvent) {
     }
   }
   else {
-    let currentIndex = getWebNavigation().sessionHistory.index;
-    duplicateTabIn(gBrowser.selectedTab, where, currentIndex + 1);
+    duplicateTabIn(gBrowser.selectedTab, where, 1);
   }
 }
 
@@ -1882,8 +1881,7 @@ function BrowserBack(aEvent) {
     }
   }
   else {
-    let currentIndex = getWebNavigation().sessionHistory.index;
-    duplicateTabIn(gBrowser.selectedTab, where, currentIndex - 1);
+    duplicateTabIn(gBrowser.selectedTab, where, -1);
   }
 }
 
@@ -3919,6 +3917,25 @@ var FullScreen = {
     } else {
       gNavToolbox.setAttribute("inFullscreen", true);
       document.documentElement.setAttribute("inFullscreen", true);
+    }
+
+    // In tabs-on-top mode, move window controls to the tab bar,
+    // and in tabs-on-bottom mode, move them back to the navigation toolbar.
+    // When there is a chance the tab bar may be collapsed, put window
+    // controls on nav bar.
+    var fullscreenflex = document.getElementById("fullscreenflex");
+    var fullscreenctls = document.getElementById("window-controls");
+    var ctlsOnTabbar = TabsOnTop.enabled &&
+                       !gPrefService.getBoolPref("browser.tabs.autoHide");
+    if (fullscreenctls.parentNode.id == "nav-bar" && ctlsOnTabbar) {
+      document.getElementById("TabsToolbar").appendChild(fullscreenctls);
+      // we don't need this space in tabs-on-top mode, so prevent it from 
+      // being shown
+      fullscreenflex.removeAttribute("fullscreencontrol");
+    }
+    else if (fullscreenctls.parentNode.id == "TabsToolbar" && !ctlsOnTabbar) {
+      document.getElementById("nav-bar").appendChild(fullscreenctls);
+      fullscreenflex.setAttribute("fullscreencontrol", "true");
     }
 
     var controls = document.getElementsByAttribute("fullscreencontrol", "true");
@@ -7489,10 +7506,6 @@ var gIdentityHandler = {
     // Update the popup strings
     this.setPopupMessages(this._identityBox.className);
 
-    // Make sure the identity popup hangs toward the middle of the location bar
-    // in RTL builds
-    var position = (getComputedStyle(gNavToolbox, "").direction == "rtl") ? 'bottomcenter topright' : 'bottomcenter topleft';
-
     // Add the "open" attribute to the identity box for styling
     this._identityBox.setAttribute("open", "true");
     var self = this;
@@ -7502,7 +7515,7 @@ var gIdentityHandler = {
     }, false);
 
     // Now open the popup, anchored off the primary chrome element
-    this._identityPopup.openPopup(this._identityBox, position);
+    this._identityPopup.openPopup(this._identityBox, "bottomcenter topleft");
   },
 
   onDragStart: function (event) {
@@ -8254,25 +8267,12 @@ function safeModeRestart()
  *                tabs, and vice versa
  *  "window"      new window
  *
- * historyIndex is an index the page can navigate to after the new tab is
- * created and loaded, it can for example be used to go back one page after the
- * tab is duplicated.
+ * delta is the offset to the history entry that you want to load.
  */
-function duplicateTabIn(aTab, where, historyIndex) {
-  let newTab = gBrowser.duplicateTab(aTab);
-
-  // Go to index if it's provided, fallback to loadURI if there's no history.
-  if (historyIndex != null) {
-    try {
-      gBrowser.getBrowserForTab(newTab).gotoIndex(historyIndex);
-    }
-    catch (ex) {
-      let sessionHistory = aTab.linkedBrowser.sessionHistory;
-      let entry = sessionHistory.getEntryAtIndex(historyIndex, false);
-      let fallbackUrl = entry.URI.spec;
-      gBrowser.getBrowserForTab(newTab).loadURI(fallbackUrl);
-    }
-  }
+function duplicateTabIn(aTab, where, delta) {
+  let newTab = Cc['@mozilla.org/browser/sessionstore;1']
+                 .getService(Ci.nsISessionStore)
+                 .duplicateTab(window, aTab, delta);
 
   var loadInBackground =
     getBoolPref("browser.tabs.loadBookmarksInBackground", false);

@@ -3217,19 +3217,11 @@ pref("mozilla.widget.disable-native-theme", true);
 pref("gfx.color_management.mode", 0);
 #endif
 
-// Default value of acceleration for all widgets.
-#ifdef XP_WIN
-pref("layers.accelerate-all", true);
-#else
-#ifdef XP_MACOSX
-pref("layers.accelerate-all", true);
-#else
-pref("layers.accelerate-all", false);
-#endif
-#endif
+// Whether to disable acceleration for all widgets.
+pref("layers.acceleration.disabled", false);
 
-// Whether to allow acceleration on layers at all.
-pref("layers.accelerate-none", false);
+// Whether to force acceleration on, ignoring blacklists.
+pref("layers.acceleration.force-enabled", false);
 
 #ifdef XP_WIN
 #ifndef WINCE

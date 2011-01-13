@@ -2519,7 +2519,7 @@ nsresult nsEditor::InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert,
   // savvy to having multiple ime txns inside them.
   
   // delete empty ime text node if there is one
-  if (isIMETransaction)
+  if (isIMETransaction && mIMETextNode)
   {
     PRUint32 len;
     mIMETextNode->GetLength(&len);

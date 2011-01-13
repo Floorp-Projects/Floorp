@@ -341,6 +341,9 @@ public:
    */
   PRUint32 EstimateMemoryUsed();
 
+  void Traverse(nsCycleCollectionTraversalCallback &cb) const;
+  void Unlink();
+
 private:
   nsresult ProcessTextForRenderingContext(const PRUnichar*       aText,
                                           PRInt32                aLength,

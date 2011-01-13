@@ -204,7 +204,10 @@ SVGDocumentWrapper::StartAnimation()
   nsIDocument* doc = mViewer->GetDocument();
   if (doc) {
 #ifdef MOZ_SMIL
-    doc->GetAnimationController()->Resume(nsSMILTimeContainer::PAUSE_IMAGE);
+    nsSMILAnimationController* controller = doc->GetAnimationController();
+    if (controller) {
+      controller->Resume(nsSMILTimeContainer::PAUSE_IMAGE);
+    }
 #endif // MOZ_SMIL
     doc->SetImagesNeedAnimating(PR_TRUE);
   }
@@ -221,7 +224,10 @@ SVGDocumentWrapper::StopAnimation()
   nsIDocument* doc = mViewer->GetDocument();
   if (doc) {
 #ifdef MOZ_SMIL
-    doc->GetAnimationController()->Pause(nsSMILTimeContainer::PAUSE_IMAGE);
+    nsSMILAnimationController* controller = doc->GetAnimationController();
+    if (controller) {
+      controller->Pause(nsSMILTimeContainer::PAUSE_IMAGE);
+    }
 #endif // MOZ_SMIL
     doc->SetImagesNeedAnimating(PR_FALSE);
   }

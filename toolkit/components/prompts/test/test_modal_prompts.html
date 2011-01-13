@@ -20,6 +20,9 @@ Prompter tests: modal prompts
 
 netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
+var isOSX = ("nsILocalFileMac" in Components.interfaces);
+var isLinux = ("@mozilla.org/gnome-gconf-service;1" in Components.classes);
+
 function pollDialog(okButton) {
     netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
@@ -34,8 +37,9 @@ function pollDialog(okButton) {
 }
 
 function checkExpectedState(ui, state) {
+
     // XXX check title? OS X has title in content
-    var iconClassPrefix = (isTabModal ? "info.icon " : "spaced ");
+    let iconClassPrefix = (isTabModal ? "info.icon " : "spaced ");
     is(ui.infoBody.textContent,       state.msg,         "Checking expected message");
     is(ui.loginContainer.hidden,      state.textHidden,  "Checking textbox visibility");
     is(ui.password1Container.hidden,  state.passHidden,  "Checking passbox visibility");
@@ -45,6 +49,36 @@ function checkExpectedState(ui, state) {
     is(ui.infoIcon.className,         iconClassPrefix + state.iconClass, "Checking expected icon CSS class");
     is(ui.loginTextbox.getAttribute("value"),     state.textValue, "Checking textbox value");
     is(ui.password1Textbox.getAttribute("value"), state.passValue, "Checking passbox value");
+
+
+    function isDefaultButton(b) {
+        return (b.hasAttribute("default") &&
+                b.getAttribute("default") == "true");
+    }
+
+    let shouldBeDefault;
+    shouldBeDefault = (state.defButton == ui.button0);
+    is(isDefaultButton(ui.button0), shouldBeDefault, "checking button0 default");
+    shouldBeDefault = (state.defButton == ui.button1);
+    is(isDefaultButton(ui.button1), shouldBeDefault, "checking button1 default");
+    shouldBeDefault = (state.defButton == ui.button2);
+    is(isDefaultButton(ui.button2), shouldBeDefault, "checking button2 default");
+
+    let fm = Cc["@mozilla.org/focus-manager;1"].
+             getService(Ci.nsIFocusManager);
+    let e = fm.focusedElement;
+    ok(true, "focused element is a " + (e ? e.localName : "<null>"));
+    if (isLinux && !e) {
+        todo(false, "Focus seems missing on Linux");
+        return;
+    }
+
+    if (isOSX && state.focused && state.focused.localName == "button")
+        ok(ui.infoBody.isSameNode(e), "buttons don't focus on OS X");
+    else if (state.focused)
+        ok(state.focused.isSameNode(e), "Checking focused element");
+    else
+        is(e, null, "Not expecting a focused element");
 }
 
 
@@ -58,7 +92,7 @@ function checkExpectedState(ui, state) {
  */
 function handleDialog(ui, testNum) {
     netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-    ok(true, "--- handleDialog for test " + testNum + 
+    ok(true, "--- handleDialog for test " + testNum +
              " --- (isTabModal=" + isTabModal + ", usePromptService=" + usePromptService + ")");
 
     let textField = ui.loginTextbox;
@@ -66,10 +100,6 @@ function handleDialog(ui, testNum) {
     let checkbox  = ui.checkbox;
     let clickOK   = true;
     let state;
-
-    // XXX check focused element
-    // XXX check text/passbox labels?
-    // XXX check button labels?
 
     switch(testNum) {
       case 1:
@@ -85,12 +115,10 @@ function handleDialog(ui, testNum) {
             passValue   : "",
             checkMsg    : "",
             checked     : false,
+            focused     : ui.button0,
+            defButton   : ui.button0,
         };
         checkExpectedState(ui, state);
-
-        //is(doc.activeElement, userfield.inputField, "focus correct for test" + testNum);
-        //doc.commandDispatcher.rewindFocus();
-        //is(doc.activeElement, body, "description focusable");
         break;
 
       case 2:
@@ -106,6 +134,8 @@ function handleDialog(ui, testNum) {
             passValue   : "",
             checkMsg    : "",
             checked     : false,
+            focused     : ui.button0,
+            defButton   : ui.button0,
         };
         checkExpectedState(ui, state);
         break;
@@ -123,6 +153,8 @@ function handleDialog(ui, testNum) {
             passValue   : "",
             checkMsg    : "Check me out!",
             checked     : false,
+            focused     : ui.button0,
+            defButton   : ui.button0,
         };
         checkExpectedState(ui, state);
 
@@ -144,6 +176,8 @@ function handleDialog(ui, testNum) {
             passValue   : "",
             checkMsg    : "",
             checked     : false,
+            focused     : ui.button0,
+            defButton   : ui.button0,
         };
         checkExpectedState(ui, state);
         break;
@@ -161,6 +195,8 @@ function handleDialog(ui, testNum) {
             passValue   : "",
             checkMsg    : "",
             checked     : false,
+            focused     : ui.button0,
+            defButton   : ui.button0,
         };
         checkExpectedState(ui, state);
         clickOK = false;
@@ -179,6 +215,8 @@ function handleDialog(ui, testNum) {
             passValue   : "",
             checkMsg    : "",
             checked     : false,
+            focused     : ui.button0,
+            defButton   : ui.button0,
         };
         checkExpectedState(ui, state);
         break;
@@ -196,6 +234,8 @@ function handleDialog(ui, testNum) {
             passValue   : "",
             checkMsg    : "",
             checked     : false,
+            focused     : ui.button0,
+            defButton   : ui.button0,
         };
         checkExpectedState(ui, state);
         clickOK = false;
@@ -214,6 +254,8 @@ function handleDialog(ui, testNum) {
             passValue   : "",
             checkMsg    : "Check me out!",
             checked     : false,
+            focused     : ui.button0,
+            defButton   : ui.button0,
         };
         checkExpectedState(ui, state);
 
@@ -235,6 +277,8 @@ function handleDialog(ui, testNum) {
             passValue   : "",
             checkMsg    : "Check me out!",
             checked     : false,
+            focused     : ui.button0,
+            defButton   : ui.button0,
         };
         checkExpectedState(ui, state);
 
@@ -257,6 +301,8 @@ function handleDialog(ui, testNum) {
             passValue   : "",
             checkMsg    : "",
             checked     : false,
+            focused     : ui.loginTextbox.inputField,
+            defButton   : ui.button0,
         };
         checkExpectedState(ui, state);
         textField.setAttribute("value", "bacon");
@@ -275,6 +321,8 @@ function handleDialog(ui, testNum) {
             passValue   : "",
             checkMsg    : "",
             checked     : false,
+            focused     : ui.loginTextbox.inputField,
+            defButton   : ui.button0,
         };
         checkExpectedState(ui, state);
         break;
@@ -292,6 +340,8 @@ function handleDialog(ui, testNum) {
             passValue   : "",
             checkMsg    : "",
             checked     : false,
+            focused     : ui.loginTextbox.inputField,
+            defButton   : ui.button0,
         };
         checkExpectedState(ui, state);
         clickOK = false;
@@ -310,6 +360,8 @@ function handleDialog(ui, testNum) {
             passValue   : "",
             checkMsg    : "",
             checked     : false,
+            focused     : ui.loginTextbox.inputField,
+            defButton   : ui.button0,
         };
         checkExpectedState(ui, state);
         textField.setAttribute("value", "bacon");
@@ -329,6 +381,8 @@ function handleDialog(ui, testNum) {
             passValue   : "",
             checkMsg    : "Check me out!",
             checked     : false,
+            focused     : ui.loginTextbox.inputField,
+            defButton   : ui.button0,
         };
         checkExpectedState(ui, state);
 
@@ -350,6 +404,8 @@ function handleDialog(ui, testNum) {
             passValue   : "",
             checkMsg    : "Check me out!",
             checked     : false,
+            focused     : ui.loginTextbox.inputField,
+            defButton   : ui.button0,
         };
         checkExpectedState(ui, state);
 
@@ -372,6 +428,8 @@ function handleDialog(ui, testNum) {
             passValue   : "ssh",
             checkMsg    : "Check me out!",
             checked     : false,
+            focused     : ui.loginTextbox.inputField,
+            defButton   : ui.button0,
         };
         checkExpectedState(ui, state);
 
@@ -395,6 +453,8 @@ function handleDialog(ui, testNum) {
             passValue   : "ssh",
             checkMsg    : "Check me out!",
             checked     : false,
+            focused     : ui.loginTextbox.inputField,
+            defButton   : ui.button0,
         };
         checkExpectedState(ui, state);
 
@@ -420,6 +480,8 @@ function handleDialog(ui, testNum) {
             passValue   : "ssh",
             checkMsg    : "Check me out!",
             checked     : false,
+            focused     : ui.password1Textbox.inputField,
+            defButton   : ui.button0,
         };
         checkExpectedState(ui, state);
 
@@ -442,6 +504,8 @@ function handleDialog(ui, testNum) {
             passValue   : "ssh",
             checkMsg    : "Check me out!",
             checked     : false,
+            focused     : ui.password1Textbox.inputField,
+            defButton   : ui.button0,
         };
         checkExpectedState(ui, state);
 
@@ -466,6 +530,8 @@ function handleDialog(ui, testNum) {
             passValue   : "",
             checkMsg    : "",
             checked     : false,
+            focused     : ui.button0,
+            defButton   : ui.button0,
         };
         is(ui.button0.label, "OK",     "Checking accept-button label");
         is(ui.button1.label, "Cancel", "Checking cancel-button label");
@@ -485,6 +551,8 @@ function handleDialog(ui, testNum) {
             passValue   : "",
             checkMsg    : "",
             checked     : false,
+            focused     : ui.button0,
+            defButton   : ui.button0,
         };
         is(ui.button0.label, "Yes", "Checking accept-button label");
         is(ui.button1.label, "No",  "Checking cancel-button label");
@@ -505,6 +573,8 @@ function handleDialog(ui, testNum) {
             passValue   : "",
             checkMsg    : "Check me out!",
             checked     : false,
+            focused     : ui.button0,
+            defButton   : ui.button0,
         };
         is(ui.button0.label, "butt0", "Checking accept-button label");
         is(ui.button1.label, "butt1", "Checking cancel-button label");
@@ -529,6 +599,8 @@ function handleDialog(ui, testNum) {
             passValue   : "",
             checkMsg    : "Check me out!",
             checked     : false,
+            focused     : ui.button1, // Default changed!
+            defButton   : ui.button1,
         };
         // XXX check button1 is default
         is(ui.button0.label, "butt0", "Checking accept-button label");
@@ -556,6 +628,8 @@ function handleDialog(ui, testNum) {
             passValue   : "",
             checkMsg    : "Check me out!",
             checked     : false,
+            focused     : ui.button2, // Default changed!
+            defButton   : ui.button2,
         };
         // XXX check button2 is default
         is(ui.button0.label, "butt0", "Checking accept-button label");
@@ -584,6 +658,8 @@ function handleDialog(ui, testNum) {
             passValue   : "",
             checkMsg    : "",
             checked     : false,
+            focused     : ui.button0,
+            defButton   : ui.button0,
         };
         checkExpectedState(ui, state);
         break;
@@ -601,7 +677,15 @@ function handleDialog(ui, testNum) {
             passValue   : "",
             checkMsg    : "",
             checked     : false,
+            focused     : null, // nothing focused until after delay fires
+            defButton   : ui.button0,
         };
+
+        // OS X doesn't initially focus the button, but rather the infoBody.
+        // The focus stays there even after the button-enable delay has fired.
+        if (isOSX)
+            state.focused = ui.infoBody;
+
         is(ui.button0.label, "OK",     "Checking accept-button label");
         is(ui.button1.label, "Cancel", "Checking cancel-button label");
         is(ui.button0.disabled, true,  "Checking accept-button is disabled");
@@ -623,6 +707,8 @@ function handleDialog(ui, testNum) {
             passValue   : "",
             checkMsg    : "Check me out!",
             checked     : false,
+            focused     : ui.loginTextbox.inputField,
+            defButton   : ui.button0,
         };
         checkExpectedState(ui, state);
 
@@ -649,6 +735,8 @@ function handleDialog(ui, testNum) {
             passValue   : "",
             checkMsg    : "Check me out!",
             checked     : false,
+            focused     : ui.loginTextbox.inputField,
+            defButton   : ui.button0,
         };
         checkExpectedState(ui, state);
 

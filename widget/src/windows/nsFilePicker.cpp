@@ -236,7 +236,7 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
     }
 
 #ifndef WINCE
-    try {
+    MOZ_SEH_TRY {
 #endif
       if (mMode == modeOpen) {
         // FILE MUST EXIST!
@@ -286,7 +286,7 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
       }
 #ifndef WINCE
     }
-    catch(...) {
+    MOZ_SEH_EXCEPT(PR_TRUE) {
       MessageBoxW(ofn.hwndOwner,
                   0,
                   L"The filepicker was unexpectedly closed by Windows.",
@@ -294,7 +294,7 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
       result = PR_FALSE;
     }
 #endif
-  
+
     if (result) {
       // Remember what filter type the user selected
       mSelectedType = (PRInt16)ofn.nFilterIndex;

@@ -179,6 +179,9 @@ Item.prototype = {
       start: function(e, ui) {
         if (this.isAGroupItem)
           GroupItems.setActiveGroupItem(this);
+        // if we start dragging a tab within a group, start with dropSpace on.
+        else if (this.parent != null)
+          this.parent._dropSpaceActive = true;
         drag.info = new Drag(this, e);
       },
       drag: function(e) {
@@ -200,7 +203,6 @@ Item.prototype = {
         var groupItem = drag.info.item.parent;
         if (groupItem)
           groupItem.remove(drag.info.$el, {dontClose: true});
-
         iQ(this.container).removeClass("acceptsDrop");
       },
       drop: function(event) {
@@ -511,7 +513,7 @@ Item.prototype = {
   // This functionality is enabled only by the debug property.
   _updateDebugBounds: function Item__updateDebugBounds() {
     if (this.$debug) {
-      this.$debug.css(this.bounds.css());
+      this.$debug.css(this.bounds);
     }
   },
 
@@ -617,7 +619,6 @@ Item.prototype = {
           var box = self.getBounds();
           box.left = startPos.x + (mouse.x - startMouse.x);
           box.top = startPos.y + (mouse.y - startMouse.y);
-
           self.setBounds(box, true);
 
           if (typeof self.dragOptions.drag == "function")
@@ -662,6 +663,11 @@ Item.prototype = {
               if (dropOptions && typeof dropOptions.over == "function")
                 dropOptions.over.apply(dropTarget, [e]);
             }
+          }
+          if (dropTarget) {
+            dropOptions = dropTarget.dropOptions;
+            if (dropOptions && typeof dropOptions.move == "function")
+              dropOptions.move.apply(dropTarget, [e]);
           }
         }
 
@@ -919,10 +925,16 @@ let Items = {
   //     default: the actual item count
   //   padding - pixels between each item
   //   columns - (int) a preset number of columns to use
+  //   dropPos - a <Point> which should have a one-tab space left open, used
+  //             when a tab is dragged over.
   //
   // Returns:
-  //   an object with the width value of the child items and the number of columns, 
-  //   if the return option is set to 'widthAndColumns'; otherwise the list of <Rect>s
+  //   By default, an object with two properties: `rects`, the list of <Rect>s,
+  //   and `dropIndex`, the index which a dragged tab should have if dropped
+  //   (null if no `dropPos` was specified);
+  //   If the `return` option is set to 'widthAndColumns', an object with the
+  //   width value of the child items (`childWidth`) and the number of columns
+  //   (`columns`) is returned.
   arrange: function Items_arrange(items, bounds, options) {
     if (typeof options == 'undefined')
       options = {};
@@ -936,8 +948,12 @@ let Items = {
 
     var tabAspect = TabItems.tabHeight / TabItems.tabWidth;
     var count = options.count || (items ? items.length : 0);
-    if (!count)
-      return rects;
+    if (options.addTab)
+      count++;
+    if (!count) {
+      let dropIndex = (Utils.isPoint(options.dropPos)) ? 0 : null;
+      return {rects: rects, dropIndex: dropIndex};
+    }
 
     var columns = options.columns || 1;
     // We'll assume for the time being that all the items have the same styling
@@ -981,17 +997,23 @@ let Items = {
 
     var column = 0;
 
+    var dropIndex = false;
+    var dropRect = false;
+    if (Utils.isPoint(options.dropPos))
+      dropRect = new Rect(options.dropPos.x, options.dropPos.y, 1, 1);
     for (let a = 0; a < count; a++) {
-      rects.push(new Rect(box));
-      if (items && a < items.length) {
-        let item = items[a];
-        if (!item.locked.bounds) {
-          item.setBounds(box, immediately);
-          item.setRotation(0);
-          if (options.z)
-            item.setZ(options.z);
-        }
+      // If we had a dropPos, see if this is where we should place it
+      if (dropRect) {
+        let activeBox = new Rect(box);
+        activeBox.inset(-itemMargin - 1, -itemMargin - 1);
+        // if the designated position (dropRect) is within the active box,
+        // this is where, if we drop the tab being dragged, it should land!
+        if (activeBox.contains(dropRect))
+          dropIndex = a;
       }
+      
+      // record the box.
+      rects.push(new Rect(box));
 
       box.left += (UI.rtl ? -1 : 1) * (box.width + padding);
       column++;
@@ -1002,7 +1024,7 @@ let Items = {
       }
     }
 
-    return rects;
+    return {rects: rects, dropIndex: dropIndex};
   },
 
   // ----------

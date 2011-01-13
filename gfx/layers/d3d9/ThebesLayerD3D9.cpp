@@ -319,6 +319,7 @@ class OpaqueRenderer {
 public:
   OpaqueRenderer(const nsIntRegion& aUpdateRegion) :
     mUpdateRegion(aUpdateRegion), mDC(NULL) {}
+  ~OpaqueRenderer() { End(); }
   already_AddRefed<gfxWindowsSurface> Begin(LayerD3D9* aLayer);
   void End();
   IDirect3DTexture9* GetTexture() { return mTmpTexture; }
@@ -365,7 +366,11 @@ OpaqueRenderer::Begin(LayerD3D9* aLayer)
 void
 OpaqueRenderer::End()
 {
-  mSurface->ReleaseDC(mDC);
+  if (mSurface && mDC) {
+    mSurface->ReleaseDC(mDC);
+    mSurface = NULL;
+    mDC = NULL;
+  }
 }
 
 static void
@@ -423,24 +428,27 @@ ThebesLayerD3D9::DrawRegion(const nsIntRegion &aRegion, SurfaceMode aMode)
     case SURFACE_COMPONENT_ALPHA: {
       nsRefPtr<gfxWindowsSurface> onBlack = opaqueRenderer.Begin(this);
       nsRefPtr<gfxWindowsSurface> onWhite = opaqueRendererOnWhite.Begin(this);
-      FillSurface(onBlack, aRegion, bounds.TopLeft(), gfxRGBA(0.0, 0.0, 0.0, 1.0));
-      FillSurface(onWhite, aRegion, bounds.TopLeft(), gfxRGBA(1.0, 1.0, 1.0, 1.0));
-      gfxASurface* surfaces[2] = { onBlack.get(), onWhite.get() };
-      destinationSurface = new gfxTeeSurface(surfaces, NS_ARRAY_LENGTH(surfaces));
-      // Using this surface as a source will likely go horribly wrong, since
-      // only the onBlack surface will really be used, so alpha information will
-      // be incorrect.
-      destinationSurface->SetAllowUseAsSource(PR_FALSE);
+      if (onBlack && onWhite) {
+        FillSurface(onBlack, aRegion, bounds.TopLeft(), gfxRGBA(0.0, 0.0, 0.0, 1.0));
+        FillSurface(onWhite, aRegion, bounds.TopLeft(), gfxRGBA(1.0, 1.0, 1.0, 1.0));
+        gfxASurface* surfaces[2] = { onBlack.get(), onWhite.get() };
+        destinationSurface = new gfxTeeSurface(surfaces, NS_ARRAY_LENGTH(surfaces));
+        // Using this surface as a source will likely go horribly wrong, since
+        // only the onBlack surface will really be used, so alpha information will
+        // be incorrect.
+        destinationSurface->SetAllowUseAsSource(PR_FALSE);
+      }
       break;
     }
   }
 
-  if (destinationSurface) {
-    nsRefPtr<gfxContext> context = new gfxContext(destinationSurface);
-    context->Translate(gfxPoint(-bounds.x, -bounds.y));
-    LayerManagerD3D9::CallbackInfo cbInfo = mD3DManager->GetCallbackInfo();
-    cbInfo.Callback(this, context, aRegion, nsIntRegion(), cbInfo.CallbackData);
-  }
+  if (!destinationSurface)
+    return;
+
+  nsRefPtr<gfxContext> context = new gfxContext(destinationSurface);
+  context->Translate(gfxPoint(-bounds.x, -bounds.y));
+  LayerManagerD3D9::CallbackInfo cbInfo = mD3DManager->GetCallbackInfo();
+  cbInfo.Callback(this, context, aRegion, nsIntRegion(), cbInfo.CallbackData);
 
   nsAutoTArray<IDirect3DTexture9*,2> srcTextures;
   nsAutoTArray<IDirect3DTexture9*,2> destTextures;

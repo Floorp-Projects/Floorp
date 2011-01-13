@@ -84,7 +84,7 @@ include svg-integration/reftest.list
 == dynamic-text-01.svg dynamic-text-01-ref.svg
 == dynamic-text-02.svg dynamic-text-02-ref.svg
 == dynamic-text-03.svg dynamic-text-03-ref.svg
-skip-if(gtk2Widget) == dynamic-text-04.svg dynamic-text-04-ref.svg # bug 569770
+fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == dynamic-text-04.svg dynamic-text-04-ref.svg # bug 421587 for WinXP
 == dynamic-textPath-01.svg dynamic-textPath-01-ref.svg
 == dynamic-use-01.svg pass.svg
 == dynamic-use-02.svg pass.svg
@@ -114,10 +114,10 @@ random == dynamic-use-nested-01.svg dynamic-use-nested-01-ref.svg # bug 467498
 == foreignObject-move-repaint-01.svg pass.svg
 == foreignObject-overflow-01.svg pass.svg
 == getElementById-a-element-01.svg pass.svg
-== gradient-live-01a.svg gradient-live-01-ref.svg
-== gradient-live-01b.svg gradient-live-01-ref.svg
-== gradient-live-01c.svg gradient-live-01-ref.svg
-== gradient-live-01d.svg gradient-live-01-ref.svg
+fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == gradient-live-01a.svg gradient-live-01-ref.svg # bug 623403
+fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == gradient-live-01b.svg gradient-live-01-ref.svg # bug 623403
+fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == gradient-live-01c.svg gradient-live-01-ref.svg # bug 623403
+fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == gradient-live-01d.svg gradient-live-01-ref.svg # bug 623403
 fails == inline-in-xul-basic-01.xul pass.svg
 == invalid-text-01.svg pass.svg
 == linearGradient-basic-01.svg pass.svg
