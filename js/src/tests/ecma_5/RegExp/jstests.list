@@ -3,4 +3,4 @@ script 7.8.5-01.js
 script 15.10.5-01.js
 script 15.10.7.5-01.js
 script empty-lookahead.js
-script regress-617935.js
+skip-if(!xulRuntime.shell&&xulRuntime.OS=="WINNT") script regress-617935.js
