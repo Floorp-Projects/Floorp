@@ -369,6 +369,17 @@ appUpdater.prototype =
       self.addons = [];
       self.addonsCheckedCount = 0;
       aAddons.forEach(function(aAddon) {
+        // Protect against code that overrides the add-ons manager and doesn't
+        // implement the isCompatibleWith or the findUpdates method.
+        if (!("isCompatibleWith" in aAddon) || !("findUpdates" in aAddon)) {
+          let errMsg = "Add-on doesn't implement either the isCompatibleWith " +
+                       "or the findUpdates method!";
+          if (aAddon.id)
+            errMsg += " Add-on ID: " + aAddon.id;
+          Components.utils.reportError(errMsg);
+          return;
+        }
+
         // If an add-on isn't appDisabled and isn't userDisabled then it is
         // either active now or the user expects it to be active after the
         // restart. If that is the case and the add-on is not installed by the
@@ -378,13 +389,18 @@ appUpdater.prototype =
         // checking plugins compatibility information isn't supported and
         // getting the scope property of a plugin breaks in some environments
         // (see bug 566787).
-        if (aAddon.type != "plugin" &&
-            !aAddon.appDisabled && !aAddon.userDisabled &&
-            aAddon.scope != AddonManager.SCOPE_APPLICATION &&
-            aAddon.isCompatible &&
-            !aAddon.isCompatibleWith(self.update.appVersion,
-                                     self.update.platformVersion))
-          self.addons.push(aAddon);
+        try {
+          if (aAddon.type != "plugin" &&
+              !aAddon.appDisabled && !aAddon.userDisabled &&
+              aAddon.scope != AddonManager.SCOPE_APPLICATION &&
+              aAddon.isCompatible &&
+              !aAddon.isCompatibleWith(self.update.appVersion,
+                                       self.update.platformVersion))
+            self.addons.push(aAddon);
+        }
+        catch (e) {
+          Components.utils.reportError(e);
+        }
       });
       self.addonsTotalCount = self.addons.length;
       if (self.addonsTotalCount == 0) {
