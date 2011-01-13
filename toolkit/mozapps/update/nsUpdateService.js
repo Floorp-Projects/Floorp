@@ -1757,8 +1757,18 @@ function UpdateManager() {
   // Ensure the Active Update file is loaded
   var updates = this._loadXMLFileIntoArray(getUpdateFile(
                   [FILE_UPDATE_ACTIVE]));
-  if (updates.length > 0)
-    this._activeUpdate = updates[0];
+  if (updates.length > 0) {
+    // Under some edgecases such as Windows system restore the active-update.xml
+    // will contain a pending update without the status file which will return
+    // STATE_NONE. To recover from this situation clean the updates dir and
+    // rewrite the active-update.xml file without the broken update.
+    if (readStatusFile(getUpdatesDir()) == STATE_NONE) {
+      cleanUpUpdatesDir();
+      this._writeUpdatesToXMLFile([], getUpdateFile([FILE_UPDATE_ACTIVE]));
+    }
+    else
+      this._activeUpdate = updates[0];
+  }
 }
 UpdateManager.prototype = {
   /**
