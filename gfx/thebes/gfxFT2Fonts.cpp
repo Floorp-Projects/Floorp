@@ -292,28 +292,35 @@ FontFamily::FindFontEntry(const gfxFontStyle& aFontStyle)
     return static_cast<FontEntry*>(FindFontForStyle(aFontStyle, needsBold));
 }
 
-PRBool
-FontFamily::FindWeightsForStyle(gfxFontEntry* aFontsForWeights[],
-                                PRBool anItalic, PRInt16 aStretch)
+void FontFamily::AddFontFileAndIndex(nsCString aFilename, PRUint32 aIndex)
 {
-    PRBool matchesSomething = PR_FALSE;
+    SetHasStyles(PR_FALSE);
+    mFilenames.AppendElement(new FileAndIndex(aFilename, aIndex));
+}
+    
 
-    for (PRUint32 j = 0; j < 2; j++) {
-        // build up an array of weights that match the italicness we're looking for
-        for (PRUint32 i = 0; i < mAvailableFonts.Length(); i++) {
-            gfxFontEntry *fe = mAvailableFonts[i];
-            const PRUint8 weight = (fe->mWeight / 100);
-            if (fe->mItalic == anItalic) {
-                aFontsForWeights[weight] = fe;
-                matchesSomething = PR_TRUE;
-            }
-        }
-        if (matchesSomething)
-            break;
-        anItalic = !anItalic;
+
+void
+FontFamily::FindStyleVariations()
+{
+    if (mHasStyles) {
+        return;
     }
+    mHasStyles = PR_TRUE;
 
-    return matchesSomething;
+    for (int i = 0; i < mFilenames.Length(); i++) {
+        FT_Face face;
+        gfxAndroidPlatform* platform = gfxToolkitPlatform::GetPlatform();
+        if (FT_Err_Ok == FT_New_Face(platform->GetFTLibrary(),
+                                     mFilenames[i].filename.get(), 
+                                     mFilenames[i].index, &face)) {
+            FontEntry* fe = FontEntry::CreateFontEntryFromFace(face);
+            if (fe)
+                AddFontEntry(fe);
+        }
+    }
+    mFilenames.Clear();
+    SetHasStyles(PR_TRUE);
 }
 
 /**
