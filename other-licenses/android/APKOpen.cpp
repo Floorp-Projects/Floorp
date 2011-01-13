@@ -59,6 +59,8 @@
 #include <linux/ashmem.h>
 #include "dlfcn.h"
 #include "APKOpen.h"
+#include <sys/time.h>
+#include <sys/resource.h>
 
 /* compression methods */
 #define STORE    0
@@ -128,11 +130,16 @@ getLibraryMapping()
 }
 
 static int
-createAshmem(size_t bytes)
+createAshmem(size_t bytes, const char *name)
 {
   int fd = open("/" ASHMEM_NAME_DEF, O_RDWR, 0600);
   if (fd < 0)
     return -1;
+
+  char buf[ASHMEM_NAME_LEN];
+
+  strlcpy(buf, name, sizeof(buf));
+  /*ret = */ioctl(fd, ASHMEM_SET_NAME, buf);
 
   if (!ioctl(fd, ASHMEM_SET_SIZE, bytes))
     return fd;
@@ -475,7 +482,7 @@ static void * mozload(const char * path, void *zip,
         fd = -1;
     }
     if (fd < 0)
-      fd = createAshmem(lib_size);
+      fd = createAshmem(lib_size, path);
 #ifdef DEBUG
     else
       __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Loading %s from cache", path + 4);
@@ -578,10 +585,10 @@ loadLibs(const char *apkName)
   if (!stat(apkName, &status))
     apk_mtime = status.st_mtime;
 
-#ifdef DEBUG
   struct timeval t0, t1;
   gettimeofday(&t0, 0);
-#endif
+  struct rusage usage1;
+  getrusage(RUSAGE_SELF, &usage1);
 
   void *zip = map_file(apkName);
   struct cdir_end *dirend = (struct cdir_end *)(zip + zip_size - sizeof(*dirend));
@@ -640,13 +647,12 @@ loadLibs(const char *apkName)
   GETFUNC(callObserver);
   GETFUNC(removeObserver);
 #undef GETFUNC
-#ifdef DEBUG
   gettimeofday(&t1, 0);
-  __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "spent %d total",
-             (((long long)t1.tv_sec * 1000000LL) + (long long)t1.tv_usec) -
-             (((long long)t0.tv_sec * 1000000LL) + (long long)t0.tv_usec));
-  __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "All libraries loaded!");
-#endif
+  struct rusage usage2;
+  getrusage(RUSAGE_SELF, &usage2);
+  __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Loaded libs in %dms total, %d faults",
+                      (t1.tv_sec - t0.tv_sec)*1000 + (t1.tv_usec - t0.tv_usec)/1000, 
+                      usage2.ru_majflt-usage1.ru_majflt);
 }
 
 extern "C" NS_EXPORT void JNICALL

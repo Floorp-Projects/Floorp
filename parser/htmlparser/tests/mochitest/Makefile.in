@@ -81,6 +81,7 @@ _TEST_FILES =	parser_datreader.js \
 		file_bug594730-6.html \
 		file_bug594730-7.html \
 		file_bug594730-8.html \
+		file_bug594730-9.html \
 		test_bug599584.html \
 		iframe_bug599584.html \
 		$(NULL)

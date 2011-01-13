@@ -69,6 +69,10 @@
 
 using namespace mozilla::imagelib;
 
+// a mask for flags that will affect the decoding
+#define DECODE_FLAGS_MASK (imgIContainer::FLAG_DECODE_NO_PREMULTIPLY_ALPHA | imgIContainer::FLAG_DECODE_NO_COLORSPACE_CONVERSION)
+#define DECODE_FLAGS_DEFAULT 0
+
 /* Accounting for compressed data */
 #if defined(PR_LOGGING)
 static PRLogModuleInfo *gCompressedImageAccountingLog = PR_NewLogModule ("CompressedImageAccounting");
@@ -178,6 +182,7 @@ NS_IMPL_ISUPPORTS5(RasterImage, imgIContainer, nsITimerCallback, nsIProperties,
 RasterImage::RasterImage(imgStatusTracker* aStatusTracker) :
   Image(aStatusTracker), // invoke superclass's constructor
   mSize(0,0),
+  mFrameDecodeFlags(DECODE_FLAGS_DEFAULT),
   mAnim(nsnull),
   mLoopCount(-1),
   mObserver(nsnull),
@@ -340,7 +345,21 @@ RasterImage::ExtractFrame(PRUint32 aWhichFrame,
   img->SetSize(aRegion.width, aRegion.height);
   img->mDecoded = PR_TRUE; // Also, we need to mark the image as decoded
   img->mHasBeenDecoded = PR_TRUE;
+  img->mFrameDecodeFlags = aFlags & DECODE_FLAGS_MASK;
 
+  if (img->mFrameDecodeFlags != mFrameDecodeFlags) {
+    // if we can't discard, then we're screwed; we have no way
+    // to re-decode.  Similarly if we aren't allowed to do a sync
+    // decode.
+    if (!(aFlags & FLAG_SYNC_DECODE))
+      return NS_ERROR_NOT_AVAILABLE;
+    if (!CanForciblyDiscard() || mDecoder || mAnim)
+      return NS_ERROR_NOT_AVAILABLE;
+    ForceDiscard();
+
+    mFrameDecodeFlags = img->mFrameDecodeFlags;
+  }
+  
   // If a synchronous decode was requested, do it
   if (aFlags & FLAG_SYNC_DECODE) {
     rv = SyncDecode();
@@ -590,6 +609,20 @@ RasterImage::CopyFrame(PRUint32 aWhichFrame,
 
   nsresult rv;
 
+  PRUint32 desiredDecodeFlags = aFlags & DECODE_FLAGS_MASK;
+  if (desiredDecodeFlags != mFrameDecodeFlags) {
+    // if we can't discard, then we're screwed; we have no way
+    // to re-decode.  Similarly if we aren't allowed to do a sync
+    // decode.
+    if (!(aFlags & FLAG_SYNC_DECODE))
+      return NS_ERROR_NOT_AVAILABLE;
+    if (!CanForciblyDiscard() || mDecoder || mAnim)
+      return NS_ERROR_NOT_AVAILABLE;
+    ForceDiscard();
+
+    mFrameDecodeFlags = desiredDecodeFlags;
+  }
+
   // If requested, synchronously flush any data we have lying around to the decoder
   if (aFlags & FLAG_SYNC_DECODE) {
     rv = SyncDecode();
@@ -647,6 +680,21 @@ RasterImage::GetFrame(PRUint32 aWhichFrame,
     return NS_ERROR_FAILURE;
 
   nsresult rv = NS_OK;
+
+  PRUint32 desiredDecodeFlags = aFlags & DECODE_FLAGS_MASK;
+  if (desiredDecodeFlags != mFrameDecodeFlags) {
+    // if we can't discard, then we're screwed; we have no way
+    // to re-decode.  Similarly if we aren't allowed to do a sync
+    // decode.
+    if (!(aFlags & FLAG_SYNC_DECODE))
+      return NS_ERROR_NOT_AVAILABLE;
+    if (!CanForciblyDiscard() || mDecoder || mAnim)
+      return NS_ERROR_NOT_AVAILABLE;
+
+    ForceDiscard();
+
+    mFrameDecodeFlags = desiredDecodeFlags;
+  }
 
   // If the caller requested a synchronous decode, do it
   if (aFlags & FLAG_SYNC_DECODE) {
@@ -1996,10 +2044,10 @@ RasterImage::GetKeys(PRUint32 *count, char ***keys)
 }
 
 void
-RasterImage::Discard()
+RasterImage::Discard(bool force)
 {
   // We should be ok for discard
-  NS_ABORT_IF_FALSE(CanDiscard(), "Asked to discard but can't!");
+  NS_ABORT_IF_FALSE(force ? CanForciblyDiscard() : CanDiscard(), "Asked to discard but can't!");
 
   // We should never discard when we have an active decoder
   NS_ABORT_IF_FALSE(!mDecoder, "Asked to discard with open decoder!");
@@ -2024,6 +2072,9 @@ RasterImage::Discard()
   if (observer)
     observer->OnDiscard(nsnull);
 
+  if (force)
+    DiscardTracker::Remove(&mDiscardTrackerNode);
+
   // Log
   PR_LOG(gCompressedImageAccountingLog, PR_LOG_DEBUG,
          ("CompressedImageAccounting: discarded uncompressed image "
@@ -2046,6 +2097,13 @@ RasterImage::CanDiscard() {
   return (DiscardingEnabled() && // Globally enabled...
           mDiscardable &&        // ...Enabled at creation time...
           (mLockCount == 0) &&   // ...not temporarily disabled...
+          mHasSourceData &&      // ...have the source data...
+          mDecoded);             // ...and have something to discard.
+}
+
+PRBool
+RasterImage::CanForciblyDiscard() {
+  return (mDiscardable &&        // ...Enabled at creation time...
           mHasSourceData &&      // ...have the source data...
           mDecoded);             // ...and have something to discard.
 }
@@ -2110,6 +2168,7 @@ RasterImage::InitDecoder(bool aDoSizeDecode)
   // Initialize the decoder
   nsCOMPtr<imgIDecoderObserver> observer(do_QueryReferent(mObserver));
   mDecoder->SetSizeDecode(aDoSizeDecode);
+  mDecoder->SetDecodeFlags(mFrameDecodeFlags);
   mDecoder->Init(this, observer);
   CONTAINER_ENSURE_SUCCESS(mDecoder->GetDecoderError());
 
@@ -2273,8 +2332,11 @@ RasterImage::RequestDecode()
   }
 
 
-  // If we have a size decode open, interrupt it and shut it down
-  if (mDecoder && mDecoder->IsSizeDecode()) {
+  // If we have a size decode open, interrupt it and shut it down; or if
+  // the decoder has different flags than what we need
+  if (mDecoder &&
+      (mDecoder->IsSizeDecode() || mDecoder->GetDecodeFlags() != mFrameDecodeFlags))
+  {
     rv = ShutdownDecoder(eShutdownIntent_Interrupted);
     CONTAINER_ENSURE_SUCCESS(rv);
   }
@@ -2324,8 +2386,11 @@ RasterImage::SyncDecode()
   // disallow this type of call in the API, and check for it in API methods.
   NS_ABORT_IF_FALSE(!mInDecoder, "Yikes, forcing sync in reentrant call!");
 
-  // If we have a size decode open, shut it down
-  if (mDecoder && mDecoder->IsSizeDecode()) {
+  // If we have a size decoder open, or one with different flags than
+  // what we need, shut it down
+  if (mDecoder &&
+      (mDecoder->IsSizeDecode() || mDecoder->GetDecodeFlags() != mFrameDecodeFlags))
+  {
     rv = ShutdownDecoder(eShutdownIntent_Interrupted);
     CONTAINER_ENSURE_SUCCESS(rv);
   }
@@ -2384,7 +2449,22 @@ RasterImage::Draw(gfxContext *aContext,
   if (mInDecoder && (aFlags & imgIContainer::FLAG_SYNC_DECODE))
     return NS_ERROR_FAILURE;
 
+  // Illegal -- you can't draw with non-default decode flags.
+  // (Disabling colorspace conversion might make sense to allow, but
+  // we don't currently.)
+  if ((aFlags & DECODE_FLAGS_MASK) != DECODE_FLAGS_DEFAULT)
+    return NS_ERROR_FAILURE;
+
   NS_ENSURE_ARG_POINTER(aContext);
+
+  // We can only draw with the default decode flags
+  if (mFrameDecodeFlags != DECODE_FLAGS_DEFAULT) {
+    if (!CanForciblyDiscard())
+      return NS_ERROR_NOT_AVAILABLE;
+    ForceDiscard();
+
+    mFrameDecodeFlags = DECODE_FLAGS_DEFAULT;
+  }
 
   // If a synchronous draw is requested, flush anything that might be sitting around
   if (aFlags & FLAG_SYNC_DECODE) {

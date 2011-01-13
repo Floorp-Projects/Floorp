@@ -1829,6 +1829,10 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                         scrollParts, createLayersForScrollbars);
   }
 
+  nsIPresShell* presShell = mOuter->PresContext()->GetPresShell();
+  nsRect scrollPort = (mIsRoot && presShell->UsingDisplayPort()) ?
+                      (presShell->GetDisplayPort()) : mScrollPort;
+
   // Overflow clipping can never clip frames outside our subtree, so there
   // is no need to worry about whether we are a moving frame that might clip
   // non-moving frames.
@@ -1838,12 +1842,14 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // had dirty rects saved for them by their parent frames calling
   // MarkOutOfFlowChildrenForDisplayList, so it's safe to restrict our
   // dirty rect here.
-  dirtyRect.IntersectRect(aDirtyRect, mScrollPort);
+  dirtyRect.IntersectRect(aDirtyRect, scrollPort);
 
   nsDisplayListCollection set;
   rv = mOuter->BuildDisplayListForChild(aBuilder, mScrolledFrame, dirtyRect, set);
   NS_ENSURE_SUCCESS(rv, rv);
-  nsRect clip = mScrollPort + aBuilder->ToReferenceFrame(mOuter);
+  nsRect clip;
+  clip = scrollPort + aBuilder->ToReferenceFrame(mOuter);
+
   nscoord radii[8];
   // Our override of GetBorderRadii ensures we never have a radius at
   // the corners where we have a scrollbar.

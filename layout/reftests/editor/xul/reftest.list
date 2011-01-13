@@ -1,9 +1,9 @@
 == empty-1.xul empty-ref.xul
 != empty-2.xul empty-ref.xul
-# There is no way to simulate an autocomplete textbox in windows Vista/7 default theme using CSS.
+# There is no way to simulate an autocomplete textbox in windows XP/Vista/7 default theme using CSS.
 # Therefore, the equlity tests below should be marked as failing.
-fails-if(windowsDefaultTheme&&/^Windows\x20NT\x206\.[01]/.test(http.oscpu)) == autocomplete-1.xul autocomplete-ref.xul
-fails-if(windowsDefaultTheme&&/^Windows\x20NT\x206\.[01]/.test(http.oscpu)) == emptyautocomplete-1.xul emptyautocomplete-ref.xul
+fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[01])/.test(http.oscpu)) == autocomplete-1.xul autocomplete-ref.xul
+fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[01])/.test(http.oscpu)) == emptyautocomplete-1.xul emptyautocomplete-ref.xul
 != emptymultiline-1.xul emptymultiline-ref.xul
 == emptymultiline-2.xul emptymultiline-ref.xul
 == emptytextbox-1.xul emptytextbox-ref.xul
@@ -11,14 +11,14 @@ fails-if(windowsDefaultTheme&&/^Windows\x20NT\x206\.[01]/.test(http.oscpu)) == e
 != emptytextbox-3.xul emptytextbox-ref.xul
 != emptytextbox-4.xul emptytextbox-ref.xul
 == emptytextbox-5.xul emptytextbox-ref.xul
-# There is no way to simulate a number textbox in windows Vista/7 default theme using CSS.
+# There is no way to simulate a number textbox in windows XP/Vista/7 default theme using CSS.
 # Therefore, the equlity tests below should be marked as failing.
 != number-1.xul number-ref.xul
 != number-2.xul number-ref.xul
-fails-if(windowsDefaultTheme&&/^Windows\x20NT\x206\.[01]/.test(http.oscpu)) == number-3.xul number-ref.xul
+fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[01])/.test(http.oscpu)) == number-3.xul number-ref.xul
 != number-4.xul number-ref.xul
-fails-if(windowsDefaultTheme&&/^Windows\x20NT\x206\.[01]/.test(http.oscpu)) == number-5.xul number-ref.xul
-fails-if(windowsDefaultTheme&&/^Windows\x20NT\x206\.[01]/.test(http.oscpu)) == numberwithvalue-1.xul numberwithvalue-ref.xul
+fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[01])/.test(http.oscpu)) == number-5.xul number-ref.xul
+fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[01])/.test(http.oscpu)) == numberwithvalue-1.xul numberwithvalue-ref.xul
 == passwd-1.xul passwd-ref.xul
 == passwd-2.xul passwd-ref.xul
 != passwd-3.xul passwd-ref.xul

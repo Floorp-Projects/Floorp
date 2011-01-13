@@ -2129,6 +2129,9 @@ var gListView = {
     if (aObj.type != this._type)
       return;
 
+    if (aIsInstall && aObj.existingAddon)
+      return;
+
     let prop = aIsInstall ? "mInstall" : "mAddon";
     for (let i = 0; i < this._listBox.itemCount; i++) {
       let item = this._listBox.childNodes[i];

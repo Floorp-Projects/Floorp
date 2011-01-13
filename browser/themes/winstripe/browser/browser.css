@@ -52,6 +52,8 @@
 %filter substitution
 %define toolbarHighlight rgba(255,255,255,.5)
 %define navbarTextboxCustomBorder border-color: rgba(0,0,0,.25) rgba(0,0,0,.32) rgba(0,0,0,.37);
+%define genericBgTabTexture -moz-linear-gradient(transparent, hsla(0,0%,36%,.15) 1px, hsla(0,0%,0%,.3) 60%)
+%define genericBgTabTextureHover -moz-linear-gradient(transparent, hsla(0,0%,70%,.15) 1px, hsla(0,0%,20%,.3) 60%)
 
 #menubar-items {
   -moz-box-orient: vertical; /* for flex hack */
@@ -478,7 +480,7 @@ toolbarbutton.bookmark-item[open="true"] {
 menu.bookmark-item,
 menuitem.bookmark-item {
   min-width: 0;
-  max-width: 26em;
+  max-width: 32em;
 }
 
 .bookmark-item > .menu-iconic-left {
@@ -969,6 +971,10 @@ toolbar:not([iconsize="small"])[mode="icons"] #forward-button:not([disabled="tru
 }
 
 /* ::::: fullscreen window controls ::::: */
+
+#TabsToolbar > #window-controls {
+  -moz-margin-start: 4px;
+}
 
 #minimize-button,
 #restore-button,
@@ -1498,7 +1504,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 .tabbrowser-tab,
 .tabs-newtab-button {
   -moz-appearance: none;
-  background: -moz-linear-gradient(hsla(0,0%,50%,.1), hsla(0,0%,37%,.1) 50%);
+  background: @genericBgTabTexture@, -moz-linear-gradient(-moz-dialog, -moz-dialog);
   background-position: -5px -2px;
   background-repeat: no-repeat;
   background-size: 200%;
@@ -1510,8 +1516,22 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 
 .tabbrowser-tab:hover,
 .tabs-newtab-button:hover {
-  background-image: -moz-linear-gradient(hsla(0,0%,100%,.4), hsla(0,0%,75%,.4) 50%);
+  background-image: @genericBgTabTextureHover@, -moz-linear-gradient(-moz-dialog, -moz-dialog);
 }
+
+%ifndef WINSTRIPE_AERO
+@media all and (-moz-windows-theme: luna-blue) {
+  .tabbrowser-tab,
+  .tabs-newtab-button {
+    background-image: -moz-linear-gradient(hsla(51,34%,89%,.9), hsla(51,15%,79%,.9) 1px, hsla(51,9%,68%,.9) 60%);
+  }
+
+  .tabbrowser-tab:hover,
+  .tabs-newtab-button:hover {
+    background-image: -moz-linear-gradient(hsla(51,34%,100%,.9), hsla(51,15%,94%,.9) 1px, hsla(51,9%,83%,.9) 60%);
+  }
+}
+%endif
 
 .tabbrowser-tab[selected="true"] {
   background-image: -moz-linear-gradient(rgba(255,255,255,.7), @toolbarHighlight@ 30%),
@@ -2183,28 +2203,26 @@ panel[dimmed="true"] {
   opacity: 0.5;
 }
 
-/* Vertically-center the statusbar compatibility shim, because
-   toolbars, even in small-icon mode, are a bit taller than
-   statusbars. Also turn off the statusbar border. On Windows
-   we have to disable borders on statusbar *and* child statusbar
-   elements. */
-#status-bar {
-  margin-top: .3em;
-  border-width: 0;
-  -moz-appearance: none;
+/* Add-on bar */
+
+#addon-bar {
+  min-height: 20px;
 }
 
-/* Remove all borders from statusbarpanel children of
-   the statusbar. */
+#status-bar {
+  border: none;
+  -moz-appearance: none;
+  min-height: 0;
+}
+
 #status-bar > statusbarpanel {
   border-width: 0;
   -moz-appearance: none;
 }
 
-/* Add-on bar close button */
 #addonbar-closebutton {
   border: none;
-  padding: 3px 5px;
+  padding: 0 5px;
   list-style-image: url("chrome://global/skin/icons/close.png");
   -moz-appearance: none;
   -moz-image-region: rect(0, 16px, 16px, 0);

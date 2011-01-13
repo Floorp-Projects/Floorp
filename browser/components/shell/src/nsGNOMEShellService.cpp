@@ -214,30 +214,31 @@ nsGNOMEShellService::SetDefaultBrowser(PRBool aClaimAllTypes,
 #endif
 
   nsCOMPtr<nsIGConfService> gconf = do_GetService(NS_GCONFSERVICE_CONTRACTID);
-
-  nsCAutoString appKeyValue(mAppPath);
-  appKeyValue.Append(" \"%s\"");
-  unsigned int i;
-
-  for (i = 0; i < NS_ARRAY_LENGTH(appProtocols); ++i) {
-    if (appProtocols[i].essential || aClaimAllTypes) {
-      gconf->SetAppForProtocol(nsDependentCString(appProtocols[i].name),
-                               appKeyValue);
+  if (gconf) {
+    nsCAutoString appKeyValue(mAppPath);
+    appKeyValue.Append(" \"%s\"");
+    for (unsigned int i = 0; i < NS_ARRAY_LENGTH(appProtocols); ++i) {
+      if (appProtocols[i].essential || aClaimAllTypes) {
+        gconf->SetAppForProtocol(nsDependentCString(appProtocols[i].name),
+                                 appKeyValue);
+      }
     }
   }
 
   // set handler for .html and xhtml files and MIME types:
   if (aClaimAllTypes) {
+    nsresult rv;
     nsCOMPtr<nsIGIOService> giovfs =
-      do_GetService(NS_GIOSERVICE_CONTRACTID);
+      do_GetService(NS_GIOSERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIStringBundleService> bundleService =
-      do_GetService(NS_STRINGBUNDLE_CONTRACTID);
-    NS_ENSURE_TRUE(bundleService, NS_ERROR_OUT_OF_MEMORY);
+      do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIStringBundle> brandBundle;
-    bundleService->CreateBundle(BRAND_PROPERTIES, getter_AddRefs(brandBundle));
-    NS_ENSURE_TRUE(brandBundle, NS_ERROR_FAILURE);
+    rv = bundleService->CreateBundle(BRAND_PROPERTIES, getter_AddRefs(brandBundle));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     nsString brandShortName, brandFullName;
     brandBundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(),
@@ -247,17 +248,16 @@ nsGNOMEShellService::SetDefaultBrowser(PRBool aClaimAllTypes,
 
     // use brandShortName as the application id.
     NS_ConvertUTF16toUTF8 id(brandShortName);
-    if (giovfs) {
-      nsCOMPtr<nsIGIOMimeApp> appInfo;
-      giovfs->CreateAppFromCommand(mAppPath,
-                                id,
-                                getter_AddRefs(appInfo));
+    nsCOMPtr<nsIGIOMimeApp> appInfo;
+    rv = giovfs->CreateAppFromCommand(mAppPath,
+                                      id,
+                                      getter_AddRefs(appInfo));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-      // Add mime types for html, xhtml extension and set app to just created appinfo.
-      for (i = 0; i < NS_ARRAY_LENGTH(appTypes); ++i) {
-        appInfo->SetAsDefaultForMimeType(nsDependentCString(appTypes[i].mimeType));
-        appInfo->SetAsDefaultForFileExtensions(nsDependentCString(appTypes[i].extensions));
-      }
+    // Add mime types for html, xhtml extension and set app to just created appinfo.
+    for (unsigned int i = 0; i < NS_ARRAY_LENGTH(appTypes); ++i) {
+      appInfo->SetAsDefaultForMimeType(nsDependentCString(appTypes[i].mimeType));
+      appInfo->SetAsDefaultForFileExtensions(nsDependentCString(appTypes[i].extensions));
     }
   }
 

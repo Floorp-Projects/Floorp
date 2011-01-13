@@ -376,13 +376,28 @@ ResponseListener.prototype =
     }
     catch (ex) { }
 
-    this.setResponseHeader(aRequest);
-
     if (HUDService.saveRequestAndResponseBodies) {
       this.httpActivity.response.body = this.receivedData;
     }
     else {
       this.httpActivity.response.bodyDiscarded = true;
+    }
+
+    // Retrieve the response headers, as they are, from the server.
+    let response = null;
+    for each (let item in HUDService.openResponseHeaders) {
+      if (item.channel === aRequest) {
+        response = item;
+        break;
+      }
+    }
+
+    if (response) {
+      this.httpActivity.response.header = response.headers;
+      delete HUDService.openResponseHeaders[response.id];
+    }
+    else {
+      this.setResponseHeader(aRequest);
     }
 
     if (HUDService.lastFinishedRequestCallback) {
@@ -1102,10 +1117,20 @@ function pruneConsoleOutputIfNecessary(aConsoleNode)
     logLimit = DEFAULT_LOG_LIMIT;
   }
 
+  let scrollBox = aConsoleNode.scrollBoxObject.element;
+  let oldScrollHeight = scrollBox.scrollHeight;
+  let scrolledToBottom = ConsoleUtils.isOutputScrolledToBottom(aConsoleNode);
+
   // Prune the nodes.
   let messageNodes = aConsoleNode.querySelectorAll(".hud-msg-node");
-  for (let i = 0; i < messageNodes.length - logLimit; i++) {
+  let removeNodes = messageNodes.length - logLimit;
+  for (let i = 0; i < removeNodes; i++) {
     messageNodes[i].parentNode.removeChild(messageNodes[i]);
+  }
+
+  if (!scrolledToBottom && removeNodes > 0 &&
+      oldScrollHeight != scrollBox.scrollHeight) {
+    scrollBox.scrollTop -= oldScrollHeight - scrollBox.scrollHeight;
   }
 
   return logLimit;
@@ -1692,6 +1717,12 @@ HUD_SERVICE.prototype =
     activityDistributor.removeObserver(this.httpObserver);
     delete this.httpObserver;
 
+    Services.obs.removeObserver(this.httpResponseExaminer,
+                                "http-on-examine-response");
+
+    this.openRequests = {};
+    this.openResponseHeaders = {};
+
     // delete the storage as it holds onto channels
     delete this.storage;
     delete this.defaultFilterPrefs;
@@ -1945,6 +1976,11 @@ HUD_SERVICE.prototype =
    * Requests that haven't finished yet.
    */
   openRequests: {},
+
+  /**
+   * Response headers for requests that haven't finished yet.
+   */
+  openResponseHeaders: {},
 
   /**
    * Assign a function to this property to listen for finished httpRequests.
@@ -2261,6 +2297,58 @@ HUD_SERVICE.prototype =
     this.httpObserver = httpObserver;
 
     activityDistributor.addObserver(httpObserver);
+
+    // This is used to find the correct HTTP response headers.
+    Services.obs.addObserver(this.httpResponseExaminer,
+                             "http-on-examine-response", false);
+  },
+
+  /**
+   * Observe notifications for the http-on-examine-response topic, coming from
+   * the nsIObserver service.
+   *
+   * @param string aTopic
+   * @param nsIHttpChannel aSubject
+   * @returns void
+   */
+  httpResponseExaminer: function HS_httpResponseExaminer(aSubject, aTopic)
+  {
+    if (aTopic != "http-on-examine-response" ||
+        !(aSubject instanceof Ci.nsIHttpChannel)) {
+      return;
+    }
+
+    let channel = aSubject.QueryInterface(Ci.nsIHttpChannel);
+    let win = NetworkHelper.getWindowForRequest(channel);
+    if (!win) {
+      return;
+    }
+    let hudId = HUDService.getHudIdByWindow(win);
+    if (!hudId) {
+      return;
+    }
+
+    let response = {
+      id: HUDService.sequenceId(),
+      hudId: hudId,
+      channel: channel,
+      headers: {},
+    };
+
+    try {
+      channel.visitResponseHeaders({
+        visitHeader: function(aName, aValue) {
+          response.headers[aName] = aValue;
+        }
+      });
+    }
+    catch (ex) {
+      delete response.headers;
+    }
+
+    if (response.headers) {
+      HUDService.openResponseHeaders[response.id] = response;
+    }
   },
 
   /**
@@ -4908,6 +4996,9 @@ ConsoleUtils = {
     ConsoleUtils.filterMessageNode(aNode, aHUDId);
 
     let outputNode = HUDService.hudReferences[aHUDId].outputNode;
+
+    let scrolledToBottom = ConsoleUtils.isOutputScrolledToBottom(outputNode);
+
     outputNode.appendChild(aNode);
     HUDService.regroupOutput(outputNode);
 
@@ -4917,10 +5008,36 @@ ConsoleUtils = {
       return;
     }
 
-    if (!aNode.classList.contains("hud-filtered-by-string") &&
-        !aNode.classList.contains("hud-filtered-by-type")) {
+    let isInputOutput = aNode.classList.contains("webconsole-msg-input") ||
+                        aNode.classList.contains("webconsole-msg-output");
+    let isFiltered = aNode.classList.contains("hud-filtered-by-string") ||
+                     aNode.classList.contains("hud-filtered-by-type");
+
+    // Scroll to the new node if it is not filtered, and if the output node is
+    // scrolled at the bottom or if the new node is a jsterm input/output
+    // message.
+    if (!isFiltered && (scrolledToBottom || isInputOutput)) {
       ConsoleUtils.scrollToVisible(aNode);
     }
+  },
+
+  /**
+   * Check if the given output node is scrolled to the bottom.
+   *
+   * @param nsIDOMNode aOutputNode
+   * @return boolean
+   *         True if the output node is scrolled to the bottom, or false
+   *         otherwise.
+   */
+  isOutputScrolledToBottom:
+  function ConsoleUtils_isOutputScrolledToBottom(aOutputNode)
+  {
+    let lastNodeHeight = aOutputNode.lastChild ?
+                         aOutputNode.lastChild.clientHeight : 0;
+    let scrollBox = aOutputNode.scrollBoxObject.element;
+
+    return scrollBox.scrollTop + scrollBox.clientHeight >=
+           scrollBox.scrollHeight - lastNodeHeight / 2;
   },
 
   /**

@@ -258,27 +258,17 @@ caption {
   padding: 0 12em;
 }
 
-#currentUser image {
+#accountCaptionImage {
   list-style-image: url("chrome://mozapps/skin/profile/profileicon.png");
 }
 
-#connectThrobber {
-  list-style-image: url("chrome://global/skin/icons/loading_16.png");
+#syncAddDeviceLabel {
+  margin-top: 1em;
+  margin-bottom: 1em;
 }
 
-.expander-up,
-.expander-down {
-  -moz-appearance: none;
-  padding: 0;
-  min-width: 0;
-}
-
-.expander-up {
-  list-style-image: url("chrome://browser/skin/places/expander-open.png") !important;
-}
-
-.expander-down {
-  list-style-image: url('chrome://browser/skin/places/expander-closed.png') !important
+#syncEnginesList {
+  height: 10em;
 }
 
 %endif

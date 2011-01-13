@@ -12,14 +12,25 @@
 <pre id="test">
 </pre>
 
-<button id="button" onmouseup="onButton()">Button</button>
+<div id="text" style="max-width: 100px" onmouseup="openAlert()">
+  This is a short piece of text used for testing that mouse selecting is
+  stopped when an alert appears.
+</div>
+<div id="text2" style="max-width: 100px">
+  This is another short piece of text used for testing that mouse selecting is
+  stopped when an alert appears.
+</div>
+<button id="button" onmouseup="openAlert()">Button</button>
 
 <script class="testbody" type="text/javascript">
 SimpleTest.waitForExplicitFinish();
 
+var selectionTest = false;
 var testNum = 0;
+var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+              getInterface(Components.interfaces.nsIDOMWindowUtils);
 
-function onButton() {
+function openAlert() {
   ok(true, "opening alert...");
   alert("hello!");
   ok(true, "...alert done.");
@@ -34,26 +45,38 @@ function runtest()
   isTabModal = true;
   startCallbackTimer();
 
-  var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-                getInterface(Components.interfaces.nsIDOMWindowUtils);
+  var button = $("button");
+  dispatchMouseEvent(button, "mousedown");
+  dispatchMouseEvent(button, "mouseup");
 
-  var e = document.createEvent("MouseEvent");
-  e.initEvent("mousedown", false, false, window, 0, 1, 1, 1, 1,
-              false, false, false, false, 0, null);
-  utils.dispatchDOMEventViaPresShell($("button"), e, true);
-  ok(true, "mousedown sent");
+  selectionTest = true;
 
-  e = document.createEvent("MouseEvent");
-  e.initEvent("mouseup", false, false, window, 0, 1, 1, 1, 1,
-              false, false, false, false, 0, null);
-  utils.dispatchDOMEventViaPresShell($("button"), e, true);
+  startCallbackTimer();
 
-  ok(true, "mouseup sent");
+  var text = $("text");
+  dispatchMouseEvent(text, "mousedown");
+  dispatchMouseEvent(text, "mouseup");
+
   SimpleTest.finish();
+}
+
+function dispatchMouseEvent(target, type)
+{
+  e = document.createEvent("MouseEvent");
+  e.initEvent(type, false, false, window, 0, 1, 1, 1, 1,
+              false, false, false, false, 0, null);
+  utils.dispatchDOMEventViaPresShell(target, e, true);
+  ok(true, type + " sent to " + target.id);
 }
 
 function handleDialog(ui, testNum)
 {
+  if (selectionTest) {
+    synthesizeMouse($("text"), 25, 55, { type: "mousemove" });
+    is(window.getSelection().toString(), "", "selection not made");
+    synthesizeMouse(ui.button0, 5, 5, { }, ui.button0.ownerDocument.defaultView);
+  }
+
   ok(true, "handleDialog sending mouseclick to dialog...");
   synthesizeMouse(ui.button0, 5, 5, { }, ui.button0.ownerDocument.defaultView);
 }

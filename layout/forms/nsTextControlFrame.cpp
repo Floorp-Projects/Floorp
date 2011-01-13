@@ -1102,7 +1102,7 @@ nsTextControlFrame::OffsetToDOMPoint(PRInt32 aOffset,
     } else {
       // Otherwise, set the selection on the textnode itself.
       NS_IF_ADDREF(*aResult = firstNode);
-      *aPosition = aOffset;
+      *aPosition = NS_MIN(aOffset, PRInt32(textLength));
     }
   } else {
     NS_IF_ADDREF(*aResult = rootNode);

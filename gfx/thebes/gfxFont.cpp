@@ -2544,6 +2544,8 @@ void gfxFontGroup::ComputeRanges(nsTArray<gfxTextRange>& aRanges,
     }
 
     PRUint32 prevCh = 0;
+    gfxFont *prevFont = nsnull;
+
     for (PRUint32 i = 0; i < len; i++) {
 
         const PRUint32 origI = i; // save off in case we increase for surrogate
@@ -2557,9 +2559,7 @@ void gfxFontGroup::ComputeRanges(nsTArray<gfxTextRange>& aRanges,
 
         // find the font for this char
         nsRefPtr<gfxFont> font =
-            FindFontForChar(ch, prevCh, aRunScript,
-                            (aRanges.Length() == 0) ?
-                            nsnull : aRanges[aRanges.Length() - 1].font.get());
+            FindFontForChar(ch, prevCh, aRunScript, prevFont);
 
         prevCh = ch;
 
@@ -2568,6 +2568,7 @@ void gfxFontGroup::ComputeRanges(nsTArray<gfxTextRange>& aRanges,
             gfxTextRange r(0,1);
             r.font = font;
             aRanges.AppendElement(r);
+            prevFont = font;
         } else {
             // if font has changed, make a new range
             gfxTextRange& prevRange = aRanges[aRanges.Length() - 1];
@@ -2578,6 +2579,13 @@ void gfxFontGroup::ComputeRanges(nsTArray<gfxTextRange>& aRanges,
                 gfxTextRange r(origI, i+1);
                 r.font = font;
                 aRanges.AppendElement(r);
+
+                // update prevFont for the next match, *unless* we switched
+                // fonts on a ZWJ, in which case propagating the changed font
+                // is probably not a good idea (see bug 619511)
+                if (!gfxFontUtils::IsJoinCauser(ch)) {
+                    prevFont = font;
+                }
             }
         }
     }
@@ -3247,22 +3255,24 @@ ClipPartialLigature(gfxTextRun *aTextRun, gfxFloat *aLeft, gfxFloat *aRight,
 }
 
 void
-gfxTextRun::DrawPartialLigature(gfxFont *aFont, gfxContext *aCtx, PRUint32 aStart,
-                                PRUint32 aEnd,
-                                const gfxRect *aDirtyRect, gfxPoint *aPt,
+gfxTextRun::DrawPartialLigature(gfxFont *aFont, gfxContext *aCtx,
+                                PRUint32 aStart, PRUint32 aEnd,
+                                gfxPoint *aPt,
                                 PropertyProvider *aProvider)
 {
     if (aStart >= aEnd)
         return;
-    if (!aDirtyRect) {
-        NS_ERROR("Cannot draw partial ligatures without a dirty rect");
-        return;
-    }
+
+    // Need to preserve the path, otherwise this can break canvas text-on-path;
+    // in general it seems like a good thing, as naive callers probably won't
+    // expect gfxTextRun::Draw to implicitly destroy the current path.
+    gfxContextPathAutoSaveRestore savePath(aCtx);
 
     // Draw partial ligature. We hack this by clipping the ligature.
     LigatureData data = ComputeLigatureData(aStart, aEnd, aProvider);
-    gfxFloat left = aDirtyRect->X();
-    gfxFloat right = aDirtyRect->XMost();
+    gfxRect clipExtents = aCtx->GetClipExtents();
+    gfxFloat left = clipExtents.X()*mAppUnitsPerDevUnit;
+    gfxFloat right = clipExtents.XMost()*mAppUnitsPerDevUnit;
     ClipPartialLigature(this, &left, &right, aPt->x, &data);
 
     aCtx->Save();
@@ -3271,9 +3281,9 @@ gfxTextRun::DrawPartialLigature(gfxFont *aFont, gfxContext *aCtx, PRUint32 aStar
     // of mAppUnitsPerDevUnit, we clip to true device unit boundaries.
     // Also, make sure we snap the rectangle to device pixels.
     aCtx->Rectangle(gfxRect(left/mAppUnitsPerDevUnit,
-                            aDirtyRect->Y()/mAppUnitsPerDevUnit,
+                            clipExtents.Y(),
                             (right - left)/mAppUnitsPerDevUnit,
-                            aDirtyRect->Height()/mAppUnitsPerDevUnit), PR_TRUE);
+                            clipExtents.Height()), PR_TRUE);
     aCtx->Clip();
     gfxFloat direction = GetDirection();
     gfxPoint pt(aPt->x - direction*data.mPartAdvance, aPt->y);
@@ -3400,7 +3410,7 @@ gfxTextRun::AdjustAdvancesForSyntheticBold(PRUint32 aStart, PRUint32 aLength)
 
 void
 gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt,
-                 PRUint32 aStart, PRUint32 aLength, const gfxRect *aDirtyRect,
+                 PRUint32 aStart, PRUint32 aLength,
                  PropertyProvider *aProvider, gfxFloat *aAdvanceWidth)
 {
     NS_ASSERTION(aStart + aLength <= mCharacterCount, "Substring out of range");
@@ -3431,10 +3441,10 @@ gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt,
         PRUint32 ligatureRunEnd = end;
         ShrinkToLigatureBoundaries(&ligatureRunStart, &ligatureRunEnd);
         
-        DrawPartialLigature(font, aContext, start, ligatureRunStart, aDirtyRect, &pt, aProvider);
+        DrawPartialLigature(font, aContext, start, ligatureRunStart, &pt, aProvider);
         DrawGlyphs(font, aContext, PR_FALSE, &pt, ligatureRunStart,
                    ligatureRunEnd, aProvider, ligatureRunStart, ligatureRunEnd);
-        DrawPartialLigature(font, aContext, ligatureRunEnd, end, aDirtyRect, &pt, aProvider);
+        DrawPartialLigature(font, aContext, ligatureRunEnd, end, &pt, aProvider);
     }
 
     // composite result when synthetic bolding used

@@ -172,8 +172,8 @@ let TabView = {
     // will not have happened by the time the browser tries to
     // update the title.
     let activeTab = window.gBrowser.selectedTab;
-    if (activeTab.tabItem && activeTab.tabItem.parent){
-      let groupName = activeTab.tabItem.parent.getTitle();
+    if (activeTab._tabViewTabItem && activeTab._tabViewTabItem.parent){
+      let groupName = activeTab._tabViewTabItem.parent.getTitle();
       if (groupName)
         return groupName;
     }
@@ -190,7 +190,7 @@ let TabView = {
 
     let self = this;
     this._initFrame(function() {
-      let activeGroup = tab.tabItem.parent;
+      let activeGroup = tab._tabViewTabItem.parent;
       let groupItems = self._window.GroupItems.groupItems;
 
       groupItems.forEach(function(groupItem) {

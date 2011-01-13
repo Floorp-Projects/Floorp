@@ -307,13 +307,20 @@
           return;
         }
 
-        var anchorRect = anchor.getBoundingClientRect();
-        var popupRect = this.getBoundingClientRect();
+        let anchorRect = anchor.getBoundingClientRect();
+        let anchorLeft = Math.round(anchor.ownerDocument.defaultView.mozInnerScreenX + anchorRect.left);
+        let anchorTop = Math.round(anchor.ownerDocument.defaultView.mozInnerScreenY + anchorRect.top);
+        let anchorRight = anchorLeft + Math.floor(anchorRect.width);
+        let anchorBottom = anchorTop + Math.floor(anchorRect.height);
 
-        var horizPos = (Math.round(popupRect.right) <= Math.round(anchorRect.left)) ? -1 :
-                       (Math.round(popupRect.left) >= Math.round(anchorRect.right)) ? 1 : 0;
-        var vertPos = (Math.round(popupRect.bottom) <= Math.round(anchorRect.top)) ? -1 :
-                      (Math.round(popupRect.top) >= Math.round(anchorRect.bottom)) ? 1 : 0;
+        let popupRect = this.getBoundingClientRect();
+        let popupLeft = Math.round(window.mozInnerScreenX + popupRect.left);
+        let popupTop = Math.round(window.mozInnerScreenY + popupRect.top);
+        let popupRight = popupLeft + Math.floor(popupRect.width);
+        let popupBottom = popupTop + Math.floor(popupRect.height);
+
+        var horizPos = popupRight <= anchorLeft ? -1 : popupLeft >= anchorRight ? 1 : 0;
+        var vertPos = popupBottom <= anchorTop ? -1 : popupTop >= anchorBottom ? 1 : 0;
 
         var anchorClass = "";
         var hideAnchor = false;
@@ -325,7 +332,7 @@
           }
           else {
             let rtl = (window.getComputedStyle(this).direction == "rtl");
-            arrowbox.pack = (popupRect.left + popupRect.width / 2 < anchorRect.left) != rtl ?
+            arrowbox.pack = (popupLeft + popupRect.width / 2 < anchorLeft) != rtl ?
                               "end" : "start";
             if (vertPos == 1) {
               container.dir = "";
@@ -344,7 +351,7 @@
             hideAnchor = true;
           }
           else {
-            arrowbox.pack = popupRect.top + popupRect.height / 2 < anchorRect.top ? "end" : "start";
+            arrowbox.pack = popupTop + popupRect.height / 2 < anchorTop ? "end" : "start";
             if (horizPos == 1) {
               container.dir = "";
               anchorClass = "left";

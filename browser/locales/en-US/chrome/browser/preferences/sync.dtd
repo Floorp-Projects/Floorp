@@ -4,8 +4,6 @@
 <!ENTITY weaveDesc.label            "&syncBrand.fullName.label; lets you access your history, bookmarks, passwords and open tabs across all your devices.">
 
 <!-- The page shown when logged in... -->
-<!ENTITY accountGroupboxCaption.label "&syncBrand.fullName.label; Account">
-<!ENTITY currentAccount.label         "Current Account:">
 
 <!-- Login error feedback -->
 <!ENTITY updatePass.label             "Update">
@@ -18,13 +16,7 @@
 <!ENTITY changePassword.label         "Change Password">
 <!ENTITY mySyncKey.label              "My Sync Key">
 <!ENTITY resetSync.label              "Reset Sync">
-<!ENTITY stopUsingAccount.label       "Stop Using This Account">
 <!ENTITY addDevice.label              "Add a Device">
-
-<!-- Sync Settings -->
-<!ENTITY syncPrefsCaption.label       "Browser Sync">
-<!ENTITY syncComputerName.label       "Computer Name:">
-<!ENTITY syncComputerName.accesskey   "c">
 
 <!ENTITY syncMy.label               "Sync My">
 <!ENTITY engine.bookmarks.label     "Bookmarks">
@@ -38,6 +30,10 @@
 <!ENTITY engine.prefs.label         "Preferences">
 <!ENTITY engine.prefs.accesskey     "S">
 
+<!-- Device Settings -->
+<!ENTITY syncComputerName.label       "Computer Name:">
+<!ENTITY syncComputerName.accesskey   "c">
+<!ENTITY deactivateDevice.label       "Deactivate This Device">
 
 <!-- Footer stuff -->
 <!ENTITY prefs.tosLink.label        "Terms of Service">

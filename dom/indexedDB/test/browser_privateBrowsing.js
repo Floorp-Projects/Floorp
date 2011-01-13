@@ -12,7 +12,7 @@ function test()
   waitForExplicitFinish();
   // Avoids the actual prompt
   setPermission(testPageURL, "indexedDB");
-  executeSoon(test2);
+  executeSoon(test1);
 }
 
 function test1()

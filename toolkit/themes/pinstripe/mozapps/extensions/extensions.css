@@ -437,10 +437,6 @@
   color: #373D48;
 }
 
-.addon[status="installing"] {
-  -moz-box-align: center;
-}
-
 .details {
   cursor: pointer;
   margin: 0;
@@ -475,8 +471,7 @@
   list-style-image: url("chrome://mozapps/skin/plugins/pluginGeneric.png");
 }
 
-.name-container,
-.addon[status="installing"] .name {
+.name-container {
   font-size: 150%;
   margin-bottom: 0;
   font-weight: bold;
@@ -692,10 +687,6 @@
 
 #detail-view .loading {
   opacity: 0;
-}
-
-#detail-view:not([loading]) .loading {
-  visibility: collapse;
 }
 
 #detail-view[loading-extended] .loading {
@@ -944,7 +935,6 @@
   border-radius: 0 3px 3px 0;
 }
 
-.download-progress .pause,
 .download-progress .cancel {
   -moz-appearance: none;
   background-color: rgba(255, 255, 255, 0.15);
@@ -955,18 +945,12 @@
   margin: 3px;
 }
 
-.download-progress .pause .button-text,
 .download-progress .cancel .button-text {
   display: none;
 }
 
-.download-progress .pause .button-icon,
 .download-progress .cancel .button-icon {
   -moz-margin-start: 0;
-}
-
-.download-progress .pause {
-  list-style-image: url('chrome://mozapps/skin/extensions/pause.png');
 }
 
 .download-progress .cancel {

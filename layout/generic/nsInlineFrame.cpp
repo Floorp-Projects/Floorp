@@ -392,17 +392,7 @@ nsInlineFrame::Reflow(nsPresContext*          aPresContext,
     }
   }
 
-  if (IsFrameTreeTooDeep(aReflowState, aMetrics)) {
-#ifdef DEBUG_kipp
-    {
-      extern char* nsPresShell_ReflowStackPointerTop;
-      char marker;
-      char* newsp = (char*) &marker;
-      printf("XXX: frame tree is too deep; approx stack size = %d\n",
-             nsPresShell_ReflowStackPointerTop - newsp);
-    }
-#endif
-    aStatus = NS_FRAME_COMPLETE;
+  if (IsFrameTreeTooDeep(aReflowState, aMetrics, aStatus)) {
     return NS_OK;
   }
 
