@@ -1,0 +1,27 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Color stop positioning for scaled gradients as backgrounds reference</title>
+  <style type="text/css">
+#outer
+{
+  border: 1px solid black;
+  width: 600px; height: 300px;
+}
+#inner
+{
+  width: 400px; height: 300px;
+  /* 250px stop is halfway along 500px diagonal */
+  background-image: -moz-linear-gradient(top left, lime 0%, teal 250px, black 100%);
+  background-image: linear-gradient(top left, lime 0%, teal 250px, black 100%);
+}
+  </style>
+</head>
+<body>
+<div id="outer"><div id="inner"></div></div>
+</body>
+</html>
