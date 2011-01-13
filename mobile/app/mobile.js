@@ -396,9 +396,6 @@ pref("browser.ui.touch.top", 12);
 pref("browser.ui.touch.bottom", 4);
 pref("browser.ui.touch.weight.visited", 120); // percentage
 
-// Sync
-pref("browser.sync.enabled", true);
-
 // plugins
 pref("plugin.disable", true);
 pref("dom.ipc.plugins.enabled", false);
@@ -502,10 +499,27 @@ pref("font.default.x-user-def", "SwissA");
 pref("font.default.x-western", "SwissA");
 #endif
 
+#ifdef MOZ_SERVICES_SYNC
+pref("browser.sync.enabled", true);
+
 // sync service
 pref("services.sync.client.type", "mobile");
-pref("services.sync.registerEngines", "Tab,Bookmarks,Form,History,Password");
+pref("services.sync.registerEngines", "Tab,Bookmarks,Form,History,Password,Prefs");
 pref("services.sync.autoconnectDelay", 5);
+
+// prefs to sync by default
+pref("services.sync.prefs.sync.browser.startup.homepage.title", true);
+pref("services.sync.prefs.sync.browser.startup.homepage", true);
+pref("services.sync.prefs.sync.browser.tabs.warnOnClose", true);
+pref("services.sync.prefs.sync.browser.ui.zoom.reflow", true);
+pref("services.sync.prefs.sync.devtools.errorconsole.enabled", true);
+pref("services.sync.prefs.sync.javascript.enabled", true);
+pref("services.sync.prefs.sync.lightweightThemes.isThemeSelected", true);
+pref("services.sync.prefs.sync.lightweightThemes.usedThemes", true);
+pref("services.sync.prefs.sync.network.cookie.cookieBehavior", true);
+pref("services.sync.prefs.sync.permissions.default.image", true);
+pref("services.sync.prefs.sync.signon.rememberSignons", true);
+#endif
 
 // threshold where a tap becomes a drag, in 1/240" reference pixels
 pref("ui.dragThreshold", 24);
