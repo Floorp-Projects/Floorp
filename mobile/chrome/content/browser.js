@@ -1684,6 +1684,9 @@ function ContentCustomKeySender(container) {
 
 ContentCustomKeySender.prototype = {
   handleEvent: function handleEvent(aEvent) {
+    if (Elements.contentShowing.getAttribute("disabled"))
+      return;
+
     let browser = getBrowser();
     if (browser && browser.getAttribute("remote") == "true") {
       aEvent.stopPropagation();
