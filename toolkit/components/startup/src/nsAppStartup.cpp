@@ -631,7 +631,7 @@ CalculateProcessCreationTimestamp()
     free(proc);
     return 0;
   }
-  PRTime starttime = proc->kp_proc.p_un.__p_starttime.tv_sec * PR_USEC_PER_SEC;
+  PRTime starttime = static_cast<PRTime>(proc->kp_proc.p_un.__p_starttime.tv_sec) * PR_USEC_PER_SEC;
   starttime += proc->kp_proc.p_un.__p_starttime.tv_usec;
   free(proc);
   return starttime;
