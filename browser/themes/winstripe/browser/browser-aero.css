@@ -73,7 +73,7 @@
   }
 
   #main-window[sizemode="maximized"] #titlebar-buttonbox {
-    -moz-margin-end: 2px;
+    -moz-margin-end: 3px;
   }
 
   #main-window {
