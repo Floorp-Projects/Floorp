@@ -68,17 +68,6 @@ JSWrapper WaiveXrayWrapperWrapper(WrapperFactory::WAIVE_XRAY_WRAPPER_FLAG);
 CrossOriginWrapper CrossOriginWrapper::singleton(0);
 
 static JSObject *
-DoubleWrap(JSContext *cx, JSObject *obj, uintN flags)
-{
-    if (flags & WrapperFactory::WAIVE_XRAY_WRAPPER_FLAG) {
-        js::SwitchToCompartment sc(cx, obj->compartment());
-        return JSWrapper::New(cx, obj, NULL, obj->getGlobal(),
-                              &WaiveXrayWrapperWrapper);
-    }
-    return obj;
-}
-
-static JSObject *
 GetCurrentOuter(JSContext *cx, JSObject *obj)
 {
     OBJ_TO_OUTER_OBJECT(cx, obj);
@@ -88,6 +77,60 @@ GetCurrentOuter(JSContext *cx, JSObject *obj)
                      "weird object, expecting an outer window proxy");
     }
 
+    return obj;
+}
+
+JSObject *
+WrapperFactory::WaiveXray(JSContext *cx, JSObject *obj)
+{
+    // We have to make sure that if we're wrapping an outer window, that
+    // the .wrappedJSObject also wraps the outer window.
+    obj = GetCurrentOuter(cx, obj);
+
+    {
+        // See if we already have a waiver wrapper for this object.
+        CompartmentPrivate *priv =
+            (CompartmentPrivate *)JS_GetCompartmentPrivate(cx, obj->compartment());
+        JSObject *wobj = nsnull;
+        if (priv && priv->waiverWrapperMap)
+            wobj = priv->waiverWrapperMap->Find(obj);
+
+        // No wrapper yet, make one.
+        if (!wobj) {
+            JSObject *proto = obj->getProto();
+            if (proto && !(proto = WaiveXray(cx, proto)))
+                return nsnull;
+
+            js::SwitchToCompartment sc(cx, obj->compartment());
+            wobj = JSWrapper::New(cx, obj, proto, obj->getGlobal(), &WaiveXrayWrapperWrapper);
+            if (!wobj)
+                return nsnull;
+
+            // Add the new wrapper so we find it next time.
+            if (priv) {
+                if (!priv->waiverWrapperMap) {
+                    priv->waiverWrapperMap = JSObject2JSObjectMap::newMap(XPC_WRAPPER_MAP_SIZE);
+                    if (!priv->waiverWrapperMap)
+                        return nsnull;
+                }
+                if (!priv->waiverWrapperMap->Add(obj, wobj))
+                    return nsnull;
+            }
+        }
+
+        obj = wobj;
+    }
+
+    return obj;
+}
+
+JSObject *
+WrapperFactory::DoubleWrap(JSContext *cx, JSObject *obj, uintN flags)
+{
+    if (flags & WrapperFactory::WAIVE_XRAY_WRAPPER_FLAG) {
+        js::SwitchToCompartment sc(cx, obj->compartment());
+        return WaiveXray(cx, obj);
+    }
     return obj;
 }
 
@@ -287,11 +330,11 @@ WrapperFactory::WrapLocationObject(JSContext *cx, JSObject *obj)
 {
     JSObject *xrayHolder = LW::createHolder(cx, obj, obj->getParent());
     if (!xrayHolder)
-        return NULL;
+        return nsnull;
     JSObject *wrapperObj = JSWrapper::New(cx, obj, obj->getProto(), obj->getParent(),
                                           &LW::singleton);
     if (!wrapperObj)
-        return NULL;
+        return nsnull;
     wrapperObj->setProxyExtra(js::ObjectValue(*xrayHolder));
     return wrapperObj;
 }
@@ -304,39 +347,9 @@ WrapperFactory::WaiveXrayAndWrap(JSContext *cx, jsval *vp)
 
     JSObject *obj = JSVAL_TO_OBJECT(*vp)->unwrap();
 
-    // We have to make sure that if we're wrapping an outer window, that
-    // the .wrappedJSObject also wraps the outer window.
-    obj = GetCurrentOuter(cx, obj);
-
-    {
-        // See if we already have a waiver wrapper for this object.
-        CompartmentPrivate *priv =
-            (CompartmentPrivate *)JS_GetCompartmentPrivate(cx, obj->compartment());
-        JSObject *wobj = nsnull;
-        if (priv && priv->waiverWrapperMap)
-            wobj = priv->waiverWrapperMap->Find(obj);
-
-        // No wrapper yet, make one.
-        if (!wobj) {
-            js::SwitchToCompartment sc(cx, obj->compartment());
-            wobj = JSWrapper::New(cx, obj, NULL, obj->getGlobal(), &WaiveXrayWrapperWrapper);
-            if (!wobj)
-                return false;
-
-            // Add the new wrapper so we find it next time.
-            if (priv) {
-                if (!priv->waiverWrapperMap) {
-                    priv->waiverWrapperMap = JSObject2JSObjectMap::newMap(XPC_WRAPPER_MAP_SIZE);
-                    if (!priv->waiverWrapperMap)
-                        return false;
-                }
-                if (!priv->waiverWrapperMap->Add(obj, wobj))
-                    return false;
-            }
-        }
-
-        obj = wobj;
-    }
+    obj = WaiveXray(cx, obj);
+    if (!obj)
+        return false;
 
     *vp = OBJECT_TO_JSVAL(obj);
     return JS_WrapValue(cx, vp);
