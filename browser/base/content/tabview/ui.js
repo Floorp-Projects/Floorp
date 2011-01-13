@@ -538,6 +538,7 @@ let UI = {
         this.reset(false);
   
       TabItems.resumeReconnecting();
+      GroupItems._updateTabBar();
     }
   },
 
@@ -583,7 +584,6 @@ let UI = {
       } else if (aTopic == "private-browsing-change-granted") {
         if (aData == "enter" || aData == "exit") {
           self._privateBrowsing.transitionMode = aData;
-          GroupItems.pauseUpdatingTabBar();
           self.storageBusy();
         }
       } else if (aTopic == "private-browsing-transition-complete") {
@@ -594,7 +594,6 @@ let UI = {
 
         self._privateBrowsing.transitionMode = "";
         self.storageReady();
-        GroupItems.resumeUpdatingTabBar();
       }
     }
 
@@ -779,8 +778,10 @@ let UI = {
 
     // update the tab bar for the new tab's group
     if (tab && tab._tabViewTabItem) {
-      newItem = tab._tabViewTabItem;
-      GroupItems.updateActiveGroupItemAndTabBar(newItem);
+      if (!TabItems.reconnectingPaused()) {
+        newItem = tab._tabViewTabItem;
+        GroupItems.updateActiveGroupItemAndTabBar(newItem);
+      }
     } else {
       // No tabItem; must be an app tab. Base the tab bar on the current group.
       // If no current group or orphan tab, figure it out based on what's
