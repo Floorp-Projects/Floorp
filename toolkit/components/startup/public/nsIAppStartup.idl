@@ -123,6 +123,16 @@ interface nsIAppStartup2 : nsIAppStartup
     readonly attribute boolean shuttingDown;
 };
 
+[scriptable, uuid(2e8c45b0-1ac1-11e0-ac64-0800200c9a66)]
+interface nsIAppStartup_MOZILLA_2_0 : nsIAppStartup2
+{
+    /** 
+     * Returns an object with main, process, firstPaint, sessionRestored properties.
+     * Properties may not be available depending on platform or application
+     */
+    void getStartupInfo();
+};
+
 %{C++
 /**
  * This success code may be returned by nsIAppStartup::Run to indicate that the
