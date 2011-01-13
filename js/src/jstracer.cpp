@@ -7589,10 +7589,6 @@ disable_debugger_exceptions() { }
 void
 SetMaxCodeCacheBytes(JSContext* cx, uint32 bytes)
 {
-#ifdef DEBUG
-    TraceMonitor* tm = &JS_TRACE_MONITOR(cx);
-    JS_ASSERT(tm->codeAlloc && tm->dataAlloc && tm->traceAlloc);
-#endif
     if (bytes > 1 G)
         bytes = 1 G;
     if (bytes < 128 K)
