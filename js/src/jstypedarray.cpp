@@ -121,9 +121,10 @@ void
 ArrayBuffer::class_finalize(JSContext *cx, JSObject *obj)
 {
     ArrayBuffer *abuf = ArrayBuffer::fromJSObject(obj);
-    if (abuf)
+    if (abuf) {
         abuf->freeStorage(cx);
-    cx->destroy<ArrayBuffer>(abuf);
+        cx->destroy<ArrayBuffer>(abuf);
+    }
 }
 
 /*
@@ -815,7 +816,8 @@ class TypedArrayTemplate
     class_finalize(JSContext *cx, JSObject *obj)
     {
         ThisTypeArray *tarray = ThisTypeArray::fromJSObject(obj);
-        cx->destroy<ThisTypeArray>(tarray);
+        if (tarray)
+            cx->destroy<ThisTypeArray>(tarray);
     }
 
     /* slice(start[, end]) */
