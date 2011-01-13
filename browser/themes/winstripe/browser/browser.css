@@ -52,6 +52,8 @@
 %filter substitution
 %define toolbarHighlight rgba(255,255,255,.5)
 %define navbarTextboxCustomBorder border-color: rgba(0,0,0,.25) rgba(0,0,0,.32) rgba(0,0,0,.37);
+%define genericBgTabTexture -moz-linear-gradient(transparent, hsla(0,0%,36%,.15) 1px, hsla(0,0%,0%,.3) 60%)
+%define genericBgTabTextureHover -moz-linear-gradient(transparent, hsla(0,0%,70%,.15) 1px, hsla(0,0%,20%,.3) 60%)
 
 #menubar-items {
   -moz-box-orient: vertical; /* for flex hack */
@@ -1502,7 +1504,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 .tabbrowser-tab,
 .tabs-newtab-button {
   -moz-appearance: none;
-  background: -moz-linear-gradient(hsla(0,0%,50%,.1), hsla(0,0%,37%,.1) 50%);
+  background: @genericBgTabTexture@, -moz-linear-gradient(-moz-dialog, -moz-dialog);
   background-position: -5px -2px;
   background-repeat: no-repeat;
   background-size: 200%;
@@ -1514,8 +1516,22 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 
 .tabbrowser-tab:hover,
 .tabs-newtab-button:hover {
-  background-image: -moz-linear-gradient(hsla(0,0%,100%,.4), hsla(0,0%,75%,.4) 50%);
+  background-image: @genericBgTabTextureHover@, -moz-linear-gradient(-moz-dialog, -moz-dialog);
 }
+
+%ifndef WINSTRIPE_AERO
+@media all and (-moz-windows-theme: luna-blue) {
+  .tabbrowser-tab,
+  .tabs-newtab-button {
+    background-image: -moz-linear-gradient(hsla(51,34%,89%,.9), hsla(51,15%,79%,.9) 1px, hsla(51,9%,68%,.9) 60%);
+  }
+
+  .tabbrowser-tab:hover,
+  .tabs-newtab-button:hover {
+    background-image: -moz-linear-gradient(hsla(51,34%,100%,.9), hsla(51,15%,94%,.9) 1px, hsla(51,9%,83%,.9) 60%);
+  }
+}
+%endif
 
 .tabbrowser-tab[selected="true"] {
   background-image: -moz-linear-gradient(rgba(255,255,255,.7), @toolbarHighlight@ 30%),
