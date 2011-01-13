@@ -7506,10 +7506,6 @@ var gIdentityHandler = {
     // Update the popup strings
     this.setPopupMessages(this._identityBox.className);
 
-    // Make sure the identity popup hangs toward the middle of the location bar
-    // in RTL builds
-    var position = (getComputedStyle(gNavToolbox, "").direction == "rtl") ? 'bottomcenter topright' : 'bottomcenter topleft';
-
     // Add the "open" attribute to the identity box for styling
     this._identityBox.setAttribute("open", "true");
     var self = this;
@@ -7519,7 +7515,7 @@ var gIdentityHandler = {
     }, false);
 
     // Now open the popup, anchored off the primary chrome element
-    this._identityPopup.openPopup(this._identityBox, position);
+    this._identityPopup.openPopup(this._identityBox, "bottomcenter topleft");
   },
 
   onDragStart: function (event) {
