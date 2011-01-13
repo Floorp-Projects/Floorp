@@ -340,12 +340,32 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   PRInt32 parentAPD = PresContext()->AppUnitsPerDevPixel();
   PRInt32 subdocAPD = presContext->AppUnitsPerDevPixel();
 
+  nsIFrame* subdocRootScrollFrame = presShell->GetRootScrollFrame();
+
   nsRect dirty;
   if (subdocRootFrame) {
-    // get the dirty rect relative to the root frame of the subdoc
-    dirty = aDirtyRect + GetOffsetToCrossDoc(subdocRootFrame);
-    // and convert into the appunits of the subdoc
-    dirty = dirty.ConvertAppUnitsRoundOut(parentAPD, subdocAPD);
+    if (presShell->UsingDisplayPort() && subdocRootScrollFrame) {
+      dirty = presShell->GetDisplayPort();
+
+      // The visual overflow rect of our viewport frame unfortunately may not
+      // intersect with the displayport of that frame. For example, the scroll
+      // offset of the frame may be (0, 0) so that the visual overflow rect
+      // is (0, 0, 800px, 500px) while the display port may have its top-left
+      // corner below y=500px.
+      //
+      // We have to force the frame to have a little faith and build a display
+      // list anyway. (see nsIFrame::BuildDisplayListForChild for the short-
+      // circuit code we are evading here).
+      //
+      subdocRootScrollFrame->AddStateBits(
+        NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO);
+
+    } else {
+      // get the dirty rect relative to the root frame of the subdoc
+      dirty = aDirtyRect + GetOffsetToCrossDoc(subdocRootFrame);
+      // and convert into the appunits of the subdoc
+      dirty = dirty.ConvertAppUnitsRoundOut(parentAPD, subdocAPD);
+    }
 
     aBuilder->EnterPresShell(subdocRootFrame, dirty);
   }
@@ -398,15 +418,49 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
 
   if (NS_SUCCEEDED(rv)) {
+
+    bool addedLayer = false;
+
+#ifdef MOZ_IPC
+    // Make a scrollable layer in the child process so it can be manipulated
+    // with transforms in the parent process.
+    if (XRE_GetProcessType() == GeckoProcessType_Content) {
+      nsIScrollableFrame* scrollFrame = presShell->GetRootScrollFrameAsScrollable();
+
+      if (scrollFrame) {
+        NS_ASSERTION(subdocRootFrame, "Root scroll frame should be non-null");
+        nsRect scrollRange = scrollFrame->GetScrollRange();
+        
+        // Since making new layers is expensive, only use nsDisplayScrollLayer
+        // if the area is scrollable.
+        if (scrollRange.width != 0 || scrollRange.height != 0) {
+          addedLayer = true;
+          nsDisplayScrollLayer* layerItem = new (aBuilder) nsDisplayScrollLayer(
+            aBuilder,
+            &childItems,
+            subdocRootScrollFrame,
+            subdocRootFrame
+          );
+          childItems.AppendToTop(layerItem);
+        }
+      }
+    }
+#endif
+
     if (subdocRootFrame && parentAPD != subdocAPD) {
+      NS_WARN_IF_FALSE(!addedLayer,
+                       "Two container layers have been added. "
+                       "Performance may suffer.");
+      addedLayer = true;
+
       nsDisplayZoom* zoomItem =
         new (aBuilder) nsDisplayZoom(aBuilder, subdocRootFrame, &childItems,
                                      subdocAPD, parentAPD);
       childItems.AppendToTop(zoomItem);
-    } else if (presContext->IsRootContentDocument()) {
+    }
+    
+    if (!addedLayer && presContext->IsRootContentDocument()) {
       // We always want top level content documents to be in their own layer.
-      // If we need a zoom item then we are good because it creates a layer. If
-      // not then create our own layer.
       nsDisplayOwnLayer* layerItem = new (aBuilder) nsDisplayOwnLayer(
         aBuilder, subdocRootFrame ? subdocRootFrame : this, &childItems);
       childItems.AppendToTop(layerItem);
