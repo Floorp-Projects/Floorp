@@ -49,3 +49,27 @@ function createEmptyGroupItem(contentWindow, width, height, padding, noAnimation
 
   return emptyGroupItem;
 }
+
+// ----------
+function afterAllTabsLoaded(callback) {
+  let stillToLoad = 0;
+
+  function onLoad() {
+    this.removeEventListener("load", onLoad, true);
+    
+    stillToLoad--;
+    if (!stillToLoad)
+      callback();
+  }
+
+  for (let a = 0; a < gBrowser.tabs.length; a++) {
+    let browser = gBrowser.tabs[a].linkedBrowser;
+    if (browser.contentDocument.readyState != "complete") {
+      stillToLoad++;
+      browser.addEventListener("load", onLoad, true);
+    }
+  }
+
+  if (!stillToLoad)
+    callback();
+}
