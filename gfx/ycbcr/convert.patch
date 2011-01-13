@@ -3117,7 +3117,7 @@ diff --git a/gfx/ycbcr/yuv_row_win.cpp b/gfx/ycbcr/yuv_row_win.cpp
 -// A shift by 17 is used to further subsample the chrominence channels.
 -// & 0xffff isolates the fixed point fraction.  >> 2 to get the upper 2 bits,
 -// for 1/65536 pixel accurate interpolation.
-+#ifdef MOZILLA_MAY_SUPPORT_SSE
++#if defined(MOZILLA_MAY_SUPPORT_SSE) && defined(_M_IX86)
 +  if (mozilla::supports_sse()) {
 +    FastConvertYUVToRGB32Row_SSE(y_buf, u_buf, v_buf, rgb_buf, width);
 +    return;
