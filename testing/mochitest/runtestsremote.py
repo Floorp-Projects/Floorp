@@ -259,7 +259,7 @@ class MochiRemote(Mochitest):
           return "NO_CHROME_ON_DROID"
         path = '/'.join(parts[:-1])
         manifest = path + "/chrome/" + os.path.basename(filename)
-        if self._dm.pushFile(filename, manifest) == None:
+        if self._dm.pushFile(filename, manifest) == False:
             raise devicemanager.FileError("Unable to install Chrome files on device.")
         return manifest
 
