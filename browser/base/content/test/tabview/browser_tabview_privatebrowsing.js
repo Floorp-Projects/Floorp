@@ -203,23 +203,3 @@ function togglePBAndThen(callback) {
   Services.obs.addObserver(pbObserver, "private-browsing-transition-complete", false);
   pb.privateBrowsingEnabled = !pb.privateBrowsingEnabled;
 }
-
-// ----------
-function afterAllTabsLoaded(callback) {
-  let stillToLoad = 0; 
-  function onLoad() {
-    this.removeEventListener("load", onLoad, true);
-    
-    stillToLoad--;
-    if (!stillToLoad)
-      callback();
-  }
-
-  for (let a = 0; a < gBrowser.tabs.length; a++) {
-    let browser = gBrowser.tabs[a].linkedBrowser;
-    if (browser.webProgress.isLoadingDocument) {
-      stillToLoad++;
-      browser.addEventListener("load", onLoad, true);
-    }
-  }
-}
