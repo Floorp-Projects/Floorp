@@ -993,6 +993,21 @@ nsDOMWindowUtils::GetFocusedInputType(char** aType)
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::FindElementWithViewId(nsViewID aID,
+                                        nsIDOMElement** aResult)
+{
+  if (aID == FrameMetrics::ROOT_SCROLL_ID) {
+    nsPresContext* presContext = GetPresContext();
+    nsIDocument* document = presContext->Document();
+    CallQueryInterface(document->GetRootElement(), aResult);
+    return NS_OK;
+  }
+
+  nsRefPtr<nsIContent> content = nsLayoutUtils::FindContentFor(aID);
+  return CallQueryInterface(content, aResult);
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::GetScreenPixelsPerCSSPixel(float* aScreenPixels)
 {
   *aScreenPixels = 1;
