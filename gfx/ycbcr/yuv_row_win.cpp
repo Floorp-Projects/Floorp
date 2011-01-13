@@ -451,7 +451,7 @@ void FastConvertYUVToRGB32Row(const uint8* y_buf,
                               const uint8* v_buf,
                               uint8* rgb_buf,
                               int width) {
-#ifdef MOZILLA_MAY_SUPPORT_SSE
+#if defined(MOZILLA_MAY_SUPPORT_SSE) && defined(_M_IX86)
   if (mozilla::supports_sse()) {
     FastConvertYUVToRGB32Row_SSE(y_buf, u_buf, v_buf, rgb_buf, width);
     return;
