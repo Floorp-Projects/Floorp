@@ -156,6 +156,47 @@ private:
   JSContext* mCx;
 };
 
+class nsDestroyJSContextRunnable : public nsIRunnable
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  nsDestroyJSContextRunnable(JSContext* aCx)
+  : mCx(aCx)
+  {
+    NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+    NS_ASSERTION(aCx, "Null pointer!");
+    NS_ASSERTION(!JS_GetGlobalObject(aCx), "Should not have a global!");
+
+    // We're removing this context from this thread. Let the JS engine know.
+    JS_ClearContextThread(aCx);
+  }
+
+  NS_IMETHOD Run()
+  {
+    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+    // We're about to use this context on this thread. Let the JS engine know.
+    if (!!JS_SetContextThread(mCx)) {
+      NS_WARNING("JS_SetContextThread failed!");
+    }
+
+    if (nsContentUtils::XPConnect()) {
+      nsContentUtils::XPConnect()->ReleaseJSContext(mCx, PR_TRUE);
+    }
+    else {
+      NS_WARNING("Failed to release JSContext!");
+    }
+
+    return NS_OK;
+  }
+
+private:
+  JSContext* mCx;
+};
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsDestroyJSContextRunnable, nsIRunnable)
+
 /**
  * This class is used as to post an error to the worker's outer handler.
  */
@@ -1396,7 +1437,14 @@ nsDOMThreadService::OnThreadShuttingDown()
 
     gThreadJSContextStack->SetSafeJSContext(nsnull);
 
-    nsContentUtils::XPConnect()->ReleaseJSContext(cx, PR_TRUE);
+    // The cycle collector may be running on the main thread. If so we cannot
+    // simply destroy this context. Instead we proxy the context destruction to
+    // the main thread. If that fails somehow then we simply leak the context.
+    nsCOMPtr<nsIRunnable> runnable = new nsDestroyJSContextRunnable(cx);
+
+    if (NS_FAILED(NS_DispatchToMainThread(runnable, NS_DISPATCH_NORMAL))) {
+      NS_WARNING("Failed to dispatch release runnable!");
+    }
   }
 
   return NS_OK;
