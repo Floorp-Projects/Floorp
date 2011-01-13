@@ -77,6 +77,7 @@ _BROWSER_FILES = \
                  browser_tabview_bug608158.js \
                  browser_tabview_bug618828.js \
                  browser_tabview_bug619937.js \
+                 browser_tabview_bug624265.js \
                  browser_tabview_dragdrop.js \
                  browser_tabview_exit_button.js \
                  browser_tabview_group.js \
