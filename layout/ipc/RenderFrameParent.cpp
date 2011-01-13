@@ -58,6 +58,64 @@ namespace layout {
 typedef FrameMetrics::ViewID ViewID;
 typedef RenderFrameParent::ViewMap ViewMap;
 
+// Represents (affine) transforms that are calculated from a content view.
+struct ViewTransform {
+  ViewTransform(nsIntPoint aTranslation, float aXScale, float aYScale)
+    : mTranslation(aTranslation)
+    , mXScale(aXScale)
+    , mYScale(aYScale)
+  {}
+
+  operator gfx3DMatrix() const
+  {
+    return
+      gfx3DMatrix::Scale(mXScale, mYScale, 1) *
+      gfx3DMatrix::Translation(mTranslation.x, mTranslation.y, 0);
+  }
+
+  nsIntPoint mTranslation;
+  float mXScale;
+  float mYScale;
+};
+
+// Matrix helpers
+// For our simple purposes, these helpers apply to 2D affine transformations
+// that can be represented by a scale and a translation. This makes the math
+// much easier because we only expect the diagonals and the translation
+// coordinates of the matrix to be non-zero.
+
+static double GetXScale(const gfx3DMatrix& aTransform)
+{
+  return aTransform._11;
+}
+ 
+static double GetYScale(const gfx3DMatrix& aTransform)
+{
+  return aTransform._22;
+}
+
+static void Scale(gfx3DMatrix& aTransform, double aXScale, double aYScale)
+{
+  aTransform._11 *= aXScale;
+  aTransform._22 *= aYScale;
+}
+
+static void Translate(gfx3DMatrix& aTransform, nsIntPoint aTranslate)
+{
+  aTransform._41 += aTranslate.x;
+  aTransform._42 += aTranslate.y;
+}
+
+static void ApplyTransform(nsRect& aRect,
+                           gfx3DMatrix& aTransform,
+                           nscoord auPerDevPixel)
+{
+  aRect.x = aRect.x * aTransform._11 + aTransform._41 * auPerDevPixel;
+  aRect.y = aRect.y * aTransform._22 + aTransform._42 * auPerDevPixel;
+  aRect.width = aRect.width * aTransform._11;
+  aRect.height = aRect.height * aTransform._22;
+}
+ 
 static void
 AssertInTopLevelChromeDoc(ContainerLayer* aContainer,
                           nsIFrame* aContainedFrame)
@@ -88,84 +146,169 @@ AssertValidContainerOfShadowTree(ContainerLayer* aContainer,
     "container of shadow tree may only be null or have 1 child that is the shadow root");
 }
 
+static const FrameMetrics*
+GetFrameMetrics(Layer* aLayer)
+{
+  // Children are not container layers, so they don't have frame metrics. Give
+  // them a blank metric.
+  if (!aLayer->GetFirstChild())
+    return NULL;
+
+  ContainerLayer* container = static_cast<ContainerLayer*>(aLayer);
+  return &container->GetFrameMetrics();
+}
+
+static nsIntPoint
+GetRootFrameOffset(nsIFrame* aContainerFrame, nsDisplayListBuilder* aBuilder)
+{
+  nscoord auPerDevPixel = aContainerFrame->PresContext()->AppUnitsPerDevPixel();
+
+  // Offset to the content rect in case we have borders or padding
+  nsPoint frameOffset =
+    (aBuilder->ToReferenceFrame(aContainerFrame->GetParent()) +
+     aContainerFrame->GetContentRect().TopLeft());
+
+  return frameOffset.ToNearestPixels(auPerDevPixel);
+}
+
 // Compute the transform of the shadow tree contained by
 // |aContainerFrame| to widget space.  We transform because the
 // subprocess layer manager renders to a different top-left than where
 // the shadow tree is drawn here and because a scale can be set on the
 // shadow tree.
-static void
+static ViewTransform
 ComputeShadowTreeTransform(nsIFrame* aContainerFrame,
-                           const FrameMetrics& aMetrics,
+                           nsFrameLoader* aRootFrameLoader,
+                           const FrameMetrics* aMetrics,
                            const ViewConfig& aConfig,
                            nsDisplayListBuilder* aBuilder,
-                           nsIntPoint* aShadowTranslation,
-                           float* aShadowXScale,
-                           float* aShadowYScale)
+                           float aInverseScaleX,
+                           float aInverseScaleY)
 {
+  // |aMetrics->mViewportScrollOffset| The frame's scroll offset when it was
+  //                                   painted, in content document pixels.
+  // |aConfig.mScrollOffset|           What our user expects, or wants, the
+  //                                   frame scroll offset to be in chrome
+  //                                   document app units.
+  //
+  // So we set a compensating translation that moves the content document
+  // pixels to where the user wants them to be.
+  //
   nscoord auPerDevPixel = aContainerFrame->PresContext()->AppUnitsPerDevPixel();
-  // Offset to the content rect in case we have borders or padding
-  nsPoint frameOffset =
-    (aBuilder->ToReferenceFrame(aContainerFrame->GetParent()) +
-     aContainerFrame->GetContentRect().TopLeft());
-  *aShadowTranslation = frameOffset.ToNearestPixels(auPerDevPixel);
+  nsIntPoint scrollOffset =
+    aConfig.mScrollOffset.ToNearestPixels(auPerDevPixel);
+  nsIntPoint metricsScrollOffset = aMetrics->mViewportScrollOffset;
 
-  if (aConfig.AsyncScrollEnabled()) {
-    // |aMetrics.mViewportScrollOffset| was the content document's
-    // scroll offset when it was painted (the document pixel at CSS
-    // viewport (0,0)).  |aConfig.mScrollOffset| is what our user
-    // expects, or wants, the content-document scroll offset to be.  So
-    // we set a compensating translation that moves the content document
-    // pixels to where the user wants them to be.
-    nsIntPoint scrollCompensation =
-      (aConfig.mScrollOffset.ToNearestPixels(auPerDevPixel));
-    scrollCompensation.x -= aMetrics.mViewportScrollOffset.x * aConfig.mXScale;
-    scrollCompensation.y -= aMetrics.mViewportScrollOffset.y * aConfig.mYScale;
-    *aShadowTranslation -= scrollCompensation;
+  if (aRootFrameLoader->AsyncScrollEnabled()) {
+    nsIntPoint scrollCompensation(
+      scrollOffset.x * aInverseScaleX - metricsScrollOffset.x * aConfig.mXScale,
+      scrollOffset.y * aInverseScaleY - metricsScrollOffset.y * aConfig.mYScale);
 
-    *aShadowXScale = aConfig.mXScale;
-    *aShadowYScale = aConfig.mYScale;
+    return ViewTransform(-scrollCompensation, aConfig.mXScale, aConfig.mYScale);
   } else {
-    *aShadowXScale = 1;
-    *aShadowYScale = 1;
+    return ViewTransform(nsIntPoint(0, 0), 1, 1);
   }
-           
 }
 
+// Use shadow layer tree to build display list for the browser's frame.
 static void
-UpdateShadowSubtree(Layer* aSubtreeRoot)
+BuildListForLayer(Layer* aLayer,
+                  nsFrameLoader* aRootFrameLoader,
+                  gfx3DMatrix aTransform,
+                  nsDisplayListBuilder* aBuilder,
+                  nsDisplayList& aShadowTree,
+                  nsIFrame* aSubdocFrame)
 {
-  ShadowLayer* shadow = aSubtreeRoot->AsShadowLayer();
+  const FrameMetrics* metrics = GetFrameMetrics(aLayer);
 
-  shadow->SetShadowClipRect(aSubtreeRoot->GetClipRect());
-  shadow->SetShadowTransform(aSubtreeRoot->GetTransform());
-  shadow->SetShadowVisibleRegion(aSubtreeRoot->GetVisibleRegion());
+  gfx3DMatrix transform;
 
-  for (Layer* child = aSubtreeRoot->GetFirstChild(); child;
+  if (metrics && metrics->IsScrollable()) {
+    const ViewID scrollId = metrics->mScrollId;
+
+    // We need to figure out the bounds of the scrollable region using the
+    // shadow layer tree from the remote process. The metrics viewport is
+    // defined based on all the transformations of its parent layers and
+    // the scale of the current layer.
+
+    // Calculate transform for this layer.
+    nsContentView* view =
+      aRootFrameLoader->GetCurrentRemoteFrame()->GetContentView(scrollId);
+    gfx3DMatrix applyTransform = ComputeShadowTreeTransform(
+      aSubdocFrame, aRootFrameLoader, metrics, view->GetViewConfig(), aBuilder,
+      1 / GetXScale(aTransform), 1 / GetYScale(aTransform));
+    transform = applyTransform * aLayer->GetTransform() * aTransform;
+
+    // As mentioned above, bounds calculation also depends on the scale
+    // of this layer.
+    Scale(aTransform, GetXScale(applyTransform), GetYScale(applyTransform));
+
+    // Calculate rect for this layer based on aTransform.
+    nsRect bounds;
+    {
+      nscoord auPerDevPixel = aSubdocFrame->PresContext()->AppUnitsPerDevPixel();
+      bounds = metrics->mViewport.ToAppUnits(auPerDevPixel);
+      ApplyTransform(bounds, aTransform, auPerDevPixel);
+
+    }
+
+    aShadowTree.AppendToTop(
+      new (aBuilder) nsDisplayRemoteShadow(aBuilder, aSubdocFrame, bounds, scrollId));
+
+  } else {
+    transform = aLayer->GetTransform() * aTransform;
+  }
+
+  for (Layer* child = aLayer->GetFirstChild(); child;
        child = child->GetNextSibling()) {
-    UpdateShadowSubtree(child);
+    BuildListForLayer(child, aRootFrameLoader, transform,
+                      aBuilder, aShadowTree, aSubdocFrame);
   }
 }
 
+// Go down shadow layer tree and apply transformations for scrollable layers.
 static void
-TransformShadowTreeTo(ContainerLayer* aRoot,
-                      const nsIntRect& aVisibleRect,
-                      const nsIntPoint& aTranslation,
-                      float aXScale, float aYScale)
+TransformShadowTree(nsDisplayListBuilder* aBuilder, nsFrameLoader* aFrameLoader,
+                    nsIFrame* aFrame, Layer* aLayer,
+                    float aXScale = 1, float aYScale = 1)
 {
-  UpdateShadowSubtree(aRoot);
+  ShadowLayer* shadow = aLayer->AsShadowLayer();
+  shadow->SetShadowClipRect(aLayer->GetClipRect());
+  shadow->SetShadowVisibleRegion(aLayer->GetVisibleRegion());
 
-  ShadowLayer* shadow = aRoot->AsShadowLayer();
-  NS_ABORT_IF_FALSE(aRoot->GetTransform() == shadow->GetShadowTransform(),
-                    "transforms should be the same now");
-  NS_ABORT_IF_FALSE(aRoot->GetTransform().Is2D(),
-                    "only 2D transforms expected currently");
-  gfxMatrix shadowTransform;
-  shadow->GetShadowTransform().Is2D(&shadowTransform);
-  // Pre-multiply this transform into the shadow's transform, so that
-  // it occurs before any transform set by the child
-  shadowTransform.Translate(gfxPoint(aTranslation.x, aTranslation.y));
-  shadowTransform.Scale(aXScale, aYScale);
-  shadow->SetShadowTransform(gfx3DMatrix::From2D(shadowTransform));
+  const FrameMetrics* metrics = GetFrameMetrics(aLayer);
+
+  gfx3DMatrix shadowTransform;
+
+  if (metrics && metrics->IsScrollable()) {
+    const ViewID scrollId = metrics->mScrollId;
+    const nsContentView* view =
+      aFrameLoader->GetCurrentRemoteFrame()->GetContentView(scrollId);
+    NS_ABORT_IF_FALSE(view, "Array of views should be consistent with layer tree");
+
+    ViewTransform viewTransform = ComputeShadowTreeTransform(
+      aFrame, aFrameLoader, metrics, view->GetViewConfig(), aBuilder,
+      1 / aXScale, 1 / aYScale
+    );
+
+    if (metrics->IsRootScrollable()) {
+      viewTransform.mTranslation += GetRootFrameOffset(aFrame, aBuilder);
+    }
+
+    shadowTransform = gfx3DMatrix(viewTransform) * aLayer->GetTransform();
+
+  } else {
+    shadowTransform = aLayer->GetTransform();
+  }
+
+  shadow->SetShadowTransform(shadowTransform);
+  aXScale *= GetXScale(shadowTransform);
+  aYScale *= GetYScale(shadowTransform);
+
+  for (Layer* child = aLayer->GetFirstChild();
+       child; child = child->GetNextSibling()) {
+    TransformShadowTree(aBuilder, aFrameLoader, aFrame, child, aXScale, aYScale);
+  }
 }
 
 static Layer*
@@ -205,7 +348,7 @@ BuildViewMap(ViewMap& oldContentViews, ViewMap& newContentViews,
     return;
 
   ContainerLayer* container = static_cast<ContainerLayer*>(aLayer);
-  const FrameMetrics& metrics = container->GetFrameMetrics();
+  const FrameMetrics metrics = container->GetFrameMetrics();
   const ViewID scrollId = metrics.mScrollId;
 
   nscoord auPerDevPixel = aFrameLoader->GetPrimaryFrameOfOwningContent()
@@ -234,10 +377,10 @@ BuildViewMap(ViewMap& oldContentViews, ViewMap& newContentViews,
   for (Layer* child = aLayer->GetFirstChild();
        child; child = child->GetNextSibling()) {
     const gfx3DMatrix transform = aLayer->GetTransform();
-    aXScale *= transform._11;
-    aYScale *= transform._22;
+    aXScale *= GetXScale(transform);
+    aYScale *= GetYScale(transform);
     BuildViewMap(oldContentViews, newContentViews, aFrameLoader, child,
-                       aXScale, aYScale);
+                 aXScale, aYScale);
   }
 }
 
@@ -359,16 +502,7 @@ RenderFrameParent::BuildLayer(nsDisplayListBuilder* aBuilder,
 
   if (mContainer) {
     AssertInTopLevelChromeDoc(mContainer, aFrame);
-    nsIntPoint shadowTranslation;
-    float shadowXScale, shadowYScale;
-    ComputeShadowTreeTransform(aFrame,
-                               shadowRoot->GetFrameMetrics(),
-                               GetContentView()->GetViewConfig(),
-                               aBuilder,
-                               &shadowTranslation,
-                               &shadowXScale, &shadowYScale);
-    TransformShadowTreeTo(shadowRoot, aVisibleRect,
-                          shadowTranslation, shadowXScale, shadowYScale);
+    TransformShadowTree(aBuilder, mFrameLoader, aFrame, shadowRoot);
     mContainer->SetClipRect(nsnull);
   }
 
@@ -487,8 +621,16 @@ RenderFrameParent::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   // We're the subdoc for <browser remote="true"> and it has
   // painted content.  Display its shadow layer tree.
   nsDisplayList shadowTree;
-  shadowTree.AppendToTop(
-    new (aBuilder) nsDisplayRemote(aBuilder, aFrame, this));
+  if (aBuilder->IsForEventDelivery()) {
+    nsRect bounds = aFrame->EnsureInnerView()->GetBounds();
+    ViewTransform offset =
+      ViewTransform(GetRootFrameOffset(aFrame, aBuilder), 1, 1);
+    BuildListForLayer(GetRootLayer(), mFrameLoader, offset,
+                      aBuilder, shadowTree, aFrame);
+  } else {
+    shadowTree.AppendToTop(
+      new (aBuilder) nsDisplayRemote(aBuilder, aFrame, this));
+  }
 
   // Clip the shadow layers to subdoc bounds
   nsPoint offset = aFrame->GetOffsetToCrossDoc(aBuilder->ReferenceFrame());

@@ -181,6 +181,11 @@ public:
     nsFrameLoader::Destroy();
   }
 
+  PRBool AsyncScrollEnabled() const
+  {
+    return !!(mRenderMode & RENDER_MODE_ASYNC_SCROLL);
+  }
+
   static nsFrameLoader* Create(nsIContent* aOwner, PRBool aNetworkCreated);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
