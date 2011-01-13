@@ -43,9 +43,11 @@
 
 #include "mozilla/layout/PRenderFrameParent.h"
 
+#include <map>
 #include "nsDisplayList.h"
 #include "Layers.h"
 
+class nsContentView;
 class nsFrameLoader;
 class nsSubDocumentFrame;
 
@@ -64,12 +66,21 @@ class RenderFrameParent : public PRenderFrameParent
   typedef mozilla::layers::Layer Layer;
   typedef mozilla::layers::LayerManager LayerManager;
   typedef mozilla::layers::ShadowLayersParent ShadowLayersParent;
+  typedef FrameMetrics::ViewID ViewID;
 
 public:
+  typedef std::map<ViewID, nsRefPtr<nsContentView> > ViewMap;
+
   RenderFrameParent(nsFrameLoader* aFrameLoader);
   virtual ~RenderFrameParent();
 
   void Destroy();
+
+  /**
+   * Helper function for getting a non-owning reference to a scrollable.
+   * @param aId The ID of the frame.
+   */
+  nsContentView* GetContentView(ViewID aId = FrameMetrics::ROOT_SCROLL_ID);
 
   void ShadowLayersUpdated();
 
@@ -83,6 +94,8 @@ public:
                                      LayerManager* aManager,
                                      const nsIntRect& aVisibleRect);
 
+  void OwnerContentChanged(nsIContent* aContent);
+
 protected:
   NS_OVERRIDE void ActorDestroy(ActorDestroyReason why);
 
@@ -90,12 +103,18 @@ protected:
   NS_OVERRIDE virtual bool DeallocPLayers(PLayersParent* aLayers);
 
 private:
+  void BuildViewMap();
+
   LayerManager* GetLayerManager() const;
   ShadowLayersParent* GetShadowLayers() const;
   ContainerLayer* GetRootLayer() const;
 
   nsRefPtr<nsFrameLoader> mFrameLoader;
   nsRefPtr<ContainerLayer> mContainer;
+
+  // This contains the views for all the scrollable frames currently in the
+  // painted region of our remote content.
+  ViewMap mContentViews;
 };
 
 } // namespace layout

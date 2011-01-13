@@ -115,12 +115,14 @@
 #ifdef MOZ_IPC
 #include "ContentParent.h"
 #include "TabParent.h"
+#include "mozilla/layout/RenderFrameParent.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
 #endif
 
 using namespace mozilla::layers;
+typedef FrameMetrics::ViewID ViewID;
 
 #include "jsapi.h"
 
@@ -302,7 +304,6 @@ nsFrameLoader::nsFrameLoader(nsIContent *aOwner, PRBool aNetworkCreated)
   , mCurrentRemoteFrame(nsnull)
   , mRemoteBrowser(nsnull)
 #endif
-  , mContentView(new nsContentView(aOwner, FrameMetrics::ROOT_SCROLL_ID))
 {
 }
 
@@ -1284,6 +1285,9 @@ void
 nsFrameLoader::SetOwnerContent(nsIContent* aContent)
 {
   mOwnerContent = aContent;
+  if (RenderFrameParent* rfp = GetCurrentRemoteFrame()) {
+    rfp->OwnerContentChanged(aContent);
+  }
 }
 
 #ifdef MOZ_IPC
@@ -1975,16 +1979,51 @@ nsFrameLoader::GetContentViewsIn(float aXPx, float aYPx,
                                  PRUint32* aLength,
                                  nsIContentView*** aResult)
 {
-  *aResult = nsnull;
-  *aLength = 0;
+  nscoord x = nsPresContext::CSSPixelsToAppUnits(aXPx - aLeftSize);
+  nscoord y = nsPresContext::CSSPixelsToAppUnits(aYPx - aTopSize);
+  nscoord w = nsPresContext::CSSPixelsToAppUnits(aLeftSize + aRightSize) + 1;
+  nscoord h = nsPresContext::CSSPixelsToAppUnits(aTopSize + aBottomSize) + 1;
+  nsRect target(x, y, w, h);
+
+  nsIFrame* frame = GetPrimaryFrameOfOwningContent();
+
+  nsTArray<ViewID> ids;
+  nsLayoutUtils::GetRemoteContentIds(frame, target, ids, true);
+  if (ids.Length() == 0 || !GetCurrentRemoteFrame()) {
+    *aResult = nsnull;
+    *aLength = 0;
+    return NS_OK;
+  }
+
+  nsIContentView** result = reinterpret_cast<nsIContentView**>(
+    NS_Alloc(ids.Length() * sizeof(nsIContentView*)));
+
+  for (PRUint32 i = 0; i < ids.Length(); i++) {
+    nsIContentView* view = GetCurrentRemoteFrame()->GetContentView(ids[i]);
+    NS_ABORT_IF_FALSE(view, "Retrieved ID from RenderFrameParent, it should be valid!");
+    nsRefPtr<nsIContentView>(view).forget(&result[i]);
+  }
+
+  *aResult = result;
+  *aLength = ids.Length();
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFrameLoader::GetRootContentView(nsIContentView** aContentView)
 {
-  nsRefPtr<nsIContentView>(GetContentView()).forget(aContentView);
-  return NS_OK;
+  RenderFrameParent* rfp = GetCurrentRemoteFrame();
+  if (!rfp) {
+    *aContentView = nsnull;
+    return NS_OK;
+  }
+
+  nsContentView* view = rfp->GetContentView();
+  NS_ABORT_IF_FALSE(view, "Should always be able to create root scrollable!");
+  nsRefPtr<nsIContentView>(view).forget(aContentView);
+
+   return NS_OK;
 }
 
 nsresult
