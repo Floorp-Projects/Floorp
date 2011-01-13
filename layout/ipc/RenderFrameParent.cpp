@@ -571,7 +571,8 @@ void
 RenderFrameParent::BuildViewMap()
 {
   ViewMap newContentViews;
-  if (GetRootLayer()) {
+  // BuildViewMap assumes we have a primary frame, which may not be the case.
+  if (GetRootLayer() && mFrameLoader->GetPrimaryFrameOfOwningContent()) {
     // Some of the content views in our hash map may no longer be active. To
     // tag them as inactive and to remove any chance of them using a dangling
     // pointer, we set mContentView to NULL.
@@ -588,11 +589,18 @@ RenderFrameParent::BuildViewMap()
     mozilla::layout::BuildViewMap(mContentViews, newContentViews, mFrameLoader, GetRootLayer());
   }
 
-  // Root scrollable layer might not be around yet. Don't accidentally delete
-  // our view for it.
-  if (!newContentViews.empty()) {
-    mContentViews = newContentViews;
+  // Here, we guarantee that *only* the root view is preserved in
+  // case we couldn't build a new view map above. This is important because
+  // the content view map should only contain the root view and content
+  // views that are present in the layer tree.
+  if (newContentViews.empty()) {
+    newContentViews.insert(ViewMap::value_type(
+      FrameMetrics::ROOT_SCROLL_ID,
+      FindViewForId(mContentViews, FrameMetrics::ROOT_SCROLL_ID)
+    ));
   }
+  
+  mContentViews = newContentViews;
 }
 
 LayerManager*

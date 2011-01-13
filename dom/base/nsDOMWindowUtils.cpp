@@ -999,7 +999,11 @@ nsDOMWindowUtils::FindElementWithViewId(nsViewID aID,
   if (aID == FrameMetrics::ROOT_SCROLL_ID) {
     nsPresContext* presContext = GetPresContext();
     nsIDocument* document = presContext->Document();
-    CallQueryInterface(document->GetRootElement(), aResult);
+    mozilla::dom::Element* rootElement = document->GetRootElement();
+    if (!rootElement) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+    CallQueryInterface(rootElement, aResult);
     return NS_OK;
   }
 
