@@ -2805,7 +2805,8 @@ private:
 
 #ifdef XPC_CHECK_WRAPPER_THREADSAFETY
 public:
-    nsCOMPtr<nsIThread>          mThread; // Don't want to overload _mOwningThread
+    // Don't want to overload _mOwningThread
+    PRThread*                    mThread; 
 #endif
 };
 
