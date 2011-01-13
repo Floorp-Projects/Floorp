@@ -524,6 +524,7 @@ protected:
  */
 class nsDisplayItem : public nsDisplayItemLink {
 public:
+  typedef mozilla::layers::FrameMetrics::ViewID ViewID;
   typedef mozilla::layers::Layer Layer;
   typedef mozilla::layers::LayerManager LayerManager;
   typedef mozilla::LayerState LayerState;
@@ -547,11 +548,23 @@ public:
 #include "nsDisplayItemTypes.h"
 
   struct HitTestState {
+    typedef nsTArray<ViewID> ShadowArray;
+
+    HitTestState(ShadowArray* aShadows = NULL)
+      : mShadows(aShadows) {
+    }
+
     ~HitTestState() {
       NS_ASSERTION(mItemBuffer.Length() == 0,
                    "mItemBuffer should have been cleared");
     }
+
     nsAutoTArray<nsDisplayItem*, 100> mItemBuffer;
+
+    // It is sometimes useful to hit test for frames that are not in this
+    // process. Display items may append IDs into this array if it is
+    // non-null.
+    ShadowArray* mShadows;
   };
 
   /**
