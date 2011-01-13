@@ -16,9 +16,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=477754
   </body>
 
   <hbox pack="center">
-    <label id="anchor" value="Anchor"/>
+    <label id="anchor" style="direction: rtl;" value="Anchor"/>
   </hbox>
-  <panel id="testPopup" style="direction: rtl;" onpopupshown="doTest();">
+  <panel id="testPopup" onpopupshown="doTest();">
     <label value="I am a popup"/>
   </panel>
 
