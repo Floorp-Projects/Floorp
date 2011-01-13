@@ -47,6 +47,7 @@
 #include "gfx3DMatrix.h"
 #include "nsFrameLoader.h"
 #include "nsViewportFrame.h"
+#include "nsSubDocumentFrame.h"
 
 typedef nsFrameLoader::ViewportConfig ViewportConfig;
 using namespace mozilla::layers;
@@ -364,6 +365,27 @@ RenderFrameParent::GetRootLayer() const
   return shadowLayers ? shadowLayers->GetRoot() : nsnull;
 }
 
+NS_IMETHODIMP
+RenderFrameParent::BuildDisplayList(nsDisplayListBuilder* aBuilder,
+                                    nsSubDocumentFrame* aFrame,
+                                    const nsRect& aDirtyRect,
+                                    const nsDisplayListSet& aLists)
+{
+  // We're the subdoc for <browser remote="true"> and it has
+  // painted content.  Display its shadow layer tree.
+  nsDisplayList shadowTree;
+  shadowTree.AppendToTop(
+    new (aBuilder) nsDisplayRemote(aBuilder, aFrame, this));
+
+  // Clip the shadow layers to subdoc bounds
+  nsPoint offset = aFrame->GetOffsetToCrossDoc(aBuilder->ReferenceFrame());
+  nsRect bounds = aFrame->EnsureInnerView()->GetBounds() + offset;
+
+  return aLists.Content()->AppendNewToTop(
+    new (aBuilder) nsDisplayClip(aBuilder, aFrame, &shadowTree,
+                                 bounds));
+}
+
 }  // namespace layout
 }  // namespace mozilla
 
@@ -375,4 +397,19 @@ nsDisplayRemote::BuildLayer(nsDisplayListBuilder* aBuilder,
   nsIntRect visibleRect = GetVisibleRect().ToNearestPixels(appUnitsPerDevPixel);
   nsRefPtr<Layer> layer = mRemoteFrame->BuildLayer(aBuilder, mFrame, aManager, visibleRect);
   return layer.forget();
+}
+
+
+void
+nsDisplayRemoteShadow::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
+                         HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames)
+{
+  // If we are here, then rects have intersected.
+  //
+  // XXX I think iframes and divs can be rounded like anything else but we don't
+  //     cover that case here.
+  //
+  if (aState->mShadows) {
+    aState->mShadows->AppendElement(mId);
+  }
 }

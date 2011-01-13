@@ -65,6 +65,8 @@ class nsClientRectList;
 #include "imgIContainer.h"
 #include "nsCSSPseudoElements.h"
 #include "nsHTMLReflowState.h"
+#include "nsIFrameLoader.h"
+#include "Layers.h"
 
 class nsBlockFrame;
 class gfxDrawable;
@@ -79,6 +81,7 @@ class nsLayoutUtils
   typedef gfxPattern::GraphicsFilter GraphicsFilter;
 
 public:
+  typedef mozilla::layers::FrameMetrics::ViewID ViewID;
 
   /**
    * Use heuristics to figure out the name of the child list that
@@ -434,6 +437,23 @@ public:
    *         origin aOrigin.
    */
   static gfxMatrix ChangeMatrixBasis(const gfxPoint &aOrigin, const gfxMatrix &aMatrix);
+
+  /**
+   * Find IDs corresponding to a scrollable content element in the child process.
+   * In correspondence with the shadow layer tree, you can use this to perform a
+   * hit test that corresponds to a specific shadow layer that you can then perform
+   * transformations on to do parent-side scrolling.
+   *
+   * @param aFrame The root frame of a stack context
+   * @param aTarget The rect to hit test relative to the frame origin
+   * @param aOutIDs All found IDs are added here
+   * @param aIgnoreRootScrollFrame a boolean to control if the display list
+   *        builder should ignore the root scroll frame
+   */
+  static nsresult GetRemoteContentIds(nsIFrame* aFrame,
+                                     const nsRect& aTarget,
+                                     nsTArray<ViewID> &aOutIDs,
+                                     PRBool aIgnoreRootScrollFrame);
 
   /**
    * Given aFrame, the root frame of a stacking context, find its descendant

@@ -44,14 +44,14 @@
 #include "mozilla/layout/PRenderFrameParent.h"
 
 #include "nsDisplayList.h"
+#include "Layers.h"
 
 class nsFrameLoader;
+class nsSubDocumentFrame;
 
 namespace mozilla {
+
 namespace layers {
-class ContainerLayer;
-class Layer;
-class LayerManager;
 class ShadowLayersParent;
 }
 
@@ -59,6 +59,7 @@ namespace layout {
 
 class RenderFrameParent : public PRenderFrameParent
 {
+  typedef mozilla::layers::FrameMetrics FrameMetrics;
   typedef mozilla::layers::ContainerLayer ContainerLayer;
   typedef mozilla::layers::Layer Layer;
   typedef mozilla::layers::LayerManager LayerManager;
@@ -71,6 +72,11 @@ public:
   void Destroy();
 
   void ShadowLayersUpdated();
+
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder* aBuilder,
+                              nsSubDocumentFrame* aFrame,
+                              const nsRect& aDirtyRect,
+                              const nsDisplayListSet& aLists);
 
   already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                      nsIFrame* aFrame,
@@ -124,6 +130,49 @@ public:
 
 private:
   RenderFrameParent* mRemoteFrame;
+};
+
+/**
+ * nsDisplayRemoteShadow is a way of adding display items for frames in a
+ * separate process, for hit testing only. After being processed, the hit
+ * test state will contain IDs for any remote frames that were hit.
+ *
+ * The frame should be its respective render frame parent.
+ */
+class nsDisplayRemoteShadow : public nsDisplayItem
+{
+  typedef mozilla::layout::RenderFrameParent RenderFrameParent;
+  typedef mozilla::layers::FrameMetrics::ViewID ViewID;
+
+public:
+  nsDisplayRemoteShadow(nsDisplayListBuilder* aBuilder,
+                        nsIFrame* aFrame,
+                        nsRect aRect,
+                        ViewID aId)
+    : nsDisplayItem(aBuilder, aFrame)
+    , mRect(aRect)
+    , mId(aId)
+  {}
+
+  NS_OVERRIDE nsRect GetBounds(nsDisplayListBuilder* aBuilder)
+  {
+    return mRect;
+  }
+
+  virtual PRUint32 GetPerFrameKey()
+  {
+    NS_ABORT();
+    return 0;
+  }
+
+  NS_OVERRIDE void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
+                           HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames);
+
+  NS_DISPLAY_DECL_NAME("Remote-Shadow", TYPE_REMOTE_SHADOW)
+
+private:
+  nsRect mRect;
+  ViewID mId;
 };
 
 #endif  // mozilla_layout_RenderFrameParent_h
