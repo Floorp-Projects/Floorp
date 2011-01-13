@@ -1,9 +1,12 @@
+%filter substitution
+%include defines.inc
+
 notification, notification[type="warning"] {
   padding: 0;
   color: #fff;
   background: #5768c3;
-  border-top: 1px solid #4756aa;
-  border-bottom: 1px solid #4756aa;
+  border-top: @border_width_tiny@ solid #4756aa;
+  border-bottom: @border_width_tiny@ solid #4756aa;
 }
 
 notification .messageCloseButton {
@@ -25,5 +28,5 @@ notification .outset {
 }
 
 notification .buttons {
-  padding: 8px; /* core spacing */
+  padding: @padding_normal@;
 }

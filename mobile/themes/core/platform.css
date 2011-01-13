@@ -38,10 +38,13 @@
 /* global skin ------------------------------------------------------------- */
 @import url(chrome://global/skin/);
 
+%filter substitution
+%include defines.inc
+
 /* general stuff ------------------------------------------------------------ */
 :root {
   font-family: "Nokia Sans", Tahoma, sans-serif !important;
-  font-size: 24px !important;
+  font-size: @font_normal@ !important;
 }
 
 ::-moz-selection {
@@ -58,8 +61,8 @@ menuitem {
 description,
 label {
   /* force mac to use the same margins as windows and linux */
-  -moz-margin-start: 6px;
-  -moz-margin-end: 5px;
+  -moz-margin-start: @margin_snormal@;
+  -moz-margin-end: @margin_snormal@;
 }
 
 /* Override any OS inverse themes */
@@ -75,9 +78,9 @@ textbox {
 
 /* textboxes --------------------------------------------------------------- */
 textbox:not([type="number"]) {
-  min-height: 48px;
-  border: 2px solid #cacdd5;
-  -moz-border-radius: 8px;
+  min-height: @textbox_height@;
+  border: @border_width_small@ solid #cacdd5;
+  -moz-border-radius: @border_radius_normal@;
   -moz-border-top-colors: -moz-initial;
   -moz-border-right-colors: -moz-initial;
   -moz-border-bottom-colors: -moz-initial;
@@ -89,7 +92,7 @@ textbox[isempty="true"] {
 }
 
 textbox.search-bar {
-  border: 2px solid rgba(0,0,0,0.4);
+  border: @border_width_small@ solid rgba(0,0,0,0.4);
   background-color: #f9f9f9;
   background: url("chrome://browser/skin/images/textbox-bg.png") top left repeat-x;
 }
@@ -109,7 +112,7 @@ textbox[disabled="true"] {
   -moz-box-align: center;
   -moz-box-pack: center;
   background-color: rgba(0,0,0,.6);
-  padding: 64px;
+  padding: @touch_normal@;
 }
 
 dialog,
@@ -117,71 +120,68 @@ dialog,
 .panel-arrowcontent {
   background: url("chrome://browser/skin/images/popup-bg-hdpi.png") left bottom repeat-x;
   background-color: white;
-  border-radius: 8px;
-  box-shadow: black 0 2px 2px, black 0 -1px 2px;
-  padding: 8px 0; /* core spacing on top/bottom */
+  border-radius: @border_radius_normal@;
+  box-shadow: black 0 @border_radius_tiny@ @border_radius_tiny@, black 0 -@border_radius_tiny@ @border_radius_tiny@;
+  padding: @padding_normal@ 0; /* core spacing on top/bottom */
 }
 
 dialog > .prompt-header {
-  padding: 8px;
-  font-size: 18px !important;
+  padding: @padding_normal@;
+  font-size: @font_small@ !important;
 }
 
 dialog > .prompt-header > .prompt-title {
-  font-size: 24px !important;
+  font-size: @font_normal@ !important;
 }
 
 @media (max-width: 499px) {
   .context-block,
   .modal-block {
-    padding: 32px;
+    padding: @padding_xlarge@;
   }
 
-  dialog > .prompt-header {
-    font-size: 16px !important;
-  }
-
+  dialog > .prompt-header,
   dialog > .prompt-header > .prompt-title {
-    font-size: 18px !important;
+    font-size: @font_small@ !important;
   }
 }
 
 dialog > .prompt-header > .prompt-message {
-  margin-top: 8px;
+  margin-top: @margin_normal@;
   white-space: pre-wrap;
 }
 
 dialog > .prompt-header > .button-checkbox {
-  margin-left: 24px;
+  margin-left: @margin_large@;
 }
 
 /* buttons ----------------------------------------------------------------- */
 .button-text,
 .toolbarbutton-text {
   font-weight: normal;
-  font-size: 24px !important;
+  font-size: @font_normal@ !important;
 }
 
 button {
   -moz-appearance: none;
-  min-width: 56px !important; /* button size */
-  min-height: 56px !important; /* button size */
+  min-width: @touch_button_small@ !important; /* button size */
+  min-height: @touch_button_small@ !important; /* button size */
   color: #000;
-  border-radius: 8px;
-  margin: 8px;
-  padding: 10px;
+  border-radius: @border_radius_normal@;
+  margin: @margin_normal@;
+  padding: @padding_xnormal@;
   background-image: url("chrome://browser/skin/images/button-bg.png");
   background-size: auto 100%;
-  border: 1px solid #cacdd5;
+  border: @border_width_tiny@ solid #cacdd5;
 }
 
 button[disabled="true"] {
   color: #aaa !important;
-  border: 1px solid #cacdd5 !important;
+  border: @border_width_tiny@ solid #cacdd5 !important;
 }
 
 button:focus > .button-box {
-  border: 1px solid transparent;
+  border: @border_width_tiny@ solid transparent;
 }
 
 button:not([disabled]):hover:active,
@@ -200,18 +200,18 @@ spinbuttons {
 }
 
 .numberbox-input-box {
-  border: 2px solid #cacdd5;
-  border-right: 0px solid transparent;
-  border-radius: 8px 0px 0px 8px;
+  border: @border_width_small@ solid #cacdd5;
+  border-right: 0 solid transparent;
+  border-radius: @border_radius_normal@ 0 0 @border_radius_normal@;
   -moz-border-top-colors: -moz-initial;
   -moz-border-bottom-colors: -moz-initial;
   -moz-border-left-colors: -moz-initial;
 }
 
 .numberbox-input-box:-moz-locale-dir(rtl) {
-  border-radius: 0px 8px 8px 0px;
-  border-right: 2px solid #cacdd5;
-  border-left: 0px solid transparent;
+  border-radius: 0 @border_radius_normal@ @border_radius_normal@ 0;
+  border-right: @border_width_small@ solid #cacdd5;
+  border-left: 0 solid transparent;
 }
 
 .spinbuttons-box {
@@ -228,15 +228,15 @@ spinbuttons {
 .spinbuttons-up,
 .spinbuttons-down {
   -moz-appearance: none !important;
-  min-width: 56px !important; /* button size */
-  min-height: 56px !important; /* button size */
+  min-width: @touch_button_small@ !important; /* button size */
+  min-height: @touch_button_small@ !important; /* button size */
   color: #000;
-  margin: 8px;
-  padding: 10px;
-  border-radius: 0px;
+  margin: @margin_normal@;
+  padding: @padding_xnormal@;
+  border-radius: 0;
   background-image: url("chrome://browser/skin/images/button-bg.png");
   background-size: auto 100%;
-  border: 1px solid #cacdd5;
+  border: @border_width_tiny@ solid #cacdd5;
   list-style-image: url("chrome://browser/skin/images/arrowdown-16.png");
 }
 
@@ -246,25 +246,30 @@ spinbuttons {
 }
 
 .spinbuttons-up {
-  border-radius: 0px 8px 8px 0px;
+  border-radius: 0 @border_radius_normal@ @border_radius_normal@ 0;
   list-style-image: url("chrome://browser/skin/images/arrowup-16.png");
 }
 
 .spinbuttons-up:-moz-locale-dir(rtl) {
-  border-radius: 8px 0px 0px 8px;
+  border-radius: @border_radius_normal@ 0 0 @border_radius_normal@;
 }
 
 /* toolbar buttons --------------------------------------------------------- */
 toolbarbutton {
-  min-width: 64px !important; /* primary button size */
-  min-height: 64px !important; /* primary button size */
+  min-width: @touch_button_large@ !important; /* primary button size */
+  min-height: @touch_button_large@ !important; /* primary button size */
   -moz-appearance: none !important;
   margin: 0;
-  padding: 2px;
+  padding: @padding_xsmall@;
 }
 
 toolbarbutton:not(.show-text) .toolbarbutton-text {
   display: none !important;
+}
+
+.toolbarbutton-icon[label]:not([label=""]),
+.toolbarbutton-icon[type="menu"] {
+  -moz-margin-end: @margin_tiny@;
 }
 
 toolbarbutton:not(.show-text) .toolbarbutton-icon,
@@ -288,7 +293,7 @@ toolbarbutton[open="true"] {
 }
 
 .button-checkbox > .button-image-icon {
-  -moz-margin-end: 8px;
+  -moz-margin-end: @margin_normal@;
   list-style-image: url("chrome://browser/skin/images/check-unselected-30.png");
 }
 
@@ -298,10 +303,10 @@ toolbarbutton[open="true"] {
 
 .button-checkbox:hover:active > .button-box,
 .button-checkbox[checked="true"] > .button-box {
-  padding-top: 1px;
-  padding-bottom: 2px;
-  -moz-padding-start: 3px;
-  -moz-padding-end: 4px;
+  padding-top: @padding_tiny@;
+  padding-bottom: @padding_xsmall@;
+  -moz-padding-start: @margin_small@;
+  -moz-padding-end: @margin_small@;
 }
 
 /* radio buttons ----------------------------------------------------------- */
@@ -311,20 +316,20 @@ radiogroup {
 
 .radio-label {
   font-weight: normal;
-  font-size: 24px !important;
+  font-size: @font_normal@ !important;
 }
 
 radio {
   -moz-appearance: none;
-  min-width: 56px !important; /* button size */
-  min-height: 56px !important; /* button size */
+  min-width: @touch_button_small@ !important; /* button size */
+  min-height: @touch_button_small@ !important; /* button size */
   color: #000;
-  padding: 10px;
-  margin: 0px;
+  padding: @padding_xnormal@;
+  margin: 0;
   background-image: url("chrome://browser/skin/images/button-bg.png");
   background-size: auto 100%;
-  border-top: 1px solid #cacdd5;
-  border-bottom: 1px solid #cacdd5;
+  border-top: @border_width_tiny@ solid #cacdd5;
+  border-bottom: @border_width_tiny@ solid #cacdd5;
 }
 
 radio .radio-icon, radio .radio-check {
@@ -338,43 +343,43 @@ radio[selected] {
 }
 
 radio:first-child {
-  border-left: 1px solid #cacdd5;
-  border-radius: 8px 0px 0px 8px;
+  border-left: @border_width_tiny@ solid #cacdd5;
+  border-radius: @border_radius_normal@ 0 0 @border_radius_normal@;
 }
 
 radio:first-child:-moz-locale-dir(rtl) {
   border-left: none;
-  border-right: 1px solid #cacdd5;
-  border-radius: 0px 8px 8px 0px;
+  border-right: @border_width_tiny@ solid #cacdd5;
+  border-radius: 0 @border_radius_normal@ @border_radius_normal@ 0;
 }
 
 radio:last-child {
-  border-right: 1px solid #cacdd5;
-  border-radius: 0px 8px 8px 0px;
+  border-right: @border_width_tiny@ solid #cacdd5;
+  border-radius: 0 @border_radius_normal@ @border_radius_normal@ 0;
 }
 
 radio:last-child:-moz-locale-dir(rtl) {
   border-right: none;
-  border-left: 1px solid #cacdd5;
-  border-radius: 8px 0px 0px 8px;
+  border-left: @border_width_tiny@ solid #cacdd5;
+  border-radius: @border_radius_normal@ 0 0 @border_radius_normal@;
 }
 
 radio[focused="true"] > .radio-label-box {
-  border: 1px solid transparent;
+  border: @border_width_tiny@ solid transparent;
 }
 
 /* checkbox radios --------------------------------------------------------- */
 checkbox {
-  margin: 1px 5px 2px 5px; /* match platform style for buttons */
+  margin: @margin_tiny@ @margin_small@ @margin_tiny@ @margin_small@; /* match platform style for buttons */
 }
 
 radio.checkbox-radio-on:not([selected]) {
-  border-right: 1px solid #cacdd5;
+  border-right: @border_width_tiny@ solid #cacdd5;
 }
 
 radio.checkbox-radio-on:not([selected]):-moz-locale-dir(rtl) {
   border-left: none;
-  border-left: 1px solid #cacdd5;
+  border-left: @border_width_tiny@ solid #cacdd5;
 }
 
 radio.checkbox-radio-off[selected],
@@ -397,33 +402,33 @@ richlistbox {
 
 richlistitem {
   -moz-user-focus: ignore;
-  min-height: 70px; /* row size */
-  padding: 5px;
-  border-bottom: 1px solid rgb(207,207,207);
+  min-height: @touch_row@; /* row size */
+  padding: @padding_small@;
+  border-bottom: @border_width_tiny@ solid rgb(207,207,207);
 }
 
 richlistitem label.title,
 richlistitem description.title {
-  font-size: 24px !important;
+  font-size: @font_normal@ !important;
 }
 
 richlistitem label.normal,
 richlistitem description.normal {
   color: gray;
-  font-size: 18px !important;
+  font-size: @font_small@ !important;
   white-space: pre-wrap;
 }
 
 richlistitem label.normal-black,
 richlistitem description.normal-black {
-  font-size: 18px !important;
+  font-size: @font_small@  !important;
   white-space: pre-wrap;
 }
 
 richlistitem label.normal-bold,
 richlistitem description.normal-bold {
   font-weight: bold;
-  font-size: 18px !important;
+  font-size: @font_small@  !important;
   white-space: pre-wrap;
 }
 
@@ -487,27 +492,27 @@ colorpicker > vbox {
 .menulist-label {
   font-family: "Nokia Sans", Tahoma, sans-serif !important;
   font-weight: normal;
-  font-size: 24px !important;
+  font-size: @font_normal@  !important;
   background-color: transparent !important;
 }
 
 menulist {
   -moz-appearance: none !important;
   -moz-user-focus: ignore;
-  min-width: 56px !important; /* button size */
-  min-height: 56px !important; /* button size */
+  min-width: @touch_button_small@ !important; /* button size */
+  min-height: @touch_button_small@ !important; /* button size */
   color: #000 !important;
-  border-radius: 8px;
-  margin: 8px;
-  padding: 6px 10px;
+  border-radius: @border_radius_normal@;
+  margin: @margin_normal@;
+  padding: @padding_small@ @padding_xnormal@;
   background-image: url("chrome://browser/skin/images/button-bg.png");
   background-size: auto 100%;
-  border: 1px solid #cacdd5;
+  border: @border_width_tiny@ solid #cacdd5;
 }
 
 menulist[disabled="true"] {
   color: #aaa !important;
-  border: 1px solid #cacdd5 !important;
+  border: @border_width_tiny@ solid #cacdd5 !important;
 }
 
 menulist:not([disabled="true"]):hover:active {
@@ -515,9 +520,9 @@ menulist:not([disabled="true"]):hover:active {
 }
 
 menulist > dropmarker {
-  height: 42px;
-  width: 42px;
-  margin-left: 5px;
+  height: 32px;
+  width: 32px;
+  margin-left: @margin_snormal@;
   background-color: transparent; /* for windows */
   border: none;                  /* for windows */
   -moz-box-align: center;
@@ -534,14 +539,14 @@ menulist[disabled="true"] > dropmarker {
 /* progressmeter ----------------------------------------------------------- */
 progressmeter {
   background-color: #fff;
-  padding: 4px;
-  height: 32px;
-  border: 3px solid #aaa;
+  padding: @padding_small@;
+  height: @textbox_height@;
+  border: @border_width_large@ solid #aaa;
   -moz-border-top-colors: -moz-initial;
   -moz-border-right-colors: -moz-initial;
   -moz-border-bottom-colors: -moz-initial;
   -moz-border-left-colors: -moz-initial;
-  -moz-border-radius: 8px;
+  -moz-border-radius: @border_radius_normal@;
 }
 
 .progress-bar {
@@ -562,28 +567,28 @@ arrowbox {
 
 .panel-arrow[side="top"] {
   list-style-image: url("chrome://browser/skin/images/arrowbox-up.png");
-  margin-bottom: -8px;
+  margin-bottom: -@margin_normal@;
 }
 
 .panel-arrow[side="bottom"] {
   list-style-image: url("chrome://browser/skin/images/arrowbox-down.png");
-  margin-top: -8px;
+  margin-top: -@margin_normal@;
 }
 
 .panel-arrow[side="left"] {
   list-style-image: url("chrome://browser/skin/images/arrowbox-horiz.png");
-  margin-right: -8px;
+  margin-right: -@margin_normal@;
   -moz-transform: scaleX(-1);
 }
 
 .panel-arrow[side="right"] {
   list-style-image: url("chrome://browser/skin/images/arrowbox-horiz.png");
-  margin-left: -8px;
+  margin-left: -@margin_normal@;
 }
 
 /*.panel-row-header ------------------------------------------------------------ */
 .panel-row-header {
-  border-bottom: 4px solid rgb(101,121,227);
+  border-bottom: @border_width_xlarge@ solid rgb(101,121,227);
   background-color: rgb(94,97,102);
   padding: 0 !important;
 }
@@ -593,13 +598,13 @@ arrowbox {
   background: rgb(94,97,102) url(images/panelrow-default-hdpi.png) no-repeat;
   background-size: 100% 100%;
   color: white;
-  border: 0px solid transparent !important;
-  -moz-border-start: 1px solid rgba(255,255,255,0.2) !important;
-  -moz-border-end: 1px solid rgba(0,0,0,0.2) !important;
-  padding-top: 3px !important;
-  padding-bottom: 3px !important;
-  -moz-padding-start: 2px !important;
-  -moz-padding-end: 2px !important;
+  border: 0 solid transparent !important;
+  -moz-border-start: @border_width_tiny@ solid rgba(255,255,255,0.2) !important;
+  -moz-border-end: @border_width_tiny@ solid rgba(0,0,0,0.2) !important;
+  padding-top: @padding_xsmall@ !important;
+  padding-bottom: @padding_xsmall@ !important;
+  -moz-padding-start: @padding_xsmall@ !important;
+  -moz-padding-end: @padding_xsmall@ !important;
   -moz-box-flex: 1;
   -moz-user-focus: ignore;
   -moz-user-select: none;
@@ -618,19 +623,19 @@ arrowbox {
   -moz-border-end-width: 0 !important;
 }
 
-@media (max-width: 499px) {
+@media (@orientation@: portrait) {
   .panel-row-button {
     -moz-box-orient: vertical;
   }
 
   .panel-row-button .toolbarbutton-text {
-    font-size: 16px !important;
+    font-size: @font_xsmall@ !important;
   }
 }
 
 .panel-row-button .toolbarbutton-text {
   text-align: left;
-  text-shadow: rgba(0,0,0,0.3) 0 2px;
+  text-shadow: rgba(0,0,0,0.3) 0 @shadow_width_small@;
 }
 
 .panel-row-button .toolbarbutton-text:-moz-locale-dir(rtl) {
