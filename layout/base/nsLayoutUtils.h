@@ -84,6 +84,17 @@ public:
   typedef mozilla::layers::FrameMetrics::ViewID ViewID;
 
   /**
+   * Finds previously assigned or generates a unique ViewID for the given
+   * content element.
+   */
+  static ViewID FindIDFor(nsIContent* aContent);
+
+  /**
+   * Find content for given ID.
+   */
+  static nsIContent* FindContentFor(ViewID aId);
+
+  /**
    * Use heuristics to figure out the name of the child list that
    * aChildFrame is currently in.
    */
@@ -1289,6 +1300,8 @@ public:
       (aPresContext->Type() == nsPresContext::eContext_PrintPreview ||
        aPresContext->Type() == nsPresContext::eContext_PageLayout);
   }
+
+  static void Shutdown();
 
 #ifdef DEBUG
   /**

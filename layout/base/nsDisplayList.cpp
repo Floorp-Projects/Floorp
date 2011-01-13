@@ -69,8 +69,6 @@ using namespace mozilla;
 using namespace mozilla::layers;
 typedef FrameMetrics::ViewID ViewID;
 
-static ViewID sScrollIdCounter = FrameMetrics::START_SCROLL_ID;
-
 nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
     Mode aMode, PRBool aBuildCaret)
     : mReferenceFrame(aReferenceFrame),
@@ -1637,19 +1635,8 @@ nsDisplayScrollLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
 
   // Get the already set unique ID for scrolling this content remotely.
   // Or, if not set, generate a new ID.
-  ViewID scrollId;
-  {
-    nsIContent* content = mFrame->GetContent();
-    void* scrollIdProperty = content->GetProperty(nsGkAtoms::RemoteId);
-    if (scrollIdProperty) {
-      scrollId = *static_cast<ViewID*>(scrollIdProperty);
-    } else {
-      scrollId = sScrollIdCounter++;
-      content->SetProperty(nsGkAtoms::RemoteId, new ViewID(scrollId),
-                           nsINode::DestroyProperty<ViewID>);
-    }
-  }
-
+  nsIContent* content = mFrame->GetContent();
+  ViewID scrollId = nsLayoutUtils::FindIDFor(content);
 
   nsRect viewport = mViewportFrame->GetRect() -
                     mViewportFrame->GetPosition() +

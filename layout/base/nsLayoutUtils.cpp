@@ -97,6 +97,7 @@
 #include "nsCanvasFrame.h"
 #include "gfxDrawable.h"
 #include "gfxUtils.h"
+#include "nsDataHashtable.h"
 
 #ifdef MOZ_SVG
 #include "nsSVGUtils.h"
@@ -120,6 +121,61 @@ bool nsLayoutUtils::gPreventAssertInCompareTreePosition = false;
 
 typedef gfxPattern::GraphicsFilter GraphicsFilter;
 typedef FrameMetrics::ViewID ViewID;
+
+static ViewID sScrollIdCounter = FrameMetrics::START_SCROLL_ID;
+
+typedef nsDataHashtable<nsUint64HashKey, nsIContent*> ContentMap;
+static ContentMap* sContentMap = NULL;
+static ContentMap& GetContentMap() {
+  if (!sContentMap) {
+    sContentMap = new ContentMap();
+    nsresult rv = sContentMap->Init();
+    NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "Could not initialize map.");
+  }
+  return *sContentMap;
+}
+
+static void DestroyViewID(void* aObject, nsIAtom* aPropertyName,
+                          void* aPropertyValue, void* aData)
+{
+  ViewID* id = static_cast<ViewID*>(aPropertyValue);
+  GetContentMap().Remove(*id);
+  delete id;
+}
+
+ViewID
+nsLayoutUtils::FindIDFor(nsIContent* aContent)
+{
+  ViewID scrollId;
+
+  void* scrollIdProperty = aContent->GetProperty(nsGkAtoms::RemoteId);
+  if (scrollIdProperty) {
+    scrollId = *static_cast<ViewID*>(scrollIdProperty);
+  } else {
+    scrollId = sScrollIdCounter++;
+    aContent->SetProperty(nsGkAtoms::RemoteId, new ViewID(scrollId),
+                          DestroyViewID);
+    GetContentMap().Put(scrollId, aContent);
+  }
+
+  return scrollId;
+}
+
+nsIContent*
+nsLayoutUtils::FindContentFor(ViewID aId)
+{
+  NS_ABORT_IF_FALSE(aId != FrameMetrics::NULL_SCROLL_ID &&
+                    aId != FrameMetrics::ROOT_SCROLL_ID,
+                    "Cannot find a content element in map for null or root IDs.");
+  nsIContent* content;
+  bool exists = GetContentMap().Get(aId, &content);
+
+  if (exists) {
+    return content;
+  } else {
+    return nsnull;
+  }
+}
 
 /**
  * A namespace class for static layout utilities.
@@ -3906,6 +3962,16 @@ nsLayoutUtils::AssertTreeOnlyEmptyNextInFlows(nsIFrame *aSubtreeRoot)
   } while (childList);
 }
 #endif
+
+/* static */
+void
+nsLayoutUtils::Shutdown()
+{
+  if (sContentMap) {
+    delete sContentMap;
+    sContentMap = NULL;
+  }
+}
 
 nsSetAttrRunnable::nsSetAttrRunnable(nsIContent* aContent, nsIAtom* aAttrName,
                                      const nsAString& aValue)
