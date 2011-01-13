@@ -277,6 +277,10 @@ function getPlayableVideo(candidates) {
 // virtual address space. Beware!
 var PARALLEL_TESTS = 2;
 
+// When true, we'll loop forever on whatever test we run. Use this to debug
+// intermittent test failures.
+const DEBUG_TEST_LOOP_FOREVER = false;
+
 // Manages a run of media tests. Runs them in chunks in order to limit
 // the number of media elements/threads running in parallel. This limits peak
 // memory use, particularly on Linux x86 where thread stacks use 10MB of
@@ -341,7 +345,7 @@ function MediaTestManager() {
     // thread stacks' address space.
     netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
     Components.utils.forceGC();
-    if (this.testNum == this.tests.length) {
+    if (this.testNum == this.tests.length && !DEBUG_TEST_LOOP_FOREVER) {
       if (this.onFinished) {
         this.onFinished();
       }
@@ -354,6 +358,10 @@ function MediaTestManager() {
       var token = (test.name ? (test.name + "-"): "") + this.testNum;
       this.testNum++;
 
+      if (DEBUG_TEST_LOOP_FOREVER && this.testNum == this.tests.length) {
+        this.testNum = 0;
+      }
+      
       // Ensure we can play the resource type.
       if (test.type && !document.createElement('video').canPlayType(test.type))
         continue;
