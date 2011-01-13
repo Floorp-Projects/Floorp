@@ -1007,9 +1007,9 @@ typedef js::Vector<JSCompartment *, 0, js::SystemAllocPolicy> WrapperVector;
 
 struct JSRuntime {
     /* Default compartment. */
-    JSCompartment       *defaultCompartment;
+    JSCompartment       *atomsCompartment;
 #ifdef JS_THREADSAFE
-    bool                defaultCompartmentIsLocked;
+    bool                atomsCompartmentIsLocked;
 #endif
 
     /* List of compartments (protected by the GC lock). */
@@ -2630,49 +2630,49 @@ class AutoUnlockGC {
     ~AutoUnlockGC() { JS_LOCK_GC(rt); }
 };
 
-class AutoLockDefaultCompartment {
+class AutoLockAtomsCompartment {
   private:
     JSContext *cx;
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 
   public:
-    AutoLockDefaultCompartment(JSContext *cx
+    AutoLockAtomsCompartment(JSContext *cx
                                JS_GUARD_OBJECT_NOTIFIER_PARAM)
       : cx(cx)
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
         JS_LOCK(cx, &cx->runtime->atomState.lock);
 #ifdef JS_THREADSAFE
-        cx->runtime->defaultCompartmentIsLocked = true;
+        cx->runtime->atomsCompartmentIsLocked = true;
 #endif
     }
-    ~AutoLockDefaultCompartment() {
+    ~AutoLockAtomsCompartment() {
 #ifdef JS_THREADSAFE
-        cx->runtime->defaultCompartmentIsLocked = false;
+        cx->runtime->atomsCompartmentIsLocked = false;
 #endif
         JS_UNLOCK(cx, &cx->runtime->atomState.lock);
     }
 };
 
-class AutoUnlockDefaultCompartment {
+class AutoUnlockAtomsCompartment {
     JSContext *cx;
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 
   public:
-    AutoUnlockDefaultCompartment(JSContext *cx
+    AutoUnlockAtomsCompartment(JSContext *cx
                                  JS_GUARD_OBJECT_NOTIFIER_PARAM)
       : cx(cx)
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
 #ifdef JS_THREADSAFE
-        cx->runtime->defaultCompartmentIsLocked = false;
+        cx->runtime->atomsCompartmentIsLocked = false;
 #endif
         JS_UNLOCK(cx, &cx->runtime->atomState.lock);
     }
-    ~AutoUnlockDefaultCompartment() {
+    ~AutoUnlockAtomsCompartment() {
         JS_LOCK(cx, &cx->runtime->atomState.lock);
 #ifdef JS_THREADSAFE
-        cx->runtime->defaultCompartmentIsLocked = true;
+        cx->runtime->atomsCompartmentIsLocked = true;
 #endif
     }
 };
