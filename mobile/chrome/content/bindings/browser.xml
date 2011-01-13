@@ -400,46 +400,14 @@
            view. -->
       <field name="_recacheRatio">1</field>
 
-      <!-- The cache viewport is what parts of content is cached in the parent process for
-           fast scrolling. This syncs that up with the current projection viewport. -->
+      <!-- Used in remote tabs only. -->
       <method name="_updateCacheViewport">
-        <body>
-          <![CDATA[
-            let scale = this._scale;
-            let bcr = this.getBoundingClientRect();
-
-            let cacheX = Math.max(this._pendingThresholdX / this._recacheRatio, bcr.width / 2);
-            let cacheY = Math.max(this._pendingThresholdY / this._recacheRatio, bcr.height / 2);
-
-            let rootView = this._contentViewManager.rootContentView;
-            if (!rootView)
-              return;
-            this.messageManager.sendAsyncMessage("Content:SetCacheViewport", {
-              x: (rootView.scrollX - cacheX + bcr.width  / 2) / scale,
-              y: (rootView.scrollY - cacheY + bcr.height / 2) / scale,
-              w: cacheX * 2 / scale,
-              h: cacheY * 2 / scale,
-              scale: scale,
-              id: rootView.id
-            });
-
-            this._pendingPixelsX = 0;
-            this._pendingPixelsY = 0;
-          ]]>
-        </body>
+        <body/>
       </method>
 
-      <!-- Synchronize the CSS viewport with the projection viewport. -->
+      <!-- Used in remote tabs only. -->
       <method name="_updateCSSViewport">
-        <body>
-          <![CDATA[
-            let rootView = this._contentViewManager.rootContentView;
-            this.messageManager.sendAsyncMessage("Content:ScrollTo", {
-              x: rootView.scrollX / this._scale,
-              y: rootView.scrollY / this._scale
-            });
-          ]]>
-        </body>
+        <body/>
       </method>
 
       <!-- Sets the scale of CSS pixels to device pixels. Does not affect page layout. -->
@@ -560,12 +528,10 @@
 
       <field name="_active">false</field>
       <property name="active" onget="return this._active;">
-         <setter>
-            this._active = val;
-            this.messageManager.sendAsyncMessage((val ? "Content:Activate" : "Content:Deactivate"), {});
-            if (val)
-              this._updateCacheViewport();
-         </setter>
+        <setter><![CDATA[
+          // Do not change displayport on local tabs!
+          this._active = val;
+        ]]></setter>
       </property>
 
     </implementation>
@@ -804,6 +770,60 @@
           ]]>
         </body>
       </method>
+
+      <!-- The cache viewport is what parts of content is cached in the parent process for
+           fast scrolling. This syncs that up with the current projection viewport. -->
+      <method name="_updateCacheViewport">
+        <body>
+          <![CDATA[
+            let scale = this._scale;
+            let bcr = this.getBoundingClientRect();
+
+            let cacheX = Math.max(this._pendingThresholdX / this._recacheRatio, bcr.width / 2);
+            let cacheY = Math.max(this._pendingThresholdY / this._recacheRatio, bcr.height / 2);
+
+            let rootView = this._contentViewManager.rootContentView;
+            // May not be available if nothing has been loaded.
+            if (!rootView)
+              return;
+
+            this.messageManager.sendAsyncMessage("Content:SetCacheViewport", {
+              x: (rootView.scrollX - cacheX + bcr.width  / 2) / scale,
+              y: (rootView.scrollY - cacheY + bcr.height / 2) / scale,
+              w: cacheX * 2 / scale,
+              h: cacheY * 2 / scale,
+              scale: scale,
+              id: rootView.id
+            });
+
+            this._pendingPixelsX = 0;
+            this._pendingPixelsY = 0;
+          ]]>
+        </body>
+      </method>
+
+      <!-- Synchronize the CSS viewport with the projection viewport. -->
+      <method name="_updateCSSViewport">
+        <body>
+          <![CDATA[
+            let rootView = this._contentViewManager.rootContentView;
+            this.messageManager.sendAsyncMessage("Content:ScrollTo", {
+              x: rootView.scrollX / this._scale,
+              y: rootView.scrollY / this._scale
+            });
+          ]]>
+        </body>
+      </method>
+
+      <property name="active" onget="return this._active;">
+         <setter>
+            this._active = val;
+            this.messageManager.sendAsyncMessage((val ? "Content:Activate" : "Content:Deactivate"), {});
+            if (val)
+              this._updateCacheViewport();
+         </setter>
+      </property>
+
     </implementation>
 
   </binding>
