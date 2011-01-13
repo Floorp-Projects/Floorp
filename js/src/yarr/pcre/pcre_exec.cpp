@@ -704,7 +704,7 @@ RECURSE:
                         int end = stack.currentFrame->args.subjectPtr - md.startSubject;
                         if (start == end && stack.currentFrame->args.groupMatched) {
                             DPRINTF(("empty string while group already matched; bailing"));
-                            RRETURN;
+                            RRETURN_NO_MATCH;
                         }
                         DPRINTF(("saving; start: %d; end: %d\n", start, end));
                         JS_ASSERT(start <= end);
