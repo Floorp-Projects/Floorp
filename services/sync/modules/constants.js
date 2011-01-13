@@ -81,6 +81,9 @@ PARTIAL_DATA_SYNC:                     60 * 1000, // 1 minute
 // and the mobile sync interval.
 HMAC_EVENT_INTERVAL:                   600000,
 
+// How long to wait between sync attempts if the Master Password is locked.
+MASTER_PASSWORD_LOCKED_RETRY_INTERVAL: 15 * 60 * 1000,   // 15 minutes
+
 // 50 is hardcoded here because of URL length restrictions.
 // (GUIDs can be up to 64 chars long)
 MOBILE_BATCH_SIZE:                     50,
@@ -116,6 +119,7 @@ LOGIN_FAILED:                          "error.login.failed",
 SYNC_FAILED_PARTIAL:                   "error.sync.failed_partial",
 CLIENT_NOT_CONFIGURED:                 "service.client_not_configured",
 STATUS_DISABLED:                       "service.disabled",
+MASTER_PASSWORD_LOCKED:                "service.master_password_locked",
 
 // success states
 LOGIN_SUCCEEDED:                       "success.login",
@@ -161,6 +165,7 @@ JPAKE_ERROR_KEYMISMATCH:               "jpake.error.keymismatch",
 JPAKE_ERROR_WRONGMESSAGE:              "jpake.error.wrongmessage",
 
 // Ways that a sync can be disabled (messages only to be printed in debug log)
+kSyncMasterPasswordLocked:             "User elected to leave Master Password locked",
 kSyncWeaveDisabled:                    "Weave is disabled",
 kSyncNotLoggedIn:                      "User is not logged in",
 kSyncNetworkOffline:                   "Network is offline",

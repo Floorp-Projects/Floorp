@@ -226,6 +226,13 @@ private:
                            PRInt16 aNewImageStatus);
 
   /**
+   * Method to fire an event once we know what's going on with the image load.
+   *
+   * @param aEventType "load" or "error" depending on how things went
+   */
+  nsresult FireEvent(const nsAString& aEventType);
+protected:
+  /**
    * Method to create an nsIURI object from the given string (will
    * handle getting the right charset, base, etc).  You MUST pass in a
    * non-null document to this function.
@@ -237,13 +244,6 @@ private:
   nsresult StringToURI(const nsAString& aSpec, nsIDocument* aDocument,
                        nsIURI** aURI);
 
-  /**
-   * Method to fire an event once we know what's going on with the image load.
-   *
-   * @param aEventType "load" or "error" depending on how things went
-   */
-  nsresult FireEvent(const nsAString& aEventType);
-protected:
   void CreateStaticImageClone(nsImageLoadingContent* aDest) const;
 
   /**

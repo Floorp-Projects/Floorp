@@ -188,8 +188,8 @@ NS_IMPL_ISUPPORTS8(imgRequest,
 
 imgRequest::imgRequest() : 
   mCacheId(0), mValidator(nsnull), mImageSniffers("image-sniffing-services"),
-  mDecodeRequested(PR_FALSE), mIsMultiPartChannel(PR_FALSE),
-  mGotData(PR_FALSE), mIsInCache(PR_FALSE), mWindowId(0)
+  mWindowId(0), mDecodeRequested(PR_FALSE), mIsMultiPartChannel(PR_FALSE),
+  mGotData(PR_FALSE), mIsInCache(PR_FALSE)
 {}
 
 imgRequest::~imgRequest()

@@ -312,7 +312,7 @@ RunTest (TestEntry *test, gfxContext *ctx) {
     }
 
     gfxFontTestStore::NewStore();
-    textRun->Draw(ctx, gfxPoint(0,0), 0, length, nsnull, nsnull, nsnull);
+    textRun->Draw(ctx, gfxPoint(0,0), 0, length, nsnull, nsnull);
     gfxFontTestStore *s = gfxFontTestStore::CurrentStore();
 
     gTextRunCache->RemoveTextRun(textRun);

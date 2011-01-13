@@ -387,6 +387,19 @@ protected:
   // Move the popup to the position specified in its |left| and |top| attributes.
   void MoveToAttributePosition();
 
+  /**
+   * Return whether the popup direction should be RTL.
+   * If the popup has an anchor, its direction is the anchor direction.
+   * Otherwise, its the general direction of the UI.
+   *
+   * Return whether the popup direction should be RTL.
+   */
+  bool IsDirectionRTL() const {
+    return mAnchorContent && mAnchorContent->GetPrimaryFrame()
+      ? mAnchorContent->GetPrimaryFrame()->GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL
+      : GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
+  }
+
   nsString     mIncrementalString;  // for incremental typing navigation
 
   // the content that the popup is anchored to, if any, which may be in a

@@ -2,16 +2,19 @@ This color conversion code is from the Chromium open source project available he
 
 http://code.google.com/chromium/
 
-The code comes from svn revision 638400 on 2010-10-26.
+The code comes from svn revision 63840 on 2010-10-26.
 
 The code was copied from a Chromium svn checkout using the 'update.sh' script which then applies patches for our build and to add dynamic CPU detection.
 
-convert.patch: Change Chromium code to build using Mozilla build system.
-               Add runtime CPU detection for MMX
-               Move default C implementation to work on all platforms.
-               Change Chromium code to allow a picture region.
-               The YUV conversion will convert within this 
-               picture region only.
-               Add YCbCr 4:4:4 support
+convert.patch contains the following changes:
 
-arm.patch: Add YCbCr to rgb16_565 conversion support, bug 616469
+  * Change Chromium code to build using Mozilla build system.
+  * Add runtime CPU detection for MMX
+  * Move default C implementation to work on all platforms.
+  * Change Chromium code to allow a picture region.
+  * The YUV conversion will convert within this picture region only.
+  * Add YCbCr 4:4:4 support
+  * Bug 616469 - Add YCbCr to rgb16_565 conversion support.
+  * Bug 619178 - Update CPU detection in yuv_convert to new SSE.h interface.
+  * Bug 616778 - Split yuv_convert FilterRows vectorized code into separate files so it can
+    be properly guarded with cpuid() calls.

@@ -198,7 +198,7 @@ protected:
 
     bool EventOccurred() const;
 
-    bool MaybeProcessDeferredIncall();
+    void MaybeUndeferIncall();
     void EnqueuePendingMessages();
 
     /**

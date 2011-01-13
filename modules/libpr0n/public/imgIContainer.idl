@@ -133,10 +133,19 @@ interface imgIContainer : nsISupports
    * available data before the call returns. It is an error to pass this flag
    * from a call stack that originates in a decoder (ie, from a decoder
    * observer event).
+   *
+   * FLAG_DECODE_NO_PREMULTIPLY_ALPHA: Do not premultiply alpha if
+   * it's not already premultiplied in the image data.
+   *
+   * FLAG_DECODE_NO_COLORSPACE_CONVERSION: Do not do any colorspace conversion;
+   * ignore any embedded profiles, and don't convert to any particular destination
+   * space.
    */
 
   const long FLAG_NONE            = 0x0;
   const long FLAG_SYNC_DECODE     = 0x1;
+  const long FLAG_DECODE_NO_PREMULTIPLY_ALPHA = 0x2;
+  const long FLAG_DECODE_NO_COLORSPACE_CONVERSION = 0x4;
 
   /**
     * Constants for specifying various "special" frames.

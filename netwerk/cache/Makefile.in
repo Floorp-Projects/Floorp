@@ -57,6 +57,7 @@ XPIDLSRCS = \
   nsICacheService.idl \
   nsICacheSession.idl \
   nsICacheVisitor.idl \
+  nsIDiskCacheStreamInternal.idl \
   $(NULL)
 
 EXPORTS = \

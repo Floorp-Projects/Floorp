@@ -71,6 +71,7 @@
 #include "nsIMenuRollup.h"
 #include "nsIDOMSimpleGestureEvent.h"
 #include "nsIPluginInstance.h"
+#include "nsThemeConstants.h"
 
 #include "nsDragService.h"
 #include "nsClipboard.h"
@@ -188,9 +189,6 @@ PRUint32 nsChildView::sLastInputEventCount = 0;
 - (void)maybeInitContextMenuTracking;
 
 + (NSEvent*)makeNewCocoaEventWithType:(NSEventType)type fromEvent:(NSEvent*)theEvent;
-
-- (float)beginMaybeResetUnifiedToolbar;
-- (void)endMaybeResetUnifiedToolbar:(float)aOldHeight;
 
 - (void)drawRect:(NSRect)aRect inContext:(CGContextRef)aContext;
 
@@ -2086,6 +2084,27 @@ nsChildView::DrawOver(LayerManager* aManager, nsIntRect aRect)
   }
 }
 
+void
+nsChildView::UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries)
+{
+  NSWindow* win = [mView window];
+  if (!win || ![win isKindOfClass:[ToolbarWindow class]])
+    return;
+
+  float unifiedToolbarHeight = 0;
+  nsIntRect topPixelStrip(0, 0, [win frame].size.width, 1);
+
+  for (PRUint32 i = 0; i < aThemeGeometries.Length(); ++i) {
+    const ThemeGeometry& g = aThemeGeometries[i];
+    if ((g.mWidgetType == NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR ||
+         g.mWidgetType == NS_THEME_TOOLBAR) &&
+        g.mRect.Contains(topPixelStrip)) {
+      unifiedToolbarHeight = g.mRect.YMost();
+    }
+  }
+  [(ToolbarWindow*)win setUnifiedToolbarHeight:unifiedToolbarHeight];
+}
+
 NS_IMETHODIMP
 nsChildView::BeginSecureKeyboardInput()
 {
@@ -2598,27 +2617,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-// Whenever we paint a toplevel window, we will be notified of any
-// unified toolbar in the window via
-// nsNativeThemeCocoa::RegisterWidgetGeometry. 
-- (float)beginMaybeResetUnifiedToolbar
-{
-  if (![[self window] isKindOfClass:[ToolbarWindow class]] ||
-      [self superview] != [[self window] contentView])
-    return 0.0;
-
-  return [(ToolbarWindow*)[self window] beginMaybeResetUnifiedToolbar];
-}
-
-- (void)endMaybeResetUnifiedToolbar:(float)aOldHeight
-{
-  if (![[self window] isKindOfClass:[ToolbarWindow class]] ||
-      [self superview] != [[self window] contentView])
-    return;
-
-  [(ToolbarWindow*)[self window] endMaybeResetUnifiedToolbar:aOldHeight];
-}
-
 -(void)update
 {
   if (mGLContext) {
@@ -2635,8 +2633,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
 // gecko to paint it
 - (void)drawRect:(NSRect)aRect
 {
-  float oldHeight = [self beginMaybeResetUnifiedToolbar];
-
   CGContextRef cgContext = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
   [self drawRect:aRect inContext:cgContext];
 
@@ -2645,8 +2641,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
   if ([[self window] isKindOfClass:[BaseWindow class]]) {
     [(BaseWindow*)[self window] deferredInvalidateShadow];
   }
-
-  [self endMaybeResetUnifiedToolbar:oldHeight];
 }
 
 - (void)drawRect:(NSRect)aRect inTitlebarContext:(CGContextRef)aContext

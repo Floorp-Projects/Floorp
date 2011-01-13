@@ -122,6 +122,7 @@ ShadowChild(const OpRemoveChild& op)
 //--------------------------------------------------
 // ShadowLayersParent
 ShadowLayersParent::ShadowLayersParent(ShadowLayerManager* aManager)
+  : mDestroyed(false)
 {
   MOZ_COUNT_CTOR(ShadowLayersParent);
   mLayerManager = aManager;
@@ -135,6 +136,7 @@ ShadowLayersParent::~ShadowLayersParent()
 void
 ShadowLayersParent::Destroy()
 {
+  mDestroyed = true;
   for (size_t i = 0; i < ManagedPLayerParent().Length(); ++i) {
     ShadowLayerParent* slp =
       static_cast<ShadowLayerParent*>(ManagedPLayerParent()[i]);
@@ -148,7 +150,7 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
 {
   MOZ_LAYERS_LOG(("[ParentSide] recieved txn with %d edits", cset.Length()));
 
-  if (layer_manager()->IsDestroyed()) {
+  if (mDestroyed || layer_manager()->IsDestroyed()) {
     return true;
   }
 
@@ -415,6 +417,10 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       nsRefPtr<gfxSharedImageSurface> newFront =
         gfxSharedImageSurface::Open(op.newFrontBuffer());
       nsRefPtr<gfxSharedImageSurface> newBack = canvas->Swap(newFront);
+      if (newFront == newBack) {
+        newFront.forget();
+      }
+
       canvas->Updated(op.updated());
 
       replyv.push_back(OpBufferSwap(shadow, NULL,
@@ -433,6 +439,9 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       nsRefPtr<gfxSharedImageSurface> newFront =
         gfxSharedImageSurface::Open(op.newFrontBuffer());
       nsRefPtr<gfxSharedImageSurface> newBack = image->Swap(newFront);
+      if (newFront == newBack) {
+        newFront.forget();
+      }
 
       replyv.push_back(OpBufferSwap(shadow, NULL,
                                     newBack->GetShmem()));

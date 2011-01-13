@@ -69,6 +69,7 @@ nsHtml5MetaScanner::tryCharset(nsString* charset)
   }
   nsCAutoString encoding;
   CopyUTF16toUTF8(*charset, encoding);
+  encoding.Trim(" \t\r\n\f");
   if (encoding.LowerCaseEqualsLiteral("utf-16") ||
       encoding.LowerCaseEqualsLiteral("utf-16be") ||
       encoding.LowerCaseEqualsLiteral("utf-16le")) {

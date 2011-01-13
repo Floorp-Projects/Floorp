@@ -411,10 +411,6 @@ PopupNotifications.prototype = {
     if (this.isPanelOpen && this._currentAnchorElement == anchorElement)
       return;
 
-    // Make sure the identity popup hangs in the correct direction.
-    var position = (this.window.getComputedStyle(this.panel, "").direction == "rtl") ?
-      "bottomcenter topright" : "bottomcenter topleft";
-
     // If the panel is already open but we're changing anchors, we need to hide
     // it first.  Otherwise it can appear in the wrong spot.  (_hidePanel is
     // safe to call even if the panel is already hidden.)
@@ -422,7 +418,7 @@ PopupNotifications.prototype = {
 
     this._currentAnchorElement = anchorElement;
 
-    this.panel.openPopup(anchorElement, position);
+    this.panel.openPopup(anchorElement, "bottomcenter topleft");
     notificationsToShow.forEach(function (n) {
       this._fireCallback(n, "shown");
     }, this);

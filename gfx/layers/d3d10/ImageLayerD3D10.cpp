@@ -40,6 +40,7 @@
 #include "gfxD2DSurface.h"
 #include "gfxWindowsSurface.h"
 #include "yuv_convert.h"
+#include "../d3d9/Nv3DVUtils.h"
 
 namespace mozilla {
 namespace layers {
@@ -87,7 +88,10 @@ SurfaceToTexture(ID3D10Device *aDevice,
   data.SysMemPitch = imageSurface->Stride();
 
   nsRefPtr<ID3D10Texture2D> texture;
-  aDevice->CreateTexture2D(&desc, &data, getter_AddRefs(texture));
+  HRESULT hr = aDevice->CreateTexture2D(&desc, &data, getter_AddRefs(texture));
+
+  LayerManagerD3D10::ReportFailure(NS_LITERAL_CSTRING("Failed to create texture for image surface"),
+                                   hr);
   return texture.forget();
 }
 
@@ -218,6 +222,11 @@ ImageLayerD3D10::RenderLayer()
       nsRefPtr<gfxASurface> surf = GetContainer()->GetCurrentAsSurface(&size);
       
       nsRefPtr<ID3D10Texture2D> texture = SurfaceToTexture(device(), surf, size);
+
+      if (!texture) {
+        NS_WARNING("Failed to create texture for surface.");
+        return;
+      }
       
       hasAlpha = surf->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA;
       
@@ -225,6 +234,7 @@ ImageLayerD3D10::RenderLayer()
     } else {
       ImageContainerD3D10 *container =
         static_cast<ImageContainerD3D10*>(GetContainer());
+
       if (container->device() != device()) {
         container->SetDevice(device());
       }
@@ -232,6 +242,13 @@ ImageLayerD3D10::RenderLayer()
       // image->GetFormat() == Image::CAIRO_SURFACE
       CairoImageD3D10 *cairoImage =
         static_cast<CairoImageD3D10*>(image.get());
+      
+      if (cairoImage->mDevice != device()) {
+        // This shader resource view was for an old device! Can't draw that
+        // now.
+        return;
+      }
+
       srView = cairoImage->mSRView;
       hasAlpha = cairoImage->mHasAlpha;
       size = cairoImage->mSize;
@@ -270,6 +287,12 @@ ImageLayerD3D10::RenderLayer()
       return;
     }
 
+    if (yuvImage->mDevice != device()) {
+        // These shader resources were created for an old device! Can't draw
+        // that here.
+        return;
+    }
+
     // TODO: At some point we should try to deal with mFilter here, you don't
     // really want to use point filtering in the case of NEAREST, since that
     // would also use point filtering for Chroma upsampling. Where most likely
@@ -280,6 +303,39 @@ ImageLayerD3D10::RenderLayer()
     effect()->GetVariableByName("tY")->AsShaderResource()->SetResource(yuvImage->mYView);
     effect()->GetVariableByName("tCb")->AsShaderResource()->SetResource(yuvImage->mCbView);
     effect()->GetVariableByName("tCr")->AsShaderResource()->SetResource(yuvImage->mCrView);
+
+    /*
+     * Send 3d control data and metadata to NV3DVUtils
+     */
+    if (GetNv3DVUtils()) {
+      Nv_Stereo_Mode mode;
+      switch (yuvImage->mData.mStereoMode) {
+      case STEREO_MODE_LEFT_RIGHT:
+        mode = NV_STEREO_MODE_LEFT_RIGHT;
+        break;
+      case STEREO_MODE_RIGHT_LEFT:
+        mode = NV_STEREO_MODE_RIGHT_LEFT;
+        break;
+      case STEREO_MODE_BOTTOM_TOP:
+        mode = NV_STEREO_MODE_BOTTOM_TOP;
+        break;
+      case STEREO_MODE_TOP_BOTTOM:
+        mode = NV_STEREO_MODE_TOP_BOTTOM;
+        break;
+      case STEREO_MODE_MONO:
+        mode = NV_STEREO_MODE_MONO;
+        break;
+      }
+      
+      // Send control data even in mono case so driver knows to leave stereo mode.
+      GetNv3DVUtils()->SendNv3DVControl(mode, true, FIREFOX_3DV_APP_HANDLE);
+
+      if (yuvImage->mData.mStereoMode != STEREO_MODE_MONO) {
+        // Dst resource is optional
+        GetNv3DVUtils()->SendNv3DVMetaData((unsigned int)yuvImage->mSize.width, 
+                                           (unsigned int)yuvImage->mSize.height, (HANDLE)(yuvImage->mYTexture), (HANDLE)(NULL));
+      }
+    }
 
     effect()->GetVariableByName("vLayerQuad")->AsVector()->SetFloatVector(
       ShaderConstantRectD3D10(
@@ -444,6 +500,11 @@ CairoImageD3D10::SetData(const CairoImage::Data &aData)
                "Invalid content type passed to CairoImageD3D10.");
 
   mTexture = SurfaceToTexture(mDevice, aData.mSurface, mSize);
+
+  if (!mTexture) {
+    NS_WARNING("Failed to create texture for CairoImage.");
+    return;
+  }
 
   if (aData.mSurface->GetContentType() == gfxASurface::CONTENT_COLOR) {
     mHasAlpha = false;

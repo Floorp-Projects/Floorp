@@ -27,9 +27,14 @@ userExtDir.append("extensions2");
 userExtDir.append(gAppInfo.ID);
 registerDirectory("XREUSysExt", userExtDir.parent);
 
+do_load_httpd_js();
+var testserver;
+
 function resetPrefs() {
   Services.prefs.setIntPref("bootstraptest.active_version", -1);
   Services.prefs.setIntPref("bootstraptest.installed_version", -1);
+  Services.prefs.setIntPref("bootstraptest2.active_version", -1);
+  Services.prefs.setIntPref("bootstraptest2.installed_version", -1);
   Services.prefs.setIntPref("bootstraptest.startup_reason", -1);
   Services.prefs.setIntPref("bootstraptest.shutdown_reason", -1);
   Services.prefs.setIntPref("bootstraptest.install_reason", -1);
@@ -42,6 +47,14 @@ function getActiveVersion() {
 
 function getInstalledVersion() {
   return Services.prefs.getIntPref("bootstraptest.installed_version");
+}
+
+function getActiveVersion2() {
+  return Services.prefs.getIntPref("bootstraptest2.active_version");
+}
+
+function getInstalledVersion2() {
+  return Services.prefs.getIntPref("bootstraptest2.installed_version");
 }
 
 function getStartupReason() {
@@ -64,6 +77,11 @@ function run_test() {
   do_test_pending();
 
   resetPrefs();
+
+  // Create and configure the HTTP server.
+  testserver = new nsHttpServer();
+  testserver.registerDirectory("/addons/", do_get_file("addons"));
+  testserver.start(4444);
 
   startupManager();
 
@@ -91,6 +109,7 @@ function run_test_1() {
                 AddonManager.OP_NEEDS_RESTART_INSTALL, 0);
     do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
 
+    let addon = install.addon;
     prepare_test({
       "bootstrap1@tests.mozilla.org": [
         ["onInstalling", false],
@@ -99,7 +118,10 @@ function run_test_1() {
     }, [
       "onInstallStarted",
       "onInstallEnded",
-    ], check_test_1);
+    ], function() {
+      do_check_true(addon.hasResource("install.rdf"));
+      check_test_1();
+    });
     install.install();
   });
 }
@@ -1017,7 +1039,133 @@ function run_test_22() {
       do_check_eq(getInstallReason(), ADDON_UPGRADE);
       do_check_eq(getStartupReason(), APP_STARTUP);
 
-      do_test_finished();
+      b1.uninstall();
+
+      run_test_23();
     });
+  });
+}
+
+
+// Tests that installing from a URL doesn't require a restart
+function run_test_23() {
+  prepare_test({ }, [
+    "onNewInstall"
+  ]);
+
+  let url = "http://localhost:4444/addons/test_bootstrap1_1.xpi";
+  AddonManager.getInstallForURL(url, function(install) {
+    ensure_test_completed();
+
+    do_check_neq(install, null);
+
+    prepare_test({ }, [
+      "onDownloadStarted",
+      "onDownloadEnded"
+    ], function() {
+      do_check_eq(install.type, "extension");
+      do_check_eq(install.version, "1.0");
+      do_check_eq(install.name, "Test Bootstrap 1");
+      do_check_eq(install.state, AddonManager.STATE_DOWNLOADED);
+      do_check_true(install.addon.hasResource("install.rdf"));
+      do_check_true(install.addon.hasResource("bootstrap.js"));
+      do_check_false(install.addon.hasResource("foo.bar"));
+      do_check_eq(install.addon.operationsRequiringRestart &
+                  AddonManager.OP_NEEDS_RESTART_INSTALL, 0);
+      do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
+  
+      let addon = install.addon;
+      prepare_test({
+        "bootstrap1@tests.mozilla.org": [
+          ["onInstalling", false],
+          "onInstalled"
+        ]
+      }, [
+        "onInstallStarted",
+        "onInstallEnded",
+      ], function() {
+        do_check_true(addon.hasResource("install.rdf"));
+        check_test_23();
+      });
+    });
+    install.install();
+  }, "application/x-xpinstall");
+}
+
+function check_test_23() {
+  AddonManager.getAllInstalls(function(installs) {
+    // There should be no active installs now since the install completed and
+    // doesn't require a restart.
+    do_check_eq(installs.length, 0);
+
+    AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+      do_check_neq(b1, null);
+      do_check_eq(b1.version, "1.0");
+      do_check_false(b1.appDisabled);
+      do_check_false(b1.userDisabled);
+      do_check_true(b1.isActive);
+      do_check_eq(getInstalledVersion(), 1);
+      do_check_eq(getActiveVersion(), 1);
+      do_check_eq(getStartupReason(), ADDON_INSTALL);
+      do_check_true(b1.hasResource("install.rdf"));
+      do_check_true(b1.hasResource("bootstrap.js"));
+      do_check_false(b1.hasResource("foo.bar"));
+      do_check_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
+
+      let dir = do_get_addon_root_uri(profileDir, "bootstrap1@tests.mozilla.org");
+      do_check_eq(b1.getResourceURI("bootstrap.js").spec, dir + "bootstrap.js");
+
+      AddonManager.getAddonsWithOperationsByTypes(null, function(list) {
+        do_check_eq(list.length, 0);
+
+        restartManager();
+        b1.uninstall();
+        restartManager();
+
+        testserver.stop(run_test_24);
+      });
+    });
+  });
+}
+
+// Tests that we recover from a broken preference
+function run_test_24() {
+  resetPrefs();
+  installAllFiles([do_get_addon("test_bootstrap1_1"), do_get_addon("test_bootstrap2_1")],
+                  function() {
+    do_check_eq(getInstalledVersion(), 1);
+    do_check_eq(getActiveVersion(), 1);
+    do_check_eq(getInstalledVersion2(), 1);
+    do_check_eq(getActiveVersion2(), 1);
+
+    resetPrefs();
+
+    restartManager();
+
+    do_check_eq(getInstalledVersion(), -1);
+    do_check_eq(getActiveVersion(), 1);
+    do_check_eq(getInstalledVersion2(), -1);
+    do_check_eq(getActiveVersion2(), 1);
+
+    shutdownManager();
+
+    do_check_eq(getInstalledVersion(), -1);
+    do_check_eq(getActiveVersion(), 0);
+    do_check_eq(getInstalledVersion2(), -1);
+    do_check_eq(getActiveVersion2(), 0);
+
+    // Break the preferece
+    let bootstrappedAddons = JSON.parse(Services.prefs.getCharPref("extensions.bootstrappedAddons"));
+    bootstrappedAddons["bootstrap1@tests.mozilla.org"].descriptor += "foo";
+    Services.prefs.setCharPref("extensions.bootstrappedAddons", JSON.stringify(bootstrappedAddons));
+
+    startupManager(false);
+
+    do_check_eq(getInstalledVersion(), -1);
+    do_check_eq(getActiveVersion(), 1);
+    do_check_eq(getInstalledVersion2(), -1);
+    do_check_eq(getActiveVersion2(), 1);
+
+    do_test_finished();
   });
 }

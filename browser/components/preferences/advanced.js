@@ -173,13 +173,13 @@ var gAdvancedPane = {
   },
 
   /**
-   * When the user toggles the layers.accelerate-none pref,
+   * When the user toggles the layers.acceleration.disabled pref,
    * sync its new value to the gfx.direct2d.disabled pref too.
    */
   updateHardwareAcceleration: function()
   {
 #ifdef XP_WIN
-    var pref = document.getElementById("layers.accelerate-none");
+    var pref = document.getElementById("layers.acceleration.disabled");
     Services.prefs.setBoolPref("gfx.direct2d.disabled", !pref.value);
 #endif
   },

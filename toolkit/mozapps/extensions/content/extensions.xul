@@ -50,8 +50,9 @@
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       xmlns:xhtml="http://www.w3.org/1999/xhtml"
-      id="addons-page" title="&addons.windowTitle;" disablechrome="true"
+      id="addons-page" title="&addons.windowTitle;"
       role="application" windowtype="Addons:Manager"
+      disablefastfind="true"
       ondragenter="gDragDrop.onDragOver(event)"
       ondragover="gDragDrop.onDragOver(event)"
       ondrop="gDragDrop.onDrop(event)">
@@ -324,7 +325,7 @@
           <hbox id="search-filter" align="center">
             <label id="search-filter-label" value="&search.filter2.label;"/>
             <radiogroup id="search-filter-radiogroup" orient="horizontal"
-                        align="center" persist="value" value="local">
+                        align="center" persist="value" value="remote">
               <radio id="search-filter-local" class="search-filter-radio"
                      label="&search.filter2.installed.label;" value="local"
                      tooltiptext="&search.filter2.installed.tooltip;"/>
@@ -551,7 +552,9 @@
                     <label id="detail-creator" class="creator"/>
                   </vbox>
                   <hbox id="detail-desc-container" align="start">
-                    <image id="detail-screenshot" hidden="true"/>
+                    <vbox pack="center"> <!-- Necessary to work around bug 394738 -->
+                      <image id="detail-screenshot" hidden="true"/>
+                    </vbox>
                     <description id="detail-desc" flex="1"/>
                   </hbox>
                   <vbox id="detail-contributions">
