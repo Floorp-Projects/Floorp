@@ -514,16 +514,14 @@ html[dir=rtl] .iq-resizable-se {
 /* Exit button
 +----------------------------------*/
 #exit-button {
-  cursor: default;
-  top: 0;
-  right: 0;
   width: 16px;
   height: 16px;
-  -moz-margin-end: 7px;
-  margin-top: 7px;
+  -moz-margin-end: 8px;
+  margin-top: 5px;
   background-image: -moz-image-rect(url(chrome://browser/skin/tabview/tabview.png), 0, 80, 16, 64);
   background-attachment: scroll;
   background-repeat: no-repeat;
+  border: none;
 }
 
 #exit-button[groups="0"] {
@@ -540,11 +538,6 @@ html[dir=rtl] .iq-resizable-se {
 
 #exit-button[groups="3"] {
   background-image: -moz-image-rect(url(chrome://browser/skin/tabview/tabview.png), 0, 64, 16, 48);
-}
-
-html[dir=rtl] #exit-button {
-  right: auto;
-  left: 0;
 }
 
 /* Search
@@ -574,10 +567,22 @@ html[dir=rtl] #exit-button {
 }
 
 #actions{
-  width: 26px;
-  height: 26px;
-  border: none;
+  top: -3px;
+  padding-top: 3px;
+  width: 29px;
   text-align: center;
+  border: 1px solid rgba(230,230,230,1);
+  background-color: rgba(248,248,248,1);
+  border-radius: 0.4em;
+  box-shadow:
+    inset rgba(255, 255, 255, 0.6) 0 0 0 2px,
+    rgba(0,0,0,0.2) 1px 1px 3px;
+}
+
+html[dir=rtl] #actions {
+  box-shadow:
+    inset rgba(255, 255, 255, 0.6) 0 0 0 2px,
+    rgba(0,0,0,0.2) -1px 1px 3px;
 }
 
 #actions #searchbutton{
@@ -586,6 +591,7 @@ html[dir=rtl] #exit-button {
   width: 20px;
   height: 20px;
   margin-top: 3px;
+  -moz-margin-end: 1px;
 }
 
 .notMainMatch{
