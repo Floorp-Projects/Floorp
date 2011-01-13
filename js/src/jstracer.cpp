@@ -6512,8 +6512,13 @@ ScopeChainCheck(JSContext* cx, TreeFragment* f)
     return true;
 }
 
-static void
-LeaveTree(TraceMonitor *tm, TracerState&, VMSideExit* lr);
+enum LEAVE_TREE_STATUS {
+  NO_DEEP_BAIL = 0,
+  DEEP_BAILED = 1
+};
+
+static LEAVE_TREE_STATUS
+LeaveTree(TraceMonitor *tm, TracerState&, VMSideExit *lr);
 
 /* Return false if the interpreter should goto error. */
 static JS_REQUIRES_STACK bool
@@ -6572,11 +6577,17 @@ ExecuteTree(JSContext* cx, TreeFragment* f, uintN& inlineCallCount,
 #endif
     debug_only(int64 t1 = PRMJ_Now();)
 
-    JS_ASSERT(*(uint64*)&tm->storage->global()[globalSlots] == 0xdeadbeefdeadbeefLL);
     JS_ASSERT_IF(lr->exitType == LOOP_EXIT, !lr->calldepth);
 
     /* Restore interpreter state. */
-    LeaveTree(tm, state, lr);
+#ifdef DEBUG
+    LEAVE_TREE_STATUS lts = 
+#endif
+        LeaveTree(tm, state, lr);
+#ifdef DEBUG
+    JS_ASSERT_IF(lts == NO_DEEP_BAIL,
+                 *(uint64*)&tm->storage->global()[globalSlots] == 0xdeadbeefdeadbeefLL);
+#endif
 
     *lrp = state.innermost;
     bool ok = !(state.builtinStatus & BUILTIN_ERROR);
@@ -6631,7 +6642,7 @@ public:
     }
 };
 
-static JS_FORCES_STACK void
+static JS_FORCES_STACK LEAVE_TREE_STATUS
 LeaveTree(TraceMonitor *tm, TracerState& state, VMSideExit* lr)
 {
     VOUCH_DOES_NOT_REQUIRE_STACK();
@@ -6776,7 +6787,7 @@ LeaveTree(TraceMonitor *tm, TracerState& state, VMSideExit* lr)
                               + innermost->sp_adj / sizeof(jsdouble) - i);
             }
         }
-        return;
+        return DEEP_BAILED;
     }
 
     while (callstack < rp) {
@@ -6956,6 +6967,7 @@ LeaveTree(TraceMonitor *tm, TracerState& state, VMSideExit* lr)
 #endif
 
     state.innermost = innermost;
+    return NO_DEEP_BAIL;
 }
 
 static jsbytecode *
