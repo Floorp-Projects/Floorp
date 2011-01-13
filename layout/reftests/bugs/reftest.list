@@ -1560,5 +1560,6 @@ HTTP(..) == 615121-1.html 615121-1-ref.html
 HTTP(..) != 615121-2.html 615121-2-notref.html
 == 617242-1.html 617242-1-ref.html
 != 618071.html 618071-notref.html
+HTTP(..) == 619511-1.html 619511-1-ref.html
 random-if(winWidget) == 621918-1.svg 621918-1-ref.svg # 1-pixel diacritic positioning discrepancy in rotated text (may depend on platform fonts)
 HTTP(..) == 621918-2.svg 621918-2-ref.svg # http(..) for filters.svg, used to mask antialiasing issues where glyphs touch
