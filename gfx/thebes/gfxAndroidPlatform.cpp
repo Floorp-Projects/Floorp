@@ -35,10 +35,15 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#ifdef MOZ_IPC
+#include "mozilla/dom/ContentChild.h"
+#include "nsXULAppAPI.h"
+#endif
 
 #include <android/log.h>
 
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <dirent.h>
 
 #include "gfxAndroidPlatform.h"
@@ -60,10 +65,15 @@
 #include "gfxFT2Fonts.h"
 #include "gfxPlatformFontList.h"
 #include "gfxFT2FontList.h"
+#include "mozilla/scache/StartupCache.h"
+#include "nsXPCOMStrings.h"
+
+using namespace mozilla;
+using namespace dom;
 
 static FT_Library gPlatformFTLibrary = NULL;
 
-#define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Gecko" , ## args)
+#define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "GeckoFonts" , ## args)
 
 gfxAndroidPlatform::gfxAndroidPlatform()
 {
@@ -144,37 +154,300 @@ gfxAndroidPlatform::GetFontList(nsIAtom *aLangGroup,
     return NS_OK;
 }
 
+class FontNameCache {
+public:
+    typedef nsAutoTArray<PRUint32, 8> IndexList;
+    PLDHashTableOps ops;
+    FontNameCache() : mWriteNeeded(PR_FALSE) {
+        ops = {
+            PL_DHashAllocTable,
+            PL_DHashFreeTable,
+            StringHash,
+            HashMatchEntry,
+            MoveEntry,
+            PL_DHashClearEntryStub,
+            PL_DHashFinalizeStub,
+            NULL};
+        if (!PL_DHashTableInit(&mMap, &ops, nsnull,
+                               sizeof(FNCMapEntry), 0)) {
+            mMap.ops = nsnull;
+            LOG("initializing the map failed");
+        }
+#ifdef MOZ_IPC
+        NS_ABORT_IF_FALSE(XRE_GetProcessType() == GeckoProcessType_Default,
+                          "StartupCacheFontNameCache should only be used in chrome procsess");
+#endif
+        mCache = mozilla::scache::StartupCache::GetSingleton();
+        Init();
+    }
 
-void
-gfxAndroidPlatform::AppendFacesFromFontFile(const char *fileName)
-{
-    FT_Face dummy;
-    if (FT_Err_Ok == FT_New_Face(GetFTLibrary(), fileName, -1, &dummy)) {
-        for (FT_Long i = 0; i < dummy->num_faces; i++) {
-            FT_Face face;
-            if (FT_Err_Ok != FT_New_Face(GetFTLibrary(), fileName, 
-                                         i, &face))
-                continue;
+    void Init()
+    {
+        if (!mMap.ops)
+            return;
+        nsCAutoString prefName("font.cache");
+        PRUint32 size;
+        char* buf;
+        if (NS_FAILED(mCache->GetBuffer(prefName.get(), &buf, &size)))
+            return;
 
-            FontEntry* fe = FontEntry::CreateFontEntryFromFace(face);
-            if (fe) {
-                LOG("font family: %s", face->family_name);
+        LOG("got: %s from the cache", nsDependentCString(buf, size).get());
+        char* entry = strtok(buf, ";");
+        while (entry) {
+            nsCString faceList, filename, indexes;
+            PRUint32 timestamp, fileSize;
+            filename.Assign(entry);
+            entry = strtok(NULL, ";");
+            if (!entry)
+                break;
+            faceList.Assign(entry);
+            entry = strtok(NULL, ";");
+            if (!entry)
+                break;
+            char* endptr;
+            timestamp = strtoul(entry, &endptr, 10);
+            if (*endptr != '\0')
+                break;
+            entry = strtok(NULL, ";");
+            if (!entry)
+                break;
+            fileSize = strtoul(entry, &endptr, 10);
+            if (*endptr != '\0')
+                break;
+            entry = strtok(NULL, ";");
+            if (!entry)
+                break;
+            indexes.Assign(entry);
+            FNCMapEntry* mapEntry =
+                static_cast<FNCMapEntry*>
+                (PL_DHashTableOperate(&mMap, filename.get(), PL_DHASH_ADD));
+            if (mapEntry) {
+                mapEntry->mFilename = filename;
+                mapEntry->mTimestamp = timestamp;
+                mapEntry->mFilesize = fileSize;
+                mapEntry->mFaces.AssignWithConversion(faceList);
+                mapEntry->mIndexes = indexes;
+            }
+            entry = strtok(NULL, ";");
+        }
+        free(buf);
+    }
 
-                NS_ConvertUTF8toUTF16 name(face->family_name);
-                ToLowerCase(name);
+    virtual void
+    GetInfoForFile(nsCString& aFileName, nsAString& aFaceList,
+                   PRUint32 *aTimestamp, PRUint32 *aFileSize,
+                   IndexList &aIndexList)
+    {
+        if (!mMap.ops)
+            return;
+        PLDHashEntryHdr *hdr = PL_DHashTableOperate(&mMap, aFileName.get(), PL_DHASH_LOOKUP);
+        if (!hdr)
+            return;
+        FNCMapEntry* entry = static_cast<FNCMapEntry*>(hdr);
+        if (entry && entry->mTimestamp && entry->mFilesize) {
+            *aTimestamp = entry->mTimestamp;
+            *aFileSize = entry->mFilesize;
+            char* indexes = const_cast<char*>(entry->mIndexes.get());
+            char* endptr = indexes + 1;
+            unsigned long index = strtoul(indexes, &endptr, 10);
+            while (indexes < endptr && indexes[0] != '\0') {
+                aIndexList.AppendElement(index);
+                indexes = endptr + 1;
+            }
+            aFaceList.Assign(entry->mFaces);
+        }
+    }
 
-                nsRefPtr<FontFamily> ff;
-                if (!mFonts.Get(name, &ff)) {
-                    ff = new FontFamily(name);
-                    mFonts.Put(name, ff);
-                }
-
-                ff->AddFontEntry(fe);
-                ff->SetHasStyles(PR_TRUE);
+    virtual void
+    CacheFileInfo(nsCString& aFileName, nsAString& aFaceList,
+                  PRUint32 aTimestamp, PRUint32 aFileSize,
+                  IndexList &aIndexList)
+    {
+        if (!mMap.ops)
+            return;
+        FNCMapEntry* entry =
+            static_cast<FNCMapEntry*>
+            (PL_DHashTableOperate(&mMap, aFileName.get(), PL_DHASH_ADD));
+        if (entry) {
+            entry->mFilename = aFileName;
+            entry->mTimestamp = aTimestamp;
+            entry->mFilesize = aFileSize;
+            entry->mFaces.Assign(aFaceList);
+            for (PRUint32 i = 0; i < aIndexList.Length(); i++) {
+                entry->mIndexes.AppendInt(aIndexList[i]);
+                entry->mIndexes.Append(",");
             }
         }
-        FT_Done_Face(dummy);
+        mWriteNeeded = PR_TRUE;
     }
+    ~FontNameCache() {
+        if (!mMap.ops)
+            return;
+
+        if (!mWriteNeeded || !mCache) {
+            PL_DHashTableFinish(&mMap);
+            return;
+        }
+
+        nsCAutoString buf;
+        PL_DHashTableEnumerate(&mMap, WriteOutMap, &buf);
+        PL_DHashTableFinish(&mMap);
+        nsCAutoString prefName("font.cache");
+        mCache->PutBuffer(prefName.get(), buf.get(), buf.Length());
+    }
+private:
+    mozilla::scache::StartupCache* mCache;
+    PLDHashTable mMap;
+    PRBool mWriteNeeded;
+
+    static PLDHashOperator WriteOutMap(PLDHashTable *aTable,
+                                       PLDHashEntryHdr *aHdr,
+                                       PRUint32 aNumber, void *aData)
+    {
+        nsCAutoString* buf = (nsCAutoString*)aData;
+        FNCMapEntry* entry = static_cast<FNCMapEntry*>(aHdr);
+
+        buf->Append(entry->mFilename);
+        buf->Append(";");
+        buf->AppendWithConversion(entry->mFaces);
+        buf->Append(";");
+        buf->AppendInt(entry->mTimestamp);
+        buf->Append(";");
+        buf->AppendInt(entry->mFilesize);
+        buf->Append(";");
+        buf->Append(entry->mIndexes);
+        buf->Append(";");
+
+        return PL_DHASH_NEXT;
+    }
+
+    typedef struct : public PLDHashEntryHdr {
+    public:
+        nsCString mFilename;
+        PRUint32 mTimestamp;
+        PRUint32 mFilesize;
+        nsString mFaces;
+        nsCString mIndexes;
+    } FNCMapEntry;
+
+
+    static PLDHashNumber StringHash(PLDHashTable *table, const void *key) {
+        PLDHashNumber h = 0;
+        for (const char *s = reinterpret_cast<const char*>(key); *s; ++s)
+            h = PR_ROTATE_LEFT32(h, 4) ^ NS_ToLower(*s);
+        return h;
+    }
+
+    static PRBool HashMatchEntry(PLDHashTable *table,
+                                 const PLDHashEntryHdr *aHdr, const void *key)
+    {
+        const FNCMapEntry* entry =
+            static_cast<const FNCMapEntry*>(aHdr);
+        return entry->mFilename.Equals((char*)key);
+    }
+
+    static void MoveEntry(PLDHashTable *table, const PLDHashEntryHdr *aFrom,
+                          PLDHashEntryHdr *aTo)
+    {
+        FNCMapEntry* to =
+            static_cast<FNCMapEntry*>(aTo);
+        const FNCMapEntry* from =
+            static_cast<const FNCMapEntry*>(aFrom);
+        to->mFilename.Assign(from->mFilename);
+        to->mTimestamp = from->mTimestamp;
+        to->mFilesize = from->mFilesize;
+        to->mFaces.Assign(from->mFaces);
+        to->mIndexes.Assign(from->mIndexes);
+    }
+
+};
+
+void
+gfxAndroidPlatform::AppendFacesFromFontFile(const char *aFileName, FontNameCache* aFontCache, InfallibleTArray<FontListEntry>* aFontList)
+{
+    nsString faceList;
+    PRUint32 timestamp = 0;
+    PRUint32 filesize = 0;
+    FontNameCache::IndexList indexList;
+    nsCString fileName(aFileName);
+    if (aFontCache)
+        aFontCache->GetInfoForFile(fileName, faceList, &timestamp, &filesize, indexList);
+    struct stat s;
+    int stat_ret = stat(aFileName, &s);
+    if (!faceList.IsEmpty() && indexList.Length() && 0 == stat_ret &&
+        s.st_mtime == timestamp && s.st_size == filesize) {
+        PRInt32 beginning = 0;
+        PRInt32 end = faceList.Find(",", PR_TRUE, beginning, -1);
+        for (PRUint32 i = 0; i < indexList.Length() && end != kNotFound; i++) {
+            nsDependentSubstring name(faceList, beginning, end);
+            ToLowerCase(name);
+            FontListEntry fle(NS_ConvertUTF16toUTF8(name), fileName,
+                              indexList[i]);
+            aFontList->AppendElement(fle);
+            beginning = end + 1;
+            end = faceList.Find(",", PR_TRUE, beginning, -1);
+        }
+        return;
+    }
+
+    faceList.AssignLiteral("");
+    timestamp = s.st_mtime;
+    filesize = s.st_size;
+    FT_Face dummy;
+    if (FT_Err_Ok == FT_New_Face(GetFTLibrary(), aFileName, -1, &dummy)) {
+        for (FT_Long i = 0; i < dummy->num_faces; i++) {
+            FT_Face face;
+            if (FT_Err_Ok != FT_New_Face(GetFTLibrary(), aFileName,
+                                         i, &face))
+                continue;
+            nsDependentCString name(face->family_name);
+            ToLowerCase(name);
+
+            nsRefPtr<FontFamily> ff;
+            faceList.AppendWithConversion(name);
+            faceList.AppendLiteral(",");
+            indexList.AppendElement(i);
+            ToLowerCase(name);
+            FontListEntry fle(name, fileName, i);
+            aFontList->AppendElement(fle);
+        }
+        FT_Done_Face(dummy);
+        if (aFontCache && 0 == stat_ret)
+            aFontCache->CacheFileInfo(fileName, faceList, timestamp, filesize, indexList);
+    }
+}
+
+void
+gfxAndroidPlatform::GetFontList(InfallibleTArray<FontListEntry>* retValue)
+{
+#ifdef MOZ_IPC
+    if (XRE_GetProcessType() != GeckoProcessType_Default) {
+        mozilla::dom::ContentChild::GetSingleton()->SendReadFontList(retValue);
+        return;
+    }
+#endif
+
+    if (mFontList.Length() > 0) {
+        *retValue = mFontList;
+        return;
+    }
+    FontNameCache fnc;
+    DIR *d = opendir("/system/fonts");
+    struct dirent *ent = NULL;
+    while(d && (ent = readdir(d)) != NULL) {
+        int namelen = strlen(ent->d_name);
+        if (namelen > 4 &&
+            strcasecmp(ent->d_name + namelen - 4, ".ttf") == 0)
+        {
+            nsCString s("/system/fonts");
+            s.Append("/");
+            s.Append(nsDependentCString(ent->d_name));
+
+            AppendFacesFromFontFile(nsPromiseFlatCString(s).get(),
+                                    &fnc, &mFontList);
+        }
+    }
+    *retValue = mFontList;
 }
 
 nsresult
@@ -189,27 +462,20 @@ gfxAndroidPlatform::UpdateFontList()
     mPrefFonts.Clear();
     mCodepointsWithNoFonts.reset();
 
-    //CancelLoader();
-
-    DIR *d = opendir("/system/fonts");
-    struct dirent *ent = NULL;
-    while(d && (ent = readdir(d)) != NULL) {
-        int namelen = strlen(ent->d_name);
-        if (namelen > 4 &&
-            strcasecmp(ent->d_name + namelen - 4, ".ttf") == 0)
-        {
-            nsCString s("/system/fonts");
-            s.Append("/");
-            s.Append(nsDependentCString(ent->d_name));
-
-            LOG("Font: %s", nsPromiseFlatCString(s).get());
-
-            AppendFacesFromFontFile(nsPromiseFlatCString(s).get());
+    InfallibleTArray<FontListEntry> fontList;
+    GetFontList(&fontList);
+    for (PRUint32 i = 0; i < fontList.Length(); i++) {
+        NS_ConvertUTF8toUTF16 name(fontList[i].familyName());
+        nsRefPtr<FontFamily> ff;
+        if (!mFonts.Get(name, &ff)) {
+            ff = new FontFamily(name);
+            mFonts.Put(name, ff);
         }
+        ff->AddFontFileAndIndex(fontList[i].filepath(), fontList[i].index());
     }
 
     // initialize the cmap loading process after font list has been initialized
-    //StartLoader(kDelayBeforeLoadingCmaps, kIntervalBetweenLoadingCmaps); 
+    //StartLoader(kDelayBeforeLoadingCmaps, kIntervalBetweenLoadingCmaps);
 
     // initialize ranges of characters for which system-wide font search should be skipped
     mCodepointsWithNoFonts.SetRange(0,0x1f);     // C0 controls
