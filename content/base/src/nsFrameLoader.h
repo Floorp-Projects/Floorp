@@ -131,7 +131,9 @@ public:
 
   nsContentView(nsIContent* aOwnerContent, ViewID aScrollId,
                 ViewConfig aConfig = ViewConfig())
-    : mOwnerContent(aOwnerContent)
+    : mViewportSize(0, 0)
+    , mContentSize(0, 0)
+    , mOwnerContent(aOwnerContent)
     , mScrollId(aScrollId)
     , mConfig(aConfig)
   {}
@@ -147,6 +149,9 @@ public:
   {
     return mConfig;
   }
+
+  nsSize mViewportSize;
+  nsSize mContentSize;
 
   nsIContent *mOwnerContent; // WEAK
 
