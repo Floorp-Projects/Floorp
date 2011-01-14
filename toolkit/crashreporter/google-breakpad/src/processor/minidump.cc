@@ -40,14 +40,15 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
-#include <unistd.h>
+
 #ifdef _WIN32
 #include <io.h>
 typedef SSIZE_T ssize_t;
-#define open _open
-#define read _read
-#define lseek _lseek
+#define PRIx64 "llx"
+#define PRIx32 "lx"
+#define snprintf _snprintf
 #else  // _WIN32
+#include <unistd.h>
 #define O_BINARY 0
 #endif  // _WIN32
 
@@ -1101,7 +1102,7 @@ void MinidumpMemoryRegion::SetDescriptor(MDMemoryDescriptor* descriptor) {
   descriptor_ = descriptor;
   valid_ = descriptor &&
            descriptor_->memory.data_size <=
-               numeric_limits<uint64_t>::max() -
+               numeric_limits<u_int64_t>::max() -
                descriptor_->start_of_memory_range;
 }
 
@@ -3688,7 +3689,11 @@ void Minidump::Print() {
   printf("  stream_directory_rva = 0x%x\n",    header_.stream_directory_rva);
   printf("  checksum             = 0x%x\n",    header_.checksum);
   struct tm timestruct;
+#ifdef _WIN32
+  gmtime_s(&timestruct, reinterpret_cast<time_t*>(&header_.time_date_stamp));
+#else
   gmtime_r(reinterpret_cast<time_t*>(&header_.time_date_stamp), &timestruct);
+#endif
   char timestr[20];
   strftime(timestr, 20, "%Y-%m-%d %H:%M:%S", &timestruct);
   printf("  time_date_stamp      = 0x%x %s\n", header_.time_date_stamp,

@@ -74,6 +74,14 @@ GfxInfo::GetDWriteEnabled(PRBool *aEnabled)
   return NS_OK;
 }
 
+/* readonly attribute DOMString DWriteVersion; */
+NS_IMETHODIMP
+GfxInfo::GetDWriteVersion(nsAString & aDwriteVersion)
+{
+  gfxWindowsPlatform::GetPlatform()->GetDLLVersion(L"dwrite.dll", aDwriteVersion);
+  return NS_OK;
+}
+
 /* XXX: GfxInfo doesn't handle multiple GPUs. We should try to do that. Bug #591057 */
 
 static nsresult GetKeyValue(const WCHAR* keyLocation, const WCHAR* keyName, nsAString& destString, int type)

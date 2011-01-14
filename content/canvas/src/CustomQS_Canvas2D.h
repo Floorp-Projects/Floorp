@@ -349,9 +349,12 @@ nsIDOMCanvasRenderingContext2D_PutImageData(JSContext *cx, uintN argc, jsval *vp
         hasDirtyRect = PR_TRUE;
     }
 
-    if (!JS_GetProperty(cx, dataObject, "data", tv.jsval_addr()) ||
-        JSVAL_IS_PRIMITIVE(tv.jsval_value()))
+    if (!JS_GetProperty(cx, dataObject, "data", tv.jsval_addr()))
         return JS_FALSE;
+
+    if (JSVAL_IS_PRIMITIVE(tv.jsval_value()))
+        return xpc_qsThrow(cx, NS_ERROR_DOM_TYPE_MISMATCH_ERR);
+
     darray = JSVAL_TO_OBJECT(tv.jsval_value());
 
     js::AutoValueRooter tsrc_tvr(cx);
