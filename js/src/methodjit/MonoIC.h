@@ -104,8 +104,6 @@ struct MICInfo {
     JSC::CodeLocationLabel entry;
     JSC::CodeLocationLabel stubEntry;
 
-    /* TODO: use a union-like structure for the below. */
-
     /*
      * - ARM and x64 always emit exactly one instruction which needs to be
      *   patched. On ARM, the label points to the patched instruction, whilst
