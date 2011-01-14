@@ -279,6 +279,7 @@ private:
                                           int nIndex,
                                           LONG newLong);
 #endif
+    void HookSystemParametersInfo();
 
     class FlashThrottleAsyncMsg : public ChildAsyncCall
     {
