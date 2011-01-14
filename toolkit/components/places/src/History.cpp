@@ -966,7 +966,7 @@ History::InsertPlace(const VisitData& aPlace)
   nsCOMPtr<mozIStorageStatement> stmt = syncStatements.GetCachedStatement(
       "INSERT INTO moz_places "
         "(url, title, rev_host, hidden, typed, guid) "
-      "VALUES (:url, :title, :rev_host, :hidden, :typed, GENERATE_GUID()) "
+      "VALUES (:url, :title, :rev_host, :hidden, :typed, :guid) "
     );
   NS_ENSURE_STATE(stmt);
   mozStorageStatementScoper scoper(stmt);
@@ -987,6 +987,13 @@ History::InsertPlace(const VisitData& aPlace)
   rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("typed"), aPlace.typed);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("hidden"), aPlace.hidden);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCAutoString guid(aPlace.guid);
+  if (aPlace.guid.IsVoid()) {
+    rv = GenerateGUID(guid);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("guid"), guid);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = stmt->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
