@@ -3471,11 +3471,7 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache)
     labels.setInlineShapeData(masm, pic.shapeGuard, inlineShapeData);
     labels.setDslotsLoad(masm, pic.fastPathRejoin, dslotsLoadLabel, vr);
     labels.setInlineValueStore(masm, pic.fastPathRejoin, inlineValueStore, vr);
-#ifdef JS_CPU_X64
-    labels.setInlineShapeJump(masm, inlineShapeData, afterInlineShapeJump);
-#else
     labels.setInlineShapeJump(masm, pic.shapeGuard, afterInlineShapeJump);
-#endif
 
     pics.append(pic);
     return true;
