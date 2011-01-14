@@ -74,6 +74,94 @@ namespace places {
 #define URI_VISIT_SAVED "uri-visit-saved"
 
 ////////////////////////////////////////////////////////////////////////////////
+//// VisitData
+
+struct VisitData {
+  VisitData()
+  : placeId(0)
+  , visitId(0)
+  , sessionId(0)
+  , hidden(true)
+  , typed(false)
+  , transitionType(PR_UINT32_MAX)
+  , visitTime(0)
+  {
+    guid.SetIsVoid(PR_TRUE);
+    title.SetIsVoid(PR_TRUE);
+  }
+
+  VisitData(nsIURI* aURI,
+            nsIURI* aReferrer = NULL)
+  : placeId(0)
+  , visitId(0)
+  , sessionId(0)
+  , hidden(true)
+  , typed(false)
+  , transitionType(PR_UINT32_MAX)
+  , visitTime(0)
+  {
+    (void)aURI->GetSpec(spec);
+    (void)GetReversedHostname(aURI, revHost);
+    if (aReferrer) {
+      (void)aReferrer->GetSpec(referrerSpec);
+    }
+    guid.SetIsVoid(PR_TRUE);
+    title.SetIsVoid(PR_TRUE);
+  }
+
+  /**
+   * Sets the transition type of the visit, as well as if it was typed and
+   * should be hidden (based on the transition type specified).
+   *
+   * @param aTransitionType
+   *        The transition type constant to set.  Must be one of the
+   *        TRANSITION_ constants on nsINavHistoryService.
+   */
+  void SetTransitionType(PRUint32 aTransitionType)
+  {
+    typed = aTransitionType == nsINavHistoryService::TRANSITION_TYPED;
+    bool redirected =
+      aTransitionType == nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY ||
+      aTransitionType == nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT;
+    hidden = GetHiddenState(redirected, aTransitionType);
+    transitionType = aTransitionType;
+  }
+
+  /**
+   * Determines if this refers to the same url as aOther, and updates aOther
+   * with missing information if so.
+   *
+   * @param aOther
+   *        The other place to check against.
+   * @return true if this is a visit for the same place as aOther, false
+   *         otherwise.
+   */
+  bool IsSamePlaceAs(VisitData& aOther)
+  {
+    if (!spec.Equals(aOther.spec)) {
+      return false;
+    }
+
+    aOther.placeId = placeId;
+    aOther.guid = guid;
+    return true;
+  }
+
+  PRInt64 placeId;
+  nsCString guid;
+  PRInt64 visitId;
+  PRInt64 sessionId;
+  nsCString spec;
+  nsString revHost;
+  bool hidden;
+  bool typed;
+  PRUint32 transitionType;
+  PRTime visitTime;
+  nsString title;
+  nsCString referrerSpec;
+};
+
+////////////////////////////////////////////////////////////////////////////////
 //// Anonymous Helpers
 
 namespace {
@@ -186,30 +274,6 @@ private:
   bool mIsVisited;
 };
 
-struct VisitData {
-  VisitData()
-  : placeId(0)
-  , visitId(0)
-  , sessionId(0)
-  , hidden(false)
-  , typed(false)
-  , transitionType(-1)
-  , visitTime(0)
-  {
-  }
-
-  PRInt64 placeId;
-  PRInt64 visitId;
-  PRInt64 sessionId;
-  nsCString spec;
-  nsString revHost;
-  bool hidden;
-  bool typed;
-  PRInt32 transitionType;
-  PRTime visitTime;
-};
-
-
 /**
  * Notifies observers about a visit.
  */
@@ -264,9 +328,46 @@ private:
 };
 
 /**
+ * Notifies a callback object about completion.
+ */
+class NotifyCompletion : public nsRunnable
+{
+public:
+  NotifyCompletion(mozIVisitInfoCallback* aCallback,
+                   const VisitData& aPlace,
+                   nsresult aResult)
+  : mCallback(aCallback)
+  , mPlace(aPlace)
+  , mResult(aResult)
+  {
+    NS_PRECONDITION(aCallback, "Must pass a non-null callback!");
+  }
+
+  NS_IMETHOD Run()
+  {
+    NS_PRECONDITION(NS_IsMainThread(),
+                    "This should be called on the main thread");
+
+    // TODO build a mozIPlaceInfo object for the visit.
+    (void)mCallback->OnComplete(mResult, nsnull);
+    return NS_OK;
+  }
+
+private:
+  /**
+   * Callers MUST hold a strong reference to this that outlives us because we
+   * may be created off of the main thread, and therefore cannot call AddRef on
+   * this object (and therefore cannot hold a strong reference to it).
+   */
+  mozIVisitInfoCallback* mCallback;
+  VisitData mPlace;
+  const nsresult mResult;
+};
+
+/**
  * Adds a visit to the database.
  */
-class InsertVisitedURI : public nsRunnable
+class InsertVisitedURIs : public nsRunnable
 {
 public:
   /**
@@ -274,28 +375,21 @@ public:
    *
    * @param aConnection
    *        The database connection to use for these operations.
-   * @param aPlace
-   *        The location to record a visit.
-   * @param [optional] aReferrer
-   *        The page that "referred" us to aPlace.
+   * @param aPlaces
+   *        The locations to record visits.
+   * @param [optional] aCallback
+   *        The callback to notify about the visit.
    */
   static nsresult Start(mozIStorageConnection* aConnection,
-                        VisitData& aPlace,
-                        nsIURI* aReferrer = nsnull)
+                        nsTArray<VisitData>& aPlaces,
+                        mozIVisitInfoCallback* aCallback = NULL)
   {
     NS_PRECONDITION(NS_IsMainThread(),
                     "This should be called on the main thread");
+    NS_PRECONDITION(aPlaces.Length() > 0, "Must pass a non-empty array!");
 
-    nsRefPtr<InsertVisitedURI> event =
-      new InsertVisitedURI(aConnection, aPlace, aReferrer);
-
-    // Speculatively get a new session id for our visit.  While it is true that
-    // we will use the session id from the referrer if the visit was "recent"
-    // enough, we cannot call this method off of the main thread, so we have to
-    // consume an id now.
-    nsNavHistory* navHistory = nsNavHistory::GetHistoryService();
-    NS_ENSURE_TRUE(navHistory, NS_ERROR_UNEXPECTED);
-    event->mPlace.sessionId = navHistory->GetNewSessionID();
+    nsRefPtr<InsertVisitedURIs> event =
+      new InsertVisitedURIs(aConnection, aPlaces, aCallback);
 
     // Get the target thread, and then start the work!
     nsCOMPtr<nsIEventTarget> target = do_GetInterface(aConnection);
@@ -311,151 +405,123 @@ public:
     NS_PRECONDITION(!NS_IsMainThread(),
                     "This should not be called on the main thread");
 
-    bool known = FetchPageInfo(mPlace);
-
-    // If we had a referrer, we want to know about its last visit to put this
-    // new visit into the same session.
-    if (!mReferrer.spec.IsEmpty()) {
-      bool recentVisit = FetchVisitInfo(mReferrer, mPlace.visitTime);
-      // At this point, we know the referrer's session id, which this new visit
-      // should also share.
-      if (recentVisit) {
-        mPlace.sessionId = mReferrer.sessionId;
-      }
-      // However, if it isn't recent enough, we don't care to log anything about
-      // the referrer and we'll start a new session.
-      else {
-        // This is sufficient to ignore our referrer.  This behavior has test
-        // coverage, so if this invariant changes, we'll know.
-        mReferrer.visitId = 0;
-      }
-    }
-
     mozStorageTransaction transaction(mDBConn, PR_FALSE,
                                       mozIStorageConnection::TRANSACTION_IMMEDIATE);
-    nsresult rv;
-    nsCOMPtr<mozIStorageStatement> stmt;
-    // If the page was in moz_places, we need to update the entry.
-    if (known) {
-      NS_ASSERTION(mPlace.placeId > 0, "must have a valid place id!");
 
-      stmt = mHistory->syncStatements.GetCachedStatement(
-          "UPDATE moz_places "
-          "SET hidden = :hidden, typed = :typed "
-          "WHERE id = :page_id "
-        );
-      NS_ENSURE_STATE(stmt);
-      rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"), mPlace.placeId);
+    VisitData* lastPlace = NULL;
+    for (nsTArray<VisitData>::size_type i = 0; i < mPlaces.Length(); i++) {
+      VisitData& place = mPlaces.ElementAt(i);
+      VisitData& referrer = mReferrers.ElementAt(i);
+
+      // We can avoid a database lookup if it's the same place as the last
+      // visit we added.
+      bool known = (lastPlace && lastPlace->IsSamePlaceAs(place)) ||
+                   mHistory->FetchPageInfo(place);
+
+      FetchReferrerInfo(referrer, place);
+
+      nsresult rv = DoDatabaseInserts(known, place, referrer);
+      if (mCallback) {
+        nsCOMPtr<nsIRunnable> event =
+          new NotifyCompletion(mCallback, place, rv);
+        nsresult rv2 = NS_DispatchToMainThread(event);
+        NS_ENSURE_SUCCESS(rv2, rv2);
+      }
       NS_ENSURE_SUCCESS(rv, rv);
+
+      nsCOMPtr<nsIRunnable> event = new NotifyVisitObservers(place, referrer);
+      rv = NS_DispatchToMainThread(event);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      lastPlace = &mPlaces.ElementAt(i);
     }
-    // Otherwise, the page was not in moz_places, so now we have to add it.
-    else {
-      NS_ASSERTION(mPlace.placeId == 0, "should not have a valid place id!");
 
-      stmt = mHistory->syncStatements.GetCachedStatement(
-          "INSERT INTO moz_places "
-            "(url, rev_host, hidden, typed, guid) "
-          "VALUES (:page_url, :rev_host, :hidden, :typed, GENERATE_GUID()) "
-        );
-      NS_ENSURE_STATE(stmt);
-
-      rv = stmt->BindStringByName(NS_LITERAL_CSTRING("rev_host"),
-                                  mPlace.revHost);
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), mPlace.spec);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-    rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("typed"), mPlace.typed);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("hidden"), mPlace.hidden);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    mozStorageStatementScoper scoper(stmt);
-    rv = stmt->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = AddVisit(mPlace, mReferrer);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = UpdateFrecency(mPlace);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = transaction.Commit();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // Finally, dispatch an event to the main thread to notify observers.
-    nsCOMPtr<nsIRunnable> event = new NotifyVisitObservers(mPlace, mReferrer);
-    rv = NS_DispatchToMainThread(event);
+    nsresult rv = transaction.Commit();
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
   }
 private:
-  InsertVisitedURI(mozIStorageConnection* aConnection,
-                   VisitData& aPlace,
-                   nsIURI* aReferrer)
+  InsertVisitedURIs(mozIStorageConnection* aConnection,
+                    nsTArray<VisitData>& aPlaces,
+                    mozIVisitInfoCallback* aCallback)
   : mDBConn(aConnection)
-  , mPlace(aPlace)
+  , mCallback(aCallback)
   , mHistory(History::GetService())
   {
-    if (aReferrer) {
-      (void)aReferrer->GetSpec(mReferrer.spec);
+    NS_PRECONDITION(NS_IsMainThread(),
+                    "This should be called on the main thread");
+
+    (void)mPlaces.SwapElements(aPlaces);
+    (void)mReferrers.SetLength(mPlaces.Length());
+
+    nsNavHistory* navHistory = nsNavHistory::GetHistoryService();
+    NS_ABORT_IF_FALSE(navHistory, "Could not get nsNavHistory?!");
+
+    for (nsTArray<VisitData>::size_type i = 0; i < mPlaces.Length(); i++) {
+      mReferrers[i].spec = mPlaces[i].referrerSpec;
+
+      // Speculatively get a new session id for our visit if the current session
+      // id is non-valid.  While it is true that we will use the session id from
+      // the referrer if the visit was "recent" enough, we cannot call this
+      // method off of the main thread, so we have to consume an id now.
+      if (mPlaces[i].sessionId <= 0) {
+        mPlaces[i].sessionId = navHistory->GetNewSessionID();
+      }
+    }
+
+    // We AddRef on the main thread, and release it when we are destroyed.
+    NS_IF_ADDREF(mCallback);
+  }
+
+  virtual ~InsertVisitedURIs()
+  {
+    if (mCallback) {
+      nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+      (void)NS_ProxyRelease(mainThread, mCallback, PR_TRUE);
     }
   }
 
   /**
-   * Loads information about the page into _place from moz_places.
+   * Inserts or updates the entry in moz_places for this visit, adds the visit,
+   * and updates the frecency of the place.
    *
-   * @param _place
-   *        The VisitData for the place we need to know information about.
-   * @return true if the page was recorded in moz_places, false otherwise.
+   * @param aKnown
+   *        True if we already have an entry for this place in moz_places, false
+   *        otherwise.
+   * @param aPlace
+   *        The place we are adding a visit for.
+   * @param aReferrer
+   *        The referrer for aPlace.
    */
-  bool FetchPageInfo(VisitData& _place)
+  nsresult DoDatabaseInserts(bool aKnown,
+                             VisitData& aPlace,
+                             VisitData& aReferrer)
   {
-    NS_PRECONDITION(!_place.spec.IsEmpty(), "must have a non-empty spec!");
+    NS_PRECONDITION(!NS_IsMainThread(),
+                    "This should not be called on the main thread");
 
-    nsCOMPtr<mozIStorageStatement> stmt =
-      mHistory->syncStatements.GetCachedStatement(
-        "SELECT id, typed, hidden "
-        "FROM moz_places "
-        "WHERE url = :page_url "
-      );
-    NS_ENSURE_TRUE(stmt, false);
-    mozStorageStatementScoper scoper(stmt);
-
-    nsresult rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"),
-                                  _place.spec);
-    NS_ENSURE_SUCCESS(rv, false);
-
-    PRBool hasResult;
-    rv = stmt->ExecuteStep(&hasResult);
-    NS_ENSURE_SUCCESS(rv, false);
-    if (!hasResult) {
-      return false;
+    // If the page was in moz_places, we need to update the entry.
+    nsresult rv;
+    if (aKnown) {
+      rv = mHistory->UpdatePlace(aPlace);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    // Otherwise, the page was not in moz_places, so now we have to add it.
+    else {
+      rv = mHistory->InsertPlace(aPlace);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    rv = stmt->GetInt64(0, &_place.placeId);
-    NS_ENSURE_SUCCESS(rv, false);
+    rv = AddVisit(aPlace, aReferrer);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    if (!_place.typed) {
-      // If this transition wasn't typed, others might have been. If database
-      // has location as typed, reflect that in our data structure.
-      PRInt32 typed;
-      rv = stmt->GetInt32(1, &typed);
-      _place.typed = !!typed;
-      NS_ENSURE_SUCCESS(rv, true);
-    }
-    if (_place.hidden) {
-      // If this transition was hidden, it is possible that others were not.
-      // Any one visible transition makes this location visible. If database
-      // has location as visible, reflect that in our data structure.
-      PRInt32 hidden;
-      rv = stmt->GetInt32(2, &hidden);
-      _place.hidden = !!hidden;
-      NS_ENSURE_SUCCESS(rv, true);
-    }
+    // TODO (bug 623969) we shouldn't update this after each visit, but
+    // rather only for each unique place to save disk I/O.
+    rv = UpdateFrecency(aPlace);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    return true;
+    return NS_OK;
   }
 
   /**
@@ -513,6 +579,41 @@ private:
   }
 
   /**
+   * Fetches information about a referrer and sets the session id for aPlace if
+   * it was a recent visit or not.
+   *
+   * @param aReferrer
+   *        The VisitData for the referrer.  This will be populated with
+   *        FetchVisitInfo.
+   * @param aPlace
+   *        The VisitData for the visit we will eventually add.
+   *
+   */
+  void FetchReferrerInfo(VisitData& aReferrer,
+                         VisitData& aPlace)
+  {
+    if (aReferrer.spec.IsEmpty()) {
+      return;
+    }
+
+    // If we had a referrer, we want to know about its last visit to put this
+    // new visit into the same session.
+    bool recentVisit = FetchVisitInfo(aReferrer, aPlace.visitTime);
+    // At this point, we know the referrer's session id, which this new visit
+    // should also share.
+    if (recentVisit) {
+      aPlace.sessionId = aReferrer.sessionId;
+    }
+    // However, if it isn't recent enough, we don't care to log anything about
+    // the referrer and we'll start a new session.
+    else {
+      // This is sufficient to ignore our referrer.  This behavior has test
+      // coverage, so if this invariant changes, we'll know.
+      aReferrer.visitId = 0;
+    }
+  }
+
+  /**
    * Adds a visit for _place and updates it with the right visit id.
    *
    * @param _place
@@ -532,7 +633,7 @@ private:
         "VALUES (:from_visit, :page_id, :visit_date, :visit_type, :session) "
       );
       NS_ENSURE_STATE(stmt);
-      rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"), mPlace.placeId);
+      rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"), _place.placeId);
       NS_ENSURE_SUCCESS(rv, rv);
     }
     else {
@@ -594,7 +695,7 @@ private:
           "WHERE id = :page_id"
         );
         NS_ENSURE_STATE(stmt);
-        rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"), mPlace.placeId);
+        rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"), aPlace.placeId);
         NS_ENSURE_SUCCESS(rv, rv);
       }
       else {
@@ -623,7 +724,7 @@ private:
           "WHERE id = :page_id AND frecency <> 0"
         );
         NS_ENSURE_STATE(stmt);
-        rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"), mPlace.placeId);
+        rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"), aPlace.placeId);
         NS_ENSURE_SUCCESS(rv, rv);
       }
       else {
@@ -647,8 +748,15 @@ private:
 
   mozIStorageConnection* mDBConn;
 
-  VisitData mPlace;
-  VisitData mReferrer;
+  nsTArray<VisitData> mPlaces;
+  nsTArray<VisitData> mReferrers;
+
+  /**
+   * We own a strong reference to this, but in an indirect way.  We call AddRef
+   * in our constructor, which happens on the main thread, and proxy the relase
+   * of the object to the main thread in our destructor.
+   */
+  mozIVisitInfoCallback* mCallback;
 
   /**
    * Strong reference to the History object because we do not want it to
@@ -744,48 +852,26 @@ public:
                     "This should not be called on the main thread");
 
     // First, see if the page exists in the database (we'll need its id later).
-    nsCOMPtr<mozIStorageStatement> stmt =
-      mHistory->syncStatements.GetCachedStatement(
-        "SELECT id, title "
-        "FROM moz_places "
-        "WHERE url = :page_url "
-      );
-    NS_ENSURE_STATE(stmt);
-
-    PRInt64 placeId = 0;
-    nsAutoString title;
-    {
-      mozStorageStatementScoper scoper(stmt);
-      nsresult rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"),
-                                    mSpec);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      PRBool hasResult;
-      rv = stmt->ExecuteStep(&hasResult);
-      NS_ENSURE_SUCCESS(rv, rv);
-      if (!hasResult) {
-        // We have no record of this page, so there is no need to do any further
-        // work.
-        return NS_OK;
-      }
-
-      rv = stmt->GetInt64(0, &placeId);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = stmt->GetString(1, title);
-      NS_ENSURE_SUCCESS(rv, rv);
+    bool exists = mHistory->FetchPageInfo(mPlace);
+    if (!exists) {
+      // We have no record of this page, so there is no need to do any further
+      // work.
+      return NS_OK;
     }
 
-    NS_ASSERTION(placeId > 0, "We somehow have an invalid place id here!");
+    NS_ASSERTION(mPlace.placeId > 0,
+                 "We somehow have an invalid place id here!");
 
     // Also, if we have the same title, there is no reason to do another write
     // or notify our observers, so bail early.
-    if (mTitle.Equals(title) || (mTitle.IsVoid() && title.IsVoid())) {
+    if (mTitle.Equals(mPlace.title) ||
+        (mTitle.IsVoid() && mPlace.title.IsVoid())) {
       return NS_OK;
     }
 
     // Now we can update our database record.
-    stmt = mHistory->syncStatements.GetCachedStatement(
+    nsCOMPtr<mozIStorageStatement> stmt =
+      mHistory->syncStatements.GetCachedStatement(
         "UPDATE moz_places "
         "SET title = :page_title "
         "WHERE id = :page_id "
@@ -795,7 +881,7 @@ public:
     {
       mozStorageStatementScoper scoper(stmt);
       nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"),
-                                          placeId);
+                                          mPlace.placeId);
       NS_ENSURE_SUCCESS(rv, rv);
       if (mTitle.IsVoid()) {
         rv = stmt->BindNullByName(NS_LITERAL_CSTRING("page_title"));
@@ -809,7 +895,7 @@ public:
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    nsCOMPtr<nsIRunnable> event = new NotifyTitleObservers(mSpec, mTitle);
+    nsCOMPtr<nsIRunnable> event = new NotifyTitleObservers(mPlace.spec, mTitle);
     nsresult rv = NS_DispatchToMainThread(event);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -819,13 +905,13 @@ public:
 private:
   SetPageTitle(const nsCString& aSpec,
                const nsString& aTitle)
-  : mSpec(aSpec)
-  , mTitle(aTitle)
+  : mTitle(aTitle)
   , mHistory(History::GetService())
   {
+    mPlace.spec = aSpec;
   }
 
-  const nsCString mSpec;
+  VisitData mPlace;
   const nsString mTitle;
 
   /**
@@ -834,6 +920,52 @@ private:
    */
   nsRefPtr<History> mHistory;
 };
+
+/**
+ * Stores an embed visit, and notifies observers.
+ *
+ * @param aPlace
+ *        The VisitData of the visit to store as an embed visit.
+ * @param [optional] aCallback
+ *        The mozIVisitInfoCallback to notify, if provided.
+ */
+void
+StoreAndNotifyEmbedVisit(VisitData& aPlace,
+                         mozIVisitInfoCallback* aCallback = NULL)
+{
+  NS_PRECONDITION(aPlace.transitionType == nsINavHistoryService::TRANSITION_EMBED,
+                  "Must only pass TRANSITION_EMBED visits to this!");
+  NS_PRECONDITION(NS_IsMainThread(), "Must be called on the main thread!");
+
+  nsCOMPtr<nsIURI> uri;
+  (void)NS_NewURI(getter_AddRefs(uri), aPlace.spec);
+
+  nsNavHistory* navHistory = nsNavHistory::GetHistoryService();
+  if (!navHistory || !uri) {
+    return;
+  }
+
+  navHistory->registerEmbedVisit(uri, aPlace.visitTime);
+
+  if (aCallback) {
+    // NotifyCompletion does not hold a strong reference to the callback, so we
+    // have to manage it by AddRefing now and then releasing it after the event
+    // has run.
+    NS_ADDREF(aCallback);
+    nsCOMPtr<nsIRunnable> event =
+      new NotifyCompletion(aCallback, aPlace, NS_OK);
+    (void)NS_DispatchToMainThread(event);
+
+    // Also dispatch an event to release our reference to the callback after
+    // NotifyCompletion has run.
+    nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+    (void)NS_ProxyRelease(mainThread, aCallback, PR_TRUE);
+  }
+
+  VisitData noReferrer;
+  nsCOMPtr<nsIRunnable> event = new NotifyVisitObservers(aPlace, noReferrer);
+  (void)NS_DispatchToMainThread(event);
+}
 
 } // anonymous namespace
 
@@ -934,6 +1066,130 @@ History::GetIsVisitedStatement()
   ),  getter_AddRefs(mIsVisitedStatement));
   NS_ENSURE_SUCCESS(rv, nsnull);
   return mIsVisitedStatement;
+}
+
+nsresult
+History::InsertPlace(const VisitData& aPlace)
+{
+  NS_PRECONDITION(aPlace.placeId == 0, "should not have a valid place id!");
+  NS_PRECONDITION(!NS_IsMainThread(), "must be called off of the main thread!");
+
+  nsCOMPtr<mozIStorageStatement> stmt = syncStatements.GetCachedStatement(
+      "INSERT INTO moz_places "
+        "(url, title, rev_host, hidden, typed, guid) "
+      "VALUES (:url, :title, :rev_host, :hidden, :typed, :guid) "
+    );
+  NS_ENSURE_STATE(stmt);
+  mozStorageStatementScoper scoper(stmt);
+
+  nsresult rv = stmt->BindStringByName(NS_LITERAL_CSTRING("rev_host"),
+                                       aPlace.revHost);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("url"), aPlace.spec);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (aPlace.title.IsVoid()) {
+    rv = stmt->BindNullByName(NS_LITERAL_CSTRING("title"));
+  }
+  else {
+    rv = stmt->BindStringByName(NS_LITERAL_CSTRING("title"),
+                                StringHead(aPlace.title, TITLE_LENGTH_MAX));
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("typed"), aPlace.typed);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("hidden"), aPlace.hidden);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCAutoString guid(aPlace.guid);
+  if (aPlace.guid.IsVoid()) {
+    rv = GenerateGUID(guid);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("guid"), guid);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult
+History::UpdatePlace(const VisitData& aPlace)
+{
+  NS_PRECONDITION(aPlace.placeId > 0, "must have a valid place id!");
+  NS_PRECONDITION(!NS_IsMainThread(), "must be called off of the main thread!");
+
+  nsCOMPtr<mozIStorageStatement> stmt = syncStatements.GetCachedStatement(
+      "UPDATE moz_places "
+      "SET hidden = :hidden, typed = :typed "
+      "WHERE id = :page_id "
+    );
+  NS_ENSURE_STATE(stmt);
+  mozStorageStatementScoper scoper(stmt);
+
+  nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"),
+                                      aPlace.placeId);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("typed"), aPlace.typed);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("hidden"), aPlace.hidden);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+bool
+History::FetchPageInfo(VisitData& _place)
+{
+  NS_PRECONDITION(!_place.spec.IsEmpty(), "must have a non-empty spec!");
+  NS_PRECONDITION(!NS_IsMainThread(), "must be called off of the main thread!");
+
+  nsCOMPtr<mozIStorageStatement> stmt = syncStatements.GetCachedStatement(
+      "SELECT id, typed, hidden, title "
+      "FROM moz_places "
+      "WHERE url = :page_url "
+    );
+  NS_ENSURE_TRUE(stmt, false);
+  mozStorageStatementScoper scoper(stmt);
+
+  nsresult rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"),
+                                _place.spec);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  PRBool hasResult;
+  rv = stmt->ExecuteStep(&hasResult);
+  NS_ENSURE_SUCCESS(rv, false);
+  if (!hasResult) {
+    return false;
+  }
+
+  rv = stmt->GetInt64(0, &_place.placeId);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  if (!_place.typed) {
+    // If this transition wasn't typed, others might have been. If database
+    // has location as typed, reflect that in our data structure.
+    PRInt32 typed;
+    rv = stmt->GetInt32(1, &typed);
+    _place.typed = !!typed;
+    NS_ENSURE_SUCCESS(rv, true);
+  }
+
+  if (_place.hidden) {
+    // If this transition was hidden, it is possible that others were not.
+    // Any one visible transition makes this location visible. If database
+    // has location as visible, reflect that in our data structure.
+    PRInt32 hidden;
+    rv = stmt->GetInt32(2, &hidden);
+    _place.hidden = !!hidden;
+    NS_ENSURE_SUCCESS(rv, true);
+  }
+
+  rv = stmt->GetString(3, _place.title);
+  NS_ENSURE_SUCCESS(rv, true);
+
+  return true;
 }
 
 /* static */
@@ -1048,15 +1304,17 @@ History::VisitURI(nsIURI* aURI,
     }
   }
 
-  VisitData place;
-  rv = aURI->GetSpec(place.spec);
-  NS_ENSURE_SUCCESS(rv, rv);
-  (void)GetReversedHostname(aURI, place.revHost);
+  nsTArray<VisitData> placeArray(1);
+  NS_ENSURE_TRUE(placeArray.AppendElement(VisitData(aURI, aLastVisitedURI)),
+                 NS_ERROR_OUT_OF_MEMORY);
+  VisitData& place = placeArray.ElementAt(0);
+  NS_ENSURE_FALSE(place.spec.IsEmpty(), NS_ERROR_INVALID_ARG);
+
+  place.visitTime = PR_Now();
 
   // Assigns a type to the edge in the visit linked list. Each type will be
   // considered differently when weighting the frecency of a location.
   PRUint32 recentFlags = navHistory->GetRecentFlags(aURI);
-  bool redirected = false;
   bool isFollowedLink = recentFlags & nsNavHistory::RECENT_ACTIVATED;
 
   // Embed visits should never be added to the database, and the same is valid
@@ -1067,53 +1325,39 @@ History::VisitURI(nsIURI* aURI,
 
   if (!(aFlags & IHistory::TOP_LEVEL) && !isFollowedLink) {
     // A frame redirected to a new site without user interaction.
-    place.transitionType = nsINavHistoryService::TRANSITION_EMBED;
+    place.SetTransitionType(nsINavHistoryService::TRANSITION_EMBED);
   }
   else if (aFlags & IHistory::REDIRECT_TEMPORARY) {
-    place.transitionType = nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY;
-    redirected = true;
+    place.SetTransitionType(nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY);
   }
   else if (aFlags & IHistory::REDIRECT_PERMANENT) {
-    place.transitionType = nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT;
-    redirected = true;
+    place.SetTransitionType(nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT);
   }
   else if (recentFlags & nsNavHistory::RECENT_TYPED) {
-    place.transitionType = nsINavHistoryService::TRANSITION_TYPED;
+    place.SetTransitionType(nsINavHistoryService::TRANSITION_TYPED);
   }
   else if (recentFlags & nsNavHistory::RECENT_BOOKMARKED) {
-    place.transitionType = nsINavHistoryService::TRANSITION_BOOKMARK;
+    place.SetTransitionType(nsINavHistoryService::TRANSITION_BOOKMARK);
   }
   else if (!(aFlags & IHistory::TOP_LEVEL) && isFollowedLink) {
     // User activated a link in a frame.
-    place.transitionType = nsINavHistoryService::TRANSITION_FRAMED_LINK;
+    place.SetTransitionType(nsINavHistoryService::TRANSITION_FRAMED_LINK);
   }
   else {
     // User was redirected or link was clicked in the main window.
-    place.transitionType = nsINavHistoryService::TRANSITION_LINK;
+    place.SetTransitionType(nsINavHistoryService::TRANSITION_LINK);
   }
-
-  place.typed = place.transitionType == nsINavHistoryService::TRANSITION_TYPED;
-  place.hidden =
-    place.transitionType == nsINavHistoryService::TRANSITION_FRAMED_LINK ||
-    place.transitionType == nsINavHistoryService::TRANSITION_EMBED ||
-    redirected;
-  place.visitTime = PR_Now();
 
   // EMBED visits are session-persistent and should not go through the database.
   // They exist only to keep track of isVisited status during the session.
   if (place.transitionType == nsINavHistoryService::TRANSITION_EMBED) {
-    navHistory->registerEmbedVisit(aURI, place.visitTime);
-    // Finally, enqueue an event to notify observers.
-    VisitData noReferrer;
-    nsCOMPtr<nsIRunnable> event = new NotifyVisitObservers(place, noReferrer);
-    rv = NS_DispatchToMainThread(event);
-    NS_ENSURE_SUCCESS(rv, rv);
+    StoreAndNotifyEmbedVisit(place);
   }
   else {
     mozIStorageConnection* dbConn = GetDBConn();
     NS_ENSURE_STATE(dbConn);
 
-    rv = InsertVisitedURI::Start(dbConn, place, aLastVisitedURI);
+    rv = InsertVisitedURIs::Start(dbConn, placeArray);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1287,6 +1531,19 @@ History::SetURITitle(nsIURI* aURI, const nsAString& aTitle)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+//// mozIAsyncHistory
+
+NS_IMETHODIMP
+History::UpdatePlaces(const jsval& aPlaceInfos,
+                      mozIVisitInfoCallback* aCallback,
+                      JSContext* aCtx)
+{
+  NS_ENSURE_TRUE(NS_IsMainThread(), NS_ERROR_UNEXPECTED);
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 //// nsIObserver
 
 NS_IMETHODIMP
@@ -1308,9 +1565,10 @@ History::Observe(nsISupports* aSubject, const char* aTopic,
 ////////////////////////////////////////////////////////////////////////////////
 //// nsISupports
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(
+NS_IMPL_THREADSAFE_ISUPPORTS3(
   History
 , IHistory
+, mozIAsyncHistory
 , nsIObserver
 )
 

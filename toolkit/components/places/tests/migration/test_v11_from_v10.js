@@ -305,7 +305,7 @@ function test_final_state()
 ////////////////////////////////////////////////////////////////////////////////
 //// Test Runner
 
-let tests = [
+let gTests = [
   test_initial_state,
   test_moz_bookmarks_guid_exists,
   test_bookmark_guids_non_null,
@@ -317,34 +317,9 @@ let tests = [
   test_place_guid_annotation_removed,
   test_final_state,
 ];
-let index = 0;
-
-function run_next_test()
-{
-  function _run_next_test() {
-    if (index < tests.length) {
-      do_test_pending();
-      print("TEST-INFO | " + _TEST_FILE + " | Starting " + tests[index].name);
-
-      // Exceptions do not kill asynchronous tests, so they'll time out.
-      try {
-        tests[index++]();
-      }
-      catch (e) {
-        do_throw(e);
-      }
-    }
-
-    do_test_finished();
-  }
-
-  // For sane stacks during failures, we execute this code soon, but not now.
-  do_execute_soon(_run_next_test);
-}
 
 function run_test()
 {
   setPlacesDatabase("places_v10.sqlite");
-  do_test_pending();
   run_next_test();
 }
