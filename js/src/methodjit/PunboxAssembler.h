@@ -131,6 +131,15 @@ class PunboxAssembler : public JSC::MacroAssembler
         move(Imm64(val.asRawBits() & JSVAL_PAYLOAD_MASK), payload);
     }
 
+    /*
+     * Load a (64b) js::Value from 'address' into 'type' and 'payload', and
+     * return a label which can be used by
+     * Repatcher::patchAddressOffsetForValue to patch the address offset.
+     */
+    Label loadValueWithAddressOffsetPatch(Address address, RegisterID type, RegisterID payload) {
+        return loadValueAsComponents(address, type, payload);
+    }
+
     template <typename T>
     void storeValueFromComponents(RegisterID type, RegisterID payload, T address) {
         move(type, Registers::ValueReg);
@@ -143,6 +152,28 @@ class PunboxAssembler : public JSC::MacroAssembler
         move(type, Registers::ValueReg);
         orPtr(payload, Registers::ValueReg);
         storeValue(Registers::ValueReg, address);
+    }
+
+    /*
+     * Store a (64b) js::Value from 'type' and 'payload' into 'address', and
+     * return a label which can be used by
+     * Repatcher::patchAddressOffsetForValueStore to patch the address offset.
+     */
+    Label storeValueWithAddressOffsetPatch(RegisterID type, RegisterID payload, Address address) {
+        storeValueFromComponents(type, payload, address);
+        return label();
+    }
+
+    /* Overload for constant type. */
+    Label storeValueWithAddressOffsetPatch(ImmTag type, RegisterID payload, Address address) {
+        storeValueFromComponents(type, payload, address);
+        return label();
+    }
+
+    /* Overload for constant type and constant data. */
+    Label storeValueWithAddressOffsetPatch(const Value &v, Address address) {
+        storeValue(v, address);
+        return label();
     }
 
     template <typename T>

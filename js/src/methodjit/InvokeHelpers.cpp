@@ -57,6 +57,7 @@
 #include "methodjit/MonoIC.h"
 #include "jsanalyze.h"
 #include "methodjit/BaseCompiler.h"
+#include "methodjit/ICRepatcher.h"
 
 #include "jsinterpinlines.h"
 #include "jspropertycacheinlines.h"
@@ -73,6 +74,8 @@
 using namespace js;
 using namespace js::mjit;
 using namespace JSC;
+
+using ic::Repatcher;
 
 static jsbytecode *
 FindExceptionHandler(JSContext *cx)
@@ -901,7 +904,7 @@ FinishExcessFrames(VMFrame &f, JSStackFrame *entryFrame)
     return true;
 }
 
-#if JS_MONOIC
+#if defined JS_MONOIC
 static void
 UpdateTraceHintSingle(Repatcher &repatcher, JSC::CodeLocationJump jump, JSC::CodeLocationLabel target)
 {
