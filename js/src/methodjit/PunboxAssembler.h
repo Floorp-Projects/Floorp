@@ -159,25 +159,30 @@ class PunboxAssembler : public JSC::MacroAssembler
      * return a label which can be used by
      * Repatcher::patchAddressOffsetForValueStore to patch the address offset.
      */
-    Label storeValueWithAddressOffsetPatch(RegisterID type, RegisterID payload, Address address) {
-        storeValueFromComponents(type, payload, address);
-        return label();
+    DataLabel32 storeValueWithAddressOffsetPatch(RegisterID type, RegisterID payload, Address address) {
+        move(type, Registers::ValueReg);
+        orPtr(payload, Registers::ValueReg);
+        return storePtrWithAddressOffsetPatch(Registers::ValueReg, address);
     }
 
     /* Overload for constant type. */
-    Label storeValueWithAddressOffsetPatch(ImmTag type, RegisterID payload, Address address) {
-        storeValueFromComponents(type, payload, address);
-        return label();
+    DataLabel32 storeValueWithAddressOffsetPatch(ImmTag type, RegisterID payload, Address address) {
+        move(type, Registers::ValueReg);
+        orPtr(payload, Registers::ValueReg);
+        return storePtrWithAddressOffsetPatch(Registers::ValueReg, address);
     }
 
     /* Overload for constant type and constant data. */
-    Label storeValueWithAddressOffsetPatch(const Value &v, Address address) {
-        storeValue(v, address);
-        return label();
+    DataLabel32 storeValueWithAddressOffsetPatch(const Value &v, Address address) {
+        jsval_layout jv;
+        jv.asBits = JSVAL_BITS(Jsvalify(v));
+
+        move(ImmPtr(reinterpret_cast<void*>(jv.asBits)), Registers::ValueReg);
+        return storePtrWithAddressOffsetPatch(Registers::ValueReg, valueOf(address));
     }
 
     /* Overloaded for store with value remat info. */
-    Label storeValueWithAddressOffsetPatch(const ValueRemat &vr, Address address) {
+    DataLabel32 storeValueWithAddressOffsetPatch(const ValueRemat &vr, Address address) {
         if (vr.isConstant()) {
             return storeValueWithAddressOffsetPatch(vr.value(), address);
         } else if (vr.isTypeKnown()) {
