@@ -46,6 +46,7 @@
 #include "assembler/assembler/MacroAssembler.h"
 #include "assembler/assembler/CodeLocation.h"
 #include "methodjit/MethodJIT.h"
+#include "methodjit/ICRepatcher.h"
 #include "BaseAssembler.h"
 #include "RematInfo.h"
 #include "BaseCompiler.h"

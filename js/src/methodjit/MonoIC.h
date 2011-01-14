@@ -91,18 +91,6 @@ class FrameSize
 namespace ic {
 
 struct MICInfo {
-#ifdef JS_CPU_X86
-    static const uint32 GET_DATA_OFFSET = 6;
-    static const uint32 GET_TYPE_OFFSET = 12;
-
-    static const uint32 SET_TYPE_OFFSET = 6;
-    static const uint32 SET_DATA_CONST_TYPE_OFFSET = 16;
-    static const uint32 SET_DATA_TYPE_OFFSET = 12;
-#elif JS_CPU_X64 || JS_CPU_ARM
-    /* X64: No constants used, thanks to patchValueOffset. */
-    /* ARM: No constants used as mic.load always points to an LDR that loads the offset. */
-#endif
-
     enum Kind
 #ifdef _MSC_VER
     : uint8_t
@@ -118,13 +106,18 @@ struct MICInfo {
 
     /* TODO: use a union-like structure for the below. */
 
-    /* Used by GET/SET. */
+    /*
+     * - ARM and x64 always emit exactly one instruction which needs to be
+     *   patched. On ARM, the label points to the patched instruction, whilst
+     *   on x64 it points to the instruction after it.
+     * - For x86, the label "load" points to the start of the load/store
+     *   sequence, which may consist of one or two "mov" instructions. Because
+     *   of this, x86 is the only platform which requires non-trivial patching
+     *   code.
+     */
     JSC::CodeLocationLabel load;
     JSC::CodeLocationDataLabel32 shape;
     JSC::CodeLocationCall stubCall;
-#if defined JS_PUNBOX64
-    uint32 patchValueOffset;
-#endif
 
     /* Used by all MICs. */
     Kind kind : 3;

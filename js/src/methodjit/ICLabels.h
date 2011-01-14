@@ -97,15 +97,15 @@ struct GetPropLabels {
         JS_ASSERT(offset == stubShapeJump);
     }
 
-#ifdef JS_NUNBOX32
+#if defined JS_NUNBOX32
     void setTypeLoad(int offset) {
-# ifdef JS_HAS_IC_LABELS
+# if defined JS_HAS_IC_LABELS
         inlineTypeLoad = offset;
 # endif
         JS_ASSERT(offset == inlineTypeLoad);
     }
     void setDataLoad(int offset) {
-# ifdef JS_HAS_IC_LABELS
+# if defined JS_HAS_IC_LABELS
         inlineDataLoad = offset;
 # endif
         JS_ASSERT(offset == inlineDataLoad);
@@ -116,9 +116,9 @@ struct GetPropLabels {
     JSC::CodeLocationDataLabel32 getDataLoad(JSC::CodeLocationLabel start) {
         return start.dataLabel32AtOffset(inlineDataLoad);
     }
-#elif JS_PUNBOX64
+#elif defined JS_PUNBOX64
     void setValueLoad(int offset) {
-# ifdef JS_HAS_IC_LABELS
+# if defined JS_HAS_IC_LABELS
         inlineValueLoad = offset;
 # endif
         JS_ASSERT(offset == inlineValueLoad);

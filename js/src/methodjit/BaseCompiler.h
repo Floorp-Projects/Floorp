@@ -182,16 +182,6 @@ class LinkerHelper : public JSC::LinkBuffer
     }
 };
 
-class Repatcher : public JSC::RepatchBuffer
-{
-  public:
-    Repatcher(JITScript *jit) : JSC::RepatchBuffer(jit->code)
-    { }
-
-    Repatcher(const JSC::JITCode &code) : JSC::RepatchBuffer(code)
-    { }
-};
-
 /*
  * On ARM, we periodically flush a constant pool into the instruction stream
  * where constants are found using PC-relative addressing. This is necessary

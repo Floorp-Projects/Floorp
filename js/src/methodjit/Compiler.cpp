@@ -495,9 +495,6 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
                 scriptMICs[i].u.name.typeConst = mics[i].u.name.typeConst;
                 scriptMICs[i].u.name.dataConst = mics[i].u.name.dataConst;
                 scriptMICs[i].u.name.usePropertyCache = mics[i].u.name.usePropertyCache;
-#if defined JS_PUNBOX64
-                scriptMICs[i].patchValueOffset = mics[i].patchValueOffset;
-#endif
                 break;
               default:
                 JS_NOT_REACHED("Bad MIC kind");
@@ -3061,8 +3058,7 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, bool doTypeCheck, bool usePropCache)
     masm.loadPayload(slot, objReg);
     Label dataLoad = masm.label();
 #elif defined JS_PUNBOX64
-    Label inlineValueLoadLabel =
-        masm.loadValueAsComponents(slot, shapeReg, objReg);
+    Label inlineValueLoadLabel = masm.loadValueAsComponents(slot, shapeReg, objReg);
 #endif
     pic.fastPathRejoin = masm.label();
 
@@ -3182,8 +3178,7 @@ mjit::Compiler::jsop_callprop_generic(JSAtom *atom)
     masm.loadPayload(slot, objReg);
     Label dataLoad = masm.label();
 #elif defined JS_PUNBOX64
-    Label inlineValueLoadLabel =
-        masm.loadValueAsComponents(slot, shapeReg, objReg);
+    Label inlineValueLoadLabel = masm.loadValueAsComponents(slot, shapeReg, objReg);
 #endif
     pic.fastPathRejoin = masm.label();
 
@@ -3321,8 +3316,7 @@ mjit::Compiler::jsop_callprop_obj(JSAtom *atom)
     masm.loadPayload(slot, objReg);
     Label dbgDataLoad = masm.label();
 #elif defined JS_PUNBOX64
-    Label inlineValueLoadLabel =
-        masm.loadValueAsComponents(slot, shapeReg, objReg);
+    Label inlineValueLoadLabel = masm.loadValueAsComponents(slot, shapeReg, objReg);
 #endif
 
     pic.fastPathRejoin = masm.label();
@@ -4360,37 +4354,12 @@ mjit::Compiler::jsop_getgname(uint32 index)
     masm.loadPtr(Address(objReg, offsetof(JSObject, slots)), objReg);
     Address address(objReg, slot);
     
-    /*
-     * On x86_64, the length of the movq instruction used is variable
-     * depending on the registers used. For example, 'movq $0x5(%r12), %r12'
-     * is one byte larger than 'movq $0x5(%r14), %r14'. This means that
-     * the constant '0x5' that we want to write is at a variable position.
-     *
-     * x86_64 only performs a single load. The constant offset is always
-     * at the end of the bytecode. Knowing the start and end of the move
-     * bytecode is sufficient for patching.
-     */
-
     /* Allocate any register other than objReg. */
     RegisterID dreg = frame.allocReg();
     /* After dreg is loaded, it's safe to clobber objReg. */
     RegisterID treg = objReg;
 
-    mic.load = masm.label();
-# if defined JS_NUNBOX32
-#  if defined JS_CPU_ARM
-    DataLabel32 offsetAddress = masm.load64WithAddressOffsetPatch(address, treg, dreg);
-    JS_ASSERT(masm.differenceBetween(mic.load, offsetAddress) == 0);
-#  else
-    masm.loadPayload(address, dreg);
-    masm.loadTypeTag(address, treg);
-#  endif
-# elif defined JS_PUNBOX64
-    Label inlineValueLoadLabel =
-        masm.loadValueAsComponents(address, treg, dreg);
-    mic.patchValueOffset = masm.differenceBetween(mic.load, inlineValueLoadLabel);
-    JS_ASSERT(mic.patchValueOffset == masm.differenceBetween(mic.load, inlineValueLoadLabel));
-# endif
+    mic.load = masm.loadValueWithAddressOffsetPatch(address, treg, dreg);
 
     frame.pushRegs(treg, dreg);
 
@@ -4484,31 +4453,13 @@ mjit::Compiler::jsop_setgname(JSAtom *atom, bool usePropertyCache)
     masm.loadPtr(Address(objReg, offsetof(JSObject, slots)), objReg);
     Address address(objReg, slot);
 
-    mic.load = masm.label();
-
-#if defined JS_CPU_ARM
-    DataLabel32 offsetAddress;
     if (mic.u.name.dataConst) {
-        offsetAddress = masm.moveWithPatch(Imm32(address.offset), JSC::ARMRegisters::S0);
-        masm.add32(address.base, JSC::ARMRegisters::S0);
-        masm.storeValue(v, Address(JSC::ARMRegisters::S0, 0));
-    } else {
-        if (mic.u.name.typeConst) {
-            offsetAddress = masm.store64WithAddressOffsetPatch(ImmType(typeTag), dataReg, address);
-        } else {
-            offsetAddress = masm.store64WithAddressOffsetPatch(typeReg, dataReg, address);
-        }
-    }
-    JS_ASSERT(masm.differenceBetween(mic.load, offsetAddress) == 0);
-#else
-    if (mic.u.name.dataConst) {
-        masm.storeValue(v, address);
+        mic.load = masm.storeValueWithAddressOffsetPatch(v, address);
     } else if (mic.u.name.typeConst) {
-        masm.storeValueFromComponents(ImmType(typeTag), dataReg, address);
+        mic.load = masm.storeValueWithAddressOffsetPatch(ImmType(typeTag), dataReg, address);
     } else {
-        masm.storeValueFromComponents(typeReg, dataReg, address);
+        mic.load = masm.storeValueWithAddressOffsetPatch(typeReg, dataReg, address);
     }
-#endif
 
 #if defined JS_PUNBOX64
     /* 

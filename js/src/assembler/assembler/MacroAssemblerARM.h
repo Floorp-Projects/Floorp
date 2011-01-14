@@ -355,6 +355,21 @@ public:
         return dataLabel;
     }
 
+    DataLabel32 store64WithAddressOffsetPatch(Imm32 hi, Imm32 lo, Address address)
+    {
+        ASSERT(address.base != ARMRegisters::S0);
+        ASSERT(address.base != ARMRegisters::S1);
+        DataLabel32 dataLabel(this);
+        m_assembler.ldr_un_imm(ARMRegisters::S0, 0);
+        m_assembler.add_r(ARMRegisters::S0, ARMRegisters::S0, address.base);
+        m_assembler.moveImm(lo.m_value, ARMRegisters::S1);
+        m_assembler.dtr_u(false, ARMRegisters::S1, ARMRegisters::S0, 0);
+        /* TODO: improve this by getting another scratch register. */
+        m_assembler.moveImm(hi.m_value, ARMRegisters::S1);
+        m_assembler.dtr_u(false, ARMRegisters::S1, ARMRegisters::S0, 4);
+        return dataLabel;
+    }
+
     void store32(RegisterID src, ImplicitAddress address)
     {
         m_assembler.dataTransfer32(false, src, address.base, address.offset);
