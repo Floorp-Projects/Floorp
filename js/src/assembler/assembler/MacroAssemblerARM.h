@@ -496,12 +496,17 @@ public:
         return Jump(m_assembler.jmp(ARMCondition(cond), useConstantPool));
     }
 
-    Jump branch32_force32(Condition cond, RegisterID left, Imm32 right, int useConstantPool = 0)
+    // Like branch32, but emit a consistently-structured sequence such that the
+    // number of instructions emitted is constant, regardless of the argument
+    // values. For ARM, this is identical to branch32WithPatch, except that it
+    // does not generate a DataLabel32.
+    Jump branch32FixedLength(Condition cond, RegisterID left, Imm32 right)
     {
-        return branch32(cond, left, right, useConstantPool);
+        m_assembler.ldr_un_imm(ARMRegisters::S1, right.m_value);
+        return branch32(cond, left, ARMRegisters::S1, true);
     }
 
-    // As branch32, but allow the value ('right') to be patched.
+    // As branch32_force32, but allow the value ('right') to be patched.
     Jump branch32WithPatch(Condition cond, RegisterID left, Imm32 right, DataLabel32 &dataLabel)
     {
         ASSERT(left != ARMRegisters::S1);

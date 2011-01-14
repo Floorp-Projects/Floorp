@@ -856,8 +856,9 @@ public:
     }
     
     // Branch based on a 32-bit comparison, forcing the size of the
-    // immediate operand to 32 bits in the native code stream.
-    Jump branch32_force32(Condition cond, RegisterID left, Imm32 right)
+    // immediate operand to 32 bits in the native code stream to ensure that
+    // the length of code emitted by this instruction is consistent.
+    Jump branch32FixedLength(Condition cond, RegisterID left, Imm32 right)
     {
         m_assembler.cmpl_ir_force32(right.m_value, left);
         return Jump(m_assembler.jCC(x86Condition(cond)));
@@ -867,7 +868,7 @@ public:
     Jump branch32WithPatch(Condition cond, RegisterID left, Imm32 right, DataLabel32 &dataLabel)
     {
         // Always use cmpl, since the value is to be patched.
-        m_assembler.cmpl_ir(right.m_value, left);
+        m_assembler.cmpl_ir_force32(right.m_value, left);
         dataLabel = DataLabel32(this);
         return Jump(m_assembler.jCC(x86Condition(cond)));
     }
