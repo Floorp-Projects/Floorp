@@ -1359,6 +1359,9 @@
           // Generate the list of tabs
           let tabs = [];
           for (let [guid, client] in Iterator(engine.getAllClients())) {
+            if (!client.tabs.length)
+              continue;
+
             tabs.push({ name: client.clientName });
 
             client.tabs.forEach(function({title, urlHistory, icon}) {
