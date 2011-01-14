@@ -312,14 +312,15 @@
             <spacer/>
             <hbox>
               <image class="statusIcon"/>
-              <vbox>
-                <label class="status" value=" "/>
-                <label class="text-link"
-                       value="&resetPassword.label;"
-                       onclick="gSyncUtils.resetPassword(); return false;"/>
-              </vbox>
+              <label class="status" value=" "/>
             </hbox>
           </row>
+          <row align="center">
+            <spacer/>
+            <label class="text-link"
+                   value="&resetPassword.label;"
+                   onclick="gSyncUtils.resetPassword(); return false;"/>
+	  </row>
           <row align="center">
             <label control="existingServer"
                    value="&server.label;"/>
@@ -360,12 +361,7 @@
       <vbox align="left" id="existingPassphraseFeedbackRow" hidden="true">
         <hbox>
           <image class="statusIcon"/>
-          <vbox>
-            <label class="status" value=" "/>
-            <label class="text-link"
-                   value="&lostSyncKey.label;"
-                   onclick="gSyncUtils.resetPassphrase(); return false;"/>
-          </vbox>
+          <label class="status" value=" "/>
         </hbox>
       </vbox>
     </groupbox>
@@ -376,6 +372,9 @@
         <label class="text-link"
                value="&addDevice.showMeHow.label;"
                href="https://services.mozilla.com/sync/help/manual-setup"/>
+        <label class="text-link"
+               value="&resetSyncKey.label;"
+               onclick="gSyncUtils.resetPassphrase(); return false;"/>
       </description>
     </vbox>
   </wizardpage>
