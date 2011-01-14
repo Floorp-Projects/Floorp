@@ -82,9 +82,9 @@ function run_test() {
                                    bmsvc.DEFAULT_INDEX, "");
   do_check_true(observer.itemChangedProperty == null);
 
-  // We set lastModified 1us in the past to workaround a timing bug on
+  // We set lastModified in the past to workaround a timing bug on
   // virtual machines, see bug 427142 for details.
-  var newDate = Date.now() * 1000 - 1;
+  var newDate = (Date.now() - 10) * 1000;
   bmsvc.setItemDateAdded(bookmarkId, newDate);
   // test notification
   do_check_eq(observer._itemChangedProperty, "dateAdded");
@@ -129,7 +129,7 @@ function run_test() {
   // test live update of lastModified caused by other changes:
   // We set lastModified in the past to workaround timers resolution,
   // see bug 427142 for details.
-  var pastDate = Date.now() * 1000 - 20000;
+  var pastDate = (Date.now() - 10) * 1000;
   bmsvc.setItemLastModified(bookmarkId, pastDate);
   // set title (causing update of last modified)
   var oldLastModified = bmsvc.getItemLastModified(bookmarkId);

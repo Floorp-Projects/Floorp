@@ -81,6 +81,7 @@ _TEST_FILES_0 = \
 	test_2d.composite.uncovered.image.source-out.html \
 	test_mozGetAsFile.html \
 	test_canvas_strokeStyle_getter.html \
+	test_bug613794.html \
 	$(NULL)
 
 ifneq (1_Linux,$(MOZ_SUITE)_$(OS_ARCH))
