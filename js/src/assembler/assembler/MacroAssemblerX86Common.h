@@ -872,6 +872,13 @@ public:
         return Jump(m_assembler.jCC(x86Condition(cond)));
     }
 
+    Jump branch32WithPatch(Condition cond, Address left, Imm32 right, DataLabel32 &dataLabel)
+    {
+        m_assembler.cmpl_im_force32(right.m_value, left.offset, left.base);
+        dataLabel = DataLabel32(this);
+        return Jump(m_assembler.jCC(x86Condition(cond)));
+    }
+
     Jump branch32(Condition cond, RegisterID left, Address right)
     {
         m_assembler.cmpl_mr(right.offset, right.base, left);
