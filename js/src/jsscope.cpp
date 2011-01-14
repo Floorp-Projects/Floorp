@@ -601,6 +601,23 @@ Shape::newDictionaryShape(JSContext *cx, const Shape &child, Shape **listp)
 }
 
 Shape *
+Shape::newDictionaryShapeForAddProperty(JSContext *cx, jsid id,
+                                        PropertyOp getter, PropertyOp setter,
+                                        uint32 slot, uintN attrs, uintN flags, intN shortid)
+{
+    Shape *shape = JS_PROPERTY_TREE(cx).newShape(cx);
+    if (!shape)
+        return NULL;
+
+    new (shape) Shape(id, getter, setter, slot, attrs, (flags & ~FROZEN) | IN_DICTIONARY, shortid);
+    shape->parent = NULL;
+    shape->listp = NULL;
+
+    JS_RUNTIME_METER(cx->runtime, liveDictModeNodes);
+    return shape;
+}
+
+Shape *
 Shape::newDictionaryList(JSContext *cx, Shape **listp)
 {
     Shape *shape = *listp;

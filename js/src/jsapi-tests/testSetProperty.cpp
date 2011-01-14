@@ -12,7 +12,7 @@ nativeGet(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     return JS_TRUE;
 }
 
-BEGIN_TEST(testSetPropertyWithNativeGetterStubSetter)
+BEGIN_TEST(testSetProperty_NativeGetterStubSetter)
 {
     jsvalRoot vobj(cx);
     JSObject *obj = JS_NewObject(cx, NULL, NULL, NULL);
@@ -63,4 +63,25 @@ BEGIN_TEST(testSetPropertyWithNativeGetterStubSetter)
 
     return true;
 }
-END_TEST(testSetPropertyWithNativeGetterStubSetter)
+END_TEST(testSetProperty_NativeGetterStubSetter)
+
+BEGIN_TEST(testSetProperty_InheritedGlobalSetter)
+{
+    // This is a JSAPI test because jsapi-test globals do not have a resolve
+    // hook and therefore can use the property cache in some cases where the
+    // shell can't.
+    JS_ASSERT(JS_GET_CLASS(cx, global)->resolve == &JS_ResolveStub);
+
+    CHECK(JS_DefineProperty(cx, global, "HOTLOOP", INT_TO_JSVAL(8), NULL, NULL, 0));
+    EXEC("var n = 0;\n"
+         "var global = this;\n"
+         "function f() { n++; }\n"
+         "Object.defineProperty(Object.prototype, 'x', {set: f});\n"
+         "for (var i = 0; i < HOTLOOP; i++)\n"
+         "    global.x = i;\n");
+    EXEC("if (n != HOTLOOP)\n"
+         "    throw 'FAIL';\n");
+    return true;
+}
+END_TEST(testSetProperty_InheritedGlobalSetter)
+
