@@ -287,8 +287,8 @@ class SetPropCompiler : public PICStubCompiler
         }
 
         Label start = masm.label();
-        Jump shapeGuard = masm.branch32_force32(Assembler::NotEqual, pic.shapeReg,
-                                                Imm32(initialShape));
+        Jump shapeGuard = masm.branch32FixedLength(Assembler::NotEqual, pic.shapeReg,
+                                                   Imm32(initialShape));
 
         Label stubShapeJumpLabel = masm.label();
 
@@ -1055,8 +1055,8 @@ class GetPropCompiler : public PICStubCompiler
             }
 
             start = masm.label();
-            shapeGuardJump = masm.branch32_force32(Assembler::NotEqual, pic.shapeReg,
-                                                   Imm32(obj->shape()));
+            shapeGuardJump = masm.branch32FixedLength(Assembler::NotEqual, pic.shapeReg,
+                                                      Imm32(obj->shape()));
         }
         Label stubShapeJumpLabel = masm.label();
 
