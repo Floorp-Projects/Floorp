@@ -41,6 +41,16 @@
 
 #include "nsTArray.h"
 
+/**
+ * An array of observers. Like a normal array, but supports iterators that are
+ * stable even if the array is modified during iteration.
+ * The template parameter T is the observer type the array will hold;
+ * N is the number of built-in storage slots that come with the array.
+ * NOTE: You probably want to use nsTObserverArray, unless you specifically
+ * want built-in storage. See below.
+ * @see nsTObserverArray, nsTArray
+ */
+
 class NS_COM_GLUE nsTObserverArray_base {
   public:
     typedef PRUint32 index_type;
@@ -89,16 +99,6 @@ class NS_COM_GLUE nsTObserverArray_base {
 
     mutable Iterator_base* mIterators;
 };
-
-/**
- * An array of observers. Like a normal array, but supports iterators that are
- * stable even if the array is modified during iteration.
- * The template parameter T is the observer type the array will hold;
- * N is the number of built-in storage slots that come with the array.
- * NOTE: You probably want to use nsTObserverArray, unless you specifically
- * want built-in storage. See below.
- * @see nsTObserverArray, nsTArray
- */
 
 template<class T, PRUint32 N>
 class nsAutoTObserverArray : protected nsTObserverArray_base {
