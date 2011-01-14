@@ -195,7 +195,7 @@ public class GeckoEvent {
         mRect = dirty;
     }
 
-    public GeckoEvent(int etype, int w, int h, int oldw, int oldh) {
+    public GeckoEvent(int etype, int w, int h, int screenw, int screenh) {
         if (etype != SIZE_CHANGED) {
             mType = INVALID;
             return;
@@ -204,7 +204,7 @@ public class GeckoEvent {
         mType = etype;
 
         mP0 = new Point(w, h);
-        mP1 = new Point(oldw, oldh);
+        mP1 = new Point(screenw, screenh);
     }
 
     public GeckoEvent(String uri) {
