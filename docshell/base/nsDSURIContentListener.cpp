@@ -146,6 +146,12 @@ nsDSURIContentListener::DoContent(const char* aContentType,
     }
 
     rv = mDocShell->CreateContentViewer(aContentType, request, aContentHandler);
+
+    if (rv == NS_ERROR_REMOTE_XUL) {
+      request->Cancel(rv);
+      return NS_OK;
+    }
+
     if (NS_FAILED(rv)) {
        // it's okay if we don't know how to handle the content   
         return NS_OK;
