@@ -872,11 +872,6 @@ ShowNativePrintDialog(HWND              aHWnd,
     }
   }
 
-  NS_ASSERTION(!printerName.IsEmpty(), "We have to have a printer name");
-  if (printerName.IsEmpty()) {
-    return NS_ERROR_FAILURE;
-  }
-
   // Now create a DEVNAMES struct so the the dialog is initialized correctly.
 
   PRUint32 len = printerName.Length();
