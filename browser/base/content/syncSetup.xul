@@ -186,8 +186,8 @@
               <label class="text-link inline-link"
                      onclick="event.stopPropagation();gSyncUtils.openPrivacyPolicy();">
                 &setup.ppLink.label;
-                &setup.tosAgree3.label;
               </label>
+              &setup.tosAgree3.label;
             </description>
           </hbox>
         </row>
@@ -457,7 +457,7 @@
                      class="mergeChoiceButton"
                      aria-labelledby="wipeRemoteLabel"/>
               <label id="wipeRemoteLabel"
-                control="wipeRemote">
+                     control="wipeRemote">
                 &choice2.server.main.label;
               </label>
             </row>
