@@ -2288,7 +2288,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
     currentBackgroundClip = bg->BottomLayer().mClip;
     isSolidBorder =
       (aFlags & PAINTBG_WILL_PAINT_BORDER) && IsOpaqueBorder(aBorder);
-    if (isSolidBorder)
+    if (isSolidBorder && currentBackgroundClip == NS_STYLE_BG_CLIP_BORDER)
       currentBackgroundClip = NS_STYLE_BG_CLIP_PADDING;
     SetupBackgroundClip(ctx, currentBackgroundClip, aForFrame,
                         aBorderArea, aDirtyRect, haveRoundedCorners,
