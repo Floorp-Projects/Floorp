@@ -3498,6 +3498,8 @@ mjit::Compiler::jsop_name(JSAtom *atom)
 {
     PICGenInfo pic(ic::PICInfo::NAME, JSOp(*PC), true);
 
+    RESERVE_IC_SPACE(masm);
+
     pic.shapeReg = frame.allocReg();
     pic.objReg = frame.allocReg();
     pic.typeReg = Registers::ReturnReg;
@@ -3505,20 +3507,24 @@ mjit::Compiler::jsop_name(JSAtom *atom)
     pic.hasTypeCheck = false;
     pic.fastPathStart = masm.label();
 
+    /* There is no inline implementation, so we always jump to the slow path or to a stub. */
     pic.shapeGuard = masm.label();
-    Jump j = masm.jump();
-    DBGLABEL(dbgJumpOffset);
+    Jump inlineJump = masm.jump();
     {
-        pic.slowPathStart = stubcc.linkExit(j, Uses(0));
+        RESERVE_OOL_SPACE(stubcc.masm);
+        pic.slowPathStart = stubcc.linkExit(inlineJump, Uses(0));
         stubcc.leave();
         passICAddress(&pic);
         pic.slowPathCall = OOL_STUBCALL(ic::Name);
+        CHECK_OOL_SPACE();
     }
-
     pic.fastPathRejoin = masm.label();
-    frame.pushRegs(pic.shapeReg, pic.objReg);
 
-    JS_ASSERT(masm.differenceBetween(pic.fastPathStart, dbgJumpOffset) == SCOPENAME_JUMP_OFFSET);
+    /* Initialize op labels. */
+    ScopeNameLabels &labels = pic.scopeNameLabels();
+    labels.setInlineJump(masm, pic.fastPathStart, inlineJump);
+
+    frame.pushRegs(pic.shapeReg, pic.objReg);
 
     stubcc.rejoin(Changes(1));
 
@@ -3540,6 +3546,8 @@ mjit::Compiler::jsop_xname(JSAtom *atom)
         stubcc.linkExit(notObject, Uses(1));
     }
 
+    RESERVE_IC_SPACE(masm);
+
     pic.shapeReg = frame.allocReg();
     pic.objReg = frame.copyDataIntoReg(fe);
     pic.typeReg = Registers::ReturnReg;
@@ -3547,21 +3555,28 @@ mjit::Compiler::jsop_xname(JSAtom *atom)
     pic.hasTypeCheck = false;
     pic.fastPathStart = masm.label();
 
+    /* There is no inline implementation, so we always jump to the slow path or to a stub. */
     pic.shapeGuard = masm.label();
-    Jump j = masm.jump();
-    DBGLABEL(dbgJumpOffset);
+    Jump inlineJump = masm.jump();
     {
-        pic.slowPathStart = stubcc.linkExit(j, Uses(1));
+        RESERVE_OOL_SPACE(stubcc.masm);
+        pic.slowPathStart = stubcc.linkExit(inlineJump, Uses(1));
         stubcc.leave();
         passICAddress(&pic);
         pic.slowPathCall = OOL_STUBCALL(ic::XName);
+        CHECK_OOL_SPACE();
     }
 
     pic.fastPathRejoin = masm.label();
+
+    RETURN_IF_OOM(false);
+
+    /* Initialize op labels. */
+    ScopeNameLabels &label = pic.scopeNameLabels();
+    labels.setInlineJumpOffset(masm.differenceBetween(pic.fastPathStart, inlineJump));
+
     frame.pop();
     frame.pushRegs(pic.shapeReg, pic.objReg);
-
-    JS_ASSERT(masm.differenceBetween(pic.fastPathStart, dbgJumpOffset) == SCOPENAME_JUMP_OFFSET);
 
     stubcc.rejoin(Changes(1));
 
