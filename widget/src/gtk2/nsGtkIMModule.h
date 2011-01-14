@@ -89,6 +89,10 @@ public:
     nsGtkIMModule(nsWindow* aOwnerWindow);
     ~nsGtkIMModule();
 
+    // "Enabled" means the users can use all IMEs.
+    // I.e., the focus is in the normal editors.
+    PRBool IsEnabled();
+
     // OnFocusWindow is a notification that aWindow is going to be focused.
     void OnFocusWindow(nsWindow* aWindow);
     // OnBlurWindow is a notification that aWindow is going to be unfocused.
@@ -103,7 +107,8 @@ public:
     // filtered by IME.  Otherwise, this returns FALSE.
     // NOTE: When the keypress event starts composition, this returns TRUE but
     //       this dispatches keydown event before compositionstart event.
-    PRBool OnKeyEvent(nsWindow* aWindow, GdkEventKey* aEvent);
+    PRBool OnKeyEvent(nsWindow* aWindow, GdkEventKey* aEvent,
+                      PRBool aKeyDownEventWasSent = PR_FALSE);
 
     // IME related nsIWidget methods.
     nsresult ResetInputState(nsWindow* aCaller);
@@ -179,6 +184,12 @@ protected:
     // another content (nsIContent).  Don't refer this value directly, use
     // ShouldIgnoreNativeCompositionEvent().
     PRPackedBool mIgnoreNativeCompositionEvent;
+    // mKeyDownEventWasSent is used by OnKeyEvent() and
+    // DispatchCompositionStart().  DispatchCompositionStart() dispatches
+    // a keydown event if the composition start is caused by a native
+    // keypress event.  If this is true, the keydown event has been dispatched.
+    // Then, DispatchCompositionStart() doesn't dispatch keydown event.
+    PRPackedBool mKeyDownEventWasSent;
 
     // sLastFocusedModule is a pointer to the last focused instance of this
     // class.  When a instance is destroyed and sLastFocusedModule refers it,
@@ -218,10 +229,6 @@ protected:
     // GetContext() returns current IM context which is chosen by the enabled
     // state.  So, this means *current* IM context.
     GtkIMContext* GetContext();
-
-    // "Enabled" means the users can use all IMEs.
-    // I.e., the focus is in the normal editors.
-    PRBool IsEnabled();
 
     // "Editable" means the users can input characters. They may be not able to
     // use IMEs but they can use dead keys.
