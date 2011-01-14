@@ -185,7 +185,6 @@ class PICStubCompiler : public BaseCompiler
     }
 };
 
-#if defined JS_POLYIC_SETPROP
 class SetPropCompiler : public PICStubCompiler
 {
     JSObject *obj;
@@ -630,7 +629,6 @@ class SetPropCompiler : public PICStubCompiler
         return generateStub(obj->shape(), shape, false, !obj->hasSlotsArray());
     }
 };
-#endif
 
 static bool
 IsCacheableProtoChain(JSObject *obj, JSObject *holder)
@@ -715,7 +713,6 @@ struct GetPropertyHelper {
     }
 };
 
-#if defined JS_POLYIC_GETPROP
 class GetPropCompiler : public PICStubCompiler
 {
     JSObject    *obj;
@@ -1155,9 +1152,7 @@ class GetPropCompiler : public PICStubCompiler
         return generateStub(getprop.holder, getprop.shape);
     }
 };
-#endif
 
-#if defined JS_POLYIC_NAME
 class ScopeNameCompiler : public PICStubCompiler
 {
   private:
@@ -1488,9 +1483,7 @@ class ScopeNameCompiler : public PICStubCompiler
         return true;
     }
 };
-#endif
  
-#if defined JS_POLYIC_BIND
 class BindNameCompiler : public PICStubCompiler
 {
     JSObject *scopeChain;
@@ -1619,9 +1612,7 @@ class BindNameCompiler : public PICStubCompiler
         return obj;
     }
 };
-#endif
 
-#if defined JS_POLYIC_GETPROP
 static void JS_FASTCALL
 DisabledLengthIC(VMFrame &f, ic::PICInfo *pic)
 {
@@ -1703,9 +1694,7 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
         THROW();
     f.regs.sp[-1] = v;
 }
-#endif
 
-#if defined JS_POLYIC_SETPROP
 template <JSBool strict>
 static void JS_FASTCALL
 DisabledSetPropIC(VMFrame &f, ic::PICInfo *pic)
@@ -1752,9 +1741,7 @@ ic::SetProp(VMFrame &f, ic::PICInfo *pic)
     Value rval = f.regs.sp[-1];
     stub(f, pic);
 }
-#endif
 
-#if defined JS_POLYIC_GETPROP
 static void JS_FASTCALL
 DisabledCallPropIC(VMFrame &f, ic::PICInfo *pic)
 {
@@ -1871,9 +1858,7 @@ ic::CallProp(VMFrame &f, ic::PICInfo *pic)
     }
 #endif
 }
-#endif
 
-#if defined JS_POLYIC_NAME
 static void JS_FASTCALL
 DisabledNameIC(VMFrame &f, ic::PICInfo *pic)
 {
@@ -1922,9 +1907,7 @@ ic::Name(VMFrame &f, ic::PICInfo *pic)
         THROW();
     f.regs.sp[0] = rval;
 }
-#endif
 
-#if defined JS_POLYIC_BIND
 static void JS_FASTCALL
 DisabledBindNameIC(VMFrame &f, ic::PICInfo *pic)
 {
@@ -1955,7 +1938,6 @@ ic::BindName(VMFrame &f, ic::PICInfo *pic)
 
     f.regs.sp[0].setObject(*obj);
 }
-#endif
 
 bool
 BaseIC::isCallOp()
@@ -1994,7 +1976,6 @@ BaseIC::shouldUpdate(JSContext *cx)
     return true;
 }
 
-#if defined JS_POLYIC_GETELEM
 static void JS_FASTCALL
 DisabledGetElem(VMFrame &f, ic::GetElementIC *ic)
 {
@@ -2230,6 +2211,7 @@ GetElementIC::attachGetProp(JSContext *cx, JSObject *obj, const Value &v, jsid i
     return Lookup_Cacheable;
 }
 
+#if defined JS_POLYIC_TYPED_ARRAY
 LookupStatus
 GetElementIC::attachTypedArray(JSContext *cx, JSObject *obj, const Value &v, jsid id, Value *vp)
 {
@@ -2332,6 +2314,7 @@ GetElementIC::attachTypedArray(JSContext *cx, JSObject *obj, const Value &v, jsi
 
     return Lookup_Cacheable;
 }
+#endif /* JS_POLYIC_TYPED_ARRAY */
 
 LookupStatus
 GetElementIC::update(JSContext *cx, JSObject *obj, const Value &v, jsid id, Value *vp)
@@ -2339,8 +2322,10 @@ GetElementIC::update(JSContext *cx, JSObject *obj, const Value &v, jsid id, Valu
     if (v.isString())
         return attachGetProp(cx, obj, v, id, vp);
 
+#if defined JS_POLYIC_TYPED_ARRAY
     if (js_IsTypedArray(obj))
         return attachTypedArray(cx, obj, v, id, vp);
+#endif
 
     return disable(cx, "unhandled object and key type");
 }
@@ -2446,9 +2431,7 @@ ic::GetElement(VMFrame &f, ic::GetElementIC *ic)
     if (!obj->getProperty(cx, id, &f.regs.sp[-2]))
         THROW();
 }
-#endif /* JS_POLYIC_GETELEM */
 
-#ifdef JS_POLYIC_SETELEM
 #define APPLY_STRICTNESS(f, s)                          \
     (FunctionTemplateConditional(s, f<true>, f<false>))
 
@@ -2582,6 +2565,7 @@ SetElementIC::attachHoleStub(JSContext *cx, JSObject *obj, int32 keyval)
     return Lookup_Cacheable;
 }
 
+#if defined JS_POLYIC_TYPED_ARRAY
 LookupStatus
 SetElementIC::attachTypedArray(JSContext *cx, JSObject *obj, int32 key)
 {
@@ -2669,6 +2653,7 @@ SetElementIC::attachTypedArray(JSContext *cx, JSObject *obj, int32 key)
 
     return Lookup_Cacheable;
 }
+#endif /* JS_POLYIC_TYPED_ARRAY */
 
 LookupStatus
 SetElementIC::update(JSContext *cx, const Value &objval, const Value &idval)
@@ -2684,8 +2669,10 @@ SetElementIC::update(JSContext *cx, const Value &objval, const Value &idval)
     if (obj->isDenseArray())
         return attachHoleStub(cx, obj, key);
 
+#if defined JS_POLYIC_TYPED_ARRAY
     if (js_IsTypedArray(obj))
         return attachTypedArray(cx, obj, key);
+#endif
 
     return disable(cx, "unsupported object type");
 }
@@ -2707,7 +2694,6 @@ ic::SetElement(VMFrame &f, ic::SetElementIC *ic)
 
 template void JS_FASTCALL ic::SetElement<true>(VMFrame &f, SetElementIC *ic);
 template void JS_FASTCALL ic::SetElement<false>(VMFrame &f, SetElementIC *ic);
-#endif /* JS_POLYIC_SETELEM */
 
 void
 JITScript::purgePICs()
@@ -2720,29 +2706,21 @@ JITScript::purgePICs()
     for (uint32 i = 0; i < nPICs; i++) {
         ic::PICInfo &pic = pics[i];
         switch (pic.kind) {
-#ifdef JS_POLYIC_SETPROP
           case ic::PICInfo::SET:
           case ic::PICInfo::SETMETHOD:
             SetPropCompiler::reset(repatcher, pic);
             break;
-#endif
-#ifdef JS_POLYIC_NAME
           case ic::PICInfo::NAME:
           case ic::PICInfo::XNAME:
             ScopeNameCompiler::reset(repatcher, pic);
             break;
-#endif
-#ifdef JS_POLYIC_BIND
           case ic::PICInfo::BIND:
             BindNameCompiler::reset(repatcher, pic);
             break;
-#endif
-#ifdef JS_POLYIC_GETPROP
           case ic::PICInfo::CALL: /* fall-through */
           case ic::PICInfo::GET:
             GetPropCompiler::reset(repatcher, pic);
             break;
-#endif
           default:
             JS_NOT_REACHED("Unhandled PIC kind");
             break;
@@ -2750,14 +2728,10 @@ JITScript::purgePICs()
         pic.reset();
     }
 
-#if defined JS_POLYIC_GETELEM
     for (uint32 i = 0; i < nGetElems; i++)
         getElems[i].purge(repatcher);
-#endif
-#if defined JS_POLYIC_SETELEM
     for (uint32 i = 0; i < nSetElems; i++)
         setElems[i].purge(repatcher);
-#endif
 }
 
 void

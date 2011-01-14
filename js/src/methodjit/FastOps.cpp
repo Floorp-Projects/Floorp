@@ -1288,7 +1288,7 @@ mjit::Compiler::jsop_setelem(bool popGuaranteed)
     stubcc.linkExitDirect(ic.holeGuard, ic.slowPathStart);
 
     stubcc.leave();
-#if defined JS_POLYIC && defined JS_POLYIC_SETELEM
+#if defined JS_POLYIC
     passICAddress(&ic);
     ic.slowPathCall = OOL_STUBCALL(STRICT_VARIANT(ic::SetElement));
 #else
@@ -1328,7 +1328,7 @@ mjit::Compiler::jsop_setelem(bool popGuaranteed)
     frame.shimmy(2);
     stubcc.rejoin(Changes(2));
 
-#if defined JS_POLYIC && defined JS_POLYIC_SETELEM
+#if defined JS_POLYIC
     if (!setElemICs.append(ic))
         return false;
 #endif
@@ -1343,7 +1343,7 @@ IsCacheableGetElem(FrameEntry *obj, FrameEntry *id)
         return false;
     if (id->isTypeKnown() &&
         !(id->getKnownType() == JSVAL_TYPE_INT32
-#if defined JS_POLYIC && defined JS_POLYIC_GETELEM
+#if defined JS_POLYIC
           || id->getKnownType() == JSVAL_TYPE_STRING
 #endif
          )) {
@@ -1475,7 +1475,7 @@ mjit::Compiler::jsop_getelem(bool isCall)
     stubcc.leave();
     if (objTypeGuard.isSet())
         objTypeGuard.get().linkTo(stubcc.masm.label(), &stubcc.masm);
-#if defined JS_POLYIC && defined JS_POLYIC_GETELEM
+#ifdef JS_POLYIC
     passICAddress(&ic);
     if (isCall)
         ic.slowPathCall = OOL_STUBCALL(ic::CallElement);
@@ -1497,7 +1497,7 @@ mjit::Compiler::jsop_getelem(bool isCall)
 
     stubcc.rejoin(Changes(2));
 
-#if defined JS_POLYIC && defined JS_POLYIC_GETELEM
+#ifdef JS_POLYIC
     if (!getElemICs.append(ic))
         return false;
 #endif

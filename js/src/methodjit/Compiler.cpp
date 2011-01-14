@@ -643,7 +643,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
             stubCode.patch(patch.slowNcodePatch, fullCode.locationOf(patch.joinPoint));
     }
 
-#if defined JS_POLYIC_GETELEM
+#ifdef JS_POLYIC
     jit->nGetElems = getElemICs.length();
     if (getElemICs.length()) {
         jit->getElems = (ic::GetElementIC *)cursor;
@@ -676,9 +676,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
 
         stubCode.patch(from.paramAddr, &to);
     }
-#endif /* JS_POLYIC_GETELEM */
 
-#if defined JS_POLYIC_SETELEM
     jit->nSetElems = setElemICs.length();
     if (setElemICs.length()) {
         jit->setElems = (ic::SetElementIC *)cursor;
@@ -723,9 +721,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
 
         stubCode.patch(from.paramAddr, &to);
     }
-#endif /* JS_POLYIC_SETELEM */
 
-#if defined JS_POLYIC
     jit->nPICs = pics.length();
     if (pics.length()) {
         jit->pics = (ic::PICInfo *)cursor;
@@ -2976,9 +2972,7 @@ mjit::Compiler::passICAddress(BaseICInfo *ic)
 {
     ic->paramAddr = stubcc.masm.moveWithPatch(ImmPtr(NULL), Registers::ArgReg1);
 }
-#endif
 
-#if defined JS_POLYIC_GETPROP
 bool
 mjit::Compiler::jsop_getprop(JSAtom *atom, bool doTypeCheck, bool usePropCache)
 {
@@ -3089,9 +3083,7 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, bool doTypeCheck, bool usePropCache)
     pics.append(pic);
     return true;
 }
-#endif /* JS_POLYIC_GETPROP */
 
-#if defined JS_POLYIC_CALLPROP
 bool
 mjit::Compiler::jsop_callprop_generic(JSAtom *atom)
 {
@@ -3368,9 +3360,7 @@ mjit::Compiler::jsop_callprop(JSAtom *atom)
         return jsop_callprop_obj(atom);
     return jsop_callprop_generic(atom);
 }
-#endif /* JS_POLYIC_CALLPROP */
 
-#ifdef JS_POLYIC_SETPROP
 bool
 mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache)
 {
@@ -3490,10 +3480,7 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache)
     pics.append(pic);
     return true;
 }
-#endif
 
-
-#ifdef JS_POLYIC_NAME
 void
 mjit::Compiler::jsop_name(JSAtom *atom)
 {
@@ -3573,7 +3560,7 @@ mjit::Compiler::jsop_xname(JSAtom *atom)
     RETURN_IF_OOM(false);
 
     /* Initialize op labels. */
-    ScopeNameLabels &label = pic.scopeNameLabels();
+    ScopeNameLabels &labels = pic.scopeNameLabels();
     labels.setInlineJumpOffset(masm.differenceBetween(pic.fastPathStart, inlineJump));
 
     frame.pop();
@@ -3585,9 +3572,6 @@ mjit::Compiler::jsop_xname(JSAtom *atom)
     return true;
 }
 
-#endif /* JSOP_POLYIC_NAME */
-
-#ifdef JS_POLYIC_BIND
 void
 mjit::Compiler::jsop_bindname(JSAtom *atom, bool usePropCache)
 {
@@ -3635,9 +3619,9 @@ mjit::Compiler::jsop_bindname(JSAtom *atom, bool usePropCache)
 
     pics.append(pic);
 }
-#endif /* JS_POLYIC_BIND */
 
-#if !defined JS_POLYIC_NAME
+#else /* !JS_POLYIC */
+
 void
 mjit::Compiler::jsop_name(JSAtom *atom)
 {
@@ -3651,35 +3635,27 @@ mjit::Compiler::jsop_xname(JSAtom *atom)
 {
     return jsop_getprop(atom);
 }
-#endif
 
-#if !defined JS_POLYIC_GETPROP
 bool
 mjit::Compiler::jsop_getprop(JSAtom *atom, bool typecheck, bool usePropCache)
 {
     jsop_getprop_slow(atom, usePropCache);
     return true;
 }
-#endif
 
-#if !defined JS_POLYIC_CALLPROP
 bool
 mjit::Compiler::jsop_callprop(JSAtom *atom)
 {
     return jsop_callprop_slow(atom);
 }
-#endif
 
-#if !defined JS_POLYIC_SETPROP
 bool
 mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache)
 {
     jsop_setprop_slow(atom, usePropCache);
     return true;
 }
-#endif
 
-#if !defined JS_POLYIC_BIND
 void
 mjit::Compiler::jsop_bindname(JSAtom *atom, bool usePropCache)
 {
