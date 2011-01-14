@@ -266,7 +266,7 @@ class PunboxAssembler : public JSC::MacroAssembler
         lshiftPtr(Imm32(1), to);
     }
 
-    void loadFunctionPrivate(RegisterID base, RegisterID to) {
+    void loadObjPrivate(RegisterID base, RegisterID to) {
         Address priv(base, offsetof(JSObject, privateData));
         loadPtr(priv, to);
     }
