@@ -691,6 +691,43 @@ gfxWindowsPlatform::WindowsOSVersion()
     return winVersion;
 }
 
+void 
+gfxWindowsPlatform::GetDLLVersion(PRUnichar *aDLLPath, nsAString& aVersion)
+{
+    DWORD versInfoSize, vers[4] = {0};
+    // version info not available case
+    aVersion.Assign(NS_LITERAL_STRING("0.0.0.0"));
+    versInfoSize = GetFileVersionInfoSizeW(aDLLPath, NULL);
+    nsAutoTArray<BYTE,512> versionInfo;
+    
+    if (!versionInfo.AppendElements(PRUint32(versInfoSize))) {
+        return;
+    }
+    if (!GetFileVersionInfoW(aDLLPath, NULL, versInfoSize, 
+           LPBYTE(versionInfo.Elements()))) {
+        return;
+    } 
+
+    UINT len;
+    VS_FIXEDFILEINFO *fileInfo;
+    if (!VerQueryValue(LPBYTE(versionInfo.Elements()), TEXT("\\"),
+           (LPVOID *)&fileInfo , &len)) {
+        return;
+    }
+
+    DWORD fileVersMS = fileInfo->dwFileVersionMS; 
+    DWORD fileVersLS = fileInfo->dwFileVersionLS;
+
+    vers[0] = HIWORD(fileVersMS);
+    vers[1] = LOWORD(fileVersMS);
+    vers[2] = HIWORD(fileVersLS);
+    vers[3] = LOWORD(fileVersLS);
+
+    char buf[256];
+    sprintf(buf, "%d.%d.%d.%d", vers[0], vers[1], vers[2], vers[3]);
+    aVersion.Assign(NS_ConvertUTF8toUTF16(buf));
+}
+
 void
 gfxWindowsPlatform::FontsPrefsChanged(nsIPrefBranch *aPrefBranch, const char *aPref)
 {
