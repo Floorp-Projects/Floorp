@@ -566,6 +566,23 @@ var tests = [
       ok(this.notifyObj.removedCallbackTriggered, "removed callback triggered");
     }
   },
+  // Test notification close button
+  { // Test #18
+    run: function () {
+      this.notifyObj = new basicNotification(),
+      this.notification = showNotification(this.notifyObj);
+    },
+    onShown: function (popup) {
+      checkPopup(popup, this.notifyObj);
+      let notification = popup.childNodes[0];
+      EventUtils.synthesizeMouseAtCenter(notification.closebutton, {});
+    },
+    onHidden: function (popup) {
+      ok(this.notifyObj.dismissalCallbackTriggered, "dismissal callback triggered");
+      this.notification.remove();
+      ok(this.notifyObj.removedCallbackTriggered, "removed callback triggered");
+    }
+  },
 ];
 
 function showNotification(notifyObj) {
