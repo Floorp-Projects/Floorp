@@ -82,6 +82,7 @@ struct GetPropLabels : MacroAssemblerTypedefs {
          * in NunboxAssembler::loadValueWithAddressOffsetPatch.
          */
         JS_ASSERT(offset == inlineValueLoadOffset);
+        (void) offset;
     }
 
     CodeLocationLabel getValueLoad(CodeLocationLabel fastPathRejoin) {
@@ -251,10 +252,6 @@ struct SetPropLabels : MacroAssemblerTypedefs {
         return fastPathStart.dataLabel32AtOffset(shapeGuardOffset + getInlineShapeDataOffset());
     }
 
-    CodeLocationJump getInlineShapeJump(CodeLocationLabel fastPathStart, int shapeGuardOffset) {
-        return fastPathStart.jumpAtOffset(shapeGuardOffset + getInlineShapeJumpOffset());
-    }
-
     void setDslotsLoad(MacroAssembler &masm, Label fastPathRejoin, Label beforeLoad,
                        const ValueRemat &rhs) {
         int offset = masm.differenceBetween(fastPathRejoin, beforeLoad);
@@ -265,19 +262,24 @@ struct SetPropLabels : MacroAssemblerTypedefs {
         return fastPathRejoin.instructionAtOffset(getDslotsLoadOffset(vr));
     }
 
-    /*
-     * Note: on x64, the base is the inlineShapeLabel DataLabel32, whereas on other
-     * platforms the base is the shapeGuard.
-     */
-    template <typename T>
-    void setInlineShapeJump(MacroAssembler &masm, T base, Label afterJump) {
-        setInlineShapeJumpOffset(masm.differenceBetween(base, afterJump));
+    void setInlineShapeJump(MacroAssembler &masm, Label shapeGuard, Label afterJump) {
+        setInlineShapeJumpOffset(masm.differenceBetween(shapeGuard, afterJump));
+    }
+
+    CodeLocationJump getInlineShapeJump(CodeLocationLabel shapeGuard) {
+        return shapeGuard.jumpAtOffset(getInlineShapeJumpOffset());
     }
 
     void setStubShapeJump(MacroAssembler &masm, Label stubStart, Label afterShapeJump) {
         int offset = masm.differenceBetween(stubStart, afterShapeJump);
         setStubShapeJumpOffset(offset);
     }
+
+    CodeLocationJump getStubShapeJump(CodeLocationLabel stubStart) {
+        return stubStart.jumpAtOffset(getStubShapeJumpOffset());
+    }
+
+  private:
 
     /* Offset-based interface. */
 
@@ -340,7 +342,7 @@ struct SetPropLabels : MacroAssemblerTypedefs {
     }
 
     int getInlineShapeJumpOffset() {
-        return POST_INST_OFFSET(inlineShapeDataOffset + INLINE_SHAPE_JUMP);
+        return POST_INST_OFFSET(inlineShapeJumpOffset);
     }
 
     int getInlineShapeDataOffset() {
@@ -364,7 +366,6 @@ struct SetPropLabels : MacroAssemblerTypedefs {
 #endif
     }
 
-  private:
     /* Offset from storeBack to beginning of 'mov dslots, addr'. */
 #if defined JS_CPU_X86
     static const int INLINE_DSLOTS_BEFORE_CONSTANT = -23;
@@ -394,16 +395,6 @@ struct SetPropLabels : MacroAssemblerTypedefs {
 
     /* Offset from shapeGuard to the end of the shape jump. */
     int32 inlineShapeJumpOffset : 8;
-
-#if defined JS_CPU_X86
-    static const int INLINE_SHAPE_JUMP = 0;
-#elif defined JS_CPU_X64
-    static const int INLINE_SHAPE_JUMP = 6;
-#elif defined JS_CPU_ARM
-    static const int INLINE_SHAPE_JUMP = 12;
-#else
-# error
-#endif
 };
 
 /* BindNameCompiler */
