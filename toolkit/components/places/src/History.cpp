@@ -355,9 +355,9 @@ public:
 
 private:
   /**
-   * Callers MUST hold a strong refernce to this that outlives us because we may
-   * be created off of the main thread, and therefore cannot call AddRef on this
-   * object (and therefore cannot hold a strong reference to it).
+   * Callers MUST hold a strong reference to this that outlives us because we
+   * may be created off of the main thread, and therefore cannot call AddRef on
+   * this object (and therefore cannot hold a strong reference to it).
    */
   mozIVisitInfoCallback* mCallback;
   VisitData mPlace;
