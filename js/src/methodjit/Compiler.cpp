@@ -1496,15 +1496,7 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_STRICTNE)
 
           BEGIN_CASE(JSOP_ITER)
-# if defined JS_CPU_X64
-            prepareStubCall(Uses(1));
-            masm.move(Imm32(PC[1]), Registers::ArgReg1);
-            INLINE_STUBCALL(stubs::Iter);
-            frame.pop();
-            frame.pushSynced();
-#else
             iter(PC[1]);
-#endif
           END_CASE(JSOP_ITER)
 
           BEGIN_CASE(JSOP_MOREITER)
@@ -1514,13 +1506,7 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_MOREITER)
 
           BEGIN_CASE(JSOP_ENDITER)
-# if defined JS_CPU_X64
-            prepareStubCall(Uses(1));
-            INLINE_STUBCALL(stubs::EndIter);
-            frame.pop();
-#else
             iterEnd();
-#endif
           END_CASE(JSOP_ENDITER)
 
           BEGIN_CASE(JSOP_POP)
@@ -2424,7 +2410,7 @@ mjit::Compiler::checkCallApplySpeculation(uint32 callImmArgc, uint32 speculatedA
     if (origCalleeType.isSet())
         isObj = masm.testObject(Assembler::NotEqual, origCalleeType.reg());
     Jump isFun = masm.testFunction(Assembler::NotEqual, origCalleeData);
-    masm.loadFunctionPrivate(origCalleeData, origCalleeData);
+    masm.loadObjPrivate(origCalleeData, origCalleeData);
     Native native = *PC == JSOP_FUNCALL ? js_fun_call : js_fun_apply;
     Jump isNative = masm.branchPtr(Assembler::NotEqual,
                                    Address(origCalleeData, JSFunction::offsetOfNativeOrScript()),
@@ -2657,7 +2643,7 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew)
 
         /* Test if the function is scripted. */
         RegisterID tmp = tempRegs.takeAnyReg();
-        stubcc.masm.loadFunctionPrivate(icCalleeData, funPtrReg);
+        stubcc.masm.loadObjPrivate(icCalleeData, funPtrReg);
         stubcc.masm.load16(Address(funPtrReg, offsetof(JSFunction, flags)), tmp);
         stubcc.masm.and32(Imm32(JSFUN_KINDMASK), tmp);
         Jump isNative = stubcc.masm.branch32(Assembler::Below, tmp, Imm32(JSFUN_INTERPRETED));
@@ -4014,8 +4000,8 @@ mjit::Compiler::iter(uintN flags)
     Jump nullIterator = masm.branchTest32(Assembler::Zero, ioreg, ioreg);
     stubcc.linkExit(nullIterator, Uses(1));
 
-    /* Get NativeIterator from iter obj. :FIXME: X64, also most of this function */
-    masm.loadPtr(Address(ioreg, offsetof(JSObject, privateData)), nireg);
+    /* Get NativeIterator from iter obj. */
+    masm.loadObjPrivate(ioreg, nireg);
 
     /* Test for active iterator. */
     Address flagsAddr(nireg, offsetof(NativeIterator, flags));
@@ -4052,6 +4038,7 @@ mjit::Compiler::iter(uintN flags)
     /* Found a match with the most recent iterator. Hooray! */
 
     /* Mark iterator as active. */
+    masm.storePtr(reg, Address(nireg, offsetof(NativeIterator, obj)));
     masm.load32(flagsAddr, T1);
     masm.or32(Imm32(JSITER_ACTIVE), T1);
     masm.store32(T1, flagsAddr);
@@ -4097,7 +4084,7 @@ mjit::Compiler::iterNext()
     stubcc.linkExit(notFast, Uses(1));
 
     /* Get private from iter obj. */
-    masm.loadFunctionPrivate(reg, T1);
+    masm.loadObjPrivate(reg, T1);
 
     RegisterID T3 = frame.allocReg();
     RegisterID T4 = frame.allocReg();
@@ -4151,7 +4138,7 @@ mjit::Compiler::iterMore()
     stubcc.linkExitForBranch(notFast);
 
     /* Get private from iter obj. */
-    masm.loadFunctionPrivate(reg, T1);
+    masm.loadObjPrivate(reg, T1);
 
     /* Get props_cursor, test */
     RegisterID T2 = frame.allocReg();
@@ -4195,8 +4182,8 @@ mjit::Compiler::iterEnd()
     Jump notIterator = masm.testObjClass(Assembler::NotEqual, reg, &js_IteratorClass);
     stubcc.linkExit(notIterator, Uses(1));
 
-    /* Get private from iter obj. :FIXME: X64 */
-    masm.loadPtr(Address(reg, offsetof(JSObject, privateData)), T1);
+    /* Get private from iter obj. */
+    masm.loadObjPrivate(reg, T1);
 
     RegisterID T2 = frame.allocReg();
 
