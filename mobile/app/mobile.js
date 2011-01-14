@@ -159,6 +159,7 @@ pref("signon.SignonFileName", "signons.txt");
 /* form helper */
 pref("formhelper.enabled", true);
 pref("formhelper.autozoom", true);
+pref("formhelper.autozoom.caret", true);
 pref("formhelper.restore", false);
 
 /* find helper */

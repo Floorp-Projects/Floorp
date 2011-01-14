@@ -72,5 +72,8 @@ let AsyncTests = {
 };
 
 let chromeRoot = getRootDirectory(gTestPath);
-messageManager.loadFrameScript(chromeRoot + "remote_head.js", true);
+// For some security reasons (which?), loading remote_head using chromeRoot
+// instead of baseURI make the browser_formsZoom.js test fails.
+let baseURI = "http://mochi.test:8888/browser/mobile/chrome/";
+messageManager.loadFrameScript(baseURI + "remote_head.js", true);
 messageManager.loadFrameScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js", true);

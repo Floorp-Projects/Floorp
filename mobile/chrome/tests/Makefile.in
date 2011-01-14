@@ -50,7 +50,9 @@ _BROWSER_FILES = \
   head.js \
   remote_head.js \
   remote_forms.js \
+  remote_formsZoom.js \
   remote_vkb.js \
+  browser_addons.js \
   browser_awesomescreen.js \
   browser_blank_01.html \
   browser_blank_02.html \
@@ -61,9 +63,10 @@ _BROWSER_FILES = \
   browser_click_content.js \
   browser_contacts.js \
   browser_find.js \
-  browser_addons.js \
   browser_forms.html \
   browser_forms.js \
+  browser_formsZoom.html \
+  browser_formsZoom.js \
   browser_mainui.js \
   browser_navigation.js \
   browser_preferences_basic.js \
