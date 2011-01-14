@@ -98,6 +98,8 @@ WBORecord.prototype = {
     let obj = {};
     for (let [key, val] in Iterator(this.data))
       obj[key] = key == "payload" ? JSON.stringify(val) : val;
+    if (this.ttl)
+      obj.ttl = this.ttl;
     return obj;
   },
 
@@ -105,6 +107,7 @@ WBORecord.prototype = {
       "id: " + this.id,
       "index: " + this.sortindex,
       "modified: " + this.modified,
+      "ttl: " + this.ttl,
       "payload: " + JSON.stringify(this.payload)
     ].join("\n  ") + " }",
 };
