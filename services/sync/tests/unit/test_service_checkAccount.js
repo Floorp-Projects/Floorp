@@ -1,22 +1,15 @@
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 
-function send(statusCode, status, body) {
-  return function(request, response) {
-    response.setStatusLine(request.httpVersion, statusCode, status);
-    response.bodyOutputStream.write(body, body.length);
-  };
-}
-
 function run_test() {
   do_test_pending();
   let server = httpd_setup({
-    "/user/1.0/johndoe": send(200, "OK", "1"),
-    "/user/1.0/janedoe": send(200, "OK", "0"),
+    "/user/1.0/johndoe": httpd_handler(200, "OK", "1"),
+    "/user/1.0/janedoe": httpd_handler(200, "OK", "0"),
     // john@doe.com
-    "/user/1.0/7wohs32cngzuqt466q3ge7indszva4of": send(200, "OK", "0"),
+    "/user/1.0/7wohs32cngzuqt466q3ge7indszva4of": httpd_handler(200, "OK", "0"),
     // jane@doe.com
-    "/user/1.0/vuuf3eqgloxpxmzph27f5a6ve7gzlrms": send(200, "OK", "1")
+    "/user/1.0/vuuf3eqgloxpxmzph27f5a6ve7gzlrms": httpd_handler(200, "OK", "1")
   });
   try {
     Service.serverURL = "http://localhost:8080/";
