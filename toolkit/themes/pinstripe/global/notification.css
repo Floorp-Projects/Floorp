@@ -155,6 +155,11 @@ notification[type="critical"] .messageImage {
               0 1px 0 rgba(255,255,255,.1);
 }
 
+.popup-notification-closebutton {
+  -moz-margin-end: -12px;
+  margin-top: -13px;
+}
+
 .popup-notification-closeitem > .menu-iconic-left {
   display: none;
 }

@@ -374,6 +374,7 @@ PopupNotifications.prototype = {
       // in the document.
       popupnotification.setAttribute("id", n.id + "-notification");
       popupnotification.setAttribute("popupid", n.id);
+      popupnotification.setAttribute("closebuttoncommand", "PopupNotifications._dismiss();");
       if (n.mainAction) {
         popupnotification.setAttribute("buttonlabel", n.mainAction.label);
         popupnotification.setAttribute("buttonaccesskey", n.mainAction.accessKey);

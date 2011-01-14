@@ -1063,6 +1063,12 @@
           </xul:button>
         </xul:hbox>
       </xul:vbox>
+      <xul:vbox pack="start">
+        <xul:toolbarbutton anonid="closebutton"
+                           class="messageCloseButton popup-notification-closebutton"
+                           xbl:inherits="oncommand=closebuttoncommand"
+                           tooltiptext="&closeNotification.tooltip;"/>
+      </xul:vbox>
     </content>
     <implementation>  
       <constructor><![CDATA[
@@ -1102,6 +1108,12 @@
             </xul:menupopup>
           </xul:button>
         </xul:hbox>
+      </xul:vbox>
+      <xul:vbox pack="start">
+        <xul:toolbarbutton anonid="closebutton"
+                           class="messageCloseButton popup-notification-closebutton"
+                           xbl:inherits="oncommand=closebuttoncommand"
+                           tooltiptext="&closeNotification.tooltip;"/>
       </xul:vbox>
     </content>
     <implementation>

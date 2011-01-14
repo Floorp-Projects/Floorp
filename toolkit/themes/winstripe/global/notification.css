@@ -148,6 +148,11 @@ notification[type="critical"] .messageImage {
 }
 %endif
 
+.popup-notification-closebutton {
+  -moz-margin-end: -14px;
+  margin-top: -10px;
+}
+
 .popup-notification-closeitem {
   list-style-image: url("chrome://global/skin/icons/close.png");
   -moz-image-region: rect(0, 16px, 16px, 0);
