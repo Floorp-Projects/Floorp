@@ -68,6 +68,39 @@ typedef JSC::MacroAssembler::Imm32 Imm32;
 /* Rough over-estimate of how much memory we need to unprotect. */
 static const uint32 INLINE_PATH_LENGTH = 64;
 
+/* Static initializer to prime platforms that use constant offsets for ICs. */
+#ifndef JS_HAS_IC_LABELS
+ICOffsetInitializer::ICOffsetInitializer()
+{
+    {
+        GetPropLabels &labels = PICInfo::getPropLabels_;
+#if defined JS_CPU_X86
+        labels.dslotsLoadOffset = -15;
+        labels.inlineShapeOffset = 6;
+        labels.inlineTypeLoad = -6;
+        labels.inlineDataLoad = 0;
+        labels.stubShapeJump = 12;
+#endif
+    }
+    {
+        SetPropLabels &labels = PICInfo::setPropLabels_;
+        labels.inlineShapeOffset = 6;
+        labels.stubShapeJump = 12;
+    }
+    {
+        BindNameLabels &labels = PICInfo::bindNameLabels_;
+#if defined JS_CPU_X86
+        labels.inlineJumpOffset = 10;
+#endif
+    }
+}
+
+ICOffsetInitializer s_ICOffsetInitializer;
+GetPropLabels PICInfo::getPropLabels_;
+SetPropLabels PICInfo::setPropLabels_;
+BindNameLabels PICInfo::bindNameLabels_;
+#endif
+
 // Helper class to simplify LinkBuffer usage in PIC stub generators.
 // This guarantees correct OOM and refcount handling for buffers while they
 // are instantiated and rooted.
@@ -154,7 +187,7 @@ class SetPropCompiler : public PICStubCompiler
             return SETPROP_DSLOTS_BEFORE_KTYPE;
         return SETPROP_DSLOTS_BEFORE_DYNAMIC;
 #elif defined JS_PUNBOX64
-        return pic.labels.setprop.dslotsLoadOffset;
+        return pic.setPropLabels().getDslotsLoadOffset();
 #endif
     }
 
@@ -179,11 +212,7 @@ class SetPropCompiler : public PICStubCompiler
 #endif
 
     static int32 inlineShapeOffset(ic::PICInfo &pic) {
-#if defined JS_NUNBOX32
-        return SETPROP_INLINE_SHAPE_OFFSET;
-#elif defined JS_PUNBOX64
-        return pic.labels.setprop.inlineShapeOffset;
-#endif
+        return pic.setPropLabels().getInlineShapeOffset();
     }
 
     static int32 inlineShapeJump(ic::PICInfo &pic) {
@@ -279,11 +308,7 @@ class SetPropCompiler : public PICStubCompiler
         // the offsets are different.
         int shapeGuardJumpOffset;
         if (pic.stubsGenerated)
-#if defined JS_NUNBOX32
-            shapeGuardJumpOffset = SETPROP_STUB_SHAPE_JUMP;
-#elif defined JS_PUNBOX64
-            shapeGuardJumpOffset = pic.labels.setprop.stubShapeJump;
-#endif
+            shapeGuardJumpOffset = pic.setPropLabels().getStubShapeJump();
         else
             shapeGuardJumpOffset = pic.shapeGuard + inlineShapeJump();
         repatcher.relink(label.jumpAtOffset(shapeGuardJumpOffset), cs);
@@ -309,12 +334,7 @@ class SetPropCompiler : public PICStubCompiler
         Jump shapeGuard = masm.branch32_force32(Assembler::NotEqual, pic.shapeReg,
                                                 Imm32(initialShape));
 
-#if defined JS_NUNBOX32
-        DBGLABEL(dbgStubShapeJump);
-        JS_ASSERT(masm.differenceBetween(start, dbgStubShapeJump) == SETPROP_STUB_SHAPE_JUMP);
-#elif defined JS_PUNBOX64
         Label stubShapeJumpLabel = masm.label();
-#endif
 
         JS_ASSERT_IF(!shape->hasDefaultSetter(), obj->getClass() == &js_CallClass);
 
@@ -489,10 +509,7 @@ class SetPropCompiler : public PICStubCompiler
         pic.stubsGenerated++;
         pic.updateLastPath(buffer, start);
 
-#if defined JS_PUNBOX64
-        pic.labels.setprop.stubShapeJump = masm.differenceBetween(start, stubShapeJumpLabel);
-        JS_ASSERT(pic.labels.setprop.stubShapeJump == masm.differenceBetween(start, stubShapeJumpLabel));
-#endif
+        pic.setPropLabels().setStubShapeJump(masm.differenceBetween(start, stubShapeJumpLabel));
 
         if (pic.stubsGenerated == MAX_PIC_STUBS)
             disable("max stubs reached");
@@ -745,11 +762,7 @@ class GetPropCompiler : public PICStubCompiler
     int         lastStubSecondShapeGuard;
 
     static int32 inlineShapeOffset(ic::PICInfo &pic) {
-#if defined JS_NUNBOX32
-        return GETPROP_INLINE_SHAPE_OFFSET;
-#elif defined JS_PUNBOX64
-        return pic.labels.getprop.inlineShapeOffset;
-#endif
+        return pic.getPropLabels().getInlineShapeOffset();
     }
 
     inline int32 inlineShapeOffset() {
@@ -769,11 +782,7 @@ class GetPropCompiler : public PICStubCompiler
     }
 
     static int32 dslotsLoad(ic::PICInfo &pic) {
-#if defined JS_NUNBOX32
-        return GETPROP_DSLOTS_LOAD;
-#elif defined JS_PUNBOX64
-        return pic.labels.getprop.dslotsLoadOffset;
-#endif
+        return pic.getPropLabels().getDslotsLoadOffset();
     }
 
     inline int32 dslotsLoad() {
@@ -1079,11 +1088,12 @@ class GetPropCompiler : public PICStubCompiler
 
         uint32 shapeOffs = pic.shapeGuard + inlineShapeOffset();
         repatcher.repatch(pic.fastPathStart.dataLabel32AtOffset(shapeOffs), obj->shape());
+        GetPropLabels &labels = pic.getPropLabels();
 #if defined JS_NUNBOX32
-        repatcher.repatch(pic.fastPathRejoin.dataLabel32AtOffset(GETPROP_TYPE_LOAD), offset + 4);
-        repatcher.repatch(pic.fastPathRejoin.dataLabel32AtOffset(GETPROP_DATA_LOAD), offset);
+        repatcher.repatch(labels.getTypeLoad(pic.fastPathRejoin), offset + 4);
+        repatcher.repatch(labels.getDataLoad(pic.fastPathRejoin), offset);
 #elif defined JS_PUNBOX64
-        repatcher.repatch(pic.fastPathRejoin.dataLabel32AtOffset(pic.labels.getprop.inlineValueOffset), offset);
+        repatcher.repatch(labels.getValueLoad(pic.fastPathRejoin), offset);
 #endif
 
         pic.inlinePathPatched = true;
@@ -1100,6 +1110,8 @@ class GetPropCompiler : public PICStubCompiler
         Label start;
         Jump shapeGuard;
         Jump argsLenGuard;
+
+        bool setStubShapeOffset = true;
         if (obj->isDenseArray()) {
             start = masm.label();
             shapeGuard = masm.testObjClass(Assembler::NotEqual, pic.objReg, obj->getClass());
@@ -1108,6 +1120,9 @@ class GetPropCompiler : public PICStubCompiler
              * No need to assert validity of GETPROP_STUB_SHAPE_JUMP in this case:
              * the IC is disabled after a dense array hit, so no patching can occur.
              */
+#ifndef JS_HAS_IC_LABELS
+            setStubShapeOffset = false;
+#endif
         } else {
             if (pic.shapeNeedsRemat()) {
                 masm.loadShape(pic.objReg, pic.shapeReg);
@@ -1117,14 +1132,9 @@ class GetPropCompiler : public PICStubCompiler
             start = masm.label();
             shapeGuard = masm.branch32_force32(Assembler::NotEqual, pic.shapeReg,
                                                Imm32(obj->shape()));
-#if defined JS_NUNBOX32
-            JS_ASSERT(masm.differenceBetween(start, shapeGuard) == GETPROP_STUB_SHAPE_JUMP);
-#endif
         }
 
-#if defined JS_PUNBOX64
         Label stubShapeJumpLabel = masm.label();
-#endif
 
         if (!shapeMismatches.append(shapeGuard))
             return error();
@@ -1173,10 +1183,8 @@ class GetPropCompiler : public PICStubCompiler
         pic.stubsGenerated++;
         pic.updateLastPath(buffer, start);
 
-#if defined JS_PUNBOX64
-        pic.labels.getprop.stubShapeJump = masm.differenceBetween(start, stubShapeJumpLabel);
-        JS_ASSERT(pic.labels.getprop.stubShapeJump == masm.differenceBetween(start, stubShapeJumpLabel));
-#endif
+        if (setStubShapeOffset)
+            pic.getPropLabels().setStubShapeJump(masm.differenceBetween(start, stubShapeJumpLabel));
 
         if (pic.stubsGenerated == MAX_PIC_STUBS)
             disable("max stubs reached");
@@ -1196,11 +1204,7 @@ class GetPropCompiler : public PICStubCompiler
         // the offsets are different.
         int shapeGuardJumpOffset;
         if (pic.stubsGenerated)
-#if defined JS_NUNBOX32
-            shapeGuardJumpOffset = GETPROP_STUB_SHAPE_JUMP;
-#elif defined JS_PUNBOX64
-            shapeGuardJumpOffset = pic.labels.getprop.stubShapeJump;
-#endif
+            shapeGuardJumpOffset = pic.getPropLabels().getStubShapeJump();
         else
             shapeGuardJumpOffset = pic.shapeGuard + inlineShapeJump();
         repatcher.relink(label.jumpAtOffset(shapeGuardJumpOffset), cs);
@@ -1546,11 +1550,7 @@ class BindNameCompiler : public PICStubCompiler
     JSAtom *atom;
 
     static int32 inlineJumpOffset(ic::PICInfo &pic) {
-#if defined JS_NUNBOX32
-        return BINDNAME_INLINE_JUMP_OFFSET;
-#elif defined JS_PUNBOX64
-        return pic.labels.bindname.inlineJumpOffset;
-#endif
+        return pic.bindNameLabels().getInlineJumpOffset();
     }
 
     inline int32 inlineJumpOffset() {

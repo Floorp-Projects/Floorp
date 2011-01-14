@@ -221,11 +221,41 @@ class Compiler : public BaseCompiler
         JSAtom *atom;
         bool hasTypeCheck;
         ValueRemat vr;
-# if defined JS_CPU_X64
-        ic::PICLabels labels;
-# endif
+#ifdef JS_HAS_IC_LABELS
+        union {
+            ic::GetPropLabels getPropLabels_;
+            ic::SetPropLabels setPropLabels_;
+            ic::BindNameLabels bindNameLabels_;
+        };
 
-        void copySimpleMembersTo(ic::PICInfo &ic) const {
+        ic::GetPropLabels &getPropLabels() {
+            JS_ASSERT(kind == ic::PICInfo::GET || kind == ic::PICInfo::CALL);
+            return getPropLabels_;
+        }
+        ic::SetPropLabels &setPropLabels() {
+            JS_ASSERT(kind == ic::PICInfo::SET || kind == ic::PICInfo::SETMETHOD);
+            return setPropLabels_;
+        }
+        ic::BindNameLabels &bindNameLabels() {
+            JS_ASSERT(kind == ic::PICInfo::BIND);
+            return bindNameLabels_;
+        }
+#else
+        ic::GetPropLabels &getPropLabels() {
+            JS_ASSERT(kind == ic::PICInfo::GET || kind == ic::PICInfo::CALL);
+            return ic::PICInfo::getPropLabels_;
+        }
+        ic::SetPropLabels &setPropLabels() {
+            JS_ASSERT(kind == ic::PICInfo::SET || kind == ic::PICInfo::SETMETHOD);
+            return ic::PICInfo::setPropLabels_;
+        }
+        ic::BindNameLabels &bindNameLabels() {
+            JS_ASSERT(kind == ic::PICInfo::BIND);
+            return ic::PICInfo::bindNameLabels_;
+        }
+#endif
+
+        void copySimpleMembersTo(ic::PICInfo &ic) {
             ic.kind = kind;
             ic.shapeReg = shapeReg;
             ic.objReg = objReg;
@@ -237,6 +267,14 @@ class Compiler : public BaseCompiler
                 ic.u.get.typeReg = typeReg;
                 ic.u.get.hasTypeCheck = hasTypeCheck;
             }
+#ifdef JS_HAS_IC_LABELS
+            if (ic.isGet())
+                ic.setLabels(getPropLabels());
+            else if (ic.isSet())
+                ic.setLabels(setPropLabels());
+            else if (ic.kind == ic::PICInfo::BIND)
+                ic.setLabels(bindNameLabels());
+#endif
         }
 
     };
