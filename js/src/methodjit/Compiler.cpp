@@ -489,7 +489,10 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
             switch (mics[i].kind) {
               case ic::MICInfo::GET:
               case ic::MICInfo::SET:
-                scriptMICs[i].load = fullCode.locationOf(mics[i].load);
+                if (mics[i].kind == ic::MICInfo::GET)
+                    scriptMICs[i].load = fullCode.locationOf(mics[i].load);
+                else
+                    scriptMICs[i].load = fullCode.locationOf(mics[i].store).labelAtOffset(0);
                 scriptMICs[i].shape = fullCode.locationOf(mics[i].shape);
                 scriptMICs[i].stubCall = stubCode.locationOf(mics[i].call);
                 scriptMICs[i].stubEntry = stubCode.locationOf(mics[i].stubEntry);
@@ -3435,7 +3438,7 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache)
 
     /* Store RHS into object slot. */
     Address slot(objReg, 1 << 24);
-    Label inlineValueStore = masm.storeValueWithAddressOffsetPatch(vr, slot);
+    DataLabel32 inlineValueStore = masm.storeValueWithAddressOffsetPatch(vr, slot);
     pic.fastPathRejoin = masm.label();
 
     frame.freeReg(objReg);
@@ -4415,23 +4418,12 @@ mjit::Compiler::jsop_setgname(JSAtom *atom, bool usePropertyCache)
     Address address(objReg, slot);
 
     if (mic.u.name.dataConst) {
-        mic.load = masm.storeValueWithAddressOffsetPatch(v, address);
+        mic.store = masm.storeValueWithAddressOffsetPatch(v, address);
     } else if (mic.u.name.typeConst) {
-        mic.load = masm.storeValueWithAddressOffsetPatch(ImmType(typeTag), dataReg, address);
+        mic.store = masm.storeValueWithAddressOffsetPatch(ImmType(typeTag), dataReg, address);
     } else {
-        mic.load = masm.storeValueWithAddressOffsetPatch(typeReg, dataReg, address);
+        mic.store = masm.storeValueWithAddressOffsetPatch(typeReg, dataReg, address);
     }
-
-#if defined JS_PUNBOX64
-    /* 
-     * Instructions on x86_64 can vary in size based on registers
-     * used. Since we only need to patch the last instruction in
-     * both paths above, remember the distance between the
-     * load label and after the instruction to be patched.
-     */
-    mic.patchValueOffset = masm.differenceBetween(mic.load, masm.label());
-    JS_ASSERT(mic.patchValueOffset == masm.differenceBetween(mic.load, masm.label()));
-#endif
 
     frame.freeReg(objReg);
     frame.popn(2);
