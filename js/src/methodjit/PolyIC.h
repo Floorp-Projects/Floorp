@@ -78,15 +78,6 @@ static const int32 SETPROP_INLINE_STORE_VALUE      =   0; //asserted
 static const int32 SETPROP_INLINE_SHAPE_JUMP       =   6; //asserted
 #endif
 
-/* GetPropCompiler */
-#if defined JS_CPU_X86
-static const int32 GETPROP_INLINE_TYPE_GUARD   =  12; //asserted
-static const int32 GETPROP_INLINE_SHAPE_JUMP   =  12; //asserted
-#elif defined JS_CPU_X64
-static const int32 GETPROP_INLINE_TYPE_GUARD   =  19; //asserted
-static const int32 GETPROP_INLINE_SHAPE_JUMP   =   6; //asserted
-#endif
-
 /* ScopeNameCompiler */
 #if defined JS_CPU_X86
 static const int32 SCOPENAME_JUMP_OFFSET = 5; //asserted
@@ -448,6 +439,15 @@ struct PICInfo : public BasePolyIC {
         if (!stubsGenerated)
             return fastPathStart;
         return CodeLocationLabel(lastStubStart.start());
+    }
+
+    CodeLocationLabel getFastShapeGuard() {
+        return fastPathStart.labelAtOffset(shapeGuard);
+    }
+
+    CodeLocationLabel getSlowTypeCheck() {
+        JS_ASSERT(isGet());
+        return slowPathStart.labelAtOffset(u.get.typeCheckOffset);
     }
 
     // Return a JITCode block corresponding to the code memory to attach a

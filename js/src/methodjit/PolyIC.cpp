@@ -77,9 +77,8 @@ ICOffsetInitializer::ICOffsetInitializer()
 #if defined JS_CPU_X86
         labels.dslotsLoadOffset = -15;
         labels.inlineShapeOffset = 6;
-        labels.inlineTypeLoad = -6;
-        labels.inlineDataLoad = 0;
-        labels.stubShapeJump = 12;
+        labels.stubShapeJumpOffset = 12;
+        labels.inlineValueLoadOffset = -12;
 #endif
     }
     {
@@ -173,6 +172,7 @@ class PICStubCompiler : public BaseCompiler
     }
 };
 
+#if defined JS_POLYIC_SETPROP
 class SetPropCompiler : public PICStubCompiler
 {
     JSObject *obj;
@@ -308,7 +308,7 @@ class SetPropCompiler : public PICStubCompiler
         // the offsets are different.
         int shapeGuardJumpOffset;
         if (pic.stubsGenerated)
-            shapeGuardJumpOffset = pic.setPropLabels().getStubShapeJump();
+            shapeGuardJumpOffset = pic.setPropLabels().getStubShapeJumpOffset();
         else
             shapeGuardJumpOffset = pic.shapeGuard + inlineShapeJump();
         repatcher.relink(label.jumpAtOffset(shapeGuardJumpOffset), cs);
@@ -671,6 +671,7 @@ class SetPropCompiler : public PICStubCompiler
         return generateStub(obj->shape(), shape, false, !obj->hasSlotsArray());
     }
 };
+#endif
 
 static bool
 IsCacheableProtoChain(JSObject *obj, JSObject *holder)
@@ -755,39 +756,12 @@ struct GetPropertyHelper {
     }
 };
 
+#if defined JS_POLYIC_GETPROP
 class GetPropCompiler : public PICStubCompiler
 {
     JSObject    *obj;
     JSAtom      *atom;
     int         lastStubSecondShapeGuard;
-
-    static int32 inlineShapeOffset(ic::PICInfo &pic) {
-        return pic.getPropLabels().getInlineShapeOffset();
-    }
-
-    inline int32 inlineShapeOffset() {
-        return inlineShapeOffset(pic);
-    }
-
-    static int32 inlineShapeJump(ic::PICInfo &pic) {
-#if defined JS_NUNBOX32
-        return GETPROP_INLINE_SHAPE_JUMP;
-#elif defined JS_PUNBOX64
-        return inlineShapeOffset(pic) + GETPROP_INLINE_SHAPE_JUMP;
-#endif
-    }
-
-    inline int32 inlineShapeJump() {
-        return inlineShapeJump(pic);
-    }
-
-    static int32 dslotsLoad(ic::PICInfo &pic) {
-        return pic.getPropLabels().getDslotsLoadOffset();
-    }
-
-    inline int32 dslotsLoad() {
-        return dslotsLoad(pic);
-    }
 
   public:
     GetPropCompiler(VMFrame &f, JSScript *script, JSObject *obj, ic::PICInfo &pic, JSAtom *atom,
@@ -799,18 +773,26 @@ class GetPropCompiler : public PICStubCompiler
         lastStubSecondShapeGuard(pic.secondShapeGuard)
     { }
 
+    int getLastStubSecondShapeGuard() const {
+#if defined JS_CPU_ARM
+        /* Jumps on ARM point at the beginning of the instruction. */
+        return lastStubSecondShapeGuard ? lastStubSecondShapeGuard - sizeof(JSC::ARMWord) : 0;
+#else
+        return lastStubSecondShapeGuard;
+#endif
+    }
+
     static void reset(Repatcher &repatcher, ic::PICInfo &pic)
     {
-        repatcher.repatchLEAToLoadPtr(pic.fastPathRejoin.instructionAtOffset(dslotsLoad(pic)));
-        repatcher.repatch(pic.fastPathStart.dataLabel32AtOffset(
-                           pic.shapeGuard + inlineShapeOffset(pic)),
+        GetPropLabels &labels = pic.getPropLabels();
+        repatcher.repatchLEAToLoadPtr(labels.getDslotsLoad(pic.fastPathRejoin));
+        repatcher.repatch(labels.getInlineShapeData(pic.getFastShapeGuard()),
                           int32(JSObjectMap::INVALID_SHAPE));
-        repatcher.relink(pic.fastPathStart.jumpAtOffset(pic.shapeGuard + inlineShapeJump(pic)),
-                         pic.slowPathStart);
+        repatcher.relink(labels.getInlineShapeJump(pic.getFastShapeGuard()), pic.slowPathStart);
 
         if (pic.hasTypeCheck()) {
-            repatcher.relink(pic.fastPathStart.jumpAtOffset(GETPROP_INLINE_TYPE_GUARD),
-                             pic.slowPathStart.labelAtOffset(pic.u.get.typeCheckOffset));
+            /* TODO: combine pic.u.get into ICLabels? */
+            repatcher.relink(labels.getInlineTypeJump(pic.fastPathStart), pic.getSlowTypeCheck());
         }
 
         VoidStubPIC stub;
@@ -1001,7 +983,7 @@ class GetPropCompiler : public PICStubCompiler
             return disable("code memory is out of range");
         }
 
-        buffer.link(notString, pic.slowPathStart.labelAtOffset(pic.u.get.typeCheckOffset));
+        buffer.link(notString, pic.getSlowTypeCheck());
         buffer.link(shapeMismatch, pic.slowPathStart);
         buffer.link(done, pic.fastPathRejoin);
 
@@ -1012,7 +994,7 @@ class GetPropCompiler : public PICStubCompiler
         /* Patch the type check to jump here. */
         if (pic.hasTypeCheck()) {
             Repatcher repatcher(f.jit());
-            repatcher.relink(pic.fastPathStart.jumpAtOffset(GETPROP_INLINE_TYPE_GUARD), cs);
+            repatcher.relink(pic.getPropLabels().getInlineTypeJump(pic.fastPathStart), cs);
         }
 
         /* Disable the PIC so we don't keep generating stubs on the above shape mismatch. */
@@ -1043,7 +1025,7 @@ class GetPropCompiler : public PICStubCompiler
             return disable("code memory is out of range");
         }
 
-        buffer.link(notString, pic.slowPathStart.labelAtOffset(pic.u.get.typeCheckOffset));
+        buffer.link(notString, pic.getSlowTypeCheck());
         buffer.link(done, pic.fastPathRejoin);
 
         CodeLocationLabel start = buffer.finalize();
@@ -1052,7 +1034,7 @@ class GetPropCompiler : public PICStubCompiler
 
         if (pic.hasTypeCheck()) {
             Repatcher repatcher(f.jit());
-            repatcher.relink(pic.fastPathStart.jumpAtOffset(GETPROP_INLINE_TYPE_GUARD), start);
+            repatcher.relink(pic.getPropLabels().getInlineTypeJump(pic.fastPathStart), start);
         }
 
         disable("generated string length stub");
@@ -1064,11 +1046,11 @@ class GetPropCompiler : public PICStubCompiler
     {
         spew("patch", "inline");
         Repatcher repatcher(f.jit());
+        GetPropLabels &labels = pic.getPropLabels();
 
         int32 offset;
         if (!holder->hasSlotsArray()) {
-            JSC::CodeLocationInstruction istr;
-            istr = pic.fastPathRejoin.instructionAtOffset(dslotsLoad());
+            CodeLocationInstruction istr = labels.getDslotsLoad(pic.fastPathRejoin);
             repatcher.repatchLoadPtrToLEA(istr);
 
             // 
@@ -1086,15 +1068,8 @@ class GetPropCompiler : public PICStubCompiler
             offset = shape->slot * sizeof(Value);
         }
 
-        uint32 shapeOffs = pic.shapeGuard + inlineShapeOffset();
-        repatcher.repatch(pic.fastPathStart.dataLabel32AtOffset(shapeOffs), obj->shape());
-        GetPropLabels &labels = pic.getPropLabels();
-#if defined JS_NUNBOX32
-        repatcher.repatch(labels.getTypeLoad(pic.fastPathRejoin), offset + 4);
-        repatcher.repatch(labels.getDataLoad(pic.fastPathRejoin), offset);
-#elif defined JS_PUNBOX64
-        repatcher.repatch(labels.getValueLoad(pic.fastPathRejoin), offset);
-#endif
+        repatcher.repatch(labels.getInlineShapeData(pic.getFastShapeGuard()), obj->shape());
+        repatcher.patchAddressOffsetForValueLoad(labels.getValueLoad(pic.fastPathRejoin), offset);
 
         pic.inlinePathPatched = true;
 
@@ -1108,13 +1083,14 @@ class GetPropCompiler : public PICStubCompiler
         Assembler masm;
 
         Label start;
-        Jump shapeGuard;
+        Jump shapeGuardJump;
+        DataLabel32 shapeGuardData;
         Jump argsLenGuard;
 
         bool setStubShapeOffset = true;
         if (obj->isDenseArray()) {
             start = masm.label();
-            shapeGuard = masm.testObjClass(Assembler::NotEqual, pic.objReg, obj->getClass());
+            shapeGuardJump = masm.testObjClass(Assembler::NotEqual, pic.objReg, obj->getClass());
 
             /* 
              * No need to assert validity of GETPROP_STUB_SHAPE_JUMP in this case:
@@ -1130,13 +1106,12 @@ class GetPropCompiler : public PICStubCompiler
             }
 
             start = masm.label();
-            shapeGuard = masm.branch32_force32(Assembler::NotEqual, pic.shapeReg,
-                                               Imm32(obj->shape()));
+            shapeGuardJump = masm.branch32WithPatch(Assembler::NotEqual, pic.shapeReg,
+                                                    Imm32(obj->shape()), shapeGuardData);
         }
-
         Label stubShapeJumpLabel = masm.label();
 
-        if (!shapeMismatches.append(shapeGuard))
+        if (!shapeMismatches.append(shapeGuardJump))
             return error();
 
         RegisterID holderReg = pic.objReg;
@@ -1204,12 +1179,12 @@ class GetPropCompiler : public PICStubCompiler
         // the offsets are different.
         int shapeGuardJumpOffset;
         if (pic.stubsGenerated)
-            shapeGuardJumpOffset = pic.getPropLabels().getStubShapeJump();
+            shapeGuardJumpOffset = pic.getPropLabels().getStubShapeJumpOffset();
         else
-            shapeGuardJumpOffset = pic.shapeGuard + inlineShapeJump();
+            shapeGuardJumpOffset = pic.shapeGuard + pic.getPropLabels().getInlineShapeJumpOffset();
         repatcher.relink(label.jumpAtOffset(shapeGuardJumpOffset), cs);
-        if (lastStubSecondShapeGuard)
-            repatcher.relink(label.jumpAtOffset(lastStubSecondShapeGuard), cs);
+        if (int secondGuardOffset = getLastStubSecondShapeGuard())
+            repatcher.relink(label.jumpAtOffset(secondGuardOffset), cs);
     }
 
     LookupStatus update()
@@ -1227,7 +1202,9 @@ class GetPropCompiler : public PICStubCompiler
         return generateStub(getprop.holder, getprop.shape);
     }
 };
+#endif
 
+#if defined JS_POLYIC_NAME
 class ScopeNameCompiler : public PICStubCompiler
 {
     JSObject *scopeChain;
@@ -1543,7 +1520,9 @@ class ScopeNameCompiler : public PICStubCompiler
         return true;
     }
 };
-
+#endif
+ 
+#if defined JS_POLYIC_BIND
 class BindNameCompiler : public PICStubCompiler
 {
     JSObject *scopeChain;
@@ -1668,7 +1647,9 @@ class BindNameCompiler : public PICStubCompiler
         return obj;
     }
 };
+#endif
 
+#if defined JS_POLYIC_GETPROP
 static void JS_FASTCALL
 DisabledLengthIC(VMFrame &f, ic::PICInfo *pic)
 {
@@ -1750,7 +1731,9 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
         THROW();
     f.regs.sp[-1] = v;
 }
+#endif
 
+#if defined JS_POLYIC_SETPROP
 template <JSBool strict>
 static void JS_FASTCALL
 DisabledSetPropIC(VMFrame &f, ic::PICInfo *pic)
@@ -1797,7 +1780,9 @@ ic::SetProp(VMFrame &f, ic::PICInfo *pic)
     Value rval = f.regs.sp[-1];
     stub(f, pic);
 }
+#endif
 
+#if defined JS_POLYIC_GETPROP
 static void JS_FASTCALL
 DisabledCallPropIC(VMFrame &f, ic::PICInfo *pic)
 {
@@ -1914,7 +1899,9 @@ ic::CallProp(VMFrame &f, ic::PICInfo *pic)
     }
 #endif
 }
+#endif
 
+#if defined JS_POLYIC_NAME
 static void JS_FASTCALL
 DisabledNameIC(VMFrame &f, ic::PICInfo *pic)
 {
@@ -1963,7 +1950,9 @@ ic::Name(VMFrame &f, ic::PICInfo *pic)
         THROW();
     f.regs.sp[0] = rval;
 }
+#endif
 
+#if defined JS_POLYIC_BIND
 static void JS_FASTCALL
 DisabledBindNameIC(VMFrame &f, ic::PICInfo *pic)
 {
@@ -1994,6 +1983,7 @@ ic::BindName(VMFrame &f, ic::PICInfo *pic)
 
     f.regs.sp[0].setObject(*obj);
 }
+#endif
 
 bool
 BaseIC::isCallOp()
@@ -2032,6 +2022,7 @@ BaseIC::shouldUpdate(JSContext *cx)
     return true;
 }
 
+#if defined JS_POLYIC_ELEM
 static void JS_FASTCALL
 DisabledGetElem(VMFrame &f, ic::GetElementIC *ic)
 {
@@ -2739,6 +2730,7 @@ ic::SetElement(VMFrame &f, ic::SetElementIC *ic)
 
 template void JS_FASTCALL ic::SetElement<true>(VMFrame &f, SetElementIC *ic);
 template void JS_FASTCALL ic::SetElement<false>(VMFrame &f, SetElementIC *ic);
+#endif /* JS_POLYIC_ELEM */
 
 void
 JITScript::purgePICs()
@@ -2751,21 +2743,29 @@ JITScript::purgePICs()
     for (uint32 i = 0; i < nPICs; i++) {
         ic::PICInfo &pic = pics[i];
         switch (pic.kind) {
+#ifdef JS_POLYIC_SETPROP
           case ic::PICInfo::SET:
           case ic::PICInfo::SETMETHOD:
             SetPropCompiler::reset(repatcher, pic);
             break;
+#endif
+#ifdef JS_POLYIC_NAME
           case ic::PICInfo::NAME:
           case ic::PICInfo::XNAME:
             ScopeNameCompiler::reset(repatcher, pic);
             break;
+#endif
+#ifdef JS_POLYIC_BIND
           case ic::PICInfo::BIND:
             BindNameCompiler::reset(repatcher, pic);
             break;
+#endif
+#ifdef JS_POLYIC_GETPROP
           case ic::PICInfo::CALL: /* fall-through */
           case ic::PICInfo::GET:
             GetPropCompiler::reset(repatcher, pic);
             break;
+#endif
           default:
             JS_NOT_REACHED("Unhandled PIC kind");
             break;
@@ -2773,10 +2773,12 @@ JITScript::purgePICs()
         pic.reset();
     }
 
+#if defined JS_POLYIC_ELEM
     for (uint32 i = 0; i < nGetElems; i++)
         getElems[i].purge(repatcher);
     for (uint32 i = 0; i < nSetElems; i++)
         setElems[i].purge(repatcher);
+#endif
 }
 
 void
