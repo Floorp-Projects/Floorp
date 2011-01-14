@@ -47,6 +47,8 @@
 #include "nsNavHistory.h"
 #include "nsNavBookmarks.h"
 #include "Helpers.h"
+#include "PlaceInfo.h"
+#include "VisitInfo.h"
 
 #include "mozilla/storage.h"
 #include "mozilla/dom/Link.h"
@@ -348,8 +350,26 @@ public:
     NS_PRECONDITION(NS_IsMainThread(),
                     "This should be called on the main thread");
 
-    // TODO build a mozIPlaceInfo object for the visit.
-    (void)mCallback->OnComplete(mResult, nsnull);
+    nsCOMPtr<nsIURI> referrerURI;
+    if (!mPlace.referrerSpec.IsEmpty()) {
+      (void)NS_NewURI(getter_AddRefs(referrerURI), mPlace.referrerSpec);
+    }
+
+    nsCOMPtr<mozIVisitInfo> visit =
+      new VisitInfo(mPlace.visitId, mPlace.visitTime, mPlace.transitionType,
+                    referrerURI.forget(), mPlace.sessionId);
+    PlaceInfo::VisitsArray visits;
+    (void)visits.AppendElement(visit);
+
+    nsCOMPtr<nsIURI> uri;
+    (void)NS_NewURI(getter_AddRefs(uri), mPlace.spec);
+
+    // We do not notify about the frecency of the place.
+    nsCOMPtr<mozIPlaceInfo> place =
+      new PlaceInfo(mPlace.placeId, mPlace.guid, uri.forget(), mPlace.title,
+                    -1, visits);
+
+    (void)mCallback->OnComplete(mResult, place);
     return NS_OK;
   }
 

@@ -72,6 +72,8 @@ CPPSRCS = \
           History.cpp \
           nsPlacesImportExportService.cpp \
           AsyncFaviconHelpers.cpp \
+          PlaceInfo.cpp \
+          VisitInfo.cpp \
           $(NULL)
 
 EXTRA_DSO_LDOPTS += \
