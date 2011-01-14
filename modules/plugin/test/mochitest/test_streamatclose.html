@@ -26,7 +26,7 @@
                     function(r, t) {
                       is(r, 2, "Stream should have failed");
                       urlnotified = true;
-                    }, true), "neverending.sjs started successfully");
+                    }, null, true), "neverending.sjs started successfully");
 
     setTimeout(removePlugin, 500);
   }
