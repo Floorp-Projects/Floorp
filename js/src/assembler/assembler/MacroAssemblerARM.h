@@ -496,6 +496,11 @@ public:
         return Jump(m_assembler.jmp(ARMCondition(cond), useConstantPool));
     }
 
+    Jump branch32_force32(Condition cond, RegisterID left, Imm32 right, int useConstantPool = 0)
+    {
+        return branch32(cond, left, right, useConstantPool);
+    }
+
     // As branch32, but allow the value ('right') to be patched.
     Jump branch32WithPatch(Condition cond, RegisterID left, Imm32 right, DataLabel32 &dataLabel)
     {

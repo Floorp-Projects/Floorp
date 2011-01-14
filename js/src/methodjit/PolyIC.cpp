@@ -1038,7 +1038,6 @@ class GetPropCompiler : public PICStubCompiler
 
         Label start;
         Jump shapeGuardJump;
-        DataLabel32 shapeGuardData;
         Jump argsLenGuard;
 
         bool setStubShapeOffset = true;
@@ -1060,8 +1059,8 @@ class GetPropCompiler : public PICStubCompiler
             }
 
             start = masm.label();
-            shapeGuardJump = masm.branch32WithPatch(Assembler::NotEqual, pic.shapeReg,
-                                                    Imm32(obj->shape()), shapeGuardData);
+            shapeGuardJump = masm.branch32_force32(Assembler::NotEqual, pic.shapeReg,
+                                                   Imm32(obj->shape()));
         }
         Label stubShapeJumpLabel = masm.label();
 
@@ -1995,7 +1994,7 @@ BaseIC::shouldUpdate(JSContext *cx)
     return true;
 }
 
-#if defined JS_POLYIC_ELEM
+#if defined JS_POLYIC_GETELEM
 static void JS_FASTCALL
 DisabledGetElem(VMFrame &f, ic::GetElementIC *ic)
 {
@@ -2048,10 +2047,13 @@ GetElementIC::purge(Repatcher &repatcher)
         repatcher.relink(fastPathStart.jumpAtOffset(inlineClaspGuard), slowPathStart);
 
     if (slowCallPatched) {
-        if (op == JSOP_GETELEM)
-            repatcher.relink(slowPathCall, FunctionPtr(JS_FUNC_TO_DATA_PTR(void *, ic::GetElement)));
-        else if (op == JSOP_CALLELEM)
-            repatcher.relink(slowPathCall, FunctionPtr(JS_FUNC_TO_DATA_PTR(void *, ic::CallElement)));
+        if (op == JSOP_GETELEM) {
+            repatcher.relink(slowPathCall,
+                             FunctionPtr(JS_FUNC_TO_DATA_PTR(void *, ic::GetElement)));
+        } else if (op == JSOP_CALLELEM) {
+            repatcher.relink(slowPathCall,
+                             FunctionPtr(JS_FUNC_TO_DATA_PTR(void *, ic::CallElement)));
+        }
     }
 
     reset();
@@ -2444,7 +2446,9 @@ ic::GetElement(VMFrame &f, ic::GetElementIC *ic)
     if (!obj->getProperty(cx, id, &f.regs.sp[-2]))
         THROW();
 }
+#endif /* JS_POLYIC_GETELEM */
 
+#ifdef JS_POLYIC_SETELEM
 #define APPLY_STRICTNESS(f, s)                          \
     (FunctionTemplateConditional(s, f<true>, f<false>))
 
@@ -2703,7 +2707,7 @@ ic::SetElement(VMFrame &f, ic::SetElementIC *ic)
 
 template void JS_FASTCALL ic::SetElement<true>(VMFrame &f, SetElementIC *ic);
 template void JS_FASTCALL ic::SetElement<false>(VMFrame &f, SetElementIC *ic);
-#endif /* JS_POLYIC_ELEM */
+#endif /* JS_POLYIC_SETELEM */
 
 void
 JITScript::purgePICs()
@@ -2746,9 +2750,11 @@ JITScript::purgePICs()
         pic.reset();
     }
 
-#if defined JS_POLYIC_ELEM
+#if defined JS_POLYIC_GETELEM
     for (uint32 i = 0; i < nGetElems; i++)
         getElems[i].purge(repatcher);
+#endif
+#if defined JS_POLYIC_SETELEM
     for (uint32 i = 0; i < nSetElems; i++)
         setElems[i].purge(repatcher);
 #endif
