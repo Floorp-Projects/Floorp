@@ -98,14 +98,14 @@ class Repatcher : public JSC::RepatchBuffer
 #if defined JS_CPU_X64 || defined JS_CPU_ARM
         repatch(label.dataLabel32AtOffset(0), offset);
 #elif defined JS_CPU_X86
-        static const unsigned LOAD_DATA_OFFSET = 6;
-        static const unsigned LOAD_TYPE_OFFSET = 12;
+        static const unsigned LOAD_TYPE_OFFSET = 6;
+        static const unsigned LOAD_DATA_OFFSET = 12;
 
         /*
          * We have the following sequence to patch:
          *
-         *      mov     <offset+0>($base), %<data>
          *      mov     <offset+4>($base), %<type>
+         *      mov     <offset+0>($base), %<data>
          */
         repatch(label.dataLabel32AtOffset(LOAD_DATA_OFFSET), offset);
         repatch(label.dataLabel32AtOffset(LOAD_TYPE_OFFSET), offset + 4);
