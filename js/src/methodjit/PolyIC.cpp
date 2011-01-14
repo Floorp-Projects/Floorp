@@ -204,7 +204,7 @@ class SetPropCompiler : public PICStubCompiler
         repatcher.repatchLEAToLoadPtr(labels.getDslotsLoad(pic.fastPathRejoin, pic.u.vr));
         repatcher.repatch(labels.getInlineShapeData(pic.fastPathStart, pic.shapeGuard),
                           int32(JSObjectMap::INVALID_SHAPE));
-        repatcher.relink(labels.getInlineShapeJump(pic.fastPathStart, pic.shapeGuard),
+        repatcher.relink(labels.getInlineShapeJump(pic.fastPathStart.labelAtOffset(pic.shapeGuard)),
                          pic.slowPathStart);
 
         FunctionPtr target(JS_FUNC_TO_DATA_PTR(void *, ic::SetProp));
@@ -262,12 +262,12 @@ class SetPropCompiler : public PICStubCompiler
         // Patch either the inline fast path or a generated stub. The stub
         // omits the prefix of the inline fast path that loads the shape, so
         // the offsets are different.
-        int shapeGuardJumpOffset;
-        if (pic.stubsGenerated)
-            shapeGuardJumpOffset = pic.setPropLabels().getStubShapeJumpOffset();
-        else
-            shapeGuardJumpOffset = pic.shapeGuard + pic.setPropLabels().getInlineShapeJumpOffset();
-        repatcher.relink(label.jumpAtOffset(shapeGuardJumpOffset), cs);
+        if (pic.stubsGenerated) {
+            repatcher.relink(pic.setPropLabels().getStubShapeJump(label), cs);
+        } else {
+            CodeLocationLabel shapeGuard = label.labelAtOffset(pic.shapeGuard);
+            repatcher.relink(pic.setPropLabels().getInlineShapeJump(shapeGuard), cs);
+        }
         if (int secondGuardOffset = getLastStubSecondShapeGuard())
             repatcher.relink(label.jumpAtOffset(secondGuardOffset), cs);
     }
@@ -291,6 +291,8 @@ class SetPropCompiler : public PICStubCompiler
                                                 Imm32(initialShape));
 
         Label stubShapeJumpLabel = masm.label();
+
+        pic.setPropLabels().setStubShapeJump(masm, start, stubShapeJumpLabel);
 
         JS_ASSERT_IF(!shape->hasDefaultSetter(), obj->getClass() == &js_CallClass);
 
@@ -420,6 +422,7 @@ class SetPropCompiler : public PICStubCompiler
 
             pic.shapeRegHasBaseShape = false;
         }
+
         Jump done = masm.jump();
 
         // Common all secondary guards into one big exit.
@@ -464,8 +467,6 @@ class SetPropCompiler : public PICStubCompiler
 
         pic.stubsGenerated++;
         pic.updateLastPath(buffer, start);
-
-        pic.setPropLabels().setStubShapeJump(masm, start, stubShapeJumpLabel);
 
         if (pic.stubsGenerated == MAX_PIC_STUBS)
             disable("max stubs reached");
