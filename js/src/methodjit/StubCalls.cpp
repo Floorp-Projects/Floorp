@@ -65,6 +65,7 @@
 #include "jsatominlines.h"
 #include "StubCalls-inl.h"
 #include "jsfuninlines.h"
+#include "jstypedarray.h"
 
 #ifdef XP_WIN
 # include "jswin.h"
