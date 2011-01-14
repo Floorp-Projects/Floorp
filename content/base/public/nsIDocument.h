@@ -285,6 +285,9 @@ public:
    * Get/Set the base target of a link in a document.
    */
   virtual void GetBaseTarget(nsAString &aBaseTarget) = 0;
+  void SetBaseTarget(const nsString& aBaseTarget) {
+    mBaseTarget = aBaseTarget;
+  }
 
   /**
    * Return a standard name for the document's character set.
@@ -1746,6 +1749,9 @@ protected:
   // The session history entry in which we're currently bf-cached. Non-null
   // if and only if we're currently in the bfcache.
   nsISHEntry* mSHEntry;
+
+  // Our base target.
+  nsString mBaseTarget;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocument, NS_IDOCUMENT_IID)
