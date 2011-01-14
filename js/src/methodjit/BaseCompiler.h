@@ -266,7 +266,7 @@ class AutoReserveICSpace {
     }
 };
 
-# define RESERVE_IC_SPACE(__masm)       AutoReserveICSpace<80> arics(__masm)
+# define RESERVE_IC_SPACE(__masm)       AutoReserveICSpace<96> arics(__masm)
 
 /* The OOL path can need a lot of space because we save and restore a lot of registers. The actual
  * sequene varies. However, dumping the literal pool before an OOL block is probably a good idea
