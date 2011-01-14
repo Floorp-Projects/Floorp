@@ -87,6 +87,7 @@ struct VisitData {
   , visitTime(0)
   {
     guid.SetIsVoid(PR_TRUE);
+    title.SetIsVoid(PR_TRUE);
   }
 
   VisitData(nsIURI* aURI,
@@ -105,6 +106,7 @@ struct VisitData {
       (void)aReferrer->GetSpec(referrerSpec);
     }
     guid.SetIsVoid(PR_TRUE);
+    title.SetIsVoid(PR_TRUE);
   }
 
   /**
@@ -963,8 +965,8 @@ History::InsertPlace(const VisitData& aPlace)
 
   nsCOMPtr<mozIStorageStatement> stmt = syncStatements.GetCachedStatement(
       "INSERT INTO moz_places "
-        "(url, rev_host, hidden, typed, guid) "
-      "VALUES (:page_url, :rev_host, :hidden, :typed, GENERATE_GUID()) "
+        "(url, title, rev_host, hidden, typed, guid) "
+      "VALUES (:url, :title, :rev_host, :hidden, :typed, GENERATE_GUID()) "
     );
   NS_ENSURE_STATE(stmt);
   mozStorageStatementScoper scoper(stmt);
@@ -972,7 +974,15 @@ History::InsertPlace(const VisitData& aPlace)
   nsresult rv = stmt->BindStringByName(NS_LITERAL_CSTRING("rev_host"),
                                        aPlace.revHost);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), aPlace.spec);
+  rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("url"), aPlace.spec);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (aPlace.title.IsVoid()) {
+    rv = stmt->BindNullByName(NS_LITERAL_CSTRING("title"));
+  }
+  else {
+    rv = stmt->BindStringByName(NS_LITERAL_CSTRING("title"),
+                                StringHead(aPlace.title, TITLE_LENGTH_MAX));
+  }
   NS_ENSURE_SUCCESS(rv, rv);
   rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("typed"), aPlace.typed);
   NS_ENSURE_SUCCESS(rv, rv);
