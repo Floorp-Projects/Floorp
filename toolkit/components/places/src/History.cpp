@@ -328,6 +328,43 @@ private:
 };
 
 /**
+ * Notifies a callback object about completion.
+ */
+class NotifyCompletion : public nsRunnable
+{
+public:
+  NotifyCompletion(mozIVisitInfoCallback* aCallback,
+                   const VisitData& aPlace,
+                   nsresult aResult)
+  : mCallback(aCallback)
+  , mPlace(aPlace)
+  , mResult(aResult)
+  {
+    NS_PRECONDITION(aCallback, "Must pass a non-null callback!");
+  }
+
+  NS_IMETHOD Run()
+  {
+    NS_PRECONDITION(NS_IsMainThread(),
+                    "This should be called on the main thread");
+
+    // TODO build a mozIPlaceInfo object for the visit.
+    (void)mCallback->OnComplete(mResult, nsnull);
+    return NS_OK;
+  }
+
+private:
+  /**
+   * Callers MUST hold a strong refernce to this that outlives us because we may
+   * be created off of the main thread, and therefore cannot call AddRef on this
+   * object (and therefore cannot hold a strong reference to it).
+   */
+  mozIVisitInfoCallback* mCallback;
+  VisitData mPlace;
+  const nsresult mResult;
+};
+
+/**
  * Adds a visit to the database.
  */
 class InsertVisitedURIs : public nsRunnable
@@ -340,16 +377,19 @@ public:
    *        The database connection to use for these operations.
    * @param aPlaces
    *        The locations to record visits.
+   * @param [optional] aCallback
+   *        The callback to notify about the visit.
    */
   static nsresult Start(mozIStorageConnection* aConnection,
-                        nsTArray<VisitData>& aPlaces)
+                        nsTArray<VisitData>& aPlaces,
+                        mozIVisitInfoCallback* aCallback = NULL)
   {
     NS_PRECONDITION(NS_IsMainThread(),
                     "This should be called on the main thread");
     NS_PRECONDITION(aPlaces.Length() > 0, "Must pass a non-empty array!");
 
     nsRefPtr<InsertVisitedURIs> event =
-      new InsertVisitedURIs(aConnection, aPlaces);
+      new InsertVisitedURIs(aConnection, aPlaces, aCallback);
 
     // Get the target thread, and then start the work!
     nsCOMPtr<nsIEventTarget> target = do_GetInterface(aConnection);
@@ -368,8 +408,7 @@ public:
     mozStorageTransaction transaction(mDBConn, PR_FALSE,
                                       mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
-    VisitData* lastPlace;
-    nsresult rv;
+    VisitData* lastPlace = NULL;
     for (nsTArray<VisitData>::size_type i = 0; i < mPlaces.Length(); i++) {
       VisitData& place = mPlaces.ElementAt(i);
       VisitData& referrer = mReferrers.ElementAt(i);
@@ -381,26 +420,15 @@ public:
 
       FetchReferrerInfo(referrer, place);
 
-      // If the page was in moz_places, we need to update the entry.
-      if (known) {
-        rv = mHistory->UpdatePlace(place);
-        NS_ENSURE_SUCCESS(rv, rv);
+      nsresult rv = DoDatabaseInserts(known, place, referrer);
+      if (mCallback) {
+        nsCOMPtr<nsIRunnable> event =
+          new NotifyCompletion(mCallback, place, rv);
+        nsresult rv2 = NS_DispatchToMainThread(event);
+        NS_ENSURE_SUCCESS(rv2, rv2);
       }
-      // Otherwise, the page was not in moz_places, so now we have to add it.
-      else {
-        rv = mHistory->InsertPlace(place);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-
-      rv = AddVisit(place, referrer);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      // TODO (bug 623969) we shouldn't update this after each visit, but
-      // rather only for each unique place to save disk I/O.
-      rv = UpdateFrecency(place);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      // Dispatch an event to the main thread to notify observers.
       nsCOMPtr<nsIRunnable> event = new NotifyVisitObservers(place, referrer);
       rv = NS_DispatchToMainThread(event);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -408,15 +436,17 @@ public:
       lastPlace = &mPlaces.ElementAt(i);
     }
 
-    rv = transaction.Commit();
+    nsresult rv = transaction.Commit();
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
   }
 private:
   InsertVisitedURIs(mozIStorageConnection* aConnection,
-                    nsTArray<VisitData>& aPlaces)
+                    nsTArray<VisitData>& aPlaces,
+                    mozIVisitInfoCallback* aCallback)
   : mDBConn(aConnection)
+  , mCallback(aCallback)
   , mHistory(History::GetService())
   {
     NS_PRECONDITION(NS_IsMainThread(),
@@ -439,6 +469,59 @@ private:
         mPlaces[i].sessionId = navHistory->GetNewSessionID();
       }
     }
+
+    // We AddRef on the main thread, and release it when we are destroyed.
+    NS_IF_ADDREF(mCallback);
+  }
+
+  virtual ~InsertVisitedURIs()
+  {
+    if (mCallback) {
+      nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+      (void)NS_ProxyRelease(mainThread, mCallback, PR_TRUE);
+    }
+  }
+
+  /**
+   * Inserts or updates the entry in moz_places for this visit, adds the visit,
+   * and updates the frecency of the place.
+   *
+   * @param aKnown
+   *        True if we already have an entry for this place in moz_places, false
+   *        otherwise.
+   * @param aPlace
+   *        The place we are adding a visit for.
+   * @param aReferrer
+   *        The referrer for aPlace.
+   */
+  nsresult DoDatabaseInserts(bool aKnown,
+                             VisitData& aPlace,
+                             VisitData& aReferrer)
+  {
+    NS_PRECONDITION(!NS_IsMainThread(),
+                    "This should not be called on the main thread");
+
+    // If the page was in moz_places, we need to update the entry.
+    nsresult rv;
+    if (aKnown) {
+      rv = mHistory->UpdatePlace(aPlace);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    // Otherwise, the page was not in moz_places, so now we have to add it.
+    else {
+      rv = mHistory->InsertPlace(aPlace);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    rv = AddVisit(aPlace, aReferrer);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // TODO (bug 623969) we shouldn't update this after each visit, but
+    // rather only for each unique place to save disk I/O.
+    rv = UpdateFrecency(aPlace);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
   }
 
   /**
@@ -669,6 +752,13 @@ private:
   nsTArray<VisitData> mReferrers;
 
   /**
+   * We own a strong reference to this, but in an indirect way.  We call AddRef
+   * in our constructor, which happens on the main thread, and proxy the relase
+   * of the object to the main thread in our destructor.
+   */
+  mozIVisitInfoCallback* mCallback;
+
+  /**
    * Strong reference to the History object because we do not want it to
    * disappear out from under us.
    */
@@ -836,9 +926,12 @@ private:
  *
  * @param aPlace
  *        The VisitData of the visit to store as an embed visit.
+ * @param [optional] aCallback
+ *        The mozIVisitInfoCallback to notify, if provided.
  */
 void
-StoreAndNotifyEmbedVisit(VisitData& aPlace)
+StoreAndNotifyEmbedVisit(VisitData& aPlace,
+                         mozIVisitInfoCallback* aCallback = NULL)
 {
   NS_PRECONDITION(aPlace.transitionType == nsINavHistoryService::TRANSITION_EMBED,
                   "Must only pass TRANSITION_EMBED visits to this!");
@@ -853,6 +946,22 @@ StoreAndNotifyEmbedVisit(VisitData& aPlace)
   }
 
   navHistory->registerEmbedVisit(uri, aPlace.visitTime);
+
+  if (aCallback) {
+    // NotifyCompletion does not hold a strong reference to the callback, so we
+    // have to manage it by AddRefing now and then releasing it after the event
+    // has run.
+    NS_ADDREF(aCallback);
+    nsCOMPtr<nsIRunnable> event =
+      new NotifyCompletion(aCallback, aPlace, NS_OK);
+    (void)NS_DispatchToMainThread(event);
+
+    // Also dispatch an event to release our reference to the callback after
+    // NotifyCompletion has run.
+    nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+    (void)NS_ProxyRelease(mainThread, aCallback, PR_TRUE);
+  }
+
   VisitData noReferrer;
   nsCOMPtr<nsIRunnable> event = new NotifyVisitObservers(aPlace, noReferrer);
   (void)NS_DispatchToMainThread(event);
