@@ -93,12 +93,20 @@ ICOffsetInitializer::ICOffsetInitializer()
         labels.stubJumpOffset = 5;
 #endif
     }
+    {
+        ScopeNameLabels &labels = PICInfo::scopeNameLabels_;
+#if defined JS_CPU_X86
+        labels.inlineJumpOffset = 5;
+        labels.stubJumpOffset = 5;
+#endif
+    }
 }
 
 ICOffsetInitializer s_ICOffsetInitializer;
 GetPropLabels PICInfo::getPropLabels_;
 SetPropLabels PICInfo::setPropLabels_;
 BindNameLabels PICInfo::bindNameLabels_;
+ScopeNameLabels PICInfo::scopeNameLabels_;
 #endif
 
 // Helper class to simplify LinkBuffer usage in PIC stub generators.
@@ -1208,31 +1216,28 @@ class GetPropCompiler : public PICStubCompiler
 #if defined JS_POLYIC_NAME
 class ScopeNameCompiler : public PICStubCompiler
 {
+  private:
+    typedef Vector<Jump, 8, ContextAllocPolicy> JumpList;
+
     JSObject *scopeChain;
     JSAtom *atom;
-
     GetPropertyHelper<ScopeNameCompiler> getprop;
-
     ScopeNameCompiler *thisFromCtor() { return this; }
-  public:
-    ScopeNameCompiler(VMFrame &f, JSScript *script, JSObject *scopeChain, ic::PICInfo &pic,
-                      JSAtom *atom, VoidStubPIC stub)
-      : PICStubCompiler("name", f, script, pic, JS_FUNC_TO_DATA_PTR(void *, stub)),
-        scopeChain(scopeChain), atom(atom),
-        getprop(f.cx, NULL, atom, *thisFromCtor())
-    { }
 
-    static void reset(Repatcher &repatcher, ic::PICInfo &pic)
+    void patchPreviousToHere(CodeLocationLabel cs)
     {
-        repatcher.relink(pic.fastPathStart.jumpAtOffset(SCOPENAME_JUMP_OFFSET),
-                         pic.slowPathStart);
-
-        VoidStubPIC stub = (pic.kind == ic::PICInfo::NAME) ? ic::Name : ic::XName;
-        FunctionPtr target(JS_FUNC_TO_DATA_PTR(void *, stub));
-        repatcher.relink(pic.slowPathCall, target);
+        ScopeNameLabels &       labels = pic.scopeNameLabels();
+        Repatcher               repatcher(pic.lastCodeBlock(f.jit()));
+        CodeLocationLabel       start = pic.lastPathStart();
+        JSC::CodeLocationJump   jump;
+        
+        // Patch either the inline fast path or a generated stub.
+        if (pic.stubsGenerated)
+            jump = labels.getStubJump(start);
+        else
+            jump = labels.getInlineJump(start);
+        repatcher.relink(jump, cs);
     }
-
-    typedef Vector<Jump, 8, ContextAllocPolicy> JumpList;
 
     LookupStatus walkScopeChain(Assembler &masm, JumpList &fails)
     {
@@ -1274,10 +1279,32 @@ class ScopeNameCompiler : public PICStubCompiler
         return Lookup_Cacheable;
     }
 
+  public:
+    ScopeNameCompiler(VMFrame &f, JSScript *script, JSObject *scopeChain, ic::PICInfo &pic,
+                      JSAtom *atom, VoidStubPIC stub)
+      : PICStubCompiler("name", f, script, pic, JS_FUNC_TO_DATA_PTR(void *, stub)),
+        scopeChain(scopeChain), atom(atom),
+        getprop(f.cx, NULL, atom, *thisFromCtor())
+    { }
+
+    static void reset(Repatcher &repatcher, ic::PICInfo &pic)
+    {
+        ScopeNameLabels &labels = pic.scopeNameLabels();
+
+        /* Link the inline path back to the slow path. */
+        JSC::CodeLocationJump inlineJump = labels.getInlineJump(pic.fastPathStart);
+        repatcher.relink(inlineJump, pic.slowPathStart);
+
+        VoidStubPIC stub = (pic.kind == ic::PICInfo::NAME) ? ic::Name : ic::XName;
+        FunctionPtr target(JS_FUNC_TO_DATA_PTR(void *, stub));
+        repatcher.relink(pic.slowPathCall, target);
+    }
+
     LookupStatus generateGlobalStub(JSObject *obj)
     {
         Assembler masm;
         JumpList fails(cx);
+        ScopeNameLabels &labels = pic.scopeNameLabels();
 
         /* For GETXPROP, the object is already in objReg. */
         if (pic.kind == ic::PICInfo::NAME)
@@ -1300,7 +1327,7 @@ class ScopeNameCompiler : public PICStubCompiler
         masm.loadObjProp(obj, pic.objReg, getprop.shape, pic.shapeReg, pic.objReg);
         Jump done = masm.jump();
 
-        // All failures flow to here, so there is a common point to patch.
+        /* All failures flow to here, so there is a common point to patch. */
         for (Jump *pj = fails.begin(); pj != fails.end(); ++pj)
             pj->linkTo(masm.label(), &masm);
         if (finalNull.isSet())
@@ -1308,9 +1335,6 @@ class ScopeNameCompiler : public PICStubCompiler
         finalShape.linkTo(masm.label(), &masm);
         Label failLabel = masm.label();
         Jump failJump = masm.jump();
-        DBGLABEL(dbgJumpOffset);
-
-        JS_ASSERT(masm.differenceBetween(failLabel, dbgJumpOffset) == SCOPENAME_JUMP_OFFSET);
 
         PICLinker buffer(masm, pic);
         if (!buffer.init(cx))
@@ -1327,12 +1351,11 @@ class ScopeNameCompiler : public PICStubCompiler
         JaegerSpew(JSpew_PICs, "generated %s global stub at %p\n", type, cs.executableAddress());
         spew("NAME stub", "global");
 
-        Repatcher repatcher(pic.lastCodeBlock(f.jit()));
-        CodeLocationLabel label = pic.lastPathStart();
-        repatcher.relink(label.jumpAtOffset(SCOPENAME_JUMP_OFFSET), cs);
+        patchPreviousToHere(cs);
 
         pic.stubsGenerated++;
         pic.updateLastPath(buffer, failLabel);
+        labels.setStubJump(masm, failLabel, failJump);
 
         if (pic.stubsGenerated == MAX_PIC_STUBS)
             disable("max stubs reached");
@@ -1349,6 +1372,7 @@ class ScopeNameCompiler : public PICStubCompiler
     {
         Assembler masm;
         Vector<Jump, 8, ContextAllocPolicy> fails(cx);
+        ScopeNameLabels &labels = pic.scopeNameLabels();
 
         /* For GETXPROP, the object is already in objReg. */
         if (pic.kind == ic::PICInfo::NAME)
@@ -1435,12 +1459,11 @@ class ScopeNameCompiler : public PICStubCompiler
         CodeLocationLabel cs = buffer.finalize();
         JaegerSpew(JSpew_PICs, "generated %s call stub at %p\n", type, cs.executableAddress());
 
-        Repatcher repatcher(pic.lastCodeBlock(f.jit()));
-        CodeLocationLabel label = pic.lastPathStart();
-        repatcher.relink(label.jumpAtOffset(SCOPENAME_JUMP_OFFSET), cs);
+        patchPreviousToHere(cs);
 
         pic.stubsGenerated++;
         pic.updateLastPath(buffer, failLabel);
+        labels.setStubJump(masm, failLabel, failJump);
 
         if (pic.stubsGenerated == MAX_PIC_STUBS)
             disable("max stubs reached");
