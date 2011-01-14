@@ -2699,15 +2699,15 @@ PlacesRemoveItemTransaction.prototype = {
       txn.doTransaction();
     }
     else {
+      // Before removing the bookmark, save its tags.
+      let tags = this._uri ? PlacesUtils.tagging.getTagsForURI(this._uri) : null;
+
       PlacesUtils.bookmarks.removeItem(this._id);
-      if (this._uri) {
-        // if this was the last bookmark (excluding tag-items and livemark
-        // children, see getMostRecentBookmarkForURI) for the bookmark's url,
-        // remove the url from tag containers as well.
-        if (PlacesUtils.getMostRecentBookmarkForURI(this._uri) == -1) {
-          this._tags = PlacesUtils.tagging.getTagsForURI(this._uri);
-          PlacesUtils.tagging.untagURI(this._uri, this._tags);
-        }
+
+      // If this was the last bookmark (excluding tag-items and livemark
+      // children) for this url, persist the tags.
+      if (tags && PlacesUtils.getMostRecentBookmarkForURI(this._uri) == -1) {
+        this._tags = tags;
       }
     }
   },
