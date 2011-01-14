@@ -174,17 +174,20 @@
                       accesskey="&setup.tosAgree1.accesskey;"
                       oncommand="this.focus(); gSyncSetup.checkFields();"/>
             <description id="tosDesc"
+                         flex="1"
                          onclick="document.getElementById('tos').focus();
                                   document.getElementById('tos').click()">
               &setup.tosAgree1.label;
               <label class="text-link inline-link"
-                     onclick="event.stopPropagation();gSyncUtils.openToS();"
-                     value="&setup.tosLink.label;"/>
+                     onclick="event.stopPropagation();gSyncUtils.openToS();">
+                &setup.tosLink.label;
+              </label>
               &setup.tosAgree2.label;
               <label class="text-link inline-link"
-                     onclick="event.stopPropagation();gSyncUtils.openPrivacyPolicy();"
-                     value="&setup.ppLink.label;"/>
-              &setup.tosAgree3.label;
+                     onclick="event.stopPropagation();gSyncUtils.openPrivacyPolicy();">
+                &setup.ppLink.label;
+                &setup.tosAgree3.label;
+              </label>
             </description>
           </hbox>
         </row>
@@ -430,7 +433,7 @@
             <column/>
             <column flex="1"/>
           </columns>
-          <rows>
+          <rows flex="1">
             <row align="center">
               <radio id="resetClient"
                      class="mergeChoiceButton"
@@ -445,16 +448,18 @@
                      class="mergeChoiceButton"
                      aria-labelledby="wipeClientLabel"/>
               <label id="wipeClientLabel"
-                     control="wipeClient"
-                     value="&choice2.client.main.label;"/>
+                     control="wipeClient">
+                &choice2.client.main.label;
+              </label>
             </row>
             <row align="center">
               <radio id="wipeRemote"
                      class="mergeChoiceButton"
                      aria-labelledby="wipeRemoteLabel"/>
               <label id="wipeRemoteLabel"
-                     control="wipeRemote"
-                     value="&choice2.server.main.label;"/>
+                control="wipeRemote">
+                &choice2.server.main.label;
+              </label>
             </row>
           </rows>
         </grid>
