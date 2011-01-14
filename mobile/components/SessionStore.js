@@ -118,12 +118,12 @@ SessionStore.prototype = {
       this._shouldRestore = true;
     }
   },
-  
+
   observe: function ss_observe(aSubject, aTopic, aData) {
     let self = this;
     let observerService = Services.obs;
     switch (aTopic) {
-      case "app-startup": 
+      case "app-startup":
         observerService.addObserver(this, "final-ui-startup", true);
         observerService.addObserver(this, "domwindowopened", true);
         observerService.addObserver(this, "domwindowclosed", true);
@@ -132,7 +132,7 @@ SessionStore.prototype = {
         observerService.addObserver(this, "quit-application-granted", true);
         observerService.addObserver(this, "quit-application", true);
         break;
-      case "final-ui-startup": 
+      case "final-ui-startup":
         observerService.removeObserver(this, "final-ui-startup");
         this.init();
         break;
@@ -153,7 +153,7 @@ SessionStore.prototype = {
           this._saveTimer = null;
           this.saveState();
         }
-        
+
         // Freeze the data at what we've got (ignoring closing windows)
         this._loadState = STATE_QUITTING;
         break;
@@ -250,37 +250,41 @@ SessionStore.prototype = {
     if (this._loadState == STATE_STOPPED) {
       this._loadState = STATE_RUNNING;
       this._lastSaveTime = Date.now();
+
+      // Nothing to restore, notify observers things are complete
+      if (!this._shouldRestore)
+        Services.obs.notifyObservers(null, "sessionstore-windows-restored", "");
     }
 
     // Add tab change listeners to all already existing tabs
     let tabs = aWindow.Browser.tabs;
     for (let i = 0; i < tabs.length; i++)
       this.onTabAdd(aWindow, tabs[i].browser, true);
-    
+
     // Notification of tab add/remove/selection
     let tabContainer = aWindow.document.getElementById("tabs");
     tabContainer.addEventListener("TabOpen", this, true);
     tabContainer.addEventListener("TabClose", this, true);
     tabContainer.addEventListener("TabSelect", this, true);
   },
-  
+
   onWindowClose: function ss_onWindowClose(aWindow) {
     // Ignore windows not tracked by SessionStore
     if (!aWindow.__SSID || !this._windows[aWindow.__SSID])
       return;
-    
+
     let tabContainer = aWindow.document.getElementById("tabs");
     tabContainer.removeEventListener("TabOpen", this, true);
     tabContainer.removeEventListener("TabClose", this, true);
     tabContainer.removeEventListener("TabSelect", this, true);
-    
+
     if (this._loadState == STATE_RUNNING) {
       // Update all window data for a last time
       this._collectWindowData(aWindow);
-      
+
       // Clear this window from the list
       delete this._windows[aWindow.__SSID];
-      
+
       // Save the state without this window to disk
       this.saveStateDelayed();
     }
@@ -288,10 +292,10 @@ SessionStore.prototype = {
     let tabs = aWindow.Browser.tabs;
     for (let i = 0; i < tabs.length; i++)
       this.onTabRemove(aWindow, tabs[i].browser, true);
-    
+
     delete aWindow.__SSID;
   },
-  
+
   onTabAdd: function ss_onTabAdd(aWindow, aBrowser, aNoNotification) {
     aBrowser.messageManager.addMessageListener("pageshow", this);
 
@@ -308,7 +312,7 @@ SessionStore.prototype = {
       return;
 
     delete aBrowser.__SS_data;
-    
+
     if (!aNoNotification)
       this.saveStateDelayed();
   },
@@ -330,7 +334,7 @@ SessionStore.prototype = {
     }
   },
 
-  onTabLoad: function ss_onTabLoad(aWindow, aBrowser, aMessage) { 
+  onTabLoad: function ss_onTabLoad(aWindow, aBrowser, aMessage) {
     // If this browser is being restored, skip any session save activity
     if (aBrowser.__SS_restore)
       return;
@@ -355,7 +359,7 @@ SessionStore.prototype = {
       let data = aBrowser.__SS_data;
       if (data.entries.length > 0)
         aBrowser.loadURI(data.entries[0].url, null, null);
-  
+
       delete aBrowser.__SS_restore;
     }
 
@@ -366,7 +370,7 @@ SessionStore.prototype = {
     if (!this._saveTimer) {
       // Interval until the next disk operation is allowed
       let minimalDelay = this._lastSaveTime + this._interval - Date.now();
-      
+
       // If we have to wait, set a timer, otherwise saveState directly
       let delay = Math.max(minimalDelay, 2000);
       if (delay > 0) {
@@ -411,7 +415,7 @@ SessionStore.prototype = {
 
     aBrowser.__SS_data = tabData;
   },
-  
+
   _collectWindowData: function ss__collectWindowData(aWindow) {
     // Ignore windows not tracked by SessionStore
     if (!aWindow.__SSID || !this._windows[aWindow.__SSID])
@@ -475,7 +479,7 @@ SessionStore.prototype = {
       let stream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(Ci.nsIFileInputStream);
       stream.init(aFile, 0x01, 0, 0);
       let cvstream = Cc["@mozilla.org/intl/converter-input-stream;1"].createInstance(Ci.nsIConverterInputStream);
-    
+
       let fileSize = stream.available();
       cvstream.init(stream, "UTF-8", fileSize, Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
 
@@ -542,7 +546,7 @@ SessionStore.prototype = {
     aIndex = aIndex || 0;
     if (!(aIndex in closedTabs))
       throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
-    
+
     // fetch the data of closed tab, while removing it from the array
     let closedTab = closedTabs.splice(aIndex, 1).shift();
 
@@ -560,14 +564,14 @@ SessionStore.prototype = {
   forgetClosedTab: function ss_forgetClosedTab(aWindow, aIndex) {
     if (!aWindow.__SSID)
       throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
-    
+
     let closedTabs = this._windows[aWindow.__SSID].closedTabs;
 
     // default to the most-recently closed tab
     aIndex = aIndex || 0;
     if (!(aIndex in closedTabs))
       throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
-    
+
     // remove closed tab from the array
     closedTabs.splice(aIndex, 1);
   },
@@ -605,8 +609,10 @@ SessionStore.prototype = {
     session.append("sessionstore.bak");
 
     let data = JSON.parse(this._readFile(session));
-    if (!data || data.windows.length == 0)
+    if (!data || data.windows.length == 0) {
+      Services.obs.notifyObservers(null, "sessionstore-windows-restored", "");
       return;
+    }
 
     let window = Services.wm.getMostRecentWindow("navigator:browser");
 
@@ -638,11 +644,13 @@ SessionStore.prototype = {
           };
           image.src = tabData.extData.thumbnail;
       }
-      
+
       tab.browser.__SS_data = tabData;
       tab.browser.__SS_extdata = tabData.extData;
       tab.browser.__SS_restore = params.delayLoad;
     }
+
+    Services.obs.notifyObservers(null, "sessionstore-windows-restored", "");
   }
 };
 
