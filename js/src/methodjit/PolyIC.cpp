@@ -90,6 +90,7 @@ ICOffsetInitializer::ICOffsetInitializer()
         BindNameLabels &labels = PICInfo::bindNameLabels_;
 #if defined JS_CPU_X86
         labels.inlineJumpOffset = 10;
+        labels.stubJumpOffset = 5;
 #endif
     }
 }
@@ -1528,14 +1529,6 @@ class BindNameCompiler : public PICStubCompiler
     JSObject *scopeChain;
     JSAtom *atom;
 
-    static int32 inlineJumpOffset(ic::PICInfo &pic) {
-        return pic.bindNameLabels().getInlineJumpOffset();
-    }
-
-    inline int32 inlineJumpOffset() {
-        return inlineJumpOffset(pic);
-    }
-
   public:
     BindNameCompiler(VMFrame &f, JSScript *script, JSObject *scopeChain, ic::PICInfo &pic,
                       JSAtom *atom, VoidStubPIC stub)
@@ -1545,18 +1538,37 @@ class BindNameCompiler : public PICStubCompiler
 
     static void reset(Repatcher &repatcher, ic::PICInfo &pic)
     {
-        int jumpOffset = pic.shapeGuard + inlineJumpOffset(pic);
-        JSC::CodeLocationJump jump = pic.fastPathStart.jumpAtOffset(jumpOffset);
-        repatcher.relink(jump, pic.slowPathStart);
+        BindNameLabels &labels = pic.bindNameLabels();
 
+        /* Link the inline jump back to the slow path. */
+        JSC::CodeLocationJump inlineJump = labels.getInlineJump(pic.getFastShapeGuard());
+        repatcher.relink(inlineJump, pic.slowPathStart);
+
+        /* Link the slow path to call the IC entry point. */
         FunctionPtr target(JS_FUNC_TO_DATA_PTR(void *, ic::BindName));
         repatcher.relink(pic.slowPathCall, target);
+    }
+
+    void patchPreviousToHere(CodeLocationLabel cs)
+    {
+        BindNameLabels &labels = pic.bindNameLabels();
+        Repatcher repatcher(pic.lastCodeBlock(f.jit()));
+        JSC::CodeLocationJump jump;
+        
+        /* Patch either the inline fast path or a generated stub. */
+        if (pic.stubsGenerated)
+            jump = labels.getStubJump(pic.lastPathStart());
+        else
+            jump = labels.getInlineJump(pic.getFastShapeGuard());
+        repatcher.relink(jump, cs);
     }
 
     LookupStatus generateStub(JSObject *obj)
     {
         Assembler masm;
         js::Vector<Jump, 8, ContextAllocPolicy> fails(cx);
+
+        BindNameLabels &labels = pic.bindNameLabels();
 
         /* Guard on the shape of the scope chain. */
         masm.loadPtr(Address(JSFrameReg, JSStackFrame::offsetOfScopeChain()), pic.objReg);
@@ -1592,9 +1604,6 @@ class BindNameCompiler : public PICStubCompiler
         firstShape.linkTo(masm.label(), &masm);
         Label failLabel = masm.label();
         Jump failJump = masm.jump();
-        DBGLABEL(dbgStubJumpOffset);
-
-        JS_ASSERT(masm.differenceBetween(failLabel, dbgStubJumpOffset) == BINDNAME_STUB_JUMP_OFFSET);
 
         PICLinker buffer(masm, pic);
         if (!buffer.init(cx))
@@ -1610,15 +1619,11 @@ class BindNameCompiler : public PICStubCompiler
         CodeLocationLabel cs = buffer.finalize();
         JaegerSpew(JSpew_PICs, "generated %s stub at %p\n", type, cs.executableAddress());
 
-        Repatcher repatcher(pic.lastCodeBlock(f.jit()));
-        CodeLocationLabel label = pic.lastPathStart();
-        if (!pic.stubsGenerated)
-            repatcher.relink(label.jumpAtOffset(pic.shapeGuard + inlineJumpOffset()), cs);
-        else
-            repatcher.relink(label.jumpAtOffset(BINDNAME_STUB_JUMP_OFFSET), cs);
+        patchPreviousToHere(cs);
 
         pic.stubsGenerated++;
         pic.updateLastPath(buffer, failLabel);
+        labels.setStubJump(masm, failLabel, failJump);
 
         if (pic.stubsGenerated == MAX_PIC_STUBS)
             disable("max stubs reached");

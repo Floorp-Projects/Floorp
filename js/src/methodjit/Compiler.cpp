@@ -3588,33 +3588,32 @@ mjit::Compiler::jsop_bindname(JSAtom *atom, bool usePropCache)
     pic.typeReg = Registers::ReturnReg;
     pic.atom = atom;
     pic.hasTypeCheck = false;
+
+    RESERVE_IC_SPACE(masm);
     pic.fastPathStart = masm.label();
 
     Address parent(pic.objReg, offsetof(JSObject, parent));
     masm.loadPtr(Address(JSFrameReg, JSStackFrame::offsetOfScopeChain()), pic.objReg);
 
     pic.shapeGuard = masm.label();
-#if defined JS_NUNBOX32
-    Jump j = masm.branchPtr(Assembler::NotEqual, masm.payloadOf(parent), ImmPtr(0));
-    Label inlineJumpOffset = masm.label();
-#elif defined JS_PUNBOX64
-    masm.loadPayload(parent, Registers::ValueReg);
-    Jump j = masm.branchPtr(Assembler::NotEqual, Registers::ValueReg, ImmPtr(0));
-    Label inlineJumpOffset = masm.label();
-#endif
+    Jump inlineJump = masm.branchPtr(Assembler::NotEqual, masm.payloadOf(parent), ImmPtr(0));
     {
-        pic.slowPathStart = stubcc.linkExit(j, Uses(0));
+        RESERVE_OOL_SPACE(stubcc.masm);
+        pic.slowPathStart = stubcc.linkExit(inlineJump, Uses(0));
         stubcc.leave();
         passICAddress(&pic);
         pic.slowPathCall = OOL_STUBCALL(ic::BindName);
+        CHECK_OOL_SPACE();
     }
 
     pic.fastPathRejoin = masm.label();
+
+    /* Initialize op labels. */
+    BindNameLabels &labels = pic.bindNameLabels();
+    labels.setInlineJump(masm, pic.shapeGuard, inlineJump);
+
     frame.pushTypedPayload(JSVAL_TYPE_OBJECT, pic.objReg);
     frame.freeReg(pic.shapeReg);
-
-    BindNameLabels &labels = pic.bindNameLabels();
-    labels.setInlineJumpOffset(masm.differenceBetween(pic.shapeGuard, inlineJumpOffset));
 
     stubcc.rejoin(Changes(1));
 

@@ -305,7 +305,7 @@ struct SetPropLabels {
 };
 
 /* BindNameCompiler */
-struct BindNameLabels {
+struct BindNameLabels : MacroAssemblerTypedefs {
     friend class ::ICOffsetInitializer;
 
     void setInlineJumpOffset(int offset) {
@@ -315,13 +315,45 @@ struct BindNameLabels {
         JS_ASSERT(offset == inlineJumpOffset);
     }
 
+    void setInlineJump(MacroAssembler &masm, Label shapeGuard, Jump inlineJump) {
+        int offset = masm.differenceBetween(shapeGuard, inlineJump);
+        setInlineJumpOffset(offset);
+    }
+
+    CodeLocationJump getInlineJump(CodeLocationLabel fastPathStart) {
+        return fastPathStart.jumpAtOffset(getInlineJumpOffset());
+    }
+
     int getInlineJumpOffset() {
         return inlineJumpOffset;
+    }
+
+    void setStubJumpOffset(int offset) {
+#ifdef JS_HAS_IC_LABELS
+        stubJumpOffset = offset;
+#endif
+        JS_ASSERT(offset == stubJumpOffset);
+    }
+
+    void setStubJump(MacroAssembler &masm, Label stubStart, Jump stubJump) {
+        int offset = masm.differenceBetween(stubStart, stubJump);
+        setStubJumpOffset(offset);
+    }
+
+    CodeLocationJump getStubJump(CodeLocationLabel lastStubStart) {
+        return lastStubStart.jumpAtOffset(getStubJumpOffset());
+    }
+
+    int getStubJumpOffset() {
+        return stubJumpOffset;
     }
 
   private:
     /* Offset from shapeGuard to end of shape jump. */
     int32 inlineJumpOffset : 8;
+
+    /* Offset from lastStubStart to end of the shape jump. */
+    int32 stubJumpOffset : 8;
 };
 
 } /* namespace ic */
