@@ -79,7 +79,7 @@ function escapeTest(contentWindow) {
   }
   contentWindow.addEventListener("tabviewsearchdisabled", onSearchDisabled, 
     false);
-  EventUtils.synthesizeKey("VK_ESCAPE", { type: "keypress" }, contentWindow);
+  EventUtils.synthesizeKey("VK_ESCAPE", { }, contentWindow);
 }
 
 function toggleTabViewTest(contentWindow) {
