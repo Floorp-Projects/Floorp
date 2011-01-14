@@ -3265,7 +3265,6 @@ END_CASE(JSOP_PICK)
 
 #define NATIVE_SET(cx,obj,shape,entry,vp)                                     \
     JS_BEGIN_MACRO                                                            \
-        TRACE_2(SetPropHit, entry, shape);                                    \
         if (shape->hasDefaultSetter() &&                                      \
             (shape)->slot != SHAPE_INVALID_SLOT &&                            \
             !(obj)->brandedOrHasMethodBarrier()) {                            \
@@ -4450,7 +4449,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
                      * new property, not updating an existing slot's value that
                      * might contain a method of a branded shape.
                      */
-                    TRACE_2(SetPropHit, entry, shape);
+                    TRACE_1(AddProperty, obj);
                     obj->nativeSetSlot(slot, rval);
 
                     /*
@@ -5944,7 +5943,7 @@ BEGIN_CASE(JSOP_INITMETHOD)
 
     /* Load the object being initialized into lval/obj. */
     JSObject *obj = &regs.sp[-2].toObject();
-    JS_ASSERT(obj->isNative());
+    JS_ASSERT(obj->isObject());
 
     /*
      * Probe the property cache.
@@ -5982,7 +5981,7 @@ BEGIN_CASE(JSOP_INITMETHOD)
          * property, not updating an existing slot's value that might
          * contain a method of a branded shape.
          */
-        TRACE_2(SetPropHit, entry, shape);
+        TRACE_1(AddProperty, obj);
         obj->nativeSetSlot(slot, rval);
     } else {
         PCMETER(JS_PROPERTY_CACHE(cx).inipcmisses++);

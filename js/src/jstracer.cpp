@@ -2506,6 +2506,7 @@ TraceRecorder::finishAbort(const char* reason)
 inline LIns*
 TraceRecorder::w_immpObjGC(JSObject* obj)
 {
+    JS_ASSERT(obj);
     tree->gcthings.addUnique(ObjectValue(*obj));
     return w.immpNonGC((void*)obj);
 }
@@ -2513,6 +2514,7 @@ TraceRecorder::w_immpObjGC(JSObject* obj)
 inline LIns*
 TraceRecorder::w_immpFunGC(JSFunction* fun)
 {
+    JS_ASSERT(fun);
     tree->gcthings.addUnique(ObjectValue(*fun));
     return w.immpNonGC((void*)fun);
 }
@@ -2520,6 +2522,7 @@ TraceRecorder::w_immpFunGC(JSFunction* fun)
 inline LIns*
 TraceRecorder::w_immpStrGC(JSString* str)
 {
+    JS_ASSERT(str);
     tree->gcthings.addUnique(StringValue(str));
     return w.immpNonGC((void*)str);
 }
@@ -2527,6 +2530,7 @@ TraceRecorder::w_immpStrGC(JSString* str)
 inline LIns*
 TraceRecorder::w_immpShapeGC(const Shape* shape)
 {
+    JS_ASSERT(shape);
     tree->shapes.addUnique(shape);
     return w.immpNonGC((void*)shape);
 }
@@ -7219,6 +7223,8 @@ RecordLoopEdge(JSContext* cx, uintN& inlineCallCount)
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::monitorRecording(JSOp op)
 {
+    JS_ASSERT(!addPropShapeBefore);
+
     TraceMonitor &localtm = JS_TRACE_MONITOR(cx);
     debug_only_stmt( JSContext *localcx = cx; )
     assertInsideLoop();
@@ -11944,18 +11950,81 @@ TraceRecorder::record_JSOP_GETPROP()
     return getProp(stackval(-1));
 }
 
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_SETPROP()
+/*
+ * If possible, lookup obj[id] without calling any resolve hooks or touching
+ * any non-native objects, store the results in *pobjp and *shapep (NULL if no
+ * such property exists), and return true.
+ *
+ * If a safe lookup is not possible, return false; *pobjp and *shapep are
+ * undefined.
+ */
+static bool
+SafeLookup(JSContext *cx, JSObject* obj, jsid id, JSObject** pobjp, const Shape** shapep)
 {
-    Value& l = stackval(-2);
-    if (l.isPrimitive())
-        RETURN_STOP_A("primitive this for SETPROP");
+    do {
+        // Avoid non-native lookupProperty hooks.
+        if (obj->getOps()->lookupProperty)
+            return false;
 
-    JSObject* obj = &l.toObject();
-    if (obj->getOps()->setProperty)
-        RETURN_STOP_A("non-native js::ObjectOps::setProperty");
-    return ARECORD_CONTINUE;
+        if (const Shape *shape = obj->nativeLookup(id)) {
+            *pobjp = obj;
+            *shapep = shape;
+            return true;
+        }
+
+        // Avoid resolve hooks.
+        if (obj->getClass()->resolve != JS_ResolveStub)
+            return false;
+    } while ((obj = obj->getProto()) != NULL);
+    *pobjp = NULL;
+    *shapep = NULL;
+    return true;
 }
+
+/*
+ * Lookup the property for the SETPROP/SETNAME/SETMETHOD instruction at pc.
+ * Emit guards to ensure that the result at run time is the same.
+ */
+JS_REQUIRES_STACK RecordingStatus
+TraceRecorder::lookupForSetPropertyOp(JSObject* obj, LIns* obj_ins, jsid id,
+                                      bool* safep, JSObject** pobjp, const Shape** shapep)
+{
+    // We could consult the property cache here, but the contract for
+    // PropertyCache::testForSet is intricate enough that it's a lot less code
+    // to do a SafeLookup.
+    *safep = SafeLookup(cx, obj, id, pobjp, shapep);
+    if (!*safep)
+        return RECORD_CONTINUE;
+
+    VMSideExit *exit = snapshot(BRANCH_EXIT);
+    if (*shapep) {
+        CHECK_STATUS(guardShape(obj_ins, obj, obj->shape(), "guard_kshape", exit));
+        if (obj != *pobjp && *pobjp != globalObj) {
+            CHECK_STATUS(guardShape(w.immpObjGC(*pobjp), *pobjp, (*pobjp)->shape(),
+                                    "guard_vshape", exit));
+        }
+    } else {
+        for (;;) {
+            if (obj != globalObj)
+                CHECK_STATUS(guardShape(obj_ins, obj, obj->shape(), "guard_proto_chain", exit));
+            obj = obj->getProto();
+            if (!obj)
+                break;
+            obj_ins = w.immpObjGC(obj);
+        }
+    }
+    return RECORD_CONTINUE;
+}
+
+static JSBool FASTCALL
+MethodWriteBarrier(JSContext* cx, JSObject* obj, uint32 slot, const Value* v)
+{
+    bool ok = obj->methodWriteBarrier(cx, slot, *v);
+    JS_ASSERT(WasBuiltinSuccessful(cx));
+    return ok;
+}
+JS_DEFINE_CALLINFO_4(static, BOOL_FAIL, MethodWriteBarrier, CONTEXT, OBJECT, UINT32, CVALUEPTR,
+                     0, ACCSET_STORE_ANY)
 
 /* Emit a specialized, inlined copy of js_NativeSet. */
 JS_REQUIRES_STACK RecordingStatus
@@ -11963,10 +12032,12 @@ TraceRecorder::nativeSet(JSObject* obj, LIns* obj_ins, const Shape* shape,
                          const Value &v, LIns* v_ins)
 {
     uint32 slot = shape->slot;
+    JS_ASSERT((slot != SHAPE_INVALID_SLOT) == shape->hasSlot());
+    JS_ASSERT_IF(shape->hasSlot(), obj->nativeContains(*shape));
 
     /*
-     * We do not trace assignment to properties that have both a nonstub setter
-     * and a slot, for several reasons.
+     * We do not trace assignment to properties that have both a non-default
+     * setter and a slot, for several reasons.
      *
      * First, that would require sampling rt->propertyRemovals before and after
      * (see js_NativeSet), and even more code to handle the case where the two
@@ -11981,17 +12052,48 @@ TraceRecorder::nativeSet(JSObject* obj, LIns* obj_ins, const Shape* shape,
      * setter's return value differed from the record-time type of v, in which
      * case unboxing would fail and, having called a native setter, we could
      * not just retry the instruction in the interpreter.
+     *
+     * If obj is branded, we would have a similar problem recovering from a
+     * failed call to MethodWriteBarrier.
      */
-    JS_ASSERT(shape->hasDefaultSetter() || slot == SHAPE_INVALID_SLOT);
+    if (!shape->hasDefaultSetter() && slot != SHAPE_INVALID_SLOT)
+        RETURN_STOP("can't trace set of property with setter and slot");
+
+    // These two cases are strict-mode errors and can't be traced.
+    if (shape->hasGetterValue() && shape->hasDefaultSetter())
+        RETURN_STOP("can't set a property that has only a getter");
+    if (shape->isDataDescriptor() && !shape->writable())
+        RETURN_STOP("can't assign to readonly property");
 
     // Call the setter, if any.
-    if (!shape->hasDefaultSetter())
+    if (!shape->hasDefaultSetter()) {
+        if (shape->hasSetterValue())
+            RETURN_STOP("can't trace JavaScript function setter yet");
         emitNativePropertyOp(shape, obj_ins, true, box_value_into_alloc(v, v_ins));
+    }
 
-    // Store the value, if this property has a slot.
     if (slot != SHAPE_INVALID_SLOT) {
-        JS_ASSERT(obj->containsSlot(shape->slot));
-        JS_ASSERT(shape->hasSlot());
+        if (obj->brandedOrHasMethodBarrier()) {
+            if (obj == globalObj) {
+                // Because the trace is type-specialized to the global object's
+                // slots, no run-time check is needed. Avoid recording a global
+                // shape change, though.
+                JS_ASSERT(obj->nativeContains(*shape));
+                if (IsFunctionObject(obj->getSlot(slot)))
+                    RETURN_STOP("can't trace set of function-valued global property");
+            } else {
+                // Setting a function-valued property might need to rebrand the
+                // object. Call the method write barrier. Note that even if the
+                // property is not function-valued now, it might be on trace.
+                enterDeepBailCall();
+                LIns* args[] = {box_value_into_alloc(v, v_ins), w.immi(slot), obj_ins, cx_ins};
+                LIns* ok_ins = w.call(&MethodWriteBarrier_ci, args);
+                guard(false, w.eqi0(ok_ins), OOM_EXIT);
+                leaveDeepBailCall();
+            }
+        }
+
+        // Store the value.
         if (obj == globalObj) {
             if (!lazilyImportGlobalSlot(slot))
                 RETURN_STOP("lazy import of global slot failed");
@@ -12005,99 +12107,74 @@ TraceRecorder::nativeSet(JSObject* obj, LIns* obj_ins, const Shape* shape,
     return RECORD_CONTINUE;
 }
 
-static JSBool FASTCALL
-MethodWriteBarrier(JSContext* cx, JSObject* obj, Shape* shape, JSObject* funobj)
-{
-    bool ok = obj->methodWriteBarrier(cx, *shape, ObjectValue(*funobj));
-    JS_ASSERT(WasBuiltinSuccessful(cx));
-    return ok;
-}
-JS_DEFINE_CALLINFO_4(static, BOOL_RETRY, MethodWriteBarrier, CONTEXT, OBJECT, SHAPE, OBJECT,
-                     0, ACCSET_STORE_ANY)
-
 JS_REQUIRES_STACK RecordingStatus
-TraceRecorder::setProp(Value &l, PropertyCacheEntry* entry, const Shape* shape,
-                       Value &v, LIns*& v_ins, bool isDefinitelyAtom)
+TraceRecorder::addDataProperty(JSObject* obj)
 {
-    if (entry == JS_NO_PROP_CACHE_FILL)
-        RETURN_STOP("can't trace uncacheable property set");
-    JS_ASSERT_IF(entry->vcapTag() >= 1, !shape->hasSlot());
+    if (!obj->isExtensible())
+        RETURN_STOP("assignment adds property to non-extensible object");
 
-    JS_ASSERT(!l.isPrimitive());
-    JSObject* obj = &l.toObject();
+    // If obj is the global, the global shape is about to change. Note also
+    // that since we do not record this case, SETNAME and SETPROP are identical
+    // as far as the tracer is concerned. (js_CheckUndeclaredVarAssignment
+    // distinguishes the two, in the interpreter.)
+    if (obj == globalObj)
+        RETURN_STOP("set new property of global object"); // global shape change
 
-    if (!shape->hasDefaultSetter() && shape->slot != SHAPE_INVALID_SLOT && !obj->isCall())
-        RETURN_STOP("can't trace set of property with setter and slot");
-    if (shape->hasSetterValue())
-        RETURN_STOP("can't trace JavaScript function setter");
+    // js_AddProperty does not call the addProperty hook.
+    Class* clasp = obj->getClass();
+    if (clasp->addProperty != Valueify(JS_PropertyStub))
+        RETURN_STOP("set new property of object with addProperty hook");
 
-    // These two cases are errors and can't be traced.
-    if (shape->hasGetterValue())
-        RETURN_STOP("can't assign to property with script getter but no setter");
-    if (!shape->writable())
-        RETURN_STOP("can't assign to readonly property");
+    // See comment in TR::nativeSet about why we do not support setting a
+    // property that has both a setter and a slot.
+    if (clasp->setProperty != Valueify(JS_PropertyStub))
+        RETURN_STOP("set new property with setter and slot");
 
-    LIns* obj_ins = get(&l);
+#ifdef DEBUG
+    addPropShapeBefore = obj->lastProperty();
+#endif
+    return RECORD_CONTINUE;
+}
 
-    JS_ASSERT_IF(entry->directHit(), obj->nativeContains(*shape));
+JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_AddProperty(JSObject *obj)
+{
+    Value& objv = stackval(-2);
+    JS_ASSERT(&objv.toObject() == obj);
+    LIns* obj_ins = get(&objv);
+    Value& v = stackval(-1);
+    LIns* v_ins = get(&v);
+    const Shape* shape = obj->lastProperty();
 
-    // Fast path for CallClass. This is about 20% faster than the general case.
-    v_ins = get(&v);
-    if (obj->isCall())
-        return setCallProp(obj, obj_ins, shape, v_ins, v);
+#ifdef DEBUG
+    JS_ASSERT(addPropShapeBefore);
+    if (obj->inDictionaryMode())
+        JS_ASSERT(shape->previous()->matches(addPropShapeBefore));
+    else
+        JS_ASSERT(shape->previous() == addPropShapeBefore);
+    JS_ASSERT(shape->isDataDescriptor());
+    JS_ASSERT(shape->hasDefaultSetter());
+    addPropShapeBefore = NULL;
+#endif
 
-    // Find obj2. If entry->adding(), the TAG bits are all 0.
-    JSObject* obj2 = obj;
-    for (jsuword i = entry->scopeIndex(); i; i--)
-        obj2 = obj2->getParent();
-    for (jsuword j = entry->protoIndex(); j; j--)
-        obj2 = obj2->getProto();
-    JS_ASSERT_IF(entry->adding(), obj2 == obj);
+    if (obj->inDictionaryMode())
+        RETURN_STOP_A("assignment adds property to dictionary"); // FIXME: bug 625900
 
-    // Guard before anything else.
-    PCVal pcval;
-    CHECK_STATUS(guardPropertyCacheHit(obj_ins, obj, obj2, entry, pcval));
-    JS_ASSERT(!obj2->nativeEmpty());
-    JS_ASSERT(obj2->nativeContains(*shape));
-    JS_ASSERT_IF(obj2 != obj, !shape->hasSlot());
+    // On trace, call js_Add{,Atom}Property to do the dirty work.
+    LIns* args[] = { w.immpShapeGC(shape), obj_ins, cx_ins };
+    jsbytecode op = *cx->regs->pc;
+    bool isDefinitelyAtom = (op == JSOP_SETPROP);
+    const CallInfo *ci = isDefinitelyAtom ? &js_AddAtomProperty_ci : &js_AddProperty_ci;
+    LIns* ok_ins = w.call(ci, args);
+    guard(false, w.eqi0(ok_ins), OOM_EXIT);
 
-    /*
-     * Setting a function-valued property might need to rebrand the object, so
-     * we emit a call to the method write barrier. There's no need to guard on
-     * this, because functions have distinct trace-type from other values and
-     * branded-ness is implied by the shape, which we've already guarded on.
-     */
-    if (obj2->brandedOrHasMethodBarrier() && IsFunctionObject(v) && entry->directHit()) {
-        /*
-         * This guarantees that generateOwnShape (possibly called by the
-         * methodWriteBarrier) will not leave trace.
-         */
-        if (obj == globalObj)
-            RETURN_STOP("can't trace function-valued property set in branded global scope");
+    // Box the value and store it in the new slot.
+    CHECK_STATUS_A(InjectStatus(nativeSet(obj, obj_ins, shape, v, v_ins)));
 
-        /*
-         * MethodWriteBarrier takes care not to deep bail, but it may reshape
-         * the given object, so forget anything we knew about obj's shape.
-         */
-        guardedShapeTable.remove(obj_ins);
-        LIns* args[] = { v_ins, w.immpShapeGC(shape), obj_ins, cx_ins };
-        LIns* ok_ins = w.call(&MethodWriteBarrier_ci, args);
-        guard(false, w.eqi0(ok_ins), OOM_EXIT);
-    }
-
-    // Add a property to the object if necessary.
-    if (entry->adding()) {
-        JS_ASSERT(shape->hasSlot());
-        if (obj == globalObj)
-            RETURN_STOP("adding a property to the global object");
-
-        LIns* args[] = { w.immpShapeGC(shape), obj_ins, cx_ins };
-        const CallInfo *ci = isDefinitelyAtom ? &js_AddAtomProperty_ci : &js_AddProperty_ci;
-        LIns* ok_ins = w.call(ci, args);
-        guard(false, w.eqi0(ok_ins), OOM_EXIT);
-    }
-
-    return nativeSet(obj, obj_ins, shape, v, v_ins);
+    // Finish off a SET instruction by moving sp[-1] to sp[-2].
+    if (op == JSOP_SETPROP || op == JSOP_SETNAME || op == JSOP_SETMETHOD)
+        set(&objv, v_ins);
+    return ARECORD_CONTINUE;
 }
 
 JS_REQUIRES_STACK RecordingStatus
@@ -12203,31 +12280,172 @@ TraceRecorder::setCallProp(JSObject *callobj, LIns *callobj_ins, const Shape *sh
     return RECORD_CONTINUE;
 }
 
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_SetPropHit(PropertyCacheEntry* entry, const Shape* shape)
+/*
+ * Emit a specialized, inlined copy of js_SetPropertyHelper for the current
+ * instruction. On success, *deferredp is true if a call to record_AddProperty
+ * is expected.
+ */
+JS_REQUIRES_STACK RecordingStatus
+TraceRecorder::setProperty(JSObject* obj, LIns* obj_ins, const Value &v, LIns* v_ins,
+                           bool* deferredp)
 {
-    Value& r = stackval(-1);
-    Value& l = stackval(-2);
-    LIns* v_ins;
+    *deferredp = false;
 
-    jsbytecode* pc = cx->regs->pc;
+    JSAtom *atom = atoms[GET_INDEX(cx->regs->pc)];
+    jsid id = ATOM_TO_JSID(atom);
 
-    bool isDefinitelyAtom = (*pc == JSOP_SETPROP);
-    CHECK_STATUS_A(setProp(l, entry, shape, r, v_ins, isDefinitelyAtom));
+    if (obj->getOps()->setProperty)
+        RETURN_STOP("non-native object");  // FIXME: bug 625900
 
-    switch (*pc) {
-      case JSOP_SETPROP:
-      case JSOP_SETNAME:
-      case JSOP_SETGNAME:
-      case JSOP_SETMETHOD:
-        if (pc[JSOP_SETPROP_LENGTH] != JSOP_POP)
-            set(&l, v_ins);
-        break;
+    bool safe;
+    JSObject* pobj;
+    const Shape* shape;
+    CHECK_STATUS(lookupForSetPropertyOp(obj, obj_ins, id, &safe, &pobj, &shape));
+    if (!safe)
+        RETURN_STOP("setprop: lookup fail"); // FIXME: bug 625900
 
-      default:;
+    // Handle Call objects specially. The Call objects we create on trace are
+    // not fully populated until we leave trace. Calling the setter on such an
+    // object wouldn't work.
+    if (obj->isCall())
+        return setCallProp(obj, obj_ins, shape, v_ins, v);
+
+    // Handle setting a property that is not found on obj or anywhere on its
+    // the prototype chain.
+    if (!shape) {
+        *deferredp = true;
+        return addDataProperty(obj);
     }
 
-    return ARECORD_CONTINUE;
+    // Check whether we can assign to/over the existing property.
+    if (shape->isAccessorDescriptor()) {
+        if (shape->hasDefaultSetter())
+            RETURN_STOP("setting accessor property with no setter");
+    } else if (!shape->writable()) {
+        RETURN_STOP("setting readonly data property");
+    }
+
+    // Handle setting an existing own property.
+    if (pobj == obj) {
+        if (*cx->regs->pc == JSOP_SETMETHOD) {
+            if (shape->isMethod() && &shape->methodObject() == &v.toObject())
+                return RECORD_CONTINUE;
+            RETURN_STOP("setmethod: property exists");
+        }
+        return nativeSet(obj, obj_ins, shape, v, v_ins);
+    }
+
+    // If shape is an inherited non-SHARED property, we will add a new,
+    // shadowing data property.
+    if (shape->hasSlot()) {
+        // Avoid being tripped up by legacy special case for shortids, where
+        // the new shadowing data property inherits the setter.
+        if (shape->hasShortID() && !shape->hasDefaultSetter())
+            RETURN_STOP("shadowing assignment with shortid");
+        *deferredp = true;
+        return addDataProperty(obj);
+    }
+
+    // Handle setting an inherited SHARED property.
+    // If it has the default setter, the assignment is a no-op.
+    if (shape->hasDefaultSetter() && !shape->hasGetterValue())
+        return RECORD_CONTINUE;
+    return nativeSet(obj, obj_ins, shape, v, v_ins);
+}
+
+/*
+ * Record a JSOP_SET{PROP,NAME,METHOD} instruction or a JSOP_INITPROP
+ * instruction initializing __proto__.
+ */
+JS_REQUIRES_STACK RecordingStatus
+TraceRecorder::recordSetPropertyOp()
+{
+    Value& l = stackval(-2);
+    if (!l.isObject())
+        RETURN_STOP("set property of primitive");
+    JSObject* obj = &l.toObject();
+    LIns* obj_ins = get(&l);
+
+    Value& r = stackval(-1);
+    LIns* r_ins = get(&r);
+
+    bool deferred;
+    CHECK_STATUS(setProperty(obj, obj_ins, r, r_ins, &deferred));
+
+    // Finish off a SET instruction by moving sp[-1] to sp[-2]. But if
+    // record_AddProperty is going be called, we're not done with sp[-2] yet,
+    // so delay this move until the end of record_AddProperty.
+    if (!deferred)
+        set(&l, r_ins);
+    return RECORD_CONTINUE;
+}
+
+JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_SETPROP()
+{
+    return InjectStatus(recordSetPropertyOp());
+}
+
+JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_SETMETHOD()
+{
+    return InjectStatus(recordSetPropertyOp());
+}
+
+JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_SETNAME()
+{
+    return InjectStatus(recordSetPropertyOp());
+}
+
+JS_REQUIRES_STACK RecordingStatus
+TraceRecorder::recordInitPropertyOp(jsbytecode op)
+{
+    Value& l = stackval(-2);
+    JSObject* obj = &l.toObject();
+    LIns* obj_ins = get(&l);
+    JS_ASSERT(obj->getClass() == &js_ObjectClass);
+
+    Value& v = stackval(-1);
+    LIns* v_ins = get(&v);
+
+    JSAtom* atom = atoms[GET_INDEX(cx->regs->pc)];
+    jsid id = ATOM_TO_JSID(atom);
+
+    // If obj already has this property (because JSOP_NEWOBJECT already set its
+    // shape or because the id appears more than once in the initializer), just
+    // set it. The existing property can't be an accessor property: we wouldn't
+    // get here, as JSOP_SETTER can't be recorded.
+    if (const Shape* shape = obj->nativeLookup(id)) {
+        // Don't assign a bare (non-cloned) function to an ordinary or method
+        // property. The opposite case, assigning some other value to a method,
+        // is OK. nativeSet emits code that trips the write barrier.
+        if (op == JSOP_INITMETHOD)
+            RETURN_STOP("initmethod: property exists");
+        JS_ASSERT(shape->isDataDescriptor());
+        JS_ASSERT(shape->hasSlot());
+        JS_ASSERT(shape->hasDefaultSetter());
+        return nativeSet(obj, obj_ins, shape, v, v_ins);
+    }
+
+    // Duplicate the interpreter's special treatment of __proto__.
+    if (atom == cx->runtime->atomState.protoAtom)
+        return recordSetPropertyOp();
+
+    // Define a new property.
+    return addDataProperty(obj);
+}
+
+JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_INITPROP()
+{
+    return InjectStatus(recordInitPropertyOp(JSOP_INITPROP));
+}
+
+JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_INITMETHOD()
+{
+    return InjectStatus(recordInitPropertyOp(JSOP_INITMETHOD));
 }
 
 JS_REQUIRES_STACK VMSideExit*
@@ -14336,13 +14554,6 @@ TraceRecorder::record_JSOP_ENDINIT()
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_INITPROP()
-{
-    // All the action is in record_SetPropHit.
-    return ARECORD_CONTINUE;
-}
-
-JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_INITELEM()
 {
     Value& v = stackval(-1);
@@ -14895,13 +15106,6 @@ TraceRecorder::record_JSOP_BINDNAME()
     // If |obj2| is the global object, we can refer to it directly instead of walking up
     // the scope chain. There may still be guards on intervening call objects.
     stack(0, obj2 == globalObj ? w.immpObjGC(obj2) : obj2_ins);
-    return ARECORD_CONTINUE;
-}
-
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_SETNAME()
-{
-    // record_SetPropHit does all the work.
     return ARECORD_CONTINUE;
 }
 
@@ -16122,18 +16326,6 @@ AbortableRecordingStatus
 TraceRecorder::record_JSOP_NOTRACE()
 {
     return ARECORD_CONTINUE;
-}
-
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_SETMETHOD()
-{
-    return record_JSOP_SETPROP();
-}
-
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_INITMETHOD()
-{
-    return record_JSOP_INITPROP();
 }
 
 JSBool FASTCALL

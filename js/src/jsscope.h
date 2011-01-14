@@ -360,6 +360,10 @@ struct Shape : public JSObjectMap
                                      bool adding = false);
     static js::Shape *newDictionaryShape(JSContext *cx, const js::Shape &child, js::Shape **listp);
     static js::Shape *newDictionaryList(JSContext *cx, js::Shape **listp);
+    static js::Shape *newDictionaryShapeForAddProperty(JSContext *cx, jsid id,
+                                                       PropertyOp getter, PropertyOp setter,
+                                                       uint32 slot, uintN attrs,
+                                                       uintN flags, intN shortid);
 
     inline void removeFromDictionary(JSObject *obj) const;
     inline void insertIntoDictionary(js::Shape **dictp);
