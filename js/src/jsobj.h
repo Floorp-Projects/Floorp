@@ -1116,6 +1116,7 @@ struct JSObject : js::gc::Cell {
     bool allocSlot(JSContext *cx, uint32 *slotp);
     bool freeSlot(JSContext *cx, uint32 slot);
 
+  public:
     bool reportReadOnly(JSContext* cx, jsid id, uintN report = JSREPORT_ERROR);
     bool reportNotConfigurable(JSContext* cx, jsid id, uintN report = JSREPORT_ERROR);
     bool reportNotExtensible(JSContext *cx, uintN report = JSREPORT_ERROR);
