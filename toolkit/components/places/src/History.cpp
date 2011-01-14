@@ -431,11 +431,13 @@ private:
     for (nsTArray<VisitData>::size_type i = 0; i < mPlaces.Length(); i++) {
       mReferrers[i].spec = mPlaces[i].referrerSpec;
 
-      // Speculatively get a new session id for our visit.  While it is true
-      // that we will use the session id from the referrer if the visit was
-      // "recent" enough, we cannot call this method off of the main thread, so
-      // we have to consume an id now.
-      mPlaces[i].sessionId = navHistory->GetNewSessionID();
+      // Speculatively get a new session id for our visit if the current session
+      // id is non-valid.  While it is true that we will use the session id from
+      // the referrer if the visit was "recent" enough, we cannot call this
+      // method off of the main thread, so we have to consume an id now.
+      if (mPlaces[i].sessionId <= 0) {
+        mPlaces[i].sessionId = navHistory->GetNewSessionID();
+      }
     }
   }
 
