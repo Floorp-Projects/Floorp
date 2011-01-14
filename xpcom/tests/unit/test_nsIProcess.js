@@ -249,13 +249,13 @@ function test_kill_2()
       process.kill();
     }
     catch (e) { }
-  }
 
-  // We need to ensure that we process any events on the main thread -
-  // this allow threads to clean up properly and avoid out of memory
-  // errors during the test.
-  while (thread.hasPendingEvents())
-    thread.processNextEvent(false);
+    // We need to ensure that we process any events on the main thread -
+    // this allow threads to clean up properly and avoid out of memory
+    // errors during the test.
+    while (thread.hasPendingEvents())
+      thread.processNextEvent(false);
+  }
 }
 
 function run_test() {
