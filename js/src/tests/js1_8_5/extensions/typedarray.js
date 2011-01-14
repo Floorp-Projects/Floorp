@@ -333,6 +333,10 @@ function test()
     checkThrows(function() new Float32Array(null));
     checkThrows(function() new Float32Array(undefined));
 
+    // check that NaN conversions happen correctly with array conversions
+    check(function() (new Int32Array([NaN])[0]) == 0);
+    check(function() { var q = new Float32Array([NaN])[0]; return q != q; });
+
     print ("done");
 
     reportCompare(0, TestFailCount, "typed array tests");
