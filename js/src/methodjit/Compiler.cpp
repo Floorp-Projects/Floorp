@@ -3105,6 +3105,8 @@ mjit::Compiler::jsop_callprop_generic(JSAtom *atom)
     /* Guard that the type is an object. */
     pic.typeReg = frame.copyTypeIntoReg(top);
 
+    RESERVE_IC_SPACE(masm);
+
     /* Start the hot path where it's easy to patch it. */
     pic.fastPathStart = masm.label();
 
@@ -3114,10 +3116,11 @@ mjit::Compiler::jsop_callprop_generic(JSAtom *atom)
      * path to the final call. We need a label in between that jump, which
      * will be the target of patched jumps in the PIC.
      */
-    Jump typeCheck = masm.testObject(Assembler::NotEqual, pic.typeReg);
-    DBGLABEL(dbgInlineTypeGuard);
+    Jump typeCheckJump = masm.testObject(Assembler::NotEqual, pic.typeReg);
+    Label typeCheck = masm.label();
+    RETURN_IF_OOM(false);
 
-    pic.typeCheck = stubcc.linkExit(typeCheck, Uses(1));
+    pic.typeCheck = stubcc.linkExit(typeCheckJump, Uses(1));
     pic.hasTypeCheck = true;
     pic.objReg = objReg;
     pic.shapeReg = shapeReg;
@@ -3129,12 +3132,14 @@ mjit::Compiler::jsop_callprop_generic(JSAtom *atom)
      */
     uint32 thisvSlot = frame.localSlots();
     Address thisv = Address(JSFrameReg, sizeof(JSStackFrame) + thisvSlot * sizeof(Value));
+
 #if defined JS_NUNBOX32
     masm.storeValueFromComponents(pic.typeReg, pic.objReg, thisv);
 #elif defined JS_PUNBOX64
     masm.orPtr(pic.objReg, pic.typeReg);
     masm.storePtr(pic.typeReg, thisv);
 #endif
+
     frame.freeReg(pic.typeReg);
 
     /* Guard on shape. */
@@ -3145,23 +3150,24 @@ mjit::Compiler::jsop_callprop_generic(JSAtom *atom)
     Jump j = masm.branch32WithPatch(Assembler::NotEqual, shapeReg,
                            Imm32(int32(JSObjectMap::INVALID_SHAPE)),
                            inlineShapeLabel);
-    DBGLABEL(dbgInlineShapeJump);
-
-    pic.slowPathStart = stubcc.linkExit(j, Uses(1));
+    Label inlineShapeJump = masm.label();
 
     /* Slow path. */
+    RESERVE_OOL_SPACE(stubcc.masm);
+    pic.slowPathStart = stubcc.linkExit(j, Uses(1));
     stubcc.leave();
     passICAddress(&pic);
     pic.slowPathCall = OOL_STUBCALL(ic::CallProp);
+    CHECK_OOL_SPACE();
 
     /* Adjust the frame. None of this will generate code. */
     frame.pop();
     frame.pushRegs(shapeReg, objReg);
     frame.pushSynced();
 
-    /* Load dslots. */
-    Label dslotsLoadLabel = masm.label();
-    masm.loadPtr(Address(objReg, offsetof(JSObject, slots)), objReg);
+    /* Load the base slot address. */
+    Label dslotsLoadLabel = masm.loadPtrWithPatchToLEA(Address(objReg, offsetof(JSObject, slots)),
+                                                               objReg);
 
     /* Copy the slot value to the expression stack. */
     Address slot(objReg, 1 << 24);
@@ -3169,18 +3175,21 @@ mjit::Compiler::jsop_callprop_generic(JSAtom *atom)
     Label fastValueLoad = masm.loadValueWithAddressOffsetPatch(slot, shapeReg, objReg);
     pic.fastPathRejoin = masm.label();
 
-    /* Assert correctness of hardcoded offsets. */
     RETURN_IF_OOM(false);
-    JS_ASSERT(masm.differenceBetween(pic.fastPathStart, dbgInlineTypeGuard) == GETPROP_INLINE_TYPE_GUARD);
 
+    /* 
+     * Initialize op labels. We use GetPropLabels here because we have the same patching
+     * requirements for CallProp.
+     */
     GetPropLabels &labels = pic.getPropLabels();
     labels.setDslotsLoadOffset(masm.differenceBetween(pic.fastPathRejoin, dslotsLoadLabel));
     labels.setInlineShapeOffset(masm.differenceBetween(pic.shapeGuard, inlineShapeLabel));
     labels.setValueLoad(masm, pic.fastPathRejoin, fastValueLoad);
-#if defined JS_NUNBOX32
-    JS_ASSERT(masm.differenceBetween(pic.shapeGuard, dbgInlineShapeJump) == GETPROP_INLINE_SHAPE_JUMP);
-#elif defined JS_PUNBOX64
-    JS_ASSERT(masm.differenceBetween(inlineShapeLabel, dbgInlineShapeJump) == GETPROP_INLINE_SHAPE_JUMP);
+    labels.setInlineTypeJump(masm, pic.fastPathStart, typeCheck);
+#ifdef JS_CPU_X64
+    labels.setInlineShapeJump(masm, inlineShapeLabel, inlineShapeJump);
+#else
+    labels.setInlineShapeJump(masm, pic.shapeGuard, inlineShapeJump);
 #endif
 
     stubcc.rejoin(Changes(2));
@@ -3257,6 +3266,8 @@ mjit::Compiler::jsop_callprop_obj(JSAtom *atom)
 
     JS_ASSERT(top->isTypeKnown());
     JS_ASSERT(top->getKnownType() == JSVAL_TYPE_OBJECT);
+    
+    RESERVE_IC_SPACE(masm);
 
     pic.pc = PC;
     pic.fastPathStart = masm.label();
@@ -3277,17 +3288,19 @@ mjit::Compiler::jsop_callprop_obj(JSAtom *atom)
     Jump j = masm.branch32WithPatch(Assembler::NotEqual, shapeReg,
                            Imm32(int32(JSObjectMap::INVALID_SHAPE)),
                            inlineShapeLabel);
-    DBGLABEL(dbgInlineShapeJump);
+    Label inlineShapeJump = masm.label();
 
+    /* Slow path. */
+    RESERVE_OOL_SPACE(stubcc.masm);
     pic.slowPathStart = stubcc.linkExit(j, Uses(1));
-
     stubcc.leave();
     passICAddress(&pic);
     pic.slowPathCall = OOL_STUBCALL(ic::CallProp);
+    CHECK_OOL_SPACE();
 
-    /* Load dslots. */
-    Label dslotsLoadLabel = masm.label();
-    masm.loadPtr(Address(objReg, offsetof(JSObject, slots)), objReg);
+    /* Load the base slot address. */
+    Label dslotsLoadLabel = masm.loadPtrWithPatchToLEA(Address(objReg, offsetof(JSObject, slots)),
+                                                               objReg);
 
     /* Copy the slot value to the expression stack. */
     Address slot(objReg, 1 << 24);
@@ -3320,11 +3333,10 @@ mjit::Compiler::jsop_callprop_obj(JSAtom *atom)
     labels.setDslotsLoadOffset(masm.differenceBetween(pic.fastPathRejoin, dslotsLoadLabel));
     labels.setInlineShapeOffset(masm.differenceBetween(pic.shapeGuard, inlineShapeLabel));
     labels.setValueLoad(masm, pic.fastPathRejoin, fastValueLoad);
-
-#if defined JS_NUNBOX32
-    JS_ASSERT(masm.differenceBetween(pic.shapeGuard, dbgInlineShapeJump) == GETPROP_INLINE_SHAPE_JUMP);
-#elif defined JS_PUNBOX64
-    JS_ASSERT(masm.differenceBetween(inlineShapeLabel, dbgInlineShapeJump) == GETPROP_INLINE_SHAPE_JUMP);
+#ifdef JS_CPU_X64
+    labels.setInlineShapeJump(masm, inlineShapeLabel, inlineShapeJump);
+#else
+    labels.setInlineShapeJump(masm, pic.shapeGuard, inlineShapeJump);
 #endif
 
     stubcc.rejoin(Changes(2));
