@@ -8791,9 +8791,29 @@ nsCSSFrameConstructor::ReplicateFixedFrames(nsPageContentFrame* aParentFrame)
     nsIFrame* prevPlaceholder = mPresShell->FrameManager()->GetPlaceholderFrameFor(fixed);
     if (prevPlaceholder &&
         nsLayoutUtils::IsProperAncestorFrame(prevCanvasFrame, prevPlaceholder)) {
-      nsresult rv = ConstructFrame(state, fixed->GetContent(),
-                                   canvasFrame, fixedPlaceholders);
-      NS_ENSURE_SUCCESS(rv, rv);
+      // We want to use the same style as the primary style frame for
+      // our content
+      nsIContent* content = fixed->GetContent();
+      nsStyleContext* styleContext =
+        nsLayoutUtils::GetStyleFrame(content->GetPrimaryFrame())->
+          GetStyleContext();
+      FrameConstructionItemList items;
+      AddFrameConstructionItemsInternal(state, content, canvasFrame,
+                                        content->Tag(),
+                                        content->GetNameSpaceID(),
+                                        PR_TRUE,
+                                        styleContext,
+                                        ITEM_ALLOW_XBL_BASE |
+                                          ITEM_ALLOW_PAGE_BREAK,
+                                        items);
+      for (FCItemIterator iter(items); !iter.IsDone(); iter.Next()) {
+        NS_ASSERTION(iter.item().DesiredParentType() ==
+                       GetParentType(canvasFrame),
+                     "This is not going to work");
+        nsresult rv =
+          ConstructFramesFromItem(state, iter, canvasFrame, fixedPlaceholders);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
     }
   }
 

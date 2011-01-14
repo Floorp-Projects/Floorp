@@ -5,12 +5,24 @@ function run_test()
     return;
   }
 
+  var is_win7_or_newer = false;
+  var ph = Components.classes["@mozilla.org/network/protocol;1?name=http"]
+             .getService(Components.interfaces.nsIHttpProtocolHandler);
+  var match = ph.userAgent.match(/Windows NT (\d+).(\d+)/);
+  if (match && (parseInt(match[1]) > 6 ||
+                parseInt(match[1]) == 6 && parseInt(match[2]) >= 1)) {
+      is_win7_or_newer = true;
+  }
+
   // try a basic crash
   do_crash(null, function(mdump, extra) {
              do_check_true(mdump.exists());
              do_check_true(mdump.fileSize > 0);
              do_check_true('StartupTime' in extra);
              do_check_true('CrashTime' in extra);
+             do_check_true(CrashTestUtils.dumpHasStream(mdump.path, CrashTestUtils.MD_THREAD_LIST_STREAM));
+             if (is_win7_or_newer)
+               do_check_true(CrashTestUtils.dumpHasStream(mdump.path, CrashTestUtils.MD_MEMORY_INFO_LIST_STREAM));
            });
 
   // check setting some basic data

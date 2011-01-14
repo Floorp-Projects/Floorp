@@ -149,9 +149,7 @@ nsHtml5TreeBuilder::createElement(PRInt32 aNamespace, nsIAtom* aName, nsHtml5Htm
           if (url) {
             mSpeculativeLoadQueue.AppendElement()->InitManifest(*url);
           }
-        } else if (nsHtml5Atoms::base == aName &&
-            (mode == NS_HTML5TREE_BUILDER_IN_HEAD ||
-             mode == NS_HTML5TREE_BUILDER_AFTER_HEAD)) {
+        } else if (nsHtml5Atoms::base == aName) {
           nsString* url =
               aAttributes->getValue(nsHtml5AttributeName::ATTR_HREF);
           if (url) {
