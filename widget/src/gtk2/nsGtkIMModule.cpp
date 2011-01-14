@@ -363,7 +363,8 @@ nsGtkIMModule::OnBlurWindow(nsWindow* aWindow)
 }
 
 PRBool
-nsGtkIMModule::OnKeyEvent(nsWindow* aCaller, GdkEventKey* aEvent)
+nsGtkIMModule::OnKeyEvent(nsWindow* aCaller, GdkEventKey* aEvent,
+                          PRBool aKeyDownEventWasSent /* = PR_FALSE */)
 {
     NS_PRECONDITION(aEvent, "aEvent must be non-null");
 
@@ -372,8 +373,8 @@ nsGtkIMModule::OnKeyEvent(nsWindow* aCaller, GdkEventKey* aEvent)
     }
 
     PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
-        ("GtkIMModule(%p): OnKeyEvent, aCaller=%p",
-         this, aCaller));
+        ("GtkIMModule(%p): OnKeyEvent, aCaller=%p, aKeyDownEventWasSent=%s",
+         this, aCaller, aKeyDownEventWasSent ? "TRUE" : "FALSE"));
     PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
         ("    aEvent: type=%s, keyval=0x%X, unicode=0x%X",
          aEvent->type == GDK_KEY_PRESS ? "GDK_KEY_PRESS" :
@@ -394,6 +395,7 @@ nsGtkIMModule::OnKeyEvent(nsWindow* aCaller, GdkEventKey* aEvent)
         return PR_FALSE;
     }
 
+    mKeyDownEventWasSent = aKeyDownEventWasSent;
     mFilterKeyEvent = PR_TRUE;
     mProcessingKeyEvent = aEvent;
     gboolean isFiltered = gtk_im_context_filter_keypress(im, aEvent);
@@ -1040,13 +1042,16 @@ nsGtkIMModule::DispatchCompositionStart()
 
     mCompositionStart = selection.mReply.mOffset;
 
-    if (mProcessingKeyEvent && mProcessingKeyEvent->type == GDK_KEY_PRESS) {
+    if (mProcessingKeyEvent && !mKeyDownEventWasSent &&
+        mProcessingKeyEvent->type == GDK_KEY_PRESS) {
         // If this composition is started by a native keydown event, we need to
         // dispatch our keydown event here (before composition start).
         nsCOMPtr<nsIWidget> kungFuDeathGrip = mLastFocusedWindow;
         PRBool isCancelled;
         mLastFocusedWindow->DispatchKeyDownEvent(mProcessingKeyEvent,
                                                  &isCancelled);
+        PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
+            ("    keydown event is dispatched"));
         if (static_cast<nsWindow*>(kungFuDeathGrip.get())->IsDestroyed() ||
             kungFuDeathGrip != mLastFocusedWindow) {
             PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
