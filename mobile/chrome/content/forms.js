@@ -95,7 +95,12 @@ FormAssistant.prototype = {
     if (element) {
       this._currentIndex = aIndex;
       gFocusManager.setFocus(element, Ci.nsIFocusManager.FLAG_NOSCROLL);
-      sendAsyncMessage("FormAssist:Show", this._getJSON());
+
+      // To ensure we get the current caret positionning of the focused
+      // element we need to delayed a bit the event
+      this._executeDelayed(function(self) {
+        sendAsyncMessage("FormAssist:Show", self._getJSON());
+      });
     }
     return element;
   },
@@ -473,9 +478,10 @@ FormAssistant.prototype = {
   /** Caret is used to input text for this element. */
   _getCaretRect: function _formHelperGetCaretRect() {
     let element = this.currentElement;
+    let focusedElement = gFocusManager.getFocusedElementForWindow(content, true, {});
     if ((element instanceof HTMLTextAreaElement ||
         (element instanceof HTMLInputElement && element.type == "text")) &&
-        gFocusManager.focusedElement == element) {
+        focusedElement == element) {
       let utils = Util.getWindowUtils(element.ownerDocument.defaultView);
       let rect = utils.sendQueryContentEvent(utils.QUERY_CARET_RECT, element.selectionEnd, 0, 0, 0);
       if (rect) {

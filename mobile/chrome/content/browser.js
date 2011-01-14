@@ -247,9 +247,6 @@ var Browser = {
       this.styles[style] = stylesheet.cssRules[index].style;
     }
 
-    // Init the cache used in the resize handler
-    window.cachedWidth = window.innerWidth;
-
     // Saved the scrolls values before the resizing of the window, to restore
     // the scrollbox position once the resize has finished.
     // The last parameter of addEventListener is true to be sure we performed
@@ -284,10 +281,10 @@ var Browser = {
       Browser.styles["window-width"].width = w + "px";
       Browser.styles["window-height"].height = h + "px";
       Browser.styles["toolbar-height"].height = toolbarHeight + "px";
-      ViewableAreaObserver.update();
 
       // Tell the UI to resize the browser controls
       BrowserUI.sizeControls(w, h);
+      ViewableAreaObserver.update();
 
       // Restore the previous scroll position
       let restorePosition = Browser.controlsPosition;
@@ -305,20 +302,6 @@ var Browser = {
         Browser.controlsScrollboxScroller.scrollTo(restorePosition.x, 0);
         Browser.pageScrollboxScroller.scrollTo(0, restorePosition.y);
         Browser.tryFloatToolbar(0, 0);
-      }
-
-      let oldWidth = window.cachedWidth || w;
-      window.cachedWidth = w;
-
-      for (let i = Browser.tabs.length - 1; i >= 0; i--) {
-        let tab = Browser.tabs[i];
-        let oldContentWindowWidth = tab.browser.contentWindowWidth;
-        tab.updateViewportSize();
-
-        // If the viewport width is still the same, the page layout has not
-        // changed, so we can keep keep the same content on-screen.
-        if (tab.browser.contentWindowWidth == oldContentWindowWidth)
-          tab.restoreViewportPosition(oldWidth, w);
       }
 
       // We want to keep the current focused element into view if possible
@@ -1005,7 +988,6 @@ var Browser = {
    * @return Rect in viewport coordinates, or null
    */
   _getZoomRectForRect: function _getZoomRectForRect(rect, y) {
-    let oldZoomLevel = getBrowser().scale;
     let zoomLevel = this._getZoomLevelForRect(rect);
     return this._getZoomRectForPoint(rect.center().x, y, zoomLevel);
   },
@@ -1208,7 +1190,7 @@ Browser.MainDragger.prototype = {
     switch (aEvent.type) {
       case "PanBegin": {
         let browser = Browser.selectedBrowser;
-        let width = window.innerWidth, height = window.innerHeight;
+        let width = ViewableAreaObserver.width, height = ViewableAreaObserver.height;
         let contentWidth = browser.contentDocumentWidth * browser.scale;
         let contentHeight = browser.contentDocumentHeight * browser.scale;
 
@@ -1291,13 +1273,13 @@ Browser.MainDragger.prototype = {
   _showScrollbars: function _showScrollbars() {
     let scaleX = this._scrollScales.x, scaleY = this._scrollScales.y;
     if (scaleX) {
+      this._horizontalScrollbar.width = ViewableAreaObserver.width * scaleX;
       this._horizontalScrollbar.setAttribute("panning", "true");
-      this._horizontalScrollbar.width = window.innerWidth * scaleX;
     }
 
     if (scaleY) {
+      this._verticalScrollbar.height = ViewableAreaObserver.height * scaleY;
       this._verticalScrollbar.setAttribute("panning", "true");
-      this._verticalScrollbar.height = window.innerHeight * scaleY;
     }
   },
 
@@ -2474,8 +2456,8 @@ Tab.prototype = {
     if (!browser)
       return;
 
-    let screenW = window.innerWidth;
-    let screenH = window.innerHeight;
+    let screenW = ViewableAreaObserver.width;
+    let screenH = ViewableAreaObserver.height;
     let viewportW, viewportH;
 
     let metadata = this.metadata;
@@ -2797,22 +2779,46 @@ var ViewableAreaObserver = {
   },
 
   get height() {
-    return this._height || window.innerHeight;
+    return (this._height || window.innerHeight) - Elements.contentNavigator.getBoundingClientRect().height;
   },
 
   observe: function va_observe(aSubject, aTopic, aData) {
     let rect = Rect.fromRect(JSON.parse(aData));
-    this._height = rect.bottom - rect.top;
-    this._width = rect.right - rect.left;
+    let height = rect.bottom - rect.top;
+    let width = rect.right - rect.left;
+    if (height == window.innerHeight && width == window.innerWidth) {
+      this._height = null;
+      this._width = null;
+    }
+    else {
+      this._height = height;
+      this._width = width;
+    }
     this.update();
   },
 
   update: function va_update() {
     let oldHeight = parseInt(Browser.styles["viewable-height"].height);
-    let newHeight = this.height - Elements.contentNavigator.getBoundingClientRect().height;
-    if (newHeight != oldHeight) {
+    let oldWidth = parseInt(Browser.styles["viewable-width"].width);
+
+    let newWidth = this.width;
+    let newHeight = this.height;
+    if (newHeight != oldHeight || newWidth != oldWidth) {
       Browser.styles["viewable-height"].height = newHeight + "px";
-      Browser.styles["viewable-width"].width = this.width + "px";
+      Browser.styles["viewable-height"].maxHeight = newHeight + "px";
+
+      Browser.styles["viewable-width"].width = newWidth + "px";
+      Browser.styles["viewable-width"].maxWidth = newWidth + "px";
+
+      for (let i = Browser.tabs.length - 1; i >= 0; i--) {
+        let tab = Browser.tabs[i];
+        tab.updateViewportSize();
+
+        // If the viewport width is still the same, the page layout has not
+        // changed, so we can keep keep the same content on-screen.
+        if (tab.browser.contentWindowWidth == oldWidth)
+          tab.restoreViewportPosition(oldWidth, w);
+      }
 
       // setTimeout(callback, 0) to ensure the resize event handler dispatch is finished
       setTimeout(function() {
