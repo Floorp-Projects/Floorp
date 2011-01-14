@@ -53,11 +53,13 @@ const TOOLKIT_ID                      = "toolkit@mozilla.org"
 const KEY_PROFILEDIR                  = "ProfD";
 const KEY_APPDIR                      = "XCurProcD";
 const FILE_BLOCKLIST                  = "blocklist.xml";
+const PREF_BLOCKLIST_LASTUPDATETIME   = "app.update.lastUpdateTime.blocklist-background-update-timer";
 const PREF_BLOCKLIST_URL              = "extensions.blocklist.url";
 const PREF_BLOCKLIST_ENABLED          = "extensions.blocklist.enabled";
 const PREF_BLOCKLIST_INTERVAL         = "extensions.blocklist.interval";
 const PREF_BLOCKLIST_LEVEL            = "extensions.blocklist.level";
 const PREF_BLOCKLIST_PINGCOUNT        = "extensions.blocklist.pingCount";
+const PREF_BLOCKLIST_TOTALPINGCOUNT   = "extensions.blocklist.totalPingCount";
 const PREF_PLUGINS_NOTIFYUSER         = "plugins.update.notifyUser";
 const PREF_GENERAL_USERAGENT_LOCALE   = "general.useragent.locale";
 const PREF_PARTNER_BRANCH             = "app.partner.";
@@ -204,7 +206,7 @@ function restartApp() {
                    createInstance(Ci.nsISupportsPRBool);
   os.notifyObservers(cancelQuit, "quit-application-requested", null);
 
-  // Something aborted the quit process. 
+  // Something aborted the quit process.
   if (cancelQuit.data)
     return;
 
@@ -225,13 +227,13 @@ function matchesOSABI(blocklistElement) {
     if (choices.length > 0 && choices.indexOf(gApp.OS) < 0)
       return false;
   }
-  
+
   if (blocklistElement.hasAttribute("xpcomabi")) {
     choices = blocklistElement.getAttribute("xpcomabi").split(",");
     if (choices.length > 0 && choices.indexOf(gApp.XPCOMABI) < 0)
       return false;
   }
-  
+
   return true;
 }
 
@@ -427,14 +429,26 @@ Blocklist.prototype = {
       return;
     }
 
-    var pingCount = 0;
-    try {
-      pingCount = gPref.getIntPref(PREF_BLOCKLIST_PINGCOUNT);
-    }
-    catch (e) {
-    }
-    if (pingCount < 0)
+    var pingCount = getPref("getIntPref", PREF_BLOCKLIST_PINGCOUNT, 0);
+    var totalPingCount = getPref("getIntPref", PREF_BLOCKLIST_TOTALPINGCOUNT, 1);
+    var daysSinceLastPing;
+    if (pingCount < 1) {
+      daysSinceLastPing = pingCount == 0 ? "new" : "reset";
       pingCount = 1;
+    }
+    else {
+      // Seconds in one day is used because nsIUpdateTimerManager stores the
+      // last update time in seconds.
+      let secondsInDay = 60 * 60 * 24;
+      let lastUpdateTime = getPref("getIntPref", PREF_BLOCKLIST_LASTUPDATETIME, 0);
+      if (lastUpdateTime != 0) {
+        let now = Math.round(Date.now() / 1000);
+        daysSinceLastPing = Math.floor((now - lastUpdateTime) / secondsInDay);
+      }
+      else {
+        daysSinceLastPing = "invalid";
+      }
+    }
 
     dsURI = dsURI.replace(/%APP_ID%/g, gApp.ID);
     dsURI = dsURI.replace(/%APP_VERSION%/g, gApp.version);
@@ -451,15 +465,28 @@ Blocklist.prototype = {
     dsURI = dsURI.replace(/%DISTRIBUTION_VERSION%/g,
                       getDistributionPrefValue(PREF_APP_DISTRIBUTION_VERSION));
     dsURI = dsURI.replace(/%PING_COUNT%/g, pingCount);
+    dsURI = dsURI.replace(/%TOTAL_PING_COUNT%/g, totalPingCount);
+    dsURI = dsURI.replace(/%DAYS_SINCE_LAST_PING%/g, daysSinceLastPing);
     dsURI = dsURI.replace(/\+/g, "%2B");
 
+    // Under normal operations it will take around 5,883,516 years before the
+    // preferences used to store pingCount and totalPingCount will rollover
+    // so this code doesn't bother trying to do the "right thing" here.
     pingCount++;
     if (pingCount > 2147483647) {
-      // Rollover to 1 if the value is greater than what is support by an
-      // integer preference. The 1 indicates that this is an existing profile.
-      pingCount = 1;
+      // Rollover to -1 if the value is greater than what is support by an
+      // integer preference. The -1 indicates that the counter has been reset.
+      pingCount = -1;
     }
     gPref.setIntPref(PREF_BLOCKLIST_PINGCOUNT, pingCount);
+
+    totalPingCount++;
+    if (totalPingCount > 2147483647) {
+      // Rollover to 1 if the value is greater than what is support by an
+      // integer preference.
+      totalPingCount = 1;
+    }
+    gPref.setIntPref(PREF_BLOCKLIST_TOTALPINGCOUNT, totalPingCount);
 
     // Verify that the URI is valid
     try {
