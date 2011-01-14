@@ -281,8 +281,11 @@ nsContentDLF::CreateInstance(const char* aCommand,
   // Try XUL
   typeIndex = 0;
   while (gXULTypes[typeIndex]) {
-    if (0 == PL_strcmp(gXULTypes[typeIndex++], aContentType) &&
-        MayUseXULXBL(aChannel)) {
+    if (0 == PL_strcmp(gXULTypes[typeIndex++], aContentType)) {
+      if (!MayUseXULXBL(aChannel)) {
+        return NS_ERROR_REMOTE_XUL;
+      }
+
       return CreateXULDocument(aCommand,
                                aChannel, aLoadGroup,
                                aContentType, aContainer,
