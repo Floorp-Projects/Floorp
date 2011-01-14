@@ -283,7 +283,7 @@ GenConversionForIntArray(Assembler &masm, js::TypedArray *tarray, const ValueRem
             stub = stubs::ConvertToTypedInt<true>;
         else 
             stub = stubs::ConvertToTypedInt<false>;
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, stub));
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, stub), false);
         if (vr.dataReg() != Registers::ReturnReg)
             masm.move(Registers::ReturnReg, vr.dataReg());
 
@@ -366,7 +366,7 @@ GenConversionForFloatArray(Assembler &masm, js::TypedArray *tarray, const ValueR
         masm.setupABICall(Registers::FastCall, 2);
         masm.storeArg(0, masm.vmFrameOffset(offsetof(VMFrame, cx)));
         masm.storeArgAddr(1, masm.addressOfExtra(vp));
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, stubs::ConvertToTypedFloat));
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, stubs::ConvertToTypedFloat), false);
         saveForCall.restore();
 
         // Load the value from the outparam, then pop the stack.
