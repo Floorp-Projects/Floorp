@@ -106,6 +106,12 @@ const kTitleTagsSeparator = " \u2013 ";
 
 const kBrowserUrlbarBranch = "browser.urlbar.";
 
+////////////////////////////////////////////////////////////////////////////////
+//// Globals and Lazy Getters
+
+XPCOMUtils.defineLazyServiceGetter(this, "pb",
+                                   "@mozilla.org/privatebrowsing;1",
+                                   "nsIPrivateBrowsingService");
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Helpers
@@ -147,6 +153,18 @@ function initTempTable(aDatabase)
   stmt.finalize();
 }
 
+/**
+ * @return true if private browsing is active, false otherwise.
+ */
+function inPrivateBrowsingMode()
+{
+  try {
+    return pb.privateBrowsingEnabled;
+  }
+  catch (ex) {
+    return false;
+  }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 //// AutoCompleteStatementCallbackWrapper class
@@ -519,6 +537,13 @@ nsPlacesAutoComplete.prototype = {
 
   registerOpenPage: function PAC_registerOpenPage(aURI)
   {
+    // Don't add any pages while in Private Browsing mode, so as to avoid
+    // leaking information about other windows that might otherwise stay hidden
+    // and private.
+    if (inPrivateBrowsingMode()) {
+      return;
+    }
+
     let stmt = this._registerOpenPageQuery;
     stmt.params.page_url = aURI.spec;
 
@@ -527,6 +552,13 @@ nsPlacesAutoComplete.prototype = {
 
   unregisterOpenPage: function PAC_unregisterOpenPage(aURI)
   {
+    // Entering Private Browsing mode will unregister all open pages, therefore
+    // there should not be anything in the moz_openpages_temp table.  As a
+    // result, we can stop now without doing any unnecessary work.
+    if (inPrivateBrowsingMode()) {
+      return;
+    }
+
     let stmt = this._unregisterOpenPageQuery;
     stmt.params.page_url = aURI.spec;
 

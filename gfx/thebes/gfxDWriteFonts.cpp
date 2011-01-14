@@ -494,7 +494,7 @@ gfxDWriteFont::GetHintedGlyphWidth(gfxContext *aCtx, PRUint16 aGID)
 
     DWRITE_GLYPH_METRICS glyphMetrics;
     HRESULT hr = mFontFace->GetGdiCompatibleGlyphMetrics(
-                  GetAdjustedSize(), 1.0f, nsnull, TRUE,
+                  GetAdjustedSize(), 1.0f, nsnull, FALSE,
                   &aGID, 1, &glyphMetrics, FALSE);
 
     if (NS_SUCCEEDED(hr)) {

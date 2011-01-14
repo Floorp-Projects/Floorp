@@ -97,6 +97,7 @@
 #include "nsCanvasFrame.h"
 #include "gfxDrawable.h"
 #include "gfxUtils.h"
+#include "nsDataHashtable.h"
 
 #ifdef MOZ_SVG
 #include "nsSVGUtils.h"
@@ -119,6 +120,62 @@ bool nsLayoutUtils::gPreventAssertInCompareTreePosition = false;
 #endif // DEBUG
 
 typedef gfxPattern::GraphicsFilter GraphicsFilter;
+typedef FrameMetrics::ViewID ViewID;
+
+static ViewID sScrollIdCounter = FrameMetrics::START_SCROLL_ID;
+
+typedef nsDataHashtable<nsUint64HashKey, nsIContent*> ContentMap;
+static ContentMap* sContentMap = NULL;
+static ContentMap& GetContentMap() {
+  if (!sContentMap) {
+    sContentMap = new ContentMap();
+    nsresult rv = sContentMap->Init();
+    NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "Could not initialize map.");
+  }
+  return *sContentMap;
+}
+
+static void DestroyViewID(void* aObject, nsIAtom* aPropertyName,
+                          void* aPropertyValue, void* aData)
+{
+  ViewID* id = static_cast<ViewID*>(aPropertyValue);
+  GetContentMap().Remove(*id);
+  delete id;
+}
+
+ViewID
+nsLayoutUtils::FindIDFor(nsIContent* aContent)
+{
+  ViewID scrollId;
+
+  void* scrollIdProperty = aContent->GetProperty(nsGkAtoms::RemoteId);
+  if (scrollIdProperty) {
+    scrollId = *static_cast<ViewID*>(scrollIdProperty);
+  } else {
+    scrollId = sScrollIdCounter++;
+    aContent->SetProperty(nsGkAtoms::RemoteId, new ViewID(scrollId),
+                          DestroyViewID);
+    GetContentMap().Put(scrollId, aContent);
+  }
+
+  return scrollId;
+}
+
+nsIContent*
+nsLayoutUtils::FindContentFor(ViewID aId)
+{
+  NS_ABORT_IF_FALSE(aId != FrameMetrics::NULL_SCROLL_ID &&
+                    aId != FrameMetrics::ROOT_SCROLL_ID,
+                    "Cannot find a content element in map for null or root IDs.");
+  nsIContent* content;
+  bool exists = GetContentMap().Get(aId, &content);
+
+  if (exists) {
+    return content;
+  } else {
+    return nsnull;
+  }
+}
 
 /**
  * A namespace class for static layout utilities.
@@ -1093,6 +1150,40 @@ nsLayoutUtils::CombineBreakType(PRUint8 aOrigBreakType,
 static PRBool gDumpPaintList = getenv("MOZ_DUMP_PAINT_LIST") != 0;
 static PRBool gDumpEventList = PR_FALSE;
 #endif
+
+nsresult
+nsLayoutUtils::GetRemoteContentIds(nsIFrame* aFrame,
+                                   const nsRect& aTarget,
+                                   nsTArray<ViewID> &aOutIDs,
+                                   PRBool aIgnoreRootScrollFrame)
+{
+  nsDisplayListBuilder builder(aFrame, nsDisplayListBuilder::EVENT_DELIVERY,
+                               PR_FALSE);
+  nsDisplayList list;
+
+  if (aIgnoreRootScrollFrame) {
+    nsIFrame* rootScrollFrame =
+      aFrame->PresContext()->PresShell()->GetRootScrollFrame();
+    if (rootScrollFrame) {
+      builder.SetIgnoreScrollFrame(rootScrollFrame);
+    }
+  }
+
+  builder.EnterPresShell(aFrame, aTarget);
+
+  nsresult rv =
+    aFrame->BuildDisplayListForStackingContext(&builder, aTarget, &list);
+
+  builder.LeavePresShell(aFrame, aTarget);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsTArray<nsIFrame*> outFrames;
+  nsDisplayItem::HitTestState hitTestState(&aOutIDs);
+  list.HitTest(&builder, aTarget, &hitTestState, &outFrames);
+  list.DeleteAll();
+
+  return NS_OK;
+}
 
 nsIFrame*
 nsLayoutUtils::GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt,
@@ -3567,6 +3658,11 @@ nsLayoutUtils::SurfaceFromElement(nsIDOMElement *aElement,
   PRBool forceCopy = (aSurfaceFlags & SFE_WANT_NEW_SURFACE) != 0;
   PRBool wantImageSurface = (aSurfaceFlags & SFE_WANT_IMAGE_SURFACE) != 0;
 
+  if (aSurfaceFlags & SFE_NO_PREMULTIPLY_ALPHA) {
+    forceCopy = PR_TRUE;
+    wantImageSurface = PR_TRUE;
+  }
+
   // If it's a <canvas>, we may be able to just grab its internal surface
   nsCOMPtr<nsIDOMHTMLCanvasElement> domCanvas = do_QueryInterface(aElement);
   if (node && domCanvas) {
@@ -3599,6 +3695,12 @@ nsLayoutUtils::SurfaceFromElement(nsIDOMElement *aElement,
       rv = (static_cast<nsICanvasElementExternal*>(canvas))->RenderContextsExternal(ctx, gfxPattern::FILTER_NEAREST);
       if (NS_FAILED(rv))
         return result;
+    }
+
+    if (aSurfaceFlags & SFE_NO_PREMULTIPLY_ALPHA) {
+      // we can modify this surface since we force a copy above when
+      // when NO_PREMULTIPLY_ALPHA is set
+      gfxUtils::UnpremultiplyImageSurface(static_cast<gfxImageSurface*>(surf.get()));
     }
 
     nsCOMPtr<nsIPrincipal> principal = node->NodePrincipal();
@@ -3714,9 +3816,14 @@ nsLayoutUtils::SurfaceFromElement(nsIDOMElement *aElement,
   PRUint32 whichFrame = (aSurfaceFlags & SFE_WANT_FIRST_FRAME)
                         ? (PRUint32) imgIContainer::FRAME_FIRST
                         : (PRUint32) imgIContainer::FRAME_CURRENT;
+  PRUint32 frameFlags = imgIContainer::FLAG_SYNC_DECODE;
+  if (aSurfaceFlags & SFE_NO_COLORSPACE_CONVERSION)
+    frameFlags |= imgIContainer::FLAG_DECODE_NO_COLORSPACE_CONVERSION;
+  if (aSurfaceFlags & SFE_NO_PREMULTIPLY_ALPHA)
+    frameFlags |= imgIContainer::FLAG_DECODE_NO_PREMULTIPLY_ALPHA;
   nsRefPtr<gfxASurface> framesurf;
   rv = imgContainer->GetFrame(whichFrame,
-                              imgIContainer::FLAG_SYNC_DECODE,
+                              frameFlags,
                               getter_AddRefs(framesurf));
   if (NS_FAILED(rv))
     return result;
@@ -3855,6 +3962,16 @@ nsLayoutUtils::AssertTreeOnlyEmptyNextInFlows(nsIFrame *aSubtreeRoot)
   } while (childList);
 }
 #endif
+
+/* static */
+void
+nsLayoutUtils::Shutdown()
+{
+  if (sContentMap) {
+    delete sContentMap;
+    sContentMap = NULL;
+  }
+}
 
 nsSetAttrRunnable::nsSetAttrRunnable(nsIContent* aContent, nsIAtom* aAttrName,
                                      const nsAString& aValue)

@@ -60,9 +60,10 @@
           <description id="info.title"
 #ifndef XP_MACOSX
             style="display: none"
+#else
+            style="margin-bottom: 1em"
 #endif
           />
-          <spacer style="height: 1em"/>
           <description id="info.body" context="contentAreaContextMenu" noinitialfocus="true"/>
         </vbox>
       </row>

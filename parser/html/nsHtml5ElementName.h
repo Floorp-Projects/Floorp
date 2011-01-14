@@ -260,6 +260,7 @@ class nsHtml5ElementName
     static nsHtml5ElementName* ELT_THEAD;
     static nsHtml5ElementName* ELT_TABLE;
     static nsHtml5ElementName* ELT_TITLE;
+    static nsHtml5ElementName* ELT_TRACK;
     static nsHtml5ElementName* ELT_TSPAN;
     static nsHtml5ElementName* ELT_TIMES;
     static nsHtml5ElementName* ELT_TFOOT;

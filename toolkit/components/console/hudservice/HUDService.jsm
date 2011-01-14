@@ -1117,10 +1117,20 @@ function pruneConsoleOutputIfNecessary(aConsoleNode)
     logLimit = DEFAULT_LOG_LIMIT;
   }
 
+  let scrollBox = aConsoleNode.scrollBoxObject.element;
+  let oldScrollHeight = scrollBox.scrollHeight;
+  let scrolledToBottom = ConsoleUtils.isOutputScrolledToBottom(aConsoleNode);
+
   // Prune the nodes.
   let messageNodes = aConsoleNode.querySelectorAll(".hud-msg-node");
-  for (let i = 0; i < messageNodes.length - logLimit; i++) {
+  let removeNodes = messageNodes.length - logLimit;
+  for (let i = 0; i < removeNodes; i++) {
     messageNodes[i].parentNode.removeChild(messageNodes[i]);
+  }
+
+  if (!scrolledToBottom && removeNodes > 0 &&
+      oldScrollHeight != scrollBox.scrollHeight) {
+    scrollBox.scrollTop -= oldScrollHeight - scrollBox.scrollHeight;
   }
 
   return logLimit;
@@ -4986,6 +4996,9 @@ ConsoleUtils = {
     ConsoleUtils.filterMessageNode(aNode, aHUDId);
 
     let outputNode = HUDService.hudReferences[aHUDId].outputNode;
+
+    let scrolledToBottom = ConsoleUtils.isOutputScrolledToBottom(outputNode);
+
     outputNode.appendChild(aNode);
     HUDService.regroupOutput(outputNode);
 
@@ -4995,10 +5008,36 @@ ConsoleUtils = {
       return;
     }
 
-    if (!aNode.classList.contains("hud-filtered-by-string") &&
-        !aNode.classList.contains("hud-filtered-by-type")) {
+    let isInputOutput = aNode.classList.contains("webconsole-msg-input") ||
+                        aNode.classList.contains("webconsole-msg-output");
+    let isFiltered = aNode.classList.contains("hud-filtered-by-string") ||
+                     aNode.classList.contains("hud-filtered-by-type");
+
+    // Scroll to the new node if it is not filtered, and if the output node is
+    // scrolled at the bottom or if the new node is a jsterm input/output
+    // message.
+    if (!isFiltered && (scrolledToBottom || isInputOutput)) {
       ConsoleUtils.scrollToVisible(aNode);
     }
+  },
+
+  /**
+   * Check if the given output node is scrolled to the bottom.
+   *
+   * @param nsIDOMNode aOutputNode
+   * @return boolean
+   *         True if the output node is scrolled to the bottom, or false
+   *         otherwise.
+   */
+  isOutputScrolledToBottom:
+  function ConsoleUtils_isOutputScrolledToBottom(aOutputNode)
+  {
+    let lastNodeHeight = aOutputNode.lastChild ?
+                         aOutputNode.lastChild.clientHeight : 0;
+    let scrollBox = aOutputNode.scrollBoxObject.element;
+
+    return scrollBox.scrollTop + scrollBox.clientHeight >=
+           scrollBox.scrollHeight - lastNodeHeight / 2;
   },
 
   /**

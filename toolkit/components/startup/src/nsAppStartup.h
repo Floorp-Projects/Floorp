@@ -55,7 +55,7 @@ struct PLEvent;
 { 0x7dd4d320, 0xc84b, 0x4624, { 0x8d, 0x45, 0x7b, 0xb9, 0xb2, 0x35, 0x69, 0x77 } }
 
 
-class nsAppStartup : public nsIAppStartup2,
+class nsAppStartup : public nsIAppStartup_MOZILLA_2_0,
                      public nsIWindowCreator2,
                      public nsIObserver,
                      public nsSupportsWeakReference
@@ -64,6 +64,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIAPPSTARTUP
   NS_DECL_NSIAPPSTARTUP2
+  NS_DECL_NSIAPPSTARTUP_MOZILLA_2_0
   NS_DECL_NSIWINDOWCREATOR
   NS_DECL_NSIWINDOWCREATOR2
   NS_DECL_NSIOBSERVER

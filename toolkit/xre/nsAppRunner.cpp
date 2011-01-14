@@ -2724,10 +2724,14 @@ NS_VISIBILITY_DEFAULT PRBool nspr_use_zone_allocator = PR_FALSE;
 typedef BOOL (WINAPI* SetProcessDEPPolicyFunc)(DWORD dwFlags);
 #endif
 
+PRTime gXRE_mainTimestamp = 0;
+
 int
 XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 {
   NS_TIME_FUNCTION;
+
+  gXRE_mainTimestamp = PR_Now();
 
 #ifdef MOZ_SPLASHSCREEN
   nsSplashScreen *splashScreen = nsnull;

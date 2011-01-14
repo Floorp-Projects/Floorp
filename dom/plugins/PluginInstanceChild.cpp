@@ -2090,7 +2090,7 @@ StreamNotifyChild::RecvRedirectNotify(const nsCString& url, const int32_t& statu
 
     PluginInstanceChild* instance = static_cast<PluginInstanceChild*>(Manager());
     if (instance->mPluginIface->urlredirectnotify)
-      instance->mPluginIface->urlredirectnotify(instance->GetNPP(), mURL.get(), status, mClosure);
+      instance->mPluginIface->urlredirectnotify(instance->GetNPP(), url.get(), status, mClosure);
 
     return true;
 }

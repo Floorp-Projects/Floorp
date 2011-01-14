@@ -1069,6 +1069,92 @@ static PRBool test_strip_chars()
                                  NS_LITERAL_STRING(" foo"), 1);
 }
 
+static PRBool test_huge_capacity()
+{
+  nsString a, b, c, d, e, f, g, h, i, j, k, l, m, n;
+  nsCString n1;
+  PRBool fail = PR_FALSE;
+#undef ok
+#define ok(x) { fail |= !(x); }
+
+  ok(a.SetCapacity(1));
+  ok(!a.SetCapacity(nsString::size_type(-1)/2));
+  ok(a.SetCapacity(0));  // free the allocated memory
+
+  ok(b.SetCapacity(1));
+  ok(!b.SetCapacity(nsString::size_type(-1)/2 - 1));
+  ok(b.SetCapacity(0));
+
+  ok(c.SetCapacity(1));
+  ok(!c.SetCapacity(nsString::size_type(-1)/2));
+  ok(c.SetCapacity(0));
+
+  ok(!d.SetCapacity(nsString::size_type(-1)/2 - 1));
+  ok(!d.SetCapacity(nsString::size_type(-1)/2));
+  ok(d.SetCapacity(0));
+
+  ok(!e.SetCapacity(nsString::size_type(-1)/4));
+  ok(!e.SetCapacity(nsString::size_type(-1)/4 + 1));
+  ok(e.SetCapacity(0));
+
+  ok(!f.SetCapacity(nsString::size_type(-1)/2));
+  ok(f.SetCapacity(0));
+
+  ok(!g.SetCapacity(nsString::size_type(-1)/4 + 1000));
+  ok(!g.SetCapacity(nsString::size_type(-1)/4 + 1001));
+  ok(g.SetCapacity(0));
+
+  ok(!h.SetCapacity(nsString::size_type(-1)/4+1));
+  ok(!h.SetCapacity(nsString::size_type(-1)/2));
+  ok(h.SetCapacity(0));
+
+  ok(i.SetCapacity(1));
+  ok(i.SetCapacity(nsString::size_type(-1)/4 - 1000));
+  ok(!i.SetCapacity(nsString::size_type(-1)/4 + 1));
+  ok(i.SetCapacity(0));
+
+  ok(j.SetCapacity(nsString::size_type(-1)/4 - 1000));
+  ok(!j.SetCapacity(nsString::size_type(-1)/4 + 1));
+  ok(j.SetCapacity(0));
+
+  ok(k.SetCapacity(nsString::size_type(-1)/8 - 1000));
+  ok(k.SetCapacity(nsString::size_type(-1)/4 - 1001));
+  ok(k.SetCapacity(nsString::size_type(-1)/4 - 998));
+  ok(!k.SetCapacity(nsString::size_type(-1)/4 + 1));
+  ok(k.SetCapacity(0));
+
+  ok(l.SetCapacity(nsString::size_type(-1)/8));
+  ok(l.SetCapacity(nsString::size_type(-1)/8 + 1));
+  ok(l.SetCapacity(nsString::size_type(-1)/8 + 2));
+  ok(l.SetCapacity(0));
+
+  ok(m.SetCapacity(nsString::size_type(-1)/8 + 1000));
+  ok(m.SetCapacity(nsString::size_type(-1)/8 + 1001));
+  ok(m.SetCapacity(0));
+
+  ok(n.SetCapacity(nsString::size_type(-1)/8+1));
+  ok(!n.SetCapacity(nsString::size_type(-1)/4));
+  ok(n.SetCapacity(0));
+
+  ok(n.SetCapacity(0));
+  ok(n.SetCapacity((nsString::size_type(-1)/2 - sizeof(nsStringBuffer)) / 2 - 2));
+  ok(n.SetCapacity(0));
+  ok(!n.SetCapacity((nsString::size_type(-1)/2 - sizeof(nsStringBuffer)) / 2 - 1));
+  ok(n.SetCapacity(0));
+  ok(n1.SetCapacity(0));
+  ok(n1.SetCapacity((nsCString::size_type(-1)/2 - sizeof(nsStringBuffer)) / 1 - 2));
+  ok(n1.SetCapacity(0));
+  ok(!n1.SetCapacity((nsCString::size_type(-1)/2 - sizeof(nsStringBuffer)) / 1 - 1));
+  ok(n1.SetCapacity(0));
+
+  // Ignore the result if the address space is less than 64-bit because
+  // some of the allocations above will exhaust the address space.  
+  if (sizeof(void*) >= 8) {
+    return !fail;
+  }
+  return PR_TRUE;
+}
+
 //----
 
 typedef PRBool (*TestFunc)();
@@ -1119,6 +1205,7 @@ tests[] =
     { "test_string_tointeger", test_string_tointeger },
     { "test_parse_string", test_parse_string },
     { "test_strip_chars", test_strip_chars },
+    { "test_huge_capacity", test_huge_capacity },
     { nsnull, nsnull }
   };
 
@@ -1131,6 +1218,8 @@ int main(int argc, char **argv)
     int count = 1;
     if (argc > 1)
       count = atoi(argv[1]);
+
+    NS_LogInit();
 
     while (count--)
       {
