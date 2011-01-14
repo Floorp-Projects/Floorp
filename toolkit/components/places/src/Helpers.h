@@ -267,6 +267,19 @@ protected:
  */
 void ForceWALCheckpoint(mozIStorageConnection* aDBConn);
 
+/**
+ * Determines if a visit should be marked as hidden given its transition type
+ * and whether or not it was a redirect.
+ *
+ * @param aIsRedirect
+ *        True if this visit was a redirect, false otherwise.
+ * @param aTransitionType
+ *        The transition type of the visit.
+ * @return true if this visit should be hidden.
+ */
+bool GetHiddenState(bool aIsRedirect,
+                    PRUint32 aTransitionType);
+
 } // namespace places
 } // namespace mozilla
 

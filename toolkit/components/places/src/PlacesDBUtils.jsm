@@ -51,7 +51,7 @@ let EXPORTED_SYMBOLS = [ "PlacesDBUtils" ];
 ////////////////////////////////////////////////////////////////////////////////
 //// Constants
 
-const FINISHED_MAINTENANCE_NOTIFICATION_TOPIC = "places-maintenance-finished";
+const FINISHED_MAINTENANCE_TOPIC = "places-maintenance-finished";
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Smart getters
@@ -61,41 +61,244 @@ XPCOMUtils.defineLazyGetter(this, "DBConn", function() {
 });
 
 ////////////////////////////////////////////////////////////////////////////////
-//// nsPlacesDBUtils class
+//// PlacesDBUtils
 
-function nsPlacesDBUtils() {
-}
+let PlacesDBUtils = {
+  /**
+   * Executes a list of maintenance tasks.
+   * Once finished it will pass a array log to the callback attached to tasks,
+   * or print out to the error console if no callback is defined.
+   * FINISHED_MAINTENANCE_TOPIC is notified through observer service on finish.
+   *
+   * @param aTasks
+   *        Tasks object to execute.
+   */
+  _executeTasks: function PDBU__executeTasks(aTasks)
+  {
+    let task = aTasks.pop();
+    if (task) {
+      task.call(PlacesDBUtils, aTasks);
+    }
+    else {
+      if (aTasks.callback) {
+        let scope = aTasks.scope || Cu.getGlobalForObject(aTasks.callback);
+        aTasks.callback.call(scope, aTasks.messages);
+      }
+      else {
+        // Output to the error console.
+        let messages = aTasks.messages
+                             .unshift("[ Places Maintenance ]");  
+        try {
+          Services.console.logStringMessage(messages.join("\n"));
+        } catch(ex) {}
+      }
 
-nsPlacesDBUtils.prototype = {
-  _statementsRunningCount: 0,
+      // Notify observers that maintenance finished.
+      Services.prefs.setIntPref("places.database.lastMaintenance", parseInt(Date.now() / 1000));
+      Services.obs.notifyObservers(null, FINISHED_MAINTENANCE_TOPIC, null);
+    }
+  },
 
-  //////////////////////////////////////////////////////////////////////////////
-  //// mozIStorageStatementCallback
+  /**
+   * Executes integrity check and common maintenance tasks.
+   *
+   * @param [optional] aCallback
+   *        Callback to be invoked when done.  The callback will get a array
+   *        of log messages.
+   * @param [optional] aScope
+   *        Scope for the callback.
+   */
+  maintenanceOnIdle: function PDBU_maintenanceOnIdle(aCallback, aScope)
+  {
+    let tasks = new Tasks([
+      this.checkIntegrity
+    , this.checkCoherence
+    , this._refreshUI
+    ]);
+    tasks.callback = aCallback;
+    tasks.scope = aScope;
+    this._executeTasks(tasks);
+  },
 
-  handleError: function PDBU_handleError(aError) {
+  /**
+   * Executes integrity check, common and advanced maintenance tasks (like
+   * expiration and vacuum).  Will also collect statistics on the database.
+   *
+   * @param [optional] aCallback
+   *        Callback to be invoked when done.  The callback will get a array
+   *        of log messages.
+   * @param [optional] aScope
+   *        Scope for the callback.
+   */
+  checkAndFixDatabase: function PDBU_checkAndFixDatabase(aCallback, aScope)
+  {
+    let tasks = new Tasks([
+      this.checkIntegrity
+    , this.checkCoherence
+    , this.expire
+    , this.vacuum
+    , this.stats
+    , this._refreshUI
+    ]);
+    tasks.callback = aCallback;
+    tasks.scope = aScope;
+    this._executeTasks(tasks);
+  },
+
+  /**
+   * Forces a full refresh of Places views.
+   *
+   * @param [optional] aTasks
+   *        Tasks object to execute.
+   */
+  _refreshUI: function PDBU__refreshUI(aTasks)
+  {
+    let tasks = new Tasks(aTasks);
+
+    // Send batch update notifications to update the UI.
+    PlacesUtils.history.runInBatchMode({
+      runBatched: function (aUserData) {}
+    }, null);
+    PlacesDBUtils._executeTasks(tasks);
+  },
+
+  _handleError: function PDBU__handleError(aError)
+  {
     Cu.reportError("Async statement execution returned with '" +
                    aError.result + "', '" + aError.message + "'");
   },
 
-  handleCompletion: function PDBU_handleCompletion(aReason) {
-    // We serve only the last statement completion
-    if (--this._statementsRunningCount > 0)
-      return;
+  /**
+   * Tries to execute a REINDEX on the database.
+   *
+   * @param [optional] aTasks
+   *        Tasks object to execute.
+   */
+  reindex: function PDBU_reindex(aTasks)
+  {
+    let tasks = new Tasks(aTasks);
+    tasks.log("> Reindex");
 
-    // We finished executing all statements.
-    // Sending Begin/EndUpdateBatch notification will ensure that the UI
-    // is correctly refreshed.
-    PlacesUtils.history.runInBatchMode({runBatched: function(aUserData){}}, null);
-    PlacesUtils.bookmarks.runInBatchMode({runBatched: function(aUserData){}}, null);
-    // Notify observers that maintenance tasks are complete
-    Services.obs.notifyObservers(null, FINISHED_MAINTENANCE_NOTIFICATION_TOPIC, null);
+    let stmt = DBConn.createAsyncStatement("REINDEX");
+    stmt.executeAsync({
+      handleError: PlacesDBUtils._handleError,
+      handleResult: function () {},
+
+      handleCompletion: function (aReason)
+      {
+        if (aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED) {
+          tasks.log("+ The database has been reindexed");
+        }
+        else {
+          tasks.log("- Unable to reindex database");
+        }
+
+        PlacesDBUtils._executeTasks(tasks);
+      }
+    });
+    stmt.finalize();
   },
 
-  //////////////////////////////////////////////////////////////////////////////
-  //// Tasks
+  /**
+   * Checks integrity but does not try to fix the database through a reindex.
+   *
+   * @param [optional] aTasks
+   *        Tasks object to execute.
+   */
+  _checkIntegritySkipReindex: function PDBU__checkIntegritySkipReindex(aTasks)
+    this.checkIntegrity(aTasks, true),
 
-  maintenanceOnIdle: function PDBU_maintenanceOnIdle() {
-    // bug 431558: preventive maintenance for Places database
+  /**
+   * Checks integrity and tries to fix the database through a reindex.
+   *
+   * @param [optional] aTasks
+   *        Tasks object to execute.
+   * @param [optional] aSkipdReindex
+   *        Whether to try to reindex database or not.
+   */
+  checkIntegrity: function PDBU_checkIntegrity(aTasks, aSkipReindex)
+  {
+    let tasks = new Tasks(aTasks);
+    tasks.log("> Integrity check");
+
+    // Run a integrity check, but stop at the first error.
+    let stmt = DBConn.createAsyncStatement("PRAGMA integrity_check(1)");
+    stmt.executeAsync({
+      handleError: PlacesDBUtils._handleError,
+
+      _corrupt: false,
+      handleResult: function (aResultSet)
+      {
+        let row = aResultSet.getNextRow();
+        this._corrupt = row.getResultByIndex(0) != "ok";
+      },
+
+      handleCompletion: function (aReason)
+      {
+        if (aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED) {
+          if (this._corrupt) {
+            tasks.log("- The database is corrupt");
+            if (aSkipReindex) {
+              tasks.log("- Unable to fix corruption, database will be replaced on next startup");
+              Services.prefs.setBoolPref("places.database.replaceOnStartup", true);
+              tasks.clear();
+            }
+            else {
+              // Try to reindex, this often fixed simple indices corruption.
+              // We insert from the top of the queue, they will run inverse.
+              tasks.push(PlacesDBUtils._checkIntegritySkipReindex);
+              tasks.push(PlacesDBUtils.reindex);
+            }
+          }
+          else {
+            tasks.log("+ The database is sane");
+          }
+        }
+        else {
+          tasks.log("- Unable to check database status");
+          tasks.clear();
+        }
+
+        PlacesDBUtils._executeTasks(tasks);
+      }
+    });
+    stmt.finalize();
+  },
+
+  /**
+   * Checks data coherence and tries to fix most common errors.
+   *
+   * @param [optional] aTasks
+   *        Tasks object to execute.
+   */
+  checkCoherence: function PDBU_checkCoherence(aTasks)
+  {
+    let tasks = new Tasks(aTasks);
+    tasks.log("> Coherence check");
+
+    let stmts = this._getBoundCoherenceStatements();
+    DBConn.executeAsync(stmts, stmts.length, {
+      handleError: PlacesDBUtils._handleError,
+      handleResult: function () {},
+
+      handleCompletion: function (aReason)
+      {
+        if (aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED) {
+          tasks.log("+ The database is coherent");
+        }
+        else {
+          tasks.log("- Unable to check database coherence");
+          tasks.clear();
+        }
+
+        PlacesDBUtils._executeTasks(tasks);
+      }
+    });
+    stmts.forEach(function (aStmt) aStmt.finalize());
+  },
+
+  _getBoundCoherenceStatements: function PDBU__getBoundCoherenceStatements()
+  {
     let cleanupStatements = [];
 
     // MOZ_ANNO_ATTRIBUTES
@@ -473,168 +676,206 @@ nsPlacesDBUtils.prototype = {
 
     // MAINTENANCE STATEMENTS SHOULD GO ABOVE THIS POINT!
 
-    // Used to keep track of last call to handleCompletion
-    this._statementsRunningCount = cleanupStatements.length;
-    // Statements are automatically queued-up by mozStorage
-    cleanupStatements.forEach(function (aStatement) {
-        aStatement.executeAsync(this);
-        aStatement.finalize();
-      }, this);
+    return cleanupStatements;
   },
 
   /**
-   * This method is only for support purposes, it will run sync and will take
-   * lot of time on big databases, but can be manually triggered to help
-   * debugging common issues.
+   * Tries to vacuum the database.
+   *
+   * @param [optional] aTasks
+   *        Tasks object to execute.
    */
-  checkAndFixDatabase: function PDBU_checkAndFixDatabase(aLogCallback) {
-    let log = [];
-    let self = this;
-    let sep = "- - -";
+  vacuum: function PDBU_vacuum(aTasks)
+  {
+    let tasks = new Tasks(aTasks);
+    tasks.log("> Vacuum");
 
-    function integrity() {
-      let integrityCheckStmt =
-        DBConn.createStatement("PRAGMA integrity_check");
-      log.push("INTEGRITY");
-      let logIndex = log.length;
-      while (integrityCheckStmt.executeStep()) {
-        log.push(integrityCheckStmt.getString(0));
-      }
-      integrityCheckStmt.finalize();
-      log.push(sep);
-      return log[logIndex] == "ok";
-    }
+    let DBFile = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
+    DBFile.append("places.sqlite");
+    tasks.log("Initial database size is " +
+              parseInt(DBFile.fileSize / 1024) + " KiB");
 
-    function vacuum(aVacuumCallback) {
-      log.push("VACUUM");
-      let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
-                   getService(Ci.nsIProperties);
-      let placesDBFile = dirSvc.get("ProfD", Ci.nsILocalFile);
-      placesDBFile.append("places.sqlite");
-      log.push("places.sqlite: " + placesDBFile.fileSize + " byte");
-      log.push(sep);
-      let stmt = DBConn.createStatement("VACUUM");
-      stmt.executeAsync({
-        handleResult: function() {},
-        handleError: function() {
-          Cu.reportError("Maintenance VACUUM failed");
-        },
-        handleCompletion: function(aReason) {
-          aVacuumCallback();
-        }
-      });
-      stmt.finalize();
-    }
+    let stmt = DBConn.createAsyncStatement("VACUUM");
+    stmt.executeAsync({
+      handleError: PlacesDBUtils._handleError,
+      handleResult: function () {},
 
-    function backup() {
-      log.push("BACKUP");
-      let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
-                   getService(Ci.nsIProperties);
-      let profD = dirSvc.get("ProfD", Ci.nsILocalFile);
-      let placesDBFile = profD.clone();
-      placesDBFile.append("places.sqlite");
-      let backupDBFile = profD.clone();
-      backupDBFile.append("places.sqlite.corrupt");
-      backupDBFile.createUnique(backupDBFile.NORMAL_FILE_TYPE, 0666);
-      let backupName = backupDBFile.leafName;
-      backupDBFile.remove(false);
-      placesDBFile.copyTo(profD, backupName);
-      log.push(backupName);
-      log.push(sep);
-    }
-
-    function reindex() {
-      log.push("REINDEX");
-      DBConn.executeSimpleSQL("REINDEX");
-      log.push(sep);
-    }
-
-    function cleanup() {
-      log.push("CLEANUP");
-      self.maintenanceOnIdle()
-      log.push(sep);
-    }
-
-    function expire() {
-      log.push("EXPIRE");
-      // Get expiration component.  This will also ensure it has already been
-      // initialized.
-      let expiration = Cc["@mozilla.org/places/expiration;1"].
-                       getService(Ci.nsIObserver);
-      // Get maximum number of unique URIs.
-      let prefs = Cc["@mozilla.org/preferences-service;1"].
-                  getService(Ci.nsIPrefBranch);
-      let limitURIs = prefs.getIntPref(
-        "places.history.expiration.transient_current_max_pages");
-      if (limitURIs >= 0)
-        log.push("Current unique URIs limit: " + limitURIs);
-      // Force a full expiration step.
-      expiration.observe(null, "places-debug-start-expiration",
-                         -1 /* expire all expirable entries */);
-      log.push(sep);
-    }
-
-    function stats() {
-      log.push("STATS");
-      let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
-                   getService(Ci.nsIProperties);
-      let placesDBFile = dirSvc.get("ProfD", Ci.nsILocalFile);
-      placesDBFile.append("places.sqlite");
-      log.push("places.sqlite: " + placesDBFile.fileSize + " byte");
-      let stmt = DBConn.createStatement(
-        "SELECT name FROM sqlite_master WHERE type = :DBType");
-      stmt.params["DBType"] = "table";
-      while (stmt.executeStep()) {
-        let tableName = stmt.getString(0);
-        let countStmt = DBConn.createStatement(
-        "SELECT count(*) FROM " + tableName);
-        countStmt.executeStep();
-        log.push(tableName + ": " + countStmt.getInt32(0));
-        countStmt.finalize();
-      }
-      stmt.finalize();
-      log.push(sep);
-    }
-
-    // First of all execute an integrity check.
-    let integrityIsGood = integrity();
-
-    // If integrity check did fail, we can try to fix the database through
-    // a reindex.
-    if (!integrityIsGood) {
-      // Backup current database.
-      backup();
-      // Execute a reindex.
-      reindex();
-      // Now check again the integrity.
-      integrityIsGood = integrity();
-    }
-
-    // If integrity is fine, let's force a maintenance, execute a vacuum and
-    // get some stats.
-    if (integrityIsGood) {
-      cleanup();
-      expire();
-      vacuum(function () {
-        stats();
-        if (aLogCallback) {
-          aLogCallback(log);
+      handleCompletion: function (aReason)
+      {
+        if (aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED) {
+          tasks.log("+ The database has been vacuumed");
+          let vacuumedDBFile = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
+          vacuumedDBFile.append("places.sqlite");
+          tasks.log("Final database size is " +
+                    parseInt(vacuumedDBFile.fileSize / 1024) + " KiB");
         }
         else {
-          try {
-            let console = Cc["@mozilla.org/consoleservice;1"].
-                          getService(Ci.nsIConsoleService);
-            console.logStringMessage(log.join('\n'));
-          }
-          catch(ex) {}
+          tasks.log("- Unable to vacuum database");
+          tasks.clear();
         }
-      });
-    }
-  }
 
+        PlacesDBUtils._executeTasks(tasks);
+      }
+    });
+    stmt.finalize();
+  },
+
+  /**
+   * Forces a full expiration on the database.
+   *
+   * @param [optional] aTasks
+   *        Tasks object to execute.
+   */
+  expire: function PDBU_expire(aTasks)
+  {
+    let tasks = new Tasks(aTasks);
+    tasks.log("> Orphans expiration");
+
+    let expiration = Cc["@mozilla.org/places/expiration;1"].
+                     getService(Ci.nsIObserver);
+
+    Services.obs.addObserver(function (aSubject, aTopic, aData) {
+      Services.obs.removeObserver(arguments.callee, aTopic);
+      tasks.log("+ Database cleaned up");
+      PlacesDBUtils._executeTasks(tasks);
+    }, PlacesUtils.TOPIC_EXPIRATION_FINISHED, false);
+
+    // Force a full expiration step.
+    expiration.observe(null, "places-debug-start-expiration", -1);
+  },
+
+  /**
+   * Collects statistical data on the database.
+   *
+   * @param [optional] aTasks
+   *        Tasks object to execute.
+   */
+  stats: function PDBU_stats(aTasks)
+  {
+    let tasks = new Tasks(aTasks);
+    tasks.log("> Statistics");
+
+    let DBFile = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
+    DBFile.append("places.sqlite");
+    tasks.log("Database size is " + parseInt(DBFile.fileSize / 1024) + " KiB");
+
+    [ "user_version"
+    , "page_size"
+    , "cache_size"
+    , "journal_mode"
+    , "synchronous"
+    ].forEach(function (aPragma) {
+      let stmt = DBConn.createStatement("PRAGMA " + aPragma);
+      stmt.executeStep();
+      tasks.log(aPragma + " is " + stmt.getString(0));
+      stmt.finalize();
+    });
+
+    // Get maximum number of unique URIs.
+    try {
+      let limitURIs = Services.prefs.getIntPref(
+        "places.history.expiration.transient_current_max_pages");
+      tasks.log("History can store a maximum of " + limitURIs + " unique pages");
+    } catch(ex) {}
+
+    let stmt = DBConn.createStatement(
+      "SELECT name FROM sqlite_master WHERE type = :type");
+    stmt.params.type = "table";
+    while (stmt.executeStep()) {
+      let tableName = stmt.getString(0);
+      let countStmt = DBConn.createStatement(
+        "SELECT count(*) FROM " + tableName);
+      countStmt.executeStep();
+      tasks.log("Table " + tableName + " has " + countStmt.getInt32(0) + " records");
+      countStmt.finalize();
+    }
+    stmt.reset();
+
+    stmt.params.type = "index";
+    while (stmt.executeStep()) {
+      tasks.log("Index " + stmt.getString(0));
+    }
+    stmt.reset();
+
+    stmt.params.type = "trigger";
+    while (stmt.executeStep()) {
+      tasks.log("Trigger " + stmt.getString(0));
+    }
+    stmt.finalize();
+
+    PlacesDBUtils._executeTasks(tasks);
+  }
 };
 
-__defineGetter__("PlacesDBUtils", function() {
-  delete this.PlacesDBUtils;
-  return this.PlacesDBUtils = new nsPlacesDBUtils;
-});
+/**
+ * LIFO tasks stack.
+ *
+ * @param [optional] aTasks
+ *        Array of tasks or another Tasks object to clone.
+ */
+function Tasks(aTasks)
+{
+  if (Array.isArray(aTasks)) {
+    this._list = aTasks.slice(0, aTasks.length);
+  }
+  else if ("list" in aTasks) {
+    this._list = aTasks.list;
+    this._log = aTasks.messages;
+    this.callback = aTasks.callback;
+    this.scope = aTasks.scope;
+  }
+}
+
+Tasks.prototype = {
+  _list: [],
+  _log: [],
+  callback: null,
+  scope: null,
+
+  /**
+   * Adds a task to the top of the list.
+   *
+   * @param aNewElt
+   *        Task to be added.
+   */
+  push: function T_push(aNewElt)
+  {
+    this._list.unshift(aNewElt);
+  },
+
+  /**
+   * Returns and consumes next task.
+   *
+   * @return next task or undefined if no task is left.
+   */
+  pop: function T_pop() this._list.shift(),
+
+  /**
+   * Removes all tasks.
+   */
+  clear: function T_clear()
+  {
+    this._list.length = 0;
+  },
+
+  /**
+   * Returns array of tasks ordered from the next to be run to the latest.
+   */
+  get list() this._list.slice(0, this._list.length),
+
+  /**
+   * Adds a message to the log.
+   *
+   * @param aMsg
+   *        String message to be added.
+   */
+  log: function T_log(aMsg)
+  {
+    this._log.push(aMsg);
+  },
+
+  /**
+   * Returns array of log messages ordered from oldest to newest.
+   */
+  get messages() this._log.slice(0, this._log.length),
+}
