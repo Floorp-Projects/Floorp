@@ -474,7 +474,9 @@ let Content = {
             }
           }
         }
-        sendAsyncMessage("Browser:ZoomToPoint:Return", { x: x, y: y, zoomTo: rect });
+        content.setTimeout(function() {
+          sendAsyncMessage("Browser:ZoomToPoint:Return", { x: x, y: y, zoomTo: rect });
+        }, 0);
         break;
       }
 
