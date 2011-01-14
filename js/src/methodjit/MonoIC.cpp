@@ -783,7 +783,7 @@ class CallCompiler : public BaseCompiler
         else
             masm.storeArg(1, argcReg.reg());
         masm.storeArg(0, cxReg);
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, fun->u.n.native));
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, fun->u.n.native), false);
 
         Jump hasException = masm.branchTest32(Assembler::Zero, Registers::ReturnReg,
                                               Registers::ReturnReg);
