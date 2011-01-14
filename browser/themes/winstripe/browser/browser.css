@@ -159,6 +159,14 @@
   }
 }
 
+%ifndef WINSTRIPE_AERO
+@media all and (-moz-windows-default-theme) {
+  #main-window[sizemode="normal"] #appmenu-button {
+    margin-bottom: 5px;
+  }
+}
+%endif
+
 #main-window[privatebrowsingmode=temporary] #appmenu-button {
   background-image: -moz-linear-gradient(rgb(153,38,211), rgb(105,19,163) 95%);
   border-color: rgba(43,8,65,.9);
