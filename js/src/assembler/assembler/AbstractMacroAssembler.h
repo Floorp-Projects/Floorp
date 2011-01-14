@@ -480,6 +480,11 @@ public:
     {
         return Label(this);
     }
+
+    DataLabel32 dataLabel32()
+    {
+        return DataLabel32(this);
+    }
     
     Label align()
     {
