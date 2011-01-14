@@ -6,6 +6,27 @@ Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/util.js");
 
 
+function test_toJSON() {
+  _("Create a record, for now without a TTL.");
+  let wbo = new WBORecord("coll", "a_record");
+  wbo.modified = 12345;
+  wbo.sortindex = 42;
+  wbo.payload = {};
+
+  _("Verify that the JSON representation contains the WBO properties, but not TTL.");
+  let json = JSON.parse(JSON.stringify(wbo));
+  do_check_eq(json.modified, 12345);
+  do_check_eq(json.sortindex, 42);
+  do_check_eq(json.payload, "{}");
+  do_check_false("ttl" in json);
+
+  _("Set a TTL, make sure it's present in the JSON representation.");
+  wbo.ttl = 30*60;
+  json = JSON.parse(JSON.stringify(wbo));
+  do_check_eq(json.ttl, 30*60);
+}
+
+
 function test_fetch() {
   let record = {id: "asdf-1234-asdf-1234",
                 modified: 2454725.98283,
@@ -55,5 +76,7 @@ function test_fetch() {
 
 function run_test() {
   initTestLogging("Trace");
+
+  test_toJSON();
   test_fetch();
 }
