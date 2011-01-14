@@ -82,15 +82,18 @@ let gSyncUtils = {
   },
 
   changePassword: function () {
-    this.openChange("ChangePassword");
+    if (Weave.Utils.ensureMPUnlocked())
+      this.openChange("ChangePassword");
   },
 
   resetPassphrase: function () {
-    this.openChange("ResetPassphrase");
+    if (Weave.Utils.ensureMPUnlocked())
+      this.openChange("ResetPassphrase");
   },
 
   updatePassphrase: function () {
-    this.openChange("UpdatePassphrase");
+    if (Weave.Utils.ensureMPUnlocked())
+      this.openChange("UpdatePassphrase");
   },
 
   resetPassword: function () {
