@@ -446,6 +446,8 @@ void nsViewManager::RenderViews(nsView *aView, nsIWidget *aWidget,
     nsRegion region = ConvertRegionBetweenViews(aRegion, aView, displayRoot);
     mObserver->Paint(displayRoot, aView, aWidget, region, aIntRegion,
                      aPaintDefaultBackground, aWillSendDidPaint);
+    if (!gFirstPaintTimestamp)
+      gFirstPaintTimestamp = PR_Now();
   }
 }
 
@@ -952,8 +954,6 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
       }
 
     case NS_DID_PAINT: {
-      if (!gFirstPaintTimestamp)
-        gFirstPaintTimestamp = PR_Now();
       nsRefPtr<nsViewManager> rootVM = RootViewManager();
       rootVM->CallDidPaintOnObservers();
       break;
