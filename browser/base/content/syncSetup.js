@@ -384,11 +384,6 @@ var gSyncSetup = {
     // This is a fallback in case the Master Password gets locked mid-wizard.
     if ((this.wizard.pageIndex >= 0) &&
         !Weave.Utils.ensureMPUnlocked()) {
-      
-      // Leave canAdvance set according to onPageShow, because it dictates
-      // whether the Next button stays enabled. Return false to prevent the
-      // wizard from advancing to the next page.
-      this.onPageShow();
       return false;
     }
       
