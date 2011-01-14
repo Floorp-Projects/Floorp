@@ -499,6 +499,8 @@ let UI = {
 
         self._resize(true);
         dispatchEvent(event);
+
+        TabItems.resumePainting();
       });
     } else {
       if (currentTab && currentTab._tabViewTabItem)
@@ -506,9 +508,9 @@ let UI = {
 
       self.setActiveTab(null);
       dispatchEvent(event);
-    }
 
-    TabItems.resumePainting();
+      TabItems.resumePainting();
+    }
   },
 
   // ----------
