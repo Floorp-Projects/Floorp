@@ -1116,8 +1116,12 @@ class TypedArrayTemplate
         if (v.isInt32())
             return NativeType(v.toInt32());
 
-        if (v.isDouble())
-            return NativeType(v.toDouble());
+        if (v.isDouble()) {
+            double d = v.toDouble();
+            if (!ArrayTypeIsFloatingPoint() && JS_UNLIKELY(JSDOUBLE_IS_NaN(d)))
+                return NativeType(int32(0));
+            return NativeType(d);
+        }
 
         if (v.isPrimitive() && !v.isMagic()) {
             jsdouble dval;
