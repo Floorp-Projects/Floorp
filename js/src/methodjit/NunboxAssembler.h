@@ -267,6 +267,21 @@ class NunboxAssembler : public JSC::MacroAssembler
 #endif
     }
 
+    /* Overloaded for store with value remat info. */
+    Label storeValueWithAddressOffsetPatch(const ValueRemat &vr, Address address) {
+        if (vr.isConstant()) {
+            return storeValueWithAddressOffsetPatch(vr.value(), address);
+        } else if (vr.isTypeKnown()) {
+            ImmType type(vr.knownType());
+            RegisterID data(vr.dataReg());
+            return storeValueWithAddressOffsetPatch(type, data, address);
+        } else {
+            RegisterID type(vr.typeReg());
+            RegisterID data(vr.dataReg());
+            return storeValueWithAddressOffsetPatch(type, data, address);
+        }
+    }
+
     /*
      * Stores type first, then payload.
      */

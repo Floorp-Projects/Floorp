@@ -43,16 +43,7 @@
 #if !defined jsjaeger_ic_labels_h__ && defined JS_METHODJIT
 #define jsjaeger_ic_labels_h__
 
-#include "jscntxt.h"
-#include "jstl.h"
-#include "jsvector.h"
-#include "assembler/assembler/MacroAssembler.h"
-#include "assembler/assembler/CodeLocation.h"
-#include "methodjit/CodeGenIncludes.h"
-#include "methodjit/MethodJIT.h"
-#include "BaseAssembler.h"
-#include "RematInfo.h"
-#include "BaseCompiler.h"
+#include "methodjit/BaseCompiler.h"
 
 class ICOffsetInitializer {
   public:
@@ -134,12 +125,12 @@ struct GetPropLabels : MacroAssemblerTypedefs {
     }
 
     CodeLocationJump getInlineTypeJump(CodeLocationLabel fastPathStart) {
-#if defined JS_CPU_X86 || defined JS_CPU_X64
         return fastPathStart.jumpAtOffset(getInlineTypeJumpOffset());
-#elif defined JS_CPU_ARM
-        /* Type check is after the testObject, so offset by one instruction to get the jump. */
-        return fastPathStart.jumpAtOffset(getInlineTypeJumpOffset() - sizeof(ARMWord));
-#endif
+    }
+
+    void setStubShapeJump(MacroAssembler &masm, Label stubStart, Label shapeJump) {
+        int offset = masm.differenceBetween(stubStart, shapeJump);
+        setStubShapeJumpOffset(offset);
     }
 
     /* Offset-based interface */
@@ -158,7 +149,7 @@ struct GetPropLabels : MacroAssemblerTypedefs {
         JS_ASSERT(offset == inlineShapeOffset);
     }
     
-    void setStubShapeJump(int offset) {
+    void setStubShapeJumpOffset(int offset) {
 #ifdef JS_HAS_IC_LABELS
         stubShapeJumpOffset = offset;
 #endif
@@ -166,12 +157,10 @@ struct GetPropLabels : MacroAssemblerTypedefs {
     }
 
     int getInlineShapeJumpOffset() {
-#if defined JS_CPU_X86
-        return INLINE_SHAPE_JUMP;
-#elif defined JS_CPU_X64
+#if defined JS_CPU_X64
         return getInlineShapeOffset() + INLINE_SHAPE_JUMP;
-#elif defined JS_CPU_ARM
-        return INLINE_SHAPE_JUMP - sizeof(ARMWord);
+#else
+        return POST_INST_OFFSET(INLINE_SHAPE_JUMP);
 #endif
     }
 
@@ -183,7 +172,7 @@ struct GetPropLabels : MacroAssemblerTypedefs {
 #if defined JS_CPU_X86 || defined JS_CPU_X64
         return INLINE_TYPE_JUMP;
 #elif defined JS_CPU_ARM
-        return inlineTypeJumpOffset;
+        return POST_INST_OFFSET(inlineTypeJumpOffset);
 #endif
     }
 
@@ -203,11 +192,7 @@ struct GetPropLabels : MacroAssemblerTypedefs {
         return dslotsLoadOffset;
     }
     int getStubShapeJumpOffset() {
-#if defined JS_CPU_X86 || defined JS_CPU_X64
-        return stubShapeJumpOffset;
-#elif defined JS_CPU_ARM
-        return stubShapeJumpOffset - sizeof(ARMWord);
-#endif
+        return POST_INST_OFFSET(stubShapeJumpOffset);
     }
 
   private:
@@ -243,63 +228,182 @@ struct GetPropLabels : MacroAssemblerTypedefs {
 };
 
 /* SetPropCompiler */
-struct SetPropLabels {
+struct SetPropLabels : MacroAssemblerTypedefs {
     friend class ::ICOffsetInitializer;
 
-#ifdef JS_PUNBOX64
-    void setDslotsLoadOffset(int offset) {
-# ifdef JS_HAS_IC_LABELS
+    void setInlineValueStore(MacroAssembler &masm, Label fastPathRejoin, Label inlineValueStore,
+                             const ValueRemat &vr) {
+        int offset = masm.differenceBetween(fastPathRejoin, inlineValueStore);
+        setInlineValueStoreOffset(offset, vr.isConstant(), vr.isTypeKnown());
+    }
+
+    CodeLocationLabel getInlineValueStore(CodeLocationLabel fastPathRejoin, const ValueRemat &vr) {
+        return fastPathRejoin.labelAtOffset(getInlineValueStoreOffset(vr.isConstant(),
+                                                                      vr.isTypeKnown()));
+    }
+
+    void setInlineShapeData(MacroAssembler &masm, Label shapeGuard, DataLabel32 inlineShapeData) {
+        int offset = masm.differenceBetween(shapeGuard, inlineShapeData);
+        setInlineShapeDataOffset(offset);
+    }
+
+    CodeLocationDataLabel32 getInlineShapeData(CodeLocationLabel fastPathStart, int shapeGuardOffset) {
+        return fastPathStart.dataLabel32AtOffset(shapeGuardOffset + getInlineShapeDataOffset());
+    }
+
+    CodeLocationJump getInlineShapeJump(CodeLocationLabel fastPathStart, int shapeGuardOffset) {
+        return fastPathStart.jumpAtOffset(shapeGuardOffset + getInlineShapeJumpOffset());
+    }
+
+    void setDslotsLoad(MacroAssembler &masm, Label fastPathRejoin, Label beforeLoad,
+                       const ValueRemat &rhs) {
+        int offset = masm.differenceBetween(fastPathRejoin, beforeLoad);
+        setDslotsLoadOffset(offset, rhs.isConstant(), rhs.isTypeKnown());
+    }
+
+    CodeLocationInstruction getDslotsLoad(CodeLocationLabel fastPathRejoin, const ValueRemat &vr) {
+        return fastPathRejoin.instructionAtOffset(getDslotsLoadOffset(vr));
+    }
+
+    /*
+     * Note: on x64, the base is the inlineShapeLabel DataLabel32, whereas on other
+     * platforms the base is the shapeGuard.
+     */
+    template <typename T>
+    void setInlineShapeJump(MacroAssembler &masm, T base, Label afterJump) {
+        setInlineShapeJumpOffset(masm.differenceBetween(base, afterJump));
+    }
+
+    void setStubShapeJump(MacroAssembler &masm, Label stubStart, Label afterShapeJump) {
+        int offset = masm.differenceBetween(stubStart, afterShapeJump);
+        setStubShapeJumpOffset(offset);
+    }
+
+    /* Offset-based interface. */
+
+    void setDslotsLoadOffset(int offset, bool isConstant, bool isTypeKnown) {
+#if defined JS_HAS_IC_LABELS
         dslotsLoadOffset = offset;
-# endif
         JS_ASSERT(offset == dslotsLoadOffset);
-    }
-#endif
-
-    int getDslotsLoadOffset() {
-#ifdef JS_PUNBOX64
-        return dslotsLoadOffset;
+#elif defined JS_CPU_X86
+        JS_ASSERT_IF(isConstant, offset == INLINE_DSLOTS_BEFORE_CONSTANT);
+        JS_ASSERT_IF(isTypeKnown && !isConstant, offset == INLINE_DSLOTS_BEFORE_KTYPE);
+        JS_ASSERT_IF(!isTypeKnown, offset == INLINE_DSLOTS_BEFORE_DYNAMIC);
 #else
-        JS_NOT_REACHED("this is inlined");
-        return 0;
+# error
 #endif
     }
 
-    void setInlineShapeOffset(int offset) {
+    int getDslotsLoadOffset(const ValueRemat &vr) {
+#if defined JS_CPU_X86
+        if (vr.isConstant())
+            return INLINE_DSLOTS_BEFORE_CONSTANT;
+        if (vr.isTypeKnown())
+            return INLINE_DSLOTS_BEFORE_KTYPE;
+        return INLINE_DSLOTS_BEFORE_DYNAMIC;
+#else
+        (void) vr;
+        return dslotsLoadOffset;
+#endif
+    }
+
+    void setInlineShapeDataOffset(int offset) {
 #ifdef JS_HAS_IC_LABELS
-        inlineShapeOffset = offset;
+        inlineShapeDataOffset = offset;
 #endif
-        JS_ASSERT(offset == inlineShapeOffset);
+        JS_ASSERT(offset == inlineShapeDataOffset);
     }
 
-    void setStubShapeJump(int offset) {
+    void setStubShapeJumpOffset(int offset) {
 #ifdef JS_HAS_IC_LABELS
-        stubShapeJump = offset;
+        stubShapeJumpOffset = offset;
 #endif
-        JS_ASSERT(offset == stubShapeJump);
+        JS_ASSERT(offset == stubShapeJumpOffset);
     }
 
-    int getInlineShapeOffset() {
-        return inlineShapeOffset;
+    void setInlineValueStoreOffset(int offset, bool isConstant, bool isTypeKnown) {
+#ifdef JS_HAS_IC_LABELS
+        inlineValueStoreOffset = offset;
+        JS_ASSERT(offset == inlineValueStoreOffset);
+#elif defined JS_CPU_X86
+        JS_ASSERT_IF(isConstant, offset == INLINE_VALUE_STORE_CONSTANT);
+        JS_ASSERT_IF(isTypeKnown && !isConstant, offset == INLINE_VALUE_STORE_KTYPE);
+        JS_ASSERT_IF(!isTypeKnown && !isConstant, offset == INLINE_VALUE_STORE_DYNAMIC);
+#endif
     }
-    int getStubShapeJump() {
-        return stubShapeJump;
+
+    void setInlineShapeJumpOffset(int offset) {
+#ifdef JS_HAS_IC_LABELS
+        inlineShapeJumpOffset = offset;
+#endif
+        JS_ASSERT(offset == inlineShapeJumpOffset);
+    }
+
+    int getInlineShapeJumpOffset() {
+        return POST_INST_OFFSET(inlineShapeDataOffset + INLINE_SHAPE_JUMP);
+    }
+
+    int getInlineShapeDataOffset() {
+        return inlineShapeDataOffset;
+    }
+
+    int getStubShapeJumpOffset() {
+        return POST_INST_OFFSET(stubShapeJumpOffset);
+    }
+
+    int getInlineValueStoreOffset(bool isConstant, bool isTypeKnown) {
+#ifdef JS_HAS_IC_LABELS
+        return inlineValueStoreOffset;
+#elif defined JS_CPU_X86
+        if (isConstant)
+            return INLINE_VALUE_STORE_CONSTANT;
+        else if (isTypeKnown)
+            return INLINE_VALUE_STORE_KTYPE;
+        else
+            return INLINE_VALUE_STORE_DYNAMIC;
+#endif
     }
 
   private:
-#ifdef JS_PUNBOX64
     /* Offset from storeBack to beginning of 'mov dslots, addr'. */
+#if defined JS_CPU_X86
+    static const int INLINE_DSLOTS_BEFORE_CONSTANT = -23;
+    static const int INLINE_DSLOTS_BEFORE_KTYPE = -19;
+    static const int INLINE_DSLOTS_BEFORE_DYNAMIC = -15;
+#else
     int32 dslotsLoadOffset : 8;
 #endif
 
     /* Offset from shapeGuard to end of shape comparison. */
-    int32 inlineShapeOffset : 8;
+    int32 inlineShapeDataOffset : 8;
 
     /* 
      * Offset from lastStubStart to end of shape jump.
      * TODO: We can redefine the location of lastStubStart to be
      * after the jump -- at which point this is always 0.
      */
-    int32 stubShapeJump : 8;
+    int32 stubShapeJumpOffset : 8;
+
+#if defined JS_CPU_X86
+    static const int INLINE_VALUE_STORE_CONSTANT = -20;
+    static const int INLINE_VALUE_STORE_KTYPE = -16;
+    static const int INLINE_VALUE_STORE_DYNAMIC = -12;
+#else
+    int32 inlineValueStoreOffset : 8;
+#endif
+
+    /* Offset from shapeGuard to the end of the shape jump. */
+    int32 inlineShapeJumpOffset : 8;
+
+#if defined JS_CPU_X86
+    static const int INLINE_SHAPE_JUMP = 0;
+#elif defined JS_CPU_X64
+    static const int INLINE_SHAPE_JUMP = 6;
+#elif defined JS_CPU_ARM
+    static const int INLINE_SHAPE_JUMP = 12;
+#else
+# error
+#endif
 };
 
 /* BindNameCompiler */
@@ -411,4 +515,3 @@ struct ScopeNameLabels : MacroAssemblerTypedefs {
 } /* namespace js */
 
 #endif /* jsjaeger_ic_labels_h__ */
-

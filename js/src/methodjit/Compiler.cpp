@@ -3372,6 +3372,9 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache)
     PICGenInfo pic(kind, op, usePropCache);
     pic.atom = atom;
 
+    RESERVE_IC_SPACE(masm);
+    RESERVE_OOL_SPACE(stubcc.masm);
+
     /* Guard that the type is an object. */
     Jump typeCheck;
     if (!lhs->isTypeKnown()) {
@@ -3415,11 +3418,11 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache)
     /* Guard on shape. */
     masm.loadShape(objReg, shapeReg);
     pic.shapeGuard = masm.label();
-    DataLabel32 inlineShapeOffsetLabel;
+    DataLabel32 inlineShapeData;
     Jump j = masm.branch32WithPatch(Assembler::NotEqual, shapeReg,
                                     Imm32(int32(JSObjectMap::INVALID_SHAPE)),
-                                    inlineShapeOffsetLabel);
-    DBGLABEL(dbgInlineShapeJump);
+                                    inlineShapeData);
+    Label afterInlineShapeJump = masm.label();
 
     /* Slow path. */
     {
@@ -3428,24 +3431,16 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache)
         stubcc.leave();
         passICAddress(&pic);
         pic.slowPathCall = OOL_STUBCALL(ic::SetProp);
+        CHECK_OOL_SPACE();
     }
 
     /* Load dslots. */
-#if defined JS_NUNBOX32
-    DBGLABEL(dbgDslots);
-#elif defined JS_PUNBOX64
-    Label dslotsLoadLabel = masm.label();
-#endif
-    masm.loadPtr(Address(objReg, offsetof(JSObject, slots)), objReg);
+    Label dslotsLoadLabel = masm.loadPtrWithPatchToLEA(Address(objReg, offsetof(JSObject, slots)),
+                                                       objReg);
 
     /* Store RHS into object slot. */
     Address slot(objReg, 1 << 24);
-#if defined JS_NUNBOX32
-    Label dbgInlineStoreType = masm.storeValue(vr, slot);
-#elif defined JS_PUNBOX64
-    masm.storeValue(vr, slot);
-#endif
-    DBGLABEL(dbgAfterValueStore);
+    Label inlineValueStore = masm.storeValueWithAddressOffsetPatch(vr, slot);
     pic.fastPathRejoin = masm.label();
 
     frame.freeReg(objReg);
@@ -3464,33 +3459,20 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache)
     RETURN_IF_OOM(false);
 
     SetPropLabels &labels = pic.setPropLabels();
-    labels.setInlineShapeOffset(masm.differenceBetween(pic.shapeGuard, inlineShapeOffsetLabel));
-#if defined JS_PUNBOX64
-    labels.setDslotsLoadOffset(masm.differenceBetween(pic.fastPathRejoin, dslotsLoadLabel));
-    JS_ASSERT(masm.differenceBetween(inlineShapeOffsetLabel, dbgInlineShapeJump) == SETPROP_INLINE_SHAPE_JUMP);
-    JS_ASSERT(masm.differenceBetween(pic.fastPathRejoin, dbgAfterValueStore) == SETPROP_INLINE_STORE_VALUE);
-#elif defined JS_NUNBOX32
-    JS_ASSERT(masm.differenceBetween(pic.shapeGuard, dbgInlineShapeJump) == SETPROP_INLINE_SHAPE_JUMP);
-    if (vr.isConstant()) {
-        /* Constants are offset inside the opcode by 4. */
-        JS_ASSERT(masm.differenceBetween(pic.fastPathRejoin, dbgInlineStoreType)-4 == SETPROP_INLINE_STORE_CONST_TYPE);
-        JS_ASSERT(masm.differenceBetween(pic.fastPathRejoin, dbgAfterValueStore)-4 == SETPROP_INLINE_STORE_CONST_DATA);
-        JS_ASSERT(masm.differenceBetween(pic.fastPathRejoin, dbgDslots) == SETPROP_DSLOTS_BEFORE_CONSTANT);
-    } else if (vr.isTypeKnown()) {
-        JS_ASSERT(masm.differenceBetween(pic.fastPathRejoin, dbgInlineStoreType)-4 == SETPROP_INLINE_STORE_KTYPE_TYPE);
-        JS_ASSERT(masm.differenceBetween(pic.fastPathRejoin, dbgAfterValueStore) == SETPROP_INLINE_STORE_KTYPE_DATA);
-        JS_ASSERT(masm.differenceBetween(pic.fastPathRejoin, dbgDslots) == SETPROP_DSLOTS_BEFORE_KTYPE);
-    } else {
-        JS_ASSERT(masm.differenceBetween(pic.fastPathRejoin, dbgInlineStoreType) == SETPROP_INLINE_STORE_DYN_TYPE);
-        JS_ASSERT(masm.differenceBetween(pic.fastPathRejoin, dbgAfterValueStore) == SETPROP_INLINE_STORE_DYN_DATA);
-        JS_ASSERT(masm.differenceBetween(pic.fastPathRejoin, dbgDslots) == SETPROP_DSLOTS_BEFORE_DYNAMIC);
-    }
+    labels.setInlineShapeData(masm, pic.shapeGuard, inlineShapeData);
+    labels.setDslotsLoad(masm, pic.fastPathRejoin, dslotsLoadLabel, vr);
+    labels.setInlineValueStore(masm, pic.fastPathRejoin, inlineValueStore, vr);
+#ifdef JS_CPU_X64
+    labels.setInlineShapeJump(masm, inlineShapeData, afterInlineShapeJump);
+#else
+    labels.setInlineShapeJump(masm, pic.shapeGuard, afterInlineShapeJump);
 #endif
 
     pics.append(pic);
     return true;
 }
 #endif
+
 
 #ifdef JS_POLYIC_NAME
 void

@@ -48,6 +48,12 @@
 #include "assembler/jit/ExecutableAllocator.h"
 #include <limits.h>
 
+#if defined JS_CPU_ARM
+# define POST_INST_OFFSET(__expr) ((__expr) - sizeof(ARMWord))
+#else
+# define POST_INST_OFFSET(__expr) (__expr)
+#endif
+
 namespace js {
 namespace mjit {
 

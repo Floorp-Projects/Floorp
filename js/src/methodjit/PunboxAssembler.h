@@ -176,6 +176,21 @@ class PunboxAssembler : public JSC::MacroAssembler
         return label();
     }
 
+    /* Overloaded for store with value remat info. */
+    Label storeValueWithAddressOffsetPatch(const ValueRemat &vr, Address address) {
+        if (vr.isConstant()) {
+            return storeValueWithAddressOffsetPatch(vr.value(), address);
+        } else if (vr.isTypeKnown()) {
+            ImmType type(vr.knownType());
+            RegisterID data(vr.dataReg());
+            return storeValueWithAddressOffsetPatch(type, data, address);
+        } else {
+            RegisterID type(vr.typeReg());
+            RegisterID data(vr.dataReg());
+            return storeValueWithAddressOffsetPatch(type, data, address);
+        }
+    }
+
     template <typename T>
     void loadTypeTag(T address, RegisterID reg) {
         loadValue(address, reg);
