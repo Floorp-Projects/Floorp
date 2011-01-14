@@ -524,6 +524,7 @@ protected:
  */
 class nsDisplayItem : public nsDisplayItemLink {
 public:
+  typedef mozilla::layers::FrameMetrics::ViewID ViewID;
   typedef mozilla::layers::Layer Layer;
   typedef mozilla::layers::LayerManager LayerManager;
   typedef mozilla::LayerState LayerState;
@@ -547,11 +548,23 @@ public:
 #include "nsDisplayItemTypes.h"
 
   struct HitTestState {
+    typedef nsTArray<ViewID> ShadowArray;
+
+    HitTestState(ShadowArray* aShadows = NULL)
+      : mShadows(aShadows) {
+    }
+
     ~HitTestState() {
       NS_ASSERTION(mItemBuffer.Length() == 0,
                    "mItemBuffer should have been cleared");
     }
+
     nsAutoTArray<nsDisplayItem*, 100> mItemBuffer;
+
+    // It is sometimes useful to hit test for frames that are not in this
+    // process. Display items may append IDs into this array if it is
+    // non-null.
+    ShadowArray* mShadows;
   };
 
   /**
@@ -1710,6 +1723,47 @@ public:
   }
   NS_DISPLAY_DECL_NAME("OwnLayer", TYPE_OWN_LAYER)
 };
+
+#ifdef MOZ_IPC
+/**
+ * This creates a layer for the given list of items, whose visibility is
+ * determined by the displayport for the given frame instead of what is
+ * passed in to ComputeVisibility.
+ *
+ * Here in content, we can use this to render more content than is actually
+ * visible. Then, the compositing process can manipulate the generated layer
+ * through transformations so that asynchronous scrolling can be implemented.
+ *
+ * Note that setting the displayport will not change any hit testing! The
+ * content process will know nothing about what the user is actually seeing,
+ * so it can only do hit testing for what is supposed to be the visible region.
+ */
+class nsDisplayScrollLayer : public nsDisplayOwnLayer
+{
+public:
+  /**
+   * @param aForFrame This will determine what the displayport is. It should be
+   *                  the root content frame of the scrolled area.
+   * @param aViewportFrame The viewport frame you see this content through.
+   */
+  nsDisplayScrollLayer(nsDisplayListBuilder* aBuilder, nsDisplayList* aList,
+                       nsIFrame* aForFrame, nsIFrame* aViewportFrame);
+  NS_DISPLAY_DECL_NAME("ScrollLayer", TYPE_SCROLL_LAYER)
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayScrollLayer();
+#endif
+
+  virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
+                                             LayerManager* aManager);
+
+  virtual PRBool ComputeVisibility(nsDisplayListBuilder* aBuilder,
+                                   nsRegion* aVisibleRegion);
+
+private:
+  nsIFrame* mViewportFrame;
+};
+#endif
 
 /**
  * nsDisplayClip can clip a list of items, but we take a single item

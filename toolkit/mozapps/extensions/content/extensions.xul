@@ -50,8 +50,9 @@
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       xmlns:xhtml="http://www.w3.org/1999/xhtml"
-      id="addons-page" title="&addons.windowTitle;" disablechrome="true"
-      role="application" windowtype="Addons:Manager" disablefastfind="true"
+      id="addons-page" title="&addons.windowTitle;"
+      role="application" windowtype="Addons:Manager"
+      disablefastfind="true"
       ondragenter="gDragDrop.onDragOver(event)"
       ondragover="gDragDrop.onDragOver(event)"
       ondrop="gDragDrop.onDrop(event)">

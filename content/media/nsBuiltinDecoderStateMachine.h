@@ -370,6 +370,15 @@ protected:
     return mStartTime + mCurrentFrameTime;
   }
 
+  // Returns an upper bound on the number of milliseconds of audio that is
+  // decoded and playable. This is the sum of the number of ms of audio which
+  // is decoded and in the reader's audio queue, and the ms of unplayed audio
+  // which has been pushed to the audio hardware for playback. Note that after
+  // calling this, the audio hardware may play some of the audio pushed to
+  // hardware, so this can only be used as a upper bound. The decoder monitor
+  // must be held when calling this. Called on the decoder thread.
+  PRInt64 GetDecodedAudioDuration();
+
   // Monitor on mAudioStream. This monitor must be held in order to delete
   // or use the audio stream. This stops us destroying the audio stream
   // while it's being used on another thread (typically when it's being

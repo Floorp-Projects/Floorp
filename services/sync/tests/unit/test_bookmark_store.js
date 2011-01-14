@@ -72,11 +72,44 @@ function test_folder_create() {
     _("Have the store create a new record object. Verify that it has the same data.");
     let newrecord = store.createRecord(folder.id);
     do_check_true(newrecord instanceof BookmarkFolder);
-    for each (let property in ["title","title", "parentName", "parentid"])
+    for each (let property in ["title", "parentName", "parentid"])
       do_check_eq(newrecord[property], folder[property]);      
 
     _("Folders have high sort index to ensure they're synced first.");
     do_check_eq(newrecord.sortindex, 1000000);
+  } finally {
+    _("Clean up.");
+    store.wipe();
+  }
+}
+
+function test_folder_createRecord() {
+  try {
+    _("Create a folder.");
+    let folder1_id = Svc.Bookmark.createFolder(
+      Svc.Bookmark.toolbarFolder, "Folder1", 0);
+    let folder1_guid = store.GUIDForId(folder1_id);
+
+    _("Create two bookmarks in that folder without assigning them GUIDs.");
+    let bmk1_id = Svc.Bookmark.insertBookmark(
+      folder1_id, fxuri, Svc.Bookmark.DEFAULT_INDEX, "Get Firefox!");
+    let bmk2_id = Svc.Bookmark.insertBookmark(
+      folder1_id, tburi, Svc.Bookmark.DEFAULT_INDEX, "Get Thunderbird!");
+
+    _("Create a record for the folder and verify basic properties.");
+    let record = store.createRecord(folder1_guid);
+    do_check_true(record instanceof BookmarkFolder);
+    do_check_eq(record.title, "Folder1");
+    do_check_eq(record.parentid, "toolbar");
+    do_check_eq(record.parentName, "Bookmarks Toolbar");
+
+    _("Verify the folder's children. Ensures that the bookmarks were given GUIDs.");
+    let bmk1_guid = store.GUIDForId(bmk1_id);
+    let bmk2_guid = store.GUIDForId(bmk2_id);
+    do_check_eq(record.children.length, 2);
+    do_check_eq(record.children[0], bmk1_guid);
+    do_check_eq(record.children[1], bmk2_guid);
+
   } finally {
     _("Clean up.");
     store.wipe();
@@ -130,7 +163,6 @@ function test_move_order() {
     do_check_eq(Svc.Bookmark.getItemIndex(bmk1_id), 0);
     do_check_eq(Svc.Bookmark.getItemIndex(bmk2_id), 1);
     let toolbar = store.createRecord("toolbar");
-    dump(JSON.stringify(toolbar.cleartext));
     do_check_eq(toolbar.children.length, 2);
     do_check_eq(toolbar.children[0], bmk1_guid);
     do_check_eq(toolbar.children[1], bmk2_guid);
@@ -159,6 +191,7 @@ function test_move_order() {
 function run_test() {
   test_bookmark_create();
   test_folder_create();
+  test_folder_createRecord();
   test_move_folder();
   test_move_order();
 }

@@ -7,4 +7,3 @@ cp $1/media/base/yuv_row_posix.cc yuv_row_posix.cpp
 cp $1/media/base/yuv_row_win.cc yuv_row_win.cpp
 cp $1/media/base/yuv_row_posix.cc yuv_row_c.cpp
 patch -p3 <convert.patch
-patch -p3 <arm.patch

@@ -174,6 +174,17 @@
                 type="checkbox"
                 observes="View:FullScreen"
                 key="key_fullScreen"/>
+#ifdef MOZ_SERVICES_SYNC
+      <!-- only one of sync-setup or sync-syncnow will be showing at once -->
+      <menuitem id="sync-setup-appmenu"
+                label="&syncSetup.label;"
+                observes="sync-setup-state"
+                oncommand="gSyncUI.openSetup()"/>
+      <menuitem id="sync-syncnowitem-appmenu"
+                label="&syncSyncNowItem.label;"
+                observes="sync-syncnow-state"
+                oncommand="gSyncUI.doSync(event);"/>
+#endif
       <menuitem id="appmenu-quit"
                 class="menuitem-iconic"
 #ifdef XP_WIN
@@ -361,18 +372,6 @@
                       oncommand="openAboutDialog();"/>
           </menupopup>
       </splitmenu>
-#ifdef MOZ_SERVICES_SYNC
-      <spacer flex="1"/>
-      <!-- only one of sync-setup or sync-syncnow will be showing at once -->
-      <menuitem id="sync-setup-appmenu"
-                label="&syncSetup.label;"
-                observes="sync-setup-state"
-                oncommand="gSyncUI.openSetup()"/>
-      <menuitem id="sync-syncnowitem-appmenu"
-                label="&syncSyncNowItem.label;"
-                observes="sync-syncnow-state"
-                oncommand="gSyncUI.doSync(event);"/>
-#endif
     </vbox>
   </hbox>
 </menupopup>

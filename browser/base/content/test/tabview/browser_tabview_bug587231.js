@@ -61,7 +61,7 @@ function onTabViewWindowLoaded() {
   ok(testGroup.isEmpty(), "This group is empty");
   
   // place tab in group
-  let testTabItem = testTab.tabItem;
+  let testTabItem = testTab._tabViewTabItem;
 
   if (testTabItem.parent)
     testTabItem.parent.remove(testTabItem);
@@ -103,8 +103,8 @@ function onTabViewWindowLoaded() {
     ok((lastTime - initialUpdateTime) > hbTiming, "Tab has been updated:"+lastTime+"-"+initialUpdateTime+">"+hbTiming);
 
     // clean up
-    testGroup.remove(testTab.tabItem);
-    testTab.tabItem.close();
+    testGroup.remove(testTab._tabViewTabItem);
+    testTab._tabViewTabItem.close();
     testGroup.close();
 
     let currentTabs = contentWindow.TabItems.getItems();

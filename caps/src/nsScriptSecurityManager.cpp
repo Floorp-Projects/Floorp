@@ -408,6 +408,8 @@ nsScriptSecurityManager::PushContextPrincipal(JSContext *cx,
                                               JSStackFrame *fp,
                                               nsIPrincipal *principal)
 {
+    NS_ASSERTION(principal, "Must pass a non-null principal");
+
     ContextPrincipal *cp = new ContextPrincipal(mContextPrincipals, cx, fp,
                                                 principal);
     if (!cp)
@@ -2545,12 +2547,32 @@ nsScriptSecurityManager::IsCapabilityEnabled(const char *capability,
     JSStackFrame *fp = nsnull;
     JSContext *cx = GetCurrentJSContext();
     fp = cx ? JS_FrameIterator(cx, &fp) : nsnull;
+
+    JSStackFrame *target = nsnull;
+    nsIPrincipal *targetPrincipal = nsnull;
+    for (ContextPrincipal *cp = mContextPrincipals; cp; cp = cp->mNext)
+    {
+        if (cp->mCx == cx)
+        {
+            target = cp->mFp;
+            targetPrincipal = cp->mPrincipal;
+            break;
+        }
+    }
+
     if (!fp)
     {
-        // No script code on stack. Allow execution.
-        *result = PR_TRUE;
+        // No script code on stack. If we had a principal pushed for this
+        // context and fp is null, then we use that principal. Otherwise, we
+        // don't have enough information and have to allow execution.
+
+        *result = (targetPrincipal && !target)
+                  ? (targetPrincipal == mSystemPrincipal)
+                  : PR_TRUE;
+
         return NS_OK;
     }
+
     *result = PR_FALSE;
     nsIPrincipal* previousPrincipal = nsnull;
     do

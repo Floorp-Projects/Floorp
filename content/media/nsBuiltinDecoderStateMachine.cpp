@@ -192,16 +192,19 @@ PRBool nsBuiltinDecoderStateMachine::HaveNextFrameData() const {
          (!HasVideo() || mReader->mVideoQueue.GetSize() > 0);
 }
 
+PRInt64 nsBuiltinDecoderStateMachine::GetDecodedAudioDuration() {
+  NS_ASSERTION(OnDecodeThread(), "Should be on decode thread.");
+  mDecoder->GetMonitor().AssertCurrentThreadIn();
+  PRInt64 audioDecoded = mReader->mAudioQueue.Duration();
+  if (mAudioEndTime != -1) {
+    audioDecoded += mAudioEndTime - GetMediaTime();
+  }
+  return audioDecoded;
+}
+
 void nsBuiltinDecoderStateMachine::DecodeLoop()
 {
   NS_ASSERTION(OnDecodeThread(), "Should be on decode thread.");
-  PRBool videoPlaying = PR_FALSE;
-  PRBool audioPlaying = PR_FALSE;
-  {
-    MonitorAutoEnter mon(mDecoder->GetMonitor());
-    videoPlaying = HasVideo();
-    audioPlaying = HasAudio();
-  }
 
   // We want to "pump" the decode until we've got a few frames/samples decoded
   // before we consider whether decode is falling behind.
@@ -228,58 +231,37 @@ void nsBuiltinDecoderStateMachine::DecodeLoop()
   PRInt64 lowAudioThreshold = LOW_AUDIO_MS;
 
   // Our local ample audio threshold. If we increase lowAudioThreshold, we'll
-  // also increase this to appropriately (we don't want lowAudioThreshold to
+  // also increase this too appropriately (we don't want lowAudioThreshold to
   // be greater than ampleAudioThreshold, else we'd stop decoding!).
   PRInt64 ampleAudioThreshold = AMPLE_AUDIO_MS;
 
-  // Main decode loop.
-  while (videoPlaying || audioPlaying) {
-    PRBool audioWait = !audioPlaying;
-    PRBool videoWait = !videoPlaying;
-    {
-      // Wait for more data to download if we've exhausted all our
-      // buffered data.
-      MonitorAutoEnter mon(mDecoder->GetMonitor());
-      if (mState == DECODER_STATE_SHUTDOWN || mStopDecodeThreads)
-        break;
-    }
+  MediaQueue<VideoData>& videoQueue = mReader->mVideoQueue;
+  MediaQueue<SoundData>& audioQueue = mReader->mAudioQueue;
 
-    PRUint32 videoQueueSize = mReader->mVideoQueue.GetSize();
-    // Don't decode any more frames if we've filled our buffers.
-    // Limits memory consumption.
-    if (videoQueueSize > AMPLE_VIDEO_FRAMES) {
-      videoWait = PR_TRUE;
+  MonitorAutoEnter mon(mDecoder->GetMonitor());
+
+  PRBool videoPlaying = HasVideo();
+  PRBool audioPlaying = HasAudio();
+
+  // Main decode loop.
+  while (mState != DECODER_STATE_SHUTDOWN &&
+         !mStopDecodeThreads &&
+         (videoPlaying || audioPlaying))
+  {
+    // We don't want to consider skipping to the next keyframe if we've
+    // only just started up the decode loop, so wait until we've decoded
+    // some frames before enabling the keyframe skip logic on video.
+    if (videoPump && videoQueue.GetSize() >= videoPumpThreshold) {
+      videoPump = PR_FALSE;
     }
 
     // We don't want to consider skipping to the next keyframe if we've
     // only just started up the decode loop, so wait until we've decoded
-    // some frames before allowing the keyframe skip.
-    if (videoPump && videoQueueSize >= videoPumpThreshold) {
-      videoPump = PR_FALSE;
-    }
-
-    // Determine how much audio data is decoded ahead of the current playback
-    // position.
-    PRInt64 currentTime = 0;
-    PRInt64 audioDecoded = 0;
-    PRBool decodeCloseToDownload = PR_FALSE;
-    {
-      MonitorAutoEnter mon(mDecoder->GetMonitor());
-      currentTime = GetMediaTime();
-      audioDecoded = mReader->mAudioQueue.Duration();
-      if (mAudioEndTime != -1) {
-        audioDecoded += mAudioEndTime - currentTime;
-      }
-      decodeCloseToDownload = IsDecodeCloseToDownload();
-    }
-
-    // Don't decode any audio if the audio decode is way ahead.
-    if (audioDecoded > ampleAudioThreshold) {
-      audioWait = PR_TRUE;
-    }
-    if (audioPump && audioDecoded > audioPumpThresholdMs) {
+    // some audio data before enabling the keyframe skip logic on audio.
+    if (audioPump && GetDecodedAudioDuration() >= audioPumpThresholdMs) {
       audioPump = PR_FALSE;
     }
+
     // We'll skip the video decode to the nearest keyframe if we're low on
     // audio, or if we're low on video, provided we're not running low on
     // data to decode. If we're running low on downloaded data to decode,
@@ -288,23 +270,28 @@ void nsBuiltinDecoderStateMachine::DecodeLoop()
     // after buffering finishes.
     if (!skipToNextKeyframe &&
         videoPlaying &&
-        !decodeCloseToDownload &&
-        ((!audioPump && audioPlaying && audioDecoded < lowAudioThreshold) ||
-         (!videoPump && videoQueueSize < LOW_VIDEO_FRAMES)))
+        !IsDecodeCloseToDownload() &&
+        ((!audioPump && audioPlaying && GetDecodedAudioDuration() < lowAudioThreshold) ||
+         (!videoPump && videoPlaying && videoQueue.GetSize() < LOW_VIDEO_FRAMES)))
     {
       skipToNextKeyframe = PR_TRUE;
       LOG(PR_LOG_DEBUG, ("Skipping video decode to the next keyframe"));
     }
 
     // Video decode.
-    if (videoPlaying && !videoWait) {
+    if (videoPlaying && videoQueue.GetSize() < AMPLE_VIDEO_FRAMES) {
       // Time the video decode, so that if it's slow, we can increase our low
       // audio threshold to reduce the chance of an audio underrun while we're
       // waiting for a video decode to complete.
-      TimeStamp start = TimeStamp::Now();
-      videoPlaying = mReader->DecodeVideoFrame(skipToNextKeyframe, currentTime);
-      TimeDuration decodeTime = TimeStamp::Now() - start;
-      if (!decodeCloseToDownload &&
+      TimeDuration decodeTime;
+      {
+        PRInt64 currentTime = GetMediaTime();
+        MonitorAutoExit exitMon(mDecoder->GetMonitor());
+        TimeStamp start = TimeStamp::Now();
+        videoPlaying = mReader->DecodeVideoFrame(skipToNextKeyframe, currentTime);
+        decodeTime = TimeStamp::Now() - start;
+      }
+      if (!IsDecodeCloseToDownload() &&
           THRESHOLD_FACTOR * decodeTime.ToMilliseconds() > lowAudioThreshold)
       {
         lowAudioThreshold =
@@ -317,50 +304,55 @@ void nsBuiltinDecoderStateMachine::DecodeLoop()
              lowAudioThreshold, ampleAudioThreshold));
       }
     }
-    {
-      MonitorAutoEnter mon(mDecoder->GetMonitor());
-      mDecoder->GetMonitor().NotifyAll();
-    }
 
     // Audio decode.
-    if (audioPlaying && !audioWait) {
+    if (audioPlaying &&
+        (GetDecodedAudioDuration() < ampleAudioThreshold || audioQueue.GetSize() == 0))
+    {
+      MonitorAutoExit exitMon(mDecoder->GetMonitor());
       audioPlaying = mReader->DecodeAudioData();
     }
+    
+    // Notify to ensure that the AudioLoop() is not waiting, in case it was
+    // waiting for more audio to be decoded.
+    mDecoder->GetMonitor().NotifyAll();
 
-    {
-      MonitorAutoEnter mon(mDecoder->GetMonitor());
-
-      if (!IsPlaying()) {
-        // Update the ready state, so that the play DOM events fire. We only
-        // need to do this if we're not playing; if we're playing the playback
-        // code will do an update whenever it advances a frame.
-        UpdateReadyState();
-      }
-
-      if (mState == DECODER_STATE_SHUTDOWN || mStopDecodeThreads) {
-        break;
-      }
-
-      if ((!HasAudio() || audioWait) &&
-          (!HasVideo() || videoWait))
-      {
-        // All active bitstreams' decode is well ahead of the playback
-        // position, we may as well wait for the playback to catch up.
-        mon.Wait();
-      }
+    if (!IsPlaying()) {
+      // Update the ready state, so that the play DOM events fire. We only
+      // need to do this if we're not playing; if we're playing the playback
+      // code will do an update whenever it advances a frame.
+      UpdateReadyState();
     }
-  }
 
+    if (mState != DECODER_STATE_SHUTDOWN &&
+        !mStopDecodeThreads &&
+        (!audioPlaying || (GetDecodedAudioDuration() >= ampleAudioThreshold &&
+                           audioQueue.GetSize() > 0))
+        &&
+        (!videoPlaying || videoQueue.GetSize() >= AMPLE_VIDEO_FRAMES))
+    {
+      // All active bitstreams' decode is well ahead of the playback
+      // position, we may as well wait for the playback to catch up. Note the
+      // audio push thread acquires and notifies the decoder monitor every time
+      // it pops SoundData off the audio queue. So if the audio push thread pops
+      // the last SoundData off the audio queue right after that queue reported
+      // it was non-empty here, we'll receive a notification on the decoder
+      // monitor which will wake us up shortly after we sleep, thus preventing
+      // both the decode and audio push threads waiting at the same time.
+      // See bug 620326.
+      mon.Wait();
+    }
+
+  } // End decode loop.
+
+  if (!mStopDecodeThreads &&
+      mState != DECODER_STATE_SHUTDOWN &&
+      mState != DECODER_STATE_SEEKING)
   {
-    MonitorAutoEnter mon(mDecoder->GetMonitor());
-    if (!mStopDecodeThreads &&
-        mState != DECODER_STATE_SHUTDOWN &&
-        mState != DECODER_STATE_SEEKING)
-    {
-      mState = DECODER_STATE_COMPLETED;
-      mDecoder->GetMonitor().NotifyAll();
-    }
+    mState = DECODER_STATE_COMPLETED;
+    mDecoder->GetMonitor().NotifyAll();
   }
+
   LOG(PR_LOG_DEBUG, ("Shutting down DecodeLoop this=%p", this));
 }
 

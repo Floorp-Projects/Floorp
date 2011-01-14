@@ -65,6 +65,8 @@ class nsClientRectList;
 #include "imgIContainer.h"
 #include "nsCSSPseudoElements.h"
 #include "nsHTMLReflowState.h"
+#include "nsIFrameLoader.h"
+#include "Layers.h"
 
 class nsBlockFrame;
 class gfxDrawable;
@@ -79,6 +81,18 @@ class nsLayoutUtils
   typedef gfxPattern::GraphicsFilter GraphicsFilter;
 
 public:
+  typedef mozilla::layers::FrameMetrics::ViewID ViewID;
+
+  /**
+   * Finds previously assigned or generates a unique ViewID for the given
+   * content element.
+   */
+  static ViewID FindIDFor(nsIContent* aContent);
+
+  /**
+   * Find content for given ID.
+   */
+  static nsIContent* FindContentFor(ViewID aId);
 
   /**
    * Use heuristics to figure out the name of the child list that
@@ -434,6 +448,23 @@ public:
    *         origin aOrigin.
    */
   static gfxMatrix ChangeMatrixBasis(const gfxPoint &aOrigin, const gfxMatrix &aMatrix);
+
+  /**
+   * Find IDs corresponding to a scrollable content element in the child process.
+   * In correspondence with the shadow layer tree, you can use this to perform a
+   * hit test that corresponds to a specific shadow layer that you can then perform
+   * transformations on to do parent-side scrolling.
+   *
+   * @param aFrame The root frame of a stack context
+   * @param aTarget The rect to hit test relative to the frame origin
+   * @param aOutIDs All found IDs are added here
+   * @param aIgnoreRootScrollFrame a boolean to control if the display list
+   *        builder should ignore the root scroll frame
+   */
+  static nsresult GetRemoteContentIds(nsIFrame* aFrame,
+                                     const nsRect& aTarget,
+                                     nsTArray<ViewID> &aOutIDs,
+                                     PRBool aIgnoreRootScrollFrame);
 
   /**
    * Given aFrame, the root frame of a stacking context, find its descendant
@@ -1209,7 +1240,13 @@ public:
     SFE_WANT_IMAGE_SURFACE = 1 << 1,
     /* Whether to extract the first frame (as opposed to the
        current frame) in the case that the element is an image. */
-    SFE_WANT_FIRST_FRAME = 1 << 2
+    SFE_WANT_FIRST_FRAME = 1 << 2,
+    /* Whether we should skip colorspace/gamma conversion */
+    SFE_NO_COLORSPACE_CONVERSION = 1 << 3,
+    /* Whether we should skip premultiplication -- the resulting
+       image will always be an image surface, and must not be given to
+       Thebes for compositing! */
+    SFE_NO_PREMULTIPLY_ALPHA = 1 << 4
   };
 
   struct SurfaceFromElementResult {
@@ -1263,6 +1300,8 @@ public:
       (aPresContext->Type() == nsPresContext::eContext_PrintPreview ||
        aPresContext->Type() == nsPresContext::eContext_PageLayout);
   }
+
+  static void Shutdown();
 
 #ifdef DEBUG
   /**

@@ -181,35 +181,26 @@ radio[pane=paneSync] {
 
 %ifdef MOZ_SERVICES_SYNC
 /* Sync Pane */
+
 #syncDesc {
   padding: 0 12em;
 }
 
-#currentUser image {
+.syncGroupBox {
+  padding: 10px;
+}
+
+#accountCaptionImage {
   list-style-image: url("chrome://mozapps/skin/profile/profileicon.png");
 }
 
-#connectThrobber {
-  list-style-image: url("chrome://global/skin/icons/loading_16.png");
+#syncAddDeviceLabel {
+  margin-top: 1em;
+  margin-bottom: 1em;
+ }
+
+#syncEnginesList {
+  height: 11em;
 }
 
-.expander-up,
-.expander-down {
-  min-width: 0;
-  margin: 0;
-  -moz-margin-end: 4px;
-}
-
-.expander-up > .button-box,
-.expander-down > .button-box {
-  padding: 0;
-}
-
-.expander-up {
-  list-style-image: url("chrome://global/skin/icons/collapse.png");
-}
-
-.expander-down {
-  list-style-image: url("chrome://global/skin/icons/expand.png");
-}
 %endif
