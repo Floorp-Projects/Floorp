@@ -16,7 +16,7 @@
  * The Original Code is Places code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Foundation.
+ * the Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
@@ -41,6 +41,7 @@
 #define mozilla_places_History_h_
 
 #include "mozilla/IHistory.h"
+#include "mozIAsyncHistory.h"
 #include "mozilla/dom/Link.h"
 #include "nsTHashtable.h"
 #include "nsString.h"
@@ -54,15 +55,19 @@
 namespace mozilla {
 namespace places {
 
+struct VisitData;
+
 #define NS_HISTORYSERVICE_CID \
   {0x0937a705, 0x91a6, 0x417a, {0x82, 0x92, 0xb2, 0x2e, 0xb1, 0x0d, 0xa8, 0x6c}}
 
 class History : public IHistory
+              , public mozIAsyncHistory
               , public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_IHISTORY
+  NS_DECL_MOZIASYNCHISTORY
   NS_DECL_NSIOBSERVER
 
   History();
@@ -79,6 +84,31 @@ public:
    * Obtains the statement to use to check if a URI is visited or not.
    */
   mozIStorageAsyncStatement* GetIsVisitedStatement();
+
+  /**
+   * Adds an entry in moz_places with the data in aVisitData.
+   *
+   * @param aVisitData
+   *        The visit data to use to populate a new row in moz_places.
+   */
+  nsresult InsertPlace(const VisitData& aVisitData);
+
+  /**
+   * Updates an entry in moz_places with the data in aVisitData.
+   *
+   * @param aVisitData
+   *        The visit data to use to update the existing row in moz_places.
+   */
+  nsresult UpdatePlace(const VisitData& aVisitData);
+
+  /**
+   * Loads information about the page into _place from moz_places.
+   *
+   * @param _place
+   *        The VisitData for the place we need to know information about.
+   * @return true if the page was recorded in moz_places, false otherwise.
+   */
+  bool FetchPageInfo(VisitData& _place);
 
   /**
    * Obtains a pointer to this service.

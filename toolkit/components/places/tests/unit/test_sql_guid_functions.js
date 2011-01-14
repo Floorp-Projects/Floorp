@@ -14,7 +14,7 @@
  */
 function check_invariants(aGuid)
 {
-  print("TEST-INFO | " + tests[index - 1].name + " | Checking guid '" +
+  print("TEST-INFO | " + gRunningTest.name + " | Checking guid '" +
         aGuid + "'");
 
   do_check_valid_places_guid(aGuid);
@@ -98,37 +98,12 @@ function test_guid_on_background()
 ////////////////////////////////////////////////////////////////////////////////
 //// Test Runner
 
-let tests = [
+let gTests = [
   test_guid_invariants,
   test_guid_on_background,
 ];
-let index = 0;
-
-function run_next_test()
-{
-  function _run_next_test() {
-    if (index < tests.length) {
-      do_test_pending();
-      print("TEST-INFO | " + _TEST_FILE + " | Starting " + tests[index].name);
-
-      // Exceptions do not kill asynchronous tests, so they'll time out.
-      try {
-        tests[index++]();
-      }
-      catch (e) {
-        do_throw(e);
-      }
-    }
-
-    do_test_finished();
-  }
-
-  // For sane stacks during failures, we execute this code soon, but not now.
-  do_execute_soon(_run_next_test);
-}
 
 function run_test()
 {
-  do_test_pending();
   run_next_test();
 }
