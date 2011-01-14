@@ -69,10 +69,16 @@ struct MacroAssemblerTypedefs {
     typedef JSC::FunctionPtr FunctionPtr;
     typedef JSC::RepatchBuffer RepatchBuffer;
     typedef JSC::CodeLocationLabel CodeLocationLabel;
+    typedef JSC::CodeLocationDataLabel32 CodeLocationDataLabel32;
+    typedef JSC::CodeLocationJump CodeLocationJump;
     typedef JSC::CodeLocationCall CodeLocationCall;
+    typedef JSC::CodeLocationInstruction CodeLocationInstruction;
     typedef JSC::ReturnAddressPtr ReturnAddressPtr;
     typedef JSC::MacroAssemblerCodePtr MacroAssemblerCodePtr;
     typedef JSC::JITCode JITCode;
+#if defined JS_CPU_ARM
+    typedef JSC::ARMWord ARMWord;
+#endif
 };
 
 class BaseCompiler : public MacroAssemblerTypedefs
@@ -195,19 +201,22 @@ class LinkerHelper : public JSC::LinkBuffer
  * up front to prevent this from happening.
  */
 #ifdef JS_CPU_ARM
+template <size_t reservedSpace>
 class AutoReserveICSpace {
     typedef Assembler::Label Label;
-    static const size_t reservedSpace = 68;
 
     Assembler           &masm;
 #ifdef DEBUG
     Label               startLabel;
+    bool                didCheck;
 #endif
 
   public:
     AutoReserveICSpace(Assembler &masm) : masm(masm) {
         masm.ensureSpace(reservedSpace);
 #ifdef DEBUG
+        didCheck = false;
+
         startLabel = masm.label();
 
         /* Assert that the constant pool is not flushed until we reach a safe point. */
@@ -217,8 +226,13 @@ class AutoReserveICSpace {
 #endif
     }
 
-    ~AutoReserveICSpace() {
+    /* Allow manual IC space checks so that non-patchable code at the end of an IC section can be
+     * free to use constant pools. */
+    void check() {
 #ifdef DEBUG
+        JS_ASSERT(!didCheck);
+        didCheck = true;
+
         Label endLabel = masm.label();
         int spaceUsed = masm.differenceBetween(startLabel, endLabel);
 
@@ -235,10 +249,31 @@ class AutoReserveICSpace {
         masm.allowPoolFlush(true);
 #endif
     }
+
+    ~AutoReserveICSpace() {
+#ifdef DEBUG
+        /* Automatically check the IC space if we didn't already do it manually. */
+        if (!didCheck) {
+            check();
+        }
+#endif
+    }
 };
-# define RESERVE_IC_SPACE(__masm) AutoReserveICSpace arics(__masm)
+
+# define RESERVE_IC_SPACE(__masm)       AutoReserveICSpace<80> arics(__masm)
+
+/* The OOL path can need a lot of space because we save and restore a lot of registers. The actual
+ * sequene varies. However, dumping the literal pool before an OOL block is probably a good idea
+ * anyway, as we branch directly to the start of the block from the fast path. */
+# define RESERVE_OOL_SPACE(__masm)      AutoReserveICSpace<256> arics_ool(__masm)
+
+/* Allow the OOL patch to be checked before object destruction. Often, non-patchable epilogues or
+ * rejoining sequences are emitted, and it isn't necessary to protect these from literal pools. */
+# define CHECK_OOL_SPACE()              arics_ool.check()
 #else
-# define RESERVE_IC_SPACE(__masm) /* Nothing. */
+# define RESERVE_IC_SPACE(__masm)       /* Do nothing. */
+# define RESERVE_OOL_SPACE(__masm)      /* Do nothing. */
+# define CHECK_OOL_SPACE()              /* Do nothing. */
 #endif
 
 } /* namespace js */
