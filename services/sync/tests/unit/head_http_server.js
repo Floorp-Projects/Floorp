@@ -130,8 +130,9 @@ function ServerCollection(wbos) {
 ServerCollection.prototype = {
 
   _inResultSet: function(wbo, options) {
-    return ((!options.ids || (options.ids.indexOf(wbo.id) != -1))
-            && (!options.newer || (wbo.modified > options.newer)));
+    return wbo.payload
+           && (!options.ids || (options.ids.indexOf(wbo.id) != -1))
+           && (!options.newer || (wbo.modified > options.newer));
   },
 
   get: function(options) {
