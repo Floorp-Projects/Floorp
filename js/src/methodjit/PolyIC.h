@@ -78,13 +78,6 @@ static const int32 SETPROP_INLINE_STORE_VALUE      =   0; //asserted
 static const int32 SETPROP_INLINE_SHAPE_JUMP       =   6; //asserted
 #endif
 
-/* ScopeNameCompiler */
-#if defined JS_CPU_X86
-static const int32 SCOPENAME_JUMP_OFFSET = 5; //asserted
-#elif defined JS_CPU_X64
-static const int32 SCOPENAME_JUMP_OFFSET = 5; //asserted
-#endif
-
 void PurgePICs(JSContext *cx);
 
 enum LookupStatus {
@@ -483,6 +476,9 @@ struct PICInfo : public BasePolyIC {
     inline bool isBind() const {
         return kind == BIND;
     }
+    inline bool isScopeName() const {
+        return kind == NAME || kind == XNAME;
+    }
     inline RegisterID typeReg() {
         JS_ASSERT(isGet());
         return u.get.typeReg;
@@ -503,11 +499,13 @@ struct PICInfo : public BasePolyIC {
     static GetPropLabels getPropLabels_;
     static SetPropLabels setPropLabels_;
     static BindNameLabels bindNameLabels_;
+    static ScopeNameLabels scopeNameLabels_;
 #else
     union {
         GetPropLabels getPropLabels_;
         SetPropLabels setPropLabels_;
         BindNameLabels bindNameLabels_;
+        ScopeNameLabels scopeNameLabels_;
     };
     void setLabels(const ic::GetPropLabels &labels) {
         JS_ASSERT(isGet());
@@ -520,6 +518,10 @@ struct PICInfo : public BasePolyIC {
     void setLabels(const ic::BindNameLabels &labels) {
         JS_ASSERT(kind == BIND);
         bindNameLabels_ = labels;
+    }
+    void setLabels(const ic::ScopeNameLabels &labels) {
+        JS_ASSERT(kind == NAME || kind == XNAME);
+        scopeNameLabels_ = labels;
     }
 #endif
 
@@ -534,6 +536,10 @@ struct PICInfo : public BasePolyIC {
     BindNameLabels &bindNameLabels() {
         JS_ASSERT(kind == BIND);
         return bindNameLabels_;
+    }
+    ScopeNameLabels &scopeNameLabels() {
+        JS_ASSERT(kind == NAME || kind == XNAME);
+        return scopeNameLabels_;
     }
 
     // Where in the script did we generate this PIC?

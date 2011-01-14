@@ -226,6 +226,7 @@ class Compiler : public BaseCompiler
             ic::GetPropLabels getPropLabels_;
             ic::SetPropLabels setPropLabels_;
             ic::BindNameLabels bindNameLabels_;
+            ic::ScopeNameLabels scopeNameLabels_;
         };
 
         ic::GetPropLabels &getPropLabels() {
@@ -240,6 +241,10 @@ class Compiler : public BaseCompiler
             JS_ASSERT(kind == ic::PICInfo::BIND);
             return bindNameLabels_;
         }
+        ic::ScopeNameLabels &scopeNameLabels() {
+            JS_ASSERT(kind == ic::PICInfo::NAME || kind == ic::PICInfo::XNAME);
+            return scopeNameLabels_;
+        }
 #else
         ic::GetPropLabels &getPropLabels() {
             JS_ASSERT(kind == ic::PICInfo::GET || kind == ic::PICInfo::CALL);
@@ -252,6 +257,10 @@ class Compiler : public BaseCompiler
         ic::BindNameLabels &bindNameLabels() {
             JS_ASSERT(kind == ic::PICInfo::BIND);
             return ic::PICInfo::bindNameLabels_;
+        }
+        ic::ScopeNameLabels &scopeNameLabels() {
+            JS_ASSERT(kind == ic::PICInfo::NAME || kind == ic::PICInfo::XNAME);
+            return ic::PICInfo::scopeNameLabels_;
         }
 #endif
 
@@ -274,6 +283,8 @@ class Compiler : public BaseCompiler
                 ic.setLabels(setPropLabels());
             else if (ic.isBind())
                 ic.setLabels(bindNameLabels());
+            else if (ic.isScopeName())
+                ic.setLabels(scopeNameLabels());
 #endif
         }
 

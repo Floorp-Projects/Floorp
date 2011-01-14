@@ -77,8 +77,6 @@ namespace ic {
 # define JS_HAS_IC_LABELS
 #endif
 
-# define JS_POLYIC_OFFSET_BITS 8
-
 /* GetPropCompiler */
 struct GetPropLabels : MacroAssemblerTypedefs {
     friend class ::ICOffsetInitializer;
@@ -350,6 +348,58 @@ struct BindNameLabels : MacroAssemblerTypedefs {
 
   private:
     /* Offset from shapeGuard to end of shape jump. */
+    int32 inlineJumpOffset : 8;
+
+    /* Offset from lastStubStart to end of the shape jump. */
+    int32 stubJumpOffset : 8;
+};
+
+/* ScopeNameCompiler */
+struct ScopeNameLabels : MacroAssemblerTypedefs {
+    friend class ::ICOffsetInitializer;
+
+    void setInlineJumpOffset(int offset) {
+#ifdef JS_HAS_IC_LABELS
+        inlineJumpOffset = offset;
+#endif
+        JS_ASSERT(offset == inlineJumpOffset);
+    }
+
+    void setInlineJump(MacroAssembler &masm, Label fastPathStart, Jump inlineJump) {
+        int offset = masm.differenceBetween(fastPathStart, inlineJump);
+        setInlineJumpOffset(offset);
+    }
+
+    CodeLocationJump getInlineJump(CodeLocationLabel fastPathStart) {
+        return fastPathStart.jumpAtOffset(getInlineJumpOffset());
+    }
+
+    int getInlineJumpOffset() {
+        return inlineJumpOffset;
+    }
+
+    void setStubJumpOffset(int offset) {
+#ifdef JS_HAS_IC_LABELS
+        stubJumpOffset = offset;
+#endif
+        JS_ASSERT(offset == stubJumpOffset);
+    }
+
+    void setStubJump(MacroAssembler &masm, Label stubStart, Jump stubJump) {
+        int offset = masm.differenceBetween(stubStart, stubJump);
+        setStubJumpOffset(offset);
+    }
+
+    CodeLocationJump getStubJump(CodeLocationLabel lastStubStart) {
+        return lastStubStart.jumpAtOffset(getStubJumpOffset());
+    }
+
+    int getStubJumpOffset() {
+        return stubJumpOffset;
+    }
+
+  private:
+    /* Offset from fastPathStart to end of shape jump. */
     int32 inlineJumpOffset : 8;
 
     /* Offset from lastStubStart to end of the shape jump. */
