@@ -287,10 +287,8 @@ class SetPropCompiler : public PICStubCompiler
         }
 
         Label start = masm.label();
-        DataLabel32 unused;
-        Jump shapeGuard = masm.branch32WithPatch(Assembler::NotEqual, pic.shapeReg,
-                                                 Imm32(initialShape), unused);
-        (void) unused;
+        Jump shapeGuard = masm.branch32_force32(Assembler::NotEqual, pic.shapeReg,
+                                                Imm32(initialShape));
 
         Label stubShapeJumpLabel = masm.label();
 
