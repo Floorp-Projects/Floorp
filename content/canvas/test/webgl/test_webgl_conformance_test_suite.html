@@ -18,24 +18,24 @@ Mochitest version of the WebGL Conformance Test Suite
  * @param {string} url The url of the external file.
  * @return {string} the loaded text if the request is synchronous.
  */
-var loadTextFileSynchronous = function(url) {
-  var error = 'loadTextFileSynchronous failed to load url "' + url + '"';
-  var request;
-  if (window.XMLHttpRequest) {
-    request = new XMLHttpRequest();
-    if (request.overrideMimeType) {
-      request.overrideMimeType('text/plain');
+  var loadTextFileSynchronous = function (url) {
+    var error = 'loadTextFileSynchronous failed to load url "' + url + '"';
+    var request;
+    if (window.XMLHttpRequest) {
+      request = new XMLHttpRequest();
+      if (request.overrideMimeType) {
+        request.overrideMimeType('text/plain');
+      }
+    } else {
+      throw 'XMLHttpRequest is disabled';
     }
-  } else {
-    throw 'XMLHttpRequest is disabled';
-  }
-  request.open('GET', url, false);
-  request.send(null);
-  if (request.readyState != 4) {
-    throw error;
-  }
-  return request.responseText;
-};
+    request.open('GET', url, false);
+    request.send(null);
+    if (request.readyState != 4) {
+      throw error;
+    }
+    return request.responseText;
+  };
 
 function start() {
 
@@ -55,52 +55,23 @@ function start() {
     return prefSvc().getBoolPref("webgl.enabled_for_all_sites");
   }
 
-  function setAnglePath(path) {
+  function setPreferGL(value) {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    if (path == null) {
-      try {
-        prefSvc().clearUserPref("gfx.angle.egl.path");
-      } catch (e) {
-        // ignore
-      }
-      return;
-    }
+    prefSvc().setBoolPref("webgl.prefer_gl", value);
+  }
+
+  function getPreferGL() {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    var retval = false;
     try {
-      var f = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
-      f.initWithPath(path);
-      prefSvc().setComplexValue("gfx.angle.egl.path", Components.interfaces.nsILocalFile, f);
-    } catch (e) {
-      // ignore -- the path is likely not valid, e.g. trying to use a path of "C:\libs" on non-windows boxes.
-    }
-  }
-
-  function getAnglePath() {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    if (prefSvc().getPrefType("gfx.angle.egl.path") == Components.interfaces.nsIPrefBranch.PREF_INVALID)
-      return null;
-    return prefSvc().getComplexValue("gfx.angle.egl.path", Components.interfaces.nsILocalFile);
-  }
-
-  function getPreferEgl() {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    if (prefSvc().getPrefType("webgl.prefer_egl") == Components.interfaces.nsIPrefBranch.PREF_INVALID)
-      return null;
-    return prefSvc().getBoolPref("webgl.prefer_egl");
-  }
-
-  function setPreferEgl(val) {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    if (val == null) {
-      prefSvc().clearUserPref("webgl.prefer_egl");
-      return;
-    }
-    prefSvc().setBoolPref("webgl.prefer_egl", val);
+      retval = prefSvc().getBoolPref("webgl.prefer_gl");
+    } catch (ex) { }
+    return retval;
   }
 
   function restoreOldPrefs() {
     setEnabledForAllSites(saved_enabled_for_all_sites);
-    setAnglePath(saved_angle_path);
-    setPreferEgl(saved_prefer_egl);
+    setPreferGL(saved_prefer_gl);
   }
 
   function getEnv(env) {
@@ -255,6 +226,7 @@ function start() {
   };
 
   Reporter.prototype.startPage = function(url) {
+    dump('WebGL mochitest: starting page ' + url + '\n');
     var page = this.pagesByURL[url];
     this.currentPage = page;
     statusTextNode.textContent = 'Running URL: ' + url;
@@ -292,10 +264,14 @@ function start() {
     }
   };
 
-  Reporter.prototype.completedCurrentTestSuiteRun = function() {
-        timesTestSuiteAlreadyRun++;
-        runTestSuite();
-  };
+  Reporter.prototype.finishedTestSuite = function() {
+      for (var i = 0; i < testsExpectedToFail.length; ++i)
+        if (testsSuccessful.indexOf(testsExpectedToFail[i]) != -1)
+          ok(false, 'Test expected to fail, but passed: ' + testsExpectedToFail[i]);
+      restoreOldPrefs();
+      statusTextNode.textContent = 'Finished';
+      SimpleTest.finish();
+  }
 
   Reporter.prototype.reportFunc = function(type, msg, success) {
     switch (type) {
@@ -308,7 +284,7 @@ function start() {
       case reportType.FINISH_PAGE:
         return this.finishPage(success);
       case reportType.FINISHED_ALL_TESTS:
-        this.completedCurrentTestSuiteRun();
+        this.finishedTestSuite();
         return true;
       default:
         throw 'unhandled';
@@ -316,20 +292,16 @@ function start() {
     };
   };
 
-  function doRunTests() {
+  function runTestSuite() {
     var reporter = new Reporter();
 
     // set WebGL-related preferences needed to run WebGL tests
     setEnabledForAllSites(true);
 
-    // if this wasn't specified, then set it to our expected dir for the build
-    // machines
-    if (!saved_angle_path) {
-      // For windows test runners.  For everyone else, it doesn't matter,
-      // we'll use ANGLE if it's installed according to the prefs.
-      setAnglePath("C:\\libs");
-      setPreferEgl(true);
-    }
+    // XXX temporary hack. Until the DirectX runtime is deployed on test slaves, we just use OpenGL,
+    // so that rel-eng can safely deploy DirectX runtime without getting sudden mochitest failures
+    // (e.g. if there's a ANGLE bug).
+    setPreferGL(true);
 
     // try to create a dummy WebGL context, just to catch context creation failures once here,
     // rather than having them result in 100's of failures (one in each test page)
@@ -351,50 +323,68 @@ function start() {
         window.webglTestHarness = testHarness;
         testHarness.runTests();
     } else {
-        // if the webgl context is null, we agreed that we wouldn't fail the test, we only add a TODO mentioning
-        // that the GL setup needs to be fixed in order for these tests to be actually run. The reason why we don't
-        // currently want to fail the test is that we want to be able to land this mochitest as soon as possible and
-        // just take care of the GL setups on the test machines afterwards.
-        var errmsg = "Disabled, because we were unable to create a WebGL context anyhow.";
+        var errmsg = "Can't create a WebGL context";
         reporter.fullResultsNode.textContent = errmsg;
-        todo(false, errmsg);
-        reporter.completedCurrentTestSuiteRun();
+        ok(false, errmsg);
+        dump("WebGL mochitest failed: " + errmsg + "\n");
+        reporter.finishedTestSuite();
     }
-  };
-
-  function runTestSuite() {
-    if (timesTestSuiteAlreadyRun == 1) {
-      for (var i = 0; i < testsExpectedToFail.length; ++i) {
-        if (testsSuccessful.indexOf(testsExpectedToFail[i]) != -1) {
-          todo(false, 'Test expected to fail, but passed: ' + testsExpectedToFail[i]);
-          dump('Test expected to fail, but passed: ' + testsExpectedToFail[i] + '\n');
-        }
-      }
-
-      restoreOldPrefs();
-      statusTextNode.textContent = 'Finished';
-      SimpleTest.finish();
-      return;
-    }
-
-    doRunTests();
   };
 
   SimpleTest.waitForExplicitFinish();
   SimpleTest.requestLongerTimeout(2);
 
-  if (getEnv("MOZ_WEBGL_TEST_SUITE") == null) {
-    // webgl test suite is disabled unless the env var is set
-    todo(false, 'WebGL test suite is disabled!');
-    SimpleTest.finish();
-    return;
+  var kIsWindows = false;
+  var kIsMac = false;
+  var kIsLinux = false;
+  if (navigator.platform.indexOf("Win") == 0)
+    kIsWindows = true;
+  else if (navigator.platform.indexOf("Linux") == 0)
+    kIsLinux = true;
+  else if (navigator.platform.indexOf("Mac") == 0)
+    kIsMac = true;
+
+  // we currently disable this test on versions of Windows older than Windows Vista,
+  // due to failure to load ANGLE on win 2003 test slaves, see bug 582053.
+  if (kIsWindows) {
+    // code borrowed from browser/components/wintaskbar/test/browser_taskbar_preview.js
+    var isWinVistaOrHigher = false;
+    try {
+      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+      var version = Components.classes["@mozilla.org/system-info;1"]
+                              .getService(Components.interfaces.nsIPropertyBag2)
+                              .getProperty("version");
+      isWinVistaOrHigher = (parseFloat(version) >= 6.0);
+    } catch (ex) {}
+    if (!isWinVistaOrHigher) {
+      dump("WebGL mochitest disabled on Windows versions older than Vista");
+      SimpleTest.finish();
+      return;
+    }
   }
 
-  var timesTestSuiteAlreadyRun = 0;
+  // we currently disable this test on version of Mac OSX older than 10.6,
+  // due to various weird failures, including one making getRenderbufferParameter tests
+  // on DEPTH_STENCIL fail
+  if (kIsMac) {
+    // code borrowed from browser/components/wintaskbar/test/browser_taskbar_preview.js
+    var is106orHigher = false;
+    try {
+      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+      var version = Components.classes["@mozilla.org/system-info;1"]
+                              .getService(Components.interfaces.nsIPropertyBag2)
+                              .getProperty("version");
+      is106orHigher = (parseFloat(version) >= 10.6);
+    } catch (ex) { }
+    if (!is106orHigher) {
+      dump("WebGL mochitest disabled on Mac OSX versions older than 10.6");
+      SimpleTest.finish();
+      return;
+    }
+  }
 
   var saved_enabled_for_all_sites = getEnabledForAllSites();
-  var saved_angle_path = getAnglePath();
-  var saved_prefer_egl = getPreferEgl();
+  var saved_prefer_gl = getPreferGL();
 
   var statusElem = document.getElementById("status");
   var statusTextNode = document.createTextNode('');
@@ -404,7 +394,22 @@ function start() {
   var expectedtofailTextNode = document.createTextNode('');
   expectedtofailElem.appendChild(expectedtofailTextNode);
 
-  var testsExpectedToFail = loadTextFileSynchronous('failing_tests.txt').split('\n');
+  // Windows uses the ANGLE library for rendering. Until everything is perfect, this means a different set of
+  // failing tests. It's easier to do a platform check for Windows than for ANGLE itself.
+  // Moreover, we currently also have different tests failing on Mac and on Linux,
+  // presumably due to differences in the drivers.
+  var failingTestsFilename;
+  if (kIsWindows)
+    failingTestsFilename = 'failing_tests_windows.txt';
+  else if (kIsLinux)
+    failingTestsFilename = 'failing_tests_linux.txt';
+  else if (kIsMac)
+    failingTestsFilename = 'failing_tests_mac.txt';
+
+  var testsExpectedToFail = loadTextFileSynchronous(failingTestsFilename)
+                            .replace(/\r/g, '') // convert to unix line breaks
+                            .split('\n');
+
   var testsSuccessful = [];
 
   runTestSuite();
