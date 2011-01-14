@@ -21,8 +21,10 @@
  *   Brendan Eich <brendan@mozilla.org>
  *
  * Contributor(s):
- *   David Anderson <danderson@mozilla.com>
  *   David Mandelin <dmandelin@mozilla.com>
+ *   David Anderson <danderson@mozilla.com>
+ *   Chris Leary <cdleary@mozilla.com>
+ *   Jacob Bramley <Jacob.Bramely@arm.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -38,29 +40,48 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#if !defined jsjaeger_codegenincs_h__ && defined JS_METHODJIT
-#define jsjaeger_codegenincs_h__
+#if !defined jsjaeger_icchecker_h__ && defined JS_METHODJIT
+#define jsjaeger_icchecker_h__
 
-/* Get a label for assertion purposes. Prevent #ifdef clutter. */
-#ifdef DEBUG
-# define DBGLABEL(name) Label name = masm.label();
-# define DBGLABEL_NOMASM(name) Label name = label();
-# define DBGLABEL_ASSIGN(name) name = masm.label();
+#include "assembler/assembler/MacroAssembler.h"
+
+namespace js {
+namespace mjit {
+
+#if defined DEBUG && defined JS_CPU_ARM
+static inline void
+CheckInstMask(void *addr, uint32 mask, uint32 expected)
+{
+    uint32 inst = *static_cast<uint32 *>(addr);
+    JS_ASSERT((inst & mask) == expected);
+}
+
+static inline void
+CheckIsLDR(JSC::CodeLocationLabel label, uint8 rd)
+{
+    JS_ASSERT((rd & 0xf) == rd);
+    CheckInstMask(label.executableAddress(), 0xfc50f000, 0xe4100000 | (rd << 12));
+}
+
+static inline void
+CheckIsBLX(JSC::CodeLocationLabel label, uint8 rsrc)
+{
+    JS_ASSERT((rsrc & 0xf) == rsrc);
+    CheckInstMask(label.executableAddress(), 0xfff000ff, 0xe1200030 | rsrc);
+}
+
+static inline void
+CheckIsStubCall(JSC::CodeLocationLabel label)
+{
+    CheckIsLDR(label.labelAtOffset(-4), JSC::ARMRegisters::ip);
+    CheckIsLDR(label.labelAtOffset(0), JSC::ARMRegisters::r8);
+    CheckIsBLX(label.labelAtOffset(4), JSC::ARMRegisters::r8);
+}
 #else
-# define DBGLABEL(name)
-# define DBGLABEL_NOMASM(name)
-# define DBGLABEL_ASSIGN(name)
+static inline void CheckIsStubCall(JSC::CodeLocationLabel label) {}
 #endif
 
-#if defined JS_NUNBOX32
-# include "NunboxAssembler.h"
-#elif defined JS_PUNBOX64
-# include "PunboxAssembler.h"
-#else
-# error "Neither JS_NUNBOX32 nor JS_PUNBOX64 is defined."
+} /* namespace mjit */
+} /* namespace js */
+
 #endif
-
-#include "BaseAssembler.h"
-
-#endif /* jsjaeger_codegenincs_h__ */
-
