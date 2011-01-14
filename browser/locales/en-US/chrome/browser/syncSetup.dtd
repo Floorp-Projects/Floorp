@@ -71,7 +71,7 @@
 <!ENTITY existingSyncKey.description "You can get a copy of your Sync Key by going to &syncBrand.shortName.label; Options on your other device, and selecting  &#x0022;My Sync Key&#x0022; under &#x0022;Manage Account&#x0022;.">
 <!ENTITY verifying.label              "Verifying…">
 <!ENTITY resetPassword.label          "Reset Password">
-<!ENTITY lostSyncKey.label            "I have lost my Sync Key">
+<!ENTITY resetSyncKey.label           "I have lost my other device.">
 
 <!-- Sync Options -->
 <!ENTITY setup.optionsPage.title      "Sync Options">
