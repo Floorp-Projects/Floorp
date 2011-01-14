@@ -85,13 +85,6 @@ static const int32 SCOPENAME_JUMP_OFFSET = 5; //asserted
 static const int32 SCOPENAME_JUMP_OFFSET = 5; //asserted
 #endif
 
-/* BindNameCompiler */
-#if defined JS_CPU_X86
-static const int32 BINDNAME_STUB_JUMP_OFFSET   =  5; //asserted
-#elif defined JS_CPU_X64
-static const int32 BINDNAME_STUB_JUMP_OFFSET   =  5; //asserted
-#endif
-
 void PurgePICs(JSContext *cx);
 
 enum LookupStatus {
@@ -486,6 +479,9 @@ struct PICInfo : public BasePolyIC {
     }
     inline bool isGet() const {
         return kind == GET || kind == CALL;
+    }
+    inline bool isBind() const {
+        return kind == BIND;
     }
     inline RegisterID typeReg() {
         JS_ASSERT(isGet());

@@ -956,6 +956,10 @@ namespace JSC {
 
         JmpSrc loadBranchTarget(int rd, Condition cc = AL, int useConstantPool = 0)
         {
+            // The 'useConstantPool' flag really just indicates where we have
+            // to use the constant pool, for repatching. We might still use it,
+            // so ensure there's space for a pool constant irrespective of
+            // 'useConstantPool'.
             ensureSpace(sizeof(ARMWord), sizeof(ARMWord));
             int s = m_buffer.uncheckedSize();
             ldr_un_imm(rd, InvalidBranchTarget, cc);

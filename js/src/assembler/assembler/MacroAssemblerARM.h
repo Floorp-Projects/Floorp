@@ -487,6 +487,7 @@ public:
 
     Jump branch32(Condition cond, RegisterID left, Imm32 right, int useConstantPool = 0)
     {
+        ASSERT(left != ARMRegisters::S0);
         if (right.m_isPointer) {
             m_assembler.ldr_un_imm(ARMRegisters::S0, right.m_value);
             m_assembler.cmp_r(left, ARMRegisters::S0);
@@ -498,8 +499,17 @@ public:
     // As branch32, but allow the value ('right') to be patched.
     Jump branch32WithPatch(Condition cond, RegisterID left, Imm32 right, DataLabel32 &dataLabel)
     {
+        ASSERT(left != ARMRegisters::S1);
         dataLabel = moveWithPatch(right, ARMRegisters::S1);
         return branch32(cond, left, ARMRegisters::S1, true);
+    }
+
+    Jump branch32WithPatch(Condition cond, Address left, Imm32 right, DataLabel32 &dataLabel)
+    {
+        ASSERT(left.base != ARMRegisters::S1);
+        load32(left, ARMRegisters::S1);
+        dataLabel = moveWithPatch(right, ARMRegisters::S0);
+        return branch32(cond, ARMRegisters::S1, ARMRegisters::S0, true);
     }
 
     Jump branch32(Condition cond, RegisterID left, Address right)
@@ -702,6 +712,7 @@ public:
     // in the range r0-r14.
     void nop(int tag)
     {
+        ASSERT((tag >= 0) && (tag <= 14));
         m_assembler.mov_r(tag, tag);
     }
 

@@ -272,7 +272,7 @@ class Compiler : public BaseCompiler
                 ic.setLabels(getPropLabels());
             else if (ic.isSet())
                 ic.setLabels(setPropLabels());
-            else if (ic.kind == ic::PICInfo::BIND)
+            else if (ic.isBind())
                 ic.setLabels(bindNameLabels());
 #endif
         }
