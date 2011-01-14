@@ -44,7 +44,7 @@ body {
   font-size: 16px;
   color: #444;
   border-top: 4px solid #1e4262;
-  margin-top: 0;
+  margin: 0;
 }
 
 h1 {
@@ -71,7 +71,7 @@ img {
     text-align: right;
     height: 30px;
     padding: 0;
-    margin: 0 0 20px;
+    margin: 0 8px 20px;
 }
 
 #header a {
@@ -80,6 +80,10 @@ img {
   background: #1e4262;
  -moz-border-radius-bottomright: 4px;
  -moz-border-radius-bottomleft: 4px;
+}
+
+#head, #content, #footer {
+  margin: 0 8px;
 }
 
 #head p {
