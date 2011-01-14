@@ -90,6 +90,7 @@
 #include "nsIView.h"
 #include "nsIEventListenerManager.h"
 #include "PCOMContentPermissionRequestChild.h"
+#include "xpcpublic.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
@@ -846,7 +847,9 @@ TabChild::InitTabChildGlobal()
 
   JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_JIT | JSOPTION_ANONFUNFIX | JSOPTION_PRIVATE_IS_NSISUPPORTS);
   JS_SetVersion(cx, JSVERSION_LATEST);
-  
+
+  xpc_LocalizeContext(cx);
+
   JSAutoRequest ar(cx);
   nsIXPConnect* xpc = nsContentUtils::XPConnect();
   const PRUint32 flags = nsIXPConnect::INIT_JS_STANDARD_CLASSES |
