@@ -66,7 +66,6 @@
 #include "jsdbgapi.h"           // for JS_ClearWatchPointsForObject
 #include "nsReadableUtils.h"
 #include "nsDOMClassInfo.h"
-#include "nsContentUtils.h"
 
 // Other Classes
 #include "nsIEventListenerManager.h"
@@ -1316,6 +1315,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGlobalWindow)
   NS_INTERFACE_MAP_ENTRY(nsIDOMViewCSS)
   NS_INTERFACE_MAP_ENTRY(nsIDOMAbstractView)
   NS_INTERFACE_MAP_ENTRY(nsIDOMStorageWindow)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMStorageIndexedDB)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY(nsIDOMWindow_2_0_BRANCH)
@@ -6277,6 +6277,13 @@ nsGlobalWindow::EnterModalState()
         nsContentUtils::ContentIsCrossDocDescendantOf(activeShell->GetDocument(), mDoc) ||
         nsContentUtils::ContentIsCrossDocDescendantOf(mDoc, activeShell->GetDocument()))) {
       nsEventStateManager::ClearGlobalActiveContent(activeESM);
+
+      activeShell->SetCapturingContent(nsnull, 0);
+
+      if (activeShell) {
+        nsCOMPtr<nsFrameSelection> frameSelection = activeShell->FrameSelection();
+        frameSelection->SetMouseDownState(PR_FALSE);
+      }
     }
   }
 
@@ -8000,6 +8007,10 @@ nsGlobalWindow::GetLocalStorage(nsIDOMStorage ** aLocalStorage)
   NS_ADDREF(*aLocalStorage = mLocalStorage);
   return NS_OK;
 }
+
+//*****************************************************************************
+// nsGlobalWindow::nsIDOMStorageIndexedDB
+//*****************************************************************************
 
 NS_IMETHODIMP
 nsGlobalWindow::GetMozIndexedDB(nsIIDBFactory** _retval)

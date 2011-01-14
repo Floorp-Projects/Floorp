@@ -441,11 +441,20 @@
           </xul:button>
         </xul:hbox>
       </xul:vbox>
+      <xul:vbox pack="start">
+        <xul:toolbarbutton anonid="closebutton"
+                           class="messageCloseButton popup-notification-closebutton"
+                           xbl:inherits="oncommand=closebuttoncommand"
+                           tooltiptext="&closeNotification.tooltip;"/>
+      </xul:vbox>
     </content>
     <resources>
       <stylesheet src="chrome://global/skin/notification.css"/>
     </resources>
     <implementation>
+      <field name="closebutton" readonly="true">
+        document.getAnonymousElementByAttribute(this, "anonid", "closebutton");
+      </field>
       <field name="button" readonly="true">
         document.getAnonymousElementByAttribute(this, "anonid", "button");
       </field>

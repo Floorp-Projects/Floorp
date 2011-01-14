@@ -29,37 +29,37 @@
                       is(t.substr(0, 11), "Lorem ipsum",
                          "GET loremipsum.txt correct");
                       testDone();
-                    }, true), "streamTest GET");
+                    }, null, true), "streamTest GET");
 
     ok(!p.streamTest("post.sjs", true, null, null,
                      function(r, t) {
                        ok(false, "Shouldn't get callback from null post");
-                     }, true), "streamTest POST null postdata");
+                     }, null, true), "streamTest POST null postdata");
 
     ok(p.streamTest("post.sjs", true, "Something good", null,
                     function(r, t) {
                       is(r, 0, "POST something good");
                       is(t, "Something good", "POST non-null correct");
                       testDone();
-                    }, true), "streamTest POST valid postdata");
+                    }, null, true), "streamTest POST valid postdata");
 
     ok(p.streamTest("http://example.invalid/", false, null, null,
                     function(r, t) {
                       is(r, 1, "Shouldn't load example.invalid DNS name");
                       testDone();
-                    }, true), "streamTest GET bad DNS");
+                    }, null, true), "streamTest GET bad DNS");
 
     ok(!p.streamTest("http://localhost:-8/", false, null, null,
                     function(r, t) {
                       ok(false, "Shouldn't get callback from malformed URI");
-                    }, true), "streamTest GET invalid URL");
+                    }, null, true), "streamTest GET invalid URL");
 
     ok(p.streamTest("javascript:'Hello';", false, null, null,
                     function(r, t) {
                       is(r, 0, "GET javascript: URI");
                       is(t, "Hello", "GET javascript: URI correct");
                       testDone();
-                    }, true), "streamTest GET javascript: URI");
+                    }, null, true), "streamTest GET javascript: URI");
 
 /*
  * XXX/cjones: disabled for now because it appears to be hard to make
@@ -77,11 +77,11 @@
                       is(r, 0, "GET data: URI");
                       is(t, "World", "GET data: URI correct");
                       testDone();
-                    }, true), "streamTest GET data: URI");
+                    }, null, true), "streamTest GET data: URI");
 
     ok(!p.streamTest("data:malformed?", false, null, null,
                      function(r, t) {
                        todo(false, "Shouldn't get callback for invalid data: URI");
-                     }, true), "streamTest GET bad data: URI");
+                     }, null, true), "streamTest GET bad data: URI");
   }
   </script>

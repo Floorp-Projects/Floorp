@@ -424,15 +424,14 @@ input.name {
   margin-bottom: 0;
   -moz-margin-start: 3px;
   padding: 1px;
-  background-image: url(chrome://browser/skin/tabview/edit-light.png);
-  -moz-padding-start: 20px;
 }
 
 html[dir=rtl] input.name {
   background-position: right top;
 }
 
-.title-container:hover input.name {
+.title-container:hover input.name,
+.title-container input.name:focus {
   border: 1px solid #ddd;
 }
 
@@ -445,13 +444,17 @@ input.name:focus {
   color: #555;
 }
 
-input.defaultName {
+input.name:-moz-placeholder {
   font-style: italic !important;
-  background-image-opacity: .1;
   color: transparent;
+  background-image: url(chrome://browser/skin/tabview/edit-light.png);
+  background-image-opacity: .1;
+  background-repeat: no-repeat;
+  -moz-padding-start: 20px;
+  -moz-padding-end: -20px;
 }
 
-.title-container:hover input.defaultName {
+.title-container:hover input.name:-moz-placeholder {
   color: #CCC;
 }
 
@@ -530,16 +533,14 @@ html[dir=rtl] .iq-resizable-se {
 /* Exit button
 +----------------------------------*/
 #exit-button {
-  cursor: default;
-  top: 1px;
-  right: 0;
   width: 18px;
   height: 18px;
-  -moz-margin-end: 3px;
-  margin-top: 3px;
+  -moz-margin-end: 4px;
+  margin-top: 2px;
   background-image: -moz-image-rect(url(chrome://browser/skin/tabview/tabview.png), 0, 90, 18, 72);
   background-attachment: scroll;
   background-repeat: no-repeat;
+  border: none;
 }
 
 #exit-button[groups="0"] {
@@ -556,11 +557,6 @@ html[dir=rtl] .iq-resizable-se {
 
 #exit-button[groups="3"] {
   background-image: -moz-image-rect(url(chrome://browser/skin/tabview/tabview.png), 0, 72, 18, 54);
-}
-
-html[dir=rtl] #exit-button {
-  right: auto;
-  left: 0;
 }
 
 /* Search
@@ -590,10 +586,28 @@ html[dir=rtl] #exit-button {
 }
 
 #actions{
-  width: 26px;
-  height: 26px;
+  top: -3px;
+  padding-top: 3px;
+  width: 29px;
   border: none;
   text-align: center;
+  background-color: #E0EAF5;
+  border-radius: 0.4em;
+  box-shadow:
+    0 1px 0 #FFFFFF inset,
+    0 -1px 1px rgba(255, 255, 255, 0.8) inset,
+    1px 0 1px rgba(255, 255, 255, 0.8) inset,
+    -1px 0 1px rgba(255, 255, 255, 0.8) inset,
+    0 1px 3px rgba(4, 38, 60, 0.6);
+}
+
+html[dir=rtl] #actions {
+  box-shadow:
+    0 1px 0 #FFFFFF inset,
+    0 -1px 1px rgba(255, 255, 255, 0.8) inset,
+    -1px 0 1px rgba(255, 255, 255, 0.8) inset,
+    1px 0 1px rgba(255, 255, 255, 0.8) inset,
+    0 1px 3px rgba(4, 38, 60, 0.6);
 }
 
 #actions #searchbutton{
@@ -602,6 +616,7 @@ html[dir=rtl] #exit-button {
   width: 20px;
   height: 20px;
   margin-top: 3px;
+  -moz-margin-end: 1px;
 }
 
 .notMainMatch{

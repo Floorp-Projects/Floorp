@@ -296,7 +296,7 @@ bool
 CheckForDeadlock(const char* test, const char* const* findTokens)
 {
     Subprocess proc(test);
-    proc.RunToCompletion(1000);
+    proc.RunToCompletion(5000);
 
     if (0 == proc.mExitCode)
         return false;

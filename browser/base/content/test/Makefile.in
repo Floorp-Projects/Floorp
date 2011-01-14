@@ -167,6 +167,7 @@ _BROWSER_FILES = \
                  browser_bug609700.js \
                  browser_bug616836.js \
                  browser_bug623893.js \
+                 browser_bug624734.js \
                  browser_contextSearchTabPosition.js \
                  browser_ctrlTab.js \
                  browser_disablechrome.js \

@@ -478,6 +478,13 @@ iQClass.prototype = {
       }
       properties = {};
       properties[key] = b;
+    } else if (a instanceof Rect) {
+      properties = {
+        left: a.left,
+        top: a.top,
+        width: a.width,
+        height: a.height
+      };
     } else {
       properties = a;
     }
@@ -495,6 +502,7 @@ iQClass.prototype = {
       let elem = this[i];
       for (let key in properties) {
         let value = properties[key];
+
         if (pixels[key] && typeof value != 'string')
           value += 'px';
 
@@ -538,6 +546,16 @@ iQClass.prototype = {
 
     let duration = (options.duration || 400);
     let easing = (easings[options.easing] || 'ease');
+
+    if (css instanceof Rect) {
+      css = {
+        left: css.left,
+        top: css.top,
+        width: css.width,
+        height: css.height
+      };
+    }
+
 
     // The latest versions of Firefox do not animate from a non-explicitly
     // set css properties. So for each element to be animated, go through

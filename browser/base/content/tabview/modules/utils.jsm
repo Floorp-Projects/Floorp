@@ -262,22 +262,6 @@ Rect.prototype = {
     this.top = a.top;
     this.width = a.width;
     this.height = a.height;
-  },
-
-  // ----------
-  // Function: css
-  // Returns an object with the dimensions of this rectangle, suitable for
-  // passing into iQ's css method. You could of course just pass the rectangle
-  // straight in, but this is cleaner, as it removes all the extraneous
-  // properties. If you give a <Rect> to <iQClass.css> without this, it will
-  // ignore the extraneous properties, but result in CSS warnings.
-  css: function Rect_css() {
-    return {
-      left: this.left,
-      top: this.top,
-      width: this.width,
-      height: this.height
-    };
   }
 };
 

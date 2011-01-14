@@ -156,7 +156,7 @@ toolbarbutton.bookmark-item[open="true"] {
 menu.bookmark-item,
 menuitem.bookmark-item {
   min-width: 0;
-  max-width: 26em;
+  max-width: 32em;
 }
 
 .bookmark-item > .menu-iconic-left {
@@ -1790,21 +1790,27 @@ panel[dimmed="true"] {
   opacity: 0.5;
 }
 
-/* Vertically-center the statusbar compatibility shim, because
-   toolbars, even in small-icon mode, are a bit taller than 
-   statusbars. */
-#status-bar {
-  margin-top: .3em;
+/* Add-on bar */
+
+#addon-bar {
+  padding: 0;
+  min-height: 20px;
 }
 
-/* Remove all borders from statusbarpanel children of
-   the statusbar. */
+#status-bar {
+  min-height: 0;
+}
+
 #status-bar > statusbarpanel {
   border-width: 0;
   -moz-appearance: none;
 }
 
-/* Add-on bar close button */
 #addonbar-closebutton {
   list-style-image: url("moz-icon://stock/gtk-close?size=menu");
+}
+
+#addonbar-closebutton > .toolbarbutton-icon {
+  margin-top: -2px;
+  margin-bottom: -2px;
 }

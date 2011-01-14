@@ -43,15 +43,17 @@
 
 #include "mozilla/layout/PRenderFrameParent.h"
 
+#include <map>
 #include "nsDisplayList.h"
+#include "Layers.h"
 
+class nsContentView;
 class nsFrameLoader;
+class nsSubDocumentFrame;
 
 namespace mozilla {
+
 namespace layers {
-class ContainerLayer;
-class Layer;
-class LayerManager;
 class ShadowLayersParent;
 }
 
@@ -59,23 +61,40 @@ namespace layout {
 
 class RenderFrameParent : public PRenderFrameParent
 {
+  typedef mozilla::layers::FrameMetrics FrameMetrics;
   typedef mozilla::layers::ContainerLayer ContainerLayer;
   typedef mozilla::layers::Layer Layer;
   typedef mozilla::layers::LayerManager LayerManager;
   typedef mozilla::layers::ShadowLayersParent ShadowLayersParent;
+  typedef FrameMetrics::ViewID ViewID;
 
 public:
+  typedef std::map<ViewID, nsRefPtr<nsContentView> > ViewMap;
+
   RenderFrameParent(nsFrameLoader* aFrameLoader);
   virtual ~RenderFrameParent();
 
   void Destroy();
 
+  /**
+   * Helper function for getting a non-owning reference to a scrollable.
+   * @param aId The ID of the frame.
+   */
+  nsContentView* GetContentView(ViewID aId = FrameMetrics::ROOT_SCROLL_ID);
+
   void ShadowLayersUpdated();
+
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder* aBuilder,
+                              nsSubDocumentFrame* aFrame,
+                              const nsRect& aDirtyRect,
+                              const nsDisplayListSet& aLists);
 
   already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                      nsIFrame* aFrame,
                                      LayerManager* aManager,
                                      const nsIntRect& aVisibleRect);
+
+  void OwnerContentChanged(nsIContent* aContent);
 
 protected:
   NS_OVERRIDE void ActorDestroy(ActorDestroyReason why);
@@ -84,12 +103,18 @@ protected:
   NS_OVERRIDE virtual bool DeallocPLayers(PLayersParent* aLayers);
 
 private:
+  void BuildViewMap();
+
   LayerManager* GetLayerManager() const;
   ShadowLayersParent* GetShadowLayers() const;
   ContainerLayer* GetRootLayer() const;
 
   nsRefPtr<nsFrameLoader> mFrameLoader;
   nsRefPtr<ContainerLayer> mContainer;
+
+  // This contains the views for all the scrollable frames currently in the
+  // painted region of our remote content.
+  ViewMap mContentViews;
 };
 
 } // namespace layout
@@ -124,6 +149,49 @@ public:
 
 private:
   RenderFrameParent* mRemoteFrame;
+};
+
+/**
+ * nsDisplayRemoteShadow is a way of adding display items for frames in a
+ * separate process, for hit testing only. After being processed, the hit
+ * test state will contain IDs for any remote frames that were hit.
+ *
+ * The frame should be its respective render frame parent.
+ */
+class nsDisplayRemoteShadow : public nsDisplayItem
+{
+  typedef mozilla::layout::RenderFrameParent RenderFrameParent;
+  typedef mozilla::layers::FrameMetrics::ViewID ViewID;
+
+public:
+  nsDisplayRemoteShadow(nsDisplayListBuilder* aBuilder,
+                        nsIFrame* aFrame,
+                        nsRect aRect,
+                        ViewID aId)
+    : nsDisplayItem(aBuilder, aFrame)
+    , mRect(aRect)
+    , mId(aId)
+  {}
+
+  NS_OVERRIDE nsRect GetBounds(nsDisplayListBuilder* aBuilder)
+  {
+    return mRect;
+  }
+
+  virtual PRUint32 GetPerFrameKey()
+  {
+    NS_ABORT();
+    return 0;
+  }
+
+  NS_OVERRIDE void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
+                           HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames);
+
+  NS_DISPLAY_DECL_NAME("Remote-Shadow", TYPE_REMOTE_SHADOW)
+
+private:
+  nsRect mRect;
+  ViewID mId;
 };
 
 #endif  // mozilla_layout_RenderFrameParent_h

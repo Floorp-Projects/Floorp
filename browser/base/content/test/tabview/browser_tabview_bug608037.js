@@ -83,8 +83,8 @@ function onTabViewWindowLoaded() {
   is(groupItems[0].getChildren().length, 2, "The group has two tab items");
 
   tabTwo = undoCloseTab(0);
-  tabTwo.tabItem.addSubscriber(tabTwo, "reconnected", function() {
-    tabTwo.tabItem.removeSubscriber(tabTwo, "reconnected");
+  tabTwo._tabViewTabItem.addSubscriber(tabTwo, "reconnected", function() {
+    tabTwo._tabViewTabItem.removeSubscriber(tabTwo, "reconnected");
 
     ok(TabView.isVisible(), "Tab View is still visible after restoring a tab");
     is(groupItems[0].getChildren().length, 3, "The group still has three tab items");

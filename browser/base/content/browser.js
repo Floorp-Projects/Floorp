@@ -5453,48 +5453,47 @@ function BrowserSetForcedDetector(doReload)
     BrowserReloadWithFlags(nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
 }
 
-function UpdateCurrentCharset()
-{
+function charsetMenuGetElement(parent, id) {
+  return parent.getElementsByAttribute("id", id)[0];
+}
+
+function UpdateCurrentCharset(target) {
     // extract the charset from DOM
     var wnd = document.commandDispatcher.focusedWindow;
     if ((window == wnd) || (wnd == null)) wnd = window.content;
 
     // Uncheck previous item
     if (gPrevCharset) {
-        var pref_item = document.getElementById('charset.' + gPrevCharset);
+        var pref_item = charsetMenuGetElement(target, "charset." + gPrevCharset);
         if (pref_item)
           pref_item.setAttribute('checked', 'false');
     }
 
-    var menuitem = document.getElementById('charset.' + wnd.document.characterSet);
+    var menuitem = charsetMenuGetElement(target, "charset." + wnd.document.characterSet);
     if (menuitem) {
         menuitem.setAttribute('checked', 'true');
     }
 }
 
-function UpdateCharsetDetector() {
-  var prefvalue = "off";
+function UpdateCharsetDetector(target) {
+  var prefvalue;
 
   try {
     prefvalue = gPrefService.getComplexValue("intl.charset.detector", Ci.nsIPrefLocalizedString).data;
   }
   catch (ex) {}
+  
+  if (!prefvalue)
+    prefvalue = "off";
 
-  prefvalue = "chardet." + prefvalue;
-
-  var menuitem = document.getElementById(prefvalue);
+  var menuitem = charsetMenuGetElement(target, "chardet." + prefvalue);
   if (menuitem)
     menuitem.setAttribute("checked", "true");
 }
 
 function UpdateMenus(event) {
-  // use setTimeout workaround to delay checkmark the menu
-  // when onmenucomplete is ready then use it instead of oncreate
-  // see bug 78290 for the detail
-  UpdateCurrentCharset();
-  setTimeout(UpdateCurrentCharset, 0);
-  UpdateCharsetDetector();
-  setTimeout(UpdateCharsetDetector, 0);
+  UpdateCurrentCharset(event.target);
+  UpdateCharsetDetector(event.target);
 }
 
 function CreateMenu(node) {
@@ -7506,10 +7505,6 @@ var gIdentityHandler = {
     // Update the popup strings
     this.setPopupMessages(this._identityBox.className);
 
-    // Make sure the identity popup hangs toward the middle of the location bar
-    // in RTL builds
-    var position = (getComputedStyle(gNavToolbox, "").direction == "rtl") ? 'bottomcenter topright' : 'bottomcenter topleft';
-
     // Add the "open" attribute to the identity box for styling
     this._identityBox.setAttribute("open", "true");
     var self = this;
@@ -7519,7 +7514,7 @@ var gIdentityHandler = {
     }, false);
 
     // Now open the popup, anchored off the primary chrome element
-    this._identityPopup.openPopup(this._identityBox, position);
+    this._identityPopup.openPopup(this._identityBox, "bottomcenter topleft");
   },
 
   onDragStart: function (event) {

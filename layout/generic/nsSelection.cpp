@@ -4356,11 +4356,6 @@ nsTypedSelection::selectFrames(nsPresContext* aPresContext, nsIRange *aRange, PR
   if (!presShell)
     return NS_OK;
 
-  // Re-get shell because the flush might have destroyed it 
-  presShell = aPresContext->GetPresShell();
-  if (!presShell)
-    return NS_OK;
-
   nsCOMPtr<nsIDOMRange> domRange = do_QueryInterface(aRange);
   if (!domRange || !aPresContext) 
     return NS_ERROR_NULL_POINTER;
@@ -4821,9 +4816,14 @@ nsTypedSelection::AddRange(nsIRange* aRange)
 
   nsRefPtr<nsPresContext>  presContext;
   GetPresContext(getter_AddRefs(presContext));
+
+  // Ensure all frames are properly constructed for selectFrames, bug 602331.
+  nsIPresShell* presShell = presContext ? presContext->GetPresShell() : nsnull;
+  if (presShell) {
+    presShell->FlushPendingNotifications(Flush_Frames);
+  }
   selectFrames(presContext, aRange, PR_TRUE);        
 
-  //ScrollIntoView(); this should not happen automatically
   if (!mFrameSelection)
     return NS_OK;//nothing to do
 
