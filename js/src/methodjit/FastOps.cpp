@@ -1256,10 +1256,12 @@ mjit::Compiler::jsop_setelem(bool popGuaranteed)
     ic.objRemat = frame.dataRematInfo(obj);
 
     // All patchable guards must occur after this point.
+    RESERVE_IC_SPACE(masm);
     ic.fastPathStart = masm.label();
 
     // Create the common out-of-line sync block, taking care to link previous
     // guards here after.
+    RESERVE_OOL_SPACE(stubcc.masm);
     ic.slowPathStart = stubcc.syncExit(Uses(3));
 
     // Guard obj is a dense array.
@@ -1427,9 +1429,11 @@ mjit::Compiler::jsop_getelem(bool isCall)
             ic.id = ValueRemat::FromRegisters(ic.typeReg, dataReg);
     }
 
+    RESERVE_IC_SPACE(masm);
     ic.fastPathStart = masm.label();
 
     // Note: slow path here is safe, since the frame will not be modified.
+    RESERVE_OOL_SPACE(stubcc.masm);
     ic.slowPathStart = stubcc.masm.label();
     frame.sync(stubcc.masm, Uses(2));
 
