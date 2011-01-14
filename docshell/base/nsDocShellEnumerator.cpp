@@ -70,9 +70,11 @@ NS_IMETHODIMP nsDocShellEnumerator::GetNext(nsISupports **outCurItem)
   if (mCurIndex >= mItemArray.Length()) {
     return NS_ERROR_FAILURE;
   }
-  
+
   // post-increment is important here
-  return CallQueryInterface(mItemArray[mCurIndex++], outCurItem);
+  nsCOMPtr<nsISupports> item = do_QueryReferent(mItemArray[mCurIndex++], &rv);
+  item.forget(outCurItem);
+  return rv;
 }
 
 /* boolean hasMoreElements (); */
@@ -91,14 +93,14 @@ NS_IMETHODIMP nsDocShellEnumerator::HasMoreElements(PRBool *outHasMore)
 nsresult nsDocShellEnumerator::GetEnumerationRootItem(nsIDocShellTreeItem * *aEnumerationRootItem)
 {
   NS_ENSURE_ARG_POINTER(aEnumerationRootItem);
-  *aEnumerationRootItem = mRootItem;
-  NS_IF_ADDREF(*aEnumerationRootItem);
+  nsCOMPtr<nsIDocShellTreeItem> item = do_QueryReferent(mRootItem);
+  item.forget(aEnumerationRootItem);
   return NS_OK;
 }
 
 nsresult nsDocShellEnumerator::SetEnumerationRootItem(nsIDocShellTreeItem * aEnumerationRootItem)
 {
-  mRootItem = aEnumerationRootItem;
+  mRootItem = do_GetWeakReference(aEnumerationRootItem);
   ClearState();
   return NS_OK;
 }
@@ -142,14 +144,15 @@ nsresult nsDocShellEnumerator::ClearState()
   return NS_OK;
 }
 
-nsresult nsDocShellEnumerator::BuildDocShellArray(nsTArray<nsIDocShellTreeItem*>& inItemArray)
+nsresult nsDocShellEnumerator::BuildDocShellArray(nsTArray<nsWeakPtr>& inItemArray)
 {
   NS_ENSURE_TRUE(mRootItem, NS_ERROR_NOT_INITIALIZED);
   inItemArray.Clear();
-  return BuildArrayRecursive(mRootItem, inItemArray);
+  nsCOMPtr<nsIDocShellTreeItem> item = do_QueryReferent(mRootItem);
+  return BuildArrayRecursive(item, inItemArray);
 }
 
-nsresult nsDocShellForwardsEnumerator::BuildArrayRecursive(nsIDocShellTreeItem* inItem, nsTArray<nsIDocShellTreeItem*>& inItemArray)
+nsresult nsDocShellForwardsEnumerator::BuildArrayRecursive(nsIDocShellTreeItem* inItem, nsTArray<nsWeakPtr>& inItemArray)
 {
   nsresult rv;
   nsCOMPtr<nsIDocShellTreeNode> itemAsNode = do_QueryInterface(inItem, &rv);
@@ -160,7 +163,7 @@ nsresult nsDocShellForwardsEnumerator::BuildArrayRecursive(nsIDocShellTreeItem* 
   if ((mDocShellType == nsIDocShellTreeItem::typeAll) ||
       (NS_SUCCEEDED(inItem->GetItemType(&itemType)) && (itemType == mDocShellType)))
   {
-    if (!inItemArray.AppendElement(inItem))
+    if (!inItemArray.AppendElement(do_GetWeakReference(inItem)))
       return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -182,7 +185,7 @@ nsresult nsDocShellForwardsEnumerator::BuildArrayRecursive(nsIDocShellTreeItem* 
 }
 
 
-nsresult nsDocShellBackwardsEnumerator::BuildArrayRecursive(nsIDocShellTreeItem* inItem, nsTArray<nsIDocShellTreeItem*>& inItemArray)
+nsresult nsDocShellBackwardsEnumerator::BuildArrayRecursive(nsIDocShellTreeItem* inItem, nsTArray<nsWeakPtr>& inItemArray)
 {
   nsresult rv;
   nsCOMPtr<nsIDocShellTreeNode> itemAsNode = do_QueryInterface(inItem, &rv);
@@ -207,7 +210,7 @@ nsresult nsDocShellBackwardsEnumerator::BuildArrayRecursive(nsIDocShellTreeItem*
   if ((mDocShellType == nsIDocShellTreeItem::typeAll) ||
       (NS_SUCCEEDED(inItem->GetItemType(&itemType)) && (itemType == mDocShellType)))
   {
-    if (!inItemArray.AppendElement(inItem))
+    if (!inItemArray.AppendElement(do_GetWeakReference(inItem)))
       return NS_ERROR_OUT_OF_MEMORY;
   }
 
