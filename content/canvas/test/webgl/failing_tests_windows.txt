@@ -6,4 +6,5 @@ conformance/gl-uniform-bool.html
 conformance/gl-vertexattribpointer.html
 conformance/glsl-2types-of-textures-on-same-unit.html
 conformance/is-object.html
+conformance/tex-image-and-sub-image-2d-with-array-buffer-view.html
 conformance/uninitialized-test.html
