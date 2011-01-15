@@ -300,17 +300,6 @@ nsDisplayListBuilder::LeavePresShell(nsIFrame* aReferenceFrame,
     return;
   }
 
-  // If we're finished building display list items for painting of the outermost
-  // pres shell, notify the widget about any toolbars we've encountered.
-  if (mIsPaintingToWindow && mPresShellStates.Length() == 1) {
-    nsIWidget* widget = aReferenceFrame->GetNearestWidget();
-    if (widget) {
-      nsIWidget_MOZILLA_2_0_BRANCH* widget2 =
-        static_cast<nsIWidget_MOZILLA_2_0_BRANCH*>(widget);
-      widget2->UpdateThemeGeometries(CurrentPresShellState()->mThemeGeometries);
-    }
-  }
-
   // Unmark and pop off the frames marked for display in this pres shell.
   PRUint32 firstFrameForShell = CurrentPresShellState()->mFirstFrameMarkedForDisplay;
   for (PRUint32 i = firstFrameForShell;
