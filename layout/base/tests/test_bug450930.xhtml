@@ -174,24 +174,24 @@ function runTest3() {
       gotScrolledOutInMainDoc = true;
   }
 
-  function IFRAMEListener(event) {
-    if (doesRectContainListElement(
-          iframe.contentDocument.getElementById("d2").getBoundingClientRect(), event.clientRects))
-      gotScrolledOutInSubdoc = true;
-  }
-
   function check() {
     ok(!gotScrolledOutInMainDoc, "scrolled-out invalidation should not propagate to main doc");
-    ok(gotScrolledOutInSubdoc, "scrolled-out invalidation should notify in subdoc");
     window.removeEventListener("MozAfterPaint", listener, false);
     iframe.contentWindow.removeEventListener("MozAfterPaint", IFRAMEListener, false);
     runNext();
   }
 
+  function IFRAMEListener(event) {
+    if (doesRectContainListElement(
+          iframe.contentDocument.getElementById("d2").getBoundingClientRect(), event.clientRects)) {
+      ok(true, "scrolled-out invalidation should notify in subdoc");
+      setTimeout(check, 0);
+    }
+  }
+
   function triggerPaint() {
     window.addEventListener("MozAfterPaint", listener, false);
     iframe.contentWindow.addEventListener("MozAfterPaint", IFRAMEListener, false);
-    setTimeout(check, 100);
     flash(iframe.contentDocument, 'd2');
   }
   triggerPaint();
