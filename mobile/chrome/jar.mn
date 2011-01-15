@@ -31,7 +31,7 @@ chrome.jar:
   content/MenuListHelperUI.js          (content/MenuListHelperUI.js)
   content/SelectHelperUI.js            (content/SelectHelperUI.js)
   content/SharingUI.js                 (content/SharingUI.js)
-  content/content.js                   (content/content.js)
+* content/content.js                   (content/content.js)
   content/commandUtil.js               (content/commandUtil.js)
 * content/bindings.xml                 (content/bindings.xml)
   content/tabs.xml                     (content/tabs.xml)
