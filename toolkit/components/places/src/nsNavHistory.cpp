@@ -1422,7 +1422,7 @@ nsNavHistory::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
   // Should match kGetInfoIndex_* (see GetQueryResults)
   RETURN_IF_STMT(mDBVisitToVisitResult, NS_LITERAL_CSTRING(
     "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, "
-           "v.visit_date, f.url, v.session, null, null, null, null "
+           "v.visit_date, f.url, v.session, null, null, null, null, null "
     "FROM moz_places h "
     "JOIN moz_historyvisits v ON h.id = v.place_id "
     "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "
