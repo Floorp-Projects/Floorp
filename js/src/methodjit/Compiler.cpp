@@ -1499,14 +1499,13 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_STRICTNE)
 
           BEGIN_CASE(JSOP_ITER)
-            if (!iter(PC[1]))
-                return Compile_Error;
+            iter(PC[1]);
           END_CASE(JSOP_ITER)
 
           BEGIN_CASE(JSOP_MOREITER)
-            /* At the byte level, this is always fused with IFNE or IFNEX. */
-            if (!iterMore())
-                return Compile_Error;
+            /* This MUST be fused with IFNE or IFNEX. */
+            iterMore();
+            break;
           END_CASE(JSOP_MOREITER)
 
           BEGIN_CASE(JSOP_ENDITER)
@@ -3965,7 +3964,7 @@ mjit::Compiler::jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index)
     return true;
 }
 
-bool
+void
 mjit::Compiler::iter(uintN flags)
 {
     FrameEntry *fe = frame.peek(-1);
@@ -3980,7 +3979,7 @@ mjit::Compiler::iter(uintN flags)
         INLINE_STUBCALL(stubs::Iter);
         frame.pop();
         frame.pushSynced();
-        return true;
+        return;
     }
 
     if (!fe->isTypeKnown()) {
@@ -4066,8 +4065,6 @@ mjit::Compiler::iter(uintN flags)
     frame.pushTypedPayload(JSVAL_TYPE_OBJECT, ioreg);
 
     stubcc.rejoin(Changes(1));
-
-    return true;
 }
 
 /*
@@ -4095,7 +4092,7 @@ mjit::Compiler::iterNext()
     RegisterID T3 = frame.allocReg();
     RegisterID T4 = frame.allocReg();
 
-    /* Test for a value iterator, which could come through an Iterator object. */
+    /* Test if for-each. */
     masm.load32(Address(T1, offsetof(NativeIterator, flags)), T3);
     notFast = masm.branchTest32(Assembler::NonZero, T3, Imm32(JSITER_FOREACH));
     stubcc.linkExit(notFast, Uses(1));
@@ -4132,7 +4129,7 @@ mjit::Compiler::iterNext()
 bool
 mjit::Compiler::iterMore()
 {
-    FrameEntry *fe = frame.peek(-1);
+    FrameEntry *fe= frame.peek(-1);
     RegisterID reg = frame.tempRegForData(fe);
 
     frame.pinReg(reg);
@@ -4145,11 +4142,6 @@ mjit::Compiler::iterMore()
 
     /* Get private from iter obj. */
     masm.loadObjPrivate(reg, T1);
-
-    /* Test that the iterator supports fast iteration. */
-    notFast = masm.branchTest32(Assembler::NonZero, Address(T1, offsetof(NativeIterator, flags)),
-                                Imm32(JSITER_FOREACH));
-    stubcc.linkExitForBranch(notFast);
 
     /* Get props_cursor, test */
     RegisterID T2 = frame.allocReg();
