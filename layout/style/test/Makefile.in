@@ -171,6 +171,7 @@ _TEST_FILES =	test_acid3_test46.html \
 		test_shorthand_property_getters.html \
 		test_style_struct_copy_constructors.html \
 		test_system_font_serialization.html \
+		test_transitions_cancel_near_end.html \
 		test_transitions_computed_values.html \
 		test_transitions_computed_value_combinations.html \
 		test_transitions_events.html \
