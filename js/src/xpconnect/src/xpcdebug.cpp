@@ -71,7 +71,7 @@ static char* FormatJSFrame(JSContext* cx, JSStackFrame* fp,
 {
     JSPropertyDescArray callProps = {0, nsnull};
     JSPropertyDescArray thisProps = {0, nsnull};
-    JSBool gotThisVal;
+    JSBool gotThisVal = JS_FALSE;
     jsval thisVal;
     JSObject* callObj = nsnull;
     JSString* funname = nsnull;
