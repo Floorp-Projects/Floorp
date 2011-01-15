@@ -772,8 +772,9 @@ gfxContext::PushGroupAndCopyBackground(gfxASurface::gfxContentType content)
 {
     if (content == gfxASurface::CONTENT_COLOR_ALPHA) {
         nsRefPtr<gfxASurface> s = CurrentSurface();
-        if (s->GetContentType() == gfxASurface::CONTENT_COLOR ||
-            s->GetOpaqueRect().Contains(GetRoundOutDeviceClipExtents(this))) {
+        if ((s->GetAllowUseAsSource() || s->GetType() == gfxASurface::SurfaceTypeTee) &&
+            (s->GetContentType() == gfxASurface::CONTENT_COLOR ||
+             s->GetOpaqueRect().Contains(GetRoundOutDeviceClipExtents(this)))) {
             cairo_push_group_with_content(mCairo, CAIRO_CONTENT_COLOR);
             nsRefPtr<gfxASurface> d = CurrentSurface();
 

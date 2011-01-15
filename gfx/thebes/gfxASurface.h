@@ -222,8 +222,6 @@ public:
 
     /**
      * Mark the surface as being allowed/not allowed to be used as a source.
-     * This currently has no effect other than triggering assertions in some
-     * cases.
      */
     void SetAllowUseAsSource(PRBool aAllow) { mAllowUseAsSource = aAllow; }
     PRBool GetAllowUseAsSource() { return mAllowUseAsSource; }
