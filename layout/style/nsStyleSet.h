@@ -218,7 +218,7 @@ class nsStyleSet
   enum sheetType {
     eAgentSheet, // CSS
     eUserSheet, // CSS
-    eHTMLPresHintSheet,
+    ePresHintSheet,
     eDocSheet, // CSS
     eStyleAttrSheet,
     eOverrideSheet, // CSS
