@@ -770,7 +770,8 @@ CopySurface(gfxASurface* aSrc, gfxASurface* aDest)
 void
 gfxContext::PushGroupAndCopyBackground(gfxASurface::gfxContentType content)
 {
-    if (content == gfxASurface::CONTENT_COLOR_ALPHA) {
+    if (content == gfxASurface::CONTENT_COLOR_ALPHA &&
+        !(GetFlags() & FLAG_DISABLE_COPY_BACKGROUND)) {
         nsRefPtr<gfxASurface> s = CurrentSurface();
         if ((s->GetAllowUseAsSource() || s->GetType() == gfxASurface::SurfaceTypeTee) &&
             (s->GetContentType() == gfxASurface::CONTENT_COLOR ||
