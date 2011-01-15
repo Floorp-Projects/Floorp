@@ -862,11 +862,12 @@ public:
   PRBool EnsureSafeToHandOutCSSRules();
 
   void NotifyInvalidation(const nsRect& aRect, PRUint32 aFlags);
+  void NotifyDidPaintForSubtree();
   void FireDOMPaintEvent();
+
   PRBool IsDOMPaintEventPending() {
     return !mInvalidateRequests.mRequests.IsEmpty();
   }
-
   void ClearMozAfterPaintEvents() {
     mInvalidateRequests.mRequests.Clear();
   }
@@ -1157,6 +1158,7 @@ protected:
   unsigned              mProcessingAnimationStyleChange : 1;
 
   unsigned              mContainsUpdatePluginGeometryFrame : 1;
+  unsigned              mFireAfterPaintEvents : 1;
 
   // Cache whether we are chrome or not because it is expensive.  
   // mIsChromeIsCached tells us if mIsChrome is valid or we need to get the
@@ -1201,6 +1203,20 @@ class nsRootPresContext : public nsPresContext {
 public:
   nsRootPresContext(nsIDocument* aDocument, nsPresContextType aType) NS_HIDDEN;
   virtual ~nsRootPresContext();
+
+  /**
+   * Ensure that NotifyDidPaintForSubtree is eventually called on this
+   * object after a timeout.
+   */
+  void EnsureEventualDidPaintEvent();
+
+  void CancelDidPaintTimer()
+  {
+    if (mNotifyDidPaintTimer) {
+      mNotifyDidPaintTimer->Cancel();
+      mNotifyDidPaintTimer = nsnull;
+    }
+  }
 
   /**
    * Registers a plugin to receive geometry updates (position and clip
@@ -1276,6 +1292,7 @@ public:
   PRUint32 GetDOMGeneration() { return mDOMGeneration; }
 
 private:
+  nsCOMPtr<nsITimer> mNotifyDidPaintTimer;
   nsTHashtable<nsPtrHashKey<nsObjectFrame> > mRegisteredPlugins;
   // if mNeedsToUpdatePluginGeometry is set, then this is the frame to
   // use as the root of the subtree to search for plugin updates, or

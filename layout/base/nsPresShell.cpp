@@ -6093,12 +6093,13 @@ PresShell::Paint(nsIView*           aDisplayRoot,
                            NSCoordToFloat(bounds__.YMost()));
 #endif
 
-  AUTO_LAYOUT_PHASE_ENTRY_POINT(GetPresContext(), Paint);
-
   NS_ASSERTION(!mIsDestroying, "painting a destroyed PresShell");
   NS_ASSERTION(aDisplayRoot, "null view");
   NS_ASSERTION(aViewToPaint, "null view");
   NS_ASSERTION(aWidgetToPaint, "Can't paint without a widget");
+
+  nsPresContext* presContext = GetPresContext();
+  AUTO_LAYOUT_PHASE_ENTRY_POINT(presContext, Paint);
 
   nsIFrame* frame = aPaintDefaultBackground
       ? nsnull : static_cast<nsIFrame*>(aDisplayRoot->GetClientData());
@@ -6131,6 +6132,7 @@ PresShell::Paint(nsIView*           aDisplayRoot,
                               nsLayoutUtils::PAINT_WIDGET_LAYERS);
 
     frame->EndDeferringInvalidatesForDisplayRoot();
+    presContext->NotifyDidPaintForSubtree();
     return NS_OK;
   }
 
@@ -6159,6 +6161,7 @@ PresShell::Paint(nsIView*           aDisplayRoot,
   if (frame) {
     frame->EndDeferringInvalidatesForDisplayRoot();
   }
+  presContext->NotifyDidPaintForSubtree();
   return NS_OK;
 }
 
