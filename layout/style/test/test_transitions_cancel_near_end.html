@@ -45,7 +45,15 @@ window.addEventListener('load', function() {
     aTarget.addEventListener('transitionend', function(aEvent) {
       if (aTarget.hasAttribute('should-restyle'))
         aTarget.style.outline = '1px solid';
-      aTarget.setAttribute('transitionend-'+aEvent.propertyName, true);
+      var attr = 'transitionend-' + aEvent.propertyName;
+      if (aTarget.hasAttribute(attr)) {
+        // It's possible, given bad timers, that we might get a
+        // transition that completed before we reversed it, which could
+        // lead to two transitionend events for the same thing.  We
+        // don't want to decrement count_remaining in this case.
+        return;
+      }
+      aTarget.setAttribute(attr, "true");
       if (--count_remaining == 0) {
         cases.forEach(function(aCase, aIndex) {
           ok(aCase.hasAttribute('transitionend-color'),
