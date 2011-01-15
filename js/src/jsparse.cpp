@@ -3351,10 +3351,10 @@ Parser::functionExpr()
 }
 
 /*
- * Recognize Directive Prologue members and directives.  Assuming pn
- * is a candidate for membership in a directive prologue, return
- * true if it is in fact a member.  Recognize directives and set
- * tc's flags accordingly.
+ * Recognize Directive Prologue members and directives. Assuming |pn| is a
+ * candidate for membership in a directive prologue, recognize directives and
+ * set |tc|'s flags accordingly. If |pn| is indeed part of a prologue, set its
+ * |pn_prologue| flag.
  *
  * Note that the following is a strict mode function:
  *
@@ -3365,17 +3365,34 @@ Parser::functionExpr()
  *   "use strict"
  * }
  *
- * That is, a statement can be a Directive Prologue member, even
- * if it can't possibly be a directive, now or in the future.
+ * That is, even though "use\x20loose" can never be a directive, now or in the
+ * future (because of the hex escape), the Directive Prologue extends through it
+ * to the "use strict" statement, which is indeed a directive.
  */
 bool
 Parser::recognizeDirectivePrologue(JSParseNode *pn, bool *isDirectivePrologueMember)
 {
-    *isDirectivePrologueMember = pn->isDirectivePrologueMember();
+    *isDirectivePrologueMember = pn->isStringExprStatement();
     if (!*isDirectivePrologueMember)
         return true;
-    if (pn->isDirective()) {
-        JSAtom *directive = pn->pn_kid->pn_atom;
+
+    JSParseNode *kid = pn->pn_kid;
+    if (kid->isEscapeFreeStringLiteral()) {
+        /*
+         * Mark this statement as being a possibly legitimate part of a
+         * directive prologue, so the byte code emitter won't warn about it
+         * being useless code. (We mustn't just omit the statement entirely yet,
+         * as it could be producing the value of an eval or JSScript execution.)
+         *
+         * Note that even if the string isn't one we recognize as a directive,
+         * the emitter still shouldn't flag it as useless, as it could become a
+         * directive in the future. We don't want to interfere with people
+         * taking advantage of directive-prologue-enabled features that appear
+         * in other browsers first.
+         */
+        pn->pn_prologue = true;
+
+        JSAtom *directive = kid->pn_atom;
         if (directive == context->runtime->atomState.useStrictAtom) {
             /*
              * Unfortunately, Directive Prologue members in general may contain

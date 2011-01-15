@@ -7,6 +7,7 @@ script String-toSource.js
 script proxy-strict.js
 script regress-bug567606.js
 script string-literal-getter-setter-decompilation.js
+script uneval-strict-functions.js
 script watch-inherited-property.js
 script watch-replaced-setter.js
 script watch-setter-become-setter.js
