@@ -2105,10 +2105,8 @@ nsDOMWorker::CompileGlobalObject(JSContext* aCx, nsLazyAutoRequest *aRequest,
   success = JS_DefineFunctions(aCx, global, gDOMWorkerFunctions);
   NS_ENSURE_TRUE(success, PR_FALSE);
 
-#ifdef MOZ_PROFILING
   success = JS_DefineProfilingFunctions(aCx, global);
   NS_ENSURE_TRUE(success, PR_FALSE);
-#endif
 
   if (IsPrivileged()) {
     // Add chrome functions.
