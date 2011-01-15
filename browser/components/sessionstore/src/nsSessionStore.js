@@ -118,7 +118,8 @@ const CAPABILITIES = [
 const INTERNAL_KEYS = ["_tabStillLoading", "_hosts", "_formDataSaved"];
 
 // These are tab events that we listen to.
-const TAB_EVENTS = ["TabOpen", "TabClose", "TabSelect", "TabShow", "TabHide"];
+const TAB_EVENTS = ["TabOpen", "TabClose", "TabSelect", "TabShow", "TabHide",
+                    "TabPinned", "TabUnpinned"];
 
 #ifndef XP_WIN
 #define BROKEN_WM_Z_ORDER
@@ -682,6 +683,10 @@ SessionStoreService.prototype = {
         break;
       case "TabHide":
         this.onTabHide(aEvent.originalTarget);
+        break;
+      case "TabPinned":
+      case "TabUnpinned":
+        this.saveStateDelayed(win);
         break;
     }
   },
