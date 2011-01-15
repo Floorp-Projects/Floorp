@@ -649,13 +649,15 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
           duration: 230,
           easing: 'fast',
           complete: function() {
-            TabItems.resumePainting();
-    
-            $tabEl
-              .css(orig)
-              .removeClass("front");
-
             onZoomDone();
+
+            setTimeout(function() {
+              TabItems.resumePainting();
+
+              $tabEl
+                .css(orig)
+                .removeClass("front");
+            }, 0);
           }
         });
       } else {
