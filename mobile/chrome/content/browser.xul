@@ -218,7 +218,9 @@
               <box id="toolbar-moveable-container">
                 <toolbar id="toolbar-main" class="panel-dark window-width">
 #ifdef MOZ_PLATFORM_MAEMO
+#if MOZ_PLATFORM_MAEMO != 6
                   <toolbarbutton id="tool-app-switch" oncommand="BrowserUI.switchTask();"/>
+#endif
 #endif
                   <hbox id="urlbar-container" flex="1" observes="bcast_urlbarState">
                     <box id="identity-box" class="urlbar-cap-button"
@@ -254,7 +256,9 @@
                     </hbox>
                   </hbox>
 #ifndef ANDROID
+#if MOZ_PLATFORM_MAEMO != 6
                   <toolbarbutton id="tool-app-close" class="urlbar-button" command="cmd_close"/>
+#endif
 #endif
                 </toolbar>
               </box>
