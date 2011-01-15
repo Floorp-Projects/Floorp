@@ -2180,14 +2180,12 @@ IteratorMore(JSContext *cx, JSObject *iterobj, bool *cond, Value *rval)
 {
     if (iterobj->getClass() == &js_IteratorClass) {
         NativeIterator *ni = (NativeIterator *) iterobj->getPrivate();
-        if (ni->isKeyIter()) {
-            *cond = (ni->props_cursor < ni->props_end);
-            return true;
-        }
+        *cond = (ni->props_cursor < ni->props_end);
+    } else {
+        if (!js_IteratorMore(cx, iterobj, rval))
+            return false;
+        *cond = rval->isTrue();
     }
-    if (!js_IteratorMore(cx, iterobj, rval))
-        return false;
-    *cond = rval->isTrue();
     return true;
 }
 
@@ -2196,15 +2194,19 @@ IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
 {
     if (iterobj->getClass() == &js_IteratorClass) {
         NativeIterator *ni = (NativeIterator *) iterobj->getPrivate();
+        JS_ASSERT(ni->props_cursor < ni->props_end);
         if (ni->isKeyIter()) {
-            JS_ASSERT(ni->props_cursor < ni->props_end);
-            jsid id = *ni->current();
+            jsid id = *ni->currentKey();
             if (JSID_IS_ATOM(id)) {
                 rval->setString(JSID_TO_STRING(id));
-                ni->incCursor();
+                ni->incKeyCursor();
                 return true;
             }
             /* Take the slow path if we have to stringify a numeric property name. */
+        } else {
+            *rval = *ni->currentValue();
+            ni->incValueCursor();
+            return true;
         }
     }
     return js_IteratorNext(cx, iterobj, rval);
