@@ -176,6 +176,7 @@ CPPSRCS		= \
 		jsxdrapi.cpp \
 		jsxml.cpp \
 		prmjtime.cpp \
+		sharkctl.cpp \
 		$(NULL)
 
 INSTALLED_HEADERS = \
@@ -632,12 +633,6 @@ ifneq ($(findstring -L,$(NSPR_LIBS)),)
 NSPR_STATIC_PATH = $(subst -L,,$(findstring -L,$(NSPR_LIBS)))
 else
 NSPR_STATIC_PATH = $(DIST)/lib
-endif
-
-ifdef MOZ_SHARK
-CFLAGS += -F/System/Library/PrivateFrameworks
-CXXFLAGS += -F/System/Library/PrivateFrameworks
-LDFLAGS += -F/System/Library/PrivateFrameworks -framework CHUD
 endif
 
 ifdef MOZ_VTUNE
