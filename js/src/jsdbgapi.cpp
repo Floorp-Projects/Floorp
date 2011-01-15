@@ -1907,102 +1907,51 @@ JS_ClearContextDebugHooks(JSContext *cx)
     return JS_SetContextDebugHooks(cx, &js_NullDebugHooks);
 }
 
-#ifdef MOZ_SHARK
+JS_PUBLIC_API(JSBool)
+JS_StartProfiling()
+{
+    return Probes::startProfiling();
+}
 
-#include <CHUD/CHUD.h>
+JS_PUBLIC_API(void)
+JS_StopProfiling()
+{
+    Probes::stopProfiling();
+}
+
+#ifdef MOZ_PROFILING
+
+static JSBool
+StartProfiling(JSContext *cx, uintN argc, jsval *vp)
+{
+    *vp = BOOLEAN_TO_JSVAL(Probes::startProfiling());
+    return true;
+}
+
+static JSBool
+StopProfiling(JSContext *cx, uintN argc, jsval *vp)
+{
+    *vp = JSVAL_VOID;
+    return true;
+}
+
+static JSFunctionSpec profiling_functions[] = {
+    JS_FN("startProfiling", StartProfiling, 0,0),
+    JS_FN("stopProfiling",  StopProfiling,  0,0),
+    JS_FS_END
+};
+
+#endif
 
 JS_PUBLIC_API(JSBool)
-JS_StartChudRemote()
+JS_DefineProfilingFunctions(JSContext *cx, JSObject *obj)
 {
-    if (chudIsRemoteAccessAcquired() &&
-        (chudStartRemotePerfMonitor("Mozilla") == chudSuccess)) {
-        return JS_TRUE;
-    }
-
-    return JS_FALSE;
+#ifdef MOZ_PROFILING
+    return JS_DefineFunctions(cx, obj, profiling_functions);
+#else
+    return true;
+#endif
 }
-
-JS_PUBLIC_API(JSBool)
-JS_StopChudRemote()
-{
-    if (chudIsRemoteAccessAcquired() &&
-        (chudStopRemotePerfMonitor() == chudSuccess)) {
-        return JS_TRUE;
-    }
-
-    return JS_FALSE;
-}
-
-JS_PUBLIC_API(JSBool)
-JS_ConnectShark()
-{
-    if (!chudIsInitialized() && (chudInitialize() != chudSuccess))
-        return JS_FALSE;
-
-    if (chudAcquireRemoteAccess() != chudSuccess)
-        return JS_FALSE;
-
-    return JS_TRUE;
-}
-
-JS_PUBLIC_API(JSBool)
-JS_DisconnectShark()
-{
-    if (chudIsRemoteAccessAcquired() && (chudReleaseRemoteAccess() != chudSuccess))
-        return JS_FALSE;
-
-    return JS_TRUE;
-}
-
-JS_FRIEND_API(JSBool)
-js_StartShark(JSContext *cx, uintN argc, jsval *vp)
-{
-    if (!JS_StartChudRemote()) {
-        JS_ReportError(cx, "Error starting CHUD.");
-        return JS_FALSE;
-    }
-
-    JS_SET_RVAL(cx, vp, JSVAL_VOID);
-    return JS_TRUE;
-}
-
-JS_FRIEND_API(JSBool)
-js_StopShark(JSContext *cx, uintN argc, jsval *vp)
-{
-    if (!JS_StopChudRemote()) {
-        JS_ReportError(cx, "Error stopping CHUD.");
-        return JS_FALSE;
-    }
-
-    JS_SET_RVAL(cx, vp, JSVAL_VOID);
-    return JS_TRUE;
-}
-
-JS_FRIEND_API(JSBool)
-js_ConnectShark(JSContext *cx, uintN argc, jsval *vp)
-{
-    if (!JS_ConnectShark()) {
-        JS_ReportError(cx, "Error connecting to Shark.");
-        return JS_FALSE;
-    }
-
-    JS_SET_RVAL(cx, vp, JSVAL_VOID);
-    return JS_TRUE;
-}
-
-JS_FRIEND_API(JSBool)
-js_DisconnectShark(JSContext *cx, uintN argc, jsval *vp)
-{
-    if (!JS_DisconnectShark()) {
-        JS_ReportError(cx, "Error disconnecting from Shark.");
-        return JS_FALSE;
-    }
-
-    JS_SET_RVAL(cx, vp, JSVAL_VOID);
-    return JS_TRUE;
-}
-
-#endif /* MOZ_SHARK */
 
 #ifdef MOZ_CALLGRIND
 

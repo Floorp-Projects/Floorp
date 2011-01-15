@@ -545,12 +545,6 @@ JSFunctionSpec gGlobalFunctions[] =
 #ifdef DEBUG
     {"dumpHeap",        DumpHeap,       5,0},
 #endif
-#ifdef MOZ_SHARK
-    {"startShark",      js_StartShark,      0,0},
-    {"stopShark",       js_StopShark,       0,0},
-    {"connectShark",    js_ConnectShark,    0,0},
-    {"disconnectShark", js_DisconnectShark, 0,0},
-#endif
 #ifdef MOZ_CALLGRIND
     {"startCallgrind",  js_StartCallgrind,  0,0},
     {"stopCallgrind",   js_StopCallgrind,   0,0},
@@ -1197,7 +1191,8 @@ XPCShellEnvironment::Init()
             return false;
         }
 
-        if (!JS_DefineFunctions(cx, globalObj, gGlobalFunctions)) {
+        if (!JS_DefineFunctions(cx, globalObj, gGlobalFunctions) ||
+	    !JS_DefineProfilingFunctions(cx, globalObj)) {
             NS_ERROR("JS_DefineFunctions failed!");
             return false;
         }
