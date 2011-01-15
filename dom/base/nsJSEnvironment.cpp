@@ -3365,7 +3365,7 @@ nsresult
 nsJSContext::SetTerminationFunction(nsScriptTerminationFunc aFunc,
                                     nsISupports* aRef)
 {
-  NS_PRECONDITION(JS_IsRunning(mContext), "should be executing script");
+  NS_PRECONDITION(GetExecutingScript(), "should be executing script");
 
   nsJSContext::TerminationFuncClosure* newClosure =
     new nsJSContext::TerminationFuncClosure(aFunc, aRef, mTerminations);
