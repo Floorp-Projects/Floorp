@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=625722
+-->
+<head>
+  <title>Test for Bug 625722</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=625722">Mozilla Bug 625722</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <span id=root><span id=A><span id=A1></span></span><span id=B></span></span>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 625722 **/
+
+function testNodeFilter(n) {
+  if (n.id == 'A' || n.id == 'A1')
+    return NodeFilter.FILTER_SKIP;
+  return NodeFilter.FILTER_ACCEPT;
+}
+
+tw = document.createTreeWalker(document.getElementById("root"),
+                               NodeFilter.SHOW_ELEMENT,
+                               testNodeFilter, false);
+
+node = tw.firstChild();
+is(node.id, 'B', "First accepted child of root not B");
+
+
+</script>
+</pre>
+</body>
+</html>
