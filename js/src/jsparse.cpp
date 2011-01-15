@@ -895,11 +895,9 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *calle
         if (!js_FoldConstants(cx, pn, &cg))
             goto out;
 
-        if (cg.functionList) {
-            if (!parser.analyzeFunctions(cg.functionList, cg.flags))
-                goto out;
-            cg.functionList = NULL;
-        }
+        if (!parser.analyzeFunctions(&cg))
+            goto out;
+        cg.functionList = NULL;
 
         if (!js_EmitTree(cx, &cg, pn))
             goto out;
@@ -1725,8 +1723,7 @@ Compiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *prin
         } else if (!js_FoldConstants(cx, pn, &funcg)) {
             /* js_FoldConstants reported the error already. */
             pn = NULL;
-        } else if (funcg.functionList &&
-                   !parser.analyzeFunctions(funcg.functionList, funcg.flags)) {
+        } else if (!parser.analyzeFunctions(&funcg)) {
             pn = NULL;
         } else {
             if (fn->pn_body) {
@@ -1886,11 +1883,13 @@ MatchOrInsertSemicolon(JSContext *cx, TokenStream *ts)
 }
 
 bool
-Parser::analyzeFunctions(JSFunctionBox *funbox, uint32& tcflags)
+Parser::analyzeFunctions(JSTreeContext *tc)
 {
-    if (!markFunArgs(funbox, tcflags))
+    if (!tc->functionList)
+        return true;
+    if (!markFunArgs(tc->functionList))
         return false;
-    setFunctionKinds(funbox, tcflags);
+    setFunctionKinds(tc->functionList, &tc->flags);
     return true;
 }
 
@@ -2022,7 +2021,7 @@ FindFunArgs(JSFunctionBox *funbox, int level, JSFunctionBoxQueue *queue)
 }
 
 bool
-Parser::markFunArgs(JSFunctionBox *funbox, uintN tcflags)
+Parser::markFunArgs(JSFunctionBox *funbox)
 {
     JSFunctionBoxQueue queue;
     if (!queue.init(functionCount))
@@ -2251,7 +2250,7 @@ CanFlattenUpvar(JSDefinition *dn, JSFunctionBox *funbox, uint32 tcflags)
 }
 
 static void
-FlagHeavyweights(JSDefinition *dn, JSFunctionBox *funbox, uint32& tcflags)
+FlagHeavyweights(JSDefinition *dn, JSFunctionBox *funbox, uint32 *tcflags)
 {
     uintN dnLevel = dn->frameLevel();
 
@@ -2269,8 +2268,8 @@ FlagHeavyweights(JSDefinition *dn, JSFunctionBox *funbox, uint32& tcflags)
         funbox->tcflags |= TCF_FUN_ENTRAINS_SCOPES;
     }
 
-    if (!funbox && (tcflags & TCF_IN_FUNCTION))
-        tcflags |= TCF_FUN_HEAVYWEIGHT;
+    if (!funbox && (*tcflags & TCF_IN_FUNCTION))
+        *tcflags |= TCF_FUN_HEAVYWEIGHT;
 }
 
 static bool
@@ -2291,7 +2290,7 @@ DeoptimizeUsesWithin(JSDefinition *dn, const TokenPos &pos)
 }
 
 void
-Parser::setFunctionKinds(JSFunctionBox *funbox, uint32& tcflags)
+Parser::setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags)
 {
 #define FUN_METER(x) JS_FUNCTION_METER(context, x)
 
@@ -2406,7 +2405,7 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32& tcflags)
 
                     if (!lexdep->isFreeVar()) {
                         ++nupvars;
-                        if (CanFlattenUpvar(lexdep, funbox, tcflags)) {
+                        if (CanFlattenUpvar(lexdep, funbox, *tcflags)) {
                             ++nflattened;
                             continue;
                         }
