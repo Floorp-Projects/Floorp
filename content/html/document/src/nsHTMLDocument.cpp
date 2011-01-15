@@ -378,16 +378,6 @@ nsHTMLDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
   SetContentTypeInternal(nsDependentCString("text/html"));
 }
 
-nsStyleSet::sheetType
-nsHTMLDocument::GetAttrSheetType()
-{
-  if (IsHTML()) {
-    return nsStyleSet::eHTMLPresHintSheet;
-  }
-
-  return nsDocument::GetAttrSheetType();
-}
-
 nsresult
 nsHTMLDocument::CreateShell(nsPresContext* aContext,
                             nsIViewManager* aViewManager,
