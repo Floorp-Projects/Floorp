@@ -1084,9 +1084,9 @@ struct Parser : private js::AutoGCRooter
      * starting at funbox, recursively walking its kids, then following its
      * siblings, their kids, etc.
      */
-    bool analyzeFunctions(JSFunctionBox *funbox, uint32& tcflags);
-    bool markFunArgs(JSFunctionBox *funbox, uintN tcflags);
-    void setFunctionKinds(JSFunctionBox *funbox, uint32& tcflags);
+    bool analyzeFunctions(JSTreeContext *tc);
+    bool markFunArgs(JSFunctionBox *funbox);
+    void setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags);
 
     void trace(JSTracer *trc);
 
