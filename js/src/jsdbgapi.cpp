@@ -1924,20 +1924,38 @@ JS_StopProfiling()
 static JSBool
 StartProfiling(JSContext *cx, uintN argc, jsval *vp)
 {
-    *vp = BOOLEAN_TO_JSVAL(Probes::startProfiling());
+    JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(Probes::startProfiling()));
     return true;
 }
 
 static JSBool
 StopProfiling(JSContext *cx, uintN argc, jsval *vp)
 {
-    *vp = JSVAL_VOID;
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return true;
 }
 
+#ifdef MOZ_SHARK
+
+static JSBool
+IgnoreAndReturnTrue(JSContext *cx, uintN argc, jsval *vp)
+{
+    JS_SET_RVAL(cx, vp, JSVAL_TRUE);
+    return true;
+}
+
+#endif
+
 static JSFunctionSpec profiling_functions[] = {
-    JS_FN("startProfiling", StartProfiling, 0,0),
-    JS_FN("stopProfiling",  StopProfiling,  0,0),
+    JS_FN("startProfiling",  StartProfiling,      0,0),
+    JS_FN("stopProfiling",   StopProfiling,       0,0),
+#ifdef MOZ_SHARK
+    /* Keep users of the old shark API happy. */
+    JS_FN("connectShark",    IgnoreAndReturnTrue, 0,0),
+    JS_FN("disconnectShark", IgnoreAndReturnTrue, 0,0),
+    JS_FN("startShark",      StartProfiling,      0,0),
+    JS_FN("stopShark",       StopProfiling,       0,0),
+#endif
     JS_FS_END
 };
 
