@@ -122,11 +122,13 @@ _MOCHITEST_FILES += \
   test_visibility.html \
   $(NULL)
 
+ifneq ($(OS_ARCH),WINNT)
 _MOCHICHROME_FILES += \
   test_xulbrowser_plugin_visibility.xul \
   xulbrowser_plugin_visibility.xul \
   plugin_visibility_loader.html \
   $(NULL)
+endif
 endif
 
 ifdef MOZ_CRASHREPORTER
