@@ -328,165 +328,317 @@ Parser::trace(JSTracer *trc)
         tc->trace(trc);
 }
 
-static void
-UnlinkFunctionBoxes(JSParseNode *pn, JSTreeContext *tc);
-
-static void
-UnlinkFunctionBox(JSParseNode *pn, JSTreeContext *tc)
+/* Add |node| to |parser|'s free node list. */
+static inline void
+AddNodeToFreeList(JSParseNode *pn, js::Parser *parser)
 {
-    JSFunctionBox *funbox = pn->pn_funbox;
-    if (funbox) {
-        JS_ASSERT(funbox->node == pn);
-        funbox->node = NULL;
-
-        if (funbox->parent && PN_OP(pn) == JSOP_LAMBDA) {
-            /*
-             * Remove pn from funbox->parent's methods list if it's there. See
-             * the TOK_SEMI case in Statement, near the bottom, the TOK_ASSIGN
-             * sub-case matching a constructor method assignment pattern.
-             */
-            JS_ASSERT(!pn->pn_defn);
-            JS_ASSERT(!pn->pn_used);
-            JSParseNode **pnp = &funbox->parent->methods;
-            while (JSParseNode *method = *pnp) {
-                if (method == pn) {
-                    *pnp = method->pn_link;
-                    break;
-                }
-                pnp = &method->pn_link;
-            }
-        }
-
-        JSFunctionBox **funboxp = &tc->functionList;
-        while (*funboxp) {
-            if (*funboxp == funbox) {
-                *funboxp = funbox->siblings;
-                break;
-            }
-            funboxp = &(*funboxp)->siblings;
-        }
-
-        uint32 oldflags = tc->flags;
-        JSFunctionBox *oldlist = tc->functionList;
-
-        tc->flags = funbox->tcflags;
-        tc->functionList = funbox->kids;
-        UnlinkFunctionBoxes(pn->pn_body, tc);
-        funbox->kids = tc->functionList;
-        tc->flags = oldflags;
-        tc->functionList = oldlist;
-
-        // FIXME: use a funbox freelist (consolidate aleFreeList and nodeList).
-        pn->pn_funbox = NULL;
-    }
-}
-
-static void
-UnlinkFunctionBoxes(JSParseNode *pn, JSTreeContext *tc)
-{
-    if (pn) {
-        switch (pn->pn_arity) {
-          case PN_NULLARY:
-            return;
-          case PN_UNARY:
-            UnlinkFunctionBoxes(pn->pn_kid, tc);
-            return;
-          case PN_BINARY:
-            UnlinkFunctionBoxes(pn->pn_left, tc);
-            UnlinkFunctionBoxes(pn->pn_right, tc);
-            return;
-          case PN_TERNARY:
-            UnlinkFunctionBoxes(pn->pn_kid1, tc);
-            UnlinkFunctionBoxes(pn->pn_kid2, tc);
-            UnlinkFunctionBoxes(pn->pn_kid3, tc);
-            return;
-          case PN_LIST:
-            for (JSParseNode *pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next)
-                UnlinkFunctionBoxes(pn2, tc);
-            return;
-          case PN_FUNC:
-            UnlinkFunctionBox(pn, tc);
-            return;
-          case PN_NAME:
-            UnlinkFunctionBoxes(pn->maybeExpr(), tc);
-            return;
-          case PN_NAMESET:
-            UnlinkFunctionBoxes(pn->pn_tree, tc);
-        }
-    }
-}
-
-static void
-RecycleFuncNameKids(JSParseNode *pn, JSTreeContext *tc);
-
-static JSParseNode *
-RecycleTree(JSParseNode *pn, JSTreeContext *tc)
-{
-    JSParseNode *next, **head;
-
-    if (!pn)
-        return NULL;
-
     /* Catch back-to-back dup recycles. */
-    JS_ASSERT(pn != tc->parser->nodeList);
-    next = pn->pn_next;
-    if (pn->pn_used || pn->pn_defn) {
-        /*
-         * JSAtomLists own definition nodes along with their used-node chains.
-         * Defer recycling such nodes until we unwind to top level to avoid
-         * linkage overhead or (alternatively) unlinking runtime complexity.
-         * Yes, this means dead code can contribute to static analysis results!
-         *
-         * Do recycle kids here, since they are no longer needed.
-         */
-        pn->pn_next = NULL;
-        RecycleFuncNameKids(pn, tc);
-    } else {
-        UnlinkFunctionBoxes(pn, tc);
-        head = &tc->parser->nodeList;
-        pn->pn_next = *head;
-        *head = pn;
-#ifdef METER_PARSENODES
-        recyclednodes++;
+    JS_ASSERT(pn != parser->nodeList);
+
+    /* 
+     * It's too hard to clear these nodes from the JSAtomLists, etc. that
+     * hold references to them, so we never free them. It's our caller's
+     * job to recognize and process these, since their children do need to
+     * be dealt with.
+     */
+    JS_ASSERT(!pn->pn_used);
+    JS_ASSERT(!pn->pn_defn);
+
+#ifdef DEBUG
+    /* Poison the node, to catch attempts to use it without initializing it. */
+    memset(pn, 0xab, sizeof(*pn));
 #endif
-    }
-    return next;
+
+    pn->pn_next = parser->nodeList;
+    parser->nodeList = pn;
+
+#ifdef METER_PARSENODES
+    recyclednodes++;
+#endif
 }
 
-static void
-RecycleFuncNameKids(JSParseNode *pn, JSTreeContext *tc)
+/* Add |node| to |tc|'s parser's free node list. */
+static inline void
+AddNodeToFreeList(JSParseNode *pn, JSTreeContext *tc)
+{
+    AddNodeToFreeList(pn, tc->parser);
+}
+
+/*
+ * Walk the function box list at |*funboxHead|, removing boxes for deleted
+ * functions and cleaning up method lists. We do this once, before
+ * performing function analysis, to avoid traversing possibly long function
+ * lists repeatedly when recycling nodes.
+ *
+ * There are actually three possible states for function boxes and their
+ * nodes:
+ *
+ * - Live: funbox->node points to the node, and funbox->node->pn_funbox
+ *   points back to the funbox.
+ *
+ * - Recycled: funbox->node points to the node, but funbox->node->pn_funbox
+ *   is NULL. When a function node is part of a tree that gets recycled, we
+ *   must avoid corrupting any method list the node is on, so we leave the
+ *   function node unrecycled until we call cleanFunctionList. At recycle
+ *   time, we clear such nodes' pn_funbox pointers to indicate that they
+ *   are deleted and should be recycled once we get here.
+ *
+ * - Mutated: funbox->node is NULL; the contents of the node itself could
+ *   be anything. When we mutate a function node into some other kind of
+ *   node, we lose all indication that the node was ever part of the
+ *   function box tree; it could later be recycled, reallocated, and turned
+ *   into anything at all. (Fortunately, method list members never get
+ *   mutated, so we don't have to worry about that case.)
+ *   PrepareNodeForMutation clears the node's function box's node pointer,
+ *   disconnecting it entirely from the function box tree, and marking the
+ *   function box to be trimmed out.
+ */
+void
+Parser::cleanFunctionList(JSFunctionBox **funboxHead)
+{
+    JSFunctionBox **link = funboxHead;
+    while (JSFunctionBox *box = *link) {
+        if (!box->node) {
+            /*
+             * This funbox's parse node was mutated into something else. Drop the box,
+             * and stay at the same link.
+             */
+            *link = box->siblings;
+        } else if (!box->node->pn_funbox) {
+            /*
+             * This funbox's parse node is ready to be recycled. Drop the box, recycle
+             * the node, and stay at the same link.
+             */
+            *link = box->siblings;
+            AddNodeToFreeList(box->node, this);
+        } else {
+            /* The function is still live. */
+
+            /* First, remove nodes for deleted functions from our methods list. */
+            {
+                JSParseNode **methodLink = &box->methods;
+                while (JSParseNode *method = *methodLink) {
+                    /* Method nodes are never rewritten in place to be other kinds of nodes. */
+                    JS_ASSERT(method->pn_arity == PN_FUNC);
+                    if (!method->pn_funbox) {
+                        /* Deleted: drop the node, and stay on this link. */
+                        *methodLink = method->pn_link;
+                    } else {
+                        /* Live: keep the node, and move to the next link. */
+                        methodLink = &method->pn_link;
+                    }
+                }
+            }
+
+            /* Second, remove boxes for deleted functions from our kids list. */
+            cleanFunctionList(&box->kids);
+
+            /* Keep the box on the list, and move to the next link. */
+            link = &box->siblings;
+        }
+    }
+}
+
+namespace js {
+
+/*
+ * A work pool of JSParseNodes. The work pool is a stack, chained together
+ * by nodes' pn_next fields. We use this to avoid creating deep C++ stacks
+ * when recycling deep parse trees.
+ *
+ * Since parse nodes are probably allocated in something close to the order
+ * they appear in a depth-first traversal of the tree, making the work pool
+ * a stack should give us pretty good locality.
+ */
+class NodeStack {
+  public:
+    NodeStack() : top(NULL) { }
+    bool empty() { return top == NULL; }
+    void push(JSParseNode *pn) {
+        pn->pn_next = top;
+        top = pn;
+    }
+    void pushUnlessNull(JSParseNode *pn) { if (pn) push(pn); }
+    /* Push the children of the PN_LIST node |pn| on the stack. */
+    void pushList(JSParseNode *pn) {
+        /* This clobbers pn->pn_head if the list is empty; should be okay. */
+        *pn->pn_tail = top;
+        top = pn->pn_head;
+    }
+    JSParseNode *pop() {
+        JS_ASSERT(!empty());
+        JSParseNode *hold = top; /* my kingdom for a prog1 */
+        top = top->pn_next;
+        return hold;
+    }
+  private:
+    JSParseNode *top;
+};
+
+} /* namespace js */
+
+/*
+ * Push the children of |pn| on |stack|. Return true if |pn| itself could be
+ * safely recycled, or false if it must be cleaned later (pn_used and pn_defn
+ * nodes, and all function nodes; see comments for
+ * js::Parser::cleanFunctionList). Some callers want to free |pn|; others
+ * (PrepareNodeForMutation) don't care about |pn|, and just need to take care of
+ * its children.
+ */
+static bool
+PushNodeChildren(JSParseNode *pn, NodeStack *stack)
 {
     switch (pn->pn_arity) {
       case PN_FUNC:
-        UnlinkFunctionBox(pn, tc);
-        /* FALL THROUGH */
+        /*
+         * Function nodes are linked into the function box tree, and may
+         * appear on method lists. Both of those lists are singly-linked,
+         * so trying to update them now could result in quadratic behavior
+         * when recycling trees containing many functions; and the lists
+         * can be very long. So we put off cleaning the lists up until just
+         * before function analysis, when we call
+         * js::Parser::cleanFunctionList.
+         *
+         * In fact, we can't recycle the parse node yet, either: it may
+         * appear on a method list, and reusing the node would corrupt
+         * that. Instead, we clear its pn_funbox pointer to mark it as
+         * deleted; js::Parser::cleanFunctionList recycles it as well.
+         *
+         * We do recycle the nodes around it, though, so we must clear
+         * pointers to them to avoid leaving dangling references where
+         * someone can find them.
+         */
+        pn->pn_funbox = NULL;
+        stack->pushUnlessNull(pn->pn_body);
+        pn->pn_body = NULL;
+        return false;
 
       case PN_NAME:
         /*
-         * Only a definition node might have a non-null strong pn_expr link
-         * to recycle, but we test !pn_used to handle PN_FUNC fall through.
-         * Every node with the pn_used flag set has a non-null pn_lexdef
-         * weak reference to its definition node.
+         * Because used/defn nodes appear in JSAtomLists and elsewhere, we
+         * don't recycle them. (We'll recover their storage when we free
+         * the temporary arena.) However, we do recycle the nodes around
+         * them, so clean up the pointers to avoid dangling references. The
+         * top-level decls table carries references to them that later
+         * iterations through the compileScript loop may find, so they need
+         * to be neat.
+         *
+         * pn_expr and pn_lexdef share storage; the latter isn't an owning
+         * reference.
          */
-        if (!pn->pn_used && pn->pn_expr) {
-            RecycleTree(pn->pn_expr, tc);
+        if (!pn->pn_used) {
+            stack->pushUnlessNull(pn->pn_expr);
             pn->pn_expr = NULL;
         }
-        break;
+        return !pn->pn_used && !pn->pn_defn;
 
-      default:
-        JS_ASSERT(PN_TYPE(pn) == TOK_FUNCTION);
+      case PN_LIST:
+        stack->pushList(pn);
+        break;
+      case PN_TERNARY:
+        stack->pushUnlessNull(pn->pn_kid1);
+        stack->pushUnlessNull(pn->pn_kid2);
+        stack->pushUnlessNull(pn->pn_kid3);
+        break;
+      case PN_BINARY:
+        if (pn->pn_left != pn->pn_right)
+            stack->pushUnlessNull(pn->pn_left);
+        stack->pushUnlessNull(pn->pn_right);
+        break;
+      case PN_UNARY:
+        stack->pushUnlessNull(pn->pn_kid);
+        break;
+      case PN_NULLARY:
+        /* 
+         * E4X function namespace nodes are PN_NULLARY, but can appear on use
+         * lists.
+         */
+        return !pn->pn_used && !pn->pn_defn;
+    }
+
+    return true;
+}
+
+/*
+ * Prepare |pn| to be mutated in place into a new kind of node. Recycle all
+ * |pn|'s recyclable children (but not |pn| itself!), and disconnect it from
+ * metadata structures (the function box tree).
+ */
+static void
+PrepareNodeForMutation(JSParseNode *pn, JSTreeContext *tc)
+{
+    if (pn->pn_arity != PN_NULLARY) {
+        if (pn->pn_arity == PN_FUNC) {
+            /*
+             * Since this node could be turned into anything, we can't
+             * ensure it won't be subsequently recycled, so we must
+             * disconnect it from the funbox tree entirely.
+             *
+             * Note that pn_funbox may legitimately be NULL. functionDef
+             * applies MakeDefIntoUse to definition nodes, which can come
+             * from prior iterations of the big loop in compileScript. In
+             * such cases, the defn nodes have been visited by the recycler
+             * (but not actually recycled!), and their funbox pointers
+             * cleared. But it's fine to mutate them into uses of some new
+             * definition.
+             */
+            if (pn->pn_funbox)
+                pn->pn_funbox->node = NULL;
+        }
+
+        /* Put |pn|'s children (but not |pn| itself) on a work stack. */
+        NodeStack stack;
+        PushNodeChildren(pn, &stack);
+        /*
+         * For each node on the work stack, push its children on the work stack,
+         * and free the node if we can.
+         */
+        while (!stack.empty()) {
+            pn = stack.pop();
+            if (PushNodeChildren(pn, &stack))
+                AddNodeToFreeList(pn, tc);
+        }
     }
 }
 
 /*
- * Allocate a JSParseNode from tc's node freelist or, failing that, from cx's
- * temporary arena.
+ * Return the nodes in the subtree |pn| to the parser's free node list, for
+ * reallocation.
+ *
+ * Note that all functions in |pn| that are not enclosed by other functions
+ * in |pn| must be direct children of |tc|, because we only clean up |tc|'s
+ * function and method lists. You must not reach into a function and
+ * recycle some part of it (unless you've updated |tc|->functionList, the
+ * way js_FoldConstants does).
+ */
+static JSParseNode *
+RecycleTree(JSParseNode *pn, JSTreeContext *tc)
+{
+    if (!pn)
+        return NULL;
+
+    JSParseNode *savedNext = pn->pn_next;
+
+    NodeStack stack;
+    for (;;) {
+        if (PushNodeChildren(pn, &stack))
+            AddNodeToFreeList(pn, tc);
+        if (stack.empty())
+            break;
+        pn = stack.pop();
+    }
+
+    return savedNext;
+}
+
+/*
+ * Allocate a JSParseNode from tc's node freelist or, failing that, from
+ * cx's temporary arena.
  */
 static JSParseNode *
 NewOrRecycledNode(JSTreeContext *tc)
 {
-    JSParseNode *pn, *pn2;
+    JSParseNode *pn;
 
     pn = tc->parser->nodeList;
     if (!pn) {
@@ -497,53 +649,8 @@ NewOrRecycledNode(JSTreeContext *tc)
             js_ReportOutOfScriptQuota(cx);
     } else {
         tc->parser->nodeList = pn->pn_next;
-
-        /* Recycle immediate descendents only, to save work and working set. */
-        switch (pn->pn_arity) {
-          case PN_FUNC:
-            RecycleTree(pn->pn_body, tc);
-            break;
-          case PN_LIST:
-            pn2 = pn->pn_head;
-            if (pn2) {
-                while (pn2 && !pn2->pn_used && !pn2->pn_defn)
-                    pn2 = pn2->pn_next;
-                if (pn2) {
-                    pn2 = pn->pn_head;
-                    do {
-                        pn2 = RecycleTree(pn2, tc);
-                    } while (pn2);
-                } else {
-                    *pn->pn_tail = tc->parser->nodeList;
-                    tc->parser->nodeList = pn->pn_head;
-#ifdef METER_PARSENODES
-                    recyclednodes += pn->pn_count;
-#endif
-                    break;
-                }
-            }
-            break;
-          case PN_TERNARY:
-            RecycleTree(pn->pn_kid1, tc);
-            RecycleTree(pn->pn_kid2, tc);
-            RecycleTree(pn->pn_kid3, tc);
-            break;
-          case PN_BINARY:
-            if (pn->pn_left != pn->pn_right)
-                RecycleTree(pn->pn_left, tc);
-            RecycleTree(pn->pn_right, tc);
-            break;
-          case PN_UNARY:
-            RecycleTree(pn->pn_kid, tc);
-            break;
-          case PN_NAME:
-            if (!pn->pn_used)
-                RecycleTree(pn->pn_expr, tc);
-            break;
-          case PN_NULLARY:
-            break;
-        }
     }
+
     if (pn) {
 #ifdef METER_PARSENODES
         parsenodes++;
@@ -1572,6 +1679,7 @@ MakeDefIntoUse(JSDefinition *dn, JSParseNode *pn, JSAtom *atom, JSTreeContext *t
         dn->pn_op = (js_CodeSpec[dn->pn_op].format & JOF_SET) ? JSOP_SETNAME : JSOP_NAME;
     } else if (dn->kind() == JSDefinition::FUNCTION) {
         JS_ASSERT(dn->pn_op == JSOP_NOP);
+        PrepareNodeForMutation(dn, tc);
         dn->pn_type = TOK_NAME;
         dn->pn_arity = PN_NAME;
         dn->pn_atom = atom;
@@ -1885,6 +1993,7 @@ MatchOrInsertSemicolon(JSContext *cx, TokenStream *ts)
 bool
 Parser::analyzeFunctions(JSTreeContext *tc)
 {
+    cleanFunctionList(&tc->functionList);
     if (!tc->functionList)
         return true;
     if (!markFunArgs(tc->functionList))
@@ -1930,6 +2039,7 @@ FindFunArgs(JSFunctionBox *funbox, int level, JSFunctionBoxQueue *queue)
 
     do {
         JSParseNode *fn = funbox->node;
+        JS_ASSERT(fn->pn_arity == PN_FUNC);
         JSFunction *fun = (JSFunction *) funbox->object;
         int fnlevel = level;
 
@@ -9675,22 +9785,13 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
     if (inCond) {
         int cond = Boolish(pn);
         if (cond >= 0) {
-            switch (pn->pn_arity) {
-              case PN_LIST:
-                pn2 = pn->pn_head;
-                do {
-                    pn3 = pn2->pn_next;
-                    RecycleTree(pn2, tc);
-                } while ((pn2 = pn3) != NULL);
-                break;
-              case PN_FUNC:
-                RecycleFuncNameKids(pn, tc);
-                break;
-              case PN_NULLARY:
-                break;
-              default:
-                JS_NOT_REACHED("unhandled arity");
-            }
+            /*
+             * We can turn function nodes into constant nodes here, but mutating function
+             * nodes is tricky --- in particular, mutating a function node that appears on
+             * a method list corrupts the method list. However, methods are M's in
+             * statements of the form 'this.foo = M;', which we never fold, so we're okay.
+             */
+            PrepareNodeForMutation(pn, tc);
             pn->pn_type = TOK_PRIMARY;
             pn->pn_op = cond ? JSOP_TRUE : JSOP_FALSE;
             pn->pn_arity = PN_NULLARY;

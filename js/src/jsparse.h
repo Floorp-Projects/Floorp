@@ -1085,6 +1085,7 @@ struct Parser : private js::AutoGCRooter
      * siblings, their kids, etc.
      */
     bool analyzeFunctions(JSTreeContext *tc);
+    void cleanFunctionList(JSFunctionBox **funbox);
     bool markFunArgs(JSFunctionBox *funbox);
     void setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags);
 
