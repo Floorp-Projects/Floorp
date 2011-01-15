@@ -121,10 +121,9 @@ function test()
     // Select all the bookmarks
     synthesizeKey("a", {accelKey:true}, aWin);
 
-    // If we can, start shark
+    // If we can, start profiling
     try {
-      connectShark();
-      startShark();
+      startProfiling();
     }
     catch (e) { }
 
@@ -133,10 +132,9 @@ function test()
     synthesizeKey("VK_BACK_SPACE", {}, aWin);
     let end = Date.now();
 
-    // Stop shark, if we can
+    // Stop profiling, if we can
     try {
-      stopShark();
-      disconnectionShark();
+      stopProfiling();
     }
     catch (e) { }
 

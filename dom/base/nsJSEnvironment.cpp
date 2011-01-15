@@ -3313,16 +3313,6 @@ static JSFunctionSpec JProfFunctions[] = {
 
 #endif /* defined(MOZ_JPROF) */
 
-#ifdef MOZ_SHARK
-static JSFunctionSpec SharkFunctions[] = {
-    {"startShark",                 js_StartShark,              0, 0},
-    {"stopShark",                  js_StopShark,               0, 0},
-    {"connectShark",               js_ConnectShark,            0, 0},
-    {"disconnectShark",            js_DisconnectShark,         0, 0},
-    {nsnull,                       nsnull,                     0, 0}
-};
-#endif
-
 #ifdef MOZ_CALLGRIND
 static JSFunctionSpec CallgrindFunctions[] = {
     {"startCallgrind",             js_StartCallgrind,          0, 0},
@@ -3372,6 +3362,11 @@ nsJSContext::InitClasses(void *aGlobalObj)
     rv = NS_ERROR_FAILURE;
   }
 
+#ifdef MOZ_PROFILING
+  // Attempt to initialize profiling functions
+  ::JS_DefineProfilingFunctions(mContext, globalObj);
+#endif
+
 #ifdef NS_TRACE_MALLOC
   // Attempt to initialize TraceMalloc functions
   ::JS_DefineFunctions(mContext, globalObj, TraceMallocFunctions);
@@ -3380,11 +3375,6 @@ nsJSContext::InitClasses(void *aGlobalObj)
 #ifdef MOZ_JPROF
   // Attempt to initialize JProf functions
   ::JS_DefineFunctions(mContext, globalObj, JProfFunctions);
-#endif
-
-#ifdef MOZ_SHARK
-  // Attempt to initialize Shark functions
-  ::JS_DefineFunctions(mContext, globalObj, SharkFunctions);
 #endif
 
 #ifdef MOZ_CALLGRIND

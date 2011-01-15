@@ -167,40 +167,31 @@ StopProfiling()
 //--------------------------------------------------
 // Shark impl
 #if defined(MOZ_SHARK)
-#include <CHUD/CHUD.h>
+#include "jsdbgapi.h"
 
 static PRBool
 _PlatformInitProfiler()
 {
-    if (chudSuccess != chudInitialize())
-        return PR_FALSE;
-    if (chudSuccess != chudAcquireRemoteAccess()) {
-        NS_WARNING("Couldn't connect to Shark.  Is it running and in Programmatic mode (Shift-Cmd-R)?");
-        return PR_FALSE;
-    }
-   return PR_TRUE;
+    return PR_TRUE;
 }
 
 static PRBool
 _PlatformStartProfile(const char* profileName)
 {
-    return (chudSuccess == chudStartRemotePerfMonitor(profileName)) ?
-        PR_TRUE : PR_FALSE;
+    return JS_StartProfiling() ? PR_TRUE : PR_FALSE;
 }
 
 static PRBool
 _PlatformStopProfile(const char* profileName)
 {
-    return (chudSuccess == chudStopRemotePerfMonitor()) ?
-        PR_TRUE : PR_FALSE;
+    JS_StopProfiling();
+    return PR_TRUE;
 }
 
 static PRBool
 _PlatformDeinitProfiler()
 {
-    return (chudIsRemoteAccessAcquired() 
-            && chudSuccess == chudReleaseRemoteAccess()) ?
-        PR_TRUE : PR_FALSE;
+    return PR_TRUE;
 }
 
 //--------------------------------------------------
