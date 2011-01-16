@@ -1010,8 +1010,15 @@ nsDisplayBackground::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
 PRBool
 nsDisplayBackground::IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor) {
   // theme background overrides any other background
-  if (mIsThemed)
+  if (mIsThemed) {
+    const nsStyleDisplay* disp = mFrame->GetStyleDisplay();
+    if (disp->mAppearance == NS_THEME_WIN_BORDERLESS_GLASS ||
+        disp->mAppearance == NS_THEME_WIN_GLASS) {
+      *aColor = NS_RGBA(0,0,0,0);
+      return PR_TRUE;
+    }
     return PR_FALSE;
+  }
 
   nsStyleContext *bgSC;
   PRBool hasBG =
