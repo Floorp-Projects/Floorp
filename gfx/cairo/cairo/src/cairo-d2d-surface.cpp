@@ -175,6 +175,10 @@ cairo_d2d_create_device_from_d3d10device(ID3D10Device1 *d3d10device)
     Vertex vertices[] = { {0.0, 0.0}, {1.0, 0.0}, {0.0, 1.0}, {1.0, 1.0} };
     CD3D10_BUFFER_DESC bufferDesc(sizeof(vertices), D3D10_BIND_VERTEX_BUFFER);
     D3D10_SUBRESOURCE_DATA data;
+    CD3D10_TEXTURE2D_DESC textDesc(DXGI_FORMAT_B8G8R8A8_UNORM,
+	                           TEXT_TEXTURE_WIDTH,
+				   TEXT_TEXTURE_HEIGHT,
+				   1, 1);
 
     cairo_d2d_device_t *device = new cairo_d2d_device_t;
 
@@ -244,7 +248,20 @@ cairo_d2d_create_device_from_d3d10device(ID3D10Device1 *d3d10device)
 	goto FAILED;
     }
     device->base.refcount = 1;
-    device->mVRAMUsage = 0;
+
+    // We start out with TEXT_TEXTURE roughly in VRAM usage.
+    device->mVRAMUsage = TEXT_TEXTURE_WIDTH * TEXT_TEXTURE_HEIGHT * 4;
+
+    textDesc.Usage = D3D10_USAGE_DYNAMIC;
+    textDesc.CPUAccessFlags = D3D10_CPU_ACCESS_WRITE;
+    hr = device->mD3D10Device->CreateTexture2D(&textDesc, NULL, &device->mTextTexture);
+    if (FAILED(hr)) {
+	goto FAILED;
+    }
+
+    hr = device->mD3D10Device->CreateShaderResourceView(device->mTextTexture,
+							NULL,
+							&device->mTextTextureView);
 
     return &device->base;
 FAILED:
