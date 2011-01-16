@@ -290,6 +290,8 @@ ThebesLayerD3D10::DrawRegion(const nsIntRegion &aRegion)
     context->SetOperator(gfxContext::OPERATOR_OVER);
   }
 
+  mD2DSurface->SetSubpixelAntialiasingEnabled(!(mContentFlags & CONTENT_COMPONENT_ALPHA));
+
   LayerManagerD3D10::CallbackInfo cbInfo = mD3DManager->GetCallbackInfo();
   cbInfo.Callback(this, context, aRegion, nsIntRegion(), cbInfo.CallbackData);
 }
