@@ -204,8 +204,28 @@ public:
                                         nsIPrivateTextRangeList *aTextRange)=0;
   nsresult EndIMEComposition();
 
+  void BeginKeypressHandling() { mLastKeypressEventWasTrusted = eTriTrue; }
   void BeginKeypressHandling(nsIDOMNSEvent* aEvent);
   void EndKeypressHandling() { mLastKeypressEventWasTrusted = eTriUnset; }
+
+  class FireTrustedInputEvent {
+  public:
+    explicit FireTrustedInputEvent(nsEditor* aSelf, PRBool aActive = PR_TRUE)
+      : mEditor(aSelf)
+      , mShouldAct(aActive && mEditor->mLastKeypressEventWasTrusted == eTriUnset) {
+      if (mShouldAct) {
+        mEditor->BeginKeypressHandling();
+      }
+    }
+    ~FireTrustedInputEvent() {
+      if (mShouldAct) {
+        mEditor->EndKeypressHandling();
+      }
+    }
+  private:
+    nsEditor* mEditor;
+    PRBool mShouldAct;
+  };
 
 protected:
   nsCString mContentMIMEType;       // MIME type of the doc we are editing.

@@ -747,6 +747,8 @@ NS_IMETHODIMP nsPlaintextEditor::DeleteSelection(nsIEditor::EDirection aAction)
   nsAutoPlaceHolderBatch batch(this, nsGkAtoms::DeleteTxnName);
   nsAutoRules beginRulesSniffing(this, kOpDeleteSelection, aAction);
 
+  FireTrustedInputEvent trusted(this, aAction != eNone);
+
   // pre-process
   nsCOMPtr<nsISelection> selection;
   result = GetSelection(getter_AddRefs(selection));
@@ -1215,6 +1217,8 @@ nsPlaintextEditor::Undo(PRUint32 aCount)
 
   nsAutoUpdateViewBatch beginViewBatching(this);
 
+  FireTrustedInputEvent trusted(this);
+
   ForceCompositionEnd();
 
   nsAutoRules beginRulesSniffing(this, kOpUndo, nsIEditor::eNone);
@@ -1241,6 +1245,8 @@ nsPlaintextEditor::Redo(PRUint32 aCount)
   nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
 
   nsAutoUpdateViewBatch beginViewBatching(this);
+
+  FireTrustedInputEvent trusted(this);
 
   ForceCompositionEnd();
 
@@ -1296,6 +1302,8 @@ nsPlaintextEditor::FireClipboardEvent(PRInt32 aType)
 
 NS_IMETHODIMP nsPlaintextEditor::Cut()
 {
+  FireTrustedInputEvent trusted(this);
+
   if (FireClipboardEvent(NS_CUT))
     return DeleteSelection(eNone);
   return NS_OK;
