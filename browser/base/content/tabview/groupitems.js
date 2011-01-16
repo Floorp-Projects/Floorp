@@ -1036,8 +1036,6 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     this.$expander
         .show()
         .css({
-          opacity: .2,
-          top: childBB.top + childBB.height - parentBB.top + padding,
           left: parentBB.width/2 - this.$expander.width()/2
         });
   },
