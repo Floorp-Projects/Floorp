@@ -963,7 +963,7 @@ find_common_ancestor(cairo_clip_path_t *a, cairo_clip_path_t *b)
     return a;
 }
 
-cairo_status_t
+static cairo_status_t
 _cairo_d2d_set_clip (cairo_d2d_surface_t *d2dsurf, cairo_clip_t *clip)
 {
     if (clip == NULL) {
@@ -1009,15 +1009,6 @@ static void _begin_draw_state(cairo_d2d_surface_t* surface)
 	surface->rt->BeginDraw();
 	surface->isDrawing = true;
     }
-}
-
-/* External helper called from dwrite code.
- * Will hopefully go away when/if that code
- * moves into here */
-void
-_cairo_d2d_begin_draw_state(cairo_d2d_surface_t *d2dsurf)
-{
-	_begin_draw_state(d2dsurf);
 }
 
 /**
@@ -1638,10 +1629,10 @@ _cairo_d2d_create_linear_gradient_brush(cairo_d2d_surface_t *d2dsurf,
  * this will make the function return a seperate brush.
  * \return A brush object
  */
-RefPtr<ID2D1Brush>
+static RefPtr<ID2D1Brush>
 _cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf, 
 				    const cairo_pattern_t *pattern,
-				    bool unique)
+				    bool unique = false)
 {
     if (pattern->type == CAIRO_PATTERN_TYPE_SOLID) {
 	cairo_solid_pattern_t *sourcePattern =
@@ -2249,8 +2240,8 @@ _cairo_d2d_clear (cairo_d2d_surface_t *d2dsurf,
     return CAIRO_INT_STATUS_SUCCESS;
 }
 
-cairo_operator_t _cairo_d2d_simplify_operator(cairo_operator_t op,
-					      const cairo_pattern_t *source)
+static cairo_operator_t _cairo_d2d_simplify_operator(cairo_operator_t op,
+					             const cairo_pattern_t *source)
 {
     if (op == CAIRO_OPERATOR_SOURCE) {
 	/** Operator over is easier for D2D! If the source if opaque, change */
@@ -2847,7 +2838,8 @@ _cairo_d2d_try_fastblit(cairo_d2d_surface_t *dst,
     return rv;
 }
 
-RefPtr<ID2D1RenderTarget> _cairo_d2d_get_temp_rt(cairo_d2d_surface_t *surf, cairo_clip_t *clip)
+static RefPtr<ID2D1RenderTarget>
+_cairo_d2d_get_temp_rt(cairo_d2d_surface_t *surf, cairo_clip_t *clip)
 {
     RefPtr<ID3D10Texture2D> texture = _cairo_d2d_get_buffer_texture(surf);
     RefPtr<ID2D1RenderTarget> new_rt;
@@ -2921,7 +2913,8 @@ RefPtr<ID2D1RenderTarget> _cairo_d2d_get_temp_rt(cairo_d2d_surface_t *surf, cair
     return new_rt;
 }
 
-cairo_int_status_t _cairo_d2d_blend_temp_surface(cairo_d2d_surface_t *surf, cairo_operator_t op, ID2D1RenderTarget *rt, cairo_clip_t *clip, const cairo_rectangle_int_t *bounds)
+static cairo_int_status_t
+_cairo_d2d_blend_temp_surface(cairo_d2d_surface_t *surf, cairo_operator_t op, ID2D1RenderTarget *rt, cairo_clip_t *clip, const cairo_rectangle_int_t *bounds = NULL)
 {
     int numPaths = 0;
     if (clip) {
@@ -3446,6 +3439,194 @@ _cairo_d2d_fill(void			*surface,
     return CAIRO_INT_STATUS_SUCCESS;
 }
 
+static cairo_int_status_t
+_cairo_dwrite_show_glyphs_on_d2d_surface(void			*surface,
+					 cairo_operator_t	 op,
+					 const cairo_pattern_t	*source,
+					 cairo_glyph_t		*glyphs,
+					 int			 num_glyphs,
+					 cairo_scaled_font_t	*scaled_font,
+					 cairo_clip_t		*clip)
+{
+    cairo_int_status_t status;
+
+    // TODO: Check font & surface for types.
+    cairo_dwrite_scaled_font_t *dwritesf = reinterpret_cast<cairo_dwrite_scaled_font_t*>(scaled_font);
+    cairo_dwrite_font_face_t *dwriteff = reinterpret_cast<cairo_dwrite_font_face_t*>(scaled_font->font_face);
+    cairo_d2d_surface_t *dst = reinterpret_cast<cairo_d2d_surface_t*>(surface);
+
+    /* We can only handle dwrite fonts */
+    //XXX: this is checked by at least one caller
+    if (cairo_scaled_font_get_type (scaled_font) != CAIRO_FONT_TYPE_DWRITE)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    op = _cairo_d2d_simplify_operator(op, source);
+
+    /* We cannot handle operator SOURCE or CLEAR */
+    if (op == CAIRO_OPERATOR_SOURCE || op == CAIRO_OPERATOR_CLEAR) {
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
+    RefPtr<ID2D1RenderTarget> target_rt = dst->rt;
+    cairo_rectangle_int_t fontArea;
+#ifndef ALWAYS_MANUAL_COMPOSITE
+    if (op != CAIRO_OPERATOR_OVER) {
+#endif
+	target_rt = _cairo_d2d_get_temp_rt(dst, clip);
+
+	if (!target_rt) {
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	}
+#ifndef ALWAYS_MANUAL_COMPOSITE
+    } else {
+	_begin_draw_state(dst);
+	status = (cairo_int_status_t)_cairo_d2d_set_clip (dst, clip);
+
+	if (unlikely(status))
+	    return status;
+    }
+#endif
+
+    D2D1_TEXT_ANTIALIAS_MODE cleartype_quality = D2D1_TEXT_ANTIALIAS_MODE_CLEARTYPE;
+
+    // If we're rendering to a temporary surface we cannot do sub-pixel AA.
+    if (dst->base.content != CAIRO_CONTENT_COLOR || dst->rt.get() != target_rt.get()) {
+	cleartype_quality = D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE;
+    }
+
+    switch (dwritesf->antialias_mode) {
+	case CAIRO_ANTIALIAS_NONE:
+	    target_rt->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_ALIASED);
+	    break;
+	case CAIRO_ANTIALIAS_GRAY:
+	    target_rt->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE);
+	    break;
+	case CAIRO_ANTIALIAS_SUBPIXEL:
+	    target_rt->SetTextAntialiasMode(cleartype_quality);
+	    break;
+    }
+
+    /* It is vital that dx values for dxy_buf are calculated from the delta of
+     * _logical_ x coordinates (not user x coordinates) or else the sum of all
+     * previous dx values may start to diverge from the current glyph's x
+     * coordinate due to accumulated rounding error. As a result strings could
+     * be painted shorter or longer than expected. */
+
+    UINT16 *indices = new UINT16[num_glyphs];
+    DWRITE_GLYPH_OFFSET *offsets = new DWRITE_GLYPH_OFFSET[num_glyphs];
+    FLOAT *advances = new FLOAT[num_glyphs];
+    BOOL transform = FALSE;
+
+    DWRITE_GLYPH_RUN run;
+    run.bidiLevel = 0;
+    run.fontFace = dwriteff->dwriteface;
+    run.glyphIndices = indices;
+    run.glyphCount = num_glyphs;
+    run.isSideways = FALSE;
+    run.glyphOffsets = offsets;
+    run.glyphAdvances = advances;
+
+    if (dwritesf->mat.xy == 0 && dwritesf->mat.yx == 0 &&
+	dwritesf->mat.xx == scaled_font->font_matrix.xx && 
+	dwritesf->mat.yy == scaled_font->font_matrix.yy) {
+	// Fast route, don't actually use a transform but just
+        // set the correct font size.
+        run.fontEmSize = (FLOAT)scaled_font->font_matrix.yy;
+
+	for (int i = 0; i < num_glyphs; i++) {
+	    indices[i] = (WORD) glyphs[i].index;
+	    // Since we will multiply by our ctm matrix later for rotation effects
+	    // and such, adjust positions by the inverse matrix now.
+	    offsets[i].ascenderOffset = -(FLOAT)(glyphs[i].y);
+	    offsets[i].advanceOffset = (FLOAT)(glyphs[i].x);
+	    advances[i] = 0.0;
+	}
+    } else {
+	transform = TRUE;
+
+	for (int i = 0; i < num_glyphs; i++) {
+	    indices[i] = (WORD) glyphs[i].index;
+	    double x = glyphs[i].x;
+	    double y = glyphs[i].y;
+	    cairo_matrix_transform_point(&dwritesf->mat_inverse, &x, &y);
+	    // Since we will multiply by our ctm matrix later for rotation effects
+	    // and such, adjust positions by the inverse matrix now. Y-axis is
+            // inverted! Therefor the offset is -y.
+	    offsets[i].ascenderOffset = -(FLOAT)y;
+	    offsets[i].advanceOffset = (FLOAT)x;
+	    advances[i] = 0.0;
+	}
+	// The font matrix takes care of the scaling if we have a transform,
+	// emSize should be 1.
+        run.fontEmSize = 1.0f;
+    }
+
+    D2D1::Matrix3x2F mat = _cairo_d2d_matrix_from_matrix(&dwritesf->mat);
+	
+    if (transform) {
+	target_rt->SetTransform(mat);
+    }
+
+    if (dst->rt.get() != target_rt.get()) {
+	RefPtr<IDWriteGlyphRunAnalysis> analysis;
+	DWRITE_MATRIX dwmat = _cairo_dwrite_matrix_from_matrix(&dwritesf->mat);
+	DWriteFactory::Instance()->CreateGlyphRunAnalysis(&run,
+							  1.0f,
+							  transform ? &dwmat : 0,
+							  DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL_SYMMETRIC,
+							  DWRITE_MEASURING_MODE_NATURAL,
+							  0,
+							  0,
+							  &analysis);
+
+	RECT bounds;
+	analysis->GetAlphaTextureBounds(scaled_font->options.antialias == CAIRO_ANTIALIAS_NONE ?
+					DWRITE_TEXTURE_ALIASED_1x1 : DWRITE_TEXTURE_CLEARTYPE_3x1,
+					&bounds);
+	fontArea.x = bounds.left;
+	fontArea.y = bounds.top;
+	fontArea.width = bounds.right - bounds.left;
+	fontArea.height = bounds.bottom - bounds.top;
+    }
+
+    RefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(dst,
+								   source);
+
+    if (!brush) {
+	delete [] indices;
+	delete [] offsets;
+	delete [] advances;
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+    
+    if (transform) {
+	D2D1::Matrix3x2F mat_inverse = _cairo_d2d_matrix_from_matrix(&dwritesf->mat_inverse);
+	D2D1::Matrix3x2F mat_brush;
+
+	// The brush matrix needs to be multiplied with the inverted matrix
+	// as well, to move the brush into the space of the glyphs. Before
+	// the render target transformation.
+	brush->GetTransform(&mat_brush);
+	mat_brush = mat_brush * mat_inverse;
+	brush->SetTransform(&mat_brush);
+    }
+    
+    target_rt->DrawGlyphRun(D2D1::Point2F(0, 0), &run, brush, dwritesf->measuring_mode);
+    
+    if (transform) {
+	target_rt->SetTransform(D2D1::Matrix3x2F::Identity());
+    }
+
+    delete [] indices;
+    delete [] offsets;
+    delete [] advances;
+
+    if (target_rt.get() != dst->rt.get()) {
+	return _cairo_d2d_blend_temp_surface(dst, op, target_rt, clip, &fontArea);
+    }
+
+    return CAIRO_INT_STATUS_SUCCESS;
+}
 
 static cairo_int_status_t
 _cairo_d2d_show_glyphs (void			*surface,
