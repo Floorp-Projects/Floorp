@@ -92,11 +92,6 @@ public:
   nsresult
   Init();
 
-  nsresult
-  EnsureLoadTemporaryTableForStorage(DOMStorageImpl* aStorage);
-  nsresult
-  FlushAndDeleteTemporaryTableForStorage(DOMStorageImpl* aStorage);
-
   /**
    * Retrieve a list of all the keys associated with a particular domain.
    */
@@ -226,6 +221,14 @@ public:
    * data that will need to be flushed.
    */
   void EnsureTempTableFlushTimer();
+
+  /**
+   * Called by the timer or on shutdown/profile change to flush all temporary
+   * tables that are too long in memory to disk.
+   * Set force to flush even a table doesn't meet the age limits.  Used during
+   * shutdown.
+   */
+  nsresult FlushAndDeleteTemporaryTables(bool force);
 
   /**
    * Stops the temp table flush timer.
