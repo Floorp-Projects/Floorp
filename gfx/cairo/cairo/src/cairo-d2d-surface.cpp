@@ -673,6 +673,21 @@ static const cairo_surface_backend_t cairo_d2d_surface_backend = {
  * Helper functions.
  */
 
+/* Stack-based helper to manage region destruction. */
+struct cairo_region_auto_ptr
+{
+    cairo_region_auto_ptr() : region(NULL)
+    { }
+    cairo_region_auto_ptr(cairo_region_t *in_region) : region(in_region)
+    { }
+
+    void set(cairo_region_t *in_region) { region = in_region; }
+
+    ~cairo_region_auto_ptr() { if (region) cairo_region_destroy (region); }
+
+    cairo_region_t *region;
+};
+
 /* This clears a new D2D surface in case the VRAM was reused from an existing surface
  * and is therefor not empty, this must be called outside of drawing state! */
 static void
@@ -2808,6 +2823,8 @@ _cairo_d2d_try_fastblit(cairo_d2d_surface_t *dst,
     /* Region we need to clip this operation to */
     cairo_region_t *clipping_region = NULL;
     cairo_region_t *region;
+    cairo_region_auto_ptr region_ptr;
+
     if (clip) {
 	_cairo_clip_get_region(clip, &clipping_region);
 
@@ -2815,6 +2832,7 @@ _cairo_d2d_try_fastblit(cairo_d2d_surface_t *dst,
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 	}
 	region = cairo_region_copy(clipping_region);
+	region_ptr.set(region);
 
 	cairo_region_intersect_rectangle(region, &rect);
 
@@ -2824,6 +2842,8 @@ _cairo_d2d_try_fastblit(cairo_d2d_surface_t *dst,
 	}
     } else {
 	region = cairo_region_create_rectangle(&rect);
+	region_ptr.set(region);
+
 	// Areas outside of the surface do not matter.
 	cairo_rectangle_int_t surface_rect = { 0, 0,
 					       dst->rt->GetPixelSize().width,
@@ -2832,8 +2852,6 @@ _cairo_d2d_try_fastblit(cairo_d2d_surface_t *dst,
     }
 
     cairo_int_status_t rv = _cairo_d2d_copy_surface(dst, d2dsrc, &translation, region);
-
-    cairo_region_destroy(region);
     
     return rv;
 }
