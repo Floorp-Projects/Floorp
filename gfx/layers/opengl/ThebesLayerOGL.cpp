@@ -555,7 +555,11 @@ ThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer,
     void* callbackData = mOGLManager->GetThebesLayerCallbackData();
     callback(this, state.mContext, state.mRegionToDraw,
              state.mRegionToInvalidate, callbackData);
-    mValidRegion.Or(mValidRegion, state.mRegionToDraw);
+    // Everything that's visible has been validated. Do this instead of
+    // OR-ing with aRegionToDraw, since that can lead to a very complex region
+    // here (OR doesn't automatically simplify to the simplest possible
+    // representation of a region.)
+    mValidRegion.Or(mValidRegion, mVisibleRegion);
   }
 
   DEBUG_GL_ERROR_CHECK(gl());
