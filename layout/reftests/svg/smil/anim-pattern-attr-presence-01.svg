@@ -1,0 +1,138 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+  xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 200 600">
+  <!-- Bug 544809 - nsSVGPatternFrame::GetPatternWithAttr and callers should
+       take account of SMIL animation.
+       
+       Test animating pattern attributes doesn't rely on the presence of
+       attributes in the DOM, but also correctly detects attributes set by
+       animation.
+
+       The format of each test is that we have a base pattern named (attName)Ref
+       which does NOT specify the attribute under test, but instead sets the
+       attribute to a non-default value using animation.
+
+       Then we have a referencing pattern named (attName) that refers to the
+       base pattern and also does NOT specify the attribute under test.
+
+       When we go to look up the attribute under test we begin at (attName),
+       notice the attribute isn't specified (either in the DOM or by animation),
+       then go to (attName)Ref and detect that the attribute is specified there
+       by animation and use that value.
+
+       To the right of each test we also include a rect that directly references
+       (attName)Ref. The two rectangles should be identical but prior to fixing
+       this bug they were not.
+       -->
+  <!-- 1. patternUnits: defaults to objectBoundingBox -->
+  <defs>
+    <pattern xlink:href="#patternUnitsRef" id="patternUnits"/>
+    <pattern id="patternUnitsRef" width="80" height="80">
+      <set attributeName="patternUnits" to="userSpaceOnUse"/>
+      <rect width="50" height="50" fill="blue"/>
+      <rect x="50" width="50" height="50" fill="red"/>
+      <rect y="50" width="50" height="50" fill="red"/>
+      <rect x="50" y="50" width="50" height="50" fill="blue"/>
+    </pattern>
+  </defs>
+  <rect width="100" height="100" stroke="black" fill="url(#patternUnits)"/>
+  <g transform="translate(100)">
+    <rect width="100" height="100" stroke="black" fill="url(#patternUnitsRef)"/>
+  </g>
+  <!-- 2. patternContentUnits: defaults to userSpaceOnUse -->
+  <defs>
+    <pattern xlink:href="#patternContentUnitsRef" id="patternContentUnits"/>
+    <pattern id="patternContentUnitsRef" width="1" height="1">
+      <set attributeName="patternContentUnits" to="objectBoundingBox"/>
+      <rect width="0.5" height="0.5" fill="blue"/>
+      <rect x="0.5" width="0.5" height="0.5" fill="red"/>
+      <rect y="0.5" width="0.5" height="0.5" fill="red"/>
+      <rect x="0.5" y="0.5" width="0.5" height="0.5" fill="blue"/>
+    </pattern>
+  </defs>
+  <g transform="translate(0 100)">
+    <rect width="100" height="100" stroke="black"
+      fill="url(#patternContentUnits)"/>
+    <g transform="translate(100)">
+      <rect width="100" height="100" stroke="black"
+        fill="url(#patternContentUnitsRef)"/>
+    </g>
+  </g>
+  <!-- 3. patternTransform: defaults to identity -->
+  <defs>
+    <pattern xlink:href="#patternTransformRef" id="patternTransform"/>
+    <pattern id="patternTransformRef" width="1" height="1">
+      <animateTransform attributeName="patternTransform" type="rotate"
+        values="45 50 50" fill="freeze"/>
+      <rect width="50" height="50" fill="blue"/>
+      <rect x="50" width="50" height="50" fill="red"/>
+      <rect y="50" width="50" height="50" fill="red"/>
+      <rect x="50" y="50" width="50" height="50" fill="blue"/>
+    </pattern>
+  </defs>
+  <g transform="translate(0 200)">
+    <rect width="100" height="100" stroke="black"
+      fill="url(#patternTransform)"/>
+    <g transform="translate(100)">
+      <rect width="100" height="100" stroke="black"
+        fill="url(#patternTransformRef)"/>
+    </g>
+  </g>
+  <!-- 4. preserveAspectRatio: defaults to xMidYMid meet -->
+  <defs>
+    <pattern xlink:href="#parRef" id="par"/>
+    <pattern id="parRef" width="1" height="1" viewBox="0.1 0.1 0.6 0.85">
+      <set attributeName="preserveAspectRatio" to="none"/>
+      <rect width="50" height="50" fill="blue"/>
+      <rect x="50" width="50" height="50" fill="red"/>
+      <rect y="50" width="50" height="50" fill="red"/>
+      <rect x="50" y="50" width="50" height="50" fill="blue"/>
+    </pattern>
+  </defs>
+  <g transform="translate(0 300)">
+    <rect width="100" height="100" stroke="black" fill="url(#par)"/>
+    <g transform="translate(100)">
+      <rect width="100" height="100" stroke="black" fill="url(#parRef)"/>
+    </g>
+  </g>
+  <!-- 5. viewBox -->
+  <defs>
+    <pattern xlink:href="#viewBoxRef" id="viewBox"/>
+    <pattern id="viewBoxRef" width="1" height="1"
+      preserveAspectRatio="none">
+      <set attributeName="viewBox" to="0.1 0.1 0.6 0.85"/>
+      <rect width="50" height="50" fill="blue"/>
+      <rect x="50" width="50" height="50" fill="red"/>
+      <rect y="50" width="50" height="50" fill="red"/>
+      <rect x="50" y="50" width="50" height="50" fill="blue"/>
+    </pattern>
+  </defs>
+  <g transform="translate(0 400)">
+    <rect width="100" height="100" stroke="black" fill="url(#viewBox)"/>
+    <g transform="translate(100)">
+      <rect width="100" height="100" stroke="black" fill="url(#viewBoxRef)"/>
+    </g>
+  </g>
+  <!-- 6. xlink:href
+    This attribute is not affected by bug 544809, i.e. it doesn't use
+    nsSVGPatternFrame::GetPatternWithAttr, but we test it here for completeness
+    -->
+  <defs>
+    <pattern id="xlink">
+      <set attributeName="xlink:href" to="#xlinkRef"/>
+    </pattern>
+    <pattern id="xlinkRef" width="1" height="1">
+      <rect width="50" height="50" fill="blue"/>
+      <rect x="50" width="50" height="50" fill="red"/>
+      <rect y="50" width="50" height="50" fill="red"/>
+      <rect x="50" y="50" width="50" height="50" fill="blue"/>
+    </pattern>
+  </defs>
+  <g transform="translate(0 500)">
+    <rect width="100" height="100" stroke="black" fill="url(#xlink)"/>
+    <g transform="translate(100)">
+      <rect width="100" height="100" stroke="black" fill="url(#xlinkRef)"/>
+    </g>
+  </g>
+  <!-- If adding more tests here, be sure to update the viewBox on the root svg
+       element -->
+</svg>
