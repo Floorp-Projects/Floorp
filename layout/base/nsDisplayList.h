@@ -1409,6 +1409,7 @@ public:
   nsDisplaySolidColor(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                       const nsRect& aBounds, nscolor aColor)
     : nsDisplayItem(aBuilder, aFrame), mBounds(aBounds), mColor(aColor) {
+    NS_ASSERTION(NS_GET_A(aColor) > 0, "Don't create invisible nsDisplaySolidColors!");
     MOZ_COUNT_CTOR(nsDisplaySolidColor);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
