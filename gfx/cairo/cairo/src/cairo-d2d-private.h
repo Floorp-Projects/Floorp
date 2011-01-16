@@ -160,21 +160,5 @@ typedef HRESULT (WINAPI*D3D10CreateEffectFromMemoryFunc)(
     ID3D10Effect **ppEffect
 );
 
-RefPtr<ID2D1Brush>
-_cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf, 
-			            const cairo_pattern_t *pattern,
-				    bool unique = false);
-void
-_cairo_d2d_begin_draw_state(cairo_d2d_surface_t *d2dsurf);
-
-cairo_status_t
-_cairo_d2d_set_clip(cairo_d2d_surface_t *d2dsurf, cairo_clip_t *clip);
-
-cairo_int_status_t _cairo_d2d_blend_temp_surface(cairo_d2d_surface_t *surf, cairo_operator_t op, ID2D1RenderTarget *rt, cairo_clip_t *clip, const cairo_rectangle_int_t *bounds = NULL);
-
-RefPtr<ID2D1RenderTarget> _cairo_d2d_get_temp_rt(cairo_d2d_surface_t *surf, cairo_clip_t *clip);
-
-cairo_operator_t _cairo_d2d_simplify_operator(cairo_operator_t op, const cairo_pattern_t *source);
-
 #endif /* CAIRO_HAS_D2D_SURFACE */
 #endif /* CAIRO_D2D_PRIVATE_H */
