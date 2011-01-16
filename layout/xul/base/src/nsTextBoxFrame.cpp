@@ -72,6 +72,7 @@
 #include "nsCSSRendering.h"
 #include "nsIReflowCallback.h"
 #include "nsBoxFrame.h"
+#include "nsIThebesFontMetrics.h"
 
 #ifdef IBMBIDI
 #include "nsBidiUtils.h"
@@ -503,9 +504,13 @@ nsTextBoxFrame::DrawText(nsIRenderingContext& aRenderingContext,
       }
     }
 
-    aRenderingContext.SetFont(fontMet);
+    nsCOMPtr<nsIRenderingContext> refContext =
+        PresContext()->PresShell()->GetReferenceRenderingContext();
 
-    CalculateUnderline(aRenderingContext);
+    aRenderingContext.SetFont(fontMet);
+    refContext->SetFont(fontMet);
+
+    CalculateUnderline(*refContext);
 
     aRenderingContext.SetColor(aOverrideColor ? *aOverrideColor : GetStyleColor()->mColor);
 
@@ -526,6 +531,7 @@ nsTextBoxFrame::DrawText(nsIRenderingContext& aRenderingContext,
            posResolve.logicalIndex = mAccessKeyInfo->mAccesskeyIndex;
            rv = bidiUtils->RenderText(mCroppedTitle.get(), mCroppedTitle.Length(), direction,
                                       presContext, aRenderingContext,
+                                      *refContext,
                                       aTextRect.x, baseline,
                                       &posResolve,
                                       1);
@@ -536,6 +542,7 @@ nsTextBoxFrame::DrawText(nsIRenderingContext& aRenderingContext,
         {
            rv = bidiUtils->RenderText(mCroppedTitle.get(), mCroppedTitle.Length(), direction,
                                       presContext, aRenderingContext,
+                                      *refContext,
                                       aTextRect.x, baseline);
         }
       }
@@ -550,13 +557,15 @@ nsTextBoxFrame::DrawText(nsIRenderingContext& aRenderingContext,
            // underline position by getting the text metric.
            // XXX are attribute values always two byte?
            if (mAccessKeyInfo->mAccesskeyIndex > 0)
-               aRenderingContext.GetWidth(mCroppedTitle.get(), mAccessKeyInfo->mAccesskeyIndex,
-                                          mAccessKeyInfo->mBeforeWidth);
+               refContext->GetWidth(mCroppedTitle.get(), mAccessKeyInfo->mAccesskeyIndex,
+                                    mAccessKeyInfo->mBeforeWidth);
            else
                mAccessKeyInfo->mBeforeWidth = 0;
        }
 
-       aRenderingContext.DrawString(mCroppedTitle, aTextRect.x, baseline);
+       nsIThebesFontMetrics* fm = static_cast<nsIThebesFontMetrics*>(fontMet.get());
+       fm->DrawString(mCroppedTitle.get(), mCroppedTitle.Length(),
+                      aTextRect.x, baseline, &aRenderingContext, refContext.get());
     }
 
     if (mAccessKeyInfo && mAccessKeyInfo->mAccesskeyIndex != kNotFound) {
