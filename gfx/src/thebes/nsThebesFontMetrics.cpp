@@ -406,16 +406,14 @@ nsThebesFontMetrics::DrawString(const char *aString, PRUint32 aLength,
 nsresult
 nsThebesFontMetrics::DrawString(const PRUnichar* aString, PRUint32 aLength,
                                 nscoord aX, nscoord aY,
-                                PRInt32 aFontID,
-                                const nscoord* aSpacing,
-                                nsThebesRenderingContext *aContext)
+                                nsIRenderingContext *aContext,
+                                nsIRenderingContext *aTextRunConstructionContext)
 {
     if (aLength == 0)
         return NS_OK;
 
-    NS_ASSERTION(!aSpacing, "Spacing not supported here");
     StubPropertyProvider provider;
-    AutoTextRun textRun(this, aContext, aString, aLength);
+    AutoTextRun textRun(this, aTextRunConstructionContext, aString, aLength);
     if (!textRun.get())
         return NS_ERROR_FAILURE;
     gfxPoint pt(aX, aY);
