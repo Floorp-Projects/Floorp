@@ -2720,7 +2720,7 @@ nsLayoutUtils::DrawString(const nsIFrame*      aFrame,
         (NS_STYLE_DIRECTION_RTL == aDirection) ?
         NSBIDI_RTL : NSBIDI_LTR;
       rv = bidiUtils->RenderText(aString, aLength, direction,
-                                 presContext, *aContext,
+                                 presContext, *aContext, *aContext,
                                  aPoint.x, aPoint.y);
     }
   }
