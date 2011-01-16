@@ -331,7 +331,6 @@ class nsHtml5StreamParser : public nsIStreamListener,
 
     nsCOMPtr<nsIRequest>          mRequest;
     nsCOMPtr<nsIRequestObserver>  mObserver;
-    nsCOMPtr<nsISupports>         mCacheEntryClosePreventer;
 
     /**
      * The Unicode decoder
