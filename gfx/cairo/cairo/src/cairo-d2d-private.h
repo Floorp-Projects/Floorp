@@ -68,8 +68,14 @@ struct _cairo_d2d_device
     RefPtr<ID3D10Buffer> mQuadBuffer;
     RefPtr<ID3D10RasterizerState> mRasterizerState;
     RefPtr<ID3D10BlendState> mBlendStates[MAX_OPERATORS];
+    /** Texture used for manual glyph rendering */
+    RefPtr<ID3D10Texture2D> mTextTexture;
+    RefPtr<ID3D10ShaderResourceView> mTextTextureView;
     int mVRAMUsage;
 };
+
+const unsigned int TEXT_TEXTURE_WIDTH = 2048;
+const unsigned int TEXT_TEXTURE_HEIGHT = 512;
 typedef struct _cairo_d2d_device cairo_d2d_device_t;
 
 struct _cairo_d2d_surface {
