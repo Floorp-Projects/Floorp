@@ -110,25 +110,31 @@ public:
 
 protected:
   // Internal methods for handling referenced patterns
+  class AutoPatternReferencer;
   nsSVGPatternFrame* GetReferencedPattern();
-  // Helper to look at our pattern and then along its reference chain (if any)
-  // to find the first pattern with the specified attribute. Returns
-  // null if there isn't one.
-  nsSVGPatternElement* GetPatternWithAttr(nsIAtom *aAttrName, nsIContent *aDefault);
+  nsSVGPatternFrame* GetReferencedPatternIfNotInUse();
 
-  //
-  const nsSVGLength2 *GetX();
-  const nsSVGLength2 *GetY();
-  const nsSVGLength2 *GetWidth();
-  const nsSVGLength2 *GetHeight();
-
-  PRUint16 GetPatternUnits();
-  PRUint16 GetPatternContentUnits();
+  // Accessors to lookup pattern attributes
+  PRUint16 GetEnumValue(PRUint32 aIndex, nsIContent *aDefault);
+  PRUint16 GetEnumValue(PRUint32 aIndex)
+  {
+    return GetEnumValue(aIndex, mContent);
+  }
+  nsIDOMSVGAnimatedTransformList* GetPatternTransformList(nsIContent* aDefault);
   gfxMatrix GetPatternTransform();
-
-  const nsSVGViewBox &GetViewBox();
-  const SVGAnimatedPreserveAspectRatio &GetPreserveAspectRatio();
-
+  const nsSVGViewBox &GetViewBox(nsIContent *aDefault);
+  const nsSVGViewBox &GetViewBox() { return GetViewBox(mContent); }
+  const SVGAnimatedPreserveAspectRatio &GetPreserveAspectRatio(
+      nsIContent *aDefault);
+  const SVGAnimatedPreserveAspectRatio &GetPreserveAspectRatio()
+  {
+    return GetPreserveAspectRatio(mContent);
+  }
+  const nsSVGLength2 *GetLengthValue(PRUint32 aIndex, nsIContent *aDefault);
+  const nsSVGLength2 *GetLengthValue(PRUint32 aIndex)
+  {
+    return GetLengthValue(aIndex, mContent);
+  }
 
   nsresult PaintPattern(gfxASurface **surface,
                         gfxMatrix *patternMatrix,
