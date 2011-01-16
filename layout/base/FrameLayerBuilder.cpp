@@ -941,27 +941,33 @@ ContainerState::ThebesLayerData::Accumulate(nsDisplayListBuilder* aBuilder,
                                             const FrameLayerBuilder::Clip& aClip)
 {
   nscolor uniformColor;
-  if (aItem->IsUniform(aBuilder, &uniformColor) &&
-      aItem->GetBounds(aBuilder).ToInsidePixels(AppUnitsPerDevPixel(aItem)).Contains(aVisibleRect)) {
-    if (mVisibleRegion.IsEmpty()) {
-      // This color is all we have
-      mSolidColor = uniformColor;
-      mIsSolidColorInVisibleRegion = PR_TRUE;
-    } else if (mIsSolidColorInVisibleRegion &&
-               mVisibleRegion.IsEqual(nsIntRegion(aVisibleRect))) {
-      // we can just blend the colors together
-      mSolidColor = NS_ComposeColors(mSolidColor, uniformColor);
+  PRBool isUniform = aItem->IsUniform(aBuilder, &uniformColor);
+  // Some display items have to exist (so they can set forceTransparentSurface
+  // below) but don't draw anything. They'll return true for isUniform but
+  // a color with opacity 0.
+  if (!isUniform || NS_GET_A(uniformColor) > 0) {
+    if (isUniform &&
+        aItem->GetBounds(aBuilder).ToInsidePixels(AppUnitsPerDevPixel(aItem)).Contains(aVisibleRect)) {
+      if (mVisibleRegion.IsEmpty()) {
+        // This color is all we have
+        mSolidColor = uniformColor;
+        mIsSolidColorInVisibleRegion = PR_TRUE;
+      } else if (mIsSolidColorInVisibleRegion &&
+                 mVisibleRegion.IsEqual(nsIntRegion(aVisibleRect))) {
+        // we can just blend the colors together
+        mSolidColor = NS_ComposeColors(mSolidColor, uniformColor);
+      } else {
+        mIsSolidColorInVisibleRegion = PR_FALSE;
+      }
     } else {
       mIsSolidColorInVisibleRegion = PR_FALSE;
     }
-  } else {
-    mIsSolidColorInVisibleRegion = PR_FALSE;
-  }
 
-  mVisibleRegion.Or(mVisibleRegion, aVisibleRect);
-  mVisibleRegion.SimplifyOutward(4);
-  mDrawRegion.Or(mDrawRegion, aDrawRect);
-  mDrawRegion.SimplifyOutward(4);
+    mVisibleRegion.Or(mVisibleRegion, aVisibleRect);
+    mVisibleRegion.SimplifyOutward(4);
+    mDrawRegion.Or(mDrawRegion, aDrawRect);
+    mDrawRegion.SimplifyOutward(4);
+  }
 
   PRBool forceTransparentSurface = PR_FALSE;
   nsRegion opaque = aItem->GetOpaqueRegion(aBuilder, &forceTransparentSurface);
