@@ -324,6 +324,64 @@ read_short(const char *buf)
     return be16_to_cpu(*(unsigned short*)buf);
 }
 
+void
+_cairo_dwrite_glyph_run_from_glyphs(cairo_glyph_t *glyphs,
+				    int num_glyphs,
+				    cairo_dwrite_scaled_font_t *scaled_font,
+				    DWRITE_GLYPH_RUN *run,
+				    cairo_bool_t *transformed)
+{
+    UINT16 *indices = new UINT16[num_glyphs];
+    FLOAT *advances = new FLOAT[num_glyphs];
+    DWRITE_GLYPH_OFFSET *offsets = new DWRITE_GLYPH_OFFSET[num_glyphs];
+
+    cairo_dwrite_font_face_t *dwriteff = reinterpret_cast<cairo_dwrite_font_face_t*>(scaled_font->base.font_face);
+
+    run->bidiLevel = 0;
+    run->fontFace = dwriteff->dwriteface;
+    run->glyphCount = num_glyphs;
+    run->isSideways = FALSE;
+    run->glyphIndices = indices;
+    run->glyphOffsets = offsets;
+    run->glyphAdvances = advances;
+
+    if (scaled_font->mat.xy == 0 && scaled_font->mat.yx == 0 &&
+	scaled_font->mat.xx == scaled_font->base.font_matrix.xx && 
+	scaled_font->mat.yy == scaled_font->base.font_matrix.yy) {
+	// Fast route, don't actually use a transform but just
+        // set the correct font size.
+	*transformed = 0;
+
+	run->fontEmSize = (FLOAT)scaled_font->base.font_matrix.yy;
+
+	for (int i = 0; i < num_glyphs; i++) {
+	    indices[i] = (WORD) glyphs[i].index;
+
+	    offsets[i].ascenderOffset = -(FLOAT)(glyphs[i].y);
+	    offsets[i].advanceOffset = (FLOAT)(glyphs[i].x);
+	    advances[i] = 0.0;
+	}
+    } else {
+	*transformed = 1;
+
+	for (int i = 0; i < num_glyphs; i++) {
+	    indices[i] = (WORD) glyphs[i].index;
+	    double x = glyphs[i].x;
+	    double y = glyphs[i].y;
+	    cairo_matrix_transform_point(&scaled_font->mat_inverse, &x, &y);
+	    // Since we will multiply by our ctm matrix later for rotation effects
+	    // and such, adjust positions by the inverse matrix now. Y-axis is
+            // inverted! Therefor the offset is -y.
+	    offsets[i].ascenderOffset = -(FLOAT)y;
+	    offsets[i].advanceOffset = (FLOAT)x;
+	    advances[i] = 0.0;
+	}
+	// The font matrix takes care of the scaling if we have a transform,
+	// emSize should be 1.
+        run->fontEmSize = 1.0f;
+    }
+}
+
 #define GASP_TAG 0x70736167
 #define GASP_DOGRAY 0x2
 
