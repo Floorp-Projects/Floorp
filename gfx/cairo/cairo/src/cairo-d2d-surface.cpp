@@ -3506,60 +3506,11 @@ _cairo_dwrite_show_glyphs_on_d2d_surface(void			*surface,
 	    break;
     }
 
-    /* It is vital that dx values for dxy_buf are calculated from the delta of
-     * _logical_ x coordinates (not user x coordinates) or else the sum of all
-     * previous dx values may start to diverge from the current glyph's x
-     * coordinate due to accumulated rounding error. As a result strings could
-     * be painted shorter or longer than expected. */
-
-    UINT16 *indices = new UINT16[num_glyphs];
-    DWRITE_GLYPH_OFFSET *offsets = new DWRITE_GLYPH_OFFSET[num_glyphs];
-    FLOAT *advances = new FLOAT[num_glyphs];
-    BOOL transform = FALSE;
+    cairo_bool_t transform = FALSE;
 
     DWRITE_GLYPH_RUN run;
-    run.bidiLevel = 0;
-    run.fontFace = dwriteff->dwriteface;
-    run.glyphIndices = indices;
-    run.glyphCount = num_glyphs;
-    run.isSideways = FALSE;
-    run.glyphOffsets = offsets;
-    run.glyphAdvances = advances;
-
-    if (dwritesf->mat.xy == 0 && dwritesf->mat.yx == 0 &&
-	dwritesf->mat.xx == scaled_font->font_matrix.xx && 
-	dwritesf->mat.yy == scaled_font->font_matrix.yy) {
-	// Fast route, don't actually use a transform but just
-        // set the correct font size.
-        run.fontEmSize = (FLOAT)scaled_font->font_matrix.yy;
-
-	for (int i = 0; i < num_glyphs; i++) {
-	    indices[i] = (WORD) glyphs[i].index;
-	    // Since we will multiply by our ctm matrix later for rotation effects
-	    // and such, adjust positions by the inverse matrix now.
-	    offsets[i].ascenderOffset = -(FLOAT)(glyphs[i].y);
-	    offsets[i].advanceOffset = (FLOAT)(glyphs[i].x);
-	    advances[i] = 0.0;
-	}
-    } else {
-	transform = TRUE;
-
-	for (int i = 0; i < num_glyphs; i++) {
-	    indices[i] = (WORD) glyphs[i].index;
-	    double x = glyphs[i].x;
-	    double y = glyphs[i].y;
-	    cairo_matrix_transform_point(&dwritesf->mat_inverse, &x, &y);
-	    // Since we will multiply by our ctm matrix later for rotation effects
-	    // and such, adjust positions by the inverse matrix now. Y-axis is
-            // inverted! Therefor the offset is -y.
-	    offsets[i].ascenderOffset = -(FLOAT)y;
-	    offsets[i].advanceOffset = (FLOAT)x;
-	    advances[i] = 0.0;
-	}
-	// The font matrix takes care of the scaling if we have a transform,
-	// emSize should be 1.
-        run.fontEmSize = 1.0f;
-    }
+    
+    _cairo_dwrite_glyph_run_from_glyphs(glyphs, num_glyphs, dwritesf, &run, &transform);
 
     D2D1::Matrix3x2F mat = _cairo_d2d_matrix_from_matrix(&dwritesf->mat);
 	
@@ -3593,9 +3544,9 @@ _cairo_dwrite_show_glyphs_on_d2d_surface(void			*surface,
 								   source);
 
     if (!brush) {
-	delete [] indices;
-	delete [] offsets;
-	delete [] advances;
+	delete [] run.glyphIndices;
+	delete [] run.glyphOffsets;
+	delete [] run.glyphAdvances;
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
     
@@ -3617,9 +3568,9 @@ _cairo_dwrite_show_glyphs_on_d2d_surface(void			*surface,
 	target_rt->SetTransform(D2D1::Matrix3x2F::Identity());
     }
 
-    delete [] indices;
-    delete [] offsets;
-    delete [] advances;
+    delete [] run.glyphIndices;
+    delete [] run.glyphOffsets;
+    delete [] run.glyphAdvances;
 
     if (target_rt.get() != dst->rt.get()) {
 	return _cairo_d2d_blend_temp_surface(dst, op, target_rt, clip, &fontArea);
