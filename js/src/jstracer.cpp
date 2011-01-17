@@ -16348,6 +16348,11 @@ TraceRecorder::record_JSOP_UNBRAND()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_UNBRANDTHIS()
 {
+    /* In case of primitive this, do nothing. */
+    JSStackFrame *fp = cx->fp();
+    if (fp->fun()->inStrictMode() && !fp->thisValue().isObject())
+        return ARECORD_CONTINUE;
+
     LIns* this_ins;
     RecordingStatus status = getThis(this_ins);
     if (status != RECORD_CONTINUE)
