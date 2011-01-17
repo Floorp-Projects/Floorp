@@ -2077,8 +2077,7 @@ static void oc_dec_init_dummy_frame(th_dec_ctx *_dec){
   cheight=yheight>>!(info->pixel_fmt&2);
   yplane_sz=yhstride*(size_t)yheight+16;
   cplane_sz=chstride*(size_t)cheight;
-  yoffset=_dec->state.ref_ystride[0]*(yheight-1)-
-   (OC_UMV_PADDING+OC_UMV_PADDING*(ptrdiff_t)yhstride);
+  yoffset=yhstride*(ptrdiff_t)(yheight-OC_UMV_PADDING-1)+OC_UMV_PADDING;
   memset(_dec->state.ref_frame_data[0]-yoffset,0x80,yplane_sz+2*cplane_sz);
 }
 
