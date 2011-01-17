@@ -517,22 +517,22 @@ GLContext::CreateTextureImage(const nsIntSize& aSize,
                               GLenum aWrapMode,
                               PRBool aUseNearestFilter)
 {
-  MakeCurrent();
+    MakeCurrent();
 
-  GLuint texture;
-  fGenTextures(1, &texture);
+    GLuint texture;
+    fGenTextures(1, &texture);
 
-  fActiveTexture(LOCAL_GL_TEXTURE0);
-  fBindTexture(LOCAL_GL_TEXTURE_2D, texture);
+    fActiveTexture(LOCAL_GL_TEXTURE0);
+    fBindTexture(LOCAL_GL_TEXTURE_2D, texture);
 
-  GLint texfilter = aUseNearestFilter ? LOCAL_GL_NEAREST : LOCAL_GL_LINEAR;
-  fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, texfilter);
-  fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, texfilter);
-  fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, aWrapMode);
-  fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, aWrapMode);
-  DEBUG_GL_ERROR_CHECK(this);
+    GLint texfilter = aUseNearestFilter ? LOCAL_GL_NEAREST : LOCAL_GL_LINEAR;
+    fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, texfilter);
+    fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, texfilter);
+    fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, aWrapMode);
+    fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, aWrapMode);
+    DEBUG_GL_ERROR_CHECK(this);
 
-  return CreateBasicTextureImage(texture, aSize, aWrapMode, aContentType, this);
+    return CreateBasicTextureImage(texture, aSize, aWrapMode, aContentType, this);
 }
 
 BasicTextureImage::~BasicTextureImage()
@@ -581,7 +581,7 @@ BasicTextureImage::BeginUpdate(nsIntRegion& aRegion)
     }
 
     nsRefPtr<gfxASurface> updateSurface = 
-      GetSurfaceForUpdate(gfxIntSize(rgnSize.width, rgnSize.height), format);
+        GetSurfaceForUpdate(gfxIntSize(rgnSize.width, rgnSize.height), format);
 
     if (!updateSurface)
         return NULL;
@@ -592,9 +592,9 @@ BasicTextureImage::BeginUpdate(nsIntRegion& aRegion)
    
     // Clear the returned surface because it might have been re-used.
     if (format == gfxASurface::ImageFormatARGB32) {
-      mUpdateContext->SetOperator(gfxContext::OPERATOR_CLEAR);
-      mUpdateContext->Paint();
-      mUpdateContext->SetOperator(gfxContext::OPERATOR_OVER);
+        mUpdateContext->SetOperator(gfxContext::OPERATOR_CLEAR);
+        mUpdateContext->Paint();
+        mUpdateContext->SetOperator(gfxContext::OPERATOR_OVER);
     }
     return mUpdateContext;
 }
@@ -617,12 +617,12 @@ BasicTextureImage::EndUpdate()
     nsIntRect surfaceRect(mUpdateOffset.x, mUpdateOffset.y, mUpdateRect.width, mUpdateRect.height);
 
     mShaderType =
-      mGLContext->UploadSurfaceToTexture(originalSurface,
-                                         surfaceRect,
-                                         mTexture,
-                                         !mTextureInited,
-                                         mUpdateRect.TopLeft(),
-                                         relative);
+        mGLContext->UploadSurfaceToTexture(originalSurface,
+                                           surfaceRect,
+                                           mTexture,
+                                           !mTextureInited,
+                                           mUpdateRect.TopLeft(),
+                                           relative);
     FinishedSurfaceUpload();
 
     mUpdateContext = nsnull;
@@ -635,13 +635,13 @@ already_AddRefed<gfxASurface>
 BasicTextureImage::GetSurfaceForUpdate(const gfxIntSize& aSize, ImageFormat aFmt)
 {
     return gfxPlatform::GetPlatform()->
-      CreateOffscreenSurface(aSize, gfxASurface::ContentFromFormat(aFmt));
+        CreateOffscreenSurface(aSize, gfxASurface::ContentFromFormat(aFmt));
 }
 
 bool
 BasicTextureImage::FinishedSurfaceUpdate()
 {
-  return false;
+    return false;
 }
 
 void
@@ -652,20 +652,20 @@ BasicTextureImage::FinishedSurfaceUpload()
 bool 
 BasicTextureImage::DirectUpdate(gfxASurface *aSurf, const nsIntRegion& aRegion)
 {
-  nsIntRect bounds = aRegion.GetBounds();
-  if (!mTextureInited) {
-    bounds = nsIntRect(0, 0, mSize.width, mSize.height);
-  }
+    nsIntRect bounds = aRegion.GetBounds();
+    if (!mTextureInited) {
+        bounds = nsIntRect(0, 0, mSize.width, mSize.height);
+    }
 
-  mShaderType =
-    mGLContext->UploadSurfaceToTexture(aSurf,
-                                       bounds,
-                                       mTexture,
-                                       !mTextureInited,
-                                       bounds.TopLeft(),
-                                       PR_FALSE);
-  mTextureInited = PR_TRUE;
-  return true;
+    mShaderType =
+        mGLContext->UploadSurfaceToTexture(aSurf,
+                                           bounds,
+                                           mTexture,
+                                           !mTextureInited,
+                                           bounds.TopLeft(),
+                                           PR_FALSE);
+    mTextureInited = PR_TRUE;
+    return true;
 }
 
 void
@@ -1270,159 +1270,160 @@ GLContext::UploadSurfaceToTexture(gfxASurface *aSurface,
                                   const nsIntPoint& aDstPoint,
                                   bool aPixelBuffer)
 {
-  bool textureInited = aOverwrite ? false : true;
-  MakeCurrent();
-  fActiveTexture(LOCAL_GL_TEXTURE0);
+    bool textureInited = aOverwrite ? false : true;
+    MakeCurrent();
+    fActiveTexture(LOCAL_GL_TEXTURE0);
   
-  if (!aTexture) {
-    fGenTextures(1, &aTexture);
-    fBindTexture(LOCAL_GL_TEXTURE_2D, aTexture);
-    fTexParameteri(LOCAL_GL_TEXTURE_2D, 
-                   LOCAL_GL_TEXTURE_MIN_FILTER, 
-                   LOCAL_GL_LINEAR);
-    fTexParameteri(LOCAL_GL_TEXTURE_2D, 
-                   LOCAL_GL_TEXTURE_MAG_FILTER, 
-                   LOCAL_GL_LINEAR);
-    fTexParameteri(LOCAL_GL_TEXTURE_2D, 
-                   LOCAL_GL_TEXTURE_WRAP_S, 
-                   LOCAL_GL_CLAMP_TO_EDGE);
-    fTexParameteri(LOCAL_GL_TEXTURE_2D, 
-                   LOCAL_GL_TEXTURE_WRAP_T, 
-                   LOCAL_GL_CLAMP_TO_EDGE);
-    textureInited = false;
-  } else {
-    fBindTexture(LOCAL_GL_TEXTURE_2D, aTexture);
-  }
-
-  nsRefPtr<gfxImageSurface> imageSurface = aSurface->GetAsImageSurface();
-  unsigned char* data = NULL;
-
-  if (!imageSurface || 
-      (imageSurface->Format() != gfxASurface::ImageFormatARGB32 &&
-       imageSurface->Format() != gfxASurface::ImageFormatRGB24 &&
-       imageSurface->Format() != gfxASurface::ImageFormatRGB16_565)) {
-    // We can't get suitable pixel data for the surface, make a copy
-    imageSurface = 
-      new gfxImageSurface(gfxIntSize(aSrcRect.width, aSrcRect.height), 
-                          gfxASurface::ImageFormatARGB32);
-  
-    nsRefPtr<gfxContext> context = new gfxContext(imageSurface);
-
-    context->Translate(-gfxPoint(aSrcRect.x, aSrcRect.y));
-    context->SetSource(aSurface);
-    context->Paint();
-    data = imageSurface->Data();
-    NS_ASSERTION(!aPixelBuffer, "Must be using an image compatible surface with pixel buffers!");
-  } else {
-    // If a pixel buffer is bound the data pointer parameter is relative
-    // to the start of the data block.
-    if (!aPixelBuffer) {
-      data = imageSurface->Data();
+    if (!aTexture) {
+        fGenTextures(1, &aTexture);
+        fBindTexture(LOCAL_GL_TEXTURE_2D, aTexture);
+        fTexParameteri(LOCAL_GL_TEXTURE_2D, 
+                       LOCAL_GL_TEXTURE_MIN_FILTER, 
+                       LOCAL_GL_LINEAR);
+        fTexParameteri(LOCAL_GL_TEXTURE_2D, 
+                       LOCAL_GL_TEXTURE_MAG_FILTER, 
+                       LOCAL_GL_LINEAR);
+        fTexParameteri(LOCAL_GL_TEXTURE_2D, 
+                       LOCAL_GL_TEXTURE_WRAP_S, 
+                       LOCAL_GL_CLAMP_TO_EDGE);
+        fTexParameteri(LOCAL_GL_TEXTURE_2D, 
+                       LOCAL_GL_TEXTURE_WRAP_T, 
+                       LOCAL_GL_CLAMP_TO_EDGE);
+        textureInited = false;
+    } else {
+        fBindTexture(LOCAL_GL_TEXTURE_2D, aTexture);
     }
-    data += aSrcRect.y * imageSurface->Stride();
-    data += aSrcRect.x * 4;
-  }
 
-  GLenum format;
-  GLenum internalformat;
-  GLenum type;
-  PRInt32 pixelSize = gfxASurface::BytePerPixelFromFormat(imageSurface->Format());
-  ShaderProgramType shader;
+    nsRefPtr<gfxImageSurface> imageSurface = aSurface->GetAsImageSurface();
+    unsigned char* data = NULL;
 
-  switch (imageSurface->Format()) {
-    case gfxASurface::ImageFormatARGB32:
-      format = LOCAL_GL_RGBA;
-      type = LOCAL_GL_UNSIGNED_BYTE;
-      shader = BGRALayerProgramType;
-      break;
-    case gfxASurface::ImageFormatRGB24:
-      // Treat RGB24 surfaces as RGBA32 except for the shader
-      // program used.
-      format = LOCAL_GL_RGBA;
-      type = LOCAL_GL_UNSIGNED_BYTE;
-      shader = BGRXLayerProgramType;
-      break;
-    case gfxASurface::ImageFormatRGB16_565:
-      format = LOCAL_GL_RGB;
-      type = LOCAL_GL_UNSIGNED_SHORT_5_6_5;
-      shader = RGBALayerProgramType;
-      break;
-    default:
-      NS_ASSERTION(false, "Unhandled image surface format!");
-      format = 0;
-      type = 0;
-      shader = ShaderProgramType(0);
-  }
+    if (!imageSurface || 
+        (imageSurface->Format() != gfxASurface::ImageFormatARGB32 &&
+         imageSurface->Format() != gfxASurface::ImageFormatRGB24 &&
+         imageSurface->Format() != gfxASurface::ImageFormatRGB16_565)) {
+        // We can't get suitable pixel data for the surface, make a copy
+        imageSurface = 
+          new gfxImageSurface(gfxIntSize(aSrcRect.width, aSrcRect.height), 
+                              gfxASurface::ImageFormatARGB32);
+  
+        nsRefPtr<gfxContext> context = new gfxContext(imageSurface);
+
+        context->Translate(-gfxPoint(aSrcRect.x, aSrcRect.y));
+        context->SetSource(aSurface);
+        context->Paint();
+        data = imageSurface->Data();
+        NS_ASSERTION(!aPixelBuffer,
+                     "Must be using an image compatible surface with pixel buffers!");
+    } else {
+        // If a pixel buffer is bound the data pointer parameter is relative
+        // to the start of the data block.
+        if (!aPixelBuffer) {
+              data = imageSurface->Data();
+        }
+        data += aSrcRect.y * imageSurface->Stride();
+        data += aSrcRect.x * 4;
+    }
+
+    GLenum format;
+    GLenum internalformat;
+    GLenum type;
+    PRInt32 pixelSize = gfxASurface::BytePerPixelFromFormat(imageSurface->Format());
+    ShaderProgramType shader;
+
+    switch (imageSurface->Format()) {
+        case gfxASurface::ImageFormatARGB32:
+            format = LOCAL_GL_RGBA;
+            type = LOCAL_GL_UNSIGNED_BYTE;
+            shader = BGRALayerProgramType;
+            break;
+        case gfxASurface::ImageFormatRGB24:
+            // Treat RGB24 surfaces as RGBA32 except for the shader
+            // program used.
+            format = LOCAL_GL_RGBA;
+            type = LOCAL_GL_UNSIGNED_BYTE;
+            shader = BGRXLayerProgramType;
+            break;
+        case gfxASurface::ImageFormatRGB16_565:
+            format = LOCAL_GL_RGB;
+            type = LOCAL_GL_UNSIGNED_SHORT_5_6_5;
+            shader = RGBALayerProgramType;
+            break;
+        default:
+            NS_ASSERTION(false, "Unhandled image surface format!");
+            format = 0;
+            type = 0;
+            shader = ShaderProgramType(0);
+    }
 
 #ifndef USE_GLES2
-  fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, 
-               imageSurface->Stride() / pixelSize);
+    fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, 
+                 imageSurface->Stride() / pixelSize);
 
-  internalformat = LOCAL_GL_RGBA;
+    internalformat = LOCAL_GL_RGBA;
 #else
-  internalformat = format;
+    internalformat = format;
 
-  if (imageSurface->Stride() != aSrcRect.width * pixelSize) {
-    // Not using the whole row of texture data and GLES doesn't 
-    // support GL_UNPACK_ROW_LENGTH. We need to upload each row
-    // separately.
-    if (!textureInited) {
-      fTexImage2D(LOCAL_GL_TEXTURE_2D,
-                  0,
-                  internalformat,
-                  aSrcRect.width,
-                  aSrcRect.height,
-                  0,
-                  format,
-                  type,
-                  NULL);
+    if (imageSurface->Stride() != aSrcRect.width * pixelSize) {
+        // Not using the whole row of texture data and GLES doesn't 
+        // support GL_UNPACK_ROW_LENGTH. We need to upload each row
+        // separately.
+        if (!textureInited) {
+            fTexImage2D(LOCAL_GL_TEXTURE_2D,
+                        0,
+                        internalformat,
+                        aSrcRect.width,
+                        aSrcRect.height,
+                        0,
+                        format,
+                        type,
+                        NULL);
+        }
+
+        for (int h = 0; h < aSrcRect.height; h++) {
+            fTexSubImage2D(LOCAL_GL_TEXTURE_2D,
+                           0,
+                           aDstPoint.x,
+                           aDstPoint.y+h,
+                           aSrcRect.width,
+                           1,
+                           format,
+                           type,
+                           data);
+            data += imageSurface->Stride();
+        }
+
+        return shader;
+  }
+#endif
+
+
+    if (textureInited) {
+        fTexSubImage2D(LOCAL_GL_TEXTURE_2D,
+                       0,
+                       aDstPoint.x,
+                       aDstPoint.y,
+                       aSrcRect.width,
+                       aSrcRect.height,
+                       format,
+                       type,
+                       data);
+    } else {
+        fTexImage2D(LOCAL_GL_TEXTURE_2D,
+                    0,
+                    internalformat,
+                    aSrcRect.width,
+                    aSrcRect.height,
+                    0,
+                    format,
+                    type,
+                    data);
     }
 
-    for (int h = 0; h < aSrcRect.height; h++) {
-      fTexSubImage2D(LOCAL_GL_TEXTURE_2D,
-                     0,
-                     aDstPoint.x,
-                     aDstPoint.y+h,
-                     aSrcRect.width,
-                     1,
-                     format,
-                     type,
-                     data);
-      data += imageSurface->Stride();
-    }
+#ifndef USE_GLES2
+    fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, 0);
+#endif
 
     return shader;
-  }
-#endif
-
-
-  if (textureInited) {
-    fTexSubImage2D(LOCAL_GL_TEXTURE_2D,
-                   0,
-                   aDstPoint.x,
-                   aDstPoint.y,
-                   aSrcRect.width,
-                   aSrcRect.height,
-                   format,
-                   type,
-                   data);
-  } else {
-    fTexImage2D(LOCAL_GL_TEXTURE_2D,
-                0,
-                internalformat,
-                aSrcRect.width,
-                aSrcRect.height,
-                0,
-                format,
-                type,
-                data);
-  }
-
-#ifndef USE_GLES2
-  fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, 0);
-#endif
-
-  return shader;
 }
 
 void
