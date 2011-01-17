@@ -1498,15 +1498,24 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 
 #tabbrowser-tabs[tabsontop="true"] > .tabbrowser-arrowscrollbox > scrollbox:not(:-moz-lwtheme) {
-  padding-bottom: 1px;
   margin-bottom: -1px;
-  position: relative;
 }
 
-#tabbrowser-tabs[tabsontop="true"] > .tabbrowser-tab[selected="true"]:not(:-moz-lwtheme) {
-  margin-bottom: -1px;
-  padding-bottom: 1px;
+%ifdef WINSTRIPE_AERO
+@media not all and (-moz-windows-compositor) {
+%endif
+  #tabbrowser-tabs[tabsontop="true"] > .tabbrowser-arrowscrollbox > scrollbox:not(:-moz-lwtheme) {
+    padding-bottom: 1px;
+    position: relative;
+  }
+
+  #tabbrowser-tabs[tabsontop="true"] > .tabbrowser-tab[selected="true"]:not(:-moz-lwtheme) {
+    margin-bottom: -1px;
+    padding-bottom: 1px;
+  }
+%ifdef WINSTRIPE_AERO
 }
+%endif
 
 /* Tabs */
 .tabbrowser-tab,

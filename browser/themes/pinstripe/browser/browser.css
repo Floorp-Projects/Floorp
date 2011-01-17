@@ -1659,11 +1659,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 .tabbrowser-tab[selected="true"] {
   z-index: 1;
-}
-
-.tabbrowser-tab[selected="true"]:not([pinned]),
-#tabbrowser-tabs[pinnedonly="true"] > .tabbrowser-tab[selected="true"] {
-  /* Don't overwrite position:fixed on pinned tabs. */
   position: relative;
 }
 
