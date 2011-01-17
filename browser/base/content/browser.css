@@ -506,7 +506,7 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
 }
 
 /* Remove the resizer from the statusbar compatibility shim */
-#status-bar > .statusbar-resizerpanel {
+#status-bar[hideresizer] > .statusbar-resizerpanel {
   display: none;
 }
 
