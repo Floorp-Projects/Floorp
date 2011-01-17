@@ -6289,16 +6289,9 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
           mPluginWindow->window = nsnull;
 #ifdef MOZ_X11
           // Fill in the display field.
-          nsIWidget* win = mObjectFrame->GetNearestWidget();
           NPSetWindowCallbackStruct* ws_info = 
             static_cast<NPSetWindowCallbackStruct*>(mPluginWindow->ws_info);
-          if (win) {
-            ws_info->display =
-              static_cast<Display*>(win->GetNativeData(NS_NATIVE_DISPLAY));
-          }
-          else {
-            ws_info->display = DefaultXDisplay();
-          }
+          ws_info->display = DefaultXDisplay();
 
           nsCAutoString description;
           GetPluginDescription(description);
