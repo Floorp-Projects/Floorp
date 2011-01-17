@@ -4681,8 +4681,13 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &valu
          * may not have changed and we may be overwriting a function-valued
          * property. See bug 560998.
          */
-        if (obj->shape() == oldShape && obj->branded() && shape->slot != SHAPE_INVALID_SLOT)
-            obj->methodWriteBarrier(cx, shape->slot, value);
+        if (obj->shape() == oldShape && obj->branded() && shape->slot != SHAPE_INVALID_SLOT) {
+#ifdef DEBUG
+            const Shape *newshape =
+#endif
+                obj->methodWriteBarrier(cx, *shape, value);
+            JS_ASSERT(newshape == shape);
+        }
     }
 
     /* Store value before calling addProperty, in case the latter GC's. */
@@ -5588,13 +5593,12 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
              */
             bool identical = shape->isMethod() && &shape->methodObject() == &vp->toObject();
             if (!identical) {
-                if (!obj->methodShapeChange(cx, *shape))
+                shape = obj->methodShapeChange(cx, *shape);
+                if (!shape)
                     return false;
 
-                JS_ASSERT(IsFunctionObject(*vp));
-
                 JSObject *funobj = &vp->toObject();
-                JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
+                JSFunction *fun = funobj->getFunctionPrivate();
                 if (fun == funobj) {
                     funobj = CloneFunctionObject(cx, fun, fun->parent);
                     if (!funobj)

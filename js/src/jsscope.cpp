@@ -1350,9 +1350,11 @@ JSObject::deletingShapeChange(JSContext *cx, const Shape &shape)
     generateOwnShape(cx);
 }
 
-bool
+const Shape *
 JSObject::methodShapeChange(JSContext *cx, const Shape &shape)
 {
+    const Shape *result = &shape;
+
     JS_ASSERT(!JSID_IS_VOID(shape.id));
     if (shape.isMethod()) {
 #ifdef DEBUG
@@ -1369,12 +1371,12 @@ JSObject::methodShapeChange(JSContext *cx, const Shape &shape)
          * despecializing from a method memoized in the property tree to a
          * plain old function-valued property.
          */
-        if (!putProperty(cx, shape.id, NULL, shape.rawSetter, shape.slot,
-                         shape.attrs,
-                         shape.getFlags() & ~Shape::METHOD,
-                         shape.shortid)) {
-            return false;
-        }
+        result = putProperty(cx, shape.id, NULL, shape.rawSetter, shape.slot,
+                             shape.attrs,
+                             shape.getFlags() & ~Shape::METHOD,
+                             shape.shortid);
+        if (!result)
+            return NULL;
     }
 
     if (branded()) {
@@ -1384,13 +1386,13 @@ JSObject::methodShapeChange(JSContext *cx, const Shape &shape)
             setMethodThrashCount(thrashCount);
             if (thrashCount == JSObject::METHOD_THRASH_COUNT_MAX) {
                 unbrand(cx);
-                return true;
+                return result;
             }
         }
     }
 
     generateOwnShape(cx);
-    return true;
+    return result;
 }
 
 bool
@@ -1403,7 +1405,7 @@ JSObject::methodShapeChange(JSContext *cx, uint32 slot)
             const Shape &shape = r.front();
             JS_ASSERT(!JSID_IS_VOID(shape.id));
             if (shape.slot == slot)
-                return methodShapeChange(cx, shape);
+                return methodShapeChange(cx, shape) != NULL;
         }
     }
     return true;
