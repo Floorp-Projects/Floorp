@@ -461,11 +461,11 @@ BasicBufferOGL::BeginPaint(ContentType aContentType)
   // BeginUpdate is allowed to modify the given region,
   // if it wants more to be repainted than we request.
   result.mContext = mTexImage->BeginUpdate(result.mRegionToDraw);
-  result.mContext->Translate(-gfxPoint(quadrantRect.x, quadrantRect.y));
   if (!result.mContext) {
     NS_WARNING("unable to get context for update");
     return result;
   }
+  result.mContext->Translate(-gfxPoint(quadrantRect.x, quadrantRect.y));
   // Move rgnToPaint back into position so that the thebes callback
   // gets the right coordintes.
   result.mRegionToDraw.MoveBy(-offset);
