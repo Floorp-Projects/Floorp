@@ -4706,10 +4706,7 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &valu
     if (defineHow & JSDNP_CACHE_RESULT) {
         JS_ASSERT_NOT_ON_TRACE(cx);
         if (added) {
-#ifdef JS_TRACER
-            PropertyCacheEntry *entry =
-#endif
-                JS_PROPERTY_CACHE(cx).fill(cx, obj, 0, 0, obj, shape, true);
+            JS_PROPERTY_CACHE(cx).fill(cx, obj, 0, 0, obj, shape, true);
             TRACE_1(AddProperty, obj);
         }
     }
