@@ -30,6 +30,14 @@ var testNum = 0;
 var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
               getInterface(Components.interfaces.nsIDOMWindowUtils);
 
+function hasTabModalPrompts() {
+  var prefName = "prompts.tab_modal.enabled";
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  Components.utils.import("resource://gre/modules/Services.jsm");
+  return Services.prefs.getPrefType(prefName) == Services.prefs.PREF_BOOL &&
+         Services.prefs.getBoolPref(prefName);
+}
+
 function openAlert() {
   ok(true, "opening alert...");
   alert("hello!");
@@ -42,14 +50,18 @@ function runtest()
   // Here we send the events to simulate clicking it.
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   ok(true, "starting test");
-  isTabModal = true;
+  isTabModal = hasTabModalPrompts();
+  if (!isTabModal)
+    todo(false, "Test is run with tab modal prompts disabled.");
+  else
+    ok(true, "Test is run with tab modal prompts enabled.");
   startCallbackTimer();
 
   var button = $("button");
   dispatchMouseEvent(button, "mousedown");
   dispatchMouseEvent(button, "mouseup");
 
-  selectionTest = true;
+  selectionTest = isTabModal;
 
   startCallbackTimer();
 
@@ -71,7 +83,9 @@ function dispatchMouseEvent(target, type)
 
 function handleDialog(ui, testNum)
 {
-  if (selectionTest) {
+  if (!selectionTest) {
+    todo(false, "Selection test is disabled when tab modal prompts are not enabled.");
+  } else {
     synthesizeMouse($("text"), 25, 55, { type: "mousemove" });
     is(window.getSelection().toString(), "", "selection not made");
     synthesizeMouse(ui.button0, 5, 5, { }, ui.button0.ownerDocument.defaultView);
