@@ -1718,10 +1718,13 @@ nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
 }
 
 ImageContainer*
-nsObjectFrame::GetImageContainer()
+nsObjectFrame::GetImageContainer(LayerManager* aManager)
 {
-  nsRefPtr<LayerManager> manager =
-    nsContentUtils::LayerManagerForDocument(mContent->GetOwnerDoc());
+  nsRefPtr<LayerManager> manager = aManager;
+
+  if (!manager) {
+    manager = nsContentUtils::LayerManagerForDocument(mContent->GetOwnerDoc());
+  }
   if (!manager) {
     return nsnull;
   }
@@ -1841,7 +1844,7 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
 
   NS_ASSERTION(layer->GetType() == Layer::TYPE_IMAGE, "ObjectFrame works only with ImageLayer");
   // Create image
-  nsRefPtr<ImageContainer> container = GetImageContainer();
+  nsRefPtr<ImageContainer> container = GetImageContainer(aManager);
   if (!container)
     return nsnull;
 
