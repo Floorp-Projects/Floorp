@@ -184,9 +184,9 @@ ifeq (Darwin, $(OS_ARCH))
 ifdef LIBXUL_SDK
 GECKO_PLATFORM_INI_PATH="$(STAGEDIST)/../Frameworks/XUL.framework/Versions/$(MOZILLA_VERSION)/platform.ini"
 else
-GECKO_PLATFORM_INI_PATH="$(STAGEDIST)/../Resources/platform.ini"
+GECKO_PLATFORM_INI_PATH="$(STAGEDIST)/platform.ini"
 endif
-FENNEC_APPLICATION_INI_PATH="$(STAGEDIST)/../Resources/application.ini"
+FENNEC_APPLICATION_INI_PATH="$(STAGEDIST)/application.ini"
 else
 ifdef LIBXUL_SDK
 GECKO_PLATFORM_INI_PATH="$(STAGEDIST)/xulrunner/platform.ini"
