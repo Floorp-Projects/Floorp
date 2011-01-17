@@ -252,8 +252,10 @@ cairo_d2d_create_device_from_d3d10device(ID3D10Device1 *d3d10device)
     // We start out with TEXT_TEXTURE roughly in VRAM usage.
     device->mVRAMUsage = TEXT_TEXTURE_WIDTH * TEXT_TEXTURE_HEIGHT * 4;
 
-    textDesc.Usage = D3D10_USAGE_DYNAMIC;
-    textDesc.CPUAccessFlags = D3D10_CPU_ACCESS_WRITE;
+    // We create this with USAGE_DEFAULT, our intention is to have VRAM reserved
+    // for text usage. We actually store glyph data in STAGING textures for the
+    // rendering pipeline to read and copy it to this VRAM texture.
+    textDesc.Usage = D3D10_USAGE_DEFAULT;
     hr = device->mD3D10Device->CreateTexture2D(&textDesc, NULL, &device->mTextTexture);
     if (FAILED(hr)) {
 	goto FAILED;
@@ -3624,8 +3626,18 @@ _cairo_dwrite_manual_show_glyphs_on_d2d_surface(void			    *surface,
 	cairo_bounds.height < TEXT_TEXTURE_HEIGHT)
     {
 	// Use our cached TextTexture when it is big enough.
+	RefPtr<ID3D10Texture2D> tmpTexture;
+	CD3D10_TEXTURE2D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM,
+				   cairo_bounds.width, cairo_bounds.height,
+				   1, 1, 0);
+
+	desc.Usage = D3D10_USAGE_STAGING;
+	desc.CPUAccessFlags = D3D10_CPU_ACCESS_WRITE;
+				   
+	hr = device->CreateTexture2D(&desc, NULL, &tmpTexture);
+
 	D3D10_MAPPED_TEXTURE2D texMap;
-	hr = dst->device->mTextTexture->Map(0, D3D10_MAP_WRITE_DISCARD, 0, &texMap);
+	hr = tmpTexture->Map(0, D3D10_MAP_WRITE, 0, &texMap);
 
 	if (FAILED(hr)) {
 	    delete [] texture;
@@ -3646,9 +3658,17 @@ _cairo_dwrite_manual_show_glyphs_on_d2d_surface(void			    *surface,
 	    }
 	}
 
-	dst->device->mTextTexture->Unmap(0);
+	tmpTexture->Unmap(0);
 
 	delete [] texture;
+
+	D3D10_BOX box;
+	box.front = box.top = box.left = 0;
+	box.back = 1;
+	box.right = cairo_bounds.width;
+	box.bottom = cairo_bounds.height;
+
+	device->CopySubresourceRegion(dst->device->mTextTexture, 0, 0, 0, 0, tmpTexture, 0, &box);
 
 	srView = dst->device->mTextTextureView;
 
