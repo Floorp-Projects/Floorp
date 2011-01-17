@@ -872,7 +872,7 @@ FragmentAssembler::endFragment()
     if (mParent.mAssm.error() != nanojit::None) {
         cerr << "error during assembly: ";
         switch (mParent.mAssm.error()) {
-          case nanojit::ConditionalBranchTooFar: cerr << "ConditionalBranchTooFar"; break;
+          case nanojit::BranchTooFar: cerr << "BranchTooFar"; break;
           case nanojit::StackFull: cerr << "StackFull"; break;
           case nanojit::UnknownBranch:  cerr << "UnknownBranch"; break;
           case nanojit::None: cerr << "None"; break;
