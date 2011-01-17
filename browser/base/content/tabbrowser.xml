@@ -1690,6 +1690,7 @@
               return;
 
             if (aTab.owner &&
+                !aTab.owner.hidden &&
                 this._removingTabs.indexOf(aTab.owner) == -1 &&
                 Services.prefs.getBoolPref("browser.tabs.selectOwnerOnClose")) {
               this.selectedTab = aTab.owner;
