@@ -201,6 +201,8 @@ js::workers::ThreadPool *gWorkerThreadPool = NULL;
 static JSBool reportWarnings = JS_TRUE;
 static JSBool compileOnly = JS_FALSE;
 
+static JSBool OOM_printAllocationCount = JS_FALSE;
+
 typedef enum JSShellErrNum {
 #define MSG_DEF(name, number, count, exception, format) \
     name = number,
@@ -613,6 +615,11 @@ usage(void)
                       "                Note: this option switches to non-interactive mode.\n"
                       "  -S <size>     Set the maximum size of the stack to <size> bytes\n"
                       "                Default is %u.\n", DEFAULT_MAX_STACK_SIZE);
+#ifdef DEBUG
+    fprintf(gErrFile, "  -A <max>      After <max> memory allocations, act like we're OOM.\n");
+    fprintf(gErrFile, "  -O <max>      At exit, print the number of memory allocations in \n"
+                      "                the program.\n");
+#endif
 #ifdef JS_THREADSAFE
     fprintf(gErrFile, "  -g <n>        Sleep for <n> seconds before starting (default: 0)\n");
 #endif
@@ -718,6 +725,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
           case 'T':
 #endif
           case 'g':
+          case 'A':
             ++i;
             break;
           default:;
@@ -769,7 +777,16 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             JS_SetGCZeal(cx, !!(atoi(argv[i])));
             break;
 #endif
+#ifdef DEBUG
+        case 'A':
+            /* Handled at the very start of main(). */
+            ++i; /* skip the argument */
+            break;
 
+        case 'O':
+            OOM_printAllocationCount = JS_TRUE;
+            break;
+#endif
         case 'w':
             reportWarnings = JS_TRUE;
             break;
@@ -5735,6 +5752,20 @@ MaybeOverrideOutFileFromEnv(const char* const envVar,
 int
 main(int argc, char **argv, char **envp)
 {
+#ifdef DEBUG
+    /* Check the allocation count first, or else we'll miss allocations. */
+    for (int i = 0; i < argc; i++)
+    {
+      if (strlen(argv[i]) == 2 && argv[i][0] == '-' && argv[i][1] == 'A')
+      {
+        if (++i == argc)
+          return usage();
+        OOM_maxAllocations = atoi(argv[i]);
+        break;
+      }
+    }
+#endif
+
     int stackDummy;
     JSRuntime *rt;
     JSContext *cx;
@@ -5808,6 +5839,11 @@ main(int argc, char **argv, char **envp)
     JS_SetGCParameterForThread(cx, JSGC_MAX_CODE_CACHE_BYTES, 16 * 1024 * 1024);
 
     result = Shell(cx, argc, argv, envp);
+
+#ifdef DEBUG
+    if (OOM_printAllocationCount)
+        printf("OOM max count: %u\n", OOM_counter);
+#endif
 
     DestroyContext(cx, true);
 
