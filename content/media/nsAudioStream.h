@@ -96,7 +96,7 @@ public:
 
   // Set the current volume of the audio playback. This is a value from
   // 0 (meaning muted) to 1 (meaning full volume).
-  virtual void SetVolume(float aVolume) = 0;
+  virtual void SetVolume(double aVolume) = 0;
 
   // Block until buffered audio data has been consumed.
   virtual void Drain() = 0;

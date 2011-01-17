@@ -117,7 +117,7 @@ Buffer
 Complete
   This is not user initiated. It occurs when the
   stream is completely decoded.
-Seek(float)
+Seek(double)
   Seek to the time position given in the resource.
 
 A state transition diagram:
@@ -245,7 +245,7 @@ public:
 
   // Set the audio volume. The decoder monitor must be obtained before
   // calling this.
-  virtual void SetVolume(float aVolume) = 0;
+  virtual void SetVolume(double aVolume) = 0;
 
   virtual void Shutdown() = 0;
 
@@ -271,12 +271,12 @@ public:
   virtual void Decode() = 0;
 
   // Seeks to aTime in seconds
-  virtual void Seek(float aTime) = 0;
+  virtual void Seek(double aTime) = 0;
 
   // Returns the current playback position in seconds.
   // Called from the main thread to get the current frame time. The decoder
   // monitor must be obtained before calling this.
-  virtual float GetCurrentTime() = 0;
+  virtual double GetCurrentTime() = 0;
 
   // Clear the flag indicating that a playback position change event
   // is currently queued. This is called from the main thread and must
@@ -338,7 +338,7 @@ class nsBuiltinDecoder : public nsMediaDecoder
   // object disposes of this decoder object.
   virtual void Shutdown();
   
-  virtual float GetCurrentTime();
+  virtual double GetCurrentTime();
 
   virtual nsresult Load(nsMediaStream* aStream,
                         nsIStreamListener** aListener,
@@ -351,13 +351,13 @@ class nsBuiltinDecoder : public nsMediaDecoder
   virtual nsresult Play();
 
   // Seek to the time position in (seconds) from the start of the video.
-  virtual nsresult Seek(float time);
+  virtual nsresult Seek(double aTime);
 
   virtual nsresult PlaybackRateChanged();
 
   virtual void Pause();
-  virtual void SetVolume(float volume);
-  virtual float GetDuration();
+  virtual void SetVolume(double aVolume);
+  virtual double GetDuration();
 
   virtual nsMediaStream* GetCurrentStream();
   virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal();
@@ -581,18 +581,18 @@ public:
   // seconds. This is updated approximately at the framerate of the
   // video (if it is a video) or the callback period of the audio.
   // It is read and written from the main thread only.
-  float mCurrentTime;
+  double mCurrentTime;
 
   // Volume that playback should start at.  0.0 = muted. 1.0 = full
   // volume.  Readable/Writeable from the main thread.
-  float mInitialVolume;
+  double mInitialVolume;
 
   // Position to seek to when the seek notification is received by the
   // decode thread. Written by the main thread and read via the
   // decode thread. Synchronised using mMonitor. If the
   // value is negative then no seek has been requested. When a seek is
   // started this is reset to negative.
-  float mRequestedSeekTime;
+  double mRequestedSeekTime;
 
   // Duration of the media resource. Set to -1 if unknown.
   // Set when the metadata is loaded. Accessed on the main thread
