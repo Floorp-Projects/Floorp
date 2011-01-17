@@ -2657,16 +2657,18 @@ PluginInstanceChild::PaintRectToPlatformSurface(const nsIntRect& aRect,
     RECT rect = {
         mWindow.x + aRect.x,
         mWindow.y + aRect.y,
-        mWindow.x + aRect.x + aRect.width,
-        mWindow.y + aRect.y + aRect.height
+        mWindow.x + aRect.XMost(),
+        mWindow.y + aRect.YMost()
     };
     NPEvent paintEvent = {
         WM_PAINT,
         uintptr_t(mWindow.window),
         uintptr_t(&rect)
     };
-    ::SetViewportOrgEx((HDC) mWindow.window, -mWindow.x, -mWindow.y, NULL);
 
+    ::SetViewportOrgEx((HDC) mWindow.window, -mWindow.x, -mWindow.y, NULL);
+    ::SelectClipRgn((HDC) mWindow.window, NULL);
+    ::IntersectClipRect((HDC) mWindow.window, rect.left, rect.top, rect.right, rect.bottom);
     mPluginIface->event(&mData, reinterpret_cast<void*>(&paintEvent));
 #else
     NS_RUNTIMEABORT("Surface type not implemented.");
