@@ -62,7 +62,7 @@ function TabItem(tab, options) {
   var $div = iQ('<div>')
     .addClass('tab')
     .html("<div class='thumb'>" +
-          "<img class='cached-thumb' style='display:none'/><canvas/></div>" +
+          "<img class='cached-thumb' style='display:none'/><canvas moz-opaque='true'/></div>" +
           "<div class='favicon'><img/></div>" +
           "<span class='tab-title'>&nbsp;</span>"
     )
@@ -803,7 +803,8 @@ let TabItems = {
     
     this.minTabHeight = this.minTabWidth * this.tabHeight / this.tabWidth;
 
-    let $canvas = iQ("<canvas>");
+    let $canvas = iQ("<canvas>")
+      .attr('moz-opaque', true);
     $canvas.appendTo(iQ("body"));
     $canvas.hide();
     this.tempCanvas = $canvas[0];
