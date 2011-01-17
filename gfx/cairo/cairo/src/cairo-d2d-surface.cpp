@@ -3527,12 +3527,19 @@ _cairo_dwrite_manual_show_glyphs_on_d2d_surface(void			    *surface,
     RefPtr<IDWriteRenderingParams> params;
     dst->rt->GetTextRenderingParams(&params);
 
-    DWRITE_RENDERING_MODE renderMode;
-    dwriteff->dwriteface->GetRecommendedRenderingMode((FLOAT)scaled_font->base.font_matrix.yy,
+    DWRITE_RENDERING_MODE renderMode = DWRITE_RENDERING_MODE_DEFAULT;
+    if (params) {
+	hr = dwriteff->dwriteface->GetRecommendedRenderingMode(
+						      (FLOAT)scaled_font->base.font_matrix.yy,
 						      1.0f,
 						      DWRITE_MEASURING_MODE_NATURAL,
 						      params,
 						      &renderMode);
+	if (FAILED(hr)) {
+	    // this probably never happens, but let's play it safe
+	    renderMode = DWRITE_RENDERING_MODE_DEFAULT;
+	}
+    }
 
     // Deal with rendering modes CreateGlyphRunAnalysis doesn't accept.
     if (renderMode == DWRITE_RENDERING_MODE_DEFAULT) {
@@ -3547,7 +3554,7 @@ _cairo_dwrite_manual_show_glyphs_on_d2d_surface(void			    *surface,
 	renderMode = DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL_SYMMETRIC;
     }
 
-    DWriteFactory::Instance()->CreateGlyphRunAnalysis(&run,
+    hr = DWriteFactory::Instance()->CreateGlyphRunAnalysis(&run,
 						      1.0f,
 						      transform ? &dwmat : 0,
 						      renderMode,
@@ -3555,14 +3562,23 @@ _cairo_dwrite_manual_show_glyphs_on_d2d_surface(void			    *surface,
 						      0,
 						      0,
 						      &analysis);
-
     delete [] run.glyphIndices;
     delete [] run.glyphAdvances;
     delete [] run.glyphOffsets;
+    if (FAILED(hr)) {
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
 
     RECT bounds;
-    analysis->GetAlphaTextureBounds(DWRITE_TEXTURE_CLEARTYPE_3x1,
-				    &bounds);
+    hr = analysis->GetAlphaTextureBounds(DWRITE_TEXTURE_CLEARTYPE_3x1,
+					 &bounds);
+    if (FAILED(hr) ||
+	// with bitmap sizes of asian fonts, GetAlphaTextureBounds returns
+	// an empty rect, so we need to detect that and fall back
+	(bounds.top == 0 && bounds.bottom == 0 && num_glyphs > 0))
+    {
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
 
     cairo_rectangle_int_t cairo_bounds =
 	_cairo_rect_from_windows_rect(&bounds);
@@ -3593,7 +3609,11 @@ _cairo_dwrite_manual_show_glyphs_on_d2d_surface(void			    *surface,
     // We add one byte so we can safely read an entire 32-bit int when copying
     // the last 3 bytes of the alpha texture.
     BYTE *texture = new BYTE[bufferSize + 1];
-    analysis->CreateAlphaTexture(DWRITE_TEXTURE_CLEARTYPE_3x1, &bounds, texture, bufferSize);
+    hr = analysis->CreateAlphaTexture(DWRITE_TEXTURE_CLEARTYPE_3x1,
+					&bounds, texture, bufferSize);
+    if (FAILED(hr)) {
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
 
     RefPtr<ID3D10ShaderResourceView> srView;
     ID3D10Device1 *device = dst->device->mD3D10Device;
