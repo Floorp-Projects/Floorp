@@ -196,7 +196,7 @@ namespace nanojit
          None = 0
         ,StackFull
         ,UnknownBranch
-        ,ConditionalBranchTooFar
+        ,BranchTooFar
     };
 
     typedef SeqBuilder<NIns*> NInsList;
@@ -500,7 +500,7 @@ namespace nanojit
             void        nBeginAssembly();
             Register    nRegisterAllocFromSet(RegisterMask set);
             void        nRegisterResetAll(RegAlloc& a);
-            static void nPatchBranch(NIns* branch, NIns* location);
+            void        nPatchBranch(NIns* branch, NIns* location);
             void        nFragExit(LIns* guard);
 
             static RegisterMask nHints[LIR_sentinel+1];
