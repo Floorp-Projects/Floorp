@@ -12353,10 +12353,7 @@ TraceRecorder::setProperty(JSObject* obj, LIns* obj_ins, const Value &v, LIns* v
     return nativeSet(obj, obj_ins, shape, v, v_ins);
 }
 
-/*
- * Record a JSOP_SET{PROP,NAME,METHOD} instruction or a JSOP_INITPROP
- * instruction initializing __proto__.
- */
+/* Record a JSOP_SET{PROP,NAME,METHOD} instruction. */
 JS_REQUIRES_STACK RecordingStatus
 TraceRecorder::recordSetPropertyOp()
 {
@@ -12428,9 +12425,12 @@ TraceRecorder::recordInitPropertyOp(jsbytecode op)
         return nativeSet(obj, obj_ins, shape, v, v_ins);
     }
 
-    // Duplicate the interpreter's special treatment of __proto__.
-    if (atom == cx->runtime->atomState.protoAtom)
-        return recordSetPropertyOp();
+    // Duplicate the interpreter's special treatment of __proto__. Unlike the
+    // SET opcodes, JSOP_INIT{PROP,METHOD} do not write to the stack.
+    if (atom == cx->runtime->atomState.protoAtom) {
+        bool deferred;
+        return setProperty(obj, obj_ins, v, v_ins, &deferred);
+    }
 
     // Define a new property.
     return addDataProperty(obj);
