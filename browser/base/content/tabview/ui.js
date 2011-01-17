@@ -1184,9 +1184,6 @@ let UI = {
   // Parameters:
   //   force - true to update even when "unnecessary"; default false
   _resize: function UI__resize(force) {
-    if (typeof force == "undefined")
-      force = false;
-
     if (!this._pageBounds)
       return;
 

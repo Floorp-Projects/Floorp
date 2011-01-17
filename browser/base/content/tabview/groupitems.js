@@ -66,7 +66,7 @@
 //   dontPush - true if this groupItem shouldn't push away or snap on creation; default is false
 //   immediately - true if we want all placement immediately, not with animation
 function GroupItem(listOfEls, options) {
-  if (typeof options == 'undefined')
+  if (!options)
     options = {};
 
   this._inited = false;
@@ -813,7 +813,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
       item.removeTrenches();
 
-      if (typeof options == 'undefined')
+      if (!options)
         options = {};
 
       var self = this;
@@ -897,7 +897,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         item = Items.item($el);
       }
 
-      if (typeof options == 'undefined')
+      if (!options)
         options = {};
 
       var index = this._children.indexOf(item);
@@ -1122,21 +1122,15 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Possible "options" properties:
   //   animate - whether to animate; default: true.
   _stackArrange: function GroupItem__stackArrange(childrenToArrange, bb, options) {
-    var animate;
-    if (!options || typeof options.animate == 'undefined')
-      animate = true;
-    else
-      animate = options.animate;
-
-    if (typeof options == 'undefined')
+    if (!options)
       options = {};
+    var animate = "animate" in options ? options.animate : true;
 
     var count = childrenToArrange.length;
     if (!count)
       return;
 
     var zIndex = this.getZ() + count + 1;
-
     var maxRotation = 35; // degress
     var scale = 0.8;
     var newTabsPad = 10;
