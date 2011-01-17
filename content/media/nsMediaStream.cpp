@@ -222,7 +222,7 @@ nsMediaChannelStream::OnStartRequest(nsIRequest* aRequest)
       }
 
       if (NS_SUCCEEDED(rv)) {
-        float duration = durationText.ToFloat(&ec);
+        double duration = durationText.ToFloat(&ec);
         if (ec == NS_OK && duration >= 0) {
           mDecoder->SetDuration(PRInt64(NS_round(duration*1000)));
         }
