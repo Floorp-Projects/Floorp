@@ -76,7 +76,6 @@ function GroupItem(listOfEls, options) {
   this.isAGroupItem = true;
   this.id = options.id || GroupItems.getNextID();
   this._isStacked = false;
-  this._stackAngles = [0];
   this.expanded = null;
   this.locked = (options.locked ? Utils.copy(options.locked) : {});
   this.topChild = null;
@@ -1173,7 +1172,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
         child.addClass("stacked");
         child.setBounds(box, !animate);
-        child.setRotation((UI.rtl ? -1 : 1) * self._randRotate(maxRotation, index));
+        child.setRotation((UI.rtl ? -1 : 1) * Math.min(index, 5) * 5);
       }
     });
 
@@ -1244,21 +1243,6 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     });
 
     return dropIndex;
-  },
-
-  // ----------
-  // Function: _randRotate
-  // Random rotation generator for <_stackArrange>
-  _randRotate: function GroupItem__randRotate(spread, index) {
-    if (index >= this._stackAngles.length) {
-      var randAngle = 5*index + parseInt((Math.random()-.5)*1);
-      this._stackAngles.push(randAngle);
-      return randAngle;
-    }
-
-    if (index > 5) index = 5;
-
-    return this._stackAngles[index];
   },
 
   // ----------
