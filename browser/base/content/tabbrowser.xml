@@ -1212,8 +1212,6 @@
             }
 
             this.tabContainer.appendChild(t);
-            if (this.tabContainer.getAttribute("pinnedonly") == "true")
-              this.tabContainer._positionPinnedTabs();
 
             if (this.tabContainer.mTabstrip._isRTLScrollbox) {
               /* In RTL UI, the tab is visually added to the left side of the
@@ -2796,30 +2794,36 @@
       <method name="_positionPinnedTabs">
         <body><![CDATA[
           var numPinned = this.tabbrowser._numPinnedTabs;
-          var pinnedOnly = (numPinned == this.tabbrowser.visibleTabs.length);
+          var doPosition = this.getAttribute("overflow") == "true" &&
+                           numPinned > 0 &&
+                           numPinned < this.tabbrowser.visibleTabs.length;
 
-          if (pinnedOnly)
-            this.setAttribute("pinnedonly", "true");
-          else
-            this.removeAttribute("pinnedonly");
+          if (doPosition) {
+            this.setAttribute("positionpinnedtabs", "true");
 
-          var scrollButtonWidth = (this.getAttribute("overflow") != "true" || pinnedOnly) ? 0 :
-                                  this.mTabstrip._scrollButtonDown.scrollWidth;
-          var paddingStart = this.mTabstrip.scrollboxPaddingStart;
-          var width = 0;
+            let scrollButtonWidth = this.mTabstrip._scrollButtonDown.scrollWidth;
+            let paddingStart = this.mTabstrip.scrollboxPaddingStart;
+            let width = 0;
 
-          for (var i = numPinned - 1; i >= 0; i--) {
-            let tab = this.childNodes[i];
-            width += pinnedOnly ? 0 : tab.scrollWidth;
-            if (this.getAttribute("overflow") != "true")
-              tab.style.MozMarginStart = - (width + scrollButtonWidth) + "px";
-            else
+            for (let i = numPinned - 1; i >= 0; i--) {
+              let tab = this.childNodes[i];
+              width += tab.scrollWidth;
               tab.style.MozMarginStart = - (width + scrollButtonWidth + paddingStart) + "px";
-          }
-          if (width == 0 || this.getAttribute("overflow") != "true")
-            this.style.MozMarginStart = width + "px";
-          else
+            }
+
             this.style.MozMarginStart = width + paddingStart + "px";
+
+          } else {
+            this.removeAttribute("positionpinnedtabs");
+
+            for (let i = 0; i < numPinned; i++) {
+              let tab = this.childNodes[i];
+              tab.style.MozMarginStart = "";
+            }
+
+            this.style.MozMarginStart = "";
+          }
+
           this.mTabstrip.ensureElementIsVisible(this.selectedItem, false);
         ]]></body>
       </method>
