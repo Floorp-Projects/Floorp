@@ -1,6 +1,11 @@
 var BookmarkHelper = {
-  _panel: null,
   _editor: null,
+
+  get box() {
+    delete this.box;
+    this.box = document.getElementById("bookmark-container");
+    return this.box;
+  },
 
   edit: function BH_edit(aURI) {
     if (!aURI)
@@ -26,18 +31,17 @@ var BookmarkHelper = {
     this._editor.setAttribute("onclose", "BookmarkHelper.hide()");
     document.getElementById("bookmark-form").appendChild(this._editor);
 
-    let toolbar = document.getElementById("toolbar-main");
-    let top = toolbar.top + toolbar.boxObject.height;
+    this.box.hidden = false;
+    BrowserUI.pushPopup(this, this.box);
 
-    this._panel = document.getElementById("bookmark-container");
-    this._panel.top = (top < 0 ? 0 : top);
-    this._panel.hidden = false;
-    BrowserUI.pushPopup(this, this._panel);
-
-    let self = this;
-    BrowserUI.lockToolbar();
-    Browser.forceChromeReflow();
-    self._editor.startEditing();
+    function waitForWidget(self) {
+      try {
+        self._editor.startEditing();
+      } catch(e) {
+        setTimeout(waitForWidget, 0, this);
+      }
+    }
+    setTimeout(waitForWidget, 0, this);
   },
 
   save: function BH_save() {
@@ -45,7 +49,6 @@ var BookmarkHelper = {
   },
 
   hide: function BH_hide() {
-    BrowserUI.unlockToolbar();
     BrowserUI.updateStar();
 
     // Note: the _editor will have already saved the data, if needed, by the time
@@ -53,7 +56,7 @@ var BookmarkHelper = {
     this._editor.parentNode.removeChild(this._editor);
     this._editor = null;
 
-    this._panel.hidden = true;
+    this.box.hidden = true;
     BrowserUI.popPopup(this);
   },
 

@@ -1918,7 +1918,6 @@ IdentityHandler.prototype = {
     this._identityPopup.hidden = false;
     this._identityPopup.top = BrowserUI.toolbarH - this._identityPopup.offset;
     this._identityPopup.anchorTo(this._identityBox);
-    this._identityPopup.focus();
 
     this._identityBox.setAttribute("open", "true");
 
@@ -2817,7 +2816,7 @@ var ViewableAreaObserver = {
         // If the viewport width is still the same, the page layout has not
         // changed, so we can keep keep the same content on-screen.
         if (tab.browser.contentWindowWidth == oldWidth)
-          tab.restoreViewportPosition(oldWidth, w);
+          tab.restoreViewportPosition(oldWidth, newWidth);
       }
 
       // setTimeout(callback, 0) to ensure the resize event handler dispatch is finished
