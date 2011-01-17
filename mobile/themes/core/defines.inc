@@ -2,7 +2,9 @@
 
 %ifdef ANDROID
 %define font_xlarge 5.08mozmm
+%define font_xnormal 2.75mozmm
 %define font_normal 2.54mozmm
+%define font_snormal 2.33mozmm
 %define font_small 1.91mozmm
 %define font_xsmall 1.69mozmm
 %define font_tiny 1.48mozmm
@@ -78,12 +80,13 @@
 
 %define autocompleteresult_padding 0.53mozmm
 
-%define appmenu_font 2.33mozmm
 %define appmenu_portrait_height 21.17mozmm
 %define appmenu_button_height  10.48mozmm
 %else
 %define font_xlarge 48px
+%define font_xnormal 26px
 %define font_normal 24px
+%define font_snormal 22px
 %define font_small 18px
 %define font_xsmall 16px
 %define font_tiny 14px
@@ -159,7 +162,6 @@
 
 %define autocompleteresult_padding 5px
 
-%define appmenu_font 22px
 %define appmenu_portrait_height 200px
 %define appmenu_button_height 99px
 %endif

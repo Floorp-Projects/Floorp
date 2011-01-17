@@ -975,21 +975,42 @@ documenttab[reload="true"] > stack > .documenttab-reload {
 
 /* bookmark editor   ------------------------------------------------------- */
 #bookmark-container {
-  padding: @padding_normal@; /* core spacing */
-  background: rgb(94,97,102);
+  -moz-box-align: center;
+  -moz-box-pack: center;
+  background-color: rgba(0,0,0,.6);
+  padding: 0;
+}
+
+#bookmark-dialog {
+  margin: @margin_xxxnormal@ !important;
+  border: @border_width_small@ solid white;
+  border-radius: @border_radius_normal@;
   box-shadow: black 0 @shadow_width_small@ @shadow_width_small@;
 }
 
 #bookmark-form {
-  padding: @padding_normal@; /* core spacing */
+  padding: @padding_xxxnormal@;
+}
+
+#bookmark-form-title {
+  font-size: @font_xnormal@;
+  padding-top: @padding_large@;
+  -moz-box-align: center;
+  -moz-box-pack: center;
+}
+
+#bookmark-form-line {
+  border-bottom: @border_width_small@ solid white;
+  margin: @margin_small@ 3em 0 3em;
+  height: @padding_normal@ !important;
 }
 
 #bookmark-form .bookmark-controls {
   display: none;
 }
 
-#bookmark-image {
-  list-style-image: url("images/star-40.png");
+#bookmark-form-buttons {
+  background-color: lightgray;
 }
 
 /* Identity popup   -------------------------------------------------------- */
@@ -1558,7 +1579,7 @@ pageaction:not([image]) > hbox >.pageaction-image {
 
 #appmenu > .appmenu-button .toolbarbutton-text {
   display: block !important;
-  font-size: @appmenu_font@ !important;
+  font-size: @font_snormal@ !important;
 }
 
 #appmenu > .appmenu-button .toolbarbutton-icon {
@@ -1588,9 +1609,20 @@ pageaction:not([image]) > hbox >.pageaction-image {
 }
 
 /* Sync setup ------------------------------------------------------------- */
-.syncsetup-page {
-  padding: @padding_large@;
-  background-color: #000;
+#syncsetup-container {
+  background-color: rgba(0,0,0,.6);
+  padding: 0;
+}
+
+#syncsetup-dialog {
+  margin: @margin_xxxnormal@ !important;
+  border: @border_width_large@ solid white;
+  border-radius: @border_radius_normal@;
+  box-shadow: black 0 @shadow_width_small@ @shadow_width_small@;
+}
+
+.syncsetup-scrollbox {
+  padding: @padding_xxxnormal@;
 }
 
 .syncsetup-center {
@@ -1598,12 +1630,29 @@ pageaction:not([image]) > hbox >.pageaction-image {
 }
 
 .syncsetup-title {
+  font-size: @font_xnormal@;
+  padding-top: @padding_large@;
   -moz-box-align: center;
+  -moz-box-pack: center;
+}
+
+.syncsetup-line {
+  border-bottom: @border_width_small@ solid white;
+  margin: @margin_small@ 3em 0 3em;
+  height: @padding_normal@ !important;
+}
+
+.syncsetup-desc  {
+  font-size: @font_snormal@;
+}
+
+.syncsetup-buttons {
+  background-color: lightgray;
 }
 
 .syncsetup-code {
-  color: #fff;
-  background-color: rgb(94,97,102);
+  color: #000;
+  background-color: #fff;
   border-radius: @border_radius_normal@;
   font-size: @font_xlarge@ !important;
   padding: 0.2em 0.4em;

@@ -26,6 +26,7 @@
 <!ENTITY historyHeader.label       "History">
 <!ENTITY desktopHeader.label       "Desktop">
 
+<!ENTITY editBookmarkDialog.title  "Edit Bookmark">
 <!ENTITY editBookmarkDone.label    "Done">
 <!ENTITY editBookmarkTags.label    "Add tags here">
 

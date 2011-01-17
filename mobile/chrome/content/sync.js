@@ -81,6 +81,16 @@ let WeaveGlue = {
     this.jpake = null;
   },
 
+  _resetScrollPosition: function _resetScrollPosition() {
+    let scrollboxes = document.getElementsByClassName("syncsetup-scrollbox");
+    for (let i = 0; i < scrollboxes.length; i++) {
+      let sbo = scrollboxes[i].boxObject.QueryInterface(Ci.nsIScrollBoxObject);
+      try {
+        sbo.scrollTo(0, 0);
+      } catch(e) {}
+    }
+  },
+
   open: function open() {
     let container = document.getElementById("syncsetup-container");
     if (!container.hidden)
@@ -91,8 +101,8 @@ let WeaveGlue = {
 
     // Show the connect UI
     container.hidden = false;
-    document.getElementById("syncsetup-jpake").hidden = false;
-    document.getElementById("syncsetup-manual").hidden = true;
+    document.getElementById("syncsetup-simple").hidden = false;
+    document.getElementById("syncsetup-fallback").hidden = true;
 
     BrowserUI.pushDialog(this);
 
@@ -134,11 +144,10 @@ let WeaveGlue = {
     this.abortEasySetup();
 
     // Reset the scroll since the previous page might have been scrolled
-    let scrollbox = document.getElementById("syncsetup-scrollbox").boxObject.QueryInterface(Ci.nsIScrollBoxObject);
-    scrollbox.scrollTo(0, 0);
+    this._resetScrollPosition();
 
-    document.getElementById("syncsetup-jpake").hidden = true;
-    document.getElementById("syncsetup-manual").hidden = false;
+    document.getElementById("syncsetup-simple").hidden = true;
+    document.getElementById("syncsetup-fallback").hidden = false;
 
     // Push the current setup data into the UI
     if (this.setupData && "account" in this.setupData) {
@@ -161,8 +170,8 @@ let WeaveGlue = {
   },
 
   close: function close() {
-    let scrollbox = document.getElementById("syncsetup-scrollbox").boxObject.QueryInterface(Ci.nsIScrollBoxObject);
-    scrollbox.scrollTo(0, 0);
+    // Reset the scroll since the previous page might have been scrolled
+    this._resetScrollPosition();
 
     // Save current setup data
     this.setupData = {

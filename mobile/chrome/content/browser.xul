@@ -358,13 +358,17 @@
       </vbox>
     </arrowbox>
 
-    <vbox id="bookmark-container" hidden="true" class="panel-dark window-width">
-      <hbox id="bookmark-form" align="start">
-        <image id="bookmark-image"/>
-      </hbox>
-      <hbox pack="center">
-        <button label="&editBookmarkDone.label;" oncommand="BookmarkHelper.save();"/>
-      </hbox>
+    <vbox id="bookmark-container" hidden="true" class="panel-dark window-width window-height">
+      <vbox id="bookmark-dialog" class="panel-dark">
+        <hbox id="bookmark-form-title">
+          <description>&editBookmarkDialog.title;</description>
+        </hbox>
+        <separator id="bookmark-form-line"/>
+        <scrollbox id="bookmark-form" align="start"/>
+        <hbox id="bookmark-form-buttons" pack="center">
+          <button label="&editBookmarkDone.label;" oncommand="BookmarkHelper.save();"/>
+        </hbox>
+      </vbox>
     </vbox>
 
     <vbox id="panel-container" class="panel-dark window-width window-height" style="-moz-stack-sizing: ignore" left="10000" hidden="true">
@@ -515,50 +519,51 @@
     </vbox>
 
 #ifdef MOZ_SERVICES_SYNC
-    <vbox id="syncsetup-container" class="panel-dark window-width window-height" hidden="true">
-      <hbox class="syncsetup-title">
-        <description>&sync.setup.title;</description>
-#ifndef ANDROID
-        <spacer flex="1"/>
-        <toolbarbutton id="tool-syncsetup-close" class="panel-close" oncommand="WeaveGlue.close();"/>
-#endif
-      </hbox>
-      <scrollbox id="syncsetup-scrollbox" orient="vertical" flex="1">
-        <vbox id="syncsetup-jpake" class="syncsetup-page" flex="1">
-          <description class="syncsetup-center" flex="1">&sync.setup.jpake;</description>
-          <separator/>
-          <vbox align="center" flex="1">
-            <description id="syncsetup-code1" class="syncsetup-code">....</description>
-            <description id="syncsetup-code2" class="syncsetup-code">....</description>
-            <description id="syncsetup-code3" class="syncsetup-code">....</description>
-          </vbox>
-          <separator/>
-          <description class="syncsetup-center syncsetup-link" flex="1" onclick="WeaveGlue.openManual();">&sync.fallback;</description>
-          <separator flex="1"/>
-          <hbox pack="center">
+    <vbox id="syncsetup-container" class="window-width window-height" hidden="true">
+      <vbox id="syncsetup-dialog" class="panel-dark" flex="1">
+        <hbox class="syncsetup-title">
+          <description>&sync.setup.title;</description>
+        </hbox>
+        <separator class="syncsetup-line"/>
+        <vbox id="syncsetup-simple" class="syncsetup-page" flex="1">
+          <scrollbox class="syncsetup-scrollbox" orient="vertical" flex="1">
+            <description class="syncsetup-desc syncsetup-center" flex="1">&sync.setup.jpake;</description>
+            <separator/>
+            <vbox align="center" flex="1">
+              <description id="syncsetup-code1" class="syncsetup-code">....</description>
+              <description id="syncsetup-code2" class="syncsetup-code">....</description>
+              <description id="syncsetup-code3" class="syncsetup-code">....</description>
+            </vbox>
+            <separator/>
+            <description class="syncsetup-center syncsetup-link" flex="1" onclick="WeaveGlue.openManual();">&sync.fallback;</description>
+            <separator flex="1"/>
+          </scrollbox>
+          <hbox class="syncsetup-buttons" pack="center">
             <button oncommand="WeaveGlue.abortEasySetup(); WeaveGlue.close();">&sync.setup.cancel;</button>
           </hbox>
         </vbox>
-        <vbox id="syncsetup-manual" class="syncsetup-page" flex="1" hidden="true">
-          <description class="syncsetup-center" flex="1">&sync.setup.manual;</description>
-          <separator/>
-          <textbox id="syncsetup-account" class="syncsetup-edit" placeholder="&sync.account;"/>
-          <textbox id="syncsetup-password" class="syncsetup-edit" placeholder="&sync.password;" type="password"/>
-          <textbox id="syncsetup-synckey" class="syncsetup-edit" placeholder="&sync.syncKey;"/>
-          <separator class="thin"/>
-          <button id="syncsetup-usecustomserver" type="checkbox" class="button-checkbox" pack="start" oncommand="WeaveGlue.toggleCustomServer();">
-            <image class="button-image-icon"/>
-            <description class="syncsetup-label" flex="1">&sync.customServer;</description>
-          </button>
-          <textbox id="syncsetup-customserver" placeholder="&sync.serverURL;"/>
-          <separator flex="1"/>
-          <hbox pack="center">
+        <vbox id="syncsetup-fallback" class="syncsetup-page" flex="1" hidden="true">
+          <scrollbox class="syncsetup-scrollbox" orient="vertical" flex="1">
+            <description class="syncsetup-desc syncsetup-center" flex="1">&sync.setup.manual;</description>
+            <separator/>
+            <textbox id="syncsetup-account" class="syncsetup-edit" placeholder="&sync.account;"/>
+            <textbox id="syncsetup-password" class="syncsetup-edit" placeholder="&sync.password;" type="password"/>
+            <textbox id="syncsetup-synckey" class="syncsetup-edit" placeholder="&sync.syncKey;"/>
+            <separator class="thin"/>
+            <button id="syncsetup-usecustomserver" type="checkbox" class="button-checkbox" pack="start" oncommand="WeaveGlue.toggleCustomServer();">
+              <image class="button-image-icon"/>
+              <description class="syncsetup-label" flex="1">&sync.customServer;</description>
+            </button>
+            <textbox id="syncsetup-customserver" placeholder="&sync.serverURL;"/>
+            <separator flex="1"/>
+          </scrollbox>
+          <hbox class="syncsetup-buttons" pack="center">
             <button oncommand="WeaveGlue.close();">&sync.setup.cancel;</button>
             <separator/>
             <button oncommand="WeaveGlue.close(); WeaveGlue.connect();">&sync.setup.connect;</button>
           </hbox>
         </vbox>
-      </scrollbox>
+      </vbox>
     </vbox>
 #endif
 
