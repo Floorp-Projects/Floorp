@@ -2290,21 +2290,15 @@ let GroupItems = {
 
     // switch to the appropriate tab first.
     if (gBrowser.selectedTab == tab) {
-      let list = gBrowser.visibleTabs;
-      let listLength = list.length;
-
-      if (listLength > 1) {
-        let index = list.indexOf(tab);
-        if (index == 0 || (index + 1) < listLength)
-          gBrowser.selectTabAtIndex(index + 1);
-        else
-          gBrowser.selectTabAtIndex(index - 1);
+      if (gBrowser.visibleTabs.length > 1) {
+        gBrowser._blurTab(tab);
         shouldUpdateTabBar = true;
       } else {
         shouldShowTabView = true;
       }
-    } else
+    } else {
       shouldUpdateTabBar = true
+    }
 
     // remove tab item from a groupItem
     if (tab._tabViewTabItem.parent)
