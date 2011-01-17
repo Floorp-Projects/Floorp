@@ -244,6 +244,10 @@ textbox {
   -moz-binding: url("chrome://browser/content/bindings.xml#textbox");
 }
 
+textbox[multiline="true"] {
+  -moz-binding: url("chrome://browser/content/bindings.xml#textarea");
+}
+
 textbox[type="timed"] {
   -moz-binding: url("chrome://browser/content/bindings.xml#timed-textbox");
 }

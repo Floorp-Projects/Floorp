@@ -1629,6 +1629,17 @@
     </handlers>
   </binding>
 
+  <binding id="textarea" extends="chrome://global/content/bindings/textbox.xml#textarea">
+    <handlers>
+      <handler event="TapLong" phase="capturing">
+        <![CDATA[
+          let box = this.inputField.parentNode;
+          box.showContextMenu(this, false);
+        ]]>
+      </handler>
+    </handlers>
+  </binding>
+
   <binding id="timed-textbox" extends="chrome://global/content/bindings/textbox.xml#timed-textbox">
     <handlers>
       <handler event="TapLong" phase="capturing">
