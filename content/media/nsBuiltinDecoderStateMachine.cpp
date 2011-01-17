@@ -370,7 +370,7 @@ void nsBuiltinDecoderStateMachine::AudioLoop()
   PRInt64 audioDuration = 0;
   PRInt64 audioStartTime = -1;
   PRUint32 channels, rate;
-  float volume = -1;
+  double volume = -1;
   PRBool setVolume;
   PRInt32 minWriteSamples = -1;
   PRInt64 samplesAtLastSleep = 0;
@@ -715,19 +715,19 @@ nsHTMLMediaElement::NextFrameStatus nsBuiltinDecoderStateMachine::GetNextFrameSt
   return nsHTMLMediaElement::NEXT_FRAME_UNAVAILABLE;
 }
 
-void nsBuiltinDecoderStateMachine::SetVolume(float volume)
+void nsBuiltinDecoderStateMachine::SetVolume(double volume)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   MonitorAutoEnter mon(mDecoder->GetMonitor());
   mVolume = volume;
 }
 
-float nsBuiltinDecoderStateMachine::GetCurrentTime()
+double nsBuiltinDecoderStateMachine::GetCurrentTime()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   mDecoder->GetMonitor().AssertCurrentThreadIn();
 
-  return (float)mCurrentFrameTime / 1000.0;
+  return static_cast<double>(mCurrentFrameTime) / 1000.0;
 }
 
 PRInt64 nsBuiltinDecoderStateMachine::GetDuration()
@@ -798,7 +798,7 @@ void nsBuiltinDecoderStateMachine::ResetPlayback()
   mAudioCompleted = PR_FALSE;
 }
 
-void nsBuiltinDecoderStateMachine::Seek(float aTime)
+void nsBuiltinDecoderStateMachine::Seek(double aTime)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   MonitorAutoEnter mon(mDecoder->GetMonitor());
@@ -1074,6 +1074,7 @@ nsresult nsBuiltinDecoderStateMachine::Run()
                              "Seek target should lie inside the first frame after seek");
                 RenderVideoFrame(video);
                 mReader->mVideoQueue.PopFront();
+                UpdatePlaybackPosition(seekTime);
               }
             }
           }
