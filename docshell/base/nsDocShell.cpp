@@ -3947,7 +3947,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
 
             // We could use something like nsTextFormatter::smprintf.
             messageStr.AssignLiteral("This page uses an unsupported technology "
-                                     "that is no longer available in ");
+                                     "that is no longer available by default in ");
             messageStr.Append(brandName);
             messageStr.AppendLiteral(".");
             break;
