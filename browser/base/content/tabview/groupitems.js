@@ -1726,12 +1726,12 @@ let GroupItems = {
   // Function: resumeArrange
   // Resolve bypassed and collected arrange() calls
   resumeArrange: function GroupItems_resumeArrange() {
+    this._arrangePaused = false;
     for (let i = 0; i < this._arrangesPending.length; i++) {
       let g = this._arrangesPending[i];
       g.groupItem.arrange(g.options);
     }
     this._arrangesPending = [];
-    this._arrangePaused = false;
   },
 
   // ----------
