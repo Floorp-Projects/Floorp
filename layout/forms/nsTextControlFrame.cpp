@@ -772,7 +772,11 @@ nsresult nsTextControlFrame::SetFormProperty(nsIAtom* aName, const nsAString& aV
       //      of select all which merely builds a range that selects
       //      all of the content and adds that to the selection.
 
-      SelectAllOrCollapseToEndOfText(PR_TRUE);
+      nsWeakFrame weakThis = this;
+      SelectAllOrCollapseToEndOfText(PR_TRUE);  // NOTE: can destroy the world
+      if (!weakThis.IsAlive()) {
+        return NS_OK;
+      }
     }
     mIsProcessing = PR_FALSE;
   }
@@ -846,14 +850,19 @@ nsTextControlFrame::SetSelectionInternal(nsIDOMNode *aStartNode,
   selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));  
   NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
 
-  rv = selection->RemoveAllRanges();  
-
+  rv = selection->RemoveAllRanges();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = selection->AddRange(range);
+  rv = selection->AddRange(range);  // NOTE: can destroy the world
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Scroll the selection into view (see bug 231389)
+  // Fetch it again since it might have been destroyed (bug 626014).
+  selCon = txtCtrl->GetSelectionController();
+  if (!selCon) {
+    return NS_OK;  // nothing to scroll, we're done
+  }
+
+  // Scroll the selection into view (see bug 231389).
   return selCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL,
                                          nsISelectionController::SELECTION_FOCUS_REGION,
                                          nsISelectionController::SCROLL_FIRST_ANCESTOR_ONLY);
