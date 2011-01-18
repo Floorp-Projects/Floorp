@@ -99,14 +99,14 @@
               case "pageshow":
                 self.onPageShow(aMessage);
 
-                if (self.mIconURL == "" && self._documentURI) {
-                  // newURI call is throwing for chrome URI
-                  try {
-                    // Use documentURIObject in the favicon construction so that we
+                if (!self.mIconURL && self._documentURI) {
+                  let iconURL = null;
+                  if (self.shouldLoadFavicon()) {
+                    // Use documentURI in the favicon construction so that we
                     // do the right thing with about:-style error pages.  Bug 515188
-                    self.loadFavicon(self.documentURI.prePath + "/favicon.ico", null);
+                    iconURL = self.documentURI.prePath + "/favicon.ico";
                   }
-                  catch(e) {}
+                  self.loadFavicon(iconURL, null);
                 }
                 break;
 
@@ -152,23 +152,24 @@
         <parameter name="aURL"/>
         <parameter name="aCharset"/>
         <body><![CDATA[
-            let iconURI = Services.io.newURI(aURL, aCharset, null);
-            if (this.shouldLoadFavicon(iconURI)) {
+            try { // newURI call is throwing for chrome URI
+              let iconURI = Services.io.newURI(aURL, aCharset, null);
+              if (gFaviconService.isFailedFavicon(iconURI))
+                return;
+
               gFaviconService.setAndLoadFaviconForPage(this.currentURI, iconURI, true);
               this.mIconURL = iconURI.spec;
-            }
-            else {
-               this.mIconURL = "";
+            } catch (e) {
+              this.mIconURL = null;
             }
         ]]></body>
       </method>
 
       <method name="shouldLoadFavicon">
-        <parameter name="aURI"/>
         <body><![CDATA[
-          let docURI = this.currentURI;
-          return (!gFaviconService.isFailedFavicon(aURI) && docURI && ("schemeIs" in docURI) &&
-                  (docURI.schemeIs("http") || docURI.schemeIs("https") || docURI.schemeIs("about") || docURI.schemeIs("chrome")));
+          let docURI = this.documentURI;
+          return (docURI && ("schemeIs" in docURI) &&
+                  (docURI.schemeIs("http") || docURI.schemeIs("https")));
         ]]></body>
       </method>
 
