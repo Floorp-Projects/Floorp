@@ -966,6 +966,9 @@ nsDocAccessible::AttributeChanged(nsIDocument *aDocument,
                                   PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                                   PRInt32 aModType)
 {
+  NS_ASSERTION(!IsDefunct(),
+               "Attribute changed called on defunct document accessible!");
+
   // Proceed even if the element is not accessible because element may become
   // accessible if it gets certain attribute.
   if (UpdateAccessibleOnAttrChange(aElement, aAttribute))
@@ -974,6 +977,8 @@ nsDocAccessible::AttributeChanged(nsIDocument *aDocument,
   // Ignore attribute change if the element doesn't have an accessible (at all
   // or still) iff the element is not a root content of this document accessible
   // (which is treated as attribute change on this document accessible).
+  // Note: we don't bail if all the content hasn't finished loading because
+  // these attributes are changing for a loaded part of the content.
   nsAccessible* accessible = GetCachedAccessible(aElement);
   if (!accessible && (mContent != aElement))
     return;
@@ -1016,22 +1021,6 @@ nsDocAccessible::AttributeChangedImpl(nsIContent* aContent, PRInt32 aNameSpaceID
   //
   // XXX todo:  invalidate accessible when aria state changes affect exposed role
   // filed as bug 472143
-
-  nsCOMPtr<nsISupports> container = mDocument->GetContainer();
-  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
-  if (!docShell) {
-    return;
-  }
-
-  if (!IsContentLoaded())
-    return; // Still loading, ignore setting of initial attributes
-
-  nsCOMPtr<nsIPresShell> shell = GetPresShell();
-  if (!shell) {
-    return; // Document has been shut down
-  }
-
-  NS_ASSERTION(aContent, "No node for attr modified");
 
   // Universal boolean properties that don't require a role. Fire the state
   // change when disabled or aria-disabled attribute is set.
