@@ -47,3 +47,4 @@ asserts(1) == passwd-4.html passwd-ref.html # bug 596901
 == caret_after_reframe.html caret_after_reframe-ref.html
 == nobogusnode-1.html nobogusnode-ref.html
 == nobogusnode-2.html nobogusnode-ref.html
+== caret_on_input_edge.html caret_on_input_edge-ref.html
