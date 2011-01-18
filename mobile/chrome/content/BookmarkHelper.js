@@ -38,7 +38,7 @@ var BookmarkHelper = {
       try {
         self._editor.startEditing();
       } catch(e) {
-        setTimeout(waitForWidget, 0, this);
+        setTimeout(waitForWidget, 0, self);
       }
     }
     setTimeout(waitForWidget, 0, this);
