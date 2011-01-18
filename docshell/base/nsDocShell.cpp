@@ -6448,7 +6448,8 @@ nsDocShell::EnsureContentViewer()
 
 nsresult
 nsDocShell::CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal,
-                                          nsIURI* aBaseURI)
+                                          nsIURI* aBaseURI,
+                                          PRBool aTryToSaveOldPresentation)
 {
   nsCOMPtr<nsIDocument> blankDoc;
   nsCOMPtr<nsIContentViewer> viewer;
@@ -6480,7 +6481,8 @@ nsDocShell::CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal,
       return NS_ERROR_FAILURE;
     }
 
-    mSavingOldViewer = CanSavePresentation(LOAD_NORMAL, nsnull, nsnull);
+    mSavingOldViewer = aTryToSaveOldPresentation && 
+                       CanSavePresentation(LOAD_NORMAL, nsnull, nsnull);
 
     // Make sure to blow away our mLoadingURI just in case.  No loads
     // from inside this pagehide.
@@ -9992,7 +9994,10 @@ nsDocShell::LoadHistoryEntry(nsISHEntry * aEntry, PRUint32 aLoadType)
         // anything from the current document from leaking into any JavaScript
         // code in the URL.
         nsCOMPtr<nsIPrincipal> prin = do_QueryInterface(owner);
-        rv = CreateAboutBlankContentViewer(prin, nsnull);
+        // Don't cache the presentation if we're going to just reload the
+        // current entry. Caching would lead to trying to save the different
+        // content viewers in the same nsISHEntry object.
+        rv = CreateAboutBlankContentViewer(prin, nsnull, aEntry != mOSHE);
 
         if (NS_FAILED(rv)) {
             // The creation of the intermittent about:blank content
