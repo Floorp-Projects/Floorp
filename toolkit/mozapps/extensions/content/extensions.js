@@ -2025,13 +2025,10 @@ var gListView = {
   node: null,
   _listBox: null,
   _emptyNotice: null,
-  _sorters: null,
   _type: null,
 
   initialize: function() {
     this.node = document.getElementById("list-view");
-    this._sorters = document.getElementById("list-sorters");
-    this._sorters.handler = this;
     this._listBox = document.getElementById("addon-list");
     this._emptyNotice = document.getElementById("addon-list-empty");
 
@@ -2069,7 +2066,7 @@ var gListView = {
 
       self.showEmptyNotice(elements.length == 0);
       if (elements.length > 0) {
-        sortElements(elements, self._sorters.sortBy, self._sorters.ascending);
+        sortElements(elements, "name", true);
         elements.forEach(function(aElement) {
           self._listBox.appendChild(aElement);
         });

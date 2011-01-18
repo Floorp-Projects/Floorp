@@ -479,11 +479,13 @@ add_test(function() {
     if (currentIndex >= sorterNames.length) {
       sorters.handler = originalHandler;
       run_next_test();
+      return;
     }
 
     // Simulate clicking on a specific sorter
     var buttonId = buttonIds[currentIndex];
     var sorter = getAnonymousElementByAttribute(sorters, "anonid", buttonId);
+    is_element_visible(sorter);
     EventUtils.synthesizeMouseAtCenter(sorter, { }, gManagerWindow);
   }
 
