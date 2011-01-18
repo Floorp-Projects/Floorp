@@ -391,15 +391,15 @@ nsXULTreeAccessible::GetSelectedItem(PRUint32 aIndex)
   if (!selection)
     return nsnull;
 
-  PRInt32 rowIndex, rowCount;
-  PRInt32 selCount = 0;
-  PRBool isSelected;
-  mTreeView->GetRowCount(&rowCount);
-  for (rowIndex = 0; rowIndex < rowCount; rowIndex++) {
-    selection->IsSelected(rowIndex, &isSelected);
-    if (isSelected) {
+  PRUint32 selCount = 0;
+  PRInt32 rangeCount = 0;
+  selection->GetRangeCount(&rangeCount);
+  for (PRInt32 rangeIdx = 0; rangeIdx < rangeCount; rangeIdx++) {
+    PRInt32 firstIdx = 0, lastIdx = -1;
+    selection->GetRangeAt(rangeIdx, &firstIdx, &lastIdx);
+    for (PRInt32 rowIdx = firstIdx; rowIdx <= lastIdx; rowIdx++) {
       if (selCount == aIndex)
-        return GetTreeItemAccessible(rowIndex);
+        return GetTreeItemAccessible(rowIdx);
 
       selCount++;
     }
