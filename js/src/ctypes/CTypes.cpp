@@ -1844,7 +1844,7 @@ ImplicitConvert(JSContext* cx,
           return false;
 
         char** charBuffer = static_cast<char**>(buffer);
-        *charBuffer = new char[nbytes + 1];
+        *charBuffer = js_array_new<char>(nbytes + 1);
         if (!*charBuffer) {
           JS_ReportAllocationOverflow(cx);
           return false;
@@ -1861,7 +1861,7 @@ ImplicitConvert(JSContext* cx,
         // JSString's buffer, but this approach is safer if the caller happens
         // to modify the string.)
         jschar** jscharBuffer = static_cast<jschar**>(buffer);
-        *jscharBuffer = new jschar[sourceLength + 1];
+        *jscharBuffer = js_array_new<jschar>(sourceLength + 1);
         if (!*jscharBuffer) {
           JS_ReportAllocationOverflow(cx);
           return false;
@@ -1946,7 +1946,7 @@ ImplicitConvert(JSContext* cx,
       // Convert into an intermediate, in case of failure.
       size_t elementSize = CType::GetSize(cx, baseType);
       size_t arraySize = elementSize * targetLength;
-      AutoPtr<char>::Array intermediate(new char[arraySize]);
+      AutoPtr<char>::Array intermediate(js_array_new<char>(arraySize));
       if (!intermediate) {
         JS_ReportAllocationOverflow(cx);
         return false;
@@ -1983,7 +1983,7 @@ ImplicitConvert(JSContext* cx,
 
       // Convert into an intermediate, in case of failure.
       size_t structSize = CType::GetSize(cx, targetType);
-      AutoPtr<char>::Array intermediate(new char[structSize]);
+      AutoPtr<char>::Array intermediate(js_array_new<char>(structSize));
       if (!intermediate) {
         JS_ReportAllocationOverflow(cx);
         return false;
@@ -2702,7 +2702,7 @@ CType::Finalize(JSContext* cx, JSObject* obj)
     // Free the FunctionInfo.
     ASSERT_OK(JS_GetReservedSlot(cx, obj, SLOT_FNINFO, &slot));
     if (!JSVAL_IS_VOID(slot))
-      delete static_cast<FunctionInfo*>(JSVAL_TO_PRIVATE(slot));
+      js_delete(static_cast<FunctionInfo*>(JSVAL_TO_PRIVATE(slot)));
     break;
   }
 
@@ -2711,7 +2711,7 @@ CType::Finalize(JSContext* cx, JSObject* obj)
     ASSERT_OK(JS_GetReservedSlot(cx, obj, SLOT_FIELDINFO, &slot));
     if (!JSVAL_IS_VOID(slot)) {
       void* info = JSVAL_TO_PRIVATE(slot);
-      delete static_cast<FieldInfoHash*>(info);
+      js_delete(static_cast<FieldInfoHash*>(info));
     }
   }
 
@@ -2721,8 +2721,8 @@ CType::Finalize(JSContext* cx, JSObject* obj)
     ASSERT_OK(JS_GetReservedSlot(cx, obj, SLOT_FFITYPE, &slot));
     if (!JSVAL_IS_VOID(slot)) {
       ffi_type* ffiType = static_cast<ffi_type*>(JSVAL_TO_PRIVATE(slot));
-      delete[] ffiType->elements;
-      delete ffiType;
+      js_array_delete(ffiType->elements);
+      js_delete(ffiType);
     }
 
     break;
@@ -3700,7 +3700,7 @@ ArrayType::BuildFFIType(JSContext* cx, JSObject* obj)
   // values. It would be nice to not do all the work of setting up 'elements',
   // but some libffi platforms currently require that it be meaningful. I'm
   // looking at you, x86_64.
-  AutoPtr<ffi_type> ffiType(new ffi_type);
+  AutoPtr<ffi_type> ffiType(js_new<ffi_type>());
   if (!ffiType) {
     JS_ReportOutOfMemory(cx);
     return NULL;
@@ -3709,7 +3709,7 @@ ArrayType::BuildFFIType(JSContext* cx, JSObject* obj)
   ffiType->type = FFI_TYPE_STRUCT;
   ffiType->size = CType::GetSize(cx, obj);
   ffiType->alignment = CType::GetAlignment(cx, obj);
-  ffiType->elements = new ffi_type*[length + 1];
+  ffiType->elements = js_array_new<ffi_type*>(length + 1);
   if (!ffiType->elements) {
     JS_ReportAllocationOverflow(cx);
     return NULL;
@@ -4032,7 +4032,7 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj, JSObject* fieldsObj
   // its constituents. (We cannot simply stash the hash in a reserved slot now
   // to get GC safety for free, since if anything in this function fails we
   // do not want to mutate 'typeObj'.)
-  AutoPtr<FieldInfoHash> fields(new FieldInfoHash);
+  AutoPtr<FieldInfoHash> fields(js_new<FieldInfoHash>());
   Array<jsval, 16> fieldRootsArray;
   if (!fields || !fields->init(len) || !fieldRootsArray.appendN(JSVAL_VOID, len)) {
     JS_ReportOutOfMemory(cx);
@@ -4141,7 +4141,7 @@ StructType::BuildFFIType(JSContext* cx, JSObject* obj)
   size_t structSize = CType::GetSize(cx, obj);
   size_t structAlign = CType::GetAlignment(cx, obj);
 
-  AutoPtr<ffi_type> ffiType(new ffi_type);
+  AutoPtr<ffi_type> ffiType(js_new<ffi_type>());
   if (!ffiType) {
     JS_ReportOutOfMemory(cx);
     return NULL;
@@ -4150,7 +4150,7 @@ StructType::BuildFFIType(JSContext* cx, JSObject* obj)
 
   AutoPtr<ffi_type*>::Array elements;
   if (len != 0) {
-    elements = new ffi_type*[len + 1];
+    elements = js_array_new<ffi_type*>(len + 1);
     if (!elements) {
       JS_ReportOutOfMemory(cx);
       return NULL;
@@ -4169,7 +4169,7 @@ StructType::BuildFFIType(JSContext* cx, JSObject* obj)
     // Represent an empty struct as having a size of 1 byte, just like C++.
     JS_ASSERT(structSize == 1);
     JS_ASSERT(structAlign == 1);
-    elements = new ffi_type*[2];
+    elements = js_array_new<ffi_type*>(2);
     if (!elements) {
       JS_ReportOutOfMemory(cx);
       return NULL;
@@ -4510,14 +4510,14 @@ struct AutoValue
 
   ~AutoValue()
   {
-    delete[] static_cast<char*>(mData);
+    js_array_delete(static_cast<char*>(mData));
   }
 
   bool SizeToType(JSContext* cx, JSObject* type)
   {
     // Allocate a minimum of sizeof(ffi_arg) to handle small integers.
     size_t size = Align(CType::GetSize(cx, type), sizeof(ffi_arg));
-    mData = new char[size];
+    mData = js_array_new<char>(size);
     if (mData)
       memset(mData, 0, size);
     return mData != NULL;
@@ -4722,7 +4722,7 @@ NewFunctionInfo(JSContext* cx,
                 jsval* argTypes,
                 uintN argLength)
 {
-  AutoPtr<FunctionInfo> fninfo(new FunctionInfo());
+  AutoPtr<FunctionInfo> fninfo(js_new<FunctionInfo>());
   if (!fninfo) {
     JS_ReportOutOfMemory(cx);
     return NULL;
@@ -5198,7 +5198,7 @@ CClosure::Create(JSContext* cx,
   JS_ASSERT(!fninfo->mIsVariadic);
   JS_ASSERT(GetABICode(cx, fninfo->mABI) != ABI_WINAPI);
 
-  AutoPtr<ClosureInfo> cinfo(new ClosureInfo());
+  AutoPtr<ClosureInfo> cinfo(js_new<ClosureInfo>());
   if (!cinfo) {
     JS_ReportOutOfMemory(cx);
     return NULL;
@@ -5311,7 +5311,7 @@ CClosure::Finalize(JSContext* cx, JSObject* obj)
   if (cinfo->closure)
     ffi_closure_free(cinfo->closure);
 
-  delete cinfo;
+  js_delete(cinfo);
 }
 
 void
@@ -5488,7 +5488,7 @@ CData::Create(JSContext* cx,
 
   // attach the buffer. since it might not be 2-byte aligned, we need to
   // allocate an aligned space for it and store it there. :(
-  char** buffer = new char*;
+  char** buffer = js_new<char*>();
   if (!buffer) {
     JS_ReportOutOfMemory(cx);
     return NULL;
@@ -5500,11 +5500,11 @@ CData::Create(JSContext* cx,
   } else {
     // Initialize our own buffer.
     size_t size = CType::GetSize(cx, typeObj);
-    data = new char[size];
+    data = js_array_new<char>(size);
     if (!data) {
       // Report a catchable allocation error.
       JS_ReportAllocationOverflow(cx);
-      delete buffer;
+      js_delete(buffer);
       return NULL;
     }
 
@@ -5517,8 +5517,8 @@ CData::Create(JSContext* cx,
   *buffer = data;
   if (!JS_SetReservedSlot(cx, dataObj, SLOT_DATA, PRIVATE_TO_JSVAL(buffer))) {
     if (ownResult)
-      delete[] data;
-    delete buffer;
+      js_array_delete(data);
+    js_delete(buffer);
     return NULL;
   }
 
@@ -5540,8 +5540,8 @@ CData::Finalize(JSContext* cx, JSObject* obj)
   char** buffer = static_cast<char**>(JSVAL_TO_PRIVATE(slot));
 
   if (owns)
-    delete[] *buffer;
-  delete buffer;
+    js_array_delete(*buffer);
+  js_delete(buffer);
 }
 
 JSObject*
@@ -5825,14 +5825,14 @@ Int64Base::Construct(JSContext* cx,
   js::AutoObjectRooter root(cx, result);
 
   // attach the Int64's data
-  JSUint64* buffer = new JSUint64(data);
+  JSUint64* buffer = js_new<JSUint64>(data);
   if (!buffer) {
     JS_ReportOutOfMemory(cx);
     return NULL;
   }
 
   if (!JS_SetReservedSlot(cx, result, SLOT_INT64, PRIVATE_TO_JSVAL(buffer))) {
-    delete buffer;
+    js_delete(buffer);
     return NULL;
   }
 
@@ -5849,7 +5849,7 @@ Int64Base::Finalize(JSContext* cx, JSObject* obj)
   if (!JS_GetReservedSlot(cx, obj, SLOT_INT64, &slot) || JSVAL_IS_VOID(slot))
     return;
 
-  delete static_cast<JSUint64*>(JSVAL_TO_PRIVATE(slot));
+  js_delete(static_cast<JSUint64*>(JSVAL_TO_PRIVATE(slot)));
 }
 
 JSUint64

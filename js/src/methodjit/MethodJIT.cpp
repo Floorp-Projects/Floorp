@@ -712,7 +712,7 @@ void
 JaegerCompartment::Finish()
 {
     TrampolineCompiler::release(&trampolines);
-    delete execAlloc;
+    js_delete(execAlloc);
 #ifdef JS_METHODJIT_PROFILE_STUBS
     FILE *fp = fopen("/tmp/stub-profiling", "wt");
 # define OPDEF(op,val,name,image,length,nuses,ndefs,prec,format) \
