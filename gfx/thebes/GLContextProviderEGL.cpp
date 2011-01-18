@@ -1208,14 +1208,13 @@ public:
     virtual bool DirectUpdate(gfxASurface *aSurf, const nsIntRegion& aRegion)
     {
         nsIntRect bounds = aRegion.GetBounds();
-        nsIntPoint dest = bounds.TopLeft();
-
-        // Bounds is the destination rect, it will be at 0,0 on the source
-        bounds.x = 0;
-        bounds.y = 0;
   
+        nsIntRegion region;
         if (!mCreated) {
             bounds = nsIntRect(0, 0, mSize.width, mSize.height);
+            region = nsIntRegion(bounds);
+        } else {
+            region = aRegion;
         }
 
         if (mBackingSurface && sEGLLibrary.HasKHRLockSurface()) {
@@ -1232,10 +1231,10 @@ public:
         } else {
             mShaderType =
               mGLContext->UploadSurfaceToTexture(aSurf,
-                                                 bounds,
+                                                 region,
                                                  mTexture,
                                                  !mCreated,
-                                                 dest,
+                                                 bounds.TopLeft(),
                                                  PR_FALSE);
         }
 
