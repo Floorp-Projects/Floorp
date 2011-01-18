@@ -410,6 +410,12 @@ nsApplicationAccessible::InvalidateChildren()
   // and RemoveChild() method calls.
 }
 
+nsAccessible*
+nsApplicationAccessible::GetParent()
+{
+  return nsnull;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessible protected methods
 
