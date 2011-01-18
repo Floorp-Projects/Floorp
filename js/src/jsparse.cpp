@@ -149,15 +149,26 @@ JSParseNode::become(JSParseNode *pn2)
         pn2->pn_used = false;
     }
 
-    /* If this is a function node fix up the pn_funbox->node back-pointer. */
-    if (PN_TYPE(pn2) == TOK_FUNCTION && pn2->pn_arity == PN_FUNC)
-        pn2->pn_funbox->node = this;
-
     pn_type = pn2->pn_type;
     pn_op = pn2->pn_op;
     pn_arity = pn2->pn_arity;
     pn_parens = pn2->pn_parens;
     pn_u = pn2->pn_u;
+
+    /*
+     * If any pointers are pointing to pn2, change them to point to this
+     * instead, since pn2 will be cleared and probably recycled.
+     */
+    if (PN_TYPE(this) == TOK_FUNCTION && pn_arity == PN_FUNC) {
+        /* Function node: fix up the pn_funbox->node back-pointer. */
+        JS_ASSERT(pn_funbox->node == pn2);
+        pn_funbox->node = this;
+    } else if (pn_arity == PN_LIST && !pn_head) {
+        /* Empty list: fix up the pn_tail pointer. */
+        JS_ASSERT(pn_tail == &pn2->pn_head);
+        pn_tail = &pn_head;
+    }
+
     pn2->clear();
 }
 
