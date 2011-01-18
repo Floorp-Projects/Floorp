@@ -2272,10 +2272,32 @@ var ContentCrashObserver = {
 };
 
 var MemoryObserver = {
-  observe: function mo_observe() {
+  _lastOOM: 0,
+
+  observe: function mo_observe(aSubject, aTopic, aData) {
+    if (aData == "heap-minimize") {
+      // do non-destructive stuff here.
+      return;
+    }
+
+    if (this._lastOOM != 0 &&
+        Date.now() - this._lastOOM < 10000) {
+      let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup);
+      appStartup.quit(Ci.nsIAppStartup.eForceQuit);
+      return;
+    }
+
+    for (let i = Browser.tabs.length - 1; i >= 0; i--) {
+      let tab = Browser.tabs[i];
+      if (tab == Browser.selectedTab)
+        continue;
+      tab.resurrect();
+    }
+
     window.QueryInterface(Ci.nsIInterfaceRequestor)
           .getInterface(Ci.nsIDOMWindowUtils).garbageCollect();
     Cu.forceGC();
+    this._lastOOM = Date.now();
   }
 };
 
