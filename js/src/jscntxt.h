@@ -136,8 +136,6 @@ static const size_t MAX_SLOW_NATIVE_EXTRA_SLOTS = 16;
 /* Forward declarations of tracer types. */
 class VMAllocator;
 class FrameInfoCache;
-struct REHashFn;
-struct REHashKey;
 struct FrameInfo;
 struct VMSideExit;
 struct TreeFragment;
@@ -145,8 +143,6 @@ struct TracerState;
 template<typename T> class Queue;
 typedef Queue<uint16> SlotList;
 class TypeMap;
-struct REFragment;
-typedef nanojit::HashMap<REHashKey, REFragment*, REHashFn> REHashMap;
 class LoopProfile;
 
 #if defined(JS_JIT_SPEW) || defined(DEBUG)
