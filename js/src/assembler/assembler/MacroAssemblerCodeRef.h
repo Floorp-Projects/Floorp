@@ -146,7 +146,9 @@ public:
         ASSERT_VALID_CODE_POINTER(m_value);
     }
 
-    void* executableAddress() const { return m_value; }
+    void* executableAddress() const {
+        return m_value;
+    }
 #if WTF_CPU_ARM_THUMB2
     // To use this pointer as a data address remove the decoration.
     void* dataLocation() const { ASSERT_VALID_CODE_POINTER(m_value); return reinterpret_cast<char*>(m_value) - 1; }
