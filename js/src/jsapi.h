@@ -3597,6 +3597,24 @@ JS_SetErrorReporter(JSContext *cx, JSErrorReporter er);
 /************************************************************************/
 
 /*
+ * Dates.
+ */
+
+extern JS_PUBLIC_API(JSObject *)
+JS_NewDateObject(JSContext *cx, int year, int mon, int mday, int hour, int min, int sec);
+
+extern JS_PUBLIC_API(JSObject *)
+JS_NewDateObjectMsec(JSContext *cx, jsdouble msec);
+
+/*
+ * Infallible predicate to test whether obj is a date object.
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_ObjectIsDate(JSContext *cx, JSObject *obj);
+
+/************************************************************************/
+
+/*
  * Regular Expressions.
  */
 #define JSREG_FOLD      0x01    /* fold uppercase to lowercase */
