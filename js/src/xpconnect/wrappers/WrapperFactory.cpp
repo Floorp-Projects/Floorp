@@ -101,7 +101,9 @@ WrapperFactory::WaiveXray(JSContext *cx, JSObject *obj)
             if (proto && !(proto = WaiveXray(cx, proto)))
                 return nsnull;
 
-            js::SwitchToCompartment sc(cx, obj->compartment());
+            JSAutoEnterCompartment ac;
+            if (!ac.enter(cx, obj))
+                return nsnull;
             wobj = JSWrapper::New(cx, obj, proto, obj->getGlobal(), &WaiveXrayWrapperWrapper);
             if (!wobj)
                 return nsnull;
