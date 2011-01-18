@@ -332,6 +332,8 @@ protected:
                 fMapBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, 
                            LOCAL_GL_WRITE_ONLY);
 
+        mGLContext->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, 0);
+
         if (!data) {
             mGLContext->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, 0);
             return gfxPlatform::GetPlatform()->
@@ -351,6 +353,7 @@ protected:
     {
         if (mBoundPixelBuffer) {
             mGLContext->MakeCurrent();
+            mGLContext->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, mPixelBuffer);
             mGLContext->fUnmapBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER);
             return true;
         }
