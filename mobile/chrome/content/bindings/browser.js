@@ -295,10 +295,10 @@ let ContentScroll =  {
         if (json.id == 1)
           rootCwu.setResolution(json.scale, json.scale);
 
-         let displayport = new Rect(json.x, json.y, json.w, json.h);
-         if (displayport.isEmpty())
-           break;
- 
+        let displayport = new Rect(json.x, json.y, json.w, json.h);
+        if (displayport.isEmpty())
+          break;
+
         let cwu20 = rootCwu.QueryInterface(Ci.nsIDOMWindowUtils_MOZILLA_2_0_BRANCH);
         let element = cwu20.findElementWithViewId(json.id);
         if (!element)

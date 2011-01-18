@@ -140,8 +140,9 @@
                 self._contentDocumentHeight = aMessage.json.height;
 
                 // Recalculate whether the visible area is actually in bounds
-                self.scrollBy(0, 0);
-                self._updateCacheViewport();
+                let view = self.getRootView();
+                view.scrollBy(0, 0);
+                view._updateCacheViewport();
                 break;
             }
           }
@@ -391,20 +392,8 @@
 
       <!-- These counters are used to update the cached viewport after they reach a certain
            threshold when scrolling -->
-      <field name="_pendingPixelsX">0</field>
-      <field name="_pendingPixelsY">0</field>
-      <field name="_pendingThresholdX">0</field>
-      <field name="_pendingThresholdY">0</field>
-      <!-- This determines what percentage of cached pixels are not yet visible before the cache
-           is refreshed. For instance, if we recached at 25% and there are originally a total of
-           400px offscreen, we'd refresh once 100 of those pixels have been scrolled into
-           view. -->
-      <field name="_recacheRatio">1</field>
-
-      <!-- Used in remote tabs only. -->
-      <method name="_updateCacheViewport">
-        <body/>
-      </method>
+      <field name="_cacheRatioWidth">1</field>
+      <field name="_cacheRatioHeight">1</field>
 
       <!-- Used in remote tabs only. -->
       <method name="_updateCSSViewport">
@@ -437,45 +426,63 @@
         </body>
       </method>
 
-      <!-- Scroll viewport by (x, y) device pixels. -->
-      <method name="scrollBy">
-        <parameter name="x"/>
-        <parameter name="y"/>
+      <method name="getRootView">
         <body>
           <![CDATA[
+            return this._contentView;
+          ]]>
+        </body>
+      </method>
+
+      <method name="getViewsAt">
+        <body>
+          <![CDATA[
+            return this._contentView;
+          ]]>
+        </body>
+      </method>
+
+      <field name="_contentView"><![CDATA[
+        ({
+          self: this,
+
+          _updateCacheViewport: function() {
+          },
+
+          isRoot: function() {
+            return true;
+          },
+
+          scrollBy: function(x, y) {
+            let self = this.self;
             let position = this.getPosition();
-            x = Math.floor(Math.max(0, Math.min(this.contentDocumentWidth,  position.x+x))-position.x);
-            y = Math.floor(Math.max(0, Math.min(this.contentDocumentHeight, position.y+y))-position.y);
-            this.contentWindow.scrollBy(x, y);
-          ]]>
-        </body>
-      </method>
+            x = Math.floor(Math.max(0, Math.min(self.contentDocumentWidth,  position.x + x)) - position.x);
+            y = Math.floor(Math.max(0, Math.min(self.contentDocumentHeight, position.y + y)) - position.y);
+            self.contentWindow.scrollBy(x, y);
+          },
 
-      <!-- Scroll viewport to (x, y) offset of document in device pixels. -->
-      <method name="scrollTo">
-        <parameter name="x"/>
-        <parameter name="y"/>
-        <body>
-          <![CDATA[
-            x = Math.floor(Math.max(0, Math.min(this.contentDocumentWidth,  x)));
-            y = Math.floor(Math.max(0, Math.min(this.contentDocumentHeight, y)));
-            this.contentWindow.scrollTo(x, y);
-          ]]>
-        </body>
-      </method>
+          scrollTo: function(x, y) {
+            let self = this.self;
+            x = Math.floor(Math.max(0, Math.min(self.contentDocumentWidth,  x)));
+            y = Math.floor(Math.max(0, Math.min(self.contentDocumentHeight, y)));
+            self.contentWindow.scrollTo(x, y);
+          },
 
-      <!-- Get position of viewport in device pixels. -->
-      <method name="getPosition">
-        <body>
-          <![CDATA[
+          getPosition: function() {
+            let self = this.self;
             let scrollX = {}, scrollY = {};
-            let cwu = this.contentWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+            let cwu = self.contentWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
                       getInterface(Components.interfaces.nsIDOMWindowUtils);
             cwu.getScrollXY(false, scrollX, scrollY);
             return { x: scrollX.value, y: scrollY.value };
-          ]]>
-        </body>
-      </method>
+          },
+
+          toString: function() {
+            return "[View Local]";
+          }
+        })
+        ]]>
+      </field>
 
       <!-- Change client coordinates in device pixels to page-relative ones in CSS px. -->
       <method name="transformClientToBrowser">
@@ -484,7 +491,8 @@
         <body>
           <![CDATA[
             let bcr = this.getBoundingClientRect();
-            let scroll = this.getPosition();
+            let view = this.getRootView();
+            let scroll = this.getRootView().getPosition();
             return { x: (clientX + scroll.x - bcr.left) / this._scale,
                      y: (clientY + scroll.y - bcr.top) / this._scale };
           ]]>
@@ -500,9 +508,11 @@
                                               .getService(Components.interfaces.nsIPrefService)
                                               .QueryInterface(Components.interfaces.nsIPrefBranch2);
 
-          this._recacheRatio = Math.max(.01, Math.min(1, prefService.getIntPref("toolkit.browser.recacheRatio") / 100));
-          this._pendingThresholdX = Math.max(0, prefService.getIntPref("toolkit.browser.cachePixelX")) * this._recacheRatio;
-          this._pendingThresholdY = Math.max(0, prefService.getIntPref("toolkit.browser.cachePixelY")) * this._recacheRatio;
+          this._cacheRatioWidth = Math.max(1, prefService.getIntPref("toolkit.browser.cacheRatioWidth") / 1000);
+          this._cacheRatioHeight = Math.max(1, prefService.getIntPref("toolkit.browser.cacheRatioHeight") / 1000);
+
+          if (this._contentViewPrototype)
+            this._contentViewPrototype.kDieTime = prefService.getIntPref("toolkit.browser.contentViewExpire");
 
           this.messageManager.loadFrameScript("chrome://browser/content/bindings/browser.js", true);
           this.messageManager.addMessageListener("DOMTitleChanged", this._messageListenerLocal);
@@ -680,19 +690,181 @@
                 if (!self.scrollSync)
                   return;
 
-                // When CSS scroll offset changes, we must redefine our cache viewport because
-                // the cache viewport coordinate system's origin is the CSS scroll offset. Setting
-                // _pendingPixels* guarantees that _updateCacheViewport is called in scrollTo.
-                self._pendingPixelsX = Number.MAX_VALUE;
-                self._pendingPixelsY = Number.MAX_VALUE;
-
                 // Use floor so that we always guarantee top-left corner of content is visible.
-                self.scrollTo(Math.floor(json.x * self.scale), Math.floor(json.y * self.scale));
+                let view = self.getRootView();
+                view.scrollTo(Math.floor(json.x * self.scale), Math.floor(json.y * self.scale));
                 break;
            }
          }
        })
       ]]></field>
+
+      <!-- Keep a store of temporary content views. -->
+      <field name="_contentViews">({})</field>
+
+      <!-- There is a point before a page has loaded where a root content view
+           may not exist. We use this so that we don't have to worry about doing
+           an if check every time we want to scroll. -->
+      <field name="_contentNoop"><![CDATA[
+        ({
+          _updateCacheViewport: function() {},
+          _getViewportSize: function() {},
+
+          isRoot: function() {
+            return true;
+          },
+
+          scrollBy: function(x, y) {},
+          scrollTo: function(x, y) {},
+          getPosition: function() {
+            return { x: 0, y: 0 };
+          }
+        })
+      ]]></field>
+
+      <field name="_contentViewPrototype"><![CDATA[
+        ({
+          self: this,
+          _id: null,
+          _contentView: null,
+          _timeout: null,
+          _pixelsPannedSinceRefresh: { x: 0, y: 0 },
+          _lastPanTime: 0,
+
+          kDieTime: 3000,
+
+          /** 
+           * Die if we haven't panned in a while.
+           *
+           * Since we keep a map of active content views, we need to regularly
+           * check if they are necessary so that every single thing the user
+           * pans is not kept in memory forever.
+           */
+          _dieIfOld: function() {
+            if (Date.now() - this._lastPanTime >= this.kDieTime)
+              this._die();
+            else
+              // This doesn't need to be exact, just be sure to clean up at some point.
+              this._timeout = setTimeout(this._dieIfOld.bind(this), this.kDieTime);
+          },
+
+          /** Cleanup after ourselves. */
+          _die: function() {
+            let timeout = this._timeout;
+            if (timeout) {
+              clearTimeout(timeout);
+              this._timeout = null;
+            }
+
+            if (this._contentView && this._pixelsPannedSinceRefresh > 0) {
+              this._updateCacheViewport();
+            }
+
+            this._contentView = null;
+
+            // We expect contentViews to contain our ID. If not, something bad
+            // happened.
+            delete this.self._contentViews[this._id];
+          },
+
+          /**
+           * The cache viewport is what parts of content is cached in the parent process for
+           * fast scrolling. This syncs that up with the current projection viewport.
+           */
+          _updateCacheViewport: function() {
+            let contentView = this._contentView;
+            let self = this.self;
+            let viewportSize = this._getViewportSize();
+            let cacheWidth = self._cacheRatioWidth * viewportSize.width;
+            let cacheHeight = self._cacheRatioHeight * viewportSize.height;
+
+            // Put the center point of the displayport at the center point
+            // of the viewport.
+            let cacheX = contentView.scrollX + viewportSize.width / 2 - cacheWidth / 2;
+            let cacheY = contentView.scrollY + viewportSize.height / 2 - cacheHeight / 2;
+
+            self.messageManager.sendAsyncMessage("Content:SetCacheViewport", {
+              scrollX: contentView.scrollX / self._scale,
+              scrollY: contentView.scrollY / self._scale,
+              x: cacheX / self._scale,
+              y: cacheY / self._scale,
+              w: cacheWidth / self._scale,
+              h: cacheHeight / self._scale,
+              scale: self._scale,
+              id: contentView.id
+            });
+
+            this._pixelsPannedSinceRefresh.x = 0;
+            this._pixelsPannedSinceRefresh.y = 0;
+          },
+
+          _getViewportSize: function() {
+            let self = this.self;
+            if (this.isRoot()) {
+              let bcr = self.getBoundingClientRect();
+              return { width: bcr.width, height: bcr.height };
+            } else {
+              return { width: this._contentView.viewportWidth, height: this._contentView.viewportHeight };
+            }
+          },
+
+          init: function(contentView) {
+            let self = this.self;
+
+            this._contentView = contentView;
+            this._id = contentView.id;
+            self._contentViews[this._id] = this;
+
+            if (!this.isRoot()) {
+              // Non-root content views are short lived.
+              this._timeout = setTimeout(this._dieIfOld.bind(this), this.kDieTime);
+              // This iframe may not have a display port yet, so build up a cache
+              // immediately.
+              this._updateCacheViewport();
+            }
+          },
+
+          isRoot: function() {
+            return this.self._contentViewManager.rootContentView == this._contentView;
+          },
+
+          scrollBy: function(x, y) {
+            // Bounding content rectangle is in device pixels
+            let contentView = this._contentView;
+            let viewportSize = this._getViewportSize();
+            // Calculate document dimensions in device pixels
+            let scrollRangeX = contentView.contentWidth - viewportSize.width;
+            let scrollRangeY = contentView.contentHeight - viewportSize.height;
+
+            x = Math.floor(Math.max(0, Math.min(scrollRangeX, contentView.scrollX + x)) - contentView.scrollX);
+            y = Math.floor(Math.max(0, Math.min(scrollRangeY, contentView.scrollY + y)) - contentView.scrollY);
+
+            if (x == 0 && y == 0)
+              return;
+
+            contentView.scrollBy(x, y);
+
+            this._lastPanTime = Date.now();
+
+            this._pixelsPannedSinceRefresh.x += x;
+            this._pixelsPannedSinceRefresh.y += y;
+            if (Math.abs(this._pixelsPannedSinceRefresh.x) > 20 ||
+                Math.abs(this._pixelsPannedSinceRefresh.y) > 20)
+              this._updateCacheViewport();
+          },
+
+          scrollTo: function(x, y) {
+            let contentView = this._contentView;
+            this.scrollBy(x - contentView.scrollX, y - contentView.scrollY);
+          },
+
+          getPosition: function() {
+            let contentView = this._contentView;
+            return { x: contentView.scrollX, y: contentView.scrollY };
+          }
+        })
+        ]]>
+      </field>
 
       <!-- Sets the scale of CSS pixels to device pixels. Does not affect page layout. -->
       <method name="_setScale">
@@ -703,9 +875,9 @@
               return;
 
             this._scale = scale;
-            let rootView = this._contentViewManager.rootContentView;
-            rootView.setScale(scale, scale);
-            this._updateCacheViewport();
+            let rootView = this.getRootView();
+            rootView._contentView.setScale(scale, scale);
+            rootView._updateCacheViewport();
 
             let event = document.createEvent("Events");
             event.initEvent("ZoomChanged", true, false);
@@ -714,91 +886,50 @@
         </body>
       </method>
 
-      <!-- Scroll by (x, y) device pixels -->
-      <method name="scrollBy">
+      <method name="_getView">
+        <parameter name="contentView"/>
+        <body>
+          <![CDATA[
+            if (!contentView) return null;
+
+            // See if we have cached it.
+            let id = contentView.id;
+            let jsContentView = this._contentViews[id];
+            if (jsContentView) {
+              // Content view may have changed if it became inactive for a
+              // little while.
+              jsContentView._contentView = contentView;
+              return jsContentView;
+            }
+
+            // Not cached. Create it.
+            jsContentView = Object.create(this._contentViewPrototype);
+            jsContentView.init(contentView);
+            return jsContentView;
+          ]]>
+        </body>
+      </method>
+
+      <!-- Get root content view. -->
+      <method name="getRootView">
+        <body>
+          <![CDATA[
+            let contentView = this._contentViewManager.rootContentView;
+            return this._getView(contentView) || this._contentNoop;
+          ]]>
+        </body>
+      </method>
+
+      <!-- Get contentView for position (x, y) relative to the browser element -->
+      <method name="getViewsAt">
         <parameter name="x"/>
         <parameter name="y"/>
         <body>
           <![CDATA[
-            let rootView = this._contentViewManager.rootContentView;
-
-            // Bounding content rectangle is in device pixels
-            let bcr = this.getBoundingClientRect();
-            let viewportWidth = bcr.width;
-            let viewportHeight = bcr.height;
-            // Calculate document dimensions in device pixels
-            let docWidth = this.contentDocumentWidth * this.scale;
-            let docHeight = this.contentDocumentHeight * this.scale;
-
-            x = Math.floor(Math.max(0, Math.min(docWidth - viewportWidth, rootView.scrollX + x)) - rootView.scrollX);
-            y = Math.floor(Math.max(0, Math.min(docHeight - viewportHeight, rootView.scrollY + y)) - rootView.scrollY);
-
-            if (x == 0 && y == 0)
-              return;
-
-            rootView.scrollBy(x, y);
-
-            // Add this to the amount of pixels we have "used" from our cache. When this hits the
-            // threshold, we will refresh.
-            this._pendingPixelsX += x;
-            this._pendingPixelsY += y;
-
-            if (Math.abs(this._pendingPixelsX) > Math.max(0, this._pendingThresholdX - bcr.width / 2) ||
-                Math.abs(this._pendingPixelsY) > Math.max(0, this._pendingThresholdY - bcr.height / 2))
-              this._updateCacheViewport();
-          ]]>
-        </body>
-      </method>
-
-      <!-- Scroll to position (x, y) in device pixels -->
-      <method name="scrollTo">
-        <parameter name="x"/>
-        <parameter name="y"/>
-        <body>
-          <![CDATA[
-            let rootView = this._contentViewManager.rootContentView;
-            this.scrollBy(x - rootView.scrollX, y - rootView.scrollY);
-          ]]>
-        </body>
-      </method>
-
-      <!-- Get position of window in device pixels -->
-      <method name="getPosition">
-        <body>
-          <![CDATA[
-            let rootView = this._contentViewManager.rootContentView;
-            return { x: rootView.scrollX, y: rootView.scrollY };
-          ]]>
-        </body>
-      </method>
-
-      <!-- The cache viewport is what parts of content is cached in the parent process for
-           fast scrolling. This syncs that up with the current projection viewport. -->
-      <method name="_updateCacheViewport">
-        <body>
-          <![CDATA[
-            let scale = this._scale;
-            let bcr = this.getBoundingClientRect();
-
-            let cacheX = Math.max(this._pendingThresholdX / this._recacheRatio, bcr.width / 2);
-            let cacheY = Math.max(this._pendingThresholdY / this._recacheRatio, bcr.height / 2);
-
-            let rootView = this._contentViewManager.rootContentView;
-            // May not be available if nothing has been loaded.
-            if (!rootView)
-              return;
-
-            this.messageManager.sendAsyncMessage("Content:SetCacheViewport", {
-              x: (rootView.scrollX - cacheX + bcr.width  / 2) / scale,
-              y: (rootView.scrollY - cacheY + bcr.height / 2) / scale,
-              w: cacheX * 2 / scale,
-              h: cacheY * 2 / scale,
-              scale: scale,
-              id: rootView.id
-            });
-
-            this._pendingPixelsX = 0;
-            this._pendingPixelsY = 0;
+            let manager = this._contentViewManager;
+            let contentView = manager.getContentViewsIn(x, y, 0, 0, 0, 0)[0] ||
+                              manager.rootContentView;
+            return this._getView(contentView);
           ]]>
         </body>
       </method>
@@ -817,12 +948,12 @@
       </method>
 
       <property name="active" onget="return this._active;">
-         <setter>
+        <setter><![CDATA[
             this._active = val;
             this.messageManager.sendAsyncMessage((val ? "Content:Activate" : "Content:Deactivate"), {});
             if (val)
-              this._updateCacheViewport();
-         </setter>
+              this.getRootView()._updateCacheViewport();
+         ]]></setter>
       </property>
 
     </implementation>
