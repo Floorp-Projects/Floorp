@@ -40,7 +40,7 @@ tabbrowser {
   opacity: 0 !important;
   -moz-transition: min-width 200ms ease-out,
                    max-width 250ms ease-out,
-                   opacity 50ms ease-out 180ms /* hide the tab for the last 20ms of the max-width transition */;
+                   opacity 50ms ease-out 100ms /* hide the tab for the last 100ms of the max-width transition */;
 }
 
 .tab-throbber:not([fadein]):not([pinned]),
