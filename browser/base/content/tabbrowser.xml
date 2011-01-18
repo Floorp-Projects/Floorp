@@ -1626,6 +1626,8 @@
             if (browser == this.mCurrentBrowser)
               this.mCurrentBrowser = null;
 
+            var wasPinned = aTab.pinned;
+
             // Invalidate browsers cache, as the tab is removed from the
             // tab container.
             this._browsers = null;
@@ -1638,7 +1640,8 @@
               this.tabs[i]._tPos = i;
 
             if (!this._windowIsClosing) {
-              this.tabContainer._positionPinnedTabs();
+              if (wasPinned)
+                this.tabContainer._positionPinnedTabs();
 
               // update tab close buttons state
               this.tabContainer.adjustTabstrip();
