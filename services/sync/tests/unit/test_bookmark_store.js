@@ -3,11 +3,14 @@ Cu.import("resource://services-sync/engines/bookmarks.js");
 Cu.import("resource://services-sync/type_records/bookmark.js");
 Cu.import("resource://services-sync/util.js");
 
+const PARENT_ANNO = "sync/parent";
+
 Engines.register(BookmarksEngine);
 let engine = Engines.get("bookmarks");
 let store = engine._store;
 let fxuri = Utils.makeURI("http://getfirefox.com/");
 let tburi = Utils.makeURI("http://getthunderbird.com/");
+
 
 function test_bookmark_create() {
   try {
@@ -31,7 +34,10 @@ function test_bookmark_create() {
     let id = store.idForGUID(fxrecord.id);
     do_check_eq(store.GUIDForId(id), fxrecord.id);
     do_check_eq(Svc.Bookmark.getItemType(id), Svc.Bookmark.TYPE_BOOKMARK);
+    do_check_true(Svc.Bookmark.getBookmarkURI(id).equals(fxuri));
     do_check_eq(Svc.Bookmark.getItemTitle(id), fxrecord.title);
+    do_check_eq(Utils.anno(id, "bookmarkProperties/description"),
+                fxrecord.description);
     do_check_eq(Svc.Bookmark.getFolderIdForItem(id),
                 Svc.Bookmark.toolbarFolder);
     do_check_eq(Svc.Bookmark.getKeywordForBookmark(id), fxrecord.keyword);
@@ -40,13 +46,85 @@ function test_bookmark_create() {
     let newrecord = store.createRecord(fxrecord.id);
     do_check_true(newrecord instanceof Bookmark);
     for each (let property in ["type", "bmkUri", "description", "title",
-                               "keyword", "parentName", "parentid"])
+                               "keyword", "parentName", "parentid"]) {
       do_check_eq(newrecord[property], fxrecord[property]);
+    }
     do_check_true(Utils.deepEquals(newrecord.tags.sort(),
                                    fxrecord.tags.sort()));
 
     _("The calculated sort index is based on frecency data.");
     do_check_true(newrecord.sortindex >= 150);
+
+    _("Create a record with some values missing.");
+    let tbrecord = new Bookmark("bookmarks", "thunderbird1");
+    tbrecord.bmkUri        = tburi.spec;
+    tbrecord.parentName    = "Bookmarks Toolbar";
+    tbrecord.parentid      = "toolbar";
+    store.applyIncoming(tbrecord);
+
+    _("Verify it has been created correctly.");
+    id = store.idForGUID(tbrecord.id);
+    do_check_eq(store.GUIDForId(id), tbrecord.id);
+    do_check_eq(Svc.Bookmark.getItemType(id), Svc.Bookmark.TYPE_BOOKMARK);
+    do_check_true(Svc.Bookmark.getBookmarkURI(id).equals(tburi));
+    do_check_eq(Svc.Bookmark.getItemTitle(id), null);
+    let error;
+    try {
+      Utils.anno(id, "bookmarkProperties/description");
+    } catch(ex) {
+      error = ex;
+    }
+    do_check_eq(error.result, Cr.NS_ERROR_NOT_AVAILABLE);
+    do_check_eq(Svc.Bookmark.getFolderIdForItem(id),
+                Svc.Bookmark.toolbarFolder);
+    do_check_eq(Svc.Bookmark.getKeywordForBookmark(id), null);
+  } finally {
+    _("Clean up.");
+    store.wipe();
+  }
+}
+
+function test_bookmark_update() {
+  try {
+    _("Create a bookmark whose values we'll change.");
+    let bmk1_id = Svc.Bookmark.insertBookmark(
+      Svc.Bookmark.toolbarFolder, fxuri, Svc.Bookmark.DEFAULT_INDEX,
+      "Get Firefox!");
+    Utils.anno(bmk1_id, "bookmarkProperties/description", "Firefox is awesome.");
+    Svc.Bookmark.setKeywordForBookmark(bmk1_id, "firefox");
+    let bmk1_guid = store.GUIDForId(bmk1_id);
+
+    _("Update the record with some null values.");
+    let record = store.createRecord(bmk1_guid);
+    record.title = null;
+    record.description = null;
+    record.keyword = null;
+    record.tags = null;
+    store.applyIncoming(record);
+
+    _("Verify that the values have been cleared.");
+    do_check_eq(Utils.anno(bmk1_id, "bookmarkProperties/description"), "");
+    do_check_eq(Svc.Bookmark.getItemTitle(bmk1_id), "");
+    do_check_eq(Svc.Bookmark.getKeywordForBookmark(bmk1_id), null);
+  } finally {
+    _("Clean up.");
+    store.wipe();
+  }
+}
+
+function test_bookmark_createRecord() {
+  try {
+    _("Create a bookmark without a description or title.");
+    let bmk1_id = Svc.Bookmark.insertBookmark(
+      Svc.Bookmark.toolbarFolder, fxuri, Svc.Bookmark.DEFAULT_INDEX, null);
+    let bmk1_guid = store.GUIDForId(bmk1_id);
+
+    _("Verify that the record is created accordingly.");
+    let record = store.createRecord(bmk1_guid);
+    do_check_eq(record.title, null);
+    do_check_eq(record.description, null);
+    do_check_eq(record.keyword, null);
+
   } finally {
     _("Clean up.");
     store.wipe();
@@ -116,6 +194,37 @@ function test_folder_createRecord() {
   }
 }
 
+function test_deleted() {
+  try {
+    _("Create a bookmark that will be deleted.");
+    let bmk1_id = Svc.Bookmark.insertBookmark(
+      Svc.Bookmark.toolbarFolder, fxuri, Svc.Bookmark.DEFAULT_INDEX,
+      "Get Firefox!");
+    let bmk1_guid = store.GUIDForId(bmk1_id);
+
+    _("Delete the bookmark through the store.");
+    let record = new PlacesItem("bookmarks", bmk1_guid);
+    record.deleted = true;
+    store.applyIncoming(record);
+
+    _("Ensure it has been deleted.");
+    let error;
+    try {
+      Svc.Bookmark.getBookmarkURI(bmk1_id);
+    } catch(ex) {
+      error = ex;
+    }
+    do_check_eq(error.result, Cr.NS_ERROR_ILLEGAL_VALUE);
+
+    let newrec = store.createRecord(bmk1_guid);
+    do_check_eq(newrec.deleted, true);
+
+  } finally {
+    _("Clean up.");
+    store.wipe();
+  }
+}
+
 function test_move_folder() {
   try {
     _("Create two folders and a bookmark in one of them.");
@@ -133,7 +242,6 @@ function test_move_folder() {
     let record = store.createRecord(bmk_guid);
     do_check_eq(record.parentid, folder1_guid);
     record.parentid = folder2_guid;
-    record.description = ""; //TODO for some reason we need this
     store.applyIncoming(record);
 
     _("Verify the new parent.");
@@ -188,10 +296,69 @@ function test_move_order() {
   }
 }
 
+function test_orphan() {
+  try {
+
+    _("Add a new bookmark locally.");
+    let bmk1_id = Svc.Bookmark.insertBookmark(
+      Svc.Bookmark.toolbarFolder, fxuri, Svc.Bookmark.DEFAULT_INDEX,
+      "Get Firefox!");
+    let bmk1_guid = store.GUIDForId(bmk1_id);
+    do_check_eq(Svc.Bookmark.getFolderIdForItem(bmk1_id), Svc.Bookmark.toolbarFolder);
+    let error;
+    try {
+      Utils.anno(bmk1_id, PARENT_ANNO);
+    } catch(ex) {
+      error = ex;
+    }
+    do_check_eq(error.result, Cr.NS_ERROR_NOT_AVAILABLE);
+
+    _("Apply a server record that is the same but refers to non-existent folder.");
+    let record = store.createRecord(bmk1_guid);
+    record.parentid = "non-existent";
+    store.applyIncoming(record);
+
+    _("Verify that bookmark has been flagged as orphan, has not moved.");
+    do_check_eq(Svc.Bookmark.getFolderIdForItem(bmk1_id), Svc.Bookmark.toolbarFolder);
+    do_check_eq(Utils.anno(bmk1_id, PARENT_ANNO), "non-existent");
+
+  } finally {
+    _("Clean up.");
+    store.wipe();
+  }
+}
+
+function test_reparentOrphans() {
+  try {
+    let folder1_id = Svc.Bookmark.createFolder(
+      Svc.Bookmark.toolbarFolder, "Folder1", 0);
+    let folder1_guid = store.GUIDForId(folder1_id);
+
+    _("Create a bogus orphan record and write the record back to the store to trigger _reparentOrphans.");
+    Utils.anno(folder1_id, PARENT_ANNO, folder1_guid);
+    let record = store.createRecord(folder1_guid);
+    record.title = "New title for Folder 1";
+    store._childrenToOrder = {};
+    store.applyIncoming(record);
+
+    _("Verify that is has been marked as an orphan even though it couldn't be moved into itself.");
+    do_check_eq(Utils.anno(folder1_id, PARENT_ANNO), folder1_guid);
+
+  } finally {
+    _("Clean up.");
+    store.wipe();
+  }
+}
+
 function run_test() {
   test_bookmark_create();
+  test_bookmark_createRecord();
+  test_bookmark_update();
   test_folder_create();
   test_folder_createRecord();
+  test_deleted();
   test_move_folder();
   test_move_order();
+  test_orphan();
+  test_reparentOrphans();
 }

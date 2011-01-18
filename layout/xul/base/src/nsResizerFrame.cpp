@@ -361,8 +361,14 @@ nsResizerFrame::GetContentToResize(nsIPresShell* aPresShell, nsIBaseWindow** aWi
                        type == nsIDocShellTreeItem::typeChrome);
     }
 
-    if (!isChromeShell)
-      return nsnull;
+    if (!isChromeShell) {
+      // don't allow resizers in content shells, except for the viewport
+      // scrollbar which doesn't have a parent
+      nsIContent* nonNativeAnon = mContent->FindFirstNonNativeAnonymous();
+      if (nonNativeAnon && !nonNativeAnon->GetParent()) {
+        return nsnull;
+      }
+    }
 
     // get the document and the window - should this be cached?
     nsPIDOMWindow *domWindow = aPresShell->GetDocument()->GetWindow();

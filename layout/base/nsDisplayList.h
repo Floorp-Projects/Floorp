@@ -362,6 +362,8 @@ public:
     mFinalTransparentRegion = &aFinalTransparentRegion;
   }
 
+  const nsTArray<ThemeGeometry>& GetThemeGeometries() { return mThemeGeometries; }
+
   /**
    * Returns true if we need to descend into this frame when building
    * the display list, even though it doesn't intersect the dirty
@@ -389,9 +391,9 @@ public:
    */
   void RegisterThemeGeometry(PRUint8 aWidgetType,
                              const nsIntRect& aRect) {
-    if (mIsPaintingToWindow) {
+    if (mIsPaintingToWindow && mPresShellStates.Length() == 1) {
       ThemeGeometry geometry(aWidgetType, aRect);
-      CurrentPresShellState()->mThemeGeometries.AppendElement(geometry);
+      mThemeGeometries.AppendElement(geometry);
     }
   }
 
@@ -457,7 +459,6 @@ private:
     nsIFrame*     mCaretFrame;
     PRUint32      mFirstFrameMarkedForDisplay;
     PRPackedBool  mIsBackgroundOnly;
-    nsAutoTArray<ThemeGeometry,2> mThemeGeometries;
   };
   PresShellState* CurrentPresShellState() {
     NS_ASSERTION(mPresShellStates.Length() > 0,
@@ -472,6 +473,7 @@ private:
   nsCOMPtr<nsISelection>         mBoundingSelection;
   nsAutoTArray<PresShellState,8> mPresShellStates;
   nsAutoTArray<nsIFrame*,100>    mFramesMarkedForDisplay;
+  nsAutoTArray<ThemeGeometry,2>  mThemeGeometries;
   nsDisplayTableItem*            mCurrentTableItem;
   const nsRegion*                mFinalTransparentRegion;
   Mode                           mMode;
@@ -1407,6 +1409,7 @@ public:
   nsDisplaySolidColor(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                       const nsRect& aBounds, nscolor aColor)
     : nsDisplayItem(aBuilder, aFrame), mBounds(aBounds), mColor(aColor) {
+    NS_ASSERTION(NS_GET_A(aColor) > 0, "Don't create invisible nsDisplaySolidColors!");
     MOZ_COUNT_CTOR(nsDisplaySolidColor);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING

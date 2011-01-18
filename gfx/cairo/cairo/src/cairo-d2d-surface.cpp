@@ -175,6 +175,10 @@ cairo_d2d_create_device_from_d3d10device(ID3D10Device1 *d3d10device)
     Vertex vertices[] = { {0.0, 0.0}, {1.0, 0.0}, {0.0, 1.0}, {1.0, 1.0} };
     CD3D10_BUFFER_DESC bufferDesc(sizeof(vertices), D3D10_BIND_VERTEX_BUFFER);
     D3D10_SUBRESOURCE_DATA data;
+    CD3D10_TEXTURE2D_DESC textDesc(DXGI_FORMAT_B8G8R8A8_UNORM,
+	                           TEXT_TEXTURE_WIDTH,
+				   TEXT_TEXTURE_HEIGHT,
+				   1, 1);
 
     cairo_d2d_device_t *device = new cairo_d2d_device_t;
 
@@ -244,7 +248,22 @@ cairo_d2d_create_device_from_d3d10device(ID3D10Device1 *d3d10device)
 	goto FAILED;
     }
     device->base.refcount = 1;
-    device->mVRAMUsage = 0;
+
+    // We start out with TEXT_TEXTURE roughly in VRAM usage.
+    device->mVRAMUsage = TEXT_TEXTURE_WIDTH * TEXT_TEXTURE_HEIGHT * 4;
+
+    // We create this with USAGE_DEFAULT, our intention is to have VRAM reserved
+    // for text usage. We actually store glyph data in STAGING textures for the
+    // rendering pipeline to read and copy it to this VRAM texture.
+    textDesc.Usage = D3D10_USAGE_DEFAULT;
+    hr = device->mD3D10Device->CreateTexture2D(&textDesc, NULL, &device->mTextTexture);
+    if (FAILED(hr)) {
+	goto FAILED;
+    }
+
+    hr = device->mD3D10Device->CreateShaderResourceView(device->mTextTexture,
+							NULL,
+							&device->mTextTextureView);
 
     return &device->base;
 FAILED:
@@ -673,6 +692,21 @@ static const cairo_surface_backend_t cairo_d2d_surface_backend = {
  * Helper functions.
  */
 
+/* Stack-based helper to manage region destruction. */
+struct cairo_region_auto_ptr
+{
+    cairo_region_auto_ptr() : region(NULL)
+    { }
+    cairo_region_auto_ptr(cairo_region_t *in_region) : region(in_region)
+    { }
+
+    void set(cairo_region_t *in_region) { region = in_region; }
+
+    ~cairo_region_auto_ptr() { if (region) cairo_region_destroy (region); }
+
+    cairo_region_t *region;
+};
+
 /* This clears a new D2D surface in case the VRAM was reused from an existing surface
  * and is therefor not empty, this must be called outside of drawing state! */
 static void
@@ -681,6 +715,19 @@ _d2d_clear_surface(cairo_d2d_surface_t *surf)
     surf->rt->BeginDraw();
     surf->rt->Clear(D2D1::ColorF(0, 0));
     surf->rt->EndDraw();
+}
+
+static cairo_rectangle_int_t
+_cairo_rect_from_windows_rect(const RECT *rect)
+{
+    cairo_rectangle_int_t new_rect;
+
+    new_rect.x = rect->left;
+    new_rect.y = rect->top;
+    new_rect.width = rect->right - rect->left;
+    new_rect.height = rect->bottom - rect->top;
+
+    return new_rect;
 }
 
 static D2D1_POINT_2F
@@ -963,7 +1010,7 @@ find_common_ancestor(cairo_clip_path_t *a, cairo_clip_path_t *b)
     return a;
 }
 
-cairo_status_t
+static cairo_status_t
 _cairo_d2d_set_clip (cairo_d2d_surface_t *d2dsurf, cairo_clip_t *clip)
 {
     if (clip == NULL) {
@@ -1009,15 +1056,6 @@ static void _begin_draw_state(cairo_d2d_surface_t* surface)
 	surface->rt->BeginDraw();
 	surface->isDrawing = true;
     }
-}
-
-/* External helper called from dwrite code.
- * Will hopefully go away when/if that code
- * moves into here */
-void
-_cairo_d2d_begin_draw_state(cairo_d2d_surface_t *d2dsurf)
-{
-	_begin_draw_state(d2dsurf);
 }
 
 /**
@@ -1638,10 +1676,10 @@ _cairo_d2d_create_linear_gradient_brush(cairo_d2d_surface_t *d2dsurf,
  * this will make the function return a seperate brush.
  * \return A brush object
  */
-RefPtr<ID2D1Brush>
+static RefPtr<ID2D1Brush>
 _cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf, 
 				    const cairo_pattern_t *pattern,
-				    bool unique)
+				    bool unique = false)
 {
     if (pattern->type == CAIRO_PATTERN_TYPE_SOLID) {
 	cairo_solid_pattern_t *sourcePattern =
@@ -2249,8 +2287,8 @@ _cairo_d2d_clear (cairo_d2d_surface_t *d2dsurf,
     return CAIRO_INT_STATUS_SUCCESS;
 }
 
-cairo_operator_t _cairo_d2d_simplify_operator(cairo_operator_t op,
-					      const cairo_pattern_t *source)
+static cairo_operator_t _cairo_d2d_simplify_operator(cairo_operator_t op,
+					             const cairo_pattern_t *source)
 {
     if (op == CAIRO_OPERATOR_SOURCE) {
 	/** Operator over is easier for D2D! If the source if opaque, change */
@@ -2817,6 +2855,8 @@ _cairo_d2d_try_fastblit(cairo_d2d_surface_t *dst,
     /* Region we need to clip this operation to */
     cairo_region_t *clipping_region = NULL;
     cairo_region_t *region;
+    cairo_region_auto_ptr region_ptr;
+
     if (clip) {
 	_cairo_clip_get_region(clip, &clipping_region);
 
@@ -2824,6 +2864,7 @@ _cairo_d2d_try_fastblit(cairo_d2d_surface_t *dst,
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 	}
 	region = cairo_region_copy(clipping_region);
+	region_ptr.set(region);
 
 	cairo_region_intersect_rectangle(region, &rect);
 
@@ -2833,6 +2874,8 @@ _cairo_d2d_try_fastblit(cairo_d2d_surface_t *dst,
 	}
     } else {
 	region = cairo_region_create_rectangle(&rect);
+	region_ptr.set(region);
+
 	// Areas outside of the surface do not matter.
 	cairo_rectangle_int_t surface_rect = { 0, 0,
 					       dst->rt->GetPixelSize().width,
@@ -2841,13 +2884,12 @@ _cairo_d2d_try_fastblit(cairo_d2d_surface_t *dst,
     }
 
     cairo_int_status_t rv = _cairo_d2d_copy_surface(dst, d2dsrc, &translation, region);
-
-    cairo_region_destroy(region);
     
     return rv;
 }
 
-RefPtr<ID2D1RenderTarget> _cairo_d2d_get_temp_rt(cairo_d2d_surface_t *surf, cairo_clip_t *clip)
+static RefPtr<ID2D1RenderTarget>
+_cairo_d2d_get_temp_rt(cairo_d2d_surface_t *surf, cairo_clip_t *clip)
 {
     RefPtr<ID3D10Texture2D> texture = _cairo_d2d_get_buffer_texture(surf);
     RefPtr<ID2D1RenderTarget> new_rt;
@@ -2921,7 +2963,8 @@ RefPtr<ID2D1RenderTarget> _cairo_d2d_get_temp_rt(cairo_d2d_surface_t *surf, cair
     return new_rt;
 }
 
-cairo_int_status_t _cairo_d2d_blend_temp_surface(cairo_d2d_surface_t *surf, cairo_operator_t op, ID2D1RenderTarget *rt, cairo_clip_t *clip, const cairo_rectangle_int_t *bounds)
+static cairo_int_status_t
+_cairo_d2d_blend_temp_surface(cairo_d2d_surface_t *surf, cairo_operator_t op, ID2D1RenderTarget *rt, cairo_clip_t *clip, const cairo_rectangle_int_t *bounds = NULL)
 {
     int numPaths = 0;
     if (clip) {
@@ -3446,6 +3489,481 @@ _cairo_d2d_fill(void			*surface,
     return CAIRO_INT_STATUS_SUCCESS;
 }
 
+cairo_int_status_t
+_cairo_dwrite_manual_show_glyphs_on_d2d_surface(void			    *surface,
+						cairo_operator_t	     op,
+						const cairo_solid_pattern_t *source,
+						cairo_glyph_t		    *glyphs,
+						int			     num_glyphs,
+						cairo_dwrite_scaled_font_t  *scaled_font,
+						cairo_clip_t		    *clip)
+{
+    cairo_dwrite_font_face_t *dwriteff = reinterpret_cast<cairo_dwrite_font_face_t*>(scaled_font->base.font_face);
+    cairo_d2d_surface_t *dst = reinterpret_cast<cairo_d2d_surface_t*>(surface);
+
+    BOOL transform = FALSE;
+    HRESULT hr;
+
+    cairo_region_t *clip_region = NULL;
+
+    // We can only draw axis and pixel aligned rectangular quads, this means we
+    // can only support clips which form regions, since the intersection with
+    // our text area will then always be a set of rectangular axis and pixel
+    // aligned quads.
+    if (clip) {
+	_cairo_clip_get_region(clip, &clip_region);
+	if (!clip_region) {
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	}
+    }
+
+    _cairo_d2d_set_clip(dst, NULL);
+    dst->rt->Flush();
+
+    DWRITE_GLYPH_RUN run;
+    _cairo_dwrite_glyph_run_from_glyphs(glyphs, num_glyphs, scaled_font, &run, &transform);
+
+    RefPtr<IDWriteGlyphRunAnalysis> analysis;
+    DWRITE_MATRIX dwmat = _cairo_dwrite_matrix_from_matrix(&scaled_font->mat);
+
+    RefPtr<IDWriteRenderingParams> params;
+    dst->rt->GetTextRenderingParams(&params);
+
+    DWRITE_RENDERING_MODE renderMode = DWRITE_RENDERING_MODE_DEFAULT;
+    if (params) {
+	hr = dwriteff->dwriteface->GetRecommendedRenderingMode(
+						      (FLOAT)scaled_font->base.font_matrix.yy,
+						      1.0f,
+						      DWRITE_MEASURING_MODE_NATURAL,
+						      params,
+						      &renderMode);
+	if (FAILED(hr)) {
+	    // this probably never happens, but let's play it safe
+	    renderMode = DWRITE_RENDERING_MODE_DEFAULT;
+	}
+    }
+
+    // Deal with rendering modes CreateGlyphRunAnalysis doesn't accept.
+    if (renderMode == DWRITE_RENDERING_MODE_DEFAULT) {
+	// As per DWRITE_RENDERING_MODE documentation, pick Natural for font
+	// sizes under 16 ppem
+	if (scaled_font->base.font_matrix.yy < 16.0f) {
+	    renderMode = DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL;
+	} else {
+	    renderMode = DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL_SYMMETRIC;
+	}
+    } else if (renderMode == DWRITE_RENDERING_MODE_OUTLINE) {
+	renderMode = DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL_SYMMETRIC;
+    }
+
+    hr = DWriteFactory::Instance()->CreateGlyphRunAnalysis(&run,
+						      1.0f,
+						      transform ? &dwmat : 0,
+						      renderMode,
+						      DWRITE_MEASURING_MODE_NATURAL,
+						      0,
+						      0,
+						      &analysis);
+    delete [] run.glyphIndices;
+    delete [] run.glyphAdvances;
+    delete [] run.glyphOffsets;
+    if (FAILED(hr)) {
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
+    RECT bounds;
+    hr = analysis->GetAlphaTextureBounds(DWRITE_TEXTURE_CLEARTYPE_3x1,
+					 &bounds);
+    if (FAILED(hr) ||
+	// with bitmap sizes of asian fonts, GetAlphaTextureBounds returns
+	// an empty rect, so we need to detect that and fall back
+	(bounds.top == 0 && bounds.bottom == 0 && num_glyphs > 0))
+    {
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
+    cairo_rectangle_int_t cairo_bounds =
+	_cairo_rect_from_windows_rect(&bounds);
+
+    cairo_region_t *region;
+    if (clip) {
+	region = cairo_region_copy(clip_region);
+
+	cairo_region_intersect_rectangle(region, &cairo_bounds);
+    } else {
+	region = cairo_region_create_rectangle(&cairo_bounds);
+    }
+
+    cairo_region_auto_ptr region_ptr(region);
+
+    if (cairo_region_is_empty(region)) {
+	// Nothing to do.
+	return CAIRO_INT_STATUS_SUCCESS;
+    }
+ 
+    int bufferSize = cairo_bounds.width * cairo_bounds.height * 3;
+
+    if (!bufferSize) {
+	// width == 0 || height == 0
+	return CAIRO_INT_STATUS_SUCCESS;
+    }
+
+    // We add one byte so we can safely read an entire 32-bit int when copying
+    // the last 3 bytes of the alpha texture.
+    BYTE *texture = new BYTE[bufferSize + 1];
+    hr = analysis->CreateAlphaTexture(DWRITE_TEXTURE_CLEARTYPE_3x1,
+					&bounds, texture, bufferSize);
+    if (FAILED(hr)) {
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
+    RefPtr<ID3D10ShaderResourceView> srView;
+    ID3D10Device1 *device = dst->device->mD3D10Device;
+
+    int textureWidth, textureHeight;
+
+    if (cairo_bounds.width < TEXT_TEXTURE_WIDTH &&
+	cairo_bounds.height < TEXT_TEXTURE_HEIGHT)
+    {
+	// Use our cached TextTexture when it is big enough.
+	RefPtr<ID3D10Texture2D> tmpTexture;
+	CD3D10_TEXTURE2D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM,
+				   cairo_bounds.width, cairo_bounds.height,
+				   1, 1, 0);
+
+	desc.Usage = D3D10_USAGE_STAGING;
+	desc.CPUAccessFlags = D3D10_CPU_ACCESS_WRITE;
+				   
+	hr = device->CreateTexture2D(&desc, NULL, &tmpTexture);
+
+	D3D10_MAPPED_TEXTURE2D texMap;
+	hr = tmpTexture->Map(0, D3D10_MAP_WRITE, 0, &texMap);
+
+	if (FAILED(hr)) {
+	    delete [] texture;
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	}
+
+	BYTE *alignedTextureData = (BYTE*)texMap.pData;
+	for (int y = 0; y < cairo_bounds.height; y++) {
+	    for (int x = 0; x < cairo_bounds.width; x++) {
+		// Copy 3 Bpp source to 4 Bpp texture.
+		//
+		// Since we don't care what ends up in the alpha pixel of the
+		// destination, therefor we can simply copy a normal 32 bit
+		// integer each time, filling the alpha pixel of the destination
+		// with the first subpixel of the next pixel from the source.
+		*((int*)(alignedTextureData + (y * texMap.RowPitch) + x * 4)) =
+		    *((int*)(texture + (y * cairo_bounds.width + x) * 3));
+	    }
+	}
+
+	tmpTexture->Unmap(0);
+
+	delete [] texture;
+
+	D3D10_BOX box;
+	box.front = box.top = box.left = 0;
+	box.back = 1;
+	box.right = cairo_bounds.width;
+	box.bottom = cairo_bounds.height;
+
+	device->CopySubresourceRegion(dst->device->mTextTexture, 0, 0, 0, 0, tmpTexture, 0, &box);
+
+	srView = dst->device->mTextTextureView;
+
+	textureWidth = TEXT_TEXTURE_WIDTH;
+	textureHeight = TEXT_TEXTURE_HEIGHT;
+    } else {
+	int alignedBufferSize = cairo_bounds.width * cairo_bounds.height * 4;
+
+	// Create a one-off immutable texture from system memory.
+	BYTE *alignedTextureData = new BYTE[alignedBufferSize];
+	for (int y = 0; y < cairo_bounds.height; y++) {
+	    for (int x = 0; x < cairo_bounds.width; x++) {
+		// Copy 3 Bpp source to 4 Bpp destination memory used for
+		// texture creation. D3D10 has no 3 Bpp texture format we can
+		// use.
+		//
+		// Since we don't care what ends up in the alpha pixel of the
+		// destination, therefor we can simply copy a normal 32 bit
+		// integer each time, filling the alpha pixel of the destination
+		// with the first subpixel of the next pixel from the source.
+		*((int*)(alignedTextureData + (y * cairo_bounds.width + x) * 4)) =
+		    *((int*)(texture + (y * cairo_bounds.width + x) * 3));
+	    }
+	}
+
+	D3D10_SUBRESOURCE_DATA data;
+  
+	CD3D10_TEXTURE2D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM,
+				   cairo_bounds.width, cairo_bounds.height,
+				   1, 1);
+	desc.Usage = D3D10_USAGE_IMMUTABLE;
+
+	data.SysMemPitch = cairo_bounds.width * 4;
+	data.pSysMem = alignedTextureData;
+
+	RefPtr<ID3D10Texture2D> tex;
+	hr = device->CreateTexture2D(&desc, &data, &tex);
+	
+	delete [] alignedTextureData;
+	delete [] texture;
+
+	if (FAILED(hr)) {
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	}
+
+	hr = device->CreateShaderResourceView(tex, NULL, &srView);
+
+	if (FAILED(hr)) {
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	}
+
+	textureWidth = cairo_bounds.width;
+	textureHeight = cairo_bounds.height;
+    }
+
+    // Prepare destination surface for rendering.
+    RefPtr<ID3D10Texture2D> dstTexture;
+
+    dst->surface->QueryInterface(&dstTexture);
+
+    if (!dst->buffer_rt_view) {
+	hr = device->CreateRenderTargetView(dstTexture, NULL, &dst->buffer_rt_view);
+	if (FAILED(hr)) {
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	}
+    }
+
+    D3D10_TEXTURE2D_DESC tDesc;
+    dstTexture->GetDesc(&tDesc);
+    D3D10_VIEWPORT vp;
+    vp.Height = tDesc.Height;
+    vp.MinDepth = 0;
+    vp.MaxDepth = 1.0;
+    vp.TopLeftX = 0;
+    vp.TopLeftY = 0;
+    vp.Width = tDesc.Width;
+    device->RSSetViewports(1, &vp);
+
+    ID3D10Effect *effect = dst->device->mSampleEffect;
+
+    ID3D10RenderTargetView *rtViewPtr = dst->buffer_rt_view;
+
+    device->OMSetRenderTargets(1, &rtViewPtr, 0);
+
+    ID3D10EffectTechnique *technique = effect->GetTechniqueByName("SampleTextTexture");
+
+    ID3D10EffectVectorVariable *quadDesc = effect->GetVariableByName("QuadDesc")->AsVector();
+    ID3D10EffectVectorVariable *texCoords = effect->GetVariableByName("TexCoords")->AsVector();
+    ID3D10EffectVectorVariable *textColor = effect->GetVariableByName("TextColor")->AsVector();
+
+    float colorVal[] = { float(source->color.red   * source->color.alpha),
+	                 float(source->color.green * source->color.alpha),
+			 float(source->color.blue  * source->color.alpha),
+			 float(source->color.alpha) };
+    textColor->SetFloatVector(colorVal);
+
+    float quadDescVal[4];
+    float texCoordsVal[4];
+
+    // Draw a quad for each rectangle in the intersection of the clip and the
+    // text area.
+    for (int i = 0; i < cairo_region_num_rectangles(region); i++) {
+	cairo_rectangle_int_t quad;
+	cairo_region_get_rectangle(region, i, &quad);
+
+	quadDescVal[0] = -1.0f + ((float)quad.x / (float)tDesc.Width) * 2.0f;
+	quadDescVal[1] = 1.0f - ((float)quad.y / (float)tDesc.Height) * 2.0f;
+	quadDescVal[2] = ((float)quad.width / (float)tDesc.Width) * 2.0f;
+	quadDescVal[3] = -((float)quad.height / (float)tDesc.Height) * 2.0f;
+	
+	texCoordsVal[0] = (float)(quad.x - cairo_bounds.x) / textureWidth;
+	texCoordsVal[1] = (float)(quad.y - cairo_bounds.y) / textureHeight;
+	texCoordsVal[2] = (float)quad.width / textureWidth;
+	texCoordsVal[3] = (float)quad.height / textureHeight;
+
+	quadDesc->SetFloatVector(quadDescVal);
+	texCoords->SetFloatVector(texCoordsVal);
+
+	_cairo_d2d_setup_for_blend(dst->device);
+	technique->GetPassByIndex(0)->Apply(0);
+
+	ID3D10ShaderResourceView *srViewPtr = srView;
+	device->PSSetShaderResources(0, 1, &srViewPtr);
+
+	device->Draw(4, 0);
+    }
+
+    return CAIRO_INT_STATUS_SUCCESS;
+}
+
+static cairo_int_status_t
+_cairo_dwrite_show_glyphs_on_d2d_surface(void			*surface,
+					 cairo_operator_t	 op,
+					 const cairo_pattern_t	*source,
+					 cairo_glyph_t		*glyphs,
+					 int			 num_glyphs,
+					 cairo_scaled_font_t	*scaled_font,
+					 cairo_clip_t		*clip)
+{
+    cairo_int_status_t status;
+
+    // TODO: Check font & surface for types.
+    cairo_dwrite_scaled_font_t *dwritesf = reinterpret_cast<cairo_dwrite_scaled_font_t*>(scaled_font);
+    cairo_dwrite_font_face_t *dwriteff = reinterpret_cast<cairo_dwrite_font_face_t*>(scaled_font->font_face);
+    cairo_d2d_surface_t *dst = reinterpret_cast<cairo_d2d_surface_t*>(surface);
+
+    /* We can only handle dwrite fonts */
+    //XXX: this is checked by at least one caller
+    if (cairo_scaled_font_get_type (scaled_font) != CAIRO_FONT_TYPE_DWRITE)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    op = _cairo_d2d_simplify_operator(op, source);
+
+    /* We cannot handle operator SOURCE or CLEAR */
+    if (op == CAIRO_OPERATOR_SOURCE || op == CAIRO_OPERATOR_CLEAR) {
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
+    if (op == CAIRO_OPERATOR_OVER && source->type == CAIRO_PATTERN_TYPE_SOLID &&
+	dst->base.content != CAIRO_CONTENT_COLOR &&
+	dst->base.permit_subpixel_antialiasing &&
+	dwritesf->antialias_mode == CAIRO_ANTIALIAS_SUBPIXEL)
+    {
+	// The D2D/DWrite drawing API's will not allow drawing subpixel AA to
+	// an RGBA surface. We do however want to do this if we know all text
+	// on a surface will be over opaque pixels, when this is the case
+	// we set the permit_subpixel_antialiasing flag on a surface. We then
+	// proceed to manually composite the glyphs to the surface.
+
+	const cairo_solid_pattern_t *solid_src =
+	    reinterpret_cast<const cairo_solid_pattern_t*>(source);
+	status = _cairo_dwrite_manual_show_glyphs_on_d2d_surface(surface,
+								 op,
+								 solid_src,
+								 glyphs,
+								 num_glyphs,
+								 dwritesf,
+								 clip);
+
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED) {
+	    return status;
+	}
+    }
+
+    RefPtr<ID2D1RenderTarget> target_rt = dst->rt;
+    cairo_rectangle_int_t fontArea;
+#ifndef ALWAYS_MANUAL_COMPOSITE
+    if (op != CAIRO_OPERATOR_OVER) {
+#endif
+	target_rt = _cairo_d2d_get_temp_rt(dst, clip);
+
+	if (!target_rt) {
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	}
+#ifndef ALWAYS_MANUAL_COMPOSITE
+    } else {
+	_begin_draw_state(dst);
+	status = (cairo_int_status_t)_cairo_d2d_set_clip (dst, clip);
+
+	if (unlikely(status))
+	    return status;
+    }
+#endif
+
+    D2D1_TEXT_ANTIALIAS_MODE cleartype_quality = D2D1_TEXT_ANTIALIAS_MODE_CLEARTYPE;
+
+    // If we're rendering to a temporary surface we cannot do sub-pixel AA.
+    if (dst->base.content != CAIRO_CONTENT_COLOR || dst->rt.get() != target_rt.get()) {
+	cleartype_quality = D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE;
+    }
+
+    switch (dwritesf->antialias_mode) {
+	case CAIRO_ANTIALIAS_NONE:
+	    target_rt->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_ALIASED);
+	    break;
+	case CAIRO_ANTIALIAS_GRAY:
+	    target_rt->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE);
+	    break;
+	case CAIRO_ANTIALIAS_SUBPIXEL:
+	    target_rt->SetTextAntialiasMode(cleartype_quality);
+	    break;
+    }
+
+    cairo_bool_t transform = FALSE;
+
+    DWRITE_GLYPH_RUN run;
+    
+    _cairo_dwrite_glyph_run_from_glyphs(glyphs, num_glyphs, dwritesf, &run, &transform);
+
+    D2D1::Matrix3x2F mat = _cairo_d2d_matrix_from_matrix(&dwritesf->mat);
+	
+    if (transform) {
+	target_rt->SetTransform(mat);
+    }
+
+    if (dst->rt.get() != target_rt.get()) {
+	RefPtr<IDWriteGlyphRunAnalysis> analysis;
+	DWRITE_MATRIX dwmat = _cairo_dwrite_matrix_from_matrix(&dwritesf->mat);
+	DWriteFactory::Instance()->CreateGlyphRunAnalysis(&run,
+							  1.0f,
+							  transform ? &dwmat : 0,
+							  DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL_SYMMETRIC,
+							  DWRITE_MEASURING_MODE_NATURAL,
+							  0,
+							  0,
+							  &analysis);
+
+	RECT bounds;
+	analysis->GetAlphaTextureBounds(scaled_font->options.antialias == CAIRO_ANTIALIAS_NONE ?
+					DWRITE_TEXTURE_ALIASED_1x1 : DWRITE_TEXTURE_CLEARTYPE_3x1,
+					&bounds);
+	fontArea.x = bounds.left;
+	fontArea.y = bounds.top;
+	fontArea.width = bounds.right - bounds.left;
+	fontArea.height = bounds.bottom - bounds.top;
+    }
+
+    RefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(dst,
+								   source);
+
+    if (!brush) {
+	delete [] run.glyphIndices;
+	delete [] run.glyphOffsets;
+	delete [] run.glyphAdvances;
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+    
+    if (transform) {
+	D2D1::Matrix3x2F mat_inverse = _cairo_d2d_matrix_from_matrix(&dwritesf->mat_inverse);
+	D2D1::Matrix3x2F mat_brush;
+
+	// The brush matrix needs to be multiplied with the inverted matrix
+	// as well, to move the brush into the space of the glyphs. Before
+	// the render target transformation.
+	brush->GetTransform(&mat_brush);
+	mat_brush = mat_brush * mat_inverse;
+	brush->SetTransform(&mat_brush);
+    }
+    
+    target_rt->DrawGlyphRun(D2D1::Point2F(0, 0), &run, brush, dwritesf->measuring_mode);
+    
+    if (transform) {
+	target_rt->SetTransform(D2D1::Matrix3x2F::Identity());
+    }
+
+    delete [] run.glyphIndices;
+    delete [] run.glyphOffsets;
+    delete [] run.glyphAdvances;
+
+    if (target_rt.get() != dst->rt.get()) {
+	return _cairo_d2d_blend_temp_surface(dst, op, target_rt, clip, &fontArea);
+    }
+
+    return CAIRO_INT_STATUS_SUCCESS;
+}
 
 static cairo_int_status_t
 _cairo_d2d_show_glyphs (void			*surface,

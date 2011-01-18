@@ -1545,6 +1545,12 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
       nsIntRegion dirtyWindowRegion(aDirtyRegion.ToOutsidePixels(pixelRatio));
       builder.SetFinalTransparentRegion(visibleRegion);
       widget->UpdatePossiblyTransparentRegion(dirtyWindowRegion, visibleWindowRegion);
+
+      // If we're finished building display list items for painting of the outermost
+      // pres shell, notify the widget about any toolbars we've encountered.
+      nsIWidget_MOZILLA_2_0_BRANCH* widget2 =
+        static_cast<nsIWidget_MOZILLA_2_0_BRANCH*>(widget);
+      widget2->UpdateThemeGeometries(builder.GetThemeGeometries());
     }
   }
 
@@ -2714,7 +2720,7 @@ nsLayoutUtils::DrawString(const nsIFrame*      aFrame,
         (NS_STYLE_DIRECTION_RTL == aDirection) ?
         NSBIDI_RTL : NSBIDI_LTR;
       rv = bidiUtils->RenderText(aString, aLength, direction,
-                                 presContext, *aContext,
+                                 presContext, *aContext, *aContext,
                                  aPoint.x, aPoint.y);
     }
   }

@@ -50,6 +50,8 @@
 #include "jsdbgapi.h"
 #include "jsprf.h"
 
+#include "xpcpublic.h"
+
 #include "XPCShellEnvironment.h"
 
 #include "mozilla/XPCOM.h"
@@ -1120,6 +1122,8 @@ XPCShellEnvironment::Init()
         NS_ERROR("failed to get nsXPConnect service!");
         return false;
     }
+
+    xpc_LocalizeContext(cx);
 
     nsRefPtr<FullTrustSecMan> secman(new FullTrustSecMan());
     xpc->SetSecurityManagerForJSContext(cx, secman, 0xFFFF);

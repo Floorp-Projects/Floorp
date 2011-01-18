@@ -1,17 +1,11 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 .findbar-closebutton {
-  border: 1px solid transparent;
-  padding: 2px !important;
+  border: none;
+  padding: 3px 5px;
   list-style-image: url("chrome://global/skin/icons/close.png");
   -moz-appearance: none;
   -moz-image-region: rect(0, 16px, 16px, 0);
-}
-
-.findbar-closebutton > .toolbarbutton-icon {
-  -moz-margin-end: 0px !important;
-  -moz-padding-end: 2px !important;
-  -moz-padding-start: 2px !important;
 }
 
 .findbar-closebutton:hover {

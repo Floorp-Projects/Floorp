@@ -542,6 +542,9 @@ mozJSComponentLoader::ReallyInit()
     rv = obsSvc->AddObserver(this, "xpcom-shutdown-loaders", PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    // Set up localized comparison and string conversion
+    xpc_LocalizeContext(mContext);
+
 #ifdef DEBUG_shaver_off
     fprintf(stderr, "mJCL: ReallyInit success!\n");
 #endif

@@ -18,13 +18,6 @@ function login_handler(request, response) {
   response.bodyOutputStream.write(body, body.length);
 }
 
-function send(statusCode, status, body) {
-  return function(request, response) {
-    response.setStatusLine(request.httpVersion, statusCode, status);
-    response.bodyOutputStream.write(body, body.length);
-  };
-}
-
 function service_unavailable(request, response) {
   let body = "Service Unavailable";
   response.setStatusLine(request.httpVersion, 503, "Service Unavailable");
@@ -45,7 +38,7 @@ function run_test() {
     "/api/1.0/janedoe/info/collections": service_unavailable,
     "/api/1.0/johndoe/storage/meta/global": new ServerWBO().handler(),
     "/api/1.0/johndoe/storage/crypto/keys": new ServerWBO().handler(),
-    "/user/1.0/johndoe/node/weave": send(200, "OK", "http://localhost:8080/api/")
+    "/user/1.0/johndoe/node/weave": httpd_handler(200, "OK", "http://localhost:8080/api/")
   });
 
   try {

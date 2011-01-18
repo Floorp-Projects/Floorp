@@ -55,7 +55,7 @@ nsScreenAndroid::~nsScreenAndroid()
 NS_IMETHODIMP
 nsScreenAndroid::GetRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRInt32 *outHeight)
 {
-    gfxIntSize sz = nsWindow::GetAndroidBounds();
+    gfxIntSize sz = nsWindow::GetAndroidScreenBounds();
 
     *outLeft = 0;
     *outTop = 0;

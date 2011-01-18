@@ -55,6 +55,7 @@ public:
     mAnimVal = mBaseVal = PRUint8(aValue);
     mAttrEnum = aAttrEnum;
     mIsAnimated = PR_FALSE;
+    mIsBaseSet = PR_FALSE;
   }
 
   nsresult SetBaseValueString(const nsAString& aValue,
@@ -72,6 +73,8 @@ public:
   void SetAnimValue(PRUint16 aValue, nsSVGElement *aSVGElement);
   PRUint16 GetAnimValue() const
     { return mAnimVal; }
+  PRBool IsExplicitlySet() const
+    { return mIsAnimated || mIsBaseSet; }
 
   nsresult ToDOMAnimatedEnum(nsIDOMSVGAnimatedEnumeration **aResult,
                              nsSVGElement* aSVGElement);
@@ -85,6 +88,7 @@ private:
   nsSVGEnumValue mBaseVal;
   PRUint8 mAttrEnum; // element specified tracking for attribute
   PRPackedBool mIsAnimated;
+  PRPackedBool mIsBaseSet;
 
   nsSVGEnumMapping *GetMapping(nsSVGElement *aSVGElement);
 

@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=616841
+-->
+<window title="Mozilla Bug 616841"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  onload="start()">
+  <label value="Mozilla Bug 616841"/>
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+    const FRAME_SCRIPT = 
+"data:,addMessageListener(\n"+
+"  'cmp',\n"+
+"  function (m) {\n"+
+"    sendAsyncMessage('cmp', { i: m.json.i,\n"+
+"                              cmp: m.json.a.localeCompare(m.json.b) });\n"+
+"  });\n"+
+"sendAsyncMessage('contentReady');";
+
+    var toCompare = [ [ "C", "D" ],
+                      [ "D", "C" ],
+                      [ "\u010C", "D" ],
+                      [ "D", "\u010C" ] ];
+    var nCmps = 0;
+
+    function recvContentReady(m) {
+      for (var i = 0; i < toCompare.length; ++i) {
+        var pair = toCompare[i];
+        messageManager.sendAsyncMessage("cmp",
+                                        { i: i, a: pair[0], b: pair[1] });
+      }
+    }
+
+    function recvCmp(m) {
+      var i = m.json.i, cmp = m.json.cmp;
+      var pair = toCompare[i];
+      opener.wrappedJSObject.is(pair[0].localeCompare(pair[1]), cmp, "localeCompare returned same result in frame script");
+
+      if (toCompare.length == ++nCmps) {
+         messageManager.removeMessageListener("cmp", recvCmp);
+        finish();
+      }
+    }
+
+    function start() {
+      messageManager.addMessageListener("contentReady", recvContentReady);
+      messageManager.addMessageListener("cmp", recvCmp);
+      messageManager.loadFrameScript(FRAME_SCRIPT, true);
+    }
+
+    function finish() {
+      opener.setTimeout("done()", 0);
+      window.close();
+    }
+
+  ]]></script>
+
+  <browser id="browser" type="content" src="about:blank"/>
+</window>

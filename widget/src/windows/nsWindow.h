@@ -50,6 +50,7 @@
  * nsWindow - Native window management and event handling.
  */
 
+#include "nsAutoPtr.h"
 #include "nsBaseWidget.h"
 #include "nsdefs.h"
 #include "nsIdleService.h"
@@ -659,7 +660,7 @@ protected:
     }
 
     PRBool mCancel;
-    nsCOMPtr<nsWindow> mWindow;
+    nsRefPtr<nsWindow> mWindow;
     const MSG &mMsg;
   };
 

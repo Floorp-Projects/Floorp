@@ -4647,19 +4647,39 @@ dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Individual module options)
 
+dnl Setup default CPU arch for arm target
+case "$target_cpu" in
+  arm*)
+    MOZ_ARM_ARCH=armv7
+  ;;
+esac
 dnl ========================================================
 dnl = Enable building the Thumb2 instruction set
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(thumb2,
- [  --enable-thumb2         Enable Thumb2 instruction set],
+ [  --enable-thumb2         Enable Thumb2 instruction set (implies ARMv7)],
     MOZ_THUMB2=1,
     MOZ_THUMB2=)
+if test -n "$MOZ_THUMB2"; then
+  MOZ_ARM_ARCH=armv7
+fi
+
+dnl ========================================================
+dnl = Enable building for ARM specific CPU features
+dnl ========================================================
+MOZ_ARG_WITH_STRING(cpu-arch,
+[  --with-cpu-arch=arch      Use specific arm architecture CPU features, default armv7],
+    MOZ_ARM_ARCH=$withval)
 
 if test -n "$MOZ_THUMB2"; then
   case "$target_cpu" in
     arm*)
+      if test "$MOZ_ARM_ARCH" != "armv7"; then
+        AC_MSG_ERROR([--enable-thumb2 is not compatible with cpu-arch=$MOZ_ARM_ARCH])
+      fi
       if test "$GNU_CC"; then
         AC_DEFINE(MOZ_THUMB2)
+        AC_DEFINE(MOZ_ARM_ARCH)
         CFLAGS="$CFLAGS -march=armv7-a -mthumb -Wa, -march=armv7-a -Wa, -mthumb"
         CXXFLAGS="$CXXFLAGS -march=armv7-a -mthumb -Wa, -march=armv7-a -Wa, -mthumb"
         ASFLAGS="$ASFLAGS -march=armv7-a -mthumb"
@@ -4671,11 +4691,27 @@ if test -n "$MOZ_THUMB2"; then
       AC_MSG_ERROR([--enable-thumb2 is not supported for non-ARM CPU architectures])
     ;;
   esac
+elif test "$MOZ_ARM_ARCH" = "armv7"; then
+  case "$target_cpu" in
+    arm*)
+      if test "$GNU_CC"; then
+        AC_DEFINE(MOZ_ARM_ARCH)
+        CFLAGS="$CFLAGS -march=armv7-a -marm -Wa, -march=armv7-a -Wa, -marm"
+        CXXFLAGS="$CXXFLAGS -march=armv7-a -marm -Wa, -march=armv7-a -Wa, -marm"
+        ASFLAGS="$ASFLAGS -march=armv7-a -marm"
+      else
+        AC_MSG_ERROR([--with-cpu-arch=armv7 is not supported for non-GNU toolchains])
+      fi
+    ;;
+    *)
+      AC_MSG_ERROR([--with-cpu-arch=armv7 is not supported for non-ARM CPU architectures])
+    ;;
+  esac
 else
   case "$target_cpu" in
     arm*)
       if test "$GNU_CC"; then
-       CFLAGS="$CFLAGS -march=armv5te -mthumb-interwork -Wa, -march=armv5te -Wa, -mthumb-interwork"
+        CFLAGS="$CFLAGS -march=armv5te -mthumb-interwork -Wa, -march=armv5te -Wa, -mthumb-interwork"
         CXXFLAGS="$CXXFLAGS -march=armv5te -mthumb-interwork -Wa, -march=armv5te -Wa, -mthumb-interwork"
         ASFLAGS="$ASFLAGS -march=armv5te -mthumb-interwork"
       fi
@@ -4684,6 +4720,7 @@ else
 fi
 
 AC_SUBST(MOZ_THUMB2)
+AC_SUBST(MOZ_ARM_ARCH)
 
 dnl ========================================================
 dnl =
@@ -6084,6 +6121,9 @@ if test "$JS_HAS_CTYPES"; then
   fi
   if test -n "$MOZ_THUMB2"; then
     ac_configure_args="$ac_configure_args --enable-thumb2"
+  fi
+  if test -n "$MOZ_ARM_ARCH"; then
+    ac_configure_args="$ac_configure_args --with-cpu-arch=$MOZ_ARM_ARCH"
   fi
 
   # Use a separate cache file for libffi, since it does things differently

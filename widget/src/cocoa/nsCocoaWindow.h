@@ -296,6 +296,7 @@ public:
     static void UnifiedShading(void* aInfo, const CGFloat* aIn, CGFloat* aOut);
 
     void SetPopupWindowLevel();
+    PRBool IsVisible();
 
     PRBool IsChildInFailingLeftClickThrough(NSView *aChild);
     PRBool ShouldFocusPlugin();
@@ -339,6 +340,7 @@ protected:
                                         // this is used for sibling sheet contention only
   PRPackedBool         mFullScreen;
   PRPackedBool         mModal;
+  PRPackedBool         mIsShowing;      // PR_TRUE during a Show(PR_TRUE) call.
 
   PRInt32              mNumModalDescendents;
 };

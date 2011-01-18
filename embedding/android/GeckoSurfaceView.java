@@ -160,7 +160,11 @@ class GeckoSurfaceView
 
             Log.i("GeckoAppJava", "surfaceChanged: fmt: " + format + " dim: " + width + " " + height);
 
-            GeckoEvent e = new GeckoEvent(GeckoEvent.SIZE_CHANGED, width, height, -1, -1);
+            DisplayMetrics metrics = new DisplayMetrics();
+            GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+
+            GeckoEvent e = new GeckoEvent(GeckoEvent.SIZE_CHANGED, width, height,
+                                          metrics.widthPixels, metrics.heightPixels);
             GeckoAppShell.sendEventToGecko(e);
 
             if (mSoftwareBuffer != null)

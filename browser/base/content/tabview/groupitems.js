@@ -66,7 +66,7 @@
 //   dontPush - true if this groupItem shouldn't push away or snap on creation; default is false
 //   immediately - true if we want all placement immediately, not with animation
 function GroupItem(listOfEls, options) {
-  if (typeof options == 'undefined')
+  if (!options)
     options = {};
 
   this._inited = false;
@@ -813,7 +813,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
       item.removeTrenches();
 
-      if (typeof options == 'undefined')
+      if (!options)
         options = {};
 
       var self = this;
@@ -897,7 +897,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         item = Items.item($el);
       }
 
-      if (typeof options == 'undefined')
+      if (!options)
         options = {};
 
       var index = this._children.indexOf(item);
@@ -1036,8 +1036,6 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     this.$expander
         .show()
         .css({
-          opacity: .2,
-          top: childBB.top + childBB.height - parentBB.top + padding,
           left: parentBB.width/2 - this.$expander.width()/2
         });
   },
@@ -1054,10 +1052,10 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       return: 'widthAndColumns',
       count: count || this._children.length
     };
-    let {childWidth, columns} = Items.arrange(null, bb, options);
-
-    let shouldStack = childWidth < TabItems.minTabWidth * 1.35;
-    this._columns = shouldStack ? null : columns;
+    let arrObj = Items.arrange(null, bb, options);
+ 
+    let shouldStack = arrObj.childWidth < TabItems.minTabWidth * 1.35;
+    this._columns = shouldStack ? null : arrObj.columns;
 
     return shouldStack;
   },
@@ -1094,67 +1092,22 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
     if (GroupItems._arrangePaused) {
       GroupItems.pushArrange(this, options);
-      return;
+      return false;
     }
-    var dropIndex = false;
-    if (this.expanded) {
-      this.topChild = null;
-      var box = new Rect(this.expanded.bounds);
-      box.inset(8, 8);
-      let result = Items.arrange(childrenToArrange, box, Utils.extend({}, options, {z: 99999}));
-      dropIndex = result.dropIndex;
-    } else {
-      var count = childrenToArrange.length;
-      var bb = this.getContentBounds();
-      if (!this.shouldStack(count + (options.addTab ? 1 : 0))) {
-        childrenToArrange.forEach(function(child) {
-          child.removeClass("stacked")
-        });
-
-        this.topChild = null;
-
-        if (!childrenToArrange.length)
-          return;
-
-        var arrangeOptions = Utils.extend({}, options, {
-          columns: this._columns
-        });
-
-        // Items.arrange will rearrange the children, but also return an array
-        // of the Rect's used.
-
-        let result = Items.arrange(childrenToArrange, bb, arrangeOptions);
-        dropIndex = result.dropIndex;
-        if ("oldDropIndex" in options && options.oldDropIndex === dropIndex)
-          return dropIndex;
-        var rects = result.rects;
-
-        let index = 0;
-        let self = this;
-        childrenToArrange.forEach(function GroupItem_arrange_children_each(child, i) {
-          // If dropIndex spacing is active and this is a child after index,
-          // bump it up one so we actually use the correct rect
-          // (and skip one for the dropPos)
-          if (self._dropSpaceActive && index === dropIndex)
-            index++;
-          if (!child.locked.bounds) {
-            child.setBounds(rects[index], !options.animate);
-            child.setRotation(0);
-            if (options.z)
-              child.setZ(options.z);
-          }
-          index++;
-        });
-
-        this._isStacked = false;
-      } else
-        this._stackArrange(bb, options);
-    }
-
-    if (this._isStacked && !this.expanded) this.showExpandControl();
-    else this.hideExpandControl();
     
-    return dropIndex;
+    let shouldStack = this.shouldStack(childrenToArrange.length + (options.addTab ? 1 : 0));
+    let box = this.getContentBounds();
+    
+    // if we should stack and we're not expanded
+    if (shouldStack && !this.expanded) {
+      this.showExpandControl();
+      this._stackArrange(childrenToArrange, box, options);
+      return false;
+    } else {
+      this.hideExpandControl();
+      // a dropIndex is returned
+      return this._gridArrange(childrenToArrange, box, options);
+    }
   },
 
   // ----------
@@ -1162,27 +1115,22 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Arranges the children in a stack.
   //
   // Parameters:
+  //   childrenToArrange - array of <TabItem> children
   //   bb - <Rect> to arrange within
   //   options - see below
   //
   // Possible "options" properties:
   //   animate - whether to animate; default: true.
-  _stackArrange: function GroupItem__stackArrange(bb, options) {
-    var animate;
-    if (!options || typeof options.animate == 'undefined')
-      animate = true;
-    else
-      animate = options.animate;
-
-    if (typeof options == 'undefined')
+  _stackArrange: function GroupItem__stackArrange(childrenToArrange, bb, options) {
+    if (!options)
       options = {};
+    var animate = "animate" in options ? options.animate : true;
 
-    var count = this._children.length;
+    var count = childrenToArrange.length;
     if (!count)
       return;
 
     var zIndex = this.getZ() + count + 1;
-
     var maxRotation = 35; // degress
     var scale = 0.8;
     var newTabsPad = 10;
@@ -1211,7 +1159,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
     var self = this;
     var children = [];
-    this._children.forEach(function GroupItem__stackArrange_order(child) {
+    childrenToArrange.forEach(function GroupItem__stackArrange_order(child) {
       if (child == self.topChild)
         children.unshift(child);
       else
@@ -1230,6 +1178,72 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     });
 
     self._isStacked = true;
+  },
+  
+  // ----------
+  // Function: _gridArrange
+  // Arranges the children into a grid.
+  //
+  // Parameters:
+  //   childrenToArrange - array of <TabItem> children
+  //   box - <Rect> to arrange within
+  //   options - see below
+  //
+  // Possible "options" properties:
+  //   animate - whether to animate; default: true.
+  //   z - (int) a z-index to assign the children
+  //   columns - the number of columns to use in the layout, if known in advance
+  //
+  // Returns:
+  //   dropIndex - (int) the index at which a dragged item (if there is one) should be added
+  //               if it is dropped. Otherwise (boolean) false.
+  _gridArrange: function GroupItem__gridArrange(childrenToArrange, box, options) {
+    this.topChild = null;
+    let arrangeOptions;
+    if (this.expanded) {
+      // if we're expanded, we actually want to use the expanded tray's bounds.
+      box = new Rect(this.expanded.bounds);
+      box.inset(8, 8);
+      arrangeOptions = Utils.extend({}, options, {z: 99999});
+    } else {
+      this._isStacked = false;
+      arrangeOptions = Utils.extend({}, options, {
+        columns: this._columns
+      });
+
+      childrenToArrange.forEach(function(child) {
+        child.removeClass("stacked")
+      });
+    }
+  
+    if (!childrenToArrange.length)
+      return false;
+
+    // Items.arrange will determine where/how the child items should be
+    // placed, but will *not* actually move them for us. This is our job.
+    let result = Items.arrange(childrenToArrange, box, arrangeOptions);
+    let {dropIndex, rects} = result;
+    if ("oldDropIndex" in options && options.oldDropIndex === dropIndex)
+      return dropIndex;
+
+    let index = 0;
+    let self = this;
+    childrenToArrange.forEach(function GroupItem_arrange_children_each(child, i) {
+      // If dropIndex spacing is active and this is a child after index,
+      // bump it up one so we actually use the correct rect
+      // (and skip one for the dropPos)
+      if (self._dropSpaceActive && index === dropIndex)
+        index++;
+      if (!child.locked.bounds) {
+        child.setBounds(rects[index], !options.animate);
+        child.setRotation(0);
+        if (arrangeOptions.z)
+          child.setZ(arrangeOptions.z);
+      }
+      index++;
+    });
+
+    return dropIndex;
   },
 
   // ----------
@@ -1284,7 +1298,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       position: "absolute",
       zIndex: 99998
     }).appendTo("body");
-
+    $tray[0].id = "expandedTray";
 
     var w = 180;
     var h = w * (TabItems.tabHeight / TabItems.tabWidth) * 1.1;
@@ -1316,7 +1330,10 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         left: pos.left
       }, {
         duration: 200,
-        easing: "tabviewBounce"
+        easing: "tabviewBounce",
+        complete: function GroupItem_expand_animate_complete() {
+          self._sendToSubscribers("expanded");
+        }
       })
       .addClass("overlay");
 
@@ -1361,6 +1378,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     if (this.expanded) {
       var z = this.getZ();
       var box = this.getBounds();
+      let self = this;
       this.expanded.$tray
         .css({
           zIndex: z + 1
@@ -1374,8 +1392,9 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         }, {
           duration: 350,
           easing: "tabviewBounce",
-          complete: function() {
+          complete: function GroupItem_collapse_animate_complete() {
             iQ(this).remove();
+            self._sendToSubscribers("collapsed");
           }
         });
 
@@ -1627,6 +1646,7 @@ let GroupItems = {
   _arrangePaused: false,
   _arrangesPending: [],
   _removingHiddenGroups: false,
+  _delayedModUpdates: [],
   minGroupHeight: 110,
   minGroupWidth: 125,
 
@@ -1640,9 +1660,18 @@ let GroupItems = {
       self._handleAttrModified(xulTab);
     }
 
+    // make sure any closed tabs are removed from the delay update list
+    function handleClose(xulTab) {
+      let idx = self._delayedModUpdates.indexOf(xulTab);
+      if (idx != -1)
+        self._delayedModUpdates.splice(idx, 1);
+    }
+
     AllTabs.register("attrModified", handleAttrModified);
+    AllTabs.register("close", handleClose);
     this._cleanupFunctions.push(function() {
       AllTabs.unregister("attrModified", handleAttrModified);
+      AllTabs.unregister("close", handleClose);
     });
   },
 
@@ -1709,6 +1738,30 @@ let GroupItems = {
   // Function: _handleAttrModified
   // watch for icon changes on app tabs
   _handleAttrModified: function GroupItems__handleAttrModified(xulTab) {
+    if (!UI.isTabViewVisible()) {
+      if (this._delayedModUpdates.indexOf(xulTab) == -1) {
+        this._delayedModUpdates.push(xulTab);
+      }
+    } else
+      this._updateAppTabIcons(xulTab); 
+  },
+
+  // ----------
+  // Function: flushTabUpdates
+  // Update apptab icons based on xulTabs which have been updated
+  // while the TabView hasn't been visible 
+  flushAppTabUpdates: function GroupItems_flushAppTabUpdates() {
+    let self = this;
+    this._delayedModUpdates.forEach(function(xulTab) {
+      self._updateAppTabIcons(xulTab);
+    });
+    this._delayedModUpdates = [];
+  },
+
+  // ----------
+  // Function: _updateAppTabIcons
+  // Update images of any apptab icons that point to passed in xultab 
+  _updateAppTabIcons: function GroupItems__updateAppTabIcons(xulTab) {
     if (xulTab.ownerDocument.defaultView != gWindow || !xulTab.pinned)
       return;
 
@@ -1723,7 +1776,7 @@ let GroupItems = {
           $icon.attr("src", iconUrl);
       });
     });
-  },
+  },  
 
   // ----------
   // Function: addAppTab

@@ -143,6 +143,7 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface)
     , mCurrentAsyncSetWindowTask(nsnull)
     , mPendingPluginCall(false)
     , mDoAlphaExtraction(false)
+    , mHasPainted(false)
     , mSurfaceDifferenceRect(0,0,0,0)
 #if (MOZ_PLATFORM_MAEMO == 5) || (MOZ_PLATFORM_MAEMO == 6)
     , mMaemoImageRendering(PR_FALSE)
@@ -161,6 +162,7 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface)
 #endif // OS_WIN
 #if defined(OS_WIN)
     InitPopupMenuHook();
+    HookSystemParametersInfo();
 #endif // OS_WIN
 #ifdef MOZ_X11
     // Maemo flash can render plugin with any provided rectangle and not require this quirk.
@@ -1208,6 +1210,47 @@ PluginInstanceChild::PluginWindowProc(HWND hWnd,
         RemoveProp(hWnd, kPluginInstanceChildProperty);
 
     return res;
+}
+
+/* system parameters info hook for flash */
+
+typedef BOOL (WINAPI *User32SystemParametersInfoW)(UINT uiAction,
+                                                   UINT uiParam,
+                                                   PVOID pvParam,
+                                                   UINT fWinIni);
+
+static User32SystemParametersInfoW sUser32SystemParametersInfoWStub = NULL;
+
+static BOOL WINAPI User32SystemParametersInfoHook(UINT uiAction,
+                                                  UINT uiParam,
+                                                  PVOID pvParam,
+                                                  UINT fWinIni)
+{
+  if (!sUser32SystemParametersInfoWStub) {
+      NS_NOTREACHED("sUser32SystemParametersInfoWStub not set??");
+      return FALSE;
+  }
+
+  // Tell them cleartype is disabled, so they don't mess with
+  // the alpha channel in our buffers.
+  if (uiAction == SPI_GETFONTSMOOTHINGTYPE && pvParam) {
+      *((UINT*)(pvParam)) = FE_FONTSMOOTHINGSTANDARD;
+      return TRUE;
+  }
+
+  return sUser32SystemParametersInfoWStub(uiAction, uiParam, pvParam, fWinIni);
+}
+
+void
+PluginInstanceChild::HookSystemParametersInfo()
+{
+    if (!(GetQuirks() & PluginModuleChild::QUIRK_FLASH_MASK_CLEARTYPE_SETTINGS))
+        return;
+    if (sUser32SystemParametersInfoWStub)
+        return;
+    sUser32Intercept.Init("gdi32.dll");
+    sUser32Intercept.AddHook("SystemParametersInfoW", User32SystemParametersInfoHook,
+                             (void**) &sUser32SystemParametersInfoWStub);
 }
 
 /* set window long ptr hook for flash */
@@ -2516,7 +2559,8 @@ PluginInstanceChild::UpdateWindowAttributes(bool aForceSetWindow)
         WINDOWPOS winpos = {
             0, 0,
             mWindow.x, mWindow.y,
-            mWindow.width, mWindow.height
+            mWindow.width, mWindow.height,
+            0
         };
         NPEvent pluginEvent = {
             WM_WINDOWPOSCHANGED, 0,
@@ -2529,15 +2573,20 @@ PluginInstanceChild::UpdateWindowAttributes(bool aForceSetWindow)
     if (mPluginIface->setwindow) {
         mPluginIface->setwindow(&mData, &mWindow);
     }
-
-    return;
 }
 
 void
 PluginInstanceChild::PaintRectToPlatformSurface(const nsIntRect& aRect,
                                                 gfxASurface* aSurface)
 {
+    bool temporarilyMakeVisible = !IsVisible() && !mHasPainted;
+    if (temporarilyMakeVisible) {
+        mWindow.clipRect.right = mWindow.width;
+        mWindow.clipRect.bottom = mWindow.height;
+    }
+
     UpdateWindowAttributes();
+
 #ifdef MOZ_X11
 #if (MOZ_PLATFORM_MAEMO == 5) || (MOZ_PLATFORM_MAEMO == 6)
     // On maemo5 we do support Image rendering NPAPI
@@ -2576,32 +2625,30 @@ PluginInstanceChild::PaintRectToPlatformSurface(const nsIntRect& aRect,
         exposeEvent.major_code = 0;
         exposeEvent.minor_code = 0;
         mPluginIface->event(&mData, reinterpret_cast<void*>(&exposeEvent));
-        return;
+    } else
+#endif
+    {
+        NS_ASSERTION(aSurface->GetType() == gfxASurface::SurfaceTypeXlib,
+                     "Non supported platform surface type");
+
+        NPEvent pluginEvent;
+        XGraphicsExposeEvent& exposeEvent = pluginEvent.xgraphicsexpose;
+        exposeEvent.type = GraphicsExpose;
+        exposeEvent.display = mWsInfo.display;
+        exposeEvent.drawable = static_cast<gfxXlibSurface*>(aSurface)->XDrawable();
+        exposeEvent.x = aRect.x;
+        exposeEvent.y = aRect.y;
+        exposeEvent.width = aRect.width;
+        exposeEvent.height = aRect.height;
+        exposeEvent.count = 0;
+        // information not set:
+        exposeEvent.serial = 0;
+        exposeEvent.send_event = False;
+        exposeEvent.major_code = 0;
+        exposeEvent.minor_code = 0;
+        mPluginIface->event(&mData, reinterpret_cast<void*>(&exposeEvent));
     }
-#endif
-    NS_ASSERTION(aSurface->GetType() == gfxASurface::SurfaceTypeXlib,
-                 "Non supported platform surface type");
-
-    NPEvent pluginEvent;
-    XGraphicsExposeEvent& exposeEvent = pluginEvent.xgraphicsexpose;
-    exposeEvent.type = GraphicsExpose;
-    exposeEvent.display = mWsInfo.display;
-    exposeEvent.drawable = static_cast<gfxXlibSurface*>(aSurface)->XDrawable();
-    exposeEvent.x = aRect.x;
-    exposeEvent.y = aRect.y;
-    exposeEvent.width = aRect.width;
-    exposeEvent.height = aRect.height;
-    exposeEvent.count = 0;
-    // information not set:
-    exposeEvent.serial = 0;
-    exposeEvent.send_event = False;
-    exposeEvent.major_code = 0;
-    exposeEvent.minor_code = 0;
-    mPluginIface->event(&mData, reinterpret_cast<void*>(&exposeEvent));
-    return;
-#endif
-
-#ifdef XP_WIN
+#elif defined(XP_WIN)
     NS_ASSERTION(SharedDIBSurface::IsSharedDIBSurface(aSurface),
                  "Expected (SharedDIB) image surface.");
 
@@ -2610,21 +2657,30 @@ PluginInstanceChild::PaintRectToPlatformSurface(const nsIntRect& aRect,
     RECT rect = {
         mWindow.x + aRect.x,
         mWindow.y + aRect.y,
-        mWindow.x + aRect.x + aRect.width,
-        mWindow.y + aRect.y + aRect.height
+        mWindow.x + aRect.XMost(),
+        mWindow.y + aRect.YMost()
     };
     NPEvent paintEvent = {
         WM_PAINT,
         uintptr_t(mWindow.window),
         uintptr_t(&rect)
     };
-    ::SetViewportOrgEx((HDC) mWindow.window, -mWindow.x, -mWindow.y, NULL);
 
+    ::SetViewportOrgEx((HDC) mWindow.window, -mWindow.x, -mWindow.y, NULL);
+    ::SelectClipRgn((HDC) mWindow.window, NULL);
+    ::IntersectClipRect((HDC) mWindow.window, rect.left, rect.top, rect.right, rect.bottom);
     mPluginIface->event(&mData, reinterpret_cast<void*>(&paintEvent));
-    return;
+#else
+    NS_RUNTIMEABORT("Surface type not implemented.");
 #endif
 
-    NS_RUNTIMEABORT("Surface type not implemented.");
+    if (temporarilyMakeVisible) {
+        mWindow.clipRect.right = mWindow.clipRect.bottom = 0;
+
+        if (mPluginIface->setwindow) {
+            mPluginIface->setwindow(&mData, &mWindow);
+        }
+    }
 }
 
 void
@@ -2758,6 +2814,7 @@ PluginInstanceChild::ShowPluginFrame()
     } else {
         PaintRectToSurface(rect, mCurrentSurface, gfxRGBA(0.0, 0.0, 0.0, 0.0));
     }
+    mHasPainted = true;
 
     NPRect r = { (uint16_t)rect.y, (uint16_t)rect.x,
                  (uint16_t)rect.YMost(), (uint16_t)rect.XMost() };
@@ -2855,7 +2912,7 @@ PluginInstanceChild::InvalidateRectDelayed(void)
     }
 
     mCurrentInvalidateTask = nsnull;
-    if (mAccumulatedInvalidRect.IsEmpty() || !IsVisible()) {
+    if (mAccumulatedInvalidRect.IsEmpty() || (mHasPainted && !IsVisible())) {
         return;
     }
 
@@ -2867,7 +2924,7 @@ PluginInstanceChild::InvalidateRectDelayed(void)
 void
 PluginInstanceChild::AsyncShowPluginFrame(void)
 {
-    if (mCurrentInvalidateTask || !IsVisible()) {
+    if (mCurrentInvalidateTask || (mHasPainted && !IsVisible())) {
         return;
     }
 

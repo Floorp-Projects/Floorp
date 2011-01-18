@@ -43,6 +43,8 @@
 
 #include "ThebesLayerBuffer.h"
 #include "ThebesLayerOGL.h"
+#include "gfxUtils.h"
+#include "gfxTeeSurface.h"
 
 namespace mozilla {
 namespace layers {
@@ -172,6 +174,7 @@ protected:
   ThebesLayer* mLayer;
   LayerOGL* mOGLLayer;
   nsRefPtr<TextureImage> mTexImage;
+  nsRefPtr<TextureImage> mTexImageOnWhite;
 };
 
 void
@@ -181,48 +184,95 @@ ThebesLayerBufferOGL::RenderTo(const nsIntPoint& aOffset,
   if (!mTexImage)
     return;
 
-  gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
-
-  if (!mTexImage->InUpdate() || !mTexImage->EndUpdate()) {
-    gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexImage->Texture());
+  if (mTexImage->InUpdate()) {
+    mTexImage->EndUpdate();
   }
 
-  // Note BGR: Cairo's image surfaces are always in what
-  // OpenGL and our shaders consider BGR format.
-  ColorTextureLayerProgram *program =
-    aManager->GetColorTextureLayerProgram(mTexImage->GetShaderProgramType());
+  if (mTexImageOnWhite && mTexImageOnWhite->InUpdate()) {
+    mTexImageOnWhite->EndUpdate();
+  }
+
+  // Bind textures.
+  gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
+  gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexImage->Texture());
+
+  if (mTexImageOnWhite) {
+    gl()->fActiveTexture(LOCAL_GL_TEXTURE1);
+    gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexImageOnWhite->Texture());
+  }
 
   float xres = mLayer->GetXResolution();
   float yres = mLayer->GetYResolution();
 
-  program->Activate();
-  program->SetLayerOpacity(mLayer->GetEffectiveOpacity());
-  program->SetLayerTransform(mLayer->GetEffectiveTransform());
-  program->SetRenderOffset(aOffset);
-  program->SetTextureUnit(0);
+  PRInt32 passes = mTexImageOnWhite ? 2 : 1;
+  for (PRInt32 pass = 1; pass <= passes; ++pass) {
+    LayerProgram *program;
 
-  nsIntRegionRectIterator iter(mLayer->GetEffectiveVisibleRegion());
-  while (const nsIntRect *iterRect = iter.Next()) {
-    nsIntRect quadRect = *iterRect;
-    program->SetLayerQuadRect(quadRect);
-    DEBUG_GL_ERROR_CHECK(gl());
+    if (passes == 2) {
+      ComponentAlphaTextureLayerProgram *alphaProgram;
+      NS_ASSERTION(!mTexImage->IsRGB() && !mTexImageOnWhite->IsRGB(),
+                   "Only BGR image surported with component alpha (currently!)");
+      if (pass == 1) {
+        alphaProgram = aManager->GetComponentAlphaPass1LayerProgram();
+        gl()->fBlendFuncSeparate(LOCAL_GL_ZERO, LOCAL_GL_ONE_MINUS_SRC_COLOR,
+                                 LOCAL_GL_ONE, LOCAL_GL_ONE);
+      } else {
+        alphaProgram = aManager->GetComponentAlphaPass2LayerProgram();
+        gl()->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE,
+                                 LOCAL_GL_ONE, LOCAL_GL_ONE);
+      }
 
-    quadRect.MoveBy(-GetOriginOffset());
+      alphaProgram->Activate();
+      DEBUG_GL_ERROR_CHECK(gl());
+      alphaProgram->SetBlackTextureUnit(0);
+      alphaProgram->SetWhiteTextureUnit(1);
+      program = alphaProgram;
+    } else {
+      // Note BGR: Cairo's image surfaces are always in what
+      // OpenGL and our shaders consider BGR format.
+      ColorTextureLayerProgram *basicProgram =
+        aManager->GetBasicLayerProgram(mLayer->CanUseOpaqueSurface(),
+                                       mTexImage->IsRGB());
 
-    // The buffer rect and rotation are resolution-neutral; with a
-    // non-1.0 resolution, only the texture size is scaled by the
-    // resolution.  So map the quadrent rect into the space scaled to
-    // the texture size and let GL do the rest.
-    gfxRect sqr(quadRect.x, quadRect.y, quadRect.width, quadRect.height);
-    sqr.Scale(xres, yres);
-    sqr.Round();
-    nsIntRect scaledQuadRect(sqr.pos.x, sqr.pos.y, sqr.size.width, sqr.size.height);
+      basicProgram->Activate();
+      DEBUG_GL_ERROR_CHECK(gl());
+      basicProgram->SetTextureUnit(0);
+      program = basicProgram;
+    }
 
-    BindAndDrawQuadWithTextureRect(gl(), program, scaledQuadRect,
-                                   mTexImage->GetSize(),
-                                   mTexImage->GetWrapMode());
-    DEBUG_GL_ERROR_CHECK(gl());
+    program->SetLayerOpacity(mLayer->GetEffectiveOpacity());
+    program->SetLayerTransform(mLayer->GetEffectiveTransform());
+    program->SetRenderOffset(aOffset);
+
+    nsIntRegionRectIterator iter(mLayer->GetEffectiveVisibleRegion());
+    while (const nsIntRect *iterRect = iter.Next()) {
+      nsIntRect quadRect = *iterRect;
+      program->SetLayerQuadRect(quadRect);
+      DEBUG_GL_ERROR_CHECK(gl());
+
+      quadRect.MoveBy(-GetOriginOffset());
+
+      // The buffer rect and rotation are resolution-neutral; with a
+      // non-1.0 resolution, only the texture size is scaled by the
+      // resolution.  So map the quadrent rect into the space scaled to
+      // the texture size and let GL do the rest.
+      gfxRect sqr(quadRect.x, quadRect.y, quadRect.width, quadRect.height);
+      sqr.Scale(xres, yres);
+      sqr.Round();
+      nsIntRect scaledQuadRect(sqr.pos.x, sqr.pos.y, sqr.size.width, sqr.size.height);
+
+      BindAndDrawQuadWithTextureRect(gl(), program, scaledQuadRect,
+                                     mTexImage->GetSize(),
+                                     mTexImage->GetWrapMode());
+      DEBUG_GL_ERROR_CHECK(gl());
+    }
   }
+
+  if (mTexImageOnWhite) {
+    // Restore defaults
+    gl()->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA,
+                             LOCAL_GL_ONE, LOCAL_GL_ONE);
+   }
 }
 
 
@@ -321,6 +371,17 @@ BasicBufferOGL::GetQuadrantRectangle(XSide aXSide, YSide aYSide)
   return mBufferRect + quadrantTranslation;
 }
 
+static void
+FillSurface(gfxASurface* aSurface, const nsIntRegion& aRegion,
+            const nsIntPoint& aOffset, const gfxRGBA& aColor)
+{
+  nsRefPtr<gfxContext> ctx = new gfxContext(aSurface);
+  ctx->Translate(-gfxPoint(aOffset.x, aOffset.y));
+  gfxUtils::ClipToRegion(ctx, aRegion);
+  ctx->SetColor(aColor);
+  ctx->Paint();
+}
+
 BasicBufferOGL::PaintState
 BasicBufferOGL::BeginPaint(ContentType aContentType)
 {
@@ -328,7 +389,22 @@ BasicBufferOGL::BeginPaint(ContentType aContentType)
 
   result.mRegionToDraw.Sub(mLayer->GetVisibleRegion(), mLayer->GetValidRegion());
 
-  if (!mTexImage || mTexImage->GetContentType() != aContentType) {
+  Layer::SurfaceMode mode = mLayer->GetSurfaceMode();
+
+  if (mode == Layer::SURFACE_COMPONENT_ALPHA) {
+#ifdef MOZ_GFX_OPTIMIZE_MOBILE
+    mode = Layer::SURFACE_SINGLE_CHANNEL_ALPHA;
+#else
+    if (!mLayer->GetParent() || !mLayer->GetParent()->SupportsComponentAlphaChildren()) {
+      mode = Layer::SURFACE_SINGLE_CHANNEL_ALPHA;
+    } else {
+      aContentType = gfxASurface::CONTENT_COLOR;
+    }
+#endif
+  }
+
+  if (!mTexImage || mTexImage->GetContentType() != aContentType ||
+      (mode == Layer::SURFACE_COMPONENT_ALPHA) != (mTexImageOnWhite != nsnull)) {
     // We're effectively clearing the valid region, so we need to draw
     // the entire visible region now.
     //
@@ -341,6 +417,7 @@ BasicBufferOGL::BeginPaint(ContentType aContentType)
     result.mRegionToDraw = mLayer->GetVisibleRegion();
     result.mRegionToInvalidate = mLayer->GetValidRegion();
     mTexImage = nsnull;
+    mTexImageOnWhite = nsnull;
     mBufferRect.SetRect(0, 0, 0, 0);
     mBufferRotation.MoveTo(0, 0);
   }
@@ -348,9 +425,15 @@ BasicBufferOGL::BeginPaint(ContentType aContentType)
   if (result.mRegionToDraw.IsEmpty())
     return result;
 
-  nsIntRect drawBounds = result.mRegionToDraw.GetBounds();
   nsIntRect visibleBounds = mLayer->GetVisibleRegion().GetBounds();
+  if (visibleBounds.width > gl()->GetMaxTextureSize() ||
+      visibleBounds.height > gl()->GetMaxTextureSize()) {
+    return result;
+  }
+
+  nsIntRect drawBounds = result.mRegionToDraw.GetBounds();
   nsRefPtr<TextureImage> destBuffer;
+  nsRefPtr<TextureImage> destBufferOnWhite;
   nsIntRect destBufferRect;
 
   if (visibleBounds.Size() <= mBufferRect.Size()) {
@@ -389,6 +472,13 @@ BasicBufferOGL::BeginPaint(ContentType aContentType)
         DEBUG_GL_ERROR_CHECK(gl());
         if (!destBuffer)
           return result;
+        if (mode == Layer::SURFACE_COMPONENT_ALPHA) {
+          destBufferOnWhite = 
+            CreateClampOrRepeatTextureImage(gl(), visibleBounds.Size(), aContentType);
+          DEBUG_GL_ERROR_CHECK(gl());
+          if (!destBufferOnWhite)
+            return result;
+        }
       } else {
         mBufferRect = destBufferRect;
         mBufferRotation = newRotation;
@@ -407,6 +497,14 @@ BasicBufferOGL::BeginPaint(ContentType aContentType)
     DEBUG_GL_ERROR_CHECK(gl());
     if (!destBuffer)
       return result;
+
+    if (mode == Layer::SURFACE_COMPONENT_ALPHA) {
+      destBufferOnWhite = 
+        CreateClampOrRepeatTextureImage(gl(), visibleBounds.Size(), aContentType);
+      DEBUG_GL_ERROR_CHECK(gl());
+      if (!destBufferOnWhite)
+        return result;
+    }
   }
 
   if (!destBuffer && !mTexImage) {
@@ -414,7 +512,7 @@ BasicBufferOGL::BeginPaint(ContentType aContentType)
   }
 
   if (destBuffer) {
-    if (mTexImage) {
+    if (mTexImage && (mode != Layer::SURFACE_COMPONENT_ALPHA || mTexImageOnWhite)) {
       // BlitTextureImage depends on the FBO texture target being
       // TEXTURE_2D.  This isn't the case on some older X1600-era Radeons.
       if (mOGLLayer->OGLManager()->FBOTextureTarget() == LOCAL_GL_TEXTURE_2D) {
@@ -429,14 +527,26 @@ BasicBufferOGL::BeginPaint(ContentType aContentType)
 
         gl()->BlitTextureImage(mTexImage, srcRect,
                                destBuffer, dstRect);
+        if (mode == Layer::SURFACE_COMPONENT_ALPHA) {
+          destBufferOnWhite->Resize(destBufferRect.Size());
+          gl()->BlitTextureImage(mTexImageOnWhite, srcRect,
+                                 destBufferOnWhite, dstRect);
+        }
       } else {
         // can't blit, just draw everything
         destBufferRect = visibleBounds;
         destBuffer = CreateClampOrRepeatTextureImage(gl(), visibleBounds.Size(), aContentType);
+        if (mode == Layer::SURFACE_COMPONENT_ALPHA) {
+          destBufferOnWhite = 
+            CreateClampOrRepeatTextureImage(gl(), visibleBounds.Size(), aContentType);
+        }
       }
     }
 
     mTexImage = destBuffer.forget();
+    if (mode == Layer::SURFACE_COMPONENT_ALPHA) {
+      mTexImageOnWhite = destBufferOnWhite.forget();
+    }
     mBufferRect = destBufferRect;
     mBufferRotation = nsIntPoint(0,0);
   }
@@ -460,12 +570,37 @@ BasicBufferOGL::BeginPaint(ContentType aContentType)
   result.mRegionToDraw.MoveBy(offset);
   // BeginUpdate is allowed to modify the given region,
   // if it wants more to be repainted than we request.
-  result.mContext = mTexImage->BeginUpdate(result.mRegionToDraw);
-  result.mContext->Translate(-gfxPoint(quadrantRect.x, quadrantRect.y));
+  if (mode == Layer::SURFACE_COMPONENT_ALPHA) {
+    nsIntRegion drawRegionCopy = result.mRegionToDraw;
+    gfxASurface *onBlack = mTexImage->BeginUpdate(drawRegionCopy);
+    gfxASurface *onWhite = mTexImageOnWhite->BeginUpdate(result.mRegionToDraw);
+    NS_ASSERTION(result.mRegionToDraw == drawRegionCopy,
+                 "BeginUpdate should always modify the draw region in the same way!");
+    FillSurface(onBlack, result.mRegionToDraw, nsIntPoint(0,0), gfxRGBA(0.0, 0.0, 0.0, 1.0));
+    FillSurface(onWhite, result.mRegionToDraw, nsIntPoint(0,0), gfxRGBA(1.0, 1.0, 1.0, 1.0));
+    gfxASurface* surfaces[2] = { onBlack, onWhite };
+    nsRefPtr<gfxTeeSurface> surf = new gfxTeeSurface(surfaces, NS_ARRAY_LENGTH(surfaces));
+
+    // XXX If the device offset is set on the individual surfaces instead of on
+    // the tee surface, we render in the wrong place. Why?
+    gfxPoint deviceOffset = onBlack->GetDeviceOffset();
+    onBlack->SetDeviceOffset(gfxPoint(0, 0));
+    onWhite->SetDeviceOffset(gfxPoint(0, 0));
+    surf->SetDeviceOffset(deviceOffset);
+
+    // Using this surface as a source will likely go horribly wrong, since
+    // only the onBlack surface will really be used, so alpha information will
+    // be incorrect.
+    surf->SetAllowUseAsSource(PR_FALSE);
+    result.mContext = new gfxContext(surf);
+  } else {
+    result.mContext = new gfxContext(mTexImage->BeginUpdate(result.mRegionToDraw));
+  }
   if (!result.mContext) {
     NS_WARNING("unable to get context for update");
     return result;
   }
+  result.mContext->Translate(-gfxPoint(quadrantRect.x, quadrantRect.y));
   // Move rgnToPaint back into position so that the thebes callback
   // gets the right coordintes.
   result.mRegionToDraw.MoveBy(-offset);
@@ -555,7 +690,11 @@ ThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer,
     void* callbackData = mOGLManager->GetThebesLayerCallbackData();
     callback(this, state.mContext, state.mRegionToDraw,
              state.mRegionToInvalidate, callbackData);
-    mValidRegion.Or(mValidRegion, state.mRegionToDraw);
+    // Everything that's visible has been validated. Do this instead of
+    // OR-ing with aRegionToDraw, since that can lead to a very complex region
+    // here (OR doesn't automatically simplify to the simplest possible
+    // representation of a region.)
+    mValidRegion.Or(mValidRegion, mVisibleRegion);
   }
 
   DEBUG_GL_ERROR_CHECK(gl());

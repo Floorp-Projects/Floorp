@@ -341,7 +341,7 @@ nsresult nsBuiltinDecoderReader::DecodeToTarget(PRInt64 aTarget)
       nsAutoPtr<VideoData> video(mVideoQueue.PeekFront());
       // If the frame end time is less than the seek target, we won't want
       // to display this frame after the seek, so discard it.
-      if (video && video->mEndTime < aTarget) {
+      if (video && video->mEndTime <= aTarget) {
         if (startTime == -1) {
           startTime = video->mTime;
         }

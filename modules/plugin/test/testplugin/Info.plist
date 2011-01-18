@@ -21,7 +21,7 @@
 	<key>WebPluginName</key>
 	<string>Test Plug-in</string>
 	<key>WebPluginDescription</key>
-	<string>Plug-in for testing purposes.</string>
+	<string>Plug-in for testing purposes.™ (हिन्दी 中文 العربية)</string>
 	<key>WebPluginMIMETypes</key>
 	<dict>
 		<key>application/x-test</key>
