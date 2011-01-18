@@ -680,7 +680,7 @@ var FormHelperUI = {
           SelectHelperUI.resize();
           self._container.contentHasChanged();
 
-          self._zoom(this._currentElementRect, this._currentCaretRect);
+          self._zoom(self._currentElementRect, self._currentCaretRect);
         }, 0, this);
         break;
     }
