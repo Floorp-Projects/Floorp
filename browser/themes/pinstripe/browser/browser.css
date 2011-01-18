@@ -1880,7 +1880,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   -moz-image-region: rect(0, 54px, 20px, 36px);
 }
 
-#TabsToolbar > #alltabs-button {
+#TabsToolbar #alltabs-button {
   list-style-image: url(chrome://browser/skin/tabbrowser/alltabs-box-bkgnd-icon.png);
   -moz-image-region: rect(0, 22px, 20px, 0);
 }
