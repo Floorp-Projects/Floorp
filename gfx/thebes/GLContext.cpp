@@ -552,10 +552,10 @@ BasicTextureImage::~BasicTextureImage()
     }
 }
 
-gfxContext*
+gfxASurface*
 BasicTextureImage::BeginUpdate(nsIntRegion& aRegion)
 {
-    NS_ASSERTION(!mUpdateContext, "BeginUpdate() without EndUpdate()?");
+    NS_ASSERTION(!mUpdateSurface, "BeginUpdate() without EndUpdate()?");
 
     // determine the region the client will need to repaint
     ImageFormat format =
@@ -579,41 +579,41 @@ BasicTextureImage::BeginUpdate(nsIntRegion& aRegion)
         return NULL;
     }
 
-    nsRefPtr<gfxASurface> updateSurface = 
+    mUpdateSurface = 
         GetSurfaceForUpdate(gfxIntSize(rgnSize.width, rgnSize.height), format);
 
-    if (!updateSurface || updateSurface->CairoStatus())
+    if (!mUpdateSurface || mUpdateSurface->CairoStatus()) {
+        mUpdateSurface = NULL;
         return NULL;
-
-    updateSurface->SetDeviceOffset(gfxPoint(-rgnSize.x, -rgnSize.y));
-
-    mUpdateContext = new gfxContext(updateSurface);
-   
-    // Clear the returned surface because it might have been re-used.
-    if (format == gfxASurface::ImageFormatARGB32) {
-        mUpdateContext->SetOperator(gfxContext::OPERATOR_CLEAR);
-        mUpdateContext->Paint();
-        mUpdateContext->SetOperator(gfxContext::OPERATOR_OVER);
     }
-    return mUpdateContext;
+
+    mUpdateSurface->SetDeviceOffset(gfxPoint(-rgnSize.x, -rgnSize.y));
+
+    if (format == gfxASurface::ImageFormatARGB32) {
+      // Clear the returned surface because it might have been re-used.
+      nsRefPtr<gfxContext> ctx = new gfxContext(mUpdateSurface);
+      ctx->SetOperator(gfxContext::OPERATOR_CLEAR);
+      ctx->Paint();
+    }
+
+    return mUpdateSurface;
 }
 
 PRBool
 BasicTextureImage::EndUpdate()
 {
-    NS_ASSERTION(!!mUpdateContext, "EndUpdate() without BeginUpdate()?");
+    NS_ASSERTION(!!mUpdateSurface, "EndUpdate() without BeginUpdate()?");
 
     // FIXME: this is the slow boat.  Make me fast (with GLXPixmap?).
-    nsRefPtr<gfxASurface> originalSurface = mUpdateContext->OriginalSurface();
 
     // Undo the device offset that BeginUpdate set; doesn't much matter for us here,
     // but important if we ever do anything directly with the surface.
-    originalSurface->SetDeviceOffset(gfxPoint(0, 0));
+    mUpdateSurface->SetDeviceOffset(gfxPoint(0, 0));
 
     bool relative = FinishedSurfaceUpdate();
 
     mShaderType =
-        mGLContext->UploadSurfaceToTexture(originalSurface,
+        mGLContext->UploadSurfaceToTexture(mUpdateSurface,
                                            mUpdateRegion,
                                            mTexture,
                                            !mTextureInited,
@@ -621,7 +621,7 @@ BasicTextureImage::EndUpdate()
                                            relative);
     FinishedSurfaceUpload();
 
-    mUpdateContext = nsnull;
+    mUpdateSurface = nsnull;
     mTextureInited = PR_TRUE;
 
     return PR_TRUE;         // mTexture is bound
@@ -671,7 +671,7 @@ BasicTextureImage::DirectUpdate(gfxASurface *aSurf, const nsIntRegion& aRegion)
 void
 BasicTextureImage::Resize(const nsIntSize& aSize)
 {
-    NS_ASSERTION(!mUpdateContext, "Resize() while in update?");
+    NS_ASSERTION(!mUpdateSurface, "Resize() while in update?");
 
     mGLContext->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
 

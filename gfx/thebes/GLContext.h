@@ -156,10 +156,10 @@ public:
     virtual ~TextureImage() {}
 
     /**
-     * Return a gfxContext for updating |aRegion| of the client's
+     * Returns a gfxASurface for updating |aRegion| of the client's
      * image if successul, NULL if not.  |aRegion|'s bounds must fit
      * within Size(); its coordinate space (if any) is ignored.  If
-     * the update begins successfully, the returned gfxContext is
+     * the update begins successfully, the returned gfxASurface is
      * owned by this.  Otherwise, NULL is returned.
      *
      * |aRegion| is an inout param: the returned region is what the
@@ -167,9 +167,8 @@ public:
      * efficiently handle repaints to "scattered" regions, while (2)
      * can only efficiently handle repaints to rects.
      *
-     * The returned context is neither translated nor clipped: it's a
-     * context for rect(<0,0>, Size()).  Painting the returned context
-     * outside of |aRegion| results in undefined behavior.
+     * Painting the returned surface outside of |aRegion| results 
+     * in undefined behavior.
      *
      * BeginUpdate() calls cannot be "nested", and each successful
      * BeginUpdate() must be followed by exactly one EndUpdate() (see
@@ -177,7 +176,7 @@ public:
      * inconsistent state.  Unsuccessful BeginUpdate()s must not be
      * followed by EndUpdate().
      */
-    virtual gfxContext* BeginUpdate(nsIntRegion& aRegion) = 0;
+    virtual gfxASurface* BeginUpdate(nsIntRegion& aRegion) = 0;
     /**
      * Finish the active update and synchronize with the server, if
      * necessary.  Return PR_TRUE iff this's texture is already bound.
@@ -295,7 +294,7 @@ public:
         , mUpdateOffset(0, 0)
     {}
 
-    virtual gfxContext* BeginUpdate(nsIntRegion& aRegion);
+    virtual gfxASurface* BeginUpdate(nsIntRegion& aRegion);
     virtual PRBool EndUpdate();
     virtual bool DirectUpdate(gfxASurface *aSurf, const nsIntRegion& aRegion);
 
@@ -311,14 +310,14 @@ public:
     // Call after surface data has been uploaded to a texture.
     virtual void FinishedSurfaceUpload();
 
-    virtual PRBool InUpdate() const { return !!mUpdateContext; }
+    virtual PRBool InUpdate() const { return !!mUpdateSurface; }
 
     virtual void Resize(const nsIntSize& aSize);
 protected:
 
     PRBool mTextureInited;
     GLContext* mGLContext;
-    nsRefPtr<gfxContext> mUpdateContext;
+    nsRefPtr<gfxASurface> mUpdateSurface;
     nsIntRegion mUpdateRegion;
 
     // The offset into the update surface at which the update rect is located.

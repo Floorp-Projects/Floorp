@@ -1060,9 +1060,9 @@ public:
         }
     }
 
-    virtual gfxContext* BeginUpdate(nsIntRegion& aRegion)
+    virtual gfxASurface* BeginUpdate(nsIntRegion& aRegion)
     {
-        NS_ASSERTION(!mUpdateContext, "BeginUpdate() without EndUpdate()?");
+        NS_ASSERTION(!mUpdateSurface, "BeginUpdate() without EndUpdate()?");
 
         // determine the region the client will need to repaint
         if (!mCreated) {
@@ -1090,21 +1090,12 @@ public:
 
         if (mBackingSurface) {
             if (sEGLLibrary.HasKHRLockSurface()) {
-                nsRefPtr<gfxASurface> surface = GetLockSurface();
-                mUpdateContext = new gfxContext(surface);
+                mUpdateSurface = GetLockSurface();
             } else {
-                mUpdateContext = new gfxContext(mBackingSurface);
-            }
-            gfxUtils::ClipToRegion(mUpdateContext, aRegion);
-
-            if (GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA) {
-                mUpdateContext->Save();
-                mUpdateContext->SetOperator(gfxContext::OPERATOR_CLEAR);
-                mUpdateContext->Fill();
-                mUpdateContext->Restore();
+                mUpdateSurface = mBackingSurface;
             }
 
-            return mUpdateContext;
+            return mUpdateSurface;
         }
 
         // if we get this far, then we're using Cairo's byte order
@@ -1112,28 +1103,27 @@ public:
 
         //printf_stderr("creating image surface %dx%d format %d\n", mUpdateRect.width, mUpdateRect.height, mUpdateFormat);
 
-        nsRefPtr<gfxASurface> updateSurface =
+        mUpdateSurface =
             new gfxImageSurface(gfxIntSize(mUpdateRect.width, mUpdateRect.height),
                                 mUpdateFormat);
 
-        updateSurface->SetDeviceOffset(gfxPoint(-mUpdateRect.x, -mUpdateRect.y));
-        mUpdateContext = new gfxContext(updateSurface);
+        mUpdateSurface->SetDeviceOffset(gfxPoint(-mUpdateRect.x, -mUpdateRect.y));
 
-        return mUpdateContext;
+        return mUpdateSurface;
     }
 
     virtual PRBool EndUpdate()
     {
-        NS_ASSERTION(!!mUpdateContext, "EndUpdate() without BeginUpdate()?");
+        NS_ASSERTION(!!mUpdateSurface, "EndUpdate() without BeginUpdate()?");
 
         if (mIsLocked) {
             UnlockSurface();
             mCreated = PR_TRUE;
-            mUpdateContext = nsnull;
+            mUpdateSurface = nsnull;
             return PR_FALSE;
         }
 
-        if (mBackingSurface && mUpdateContext->OriginalSurface() == mBackingSurface) {
+        if (mBackingSurface && mUpdateSurface == mBackingSurface) {
 #ifdef MOZ_X11
             if (mBackingSurface->GetType() == gfxASurface::SurfaceTypeXlib) {
                 XSync(DefaultXDisplay(), False);
@@ -1142,7 +1132,7 @@ public:
 
             mBackingSurface->SetDeviceOffset(gfxPoint(0, 0));
             mCreated = PR_TRUE;
-            mUpdateContext = nsnull;
+            mUpdateSurface = nsnull;
             return PR_FALSE;
         }
 
@@ -1151,21 +1141,20 @@ public:
         // This is the slower path -- we didn't have any way to set up
         // a fast mapping between our cairo target surface and the GL
         // texture, so we have to upload data.
-        nsRefPtr<gfxASurface> originalSurface = mUpdateContext->OriginalSurface();
 
         // Undo the device offset that BeginUpdate set; doesn't much
         // matter for us here, but important if we ever do anything
         // directly with the surface.
-        originalSurface->SetDeviceOffset(gfxPoint(0, 0));
+        mUpdateSurface->SetDeviceOffset(gfxPoint(0, 0));
 
         nsRefPtr<gfxImageSurface> uploadImage = nsnull;
         gfxIntSize updateSize(mUpdateRect.width, mUpdateRect.height);
 
-        NS_ASSERTION(originalSurface->GetType() == gfxASurface::SurfaceTypeImage &&
-                     originalSurface->GetSize() == updateSize,
+        NS_ASSERTION(mUpdateSurface->GetType() == gfxASurface::SurfaceTypeImage &&
+                     mUpdateSurface->GetSize() == updateSize,
                      "Upload image isn't an image surface when one is expected, or is wrong size!");
 
-        uploadImage = static_cast<gfxImageSurface*>(originalSurface.get());
+        uploadImage = static_cast<gfxImageSurface*>(mUpdateSurface.get());
 
         if (!uploadImage) {
             return PR_FALSE;
@@ -1201,7 +1190,7 @@ public:
                                        uploadImage->Data());
         }
 
-        mUpdateContext = nsnull;
+        mUpdateSurface = nsnull;
         return PR_TRUE;         // mTexture is bound
     }
 
@@ -1218,14 +1207,14 @@ public:
         }
 
         if (mBackingSurface && sEGLLibrary.HasKHRLockSurface()) {
-            nsRefPtr<gfxASurface> surface = GetLockSurface();
-            if (surface) {
-                mUpdateContext = new gfxContext(surface);
-                gfxUtils::ClipToRegion(mUpdateContext, aRegion);
-                mUpdateContext->SetSource(aSurf);
-                mUpdateContext->SetOperator(gfxContext::OPERATOR_SOURCE);
-                mUpdateContext->Paint();
-                mUpdateContext = nsnull;
+            mUpdateSurface = GetLockSurface();
+            if (mUpdateSurface) {
+                nsRefPtr<gfxContext> ctx = new gfxContext(mUpdateSurface);
+                gfxUtils::ClipToRegion(ctx, aRegion);
+                ctx->SetSource(aSurf);
+                ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+                ctx->Paint();
+                mUpdateSurface = nsnull;
                 UnlockSurface();
             }
         } else {
@@ -1242,11 +1231,11 @@ public:
         return true;
     }
 
-    virtual PRBool InUpdate() const { return !!mUpdateContext; }
+    virtual PRBool InUpdate() const { return !!mUpdateSurface; }
 
     virtual void Resize(const nsIntSize& aSize)
     {
-        NS_ASSERTION(!mUpdateContext, "Resize() while in update?");
+        NS_ASSERTION(!mUpdateSurface, "Resize() while in update?");
 
         if (mSize == aSize && mCreated)
             return;
@@ -1465,11 +1454,11 @@ protected:
     typedef gfxASurface::gfxImageFormat ImageFormat;
 
     GLContext* mGLContext;
-    nsRefPtr<gfxContext> mUpdateContext;
 
     nsIntRect mUpdateRect;
     ImageFormat mUpdateFormat;
     nsRefPtr<gfxASurface> mBackingSurface;
+    nsRefPtr<gfxASurface> mUpdateSurface;
     EGLSurface mSurface;
     EGLConfig mConfig;
     EGLImageKHR mImageKHR;
