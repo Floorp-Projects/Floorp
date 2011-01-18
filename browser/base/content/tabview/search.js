@@ -224,7 +224,7 @@ TabMatcher.prototype = {
         // If TabView is around iterate over all tabs, else get the currently
         // shown tabs...
         
-        tvWindow = win.TabView.getContentWindow();
+        let tvWindow = win.TabView.getContentWindow();
         if (tvWindow)
           allTabs = allTabs.concat( tvWindow.TabItems.getItems() );
         else
