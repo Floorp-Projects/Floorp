@@ -582,6 +582,7 @@ InitJITLogController()
             "  aftersf      show LIR after StackFilter\n"
             "  afterdce     show LIR after dead code elimination\n"
             "  native       show native code (interleaved with 'afterdce')\n"
+            "  nativebytes  show native code bytes in 'native' output\n"
             "  regalloc     show regalloc state in 'native' output\n"
             "  activation   show activation state in 'native' output\n"
             "\n"
@@ -608,6 +609,7 @@ InitJITLogController()
     if (strstr(tmf, "aftersf")    || strstr(tmf, "full")) bits |= LC_AfterSF;
     if (strstr(tmf, "afterdce")   || strstr(tmf, "full")) bits |= LC_AfterDCE;
     if (strstr(tmf, "native")     || strstr(tmf, "full")) bits |= LC_Native;
+    if (strstr(tmf, "nativebytes")|| strstr(tmf, "full")) bits |= LC_Bytes;
     if (strstr(tmf, "regalloc")   || strstr(tmf, "full")) bits |= LC_RegAlloc;
     if (strstr(tmf, "activation") || strstr(tmf, "full")) bits |= LC_Activation;
 
