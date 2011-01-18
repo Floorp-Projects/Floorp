@@ -877,9 +877,7 @@ toolbar[iconsize="small"] #feed-button {
 /* Fullscreen window controls */
 #window-controls {
   -moz-box-align: start;
-  padding: 0;
-  border-left: 2px solid;
-  -moz-border-left-colors: ThreeDHighlight ThreeDShadow;
+  -moz-margin-start: 10px;
 }
 
 #minimize-button {
