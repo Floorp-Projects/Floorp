@@ -5707,6 +5707,32 @@ JS_SetErrorReporter(JSContext *cx, JSErrorReporter er)
 /************************************************************************/
 
 /*
+ * Dates.
+ */
+JS_PUBLIC_API(JSObject *)
+JS_NewDateObject(JSContext *cx, int y, int m, int d, int h, int m, int s)
+{
+    CHECK_REQUEST(cx);
+    return js_NewDateObject(cx, y, m, d, h, m, s);
+}
+
+JS_PUBLIC_API(JSObject *)
+JS_NewDateObjectMsec(JSContext *cx, jsdouble msec)
+{
+    CHECK_REQUEST(cx);
+    return js_NewDateObjectMsec(cx, msec);
+}
+
+JS_PUBLIC_API(JSBool)
+JS_ObjectIsDate(JSContext *cx, JSObject *obj)
+{
+    JS_ASSERT(obj);
+    return obj->isDate();
+}
+
+/************************************************************************/
+
+/*
  * Regular Expressions.
  */
 JS_PUBLIC_API(JSObject *)
