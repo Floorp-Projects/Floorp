@@ -6259,15 +6259,10 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
 {
   NS_ENSURE_TRUE(mPluginWindow, NS_ERROR_NULL_POINTER);
 
-  nsIView   *view;
   nsresult  rv = NS_ERROR_FAILURE;
 
   if (mObjectFrame) {
-    // Create view if necessary
-
-    view = mObjectFrame->GetView();
-
-    if (!view || !mWidget) {
+    if (!mWidget) {
       PRBool windowless = PR_FALSE;
       mInstance->IsWindowless(&windowless);
 
