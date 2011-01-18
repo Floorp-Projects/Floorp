@@ -1777,9 +1777,9 @@ namespace nanojit
         char *formatImmD(RefBuf* buf, double c);
         void formatGuard(InsBuf* buf, LIns* ins);       // defined by the embedder
         void formatGuardXov(InsBuf* buf, LIns* ins);    // defined by the embedder
-        static const char* accNames[];                  // defined by the embedder
 
     public:
+        static const char* accNames[];                  // defined by the embedder
 
         LInsPrinter(Allocator& alloc, int embNumUsedAccs)
             : alloc(alloc), EMB_NUM_USED_ACCS(embNumUsedAccs)
