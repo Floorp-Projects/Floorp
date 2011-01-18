@@ -439,32 +439,77 @@ nsRootAccessible::FireCurrentFocusEvent()
 // nsIDOMEventListener
 
 NS_IMETHODIMP
-nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
+nsRootAccessible::HandleEvent(nsIDOMEvent* aDOMEvent)
 {
-  nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aEvent));
-  NS_ENSURE_STATE(nsevent);
+  nsCOMPtr<nsIDOMNSEvent> DOMNSEvent(do_QueryInterface(aDOMEvent));
+  nsCOMPtr<nsIDOMEventTarget> DOMEventTarget;
+  DOMNSEvent->GetOriginalTarget(getter_AddRefs(DOMEventTarget));
+  nsCOMPtr<nsINode> origTargetNode(do_QueryInterface(DOMEventTarget));
+  if (!origTargetNode)
+    return NS_OK;
 
-  nsCOMPtr<nsIDOMEventTarget> domEventTarget;
-  nsevent->GetOriginalTarget(getter_AddRefs(domEventTarget));
-  nsCOMPtr<nsINode> origTarget(do_QueryInterface(domEventTarget));
-  NS_ENSURE_STATE(origTarget);
+  nsDocAccessible* document =
+    GetAccService()->GetDocAccessible(origTargetNode->GetOwnerDoc());
+
+  if (document) {
+#ifdef DEBUG_NOTIFICATIONS
+    if (origTargetNode->IsElement()) {
+      nsIContent* elm = origTargetNode->AsElement();
+
+      nsAutoString tag;
+      elm->Tag()->ToString(tag);
+
+      nsIAtom* atomid = elm->GetID();
+      nsCAutoString id;
+      if (atomid)
+        atomid->ToUTF8String(id);
+
+      nsAutoString eventType;
+      aDOMEvent->GetType(eventType);
+
+      printf("\nPend DOM event processing for %s@id='%s', type: %s\n\n",
+             NS_ConvertUTF16toUTF8(tag).get(), id.get(),
+             NS_ConvertUTF16toUTF8(eventType).get());
+    }
+#endif
+
+    // Root accessible exists longer than any of its descendant documents so
+    // that we are guaranteed notification is processed before root accessible
+    // is destroyed.
+    document->HandleNotification<nsRootAccessible, nsIDOMEvent>
+      (this, &nsRootAccessible::ProcessDOMEvent, aDOMEvent);
+  }
+
+  return NS_OK;
+}
+
+// nsRootAccessible protected
+void
+nsRootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
+{
+  nsCOMPtr<nsIDOMNSEvent> DOMNSEvent(do_QueryInterface(aDOMEvent));
+  nsCOMPtr<nsIDOMEventTarget> DOMEventTarget;
+  DOMNSEvent->GetOriginalTarget(getter_AddRefs(DOMEventTarget));
+  nsCOMPtr<nsINode> origTargetNode(do_QueryInterface(DOMEventTarget));
 
   nsAutoString eventType;
-  aEvent->GetType(eventType);
+  aDOMEvent->GetType(eventType);
 
   nsCOMPtr<nsIWeakReference> weakShell =
-    nsCoreUtils::GetWeakShellFor(origTarget);
+    nsCoreUtils::GetWeakShellFor(origTargetNode);
   if (!weakShell)
-    return NS_OK;
+    return;
 
   nsAccessible* accessible =
-    GetAccService()->GetAccessibleOrContainer(origTarget, weakShell);
+    GetAccService()->GetAccessibleOrContainer(origTargetNode, weakShell);
 
-  if (eventType.EqualsLiteral("popuphiding"))
-    return HandlePopupHidingEvent(origTarget, accessible);
+  if (eventType.EqualsLiteral("popuphiding")) {
+    HandlePopupHidingEvent(origTargetNode, accessible);
+    return;
+  }
 
   if (!accessible)
-    return NS_OK;
+    return;
 
   nsDocAccessible* targetDocument = accessible->GetDocAccessible();
   NS_ASSERTION(targetDocument, "No document while accessible is in document?!");
@@ -485,14 +530,18 @@ nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     if (treeAcc) {
       if (eventType.EqualsLiteral("TreeViewChanged")) {
         treeAcc->TreeViewChanged();
-        return NS_OK;
+        return;
       }
 
-      if (eventType.EqualsLiteral("TreeRowCountChanged"))
-        return HandleTreeRowCountChangedEvent(aEvent, treeAcc);
+      if (eventType.EqualsLiteral("TreeRowCountChanged")) {
+        HandleTreeRowCountChangedEvent(aDOMEvent, treeAcc);
+        return;
+      }
       
-      if (eventType.EqualsLiteral("TreeInvalidated"))
-        return HandleTreeInvalidatedEvent(aEvent, treeAcc);
+      if (eventType.EqualsLiteral("TreeInvalidated")) {
+        HandleTreeInvalidatedEvent(aDOMEvent, treeAcc);
+        return;
+      }
     }
   }
 #endif
@@ -515,7 +564,7 @@ nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     if (isEnabled)
       FireAccessibleFocusEvent(accessible, targetContent);
 
-    return NS_OK;
+    return;
   }
 
   if (eventType.EqualsLiteral("CheckboxStateChange")) {
@@ -528,7 +577,7 @@ nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
                               PR_FALSE, isEnabled);
 
     nsEventShell::FireEvent(accEvent);
-    return NS_OK;
+    return;
   }
 
   nsAccessible *treeItemAccessible = nsnull;
@@ -561,7 +610,7 @@ nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
       new AccStateChangeEvent(accessible, nsIAccessibleStates::STATE_EXPANDED,
                               PR_FALSE, isEnabled);
     nsEventShell::FireEvent(accEvent);
-    return NS_OK;
+    return;
   }
 
   if (treeItemAccessible && eventType.EqualsLiteral("select")) {
@@ -578,12 +627,12 @@ nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
         // that state changes. nsXULTreeAccessible::UpdateTreeSelection();
         nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_SELECTION_WITHIN,
                                 accessible);
-        return NS_OK;
+        return;
       }
 
       nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_SELECTION,
                               treeItemAccessible);
-      return NS_OK;
+      return;
     }
   }
   else
@@ -608,12 +657,12 @@ nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
             focusedItem = do_QueryInterface(selectedItem);
 
           if (!focusedItem)
-            return NS_OK;
+            return;
 
           accessible = GetAccService()->GetAccessibleInWeakShell(focusedItem,
                                                                  weakShell);
           if (!accessible)
-            return NS_OK;
+            return;
         }
       }
     }
@@ -640,11 +689,12 @@ nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     if (!treeItemAccessible) {
 #ifdef MOZ_XUL
       if (isTree) {
-        return NS_OK; // Tree with nothing selected
+        return; // Tree with nothing selected
       }
 #endif
       nsIFrame* menuFrame = accessible->GetFrame();
-      NS_ENSURE_TRUE(menuFrame, NS_ERROR_FAILURE);
+      if (!menuFrame)
+        return;
 
       nsIMenuFrame* imenuFrame = do_QueryFrame(menuFrame);
       if (imenuFrame)
@@ -654,18 +704,20 @@ nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
                        !imenuFrame->IsOnActiveMenuBar()) {
         // It is a top level menuitem. Only fire a focus event when the menu bar
         // is active.
-        return NS_OK;
+        return;
       } else {
         nsAccessible *containerAccessible = accessible->GetParent();
-        NS_ENSURE_TRUE(containerAccessible, NS_ERROR_FAILURE);
+        if (!containerAccessible)
+          return;
         // It is not top level menuitem
         // Only fire focus event if it is not inside collapsed popup
         // and not a listitem of a combo box
         if (nsAccUtils::State(containerAccessible) & nsIAccessibleStates::STATE_COLLAPSED) {
           nsAccessible *containerParent = containerAccessible->GetParent();
-          NS_ENSURE_TRUE(containerParent, NS_ERROR_FAILURE);
+          if (!containerParent)
+            return;
           if (containerParent->Role() != nsIAccessibleRole::ROLE_COMBOBOX) {
-            return NS_OK;
+            return;
           }
         }
       }
@@ -712,7 +764,6 @@ nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
                             accessible);
   }
 #endif
-  return NS_OK;
 }
 
 
@@ -811,8 +862,8 @@ nsRootAccessible::GetRelationByType(PRUint32 aRelationType,
 ////////////////////////////////////////////////////////////////////////////////
 // Protected members
 
-nsresult
-nsRootAccessible::HandlePopupShownEvent(nsAccessible *aAccessible)
+void
+nsRootAccessible::HandlePopupShownEvent(nsAccessible* aAccessible)
 {
   PRUint32 role = aAccessible->Role();
 
@@ -820,7 +871,7 @@ nsRootAccessible::HandlePopupShownEvent(nsAccessible *aAccessible)
     // Don't fire menupopup events for combobox and autocomplete lists.
     nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_MENUPOPUP_START,
                             aAccessible);
-    return NS_OK;
+    return;
   }
 
   if (role == nsIAccessibleRole::ROLE_TOOLTIP) {
@@ -829,13 +880,14 @@ nsRootAccessible::HandlePopupShownEvent(nsAccessible *aAccessible)
     // AT's expect to get an EVENT_SHOW for the tooltip. 
     // In event callback the tooltip's accessible will be ready.
     nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_SHOW, aAccessible);
-    return NS_OK;
+    return;
   }
 
   if (role == nsIAccessibleRole::ROLE_COMBOBOX_LIST) {
     // Fire expanded state change event for comboboxes and autocompeletes.
     nsAccessible* combobox = aAccessible->GetParent();
-    NS_ENSURE_STATE(combobox);
+    if (!combobox)
+      return;
 
     PRUint32 comboboxRole = combobox->Role();
     if (comboboxRole == nsIAccessibleRole::ROLE_COMBOBOX ||
@@ -844,19 +896,15 @@ nsRootAccessible::HandlePopupShownEvent(nsAccessible *aAccessible)
         new AccStateChangeEvent(combobox,
                                 nsIAccessibleStates::STATE_EXPANDED,
                                 PR_FALSE, PR_TRUE);
-      NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
-
-      nsEventShell::FireEvent(event);
-      return NS_OK;
+      if (event)
+        nsEventShell::FireEvent(event);
     }
   }
-
-  return NS_OK;
 }
 
-nsresult
-nsRootAccessible::HandlePopupHidingEvent(nsINode *aNode,
-                                         nsAccessible *aAccessible)
+void
+nsRootAccessible::HandlePopupHidingEvent(nsINode* aNode,
+                                         nsAccessible* aAccessible)
 {
   // If accessible focus was on or inside popup that closes, then restore it
   // to true current focus. This is the case when we've been getting
@@ -871,14 +919,13 @@ nsRootAccessible::HandlePopupHidingEvent(nsINode *aNode,
   }
 
   // Fire expanded state change event for comboboxes and autocompletes.
-  if (!aAccessible)
-    return NS_OK;
-
-  if (aAccessible->Role() != nsIAccessibleRole::ROLE_COMBOBOX_LIST)
-    return NS_OK;
+  if (!aAccessible ||
+      aAccessible->Role() != nsIAccessibleRole::ROLE_COMBOBOX_LIST)
+    return;
 
   nsAccessible* combobox = aAccessible->GetParent();
-  NS_ENSURE_STATE(combobox);
+  if (!combobox)
+    return;
 
   PRUint32 comboboxRole = combobox->Role();
   if (comboboxRole == nsIAccessibleRole::ROLE_COMBOBOX ||
@@ -887,51 +934,46 @@ nsRootAccessible::HandlePopupHidingEvent(nsINode *aNode,
       new AccStateChangeEvent(combobox,
                               nsIAccessibleStates::STATE_EXPANDED,
                               PR_FALSE, PR_FALSE);
-    NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
-
-    nsEventShell::FireEvent(event);
-    return NS_OK;
+    if (event)
+      nsEventShell::FireEvent(event);
   }
-
-  return NS_OK;
 }
 
 #ifdef MOZ_XUL
-nsresult
-nsRootAccessible::HandleTreeRowCountChangedEvent(nsIDOMEvent *aEvent,
-                                                 nsXULTreeAccessible *aAccessible)
+void
+nsRootAccessible::HandleTreeRowCountChangedEvent(nsIDOMEvent* aEvent,
+                                                 nsXULTreeAccessible* aAccessible)
 {
   nsCOMPtr<nsIDOMDataContainerEvent> dataEvent(do_QueryInterface(aEvent));
   if (!dataEvent)
-    return NS_OK;
+    return;
 
   nsCOMPtr<nsIVariant> indexVariant;
   dataEvent->GetData(NS_LITERAL_STRING("index"),
                      getter_AddRefs(indexVariant));
   if (!indexVariant)
-    return NS_OK;
+    return;
 
   nsCOMPtr<nsIVariant> countVariant;
   dataEvent->GetData(NS_LITERAL_STRING("count"),
                      getter_AddRefs(countVariant));
   if (!countVariant)
-    return NS_OK;
+    return;
 
   PRInt32 index, count;
   indexVariant->GetAsInt32(&index);
   countVariant->GetAsInt32(&count);
 
   aAccessible->InvalidateCache(index, count);
-  return NS_OK;
 }
 
-nsresult
-nsRootAccessible::HandleTreeInvalidatedEvent(nsIDOMEvent *aEvent,
-                                             nsXULTreeAccessible *aAccessible)
+void
+nsRootAccessible::HandleTreeInvalidatedEvent(nsIDOMEvent* aEvent,
+                                             nsXULTreeAccessible* aAccessible)
 {
   nsCOMPtr<nsIDOMDataContainerEvent> dataEvent(do_QueryInterface(aEvent));
   if (!dataEvent)
-    return NS_OK;
+    return;
 
   PRInt32 startRow = 0, endRow = -1, startCol = 0, endCol = -1;
 
@@ -960,7 +1002,5 @@ nsRootAccessible::HandleTreeInvalidatedEvent(nsIDOMEvent *aEvent,
     endColVariant->GetAsInt32(&endCol);
 
   aAccessible->TreeViewInvalidated(startRow, endRow, startCol, endCol);
-  return NS_OK;
 }
 #endif
-
