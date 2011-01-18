@@ -11,7 +11,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is bug 594176 test.
+ * The Original Code is a test for bug 616967.
  *
  * The Initial Developer of the Original Code is
  * Mozilla Foundation.
@@ -19,7 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- * Raymond Lee <raymond@appcoast.com>
+ * Tim Taubert <tim.taubert@gmx.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,30 +36,19 @@
  * ***** END LICENSE BLOCK ***** */
 
 function test() {
-  let [origTab] = gBrowser.visibleTabs;
-  ok(!origTab.pinned, "The original tab is not pinned");
- 
-  let pinnedTab = gBrowser.addTab();
-  gBrowser.pinTab(pinnedTab);
-  ok(pinnedTab.pinned, "The new tab is pinned");
+  waitForExplicitFinish();
 
-  popup(origTab);
-  ok(!document.getElementById("context_tabViewMenu").disabled, 
-     "The tab view menu is enabled for normal tab");
+  let branch = Services.prefs.getBranch('browser.panorama.');
+  branch.setBoolPref('experienced_first_run', false);
+  
+  newWindowWithTabView(function (win) {
+    is(win.gBrowser.visibleTabs.length, 1, 'There should be one visible tab, only');
 
-  popup(pinnedTab);
-  ok(document.getElementById("context_tabViewMenu").disabled, 
-     "The tab view menu is disabled for pinned tab");
+    win.TabView._initFrame(function () {
+      is(win.gBrowser.visibleTabs.length, 1, 'There should be one visible tab, only');
 
-  gBrowser.unpinTab(pinnedTab);
-  popup(pinnedTab);
-  ok(!document.getElementById("context_tabViewMenu").disabled, 
-     "The tab view menu is enabled for unpinned tab");
-
-  gBrowser.removeTab(pinnedTab);
-}
-
-function popup(tab) {
-  document.popupNode = tab;
-  TabContextMenu.updateContextMenu(document.getElementById("tabContextMenu"));
+      win.close();
+      finish();
+    });
+  });
 }

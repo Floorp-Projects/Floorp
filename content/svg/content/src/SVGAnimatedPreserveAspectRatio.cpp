@@ -237,6 +237,7 @@ SVGAnimatedPreserveAspectRatio::SetBaseValueString(
   }
 
   mBaseVal = val;
+  mIsBaseSet = PR_TRUE;
   if (!mIsAnimated) {
     mAnimVal = mBaseVal;
   }
@@ -281,6 +282,7 @@ SVGAnimatedPreserveAspectRatio::SetBaseAlign(PRUint16 aAlign,
 {
   nsresult rv = mBaseVal.SetAlign(aAlign);
   NS_ENSURE_SUCCESS(rv, rv);
+  mIsBaseSet = PR_TRUE;
 
   mAnimVal.mAlign = mBaseVal.mAlign;
   aSVGElement->DidChangePreserveAspectRatio(PR_TRUE);
@@ -299,6 +301,7 @@ SVGAnimatedPreserveAspectRatio::SetBaseMeetOrSlice(PRUint16 aMeetOrSlice,
 {
   nsresult rv = mBaseVal.SetMeetOrSlice(aMeetOrSlice);
   NS_ENSURE_SUCCESS(rv, rv);
+  mIsBaseSet = PR_TRUE;
 
   mAnimVal.mMeetOrSlice = mBaseVal.mMeetOrSlice;
   aSVGElement->DidChangePreserveAspectRatio(PR_TRUE);

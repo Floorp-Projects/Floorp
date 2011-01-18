@@ -525,28 +525,10 @@ DeviceManagerD3D9::VerifyReadyForRendering()
     if (IsD3D9Ex()) {
       hr = mDeviceEx->CheckDeviceState(mFocusWnd);
 
-      if (hr == D3DERR_DEVICEREMOVED) {
+      if (FAILED(hr)) {
         mDeviceWasRemoved = true;
         LayerManagerD3D9::OnDeviceManagerDestroy(this);
         return false;
-      }
-
-      if (FAILED(hr)) {
-        D3DPRESENT_PARAMETERS pp;
-        memset(&pp, 0, sizeof(D3DPRESENT_PARAMETERS));
-
-        pp.BackBufferWidth = 1;
-        pp.BackBufferHeight = 1;
-        pp.BackBufferFormat = D3DFMT_A8R8G8B8;
-        pp.SwapEffect = D3DSWAPEFFECT_DISCARD;
-        pp.Windowed = TRUE;
-        pp.PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
-        pp.hDeviceWindow = mFocusWnd;
-        
-        hr = mDeviceEx->ResetEx(&pp, NULL);
-        if (FAILED(hr)) {
-          return false;
-        }
       }
     }
     return true;

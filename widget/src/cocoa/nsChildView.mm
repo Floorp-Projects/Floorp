@@ -2736,6 +2736,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   NSSize bufferSize = [self bounds].size;
   nsRefPtr<gfxQuartzSurface> targetSurface =
     new gfxQuartzSurface(aContext, gfxSize(bufferSize.width, bufferSize.height));
+  targetSurface->SetAllowUseAsSource(PR_FALSE);
 
   nsRefPtr<gfxContext> targetContext = new gfxContext(targetSurface);
 

@@ -2723,7 +2723,7 @@ var gUpdatesView = {
       var count = aInstallsList.filter(function(aInstall) {
         return self.isManualUpdate(aInstall, true);
       }).length;
-      self._categoryItem.disabled = gViewController.currentViewObj != self &&
+      self._categoryItem.disabled = gViewController.currentViewId != "addons://updates/available" &&
                                     count == 0;
       self._categoryItem.badgeCount = count;
       if (aInitializing)

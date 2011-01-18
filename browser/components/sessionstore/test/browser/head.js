@@ -90,6 +90,16 @@ function waitForBrowserState(aState, aSetStateCallback) {
   SS_SVC.setBrowserState(JSON.stringify(aState));
 }
 
+// waitForSaveState waits for a state write but not necessarily for the state to
+// turn dirty.
+function waitForSaveState(aSaveStateCallback) {
+  let topic = "sessionstore-state-write";
+  Services.obs.addObserver(function() {
+    Services.obs.removeObserver(arguments.callee, topic, false);
+    executeSoon(aSaveStateCallback);
+  }, topic, false);
+};
+
 function r() {
   return Date.now() + Math.random();
 }

@@ -129,6 +129,7 @@ CryptoWrapper.prototype = {
       "id: " + this.id,
       "index: " + this.sortindex,
       "modified: " + this.modified,
+      "ttl: " + this.ttl,
       "payload: " + (this.deleted ? "DELETED" : JSON.stringify(this.cleartext)),
       "collection: " + (this.collection || "undefined")
     ].join("\n  ") + " }",

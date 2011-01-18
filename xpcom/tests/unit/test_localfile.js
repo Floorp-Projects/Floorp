@@ -119,6 +119,12 @@ function test_file_modification_time()
   diff = Math.abs(file.lastModifiedTime - tomorrow);
   do_check_true(diff < MAX_TIME_DIFFERENCE);
 
+  var bug377307 = 1172950238000;
+  file.lastModifiedTime = bug377307;
+
+  diff = Math.abs(file.lastModifiedTime - bug377307);
+  do_check_true(diff < MAX_TIME_DIFFERENCE);
+
   file.remove(true);
 }
 

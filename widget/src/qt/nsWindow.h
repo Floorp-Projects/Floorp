@@ -323,6 +323,21 @@ protected:
     gfxASurface*       GetThebesSurface();
 
 private:
+    typedef struct {
+        QPointF centerPoint;
+        QPointF touchPoint;
+        double delta;
+        bool needDispatch;
+        double startDistance;
+        double prevDistance;
+    } MozCachedTouchEvent;
+
+    typedef struct {
+        QPointF pos;
+        Qt::KeyboardModifiers modifiers;
+        bool needDispatch;
+    } MozCachedMoveEvent;
+
     void*              SetupPluginPort(void);
     nsresult           SetWindowIconList(const nsTArray<nsCString> &aIconList);
     void               SetDefaultIcon(void);
@@ -387,13 +402,48 @@ private:
     // event (like a keypress or mouse click).
     void UserActivity();
 
+    inline void ProcessMotionEvent() {
+        if (mPinchEvent.needDispatch) {
+            double distance = DistanceBetweenPoints(mPinchEvent.centerPoint, mPinchEvent.touchPoint);
+            distance *= 2;
+            mPinchEvent.delta = distance - mPinchEvent.prevDistance;
+            nsIntPoint centerPoint(mPinchEvent.centerPoint.x(), mPinchEvent.centerPoint.y());
+            DispatchGestureEvent(NS_SIMPLE_GESTURE_MAGNIFY_UPDATE,
+                                 0, mPinchEvent.delta, centerPoint);
+            mPinchEvent.prevDistance = distance;
+        }
+        if (mMoveEvent.needDispatch) {
+            nsMouseEvent event(PR_TRUE, NS_MOUSE_MOVE, this, nsMouseEvent::eReal);
+
+            event.refPoint.x = nscoord(mMoveEvent.pos.x());
+            event.refPoint.y = nscoord(mMoveEvent.pos.y());
+
+            event.isShift         = ((mMoveEvent.modifiers & Qt::ShiftModifier) != 0);
+            event.isControl       = ((mMoveEvent.modifiers & Qt::ControlModifier) != 0);
+            event.isAlt           = ((mMoveEvent.modifiers & Qt::AltModifier) != 0);
+            event.isMeta          = ((mMoveEvent.modifiers & Qt::MetaModifier) != 0);
+            event.clickCount      = 0;
+
+            DispatchEvent(&event);
+            mMoveEvent.needDispatch = false;
+        }
+
+        mTimerStarted = PR_FALSE;
+    }
+
+    void DispatchMotionToMainThread() {
+        if (!mTimerStarted) {
+            nsCOMPtr<nsIRunnable> event =
+                NS_NewRunnableMethod(this, &nsWindow::ProcessMotionEvent);
+            NS_DispatchToMainThread(event);
+            mTimerStarted = PR_TRUE;
+        }
+    }
+
     // Remember dirty area caused by ::Scroll
     QRegion mDirtyScrollArea;
 
 #if (QT_VERSION >= QT_VERSION_CHECK(4, 6, 0))
-    double mTouchPointDistance;
-    double mLastPinchDistance;
-    double mPinchStartDistance;
     QTime mLastMultiTouchTime;
 #endif
 
@@ -402,6 +452,9 @@ private:
     PRPackedBool mListenForResizes;
     PRPackedBool mNeedsShow;
     PRPackedBool mGesturesCancelled;
+    MozCachedTouchEvent mPinchEvent;
+    MozCachedMoveEvent mMoveEvent;
+    PRPackedBool mTimerStarted;
 };
 
 class nsChildWindow : public nsWindow

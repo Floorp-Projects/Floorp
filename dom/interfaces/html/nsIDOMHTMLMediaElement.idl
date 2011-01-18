@@ -57,7 +57,7 @@
 #endif
 %}
 
-[scriptable, uuid(c8b1423f-1321-4324-b6b7-8548d2fdc3da)]
+[scriptable, uuid(91f65f50-74ea-40ea-8e26-652290738730)]
 interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
 {
   // error state
@@ -86,8 +86,8 @@ interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
   readonly attribute boolean seeking;
 
   // playback state
-           attribute float currentTime;
-  readonly attribute float duration;
+           attribute double currentTime;
+  readonly attribute double duration;
   readonly attribute boolean paused;
   readonly attribute boolean ended;
   readonly attribute boolean mozAutoplayEnabled;
@@ -97,7 +97,7 @@ interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
 
   // controls
            attribute boolean controls;
-           attribute float volume;
+           attribute double volume;
            attribute boolean muted;
 
   // Mozilla extension: extra stream metadata information, used as part

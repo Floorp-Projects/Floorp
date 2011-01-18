@@ -642,6 +642,73 @@ public:
 };
 
 /*
+ * A ComponentAlphaTextureLayerProgram is a LayerProgram that renders one pass
+ * of the two-pass component alpha rendering system using two textures.
+ * It adds the following attributes and uniforms:
+ *
+ * Attribute inputs:
+ *   aTexCoord     - texture coordinate
+ *
+ * Uniforms:
+ *   uBlackTexture    - 2D texture on top of an opaque black background
+ *   uWhiteTexture    - 2D texture on top of an opaque white background
+ */
+
+class ComponentAlphaTextureLayerProgram :
+  public LayerProgram
+{
+public:
+  enum {
+    BlackTextureUniform = NumLayerUniforms,
+    WhiteTextureUniform,
+    NumUniforms
+  };
+
+  enum {
+    TexCoordAttrib = NumLayerAttribs,
+    NumAttribs
+  };
+
+  ComponentAlphaTextureLayerProgram(GLContext *aGL)
+    : LayerProgram(aGL)
+  { }
+
+  bool Initialize(const char *aVertexShaderString,
+                  const char *aFragmentShaderString)
+  {
+    if (!LayerProgram::Initialize(aVertexShaderString, aFragmentShaderString))
+      return false;
+
+    const char *uniformNames[] = {
+      "uBlackTexture",
+      "uWhiteTexture",
+      NULL
+    };
+
+    mUniformLocations.SetLength(NumUniforms);
+    GetUniformLocations(uniformNames, &mUniformLocations[NumLayerUniforms]);
+
+    const char *attribNames[] = {
+      "aTexCoord",
+      NULL
+    };
+
+    mAttribLocations.SetLength(NumAttribs);
+    GetAttribLocations(attribNames, &mAttribLocations[NumLayerAttribs]);
+
+    return true;
+  }
+
+  void SetBlackTextureUnit(GLint aUnit) {
+    SetUniform(mUniformLocations[BlackTextureUniform], aUnit);
+  }
+
+  void SetWhiteTextureUnit(GLint aUnit) {
+    SetUniform(mUniformLocations[WhiteTextureUniform], aUnit);
+  }
+};
+
+/*
  * A SolidColorLayerProgram is a LayerProgram that renders
  * a solid color.  It adds the following attributes and uniforms:
  *

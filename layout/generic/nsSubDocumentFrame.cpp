@@ -741,6 +741,13 @@ nsSubDocumentFrame::AttributeChanged(PRInt32 aNameSpaceID,
       }
     }
   }
+  else if (aAttribute == nsGkAtoms::showresizer) {
+    nsIFrame* rootFrame = GetSubdocumentRootFrame();
+    if (rootFrame) {
+      rootFrame->PresContext()->PresShell()->
+        FrameNeedsReflow(rootFrame, nsIPresShell::eResize, NS_FRAME_IS_DIRTY);
+    }
+  }
   else if (aAttribute == nsGkAtoms::type) {
     if (!mFrameLoader) 
       return NS_OK;

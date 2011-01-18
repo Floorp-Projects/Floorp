@@ -148,6 +148,7 @@ nsCocoaWindow::nsCocoaWindow()
 , mSheetNeedsShow(PR_FALSE)
 , mFullScreen(PR_FALSE)
 , mModal(PR_FALSE)
+, mIsShowing(PR_FALSE)
 , mNumModalDescendents(0)
 {
 
@@ -532,14 +533,20 @@ void* nsCocoaWindow::GetNativeData(PRUint32 aDataType)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSNULL;
 }
 
+PRBool
+nsCocoaWindow::IsVisible()
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
+  return [mWindow isVisible] || mSheetNeedsShow || mIsShowing;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(PR_FALSE);
+}
+
 NS_IMETHODIMP nsCocoaWindow::IsVisible(PRBool & aState)
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-
-  aState = ([mWindow isVisible] || mSheetNeedsShow);
+  aState = IsVisible();
   return NS_OK;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 NS_IMETHODIMP nsCocoaWindow::SetModal(PRBool aState)
@@ -624,7 +631,7 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
 
   // We need to re-execute sometimes in order to bring already-visible
   // windows forward.
-  if (!mSheetNeedsShow && !bState && ![mWindow isVisible])
+  if (!bState && !IsVisible())
     return NS_OK;
 
   nsIWidget* parentWidget = mParent;
@@ -633,10 +640,23 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
     (NSWindow*)parentWidget->GetNativeData(NS_NATIVE_WINDOW) : nil;
 
   if (bState && !mBounds.IsEmpty()) {
+    // IsVisible can be entered from inside this method, for example through
+    // synchronous painting. Unfortunately, at that point [mWindow isVisible]
+    // still returns NO, so we use mIsShowing to tell us that we should return
+    // true from IsVisible anyway.
+    mIsShowing = PR_TRUE;
+
+    if (mPopupContentView) {
+      // Ensure our content view is visible. We never need to hide it.
+      mPopupContentView->Show(PR_TRUE);
+    }
+
     if (mWindowType == eWindowType_sheet) {
       // bail if no parent window (its basically what we do in Carbon)
-      if (!nativeParentWindow || !piParentWidget)
+      if (!nativeParentWindow || !piParentWidget) {
+        mIsShowing = PR_FALSE;
         return NS_ERROR_FAILURE;
+      }
 
       NSWindow* topNonSheetWindow = nativeParentWindow;
       
@@ -729,6 +749,7 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
       NS_OBJC_END_TRY_LOGONLY_BLOCK;
       SendSetZLevelEvent();
     }
+    mIsShowing = PR_FALSE;
   }
   else {
     // roll up any popups if a top-level window is going away
@@ -834,9 +855,6 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
       }
     }
   }
-  
-  if (mPopupContentView)
-      mPopupContentView->Show(bState);
 
   return NS_OK;
 

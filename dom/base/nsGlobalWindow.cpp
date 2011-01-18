@@ -269,8 +269,12 @@ static PRBool               gDOMWindowDumpEnabled      = PR_FALSE;
 #define DEBUG_PAGE_CACHE
 #endif
 
-// The shortest interval/timeout we permit
-#define DOM_MIN_TIMEOUT_VALUE 10 // 10ms
+// The default shortest interval/timeout we permit
+#define DEFAULT_MIN_TIMEOUT_VALUE 10 // 10ms
+static PRInt32 gMinTimeoutValue;
+static inline PRInt32 DOMMinTimeoutValue() {
+  return NS_MAX(gMinTimeoutValue, 0);
+}
 
 // The number of nested timeouts before we start clamping. HTML5 says 1, WebKit
 // uses 5.
@@ -881,13 +885,15 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
 
   gRefCnt++;
 
-#if !(defined(NS_DEBUG) || defined(MOZ_ENABLE_JS_DUMP))
   if (gRefCnt == 1) {
-    static const char* prefName = "browser.dom.window.dump.enabled";
-    nsContentUtils::AddBoolPrefVarCache(prefName, &gDOMWindowDumpEnabled);
-    gDOMWindowDumpEnabled = nsContentUtils::GetBoolPref(prefName);
-  }
+#if !(defined(NS_DEBUG) || defined(MOZ_ENABLE_JS_DUMP))
+    nsContentUtils::AddBoolPrefVarCache("browser.dom.window.dump.enabled",
+                                        &gDOMWindowDumpEnabled);
 #endif
+    nsContentUtils::AddIntPrefVarCache("dom.min_timeout_value",
+                                       &gMinTimeoutValue,
+                                       DEFAULT_MIN_TIMEOUT_VALUE);
+  }
 
   if (gDumpFile == nsnull) {
     const nsAdoptingCString& fname = 
@@ -1004,8 +1010,6 @@ nsGlobalWindow::~nsGlobalWindow()
   nsCycleCollector_DEBUG_wasFreed(static_cast<nsIScriptGlobalObject*>(this));
 #endif
 
-  delete mPendingStorageEventsObsolete;
-
   if (mURLProperty) {
     mURLProperty->ClearWindowReference();
   }
@@ -1089,6 +1093,8 @@ nsGlobalWindow::CleanUp(PRBool aIgnoreModalDialog)
   mFrames = nsnull;
   mApplicationCache = nsnull;
   mIndexedDB = nsnull;
+  delete mPendingStorageEventsObsolete;
+
 
   ClearControllers();
 
@@ -1371,6 +1377,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGlobalWindow)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFocusedNode)
 
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mPendingStorageEvents)
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
@@ -1402,6 +1410,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
   }
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFocusedNode)
+
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(mPendingStorageEvents)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -8317,7 +8327,7 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
       // store the domain in which the change happened and fire the
       // events if we're ever thawed.
 
-      mPendingStorageEvents.AppendElement(event);
+      mPendingStorageEvents.AppendObject(event);
       return NS_OK;
     }
 
@@ -8368,7 +8378,7 @@ nsGlobalWindow::FireDelayedDOMEvents()
 {
   FORWARD_TO_INNER(FireDelayedDOMEvents, (), NS_ERROR_UNEXPECTED);
 
-  for (PRUint32 i = 0; i < mPendingStorageEvents.Length(); ++i) {
+  for (PRUint32 i = 0; i < mPendingStorageEvents.Count(); ++i) {
     Observe(mPendingStorageEvents[i], "dom-storage2-changed", nsnull);
   }
 
@@ -8682,12 +8692,12 @@ nsGlobalWindow::SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
   }
 
   PRUint32 nestingLevel = sNestingLevel + 1;
-  if (interval < DOM_MIN_TIMEOUT_VALUE) {
+  if (interval < DOMMinTimeoutValue()) {
     if (aIsInterval || nestingLevel >= DOM_CLAMP_TIMEOUT_NESTING_LEVEL) {
-      // Don't allow timeouts less than DOM_MIN_TIMEOUT_VALUE from
+      // Don't allow timeouts less than DOMMinTimeoutValue() from
       // now...
 
-      interval = DOM_MIN_TIMEOUT_VALUE;
+      interval = DOMMinTimeoutValue();;
     }
     else if (interval < 0) {
       // Clamp negative intervals to 0.
@@ -8696,7 +8706,7 @@ nsGlobalWindow::SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
     }
   }
 
-  NS_ASSERTION(interval >= 0, "DOM_MIN_TIMEOUT_VALUE lies");
+  NS_ASSERTION(interval >= 0, "DOMMinTimeoutValue() lies");
   PRUint32 realInterval = interval;
 
   // Make sure we don't proceed with a interval larger than our timer
@@ -9104,10 +9114,10 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
     // timeout, accounting for clock drift.
     if (timeout->mInterval) {
       // Compute time to next timeout for interval timer.
-      // Make sure nextInterval is at least DOM_MIN_TIMEOUT_VALUE.
+      // Make sure nextInterval is at least DOMMinTimeoutValue().
       TimeDuration nextInterval =
         TimeDuration::FromMilliseconds(NS_MAX(timeout->mInterval,
-                                              PRUint32(DOM_MIN_TIMEOUT_VALUE)));
+                                              PRUint32(DOMMinTimeoutValue())));
 
       // If we're running pending timeouts because they've been temporarily
       // disabled (!aTimeout), set the next interval to be relative to "now",
@@ -9812,7 +9822,7 @@ nsGlobalWindow::ResumeTimeouts(PRBool aThawChildren)
       // not???
       PRUint32 delay =
         NS_MAX(PRInt32(t->mTimeRemaining.ToMilliseconds()),
-               DOM_MIN_TIMEOUT_VALUE);
+               DOMMinTimeoutValue());
 
       // Set mWhen back to the time when the timer is supposed to
       // fire.

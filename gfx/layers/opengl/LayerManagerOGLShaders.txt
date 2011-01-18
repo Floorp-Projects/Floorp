@@ -277,3 +277,34 @@ void main()
 }
 #endif
 @end
+
+// Two textures and two passes for component alpha rendering
+@shader sComponentPass1FS
+
+$LAYER_FRAGMENT$
+uniform sampler2D uBlackTexture;
+uniform sampler2D uWhiteTexture;
+
+void main()
+{
+  vec3 onBlack = texture2D(uBlackTexture, vTexCoord).bgr;
+  vec3 onWhite = texture2D(uWhiteTexture, vTexCoord).bgr;
+  vec4 alphas = (1.0 - onWhite + onBlack).rgbg;
+  gl_FragColor = alphas * uLayerOpacity;
+}
+@end
+
+@shader sComponentPass2FS
+
+$LAYER_FRAGMENT$
+uniform sampler2D uBlackTexture;
+uniform sampler2D uWhiteTexture;
+
+void main()
+{
+  vec3 onBlack = texture2D(uBlackTexture, vTexCoord).bgr;
+  vec3 onWhite = texture2D(uWhiteTexture, vTexCoord).bgr;
+  vec4 alphas = (1.0 - onWhite + onBlack).rgbg;
+  gl_FragColor = vec4(onBlack, alphas.a) * uLayerOpacity;
+}
+@end

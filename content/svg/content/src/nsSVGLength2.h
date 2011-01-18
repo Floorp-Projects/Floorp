@@ -97,7 +97,7 @@ public:
   // explicitly set by markup or a DOM call), PR_FALSE otherwise.
   // If this returns PR_FALSE, the animated value is still valid, that is,
   // useable, and represents the default base value of the attribute.
-  PRBool IsAnimValSet() const
+  PRBool IsExplicitlySet() const
     { return mIsAnimated || mIsBaseSet; }
   
   nsresult ToDOMAnimatedLength(nsIDOMSVGAnimatedLength **aResult,

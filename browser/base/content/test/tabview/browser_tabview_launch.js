@@ -40,7 +40,7 @@ let tabViewShownCount = 0;
 // ----------
 function test() {
   waitForExplicitFinish();
-  
+
   // verify initial state
   ok(!TabView.isVisible(), "Tab View starts hidden");
 
@@ -54,7 +54,7 @@ function test() {
 // ----------
 function onTabViewLoadedAndShown() {
   window.removeEventListener("tabviewshown", onTabViewLoadedAndShown, false);
-  
+
   // Evidently sometimes isVisible (which is based on the selectedIndex of the
   // tabview deck) isn't updated immediately when called from button.doCommand,
   // so we add a little timeout here to get outside of the doCommand call.
@@ -66,7 +66,7 @@ function onTabViewLoadedAndShown() {
     if (deck.selectedIndex == 1) {
       ok(TabView.isVisible(), "Tab View is visible. Count: " + tabViewShownCount);
       tabViewShownCount++;
-      
+
       // kick off the series
       window.addEventListener("tabviewshown", onTabViewShown, false);
       window.addEventListener("tabviewhidden", onTabViewHidden, false);
@@ -75,7 +75,7 @@ function onTabViewLoadedAndShown() {
       setTimeout(waitForSwitch, 10);
     }
   }
-  
+
   setTimeout(waitForSwitch, 1);
 }
 
@@ -87,14 +87,14 @@ function onTabViewShown() {
   TabView.toggle();
 }
 
-// ---------- 
+// ----------
 function onTabViewHidden() {
   ok(!TabView.isVisible(), "Tab View is hidden. Count: " + tabViewShownCount);
 
   if (tabViewShownCount == 1) {
     document.getElementById("menu_tabview").doCommand();
   } else if (tabViewShownCount == 2) {
-    EventUtils.synthesizeKey("e", { accelKey: true });
+    EventUtils.synthesizeKey("e", { accelKey: true, shiftKey: true });
   } else if (tabViewShownCount == 3) {
     window.removeEventListener("tabviewshown", onTabViewShown, false);
     window.removeEventListener("tabviewhidden", onTabViewHidden, false);
