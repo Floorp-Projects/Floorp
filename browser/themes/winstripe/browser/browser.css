@@ -552,7 +552,6 @@ menuitem.bookmark-item {
 
 /* ::::: primary toolbar buttons ::::: */
 
-.toolbarbutton-1 > .toolbarbutton-menubutton-button,
 .toolbarbutton-1 {
   list-style-image: url("chrome://browser/skin/Toolbar.png");
 }
