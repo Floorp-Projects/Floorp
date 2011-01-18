@@ -582,7 +582,7 @@ BasicTextureImage::BeginUpdate(nsIntRegion& aRegion)
     nsRefPtr<gfxASurface> updateSurface = 
         GetSurfaceForUpdate(gfxIntSize(rgnSize.width, rgnSize.height), format);
 
-    if (!updateSurface)
+    if (!updateSurface || updateSurface->CairoStatus())
         return NULL;
 
     updateSurface->SetDeviceOffset(gfxPoint(-rgnSize.x, -rgnSize.y));
