@@ -345,6 +345,9 @@ let UI = {
     
     if (firstTime) {
       gPrefBranch.setBoolPref("experienced_first_run", true);
+      // ensure that the first run pref is flushed to the file, in case a crash 
+      // or force quit happens before the pref gets flushed automatically.
+      Services.prefs.savePrefFile(null);
 
       let url = gPrefBranch.getCharPref("welcome_url");
       let newTab = gBrowser.loadOneTab(url, {inBackground: true});
@@ -517,6 +520,8 @@ let UI = {
 
       TabItems.resumePainting();
     }
+
+    Storage.saveVisibilityData(gWindow, "true");
   },
 
   // ----------
@@ -553,6 +558,8 @@ let UI = {
     let event = document.createEvent("Events");
     event.initEvent("tabviewhidden", true, false);
     dispatchEvent(event);
+
+    Storage.saveVisibilityData(gWindow, "false");
   },
 
 #ifdef XP_MACOSX
@@ -1156,7 +1163,7 @@ let UI = {
       iQ(window).unbind("mousemove", updateSize);
       item.container.removeClass("dragRegion");
       dragOutInfo.stop();
-      box = item.getBounds();
+      let box = item.getBounds();
       if (box.width > minMinSize && box.height > minMinSize &&
          (box.width > minSize || box.height > minSize)) {
         var bounds = item.getBounds();
@@ -1165,7 +1172,7 @@ let UI = {
         // to that groupItem.
         var tabs = GroupItems.getOrphanedTabs();
         var insideTabs = [];
-        for each(tab in tabs) {
+        for each(let tab in tabs) {
           if (bounds.contains(tab.bounds))
             insideTabs.push(tab);
         }
