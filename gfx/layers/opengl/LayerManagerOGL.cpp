@@ -61,8 +61,6 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch2.h"
 
-#include "nsIGfxInfo.h"
-
 namespace mozilla {
 namespace layers {
 
@@ -154,25 +152,6 @@ already_AddRefed<mozilla::gl::GLContext>
 LayerManagerOGL::CreateContext()
 {
   nsRefPtr<GLContext> context;
-  nsCOMPtr<nsIPrefBranch2> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-
-  PRBool forceAccelerate = PR_FALSE;
-  if (prefs) {
-    // we should use AddBoolPrefVarCache
-    prefs->GetBoolPref("layers.acceleration.force-enabled",
-                       &forceAccelerate);
-  }
-
-  nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
-  if (gfxInfo) {
-    PRInt32 status;
-    if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_OPENGL_LAYERS, &status))) {
-      if (status != nsIGfxInfo::FEATURE_NO_INFO && !forceAccelerate) {
-        NS_WARNING("OpenGL-accelerated layers are not supported on this system.");
-        return nsnull;
-      }
-    }
-  }
 
 #ifdef XP_WIN
   if (PR_GetEnv("MOZ_LAYERS_PREFER_EGL")) {
