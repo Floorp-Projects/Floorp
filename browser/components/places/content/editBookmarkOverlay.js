@@ -1161,14 +1161,30 @@ var gEditItemOverlay = {
     this._folderMenuList.selectedItem = folderItem;
   },
 
-  onItemAdded: function EIO_onItemAdded(aItemId, aFolder, aIndex, aItemType,
+  onItemAdded: function EIO_onItemAdded(aItemId, aParentId, aIndex, aItemType,
                                         aURI) {
     this._lastNewItem = aItemId;
+
+    if (this._uri && aItemType == PlacesUtils.bookmarks.TYPE_BOOKMARK &&
+        PlacesUtils.bookmarks.getFolderIdForItem(aParentId) ==
+          PlacesUtils.tagsFolderId) {
+      // Ensure the tagsField is in sync.
+      let tags = PlacesUtils.tagging.getTagsForURI(this._uri).join(", ");
+      this._initTextField("tagsField", tags, false);
+    }
+  },
+  onItemRemoved: function(aItemId, aParentId, aIndex, aItemType) {
+    if (this._uri && aItemType == PlacesUtils.bookmarks.TYPE_BOOKMARK &&
+        PlacesUtils.bookmarks.getFolderIdForItem(aParentId) ==
+          PlacesUtils.tagsFolderId) {
+      // Ensure the tagsField is in sync.
+      let tags = PlacesUtils.tagging.getTagsForURI(this._uri).join(", ");
+      this._initTextField("tagsField", tags, false);
+    }
   },
 
   onBeginUpdateBatch: function() { },
   onEndUpdateBatch: function() { },
   onBeforeItemRemoved: function() { },
-  onItemRemoved: function() { },
   onItemVisited: function() { },
 };
