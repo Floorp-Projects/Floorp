@@ -26,8 +26,16 @@ CPPSRCS = yuv_convert.cpp \
 # yuv_convert_sse2.cpp. These files use MMX and SSE2 intrinsics, so they need
 # special compile flags on some compilers.
 ifneq (,$(INTEL_ARCHITECTURE))
-CPPSRCS += yuv_convert_mmx.cpp \
-           yuv_convert_sse2.cpp
+CPPSRCS += yuv_convert_sse2.cpp
+
+# MSVC doesn't support MMX when targeting AMD64.
+ifdef _MSC_VER
+ifneq ($(OS_TEST),x86_64)
+CPPSRCS += yuv_convert_mmx.cpp
+endif
+else
+CPPSRCS += yuv_convert_mmx.cpp
+endif
 
 ifdef GNU_CC
 yuv_convert_mmx.$(OBJ_SUFFIX): CXXFLAGS += -mmmx
