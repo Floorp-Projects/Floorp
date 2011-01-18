@@ -141,6 +141,9 @@ PurgeCallICs(JSContext *cx, JSScript *start)
 JS_FRIEND_API(JSBool)
 js_SetDebugMode(JSContext *cx, JSBool debug)
 {
+    if (!cx->compartment)
+        return JS_TRUE;
+
     cx->compartment->debugMode = debug;
 #ifdef JS_METHODJIT
     for (JSScript *script = (JSScript *)cx->compartment->scripts.next;
