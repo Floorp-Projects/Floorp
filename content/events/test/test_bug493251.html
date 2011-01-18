@@ -31,27 +31,88 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=493251
   var keyPress = 0;
   var keyUp = 0;
 
+  function suppressEventHandling(aSuppress) {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    var utils = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+                    getInterface(Components.interfaces.nsIDOMWindowUtils);
+    ok(true, "suppressEventHandling: aSuppress=" + aSuppress);
+    utils.suppressEventHandling(aSuppress);
+  }
+
   function dispatchKeyEvent(type) {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     var utils = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
                     getInterface(Components.interfaces.nsIDOMWindowUtils);
+    ok(true, "Dipatching key event: type=" + type);
     utils.sendKeyEvent(type, 
                        Components.interfaces.nsIDOMKeyEvent.DOM_VK_A,
                        0, 0);
   }
 
-  function doTest() {
+  function dispatchMouseEvent(aType, aX, aY, aButton, aClickCount, aModifiers) {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     var utils = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
                     getInterface(Components.interfaces.nsIDOMWindowUtils);
-    win.document.getElementsByTagName("input")[0].focus();
-    win.addEventListener("keydown", function(e) { ++keyDown; }, true);
-    win.addEventListener("keypress", function(e) { ++keyPress; }, true);
-    win.addEventListener("keyup", function(e) { ++keyUp; }, true);
-    win.addEventListener("mousedown", function(e) { ++mouseDown; }, true);
-    win.addEventListener("mouseup", function(e) { ++mouseUp; }, true);
-    win.addEventListener("click", function(e) { ++mouseClick; }, true);
+    ok(true, "Dipatching mouse event: aType=" + aType + ", aX=" + aX + ", aY" +
+               aY + ", aButton=" + aButton + ", aClickCount=" + aClickCount +
+               ", aModifiers=" + aModifiers);
+    utils.sendMouseEvent(aType, aX, aY, aButton, aClickCount, aModifiers);
+  }
 
+  function dumpEvent(aEvent) {
+    var detail = "target=" + aEvent.target + ", originalTarget=" +
+                 aEvent.originalTarget + ", getPreventDefault()=" +
+                 aEvent.getPreventDefault() + ", isTrusted=" + aEvent.isTrusted;
+    switch (aEvent.type) {
+      case "keydown":
+      case "keypress":
+      case "keyup":
+        detail += ", charCode=0x" + aEvent.charCode.toString(16) +
+          ", keyCode=0x" + aEvent.keyCode.toString(16) +
+          ", altKey=" + (aEvent.altKey ? "PRESSED" : "no") +
+          ", ctrlKey=" + (aEvent.ctrlKey ? "PRESSED" : "no") +
+          ", shiftKey=" + (aEvent.shiftKey ? "PRESSED" : "no") +
+          ", metaKey=" + (aEvent.metaKey ? "PRESSED" : "no");
+        break;
+      case "mousedown":
+      case "mouseup":
+      case "click":
+        detail += ", screenX=" + aEvent.screenX + ", screenY=" + aEvent.screenY +
+          ", clientX=" + aEvent.clientX + ", clientY=" + aEvent.clientY +
+          ", altKey=" + (aEvent.altKey ? "PRESSED" : "no") +
+          ", ctrlKey=" + (aEvent.ctrlKey ? "PRESSED" : "no") +
+          ", shiftKey=" + (aEvent.shiftKey ? "PRESSED" : "no") +
+          ", metaKey=" + (aEvent.metaKey ? "PRESSED" : "no") +
+          ", button=" + aEvent.button +
+          ", relatedTarget=" + aEvent.relatedTarget;
+        break;
+    }
+    ok(true, aEvent.type + " event is handled: " + detail);
+
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    var fm = Components.classes["@mozilla.org/focus-manager;1"].
+                        getService(Components.interfaces.nsIFocusManager);
+    ok(true, "focused element is \"" + fm.focusedElement +
+             "\" and focused window is \"" + fm.focusedWindow +
+             "\" (the testing window is \"" + win + "\"");
+  }
+
+  function doTest() {
+    win.document.getElementsByTagName("input")[0].focus();
+    win.addEventListener("keydown",
+                         function(e) { dumpEvent(e); ++keyDown; }, true);
+    win.addEventListener("keypress",
+                         function(e) { dumpEvent(e); ++keyPress; }, true);
+    win.addEventListener("keyup",
+                         function(e) { dumpEvent(e); ++keyUp; }, true);
+    win.addEventListener("mousedown",
+                         function(e) { dumpEvent(e); ++mouseDown; }, true);
+    win.addEventListener("mouseup",
+                         function(e) { dumpEvent(e); ++mouseUp; }, true);
+    win.addEventListener("click",
+                         function(e) { dumpEvent(e); ++mouseClick; }, true);
+
+    ok(true, "doTest #1...");
     dispatchKeyEvent("keydown");
     dispatchKeyEvent("keypress");
     dispatchKeyEvent("keyup");
@@ -59,14 +120,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=493251
     is(keyPress, 1, "Wrong number events (2)");
     is(keyUp, 1, "Wrong number events (3)");
 
-    utils.suppressEventHandling(true);
+    ok(true, "doTest #2...");
+    suppressEventHandling(true);
     dispatchKeyEvent("keydown");
     dispatchKeyEvent("keypress");
     dispatchKeyEvent("keyup");
     is(keyDown, 1, "Wrong number events (4)");
     is(keyPress, 1, "Wrong number events (5)");
     is(keyUp, 1, "Wrong number events (6)");
-    utils.suppressEventHandling(false);
+    suppressEventHandling(false);
     is(keyDown, 1, "Wrong number events (7)");
     is(keyPress, 1, "Wrong number events (8)");
     is(keyUp, 1, "Wrong number events (9)");
@@ -75,38 +137,35 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=493251
     }
 
   function continueTest1() {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    var utils = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-                    getInterface(Components.interfaces.nsIDOMWindowUtils);
+    ok(true, "continueTest1...");
     dispatchKeyEvent("keydown");
-    utils.suppressEventHandling(true);
+    suppressEventHandling(true);
     dispatchKeyEvent("keypress");
     dispatchKeyEvent("keyup");
     is(keyDown, 2, "Wrong number events (10)");
     is(keyPress, 1, "Wrong number events (11)");
     is(keyUp, 1, "Wrong number events (12)");
-    utils.suppressEventHandling(false);
+    suppressEventHandling(false);
     setTimeout(continueTest2, 0);
   }
 
   function continueTest2() {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    var utils = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-                    getInterface(Components.interfaces.nsIDOMWindowUtils);
+    ok(true, "continueTest2 #1...");
     is(keyDown, 2, "Wrong number events (13)");
     is(keyPress, 2, "Wrong number events (14)");
     is(keyUp, 2, "Wrong number events (15)");
 
-    utils.sendMouseEvent("mousedown", 5, 5, 0, 1, 0);
-    utils.sendMouseEvent("mouseup", 5, 5, 0, 1, 0);
+    dispatchMouseEvent("mousedown", 5, 5, 0, 1, 0);
+    dispatchMouseEvent("mouseup", 5, 5, 0, 1, 0);
     is(mouseDown, 1, "Wrong number events (16)");
     is(mouseUp, 1, "Wrong number events (17)");
     is(mouseClick, 1, "Wrong number events (18)");
 
-    utils.suppressEventHandling(true);
-    utils.sendMouseEvent("mousedown", 5, 5, 0, 1, 0);
-    utils.sendMouseEvent("mouseup", 5, 5, 0, 1, 0);
-    utils.suppressEventHandling(false);
+    ok(true, "continueTest2 #2...");
+    suppressEventHandling(true);
+    dispatchMouseEvent("mousedown", 5, 5, 0, 1, 0);
+    dispatchMouseEvent("mouseup", 5, 5, 0, 1, 0);
+    suppressEventHandling(false);
     is(mouseDown, 1, "Wrong number events (19)");
     is(mouseUp, 1, "Wrong number events (20)");
     is(mouseClick, 1, "Wrong number events (21)");
@@ -115,17 +174,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=493251
   }
 
   function continueTest3() {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    var utils = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-                    getInterface(Components.interfaces.nsIDOMWindowUtils);
-    utils.sendMouseEvent("mousedown", 5, 5, 0, 1, 0);
-    utils.suppressEventHandling(true);
-    utils.sendMouseEvent("mouseup", 5, 5, 0, 1, 0);
-    utils.suppressEventHandling(false);
+    ok(true, "continueTest3...");
+    dispatchMouseEvent("mousedown", 5, 5, 0, 1, 0);
+    suppressEventHandling(true);
+    dispatchMouseEvent("mouseup", 5, 5, 0, 1, 0);
+    suppressEventHandling(false);
     setTimeout(continueTest4, 1000);
   }
 
   function continueTest4() {
+    ok(true, "continueTest4...");
     is(mouseDown, 2, "Wrong number events (19)");
     is(mouseUp, 2, "Wrong number events (20)");
     is(mouseClick, 2, "Wrong number events (21)");

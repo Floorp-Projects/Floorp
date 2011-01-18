@@ -362,6 +362,12 @@
                 onget="return this.contentDocument.nodePrincipal;"
                 readonly="true"/>
 
+      <property name="showWindowResizer"
+                onset="if (val) this.setAttribute('showresizer', 'true');
+                       else this.removeAttribute('showresizer');
+                       return val;"
+                onget="return this.getAttribute('showresizer') == 'true';"/>
+
       <field name="mPrefs" readonly="true">
         Components.classes['@mozilla.org/preferences-service;1']
                   .getService(Components.interfaces.nsIPrefService)

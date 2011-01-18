@@ -281,6 +281,12 @@ nsDOMStorageManager::Initialize()
   os->AddObserver(gStorageManager, "profile-after-change", PR_FALSE);
   os->AddObserver(gStorageManager, "perm-changed", PR_FALSE);
   os->AddObserver(gStorageManager, "browser:purge-domain-data", PR_FALSE);
+#ifdef MOZ_STORAGE
+  // Used for temporary table flushing
+  os->AddObserver(gStorageManager, "profile-before-change", PR_FALSE);
+  os->AddObserver(gStorageManager, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
+  os->AddObserver(gStorageManager, NS_DOMSTORAGE_FLUSH_TIMER_OBSERVER, PR_FALSE);
+#endif
 
   return NS_OK;
 }
@@ -441,8 +447,6 @@ nsDOMStorageManager::Observe(nsISupports *aSubject,
     nsCOMPtr<nsIObserverService> obsserv = mozilla::services::GetObserverService();
     if (obsserv)
       obsserv->NotifyObservers(nsnull, NS_DOMSTORAGE_FLUSH_TIMER_OBSERVER, nsnull);
-    if (!UnflushedDataExists())
-      DOMStorageImpl::gStorageDB->StopTempTableFlushTimer();
   } else if (!strcmp(aTopic, "browser:purge-domain-data")) {
     // Convert the domain name to the ACE format
     nsCAutoString aceDomain;
@@ -470,6 +474,19 @@ nsDOMStorageManager::Observe(nsISupports *aSubject,
     NS_ENSURE_SUCCESS(rv, rv);
 
     DOMStorageImpl::gStorageDB->RemoveOwner(aceDomain, PR_TRUE);
+  } else if (!strcmp(aTopic, "profile-before-change") || 
+             !strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
+    if (DOMStorageImpl::gStorageDB) {
+      nsresult rv = DOMStorageImpl::gStorageDB->FlushAndDeleteTemporaryTables(true);
+      if (NS_FAILED(rv))
+        NS_WARNING("DOMStorage: temporary table commit failed");
+    }
+  } else if (!strcmp(aTopic, NS_DOMSTORAGE_FLUSH_TIMER_OBSERVER)) {
+    if (DOMStorageImpl::gStorageDB) {
+      nsresult rv = DOMStorageImpl::gStorageDB->FlushAndDeleteTemporaryTables(false);
+      if (NS_FAILED(rv))
+        NS_WARNING("DOMStorage: temporary table commit failed");
+    }
 #endif
   }
 
@@ -537,26 +554,6 @@ nsDOMStorageManager::RemoveFromStoragesHash(DOMStorageImpl* aStorage)
   nsDOMStorageEntry* entry = mStorages.GetEntry(aStorage);
   if (entry)
     mStorages.RemoveEntry(aStorage);
-}
-
-static PLDHashOperator
-CheckUnflushedData(nsDOMStorageEntry* aEntry, void* userArg)
-{
-  if (aEntry->mStorage->WasTemporaryTableLoaded()) {
-    PRBool *unflushedData = (PRBool*)userArg;
-    *unflushedData = PR_TRUE;
-    return PL_DHASH_STOP;
-  }
-
-  return PL_DHASH_NEXT;
-}
-
-PRBool
-nsDOMStorageManager::UnflushedDataExists()
-{
-  PRBool unflushedData = PR_FALSE;
-  mStorages.EnumerateEntries(CheckUnflushedData, &unflushedData);
-  return unflushedData;
 }
 
 //
@@ -726,25 +723,19 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(DOMStorageImpl)
 }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(DOMStorageImpl, nsIObserver)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(DOMStorageImpl, nsIObserver)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMStorageImpl)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMStorageImpl)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMStorageImpl)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIObserver)
-  NS_INTERFACE_MAP_ENTRY(nsIObserver)
-  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
 DOMStorageImpl::DOMStorageImpl(nsDOMStorage* aStorage)
-  : mLoadedTemporaryTable(false)
 {
   Init(aStorage);
 }
 
 DOMStorageImpl::DOMStorageImpl(nsDOMStorage* aStorage, DOMStorageImpl& aThat)
   : DOMStorageBase(aThat)
-  , mLoadedTemporaryTable(aThat.mLoadedTemporaryTable)
-  , mLastTemporaryTableAccessTime(aThat.mLastTemporaryTableAccessTime)
-  , mTemporaryTableAge(aThat.mTemporaryTableAge)
 {
   Init(aStorage);
 }
@@ -807,8 +798,6 @@ DOMStorageImpl::InitFromChild(bool aUseDB, bool aCanUseChromePersist,
   mQuotaDomainDBKey = aQuotaDomainDBKey;
   mQuotaETLDplus1DomainDBKey = aQuotaETLDplus1DomainDBKey;
   mStorageType = static_cast<nsPIDOMStorage::nsDOMStorageType>(aStorageType);
-  if (mStorageType != nsPIDOMStorage::SessionStorage)
-    RegisterObservers();
 }
 
 void
@@ -828,14 +817,12 @@ DOMStorageImpl::InitAsLocalStorage(nsIURI* aDomainURI,
                                    bool aCanUseChromePersist)
 {
   DOMStorageBase::InitAsLocalStorage(aDomainURI, aCanUseChromePersist);
-  RegisterObservers();
 }
 
 void
 DOMStorageImpl::InitAsGlobalStorage(const nsACString& aDomainDemanded)
 {
   DOMStorageBase::InitAsGlobalStorage(aDomainDemanded);
-  RegisterObservers();
 }
 
 bool
@@ -1029,86 +1016,6 @@ DOMStorageImpl::CloneFrom(bool aCallerSecure, DOMStorageBase* aThat)
   DOMStorageImpl* that = static_cast<DOMStorageImpl*>(aThat);
   CopyArgs args = { this, aCallerSecure };
   that->mItems.EnumerateEntries(CopyStorageItems, &args);
-  return NS_OK;
-}
-
-nsresult
-DOMStorageImpl::RegisterObservers()
-{
-  nsCOMPtr<nsIObserverService> obsserv = mozilla::services::GetObserverService();
-  if (obsserv) {
-    obsserv->AddObserver(this, "profile-before-change", PR_TRUE);
-    obsserv->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
-    obsserv->AddObserver(this, NS_DOMSTORAGE_FLUSH_TIMER_OBSERVER, PR_TRUE);
-  }
-  return NS_OK;
-}
-
-nsresult
-DOMStorageImpl::MaybeCommitTemporaryTable(bool force)
-{
-#ifdef MOZ_STORAGE
-  if (!UseDB())
-    return NS_OK;
-
-  if (!mLoadedTemporaryTable)
-    return NS_OK;
-
-  // If we are not forced to flush (e.g. on shutdown) then don't flush if the
-  // last table access is less then 5 seconds ago or the table itself is not
-  // older then 30 secs
-  if (!force &&
-      ((TimeStamp::Now() - mLastTemporaryTableAccessTime).ToSeconds() < 
-       NS_DOMSTORAGE_MAXIMUM_TEMPTABLE_INACTIVITY_TIME) &&
-      ((TimeStamp::Now() - mTemporaryTableAge).ToSeconds() < 
-       NS_DOMSTORAGE_MAXIMUM_TEMPTABLE_AGE))
-    return NS_OK;
-
-  return gStorageDB->FlushAndDeleteTemporaryTableForStorage(this);
-#endif
-
-  return NS_OK;
-}
-
-bool
-DOMStorageImpl::WasTemporaryTableLoaded()
-{
-  return mLoadedTemporaryTable;
-}
-
-void
-DOMStorageImpl::SetTemporaryTableLoaded(bool loaded)
-{
-  if (loaded) {
-    mLastTemporaryTableAccessTime = TimeStamp::Now();
-    if (!mLoadedTemporaryTable)
-      mTemporaryTableAge = mLastTemporaryTableAccessTime;
-
-    gStorageDB->EnsureTempTableFlushTimer();
-  }
-
-  mLoadedTemporaryTable = loaded;
-}
-
-NS_IMETHODIMP
-DOMStorageImpl::Observe(nsISupports *subject,
-                      const char *topic,
-                      const PRUnichar *data)
-{
-  bool isProfileBeforeChange = !strcmp(topic, "profile-before-change");
-  bool isXPCOMShutdown = !strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-  bool isFlushTimer = !strcmp(topic, NS_DOMSTORAGE_FLUSH_TIMER_OBSERVER);
-
-  if (isXPCOMShutdown || isProfileBeforeChange || isFlushTimer) {
-    nsresult rv = MaybeCommitTemporaryTable(isXPCOMShutdown || isProfileBeforeChange);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("DOMStorage: temporary table commit failed");
-    }
-
-    return NS_OK;
-  }
-
-  NS_WARNING("Unrecognized topic in nsDOMStorage::Observe");
   return NS_OK;
 }
 

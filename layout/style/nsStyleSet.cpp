@@ -192,7 +192,6 @@ nsStyleSet::GatherRuleProcessors(sheetType aType)
   mRuleProcessors[aType] = nsnull;
   if (mAuthorStyleDisabled && (aType == eDocSheet || 
                                aType == ePresHintSheet ||
-                               aType == eHTMLPresHintSheet ||
                                aType == eStyleAttrSheet)) {
     //don't regather if this level is disabled
     return NS_OK;
@@ -310,7 +309,6 @@ nsStyleSet::SetAuthorStyleDisabled(PRBool aStyleDisabled)
     BeginUpdate();
     mDirty |= 1 << eDocSheet |
               1 << ePresHintSheet |
-              1 << eHTMLPresHintSheet |
               1 << eStyleAttrSheet;
     return EndUpdate();
   }
@@ -581,31 +579,21 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
   // Cascading order:
   // [least important]
   //  1. UA normal rules                    = Agent        normal
-  //  2. Presentation hints                 = PresHint     normal
-  //  3. User normal rules                  = User         normal
-  //  4. HTML Presentation hints            = HTMLPresHint normal
-  //  5. Author normal rules                = Document     normal
-  //  6. Override normal rules              = Override     normal
-  //  7. Author !important rules            = Document     !important
-  //  8. Override !important rules          = Override     !important
-  //  9. User !important rules              = User         !important
-  // 10. UA !important rules                = Agent        !important
+  //  2. User normal rules                  = User         normal
+  //  3. Presentation hints                 = PresHint     normal
+  //  4. Author normal rules                = Document     normal
+  //  5. Override normal rules              = Override     normal
+  //  6. Author !important rules            = Document     !important
+  //  7. Override !important rules          = Override     !important
+  //  8. User !important rules              = User         !important
+  //  9. UA !important rules                = Agent        !important
   // [most important]
 
-  NS_PRECONDITION(SheetCount(ePresHintSheet) == 0 ||
-                  SheetCount(eHTMLPresHintSheet) == 0,
-                  "Can't have both types of preshint sheets at once!");
-  
   aRuleWalker->SetLevel(eAgentSheet, PR_FALSE, PR_TRUE);
   if (mRuleProcessors[eAgentSheet])
     (*aCollectorFunc)(mRuleProcessors[eAgentSheet], aData);
   nsRuleNode* lastAgentRN = aRuleWalker->CurrentNode();
   PRBool haveImportantUARules = !aRuleWalker->GetCheckForImportantRules();
-
-  aRuleWalker->SetLevel(ePresHintSheet, PR_FALSE, PR_FALSE);
-  if (mRuleProcessors[ePresHintSheet])
-    (*aCollectorFunc)(mRuleProcessors[ePresHintSheet], aData);
-  nsRuleNode* lastPresHintRN = aRuleWalker->CurrentNode();
 
   aRuleWalker->SetLevel(eUserSheet, PR_FALSE, PR_TRUE);
   PRBool skipUserStyles =
@@ -615,10 +603,10 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
   nsRuleNode* lastUserRN = aRuleWalker->CurrentNode();
   PRBool haveImportantUserRules = !aRuleWalker->GetCheckForImportantRules();
 
-  aRuleWalker->SetLevel(eHTMLPresHintSheet, PR_FALSE, PR_FALSE);
-  if (mRuleProcessors[eHTMLPresHintSheet])
-    (*aCollectorFunc)(mRuleProcessors[eHTMLPresHintSheet], aData);
-  nsRuleNode* lastHTMLPresHintRN = aRuleWalker->CurrentNode();
+  aRuleWalker->SetLevel(ePresHintSheet, PR_FALSE, PR_FALSE);
+  if (mRuleProcessors[ePresHintSheet])
+    (*aCollectorFunc)(mRuleProcessors[ePresHintSheet], aData);
+  nsRuleNode* lastPresHintRN = aRuleWalker->CurrentNode();
   
   aRuleWalker->SetLevel(eDocSheet, PR_FALSE, PR_TRUE);
   PRBool cutOffInheritance = PR_FALSE;
@@ -646,11 +634,11 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
 
   if (haveImportantDocRules) {
     aRuleWalker->SetLevel(eDocSheet, PR_TRUE, PR_FALSE);
-    AddImportantRules(lastDocRN, lastHTMLPresHintRN, aRuleWalker);  // doc
+    AddImportantRules(lastDocRN, lastPresHintRN, aRuleWalker);  // doc
   }
 #ifdef DEBUG
   else {
-    AssertNoImportantRules(lastDocRN, lastHTMLPresHintRN);
+    AssertNoImportantRules(lastDocRN, lastPresHintRN);
   }
 #endif
 
@@ -665,23 +653,18 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
 #endif
 
 #ifdef DEBUG
-  AssertNoCSSRules(lastHTMLPresHintRN, lastUserRN);
-  AssertNoImportantRules(lastHTMLPresHintRN, lastUserRN); // HTML preshints
+  AssertNoCSSRules(lastPresHintRN, lastUserRN);
+  AssertNoImportantRules(lastPresHintRN, lastUserRN); // preshints
 #endif
 
   if (haveImportantUserRules) {
     aRuleWalker->SetLevel(eUserSheet, PR_TRUE, PR_FALSE);
-    AddImportantRules(lastUserRN, lastPresHintRN, aRuleWalker); //user
+    AddImportantRules(lastUserRN, lastAgentRN, aRuleWalker); //user
   }
 #ifdef DEBUG
   else {
-    AssertNoImportantRules(lastUserRN, lastPresHintRN);
+    AssertNoImportantRules(lastUserRN, lastAgentRN);
   }
-#endif
-
-#ifdef DEBUG
-  AssertNoCSSRules(lastPresHintRN, lastAgentRN);
-  AssertNoImportantRules(lastPresHintRN, lastAgentRN); // preshints
 #endif
 
   if (haveImportantUARules) {
@@ -713,21 +696,15 @@ nsStyleSet::WalkRuleProcessors(nsIStyleRuleProcessor::EnumFunc aFunc,
                                RuleProcessorData* aData,
                                PRBool aWalkAllXBLStylesheets)
 {
-  NS_PRECONDITION(SheetCount(ePresHintSheet) == 0 ||
-                  SheetCount(eHTMLPresHintSheet) == 0,
-                  "Can't have both types of preshint sheets at once!");
-  
   if (mRuleProcessors[eAgentSheet])
     (*aFunc)(mRuleProcessors[eAgentSheet], aData);
-  if (mRuleProcessors[ePresHintSheet])
-    (*aFunc)(mRuleProcessors[ePresHintSheet], aData);
 
   PRBool skipUserStyles = aData->mElement->IsInNativeAnonymousSubtree();
   if (!skipUserStyles && mRuleProcessors[eUserSheet]) // NOTE: different
     (*aFunc)(mRuleProcessors[eUserSheet], aData);
 
-  if (mRuleProcessors[eHTMLPresHintSheet])
-    (*aFunc)(mRuleProcessors[eHTMLPresHintSheet], aData);
+  if (mRuleProcessors[ePresHintSheet])
+    (*aFunc)(mRuleProcessors[ePresHintSheet], aData);
   
   PRBool cutOffInheritance = PR_FALSE;
   if (mBindingManager) {

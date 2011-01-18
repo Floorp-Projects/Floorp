@@ -97,11 +97,32 @@ private:
     static IDWriteFontCollection *mSystemCollection;
 };
 
-cairo_int_status_t
-_cairo_dwrite_show_glyphs_on_d2d_surface(void			*surface,
-					cairo_operator_t	 op,
-					const cairo_pattern_t	*source,
-					cairo_glyph_t		*glyphs,
-					int			 num_glyphs,
-					cairo_scaled_font_t	*scaled_font,
-					cairo_clip_t		*clip);
+/* cairo_font_face_t implementation */
+struct _cairo_dwrite_font_face {
+    cairo_font_face_t base;
+    IDWriteFont *font;
+    IDWriteFontFace *dwriteface;
+};
+typedef struct _cairo_dwrite_font_face cairo_dwrite_font_face_t;
+
+/* cairo_scaled_font_t implementation */
+struct _cairo_dwrite_scaled_font {
+    cairo_scaled_font_t base;
+    cairo_matrix_t mat;
+    cairo_matrix_t mat_inverse;
+    cairo_antialias_t antialias_mode;
+    DWRITE_MEASURING_MODE measuring_mode;
+};
+typedef struct _cairo_dwrite_scaled_font cairo_dwrite_scaled_font_t;
+
+DWRITE_MATRIX _cairo_dwrite_matrix_from_matrix(const cairo_matrix_t *matrix);
+
+// This will create a DWrite glyph run from cairo glyphs and a scaled_font.
+// It is important to note the array members of DWRITE_GLYPH_RUN should be
+// deleted by the caller.
+void
+_cairo_dwrite_glyph_run_from_glyphs(cairo_glyph_t *glyphs,
+				    int num_glyphs,
+				    cairo_dwrite_scaled_font_t *scaled_font,
+				    DWRITE_GLYPH_RUN *run,
+				    cairo_bool_t *transformed);

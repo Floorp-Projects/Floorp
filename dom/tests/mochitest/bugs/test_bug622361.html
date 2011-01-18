@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+<script>
+var w;
+var counter = 0;
+
+function doNext()
+{
+  counter++;
+  postMessage("ohai", "*");
+}
+
+function boom(event)
+{
+  switch (counter)
+  {
+  case 1:
+    w = window.open("data:text/html,1");
+    doNext();
+    return;
+  case 2:
+    w.location = "data:text/html,2";
+    function next()
+    {
+      w.history.back();
+      doNext();
+    }
+    setTimeout(next, 5000);
+    return;
+  case 3:
+    localStorage.setItem("key", "value");
+    w.history.forward();
+    doNext();
+    return;
+  case 4:
+    w.close();
+    SimpleTest.finish();
+  }
+}
+
+window.addEventListener("message", boom, false);
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</head>
+<body onload="doNext();"></body>
+</html>

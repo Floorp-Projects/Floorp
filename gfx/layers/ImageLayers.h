@@ -218,7 +218,12 @@ public:
    * Set the ImageContainer. aContainer must have the same layer manager
    * as this layer.
    */
-  void SetContainer(ImageContainer* aContainer) { mContainer = aContainer; }
+  void SetContainer(ImageContainer* aContainer) 
+  {
+    NS_ASSERTION(!aContainer->Manager() || aContainer->Manager() == Manager(), 
+                 "ImageContainer must have the same manager as the ImageLayer");
+    mContainer = aContainer;  
+  }
   /**
    * CONSTRUCTION PHASE ONLY
    * Set the filter used to resample this image if necessary.

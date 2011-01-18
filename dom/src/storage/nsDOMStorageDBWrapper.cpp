@@ -75,7 +75,6 @@ nsDOMStorageDBWrapper::nsDOMStorageDBWrapper()
 
 nsDOMStorageDBWrapper::~nsDOMStorageDBWrapper()
 {
-  StopTempTableFlushTimer();
 }
 
 nsresult
@@ -99,29 +98,18 @@ nsDOMStorageDBWrapper::Init()
 }
 
 nsresult
-nsDOMStorageDBWrapper::EnsureLoadTemporaryTableForStorage(DOMStorageImpl* aStorage)
+nsDOMStorageDBWrapper::FlushAndDeleteTemporaryTables(bool force)
 {
-  if (aStorage->CanUseChromePersist())
-    return mChromePersistentDB.EnsureLoadTemporaryTableForStorage(aStorage);
-  if (nsDOMStorageManager::gStorageManager->InPrivateBrowsingMode())
-    return NS_OK;
-  if (aStorage->SessionOnly())
-    return NS_OK;
+  nsresult rv1, rv2;
+  rv1 = mChromePersistentDB.FlushTemporaryTables(force);
+  rv2 = mPersistentDB.FlushTemporaryTables(force);
 
-  return mPersistentDB.EnsureLoadTemporaryTableForStorage(aStorage);
-}
+  // Everything flushed?  Then no need for a timer.
+  if (!mChromePersistentDB.mTempTableLoads.Count() && 
+      !mPersistentDB.mTempTableLoads.Count())
+    StopTempTableFlushTimer();
 
-nsresult
-nsDOMStorageDBWrapper::FlushAndDeleteTemporaryTableForStorage(DOMStorageImpl* aStorage)
-{
-  if (aStorage->CanUseChromePersist())
-    return mChromePersistentDB.FlushAndDeleteTemporaryTableForStorage(aStorage);
-  if (nsDOMStorageManager::gStorageManager->InPrivateBrowsingMode())
-    return NS_OK;
-  if (aStorage->SessionOnly())
-    return NS_OK;
-
-  return mPersistentDB.FlushAndDeleteTemporaryTableForStorage(aStorage);
+  return NS_FAILED(rv1) ? rv1 : rv2;
 }
 
 nsresult

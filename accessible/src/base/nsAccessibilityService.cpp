@@ -503,7 +503,7 @@ nsAccessibilityService::ContentRangeInserted(nsIPresShell* aPresShell,
 
   nsDocAccessible* docAccessible = GetDocAccessible(aPresShell->GetDocument());
   if (docAccessible)
-    docAccessible->UpdateTree(aContainer, aStartChild, aEndChild, PR_TRUE);
+    docAccessible->ContentInserted(aContainer, aStartChild, aEndChild);
 }
 
 void
@@ -537,8 +537,7 @@ nsAccessibilityService::ContentRemoved(nsIPresShell* aPresShell,
 
   nsDocAccessible* docAccessible = GetDocAccessible(aPresShell->GetDocument());
   if (docAccessible)
-    docAccessible->UpdateTree(aContainer, aChild, aChild->GetNextSibling(),
-                              PR_FALSE);
+    docAccessible->ContentRemoved(aContainer, aChild);
 }
 
 void

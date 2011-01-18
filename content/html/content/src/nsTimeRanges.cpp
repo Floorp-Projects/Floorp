@@ -58,7 +58,7 @@ nsTimeRanges::GetLength(PRUint32* aLength) {
 }
 
 NS_IMETHODIMP
-nsTimeRanges::Start(PRUint32 aIndex, float* aTime) {
+nsTimeRanges::Start(PRUint32 aIndex, double* aTime) {
   if (aIndex >= mRanges.Length())
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   *aTime = mRanges[aIndex].mStart;
@@ -66,7 +66,7 @@ nsTimeRanges::Start(PRUint32 aIndex, float* aTime) {
 }
 
 NS_IMETHODIMP
-nsTimeRanges::End(PRUint32 aIndex, float* aTime) {
+nsTimeRanges::End(PRUint32 aIndex, double* aTime) {
   if (aIndex >= mRanges.Length())
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   *aTime = mRanges[aIndex].mEnd;
@@ -74,6 +74,6 @@ nsTimeRanges::End(PRUint32 aIndex, float* aTime) {
 }
 
 void
-nsTimeRanges::Add(float aStart, float aEnd) {
+nsTimeRanges::Add(double aStart, double aEnd) {
   mRanges.AppendElement(TimeRange(aStart,aEnd));
 }

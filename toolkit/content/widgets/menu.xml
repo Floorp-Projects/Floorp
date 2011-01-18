@@ -62,7 +62,7 @@
 
       <property name="openedWithKey" readonly="true">
         <getter><![CDATA[
-          return this.boxObject.QueryInterface(Components.interfaces.nsIMenuBoxObject).openedWithKey;
+          return this.boxObject.QueryInterface(Components.interfaces.nsIMenuBoxObject_MOZILLA_2_0_BRANCH).openedWithKey;
         ]]></getter>
       </property>
 

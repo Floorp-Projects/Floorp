@@ -1,0 +1,81 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=613888
+-->
+<head>
+  <title>Test for Bug 613888</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style type="text/css">
+    #animated-elements-container > span {
+      color: black;
+      background: white;
+      -moz-transition:
+        color 10s ease-out,
+        background 1s ease-out;
+    }
+    #animated-elements-container > span.another {
+      color: white;
+      background: black;
+    }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=613888">Mozilla Bug 613888</a>
+<pre id="animated-elements-container">
+  <span should-restyle="true">canceled on a half of the animation</span>
+  <span should-restyle="true">canceled too fast, and restyled on transitionend</span>
+  <span>canceled too fast, but not restyled on transitionend</span>
+</pre>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 613888: that we don't cancel transitions when they're
+    about to end (current interpolated value rounds to ending value) and
+    they get an unrelated style change.  **/
+
+var count_remaining = 6;
+
+window.addEventListener('load', function() {
+  var cases = Array.slice(document.querySelectorAll('#animated-elements-container > span'));
+
+  cases.forEach(function(aTarget) {
+    aTarget.addEventListener('transitionend', function(aEvent) {
+      if (aTarget.hasAttribute('should-restyle'))
+        aTarget.style.outline = '1px solid';
+      var attr = 'transitionend-' + aEvent.propertyName;
+      if (aTarget.hasAttribute(attr)) {
+        // It's possible, given bad timers, that we might get a
+        // transition that completed before we reversed it, which could
+        // lead to two transitionend events for the same thing.  We
+        // don't want to decrement count_remaining in this case.
+        return;
+      }
+      aTarget.setAttribute(attr, "true");
+      if (--count_remaining == 0) {
+        cases.forEach(function(aCase, aIndex) {
+          ok(aCase.hasAttribute('transitionend-color'),
+             "transitionend for color was fired for case "+aIndex);
+          ok(aCase.hasAttribute('transitionend-background-color'),
+             "transitionend for background-color was fired for case "+aIndex);
+        });
+        SimpleTest.finish();
+      }
+    }, false);
+  });
+
+  cases.forEach(function(aCase) aCase.className = 'another' );
+
+  window.setTimeout(function() cases[0].className = '', 500);
+  window.setTimeout(function() cases[1].className = cases[2].className = '', 250);
+
+}, false);
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

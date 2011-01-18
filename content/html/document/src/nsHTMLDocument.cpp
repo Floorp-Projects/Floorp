@@ -378,16 +378,6 @@ nsHTMLDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
   SetContentTypeInternal(nsDependentCString("text/html"));
 }
 
-nsStyleSet::sheetType
-nsHTMLDocument::GetAttrSheetType()
-{
-  if (IsHTML()) {
-    return nsStyleSet::eHTMLPresHintSheet;
-  }
-
-  return nsDocument::GetAttrSheetType();
-}
-
 nsresult
 nsHTMLDocument::CreateShell(nsPresContext* aContext,
                             nsIViewManager* aViewManager,
@@ -3318,7 +3308,7 @@ nsHTMLDocument::EditingStateChanged()
 
     // If we're entering the design mode, put the selection at the beginning of
     // the document for compatibility reasons.
-    if (designMode) {
+    if (designMode && oldState == eOff) {
       rv = editor->BeginningOfDocument();
       NS_ENSURE_SUCCESS(rv, rv);
     }

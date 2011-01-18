@@ -358,6 +358,10 @@ let UI = {
                                    welcomeWidth, welcomeWidth * aspect);
       newTabItem.setBounds(welcomeBounds, true);
       GroupItems.setActiveGroupItem(groupItem);
+
+      // Remove the newly created welcome-tab from the tab bar
+      if (!this.isTabViewVisible())
+        GroupItems._updateTabBar();
     }
   },
 
@@ -495,6 +499,11 @@ let UI = {
 
         self._resize(true);
         dispatchEvent(event);
+
+        // Flush pending updates
+        GroupItems.flushAppTabUpdates();
+
+        TabItems.resumePainting();
       });
     } else {
       if (currentTab && currentTab._tabViewTabItem)
@@ -502,9 +511,12 @@ let UI = {
 
       self.setActiveTab(null);
       dispatchEvent(event);
-    }
 
-    TabItems.resumePainting();
+      // Flush pending updates
+      GroupItems.flushAppTabUpdates();
+
+      TabItems.resumePainting();
+    }
   },
 
   // ----------
@@ -1180,9 +1192,6 @@ let UI = {
   // Parameters:
   //   force - true to update even when "unnecessary"; default false
   _resize: function UI__resize(force) {
-    if (typeof force == "undefined")
-      force = false;
-
     if (!this._pageBounds)
       return;
 

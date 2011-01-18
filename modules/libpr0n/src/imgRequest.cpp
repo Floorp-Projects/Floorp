@@ -241,19 +241,15 @@ nsresult imgRequest::Init(nsIURI *aURI,
 
   // Register our pref observer if it hasn't been done yet.
   if (NS_UNLIKELY(!gRegisteredPrefObserver)) {
-    imgRequestPrefObserver *observer = new imgRequestPrefObserver();
-    if (observer) {
-      nsCOMPtr<nsIPrefBranch2> branch = do_GetService(NS_PREFSERVICE_CONTRACTID);
-      if (branch) {
-        branch->AddObserver(DISCARD_PREF, observer, PR_FALSE);
-        branch->AddObserver(DECODEONDRAW_PREF, observer, PR_FALSE);
-        branch->AddObserver(DISCARD_TIMEOUT_PREF, observer, PR_FALSE);
-        ReloadPrefs(branch);
-        gRegisteredPrefObserver = PR_TRUE;
-      }
+    nsCOMPtr<nsIPrefBranch2> branch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (branch) {
+      nsCOMPtr<nsIObserver> observer(new imgRequestPrefObserver());
+      branch->AddObserver(DISCARD_PREF, observer, PR_FALSE);
+      branch->AddObserver(DECODEONDRAW_PREF, observer, PR_FALSE);
+      branch->AddObserver(DISCARD_TIMEOUT_PREF, observer, PR_FALSE);
+      ReloadPrefs(branch);
+      gRegisteredPrefObserver = PR_TRUE;
     }
-    else
-      delete observer;
   }
 
   return NS_OK;

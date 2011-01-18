@@ -55,6 +55,10 @@
 #include "nsPrintfCString.h"
 #include "nsNetUtil.h"
 
+// Temporary tables for a storage scope will be flushed if found older
+// then this time in seconds since the load
+#define TEMP_TABLE_MAX_AGE (10) // seconds
+
 class nsReverseStringSQLFunction : public mozIStorageFunction
 {
   NS_DECL_ISUPPORTS
@@ -98,6 +102,7 @@ NS_IMPL_ISUPPORTS1(nsIsOfflineSQLFunction, mozIStorageFunction)
 
 nsDOMStoragePersistentDB::nsDOMStoragePersistentDB()
 {
+  mTempTableLoads.Init(16);
 }
 
 NS_IMETHODIMP
@@ -446,7 +451,9 @@ nsDOMStoragePersistentDB::Init(const nsString& aDatabaseName)
 nsresult
 nsDOMStoragePersistentDB::EnsureLoadTemporaryTableForStorage(DOMStorageImpl* aStorage)
 {
-  if (!aStorage->WasTemporaryTableLoaded()) {
+  TimeStamp timeStamp;
+
+  if (!mTempTableLoads.Get(aStorage->GetScopeDBKey(), &timeStamp)) {
     nsresult rv;
 
     rv = MaybeCommitInsertTransaction();
@@ -466,65 +473,82 @@ nsDOMStoragePersistentDB::EnsureLoadTemporaryTableForStorage(DOMStorageImpl* aSt
 
     rv = mCopyToTempTableStatement->Execute();
     NS_ENSURE_SUCCESS(rv, rv);
-  }
 
-  // Always call this to update the last access time
-  aStorage->SetTemporaryTableLoaded(true);
+    mTempTableLoads.Put(aStorage->GetScopeDBKey(), TimeStamp::Now());
+
+    DOMStorageImpl::gStorageDB->EnsureTempTableFlushTimer();
+  }
 
   return NS_OK;
 }
 
-nsresult
-nsDOMStoragePersistentDB::FlushAndDeleteTemporaryTableForStorage(DOMStorageImpl* aStorage)
+/* static */
+PLDHashOperator
+nsDOMStoragePersistentDB::FlushTemporaryTable(nsCStringHashKey::KeyType aKey,
+                                              TimeStamp& aData,
+                                              void* aUserArg)
 {
-  if (!aStorage->WasTemporaryTableLoaded())
-    return NS_OK;
+  FlushTemporaryTableData* data = (FlushTemporaryTableData*)aUserArg;
 
+  if (!data->mForce && 
+      ((TimeStamp::Now() - aData).ToSeconds() < TEMP_TABLE_MAX_AGE))
+    return PL_DHASH_NEXT;
+
+  {
+    mozStorageStatementScoper scope(data->mDB->mCopyBackToDiskStatement);
+
+    Binder binder(data->mDB->mCopyBackToDiskStatement, &data->mRV);
+    NS_ENSURE_SUCCESS(data->mRV, PL_DHASH_STOP);
+
+    data->mRV = binder->BindUTF8StringByName(NS_LITERAL_CSTRING("scope"), aKey);
+    NS_ENSURE_SUCCESS(data->mRV, PL_DHASH_STOP);
+
+    data->mRV = binder.Add();
+    NS_ENSURE_SUCCESS(data->mRV, PL_DHASH_STOP);
+
+    data->mRV = data->mDB->mCopyBackToDiskStatement->Execute();
+    NS_ENSURE_SUCCESS(data->mRV, PL_DHASH_STOP);
+  }
+
+  {
+    mozStorageStatementScoper scope(data->mDB->mDeleteTemporaryTableStatement);
+
+    Binder binder(data->mDB->mDeleteTemporaryTableStatement, &data->mRV);
+    NS_ENSURE_SUCCESS(data->mRV, PL_DHASH_STOP);
+
+    data->mRV = binder->BindUTF8StringByName(NS_LITERAL_CSTRING("scope"), aKey);
+    NS_ENSURE_SUCCESS(data->mRV, PL_DHASH_STOP);
+
+    data->mRV = binder.Add();
+    NS_ENSURE_SUCCESS(data->mRV, PL_DHASH_STOP);
+
+    data->mRV = data->mDB->mDeleteTemporaryTableStatement->Execute();
+    NS_ENSURE_SUCCESS(data->mRV, PL_DHASH_STOP);
+  }
+
+  return PL_DHASH_REMOVE;
+}
+
+nsresult
+nsDOMStoragePersistentDB::FlushTemporaryTables(bool force)
+{
   mozStorageTransaction trans(mConnection, PR_FALSE);
 
   nsresult rv;
 
-  {
-    mozStorageStatementScoper scope(mCopyBackToDiskStatement);
+  FlushTemporaryTableData data;
+  data.mDB = this;
+  data.mForce = force;
+  data.mRV = NS_OK;
 
-    Binder binder(mCopyBackToDiskStatement, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = binder->BindUTF8StringByName(NS_LITERAL_CSTRING("scope"),
-                                      aStorage->GetScopeDBKey());
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = binder.Add();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = mCopyBackToDiskStatement->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  {
-    mozStorageStatementScoper scope(mDeleteTemporaryTableStatement);
-
-    Binder binder(mDeleteTemporaryTableStatement, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = binder->BindUTF8StringByName(NS_LITERAL_CSTRING("scope"),
-                                      aStorage->GetScopeDBKey());
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = binder.Add();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = mDeleteTemporaryTableStatement->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  mTempTableLoads.Enumerate(FlushTemporaryTable, &data);
+  NS_ENSURE_SUCCESS(data.mRV, data.mRV);
 
   rv = trans.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = MaybeCommitInsertTransaction();
   NS_ENSURE_SUCCESS(rv, rv);
-
-  aStorage->SetTemporaryTableLoaded(false);
 
   return NS_OK;
 }
