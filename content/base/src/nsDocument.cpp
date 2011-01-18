@@ -855,6 +855,33 @@ nsExternalResourceMap::ShowViewers()
   mMap.EnumerateRead(ExternalResourceShower, nsnull);
 }
 
+void
+TransferZoomLevels(nsIDocument* aFromDoc,
+                   nsIDocument* aToDoc)
+{
+  NS_ABORT_IF_FALSE(aFromDoc && aToDoc,
+                    "transferring zoom levels from/to null doc");
+
+  nsIPresShell* fromShell = aFromDoc->GetShell();
+  if (!fromShell)
+    return;
+
+  nsPresContext* fromCtxt = fromShell->GetPresContext();
+  if (!fromCtxt)
+    return;
+
+  nsIPresShell* toShell = aToDoc->GetShell();
+  if (!toShell)
+    return;
+
+  nsPresContext* toCtxt = toShell->GetPresContext();
+  if (!toCtxt)
+    return;
+
+  toCtxt->SetFullZoom(fromCtxt->GetFullZoom());
+  toCtxt->SetTextZoom(fromCtxt->TextZoom());
+}
+
 nsresult
 nsExternalResourceMap::AddExternalResource(nsIURI* aURI,
                                            nsIDocumentViewer* aViewer,
@@ -912,6 +939,9 @@ nsExternalResourceMap::AddExternalResource(nsIURI* aURI,
     newResource->mDocument = doc;
     newResource->mViewer = aViewer;
     newResource->mLoadGroup = aLoadGroup;
+    if (doc) {
+      TransferZoomLevels(aDisplayDocument, doc);
+    }
   }
 
   const nsTArray< nsCOMPtr<nsIObserver> > & obs = load->Observers();
