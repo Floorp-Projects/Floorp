@@ -357,7 +357,13 @@ interface nsIFaviconDataCallback : nsISupports
  * Notification sent when all favicons are expired.
  */
 #define NS_PLACES_FAVICONS_EXPIRED_TOPIC_ID "places-favicons-expired"
+
+#ifdef MOZ_WIDGET_GTK2
+#define FAVICON_DEFAULT_URL "moz-icon://stock/gtk-file?size=toolbarsmall"
+#else
 #define FAVICON_DEFAULT_URL "chrome://mozapps/skin/places/defaultFavicon.png"
+#endif
+
 #define FAVICON_ERRORPAGE_URL "chrome://global/skin/icons/warning-16.png"
 
 %}
