@@ -907,10 +907,9 @@ void nsBuiltinDecoderStateMachine::NotifyDataExhausted()
 {
   MonitorAutoEnter mon(mDecoder->GetMonitor());
   nsMediaStream* stream = mDecoder->GetCurrentStream();
-  NS_ASSERTION(!stream->IsDataCachedToEndOfStream(mDecoder->mDecoderPosition),
-               "We shouldn't be notified in this case!");
   if (mDecoder->GetState() == nsBuiltinDecoder::PLAY_STATE_PLAYING &&
       mState == DECODER_STATE_DECODING &&
+      !stream->IsDataCachedToEndOfStream(mDecoder->mDecoderPosition) &&
       !stream->IsSuspended())
   {
     // Our decode has caught up with the download. Let's buffer to make sure
