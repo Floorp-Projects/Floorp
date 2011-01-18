@@ -796,9 +796,9 @@
              aria-label="&tabsToolbar.label;"
              context="toolbar-context-menu"
 #ifdef APPMENU_ON_TABBAR
-             defaultset="appmenu-toolbar-button,tabbrowser-tabs,new-tab-button,alltabs-button,tabview-button,tabs-closebutton"
+             defaultset="appmenu-toolbar-button,tabbrowser-tabs,new-tab-button,alltabs-button,tabs-closebutton"
 #else
-             defaultset="tabbrowser-tabs,new-tab-button,alltabs-button,tabview-button,tabs-closebutton"
+             defaultset="tabbrowser-tabs,new-tab-button,alltabs-button,tabs-closebutton"
 #endif
              collapsed="true">
 
@@ -842,13 +842,6 @@
         <menupopup id="alltabs-popup"
                    position="after_end"/>
       </toolbarbutton>
-
-      <toolbarbutton id="tabview-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     label="&tabGroupsButton.label;"
-                     command="Browser:ToggleTabView"
-                     tooltiptext="&tabGroupsButton.tooltip;"
-                     removable="true"
-                     observes="tabviewGroupsNumber"/>
 
       <toolbarbutton id="tabs-closebutton"
                      class="close-button tabs-closebutton"
@@ -957,6 +950,12 @@
                    oncommand="return FeedHandler.subscribeToFeed(null, event);"
                    onclick="checkForMiddleClick(this, event);"/>
       </toolbarbutton>
+
+      <toolbarbutton id="tabview-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     label="&tabGroupsButton.label;"
+                     command="Browser:ToggleTabView"
+                     tooltiptext="&tabGroupsButton.tooltip;"
+                     observes="tabviewGroupsNumber"/>
     </toolbarpalette>
   </toolbox>
 
