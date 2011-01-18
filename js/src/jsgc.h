@@ -39,6 +39,14 @@
 
 #ifndef jsgc_h___
 #define jsgc_h___
+
+/* Gross special case for Gecko, which defines malloc/calloc/free. */
+#ifdef mozilla_mozalloc_macro_wrappers_h
+#  define JS_GC_UNDEFD_MOZALLOC_WRAPPERS
+/* The "anti-header" */
+#  include "mozilla/mozalloc_undef_macro_wrappers.h"
+#endif
+
 /*
  * JS Garbage Collector.
  */
@@ -1085,5 +1093,9 @@ JSObject::getCompartment() const
 {
     return compartment();
 }
+
+#ifdef JS_GC_UNDEFD_MOZALLOC_WRAPPERS
+#  include "mozilla/mozalloc_macro_wrappers.h"
+#endif
 
 #endif /* jsgc_h___ */

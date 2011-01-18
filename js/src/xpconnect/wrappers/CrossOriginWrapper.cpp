@@ -107,7 +107,7 @@ CrossOriginWrapper::enter(JSContext *cx, JSObject *wrapper, jsid id, Action act)
         return true;
     }
     JSStackFrame *fp = NULL;
-    nsIPrincipal *principal = GetCompartmentPrincipal(wrappedObject(wrapper)->getCompartment());
+    nsIPrincipal *principal = GetCompartmentPrincipal(wrappedObject(wrapper)->compartment());
     nsresult rv = ssm->PushContextPrincipal(cx, JS_FrameIterator(cx, &fp), principal);
     if (NS_FAILED(rv)) {
         NS_WARNING("Not allowing call because we're out of memory");

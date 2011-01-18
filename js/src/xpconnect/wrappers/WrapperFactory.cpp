@@ -190,7 +190,7 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, JSObject *scope, JSObject *obj
         // a separate compartment, then this object is explicitly requesting
         // that we don't create a second JS object for it: create a security
         // wrapper.
-        if (originalScope->getCompartment() != scope->getCompartment())
+        if (originalScope->compartment() != scope->getCompartment())
             return DoubleWrap(cx, obj, flags);
 
         // Note: this penalizes objects that only have one wrapper, but are
@@ -237,7 +237,7 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
                  "wrapped object passed to rewrap");
     NS_ASSERTION(JS_GET_CLASS(cx, obj) != &XrayUtils::HolderClass, "trying to wrap a holder");
 
-    JSCompartment *origin = obj->getCompartment();
+    JSCompartment *origin = obj->compartment();
     JSCompartment *target = cx->compartment;
     JSObject *xrayHolder = nsnull;
 
