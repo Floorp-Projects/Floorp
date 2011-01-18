@@ -186,10 +186,11 @@ MouseModule.prototype = {
     let dragData = this._dragData;
     if (dragData.dragging) {
       // Somehow a mouse up was missed.
-      let [sX, sY] = dragData.panPosition();
       this._doDragStop();
     }
     dragData.reset();
+    this.dX = 0;
+    this.dY = 0;
 
     // walk up the DOM tree in search of nearest scrollable ancestor.  nulls are
     // returned if none found.
@@ -246,6 +247,9 @@ MouseModule.prototype = {
       aEvent.preventDefault();
     }
 
+    // onMouseMove will not record the delta change if we are waiting for a
+    // paint. Since this is the last input for this drag, we override the flag.
+    this._waitingForPaint = false;
     this._onMouseMove(aEvent);
 
     let dragData = this._dragData;
@@ -300,13 +304,31 @@ MouseModule.prototype = {
   _onMouseMove: function _onMouseMove(aEvent) {
     let dragData = this._dragData;
 
-    if (dragData.dragging && !this._waitingForPaint) {
+    if (dragData.dragging) {
       let oldIsPan = dragData.isPan();
       dragData.setDragPosition(aEvent.screenX, aEvent.screenY);
+
+      // Kinetic panning is sensitive to time. It is more stable if it receives
+      // the mousemove events as they come. For dragging though, we only want
+      // to call _dragBy if we aren't waiting for a paint (so we don't spam the
+      // main browser loop with a bunch of redundant paints).
+      //
+      // Here, we feed kinetic panning drag differences for mouse events as
+      // come; for dragging, we build up a drag buffer in this.dX/this.dY and
+      // release it when we are ready to paint.
+      //
+      let [sX, sY] = dragData.panPosition();
+      this.dX += dragData.prevPanX - sX;
+      this.dY += dragData.prevPanY - sY;
+
       if (dragData.isPan()) {
         // Only pan when mouse event isn't part of a click. Prevent jittering on tap.
-        let [sX, sY] = dragData.panPosition();
-        this._doDragMove();
+        this._kinetic.addData(sX - dragData.prevPanX, sY - dragData.prevPanY);
+        if (!this._waitingForPaint) {
+          this._dragBy(this.dX, this.dY);
+          this.dX = 0;
+          this.dY = 0;
+        }
 
         // Let everyone know when mousemove begins a pan
         if (!oldIsPan && dragData.isPan()) {
@@ -357,29 +379,13 @@ MouseModule.prototype = {
       this._dragger = null;
     } else if (dragData.isPan()) {
       // Start kinetic pan.
-      let [sX, sY] = dragData.panPosition();
-      let dX = dragData.prevPanX - sX;
-      let dY = dragData.prevPanY - sY;
-      this._kinetic.addData(-dX, -dY);
       this._kinetic.start();
     }
   },
 
   /**
-   * Update kinetic with new data and drag.
-   */
-  _doDragMove: function _doDragMove() {
-    let dragData = this._dragData;
-    let [sX, sY] = dragData.panPosition();
-    let dX = dragData.prevPanX - sX;
-    let dY = dragData.prevPanY - sY;
-    this._kinetic.addData(-dX, -dY);
-    this._dragBy(dX, dY);
-  },
-
-  /**
-   * Used by _doDragMove() above and by KineticController's timer to do the
-   * actual dragMove signalling to the dragger.  We'd put this in _doDragMove()
+   * Used by _onMouseMove() above and by KineticController's timer to do the
+   * actual dragMove signalling to the dragger.  We'd put this in _onMouseMove()
    * but then KineticController would be adding to its own data as it signals
    * the dragger of dragMove()s.
    */
@@ -711,13 +717,13 @@ DragData.prototype = {
 
         this.locked = true;
       }
-
-      // After pan lock, figure out previous panning position. Base it on last drag
-      // position so there isn't a jump in panning.
-      let [prevX, prevY] = this._lockAxis(this.sX, this.sY);
-      this.prevPanX = prevX;
-      this.prevPanY = prevY;
     }
+
+    // After pan lock, figure out previous panning position. Base it on last drag
+    // position so there isn't a jump in panning.
+    let [prevX, prevY] = this._lockAxis(this.sX, this.sY);
+    this.prevPanX = prevX;
+    this.prevPanY = prevY;
 
     this.sX = sX;
     this.sY = sY;
