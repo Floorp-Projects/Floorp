@@ -1903,7 +1903,9 @@ main(int argc, char **argv)
             return 1;
         }
 
+#ifdef MOZ_ENABLE_LIBXUL
         xpc_LocalizeContext(cx);
+#endif
 
         nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());
         if (!xpc) {
