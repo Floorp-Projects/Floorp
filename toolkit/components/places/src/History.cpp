@@ -531,15 +531,6 @@ private:
     else {
       rv = mHistory->InsertPlace(aPlace);
       NS_ENSURE_SUCCESS(rv, rv);
-
-      // We need the place id and guid of the page we just inserted when we
-      // have a callback.  No point in doing the disk I/O if we do not need it.
-      if (mCallback) {
-        bool exists = mHistory->FetchPageInfo(aPlace);
-        if (!exists) {
-          NS_NOTREACHED("should have an entry in moz_places");
-        }
-      }
     }
 
     rv = AddVisit(aPlace, aReferrer);
@@ -569,34 +560,14 @@ private:
   {
     NS_PRECONDITION(!_place.spec.IsEmpty(), "must have a non-empty spec!");
 
-    nsCOMPtr<mozIStorageStatement> stmt;
-    // If we have a visitTime, we want information on that specific visit.
-    if (_place.visitTime) {
-      stmt = mHistory->syncStatements.GetCachedStatement(
-        "SELECT id, session, visit_date "
-        "FROM moz_historyvisits "
-        "WHERE place_id = (SELECT id FROM moz_places WHERE url = :page_url) "
-        "AND visit_date = :visit_date "
-      );
-      NS_ENSURE_TRUE(stmt, false);
-
-      mozStorageStatementScoper scoper(stmt);
-      nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("visit_date"),
-                                          _place.visitTime);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      scoper.Abandon();
-    }
-    // Otherwise, we want information about the most recent visit.
-    else {
-      stmt = mHistory->syncStatements.GetCachedStatement(
+    nsCOMPtr<mozIStorageStatement> stmt =
+      mHistory->syncStatements.GetCachedStatement(
         "SELECT id, session, visit_date "
         "FROM moz_historyvisits "
         "WHERE place_id = (SELECT id FROM moz_places WHERE url = :page_url) "
         "ORDER BY visit_date DESC "
       );
-      NS_ENSURE_TRUE(stmt, false);
-    }
+    NS_ENSURE_TRUE(stmt, false);
     mozStorageStatementScoper scoper(stmt);
 
     nsresult rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"),
@@ -717,8 +688,11 @@ private:
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Now that it should be in the database, we need to obtain the id of the
-    // visit we just added.
-    (void)FetchVisitInfo(_place);
+    // place we just added.
+    bool visited = FetchVisitInfo(_place);
+    if (visited) {
+      NS_NOTREACHED("Not visited after adding a visit!");
+    }
 
     return NS_OK;
   }
