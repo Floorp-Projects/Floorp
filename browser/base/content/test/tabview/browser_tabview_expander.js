@@ -180,11 +180,10 @@ function onTabViewWindowLoaded(win) {
       ok(activeTab, "There is an active tab.");
       let originalTabItem = originalTab._tabViewTabItem;
 
-      // TODO: bug 625654
-      todo_isnot(activeTab, originalTabItem, "But it's not what it was a moment ago.");
+      isnot(activeTab, originalTabItem, "But it's not what it was a moment ago.");
       let someChildIsActive = group.getChildren().some(function(child)
                               child == activeTab);
-      todo(someChildIsActive, "Now one of the children in the group is active.");
+      ok(someChildIsActive, "Now one of the children in the group is active.");
             
       // now activate Panorama...
       win.addEventListener("tabviewhidden", stage3hidden, false);
@@ -194,12 +193,11 @@ function onTabViewWindowLoaded(win) {
     let stage3hidden = function() {
       win.removeEventListener("tabviewhidden", stage3hidden, false);
       
-      // TODO: bug 625654
-      todo_isnot(win.gBrowser.selectedTab, originalTab, "We did not enter the original tab.");
+      isnot(win.gBrowser.selectedTab, originalTab, "We did not enter the original tab.");
 
       let someChildIsSelected = group.getChildren().some(function(child)
                                   child.tab == win.gBrowser.selectedTab);
-      todo(someChildIsSelected, "Instead we're in one of the stack's children.");
+      ok(someChildIsSelected, "Instead we're in one of the stack's children.");
       
       win.addEventListener("tabviewshown", stage3shown, false);
       win.TabView.toggle();
@@ -208,11 +206,9 @@ function onTabViewWindowLoaded(win) {
     let stage3shown = function() {
       win.removeEventListener("tabviewshown", stage3shown, false);
   
-      // TODO: bug 625654
       let overlay = contentWindow.document.getElementById("expandedTray");
-      todo(!group.expanded, "The group is no longer expanded.");
-      todo(!overlay, "The expanded tray should be gone after looking at another tab.");
-      todo_isnot(expander[0].style.display, "none", "The expander is visible!");
+      ok(!group.expanded, "The group is no longer expanded.");
+      isnot(expander[0].style.display, "none", "The expander is visible!");
 
       win.close();
       finish();

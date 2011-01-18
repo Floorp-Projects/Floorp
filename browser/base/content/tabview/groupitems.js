@@ -1289,6 +1289,9 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     var self = this;
     // ___ we're stacked, and command is held down so expand
     GroupItems.setActiveGroupItem(self);
+    let activeTab = this.topChild || this.getChildren()[0];
+    UI.setActiveTab(activeTab);
+    
     var startBounds = this.getChild(0).getBounds();
     var $tray = iQ("<div>").css({
       top: startBounds.top,
