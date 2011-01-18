@@ -1135,35 +1135,23 @@ History::InsertPlace(const VisitData& aPlace)
 nsresult
 History::UpdatePlace(const VisitData& aPlace)
 {
-  NS_PRECONDITION(!NS_IsMainThread(), "must be called off of the main thread!");
   NS_PRECONDITION(aPlace.placeId > 0, "must have a valid place id!");
-  NS_PRECONDITION(!aPlace.guid.IsVoid(), "must have a guid!");
+  NS_PRECONDITION(!NS_IsMainThread(), "must be called off of the main thread!");
 
   nsCOMPtr<mozIStorageStatement> stmt = syncStatements.GetCachedStatement(
       "UPDATE moz_places "
-      "SET title = :title, "
-          "hidden = :hidden, "
-          "typed = :typed, "
-          "guid = :guid "
+      "SET hidden = :hidden, typed = :typed "
       "WHERE id = :page_id "
     );
   NS_ENSURE_STATE(stmt);
   mozStorageStatementScoper scoper(stmt);
 
-  nsresult rv;
-  if (!aPlace.title.IsVoid()) {
-    rv = stmt->BindStringByName(NS_LITERAL_CSTRING("title"),
-                                StringHead(aPlace.title, TITLE_LENGTH_MAX));
-  }
+  nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"),
+                                      aPlace.placeId);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("typed"), aPlace.typed);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("hidden"), aPlace.hidden);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("guid"), aPlace.guid);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"),
-                             aPlace.placeId);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = stmt->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1178,7 +1166,7 @@ History::FetchPageInfo(VisitData& _place)
   NS_PRECONDITION(!NS_IsMainThread(), "must be called off of the main thread!");
 
   nsCOMPtr<mozIStorageStatement> stmt = syncStatements.GetCachedStatement(
-      "SELECT id, title, hidden, typed, guid "
+      "SELECT id, typed, hidden, title "
       "FROM moz_places "
       "WHERE url = :page_url "
     );
@@ -1199,8 +1187,12 @@ History::FetchPageInfo(VisitData& _place)
   rv = stmt->GetInt64(0, &_place.placeId);
   NS_ENSURE_SUCCESS(rv, false);
 
-  if (_place.title.IsVoid()) {
-    rv = stmt->GetString(1, _place.title);
+  if (!_place.typed) {
+    // If this transition wasn't typed, others might have been. If database
+    // has location as typed, reflect that in our data structure.
+    PRInt32 typed;
+    rv = stmt->GetInt32(1, &typed);
+    _place.typed = !!typed;
     NS_ENSURE_SUCCESS(rv, true);
   }
 
@@ -1214,19 +1206,8 @@ History::FetchPageInfo(VisitData& _place)
     NS_ENSURE_SUCCESS(rv, true);
   }
 
-  if (!_place.typed) {
-    // If this transition wasn't typed, others might have been. If database
-    // has location as typed, reflect that in our data structure.
-    PRInt32 typed;
-    rv = stmt->GetInt32(3, &typed);
-    _place.typed = !!typed;
-    NS_ENSURE_SUCCESS(rv, true);
-  }
-
-  if (_place.guid.IsVoid()) {
-    rv = stmt->GetUTF8String(4, _place.guid);
-    NS_ENSURE_SUCCESS(rv, true);
-  }
+  rv = stmt->GetString(3, _place.title);
+  NS_ENSURE_SUCCESS(rv, true);
 
   return true;
 }
