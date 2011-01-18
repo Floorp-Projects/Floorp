@@ -638,7 +638,7 @@ JSRuntime::init(uint32 maxbytes)
     }
 #endif
 
-    if (!(atomsCompartment = new JSCompartment(this)) ||
+    if (!(atomsCompartment = js_new<JSCompartment>(this)) ||
         !atomsCompartment->init() ||
         !compartments.append(atomsCompartment)) {
         return false;
@@ -1161,11 +1161,11 @@ JS_EnterCrossCompartmentCall(JSContext *cx, JSObject *target)
     CHECK_REQUEST(cx);
 
     JS_ASSERT(target);
-    AutoCompartment *call = new AutoCompartment(cx, target);
+    AutoCompartment *call = js_new<AutoCompartment>(cx, target);
     if (!call)
         return NULL;
     if (!call->enter()) {
-        delete call;
+        js_delete(call);
         return NULL;
     }
     return reinterpret_cast<JSCrossCompartmentCall *>(call);
@@ -1193,7 +1193,7 @@ JS_LeaveCrossCompartmentCall(JSCrossCompartmentCall *call)
     AutoCompartment *realcall = reinterpret_cast<AutoCompartment *>(call);
     CHECK_REQUEST(realcall->context);
     realcall->leave();
-    delete realcall;
+    js_delete(realcall);
 }
 
 bool

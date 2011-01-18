@@ -2240,6 +2240,9 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
     guardedShapeTable(cx),
     initDepth(0),
     hadNewInit(false),
+#ifdef DEBUG
+    addPropShapeBefore(NULL),
+#endif
     rval_ins(NULL),
     native_rval_ins(NULL),
     newobj_ins(NULL),
@@ -2439,12 +2442,14 @@ TraceRecorder::finishSuccessfully()
     AUDIT(traceCompleted);
     mark.commit();
 
-    /* Grab local copies of members needed after |delete this|. */
+    /* Grab local copies of members needed after destruction of |this|. */
     JSContext* localcx = cx;
     TraceMonitor* localtm = traceMonitor;
 
     localtm->recorder = NULL;
-    delete this;
+    /* We can't (easily) use js_delete() here because the constructor is private. */
+    this->~TraceRecorder();
+    js_free(this);
 
     /* Catch OOM that occurred during recording. */
     if (localtm->outOfMemory() || OverfullJITCache(localcx, localtm)) {
@@ -2492,12 +2497,16 @@ TraceRecorder::finishAbort(const char* reason)
         fragment->root->sideExits.setLength(numSideExitsBefore);
     }
 
-    /* Grab local copies of members needed after |delete this|. */
+    /* Grab local copies of members needed after destruction of |this|. */
     JSContext* localcx = cx;
     TraceMonitor* localtm = traceMonitor;
 
     localtm->recorder = NULL;
-    delete this;
+    /* We can't (easily) use js_delete() here because the constructor is private. */
+    this->~TraceRecorder();
+    js_free(this);
+
+    /* Catch OOM that occurred during recording. */
     if (localtm->outOfMemory() || OverfullJITCache(localcx, localtm)) {
         ResetJIT(localcx, FR_OOM);
         return JIT_RESET;
@@ -5564,9 +5573,13 @@ TraceRecorder::startRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* f,
     JS_ASSERT(!tm->needFlush);
     JS_ASSERT_IF(cx->fp()->hasImacropc(), f->root != f);
 
-    tm->recorder = new TraceRecorder(cx, anchor, f, stackSlots, ngslots, typeMap,
-                                     expectedInnerExit, outerScript, outerPC, outerArgc,
-                                     speculate);
+    /* We can't (easily) use js_new() here because the constructor is private. */
+    void *memory = js_malloc(sizeof(TraceRecorder));
+    tm->recorder = memory
+                 ? new(memory) TraceRecorder(cx, anchor, f, stackSlots, ngslots, typeMap,
+                                             expectedInnerExit, outerScript, outerPC, outerArgc,
+                                             speculate)
+                 : NULL;
 
     if (!tm->recorder || tm->outOfMemory() || OverfullJITCache(cx, tm)) {
         ResetJIT(cx, FR_OOM);
@@ -7619,7 +7632,8 @@ InitJIT(TraceMonitor *tm)
     }
     /* Set up fragprofiling, if required. */
     if (LogController.lcbits & LC_FragProfile) {
-        tm->profAlloc = new VMAllocator();
+        tm->profAlloc = js_new<VMAllocator>();
+        JS_ASSERT(tm->profAlloc);
         tm->profTab = new (*tm->profAlloc) FragStatsMap(*tm->profAlloc);
     }
     tm->lastFragID = 0;
@@ -7653,27 +7667,30 @@ InitJIT(TraceMonitor *tm)
         did_we_check_processor_features = true;
     }
 
-    tm->oracle = new Oracle();
+    #define CHECK_ALLOC(lhs, rhs) \
+        do { lhs = (rhs); if (!lhs) return false; } while (0)
+
+    CHECK_ALLOC(tm->oracle, js_new<Oracle>());
 
     tm->profile = NULL;
     
-    tm->recordAttempts = new RecordAttemptMap;
+    CHECK_ALLOC(tm->recordAttempts, js_new<RecordAttemptMap>());
     if (!tm->recordAttempts->init(PC_HASH_COUNT))
-        abort();
+        return false;
 
-    tm->loopProfiles = new LoopProfileMap;
+    CHECK_ALLOC(tm->loopProfiles, js_new<LoopProfileMap>());
     if (!tm->loopProfiles->init(PC_HASH_COUNT))
-        abort();
+        return false;
 
     tm->flushEpoch = 0;
     
-    tm->dataAlloc = new VMAllocator();
-    tm->traceAlloc = new VMAllocator();
-    tm->tempAlloc = new VMAllocator();
-    tm->codeAlloc = new CodeAlloc();
-    tm->frameCache = new FrameInfoCache(tm->dataAlloc);
-    tm->storage = new TraceNativeStorage();
-    tm->cachedTempTypeMap = new TypeMap(0);
+    CHECK_ALLOC(tm->dataAlloc, js_new<VMAllocator>());
+    CHECK_ALLOC(tm->traceAlloc, js_new<VMAllocator>());
+    CHECK_ALLOC(tm->tempAlloc, js_new<VMAllocator>());
+    CHECK_ALLOC(tm->codeAlloc, js_new<CodeAlloc>());
+    CHECK_ALLOC(tm->frameCache, js_new<FrameInfoCache>(tm->dataAlloc));
+    CHECK_ALLOC(tm->storage, js_new<TraceNativeStorage>());
+    CHECK_ALLOC(tm->cachedTempTypeMap, js_new<TypeMap>((Allocator*)NULL));
     tm->flush();
     verbose_only( tm->branches = NULL; )
 
@@ -7747,9 +7764,9 @@ FinishJIT(TraceMonitor *tm)
     }
 #endif
 
-    delete tm->recordAttempts;
-    delete tm->loopProfiles;
-    delete tm->oracle;
+    js_delete(tm->recordAttempts);
+    js_delete(tm->loopProfiles);
+    js_delete(tm->oracle);
 
 #ifdef DEBUG
     // Recover profiling data from expiring Fragments, and display
@@ -7772,7 +7789,7 @@ FinishJIT(TraceMonitor *tm)
         }
 
         FragProfiling_showResults(tm);
-        delete tm->profAlloc;
+        js_delete(tm->profAlloc);
 
     } else {
         NanoAssert(!tm->profTab);
@@ -7782,37 +7799,25 @@ FinishJIT(TraceMonitor *tm)
 
     PodArrayZero(tm->vmfragments);
 
-    if (tm->frameCache) {
-        delete tm->frameCache;
-        tm->frameCache = NULL;
-    }
+    js_delete(tm->frameCache);
+    tm->frameCache = NULL;
 
-    if (tm->codeAlloc) {
-        delete tm->codeAlloc;
-        tm->codeAlloc = NULL;
-    }
+    js_delete(tm->codeAlloc);
+    tm->codeAlloc = NULL;
 
-    if (tm->dataAlloc) {
-        delete tm->dataAlloc;
-        tm->dataAlloc = NULL;
-    }
+    js_delete(tm->dataAlloc);
+    tm->dataAlloc = NULL;
 
-    if (tm->traceAlloc) {
-        delete tm->traceAlloc;
-        tm->traceAlloc = NULL;
-    }
+    js_delete(tm->traceAlloc);
+    tm->traceAlloc = NULL;
 
-    if (tm->tempAlloc) {
-        delete tm->tempAlloc;
-        tm->tempAlloc = NULL;
-    }
+    js_delete(tm->tempAlloc);
+    tm->tempAlloc = NULL;
 
-    if (tm->storage) {
-        delete tm->storage;
-        tm->storage = NULL;
-    }
+    js_delete(tm->storage);
+    tm->storage = NULL;
 
-    delete tm->cachedTempTypeMap;
+    js_delete(tm->cachedTempTypeMap);
     tm->cachedTempTypeMap = NULL;
 }
 

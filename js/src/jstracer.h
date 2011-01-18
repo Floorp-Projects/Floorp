@@ -1575,9 +1575,6 @@ class TraceRecorder
 # include "jsopcode.tbl"
 #undef OPDEF
 
-    inline void* operator new(size_t size) { return js_calloc(size); }
-    inline void operator delete(void *p) { js_free(p); }
-
     JS_REQUIRES_STACK
     TraceRecorder(JSContext* cx, VMSideExit*, VMFragment*,
                   unsigned stackSlots, unsigned ngslots, JSValueType* typeMap,
