@@ -1950,6 +1950,10 @@ let GroupItems = {
     if (groupItem == this._activeGroupItem)
       this._activeGroupItem = null;
 
+    this._arrangesPending = this._arrangesPending.filter(function (pending) {
+      return groupItem != pending.groupItem;
+    });
+
     UI.updateTabButton();
   },
 
