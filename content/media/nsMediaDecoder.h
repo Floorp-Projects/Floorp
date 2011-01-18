@@ -286,6 +286,11 @@ public:
   // to buffer, given the current download and playback rates.
   PRBool CanPlayThrough();
 
+  // Called by the nsMediaStream when a read on the stream by the decoder
+  // is about to block due to insuffient data. Decoders may want to pause
+  // playback and go into buffering mode when this is called.
+  virtual void NotifyDataExhausted() = 0;
+
 protected:
 
   // Start timer to update download progress information.

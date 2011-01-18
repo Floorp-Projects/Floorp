@@ -901,7 +901,23 @@ PRBool nsBuiltinDecoderStateMachine::IsDecodeCloseToDownload()
   double threshold = (bufferTarget > 0 && length != -1) ?
     (length / (bufferTarget)) : LIVE_BUFFER_MARGIN;
   return (downloadPos - decodePos) < threshold;
-}        
+}
+
+void nsBuiltinDecoderStateMachine::NotifyDataExhausted()
+{
+  MonitorAutoEnter mon(mDecoder->GetMonitor());
+  nsMediaStream* stream = mDecoder->GetCurrentStream();
+  NS_ASSERTION(!stream->IsDataCachedToEndOfStream(mDecoder->mDecoderPosition),
+               "We shouldn't be notified in this case!");
+  if (mDecoder->GetState() == nsBuiltinDecoder::PLAY_STATE_PLAYING &&
+      mState == DECODER_STATE_DECODING &&
+      !stream->IsSuspended())
+  {
+    // Our decode has caught up with the download. Let's buffer to make sure
+    // we can play a decent amount of video in the future.
+    StartBuffering();
+  }
+}
 
 nsresult nsBuiltinDecoderStateMachine::Run()
 {
@@ -991,17 +1007,6 @@ nsresult nsBuiltinDecoderStateMachine::Run()
 
         if (mState != DECODER_STATE_DECODING)
           continue;
-
-        if (IsDecodeCloseToDownload() &&
-            mDecoder->GetState() == nsBuiltinDecoder::PLAY_STATE_PLAYING &&
-            !stream->IsDataCachedToEndOfStream(mDecoder->mDecoderPosition) &&
-            !stream->IsSuspended())
-        {
-          // We're low on decoded data, and/or our decode has caught up with
-          // the download. Let's buffer to make sure we can play a decent
-          // amount of video in the future.
-          StartBuffering();
-        }
       }
       break;
 
@@ -1107,6 +1112,11 @@ nsresult nsBuiltinDecoderStateMachine::Run()
 
     case DECODER_STATE_BUFFERING:
       {
+        if (IsPlaying()) {
+          StopPlayback(AUDIO_PAUSE);
+          mDecoder->GetMonitor().NotifyAll();
+        }
+
         TimeStamp now = TimeStamp::Now();
         if (mBufferingEndOffset == -1) {
           // This is the first time we've entered the buffering state.
@@ -1479,10 +1489,6 @@ void nsBuiltinDecoderStateMachine::LoadMetadata()
 void nsBuiltinDecoderStateMachine::StartBuffering()
 {
   mDecoder->GetMonitor().AssertCurrentThreadIn();
-  if (IsPlaying()) {
-    StopPlayback(AUDIO_PAUSE);
-    mDecoder->GetMonitor().NotifyAll();
-  }
 
   // We need to tell the element that buffering has started.
   // We can't just directly send an asynchronous runnable that

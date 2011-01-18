@@ -244,6 +244,7 @@ class nsWaveDecoder : public nsMediaDecoder
 
   virtual void NotifyDataArrived(const char* aBuffer, PRUint32 aLength, PRUint32 aOffset) {}
 
+  void NotifyDataExhausted() {}
 private:
   // Notifies the element that seeking has started.
   void SeekingStarted();
