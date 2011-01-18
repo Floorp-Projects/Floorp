@@ -1502,12 +1502,15 @@
       <method name="contentHasChanged">
         <body><![CDATA[
           let height = Math.floor(this.getBoundingClientRect().height);
+          let oldHeight = parseInt(this._spacer.getAttribute("height"));
           this.top = window.innerHeight - height;
           this._spacer.setAttribute("height", height);
 
-          let event = document.createEvent("Events");
-          event.initEvent("SizeChanged", true, false);
-          this.dispatchEvent(event);
+          if (height != oldHeight) {
+            let event = document.createEvent("Events");
+            event.initEvent("SizeChanged", true, false);
+            this.dispatchEvent(event);
+          }
         ]]></body>
       </method>
 
