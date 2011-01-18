@@ -1,0 +1,20 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script>
+<![CDATA[
+
+function boom()
+{
+  document.getElementById("i").selectionEnd;
+  document.getElementById("a").appendChild(document.getElementById("b"));
+}
+
+]]>
+</script>
+</head>
+<body onload="boom();">
+
+<mrow xmlns="http://www.w3.org/1998/Math/MathML" id="a"><mrow id="b"/><input xmlns="http://www.w3.org/1999/xhtml" id="i" /></mrow>
+
+</body>
+</html>
