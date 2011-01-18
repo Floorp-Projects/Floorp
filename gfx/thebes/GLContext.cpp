@@ -599,7 +599,7 @@ BasicTextureImage::BeginUpdate(nsIntRegion& aRegion)
     return mUpdateSurface;
 }
 
-PRBool
+void
 BasicTextureImage::EndUpdate()
 {
     NS_ASSERTION(!!mUpdateSurface, "EndUpdate() without BeginUpdate()?");
@@ -623,8 +623,6 @@ BasicTextureImage::EndUpdate()
 
     mUpdateSurface = nsnull;
     mTextureInited = PR_TRUE;
-
-    return PR_TRUE;         // mTexture is bound
 }
 
 already_AddRefed<gfxASurface>

@@ -219,6 +219,14 @@ public:
   YCbCrTextureLayerProgram *GetYCbCrLayerProgram() {
     return static_cast<YCbCrTextureLayerProgram*>(mPrograms[gl::YCbCrLayerProgramType]);
   }
+  ComponentAlphaTextureLayerProgram *GetComponentAlphaPass1LayerProgram() {
+    return static_cast<ComponentAlphaTextureLayerProgram*>
+             (mPrograms[gl::ComponentAlphaPass1ProgramType]);
+  }
+  ComponentAlphaTextureLayerProgram *GetComponentAlphaPass2LayerProgram() {
+    return static_cast<ComponentAlphaTextureLayerProgram*>
+             (mPrograms[gl::ComponentAlphaPass2ProgramType]);
+  }
   CopyProgram *GetCopy2DProgram() {
     return static_cast<CopyProgram*>(mPrograms[gl::Copy2DProgramType]);
   }
@@ -266,13 +274,27 @@ public:
 
   GLenum FBOTextureTarget() { return mFBOTextureTarget; }
 
+  /**
+   * Controls how to initialize the texture / FBO created by
+   * CreateFBOWithTexture.
+   *  - InitModeNone: No initialization, contents are undefined.
+   *  - InitModeClear: Clears the FBO.
+   *  - InitModeCopy: Copies the contents of the current glReadBuffer into the
+   *    texture.
+   */
+  enum InitMode {
+    InitModeNone,
+    InitModeClear,
+    InitModeCopy
+  };
+
   /* Create a FBO backed by a texture; will leave the FBO
    * bound.  Note that the texture target type will be
    * of the type returned by FBOTextureTarget; different
    * shaders are required to sample from the different
    * texture types.
    */
-  void CreateFBOWithTexture(int aWidth, int aHeight,
+  void CreateFBOWithTexture(const nsIntRect& aRect, InitMode aInit,
                             GLuint *aFBO, GLuint *aTexture);
 
   GLuint QuadVBO() { return mQuadVBO; }

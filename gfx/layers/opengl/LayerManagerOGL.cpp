@@ -244,6 +244,10 @@ LayerManagerOGL::Initialize(GLContext *aExistingContext)
                  sLayerVS, sSolidColorLayerFS);
   SHADER_PROGRAM(YCbCrLayerProgramType, YCbCrTextureLayerProgram,
                  sLayerVS, sYCbCrTextureLayerFS);
+  SHADER_PROGRAM(ComponentAlphaPass1ProgramType, ComponentAlphaTextureLayerProgram,
+                 sLayerVS, sComponentPass1FS);
+  SHADER_PROGRAM(ComponentAlphaPass2ProgramType, ComponentAlphaTextureLayerProgram,
+                 sLayerVS, sComponentPass2FS);
   /* Copy programs (used for final framebuffer blit) */
   SHADER_PROGRAM(Copy2DProgramType, CopyProgram,
                  sCopyVS, sCopy2DFS);
@@ -869,7 +873,9 @@ LayerManagerOGL::ProgramType LayerManagerOGL::sLayerProgramTypes[] = {
   gl::BGRXLayerProgramType,
   gl::RGBARectLayerProgramType,
   gl::ColorLayerProgramType,
-  gl::YCbCrLayerProgramType
+  gl::YCbCrLayerProgramType,
+  gl::ComponentAlphaPass1ProgramType,
+  gl::ComponentAlphaPass2ProgramType
 };
 
 #define FOR_EACH_LAYER_PROGRAM(vname)                       \
@@ -895,7 +901,7 @@ LayerManagerOGL::SetLayerProgramProjectionMatrix(const gfx3DMatrix& aMatrix)
 }
 
 void
-LayerManagerOGL::CreateFBOWithTexture(int aWidth, int aHeight,
+LayerManagerOGL::CreateFBOWithTexture(const nsIntRect& aRect, InitMode aInit,
                                       GLuint *aFBO, GLuint *aTexture)
 {
   GLuint tex, fbo;
@@ -903,14 +909,23 @@ LayerManagerOGL::CreateFBOWithTexture(int aWidth, int aHeight,
   mGLContext->fActiveTexture(LOCAL_GL_TEXTURE0);
   mGLContext->fGenTextures(1, &tex);
   mGLContext->fBindTexture(mFBOTextureTarget, tex);
-  mGLContext->fTexImage2D(mFBOTextureTarget,
-                          0,
-                          LOCAL_GL_RGBA,
-                          aWidth, aHeight,
-                          0,
-                          LOCAL_GL_RGBA,
-                          LOCAL_GL_UNSIGNED_BYTE,
-                          NULL);
+  if (aInit == InitModeCopy) {
+    mGLContext->fCopyTexImage2D(mFBOTextureTarget,
+                                0,
+                                LOCAL_GL_RGBA,
+                                aRect.x, aRect.y,
+                                aRect.width, aRect.height,
+                                0);
+  } else {
+    mGLContext->fTexImage2D(mFBOTextureTarget,
+                            0,
+                            LOCAL_GL_RGBA,
+                            aRect.width, aRect.height,
+                            0,
+                            LOCAL_GL_RGBA,
+                            LOCAL_GL_UNSIGNED_BYTE,
+                            NULL);
+  }
   mGLContext->fTexParameteri(mFBOTextureTarget, LOCAL_GL_TEXTURE_MIN_FILTER,
                              LOCAL_GL_LINEAR);
   mGLContext->fTexParameteri(mFBOTextureTarget, LOCAL_GL_TEXTURE_MAG_FILTER,
@@ -927,6 +942,11 @@ LayerManagerOGL::CreateFBOWithTexture(int aWidth, int aHeight,
 
   NS_ASSERTION(mGLContext->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER) ==
                LOCAL_GL_FRAMEBUFFER_COMPLETE, "Error setting up framebuffer.");
+
+  if (aInit == InitModeClear) {
+    mGLContext->fClearColor(0.0, 0.0, 0.0, 0.0);
+    mGLContext->fClear(LOCAL_GL_COLOR_BUFFER_BIT);
+  }
 
   *aFBO = fbo;
   *aTexture = tex;
