@@ -319,7 +319,7 @@ protected:
     PRBool mTextureInited;
     GLContext* mGLContext;
     nsRefPtr<gfxContext> mUpdateContext;
-    nsIntRect mUpdateRect;
+    nsIntRegion mUpdateRegion;
 
     // The offset into the update surface at which the update rect is located.
     nsIntPoint mUpdateOffset;
@@ -759,20 +759,21 @@ public:
      * or aOverwrite is true.
      *
      * \param aSurface Surface to upload. 
-     * \param aSrcRect Region of aSurface to upload.
+     * \param aDstRegion Region of texture to upload to.
      * \param aTexture Texture to use, or 0 to have one created for you.
      * \param aOverwrite Over an existing texture with a new one.
-     * \param aDstPoint Offset into existing texture to upload contents.
+     * \param aSrcPoint Offset into aSrc where the region's bound's 
+     *  TopLeft() sits.
      * \param aPixelBuffer Pass true to upload texture data with an
      *  offset from the base data (generally for pixel buffer objects), 
      *  otherwise textures are upload with an absolute pointer to the data.
      * \return Shader program needed to render this texture.
      */
     ShaderProgramType UploadSurfaceToTexture(gfxASurface *aSurface, 
-                                             const nsIntRect& aSrcRect,
+                                             const nsIntRegion& aDstRegion,
                                              GLuint& aTexture,
                                              bool aOverwrite = false,
-                                             const nsIntPoint& aDstPoint = nsIntPoint(0, 0),
+                                             const nsIntPoint& aSrcPoint = nsIntPoint(0, 0),
                                              bool aPixelBuffer = PR_FALSE);
 
 #ifndef MOZ_ENABLE_LIBXUL
