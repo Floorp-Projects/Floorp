@@ -58,7 +58,10 @@
 using namespace std;
 
 #define PLUGIN_NAME        "Test Plug-in"
-#define PLUGIN_DESCRIPTION "Plug-in for testing purposes."
+#define PLUGIN_DESCRIPTION "Plug-in for testing purposes.\xE2\x84\xA2 "          \
+    "(\xe0\xa4\xb9\xe0\xa4\xbf\xe0\xa4\xa8\xe0\xa5\x8d\xe0\xa4\xa6\xe0\xa5\x80 " \
+    "\xe4\xb8\xad\xe6\x96\x87 "                                                  \
+    "\xd8\xa7\xd9\x84\xd8\xb9\xd8\xb1\xd8\xa8\xd9\x8a\xd8\xa9)"
 #define PLUGIN_VERSION     "1.0.0.0"
 
 #define ARRAY_LENGTH(a) (sizeof(a)/sizeof(a[0]))
