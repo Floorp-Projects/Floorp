@@ -79,7 +79,7 @@ const AnimatedZoom = {
   getStartRect: function getStartRect() {
     let browser = getBrowser();
     let bcr = browser.getBoundingClientRect();
-    let scroll = browser.getPosition();
+    let scroll = browser.getRootView().getPosition();
     return new Rect(scroll.x, scroll.y, bcr.width, bcr.height);
   },
 
@@ -92,8 +92,10 @@ const AnimatedZoom = {
     // There is some bug that I have not yet discovered that make browser.scrollTo
     // not behave correctly and there is no intelligence in browser.scale to keep
     // the actual resolution changes small.
-    getBrowser()._contentViewManager.rootContentView.setScale(zoomLevel, zoomLevel);
-    getBrowser()._contentViewManager.rootContentView.scrollTo(nextRect.left * zoomRatio, nextRect.top * zoomRatio);
+    // * One bug is related to setting scale. See bug 626792.
+    let contentView = getBrowser()._contentViewManager.rootContentView;
+    contentView.setScale(zoomLevel, zoomLevel);
+    contentView.scrollTo(nextRect.left * zoomRatio, nextRect.top * zoomRatio);
     this.zoomRect = nextRect;
   },
 

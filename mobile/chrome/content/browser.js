@@ -212,15 +212,18 @@ var Browser = {
     this.contentScrollbox = Elements.browsers;
     this.contentScrollboxScroller = {
       scrollBy: function(aDx, aDy) {
-        getBrowser().scrollBy(aDx, aDy);
+        let view = getBrowser().getRootView();
+        view.scrollBy(aDx, aDy);
       },
 
       scrollTo: function(aX, aY) {
-        getBrowser().scrollTo(aX, aY);
+        let view = getBrowser().getRootView();
+        view.scrollTo(aX, aY);
       },
 
       getPosition: function(aScrollX, aScrollY) {
-        let scroll = getBrowser().getPosition();
+        let view = getBrowser().getRootView();
+        let scroll = view.getPosition();
         aScrollX.value = scroll.x;
         aScrollY.value = scroll.y;
       }
@@ -1027,8 +1030,13 @@ var Browser = {
     this.hideSidebars();
     this.hideTitlebar();
 
+    // XXX see AnimatedZoom.updateTo for why we use _contentView.
     browser.scale = this.selectedTab.clampZoomLevel(zoomLevel);
-    browser.scrollTo(scrollX, scrollY);
+    let view = browser.getRootView();
+    if (view._contentView) {
+      view._contentView.scrollTo(scrollX, scrollY);
+      view._updateCacheViewport();
+    }
   },
 
   zoomToPoint: function zoomToPoint(cX, cY, aRect) {
@@ -1159,6 +1167,9 @@ Browser.MainDragger.prototype = {
   },
 
   dragStart: function dragStart(clientX, clientY, target, scroller) {
+    let browser = getBrowser();
+    let bcr = browser.getBoundingClientRect();
+    this._contentView = browser.getViewsAt(clientX - bcr.left, clientY - bcr.top);
   },
 
   dragStop: function dragStop(dx, dy, scroller) {
@@ -1169,11 +1180,17 @@ Browser.MainDragger.prototype = {
   dragMove: function dragMove(dx, dy, scroller) {
     let doffset = new Point(dx, dy);
 
+    if (!this._contentView.isRoot()) {
+      this._panContentView(this._contentView, doffset);
+      // XXX we may need to have "escape borders" for iframe panning
+      // XXX does not deal with scrollables within scrollables
+    }
+
     // First calculate any panning to take sidebars out of view
     let panOffset = this._panControlsAwayOffset(doffset);
 
     // Do content panning
-    this._panScroller(Browser.contentScrollboxScroller, doffset);
+    this._panContentView(getBrowser().getRootView(), doffset);
 
     // Any leftover panning in doffset would bring controls into view. Add to sidebar
     // away panning for the total scroll offset.
@@ -1238,6 +1255,14 @@ Browser.MainDragger.prototype = {
 
     doffset.subtract(x, y);
     return new Point(x, y);
+  },
+
+  /** Pan scroller by the given amount. Updates doffset with leftovers. */
+  _panContentView: function _panContentView(contentView, doffset) {
+    let pos0 = contentView.getPosition();
+    contentView.scrollBy(doffset.x, doffset.y);
+    let pos1 = contentView.getPosition();
+    doffset.subtract(pos1.x - pos0.x, pos1.y - pos0.y);
   },
 
   /** Pan scroller by the given amount. Updates doffset with leftovers. */
@@ -2499,7 +2524,8 @@ Tab.prototype = {
 
   restoreViewportPosition: function restoreViewportPosition(aOldWidth, aNewWidth) {
     let browser = this._browser;
-    let pos = browser.getPosition();
+    let view = browser.getRootView();
+    let pos = view.getPosition();
 
     // zoom to keep the same portion of the document visible
     let oldScale = browser.scale;
@@ -2508,7 +2534,7 @@ Tab.prototype = {
 
     // ...and keep the same top-left corner of the visible rect
     let scaleRatio = newScale / oldScale;
-    browser.scrollTo(pos.x * scaleRatio, pos.y * scaleRatio);
+    view.scrollTo(pos.x * scaleRatio, pos.y * scaleRatio);
   },
 
   startLoading: function startLoading() {

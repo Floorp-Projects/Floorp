@@ -37,10 +37,24 @@
 
 #filter substitution
 
-// for browser.xml binding
-pref("toolkit.browser.cachePixelX", 580);
-pref("toolkit.browser.cachePixelY", 1000);
-pref("toolkit.browser.recacheRatio", 60);
+// For browser.xml binding
+//
+// cacheRatio* is a ratio that determines the amount of pixels to cache. The
+// ratio is multiplied by the viewport width or height to get the displayport's
+// width or height, respectively.
+//
+// (divide integer value by 1000 to get the ratio)
+//
+// For instance: cachePercentageWidth is 1500
+//               viewport height is 500
+//               => display port height will be 500 * 1.5 = 750
+//
+pref("toolkit.browser.cacheRatioWidth", 1100);
+pref("toolkit.browser.cacheRatioHeight", 2000);
+
+// How long before a content view (a handle to a remote scrollable object)
+// expires.
+pref("toolkit.browser.contentViewExpire", 3000);
 
 pref("toolkit.defaultChromeURI", "chrome://browser/content/browser.xul");
 pref("general.useragent.compatMode.firefox", true);
