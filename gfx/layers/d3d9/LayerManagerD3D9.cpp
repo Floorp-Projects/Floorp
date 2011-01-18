@@ -70,6 +70,7 @@ LayerManagerD3D9::Initialize()
 {
   nsCOMPtr<nsIPrefBranch2> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
 
+  /* XXX: this preference and blacklist code should move out of the layer manager */
   PRBool forceAccelerate = PR_FALSE;
   if (prefs) {
     // we should use AddBoolPrefVarCache
