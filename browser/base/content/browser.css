@@ -480,6 +480,9 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
   -moz-user-focus: normal;
 }
 
+/* We use the iconBox as the notification anchor when a popup notification is
+   created with a null anchorID, so in that case use a default anchor icon. */
+#notification-popup-box[anchorid="notification-popup-box"] > #default-notification-icon,
 #notification-popup-box[anchorid="geo-notification-icon"] > #geo-notification-icon,
 #notification-popup-box[anchorid="indexedDB-notification-icon"] > #indexedDB-notification-icon,
 #notification-popup-box[anchorid="addons-notification-icon"] > #addons-notification-icon,

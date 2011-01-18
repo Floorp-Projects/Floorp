@@ -1201,6 +1201,10 @@ toolbar[iconsize="small"] #feed-button {
   outline: 1px dotted -moz-DialogText;
 }
 
+#default-notification-icon {
+  list-style-image: url(chrome://global/skin/icons/information-16.png);
+}
+
 #geo-notification-icon {
   list-style-image: url(chrome://browser/skin/Geolocation-16.png);
 }

@@ -2067,6 +2067,10 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
               0 0 3px 2px -moz-mac-focusring;
 }
 
+#default-notification-icon {
+  list-style-image: url(chrome://global/skin/icons/information-16.png);
+}
+
 #geo-notification-icon {
   list-style-image: url(chrome://browser/skin/Geolocation-16.png);
 }

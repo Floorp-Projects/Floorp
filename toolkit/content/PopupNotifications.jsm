@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Gavin Sharp <gavin@gavinsharp.com> (Original Author)
+ *   Margaret Leibovic <margaret.leibovic@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -417,6 +418,13 @@ PopupNotifications.prototype = {
     // it first.  Otherwise it can appear in the wrong spot.  (_hidePanel is
     // safe to call even if the panel is already hidden.)
     this._hidePanel();
+
+    // If the anchor element is hidden, use the tab as the anchor. We only ever
+    // show notifications for the current browser, so we can just use the
+    // current tab.
+    let bo = anchorElement.boxObject;
+    if (bo.height == 0 && bo.width == 0)
+      anchorElement = this.tabbrowser.selectedTab;
 
     this._currentAnchorElement = anchorElement;
 
