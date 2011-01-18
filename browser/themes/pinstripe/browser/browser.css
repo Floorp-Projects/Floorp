@@ -288,6 +288,22 @@ toolbarbutton.bookmark-item > menupopup {
   background-origin: border-box;
 }
 
+.toolbarbutton-1:not([type="menu-button"]):-moz-lwtheme,
+.toolbarbutton-1 > .toolbarbutton-menubutton-button:-moz-lwtheme,
+.toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker:-moz-lwtheme,
+#restore-button:-moz-lwtheme {
+  border-color: rgba(0, 0, 0, 0.4);
+  background-image: -moz-linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.2));
+  box-shadow: inset 0 1px rgba(255,255,255,0.3), 0 1px rgba(255,255,255,0.2);
+}
+
+.toolbarbutton-1:not([type="menu-button"]):-moz-lwtheme-darktext,
+.toolbarbutton-1 > .toolbarbutton-menubutton-button:-moz-lwtheme-darktext,
+.toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker:-moz-lwtheme-darktext,
+#restore-button:-moz-lwtheme-darktext {
+  background-image: -moz-linear-gradient(rgba(255,255,255,0.3), rgba(50,50,50,0.2) 50%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.13));
+}
+
 .toolbarbutton-1 > .toolbarbutton-menubutton-button,
 .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
   margin: 0;
@@ -376,30 +392,50 @@ toolbar:not([mode="icons"]) .toolbarbutton-1:not([open="true"]) > .toolbarbutton
   margin: 2px 0 0;
 }
 
-toolbar[mode="icons"] .toolbarbutton-1:not([type="menu-button"]):not([disabled="true"]):active:hover,
-toolbar[mode="icons"] .toolbarbutton-1:not([type="menu-button"])[open="true"],
-toolbar[mode="icons"] .toolbarbutton-1:not([disabled="true"]) > .toolbarbutton-menubutton-button:active:hover,
-toolbar[mode="icons"] .toolbarbutton-1[open="true"] > .toolbarbutton-menubutton-dropmarker,
-toolbar[mode="icons"] #restore-button:not([disabled="true"]):active:hover {
+toolbar[mode="icons"] .toolbarbutton-1:not([type="menu-button"]):not([disabled="true"]):active:hover:not(:-moz-lwtheme),
+toolbar[mode="icons"] .toolbarbutton-1:not([type="menu-button"])[open="true"]:not(:-moz-lwtheme),
+toolbar[mode="icons"] .toolbarbutton-1:not([disabled="true"]) > .toolbarbutton-menubutton-button:active:hover:not(:-moz-lwtheme),
+toolbar[mode="icons"] .toolbarbutton-1[open="true"] > .toolbarbutton-menubutton-dropmarker:not(:-moz-lwtheme),
+toolbar[mode="icons"] #restore-button:not([disabled="true"]):active:hover:not(:-moz-lwtheme) {
   background: @toolbarbuttonPressedBackgroundColor@;
   text-shadow: @loweredShadow@;
   box-shadow: @toolbarbuttonPressedInnerShadow@, @loweredShadow@;
 }
 
-toolbar[mode="icons"] .toolbarbutton-1:not([type="menu-button"]):not(#fullscreen-button)[checked="true"] {
+toolbar[mode="icons"] .toolbarbutton-1:not([type="menu-button"]):not([disabled="true"]):active:hover:-moz-lwtheme,
+toolbar[mode="icons"] .toolbarbutton-1:not([type="menu-button"])[open="true"]:-moz-lwtheme,
+toolbar[mode="icons"] .toolbarbutton-1:not([disabled="true"]) > .toolbarbutton-menubutton-button:active:hover:-moz-lwtheme,
+toolbar[mode="icons"] .toolbarbutton-1[open="true"] > .toolbarbutton-menubutton-dropmarker:-moz-lwtheme,
+toolbar[mode="icons"] #restore-button:not([disabled="true"]):active:hover:-moz-lwtheme {
+  text-shadow: @loweredShadow@;
+  background-color: rgba(0,0,0,0.2);
+  box-shadow: inset 0 2px 5px rgba(0,0,0,0.6), 0 1px rgba(255,255,255,0.2);
+}
+
+toolbar[mode="icons"] .toolbarbutton-1:not([type="menu-button"]):not(#fullscreen-button)[checked="true"]:not(:-moz-lwtheme) {
   background: #606060;
   box-shadow: inset #2A2A2A 0 3px 3.5px, @loweredShadow@;
 }
 
-toolbar[mode="icons"] .toolbarbutton-1:not([type="menu-button"]):not(#fullscreen-button)[checked="true"]:not([disabled="true"]):active:hover {
+toolbar[mode="icons"] .toolbarbutton-1:not([type="menu-button"]):not(#fullscreen-button)[checked="true"]:-moz-lwtheme {
+  background-color: rgba(0,0,0,0.4);
+  box-shadow: inset 0 2px 5px rgba(0,0,0,0.7), 0 1px rgba(255,255,255,0.2);
+}
+
+toolbar[mode="icons"] .toolbarbutton-1:not([type="menu-button"]):not(#fullscreen-button)[checked="true"]:not([disabled="true"]):active:hover:not(:-moz-lwtheme) {
   background: #4E4E4E;
   box-shadow: inset #1c1c1c 0 3px 3.5px;
 }
 
-toolbar[mode="icons"] .toolbarbutton-1:not([type="menu-button"]):-moz-window-inactive,
-toolbar[mode="icons"] .toolbarbutton-1 > .toolbarbutton-menubutton-button:-moz-window-inactive,
-toolbar[mode="icons"] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker:-moz-window-inactive,
-toolbar[mode="icons"] #restore-button:-moz-window-inactive {
+toolbar[mode="icons"] .toolbarbutton-1:not([type="menu-button"]):not(#fullscreen-button)[checked="true"]:not([disabled="true"]):active:hover:-moz-lwtheme {
+  background-color: rgba(0, 0, 0, 0.6);
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.8), 0 1px rgba(255, 255, 255, 0.2);
+}
+
+toolbar[mode="icons"] .toolbarbutton-1:not([type="menu-button"]):-moz-window-inactive:not(:-moz-lwtheme),
+toolbar[mode="icons"] .toolbarbutton-1 > .toolbarbutton-menubutton-button:-moz-window-inactive:not(:-moz-lwtheme),
+toolbar[mode="icons"] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker:-moz-window-inactive:not(:-moz-lwtheme),
+toolbar[mode="icons"] #restore-button:-moz-window-inactive:not(:-moz-lwtheme) {
   border-color: @toolbarbuttonInactiveBorderColor@;
   background-image: @toolbarbuttonInactiveBackgroundImage@;
 }
@@ -432,18 +468,16 @@ toolbar[mode="icons"] .toolbarbutton-1 > menupopup {
 toolbar:not([iconsize="small"])[mode="icons"] #back-button {
   -moz-margin-end: -5px;
   position: relative;
+  z-index: 1;
   -moz-image-region: rect(0, 20px, 20px, 0);
-}
-
-toolbar:not([iconsize="small"])[mode="icons"] #back-button:-moz-locale-dir(rtl) {
-  -moz-transform: scaleX(-1);
-}
-
-toolbar:not([iconsize="small"])[mode="icons"] #back-button {
   width: 30px;
   height: 30px;
   padding: 4px 5px 4px 3px;
   border-radius: 10000px;
+}
+
+toolbar:not([iconsize="small"])[mode="icons"] #back-button:-moz-locale-dir(rtl) {
+  -moz-transform: scaleX(-1);
 }
 
 toolbar[mode="icons"] #forward-button {
@@ -454,6 +488,10 @@ toolbar[mode="icons"]:not([iconsize="small"]) #forward-button {
   /* 1px to the right */
   -moz-padding-start: 4px;
   -moz-padding-end: 2px;
+}
+
+toolbar[mode="icons"]:not([iconsize="small"]) #forward-button:-moz-lwtheme {
+  mask: url(chrome://browser/content/browser.xul#pinstripe-keyhole-forward-mask);
 }
 
 toolbar[iconsize="small"][mode="icons"] #back-button {
