@@ -348,8 +348,13 @@ BasicBufferOGL::BeginPaint(ContentType aContentType)
   if (result.mRegionToDraw.IsEmpty())
     return result;
 
-  nsIntRect drawBounds = result.mRegionToDraw.GetBounds();
   nsIntRect visibleBounds = mLayer->GetVisibleRegion().GetBounds();
+  if (visibleBounds.width > gl()->GetMaxTextureSize() ||
+      visibleBounds.height > gl()->GetMaxTextureSize()) {
+    return result;
+  }
+
+  nsIntRect drawBounds = result.mRegionToDraw.GetBounds();
   nsRefPtr<TextureImage> destBuffer;
   nsIntRect destBufferRect;
 
