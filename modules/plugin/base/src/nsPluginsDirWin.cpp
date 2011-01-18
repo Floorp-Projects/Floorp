@@ -81,31 +81,7 @@ static char* GetKeyValue(void* verbuf, const WCHAR* key,
     return nsnull;
   }
 
-  // copy the WCHAR cp1252 output from VerQueryValueW into a
-  // byte buffer so that we can use MultiByteToWideChar on it
-  nsCString bstr;
-  for (UINT i = 0; i < blen; ++i) {
-    bstr.Append((char)buf[i]);
-  }
-
-  // determine number of Unicode character to be generated
-  int ulen = ::MultiByteToWideChar(codepage, MB_PRECOMPOSED,
-                                   bstr.BeginReading(), bstr.Length(),
-                                   nsnull, 0);
-  if (ulen == 0) {
-    return nsnull;
-  }
-
-  nsString ustr;
-  ustr.SetLength(ulen);
-  if (ustr.Length() < (unsigned)ulen) {
-    return nsnull;
-  }
-
-  (void)::MultiByteToWideChar(codepage, MB_PRECOMPOSED,
-                              bstr.BeginReading(), bstr.Length(),
-                              ustr.BeginWriting(), ustr.Length());
-  return PL_strdup(NS_ConvertUTF16toUTF8(ustr).get());
+  return PL_strdup(NS_ConvertUTF16toUTF8(buf, blen).get());
 }
 
 static char* GetVersion(void* verbuf)
