@@ -125,6 +125,8 @@ enum ShaderProgramType {
     RGBARectLayerProgramType,
     ColorLayerProgramType,
     YCbCrLayerProgramType,
+    ComponentAlphaPass1ProgramType,
+    ComponentAlphaPass2ProgramType,
     Copy2DProgramType,
     Copy2DRectProgramType,
     NumProgramTypes
@@ -179,12 +181,12 @@ public:
     virtual gfxASurface* BeginUpdate(nsIntRegion& aRegion) = 0;
     /**
      * Finish the active update and synchronize with the server, if
-     * necessary.  Return PR_TRUE iff this's texture is already bound.
+     * necessary.
      *
      * BeginUpdate() must have been called exactly once before
      * EndUpdate().
      */
-    virtual PRBool EndUpdate() = 0;
+    virtual void EndUpdate() = 0;
 
     /**
      * Set this TextureImage's size, and ensure a texture has been
@@ -295,7 +297,7 @@ public:
     {}
 
     virtual gfxASurface* BeginUpdate(nsIntRegion& aRegion);
-    virtual PRBool EndUpdate();
+    virtual void EndUpdate();
     virtual bool DirectUpdate(gfxASurface *aSurf, const nsIntRegion& aRegion);
 
     // Returns a surface to draw into

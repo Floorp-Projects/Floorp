@@ -1112,7 +1112,7 @@ public:
         return mUpdateSurface;
     }
 
-    virtual PRBool EndUpdate()
+    virtual void EndUpdate()
     {
         NS_ASSERTION(!!mUpdateSurface, "EndUpdate() without BeginUpdate()?");
 
@@ -1120,7 +1120,7 @@ public:
             UnlockSurface();
             mCreated = PR_TRUE;
             mUpdateSurface = nsnull;
-            return PR_FALSE;
+            return;
         }
 
         if (mBackingSurface && mUpdateSurface == mBackingSurface) {
@@ -1133,7 +1133,7 @@ public:
             mBackingSurface->SetDeviceOffset(gfxPoint(0, 0));
             mCreated = PR_TRUE;
             mUpdateSurface = nsnull;
-            return PR_FALSE;
+            return;
         }
 
         //printf_stderr("EndUpdate: slow path");
@@ -1157,7 +1157,7 @@ public:
         uploadImage = static_cast<gfxImageSurface*>(mUpdateSurface.get());
 
         if (!uploadImage) {
-            return PR_FALSE;
+            return;
         }
 
         mGLContext->MakeCurrent();
@@ -1191,7 +1191,7 @@ public:
         }
 
         mUpdateSurface = nsnull;
-        return PR_TRUE;         // mTexture is bound
+        return;         // mTexture is bound
     }
 
     virtual bool DirectUpdate(gfxASurface *aSurf, const nsIntRegion& aRegion)
