@@ -1505,6 +1505,14 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   opacity: .8;
 }
 
+/* Prevent overlapping of tabs during the close animation */
+.tab-label:not([fadein]):not([pinned]) {
+  margin-left: -16px;
+  margin-right: -16px;
+  -moz-transition: opacity 100ms ease-out,
+                   margin 30ms ease-out 80ms;
+}
+
 .tab-stack {
   /* ensure stable tab height with and without toolbarbuttons on the tab bar */
   height: 26px;
