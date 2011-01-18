@@ -774,6 +774,7 @@ Item.prototype = {
         var self = this;
         var startMouse;
         var startSize;
+        var startAspect;
 
         // ___ mousemove
         var handleMouseMove = function(e) {
