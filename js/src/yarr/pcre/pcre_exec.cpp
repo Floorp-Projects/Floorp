@@ -388,7 +388,8 @@ struct MatchStack {
     MatchFrame* allocateNextFrame() {
         if (canUseStackBufferForNextFrame())
             return currentFrame + 1;
-        MatchFrame *frame = new MatchFrame;
+        // FIXME: bug 574459 -- no NULL check
+        MatchFrame *frame = js_new<MatchFrame>();
         frame->init(regExpPool);
         return frame;
     }
@@ -412,7 +413,7 @@ struct MatchStack {
         MatchFrame* oldFrame = currentFrame;
         currentFrame = currentFrame->previousFrame;
         if (size > numFramesOnStack)
-            delete oldFrame;
+            js_delete(oldFrame);
         size--;
     }
 

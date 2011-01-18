@@ -52,20 +52,6 @@
 typedef jschar UChar;
 typedef JSLinearString UString;
 
-template <typename T>
-class ValueDeleter
-{
-  public:
-    void operator()(T &t) { delete t; }
-};
-
-template<typename T, size_t N, class AP>
-static inline void
-deleteAllValues(js::Vector<T,N,AP> &vector)
-{
-    js::ForEach(vector.begin(), vector.end(), ValueDeleter<T>());
-}
-
 class Unicode {
   public:
     static UChar toUpper(UChar c) { return JS_TOUPPER(c); }

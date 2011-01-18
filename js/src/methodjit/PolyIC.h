@@ -157,7 +157,7 @@ class BasePolyIC : public BaseIC {
     ~BasePolyIC() {
         releasePools();
         if (areMultiplePools())
-            delete multiplePools();
+            js_delete(multiplePools());
     }
 
     void reset() {
@@ -192,11 +192,11 @@ class BasePolyIC : public BaseIC {
         if (isOnePool()) {
             JSC::ExecutablePool *oldPool = u.execPool;
             JS_ASSERT(!isTagged(oldPool));
-            ExecPoolVector *execPools = new ExecPoolVector(SystemAllocPolicy()); 
+            ExecPoolVector *execPools = js_new<ExecPoolVector>(SystemAllocPolicy()); 
             if (!execPools)
                 return false;
             if (!execPools->append(oldPool) || !execPools->append(pool)) {
-                delete execPools;
+                js_delete(execPools);
                 return false;
             }
             u.taggedExecPools = tag(execPools);
