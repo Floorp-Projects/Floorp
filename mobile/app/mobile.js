@@ -399,7 +399,7 @@ pref("browser.ui.touch.weight.visited", 120); // percentage
 
 // plugins
 pref("plugin.disable", true);
-pref("dom.ipc.plugins.enabled", false);
+pref("dom.ipc.plugins.enabled", true);
 
 // product URLs
 // The breakpad report server to link to in about:crashes
