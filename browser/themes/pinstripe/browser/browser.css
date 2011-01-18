@@ -1172,13 +1172,12 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   padding: 0;
   margin-left: 4px;
   margin-right: 4px;
-  margin-bottom: 8px !important;
+  margin-bottom: 8px;
   height:  20px;
 }
 
 #editBMPanel_newFolderButton {
   -moz-appearance: none;
-  background-color: transparent !important;
   border: 0;
   -moz-border-end-width: 3px;
   border-style: solid;
@@ -1190,7 +1189,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   min-height: 20px;
   height:  20px;
   color: #fff;
-  list-style-image: url("chrome://browser/skin/hud-style-new-folder-plus-sign.png") !important;
+  list-style-image: url("chrome://browser/skin/hud-style-new-folder-plus-sign.png");
   position: relative;
 }
 
@@ -1200,13 +1199,11 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 
 #editBMPanel_newFolderButton:-moz-focusring {
-  box-shadow: 0 0 1px -moz-mac-focusring inset,
-              0 0 4px 1px -moz-mac-focusring,
-              0 0 2px 1px -moz-mac-focusring;
+  @hudButtonFocused@
 }
 
 #editBMPanel_newFolderButton .button-text {
-  display: none !important;
+  display: none;
 }
 
 #editBMPanel_folderMenuList {
@@ -1291,41 +1288,38 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 
 #editBMPanel_tagsSelector:-moz-focusring {
-  box-shadow: 0 0 1px -moz-mac-focusring inset,
-              0 0 4px 1px -moz-mac-focusring,
-              0 0 2px 1px -moz-mac-focusring;
+  @hudButtonFocused@
 }
 
 #editBMPanel_tagsSelector .listcell-check {
-  -moz-appearance: none !important;
-  background-color: transparent;
+  -moz-appearance: none;
   border: 0;
-  list-style-image: url("chrome://browser/skin/hud-style-check-box-empty.png");
+  background: url("chrome://browser/skin/hud-style-check-box-empty.png") no-repeat 50% 50%;
   min-height: 14px;
   min-width: 14px;
 }
 
 #editBMPanel_tagsSelector .listcell-check[checked="true"] {
-  list-style-image: url("chrome://browser/skin/hud-style-check-box-checked.png");
+  background-image: url("chrome://browser/skin/hud-style-check-box-checked.png");
 }
 
-#editBMPanel_folderTree treechildren::-moz-tree-row {
-  color: #fff !important;
-  background-color: transparent !important;
-  border: none !important;
+#editBMPanel_folderTree > treechildren::-moz-tree-row {
+  color: #fff;
+  background-color: transparent;
+  border: none;
 }
 
-#editBMPanel_folderTree treechildren::-moz-tree-row(selected) {
-  background-color: #b3b3b3 !important;
+#editBMPanel_folderTree > treechildren::-moz-tree-row(selected) {
+  background-color: #b3b3b3;
 }
 
-#editBMPanel_folderTree treechildren::-moz-tree-cell-text(selected),
-#editBMPanel_folderTree treechildren::-moz-tree-cell-text(selected, focus) {
-  color: #222222 !important;
+#editBMPanel_folderTree > treechildren::-moz-tree-cell-text(selected),
+#editBMPanel_folderTree > treechildren::-moz-tree-cell-text(selected, focus) {
+  color: #222222;
 }
 
-#editBMPanel_folderTree treechildren::-moz-tree-row(selected, focus) {
-  background-color: #b3b3b3 !important;
+#editBMPanel_folderTree > treechildren::-moz-tree-row(selected, focus) {
+  background-color: #b3b3b3;
 }
 
 #editBMPanel_tagsSelector > listitem[selected="true"] {
@@ -1359,12 +1353,12 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 
 #editBookmarkPanel .expander-up,
 #editBookmarkPanel .expander-down:hover:active {
-  list-style-image: url("chrome://browser/skin/hud-style-expander-open.png") !important;
+  list-style-image: url("chrome://browser/skin/hud-style-expander-open.png");
 }
 
 #editBookmarkPanel .expander-down,
 #editBookmarkPanel .expander-up:hover:active {
-  list-style-image: url("chrome://browser/skin/hud-style-expander-closed.png") !important;
+  list-style-image: url("chrome://browser/skin/hud-style-expander-closed.png");
 }
 
 /**** name picker ****/
@@ -1388,14 +1382,12 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 
 #editBMPanel_tagsField > .autocomplete-textbox-container > .textbox-input-box > html|*.textbox-input:-moz-placeholder {
-  color: #bbb !important;
+  color: #bbb;
 }
 
 #editBMPanel_tagsField[focused="true"],
 #editBMPanel_namePicker[droppable="false"][focused="true"] > .menulist-editable-box {
-  box-shadow: 0 0 1px -moz-mac-focusring inset,
-              0 0 4px 1px -moz-mac-focusring,
-              0 0 2px 1px -moz-mac-focusring;
+  @hudButtonFocused@
   background-color: #eee !important;
   color: #000 !important;
 }
