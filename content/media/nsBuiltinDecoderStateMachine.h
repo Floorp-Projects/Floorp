@@ -410,11 +410,13 @@ protected:
   TimeDuration mPlayDuration;
 
   // Time that buffering started. Used for buffering timeout and only
-  // accessed on the state machine thread.
+  // accessed on the state machine thread. This is null while we're not
+  // buffering.
   TimeStamp mBufferingStart;
 
   // Download position where we should stop buffering. Only
-  // accessed on the state machine thread.
+  // accessed on the state machine thread. This is -1 while we're not
+  // buffering.
   PRInt64 mBufferingEndOffset;
 
   // Start time of the media, in milliseconds. This is the presentation
