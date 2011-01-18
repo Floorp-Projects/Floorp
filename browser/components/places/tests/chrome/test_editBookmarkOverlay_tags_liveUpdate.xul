@@ -1,0 +1,80 @@
+<?xml version="1.0"?>
+
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<?xml-stylesheet href="chrome://browser/skin/places/editBookmarkOverlay.css"?>
+<?xml-stylesheet href="chrome://browser/content/places/places.css"?>
+<?xml-stylesheet href="chrome://browser/skin/places/places.css"?>
+
+<?xul-overlay href="chrome://browser/content/places/placesOverlay.xul"?>
+<?xul-overlay href="chrome://browser/content/places/editBookmarkOverlay.xul"?>
+
+<!DOCTYPE window [
+  <!ENTITY % editBookmarkOverlayDTD SYSTEM "chrome://browser/locale/places/editBookmarkOverlay.dtd">
+  %editBookmarkOverlayDTD;
+]>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="485100: Exchanging a letter of a tag name with its big/small equivalent removes tag from bookmark"
+        onload="runTest();">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script type="application/javascript"
+          src="chrome://browser/content/places/editBookmarkOverlay.js"/>
+
+  <body xmlns="http://www.w3.org/1999/xhtml" />
+
+  <vbox id="editBookmarkPanelContent"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+    function runTest() {
+      Components.utils.import("resource://gre/modules/NetUtil.jsm");
+
+      const TEST_URI = NetUtil.newURI("http://www.test.me");
+      const TEST_TAG = "test-tag";
+
+      // Add a bookmark, init the panel then add a tag to the bookmark
+      // through the Places API.  The editBookmarkPanel should live update.
+      let itemId = PlacesUtils.bookmarks.insertBookmark(
+        PlacesUtils.toolbarFolderId, TEST_URI,
+        PlacesUtils.bookmarks.DEFAULT_INDEX, "test.me"
+      );
+
+      // Init panel.
+      ok(gEditItemOverlay, "gEditItemOverlay is in context");
+      gEditItemOverlay.initPanel(itemId);
+
+      // Add a tag.
+      PlacesUtils.tagging.tagURI(TEST_URI, [TEST_TAG]);
+      // Test that the tag has been added.
+      is(PlacesUtils.tagging.getTagsForURI(TEST_URI)[0], TEST_TAG,
+         "Tag correctly added.");
+      // Check the panel.
+      is (document.getElementById("editBMPanel_tagsField").value, TEST_TAG,
+          "Tags match.");
+
+      // Remove tag.
+      PlacesUtils.tagging.untagURI(TEST_URI, [TEST_TAG]);
+      // Test that the tag has been removed.
+      is(PlacesUtils.tagging.getTagsForURI(TEST_URI)[0], undefined,
+         "Tag correctly removed.");
+      // Check the panel.
+      is (document.getElementById("editBMPanel_tagsField").value, "",
+          "Tags match.");
+
+      // Cleanup.
+      PlacesUtils.bookmarks.removeItem(itemId);
+    }
+  ]]>
+  </script>
+
+</window>
