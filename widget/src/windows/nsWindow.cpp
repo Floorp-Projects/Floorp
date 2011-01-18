@@ -181,6 +181,7 @@
 #include "LayerManagerD3D10.h"
 #endif
 #include "LayerManagerOGL.h"
+#include "nsIGfxInfo.h"
 #endif
 #include "BasicLayers.h"
 
@@ -3284,6 +3285,7 @@ struct LayerManagerPrefs {
   {}
   PRBool mAccelerateByDefault;
   PRBool mDisableAcceleration;
+  PRBool mForceAcceleration;
   PRBool mPreferOpenGL;
   PRBool mPreferD3D9;
 };
@@ -3295,6 +3297,8 @@ GetLayerManagerPrefs(LayerManagerPrefs* aManagerPrefs)
   if (prefs) {
     prefs->GetBoolPref("layers.acceleration.disabled",
                        &aManagerPrefs->mDisableAcceleration);
+    prefs->GetBoolPref("layers.acceleration.force-enabled",
+                       &aManagerPrefs->mForceAcceleration);
     prefs->GetBoolPref("layers.prefer-opengl",
                        &aManagerPrefs->mPreferOpenGL);
     prefs->GetBoolPref("layers.prefer-d3d9",
@@ -3383,10 +3387,22 @@ nsWindow::GetLayerManager(LayerManagerPersistence aPersistence, bool* aAllowReta
       }
 #endif
       if (!mLayerManager && prefs.mPreferOpenGL) {
-        nsRefPtr<mozilla::layers::LayerManagerOGL> layerManager =
-          new mozilla::layers::LayerManagerOGL(this);
-        if (layerManager->Initialize()) {
-          mLayerManager = layerManager;
+        nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
+        PRInt32 status = nsIGfxInfo::FEATURE_NO_INFO;
+
+        if (gfxInfo && !prefs.mForceAcceleration) {
+          gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_OPENGL_LAYERS, &status);
+        }
+
+        if (status == nsIGfxInfo::FEATURE_NO_INFO) {
+          nsRefPtr<mozilla::layers::LayerManagerOGL> layerManager =
+            new mozilla::layers::LayerManagerOGL(this);
+          if (layerManager->Initialize()) {
+            mLayerManager = layerManager;
+          }
+
+        } else {
+          NS_WARNING("OpenGL accelerated layers are not supported on this system.");
         }
       }
     }
