@@ -279,7 +279,7 @@ private:
 
     Handle* self = Unwrap(cx, JS_THIS_OBJECT(cx, vp));
     if (self)
-      unused << Send__delete__(self);
+      unused << BaseType::Send__delete__(self);
 
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
 
@@ -318,7 +318,7 @@ private:
       NS_ASSERTION(!self->mRooted, "Finalizing a rooted object?");
       self->mCx = NULL;
       self->mObj = NULL;
-      unused << Send__delete__(self);
+      unused << BaseType::Send__delete__(self);
     }
   }
 };
