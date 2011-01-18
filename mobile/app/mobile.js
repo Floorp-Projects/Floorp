@@ -398,7 +398,11 @@ pref("browser.ui.touch.bottom", 4);
 pref("browser.ui.touch.weight.visited", 120); // percentage
 
 // plugins
+#if MOZ_PLATFORM_MAEMO == 6
+pref("plugin.disable", false);
+#else
 pref("plugin.disable", true);
+#endif
 pref("dom.ipc.plugins.enabled", true);
 
 // product URLs
