@@ -126,8 +126,8 @@
     {
       this.eventSeq = [
         new invokerChecker(EVENT_HIDE, getNode(aParentID)),
-        new invokerChecker(EVENT_SHOW, getNode(aChildID)),
         new invokerChecker(EVENT_HIDE, getNode(aParent2ID)),
+        new invokerChecker(EVENT_SHOW, getNode(aChildID)),
         new invokerChecker(EVENT_SHOW, getNode(aChild2ID)),
         new invokerChecker(EVENT_REORDER, getNode(aContainerID))
       ];

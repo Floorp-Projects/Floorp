@@ -700,7 +700,8 @@ class PresShell : public nsIPresShell, public nsIViewObserver,
                   public nsStubDocumentObserver,
                   public nsISelectionController, public nsIObserver,
                   public nsSupportsWeakReference,
-                  public nsIPresShell_MOZILLA_2_0_BRANCH
+                  public nsIPresShell_MOZILLA_2_0_BRANCH,
+                  public nsIPresShell_MOZILLA_2_0_BRANCH2
 {
 public:
   PresShell();
@@ -970,6 +971,12 @@ public:
   virtual NS_HIDDEN_(nsresult) SetIsActive(PRBool aIsActive);
 
   virtual PRBool GetIsViewportOverridden() { return mViewportOverridden; }
+
+  virtual PRBool IsLayoutFlushObserver()
+  {
+    return GetPresContext()->RefreshDriver()->
+      IsLayoutFlushObserver(this);
+  }
 
 protected:
   virtual ~PresShell();
@@ -1673,10 +1680,11 @@ PresShell::PresShell()
   sLiveShells->PutEntry(this);
 }
 
-NS_IMPL_ISUPPORTS9(PresShell, nsIPresShell, nsIDocumentObserver,
+NS_IMPL_ISUPPORTS10(PresShell, nsIPresShell, nsIDocumentObserver,
                    nsIViewObserver, nsISelectionController,
                    nsISelectionDisplay, nsIObserver, nsISupportsWeakReference,
-                   nsIMutationObserver, nsIPresShell_MOZILLA_2_0_BRANCH)
+                   nsIMutationObserver, nsIPresShell_MOZILLA_2_0_BRANCH,
+                   nsIPresShell_MOZILLA_2_0_BRANCH2)
 
 PresShell::~PresShell()
 {
