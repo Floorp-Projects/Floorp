@@ -21,8 +21,8 @@ function ended(evt) {
 
 function startTest(test, token) {
   var v = document.createElement('video');
-  v.token = v;
-  manager.started(v);
+  v.token = token;
+  manager.started(v.token);
   v.src = test.name;
   v._name = test.name;
   v._finished = false;

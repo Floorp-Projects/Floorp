@@ -250,6 +250,8 @@ public:
     return mEndTime;
   }
 
+  void NotifyDataExhausted();
+
 protected:
 
   // Returns PR_TRUE if the decode is withing an estimated one tenth of a

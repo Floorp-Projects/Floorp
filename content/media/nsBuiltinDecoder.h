@@ -303,6 +303,8 @@ public:
   // with the decode monitor held. Called on the state machine thread and
   // the main thread.
   virtual void StartBuffering() = 0;
+
+  virtual void NotifyDataExhausted() = 0;
 };
 
 class nsBuiltinDecoder : public nsMediaDecoder
@@ -366,6 +368,10 @@ class nsBuiltinDecoder : public nsMediaDecoder
   // Called by the decode thread to keep track of the number of bytes read
   // from the resource.
   void NotifyBytesConsumed(PRInt64 aBytes);
+
+  void NotifyDataExhausted() {
+    mDecoderStateMachine->NotifyDataExhausted();
+  }
 
   // Called when the video file has completed downloading.
   // Call on the main thread only.
