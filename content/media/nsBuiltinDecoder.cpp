@@ -599,6 +599,7 @@ void nsBuiltinDecoder::NotifyBytesConsumed(PRInt64 aBytes)
                "Should be on play state machine or decode thread.");
   if (!mIgnoreProgressData) {
     mDecoderPosition += aBytes;
+    mPlaybackStatistics.AddBytes(aBytes);
   }
 }
 

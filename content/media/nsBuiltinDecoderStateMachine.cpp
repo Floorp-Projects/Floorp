@@ -149,7 +149,7 @@ nsBuiltinDecoderStateMachine::nsBuiltinDecoderStateMachine(nsBuiltinDecoder* aDe
   mAudioMonitor("media.audiostream"),
   mCbCrSize(0),
   mPlayDuration(0),
-  mBufferingEndOffset(0),
+  mBufferingEndOffset(-1),
   mStartTime(-1),
   mEndTime(-1),
   mSeekTime(0),
@@ -598,7 +598,6 @@ PRUint32 nsBuiltinDecoderStateMachine::PlayFromAudioQueue(PRUint64 aSampleOffset
   return samples;
 }
 
-
 nsresult nsBuiltinDecoderStateMachine::Init(nsDecoderStateMachine* aCloneDonor)
 {
   nsBuiltinDecoderReader* cloneReader = nsnull;
@@ -613,6 +612,8 @@ void nsBuiltinDecoderStateMachine::StopPlayback(eStopMode aMode)
   NS_ASSERTION(IsCurrentThread(mDecoder->mStateMachineThread),
                "Should be on state machine thread.");
   mDecoder->GetMonitor().AssertCurrentThreadIn();
+
+  mDecoder->mPlaybackStatistics.Stop(TimeStamp::Now());
 
   // Reset mPlayStartTime before we pause/shutdown the nsAudioStream. This is
   // so that if the audio loop is about to write audio, it will have the chance
@@ -645,6 +646,7 @@ void nsBuiltinDecoderStateMachine::StartPlayback()
   NS_ASSERTION(!IsPlaying(), "Shouldn't be playing when StartPlayback() is called");
   mDecoder->GetMonitor().AssertCurrentThreadIn();
   LOG(PR_LOG_DEBUG, ("%p StartPlayback", mDecoder));
+  mDecoder->mPlaybackStatistics.Start(TimeStamp::Now());
   if (HasAudio()) {
     MonitorAutoExit exitMon(mDecoder->GetMonitor());
     MonitorAutoEnter audioMon(mAudioMonitor);
@@ -1105,10 +1107,27 @@ nsresult nsBuiltinDecoderStateMachine::Run()
 
     case DECODER_STATE_BUFFERING:
       {
+        TimeStamp now = TimeStamp::Now();
+        if (mBufferingEndOffset == -1) {
+          // This is the first time we've entered the buffering state.
+          // Calculate the buffering end conditions.
+          mBufferingStart = now;
+          PRPackedBool reliable;
+          double playbackRate = mDecoder->ComputePlaybackRate(&reliable);
+          mBufferingEndOffset = mDecoder->mDecoderPosition +
+            BUFFERING_RATE(playbackRate) * BUFFERING_WAIT;
+          nsMediaDecoder::Statistics stats = mDecoder->GetStatistics();
+          LOG(PR_LOG_DEBUG, ("Starting to buffer playback=%.1lfKB/s%s download=%.1lfKB/s%s",
+              stats.mDownloadRate/1024, stats.mDownloadRateReliable ? "" : " (unreliable)",
+              stats.mPlaybackRate/1024, stats.mPlaybackRateReliable ? "" : " (unreliable)"));
+        }
+        NS_ASSERTION(mBufferingEndOffset != -1 && !mBufferingStart.IsNull(),
+                     "Must know buffering end conditions.");
+
         // We will remain in the buffering state if we've not decoded enough
         // data to begin playback, or if we've not downloaded a reasonable
         // amount of data inside our buffering time.
-        TimeDuration elapsed = TimeStamp::Now() - mBufferingStart;
+        TimeDuration elapsed = now - mBufferingStart;
         PRBool isLiveStream = mDecoder->GetCurrentStream()->GetLength() == -1;
         if ((isLiveStream || !mDecoder->CanPlayThrough()) &&
              elapsed < TimeDuration::FromSeconds(BUFFERING_WAIT) &&
@@ -1127,7 +1146,9 @@ nsresult nsBuiltinDecoderStateMachine::Run()
           LOG(PR_LOG_DEBUG, ("%p Changed state from BUFFERING to DECODING", mDecoder));
           LOG(PR_LOG_DEBUG, ("%p Buffered for %lf seconds",
                              mDecoder,
-                             (TimeStamp::Now() - mBufferingStart).ToSeconds()));
+                             (now - mBufferingStart).ToSeconds()));
+          mBufferingEndOffset = -1;
+          mBufferingStart = TimeStamp();
           mState = DECODER_STATE_DECODING;
         }
 
@@ -1473,12 +1494,6 @@ void nsBuiltinDecoderStateMachine::StartBuffering()
   // will check the current state and decide whether to tell
   // the element we're buffering or not.
   UpdateReadyState();
-
-  mBufferingStart = TimeStamp::Now();
-  PRPackedBool reliable;
-  double playbackRate = mDecoder->ComputePlaybackRate(&reliable);
-  mBufferingEndOffset = mDecoder->mDecoderPosition +
-    BUFFERING_RATE(playbackRate) * BUFFERING_WAIT;
   mState = DECODER_STATE_BUFFERING;
   LOG(PR_LOG_DEBUG, ("Changed state from DECODING to BUFFERING"));
 }
