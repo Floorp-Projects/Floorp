@@ -1421,7 +1421,7 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
         {
             OBJ_TO_OUTER_OBJECT(cx, flat);
             NS_ASSERTION(flat, "bad outer object hook!");
-            NS_ASSERTION(flat->getCompartment() == cx->compartment,
+            NS_ASSERTION(flat->compartment() == cx->compartment,
                          "bad compartment");
         }
     }
