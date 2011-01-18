@@ -873,7 +873,27 @@ const gFormSubmitObserver = {
     }, false);
 
     this.panel.hidden = false;
-    this.panel.openPopup(element, "after_start", 0, 0);
+
+    // We want to show the popup at the middle of checkbox and radio buttons
+    // and where the content begin for the other elements.
+    let offset = 0;
+    let position = "";
+
+    if (element.tagName == 'INPUT' &&
+        (element.type == 'radio' || element.type == 'checkbox')) {
+      position = "bottomcenter topleft";
+    } else {
+      let style = element.ownerDocument.defaultView.getComputedStyle(element, null);
+      if (style.direction == 'rtl') {
+        offset = parseInt(style.paddingRight) + parseInt(style.borderRightWidth);
+      } else {
+        offset = parseInt(style.paddingLeft) + parseInt(style.borderLeftWidth);
+      }
+
+      position = "after_start";
+    }
+
+    this.panel.openPopup(element, position, offset, 0);
   }
 };
 
