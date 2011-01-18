@@ -101,18 +101,20 @@ public:
 
   void Destroy();
 
+
   /**
-   * Initializes the layer manager, this is when the layer manager will
-   * actually access the device and attempt to create the swap chain used
-   * to draw to the window. If this method fails the device cannot be used.
-   * This function is not threadsafe.
+   * Initializes the layer manager with a given GLContext. If aContext is null
+   * then the layer manager will try to create one for the associated widget.
    *
-   * \param aExistingContext an existing GL context to use, instead of creating
-   * our own for the widget.
+   * \param aContext an existing GL context to use. Can be created with CreateContext()
    *
    * \return True is initialization was succesful, false when it was not.
    */
-  PRBool Initialize(GLContext *aExistingContext = nsnull);
+  PRBool Initialize() {
+    return Initialize(CreateContext());
+  }
+
+  PRBool Initialize(nsRefPtr<GLContext> aContext);
 
   /**
    * Sets the clipping region for this layer manager. This is important on 
@@ -386,6 +388,8 @@ private:
   nsRefPtr<gfxContext> mTarget;
 
   nsRefPtr<GLContext> mGLContext;
+
+  already_AddRefed<mozilla::gl::GLContext> CreateContext();
 
   // The image containers that this layer manager has created.
   // The destructor will tell the layer manager to remove
