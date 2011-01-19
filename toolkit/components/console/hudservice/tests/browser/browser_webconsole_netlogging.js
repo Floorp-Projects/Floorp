@@ -20,6 +20,7 @@ const TEST_DATA_JSON_CONTENT =
   '{ id: "test JSON data", myArray: [ "foo", "bar", "baz", "biff" ] }';
 
 let lastRequest = null;
+let requestCallback = null;
 
 function test()
 {
@@ -36,6 +37,9 @@ function test()
 
     HUDService.lastFinishedRequestCallback = function(aRequest) {
       lastRequest = aRequest;
+      if (requestCallback) {
+        requestCallback();
+      }
     };
 
     executeSoon(testPageLoad);
@@ -83,7 +87,7 @@ function testPageLoadBody()
 
 function testXhrGet()
 {
-  let callback = function() {
+  requestCallback = function() {
     ok(lastRequest, "testXhrGet() was logged");
     is(lastRequest.method, "GET", "Method is correct");
     is(lastRequest.request.body, null, "No request body was sent");
@@ -91,21 +95,17 @@ function testXhrGet()
       "Response is correct");
 
     lastRequest = null;
+    requestCallback = null;
     executeSoon(testXhrPost);
   };
 
   // Start the XMLHttpRequest() GET test.
-  content.wrappedJSObject.testXhrGet(function() {
-    // Use executeSoon here as the xhr callback is invoked before the network
-    // observer detected that the request is completly done and the
-    // HUDService.lastFinishedRequest is set. executeSoon solves that problem.
-    executeSoon(callback);
-  });
+  content.wrappedJSObject.testXhrGet();
 }
 
 function testXhrPost()
 {
-  let callback = function() {
+  requestCallback = function() {
     ok(lastRequest, "testXhrPost() was logged");
     is(lastRequest.method, "POST", "Method is correct");
     is(lastRequest.request.body, "Hello world!",
@@ -114,13 +114,12 @@ function testXhrPost()
       "Response is correct");
 
     lastRequest = null;
+    requestCallback = null;
     executeSoon(testFormSubmission);
   };
 
   // Start the XMLHttpRequest() POST test.
-  content.wrappedJSObject.testXhrPost(function() {
-    executeSoon(callback);
-  });
+  content.wrappedJSObject.testXhrPost();
 }
 
 function testFormSubmission()
