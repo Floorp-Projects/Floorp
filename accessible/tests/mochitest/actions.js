@@ -120,6 +120,12 @@ function actionInvoker(aAccOrElmOrId, aActionIndex, aActionName, aEventSeq)
   }
 
   this.eventSeq = aEventSeq;
+
+  this.getID = function actionInvoker_getID()
+  {
+    return "invoke an action " + aActionName + " at index " + aActionIndex +
+      " on " + prettyName(aAccOrElmOrId);
+  }
 }
 
 function checkerOfActionInvoker(aType, aTarget, aActionObj)
