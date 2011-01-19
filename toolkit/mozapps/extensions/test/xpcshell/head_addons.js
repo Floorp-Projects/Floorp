@@ -1056,6 +1056,9 @@ Services.prefs.setBoolPref("extensions.getAddons.cache.enabled", false);
 Services.prefs.setCharPref("extensions.update.url", "http://127.0.0.1/updateURL");
 Services.prefs.setCharPref("extensions.blocklist.url", "http://127.0.0.1/blocklistURL");
 
+// By default ignore bundled add-ons
+Services.prefs.setBoolPref("extensions.installDistroAddons", false);
+
 // Register a temporary directory for the tests.
 const gTmpD = gProfD.clone();
 gTmpD.append("temp");
