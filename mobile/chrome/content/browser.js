@@ -1169,10 +1169,11 @@ Browser.MainDragger.prototype = {
   dragStart: function dragStart(clientX, clientY, target, scroller) {
     let browser = getBrowser();
     let bcr = browser.getBoundingClientRect();
-    this._contentView = browser.getViewsAt(clientX - bcr.left, clientY - bcr.top);
+    this._contentView = browser.getViewAt(clientX - bcr.left, clientY - bcr.top);
   },
 
   dragStop: function dragStop(dx, dy, scroller) {
+    this._contentView = null;
     this.dragMove(Browser.snapSidebars(), 0, scroller);
     Browser.tryUnfloatToolbar();
   },
@@ -1180,14 +1181,14 @@ Browser.MainDragger.prototype = {
   dragMove: function dragMove(dx, dy, scroller) {
     let doffset = new Point(dx, dy);
 
-    if (!this._contentView.isRoot()) {
+    // First calculate any panning to take sidebars out of view
+    let panOffset = this._panControlsAwayOffset(doffset);
+
+    if (this._contentView && !this._contentView.isRoot()) {
       this._panContentView(this._contentView, doffset);
       // XXX we may need to have "escape borders" for iframe panning
       // XXX does not deal with scrollables within scrollables
     }
-
-    // First calculate any panning to take sidebars out of view
-    let panOffset = this._panControlsAwayOffset(doffset);
 
     // Do content panning
     this._panContentView(getBrowser().getRootView(), doffset);
