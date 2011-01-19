@@ -332,8 +332,7 @@
             if (this.feeds && aMessage.target == this)
               this.feeds = null;
 
-            if (aMessage.windowId == this.contentWindowId)
-              this.scale = 1;
+            this.scale = 1;
          ]]>
         </body>
       </method>
