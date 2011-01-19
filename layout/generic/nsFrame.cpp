@@ -1228,18 +1228,6 @@ static inline PRBool ApplyOverflowHiddenClipping(nsIFrame* aFrame,
        type == nsGkAtoms::bcTableCellFrame;
 }
 
-static inline PRBool ApplyPaginatedOverflowClipping(nsIFrame* aFrame,
-                                                    const nsStyleDisplay* aDisp)
-{
-  // If we're paginated and aFrame is a block, and it has
-  // NS_BLOCK_CLIP_PAGINATED_OVERFLOW set, then we want to clip our
-  // overflow.
-  return
-    aFrame->PresContext()->IsPaginated() &&
-    aFrame->GetType() == nsGkAtoms::blockFrame &&
-    (aFrame->GetStateBits() & NS_BLOCK_CLIP_PAGINATED_OVERFLOW) != 0;
-}
-
 static PRBool ApplyOverflowClipping(nsDisplayListBuilder* aBuilder,
                                     nsIFrame* aFrame,
                                     const nsStyleDisplay* aDisp, nsRect* aRect) {
@@ -1252,7 +1240,7 @@ static PRBool ApplyOverflowClipping(nsDisplayListBuilder* aBuilder,
   // frames, and any non-visible value for blocks in a paginated context).
   // Other overflow clipping is applied by nsHTML/XULScrollFrame.
   if (!ApplyOverflowHiddenClipping(aFrame, aDisp) &&
-      !ApplyPaginatedOverflowClipping(aFrame, aDisp)) {
+      !nsFrame::ApplyPaginatedOverflowClipping(aFrame)) {
     PRBool clip = aDisp->mOverflowX == NS_STYLE_OVERFLOW_CLIP;
     if (!clip)
       return PR_FALSE;
@@ -6129,7 +6117,8 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
   NS_ASSERTION((disp->mOverflowY == NS_STYLE_OVERFLOW_CLIP) ==
                (disp->mOverflowX == NS_STYLE_OVERFLOW_CLIP),
                "If one overflow is clip, the other should be too");
-  if (disp->mOverflowX == NS_STYLE_OVERFLOW_CLIP) {
+  if (disp->mOverflowX == NS_STYLE_OVERFLOW_CLIP ||
+      nsFrame::ApplyPaginatedOverflowClipping(this)) {
     // The contents are actually clipped to the padding area 
     aOverflowAreas.SetAllTo(bounds);
   }
