@@ -1413,8 +1413,12 @@ PRBool nsMenuPopupFrame::ConsumeOutsideClicks()
 #if defined(XP_WIN) || defined(XP_OS2)
     // Don't consume outside clicks for menus in Windows
     if (ni->Equals(nsGkAtoms::menu, kNameSpaceID_XUL) ||
-       (ni->Equals(nsGkAtoms::popupset, kNameSpaceID_XUL)))
+        ni->Equals(nsGkAtoms::popupset, kNameSpaceID_XUL) ||
+        (ni->Equals(nsGkAtoms::button, kNameSpaceID_XUL) &&
+         parentContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                                    nsGkAtoms::menu, eCaseMatters))) {
       return PR_FALSE;
+    }
 #endif
     if (ni->Equals(nsGkAtoms::textbox, kNameSpaceID_XUL)) {
       // Don't consume outside clicks for autocomplete widget
