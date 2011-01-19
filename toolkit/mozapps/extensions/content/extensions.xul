@@ -555,7 +555,10 @@
                     <vbox pack="center"> <!-- Necessary to work around bug 394738 -->
                       <image id="detail-screenshot" hidden="true"/>
                     </vbox>
-                    <description id="detail-desc" flex="1"/>
+                    <vbox flex="1">
+                      <description id="detail-desc"/>
+                      <description id="detail-fulldesc"/>
+                    </vbox>
                   </hbox>
                   <vbox id="detail-contributions">
                     <description id="detail-contrib-description">
