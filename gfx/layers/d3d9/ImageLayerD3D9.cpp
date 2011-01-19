@@ -239,7 +239,10 @@ ImageLayerD3D9::RenderLayer()
   }
 
   nsRefPtr<Image> image = GetContainer()->GetCurrentImage();
-  
+  if (!image) {
+    return;
+  }
+
   SetShaderTransformAndOpacity();
 
   if (GetContainer()->GetBackendType() != LayerManager::LAYERS_D3D9)
