@@ -20,6 +20,7 @@ EXPORTS      = chromium_types.h \
 CPPSRCS = yuv_convert.cpp \
           yuv_row_c.cpp \
           yuv_row_table.cpp \
+          ycbcr_to_rgb565.cpp \
           $(NULL)
 
 # Are we targeting x86 or x64?  If so, build yuv_convert_mmx.cpp and
