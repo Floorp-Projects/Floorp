@@ -158,6 +158,8 @@ quartz-check-imageSurfaceEquiv.patch: Drop cairo_quartz_surface_t's "imageSurfac
 
 disable-subpixel-antialiasing.patch: Add API to disable subpixel antialiasing completely for a target surface
 
+tee-surfaces-pointwise.patch: Composite tee subsurfaces pointwise if possible
+
 ==== pixman patches ====
 
 pixman-android-cpu-detect.patch: Add CPU detection support for Android, where we can't reliably access /proc/self/auxv.
