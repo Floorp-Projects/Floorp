@@ -2060,7 +2060,7 @@ nsFrameLoader::GetRootContentView(nsIContentView** aContentView)
   NS_ABORT_IF_FALSE(view, "Should always be able to create root scrollable!");
   nsRefPtr<nsIContentView>(view).forget(aContentView);
 
-   return NS_OK;
+  return NS_OK;
 #else
   return NS_ERROR_NOT_IMPLEMENTED;
 #endif
