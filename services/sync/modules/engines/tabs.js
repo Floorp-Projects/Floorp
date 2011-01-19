@@ -36,18 +36,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['TabEngine'];
+const EXPORTED_SYMBOLS = ['TabEngine', 'TabSetRecord'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
+
+const TABS_TTL = 604800; // 7 days
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/clients.js");
 Cu.import("resource://services-sync/stores.js");
 Cu.import("resource://services-sync/trackers.js");
-Cu.import("resource://services-sync/type_records/tabs.js");
+Cu.import("resource://services-sync/base_records/crypto.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/ext/Preferences.js");
 
@@ -57,6 +59,19 @@ Cu.import("resource://services-sync/ext/Preferences.js");
 // with the -private command line argument.  In both cases, the
 // "autoStarted" flag of nsIPrivateBrowsingService will be wrong.
 const PBPrefs = new Preferences("browser.privatebrowsing.");
+
+
+function TabSetRecord(collection, id) {
+  CryptoWrapper.call(this, collection, id);
+}
+TabSetRecord.prototype = {
+  __proto__: CryptoWrapper.prototype,
+  _logName: "Record.Tabs",
+  ttl: TABS_TTL
+};
+
+Utils.deferGetSet(TabSetRecord, "cleartext", ["clientName", "tabs"]);
+
 
 function TabEngine() {
   SyncEngine.call(this, "Tabs");

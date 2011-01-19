@@ -1,5 +1,4 @@
 Cu.import("resource://services-sync/engines/bookmarks.js");
-Cu.import("resource://services-sync/type_records/bookmark.js");
 Cu.import("resource://services-sync/base_records/wbo.js");
 Cu.import("resource://services-sync/base_records/crypto.js");
 Cu.import("resource://services-sync/log4moz.js");

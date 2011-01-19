@@ -1,6 +1,5 @@
 _("Making sure after processing incoming bookmarks, they show up in the right order");
 Cu.import("resource://services-sync/engines/bookmarks.js");
-Cu.import("resource://services-sync/type_records/bookmark.js");
 Cu.import("resource://services-sync/util.js");
 
 function getBookmarks(folderId) {

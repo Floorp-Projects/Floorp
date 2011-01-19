@@ -22,13 +22,6 @@ const modules = [
                  "service.js",
                  "stores.js",
                  "trackers.js",
-                 "type_records/bookmark.js",
-                 "type_records/clients.js",
-                 "type_records/forms.js",
-                 "type_records/history.js",
-                 "type_records/passwords.js",
-                 "type_records/prefs.js",
-                 "type_records/tabs.js",
                  "util.js",
 ];
 

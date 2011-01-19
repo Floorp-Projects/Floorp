@@ -34,7 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['FormEngine'];
+const EXPORTED_SYMBOLS = ['FormEngine', 'FormRec'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -44,9 +44,23 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/stores.js");
 Cu.import("resource://services-sync/trackers.js");
-Cu.import("resource://services-sync/type_records/forms.js");
+Cu.import("resource://services-sync/base_records/crypto.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/log4moz.js");
+
+const FORMS_TTL = 5184000; // 60 days
+
+function FormRec(collection, id) {
+  CryptoWrapper.call(this, collection, id);
+}
+FormRec.prototype = {
+  __proto__: CryptoWrapper.prototype,
+  _logName: "Record.Form",
+  ttl: FORMS_TTL
+};
+
+Utils.deferGetSet(FormRec, "cleartext", ["name", "value"]);
+
 
 let FormWrapper = {
   _log: Log4Moz.repository.getLogger('Engine.Forms'),
