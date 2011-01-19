@@ -10582,6 +10582,9 @@ nsDocShell::ConfirmRepost(PRBool * aRepost)
 {
   nsCOMPtr<nsIPrompt> prompter;
   CallGetInterface(this, static_cast<nsIPrompt**>(getter_AddRefs(prompter)));
+  if (!prompter) {
+      return NS_ERROR_NOT_AVAILABLE;
+  }
 
   nsCOMPtr<nsIStringBundleService> stringBundleService =
     mozilla::services::GetStringBundleService();
