@@ -5921,8 +5921,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * API users may also set the JSOPTION_NO_SCRIPT_RVAL option when
              * calling JS_Compile* to suppress JSOP_POPV.
              */
-            wantval = !(cg->flags & (TCF_IN_FUNCTION | TCF_NO_SCRIPT_RVAL));
-            useful = wantval || pn->isDirectivePrologueMember();
+            useful = wantval = !(cg->flags & (TCF_IN_FUNCTION | TCF_NO_SCRIPT_RVAL));
+
+            /* Don't eliminate expressions with side effects. */
             if (!useful) {
                 if (!CheckSideEffects(cx, cg, pn2, &useful))
                     return JS_FALSE;
@@ -5935,14 +5936,21 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * labeled compound statement.
              */
             if (!useful &&
-                (!cg->topStmt ||
-                 cg->topStmt->type != STMT_LABEL ||
-                 cg->topStmt->update < CG_OFFSET(cg))) {
-                CG_CURRENT_LINE(cg) = pn2->pn_pos.begin.lineno;
-                if (!ReportCompileErrorNumber(cx, CG_TS(cg), pn2,
-                                              JSREPORT_WARNING | JSREPORT_STRICT,
-                                              JSMSG_USELESS_EXPR)) {
-                    return JS_FALSE;
+                cg->topStmt &&
+                cg->topStmt->type == STMT_LABEL &&
+                cg->topStmt->update >= CG_OFFSET(cg)) {
+                useful = true;
+            }
+
+            if (!useful) {
+                /* Don't complain about directive prologue members; just don't emit their code. */
+                if (!pn->isDirectivePrologueMember()) {
+                    CG_CURRENT_LINE(cg) = pn2->pn_pos.begin.lineno;
+                    if (!ReportCompileErrorNumber(cx, CG_TS(cg), pn2,
+                                                  JSREPORT_WARNING | JSREPORT_STRICT,
+                                                  JSMSG_USELESS_EXPR)) {
+                        return JS_FALSE;
+                    }
                 }
             } else {
                 op = wantval ? JSOP_POPV : JSOP_POP;

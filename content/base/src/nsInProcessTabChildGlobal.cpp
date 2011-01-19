@@ -50,6 +50,7 @@
 #include "nsIJSContextStack.h"
 #include "nsFrameLoader.h"
 #include "nsIPrivateDOMEvent.h"
+#include "xpcpublic.h"
 
 bool SendSyncMessageToParent(void* aCallbackData,
                              const nsAString& aMessage,
@@ -291,6 +292,8 @@ nsInProcessTabChildGlobal::InitTabChildGlobal()
 
   JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_JIT | JSOPTION_ANONFUNFIX | JSOPTION_PRIVATE_IS_NSISUPPORTS);
   JS_SetVersion(cx, JSVERSION_LATEST);
+
+  xpc_LocalizeContext(cx);
 
   JSAutoRequest ar(cx);
   nsIXPConnect* xpc = nsContentUtils::XPConnect();

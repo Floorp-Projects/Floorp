@@ -176,6 +176,7 @@ CPPSRCS		= \
 		jsxdrapi.cpp \
 		jsxml.cpp \
 		prmjtime.cpp \
+		sharkctl.cpp \
 		$(NULL)
 
 INSTALLED_HEADERS = \
@@ -571,6 +572,14 @@ check-valgrind::
 	$(check-sync-dirs) $(srcdir)/build $(MOZ_SYNC_BUILD_FILES)/build
 endif
 
+# The "find any vanilla new/new[] calls" script is tailored to Linux, so
+# only run it there.  That should be enough to catch any such calls that
+# creep in.
+ifeq ($(OS_ARCH),Linux)
+check::
+	$(srcdir)/config/find_vanilla_new_calls $(LIBRARY)
+endif
+
 ifdef ENABLE_TRACEJIT
 ifndef WINCE
 check::
@@ -632,12 +641,6 @@ ifneq ($(findstring -L,$(NSPR_LIBS)),)
 NSPR_STATIC_PATH = $(subst -L,,$(findstring -L,$(NSPR_LIBS)))
 else
 NSPR_STATIC_PATH = $(DIST)/lib
-endif
-
-ifdef MOZ_SHARK
-CFLAGS += -F/System/Library/PrivateFrameworks
-CXXFLAGS += -F/System/Library/PrivateFrameworks
-LDFLAGS += -F/System/Library/PrivateFrameworks -framework CHUD
 endif
 
 ifdef MOZ_VTUNE

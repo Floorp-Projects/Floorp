@@ -118,7 +118,8 @@ const CAPABILITIES = [
 const INTERNAL_KEYS = ["_tabStillLoading", "_hosts", "_formDataSaved"];
 
 // These are tab events that we listen to.
-const TAB_EVENTS = ["TabOpen", "TabClose", "TabSelect", "TabShow", "TabHide"];
+const TAB_EVENTS = ["TabOpen", "TabClose", "TabSelect", "TabShow", "TabHide",
+                    "TabPinned", "TabUnpinned"];
 
 #ifndef XP_WIN
 #define BROKEN_WM_Z_ORDER
@@ -200,9 +201,6 @@ SessionStoreService.prototype = {
 
   // whether we are in private browsing mode
   _inPrivateBrowsing: false,
-
-  // whether we clearing history on shutdown
-  _clearingOnShutdown: false,
 
   // whether the last window was closed and should be restored
   _restoreLastWindow: false,
@@ -454,7 +452,13 @@ SessionStoreService.prototype = {
     case "quit-application":
       if (aData == "restart") {
         this._prefBranch.setBoolPref("sessionstore.resume_session_once", true);
-        this._clearingOnShutdown = false;
+        // The browser:purge-session-history notification fires after the
+        // quit-application notification so unregister the
+        // browser:purge-session-history notification to prevent clearing
+        // session data on disk on a restart.  It is also unnecessary to
+        // perform any other sanitization processing on a restart as the
+        // browser is about to exit anyway.
+        Services.obs.removeObserver(this, "browser:purge-session-history");
       }
       else if (this._resume_session_once_on_shutdown != null) {
         // if the sessionstore.resume_session_once preference was changed by
@@ -469,6 +473,12 @@ SessionStoreService.prototype = {
       this._uninit();
       break;
     case "browser:purge-session-history": // catch sanitization 
+      this._clearDisk();
+      // If the browser is shutting down, simply return after clearing the
+      // session data on disk as this notification fires after the
+      // quit-application notification so the browser is about to exit.
+      if (this._loadState == STATE_QUITTING)
+        return;
       let openWindows = {};
       this._forEachBrowserWindow(function(aWindow) {
         Array.forEach(aWindow.gBrowser.tabs, function(aTab) {
@@ -487,7 +497,6 @@ SessionStoreService.prototype = {
       }
       // also clear all data about closed windows
       this._closedWindows = [];
-      this._clearDisk();
       // give the tabbrowsers a chance to clear their histories first
       var win = this._getMostRecentBrowserWindow();
       if (win)
@@ -497,8 +506,6 @@ SessionStoreService.prototype = {
       // Delete the private browsing backed up state, if any
       if ("_stateBackup" in this)
         delete this._stateBackup;
-      if (this._loadState == STATE_QUITTING)
-        this._clearingOnShutdown = true;
       break;
     case "browser:purge-domain-data":
       // does a session history entry contain a url for the given domain?
@@ -676,6 +683,10 @@ SessionStoreService.prototype = {
         break;
       case "TabHide":
         this.onTabHide(aEvent.originalTarget);
+        break;
+      case "TabPinned":
+      case "TabUnpinned":
+        this.saveStateDelayed(win);
         break;
     }
   },
@@ -3368,9 +3379,6 @@ SessionStoreService.prototype = {
    * @returns bool
    */
   _doResumeSession: function sss_doResumeSession() {
-    if (this._clearingOnShutdown)
-      return false;
-
     return this._prefBranch.getIntPref("startup.page") == 3 ||
            this._prefBranch.getBoolPref("sessionstore.resume_session_once");
   },

@@ -404,8 +404,10 @@ GetCustomIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
         return false;
 
     /* If there is no custom __iterator__ method, we are done here. */
-    if (vp->isUndefined())
+    if (!vp->isObject()) {
+        vp->setUndefined();
         return true;
+    }
 
     /* Otherwise call it and return that object. */
     LeaveTrace(cx);

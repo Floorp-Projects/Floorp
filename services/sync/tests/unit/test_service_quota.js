@@ -1,13 +1,6 @@
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 
-function send(body) {
-  return function(request, response) {
-    response.setStatusLine(request.httpVersion, 200, "OK");
-    response.bodyOutputStream.write(body, body.length);
-  };
-}
-
 function run_test() {
   let collection_usage = {steam:  65.11328,
                           petrol: 82.488281,
@@ -16,10 +9,10 @@ function run_test() {
 
   do_test_pending();
   let server = httpd_setup({
-    "/1.0/johndoe/info/collection_usage": send(JSON.stringify(collection_usage)),
-    "/1.0/johndoe/info/quota":            send(JSON.stringify(quota)),
-    "/1.0/janedoe/info/collection_usage": send("gargabe"),
-    "/1.0/janedoe/info/quota":            send("more garbage")
+    "/1.0/johndoe/info/collection_usage": httpd_handler(200, "OK", JSON.stringify(collection_usage)),
+    "/1.0/johndoe/info/quota":            httpd_handler(200, "OK", JSON.stringify(quota)),
+    "/1.0/janedoe/info/collection_usage": httpd_handler(200, "OK", "gargabe"),
+    "/1.0/janedoe/info/quota":            httpd_handler(200, "OK", "more garbage")
   });
 
   try {

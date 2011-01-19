@@ -105,3 +105,59 @@ function afterAllTabsLoaded(callback, win) {
   if (!stillToLoad)
     callback();
 }
+
+// ----------
+function showTabView(callback, win) {
+  win = win || window;
+
+  if (win.TabView.isVisible()) {
+    callback();
+    return;
+  }
+
+  whenTabViewIsShown(callback, win);
+  win.TabView.show();
+}
+
+// ----------
+function hideTabView(callback, win) {
+  win = win || window;
+
+  if (!win.TabView.isVisible()) {
+    callback();
+    return;
+  }
+
+  whenTabViewIsHidden(callback, win);
+  win.TabView.hide();
+}
+
+// ----------
+function whenTabViewIsHidden(callback, win) {
+  win = win || window;
+
+  if (!win.TabView.isVisible()) {
+    callback();
+    return;
+  }
+
+  win.addEventListener('tabviewhidden', function () {
+    win.removeEventListener('tabviewhidden', arguments.callee, false);
+    callback();
+  }, false);
+}
+
+// ----------
+function whenTabViewIsShown(callback, win) {
+  win = win || window;
+
+  if (win.TabView.isVisible()) {
+    callback();
+    return;
+  }
+
+  win.addEventListener('tabviewshown', function () {
+    win.removeEventListener('tabviewshown', arguments.callee, false);
+    callback();
+  }, false);
+}

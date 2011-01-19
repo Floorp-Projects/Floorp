@@ -84,14 +84,6 @@
 #include "nsXPCOMCIDInternal.h"
 #include "nsIXULRuntime.h"
 
-// For locale aware string methods
-#include "plstr.h"
-#include "nsIPlatformCharset.h"
-#include "nsICharsetConverterManager.h"
-#include "nsUnicharUtils.h"
-#include "nsILocaleService.h"
-#include "nsICollation.h"
-#include "nsCollationCID.h"
 #include "nsDOMClassInfo.h"
 
 #include "jsdbgapi.h"           // for JS_ClearWatchPointsForObject
@@ -223,10 +215,6 @@ static PRTime sMaxScriptRunTime;
 static PRTime sMaxChromeScriptRunTime;
 
 static nsIScriptSecurityManager *sSecurityManager;
-
-static nsICollation *gCollation;
-
-static nsIUnicodeDecoder *gDecoder;
 
 // nsUserActivityObserver observes user-interaction-active and
 // user-interaction-inactive notifications. It counts the number of
@@ -642,166 +630,6 @@ NS_ScriptErrorReporter(JSContext *cx,
             : ""));
   }
 #endif
-}
-
-static JSBool
-LocaleToUnicode(JSContext *cx, const char *src, jsval *rval)
-{
-  nsresult rv;
-
-  if (!gDecoder) {
-    // use app default locale
-    nsCOMPtr<nsILocaleService> localeService =
-      do_GetService(NS_LOCALESERVICE_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsILocale> appLocale;
-      rv = localeService->GetApplicationLocale(getter_AddRefs(appLocale));
-      if (NS_SUCCEEDED(rv)) {
-        nsAutoString localeStr;
-        rv = appLocale->
-          GetCategory(NS_LITERAL_STRING(NSILOCALE_TIME), localeStr);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get app locale info");
-
-        nsCOMPtr<nsIPlatformCharset> platformCharset =
-          do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
-
-        if (NS_SUCCEEDED(rv)) {
-          nsCAutoString charset;
-          rv = platformCharset->GetDefaultCharsetForLocale(localeStr, charset);
-          if (NS_SUCCEEDED(rv)) {
-            // get/create unicode decoder for charset
-            nsCOMPtr<nsICharsetConverterManager> ccm =
-              do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
-            if (NS_SUCCEEDED(rv))
-              ccm->GetUnicodeDecoder(charset.get(), &gDecoder);
-          }
-        }
-      }
-    }
-  }
-
-  JSString *str = nsnull;
-  PRInt32 srcLength = PL_strlen(src);
-
-  if (gDecoder) {
-    PRInt32 unicharLength = srcLength;
-    PRUnichar *unichars =
-      (PRUnichar *)JS_malloc(cx, (srcLength + 1) * sizeof(PRUnichar));
-    if (unichars) {
-      rv = gDecoder->Convert(src, &srcLength, unichars, &unicharLength);
-      if (NS_SUCCEEDED(rv)) {
-        // terminate the returned string
-        unichars[unicharLength] = 0;
-
-        // nsIUnicodeDecoder::Convert may use fewer than srcLength PRUnichars
-        if (unicharLength + 1 < srcLength + 1) {
-          PRUnichar *shrunkUnichars =
-            (PRUnichar *)JS_realloc(cx, unichars,
-                                    (unicharLength + 1) * sizeof(PRUnichar));
-          if (shrunkUnichars)
-            unichars = shrunkUnichars;
-        }
-        str = JS_NewUCString(cx,
-                             reinterpret_cast<jschar*>(unichars),
-                             unicharLength);
-      }
-      if (!str)
-        JS_free(cx, unichars);
-    }
-  }
-
-  if (!str) {
-    nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_OUT_OF_MEMORY);
-    return JS_FALSE;
-  }
-
-  *rval = STRING_TO_JSVAL(str);
-  return JS_TRUE;
-}
-
-
-static JSBool
-ChangeCase(JSContext *cx, JSString *src, jsval *rval,
-           void(* changeCaseFnc)(const nsAString&, nsAString&))
-{
-  nsDependentJSString depStr;
-  if (!depStr.init(cx, src)) {
-    return JS_FALSE;
-  }
-
-  nsAutoString result;
-  changeCaseFnc(depStr, result);
-
-  JSString *ucstr = JS_NewUCStringCopyN(cx, (jschar*)result.get(), result.Length());
-  if (!ucstr) {
-    return JS_FALSE;
-  }
-
-  *rval = STRING_TO_JSVAL(ucstr);
-
-  return JS_TRUE;
-}
-
-static JSBool
-LocaleToUpperCase(JSContext *cx, JSString *src, jsval *rval)
-{
-  return ChangeCase(cx, src, rval, ToUpperCase);
-}
-
-static JSBool
-LocaleToLowerCase(JSContext *cx, JSString *src, jsval *rval)
-{
-  return ChangeCase(cx, src, rval, ToLowerCase);
-}
-
-static JSBool
-LocaleCompare(JSContext *cx, JSString *src1, JSString *src2, jsval *rval)
-{
-  nsresult rv;
-
-  if (!gCollation) {
-    nsCOMPtr<nsILocaleService> localeService =
-      do_GetService(NS_LOCALESERVICE_CONTRACTID, &rv);
-
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsILocale> locale;
-      rv = localeService->GetApplicationLocale(getter_AddRefs(locale));
-
-      if (NS_SUCCEEDED(rv)) {
-        nsCOMPtr<nsICollationFactory> colFactory =
-          do_CreateInstance(NS_COLLATIONFACTORY_CONTRACTID, &rv);
-
-        if (NS_SUCCEEDED(rv)) {
-          rv = colFactory->CreateCollation(locale, &gCollation);
-        }
-      }
-    }
-
-    if (NS_FAILED(rv)) {
-      nsDOMClassInfo::ThrowJSException(cx, rv);
-
-      return JS_FALSE;
-    }
-  }
-
-  nsDependentJSString depStr1, depStr2;
-  if (!depStr1.init(cx, src1) || !depStr2.init(cx, src2)) {
-    return JS_FALSE;
-  }
-
-  PRInt32 result;
-  rv = gCollation->CompareString(nsICollation::kCollationStrengthDefault,
-                                 depStr1, depStr2, &result);
-
-  if (NS_FAILED(rv)) {
-    nsDOMClassInfo::ThrowJSException(cx, rv);
-
-    return JS_FALSE;
-  }
-
-  *rval = INT_TO_JSVAL(result);
-
-  return JS_TRUE;
 }
 
 #ifdef DEBUG
@@ -1311,15 +1139,7 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime)
 
     ::JS_SetOperationCallback(mContext, DOMOperationCallback);
 
-    static JSLocaleCallbacks localeCallbacks =
-      {
-        LocaleToUpperCase,
-        LocaleToLowerCase,
-        LocaleCompare,
-        LocaleToUnicode
-      };
-
-    ::JS_SetLocaleCallbacks(mContext, &localeCallbacks);
+    xpc_LocalizeContext(mContext);
   }
   mIsInitialized = PR_FALSE;
   mTerminations = nsnull;
@@ -1350,8 +1170,6 @@ nsJSContext::~nsJSContext()
 
     NS_IF_RELEASE(sRuntimeService);
     NS_IF_RELEASE(sSecurityManager);
-    NS_IF_RELEASE(gCollation);
-    NS_IF_RELEASE(gDecoder);
   }
 }
 
@@ -3313,16 +3131,6 @@ static JSFunctionSpec JProfFunctions[] = {
 
 #endif /* defined(MOZ_JPROF) */
 
-#ifdef MOZ_SHARK
-static JSFunctionSpec SharkFunctions[] = {
-    {"startShark",                 js_StartShark,              0, 0},
-    {"stopShark",                  js_StopShark,               0, 0},
-    {"connectShark",               js_ConnectShark,            0, 0},
-    {"disconnectShark",            js_DisconnectShark,         0, 0},
-    {nsnull,                       nsnull,                     0, 0}
-};
-#endif
-
 #ifdef MOZ_CALLGRIND
 static JSFunctionSpec CallgrindFunctions[] = {
     {"startCallgrind",             js_StartCallgrind,          0, 0},
@@ -3372,6 +3180,9 @@ nsJSContext::InitClasses(void *aGlobalObj)
     rv = NS_ERROR_FAILURE;
   }
 
+  // Attempt to initialize profiling functions
+  ::JS_DefineProfilingFunctions(mContext, globalObj);
+
 #ifdef NS_TRACE_MALLOC
   // Attempt to initialize TraceMalloc functions
   ::JS_DefineFunctions(mContext, globalObj, TraceMallocFunctions);
@@ -3380,11 +3191,6 @@ nsJSContext::InitClasses(void *aGlobalObj)
 #ifdef MOZ_JPROF
   // Attempt to initialize JProf functions
   ::JS_DefineFunctions(mContext, globalObj, JProfFunctions);
-#endif
-
-#ifdef MOZ_SHARK
-  // Attempt to initialize Shark functions
-  ::JS_DefineFunctions(mContext, globalObj, SharkFunctions);
 #endif
 
 #ifdef MOZ_CALLGRIND
@@ -3952,7 +3758,6 @@ nsJSRuntime::Startup()
   sDidShutdown = PR_FALSE;
   sContextCount = 0;
   sSecurityManager = nsnull;
-  gCollation = nsnull;
 }
 
 static int
@@ -4240,8 +4045,6 @@ nsJSRuntime::Shutdown()
     }
     NS_IF_RELEASE(sRuntimeService);
     NS_IF_RELEASE(sSecurityManager);
-    NS_IF_RELEASE(gCollation);
-    NS_IF_RELEASE(gDecoder);
   }
 
   sDidShutdown = PR_TRUE;

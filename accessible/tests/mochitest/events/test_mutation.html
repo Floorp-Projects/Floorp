@@ -244,6 +244,71 @@
     }
 
     /**
+     * Trigger content insertion, removal and insertion of the same element
+     * for the same parent.
+     */
+    function test1(aContainerID)
+    {
+      this.divNode = document.createElement("div");
+      this.divNode.setAttribute("id", "div-test1");
+      this.containerNode = getNode(aContainerID);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_SHOW, this.divNode),
+        new invokerChecker(EVENT_REORDER, this.containerNode)
+      ];
+
+      this.invoke = function test1_invoke()
+      {
+        this.containerNode.appendChild(this.divNode);
+        getComputedStyle(this.divNode, "").color;
+        this.containerNode.removeChild(this.divNode);
+        this.containerNode.appendChild(this.divNode);
+      }
+
+      this.getID = function test1_getID()
+      {
+        return "test1";
+      }
+    }
+
+    /**
+     * Trigger content insertion, removal and insertion of the same element
+     * for the different parents.
+     */
+    function test2(aContainerID, aTmpContainerID)
+    {
+      this.divNode = document.createElement("div");
+      this.divNode.setAttribute("id", "div-test2");
+      this.containerNode = getNode(aContainerID);
+      this.tmpContainerNode = getNode(aTmpContainerID);
+      this.container = getAccessible(this.containerNode);
+      this.tmpContainer = getAccessible(this.tmpContainerNode);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_SHOW, this.divNode),
+        new invokerChecker(EVENT_REORDER, this.containerNode)
+      ];
+
+      this.unexpectedEventSeq = [
+        new invokerChecker(EVENT_REORDER, this.tmpContainerNode)
+      ];
+
+      this.invoke = function test2_invoke()
+      {
+        this.tmpContainerNode.appendChild(this.divNode);
+        getComputedStyle(this.divNode, "").color;
+        this.tmpContainerNode.removeChild(this.divNode);
+        this.containerNode.appendChild(this.divNode);
+      }
+
+      this.getID = function test2_getID()
+      {
+        return "test2";
+      }
+    }
+
+    /**
      * Target getters.
      */
     function getFirstChild(aNode)
@@ -361,6 +426,10 @@
       gQueue.push(new changeClass("container3", "link8", "visibilityHidden",
                                   kHideEvents));
 
+      gQueue.push(new test1("testContainer"));
+      gQueue.push(new test2("testContainer", "testContainer2"));
+      gQueue.push(new test2("testContainer", "testNestedContainer"));
+
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
 
@@ -374,23 +443,23 @@
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=469985"
      title=" turn the test from bug 354745 into mochitest">
-    Mozilla Bug 469985
-  </a><br>
+    Mozilla Bug 469985</a>
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=472662"
      title="no reorder event when html:link display property is changed from 'none' to 'inline'">
-    Mozilla Bug 472662
-  </a><br>
+    Mozilla Bug 472662</a>
   <a target="_blank"
      title="Rework accessible tree update code"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=570275">
-    Mozilla Bug 570275
-  </a><br>
+    Mozilla Bug 570275</a>
   <a target="_blank"
      title="Develop a way to handle visibility style"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=606125">
-    Mozilla Bug 606125
-  </a>
+    Mozilla Bug 606125</a>
+  <a target="_blank"
+     title="Update accessible tree on content insertion after layout"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=498015">
+    Mozilla Bug 498015</a>
 
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -416,6 +485,8 @@
 
     <div id="container2" class="displayNone"><a id="link7">Link #7</a></div>
     <div id="container3" class="visibilityHidden"><a id="link8">Link #8</a></div>
+    <div id="testNestedContainer"></div>
   </div>
+  <div id="testContainer2"></div>
 </body>
 </html>

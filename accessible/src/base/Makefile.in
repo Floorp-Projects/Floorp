@@ -53,6 +53,7 @@ CPPSRCS = \
   AccGroupInfo.cpp \
   AccIterator.cpp \
   filters.cpp \
+  NotificationController.cpp \
   nsAccDocManager.cpp \
   nsAccessNode.cpp \
   nsARIAGridAccessible.cpp \

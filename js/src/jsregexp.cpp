@@ -118,14 +118,14 @@ Class js::regexp_statics_class = {
  * Note that the refcount of |newRegExp| is unchanged.
  */
 static void
-SwapObjectRegExp(JSContext *cx, JSObject *obj, RegExp &newRegExp)
+SwapObjectRegExp(JSContext *cx, JSObject *obj, AlreadyIncRefed<RegExp> newRegExp)
 {
     RegExp *oldRegExp = RegExp::extractFrom(obj);
 #ifdef DEBUG
-    assertSameCompartment(cx, obj, newRegExp.compartment);
+    assertSameCompartment(cx, obj, newRegExp->compartment);
 #endif
 
-    obj->setPrivate(&newRegExp);
+    obj->setPrivate(newRegExp.get());
     obj->zeroRegExpLastIndex();
     if (oldRegExp)
         oldRegExp->decref(cx);
@@ -158,9 +158,10 @@ js_CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *proto)
              * This regex is lacking flags from the statics, so we must recompile with the new
              * flags instead of increffing.
              */
-            re = RegExp::create(cx, re->getSource(), origFlags | staticsFlags);
-            if (!re)
+            AlreadyIncRefed<RegExp> clone = RegExp::create(cx, re->getSource(), origFlags | staticsFlags);
+            if (!clone)
                 return NULL;
+            re = clone.get();
         } else {
             re->incref(cx);
         }
@@ -282,14 +283,14 @@ RegExp::parseFlags(JSContext *cx, JSString *flagStr, uint32 &flagsOut)
     return true;
 }
 
-RegExp *
+AlreadyIncRefed<RegExp>
 RegExp::createFlagged(JSContext *cx, JSString *str, JSString *opt)
 {
     if (!opt)
         return create(cx, str, 0);
     uint32 flags = 0;
     if (!parseFlags(cx, opt, flags))
-        return false;
+        return AlreadyIncRefed<RegExp>(NULL);
     return create(cx, str, flags);
 }
 
@@ -504,10 +505,10 @@ js_XDRRegExpObject(JSXDRState *xdr, JSObject **objp)
             return false;
         obj->clearParent();
         obj->clearProto();
-        RegExp *re = RegExp::create(xdr->cx, source, flagsword);
+        AlreadyIncRefed<RegExp> re = RegExp::create(xdr->cx, source, flagsword);
         if (!re)
             return false;
-        obj->setPrivate(re);
+        obj->setPrivate(re.get());
         obj->zeroRegExpLastIndex();
         *objp = obj;
     }
@@ -666,10 +667,10 @@ static bool
 regexp_compile_sub_tail(JSContext *cx, JSObject *obj, Value *rval, JSString *str, uint32 flags = 0)
 {
     flags |= cx->regExpStatics()->getFlags();
-    RegExp *re = RegExp::create(cx, str, flags);
+    AlreadyIncRefed<RegExp> re = RegExp::create(cx, str, flags);
     if (!re)
         return false;
-    SwapObjectRegExp(cx, obj, *re);
+    SwapObjectRegExp(cx, obj, re);
     *rval = ObjectValue(*obj);
     return true;
 }
@@ -697,16 +698,13 @@ regexp_compile_sub(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value 
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NEWREGEXP_FLAGGED);
             return false;
         }
-        RegExp *clone;
-        {
-            RegExp *re = RegExp::extractFrom(&sourceObj);
-            if (!re)
-                return false;
-            clone = RegExp::clone(cx, *re);
-        }
+        RegExp *re = RegExp::extractFrom(&sourceObj);
+        if (!re)
+            return false;
+        AlreadyIncRefed<RegExp> clone = RegExp::clone(cx, *re);
         if (!clone)
             return false;
-        SwapObjectRegExp(cx, obj, *clone);
+        SwapObjectRegExp(cx, obj, clone);
         *rval = ObjectValue(*obj);
         return true;
     }
@@ -755,7 +753,7 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, Value *argv, JSBool te
      * Code execution under this call could swap out the guts of |obj|, so we
      * have to take a defensive refcount here.
      */
-    AutoRefCount<RegExp> arc(cx, re);
+    AutoRefCount<RegExp> arc(cx, NeedsIncRef<RegExp>(re));
 
     jsdouble lastIndex;
     if (re->global() || re->sticky()) {
@@ -876,10 +874,10 @@ regexp_construct(JSContext *cx, uintN argc, Value *vp)
 static bool
 InitRegExpClassCompile(JSContext *cx, JSObject *obj)
 {
-    RegExp *re = RegExp::create(cx, cx->runtime->emptyString, 0);
+    AlreadyIncRefed<RegExp> re = RegExp::create(cx, cx->runtime->emptyString, 0);
     if (!re)
         return false;
-    SwapObjectRegExp(cx, obj, *re);
+    SwapObjectRegExp(cx, obj, re);
     return true;
 }
 

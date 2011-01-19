@@ -721,6 +721,10 @@ namespace nanojit
         // Generally, void instructions (statements) are always live and
         // non-void instructions (expressions) are live if used by another
         // live instruction.  But there are some trickier cases.
+        // Any non-void instruction can be marked isResultLive=1 even
+        // when it is unreachable, e.g. due to an always-taken branch.
+        // The assembler marks it live if it sees any uses, regardless of
+        // whether those uses are in reachable code or not.
         bool isLive() const {
             return isV() ||
                    sharedFields.isResultLive ||

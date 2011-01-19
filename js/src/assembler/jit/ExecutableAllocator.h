@@ -113,7 +113,7 @@ private:
         RChunk* chunk;
 #endif
     };
-    typedef js::Vector<Allocation, 2 ,js::SystemAllocPolicy > AllocationList;
+    typedef js::Vector<Allocation, 2, js::SystemAllocPolicy> AllocationList;
 
     // Reference count for automatic reclamation.
     unsigned m_refCount;
@@ -132,14 +132,16 @@ public:
     { 
         JS_ASSERT(m_refCount != 0);
         if (--m_refCount == 0)
-            delete this;
+            js_delete(this);
     }
 
     static ExecutablePool* create(size_t n)
     {
-        ExecutablePool *pool = new ExecutablePool(n);
-        if (!pool->m_freePtr) {
-            delete pool;
+        /* We can't (easily) use js_new() here because the constructor is private. */
+        void *memory = js_malloc(sizeof(ExecutablePool));
+        ExecutablePool *pool = memory ? new(memory) ExecutablePool(n) : NULL;
+        if (!pool || !pool->m_freePtr) {
+            js_delete(pool);
             return NULL;
         }
         return pool;
@@ -207,7 +209,9 @@ public:
     // Returns NULL on OOM.
     static ExecutableAllocator *create()
     {
-        ExecutableAllocator *allocator = new ExecutableAllocator();
+        /* We can't (easily) use js_new() here because the constructor is private. */
+        void *memory = js_malloc(sizeof(ExecutableAllocator));
+        ExecutableAllocator *allocator = memory ? new(memory) ExecutableAllocator() : NULL;
         if (!allocator)
             return allocator;
 
@@ -215,7 +219,7 @@ public:
             intializePageSize();
         ExecutablePool *pool = ExecutablePool::create(JIT_ALLOCATOR_LARGE_ALLOC_SIZE);
         if (!pool) {
-            delete allocator;
+            js_delete(allocator);
             return NULL;
         }
         JS_ASSERT(allocator->m_smallAllocationPools.empty());
@@ -226,7 +230,7 @@ public:
     ~ExecutableAllocator()
     {
         for (size_t i = 0; i < m_smallAllocationPools.length(); i++)
-            delete m_smallAllocationPools[i];
+            js_delete(m_smallAllocationPools[i]);
     }
 
     // poolForSize returns reference-counted objects. The caller owns a reference

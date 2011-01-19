@@ -325,6 +325,12 @@ BookmarksStore.prototype = {
   },
 
   applyIncoming: function BStore_applyIncoming(record) {
+    // Don't bother with pre and post-processing for deletions.
+    if (record.deleted) {
+      Store.prototype.applyIncoming.apply(this, arguments);
+      return;
+    }
+
     // For special folders we're only interested in child ordering.
     if ((record.id in kSpecialIds) && record.children) {
       this._log.debug("Processing special node: " + record.id);
@@ -367,19 +373,19 @@ BookmarksStore.prototype = {
 
     // Figure out the local id of the parent GUID if available
     let parentGUID = record.parentid;
-    record._orphan = false;
-    if (parentGUID != null) {
-      let parentId = this.idForGUID(parentGUID);
+    if (!parentGUID) {
+      throw "Record " + record.id + " has invalid parentid: " + parentGUID;
+    }
 
-      // Default to unfiled if we don't have the parent yet
-      if (parentId <= 0) {
-        this._log.trace("Reparenting to unfiled until parent is synced");
-        record._orphan = true;
-        parentId = kSpecialIds.unfiled;
-      }
-
+    let parentId = this.idForGUID(parentGUID);
+    if (parentId > 0) {
       // Save the parent id for modifying the bookmark later
       record._parent = parentId;
+      record._orphan = false;
+    } else {
+      this._log.trace("Record " + record.id +
+                      " is an orphan: could not find parent " + parentGUID);
+      record._orphan = true;
     }
 
     // Do the normal processing of incoming records
@@ -396,7 +402,7 @@ BookmarksStore.prototype = {
           this._childrenToOrder[record.id] = record.children;
       }
 
-      // Create an annotation to remember that it needs a parent
+      // Create an annotation to remember that it needs reparenting.
       if (record._orphan)
         Utils.anno(itemId, PARENT_ANNO, parentGUID);
     }
@@ -421,12 +427,32 @@ BookmarksStore.prototype = {
     this._log.debug("Reparenting orphans " + orphans + " to " + parentId);
     orphans.forEach(function(orphan) {
       // Move the orphan to the parent and drop the missing parent annotation
-      Svc.Bookmark.moveItem(orphan, parentId, Svc.Bookmark.DEFAULT_INDEX);
-      Svc.Annos.removeItemAnnotation(orphan, PARENT_ANNO);
+      if (this._reparentItem(orphan, parentId)) {
+        Svc.Annos.removeItemAnnotation(orphan, PARENT_ANNO);
+      }
     }, this);
   },
 
+  _reparentItem: function _reparentItem(itemId, parentId) {
+    this._log.trace("Attempting to move item " + itemId + " to new parent " +
+                    parentId);
+    try {
+      if (parentId > 0) {
+        Svc.Bookmark.moveItem(itemId, parentId, Svc.Bookmark.DEFAULT_INDEX);
+        return true;
+      }
+    } catch(ex) {
+      this._log.debug("Failed to reparent item. " + Utils.exceptionStr(ex));
+    }
+    return false;
+  },
+
   create: function BStore_create(record) {
+    // Default to unfiled if we don't have the parent yet
+    if (!record._parent) {
+      record._parent = kSpecialIds.unfiled;
+    }
+
     let newId;
     switch (record.type) {
     case "bookmark":
@@ -438,7 +464,9 @@ BookmarksStore.prototype = {
       this._log.debug(["created bookmark", newId, "under", record._parent,
                        "as", record.title, record.bmkUri].join(" "));
 
-      this._tagURI(uri, record.tags);
+      if (Utils.isArray(record.tags)) {
+        this._tagURI(uri, record.tags);
+      }
       this._bms.setKeywordForBookmark(newId, record.keyword);
       if (record.description)
         Utils.anno(newId, "bookmarkProperties/description", record.description);
@@ -540,26 +568,30 @@ BookmarksStore.prototype = {
     this._log.trace("Updating " + record.id + " (" + itemId + ")");
 
     // Move the bookmark to a new parent or new position if necessary
-    if (Svc.Bookmark.getFolderIdForItem(itemId) != record._parent) {
-      this._log.trace("Moving item to a new parent.");
-      Svc.Bookmark.moveItem(itemId, record._parent, Svc.Bookmark.DEFAULT_INDEX);
+    if (record._parent > 0 &&
+        Svc.Bookmark.getFolderIdForItem(itemId) != record._parent) {
+      this._reparentItem(itemId, record._parent);
     }
 
     for (let [key, val] in Iterator(record.cleartext)) {
       switch (key) {
       case "title":
+        val = val || "";
         this._bms.setItemTitle(itemId, val);
         break;
       case "bmkUri":
         this._bms.changeBookmarkURI(itemId, Utils.makeURI(val));
         break;
       case "tags":
-        this._tagURI(this._bms.getBookmarkURI(itemId), val);
+        if (Utils.isArray(val)) {
+          this._tagURI(this._bms.getBookmarkURI(itemId), val);
+        }
         break;
       case "keyword":
         this._bms.setKeywordForBookmark(itemId, val);
         break;
       case "description":
+        val = val || "";
         Utils.anno(itemId, "bookmarkProperties/description", val);
         break;
       case "loadInSidebar":
@@ -644,7 +676,7 @@ BookmarksStore.prototype = {
     try {
       return Utils.anno(id, "bookmarkProperties/description");
     } catch (e) {
-      return undefined;
+      return null;
     }
   },
 

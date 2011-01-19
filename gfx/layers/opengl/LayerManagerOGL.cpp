@@ -61,8 +61,6 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch2.h"
 
-#include "nsIGfxInfo.h"
-
 namespace mozilla {
 namespace layers {
 
@@ -150,52 +148,37 @@ LayerManagerOGL::CleanupResources()
   mGLContext = nsnull;
 }
 
-PRBool
-LayerManagerOGL::Initialize(GLContext *aExistingContext)
+already_AddRefed<mozilla::gl::GLContext>
+LayerManagerOGL::CreateContext()
 {
-  if (aExistingContext) {
-    mGLContext = aExistingContext;
-  } else {
-    if (mGLContext)
-      CleanupResources();
-
-    nsCOMPtr<nsIPrefBranch2> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-
-    PRBool forceAccelerate = PR_FALSE;
-    if (prefs) {
-      // we should use AddBoolPrefVarCache
-      prefs->GetBoolPref("layers.acceleration.force-enabled",
-                         &forceAccelerate);
-    }
-
-    nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
-    if (gfxInfo) {
-      PRInt32 status;
-      if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_OPENGL_LAYERS, &status))) {
-        if (status != nsIGfxInfo::FEATURE_NO_INFO && !forceAccelerate) {
-          NS_WARNING("OpenGL-accelerated layers are not supported on this system.");
-          return PR_FALSE;
-        }
-      }
-    }
-
-    mGLContext = nsnull;
+  nsRefPtr<GLContext> context;
 
 #ifdef XP_WIN
-    if (PR_GetEnv("MOZ_LAYERS_PREFER_EGL")) {
-      printf_stderr("Trying GL layers...\n");
-      mGLContext = gl::GLContextProviderEGL::CreateForWindow(mWidget);
-    }
+  if (PR_GetEnv("MOZ_LAYERS_PREFER_EGL")) {
+    printf_stderr("Trying GL layers...\n");
+    context = gl::GLContextProviderEGL::CreateForWindow(mWidget);
+  }
 #endif
 
-    if (!mGLContext)
-      mGLContext = gl::GLContextProvider::CreateForWindow(mWidget);
+  if (!context)
+    context = gl::GLContextProvider::CreateForWindow(mWidget);
 
-    if (!mGLContext) {
-      NS_WARNING("Failed to create LayerManagerOGL context");
-      return PR_FALSE;
-    }
+  if (!context) {
+    NS_WARNING("Failed to create LayerManagerOGL context");
   }
+  return context.forget();
+}
+
+PRBool
+LayerManagerOGL::Initialize(nsRefPtr<GLContext> aContext)
+{
+  // Do not allow double intiailization
+  NS_ABORT_IF_FALSE(mGLContext == nsnull, "Don't reiniailize layer managers");
+
+  if (!aContext)
+    return PR_FALSE;
+
+  mGLContext = aContext;
 
   MakeCurrent();
 
@@ -244,6 +227,10 @@ LayerManagerOGL::Initialize(GLContext *aExistingContext)
                  sLayerVS, sSolidColorLayerFS);
   SHADER_PROGRAM(YCbCrLayerProgramType, YCbCrTextureLayerProgram,
                  sLayerVS, sYCbCrTextureLayerFS);
+  SHADER_PROGRAM(ComponentAlphaPass1ProgramType, ComponentAlphaTextureLayerProgram,
+                 sLayerVS, sComponentPass1FS);
+  SHADER_PROGRAM(ComponentAlphaPass2ProgramType, ComponentAlphaTextureLayerProgram,
+                 sLayerVS, sComponentPass2FS);
   /* Copy programs (used for final framebuffer blit) */
   SHADER_PROGRAM(Copy2DProgramType, CopyProgram,
                  sCopyVS, sCopy2DFS);
@@ -869,7 +856,9 @@ LayerManagerOGL::ProgramType LayerManagerOGL::sLayerProgramTypes[] = {
   gl::BGRXLayerProgramType,
   gl::RGBARectLayerProgramType,
   gl::ColorLayerProgramType,
-  gl::YCbCrLayerProgramType
+  gl::YCbCrLayerProgramType,
+  gl::ComponentAlphaPass1ProgramType,
+  gl::ComponentAlphaPass2ProgramType
 };
 
 #define FOR_EACH_LAYER_PROGRAM(vname)                       \
@@ -895,7 +884,7 @@ LayerManagerOGL::SetLayerProgramProjectionMatrix(const gfx3DMatrix& aMatrix)
 }
 
 void
-LayerManagerOGL::CreateFBOWithTexture(int aWidth, int aHeight,
+LayerManagerOGL::CreateFBOWithTexture(const nsIntRect& aRect, InitMode aInit,
                                       GLuint *aFBO, GLuint *aTexture)
 {
   GLuint tex, fbo;
@@ -903,14 +892,23 @@ LayerManagerOGL::CreateFBOWithTexture(int aWidth, int aHeight,
   mGLContext->fActiveTexture(LOCAL_GL_TEXTURE0);
   mGLContext->fGenTextures(1, &tex);
   mGLContext->fBindTexture(mFBOTextureTarget, tex);
-  mGLContext->fTexImage2D(mFBOTextureTarget,
-                          0,
-                          LOCAL_GL_RGBA,
-                          aWidth, aHeight,
-                          0,
-                          LOCAL_GL_RGBA,
-                          LOCAL_GL_UNSIGNED_BYTE,
-                          NULL);
+  if (aInit == InitModeCopy) {
+    mGLContext->fCopyTexImage2D(mFBOTextureTarget,
+                                0,
+                                LOCAL_GL_RGBA,
+                                aRect.x, aRect.y,
+                                aRect.width, aRect.height,
+                                0);
+  } else {
+    mGLContext->fTexImage2D(mFBOTextureTarget,
+                            0,
+                            LOCAL_GL_RGBA,
+                            aRect.width, aRect.height,
+                            0,
+                            LOCAL_GL_RGBA,
+                            LOCAL_GL_UNSIGNED_BYTE,
+                            NULL);
+  }
   mGLContext->fTexParameteri(mFBOTextureTarget, LOCAL_GL_TEXTURE_MIN_FILTER,
                              LOCAL_GL_LINEAR);
   mGLContext->fTexParameteri(mFBOTextureTarget, LOCAL_GL_TEXTURE_MAG_FILTER,
@@ -927,6 +925,11 @@ LayerManagerOGL::CreateFBOWithTexture(int aWidth, int aHeight,
 
   NS_ASSERTION(mGLContext->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER) ==
                LOCAL_GL_FRAMEBUFFER_COMPLETE, "Error setting up framebuffer.");
+
+  if (aInit == InitModeClear) {
+    mGLContext->fClearColor(0.0, 0.0, 0.0, 0.0);
+    mGLContext->fClear(LOCAL_GL_COLOR_BUFFER_BIT);
+  }
 
   *aFBO = fbo;
   *aTexture = tex;

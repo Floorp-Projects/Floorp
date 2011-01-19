@@ -121,7 +121,15 @@ public:
                                 nscoord aX, nscoord aY,
                                 PRInt32 aFontID,
                                 const nscoord* aSpacing,
-                                nsThebesRenderingContext *aContext);
+                                nsThebesRenderingContext *aContext)
+    {
+      NS_ASSERTION(!aSpacing, "Spacing not supported here");
+      return DrawString(aString, aLength, aX, aY, aContext, aContext);
+    }
+    virtual nsresult DrawString(const PRUnichar* aString, PRUint32 aLength,
+                                nscoord aX, nscoord aY,
+                                nsIRenderingContext *aContext,
+                                nsIRenderingContext *aTextRunConstructionContext);
 
 #ifdef MOZ_MATHML
     // These two functions get the bounding metrics for this handle,

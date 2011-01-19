@@ -6317,7 +6317,6 @@ _malloc_prefork(void)
 		if (arenas[i] != NULL)
 			malloc_spin_lock(&arenas[i]->lock);
 	}
-	malloc_spin_unlock(&arenas_lock);
 
 	malloc_mutex_lock(&base_mtx);
 
@@ -6335,7 +6334,6 @@ _malloc_postfork(void)
 
 	malloc_mutex_unlock(&base_mtx);
 
-	malloc_spin_lock(&arenas_lock);
 	for (i = 0; i < narenas; i++) {
 		if (arenas[i] != NULL)
 			malloc_spin_unlock(&arenas[i]->lock);

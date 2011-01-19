@@ -153,7 +153,8 @@ add_test(function() {
     is(get("detail-icon").src, "chrome://foo/skin/icon64.png", "Icon should be correct");
     is_element_hidden(get("detail-creator"), "Creator should be hidden");
     is_element_hidden(get("detail-screenshot"), "Screenshot should be hidden");
-    is(get("detail-desc").textContent, "Longer description", "Description should be correct");
+    is(get("detail-desc").textContent, "Short description", "Description should be correct");
+    is(get("detail-fulldesc").textContent, "Longer description", "Full description should be correct");
 
     is_element_visible(get("detail-contributions"), "Contributions section should be visible");
     is_element_visible(get("detail-contrib-suggested"), "Contributions amount should be visible");
@@ -258,6 +259,7 @@ add_test(function() {
     is_element_visible(get("detail-screenshot"), "Screenshot should be visible");
     is(get("detail-screenshot").src, "http://example.com/screenshot", "Should be showing the full sized screenshot");
     is(get("detail-desc").textContent, "Short description", "Description should be correct");
+    is_element_hidden(get("detail-fulldesc"), "Full description should be hidden");
 
     is_element_visible(get("detail-contributions"), "Contributions section should be visible");
     is_element_hidden(get("detail-contrib-suggested"), "Contributions amount should be hidden");
@@ -672,7 +674,8 @@ add_test(function() {
     is(get("detail-icon").src, "chrome://foo/skin/icon264.png", "Icon should be correct");
     is_element_hidden(get("detail-creator"), "Creator should be hidden");
     is_element_hidden(get("detail-screenshot"), "Screenshot should be hidden");
-    is(get("detail-desc").textContent, "Longer description replacement", "Description should be correct");
+    is(get("detail-desc").textContent, "Short description replacement", "Description should be correct");
+    is(get("detail-fulldesc").textContent, "Longer description replacement", "Full description should be correct");
 
     is_element_hidden(get("detail-contributions"), "Contributions section should be hidden");
 

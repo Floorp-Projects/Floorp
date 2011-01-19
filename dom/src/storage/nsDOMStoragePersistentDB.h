@@ -43,9 +43,14 @@
 #include "mozIStorageConnection.h"
 #include "mozIStorageStatement.h"
 #include "nsTHashtable.h"
+#include "nsDataHashtable.h"
+#include "mozilla/TimeStamp.h"
 
 class DOMStorageImpl;
 class nsSessionStorageEntry;
+
+using mozilla::TimeStamp;
+using mozilla::TimeDuration;
 
 class nsDOMStoragePersistentDB
 {
@@ -55,11 +60,6 @@ public:
 
   nsresult
   Init(const nsString& aDatabaseName);
-
-  nsresult
-  EnsureLoadTemporaryTableForStorage(DOMStorageImpl* aStorage);
-  nsresult
-  FlushAndDeleteTemporaryTableForStorage(DOMStorageImpl* aStorage);
 
   /**
    * Retrieve a list of all the keys associated with a particular domain.
@@ -162,7 +162,26 @@ public:
    */
   nsresult MaybeCommitInsertTransaction();
 
+  /**
+   * Flushes all temporary tables based on time or forcibly during shutdown. 
+   */
+  nsresult FlushTemporaryTables(bool force);
+
 protected:
+  /**
+   * Ensures that a temporary table is correctly filled for the scope of
+   * the given storage.
+   */
+  nsresult EnsureLoadTemporaryTableForStorage(DOMStorageImpl* aStorage);
+
+  struct FlushTemporaryTableData {
+    nsDOMStoragePersistentDB* mDB;
+    bool mForce;
+    nsresult mRV;
+  };
+  static PLDHashOperator FlushTemporaryTable(nsCStringHashKey::KeyType aKey,
+                                             TimeStamp& aData,
+                                             void* aUserArg);       
 
   nsCOMPtr<mozIStorageConnection> mConnection;
 
@@ -182,6 +201,11 @@ protected:
 
   nsCString mCachedOwner;
   PRInt32 mCachedUsage;
+
+  // Maps ScopeDBKey to time of the temporary table load for that scope.
+  // If a record is present, the temp table has been loaded. If it is not
+  // present, the table has not yet been loaded or has alrady been flushed.
+  nsDataHashtable<nsCStringHashKey, TimeStamp> mTempTableLoads; 
 
   friend class nsDOMStorageDBWrapper;
   friend class nsDOMStorageMemoryDB;

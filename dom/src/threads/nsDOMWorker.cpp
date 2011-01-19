@@ -778,12 +778,6 @@ JSFunctionSpec gDOMWorkerFunctions[] = {
   { "Worker",              nsDOMWorkerFunctions::NewWorker,           1, 0 },
   { "atob",                nsDOMWorkerFunctions::AtoB,                1, 0 },
   { "btoa",                nsDOMWorkerFunctions::BtoA,                1, 0 },
-#ifdef MOZ_SHARK
-  { "startShark",          js_StartShark,                             0, 0 },
-  { "stopShark",           js_StopShark,                              0, 0 },
-  { "connectShark",        js_ConnectShark,                           0, 0 },
-  { "disconnectShark",     js_DisconnectShark,                        0, 0 },
-#endif
   { nsnull,                nsnull,                                    0, 0 }
 };
 
@@ -2109,6 +2103,9 @@ nsDOMWorker::CompileGlobalObject(JSContext* aCx, nsLazyAutoRequest *aRequest,
 
   // Set up worker thread functions.
   success = JS_DefineFunctions(aCx, global, gDOMWorkerFunctions);
+  NS_ENSURE_TRUE(success, PR_FALSE);
+
+  success = JS_DefineProfilingFunctions(aCx, global);
   NS_ENSURE_TRUE(success, PR_FALSE);
 
   if (IsPrivileged()) {

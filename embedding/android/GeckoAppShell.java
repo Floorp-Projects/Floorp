@@ -79,8 +79,10 @@ class GeckoAppShell
     static private final int NOTIFY_IME_CANCELCOMPOSITION = 2;
     static private final int NOTIFY_IME_FOCUSCHANGE = 3;
 
-    static private final long kFreeSpaceThreshold = 157286400L; // 150MB
+    static public final long kFreeSpaceThreshold = 157286400L; // 150MB
     static private final long kLibFreeSpaceBuffer = 20971520L; // 29MB
+    static private File sCacheFile = null;
+    static private int sFreeSpace = -1;
 
     /* The Android-side API: API methods that Android calls */
 
@@ -96,6 +98,21 @@ class GeckoAppShell
     public static native void callObserver(String observerKey, String topic, String data);
     public static native void removeObserver(String observerKey);
     public static native void loadLibs(String apkName, boolean shouldExtract);
+
+    public static File getCacheDir() {
+        if (sCacheFile == null)
+            sCacheFile = GeckoApp.mAppContext.getCacheDir();
+        return sCacheFile;
+    }
+
+    public static long getFreeSpace() {
+        if (sFreeSpace == -1) {
+            StatFs cacheStats = new StatFs(getCacheDir().getPath());
+            sFreeSpace = cacheStats.getFreeBlocks() * 
+                cacheStats.getBlockSize();
+        }
+        return sFreeSpace;
+    }
 
     // java-side stuff
     public static void loadGeckoLibs(String apkName) {
@@ -123,13 +140,12 @@ class GeckoAppShell
 
         f = Environment.getDownloadCacheDirectory();
         GeckoAppShell.putenv("EXTERNAL_STORAGE=" + f.getPath());
-        File cacheFile = GeckoApp.mAppContext.getCacheDir();
+
+        File cacheFile = getCacheDir();
         GeckoAppShell.putenv("CACHE_PATH=" + cacheFile.getPath());
 
         // gingerbread introduces File.getUsableSpace(). We should use that.
-        StatFs cacheStats = new StatFs(cacheFile.getPath());
-        long freeSpace = cacheStats.getFreeBlocks() * cacheStats.getBlockSize();
-
+        long freeSpace = getFreeSpace();
         try {
             File downloadDir = null;
             if (Build.VERSION.SDK_INT >= 8)

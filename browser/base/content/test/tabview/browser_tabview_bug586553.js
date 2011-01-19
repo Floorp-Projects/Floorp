@@ -67,7 +67,7 @@ function onTabViewWindowLoaded() {
   
   gBrowser.tabContainer.addEventListener("TabMove", onTabMove, false);
     
-  groupItem = contentWindow.GroupItems.getActiveGroupItem();
+  let groupItem = contentWindow.GroupItems.getActiveGroupItem();
   
   // move 3 > 0 (and therefore 0 > 1, 1 > 2, 2 > 3)
   groupItem._children.splice(0, 0, groupItem._children.splice(3, 1)[0]);

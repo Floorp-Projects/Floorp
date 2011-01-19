@@ -477,7 +477,7 @@ struct JSObject : js::gc::Cell {
     }
 
     void deletingShapeChange(JSContext *cx, const js::Shape &shape);
-    bool methodShapeChange(JSContext *cx, const js::Shape &shape);
+    const js::Shape *methodShapeChange(JSContext *cx, const js::Shape &shape);
     bool methodShapeChange(JSContext *cx, uint32 slot);
     void protoShapeChange(JSContext *cx);
     void shadowingShapeChange(JSContext *cx, const js::Shape &shape);
@@ -551,9 +551,9 @@ struct JSObject : js::gc::Cell {
      * jsobjinlines.h after methodReadBarrier. The slot flavor is required by
      * JSOP_*GVAR, which deals in slots not shapes, while not deoptimizing to
      * map slot to shape unless JSObject::flags show that this is necessary.
-     * The methodShapeChange overload (directly below) parallels this.
+     * The methodShapeChange overload (above) parallels this.
      */
-    bool methodWriteBarrier(JSContext *cx, const js::Shape &shape, const js::Value &v);
+    const js::Shape *methodWriteBarrier(JSContext *cx, const js::Shape &shape, const js::Value &v);
     bool methodWriteBarrier(JSContext *cx, uint32 slot, const js::Value &v);
 
     bool isIndexed() const          { return !!(flags & INDEXED); }
@@ -1116,6 +1116,7 @@ struct JSObject : js::gc::Cell {
     bool allocSlot(JSContext *cx, uint32 *slotp);
     bool freeSlot(JSContext *cx, uint32 slot);
 
+  public:
     bool reportReadOnly(JSContext* cx, jsid id, uintN report = JSREPORT_ERROR);
     bool reportNotConfigurable(JSContext* cx, jsid id, uintN report = JSREPORT_ERROR);
     bool reportNotExtensible(JSContext *cx, uintN report = JSREPORT_ERROR);

@@ -11,7 +11,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is bug 594176 test.
+ * The Original Code is tabview bug 624953 test.
  *
  * The Initial Developer of the Original Code is
  * Mozilla Foundation.
@@ -19,7 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- * Raymond Lee <raymond@appcoast.com>
+ * Tim Taubert <tim.taubert@gmx.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,30 +36,38 @@
  * ***** END LICENSE BLOCK ***** */
 
 function test() {
-  let [origTab] = gBrowser.visibleTabs;
-  ok(!origTab.pinned, "The original tab is not pinned");
- 
-  let pinnedTab = gBrowser.addTab();
-  gBrowser.pinTab(pinnedTab);
-  ok(pinnedTab.pinned, "The new tab is pinned");
+  waitForExplicitFinish();
 
-  popup(origTab);
-  ok(!document.getElementById("context_tabViewMenu").disabled, 
-     "The tab view menu is enabled for normal tab");
+  let finishTest = function (groupItem) {
+    groupItem.addSubscriber(groupItem, 'groupHidden', function () {
+      groupItem.removeSubscriber(groupItem, 'groupHidden');
+      groupItem.closeHidden();
+      hideTabView(finish);
+    });
 
-  popup(pinnedTab);
-  ok(document.getElementById("context_tabViewMenu").disabled, 
-     "The tab view menu is disabled for pinned tab");
+    groupItem.closeAll();
+  }
 
-  gBrowser.unpinTab(pinnedTab);
-  popup(pinnedTab);
-  ok(!document.getElementById("context_tabViewMenu").disabled, 
-     "The tab view menu is enabled for unpinned tab");
+  showTabView(function () {
+    let cw = TabView.getContentWindow();
 
-  gBrowser.removeTab(pinnedTab);
-}
+    let bounds = new cw.Rect(20, 20, 150, 200);
+    let groupItem = new cw.GroupItem([], {bounds: bounds, immediately: true});
+    cw.GroupItems.setActiveGroupItem(groupItem);
 
-function popup(tab) {
-  document.popupNode = tab;
-  TabContextMenu.updateContextMenu(document.getElementById("tabContextMenu"));
+    for (let i=0; i<4; i++)
+      gBrowser.loadOneTab('about:blank', {inBackground: true});
+
+    ok(!groupItem._isStacked, 'groupItem is not stacked');
+    cw.GroupItems.pauseArrange();
+
+    groupItem.setSize(150, 150);
+    groupItem.setUserSize();
+    ok(!groupItem._isStacked, 'groupItem is still not stacked');
+
+    cw.GroupItems.resumeArrange();
+    ok(groupItem._isStacked, 'groupItem is now stacked');
+
+    finishTest(groupItem);
+  });
 }

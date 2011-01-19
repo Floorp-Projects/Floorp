@@ -56,25 +56,25 @@ template<class T>
 class OperatorDelete
 {
 public:
-  static void destroy(T* ptr) { delete ptr; }
+  static void destroy(T* ptr) { js_delete(ptr); }
 };
 
 template<class T>
 class OperatorArrayDelete
 {
 public:
-  static void destroy(T* ptr) { delete[] ptr; }
+  static void destroy(T* ptr) { js_array_delete(ptr); }
 };
 
-// Class that takes ownership of a pointer T*, and calls operator delete or
-// operator delete[] upon destruction.
+// Class that takes ownership of a pointer T*, and calls js_delete() or
+// js_array_delete() upon destruction.
 template<class T, class DeleteTraits = OperatorDelete<T> >
 class AutoPtr {
 private:
   typedef AutoPtr<T, DeleteTraits> self_type;
 
 public:
-  // An AutoPtr variant that calls operator delete[] instead.
+  // An AutoPtr variant that calls js_array_delete() instead.
   typedef AutoPtr<T, OperatorArrayDelete<T> > Array;
 
   AutoPtr() : mPtr(NULL) { }

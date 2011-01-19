@@ -348,9 +348,6 @@ AutoCompartment::enter()
     if (origin != destination) {
         LeaveTrace(context);
 
-        if (context->isExceptionPending())
-            return false;
-
         context->compartment = destination;
         JSObject *scopeChain = target->getGlobal();
         JS_ASSERT(scopeChain->isNative());
@@ -360,6 +357,9 @@ AutoCompartment::enter()
             context->compartment = origin;
             return false;
         }
+
+        if (context->isExceptionPending())
+            context->wrapPendingException();
     }
     entered = true;
     return true;

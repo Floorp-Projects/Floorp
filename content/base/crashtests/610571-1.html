@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<script>
+
+function boom()
+{
+  var frame1 = document.createElementNS("http://www.w3.org/1999/xhtml", "iframe"); frame1.src = "data:text/html,1"; document.body.appendChild(frame1);
+  var frame2 = document.createElementNS("http://www.w3.org/1999/xhtml", "iframe"); frame2.src = "data:text/html,2"; document.body.appendChild(frame2);
+  var frame1doc = frame1.contentDocument;
+  var frame1root = frame1doc.documentElement;
+  frame1root.appendChild(frame2);
+  setTimeout(function() { 
+    try {
+      frame2.contentDocument.q = frame1root.__lookupGetter__("nextSibling");
+    } catch(ex) {}
+    document.documentElement.removeAttribute("class");
+  }, 200);
+}
+
+</script>
+</head>
+
+<body onload="boom();"></body>
+</html>
+

@@ -40,7 +40,7 @@ tabbrowser {
   opacity: 0 !important;
   -moz-transition: min-width 200ms ease-out,
                    max-width 250ms ease-out,
-                   opacity 50ms ease-out 180ms /* hide the tab for the last 20ms of the max-width transition */;
+                   opacity 50ms ease-out 100ms /* hide the tab for the last 100ms of the max-width transition */;
 }
 
 .tab-throbber:not([fadein]):not([pinned]),
@@ -57,8 +57,8 @@ tabbrowser {
   -moz-transition: opacity 250ms;
 }
 
-.tabbrowser-tabs:not([pinnedonly]) > .tabbrowser-tab[pinned] {
-  position: fixed;
+.tabbrowser-tabs[positionpinnedtabs] > .tabbrowser-tab[pinned] {
+  position: fixed !important;
   display: block; /* position:fixed already does this (bug 579776), but let's be explicit */
 }
 
@@ -480,6 +480,9 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
   -moz-user-focus: normal;
 }
 
+/* We use the iconBox as the notification anchor when a popup notification is
+   created with a null anchorID, so in that case use a default anchor icon. */
+#notification-popup-box[anchorid="notification-popup-box"] > #default-notification-icon,
 #notification-popup-box[anchorid="geo-notification-icon"] > #geo-notification-icon,
 #notification-popup-box[anchorid="indexedDB-notification-icon"] > #indexedDB-notification-icon,
 #notification-popup-box[anchorid="addons-notification-icon"] > #addons-notification-icon,
@@ -506,7 +509,7 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
 }
 
 /* Remove the resizer from the statusbar compatibility shim */
-#status-bar > .statusbar-resizerpanel {
+#status-bar[hideresizer] > .statusbar-resizerpanel {
   display: none;
 }
 

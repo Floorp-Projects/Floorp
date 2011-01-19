@@ -109,10 +109,10 @@ public:
   void Init(nsDisplayListBuilder* aBuilder);
 
   /**
-   * Call this to notify that we are about to start a transaction on the
+   * Call this to notify that we have just started a transaction on the
    * retained layer manager aManager.
    */
-  void WillBeginRetainedLayerTransaction(LayerManager* aManager);
+  void DidBeginRetainedLayerTransaction(LayerManager* aManager);
 
   /**
    * Call this just before we end a transaction on aManager. If aManager

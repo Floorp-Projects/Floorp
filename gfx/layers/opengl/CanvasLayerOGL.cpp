@@ -179,8 +179,8 @@ CanvasLayerOGL::Updated(const nsIntRect& aRect)
       gl()->UploadSurfaceToTexture(updatedAreaSurface,
                                    mUpdatedRect,
                                    mTexture,
-                                          false,
-                                          mUpdatedRect.TopLeft());
+                                   false,
+                                   mUpdatedRect.TopLeft());
   }
 
   // sanity

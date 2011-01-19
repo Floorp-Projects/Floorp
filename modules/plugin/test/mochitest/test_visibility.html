@@ -13,30 +13,28 @@
 <body onload="startTest()">
   <p id="display"></p>
 
+  <script type="application/javascript" src="utils.js"></script>
   <script type="application/javascript">
   SimpleTest.waitForExplicitFinish();
 
-  function doubleForDoublePass() {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    if (SimpleTest.testPluginIsOOP())
-      return 1;
-
-    try {
-      if (Components.classes["@mozilla.org/gfx/info;1"].getService(Components.interfaces.nsIGfxInfo).D2DEnabled)
-        return 2;
-    }
-    catch (e) { }
-
-    return 1;
-  }
-
-  var didpaint = function() {
-    ok(false, "Plugin should not paint until it is visible!");
-  };
+  var didpaint = function() {};
 
   function startTest() {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+    if (SimpleTest.testPluginIsOOP()) {
+      if (p.getPaintCount() < 1) {
+        setTimeout(startTest, 0);
+        return;
+      }
+    }
+
+    didpaint = function() {
+      ok(false, "Plugin should not paint until it is visible!");
+    };
+
     ok(!p.isVisible(), "Plugin should not be visible.");
-    is(p.getPaintCount(), 0, "Plugin should not have painted.");
+    paintCountIs(p, 0, "Plugin should not have painted.");
 
     didpaint = part2;
 
@@ -45,8 +43,7 @@
 
   function part2() {
     ok(p.isVisible(), "Plugin should now be visible.");
-    is(p.getPaintCount(), 1 * doubleForDoublePass(),
-       "Plugin should have painted once.");
+    paintCountIs(p, 1, "Plugin should have painted once.");
 
     didpaint = part3;
 
@@ -59,8 +56,7 @@
 
   function part3() {
     ok(p.isVisible(), "Plugin should still be visible.");
-    is(p.getPaintCount(), 2 * doubleForDoublePass(),
-       "Plugin should have painted twice.");
+    paintCountIs(p, 2, "Plugin should have painted twice.");
 
     didpaint = function() {
       ok(false, "Plugin should not paint when it is invisible.");

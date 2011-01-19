@@ -108,10 +108,9 @@ function writeDataToFile(file, data) {
   fstream.close();
 }
 
-function addPendingCrashreport(crD, extra) {
+function addPendingCrashreport(crD, date, extra) {
   let pendingdir = crD.clone();
   pendingdir.append("pending");
-  let date = Date.now() - Math.round(Math.random() * 10 * 60000);
   let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"]
                       .getService(Ci.nsIUUIDGenerator);
   let uuid = uuidGenerator.generateUUID().toString();

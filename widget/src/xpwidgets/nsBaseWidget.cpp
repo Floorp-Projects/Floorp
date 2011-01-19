@@ -52,6 +52,7 @@
 #include "BasicLayers.h"
 #include "LayerManagerOGL.h"
 #include "nsIXULRuntime.h"
+#include "nsIGfxInfo.h"
 
 #ifdef DEBUG
 #include "nsIObserver.h"
@@ -784,7 +785,7 @@ nsBaseWidget::GetShouldAccelerate()
 
   PRBool disableAcceleration = PR_FALSE;
   PRBool forceAcceleration = PR_FALSE;
-#if defined(XP_WIN) || defined(XP_MACOSX) || defined(ANDROID)
+#if defined(XP_WIN) || defined(XP_MACOSX) || defined(ANDROID) || (MOZ_PLATFORM_MAEMO > 5)
   PRBool accelerateByDefault = PR_TRUE;
 #else
   PRBool accelerateByDefault = PR_FALSE;
@@ -812,7 +813,21 @@ nsBaseWidget::GetShouldAccelerate()
   if (disableAcceleration || safeMode)
     return PR_FALSE;
 
-  if (accelerateByDefault || forceAcceleration)
+  if (forceAcceleration)
+    return PR_TRUE;
+
+  nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
+  if (gfxInfo) {
+    PRInt32 status;
+    if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_OPENGL_LAYERS, &status))) {
+      if (status != nsIGfxInfo::FEATURE_NO_INFO) {
+        NS_WARNING("OpenGL-accelerated layers are not supported on this system.");
+        return PR_FALSE;
+      }
+    }
+  }
+
+  if (accelerateByDefault)
     return PR_TRUE;
 
   /* use the window acceleration flag */
@@ -828,7 +843,6 @@ LayerManager* nsBaseWidget::GetLayerManager(LayerManagerPersistence,
                                             bool* aAllowRetaining)
 {
   if (!mLayerManager) {
-    nsCOMPtr<nsIPrefBranch2> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
 
     mUseAcceleratedRendering = GetShouldAccelerate();
 

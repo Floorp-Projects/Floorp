@@ -192,8 +192,8 @@ nsSVGRectElement::ConstructPath(gfxContext *aCtx)
 
   /* If either the 'rx' or the 'ry' attribute isn't set, then we
      have to set it to the value of the other. */
-  PRBool hasRx = mLengthAttributes[RX].IsAnimValSet();
-  PRBool hasRy = mLengthAttributes[RY].IsAnimValSet();
+  PRBool hasRx = mLengthAttributes[RX].IsExplicitlySet();
+  PRBool hasRy = mLengthAttributes[RY].IsExplicitlySet();
   if (hasRx && !hasRy)
     ry = rx;
   else if (hasRy && !hasRx)

@@ -90,8 +90,10 @@
 #endif
 
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
+#ifdef MOZ_ENABLE_LIBXUL
 extern PRTime gXRE_mainTimestamp;
 extern PRTime gFirstPaintTimestamp;
+#endif
 // mfinklesessionstore-browser-state-restored might be a better choice than the one below
 static PRTime gRestoredTimestamp = 0;       // Timestamp of sessionstore-windows-restored
 static PRTime gProcessCreationTimestamp = 0;// Timestamp of sessionstore-windows-restored
@@ -685,8 +687,10 @@ nsAppStartup::GetStartupInfo()
     gProcessCreationTimestamp = CalculateProcessCreationTimestamp();
 
   MaybeDefineProperty(cx, obj, "process", gProcessCreationTimestamp);
+#ifdef MOZ_ENABLE_LIBXUL
   MaybeDefineProperty(cx, obj, "main", gXRE_mainTimestamp);
   MaybeDefineProperty(cx, obj, "firstPaint", gFirstPaintTimestamp);
+#endif
   MaybeDefineProperty(cx, obj, "sessionRestored", gRestoredTimestamp);
   return NS_OK;
 }
