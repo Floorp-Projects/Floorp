@@ -2011,7 +2011,10 @@ BasicShadowableCanvasLayer::Paint(gfxContext* aContext,
   // the shmem back buffer
   nsRefPtr<gfxContext> tmpCtx = new gfxContext(mBackBuffer);
   tmpCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
-  tmpCtx->DrawSurface(mSurface, gfxSize(mBounds.width, mBounds.height));
+
+  // call BasicCanvasLayer::Paint to draw to our tmp context, because
+  // it'll handle things like flipping correctly
+  BasicCanvasLayer::Paint(tmpCtx, nsnull, nsnull);
 
   BasicManager()->PaintedCanvas(BasicManager()->Hold(this),
                                 mBackBuffer);
