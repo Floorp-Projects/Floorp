@@ -858,7 +858,7 @@ js_FinishGC(JSRuntime *rt)
     for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c) {
         JSCompartment *comp = *c;
         comp->finishArenaLists();
-        delete comp;
+        js_delete(comp);
     }
     rt->compartments.clear();
     rt->atomsCompartment = NULL;
@@ -2207,7 +2207,7 @@ SweepCompartments(JSContext *cx, JSGCInvocationKind gckind)
                     (void) callback(cx, compartment, JSCOMPARTMENT_DESTROY);
                 if (compartment->principals)
                     JSPRINCIPALS_DROP(cx, compartment->principals);
-                delete compartment;
+                js_delete(compartment);
             } else {
                 compartment->marked = false;
                 *write++ = compartment;
@@ -2864,9 +2864,9 @@ JSCompartment *
 NewCompartment(JSContext *cx, JSPrincipals *principals)
 {
     JSRuntime *rt = cx->runtime;
-    JSCompartment *compartment = new JSCompartment(rt);
+    JSCompartment *compartment = js_new<JSCompartment>(rt);
     if (!compartment || !compartment->init()) {
-        delete compartment;
+        js_delete(compartment);
         JS_ReportOutOfMemory(cx);
         return NULL;
     }

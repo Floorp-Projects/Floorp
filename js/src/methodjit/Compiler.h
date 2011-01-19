@@ -74,10 +74,8 @@ class Compiler : public BaseCompiler
         Label stubEntry;
         DataLabel32 shape;
         DataLabelPtr addrLabel;
-#if defined JS_PUNBOX64
-        uint32 patchValueOffset;
-#endif
         Label load;
+        DataLabel32 store;
         Call call;
         ic::MICInfo::Kind kind;
         jsbytecode *jumpTarget;

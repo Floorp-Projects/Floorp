@@ -567,6 +567,9 @@ pref("dom.disable_open_click_delay", 1000);
 pref("dom.storage.enabled", true);
 pref("dom.storage.default_quota",      5120);
 
+// Timeout clamp in ms for timeouts we clamp
+pref("dom.min_timeout_value", 10);
+
 // Parsing perf prefs. For now just mimic what the old code did.
 #ifndef XP_WIN
 pref("content.sink.pending_event_mode", 0);

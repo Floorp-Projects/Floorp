@@ -457,15 +457,15 @@ html[dir=rtl] .title-shield {
 }
 
 .stackExpander {
-  opacity: .4;
   cursor: pointer;
-  background-image: url(chrome://browser/skin/tabview/stack-expander.png);
+  bottom: 8px;
+  background-image: -moz-image-rect(url(chrome://browser/skin/tabview/stack-expander.png), 0, 48, 24, 24);
   width: 24px;
   height: 24px;
 }
 
 .stackExpander:hover {
-  opacity: .7 !important;
+  background-image: -moz-image-rect(url(chrome://browser/skin/tabview/stack-expander.png), 0, 24, 24, 0);
 }
 
 /* Resizable

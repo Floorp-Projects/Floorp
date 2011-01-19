@@ -149,6 +149,14 @@
     border-top-right-radius: 3.5px;
   }
 
+  #tabbrowser-tabs[tabsontop="true"] > .tabbrowser-tab[selected="true"]:not(:-moz-lwtheme),
+  #navigator-toolbox[tabsontop="true"] > #nav-bar:not(:-moz-lwtheme),
+  #navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + toolbar:not(:-moz-lwtheme),
+  #navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + #customToolbars + #PersonalToolbar:not(:-moz-lwtheme) {
+    position: relative;
+    z-index: 1;
+  }
+
   #navigator-toolbox:not([tabsontop="true"]) > #PersonalToolbar {
     padding-top: 0 !important;
     margin-top: 3px;
@@ -206,17 +214,6 @@
 
   .tabbrowser-tab:not(:-moz-lwtheme) {
     text-shadow: none;
-  }
-
-  .tabbrowser-tab:not(:-moz-lwtheme):not([selected="true"]),
-  .tabs-newtab-button:not(:-moz-lwtheme) {
-    background-image: -moz-linear-gradient(hsl(214,15%,80%), hsl(214,15%,65%) 50%);
-    color: black;
-  }
-
-  .tabbrowser-tab:not(:-moz-lwtheme):not([selected="true"]):hover,
-  .tabs-newtab-button:not(:-moz-lwtheme):hover {
-    background-image: -moz-linear-gradient(hsl(214,15%,90%), hsl(214,15%,75%) 50%);
   }
 
   #allTabs-panel,

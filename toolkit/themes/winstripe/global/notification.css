@@ -68,7 +68,9 @@ notification[type="critical"] .messageImage {
 }
 
 %ifdef XP_WIN
-@media all and (-moz-windows-default-theme) {
+/*
+XXX: apply styles to all themes until bug 509642 is fixed
+@media all and (-moz-windows-default-theme) {*/
   .popup-notification-menubutton[type="menu-button"] {
     -moz-appearance: none;
     border-radius: 3px;
@@ -145,7 +147,7 @@ notification[type="critical"] .messageImage {
 %endif
     box-shadow: 0 0 2px rgba(0,0,0,.65) inset;
   }
-}
+/*}*/
 %endif
 
 .popup-notification-closebutton {

@@ -882,10 +882,7 @@ nsObjectLoadingContent::EnsureInstantiation(nsIPluginInstance** aInstance)
       return NS_OK;
     }
 
-    nsCOMPtr<nsIPresShell> shell = doc->GetShell();
-    if (shell) {
-      shell->RecreateFramesFor(thisContent);
-    }
+    doc->FlushPendingNotifications(Flush_Frames);
 
     mInstantiating = PR_FALSE;
 

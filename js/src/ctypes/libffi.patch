@@ -1,4 +1,4 @@
-Patch libffi to fix bug 550602, bug 538216 and bug 594611.
+Patch libffi to fix bug 550602, bug 538216, bug 594611, and bug 605421.
 
 diff --git a/js/src/ctypes/libffi/Makefile.in b/js/src/ctypes/libffi/Makefile.in
 --- a/js/src/ctypes/libffi/Makefile.in
@@ -143,3 +143,843 @@ diff --git a/js/src/ctypes/libffi/src/x86/ffi64.c b/js/src/ctypes/libffi/src/x86
  ffi_call (ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
  {
    enum x86_64_reg_class classes[MAX_CLASSES];
+diff --git a/js/src/ctypes/libffi/src/arm/ffi.c b/js/src/ctypes/libffi/src/arm/ffi.c
+--- a/js/src/ctypes/libffi/src/arm/ffi.c
++++ b/js/src/ctypes/libffi/src/arm/ffi.c
+@@ -24,22 +24,30 @@
+    DEALINGS IN THE SOFTWARE.
+    ----------------------------------------------------------------------- */
+ 
+ #include <ffi.h>
+ #include <ffi_common.h>
+ 
+ #include <stdlib.h>
+ 
++/* Forward declares. */
++static int vfp_type_p (ffi_type *);
++static void layout_vfp_args (ffi_cif *);
++
+ /* ffi_prep_args is called by the assembly routine once stack space
+-   has been allocated for the function's arguments */
+-
+-void ffi_prep_args(char *stack, extended_cif *ecif)
++   has been allocated for the function's arguments
++   
++   The vfp_space parameter is the load area for VFP regs, the return
++   value is cif->vfp_used (word bitset of VFP regs used for passing
++   arguments). These are only used for the VFP hard-float ABI.
++*/
++int ffi_prep_args(char *stack, extended_cif *ecif, float *vfp_space)
+ {
+-  register unsigned int i;
++  register unsigned int i, vi = 0;
+   register void **p_argv;
+   register char *argp;
+   register ffi_type **p_arg;
+ 
+   argp = stack;
+ 
+   if ( ecif->cif->flags == FFI_TYPE_STRUCT ) {
+     *(void **) argp = ecif->rvalue;
+@@ -49,16 +57,31 @@ void ffi_prep_args(char *stack, extended
+   p_argv = ecif->avalue;
+ 
+   for (i = ecif->cif->nargs, p_arg = ecif->cif->arg_types;
+        (i != 0);
+        i--, p_arg++)
+     {
+       size_t z;
+ 
++      /* Allocated in VFP registers. */
++      if (ecif->cif->abi == FFI_VFP
++	  && vi < ecif->cif->vfp_nargs && vfp_type_p (*p_arg))
++	{
++	  float* vfp_slot = vfp_space + ecif->cif->vfp_args[vi++];
++	  if ((*p_arg)->type == FFI_TYPE_FLOAT)
++	    *((float*)vfp_slot) = *((float*)*p_argv);
++	  else if ((*p_arg)->type == FFI_TYPE_DOUBLE)
++	    *((double*)vfp_slot) = *((double*)*p_argv);
++	  else
++	    memcpy(vfp_slot, *p_argv, (*p_arg)->size);
++	  p_argv++;
++	  continue;
++	}
++
+       /* Align if necessary */
+       if (((*p_arg)->alignment - 1) & (unsigned) argp) {
+ 	argp = (char *) ALIGN(argp, (*p_arg)->alignment);
+       }
+ 
+       if ((*p_arg)->type == FFI_TYPE_STRUCT)
+ 	argp = (char *) ALIGN(argp, 4);
+ 
+@@ -98,23 +121,25 @@ void ffi_prep_args(char *stack, extended
+ 	    }
+ 	  else
+ 	    {
+ 	      memcpy(argp, *p_argv, z);
+ 	    }
+ 	  p_argv++;
+ 	  argp += z;
+     }
+-  
+-  return;
++
++  /* Indicate the VFP registers used. */
++  return ecif->cif->vfp_used;
+ }
+ 
+ /* Perform machine dependent cif processing */
+ ffi_status ffi_prep_cif_machdep(ffi_cif *cif)
+ {
++  int type_code;
+   /* Round the stack up to a multiple of 8 bytes.  This isn't needed 
+      everywhere, but it is on some platforms, and it doesn't harm anything
+      when it isn't needed.  */
+   cif->bytes = (cif->bytes + 7) & ~7;
+ 
+   /* Set the return type flag */
+   switch (cif->rtype->type)
+     {
+@@ -125,137 +150,176 @@ ffi_status ffi_prep_cif_machdep(ffi_cif 
+       break;
+ 
+     case FFI_TYPE_SINT64:
+     case FFI_TYPE_UINT64:
+       cif->flags = (unsigned) FFI_TYPE_SINT64;
+       break;
+ 
+     case FFI_TYPE_STRUCT:
+-      if (cif->rtype->size <= 4)
++      if (cif->abi == FFI_VFP
++	  && (type_code = vfp_type_p (cif->rtype)) != 0)
++	{
++	  /* A Composite Type passed in VFP registers, either
++	     FFI_TYPE_STRUCT_VFP_FLOAT or FFI_TYPE_STRUCT_VFP_DOUBLE. */
++	  cif->flags = (unsigned) type_code;
++	}
++      else if (cif->rtype->size <= 4)
+ 	/* A Composite Type not larger than 4 bytes is returned in r0.  */
+ 	cif->flags = (unsigned)FFI_TYPE_INT;
+       else
+ 	/* A Composite Type larger than 4 bytes, or whose size cannot
+ 	   be determined statically ... is stored in memory at an
+ 	   address passed [in r0].  */
+ 	cif->flags = (unsigned)FFI_TYPE_STRUCT;
+       break;
+ 
+     default:
+       cif->flags = FFI_TYPE_INT;
+       break;
+     }
+ 
++  /* Map out the register placements of VFP register args.
++     The VFP hard-float calling conventions are slightly more sophisticated than
++     the base calling conventions, so we do it here instead of in ffi_prep_args(). */
++  if (cif->abi == FFI_VFP)
++    layout_vfp_args (cif);
++
+   return FFI_OK;
+ }
+ 
+-extern void ffi_call_SYSV(void (*)(char *, extended_cif *), extended_cif *,
+-			  unsigned, unsigned, unsigned *, void (*fn)(void));
++/* Prototypes for assembly functions, in sysv.S */
++extern void ffi_call_SYSV (void (*fn)(void), extended_cif *, unsigned, unsigned, unsigned *);
++extern void ffi_call_VFP (void (*fn)(void), extended_cif *, unsigned, unsigned, unsigned *);
+ 
+ void ffi_call(ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
+ {
+   extended_cif ecif;
+ 
+   int small_struct = (cif->flags == FFI_TYPE_INT 
+ 		      && cif->rtype->type == FFI_TYPE_STRUCT);
++  int vfp_struct = (cif->flags == FFI_TYPE_STRUCT_VFP_FLOAT
++		    || cif->flags == FFI_TYPE_STRUCT_VFP_DOUBLE);
+ 
+   ecif.cif = cif;
+   ecif.avalue = avalue;
+ 
+   unsigned int temp;
+   
+   /* If the return value is a struct and we don't have a return	*/
+   /* value address then we need to make one		        */
+ 
+   if ((rvalue == NULL) && 
+       (cif->flags == FFI_TYPE_STRUCT))
+     {
+       ecif.rvalue = alloca(cif->rtype->size);
+     }
+   else if (small_struct)
+     ecif.rvalue = &temp;
++  else if (vfp_struct)
++    {
++      /* Largest case is double x 4. */
++      ecif.rvalue = alloca(32);
++    }
+   else
+     ecif.rvalue = rvalue;
+ 
+   switch (cif->abi) 
+     {
+     case FFI_SYSV:
+-      ffi_call_SYSV(ffi_prep_args, &ecif, cif->bytes, cif->flags, ecif.rvalue,
+-		    fn);
++      ffi_call_SYSV (fn, &ecif, cif->bytes, cif->flags, ecif.rvalue);
++      break;
+ 
++    case FFI_VFP:
++      ffi_call_VFP (fn, &ecif, cif->bytes, cif->flags, ecif.rvalue);
+       break;
++
+     default:
+       FFI_ASSERT(0);
+       break;
+     }
+   if (small_struct)
+     memcpy (rvalue, &temp, cif->rtype->size);
++  else if (vfp_struct)
++    memcpy (rvalue, ecif.rvalue, cif->rtype->size);
+ }
+ 
+ /** private members **/
+ 
+ static void ffi_prep_incoming_args_SYSV (char *stack, void **ret,
+-					 void** args, ffi_cif* cif);
++					 void** args, ffi_cif* cif, float *vfp_stack);
+ 
+ void ffi_closure_SYSV (ffi_closure *);
+ 
++void ffi_closure_VFP (ffi_closure *);
++
+ /* This function is jumped to by the trampoline */
+ 
+ unsigned int
+-ffi_closure_SYSV_inner (closure, respp, args)
++ffi_closure_SYSV_inner (closure, respp, args, vfp_args)
+      ffi_closure *closure;
+      void **respp;
+      void *args;
++     void *vfp_args;
+ {
+   // our various things...
+   ffi_cif       *cif;
+   void         **arg_area;
+ 
+   cif         = closure->cif;
+   arg_area    = (void**) alloca (cif->nargs * sizeof (void*));  
+ 
+   /* this call will initialize ARG_AREA, such that each
+    * element in that array points to the corresponding 
+    * value on the stack; and if the function returns
+    * a structure, it will re-set RESP to point to the
+    * structure return address.  */
+ 
+-  ffi_prep_incoming_args_SYSV(args, respp, arg_area, cif);
++  ffi_prep_incoming_args_SYSV(args, respp, arg_area, cif, vfp_args);
+ 
+   (closure->fun) (cif, *respp, arg_area, closure->user_data);
+ 
+   return cif->flags;
+ }
+ 
+ /*@-exportheader@*/
+ static void 
+ ffi_prep_incoming_args_SYSV(char *stack, void **rvalue,
+-			    void **avalue, ffi_cif *cif)
++			    void **avalue, ffi_cif *cif,
++			    /* Used only under VFP hard-float ABI. */
++			    float *vfp_stack)
+ /*@=exportheader@*/
+ {
+-  register unsigned int i;
++  register unsigned int i, vi = 0;
+   register void **p_argv;
+   register char *argp;
+   register ffi_type **p_arg;
+ 
+   argp = stack;
+ 
+   if ( cif->flags == FFI_TYPE_STRUCT ) {
+     *rvalue = *(void **) argp;
+     argp += 4;
+   }
+ 
+   p_argv = avalue;
+ 
+   for (i = cif->nargs, p_arg = cif->arg_types; (i != 0); i--, p_arg++)
+     {
+       size_t z;
++      size_t alignment;
++  
++      if (cif->abi == FFI_VFP
++	  && vi < cif->vfp_nargs && vfp_type_p (*p_arg))
++	{
++	  *p_argv++ = (void*)(vfp_stack + cif->vfp_args[vi++]);
++	  continue;
++	}
+ 
+-      size_t alignment = (*p_arg)->alignment;
++      alignment = (*p_arg)->alignment;
+       if (alignment < 4)
+ 	alignment = 4;
+       /* Align if necessary */
+       if ((alignment - 1) & (unsigned) argp) {
+ 	argp = (char *) ALIGN(argp, alignment);
+       }
+ 
+       z = (*p_arg)->size;
+@@ -290,20 +354,147 @@ ffi_prep_incoming_args_SYSV(char *stack,
+ 
+ ffi_status
+ ffi_prep_closure_loc (ffi_closure* closure,
+ 		      ffi_cif* cif,
+ 		      void (*fun)(ffi_cif*,void*,void**,void*),
+ 		      void *user_data,
+ 		      void *codeloc)
+ {
+-  FFI_ASSERT (cif->abi == FFI_SYSV);
++  void (*closure_func)(ffi_closure*) = NULL;
+ 
++  if (cif->abi == FFI_SYSV)
++    closure_func = &ffi_closure_SYSV;
++  else if (cif->abi == FFI_VFP)
++    closure_func = &ffi_closure_VFP;
++  else
++    FFI_ASSERT (0);
++    
+   FFI_INIT_TRAMPOLINE (&closure->tramp[0], \
+-		       &ffi_closure_SYSV,  \
++		       closure_func,  \
+ 		       codeloc);
+     
+   closure->cif  = cif;
+   closure->user_data = user_data;
+   closure->fun  = fun;
+ 
+   return FFI_OK;
+ }
++
++/* Below are routines for VFP hard-float support. */
++
++static int rec_vfp_type_p (ffi_type *t, int *elt, int *elnum)
++{
++  switch (t->type)
++    {
++    case FFI_TYPE_FLOAT:
++    case FFI_TYPE_DOUBLE:
++      *elt = (int) t->type;
++      *elnum = 1;
++      return 1;
++
++    case FFI_TYPE_STRUCT_VFP_FLOAT:
++      *elt = FFI_TYPE_FLOAT;
++      *elnum = t->size / sizeof (float);
++      return 1;
++
++    case FFI_TYPE_STRUCT_VFP_DOUBLE:
++      *elt = FFI_TYPE_DOUBLE;
++      *elnum = t->size / sizeof (double);
++      return 1;
++
++    case FFI_TYPE_STRUCT:;
++      {
++	int base_elt = 0, total_elnum = 0;
++	ffi_type **el = t->elements;
++	while (*el)
++	  {
++	    int el_elt = 0, el_elnum = 0;
++	    if (! rec_vfp_type_p (*el, &el_elt, &el_elnum)
++		|| (base_elt && base_elt != el_elt)
++		|| total_elnum + el_elnum > 4)
++	      return 0;
++	    base_elt = el_elt;
++	    total_elnum += el_elnum;
++	    el++;
++	  }
++	*elnum = total_elnum;
++	*elt = base_elt;
++	return 1;
++      }
++    default: ;
++    }
++  return 0;
++}
++
++static int vfp_type_p (ffi_type *t)
++{
++  int elt, elnum;
++  if (rec_vfp_type_p (t, &elt, &elnum))
++    {
++      if (t->type == FFI_TYPE_STRUCT)
++	{
++	  if (elnum == 1)
++	    t->type = elt;
++	  else
++	    t->type = (elt == FFI_TYPE_FLOAT
++		       ? FFI_TYPE_STRUCT_VFP_FLOAT
++		       : FFI_TYPE_STRUCT_VFP_DOUBLE);
++	}
++      return (int) t->type;
++    }
++  return 0;
++}
++
++static void place_vfp_arg (ffi_cif *cif, ffi_type *t)
++{
++  int reg = cif->vfp_reg_free;
++  int nregs = t->size / sizeof (float);
++  int align = ((t->type == FFI_TYPE_STRUCT_VFP_FLOAT
++		|| t->type == FFI_TYPE_FLOAT) ? 1 : 2);
++  /* Align register number. */
++  if ((reg & 1) && align == 2)
++    reg++;
++  while (reg + nregs <= 16)
++    {
++      int s, new_used = 0;
++      for (s = reg; s < reg + nregs; s++)
++	{
++	  new_used |= (1 << s);
++	  if (cif->vfp_used & (1 << s))
++	    {
++	      reg += align;
++	      goto next_reg;
++	    }
++	}
++      /* Found regs to allocate. */
++      cif->vfp_used |= new_used;
++      cif->vfp_args[cif->vfp_nargs++] = reg;
++
++      /* Update vfp_reg_free. */
++      if (cif->vfp_used & (1 << cif->vfp_reg_free))
++	{
++	  reg += nregs;
++	  while (cif->vfp_used & (1 << reg))
++	    reg += 1;
++	  cif->vfp_reg_free = reg;
++	}
++      return;
++    next_reg: ;
++    }
++}
++
++static void layout_vfp_args (ffi_cif *cif)
++{
++  int i;
++  /* Init VFP fields */
++  cif->vfp_used = 0;
++  cif->vfp_nargs = 0;
++  cif->vfp_reg_free = 0;
++  memset (cif->vfp_args, -1, 16); /* Init to -1. */
++
++  for (i = 0; i < cif->nargs; i++)
++    {
++      ffi_type *t = cif->arg_types[i];
++      if (vfp_type_p (t))
++	place_vfp_arg (cif, t);
++    }
++}
+diff --git a/js/src/ctypes/libffi/src/arm/ffitarget.h b/js/src/ctypes/libffi/src/arm/ffitarget.h
+--- a/js/src/ctypes/libffi/src/arm/ffitarget.h
++++ b/js/src/ctypes/libffi/src/arm/ffitarget.h
+@@ -29,21 +29,35 @@
+ 
+ #ifndef LIBFFI_ASM
+ typedef unsigned long          ffi_arg;
+ typedef signed long            ffi_sarg;
+ 
+ typedef enum ffi_abi {
+   FFI_FIRST_ABI = 0,
+   FFI_SYSV,
++  FFI_VFP,
+   FFI_LAST_ABI,
++#ifdef __ARM_PCS_VFP
++  FFI_DEFAULT_ABI = FFI_VFP
++#else
+   FFI_DEFAULT_ABI = FFI_SYSV
++#endif
+ } ffi_abi;
+ #endif
+ 
++#define FFI_EXTRA_CIF_FIELDS			\
++  int vfp_used;					\
++  short vfp_reg_free, vfp_nargs;		\
++  signed char vfp_args[16]			\
++
++/* Internally used. */
++#define FFI_TYPE_STRUCT_VFP_FLOAT  (FFI_TYPE_LAST + 1)
++#define FFI_TYPE_STRUCT_VFP_DOUBLE (FFI_TYPE_LAST + 2)
++
+ /* ---- Definitions for closures ----------------------------------------- */
+ 
+ #define FFI_CLOSURES 1
+ #define FFI_TRAMPOLINE_SIZE 20
+ #define FFI_NATIVE_RAW_API 0
+ 
+ #endif
+ 
+diff --git a/js/src/ctypes/libffi/src/arm/sysv.S b/js/src/ctypes/libffi/src/arm/sysv.S
+--- a/js/src/ctypes/libffi/src/arm/sysv.S
++++ b/js/src/ctypes/libffi/src/arm/sysv.S
+@@ -137,54 +137,52 @@ _L__\name:
+ 	ldr\cond	pc, [sp], #4
+ 	.else
+ 	ldm\cond\dirn	sp!, {\regs, pc}
+ 	.endif
+ #endif
+ .endm
+ 
+ 
+-	@ r0:   ffi_prep_args
++	@ r0:   fn
+ 	@ r1:   &ecif
+ 	@ r2:   cif->bytes
+ 	@ r3:   fig->flags
+ 	@ sp+0: ecif.rvalue
+-	@ sp+4: fn
+ 
+ 	@ This assumes we are using gas.
+ ARM_FUNC_START ffi_call_SYSV
+ 	@ Save registers
+         stmfd	sp!, {r0-r3, fp, lr}
+ 	UNWIND .save	{r0-r3, fp, lr}
+ 	mov	fp, sp
+ 
+ 	UNWIND .setfp	fp, sp
+ 
+ 	@ Make room for all of the new args.
+ 	sub	sp, fp, r2
+ 
+ 	@ Place all of the ffi_prep_args in position
+-	mov	ip, r0
+ 	mov	r0, sp
+ 	@     r1 already set
+ 
+ 	@ Call ffi_prep_args(stack, &ecif)
+-	call_reg(ip)
++	bl	ffi_prep_args
+ 
+ 	@ move first 4 parameters in registers
+ 	ldmia	sp, {r0-r3}
+ 
+ 	@ and adjust stack
+-	ldr	ip, [fp, #8]
+-        cmp	ip, #16
+-	movhs	ip, #16
+-        add	sp, sp, ip
++	sub	lr, fp, sp	@ cif->bytes == fp - sp
++	ldr	ip, [fp]	@ load fn() in advance
++	cmp	lr, #16
++	movhs	lr, #16
++	add	sp, sp, lr
+ 
+ 	@ call (fn) (...)
+-	ldr	ip, [fp, #28]
+ 	call_reg(ip)
+ 	
+ 	@ Remove the space we pushed for the args
+ 	mov	sp, fp
+ 
+ 	@ Load r2 with the pointer to storage for the return value
+ 	ldr	r2, [sp, #24]
+ 
+@@ -225,16 +223,111 @@ ARM_FUNC_START ffi_call_SYSV
+ 
+ LSYM(Lepilogue):
+ 	RETLDM	"r0-r3,fp"
+ 
+ .ffi_call_SYSV_end:
+ 	UNWIND .fnend
+         .size    CNAME(ffi_call_SYSV),.ffi_call_SYSV_end-CNAME(ffi_call_SYSV)
+ 
++
++	@ r0:   fn
++	@ r1:   &ecif
++	@ r2:   cif->bytes
++	@ r3:   fig->flags
++	@ sp+0: ecif.rvalue
++
++ARM_FUNC_START ffi_call_VFP
++	@ Save registers
++        stmfd	sp!, {r0-r3, fp, lr}
++	UNWIND .save	{r0-r3, fp, lr}
++	mov	fp, sp
++	UNWIND .setfp	fp, sp
++
++	@ Make room for all of the new args.
++	sub	sp, sp, r2
++
++	@ Make room for loading VFP args
++	sub	sp, sp, #64
++
++	@ Place all of the ffi_prep_args in position
++	mov	r0, sp
++	@     r1 already set
++	sub	r2, fp, #64   @ VFP scratch space
++
++	@ Call ffi_prep_args(stack, &ecif, vfp_space)
++	bl	ffi_prep_args
++
++	@ Load VFP register args if needed
++	cmp	r0, #0
++	beq	LSYM(Lbase_args)
++
++	@ Load only d0 if possible
++	cmp	r0, #3
++	sub	ip, fp, #64
++	flddle	d0, [ip]
++	fldmiadgt	ip, {d0-d7}
++
++LSYM(Lbase_args):
++	@ move first 4 parameters in registers
++	ldmia	sp, {r0-r3}
++
++	@ and adjust stack
++	sub	lr, ip, sp	@ cif->bytes == (fp - 64) - sp
++	ldr	ip, [fp]	@ load fn() in advance
++        cmp	lr, #16
++	movhs	lr, #16
++        add	sp, sp, lr
++
++	@ call (fn) (...)
++	call_reg(ip)
++
++	@ Remove the space we pushed for the args
++	mov	sp, fp
++
++	@ Load r2 with the pointer to storage for
++	@ the return value
++	ldr	r2, [sp, #24]
++
++	@ Load r3 with the return type code 
++	ldr	r3, [sp, #12]
++
++	@ If the return value pointer is NULL,
++	@ assume no return value.
++	cmp	r2, #0
++	beq	LSYM(Lepilogue_vfp)
++	
++	cmp	r3, #FFI_TYPE_INT
++	streq	r0, [r2]
++	beq	LSYM(Lepilogue_vfp)
++
++	cmp	r3, #FFI_TYPE_SINT64
++	stmeqia	r2, {r0, r1}
++	beq	LSYM(Lepilogue_vfp)
++
++	cmp	r3, #FFI_TYPE_FLOAT
++	fstseq	s0, [r2]
++	beq	LSYM(Lepilogue_vfp)
++	
++	cmp	r3, #FFI_TYPE_DOUBLE
++	fstdeq	d0, [r2]
++	beq	LSYM(Lepilogue_vfp)
++
++	cmp	r3, #FFI_TYPE_STRUCT_VFP_FLOAT
++	cmpne	r3, #FFI_TYPE_STRUCT_VFP_DOUBLE
++	fstmiadeq	r2, {d0-d3}
++
++LSYM(Lepilogue_vfp):
++	RETLDM	"r0-r3,fp"
++
++.ffi_call_VFP_end:
++	UNWIND .fnend
++        .size    CNAME(ffi_call_VFP),.ffi_call_VFP_end-CNAME(ffi_call_VFP)
++	
++	
+ /*
+ 	unsigned int FFI_HIDDEN
+ 	ffi_closure_SYSV_inner (closure, respp, args)
+ 	     ffi_closure *closure;
+ 	     void **respp;
+   	     void *args;
+ */
+ 
+@@ -297,11 +390,73 @@ ARM_FUNC_START ffi_closure_SYSV
+ 	ldfd	f0, [sp]
+ 	b	.Lclosure_epilogue
+ #endif
+ 
+ .ffi_closure_SYSV_end:
+ 	UNWIND .fnend
+         .size    CNAME(ffi_closure_SYSV),.ffi_closure_SYSV_end-CNAME(ffi_closure_SYSV)
+ 
++
++ARM_FUNC_START ffi_closure_VFP
++	fstmfdd	sp!, {d0-d7}
++	@ r0-r3, then d0-d7
++	UNWIND .pad #80
++	add	ip, sp, #80
++	stmfd	sp!, {ip, lr}
++	UNWIND .save	{r0, lr}
++	add	r2, sp, #72
++	add	r3, sp, #8
++	.pad #72
++	sub	sp, sp, #72
++	str	sp, [sp, #64]
++	add	r1, sp, #64
++	bl	ffi_closure_SYSV_inner
++
++	cmp	r0, #FFI_TYPE_INT
++	beq	.Lretint_vfp
++
++	cmp	r0, #FFI_TYPE_FLOAT
++	beq	.Lretfloat_vfp
++
++	cmp	r0, #FFI_TYPE_DOUBLE
++	cmpne	r0, #FFI_TYPE_LONGDOUBLE
++	beq	.Lretdouble_vfp
++
++	cmp	r0, #FFI_TYPE_SINT64
++	beq	.Lretlonglong_vfp
++
++	cmp	r0, #FFI_TYPE_STRUCT_VFP_FLOAT
++	beq	.Lretfloat_struct_vfp
++
++	cmp	r0, #FFI_TYPE_STRUCT_VFP_DOUBLE
++	beq	.Lretdouble_struct_vfp
++	
++.Lclosure_epilogue_vfp:
++	add	sp, sp, #72
++	ldmfd	sp, {sp, pc}
++
++.Lretfloat_vfp:
++	flds	s0, [sp]
++	b	.Lclosure_epilogue_vfp
++.Lretdouble_vfp:
++	fldd	d0, [sp]
++	b	.Lclosure_epilogue_vfp
++.Lretint_vfp:
++	ldr	r0, [sp]
++	b	.Lclosure_epilogue_vfp
++.Lretlonglong_vfp:
++	ldmia	sp, {r0, r1}
++	b	.Lclosure_epilogue_vfp
++.Lretfloat_struct_vfp:
++	fldmiad	sp, {d0-d1}
++	b	.Lclosure_epilogue_vfp
++.Lretdouble_struct_vfp:
++	fldmiad	sp, {d0-d3}
++	b	.Lclosure_epilogue_vfp
++
++.ffi_closure_VFP_end:
++	UNWIND .fnend
++        .size    CNAME(ffi_closure_VFP),.ffi_closure_VFP_end-CNAME(ffi_closure_VFP)
++
+ #if defined __ELF__ && defined __linux__
+ 	.section	.note.GNU-stack,"",%progbits
+ #endif
+diff --git a/js/src/ctypes/libffi/testsuite/lib/libffi-dg.exp b/js/src/ctypes/libffi/testsuite/lib/libffi-dg.exp
+--- a/js/src/ctypes/libffi/testsuite/lib/libffi-dg.exp
++++ b/js/src/ctypes/libffi/testsuite/lib/libffi-dg.exp
+@@ -261,16 +261,66 @@ proc dg-xfail-if { args } {
+     set args [lreplace $args 0 0]
+     set selector "target [join [lindex $args 1]]"
+     if { [dg-process-target $selector] == "S" } {
+ 	global compiler_conditional_xfail_data
+ 	set compiler_conditional_xfail_data $args
+     }
+ }
+ 
++proc check-flags { args } {
++
++    # The args are within another list; pull them out.
++    set args [lindex $args 0]
++
++    # The next two arguments are optional.  If they were not specified,
++    # use the defaults.
++    if { [llength $args] == 2 } {
++	lappend $args [list "*"]
++    }
++    if { [llength $args] == 3 } {
++	lappend $args [list ""]
++    }
++
++    # If the option strings are the defaults, or the same as the
++    # defaults, there is no need to call check_conditional_xfail to
++    # compare them to the actual options.
++    if { [string compare [lindex $args 2] "*"] == 0
++	 && [string compare [lindex $args 3] "" ] == 0 } {
++	set result 1    
++    } else {
++	# The target list might be an effective-target keyword, so replace
++	# the original list with "*-*-*", since we already know it matches.
++	set result [check_conditional_xfail [lreplace $args 1 1 "*-*-*"]]
++    }
++
++    return $result
++}
++
++proc dg-skip-if { args } {
++    # Verify the number of arguments.  The last two are optional.
++    set args [lreplace $args 0 0]
++    if { [llength $args] < 2 || [llength $args] > 4 } {
++        error "dg-skip-if 2: need 2, 3, or 4 arguments"
++    }
++
++    # Don't bother if we're already skipping the test.
++    upvar dg-do-what dg-do-what
++    if { [lindex ${dg-do-what} 1] == "N" } {
++      return
++    }
++
++    set selector [list target [lindex $args 1]]
++    if { [dg-process-target $selector] == "S" } {
++        if [check-flags $args] {
++            upvar dg-do-what dg-do-what
++            set dg-do-what [list [lindex ${dg-do-what} 0] "N" "P"]
++        }
++    }
++}
+ 
+ # We need to make sure that additional_files and additional_sources
+ # are both cleared out after every test.  It is not enough to clear
+ # them out *before* the next test run because gcc-target-compile gets
+ # run directly from some .exp files (outside of any test).  (Those
+ # uses should eventually be eliminated.)
+ 
+ # Because the DG framework doesn't provide a hook that is run at the
+diff --git a/js/src/ctypes/libffi/testsuite/libffi.call/cls_double_va.c b/js/src/ctypes/libffi/testsuite/libffi.call/cls_double_va.c
+--- a/js/src/ctypes/libffi/testsuite/libffi.call/cls_double_va.c
++++ b/js/src/ctypes/libffi/testsuite/libffi.call/cls_double_va.c
+@@ -1,16 +1,18 @@
+ /* Area:		ffi_call, closure_call
+    Purpose:		Test doubles passed in variable argument lists.
+    Limitations:	none.
+    PR:			none.
+    Originator:	Blake Chaffin 6/6/2007	 */
+ 
+ /* { dg-do run { xfail strongarm*-*-* xscale*-*-* } } */
+ /* { dg-output "" { xfail avr32*-*-* } } */
++/* { dg-skip-if "" arm*-*-* { "-mfloat-abi=hard" } { "" } } */
++
+ #include "ffitest.h"
+ 
+ static void
+ cls_double_va_fn(ffi_cif* cif __UNUSED__, void* resp, 
+ 		 void** args, void* userdata __UNUSED__)
+ {
+ 	char*	format		= *(char**)args[0];
+ 	double	doubleValue	= *(double*)args[1];
+diff --git a/js/src/ctypes/libffi/testsuite/libffi.call/cls_longdouble_va.c b/js/src/ctypes/libffi/testsuite/libffi.call/cls_longdouble_va.c
+--- a/js/src/ctypes/libffi/testsuite/libffi.call/cls_longdouble_va.c
++++ b/js/src/ctypes/libffi/testsuite/libffi.call/cls_longdouble_va.c
+@@ -1,16 +1,18 @@
+ /* Area:		ffi_call, closure_call
+    Purpose:		Test long doubles passed in variable argument lists.
+    Limitations:	none.
+    PR:			none.
+    Originator:	Blake Chaffin 6/6/2007	 */
+ 
+ /* { dg-do run { xfail strongarm*-*-* xscale*-*-* } } */
+ /* { dg-output "" { xfail avr32*-*-* x86_64-*-mingw* } } */
++/* { dg-skip-if "" arm*-*-* { "-mfloat-abi=hard" } { "" } } */
++
+ #include "ffitest.h"
+ 
+ static void
+ cls_longdouble_va_fn(ffi_cif* cif __UNUSED__, void* resp, 
+ 		     void** args, void* userdata __UNUSED__)
+ {
+ 	char*		format	= *(char**)args[0];
+ 	long double	ldValue	= *(long double*)args[1];

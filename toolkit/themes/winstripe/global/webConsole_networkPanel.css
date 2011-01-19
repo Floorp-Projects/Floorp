@@ -47,6 +47,7 @@ body {
 #header {
   padding: 5px;
   overflow-x: auto;
+  display: block;
 }
 
 h1 {
@@ -76,6 +77,7 @@ h1 .info {
   width: 100%;
   max-height: 330px;
   overflow: auto;
+  display: block;
 }
 
 .property-table-header {

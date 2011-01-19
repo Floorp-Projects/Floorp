@@ -409,9 +409,8 @@ AsyncClickHandler::Run()
         }
         if (!prefSaved) {
           // Store the last used directory using the content pref service
-          rv = nsHTMLInputElement::gUploadLastDir->StoreLastUsedDirectory(doc->GetDocumentURI(), 
-                                                                          localFile);
-          NS_ENSURE_SUCCESS(rv, rv);
+          nsHTMLInputElement::gUploadLastDir->StoreLastUsedDirectory(doc->GetDocumentURI(),
+                                                                     localFile);
           prefSaved = PR_TRUE;
         }
       }
@@ -429,9 +428,8 @@ AsyncClickHandler::Run()
         newFiles.AppendObject(domFile);
       }
       // Store the last used directory using the content pref service
-      rv = nsHTMLInputElement::gUploadLastDir->StoreLastUsedDirectory(doc->GetDocumentURI(),
-                                                                      localFile);
-      NS_ENSURE_SUCCESS(rv, rv);
+      nsHTMLInputElement::gUploadLastDir->StoreLastUsedDirectory(doc->GetDocumentURI(),
+                                                                 localFile);
     }
   }
 

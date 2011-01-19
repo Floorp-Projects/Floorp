@@ -1386,8 +1386,9 @@ nsFrameLoader::MaybeCreateDocShell()
     return NS_ERROR_UNEXPECTED;
   }
 
-  if (doc->GetDisplayDocument()) {
-    // Don't allow subframe loads in external reference documents
+  if (doc->GetDisplayDocument() || !doc->IsActive()) {
+    // Don't allow subframe loads in external reference documents, nor
+    // in non-active documents.
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -2059,7 +2060,7 @@ nsFrameLoader::GetRootContentView(nsIContentView** aContentView)
   NS_ABORT_IF_FALSE(view, "Should always be able to create root scrollable!");
   nsRefPtr<nsIContentView>(view).forget(aContentView);
 
-   return NS_OK;
+  return NS_OK;
 #else
   return NS_ERROR_NOT_IMPLEMENTED;
 #endif

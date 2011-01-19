@@ -138,6 +138,16 @@ GetNextSibling(LayerOGL* aLayer)
                  : nsnull;
 }
 
+static PRBool
+HasOpaqueAncestorLayer(Layer* aLayer)
+{
+  for (Layer* l = aLayer->GetParent(); l; l = l->GetParent()) {
+    if (l->GetContentFlags() & Layer::CONTENT_OPAQUE)
+      return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
 template<class Container>
 static void
 ContainerRender(Container* aContainer,
@@ -156,14 +166,45 @@ ContainerRender(Container* aContainer,
 
   nsIntRect cachedScissor = aContainer->gl()->ScissorRect();
   aContainer->gl()->PushScissorRect();
+  aContainer->mSupportsComponentAlphaChildren = PR_FALSE;
 
   float opacity = aContainer->GetEffectiveOpacity();
   const gfx3DMatrix& transform = aContainer->GetEffectiveTransform();
   bool needsFramebuffer = aContainer->UseIntermediateSurface();
   gfxMatrix contTransform;
   if (needsFramebuffer) {
-    aManager->CreateFBOWithTexture(visibleRect.width,
-                                   visibleRect.height,
+    LayerManagerOGL::InitMode mode = LayerManagerOGL::InitModeClear;
+    nsIntRect framebufferRect = visibleRect;
+    if (aContainer->GetEffectiveVisibleRegion().GetNumRects() == 1 && 
+        (aContainer->GetContentFlags() & Layer::CONTENT_OPAQUE))
+    {
+      // don't need a background, we're going to paint all opaque stuff
+      aContainer->mSupportsComponentAlphaChildren = PR_TRUE;
+      mode = LayerManagerOGL::InitModeNone;
+    } else {
+      const gfx3DMatrix& transform3D = aContainer->GetEffectiveTransform();
+      gfxMatrix transform;
+      // If we have an opaque ancestor layer, then we can be sure that
+      // all the pixels we draw into are either opaque already or will be
+      // covered by something opaque. Otherwise copying up the background is
+      // not safe.
+      if (HasOpaqueAncestorLayer(aContainer) &&
+          transform3D.Is2D(&transform) && !transform.HasNonIntegerTranslation()) {
+        mode = LayerManagerOGL::InitModeCopy;
+        framebufferRect.x += transform.x0;
+        framebufferRect.y += transform.y0;
+        aContainer->mSupportsComponentAlphaChildren = PR_TRUE;
+      }
+    }
+
+    aContainer->gl()->fScissor(0, 0, visibleRect.width, visibleRect.height);
+    framebufferRect -= childOffset; 
+    if (!aPreviousFrameBuffer) {
+      aContainer->gl()->FixWindowCoordinateRect(framebufferRect,
+                                                aManager->GetWigetSize().height);
+    }
+    aManager->CreateFBOWithTexture(framebufferRect,
+                                   mode,
                                    &frameBuffer,
                                    &containerSurface);
     childOffset.x = visibleRect.x;
@@ -172,11 +213,10 @@ ContainerRender(Container* aContainer,
     aContainer->gl()->PushViewportRect();
     aManager->SetupPipeline(visibleRect.width, visibleRect.height);
 
-    aContainer->gl()->fScissor(0, 0, visibleRect.width, visibleRect.height);
-    aContainer->gl()->fClearColor(0.0, 0.0, 0.0, 0.0);
-    aContainer->gl()->fClear(LOCAL_GL_COLOR_BUFFER_BIT);
   } else {
     frameBuffer = aPreviousFrameBuffer;
+    aContainer->mSupportsComponentAlphaChildren = (aContainer->GetContentFlags() & Layer::CONTENT_OPAQUE) ||
+      (aContainer->GetParent() && aContainer->GetParent()->SupportsComponentAlphaChildren());
 #ifdef DEBUG
     PRBool is2d =
 #endif

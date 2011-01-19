@@ -232,7 +232,7 @@ struct GetPropLabels : MacroAssemblerTypedefs {
 struct SetPropLabels : MacroAssemblerTypedefs {
     friend class ::ICOffsetInitializer;
 
-    void setInlineValueStore(MacroAssembler &masm, Label fastPathRejoin, Label inlineValueStore,
+    void setInlineValueStore(MacroAssembler &masm, Label fastPathRejoin, DataLabel32 inlineValueStore,
                              const ValueRemat &vr) {
         int offset = masm.differenceBetween(fastPathRejoin, inlineValueStore);
         setInlineValueStoreOffset(offset, vr.isConstant(), vr.isTypeKnown());

@@ -4642,8 +4642,8 @@ else
             NSPR_LIBS="${LIBXUL_DIST}/lib/nspr${NSPR_VERSION}.lib ${LIBXUL_DIST}/lib/plc${NSPR_VERSION}.lib ${LIBXUL_DIST}/lib/plds${NSPR_VERSION}.lib "
         fi
     else
-        NSPR_CFLAGS='`$(LIBXUL_DIST)/bin/nspr-config --prefix='${LIBXUL_DIST}' --includedir='${LIBXUL_DIST}'/include/nspr --cflags`'
-        NSPR_LIBS='`$(LIBXUL_DIST)/bin/nspr-config --prefix='${LIBXUL_DIST}' --libdir='${LIBXUL_DIST}'/lib --libs`'
+        NSPR_CFLAGS='`$(LIBXUL_DIST)/sdk/bin/nspr-config --prefix='${LIBXUL_DIST}' --includedir='${LIBXUL_DIST}'/include/nspr --cflags`'
+        NSPR_LIBS='`$(LIBXUL_DIST)/sdk/bin/nspr-config --prefix='${LIBXUL_DIST}' --libdir='${LIBXUL_DIST}'/lib --libs`'
     fi
 fi
 
@@ -7132,18 +7132,39 @@ if test $MOZ_PLATFORM_MAEMO; then
    AC_SUBST(MOZ_PLATFORM_MAEMO_CFLAGS)
 fi
 
+dnl Setup default CPU arch for arm target
+case "$target_cpu" in
+  arm*)
+    MOZ_ARM_ARCH=armv7
+  ;;
+esac
 dnl ========================================================
 dnl = Enable building the Thumb2 instruction set
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(thumb2,
- [  --enable-thumb2         Enable Thumb2 instruction set],
+ [  --enable-thumb2         Enable Thumb2 instruction set (implies ARMv7)],
     MOZ_THUMB2=1,
     MOZ_THUMB2=)
+if test -n "$MOZ_THUMB2"; then
+  MOZ_ARM_ARCH=armv7
+fi
+
+dnl ========================================================
+dnl = Enable building for ARM specific CPU features
+dnl ========================================================
+MOZ_ARG_WITH_STRING(cpu-arch,
+[  --with-cpu-arch=arch      Use specific arm architecture CPU features, default armv7],
+    MOZ_ARM_ARCH=$withval)
 
 if test -n "$MOZ_THUMB2"; then
   case "$target_cpu" in
     arm*)
+      if test "$MOZ_ARM_ARCH" != "armv7"; then
+        AC_MSG_ERROR([--enable-thumb2 is not compatible with cpu-arch=$MOZ_ARM_ARCH])
+      fi
       if test "$GNU_CC"; then
+        AC_DEFINE(MOZ_THUMB2)
+        AC_DEFINE(MOZ_ARM_ARCH)
         CFLAGS="$CFLAGS -march=armv7-a -mthumb -Wa, -march=armv7-a -Wa, -mthumb"
         CXXFLAGS="$CXXFLAGS -march=armv7-a -mthumb -Wa, -march=armv7-a -Wa, -mthumb"
         ASFLAGS="$ASFLAGS -march=armv7-a -mthumb"
@@ -7155,11 +7176,27 @@ if test -n "$MOZ_THUMB2"; then
       AC_MSG_ERROR([--enable-thumb2 is not supported for non-ARM CPU architectures])
     ;;
   esac
+elif test "$MOZ_ARM_ARCH" = "armv7"; then
+  case "$target_cpu" in
+    arm*)
+      if test "$GNU_CC"; then
+        AC_DEFINE(MOZ_ARM_ARCH)
+        CFLAGS="$CFLAGS -march=armv7-a -marm -Wa, -march=armv7-a -Wa, -marm"
+        CXXFLAGS="$CXXFLAGS -march=armv7-a -marm -Wa, -march=armv7-a -Wa, -marm"
+        ASFLAGS="$ASFLAGS -march=armv7-a -marm"
+      else
+        AC_MSG_ERROR([--with-cpu-arch=armv7 is not supported for non-GNU toolchains])
+      fi
+    ;;
+    *)
+      AC_MSG_ERROR([--with-cpu-arch=armv7 is not supported for non-ARM CPU architectures])
+    ;;
+  esac
 else
   case "$target_cpu" in
     arm*)
       if test "$GNU_CC"; then
-       CFLAGS="$CFLAGS -march=armv5te -mthumb-interwork -Wa, -march=armv5te -Wa, -mthumb-interwork"
+        CFLAGS="$CFLAGS -march=armv5te -mthumb-interwork -Wa, -march=armv5te -Wa, -mthumb-interwork"
         CXXFLAGS="$CXXFLAGS -march=armv5te -mthumb-interwork -Wa, -march=armv5te -Wa, -mthumb-interwork"
         ASFLAGS="$ASFLAGS -march=armv5te -mthumb-interwork"
       fi
@@ -7168,6 +7205,7 @@ else
 fi
 
 AC_SUBST(MOZ_THUMB2)
+AC_SUBST(MOZ_ARM_ARCH)
 
 dnl ========================================================
 dnl = faststripe theme
@@ -7604,7 +7642,7 @@ dnl ========================================================
 dnl shark
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(shark,
-[  --enable-shark          Enable shark remote profiling (needs CHUD framework). Implies --enable-profiling.],
+[  --enable-shark          Enable shark remote profiling. Implies --enable-profiling.],
     MOZ_SHARK=1,
     MOZ_SHARK= )
 if test -n "$MOZ_SHARK"; then
@@ -7633,6 +7671,13 @@ MOZ_ARG_ENABLE_BOOL(vtune,
 if test -n "$MOZ_VTUNE"; then
     MOZ_PROFILING=1
     AC_DEFINE(MOZ_VTUNE)
+fi
+
+dnl ========================================================
+dnl Profiling
+dnl ========================================================
+if test -n "$MOZ_PROFILING"; then
+    AC_DEFINE(MOZ_PROFILING)
 fi
 
 dnl ========================================================
@@ -9477,6 +9522,9 @@ if test "$COMPILE_ENVIRONMENT" -a -z "$LIBXUL_SDK_DIR"; then
 
 if test -n "$MOZ_THUMB2"; then
   _SUBDIR_CONFIG_ARGS="$_SUBDIR_CONFIG_ARGS --enable-thumb2"
+fi
+if test -n "$MOZ_ARM_ARCH"; then
+  _SUBDIR_CONFIG_ARGS="$_SUBDIR_CONFIG_ARGS --with-cpu-arch=$MOZ_ARM_ARCH"
 fi
 if test -n "$_WRAP_MALLOC"; then
   _SUBDIR_CONFIG_ARGS="$_SUBDIR_CONFIG_ARGS --enable-wrap-malloc"

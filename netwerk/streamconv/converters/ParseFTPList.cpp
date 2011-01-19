@@ -1199,12 +1199,21 @@ int ParseFTPList(const char *line, struct list_state *state,
        
         } /* time/year */
         
-        // there is exacly 1 space between filename and previous token in all
-        // outputs except old Hellsoft
-        if (!is_old_Hellsoft)
-          result->fe_fname = tokens[tokmarker+3] + toklen[tokmarker+3] + 1;
-        else
-          result->fe_fname = tokens[tokmarker+4];
+        // The length of the whole date string should be 12. On AIX the length
+        // is only 11 when the year is present in the date string and there is
+        // 1 padding space at the end of the string. In both cases the filename
+        // starts at offset 13 from the start of the date string.
+        // Don't care about leading spaces when the date string has different
+        // format or when old Hellsoft output was detected.
+        {
+          const char *date_start = tokens[tokmarker+1];
+          const char *date_end = tokens[tokmarker+3] + toklen[tokmarker+3];
+          if (!is_old_Hellsoft && ((date_end - date_start) == 12 ||
+              ((date_end - date_start) == 11 && date_end[1] == ' ')))
+            result->fe_fname = date_start + 13;
+          else
+            result->fe_fname = tokens[tokmarker+4];
+        }
 
         result->fe_fnlen = (&(line[linelen]))
                            - (result->fe_fname);

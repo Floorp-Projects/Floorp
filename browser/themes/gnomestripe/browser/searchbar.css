@@ -21,8 +21,7 @@
 .searchbar-engine-image {
   height: 16px;
   width: 16px;
-  list-style-image: url("chrome://global/skin/icons/folder-item.png");
-  -moz-image-region: rect(0px, 16px, 16px, 0px);
+  list-style-image: url("moz-icon://stock/gtk-file?size=menu");
   -moz-margin-start: 2px;
 }
 

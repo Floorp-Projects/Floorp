@@ -181,6 +181,7 @@
 #include "LayerManagerD3D10.h"
 #endif
 #include "LayerManagerOGL.h"
+#include "nsIGfxInfo.h"
 #endif
 #include "BasicLayers.h"
 
@@ -362,6 +363,17 @@ static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 
 // General purpose user32.dll hook object
 static WindowsDllInterceptor sUser32Intercept;
+
+// A glass window's opaque rectangle must be at least this height
+// before we use glass margins. Shorter opaque rectangles lead to
+// stupid-looking visual effects because Windows (foolishly) makes the
+// window edge rendering dependent on the opaque rect height.
+static const int MIN_OPAQUE_RECT_HEIGHT_FOR_GLASS_MARGINS = 50;
+
+// Maximum number of pixels for the left and right horizontal glass margins.
+// If the margins are bigger than this, we won't use margins at all because
+// Windows' glaze effect will start to look stupid.
+static const int MAX_HORIZONTAL_GLASS_MARGIN = 5;
 
 /**************************************************************
  **************************************************************
@@ -2573,11 +2585,11 @@ void nsWindow::UpdatePossiblyTransparentRegion(const nsIntRegion &aDirtyRegion,
 
   // If there is no opaque region or hidechrome=true, set margins
   // to support a full sheet of glass.
-  if (opaqueRegion.IsEmpty() || mHideChrome) {
-    // Comments in MSDN indicate all values must be set to -1
-    margins.cxLeftWidth = margins.cxRightWidth = 
-      margins.cyTopHeight = margins.cyBottomHeight = -1;
-  } else {
+  // Comments in MSDN indicate all values must be set to -1 to get a full
+  // sheet of glass.
+  margins.cxLeftWidth = margins.cxRightWidth =
+    margins.cyTopHeight = margins.cyBottomHeight = -1;
+  if (!opaqueRegion.IsEmpty() && !mHideChrome) {
     nsIntRect pluginBounds;
     for (nsIWidget* child = GetFirstChild(); child; child = child->GetNextSibling()) {
       nsWindowType type;
@@ -2600,17 +2612,21 @@ void nsWindow::UpdatePossiblyTransparentRegion(const nsIntRegion &aDirtyRegion,
     // Find the largest rectangle and use that to calculate the inset. Our top
     // priority is to include the bounds of all plugins.
     nsIntRect largest = opaqueRegion.GetLargestRectangle(pluginBounds);
-    margins.cxLeftWidth = largest.x;
-    margins.cxRightWidth = clientBounds.width - largest.XMost();
-    margins.cyBottomHeight = clientBounds.height - largest.YMost();
+    if (largest.x <= MAX_HORIZONTAL_GLASS_MARGIN &&
+        clientBounds.width - largest.XMost() <= MAX_HORIZONTAL_GLASS_MARGIN &&
+        largest.height >= MIN_OPAQUE_RECT_HEIGHT_FOR_GLASS_MARGINS) {
+      margins.cxLeftWidth = largest.x;
+      margins.cxRightWidth = clientBounds.width - largest.XMost();
+      margins.cyBottomHeight = clientBounds.height - largest.YMost();
 
-    if (mCustomNonClient) {
-      // The minimum glass height must be the caption buttons height,
-      // otherwise the buttons are drawn incorrectly.
-      largest.y = PR_MAX(largest.y, 
-                         nsUXThemeData::sCommandButtons[CMDBUTTONIDX_BUTTONBOX].cy);
+      if (mCustomNonClient) {
+        // The minimum glass height must be the caption buttons height,
+        // otherwise the buttons are drawn incorrectly.
+        largest.y = PR_MAX(largest.y,
+                           nsUXThemeData::sCommandButtons[CMDBUTTONIDX_BUTTONBOX].cy);
+      }
+      margins.cyTopHeight = largest.y;
     }
-    margins.cyTopHeight = largest.y;
   }
 
   // Only update glass area if there are changes
@@ -3284,6 +3300,7 @@ struct LayerManagerPrefs {
   {}
   PRBool mAccelerateByDefault;
   PRBool mDisableAcceleration;
+  PRBool mForceAcceleration;
   PRBool mPreferOpenGL;
   PRBool mPreferD3D9;
 };
@@ -3295,6 +3312,8 @@ GetLayerManagerPrefs(LayerManagerPrefs* aManagerPrefs)
   if (prefs) {
     prefs->GetBoolPref("layers.acceleration.disabled",
                        &aManagerPrefs->mDisableAcceleration);
+    prefs->GetBoolPref("layers.acceleration.force-enabled",
+                       &aManagerPrefs->mForceAcceleration);
     prefs->GetBoolPref("layers.prefer-opengl",
                        &aManagerPrefs->mPreferOpenGL);
     prefs->GetBoolPref("layers.prefer-d3d9",
@@ -3383,10 +3402,22 @@ nsWindow::GetLayerManager(LayerManagerPersistence aPersistence, bool* aAllowReta
       }
 #endif
       if (!mLayerManager && prefs.mPreferOpenGL) {
-        nsRefPtr<mozilla::layers::LayerManagerOGL> layerManager =
-          new mozilla::layers::LayerManagerOGL(this);
-        if (layerManager->Initialize()) {
-          mLayerManager = layerManager;
+        nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
+        PRInt32 status = nsIGfxInfo::FEATURE_NO_INFO;
+
+        if (gfxInfo && !prefs.mForceAcceleration) {
+          gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_OPENGL_LAYERS, &status);
+        }
+
+        if (status == nsIGfxInfo::FEATURE_NO_INFO) {
+          nsRefPtr<mozilla::layers::LayerManagerOGL> layerManager =
+            new mozilla::layers::LayerManagerOGL(this);
+          if (layerManager->Initialize()) {
+            mLayerManager = layerManager;
+          }
+
+        } else {
+          NS_WARNING("OpenGL accelerated layers are not supported on this system.");
         }
       }
     }

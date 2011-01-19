@@ -649,7 +649,11 @@ public:
          * When this flag is set, snapping to device pixels is disabled.
          * It simply never does anything.
          */
-        FLAG_DISABLE_SNAPPING = (1 << 1)
+        FLAG_DISABLE_SNAPPING = (1 << 1),
+        /**
+         * Disable copying of backgrounds in PushGroupAndCopyBackground.
+         */
+        FLAG_DISABLE_COPY_BACKGROUND = (1 << 2)
     };
 
     void SetFlag(PRInt32 aFlag) { mFlags |= aFlag; }

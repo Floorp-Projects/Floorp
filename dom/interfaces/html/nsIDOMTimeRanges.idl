@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 #include "domstubs.idl"
 
-[scriptable, uuid(a45a7bec-1ff9-4fba-8a9d-e99606c987fc)]
+[scriptable, uuid(c43448db-0bab-461d-b648-1ca14a967f7e)]
 interface nsIDOMTimeRanges : nsISupports
 {
   /* The number of ranges represented by the time range object */
@@ -45,9 +45,9 @@ interface nsIDOMTimeRanges : nsISupports
 
   /* The position of the start of the index'd range, in seconds measured
      from the start of the timeline that this object represents */
-  float start(in unsigned long index);
+  double start(in unsigned long index);
 
   /* The position of the end of the index'd range, in seconds measured
      from the start of the timeline that this object represents */
-  float end(in unsigned long index);
+  double end(in unsigned long index);
 };

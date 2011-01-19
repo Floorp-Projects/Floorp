@@ -423,7 +423,11 @@ protected:
     }
     aCallback(this, aContext, aRegionToDraw, aRegionToInvalidate,
               aCallbackData);
-    mValidRegion.Or(mValidRegion, aRegionToDraw);
+    // Everything that's visible has been validated. Do this instead of
+    // OR-ing with aRegionToDraw, since that can lead to a very complex region
+    // here (OR doesn't automatically simplify to the simplest possible
+    // representation of a region.)
+    mValidRegion.Or(mValidRegion, mVisibleRegion);
   }
 
   Buffer mBuffer;
@@ -1272,6 +1276,12 @@ BasicLayerManager::EndTransactionInternal(DrawThebesLayerCallback aCallback,
 
     // If we're doing manual double-buffering, we need to avoid drawing
     // the results of an incomplete transaction to the destination surface.
+    // If the transaction is incomplete and we're not double-buffering then
+    // either the system is double-buffering our window (in which case the
+    // followup EndTransaction will be drawn over the top of our incomplete
+    // transaction before the system updates the window), or we have no
+    // overlapping or transparent layers in the update region, in which case
+    // our partial transaction drawing will look fine.
     if (useDoubleBuffering && !mTransactionIncomplete) {
       finalTarget->SetOperator(gfxContext::OPERATOR_SOURCE);
       PopGroupWithCachedSurface(finalTarget, cachedSurfaceOffset);
@@ -1286,23 +1296,25 @@ BasicLayerManager::EndTransactionInternal(DrawThebesLayerCallback aCallback,
 #endif
 
 #ifdef DEBUG
-  mPhase = PHASE_NONE;
+  // Go back to the construction phase if the transaction isn't complete.
+  // Layout will update the layer tree and call EndTransaction().
+  mPhase = mTransactionIncomplete ? PHASE_CONSTRUCTION : PHASE_NONE;
 #endif
   mUsingDefaultTarget = PR_FALSE;
 
   NS_ASSERTION(!aCallback || !mTransactionIncomplete,
                "If callback is not null, transaction must be complete");
+
   return !mTransactionIncomplete;
 }
 
 bool
-BasicLayerManager::DoEmptyTransaction()
+BasicLayerManager::EndEmptyTransaction()
 {
   if (!mRoot) {
     return false;
   }
 
-  BeginTransaction();
   return EndTransactionInternal(nsnull, nsnull);
 }
 
@@ -1999,7 +2011,10 @@ BasicShadowableCanvasLayer::Paint(gfxContext* aContext,
   // the shmem back buffer
   nsRefPtr<gfxContext> tmpCtx = new gfxContext(mBackBuffer);
   tmpCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
-  tmpCtx->DrawSurface(mSurface, gfxSize(mBounds.width, mBounds.height));
+
+  // call BasicCanvasLayer::Paint to draw to our tmp context, because
+  // it'll handle things like flipping correctly
+  BasicCanvasLayer::Paint(tmpCtx, nsnull, nsnull);
 
   BasicManager()->PaintedCanvas(BasicManager()->Hold(this),
                                 mBackBuffer);
@@ -2617,7 +2632,7 @@ BasicShadowLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
   // If the last transaction was incomplete (a failed DoEmptyTransaction),
   // don't signal a new transaction to ShadowLayerForwarder. Carry on adding
   // to the previous transaction.
-  if (HasShadowManager() && !mTransactionIncomplete) {
+  if (HasShadowManager()) {
     ShadowLayerForwarder::BeginTransaction();
   }
   BasicLayerManager::BeginTransactionWithTarget(aTarget);
@@ -2632,17 +2647,12 @@ BasicShadowLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
 }
 
 bool
-BasicShadowLayerManager::DoEmptyTransaction()
+BasicShadowLayerManager::EndEmptyTransaction()
 {
-  if (!mRoot) {
-    return false;
-  }
-
-  BasicLayerManager::BeginTransaction();
-  if (!EndTransactionInternal(nsnull, nsnull)) {
+  if (!BasicLayerManager::EndEmptyTransaction()) {
     // Return without calling ForwardTransaction. This leaves the
     // ShadowLayerForwarder transaction open; the following
-    // BeginTransaction/EndTransaction pair will complete it.
+    // EndTransaction will complete it.
     return false;
   }
   ForwardTransaction();

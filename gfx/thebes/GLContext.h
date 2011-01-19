@@ -125,6 +125,8 @@ enum ShaderProgramType {
     RGBARectLayerProgramType,
     ColorLayerProgramType,
     YCbCrLayerProgramType,
+    ComponentAlphaPass1ProgramType,
+    ComponentAlphaPass2ProgramType,
     Copy2DProgramType,
     Copy2DRectProgramType,
     NumProgramTypes
@@ -156,10 +158,10 @@ public:
     virtual ~TextureImage() {}
 
     /**
-     * Return a gfxContext for updating |aRegion| of the client's
+     * Returns a gfxASurface for updating |aRegion| of the client's
      * image if successul, NULL if not.  |aRegion|'s bounds must fit
      * within Size(); its coordinate space (if any) is ignored.  If
-     * the update begins successfully, the returned gfxContext is
+     * the update begins successfully, the returned gfxASurface is
      * owned by this.  Otherwise, NULL is returned.
      *
      * |aRegion| is an inout param: the returned region is what the
@@ -167,9 +169,8 @@ public:
      * efficiently handle repaints to "scattered" regions, while (2)
      * can only efficiently handle repaints to rects.
      *
-     * The returned context is neither translated nor clipped: it's a
-     * context for rect(<0,0>, Size()).  Painting the returned context
-     * outside of |aRegion| results in undefined behavior.
+     * Painting the returned surface outside of |aRegion| results 
+     * in undefined behavior.
      *
      * BeginUpdate() calls cannot be "nested", and each successful
      * BeginUpdate() must be followed by exactly one EndUpdate() (see
@@ -177,15 +178,15 @@ public:
      * inconsistent state.  Unsuccessful BeginUpdate()s must not be
      * followed by EndUpdate().
      */
-    virtual gfxContext* BeginUpdate(nsIntRegion& aRegion) = 0;
+    virtual gfxASurface* BeginUpdate(nsIntRegion& aRegion) = 0;
     /**
      * Finish the active update and synchronize with the server, if
-     * necessary.  Return PR_TRUE iff this's texture is already bound.
+     * necessary.
      *
      * BeginUpdate() must have been called exactly once before
      * EndUpdate().
      */
-    virtual PRBool EndUpdate() = 0;
+    virtual void EndUpdate() = 0;
 
     /**
      * Set this TextureImage's size, and ensure a texture has been
@@ -295,8 +296,8 @@ public:
         , mUpdateOffset(0, 0)
     {}
 
-    virtual gfxContext* BeginUpdate(nsIntRegion& aRegion);
-    virtual PRBool EndUpdate();
+    virtual gfxASurface* BeginUpdate(nsIntRegion& aRegion);
+    virtual void EndUpdate();
     virtual bool DirectUpdate(gfxASurface *aSurf, const nsIntRegion& aRegion);
 
     // Returns a surface to draw into
@@ -311,15 +312,15 @@ public:
     // Call after surface data has been uploaded to a texture.
     virtual void FinishedSurfaceUpload();
 
-    virtual PRBool InUpdate() const { return !!mUpdateContext; }
+    virtual PRBool InUpdate() const { return !!mUpdateSurface; }
 
     virtual void Resize(const nsIntSize& aSize);
 protected:
 
     PRBool mTextureInited;
     GLContext* mGLContext;
-    nsRefPtr<gfxContext> mUpdateContext;
-    nsIntRect mUpdateRect;
+    nsRefPtr<gfxASurface> mUpdateSurface;
+    nsIntRegion mUpdateRegion;
 
     // The offset into the update surface at which the update rect is located.
     nsIntPoint mUpdateOffset;
@@ -759,20 +760,21 @@ public:
      * or aOverwrite is true.
      *
      * \param aSurface Surface to upload. 
-     * \param aSrcRect Region of aSurface to upload.
+     * \param aDstRegion Region of texture to upload to.
      * \param aTexture Texture to use, or 0 to have one created for you.
      * \param aOverwrite Over an existing texture with a new one.
-     * \param aDstPoint Offset into existing texture to upload contents.
+     * \param aSrcPoint Offset into aSrc where the region's bound's 
+     *  TopLeft() sits.
      * \param aPixelBuffer Pass true to upload texture data with an
      *  offset from the base data (generally for pixel buffer objects), 
      *  otherwise textures are upload with an absolute pointer to the data.
      * \return Shader program needed to render this texture.
      */
     ShaderProgramType UploadSurfaceToTexture(gfxASurface *aSurface, 
-                                             const nsIntRect& aSrcRect,
+                                             const nsIntRegion& aDstRegion,
                                              GLuint& aTexture,
                                              bool aOverwrite = false,
-                                             const nsIntPoint& aDstPoint = nsIntPoint(0, 0),
+                                             const nsIntPoint& aSrcPoint = nsIntPoint(0, 0),
                                              bool aPixelBuffer = PR_FALSE);
 
 #ifndef MOZ_ENABLE_LIBXUL

@@ -172,8 +172,8 @@
 #endif
 
 #if defined(_M_AMD64)
-  // MMX is always available on AMD64.
-  #define MOZILLA_PRESUME_MMX
+  // MSVC for AMD64 doesn't support MMX, so don't presume it here.
+
   // SSE is always available on AMD64.
   #define MOZILLA_PRESUME_SSE
   // SSE2 is always available on AMD64.
@@ -231,7 +231,11 @@ namespace mozilla {
 #define MOZILLA_MAY_SUPPORT_MMX 1
   inline bool supports_mmx() { return true; }
 #elif defined(MOZILLA_SSE_HAVE_CPUID_DETECTION)
+#if !(defined(_MSC_VER) && defined(_M_AMD64))
+  // Define MOZILLA_MAY_SUPPORT_MMX only if we're not on MSVC for
+  // AMD64, since that compiler doesn't support MMX.
 #define MOZILLA_MAY_SUPPORT_MMX 1
+#endif
   inline bool supports_mmx() { return sse_private::mmx_enabled; }
 #else
   inline bool supports_mmx() { return false; }

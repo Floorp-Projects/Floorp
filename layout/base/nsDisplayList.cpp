@@ -180,9 +180,14 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
     metrics.mViewportScrollOffset =
       rootScrollableFrame->GetScrollPosition().ToNearestPixels(auPerDevPixel);
     
-    metrics.mScrollId = aScrollId;
+  }
+  else {
+    nsSize contentSize = aForFrame->GetSize();
+    metrics.mContentSize = nsIntSize(NSAppUnitsToIntPixels(contentSize.width, auPerDevPixel),
+                                     NSAppUnitsToIntPixels(contentSize.height, auPerDevPixel));
   }
 
+  metrics.mScrollId = aScrollId;
   aRoot->SetFrameMetrics(metrics);
 }
 
@@ -298,17 +303,6 @@ nsDisplayListBuilder::LeavePresShell(nsIFrame* aReferenceFrame,
     // Must have not allocated a state for this presshell, presumably due
     // to OOM.
     return;
-  }
-
-  // If we're finished building display list items for painting of the outermost
-  // pres shell, notify the widget about any toolbars we've encountered.
-  if (mIsPaintingToWindow && mPresShellStates.Length() == 1) {
-    nsIWidget* widget = aReferenceFrame->GetNearestWidget();
-    if (widget) {
-      nsIWidget_MOZILLA_2_0_BRANCH* widget2 =
-        static_cast<nsIWidget_MOZILLA_2_0_BRANCH*>(widget);
-      widget2->UpdateThemeGeometries(CurrentPresShellState()->mThemeGeometries);
-    }
   }
 
   // Unmark and pop off the frames marked for display in this pres shell.
@@ -465,16 +459,17 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
                "Must call ComputeVisibility before calling Paint");
 
   nsRefPtr<LayerManager> layerManager;
+  bool allowRetaining = false;
+  bool doBeginTransaction = true;
   if (aFlags & PAINT_USE_WIDGET_LAYERS) {
     nsIFrame* referenceFrame = aBuilder->ReferenceFrame();
     NS_ASSERTION(referenceFrame == nsLayoutUtils::GetDisplayRootFrame(referenceFrame),
                  "Reference frame must be a display root for us to use the layer manager");
     nsIWidget* window = referenceFrame->GetNearestWidget();
     if (window) {
-      bool allowRetaining = true;
       layerManager = window->GetLayerManager(&allowRetaining);
-      if (layerManager && allowRetaining) {
-        aBuilder->LayerBuilder()->WillBeginRetainedLayerTransaction(layerManager);
+      if (layerManager) {
+        doBeginTransaction = !(aFlags & PAINT_EXISTING_TRANSACTION);
       }
     }
   }
@@ -492,10 +487,15 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
     FrameLayerBuilder::InvalidateAllLayers(layerManager);
   }
 
-  if (aCtx) {
-    layerManager->BeginTransactionWithTarget(aCtx->ThebesContext());
-  } else {
-    layerManager->BeginTransaction();
+  if (doBeginTransaction) {
+    if (aCtx) {
+      layerManager->BeginTransactionWithTarget(aCtx->ThebesContext());
+    } else {
+      layerManager->BeginTransaction();
+    }
+  }
+  if (allowRetaining) {
+    aBuilder->LayerBuilder()->DidBeginRetainedLayerTransaction(layerManager);
   }
 
   nsRefPtr<ContainerLayer> root = aBuilder->LayerBuilder()->
@@ -1021,8 +1021,15 @@ nsDisplayBackground::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
 PRBool
 nsDisplayBackground::IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor) {
   // theme background overrides any other background
-  if (mIsThemed)
+  if (mIsThemed) {
+    const nsStyleDisplay* disp = mFrame->GetStyleDisplay();
+    if (disp->mAppearance == NS_THEME_WIN_BORDERLESS_GLASS ||
+        disp->mAppearance == NS_THEME_WIN_GLASS) {
+      *aColor = NS_RGBA(0,0,0,0);
+      return PR_TRUE;
+    }
     return PR_FALSE;
+  }
 
   nsStyleContext *bgSC;
   PRBool hasBG =

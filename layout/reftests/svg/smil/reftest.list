@@ -171,7 +171,7 @@ fails == anim-strokecolor-1.svg anim-standard-ref.svg # bug 436296
 == anim-targethref-8.svg anim-standard-ref.svg
 == anim-targethref-9.svg anim-standard-ref.svg
 
-fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == anim-text-rotate-01.svg anim-text-rotate-01-ref.svg # bug 421587
+== anim-text-rotate-01.svg anim-text-rotate-01-ref.svg
 == anim-feFuncR-tableValues-01.svg anim-feFuncR-tableValues-01-ref.svg
 
 random == anim-text-x-y-dx-dy-01.svg anim-text-x-y-dx-dy-01-ref.svg # bug 579588
@@ -197,7 +197,11 @@ random == anim-text-x-y-dx-dy-01.svg anim-text-x-y-dx-dy-01-ref.svg # bug 579588
 == anim-y-interp-5.svg anim-y-interp-5-ref.svg
 == anim-y-interp-6.svg anim-y-interp-6-ref.svg
 
+# Test we don't rely on HasAttr to see if an attribute has been set
 == anim-rect-rxry-1.svg anim-rect-rxry-1-ref.svg
+== anim-pattern-attr-presence-01.svg anim-pattern-attr-presence-01-ref.svg
+fails == anim-pattern-attr-presence-02.svg anim-pattern-attr-presence-02-ref.svg
+# ^ bug 621651
 
 == api-sanity-1.svg lime.svg
 

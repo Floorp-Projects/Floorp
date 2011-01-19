@@ -1576,32 +1576,30 @@ class FlatMatch
 /* A regexp and optional associated object. */
 class RegExpPair
 {
-    AutoRefCount<RegExp>    arc;
+    AutoRefCount<RegExp>    re_;
     JSObject                *reobj_;
-    RegExp                  *re_;
 
     explicit RegExpPair(RegExpPair &);
 
   public:
-    explicit RegExpPair(JSContext *cx, RegExp *re) : arc(cx, re), re_(re) {}
+    explicit RegExpPair(JSContext *cx) : re_(cx) {}
 
-    void reset(JSObject &reobj) {
-        reobj_ = &reobj;
-        re_ = RegExp::extractFrom(&reobj);
-        JS_ASSERT(re_);
-        arc.reset(re_);
+    void reset(JSObject &obj) {
+        reobj_ = &obj;
+        RegExp *re = RegExp::extractFrom(reobj_);
+        JS_ASSERT(re);
+        re_.reset(NeedsIncRef<RegExp>(re));
     }
 
-    void reset(RegExp &re) {
-        re_ = &re;
+    void reset(AlreadyIncRefed<RegExp> re) {
         reobj_ = NULL;
-        arc.reset(re_);
+        re_.reset(re);
     }
 
     /* Note: May be null. */
     JSObject *reobj() const { return reobj_; }
-    RegExp &re() const { JS_ASSERT(re_); return *re_; }
-    bool hasRegExp() const { return !!re_; }
+    bool hasRegExp() const { return !re_.null(); }
+    RegExp &re() const { JS_ASSERT(hasRegExp()); return *re_; }
 };
 
 /*
@@ -1647,7 +1645,7 @@ class RegExpGuard
     }
 
   public:
-    explicit RegExpGuard(JSContext *cx) : cx(cx), rep(cx, NULL) {}
+    explicit RegExpGuard(JSContext *cx) : cx(cx), rep(cx) {}
     ~RegExpGuard() {}
 
     /* init must succeed in order to call tryFlatMatch or normalizeRegExp. */
@@ -1733,10 +1731,10 @@ class RegExpGuard
         }
         JS_ASSERT(patstr);
 
-        RegExp *re = RegExp::createFlagged(cx, patstr, opt);
+        AlreadyIncRefed<RegExp> re = RegExp::createFlagged(cx, patstr, opt);
         if (!re)
             return NULL;
-        rep.reset(*re);
+        rep.reset(re);
         return &rep;
     }
 

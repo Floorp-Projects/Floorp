@@ -774,6 +774,7 @@ Item.prototype = {
         var self = this;
         var startMouse;
         var startSize;
+        var startAspect;
 
         // ___ mousemove
         var handleMouseMove = function(e) {
@@ -939,12 +940,9 @@ let Items = {
   //   width value of the child items (`childWidth`) and the number of columns
   //   (`columns`) is returned.
   arrange: function Items_arrange(items, bounds, options) {
-    if (typeof options == 'undefined')
+    if (!options)
       options = {};
-
-    var animate = true;
-    if (typeof options.animate != 'undefined')
-      animate = options.animate;
+    var animate = "animate" in options ? options.animate : true;
     var immediately = !animate;
 
     var rects = [];

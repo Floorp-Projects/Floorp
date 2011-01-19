@@ -14,6 +14,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=619644
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=619644">Mozilla Bug 619644</a>
 <pre id="test">
 <script class="testbody" type="text/javascript">
+function hasTabModalPrompts() {
+  var prefName = "prompts.tab_modal.enabled";
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  Components.utils.import("resource://gre/modules/Services.jsm");
+  return Services.prefs.getPrefType(prefName) == Services.prefs.PREF_BOOL &&
+         Services.prefs.getBoolPref(prefName);
+}
+
+if (!hasTabModalPrompts()) {
+  todo(false, "Test disabled when tab modal prompts are not enabled.");
+} else {
 SimpleTest.waitForExplicitFinish();
 
 // This is a little yucky, but it works
@@ -36,6 +47,7 @@ function checktest(e) {
 
 window.addEventListener("message", runtest, false);
 window.open("bug619644_inner.html", "619644");
+}
 </script>
 </pre>
 </body>

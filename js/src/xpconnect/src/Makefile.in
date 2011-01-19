@@ -75,6 +75,7 @@ CPPSRCS		= \
 		xpcexception.cpp \
 		xpcjsid.cpp \
 		xpcjsruntime.cpp \
+		xpclocale.cpp \
 		xpclog.cpp \
 		xpcmaps.cpp \
 		xpcmodule.cpp \

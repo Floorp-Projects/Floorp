@@ -68,33 +68,31 @@ struct BindingColumnData
   int column;
 };
 
-} // anonymous namespace
-
 ////////////////////////////////////////////////////////////////////////////////
 //// Variant Specialization Functions (variantToSQLiteT)
 
-static int
+int
 sqlite3_T_int(BindingColumnData aData,
               int aValue)
 {
   return ::sqlite3_bind_int(aData.stmt, aData.column + 1, aValue);
 }
 
-static int
+int
 sqlite3_T_int64(BindingColumnData aData,
                 sqlite3_int64 aValue)
 {
   return ::sqlite3_bind_int64(aData.stmt, aData.column + 1, aValue);
 }
 
-static int
+int
 sqlite3_T_double(BindingColumnData aData,
                  double aValue)
 {
   return ::sqlite3_bind_double(aData.stmt, aData.column + 1, aValue);
 }
 
-static int
+int
 sqlite3_T_text(BindingColumnData aData,
                const nsCString& aValue)
 {
@@ -105,7 +103,7 @@ sqlite3_T_text(BindingColumnData aData,
                              SQLITE_TRANSIENT);
 }
 
-static int
+int
 sqlite3_T_text16(BindingColumnData aData,
                  const nsString& aValue)
 {
@@ -116,13 +114,13 @@ sqlite3_T_text16(BindingColumnData aData,
                                SQLITE_TRANSIENT);
 }
 
-static int
+int
 sqlite3_T_null(BindingColumnData aData)
 {
   return ::sqlite3_bind_null(aData.stmt, aData.column + 1);
 }
 
-static int
+int
 sqlite3_T_blob(BindingColumnData aData,
                const void *aBlob,
                int aSize)
@@ -133,6 +131,8 @@ sqlite3_T_blob(BindingColumnData aData,
 }
 
 #include "variantToSQLiteT_impl.h"
+
+} // anonymous namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 //// BindingParams

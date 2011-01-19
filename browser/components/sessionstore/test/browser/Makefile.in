@@ -131,6 +131,7 @@ _BROWSER_TEST_FILES = \
 	browser_597315_c1.html \
 	browser_597315_c2.html \
 	browser_600545.js \
+	browser_601955.js \
 	browser_607016.js \
 	browser_615394-SSWindowState_events.js \
 	browser_618151.js \

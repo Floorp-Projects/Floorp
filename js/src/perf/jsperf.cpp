@@ -63,7 +63,7 @@ pm_construct(JSContext* cx, uintN argc, jsval* vp)
     if (!JS_FreezeObject(cx, obj))
         return JS_FALSE;
 
-    PerfMeasurement* p = new PerfMeasurement(PerfMeasurement::EventMask(mask));
+    PerfMeasurement* p = js_new<PerfMeasurement>(PerfMeasurement::EventMask(mask));
     if (!p) {
         JS_ReportOutOfMemory(cx);
         return JS_FALSE;
@@ -77,7 +77,7 @@ pm_construct(JSContext* cx, uintN argc, jsval* vp)
 static void
 pm_finalize(JSContext* cx, JSObject* obj)
 {
-    delete (PerfMeasurement*) JS_GetPrivate(cx, obj);
+    js_delete((PerfMeasurement*) JS_GetPrivate(cx, obj));
 }
 
 // Property access

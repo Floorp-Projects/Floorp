@@ -1541,19 +1541,30 @@ SetupDirtyRects(const nsRect& aBGClipArea, const nsRect& aCallerDirtyRect,
                     "second should be empty if first is");
 }
 
+struct BackgroundClipState {
+  nsRect mBGClipArea;
+  nsRect mDirtyRect;
+  gfxRect mDirtyRectGfx;
+
+  gfxCornerSizes mClippedRadii;
+  PRPackedBool mRadiiAreOuter;
+
+  // Whether we are being asked to draw with a caller provided background
+  // clipping area. If this is true we also disable rounded corners.
+  PRPackedBool mCustomClip;
+};
+
 static void
-SetupBackgroundClip(gfxContext *aCtx, PRUint8 aBackgroundClip,
-                    nsIFrame* aForFrame, const nsRect& aBorderArea,
-                    const nsRect& aCallerDirtyRect, PRBool aHaveRoundedCorners,
-                    const gfxCornerSizes& aBGRadii, nscoord aAppUnitsPerPixel,
-                    gfxContextAutoSaveRestore* aAutoSR,
-                    /* OUT: */
-                    nsRect* aBGClipArea, nsRect* aDirtyRect,
-                    gfxRect* aDirtyRectGfx)
+GetBackgroundClip(gfxContext *aCtx, PRUint8 aBackgroundClip,
+                  nsIFrame* aForFrame, const nsRect& aBorderArea,
+                  const nsRect& aCallerDirtyRect, PRBool aHaveRoundedCorners,
+                  const gfxCornerSizes& aBGRadii, nscoord aAppUnitsPerPixel,
+                  /* out */ BackgroundClipState* aClipState)
 {
-  *aBGClipArea = aBorderArea;
-  PRBool radiiAreOuter = PR_TRUE;
-  gfxCornerSizes clippedRadii = aBGRadii;
+  aClipState->mBGClipArea = aBorderArea;
+  aClipState->mCustomClip = PR_FALSE;
+  aClipState->mRadiiAreOuter = PR_TRUE;
+  aClipState->mClippedRadii = aBGRadii;
   if (aBackgroundClip != NS_STYLE_BG_CLIP_BORDER) {
     nsMargin border = aForFrame->GetUsedBorder();
     if (aBackgroundClip != NS_STYLE_BG_CLIP_PADDING) {
@@ -1562,7 +1573,7 @@ SetupBackgroundClip(gfxContext *aCtx, PRUint8 aBackgroundClip,
       border += aForFrame->GetUsedPadding();
     }
     aForFrame->ApplySkipSides(border);
-    aBGClipArea->Deflate(border);
+    aClipState->mBGClipArea.Deflate(border);
 
     if (aHaveRoundedCorners) {
       gfxFloat borderSizes[4] = {
@@ -1572,17 +1583,29 @@ SetupBackgroundClip(gfxContext *aCtx, PRUint8 aBackgroundClip,
         gfxFloat(border.left / aAppUnitsPerPixel)
       };
       nsCSSBorderRenderer::ComputeInnerRadii(aBGRadii, borderSizes,
-                                             &clippedRadii);
-      radiiAreOuter = PR_FALSE;
+                                             &aClipState->mClippedRadii);
+      aClipState->mRadiiAreOuter = PR_FALSE;
     }
   }
 
-  SetupDirtyRects(*aBGClipArea, aCallerDirtyRect, aAppUnitsPerPixel,
-                  aDirtyRect, aDirtyRectGfx);
+  SetupDirtyRects(aClipState->mBGClipArea, aCallerDirtyRect, aAppUnitsPerPixel,
+                  &aClipState->mDirtyRect, &aClipState->mDirtyRectGfx);
+}
 
-  if (aDirtyRectGfx->IsEmpty()) {
+static void
+SetupBackgroundClip(BackgroundClipState& aClipState, gfxContext *aCtx,
+                    PRBool aHaveRoundedCorners, nscoord aAppUnitsPerPixel,
+                    gfxContextAutoSaveRestore* aAutoSR)
+{
+  if (aClipState.mDirtyRectGfx.IsEmpty()) {
     // Our caller won't draw anything under this condition, so no need
     // to set more up.
+    return;
+  }
+
+  if (aClipState.mCustomClip) {
+    // We don't support custom clips and rounded corners, arguably a bug, but
+    // table painting seems to depend on it.
     return;
   }
 
@@ -1595,7 +1618,7 @@ SetupBackgroundClip(gfxContext *aCtx, PRUint8 aBackgroundClip,
 
   if (aHaveRoundedCorners) {
     gfxRect bgAreaGfx =
-      nsLayoutUtils::RectToGfxRect(*aBGClipArea, aAppUnitsPerPixel);
+      nsLayoutUtils::RectToGfxRect(aClipState.mBGClipArea, aAppUnitsPerPixel);
     bgAreaGfx.Round();
     bgAreaGfx.Condition();
 
@@ -1604,15 +1627,62 @@ SetupBackgroundClip(gfxContext *aCtx, PRUint8 aBackgroundClip,
       // http://hg.mozilla.org/mozilla-central/rev/50e934e4979b landed.
       NS_WARNING("converted background area should not be empty");
       // Make our caller not do anything.
-      aDirtyRectGfx->size.SizeTo(0.0, 0.0);
+      aClipState.mDirtyRectGfx.size.SizeTo(0.0, 0.0);
       return;
     }
 
     aAutoSR->Reset(aCtx);
     aCtx->NewPath();
-    aCtx->RoundedRectangle(bgAreaGfx, clippedRadii, radiiAreOuter);
+    aCtx->RoundedRectangle(bgAreaGfx, aClipState.mClippedRadii, aClipState.mRadiiAreOuter);
     aCtx->Clip();
   }
+}
+
+static void
+DrawBackgroundColor(BackgroundClipState& aClipState, gfxContext *aCtx,
+                    PRBool aHaveRoundedCorners, nscoord aAppUnitsPerPixel)
+{
+  if (aClipState.mDirtyRectGfx.IsEmpty()) {
+    // Our caller won't draw anything under this condition, so no need
+    // to set more up.
+    return;
+  }
+
+  // We don't support custom clips and rounded corners, arguably a bug, but
+  // table painting seems to depend on it.
+  if (!aHaveRoundedCorners || aClipState.mCustomClip) {
+    aCtx->NewPath();
+    aCtx->Rectangle(aClipState.mDirtyRectGfx, PR_TRUE);
+    aCtx->Fill();
+    return;
+  }
+
+  gfxRect bgAreaGfx =
+    nsLayoutUtils::RectToGfxRect(aClipState.mBGClipArea, aAppUnitsPerPixel);
+  bgAreaGfx.Round();
+  bgAreaGfx.Condition();
+
+  if (bgAreaGfx.IsEmpty()) {
+    // I think it's become possible to hit this since
+    // http://hg.mozilla.org/mozilla-central/rev/50e934e4979b landed.
+    NS_WARNING("converted background area should not be empty");
+    // Make our caller not do anything.
+    aClipState.mDirtyRectGfx.size.SizeTo(0.0, 0.0);
+    return;
+  }
+
+  aCtx->Save();
+  gfxRect dirty = bgAreaGfx.Intersect(aClipState.mDirtyRectGfx);
+
+  aCtx->NewPath();
+  aCtx->Rectangle(dirty, PR_TRUE);
+  aCtx->Clip();
+
+  aCtx->NewPath();
+  aCtx->RoundedRectangle(bgAreaGfx, aClipState.mClippedRadii,
+                         aClipState.mRadiiAreOuter);
+  aCtx->Fill();
+  aCtx->Restore();
 }
 
 static nscolor
@@ -2267,15 +2337,14 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
   // intersection, but that breaks the table painter -- in particular,
   // taking the intersection breaks reftests/bugs/403249-1[ab].)
   const nsStyleBackground *bg = aBackgroundSC->GetStyleBackground();
-  nsRect bgClipArea, dirtyRect;
-  gfxRect dirtyRectGfx;
+  BackgroundClipState clipState;
   PRUint8 currentBackgroundClip;
   PRBool isSolidBorder;
-  gfxContextAutoSaveRestore autoSR;
   if (aBGClipRect) {
-    bgClipArea = *aBGClipRect;
-    SetupDirtyRects(bgClipArea, aDirtyRect, appUnitsPerPixel,
-                    &dirtyRect, &dirtyRectGfx);
+    clipState.mBGClipArea = *aBGClipRect;
+    clipState.mCustomClip = PR_TRUE;
+    SetupDirtyRects(clipState.mBGClipArea, aDirtyRect, appUnitsPerPixel,
+                    &clipState.mDirtyRect, &clipState.mDirtyRectGfx);
   } else {
     // The background is rendered over the 'background-clip' area,
     // which is normally equal to the border area but may be reduced
@@ -2290,24 +2359,24 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
       (aFlags & PAINTBG_WILL_PAINT_BORDER) && IsOpaqueBorder(aBorder);
     if (isSolidBorder && currentBackgroundClip == NS_STYLE_BG_CLIP_BORDER)
       currentBackgroundClip = NS_STYLE_BG_CLIP_PADDING;
-    SetupBackgroundClip(ctx, currentBackgroundClip, aForFrame,
-                        aBorderArea, aDirtyRect, haveRoundedCorners,
-                        bgRadii, appUnitsPerPixel, &autoSR,
-                        &bgClipArea, &dirtyRect, &dirtyRectGfx);
+
+    GetBackgroundClip(ctx, currentBackgroundClip, aForFrame, aBorderArea,
+                      aDirtyRect, haveRoundedCorners, bgRadii, appUnitsPerPixel,
+                      &clipState);
   }
 
   // If we might be using a background color, go ahead and set it now.
   if (drawBackgroundColor && !isCanvasFrame)
     ctx->SetColor(gfxRGBA(bgColor));
 
+  gfxContextAutoSaveRestore autoSR;
+
   // If there is no background image, draw a color.  (If there is
   // neither a background image nor a color, we wouldn't have gotten
   // this far.)
   if (!drawBackgroundImage) {
-    if (!dirtyRectGfx.IsEmpty() && !isCanvasFrame) {
-      ctx->NewPath();
-      ctx->Rectangle(dirtyRectGfx, PR_TRUE);
-      ctx->Fill();
+    if (!isCanvasFrame) {
+      DrawBackgroundColor(clipState, ctx, haveRoundedCorners, appUnitsPerPixel);
     }
     return;
   }
@@ -2326,35 +2395,40 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
   // The background color is rendered over the entire dirty area,
   // even if the image isn't.
   if (drawBackgroundColor && !isCanvasFrame) {
-    if (!dirtyRectGfx.IsEmpty()) {
-      ctx->NewPath();
-      ctx->Rectangle(dirtyRectGfx, PR_TRUE);
-      ctx->Fill();
-    }
+    DrawBackgroundColor(clipState, ctx, haveRoundedCorners, appUnitsPerPixel);
   }
 
   if (drawBackgroundImage) {
+    bool clipSet = false;
     NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, bg) {
       const nsStyleBackground::Layer &layer = bg->mLayers[i];
       if (!aBGClipRect) {
         PRUint8 newBackgroundClip = layer.mClip;
         if (isSolidBorder && newBackgroundClip == NS_STYLE_BG_CLIP_BORDER)
           newBackgroundClip = NS_STYLE_BG_CLIP_PADDING;
-        if (currentBackgroundClip != newBackgroundClip) {
+        if (currentBackgroundClip != newBackgroundClip || !clipSet) {
           currentBackgroundClip = newBackgroundClip;
-          SetupBackgroundClip(ctx, currentBackgroundClip, aForFrame,
+          // If clipSet is false that means this is the bottom layer and we
+          // already called GetBackgroundClip above and it stored its results
+          // in clipState.
+          if (clipSet) {
+            GetBackgroundClip(ctx, currentBackgroundClip, aForFrame,
                               aBorderArea, aDirtyRect, haveRoundedCorners,
-                              bgRadii, appUnitsPerPixel, &autoSR,
-                              &bgClipArea, &dirtyRect, &dirtyRectGfx);
+                              bgRadii, appUnitsPerPixel, &clipState);
+          }
+          SetupBackgroundClip(clipState, ctx, haveRoundedCorners,
+                              appUnitsPerPixel, &autoSR);
+          clipSet = true;
         }
       }
-      if (!dirtyRectGfx.IsEmpty()) {
+      if (!clipState.mDirtyRectGfx.IsEmpty()) {
         BackgroundLayerState state = PrepareBackgroundLayer(aPresContext, aForFrame,
-            aFlags, aBorderArea, bgClipArea, *bg, layer);
+            aFlags, aBorderArea, clipState.mBGClipArea, *bg, layer);
         if (!state.mFillArea.IsEmpty()) {
           state.mImageRenderer.Draw(aPresContext, aRenderingContext,
                                     state.mDestArea, state.mFillArea,
-                                    state.mAnchor + aBorderArea.TopLeft(), dirtyRect);
+                                    state.mAnchor + aBorderArea.TopLeft(),
+                                    clipState.mDirtyRect);
         }
       }
     }

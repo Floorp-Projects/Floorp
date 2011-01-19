@@ -286,7 +286,8 @@ gfxWindowsSurface::GetDefaultContextFlags() const
 {
     if (mForPrinting)
         return gfxContext::FLAG_SIMPLIFY_OPERATORS |
-               gfxContext::FLAG_DISABLE_SNAPPING;
+               gfxContext::FLAG_DISABLE_SNAPPING |
+               gfxContext::FLAG_DISABLE_COPY_BACKGROUND;
 
     return 0;
 }

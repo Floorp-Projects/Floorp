@@ -3461,7 +3461,7 @@ nsCycleCollector_collect(nsICycleCollectorListener *aListener)
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
     nsCOMPtr<nsICycleCollectorListener> listener(aListener);
 #ifdef DEBUG_CC
-    if (!aListener && sCollector.mParams.mDrawGraphs) {
+    if (!aListener && sCollector->mParams.mDrawGraphs) {
         listener = new nsCycleCollectorLogger();
     }
 #endif
