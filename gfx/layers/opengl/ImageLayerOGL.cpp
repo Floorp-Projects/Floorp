@@ -379,6 +379,9 @@ ImageLayerOGL::RenderLayer(int,
   mOGLManager->MakeCurrent();
 
   nsRefPtr<Image> image = GetContainer()->GetCurrentImage();
+  if (!image) {
+    return;
+  }
 
   if (image->GetFormat() == Image::PLANAR_YCBCR) {
     PlanarYCbCrImageOGL *yuvImage =
