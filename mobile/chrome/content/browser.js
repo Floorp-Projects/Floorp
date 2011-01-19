@@ -2460,6 +2460,9 @@ function Tab(aURI, aParams) {
   // aParams is an object that contains some properties for the initial tab
   // loading like flags, a referrerURI, a charset or even a postData.
   this.create(aURI, aParams || {});
+
+  // default tabs to inactive (i.e. no display port)
+  this.active = false;
 }
 
 Tab.prototype = {
