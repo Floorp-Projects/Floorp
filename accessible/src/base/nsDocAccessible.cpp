@@ -1851,10 +1851,6 @@ nsDocAccessible::ProcessContentInserted(nsAccessible* aContainer,
   // are created while parent recaches child accessibles.
   aContainer->InvalidateChildren();
 
-  nsAccessible* directContainer =
-    GetAccService()->GetContainerAccessible(aInsertedContent->ElementAt(0),
-                                            mWeakShell);
-
   // The container might be changed, for example, because of the subsequent
   // overlapping content insertion (i.e. other content was inserted between this
   // inserted content and its container or the content was reinserted into
@@ -1863,8 +1859,15 @@ nsDocAccessible::ProcessContentInserted(nsAccessible* aContainer,
   // harm an AT. On the another hand container can be different because direct
   // container wasn't cached yet when we handled content insertion notification
   // and therefore we can't ignore the case when container has been changed.
-  for (PRUint32 idx = 0; idx < aInsertedContent->Length(); idx++)
-    UpdateTree(directContainer, aInsertedContent->ElementAt(idx), PR_TRUE);
+  // Theoretically the element might be not in tree at all at this point what
+  // means there's no container.
+  for (PRUint32 idx = 0; idx < aInsertedContent->Length(); idx++) {
+    nsAccessible* directContainer =
+      GetAccService()->GetContainerAccessible(aInsertedContent->ElementAt(idx),
+                                              mWeakShell);
+    if (directContainer)
+      UpdateTree(directContainer, aInsertedContent->ElementAt(idx), PR_TRUE);
+  }
 }
 
 void
