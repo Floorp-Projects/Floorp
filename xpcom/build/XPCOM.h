@@ -117,7 +117,6 @@
 #include "nsIUnicharLineInputStream.h"
 #include "nsIVariant.h"
 #include "nsIVersionComparator.h"
-#include "nsIWeakReference.h"
 #include "nsIWritablePropertyBag2.h"
 
 // interfaces that include something above

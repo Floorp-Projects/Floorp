@@ -43,7 +43,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
-#include "nsIWeakReference.h"
 #include "nsIWeakReferenceUtils.h"
 
 class nsIDocShellTreeItem;
