@@ -42,8 +42,7 @@ Components.utils.import("resource://services-sync/constants.js", Weave);
 let lazies = {
   "auth.js":              ['Auth', 'BrokenBasicAuthenticator',
                            'BasicAuthenticator', 'NoOpAuthenticator'],
-  "base_records/crypto.js":
-                          ["CollectionKeys", "BulkKeyBundle", "SyncKeyBundle"],
+  "record.js":            ["CollectionKeys", "BulkKeyBundle", "SyncKeyBundle"],
   "engines.js":           ['Engines', 'Engine', 'SyncEngine', 'Store'],
   "engines/bookmarks.js": ['BookmarksEngine', 'BookmarksSharingManager'],
   "engines/clients.js":   ["Clients"],

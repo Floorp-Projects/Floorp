@@ -46,9 +46,7 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-Cu.import("resource://services-sync/base_records/collection.js");
-Cu.import("resource://services-sync/base_records/crypto.js");
-Cu.import("resource://services-sync/base_records/wbo.js");
+Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/ext/Observers.js");
 Cu.import("resource://services-sync/ext/Sync.js");

@@ -1,6 +1,6 @@
 var btoa;
 
-Cu.import("resource://services-sync/base_records/crypto.js");
+Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/constants.js");
 btoa = Cu.import("resource://services-sync/util.js").btoa;
 

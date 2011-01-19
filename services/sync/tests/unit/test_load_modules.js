@@ -1,8 +1,5 @@
 const modules = [
                  "auth.js",
-                 "base_records/collection.js",
-                 "base_records/crypto.js",
-                 "base_records/wbo.js",
                  "constants.js",
                  "engines/bookmarks.js",
                  "engines/clients.js",
@@ -18,6 +15,7 @@ const modules = [
                  "log4moz.js",
                  "main.js",
                  "notifications.js",
+                 "record.js",
                  "resource.js",
                  "service.js",
                  "util.js",
