@@ -50,6 +50,7 @@
 #include "nsFrameSelection.h"
 #include "nsHTMLReflowState.h"
 #include "nsHTMLReflowMetrics.h"
+#include "nsHTMLParts.h"
 
 /**
  * nsFrame logging constants. We redefine the nspr
@@ -571,6 +572,17 @@ public:
   static PRInt32 GetLineNumber(nsIFrame *aFrame,
                                PRBool aLockScroll,
                                nsIFrame** aContainingBlock = nsnull);
+
+  // test whether aFrame should apply paginated overflow clipping.
+  static PRBool ApplyPaginatedOverflowClipping(nsIFrame* aFrame)
+  {
+    // If we're paginated and a block, and have NS_BLOCK_CLIP_PAGINATED_OVERFLOW
+    // set, then we want to clip our overflow.
+    return
+      aFrame->PresContext()->IsPaginated() &&
+      aFrame->GetType() == nsGkAtoms::blockFrame &&
+      (aFrame->GetStateBits() & NS_BLOCK_CLIP_PAGINATED_OVERFLOW) != 0;
+  }
 
 protected:
 
