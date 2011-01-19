@@ -269,6 +269,8 @@ let DOMEvents =  {
 DOMEvents.init();
 
 let ContentScroll =  {
+  ignoreScroll: false,
+
   init: function() {
     addMessageListener("Content:ScrollTo", this);
     addMessageListener("Content:ScrollBy", this);
@@ -282,11 +284,21 @@ let ContentScroll =  {
   receiveMessage: function(aMessage) {
     let json = aMessage.json;
     switch (aMessage.name) {
-      case "Content:ScrollTo":
+      case "Content:ScrollTo": {
+        let scrollOffset = Util.getScrollOffset(content);
+        if (scrollOffset.x == json.x && scrollOffset.y == json.y)
+          return;
+
+        this.ignoreScroll = true;
         content.scrollTo(json.x, json.y);
         break;
+      }
 
       case "Content:ScrollBy":
+        if (!json.dx && !json.dy)
+          return;
+
+        this.ignoreScroll = true;
         content.scrollBy(json.dx, json.dy);
         break;
 
@@ -341,6 +353,11 @@ let ContentScroll =  {
   handleEvent: function(aEvent) {
     switch (aEvent.type) {
       case "scroll": {
+        if (this.ignoreScroll) {
+          this.ignoreScroll = false;
+          return;
+        }
+
         let doc = aEvent.target;
         if (doc != content.document)
           return;
