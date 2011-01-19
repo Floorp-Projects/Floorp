@@ -180,9 +180,14 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
     metrics.mViewportScrollOffset =
       rootScrollableFrame->GetScrollPosition().ToNearestPixels(auPerDevPixel);
     
-    metrics.mScrollId = aScrollId;
+  }
+  else {
+    nsSize contentSize = aForFrame->GetSize();
+    metrics.mContentSize = nsIntSize(NSAppUnitsToIntPixels(contentSize.width, auPerDevPixel),
+                                     NSAppUnitsToIntPixels(contentSize.height, auPerDevPixel));
   }
 
+  metrics.mScrollId = aScrollId;
   aRoot->SetFrameMetrics(metrics);
 }
 
