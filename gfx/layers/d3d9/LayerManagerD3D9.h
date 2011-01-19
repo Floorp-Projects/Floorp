@@ -119,19 +119,21 @@ public:
    */
   virtual void Destroy();
 
-  void BeginTransaction();
+  virtual void BeginTransaction();
 
-  void BeginTransactionWithTarget(gfxContext* aTarget);
+  virtual void BeginTransactionWithTarget(gfxContext* aTarget);
 
   void EndConstruction();
+
+  virtual bool EndEmptyTransaction();
 
   struct CallbackInfo {
     DrawThebesLayerCallback Callback;
     void *CallbackData;
   };
 
-  void EndTransaction(DrawThebesLayerCallback aCallback,
-                      void* aCallbackData);
+  virtual void EndTransaction(DrawThebesLayerCallback aCallback,
+                              void* aCallbackData);
 
   const CallbackInfo &GetCallbackInfo() { return mCurrentCallbackInfo; }
 
@@ -205,6 +207,12 @@ private:
    * Region we're clipping our current drawing to.
    */
   nsIntRegion mClippingRegion;
+
+  /*
+   * Device reset count at last paint. Whenever this changes, we need to
+   * do a full layer tree update.
+   */
+  PRUint32 mDeviceResetCount;
 
   /*
    * Render the current layer tree to the active target.
