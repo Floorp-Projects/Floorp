@@ -46,34 +46,6 @@
 using namespace mozilla::dom;
 #endif
 
-class nsDesktopNotification;
-
-/* ------------------------------------------------------------------------ */
-/* NotificationRequestAllowEvent                                            */
-/*   For testing mode only.  Allows us to send a "okay" request             */
-/* ------------------------------------------------------------------------ */
-class NotificationRequestAllowEvent : public nsRunnable
-{
-public:
-  NotificationRequestAllowEvent(nsDOMDesktopNotification* request)
-    : mRequest(request)
-  {
-  }
-  
-  NS_IMETHOD Run()
-  {
-    mRequest->PostDesktopNotification();
-    mRequest = nsnull;
-    return NS_OK;
-  }
-  
-private:
-  PRBool mAllow;
-  nsRefPtr<nsDOMDesktopNotification> mRequest;
-};
-
-
-
 /* ------------------------------------------------------------------------ */
 /* AlertServiceObserver                                                     */
 /* ------------------------------------------------------------------------ */
@@ -137,9 +109,54 @@ nsDOMDesktopNotification::nsDOMDesktopNotification(const nsAString & title,
   , mIconURL(iconURL)
 #endif
   , mURI(uri)
+  , mAllow(PR_FALSE)
+  , mShowHasBeenCalled(PR_FALSE)
 {
   mOwner = aWindow;
   mScriptContext = aScriptContext;
+
+  if (nsContentUtils::GetBoolPref("notification.disabled", PR_FALSE))
+    return;
+
+  // If we are in testing mode (running mochitests, for example)
+  // and we are suppose to allow requests, then just post an allow event.
+  if (nsContentUtils::GetBoolPref("notification.prompt.testing", PR_FALSE) &&
+      nsContentUtils::GetBoolPref("notification.prompt.testing.allow", PR_TRUE)) {
+    mAllow = PR_TRUE;
+    return;
+  }
+
+  nsRefPtr<nsDesktopNotificationRequest> request = new nsDesktopNotificationRequest(this);
+
+  // if we are in the content process, then remote it to the parent.
+#ifdef MOZ_IPC
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+
+    // if for some reason mOwner is null, just silently
+    // bail.  The user will not see a notification, and that
+    // is fine.
+    if (!mOwner)
+      return;
+
+    // because owner implements nsITabChild, we can assume that it is
+    // the one and only TabChild for this docshell.
+    TabChild* child = GetTabChildFrom(mOwner->GetDocShell());
+    
+    // Retain a reference so the object isn't deleted without IPDL's knowledge.
+    // Corresponding release occurs in DeallocPContentPermissionRequest.
+    request->AddRef();
+
+    nsCString type = NS_LITERAL_CSTRING("desktop-notification");
+    child->SendPContentPermissionRequestConstructor(request, type, IPC::URI(mURI));
+    
+    request->Sendprompt();
+    return;
+  }
+#endif
+
+  // otherwise, dispatch it
+  NS_DispatchToMainThread(request);
+
 }
 
 nsDOMDesktopNotification::~nsDOMDesktopNotification()
@@ -170,6 +187,16 @@ nsDOMDesktopNotification::DispatchNotificationEvent(const nsString& aName)
 }
 
 void
+nsDOMDesktopNotification::SetAllow(PRBool aAllow)
+{
+  mAllow = aAllow;
+
+  // if we have called Show() already, lets go ahead and post a notification
+  if (mShowHasBeenCalled && aAllow)
+    PostDesktopNotification();
+}
+
+void
 nsDOMDesktopNotification::HandleAlertServiceNotification(const char *aTopic)
 {
   if (NS_FAILED(CheckInnerWindowCorrectness()))
@@ -185,49 +212,12 @@ nsDOMDesktopNotification::HandleAlertServiceNotification(const char *aTopic)
 NS_IMETHODIMP
 nsDOMDesktopNotification::Show()
 {
-  if (nsContentUtils::GetBoolPref("notification.disabled", PR_FALSE))
+  mShowHasBeenCalled = PR_TRUE;
+
+  if (!mAllow)
     return NS_OK;
 
-  // If we are in testing mode (running mochitests, for example)
-  // and we are suppose to allow requests, then just post an allow event.
-  if (nsContentUtils::GetBoolPref("notification.prompt.testing", PR_FALSE) &&
-      nsContentUtils::GetBoolPref("notification.prompt.testing.allow", PR_TRUE)) {
-    nsCOMPtr<nsIRunnable> request = new NotificationRequestAllowEvent(this);
-    NS_DispatchToMainThread(request);
-    return NS_OK;
-  }
-
-  // otherwise, create a normal request.
-  nsRefPtr<nsDesktopNotificationRequest> request = new nsDesktopNotificationRequest(this);
-
-  // if we are in the content process, then remote it to the parent.
-#ifdef MOZ_IPC
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
-
-    // if for some reason mOwner is null, just silently
-    // bail.  The user will not see a notification, and that
-    // is fine.
-    if (!mOwner)
-      return NS_OK;
-
-    // because owner implements nsITabChild, we can assume that it is
-    // the one and only TabChild for this docshell.
-    TabChild* child = GetTabChildFrom(mOwner->GetDocShell());
-    
-    // Retain a reference so the object isn't deleted without IPDL's knowledge.
-    // Corresponding release occurs in DeallocPContentPermissionRequest.
-    request->AddRef();
-
-    nsCString type = NS_LITERAL_CSTRING("desktop-notification");
-    child->SendPContentPermissionRequestConstructor(request, type, IPC::URI(mURI));
-    
-    request->Sendprompt();
-    return NS_OK;
-  }
-#endif
-
-  // otherwise, dispatch it
-  NS_DispatchToMainThread(request);
+  PostDesktopNotification();
   return NS_OK;
 }
 
@@ -327,6 +317,7 @@ nsDesktopNotificationRequest::GetElement(nsIDOMElement * *aElement)
 NS_IMETHODIMP
 nsDesktopNotificationRequest::Cancel()
 {
+  mDesktopNotification->SetAllow(PR_FALSE);
   mDesktopNotification = nsnull;
   return NS_OK;
 }
@@ -334,7 +325,7 @@ nsDesktopNotificationRequest::Cancel()
 NS_IMETHODIMP
 nsDesktopNotificationRequest::Allow()
 {
-  mDesktopNotification->PostDesktopNotification();
+  mDesktopNotification->SetAllow(PR_TRUE);
   mDesktopNotification = nsnull;
   return NS_OK;
 }
