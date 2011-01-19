@@ -192,6 +192,9 @@ let DOMEvents =  {
 
       case "pageshow":
       case "pagehide": {
+        if (aEvent.target.defaultView != content)
+          break;
+
         let util = aEvent.target.defaultView.QueryInterface(Ci.nsIInterfaceRequestor)
                                             .getInterface(Ci.nsIDOMWindowUtils);
 
