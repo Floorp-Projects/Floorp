@@ -434,7 +434,7 @@
         </body>
       </method>
 
-      <method name="getViewsAt">
+      <method name="getViewAt">
         <body>
           <![CDATA[
             return this._contentView;
@@ -760,8 +760,6 @@
               this._updateCacheViewport();
             }
 
-            this._contentView = null;
-
             // We expect contentViews to contain our ID. If not, something bad
             // happened.
             delete this.self._contentViews[this._id];
@@ -921,7 +919,7 @@
       </method>
 
       <!-- Get contentView for position (x, y) relative to the browser element -->
-      <method name="getViewsAt">
+      <method name="getViewAt">
         <parameter name="x"/>
         <parameter name="y"/>
         <body>
