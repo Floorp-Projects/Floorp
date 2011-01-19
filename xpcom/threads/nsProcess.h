@@ -48,7 +48,6 @@
 #include "nsIFile.h"
 #include "nsIThread.h"
 #include "nsIObserver.h"
-#include "nsIWeakReference.h"
 #include "nsIWeakReferenceUtils.h"
 #include "nsIObserver.h"
 #include "nsString.h"
