@@ -907,6 +907,8 @@ pref("browser.shell.checkDefaultBrowser", false);
 // disable bfcache for memory
 pref("browser.sessionhistory.max_total_viewers", 0);
 
+pref("browser.sessionhistory.optimize_eviction", false);
+
 // tweak default content sink prefs
 pref("content.sink.interactive_deflect_count", 10); /* default 0 */
 pref("content.sink.perf_deflect_count", 50); /* default 200 */
