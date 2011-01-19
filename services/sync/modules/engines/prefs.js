@@ -44,8 +44,6 @@ const Cu = Components.utils;
 const WEAVE_SYNC_PREFS = "services.sync.prefs.sync.";
 
 Cu.import("resource://services-sync/engines.js");
-Cu.import("resource://services-sync/stores.js");
-Cu.import("resource://services-sync/trackers.js");
 Cu.import("resource://services-sync/base_records/crypto.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/ext/Preferences.js");

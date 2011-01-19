@@ -20,8 +20,6 @@ const modules = [
                  "notifications.js",
                  "resource.js",
                  "service.js",
-                 "stores.js",
-                 "trackers.js",
                  "util.js",
 ];
 

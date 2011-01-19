@@ -45,8 +45,6 @@ const Ci = Components.interfaces;
 Cu.import("resource://services-sync/base_records/collection.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
-Cu.import("resource://services-sync/stores.js");
-Cu.import("resource://services-sync/trackers.js");
 Cu.import("resource://services-sync/base_records/crypto.js");
 Cu.import("resource://services-sync/util.js");
 
