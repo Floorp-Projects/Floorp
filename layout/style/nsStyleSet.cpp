@@ -1074,7 +1074,7 @@ nsStyleSet::NotifyStyleContextDestroyed(nsPresContext* aPresContext,
   if (mInReconstruct)
     return;
 
-  if (mUnusedRuleNodeCount == kGCInterval) {
+  if (mUnusedRuleNodeCount >= kGCInterval) {
     GCRuleTrees();
   }
 }
