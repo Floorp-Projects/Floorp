@@ -1,5 +1,4 @@
 const modules = [
-                 "auth.js",
                  "constants.js",
                  "engines/bookmarks.js",
                  "engines/clients.js",
