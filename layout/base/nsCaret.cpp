@@ -260,10 +260,10 @@ nsCaret::Metrics nsCaret::ComputeMetrics(nsIFrame* aFrame, PRInt32 aOffset, nsco
 
   // Round them to device pixels. Always round down, except that anything
   // between 0 and 1 goes up to 1 so we don't let the caret disappear.
+  PRUint32 tpp = aFrame->PresContext()->AppUnitsPerDevPixel();
   Metrics result;
-  result.mAppPerDev = aFrame->PresContext()->AppUnitsPerDevPixel();
-  result.mCaretWidth = NS_ROUND_BORDER_TO_PIXELS(caretWidth, result.mAppPerDev);
-  result.mBidiIndicatorSize = NS_ROUND_BORDER_TO_PIXELS(bidiIndicatorSize, result.mAppPerDev);
+  result.mCaretWidth = NS_ROUND_BORDER_TO_PIXELS(caretWidth, tpp);
+  result.mBidiIndicatorSize = NS_ROUND_BORDER_TO_PIXELS(bidiIndicatorSize, tpp);
   return result;
 }
 
@@ -383,13 +383,8 @@ nsCaret::GetGeometryForFrame(nsIFrame* aFrame,
     // then snap it back, put it as close to the edge as it can.
     nscoord overflow = caretInScroll.XMost() -
       scrolled->GetVisualOverflowRectRelativeToSelf().width;
-    if (overflow > 0) {
+    if (overflow > 0)
       aRect->x -= overflow;
-      // Make sure that the caret falls on a device pixel boundary so that
-      // it doesn't fall outside of the view. We round the X coordinate
-      // down to the nearest device pixel unit.
-      aRect->x = floor(double(aRect->x) / caretMetrics.mAppPerDev) * caretMetrics.mAppPerDev;
-    }
   }
 
   if (aBidiIndicatorSize)
