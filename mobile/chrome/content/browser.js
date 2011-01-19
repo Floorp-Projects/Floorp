@@ -1178,7 +1178,10 @@ Browser.MainDragger.prototype = {
     Browser.tryUnfloatToolbar();
 
     // Update the scroll position of the content
-    getBrowser()._updateCSSViewport();
+    let browser = getBrowser();
+    browser._updateCSSViewport();
+    let view = browser.getRootView();
+    view._updateCacheViewport();
   },
 
   dragMove: function dragMove(dx, dy, scroller) {
