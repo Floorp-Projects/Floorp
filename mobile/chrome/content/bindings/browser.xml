@@ -769,8 +769,11 @@
            * fast scrolling. This syncs that up with the current projection viewport.
            */
           _updateCacheViewport: function() {
-            let contentView = this._contentView;
             let self = this.self;
+            if (!self.active)
+               return;
+
+            let contentView = this._contentView;
             let viewportSize = this._getViewportSize();
             let cacheWidth = self._cacheRatioWidth * viewportSize.width;
             let cacheHeight = self._cacheRatioHeight * viewportSize.height;
