@@ -4449,48 +4449,67 @@ namespace xpc {
 
 struct CompartmentPrivate
 {
-  CompartmentPrivate(PtrAndPrincipalHashKey *key, bool wantXrays, bool cycleCollectionEnabled)
-    : key(key),
-      ptr(nsnull),
-      wantXrays(wantXrays),
-      cycleCollectionEnabled(cycleCollectionEnabled),
-      waiverWrapperMap(nsnull)
-  {
-  }
+    CompartmentPrivate(PtrAndPrincipalHashKey *key, bool wantXrays, bool cycleCollectionEnabled)
+        : key(key),
+          ptr(nsnull),
+          wantXrays(wantXrays),
+          cycleCollectionEnabled(cycleCollectionEnabled),
+          waiverWrapperMap(nsnull),
+          expandoMap(nsnull)
+    {
+    }
 
-  CompartmentPrivate(nsISupports *ptr, bool wantXrays, bool cycleCollectionEnabled)
-    : key(nsnull),
-      ptr(ptr),
-      wantXrays(wantXrays),
-      cycleCollectionEnabled(cycleCollectionEnabled),
-      waiverWrapperMap(nsnull)
-  {
-  }
+    CompartmentPrivate(nsISupports *ptr, bool wantXrays, bool cycleCollectionEnabled)
+        : key(nsnull),
+          ptr(ptr),
+          wantXrays(wantXrays),
+          cycleCollectionEnabled(cycleCollectionEnabled),
+          waiverWrapperMap(nsnull),
+          expandoMap(nsnull)
+    {
+    }
 
-  ~CompartmentPrivate();
+    ~CompartmentPrivate();
 
-  // NB: key and ptr are mutually exclusive.
-  nsAutoPtr<PtrAndPrincipalHashKey> key;
-  nsCOMPtr<nsISupports> ptr;
-  bool wantXrays;
-  bool cycleCollectionEnabled;
-  JSObject2JSObjectMap *waiverWrapperMap;
+    // NB: key and ptr are mutually exclusive.
+    nsAutoPtr<PtrAndPrincipalHashKey> key;
+    nsCOMPtr<nsISupports> ptr;
+    bool wantXrays;
+    bool cycleCollectionEnabled;
+    JSObject2JSObjectMap *waiverWrapperMap;
+    // NB: we don't want this map to hold a strong reference to the wrapper.
+    nsDataHashtable<nsPtrHashKey<XPCWrappedNative>, JSObject *> *expandoMap;
+
+    bool RegisterExpandoObject(XPCWrappedNative *wn, JSObject *expando) {
+        if (!expandoMap) {
+            expandoMap = new nsDataHashtable<nsPtrHashKey<XPCWrappedNative>, JSObject *>();
+            if (!expandoMap->Init(8))
+                return false;
+        }
+        return expandoMap->Put(wn, expando);
+    }
+
+    JSObject *LookupExpandoObject(XPCWrappedNative *wn) {
+        if (!expandoMap)
+            return nsnull;
+        return expandoMap->Get(wn);
+    }
 };
 
 inline bool
 CompartmentParticipatesInCycleCollection(JSContext *cx, JSCompartment *compartment)
 {
-   CompartmentPrivate *priv =
-       static_cast<CompartmentPrivate *>(JS_GetCompartmentPrivate(cx, compartment));
-   NS_ASSERTION(priv, "This should never be null!");
+    CompartmentPrivate *priv =
+        static_cast<CompartmentPrivate *>(JS_GetCompartmentPrivate(cx, compartment));
+    NS_ASSERTION(priv, "This should never be null!");
 
-   return priv->cycleCollectionEnabled;
+    return priv->cycleCollectionEnabled;
 }
 
 inline bool
 ParticipatesInCycleCollection(JSContext *cx, js::gc::Cell *cell)
 {
-   return CompartmentParticipatesInCycleCollection(cx, cell->compartment());
+    return CompartmentParticipatesInCycleCollection(cx, cell->compartment());
 }
 
 }
