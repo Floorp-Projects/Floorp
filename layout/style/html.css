@@ -328,7 +328,7 @@ table:-moz-table-border-nonzero > * > th,
 table:-moz-table-border-nonzero > td,
 table:-moz-table-border-nonzero > th
 {
-  border-style: inset;
+  border: thin inset;
 }
 
 /* collapse only if rules are really specified */
@@ -345,7 +345,7 @@ table[rules]:not([rules=""])> * > tr > th,
 table[rules]:not([rules=""])> td,
 table[rules]:not([rules=""])> th
 {
-  border-style: none;
+  border: thin none;
 }
 
 
@@ -356,7 +356,7 @@ table[rules][rules="none"] > * > tr > th,
 table[rules][rules="none"] > td,
 table[rules][rules="none"] > th
 {
-  border-style: hidden;
+  border: thin hidden;
 }
 
 table[rules][rules="all"] > tr > td,
@@ -366,13 +366,13 @@ table[rules][rules="all"] > * > tr > th,
 table[rules][rules="all"] > td,
 table[rules][rules="all"] > th 
 {
-  border-style: solid;
+  border: thin solid ;
 }
 
 table[rules][rules="rows"] > tr,
 table[rules][rules="rows"] > * > tr {
-  border-top-style: solid;
-  border-bottom-style: solid;
+  border-top: thin solid;
+  border-bottom: thin solid;
 }
 
 
@@ -380,19 +380,19 @@ table[rules][rules="cols"] > tr > td,
 table[rules][rules="cols"] > * > tr > td,
 table[rules][rules="cols"] > tr > th,
 table[rules][rules="cols"] > * > tr > th {
-  border-left-style: solid;
-  border-right-style: solid;
+  border-left: thin solid;
+  border-right: thin solid;
 }
 
 table[rules][rules="groups"] > colgroup {
-  border-left-style: solid;
-  border-right-style: solid;
+  border-left: thin solid;
+  border-right: thin solid;
 }
 table[rules][rules="groups"] > tfoot,
 table[rules][rules="groups"] > thead,
 table[rules][rules="groups"] > tbody {
-  border-top-style: solid;
-  border-bottom-style: solid;
+  border-top: thin solid;
+  border-bottom: thin solid;
 }
   
   
@@ -419,8 +419,6 @@ table[align="center"] > caption[align="right"] {
 tr {
   display: table-row;
   vertical-align: inherit;
-  border-width: thin;
-  border-color: inherit; /* inherit bordercolor attribute */
 }
 
 col {
@@ -434,22 +432,16 @@ colgroup {
 tbody {
   display: table-row-group;
   vertical-align: middle;
-  border-width: thin;
-  border-color: inherit;
 }
 
 thead {
   display: table-header-group;
   vertical-align: middle;
-  border-width: thin;
-  border-color: inherit;
 }
 
 tfoot {
   display: table-footer-group;
   vertical-align: middle;
-  border-width: thin;
-  border-color: inherit;
 }
 
 /* for XHTML tables without tbody */
@@ -462,8 +454,6 @@ td {
   vertical-align: inherit;
   text-align: inherit; 
   padding: 1px;
-  border-width: thin;
-  border-color: inherit;
 }
 
 th {
@@ -471,8 +461,6 @@ th {
   vertical-align: inherit;
   font-weight: bold;
   padding: 1px;
-  border-width: thin;
-  border-color: inherit;
 }
 
 tr > form:-moz-is-html, tbody > form:-moz-is-html,
