@@ -44,7 +44,7 @@ let lazies = {
                            'BasicAuthenticator', 'NoOpAuthenticator'],
   "base_records/crypto.js":
                           ["CollectionKeys", "BulkKeyBundle", "SyncKeyBundle"],
-  "engines.js":           ['Engines', 'Engine', 'SyncEngine'],
+  "engines.js":           ['Engines', 'Engine', 'SyncEngine', 'Store'],
   "engines/bookmarks.js": ['BookmarksEngine', 'BookmarksSharingManager'],
   "engines/clients.js":   ["Clients"],
   "engines/forms.js":     ["FormEngine"],
@@ -58,7 +58,6 @@ let lazies = {
   "resource.js":          ["Resource"],
   "service.js":           ["Service"],
   "status.js":            ["Status"],
-  "stores.js":            ["Store"],
   "util.js":              ['Utils', 'Svc', 'Str']
 };
 

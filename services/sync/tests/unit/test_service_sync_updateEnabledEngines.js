@@ -1,4 +1,3 @@
-Cu.import("resource://services-sync/stores.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/clients.js");
 Cu.import("resource://services-sync/util.js");
