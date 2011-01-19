@@ -4892,10 +4892,6 @@ ConsoleUtils = {
                       "without any clipboard text");
     }
 
-    // Make the marker (the colored part of the timeline).
-    let markerNode = aDocument.createElementNS(XUL_NS, "xul:vbox");
-    markerNode.classList.add("webconsole-marker");
-
     // Make the icon container, which is a vertical box. Its purpose is to
     // ensure that the icon stays anchored at the top of the message even for
     // long multi-line messages.
@@ -4952,7 +4948,6 @@ ConsoleUtils = {
     ConsoleUtils.setMessageType(node, aCategory, aSeverity);
 
     node.appendChild(timestampNode);
-    node.appendChild(markerNode);
     node.appendChild(iconContainer);
     node.appendChild(bodyNode);
     if (locationNode) {
