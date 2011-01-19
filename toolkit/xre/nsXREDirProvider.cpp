@@ -338,6 +338,11 @@ nsXREDirProvider::GetFile(const char* aProperty, PRBool* aPersistent,
   else if (!strcmp(aProperty, XRE_USER_SYS_EXTENSION_DIR)) {
     return GetSysUserExtensionsDirectory((nsILocalFile**)(nsIFile**) aFile);
   }
+  else if (!strcmp(aProperty, XRE_APP_DISTRIBUTION_DIR)) {
+    rv = GetAppDir()->Clone(getter_AddRefs(file));
+    if (NS_SUCCEEDED(rv))
+      rv = file->AppendNative(NS_LITERAL_CSTRING("distribution"));
+  }
   else if (NS_SUCCEEDED(GetProfileStartupDir(getter_AddRefs(file)))) {
     // We need to allow component, xpt, and chrome registration to
     // occur prior to the profile-after-change notification.
