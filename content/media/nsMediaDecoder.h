@@ -108,10 +108,10 @@ public:
 
   // Return the time position in the video stream being
   // played measured in seconds.
-  virtual float GetCurrentTime() = 0;
+  virtual double GetCurrentTime() = 0;
 
   // Seek to the time position in (seconds) from the start of the video.
-  virtual nsresult Seek(float time) = 0;
+  virtual nsresult Seek(double aTime) = 0;
 
   // Called by the element when the playback rate has been changed.
   // Adjust the speed of the playback, optionally with pitch correction,
@@ -119,13 +119,13 @@ public:
   virtual nsresult PlaybackRateChanged() = 0;
 
   // Return the duration of the video in seconds.
-  virtual float GetDuration() = 0;
+  virtual double GetDuration() = 0;
 
   // Pause video playback.
   virtual void Pause() = 0;
 
   // Set the audio volume. It should be a value from 0 to 1.0.
-  virtual void SetVolume(float volume) = 0;
+  virtual void SetVolume(double aVolume) = 0;
 
   // Start playback of a video. 'Load' must have previously been
   // called.
@@ -285,6 +285,11 @@ public:
   // Returns PR_TRUE if we can play the entire media through without stopping
   // to buffer, given the current download and playback rates.
   PRBool CanPlayThrough();
+
+  // Called by the nsMediaStream when a read on the stream by the decoder
+  // is about to block due to insuffient data. Decoders may want to pause
+  // playback and go into buffering mode when this is called.
+  virtual void NotifyDataExhausted() = 0;
 
 protected:
 

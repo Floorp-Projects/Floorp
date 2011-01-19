@@ -10,6 +10,11 @@
     <implementation>
       <constructor>
       <![CDATA[
+        // don't do this for viewport resizers; causes a crash related to
+        // bugs 563665 and 581536 otherwise
+        if (this.parentNode == this.ownerDocument.documentElement)
+          return;
+
         // if the direction is rtl, set the rtl attribute so that the
         // stylesheet can use this to make the cursor appear properly
         var direction = window.getComputedStyle(this, "").direction;

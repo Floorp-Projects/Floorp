@@ -62,7 +62,7 @@ function TabItem(tab, options) {
   var $div = iQ('<div>')
     .addClass('tab')
     .html("<div class='thumb'>" +
-          "<img class='cached-thumb' style='display:none'/><canvas/></div>" +
+          "<img class='cached-thumb' style='display:none'/><canvas moz-opaque='true'/></div>" +
           "<div class='favicon'><img/></div>" +
           "<span class='tab-title'>&nbsp;</span>"
     )
@@ -649,13 +649,15 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
           duration: 230,
           easing: 'fast',
           complete: function() {
-            TabItems.resumePainting();
-    
-            $tabEl
-              .css(orig)
-              .removeClass("front");
-
             onZoomDone();
+
+            setTimeout(function() {
+              TabItems.resumePainting();
+
+              $tabEl
+                .css(orig)
+                .removeClass("front");
+            }, 0);
           }
         });
       } else {
@@ -785,7 +787,7 @@ let TabItems = {
   cachedDataCounter: 0,  // total number of cached data being displayed.
   tabsProgressListener: null,
   _tabsWaitingForUpdate: [],
-  _heartbeatOn: false, // see explanation at startHeartbeat() below
+  _heartbeat: null, // see explanation at startHeartbeat() below
   _heartbeatTiming: 100, // milliseconds between _checkHeartbeat() calls
   _lastUpdateTime: Date.now(),
   _eventListeners: [],
@@ -803,7 +805,8 @@ let TabItems = {
     
     this.minTabHeight = this.minTabWidth * this.tabHeight / this.tabWidth;
 
-    let $canvas = iQ("<canvas>");
+    let $canvas = iQ("<canvas>")
+      .attr('moz-opaque', true);
     $canvas.appendTo(iQ("body"));
     $canvas.hide();
     this.tempCanvas = $canvas[0];
@@ -897,12 +900,9 @@ let TabItems = {
         Date.now() - this._lastUpdateTime < this._heartbeatTiming
       );
 
-      let isCurrentTab = (
-        !UI.isTabViewVisible() &&
-        tab == gBrowser.selectedTab
-      );
-
-      if (shouldDefer && !isCurrentTab) {
+      if (shouldDefer) {
+        if (!this.reconnectingPaused() && !tab._tabViewTabItem._reconnected)
+          this._reconnect(tab._tabViewTabItem);          
         if (this._tabsWaitingForUpdate.indexOf(tab) == -1)
           this._tabsWaitingForUpdate.push(tab);
         this.startHeartbeat();
@@ -1052,26 +1052,25 @@ let TabItems = {
   // Start a new heartbeat if there isn't one already started.
   // The heartbeat is a chain of setTimeout calls that allows us to spread
   // out update calls over a period of time.
-  // _heartbeatOn is used to make sure that we don't add multiple 
+  // _heartbeat is used to make sure that we don't add multiple 
   // setTimeout chains.
   startHeartbeat: function TabItems_startHeartbeat() {
-    if (!this._heartbeatOn) {
-      this._heartbeatOn = true;
+    if (!this._heartbeat) {
       let self = this;
-      setTimeout(function() {
+      this._heartbeat = setTimeout(function() {
         self._checkHeartbeat();
       }, this._heartbeatTiming);
     }
   },
-  
+
   // ----------
   // Function: _checkHeartbeat
   // This periodically checks for tabs waiting to be updated, and calls
   // _update on them.
   // Should only be called by startHeartbeat and resumePainting.
   _checkHeartbeat: function TabItems__checkHeartbeat() {
-    this._heartbeatOn = false;
-    
+    this._heartbeat = null;
+
     if (this.isPaintingPaused())
       return;
 
@@ -1093,8 +1092,12 @@ let TabItems = {
    // pausePainting needs to be mirrored with a call to <resumePainting>.
    pausePainting: function TabItems_pausePainting() {
      this.paintingPaused++;
+     if (this._heartbeat) {
+       clearTimeout(this._heartbeat);
+       this._heartbeat = null;
+     }
    },
- 
+
    // ----------
    // Function: resumePainting
    // Undoes a call to <pausePainting>. For instance, if you called
@@ -1291,7 +1294,9 @@ TabCanvas.prototype = {
       ctx.save();
       ctx.scale(scaler, scaler);
       try{
-        ctx.drawWindow(fromWin, fromWin.scrollX, fromWin.scrollY, w/scaler, h/scaler, "#fff");
+        ctx.drawWindow(fromWin, fromWin.scrollX, fromWin.scrollY, 
+          w/scaler, h/scaler, "#fff",
+          Ci.nsIDOMCanvasRenderingContext2D.DRAWWINDOW_DO_NOT_FLUSH);
       } catch(e) {
         Utils.error('paint', e);
       }

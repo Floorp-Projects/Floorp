@@ -543,6 +543,7 @@
                  onfocus="document.getElementById('identity-box').style.MozUserFocus= 'normal'"
                  onblur="setTimeout(function() document.getElementById('identity-box').style.MozUserFocus = '', 0);">
           <box id="notification-popup-box" hidden="true" align="center">
+            <image id="default-notification-icon" class="notification-anchor-icon" role="button"/>
             <image id="geo-notification-icon" class="notification-anchor-icon" role="button"/>
             <image id="addons-notification-icon" class="notification-anchor-icon" role="button"/>
             <image id="indexedDB-notification-icon" class="notification-anchor-icon" role="button"/>
@@ -1014,6 +1015,10 @@
 #endif
 #ifdef XP_MACOSX
   <svg:svg height="0">
+    <svg:mask id="pinstripe-keyhole-forward-mask" maskContentUnits="objectBoundingBox">
+      <svg:rect x="0" y="0" width="1" height="1" fill="white"/>
+      <svg:circle cx="-0.46" cy="0.48" r="0.65"/>
+    </svg:mask>
     <svg:mask id="pinstripe-tab-ontop-left-curve-mask" maskContentUnits="userSpaceOnUse">
       <svg:circle cx="9" cy="3" r="3" fill="white"/>
       <svg:rect x="9" y="0" width="3" height="3" fill="white"/>

@@ -1102,6 +1102,14 @@ class TraceRecorder
     int                             initDepth;
     bool                            hadNewInit;
 
+#ifdef DEBUG
+    /*
+     * If we are expecting a record_AddProperty callback for this instruction,
+     * the shape of the object before adding the data property. Else NULL.
+     */
+    const js::Shape* addPropShapeBefore;
+#endif
+
     /***************************************** Temporal state hoisted into the recording session */
 
     /* Carry the return value from a STOP/RETURN to the subsequent record_LeaveFrame. */
@@ -1410,16 +1418,6 @@ class TraceRecorder
                                                 nanojit::LIns* str_ins, nanojit::LIns* idx_ins,
                                                 JSOp mode, nanojit::LIns** out_ins);
 
-    JS_REQUIRES_STACK RecordingStatus nativeSet(JSObject* obj, nanojit::LIns* obj_ins,
-                                                const js::Shape* shape,
-                                                const Value &v, nanojit::LIns* v_ins);
-    JS_REQUIRES_STACK RecordingStatus setProp(Value &l, PropertyCacheEntry* entry,
-                                              const js::Shape* shape,
-                                              Value &v, nanojit::LIns*& v_ins,
-                                              bool isDefinitelyAtom);
-    JS_REQUIRES_STACK RecordingStatus setCallProp(JSObject *callobj, nanojit::LIns *callobj_ins,
-                                                  const js::Shape *shape, nanojit::LIns *v_ins,
-                                                  const Value &v);
     JS_REQUIRES_STACK RecordingStatus initOrSetPropertyByName(nanojit::LIns* obj_ins,
                                                               Value* idvalp, Value* rvalp,
                                                               bool init);
@@ -1428,6 +1426,23 @@ class TraceRecorder
                                                                Value* rvalp, bool init);
     JS_REQUIRES_STACK AbortableRecordingStatus setElem(int lval_spindex, int idx_spindex,
                                                        int v_spindex);
+
+    JS_REQUIRES_STACK RecordingStatus lookupForSetPropertyOp(JSObject* obj, nanojit::LIns* obj_ins,
+                                                             jsid id, bool* safep,
+                                                             JSObject** pobjp,
+                                                             const js::Shape** shapep);
+    JS_REQUIRES_STACK RecordingStatus nativeSet(JSObject* obj, nanojit::LIns* obj_ins,
+                                                const js::Shape* shape,
+                                                const Value& v, nanojit::LIns* v_ins);
+    JS_REQUIRES_STACK RecordingStatus addDataProperty(JSObject* obj);
+    JS_REQUIRES_STACK RecordingStatus setCallProp(JSObject* callobj, nanojit::LIns* callobj_ins,
+                                                  const js::Shape* shape, nanojit::LIns* v_ins,
+                                                  const Value& v);
+    JS_REQUIRES_STACK RecordingStatus setProperty(JSObject* obj, nanojit::LIns* obj_ins,
+                                                  const Value& v, nanojit::LIns* v_ins,
+                                                  bool* deferredp);
+    JS_REQUIRES_STACK RecordingStatus recordSetPropertyOp();
+    JS_REQUIRES_STACK RecordingStatus recordInitPropertyOp(jsbytecode op);
 
     void box_undefined_into(tjit::Address addr);
 #if JS_BITS_PER_WORD == 32
@@ -1560,9 +1575,6 @@ class TraceRecorder
 # include "jsopcode.tbl"
 #undef OPDEF
 
-    inline void* operator new(size_t size) { return js_calloc(size); }
-    inline void operator delete(void *p) { js_free(p); }
-
     JS_REQUIRES_STACK
     TraceRecorder(JSContext* cx, VMSideExit*, VMFragment*,
                   unsigned stackSlots, unsigned ngslots, JSValueType* typeMap,
@@ -1613,8 +1625,7 @@ class TraceRecorder
     JS_REQUIRES_STACK AbortableRecordingStatus monitorRecording(JSOp op);
     JS_REQUIRES_STACK AbortableRecordingStatus record_EnterFrame();
     JS_REQUIRES_STACK AbortableRecordingStatus record_LeaveFrame();
-    JS_REQUIRES_STACK AbortableRecordingStatus record_SetPropHit(PropertyCacheEntry* entry,
-                                                                 const js::Shape* shape);
+    JS_REQUIRES_STACK AbortableRecordingStatus record_AddProperty(JSObject *obj);
     JS_REQUIRES_STACK AbortableRecordingStatus record_DefLocalFunSetSlot(uint32 slot,
                                                                          JSObject* obj);
     JS_REQUIRES_STACK AbortableRecordingStatus record_NativeCallComplete();

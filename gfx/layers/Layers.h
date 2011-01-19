@@ -294,6 +294,18 @@ public:
    */
   virtual void BeginTransactionWithTarget(gfxContext* aTarget) = 0;
   /**
+   * Attempts to end an "empty transaction". There must have been no
+   * changes to the layer tree since the BeginTransaction().
+   * It's possible for this to fail; ThebesLayers may need to be updated
+   * due to VRAM data being lost, for example. In such cases this method
+   * returns false, and the caller must proceed with a normal layer tree
+   * update and EndTransaction.
+   */
+  virtual bool EndEmptyTransaction()
+  {
+    return false;
+  }
+  /**
    * Function called to draw the contents of each ThebesLayer.
    * aRegionToDraw contains the region that needs to be drawn.
    * This would normally be a subregion of the visible region.
@@ -333,21 +345,6 @@ public:
    */
   virtual void EndTransaction(DrawThebesLayerCallback aCallback,
                               void* aCallbackData) = 0;
-
-  /**
-   * Attempts to perform an "empty transaction", i.e., a BeginTransaction()
-   * followed by no changes to the layer tree and an EndTransaction with no
-   * ThebesLayer drawing callback. This will only work if no ThebesLayers
-   * need to be updated (i.e. the visible region of each ThebesLayer is already
-   * fully retained). Since this cannot be predicted in advance,
-   * DoEmptyTransaction is allowed to fail and return false. When
-   * DoEmptyTransaction fails it must be immediately (within the same paint
-   * event) followed by a normal BeginTransaction/EndTransaction pair.
-   */
-  virtual bool DoEmptyTransaction()
-  {
-    return false;
-  }
 
   PRBool IsSnappingEffectiveTransforms() { return mSnapEffectiveTransforms; } 
 

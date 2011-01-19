@@ -1103,24 +1103,33 @@ nsPresContext::Observe(nsISupports* aSubject,
   return NS_ERROR_FAILURE;
 }
 
+static nsPresContext*
+GetParentPresContext(nsPresContext* aPresContext)
+{
+  nsIPresShell* shell = aPresContext->GetPresShell();
+  if (shell) {
+    nsIFrame* rootFrame = shell->FrameManager()->GetRootFrame();
+    if (rootFrame) {
+      nsIFrame* f = nsLayoutUtils::GetCrossDocParentFrame(rootFrame);
+      if (f)
+        return f->PresContext();
+    }
+  }
+  return nsnull;
+}
+
 // We may want to replace this with something faster, maybe caching the root prescontext
 nsRootPresContext*
 nsPresContext::GetRootPresContext()
 {
   nsPresContext* pc = this;
   for (;;) {
-    if (pc->mShell) {
-      nsIFrame* rootFrame = pc->mShell->FrameManager()->GetRootFrame();
-      if (rootFrame) {
-        nsIFrame* f = nsLayoutUtils::GetCrossDocParentFrame(rootFrame);
-        if (f) {
-          pc = f->PresContext();
-          continue;
-        }
-      }
-    }
-    return pc->IsRoot() ? static_cast<nsRootPresContext*>(pc) : nsnull;
+    nsPresContext* parent = GetParentPresContext(pc);
+    if (!parent)
+      break;
+    pc = parent;
   }
+  return pc->IsRoot() ? static_cast<nsRootPresContext*>(pc) : nsnull;
 }
 
 void
@@ -2178,11 +2187,17 @@ nsPresContext::NotifyInvalidation(const nsRect& aRect, PRUint32 aFlags)
   if (aRect.IsEmpty() || !MayHavePaintEventListener())
     return;
 
-  if (!IsDOMPaintEventPending()) {
-    // No event is pending. Dispatch one now.
-    nsCOMPtr<nsIRunnable> ev =
-      NS_NewRunnableMethod(this, &nsPresContext::FireDOMPaintEvent);
-    NS_DispatchToCurrentThread(ev);
+  nsPresContext* pc;
+  for (pc = this; pc; pc = GetParentPresContext(pc)) {
+    if (pc->mFireAfterPaintEvents)
+      break;
+    pc->mFireAfterPaintEvents = PR_TRUE;
+  }
+  if (!pc) {
+    nsRootPresContext* rpc = GetRootPresContext();
+    if (rpc) {
+      rpc->EnsureEventualDidPaintEvent();
+    }
   }
 
   nsInvalidateRequestList::Request* request =
@@ -2192,6 +2207,39 @@ nsPresContext::NotifyInvalidation(const nsRect& aRect, PRUint32 aFlags)
 
   request->mRect = aRect;
   request->mFlags = aFlags;
+}
+
+static PRBool
+NotifyDidPaintSubdocumentCallback(nsIDocument* aDocument, void* aData)
+{
+  nsIPresShell* shell = aDocument->GetShell();
+  if (shell) {
+    nsPresContext* pc = shell->GetPresContext();
+    if (pc) {
+      pc->NotifyDidPaintForSubtree();
+    }
+  }
+  return PR_TRUE;
+}
+
+void
+nsPresContext::NotifyDidPaintForSubtree()
+{
+  if (!mFireAfterPaintEvents)
+    return;
+  mFireAfterPaintEvents = PR_FALSE;
+
+  if (IsRoot()) {
+    static_cast<nsRootPresContext*>(this)->CancelDidPaintTimer();
+  }
+
+  if (!mInvalidateRequests.mRequests.IsEmpty()) {
+    nsCOMPtr<nsIRunnable> ev =
+      NS_NewRunnableMethod(this, &nsPresContext::FireDOMPaintEvent);
+    nsContentUtils::AddScriptRunner(ev);
+  }
+
+  mDocument->EnumerateSubDocuments(NotifyDidPaintSubdocumentCallback, nsnull);
 }
 
 PRBool
@@ -2400,6 +2448,7 @@ nsRootPresContext::~nsRootPresContext()
 {
   NS_ASSERTION(mRegisteredPlugins.Count() == 0,
                "All plugins should have been unregistered");
+  CancelDidPaintTimer();
 }
 
 void
@@ -2733,4 +2782,24 @@ nsRootPresContext::RootForgetUpdatePluginGeometryFrame(nsIFrame* aFrame)
       SetContainsUpdatePluginGeometryFrame(PR_FALSE);
     mUpdatePluginGeometryForFrame = nsnull;
   }
+}
+
+static void
+NotifyDidPaintForSubtreeCallback(nsITimer *aTimer, void *aClosure)
+{
+  nsPresContext* presContext = (nsPresContext*)aClosure;
+  nsAutoScriptBlocker blockScripts;
+  presContext->NotifyDidPaintForSubtree();
+}
+
+void
+nsRootPresContext::EnsureEventualDidPaintEvent()
+{
+  if (mNotifyDidPaintTimer)
+    return;
+  mNotifyDidPaintTimer = do_CreateInstance("@mozilla.org/timer;1");
+  if (!mNotifyDidPaintTimer)
+    return;
+  mNotifyDidPaintTimer->InitWithFuncCallback(NotifyDidPaintForSubtreeCallback,
+                                             (void*)this, 100, nsITimer::TYPE_ONE_SHOT);
 }

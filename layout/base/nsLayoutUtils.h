@@ -560,7 +560,8 @@ public:
     PAINT_DOCUMENT_RELATIVE = 0x10,
     PAINT_HIDE_CARET = 0x20,
     PAINT_ALL_CONTINUATIONS = 0x40,
-    PAINT_TO_WINDOW = 0x80
+    PAINT_TO_WINDOW = 0x80,
+    PAINT_EXISTING_TRANSACTION = 0x100
   };
 
   /**
@@ -588,6 +589,9 @@ public:
    * as being relative to the document.  (Normally it's relative to the CSS
    * viewport.) PAINT_TO_WINDOW sets painting to window to true on the display
    * list builder even if we can't tell that we are painting to the window.
+   * If PAINT_EXISTING_TRANSACTION is set, then BeginTransaction() has already
+   * been called on aFrame's widget's layer manager and should not be
+   * called again.
    *
    * So there are three possible behaviours:
    * 1) PAINT_WIDGET_LAYERS is set and aRenderingContext is null; we paint

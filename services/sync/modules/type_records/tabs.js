@@ -44,12 +44,15 @@ const Cu = Components.utils;
 Cu.import("resource://services-sync/base_records/crypto.js");
 Cu.import("resource://services-sync/util.js");
 
+const TABS_TTL = 604800; // 7 days
+
 function TabSetRecord(collection, id) {
   CryptoWrapper.call(this, collection, id);
 }
 TabSetRecord.prototype = {
   __proto__: CryptoWrapper.prototype,
   _logName: "Record.Tabs",
+  ttl: TABS_TTL
 };
 
 Utils.deferGetSet(TabSetRecord, "cleartext", ["clientName", "tabs"]);

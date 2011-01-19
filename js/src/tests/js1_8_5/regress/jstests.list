@@ -29,6 +29,7 @@ script regress-567152.js
 script regress-569306.js
 script regress-569464.js
 script regress-571014.js
+script regress-573875.js
 script regress-577648-1.js
 script regress-577648-2.js
 script regress-583429.js
@@ -77,4 +78,5 @@ script regress-620376-1.js
 script regress-620376-2.js
 script regress-621814.js
 script regress-620750.js
+script regress-624199.js
 script regress-624547.js

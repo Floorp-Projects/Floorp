@@ -54,8 +54,9 @@ namespace layers {
 DeviceManagerD3D9 *LayerManagerD3D9::mDefaultDeviceManager = nsnull;
 
 LayerManagerD3D9::LayerManagerD3D9(nsIWidget *aWidget)
+  : mWidget(aWidget)
+  , mDeviceResetCount(0)
 {
-  mWidget = aWidget;
   mCurrentCallbackInfo.Callback = NULL;
   mCurrentCallbackInfo.CallbackData = NULL;
 }
@@ -70,6 +71,7 @@ LayerManagerD3D9::Initialize()
 {
   nsCOMPtr<nsIPrefBranch2> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
 
+  /* XXX: this preference and blacklist code should move out of the layer manager */
   PRBool forceAccelerate = PR_FALSE;
   if (prefs) {
     // we should use AddBoolPrefVarCache
@@ -150,10 +152,26 @@ LayerManagerD3D9::EndConstruction()
 {
 }
 
+bool
+LayerManagerD3D9::EndEmptyTransaction()
+{
+  // If the device reset count from our last EndTransaction doesn't match
+  // the current device reset count, the device must have been reset one or
+  // more times since our last transaction. In that case, an empty transaction
+  // is not possible, because layers may need to be rerendered.
+  if (!mRoot || mDeviceResetCount != mDeviceManager->GetDeviceResetCount())
+    return false;
+
+  EndTransaction(nsnull, nsnull);
+  return true;
+}
+
 void
 LayerManagerD3D9::EndTransaction(DrawThebesLayerCallback aCallback,
                                  void* aCallbackData)
 {
+  mDeviceResetCount = mDeviceManager->GetDeviceResetCount();
+
   mCurrentCallbackInfo.Callback = aCallback;
   mCurrentCallbackInfo.CallbackData = aCallbackData;
 

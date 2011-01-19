@@ -209,6 +209,12 @@ ThebesLayerD3D9::RenderLayer()
   }
 
   if (!mValidRegion.IsEqual(mVisibleRegion)) {
+    LayerManagerD3D9::CallbackInfo cbInfo = mD3DManager->GetCallbackInfo();
+    if (!cbInfo.Callback) {
+      NS_ERROR("D3D9 should never need to update ThebesLayers in an empty transaction");
+      return;
+    }
+
     /* We use the bounds of the visible region because we draw the bounds of
      * this region when we draw this entire texture. We have to make sure that
      * the areas that aren't filled with content get their background drawn.

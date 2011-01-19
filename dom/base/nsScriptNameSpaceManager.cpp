@@ -55,6 +55,7 @@
 #include "nsDOMClassInfo.h"
 #include "nsCRT.h"
 #include "nsIObserverService.h"
+#include "nsPrintfCString.h"
 
 #define NS_INTERFACE_PREFIX "nsI"
 #define NS_DOM_INTERFACE_PREFIX "nsIDOM"
@@ -687,7 +688,8 @@ nsScriptNameSpaceManager::AddCategoryEntryToHash(nsICategoryManager* aCategoryMa
   } else if (strcmp(aCategory, JAVASCRIPT_GLOBAL_DYNAMIC_NAMESET_CATEGORY) == 0) {
     type = nsGlobalNameStruct::eTypeDynamicNameSet;
   } else {
-    NS_WARNING("The category has no corresponding type!");
+    NS_WARNING(nsPrintfCString(128, "The category '%s' has no corresponding type!",
+                               aCategory).get());
     return NS_ERROR_UNEXPECTED;
   }
 

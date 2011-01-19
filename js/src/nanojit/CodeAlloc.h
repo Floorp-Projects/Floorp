@@ -119,6 +119,12 @@ namespace nanojit
         static const size_t sizeofMinBlock = offsetof(CodeList, code);
         static const size_t minAllocSize = LARGEST_UNDERRUN_PROT;
 
+        // Return the number of bytes needed for the header of 'n' blocks
+        static size_t headerSpaceFor(uint32_t nbrBlks)  { return nbrBlks * sizeofMinBlock; }
+
+        // Return the number of bytes needed in order to safely construct 'n' blocks
+        static size_t blkSpaceFor(uint32_t nbrBlks)     { return (nbrBlks * minAllocSize) + headerSpaceFor(nbrBlks); }
+
         /** Terminator blocks.  All active and free allocations
             are reachable by traversing this chain and each
             element's lower chain. */
@@ -181,8 +187,8 @@ namespace nanojit
         /** return all the memory allocated through this allocator to the gcheap. */
         void reset();
 
-        /** allocate some memory for code, return pointers to the region. */
-        void alloc(NIns* &start, NIns* &end);
+        /** allocate some memory (up to 'byteLimit' bytes) for code returning pointers to the region.  A zero 'byteLimit' means no limit */
+        void alloc(NIns* &start, NIns* &end, size_t byteLimit);
 
         /** free a block of memory previously returned by alloc() */
         void free(NIns* start, NIns* end);

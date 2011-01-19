@@ -226,6 +226,9 @@ nsWindow::nsWindow()
     mListenForResizes    = PR_FALSE;
     mNeedsShow           = PR_FALSE;
     mGesturesCancelled   = PR_FALSE;
+    mTimerStarted        = PR_FALSE;
+    mPinchEvent.needDispatch = false;
+    mMoveEvent.needDispatch = false;
     
     if (!gGlobalsInitialized) {
         gGlobalsInitialized = PR_TRUE;
@@ -1254,20 +1257,12 @@ nsWindow::OnMotionNotifyEvent(QGraphicsSceneMouseEvent *aEvent)
 
     CHECK_MOUSE_BLOCKED
 
-    nsMouseEvent event(PR_TRUE, NS_MOUSE_MOVE, this, nsMouseEvent::eReal);
+    mMoveEvent.pos = aEvent->pos();
+    mMoveEvent.modifiers = aEvent->modifiers();
+    mMoveEvent.needDispatch = true;
+    DispatchMotionToMainThread();
 
-    event.refPoint.x = nscoord(aEvent->pos().x());
-    event.refPoint.y = nscoord(aEvent->pos().y());
-
-    event.isShift         = ((aEvent->modifiers() & Qt::ShiftModifier) != 0);
-    event.isControl       = ((aEvent->modifiers() & Qt::ControlModifier) != 0);
-    event.isAlt           = ((aEvent->modifiers() & Qt::AltModifier) != 0);
-    event.isMeta          = ((aEvent->modifiers() & Qt::MetaModifier) != 0);
-    event.clickCount      = 0;
-
-    nsEventStatus status = DispatchEvent(&event);
-
-    return status;
+    return nsEventStatus_eIgnore;
 }
 
 void
@@ -1901,23 +1896,17 @@ nsEventStatus nsWindow::OnTouchEvent(QTouchEvent *event, PRBool &handled)
             gestureNotifyEvent.refPoint = nsIntPoint(fpos.x(), fpos.y());
             DispatchEvent(&gestureNotifyEvent);
         }
+        mPinchEvent.needDispatch = true;
     }
     else if (event->type() == QEvent::TouchEnd) {
         mGesturesCancelled = PR_FALSE;
+        mPinchEvent.needDispatch = false;
     }
 
-    if (touchPoints.count() == 2) {
-        mTouchPointDistance = DistanceBetweenPoints(touchPoints.at(0).scenePos(),
-                                                    touchPoints.at(1).scenePos());
-        if (event->type() == QEvent::TouchBegin) {
-            mLastPinchDistance = mTouchPointDistance;
-        }
-    }
-
-    //Disable mouse events when gestures are used, because they cause problems with
-    //Fennec
-    if (touchPoints.count() > 1) {
-        mLastMultiTouchTime.start();
+    if (touchPoints.count() > 0) {
+        // Remember start touch point in order to use it for
+        // distance calculation in NS_SIMPLE_GESTURE_MAGNIFY_UPDATE
+        mPinchEvent.touchPoint = touchPoints.at(0).scenePos();
     }
 
     return nsEventStatus_eIgnore;
@@ -1939,32 +1928,38 @@ nsWindow::OnGestureEvent(QGestureEvent* event, PRBool &handled) {
         QPinchGesture* pinch = static_cast<QPinchGesture*>(gesture);
         handled = PR_TRUE;
 
-        QPointF mappedCenterPoint =
+        mPinchEvent.centerPoint =
             mWidget->mapFromScene(event->mapToGraphicsScene(pinch->centerPoint()));
-        nsIntPoint centerPoint(mappedCenterPoint.x(), mappedCenterPoint.y());
+        nsIntPoint centerPoint(mPinchEvent.centerPoint.x(),
+                               mPinchEvent.centerPoint.y());
 
         if (pinch->state() == Qt::GestureStarted) {
             event->accept();
-            mPinchStartDistance = mTouchPointDistance;
+            mPinchEvent.startDistance = DistanceBetweenPoints(mPinchEvent.centerPoint, mPinchEvent.touchPoint) * 2;
+            mPinchEvent.prevDistance = mPinchEvent.startDistance;
             result = DispatchGestureEvent(NS_SIMPLE_GESTURE_MAGNIFY_START,
                                           0, 0, centerPoint);
         }
         else if (pinch->state() == Qt::GestureUpdated) {
-            double delta = mTouchPointDistance - mLastPinchDistance;
-
-            result = DispatchGestureEvent(NS_SIMPLE_GESTURE_MAGNIFY_UPDATE,
-                                          0, delta, centerPoint);
+            if (mPinchEvent.needDispatch) {
+                mPinchEvent.delta = 0;
+                DispatchMotionToMainThread();
+            }
         }
         else if (pinch->state() == Qt::GestureFinished) {
-            double delta =mTouchPointDistance - mPinchStartDistance;
+            double distance = DistanceBetweenPoints(mPinchEvent.centerPoint, mPinchEvent.touchPoint) * 2;
+            double delta = distance - mPinchEvent.startDistance;
             result = DispatchGestureEvent(NS_SIMPLE_GESTURE_MAGNIFY,
                                           0, delta, centerPoint);
+            mPinchEvent.needDispatch = false;
         }
         else {
             handled = false;
         }
 
-        mLastPinchDistance = mTouchPointDistance;
+        //Disable mouse events when gestures are used, because they cause problems with
+        //Fennec
+        mLastMultiTouchTime.start();
     }
 
     gesture = event->gesture(gSwipeGestureId);
@@ -1983,12 +1978,17 @@ nsWindow::OnGestureEvent(QGestureEvent* event, PRBool &handled) {
 
             // Cancel pinch gesture
             mGesturesCancelled = PR_TRUE;
-            PRFloat64 delta = mTouchPointDistance - mPinchStartDistance;
-            DispatchGestureEvent(NS_SIMPLE_GESTURE_MAGNIFY, 0, delta/2, hotspot);
+            mPinchEvent.needDispatch = false;
+
+            double distance = DistanceBetweenPoints(swipe->hotSpot(), mPinchEvent.touchPoint) * 2;
+            PRFloat64 delta = distance - mPinchEvent.startDistance;
+
+            DispatchGestureEvent(NS_SIMPLE_GESTURE_MAGNIFY, 0, delta / 2, hotspot);
 
             result = DispatchGestureEvent(NS_SIMPLE_GESTURE_SWIPE,
                                           swipe->Direction(), 0, hotspot);
         }
+        mLastMultiTouchTime.start();
     }
 
     return result;

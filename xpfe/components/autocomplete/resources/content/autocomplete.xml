@@ -1745,7 +1745,7 @@
       <method name="showPopup">
         <body><![CDATA[
           var textbox = document.getBindingParent(this);
-          var kids = textbox.getElementsByTagName("menupopup");
+          var kids = textbox.getElementsByClassName("autocomplete-history-popup");
           if (kids.item(0) && textbox.getAttribute("open") != "true") { // Open history popup
             kids[0].showPopup(textbox, -1, -1, "popup", "bottomleft", "topleft");
             textbox.setAttribute("open", "true");

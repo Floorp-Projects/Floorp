@@ -45,6 +45,10 @@
  * Wraps a cairo_tee_surface. The first surface in the surface list is the
  * primary surface, which answers all surface queries (including size).
  * All drawing is performed on all the surfaces.
+ *
+ * The device transform of a tee surface is applied before drawing to the
+ * underlying surfaces --- which also applies the device transforms of the
+ * underlying surfaces.
  */
 class THEBES_API gfxTeeSurface : public gfxASurface {
 public:
@@ -53,6 +57,9 @@ public:
 
     virtual const gfxIntSize GetSize() const;
 
+    /**
+     * Returns the list of underlying surfaces.
+     */
     void GetSurfaces(nsTArray<nsRefPtr<gfxASurface> > *aSurfaces);
 };
 

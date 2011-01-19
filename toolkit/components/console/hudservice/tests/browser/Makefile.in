@@ -118,6 +118,7 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_599725_response_headers.js \
 	browser_webconsole_bug_613642_maintain_scroll.js \
 	browser_webconsole_bug_613642_prune_scroll.js \
+	browser_webconsole_bug_618078_network_exceptions.js \
 	head.js \
 	$(NULL)
 
@@ -182,6 +183,7 @@ _BROWSER_TEST_PAGES = \
 	test-bug-603750-websocket.html \
 	test-bug-603750-websocket.js \
 	test-bug-599725-response-headers.sjs \
+	test-bug-618078-network-exceptions.html \
 	$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)

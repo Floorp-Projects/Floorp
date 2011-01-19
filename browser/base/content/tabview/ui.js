@@ -345,6 +345,9 @@ let UI = {
     
     if (firstTime) {
       gPrefBranch.setBoolPref("experienced_first_run", true);
+      // ensure that the first run pref is flushed to the file, in case a crash 
+      // or force quit happens before the pref gets flushed automatically.
+      Services.prefs.savePrefFile(null);
 
       let url = gPrefBranch.getCharPref("welcome_url");
       let newTab = gBrowser.loadOneTab(url, {inBackground: true});
@@ -358,6 +361,10 @@ let UI = {
                                    welcomeWidth, welcomeWidth * aspect);
       newTabItem.setBounds(welcomeBounds, true);
       GroupItems.setActiveGroupItem(groupItem);
+
+      // Remove the newly created welcome-tab from the tab bar
+      if (!this.isTabViewVisible())
+        GroupItems._updateTabBar();
     }
   },
 
@@ -495,6 +502,11 @@ let UI = {
 
         self._resize(true);
         dispatchEvent(event);
+
+        // Flush pending updates
+        GroupItems.flushAppTabUpdates();
+
+        TabItems.resumePainting();
       });
     } else {
       if (currentTab && currentTab._tabViewTabItem)
@@ -502,9 +514,14 @@ let UI = {
 
       self.setActiveTab(null);
       dispatchEvent(event);
+
+      // Flush pending updates
+      GroupItems.flushAppTabUpdates();
+
+      TabItems.resumePainting();
     }
 
-    TabItems.resumePainting();
+    Storage.saveVisibilityData(gWindow, "true");
   },
 
   // ----------
@@ -541,6 +558,8 @@ let UI = {
     let event = document.createEvent("Events");
     event.initEvent("tabviewhidden", true, false);
     dispatchEvent(event);
+
+    Storage.saveVisibilityData(gWindow, "false");
   },
 
 #ifdef XP_MACOSX
@@ -1144,7 +1163,7 @@ let UI = {
       iQ(window).unbind("mousemove", updateSize);
       item.container.removeClass("dragRegion");
       dragOutInfo.stop();
-      box = item.getBounds();
+      let box = item.getBounds();
       if (box.width > minMinSize && box.height > minMinSize &&
          (box.width > minSize || box.height > minSize)) {
         var bounds = item.getBounds();
@@ -1153,7 +1172,7 @@ let UI = {
         // to that groupItem.
         var tabs = GroupItems.getOrphanedTabs();
         var insideTabs = [];
-        for each(tab in tabs) {
+        for each(let tab in tabs) {
           if (bounds.contains(tab.bounds))
             insideTabs.push(tab);
         }
@@ -1180,9 +1199,6 @@ let UI = {
   // Parameters:
   //   force - true to update even when "unnecessary"; default false
   _resize: function UI__resize(force) {
-    if (typeof force == "undefined")
-      force = false;
-
     if (!this._pageBounds)
       return;
 

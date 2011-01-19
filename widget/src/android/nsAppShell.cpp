@@ -232,8 +232,6 @@ nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
 
     EVLOG("nsAppShell: event %p %d [ndraws %d]", (void*)curEvent.get(), curEvent->Type(), mNumDraws);
 
-    nsWindow *target = (nsWindow*) curEvent->NativeWindow();
-
     switch (curEvent->Type()) {
     case AndroidGeckoEvent::NATIVE_POKE:
         NativeEventCallback();
@@ -311,10 +309,7 @@ nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
     }
 
     default:
-        if (target)
-            target->OnAndroidEvent(curEvent);
-        else
-            nsWindow::OnGlobalAndroidEvent(curEvent);
+        nsWindow::OnGlobalAndroidEvent(curEvent);
     }
 
     EVLOG("nsAppShell: -- done event %p %d", (void*)curEvent.get(), curEvent->Type());

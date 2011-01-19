@@ -82,6 +82,7 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsBaseWidget)
 
 // The dimensions of the current android view
 static gfxIntSize gAndroidBounds;
+static gfxIntSize gAndroidScreenBounds;
 
 #ifdef MOZ_IPC
 class ContentCreationNotifier;
@@ -99,7 +100,7 @@ class ContentCreationNotifier : public nsIObserver
         if (!strcmp(aTopic, "ipc:content-created")) {
             ContentParent *cp = ContentParent::GetSingleton(PR_FALSE);
             NS_ABORT_IF_FALSE(cp, "Must have content process if notified of its creation");
-            unused << cp->SendScreenSizeChanged(gAndroidBounds);
+            unused << cp->SendScreenSizeChanged(gAndroidScreenBounds);
         } else if (!strcmp(aTopic, "xpcom-shutdown")) {
             nsCOMPtr<nsIObserverService>
                 obs(do_GetService("@mozilla.org/observer-service;1"));
@@ -304,7 +305,7 @@ nsWindow::SetParent(nsIWidget *aNewParent)
 
     // if we are now in the toplevel window's hierarchy, schedule a redraw
     if (FindTopLevel() == TopWindow())
-        nsAppShell::gAppShell->PostEvent(new AndroidGeckoEvent(TopWindow(), -1, -1, -1, -1));
+        nsAppShell::gAppShell->PostEvent(new AndroidGeckoEvent(-1, -1, -1, -1));
 
     return NS_OK;
 }
@@ -361,7 +362,7 @@ nsWindow::Show(PRBool aState)
                 BringToFront();
             }
         } else if (FindTopLevel() == TopWindow()) {
-            nsAppShell::gAppShell->PostEvent(new AndroidGeckoEvent(TopWindow(), -1, -1, -1, -1));
+            nsAppShell::gAppShell->PostEvent(new AndroidGeckoEvent(-1, -1, -1, -1));
         }
     }
 
@@ -458,7 +459,7 @@ nsWindow::Resize(PRInt32 aX,
 
     // Should we skip honoring aRepaint here?
     if (aRepaint && FindTopLevel() == TopWindow())
-        nsAppShell::gAppShell->PostEvent(new AndroidGeckoEvent(TopWindow(), -1, -1, -1, -1));
+        nsAppShell::gAppShell->PostEvent(new AndroidGeckoEvent(-1, -1, -1, -1));
 
     return NS_OK;
 }
@@ -512,7 +513,7 @@ nsWindow::Invalidate(const nsIntRect &aRect,
                      PRBool aIsSynchronous)
 {
     ALOG("nsWindow::Invalidate %p [%d %d %d %d]", (void*) this, aRect.x, aRect.y, aRect.width, aRect.height);
-    nsAppShell::gAppShell->PostEvent(new AndroidGeckoEvent(TopWindow(), -1, -1, -1, -1));
+    nsAppShell::gAppShell->PostEvent(new AndroidGeckoEvent(-1, -1, -1, -1));
     return NS_OK;
 }
 
@@ -578,7 +579,7 @@ nsWindow::BringToFront()
     nsGUIEvent event(PR_TRUE, NS_ACTIVATE, this);
     DispatchEvent(&event);
 
-    nsAppShell::gAppShell->PostEvent(new AndroidGeckoEvent(TopWindow(), -1, -1, -1, -1));
+    nsAppShell::gAppShell->PostEvent(new AndroidGeckoEvent(-1, -1, -1, -1));
 }
 
 NS_IMETHODIMP
@@ -734,42 +735,57 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
             int nw = ae->P0().x;
             int nh = ae->P0().y;
 
-            if (nw == gAndroidBounds.width &&
-                nh == gAndroidBounds.height) {
-                return;
+            if (nw != gAndroidBounds.width ||
+                nh != gAndroidBounds.height) {
+
+                gAndroidBounds.width = nw;
+                gAndroidBounds.height = nh;
+
+                // tell all the windows about the new size
+                for (size_t i = 0; i < gTopLevelWindows.Length(); ++i) {
+                    if (gTopLevelWindows[i]->mIsVisible)
+                        gTopLevelWindows[i]->Resize(gAndroidBounds.width,
+                                                    gAndroidBounds.height,
+                                                    PR_TRUE);
+                }
             }
 
-            gAndroidBounds.width = nw;
-            gAndroidBounds.height = nh;
+            int newScreenWidth = ae->P1().x;
+            int newScreenHeight = ae->P1().y;
 
-            // tell all the windows about the new size
-            for (size_t i = 0; i < gTopLevelWindows.Length(); ++i) {
-                if (gTopLevelWindows[i]->mIsVisible)
-                    gTopLevelWindows[i]->Resize(gAndroidBounds.width, gAndroidBounds.height, PR_TRUE);
-            }
+            if (newScreenWidth == gAndroidScreenBounds.width &&
+                newScreenHeight == gAndroidScreenBounds.height)
+                break;
+
+            gAndroidScreenBounds.width = newScreenWidth;
+            gAndroidScreenBounds.height = newScreenHeight;
 
 #ifdef MOZ_IPC
-            if (XRE_GetProcessType() == GeckoProcessType_Default) {
-                if (!gContentCreationNotifier) {
-                    nsCOMPtr<nsIObserverService> obs =
-                        do_GetService("@mozilla.org/observer-service;1");
-                    if (obs) {
-                        nsCOMPtr<ContentCreationNotifier> notifier = new ContentCreationNotifier;
-                        if (NS_SUCCEEDED(obs->AddObserver(notifier, "ipc:content-created", PR_FALSE))) {
-                            if (NS_SUCCEEDED(obs->AddObserver(notifier, "xpcom-shutdown", PR_FALSE)))
-                                gContentCreationNotifier = notifier;
-                            else {
-                                obs->RemoveObserver(notifier, "ipc:content-created");
-                            }
-                        }
-                    }
-                }
-                ContentParent *cp = ContentParent::GetSingleton(PR_FALSE);
-                if (cp)
-                    unused << cp->SendScreenSizeChanged(gAndroidBounds);
+            if (XRE_GetProcessType() != GeckoProcessType_Default)
+                break;
+
+            // Tell the content process the new screen size.
+            ContentParent *cp = ContentParent::GetSingleton(PR_FALSE);
+            if (cp)
+                unused << cp->SendScreenSizeChanged(gAndroidScreenBounds);
+
+            if (gContentCreationNotifier)
+                break;
+
+            // If the content process is not created yet, wait until it's
+            // created and then tell it the screen size.
+            nsCOMPtr<nsIObserverService> obs = do_GetService("@mozilla.org/observer-service;1");
+            if (!obs)
+                break;
+
+            nsCOMPtr<ContentCreationNotifier> notifier = new ContentCreationNotifier;
+            if (NS_SUCCEEDED(obs->AddObserver(notifier, "ipc:content-created", PR_FALSE))) {
+                if (NS_SUCCEEDED(obs->AddObserver(notifier, "xpcom-shutdown", PR_FALSE)))
+                    gContentCreationNotifier = notifier;
+                else
+                    obs->RemoveObserver(notifier, "ipc:content-created");
             }
 #endif
-            break;
         }
 
         case AndroidGeckoEvent::MOTION_EVENT: {
@@ -1048,25 +1064,15 @@ nsWindow::InitEvent(nsGUIEvent& event, nsIntPoint* aPoint)
     event.time = PR_Now() / 1000;
 }
 
-void
-nsWindow::SetInitialAndroidBounds(const gfxIntSize& sz)
-{
-    if (!gTopLevelWindows.IsEmpty()) {
-        NS_WARNING("SetInitialAndroidBounds called way too late, we already have toplevel windows!");
-    }
-
-    gAndroidBounds = sz;
-}
-
 gfxIntSize
-nsWindow::GetAndroidBounds()
+nsWindow::GetAndroidScreenBounds()
 {
 #ifdef MOZ_IPC
     if (XRE_GetProcessType() == GeckoProcessType_Content) {
         return ContentChild::GetSingleton()->GetScreenSize();
     }
 #endif
-    return gAndroidBounds;
+    return gAndroidScreenBounds;
 }
 
 void *

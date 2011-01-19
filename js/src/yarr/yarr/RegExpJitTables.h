@@ -2629,14 +2629,16 @@ static const char _wordcharData[65536] = {
 
 CharacterClass* digitsCreate()
 {
-    CharacterClass* characterClass = new CharacterClass(0);
+    // FIXME: bug 574459 -- no NULL check
+    CharacterClass* characterClass = js_new<CharacterClass>((CharacterClassTable*)NULL);
     characterClass->m_ranges.append(CharacterRange(0x30, 0x39));
     return characterClass;
 }
 
 CharacterClass* nondigitsCreate()
 {
-    CharacterClass* characterClass = new CharacterClass(0);
+    // FIXME: bug 574459 -- no NULL check
+    CharacterClass* characterClass = js_new<CharacterClass>((CharacterClassTable*)NULL);
     characterClass->m_ranges.append(CharacterRange(0x00, 0x2f));
     characterClass->m_ranges.append(CharacterRange(0x3a, 0x7f));
     characterClass->m_rangesUnicode.append(CharacterRange(0x0080, 0xffff));
@@ -2645,7 +2647,8 @@ CharacterClass* nondigitsCreate()
 
 CharacterClass* newlineCreate()
 {
-    CharacterClass* characterClass = new CharacterClass(0);
+    // FIXME: bug 574459 -- no NULL check
+    CharacterClass* characterClass = js_new<CharacterClass>((CharacterClassTable*)NULL);
     characterClass->m_matches.append(0x0a);
     characterClass->m_matches.append(0x0d);
     characterClass->m_matchesUnicode.append(0x2028);
@@ -2655,7 +2658,8 @@ CharacterClass* newlineCreate()
 
 CharacterClass* spacesCreate()
 {
-    CharacterClass* characterClass = new CharacterClass(CharacterClassTable::create(_spacesData, false));
+    // FIXME: bug 574459 -- no NULL check
+    CharacterClass* characterClass = js_new<CharacterClass>(CharacterClassTable::create(_spacesData, false));
     characterClass->m_ranges.append(CharacterRange(0x09, 0x0d));
     characterClass->m_matches.append(0x20);
     characterClass->m_matchesUnicode.append(0x00a0);
@@ -2672,7 +2676,8 @@ CharacterClass* spacesCreate()
 
 CharacterClass* nonspacesCreate()
 {
-    CharacterClass* characterClass = new CharacterClass(CharacterClassTable::create(_spacesData, true));
+    // FIXME: bug 574459 -- no NULL check
+    CharacterClass* characterClass = js_new<CharacterClass>(CharacterClassTable::create(_spacesData, true));
     characterClass->m_ranges.append(CharacterRange(0x00, 0x08));
     characterClass->m_ranges.append(CharacterRange(0x0e, 0x1f));
     characterClass->m_ranges.append(CharacterRange(0x21, 0x7f));
@@ -2690,7 +2695,8 @@ CharacterClass* nonspacesCreate()
 
 CharacterClass* nonwordcharCreate()
 {
-    CharacterClass* characterClass = new CharacterClass(CharacterClassTable::create(_wordcharData, true));
+    // FIXME: bug 574459 -- no NULL check
+    CharacterClass* characterClass = js_new<CharacterClass>(CharacterClassTable::create(_wordcharData, true));
     characterClass->m_ranges.append(CharacterRange(0x00, 0x2f));
     characterClass->m_ranges.append(CharacterRange(0x3a, 0x40));
     characterClass->m_ranges.append(CharacterRange(0x5b, 0x5e));
@@ -2702,7 +2708,8 @@ CharacterClass* nonwordcharCreate()
 
 CharacterClass* wordcharCreate()
 {
-    CharacterClass* characterClass = new CharacterClass(CharacterClassTable::create(_wordcharData, false));
+    // FIXME: bug 574459 -- no NULL check
+    CharacterClass* characterClass = js_new<CharacterClass>(CharacterClassTable::create(_wordcharData, false));
     characterClass->m_ranges.append(CharacterRange(0x30, 0x39));
     characterClass->m_ranges.append(CharacterRange(0x41, 0x5a));
     characterClass->m_matches.append(0x5f);

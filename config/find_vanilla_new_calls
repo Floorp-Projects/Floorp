@@ -1,0 +1,80 @@
+# /bin/bash
+
+#----------------------------------------------------------------------------
+# We must avoid using the vanilla new/new[] operators (and consequently, the
+# vanilla delete/delete[] operators) in SpiderMonkey, see bug 624878 for why.
+#
+# This script:
+# - Detects if any of the vanilla new/new[] operators are used in a file.
+#   Its exit code is 1 if it found some, and 0 if it didn't.
+# - Doesn't detect delete/delete[] because it appears they can be present
+#   somehow due to virtual destructors, but this is ok because vanilla
+#   delete/delete[] calls don't make sense without corresponding new/new[]
+#   calls, and any explicit calls will be caught by Valgrind's mismatched
+#   alloc/free checking.
+# - Doesn't detect the 'nothrow' variants, which are ok but probably still
+#   best avoided.
+# - Is designed to only run on Linux (though it may also work on Mac);  one
+#   platform will be enough to catch any violations.
+#
+# If this script fails:
+# - You need to find the uses of vanilla new/delete and replace them with
+#   js_new()/js_delete().
+# - Run this script on each of the .o files, that should narrow it down.
+# - After that, one way to find them is to run 'objdump -r -C' on the
+#   relevant .o files.  For example, you might search for 'operator new' and
+#   find a record like this:
+#
+#  RELOCATION RECORDS FOR [.text._ZN3JSC14ExecutablePool6createEj]:
+#  OFFSET   TYPE              VALUE
+#  00000009 R_386_PC32        __i686.get_pc_thunk.bx
+#  0000000f R_386_GOTPC       _GLOBAL_OFFSET_TABLE_
+#  0000001b R_386_PLT32       operator new(unsigned int)
+#  0000002e R_386_PC32        JSC::ExecutablePool::ExecutablePool(unsigned int)
+#  0000004a R_386_PC32        JSC::ExecutablePool::~ExecutablePool()
+#  00000052 R_386_PLT32       operator delete(void*)
+#
+#   This says that vanilla 'new' and 'delete' are both used in
+#   JSC::ExecutablePool::create(unsigned int).  This doesn't always work,
+#   though.  (Nb: use 'c++filt' to demangle names like
+#   _ZN3JSC14ExecutablePool6createEj.)
+#
+# If that doesn't work, use grep.
+#----------------------------------------------------------------------------
+
+if [ -z $1 ] ; then
+    echo "usage: find_vanilla_new_calls <file>"
+    exit 1
+fi
+
+file=$1
+
+if [ ! -f $file ] ; then
+    echo "TEST-UNEXPECTED-FAIL | find_vanilla_new_calls | file '$file' not found"
+    exit 1
+fi
+
+tmpfile1=`mktemp`
+tmpfile2=`mktemp`
+nm -C $file > $tmpfile1
+
+# Need to double-escape '[' and ']' to stop grep from interpreting them
+# specially.
+grep 'operator new(unsigned int)'        $tmpfile1 >> $tmpfile2
+grep 'operator new(unsigned long)'       $tmpfile1 >> $tmpfile2
+grep 'operator new\\[\\](unsigned int)'  $tmpfile1 >> $tmpfile2
+grep 'operator new\\[\\](unsigned long)' $tmpfile1 >> $tmpfile2
+rm -f $tmpfile1
+
+if [ -s $tmpfile2 ] ; then
+    echo "TEST-UNEXPECTED-FAIL | find_vanilla_new_calls | found calls are listed below"
+    cat $tmpfile2
+    echo
+    rm -f $tmpfile2
+    exit 1
+fi
+
+echo "TEST-PASS | find_vanilla_new_calls | ok"
+echo
+
+exit 0

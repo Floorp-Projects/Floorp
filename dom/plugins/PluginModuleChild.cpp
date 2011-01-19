@@ -1788,7 +1788,7 @@ PluginModuleChild::AllocPPluginInstance(const nsCString& aMimeType,
     InitQuirksModes(aMimeType);
 
 #ifdef XP_WIN
-    if (mQuirks & QUIRK_FLASH_HOOK_GETWINDOINFO) {
+    if (mQuirks & QUIRK_FLASH_HOOK_GETWINDOWINFO) {
         sUser32Intercept.Init("user32.dll");
         sUser32Intercept.AddHook("GetWindowInfo", PMCGetWindowInfoHook,
                                  (void**) &sGetWindowInfoPtrStub);
@@ -1827,7 +1827,8 @@ PluginModuleChild::InitQuirksModes(const nsCString& aMimeType)
         mQuirks |= QUIRK_WINLESS_TRACKPOPUP_HOOK;
         mQuirks |= QUIRK_FLASH_THROTTLE_WMUSER_EVENTS; 
         mQuirks |= QUIRK_FLASH_HOOK_SETLONGPTR;
-        mQuirks |= QUIRK_FLASH_HOOK_GETWINDOINFO;
+        mQuirks |= QUIRK_FLASH_HOOK_GETWINDOWINFO;
+        mQuirks |= QUIRK_FLASH_MASK_CLEARTYPE_SETTINGS;
     }
 #endif
 }

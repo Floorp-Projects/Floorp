@@ -190,6 +190,12 @@ private:
   // reading metadata or destruction of the reader itself.
   void Cleanup();
 
+  // Returns PR_TRUE if we should decode up to the seek target rather than
+  // seeking to the target using an index-assisted seek.  We should do this
+  // if the seek target (aTarget, in ms), lies not too far ahead of the
+  // current playback position (aCurrentTime, in ms).
+  PRBool CanDecodeToTarget(PRInt64 aTarget, PRInt64 aCurrentTime);
+
 private:
   // libnestegg context for webm container. Access on state machine thread
   // or decoder thread only.
