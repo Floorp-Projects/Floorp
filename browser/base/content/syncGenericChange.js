@@ -94,7 +94,7 @@ let Change = {
           document.getElementById("passphraseBackupButtons").hidden = true;
           document.getElementById("generatePassphraseButton").hidden = true;
           document.title = this._str("new.synckey.title");
-          introText.textContent = this._str("new.synckey.introText");
+          introText.textContent = this._str("new.synckey2.introText");
           this._dialog.getButton("accept")
               .setAttribute("label", this._str("new.synckey.acceptButton"));
         }
