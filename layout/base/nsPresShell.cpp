@@ -6116,10 +6116,11 @@ PresShell::Paint(nsIView*           aDisplayRoot,
 
   LayerManager* layerManager = aWidgetToPaint->GetLayerManager();
   NS_ASSERTION(layerManager, "Must be in paint event");
+  layerManager->BeginTransaction();
 
   if (frame) {
     if (!(frame->GetStateBits() & NS_FRAME_UPDATE_LAYER_TREE)) {
-      if (layerManager->DoEmptyTransaction())
+      if (layerManager->EndEmptyTransaction())
         return NS_OK;
     }
     frame->RemoveStateBits(NS_FRAME_UPDATE_LAYER_TREE);
@@ -6139,7 +6140,8 @@ PresShell::Paint(nsIView*           aDisplayRoot,
     // need. (aPaintDefaultBackground will never be needed since the
     // chrome can always paint a default background.)
     nsLayoutUtils::PaintFrame(nsnull, frame, aDirtyRegion, bgcolor,
-                              nsLayoutUtils::PAINT_WIDGET_LAYERS);
+                              nsLayoutUtils::PAINT_WIDGET_LAYERS |
+                              nsLayoutUtils::PAINT_EXISTING_TRANSACTION);
 
     frame->EndDeferringInvalidatesForDisplayRoot();
     presContext->NotifyDidPaintForSubtree();
@@ -6152,7 +6154,6 @@ PresShell::Paint(nsIView*           aDisplayRoot,
     frame->BeginDeferringInvalidatesForDisplayRoot(aDirtyRegion);
   }
 
-  layerManager->BeginTransaction();
   nsRefPtr<ThebesLayer> root = layerManager->CreateThebesLayer();
   if (root) {
     root->SetVisibleRegion(aIntDirtyRegion);

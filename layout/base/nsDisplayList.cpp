@@ -454,16 +454,17 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
                "Must call ComputeVisibility before calling Paint");
 
   nsRefPtr<LayerManager> layerManager;
+  bool allowRetaining = false;
+  bool doBeginTransaction = true;
   if (aFlags & PAINT_USE_WIDGET_LAYERS) {
     nsIFrame* referenceFrame = aBuilder->ReferenceFrame();
     NS_ASSERTION(referenceFrame == nsLayoutUtils::GetDisplayRootFrame(referenceFrame),
                  "Reference frame must be a display root for us to use the layer manager");
     nsIWidget* window = referenceFrame->GetNearestWidget();
     if (window) {
-      bool allowRetaining = true;
       layerManager = window->GetLayerManager(&allowRetaining);
-      if (layerManager && allowRetaining) {
-        aBuilder->LayerBuilder()->WillBeginRetainedLayerTransaction(layerManager);
+      if (layerManager) {
+        doBeginTransaction = !(aFlags & PAINT_EXISTING_TRANSACTION);
       }
     }
   }
@@ -481,10 +482,15 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
     FrameLayerBuilder::InvalidateAllLayers(layerManager);
   }
 
-  if (aCtx) {
-    layerManager->BeginTransactionWithTarget(aCtx->ThebesContext());
-  } else {
-    layerManager->BeginTransaction();
+  if (doBeginTransaction) {
+    if (aCtx) {
+      layerManager->BeginTransactionWithTarget(aCtx->ThebesContext());
+    } else {
+      layerManager->BeginTransaction();
+    }
+  }
+  if (allowRetaining) {
+    aBuilder->LayerBuilder()->DidBeginRetainedLayerTransaction(layerManager);
   }
 
   nsRefPtr<ContainerLayer> root = aBuilder->LayerBuilder()->

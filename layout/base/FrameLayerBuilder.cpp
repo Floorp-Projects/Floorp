@@ -462,7 +462,7 @@ FrameLayerBuilder::DestroyDisplayItemData(nsIFrame* aFrame,
 }
 
 void
-FrameLayerBuilder::WillBeginRetainedLayerTransaction(LayerManager* aManager)
+FrameLayerBuilder::DidBeginRetainedLayerTransaction(LayerManager* aManager)
 {
   mRetainingManager = aManager;
   LayerManagerData* data = static_cast<LayerManagerData*>

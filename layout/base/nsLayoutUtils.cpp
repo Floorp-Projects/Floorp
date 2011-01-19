@@ -1553,6 +1553,9 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
       widget2->UpdateThemeGeometries(builder.GetThemeGeometries());
     }
   }
+  if (aFlags & PAINT_EXISTING_TRANSACTION) {
+    flags |= nsDisplayList::PAINT_EXISTING_TRANSACTION;
+  }
 
   list.PaintRoot(&builder, aRenderingContext, flags);
 

@@ -140,9 +140,9 @@ public:
 
   virtual void BeginTransaction();
   virtual void BeginTransactionWithTarget(gfxContext* aTarget);
+  virtual bool EndEmptyTransaction();
   virtual void EndTransaction(DrawThebesLayerCallback aCallback,
                               void* aCallbackData);
-  virtual bool DoEmptyTransaction();
 
   virtual void SetRoot(Layer* aLayer);
 
@@ -241,9 +241,9 @@ public:
   virtual ~BasicShadowLayerManager();
 
   virtual void BeginTransactionWithTarget(gfxContext* aTarget);
+  virtual bool EndEmptyTransaction();
   virtual void EndTransaction(DrawThebesLayerCallback aCallback,
                               void* aCallbackData);
-  virtual bool DoEmptyTransaction();
 
   virtual void SetRoot(Layer* aLayer);
 

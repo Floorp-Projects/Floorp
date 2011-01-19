@@ -1030,6 +1030,10 @@ public:
    * If PAINT_FLUSH_LAYERS is set, we'll force a completely new layer
    * tree to be created for this paint *and* the next paint.
    * 
+   * If PAINT_EXISTING_TRANSACTION is set, the reference frame's widget's
+   * layer manager has already had BeginTransaction() called on it and
+   * we should not call it again.
+   *
    * ComputeVisibility must be called before Paint.
    * 
    * This must only be called on the root display list of the display list
@@ -1038,7 +1042,8 @@ public:
   enum {
     PAINT_DEFAULT = 0,
     PAINT_USE_WIDGET_LAYERS = 0x01,
-    PAINT_FLUSH_LAYERS = 0x02
+    PAINT_FLUSH_LAYERS = 0x02,
+    PAINT_EXISTING_TRANSACTION = 0x04
   };
   void PaintRoot(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
                  PRUint32 aFlags) const;
