@@ -13,12 +13,14 @@
  *
  * The Original Code is Weave.
  *
- * The Initial Developer of the Original Code is Mozilla.
+ * The Initial Developer of the Original Code is
+ * the Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
  *  Dan Mills <thunder@mozilla.com>
+ *  Philipp von Weitershausen <philipp@weitershausen.de>
  *  Richard Newman <rnewman@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -35,7 +37,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ["CryptoWrapper", "CollectionKeys", "BulkKeyBundle", "SyncKeyBundle"];
+const EXPORTED_SYMBOLS = ["WBORecord", "RecordManager", "Records",
+                          "CryptoWrapper", "CollectionKeys", "BulkKeyBundle",
+                          "SyncKeyBundle", "Collection"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -43,10 +47,137 @@ const Cr = Components.results;
 const Cu = Components.utils;
 
 Cu.import("resource://services-sync/constants.js");
-Cu.import("resource://services-sync/base_records/wbo.js");
 Cu.import("resource://services-sync/identity.js");
-Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/log4moz.js");
+Cu.import("resource://services-sync/resource.js");
+Cu.import("resource://services-sync/util.js");
+
+function WBORecord(collection, id) {
+  this.data = {};
+  this.payload = {};
+  this.collection = collection;      // Optional.
+  this.id = id;                      // Optional.
+}
+WBORecord.prototype = {
+  _logName: "Record.WBO",
+
+  get sortindex() {
+    if (this.data.sortindex)
+      return this.data.sortindex;
+    return 0;
+  },
+
+  // Get thyself from your URI, then deserialize.
+  // Set thine 'response' field.
+  fetch: function fetch(uri) {
+    let r = new Resource(uri).get();
+    if (r.success) {
+      this.deserialize(r);   // Warning! Muffles exceptions!
+    }
+    this.response = r;
+    return this;
+  },
+  
+  upload: function upload(uri) {
+    return new Resource(uri).put(this);
+  },
+  
+  // Take a base URI string, with trailing slash, and return the URI of this
+  // WBO based on collection and ID.
+  uri: function(base) {
+    if (this.collection && this.id)
+      return Utils.makeURL(base + this.collection + "/" + this.id);
+    return null;
+  },
+  
+  deserialize: function deserialize(json) {
+    this.data = json.constructor.toString() == String ? JSON.parse(json) : json;
+
+    try {
+      // The payload is likely to be JSON, but if not, keep it as a string
+      this.payload = JSON.parse(this.payload);
+    } catch(ex) {}
+  },
+
+  toJSON: function toJSON() {
+    // Copy fields from data to be stringified, making sure payload is a string
+    let obj = {};
+    for (let [key, val] in Iterator(this.data))
+      obj[key] = key == "payload" ? JSON.stringify(val) : val;
+    if (this.ttl)
+      obj.ttl = this.ttl;
+    return obj;
+  },
+
+  toString: function WBORec_toString() "{ " + [
+      "id: " + this.id,
+      "index: " + this.sortindex,
+      "modified: " + this.modified,
+      "ttl: " + this.ttl,
+      "payload: " + JSON.stringify(this.payload)
+    ].join("\n  ") + " }",
+};
+
+Utils.deferGetSet(WBORecord, "data", ["id", "modified", "sortindex", "payload"]);
+
+Utils.lazy(this, 'Records', RecordManager);
+
+function RecordManager() {
+  this._log = Log4Moz.repository.getLogger(this._logName);
+  this._records = {};
+}
+RecordManager.prototype = {
+  _recordType: WBORecord,
+  _logName: "RecordMgr",
+
+  import: function RecordMgr_import(url) {
+    this._log.trace("Importing record: " + (url.spec ? url.spec : url));
+    try {
+      // Clear out the last response with empty object if GET fails
+      this.response = {};
+      this.response = new Resource(url).get();
+
+      // Don't parse and save the record on failure
+      if (!this.response.success)
+        return null;
+
+      let record = new this._recordType(url);
+      record.deserialize(this.response);
+
+      return this.set(url, record);
+    } catch(ex) {
+      this._log.debug("Failed to import record: " + Utils.exceptionStr(ex));
+      return null;
+    }
+  },
+
+  get: function RecordMgr_get(url) {
+    // Use a url string as the key to the hash
+    let spec = url.spec ? url.spec : url;
+    if (spec in this._records)
+      return this._records[spec];
+    return this.import(url);
+  },
+
+  set: function RecordMgr_set(url, record) {
+    let spec = url.spec ? url.spec : url;
+    return this._records[spec] = record;
+  },
+
+  contains: function RecordMgr_contains(url) {
+    if ((url.spec || url) in this._records)
+      return true;
+    return false;
+  },
+
+  clearCache: function recordMgr_clearCache() {
+    this._records = {};
+  },
+
+  del: function RecordMgr_del(url) {
+    delete this._records[url];
+  }
+};
 
 function CryptoWrapper(collection, id) {
   this.cleartext = {};
@@ -556,5 +687,119 @@ SyncKeyBundle.prototype = {
     // Individual sets: cheaper than calling parent setter.
     this._hmac = hmac;
     this._hmacObj = Utils.makeHMACKey(hmac);
+  }
+};
+
+
+function Collection(uri, recordObj) {
+  Resource.call(this, uri);
+  this._recordObj = recordObj;
+
+  this._full = false;
+  this._ids = null;
+  this._limit = 0;
+  this._older = 0;
+  this._newer = 0;
+  this._data = [];
+}
+Collection.prototype = {
+  __proto__: Resource.prototype,
+  _logName: "Collection",
+
+  _rebuildURL: function Coll__rebuildURL() {
+    // XXX should consider what happens if it's not a URL...
+    this.uri.QueryInterface(Ci.nsIURL);
+
+    let args = [];
+    if (this.older)
+      args.push('older=' + this.older);
+    else if (this.newer) {
+      args.push('newer=' + this.newer);
+    }
+    if (this.full)
+      args.push('full=1');
+    if (this.sort)
+      args.push('sort=' + this.sort);
+    if (this.ids != null)
+      args.push("ids=" + this.ids);
+    if (this.limit > 0 && this.limit != Infinity)
+      args.push("limit=" + this.limit);
+
+    this.uri.query = (args.length > 0)? '?' + args.join('&') : '';
+  },
+
+  // get full items
+  get full() { return this._full; },
+  set full(value) {
+    this._full = value;
+    this._rebuildURL();
+  },
+
+  // Apply the action to a certain set of ids
+  get ids() this._ids,
+  set ids(value) {
+    this._ids = value;
+    this._rebuildURL();
+  },
+
+  // Limit how many records to get
+  get limit() this._limit,
+  set limit(value) {
+    this._limit = value;
+    this._rebuildURL();
+  },
+
+  // get only items modified before some date
+  get older() { return this._older; },
+  set older(value) {
+    this._older = value;
+    this._rebuildURL();
+  },
+
+  // get only items modified since some date
+  get newer() { return this._newer; },
+  set newer(value) {
+    this._newer = value;
+    this._rebuildURL();
+  },
+
+  // get items sorted by some criteria. valid values:
+  // oldest (oldest first)
+  // newest (newest first)
+  // index
+  get sort() { return this._sort; },
+  set sort(value) {
+    this._sort = value;
+    this._rebuildURL();
+  },
+
+  pushData: function Coll_pushData(data) {
+    this._data.push(data);
+  },
+
+  clearRecords: function Coll_clearRecords() {
+    this._data = [];
+  },
+
+  set recordHandler(onRecord) {
+    // Save this because onProgress is called with this as the ChannelListener
+    let coll = this;
+
+    // Switch to newline separated records for incremental parsing
+    coll.setHeader("Accept", "application/newlines");
+
+    this._onProgress = function() {
+      let newline;
+      while ((newline = this._data.indexOf("\n")) > 0) {
+        // Split the json record from the rest of the data
+        let json = this._data.slice(0, newline);
+        this._data = this._data.slice(newline + 1);
+
+        // Deserialize a record from json and give it to the callback
+        let record = new coll._recordObj();
+        record.deserialize(json);
+        onRecord(record);
+      }
+    };
   }
 };
