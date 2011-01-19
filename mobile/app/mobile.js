@@ -543,7 +543,11 @@ pref("services.sync.prefs.sync.signon.rememberSignons", true);
 // threshold where a tap becomes a drag, in 1/240" reference pixels
 pref("ui.dragThreshold", 24);
 
+#if MOZ_PLATFORM_MAEMO == 6
+pref("layers.acceleration.disabled", false);
+#else
 pref("layers.acceleration.disabled", true);
+#endif
 
 pref("notification.feature.enabled", true);
 pref("indexedDB.feature.enabled", false);
