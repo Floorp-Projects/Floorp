@@ -58,6 +58,8 @@ PrefRec.prototype = {
   _logName: "Record.Pref",
 };
 
+Utils.deferGetSet(PrefRec, "cleartext", ["value"]);
+
 
 function PrefsEngine() {
   SyncEngine.call(this, "Prefs");
