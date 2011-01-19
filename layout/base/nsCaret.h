@@ -215,7 +215,6 @@ protected:
     struct Metrics {
       nscoord mBidiIndicatorSize; // width and height of bidi indicator
       nscoord mCaretWidth;        // full caret width including bidi indicator
-      PRUint32 mAppPerDev;        // App units per device units metric
     };
     Metrics ComputeMetrics(nsIFrame* aFrame, PRInt32 aOffset, nscoord aCaretHeight);
     nsresult GetGeometryForFrame(nsIFrame* aFrame,
