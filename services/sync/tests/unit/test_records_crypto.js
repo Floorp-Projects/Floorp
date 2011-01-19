@@ -1,6 +1,6 @@
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/record.js");
-Cu.import("resource://services-sync/auth.js");
+Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/log4moz.js");
 Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/util.js");

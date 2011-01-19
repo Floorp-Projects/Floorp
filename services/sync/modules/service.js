@@ -55,7 +55,6 @@ const CLUSTER_BACKOFF = 5 * 60 * 1000; // 5 minutes
 const PBKDF2_KEY_BYTES = 16;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://services-sync/auth.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
