@@ -40,7 +40,7 @@
 
 //The logic for have_ycbcr_to_rgb565 is taken from pixman-cpu.c
 
-#if !defined (__arm__)
+#if !defined (HAVE_ARM_NEON)
 
 int have_ycbcr_to_rgb565 ()
 {
