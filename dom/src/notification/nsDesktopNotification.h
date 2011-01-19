@@ -127,6 +127,8 @@ public:
    */
   void PostDesktopNotification();
 
+  void SetAllow(PRBool aAllow);
+
   /*
    * Creates and dispatches a dom event of type aName
    */
@@ -145,6 +147,8 @@ protected:
 
   nsRefPtr<AlertServiceObserver> mObserver;
   nsCOMPtr<nsIURI> mURI;
+  PRBool mAllow;
+  PRBool mShowHasBeenCalled;
 };
 
 /*
