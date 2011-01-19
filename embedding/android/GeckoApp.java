@@ -200,10 +200,13 @@ abstract public class GeckoApp
                 GeckoAppShell.loadGeckoLibs(
                     getApplication().getPackageResourcePath());
             }});
-        File libxulFile = new File(getCacheDir(), "libxul.so");
-        if (!libxulFile.exists() || 
-            libxulFile.lastModified() < 
-            new File(getApplication().getPackageResourcePath()).lastModified())
+        File cacheFile = GeckoAppShell.getCacheDir();
+        File libxulFile = new File(cacheFile, "libxul.so");
+
+        if (GeckoAppShell.getFreeSpace() > GeckoAppShell.kFreeSpaceThreshold &&
+            (!libxulFile.exists() || 
+             new File(getApplication().getPackageResourcePath()).lastModified()
+             >= libxulFile.lastModified()))
             surfaceView.mSplashStatusMsg =
                 getResources().getString(R.string.splash_screen_installing);
         else
