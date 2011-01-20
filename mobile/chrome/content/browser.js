@@ -2541,7 +2541,8 @@ Tab.prototype = {
       }
     }
 
-    browser.setWindowSize(viewportW, viewportH);
+    if (browser.contentWindowWidth != viewportW || browser.contentWindowHeight != viewportH)
+      browser.setWindowSize(viewportW, viewportH);
   },
 
   restoreViewportPosition: function restoreViewportPosition(aOldWidth, aNewWidth) {
@@ -2854,29 +2855,31 @@ var ViewableAreaObserver = {
 
     let newWidth = this.width;
     let newHeight = this.height;
-    if (newHeight != oldHeight || newWidth != oldWidth) {
-      Browser.styles["viewable-height"].height = newHeight + "px";
-      Browser.styles["viewable-height"].maxHeight = newHeight + "px";
+    if (newHeight == oldHeight && newWidth == oldWidth)
+      return;
 
-      Browser.styles["viewable-width"].width = newWidth + "px";
-      Browser.styles["viewable-width"].maxWidth = newWidth + "px";
+    Browser.styles["viewable-height"].height = newHeight + "px";
+    Browser.styles["viewable-height"].maxHeight = newHeight + "px";
 
-      for (let i = Browser.tabs.length - 1; i >= 0; i--) {
-        let tab = Browser.tabs[i];
-        tab.updateViewportSize();
+    Browser.styles["viewable-width"].width = newWidth + "px";
+    Browser.styles["viewable-width"].maxWidth = newWidth + "px";
 
-        // If the viewport width is still the same, the page layout has not
-        // changed, so we can keep keep the same content on-screen.
-        if (tab.browser.contentWindowWidth == oldWidth)
-          tab.restoreViewportPosition(oldWidth, newWidth);
-      }
+    for (let i = Browser.tabs.length - 1; i >= 0; i--) {
+      let tab = Browser.tabs[i];
+      tab.updateViewportSize();
+      tab.updateDefaultZoomLevel();
 
-      // setTimeout(callback, 0) to ensure the resize event handler dispatch is finished
-      setTimeout(function() {
-        let event = document.createEvent("Events");
-        event.initEvent("SizeChanged", true, false);
-        Elements.browsers.dispatchEvent(event);
-      }, 0);
+      // If the viewport width is still the same, the page layout has not
+      // changed, so we can keep keep the same content on-screen.
+      if (tab.browser.contentWindowWidth == oldWidth)
+        tab.restoreViewportPosition(oldWidth, newWidth);
     }
+
+    // setTimeout(callback, 0) to ensure the resize event handler dispatch is finished
+    setTimeout(function() {
+      let event = document.createEvent("Events");
+      event.initEvent("SizeChanged", true, false);
+      Elements.browsers.dispatchEvent(event);
+    }, 0);
   }
 };
