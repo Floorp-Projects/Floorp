@@ -6950,28 +6950,35 @@ CompExprTransplanter::transplant(JSParseNode *pn)
 
     switch (pn->pn_arity) {
       case PN_LIST:
-        for (JSParseNode *pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next)
-            transplant(pn2);
+        for (JSParseNode *pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
+            if (!transplant(pn2))
+                return false;
+        }
         if (pn->pn_pos >= root->pn_pos)
             AdjustBlockId(pn, adjust, tc);
         break;
 
       case PN_TERNARY:
-        transplant(pn->pn_kid1);
-        transplant(pn->pn_kid2);
-        transplant(pn->pn_kid3);
+        if (!transplant(pn->pn_kid1) ||
+            !transplant(pn->pn_kid2) ||
+            !transplant(pn->pn_kid3))
+            return false;
         break;
 
       case PN_BINARY:
-        transplant(pn->pn_left);
+        if (!transplant(pn->pn_left))
+            return false;
 
         /* Binary TOK_COLON nodes can have left == right. See bug 492714. */
-        if (pn->pn_right != pn->pn_left)
-            transplant(pn->pn_right);
+        if (pn->pn_right != pn->pn_left) {
+            if (!transplant(pn->pn_right))
+                return false;
+        }
         break;
 
       case PN_UNARY:
-        transplant(pn->pn_kid);
+        if (!transplant(pn->pn_kid))
+            return false;
         break;
 
       case PN_FUNC:
@@ -7006,7 +7013,8 @@ CompExprTransplanter::transplant(JSParseNode *pn)
       }
 
       case PN_NAME:
-        transplant(pn->maybeExpr());
+        if (!transplant(pn->maybeExpr()))
+            return false;
         if (pn->pn_arity == PN_FUNC)
             --funcLevel;
 
@@ -7084,7 +7092,8 @@ CompExprTransplanter::transplant(JSParseNode *pn)
         break;
 
       case PN_NAMESET:
-        transplant(pn->pn_tree);
+        if (!transplant(pn->pn_tree))
+            return false;
         break;
     }
     return true;
