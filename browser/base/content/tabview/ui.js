@@ -342,13 +342,15 @@ let UI = {
         item.parent.remove(item);
       groupItem.add(item, {immediately: true});
     });
-    
+    GroupItems.setActiveGroupItem(groupItem);
+
     if (firstTime) {
       gPrefBranch.setBoolPref("experienced_first_run", true);
       // ensure that the first run pref is flushed to the file, in case a crash 
       // or force quit happens before the pref gets flushed automatically.
       Services.prefs.savePrefFile(null);
 
+      /* DISABLED BY BUG 626754. To be reenabled via bug 626926.
       let url = gPrefBranch.getCharPref("welcome_url");
       let newTab = gBrowser.loadOneTab(url, {inBackground: true});
       let newTabItem = newTab._tabViewTabItem;
@@ -360,11 +362,11 @@ let UI = {
       let welcomeBounds = new Rect(UI.rtl ? pageBounds.left : box.right, box.top,
                                    welcomeWidth, welcomeWidth * aspect);
       newTabItem.setBounds(welcomeBounds, true);
-      GroupItems.setActiveGroupItem(groupItem);
 
       // Remove the newly created welcome-tab from the tab bar
       if (!this.isTabViewVisible())
         GroupItems._updateTabBar();
+      */
     }
   },
 
