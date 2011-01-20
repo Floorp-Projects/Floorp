@@ -71,10 +71,20 @@ enum VersionComparisonOp {
 };
 
 /* A zero-terminated array of devices to match, or all devices */
-typedef const PRUint32 *GfxDeviceFamily;
+typedef PRUint32 *GfxDeviceFamily;
 
 struct GfxDriverInfo
 {
+  // If |ownDevices| is true, you are transferring ownership of the devices
+  // array, and it will be deleted when this GfxDriverInfo is destroyed.
+  GfxDriverInfo(OperatingSystem os, PRUint32 vendor, GfxDeviceFamily devices,
+                PRInt32 feature, PRInt32 featureStatus, VersionComparisonOp op,
+                PRUint64 driverVersion, bool ownDevices = false);
+
+  GfxDriverInfo();
+  GfxDriverInfo(const GfxDriverInfo&);
+  ~GfxDriverInfo();
+
   OperatingSystem mOperatingSystem;
 
   PRUint32 mAdapterVendor;
@@ -82,6 +92,10 @@ struct GfxDriverInfo
 
   GfxDeviceFamily mDevices;
   static GfxDeviceFamily allDevices;
+
+  // Whether the mDevices array should be deleted when this structure is
+  // deallocated. False by default.
+  bool mDeleteDevices;
 
   /* A feature from nsIGfxInfo, or all features */
   PRInt32 mFeature;

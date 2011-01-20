@@ -77,11 +77,11 @@ GfxInfo::GetDWriteVersion(nsAString & aDwriteVersion)
   return NS_ERROR_FAILURE;
 }
 
-void
+nsresult
 GfxInfo::Init()
 {
+  return GfxInfoBase::Init();
 }
-
 
 /* readonly attribute DOMString adapterDescription; */
 NS_IMETHODIMP

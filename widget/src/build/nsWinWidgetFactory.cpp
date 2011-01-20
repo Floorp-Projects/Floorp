@@ -103,7 +103,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(JumpListShortcut)
 
 namespace mozilla {
 namespace widget {
-NS_GENERIC_FACTORY_CONSTRUCTOR(GfxInfo)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(GfxInfo, Init);
 }
 }
 

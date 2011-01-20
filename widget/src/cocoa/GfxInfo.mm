@@ -52,10 +52,12 @@
 
 using namespace mozilla::widget;
 
-void
+nsresult
 GfxInfo::Init()
 {
   NS_TIME_FUNCTION;
+
+  nsresult rv = GfxInfoBase::Init();
 
   CGLRendererInfoObj renderer = 0;
   GLint rendererCount = 0;
@@ -63,7 +65,7 @@ GfxInfo::Init()
   memset(mRendererIDs, 0, sizeof(mRendererIDs));
 
   if (CGLQueryRendererInfo(0xffffffff, &renderer, &rendererCount) != kCGLNoError)
-    return;
+    return rv;
 
   rendererCount = (GLint) PR_MIN(rendererCount, (GLint) NS_ARRAY_LENGTH(mRendererIDs));
   for (GLint i = 0; i < rendererCount; i++) {
@@ -88,6 +90,8 @@ GfxInfo::Init()
   CGLDestroyRendererInfo(renderer);
 
   AddCrashReportAnnotations();
+
+  return rv;
 }
 
 NS_IMETHODIMP

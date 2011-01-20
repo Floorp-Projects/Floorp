@@ -48,9 +48,6 @@ namespace widget {
 class GfxInfo : public GfxInfoBase
 {
 public:
-  GfxInfo() {Init();}
-  virtual ~GfxInfo() {}
-
   // We only declare the subset of nsIGfxInfo that we actually implement. The
   // rest is brought forward from GfxInfoBase.
   NS_SCRIPTABLE NS_IMETHOD GetD2DEnabled(PRBool *aD2DEnabled);
@@ -67,13 +64,14 @@ public:
   using GfxInfoBase::GetFeatureSuggestedDriverVersion;
   using GfxInfoBase::GetWebGLParameter;
 
+  virtual nsresult Init();
+
 protected:
 
   virtual nsresult GetFeatureStatusImpl(PRInt32 aFeature, PRInt32 *aStatus, nsAString & aSuggestedDriverVersion);
 
 private:
 
-  void Init();
   void AddCrashReportAnnotations();
   nsString mDeviceString;
   nsString mDeviceID;
