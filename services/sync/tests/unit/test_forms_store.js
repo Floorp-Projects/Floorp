@@ -1,6 +1,5 @@
 _("Make sure the form store follows the Store api and correctly accesses the backend form storage");
 Cu.import("resource://services-sync/engines/forms.js");
-Cu.import("resource://services-sync/type_records/forms.js");
 
 function run_test() {
   let baseuri = "http://fake/uri/";

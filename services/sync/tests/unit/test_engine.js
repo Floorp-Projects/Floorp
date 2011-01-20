@@ -1,7 +1,5 @@
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/ext/Observers.js");
-Cu.import("resource://services-sync/stores.js");
-Cu.import("resource://services-sync/trackers.js");
 Cu.import("resource://services-sync/util.js");
 
 

@@ -87,7 +87,7 @@ let Status = {
 
     Cu.import("resource://services-sync/util.js");
     Cu.import("resource://services-sync/identity.js");
-    Cu.import("resource://services-sync/base_records/crypto.js");
+    Cu.import("resource://services-sync/record.js");
     if (!Utils.mpLocked()) {
       let id = ID.get("WeaveID");
       if (!id)

@@ -5,7 +5,7 @@ Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/util.js");
 Svc.DefaultPrefs.set("registerEngines", "");
 Cu.import("resource://services-sync/service.js");
-Cu.import("resource://services-sync/base_records/crypto.js");
+Cu.import("resource://services-sync/record.js");
 
 initTestLogging();
 

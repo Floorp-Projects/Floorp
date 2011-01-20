@@ -1,7 +1,5 @@
-Cu.import("resource://services-sync/base_records/wbo.js");
-Cu.import("resource://services-sync/base_records/crypto.js");
+Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/engines/history.js");
-Cu.import("resource://services-sync/type_records/history.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/identity.js");
