@@ -418,6 +418,11 @@ protected:
                               PRBool aIsInsert);
 
   /**
+   * Create accessible tree.
+   */
+  void CacheChildrenInSubtree(nsAccessible* aRoot);
+
+  /**
    * Remove accessibles in subtree from node to accessible map.
    */
   void UncacheChildrenInSubtree(nsAccessible* aRoot);
