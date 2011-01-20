@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *  Dan Mills <thunder@mozilla.com>
+ *  Philipp von Weitershausen <philipp@weitershausen.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ["Clients"];
+const EXPORTED_SYMBOLS = ["Clients", "ClientsRec"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -43,11 +44,23 @@ const Cu = Components.utils;
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/ext/StringBundle.js");
-Cu.import("resource://services-sync/stores.js");
-Cu.import("resource://services-sync/type_records/clients.js");
+Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/util.js");
 
+const CLIENTS_TTL = 1814400; // 21 days
 const CLIENTS_TTL_REFRESH = 604800; // 7 days
+
+function ClientsRec(collection, id) {
+  CryptoWrapper.call(this, collection, id);
+}
+ClientsRec.prototype = {
+  __proto__: CryptoWrapper.prototype,
+  _logName: "Record.Clients",
+  ttl: CLIENTS_TTL
+};
+
+Utils.deferGetSet(ClientsRec, "cleartext", ["name", "type", "commands"]);
+
 
 Utils.lazy(this, "Clients", ClientEngine);
 

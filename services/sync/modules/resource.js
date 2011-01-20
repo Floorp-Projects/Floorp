@@ -36,20 +36,78 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ["Resource", "AsyncResource"];
+const EXPORTED_SYMBOLS = ["Resource", "AsyncResource",
+                          "Auth", "BrokenBasicAuthenticator",
+                          "BasicAuthenticator", "NoOpAuthenticator"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-Cu.import("resource://services-sync/auth.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/ext/Observers.js");
 Cu.import("resource://services-sync/ext/Preferences.js");
 Cu.import("resource://services-sync/ext/Sync.js");
 Cu.import("resource://services-sync/log4moz.js");
 Cu.import("resource://services-sync/util.js");
+
+Utils.lazy(this, 'Auth', AuthMgr);
+
+// XXX: the authenticator api will probably need to be changed to support
+// other methods (digest, oauth, etc)
+
+function NoOpAuthenticator() {}
+NoOpAuthenticator.prototype = {
+  onRequest: function NoOpAuth_onRequest(headers) {
+    return headers;
+  }
+};
+
+// Warning: This will drop the high unicode bytes from passwords.
+// Use BasicAuthenticator to send non-ASCII passwords UTF8-encoded.
+function BrokenBasicAuthenticator(identity) {
+  this._id = identity;
+}
+BrokenBasicAuthenticator.prototype = {
+  onRequest: function BasicAuth_onRequest(headers) {
+    headers['Authorization'] = 'Basic ' +
+      btoa(this._id.username + ':' + this._id.password);
+    return headers;
+  }
+};
+
+function BasicAuthenticator(identity) {
+  this._id = identity;
+}
+BasicAuthenticator.prototype = {
+  onRequest: function onRequest(headers) {
+    headers['Authorization'] = 'Basic ' +
+      btoa(this._id.username + ':' + this._id.passwordUTF8);
+    return headers;
+  }
+};
+
+function AuthMgr() {
+  this._authenticators = {};
+  this.defaultAuthenticator = new NoOpAuthenticator();
+}
+AuthMgr.prototype = {
+  defaultAuthenticator: null,
+
+  registerAuthenticator: function AuthMgr_register(match, authenticator) {
+    this._authenticators[match] = authenticator;
+  },
+
+  lookupAuthenticator: function AuthMgr_lookup(uri) {
+    for (let match in this._authenticators) {
+      if (uri.match(match))
+        return this._authenticators[match];
+    }
+    return this.defaultAuthenticator;
+  }
+};
+
 
 /*
  * AsyncResource represents a remote network resource, identified by a URI.
