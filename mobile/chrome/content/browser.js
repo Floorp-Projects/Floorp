@@ -2279,18 +2279,9 @@ var ContentCrashObserver = {
 };
 
 var MemoryObserver = {
-  _lastOOM: 0,
-
   observe: function mo_observe(aSubject, aTopic, aData) {
     if (aData == "heap-minimize") {
       // do non-destructive stuff here.
-      return;
-    }
-
-    if (this._lastOOM != 0 &&
-        Date.now() - this._lastOOM < 10000) {
-      let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup);
-      appStartup.quit(Ci.nsIAppStartup.eForceQuit);
       return;
     }
 
@@ -2304,7 +2295,6 @@ var MemoryObserver = {
     window.QueryInterface(Ci.nsIInterfaceRequestor)
           .getInterface(Ci.nsIDOMWindowUtils).garbageCollect();
     Cu.forceGC();
-    this._lastOOM = Date.now();
   }
 };
 
