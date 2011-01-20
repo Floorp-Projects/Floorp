@@ -307,6 +307,17 @@ public:
    */
   PRInt32 GetFilterFromAccept();
 
+  /**
+   * The form might need to request an update of the UI bits
+   * (BF_CAN_SHOW_INVALID_UI and BF_CAN_SHOW_VALID_UI) when an invalid form
+   * submission is tried.
+   *
+   * @param aIsFocused Whether the element is currently focused.
+   *
+   * @note The caller is responsible to call ContentStatesChanged.
+   */
+  void UpdateValidityUIBits(bool aIsFocused);
+
 protected:
   // Pull IsSingleLineTextControl into our scope, otherwise it'd be hidden
   // by the nsITextControlElement version.
