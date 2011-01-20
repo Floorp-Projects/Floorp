@@ -112,6 +112,7 @@ _BROWSER_TEST_FILES = \
 	browser_495495.js \
 	browser_500328.js \
 	browser_514751.js \
+	browser_522375.js \
 	browser_522545.js \
 	browser_524745.js \
 	browser_528776.js \
@@ -135,7 +136,7 @@ _BROWSER_TEST_FILES = \
 	browser_607016.js \
 	browser_615394-SSWindowState_events.js \
 	browser_618151.js \
-	browser_522375.js \
+	browser_623779.js \
 	$(NULL)
 
 ifneq ($(OS_ARCH),Darwin)
