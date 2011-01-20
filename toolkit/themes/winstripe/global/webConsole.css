@@ -59,10 +59,23 @@
   overflow: auto;
 }
 
-.hud-main-label {
-  font-size: 1em;
-  padding-top: 0.33em;
-  font-weight: bold;
+/* General output styles */
+
+.webconsole-timestamp {
+  color: GrayText;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.webconsole-msg-icon {
+  list-style-image: url(chrome://global/skin/icons/webconsole.png);
+  margin: 2px 3px;
+  width: 10px;
+  height: 10px;
+}
+
+.webconsole-msg-log > .webconsole-msg-icon-container > .webconsole-msg-icon {
+  visibility: hidden;
 }
 
 .hud-clickable {
@@ -70,49 +83,38 @@
   text-decoration: underline;
 }
 
-.hud-network {
-  color: blue;
+.webconsole-msg-body {
+  margin-top: 0;
+  margin-bottom: 3px;
+  -moz-margin-start: 3px;
+  -moz-margin-end: 6px;
 }
 
-.hud-error {
-  color: red;
+.webconsole-location {
+  margin-top: 0;
+  margin-bottom: 0;
+  -moz-margin-start: 0;
+  -moz-margin-end: 6px;
+  width: 10em;
+  text-align: end;
 }
 
-.hud-log {
-  color: black;
+.hud-msg-node[selected="true"] > .webconsole-timestamp,
+.hud-msg-node[selected="true"] > .webconsole-location {
+  color: inherit;
 }
 
-.hud-warn {
-  color: orange;
-}
-
-.hud-info {
-  color: green;
-}
-
-.hud-exception {
-  color: red;
-  font-weight: bold;
-}
-
-.hud-msg-node {    
-  width: 100%;
-  margin-top: 0.3em;
-  margin-bottom: 0.3em;
-  padding-left: 1em;
-  -moz-user-select: text;
-  white-space: pre-wrap;
-  -moz-user-focus: normal;
+.hud-output-node,
+.jsterm-input-node,
+.jsterm-complete-node {
+  font: 12px Consolas, Lucida Console, monospace;
 }
 
 .hud-output-node {
-  border-bottom: 1px solid #ddd;
-  border-top: 1px solid #ddd;
-  overflow-x: auto;
-  overflow: auto;
-  font: 1em monospace;
-  background-color: white;
-  width: 100%;
+  -moz-appearance: none;
+  border-bottom: 1px solid ThreeDShadow;
+  border-top: 1px solid ThreeDShadow;
+  margin: 0;
 }
 
 .hud-filtered-by-type,
@@ -129,24 +131,79 @@
   list-style-image: url("chrome://global/skin/icons/webconsole.png");
 }
 
-/* Network button */
+/* Network styles */
 .webconsole-filter-button[category="net"] {
   -moz-image-region: rect(0, 40px, 10px, 30px);
 }
 
-/* CSS button */
+.webconsole-msg-network > .webconsole-msg-icon-container {
+  -moz-border-start: solid #000 6px;
+}
+
+.webconsole-msg-network.webconsole-msg-error > .webconsole-msg-icon-container > .webconsole-msg-icon {
+  -moz-image-region: rect(0, 10px, 10px, 0);
+}
+
+/* CSS styles */
 .webconsole-filter-button[category="css"] {
   -moz-image-region: rect(10px, 40px, 20px, 30px);
 }
 
-/* JS button */
+.webconsole-msg-cssparser > .webconsole-msg-icon-container {
+  -moz-border-start: solid #00b6f0 6px;
+}
+
+.webconsole-msg-cssparser.webconsole-msg-error > .webconsole-msg-icon-container > .webconsole-msg-icon {
+  -moz-image-region: rect(10px, 10px, 20px, 0);
+}
+
+.webconsole-msg-cssparser.webconsole-msg-warn > .webconsole-msg-icon-container > .webconsole-msg-icon {
+  -moz-image-region: rect(10px, 20px, 20px, 10px);
+}
+
+/* JS styles */
 .webconsole-filter-button[category="js"] {
   -moz-image-region: rect(20px, 40px, 30px, 30px);
 }
 
-/* Web Developer button */
+.webconsole-msg-exception > .webconsole-msg-icon-container {
+  -moz-border-start: solid #fb9500 6px;
+}
+
+.webconsole-msg-exception.webconsole-msg-error > .webconsole-msg-icon-container > .webconsole-msg-icon {
+  -moz-image-region: rect(20px, 10px, 30px, 0);
+}
+
+.webconsole-msg-exception.webconsole-msg-warn > .webconsole-msg-icon-container > .webconsole-msg-icon {
+  -moz-image-region: rect(20px, 20px, 30px, 10px);
+}
+
+/* Web Developer styles */
 .webconsole-filter-button[category="webdev"] {
   -moz-image-region: rect(30px, 40px, 40px, 30px);
+}
+
+.webconsole-msg-console > .webconsole-msg-icon-container {
+  -moz-border-start: solid #cbcbcb 6px;
+}
+
+.webconsole-msg-console.webconsole-msg-error > .webconsole-msg-icon-container > .webconsole-msg-icon,
+.webconsole-msg-output.webconsole-msg-error > .webconsole-msg-icon-container > .webconsole-msg-icon {
+  -moz-image-region: rect(30px, 10px, 40px, 0);
+}
+
+.webconsole-msg-console.webconsole-msg-warn > .webconsole-msg-icon-container > .webconsole-msg-icon {
+  -moz-image-region: rect(30px, 20px, 40px, 10px);
+}
+
+.webconsole-msg-console.webconsole-msg-info > .webconsole-msg-icon-container > .webconsole-msg-icon {
+  -moz-image-region: rect(30px, 30px, 40px, 20px);
+}
+
+/* Input and output styles */
+.webconsole-msg-input > .webconsole-msg-icon-container,
+.webconsole-msg-output > .webconsole-msg-icon-container {
+  border-left: solid #808080 6px;
 }
 
 .webconsole-close-button {
@@ -198,8 +255,6 @@
 
 .jsterm-input-node,
 .jsterm-complete-node {
-  font-family: monospace;
-  font-size: 9pt;
   border: none;
   padding: 0 0 0 16px;
   -moz-appearance: none;
