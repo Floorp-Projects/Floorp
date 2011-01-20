@@ -134,7 +134,7 @@ PlaceInfo::GetVisits(JSContext* aContext,
 NS_IMPL_ISUPPORTS1(
   PlaceInfo
 , mozIPlaceInfo
-);
+)
 
 } // namespace places
 } // namespace mozilla
