@@ -7052,21 +7052,22 @@ CompExprTransplanter::transplant(JSParseNode *pn)
                 JS_ASSERT(!tc->decls.lookup(atom));
 
                 if (dn->pn_pos < root->pn_pos || dn->isPlaceholder()) {
-                    JSAtomListElement *ale = tc->lexdeps.add(tc->parser, dn->pn_atom);
+                    JSAtomListElement *ale = tc->lexdeps.add(tc->parser, atom);
                     if (!ale)
                         return false;
 
                     if (dn->pn_pos >= root->pn_pos) {
                         tc->parent->lexdeps.remove(tc->parser, atom);
                     } else {
-                        JSDefinition *dn2 = (JSDefinition *)NameNode::create(dn->pn_atom, tc);
+                        JSDefinition *dn2 = (JSDefinition *)NameNode::create(atom, tc);
                         if (!dn2)
                             return false;
 
-                        dn2->pn_type = dn->pn_type;
-                        dn2->pn_pos = root->pn_pos;
+                        dn2->pn_type = TOK_NAME;
+                        dn2->pn_op = JSOP_NOP;
                         dn2->pn_defn = true;
                         dn2->pn_dflags |= PND_PLACEHOLDER;
+                        dn2->pn_pos = root->pn_pos;
 
                         JSParseNode **pnup = &dn->dn_uses;
                         JSParseNode *pnu;
