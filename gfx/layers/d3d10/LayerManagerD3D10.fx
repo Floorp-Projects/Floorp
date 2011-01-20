@@ -41,19 +41,6 @@ BlendState NonPremul
   RenderTargetWriteMask[0] = 0x0F; // All
 };
 
-BlendState ComponentAlphaBlend
-{
-  AlphaToCoverageEnable = FALSE;
-  BlendEnable[0] = TRUE;
-  SrcBlend = One;
-  DestBlend = Inv_Src1_Color;
-  BlendOp = Add;
-  SrcBlendAlpha = Zero;
-  DestBlendAlpha = One;
-  BlendOpAlpha = Add;
-  RenderTargetWriteMask[0] = 0x0F; // All
-};
-
 RasterizerState LayerRast
 {
   ScissorEnable = True;
@@ -64,7 +51,6 @@ Texture2D tRGB;
 Texture2D tY;
 Texture2D tCb;
 Texture2D tCr;
-Texture2D tRGBWhite;
 
 SamplerState LayerTextureSamplerLinear
 {
@@ -87,11 +73,6 @@ struct VS_INPUT {
 struct VS_OUTPUT {
   float4 vPosition : SV_Position;
   float2 vTexCoords : TEXCOORD0;
-};
-
-struct PS_OUTPUT {
-  float4 vSrc;
-  float4 vAlpha;
 };
 
 VS_OUTPUT LayerQuadVS(const VS_INPUT aVertex)
@@ -164,17 +145,6 @@ float4 YCbCrShader(const VS_OUTPUT aVertex) : SV_Target
   color.a = 1.0f;
  
   return color * fLayerOpacity;
-}
-
-PS_OUTPUT ComponentAlphaShader(const VS_OUTPUT aVertex) : SV_Target
-{
-  PS_OUTPUT result;
-
-  result.vSrc = tRGB.Sample(LayerTextureSamplerLinear, aVertex.vTexCoords);
-  result.vAlpha = 1.0 - tRGBWhite.Sample(LayerTextureSamplerLinear, aVertex.vTexCoords) + result.vSrc;
-  result.vSrc *= fLayerOpacity;
-  result.vAlpha *= fLayerOpacity;
-  return result;
 }
 
 float4 SolidColorShader(const VS_OUTPUT aVertex) : SV_Target
@@ -264,19 +234,6 @@ technique10 RenderYCbCrLayer
         SetGeometryShader( NULL );
         SetPixelShader( CompileShader( ps_4_0_level_9_3, YCbCrShader() ) );
     }
-}
-
-technique10 RenderComponentAlphaLayer
-{
-	Pass P0
-	{
-	    SetRasterizerState( LayerRast );
-        SetBlendState( ComponentAlphaBlend, float4( 0.0f, 0.0f, 0.0f, 0.0f ), 0xFFFFFFFF );
-        SetVertexShader( CompileShader( vs_4_0_level_9_3, LayerQuadVS() ) );
-        SetGeometryShader( NULL );
-        SetPixelShader( CompileShader( ps_4_0_level_9_3, ComponentAlphaShader() ) );
-	}
-
 }
 
 technique10 RenderSolidColorLayer
