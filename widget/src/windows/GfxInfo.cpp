@@ -45,6 +45,7 @@
 #include "mozilla/FunctionTimer.h"
 #include "prenv.h"
 #include "prprf.h"
+#include "GfxDriverInfo.h"
 
 #if defined(MOZ_CRASHREPORTER) && defined(MOZ_ENABLE_LIBXUL)
 #include "nsExceptionHandler.h"
@@ -395,39 +396,8 @@ GfxInfo::AddCrashReportAnnotations()
 #endif
 }
 
-enum VersionComparisonOp {
-  DRIVER_LESS_THAN,             // driver <  version
-  DRIVER_LESS_THAN_OR_EQUAL,    // driver <= version
-  DRIVER_GREATER_THAN,          // driver >  version
-  DRIVER_GREATER_THAN_OR_EQUAL, // driver >= version
-  DRIVER_EQUAL,                 // driver == version
-  DRIVER_NOT_EQUAL,             // driver != version
-  DRIVER_BETWEEN_EXCLUSIVE,     // driver > version && driver < versionMax
-  DRIVER_BETWEEN_INCLUSIVE,     // driver >= version && driver <= versionMax
-  DRIVER_BETWEEN_INCLUSIVE_START // driver >= version && driver < versionMax
-};
-
-typedef const PRUint32 *GfxDeviceFamily;
-
-struct GfxDriverInfo {
-  PRUint32 windowsVersion;
-
-  PRUint32 vendor;
-  GfxDeviceFamily devices;
-
-  PRInt32 feature;
-  PRInt32 featureStatus;
-
-  VersionComparisonOp op;
-
-  /* versions are assumed to be A.B.C.D packed as 0xAAAABBBBCCCCDDDD */
-  PRUint64 version;
-  PRUint64 versionMax;
-};
-
 static const PRUint32 allWindowsVersions = 0xffffffff;
 static const PRInt32  allFeatures = -1;
-static const PRUint32 *allDevices = (PRUint32*) nsnull;
 static const PRUint64 allDriverVersions = 0xffffffffffffffffULL;
 
 /* Intel vendor and device IDs */
@@ -437,7 +407,7 @@ static const PRUint32 vendorIntel = 0x8086;
 
 /* AMD vendor and device IDs */
 
-#define V(a,b,c,d)   ((PRUint64(a)<<48) | (PRUint64(b)<<32) | (PRUint64(c)<<16) | PRUint64(d))
+#define V(a,b,c,d) GFX_DRIVER_VERSION(a,b,c,d)
 
 static const PRUint32 deviceFamilyIntelGMA500[] = {
     0x8108, /* IntelGMA500_1 */
@@ -541,7 +511,7 @@ static const GfxDriverInfo driverInfo[] = {
   /*
    * Implement special Direct2D blocklist from bug 595364
    */
-  { allWindowsVersions,
+  { DRIVER_OS_ALL,
     vendorIntel, deviceFamilyIntelBlockDirect2D,
     nsIGfxInfo::FEATURE_DIRECT2D, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
     DRIVER_LESS_THAN, allDriverVersions },
@@ -556,34 +526,34 @@ static const GfxDriverInfo driverInfo[] = {
     allFeatures, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,           \
     DRIVER_LESS_THAN, driverVer },
 
-  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(gfxWindowsPlatform::kWindowsXP, deviceFamilyIntelGMA500,   V(6,14,11,1018))
-  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(gfxWindowsPlatform::kWindowsXP, deviceFamilyIntelGMA900,   V(6,14,10,4764))
-  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(gfxWindowsPlatform::kWindowsXP, deviceFamilyIntelGMA950,   V(6,14,10,4926))
-  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(gfxWindowsPlatform::kWindowsXP, deviceFamilyIntelGMA3150,  V(6,14,10,5260))
-  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(gfxWindowsPlatform::kWindowsXP, deviceFamilyIntelGMAX3000, V(6,14,10,5218))
-  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(gfxWindowsPlatform::kWindowsXP, deviceFamilyIntelGMAX4500HD, V(6,14,10,5284))
+  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_XP, deviceFamilyIntelGMA500,   V(6,14,11,1018))
+  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_XP, deviceFamilyIntelGMA900,   V(6,14,10,4764))
+  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_XP, deviceFamilyIntelGMA950,   V(6,14,10,4926))
+  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_XP, deviceFamilyIntelGMA3150,  V(6,14,10,5260))
+  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_XP, deviceFamilyIntelGMAX3000, V(6,14,10,5218))
+  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_XP, deviceFamilyIntelGMAX4500HD, V(6,14,10,5284))
 
-  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(gfxWindowsPlatform::kWindowsVista, deviceFamilyIntelGMA500,   V(7,14,10,1006))
-  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(gfxWindowsPlatform::kWindowsVista, deviceFamilyIntelGMA900,   allDriverVersions)
-  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(gfxWindowsPlatform::kWindowsVista, deviceFamilyIntelGMA950,   V(7,14,10,1504))
-  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(gfxWindowsPlatform::kWindowsVista, deviceFamilyIntelGMA3150,  V(7,14,10,2124))
-  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(gfxWindowsPlatform::kWindowsVista, deviceFamilyIntelGMAX3000, V(7,15,10,1666))
-  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(gfxWindowsPlatform::kWindowsVista, deviceFamilyIntelGMAX4500HD, V(8,15,10,2202))
+  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_VISTA, deviceFamilyIntelGMA500,   V(7,14,10,1006))
+  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_VISTA, deviceFamilyIntelGMA900,   allDriverVersions)
+  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_VISTA, deviceFamilyIntelGMA950,   V(7,14,10,1504))
+  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_VISTA, deviceFamilyIntelGMA3150,  V(7,14,10,2124))
+  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_VISTA, deviceFamilyIntelGMAX3000, V(7,15,10,1666))
+  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_VISTA, deviceFamilyIntelGMAX4500HD, V(8,15,10,2202))
 
-  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(gfxWindowsPlatform::kWindows7, deviceFamilyIntelGMA500,   V(5,0,0,2026))
-  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(gfxWindowsPlatform::kWindows7, deviceFamilyIntelGMA900,   allDriverVersions)
-  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(gfxWindowsPlatform::kWindows7, deviceFamilyIntelGMA950,   V(8,15,10,1930))
-  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(gfxWindowsPlatform::kWindows7, deviceFamilyIntelGMA3150,  V(8,14,10,2117))
-  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(gfxWindowsPlatform::kWindows7, deviceFamilyIntelGMAX3000, V(8,15,10,1930))
-  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(gfxWindowsPlatform::kWindows7, deviceFamilyIntelGMAX4500HD, V(8,15,10,2202))
+  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_7, deviceFamilyIntelGMA500,   V(5,0,0,2026))
+  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_7, deviceFamilyIntelGMA900,   allDriverVersions)
+  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_7, deviceFamilyIntelGMA950,   V(8,15,10,1930))
+  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_7, deviceFamilyIntelGMA3150,  V(8,14,10,2117))
+  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_7, deviceFamilyIntelGMAX3000, V(8,15,10,1930))
+  IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_7, deviceFamilyIntelGMAX4500HD, V(8,15,10,2202))
 
   /* OpenGL on any Intel hardware is discouraged */
-  { allWindowsVersions,
-    vendorIntel, allDevices,
+  { DRIVER_OS_ALL,
+    vendorIntel, nsnull,
     nsIGfxInfo::FEATURE_OPENGL_LAYERS, nsIGfxInfo::FEATURE_DISCOURAGED,
     DRIVER_LESS_THAN, allDriverVersions },
-  { allWindowsVersions,
-    vendorIntel, allDevices,
+  { DRIVER_OS_ALL,
+    vendorIntel, nsnull,
     nsIGfxInfo::FEATURE_WEBGL_OPENGL, nsIGfxInfo::FEATURE_DISCOURAGED,
     DRIVER_LESS_THAN, allDriverVersions },
 
@@ -595,24 +565,27 @@ static const GfxDriverInfo driverInfo[] = {
    * AMD entries
    */
 
-  { 0, 0, allDevices, 0 }
+  { (OperatingSystem)0, 0, nsnull, 0 }
 };
 
-static bool
-ParseDriverVersion(nsAString& aVersion, PRUint64 *aNumericVersion)
+static OperatingSystem
+WindowsVersionToOperatingSystem(PRInt32 aWindowsVersion)
 {
-  int a, b, c, d;
-  /* honestly, why do I even bother */
-  if (sscanf(nsPromiseFlatCString(NS_LossyConvertUTF16toASCII(aVersion)).get(),
-             "%d.%d.%d.%d", &a, &b, &c, &d) != 4)
-    return false;
-  if (a < 0 || a > 0xffff) return false;
-  if (b < 0 || b > 0xffff) return false;
-  if (c < 0 || c > 0xffff) return false;
-  if (d < 0 || d > 0xffff) return false;
-
-  *aNumericVersion = V(a, b, c, d);
-  return true;
+  switch(aWindowsVersion) {
+    case gfxWindowsPlatform::kWindows2000:
+      return DRIVER_OS_WINDOWS_2000;
+    case gfxWindowsPlatform::kWindowsXP:
+      return DRIVER_OS_WINDOWS_XP;
+    case gfxWindowsPlatform::kWindowsServer2003:
+      return DRIVER_OS_WINDOWS_SERVER_2003;
+    case gfxWindowsPlatform::kWindowsVista:
+      return DRIVER_OS_WINDOWS_VISTA;
+    case gfxWindowsPlatform::kWindows7:
+      return DRIVER_OS_WINDOWS_7;
+    case gfxWindowsPlatform::kWindowsUnknown:
+    default:
+      return DRIVER_OS_UNKNOWN;
+    };
 }
 
 nsresult
@@ -656,24 +629,27 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32 *aStatus, nsAString & aS
     return NS_OK;
   }
 
-  const GfxDriverInfo *info = &driverInfo[0];
-  while (info->windowsVersion) {
+  OperatingSystem os = WindowsVersionToOperatingSystem(windowsVersion);
 
-    if (info->windowsVersion != allWindowsVersions &&
-        info->windowsVersion != windowsVersion)
+  const GfxDriverInfo *info = &driverInfo[0];
+  while (info->mOperatingSystem) {
+
+    if (info->mOperatingSystem != DRIVER_OS_ALL &&
+        info->mOperatingSystem != os)
     {
       info++;
       continue;
     }
 
-    if (info->vendor != adapterVendor) {
+    if (info->mAdapterVendor != GfxDriverInfo::allAdapterVendors &&
+        info->mAdapterVendor != adapterVendor) {
       info++;
       continue;
     }
 
-    if (info->devices != allDevices) {
+    if (info->mDevices != GfxDriverInfo::allDevices) {
         bool deviceMatches = false;
-        for (const PRUint32 *devices = info->devices; *devices; ++devices) {
+        for (const PRUint32 *devices = info->mDevices; *devices; ++devices) {
             if (*devices == adapterDeviceID) {
                 deviceMatches = true;
                 break;
@@ -688,34 +664,34 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32 *aStatus, nsAString & aS
 
     bool match = false;
 
-    switch (info->op) {
+    switch (info->mComparisonOp) {
     case DRIVER_LESS_THAN:
-      match = driverVersion < info->version;
-      suggestedDriverVersion = info->version;
+      match = driverVersion < info->mDriverVersion;
+      suggestedDriverVersion = info->mDriverVersion;
       break;
     case DRIVER_LESS_THAN_OR_EQUAL:
-      match = driverVersion <= info->version;
+      match = driverVersion <= info->mDriverVersion;
       break;
     case DRIVER_GREATER_THAN:
-      match = driverVersion > info->version;
+      match = driverVersion > info->mDriverVersion;
       break;
     case DRIVER_GREATER_THAN_OR_EQUAL:
-      match = driverVersion >= info->version;
+      match = driverVersion >= info->mDriverVersion;
       break;
     case DRIVER_EQUAL:
-      match = driverVersion == info->version;
+      match = driverVersion == info->mDriverVersion;
       break;
     case DRIVER_NOT_EQUAL:
-      match = driverVersion != info->version;
+      match = driverVersion != info->mDriverVersion;
       break;
     case DRIVER_BETWEEN_EXCLUSIVE:
-      match = driverVersion > info->version && driverVersion < info->versionMax;
+      match = driverVersion > info->mDriverVersion && driverVersion < info->mDriverVersionMax;
       break;
     case DRIVER_BETWEEN_INCLUSIVE:
-      match = driverVersion >= info->version && driverVersion <= info->versionMax;
+      match = driverVersion >= info->mDriverVersion && driverVersion <= info->mDriverVersionMax;
       break;
     case DRIVER_BETWEEN_INCLUSIVE_START:
-      match = driverVersion >= info->version && driverVersion < info->versionMax;
+      match = driverVersion >= info->mDriverVersion && driverVersion < info->mDriverVersionMax;
       break;
     default:
       NS_WARNING("Bogus op in GfxDriverInfo");
@@ -723,10 +699,10 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32 *aStatus, nsAString & aS
     }
 
     if (match) {
-      if (info->feature == allFeatures ||
-          info->feature == aFeature)
+      if (info->mFeature == GfxDriverInfo::allFeatures ||
+          info->mFeature == aFeature)
       {
-        status = info->featureStatus;
+        status = info->mFeatureStatus;
         break;
       }
     }

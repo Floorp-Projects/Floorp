@@ -69,6 +69,7 @@ CPPSRCS		= \
 		nsIdleService.cpp \
 		nsClipboardPrivacyHandler.cpp \
 		GfxInfoWebGL.cpp \
+                GfxDriverInfo.cpp \
 		$(NULL)
 
 ifdef MOZ_IPC
