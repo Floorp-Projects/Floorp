@@ -14,6 +14,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=428248
 
   <script type="application/javascript"
           src="common.js"></script>
+  <script type="application/javascript"
+          src="events.js"></script>
 
   <script type="application/javascript">
     var gParagraphAcc;
@@ -40,23 +42,48 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=428248
     }
 
     const kLinksCount = 128;
-    function prepareTest()
+    function addLinks(aContainerID)
     {
-      var container = document.getElementById("p3");
-      for (var jdx = 0; jdx < kLinksCount; jdx++) {
-        var a = document.createElement("a");
-        a.setAttribute("href", "mozilla.org");
-        a.textContent = "mozilla";
-        container.appendChild(a);
+      this.containerNode = getNode(aContainerID);
 
-        var span = document.createElement("span");
-        span.textContent = " text ";
-        container.appendChild(span);
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, this.containerNode)
+      ];
+
+      this.invoke = function addLinks_invoke()
+      {
+        for (var jdx = 0; jdx < kLinksCount; jdx++) {
+          var a = document.createElement("a");
+          a.setAttribute("href", "mozilla.org");
+          a.textContent = "mozilla";
+          this.containerNode.appendChild(a);
+
+          var span = document.createElement("span");
+          span.textContent = " text ";
+          this.containerNode.appendChild(span);
+        }
       }
 
-      window.setTimeout(doTest, 0);
+      this.finalCheck = function addLinks_finalCheck()
+      {
+        // getLinkAt and getLinkIndex.
+        var htAcc = getAccessible(this.containerNode, [nsIAccessibleHyperText]);
+        for (var jdx = 0; jdx < kLinksCount; jdx++) {
+          var link = htAcc.getLinkAt(jdx);
+          ok(link, "No link at index " + jdx + " for '" + aContainerID + "'");
+
+          var linkIdx = htAcc.getLinkIndex(link);
+          is(linkIdx, jdx, "Wrong link index for '" + aContainerID + "'!");
+        }
+      }
+
+      this.getID = function addLinks_getID()
+      {
+        return "Add links for '" + aContainerID + "'";
+      }
     }
 
+    var gQueue = null;
     function doTest()
     {
       // Test link count
@@ -90,17 +117,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=428248
       is(link, p2.getChildAt(0), "Wrong link for p2");
       is(p2.linkCount, 1, "Wrong link count for p2");
 
-      // getLinkAt and getLinkIndex.
-      var container = document.getElementById("p3");
-      var htAcc = getAccessible(container, [nsIAccessibleHyperText]);
-      for (var jdx = 0; jdx < kLinksCount; jdx++) {
-        var link = htAcc.getLinkAt(jdx);
-        ok(link, "No link at index " + jdx + " for 'p3'");
-
-        var linkIdx = htAcc.getLinkIndex(link);
-        is(linkIdx, jdx, "Wrong link index for 'p3'!");
-      };
-
       // getLinkIndexAtOffset, causes the offsets to be cached;
       testLinkIndexAtOffset("p4", 0, 0); // 1st 'mozilla' link
       testLinkIndexAtOffset("p4", 1, 1); // 2nd 'mozilla' link
@@ -122,11 +138,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=428248
       testLinkIndexAtOffset("p4", 8, 2); // 3d 'mozilla' link
       testLinkIndexAtOffset("p4", 9, 2); // the end, latest link
 
-      SimpleTest.finish();
+      gQueue = new eventQueue();
+      gQueue.push(new addLinks("p3"));
+      gQueue.invoke(); // Will call SimpleTest.finish();
     }
 
     SimpleTest.waitForExplicitFinish();
-    addA11yLoadEvent(prepareTest);
+    addA11yLoadEvent(doTest);
   </script>
 </head>
 <body>
