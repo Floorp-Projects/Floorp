@@ -207,7 +207,7 @@ nsresult
 nsDiskCacheMap::Trim()
 {
     nsresult rv, rv2 = NS_OK;
-    for (int i=0; i < 3; ++i) {
+    for (int i=0; i < kNumBlockFiles; ++i) {
         rv = mBlockFile[i].Trim();
         if (NS_FAILED(rv))  rv2 = rv;   // if one or more errors, report at least one
     }
@@ -613,12 +613,13 @@ nsDiskCacheMap::OpenBlockFiles()
     nsCOMPtr<nsILocalFile> blockFile;
     nsresult rv = NS_OK;
     
-    for (int i = 0; i < 3; ++i) {
+    for (int i = 0; i < kNumBlockFiles; ++i) {
         rv = GetBlockFileForIndex(i, getter_AddRefs(blockFile));
         if (NS_FAILED(rv)) break;
     
         PRUint32 blockSize = GetBlockSizeForIndex(i+1); // +1 to match file selectors 1,2,3
-        rv = mBlockFile[i].Open(blockFile, blockSize);
+        PRUint32 bitMapSize = GetBitMapSizeForIndex(i+1);
+        rv = mBlockFile[i].Open(blockFile, blockSize, bitMapSize);
         if (NS_FAILED(rv)) break;
     }
     // close all files in case of any error
@@ -633,7 +634,7 @@ nsresult
 nsDiskCacheMap::CloseBlockFiles(PRBool flush)
 {
     nsresult rv, rv2 = NS_OK;
-    for (int i=0; i < 3; ++i) {
+    for (int i=0; i < kNumBlockFiles; ++i) {
         rv = mBlockFile[i].Close(flush);
         if (NS_FAILED(rv))  rv2 = rv;   // if one or more errors, report at least one
     }
@@ -647,7 +648,7 @@ nsDiskCacheMap::CacheFilesExist()
     nsCOMPtr<nsILocalFile> blockFile;
     nsresult rv;
     
-    for (int i = 0; i < 3; ++i) {
+    for (int i = 0; i < kNumBlockFiles; ++i) {
         PRBool exists;
         rv = GetBlockFileForIndex(i, getter_AddRefs(blockFile));
         if (NS_FAILED(rv))  return PR_FALSE;
@@ -728,7 +729,7 @@ nsDiskCacheMap::ReadDiskCacheEntry(nsDiskCacheRecord * record)
         PR_Close(fd);
         NS_ENSURE_SUCCESS(rv, nsnull);
 
-    } else if (metaFile < 4) {  // XXX magic number: use constant
+    } else if (metaFile < (kNumBlockFiles + 1)) {
         // entry/metadata stored in cache block file
         
         // allocate buffer
@@ -839,7 +840,40 @@ nsDiskCacheMap::WriteDiskCacheEntry(nsDiskCacheBinding *  binding)
     }
 
     binding->mRecord.SetEvictionRank(ULONG_MAX - SecondsFromPRTime(PR_Now()));
-        
+    // write entry data to disk cache block file
+    diskEntry->Swap();
+
+    if (fileIndex != 0) {
+        while (1) {
+            PRUint32  blockSize = GetBlockSizeForIndex(fileIndex);
+            PRUint32  blocks    = ((size - 1) / blockSize) + 1;
+
+            PRInt32 startBlock;
+            rv = mBlockFile[fileIndex - 1].WriteBlocks(diskEntry, size, blocks,
+                                                       &startBlock);
+            if (NS_SUCCEEDED(rv)) {
+                // update binding and cache map record
+                binding->mRecord.SetMetaBlocks(fileIndex, startBlock, blocks);
+
+                rv = UpdateRecord(&binding->mRecord);
+                NS_ENSURE_SUCCESS(rv, rv);
+
+                // XXX we should probably write out bucket ourselves
+
+                IncrementTotalSize(blocks, blockSize);
+                break;
+            }
+
+            if (fileIndex == kNumBlockFiles) {
+                fileIndex = 0; // write data to separate file
+                break;
+            }
+
+            // try next block file
+            fileIndex++;
+        }
+    }
+
     if (fileIndex == 0) {
         // Write entry data to separate file
         PRUint32 metaFileSizeK = ((size + 0x03FF) >> 10); // round up to nearest 1k
@@ -864,7 +898,6 @@ nsDiskCacheMap::WriteDiskCacheEntry(nsDiskCacheBinding *  binding)
         NS_ENSURE_SUCCESS(rv, rv);
 
         // write the file
-        diskEntry->Swap();
         PRInt32 bytesWritten = PR_Write(fd, diskEntry, size);
         
         PRStatus err = PR_Close(fd);
@@ -873,28 +906,6 @@ nsDiskCacheMap::WriteDiskCacheEntry(nsDiskCacheBinding *  binding)
         }
         // XXX handle metaFileSizeK == USHRT_MAX
         IncrementTotalSize(metaFileSizeK);
-        
-    } else {
-        PRUint32  blockSize = GetBlockSizeForIndex(fileIndex);
-        PRUint32  blocks    = ((size - 1) / blockSize) + 1;
-
-        // write entry data to disk cache block file
-        diskEntry->Swap();
-        PRInt32 startBlock;
-        nsresult rv2 = mBlockFile[fileIndex - 1].WriteBlocks(diskEntry, size, blocks, &startBlock);
-        // Call UpdateRecord() even if WriteBlocks() has failed. We need to
-        // update the record because we've changed the eviction rank.
-        if (NS_SUCCEEDED(rv2)) {
-            // update binding and cache map record
-            binding->mRecord.SetMetaBlocks(fileIndex, startBlock, blocks);
-        }
-        rv = UpdateRecord(&binding->mRecord);
-        NS_ENSURE_SUCCESS(rv, rv);
-        NS_ENSURE_SUCCESS(rv2, rv2);
-
-        // XXX we should probably write out bucket ourselves
-        
-        IncrementTotalSize(blocks, blockSize);
     }
 
     return rv;
@@ -932,19 +943,28 @@ nsDiskCacheMap::WriteDataCacheBlocks(nsDiskCacheBinding * binding, char * buffer
     
     // determine block file & number of blocks
     PRUint32  fileIndex  = CalculateFileIndex(size);
-    PRUint32  blockSize  = GetBlockSizeForIndex(fileIndex);
     PRUint32  blockCount = 0;
     PRInt32   startBlock = 0;
-    
-    if (size > 0) {
-        blockCount = ((size - 1) / blockSize) + 1;
 
-        rv = mBlockFile[fileIndex - 1].WriteBlocks(buffer, size, blockCount, &startBlock);
-        NS_ENSURE_SUCCESS(rv, rv);
-        
-        IncrementTotalSize(blockCount, blockSize);
+    if (size > 0) {
+        while (1) {
+            PRUint32  blockSize  = GetBlockSizeForIndex(fileIndex);
+            blockCount = ((size - 1) / blockSize) + 1;
+
+            rv = mBlockFile[fileIndex - 1].WriteBlocks(buffer, size, blockCount,
+                                                       &startBlock);
+            if (NS_SUCCEEDED(rv)) {
+                IncrementTotalSize(blockCount, blockSize);
+                break;
+            }
+
+            if (fileIndex == kNumBlockFiles)
+                return rv;
+
+            fileIndex++;
+        }
     }
-    
+
     // update binding and cache map record
     binding->mRecord.SetDataBlocks(fileIndex, startBlock, blockCount);
     if (!binding->mDoomed) {
@@ -984,7 +1004,7 @@ nsDiskCacheMap::DeleteStorage(nsDiskCacheRecord * record, PRBool metaData)
         }
         DecrementTotalSize(sizeK);
         
-    } else if (fileIndex < 4) {
+    } else if (fileIndex < (kNumBlockFiles + 1)) {
         // deallocate blocks
         PRUint32  startBlock = metaData ? record->MetaStartBlock() : record->DataStartBlock();
         PRUint32  blockCount = metaData ? record->MetaBlockCount() : record->DataBlockCount();
@@ -1085,10 +1105,14 @@ nsDiskCacheMap::GetBlockFileForIndex(PRUint32 index, nsILocalFile ** result)
 PRUint32
 nsDiskCacheMap::CalculateFileIndex(PRUint32 size)
 {
-    if (size <=  1024)  return 1;
-    if (size <=  4096)  return 2;
-    if (size <= 16384)  return 3;
-    return 0;  
+    // We prefer to use block file with larger block if the wasted space would
+    // be the same. E.g. store entry with size of 3073 bytes in 1 4K-block
+    // instead of in 4 1K-blocks.
+
+    if (size <= 3 * BLOCK_SIZE_FOR_INDEX(1))  return 1;
+    if (size <= 3 * BLOCK_SIZE_FOR_INDEX(2))  return 2;
+    if (size <= 4 * BLOCK_SIZE_FOR_INDEX(3))  return 3;
+    return 0;
 }
 
 nsresult

@@ -1454,7 +1454,15 @@ nsDocAccessible::RecreateAccessible(nsINode* aNode)
       mNodeToAccessibleMap.Remove(oldAccessible->GetNode());
 
   } else {
+    // Not accessible node may not have container accessible if we recreate
+    // an accessible asynchronously.
+    // XXX: asynchronous RecreateAccessible notifications should be coalesced
+    // with accessible tree mutation notifications. We could trigger
+    // ContentRemoved/ContentInserted pair for that but it moves us away from
+    // the idea to not recreate the whole subtree.
     parent = GetAccService()->GetContainerAccessible(aNode, mWeakShell);
+    if (!parent)
+      return;
   }
 
   // Get new accessible and fire show event.
@@ -1946,7 +1954,11 @@ nsDocAccessible::UpdateTreeInternal(nsAccessible* aContainer,
 
     updateFlags |= eAccessible;
 
-    if (!aIsInsert) {
+    if (aIsInsert) {
+      // Create accessible tree for shown accessible.
+      CacheChildrenInSubtree(accessible);
+
+    } else {
       // Fire menupopup end event before hide event if a menu goes away.
 
       // XXX: We don't look into children of hidden subtree to find hiding
@@ -2011,6 +2023,20 @@ nsDocAccessible::UpdateTreeInternal(nsAccessible* aContainer,
   }
 
   return updateFlags;
+}
+
+void
+nsDocAccessible::CacheChildrenInSubtree(nsAccessible* aRoot)
+{
+  aRoot->EnsureChildren();
+
+  PRUint32 count = aRoot->GetChildCount();
+  for (PRUint32 idx = 0; idx < count; idx++)  {
+    nsAccessible* child = aRoot->GetChildAt(idx);
+    // Don't cross document boundaries.
+    if (child->IsContent())
+      CacheChildrenInSubtree(child);
+  }
 }
 
 void

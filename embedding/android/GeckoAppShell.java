@@ -59,6 +59,8 @@ import android.location.*;
 
 import android.util.*;
 import android.net.Uri;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 
 class GeckoAppShell
 {
@@ -98,6 +100,7 @@ class GeckoAppShell
     public static native void callObserver(String observerKey, String topic, String data);
     public static native void removeObserver(String observerKey);
     public static native void loadLibs(String apkName, boolean shouldExtract);
+    public static native void onChangeNetworkLinkStatus(String status);
 
     public static File getCacheDir() {
         if (sCacheFile == null)
@@ -705,5 +708,22 @@ class GeckoAppShell
                 GeckoApp.surfaceView.setKeepScreenOn(on);
             }
         });
+    }
+
+    public static boolean isNetworkLinkUp() {
+        ConnectivityManager cm = (ConnectivityManager)
+            GeckoApp.mAppContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo info = cm.getActiveNetworkInfo();
+        if (info == null || !info.isConnected())
+            return false;
+        return true;
+    }
+
+    public static boolean isNetworkLinkKnown() {
+        ConnectivityManager cm = (ConnectivityManager)
+            GeckoApp.mAppContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (cm.getActiveNetworkInfo() == null)
+            return false;
+        return true;
     }
 }

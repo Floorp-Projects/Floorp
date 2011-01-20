@@ -109,7 +109,7 @@ function callProvider(aProvider, aMethod, aDefault) {
     return aProvider[aMethod].apply(aProvider, args);
   }
   catch (e) {
-    ERROR("Exception calling provider" + aMethod, e);
+    ERROR("Exception calling provider " + aMethod, e);
     return aDefault;
   }
 }

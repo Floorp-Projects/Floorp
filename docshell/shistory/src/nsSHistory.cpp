@@ -70,6 +70,7 @@
 
 #define PREF_SHISTORY_SIZE "browser.sessionhistory.max_entries"
 #define PREF_SHISTORY_MAX_TOTAL_VIEWERS "browser.sessionhistory.max_total_viewers"
+#define PREF_SHISTORY_OPTIMIZE_EVICTION "browser.sessionhistory.optimize_eviction"
 
 static PRInt32  gHistoryMaxSize = 50;
 // Max viewers allowed per SHistory objects
@@ -79,6 +80,16 @@ static PRCList gSHistoryList;
 // Max viewers allowed total, across all SHistory objects - negative default
 // means we will calculate how many viewers to cache based on total memory
 PRInt32 nsSHistory::sHistoryMaxTotalViewers = -1;
+
+// Whether we should optimize the search for which entry to evict,
+// by evicting older entries first. See entryLastTouched in
+// nsSHistory::EvictGlobalContentViewer().
+// NB: After 4.0, we should remove this option and the corresponding
+//     pref - optimization should always be used
+static PRBool gOptimizeEviction = PR_FALSE;
+// A counter that is used to be able to know the order in which
+// entries were touched, so that we can evict older entries first.
+static PRUint32 gTouchCounter = 0;
 
 enum HistCmd{
   HIST_CMD_BACK,
@@ -222,6 +233,8 @@ nsSHistory::UpdatePrefs(nsIPrefBranch *aPrefBranch)
   aPrefBranch->GetIntPref(PREF_SHISTORY_SIZE, &gHistoryMaxSize);
   aPrefBranch->GetIntPref(PREF_SHISTORY_MAX_TOTAL_VIEWERS,
                           &sHistoryMaxTotalViewers);
+  aPrefBranch->GetBoolPref(PREF_SHISTORY_OPTIMIZE_EVICTION,
+                          &gOptimizeEviction);
   // If the pref is negative, that means we calculate how many viewers
   // we think we should cache, based on total memory
   if (sHistoryMaxTotalViewers < 0) {
@@ -264,6 +277,8 @@ nsSHistory::Startup()
       }
       branch->AddObserver(PREF_SHISTORY_SIZE, obs, PR_FALSE);
       branch->AddObserver(PREF_SHISTORY_MAX_TOTAL_VIEWERS,
+                          obs, PR_FALSE);
+      branch->AddObserver(PREF_SHISTORY_OPTIMIZE_EVICTION,
                           obs, PR_FALSE);
 
       nsCOMPtr<nsIObserverService> obsSvc =
@@ -937,6 +952,7 @@ nsSHistory::EvictGlobalContentViewer()
     // farthest from the current focus in any SHistory object.  The
     // ContentViewer associated with that SHEntry will be evicted
     PRInt32 distanceFromFocus = 0;
+    PRUint32 candidateLastTouched = 0;
     nsCOMPtr<nsISHEntry> evictFromSHE;
     nsCOMPtr<nsIContentViewer> evictViewer;
     PRInt32 totalContentViewers = 0;
@@ -960,6 +976,15 @@ nsSHistory::EvictGlobalContentViewer()
         nsCOMPtr<nsISHEntry> ownerEntry;
         entry->GetAnyContentViewer(getter_AddRefs(ownerEntry),
                                    getter_AddRefs(viewer));
+
+        PRUint32 entryLastTouched = 0;
+        if (gOptimizeEviction) {
+          nsCOMPtr<nsISHEntryInternal> entryInternal = do_QueryInterface(entry);
+          if (entryInternal) {
+            // Find when this entry was last activated
+            entryInternal->GetLastTouched(&entryLastTouched);
+          }
+        }
 
 #ifdef DEBUG_PAGE_CACHE
         nsCOMPtr<nsIURI> uri;
@@ -985,12 +1010,16 @@ nsSHistory::EvictGlobalContentViewer()
           printf("mIndex: %d i: %d\n", shist->mIndex, i);
 #endif
           totalContentViewers++;
-          if (distance > distanceFromFocus) {
-            
+
+          // If this entry is further away from focus than any previously found
+          // or at the same distance but it is longer time since it was activated
+          // then take this entry as the new candiate for eviction
+          if (distance > distanceFromFocus || (distance == distanceFromFocus && candidateLastTouched > entryLastTouched)) {
+
 #ifdef DEBUG_PAGE_CACHE
             printf("Choosing as new eviction candidate: %s\n", spec.get());
 #endif
-
+            candidateLastTouched = entryLastTouched;
             distanceFromFocus = distance;
             evictFromSHE = ownerEntry;
             evictViewer = viewer;
@@ -1404,7 +1433,6 @@ NS_IMETHODIMP
 nsSHistory::LoadEntry(PRInt32 aIndex, long aLoadType, PRUint32 aHistCmd)
 {
   nsCOMPtr<nsIDocShell> docShell;
-  nsCOMPtr<nsISHEntry> shEntry;
   // Keep note of requested history index in mRequestedIndex.
   mRequestedIndex = aIndex;
 
@@ -1417,6 +1445,13 @@ nsSHistory::LoadEntry(PRInt32 aIndex, long aLoadType, PRUint32 aHistCmd)
   if (!nextEntry || !prevEntry || !nHEntry) {
     mRequestedIndex = -1;
     return NS_ERROR_FAILURE;
+  }
+
+  // Remember that this entry is getting loaded at this point in the sequence
+  nsCOMPtr<nsISHEntryInternal> entryInternal = do_QueryInterface(nextEntry);
+
+  if (entryInternal) {
+    entryInternal->SetLastTouched(++gTouchCounter);
   }
 
   // Send appropriate listener notifications

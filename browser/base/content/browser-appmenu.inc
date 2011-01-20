@@ -150,6 +150,11 @@
                     label="&viewPageSourceCmd.label;"
                     command="View:PageSource"
                     key="key_viewSource"/>
+          <menuitem id="appmenu_errorConsole"
+                    hidden="true"
+                    label="&errorConsoleCmd.label;"
+                    key="key_errorConsole"
+                    oncommand="toJavaScriptConsole();"/>
           <menuseparator/>
 #define ID_PREFIX appmenu_developer_
 #define OMIT_ACCESSKEYS

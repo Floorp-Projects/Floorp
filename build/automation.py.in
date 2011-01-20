@@ -368,6 +368,8 @@ user_pref("browser.panorama.experienced_first_run", true); // Assume experienced
 user_pref("extensions.enabledScopes", 5);
 // Disable metadata caching for installed add-ons by default
 user_pref("extensions.getAddons.cache.enabled", false);
+// Disable intalling any distribution add-ons
+user_pref("extensions.installDistroAddons", false);
 
 user_pref("extensions.testpilot.runStudies", false);
 

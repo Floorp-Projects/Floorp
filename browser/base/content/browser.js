@@ -1635,6 +1635,9 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   if (consoleEnabled) {
     document.getElementById("javascriptConsole").hidden = false;
     document.getElementById("key_errorConsole").removeAttribute("disabled");
+#ifdef MENUBAR_CAN_AUTOHIDE
+    document.getElementById("appmenu_errorConsole").hidden = false;
+#endif
   }
 
 #ifdef MENUBAR_CAN_AUTOHIDE
@@ -4875,7 +4878,7 @@ var TabsInTitlebar = {
   },
 
   _update: function () {
-    if (!this._initialized)
+    if (!this._initialized || window.fullScreen)
       return;
 
     let allowed = true;
@@ -4911,6 +4914,17 @@ var TabsInTitlebar = {
       titlebar.style.marginBottom = - Math.min(distance, maxMargin) + "px";
 
       docElement.setAttribute("tabsintitlebar", "true");
+
+      if (!this._draghandle) {
+        let tmp = {};
+        Components.utils.import("resource://gre/modules/WindowDraggingUtils.jsm", tmp);
+        this._draghandle = new tmp.WindowDraggingElement(tabsToolbar, window);
+        this._draghandle.mouseDownCheck = function () {
+          return !this._dragBindingAlive &&
+                 this.ownerDocument.documentElement
+                     .getAttribute("tabsintitlebar") == "true";
+        };
+      }
     } else {
       docElement.removeAttribute("tabsintitlebar");
 

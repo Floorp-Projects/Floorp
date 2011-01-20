@@ -49,6 +49,7 @@
 #include <android/log.h>
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
+#include "nsINetworkLinkService.h"
 
 using namespace mozilla;
 
@@ -62,6 +63,7 @@ extern "C" {
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_onLowMemory(JNIEnv *, jclass);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_callObserver(JNIEnv *, jclass, jstring observerKey, jstring topic, jstring data);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_removeObserver(JNIEnv *jenv, jclass, jstring jObserverKey);
+    NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_onChangeNetworkLinkStatus(JNIEnv *, jclass, jstring status);
 }
 
 
@@ -131,4 +133,17 @@ Java_org_mozilla_gecko_GeckoAppShell_removeObserver(JNIEnv *jenv, jclass, jstrin
     jenv->ReleaseStringChars(jObserverKey, observerKey);
 
     nsAppShell::gAppShell->RemoveObserver(sObserverKey);
+}
+
+NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_GeckoAppShell_onChangeNetworkLinkStatus(JNIEnv *jenv, jclass, jstring jStatus)
+{
+    if (!nsAppShell::gAppShell)
+        return;
+
+    nsJNIString sStatus(jStatus, jenv);
+
+    nsAppShell::gAppShell->NotifyObservers(nsnull,
+                                           NS_NETWORK_LINK_TOPIC,
+                                           sStatus.get());
 }

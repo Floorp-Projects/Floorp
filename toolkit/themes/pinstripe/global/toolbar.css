@@ -45,6 +45,7 @@ toolbar {
   -moz-appearance: toolbar;
 }
 
+menubar:-moz-lwtheme,
 toolbar:-moz-lwtheme {
   -moz-appearance: none;
   background: none;

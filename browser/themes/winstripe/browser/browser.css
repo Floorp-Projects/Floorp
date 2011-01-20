@@ -777,7 +777,7 @@ toolbar:not([iconsize="small"])[mode="icons"] #back-button {
               1px 2px 1px rgba(0,0,0,.2);
 }
 
-#nav-bar:not([iconsize="small"])[mode="icons"] #back-button:not([disabled="true"]):not([checked="true"]):not(:active):hover {
+#nav-bar:not([iconsize="small"])[mode="icons"] #back-button:not([disabled="true"]):not([open="true"]):not(:active):hover {
   box-shadow: 0 0 0 1px rgba(255,255,255,.3) inset,
               0 0 0 2px rgba(255,255,255,.1) inset,
               0 0 0 1px hsla(190,50%,40%,.3),
@@ -787,7 +787,8 @@ toolbar:not([iconsize="small"])[mode="icons"] #back-button {
               0 0 5px 1px hsl(190,90%,80%);
 }
 
-#nav-bar:not([iconsize="small"])[mode="icons"] #back-button:not([disabled="true"]):hover:active {
+#nav-bar:not([iconsize="small"])[mode="icons"] #back-button:not([disabled="true"]):hover:active,
+#nav-bar:not([iconsize="small"])[mode="icons"] #back-button[open="true"] {
   box-shadow: 0 0 6.5px rgba(0,0,0,.4) inset,
               0 0 2px rgba(0,0,0,.4) inset,
               0 0 0 1px rgba(0,0,0,.65),

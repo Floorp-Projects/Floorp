@@ -1847,8 +1847,9 @@ nsFrameLoader::SendCrossProcessMouseEvent(const nsAString& aType,
 #ifdef MOZ_IPC
   if (mRemoteBrowser) {
     mRemoteBrowser->SendMouseEvent(aType, aX, aY, aButton,
-                                  aClickCount, aModifiers,
-                                  aIgnoreRootScrollFrame);
+                                   aClickCount, aModifiers,
+                                   aIgnoreRootScrollFrame);
+    return NS_OK;
   }
 #endif
   return NS_ERROR_FAILURE;
@@ -1877,7 +1878,8 @@ nsFrameLoader::SendCrossProcessKeyEvent(const nsAString& aType,
 #ifdef MOZ_IPC
   if (mRemoteBrowser) {
     mRemoteBrowser->SendKeyEvent(aType, aKeyCode, aCharCode, aModifiers,
-                                aPreventDefault);
+                                 aPreventDefault);
+    return NS_OK;
   }
 #endif
   return NS_ERROR_FAILURE;
