@@ -3512,7 +3512,7 @@ Parser::condition()
     JSParseNode *pn;
 
     MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_COND);
-    pn = parenExpr(NULL, NULL);
+    pn = parenExpr();
     if (!pn)
         return NULL;
     MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_COND);
@@ -5045,7 +5045,7 @@ Parser::switchStatement()
     MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_SWITCH);
 
     /* pn1 points to the switch's discriminant. */
-    JSParseNode *pn1 = parenExpr(NULL, NULL);
+    JSParseNode *pn1 = parenExpr();
     if (!pn1)
         return NULL;
 
@@ -5664,7 +5664,7 @@ Parser::withStatement()
     if (!pn)
         return NULL;
     MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_WITH);
-    JSParseNode *pn2 = parenExpr(NULL, NULL);
+    JSParseNode *pn2 = parenExpr();
     if (!pn2)
         return NULL;
     MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_WITH);
@@ -7291,20 +7291,22 @@ Parser::comprehensionTail(JSParseNode *kid, uintN blockid,
  * generator function that is immediately called to evaluate to the generator
  * iterator that is the value of this generator expression.
  *
- * Callers pass a blank unary node via pn, which generatorExpr fills in as the
- * yield expression, which ComprehensionTail in turn wraps in a TOK_SEMI-type
- * expression-statement node that constitutes the body of the |for| loop(s) in
- * the generator function.
+ * |kid| must be the expression before the |for| keyword; we return an
+ * application of a generator function that includes the |for| loops and
+ * |if| guards, with |kid| as the operand of a |yield| expression as the
+ * innermost loop body.
  *
  * Note how unlike Python, we do not evaluate the expression to the right of
  * the first |in| in the chain of |for| heads. Instead, a generator expression
  * is merely sugar for a generator function expression and its application.
  */
 JSParseNode *
-Parser::generatorExpr(JSParseNode *pn, JSParseNode *kid)
+Parser::generatorExpr(JSParseNode *kid)
 {
-    /* Initialize pn, connecting it to kid. */
-    JS_ASSERT(pn->pn_arity == PN_UNARY);
+    /* Create a |yield| node for |kid|. */
+    JSParseNode *pn = UnaryNode::create(tc);
+    if (!pn)
+        return NULL;
     pn->pn_type = TOK_YIELD;
     pn->pn_op = JSOP_YIELD;
     pn->pn_parens = true;
@@ -7406,10 +7408,7 @@ Parser::argumentList(JSParseNode *listNode)
 #endif
 #if JS_HAS_GENERATOR_EXPRS
         if (tokenStream.matchToken(TOK_FOR)) {
-            JSParseNode *pn = UnaryNode::create(tc);
-            if (!pn)
-                return JS_FALSE;
-            argNode = generatorExpr(pn, argNode);
+            argNode = generatorExpr(argNode);
             if (!argNode)
                 return JS_FALSE;
             if (listNode->pn_count > 1 ||
@@ -8724,7 +8723,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
       {
         JSBool genexp;
 
-        pn = parenExpr(NULL, &genexp);
+        pn = parenExpr(&genexp);
         if (!pn)
             return NULL;
         pn->pn_parens = true;
@@ -8965,7 +8964,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
 }
 
 JSParseNode *
-Parser::parenExpr(JSParseNode *pn1, JSBool *genexp)
+Parser::parenExpr(JSBool *genexp)
 {
     TokenPtr begin;
     JSParseNode *pn;
@@ -8990,12 +8989,7 @@ Parser::parenExpr(JSParseNode *pn1, JSBool *genexp)
                               js_generator_str);
             return NULL;
         }
-        if (!pn1) {
-            pn1 = UnaryNode::create(tc);
-            if (!pn1)
-                return NULL;
-        }
-        pn = generatorExpr(pn1, pn);
+        pn = generatorExpr(pn);
         if (!pn)
             return NULL;
         pn->pn_pos.begin = begin;
