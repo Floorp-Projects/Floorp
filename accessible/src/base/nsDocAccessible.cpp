@@ -1454,7 +1454,15 @@ nsDocAccessible::RecreateAccessible(nsINode* aNode)
       mNodeToAccessibleMap.Remove(oldAccessible->GetNode());
 
   } else {
+    // Not accessible node may not have container accessible if we recreate
+    // an accessible asynchronously.
+    // XXX: asynchronous RecreateAccessible notifications should be coalesced
+    // with accessible tree mutation notifications. We could trigger
+    // ContentRemoved/ContentInserted pair for that but it moves us away from
+    // the idea to not recreate the whole subtree.
     parent = GetAccService()->GetContainerAccessible(aNode, mWeakShell);
+    if (!parent)
+      return;
   }
 
   // Get new accessible and fire show event.
