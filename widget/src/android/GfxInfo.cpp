@@ -194,11 +194,18 @@ GfxInfo::AddCrashReportAnnotations()
 }
 
 nsresult
-GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32 *aStatus, nsAString & aSuggestedDriverVersion)
+GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32 *aStatus, nsAString & aSuggestedDriverVersion,
+                              GfxDriverInfo* aDriverInfo /* = nsnull */)
 {
   PRInt32 status = nsIGfxInfo::FEATURE_NO_INFO;
 
   aSuggestedDriverVersion.SetIsVoid(PR_TRUE);
+
+  // For now, we don't implement the downloaded blacklist.
+  if (aDriverInfo) {
+    *aStatus = status;
+    return NS_OK;
+  }
 
   if (aFeature == FEATURE_OPENGL_LAYERS) {
       nsAutoString str;

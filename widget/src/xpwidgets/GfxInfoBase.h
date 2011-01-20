@@ -44,6 +44,8 @@
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
+#include "GfxDriverInfo.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 namespace widget {  
@@ -77,8 +79,15 @@ public:
   virtual nsresult Init();
 
 protected:
+
   virtual nsresult GetFeatureStatusImpl(PRInt32 aFeature, PRInt32* aStatus,
-                                        nsAString& aSuggestedDriverVersion) = 0;
+                                        nsAString& aSuggestedDriverVersion,
+                                        GfxDriverInfo* aDriverInfo = nsnull) = 0;
+
+private:
+
+  void EvaluateDownloadedBlacklist(nsTArray<GfxDriverInfo>& aDriverInfo);
+
 };
 
 };
