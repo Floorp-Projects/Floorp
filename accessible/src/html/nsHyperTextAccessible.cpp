@@ -2116,8 +2116,12 @@ PRInt32
 nsHyperTextAccessible::GetChildOffset(PRUint32 aChildIndex,
                                       PRBool aInvalidateAfter)
 {
-  if (aChildIndex == 0)
+  if (aChildIndex == 0) {
+    if (aInvalidateAfter)
+      mOffsets.Clear();
+
     return aChildIndex;
+  }
 
   PRInt32 count = mOffsets.Length() - aChildIndex;
   if (count > 0) {

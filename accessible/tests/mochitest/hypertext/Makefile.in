@@ -16,7 +16,7 @@
 #
 # The Initial Developer of the Original Code is
 # Mozilla Foundation.
-# Portions created by the Initial Developer are Copyright (C) 2008
+# Portions created by the Initial Developer are Copyright (C) 2011
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -36,85 +36,18 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../..
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-relativesrcdir  = accessible
-
-DIRS	= \
-  actions \
-  attributes \
-  editabletext \
-  events \
-  hyperlink \
-  hypertext \
-  name \
-  relations \
-  selectable \
-  states \
-  table \
-  text \
-  tree \
-  treeupdate \
-  $(null)
+relativesrcdir  = accessible/hypertext
 
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES =\
-		formimage.png \
-		letters.gif \
-		moz.png \
-		$(topsrcdir)/content/media/test/bug461281.ogg \
-		longdesc_src.html \
-		actions.js \
-		attributes.js \
-		common.js \
-		events.js \
-		grid.js \
-		layout.js \
-		name.js \
-		nsIAccessible_selects.js \
-		relations.js \
-		role.js \
-		selectable.js \
-		states.js \
-		table.js \
-		value.js \
-		test_aria_activedescendant.html \
-		test_aria_role_article.html \
-		test_aria_role_equation.html \
-		test_aria_roles.html \
-		test_aria_roles.xul \
-		test_aria_token_attrs.html \
-		test_bug420863.html \
-	$(warning   test_childAtPoint.html temporarily disabled) \
-	$(warning	test_childAtPoint.xul temporarily disabled) \
-		test_descr.html \
-		test_elm_landmarks.html \
-		test_elm_listbox.xul \
-	$(warning   test_elm_media.html temporarily disabled) \
-		test_elm_nsApplicationAcc.html \
-		test_elm_plugin.html \
-		test_keys.html \
-	$(warning test_nsIAccessible_comboboxes.xul temporarily disabled) \
- 		test_nsIAccessible_selects.html \
-		test_nsIAccessible_focus.html \
-		test_nsIAccessibleDocument.html \
-		test_nsIAccessibleImage.html \
-		test_nsIAccessNode_utils.html \
-		test_nsOuterDocAccessible.html \
-		test_role_nsHyperTextAcc.html \
-		test_text_caret.html \
-		test_textboxes.html \
-		test_textboxes.xul \
-		test_value.html \
-		test_value.xul \
-		testTextboxes.js \
-		text.js \
-		treeview.css \
-		treeview.js \
+_TEST_FILES = \
+		test_general.html \
+		test_update.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
