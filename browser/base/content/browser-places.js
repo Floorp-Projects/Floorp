@@ -730,7 +730,10 @@ var BookmarksEventHandler = {
       for (node = target.parentNode; node; node = node.parentNode) {
         if (node.localName == "menupopup")
           node.hidePopup();
-        else if (node.localName != "menu")
+        else if (node.localName != "menu" &&
+                 node.localName != "splitmenu" &&
+                 node.localName != "hbox" &&
+                 node.localName != "vbox" )
           break;
       }
     }
