@@ -165,6 +165,7 @@ JSParseNode::become(JSParseNode *pn2)
         pn_funbox->node = this;
     } else if (pn_arity == PN_LIST && !pn_head) {
         /* Empty list: fix up the pn_tail pointer. */
+        JS_ASSERT(pn_count == 0);
         JS_ASSERT(pn_tail == &pn2->pn_head);
         pn_tail = &pn_head;
     }
