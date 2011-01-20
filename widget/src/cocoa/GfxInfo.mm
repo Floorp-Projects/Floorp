@@ -40,7 +40,6 @@
 #include <OpenGL/CGLRenderers.h>
 
 #include "GfxInfo.h"
-#include "GfxInfoWebGL.h"
 #include "nsUnicharUtils.h"
 #include "mozilla/FunctionTimer.h"
 
@@ -51,10 +50,7 @@
 #include "nsIPrefService.h"
 #endif
 
-
 using namespace mozilla::widget;
-
-NS_IMPL_ISUPPORTS1(GfxInfo, nsIGfxInfo)
 
 void
 GfxInfo::Init()
@@ -187,10 +183,13 @@ GfxInfo::AddCrashReportAnnotations()
 #endif
 }
 
-NS_IMETHODIMP
-GfxInfo::GetFeatureStatus(PRInt32 aFeature, PRInt32 *aStatus)
+nsresult
+GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32* aStatus,
+                              nsAString& aSuggestedDriverVersion)
 {
   NS_ENSURE_ARG_POINTER(aStatus);
+
+  aSuggestedDriverVersion.SetIsVoid(PR_TRUE);
 
   PRInt32 status = nsIGfxInfo::FEATURE_NO_INFO;
 
@@ -235,16 +234,4 @@ GfxInfo::GetFeatureStatus(PRInt32 aFeature, PRInt32 *aStatus)
   }
   *aStatus = status;
   return NS_OK;
-}
-
-NS_IMETHODIMP
-GfxInfo::GetFeatureSuggestedDriverVersion(PRInt32 aFeature, nsAString& aSuggestedDriverVersion)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-GfxInfo::GetWebGLParameter(const nsAString& aParam, nsAString& aResult)
-{
-  return GfxInfoWebGL::GetWebGLParameter(aParam, aResult);
 }

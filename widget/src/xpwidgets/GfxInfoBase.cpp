@@ -18,7 +18,7 @@
  *
  * The Initial Developer of the Original Code is
  * Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2010
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -37,54 +37,31 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __mozilla_widget_GfxInfo_h__
-#define __mozilla_widget_GfxInfo_h__
-
 #include "GfxInfoBase.h"
+#include "GfxInfoWebGL.h"
 
-namespace mozilla {
-namespace widget {
+using namespace mozilla::widget;
 
-class GfxInfo : public GfxInfoBase
+NS_IMPL_ISUPPORTS1(GfxInfoBase, nsIGfxInfo)
+
+NS_IMETHODIMP
+GfxInfoBase::GetFeatureStatus(PRInt32 aFeature, PRInt32* aStatus NS_OUTPARAM)
 {
-public:
-  GfxInfo() {Init();}
-  virtual ~GfxInfo() {}
+  nsString version;
+  return GetFeatureStatusImpl(aFeature, aStatus, version);
+}
 
-  // We only declare the subset of nsIGfxInfo that we actually implement. The
-  // rest is brought forward from GfxInfoBase.
-  NS_SCRIPTABLE NS_IMETHOD GetD2DEnabled(PRBool *aD2DEnabled);
-  NS_SCRIPTABLE NS_IMETHOD GetDWriteEnabled(PRBool *aDWriteEnabled);
-  NS_SCRIPTABLE NS_IMETHOD GetDWriteVersion(nsAString & aDwriteVersion);
-  NS_SCRIPTABLE NS_IMETHOD GetAdapterDescription(nsAString & aAdapterDescription);
-  NS_SCRIPTABLE NS_IMETHOD GetAdapterDriver(nsAString & aAdapterDriver);
-  NS_SCRIPTABLE NS_IMETHOD GetAdapterVendorID(PRUint32 *aAdapterVendorID);
-  NS_SCRIPTABLE NS_IMETHOD GetAdapterDeviceID(PRUint32 *aAdapterDeviceID);
-  NS_SCRIPTABLE NS_IMETHOD GetAdapterRAM(nsAString & aAdapterRAM);
-  NS_SCRIPTABLE NS_IMETHOD GetAdapterDriverVersion(nsAString & aAdapterDriverVersion);
-  NS_SCRIPTABLE NS_IMETHOD GetAdapterDriverDate(nsAString & aAdapterDriverDate);
-  using GfxInfoBase::GetFeatureStatus;
-  using GfxInfoBase::GetFeatureSuggestedDriverVersion;
-  using GfxInfoBase::GetWebGLParameter;
+NS_IMETHODIMP
+GfxInfoBase::GetFeatureSuggestedDriverVersion(PRInt32 aFeature,
+                                              nsAString& aVersion NS_OUTPARAM)
+{
+  PRInt32 status;
+  return GetFeatureStatusImpl(aFeature, &status, aVersion);
+}
 
-protected:
-
-  virtual nsresult GetFeatureStatusImpl(PRInt32 aFeature, PRInt32 *aStatus, nsAString & aSuggestedDriverVersion);
-
-private:
-
-  void Init();
-  void AddCrashReportAnnotations();
-  nsString mDeviceString;
-  nsString mDeviceID;
-  nsString mDriverVersion;
-  nsString mDriverDate;
-  nsString mDeviceKey;
-  nsString mDeviceKeyDebug;
-
-};
-
-} // namespace widget
-} // namespace mozilla
-
-#endif /* __mozilla_widget_GfxInfo_h__ */
+NS_IMETHODIMP
+GfxInfoBase::GetWebGLParameter(const nsAString& aParam,
+                               nsAString& aResult NS_OUTPARAM)
+{
+  return GfxInfoWebGL::GetWebGLParameter(aParam, aResult);
+}

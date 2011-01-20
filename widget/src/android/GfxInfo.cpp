@@ -34,7 +34,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "GfxInfo.h"
-#include "GfxInfoWebGL.h"
 #include "nsUnicharUtils.h"
 #include "nsPrintfCString.h"
 #include "mozilla/FunctionTimer.h"
@@ -194,10 +193,12 @@ GfxInfo::AddCrashReportAnnotations()
 #endif
 }
 
-NS_IMETHODIMP
-GfxInfo::GetFeatureStatus(PRInt32 aFeature, PRInt32 *aStatus)
+nsresult
+GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32 *aStatus, nsAString & aSuggestedDriverVersion)
 {
   PRInt32 status = nsIGfxInfo::FEATURE_NO_INFO;
+
+  aSuggestedDriverVersion.SetIsVoid(PR_TRUE);
 
   if (aFeature == FEATURE_OPENGL_LAYERS) {
       nsAutoString str;
@@ -211,16 +212,4 @@ GfxInfo::GetFeatureStatus(PRInt32 aFeature, PRInt32 *aStatus)
 
   *aStatus = status;
   return NS_OK;
-}
-
-NS_IMETHODIMP
-GfxInfo::GetFeatureSuggestedDriverVersion(PRInt32 aFeature, nsAString& aSuggestedDriverVersion)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-GfxInfo::GetWebGLParameter(const nsAString& aParam, nsAString& aResult)
-{
-  return GfxInfoWebGL::GetWebGLParameter(aParam, aResult);
 }

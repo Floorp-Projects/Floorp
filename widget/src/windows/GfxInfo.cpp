@@ -57,8 +57,6 @@
 
 using namespace mozilla::widget;
 
-NS_IMPL_ISUPPORTS1(GfxInfo, nsIGfxInfo)
-
 /* GetD2DEnabled and GetDwriteEnabled shouldn't be called until after gfxPlatform initialization
  * has occurred because they depend on it for information. (See bug 591561) */
 nsresult
@@ -721,24 +719,4 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32 *aStatus, nsAString & aS
   }
   
   return NS_OK;
-}
-
-NS_IMETHODIMP
-GfxInfo::GetFeatureStatus(PRInt32 aFeature, PRInt32 *aStatus)
-{
-  nsString s;
-  return GetFeatureStatusImpl(aFeature, aStatus, s);
-}
-
-NS_IMETHODIMP
-GfxInfo::GetFeatureSuggestedDriverVersion(PRInt32 aFeature, nsAString& aSuggestedDriverVersion)
-{
-  PRInt32 i;
-  return GetFeatureStatusImpl(aFeature, &i, aSuggestedDriverVersion);
-}
-
-NS_IMETHODIMP
-GfxInfo::GetWebGLParameter(const nsAString& aParam, nsAString& aResult)
-{
-  return GfxInfoWebGL::GetWebGLParameter(aParam, aResult);
 }
