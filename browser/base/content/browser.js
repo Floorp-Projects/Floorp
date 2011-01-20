@@ -4875,7 +4875,7 @@ var TabsInTitlebar = {
   },
 
   _update: function () {
-    if (!this._initialized)
+    if (!this._initialized || window.fullScreen)
       return;
 
     let allowed = true;
