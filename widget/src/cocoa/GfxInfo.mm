@@ -40,7 +40,6 @@
 #include <OpenGL/CGLRenderers.h>
 
 #include "GfxInfo.h"
-#include "GfxInfoWebGL.h"
 #include "nsUnicharUtils.h"
 #include "mozilla/FunctionTimer.h"
 
@@ -51,15 +50,14 @@
 #include "nsIPrefService.h"
 #endif
 
-
 using namespace mozilla::widget;
 
-NS_IMPL_ISUPPORTS1(GfxInfo, nsIGfxInfo)
-
-void
+nsresult
 GfxInfo::Init()
 {
   NS_TIME_FUNCTION;
+
+  nsresult rv = GfxInfoBase::Init();
 
   CGLRendererInfoObj renderer = 0;
   GLint rendererCount = 0;
@@ -67,7 +65,7 @@ GfxInfo::Init()
   memset(mRendererIDs, 0, sizeof(mRendererIDs));
 
   if (CGLQueryRendererInfo(0xffffffff, &renderer, &rendererCount) != kCGLNoError)
-    return;
+    return rv;
 
   rendererCount = (GLint) PR_MIN(rendererCount, (GLint) NS_ARRAY_LENGTH(mRendererIDs));
   for (GLint i = 0; i < rendererCount; i++) {
@@ -92,6 +90,8 @@ GfxInfo::Init()
   CGLDestroyRendererInfo(renderer);
 
   AddCrashReportAnnotations();
+
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -187,12 +187,20 @@ GfxInfo::AddCrashReportAnnotations()
 #endif
 }
 
-NS_IMETHODIMP
-GfxInfo::GetFeatureStatus(PRInt32 aFeature, PRInt32 *aStatus)
+nsresult
+GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32* aStatus,
+                              nsAString& aSuggestedDriverVersion,
+                              GfxDriverInfo* aDriverInfo /* = nsnull */)
 {
   NS_ENSURE_ARG_POINTER(aStatus);
 
+  aSuggestedDriverVersion.SetIsVoid(PR_TRUE);
+
   PRInt32 status = nsIGfxInfo::FEATURE_NO_INFO;
+
+  // For now, we don't implement the downloaded blacklist.
+  if (aDriverInfo)
+    return NS_OK;
 
   if (aFeature == nsIGfxInfo::FEATURE_OPENGL_LAYERS) {
     // CGL reports a list of renderers, some renderers are slow (e.g. software)
@@ -235,16 +243,4 @@ GfxInfo::GetFeatureStatus(PRInt32 aFeature, PRInt32 *aStatus)
   }
   *aStatus = status;
   return NS_OK;
-}
-
-NS_IMETHODIMP
-GfxInfo::GetFeatureSuggestedDriverVersion(PRInt32 aFeature, nsAString& aSuggestedDriverVersion)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-GfxInfo::GetWebGLParameter(const nsAString& aParam, nsAString& aResult)
-{
-  return GfxInfoWebGL::GetWebGLParameter(aParam, aResult);
 }

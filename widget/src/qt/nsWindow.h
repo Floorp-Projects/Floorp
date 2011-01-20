@@ -233,6 +233,9 @@ public:
     PRBool AreBoundsSane(void);
 
     NS_IMETHOD         ReparentNativeWidget(nsIWidget* aNewParent);
+
+    QWidget* GetViewWidget();
+
 protected:
     nsCOMPtr<nsIWidget> mParent;
     // Is this a toplevel window?
@@ -345,7 +348,6 @@ private:
     PRBool             DispatchCommandEvent(nsIAtom* aCommand);
     MozQWidget*        createQWidget(MozQWidget *parent, nsWidgetInitData *aInitData);
 
-    QWidget*           GetViewWidget();
     PRBool             IsAcceleratedQView(QGraphicsView* aView);
 
     MozQWidget*        mWidget;

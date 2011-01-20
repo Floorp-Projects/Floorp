@@ -15,4 +15,4 @@
 == select-disabled-fieldset-1.html select-fieldset-ref.html
 == select-disabled-fieldset-2.html select-fieldset-ref.html
 == select-fieldset-legend.html select-fieldset-legend-ref.html
-== select-novalidate.html select-ref.html
+== select-novalidate.html select-required-ref.html

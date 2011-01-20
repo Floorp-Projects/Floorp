@@ -120,6 +120,7 @@ private:
   nsAutoPtr<nsDocShellEditorData> mEditorData;
   nsString                        mStateData;
   PRUint64                        mDocShellID;
+  PRUint32                        mLastTouched;
 };
 
 #endif /* nsSHEntry_h */

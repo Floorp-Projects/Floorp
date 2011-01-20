@@ -262,6 +262,7 @@ imgIContainer*  nsWindow::sCursorImgContainer     = nsnull;
 nsWindow*       nsWindow::sCurrentWindow          = nsnull;
 PRBool          nsWindow::sJustGotDeactivate      = PR_FALSE;
 PRBool          nsWindow::sJustGotActivate        = PR_FALSE;
+PRBool          nsWindow::sIsInMouseCapture       = PR_FALSE;
 
 // imported in nsWidgetFactory.cpp
 TriStateBool    nsWindow::sCanQuit                = TRI_UNKNOWN;
@@ -406,7 +407,6 @@ nsWindow::nsWindow() : nsBaseWidget()
   mNativeDragTarget     = nsnull;
   mInDtor               = PR_FALSE;
   mIsVisible            = PR_FALSE;
-  mIsInMouseCapture     = PR_FALSE;
   mIsTopWidgetWindow    = PR_FALSE;
   mUnicodeWidget        = PR_TRUE;
   mDisplayPanFeedback   = PR_FALSE;
@@ -426,7 +426,6 @@ nsWindow::nsWindow() : nsBaseWidget()
   mOldStyle             = 0;
   mOldExStyle           = 0;
   mPainting             = 0;
-  mExitToNonClientArea  = 0;
   mLastKeyboardLayout   = 0;
   mBlurSuppressLevel    = 0;
   mIMEContext.mStatus   = nsIWidget::IME_STATUS_ENABLED;
@@ -3143,7 +3142,7 @@ NS_METHOD nsWindow::CaptureMouse(PRBool aCapture)
     nsToolkit::gMouseTrailer->SetCaptureWindow(NULL);
     ::ReleaseCapture();
   }
-  mIsInMouseCapture = aCapture;
+  sIsInMouseCapture = aCapture;
   return NS_OK;
 }
 
@@ -3965,7 +3964,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam,
     case NS_MOUSE_BUTTON_UP:
     case NS_MOUSE_MOVE:
     case NS_MOUSE_EXIT:
-      if (!(wParam & (MK_LBUTTON | MK_MBUTTON | MK_RBUTTON)) && mIsInMouseCapture)
+      if (!(wParam & (MK_LBUTTON | MK_MBUTTON | MK_RBUTTON)) && sIsInMouseCapture)
         CaptureMouse(PR_FALSE);
       break;
 
@@ -4143,7 +4142,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam,
     if (nsToolkit::gMouseTrailer)
       nsToolkit::gMouseTrailer->Disable();
     if (aEventType == NS_MOUSE_MOVE) {
-      if (nsToolkit::gMouseTrailer && !mIsInMouseCapture) {
+      if (nsToolkit::gMouseTrailer && !sIsInMouseCapture) {
         nsToolkit::gMouseTrailer->SetMouseTrailerWindow(mWnd);
       }
       nsIntRect rect;
@@ -5055,7 +5054,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
       if ((sLastMouseMovePoint.x != mp.x) || (sLastMouseMovePoint.y != mp.y)) {
         userMovedMouse = PR_TRUE;
       }
-      mExitToNonClientArea = PR_FALSE;
 
       result = DispatchMouseEvent(NS_MOUSE_MOVE, wParam, lParam,
                                   PR_FALSE, nsMouseEvent::eLeftButton, MOUSE_INPUT_SOURCE());
@@ -5068,7 +5066,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     case WM_NCMOUSEMOVE:
       // If we receive a mouse move event on non-client chrome, make sure and
       // send an NS_MOUSE_EXIT event as well.
-      if (mMousePresent && !mIsInMouseCapture)
+      if (mMousePresent && !sIsInMouseCapture)
         SendMessage(mWnd, WM_MOUSELEAVE, 0, 0);
     break;
 
@@ -5880,7 +5878,7 @@ nsWindow::ClientMarginHitTestPoint(PRInt32 mx, PRInt32 my)
                      my <= winRect.bottom - bottomMargin;
   }
 
-  if (!mIsInMouseCapture && 
+  if (!sIsInMouseCapture &&
       contentOverlap &&
       (testResult == HTCLIENT ||
        testResult == HTTOP ||
@@ -5894,12 +5892,6 @@ nsWindow::ClientMarginHitTestPoint(PRInt32 mx, PRInt32 my)
       // The mouse is over a blank area
       testResult = testResult == HTCLIENT ? HTCAPTION : testResult;
 
-      if (!mExitToNonClientArea) {
-        // The first time the mouse pointer goes from client area to non-client area,
-        // we don't want to miss that movement so we can interpret mouseout input.
-        ::SendMessage(mWnd, WM_MOUSEMOVE, 0, lParamClient);
-        mExitToNonClientArea = PR_TRUE;
-      }
     } else {
       // There's content over the mouse pointer. Set HTCLIENT
       // to possibly override a resizer border.

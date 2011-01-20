@@ -331,9 +331,33 @@
             hideAnchor = true;
           }
           else {
-            let rtl = (window.getComputedStyle(this).direction == "rtl");
-            arrowbox.pack = (popupLeft + popupRect.width / 2 < anchorLeft) != rtl ?
-                              "end" : "start";
+            let pack = "";
+
+            // We have to guess where to position the arrow given that we don't
+            // have access to the parameters passed to |openPopup|.
+
+            // If the popup is on the left of the anchor.
+            if (popupLeft < anchorLeft && popupRight < anchorRight) {
+              pack = (popupLeft + popupRect.width / 2 < anchorLeft) ? "end" : "start";
+            // If the popup is on the right of the anchor.
+            } else if (popupLeft > anchorLeft && popupRight > anchorRight) {
+              pack = (popupLeft + popupRect.width / 2 > anchorRight) ? "start" : "end";
+            // If the popup is not on the right nor on the left.
+            // Basically, that means one is above the other and one is bigger
+            // than the other.
+            // In that case, we can't easily choose a position for the arrow so
+            // we have to guess depending on which side the popup is more close to.
+            } else {
+              pack = (Math.abs(popupLeft - anchorLeft) < Math.abs(popupRight - anchorRight)) ? "start" : "end";
+            }
+
+            // In RTL, everything should be inverted.
+            if (window.getComputedStyle(this).direction == "rtl") {
+              pack = (pack == "start") ? "end" : "start";
+            }
+
+            arrowbox.pack = pack;
+
             if (vertPos == 1) {
               container.dir = "";
               anchorClass = "top";

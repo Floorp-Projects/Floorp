@@ -1061,21 +1061,21 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption, Q
     if (renderMode == gfxQtPlatform::RENDER_BUFFERED) {
         ctx->Translate(gfxPoint(-r.x(), -r.y()));
     }
-#ifdef MOZ_ENABLE_MEEGOTOUCH
     else if (renderMode == gfxQtPlatform::RENDER_DIRECT) {
+      gfxMatrix matr;
+      matr.Translate(gfxPoint(aPainter->transform().dx(), aPainter->transform().dy()));
+#ifdef MOZ_ENABLE_MEEGOTOUCH
       MWindow* window = MApplication::activeWindow();
       if (window) {
         // This is needed for rotate transformation on MeeGo
         // This will work very slow if pixman does not handle rotation very well
-        gfxMatrix matr;
         M::OrientationAngle angle = window->orientationAngle();
-        matr.Translate(gfxPoint(aPainter->transform().dx(), aPainter->transform().dy()));
         matr.Rotate((M_PI/180)*angle);
-        ctx->SetMatrix(matr);
         NS_ASSERTION(PIXMAN_VERSION > PIXMAN_VERSION_ENCODE(0, 21, 2) || !angle, "Old pixman and rotate transform, it is going to be slow");
       }
-    }
 #endif
+      ctx->SetMatrix(matr);
+    }
 
     nsPaintEvent event(PR_TRUE, NS_PAINT, this);
     event.refPoint.x = rect.x;
