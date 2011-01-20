@@ -40,15 +40,24 @@
 #ifndef __mozilla_widget_GfxInfoBase_h__
 #define __mozilla_widget_GfxInfoBase_h__
 
-#include <nsIGfxInfo.h>
+#include "nsIGfxInfo.h"
+#include "nsCOMPtr.h"
+#include "nsIObserver.h"
+#include "nsWeakReference.h"
 
 namespace mozilla {
 namespace widget {  
 
-class GfxInfoBase : public nsIGfxInfo
+class GfxInfoBase : public nsIGfxInfo,
+                    public nsIObserver,
+                    public nsSupportsWeakReference
 {
 public:
+  GfxInfoBase();
+  virtual ~GfxInfoBase();
+
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
 
   // We only declare a subset of the nsIGfxInfo interface. It's up to derived
   // classes to implement the rest of the interface.  
@@ -60,6 +69,12 @@ public:
   NS_SCRIPTABLE NS_IMETHOD GetFeatureStatus(PRInt32 aFeature, PRInt32 *_retval NS_OUTPARAM);
   NS_SCRIPTABLE NS_IMETHOD GetFeatureSuggestedDriverVersion(PRInt32 aFeature, nsAString & _retval NS_OUTPARAM);
   NS_SCRIPTABLE NS_IMETHOD GetWebGLParameter(const nsAString & aParam, nsAString & _retval NS_OUTPARAM);
+
+  // Initialization function. If you override this, you must call this class's
+  // version of Init first.
+  // Ideally, Init() would be void-return, but the rules of
+  // NS_GENERIC_FACTORY_CONSTRUCTOR_INIT require it be nsresult return.
+  virtual nsresult Init();
 
 protected:
   virtual nsresult GetFeatureStatusImpl(PRInt32 aFeature, PRInt32* aStatus,
