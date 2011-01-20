@@ -142,6 +142,9 @@
                 // Recalculate whether the visible area is actually in bounds
                 let view = self.getRootView();
                 view.scrollBy(0, 0);
+
+                // XXX Actually this fire a SetCacheViewport event as well as the
+                // scrolledAreaChanged handler in content/chrome/browser.js
                 view._updateCacheViewport();
                 break;
             }
