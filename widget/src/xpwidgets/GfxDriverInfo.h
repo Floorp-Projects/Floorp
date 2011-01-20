@@ -131,7 +131,7 @@ ParseDriverVersion(nsAString& aVersion, PRUint64 *aNumericVersion)
   return true;
 }
 
-};
-};
+}
+}
 
 #endif /*__mozilla_widget_GfxDriverInfo_h__ */

@@ -90,7 +90,7 @@ private:
 
 };
 
-};
-};
+}
+}
 
 #endif /* __mozilla_widget_GfxInfoBase_h__ */
