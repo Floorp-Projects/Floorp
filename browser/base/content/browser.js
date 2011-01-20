@@ -1635,6 +1635,9 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   if (consoleEnabled) {
     document.getElementById("javascriptConsole").hidden = false;
     document.getElementById("key_errorConsole").removeAttribute("disabled");
+#ifdef MENUBAR_CAN_AUTOHIDE
+    document.getElementById("appmenu_errorConsole").hidden = false;
+#endif
   }
 
 #ifdef MENUBAR_CAN_AUTOHIDE
