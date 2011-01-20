@@ -560,60 +560,19 @@ protected:
   }
 
   /**
-   * Return if an invalid element should have a specific UI for being invalid
-   * (with :-moz-ui-invalid pseudo-class.
+   * Return if an element should have a specific validity UI
+   * (with :-moz-ui-invalid and :-moz-ui-valid pseudo-classes).
    *
-   * @return Whether the invalid elemnet should have a UI for being invalid.
-   * @note The caller has to be sure the element is invalid before calling.
+   * @return Whether the elemnet should have a validity UI.
    */
-  bool ShouldShowInvalidUI() const {
-    NS_ASSERTION(!IsValid(), "You should not call ShouldShowInvalidUI if the "
-                             "element is valid!");
-
+  bool ShouldShowValidityUI() const {
     /**
-     * Never show the invalid UI if the form has the novalidate attribute set.
+     * Never show the validity UI if the form has the novalidate attribute set.
+     * Always show the validity UI if the form has already tried to be submitted
+     * but was invalid.
      *
-     * Always show the invalid UI if:
-     * - the form has already tried to be submitted but was invalid;
-     * - the element is suffering from a custom error;
-     * - the element has had its value changed
-     *
-     * Otherwise, show the invalid UI if the element's value has been changed.
+     * Otherwise, show the validity UI if the element's value has been changed.
      */
-    if (mForm) {
-      if (mForm->HasAttr(kNameSpaceID_None, nsGkAtoms::novalidate)) {
-        return false;
-      }
-      if (mForm->HasEverTriedInvalidSubmit()) {
-        return true;
-      }
-    }
-
-    if (GetValidityState(VALIDITY_STATE_CUSTOM_ERROR)) {
-      return true;
-    }
-
-    switch (GetValueMode()) {
-      case VALUE_MODE_DEFAULT:
-        return true;
-      case VALUE_MODE_DEFAULT_ON:
-        return GetCheckedChanged();
-      case VALUE_MODE_VALUE:
-      case VALUE_MODE_FILENAME:
-        return GetValueChanged();
-      default:
-        NS_NOTREACHED("We should not be there: there are no other modes.");
-        return false;
-    }
-  }
-
-  /**
-   * Return whether an element should show the valid UI.
-   *
-   * @return Whether the valid UI should be shown.
-   * @note This doesn't take into account the validity of the element.
-   */
-  bool ShouldShowValidUI() const {
     if (mForm) {
       if (mForm->HasAttr(kNameSpaceID_None, nsGkAtoms::novalidate)) {
         return false;
