@@ -65,71 +65,36 @@ ThebesLayerD3D10::~ThebesLayerD3D10()
 #define RETENTION_THRESHOLD 16384
 
 void
-ThebesLayerD3D10::SetVisibleRegion(const nsIntRegion &aRegion)
+
+ThebesLayerD3D10::InvalidateRegion(const nsIntRegion &aRegion)
 {
-  if (aRegion.IsEqual(mVisibleRegion)) {
-    return;
-  }
+  mValidRegion.Sub(mValidRegion, aRegion);
+}
 
-  nsIntRegion oldVisibleRegion = mVisibleRegion;
-  ThebesLayer::SetVisibleRegion(aRegion);
-
-  if (!mTexture) {
-    // If we don't need to retain content initialize lazily. This is good also
-    // because we might get mIsOpaqueSurface set later than the first call to
-    // SetVisibleRegion.
-    return;
-  }
-
-  VerifyContentType();
-
-  nsRefPtr<ID3D10Texture2D> oldTexture = mTexture;
-
-  nsIntRect oldBounds = oldVisibleRegion.GetBounds();
-  nsIntRect newBounds = mVisibleRegion.GetBounds();
-
-  CreateNewTexture(gfxIntSize(newBounds.width, newBounds.height));
-
-  // Old visible region will become the region that is covered by both the
-  // old and the new visible region.
-  oldVisibleRegion.And(oldVisibleRegion, mVisibleRegion);
-  // No point in retaining parts which were not valid.
-  oldVisibleRegion.And(oldVisibleRegion, mValidRegion);
-
-  nsIntRect largeRect = oldVisibleRegion.GetLargestRectangle();
-
-  // If we had no hardware texture before or have no retained area larger than
-  // the retention threshold, we're not retaining and are done here. If our
-  // texture creation failed this can mean a device reset is pending and we
-  // should silently ignore the failure. In the future when device failures
-  // are properly handled we should test for the type of failure and gracefully
-  // handle different failures. See bug 569081.
-  if (!oldTexture || !mTexture ||
-      largeRect.width * largeRect.height < RETENTION_THRESHOLD) {
-    mValidRegion.SetEmpty();
-    return;
-  }
-
+void ThebesLayerD3D10::CopyRegion(ID3D10Texture2D* aSrc, const nsIntPoint &aSrcOffset,
+                                  ID3D10Texture2D* aDest, const nsIntPoint &aDestOffset,
+                                  const nsIntRegion &aCopyRegion, nsIntRegion* aValidRegion)
+{
   nsIntRegion retainedRegion;
-  nsIntRegionRectIterator iter(oldVisibleRegion);
+  nsIntRegionRectIterator iter(aCopyRegion);
   const nsIntRect *r;
   while ((r = iter.Next())) {
     if (r->width * r->height > RETENTION_THRESHOLD) {
       // Calculate the retained rectangle's position on the old and the new
       // surface.
       D3D10_BOX box;
-      box.left = r->x - oldBounds.x;
-      box.top = r->y - oldBounds.y;
+      box.left = r->x - aSrcOffset.x;
+      box.top = r->y - aSrcOffset.y;
       box.right = box.left + r->width;
       box.bottom = box.top + r->height;
-      box.back = 1.0f;
+      box.back = 1;
       box.front = 0;
 
-      device()->CopySubresourceRegion(mTexture, 0,
-                                      r->x - newBounds.x,
-                                      r->y - newBounds.y,
+      device()->CopySubresourceRegion(aDest, 0,
+                                      r->x - aDestOffset.x,
+                                      r->y - aDestOffset.y,
                                       0,
-                                      oldTexture, 0,
+                                      aSrc, 0,
                                       &box);
 
       retainedRegion.Or(retainedRegion, *r);
@@ -137,14 +102,7 @@ ThebesLayerD3D10::SetVisibleRegion(const nsIntRegion &aRegion)
   }
 
   // Areas which were valid and were retained are still valid
-  mValidRegion.And(mValidRegion, retainedRegion);  
-}
-
-
-void
-ThebesLayerD3D10::InvalidateRegion(const nsIntRegion &aRegion)
-{
-  mValidRegion.Sub(mValidRegion, aRegion);
+  aValidRegion->And(*aValidRegion, retainedRegion);  
 }
 
 void
@@ -210,6 +168,42 @@ ThebesLayerD3D10::Validate()
 
   nsIntRect visibleRect = mVisibleRegion.GetBounds();
 
+  if (mTexture) {
+    if (!mTextureRegion.IsEqual(mVisibleRegion)) {
+      nsRefPtr<ID3D10Texture2D> oldTexture = mTexture;
+
+      nsIntRegion retainRegion = mTextureRegion;
+      nsIntRect oldBounds = mTextureRegion.GetBounds();
+      nsIntRect newBounds = mVisibleRegion.GetBounds();
+
+      CreateNewTexture(gfxIntSize(newBounds.width, newBounds.height));
+
+      // Old visible region will become the region that is covered by both the
+      // old and the new visible region.
+      retainRegion.And(retainRegion, mVisibleRegion);
+      // No point in retaining parts which were not valid.
+      retainRegion.And(retainRegion, mValidRegion);
+
+      nsIntRect largeRect = retainRegion.GetLargestRectangle();
+
+      // If we had no hardware texture before or have no retained area larger than
+      // the retention threshold, we're not retaining and are done here. If our
+      // texture creation failed this can mean a device reset is pending and we
+      // should silently ignore the failure. In the future when device failures
+      // are properly handled we should test for the type of failure and gracefully
+      // handle different failures. See bug 569081.
+      if (!oldTexture || !mTexture ||
+          largeRect.width * largeRect.height < RETENTION_THRESHOLD) {
+        mValidRegion.SetEmpty();
+      } else {
+        CopyRegion(oldTexture, oldBounds.TopLeft(),
+                   mTexture, newBounds.TopLeft(),
+                   retainRegion, &mValidRegion);
+      }
+      mTextureRegion = mVisibleRegion;
+    }
+  }
+
   if (!mTexture) {
     CreateNewTexture(gfxIntSize(visibleRect.width, visibleRect.height));
     mValidRegion.SetEmpty();
@@ -272,7 +266,6 @@ ThebesLayerD3D10::VerifyContentType()
 void
 ThebesLayerD3D10::DrawRegion(const nsIntRegion &aRegion)
 {
-  HRESULT hr;
   nsIntRect visibleRect = mVisibleRegion.GetBounds();
 
   if (!mD2DSurface) {
