@@ -259,7 +259,7 @@ AsyncStatement::getParams()
  */
 AsyncStatement::~AsyncStatement()
 {
-  internalAsyncFinalize();
+  destructorAsyncFinalize();
   cleanupJSHelpers();
 
   // If we are getting destroyed on the wrong thread, proxy the connection
