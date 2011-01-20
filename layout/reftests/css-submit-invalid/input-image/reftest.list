@@ -12,5 +12,4 @@
 == remove-submit-control.html valid-ref-3.html
 == change-type-submit-control.html invalid-ref.html
 == change-type-not-submit-control.html valid-ref-4.html
-== self-invalid.html about:blank
 == remove-form.html invalid-ref-3.html
