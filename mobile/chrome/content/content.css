@@ -154,6 +154,11 @@ textarea,
   background: white -moz-linear-gradient(top, rgba(115,115,115,0.5) 0, rgba(215,215,215,0.5) 3px, rgba(255,255,255,0.2) 16px);
 }
 
+input:-moz-placeholder,
+textarea:-moz-placeholder {
+  color: GrayText;
+}
+
 select:not([size]):not([multiple]),
 select[size="0"],
 select[size="1"],
