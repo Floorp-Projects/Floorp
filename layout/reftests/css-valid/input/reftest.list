@@ -29,4 +29,6 @@
 == input-radio-dyn-valid-2.html success-ref.html
 == input-radio-nogroup-required-valid.html success-ref.html
 == input-radio-nogroup-required-invalid.html success-ref.html
+== input-submit.html input-submit-ref.html
+== input-image.html input-image-ref.html
 # input type='hidden' shouldn't show
