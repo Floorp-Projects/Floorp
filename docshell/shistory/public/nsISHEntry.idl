@@ -250,11 +250,16 @@ interface nsISHEntry : nsIHistoryEntry
     attribute unsigned long long docshellID;
 };
 
-[scriptable, uuid(e0b0ac6d-cb29-4be2-b685-1755d6301a69)]
+[scriptable, uuid(bb66ac35-253b-471f-a317-3ece940f04c5)]
 interface nsISHEntryInternal : nsISupports
 {
     [notxpcom] void RemoveFromBFCacheAsync();
     [notxpcom] void RemoveFromBFCacheSync();
+
+    /**
+     * A number that is assigned by the sHistory when the entry is activated
+     */
+    attribute unsigned long lastTouched;
 };
 
 %{ C++

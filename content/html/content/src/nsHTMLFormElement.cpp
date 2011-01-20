@@ -1757,6 +1757,14 @@ nsHTMLFormElement::CheckValidFormSubmission()
 
           for (PRUint32 i = 0, length = mControls->mElements.Length();
                i < length; ++i) {
+            // Input elements can trigger a form submission and we want to
+            // update the style in that case.
+            if (mControls->mElements[i]->IsHTML(nsGkAtoms::input) &&
+                nsContentUtils::IsFocusedContent(mControls->mElements[i])) {
+              static_cast<nsHTMLInputElement*>(mControls->mElements[i])
+                ->UpdateValidityUIBits(true);
+            }
+
             doc->ContentStatesChanged(mControls->mElements[i], nsnull,
                                       NS_EVENT_STATE_MOZ_UI_VALID |
                                       NS_EVENT_STATE_MOZ_UI_INVALID);

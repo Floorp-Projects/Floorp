@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=428248
+-->
+<head>
+  <title>nsIHyper>TextAccessible chrome tests</title>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+
+  <script type="application/javascript">
+    var gParagraphAcc;
+
+    function testLinkIndexAtOffset(aID, aOffset, aIndex)
+    {
+      var htAcc = getAccessible(aID, [nsIAccessibleHyperText]);
+      is(htAcc.getLinkIndexAtOffset(aOffset), aIndex,
+         "Wrong link index at offset " + aOffset + " for ID " + aID + "!");
+    }
+
+    function testThis(aID, aCharIndex, aExpectedLinkIndex, aName)
+    {
+      testLinkIndexAtOffset(gParagraphAcc, aCharIndex, aExpectedLinkIndex);
+
+      var linkAcc = gParagraphAcc.getLinkAt(aExpectedLinkIndex);
+      ok(linkAcc, "No accessible for link " + aID + "!");
+
+      var linkIndex = gParagraphAcc.getLinkIndex(linkAcc);
+      is(linkIndex, aExpectedLinkIndex, "Wrong link index for " + aID + "!");
+
+      // Just test the link's name to make sure we get the right one.
+      is(linkAcc.getAnchor(0).name, aName, "Wrong name for " + aID + "!");
+    }
+
+    function doTest()
+    {
+      // Test link count
+      gParagraphAcc = getAccessible("testParagraph", [nsIAccessibleHyperText]);
+      is(gParagraphAcc.linkCount, 7, "Wrong link count for paragraph!");
+
+      // normal hyperlink
+      testThis("NormalHyperlink", 14, 0, "Mozilla Foundation");
+
+      // ARIA hyperlink
+      testThis("AriaHyperlink", 27, 1, "Mozilla Foundation Home");
+
+      // ARIA hyperlink with status invalid
+      testThis("InvalidAriaHyperlink", 63, 2, "Invalid link");
+
+      // image map, but not its link children. They are not part of hypertext.
+      testThis("imgmap", 76, 3, "b");
+
+      // empty hyperlink
+      testThis("emptyLink", 90, 4, null);
+
+      // normal hyperlink with embedded span
+      testThis("LinkWithSpan", 116, 5, "Heise Online");
+
+      // Named anchor
+      testThis("namedAnchor", 193, 6, "This should never be of state_linked");
+
+      // Paragraph with link
+      var p2 = getAccessible("p2", [nsIAccessibleHyperText]);
+      var link = p2.getLinkAt(0);
+      is(link, p2.getChildAt(0), "Wrong link for p2");
+      is(p2.linkCount, 1, "Wrong link count for p2");
+
+      // getLinkIndexAtOffset, causes the offsets to be cached;
+      testLinkIndexAtOffset("p4", 0, 0); // 1st 'mozilla' link
+      testLinkIndexAtOffset("p4", 1, 1); // 2nd 'mozilla' link
+      testLinkIndexAtOffset("p4", 2, -1); // ' ' of ' te' text node
+      testLinkIndexAtOffset("p4", 3, -1); // 't' of ' te' text node
+      testLinkIndexAtOffset("p4", 5, -1); // 'x' of 'xt ' text node
+      testLinkIndexAtOffset("p4", 7, -1); // ' ' of 'xt ' text node
+      testLinkIndexAtOffset("p4", 8, 2); // 3d 'mozilla' link
+      testLinkIndexAtOffset("p4", 9, 2); // the end, latest link
+
+      // the second pass to make sure link indexes are calculated propertly from
+      // cached offsets.
+      testLinkIndexAtOffset("p4", 0, 0); // 1st 'mozilla' link
+      testLinkIndexAtOffset("p4", 1, 1); // 2nd 'mozilla' link
+      testLinkIndexAtOffset("p4", 2, -1); // ' ' of ' te' text node
+      testLinkIndexAtOffset("p4", 3, -1); // 't' of ' te' text node
+      testLinkIndexAtOffset("p4", 5, -1); // 'x' of 'xt ' text node
+      testLinkIndexAtOffset("p4", 7, -1); // ' ' of 'xt ' text node
+      testLinkIndexAtOffset("p4", 8, 2); // 3d 'mozilla' link
+      testLinkIndexAtOffset("p4", 9, 2); // the end, latest link
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="Create tests for NSIAccessibleHyperlink interface"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=418368">
+    Mozilla Bug 418368
+  </a><br>
+  <a target="_blank"
+     title="Cache links within hypertext accessible"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=572394">
+    Mozilla Bug 572394
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+  <p id="testParagraph"><br
+  >Simple link:<br
+  ><a id="NormalHyperlink" href="http://www.mozilla.org">Mozilla Foundation</a><br
+  >ARIA link:<br
+  ><span id="AriaHyperlink" role="link"
+          onclick="window.open('http://www.mozilla.org/');"
+          tabindex="0">Mozilla Foundation Home</span><br
+  >Invalid, non-focusable hyperlink:<br
+  ><span id="InvalidAriaHyperlink" role="link" aria-invalid="true"
+         onclick="window.open('http:/www.mozilla.org/');">Invalid link</span><br
+  >Image map:<br
+  ><map name="atoz_map"><area href="http://www.bbc.co.uk/radio4/atoz/index.shtml#b"
+                              coords="17,0,30,14"
+                              alt="b"
+                              shape="rect"></area
+   ><area href="http://www.bbc.co.uk/radio4/atoz/index.shtml#a"
+          coords="0,0,13,14"
+          alt="a"
+          shape="rect"></area></map
+   ><img width="447" id="imgmap"
+         height="15"
+         usemap="#atoz_map"
+         src="letters.gif"></img><br
+  >Empty link:<br
+  ><a id="emptyLink" href=""><img src=""></img></a><br
+  >Link with embedded span<br
+  ><a id="LinkWithSpan" href="http://www.heise.de/"><span lang="de">Heise Online</span></a><br
+  >Named anchor, must not have "linked" state for it to be exposed correctly:<br
+  ><a id="namedAnchor" name="named_anchor">This should never be of state_linked</a>
+  </p>
+  <p id="p2"><a href="http://mozilla.org">mozilla.org</a></p>
+  <p id="p4"><a href="www">mozilla</a><a href="www">mozilla</a><span> te</span><span>xt </span><a href="www">mozilla</a></p>
+</body>
+</html>

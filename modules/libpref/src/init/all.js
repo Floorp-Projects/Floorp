@@ -105,6 +105,8 @@ pref("dom.indexedDB.warningQuota", 50);
 // of content viewers to cache based on the amount of available memory.
 pref("browser.sessionhistory.max_total_viewers", -1);
 
+pref("browser.sessionhistory.optimize_eviction", false);
+
 pref("ui.use_native_colors", true);
 pref("ui.use_native_popup_windows", false);
 pref("ui.click_hold_context_menus", false);

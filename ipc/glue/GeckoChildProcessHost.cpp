@@ -76,6 +76,13 @@
 using mozilla::MonitorAutoEnter;
 using mozilla::ipc::GeckoChildProcessHost;
 
+#ifdef ANDROID
+// Like its predecessor in nsExceptionHandler.cpp, this is
+// the magic number of a file descriptor remapping we must
+// preserve for the child process.
+static const int kMagicAndroidSystemPropFd = 5;
+#endif
+
 template<>
 struct RunnableMethodTraits<GeckoChildProcessHost>
 {
@@ -406,7 +413,22 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts, b
   // fill the last arg with something if there's no cache
   if (cacheStr.IsEmpty())
     cacheStr.AppendLiteral("-");
-#endif
+
+  // Remap the Android property workspace to a well-known int,
+  // and update the environment to reflect the new value for the
+  // child process.
+  const char *apws = getenv("ANDROID_PROPERTY_WORKSPACE");
+  if (apws) {
+    int fd = atoi(apws);
+    mFileMap.push_back(std::pair<int, int>(fd, kMagicAndroidSystemPropFd));
+
+    char buf[32];
+    char *szptr = strchr(apws, ',');
+
+    snprintf(buf, sizeof(buf), "%d%s", kMagicAndroidSystemPropFd, szptr);
+    newEnvVars["ANDROID_PROPERTY_WORKSPACE"] = buf;
+  }
+#endif  // ANDROID
 
   // remap the IPC socket fd to a well-known int, as the OS does for
   // STDOUT_FILENO, for example

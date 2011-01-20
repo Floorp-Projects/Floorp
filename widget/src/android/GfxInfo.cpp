@@ -34,7 +34,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "GfxInfo.h"
-#include "GfxInfoWebGL.h"
 #include "nsUnicharUtils.h"
 #include "nsPrintfCString.h"
 #include "mozilla/FunctionTimer.h"
@@ -51,11 +50,7 @@
 #include "nsIPrefService.h"
 #endif
 
-
 using namespace mozilla::widget;
-
-
-NS_IMPL_ISUPPORTS1(GfxInfo, nsIGfxInfo)
 
 /* GetD2DEnabled and GetDwriteEnabled shouldn't be called until after gfxPlatform initialization
  * has occurred because they depend on it for information. (See bug 591561) */
@@ -78,11 +73,11 @@ GfxInfo::GetDWriteVersion(nsAString & aDwriteVersion)
   return NS_ERROR_FAILURE;
 }
 
-void
+nsresult
 GfxInfo::Init()
 {
+  return GfxInfoBase::Init();
 }
-
 
 /* readonly attribute DOMString adapterDescription; */
 NS_IMETHODIMP
@@ -194,10 +189,19 @@ GfxInfo::AddCrashReportAnnotations()
 #endif
 }
 
-NS_IMETHODIMP
-GfxInfo::GetFeatureStatus(PRInt32 aFeature, PRInt32 *aStatus)
+nsresult
+GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32 *aStatus, nsAString & aSuggestedDriverVersion,
+                              GfxDriverInfo* aDriverInfo /* = nsnull */)
 {
   PRInt32 status = nsIGfxInfo::FEATURE_NO_INFO;
+
+  aSuggestedDriverVersion.SetIsVoid(PR_TRUE);
+
+  // For now, we don't implement the downloaded blacklist.
+  if (aDriverInfo) {
+    *aStatus = status;
+    return NS_OK;
+  }
 
   if (aFeature == FEATURE_OPENGL_LAYERS) {
       nsAutoString str;
@@ -211,16 +215,4 @@ GfxInfo::GetFeatureStatus(PRInt32 aFeature, PRInt32 *aStatus)
 
   *aStatus = status;
   return NS_OK;
-}
-
-NS_IMETHODIMP
-GfxInfo::GetFeatureSuggestedDriverVersion(PRInt32 aFeature, nsAString& aSuggestedDriverVersion)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-GfxInfo::GetWebGLParameter(const nsAString& aParam, nsAString& aResult)
-{
-  return GfxInfoWebGL::GetWebGLParameter(aParam, aResult);
 }

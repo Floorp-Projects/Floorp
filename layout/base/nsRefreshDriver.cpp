@@ -290,24 +290,42 @@ nsRefreshDriver::Notify(nsITimer * /* unused */)
       }
 
       // This is the Flush_Style case.
-      while (!mStyleFlushObservers.IsEmpty() &&
-             mPresContext && mPresContext->GetPresShell()) {
-        PRUint32 idx = mStyleFlushObservers.Length() - 1;
-        nsCOMPtr<nsIPresShell> shell = mStyleFlushObservers[idx];
-        mStyleFlushObservers.RemoveElementAt(idx);
-        shell->FrameConstructor()->mObservingRefreshDriver = PR_FALSE;
-        shell->FlushPendingNotifications(Flush_Style);
+      if (mPresContext && mPresContext->GetPresShell()) {
+        nsAutoTArray<nsIPresShell*, 16> observers;
+        observers.AppendElements(mStyleFlushObservers);
+        for (PRUint32 j = observers.Length();
+             j && mPresContext && mPresContext->GetPresShell(); --j) {
+          // Make sure to not process observers which might have been removed
+          // during previous iterations.
+          nsIPresShell* shell = observers[j - 1];
+          if (!mStyleFlushObservers.Contains(shell))
+            continue;
+          NS_ADDREF(shell);
+          mStyleFlushObservers.RemoveElement(shell);
+          shell->FrameConstructor()->mObservingRefreshDriver = PR_FALSE;
+          shell->FlushPendingNotifications(Flush_Style);
+          NS_RELEASE(shell);
+        }
       }
     } else if  (i == 1) {
       // This is the Flush_Layout case.
-      while (!mLayoutFlushObservers.IsEmpty() &&
-             mPresContext && mPresContext->GetPresShell()) {
-        PRUint32 idx = mLayoutFlushObservers.Length() - 1;
-        nsCOMPtr<nsIPresShell> shell = mLayoutFlushObservers[idx];
-        mLayoutFlushObservers.RemoveElementAt(idx);
-        shell->mReflowScheduled = PR_FALSE;
-        shell->mSuppressInterruptibleReflows = PR_FALSE;
-        shell->FlushPendingNotifications(Flush_InterruptibleLayout);
+      if (mPresContext && mPresContext->GetPresShell()) {
+        nsAutoTArray<nsIPresShell*, 16> observers;
+        observers.AppendElements(mLayoutFlushObservers);
+        for (PRUint32 j = observers.Length();
+             j && mPresContext && mPresContext->GetPresShell(); --j) {
+          // Make sure to not process observers which might have been removed
+          // during previous iterations.
+          nsIPresShell* shell = observers[j - 1];
+          if (!mLayoutFlushObservers.Contains(shell))
+            continue;
+          NS_ADDREF(shell);
+          mLayoutFlushObservers.RemoveElement(shell);
+          shell->mReflowScheduled = PR_FALSE;
+          shell->mSuppressInterruptibleReflows = PR_FALSE;
+          shell->FlushPendingNotifications(Flush_InterruptibleLayout);
+          NS_RELEASE(shell);
+        }
       }
     }
   }

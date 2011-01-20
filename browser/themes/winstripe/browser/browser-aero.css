@@ -125,10 +125,15 @@
     border-left: 1px solid @glassToolbarBorderColor@;
     border-right: 1px solid @glassToolbarBorderColor@;
   }
-  #navigator-toolbox,
+  #navigator-toolbox[tabsontop="false"],
+  #main-window[disablechrome] #navigator-toolbox[tabsontop="true"],
   #navigator-toolbox > toolbar {
     border-color: @glassToolbarBorderColor@ !important;
     background-clip: padding-box;
+  }
+  #main-window[sizemode="normal"]:not([disablechrome]) #navigator-toolbox[tabsontop="true"] {
+    border-bottom-left-radius: 2px;
+    border-bottom-right-radius: 2px;
   }
   #main-window[sizemode="normal"] #browser-border-start,
   #main-window[sizemode="normal"] #browser-border-end {

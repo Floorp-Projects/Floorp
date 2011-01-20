@@ -1,9 +1,8 @@
 <!DOCTYPE html>
 <html class="reftest-wait">
-  <!-- Test: if button has a custom error, it should not be affected by :-moz-ui-invalid
-             pseudo-class. -->
+  <!-- Test: button elemnet is never affected by :-moz-ui-invalid. -->
   <link rel='stylesheet' type='text/css' href='style.css'>
   <body onload="document.getElementById('b').setCustomValidity('foo'); document.documentElement.className='';">
-    <button class='invalid' id='b'></button>
+    <button class='notinvalid' id='b'></button>
   </body>
 </html>

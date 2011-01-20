@@ -263,6 +263,12 @@ struct nsXREAppData
 #define XRE_USER_SYS_EXTENSION_DIR "XREUSysExt"
 
 /**
+ * A directory service key which specifies the distribution specific files for
+ * the application.
+ */
+#define XRE_APP_DISTRIBUTION_DIR "XREAppDist"
+
+/**
  * Begin an XUL application. Does not return until the user exits the
  * application.
  *

@@ -1183,6 +1183,7 @@ SessionStoreService.prototype = {
     this._updateTextAndScrollDataForTab(sourceWindow, aTab.linkedBrowser, tabState, true);
     tabState.index += aDelta;
     tabState.index = Math.max(1, Math.min(tabState.index, tabState.entries.length));
+    tabState.pinned = false;
 
     this._sendWindowStateEvent(aWindow, "Busy");
     let newTab = aTab == aWindow.gBrowser.selectedTab ?
