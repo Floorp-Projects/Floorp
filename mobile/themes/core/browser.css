@@ -1500,12 +1500,8 @@ pageaction:not([image]) > hbox >.pageaction-image {
   font-style: italic;
 }
 
-.chrome-select-option.optgroup > .chrome-select-option-image {
-  display: none;
-}
-
 .chrome-select-option.in-optgroup {
-  -moz-padding-start: @padding_large@;
+  -moz-padding-start: -moz-calc(30px + @padding_large@);
 }
 
 .chrome-select-option-image {
