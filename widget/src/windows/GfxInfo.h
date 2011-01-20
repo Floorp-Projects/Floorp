@@ -48,6 +48,8 @@ namespace widget {
 class GfxInfo : public GfxInfoBase
 {
 public:
+  GfxInfo();
+
   // We only declare the subset of nsIGfxInfo that we actually implement. The
   // rest is brought forward from GfxInfoBase.
   NS_SCRIPTABLE NS_IMETHOD GetD2DEnabled(PRBool *aD2DEnabled);
@@ -79,7 +81,8 @@ private:
   nsString mDriverDate;
   nsString mDeviceKey;
   nsString mDeviceKeyDebug;
-
+  PRUint32 mAdapterVendorID;
+  PRUint32 mAdapterDeviceID;
 };
 
 } // namespace widget

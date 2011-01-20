@@ -57,6 +57,12 @@
 
 using namespace mozilla::widget;
 
+GfxInfo::GfxInfo()
+  : mAdapterVendorID(0),
+    mAdapterDeviceID(0)
+{
+}
+
 /* GetD2DEnabled and GetDwriteEnabled shouldn't be called until after gfxPlatform initialization
  * has occurred because they depend on it for information. (See bug 591561) */
 nsresult
@@ -258,6 +264,41 @@ GfxInfo::Init()
 
   RegCloseKey(key);
 
+  const char *spoofedDriverVersionString = PR_GetEnv("MOZ_GFX_SPOOF_DRIVER_VERSION");
+  if (spoofedDriverVersionString) {
+    mDriverVersion.AssignASCII(spoofedDriverVersionString);
+  }
+
+  const char *spoofedVendor = PR_GetEnv("MOZ_GFX_SPOOF_VENDOR_ID");
+  if (spoofedVendor) {
+     PR_sscanf(spoofedVendor, "%x", &mAdapterVendorID);
+  } else {
+    nsAutoString vendor(mDeviceID);
+    ToUpperCase(vendor);
+    PRInt32 start = vendor.Find(NS_LITERAL_CSTRING("VEN_"));
+    if (start != -1) {
+      vendor.Cut(0, start + strlen("VEN_"));
+      vendor.Truncate(4);
+    }
+    nsresult err;
+    mAdapterVendorID = vendor.ToInteger(&err, 16);
+  }
+
+  const char *spoofedDevice = PR_GetEnv("MOZ_GFX_SPOOF_DEVICE_ID");
+  if (spoofedDevice) {
+    PR_sscanf(spoofedDevice, "%x", &mAdapterDeviceID);
+  } else {
+    nsAutoString device(mDeviceID);
+    ToUpperCase(device);
+    PRInt32 start = device.Find(NS_LITERAL_CSTRING("&DEV_"));
+    if (start != -1) {
+      device.Cut(0, start + strlen("&DEV_"));
+      device.Truncate(4);
+    }
+    nsresult err;
+    mAdapterDeviceID = device.ToInteger(&err, 16);
+  }
+
   AddCrashReportAnnotations();
 
   return rv;
@@ -293,12 +334,6 @@ GfxInfo::GetAdapterDriver(nsAString & aAdapterDriver)
 NS_IMETHODIMP
 GfxInfo::GetAdapterDriverVersion(nsAString & aAdapterDriverVersion)
 {
-  const char *spoofedDriverVersionString = PR_GetEnv("MOZ_GFX_SPOOF_DRIVER_VERSION");
-  if (spoofedDriverVersionString) {
-    aAdapterDriverVersion.AssignASCII(spoofedDriverVersionString);
-    return NS_OK;
-  }
-
   aAdapterDriverVersion = mDriverVersion;
   return NS_OK;
 }
@@ -315,22 +350,7 @@ GfxInfo::GetAdapterDriverDate(nsAString & aAdapterDriverDate)
 NS_IMETHODIMP
 GfxInfo::GetAdapterVendorID(PRUint32 *aAdapterVendorID)
 {
-  const char *spoofedVendor = PR_GetEnv("MOZ_GFX_SPOOF_VENDOR_ID");
-  if (spoofedVendor &&
-      1 == PR_sscanf(spoofedVendor, "%x", aAdapterVendorID))
-  {
-      return NS_OK;
-  }
-
-  nsAutoString vendor(mDeviceID);
-  ToUpperCase(vendor);
-  PRInt32 start = vendor.Find(NS_LITERAL_CSTRING("VEN_"));
-  if (start != -1) {
-    vendor.Cut(0, start + strlen("VEN_"));
-    vendor.Truncate(4);
-  }
-  nsresult err;
-  *aAdapterVendorID = vendor.ToInteger(&err, 16);
+  *aAdapterVendorID = mAdapterVendorID;
   return NS_OK;
 }
 
@@ -338,23 +358,7 @@ GfxInfo::GetAdapterVendorID(PRUint32 *aAdapterVendorID)
 NS_IMETHODIMP
 GfxInfo::GetAdapterDeviceID(PRUint32 *aAdapterDeviceID)
 {
-  const char *spoofedDevice = PR_GetEnv("MOZ_GFX_SPOOF_DEVICE_ID");
-  if (spoofedDevice &&
-      1 == PR_sscanf(spoofedDevice, "%x", aAdapterDeviceID))
-  {
-      return NS_OK;
-  }
-
-  nsAutoString device(mDeviceID);
-  ToUpperCase(device);
-  PRInt32 start = device.Find(NS_LITERAL_CSTRING("&DEV_"));
-  if (start != -1) {
-    device.Cut(0, start + strlen("&DEV_"));
-    device.Truncate(4);
-  }
-  nsresult err;
-  *aAdapterDeviceID = device.ToInteger(&err, 16);
-
+  *aAdapterDeviceID = mAdapterDeviceID;
   return NS_OK;
 }
 
