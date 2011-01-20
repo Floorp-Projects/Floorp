@@ -50,11 +50,7 @@
 #include "nsIPrefService.h"
 #endif
 
-
 using namespace mozilla::widget;
-
-
-NS_IMPL_ISUPPORTS1(GfxInfo, nsIGfxInfo)
 
 /* GetD2DEnabled and GetDwriteEnabled shouldn't be called until after gfxPlatform initialization
  * has occurred because they depend on it for information. (See bug 591561) */
