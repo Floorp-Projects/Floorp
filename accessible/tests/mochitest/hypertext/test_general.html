@@ -13,9 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=428248
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 
   <script type="application/javascript"
-          src="common.js"></script>
-  <script type="application/javascript"
-          src="events.js"></script>
+          src="../common.js"></script>
 
   <script type="application/javascript">
     var gParagraphAcc;
@@ -41,49 +39,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=428248
       is(linkAcc.getAnchor(0).name, aName, "Wrong name for " + aID + "!");
     }
 
-    const kLinksCount = 128;
-    function addLinks(aContainerID)
-    {
-      this.containerNode = getNode(aContainerID);
-
-      this.eventSeq = [
-        new invokerChecker(EVENT_REORDER, this.containerNode)
-      ];
-
-      this.invoke = function addLinks_invoke()
-      {
-        for (var jdx = 0; jdx < kLinksCount; jdx++) {
-          var a = document.createElement("a");
-          a.setAttribute("href", "mozilla.org");
-          a.textContent = "mozilla";
-          this.containerNode.appendChild(a);
-
-          var span = document.createElement("span");
-          span.textContent = " text ";
-          this.containerNode.appendChild(span);
-        }
-      }
-
-      this.finalCheck = function addLinks_finalCheck()
-      {
-        // getLinkAt and getLinkIndex.
-        var htAcc = getAccessible(this.containerNode, [nsIAccessibleHyperText]);
-        for (var jdx = 0; jdx < kLinksCount; jdx++) {
-          var link = htAcc.getLinkAt(jdx);
-          ok(link, "No link at index " + jdx + " for '" + aContainerID + "'");
-
-          var linkIdx = htAcc.getLinkIndex(link);
-          is(linkIdx, jdx, "Wrong link index for '" + aContainerID + "'!");
-        }
-      }
-
-      this.getID = function addLinks_getID()
-      {
-        return "Add links for '" + aContainerID + "'";
-      }
-    }
-
-    var gQueue = null;
     function doTest()
     {
       // Test link count
@@ -138,9 +93,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=428248
       testLinkIndexAtOffset("p4", 8, 2); // 3d 'mozilla' link
       testLinkIndexAtOffset("p4", 9, 2); // the end, latest link
 
-      gQueue = new eventQueue();
-      gQueue.push(new addLinks("p3"));
-      gQueue.invoke(); // Will call SimpleTest.finish();
+      SimpleTest.finish();
     }
 
     SimpleTest.waitForExplicitFinish();
@@ -194,7 +147,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=428248
   ><a id="namedAnchor" name="named_anchor">This should never be of state_linked</a>
   </p>
   <p id="p2"><a href="http://mozilla.org">mozilla.org</a></p>
-  <p id="p3"></p>
   <p id="p4"><a href="www">mozilla</a><a href="www">mozilla</a><span> te</span><span>xt </span><a href="www">mozilla</a></p>
 </body>
 </html>
