@@ -4914,6 +4914,17 @@ var TabsInTitlebar = {
       titlebar.style.marginBottom = - Math.min(distance, maxMargin) + "px";
 
       docElement.setAttribute("tabsintitlebar", "true");
+
+      if (!this._draghandle) {
+        let tmp = {};
+        Components.utils.import("resource://gre/modules/WindowDraggingUtils.jsm", tmp);
+        this._draghandle = new tmp.WindowDraggingElement(tabsToolbar, window);
+        this._draghandle.mouseDownCheck = function () {
+          return !this._dragBindingAlive &&
+                 this.ownerDocument.documentElement
+                     .getAttribute("tabsintitlebar") == "true";
+        };
+      }
     } else {
       docElement.removeAttribute("tabsintitlebar");
 

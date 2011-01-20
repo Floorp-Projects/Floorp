@@ -97,10 +97,6 @@ toolbar[printpreview="true"] {
   -moz-binding: url("chrome://global/content/bindings/general.xml#windowdragbox");
 }
 
-#main-window[tabsintitlebar] #TabsToolbar {
-  -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbar-drag");
-}
-
 #titlebar-spacer {
   pointer-events: none;
 }
