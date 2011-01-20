@@ -2096,20 +2096,12 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
     nsEventStates states;
 
     if (aVisitor.mEvent->message == NS_FOCUS_CONTENT) {
-      // If the invalid UI is shown, we should show it while focusing (and
-      // update). Otherwise, we should not.
-      SET_BOOLBIT(mBitField, BF_CAN_SHOW_INVALID_UI,
-                  !IsValid() && ShouldShowInvalidUI());
-
-      // If neither invalid UI nor valid UI is shown, we shouldn't show the valid
-      // UI while typing.
-      SET_BOOLBIT(mBitField, BF_CAN_SHOW_VALID_UI, ShouldShowValidUI());
+      UpdateValidityUIBits(true);
 
       // We don't have to update NS_EVENT_STATE_MOZ_UI_INVALID nor
       // NS_EVENT_STATE_MOZ_UI_VALID given that the states should not change.
     } else { // NS_BLUR_CONTENT
-      SET_BOOLBIT(mBitField, BF_CAN_SHOW_INVALID_UI, PR_TRUE);
-      SET_BOOLBIT(mBitField, BF_CAN_SHOW_VALID_UI, PR_TRUE);
+      UpdateValidityUIBits(false);
       states |= NS_EVENT_STATE_MOZ_UI_VALID | NS_EVENT_STATE_MOZ_UI_INVALID;
     }
 
@@ -4584,5 +4576,23 @@ nsHTMLInputElement::GetFilterFromAccept()
   }
 
   return filter;
+}
+
+void
+nsHTMLInputElement::UpdateValidityUIBits(bool aIsFocused)
+{
+  if (aIsFocused) {
+    // If the invalid UI is shown, we should show it while focusing (and
+    // update). Otherwise, we should not.
+    SET_BOOLBIT(mBitField, BF_CAN_SHOW_INVALID_UI,
+                !IsValid() && ShouldShowInvalidUI());
+
+    // If neither invalid UI nor valid UI is shown, we shouldn't show the valid
+    // UI while typing.
+    SET_BOOLBIT(mBitField, BF_CAN_SHOW_VALID_UI, ShouldShowValidUI());
+  } else {
+    SET_BOOLBIT(mBitField, BF_CAN_SHOW_INVALID_UI, PR_TRUE);
+    SET_BOOLBIT(mBitField, BF_CAN_SHOW_VALID_UI, PR_TRUE);
+  }
 }
 
