@@ -1572,11 +1572,11 @@ nsHTMLSelectElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
   if (aVisitor.mEvent->message == NS_FOCUS_CONTENT) {
     // If the invalid UI is shown, we should show it while focused and
     // update the invalid/valid UI.
-    mCanShowInvalidUI = !IsValid() && ShouldShowInvalidUI();
+    mCanShowInvalidUI = !IsValid() && ShouldShowValidityUI();
 
     // If neither invalid UI nor valid UI is shown, we shouldn't show the valid
     // UI while focused.
-    mCanShowValidUI = ShouldShowValidUI();
+    mCanShowValidUI = ShouldShowValidityUI();
 
     // We don't have to update NS_EVENT_STATE_MOZ_UI_INVALID nor
     // NS_EVENT_STATE_MOZ_UI_VALID given that the states should not change.
@@ -1606,7 +1606,8 @@ nsHTMLSelectElement::IntrinsicState() const
     } else {
       state |= NS_EVENT_STATE_INVALID;
 
-      if (mCanShowInvalidUI && ShouldShowInvalidUI()) {
+      if (GetValidityState(VALIDITY_STATE_CUSTOM_ERROR) ||
+          (mCanShowInvalidUI && ShouldShowValidityUI())) {
         state |= NS_EVENT_STATE_MOZ_UI_INVALID;
       }
     }
@@ -1617,10 +1618,10 @@ nsHTMLSelectElement::IntrinsicState() const
     // 2. The element is either valid or isn't allowed to have
     //    :-moz-ui-invalid applying ;
     // 3. The rules to have :-moz-ui-valid applying are fulfilled
-    //    (see ShouldShowValidUI()).
-    if (mCanShowValidUI &&
-        (IsValid() || !mCanShowInvalidUI) &&
-        ShouldShowValidUI()) {
+    //    (see ShouldShowValidityUI()).
+    if (mCanShowValidUI && ShouldShowValidityUI() &&
+        (IsValid() || (state.HasState(NS_EVENT_STATE_MOZ_UI_INVALID) &&
+                       !mCanShowInvalidUI))) {
       state |= NS_EVENT_STATE_MOZ_UI_VALID;
     }
   }
