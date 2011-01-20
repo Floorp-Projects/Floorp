@@ -1,10 +1,8 @@
-Cu.import("resource://services-sync/stores.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/clients.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/constants.js");
-Cu.import("resource://services-sync/base_records/crypto.js");
-Cu.import("resource://services-sync/base_records/wbo.js");
+Cu.import("resource://services-sync/record.js");
 
 Svc.DefaultPrefs.set("registerEngines", "");
 Cu.import("resource://services-sync/service.js");

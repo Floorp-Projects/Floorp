@@ -1,6 +1,5 @@
 _("Make sure Collection can correctly incrementally parse GET requests");
-Cu.import("resource://services-sync/base_records/collection.js");
-Cu.import("resource://services-sync/base_records/wbo.js");
+Cu.import("resource://services-sync/record.js");
 
 function run_test() {
   let base = "http://fake/";

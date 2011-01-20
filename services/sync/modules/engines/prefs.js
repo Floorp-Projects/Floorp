@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['PrefsEngine'];
+const EXPORTED_SYMBOLS = ['PrefsEngine', 'PrefRec'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -44,13 +44,22 @@ const Cu = Components.utils;
 const WEAVE_SYNC_PREFS = "services.sync.prefs.sync.";
 
 Cu.import("resource://services-sync/engines.js");
-Cu.import("resource://services-sync/stores.js");
-Cu.import("resource://services-sync/trackers.js");
-Cu.import("resource://services-sync/type_records/prefs.js");
+Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/ext/Preferences.js");
 
 const PREFS_GUID = Utils.encodeBase64url(Svc.AppInfo.ID);
+
+function PrefRec(collection, id) {
+  CryptoWrapper.call(this, collection, id);
+}
+PrefRec.prototype = {
+  __proto__: CryptoWrapper.prototype,
+  _logName: "Record.Pref",
+};
+
+Utils.deferGetSet(PrefRec, "cleartext", ["value"]);
+
 
 function PrefsEngine() {
   SyncEngine.call(this, "Prefs");
