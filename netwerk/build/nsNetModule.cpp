@@ -322,6 +322,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMaemoNetworkLinkService, Init)
 #elif defined(MOZ_ENABLE_QTNETWORK)
 #include "nsQtNetworkLinkService.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsQtNetworkLinkService, Init)
+#elif defined(ANDROID)
+#include "nsAndroidNetworkLinkService.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAndroidNetworkLinkService)
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -749,6 +752,8 @@ NS_DEFINE_NAMED_CID(NS_NETWORK_LINK_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_NETWORK_LINK_SERVICE_CID);
 #elif defined(MOZ_ENABLE_QTNETWORK)
 NS_DEFINE_NAMED_CID(NS_NETWORK_LINK_SERVICE_CID);
+#elif defined(ANDROID)
+NS_DEFINE_NAMED_CID(NS_NETWORK_LINK_SERVICE_CID);
 #endif
 NS_DEFINE_NAMED_CID(NS_SERIALIZATION_HELPER_CID);
 #ifdef MOZ_IPC
@@ -878,6 +883,8 @@ static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
     { &kNS_NETWORK_LINK_SERVICE_CID, false, NULL, nsMaemoNetworkLinkServiceConstructor },
 #elif defined(MOZ_ENABLE_QTNETWORK)
     { &kNS_NETWORK_LINK_SERVICE_CID, false, NULL, nsQtNetworkLinkServiceConstructor },
+#elif defined(ANDROID)
+    { &kNS_NETWORK_LINK_SERVICE_CID, false, NULL, nsAndroidNetworkLinkServiceConstructor },
 #endif
     { &kNS_SERIALIZATION_HELPER_CID, false, NULL, nsSerializationHelperConstructor },
 #ifdef MOZ_IPC
@@ -1013,6 +1020,8 @@ static const mozilla::Module::ContractIDEntry kNeckoContracts[] = {
 #elif defined(MOZ_ENABLE_LIBCONIC)
     { NS_NETWORK_LINK_SERVICE_CONTRACTID, &kNS_NETWORK_LINK_SERVICE_CID },
 #elif defined(MOZ_ENABLE_QTNETWORK)
+    { NS_NETWORK_LINK_SERVICE_CONTRACTID, &kNS_NETWORK_LINK_SERVICE_CID },
+#elif defined(ANDROID)
     { NS_NETWORK_LINK_SERVICE_CONTRACTID, &kNS_NETWORK_LINK_SERVICE_CID },
 #endif
     { NS_SERIALIZATION_HELPER_CONTRACTID, &kNS_SERIALIZATION_HELPER_CID },
