@@ -101,7 +101,7 @@ VisitInfo::GetSessionId(PRInt64* _sessionId)
 NS_IMPL_ISUPPORTS1(
   VisitInfo
 , mozIVisitInfo
-);
+)
 
 } // namespace places
 } // namespace mozilla
