@@ -312,17 +312,6 @@ endif
 # Set the permissions that the folders will have in ftp once uploaded
 	chmod -vR 775 $(UPLOAD_DIR)
 
-l10n-upload-%: AB_CD=$*
-l10n-upload-%:
-	$(PYTHON) $(topsrcdir)/build/upload.py --base-path $(DIST) "$(DIST)/$(PACKAGE)" $(DIST)/$(LANGPACK)
-ifdef MOZ_MAKE_COMPLETE_MAR
-	$(PYTHON) $(topsrcdir)/build/upload.py --base-path $(DIST) $(DIST)/$(COMPLETE_MAR) $(call QUOTED_WILDCARD,$(wildcard $(DIST)/$(PARTIAL_MAR)))
-endif
-ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
-	$(PYTHON) $(topsrcdir)/build/upload.py --base-path $(DIST) "$(INSTALLER_PACKAGE)"
-endif
-
-
 merge-%:
 ifdef LOCALE_MERGEDIR
 	$(RM) -rf $(LOCALE_MERGEDIR)
