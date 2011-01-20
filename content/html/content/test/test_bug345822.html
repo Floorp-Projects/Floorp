@@ -333,14 +333,14 @@ checkRequiredAttribute(document.createElement('input'));
 // The require attribute behavior depend of the input type.
 // First of all, checks for types that make the element barred from
 // constraint validation.
-var typeBarredFromConstraintValidation = ["hidden", "button", "reset"];
+var typeBarredFromConstraintValidation = ["hidden", "button", "reset", "submit", "image"];
 for each (type in typeRequireNotApply) {
   checkInputRequiredNotApply(type, true);
 }
 
 // Then, checks for the types which do not use the required attribute.
 // TODO: check 'color' and 'range' when they will be implemented.
-var typeRequireNotApply = ["submit", "image"];
+var typeRequireNotApply = [];
 for each (type in typeRequireNotApply) {
   checkInputRequiredNotApply(type, false);
 }
