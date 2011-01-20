@@ -506,10 +506,8 @@ protected:
   PRPackedBool          mIsTopWidgetWindow;
   PRPackedBool          mInDtor;
   PRPackedBool          mIsVisible;
-  PRPackedBool          mIsInMouseCapture;
   PRPackedBool          mUnicodeWidget;
   PRPackedBool          mPainting;
-  PRPackedBool          mExitToNonClientArea;
   PRPackedBool          mTouchWindow;
   PRPackedBool          mDisplayPanFeedback;
   PRPackedBool          mHideChrome;
@@ -535,6 +533,7 @@ protected:
   static PRBool         sSwitchKeyboardLayout;
   static PRBool         sJustGotDeactivate;
   static PRBool         sJustGotActivate;
+  static PRBool         sIsInMouseCapture;
   static int            sTrimOnMinimize;
   static PRBool         sDefaultTrackPointHack;
   static const char*    sDefaultMainWindowClass;
