@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>nsIHyper>TextAccessible in dynamic tests</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+    const kLinksCount = 128;
+    function addLinks(aContainerID)
+    {
+      this.containerNode = getNode(aContainerID);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, this.containerNode)
+      ];
+
+      this.invoke = function addLinks_invoke()
+      {
+        for (var jdx = 0; jdx < kLinksCount; jdx++) {
+          var a = document.createElement("a");
+          a.setAttribute("href", "mozilla.org");
+          a.textContent = "mozilla";
+          this.containerNode.appendChild(a);
+
+          var span = document.createElement("span");
+          span.textContent = " text ";
+          this.containerNode.appendChild(span);
+        }
+      }
+
+      this.finalCheck = function addLinks_finalCheck()
+      {
+        // getLinkAt and getLinkIndex.
+        var htAcc = getAccessible(this.containerNode, [nsIAccessibleHyperText]);
+        for (var jdx = 0; jdx < kLinksCount; jdx++) {
+          var link = htAcc.getLinkAt(jdx);
+          ok(link, "No link at index " + jdx + " for '" + aContainerID + "'");
+
+          var linkIdx = htAcc.getLinkIndex(link);
+          is(linkIdx, jdx, "Wrong link index for '" + aContainerID + "'!");
+        }
+      }
+
+      this.getID = function addLinks_getID()
+      {
+        return "Add links for '" + aContainerID + "'";
+      }
+    }
+
+    function updateText(aContainerID)
+    {
+      this.containerNode = getNode(aContainerID);
+      this.container = getAccessible(this.containerNode, nsIAccessibleHyperText);
+      this.text = this.container.firstChild.QueryInterface(nsIAccessNode);
+      this.textNode = this.text.DOMNode;
+      this.textLen = this.textNode.data.length;
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_TEXT_INSERTED, this.containerNode)
+      ];
+
+      this.invoke = function updateText_invoke()
+      {
+        is(this.container.getLinkIndexAtOffset(this.textLen), 0,
+           "Wrong intial text offsets!");
+
+        this.text.DOMNode.appendData(" my");
+      }
+
+      this.finalCheck = function updateText_finalCheck()
+      {
+        is(this.container.getLinkIndexAtOffset(this.textLen), -1,
+           "Text offsets weren't updated!");
+      }
+
+      this.getID = function updateText_getID()
+      {
+        return "update text for '" + aContainerID + "'";
+      }
+    }
+
+    var gQueue = null;
+    function doTest()
+    {
+      gQueue = new eventQueue();
+      gQueue.push(new addLinks("p1"));
+      gQueue.push(new updateText("p2"));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="Text offsets don't get updated when text of first child text accessible is changed"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=625009">
+    Mozilla Bug 625009
+  </a><br>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <p id="p1"></p>
+  <p id="p2"><b>hello</b><a>friend</a></p>
+</body>
+</html>
