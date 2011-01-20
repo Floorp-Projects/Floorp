@@ -901,8 +901,6 @@ let TabItems = {
       );
 
       if (shouldDefer) {
-        if (!this.reconnectingPaused() && !tab._tabViewTabItem._reconnected)
-          this._reconnect(tab._tabViewTabItem);          
         if (this._tabsWaitingForUpdate.indexOf(tab) == -1)
           this._tabsWaitingForUpdate.push(tab);
         this.startHeartbeat();
