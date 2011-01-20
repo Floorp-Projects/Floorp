@@ -489,6 +489,8 @@ GfxInfoBase::Observe(nsISupports* aSubject, const char* aTopic,
       {
         nsTArray<GfxDriverInfo> driverInfo;
         BlacklistEntriesToDriverInfo(blacklistEntries, driverInfo);
+
+        EvaluateDownloadedBlacklist(driverInfo);
       }
     }
   }
@@ -545,4 +547,59 @@ GfxInfoBase::GetWebGLParameter(const nsAString& aParam,
                                nsAString& aResult NS_OUTPARAM)
 {
   return GfxInfoWebGL::GetWebGLParameter(aParam, aResult);
+}
+
+void
+GfxInfoBase::EvaluateDownloadedBlacklist(nsTArray<GfxDriverInfo>& aDriverInfo)
+{
+  PRInt32 features[] = {
+    nsIGfxInfo::FEATURE_DIRECT2D,
+    nsIGfxInfo::FEATURE_DIRECT3D_9_LAYERS,
+    nsIGfxInfo::FEATURE_DIRECT3D_10_LAYERS,
+    nsIGfxInfo::FEATURE_DIRECT3D_10_1_LAYERS,
+    nsIGfxInfo::FEATURE_OPENGL_LAYERS,
+    nsIGfxInfo::FEATURE_WEBGL_OPENGL,
+    nsIGfxInfo::FEATURE_WEBGL_ANGLE,
+    0
+  };
+
+  // GetFeatureStatusImpl wants a zero-GfxDriverInfo terminated array. So, we
+  // append that to our list.
+  aDriverInfo.AppendElement(GfxDriverInfo());
+
+  // For every feature we know about, we evaluate whether this blacklist has a
+  // non-NO_INFO status. If it does, we set the pref we evaluate in
+  // GetFeatureStatus above, so we don't need to hold on to this blacklist
+  // anywhere permanent.
+  int i = 0;
+  while (features[i]) {
+    PRInt32 status;
+    nsAutoString suggestedVersion;
+    if (NS_SUCCEEDED(GetFeatureStatusImpl(features[i], &status,
+                                          suggestedVersion,
+                                          aDriverInfo.Elements()))) {
+      switch (status) {
+        default:
+        case nsIGfxInfo::FEATURE_NO_INFO:
+          RemovePrefForFeature(features[i]);
+          break;
+
+        case nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION:
+          if (!suggestedVersion.IsEmpty()) {
+            SetPrefValueForDriverVersion(suggestedVersion);
+          } else {
+            RemovePrefForDriverVersion();
+          }
+          // FALLTHROUGH
+
+        case nsIGfxInfo::FEATURE_BLOCKED_DEVICE:
+        case nsIGfxInfo::FEATURE_DISCOURAGED:
+        case nsIGfxInfo::FEATURE_BLOCKED_OS_VERSION:
+          SetPrefValueForFeature(features[i], status);
+          break;
+      }
+    }
+
+    ++i;
+  }
 }
