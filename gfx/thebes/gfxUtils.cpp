@@ -434,9 +434,10 @@ gfxUtils::ImageFormatToDepth(gfxASurface::gfxImageFormat aFormat)
     }
     return 0;
 }
+
 static void
-ClipToRegionInternal(gfxContext* aContext, const nsIntRegion& aRegion,
-                     PRBool aSnap)
+PathForRegionInternal(gfxContext* aContext, const nsIntRegion& aRegion,
+                      PRBool aSnap)
 {
   aContext->NewPath();
   nsIntRegionRectIterator iter(aRegion);
@@ -444,19 +445,26 @@ ClipToRegionInternal(gfxContext* aContext, const nsIntRegion& aRegion,
   while ((r = iter.Next()) != nsnull) {
     aContext->Rectangle(gfxRect(r->x, r->y, r->width, r->height), aSnap);
   }
-  aContext->Clip();
 }
 
 /*static*/ void
 gfxUtils::ClipToRegion(gfxContext* aContext, const nsIntRegion& aRegion)
 {
-  ClipToRegionInternal(aContext, aRegion, PR_FALSE);
+  PathForRegionInternal(aContext, aRegion, PR_FALSE);
+  aContext->Clip();
 }
 
 /*static*/ void
 gfxUtils::ClipToRegionSnapped(gfxContext* aContext, const nsIntRegion& aRegion)
 {
-  ClipToRegionInternal(aContext, aRegion, PR_TRUE);
+  PathForRegionInternal(aContext, aRegion, PR_TRUE);
+  aContext->Clip();
+}
+
+/*static*/ void 
+gfxUtils::PathForRegion(gfxContext* aContext, const nsIntRegion& aRegion)
+{
+  PathForRegionInternal(aContext, aRegion, PR_FALSE);
 }
 
 PRBool

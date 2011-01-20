@@ -96,6 +96,11 @@ public:
      */
     static void ClipToRegionSnapped(gfxContext* aContext, const nsIntRegion& aRegion);
 
+    /**
+     * Draw a path around aRegion.
+     */
+    static void PathForRegion(gfxContext* aContext, const nsIntRegion& aRegion);
+
     /*
      * Convert image format to depth value
      */

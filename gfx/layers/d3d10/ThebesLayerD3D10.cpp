@@ -43,6 +43,9 @@
 #include "gfxD2DSurface.h"
 #endif
 
+#include "gfxTeeSurface.h"
+#include "gfxUtils.h"
+
 namespace mozilla {
 namespace layers {
 
@@ -117,7 +120,9 @@ ThebesLayerD3D10::RenderLayer()
   SetEffectTransformAndOpacity();
 
   ID3D10EffectTechnique *technique;
-  if (CanUseOpaqueSurface()) {
+  if (mTextureOnWhite) {
+    technique = effect()->GetTechniqueByName("RenderComponentAlphaLayer");
+  } else if (CanUseOpaqueSurface()) {
     technique = effect()->GetTechniqueByName("RenderRGBLayerPremul");
   } else {
     technique = effect()->GetTechniqueByName("RenderRGBALayerPremul");
@@ -129,6 +134,9 @@ ThebesLayerD3D10::RenderLayer()
   const nsIntRect *iterRect;
   if (mSRView) {
     effect()->GetVariableByName("tRGB")->AsShaderResource()->SetResource(mSRView);
+  }
+  if (mSRViewOnWhite) {
+    effect()->GetVariableByName("tRGBWhite")->AsShaderResource()->SetResource(mSRViewOnWhite);
   }
 
   while ((iterRect = iter.Next())) {
@@ -164,19 +172,28 @@ ThebesLayerD3D10::Validate()
     return;
   }
 
-  VerifyContentType();
+  SurfaceMode mode = GetSurfaceMode();
+  if (mode == SURFACE_COMPONENT_ALPHA &&
+      (!mParent || !mParent->SupportsComponentAlphaChildren())) {
+    mode = SURFACE_SINGLE_CHANNEL_ALPHA;
+  }
+
+  VerifyContentType(mode);
 
   nsIntRect visibleRect = mVisibleRegion.GetBounds();
 
   if (mTexture) {
     if (!mTextureRegion.IsEqual(mVisibleRegion)) {
       nsRefPtr<ID3D10Texture2D> oldTexture = mTexture;
+      mTexture = nsnull;
+      nsRefPtr<ID3D10Texture2D> oldTextureOnWhite = mTextureOnWhite;
+      mTextureOnWhite = nsnull;
 
       nsIntRegion retainRegion = mTextureRegion;
       nsIntRect oldBounds = mTextureRegion.GetBounds();
       nsIntRect newBounds = mVisibleRegion.GetBounds();
 
-      CreateNewTexture(gfxIntSize(newBounds.width, newBounds.height));
+      CreateNewTextures(gfxIntSize(newBounds.width, newBounds.height), mode);
 
       // Old visible region will become the region that is covered by both the
       // old and the new visible region.
@@ -199,13 +216,18 @@ ThebesLayerD3D10::Validate()
         CopyRegion(oldTexture, oldBounds.TopLeft(),
                    mTexture, newBounds.TopLeft(),
                    retainRegion, &mValidRegion);
+        if (oldTextureOnWhite) {
+          CopyRegion(oldTextureOnWhite, oldBounds.TopLeft(),
+                     mTextureOnWhite, newBounds.TopLeft(),
+                     retainRegion, &mValidRegion);
+        }
       }
       mTextureRegion = mVisibleRegion;
     }
   }
 
-  if (!mTexture) {
-    CreateNewTexture(gfxIntSize(visibleRect.width, visibleRect.height));
+  if (!mTexture || (mode == SURFACE_COMPONENT_ALPHA && !mTextureOnWhite)) {
+    CreateNewTextures(gfxIntSize(visibleRect.width, visibleRect.height), mode);
     mValidRegion.SetEmpty();
   }
 
@@ -225,7 +247,7 @@ ThebesLayerD3D10::Validate()
     nsIntRegion region;
     region.Sub(mVisibleRegion, mValidRegion);
 
-    DrawRegion(region);
+    DrawRegion(region, mode);
 
     mValidRegion = mVisibleRegion;
   }
@@ -244,13 +266,13 @@ ThebesLayerD3D10::GetLayer()
 }
 
 void
-ThebesLayerD3D10::VerifyContentType()
+ThebesLayerD3D10::VerifyContentType(SurfaceMode aMode)
 {
   if (mD2DSurface) {
-    gfxASurface::gfxContentType type = CanUseOpaqueSurface() ?
+    gfxASurface::gfxContentType type = aMode != SURFACE_SINGLE_CHANNEL_ALPHA ?
       gfxASurface::CONTENT_COLOR : gfxASurface::CONTENT_COLOR_ALPHA;
 
-    if (type != mD2DSurface->GetContentType()) {
+    if (type != mD2DSurface->GetContentType()) {  
       mD2DSurface = new gfxD2DSurface(mTexture, type);
 
       if (!mD2DSurface || mD2DSurface->CairoStatus()) {
@@ -258,13 +280,33 @@ ThebesLayerD3D10::VerifyContentType()
         mD2DSurface = nsnull;
         return;
       }
+
+      mValidRegion.SetEmpty();
+    }
+        
+    if (aMode != SURFACE_COMPONENT_ALPHA && mTextureOnWhite) {
+      // If we've transitioned away from component alpha, we can delete those resources.
+      mD2DSurfaceOnWhite = nsnull;
+      mSRViewOnWhite = nsnull;
+      mTextureOnWhite = nsnull;
       mValidRegion.SetEmpty();
     }
   }
 }
 
+static void
+FillSurface(gfxASurface* aSurface, const nsIntRegion& aRegion,
+            const nsIntPoint& aOffset, const gfxRGBA& aColor)
+{
+  nsRefPtr<gfxContext> ctx = new gfxContext(aSurface);
+  ctx->Translate(-gfxPoint(aOffset.x, aOffset.y));
+  gfxUtils::PathForRegion(ctx, aRegion);
+  ctx->SetColor(aColor);
+  ctx->Fill();
+}
+
 void
-ThebesLayerD3D10::DrawRegion(const nsIntRegion &aRegion)
+ThebesLayerD3D10::DrawRegion(const nsIntRegion &aRegion, SurfaceMode aMode)
 {
   nsIntRect visibleRect = mVisibleRegion.GetBounds();
 
@@ -272,7 +314,22 @@ ThebesLayerD3D10::DrawRegion(const nsIntRegion &aRegion)
     return;
   }
 
-  nsRefPtr<gfxContext> context = new gfxContext(mD2DSurface);
+  nsRefPtr<gfxASurface> destinationSurface;
+  
+  if (aMode == SURFACE_COMPONENT_ALPHA) {
+    FillSurface(mD2DSurface, aRegion, visibleRect.TopLeft(), gfxRGBA(0.0, 0.0, 0.0, 1.0));
+    FillSurface(mD2DSurfaceOnWhite, aRegion, visibleRect.TopLeft(), gfxRGBA(1.0, 1.0, 1.0, 1.0));
+    gfxASurface* surfaces[2] = { mD2DSurface.get(), mD2DSurfaceOnWhite.get() };
+    destinationSurface = new gfxTeeSurface(surfaces, NS_ARRAY_LENGTH(surfaces));
+    // Using this surface as a source will likely go horribly wrong, since
+    // only the onBlack surface will really be used, so alpha information will
+    // be incorrect.
+    destinationSurface->SetAllowUseAsSource(PR_FALSE);
+  } else {
+    destinationSurface = mD2DSurface;
+  }
+
+  nsRefPtr<gfxContext> context = new gfxContext(destinationSurface);
 
   nsIntRegionRectIterator iter(aRegion);
   context->Translate(gfxPoint(-visibleRect.x, -visibleRect.y));
@@ -283,7 +340,7 @@ ThebesLayerD3D10::DrawRegion(const nsIntRegion &aRegion)
   }
   context->Clip();
 
-  if (mD2DSurface->GetContentType() != gfxASurface::CONTENT_COLOR) {
+  if (aMode == SURFACE_SINGLE_CHANNEL_ALPHA) {
     context->SetOperator(gfxContext::OPERATOR_CLEAR);
     context->Paint();
     context->SetOperator(gfxContext::OPERATOR_OVER);
@@ -296,7 +353,7 @@ ThebesLayerD3D10::DrawRegion(const nsIntRegion &aRegion)
 }
 
 void
-ThebesLayerD3D10::CreateNewTexture(const gfxIntSize &aSize)
+ThebesLayerD3D10::CreateNewTextures(const gfxIntSize &aSize, SurfaceMode aMode)
 {
   if (aSize.width == 0 || aSize.height == 0) {
     // Nothing to do.
@@ -306,27 +363,54 @@ ThebesLayerD3D10::CreateNewTexture(const gfxIntSize &aSize)
   CD3D10_TEXTURE2D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM, aSize.width, aSize.height, 1, 1);
   desc.BindFlags = D3D10_BIND_RENDER_TARGET | D3D10_BIND_SHADER_RESOURCE;
   desc.MiscFlags = D3D10_RESOURCE_MISC_GDI_COMPATIBLE;
+  HRESULT hr;
 
-  HRESULT hr = device()->CreateTexture2D(&desc, NULL, getter_AddRefs(mTexture));
+  if (!mTexture) {
+    hr = device()->CreateTexture2D(&desc, NULL, getter_AddRefs(mTexture));
 
-  if (FAILED(hr)) {
-    NS_WARNING("Failed to create new texture for ThebesLayerD3D10!");
-    return;
+    if (FAILED(hr)) {
+      NS_WARNING("Failed to create new texture for ThebesLayerD3D10!");
+      return;
+    }
+
+    hr = device()->CreateShaderResourceView(mTexture, NULL, getter_AddRefs(mSRView));
+
+    if (FAILED(hr)) {
+      NS_WARNING("Failed to create shader resource view for ThebesLayerD3D10.");
+    }
+
+    mD2DSurface = new gfxD2DSurface(mTexture, aMode != SURFACE_SINGLE_CHANNEL_ALPHA ?
+      gfxASurface::CONTENT_COLOR : gfxASurface::CONTENT_COLOR_ALPHA);
+
+    if (!mD2DSurface || mD2DSurface->CairoStatus()) {
+      NS_WARNING("Failed to create surface for ThebesLayerD3D10.");
+      mD2DSurface = nsnull;
+      return;
+    }
+
   }
 
-  hr = device()->CreateShaderResourceView(mTexture, NULL, getter_AddRefs(mSRView));
+  if (aMode == SURFACE_COMPONENT_ALPHA && !mTextureOnWhite) {
+    hr = device()->CreateTexture2D(&desc, NULL, getter_AddRefs(mTextureOnWhite));
 
-  if (FAILED(hr)) {
-    NS_WARNING("Failed to create shader resource view for ThebesLayerD3D10.");
-  }
+    if (FAILED(hr)) {
+      NS_WARNING("Failed to create new texture for ThebesLayerD3D10!");
+      return;
+    }
 
-  mD2DSurface = new gfxD2DSurface(mTexture, CanUseOpaqueSurface() ?
-    gfxASurface::CONTENT_COLOR : gfxASurface::CONTENT_COLOR_ALPHA);
+    hr = device()->CreateShaderResourceView(mTextureOnWhite, NULL, getter_AddRefs(mSRViewOnWhite));
 
-  if (!mD2DSurface || mD2DSurface->CairoStatus()) {
-    NS_WARNING("Failed to create surface for ThebesLayerD3D10.");
-    mD2DSurface = nsnull;
-    return;
+    if (FAILED(hr)) {
+      NS_WARNING("Failed to create shader resource view for ThebesLayerD3D10.");
+    }
+
+    mD2DSurfaceOnWhite = new gfxD2DSurface(mTextureOnWhite, gfxASurface::CONTENT_COLOR);
+
+    if (!mD2DSurfaceOnWhite || mD2DSurfaceOnWhite->CairoStatus()) {
+      NS_WARNING("Failed to create surface for ThebesLayerD3D10.");
+      mD2DSurfaceOnWhite = nsnull;
+      return;
+    }
   }
 }
 
