@@ -170,10 +170,12 @@ static void normalizeDriverId(nsString& driverid) {
  * */
 
 #define DEVICE_KEY_PREFIX L"\\Registry\\Machine\\"
-void
+nsresult
 GfxInfo::Init()
 {
   NS_TIME_FUNCTION;
+
+  nsresult rv = GfxInfoBase::Init();
 
   DISPLAY_DEVICEW displayDevice;
   displayDevice.cb = sizeof(displayDevice);
@@ -193,7 +195,7 @@ GfxInfo::Init()
   if (wcsnlen(displayDevice.DeviceKey, NS_ARRAY_LENGTH(displayDevice.DeviceKey))
       == NS_ARRAY_LENGTH(displayDevice.DeviceKey)) {
     // we did not find a NULL
-    return;
+    return rv;
   }
 
   mDeviceKeyDebug = displayDevice.DeviceKey;
@@ -202,7 +204,7 @@ GfxInfo::Init()
   /* check that DeviceKey begins with DEVICE_KEY_PREFIX */
   /* some systems have a DeviceKey starting with \REGISTRY\Machine\ so we need to compare case insenstively */
   if (_wcsnicmp(displayDevice.DeviceKey, DEVICE_KEY_PREFIX, NS_ARRAY_LENGTH(DEVICE_KEY_PREFIX)-1) != 0)
-    return;
+    return rv;
 
   // chop off DEVICE_KEY_PREFIX
   mDeviceKey = displayDevice.DeviceKey + NS_ARRAY_LENGTH(DEVICE_KEY_PREFIX)-1;
@@ -223,7 +225,7 @@ GfxInfo::Init()
                         L"System\\CurrentControlSet\\Control\\Class\\{4D36E968-E325-11CE-BFC1-08002BE10318}", 
                         0, KEY_QUERY_VALUE | KEY_ENUMERATE_SUB_KEYS, &key);
   if (result != ERROR_SUCCESS) {
-    return;
+    return rv;
   }
 
   nsAutoString wantedDriverId(mDeviceID);
@@ -256,8 +258,9 @@ GfxInfo::Init()
 
   RegCloseKey(key);
 
-
   AddCrashReportAnnotations();
+
+  return rv;
 }
 
 /* readonly attribute DOMString adapterDescription; */
@@ -509,20 +512,20 @@ static const GfxDriverInfo driverInfo[] = {
   /*
    * Implement special Direct2D blocklist from bug 595364
    */
-  { DRIVER_OS_ALL,
-    vendorIntel, deviceFamilyIntelBlockDirect2D,
+  GfxDriverInfo( DRIVER_OS_ALL,
+    vendorIntel, (GfxDeviceFamily) deviceFamilyIntelBlockDirect2D,
     nsIGfxInfo::FEATURE_DIRECT2D, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
-    DRIVER_LESS_THAN, allDriverVersions },
+    DRIVER_LESS_THAN, allDriverVersions ),
 
   /* implement the blocklist from bug 594877
    * Block all features on any drivers before this, as there's a crash when a MS Hotfix is installed.
    * The crash itself is Direct2D-related, but for safety we block all features.
    */
 #define IMPLEMENT_INTEL_DRIVER_BLOCKLIST(winVer, devFamily, driverVer) \
-  { winVer,                                                            \
-    vendorIntel, devFamily,                                            \
+  GfxDriverInfo( winVer,                                               \
+    vendorIntel, (GfxDeviceFamily) devFamily,                          \
     allFeatures, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,           \
-    DRIVER_LESS_THAN, driverVer },
+    DRIVER_LESS_THAN, driverVer ),
 
   IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_XP, deviceFamilyIntelGMA500,   V(6,14,11,1018))
   IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_XP, deviceFamilyIntelGMA900,   V(6,14,10,4764))
@@ -546,14 +549,14 @@ static const GfxDriverInfo driverInfo[] = {
   IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_7, deviceFamilyIntelGMAX4500HD, V(8,15,10,2202))
 
   /* OpenGL on any Intel hardware is discouraged */
-  { DRIVER_OS_ALL,
-    vendorIntel, nsnull,
+  GfxDriverInfo( DRIVER_OS_ALL,
+    vendorIntel, GfxDriverInfo::allDevices,
     nsIGfxInfo::FEATURE_OPENGL_LAYERS, nsIGfxInfo::FEATURE_DISCOURAGED,
-    DRIVER_LESS_THAN, allDriverVersions },
-  { DRIVER_OS_ALL,
-    vendorIntel, nsnull,
+    DRIVER_LESS_THAN, allDriverVersions ),
+  GfxDriverInfo( DRIVER_OS_ALL,
+    vendorIntel, GfxDriverInfo::allDevices,
     nsIGfxInfo::FEATURE_WEBGL_OPENGL, nsIGfxInfo::FEATURE_DISCOURAGED,
-    DRIVER_LESS_THAN, allDriverVersions },
+    DRIVER_LESS_THAN, allDriverVersions ),
 
   /*
    * NVIDIA entries
@@ -563,7 +566,7 @@ static const GfxDriverInfo driverInfo[] = {
    * AMD entries
    */
 
-  { (OperatingSystem)0, 0, nsnull, 0 }
+  GfxDriverInfo()
 };
 
 static OperatingSystem
