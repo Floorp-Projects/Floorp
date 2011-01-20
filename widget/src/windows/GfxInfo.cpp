@@ -57,9 +57,14 @@
 
 using namespace mozilla::widget;
 
+#ifdef DEBUG
+NS_IMPL_ISUPPORTS_INHERITED1(GfxInfo, GfxInfoBase, nsIGfxInfoDebug)
+#endif
+
 GfxInfo::GfxInfo()
   : mAdapterVendorID(0),
-    mAdapterDeviceID(0)
+    mAdapterDeviceID(0),
+    mWindowsVersion(0)
 {
 }
 
@@ -297,6 +302,13 @@ GfxInfo::Init()
     }
     nsresult err;
     mAdapterDeviceID = device.ToInteger(&err, 16);
+  }
+
+  const char *spoofedWindowsVersion = PR_GetEnv("MOZ_GFX_SPOOF_WINDOWS_VERSION");
+  if (spoofedWindowsVersion) {
+    PR_sscanf(spoofedWindowsVersion, "%x", &mWindowsVersion);
+  } else {
+    mWindowsVersion = gfxWindowsPlatform::WindowsOSVersion();
   }
 
   AddCrashReportAnnotations();
@@ -618,23 +630,14 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32 *aStatus, nsAString & aS
   
   PRUint64 suggestedDriverVersion = 0;
 
-  PRInt32 windowsVersion = 0;
-  const char *spoofedWindowsVersion = PR_GetEnv("MOZ_GFX_SPOOF_WINDOWS_VERSION");
-  if (spoofedWindowsVersion) {
-    if (1 != PR_sscanf(spoofedWindowsVersion, "%x", &windowsVersion))
-      return NS_ERROR_FAILURE;
-  } else {
-    windowsVersion = gfxWindowsPlatform::WindowsOSVersion();
-  }
-
   if (aFeature == FEATURE_DIRECT3D_9_LAYERS &&
-      windowsVersion < gfxWindowsPlatform::kWindowsXP)
+      mWindowsVersion < gfxWindowsPlatform::kWindowsXP)
   {
     *aStatus = FEATURE_BLOCKED_OS_VERSION;
     return NS_OK;
   }
 
-  OperatingSystem os = WindowsVersionToOperatingSystem(windowsVersion);
+  OperatingSystem os = WindowsVersionToOperatingSystem(mWindowsVersion);
 
   const GfxDriverInfo *info;
   if (aDriverInfo)
@@ -732,3 +735,37 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32 *aStatus, nsAString & aS
   
   return NS_OK;
 }
+
+#ifdef DEBUG
+
+// Implement nsIGfxInfoDebug
+
+/* void spoofVendorID (in unsigned long aVendorID); */
+NS_IMETHODIMP GfxInfo::SpoofVendorID(PRUint32 aVendorID)
+{
+  mAdapterVendorID = aVendorID;
+  return NS_OK;
+}
+
+/* void spoofDeviceID (in unsigned long aDeviceID); */
+NS_IMETHODIMP GfxInfo::SpoofDeviceID(PRUint32 aDeviceID)
+{
+  mAdapterDeviceID = aDeviceID;
+  return NS_OK;
+}
+
+/* void spoofDriverVersion (in DOMString aDriverVersion); */
+NS_IMETHODIMP GfxInfo::SpoofDriverVersion(const nsAString & aDriverVersion)
+{
+  mDriverVersion = aDriverVersion;
+  return NS_OK;
+}
+
+/* void spoofOSVersion (in unsigned long aVersion); */
+NS_IMETHODIMP GfxInfo::SpoofOSVersion(PRUint32 aVersion)
+{
+  mWindowsVersion = aVersion;
+  return NS_OK;
+}
+
+#endif
