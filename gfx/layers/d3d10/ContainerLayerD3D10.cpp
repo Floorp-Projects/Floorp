@@ -154,6 +154,16 @@ GetNextSiblingD3D10(LayerD3D10* aLayer)
                 : nsnull;
 }
 
+static PRBool
+HasOpaqueAncestorLayer(Layer* aLayer)
+{
+  for (Layer* l = aLayer->GetParent(); l; l = l->GetParent()) {
+    if (l->GetContentFlags() & Layer::CONTENT_OPAQUE)
+      return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
 void
 ContainerLayerD3D10::RenderLayer()
 {
@@ -171,6 +181,7 @@ ContainerLayerD3D10::RenderLayer()
 
   gfx3DMatrix oldViewMatrix;
 
+  mSupportsComponentAlphaChildren = PR_FALSE;
   gfxMatrix contTransform;
   if (useIntermediate) {
     device()->OMGetRenderTargets(1, getter_AddRefs(previousRTView), NULL);
@@ -188,14 +199,49 @@ ContainerLayerD3D10::RenderLayer()
     
     device()->CreateRenderTargetView(renderTexture, NULL, getter_AddRefs(rtView));
 
-    float black[] = { 0, 0, 0, 0};
-    device()->ClearRenderTargetView(rtView, black);
+    effect()->GetVariableByName("vRenderTargetOffset")->
+      GetRawValue(previousRenderTargetOffset, 0, 8);
+
+    if (mVisibleRegion.GetNumRects() == 1 && (GetContentFlags() & CONTENT_OPAQUE)) {
+      // don't need a background, we're going to paint all opaque stuff
+      mSupportsComponentAlphaChildren = PR_TRUE;
+    } else {
+      const gfx3DMatrix& transform3D = GetEffectiveTransform();
+      gfxMatrix transform;
+
+      // If we have an opaque ancestor layer, then we can be sure that
+      // all the pixels we draw into are either opaque already or will be
+      // covered by something opaque. Otherwise copying up the background is
+      // not safe.
+      if (HasOpaqueAncestorLayer(this) &&
+          transform3D.Is2D(&transform) && !transform.HasNonIntegerTranslation() &&
+          GetParent()->GetEffectiveVisibleRegion().GetBounds().Contains(visibleRect)) {
+        // Copy background up from below
+        D3D10_BOX srcBox;
+        srcBox.left = visibleRect.x + PRInt32(transform.x0) - PRInt32(previousRenderTargetOffset[0]);
+        srcBox.top = visibleRect.y + PRInt32(transform.y0) - PRInt32(previousRenderTargetOffset[1]);
+        srcBox.right = srcBox.left + visibleRect.width;
+        srcBox.bottom = srcBox.top + visibleRect.height;
+        srcBox.back = 1;
+        srcBox.front = 0;
+
+        nsRefPtr<ID3D10Resource> srcResource;
+        previousRTView->GetResource(getter_AddRefs(srcResource));
+
+        device()->CopySubresourceRegion(renderTexture, 0,
+                                        0, 0, 0,
+                                        srcResource, 0,
+                                        &srcBox);
+
+        mSupportsComponentAlphaChildren = PR_TRUE;
+      } else {
+        float black[] = { 0, 0, 0, 0};
+        device()->ClearRenderTargetView(rtView, black);
+      }
+    }
 
     ID3D10RenderTargetView *rtViewPtr = rtView;
     device()->OMSetRenderTargets(1, &rtViewPtr, NULL);
-
-    effect()->GetVariableByName("vRenderTargetOffset")->
-      GetRawValue(previousRenderTargetOffset, 0, 8);
 
     renderTargetOffset[0] = (float)visibleRect.x;
     renderTargetOffset[1] = (float)visibleRect.y;
@@ -210,6 +256,9 @@ ContainerLayerD3D10::RenderLayer()
 #endif
     GetEffectiveTransform().Is2D(&contTransform);
     NS_ASSERTION(is2d, "Transform must be 2D");
+
+    mSupportsComponentAlphaChildren = (GetContentFlags() & CONTENT_OPAQUE) ||
+        (mParent && mParent->SupportsComponentAlphaChildren());
   }
 
   /*
