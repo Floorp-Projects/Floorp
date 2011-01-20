@@ -189,13 +189,18 @@ GfxInfo::AddCrashReportAnnotations()
 
 nsresult
 GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32* aStatus,
-                              nsAString& aSuggestedDriverVersion)
+                              nsAString& aSuggestedDriverVersion,
+                              GfxDriverInfo* aDriverInfo /* = nsnull */)
 {
   NS_ENSURE_ARG_POINTER(aStatus);
 
   aSuggestedDriverVersion.SetIsVoid(PR_TRUE);
 
   PRInt32 status = nsIGfxInfo::FEATURE_NO_INFO;
+
+  // For now, we don't implement the downloaded blacklist.
+  if (aDriverInfo)
+    return NS_OK;
 
   if (aFeature == nsIGfxInfo::FEATURE_OPENGL_LAYERS) {
     // CGL reports a list of renderers, some renderers are slow (e.g. software)

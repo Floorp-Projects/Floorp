@@ -500,7 +500,7 @@ static const PRUint32 deviceFamilyIntelGMAX4500HD[] = {
     0
 };
 
-static const GfxDriverInfo driverInfo[] = {
+static const GfxDriverInfo gDriverInfo[] = {
   /*
    * Notice that the first match defines the result. So always implement special cases firsts and general case last.
    */
@@ -590,7 +590,7 @@ WindowsVersionToOperatingSystem(PRInt32 aWindowsVersion)
 }
 
 nsresult
-GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32 *aStatus, nsAString & aSuggestedDriverVersion)
+GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32 *aStatus, nsAString & aSuggestedDriverVersion, GfxDriverInfo* aDriverInfo /* = nsnull */)
 {
   *aStatus = nsIGfxInfo::FEATURE_NO_INFO;
   aSuggestedDriverVersion.SetIsVoid(PR_TRUE);
@@ -632,7 +632,12 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32 *aStatus, nsAString & aS
 
   OperatingSystem os = WindowsVersionToOperatingSystem(windowsVersion);
 
-  const GfxDriverInfo *info = &driverInfo[0];
+  const GfxDriverInfo *info;
+  if (aDriverInfo)
+    info = aDriverInfo;
+  else
+    info = &gDriverInfo[0];
+
   while (info->mOperatingSystem) {
 
     if (info->mOperatingSystem != DRIVER_OS_ALL &&
