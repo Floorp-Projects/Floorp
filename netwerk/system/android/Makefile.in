@@ -1,4 +1,3 @@
-#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -12,14 +11,14 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org code.
+# The Original Code is mozilla.org.
 #
-# The Initial Developer of the Original Code is
-# Juan Lang
-# Portions created by the Initial Developer are Copyright (C) 2006
+# The Initial Developer of the Original Code is Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2011
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Makoto Kato <m_kato@ga2.so-net.ne.jp> (Original Author)
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,37 +34,26 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../..
+DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= necko
+MODULE	       = necko
+LIBRARY_NAME   = neckosystem_s
+LIBXUL_LIBRARY = 1
 
-ifeq ($(OS_ARCH),WINNT)
-    DIRS += win32
-endif
+FORCE_STATIC_LIB = 1
 
-ifeq ($(OS_ARCH),WINCE)
-    DIRS += wince
-endif
-
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-    DIRS += mac
-endif
-
-ifdef MOZ_ENABLE_LIBCONIC
-    DIRS += maemo
-endif
-
-ifdef MOZ_ENABLE_QTNETWORK
-    DIRS += qt
-endif
-
-ifeq (android,$(MOZ_WIDGET_TOOLKIT))
-    DIRS += android
-endif
+CPPSRCS += \
+	nsAndroidNetworkLinkService.cpp \
+	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
+DEFINES += -DIMPL_NS_NET
+
+LOCAL_INCLUDES += -I$(srcdir)/../../base/src
+ 

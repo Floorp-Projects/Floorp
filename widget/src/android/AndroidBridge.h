@@ -180,6 +180,10 @@ public:
 
     void HideProgressDialogOnce();
 
+    bool IsNetworkLinkUp();
+
+    bool IsNetworkLinkKnown();
+
     struct AutoLocalJNIFrame {
         AutoLocalJNIFrame(int nEntries = 128) : mEntries(nEntries) {
             // Make sure there is enough space to store a local ref to the
@@ -262,6 +266,8 @@ protected:
     jmethodID jHideProgressDialog;
     jmethodID jPerformHapticFeedback;
     jmethodID jSetKeepScreenOn;
+    jmethodID jIsNetworkLinkUp;
+    jmethodID jIsNetworkLinkKnown;
 
     // stuff we need for CallEglCreateWindowSurface
     jclass jEGLSurfaceImplClass;
