@@ -44,10 +44,8 @@ function test() {
   // verify initial state
   ok(!TabView.isVisible(), "Tab View starts hidden");
 
-  // use the Tab View button to launch it for the first time
+  // launch tab view for the first time
   window.addEventListener("tabviewshown", onTabViewLoadedAndShown, false);
-  let button = document.getElementById("tabview-button");
-  ok(!button, "Tab View button not exist by default");
   let tabViewCommand = document.getElementById("Browser:ToggleTabView");
   tabViewCommand.doCommand();
 }
