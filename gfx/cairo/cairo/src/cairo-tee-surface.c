@@ -467,29 +467,6 @@ _cairo_tee_surface_show_text_glyphs (void		    *abstract_surface,
     return status;
 }
 
-static cairo_status_t
-_cairo_tee_surface_flush (void *abstract_surface)
-{
-    cairo_tee_surface_t *surface = abstract_surface;
-    cairo_surface_wrapper_t *slaves;
-    int n, num_slaves;
-    cairo_status_t status;
-
-    status = _cairo_surface_wrapper_flush(&surface->master);
-    if (unlikely (status))
-	return status;
-
-    num_slaves = _cairo_array_num_elements (&surface->slaves);
-    slaves = _cairo_array_index (&surface->slaves, 0);
-    for (n = 0; n < num_slaves; n++) {
-	status = _cairo_surface_wrapper_flush(&slaves[n]);
-	if (unlikely (status))
-	    return status;
-    }
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
 static const cairo_surface_backend_t cairo_tee_surface_backend = {
     CAIRO_SURFACE_TYPE_TEE,
     _cairo_tee_surface_create_similar,
@@ -508,7 +485,7 @@ static const cairo_surface_backend_t cairo_tee_surface_backend = {
     _cairo_tee_surface_get_extents,
     NULL, /* old_show_glyphs */
     _cairo_tee_surface_get_font_options,
-    _cairo_tee_surface_flush,
+    NULL, /* flush */
     NULL, /* mark_dirty_rectangle */
     NULL, /* scaled_font_fini */
     NULL, /* scaled_glyph_fini */
