@@ -1120,14 +1120,6 @@ toolbar[iconsize="small"] #feed-button {
   min-width: 280px;
 }
 
-/* Invalid form popup */
-#invalid-form-popup {
-  -moz-appearance: none;
-  background-color: #fffcd6;
-  border: 1px solid #dad8b6;
-  font-weight: bold;
-}
-
 /* Notification popup */
 #notification-popup {
   min-width: 280px;
