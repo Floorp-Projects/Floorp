@@ -25,6 +25,7 @@
  * Ehsan Akhgari <ehsan@mozilla.com>
  * Raymond Lee <raymond@appcoast.com>
  * Sean Dunn <seanedunn@yahoo.com>
+ * Tim Taubert <tim.taubert@gmx.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -1356,14 +1357,17 @@ let UI = {
       let unhiddenGroups = GroupItems.groupItems.filter(function(groupItem) {
         return (!groupItem.hidden && groupItem.getChildren().length > 0);
       });
-      // no visible groups, no orphaned tabs and no apps tabs, open a new group
-      // with a blank tab
-      if (unhiddenGroups.length == 0 && GroupItems.getOrphanedTabs().length == 0 &&
-          gBrowser._numPinnedTabs == 0) {
-        let box = new Rect(20, 20, 250, 200);
-        let groupItem = new GroupItem([], { bounds: box, immediately: true });
-        groupItem.newTab();
-        return;
+      // no pinned tabs, no visible groups and no orphaned tabs: open a new
+      // group. open a blank tab and return
+      if (!unhiddenGroups.length && !GroupItems.getOrphanedTabs().length) {
+        let emptyGroups = GroupItems.groupItems.filter(function (groupItem) {
+          return (!groupItem.hidden && !groupItem.getChildren().length);
+        });
+        let group = (emptyGroups.length ? emptyGroups[0] : GroupItems.newGroup());
+        if (!gBrowser._numPinnedTabs) {
+          group.newTab();
+          return;
+        }
       }
 
       // If there's an active TabItem, zoom into it. If not (for instance when the
