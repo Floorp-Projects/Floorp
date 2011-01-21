@@ -2473,34 +2473,68 @@ nsXPConnect::Peek(JSContext * *_retval)
 
 void 
 nsXPConnect::CheckForDebugMode(JSRuntime *rt) {
-    if (gDebugMode != gDesiredDebugMode) {
-        // This can happen if a Worker is running, but we don't have the ability
-        // to debug workers right now, so just return.
-        if (!NS_IsMainThread()) {
-            return;
-        }
+    JSContext *cx = NULL;
 
-        JS_SetRuntimeDebugMode(rt, gDesiredDebugMode);
+    if (gDebugMode == gDesiredDebugMode) {
+        return;
+    }
+        
+    // This can happen if a Worker is running, but we don't have the ability to
+    // debug workers right now, so just return.
+    if (!NS_IsMainThread()) {
+        return;
+    }
 
-        nsresult rv;
-        const char jsdServiceCtrID[] = "@mozilla.org/js/jsd/debugger-service;1";
-        nsCOMPtr<jsdIDebuggerService> jsds = do_GetService(jsdServiceCtrID, &rv);
-        if (NS_SUCCEEDED(rv)) {
-            if (gDesiredDebugMode == PR_FALSE) {
-                rv = jsds->RecompileForDebugMode(rt, PR_FALSE);
-            } else {
-                rv = jsds->ActivateDebugger(rt);
+    JS_SetRuntimeDebugMode(rt, gDesiredDebugMode);
+
+    nsresult rv;
+    const char jsdServiceCtrID[] = "@mozilla.org/js/jsd/debugger-service;1";
+    nsCOMPtr<jsdIDebuggerService> jsds = do_GetService(jsdServiceCtrID, &rv);
+    if (!NS_SUCCEEDED(rv)) {
+        goto fail;
+    }
+
+    if (!(cx = JS_NewContext(rt, 256))) {
+        goto fail;
+    }
+    JS_BeginRequest(cx);
+
+    {
+        js::WrapperVector &vector = rt->compartments;
+        for (JSCompartment **p = vector.begin(); p != vector.end(); ++p) {
+            JSCompartment *comp = *p;
+            if (!comp->principals) {
+                /* Ignore special compartments (atoms, JSD compartments) */
+                continue;
+            }
+
+            /* ParticipatesInCycleCollection means "on the main thread" */
+            if (xpc::CompartmentParticipatesInCycleCollection(cx, comp)) {
+                rv = jsds->RecompileForDebugMode(cx, comp, gDesiredDebugMode);
+                if (!NS_SUCCEEDED(rv)) {
+                    goto fail;
+                }
             }
         }
-
-        if (NS_SUCCEEDED(rv)) {
-            gDebugMode = gDesiredDebugMode;
-        } else {
-            // if the attempt failed, cancel the debugMode request
-            gDesiredDebugMode = gDebugMode;
-            JS_SetRuntimeDebugMode(rt, gDebugMode);
-        }
     }
+
+    JS_EndRequest(cx);
+    JS_DestroyContext(cx);
+
+    if (gDesiredDebugMode) {
+        rv = jsds->ActivateDebugger(rt);
+    }
+
+    gDebugMode = gDesiredDebugMode;
+    return;
+
+fail:
+    if (jsds)
+        jsds->DeactivateDebugger();
+
+    // if the attempt failed, cancel the debugMode request
+    gDesiredDebugMode = gDebugMode;
+    JS_SetRuntimeDebugMode(rt, gDebugMode);
 }
 
 /* JSContext Pop (); */

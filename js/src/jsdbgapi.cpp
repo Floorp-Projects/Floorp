@@ -42,10 +42,12 @@
  * JS debugging API.
  */
 #include <string.h>
+#include "jsprvtd.h"
 #include "jstypes.h"
 #include "jsstdint.h"
 #include "jsutil.h"
 #include "jsclist.h"
+#include "jshashtable.h"
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jsversion.h"
@@ -98,17 +100,11 @@ JS_GetDebugMode(JSContext *cx)
     return cx->compartment->debugMode;
 }
 
-#ifdef JS_METHODJIT
-static bool
-IsScriptLive(JSContext *cx, JSScript *script)
+JS_PUBLIC_API(JSBool)
+JS_SetDebugMode(JSContext *cx, JSBool debug)
 {
-    for (AllFramesIter i(cx); !i.done(); ++i) {
-        if (i.fp()->maybeScript() == script)
-            return true;
-    }
-    return false;
+    return JS_SetDebugModeForCompartment(cx, cx->compartment, debug);
 }
-#endif
 
 JS_PUBLIC_API(void)
 JS_SetRuntimeDebugMode(JSRuntime *rt, JSBool debug)
@@ -116,74 +112,73 @@ JS_SetRuntimeDebugMode(JSRuntime *rt, JSBool debug)
     rt->debugMode = debug;
 }
 
-#ifdef JS_METHODJIT
-static void
-PurgeCallICs(JSContext *cx, JSScript *start)
-{
-    for (JSScript *script = start;
-         &script->links != &cx->compartment->scripts;
-         script = (JSScript *)script->links.next)
-    {
-        // Debug mode does not use call ICs.
-        if (script->debugMode)
-            continue;
-
-        JS_ASSERT(!IsScriptLive(cx, script));
-
-        if (script->jitNormal)
-            script->jitNormal->nukeScriptDependentICs();
-        if (script->jitCtor)
-            script->jitCtor->nukeScriptDependentICs();
-    }
-}
-#endif
-
 JS_FRIEND_API(JSBool)
-js_SetDebugMode(JSContext *cx, JSBool debug)
+JS_SetDebugModeForCompartment(JSContext *cx, JSCompartment *comp, JSBool debug)
 {
-    if (!cx->compartment)
-        return JS_TRUE;
+    JSRuntime *rt = cx->runtime;
 
-    cx->compartment->debugMode = debug;
-#ifdef JS_METHODJIT
-    for (JSScript *script = (JSScript *)cx->compartment->scripts.next;
-         &script->links != &cx->compartment->scripts;
-         script = (JSScript *)script->links.next) {
-        if (script->debugMode != !!debug &&
-            script->hasJITCode() &&
-            !IsScriptLive(cx, script)) {
-            /*
-             * In the event that this fails, debug mode is left partially on,
-             * leading to a small performance overhead but no loss of
-             * correctness. We set the debug flag to false so that the caller
-             * will not later attempt to use debugging features.
-             */
-            js::mjit::Recompiler recompiler(cx, script);
-            if (!recompiler.recompile()) {
-                /*
-                 * If recompilation failed, we could be in a state where
-                 * remaining compiled scripts hold call IC references that
-                 * have been destroyed by recompilation. Clear those ICs now.
-                 */
-                PurgeCallICs(cx, script);
-                cx->compartment->debugMode = JS_FALSE;
-                return JS_FALSE;
-            }
+    // We can only recompile scripts that are not currently live (executing in
+    // some context). This function is only called from the main thread, and
+    // will only consider contexts in that same thread and scripts inside
+    // compartments associated with that same thread. (Scripts in other threads
+    // are allowed to migrate from thread to thread, but scripts do not migrate
+    // between the main thread and other threads.)
+    //
+    // Discard all of this thread's inactive JITScripts and set their
+    // debugMode. The remaining scripts will be left as-is.
+
+    // Find all live scripts
+
+    JSContext *iter = NULL;
+    jsword currentThreadId = reinterpret_cast<jsword>(js_CurrentThreadId());
+    typedef HashSet<JSScript *, DefaultHasher<JSScript*>, ContextAllocPolicy> ScriptMap;
+    ScriptMap liveScripts(cx);
+    if (!liveScripts.init())
+        return JS_FALSE;
+
+    JSContext *icx;
+    while ((icx = JS_ContextIterator(rt, &iter))) {
+        if (JS_GetContextThread(icx) != currentThreadId)
+            continue;
+            
+        for (AllFramesIter i(icx); !i.done(); ++i) {
+            JSScript *script = i.fp()->maybeScript();
+            if (script)
+                liveScripts.put(script);
         }
     }
+
+    comp->debugMode = debug;
+
+    JSAutoEnterCompartment ac;
+
+#ifdef JS_METHODJIT
+    for (JSScript *script = (JSScript *)comp->scripts.next;
+         &script->links != &comp->scripts;
+         script = (JSScript *)script->links.next)
+    {
+        if (!script->debugMode == !debug)
+            continue;
+        if (liveScripts.has(script))
+            continue;
+
+        /*
+         * If compartment entry fails, debug mode is left partially on, leading
+         * to a small performance overhead but no loss of correctness. We set
+         * the debug flags to false so that the caller will not later attempt
+         * to use debugging features.
+         */
+        if (!ac.entered() && !ac.enter(cx, script)) {
+            comp->debugMode = JS_FALSE;
+            return JS_FALSE;
+        }
+
+        mjit::ReleaseScriptCode(cx, script);
+        script->debugMode = !!debug;
+    }
 #endif
+
     return JS_TRUE;
-}
-
-JS_PUBLIC_API(JSBool)
-JS_SetDebugMode(JSContext *cx, JSBool debug)
-{
-#ifdef DEBUG
-    for (AllFramesIter i(cx); !i.done(); ++i)
-        JS_ASSERT(!JS_IsScriptFrame(cx, i.fp()));
-#endif
-
-    return js_SetDebugMode(cx, debug);
 }
 
 JS_FRIEND_API(JSBool)
