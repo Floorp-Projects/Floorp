@@ -368,7 +368,7 @@ SearchEventHandlerClass.prototype = {
 
     this.switchToInMode();
     this.initiatedBy = "keydown";
-    ensureSearchShown();
+    ensureSearchShown(true);
   },
 
   // ----------
@@ -542,7 +542,12 @@ function performSearch() {
   matcher.doSearch(TabHandlers.onMatch, TabHandlers.onUnmatch, TabHandlers.onOther);
 }
 
-function ensureSearchShown(){
+// ----------
+// Function: ensureSearchShown
+// Ensure the search feature is displayed.  If not, display it.
+// Parameters:
+//  - a boolean indicates whether this is triggered by a keypress or not
+function ensureSearchShown(activatedByKeypress) {
   var $search = iQ("#search");
   var $searchShade = iQ("#searchshade");
   var $searchbox = iQ("#searchbox");
@@ -556,17 +561,27 @@ function ensureSearchShown(){
     UI.setTitlebarColors({active: "#717171", inactive: "#EDEDED"});
 #endif
 
-    $searchbox[0].focus();
-    $searchbox[0].val = '0';
-
     // NOTE: when this function is called by keydown handler, next keypress
     // event or composition events of IME will be fired on the focused editor.
 
-    setTimeout(function dispatchTabViewSearchEnabledEvent() {
+    function dispatchTabViewSearchEnabledEvent() {
       let newEvent = document.createEvent("Events");
       newEvent.initEvent("tabviewsearchenabled", false, false);
       dispatchEvent(newEvent);
-    }, 0);
+    };
+
+    if (activatedByKeypress) {
+      // set the focus so key strokes are entered into the textbox.
+      $searchbox[0].focus();
+      dispatchTabViewSearchEnabledEvent(); 
+    } else {
+      // marshal the focusing, otherwise it ends up with searchbox[0].focus gets
+      // called before the search button gets the focus after being pressed.
+      setTimeout(function setFocusAndDispatchSearchEnabledEvent() {
+        $searchbox[0].focus();
+        dispatchTabViewSearchEnabledEvent();
+      }, 0);
+    }
   }
 }
 

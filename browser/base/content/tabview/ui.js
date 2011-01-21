@@ -1061,7 +1061,7 @@ let UI = {
   //   event - the event triggers this action.
   enableSearch: function UI_enableSearch(event) {
     if (!isSearchEnabled()) {
-      ensureSearchShown(null);
+      ensureSearchShown();
       SearchEventHandler.switchToInMode();
       
       if (event) {
