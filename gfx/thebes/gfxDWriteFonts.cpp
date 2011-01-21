@@ -481,27 +481,37 @@ gfxDWriteFont::GetFontTable(PRUint32 aTag)
 }
 
 PRInt32
-gfxDWriteFont::GetHintedGlyphWidth(gfxContext *aCtx, PRUint16 aGID)
+gfxDWriteFont::GetGlyphWidth(gfxContext *aCtx, PRUint16 aGID)
 {
     if (!mGlyphWidths.IsInitialized()) {
         mGlyphWidths.Init(200);
     }
 
-    PRInt32 width;
+    PRInt32 width = -1;
     if (mGlyphWidths.Get(aGID, &width)) {
         return width;
     }
 
     DWRITE_GLYPH_METRICS glyphMetrics;
-    HRESULT hr = mFontFace->GetGdiCompatibleGlyphMetrics(
+    HRESULT hr;
+    if (mUsingClearType) {
+        hr = mFontFace->GetDesignGlyphMetrics(
+                  &aGID, 1, &glyphMetrics, FALSE);
+        if (SUCCEEDED(hr)) {
+            width =
+                NS_lround(glyphMetrics.advanceWidth * mFUnitsConvFactor *
+                          65536.0);
+        }
+    } else {
+        hr = mFontFace->GetGdiCompatibleGlyphMetrics(
                   GetAdjustedSize(), 1.0f, nsnull, FALSE,
                   &aGID, 1, &glyphMetrics, FALSE);
-
-    if (NS_SUCCEEDED(hr)) {
-        width = NS_lround(glyphMetrics.advanceWidth * mFUnitsConvFactor) << 16;
-        mGlyphWidths.Put(aGID, width);
-        return width;
+        if (SUCCEEDED(hr)) {
+            width =
+                NS_lround(glyphMetrics.advanceWidth * mFUnitsConvFactor) << 16;
+        }
     }
 
-    return -1;
+    mGlyphWidths.Put(aGID, width);
+    return width;
 }

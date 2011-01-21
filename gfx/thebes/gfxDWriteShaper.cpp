@@ -175,7 +175,7 @@ trymoreglyphs:
             continue;
         }
 
-        if (mFont->ProvidesHintedWidths()) {
+        if (!static_cast<gfxDWriteFont*>(mFont)->mUsingClearType) {
             hr = analyzer->GetGdiCompatibleGlyphPlacements(
                                               aString + range.start,
                                               clusters.Elements(),
