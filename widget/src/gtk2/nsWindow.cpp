@@ -720,6 +720,8 @@ nsWindow::Destroy(void)
     }
     mLayerManager = nsnull;
 
+    ClearCachedResources();
+
     g_signal_handlers_disconnect_by_func(gtk_settings_get_default(),
                                          FuncToGpointer(theme_changed_cb),
                                          this);
@@ -1036,6 +1038,11 @@ nsWindow::Show(PRBool aState)
 {
     if (aState == mIsShown)
         return NS_OK;
+
+    // Clear our cached resources when the window is hidden.
+    if (mIsShown && !aState) {
+        ClearCachedResources();
+    }
 
     mIsShown = aState;
 
@@ -6745,4 +6752,22 @@ nsWindow::BeginResizeDrag(nsGUIEvent* aEvent, PRInt32 aHorizontal, PRInt32 aVert
                                  screenX, screenY, aEvent->time);
 
     return NS_OK;
+}
+
+void
+nsWindow::ClearCachedResources()
+{
+    if (mLayerManager &&
+        mLayerManager->GetBackendType() == LayerManager::LAYERS_BASIC) {
+        static_cast<BasicLayerManager*> (mLayerManager.get())->
+            ClearCachedResources();
+    }
+
+    GList* children = gdk_window_peek_children(mGdkWindow);
+    for (GList* list = children; list; list = list->next) {
+        nsWindow* window = get_window_for_gdk_window(GDK_WINDOW(list->data));
+        if (window) {
+            window->ClearCachedResources();
+        }
+    }
 }
