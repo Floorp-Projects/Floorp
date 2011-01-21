@@ -104,7 +104,7 @@ public:
   virtual void WillRefresh(mozilla::TimeStamp aTime);
 
 private:
-  friend class ElementTransitions; // for TransitionsRemoved
+  friend struct ElementTransitions; // for TransitionsRemoved
 
   void ConsiderStartingTransition(nsCSSProperty aProperty,
                                   const nsTransition& aTransition,
