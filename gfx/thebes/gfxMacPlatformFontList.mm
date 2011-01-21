@@ -38,6 +38,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_LOGGING
+#define FORCE_PR_LOG /* Allow logging in the release build */
+#endif
+#include "prlog.h"
+
 #include <Carbon/Carbon.h>
 
 #import <AppKit/AppKit.h>
@@ -121,11 +126,14 @@ static NSString* GetNSStringForString(const nsAString& aSrc)
 }
 
 #ifdef PR_LOGGING
-static PRLogModuleInfo *gFontInfoLog = PR_NewLogModule("fontInfoLog");
-#endif /* PR_LOGGING */
 
-#define LOG(args) PR_LOG(gFontInfoLog, PR_LOG_DEBUG, args)
-#define LOG_ENABLED() PR_LOG_TEST(gFontInfoLog, PR_LOG_DEBUG)
+#define LOG_FONTLIST(args) PR_LOG(gfxPlatform::GetLog(eGfxLog_fontlist), \
+                               PR_LOG_DEBUG, args)
+#define LOG_FONTLIST_ENABLED() PR_LOG_TEST( \
+                                   gfxPlatform::GetLog(eGfxLog_fontlist), \
+                                   PR_LOG_DEBUG)
+
+#endif // PR_LOGGING
 
 /* MacOSFontEntry */
 #pragma mark-
@@ -287,9 +295,11 @@ MacOSFontEntry::ReadCMAP()
         }
     }
 
-    PR_LOG(gFontInfoLog, PR_LOG_DEBUG, ("(fontinit-cmap) psname: %s, size: %d\n",
-                                        NS_ConvertUTF16toUTF8(mName).get(),
-                                        mCharacterMap.GetSize()));
+#ifdef PR_LOGGING
+    LOG_FONTLIST(("(fontlist-cmap) name: %s, size: %d\n",
+                  NS_ConvertUTF16toUTF8(mName).get(),
+                  mCharacterMap.GetSize()));
+#endif
 
     return rv;
 }
@@ -467,8 +477,8 @@ gfxMacFontFamily::FindStyleVariations()
         }
 
 #ifdef PR_LOGGING
-        if (LOG_ENABLED()) {
-            LOG(("(fontinit) added (%s) to family (%s)"
+        if (LOG_FONTLIST_ENABLED()) {
+            LOG_FONTLIST(("(fontlist) added (%s) to family (%s)"
                  " with style: %s weight: %d stretch: %d"
                  " (apple-weight: %d macTraits: %8.8x)",
                  NS_ConvertUTF16toUTF8(fontEntry->Name()).get(), 
@@ -636,7 +646,9 @@ gfxMacPlatformFontList::InitFontList()
         return NS_OK;
 
     mATSGeneration = currentGeneration;
-    PR_LOG(gFontInfoLog, PR_LOG_DEBUG, ("(fontinit) updating to generation: %d", mATSGeneration));
+#ifdef PR_LOGGING
+    LOG_FONTLIST(("(fontlist) updating to generation: %d", mATSGeneration));
+#endif
 
     // reset font lists
     gfxPlatformFontList::InitFontList();
@@ -700,15 +712,20 @@ gfxMacPlatformFontList::InitSingleFaceList()
 
     PRUint32 numFonts = singleFaceFonts.Length();
     for (PRUint32 i = 0; i < numFonts; i++) {
-        PR_LOG(gFontInfoLog, PR_LOG_DEBUG, ("(fontlist-singleface) face name: %s\n",
-                                            NS_ConvertUTF16toUTF8(singleFaceFonts[i]).get()));
+#ifdef PR_LOGGING
+        LOG_FONTLIST(("(fontlist-singleface) face name: %s\n",
+                      NS_ConvertUTF16toUTF8(singleFaceFonts[i]).get()));
+#endif
         gfxFontEntry *fontEntry = LookupLocalFont(nsnull, singleFaceFonts[i]);
         if (fontEntry) {
             nsAutoString familyName, key;
             familyName = singleFaceFonts[i];
             GenerateFontListKey(familyName, key);
-            PR_LOG(gFontInfoLog, PR_LOG_DEBUG, ("(fontlist-singleface) family name: %s, key: %s\n",
-                   NS_ConvertUTF16toUTF8(familyName).get(), NS_ConvertUTF16toUTF8(key).get()));
+#ifdef PR_LOGGING
+            LOG_FONTLIST(("(fontlist-singleface) family name: %s, key: %s\n",
+                          NS_ConvertUTF16toUTF8(familyName).get(),
+                          NS_ConvertUTF16toUTF8(key).get()));
+#endif
 
             // add only if doesn't exist already
             PRBool found;
@@ -719,8 +736,11 @@ gfxMacPlatformFontList::InitSingleFaceList()
                 familyEntry->SetHasStyles(PR_TRUE);
                 mFontFamilies.Put(key, familyEntry);
                 fontEntry->mFamily = familyEntry;
-                PR_LOG(gFontInfoLog, PR_LOG_DEBUG, ("(fontlist-singleface) added new family\n",
-                       NS_ConvertUTF16toUTF8(familyName).get(), NS_ConvertUTF16toUTF8(key).get()));
+#ifdef PR_LOGGING
+                LOG_FONTLIST(("(fontlist-singleface) added new family\n",
+                              NS_ConvertUTF16toUTF8(familyName).get(),
+                              NS_ConvertUTF16toUTF8(key).get()));
+#endif
             }
         }
     }
