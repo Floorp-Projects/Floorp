@@ -68,28 +68,35 @@ namespace nanojit
         postReset();
     }
 
-    void* Allocator::allocSlow(size_t nbytes)
+    void* Allocator::allocSlow(size_t nbytes, bool fallible)
     {
         NanoAssert((nbytes & 7) == 0);
-        fill(nbytes);
-        NanoAssert(current_top + nbytes <= current_limit);
-        void* p = current_top;
-        current_top += nbytes;
-        return p;
+        if (fill(nbytes, fallible)) {
+            NanoAssert(current_top + nbytes <= current_limit);
+            void* p = current_top;
+            current_top += nbytes;
+            return p;
+        }
+        return NULL;
     }
 
-    void Allocator::fill(size_t nbytes)
+    bool Allocator::fill(size_t nbytes, bool fallible)
     {
-        const size_t minChunk = 2000;
-        if (nbytes < minChunk)
-            nbytes = minChunk;
+        if (nbytes < MIN_CHUNK_SZB)
+            nbytes = MIN_CHUNK_SZB;
         size_t chunkbytes = sizeof(Chunk) + nbytes - sizeof(int64_t);
-        void* mem = allocChunk(chunkbytes);
-        Chunk* chunk = (Chunk*) mem;
-        chunk->prev = current_chunk;
-        current_chunk = chunk;
-        current_top = (char*)chunk->data;
-        current_limit = (char*)mem + chunkbytes;
+        void* mem = allocChunk(chunkbytes, fallible);
+        if (mem) {
+            Chunk* chunk = (Chunk*) mem;
+            chunk->prev = current_chunk;
+            current_chunk = chunk;
+            current_top = (char*)chunk->data;
+            current_limit = (char*)mem + chunkbytes;
+            return true;
+        } else {
+            NanoAssert(fallible);
+            return false;
+        }
     }
 }
 

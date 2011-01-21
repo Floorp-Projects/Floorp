@@ -396,7 +396,7 @@ class Compiler : public BaseCompiler
     /* Emitting helpers. */
     void restoreFrameRegs(Assembler &masm);
     bool emitStubCmpOp(BoolStub stub, jsbytecode *target, JSOp fused);
-    void iter(uintN flags);
+    bool iter(uintN flags);
     void iterNext();
     bool iterMore();
     void iterEnd();

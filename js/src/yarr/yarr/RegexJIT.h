@@ -74,7 +74,8 @@ public:
 
     int execute(const UChar* input, unsigned start, unsigned length, int* output)
     {
-        return JS_EXTENSION((reinterpret_cast<RegexJITCode>(m_ref.m_code.executableAddress()))(input, start, length, output));
+        void *code = m_ref.m_code.executableAddress();
+        return JS_EXTENSION((reinterpret_cast<RegexJITCode>(code))(input, start, length, output));
     }
 
 private:
