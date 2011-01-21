@@ -1200,7 +1200,11 @@ nsHTMLInputElement::SetUserInput(const nsAString& aValue)
   } else {
     SetValueInternal(aValue, PR_TRUE, PR_TRUE);
   }
-  return NS_OK;
+
+  return nsContentUtils::DispatchTrustedEvent(GetOwnerDoc(),
+                                              static_cast<nsIDOMHTMLInputElement*>(this),
+                                              NS_LITERAL_STRING("input"), PR_TRUE,
+                                              PR_TRUE);
 }
 
 NS_IMETHODIMP_(nsIEditor*)
