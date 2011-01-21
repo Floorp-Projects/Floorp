@@ -777,8 +777,8 @@ js_Stringify(JSContext *cx, Value *vp, JSObject *replacer, Value space, StringBu
 
     /* Step 10. */
     jsid emptyId = ATOM_TO_JSID(cx->runtime->atomState.emptyAtom);
-    if (!js_DefineNativeProperty(cx, wrapper, emptyId, *vp, PropertyStub, StrictPropertyStub,
-                                 JSPROP_ENUMERATE, 0, 0, NULL))
+    if (!DefineNativeProperty(cx, wrapper, emptyId, *vp, PropertyStub, StrictPropertyStub,
+                              JSPROP_ENUMERATE, 0, 0))
     {
         return false;
     }
@@ -879,9 +879,8 @@ Walk(JSContext *cx, JSObject *holder, jsid name, const Value &reviver, Value *vp
                 } else {
                     /* Step 2b(ii)(3). */
                     JS_ASSERT(obj->isNative());
-                    if (!js_DefineNativeProperty(cx, obj, id, newElement, PropertyStub,
-                                                 StrictPropertyStub, JSPROP_ENUMERATE, 0, 0,
-                                                 NULL))
+                    if (!DefineNativeProperty(cx, obj, id, newElement, PropertyStub,
+                                              StrictPropertyStub, JSPROP_ENUMERATE, 0, 0))
                     {
                         return false;
                     }
