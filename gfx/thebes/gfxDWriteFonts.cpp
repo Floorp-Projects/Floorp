@@ -228,6 +228,12 @@ gfxDWriteFont::ComputeMetrics()
     if (HasBitmapStrikeForSize(NS_lround(mAdjustedSize))) {
         mAdjustedSize = NS_lround(mAdjustedSize);
         mUseSubpixelPositions = PR_FALSE;
+        // if we have bitmaps, we need to tell Cairo NOT to use subpixel AA,
+        // to avoid the manual-subpixel codepath in cairo-d2d-surface.cpp
+        // which fails to render bitmap glyphs (see bug 626299)
+        if (mAntialiasOption == kAntialiasDefault && UsingClearType()) {
+            mAntialiasOption = kAntialiasGrayscale;
+        }
     }
 
     mMetrics = new gfxFont::Metrics;
