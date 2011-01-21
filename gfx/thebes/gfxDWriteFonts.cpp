@@ -672,6 +672,16 @@ gfxDWriteFont::GetFontTable(PRUint32 aTag)
     return nsnull;
 }
 
+PRBool
+gfxDWriteFont::ProvidesGlyphWidths()
+{
+    if (!mInitialized) {
+        Initialize();
+    }
+    return !mUseSubpixelPositions ||
+           (mFontFace->GetSimulations() & DWRITE_FONT_SIMULATIONS_BOLD);
+}
+
 PRInt32
 gfxDWriteFont::GetGlyphWidth(gfxContext *aCtx, PRUint16 aGID)
 {
