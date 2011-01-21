@@ -1505,7 +1505,7 @@ random-if(layersGPUAccelerated) == 564991-1.html 564991-1-ref.html
 == 579655-1.html 579655-1-ref.html
 == 577838-1.html 577838-1-ref.html
 == 577838-2.html 577838-2-ref.html
-random-if(layersGPUAccelerated) fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == 579323-1.html 579323-1-ref.html # bug 623450 for WinXP
+random-if(layersGPUAccelerated) fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) fails-if(/Mac\x20OS\x20X\x2010\.5/.test(http.oscpu)) == 579323-1.html 579323-1-ref.html # bug 623450 for WinXP and bug 627560 for OSX 10.5
 == 579349-1.html 579349-1-ref.html
 == 579808-1.html 579808-1-ref.html
 random-if(layersGPUAccelerated) fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu))  == 579985-1.html 579985-1-ref.html # bug 623452 for WinXP; this bug was only for a regression in BasicLayers anyway
