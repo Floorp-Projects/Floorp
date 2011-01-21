@@ -4117,16 +4117,11 @@ nsHTMLInputElement::IsValidEmailAddress(const nsAString& aValue)
     return PR_FALSE;
   }
 
-  // The domain name must have at least one dot which can't follow another dot,
-  // can't be the first nor the last domain name character.
-  PRBool dotFound = PR_FALSE;
-
   // Parsing the domain name.
   for (; i < length; ++i) {
     PRUnichar c = aValue[i];
 
     if (c == '.') {
-      dotFound = PR_TRUE;
       // A dot can't follow a dot.
       if (aValue[i-1] == '.') {
         return PR_FALSE;
@@ -4138,7 +4133,7 @@ nsHTMLInputElement::IsValidEmailAddress(const nsAString& aValue)
     }
   }
 
-  return dotFound;
+  return PR_TRUE;
 }
 
 //static
