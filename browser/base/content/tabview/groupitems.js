@@ -84,6 +84,7 @@ function GroupItem(listOfEls, options) {
   this.fadeAwayUndoButtonDuration = 300;
 
   this.keepProportional = false;
+  this._frozenItemSizeData = {};
 
   // Double click tracker
   this._lastClick = 0;
@@ -194,6 +195,7 @@ function GroupItem(listOfEls, options) {
         gTabView.firstUseExperienced = true;
     })
     .focus(function() {
+      self._unfreezeItemSize();
       if (!self._titleFocused) {
         (self.$title)[0].select();
         self._titleFocused = true;
@@ -644,6 +646,9 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     this.removeAll({dontClose: true});
     GroupItems.unregister(this);
 
+    // remove unfreeze event handlers, if item size is frozen
+    this._unfreezeItemSize({dontArrange: true});
+
     let self = this;
     let destroyGroup = function () {
       iQ(self.container).remove();
@@ -677,6 +682,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Closes the groupItem and all of its children.
   closeAll: function GroupItem_closeAll() {
     if (this._children.length > 0) {
+      this._unfreezeItemSize();
       this._children.forEach(function(child) {
         iQ(child.container).hide();
       });
@@ -1009,8 +1015,13 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         item.groupItemData = {};
 
         item.addSubscriber(this, "close", function() {
+          let count = self._children.length;
+          let dontArrange = self.expanded || !self.shouldStack(count);
           let dontClose = !item.closedManually && gBrowser._numPinnedTabs > 0;
-          self.remove(item, { dontClose: dontClose });
+          self.remove(item, {dontArrange: dontArrange, dontClose: dontClose});
+
+          if (dontArrange)
+            self._freezeItemSize(count);
 
           if (self._children.length > 0 && self._activeTab) {
             GroupItems.setActiveGroupItem(self);
@@ -1037,6 +1048,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       if (!options.dontArrange)
         this.arrange({animate: !options.immediately});
 
+      this._unfreezeItemSize({dontArrange: true});
       this._sendToSubscribers("childAdded",{ groupItemId: this.id, item: item });
 
       UI.setReorderTabsOnHide(this);
@@ -1107,8 +1119,10 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       let closed = options.dontClose ? false : this.closeIfEmpty();
       if (closed)
         this._makeClosestTabActive();
-      else if (!options.dontArrange)
+      else if (!options.dontArrange) {
         this.arrange({animate: !options.immediately});
+        this._unfreezeItemSize({dontArrange: true});
+      }
 
       this._sendToSubscribers("childRemoved",{ groupItemId: this.id, item: item });
     } catch(e) {
@@ -1237,6 +1251,66 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     this._columns = shouldStack ? null : arrObj.columns;
 
     return shouldStack;
+  },
+
+  // ----------
+  // Function: _freezeItemSize
+  // Freezes current item size (when removing a child).
+  //
+  // Parameters:
+  //   itemCount - the number of children before the last one was removed
+  _freezeItemSize: function GroupItem__freezeItemSize(itemCount) {
+    let data = this._frozenItemSizeData;
+
+    if (!data.lastItemCount) {
+      let self = this;
+      data.lastItemCount = itemCount;
+
+      // unfreeze item size when tabview is hidden
+      data.onTabViewHidden = function () self._unfreezeItemSize();
+      window.addEventListener('tabviewhidden', data.onTabViewHidden, false);
+
+      // we don't need to observe mouse movement when expanded because the
+      // tray is closed when we leave it and collapse causes unfreezing
+      if (self.expanded)
+        return;
+
+      // unfreeze item size when cursor is moved out of group bounds
+      data.onMouseMove = function (e) {
+        let cursor = new Point(e.pageX, e.pageY);
+        if (!self.bounds.contains(cursor))
+          self._unfreezeItemSize();
+      }
+      iQ(window).mousemove(data.onMouseMove);
+    }
+
+    this.arrange({animate: true, count: data.lastItemCount});
+  },
+
+  // ----------
+  // Function: _unfreezeItemSize
+  // Unfreezes and updates item size.
+  //
+  // Parameters:
+  //   options - various options (see below)
+  //
+  // Possible options:
+  //   dontArrange - do not arrange items when unfreezing
+  _unfreezeItemSize: function GroupItem__unfreezeItemSize(options) {
+    let data = this._frozenItemSizeData;
+    if (!data.lastItemCount)
+      return;
+
+    if (!options || !options.dontArrange)
+      this.arrange({animate: true});
+
+    // unbind event listeners
+    window.removeEventListener('tabviewhidden', data.onTabViewHidden, false);
+    if (data.onMouseMove)
+      iQ(window).unbind('mousemove', data.onMouseMove);
+
+    // reset freeze status
+    this._frozenItemSizeData = {};
   },
 
   // ----------
@@ -1563,6 +1637,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       });
 
       this.arrange({z: z + 2});
+      this._unfreezeItemSize({dontArrange: true});
     }
   },
 
@@ -1690,8 +1765,11 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Function: setResizable
   // Sets whether the groupItem is resizable and updates the UI accordingly.
   setResizable: function GroupItem_setResizable(value, immediately) {
+    var self = this;
+
     this.resizeOptions.minWidth = GroupItems.minGroupWidth;
     this.resizeOptions.minHeight = GroupItems.minGroupHeight;
+    this.resizeOptions.start = function () self._unfreezeItemSize();
 
     if (value) {
       immediately ? this.$resizer.show() : this.$resizer.fadeIn();
