@@ -1,6 +1,6 @@
-This is sqlite 3.7.3
+This is sqlite 3.7.4
 
--- Shawn Wilsher <me@shawnwilsher.com>, 10/2010
+-- Paul O’Shannessy <paul@oshannessy.com>, 01/2011
 
 See http://www.sqlite.org/ for more info.
 
@@ -13,9 +13,10 @@ Simply copy the sqlite3.h and sqlite3.c files from the amalgamation of sqlite.
 
 Also copy test_quota.c from the full source package.
 
-Be sure to update SQLITE_VERSION accordingly in $(topsrcdir)/configure.in.
+Be sure to update SQLITE_VERSION accordingly in $(topsrcdir)/configure.in as
+well as the version number at the top of this file.
 
--- Shawn Wilsher <me@shawnwilsher.com> 01/2008
+-- Paul O’Shannessy <paul@oshannessy.com>, 01/2011
 
 We are using an experimental quota management feature included in test_quota.c.
 This file is not compiled into mozsqlite, but instead included directly into
