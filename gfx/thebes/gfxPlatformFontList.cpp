@@ -437,6 +437,24 @@ gfxPlatformFontList::FindFontForCharProc(nsStringHashKey::KeyType aKey, nsRefPtr
     return PL_DHASH_NEXT;
 }
 
+#ifdef XP_WIN
+#include <windows.h>
+
+// crude hack for using when monitoring process
+static void LogRegistryEvent(const wchar_t *msg)
+{
+  HKEY dummyKey;
+  HRESULT hr;
+  wchar_t buf[512];
+
+  wsprintfW(buf, L" log %s", msg);
+  hr = RegOpenKeyExW(HKEY_LOCAL_MACHINE, buf, 0, KEY_READ, &dummyKey);
+  if (SUCCEEDED(hr)) {
+    RegCloseKey(dummyKey);
+  }
+}
+#endif
+
 gfxFontFamily* 
 gfxPlatformFontList::FindFamily(const nsAString& aFamily)
 {
