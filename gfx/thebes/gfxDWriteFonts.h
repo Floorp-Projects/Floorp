@@ -84,10 +84,7 @@ public:
     // use DWrite API to get direct access to system font data
     virtual hb_blob_t *GetFontTable(PRUint32 aTag);
 
-    virtual PRBool ProvidesGlyphWidths() const {
-        return !mUseSubpixelPositions ||
-               (mFontFace->GetSimulations() & DWRITE_FONT_SIMULATIONS_BOLD);
-    }
+    virtual PRBool ProvidesGlyphWidths();
 
     virtual PRInt32 GetGlyphWidth(gfxContext *aCtx, PRUint16 aGID);
 
