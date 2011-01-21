@@ -1015,9 +1015,6 @@ let TabItems = {
       Utils.assertThrow(tab._tabViewTabItem, "should already be linked");
       // note that it's ok to unlink an app tab; see .handleTabUnpin
 
-      if (tab._tabViewTabItem == GroupItems.getActiveOrphanTab())
-        GroupItems.setActiveOrphanTab(null);
-
       this.unregister(tab._tabViewTabItem);
       tab._tabViewTabItem._sendToSubscribers("close");
       iQ(tab._tabViewTabItem.container).remove();
