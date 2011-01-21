@@ -681,7 +681,7 @@ mjit::EnterMethodJIT(JSContext *cx, StackFrame *fp, void *code, Value *stackLimi
     JSBool ok;
     {
         AssertCompartmentUnchanged pcc(cx);
-        JSAutoResolveFlags rf(cx, JSRESOLVE_INFER);
+        JSAutoResolveFlags rf(cx, RESOLVE_INFER);
         ok = JaegerTrampoline(cx, fp, code, stackLimit);
     }
 

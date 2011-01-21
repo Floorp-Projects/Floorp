@@ -2138,7 +2138,7 @@ Interpret(JSContext *cx, StackFrame *entryFrame, uintN inlineCallCount, InterpMo
 #ifdef MOZ_TRACEVIS
     TraceVisStateObj tvso(cx, S_INTERP);
 #endif
-    JSAutoResolveFlags rf(cx, JSRESOLVE_INFER);
+    JSAutoResolveFlags rf(cx, RESOLVE_INFER);
 
 # ifdef DEBUG
     /*
@@ -4361,11 +4361,11 @@ BEGIN_CASE(JSOP_SETMETHOD)
         if (entry && JS_LIKELY(!obj->getOps()->setProperty)) {
             uintN defineHow;
             if (op == JSOP_SETMETHOD)
-                defineHow = JSDNP_CACHE_RESULT | JSDNP_SET_METHOD;
+                defineHow = DNP_CACHE_RESULT | DNP_SET_METHOD;
             else if (op == JSOP_SETNAME)
-                defineHow = JSDNP_CACHE_RESULT | JSDNP_UNQUALIFIED;
+                defineHow = DNP_CACHE_RESULT | DNP_UNQUALIFIED;
             else
-                defineHow = JSDNP_CACHE_RESULT;
+                defineHow = DNP_CACHE_RESULT;
             if (!js_SetPropertyHelper(cx, obj, id, defineHow, &rval, script->strictModeCode))
                 goto error;
         } else {
@@ -5244,8 +5244,8 @@ BEGIN_CASE(JSOP_DEFVAR)
 
     /* Bind a variable only if it's not yet defined. */
     if (shouldDefine &&
-        !js_DefineNativeProperty(cx, obj, id, UndefinedValue(),
-                                 PropertyStub, StrictPropertyStub, attrs, 0, 0, NULL)) {
+        !DefineNativeProperty(cx, obj, id, UndefinedValue(), PropertyStub, StrictPropertyStub,
+                              attrs, 0, 0)) {
         goto error;
     }
 }
@@ -5850,13 +5850,12 @@ BEGIN_CASE(JSOP_INITMETHOD)
         jsid id = ATOM_TO_JSID(atom);
 
         uintN defineHow = (op == JSOP_INITMETHOD)
-                          ? JSDNP_CACHE_RESULT | JSDNP_SET_METHOD
-                          : JSDNP_CACHE_RESULT;
-        if (!(JS_UNLIKELY(atom == cx->runtime->atomState.protoAtom)
-              ? js_SetPropertyHelper(cx, obj, id, defineHow, &rval, script->strictModeCode)
-              : js_DefineNativeProperty(cx, obj, id, rval, NULL, NULL,
-                                        JSPROP_ENUMERATE, 0, 0, NULL,
-                                        defineHow))) {
+                          ? DNP_CACHE_RESULT | DNP_SET_METHOD
+                          : DNP_CACHE_RESULT;
+        if (JS_UNLIKELY(atom == cx->runtime->atomState.protoAtom)
+            ? !js_SetPropertyHelper(cx, obj, id, defineHow, &rval, script->strictModeCode)
+            : !DefineNativeProperty(cx, obj, id, rval, NULL, NULL,
+                                    JSPROP_ENUMERATE, 0, 0, defineHow)) {
             goto error;
         }
     }

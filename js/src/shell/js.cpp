@@ -3721,7 +3721,7 @@ CopyProperty(JSContext *cx, JSObject *obj, JSObject *referent, jsid id,
 
     *objp = NULL;
     if (referent->isNative()) {
-        if (js_LookupPropertyWithFlags(cx, referent, id, lookupFlags, &obj2, &prop) < 0)
+        if (!LookupPropertyWithFlags(cx, referent, id, lookupFlags, &obj2, &prop))
             return false;
         if (obj2 != referent)
             return true;
@@ -3768,9 +3768,8 @@ CopyProperty(JSContext *cx, JSObject *obj, JSObject *referent, jsid id,
     }
 
     *objp = obj;
-    return js_DefineNativeProperty(cx, obj, id, desc.value,
-                                   desc.getter, desc.setter, desc.attrs, propFlags,
-                                   desc.shortid, &prop);
+    return !!DefineNativeProperty(cx, obj, id, desc.value, desc.getter, desc.setter,
+                                  desc.attrs, propFlags, desc.shortid);
 }
 
 static JSBool

@@ -1036,11 +1036,9 @@ CreateFunCallObject(JSContext *cx, StackFrame *fp)
         if (!scopeChain)
             return NULL;
 
-        if (!js_DefineNativeProperty(cx, scopeChain, ATOM_TO_JSID(lambdaName),
-                                     ObjectValue(fp->callee()),
-                                     CalleeGetter, NULL,
-                                     JSPROP_PERMANENT | JSPROP_READONLY,
-                                     0, 0, NULL)) {
+        if (!DefineNativeProperty(cx, scopeChain, ATOM_TO_JSID(lambdaName),
+                                  ObjectValue(fp->callee()), CalleeGetter, NULL,
+                                  JSPROP_PERMANENT | JSPROP_READONLY, 0, 0)) {
             return NULL;
         }
     }
@@ -1368,10 +1366,10 @@ call_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
      * rebinding-Call-property logic.
      */
     if (callee && id == ATOM_TO_JSID(cx->runtime->atomState.argumentsAtom)) {
-        if (!js_DefineNativeProperty(cx, obj, id, UndefinedValue(),
-                                     GetCallArguments, SetCallArguments,
-                                     JSPROP_PERMANENT | JSPROP_SHARED | JSPROP_ENUMERATE,
-                                     0, 0, NULL, JSDNP_DONT_PURGE)) {
+        if (!DefineNativeProperty(cx, obj, id, UndefinedValue(),
+                                  GetCallArguments, SetCallArguments,
+                                  JSPROP_PERMANENT | JSPROP_SHARED | JSPROP_ENUMERATE,
+                                  0, 0, DNP_DONT_PURGE)) {
             return false;
         }
         *objp = obj;
@@ -1790,9 +1788,9 @@ fun_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 
     if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
         JS_ASSERT(!IsInternalFunctionObject(obj));
-        if (!js_DefineNativeProperty(cx, obj, id, Int32Value(fun->nargs),
-                                     PropertyStub, StrictPropertyStub,
-                                     JSPROP_PERMANENT | JSPROP_READONLY, 0, 0, NULL)) {
+        if (!DefineNativeProperty(cx, obj, id, Int32Value(fun->nargs),
+                                  PropertyStub, StrictPropertyStub,
+                                  JSPROP_PERMANENT | JSPROP_READONLY, 0, 0)) {
             return false;
         }
         *objp = obj;
@@ -1804,11 +1802,9 @@ fun_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 
         if (JSID_IS_ATOM(id, OFFSET_TO_ATOM(cx->runtime, lfp->atomOffset))) {
             JS_ASSERT(!IsInternalFunctionObject(obj));
-
-            if (!js_DefineNativeProperty(cx, obj, id, UndefinedValue(),
-                                         fun_getProperty, StrictPropertyStub,
-                                         lfp->attrs, Shape::HAS_SHORTID,
-                                         lfp->tinyid, NULL)) {
+            if (!DefineNativeProperty(cx, obj, id, UndefinedValue(),
+                                      fun_getProperty, StrictPropertyStub,
+                                      lfp->attrs, Shape::HAS_SHORTID, lfp->tinyid)) {
                 return false;
             }
             *objp = obj;
@@ -1836,10 +1832,8 @@ fun_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                 setter = StrictPropertyStub;
             }
 
-            if (!js_DefineNativeProperty(cx, obj, id, UndefinedValue(),
-                                         getter, setter,
-                                         attrs, Shape::HAS_SHORTID,
-                                         p.tinyid, NULL)) {
+            if (!DefineNativeProperty(cx, obj, id, UndefinedValue(), getter, setter,
+                                      attrs, Shape::HAS_SHORTID, p.tinyid)) {
                 return false;
             }
             *objp = obj;
