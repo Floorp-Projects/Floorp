@@ -83,8 +83,6 @@
 #include "mozilla/dom/StorageParent.h"
 #include "nsAccelerometer.h"
 
-#include <android/log.h>
-
 using namespace mozilla::ipc;
 using namespace mozilla::net;
 using namespace mozilla::places;
