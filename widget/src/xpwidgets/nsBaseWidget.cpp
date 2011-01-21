@@ -53,6 +53,7 @@
 #include "LayerManagerOGL.h"
 #include "nsIXULRuntime.h"
 #include "nsIGfxInfo.h"
+#include "npapi.h"
 
 #ifdef DEBUG
 #include "nsIObserver.h"
