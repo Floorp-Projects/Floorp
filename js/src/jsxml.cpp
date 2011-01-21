@@ -6363,7 +6363,7 @@ xml_replace(JSContext *cx, uintN argc, jsval *vp)
 
     bool haveIndex;
     if (argc == 0) {
-        haveIndex = true;
+        haveIndex = false;
     } else {
         if (!js_IdValIsIndex(cx, vp[2], &index, &haveIndex))
             return JS_FALSE;
