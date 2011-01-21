@@ -57,7 +57,7 @@ namespace storage {
   {0xd18856c9, 0xbf07, 0x4ae2, {0x94, 0x5b, 0x1a, 0xdd, 0x49, 0x19, 0x55, 0x2a}}
 
 class Connection;
-struct StatementData;
+class StatementData;
 
 class AsyncStatementFinalizer;
 
