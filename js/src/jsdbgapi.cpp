@@ -1927,13 +1927,14 @@ JS_StopProfiling()
 static JSBool
 StartProfiling(JSContext *cx, uintN argc, jsval *vp)
 {
-    JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(Probes::startProfiling()));
+    JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(JS_StartProfiling()));
     return true;
 }
 
 static JSBool
 StopProfiling(JSContext *cx, uintN argc, jsval *vp)
 {
+    JS_StopProfiling();
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return true;
 }
