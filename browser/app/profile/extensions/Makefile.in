@@ -40,6 +40,8 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
+DISTROEXT = $(call core_abspath,$(DIST))/bin/distribution/extensions
+
 include $(DEPTH)/config/autoconf.mk
 
 DIRS = {972ce4c6-7e08-4474-a285-3208198ce6fd}
@@ -51,11 +53,13 @@ EXTENSIONS = \
   testpilot@labs.mozilla.com \
   $(NULL)
 
-define _INSTALL_EXTENSIONS
-$(PYTHON) $(topsrcdir)/config/nsinstall.py $(wildcard $(srcdir)/$(dir)/*) $(DIST)/bin/extensions/$(dir)
+define _INSTALL_EXTENSION
+cd $(srcdir)/$(dir) && \
+  $(ZIP) -r9XD $(DISTROEXT)/$(dir).xpi *
 
 endef # do not remove the blank line!
 
 libs::
-	$(foreach dir,$(EXTENSIONS),$(_INSTALL_EXTENSIONS))
+	$(NSINSTALL) -D $(DISTROEXT)
+	$(foreach dir,$(EXTENSIONS),$(_INSTALL_EXTENSION))
 endif
