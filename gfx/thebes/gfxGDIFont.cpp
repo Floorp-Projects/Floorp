@@ -340,7 +340,7 @@ gfxGDIFont::Initialize()
         mMetrics->emAscent = ROUND(mMetrics->emHeight * (double)oMetrics.otmAscent / typEmHeight);
         mMetrics->emDescent = mMetrics->emHeight - mMetrics->emAscent;
         if (oMetrics.otmEMSquare > 0) {
-            mFUnitsConvFactor = float(GetAdjustedSize() / oMetrics.otmEMSquare);
+            mFUnitsConvFactor = float(mAdjustedSize / oMetrics.otmEMSquare);
         }
     } else {
         // Make a best-effort guess at extended metrics

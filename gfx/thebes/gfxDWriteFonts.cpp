@@ -122,31 +122,12 @@ gfxDWriteFont::gfxDWriteFont(gfxFontEntry *aFontEntry,
     : gfxFont(aFontEntry, aFontStyle, anAAOption)
     , mCairoFontFace(nsnull)
     , mCairoScaledFont(nsnull)
+    , mInitialized(PR_FALSE)
+    , mMetrics(nsnull)
     , mNeedsOblique(PR_FALSE)
     , mNeedsBold(aNeedsBold)
     , mUseSubpixelPositions(PR_FALSE)
 {
-    gfxDWriteFontEntry *fe =
-        static_cast<gfxDWriteFontEntry*>(aFontEntry);
-    nsresult rv;
-    DWRITE_FONT_SIMULATIONS sims = DWRITE_FONT_SIMULATIONS_NONE;
-    if ((GetStyle()->style & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)) &&
-        !fe->IsItalic()) {
-            // For this we always use the font_matrix for uniformity. Not the
-            // DWrite simulation.
-            mNeedsOblique = PR_TRUE;
-    }
-    if (aNeedsBold) {
-        sims |= DWRITE_FONT_SIMULATIONS_BOLD;
-    }
-
-    rv = fe->CreateFontFace(getter_AddRefs(mFontFace), sims);
-
-    if (NS_FAILED(rv)) {
-        mIsValid = PR_FALSE;
-        return;
-    }
-
     if ((anAAOption == gfxFont::kAntialiasDefault && UsingClearType()) ||
         anAAOption == gfxFont::kAntialiasSubpixel)
     {
@@ -154,8 +135,6 @@ gfxDWriteFont::gfxDWriteFont(gfxFontEntry *aFontEntry,
         // note that this may be reset to FALSE if we determine that a bitmap
         // strike is going to be used
     }
-
-    ComputeMetrics();
 
     if (FontCanSupportHarfBuzz()) {
         mHarfBuzzShaper = new gfxHarfBuzzShaper(this);
@@ -170,6 +149,7 @@ gfxDWriteFont::~gfxDWriteFont()
     if (mCairoScaledFont) {
         cairo_scaled_font_destroy(mCairoScaledFont);
     }
+    delete mMetrics;
 }
 
 gfxFont*
@@ -177,6 +157,37 @@ gfxDWriteFont::CopyWithAntialiasOption(AntialiasOption anAAOption)
 {
     return new gfxDWriteFont(static_cast<gfxDWriteFontEntry*>(mFontEntry.get()),
                              &mStyle, mNeedsBold, anAAOption);
+}
+
+void
+gfxDWriteFont::Initialize()
+{
+    NS_ASSERTION(!mInitialized, "initializing gfxDWriteFont a second time");
+    mInitialized = PR_TRUE;
+
+    gfxDWriteFontEntry *fe =
+        static_cast<gfxDWriteFontEntry*>((gfxFontEntry*)mFontEntry);
+
+    nsresult rv;
+    DWRITE_FONT_SIMULATIONS sims = DWRITE_FONT_SIMULATIONS_NONE;
+    if ((GetStyle()->style & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)) &&
+        !fe->IsItalic()) {
+            // For this we always use the font_matrix for uniformity. Not the
+            // DWrite simulation.
+            mNeedsOblique = PR_TRUE;
+    }
+    if (mNeedsBold) {
+        sims |= DWRITE_FONT_SIMULATIONS_BOLD;
+    }
+
+    rv = fe->CreateFontFace(getter_AddRefs(mFontFace), sims);
+
+    if (NS_FAILED(rv)) {
+        mIsValid = PR_FALSE;
+        return;
+    }
+
+    ComputeMetrics();
 }
 
 void
@@ -194,7 +205,10 @@ gfxDWriteFont::GetUniqueName()
 const gfxFont::Metrics&
 gfxDWriteFont::GetMetrics()
 {
-    return mMetrics;
+    if (!mInitialized) {
+        Initialize();
+    }
+    return *mMetrics;
 }
 
 void
@@ -216,24 +230,27 @@ gfxDWriteFont::ComputeMetrics()
         mUseSubpixelPositions = PR_FALSE;
     }
 
-    mMetrics.xHeight =
+    mMetrics = new gfxFont::Metrics;
+    ::memset(mMetrics, 0, sizeof(*mMetrics));
+
+    mMetrics->xHeight =
         ((gfxFloat)fontMetrics.xHeight /
                    fontMetrics.designUnitsPerEm) * mAdjustedSize;
 
-    mMetrics.maxAscent = 
+    mMetrics->maxAscent = 
         ceil(((gfxFloat)fontMetrics.ascent /
                    fontMetrics.designUnitsPerEm) * mAdjustedSize);
-    mMetrics.maxDescent = 
+    mMetrics->maxDescent = 
         ceil(((gfxFloat)fontMetrics.descent /
                    fontMetrics.designUnitsPerEm) * mAdjustedSize);
-    mMetrics.maxHeight = mMetrics.maxAscent + mMetrics.maxDescent;
+    mMetrics->maxHeight = mMetrics->maxAscent + mMetrics->maxDescent;
 
-    mMetrics.emHeight = mAdjustedSize;
-    mMetrics.emAscent = mMetrics.emHeight *
-        mMetrics.maxAscent / mMetrics.maxHeight;
-    mMetrics.emDescent = mMetrics.emHeight - mMetrics.emAscent;
+    mMetrics->emHeight = mAdjustedSize;
+    mMetrics->emAscent = mMetrics->emHeight *
+        mMetrics->maxAscent / mMetrics->maxHeight;
+    mMetrics->emDescent = mMetrics->emHeight - mMetrics->emAscent;
 
-    mMetrics.maxAdvance = mAdjustedSize;
+    mMetrics->maxAdvance = mAdjustedSize;
 
     // try to get the true maxAdvance value from 'hhea'
     PRUint8 *tableData;
@@ -250,27 +267,27 @@ gfxDWriteFont::ComputeMetrics()
         if (exists && len >= sizeof(mozilla::HheaTable)) {
             const mozilla::HheaTable* hhea =
                 reinterpret_cast<const mozilla::HheaTable*>(tableData);
-            mMetrics.maxAdvance = ((gfxFloat)PRUint16(hhea->advanceWidthMax) /
+            mMetrics->maxAdvance = ((gfxFloat)PRUint16(hhea->advanceWidthMax) /
                        fontMetrics.designUnitsPerEm) * mAdjustedSize;
         }
         mFontFace->ReleaseFontTable(tableContext);
     }
 
-    mMetrics.internalLeading = NS_MAX(mMetrics.maxHeight - mMetrics.emHeight, 0.0);
-    mMetrics.externalLeading = 
+    mMetrics->internalLeading = NS_MAX(mMetrics->maxHeight - mMetrics->emHeight, 0.0);
+    mMetrics->externalLeading = 
         ceil(((gfxFloat)fontMetrics.lineGap /
                    fontMetrics.designUnitsPerEm) * mAdjustedSize);
 
     UINT16 glyph = (PRUint16)GetSpaceGlyph();
     DWRITE_GLYPH_METRICS metrics;
     mFontFace->GetDesignGlyphMetrics(&glyph, 1, &metrics);
-    mMetrics.spaceWidth = 
+    mMetrics->spaceWidth = 
         ((gfxFloat)metrics.advanceWidth /
                    fontMetrics.designUnitsPerEm) * mAdjustedSize;
 
     // try to get aveCharWidth from the OS/2 table, fall back to measuring 'x'
     // if the table is not available
-    mMetrics.aveCharWidth = 0;
+    mMetrics->aveCharWidth = 0;
     hr = mFontFace->TryGetFontTable(DWRITE_MAKE_OPENTYPE_TAG('O', 'S', '/', '2'),
                                     (const void**)&tableData,
                                     &len,
@@ -283,23 +300,23 @@ gfxDWriteFont::ComputeMetrics()
             // two 16-bit fields here.
             const mozilla::OS2Table* os2 =
                 reinterpret_cast<const mozilla::OS2Table*>(tableData);
-            mMetrics.aveCharWidth = ((gfxFloat)PRInt16(os2->xAvgCharWidth) /
+            mMetrics->aveCharWidth = ((gfxFloat)PRInt16(os2->xAvgCharWidth) /
                        fontMetrics.designUnitsPerEm) * mAdjustedSize;
         }
         mFontFace->ReleaseFontTable(tableContext);
     }
 
     UINT32 ucs;
-    if (mMetrics.aveCharWidth < 1) {
+    if (mMetrics->aveCharWidth < 1) {
         ucs = L'x';
         if (SUCCEEDED(mFontFace->GetGlyphIndicesA(&ucs, 1, &glyph)) &&
             SUCCEEDED(mFontFace->GetDesignGlyphMetrics(&glyph, 1, &metrics))) {    
-            mMetrics.aveCharWidth = 
+            mMetrics->aveCharWidth = 
                 ((gfxFloat)metrics.advanceWidth /
                            fontMetrics.designUnitsPerEm) * mAdjustedSize;
         } else {
             // Let's just assume the X is square.
-            mMetrics.aveCharWidth = 
+            mMetrics->aveCharWidth = 
                 ((gfxFloat)fontMetrics.xHeight /
                            fontMetrics.designUnitsPerEm) * mAdjustedSize;
         }
@@ -308,43 +325,43 @@ gfxDWriteFont::ComputeMetrics()
     ucs = L'0';
     if (SUCCEEDED(mFontFace->GetGlyphIndicesA(&ucs, 1, &glyph)) &&
         SUCCEEDED(mFontFace->GetDesignGlyphMetrics(&glyph, 1, &metrics))) {
-        mMetrics.zeroOrAveCharWidth = 
+        mMetrics->zeroOrAveCharWidth = 
             ((gfxFloat)metrics.advanceWidth /
                        fontMetrics.designUnitsPerEm) * mAdjustedSize;
     } else {
-        mMetrics.zeroOrAveCharWidth = mMetrics.aveCharWidth;
+        mMetrics->zeroOrAveCharWidth = mMetrics->aveCharWidth;
     }
 
-    mMetrics.underlineOffset = 
+    mMetrics->underlineOffset = 
         ((gfxFloat)fontMetrics.underlinePosition /
                    fontMetrics.designUnitsPerEm) * mAdjustedSize;
-    mMetrics.underlineSize = 
+    mMetrics->underlineSize = 
         ((gfxFloat)fontMetrics.underlineThickness /
                    fontMetrics.designUnitsPerEm) * mAdjustedSize;
-    mMetrics.strikeoutOffset = 
+    mMetrics->strikeoutOffset = 
         ((gfxFloat)fontMetrics.strikethroughPosition /
                    fontMetrics.designUnitsPerEm) * mAdjustedSize;
-    mMetrics.strikeoutSize = 
+    mMetrics->strikeoutSize = 
         ((gfxFloat)fontMetrics.strikethroughThickness /
                    fontMetrics.designUnitsPerEm) * mAdjustedSize;
-    mMetrics.superscriptOffset = 0;
-    mMetrics.subscriptOffset = 0;
+    mMetrics->superscriptOffset = 0;
+    mMetrics->subscriptOffset = 0;
 
-    mFUnitsConvFactor = GetAdjustedSize() / fontMetrics.designUnitsPerEm;
+    mFUnitsConvFactor = float(mAdjustedSize / fontMetrics.designUnitsPerEm);
 
-    SanitizeMetrics(&mMetrics, GetFontEntry()->mIsBadUnderlineFont);
+    SanitizeMetrics(mMetrics, GetFontEntry()->mIsBadUnderlineFont);
 
 #if 0
     printf("Font: %p (%s) size: %f\n", this,
            NS_ConvertUTF16toUTF8(GetName()).get(), mStyle.size);
-    printf("    emHeight: %f emAscent: %f emDescent: %f\n", mMetrics.emHeight, mMetrics.emAscent, mMetrics.emDescent);
-    printf("    maxAscent: %f maxDescent: %f maxAdvance: %f\n", mMetrics.maxAscent, mMetrics.maxDescent, mMetrics.maxAdvance);
-    printf("    internalLeading: %f externalLeading: %f\n", mMetrics.internalLeading, mMetrics.externalLeading);
+    printf("    emHeight: %f emAscent: %f emDescent: %f\n", mMetrics->emHeight, mMetrics->emAscent, mMetrics->emDescent);
+    printf("    maxAscent: %f maxDescent: %f maxAdvance: %f\n", mMetrics->maxAscent, mMetrics->maxDescent, mMetrics->maxAdvance);
+    printf("    internalLeading: %f externalLeading: %f\n", mMetrics->internalLeading, mMetrics->externalLeading);
     printf("    spaceWidth: %f aveCharWidth: %f zeroOrAve: %f xHeight: %f\n",
-           mMetrics.spaceWidth, mMetrics.aveCharWidth, mMetrics.zeroOrAveCharWidth, mMetrics.xHeight);
+           mMetrics->spaceWidth, mMetrics->aveCharWidth, mMetrics->zeroOrAveCharWidth, mMetrics->xHeight);
     printf("    uOff: %f uSize: %f stOff: %f stSize: %f supOff: %f subOff: %f\n",
-           mMetrics.underlineOffset, mMetrics.underlineSize, mMetrics.strikeoutOffset, mMetrics.strikeoutSize,
-           mMetrics.superscriptOffset, mMetrics.subscriptOffset);
+           mMetrics->underlineOffset, mMetrics->underlineSize, mMetrics->strikeoutOffset, mMetrics->strikeoutSize,
+           mMetrics->superscriptOffset, mMetrics->subscriptOffset);
 #endif
 }
 
@@ -495,6 +512,9 @@ gfxDWriteFont::HasBitmapStrikeForSize(PRUint32 aSize)
 PRUint32
 gfxDWriteFont::GetSpaceGlyph()
 {
+    if (!mInitialized) {
+        Initialize();
+    }
     UINT32 ucs = L' ';
     UINT16 glyph;
     HRESULT hr;
@@ -508,6 +528,9 @@ gfxDWriteFont::GetSpaceGlyph()
 PRBool
 gfxDWriteFont::SetupCairoFont(gfxContext *aContext)
 {
+    if (!mInitialized) {
+        Initialize();
+    }
     cairo_scaled_font_t *scaledFont = CairoScaledFont();
     if (cairo_scaled_font_status(scaledFont) != CAIRO_STATUS_SUCCESS) {
         // Don't cairo_set_scaled_font as that would propagate the error to
@@ -516,6 +539,24 @@ gfxDWriteFont::SetupCairoFont(gfxContext *aContext)
     }
     cairo_set_scaled_font(aContext->GetCairo(), scaledFont);
     return PR_TRUE;
+}
+
+PRBool
+gfxDWriteFont::IsValid()
+{
+    if (!mInitialized) {
+        Initialize();
+    }
+    return mFontFace != NULL;
+}
+
+IDWriteFontFace*
+gfxDWriteFont::GetFontFace()
+{
+    if (!mInitialized) {
+        Initialize();
+    }
+    return  mFontFace.get();
 }
 
 cairo_font_face_t *
@@ -655,7 +696,7 @@ gfxDWriteFont::GetGlyphWidth(gfxContext *aCtx, PRUint16 aGID)
         }
     } else {
         hr = mFontFace->GetGdiCompatibleGlyphMetrics(
-                  GetAdjustedSize(), 1.0f, nsnull, FALSE,
+                  FLOAT(mAdjustedSize), 1.0f, nsnull, FALSE,
                   &aGID, 1, &glyphMetrics, FALSE);
         if (SUCCEEDED(hr)) {
             width =
