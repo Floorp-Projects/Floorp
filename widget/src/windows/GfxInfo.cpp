@@ -414,7 +414,6 @@ GfxInfo::AddCrashReportAnnotations()
 }
 
 static const PRUint32 allWindowsVersions = 0xffffffff;
-static const PRInt32  allFeatures = -1;
 static const PRUint64 allDriverVersions = 0xffffffffffffffffULL;
 
 /* Intel vendor and device IDs */
@@ -540,7 +539,7 @@ static const GfxDriverInfo gDriverInfo[] = {
 #define IMPLEMENT_INTEL_DRIVER_BLOCKLIST(winVer, devFamily, driverVer) \
   GfxDriverInfo( winVer,                                               \
     vendorIntel, (GfxDeviceFamily) devFamily,                          \
-    allFeatures, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,           \
+    GfxDriverInfo::allFeatures, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,           \
     DRIVER_LESS_THAN, driverVer ),
 
   IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_XP, deviceFamilyIntelGMA500,   V(6,14,11,1018))
