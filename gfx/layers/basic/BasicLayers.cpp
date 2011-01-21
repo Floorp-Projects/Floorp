@@ -1287,7 +1287,13 @@ BasicLayerManager::EndTransactionInternal(DrawThebesLayerCallback aCallback,
       PopGroupWithCachedSurface(finalTarget, cachedSurfaceOffset);
     }
 
-    mTarget = nsnull;
+    if (!mTransactionIncomplete) {
+      // Clear out target if we have a complete transaction.
+      mTarget = nsnull;
+    } else {
+      // If we don't have a complete transaction set back to the old mTarget.
+      mTarget = finalTarget;
+    }
   }
 
 #ifdef MOZ_LAYERS_HAVE_LOG
@@ -1300,10 +1306,17 @@ BasicLayerManager::EndTransactionInternal(DrawThebesLayerCallback aCallback,
   // Layout will update the layer tree and call EndTransaction().
   mPhase = mTransactionIncomplete ? PHASE_CONSTRUCTION : PHASE_NONE;
 #endif
-  mUsingDefaultTarget = PR_FALSE;
+
+  if (!mTransactionIncomplete) {
+    // This is still valid if the transaction was incomplete.
+    mUsingDefaultTarget = PR_FALSE;
+  }
 
   NS_ASSERTION(!aCallback || !mTransactionIncomplete,
                "If callback is not null, transaction must be complete");
+
+  // XXX - We should probably assert here that for an incomplete transaction
+  // out target is the default target.
 
   return !mTransactionIncomplete;
 }
