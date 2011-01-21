@@ -800,8 +800,7 @@ array_getProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Val
         }
 
         vp->setUndefined();
-        if (js_LookupPropertyWithFlags(cx, proto, id, cx->resolveFlags,
-                                       &obj2, &prop) < 0)
+        if (!LookupPropertyWithFlags(cx, proto, id, cx->resolveFlags, &obj2, &prop))
             return JS_FALSE;
 
         if (prop && obj2->isNative()) {

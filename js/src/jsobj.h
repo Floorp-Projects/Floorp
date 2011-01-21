@@ -209,10 +209,9 @@ enum {
 };
 
 /*
- * Unlike js_DefineNativeProperty, propp must be non-null. On success, and if
- * id was found, return true with *objp non-null and with a property of *objp
- * stored in *propp. If successful but id was not found, return true with both
- * *objp and *propp null.
+ * On success, and if id was found, return true with *objp non-null and with a
+ * property of *objp stored in *propp. If successful but id was not found,
+ * return true with both *objp and *propp null.
  */
 extern JS_FRIEND_API(JSBool)
 js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
@@ -1570,48 +1569,43 @@ extern JSBool
 js_DefineOwnProperty(JSContext *cx, JSObject *obj, jsid id,
                      const js::Value &descriptor, JSBool *bp);
 
+extern JS_FRIEND_DATA(js::Class) js_CallClass;
+extern JS_FRIEND_DATA(js::Class) js_DeclEnvClass;
+
+namespace js {
+
 /*
  * Flags for the defineHow parameter of js_DefineNativeProperty.
  */
-const uintN JSDNP_CACHE_RESULT = 1; /* an interpreter call from JSOP_INITPROP */
-const uintN JSDNP_DONT_PURGE   = 2; /* suppress js_PurgeScopeChain */
-const uintN JSDNP_SET_METHOD   = 4; /* js_{DefineNativeProperty,SetPropertyHelper}
+const uintN DNP_CACHE_RESULT = 1;   /* an interpreter call from JSOP_INITPROP */
+const uintN DNP_DONT_PURGE   = 2;   /* suppress js_PurgeScopeChain */
+const uintN DNP_SET_METHOD   = 4;   /* DefineNativeProperty,js_SetPropertyHelper
                                        must pass the js::Shape::METHOD
                                        flag on to JSObject::{add,put}Property */
-const uintN JSDNP_UNQUALIFIED  = 8; /* Unqualified property set.  Only used in
+const uintN DNP_UNQUALIFIED  = 8;   /* Unqualified property set.  Only used in
                                        the defineHow argument of
                                        js_SetPropertyHelper. */
 
 /*
- * On error, return false.  On success, if propp is non-null, return true with
- * obj locked and with a held property in *propp; if propp is null, return true
- * but release obj's lock first.
+ * Return successfully added or changed shape or NULL on error.
  */
-extern JSBool
-js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const js::Value &value,
-                        js::PropertyOp getter, js::StrictPropertyOp setter, uintN attrs,
-                        uintN flags, intN shortid, JSProperty **propp,
-                        uintN defineHow = 0);
+extern const Shape *
+DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const js::Value &value,
+                     PropertyOp getter, StrictPropertyOp setter, uintN attrs,
+                     uintN flags, intN shortid, uintN defineHow = 0);
 
 /*
- * Specialized subroutine that allows caller to preset JSRESOLVE_* flags and
- * returns the index along the prototype chain in which *propp was found, or
- * the last index if not found, or -1 on error.
+ * Specialized subroutine that allows caller to preset JSRESOLVE_* flags.
  */
-extern int
-js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
-                           JSObject **objp, JSProperty **propp);
+extern bool
+LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
+                        JSObject **objp, JSProperty **propp);
 
 /*
  * Constant to pass to js_LookupPropertyWithFlags to infer bits from current
  * bytecode.
  */
-static const uintN JSRESOLVE_INFER = 0xffff;
-
-extern JS_FRIEND_DATA(js::Class) js_CallClass;
-extern JS_FRIEND_DATA(js::Class) js_DeclEnvClass;
-
-namespace js {
+static const uintN RESOLVE_INFER = 0xffff;
 
 /*
  * We cache name lookup results only for the global object or for native

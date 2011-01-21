@@ -3119,7 +3119,7 @@ with_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
 {
     /* Fixes bug 463997 */
     uintN flags = cx->resolveFlags;
-    if (flags == JSRESOLVE_INFER)
+    if (flags == RESOLVE_INFER)
         flags = js_InferFlags(cx, flags);
     flags |= JSRESOLVE_WITH;
     JSAutoResolveFlags rf(cx, flags);
@@ -4263,19 +4263,19 @@ js_FindClassObject(JSContext *cx, JSObject *start, JSProtoKey protoKey,
         obj = cx->globalObject;
         if (!obj) {
             vp->setUndefined();
-            return JS_TRUE;
+            return true;
         }
     }
 
     OBJ_TO_INNER_OBJECT(cx, obj);
     if (!obj)
-        return JS_FALSE;
+        return false;
 
     if (protoKey != JSProto_Null) {
         JS_ASSERT(JSProto_Null < protoKey);
         JS_ASSERT(protoKey < JSProto_LIMIT);
         if (!js_GetClassObject(cx, obj, protoKey, &cobj))
-            return JS_FALSE;
+            return false;
         if (cobj) {
             vp->setObject(*cobj);
             return JS_TRUE;
@@ -4289,10 +4289,8 @@ js_FindClassObject(JSContext *cx, JSObject *start, JSProtoKey protoKey,
     }
 
     JS_ASSERT(obj->isNative());
-    if (js_LookupPropertyWithFlags(cx, obj, id, JSRESOLVE_CLASSNAME,
-                                   &pobj, &prop) < 0) {
-        return JS_FALSE;
-    }
+    if (!LookupPropertyWithFlags(cx, obj, id, JSRESOLVE_CLASSNAME, &pobj, &prop))
+        return false;
     Value v = UndefinedValue();
     if (prop && pobj->isNative()) {
         shape = (Shape *) prop;
@@ -4303,7 +4301,7 @@ js_FindClassObject(JSContext *cx, JSObject *start, JSProtoKey protoKey,
         }
     }
     *vp = v;
-    return JS_TRUE;
+    return true;
 }
 
 JSObject *
@@ -4618,8 +4616,7 @@ JSBool
 js_DefineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *value,
                   PropertyOp getter, StrictPropertyOp setter, uintN attrs)
 {
-    return js_DefineNativeProperty(cx, obj, id, *value, getter, setter, attrs,
-                                   0, 0, NULL);
+    return !!DefineNativeProperty(cx, obj, id, *value, getter, setter, attrs, 0, 0);
 }
 
 /*
@@ -4644,13 +4641,14 @@ CallAddPropertyHook(JSContext *cx, Class *clasp, JSObject *obj, const Shape *sha
     return true;
 }
 
-JSBool
-js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &value,
-                        PropertyOp getter, StrictPropertyOp setter, uintN attrs,
-                        uintN flags, intN shortid, JSProperty **propp,
-                        uintN defineHow /* = 0 */)
+namespace js {
+
+const Shape *
+DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &value,
+                     PropertyOp getter, StrictPropertyOp setter, uintN attrs,
+                     uintN flags, intN shortid, uintN defineHow /* = 0 */)
 {
-    JS_ASSERT((defineHow & ~(JSDNP_CACHE_RESULT | JSDNP_DONT_PURGE | JSDNP_SET_METHOD)) == 0);
+    JS_ASSERT((defineHow & ~(DNP_CACHE_RESULT | DNP_DONT_PURGE | DNP_SET_METHOD)) == 0);
     LeaveTraceIfGlobalObject(cx, obj);
 
     /* Convert string indices to integers if appropriate. */
@@ -4667,31 +4665,28 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &valu
         JSProperty *prop;
 
         /*
-         * If JS_THREADSAFE and id is found, js_LookupProperty returns with
-         * shape non-null and pobj locked.  If pobj == obj, the property is
-         * already in obj and obj has its own (mutable) scope.  So if we are
-         * defining a getter whose setter was already defined, or vice versa,
-         * finish the job via obj->changeProperty, and refresh the property
-         * cache line for (obj, id) to map shape.
+         * If we are defining a getter whose setter was already defined, or
+         * vice versa, finish the job via obj->changeProperty, and refresh the
+         * property cache line for (obj, id) to map shape.
          */
         if (!js_LookupProperty(cx, obj, id, &pobj, &prop))
-            return JS_FALSE;
-        shape = (Shape *) prop;
-        if (shape && pobj == obj && shape->isAccessorDescriptor()) {
-            shape = obj->changeProperty(cx, shape, attrs,
-                                        JSPROP_GETTER | JSPROP_SETTER,
-                                        (attrs & JSPROP_GETTER)
-                                        ? getter
-                                        : shape->getter(),
-                                        (attrs & JSPROP_SETTER)
-                                        ? setter
-                                        : shape->setter());
-
-            if (!shape)
-                return false;
-        } else if (prop) {
-            prop = NULL;
-            shape = NULL;
+            return NULL;
+        if (prop && pobj == obj) {
+            shape = (const Shape *) prop;
+            if (shape->isAccessorDescriptor()) {
+                shape = obj->changeProperty(cx, shape, attrs,
+                                            JSPROP_GETTER | JSPROP_SETTER,
+                                            (attrs & JSPROP_GETTER)
+                                            ? getter
+                                            : shape->getter(),
+                                            (attrs & JSPROP_SETTER)
+                                            ? setter
+                                            : shape->setter());
+                if (!shape)
+                    return NULL;
+            } else {
+                shape = NULL;
+            }
         }
     }
 
@@ -4700,7 +4695,7 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &valu
      * to be shadowed in obj's scope chain unless it is known a priori that it
      * is not possible. We do this before locking obj to avoid nesting locks.
      */
-    if (!(defineHow & JSDNP_DONT_PURGE))
+    if (!(defineHow & DNP_DONT_PURGE))
         js_PurgeScopeChain(cx, obj, id);
 
     /*
@@ -4713,7 +4708,7 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &valu
 
     /* Use the object's class getter and setter by default. */
     Class *clasp = obj->getClass();
-    if (!(defineHow & JSDNP_SET_METHOD)) {
+    if (!(defineHow & DNP_SET_METHOD)) {
         if (!getter && !(attrs & JSPROP_GETTER))
             getter = clasp->getProperty;
         if (!setter && !(attrs & JSPROP_SETTER))
@@ -4722,7 +4717,7 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &valu
 
     /* Get obj's own scope if it has one, or create a new one for obj. */
     if (!obj->ensureClassReservedSlots(cx))
-        return false;
+        return NULL;
 
     /*
      * Make a local copy of value, in case a method barrier needs to update the
@@ -4733,7 +4728,7 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &valu
 
     if (!shape) {
         /* Add a new property, or replace an existing one of the same id. */
-        if (defineHow & JSDNP_SET_METHOD) {
+        if (defineHow & DNP_SET_METHOD) {
             JS_ASSERT(clasp == &js_ObjectClass);
             JS_ASSERT(IsFunctionObject(value));
             JS_ASSERT(!(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
@@ -4767,7 +4762,7 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &valu
                 JS_ASSERT(existingShape->getter() != getter);
 
                 if (!obj->methodReadBarrier(cx, *existingShape, &valueCopy))
-                    return false;
+                    return NULL;
             }
         } else {
             adding = true;
@@ -4777,7 +4772,7 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &valu
         shape = obj->putProperty(cx, id, getter, setter, SHAPE_INVALID_SLOT,
                                  attrs, flags, shortid);
         if (!shape)
-            return false;
+            return NULL;
 
         /*
          * If shape is a joined method, the above call to putProperty suffices
@@ -4803,28 +4798,26 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &valu
     /* XXXbe called with lock held */
     if (!CallAddPropertyHook(cx, clasp, obj, shape, &valueCopy)) {
         obj->removeProperty(cx, id);
-        return false;
+        return NULL;
     }
 
-    if (defineHow & JSDNP_CACHE_RESULT) {
+    if (defineHow & DNP_CACHE_RESULT) {
         JS_ASSERT_NOT_ON_TRACE(cx);
         if (adding) {
-            JS_PROPERTY_CACHE(cx).fill(cx, obj, 0, 0, obj, shape, true);
+            JS_PROPERTY_CACHE(cx).fill(cx, obj, 0, obj, shape, true);
             TRACE_1(AddProperty, obj);
         }
     }
-    if (propp)
-        *propp = (JSProperty *) shape;
-    return true;
+    return shape;
 
 #ifdef JS_TRACER
-  error: // TRACE_1 jumps here on error.
+  error:
+    /* TRACE_1 jumps here on error. */
+    return NULL;
 #endif
-    return false;
 }
 
-#define SCOPE_DEPTH_ACCUM(bs,val)                                             \
-    JS_SCOPE_DEPTH_METERING(JS_BASIC_STATS_ACCUM(bs, val))
+} /* namespace js */
 
 /*
  * Call obj's resolve hook.
@@ -4873,7 +4866,7 @@ CallResolveOp(JSContext *cx, JSObject *start, JSObject *obj, jsid id, uintN flag
 
     if (clasp->flags & JSCLASS_NEW_RESOLVE) {
         JSNewResolveOp newresolve = reinterpret_cast<JSNewResolveOp>(resolve);
-        if (flags == JSRESOLVE_INFER)
+        if (flags == RESOLVE_INFER)
             flags = js_InferFlags(cx, 0);
         JSObject *obj2 = (clasp->flags & JSCLASS_NEW_RESOLVE_GETS_START) ? start : NULL;
         if (!newresolve(cx, obj, id, flags, &obj2))
@@ -4909,39 +4902,43 @@ CallResolveOp(JSContext *cx, JSObject *start, JSObject *obj, jsid id, uintN flag
     return true;
 }
 
-static JS_ALWAYS_INLINE int
-js_LookupPropertyWithFlagsInline(JSContext *cx, JSObject *obj, jsid id, uintN flags,
-                                 JSObject **objp, JSProperty **propp)
+#define SCOPE_DEPTH_ACCUM(bs,val) JS_SCOPE_DEPTH_METERING(JS_BASIC_STATS_ACCUM(bs, val))
+
+static JS_ALWAYS_INLINE bool
+LookupPropertyWithFlagsInline(JSContext *cx, JSObject *obj, jsid id, uintN flags,
+                              JSObject **objp, JSProperty **propp)
 {
     /* We should not get string indices which aren't already integers here. */
     JS_ASSERT(id == js_CheckForStringIndex(id));
 
     /* Search scopes starting with obj and following the prototype link. */
     JSObject *start = obj;
-    int protoIndex;
-    for (protoIndex = 0; ; protoIndex++) {
+#ifdef JS_SCOPE_DEPTH_METER
+    int protoIndex = 0;
+#endif
+    for (; ; JS_SCOPE_DEPTH_METERING(protoIndex++)) {
         const Shape *shape = obj->nativeLookup(id);
         if (shape) {
             SCOPE_DEPTH_ACCUM(&cx->runtime->protoLookupDepthStats, protoIndex);
             *objp = obj;
             *propp = (JSProperty *) shape;
-            return protoIndex;
+            return true;
         }
 
         /* Try obj's class resolve hook if id was not found in obj's scope. */
-        if (!shape && obj->getClass()->resolve != JS_ResolveStub) {
+        if (obj->getClass()->resolve != JS_ResolveStub) {
             bool recursed;
             if (!CallResolveOp(cx, start, obj, id, flags, objp, propp, &recursed))
-                return -1;
+                return false;
             if (recursed)
                 break;
             if (*propp) {
-                /* Recalculate protoIndex in case it was resolved on some other object. */
-                protoIndex = 0;
-                for (JSObject *proto = start; proto && proto != *objp; proto = proto->getProto())
-                    protoIndex++;
+                /*
+                 * For stats we do not recalculate protoIndex even if it was
+                 * resolved on some other object.
+                 */
                 SCOPE_DEPTH_ACCUM(&cx->runtime->protoLookupDepthStats, protoIndex);
-                return protoIndex;
+                return true;
             }
         }
 
@@ -4950,7 +4947,7 @@ js_LookupPropertyWithFlagsInline(JSContext *cx, JSObject *obj, jsid id, uintN fl
             break;
         if (!proto->isNative()) {
             if (!proto->lookupProperty(cx, id, objp, propp))
-                return -1;
+                return false;
 #ifdef DEBUG
             /*
              * Non-native objects must have either non-native lookup results,
@@ -4966,7 +4963,7 @@ js_LookupPropertyWithFlagsInline(JSContext *cx, JSObject *obj, jsid id, uintN fl
                     JS_ASSERT(proto);
             }
 #endif
-            return protoIndex + 1;
+            return true;
         }
 
         obj = proto;
@@ -4974,7 +4971,7 @@ js_LookupPropertyWithFlagsInline(JSContext *cx, JSObject *obj, jsid id, uintN fl
 
     *objp = NULL;
     *propp = NULL;
-    return protoIndex;
+    return true;
 }
 
 JS_FRIEND_API(JSBool)
@@ -4984,18 +4981,22 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
     /* Convert string indices to integers if appropriate. */
     id = js_CheckForStringIndex(id);
 
-    return js_LookupPropertyWithFlagsInline(cx, obj, id, cx->resolveFlags, objp, propp) >= 0;
+    return LookupPropertyWithFlagsInline(cx, obj, id, cx->resolveFlags, objp, propp);
 }
 
-int
-js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
-                           JSObject **objp, JSProperty **propp)
+namespace js {
+
+bool
+LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
+                        JSObject **objp, JSProperty **propp)
 {
     /* Convert string indices to integers if appropriate. */
     id = js_CheckForStringIndex(id);
 
-    return js_LookupPropertyWithFlagsInline(cx, obj, id, flags, objp, propp);
+    return LookupPropertyWithFlagsInline(cx, obj, id, flags, objp, propp);
 }
+
+} /* namespace js */
 
 PropertyCacheEntry *
 js_FindPropertyHelper(JSContext *cx, jsid id, JSBool cacheResult,
@@ -5003,7 +5004,7 @@ js_FindPropertyHelper(JSContext *cx, jsid id, JSBool cacheResult,
 {
     JSObject *scopeChain, *obj, *parent, *pobj;
     PropertyCacheEntry *entry;
-    int scopeIndex, protoIndex;
+    int scopeIndex;
     JSProperty *prop;
 
     JS_ASSERT_IF(cacheResult, !JS_ON_TRACE(cx));
@@ -5018,10 +5019,7 @@ js_FindPropertyHelper(JSContext *cx, jsid id, JSBool cacheResult,
          ? IsCacheableNonGlobalScope(obj)
          : !obj->getOps()->lookupProperty;
          ++scopeIndex) {
-        protoIndex =
-            js_LookupPropertyWithFlags(cx, obj, id, cx->resolveFlags,
-                                       &pobj, &prop);
-        if (protoIndex < 0)
+        if (!LookupPropertyWithFlags(cx, obj, id, cx->resolveFlags, &pobj, &prop))
             return NULL;
 
         if (prop) {
@@ -5032,17 +5030,16 @@ js_FindPropertyHelper(JSContext *cx, jsid id, JSBool cacheResult,
                 JS_ASSERT(pobj->getClass() == clasp);
                 if (clasp == &js_BlockClass) {
                     /*
-                     * A block instance on the scope chain is immutable and it
-                     * shares its shapes with its compile-time prototype.
+                     * A block instance on the scope chain is immutable and
+                     * shares its shape with the compile-time prototype. Thus
+                     * we cannot find any property on the prototype.
                      */
-                    JS_ASSERT(pobj == obj);
                     JS_ASSERT(pobj->isClonedBlock());
-                    JS_ASSERT(protoIndex == 0);
                 } else {
                     /* Call and DeclEnvClass objects have no prototypes. */
                     JS_ASSERT(!obj->getProto());
-                    JS_ASSERT(protoIndex == 0);
                 }
+                JS_ASSERT(pobj == obj);
             } else {
                 JS_ASSERT(obj->isNative());
             }
@@ -5052,8 +5049,7 @@ js_FindPropertyHelper(JSContext *cx, jsid id, JSBool cacheResult,
              * non-native prototype.
              */
             if (cacheResult && pobj->isNative()) {
-                entry = JS_PROPERTY_CACHE(cx).fill(cx, scopeChain, scopeIndex,
-                                                   protoIndex, pobj,
+                entry = JS_PROPERTY_CACHE(cx).fill(cx, scopeChain, scopeIndex, pobj,
                                                    (Shape *) prop);
             }
             SCOPE_DEPTH_ACCUM(&cx->runtime->scopeSearchDepthStats, scopeIndex);
@@ -5133,10 +5129,7 @@ js_FindIdentifierBase(JSContext *cx, JSObject *scopeChain, jsid id)
          scopeIndex++) {
         JSObject *pobj;
         JSProperty *prop;
-        int protoIndex = js_LookupPropertyWithFlags(cx, obj, id,
-                                                    cx->resolveFlags,
-                                                    &pobj, &prop);
-        if (protoIndex < 0)
+        if (!LookupPropertyWithFlags(cx, obj, id, cx->resolveFlags, &pobj, &prop))
             return NULL;
         if (prop) {
             if (!pobj->isNative()) {
@@ -5145,8 +5138,7 @@ js_FindIdentifierBase(JSContext *cx, JSObject *scopeChain, jsid id)
             }
             JS_ASSERT_IF(obj->getParent(), pobj->getClass() == obj->getClass());
             DebugOnly<PropertyCacheEntry*> entry =
-                JS_PROPERTY_CACHE(cx).fill(cx, scopeChain, scopeIndex, protoIndex, pobj,
-                                           (Shape *) prop);
+                JS_PROPERTY_CACHE(cx).fill(cx, scopeChain, scopeIndex, pobj, (Shape *) prop);
             JS_ASSERT(entry);
             return obj;
         }
@@ -5298,7 +5290,6 @@ js_GetPropertyHelperWithShapeInline(JSContext *cx, JSObject *obj, JSObject *rece
                                     const Shape **shapeOut, JSObject **holderOut)
 {
     JSObject *aobj, *obj2;
-    int protoIndex;
     JSProperty *prop;
     const Shape *shape;
 
@@ -5310,11 +5301,9 @@ js_GetPropertyHelperWithShapeInline(JSContext *cx, JSObject *obj, JSObject *rece
     id = js_CheckForStringIndex(id);
 
     aobj = js_GetProtoIfDenseArray(obj);
-    /* This call site is hot -- use the always-inlined variant of js_LookupPropertyWithFlags(). */
-    protoIndex = js_LookupPropertyWithFlagsInline(cx, aobj, id, cx->resolveFlags,
-                                                  &obj2, &prop);
-    if (protoIndex < 0)
-        return JS_FALSE;
+    /* This call site is hot -- use the always-inlined variant of LookupPropertyWithFlags(). */
+    if (!LookupPropertyWithFlagsInline(cx, aobj, id, cx->resolveFlags, &obj2, &prop))
+        return false;
 
     *holderOut = obj2;
 
@@ -5357,7 +5346,7 @@ js_GetPropertyHelperWithShapeInline(JSContext *cx, JSObject *obj, JSObject *rece
                     return JS_TRUE;
 
                 /* Do not warn about tests like (obj[prop] == undefined). */
-                if (cx->resolveFlags == JSRESOLVE_INFER) {
+                if (cx->resolveFlags == RESOLVE_INFER) {
                     LeaveTrace(cx);
                     pc += js_CodeSpec[op].length;
                     if (Detecting(cx, pc))
@@ -5390,7 +5379,7 @@ js_GetPropertyHelperWithShapeInline(JSContext *cx, JSObject *obj, JSObject *rece
 
     if (getHow & JSGET_CACHE_RESULT) {
         JS_ASSERT_NOT_ON_TRACE(cx);
-        JS_PROPERTY_CACHE(cx).fill(cx, aobj, 0, protoIndex, obj2, shape);
+        JS_PROPERTY_CACHE(cx).fill(cx, aobj, 0, obj2, shape);
     }
 
     /* This call site is hot -- use the always-inlined variant of js_NativeGet(). */
@@ -5436,7 +5425,7 @@ js::GetPropertyDefault(JSContext *cx, JSObject *obj, jsid id, const Value &def, 
 {
     JSProperty *prop;
     JSObject *obj2;
-    if (js_LookupPropertyWithFlags(cx, obj, id, JSRESOLVE_QUALIFIED, &obj2, &prop) < 0)
+    if (!LookupPropertyWithFlags(cx, obj, id, JSRESOLVE_QUALIFIED, &obj2, &prop))
         return false;
 
     if (!prop) {
@@ -5525,7 +5514,6 @@ JSBool
 js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
                      Value *vp, JSBool strict)
 {
-    int protoIndex;
     JSObject *pobj;
     JSProperty *prop;
     const Shape *shape;
@@ -5536,18 +5524,15 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
     StrictPropertyOp setter;
     bool added;
 
-    JS_ASSERT((defineHow &
-               ~(JSDNP_CACHE_RESULT | JSDNP_SET_METHOD | JSDNP_UNQUALIFIED)) == 0);
-    if (defineHow & JSDNP_CACHE_RESULT)
+    JS_ASSERT((defineHow & ~(DNP_CACHE_RESULT | DNP_SET_METHOD | DNP_UNQUALIFIED)) == 0);
+    if (defineHow & DNP_CACHE_RESULT)
         JS_ASSERT_NOT_ON_TRACE(cx);
 
     /* Convert string indices to integers if appropriate. */
     id = js_CheckForStringIndex(id);
 
-    protoIndex = js_LookupPropertyWithFlags(cx, obj, id, cx->resolveFlags,
-                                            &pobj, &prop);
-    if (protoIndex < 0)
-        return JS_FALSE;
+    if (!LookupPropertyWithFlags(cx, obj, id, cx->resolveFlags, &pobj, &prop))
+        return false;
     if (prop) {
         if (!pobj->isNative()) {
             if (pobj->isProxy()) {
@@ -5576,7 +5561,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
         JS_ASSERT(!obj->isBlock());
 
         if (!obj->getParent() &&
-            (defineHow & JSDNP_UNQUALIFIED) &&
+            (defineHow & DNP_UNQUALIFIED) &&
             !js_CheckUndeclaredVarAssignment(cx, JSID_TO_STRING(id))) {
             return JS_FALSE;
         }
@@ -5620,8 +5605,8 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
              * We found id in a prototype object: prepare to share or shadow.
              */
             if (!shape->shadowable()) {
-                if (defineHow & JSDNP_CACHE_RESULT)
-                    JS_PROPERTY_CACHE(cx).fill(cx, obj, 0, protoIndex, pobj, shape);
+                if (defineHow & DNP_CACHE_RESULT)
+                    JS_PROPERTY_CACHE(cx).fill(cx, obj, 0, pobj, shape);
 
                 if (shape->hasDefaultSetter() && !shape->hasGetterValue())
                     return JS_TRUE;
@@ -5645,7 +5630,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
              * about to create in obj.
              */
             if (!shape->hasSlot()) {
-                defineHow &= ~JSDNP_SET_METHOD;
+                defineHow &= ~DNP_SET_METHOD;
                 if (shape->hasShortID()) {
                     flags = Shape::HAS_SHORTID;
                     shortid = shape->shortid;
@@ -5668,7 +5653,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
         JS_ASSERT_IF(shape && shape->isMethod(), pobj->hasMethodBarrier());
         JS_ASSERT_IF(shape && shape->isMethod(),
                      pobj->getSlot(shape->slot).toObject() == shape->methodObject());
-        if (shape && (defineHow & JSDNP_SET_METHOD)) {
+        if (shape && (defineHow & DNP_SET_METHOD)) {
             /*
              * JSOP_SETMETHOD is assigning to an existing own property. If it
              * is an identical method property, do nothing. Otherwise downgrade
@@ -5720,7 +5705,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
          * Check for Object class here to avoid defining a method on a class
          * with magic resolve, addProperty, getProperty, etc. hooks.
          */
-        if ((defineHow & JSDNP_SET_METHOD) && obj->canHaveMethodBarrier()) {
+        if ((defineHow & DNP_SET_METHOD) && obj->canHaveMethodBarrier()) {
             JS_ASSERT(IsFunctionObject(*vp));
             JS_ASSERT(!(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
 
@@ -5737,13 +5722,13 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
         if (!shape)
             return JS_FALSE;
 
-        if (defineHow & JSDNP_CACHE_RESULT)
+        if (defineHow & DNP_CACHE_RESULT)
             TRACE_1(AddProperty, obj);
 
         /*
          * Initialize the new property value (passed to setter) to undefined.
          * Note that we store before calling addProperty, to match the order
-         * in js_DefineNativeProperty.
+         * in DefineNativeProperty.
          */
         if (obj->containsSlot(shape->slot))
             obj->nativeSetSlot(shape->slot, UndefinedValue());
@@ -5756,8 +5741,8 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
         added = true;
     }
 
-    if (defineHow & JSDNP_CACHE_RESULT)
-        JS_PROPERTY_CACHE(cx).fill(cx, obj, 0, 0, obj, shape, added);
+    if (defineHow & DNP_CACHE_RESULT)
+        JS_PROPERTY_CACHE(cx).fill(cx, obj, 0, obj, shape, added);
 
     return js_NativeSet(cx, obj, shape, added, strict, vp);
 
