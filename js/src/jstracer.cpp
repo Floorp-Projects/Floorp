@@ -12458,7 +12458,7 @@ TraceRecorder::recordInitPropertyOp(jsbytecode op)
     LIns* v_ins = get(&v);
 
     JSAtom* atom = atoms[GET_INDEX(cx->regs->pc)];
-    jsid id = ATOM_TO_JSID(atom);
+    jsid id = js_CheckForStringIndex(ATOM_TO_JSID(atom));
 
     // If obj already has this property (because JSOP_NEWOBJECT already set its
     // shape or because the id appears more than once in the initializer), just
