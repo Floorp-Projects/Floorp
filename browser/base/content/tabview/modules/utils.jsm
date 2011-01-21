@@ -21,6 +21,7 @@
  * Aza Raskin <aza@mozilla.com>
  * Ian Gilman <ian@iangilman.com>
  * Michael Yoshitaka Erlewine <mitcho@mitcho.com>
+ * Tim Taubert <tim.taubert@gmx.de>
  *
  * This file incorporates work from:
  * jQuery JavaScript Library v1.4.2: http://code.jquery.com/jquery-1.4.2.js
@@ -170,16 +171,22 @@ Rect.prototype = {
 
   // ----------
   // Function: contains
-  // Returns a boolean denoting if the given <Rect> is contained within
+  // Returns a boolean denoting if the <Rect> or <Point> is contained inside
   // this rectangle.
   //
-  // Paramaters
-  //  - A <Rect>
-  contains: function Rect_contains(rect) {
-    return (rect.left >= this.left &&
-            rect.right <= this.right &&
-            rect.top >= this.top &&
-            rect.bottom <= this.bottom);
+  // Parameters
+  //  - A <Rect> or a <Point>
+  contains: function Rect_contains(a) {
+    if (Utils.isPoint(a))
+      return (a.x > this.left &&
+              a.x < this.right &&
+              a.y > this.top &&
+              a.y < this.bottom);
+
+    return (a.left >= this.left &&
+            a.right <= this.right &&
+            a.top >= this.top &&
+            a.bottom <= this.bottom);
   },
 
   // ----------
