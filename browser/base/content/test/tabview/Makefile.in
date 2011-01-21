@@ -80,6 +80,7 @@ _BROWSER_FILES = \
                  browser_tabview_bug608184.js \
                  browser_tabview_bug608158.js \
                  browser_tabview_bug610242.js \
+                 browser_tabview_bug613541.js \
                  browser_tabview_bug616729.js \
                  browser_tabview_bug616967.js \
                  browser_tabview_bug618828.js \

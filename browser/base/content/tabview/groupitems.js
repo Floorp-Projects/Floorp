@@ -641,6 +641,20 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
     this._cancelFadeAwayUndoButtonTimer();
 
+    // When the last non-empty groupItem is closed and there are no orphan or
+    // pinned tabs then create a new group with a blank tab.
+    let remainingGroups = GroupItems.groupItems.filter(function (groupItem) {
+      return (groupItem != self && groupItem.getChildren().length);
+    });
+    if (!gBrowser._numPinnedTabs && !GroupItems.getOrphanedTabs().length &&
+        !remainingGroups.length) {
+      let emptyGroups = GroupItems.groupItems.filter(function (groupItem) {
+        return (groupItem != self && !groupItem.getChildren().length);
+      });
+      let group = (emptyGroups.length ? emptyGroups[0] : GroupItems.newGroup());
+      group.newTab();
+    }
+
     // when "TabClose" event is fired, the browser tab is about to close and our 
     // item "close" event is fired.  And then, the browser tab gets closed. 
     // In other words, the group "close" event is fired before all browser
@@ -1671,6 +1685,14 @@ let GroupItems = {
 
     // additional clean up
     this.groupItems = null;
+  },
+
+  // ----------
+  // Function: newGroup
+  // Creates a new empty group.
+  newGroup: function () {
+    let bounds = new Rect(20, 20, 250, 200);
+    return new GroupItem([], {bounds: bounds, immediately: true});
   },
 
   // ----------
