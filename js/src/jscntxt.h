@@ -833,7 +833,7 @@ private:
                         _(joinedsetmethod), _(joinedinitmethod),              \
                         _(joinedreplace), _(joinedsort), _(joinedmodulepat),  \
                         _(mreadbarrier), _(mwritebarrier), _(mwslotbarrier),  \
-                        _(unjoined)
+                        _(unjoined), _(indynamicscope)
 # define identity(x)    x
 
 struct JSFunctionMeter {
