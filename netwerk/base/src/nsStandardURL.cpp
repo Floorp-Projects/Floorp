@@ -88,7 +88,7 @@ static PRLogModuleInfo *gStandardURLLog;
 #define ENSURE_MUTABLE() \
   PR_BEGIN_MACRO \
     if (!mMutable) { \
-        NS_ERROR("attempt to modify an immutable nsStandardURL"); \
+        NS_WARNING("attempt to modify an immutable nsStandardURL"); \
         return NS_ERROR_ABORT; \
     } \
   PR_END_MACRO
