@@ -380,9 +380,11 @@ GfxInfo::AddCrashReportAnnotations()
 #if defined(MOZ_CRASHREPORTER) && defined(MOZ_ENABLE_LIBXUL)
   nsCAutoString deviceIDString, vendorIDString;
   PRUint32 deviceID, vendorID;
+  nsAutoString adapterDriverVersionString;
 
   GetAdapterDeviceID(&deviceID);
   GetAdapterVendorID(&vendorID);
+  GetAdapterDriverVersion(adapterDriverVersionString);
 
   deviceIDString.AppendPrintf("%04x", deviceID);
   vendorIDString.AppendPrintf("%04x", vendorID);
@@ -391,13 +393,15 @@ GfxInfo::AddCrashReportAnnotations()
       vendorIDString);
   CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("AdapterDeviceID"),
       deviceIDString);
-
+  
   /* Add an App Note for now so that we get the data immediately. These
    * can go away after we store the above in the socorro db */
   nsCAutoString note;
   /* AppendPrintf only supports 32 character strings, mrghh. */
   note.AppendPrintf("AdapterVendorID: %04x, ", vendorID);
-  note.AppendPrintf("AdapterDeviceID: %04x", deviceID);
+  note.AppendPrintf("AdapterDeviceID: %04x, ", deviceID);
+  note.AppendPrintf("AdapterDriverVersion: ");
+  note.Append(NS_LossyConvertUTF16toASCII(adapterDriverVersionString));
 
   if (vendorID == 0) {
       /* if we didn't find a valid vendorID lets append the mDeviceID string to try to find out why */
