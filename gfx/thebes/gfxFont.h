@@ -1009,16 +1009,16 @@ public:
         return 0;
     }
 
-    // subclasses may provide hinted glyph widths (in font units);
+    // subclasses may provide (possibly hinted) glyph widths (in font units);
     // if they do not override this, harfbuzz will use unhinted widths
     // derived from the font tables
-    virtual PRBool ProvidesHintedWidths() const {
+    virtual PRBool ProvidesGlyphWidths() const {
         return PR_FALSE;
     }
 
     // The return value is interpreted as a horizontal advance in 16.16 fixed
     // point format.
-    virtual PRInt32 GetHintedGlyphWidth(gfxContext *aCtx, PRUint16 aGID) {
+    virtual PRInt32 GetGlyphWidth(gfxContext *aCtx, PRUint16 aGID) {
         return -1;
     }
 
