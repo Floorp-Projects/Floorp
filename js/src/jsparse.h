@@ -977,6 +977,12 @@ struct JSFunctionBox : public JSObjectBox
     bool joinable() const;
 
     /*
+     * True if this function is inside the scope of a with-statement, an E4X
+     * filter-expression, or a function that uses direct eval.
+     */
+    bool inAnyDynamicScope() const;
+
+    /*
      * Unbrand an object being initialized or constructed if any method cannot
      * be joined to one compiler-created null closure shared among N different
      * closure environments.
