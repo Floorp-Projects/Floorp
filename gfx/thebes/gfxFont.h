@@ -967,7 +967,7 @@ public:
         return nsnull;
     }
 
-    gfxFloat GetAdjustedSize() const {
+    virtual gfxFloat GetAdjustedSize() {
         return mAdjustedSize > 0.0 ? mAdjustedSize : mStyle.size;
     }
 

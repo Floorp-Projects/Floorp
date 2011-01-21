@@ -204,6 +204,7 @@ pref("gfx.font_rendering.harfbuzz.level", 2);
 #ifdef XP_WIN
 #ifndef WINCE
 pref("gfx.font_rendering.directwrite.enabled", false);
+pref("gfx.font_rendering.directwrite.use_gdi_table_loading", true);
 #endif
 #endif
 

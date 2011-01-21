@@ -61,7 +61,7 @@ public:
 
     HFONT GetHFONT() { if (!mMetrics) Initialize(); return mFont; }
 
-    gfxFloat GetAdjustedSize() const { return mAdjustedSize; }
+    gfxFloat GetAdjustedSize() { if (!mMetrics) Initialize(); return mAdjustedSize; }
 
     cairo_font_face_t   *CairoFontFace() { return mFontFace; }
     cairo_scaled_font_t *CairoScaledFont() { return mScaledFont; }
