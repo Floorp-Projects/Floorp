@@ -61,6 +61,14 @@ using namespace mozilla::widget;
 NS_IMPL_ISUPPORTS_INHERITED1(GfxInfo, GfxInfoBase, nsIGfxInfoDebug)
 #endif
 
+static const PRUint32 allWindowsVersions = 0xffffffff;
+static const PRUint64 allDriverVersions = 0xffffffffffffffffULL;
+
+static const PRUint32 vendorIntel = 0x8086;
+
+#define V(a,b,c,d) GFX_DRIVER_VERSION(a,b,c,d)
+
+
 GfxInfo::GfxInfo()
   : mAdapterVendorID(0),
     mAdapterDeviceID(0),
@@ -289,6 +297,29 @@ GfxInfo::Init()
     mAdapterVendorID = vendor.ToInteger(&err, 16);
   }
 
+  mHasDriverVersionMismatch = PR_FALSE;
+  if (mAdapterVendorID == vendorIntel) {
+    // we've had big crashers (bugs 590373 and 595364) apparently correlated
+    // with bad Intel driver installations where the DriverVersion reported by the registry was
+    // not the version of the DLL.
+    PRBool is64bitApp = sizeof(void*) == 8;
+    PRUnichar *dllFileName = is64bitApp
+                           ? L"igd10umd64.dll"
+                           : L"igd10umd32.dll";
+    nsString dllVersion;
+    // if GetDLLVersion fails, it gives "0.0.0.0"
+    gfxWindowsPlatform::GetPlatform()->GetDLLVersion(dllFileName, dllVersion);
+
+    PRUint64 dllNumericVersion = 0, driverNumericVersion = 0;
+    // so if GetDLLVersion failed, we get dllNumericVersion = 0
+    ParseDriverVersion(dllVersion, &dllNumericVersion);
+    ParseDriverVersion(mDriverVersion, &driverNumericVersion);
+
+    // so this test implicitly handles the case where GetDLLVersion failed
+    if (dllNumericVersion != driverNumericVersion)
+      mHasDriverVersionMismatch = PR_TRUE;
+  }
+
   const char *spoofedDevice = PR_GetEnv("MOZ_GFX_SPOOF_DEVICE_ID");
   if (spoofedDevice) {
     PR_sscanf(spoofedDevice, "%x", &mAdapterDeviceID);
@@ -416,16 +447,6 @@ GfxInfo::AddCrashReportAnnotations()
 
 #endif
 }
-
-static const PRUint32 allWindowsVersions = 0xffffffff;
-static const PRUint64 allDriverVersions = 0xffffffffffffffffULL;
-
-/* Intel vendor and device IDs */
-static const PRUint32 vendorIntel = 0x8086;
-
-/* NVIDIA vendor and device IDs */
-
-/* AMD vendor and device IDs */
 
 #define V(a,b,c,d) GFX_DRIVER_VERSION(a,b,c,d)
 
@@ -647,6 +668,16 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32 *aStatus, nsAString & aS
     info = aDriverInfo;
   else
     info = &gDriverInfo[0];
+
+  if (mHasDriverVersionMismatch) {
+    if (aFeature == nsIGfxInfo::FEATURE_DIRECT3D_10_LAYERS ||
+        aFeature == nsIGfxInfo::FEATURE_DIRECT3D_10_1_LAYERS ||
+        aFeature == nsIGfxInfo::FEATURE_DIRECT2D)
+    {
+      *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION;
+      return NS_OK;
+    }
+  }
 
   while (info->mOperatingSystem) {
 
