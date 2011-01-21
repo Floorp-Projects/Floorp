@@ -53,6 +53,7 @@
 [ptr] native JSDValue(JSDValue);
 [ptr] native JSRuntime(JSRuntime);
 [ptr] native JSContext(JSContext);
+[ptr] native JSCompartment(JSCompartment);
 
 /* interfaces we declare in this file */
 interface jsdIDebuggerService;
@@ -78,7 +79,7 @@ interface jsdIActivationCallback;
  * Debugger service.  It's not a good idea to have more than one active client of
  * the debugger service.
  */
-[scriptable, uuid(1ad86ef3-5eca-4ed7-81c5-a757d1957dff)]
+[scriptable, uuid(aa232c7f-855f-4488-a92c-6f89adc668cc)]
 interface jsdIDebuggerService : nsISupports
 {
     /** Internal use only. */
@@ -241,9 +242,14 @@ interface jsdIDebuggerService : nsISupports
     [noscript] void activateDebugger(in JSRuntime rt);
 
     /**
+     * Called by nsIXPConnect to deactivate debugger on setup failure.
+     */
+    [noscript] void deactivateDebugger();
+
+    /**
      * Recompile all active scripts in the runtime for debugMode.
      */
-    [noscript] void recompileForDebugMode(in JSRuntime rt, in PRBool mode);
+    [noscript] void recompileForDebugMode(in JSContext cx, in JSCompartment comp, in PRBool mode);
 
     /**
      * Turn the debugger off.  This will invalidate all of your jsdIEphemeral

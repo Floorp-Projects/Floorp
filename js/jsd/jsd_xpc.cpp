@@ -2511,22 +2511,41 @@ jsdService::AsyncOn (jsdIActivationCallback *activationCallback)
 }
 
 NS_IMETHODIMP
-jsdService::RecompileForDebugMode (JSRuntime *rt, JSBool mode) {
+jsdService::RecompileForDebugMode (JSContext *cx, JSCompartment *comp, JSBool mode) {
   NS_ASSERTION(NS_IsMainThread(), "wrong thread");
-
-  JSContext *cx;
-  JSContext *iter = NULL;
-
-  jsword currentThreadId = reinterpret_cast<jsword>(js_CurrentThreadId());
-
-  while ((cx = JS_ContextIterator (rt, &iter))) {
-    if (JS_GetContextThread(cx) == currentThreadId) {
-      JS_SetDebugMode(cx, mode);
-    }
-  }
-
-  return NS_OK;
+  return JS_SetDebugModeForCompartment(cx, comp, mode) ? NS_OK : NS_ERROR_FAILURE;
 }
+
+NS_IMETHODIMP
+jsdService::DeactivateDebugger ()
+{
+    if (!mCx)
+        return NS_OK;
+
+    jsdContext::InvalidateAll();
+    jsdScript::InvalidateAll();
+    jsdValue::InvalidateAll();
+    jsdProperty::InvalidateAll();
+    ClearAllBreakpoints();
+
+    JSD_SetErrorReporter (mCx, NULL, NULL);
+    JSD_SetScriptHook (mCx, NULL, NULL);
+    JSD_ClearThrowHook (mCx);
+    JSD_ClearInterruptHook (mCx);
+    JSD_ClearDebuggerHook (mCx);
+    JSD_ClearDebugBreakHook (mCx);
+    JSD_ClearTopLevelHook (mCx);
+    JSD_ClearFunctionHook (mCx);
+    
+    JSD_DebuggerOff (mCx);
+
+    mCx = nsnull;
+    mRuntime = nsnull;
+    mOn = PR_FALSE;
+
+    return NS_OK;
+}
+
 
 NS_IMETHODIMP
 jsdService::ActivateDebugger (JSRuntime *rt)
@@ -2535,7 +2554,6 @@ jsdService::ActivateDebugger (JSRuntime *rt)
         return (rt == mRuntime) ? NS_OK : NS_ERROR_ALREADY_INITIALIZED;
 
     mRuntime = rt;
-    RecompileForDebugMode(rt, JS_TRUE);
 
     if (gLastGCProc == jsds_GCCallbackProc)
         /* condition indicates that the callback proc has not been set yet */
@@ -2615,26 +2633,7 @@ jsdService::Off (void)
         JS_SetGCCallbackRT (mRuntime, gLastGCProc);
     */
 
-    jsdContext::InvalidateAll();
-    jsdScript::InvalidateAll();
-    jsdValue::InvalidateAll();
-    jsdProperty::InvalidateAll();
-    ClearAllBreakpoints();
-
-    JSD_SetErrorReporter (mCx, NULL, NULL);
-    JSD_SetScriptHook (mCx, NULL, NULL);
-    JSD_ClearThrowHook (mCx);
-    JSD_ClearInterruptHook (mCx);
-    JSD_ClearDebuggerHook (mCx);
-    JSD_ClearDebugBreakHook (mCx);
-    JSD_ClearTopLevelHook (mCx);
-    JSD_ClearFunctionHook (mCx);
-    
-    JSD_DebuggerOff (mCx);
-
-    mCx = nsnull;
-    mRuntime = nsnull;
-    mOn = PR_FALSE;
+    DeactivateDebugger();
 
 #ifdef DEBUG
     printf ("+++ JavaScript debugging hooks removed.\n");
