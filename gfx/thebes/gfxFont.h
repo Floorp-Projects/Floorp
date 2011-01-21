@@ -460,12 +460,13 @@ private:
 // used when picking fallback font
 struct FontSearch {
     FontSearch(const PRUint32 aCharacter, gfxFont *aFont) :
-        mCh(aCharacter), mFontToMatch(aFont), mMatchRank(0) {
+        mCh(aCharacter), mFontToMatch(aFont), mMatchRank(0), mCount(0) {
     }
     const PRUint32         mCh;
     gfxFont*               mFontToMatch;
     PRInt32                mMatchRank;
     nsRefPtr<gfxFontEntry> mBestMatch;
+    PRUint32               mCount;
 };
 
 class gfxFontFamily {
