@@ -4319,6 +4319,21 @@ var XULBrowserWindow = {
         document.documentElement.setAttribute("disablechrome", "true");
       else
         document.documentElement.removeAttribute("disablechrome");
+
+      // Disable find commands in documents that ask for them to be disabled.
+      let docElt = content.document.documentElement;
+      let disableFind = aLocationURI &&
+        (docElt && docElt.getAttribute("disablefastfind") == "true") &&
+        (aLocationURI.schemeIs("about") || aLocationURI.schemeIs("chrome"));
+      let findCommands = [document.getElementById("cmd_find"),
+                          document.getElementById("cmd_findAgain"),
+                          document.getElementById("cmd_findPrevious")];
+      findCommands.forEach(function (elt) {
+        if (disableFind)
+          elt.setAttribute("disabled", "true");
+        else
+          elt.removeAttribute("disabled");
+      });
     }
     UpdateBackForwardCommands(gBrowser.webNavigation);
 
