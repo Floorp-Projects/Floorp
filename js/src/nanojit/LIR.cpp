@@ -2061,9 +2061,9 @@ namespace nanojit
           storesSinceLastLoad(ACCSET_NONE),
           alloc(alloc),
           knownCmpValues(alloc),
-          suspended(false)
+          suspended(false),
+          initOOM(false)
     {
-
         m_findNL[NLImmISmall] = &CseFilter::findImmISmall;
         m_findNL[NLImmILarge] = &CseFilter::findImmILarge;
         m_findNL[NLImmQ]      = PTR_SIZE(NULL, &CseFilter::findImmQ);
@@ -2082,15 +2082,26 @@ namespace nanojit
         m_capNL[NL3]          = 16;
         m_capNL[NLCall]       = 64;
 
+        // The largish allocations are fallible, the small ones are
+        // infallible.  See the comment on initOOM's declaration for why.
+
         for (NLKind nlkind = NLFirst; nlkind <= NLLast; nlkind = nextNLKind(nlkind)) {
-            m_listNL[nlkind] = new (alloc) LIns*[m_capNL[nlkind]];
+            m_listNL[nlkind] = (LIns**)alloc.fallibleAlloc(sizeof(LIns*) * m_capNL[nlkind]);
+            if (!m_listNL[nlkind]) {
+                initOOM = true;
+                return;
+            }
             m_usedNL[nlkind] = 1; // Force memset in clearAll().
         }
 
         // Note that this allocates the CONST and MULTIPLE tables as well.
         for (CseAcc a = 0; a < CSE_NUM_USED_ACCS; a++) {
             m_capL[a] = 16;
-            m_listL[a] = new (alloc) LIns*[m_capL[a]];
+            m_listL[a] = (LIns**)alloc.fallibleAlloc(sizeof(LIns*) * m_capL[a]);
+            if (!m_listL[a]) {
+                initOOM = true;
+                return;
+            }
             m_usedL[a] = 1; // Force memset(0) in first clearAll().
         }
 
@@ -2210,43 +2221,61 @@ namespace nanojit
         return hashfinish(hash);
     }
 
-    void CseFilter::growNL(NLKind nlkind)
+    bool CseFilter::growNL(NLKind nlkind)
     {
         NanoAssert(nlkind != NLImmISmall);
         const uint32_t oldcap = m_capNL[nlkind];
         m_capNL[nlkind] <<= 1;
-        LIns** oldlist = m_listNL[nlkind];
-        m_listNL[nlkind] = new (alloc) LIns*[m_capNL[nlkind]];
-        VMPI_memset(m_listNL[nlkind], 0, m_capNL[nlkind] * sizeof(LIns*));
-        find_t find = m_findNL[nlkind];
-        for (uint32_t i = 0; i < oldcap; i++) {
-            LIns* ins = oldlist[i];
-            if (!ins) continue;
-            uint32_t j = (this->*find)(ins);
-            NanoAssert(!m_listNL[nlkind][j]);
-            m_listNL[nlkind][j] = ins;
+        // We make this allocation fallible because it's potentially large and
+        // easy to recover from.  If it fails, we won't add any more
+        // instructions to the table and some CSE opportunities may be missed.
+        LIns** tmp = (LIns**)alloc.fallibleAlloc(sizeof(LIns*) * m_capNL[nlkind]);
+        if (tmp) {
+            LIns** oldlist = m_listNL[nlkind];
+            m_listNL[nlkind] = tmp;
+            VMPI_memset(m_listNL[nlkind], 0, m_capNL[nlkind] * sizeof(LIns*));
+            find_t find = m_findNL[nlkind];
+            for (uint32_t i = 0; i < oldcap; i++) {
+                LIns* ins = oldlist[i];
+                if (!ins) continue;
+                uint32_t j = (this->*find)(ins);
+                NanoAssert(!m_listNL[nlkind][j]);
+                m_listNL[nlkind][j] = ins;
+            }
+            return true;
+        } else {
+            m_capNL[nlkind] = oldcap;
+            return false;
         }
     }
 
-    void CseFilter::growL(CseAcc cseAcc)
+    bool CseFilter::growL(CseAcc cseAcc)
     {
         const uint32_t oldcap = m_capL[cseAcc];
         m_capL[cseAcc] <<= 1;
-        LIns** oldlist = m_listL[cseAcc];
-        m_listL[cseAcc] = new (alloc) LIns*[m_capL[cseAcc]];
-        VMPI_memset(m_listL[cseAcc], 0, m_capL[cseAcc] * sizeof(LIns*));
-        find_t find = &CseFilter::findLoad;
-        for (uint32_t i = 0; i < oldcap; i++) {
-            LIns* ins = oldlist[i];
-            if (!ins) continue;
-            uint32_t j = (this->*find)(ins);
-            NanoAssert(!m_listL[cseAcc][j]);
-            m_listL[cseAcc][j] = ins;
+        LIns** tmp = (LIns**)alloc.fallibleAlloc(sizeof(LIns*) * m_capL[cseAcc]);
+        if (tmp) {
+            LIns** oldlist = m_listL[cseAcc];
+            m_listL[cseAcc] = tmp;
+            VMPI_memset(m_listL[cseAcc], 0, m_capL[cseAcc] * sizeof(LIns*));
+            find_t find = &CseFilter::findLoad;
+            for (uint32_t i = 0; i < oldcap; i++) {
+                LIns* ins = oldlist[i];
+                if (!ins) continue;
+                uint32_t j = (this->*find)(ins);
+                NanoAssert(!m_listL[cseAcc][j]);
+                m_listL[cseAcc][j] = ins;
+            }
+            return true;
+        } else {
+            m_capL[cseAcc] = oldcap;
+            return false;
         }
     }
 
     void CseFilter::addNLImmISmall(LIns* ins, uint32_t k)
     {
+        NanoAssert(!initOOM);
         if (suspended) return;
         NLKind nlkind = NLImmISmall;
         NanoAssert(k < m_capNL[nlkind]);
@@ -2257,24 +2286,36 @@ namespace nanojit
 
     void CseFilter::addNL(NLKind nlkind, LIns* ins, uint32_t k)
     {
+        NanoAssert(!initOOM);
         if (suspended) return;
         NanoAssert(!m_listNL[nlkind][k]);
         m_usedNL[nlkind]++;
         m_listNL[nlkind][k] = ins;
         if ((m_usedNL[nlkind] * 4) >= (m_capNL[nlkind] * 3)) {  // load factor of 0.75
-            growNL(nlkind);
+            bool ok = growNL(nlkind);
+            if (!ok) {
+                // OOM: undo the insertion.
+                m_usedNL[nlkind]--;
+                m_listNL[nlkind][k] = NULL;
+            }
         }
     }
 
     void CseFilter::addL(LIns* ins, uint32_t k)
     {
+        NanoAssert(!initOOM);
         if (suspended) return;
         CseAcc cseAcc = miniAccSetToCseAcc(ins->miniAccSet(), ins->loadQual());
         NanoAssert(!m_listL[cseAcc][k]);
         m_usedL[cseAcc]++;
         m_listL[cseAcc][k] = ins;
         if ((m_usedL[cseAcc] * 4) >= (m_capL[cseAcc] * 3)) {  // load factor of 0.75
-            growL(cseAcc);
+            bool ok = growL(cseAcc);
+            if (!ok) {
+                // OOM: undo the insertion.
+                m_usedL[cseAcc]--;
+                m_listL[cseAcc][k] = NULL;
+            }
         }
     }
 

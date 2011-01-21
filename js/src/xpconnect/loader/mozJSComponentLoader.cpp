@@ -1500,7 +1500,7 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
 
         JSAutoEnterCompartment ac;
         if (!ac.enter(mContext, mod->global))
-            return NULL;
+            return NS_ERROR_FAILURE;
 
         if (!JS_GetProperty(mContext, mod->global,
                             "EXPORTED_SYMBOLS", &symbols)) {
