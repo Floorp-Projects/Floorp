@@ -895,7 +895,7 @@ nsWindow::DrawTo(gfxASurface *targetSurface)
 
                 {
                     AutoLayerManagerSetup
-                      setupLayerManager(this, ctx, BasicLayerManager::BUFFER_BUFFERED);
+                      setupLayerManager(this, ctx, BasicLayerManager::BUFFER_NONE);
                     status = DispatchEvent(&event);
                 }
 
