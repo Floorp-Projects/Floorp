@@ -83,7 +83,7 @@ gfxHarfBuzzShaper::gfxHarfBuzzShaper(gfxFont *aFont)
       mSubtableOffset(0),
       mUVSTableOffset(0),
       mUseFontGetGlyph(aFont->ProvidesGetGlyph()),
-      mUseHintedWidths(aFont->ProvidesHintedWidths())
+      mUseFontGlyphWidths(aFont->ProvidesGlyphWidths())
 {
 }
 
@@ -215,8 +215,8 @@ gfxHarfBuzzShaper::GetGlyphAdvance(gfxContext *aContext,
                                    hb_position_t *x_advance,
                                    hb_position_t *y_advance) const
 {
-    if (mUseHintedWidths) {
-        *x_advance = mFont->GetHintedGlyphWidth(aContext, glyph);
+    if (mUseFontGlyphWidths) {
+        *x_advance = mFont->GetGlyphWidth(aContext, glyph);
         return;
     }
 
@@ -752,8 +752,8 @@ gfxHarfBuzzShaper::InitTextRun(gfxContext *aContext,
             hb_blob_unlock(mCmapTable);
         }
 
-        if (!mUseHintedWidths) {
-            // if font doesn't implement hinted widths, we will be reading
+        if (!mUseFontGlyphWidths) {
+            // if font doesn't implement GetGlyphWidth, we will be reading
             // the hmtx table directly;
             // read mNumLongMetrics from hhea table without caching its blob,
             // and preload/cache the hmtx table
@@ -788,7 +788,7 @@ gfxHarfBuzzShaper::InitTextRun(gfxContext *aContext,
     }
 
     if ((!mUseFontGetGlyph && mCmapFormat <= 0) ||
-        (!mUseHintedWidths && !mHmtxTable)) {
+        (!mUseFontGlyphWidths && !mHmtxTable)) {
         // unable to shape with this font
         return PR_FALSE;
     }

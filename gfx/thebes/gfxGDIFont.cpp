@@ -476,7 +476,7 @@ gfxGDIFont::FillLogFont(LOGFONTW& aLogFont, gfxFloat aSize)
 }
 
 PRInt32
-gfxGDIFont::GetHintedGlyphWidth(gfxContext *aCtx, PRUint16 aGID)
+gfxGDIFont::GetGlyphWidth(gfxContext *aCtx, PRUint16 aGID)
 {
     if (!mGlyphWidths.IsInitialized()) {
         mGlyphWidths.Init(200);
