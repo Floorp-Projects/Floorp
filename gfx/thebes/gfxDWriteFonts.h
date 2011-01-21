@@ -80,7 +80,7 @@ public:
     virtual hb_blob_t *GetFontTable(PRUint32 aTag);
 
     virtual PRBool ProvidesGlyphWidths() const {
-        return !mUsingClearType ||
+        return !mUseSubpixelPositions ||
                (mFontFace->GetSimulations() & DWRITE_FONT_SIMULATIONS_BOLD);
     }
 
@@ -92,6 +92,8 @@ protected:
     virtual void CreatePlatformShaper();
 
     void ComputeMetrics();
+
+    PRBool HasBitmapStrikeForSize(PRUint32 aSize);
 
     cairo_font_face_t *CairoFontFace();
 
@@ -110,7 +112,7 @@ protected:
 
     PRPackedBool mNeedsOblique;
     PRPackedBool mNeedsBold;
-    PRPackedBool mUsingClearType;
+    PRPackedBool mUseSubpixelPositions;
 };
 
 #endif
