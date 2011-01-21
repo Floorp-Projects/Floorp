@@ -39,6 +39,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_LOGGING
+#define FORCE_PR_LOG /* Allow logging in the release build */
+#endif
+#include "prlog.h"
+
 #include "gfxGDIFontList.h"
 #include "gfxWindowsPlatform.h"
 #include "gfxUserFontSet.h"
@@ -65,11 +70,13 @@
 #endif
 
 #ifdef PR_LOGGING
-static PRLogModuleInfo *gFontInfoLog = PR_NewLogModule("fontInfoLog");
-#endif /* PR_LOGGING */
+#define LOG_FONTLIST(args) PR_LOG(gfxPlatform::GetLog(eGfxLog_fontlist), \
+                               PR_LOG_DEBUG, args)
+#define LOG_FONTLIST_ENABLED() PR_LOG_TEST( \
+                                   gfxPlatform::GetLog(eGfxLog_fontlist), \
+                                   PR_LOG_DEBUG)
 
-#define LOG(args) PR_LOG(gFontInfoLog, PR_LOG_DEBUG, args)
-#define LOG_ENABLED() PR_LOG_TEST(gFontInfoLog, PR_LOG_DEBUG)
+#endif // PR_LOGGING
 
 // font info loader constants
 
@@ -251,8 +258,10 @@ GDIFontEntry::ReadCMAP()
     mSymbolFont = symbolFont;
     mHasCmapTable = NS_SUCCEEDED(rv);
 
-    PR_LOG(gFontInfoLog, PR_LOG_DEBUG, ("(fontinit-cmap) psname: %s, size: %d\n", 
-                                        NS_ConvertUTF16toUTF8(mName).get(), mCharacterMap.GetSize()));
+#ifdef PR_LOGGING
+    LOG_FONTLIST(("(fontlist-cmap) name: %s, size: %d\n",
+                  NS_ConvertUTF16toUTF8(mName).get(), mCharacterMap.GetSize()));
+#endif
     return rv;
 }
 
@@ -528,8 +537,8 @@ GDIFontFamily::FamilyAddStylesProc(const ENUMLOGFONTEXW *lpelfe,
     }
 
 #ifdef PR_LOGGING
-    if (LOG_ENABLED()) {
-        LOG(("(fontinit) added (%s) to family (%s)"
+    if (LOG_FONTLIST_ENABLED()) {
+        LOG_FONTLIST(("(fontlist) added (%s) to family (%s)"
              " with style: %s weight: %d stretch: %d",
              NS_ConvertUTF16toUTF8(fe->Name()).get(), 
              NS_ConvertUTF16toUTF8(ff->Name()).get(), 
@@ -564,8 +573,9 @@ GDIFontFamily::FindStyleVariations()
                         (FONTENUMPROCW)GDIFontFamily::FamilyAddStylesProc,
                         (LPARAM)this, 0);
 #ifdef PR_LOGGING
-    if (LOG_ENABLED() && mAvailableFonts.Length() == 0) {
-        LOG(("no styles available in family \"%s\"", NS_ConvertUTF16toUTF8(mName).get()));
+    if (LOG_FONTLIST_ENABLED() && mAvailableFonts.Length() == 0) {
+        LOG_FONTLIST(("(fontlist) no styles available in family \"%s\"",
+                      NS_ConvertUTF16toUTF8(mName).get()));
     }
 #endif
 
