@@ -1013,7 +1013,7 @@ public:
     // subclasses may provide (possibly hinted) glyph widths (in font units);
     // if they do not override this, harfbuzz will use unhinted widths
     // derived from the font tables
-    virtual PRBool ProvidesGlyphWidths() const {
+    virtual PRBool ProvidesGlyphWidths() {
         return PR_FALSE;
     }
 

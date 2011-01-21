@@ -76,7 +76,7 @@ public:
     /* required for MathML to suppress effects of ClearType "padding" */
     virtual gfxFont* CopyWithAntialiasOption(AntialiasOption anAAOption);
 
-    virtual PRBool ProvidesGlyphWidths() const { return PR_TRUE; }
+    virtual PRBool ProvidesGlyphWidths() { return PR_TRUE; }
 
     // get hinted glyph width in pixels as 16.16 fixed-point value
     virtual PRInt32 GetGlyphWidth(gfxContext *aCtx, PRUint16 aGID);
