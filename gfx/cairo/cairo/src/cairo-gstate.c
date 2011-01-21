@@ -1846,6 +1846,7 @@ _cairo_gstate_show_text_glyphs (cairo_gstate_t		   *gstate,
 	goto CLEANUP_GLYPHS;
 
     _cairo_gstate_copy_transformed_source (gstate, &source_pattern.base);
+    _cairo_clip_init(&clip);
 
     /* For really huge font sizes, we can just do path;fill instead of
      * show_glyphs, as show_glyphs would put excess pressure on the cache,
