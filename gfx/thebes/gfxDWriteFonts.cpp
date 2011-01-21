@@ -124,7 +124,7 @@ gfxDWriteFont::gfxDWriteFont(gfxFontEntry *aFontEntry,
     , mCairoScaledFont(nsnull)
     , mNeedsOblique(PR_FALSE)
     , mNeedsBold(aNeedsBold)
-    , mUsingClearType(PR_FALSE)
+    , mUseSubpixelPositions(PR_FALSE)
 {
     gfxDWriteFontEntry *fe =
         static_cast<gfxDWriteFontEntry*>(aFontEntry);
@@ -150,7 +150,9 @@ gfxDWriteFont::gfxDWriteFont(gfxFontEntry *aFontEntry,
     if ((anAAOption == gfxFont::kAntialiasDefault && UsingClearType()) ||
         anAAOption == gfxFont::kAntialiasSubpixel)
     {
-        mUsingClearType = PR_TRUE;
+        mUseSubpixelPositions = PR_TRUE;
+        // note that this may be reset to FALSE if we determine that a bitmap
+        // strike is going to be used
     }
 
     ComputeMetrics();
@@ -207,6 +209,11 @@ gfxDWriteFont::ComputeMetrics()
         mAdjustedSize = mStyle.GetAdjustedSize(aspect);
     } else {
         mAdjustedSize = mStyle.size;
+    }
+
+    if (HasBitmapStrikeForSize(NS_lround(mAdjustedSize))) {
+        mAdjustedSize = NS_lround(mAdjustedSize);
+        mUseSubpixelPositions = PR_FALSE;
     }
 
     mMetrics.xHeight =
@@ -339,6 +346,150 @@ gfxDWriteFont::ComputeMetrics()
            mMetrics.underlineOffset, mMetrics.underlineSize, mMetrics.strikeoutOffset, mMetrics.strikeoutSize,
            mMetrics.superscriptOffset, mMetrics.subscriptOffset);
 #endif
+}
+
+using namespace mozilla; // for AutoSwap_* types
+
+struct EBLCHeader {
+    AutoSwap_PRUint32 version;
+    AutoSwap_PRUint32 numSizes;
+};
+
+struct SbitLineMetrics {
+    PRInt8  ascender;
+    PRInt8  descender;
+    PRUint8 widthMax;
+    PRInt8  caretSlopeNumerator;
+    PRInt8  caretSlopeDenominator;
+    PRInt8  caretOffset;
+    PRInt8  minOriginSB;
+    PRInt8  minAdvanceSB;
+    PRInt8  maxBeforeBL;
+    PRInt8  minAfterBL;
+    PRInt8  pad1;
+    PRInt8  pad2;
+};
+
+struct BitmapSizeTable {
+    AutoSwap_PRUint32 indexSubTableArrayOffset;
+    AutoSwap_PRUint32 indexTablesSize;
+    AutoSwap_PRUint32 numberOfIndexSubTables;
+    AutoSwap_PRUint32 colorRef;
+    SbitLineMetrics   hori;
+    SbitLineMetrics   vert;
+    AutoSwap_PRUint16 startGlyphIndex;
+    AutoSwap_PRUint16 endGlyphIndex;
+    PRUint8           ppemX;
+    PRUint8           ppemY;
+    PRUint8           bitDepth;
+    PRUint8           flags;
+};
+
+typedef EBLCHeader EBSCHeader;
+
+struct BitmapScaleTable {
+    SbitLineMetrics   hori;
+    SbitLineMetrics   vert;
+    PRUint8           ppemX;
+    PRUint8           ppemY;
+    PRUint8           substitutePpemX;
+    PRUint8           substitutePpemY;
+};
+
+PRBool
+gfxDWriteFont::HasBitmapStrikeForSize(PRUint32 aSize)
+{
+    PRUint8 *tableData;
+    PRUint32 len;
+    void *tableContext;
+    BOOL exists;
+    HRESULT hr =
+        mFontFace->TryGetFontTable(DWRITE_MAKE_OPENTYPE_TAG('E', 'B', 'L', 'C'),
+                                   (const void**)&tableData, &len,
+                                   &tableContext, &exists);
+    if (FAILED(hr)) {
+        return PR_FALSE;
+    }
+
+    PRBool hasStrike = PR_FALSE;
+    // not really a loop, but this lets us use 'break' to skip out of the block
+    // as soon as we know the answer, and skips it altogether if the table is
+    // not present
+    while (exists) {
+        if (len < sizeof(EBLCHeader)) {
+            break;
+        }
+        const EBLCHeader *hdr = reinterpret_cast<const EBLCHeader*>(tableData);
+        if (hdr->version != 0x00020000) {
+            break;
+        }
+        PRUint32 numSizes = hdr->numSizes;
+        if (numSizes > 0xffff) { // sanity-check, prevent overflow below
+            break;
+        }
+        if (len < sizeof(EBLCHeader) + numSizes * sizeof(BitmapSizeTable)) {
+            break;
+        }
+        const BitmapSizeTable *sizeTable =
+            reinterpret_cast<const BitmapSizeTable*>(hdr + 1);
+        for (PRUint32 i = 0; i < numSizes; ++i, ++sizeTable) {
+            if (sizeTable->ppemX == aSize && sizeTable->ppemY == aSize) {
+                // we ignore a strike that contains fewer than 4 glyphs,
+                // as that probably indicates a font such as Courier New
+                // that provides bitmaps ONLY for the "shading" characters
+                // U+2591..2593
+                hasStrike = (PRUint16(sizeTable->endGlyphIndex) >=
+                             PRUint16(sizeTable->startGlyphIndex) + 3);
+                break;
+            }
+        }
+        // if we reach here, we didn't find a strike; unconditionally break
+        // out of the while-loop block
+        break;
+    }
+    mFontFace->ReleaseFontTable(tableContext);
+
+    if (hasStrike) {
+        return PR_TRUE;
+    }
+
+    // if we didn't find a real strike, check if the font calls for scaling
+    // another bitmap to this size
+    hr = mFontFace->TryGetFontTable(DWRITE_MAKE_OPENTYPE_TAG('E', 'B', 'S', 'C'),
+                                    (const void**)&tableData, &len,
+                                    &tableContext, &exists);
+    if (FAILED(hr)) {
+        return PR_FALSE;
+    }
+
+    while (exists) {
+        if (len < sizeof(EBSCHeader)) {
+            break;
+        }
+        const EBSCHeader *hdr = reinterpret_cast<const EBSCHeader*>(tableData);
+        if (hdr->version != 0x00020000) {
+            break;
+        }
+        PRUint32 numSizes = hdr->numSizes;
+        if (numSizes > 0xffff) {
+            break;
+        }
+        if (len < sizeof(EBSCHeader) + numSizes * sizeof(BitmapScaleTable)) {
+            break;
+        }
+        const BitmapScaleTable *scaleTable =
+            reinterpret_cast<const BitmapScaleTable*>(hdr + 1);
+        for (PRUint32 i = 0; i < numSizes; ++i, ++scaleTable) {
+            if (scaleTable->ppemX == aSize && scaleTable->ppemY == aSize) {
+                hasStrike = PR_TRUE;
+                break;
+            }
+        }
+        break;
+    }
+    mFontFace->ReleaseFontTable(tableContext);
+
+    return hasStrike;
 }
 
 PRUint32
@@ -494,7 +645,7 @@ gfxDWriteFont::GetGlyphWidth(gfxContext *aCtx, PRUint16 aGID)
 
     DWRITE_GLYPH_METRICS glyphMetrics;
     HRESULT hr;
-    if (mUsingClearType) {
+    if (mUseSubpixelPositions) {
         hr = mFontFace->GetDesignGlyphMetrics(
                   &aGID, 1, &glyphMetrics, FALSE);
         if (SUCCEEDED(hr)) {
