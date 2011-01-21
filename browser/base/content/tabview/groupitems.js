@@ -491,6 +491,8 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
     this.adjustTitleSize();
 
+    UI.clearShouldResizeItems();
+
     this._updateDebugBounds();
     this.setTrenches(rect);
 

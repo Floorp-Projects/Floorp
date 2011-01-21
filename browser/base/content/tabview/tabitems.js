@@ -496,6 +496,8 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       this._hasBeenDrawn = true;
     }
 
+    UI.clearShouldResizeItems();
+
     this._updateDebugBounds();
     rect = this.getBounds(); // ensure that it's a <Rect>
 
