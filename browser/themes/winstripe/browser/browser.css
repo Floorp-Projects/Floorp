@@ -1128,15 +1128,17 @@ html|*.urlbar-input:-moz-lwtheme:-moz-placeholder,
   -moz-box-align: stretch;
 }
 
-#urlbar-display {
+#urlbar-display-box {
   margin-top: -2px;
   margin-bottom: -2px;
-  padding-top: 3px;
-  padding-bottom: 2px;
-  -moz-padding-end: 3px;
-  color: GrayText;
   -moz-border-end: 1px solid #AAA;
   -moz-margin-end: 3px;
+}
+
+#urlbar-display {
+  margin-top: 0;
+  margin-bottom: 0;
+  color: GrayText;
 }
 
 /* over-link in location bar */

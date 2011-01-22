@@ -783,7 +783,8 @@
             overLink.style.maxWidth = maxWidth + "px";
           }
 
-          this._originLabel.value = this.value;
+          var action = this._parseActionUrl(this._value);
+          this._originLabel.value = action ? action.param : this._value;
         ]]></body>
       </method>
 

@@ -279,7 +279,7 @@ panel[noactions] > richlistbox > richlistitem[type~="action"] > .ac-url-box > .a
   visibility: visible;
 }
 
-#urlbar:not([actiontype]) > #urlbar-display {
+#urlbar:not([actiontype]) > #urlbar-display-box {
   display: none;
 }
 
