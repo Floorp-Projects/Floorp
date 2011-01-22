@@ -2075,9 +2075,9 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
         }
 
         JS_SetParent(cx, mJSObject, newInnerWindow->mJSObject);
-      }
 
-      mContext->SetOuterObject(mJSObject);
+        mContext->SetOuterObject(mJSObject);
+      }
     }
 
     JSAutoEnterCompartment ac;
@@ -2108,6 +2108,12 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
         return NS_ERROR_FAILURE;
       }
     }
+  }
+
+  JSAutoEnterCompartment ac;
+  if (!ac.enter(cx, mJSObject)) {
+    NS_ERROR("unable to enter a compartment");
+    return NS_ERROR_FAILURE;
   }
 
   if (!aState && !reUseInnerWindow) {
