@@ -364,11 +364,11 @@ menuitem.menuitem-non-iconic {
 %ifdef MOZ_WIDGET_GTK2
 /********* detection of system setting to use icons in menus ***********/
 @media not all and (-moz-images-in-menus) {
-  menuitem:not([type]):not(.menuitem-with-favicon) > .menu-iconic-left {
+  .menu-iconic-left {
     visibility: hidden;
   }
-  menu > .menu-iconic-left {
-    visibility: hidden;
+  :-moz-any(menuitem[type], .menuitem-with-favicon) > .menu-iconic-left {
+    visibility: visible;
   }
 }
 %endif
