@@ -39,17 +39,20 @@
 # ***** END LICENSE BLOCK *****
 
 <menupopup id="appmenu-popup"
+           onpopupshowing="if (event.target == this) {
+                             updateEditUIVisibility();
 #ifdef MOZ_SERVICES_SYNC
-           onpopupshowing="updateEditUIVisibility();gSyncUI.updateUI();">
-#else
-           onpopupshowing="updateEditUIVisibility();">
+                             gSyncUI.updateUI();
 #endif
+                             return;
+                           }
+                           if (event.target.parentNode.parentNode.parentNode.parentNode == this)
+                             this._currentPopup = event.target;">
   <hbox>
     <vbox id="appmenuPrimaryPane">
       <splitmenu id="appmenu_newTab"
                  label="&tabCmd.label;"
-                 command="cmd_newNavigatorTab"
-                 key="key_newNavigatorTab">
+                 command="cmd_newNavigatorTab">
           <menupopup>
             <menuitem id="appmenu_newTab_popup"
                       label="&tabCmd.label;"
@@ -116,8 +119,7 @@
       <splitmenu id="appmenu_print"
                  iconic="true"
                  label="&printCmd.label;"
-                 command="cmd_print"
-                 key="printKb">
+                 command="cmd_print">
           <menupopup>
             <menuitem id="appmenu_print_popup"
                       class="menuitem-iconic"
@@ -203,8 +205,7 @@
       <splitmenu id="appmenu_bookmarks"
                  iconic="true"
                  label="&bookmarksMenu.label;"
-                 command="Browser:ShowAllBookmarks"
-                 key="manBookmarkKb">
+                 command="Browser:ShowAllBookmarks">
           <menupopup id="appmenu_bookmarksPopup"
                      placespopup="true"
                      context="placesContext"
@@ -267,8 +268,7 @@
       <splitmenu id="appmenu_history"
                  iconic="true"
                  label="&historyMenu.label;"
-                 command="Browser:ShowAllHistory"
-                 key="showAllHistoryKb">
+                 command="Browser:ShowAllHistory">
           <menupopup id="appmenu_historyMenupopup"
                      placespopup="true"
                      oncommand="this.parentNode._placesView._onCommand(event);"

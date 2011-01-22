@@ -1299,27 +1299,85 @@
 
   <binding id="splitmenu">
     <content>
-      <xul:menuitem anonid="item" flex="1"
-                    class="menuitem-tooltip split-menuitem-item"
-                    xbl:inherits="label,key"/>
-      <xul:menu anonid="menu" class="split-menuitem-menu"
+      <xul:hbox anonid="menuitem" flex="1"
+                class="splitmenu-menuitem"
+                xbl:inherits="iconic,label,disabled,onclick=oncommand,_moz-menuactive=active"/>
+      <xul:menu anonid="menu" class="splitmenu-menu"
+                xbl:inherits="disabled"
                 oncommand="event.stopPropagation();">
         <children includes="menupopup"/>
       </xul:menu>
     </content>
 
     <implementation>
-      <constructor><![CDATA[
-        if (this.getAttribute("iconic") == "true") {
-          this.item.classList.remove("menuitem-tooltip");
-          this.item.classList.add("menuitem-iconic-tooltip");
-          this.item.classList.add("menuitem-iconic");
-        }
-      ]]></constructor>
-      <field name="item" readonly="true">
-        document.getAnonymousElementByAttribute(this, "anonid", "item");
+      <field name="menuitem" readonly="true">
+        document.getAnonymousElementByAttribute(this, "anonid", "menuitem");
       </field>
+      <field name="menu" readonly="true">
+        document.getAnonymousElementByAttribute(this, "anonid", "menu");
+      </field>
+
+      <field name="_menuDelay">600</field>
+
+      <field name="_parentMenupopup"><![CDATA[
+        let node = this.parentNode;
+        while (node) {
+          if (node.localName == "menupopup")
+            break;
+          node = node.parentNode;
+        }
+        node;
+      ]]></field>
     </implementation>
+
+    <handlers>
+      <handler event="mouseover"><![CDATA[
+        if (this.getAttribute("active") != "true" &&
+            this.getAttribute("disabled") != "true") {
+          if (this._parentMenupopup._currentPopup)
+            this._parentMenupopup._currentPopup.hidePopup();
+
+          this.setAttribute("active", "true");
+
+          let self = this;
+          setTimeout(function () {
+            if (self.getAttribute("active") == "true")
+              self.menu.open = true;
+          }, this._menuDelay);
+        }
+      ]]></handler>
+
+      <handler event="mouseout"><![CDATA[
+        if (this.menu.open)
+          return;
+
+        let node = event.relatedTarget;
+        while (node) {
+          if (node == this)
+            return;
+          node = node.parentNode;
+        }
+        this.removeAttribute("active");
+      ]]></handler>
+
+      <handler event="popuphidden"><![CDATA[
+        if (event.target == this.firstChild)
+          this.removeAttribute("active");
+      ]]></handler>
+
+      <handler event="click" phase="capturing"><![CDATA[
+        let node = event.originalTarget;
+        while (true) {
+          if (node == this.menuitem)
+            break;
+          if (node == this)
+            return;
+          node = node.parentNode;
+        }
+
+        this._parentMenupopup.hidePopup();
+      ]]></handler>
+    </handlers>
   </binding>
 
   <binding id="menuitem-tooltip" extends="chrome://global/content/bindings/menu.xml#menuitem">
@@ -1343,5 +1401,5 @@
       ]]></constructor>
     </implementation>
   </binding>
-  
+
 </bindings>
