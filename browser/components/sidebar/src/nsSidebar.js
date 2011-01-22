@@ -104,8 +104,10 @@ function (aTitle, aContentURL, aCustomizeURL, aPersist)
 {
     var WINMEDSVC = Components.classes['@mozilla.org/appshell/window-mediator;1']
                               .getService(Components.interfaces.nsIWindowMediator);
+
+    // XXX Bug 620418: We shouldn't do this anymore. Instead, we should find the
+    // global object for our caller and use it.
     var win = WINMEDSVC.getMostRecentWindow( "navigator:browser" );
-                                                                                
     if (!sidebarURLSecurityCheck(aContentURL))
       return;
 
@@ -117,7 +119,16 @@ function (aTitle, aContentURL, aCustomizeURL, aPersist)
     }
     catch(ex) { return; }
 
-    win.PlacesUIUtils.showMinimalAddBookmarkUI(uri, aTitle, null, null, true, true);
+    win.PlacesUIUtils.showBookmarkDialog({ action: "add"
+                                         , type: "bookmark"
+                                         , hiddenRows: [ "description"
+                                                       , "keyword"
+                                                       , "location"
+                                                       , "loadInSidebar" ]
+                                         , uri: uri
+                                         , title: aTitle
+                                         , loadBookmarkInSidebar: true
+                                         }, win);
 }
 
 nsSidebar.prototype.validateSearchEngine =
