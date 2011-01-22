@@ -24,6 +24,7 @@
  * Michael Yoshitaka Erlewine <mitcho@mitcho.com>
  * Ehsan Akhgari <ehsan@mozilla.com>
  * Raymond Lee <raymond@appcoast.com>
+ * Tim Taubert <tim.taubert@gmx.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -1565,34 +1566,21 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Reorders the tabs in the tab bar based on the arrangment of the tabs
   // shown in the groupItem.
   reorderTabsBasedOnTabItemOrder: function GroupItem_reorderTabsBasedOnTabItemOrder() {
-    let targetIndices = null;
+    let indices;
+    let tabs = this._children.map(function (tabItem) tabItem.tab);
 
-    let self = this;
-    this._children.some(function(tabItem, index) {
-      // if no targetIndices, or it was reset, recompute
-      if (!targetIndices) {
-        let currentIndices = [tabItem.tab._tPos for each (tabItem in self._children)];
-        targetIndices = currentIndices.concat().sort();
-        // if no resorting is required, we're done!
-        if (currentIndices == targetIndices)
-          return true;
-      }
-    
-      // Compute a target range for this tab's index
-      let originalIndex = tabItem.tab._tPos;
-      let targetRange = new Range(index ? targetIndices[index - 1] : -1,
-                                  targetIndices[index + 1] || Infinity);
+    tabs.forEach(function (tab, index) {
+      if (!indices)
+        indices = tabs.map(function (tab) tab._tPos);
 
-      // If the originalIndex of this tab is not within its target,
-      // let's move it to the targetIndex.
-      if (!targetRange.contains(originalIndex)) {
-        let targetIndex = targetIndices[index];
-        gBrowser.moveTabTo(tabItem.tab, targetIndex);
-        // force recomputing targetIndices
-        targetIndices = null;
+      let start = index ? indices[index - 1] + 1 : 0;
+      let end = index + 1 < indices.length ? indices[index + 1] - 1 : Infinity;
+      let targetRange = new Range(start, end);
+
+      if (!targetRange.contains(tab._tPos)) {
+        gBrowser.moveTabTo(tab, start);
+        indices = null;
       }
-      
-      return false;
     });
   },
 
