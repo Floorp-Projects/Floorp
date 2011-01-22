@@ -394,9 +394,15 @@ nsAppShell::ProcessGeckoEvents(void* aInfo)
              atStart:NO];
   }
 
+  // During "event tracking" mode, we're in a nested event loop (and we're
+  // usually in a performance-critical section such as a window resize), so we
+  // block native events.
+  NSString *runLoopMode = [[NSRunLoop currentRunLoop] currentMode];
+  PRBool blockNativeEvents = runLoopMode == NSEventTrackingRunLoopMode;
+
   if (self->mSuspendNativeCount <= 0) {
     ++self->mNativeEventCallbackDepth;
-    self->NativeEventCallback();
+    self->NativeEventCallback(blockNativeEvents);
     --self->mNativeEventCallbackDepth;
   } else {
     self->mSkippedNativeCallback = PR_TRUE;

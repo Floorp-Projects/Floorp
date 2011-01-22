@@ -4,7 +4,7 @@
      xmlns:em="http://www.mozilla.org/2004/em-rdf#">
   <Description about="urn:mozilla:install-manifest">
     <em:id>testpilot@labs.mozilla.com</em:id>
-    <em:version>1.0.3</em:version>
+    <em:version>1.0.4</em:version>
     <em:type>2</em:type>
 
     <!-- Target Application this extension can install into, 

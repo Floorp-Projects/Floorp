@@ -137,6 +137,7 @@ _BROWSER_TEST_FILES = \
 	browser_615394-SSWindowState_events.js \
 	browser_618151.js \
 	browser_623779.js \
+	browser_625257.js \
 	$(NULL)
 
 ifneq ($(OS_ARCH),Darwin)

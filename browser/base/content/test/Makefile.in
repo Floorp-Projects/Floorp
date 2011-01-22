@@ -170,6 +170,7 @@ _BROWSER_FILES = \
                  browser_bug624734.js \
                  browser_contextSearchTabPosition.js \
                  browser_ctrlTab.js \
+                 browser_customize_popupNotification.js \
                  browser_disablechrome.js \
                  browser_discovery.js \
                  browser_duplicateIDs.js \

@@ -701,11 +701,28 @@ var AddonRepository = {
    *         The callback to pass results to
    */
   getAddonsByIDs: function(aIDs, aCallback) {
+    let startupInfo = Cc["@mozilla.org/toolkit/app-startup;1"].
+                      getService(Ci.nsIAppStartup_MOZILLA_2_0).
+                      getStartupInfo();
+
     let ids = aIDs.slice(0);
-    let url = this._formatURLPref(PREF_GETADDONS_BYIDS, {
+
+    let params = {
       API_VERSION : API_VERSION,
       IDS : ids.map(encodeURIComponent).join(',')
-    });
+    };
+
+    if (startupInfo.process) {
+      if (startupInfo.main)
+        params.TIME_MAIN = startupInfo.main - startupInfo.process;
+      if (startupInfo.firstPaint)
+        params.TIME_FIRST_PAINT = startupInfo.firstPaint - startupInfo.process;
+      if (startupInfo.sessionRestored)
+        params.TIME_SESSION_RESTORED = startupInfo.sessionRestored -
+                                       startupInfo.process;
+    };
+
+    let url = this._formatURLPref(PREF_GETADDONS_BYIDS, params);
 
     let self = this;
     function handleResults(aElements, aTotalResults) {
@@ -1123,6 +1140,8 @@ var AddonRepository = {
     this._searching = true;
     this._callback = aCallback;
     this._maxResults = aMaxResults;
+
+    LOG("Requesting " + aURI);
 
     this._request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
                     createInstance(Ci.nsIXMLHttpRequest);
