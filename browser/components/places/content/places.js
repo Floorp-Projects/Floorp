@@ -343,8 +343,7 @@ var PlacesOrganizer = {
   },
 
   openSelectedNode: function PO_openSelectedNode(aEvent) {
-    PlacesUIUtils.openNodeWithEvent(this._content.selectedNode, aEvent,
-                                    this._content.treeBoxObject.view);
+    PlacesUIUtils.openNodeWithEvent(this._content.selectedNode, aEvent);
   },
 
   /**
