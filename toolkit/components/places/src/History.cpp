@@ -57,6 +57,7 @@
 #include "mozilla/Services.h"
 #include "nsThreadUtils.h"
 #include "nsNetUtil.h"
+#include "nsContentUtils.h"
 
 // Initial size for the cache holding visited status observers.
 #define VISIT_OBSERVERS_INITIAL_CACHE_SIZE 128
@@ -167,6 +168,141 @@ struct VisitData {
 //// Anonymous Helpers
 
 namespace {
+
+/**
+ * Obtains an nsIURI from the "uri" property of a JSObject.
+ *
+ * @param aCtx
+ *        The JSContext for aObject.
+ * @param aObject
+ *        The JSObject to get the URI from.
+ * @param aProperty
+ *        The name of the property to get the URI from.
+ * @return the URI if it exists.
+ */
+already_AddRefed<nsIURI>
+GetURIFromJSObject(JSContext* aCtx,
+                   JSObject* aObject,
+                   const char* aProperty)
+{
+  jsval uriVal;
+  JSBool rc = JS_GetProperty(aCtx, aObject, aProperty, &uriVal);
+  NS_ENSURE_TRUE(rc, nsnull);
+  if (!JSVAL_IS_PRIMITIVE(uriVal)) {
+    nsCOMPtr<nsIXPConnectWrappedNative> wrappedObj;
+    nsresult rv = nsContentUtils::XPConnect()->GetWrappedNativeOfJSObject(
+      aCtx,
+      JSVAL_TO_OBJECT(uriVal),
+      getter_AddRefs(wrappedObj)
+    );
+    NS_ENSURE_SUCCESS(rv, nsnull);
+    nsCOMPtr<nsIURI> uri = do_QueryWrappedNative(wrappedObj);
+    return uri.forget();
+  }
+  return nsnull;
+}
+
+/**
+ * Obtains the specified property of a JSObject.
+ *
+ * @param aCtx
+ *        The JSContext for aObject.
+ * @param aObject
+ *        The JSObject to get the string from.
+ * @param aProperty
+ *        The property to get the value from.
+ * @param _string
+ *        The string to populate with the value, or set it to void.
+ */
+void
+GetStringFromJSObject(JSContext* aCtx,
+                      JSObject* aObject,
+                      const char* aProperty,
+                      nsString& _string)
+{
+  jsval val;
+  JSBool rc = JS_GetProperty(aCtx, aObject, aProperty, &val);
+  if (!rc || JSVAL_IS_VOID(val) || !JSVAL_IS_STRING(val)) {
+    _string.SetIsVoid(PR_TRUE);
+    return;
+  }
+  size_t length;
+  const jschar* chars =
+    JS_GetStringCharsZAndLength(aCtx, JSVAL_TO_STRING(val), &length);
+  if (!chars) {
+    _string.SetIsVoid(PR_TRUE);
+    return;
+  }
+  _string.Assign(static_cast<const PRUnichar*>(chars), length);
+}
+
+/**
+ * Obtains the specified property of a JSObject.
+ *
+ * @param aCtx
+ *        The JSContext for aObject.
+ * @param aObject
+ *        The JSObject to get the int from.
+ * @param aProperty
+ *        The property to get the value from.
+ * @param _int
+ *        The integer to populate with the value on success.
+ */
+template <typename IntType>
+nsresult
+GetIntFromJSObject(JSContext* aCtx,
+                   JSObject* aObject,
+                   const char* aProperty,
+                   IntType* _int)
+{
+  jsval value;
+  JSBool rc = JS_GetProperty(aCtx, aObject, aProperty, &value);
+  NS_ENSURE_TRUE(rc, NS_ERROR_UNEXPECTED);
+  if (JSVAL_IS_VOID(value)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  NS_ENSURE_ARG(JSVAL_IS_PRIMITIVE(value));
+  NS_ENSURE_ARG(JSVAL_IS_NUMBER(value));
+
+  jsdouble num;
+  rc = JS_ValueToNumber(aCtx, value, &num);
+  NS_ENSURE_TRUE(rc, NS_ERROR_UNEXPECTED);
+  NS_ENSURE_ARG(IntType(num) == num);
+
+  *_int = IntType(num);
+  return NS_OK;
+}
+
+/**
+ * Obtains the specified property of a JSObject.
+ *
+ * @pre aArray must be an Array object.
+ *
+ * @param aCtx
+ *        The JSContext for aArray.
+ * @param aArray
+ *        The JSObject to get the object from.
+ * @param aIndex
+ *        The index to get the object from.
+ * @param _object
+ *        The JSObject pointer on success.
+ */
+nsresult
+GetJSObjectFromArray(JSContext* aCtx,
+                     JSObject* aArray,
+                     jsuint aIndex,
+                     JSObject** _rooter)
+{
+  NS_PRECONDITION(JS_IsArrayObject(aCtx, aArray),
+                  "Must provide an object that is an array!");
+
+  jsval value;
+  JSBool rc = JS_GetElement(aCtx, aArray, aIndex, &value);
+  NS_ENSURE_TRUE(rc, NS_ERROR_UNEXPECTED);
+  NS_ENSURE_ARG(!JSVAL_IS_PRIMITIVE(value));
+  *_rooter = JSVAL_TO_OBJECT(value);
+  return NS_OK;
+}
 
 class VisitedQuery : public AsyncStatementCallback
 {
@@ -1604,8 +1740,141 @@ History::UpdatePlaces(const jsval& aPlaceInfos,
                       JSContext* aCtx)
 {
   NS_ENSURE_TRUE(NS_IsMainThread(), NS_ERROR_UNEXPECTED);
+  NS_ENSURE_TRUE(!JSVAL_IS_PRIMITIVE(aPlaceInfos), NS_ERROR_INVALID_ARG);
 
-  return NS_ERROR_NOT_IMPLEMENTED;
+  jsuint infosLength = 1;
+  JSObject* infos;
+  if (JS_IsArrayObject(aCtx, JSVAL_TO_OBJECT(aPlaceInfos))) {
+    infos = JSVAL_TO_OBJECT(aPlaceInfos);
+    (void)JS_GetArrayLength(aCtx, infos, &infosLength);
+    NS_ENSURE_ARG(infosLength > 0);
+  }
+  else {
+    // Build a temporary array to store this one item so the code below can
+    // just loop.
+    infos = JS_NewArrayObject(aCtx, 0, NULL);
+    NS_ENSURE_TRUE(infos, NS_ERROR_OUT_OF_MEMORY);
+
+    JSBool rc = JS_DefineElement(aCtx, infos, 0, aPlaceInfos, NULL, NULL, 0);
+    NS_ENSURE_TRUE(rc, NS_ERROR_UNEXPECTED);
+  }
+
+  nsTArray<VisitData> visitData;
+  for (jsuint i = 0; i < infosLength; i++) {
+    JSObject* info;
+    nsresult rv = GetJSObjectFromArray(aCtx, infos, i, &info);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIURI> uri = GetURIFromJSObject(aCtx, info, "uri");
+    PRInt64 placeId;
+    rv = GetIntFromJSObject(aCtx, info, "placeId", &placeId);
+    if (rv == NS_ERROR_INVALID_ARG) {
+      placeId = 0;
+    }
+    else {
+      NS_ENSURE_SUCCESS(rv, rv);
+      NS_ENSURE_ARG(placeId > 0);
+    }
+    nsCString guid;
+    {
+      nsString fatGUID;
+      GetStringFromJSObject(aCtx, info, "guid", fatGUID);
+      if (fatGUID.IsVoid()) {
+        guid.SetIsVoid(PR_TRUE);
+      }
+      else {
+        guid = NS_ConvertUTF16toUTF8(fatGUID);
+      }
+    }
+
+    // We must have at least one of uri, valid id, or guid.
+    NS_ENSURE_ARG(uri || placeId > 0 || !guid.IsVoid());
+
+    // If we were given a guid, make sure it is valid.
+    bool isValidGUID = IsValidGUID(guid);
+    NS_ENSURE_ARG(guid.IsVoid() || isValidGUID);
+
+    nsString title;
+    GetStringFromJSObject(aCtx, info, "title", title);
+
+    JSObject* visits = NULL;
+    {
+      jsval visitsVal;
+      JSBool rc = JS_GetProperty(aCtx, info, "visits", &visitsVal);
+      NS_ENSURE_TRUE(rc, NS_ERROR_UNEXPECTED);
+      if (!JSVAL_IS_PRIMITIVE(visitsVal)) {
+        visits = JSVAL_TO_OBJECT(visitsVal);
+        NS_ENSURE_ARG(JS_IsArrayObject(aCtx, visits));
+      }
+    }
+
+    jsuint visitsLength = 0;
+    if (visits) {
+      (void)JS_GetArrayLength(aCtx, visits, &visitsLength);
+    }
+
+    // If we have no id or guid, we must have visits.
+    if (!(placeId > 0 || isValidGUID)) {
+      NS_ENSURE_ARG(visits);
+      NS_ENSURE_ARG(visitsLength > 0);
+    }
+
+    // Check each visit, and build our array of VisitData objects.
+    visitData.SetCapacity(visitData.Length() + visitsLength);
+    for (jsuint j = 0; j < visitsLength; j++) {
+      JSObject* visit;
+      rv = GetJSObjectFromArray(aCtx, visits, j, &visit);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      VisitData& data = *visitData.AppendElement(VisitData(uri));
+      data.placeId = placeId;
+      data.title = title;
+      data.guid = guid;
+
+      // We must have a date and a transaction type!
+      rv = GetIntFromJSObject(aCtx, visit, "visitDate", &data.visitTime);
+      NS_ENSURE_SUCCESS(rv, rv);
+      PRUint32 transitionType;
+      rv = GetIntFromJSObject(aCtx, visit, "transitionType", &transitionType);
+      NS_ENSURE_SUCCESS(rv, rv);
+      NS_ENSURE_ARG_RANGE(transitionType,
+                          nsINavHistoryService::TRANSITION_LINK,
+                          nsINavHistoryService::TRANSITION_FRAMED_LINK);
+      data.SetTransitionType(transitionType);
+
+      // If the visit is an embed visit, we do not actually add it to the
+      // database.
+      if (transitionType == nsINavHistoryService::TRANSITION_EMBED) {
+        StoreAndNotifyEmbedVisit(data, aCallback);
+        visitData.RemoveElementAt(visitData.Length() - 1);
+        continue;
+      }
+
+      // The session id is optional.
+      rv = GetIntFromJSObject(aCtx, visit, "sessionId", &data.sessionId);
+      if (rv == NS_ERROR_INVALID_ARG) {
+        data.sessionId = 0;
+      }
+      else {
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // The referrer is optional.
+      nsCOMPtr<nsIURI> referrer = GetURIFromJSObject(aCtx, visit,
+                                                     "referrerURI");
+      if (referrer) {
+        (void)referrer->GetSpec(data.referrerSpec);
+      }
+    }
+  }
+
+  mozIStorageConnection* dbConn = GetDBConn();
+  NS_ENSURE_STATE(dbConn);
+
+  nsresult rv = InsertVisitedURIs::Start(dbConn, visitData, aCallback);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
