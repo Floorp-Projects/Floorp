@@ -626,7 +626,7 @@
   ${GetShortcutsLogPath} $0
   ${If} ${FileExists} "$0"
     ClearErrors
-    ReadINIStr $1 "$0" "SMPROGRAMS" "RelativePathToDir"
+    ReadINIStr $5 "$0" "SMPROGRAMS" "RelativePathToDir"
     ${Unless} ${Errors}
       ClearErrors
       ReadINIStr $1 "$0" "STARTMENU" "Shortcut0"
@@ -634,7 +634,7 @@
         ; The STARTMENU ini section doesn't exist.
         ${LogStartMenuShortcut} "${BrandFullName}.lnk"
         ${GetLongPath} "$SMPROGRAMS" $2
-        ${GetLongPath} "$2\$1" $1
+        ${GetLongPath} "$2\$5" $1
         ${If} "$1" != ""
           ClearErrors
           ReadINIStr $3 "$0" "SMPROGRAMS" "Shortcut0"

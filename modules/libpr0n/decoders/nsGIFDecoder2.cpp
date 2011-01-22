@@ -146,7 +146,7 @@ nsGIFDecoder2::FinishInternal()
     mGIFOpen = PR_FALSE;
   }
 
-  mImage->SetLoopCount(mGIFStruct.loop_count);
+  mImage->SetLoopCount(mGIFStruct.loop_count - 1);
 }
 
 // Push any new rows according to mCurrentPass/mLastFlushedPass and
@@ -871,11 +871,6 @@ nsGIFDecoder2::WriteInternal(const char *aBuffer, PRUint32 aCount)
           /* Loop entire animation specified # of times.  Only read the
              loop count during the first iteration. */
           mGIFStruct.loop_count = GETINT16(q + 1);
-  
-          /* Zero loop count is infinite animation loop request */
-          if (mGIFStruct.loop_count == 0)
-            mGIFStruct.loop_count = -1;
-  
           GETN(1, gif_netscape_extension_block);
           break;
         

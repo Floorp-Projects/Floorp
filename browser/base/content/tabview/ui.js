@@ -1204,14 +1204,19 @@ let UI = {
     if (!this._pageBounds)
       return;
 
-    // If TabView isn't focused and is not showing, don't perform a resize.
-    // This resize really slows things down.
+    // Here are reasons why we *won't* resize:
+    // 1. Panorama isn't visible (in which case we will resize when we do display)
+    // 2. the screen dimensions haven't changed
+    // 3. everything on the screen fits and nothing feels cramped
     if (!force && !this.isTabViewVisible())
       return;
 
-    var oldPageBounds = new Rect(this._pageBounds);
-    var newPageBounds = Items.getPageBounds();
+    let oldPageBounds = new Rect(this._pageBounds);
+    let newPageBounds = Items.getPageBounds();
     if (newPageBounds.equals(oldPageBounds))
+      return;
+
+    if (!this.shouldResizeItems())
       return;
 
     var items = Items.getTopLevelItems();
@@ -1280,6 +1285,58 @@ let UI = {
 
     this._pageBounds = Items.getPageBounds();
     this._save();
+  },
+  
+  // ----------
+  // Function: shouldResizeItems
+  // Returns whether we should resize the items on the screen, based on whether
+  // the top-level items fit in the screen or not and whether they feel
+  // "cramped" or not.
+  // These computations may be done using cached values. The cache can be
+  // cleared with UI.clearShouldResizeItems().
+  shouldResizeItems: function UI_shouldResizeItems() {
+
+    let newPageBounds = Items.getPageBounds();
+    
+    // If we don't have cached cached values...
+    if (this._minimalRect === undefined || this._feelsCramped === undefined) {
+
+      // Loop through every top-level Item for two operations:
+      // 1. check if it is feeling "cramped" due to squishing (a technical term),
+      // 2. union its bounds with the minimalRect
+      let feelsCramped = false;
+      let minimalRect = new Rect(0, 0, 1, 1);
+      
+      Items.getTopLevelItems()
+        .forEach(function UI_shouldResizeItems_checkItem(item) {
+          let bounds = new Rect(item.getBounds());
+          feelsCramped = feelsCramped || (item.userSize &&
+            (item.userSize.x > bounds.width || item.userSize.y > bounds.height));
+          bounds.inset(-Trenches.defaultRadius, -Trenches.defaultRadius);
+          minimalRect = minimalRect.union(bounds);
+        });
+      
+      // ensure the minimalRect extends to, but not beyond, the origin
+      minimalRect.left = 0;
+      minimalRect.top  = 0;
+  
+      this._minimalRect = minimalRect;
+      this._feelsCramped = feelsCramped;
+    }
+
+    return this._minimalRect.width > newPageBounds.width ||
+      this._minimalRect.height > newPageBounds.height ||
+      this._feelsCramped;
+  },
+  
+  // ----------
+  // Function: clearShouldResizeItems
+  // Clear the cache of whether we should resize the items on the Panorama
+  // screen, forcing a recomputation on the next UI.shouldResizeItems()
+  // call.
+  clearShouldResizeItems: function UI_clearShouldResizeItems() {
+    delete this._minimalRect;
+    delete this._feelsCramped;
   },
 
   // ----------

@@ -2009,6 +2009,7 @@ CurrentThreadId()
     if (threads_for_task[i] == mach_thread_self())
       return i;
   }
+  abort();
 #else
 #  error "Unsupported platform"
 #endif

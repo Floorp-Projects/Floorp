@@ -562,6 +562,7 @@ static nsExtraMimeTypeEntry extraMimeEntries [] =
 #endif
   { APPLICATION_GZIP2, "gz", "gzip" },
   { "application/x-arj", "arj", "ARJ file" },
+  { "application/rtf", "rtf", "Rich Text Format File" },
   { APPLICATION_XPINSTALL, "xpi", "XPInstall Install" },
   { APPLICATION_POSTSCRIPT, "ps,eps,ai", "Postscript File" },
   { APPLICATION_XJAVASCRIPT, "js", "Javascript Source File" },

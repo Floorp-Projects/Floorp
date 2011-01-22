@@ -669,12 +669,10 @@ menuitem.bookmark-item {
 .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
 .toolbarbutton-1 > .toolbarbutton-icon {
   -moz-margin-end: 0;
-  width: 18px;
-  height: 18px;
 }
 
-toolbar[iconsize="small"] .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
-toolbar[iconsize="small"] .toolbarbutton-1 > .toolbarbutton-icon {
+#nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
+#nav-bar .toolbarbutton-1 > .toolbarbutton-icon {
   margin: 1px;
   width: 16px;
   height: 16px;
