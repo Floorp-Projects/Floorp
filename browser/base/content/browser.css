@@ -155,13 +155,18 @@ splitmenu {
   -moz-binding: url("chrome://browser/content/urlbarBindings.xml#splitmenu");
 }
 
-.split-menuitem-item {
+.splitmenu-menuitem {
+  -moz-binding: url("chrome://global/content/bindings/menu.xml#menuitem");
   list-style-image: inherit;
   -moz-image-region: inherit;
 }
 
-.split-menuitem-menu > .menu-text,
-.split-menuitem-menu > .menu-accel-container {
+.splitmenu-menuitem[iconic="true"] {
+  -moz-binding: url("chrome://global/content/bindings/menu.xml#menuitem-iconic");
+}
+
+.splitmenu-menu > .menu-text,
+:-moz-any(.splitmenu-menu, .splitmenu-menuitem) > .menu-accel-container {
   display: none;
 }
 
