@@ -318,7 +318,7 @@ var PlacesUIUtils = {
 
   _reportDeprecatedAddBookmarkMethod:
   function PUIU__reportDeprecatedAddBookmarkMethod() {
-    let oldFuncName = arguments.callee.caller.name.slice(5); // remove PUIU_
+    let oldFuncName = arugments.callee.caller.name.slice(5); // remove PUIU_
     Cu.reportError(oldFuncName + " is deprecated and will be removed in a \
                    future release.  Use showBookmarkDialog instead");
   },
