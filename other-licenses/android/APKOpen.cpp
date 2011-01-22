@@ -695,7 +695,13 @@ Java_org_mozilla_gecko_GeckoAppShell_loadLibs(JNIEnv *jenv, jclass jGeckoAppShel
 
   loadLibs(str);
   jenv->ReleaseStringUTFChars(jApkName, str);
-  if (extractLibs && cache_mapping) {
+  bool haveLibsToWrite = false;
+  if (cache_mapping && extractLibs)
+    for (int i = 0; i < cache_count && !haveLibsToWrite; i++)
+      if (cache_mapping[i].buffer)
+        haveLibsToWrite = true;
+
+  if (haveLibsToWrite) {
     if (!fork()) {
       sleep(10);
       nice(10);

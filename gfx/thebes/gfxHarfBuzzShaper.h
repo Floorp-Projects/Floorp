@@ -118,9 +118,9 @@ protected:
     // Whether the font implements GetGlyph, or we should read tables
     // directly
     PRPackedBool mUseFontGetGlyph;
-    // Whether the font implements hinted widths, or we should read tables
+    // Whether the font implements GetGlyphWidth, or we should read tables
     // directly to get ideal widths
-    PRPackedBool mUseHintedWidths;
+    PRPackedBool mUseFontGlyphWidths;
 };
 
 #endif /* GFX_HARFBUZZSHAPER_H */

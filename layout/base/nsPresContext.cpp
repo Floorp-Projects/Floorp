@@ -258,10 +258,6 @@ nsPresContext::~nsPresContext()
   NS_PRECONDITION(!mShell, "Presshell forgot to clear our mShell pointer");
   SetShell(nsnull);
 
-  if (mTransitionManager) {
-    mTransitionManager->Disconnect();
-  }
-
   // Disconnect the refresh driver *after* the transition manager, which
   // needs it.
   if (mRefreshDriver && mRefreshDriver->PresContext() == this) {
@@ -1047,6 +1043,11 @@ nsPresContext::SetShell(nsIPresShell* aShell)
       mImageLoaders[i].Enumerate(destroy_loads, nsnull);
       mImageLoaders[i].Clear();
     }
+
+    if (mTransitionManager) {
+      mTransitionManager->Disconnect();
+      mTransitionManager = nsnull;
+    }
   }
 }
 
@@ -1462,8 +1463,11 @@ nsPresContext::SetBidi(PRUint32 aSource, PRBool aForceRestyle)
       SetVisualMode(IsVisualCharset(doc->GetDocumentCharacterSet()));
     }
   }
-  if (aForceRestyle) {
-    RebuildAllStyleData(NS_STYLE_HINT_REFLOW);
+  if (aForceRestyle && mShell) {
+    // Reconstruct the root document element's frame and its children,
+    // because we need to trigger frame reconstruction for direction change.
+    RebuildUserFontSet();
+    mShell->ReconstructFrames();
   }
 }
 

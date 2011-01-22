@@ -126,7 +126,7 @@ CMMSRCS += MacLaunchHelper.mm
 CMMSRCS += MacApplicationDelegate.mm
 CMMSRCS += MacAutoreleasePool.mm
 CPPSRCS += nsCommandLineServiceMac.cpp
-OS_CXXFLAGS += -fexceptions
+ENABLE_CXX_EXCEPTIONS = 1
 endif
 
 ifdef MOZ_X11

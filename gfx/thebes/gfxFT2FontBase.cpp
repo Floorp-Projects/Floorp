@@ -216,7 +216,7 @@ gfxFT2FontBase::GetGlyph(PRUint32 unicode, PRUint32 variation_selector)
 }
 
 PRInt32
-gfxFT2FontBase::GetHintedGlyphWidth(gfxContext *aCtx, PRUint16 aGID)
+gfxFT2FontBase::GetGlyphWidth(gfxContext *aCtx, PRUint16 aGID)
 {
     cairo_text_extents_t extents;
     GetGlyphExtents(aGID, &extents);
