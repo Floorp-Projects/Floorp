@@ -4392,6 +4392,42 @@ JSObject::freeSlot(JSContext *cx, uint32 slot)
     return false;
 }
 
+JS_FRIEND_API(bool)
+js_UnbrandAndClearSlots(JSContext *cx, JSObject *obj)
+{
+    JS_ASSERT(obj->isNative());
+    JS_ASSERT(obj->isGlobal());
+
+    if (!obj->unbrand(cx))
+        return false;
+
+    /*
+     * Clear the prototype cache. We must not clear the other global
+     * reserved slots, as other code will crash if they are arbitrarily
+     * reset (e.g., regexp statics).
+     */
+    for (int key = JSProto_Null; key < JSRESERVED_GLOBAL_THIS; key++)
+        JS_SetReservedSlot(cx, obj, key, JSVAL_VOID);
+
+    /*
+     * Clear the non-reserved slots.
+     */
+    ClearValueRange(obj->slots + JSCLASS_RESERVED_SLOTS(obj->clasp),
+                    obj->capacity - JSCLASS_RESERVED_SLOTS(obj->clasp),
+                    obj->clasp == &js_ArrayClass);
+
+    /*
+     * We just overwrote all slots to undefined, so the freelist has
+     * been trashed. We need to clear the head pointer or else we will
+     * crash later. This leaks slots but the object is all but dead
+     * anyway.
+     */
+    if (obj->hasPropertyTable())
+        obj->lastProperty()->table->freelist = SHAPE_INVALID_SLOT;
+
+    return true;
+}
+
 /* JSBOXEDWORD_INT_MAX as a string */
 #define JSBOXEDWORD_INT_MAX_STRING "1073741823"
 
