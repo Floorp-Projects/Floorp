@@ -288,7 +288,7 @@ var ExtensionsView = {
   },
 
   _createLocalAddon: function ev__createLocalAddon(aAddon) {
-    let strings = Elements.browserBundle;
+    let strings = Services.strings.createBundle("chrome://browser/locale/browser.properties");
 
     let appManaged = (aAddon.scope == AddonManager.SCOPE_APPLICATION);
     let opType = this._getOpTypeForOperations(aAddon.pendingOperations);
@@ -936,13 +936,13 @@ AddonInstallListener.prototype = {
 
     // If we are updating an add-on, change the status
     if (element.hasAttribute("updating")) {
-      let strings = Elements.browserBundle;
+      let strings = Services.strings.createBundle("chrome://browser/locale/browser.properties");
       element.setAttribute("updateStatus", strings.getFormattedString("addonUpdate.updated", [aAddon.version]));
       element.removeAttribute("updating");
     }
   },
 
-  onInstallFailed: function(aInstall, aError) {
+  onInstallFailed: function(aInstall) {
     this._showInstallCompleteAlert(false);
 
     if (ExtensionsView.visible) {
@@ -954,7 +954,7 @@ AddonInstallListener.prototype = {
       let strings = Services.strings.createBundle("chrome://global/locale/xpinstall/xpinstall.properties");
 
       let error = null;
-      switch (aError) {
+      switch (aInstall.error) {
       case AddonManager.ERROR_NETWORK_FAILURE:
         error = "error-228";
         break;
@@ -969,7 +969,7 @@ AddonInstallListener.prototype = {
       try {
         var msg = strings.GetStringFromName(error);
       } catch (ex) {
-        msg = strings.formatStringFromName("unknown.error", [aError]);
+        msg = strings.formatStringFromName("unknown.error", [aInstall.error], 1);
       }
       element.setAttribute("error", msg);
     }
@@ -994,8 +994,8 @@ AddonInstallListener.prototype = {
     element.setAttribute("progress", progress);
   },
 
-  onDownloadFailed: function(aInstall, aError) {
-    this.onInstallFailed(aInstall, aError);
+  onDownloadFailed: function(aInstall) {
+    this.onInstallFailed(aInstall);
   },
 
   onDownloadCancelled: function(aInstall) {
