@@ -902,16 +902,24 @@ obj_valueOf(JSContext *cx, uintN argc, Value *vp)
  * principals.
  */
 JSBool
-js_CheckContentSecurityPolicy(JSContext *cx)
+js_CheckContentSecurityPolicy(JSContext *cx, JSObject *scopeobj)
 {
-    JSSecurityCallbacks *callbacks = JS_GetSecurityCallbacks(cx);
+    // CSP is static per document, so if our check said yes before, that
+    // answer is still valid.
+    JSObject *global = scopeobj->getGlobal();
+    Value v = global->getReservedSlot(JSRESERVED_GLOBAL_EVAL_ALLOWED);
+    if (v.isUndefined()) {
+        JSSecurityCallbacks *callbacks = JS_GetSecurityCallbacks(cx);
 
-    // if there are callbacks, make sure that the CSP callback is installed and
-    // that it permits eval().
-    if (callbacks && callbacks->contentSecurityPolicyAllows)
-        return callbacks->contentSecurityPolicyAllows(cx);
+        // if there are callbacks, make sure that the CSP callback is installed and
+        // that it permits eval().
+        v.setBoolean((!callbacks || !callbacks->contentSecurityPolicyAllows) ||
+                     callbacks->contentSecurityPolicyAllows(cx));
 
-    return JS_TRUE;
+        // update the cache in the global object for the result of the security check
+        js_SetReservedSlot(cx, global, JSRESERVED_GLOBAL_EVAL_ALLOWED, v);
+    }
+    return !v.isFalse();
 }
 
 /*
@@ -1155,7 +1163,7 @@ EvalKernel(JSContext *cx, uintN argc, Value *vp, EvalType evalType, JSStackFrame
      * CSP check: Is eval() allowed at all?
      * Report errors via CSP is done in the script security mgr.
      */
-    if (!js_CheckContentSecurityPolicy(cx)) {
+    if (!js_CheckContentSecurityPolicy(cx, scopeobj)) {
         JS_ReportError(cx, "call to eval() blocked by CSP");
         return false;
     }

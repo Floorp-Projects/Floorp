@@ -1808,7 +1808,7 @@ js_CheckPrincipalsAccess(JSContext *cx, JSObject *scopeobj,
 
 /* For CSP -- checks if eval() and friends are allowed to run. */
 extern JSBool
-js_CheckContentSecurityPolicy(JSContext *cx);
+js_CheckContentSecurityPolicy(JSContext *cx, JSObject *scopeObj);
 
 /* NB: Infallible. */
 extern const char *
