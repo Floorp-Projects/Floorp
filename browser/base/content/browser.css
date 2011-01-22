@@ -192,16 +192,14 @@ splitmenu {
   -moz-binding: url(chrome://browser/content/urlbarBindings.xml#urlbar);
 }
 
-.uri-element-right-align:-moz-locale-dir(rtl),
-html|input.uri-element-right-align:-moz-locale-dir(rtl),
-.ac-url-text:-moz-locale-dir(rtl),
-.ac-title:-moz-locale-dir(rtl)  > description {
-  direction: ltr !important;
-  text-align: right !important;
+/* Some child nodes want to be ordered based on the locale's direction, while
+   everything else should be ltr. */
+.urlbar-input-box:-moz-locale-dir(rtl) {
+  direction: rtl;
 }
 
-.urlbar-over-link-box:-moz-locale-dir(rtl) {
-  -moz-box-direction: reverse;
+html|*.urlbar-input {
+  direction: ltr;
 }
 
 /* over-link in location bar */
