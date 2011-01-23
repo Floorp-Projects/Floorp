@@ -703,10 +703,10 @@ Application.prototype = {
 
   get windows() {
     var win = [];
-    var browserEnum = Utilities.windowMediator.getEnumerator("navigator:browser");
+    var enum = Utilities.windowMediator.getEnumerator("navigator:browser");
 
-    while (browserEnum.hasMoreElements())
-      win.push(new Window(browserEnum.getNext()));
+    while (enum.hasMoreElements())
+      win.push(new Window(enum.getNext()));
 
     return win;
   },

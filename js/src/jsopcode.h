@@ -311,7 +311,7 @@ extern JSPrinter *
 js_NewPrinter(JSContext *cx, const char *name, JSFunction *fun,
               uintN indent, JSBool pretty, JSBool grouped, JSBool strict);
 
-extern JSBool
+extern void
 js_DestroyPrinter(JSPrinter *jp);
 
 extern JSString *

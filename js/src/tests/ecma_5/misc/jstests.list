@@ -6,4 +6,3 @@ script unwrapped-no-such-method.js
 script explicit-undefined-optional-argument.js
 script function-definition-eval.js
 skip-if(!xulRuntime.shell) script function-definition-evaluate.js # needs evaluate()
-script future-reserved-words.js

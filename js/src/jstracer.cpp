@@ -14978,13 +14978,6 @@ TraceRecorder::record_JSOP_POPN()
     return ARECORD_CONTINUE;
 }
 
-static inline bool
-IsFindableCallObj(JSObject *obj)
-{
-    return obj->isCall() &&
-           (obj->callIsForEval() || obj->getCallObjCalleeFunction()->isHeavyweight());
-}
-
 /*
  * Generate LIR to reach |obj2| from |obj| by traversing the scope chain. The
  * generated code also ensures that any call objects found have not changed shape.
@@ -15026,10 +15019,13 @@ TraceRecorder::traverseScopeChain(JSObject *obj, LIns *obj_ins, JSObject *target
 
     for (;;) {
         if (searchObj != globalObj) {
-            if (searchObj->isBlock())
+            Class* clasp = searchObj->getClass();
+            if (clasp == &js_BlockClass) {
                 foundBlockObj = true;
-            else if (IsFindableCallObj(searchObj))
+            } else if (clasp == &js_CallClass &&
+                       searchObj->getCallObjCalleeFunction()->isHeavyweight()) {
                 foundCallObj = true;
+            }
         }
 
         if (searchObj == targetObj)
@@ -15058,7 +15054,8 @@ TraceRecorder::traverseScopeChain(JSObject *obj, LIns *obj_ins, JSObject *target
             // We must guard on the shape of all call objects for heavyweight functions
             // that we traverse on the scope chain: if the shape changes, a variable with
             // the same name may have been inserted in the scope chain.
-            if (IsFindableCallObj(obj)) {
+            if (obj->isCall() &&
+                obj->getCallObjCalleeFunction()->isHeavyweight()) {
                 if (!exit)
                     exit = snapshot(BRANCH_EXIT);
                 guard(true,
