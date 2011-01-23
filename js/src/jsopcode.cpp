@@ -805,6 +805,7 @@ struct JSPrinter {
     bool            pretty;         /* pretty-print: indent, use newlines */
     bool            grouped;        /* in parenthesized expression context */
     bool            strict;         /* in code marked strict */
+    bool            error;          /* error occured */
     JSScript        *script;        /* script being printed */
     jsbytecode      *dvgfence;      /* DecompileExpression fencepost */
     jsbytecode      **pcstack;      /* DecompileExpression modeled stack */
@@ -827,6 +828,7 @@ js_NewPrinter(JSContext *cx, const char *name, JSFunction *fun,
     jp->pretty = !!pretty;
     jp->grouped = !!grouped;
     jp->strict = !!strict;
+    jp->error = false;
     jp->script = NULL;
     jp->dvgfence = NULL;
     jp->pcstack = NULL;
@@ -842,11 +844,13 @@ js_NewPrinter(JSContext *cx, const char *name, JSFunction *fun,
     return jp;
 }
 
-void
+bool
 js_DestroyPrinter(JSPrinter *jp)
 {
     JS_FinishArenaPool(&jp->pool);
+    bool error = jp->error;
     jp->sprinter.context->free(jp);
+    return error;
 }
 
 JSString *
@@ -2329,7 +2333,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     ok = js_DecompileFunction(jp2);
                     if (ok && jp2->sprinter.base)
                         js_puts(jp, jp2->sprinter.base);
-                    js_DestroyPrinter(jp2);
+                    ok &= !!js_DestroyPrinter(jp2);
                     if (!ok)
                         return NULL;
                     js_puts(jp, "\n\n");
@@ -4921,7 +4925,8 @@ js_DecompileToString(JSContext *cx, const char *name, JSFunction *fun,
         str = js_GetPrinterOutput(jp);
     else
         str = NULL;
-    js_DestroyPrinter(jp);
+    if (!js_DestroyPrinter(jp))
+        return NULL;
     return str;
 }
 
@@ -5304,7 +5309,10 @@ DecompileExpression(JSContext *cx, JSScript *script, JSFunction *fun,
             name = (jp->sprinter.base) ? jp->sprinter.base : (char *) "";
             name = JS_strdup(cx, name);
         }
-        js_DestroyPrinter(jp);
+        if (!js_DestroyPrinter(jp)) {
+            cx->free(name);
+            name = NULL;
+        }
     }
 
 out:
