@@ -276,6 +276,9 @@ private:
      */
     nsresult Hash(const char *buf, nsACString &hash);
 
+    virtual void OnIncreaseCacheEntryClosePreventCount();
+    virtual void OnDecreaseCacheEntryClosePreventCount();
+
 private:
     nsCOMPtr<nsISupports>             mSecurityInfo;
     nsCOMPtr<nsICancelable>           mProxyRequest;
@@ -327,10 +330,6 @@ private:
     nsCOMPtr<nsIChannel>              mRedirectChannel;
     PRUint32                          mRedirectType;
 
-    // Hold counter, keeps the number of calls to holdCacheEntry(), positive
-    // value prevents the cache entry from release in OnStopRequest.
-    PRUint32                          mCacheEntryClosePreventionCount;
-
     // state flags
     PRUint32                          mCachedContentIsValid     : 1;
     PRUint32                          mCachedContentIsPartial   : 1;
@@ -368,8 +367,6 @@ private:
     nsresult WaitForRedirectCallback();
     void PushRedirectAsyncFunc(nsContinueRedirectionFunc func);
     void PopRedirectAsyncFunc(nsContinueRedirectionFunc func);
-
-    friend class HttpChannelCacheEntryClosePreventer;
 };
 
 #endif // nsHttpChannel_h__
