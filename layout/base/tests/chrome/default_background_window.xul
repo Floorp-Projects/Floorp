@@ -18,8 +18,8 @@
     SimpleTest.waitForExplicitFinish();
 
     var imports = [ "SimpleTest", "is", "isnot", "ok" ];
-    for each (var name in imports) {
-      window[name] = window.opener.wrappedJSObject[name];
+    for each (var import in imports) {
+      window[import] = window.opener.wrappedJSObject[import];
     }
     
     function snapshot(win) {

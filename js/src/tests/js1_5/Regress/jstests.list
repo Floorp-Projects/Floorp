@@ -60,6 +60,7 @@ script regress-233483.js
 script regress-234389.js
 script regress-238881.js
 script regress-238945.js
+script regress-240317.js
 script regress-240577.js
 script regress-243174.js
 script regress-243389-n.js

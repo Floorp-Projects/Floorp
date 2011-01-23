@@ -880,9 +880,9 @@ var gSyncSetup = {
   // if no property string is passed in, we clear label/style
   _setFeedback: function (element, success, string) {
     element.hidden = success || !string;
-    let classname = success ? "success" : "error";
+    let class = success ? "success" : "error";
     let image = element.getElementsByAttribute("class", "statusIcon")[0];
-    image.setAttribute("status", classname);
+    image.setAttribute("status", class);
     let label = element.getElementsByAttribute("class", "status")[0];
     label.value = string;
   },
