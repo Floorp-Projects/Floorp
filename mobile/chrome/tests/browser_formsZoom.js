@@ -65,7 +65,7 @@ function isElementVisible(aElement) {
 
   let browser = getBrowser();
   let zoomRect = Rect.fromRect(browser.getBoundingClientRect());
-  let scroll = browser.getPosition();
+  let scroll = browser.getRootView().getPosition();
   let browserRect = new Rect(scroll.x, scroll.y, zoomRect.width, zoomRect.height);
 
   info("CanZoom: " +Browser.selectedTab.allowZoom);

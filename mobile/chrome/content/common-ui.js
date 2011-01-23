@@ -887,7 +887,7 @@ var FormHelperUI = {
     this._currentCaretRect = aCaretRect;
     let caretRect = aCaretRect.clone().scale(browser.scale, browser.scale);
 
-    let scroll = browser.getPosition();
+    let scroll = browser.getRootView().getPosition();
     zoomRect = new Rect(scroll.x, scroll.y, zoomRect.width, zoomRect.height);
     if (zoomRect.contains(caretRect))
       return;
