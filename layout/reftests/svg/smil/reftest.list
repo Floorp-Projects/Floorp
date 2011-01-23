@@ -130,6 +130,12 @@ fails == anim-fillcolor-1.svg      anim-standard-ref.svg # bug 436296
 == anim-pattern-href-01.svg lime.svg
 asserts(9) == anim-use-href-01.svg lime.svg  # the asserts here are bug 563481
 
+# animate the class attribute
+== anim-class-01.svg lime.svg
+== anim-class-02.svg lime.svg
+== anim-class-03.svg lime.svg
+== anim-class-04.svg anim-class-04-ref.svg
+
 # animate with some paint server values
 == anim-paintserver-1.svg anim-paintserver-1-ref.svg
 
