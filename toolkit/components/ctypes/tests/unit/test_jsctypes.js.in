@@ -82,12 +82,12 @@ function do_check_throws(f, type, stack)
   do_throw("expected " + type.name + " exception, none thrown", stack);
 }
 
-function do_check_class(obj, classname, stack)
+function do_check_class(obj, class, stack)
 {
   if (!stack)
     stack = Components.stack.caller;
 
-  do_check_eq(Object.prototype.toString.call(obj), "[object " + classname + "]", stack);
+  do_check_eq(Object.prototype.toString.call(obj), "[object " + class + "]", stack);
 }
 
 function run_test()

@@ -144,7 +144,6 @@ enum TokenKind {
                                            of definitions paired with a parse
                                            tree full of uses of those names */
     TOK_RESERVED,                       /* reserved keywords */
-    TOK_STRICT_RESERVED,                /* reserved keywords in strict mode */
     TOK_LIMIT                           /* domain size */
 };
 

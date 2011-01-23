@@ -4845,8 +4845,7 @@ JS_DecompileScript(JSContext *cx, JSScript *script, const char *name, uintN inde
         str = js_GetPrinterOutput(jp);
     else
         str = NULL;
-    if (!js_DestroyPrinter(jp))
-        return NULL;
+    js_DestroyPrinter(jp);
     return str;
 }
 
