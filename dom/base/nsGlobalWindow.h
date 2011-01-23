@@ -863,6 +863,11 @@ protected:
   // Fast way to tell if this is a chrome window (without having to QI).
   PRPackedBool                  mIsChrome : 1;
 
+  // Hack to indicate whether a chrome window needs its message manager
+  // to be disconnected, since clean up code is shared in the global
+  // window superclass.
+  PRPackedBool                  mCleanMessageManager : 1;
+
   // Indicates that the current document has never received a document focus
   // event.
   PRPackedBool           mNeedsFocus : 1;
@@ -1004,6 +1009,19 @@ public:
     : nsGlobalWindow(aOuterWindow)
   {
     mIsChrome = PR_TRUE;
+    mCleanMessageManager = PR_TRUE;
+  }
+
+  ~nsGlobalChromeWindow()
+  {
+    NS_ABORT_IF_FALSE(mCleanMessageManager,
+                      "chrome windows may always disconnect the msg manager");
+    if (mMessageManager) {
+      static_cast<nsFrameMessageManager *>(
+        mMessageManager.get())->Disconnect();
+    }
+
+    mCleanMessageManager = PR_FALSE;
   }
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsGlobalChromeWindow,
