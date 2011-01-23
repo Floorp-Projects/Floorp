@@ -64,6 +64,7 @@ HttpBaseChannel::HttpBaseChannel()
   , mPriority(PRIORITY_NORMAL)
   , mCaps(0)
   , mRedirectionLimit(gHttpHandler->RedirectionLimit())
+  , mCacheEntryClosePreventionCount(0)
   , mApplyConversion(PR_TRUE)
   , mCanceled(PR_FALSE)
   , mIsPending(PR_FALSE)
@@ -1405,6 +1406,19 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
 
 //------------------------------------------------------------------------------
 
+NS_IMPL_ISUPPORTS0(HttpBaseChannel::CacheEntryClosePreventer)
+
+HttpBaseChannel::CacheEntryClosePreventer::CacheEntryClosePreventer(
+  HttpBaseChannel* channel)
+: mChannel(channel)
+{
+  mChannel->OnIncreaseCacheEntryClosePreventCount();
+}
+
+HttpBaseChannel::CacheEntryClosePreventer::~CacheEntryClosePreventer()
+{
+  mChannel->OnDecreaseCacheEntryClosePreventCount();
+}
+
 }  // namespace net
 }  // namespace mozilla
-

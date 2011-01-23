@@ -70,6 +70,7 @@ namespace net {
 class HttpChannelChild : public PHttpChannelChild
                        , public HttpBaseChannel
                        , public nsICacheInfoChannel
+                       , public nsICacheInfoChannel_GECKO_2_0
                        , public nsIProxiedChannel
                        , public nsITraceableChannel
                        , public nsIApplicationCacheChannel
@@ -82,6 +83,7 @@ class HttpChannelChild : public PHttpChannelChild
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSICACHEINFOCHANNEL
+  NS_DECL_NSICACHEINFOCHANNEL_GECKO_2_0
   NS_DECL_NSIPROXIEDCHANNEL
   NS_DECL_NSITRACEABLECHANNEL
   NS_DECL_NSIAPPLICATIONCACHECONTAINER
@@ -107,6 +109,9 @@ public:
   NS_IMETHOD SetRequestHeader(const nsACString& aHeader, 
                               const nsACString& aValue, 
                               PRBool aMerge);
+  NS_IMETHOD SetResponseHeader(const nsACString& aHeader,
+                               const nsACString& aValue,
+                               PRBool aMerge);
   // nsIHttpChannelInternal
   NS_IMETHOD SetupFallbackChannel(const char *aFallbackKey);
   // nsISupportsPriority
@@ -166,7 +171,11 @@ private:
   PRUint32 mSuspendCount;
 
   bool mIPCOpen;
-  bool mKeptAlive;
+  // Indicates IPDL channel was not deleted during OnStopRequest, because
+  // 1) this a document-level channel (IPDL channel will be deleted during
+  // destructor); or 2) mCacheEntryClosePreventionCount is non-zero (IPDL
+  // channel will be deleted when count hits 0).
+  bool mDeferredIPDLClose;
 
   void OnStartRequest(const nsHttpResponseHead& responseHead,
                           const PRBool& useResponseHead,
@@ -189,6 +198,11 @@ private:
                       const nsHttpResponseHead& responseHead);
   void Redirect3Complete();
   void DeleteSelf();
+
+  void MaybeCloseIPDL(bool forceDocumentLoadDeletion = false);
+
+  virtual void OnIncreaseCacheEntryClosePreventCount();
+  virtual void OnDecreaseCacheEntryClosePreventCount();
 
   friend class StartRequestEvent;
   friend class StopRequestEvent;
