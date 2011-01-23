@@ -844,7 +844,7 @@ js_NewPrinter(JSContext *cx, const char *name, JSFunction *fun,
     return jp;
 }
 
-bool
+JSBool
 js_DestroyPrinter(JSPrinter *jp)
 {
     JS_FinishArenaPool(&jp->pool);
