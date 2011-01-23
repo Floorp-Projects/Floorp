@@ -1043,8 +1043,16 @@ TokenStream::getTokenInternal()
             !(flags & TSF_KEYWORD_IS_NAME) &&
             (kw = FindKeyword(tokenbuf.begin(), tokenbuf.length()))) {
             if (kw->tokentype == TOK_RESERVED) {
-                if (!ReportCompileErrorNumber(cx, this, NULL, JSREPORT_WARNING | JSREPORT_STRICT,
+                if (!ReportCompileErrorNumber(cx, this, NULL, JSREPORT_ERROR,
                                               JSMSG_RESERVED_ID, kw->chars)) {
+                    goto error;
+                }
+            } else if (kw->tokentype == TOK_STRICT_RESERVED) {
+                if (isStrictMode()
+                    ? !ReportStrictModeError(cx, this, NULL, NULL, JSMSG_RESERVED_ID, kw->chars)
+                    : !ReportCompileErrorNumber(cx, this, NULL,
+                                                JSREPORT_STRICT | JSREPORT_WARNING,
+                                                JSMSG_RESERVED_ID, kw->chars)) {
                     goto error;
                 }
             } else if (kw->version <= VersionNumber(version)) {
