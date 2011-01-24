@@ -909,7 +909,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             break;
 
         case 'd':
-            JS_SetDebugMode(cx, JS_TRUE);
+            js_SetDebugMode(cx, JS_TRUE);
             break;
 
         case 'z':
@@ -1658,7 +1658,7 @@ SetDebug(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     }
     
-    JS_SetDebugMode(cx, JSVAL_TO_BOOLEAN(argv[0]));
+    js_SetDebugMode(cx, JSVAL_TO_BOOLEAN(argv[0]));
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return JS_TRUE;
 }

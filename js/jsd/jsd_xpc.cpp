@@ -2507,14 +2507,18 @@ NS_IMETHODIMP
 jsdService::RecompileForDebugMode (JSRuntime *rt, JSBool mode) {
   NS_ASSERTION(NS_IsMainThread(), "wrong thread");
 
-  JSContext *cx = JS_NewContext(rt, 256);
-  if (!cx)
-      return NS_ERROR_FAILURE;
-  JS_BeginRequest(cx);
-  JSBool ok = JS_SetDebugMode(cx, mode);
-  JS_EndRequest(cx);
-  JS_DestroyContext(cx);
-  return ok ? NS_OK : NS_ERROR_FAILURE;
+  JSContext *cx;
+  JSContext *iter = NULL;
+
+  jsword currentThreadId = reinterpret_cast<jsword>(js_CurrentThreadId());
+
+  while ((cx = JS_ContextIterator (rt, &iter))) {
+    if (JS_GetContextThread(cx) == currentThreadId) {
+      JS_SetDebugMode(cx, mode);
+    }
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
