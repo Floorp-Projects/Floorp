@@ -121,7 +121,6 @@ nsHttpChannel::nsHttpChannel()
     , mAsyncCacheOpen(PR_FALSE)
     , mPendingAsyncCallOnResume(nsnull)
     , mSuspendCount(0)
-    , mCacheEntryClosePreventionCount(0)
     , mCachedContentIsValid(PR_FALSE)
     , mCachedContentIsPartial(PR_FALSE)
     , mTransactionReplaced(PR_FALSE)
@@ -136,8 +135,6 @@ nsHttpChannel::nsHttpChannel()
     , mFallingBack(PR_FALSE)
     , mWaitingForRedirectCallback(PR_FALSE)
     , mRequestTimeInitialized(PR_FALSE)
-    , mDeferredCacheEntryClose(PR_FALSE)
-    , mDoomCacheEntryOnClose(PR_FALSE)
 {
     LOG(("Creating nsHttpChannel [this=%p]\n", this));
 }
@@ -2824,33 +2821,11 @@ nsHttpChannel::ReadFromCache()
 void
 nsHttpChannel::CloseCacheEntry(PRBool doomOnFailure)
 {
-    if (!mCacheEntry || mDeferredCacheEntryClose)
+    if (!mCacheEntry)
         return;
 
     LOG(("nsHttpChannel::CloseCacheEntry [this=%p] mStatus=%x mCacheAccess=%x",
          this, mStatus, mCacheAccess));
-
-    mDoomCacheEntryOnClose = doomOnFailure;
-
-    if (mCacheEntryClosePreventionCount) {
-        LOG(("  close is on hold"));
-        mDeferredCacheEntryClose = PR_TRUE;
-        return;
-    }
-
-    CloseCacheEntryInternal();
-}
-
-void
-nsHttpChannel::CloseCacheEntryInternal()
-{
-    LOG(("nsHttpChannel::CloseCacheEntryInternal [this=%p] mStatus=%x mCacheAccess=%x",
-         this, mStatus, mCacheAccess));
-
-    // perform any final cache operations before we close the cache entry.
-    if ((mCacheAccess & nsICache::ACCESS_WRITE) && mRequestTimeInitialized) {
-        FinalizeCacheEntry();
-    }
 
     // If we have begun to create or replace a cache entry, and that cache
     // entry is not complete and not resumable, then it needs to be doomed.
@@ -2860,7 +2835,7 @@ nsHttpChannel::CloseCacheEntryInternal()
     PRBool doom = PR_FALSE;
     if (mInitedCacheEntry) {
         NS_ASSERTION(mResponseHead, "oops");
-        if (NS_FAILED(mStatus) && mDoomCacheEntryOnClose &&
+        if (NS_FAILED(mStatus) && doomOnFailure &&
             (mCacheAccess & nsICache::ACCESS_WRITE) &&
             !mResponseHead->IsResumable())
             doom = PR_TRUE;
@@ -3508,7 +3483,6 @@ NS_INTERFACE_MAP_BEGIN(nsHttpChannel)
     NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
     NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
     NS_INTERFACE_MAP_ENTRY(nsIHttpChannel)
-    NS_INTERFACE_MAP_ENTRY(nsICacheInfoChannel_GECKO_2_0)
     NS_INTERFACE_MAP_ENTRY(nsICacheInfoChannel)
     NS_INTERFACE_MAP_ENTRY(nsICachingChannel)
     NS_INTERFACE_MAP_ENTRY(nsIUploadChannel)
@@ -4038,6 +4012,12 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
     mIsPending = PR_FALSE;
     mStatus = status;
 
+    // perform any final cache operations before we close the cache entry.
+    if (mCacheEntry && (mCacheAccess & nsICache::ACCESS_WRITE) &&
+        mRequestTimeInitialized){
+        FinalizeCacheEntry();
+    }
+    
     if (mListener) {
         LOG(("  calling OnStopRequest\n"));
         mListener->OnStopRequest(this, mListenerContext, status);
@@ -4218,50 +4198,6 @@ nsHttpChannel::SetCacheTokenCachedCharset(const nsACString &aCharset)
 
     return mCacheEntry->SetMetaDataElement("charset",
                                            PromiseFlatCString(aCharset).get());
-}
-
-//-----------------------------------------------------------------------------
-// nsHttpChannel::nsIHttpChannelInternal_GECKO_2_0
-//-----------------------------------------------------------------------------
-
-class HttpChannelCacheEntryClosePreventer : public nsISupports
-{
-public:
-    NS_DECL_ISUPPORTS
-
-    HttpChannelCacheEntryClosePreventer(nsHttpChannel* channel)
-    : mChannel(channel)
-    {
-        ++mChannel->mCacheEntryClosePreventionCount;
-        LOG(("mCacheEntryClosePreventionCount increased to %d, [this=%x]",
-             mChannel->mCacheEntryClosePreventionCount,
-             mChannel.get()));
-    }
-
-private:
-    ~HttpChannelCacheEntryClosePreventer()
-    {
-        --mChannel->mCacheEntryClosePreventionCount;
-        LOG(("mCacheEntryClosePreventionCount decreased to %d, [this=%x]",
-             mChannel->mCacheEntryClosePreventionCount,
-             mChannel.get()));
-
-        if (!mChannel->mCacheEntryClosePreventionCount &&
-            mChannel->mDeferredCacheEntryClose) {
-            mChannel->CloseCacheEntryInternal();
-        }
-    }
-
-    nsRefPtr<nsHttpChannel> mChannel;
-};
-
-NS_IMPL_ISUPPORTS0(HttpChannelCacheEntryClosePreventer)
-
-NS_IMETHODIMP
-nsHttpChannel::GetCacheEntryClosePreventer(nsISupports** _retval)
-{
-    NS_ADDREF(*_retval = new HttpChannelCacheEntryClosePreventer(this));
-    return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
