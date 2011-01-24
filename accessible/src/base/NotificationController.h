@@ -257,6 +257,17 @@ private:
   nsIPresShell* mPresShell;
 
   /**
+   * Indicate whether initial construction of the document's accessible tree
+   * performed or pending. When the document accessible is created then
+   * we construct its initial accessible tree.
+   */
+  enum eTreeConstructedState {
+    eTreeConstructed,
+    eTreeConstructionPending
+  };
+  eTreeConstructedState mTreeConstructedState;
+
+  /**
    * Storage for content inserted notification information.
    */
   class ContentInsertion
