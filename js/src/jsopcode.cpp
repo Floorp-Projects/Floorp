@@ -5098,6 +5098,9 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v_in,
     pc = fp->hasImacropc() ? fp->imacropc() : cx->regs->pc;
     JS_ASSERT(script->code <= pc && pc < script->code + script->length);
 
+    if (pc < script->main)
+        goto do_fallback;
+    
     if (spindex != JSDVG_IGNORE_STACK) {
         jsbytecode **pcstack;
 
