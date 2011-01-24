@@ -865,6 +865,30 @@ JSObject::addPropertyInternal(JSContext *cx, jsid id,
     return NULL;
 }
 
+/*
+ * Check and adjust the new attributes for the shape to make sure that our
+ * slot access optimizations are sound. It is responsibility of the callers to
+ * enforce all restrictions from ECMA-262 v5 8.12.9 [[DefineOwnProperty]].
+ */
+inline bool
+CheckCanChangeAttrs(JSContext *cx, JSObject *obj, const Shape *shape, uintN *attrsp)
+{
+    if (shape->configurable())
+        return true;
+
+    /* A permanent property must stay permanent. */
+    *attrsp |= JSPROP_PERMANENT;
+
+    /* Reject attempts to remove a slot from the permanent data property. */
+    if (shape->isDataDescriptor() && shape->hasSlot() &&
+        (*attrsp & (JSPROP_GETTER | JSPROP_SETTER | JSPROP_SHARED))) {
+        obj->reportNotConfigurable(cx, shape->id);
+        return false;
+    }
+
+    return true;
+}
+
 const Shape *
 JSObject::putProperty(JSContext *cx, jsid id,
                       PropertyOp getter, PropertyOp setter,
@@ -910,6 +934,9 @@ JSObject::putProperty(JSContext *cx, jsid id,
     /* Property exists: search must have returned a valid *spp. */
     JS_ASSERT(!SHAPE_IS_REMOVED(*spp));
 
+    if (!CheckCanChangeAttrs(cx, this, shape, &attrs))
+        return NULL;
+    
     /*
      * If the caller wants to allocate a slot, but doesn't care which slot,
      * copy the existing shape's slot into slot so we can match shape, if all
@@ -1066,6 +1093,10 @@ JSObject::changeProperty(JSContext *cx, const Shape *shape, uintN attrs, uintN m
         getter = NULL;
     if (setter == PropertyStub)
         setter = NULL;
+
+    if (!CheckCanChangeAttrs(cx, this, shape, &attrs))
+        return NULL;
+    
     if (shape->attrs == attrs && shape->getter() == getter && shape->setter() == setter)
         return shape;
 
