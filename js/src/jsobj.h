@@ -1492,6 +1492,15 @@ JS_FRIEND_API(JSBool) js_obj_defineSetter(JSContext *cx, uintN argc, js::Value *
 extern JSObject *
 js_InitObjectClass(JSContext *cx, JSObject *obj);
 
+namespace js {
+JSObject *
+DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAtom *atom,
+                              JSObject *protoProto, Class *clasp,
+                              Native constructor, uintN nargs,
+                              JSPropertySpec *ps, JSFunctionSpec *fs,
+                              JSPropertySpec *static_ps, JSFunctionSpec *static_fs);
+}
+
 extern JSObject *
 js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
              js::Class *clasp, js::Native constructor, uintN nargs,
