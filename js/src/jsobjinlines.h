@@ -1104,7 +1104,7 @@ NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent,
 {
     /* Bootstrap the ur-object, and make it the default prototype object. */
     if (withProto == WithProto::Class && !proto) {
-        if (!FindProto (cx, clasp, parent, &proto))
+        if (!FindProto(cx, clasp, parent, &proto))
           return NULL;
     }
 
@@ -1187,7 +1187,7 @@ NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent)
 }
 
 /*
- * As for js_GetGCObjectKind, where numSlots is a guess at the final size of
+ * As for gc::GetGCObjectKind, where numSlots is a guess at the final size of
  * the object, zero if the final size is unknown.
  */
 static inline gc::FinalizeKind

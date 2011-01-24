@@ -1007,9 +1007,6 @@ GetExceptionProtoKey(intN exn)
 JSObject *
 js_InitExceptionClasses(JSContext *cx, JSObject *obj)
 {
-    jsval roots[3];
-    JSObject *obj_proto, *error_proto;
-
     /*
      * If lazy class initialization occurs for any Error subclass, then all
      * classes are initialized, starting with Error.  To avoid reentry and
@@ -1020,76 +1017,46 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
      * See the equivalent code to ensure that parent_proto is non-null when
      * js_InitClass calls NewObject, in jsobj.cpp.
      */
+    JSObject *obj_proto;
     if (!js_GetClassPrototype(cx, obj, JSProto_Object, &obj_proto))
         return NULL;
 
-    PodArrayZero(roots);
-    AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(roots), Valueify(roots));
-
-#ifdef __GNUC__
-    error_proto = NULL;   /* quell GCC overwarning */
-#endif
-
-    jsval empty = STRING_TO_JSVAL(cx->runtime->emptyString);
-
-    /* Initialize the prototypes first. */
+    /* Define all error constructors. */
+    Value empty = StringValue(cx->runtime->emptyString);
+    jsid nameId = ATOM_TO_JSID(cx->runtime->atomState.nameAtom);
+    jsid messageId = ATOM_TO_JSID(cx->runtime->atomState.messageAtom);
+    jsid fileNameId = ATOM_TO_JSID(cx->runtime->atomState.fileNameAtom);
+    jsid lineNumberId = ATOM_TO_JSID(cx->runtime->atomState.lineNumberAtom);
+    JSObject *error_proto = NULL;
     for (intN i = JSEXN_ERR; i != JSEXN_LIMIT; i++) {
-        /* Make the prototype for the current constructor name. */
+        JSProtoKey protoKey = GetExceptionProtoKey(i);
+        JSAtom *atom = cx->runtime->atomState.classAtoms[protoKey];
         JSObject *proto =
-            NewNonFunction<WithProto::Class>(cx, &js_ErrorClass, (i != JSEXN_ERR) ? error_proto : obj_proto, obj);
+            DefineConstructorAndPrototype(cx, obj, protoKey, atom,
+                                          (i == JSEXN_ERR) ? obj_proto : error_proto,
+                                          &js_ErrorClass, Exception, 1,
+                                          NULL, (i == JSEXN_ERR) ? exception_methods : NULL,
+                                          NULL, NULL);
         if (!proto)
             return NULL;
-        if (i == JSEXN_ERR) {
+        JS_ASSERT(proto->privateData == NULL);
+
+        if (i == JSEXN_ERR)
             error_proto = proto;
-            roots[0] = OBJECT_TO_JSVAL(proto);
-        } else {
-            // We cannot share the root for error_proto and other prototypes
-            // as error_proto must be rooted until the function returns.
-            roots[1] = OBJECT_TO_JSVAL(proto);
-        }
 
-        /* So exn_finalize knows whether to destroy private data. */
-        proto->setPrivate(NULL);
-
-        /* Make a constructor function for the current name. */
-        JSProtoKey protoKey = GetExceptionProtoKey(i);
-        
-        jsid id = ATOM_TO_JSID(cx->runtime->atomState.classAtoms[protoKey]);
-        JSFunction *fun = js_DefineFunction(cx, obj, id, Exception, 1, JSFUN_CONSTRUCTOR);
-        if (!fun)
-            return NULL;
-        roots[2] = OBJECT_TO_JSVAL(FUN_OBJECT(fun));
-
-        /* Make this constructor make objects of class Exception. */
-        FUN_CLASP(fun) = &js_ErrorClass;
-
-        /* Make the prototype and constructor links. */
-        if (!js_SetClassPrototype(cx, FUN_OBJECT(fun), proto,
-                                  JSPROP_READONLY | JSPROP_PERMANENT)) {
-            return NULL;
-        }
-
-        /* Add the name property to the prototype. */
-        if (!JS_DefineProperty(cx, proto, js_name_str, STRING_TO_JSVAL(JSID_TO_STRING(id)),
-                               NULL, NULL, JSPROP_ENUMERATE)) {
-            return NULL;
-        }
-
-        /* Finally, stash the constructor for later uses. */
-        if (!js_SetClassObject(cx, obj, protoKey, FUN_OBJECT(fun), proto))
-            return NULL;
-
-        /* Set default values. */
-        if (!JS_DefineProperty(cx, proto, js_message_str, empty, NULL, NULL, JSPROP_ENUMERATE) ||
-            !JS_DefineProperty(cx, proto, js_fileName_str, empty, NULL, NULL, JSPROP_ENUMERATE) ||
-            !JS_DefineProperty(cx, proto, js_lineNumber_str, JSVAL_ZERO, NULL, NULL,
-                               JSPROP_ENUMERATE)) {
+        /* Add properties to the prototype. */
+        JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_DECLARING);
+        if (!js_DefineNativeProperty(cx, proto, nameId, StringValue(atom),
+                                     PropertyStub, PropertyStub, JSPROP_ENUMERATE, 0, 0, NULL) ||
+            !js_DefineNativeProperty(cx, proto, messageId, empty,
+                                     PropertyStub, PropertyStub, JSPROP_ENUMERATE, 0, 0, NULL) ||
+            !js_DefineNativeProperty(cx, proto, fileNameId, empty,
+                                     PropertyStub, PropertyStub, JSPROP_ENUMERATE, 0, 0, NULL) ||
+            !js_DefineNativeProperty(cx, proto, lineNumberId, Valueify(JSVAL_ZERO),
+                                     PropertyStub, PropertyStub, JSPROP_ENUMERATE, 0, 0, NULL)) {
             return NULL;
         }
     }
-
-    if (!JS_DefineFunctions(cx, error_proto, exception_methods))
-        return NULL;
 
     return error_proto;
 }
