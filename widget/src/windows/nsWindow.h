@@ -332,9 +332,11 @@ protected:
   void                    InvalidateNonClientRegion();
   HRGN                    ExcludeNonClientFromPaintRegion(HRGN aRegion);
 #if !defined(WINCE)
-  static void             InitInputHackDefaults();
+  static void             InitInputWorkaroundPrefDefaults();
 #endif
+  static PRBool           GetInputWorkaroundPref(const char* aPrefName, PRBool aValueIfAutomatic);
   static PRBool           UseTrackPointHack();
+  static void             PerformElantechSwipeGestureHack(UINT& aVirtualKeyCode, nsModifierKeyState& aModKeyState);
   static void             GetMainWindowClass(nsAString& aClass);
   PRBool                  HasGlass() const {
     return mTransparencyMode == eTransparencyGlass ||
@@ -540,6 +542,7 @@ protected:
   static int            sTrimOnMinimize;
   static PRBool         sDefaultTrackPointHack;
   static const char*    sDefaultMainWindowClass;
+  static PRBool         sUseElantechGestureHacks;
   static bool           sAllowD3D9;
 #ifdef MOZ_IPC
   static PRUint32       sOOPPPluginFocusEvent;
