@@ -47,6 +47,7 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 
 const GUID_ANNO = "sync/guid";
+const MOBILE_ANNO = "mobile/bookmarksRoot";
 const PARENT_ANNO = "sync/parent";
 const SERVICE_NOT_SUPPORTED = "Service not supported on this platform";
 const FOLDER_SORTINDEX = 1000000;
@@ -177,28 +178,61 @@ function archiveBookmarks() {
   catch(ex) {}
 }
 
-// Lazily initialize the special top level folders
-let kSpecialIds = {};
-[["menu", "bookmarksMenuFolder"],
- ["places", "placesRoot"],
- ["tags", "tagsFolder"],
- ["toolbar", "toolbarFolder"],
- ["unfiled", "unfiledBookmarksFolder"],
-].forEach(function([guid, placeName]) {
-  Utils.lazy2(kSpecialIds, guid, function() Svc.Bookmark[placeName]);
-});
-Utils.lazy2(kSpecialIds, "mobile", function() {
-  // Use the (one) mobile root if it already exists
-  let anno = "mobile/bookmarksRoot";
-  let root = Svc.Annos.getItemsWithAnnotation(anno, {});
-  if (root.length != 0)
-    return root[0];
+let kSpecialIds = {
 
-  // Create the special mobile folder to store mobile bookmarks
-  let mobile = Svc.Bookmark.createFolder(Svc.Bookmark.placesRoot, "mobile", -1);
-  Utils.anno(mobile, anno, 1);
-  return mobile;
-});
+  // Special IDs. Note that mobile can attempt to create a record on
+  // dereference; special accessors are provided to prevent recursion within
+  // observers.
+  get guids()
+    ["menu", "places", "tags", "toolbar", "unfiled", "mobile"],
+
+  // Create the special mobile folder to store mobile bookmarks.
+  createMobileRoot: function createMobileRoot() {
+    let root = Svc.Bookmark.placesRoot;
+    let mRoot = Svc.Bookmark.createFolder(root, "mobile", -1);
+    Utils.anno(mRoot, MOBILE_ANNO, 1);
+    return mRoot;
+  },
+
+  findMobileRoot: function findMobileRoot(create) {
+    // Use the (one) mobile root if it already exists.
+    let root = Svc.Annos.getItemsWithAnnotation(MOBILE_ANNO, {});
+    if (root.length != 0)
+      return root[0];
+
+    if (create)
+      return this.createMobileRoot();
+
+    return null;
+  },
+
+  // Accessors for IDs.
+  isSpecialGUID: function isSpecialGUID(g) {
+    return this.guids.indexOf(g) != -1;
+  },
+
+  specialIdForGUID: function specialIdForGUID(guid, create) {
+    if (guid == "mobile") {
+      return this.findMobileRoot(create);
+    }
+    return this[guid];
+  },
+
+  // Don't bother creating mobile: if it doesn't exist, this ID can't be it!
+  specialGUIDForId: function specialGUIDForId(id) {
+    for each (let guid in this.guids)
+      if (this.specialIdForGUID(guid, false) == id)
+        return guid;
+    return null;
+  },
+
+  get menu()    Svc.Bookmark.bookmarksMenuFolder,
+  get places()  Svc.Bookmark.placesRoot,
+  get tags()    Svc.Bookmark.tagsFolder,
+  get toolbar() Svc.Bookmark.toolbarFolder,
+  get unfiled() Svc.Bookmark.unfiledBookmarksFolder,
+  get mobile()  this.findMobileRoot(true),
+};
 
 function BookmarksEngine() {
   SyncEngine.call(this, "Bookmarks");
@@ -428,7 +462,7 @@ BookmarksStore.prototype = {
 
 
   itemExists: function BStore_itemExists(id) {
-    return this.idForGUID(id) > 0;
+    return this.idForGUID(id, true) > 0;
   },
 
   applyIncoming: function BStore_applyIncoming(record) {
@@ -1092,9 +1126,9 @@ BookmarksStore.prototype = {
   },
 
   GUIDForId: function GUIDForId(id) {
-    for (let [guid, specialId] in Iterator(kSpecialIds))
-      if (id == specialId)
-         return guid;
+    let special = kSpecialIds.specialGUIDForId(id);
+    if (special)
+      return special;
 
     let stmt = this._guidForIdStm;
     stmt.params.item_id = id;
@@ -1136,9 +1170,11 @@ BookmarksStore.prototype = {
     return this.__idForGUIDStm = stmt;
   },
 
-  idForGUID: function idForGUID(guid) {
-    if (guid in kSpecialIds)
-      return kSpecialIds[guid];
+  // noCreate is provided as an optional argument to prevent the creation of
+  // non-existent special records, such as "mobile".
+  idForGUID: function idForGUID(guid, noCreate) {
+    if (kSpecialIds.isSpecialGUID(guid))
+      return kSpecialIds.specialIdForGUID(guid, !noCreate);
 
     let stmt = this._idForGUIDStm;
     // guid might be a String object rather than a string.
@@ -1174,9 +1210,15 @@ BookmarksStore.prototype = {
 
   _getChildren: function BStore_getChildren(guid, items) {
     let node = guid; // the recursion case
-    if (typeof(node) == "string") // callers will give us the guid as the first arg
-      node = this._getNode(this.idForGUID(guid));
-
+    if (typeof(node) == "string") { // callers will give us the guid as the first arg
+      let nodeID = this.idForGUID(guid, true);
+      if (!nodeID) {
+        this._log.debug("No node for GUID " + guid + "; returning no children.");
+        return items;
+      }
+      node = this._getNode(nodeID);
+    }
+    
     if (node.type == node.RESULT_TYPE_FOLDER &&
         !this._ls.isLivemark(node.itemId)) {
       node.QueryInterface(Ci.nsINavHistoryQueryResultNode);
@@ -1208,9 +1250,10 @@ BookmarksStore.prototype = {
   getAllIDs: function BStore_getAllIDs() {
     let items = {"menu": true,
                  "toolbar": true};
-    for (let [guid, id] in Iterator(kSpecialIds))
+    for each (let guid in kSpecialIds.guids) {
       if (guid != "places" && guid != "tags")
         this._getChildren(guid, items);
+    }
     return items;
   },
 
@@ -1218,9 +1261,12 @@ BookmarksStore.prototype = {
     // Save a backup before clearing out all bookmarks
     archiveBookmarks();
 
-    for (let [guid, id] in Iterator(kSpecialIds))
-      if (guid != "places")
-        this._bms.removeFolderChildren(id);
+    for each (let guid in kSpecialIds.guids)
+      if (guid != "places") {
+        let id = kSpecialIds.specialIdForGUID(guid);
+        if (id)
+          this._bms.removeFolderChildren(id);
+      }
   }
 };
 
