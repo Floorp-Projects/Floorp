@@ -2311,6 +2311,8 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
     JS_ASSERT(globalObj->hasOwnShape());
     JS_ASSERT(cx->regs->pc == (jsbytecode*)fragment->ip);
 
+    JS_THREAD_DATA(cx)->tracerCompartment = cx->compartment;
+
 #ifdef DEBUG
     lirbuf->printer = new (tempAlloc()) LInsPrinter(tempAlloc(), TM_NUM_USED_ACCS);
 #endif
@@ -2460,6 +2462,8 @@ TraceRecorder::~TraceRecorder()
     /* Should already have been adjusted by callers before calling delete. */
     JS_ASSERT(traceMonitor->recorder != this);
 
+    JS_THREAD_DATA(cx)->tracerCompartment = NULL;
+    
     if (trashSelf)
         TrashTree(fragment->root);
 
@@ -6322,9 +6326,6 @@ public:
 JS_REQUIRES_STACK TreeFragment*
 TraceRecorder::findNestedCompatiblePeer(TreeFragment* f)
 {
-    TraceMonitor* tm;
-
-    tm = &JS_TRACE_MONITOR(cx);
     unsigned int ngslots = tree->globalSlots->length();
 
     for (; f != NULL; f = f->peer) {
@@ -6489,6 +6490,8 @@ TracerState::TracerState(JSContext* cx, TraceMonitor* tm, TreeFragment* f,
     prev = tm->tracerState;
     tm->tracerState = this;
 
+    JS_THREAD_DATA(cx)->tracerCompartment = cx->compartment;
+
     JS_ASSERT(eos == stackBase + MAX_NATIVE_STACK_SLOTS);
     JS_ASSERT(sp < eos);
 
@@ -6517,6 +6520,8 @@ TracerState::~TracerState()
     TraceMonitor *tm = &JS_TRACE_MONITOR(cx);
     tm->tracerState = prev;
     tm->tracecx = NULL;
+
+    JS_THREAD_DATA(cx)->tracerCompartment = NULL;
 }
 
 /* Call |f|, return the exit taken. */
@@ -16902,6 +16907,14 @@ LookupLoopProfile(JSContext *cx, jsbytecode *pc)
         return NULL;
 }
 
+static void
+StopProfiling(JSContext *cx)
+{
+    TraceMonitor* tm = &JS_TRACE_MONITOR(cx);
+    tm->profile = NULL;
+    JS_THREAD_DATA(cx)->tracerCompartment = NULL;
+}
+
 JS_REQUIRES_STACK TracePointAction
 MonitorTracePoint(JSContext *cx, uintN& inlineCallCount, bool* blacklist,
                   void** traceData, uintN *traceEpoch, uint32 *loopCounter, uint32 hits)
@@ -16945,6 +16958,8 @@ MonitorTracePoint(JSContext *cx, uintN& inlineCallCount, bool* blacklist,
 
     tm->profile = prof;
 
+    JS_THREAD_DATA(cx)->tracerCompartment = cx->compartment;
+
     if (!Interpret(cx, cx->fp(), inlineCallCount, JSINTERP_PROFILE))
         return TPA_Error;
 
@@ -16979,7 +16994,7 @@ LoopProfile::profileOperation(JSContext* cx, JSOp op)
     TraceMonitor* tm = &JS_TRACE_MONITOR(cx);
 
     if (profiled) {
-        tm->profile = NULL;
+        StopProfiling(cx);
         return ProfComplete;
     }
 
@@ -16991,7 +17006,7 @@ LoopProfile::profileOperation(JSContext* cx, JSOp op)
         debug_only_printf(LC_TMProfiler, "Profiling complete (loop exit) at line %u\n",
                           js_FramePCToLineNumber(cx, cx->fp()));
         tm->profile->decide(cx);
-        tm->profile = NULL;
+        StopProfiling(cx);
         return ProfComplete;
     }
 
@@ -17005,7 +17020,7 @@ LoopProfile::profileOperation(JSContext* cx, JSOp op)
             if (loopStackDepth == PROFILE_MAX_INNER_LOOPS) {
                 debug_only_print0(LC_TMProfiler, "Profiling complete (maxnest)\n");
                 tm->profile->decide(cx);
-                tm->profile = NULL;
+                StopProfiling(cx);
                 return ProfComplete;
             }
 
@@ -17089,7 +17104,7 @@ LoopProfile::profileOperation(JSContext* cx, JSOp op)
     if (numAllOps >= MAX_PROFILE_OPS) {
         debug_only_print0(LC_TMProfiler, "Profiling complete (maxops)\n");
         tm->profile->decide(cx);
-        tm->profile = NULL;
+        StopProfiling(cx);
         return ProfComplete;
     }
 
@@ -17351,7 +17366,7 @@ AbortProfiling(JSContext *cx)
     tm->profile->profiled = true;
     tm->profile->traceOK = false;
     tm->profile->execOK = false;
-    tm->profile = NULL;
+    StopProfiling(cx);
 }
 
 #else /* JS_METHODJIT */
