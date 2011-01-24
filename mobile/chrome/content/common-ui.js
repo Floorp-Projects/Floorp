@@ -966,7 +966,7 @@ var ContextHelper = {
     let last = null;
     let commands = document.getElementById("context-commands");
     for (let i=0; i<commands.childElementCount; i++) {
-      let command = commands.children[i];
+      let command = commands.childNodes[i];
       command.removeAttribute("selector");
       command.hidden = true;
 
