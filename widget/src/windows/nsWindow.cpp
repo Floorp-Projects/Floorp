@@ -299,6 +299,8 @@ int             nsWindow::sTrimOnMinimize         = 2;
 PRBool          nsWindow::sDefaultTrackPointHack  = PR_FALSE;
 // Default value for general window class (used when the pref is the empty string).
 const char*     nsWindow::sDefaultMainWindowClass = kClassNameGeneral;
+// Whether to enable the Elantech gesture hack.
+PRBool          nsWindow::sUseElantechGestureHacks = PR_FALSE;
 
 // If we're using D3D9, this will not be allowed during initial 5 seconds.
 bool            nsWindow::sAllowD3D9              = false;
@@ -470,7 +472,7 @@ nsWindow::nsWindow() : nsBaseWidget()
 #endif
 
 #if !defined(WINCE)
-    InitInputHackDefaults();
+    InitInputWorkaroundPrefDefaults();
 #endif
 
     // Init titlebar button info for custom frames.
@@ -6753,6 +6755,37 @@ PRBool nsWindow::IsRedirectedKeyDownMessage(const MSG &aMsg)
           GetScanCode(sRedirectedKeyDown.lParam) == GetScanCode(aMsg.lParam));
 }
 
+void
+nsWindow::PerformElantechSwipeGestureHack(UINT& aVirtualKeyCode,
+                                          nsModifierKeyState& aModKeyState)
+{
+  // The Elantech touchpad driver understands three-finger swipe left and
+  // right gestures, and translates them into Page Up and Page Down key
+  // events for most applications.  For Firefox 3.6, it instead sends
+  // Alt+Left and Alt+Right to trigger browser back/forward actions.  As
+  // with the Thinkpad Driver hack in nsWindow::Create, the change in
+  // HWND structure makes Firefox not trigger the driver's heuristics
+  // any longer.
+  //
+  // The Elantech driver actually sends these messages for a three-finger
+  // swipe right:
+  //
+  //   WM_KEYDOWN virtual_key = 0xCC or 0xFF (depending on driver version)
+  //   WM_KEYDOWN virtual_key = VK_NEXT
+  //   WM_KEYUP   virtual_key = VK_NEXT
+  //   WM_KEYUP   virtual_key = 0xCC or 0xFF
+  //
+  // so we use the 0xCC or 0xFF key modifier to detect whether the Page Down
+  // is due to the gesture rather than a regular Page Down keypress.  We then
+  // pretend that we were went an Alt+Right keystroke instead.  Similarly
+  // for VK_PRIOR and Alt+Left.
+  if ((aVirtualKeyCode == VK_NEXT || aVirtualKeyCode == VK_PRIOR) &&
+      (IS_VK_DOWN(0xFF) || IS_VK_DOWN(0xCC))) {
+    aModKeyState.mIsAltDown = true;
+    aVirtualKeyCode = aVirtualKeyCode == VK_NEXT ? VK_RIGHT : VK_LEFT;
+  }
+}
+
 /**
  * nsWindow::OnKeyDown peeks into the message queue and pulls out
  * WM_CHAR messages for processing. During testing we don't want to
@@ -6772,6 +6805,10 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
 #ifndef WINCE
   gKbdLayout.OnKeyDown(virtualKeyCode);
 #endif
+
+  if (sUseElantechGestureHacks) {
+    PerformElantechSwipeGestureHack(virtualKeyCode, aModKeyState);
+  }
 
   // Use only DOMKeyCode for XP processing.
   // Use virtualKeyCode for gKbdLayout and native processing.
@@ -7122,6 +7159,10 @@ LRESULT nsWindow::OnKeyUp(const MSG &aMsg,
                           PRBool *aEventDispatched)
 {
   UINT virtualKeyCode = aMsg.wParam;
+
+  if (sUseElantechGestureHacks) {
+    PerformElantechSwipeGestureHack(virtualKeyCode, aModKeyState);
+  }
 
   PR_LOG(gWindowsLog, PR_LOG_ALWAYS,
          ("nsWindow::OnKeyUp VK=%d\n", virtualKeyCode));
@@ -8821,13 +8862,28 @@ void nsWindow::GetMainWindowClass(nsAString& aClass)
   aClass.AssignASCII(sDefaultMainWindowClass);
 }
 
-PRBool nsWindow::UseTrackPointHack()
+/**
+ * Gets the Boolean value of a pref used to enable or disable an input
+ * workaround (like the Trackpoint hack).  The pref can take values 0 (for
+ * disabled), 1 (for enabled) or -1 (to automatically detect whether to
+ * enable the workaround).
+ *
+ * @param aPrefName The name of the pref.
+ * @param aValueIfAutomatic Whether the given input workaround should be
+ *   enabled by default.
+ */
+PRBool nsWindow::GetInputWorkaroundPref(const char* aPrefName,
+                                        PRBool aValueIfAutomatic)
 {
+  if (!aPrefName) {
+    return aValueIfAutomatic;
+  }
+
   nsresult rv;
   nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
   if (NS_SUCCEEDED(rv) && prefs) {
     PRInt32 lHackValue;
-    rv = prefs->GetIntPref("ui.trackpoint_hack.enabled", &lHackValue);
+    rv = prefs->GetIntPref(aPrefName, &lHackValue);
     if (NS_SUCCEEDED(rv)) {
       switch (lHackValue) {
         case 0: // disabled
@@ -8839,12 +8895,18 @@ PRBool nsWindow::UseTrackPointHack()
       }
     }
   }
-  return sDefaultTrackPointHack;
+  return aValueIfAutomatic;
+}
+
+PRBool nsWindow::UseTrackPointHack()
+{
+  return GetInputWorkaroundPref("ui.trackpoint_hack.enabled",
+                                sDefaultTrackPointHack);
 }
 
 #if !defined(WINCE)
 static PRBool
-HasRegistryKey(HKEY aRoot, LPCWSTR aName)
+HasRegistryKey(HKEY aRoot, PRUnichar* aName)
 {
   HKEY key;
   LONG result = ::RegOpenKeyExW(aRoot, aName, 0, KEY_READ, &key);
@@ -8854,28 +8916,91 @@ HasRegistryKey(HKEY aRoot, LPCWSTR aName)
   return PR_TRUE;
 }
 
+/**
+ * Gets the value of a string-typed registry value.
+ *
+ * @param aRoot The registry root to search in.
+ * @param aKeyName The name of the registry key to open.
+ * @param aValueName The name of the registry value in the specified key whose
+ *   value is to be retrieved.  Can be null, to retrieve the key's unnamed/
+ *   default value.
+ * @param aBuffer The buffer into which to store the string value.  Can be null,
+ *   in which case the return value indicates just whether the value exists.
+ * @param aBufferLength The size of aBuffer, in bytes.
+ * @return Whether the value exists and is a string.
+ */
 static PRBool
-IsObsoleteSynapticsDriver()
+GetRegistryKey(HKEY aRoot, PRUnichar* aKeyName, PRUnichar* aValueName, PRUnichar* aBuffer, DWORD aBufferLength)
 {
+  if (!aKeyName) {
+    return PR_FALSE;
+  }
+
   HKEY key;
-  LONG result = ::RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-      L"Software\\Synaptics\\SynTP\\Install", 0, KEY_READ, &key);
+  LONG result = ::RegOpenKeyExW(aRoot, aKeyName, NULL, KEY_READ, &key);
   if (result != ERROR_SUCCESS)
     return PR_FALSE;
   DWORD type;
-  PRUnichar buf[40];
-  DWORD buflen = sizeof(buf);
-  result = ::RegQueryValueExW(key, L"DriverVersion", NULL, &type, (BYTE*)buf, &buflen);
+  result = ::RegQueryValueExW(key, aValueName, NULL, &type, (BYTE*) aBuffer, &aBufferLength);
   ::RegCloseKey(key);
   if (result != ERROR_SUCCESS || type != REG_SZ)
     return PR_FALSE;
-  buf[NS_ARRAY_LENGTH(buf) - 1] = 0;
+  if (aBuffer)
+    aBuffer[aBufferLength - 1] = 0;
+  return PR_TRUE;
+}
+
+static PRBool
+IsObsoleteSynapticsDriver()
+{
+  PRUnichar buf[40];
+  PRBool foundKey = GetRegistryKey(HKEY_LOCAL_MACHINE,
+                                   L"Software\\Synaptics\\SynTP\\Install",
+                                   L"DriverVersion",
+                                   buf,
+                                   sizeof buf);
+  if (!foundKey)
+    return PR_FALSE;
 
   int majorVersion = wcstol(buf, NULL, 10);
   return majorVersion < 15;
 }
 
-void nsWindow::InitInputHackDefaults()
+static PRBool
+IsObsoleteElantechDriver()
+{
+  PRUnichar buf[40];
+  // The driver version is found in one of these two registry keys.
+  PRBool foundKey = GetRegistryKey(HKEY_CURRENT_USER,
+                                   L"Software\\Elantech\\MainOption",
+                                   L"DriverVersion",
+                                   buf,
+                                   sizeof buf);
+  if (!foundKey)
+    foundKey = GetRegistryKey(HKEY_CURRENT_USER,
+                              L"Software\\Elantech",
+                              L"DriverVersion",
+                              buf,
+                              sizeof buf);
+
+  if (!foundKey)
+    return PR_FALSE;
+
+  // Assume that the major version number can be found just after a space
+  // or at the start of the string.
+  for (PRUnichar* p = buf; *p; p++) {
+    if (*p >= L'0' && *p <= L'9' && (p == buf || *(p - 1) == L' ')) {
+      int majorVersion = wcstol(p, NULL, 10);
+      // Version 7 needs the hack.
+      if (majorVersion == 7)
+        return PR_TRUE;
+    }
+  }
+
+  return PR_FALSE;
+}
+
+void nsWindow::InitInputWorkaroundPrefDefaults()
 {
   if (HasRegistryKey(HKEY_CURRENT_USER, L"Software\\Lenovo\\TrackPoint")) {
     sDefaultTrackPointHack = PR_TRUE;
@@ -8888,6 +9013,10 @@ void nsWindow::InitInputHackDefaults()
               IsObsoleteSynapticsDriver()) {
     sDefaultTrackPointHack = PR_TRUE;
   }
+
+  sUseElantechGestureHacks =
+    GetInputWorkaroundPref("ui.elantech_gesture_hacks.enabled",
+                           IsObsoleteElantechDriver());
 }
 #endif // #if !defined(WINCE)
 
