@@ -1813,6 +1813,11 @@ pref("ui.trackpoint_hack.enabled", -1);
 // some trackpad drivers behave better.
 pref("ui.window_class_override", "");
 
+// Enables or disables the Elantech gesture hacks.  -1 is autodetect, 0 is off,
+// and 1 is on.  Set this to 1 if three-finger swipe gestures do not cause
+// page back/forward actions, or if pinch-to-zoom does not work.
+pref("ui.elantech_gesture_hacks.enabled", -1);
+
 # WINNT
 #endif
 
