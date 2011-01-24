@@ -2033,8 +2033,9 @@ error:
 
 /*
  * Since this function is only called in the context of a pending exception,
- * the caller must subsequently take an error path. If wrapping fails, it will
- * set a new (uncatchable) exception to be used in place of the original.
+ * the caller must subsequently take an error path. If wrapping fails, we leave
+ * the exception cleared, which, in the context of an error path, will be
+ * interpreted as an uncatchable exception.
  */
 void
 JSContext::wrapPendingException()
