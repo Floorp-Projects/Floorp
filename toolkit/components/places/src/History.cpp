@@ -521,6 +521,58 @@ private:
 };
 
 /**
+ * Checks to see if we can add aURI to history, and dispatches an error to
+ * aCallback (if provided) if we cannot.
+ *
+ * @param aURI
+ *        The URI to check.
+ * @param [optional] aGUID
+ *        The guid of the URI to check.  This is passed back to the callback.
+ * @param [optional] aPlaceId
+ *        The placeId of the URI to check.  This is passed back to the callback.
+ * @param [optional] aCallback
+ *        The callback to notify if the URI cannot be added to history.
+ * @return true if the URI can be added to history, false otherwise.
+ */
+bool
+CanAddURI(nsIURI* aURI,
+          const nsCString& aGUID = EmptyCString(),
+          PRInt64 aPlaceId = 0,
+          mozIVisitInfoCallback* aCallback = NULL)
+{
+  nsNavHistory* navHistory = nsNavHistory::GetHistoryService();
+  NS_ENSURE_TRUE(navHistory, false);
+
+  PRBool canAdd;
+  nsresult rv = navHistory->CanAddURI(aURI, &canAdd);
+  if (NS_SUCCEEDED(rv) && canAdd) {
+    return true;
+  };
+
+  // We cannot add the URI.  Notify the callback, if we were given one.
+  if (aCallback) {
+    // NotifyCompletion does not hold a strong reference to the callback, so we
+    // have to manage it by AddRefing now and then releasing it after the event
+    // has run.
+    NS_ADDREF(aCallback);
+
+    VisitData place(aURI);
+    place.guid = aGUID;
+    place.placeId = aPlaceId;
+    nsCOMPtr<nsIRunnable> event =
+      new NotifyCompletion(aCallback, place, NS_ERROR_INVALID_ARG);
+    (void)NS_DispatchToMainThread(event);
+
+    // Also dispatch an event to release our reference to the callback after
+    // NotifyCompletion has run.
+    nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+    (void)NS_ProxyRelease(mainThread, aCallback, PR_TRUE);
+  }
+
+  return false;
+}
+
+/**
  * Adds a visit to the database.
  */
 class InsertVisitedURIs : public nsRunnable
@@ -624,6 +676,13 @@ private:
       if (mPlaces[i].sessionId <= 0) {
         mPlaces[i].sessionId = navHistory->GetNewSessionID();
       }
+
+#ifdef DEBUG
+      nsCOMPtr<nsIURI> uri;
+      (void)NS_NewURI(getter_AddRefs(uri), mPlaces[i].spec);
+      NS_ASSERTION(CanAddURI(uri),
+                   "Passed a VisitData with a URI we cannot add to history!");
+#endif
     }
 
     // We AddRef on the main thread, and release it when we are destroyed.
@@ -1787,6 +1846,12 @@ History::UpdatePlaces(const jsval& aPlaceInfos,
       }
     }
 
+    // Make sure that any uri we are given can be added to history, and if not,
+    // skip it (CanAddURI will notify our callback for us).
+    if (uri && !CanAddURI(uri, guid, placeId, aCallback)) {
+      continue;
+    }
+
     // We must have at least one of uri, valid id, or guid.
     NS_ENSURE_ARG(uri || placeId > 0 || !guid.IsVoid());
 
@@ -1868,11 +1933,16 @@ History::UpdatePlaces(const jsval& aPlaceInfos,
     }
   }
 
-  mozIStorageConnection* dbConn = GetDBConn();
-  NS_ENSURE_STATE(dbConn);
+  // It is possible that all of the visits we were passed were dissallowed by
+  // CanAddURI, which isn't an error.  If we have no visits to add, however,
+  // we should not call InsertVisitedURIs::Start.
+  if (visitData.Length()) {
+    mozIStorageConnection* dbConn = GetDBConn();
+    NS_ENSURE_STATE(dbConn);
 
-  nsresult rv = InsertVisitedURIs::Start(dbConn, visitData, aCallback);
-  NS_ENSURE_SUCCESS(rv, rv);
+    nsresult rv = InsertVisitedURIs::Start(dbConn, visitData, aCallback);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   return NS_OK;
 }
