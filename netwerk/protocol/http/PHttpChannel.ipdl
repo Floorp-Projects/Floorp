@@ -86,6 +86,7 @@ parent:
   SetPriority(PRUint16 priority);
 
   SetCacheTokenCachedCharset(nsCString charset);
+  SetResponseHeader(nsCString header, nsCString value, bool merge);
 
   UpdateAssociatedContentSecurity(PRInt32 high,
                                   PRInt32 low,

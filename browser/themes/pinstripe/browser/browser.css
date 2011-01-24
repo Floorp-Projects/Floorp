@@ -886,15 +886,15 @@ toolbar[mode="icons"] #zoom-in-button {
   max-width: 20em;
 }
 
-#urlbar-display {
-  margin-top: -3px;
-  margin-bottom: -2px;
-  padding-top: 3px;
-  padding-bottom: 2px;
-  -moz-padding-end: 3px;
-  color: GrayText;
+#urlbar-display-box {
   -moz-border-end: 1px solid #AAA;
   -moz-margin-end: 3px;
+}
+
+#urlbar-display {
+  margin-top: 0;
+  margin-bottom: 0;
+  color: GrayText;
 }
 
 #PopupAutoCompleteRichResult {
@@ -1421,12 +1421,12 @@ sidebarheader {
   -moz-border-end: 1px solid #404040;
   min-width: 1px;
   width: 1px;
-  background-image: none !important;       
-} 
+  background-image: none !important;
+}
 
 #sidebar-title {
   color: #535f6d;
-  font-weight: bold;  
+  font-weight: bold;
 }
 
 #sidebar-throbber[loading="true"] {

@@ -6269,13 +6269,15 @@ get_inner_gdk_window (GdkWindow *aWindow,
         GList * child = g_list_nth(children, num - i - 1) ;
         if (child) {
             GdkWindow * childWindow = (GdkWindow *) child->data;
-            gdk_window_get_geometry (childWindow, &cx, &cy, &cw, &ch, &cd);
-            if ((cx < x) && (x < (cx + cw)) &&
-                (cy < y) && (y < (cy + ch)) &&
-                gdk_window_is_visible (childWindow)) {
-                return get_inner_gdk_window (childWindow,
-                                             x - cx, y - cy,
-                                             retx, rety);
+            if (get_window_for_gdk_window(childWindow)) {
+                gdk_window_get_geometry (childWindow, &cx, &cy, &cw, &ch, &cd);
+                if ((cx < x) && (x < (cx + cw)) &&
+                    (cy < y) && (y < (cy + ch)) &&
+                    gdk_window_is_visible (childWindow)) {
+                    return get_inner_gdk_window (childWindow,
+                                                 x - cx, y - cy,
+                                                 retx, rety);
+                }
             }
         }
     }

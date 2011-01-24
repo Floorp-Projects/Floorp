@@ -186,10 +186,30 @@ public:
         PRPackedBool mReady;
     };
 
-    nsHttpResponseHead * GetResponseHead() const { return mResponseHead; }
-    nsHttpRequestHead * GetRequestHead() { return &mRequestHead; }
+  nsHttpResponseHead * GetResponseHead() const { return mResponseHead; }
+  nsHttpRequestHead * GetRequestHead() { return &mRequestHead; }
 
 protected:
+  // Increment/decrement counter that, when positive, keeps channel's cache
+  // entry open after OnStopRequest if needed.
+
+  virtual void OnIncreaseCacheEntryClosePreventCount() = 0;
+  virtual void OnDecreaseCacheEntryClosePreventCount() = 0;
+
+  // Object created and returned on every call to cacheEntryClosePreventer
+  // attribute.  Calls the two methods right above in its constructor and
+  // destructor respectively.
+
+  class CacheEntryClosePreventer : public nsISupports
+  {
+  public:
+      NS_DECL_ISUPPORTS
+      CacheEntryClosePreventer(HttpBaseChannel* channel);
+  private:
+      ~CacheEntryClosePreventer();
+      nsRefPtr<HttpBaseChannel> mChannel;
+  };
+
   nsresult ApplyContentConversions();
 
   void AddCookiesToRequest();
@@ -237,6 +257,10 @@ protected:
   PRInt16                           mPriority;
   PRUint8                           mCaps;
   PRUint8                           mRedirectionLimit;
+
+  // Keeps the number of CacheEntryClosePreventer objects being held,
+  // positive value prevents the cache entry from release in OnStopRequest.
+  PRUint32                          mCacheEntryClosePreventionCount;
 
   PRUint32                          mApplyConversion            : 1;
   PRUint32                          mCanceled                   : 1;

@@ -99,6 +99,9 @@ protected:
   virtual bool RecvConnectChannel(const PRUint32& channelId);
   virtual bool RecvSetPriority(const PRUint16& priority);
   virtual bool RecvSetCacheTokenCachedCharset(const nsCString& charset);
+  virtual bool RecvSetResponseHeader(const nsCString& header,
+                                     const nsCString& value,
+                                     const bool& merge);
   virtual bool RecvSuspend();
   virtual bool RecvResume();
   virtual bool RecvCancel(const nsresult& status);
@@ -119,7 +122,7 @@ protected:
 
 private:
   nsCOMPtr<nsIChannel> mChannel;
-  nsCOMPtr<nsICacheEntryDescriptor> mCacheDescriptor;
+  nsCOMPtr<nsISupports> mCacheClosePreventer;
   bool mIPCClosed;                // PHttpChannel actor has been Closed()
 
   nsCOMPtr<nsIChannel> mRedirectChannel;

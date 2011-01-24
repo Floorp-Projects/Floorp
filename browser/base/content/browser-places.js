@@ -348,10 +348,8 @@ var PlacesCommandHook = {
       if (starIcon && isElementVisible(starIcon)) {
         // Make sure the bookmark properties dialog hangs toward the middle of
         // the location bar in RTL builds
-        var position = (getComputedStyle(gNavToolbox, "").direction == "rtl") ?
-          'bottomcenter topleft' : 'bottomcenter topright';
         if (aShowEditUI)
-          StarUI.showEditBookmarkPopup(itemId, starIcon, position);
+          StarUI.showEditBookmarkPopup(itemId, starIcon, "bottomcenter topright");
         return;
       }
     }
