@@ -4829,6 +4829,7 @@ mjit::Compiler::jsop_tableswitch(jsbytecode *pc)
 {
 #if defined JS_CPU_ARM
     JS_NOT_REACHED("Implement jump(BaseIndex) for ARM");
+    return true;
 #else
     jsbytecode *originalPC = pc;
 
