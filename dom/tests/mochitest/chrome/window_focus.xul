@@ -803,6 +803,39 @@ function startTest()
   expectFocusShift(function () synthesizeKey("VK_TAB", { shiftKey: true }),
                    null, textbox1.inputField, true, "shift+tab on textbox with tabindex set");
 
+  // ---- test for bug 618907 which ensures that canceling the mousedown event still focuses the
+  //      right frame
+
+  var childContentFrame = document.getElementById("ifa")
+  childContentFrame.style.MozUserFocus = "";
+
+  var frab = childContentFrame.contentDocument.getElementById("fra-b");
+  var mouseDownListener = function(event) event.preventDefault();
+  frab.addEventListener("mousedown", mouseDownListener, false);
+
+  var childElementToFocus = childContentFrame.contentDocument.getElementById("fra");
+  gLastFocus = childElementToFocus;
+  gLastFocusWindow = childContentFrame.contentWindow;
+  gLastFocus.focus();
+  gEvents = "";
+
+  setFocusTo("t1", window);
+
+  gLastFocusMethod = -1;
+  expectFocusShift(function () synthesizeMouse(frab, 5, 5, { }, childContentFrame.contentWindow),
+                   null, childElementToFocus, true,
+                   "mousedown event canceled - chrome to content");
+
+  frab.removeEventListener("mousedown", mouseDownListener, false);
+
+  var t5 = getById("t5");
+  t5.addEventListener("mousedown", mouseDownListener, false);
+  synthesizeMouse(t5, 10, 10, { })
+  t5.removeEventListener("mousedown", mouseDownListener, false);
+  is(fm.focusedElement, childElementToFocus,
+     "mousedown event cancelled - content to chrome - element");
+  is(fm.focusedWindow, childContentFrame.contentWindow, "mousedown event cancelled - content to chrome - window");
+
   // ---- test to check that refocusing an element during a blur event doesn't succeed
 
   var t1 = getById("t1");
@@ -1667,8 +1700,8 @@ SimpleTest.waitForFocus(startTest);
 <checkbox id="n2"/><checkbox id="n4"/><checkbox id="n6"/><checkbox id="n8"/><checkbox id="n10"/><checkbox id="n12"/>
 <listbox id="last" width="20" rows="1"/>
 
-<iframe id="ifa" width="20" height="20" style="-moz-user-focus: ignore;"
-        src="data:text/html,&lt;input id=fra&gt;
+<iframe id="ifa" width="40" height="60" style="-moz-user-focus: ignore;" type="content"
+        src="data:text/html,&lt;input id=fra size='2'&gt;&lt;input id='fra-b' size='2'&gt;
         &lt;iframe src='data:text/html,&lt;input id=frc&gt;&lt;iframe src=&quot;data:text/html,&lt;input id=frd&gt;&quot;&gt;&lt;/iframe&gt;'&gt;&lt;/iframe&gt;"/>
 <iframe id="ifb" width="20" height="20" style="-moz-user-focus: ignore;"
         src="data:text/html,&lt;input id=frd&gt;&lt;/iframe&gt;"/>
