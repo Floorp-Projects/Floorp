@@ -815,6 +815,17 @@ private:
 
 } /* namespace js */
 
+/*
+ * N.B. JS_ON_TRACE(cx) is true if JIT code is on the stack in the current
+ * thread, regardless of whether cx is the context in which that trace is
+ * executing.  cx must be a context on the current thread.
+ */
+#ifdef JS_TRACER
+# define JS_ON_TRACE(cx)            (cx->compartment && JS_TRACE_MONITOR(cx).ontrace())
+#else
+# define JS_ON_TRACE(cx)            false
+#endif
+
 #ifdef DEBUG
 # define FUNCTION_KIND_METER_LIST(_)                                          \
                         _(allfun), _(heavy), _(nofreeupvar), _(onlyfreevar),  \
@@ -848,18 +859,6 @@ struct JSThreadData {
     unsigned            requestDepth;
 #endif
 
-#ifdef JS_TRACER
-    /*
-     * During trace execution (or during trace recording or
-     * profiling), this field points to the compartment doing the
-     * execution on this thread. At other times, it is NULL.  If a
-     * thread tries to execute/record/profile one trace while another
-     * is still running, the initial one will abort. Therefore, we
-     * only need to track one tracerCompartment at a time.
-     */
-    JSCompartment       *tracerCompartment;
-#endif
-    
     /*
      * If non-zero, we were been asked to call the operation callback as soon
      * as possible.  If the thread has an active request, this contributes
