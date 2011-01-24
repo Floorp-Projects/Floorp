@@ -67,8 +67,7 @@ interface nsICacheInfoChannel_GECKO_2_0 : nsISupports
    * Return an object that while not released prevents the channel from
    * releasing the cache entry after all work on it has been done.  Used by
    * asynchronous consumers that needs to work with the cache entry long after
-   * onStopRequest has been called.  Must be acquired no later than during
-   * onStopRequest.
+   * onStopRequest has been called.
    */
   readonly attribute nsISupports cacheEntryClosePreventer;
 };
