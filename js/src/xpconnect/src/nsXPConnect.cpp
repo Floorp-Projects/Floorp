@@ -2508,7 +2508,8 @@ nsXPConnect::Push(JSContext * cx)
                 break;
             }
         }
-        if (!runningJS)
+        /* Turning debugging off is immediate even if JS is running */
+        if (!runningJS || !gDesiredDebugMode)
             CheckForDebugMode(mRuntime->GetJSRuntime());
     }
 
@@ -2777,6 +2778,8 @@ NS_IMETHODIMP
 nsXPConnect::SetDebugModeWhenPossible(PRBool mode)
 {
     gDesiredDebugMode = mode;
+    if (!mode)
+        CheckForDebugMode(mRuntime->GetJSRuntime());
     return NS_OK;
 }
 
