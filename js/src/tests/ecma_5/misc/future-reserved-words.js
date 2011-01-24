@@ -14,25 +14,27 @@ print(BUGNUMBER + ": " + summary);
  **************/
 
 var futureReservedWords =
-  ["class",
+  [
+   "class",
    // "const", // Mozilla extension enabled even for versionless code
    "enum",
    "export",
    "extends",
    "import",
-   "super"];
+   "super",
+  ];
 
 var strictFutureReservedWords =
   [
    "implements",
    "interface",
-   // "let", // Mozilla extension, strict checks disabled for now
+   "let", // enabled: this file doesn't execute as JS1.7
    "package",
    "private",
    "protected",
    "public",
    "static",
-   // "yield", // Mozilla extension, strict checks disabled for now
+   "yield", // enabled: this file doesn't execute as JS1.7
   ];
 
 function testWord(word, expectNormal, expectStrict)
