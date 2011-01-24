@@ -45,7 +45,6 @@
 #include "jsproxy.h"
 #include "jsscope.h"
 #include "jstracer.h"
-#include "assembler/wtf/Platform.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/PolyIC.h"
 #include "methodjit/MonoIC.h"
