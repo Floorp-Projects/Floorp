@@ -45,6 +45,10 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE       = build
 
+ifeq ($(USE_ELF_HACK)$(HOST_OS_ARCH)$(OS_ARCH)$(OS_TARGET),1LinuxLinuxLinux)
+DIRS = elfhack
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 libs:: $(srcdir)/run-mozilla.sh
