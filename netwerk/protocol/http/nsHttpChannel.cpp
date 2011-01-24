@@ -121,6 +121,7 @@ nsHttpChannel::nsHttpChannel()
     , mAsyncCacheOpen(PR_FALSE)
     , mPendingAsyncCallOnResume(nsnull)
     , mSuspendCount(0)
+    , mCacheEntryClosePreventionCount(0)
     , mCachedContentIsValid(PR_FALSE)
     , mCachedContentIsPartial(PR_FALSE)
     , mTransactionReplaced(PR_FALSE)
@@ -4223,31 +4224,44 @@ nsHttpChannel::SetCacheTokenCachedCharset(const nsACString &aCharset)
 // nsHttpChannel::nsIHttpChannelInternal_GECKO_2_0
 //-----------------------------------------------------------------------------
 
+class HttpChannelCacheEntryClosePreventer : public nsISupports
+{
+public:
+    NS_DECL_ISUPPORTS
+
+    HttpChannelCacheEntryClosePreventer(nsHttpChannel* channel)
+    : mChannel(channel)
+    {
+        ++mChannel->mCacheEntryClosePreventionCount;
+        LOG(("mCacheEntryClosePreventionCount increased to %d, [this=%x]",
+             mChannel->mCacheEntryClosePreventionCount,
+             mChannel.get()));
+    }
+
+private:
+    ~HttpChannelCacheEntryClosePreventer()
+    {
+        --mChannel->mCacheEntryClosePreventionCount;
+        LOG(("mCacheEntryClosePreventionCount decreased to %d, [this=%x]",
+             mChannel->mCacheEntryClosePreventionCount,
+             mChannel.get()));
+
+        if (!mChannel->mCacheEntryClosePreventionCount &&
+            mChannel->mDeferredCacheEntryClose) {
+            mChannel->CloseCacheEntryInternal();
+        }
+    }
+
+    nsRefPtr<nsHttpChannel> mChannel;
+};
+
+NS_IMPL_ISUPPORTS0(HttpChannelCacheEntryClosePreventer)
+
 NS_IMETHODIMP
 nsHttpChannel::GetCacheEntryClosePreventer(nsISupports** _retval)
 {
-    NS_ADDREF(*_retval = new CacheEntryClosePreventer(this));
+    NS_ADDREF(*_retval = new HttpChannelCacheEntryClosePreventer(this));
     return NS_OK;
-}
-
-void
-nsHttpChannel::OnIncreaseCacheEntryClosePreventCount()
-{
-    ++mCacheEntryClosePreventionCount;
-    LOG(("nsHttpChannel::mCacheEntryClosePreventionCount increased to %d, [this=%x]",
-         mCacheEntryClosePreventionCount, this));
-}
-
-void
-nsHttpChannel::OnDecreaseCacheEntryClosePreventCount()
-{
-    --mCacheEntryClosePreventionCount;
-    LOG(("nsHttpChannel::mCacheEntryClosePreventionCount decreased to %d, [this=%x]",
-         mCacheEntryClosePreventionCount, this));
-
-    if (!mCacheEntryClosePreventionCount && mDeferredCacheEntryClose) {
-        CloseCacheEntryInternal();
-    }
 }
 
 //-----------------------------------------------------------------------------
