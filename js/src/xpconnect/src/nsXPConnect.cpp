@@ -2562,16 +2562,22 @@ nsXPConnect::Push(JSContext * cx)
     if(!data)
         return NS_ERROR_FAILURE;
 
-    PRInt32 count;
-    nsresult rv;
-    rv = data->GetJSContextStack()->GetCount(&count);
-    if (NS_FAILED(rv))
-        return rv;
-
-    if (count == 0)
-        CheckForDebugMode(mRuntime->GetJSRuntime());
-
-    return data->GetJSContextStack()->Push(cx);
+     if (gDebugMode != gDesiredDebugMode && NS_IsMainThread()) {
+         const nsTArray<XPCJSContextInfo>* stack = data->GetJSContextStack()->GetStack();
+         bool runningJS = false;
+         for (PRUint32 i = 0; i < stack->Length(); ++i) {
+             JSContext *cx = (*stack)[i].cx;
+             /* Use ParticipatesInCycleCollection to detect main thread */
+             if (cx && cx->regs && xpc::ParticipatesInCycleCollection(cx, cx->globalObject)) {
+                 runningJS = true;
+                 break;
+             }
+         }
+         if (!runningJS)
+             CheckForDebugMode(mRuntime->GetJSRuntime());
+     }
+ 
+     return data->GetJSContextStack()->Push(cx);
 }
 
 /* attribute JSContext SafeJSContext; */
