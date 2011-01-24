@@ -1305,14 +1305,13 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
         cx = nsnull;
     }
 
-    js::AutoValueVector args(cx);
-    /* This must come before AutoScriptEvaluate */
-    JSAutoEnterCompartment ac;
     AutoScriptEvaluate scriptEval(cx);
+    js::AutoValueVector args(cx);
     ContextPrincipalGuard principalGuard(ccx);
 
     obj = thisObj = wrapper->GetJSObject();
 
+    JSAutoEnterCompartment ac;
     if (!ac.enter(ccx, obj))
         goto pre_call_clean_up;
 
