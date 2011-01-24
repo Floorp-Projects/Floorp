@@ -1,0 +1,76 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Test</title>
+
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+    function testSteps()
+    {
+      const data = { id: new Date().getTime(),
+                     num: parseInt(Math.random() * 1000) };
+
+      let request = mozIndexedDB.open(window.location.pathname);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield;
+
+      let db = event.target.result;
+      db.onerror = errorHandler;
+
+      db.setVersion("1").onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      event.target.transaction.oncomplete = continueToNextStep;
+
+      // Make object store, add data.
+      let objectStore = db.createObjectStore("foo", { keyPath: "id" });
+      objectStore.add(data);
+      yield;
+
+      db.setVersion("2").onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      event.target.transaction.oncomplete = continueToNextStep;
+
+      // Create index.
+      event.target.transaction.objectStore("foo").createIndex("foo", "num");
+      yield;
+
+      // Make sure our object made it into the index.
+      let seenCount = 0;
+
+
+      db.transaction("foo").objectStore("foo").index("foo")
+        .openKeyCursor().onsuccess = function(event) {
+        let cursor = event.target.result;
+        if (cursor) {
+          is(cursor.key, data.num, "Good key");
+          is(cursor.value, data.id, "Good value");
+          seenCount++;
+          cursor.continue();
+        }
+        else {
+          continueToNextStep();
+        }
+      };
+      yield;
+
+      is(seenCount, 1, "Saw our entry");
+
+      finishTest();
+      yield;
+    }
+  </script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+</head>
+
+<body onload="runTest();"></body>
+
+</html>

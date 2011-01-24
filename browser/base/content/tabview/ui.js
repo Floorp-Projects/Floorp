@@ -200,11 +200,6 @@ let UI = {
         }
       });
 
-      iQ(window).bind("beforeunload", function() {
-        Array.forEach(gBrowser.tabs, function(tab) {
-          gBrowser.showTab(tab);
-        });
-      });
       iQ(window).bind("unload", function() {
         self.uninit();
       });

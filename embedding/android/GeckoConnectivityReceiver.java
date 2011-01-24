@@ -47,7 +47,7 @@ public class GeckoConnectivityReceiver
     public void onReceive(Context context, Intent intent) {
         String status;
         ConnectivityManager cm = (ConnectivityManager)
-            GeckoApp.mAppContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+            context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo info = cm.getActiveNetworkInfo();
         if (info == null)
             status = "unknown";

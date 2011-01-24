@@ -56,6 +56,9 @@
     <emItem id="{3f963a5b-e555-4543-90e2-c3908898db71}">
       <versionRange minVersion=" " maxVersion="8.5"/>
     </emItem>
+    <emItem id="{46551EC9-40F0-4e47-8E18-8E5CF550CFB8}">
+      <versionRange minVersion="1.1b1" maxVersion="1.1b1"/>
+    </emItem>
     <emItem id="{4B3803EA-5230-4DC3-A7FC-33638F3D3542}">
       <versionRange minVersion="1.2" maxVersion="1.2">
         <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
@@ -64,8 +67,11 @@
       </versionRange>
     </emItem>
     <emItem id="{8CE11043-9A15-4207-A565-0C94C42D590D}"/>
+    <emItem id="{AB2CE124-6272-4b12-94A9-7303C7397BD1}">
+      <versionRange severity="1"/>
+    </emItem>
     <emItem id="{B13721C7-F507-4982-B2E5-502A71474FED}">
-      <versionRange minVersion=" " maxVersion="3.3.0.3970" severity="1"/>
+      <versionRange severity="1"/>
     </emItem>
     <emItem id="{E8E88AB0-7182-11DF-904E-6045E0D72085}"/>
   </emItems>

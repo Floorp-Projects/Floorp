@@ -51,6 +51,7 @@
 #include "nsTArray.h"
 
 #include "nsIHttpEventSink.h"
+#include "nsICacheInfoChannel.h"
 #include "nsICachingChannel.h"
 #include "nsICacheEntryDescriptor.h"
 #include "nsICacheListener.h"
@@ -67,6 +68,7 @@
 
 class nsAHttpConnection;
 class AutoRedirectVetoNotifier;
+class HttpChannelCacheEntryClosePreventer;
 
 using namespace mozilla::net;
 
@@ -76,6 +78,7 @@ using namespace mozilla::net;
 
 class nsHttpChannel : public HttpBaseChannel
                     , public nsIStreamListener
+                    , public nsICacheInfoChannel_GECKO_2_0
                     , public nsICachingChannel
                     , public nsICacheListener
                     , public nsITransportEventSink
@@ -89,6 +92,7 @@ public:
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
+    NS_DECL_NSICACHEINFOCHANNEL_GECKO_2_0
     NS_DECL_NSICACHEINFOCHANNEL
     NS_DECL_NSICACHINGCHANNEL
     NS_DECL_NSICACHELISTENER
@@ -229,6 +233,7 @@ private:
     nsresult ShouldUpdateOfflineCacheEntry(PRBool *shouldCacheForOfflineUse);
     nsresult ReadFromCache();
     void     CloseCacheEntry(PRBool doomOnFailure);
+    void     CloseCacheEntryInternal();
     void     CloseOfflineCacheEntry();
     nsresult InitCacheEntry();
     nsresult InitOfflineCacheEntry();
@@ -270,6 +275,9 @@ private:
      * input buffer. Input buffer must be a null-terminated string.
      */
     nsresult Hash(const char *buf, nsACString &hash);
+
+    virtual void OnIncreaseCacheEntryClosePreventCount();
+    virtual void OnDecreaseCacheEntryClosePreventCount();
 
 private:
     nsCOMPtr<nsISupports>             mSecurityInfo;
@@ -345,7 +353,12 @@ private:
     PRUint32                          mWaitingForRedirectCallback : 1;
     // True if mRequestTime has been set. In such a case it is safe to update
     // the cache entry's expiration time. Otherwise, it is not(see bug 567360).
-    PRUint32                          mRequestTimeInitialized : 1;
+    PRUint32                          mRequestTimeInitialized   : 1;
+    // True if CloseCacheEntry was called while cache entry hold counter was
+    // positive.
+    PRUint32                          mDeferredCacheEntryClose  : 1;
+    // True if CloseCacheEntry was called with doomOnFailure set to TRUE.
+    PRUint32                          mDoomCacheEntryOnClose    : 1;
 
     nsTArray<nsContinueRedirectionFunc> mRedirectFuncStack;
 
