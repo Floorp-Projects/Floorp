@@ -53,24 +53,24 @@ Features to add:
 -->
 <html lang="en-US" xml:lang="en-US" xmlns="http://www.w3.org/1999/xhtml">
 <head>
-	<title>Reftest analyzer</title>
-	<style type="text/css"><![CDATA[
+  <title>Reftest analyzer</title>
+  <style type="text/css"><![CDATA[
 
-        #itemlist { width: 300px; }
-        #images { position: fixed; top: 10px; left: 310px; }
+  #itemlist { width: 300px; }
+  #images { position: fixed; top: 10px; left: 310px; }
 
-	form#imgcontrols { margin: 0; display: block; }
+  form#imgcontrols { margin: 0; display: block; }
 
-	#itemlist > table { border-collapse: collapse; }
-	#itemlist > table > tbody > tr > td { border: 1px solid; padding: 1px; }
+  #itemlist > table { border-collapse: collapse; }
+  #itemlist > table > tbody > tr > td { border: 1px solid; padding: 1px; }
 
-	/*
-	#itemlist > table > tbody > tr.pass > td.url { background: lime; }
-	#itemlist > table > tbody > tr.fail > td.url { background: red; }
-	*/
+  /*
+  #itemlist > table > tbody > tr.pass > td.url { background: lime; }
+  #itemlist > table > tbody > tr.fail > td.url { background: red; }
+  */
 
-	]]></style>
-	<script type="text/javascript"><![CDATA[
+  ]]></style>
+  <script type="text/javascript"><![CDATA[
 
 var XLINK_NS = "http://www.w3.org/1999/xlink";
 var SVG_NS = "http://www.w3.org/2000/svg";
@@ -80,192 +80,192 @@ var gPhases = null;
 var gIDCache = {};
 
 function ID(id) {
-	if (!(id in gIDCache))
-		gIDCache[id] = document.getElementById(id);
-	return gIDCache[id];
+  if (!(id in gIDCache))
+    gIDCache[id] = document.getElementById(id);
+  return gIDCache[id];
 }
 
 function load() {
-	gPhases = [ ID("entry"), ID("loading"), ID("viewer") ];
+  gPhases = [ ID("entry"), ID("loading"), ID("viewer") ];
 }
 
 function show_phase(phaseid) {
-	for (var i in gPhases) {
-		var phase = gPhases[i];
-		phase.style.display = (phase.id == phaseid) ? "" : "none";
-	}
+  for (var i in gPhases) {
+    var phase = gPhases[i];
+    phase.style.display = (phase.id == phaseid) ? "" : "none";
+  }
 
-	if (phase == "viewer")
-		ID("images").style.display = "none";
+  if (phase == "viewer")
+    ID("images").style.display = "none";
 }
 
 function fileentry_changed() {
-	show_phase("loading");
-	var input = ID("fileentry");
-	var files = input.files;
-	var log = null;
-	if (files.length > 0) {
-		// Only handle the first file; don't handle multiple selection.
-		// The parts of the log we care about are ASCII-only.  Since we
-		// can ignore lines we don't care about, best to read in as
-		// iso-8859-1, which guarantees we don't get decoding errors.
-		log = files[0].getAsText("iso-8859-1");
-	}
-	// So the user can process the same filename again (after
-	// overwriting the log), clear the value on the form input so we
-	// will always get an onchange event.
-	input.value = "";
+  show_phase("loading");
+  var input = ID("fileentry");
+  var files = input.files;
+  var log = null;
+  if (files.length > 0) {
+    // Only handle the first file; don't handle multiple selection.
+    // The parts of the log we care about are ASCII-only.  Since we
+    // can ignore lines we don't care about, best to read in as
+    // iso-8859-1, which guarantees we don't get decoding errors.
+    log = files[0].getAsText("iso-8859-1");
+  }
+  // So the user can process the same filename again (after
+  // overwriting the log), clear the value on the form input so we
+  // will always get an onchange event.
+  input.value = "";
 
-	if (log)
-		process_log(log);
-	else
-		show_phase("entry");
+  if (log)
+    process_log(log);
+  else
+    show_phase("entry");
 }
 
 function log_pasted() {
-	show_phase("loading");
-	var entry = ID("logentry");
-	var log = entry.value;
-	entry.value = "";
-	process_log(log);
+  show_phase("loading");
+  var entry = ID("logentry");
+  var log = entry.value;
+  entry.value = "";
+  process_log(log);
 }
 
 var gTestItems;
 
 function process_log(contents) {
-	var lines = contents.split(/[\r\n]+/);
-	gTestItems = [];
-	for (var j in lines) {
-		var line = lines[j];
-		var match = line.match(/^(?:NEXT ERROR )?REFTEST (.*)$/);
-		if (!match)
-			continue;
-		line = match[1];
-		match = line.match(/^(TEST-PASS|TEST-UNEXPECTED-PASS|TEST-KNOWN-FAIL|TEST-UNEXPECTED-FAIL)(\(EXPECTED RANDOM\)|) \| ([^\|]+) \|(.*)/);
-		if (match) {
-			var state = match[1];
-			var random = match[2];
-			var url = match[3];
+  var lines = contents.split(/[\r\n]+/);
+  gTestItems = [];
+  for (var j in lines) {
+    var line = lines[j];
+    var match = line.match(/^(?:NEXT ERROR )?REFTEST (.*)$/);
+    if (!match)
+      continue;
+    line = match[1];
+    match = line.match(/^(TEST-PASS|TEST-UNEXPECTED-PASS|TEST-KNOWN-FAIL|TEST-UNEXPECTED-FAIL)(\(EXPECTED RANDOM\)|) \| ([^\|]+) \|(.*)/);
+    if (match) {
+      var state = match[1];
+      var random = match[2];
+      var url = match[3];
                         var extra = match[4];
-			gTestItems.push(
-				{
-					pass: !state.match(/FAIL$/),
-					// only one of the following three should ever be true
-					unexpected: !!state.match(/^TEST-UNEXPECTED/),
-					random: (random == "(EXPECTED RANDOM)"),
-					skip: (extra == " (SKIP)"),
-					url: url,
-					images: []
-				});
-			continue;
-		}
-		match = line.match(/^  IMAGE[^:]*: (.*)$/);
-		if (match) {
-			var item = gTestItems[gTestItems.length - 1];
-			item.images.push(match[1]);
-		}
-	}
+      gTestItems.push(
+        {
+          pass: !state.match(/FAIL$/),
+          // only one of the following three should ever be true
+          unexpected: !!state.match(/^TEST-UNEXPECTED/),
+          random: (random == "(EXPECTED RANDOM)"),
+          skip: (extra == " (SKIP)"),
+          url: url,
+          images: []
+        });
+      continue;
+    }
+    match = line.match(/^  IMAGE[^:]*: (.*)$/);
+    if (match) {
+      var item = gTestItems[gTestItems.length - 1];
+      item.images.push(match[1]);
+    }
+  }
 
-	build_viewer();
+  build_viewer();
 }
 
 function build_viewer() {
-	if (gTestItems.length == 0) {
-		show_phase("entry");
-		return;
-	}
+  if (gTestItems.length == 0) {
+    show_phase("entry");
+    return;
+  }
 
-	var cell = ID("itemlist");
-	while (cell.childNodes.length > 0)
-		cell.removeChild(cell.childNodes[cell.childNodes.length - 1]);
+  var cell = ID("itemlist");
+  while (cell.childNodes.length > 0)
+    cell.removeChild(cell.childNodes[cell.childNodes.length - 1]);
 
-	var table = document.createElement("table");
-	var tbody = document.createElement("tbody");
-	table.appendChild(tbody);
+  var table = document.createElement("table");
+  var tbody = document.createElement("tbody");
+  table.appendChild(tbody);
 
-	for (var i in gTestItems) {
-		var item = gTestItems[i];
+  for (var i in gTestItems) {
+    var item = gTestItems[i];
 
-		// XXX skip expected pass items until we have filtering UI
-		if (item.pass && !item.unexpected)
-			continue;
+    // XXX skip expected pass items until we have filtering UI
+    if (item.pass && !item.unexpected)
+      continue;
 
-		var tr = document.createElement("tr");
-		var rowclass = item.pass ? "pass" : "fail";
-		var td;
-		var text;
+    var tr = document.createElement("tr");
+    var rowclass = item.pass ? "pass" : "fail";
+    var td;
+    var text;
 
-		td = document.createElement("td");
-		text = "";
-		if (item.unexpected) { text += "!"; rowclass += " unexpected"; }
-		if (item.random) { text += "R"; rowclass += " random"; }
-		if (item.skip) { text += "S"; rowclass += " skip"; }
-		td.appendChild(document.createTextNode(text));
-		tr.appendChild(td);
+    td = document.createElement("td");
+    text = "";
+    if (item.unexpected) { text += "!"; rowclass += " unexpected"; }
+    if (item.random) { text += "R"; rowclass += " random"; }
+    if (item.skip) { text += "S"; rowclass += " skip"; }
+    td.appendChild(document.createTextNode(text));
+    tr.appendChild(td);
 
-		td = document.createElement("td");
-		td.className = "url";
-		// Only display part of URL after "/mozilla/".
-		var match = item.url.match(/\/mozilla\/(.*)/);
-		text = document.createTextNode(match ? match[1] : item.url);
-		if (item.images.length > 0) {
-			var a = document.createElement("a");
-			a.href = "javascript:show_images(" + i + ")";
-			a.appendChild(text);
-			td.appendChild(a);
-		} else {
-			td.appendChild(text);
-		}
-		tr.appendChild(td);
+    td = document.createElement("td");
+    td.className = "url";
+    // Only display part of URL after "/mozilla/".
+    var match = item.url.match(/\/mozilla\/(.*)/);
+    text = document.createTextNode(match ? match[1] : item.url);
+    if (item.images.length > 0) {
+      var a = document.createElement("a");
+      a.href = "javascript:show_images(" + i + ")";
+      a.appendChild(text);
+      td.appendChild(a);
+    } else {
+      td.appendChild(text);
+    }
+    tr.appendChild(td);
 
-		tbody.appendChild(tr);
-	}
+    tbody.appendChild(tr);
+  }
 
-	cell.appendChild(table);
+  cell.appendChild(table);
 
-	show_phase("viewer");
+  show_phase("viewer");
 }
 
 function show_images(i) {
-	var item = gTestItems[i];
-	var cell = ID("images");
+  var item = gTestItems[i];
+  var cell = ID("images");
 
-	ID("image1").style.display = "";
-	ID("image2").style.display = "none";
-	ID("diffrect").style.display = "none";
-	ID("imgcontrols").reset();
+  ID("image1").style.display = "";
+  ID("image2").style.display = "none";
+  ID("diffrect").style.display = "none";
+  ID("imgcontrols").reset();
 
-	ID("image1").setAttributeNS(XLINK_NS, "xlink:href", item.images[0]);
-	// Making the href be #image1 doesn't seem to work
-	ID("feimage1").setAttributeNS(XLINK_NS, "xlink:href", item.images[0]);
-	if (item.images.length == 1) {
-		ID("imgcontrols").style.display = "none";
-	} else {
-		ID("imgcontrols").style.display = "";
+  ID("image1").setAttributeNS(XLINK_NS, "xlink:href", item.images[0]);
+  // Making the href be #image1 doesn't seem to work
+  ID("feimage1").setAttributeNS(XLINK_NS, "xlink:href", item.images[0]);
+  if (item.images.length == 1) {
+    ID("imgcontrols").style.display = "none";
+  } else {
+    ID("imgcontrols").style.display = "";
 
-		ID("image2").setAttributeNS(XLINK_NS, "xlink:href", item.images[1]);
-		// Making the href be #image2 doesn't seem to work
-		ID("feimage2").setAttributeNS(XLINK_NS, "xlink:href", item.images[1]);
-	}
+    ID("image2").setAttributeNS(XLINK_NS, "xlink:href", item.images[1]);
+    // Making the href be #image2 doesn't seem to work
+    ID("feimage2").setAttributeNS(XLINK_NS, "xlink:href", item.images[1]);
+  }
 
-	cell.style.display = "";
+  cell.style.display = "";
 }
 
 function show_image(i) {
-	if (i == 1) {
-		ID("image1").style.display = "";
-		ID("image2").style.display = "none";
-	} else {
-		ID("image1").style.display = "none";
-		ID("image2").style.display = "";
-	}
+  if (i == 1) {
+    ID("image1").style.display = "";
+    ID("image2").style.display = "none";
+  } else {
+    ID("image1").style.display = "none";
+    ID("image2").style.display = "";
+  }
 }
 
 function show_differences(cb) {
-	ID("diffrect").style.display = cb.checked ? "" : "none";
+  ID("diffrect").style.display = cb.checked ? "" : "none";
 }
 
-	]]></script>
+  ]]></script>
 
 </head>
 <body onload="load()">
@@ -295,63 +295,63 @@ function show_differences(cb) {
     </form>
     <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="800px" height="1000px" viewbox="0 0 800 1000" id="svg">
       <defs>
-	<!-- use sRGB to avoid loss of data -->
-	<filter id="showDifferences" x="0%" y="0%" width="100%" height="100%"
-	        style="color-interpolation-filters: sRGB">
-	  <feImage id="feimage1" result="img1" xlink:href="#image1" />
-	  <feImage id="feimage2" result="img2" xlink:href="#image2" />
-	  <!-- inv1 and inv2 are the images with RGB inverted -->
-	  <feComponentTransfer result="inv1" in="img1">
-	    <feFuncR type="linear" slope="-1" intercept="1" />
-	    <feFuncG type="linear" slope="-1" intercept="1" />
-	    <feFuncB type="linear" slope="-1" intercept="1" />
-	  </feComponentTransfer>
-	  <feComponentTransfer result="inv2" in="img2">
-	    <feFuncR type="linear" slope="-1" intercept="1" />
-	    <feFuncG type="linear" slope="-1" intercept="1" />
-	    <feFuncB type="linear" slope="-1" intercept="1" />
-	  </feComponentTransfer>
-	  <!-- w1 will have non-white pixels anywhere that img2
-	       is brighter than img1, and w2 for the reverse.
-	       It would be nice not to have to go through these
-	       intermediate states, but feComposite
-	       type="arithmetic" can't transform the RGB channels
-	       and leave the alpha channel untouched. -->
-	  <feComposite result="w1" in="img1" in2="inv2" operator="arithmetic" k2="1" k3="1" />
-	  <feComposite result="w2" in="img2" in2="inv1" operator="arithmetic" k2="1" k3="1" />
-	  <!-- c1 will have non-black pixels anywhere that img2
-	       is brighter than img1, and c2 for the reverse -->
-	  <feComponentTransfer result="c1" in="w1">
-	    <feFuncR type="linear" slope="-1" intercept="1" />
-	    <feFuncG type="linear" slope="-1" intercept="1" />
-	    <feFuncB type="linear" slope="-1" intercept="1" />
-	  </feComponentTransfer>
-	  <feComponentTransfer result="c2" in="w2">
-	    <feFuncR type="linear" slope="-1" intercept="1" />
-	    <feFuncG type="linear" slope="-1" intercept="1" />
-	    <feFuncB type="linear" slope="-1" intercept="1" />
-	  </feComponentTransfer>
-	  <!-- c will be nonblack (and fully on) for every pixel+component where there are differences -->
-	  <feComposite result="c" in="c1" in2="c2" operator="arithmetic" k2="255" k3="255" />
-	  <!-- a will be opaque for every pixel with differences and transparent for all others -->
-	  <feColorMatrix result="a" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1 1 1 0 0" />
-	  
-	  <!-- a, dilated by 4 pixels -->
-	  <feMorphology result="dila4" in="a" operator="dilate" radius="4" />
-	  <!-- a, dilated by 1 pixel -->
-	  <feMorphology result="dila1" in="a" operator="dilate" radius="1" />
-	  
-	  <!-- all the pixels in the 3-pixel dilation of a but not in the 1-pixel dilation of a, to highlight the diffs -->
-	  <feComposite result="highlight" in="dila4" in2="dila1" operator="out" />
+        <!-- use sRGB to avoid loss of data -->
+        <filter id="showDifferences" x="0%" y="0%" width="100%" height="100%"
+                style="color-interpolation-filters: sRGB">
+          <feImage id="feimage1" result="img1" xlink:href="#image1" />
+          <feImage id="feimage2" result="img2" xlink:href="#image2" />
+          <!-- inv1 and inv2 are the images with RGB inverted -->
+          <feComponentTransfer result="inv1" in="img1">
+            <feFuncR type="linear" slope="-1" intercept="1" />
+            <feFuncG type="linear" slope="-1" intercept="1" />
+            <feFuncB type="linear" slope="-1" intercept="1" />
+          </feComponentTransfer>
+          <feComponentTransfer result="inv2" in="img2">
+            <feFuncR type="linear" slope="-1" intercept="1" />
+            <feFuncG type="linear" slope="-1" intercept="1" />
+            <feFuncB type="linear" slope="-1" intercept="1" />
+          </feComponentTransfer>
+          <!-- w1 will have non-white pixels anywhere that img2
+               is brighter than img1, and w2 for the reverse.
+               It would be nice not to have to go through these
+               intermediate states, but feComposite
+               type="arithmetic" can't transform the RGB channels
+               and leave the alpha channel untouched. -->
+          <feComposite result="w1" in="img1" in2="inv2" operator="arithmetic" k2="1" k3="1" />
+          <feComposite result="w2" in="img2" in2="inv1" operator="arithmetic" k2="1" k3="1" />
+          <!-- c1 will have non-black pixels anywhere that img2
+               is brighter than img1, and c2 for the reverse -->
+          <feComponentTransfer result="c1" in="w1">
+            <feFuncR type="linear" slope="-1" intercept="1" />
+            <feFuncG type="linear" slope="-1" intercept="1" />
+            <feFuncB type="linear" slope="-1" intercept="1" />
+          </feComponentTransfer>
+          <feComponentTransfer result="c2" in="w2">
+            <feFuncR type="linear" slope="-1" intercept="1" />
+            <feFuncG type="linear" slope="-1" intercept="1" />
+            <feFuncB type="linear" slope="-1" intercept="1" />
+          </feComponentTransfer>
+          <!-- c will be nonblack (and fully on) for every pixel+component where there are differences -->
+          <feComposite result="c" in="c1" in2="c2" operator="arithmetic" k2="255" k3="255" />
+          <!-- a will be opaque for every pixel with differences and transparent for all others -->
+          <feColorMatrix result="a" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1 1 1 0 0" />
+          
+          <!-- a, dilated by 4 pixels -->
+          <feMorphology result="dila4" in="a" operator="dilate" radius="4" />
+          <!-- a, dilated by 1 pixel -->
+          <feMorphology result="dila1" in="a" operator="dilate" radius="1" />
+          
+          <!-- all the pixels in the 3-pixel dilation of a but not in the 1-pixel dilation of a, to highlight the diffs -->
+          <feComposite result="highlight" in="dila4" in2="dila1" operator="out" />
 
-	  <feFlood result="red" flood-color="red" />
-	  <feComposite result="redhighlight" in="red" in2="highlight" operator="in" />
-	  <feFlood result="black" flood-color="black" flood-opacity="0.5" />
-	  <feMerge>
-	    <feMergeNode in="black" />
-	    <feMergeNode in="redhighlight" />
-	  </feMerge>
-	</filter>
+          <feFlood result="red" flood-color="red" />
+          <feComposite result="redhighlight" in="red" in2="highlight" operator="in" />
+          <feFlood result="black" flood-color="black" flood-opacity="0.5" />
+          <feMerge>
+            <feMergeNode in="black" />
+            <feMergeNode in="redhighlight" />
+          </feMerge>
+        </filter>
       </defs>
       <image x="0" y="0" width="100%" height="100%" id="image1" />
       <image x="0" y="0" width="100%" height="100%" id="image2" />
