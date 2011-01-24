@@ -85,9 +85,6 @@ HttpChannelParent::ActorDestroy(ActorDestroyReason why)
   // We may still have refcount>0 if nsHttpChannel hasn't called OnStopRequest
   // yet, but we must not send any more msgs to child.
   mIPCClosed = true;
-
-  // As we know the child channel has finished, let the cache entry close.
-  mCacheClosePreventer = 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -300,25 +297,9 @@ HttpChannelParent::RecvCancel(const nsresult& status)
 bool
 HttpChannelParent::RecvSetCacheTokenCachedCharset(const nsCString& charset)
 {
-  nsHttpChannel *chan = static_cast<nsHttpChannel *>(mChannel.get());
-
-  nsresult rv;
-
-  nsCOMPtr<nsICacheEntryDescriptor> cacheDescriptor;
-  rv = chan->GetCacheToken(getter_AddRefs(cacheDescriptor));
-  if (NS_SUCCEEDED(rv))
-    cacheDescriptor->SetMetaDataElement("charset",
-                                        PromiseFlatCString(charset).get());
-  return true;
-}
-
-bool
-HttpChannelParent::RecvSetResponseHeader(const nsCString& header,
-                                         const nsCString& value,
-                                         const bool& merge)
-{
-  nsHttpChannel *chan = static_cast<nsHttpChannel *>(mChannel.get());
-  chan->SetResponseHeader(header, value, merge);
+  if (mCacheDescriptor)
+    mCacheDescriptor->SetMetaDataElement("charset",
+                                         PromiseFlatCString(charset).get());
   return true;
 }
 
@@ -372,7 +353,7 @@ HttpChannelParent::RecvDocumentChannelCleanup()
 {
   // We must clear the cache entry here, else we'll block other channels from
   // reading it if we've got it open for writing.  
-  mCacheClosePreventer = 0;
+  mCacheDescriptor = 0;
 
   return true;
 }
@@ -424,14 +405,9 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
   if (encodedChannel)
     encodedChannel->SetApplyConversion(PR_FALSE);
 
-  // Prevent cache entry from being closed during HttpChannel::OnStopRequest:
-  // - We need the cache entry for RecvSetCacheTokenCachedCharset()
-  // - The child channel may call GetCacheEntryClosePreventer, so we have to
-  //   call it now (otherwise we could hit OnStopRequest and close entry
-  //   before child gets a chance to keep it open).
-  // We close entry either when RecvDocumentChannelCleanup is called, or the
-  // IPDL channel is deleted.
-  chan->GetCacheEntryClosePreventer(getter_AddRefs(mCacheClosePreventer));
+  // Keep the cache entry for future use in RecvSetCacheTokenCachedCharset().
+  // It could be already released by nsHttpChannel at that time.
+  chan->GetCacheToken(getter_AddRefs(mCacheDescriptor));
 
   nsCString secInfoSerialization;
   nsCOMPtr<nsISupports> secInfoSupp;
@@ -452,15 +428,12 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
     tuple->mMerge  = false;
   }
 
-  nsCOMPtr<nsICacheEntryDescriptor> cacheDescriptor;
-  chan->GetCacheToken(getter_AddRefs(cacheDescriptor));
-
   if (mIPCClosed || 
       !SendOnStartRequest(responseHead ? *responseHead : nsHttpResponseHead(), 
                           !!responseHead,
                           headers,
                           isFromCache,
-                          cacheDescriptor ? PR_TRUE : PR_FALSE,
+                          mCacheDescriptor ? PR_TRUE : PR_FALSE,
                           expirationTime, cachedCharset, secInfoSerialization)) 
   {
     return NS_ERROR_UNEXPECTED; 
