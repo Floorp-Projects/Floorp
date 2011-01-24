@@ -302,6 +302,55 @@ function test_add_visit_invalid_transitionType_throws()
   run_next_test();
 }
 
+function test_non_addable_uri_errors()
+{
+  // Array of protocols that nsINavHistoryService::canAddURI returns false for.
+  const URLS = [
+    "about:config",
+    "imap://cyrus.andrew.cmu.edu/archive.imap",
+    "news://new.mozilla.org/mozilla.dev.apps.firefox",
+    "mailbox:Inbox",
+    "moz-anno:favicon:http://mozilla.org/made-up-favicon",
+    "view-source:http://mozilla.org",
+    "chrome://browser/content/browser.xul",
+    "resource://gre-resources/hiddenWindow.html",
+    "data:,Hello%2C%20World!",
+    "wyciwyg:/0/http://mozilla.org",
+    "javascript:alert('hello wolrd!');",
+  ];
+  let places = [];
+  URLS.forEach(function(url) {
+    try {
+      let place = {
+        uri: NetUtil.newURI(url),
+        title: "test for " + url,
+        visits: [
+          new VisitInfo(),
+        ],
+      };
+      places.push(place);
+    }
+    catch (e if e.result === Cr.NS_ERROR_MALFORMED_URI) {
+      // NetUtil.newURI() can throw if e.g. our app knows about imap://
+      // but the account is not set up and so the URL is invalid for us.
+      // Note this in the log but ignore as it's not the subject of this test.
+      do_log_info("Could not construct URI for '" + url + "'; ignoring");
+    }
+  });
+
+  let callbackCount = 0;
+  gHistory.updatePlaces(places, function(aResultCode, aPlaceInfo) {
+    do_log_info("Checking '" + aPlaceInfo.uri.spec + "'");
+    do_check_eq(aResultCode, Cr.NS_ERROR_INVALID_ARG);
+    do_check_false(gGlobalHistory.isVisited(aPlaceInfo.uri));
+
+    // If we have had all of our callbacks, continue running tests.
+    if (++callbackCount == places.length) {
+      run_next_test();
+    }
+  });
+}
+
 function test_add_visit()
 {
   const VISIT_TIME = Date.now() * 1000;
@@ -639,6 +688,7 @@ let gTests = [
   test_add_visit_no_date_throws,
   test_add_visit_no_transitionType_throws,
   test_add_visit_invalid_transitionType_throws,
+  test_non_addable_uri_errors,
   test_add_visit,
   test_properties_saved,
   test_guid_saved,
