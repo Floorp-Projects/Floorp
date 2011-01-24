@@ -94,7 +94,7 @@ public:
 
   const nsString& KeyPath() const
   {
-    return mName;
+    return mKeyPath;
   }
 
 private:

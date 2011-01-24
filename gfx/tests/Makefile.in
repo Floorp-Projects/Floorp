@@ -51,6 +51,7 @@ XPCSHELL_TESTS = unit
 _TEST_FILES = $(addprefix mochitest/, \
 	test_bug509244.html \
 	test_bug513439.html \
+	test_acceleration.html \
 )
 
 ifndef MOZ_ENABLE_LIBXUL

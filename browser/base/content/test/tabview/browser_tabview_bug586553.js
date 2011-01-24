@@ -83,10 +83,10 @@ function onTabViewWindowHidden() {
   
   is(moves, 1, "Only one move should be necessary for this basic move.");
 
-  is(originalTab._tPos, 1, "Original tab is in position 0");
-  is(newTabs[0]._tPos, 2, "Robots is in position 1");
-  is(newTabs[1]._tPos, 3, "Mozilla is in position 2");
-  is(newTabs[2]._tPos, 0, "Credits is in position 3");
+  is(newTabs[2]._tPos, 0, "Credits is in position 0");
+  is(originalTab._tPos, 1, "Original tab is in position 1");
+  is(newTabs[0]._tPos, 2, "Robots is in position 2");
+  is(newTabs[1]._tPos, 3, "Mozilla is in position 3");
   
   gBrowser.removeTab(newTabs[0]);
   gBrowser.removeTab(newTabs[1]);
