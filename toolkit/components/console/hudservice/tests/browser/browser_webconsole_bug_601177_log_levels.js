@@ -18,41 +18,35 @@ function onContentLoaded()
   let HUD = HUDService.hudReferences[hudId];
   msgs = HUD.outputNode.querySelectorAll(".hud-msg-node");
 
-  ok(findEntry("hud-networkinfo", "test-bug-601177-log-levels.html"),
-    "found test-bug-601177-log-levels.html");
+  findEntry(HUD, "hud-networkinfo", "test-bug-601177-log-levels.html",
+            "found test-bug-601177-log-levels.html");
 
-  ok(findEntry("hud-networkinfo", "test-bug-601177-log-levels.js"),
-    "found test-bug-601177-log-levels.js");
+  findEntry(HUD, "hud-networkinfo", "test-bug-601177-log-levels.js",
+            "found test-bug-601177-log-levels.js");
 
-  ok(findEntry("hud-networkinfo", "test-image.png"),
-    "found test-image.png");
+  findEntry(HUD, "hud-networkinfo", "test-image.png", "found test-image.png");
 
-  ok(findEntry("hud-network", "foobar-known-to-fail.png"),
-    "found foobar-known-to-fail.png");
+  findEntry(HUD, "hud-network", "foobar-known-to-fail.png",
+            "found foobar-known-to-fail.png");
 
-  ok(findEntry("hud-exception", "foobarBug601177exception"),
-    "found exception");
+  findEntry(HUD, "hud-exception", "foobarBug601177exception",
+            "found exception");
 
-  ok(findEntry("hud-jswarn", "undefinedPropertyBug601177"),
-    "found strict warning");
+  findEntry(HUD, "hud-jswarn", "undefinedPropertyBug601177",
+            "found strict warning");
 
-  ok(findEntry("hud-jswarn", "foobarBug601177strictError"),
-    "found strict error");
+  findEntry(HUD, "hud-jswarn", "foobarBug601177strictError",
+            "found strict error");
 
   msgs = null;
   Services.prefs.setBoolPref("javascript.options.strict", false);
   finishTest();
 }
 
-function findEntry(aClass, aString)
+function findEntry(aHUD, aClass, aString, aMessage)
 {
-  for (let i = 0, n = msgs.length; i < n; i++) {
-    if (msgs[i].classList.contains(aClass) &&
-        msgs[i].textContent.indexOf(aString) > -1) {
-      return true;
-    }
-  }
-  return false;
+  return testLogEntry(aHUD.outputNode, aString, aMessage, false, false,
+                      aClass);
 }
 
 function test()
