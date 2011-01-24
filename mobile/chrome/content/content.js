@@ -802,6 +802,11 @@ var ContextHandler = {
    */
   registerType: function registerType(aName, aHandler) {
     this._types.push({name: aName, handler: aHandler});
+  },
+
+  /** Remove all handlers registered for a given type. */
+  unregisterType: function unregisterType(aName) {
+    this._types = this._types.filter(function(type) type.name != aName);
   }
 };
 
