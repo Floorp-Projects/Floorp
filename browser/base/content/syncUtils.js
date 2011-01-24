@@ -77,7 +77,7 @@ let gSyncUtils = {
 
     // Open up the change dialog
     let changeXUL = "chrome://browser/content/syncGenericChange.xul";
-    let changeOpt = "centerscreen,chrome,dialog,modal,resizable=no";
+    let changeOpt = "centerscreen,chrome,resizable=no";
     Weave.Svc.WinWatcher.activeWindow.openDialog(changeXUL, "", changeOpt, type);
   },
 
