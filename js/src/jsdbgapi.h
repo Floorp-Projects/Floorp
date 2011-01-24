@@ -70,8 +70,12 @@ JS_SetRuntimeDebugMode(JSRuntime *rt, JSBool debug);
 extern JS_PUBLIC_API(JSBool)
 JS_GetDebugMode(JSContext *cx);
 
-/* Turn on/off debugging mode for a whole runtime. */
-JS_FRIEND_API(JSBool)
+/* Turn on debugging mode, ignoring the presence of live frames. */
+extern JS_FRIEND_API(JSBool)
+js_SetDebugMode(JSContext *cx, JSBool debug);
+
+/* Turn on debugging mode. */
+extern JS_PUBLIC_API(JSBool)
 JS_SetDebugMode(JSContext *cx, JSBool debug);
 
 /* Turn on single step mode. Requires debug mode. */
