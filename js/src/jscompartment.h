@@ -412,8 +412,33 @@ struct JS_FRIEND_API(JSCompartment) {
     }
 };
 
-#define JS_TRACE_MONITOR(cx)    (cx->compartment->traceMonitor)
 #define JS_SCRIPTS_TO_GC(cx)    (cx->compartment->scriptsToGC)
+
+#ifdef JS_TRACER
+static inline js::TraceMonitor &
+JS_TRACE_MONITOR(JSContext *cx)
+{
+    JSCompartment *c = JS_THREAD_DATA(cx)->tracerCompartment;
+    if (c == NULL)
+        c = cx->compartment;
+    return c->traceMonitor;
+}
+#endif
+
+/*
+ * N.B. JS_ON_TRACE(cx) is true if JIT code is on the stack in the current
+ * thread, regardless of whether cx is the context in which that trace is
+ * executing.  cx must be a context on the current thread.
+ */
+static inline bool
+JS_ON_TRACE(JSContext *cx)
+{
+#ifdef JS_TRACER
+    if (cx->compartment || JS_THREAD_DATA(cx)->tracerCompartment)
+        return JS_TRACE_MONITOR(cx).ontrace();
+#endif
+    return false;
+}
 
 namespace js {
 static inline MathCache *
