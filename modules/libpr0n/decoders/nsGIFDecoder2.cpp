@@ -121,6 +121,9 @@ nsGIFDecoder2::nsGIFDecoder2()
   // Clear out the structure, excluding the arrays
   memset(&mGIFStruct, 0, sizeof(mGIFStruct));
 
+  // Initialize as "animate once" in case no NETSCAPE2.0 extension is found
+  mGIFStruct.loop_count = 1;
+
   // Start with the version (GIF89a|GIF87a)
   mGIFStruct.state = gif_type;
   mGIFStruct.bytes_to_consume = 6;
