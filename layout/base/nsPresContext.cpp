@@ -229,7 +229,6 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
   mActiveLinkColor = NS_RGB(0xEE, 0x00, 0x00);
   mVisitedLinkColor = NS_RGB(0x55, 0x1A, 0x8B);
   mUnderlineLinks = PR_TRUE;
-  mSendAfterPaintToContent = PR_FALSE;
 
   mFocusTextColor = mDefaultColor;
   mFocusBackgroundColor = mBackgroundColor;
@@ -304,9 +303,6 @@ nsPresContext::~nsPresContext()
 #ifdef IBMBIDI
   nsContentUtils::UnregisterPrefCallback("bidi.", PrefChangedCallback, this);
 #endif // IBMBIDI
-  nsContentUtils::UnregisterPrefCallback("dom.send_after_paint_to_content",
-                                         nsPresContext::PrefChangedCallback,
-                                         this);
   nsContentUtils::UnregisterPrefCallback("gfx.font_rendering.",
                                          nsPresContext::PrefChangedCallback,
                                          this);
@@ -653,10 +649,6 @@ nsPresContext::GetUserPreferences()
   // * document colors
   GetDocumentColorPreferences();
 
-  mSendAfterPaintToContent =
-    nsContentUtils::GetBoolPref("dom.send_after_paint_to_content",
-                                mSendAfterPaintToContent);
-
   // * link colors
   mUnderlineLinks =
     nsContentUtils::GetBoolPref("browser.underline_anchors", mUnderlineLinks);
@@ -964,9 +956,6 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext)
   nsContentUtils::RegisterPrefCallback("bidi.", PrefChangedCallback,
                                        this);
 #endif
-  nsContentUtils::RegisterPrefCallback("dom.send_after_paint_to_content",
-                                       nsPresContext::PrefChangedCallback,
-                                       this);
   nsContentUtils::RegisterPrefCallback("gfx.font_rendering.", PrefChangedCallback,
                                        this);
   nsContentUtils::RegisterPrefCallback("layout.css.dpi",
@@ -2103,20 +2092,13 @@ nsPresContext::FireDOMPaintEvent()
   nsCOMPtr<nsIDOMEventTarget> dispatchTarget = do_QueryInterface(ourWindow);
   nsCOMPtr<nsIDOMEventTarget> eventTarget = dispatchTarget;
   if (!IsChrome()) {
-    PRBool notifyContent = mSendAfterPaintToContent;
-
-    if (notifyContent) {
-      // If the pref is set, we still don't post events when they're
-      // entirely cross-doc.
-      notifyContent = PR_FALSE;
-      for (PRUint32 i = 0; i < mInvalidateRequests.mRequests.Length(); ++i) {
-        if (!(mInvalidateRequests.mRequests[i].mFlags &
-              nsIFrame::INVALIDATE_CROSS_DOC)) {
-          notifyContent = PR_TRUE;
-        }
+    PRBool isCrossDocOnly = PR_TRUE;
+    for (PRUint32 i = 0; i < mInvalidateRequests.mRequests.Length(); ++i) {
+      if (!(mInvalidateRequests.mRequests[i].mFlags & nsIFrame::INVALIDATE_CROSS_DOC)) {
+        isCrossDocOnly = PR_FALSE;
       }
     }
-    if (!notifyContent) {
+    if (isCrossDocOnly) {
       // Don't tell the window about this event, it should not know that
       // something happened in a subdocument. Tell only the chrome event handler.
       // (Events sent to the window get propagated to the chrome event handler
