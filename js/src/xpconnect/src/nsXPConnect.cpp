@@ -2498,19 +2498,14 @@ nsXPConnect::Push(JSContext * cx)
     if(!data)
         return NS_ERROR_FAILURE;
 
-    if (gDebugMode != gDesiredDebugMode && NS_IsMainThread()) {
-        const nsTArray<XPCJSContextInfo>* stack = data->GetJSContextStack()->GetStack();
-        bool runningJS = false;
-        for (PRUint32 i = 0; i < stack->Length(); ++i) {
-            JSContext *cx = (*stack)[i].cx;
-            if (cx && cx->regs) {
-                runningJS = true;
-                break;
-            }
-        }
-        if (!runningJS)
-            CheckForDebugMode(mRuntime->GetJSRuntime());
-    }
+    PRInt32 count;
+    nsresult rv;
+    rv = data->GetJSContextStack()->GetCount(&count);
+    if (NS_FAILED(rv))
+        return rv;
+
+    if (count == 0)
+        CheckForDebugMode(mRuntime->GetJSRuntime());
 
     return data->GetJSContextStack()->Push(cx);
 }
