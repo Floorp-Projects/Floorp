@@ -73,6 +73,7 @@ _TEST_FILES =	bug500931_helper.html \
 		test_bug560351.html \
 		test_bug564330.html \
 		test_frameWrapping.html \
+		test_bug585745.html \
 		test_bug589028.html \
 		bug589028_helper.html \
 		test_bug605167.html \
