@@ -17,7 +17,7 @@
   <script type="application/javascript">
   SimpleTest.waitForExplicitFinish();
 
-  var didpaint = function() {};
+  var didPaint = function() {};
 
   function startTest() {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
@@ -29,14 +29,14 @@
       }
     }
 
-    didpaint = function() {
+    didPaint = function() {
       ok(false, "Plugin should not paint until it is visible!");
     };
 
     ok(!p.isVisible(), "Plugin should not be visible.");
     paintCountIs(p, 0, "Plugin should not have painted.");
 
-    didpaint = part2;
+    didPaint = part2;
 
     p.style.visibility = 'visible';
   }
@@ -45,7 +45,7 @@
     ok(p.isVisible(), "Plugin should now be visible.");
     paintCountIs(p, 1, "Plugin should have painted once.");
 
-    didpaint = part3;
+    didPaint = part3;
 
     p.setColor('FF0000FF'); // this causes an invalidate/repaint
   }
@@ -58,7 +58,7 @@
     ok(p.isVisible(), "Plugin should still be visible.");
     paintCountIs(p, 2, "Plugin should have painted twice.");
 
-    didpaint = function() {
+    didPaint = function() {
       ok(false, "Plugin should not paint when it is invisible.");
     };
 
@@ -85,9 +85,18 @@
     setTimeout(SimpleTest.finish, 500);
     // wait to make sure we don't actually paint
   }
+
+  function inPaint() {
+    // We're actually in the middle of painting the plugin so don't do anything
+    // complex here, for the sake of cases where async plugin painting isn't
+    // enabled yet
+    setTimeout(didPaint, 0);
+    // Don't run that didPaint callback again
+    didPaint = function() {};
+  }
   </script>
 
-  <embed id="theplugin" class="hidden" type="application/x-test" drawmode="solid" color="FFFF0000" paintscript="setTimeout(didpaint, 0)"></embed>
+  <embed id="theplugin" class="hidden" type="application/x-test" drawmode="solid" color="FFFF0000" paintscript="inPaint()"></embed>
   
   <script type="application/javascript">
   var p = document.getElementById('theplugin');

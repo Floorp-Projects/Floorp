@@ -120,11 +120,11 @@ _MOCHICHROME_FILES = \
   $(NULL)
 
 ifneq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-ifneq ($(OS_ARCH),WINNT)
 _MOCHITEST_FILES += \
   test_visibility.html \
   $(NULL)
 
+ifneq ($(OS_ARCH),WINNT)
 _MOCHICHROME_FILES += \
   test_xulbrowser_plugin_visibility.xul \
   xulbrowser_plugin_visibility.xul \
