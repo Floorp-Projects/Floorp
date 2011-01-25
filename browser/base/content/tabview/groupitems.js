@@ -567,7 +567,6 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Function: closeAll
   // Closes the groupItem and all of its children.
   closeAll: function GroupItem_closeAll() {
-    let closeCenter = this.getBounds().center();
     if (this._children.length > 0) {
       this._children.forEach(function(child) {
         iQ(child.container).hide();
@@ -588,6 +587,16 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       if (!this.locked.close)
         this.close();
     }
+    
+    this._makeClosestTabActive();
+  },
+  
+  // ----------
+  // Function: _makeClosestTabActive
+  // Make the closest tab external to this group active.
+  // Used when closing the group.
+  _makeClosestTabActive: function GroupItem__makeClosestTabActive() {
+    let closeCenter = this.getBounds().center();
     // Find closest tab to make active
     let closestTabItem = UI.getClosestTab(closeCenter);
     UI.setActiveTab(closestTabItem);
@@ -943,6 +952,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
           !options.dontClose) {
         if (!GroupItems.getUnclosableGroupItemId()) {
           this.close();
+          this._makeClosestTabActive();
         } else {
           // this.close();  this line is causing the leak but the leak doesn't happen after re-enabling it
         }
