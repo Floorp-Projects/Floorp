@@ -1121,6 +1121,7 @@ protected:
   unsigned              mUseDocumentFonts : 1;
   unsigned              mUseDocumentColors : 1;
   unsigned              mUnderlineLinks : 1;
+  unsigned              mSendAfterPaintToContent : 1;
   unsigned              mUseFocusColors : 1;
   unsigned              mFocusRingOnAnything : 1;
   unsigned              mFocusRingStyle : 1;

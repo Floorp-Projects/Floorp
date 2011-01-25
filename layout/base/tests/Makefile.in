@@ -66,6 +66,7 @@ _TEST_FILES =	\
 		bug369950-subframe.xml \
 		bug495648.rdf \
 		decoration_line_rendering.js \
+		test_after_paint_pref.html \
 		test_border_radius_hit_testing.html \
 		test_bug66619.html \
 		test_bug114649.html \
