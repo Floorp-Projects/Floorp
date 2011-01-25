@@ -16,14 +16,19 @@
     
     function doTest()
     {
-      var IDs = ["input", "div", "textarea"];
-  
       // __h__e__l__l__o__ __m__y__ __f__r__i__e__n__d__
       //  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15
 
       ////////////////////////////////////////////////////////////////////////
+      // characterCount
+
+      testCharacterCount(["input", "div"], 15);
+      testCharacterCount(["textarea"], 16);
+
+      ////////////////////////////////////////////////////////////////////////
       // getText
 
+      var IDs = ["input", "div", "textarea"];
       testText(IDs, 0, 1, "h");
       testText(IDs, 1, 3, "el");
       testText(IDs, 14, 15, "d");

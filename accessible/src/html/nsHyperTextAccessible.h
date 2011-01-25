@@ -91,7 +91,7 @@ public:
 
   virtual void InvalidateChildren();
 
-  // nsHyperTextAccessible
+  // nsHyperTextAccessible (static helper method)
 
   // Convert content offset to rendered text offset  
   static nsresult ContentToRenderedOffset(nsIFrame *aFrame, PRInt32 aContentOffset,
@@ -100,6 +100,9 @@ public:
   // Convert rendered text offset to content offset
   static nsresult RenderedToContentOffset(nsIFrame *aFrame, PRUint32 aRenderedOffset,
                                           PRInt32 *aContentOffset);
+
+  //////////////////////////////////////////////////////////////////////////////
+  // HyperLinkAccessible
 
   /**
    * Return link count within this hypertext accessible.
@@ -133,6 +136,9 @@ public:
     nsAccessible* child = GetChildAtOffset(aOffset);
     return child ? GetLinkIndex(child) : -1;
   }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // nsHyperTextAccessible: DOM point to text offset conversions.
 
   /**
     * Turn a DOM Node and offset into a character offset into this hypertext.
@@ -191,6 +197,17 @@ public:
                                       PRInt32 *aStartOffset,
                                       nsIDOMNode **aEndNode,
                                       PRInt32 *aEndOffset);
+
+  //////////////////////////////////////////////////////////////////////////////
+  // TextAccessible
+
+  /**
+   * Return character count within the hypertext accessible.
+   */
+  inline PRUint32 CharacterCount()
+  {
+    return GetChildOffset(GetChildCount());
+  }
 
   /**
    * Return text offset of the given child accessible within hypertext
