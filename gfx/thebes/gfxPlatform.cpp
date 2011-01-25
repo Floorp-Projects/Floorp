@@ -963,14 +963,16 @@ gfxPlatform::GetCMSOutputProfile()
             nsresult rv;
 
             /* Determine if we're using the internal override to force sRGB as
-               an output profile for reftests. See Bug 452125. */
-            PRBool hasSRGBOverride, doSRGBOverride;
-            rv = prefs->PrefHasUserValue(CMForceSRGBPrefName, &hasSRGBOverride);
-            if (NS_SUCCEEDED(rv) && hasSRGBOverride) {
-                rv = prefs->GetBoolPref(CMForceSRGBPrefName, &doSRGBOverride);
-                if (NS_SUCCEEDED(rv) && doSRGBOverride)
-                    gCMSOutputProfile = GetCMSsRGBProfile();
-            }
+               an output profile for reftests. See Bug 452125.
+
+               Note that we don't normally (outside of tests) set a
+               default value of this preference, which means GetBoolPref
+               will typically throw (and leave its out-param untouched).
+             */
+            PRBool doSRGBOverride;
+            rv = prefs->GetBoolPref(CMForceSRGBPrefName, &doSRGBOverride);
+            if (NS_SUCCEEDED(rv) && doSRGBOverride)
+                gCMSOutputProfile = GetCMSsRGBProfile();
 
             if (!gCMSOutputProfile) {
 
