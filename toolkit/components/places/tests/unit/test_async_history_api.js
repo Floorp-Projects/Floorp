@@ -40,6 +40,62 @@ function VisitInfo(aTransitionType,
 }
 
 /**
+ * Generic nsINavHistoryObserver that doesn't implement anything, but provides
+ * dummy methods to prevent errors about an object not having a certain method.
+ */
+function NavHistoryObserver()
+{
+}
+NavHistoryObserver.prototype =
+{
+  onBeginUpdateBatch: function() { },
+  onEndUpdateBatch: function() { },
+  onVisit: function() { },
+  onTitleChanged: function() { },
+  onBeforeDeleteURI: function() { },
+  onDeleteURI: function() { },
+  onClearHistory: function() { },
+  onPageChanged: function() { },
+  onDeleteVisits: function() { },
+  QueryInterface: XPCOMUtils.generateQI([
+    Ci.nsINavHistoryObserver,
+  ]),
+};
+
+/**
+ * Listens for a title change notification, and calls aCallback when it gets it.
+ *
+ * @param aURI
+ *        The URI of the page we expect a notification for.
+ * @param aExpectedTitle
+ *        The expected title of the URI we expect a notification for.
+ * @param aCallback
+ *        The method to call when we have gotten the proper notification about
+ *        the title changing.
+ */
+function TitleChangedObserver(aURI,
+                              aExpectedTitle,
+                              aCallback)
+{
+  this.uri = aURI;
+  this.expectedTitle = aExpectedTitle;
+  this.callback = aCallback;
+}
+TitleChangedObserver.prototype = {
+  __proto__: NavHistoryObserver.prototype,
+  onTitleChanged: function(aURI,
+                           aTitle)
+  {
+    do_log_info("onTitleChanged(" + aURI.spec + ", " + aTitle + ")");
+    if (!this.uri.equals(aURI)) {
+      return;
+    }
+    do_check_eq(aTitle, this.expectedTitle);
+    this.callback();
+  },
+};
+
+/**
  * Tests that a title was set properly in the database.
  *
  * @param aURI
@@ -720,6 +776,7 @@ function test_title_change_saved()
   // First, add a visit for it.
   let place = {
     uri: NetUtil.newURI(TEST_DOMAIN + "test_title_change_saved"),
+    title: "original title",
     visits: [
       new VisitInfo(),
     ],
@@ -729,16 +786,105 @@ function test_title_change_saved()
   gHistory.updatePlaces(place, function(aResultCode, aPlaceInfo) {
     do_check_true(Components.isSuccessCode(aResultCode));
 
-    // Then, change the title with visits.
-    place.title = "title change";
+    // Now, make sure the empty string clears the title.
+    place.title = "";
     place.visits = [new VisitInfo()];
     gHistory.updatePlaces(place, function(aResultCode, aPlaceInfo) {
       do_check_true(Components.isSuccessCode(aResultCode));
-      do_check_title_for_uri(place.uri, place.title);
+      do_check_title_for_uri(place.uri, null);
+
+      // Then, change the title with visits.
+      place.title = "title change";
+      place.visits = [new VisitInfo()];
+      gHistory.updatePlaces(place, function(aResultCode, aPlaceInfo) {
+        do_check_true(Components.isSuccessCode(aResultCode));
+        do_check_title_for_uri(place.uri, place.title);
+
+        // Lastly, check that the title is cleared if we set it to null.
+        place.title = null;
+        place.visits = [new VisitInfo()];
+        gHistory.updatePlaces(place, function(aResultCode, aPlaceInfo) {
+          do_check_true(Components.isSuccessCode(aResultCode));
+          do_check_title_for_uri(place.uri, place.title);
+
+          run_next_test();
+        });
+      });
+    });
+  });
+}
+
+function test_no_title_does_not_clear_title()
+{
+  const TITLE = "test title";
+  // First, add a visit for it.
+  let place = {
+    uri: NetUtil.newURI(TEST_DOMAIN + "test_no_title_does_not_clear_title"),
+    title: TITLE,
+    visits: [
+      new VisitInfo(),
+    ],
+  };
+  do_check_false(gGlobalHistory.isVisited(place.uri));
+
+  gHistory.updatePlaces(place, function(aResultCode, aPlaceInfo) {
+    do_check_true(Components.isSuccessCode(aResultCode));
+
+    // Now, make sure that not specifying a title does not clear it.
+    delete place.title;
+    place.visits = [new VisitInfo()];
+    gHistory.updatePlaces(place, function(aResultCode, aPlaceInfo) {
+      do_check_true(Components.isSuccessCode(aResultCode));
+      do_check_title_for_uri(place.uri, TITLE);
 
       run_next_test();
     });
   });
+}
+
+function test_title_change_notifies()
+{
+  // There are three cases to test.  The first case is to make sure we do not
+  // get notified if we do not specify a title.
+  let place = {
+    uri: NetUtil.newURI(TEST_DOMAIN + "test_title_change_notifies"),
+    visits: [
+      new VisitInfo(),
+    ],
+  };
+  do_check_false(gGlobalHistory.isVisited(place.uri));
+
+  let silentObserver =
+    new TitleChangedObserver(place.uri, "DO NOT WANT", function() {
+      do_throw("unexpected callback!");
+    });
+
+  PlacesUtils.history.addObserver(silentObserver, false);
+  gHistory.updatePlaces(place);
+
+  // The second case to test is that we get the notification when we add
+  // it for the first time.  The first case will fail before our callback if it
+  // is busted, so we can do this now.
+  place.uri = NetUtil.newURI(place.uri.spec + "/new-visit-with-title");
+  place.title = "title 1";
+  let callbackCount = 0;
+  let observer = new TitleChangedObserver(place.uri, place.title, function() {
+    switch (++callbackCount) {
+      case 1:
+        // The third case to test is to make sure we get a notification when we
+        // change an existing place.
+        observer.expectedTitle = place.title = "title 2";
+        place.visits = [new VisitInfo()];
+        gHistory.updatePlaces(place);
+        break;
+      case 2:
+        PlacesUtils.history.removeObserver(silentObserver);
+        PlacesUtils.history.removeObserver(observer);
+        run_next_test();
+    };
+  });
+  PlacesUtils.history.addObserver(observer, false);
+  gHistory.updatePlaces(place);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -763,6 +909,8 @@ let gTests = [
   test_sessionId_saved,
   test_guid_change_saved,
   test_title_change_saved,
+  test_no_title_does_not_clear_title,
+  test_title_change_notifies,
 ];
 
 function run_test()
