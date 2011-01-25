@@ -89,14 +89,8 @@ const AnimatedZoom = {
     let zoomRatio = window.innerWidth / nextRect.width;
     let zoomLevel = browser.scale * zoomRatio;
 
-    // XXX using the underlying frameLoader APIs is undesirable and is not a
-    // pattern to propagate. The browser binding should be taking care of this!
-    // There is some bug that I have not yet discovered that make browser.scrollTo
-    // not behave correctly and there is no intelligence in browser.scale to keep
-    // the actual resolution changes small.
-    // * One bug is related to setting scale. See bug 626792.
     let contentView = browser.getRootView();
-    contentView.setScale(zoomLevel, zoomLevel);
+    contentView.setScale(zoomLevel);
     contentView.scrollTo(nextRect.left * zoomRatio, nextRect.top * zoomRatio);
 
     this.zoomRect = nextRect;
