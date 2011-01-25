@@ -25,7 +25,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=448587.xul
   const Cu = Components.utils;
   var sandbox = new Cu.Sandbox("about:blank");
   var fwrapper = Cu.evalInSandbox("function f() {} f", sandbox);
-  ok(fwrapper.prototype == Cu.evalInSandbox("f.prototype", sandbox));
+  is(fwrapper.prototype, Cu.evalInSandbox("f.prototype", sandbox),
+     "we don't censor .prototype through .wrappedJSObject");
   ]]>
   </script>
 </window>
