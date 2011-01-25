@@ -71,8 +71,6 @@
 #include "nsINode.h"
 #include "nsHashtable.h"
 
-#include "jsapi.h"
-
 struct nsNativeKeyEvent; // Don't include nsINativeKeyBindings.h here: it will force strange compilation error!
 
 class nsIDOMScriptObjectFactory;
