@@ -205,28 +205,49 @@ function test_invalid_guid_throws()
   run_next_test();
 }
 
-function test_no_id_or_guid_no_visits_throws()
+function test_no_visits_throws()
 {
-  // First, test with no visit attribute.
-  let place = {
-    uri: NetUtil.newURI(TEST_DOMAIN + "test_no_id_or_guid_no_visits_throws"),
-  };
-  try {
-    gHistory.updatePlaces(place);
-    do_throw("Should have thrown!");
-  }
-  catch (e) {
-    do_check_eq(e.result, Cr.NS_ERROR_INVALID_ARG);
-  }
+  const TEST_URI =
+    NetUtil.newURI(TEST_DOMAIN + "test_no_id_or_guid_no_visits_throws");
+  const TEST_GUID = "_RANDOMGUID_";
+  const TEST_PLACEID = 2;
 
-  // Now test with an empty array.
-  place.visits = [];
-  try {
-    gHistory.updatePlaces(place);
-    do_throw("Should have thrown!");
-  }
-  catch (e) {
-    do_check_eq(e.result, Cr.NS_ERROR_INVALID_ARG);
+  let log_test_conditions = function(aPlace) {
+    let str = "Testing place with " +
+      (aPlace.uri ? "uri" : "no uri") + ", " +
+      (aPlace.guid ? "guid" : "no guid") + ", " +
+      (aPlace.placeId ? "placeId" : "no placeId") + ", " +
+      (aPlace.visits ? "visits array" : "no visits array");
+    do_log_info(str);
+  };
+
+  // Loop through every possible case.  Note that we don't actually care about
+  // the case where we have no uri, place id, or guid (covered by another test),
+  // but it is easier to just make sure it too throws than to exclude it.
+  let place = { };
+  for (let uri = 1; uri >= 0; uri--) {
+    place.uri = uri ? TEST_URI : undefined;
+
+    for (let guid = 1; guid >= 0; guid--) {
+      place.guid = guid ? TEST_GUID : undefined;
+
+      for (let placeId = 1; placeId >= 0; placeId--) {
+        place.placeId = placeId ? TEST_PLACEID : undefined;
+
+        for (let visits = 1; visits >= 0; visits--) {
+          place.visits = visits ? [] : undefined;
+
+          log_test_conditions(place);
+          try {
+            gHistory.updatePlaces(place);
+            do_throw("Should have thrown!");
+          }
+          catch (e) {
+            do_check_eq(e.result, Cr.NS_ERROR_INVALID_ARG);
+          }
+        }
+      }
+    }
   }
 
   run_next_test();
@@ -729,7 +750,7 @@ let gTests = [
   test_invalid_places_throws,
   test_invalid_id_throws,
   test_invalid_guid_throws,
-  test_no_id_or_guid_no_visits_throws,
+  test_no_visits_throws,
   test_add_visit_no_date_throws,
   test_add_visit_no_transitionType_throws,
   test_add_visit_invalid_transitionType_throws,
