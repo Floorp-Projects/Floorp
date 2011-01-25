@@ -523,7 +523,7 @@ function options(aOptionName)
 
   if (aOptionName)
   {
-    if (options.currvalues[aOptionName])
+    if (options.currvalues.hasOwnProperty(aOptionName))
     {
       // option is set, toggle it to unset
       delete options.currvalues[aOptionName];
@@ -543,17 +543,18 @@ function options(aOptionName)
 function optionsInit() {
 
   // hash containing the set options
-  options.currvalues = {strict:     '',
-                        werror:     '',
-                        atline:     '',
-                        xml:        '',
-                        relimit:    '',
-                        anonfunfux: ''
-  }
+  options.currvalues = {
+    strict:     true,
+    werror:     true,
+    atline:     true,
+    xml:        true,
+    relimit:    true,
+    anonfunfix: true,
+  };
 
   // record initial values to support resetting
   // options to their initial values
-  options.initvalues  = {};
+  options.initvalues = {};
 
   // record values in a stack to support pushing
   // and popping options
@@ -569,7 +570,7 @@ function optionsInit() {
     }
     else
     {
-      options.initvalues[optionName] = '';
+      options.initvalues[optionName] = true;
     }
   }
 }

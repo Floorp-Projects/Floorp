@@ -404,7 +404,8 @@ WrapEscapingClosure(JSContext *cx, JSStackFrame *fp, JSFunction *fun)
                                             ? script->globals()->length
                                             : 0,
                                             script->nClosedArgs,
-                                            script->nClosedVars);
+                                            script->nClosedVars,
+                                            script->getVersion());
     if (!wscript)
         return NULL;
 
@@ -469,7 +470,7 @@ WrapEscapingClosure(JSContext *cx, JSStackFrame *fp, JSFunction *fun)
      * Fill in the rest of wscript. This means if you add members to JSScript
      * you must update this code. FIXME: factor into JSScript::clone method.
      */
-    wscript->setVersion(script->getVersion());
+    JS_ASSERT(wscript->getVersion() == script->getVersion());
     wscript->nfixed = script->nfixed;
     wscript->filename = script->filename;
     wscript->lineno = script->lineno;
@@ -2512,7 +2513,7 @@ Function(JSContext *cx, uintN argc, Value *vp)
 
         /* Initialize a tokenstream that reads from the given string. */
         TokenStream ts(cx);
-        if (!ts.init(cx->findVersion(), collected_args, args_length, filename, lineno)) {
+        if (!ts.init(collected_args, args_length, filename, lineno, cx->findVersion())) {
             JS_ARENA_RELEASE(&cx->tempPool, mark);
             return JS_FALSE;
         }
@@ -2601,7 +2602,7 @@ Function(JSContext *cx, uintN argc, Value *vp)
         return JS_FALSE;
 
     return Compiler::compileFunctionBody(cx, fun, principals, &bindings,
-                                         chars, length, filename, lineno);
+                                         chars, length, filename, lineno, cx->findVersion());
 }
 
 static JSBool
@@ -2625,10 +2626,9 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
         return NULL;
     fun->flags |= JSFUN_PROTOTYPE;
 
-    JSScript *script = JSScript::NewScript(cx, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    JSScript *script = JSScript::NewScript(cx, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, JSVERSION_DEFAULT);
     if (!script)
         return NULL;
-    script->setVersion(JSVERSION_DEFAULT);
     script->noScriptRval = true;
     script->code[0] = JSOP_STOP;
     script->code[1] = SRC_NULL;
