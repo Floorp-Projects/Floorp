@@ -286,8 +286,13 @@ Snapshot(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector *props)
             if (pobj->isProxy()) {
                 AutoIdVector proxyProps(cx);
                 if (flags & JSITER_OWNONLY) {
-                    if (!JSProxy::keys(cx, pobj, proxyProps))
-                        return false;
+                    if (flags & JSITER_HIDDEN) {
+                        if (!JSProxy::getOwnPropertyNames(cx, pobj, proxyProps))
+                            return false;
+                    } else {
+                        if (!JSProxy::keys(cx, pobj, proxyProps))
+                            return false;
+                    }
                 } else {
                     if (!JSProxy::enumerate(cx, pobj, proxyProps))
                         return false;
