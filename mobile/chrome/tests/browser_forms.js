@@ -9,7 +9,7 @@ function test() {
 
   // Need to wait until the page is loaded
   messageManager.addMessageListener("pageshow", function(aMessage) {
-    if (newTab.browser.currentURI.spec != "about:blank") {
+    if (newTab && newTab.browser.currentURI.spec != "about:blank") {
       messageManager.removeMessageListener(aMessage.name, arguments.callee);
       setTimeout(onTabLoaded, 0);
     }
@@ -42,25 +42,29 @@ function testMouseEvents() {
   });
 };
 
-function testOpenUIWithSyncFocus() {
-  AsyncTests.waitFor("Test:Open", { value: "*[tabindex='0']" }, function(json) {
-    ok(FormHelperUI._open, "Form Assistant should be open");
-    testOpenUI();
+function waitForFormAssist(aCallback) {
+  messageManager.addMessageListener("FormAssist:Show", function(aMessage) {
+    messageManager.removeMessageListener(aMessage.name, arguments.callee);
+    setTimeout(function() {
+      ok(FormHelperUI._open, "Form Assistant should be open");
+      setTimeout(aCallback, 0);
+    });
   });
+};
+
+function testOpenUIWithSyncFocus() {
+  AsyncTests.waitFor("Test:Open", { value: "*[tabindex='0']" }, function(json) {});
+  waitForFormAssist(testOpenUI);
 };
 
 function testOpenUI() {
-  AsyncTests.waitFor("Test:Open", { value: "*[tabindex='0']" }, function(json) {
-    ok(FormHelperUI._open, "Form Assistant should be open");
-    testOpenUIWithFocusRedirect();
-  });
+  AsyncTests.waitFor("Test:Open", { value: "*[tabindex='0']" }, function(json) {});
+  waitForFormAssist(testOpenUIWithFocusRedirect);
 };
 
 function testOpenUIWithFocusRedirect() {
-  AsyncTests.waitFor("Test:OpenWithFocusRedirect", { value: "*[tabindex='0']" }, function(json) {
-    ok(FormHelperUI._open, "Form Assistant should be open");
-    testShowUIForSelect();
-  });
+  AsyncTests.waitFor("Test:OpenWithFocusRedirect", { value: "*[tabindex='0']" }, function(json) {});
+  waitForFormAssist(testShowUIForSelect);
 };
 
 function testShowUIForSelect() {
