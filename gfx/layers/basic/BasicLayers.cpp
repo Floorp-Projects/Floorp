@@ -824,6 +824,9 @@ public:
                      LayerManager::DrawThebesLayerCallback aCallback,
                      void* aCallbackData);
 
+  virtual void PaintWithOpacity(gfxContext* aContext,
+                                float aOpacity);
+
 protected:
   BasicLayerManager* BasicManager()
   {
@@ -933,6 +936,13 @@ BasicCanvasLayer::Paint(gfxContext* aContext,
                         LayerManager::DrawThebesLayerCallback aCallback,
                         void* aCallbackData)
 {
+  PaintWithOpacity(aContext, GetEffectiveOpacity());
+}
+
+void
+BasicCanvasLayer::PaintWithOpacity(gfxContext* aContext,
+                                   float aOpacity)
+{
   NS_ASSERTION(BasicManager()->InDrawing(),
                "Can only draw in drawing phase");
 
@@ -948,16 +958,14 @@ BasicCanvasLayer::Paint(gfxContext* aContext,
     aContext->Scale(1.0, -1.0);
   }
 
-  float opacity = GetEffectiveOpacity();
-
   aContext->NewPath();
   // No need to snap here; our transform is already set up to snap our rect
   aContext->Rectangle(gfxRect(0, 0, mBounds.width, mBounds.height));
   aContext->SetPattern(pat);
-  if (opacity != 1.0) {
+  if (aOpacity != 1.0) {
     aContext->Save();
     aContext->Clip();
-    aContext->Paint(opacity);
+    aContext->Paint(aOpacity);
     aContext->Restore();
   } else {
     aContext->Fill();
@@ -2020,14 +2028,19 @@ BasicShadowableCanvasLayer::Paint(gfxContext* aContext,
   if (!HasShadow())
     return;
 
-  // XXX this is yucky and slow.  It'd be nice to draw directly into
-  // the shmem back buffer
+  // It'd be nice to draw directly into the shmem back buffer.
+  // Doing so is complex -- for 2D canvases, we'd need to copy
+  // changed areas, much like we do for Thebes layers, as well as
+  // do all sorts of magic to swap out the surface underneath the
+  // canvas' thebes/cairo context.
   nsRefPtr<gfxContext> tmpCtx = new gfxContext(mBackBuffer);
   tmpCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
 
   // call BasicCanvasLayer::Paint to draw to our tmp context, because
-  // it'll handle things like flipping correctly
-  BasicCanvasLayer::Paint(tmpCtx, nsnull, nsnull);
+  // it'll handle things like flipping correctly.  We always want
+  // to do this with 1.0 opacity though, because opacity is a layer
+  // property that's handled by the shadow tree.
+  BasicCanvasLayer::PaintWithOpacity(tmpCtx, 1.0f);
 
   BasicManager()->PaintedCanvas(BasicManager()->Hold(this),
                                 mBackBuffer);
