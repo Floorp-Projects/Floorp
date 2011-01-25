@@ -274,9 +274,10 @@ var Browser = {
       let w = window.innerWidth;
       let h = window.innerHeight;
 
-      // XXX is this code right here actually needed?
-      let maximize = (document.documentElement.getAttribute("sizemode") == "maximized");
-      if (maximize && w > screen.width)
+      // Don't bother doing unuseful work during intermediate resized during
+      // startup if the goal is to be fullscreen
+      let fullscreen = (document.documentElement.getAttribute("sizemode") == "fullscreen");
+      if (fullscreen && w != screen.width)
         return;
 
       let toolbarHeight = Math.round(document.getElementById("toolbar-main").getBoundingClientRect().height);
@@ -342,7 +343,9 @@ var Browser = {
     os.addObserver(BrowserSearch, "browser-search-engine-modified", false);
 
     // Listens for change in the viewable area
+#if MOZ_PLATFORM_MAEMO == 6
     os.addObserver(ViewableAreaObserver, "softkb-change", false);
+#endif
     Elements.contentNavigator.addEventListener("SizeChanged", function() {
       ViewableAreaObserver.update();
     }, true);
@@ -2544,7 +2547,8 @@ Tab.prototype = {
       }
     }
 
-    browser.setWindowSize(viewportW, viewportH);
+    if (browser.contentWindowWidth != viewportW || browser.contentWindowHeight != viewportH)
+      browser.setWindowSize(viewportW, viewportH);
   },
 
   restoreViewportPosition: function restoreViewportPosition(aOldWidth, aNewWidth) {
@@ -2837,6 +2841,7 @@ var ViewableAreaObserver = {
   },
 
   observe: function va_observe(aSubject, aTopic, aData) {
+#if MOZ_PLATFORM_MAEMO == 6
     let rect = Rect.fromRect(JSON.parse(aData));
     let height = rect.bottom - rect.top;
     let width = rect.right - rect.left;
@@ -2849,6 +2854,7 @@ var ViewableAreaObserver = {
       this._width = width;
     }
     this.update();
+#endif
   },
 
   update: function va_update() {
@@ -2857,29 +2863,31 @@ var ViewableAreaObserver = {
 
     let newWidth = this.width;
     let newHeight = this.height;
-    if (newHeight != oldHeight || newWidth != oldWidth) {
-      Browser.styles["viewable-height"].height = newHeight + "px";
-      Browser.styles["viewable-height"].maxHeight = newHeight + "px";
+    if (newHeight == oldHeight && newWidth == oldWidth)
+      return;
 
-      Browser.styles["viewable-width"].width = newWidth + "px";
-      Browser.styles["viewable-width"].maxWidth = newWidth + "px";
+    Browser.styles["viewable-height"].height = newHeight + "px";
+    Browser.styles["viewable-height"].maxHeight = newHeight + "px";
 
-      for (let i = Browser.tabs.length - 1; i >= 0; i--) {
-        let tab = Browser.tabs[i];
-        tab.updateViewportSize();
+    Browser.styles["viewable-width"].width = newWidth + "px";
+    Browser.styles["viewable-width"].maxWidth = newWidth + "px";
 
-        // If the viewport width is still the same, the page layout has not
-        // changed, so we can keep keep the same content on-screen.
-        if (tab.browser.contentWindowWidth == oldWidth)
-          tab.restoreViewportPosition(oldWidth, newWidth);
-      }
+    for (let i = Browser.tabs.length - 1; i >= 0; i--) {
+      let tab = Browser.tabs[i];
+      tab.updateViewportSize();
+      tab.updateDefaultZoomLevel();
 
-      // setTimeout(callback, 0) to ensure the resize event handler dispatch is finished
-      setTimeout(function() {
-        let event = document.createEvent("Events");
-        event.initEvent("SizeChanged", true, false);
-        Elements.browsers.dispatchEvent(event);
-      }, 0);
+      // If the viewport width is still the same, the page layout has not
+      // changed, so we can keep keep the same content on-screen.
+      if (tab.browser.contentWindowWidth == oldWidth)
+        tab.restoreViewportPosition(oldWidth, newWidth);
     }
+
+    // setTimeout(callback, 0) to ensure the resize event handler dispatch is finished
+    setTimeout(function() {
+      let event = document.createEvent("Events");
+      event.initEvent("SizeChanged", true, false);
+      Elements.browsers.dispatchEvent(event);
+    }, 0);
   }
 };
