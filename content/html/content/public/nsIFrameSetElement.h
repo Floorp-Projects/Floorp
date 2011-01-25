@@ -66,6 +66,12 @@ struct nsFramesetSpec {
 };
 
 /**
+ * The maximum number of entries allowed in the frame set element row
+ * or column spec.
+ */
+#define NS_MAX_FRAMESET_SPEC_COUNT 16000
+
+/**
  * This interface is used by the nsFramesetFrame to access the parsed
  * values of the "rows" and "cols" attributes
  */
