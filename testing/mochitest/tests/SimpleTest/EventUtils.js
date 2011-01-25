@@ -604,6 +604,14 @@ function synthesizeDrop(srcElement, destElement, dragData, dropEffect, aWindow)
   if (!aWindow)
     aWindow = window;
 
+  // For events to trigger the UA's default actions they need to be "trusted".
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+  var gWindowUtils  = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+                             getInterface(Components.interfaces.nsIDOMWindowUtils);
+  var ds = Components.classes["@mozilla.org/widget/dragservice;1"].
+           getService(Components.interfaces.nsIDragService);
+
   var dataTransfer;
   var trapDrag = function(event) {
     dataTransfer = event.dataTransfer;
@@ -618,32 +626,39 @@ function synthesizeDrop(srcElement, destElement, dragData, dropEffect, aWindow)
     event.stopPropagation();
   }
 
-  // need to use real mouse action
-  aWindow.addEventListener("dragstart", trapDrag, true);
-  synthesizeMouse(srcElement, 2, 2, { type: "mousedown" }, aWindow);
-  synthesizeMouse(srcElement, 11, 11, { type: "mousemove" }, aWindow);
-  synthesizeMouse(srcElement, 20, 20, { type: "mousemove" }, aWindow);
-  aWindow.removeEventListener("dragstart", trapDrag, true);
+  ds.startDragSession();
 
-  event = aWindow.document.createEvent("DragEvents");
-  event.initDragEvent("dragenter", true, true, aWindow, 0, 0, 0, 0, 0, false, false, false, false, 0, null, dataTransfer);
-  destElement.dispatchEvent(event);
+  try {
+    // need to use real mouse action
+    aWindow.addEventListener("dragstart", trapDrag, true);
+    synthesizeMouse(srcElement, 2, 2, { type: "mousedown" }, aWindow);
+    synthesizeMouse(srcElement, 11, 11, { type: "mousemove" }, aWindow);
+    synthesizeMouse(srcElement, 20, 20, { type: "mousemove" }, aWindow);
+    aWindow.removeEventListener("dragstart", trapDrag, true);
 
-  var event = aWindow.document.createEvent("DragEvents");
-  event.initDragEvent("dragover", true, true, aWindow, 0, 0, 0, 0, 0, false, false, false, false, 0, null, dataTransfer);
-  if (destElement.dispatchEvent(event)) {
-    synthesizeMouse(destElement, 20, 20, { type: "mouseup" }, aWindow);
-    return "none";
-  }
-
-  if (dataTransfer.dropEffect != "none") {
     event = aWindow.document.createEvent("DragEvents");
-    event.initDragEvent("drop", true, true, aWindow, 0, 0, 0, 0, 0, false, false, false, false, 0, null, dataTransfer);
-    destElement.dispatchEvent(event);
-  }
-  synthesizeMouse(destElement, 20, 20, { type: "mouseup" }, aWindow);
+    event.initDragEvent("dragenter", true, true, aWindow, 0, 0, 0, 0, 0, false, false, false, false, 0, null, dataTransfer);
+    gWindowUtils.dispatchDOMEventViaPresShell(destElement, event, true);
 
-  return dataTransfer.dropEffect;
+    var event = aWindow.document.createEvent("DragEvents");
+    event.initDragEvent("dragover", true, true, aWindow, 0, 0, 0, 0, 0, false, false, false, false, 0, null, dataTransfer);
+    if (gWindowUtils.dispatchDOMEventViaPresShell(destElement, event, true)) {
+      synthesizeMouseAtCenter(destElement, { type: "mouseup" }, aWindow);
+      return "none";
+    }
+
+    if (dataTransfer.dropEffect != "none") {
+      event = aWindow.document.createEvent("DragEvents");
+      event.initDragEvent("drop", true, true, aWindow, 0, 0, 0, 0, 0, false, false, false, false, 0, null, dataTransfer);
+      gWindowUtils.dispatchDOMEventViaPresShell(destElement, event, true);
+    }
+
+    synthesizeMouseAtCenter(destElement, { type: "mouseup" }, aWindow);
+
+    return dataTransfer.dropEffect;
+  } finally {
+    ds.endDragSession(true);
+  }
 }
 
 function disableNonTestMouseEvents(aDisable)
