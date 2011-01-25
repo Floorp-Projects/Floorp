@@ -1938,7 +1938,6 @@ let GroupItems = {
     let groupItemsData = Storage.readGroupItemsData(gWindow);
     let groupItemData = Storage.readGroupItemData(gWindow);
     this.reconstitute(groupItemsData, groupItemData);
-    this.killNewTabGroup(); // temporary?
     
     return (groupItemsData && !Utils.isEmptyObject(groupItemsData));
   },
@@ -2343,21 +2342,6 @@ let GroupItems = {
       tab._tabViewTabItem.setZoomPrep(false);
       UI.showTabView();
     }
-  },
-
-  // ----------
-  // Function: killNewTabGroup
-  // Removes the New Tab Group, which is now defunct. See bug 575851 and comments therein.
-  killNewTabGroup: function GroupItems_killNewTabGroup() {
-    // not localized as the original "New Tabs" group title was never localized
-    // to begin with
-    let newTabGroupTitle = "New Tabs";
-    this.groupItems.forEach(function(groupItem) {
-      if (groupItem.getTitle() == newTabGroupTitle && groupItem.locked.title) {
-        groupItem.removeAll();
-        groupItem.close();
-      }
-    });
   },
 
   // ----------
