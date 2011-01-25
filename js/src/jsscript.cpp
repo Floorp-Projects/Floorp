@@ -576,18 +576,16 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
         nClosedArgs = encodedClosedCount >> 16;
         nClosedVars = encodedClosedCount & 0xFFFF;
 
-        /* Note: version is packed into the 32b space with another 16b value. */
-        JSVersion version_ = JSVersion(version & JS_BITMASK(16));
-        JS_ASSERT((version_ & VersionFlags::FULL_MASK) == uintN(version_));
         script = JSScript::NewScript(cx, length, nsrcnotes, natoms, nobjects, nupvars,
                                      nregexps, ntrynotes, nconsts, 0, nClosedArgs,
-                                     nClosedVars, version_);
+                                     nClosedVars);
         if (!script)
             return JS_FALSE;
 
         script->bindings.transfer(cx, &bindings);
 
         script->main += prologLength;
+        script->setVersion(JSVersion(version & 0xffff));
         script->nfixed = uint16(version >> 16);
 
         /* If we know nsrcnotes, we allocated space for notes in script. */
@@ -1215,7 +1213,7 @@ JSScript *
 JSScript::NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natoms,
                     uint32 nobjects, uint32 nupvars, uint32 nregexps,
                     uint32 ntrynotes, uint32 nconsts, uint32 nglobals,
-                    uint16 nClosedArgs, uint16 nClosedVars, JSVersion version)
+                    uint16 nClosedArgs, uint16 nClosedVars)
 {
     size_t size, vectorSize;
     JSScript *script;
@@ -1259,7 +1257,7 @@ JSScript::NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natom
 
     PodZero(script);
     script->length = length;
-    script->version = version;
+    script->setVersion(cx->findVersion());
     new (&script->bindings) Bindings(cx);
 
     uint8 *scriptEnd = reinterpret_cast<uint8 *>(script + 1);
@@ -1397,7 +1395,6 @@ JSScript::NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natom
 #endif
 
     JS_APPEND_LINK(&script->links, &cx->compartment->scripts);
-    JS_ASSERT(script->getVersion() == version);
     return script;
 }
 
@@ -1426,7 +1423,7 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
                        cg->atomList.count, cg->objectList.length,
                        cg->upvarList.count, cg->regexpList.length,
                        cg->ntrynotes, cg->constList.length(),
-                       cg->globalUses.length(), nClosedArgs, nClosedVars, cg->version());
+                       cg->globalUses.length(), nClosedArgs, nClosedVars);
     if (!script)
         return NULL;
 

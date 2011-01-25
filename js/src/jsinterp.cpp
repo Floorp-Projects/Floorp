@@ -963,7 +963,7 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
             return false;
         frame.fp()->globalThis().setObject(*thisp);
 
-        initialVarObj = cx->hasRunOption(JSOPTION_VAROBJFIX) ? chain->getGlobal() : chain;
+        initialVarObj = (cx->options & JSOPTION_VAROBJFIX) ? chain->getGlobal() : chain;
     }
 
     /*

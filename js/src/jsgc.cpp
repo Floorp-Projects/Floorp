@@ -1620,7 +1620,7 @@ MarkContext(JSTracer *trc, JSContext *acx)
     /* Stack frames and slots are traced by StackSpace::mark. */
 
     /* Mark other roots-by-definition in acx. */
-    if (acx->globalObject && !acx->hasRunOption(JSOPTION_UNROOTED_GLOBAL))
+    if (acx->globalObject && !JS_HAS_OPTION(acx, JSOPTION_UNROOTED_GLOBAL))
         MarkObject(trc, *acx->globalObject, "global object");
     if (acx->isExceptionPending())
         MarkValue(trc, acx->getPendingException(), "exception");

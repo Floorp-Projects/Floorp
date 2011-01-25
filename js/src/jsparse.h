@@ -1043,7 +1043,7 @@ struct Parser : private js::AutoGCRooter
     JSContext           * const context; /* FIXME Bug 551291: use AutoGCRooter::context? */
     JSAtomListElement   *aleFreeList;
     void                *tempFreeList[NUM_TEMP_FREELISTS];
-    TokenStream         tokenStream;
+    js::TokenStream     tokenStream;
     void                *tempPoolMark;  /* initial JSContext.tempPool mark */
     JSPrincipals        *principals;    /* principals associated with source */
     JSStackFrame *const callerFrame;    /* scripted caller frame for eval and dbgapi */
@@ -1052,6 +1052,7 @@ struct Parser : private js::AutoGCRooter
     uint32              functionCount;  /* number of functions in current unit */
     JSObjectBox         *traceListHead; /* list of parsed object for GC tracing */
     JSTreeContext       *tc;            /* innermost tree context (stack-allocated) */
+    JSVersion           version;        /* cached version to avoid repeated lookups */
 
     /* Root atoms and objects allocated for the parsed tree. */
     js::AutoKeepAtoms   keepAtoms;
@@ -1069,16 +1070,15 @@ struct Parser : private js::AutoGCRooter
      * JSContext.tempPool mark. This means you cannot allocate from tempPool
      * and save the pointer beyond the next Parser destructor invocation.
      */
-    bool init(const jschar *base, size_t length, const char *filename, uintN lineno,
-              JSVersion version);
+    bool init(const jschar *base, size_t length,
+              const char *filename, uintN lineno);
 
     void setPrincipals(JSPrincipals *prin);
 
-    const char *getFilename() const { return tokenStream.getFilename(); }
-    JSVersion versionWithFlags() const { return tokenStream.versionWithFlags(); }
-    JSVersion versionNumber() const { return tokenStream.versionNumber(); }
-    bool hasXML() const { return tokenStream.hasXML(); }
-    bool hasAnonFunFix() const { return tokenStream.hasAnonFunFix(); }
+    const char *getFilename()
+    {
+        return tokenStream.getFilename();
+    }
 
     /*
      * Parse a top-level JS script.
@@ -1217,25 +1217,28 @@ struct Compiler
      * Initialize a compiler. Parameters are passed on to init parser.
      */
     inline bool
-    init(const jschar *base, size_t length, const char *filename, uintN lineno, JSVersion version)
+    init(const jschar *base, size_t length,
+         const char *filename, uintN lineno)
     {
-        return parser.init(base, length, filename, lineno, version);
+        return parser.init(base, length, filename, lineno);
     }
 
     static bool
     compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *principals,
                         js::Bindings *bindings, const jschar *chars, size_t length,
-                        const char *filename, uintN lineno, JSVersion version);
+                        const char *filename, uintN lineno);
 
     static JSScript *
     compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *callerFrame,
                   JSPrincipals *principals, uint32 tcflags,
                   const jschar *chars, size_t length,
-                  const char *filename, uintN lineno, JSVersion version,
-                  JSString *source = NULL, uintN staticLevel = 0);
+                  const char *filename, uintN lineno,
+                  JSString *source = NULL,
+                  uintN staticLevel = 0);
 
   private:
-    static bool defineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *script);
+    static bool
+    defineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *script);
 };
 
 } /* namespace js */
