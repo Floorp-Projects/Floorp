@@ -183,12 +183,12 @@ TokenStream::TokenStream(JSContext *cx)
 #endif
 
 bool
-TokenStream::init(JSVersion version, const jschar *base, size_t length, const char *fn, uintN ln)
+TokenStream::init(const jschar *base, size_t length, const char *fn, uintN ln, JSVersion v)
 {
-    this->version = version;
-
     filename = fn;
     lineno = ln;
+    version = v;
+    xml = VersionHasXML(v);
 
     userbuf.base = (jschar *)base;
     userbuf.limit = (jschar *)base + length;
@@ -428,11 +428,11 @@ TokenStream::reportCompileErrorNumberVA(JSParseNode *pn, uintN flags, uintN erro
     uintN index, i;
     JSErrorReporter onError;
 
-    if (JSREPORT_IS_STRICT(flags) && !JS_HAS_STRICT_OPTION(cx))
+    if (JSREPORT_IS_STRICT(flags) && !cx->hasStrictOption())
         return JS_TRUE;
 
     warning = JSREPORT_IS_WARNING(flags);
-    if (warning && JS_HAS_WERROR_OPTION(cx)) {
+    if (warning && cx->hasWErrorOption()) {
         flags &= ~JSREPORT_WARNING;
         warning = false;
     }
@@ -583,7 +583,7 @@ js::ReportStrictModeError(JSContext *cx, TokenStream *ts, JSTreeContext *tc, JSP
     if ((ts && ts->isStrictMode()) || (tc && (tc->flags & TCF_STRICT_MODE_CODE))) {
         flags = JSREPORT_ERROR;
     } else {
-        if (!JS_HAS_STRICT_OPTION(cx))
+        if (!cx->hasStrictOption())
             return true;
         flags = JSREPORT_WARNING;
     }
@@ -1056,7 +1056,7 @@ TokenStream::getTokenInternal()
                     goto error;
                 }
             } else {
-                if (kw->version <= VersionNumber(version)) {
+                if (kw->version <= versionNumber()) {
                     tt = kw->tokentype;
                     tp->t_op = (JSOp) kw->op;
                     goto out;
@@ -1420,8 +1420,7 @@ TokenStream::getTokenInternal()
          *
          * The check for this is in jsparse.cpp, Compiler::compileScript.
          */
-        if ((flags & TSF_OPERAND) &&
-            (VersionShouldParseXML(version) || peekChar() != '!')) {
+        if ((flags & TSF_OPERAND) && (hasXML() || peekChar() != '!')) {
             /* Check for XML comment or CDATA section. */
             if (matchChar('!')) {
                 tokenbuf.clear();
@@ -1577,7 +1576,7 @@ TokenStream::getTokenInternal()
              * "//@line 123\n" sets the number of the *next* line after the
              * comment to 123.
              */
-            if (JS_HAS_ATLINE_OPTION(cx)) {
+            if (cx->hasAtLineOption()) {
                 jschar cp[5];
                 uintN i, line, temp;
                 char filenameBuf[1024];
@@ -1795,7 +1794,7 @@ TokenStream::getTokenInternal()
             }
         }
         tp->t_dval = (jsdouble) n;
-        if (JS_HAS_STRICT_OPTION(cx) &&
+        if (cx->hasStrictOption() &&
             (c == '=' || c == '#')) {
             char buf[20];
             JS_snprintf(buf, sizeof buf, "#%u%c", n, c);
