@@ -425,10 +425,8 @@ input.name:-moz-placeholder {
   font-style: italic !important;
   color: transparent;
   background-image: url(chrome://browser/skin/tabview/edit-light.png);
-  background-image-opacity: .1;
   background-repeat: no-repeat;
   -moz-padding-start: 20px;
-  -moz-margin-end: -20px;
 }
 
 .title-container:hover input.name:-moz-placeholder {
