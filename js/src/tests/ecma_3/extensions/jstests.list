@@ -8,7 +8,7 @@ script regress-220367-002.js
 script regress-228087.js
 script regress-274152.js
 script regress-320854.js
-script regress-327170.js
+skip script regress-327170.js # RegExp.compile removed.
 script regress-368516.js
 script regress-385393-03.js
 script regress-429248.js
