@@ -53,6 +53,7 @@
     var gScrollHandler = {
       handleEvent: function gScrollHandler_handleEvent(aEvent) {
         if (aEvent.DOMNode.getAttribute("name") == "link1") {
+          ok(true, "scrolling start event was handled on link1");
           unregisterA11yEventListener(EVENT_SCROLLING_START, this);
           SimpleTest.finish();
         }
