@@ -703,7 +703,7 @@ Item.prototype = {
 
       // ___ mousedown
       $container.mousedown(function(e) {
-        if (Utils.isRightClick(e))
+        if (!Utils.isLeftClick(e))
           return;
 
         var cancel = false;
@@ -835,7 +835,7 @@ Item.prototype = {
           .addClass('iq-resizable-handle iq-resizable-se')
           .appendTo($container)
           .mousedown(function(e) {
-            if (Utils.isRightClick(e))
+            if (!Utils.isLeftClick(e))
               return;
 
             startMouse = new Point(e.pageX, e.pageY);
