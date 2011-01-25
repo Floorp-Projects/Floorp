@@ -1875,17 +1875,13 @@ History::UpdatePlaces(const jsval& aPlaceInfos,
         NS_ENSURE_ARG(JS_IsArrayObject(aCtx, visits));
       }
     }
+    NS_ENSURE_ARG(visits);
 
     jsuint visitsLength = 0;
     if (visits) {
       (void)JS_GetArrayLength(aCtx, visits, &visitsLength);
     }
-
-    // If we have no id or guid, we must have visits.
-    if (!(placeId > 0 || isValidGUID)) {
-      NS_ENSURE_ARG(visits);
-      NS_ENSURE_ARG(visitsLength > 0);
-    }
+    NS_ENSURE_ARG(visitsLength > 0);
 
     // Check each visit, and build our array of VisitData objects.
     visitData.SetCapacity(visitData.Length() + visitsLength);
