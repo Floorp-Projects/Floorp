@@ -773,6 +773,69 @@
           },
 
           /**
+           * Given the cache size and the viewport size, this determines where the cache
+           * should start relative to the scroll position. This adjusts the position based
+           * on which direction the user is panning, so that we use our cache as
+           * effectively as possible.
+           *
+           * @param aDirection Negative means user is panning to the left or above
+           *                   Zero means user did not pan
+           *                   Positive means user is panning to the right or below
+           * @param aViewportSize The width or height of the viewport
+           * @param aCacheSize The width or height of the displayport
+           */
+          _getRelativeCacheStart: function(aDirection, aViewportSize, aCacheSize) {
+            // Remember that this is relative to the viewport scroll position.
+            // Let's assume we are thinking about the y-axis.
+            // The extreme cases:
+            // |0| would mean that there is no content available above
+            // |aViewportSize - aCacheSize| would mean no content available below
+            //
+            // Taking the average of the extremes puts equal amounts of cache on the
+            // top and bottom of the viewport. If we think of this like a weighted
+            // average, .5 is the sweet spot where equals amounts of content are
+            // above and below the visible area.
+            //
+            // This weight is therefore how much of the cache is above (or to the
+            // left) the visible area.
+            let cachedAbove = .5;
+
+            // If panning down, leave only 25% of the non-visible cache above.
+            if (aDirection > 0)
+              cachedAbove = .25;
+
+            // If panning up, Leave 75% of the non-visible cache above.
+            if (aDirection < 0)
+              cachedAbove = .75;
+
+            return (aViewportSize - aCacheSize) * cachedAbove;
+          },
+
+          /** Determine size of the pixel cache. */
+          _getCacheSize: function(viewportSize) {
+            let self = this.self;
+            let contentView = this._contentView;
+
+            let cacheWidth = self._cacheRatioWidth * viewportSize.width;
+            let cacheHeight = self._cacheRatioHeight * viewportSize.height;
+            let contentWidth = contentView.contentWidth;
+            let contentHeight = contentView.contentHeight;
+
+            // There are common cases, such as long skinny pages, where our cache size is
+            // bigger than our content size. In those cases, we take that sliver of leftover
+            // space and apply it to the other dimension.
+            if (contentWidth < cacheWidth) {
+              cacheHeight += (cacheWidth - contentWidth) * contentHeight / contentWidth;
+              cacheWidth = contentWidth;
+            } else if (contentHeight < cacheHeight) {
+              cacheWidth += (cacheHeight - contentHeight) * contentWidth / contentHeight;
+              cacheHeight = contentHeight;
+            }
+
+            return { width: cacheWidth, height: cacheHeight };
+          },
+
+          /**
            * The cache viewport is what parts of content is cached in the parent process for
            * fast scrolling. This syncs that up with the current projection viewport.
            */
@@ -783,21 +846,23 @@
 
             let contentView = this._contentView;
             let viewportSize = this._getViewportSize();
-            let cacheWidth = self._cacheRatioWidth * viewportSize.width;
-            let cacheHeight = self._cacheRatioHeight * viewportSize.height;
+            let cacheSize = this._getCacheSize(viewportSize);
+            let cacheX = this._getRelativeCacheStart(this._pixelsPannedSinceRefresh.x, viewportSize.width, cacheSize.width) + contentView.scrollX;
+            let cacheY = this._getRelativeCacheStart(this._pixelsPannedSinceRefresh.y, viewportSize.height, cacheSize.height) + contentView.scrollY;
 
-            // Put the center point of the displayport at the center point
-            // of the viewport.
-            let cacheX = contentView.scrollX + viewportSize.width / 2 - cacheWidth / 2;
-            let cacheY = contentView.scrollY + viewportSize.height / 2 - cacheHeight / 2;
+            // Use our pixels efficiently and don't try to cache things outside of content
+            // boundaries.
+            let bounds = new Rect(0, 0, contentView.contentWidth, contentView.contentHeight);
+            let displayport = new Rect(cacheX, cacheY, cacheSize.width, cacheSize.height);
+            displayport.translateInside(bounds);
 
             self.messageManager.sendAsyncMessage("Content:SetCacheViewport", {
               scrollX: contentView.scrollX / self._scale,
               scrollY: contentView.scrollY / self._scale,
-              x: cacheX / self._scale,
-              y: cacheY / self._scale,
-              w: cacheWidth / self._scale,
-              h: cacheHeight / self._scale,
+              x: displayport.x / self._scale,
+              y: displayport.y / self._scale,
+              w: displayport.width / self._scale,
+              h: displayport.height / self._scale,
               scale: self._scale,
               id: contentView.id
             });
