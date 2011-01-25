@@ -1139,12 +1139,17 @@ BookmarksStore.prototype = {
         "FROM moz_bookmarks " +
         "WHERE guid = :guid");
     } else {
+      // Order results by lastModified so we can preserve the ID of the oldest bookmark.
+      // Copying a record preserves its dateAdded, and only modifying the
+      // bookmark alters its lastModified, so we also order by its item_id --
+      // lowest wins ties. Of course, Places can still screw us by reassigning IDs...
       stmt = this._getStmt(
         "SELECT a.item_id AS item_id " +
         "FROM moz_items_annos a " +
         "JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id " +
         "WHERE n.name = '" + GUID_ANNO + "' " +
-        "AND a.content = :guid");
+        "AND a.content = :guid " +
+        "ORDER BY a.lastModified, a.item_id");
     }
 
     return this.__idForGUIDStm = stmt;
@@ -1160,10 +1165,32 @@ BookmarksStore.prototype = {
     // guid might be a String object rather than a string.
     stmt.params.guid = guid.toString();
 
-    let result = Utils.queryAsync(stmt, ["item_id"])[0];
-    if (result)
-      return result.item_id;
-    return -1;
+    let results = Utils.queryAsync(stmt, ["item_id"]);
+    this._log.trace("Rows matching GUID " + guid + ": " + results.length);
+    
+    // Here's the one we care about: the first.
+    let result = results[0];
+    
+    if (!result)
+      return -1;
+    
+    if (!this._haveGUIDColumn) {
+      try {
+        // Assign new GUIDs to any that came later.
+        for (let i = 1; i < results.length; ++i) {
+          let surplus = results[i];
+          this._log.debug("Assigning new GUID to copied row " + surplus.item_id);
+          this._setGUID(surplus.item_id);
+        }
+      } catch (ex) {
+        // Just skip it and carry on. This shouldn't happen, but if it does we
+        // don't want to fail hard.
+        this._log.debug("Got exception assigning new GUIDs: " +
+                        Utils.exceptionStr(ex));
+      }
+    }
+    
+    return result.item_id;
   },
 
   _calculateIndex: function _calculateIndex(record) {
