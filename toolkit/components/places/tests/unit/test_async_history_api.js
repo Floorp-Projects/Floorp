@@ -16,7 +16,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "gGlobalHistory",
                                    "@mozilla.org/browser/nav-history-service;1",
                                    "nsIGlobalHistory2");
 
-const TEST_DOMAIN = "http://mozilla.org/"
+const TEST_DOMAIN = "http://mozilla.org/";
+const TOPIC_UPDATEPLACES_COMPLETE = "places-updatePlaces-complete";
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Helpers
@@ -405,6 +406,50 @@ function test_non_addable_uri_errors()
       run_next_test();
     }
   });
+}
+
+function test_observer_topic_dispatched_when_complete()
+{
+  // We test a normal visit, and embeded visit, and a uri that would fail
+  // the canAddURI test to make sure that the notification happens after *all*
+  // of them have had a callback.
+  let places = [
+    { uri: NetUtil.newURI(TEST_DOMAIN +
+                          "test_observer_topic_dispatched_when_complete"),
+      visits: [
+        new VisitInfo(),
+        new VisitInfo(TRANSITION_EMBED),
+      ],
+    },
+    { uri: NetUtil.newURI("data:,Hello%2C%20World!"),
+      visits: [
+        new VisitInfo(),
+      ],
+    },
+  ];
+  do_check_false(gGlobalHistory.isVisited(places[0].uri));
+  do_check_false(gGlobalHistory.isVisited(places[1].uri));
+
+  const EXPECTED_COUNT = 3;
+  let callbackCount = 0;
+
+  gHistory.updatePlaces(places, function(aResultCode, aPlaceInfo) {
+    let checker = PlacesUtils.history.canAddURI(aPlaceInfo.uri) ?
+      do_check_true : do_check_false;
+    checker(Components.isSuccessCode(aResultCode));
+    callbackCount++;
+  });
+
+  let observer = {
+    observe: function(aSubject, aTopic, aData)
+    {
+      do_check_eq(aTopic, TOPIC_UPDATEPLACES_COMPLETE);
+      do_check_eq(callbackCount, EXPECTED_COUNT);
+      Services.obs.removeObserver(observer, TOPIC_UPDATEPLACES_COMPLETE);
+      run_next_test();
+    },
+  };
+  Services.obs.addObserver(observer, TOPIC_UPDATEPLACES_COMPLETE, false);
 }
 
 function test_add_visit()
@@ -835,6 +880,7 @@ let gTests = [
   test_add_visit_no_transitionType_throws,
   test_add_visit_invalid_transitionType_throws,
   test_non_addable_uri_errors,
+  test_observer_topic_dispatched_when_complete,
   test_add_visit,
   test_properties_saved,
   test_guid_saved,
