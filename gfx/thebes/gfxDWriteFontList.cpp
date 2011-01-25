@@ -50,6 +50,8 @@
 
 #include "nsIWindowsRegKey.h"
 
+using namespace mozilla;
+
 #ifdef PR_LOGGING
 
 #define LOG_FONTLIST(args) PR_LOG(gfxPlatform::GetLog(eGfxLog_fontlist), \
@@ -431,6 +433,41 @@ gfxDWriteFontEntry::InitLogFont(IDWriteFont *aFont, LOGFONTW *aLogFont)
         gfxDWriteFontList::PlatformFontList()->GetGDIInterop();
     hr = gdi->ConvertFontToLOGFONT(aFont, aLogFont, &isInSystemCollection);
     return (FAILED(hr) ? PR_FALSE : PR_TRUE);
+}
+
+PRBool
+gfxDWriteFontEntry::IsCJKFont()
+{
+    if (mIsCJK != UNINITIALIZED_VALUE) {
+        return mIsCJK;
+    }
+
+    mIsCJK = PR_FALSE;
+
+    const PRUint32 kOS2Tag = TRUETYPE_TAG('O','S','/','2');
+    AutoFallibleTArray<PRUint8,128> buffer;
+    if (GetFontTable(kOS2Tag, buffer) != NS_OK) {
+        return mIsCJK;
+    }
+
+    // ulCodePageRange bit definitions for the CJK codepages,
+    // from http://www.microsoft.com/typography/otspec/os2.htm#cpr
+    const PRUint32 CJK_CODEPAGE_BITS =
+        (1 << 17) | // codepage 932 - JIS/Japan
+        (1 << 18) | // codepage 936 - Chinese (simplified)
+        (1 << 19) | // codepage 949 - Korean Wansung
+        (1 << 20) | // codepage 950 - Chinese (traditional)
+        (1 << 21);  // codepage 1361 - Korean Johab
+
+    if (buffer.Length() >= offsetof(OS2Table, sxHeight)) {
+        const OS2Table* os2 =
+            reinterpret_cast<const OS2Table*>(buffer.Elements());
+        if ((PRUint32(os2->codePageRange1) & CJK_CODEPAGE_BITS) != 0) {
+            mIsCJK = PR_TRUE;
+        }
+    }
+
+    return mIsCJK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
