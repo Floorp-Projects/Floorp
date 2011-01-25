@@ -96,6 +96,11 @@
  *******************************************************************************
  */
 
+#ifdef MOZ_MEMORY_ANDROID
+#define NO_TLS
+#define _pthread_self() pthread_self()
+#endif
+
 /*
  * MALLOC_PRODUCTION disables assertions and statistics gathering.  It also
  * defaults the A and J runtime options to off.  These settings are appropriate
