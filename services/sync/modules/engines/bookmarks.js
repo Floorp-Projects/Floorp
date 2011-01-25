@@ -63,6 +63,7 @@ Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/util.js");
 
+Cu.import("resource://services-sync/main.js");      // For access to Service.
 
 function PlacesItem(collection, id, type) {
   CryptoWrapper.call(this, collection, id);
@@ -236,7 +237,6 @@ let kSpecialIds = {
 
 function BookmarksEngine() {
   SyncEngine.call(this, "Bookmarks");
-  this._handleImport();
 }
 BookmarksEngine.prototype = {
   __proto__: SyncEngine.prototype,
@@ -244,26 +244,6 @@ BookmarksEngine.prototype = {
   _storeObj: BookmarksStore,
   _trackerObj: BookmarksTracker,
   version: 2,
-
-  _handleImport: function _handleImport() {
-    Svc.Obs.add("bookmarks-restore-begin", function() {
-      this._log.debug("Ignoring changes from importing bookmarks");
-      this._tracker.ignoreAll = true;
-    }, this);
-
-    Svc.Obs.add("bookmarks-restore-success", function() {
-      this._log.debug("Tracking all items on successful import");
-      this._tracker.ignoreAll = false;
-
-      // Mark all the items as changed so they get uploaded
-      for (let id in this._store.getAllIDs())
-        this._tracker.addChangedID(id);
-    }, this);
-
-    Svc.Obs.add("bookmarks-restore-failed", function() {
-      this._tracker.ignoreAll = false;
-    }, this);
-  },
 
   _sync: Utils.batchSync("Bookmark", SyncEngine),
 
@@ -1286,12 +1266,18 @@ BookmarksTracker.prototype = {
       case "weave:engine:start-tracking":
         if (!this._enabled) {
           Svc.Bookmark.addObserver(this, true);
+          Svc.Obs.add("bookmarks-restore-begin", this);
+          Svc.Obs.add("bookmarks-restore-success", this);
+          Svc.Obs.add("bookmarks-restore-failed", this);
           this._enabled = true;
         }
         break;
       case "weave:engine:stop-tracking":
         if (this._enabled) {
           Svc.Bookmark.removeObserver(this);
+          Svc.Obs.remove("bookmarks-restore-begin", this);
+          Svc.Obs.remove("bookmarks-restore-success", this);
+          Svc.Obs.remove("bookmarks-restore-failed", this);
           this._enabled = false;
         }
         // Fall through to clean up.
@@ -1300,6 +1286,24 @@ BookmarksTracker.prototype = {
         // we don't leak
         this.__ls = null;
         this.__bms = null;
+        break;
+        
+      case "bookmarks-restore-begin":
+        this._log.debug("Ignoring changes from importing bookmarks.");
+        this.ignoreAll = true;
+        break;
+      case "bookmarks-restore-success":
+        this._log.debug("Tracking all items on successful import.");
+        this.ignoreAll = false;
+        
+        this._log.debug("Restore succeeded: wiping server and other clients.");
+        Weave.Service.resetClient([this.name]);
+        Weave.Service.wipeServer([this.name]);
+        Weave.Service.prepCommand("wipeEngine", [this.name]);
+        break;
+      case "bookmarks-restore-failed":
+        this._log.debug("Tracking all items on failed import.");
+        this.ignoreAll = false;
         break;
     }
   },
