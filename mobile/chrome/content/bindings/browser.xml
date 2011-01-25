@@ -452,6 +452,9 @@
             return true;
           },
 
+          setScale: function(aXScale, aYScale) {
+          },
+
           scrollBy: function(x, y) {
             let self = this.self;
             let position = this.getPosition();
@@ -715,6 +718,7 @@
 
           scrollBy: function(x, y) {},
           scrollTo: function(x, y) {},
+          setScale: function(aXScale, aYScale) {},
           getPosition: function() {
             return { x: 0, y: 0 };
           }
@@ -858,6 +862,11 @@
             this.scrollBy(x - contentView.scrollX, y - contentView.scrollY);
           },
 
+          setScale: function(aXScale, aYScale) {
+            let contentView = this._contentView;
+            contentView.setScale(aXScale, aYScale);
+          },
+
           getPosition: function() {
             let contentView = this._contentView;
             return { x: contentView.scrollX, y: contentView.scrollY };
@@ -876,7 +885,7 @@
 
             this._scale = scale;
             let rootView = this.getRootView();
-            rootView._contentView.setScale(scale, scale);
+            rootView.setScale(scale, scale);
             rootView._updateCacheViewport();
 
             let event = document.createEvent("Events");
