@@ -2868,10 +2868,14 @@ var ViewableAreaObserver = {
     Browser.styles["viewable-width"].width = newWidth + "px";
     Browser.styles["viewable-width"].maxWidth = newWidth + "px";
 
+    let startup = !oldHeight && !oldWidth;
     for (let i = Browser.tabs.length - 1; i >= 0; i--) {
       let tab = Browser.tabs[i];
       tab.updateViewportSize();
-      tab.updateDefaultZoomLevel();
+      
+      // Don't bother updating the zoom level on startup
+      if (!startup)
+        tab.updateDefaultZoomLevel();
 
       // If the viewport width is still the same, the page layout has not
       // changed, so we can keep keep the same content on-screen.
