@@ -1834,6 +1834,23 @@ nsDocAccessible::ProcessPendingEvent(AccEvent* aEvent)
 }
 
 void
+nsDocAccessible::ProcessAnchorJump(nsIContent* aTargetNode)
+{
+  // If the jump target is not accessible then fire an event for nearest
+  // accessible in parent chain.
+  nsAccessible* target = GetAccService()->GetAccessibleOrContainer(aTargetNode,
+                                                                   mWeakShell);
+  if (!target)
+    return;
+
+  // XXX: bug 625699, note in some cases the node could go away before we flush
+  // the queue, for example if the node becomes inaccessible, or is removed from
+  // the DOM.
+  FireDelayedAccessibleEvent(nsIAccessibleEvent::EVENT_SCROLLING_START,
+                             target->GetNode());
+}
+
+void
 nsDocAccessible::ProcessContentInserted(nsAccessible* aContainer,
                                         const nsTArray<nsCOMPtr<nsIContent> >* aInsertedContent)
 {
