@@ -7090,12 +7090,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             return JS_FALSE;
         break;
 
-#if JS_HAS_DEBUGGER_KEYWORD
       case TOK_DEBUGGER:
         if (js_Emit1(cx, cg, JSOP_DEBUGGER) < 0)
             return JS_FALSE;
         break;
-#endif /* JS_HAS_DEBUGGER_KEYWORD */
 
 #if JS_HAS_XML_SUPPORT
       case TOK_XMLELEM:

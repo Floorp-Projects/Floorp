@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: java; tab-width:8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -19,7 +20,7 @@
  * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s): Jesse Ruderman
+ * Contributor(s): Andrew Drake
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,37 +36,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-//-----------------------------------------------------------------------------
-var BUGNUMBER = 355736;
-var summary = 'Decompilation of "[reserved]" has extra quotes';
-var actual = '';
-var expect = '';
-var f;
 
-//-----------------------------------------------------------------------------
-test();
-//-----------------------------------------------------------------------------
+var BUGNUMBER = 621464;
+var summary = '<x>a</x>.replace() == <x>a</x>';
 
-function test()
-{
-  enterFunc ('test');
-  printBugNumber(BUGNUMBER);
-  printStatus (summary);
- 
-  f = function() { [implements] = q; };
-  expect = 'function() { [implements] = q; }';
-  actual = f + '';
-  compareSource(expect, actual, summary + ': 1');
+printBugNumber(BUGNUMBER);
+START(summary);
 
-  f = function() { return { get implements() { } } };
-  expect = 'function() { return { get implements() { } }; }';
-  actual = f + '';
-  compareSource(expect, actual, summary + ': 2');
+var expected = <x>a</x>;
+var actual = <x>a</x>.replace();
 
-  f = function() { [goto] = a };
-  expect = 'function() { [goto] = a; }';
-  actual = f + '';
-  compareSource(expect, actual, summary + ': 3');
+TEST(0, expected, actual);
 
-  exitFunc ('test');
-}
+END();

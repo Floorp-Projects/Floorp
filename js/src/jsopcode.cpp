@@ -4613,12 +4613,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 break;
 #endif /* JS_HAS_SHARP_VARS */
 
-#if JS_HAS_DEBUGGER_KEYWORD
               case JSOP_DEBUGGER:
                 js_printf(jp, "\tdebugger;\n");
                 todo = -2;
                 break;
-#endif /* JS_HAS_DEBUGGER_KEYWORD */
 
 #if JS_HAS_XML_SUPPORT
               case JSOP_STARTXML:
@@ -5100,6 +5098,9 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v_in,
     pc = fp->hasImacropc() ? fp->imacropc() : cx->regs->pc;
     JS_ASSERT(script->code <= pc && pc < script->code + script->length);
 
+    if (pc < script->main)
+        goto do_fallback;
+    
     if (spindex != JSDVG_IGNORE_STACK) {
         jsbytecode **pcstack;
 

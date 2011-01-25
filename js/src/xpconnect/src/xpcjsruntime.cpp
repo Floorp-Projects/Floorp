@@ -244,6 +244,8 @@ xpc::CompartmentPrivate::~CompartmentPrivate()
 {
     if (waiverWrapperMap)
         delete waiverWrapperMap;
+    if (expandoMap)
+        delete expandoMap;
 }
 
 static JSBool
@@ -402,6 +404,24 @@ struct ClearedGlobalObject : public JSDHashEntryHdr
     JSObject* mGlobalObject;
 };
 
+static PLDHashOperator
+TraceExpandos(XPCWrappedNative *wn, JSObject *expando, void *aClosure)
+{
+    JS_CALL_OBJECT_TRACER(static_cast<JSTracer *>(aClosure), expando, "expando object");
+    return PL_DHASH_NEXT;
+}
+
+
+static PLDHashOperator
+TraceCompartment(nsCStringHashKey& aKey, JSCompartment *compartment, void *aClosure)
+{
+    xpc::CompartmentPrivate *priv = (xpc::CompartmentPrivate *)
+        JS_GetCompartmentPrivate(static_cast<JSTracer *>(aClosure)->context, compartment);
+    if (priv->expandoMap)
+        priv->expandoMap->EnumerateRead(TraceExpandos, (JSContext *)aClosure);
+    return PL_DHASH_NEXT;
+}
+
 void XPCJSRuntime::TraceXPConnectRoots(JSTracer *trc)
 {
     JSContext *iter = nsnull, *acx;
@@ -423,6 +443,10 @@ void XPCJSRuntime::TraceXPConnectRoots(JSTracer *trc)
 
     if(mJSHolders.ops)
         JS_DHashTableEnumerate(&mJSHolders, TraceJSHolder, trc);
+
+    // Trace compartments.
+    GetCompartmentMap().EnumerateRead((XPCCompartmentMap::EnumReadFunction)
+                                      TraceCompartment, trc);
 }
 
 struct Closure
@@ -564,12 +588,23 @@ SweepWaiverWrappers(JSDHashTable *table, JSDHashEntryHdr *hdr,
 }
 
 static PLDHashOperator
+SweepExpandos(XPCWrappedNative *wn, JSObject *&expando, void *arg)
+{
+    JSContext *cx = (JSContext *)arg;
+    return IsAboutToBeFinalized(cx, wn->GetFlatJSObjectNoMark())
+           ? PL_DHASH_REMOVE
+           : PL_DHASH_NEXT;
+}
+
+static PLDHashOperator
 SweepCompartment(nsCStringHashKey& aKey, JSCompartment *compartment, void *aClosure)
 {
     xpc::CompartmentPrivate *priv = (xpc::CompartmentPrivate *)
         JS_GetCompartmentPrivate((JSContext *)aClosure, compartment);
     if (priv->waiverWrapperMap)
         priv->waiverWrapperMap->Enumerate(SweepWaiverWrappers, (JSContext *)aClosure);
+    if (priv->expandoMap)
+        priv->expandoMap->Enumerate(SweepExpandos, (JSContext *)aClosure);
     return PL_DHASH_NEXT;
 }
 
