@@ -392,6 +392,16 @@ LayerManagerOGL::BeginTransactionWithTarget(gfxContext *aTarget)
   mTarget = aTarget;
 }
 
+bool
+LayerManagerOGL::EndEmptyTransaction()
+{
+  if (!mRoot)
+    return false;
+
+  EndTransaction(nsnull, nsnull);
+  return true;
+}
+
 void
 LayerManagerOGL::EndTransaction(DrawThebesLayerCallback aCallback,
                                 void* aCallbackData)
@@ -413,10 +423,7 @@ LayerManagerOGL::EndTransaction(DrawThebesLayerCallback aCallback,
   mThebesLayerCallback = aCallback;
   mThebesLayerCallbackData = aCallbackData;
 
-  // NULL callback means "non-painting transaction"
-  if (aCallback) {
-    Render();
-  }
+  Render();
 
   mThebesLayerCallback = nsnull;
   mThebesLayerCallbackData = nsnull;
