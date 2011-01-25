@@ -16,7 +16,7 @@
 # The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-# Mozilla Foundation.
+# the Mozilla Foundation.
 # Portions created by the Initial Developer are Copyright (C) 1998
 # the Initial Developer. All Rights Reserved.
 #
