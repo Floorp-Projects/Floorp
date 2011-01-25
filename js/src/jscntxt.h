@@ -1533,6 +1533,12 @@ namespace js {
 
 class AutoGCRooter;
 
+#define JS_HAS_OPTION(cx,option)        (((cx)->options & (option)) != 0)
+#define JS_HAS_STRICT_OPTION(cx)        JS_HAS_OPTION(cx, JSOPTION_STRICT)
+#define JS_HAS_WERROR_OPTION(cx)        JS_HAS_OPTION(cx, JSOPTION_WERROR)
+#define JS_HAS_COMPILE_N_GO_OPTION(cx)  JS_HAS_OPTION(cx, JSOPTION_COMPILE_N_GO)
+#define JS_HAS_ATLINE_OPTION(cx)        JS_HAS_OPTION(cx, JSOPTION_ATLINE)
+
 static inline bool
 OptionsHasXML(uint32 options)
 {
@@ -1561,10 +1567,9 @@ OptionsSameVersionFlags(uint32 self, uint32 other)
  * become invalid.
  */
 namespace VersionFlags {
-static const uintN MASK         = 0x0FFF; /* see JSVersion in jspubtd.h */
-static const uintN HAS_XML      = 0x1000; /* flag induced by XML option */
-static const uintN ANONFUNFIX   = 0x2000; /* see jsapi.h comment on JSOPTION_ANONFUNFIX */
-static const uintN FULL_MASK    = 0x3FFF;
+static const uint32 MASK        = 0x0FFF; /* see JSVersion in jspubtd.h */
+static const uint32 HAS_XML     = 0x1000; /* flag induced by XML option */
+static const uint32 ANONFUNFIX  = 0x2000; /* see jsapi.h comment on JSOPTION_ANONFUNFIX */
 }
 
 static inline JSVersion
@@ -1616,33 +1621,10 @@ VersionExtractFlags(JSVersion version)
     return JSVersion(uint32(version) & ~VersionFlags::MASK);
 }
 
-static inline void
-VersionCopyFlags(JSVersion *version, JSVersion from)
-{
-    *version = JSVersion(VersionNumber(*version) | VersionExtractFlags(from));
-}
-
 static inline bool
 VersionHasFlags(JSVersion version)
 {
     return !!VersionExtractFlags(version);
-}
-
-static inline uintN
-VersionFlagsToOptions(JSVersion version)
-{
-    uintN copts = (VersionHasXML(version) ? JSOPTION_XML : 0) |
-                  (VersionHasAnonFunFix(version) ? JSOPTION_ANONFUNFIX : 0);
-    JS_ASSERT((copts & JSCOMPILEOPTION_MASK) == copts);
-    return copts;
-}
-
-static inline JSVersion
-OptionFlagsToVersion(uintN options, JSVersion version)
-{
-    VersionSetXML(&version, OptionsHasXML(options));
-    VersionSetAnonFunFix(&version, OptionsHasAnonFunFix(options));
-    return version;
 }
 
 static inline bool
@@ -1674,10 +1656,10 @@ struct JSContext
     JSBool              throwing;           /* is there a pending exception? */
     js::Value           exception;          /* most-recently-thrown exception */
 
-    /* Per-context run options. */
-    uintN               runOptions;            /* see jsapi.h for JSOPTION_* */
-
   public:
+    /* Per-context options. */
+    uint32              options;            /* see jsapi.h for JSOPTION_* */
+
     /* Locale specific callbacks for string conversion. */
     JSLocaleCallbacks   *localeCallbacks;
 
@@ -1849,7 +1831,7 @@ struct JSContext
         return fp;
     }
 
-  public:
+  private:
     /*
      * The default script compilation version can be set iff there is no code running.
      * This typically occurs via the JSAPI right after a context is constructed.
@@ -1865,18 +1847,18 @@ struct JSContext
         hasVersionOverride = true;
     }
 
+  public:
+    void clearVersionOverride() {
+        hasVersionOverride = false;
+    }
+    
+    bool isVersionOverridden() const {
+        return hasVersionOverride;
+    }
+
     /* Set the default script compilation version. */
     void setDefaultVersion(JSVersion version) {
         defaultVersion = version;
-    }
-
-    void clearVersionOverride() { hasVersionOverride = false; }
-    JSVersion getDefaultVersion() const { return defaultVersion; }
-    bool isVersionOverridden() const { return hasVersionOverride; }
-
-    JSVersion getVersionOverride() const {
-        JS_ASSERT(isVersionOverridden());
-        return versionOverride;
     }
 
     /*
@@ -1892,23 +1874,6 @@ struct JSContext
         return true;
     }
 
-  private:
-    /*
-     * If there is no code currently executing, turn the override version into
-     * the default version.
-     *
-     * NB: the only time the version is potentially capable of migrating is
-     * on return from the Execute or ExternalInvoke paths as they call through
-     * JSContext::popSegmentAndFrame.
-     */
-    void maybeMigrateVersionOverride() {
-        if (JS_LIKELY(!isVersionOverridden() || currentSegment))
-            return;
-        defaultVersion = versionOverride;
-        clearVersionOverride();
-    }
-
-  public:
     /*
      * Return:
      * - The override version, if there is an override version.
@@ -1933,33 +1898,29 @@ struct JSContext
         return defaultVersion;
     }
 
-    void setRunOptions(uintN ropts) {
-        JS_ASSERT((ropts & JSRUNOPTION_MASK) == ropts);
-        runOptions = ropts;
+    void optionFlagsToVersion(JSVersion *version) const {
+        js::VersionSetXML(version, js::OptionsHasXML(options));
+        js::VersionSetAnonFunFix(version, js::OptionsHasAnonFunFix(options));
+    }
+
+    void checkOptionVersionSync() const {
+#ifdef DEBUG
+        JSVersion version = findVersion();
+        JS_ASSERT(js::VersionHasXML(version) == js::OptionsHasXML(options));
+        JS_ASSERT(js::VersionHasAnonFunFix(version) == js::OptionsHasAnonFunFix(options));
+#endif
     }
 
     /* Note: may override the version. */
-    void setCompileOptions(uintN newcopts) {
-        JS_ASSERT((newcopts & JSCOMPILEOPTION_MASK) == newcopts);
-        if (JS_LIKELY(getCompileOptions() == newcopts))
-            return;
+    void syncOptionsToVersion() {
         JSVersion version = findVersion();
-        JSVersion newVersion = js::OptionFlagsToVersion(newcopts, version);
-        maybeOverrideVersion(newVersion);
+        if (js::OptionsHasXML(options) == js::VersionHasXML(version) &&
+            js::OptionsHasAnonFunFix(options) == js::VersionHasAnonFunFix(version))
+            return;
+        js::VersionSetXML(&version, js::OptionsHasXML(options));
+        js::VersionSetAnonFunFix(&version, js::OptionsHasAnonFunFix(options));
+        maybeOverrideVersion(version);
     }
-
-    uintN getRunOptions() const { return runOptions; }
-    uintN getCompileOptions() const { return js::VersionFlagsToOptions(findVersion()); }
-    uintN allOptions() const { return getRunOptions() | getCompileOptions(); }
-
-    bool hasRunOption(uintN ropt) const {
-        JS_ASSERT((ropt & JSRUNOPTION_MASK) == ropt);
-        return !!(runOptions & ropt);
-    }
-
-    bool hasStrictOption() const { return hasRunOption(JSOPTION_STRICT); }
-    bool hasWErrorOption() const { return hasRunOption(JSOPTION_WERROR); }
-    bool hasAtLineOption() const { return hasRunOption(JSOPTION_ATLINE); }
 
 #ifdef JS_THREADSAFE
     JSThread            *thread;

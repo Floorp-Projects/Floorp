@@ -376,26 +376,32 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * aURL
      * exceptions, including the source/line number */
     er = JS_SetErrorReporter (cx, mozJSLoaderErrorReporter);
 
-    if (charset)
     {
-        nsString script;
-        rv = nsScriptLoader::ConvertToUTF16(
-                nsnull, reinterpret_cast<PRUint8*>(buf.get()), len,
-                nsDependentString(reinterpret_cast<PRUnichar*>(charset)), nsnull, script);
+        JSVersion version = cx->findVersion();
 
-        if (NS_FAILED(rv))
+        if (charset)
         {
-            errmsg = JS_NewStringCopyZ(cx, LOAD_ERROR_BADCHARSET);
-            goto return_exception;
+            nsString script;
+            rv = nsScriptLoader::ConvertToUTF16(
+                    nsnull, reinterpret_cast<PRUint8*>(buf.get()), len,
+                    nsDependentString(reinterpret_cast<PRUnichar*>(charset)), nsnull, script);
+
+            if (NS_FAILED(rv))
+            {
+                errmsg = JS_NewStringCopyZ (cx, LOAD_ERROR_BADCHARSET);
+                goto return_exception;
+            }
+            ok = JS_EvaluateUCScriptForPrincipalsVersion(cx, target_obj, jsPrincipals,
+                                                         reinterpret_cast<const jschar*>(script.get()),
+                                                         script.Length(), uriStr.get(), 1, rval,
+                                                         version);
         }
-        ok = JS_EvaluateUCScriptForPrincipals(cx, target_obj, jsPrincipals,
-                                              reinterpret_cast<const jschar*>(script.get()),
-                                              script.Length(), uriStr.get(), 1, rval);
-    }
-    else
-    {
-        ok = JS_EvaluateScriptForPrincipals(cx, target_obj, jsPrincipals,
-                                            buf, len, uriStr.get(), 1, rval);
+        else
+        {
+            ok = JS_EvaluateScriptForPrincipalsVersion(cx, target_obj, jsPrincipals,
+                                                       buf, len, uriStr.get(), 1, rval,
+                                                       version);
+        }
     }
 
     if (ok)
