@@ -818,8 +818,9 @@
 
             let cacheWidth = self._cacheRatioWidth * viewportSize.width;
             let cacheHeight = self._cacheRatioHeight * viewportSize.height;
-            let contentWidth = contentView.contentWidth;
-            let contentHeight = contentView.contentHeight;
+            let contentSize = this._getContentSize();
+            let contentWidth = contentSize.width;
+            let contentHeight = contentSize.height;
 
             // There are common cases, such as long skinny pages, where our cache size is
             // bigger than our content size. In those cases, we take that sliver of leftover
@@ -849,10 +850,11 @@
             let cacheSize = this._getCacheSize(viewportSize);
             let cacheX = this._getRelativeCacheStart(this._pixelsPannedSinceRefresh.x, viewportSize.width, cacheSize.width) + contentView.scrollX;
             let cacheY = this._getRelativeCacheStart(this._pixelsPannedSinceRefresh.y, viewportSize.height, cacheSize.height) + contentView.scrollY;
+            let contentSize = this._getContentSize();
 
             // Use our pixels efficiently and don't try to cache things outside of content
             // boundaries.
-            let bounds = new Rect(0, 0, contentView.contentWidth, contentView.contentHeight);
+            let bounds = new Rect(0, 0, contentSize.width, contentSize.height);
             let displayport = new Rect(cacheX, cacheY, cacheSize.width, cacheSize.height);
             displayport.translateInside(bounds);
 
@@ -871,6 +873,20 @@
             this._pixelsPannedSinceRefresh.y = 0;
           },
 
+          _getContentSize: function() {
+            let self = this.self;
+            if (this.isRoot()) {
+              // XXX Bug 626792 means contentWidth and contentHeight aren't always
+              // updated immediately. This makes the displayport go haywire so
+              // use contentDocument properties.
+              return { width: self._contentDocumentWidth * this._scale,
+                       height: self._contentDocumentHeight * this._scale };
+            } else {
+              return { width: this._contentView.contentWidth,
+                       height: this._contentView.contentHeight };
+            }
+          },
+
           _getViewportSize: function() {
             let self = this.self;
             if (this.isRoot()) {
@@ -886,6 +902,7 @@
 
             this._contentView = contentView;
             this._id = contentView.id;
+            this._scale = 1;
             self._contentViews[this._id] = this;
 
             if (!this.isRoot()) {
@@ -905,9 +922,10 @@
             // Bounding content rectangle is in device pixels
             let contentView = this._contentView;
             let viewportSize = this._getViewportSize();
+            let contentSize = this._getContentSize();
             // Calculate document dimensions in device pixels
-            let scrollRangeX = contentView.contentWidth - viewportSize.width;
-            let scrollRangeY = contentView.contentHeight - viewportSize.height;
+            let scrollRangeX = contentSize.width - viewportSize.width;
+            let scrollRangeY = contentSize.height - viewportSize.height;
 
             x = Math.floor(Math.max(0, Math.min(scrollRangeX, contentView.scrollX + x)) - contentView.scrollX);
             y = Math.floor(Math.max(0, Math.min(scrollRangeY, contentView.scrollY + y)) - contentView.scrollY);
@@ -931,9 +949,10 @@
             this.scrollBy(x - contentView.scrollX, y - contentView.scrollY);
           },
 
-          setScale: function(aXScale, aYScale) {
+          setScale: function(scale) {
             let contentView = this._contentView;
-            contentView.setScale(aXScale, aYScale);
+            this._scale = scale;
+            contentView.setScale(scale, scale);
           },
 
           getPosition: function() {
@@ -954,7 +973,7 @@
 
             this._scale = scale;
             let rootView = this.getRootView();
-            rootView.setScale(scale, scale);
+            rootView.setScale(scale);
             rootView._updateCacheViewport();
 
             let event = document.createEvent("Events");
