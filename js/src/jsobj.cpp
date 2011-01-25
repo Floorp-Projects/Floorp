@@ -2567,13 +2567,8 @@ obj_getOwnPropertyNames(JSContext *cx, uintN argc, Value *vp)
         return false;
 
     AutoIdVector keys(cx);
-    if (obj->isProxy()) {
-        if (!JSProxy::getOwnPropertyNames(cx, obj, keys))
-            return false;
-    } else {
-        if (!GetPropertyNames(cx, obj, JSITER_OWNONLY | JSITER_HIDDEN, &keys))
-            return false;
-    }
+    if (!GetPropertyNames(cx, obj, JSITER_OWNONLY | JSITER_HIDDEN, &keys))
+        return false;
 
     AutoValueVector vals(cx);
     if (!vals.resize(keys.length()))
