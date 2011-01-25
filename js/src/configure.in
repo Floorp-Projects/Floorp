@@ -177,7 +177,7 @@ dnl Default to MSVC for win32 and gcc-4.2 for darwin
 dnl ==============================================================
 if test -z "$CROSS_COMPILE"; then
 case "$target" in
-*-cygwin*|*-mingw*|*-msvc*|*-mks*)
+*-mingw*)
     if test -z "$CC"; then CC=cl; fi
     if test -z "$CXX"; then CXX=cl; fi
     if test -z "$CPP"; then CPP="cl -E -nologo"; fi
@@ -600,7 +600,7 @@ case "$WINSDK_TARGETVER" in
 esac
 
 case "$target" in
-*-cygwin*|*-mingw*|*-msvc*|*-mks*|*-wince|*-winmo)
+*-mingw*|*-wince|*-winmo)
     if test "$GCC" != "yes"; then
         # Check to see if we are really running in a msvc environemnt
         _WIN32_MSVC=1
@@ -1168,7 +1168,7 @@ if test -n "$MAKE"; then
 fi
 
 case "$host_os" in
-cygwin*|mingw*|mks*|msvc*)
+mingw*)
     MOZ_PATH_PROGS(GMAKE, $GMAKE $NOT_PYMAKE make gmake, :)
     ;;
 *)
@@ -1206,7 +1206,6 @@ ASM_SUFFIX=s
 IMPORT_LIB_SUFFIX=
 TARGET_MD_ARCH=unix
 DIRENT_INO=d_ino
-CYGWIN_WRAPPER=
 WIN_TOP_SRC=
 MOZ_USER_DIR=".mozilla"
 
@@ -1270,7 +1269,7 @@ HOST_OS_ARCH=`echo $host_os | sed -e 's|/|_|g'`
 #
 
 case "$HOST_OS_ARCH" in
-cygwin*|mingw*|mks*|msvc*)
+mingw*)
     HOST_OS_ARCH=WINNT
     ;;
 darwin*)
@@ -1363,13 +1362,8 @@ Windows_NT)
     fi
     OS_RELEASE="${OS_RELEASE}.${OS_MINOR_RELEASE}"
     ;;
-CYGWIN32_NT|CYGWIN_NT*|MINGW*_NT*)
+MINGW*_NT*)
 #
-# If uname -s returns "CYGWIN_NT-4.0", we assume that we are using
-# the uname.exe in the Cygwin tools.
-# Prior to the Beta 20 release, Cygwin was called GNU-Win32.
-# If uname -s returns "CYGWIN32/NT", we assume that we are using
-# the uname.exe in the GNU-Win32 tools.
 # If uname -s returns MINGW32_NT-5.1, we assume that we are using
 # the uname.exe in the MSYS tools.
 #
@@ -1829,7 +1823,7 @@ case "$host" in
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O3}"
     ;;
 
-*cygwin*|*mingw*|*mks*|*msvc*|*wince|*winmo)
+*mingw*|*wince|*winmo)
     # we need Python 2.5 on Windows
     PYTHON_VERSION=2.5
     if test -n "$_WIN32_MSVC"; then
@@ -1846,23 +1840,7 @@ case "$host" in
     HOST_BIN_SUFFIX=.exe
     case "$host" in
     *mingw*)
-    dnl MinGW/MSYS does not need CYGWIN_WRAPPER
         PERL="/bin/sh ${_topsrcdir}/build/msys-perl-wrapper"
-        ;;
-    *)
-        CYGWIN_WRAPPER="${srcdir}/build/cygwin-wrapper"
-        if test "`echo ${srcdir} | grep -c ^/ 2>/dev/null`" = 0; then
-            _pwd=`pwd`
-            CYGWIN_WRAPPER="${_pwd}/${srcdir}/build/cygwin-wrapper"
-        fi
-        if test "`${PERL} -v | grep -c cygwin  2>/dev/null`" = 0; then
-            AS_PERL=1
-            PERL="${CYGWIN_WRAPPER} $PERL"
-        fi
-
-        if test "`${PYTHON} -c 'import sys; print sys.platform;'`" != "cygwin"; then
-            PYTHON="${CYGWIN_WRAPPER} $PYTHON"
-        fi
         ;;
     esac
 
@@ -2330,7 +2308,7 @@ ia64*-hpux*)
     RANLIB='echo no ranlib '
 ;;
 
-*-mingw*|*-cygwin*|*-msvc*|*-mks*)
+*-mingw*)
     DSO_CFLAGS=
     DSO_PIC_CFLAGS=
     DLL_SUFFIX=.dll
@@ -2451,42 +2429,31 @@ ia64*-hpux*)
     no_x=yes
     AC_DEFINE(NO_X11)
 
-    dnl MinGW/MSYS doesn't provide or need cygpath
     case "$host" in
     *-mingw*)
-	CYGPATH_W=echo
-	CYGPATH_S=cat
-	MOZ_BUILD_ROOT=`cd $MOZ_BUILD_ROOT && pwd -W`
-	;;
-    *-cygwin*|*-msvc*|*-mks*)
-	CYGPATH_W="cygpath -a -w"
-	CYGPATH_S="sed -e s|\\\\|/|g"
-	MOZ_BUILD_ROOT=`$CYGPATH_W $MOZ_BUILD_ROOT | $CYGPATH_S`
-	;;
+        MOZ_BUILD_ROOT=`cd $MOZ_BUILD_ROOT && pwd -W`
+        ;;
     esac
+
     case "$host" in
-    *-mingw*|*-cygwin*|*-msvc*|*-mks*)
-
-    if test -z "$MOZ_TOOLS"; then
-        AC_MSG_ERROR([MOZ_TOOLS is not set])
-    fi
-
-    MOZ_TOOLS_DIR=`cd $MOZ_TOOLS && pwd -W`
-    if test "$?" != "0" -o -z "$MOZ_TOOLS_DIR"; then
-        AC_MSG_ERROR([cd \$MOZ_TOOLS failed. MOZ_TOOLS ==? $MOZ_TOOLS])
-    fi
-    MOZ_TOOLS_BIN_DIR="$(cd "$MOZ_TOOLS_DIR/bin" && pwd)"
-    if test `echo ${PATH}: | grep -ic "$MOZ_TOOLS_BINDIR:"` = 0; then
-        AC_MSG_ERROR([\$MOZ_TOOLS\\bin must be in your path.])
-    fi
-    MOZ_TOOLS_DIR=`$CYGPATH_W $MOZ_TOOLS_DIR | $CYGPATH_S`
-    ;;
+    *-mingw*)
+        if test -z "$MOZ_TOOLS"; then
+            AC_MSG_ERROR([MOZ_TOOLS is not set])
+        fi
+        MOZ_TOOLS_DIR=`cd $MOZ_TOOLS && pwd -W`
+        if test "$?" != "0" -o -z "$MOZ_TOOLS_DIR"; then
+            AC_MSG_ERROR([cd \$MOZ_TOOLS failed. MOZ_TOOLS ==? $MOZ_TOOLS])
+        fi
+        MOZ_TOOLS_BIN_DIR="$(cd "$MOZ_TOOLS_DIR/bin" && pwd)"
+        if test `echo ${PATH}: | grep -ic "$MOZ_TOOLS_BINDIR:"` = 0; then
+            AC_MSG_ERROR([\$MOZ_TOOLS\\bin must be in your path.])
+        fi
+        ;;
     esac 
-
 
     case "$host_os" in
     cygwin*|msvc*|mks*)
-        AC_MSG_WARN([Using a cygwin build environment is unsupported. Configure cannot check for the presence of necessary headers. Please upgrade to MozillaBuild; see https://developer.mozilla.org/en/Windows_Build_Prerequisites.])
+        AC_MSG_ERROR([Using a Cygwin build environment is unsupported. Configure cannot check for presence of necessary headers. Please upgrade to MozillaBuild; see https://developer.mozilla.org/en/Windows_Build_Prerequisites.])
         ;;
     esac
 
@@ -2868,7 +2835,7 @@ case "$target" in
 *-openvms*)
     NO_LD_ARCHIVE_FLAGS=
     ;;
-*-msvc*|*-mks*|*-mingw*|*-cygwin*|*-wince|*-winmo)
+*-mingw*|*-wince|*-winmo)
     if test -z "$GNU_CC"; then
         NO_LD_ARCHIVE_FLAGS=
     fi
@@ -2900,7 +2867,7 @@ case "$target" in
     *-darwin*)
         MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,-exported_symbols_list -Wl,$(BUILD_TOOLS)/gnu-ld-scripts/components-export-list'
         ;;
-    *-cygwin*|*-mingw*|*-mks*|*-msvc|*-wince|*-winmo)
+    *-mingw*|*-wince|*-winmo)
         if test -n "$GNU_CC"; then
            MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,--version-script,$(BUILD_TOOLS)/gnu-ld-scripts/components-version-script'
         fi
@@ -3032,7 +2999,7 @@ case "$target" in
 *-gnu*)
     AC_DEFINE(AVMPLUS_UNIX)
     ;;
-*-cygwin*|*-mingw*|*-mks*|*-msvc*|*-wince|*-winmo)
+*-mingw*|*-wince|*-winmo)
     AC_DEFINE(AVMPLUS_WIN32)
     ;;
 *-os2*)
@@ -3847,7 +3814,7 @@ if test "$ac_cv_func_gnu_get_libc_version" = "yes"; then
 fi
 
 case $target_os in
-    os2*|msvc*|mks*|cygwin*|mingw*|darwin*|wince*|winmo*|beos*)
+    darwin*|mingw*|os2*|wince*|winmo*)
         ;;
     *)
     
@@ -4937,7 +4904,7 @@ if test "$MOZ_MEMORY"; then
   *-solaris*)
     AC_DEFINE(MOZ_MEMORY_SOLARIS)
     ;;
-  *-msvc*|*-mks*|*-cygwin*|*-mingw*)
+  *-mingw*)
     AC_DEFINE(MOZ_MEMORY_WINDOWS)
     # the interesting bits will get passed down in MOZ_MEMORY_LDFLAGS
     ;;
@@ -5595,7 +5562,7 @@ EDITLINE_LIBS=
 JS_DISABLE_SHELL=
 
 case "$target" in
-*-wince*|*-winmo*|*-mingw*|*-cygwin*|*-msvc*|*-mks*)
+*-mingw*|*-wince*|*-winmo*)
     NO_EDITLINE=1
     ;;
 *-symbian*)
@@ -5736,8 +5703,6 @@ dnl win32 options
 AC_SUBST(MOZ_MAPINFO)
 AC_SUBST(MOZ_BROWSE_INFO)
 AC_SUBST(MOZ_TOOLS_DIR)
-AC_SUBST(CYGWIN_WRAPPER)
-AC_SUBST(AS_PERL)
 AC_SUBST(WIN32_REDIST_DIR)
 AC_SUBST(PYTHON)
 
@@ -5927,28 +5892,12 @@ dnl ========================================================
 AC_HAVE_FUNCS(setlocale)
 AC_HAVE_FUNCS(localeconv)
 
-dnl ========================================================
-dnl Use cygwin wrapper for win32 builds, except MSYS/MinGW
-dnl ========================================================
 case "$host_os" in
 mingw*)
     WIN_TOP_SRC=`cd $srcdir; pwd -W`
     ;;
-cygwin*|msvc*|mks*)
-    HOST_CC="\$(CYGWIN_WRAPPER) $HOST_CC"
-    HOST_CXX="\$(CYGWIN_WRAPPER) $HOST_CXX"
-    CC="\$(CYGWIN_WRAPPER) $CC"
-    CXX="\$(CYGWIN_WRAPPER) $CXX"
-    CPP="\$(CYGWIN_WRAPPER) $CPP"
-    LD="\$(CYGWIN_WRAPPER) $LD"
-    AS="\$(CYGWIN_WRAPPER) $AS"
-    RC="\$(CYGWIN_WRAPPER) $RC"
-    CYGDRIVE_MOUNT=`mount -p | awk '{ if (/^\//) { print $1; exit } }'`
-    WIN_TOP_SRC=`cygpath -a -w $srcdir | sed -e 's|\\\\|/|g'`
-    ;;
 esac
 
-AC_SUBST(CYGDRIVE_MOUNT)
 AC_SUBST(WIN_TOP_SRC)
 
 AC_SUBST(MOZILLA_VERSION)
@@ -6038,11 +5987,7 @@ dnl This does not change the $MAKEFILES variable.
 dnl
 dnl OpenVMS gets a line overflow on the long eval command, so use a temp file.
 dnl
-if test -z "${AS_PERL}"; then
 echo $MAKEFILES | ${PERL} $srcdir/build/autoconf/acoutput-fast.pl > conftest.sh
-else
-echo $MAKEFILES | ${PERL} $srcdir/build/autoconf/acoutput-fast.pl -nowrap --cygwin-srcdir=$srcdir > conftest.sh
-fi
 . ./conftest.sh
 rm conftest.sh
 

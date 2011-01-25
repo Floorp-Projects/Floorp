@@ -1553,14 +1553,10 @@ endif
 EMPTY :=
 SPACE := $(EMPTY) $(EMPTY)
 
-# Cygwin and MSYS have their own special path form, but javac expects the source
-# and class paths to be in the DOS form (i.e. e:/builds/...).  This function
-# does the appropriate conversion on Windows, but is a noop on other systems.
+# MSYS has its own special path form, but javac expects the source and class
+# paths to be in the DOS form (i.e. e:/builds/...).  This function does the
+# appropriate conversion on Windows, but is a noop on other systems.
 ifeq (,$(filter-out WINNT WINCE, $(HOST_OS_ARCH)))
-ifdef CYGWIN_WRAPPER
-normalizepath = $(foreach p,$(1),$(shell cygpath -m $(p)))
-else
-# assume MSYS
 #  We use 'pwd -W' to get DOS form of the path.  However, since the given path
 #  could be a file or a non-existent path, we cannot call 'pwd -W' directly
 #  on the path.  Instead, we extract the root path (i.e. "c:/"), call 'pwd -W'
@@ -1568,7 +1564,6 @@ else
 root-path = $(shell echo $(1) | sed -e "s|\(/[^/]*\)/\?\(.*\)|\1|")
 non-root-path = $(shell echo $(1) | sed -e "s|\(/[^/]*\)/\?\(.*\)|\2|")
 normalizepath = $(foreach p,$(1),$(if $(filter /%,$(1)),$(patsubst %/,%,$(shell cd $(call root-path,$(1)) && pwd -W))/$(call non-root-path,$(1)),$(1)))
-endif
 else
 normalizepath = $(1)
 endif
@@ -1593,7 +1588,7 @@ $(_JAVA_DIR)::
 	$(NSINSTALL) -D $@
 
 $(_JAVA_DIR)/%.class: %.java $(GLOBAL_DEPS) $(_JAVA_DIR)
-	$(CYGWIN_WRAPPER) $(JAVAC) $(JAVAC_FLAGS) -classpath $(_JAVA_CLASSPATH) \
+	$(JAVAC) $(JAVAC_FLAGS) -classpath $(_JAVA_CLASSPATH) \
 			-sourcepath $(_JAVA_SOURCEPATH) -d $(_JAVA_DIR) $(_VPATH_SRCS)
 
 $(JAVA_LIBRARY): $(addprefix $(_JAVA_DIR)/,$(JAVA_SRCS:.java=.class)) $(GLOBAL_DEPS)
@@ -1605,21 +1600,15 @@ GARBAGE_DIRS += $(_JAVA_DIR)
 # Update Makefiles
 ###############################################################################
 
-# In GNU make 3.80, makefiles must use the /cygdrive syntax, even if we're
-# processing them with AS perl. See bug 232003
-ifdef AS_PERL
-CYGWIN_TOPSRCDIR = -nowrap -p $(topsrcdir) -wrap
-endif
-
 # Note: Passing depth to make-makefile is optional.
 #       It saves the script some work, though.
 Makefile: Makefile.in
-	@$(PERL) $(AUTOCONF_TOOLS)/make-makefile -t $(topsrcdir) -d $(DEPTH) $(CYGWIN_TOPSRCDIR)
+	@$(PERL) $(AUTOCONF_TOOLS)/make-makefile -t $(topsrcdir) -d $(DEPTH)
 
 ifdef SUBMAKEFILES
 # VPATH does not work on some machines in this case, so add $(srcdir)
 $(SUBMAKEFILES): % : $(srcdir)/%.in
-	$(PERL) $(AUTOCONF_TOOLS)/make-makefile -t $(topsrcdir) -d $(DEPTH) $(CYGWIN_TOPSRCDIR) $@
+	$(PERL) $(AUTOCONF_TOOLS)/make-makefile -t $(topsrcdir) -d $(DEPTH) $@
 endif
 
 ifdef AUTOUPDATE_CONFIGURE

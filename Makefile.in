@@ -134,13 +134,9 @@ distclean::
 
 ifeq ($(OS_ARCH),WINNT)
 # we want to copy PDB files on Windows
-MAKE_SYM_STORE_ARGS := -c
+MAKE_SYM_STORE_ARGS := -c --vcs-info
 ifdef PDBSTR_PATH
 MAKE_SYM_STORE_ARGS += -i
-endif
-ifeq (,$(CYGWIN_WRAPPER))
-# this doesn't work with Cygwin Python
-MAKE_SYM_STORE_ARGS += --vcs-info
 endif
 DUMP_SYMS_BIN ?= $(topsrcdir)/toolkit/crashreporter/tools/win32/dump_syms_vc$(_MSC_VER).exe
 # PDB files don't get moved to dist, so we need to scan the whole objdir
