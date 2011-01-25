@@ -478,9 +478,11 @@ nsAutoCompleteController::HandleKeyNavigation(PRUint32 aKey, PRBool *_retval)
           StopSearch();
 
           if (!mInput) {
-            // StopSearch() can call PostSearchCleanup() which might result
-            // in a blur event, which could null out mInput, so we need to check it
-            // again.  See bug #395344 for more details
+            // Because of the joy of nested event loops (which can easily happen when some
+            // code uses a generator for an asynchronous AutoComplete search),
+            // nsIAutoCompleteSearch::StartSearch might cause us to be detached from our input
+            // field.  The next time we iterate, we'd be touching something that we shouldn't
+            // be, and result in a crash.
             return NS_OK;
           }
 
@@ -1044,6 +1046,13 @@ nsAutoCompleteController::StartSearch()
     if (NS_FAILED(rv)) {
       ++searchesFailed;
       --mSearchesOngoing;
+    }
+    // nsIAutoCompleteSearch::StartSearch might cause us to be detached from
+    // our input field, so it's not safe to assume that it's safe to iterate
+    // over the next iteration.
+    if (!mInput) {
+      // The search operation has been finished.
+      return NS_OK;
     }
   }
 
