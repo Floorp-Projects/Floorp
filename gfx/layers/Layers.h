@@ -301,10 +301,8 @@ public:
    * returns false, and the caller must proceed with a normal layer tree
    * update and EndTransaction.
    */
-  virtual bool EndEmptyTransaction()
-  {
-    return false;
-  }
+  virtual bool EndEmptyTransaction() = 0;
+
   /**
    * Function called to draw the contents of each ThebesLayer.
    * aRegionToDraw contains the region that needs to be drawn.
