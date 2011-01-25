@@ -71,12 +71,11 @@ class RefTest(object):
     self.automation.setupPermissionsDatabase(profileDir,
       {'allowXULXBL': [('localhost', True), ('<file>', True)]})
 
-    # Set preferences.
+    # Set preferences for communication between our command line arguments
+    # and the reftest harness.  Preferences that are required for reftest
+    # to work should instead be set in reftest-cmdline.js .
     prefsFile = open(os.path.join(profileDir, "user.js"), "w")
-    prefsFile.write("""user_pref("browser.dom.window.dump.enabled", true);
-    """)
     prefsFile.write('user_pref("reftest.timeout", %d);\n' % (options.timeout * 1000))
-    prefsFile.write('user_pref("ui.caretBlinkTime", -1);\n')
 
     if options.totalChunks != None:
       prefsFile.write('user_pref("reftest.totalChunks", %d);\n' % options.totalChunks)
@@ -92,9 +91,6 @@ class RefTest(object):
         sys.exit(1)
       part = 'user_pref("%s", %s);\n' % (thispref[0], thispref[1])
       prefsFile.write(part)
-    # no slow script dialogs
-    prefsFile.write('user_pref("dom.max_script_run_time", 0);')
-    prefsFile.write('user_pref("dom.max_chrome_script_run_time", 0);')
     prefsFile.close()
 
     # install the reftest extension bits into the profile
