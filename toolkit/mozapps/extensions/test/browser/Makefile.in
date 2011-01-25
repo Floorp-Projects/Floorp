@@ -47,6 +47,7 @@ include $(DEPTH)/config/autoconf.mk
 
 _MAIN_TEST_FILES = \
   head.js \
+  browser_about.js \
   browser_bug557943.js \
   browser_bug562797.js \
   browser_bug562854.js \
@@ -93,6 +94,7 @@ _TEST_FILES = \
   $(NULL)
 
 _TEST_RESOURCES = \
+  addon_about.xul \
   addon_prefs.xul \
   browser_bug557956.rdf \
   browser_bug557956_8_2.xpi \
