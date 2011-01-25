@@ -1072,8 +1072,7 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
     newDefaultJSOptions &= ~JSOPTION_PROFILING;
 
 #ifdef DEBUG
-  // In debug builds, warnings are enabled in chrome context if
-  // javascript.options.strict.debug is true
+  // In debug builds, warnings are enabled in chrome context if javascript.options.strict.debug is true
   PRBool strictDebug = nsContentUtils::GetBoolPref(js_strict_debug_option_str);
   // Note this callback is also called from context's InitClasses thus we don't
   // need to enable this directly from InitContext
@@ -1095,10 +1094,15 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
   else
     newDefaultJSOptions &= ~JSOPTION_RELIMIT;
 
-  ::JS_SetOptions(context->mContext, newDefaultJSOptions);
+  if (newDefaultJSOptions != oldDefaultJSOptions) {
+    // Set options only if we used the old defaults; otherwise the page has
+    // customized some via the options object and we defer to its wisdom.
+    if (::JS_GetOptions(context->mContext) == oldDefaultJSOptions)
+      ::JS_SetOptions(context->mContext, newDefaultJSOptions);
 
-  // Save the new defaults for the next page load (InitContext).
-  context->mDefaultJSOptions = newDefaultJSOptions;
+    // Save the new defaults for the next page load (InitContext).
+    context->mDefaultJSOptions = newDefaultJSOptions;
+  }
 
 #ifdef JS_GC_ZEAL
   PRInt32 zeal = nsContentUtils::GetIntPref(js_zeal_option_str, -1);
@@ -2839,6 +2843,57 @@ nsJSContext::AddSupportsPrimitiveTojsvals(nsISupports *aArg, jsval *aArgv)
   return NS_OK;
 }
 
+static JSPropertySpec OptionsProperties[] = {
+  {"strict",    (int8)JSOPTION_STRICT,   JSPROP_ENUMERATE | JSPROP_PERMANENT},
+  {"werror",    (int8)JSOPTION_WERROR,   JSPROP_ENUMERATE | JSPROP_PERMANENT},
+  {"relimit",   (int8)JSOPTION_RELIMIT,  JSPROP_ENUMERATE | JSPROP_PERMANENT},
+  {0}
+};
+
+static JSBool
+GetOptionsProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+{
+  if (JSID_IS_INT(id)) {
+    uint32 optbit = (uint32) JSID_TO_INT(id);
+    if (((optbit & (optbit - 1)) == 0 && optbit <= JSOPTION_WERROR) ||
+          optbit == JSOPTION_RELIMIT)
+      *vp = (JS_GetOptions(cx) & optbit) ? JSVAL_TRUE : JSVAL_FALSE;
+  }
+  return JS_TRUE;
+}
+
+static JSBool
+SetOptionsProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+{
+  if (JSID_IS_INT(id)) {
+    uint32 optbit = (uint32) JSID_TO_INT(id);
+
+    // Don't let options other than strict, werror, or relimit be set -- it
+    // would be bad if web page script could clear
+    // JSOPTION_PRIVATE_IS_NSISUPPORTS!
+    if (((optbit & (optbit - 1)) == 0 && optbit <= JSOPTION_WERROR) ||
+        optbit == JSOPTION_RELIMIT) {
+      JSBool optval;
+      JS_ValueToBoolean(cx, *vp, &optval);
+
+      uint32 optset = ::JS_GetOptions(cx);
+      if (optval)
+        optset |= optbit;
+      else
+        optset &= ~optbit;
+      ::JS_SetOptions(cx, optset);
+    }
+  }
+  return JS_TRUE;
+}
+
+static JSClass OptionsClass = {
+  "JSOptions",
+  0,
+  JS_PropertyStub, JS_PropertyStub, GetOptionsProperty, SetOptionsProperty,
+  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, nsnull
+};
+
 #ifdef NS_TRACE_MALLOC
 
 #include <errno.h>              // XXX assume Linux if NS_TRACE_MALLOC
@@ -3116,7 +3171,15 @@ nsJSContext::InitClasses(void *aGlobalObj)
 
   JSAutoRequest ar(mContext);
 
-  ::JS_SetOptions(mContext, mDefaultJSOptions);
+  // Initialize the options object and set default options in mContext
+  JSObject *optionsObj = ::JS_DefineObject(mContext, globalObj, "_options",
+                                           &OptionsClass, nsnull, 0);
+  if (optionsObj &&
+      ::JS_DefineProperties(mContext, optionsObj, OptionsProperties)) {
+    ::JS_SetOptions(mContext, mDefaultJSOptions);
+  } else {
+    rv = NS_ERROR_FAILURE;
+  }
 
   // Attempt to initialize profiling functions
   ::JS_DefineProfilingFunctions(mContext, globalObj);

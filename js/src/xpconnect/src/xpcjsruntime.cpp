@@ -426,7 +426,7 @@ void XPCJSRuntime::TraceXPConnectRoots(JSTracer *trc)
 {
     JSContext *iter = nsnull, *acx;
     while ((acx = JS_ContextIterator(GetJSRuntime(), &iter))) {
-        JS_ASSERT(acx->hasRunOption(JSOPTION_UNROOTED_GLOBAL));
+        JS_ASSERT(JS_HAS_OPTION(acx, JSOPTION_UNROOTED_GLOBAL));
         if (acx->globalObject)
             JS_CALL_OBJECT_TRACER(trc, acx->globalObject, "global object");
     }
@@ -628,7 +628,7 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
                 JSContext *iter = nsnull, *acx;
 
                 while((acx = JS_ContextIterator(cx->runtime, &iter))) {
-                    if (!acx->hasRunOption(JSOPTION_UNROOTED_GLOBAL))
+                    if (!JS_HAS_OPTION(acx, JSOPTION_UNROOTED_GLOBAL))
                         JS_ToggleOptions(acx, JSOPTION_UNROOTED_GLOBAL);
                 }
                 break;

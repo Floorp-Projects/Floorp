@@ -464,7 +464,7 @@ struct JSTreeContext {              /* tree context for semantic checks */
  * JSOPTION_STRICT warnings or strict mode errors.
  */
 inline bool JSTreeContext::needStrictChecks() {
-    return parser->context->hasStrictOption() || inStrictMode();
+    return JS_HAS_STRICT_OPTION(parser->context) || inStrictMode();
 }
 
 /*
@@ -653,18 +653,17 @@ struct JSCodeGenerator : public JSTreeContext
      */
     bool addGlobalUse(JSAtom *atom, uint32 slot, js::UpvarCookie *cookie);
 
-    bool hasSharps() const {
+    bool hasSharps() {
         bool rv = !!(flags & TCF_HAS_SHARPS);
         JS_ASSERT((sharpSlotBase >= 0) == rv);
         return rv;
     }
 
-    uintN sharpSlots() const {
+    uintN sharpSlots() {
         return hasSharps() ? SHARP_NSLOTS : 0;
     }
 
-    bool compilingForEval() const { return !!(flags & TCF_COMPILE_FOR_EVAL); }
-    JSVersion version() const { return parser->versionWithFlags(); }
+    bool compilingForEval() { return !!(flags & TCF_COMPILE_FOR_EVAL); }
 
     bool shouldNoteClosedName(JSParseNode *pn);
 
