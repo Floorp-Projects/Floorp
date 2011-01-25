@@ -1523,6 +1523,11 @@ nsContentUtils::GetDocumentFromCaller()
   sXPConnect->GetCaller(&cx, &obj);
   NS_ASSERTION(cx && obj, "Caller ensures something is running");
 
+  JSAutoEnterCompartment ac;
+  if (!ac.enter(cx, obj)) {
+    return nsnull;
+  }
+
   nsCOMPtr<nsPIDOMWindow> win =
     do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(cx, obj));
   if (!win) {

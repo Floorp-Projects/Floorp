@@ -2822,32 +2822,17 @@ nsXPCComponents_Utils::LookupMethod()
     jsval funval;
     JSFunction *oldfunction;
 
-    {
-        JSAutoEnterCompartment ac;
+    // get (and perhaps lazily create) the member's cloned function
+    if(!member->NewFunctionObject(inner_cc, iface,
+                                  JSVAL_TO_OBJECT(argv[0]),
+                                  &funval))
+        return NS_ERROR_XPC_BAD_CONVERT_JS;
 
-        if (!ac.enter(inner_cc, wrapper->GetFlatJSObjectAndMark())) {
-            return NS_ERROR_UNEXPECTED;
-        }
-
-        // get (and perhaps lazily create) the member's cloned function
-        if(!member->NewFunctionObject(inner_cc, iface,
-                                      wrapper->GetFlatJSObjectAndMark(),
-                                      &funval))
-            return NS_ERROR_XPC_BAD_CONVERT_JS;
-
-        oldfunction = JS_ValueToFunction(inner_cc, funval);
-        NS_ASSERTION(oldfunction, "Function is not a function");
-    }
+    oldfunction = JS_ValueToFunction(inner_cc, funval);
+    NS_ASSERTION(oldfunction, "Function is not a function");
 
     // Stick the function in the return value. This roots it.
     *retval = funval;
-
-    // Callers of this method are implicitly buying into
-    // XPCNativeWrapper-like protection. The easiest way to enforce
-    // this is to let the JS engine wrap the function.
-    if (!JS_WrapValue(inner_cc, retval)) {
-        return NS_ERROR_UNEXPECTED;
-    }
 
     // Tell XPConnect that we returned the function through the call context.
     cc->SetReturnValueWasSet(PR_TRUE);
