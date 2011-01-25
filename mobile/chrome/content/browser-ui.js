@@ -442,7 +442,9 @@ var BrowserUI = {
     Elements.tabs.addEventListener("TabOpen", this, true);
 
     Elements.browsers.addEventListener("PanFinished", this, true);
+#if MOZ_PLATFORM_MAEMO == 6
     Elements.browsers.addEventListener("SizeChanged", this, true);
+#endif
 
     // listen content messages
     messageManager.addMessageListener("DOMLinkAdded", this);
