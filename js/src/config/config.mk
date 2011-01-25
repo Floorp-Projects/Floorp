@@ -449,16 +449,16 @@ MY_RULES	:= $(DEPTH)/config/myrules.mk
 #
 # Default command macros; can be overridden in <arch>.mk.
 #
-CCC		= $(CXX)
-NFSPWD		= $(CONFIG_TOOLS)/nfspwd
-PURIFY		= purify $(PURIFYOPTIONS)
-QUANTIFY	= quantify $(QUANTIFYOPTIONS)
+CCC = $(CXX)
+NFSPWD = $(CONFIG_TOOLS)/nfspwd
+PURIFY = purify $(PURIFYOPTIONS)
+QUANTIFY = quantify $(QUANTIFYOPTIONS)
 ifdef CROSS_COMPILE
-XPIDL_COMPILE 	= $(CYGWIN_WRAPPER) $(LIBXUL_DIST)/host/bin/host_xpidl$(HOST_BIN_SUFFIX)
-XPIDL_LINK	= $(CYGWIN_WRAPPER) $(LIBXUL_DIST)/host/bin/host_xpt_link$(HOST_BIN_SUFFIX)
+XPIDL_COMPILE = $(LIBXUL_DIST)/host/bin/host_xpidl$(HOST_BIN_SUFFIX)
+XPIDL_LINK = $(LIBXUL_DIST)/host/bin/host_xpt_link$(HOST_BIN_SUFFIX)
 else
-XPIDL_COMPILE 	= $(CYGWIN_WRAPPER) $(LIBXUL_DIST)/bin/xpidl$(BIN_SUFFIX)
-XPIDL_LINK	= $(CYGWIN_WRAPPER) $(LIBXUL_DIST)/bin/xpt_link$(BIN_SUFFIX)
+XPIDL_COMPILE = $(LIBXUL_DIST)/bin/xpidl$(BIN_SUFFIX)
+XPIDL_LINK = $(LIBXUL_DIST)/bin/xpt_link$(BIN_SUFFIX)
 endif
 
 # Java macros
@@ -675,11 +675,11 @@ endif # OS_ARCH=Darwin
 
 
 ifdef MOZ_NATIVE_MAKEDEPEND
-MKDEPEND_DIR	=
-MKDEPEND	= $(CYGWIN_WRAPPER) $(MOZ_NATIVE_MAKEDEPEND)
+MKDEPEND_DIR =
+MKDEPEND = $(MOZ_NATIVE_MAKEDEPEND)
 else
-MKDEPEND_DIR	= $(CONFIG_TOOLS)/mkdepend
-MKDEPEND	= $(CYGWIN_WRAPPER) $(MKDEPEND_DIR)/mkdepend$(BIN_SUFFIX)
+MKDEPEND_DIR = $(CONFIG_TOOLS)/mkdepend
+MKDEPEND = $(MKDEPEND_DIR)/mkdepend$(BIN_SUFFIX)
 endif
 
 # Set link flags according to whether we want a console.
@@ -743,12 +743,12 @@ PWD := $(CURDIR)
 endif
 
 ifdef NSINSTALL_BIN
-NSINSTALL	= $(CYGWIN_WRAPPER) $(NSINSTALL_BIN)
+NSINSTALL = $(NSINSTALL_BIN)
 else
 ifeq (OS2,$(CROSS_COMPILE)$(OS_ARCH))
-NSINSTALL	= $(MOZ_TOOLS_DIR)/nsinstall
+NSINSTALL = $(MOZ_TOOLS_DIR)/nsinstall
 else
-NSINSTALL	= $(CONFIG_TOOLS)/nsinstall$(HOST_BIN_SUFFIX)
+NSINSTALL = $(CONFIG_TOOLS)/nsinstall$(HOST_BIN_SUFFIX)
 endif # OS2
 endif # NSINSTALL_BIN
 
@@ -776,12 +776,6 @@ endif # WINNT/OS2
 
 # Use nsinstall in copy mode to install files on the system
 SYSINSTALL	= $(NSINSTALL) -t
-
-ifeq ($(OS_ARCH),WINNT)
-ifneq (,$(CYGDRIVE_MOUNT))
-export CYGDRIVE_MOUNT
-endif
-endif
 
 #
 # Localization build automation
