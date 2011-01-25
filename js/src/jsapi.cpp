@@ -122,41 +122,57 @@ static JSClass dummy_class = {
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
+/*
+ * This class is a version-establising barrier at the head of a VM entry or
+ * re-entry. It ensures that:
+ *
+ * - |newVersion| is the starting (default) version used for the context.
+ * - The starting version state is not an override.
+ * - Overrides in the VM session are not propagated to the caller.
+ */
 class AutoVersionAPI
 {
     JSContext   * const cx;
-    JSVersion   oldVersion;
-    bool        oldVersionWasOverride;
-    uint32      oldOptions;
+    JSVersion   oldDefaultVersion;
+    bool        oldHasVersionOverride;
+    JSVersion   oldVersionOverride;
+#ifdef DEBUG
+    uintN       oldCompileOptions;
+#endif
+    JSVersion   newVersion;
 
   public:
     explicit AutoVersionAPI(JSContext *cx, JSVersion newVersion)
-      : cx(cx), oldVersion(cx->findVersion()), oldVersionWasOverride(cx->isVersionOverridden()),
-        oldOptions(cx->options) {
+      : cx(cx),
+        oldDefaultVersion(cx->getDefaultVersion()),
+        oldHasVersionOverride(cx->isVersionOverridden()),
+        oldVersionOverride(oldHasVersionOverride ? cx->findVersion() : JSVERSION_UNKNOWN)
+#ifdef DEBUG
+        , oldCompileOptions(cx->getCompileOptions()) 
+#endif
+    {
         /* 
          * Note: ANONFUNFIX in newVersion is ignored for backwards
          * compatibility, must be set via JS_SetOptions. (Because of this, we
          * inherit the current ANONFUNFIX setting from the options.
          */
-        cx->options = VersionHasXML(newVersion)
-                      ? (cx->options | JSOPTION_XML)
-                      : (cx->options & ~JSOPTION_XML);
-
-        VersionSetAnonFunFix(&newVersion, OptionsHasAnonFunFix(cx->options));
-        cx->maybeOverrideVersion(newVersion);
-        cx->checkOptionVersionSync();
+        VersionSetAnonFunFix(&newVersion, OptionsHasAnonFunFix(cx->getCompileOptions()));
+        this->newVersion = newVersion;
+        cx->clearVersionOverride();
+        cx->setDefaultVersion(newVersion);
     }
 
     ~AutoVersionAPI() {
-        cx->options = oldOptions;
-        if (oldVersionWasOverride) {
-            JS_ALWAYS_TRUE(cx->maybeOverrideVersion(oldVersion));
-        } else {
+        cx->setDefaultVersion(oldDefaultVersion);
+        if (oldHasVersionOverride)
+            cx->overrideVersion(oldVersionOverride);
+        else
             cx->clearVersionOverride();
-            cx->setDefaultVersion(oldVersion);
-        }
-        JS_ASSERT(cx->findVersion() == oldVersion);
+        JS_ASSERT(oldCompileOptions == cx->getCompileOptions());
     }
+
+    /* The version that this scoped-entity establishes. */
+    JSVersion version() const { return newVersion; }
 };
 
 #ifdef HAVE_VA_LIST_AS_ARRAY
@@ -1038,6 +1054,9 @@ JS_SetVersion(JSContext *cx, JSVersion newVersion)
     JS_ASSERT(!VersionHasFlags(newVersion));
     JSVersion newVersionNumber = newVersion;
 
+#ifdef DEBUG
+    uintN coptsBefore = cx->getCompileOptions();
+#endif
     JSVersion oldVersion = cx->findVersion();
     JSVersion oldVersionNumber = VersionNumber(oldVersion);
     if (oldVersionNumber == newVersionNumber)
@@ -1047,9 +1066,9 @@ JS_SetVersion(JSContext *cx, JSVersion newVersion)
     if (newVersionNumber != JSVERSION_DEFAULT && newVersionNumber <= JSVERSION_1_4)
         return oldVersionNumber;
 
-    cx->optionFlagsToVersion(&newVersion);
+    VersionCopyFlags(&newVersion, oldVersion);
     cx->maybeOverrideVersion(newVersion);
-    cx->checkOptionVersionSync();
+    JS_ASSERT(cx->getCompileOptions() == coptsBefore);
     return oldVersionNumber;
 }
 
@@ -1102,32 +1121,36 @@ JS_GetOptions(JSContext *cx)
      * We may have been synchronized with a script version that was formerly on
      * the stack, but has now been popped.
      */
-    return cx->options;
+    return cx->allOptions();
+}
+
+static uintN
+SetOptionsCommon(JSContext *cx, uintN options)
+{
+    JS_ASSERT((options & JSALLOPTION_MASK) == options);
+    uintN oldopts = cx->allOptions();
+    uintN newropts = options & JSRUNOPTION_MASK;
+    uintN newcopts = options & JSCOMPILEOPTION_MASK;
+    cx->setRunOptions(newropts);
+    cx->setCompileOptions(newcopts);
+    cx->updateJITEnabled();
+    return oldopts;
 }
 
 JS_PUBLIC_API(uint32)
 JS_SetOptions(JSContext *cx, uint32 options)
 {
     AutoLockGC lock(cx->runtime);
-    uint32 oldopts = cx->options;
-    cx->options = options;
-    cx->syncOptionsToVersion();
-    cx->updateJITEnabled();
-    cx->checkOptionVersionSync();
-    return oldopts;
+    return SetOptionsCommon(cx, options);
 }
 
 JS_PUBLIC_API(uint32)
 JS_ToggleOptions(JSContext *cx, uint32 options)
 {
     AutoLockGC lock(cx->runtime);
-    cx->checkOptionVersionSync();
-    uint32 oldopts = cx->options;
-    cx->options ^= options;
-    cx->syncOptionsToVersion();
-    cx->updateJITEnabled();
-    cx->checkOptionVersionSync();
-    return oldopts;
+    uintN oldopts = cx->allOptions();
+    uintN newopts = oldopts ^ options;
+    return SetOptionsCommon(cx, newopts);
 }
 
 JS_PUBLIC_API(const char *)
@@ -4377,7 +4400,7 @@ JS_DefineFunctionById(JSContext *cx, JSObject *obj, jsid id, JSNative call,
 inline static void
 LAST_FRAME_EXCEPTION_CHECK(JSContext *cx, bool result)
 {
-    if (!result && !(cx->options & JSOPTION_DONT_REPORT_UNCAUGHT))
+    if (!result && !cx->hasRunOption(JSOPTION_DONT_REPORT_UNCAUGHT))
         js_ReportUncaughtException(cx);
 }
 
@@ -4392,8 +4415,8 @@ LAST_FRAME_CHECKS(JSContext *cx, bool result)
 inline static uint32
 JS_OPTIONS_TO_TCFLAGS(JSContext *cx)
 {
-    return ((cx->options & JSOPTION_COMPILE_N_GO) ? TCF_COMPILE_N_GO : 0) |
-           ((cx->options & JSOPTION_NO_SCRIPT_RVAL) ? TCF_NO_SCRIPT_RVAL : 0);
+    return (cx->hasRunOption(JSOPTION_COMPILE_N_GO) ? TCF_COMPILE_N_GO : 0) |
+           (cx->hasRunOption(JSOPTION_NO_SCRIPT_RVAL) ? TCF_NO_SCRIPT_RVAL : 0);
 }
 
 extern JS_PUBLIC_API(JSScript *)
@@ -4418,7 +4441,7 @@ JS_CompileUCScriptForPrincipals(JSContext *cx, JSObject *obj, JSPrincipals *prin
 
     uint32 tcflags = JS_OPTIONS_TO_TCFLAGS(cx) | TCF_NEED_MUTABLE_SCRIPT;
     JSScript *script = Compiler::compileScript(cx, obj, NULL, principals, tcflags,
-                                               chars, length, filename, lineno);
+                                               chars, length, filename, lineno, cx->findVersion());
     if (script && !js_NewScriptObject(cx, script)) {
         js_DestroyScript(cx, script);
         script = NULL;
@@ -4493,7 +4516,7 @@ JS_BufferIsCompilableUnit(JSContext *cx, JSObject *obj, const char *bytes, size_
     exnState = JS_SaveExceptionState(cx);
     {
         Parser parser(cx);
-        if (parser.init(chars, length, NULL, 1)) {
+        if (parser.init(chars, length, NULL, 1, cx->findVersion())) {
             older = JS_SetErrorReporter(cx, NULL);
             if (!parser.parse(obj) &&
                 parser.tokenStream.isUnexpectedEOF()) {
@@ -4571,7 +4594,8 @@ CompileFileHelper(JSContext *cx, JSObject *obj, JSPrincipals *principals, uint32
 
     JS_ASSERT(i <= len);
     len = i;
-    script = Compiler::compileScript(cx, obj, NULL, principals, tcflags, buf, len, filename, 1);
+    script = Compiler::compileScript(cx, obj, NULL, principals, tcflags, buf, len, filename, 1,
+                                     cx->findVersion());
     cx->free(buf);
     return script;
 }
@@ -4755,7 +4779,7 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
         }
 
         if (!Compiler::compileFunctionBody(cx, fun, principals, &bindings,
-                                           chars, length, filename, lineno)) {
+                                           chars, length, filename, lineno, cx->findVersion())) {
             fun = NULL;
             goto out2;
         }
@@ -4896,6 +4920,32 @@ JS_ExecuteScriptVersion(JSContext *cx, JSObject *obj, JSScript *script, jsval *r
     return JS_ExecuteScript(cx, obj, script, rval);
 }
 
+bool
+EvaluateUCScriptForPrincipalsCommon(JSContext *cx, JSObject *obj,
+                                    JSPrincipals *principals,
+                                    const jschar *chars, uintN length,
+                                    const char *filename, uintN lineno,
+                                    jsval *rval, JSVersion compileVersion)
+{
+    JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
+
+    CHECK_REQUEST(cx);
+    JSScript *script = Compiler::compileScript(cx, obj, NULL, principals,
+                                               !rval
+                                               ? TCF_COMPILE_N_GO | TCF_NO_SCRIPT_RVAL
+                                               : TCF_COMPILE_N_GO,
+                                               chars, length, filename, lineno, compileVersion);
+    if (!script) {
+        LAST_FRAME_CHECKS(cx, script);
+        return false;
+    }
+    JS_ASSERT(script->getVersion() == compileVersion);
+    bool ok = Execute(cx, obj, script, NULL, 0, Valueify(rval));
+    LAST_FRAME_CHECKS(cx, ok);
+    js_DestroyScript(cx, script);
+    return ok;
+
+}
 
 JS_PUBLIC_API(JSBool)
 JS_EvaluateUCScriptForPrincipalsVersion(JSContext *cx, JSObject *obj,
@@ -4905,8 +4955,8 @@ JS_EvaluateUCScriptForPrincipalsVersion(JSContext *cx, JSObject *obj,
                                         jsval *rval, JSVersion version)
 {
     AutoVersionAPI avi(cx, version);
-    return JS_EvaluateUCScriptForPrincipals(cx, obj, principals, chars, length, filename, lineno,
-                                            rval);
+    return EvaluateUCScriptForPrincipalsCommon(cx, obj, principals, chars, length,
+                                               filename, lineno, rval, avi.version());
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4916,24 +4966,8 @@ JS_EvaluateUCScriptForPrincipals(JSContext *cx, JSObject *obj,
                                  const char *filename, uintN lineno,
                                  jsval *rval)
 {
-    JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
-    JSScript *script;
-    JSBool ok;
-
-    CHECK_REQUEST(cx);
-    script = Compiler::compileScript(cx, obj, NULL, principals,
-                                     !rval
-                                     ? TCF_COMPILE_N_GO | TCF_NO_SCRIPT_RVAL
-                                     : TCF_COMPILE_N_GO,
-                                     chars, length, filename, lineno);
-    if (!script) {
-        LAST_FRAME_CHECKS(cx, script);
-        return JS_FALSE;
-    }
-    ok = Execute(cx, obj, script, NULL, 0, Valueify(rval));
-    LAST_FRAME_CHECKS(cx, ok);
-    js_DestroyScript(cx, script);
-    return ok;
+    return EvaluateUCScriptForPrincipalsCommon(cx, obj, principals, chars, length,
+                                               filename, lineno, rval, cx->findVersion());
 }
 
 JS_PUBLIC_API(JSBool)
