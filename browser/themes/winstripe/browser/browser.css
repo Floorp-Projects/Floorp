@@ -67,7 +67,14 @@
   -moz-appearance: none;
   background-color: transparent;
   border-top: none;
-  border-bottom: 1px solid ThreeDShadow;
+}
+
+#navigator-toolbox::after {
+  content: "";
+  display: -moz-box;
+  -moz-box-ordinal-group: 101; /* tabs toolbar is 100 */
+  height: 1px;
+  background-color: ThreeDShadow;
 }
 
 #navigator-toolbox > toolbar:not(:-moz-lwtheme) {
