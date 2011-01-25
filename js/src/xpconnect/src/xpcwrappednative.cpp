@@ -1689,7 +1689,8 @@ XPCWrappedNative::GetWrappedNativeOfJSObject(JSContext* cx,
 
     if(funobj)
     {
-        JSObject* funObjParent = funobj->getParent();
+        JSObject* funObjParent = funobj->getParent()->unwrap();
+        OBJ_TO_INNER_OBJECT(cx, funObjParent);
         NS_ASSERTION(funObjParent, "funobj has no parent");
 
         js::Class* funObjParentClass = funObjParent->getClass();

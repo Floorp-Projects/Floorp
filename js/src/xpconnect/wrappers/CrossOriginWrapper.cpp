@@ -46,7 +46,15 @@
 
 namespace xpc {
 
-CrossOriginWrapper::CrossOriginWrapper(uintN flags) : JSCrossCompartmentWrapper(flags)
+NoWaiverWrapper::NoWaiverWrapper(uintN flags) : JSCrossCompartmentWrapper(flags)
+{
+}
+
+NoWaiverWrapper::~NoWaiverWrapper()
+{
+}
+
+CrossOriginWrapper::CrossOriginWrapper(uintN flags) : NoWaiverWrapper(flags)
 {
 }
 
@@ -100,7 +108,7 @@ CrossOriginWrapper::construct(JSContext *cx, JSObject *wrapper,
 }
 
 bool
-CrossOriginWrapper::enter(JSContext *cx, JSObject *wrapper, jsid id, Action act)
+NoWaiverWrapper::enter(JSContext *cx, JSObject *wrapper, jsid id, Action act)
 {
     nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
     if (!ssm) {
@@ -118,7 +126,7 @@ CrossOriginWrapper::enter(JSContext *cx, JSObject *wrapper, jsid id, Action act)
 }
 
 void
-CrossOriginWrapper::leave(JSContext *cx, JSObject *wrapper)
+NoWaiverWrapper::leave(JSContext *cx, JSObject *wrapper)
 {
     nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
     if (ssm) {
