@@ -27,7 +27,7 @@ toolkit.jar:
   skin/classic/global/listbox.css
   skin/classic/global/menu.css
   skin/classic/global/menulist.css
-  skin/classic/global/notification.css
+* skin/classic/global/notification.css
   skin/classic/global/netError.css
   skin/classic/global/numberbox.css
   skin/classic/global/passwordmgr.css
