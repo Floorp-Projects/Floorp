@@ -359,11 +359,6 @@ function StartTests()
 
 function OnRefTestUnload()
 {
-    /* Clear the sRGB forcing pref to leave the profile as we found it. */
-    var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-                getService(Components.interfaces.nsIPrefBranch2);
-    prefs.clearUserPref("gfx.color_management.force_srgb");
-
     gBrowser.removeEventListener("load", OnDocumentLoad, true);
     MozillaFileLogger.close();
 }
