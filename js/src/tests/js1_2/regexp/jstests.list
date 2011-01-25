@@ -20,7 +20,7 @@ script backslash.js
 script backspace.js
 script beginLine.js
 script character_class.js
-script compile.js
+skip script compile.js # RegExp.compile removed.
 script control_characters.js
 script digit.js
 script dot.js
