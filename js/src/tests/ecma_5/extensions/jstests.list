@@ -23,4 +23,4 @@ script bug496985.js
 script bug566661.js
 script iterator-in-catch.js
 script strict-function-statements.js
-script function-definition-with.js
+skip-if(!xulRuntime.shell) script function-definition-with.js # needs evaluate()
