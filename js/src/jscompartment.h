@@ -332,6 +332,33 @@ class NativeIterCache {
     }
 };
 
+/*
+ * A single-entry cache for some base-10 double-to-string conversions. This
+ * helps date-format-xparb.js.  It also avoids skewing the results for
+ * v8-splay.js when measured by the SunSpider harness, where the splay tree
+ * initialization (which includes many repeated double-to-string conversions)
+ * is erroneously included in the measurement; see bug 562553.
+ */
+class DtoaCache {
+    double   d;
+    jsint    base;
+    JSString *s;        // if s==NULL, d and base are not valid
+  public:
+    DtoaCache() : s(NULL) {}
+    void purge() { s = NULL; }
+
+    JSString *lookup(jsint base, double d) {
+        return this->s && base == this->base && d == this->d ? this->s : NULL;
+    }
+
+    void cache(jsint base, double d, JSString *s) {
+        this->base = base;
+        this->d = d;
+        this->s = s;
+    }
+
+};
+
 } /* namespace js */
 
 struct JS_FRIEND_API(JSCompartment) {
@@ -400,6 +427,8 @@ struct JS_FRIEND_API(JSCompartment) {
     bool arenaListsAreEmpty();
 
     void setGCLastBytes(size_t lastBytes);
+
+    js::DtoaCache dtoaCache;
 
   private:
     js::MathCache                *mathCache;

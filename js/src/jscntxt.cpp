@@ -533,8 +533,6 @@ JSThreadData::purge(JSContext *cx)
 
     /* FIXME: bug 506341. */
     propertyCache.purge(cx);
-
-    dtoaCache.s = NULL;
 }
 
 #ifdef JS_THREADSAFE
