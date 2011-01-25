@@ -2018,6 +2018,13 @@ public:
   void InvalidateLayer(const nsRect& aDamageRect, PRUint32 aDisplayItemKey);
 
   /**
+   * Invalidate the area of the parent that's covered by the transformed
+   * visual overflow rect of this frame. Don't depend on the transform style
+   * for this frame, in case that's changed since this frame was painted.
+   */
+  void InvalidateTransformLayer();
+
+  /**
    * Helper function that can be overridden by frame classes. The rectangle
    * (plus aOffsetX/aOffsetY) is relative to this frame.
    * 
