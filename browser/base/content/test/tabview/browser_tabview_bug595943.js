@@ -81,7 +81,7 @@ function onTabViewWindowLoaded() {
     window.removeEventListener("tabviewhidden", onTabViewHidden, false);
     ok(!TabView.isVisible(), "Tab View is hidden because we clicked on the app tab");
   
-    // Remove the tab we're looking at. Note: this will also close groupItem (verified below)
+    // Remove the tab we're looking at.
     gBrowser.removeTab(normalXulTab);  
   
     // Make sure we haven't returned to TabView; this is the crux of this test
@@ -93,9 +93,12 @@ function onTabViewWindowLoaded() {
     gBrowser.unpinTab(appXulTab);
     gBrowser.removeTab(appXulTab);
 
+    ok(groupItem.closeIfEmpty(), "the second group was empty");
+
     // Verify ending state
     is(gBrowser.tabs.length, 1, "we finish with one tab");
-    is(contentWindow.GroupItems.groupItems.length, 1, "we finish with one group");
+    is(contentWindow.GroupItems.groupItems.length, 1,
+       "we finish with one group");
     ok(!TabView.isVisible(), "we finish with Tab View hidden");
       
     finish();
