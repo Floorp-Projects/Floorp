@@ -243,6 +243,11 @@ JS_DEFINE_CALLINFO_2(extern, BOOL, js_Flatten, CONTEXT, STRING, 0, nanojit::ACCS
 JSString * JS_FASTCALL
 js_ConcatStrings(JSContext *cx, JSString *left, JSString *right)
 {
+    JS_ASSERT_IF(!JSString::isStatic(left) && !left->isAtomized(),
+                 left->asCell()->compartment() == cx->compartment);
+    JS_ASSERT_IF(!JSString::isStatic(right) && !right->isAtomized(),
+                 right->asCell()->compartment() == cx->compartment);
+
     size_t leftLen = left->length();
     if (leftLen == 0)
         return right;
