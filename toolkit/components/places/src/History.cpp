@@ -88,6 +88,7 @@ struct VisitData {
   , typed(false)
   , transitionType(PR_UINT32_MAX)
   , visitTime(0)
+  , titleChanged(false)
   {
     guid.SetIsVoid(PR_TRUE);
     title.SetIsVoid(PR_TRUE);
@@ -102,6 +103,7 @@ struct VisitData {
   , typed(false)
   , transitionType(PR_UINT32_MAX)
   , visitTime(0)
+  , titleChanged(false)
   {
     (void)aURI->GetSpec(spec);
     (void)GetReversedHostname(aURI, revHost);
@@ -162,6 +164,9 @@ struct VisitData {
   PRTime visitTime;
   nsString title;
   nsCString referrerSpec;
+
+  // TODO bug 626836 hook up hidden and typed change tracking too!
+  bool titleChanged;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -222,8 +227,14 @@ GetStringFromJSObject(JSContext* aCtx,
 {
   jsval val;
   JSBool rc = JS_GetProperty(aCtx, aObject, aProperty, &val);
-  if (!rc || JSVAL_IS_VOID(val) || !JSVAL_IS_STRING(val)) {
+  if (!rc || JSVAL_IS_VOID(val) ||
+      !(JSVAL_IS_NULL(val) || JSVAL_IS_STRING(val))) {
     _string.SetIsVoid(PR_TRUE);
+    return;
+  }
+  // |null| in JS maps to the empty string.
+  if (JSVAL_IS_NULL(val)) {
+    _string.Truncate();
     return;
   }
   size_t length;
@@ -466,6 +477,45 @@ private:
 };
 
 /**
+ * Notifies observers about a pages title changing.
+ */
+class NotifyTitleObservers : public nsRunnable
+{
+public:
+  /**
+   * Notifies observers on the main thread.
+   *
+   * @param aSpec
+   *        The spec of the URI to notify about.
+   * @param aTitle
+   *        The new title to notify about.
+   */
+  NotifyTitleObservers(const nsCString& aSpec,
+                       const nsString& aTitle)
+  : mSpec(aSpec)
+  , mTitle(aTitle)
+  {
+  }
+
+  NS_IMETHOD Run()
+  {
+    NS_PRECONDITION(NS_IsMainThread(),
+                    "This should be called on the main thread");
+
+    nsNavHistory* navHistory = nsNavHistory::GetHistoryService();
+    NS_ENSURE_TRUE(navHistory, NS_ERROR_OUT_OF_MEMORY);
+    nsCOMPtr<nsIURI> uri;
+    (void)NS_NewURI(getter_AddRefs(uri), mSpec);
+    navHistory->NotifyTitleChange(uri, mTitle);
+
+    return NS_OK;
+  }
+private:
+  const nsCString mSpec;
+  const nsString mTitle;
+};
+
+/**
  * Notifies a callback object about completion.
  */
 class NotifyCompletion : public nsRunnable
@@ -640,6 +690,13 @@ public:
       nsCOMPtr<nsIRunnable> event = new NotifyVisitObservers(place, referrer);
       rv = NS_DispatchToMainThread(event);
       NS_ENSURE_SUCCESS(rv, rv);
+
+      // Notify about title change if needed.
+      if ((!known && !place.title.IsVoid()) || place.titleChanged) {
+        event = new NotifyTitleObservers(place.spec, place.title);
+        rv = NS_DispatchToMainThread(event);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
 
       lastPlace = &mPlaces.ElementAt(i);
     }
@@ -1007,48 +1064,6 @@ private:
 };
 
 /**
- * Notifies observers about a pages title changing.
- */
-class NotifyTitleObservers : public nsRunnable
-{
-public:
-  /**
-   * Notifies observers on the main thread.
-   *
-   * @param aSpec
-   *        The spec of the URI to notify about.
-   * @param aTitle
-   *        The new title to notify about.
-   */
-  NotifyTitleObservers(const nsCString& aSpec,
-                       const nsString& aTitle)
-  : mSpec(aSpec)
-  , mTitle(aTitle)
-  {
-    NS_PRECONDITION(!NS_IsMainThread(),
-                    "This should not be called on the main thread");
-  }
-
-  NS_IMETHOD Run()
-  {
-    NS_PRECONDITION(NS_IsMainThread(),
-                    "This should be called on the main thread");
-
-    nsNavHistory* navHistory = nsNavHistory::GetHistoryService();
-    NS_ENSURE_TRUE(navHistory, NS_ERROR_OUT_OF_MEMORY);
-    nsCOMPtr<nsIURI> uri;
-    (void)NS_NewURI(getter_AddRefs(uri), mSpec);
-    navHistory->NotifyTitleChange(uri, mTitle);
-
-    return NS_OK;
-  }
-private:
-  const nsCString mSpec;
-  const nsString mTitle;
-};
-
-
-/**
  * Sets the page title for a page in moz_places (if necessary).
  */
 class SetPageTitle : public nsRunnable
@@ -1094,21 +1109,14 @@ public:
 
     // First, see if the page exists in the database (we'll need its id later).
     bool exists = mHistory->FetchPageInfo(mPlace);
-    if (!exists) {
-      // We have no record of this page, so there is no need to do any further
-      // work.
+    if (!exists || !mPlace.titleChanged) {
+      // We have no record of this page, or we have no title change, so there
+      // is no need to do any further work.
       return NS_OK;
     }
 
     NS_ASSERTION(mPlace.placeId > 0,
                  "We somehow have an invalid place id here!");
-
-    // Also, if we have the same title, there is no reason to do another write
-    // or notify our observers, so bail early.
-    if (mTitle.Equals(mPlace.title) ||
-        (mTitle.IsVoid() && mPlace.title.IsVoid())) {
-      return NS_OK;
-    }
 
     // Now we can update our database record.
     nsCOMPtr<mozIStorageStatement> stmt =
@@ -1328,7 +1336,8 @@ History::InsertPlace(const VisitData& aPlace)
   NS_ENSURE_SUCCESS(rv, rv);
   rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("url"), aPlace.spec);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (aPlace.title.IsVoid()) {
+  // Empty strings should have no title, just like nsNavHistory::SetPageTitle.
+  if (aPlace.title.IsEmpty()) {
     rv = stmt->BindNullByName(NS_LITERAL_CSTRING("title"));
   }
   else {
@@ -1372,11 +1381,15 @@ History::UpdatePlace(const VisitData& aPlace)
   mozStorageStatementScoper scoper(stmt);
 
   nsresult rv;
-  if (!aPlace.title.IsVoid()) {
+  // Empty strings should clear the title, just like nsNavHistory::SetPageTitle.
+  if (aPlace.title.IsEmpty()) {
+    rv = stmt->BindNullByName(NS_LITERAL_CSTRING("title"));
+  }
+  else {
     rv = stmt->BindStringByName(NS_LITERAL_CSTRING("title"),
                                 StringHead(aPlace.title, TITLE_LENGTH_MAX));
-    NS_ENSURE_SUCCESS(rv, rv);
   }
+  NS_ENSURE_SUCCESS(rv, rv);
   rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("typed"), aPlace.typed);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("hidden"), aPlace.hidden);
@@ -1420,9 +1433,16 @@ History::FetchPageInfo(VisitData& _place)
   rv = stmt->GetInt64(0, &_place.placeId);
   NS_ENSURE_SUCCESS(rv, false);
 
+  nsAutoString title;
+  rv = stmt->GetString(1, title);
+  NS_ENSURE_SUCCESS(rv, true);
+
+  // We track if we change the title, but will add the current title to _place
+  // if we do not have one set.
+  _place.titleChanged = !(_place.title.Equals(title) ||
+                          (_place.title.IsVoid() && title.IsVoid()));
   if (_place.title.IsVoid()) {
-    rv = stmt->GetString(1, _place.title);
-    NS_ENSURE_SUCCESS(rv, true);
+    _place.title = title;
   }
 
   if (_place.hidden) {
