@@ -78,7 +78,6 @@ browser.jar:
   skin/classic/browser/tabbrowser/tab.png             (tabbrowser/tab.png)
   skin/classic/browser/tabbrowser/tabDragIndicator.png (tabbrowser/tabDragIndicator.png)
   skin/classic/browser/tabview/edit-light.png         (tabview/edit-light.png)
-  skin/classic/browser/tabview/edit.png               (tabview/edit.png)
   skin/classic/browser/tabview/new-tab.png            (tabview/new-tab.png)
   skin/classic/browser/tabview/search.png             (tabview/search.png)  
   skin/classic/browser/tabview/stack-expander.png     (tabview/stack-expander.png)
