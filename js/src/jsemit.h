@@ -263,6 +263,11 @@ struct JSStmtInfo {
 #define TCF_HAS_SINGLETONS       0x8000000
 
 /*
+ * Some enclosing scope is a with-statement or E4X filter-expression.
+ */
+#define TCF_IN_WITH             0x10000000
+
+/*
  * Flags to check for return; vs. return expr; in a function.
  */
 #define TCF_RETURN_FLAGS        (TCF_RETURN_EXPR | TCF_RETURN_VOID)

@@ -151,7 +151,7 @@ script regress-390597.js
 script regress-390598.js
 script regress-394967.js
 script regress-396326.js
-script regress-406572.js
+skip script regress-406572.js
 script regress-407019.js
 script regress-407501.js
 skip-if(!xulRuntime.shell) script regress-407720.js # slow

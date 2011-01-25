@@ -301,6 +301,8 @@ Parser::newFunctionBox(JSObject *obj, JSParseNode *fn, JSTreeContext *tc)
     }
     funbox->level = tc->staticLevel;
     funbox->tcflags = (TCF_IN_FUNCTION | (tc->flags & (TCF_COMPILE_N_GO | TCF_STRICT_MODE_CODE)));
+    if (tc->innermostWith)
+        funbox->tcflags |= TCF_IN_WITH;
     return funbox;
 }
 
@@ -309,6 +311,16 @@ JSFunctionBox::joinable() const
 {
     return FUN_NULL_CLOSURE((JSFunction *) object) &&
            !(tcflags & (TCF_FUN_USES_ARGUMENTS | TCF_FUN_USES_OWN_NAME));
+}
+
+bool
+JSFunctionBox::inAnyDynamicScope() const
+{
+    for (const JSFunctionBox *funbox = this; funbox; funbox = funbox->parent) {
+        if (funbox->tcflags & (TCF_IN_WITH | TCF_FUN_CALLS_EVAL))
+            return true;
+    }
+    return false;
 }
 
 bool
@@ -2464,6 +2476,9 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags)
         FUN_METER(allfun);
         if (funbox->tcflags & TCF_FUN_HEAVYWEIGHT) {
             FUN_METER(heavy);
+        } else if (funbox->inAnyDynamicScope()) {
+            JS_ASSERT(!FUN_NULL_CLOSURE(fun));
+            FUN_METER(indynamicscope);
         } else if (pn->pn_type != TOK_UPVARS) {
             /*
              * No lexical dependencies => null closure, for best performance.
@@ -6188,7 +6203,6 @@ Parser::statement()
         pn->pn_type = TOK_SEMI;
         return pn;
 
-#if JS_HAS_DEBUGGER_KEYWORD
       case TOK_DEBUGGER:
         pn = NullaryNode::create(tc);
         if (!pn)
@@ -6196,7 +6210,6 @@ Parser::statement()
         pn->pn_type = TOK_DEBUGGER;
         tc->flags |= TCF_FUN_HEAVYWEIGHT;
         break;
-#endif /* JS_HAS_DEBUGGER_KEYWORD */
 
 #if JS_HAS_XML_SUPPORT
       case TOK_DEFAULT:

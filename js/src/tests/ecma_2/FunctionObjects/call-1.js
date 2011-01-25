@@ -53,22 +53,22 @@ startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 new TestCase( SECTION,
-	      "ToString.call( this, this )",
+	      "ConvertToString.call(this, this)",
 	      GLOBAL,
-	      ToString.call( this, this ) );
+	      ConvertToString.call(this, this));
 
 new TestCase( SECTION,
-	      "ToString.call( Boolean, Boolean.prototype )",
+	      "ConvertToString.call(Boolean, Boolean.prototype)",
 	      "false",
-	      ToString.call( Boolean, Boolean.prototype ) );
+	      ConvertToString.call(Boolean, Boolean.prototype));
 
 new TestCase( SECTION,
-	      "ToString.call( Boolean, Boolean.prototype.valueOf() )",
+	      "ConvertToString.call(Boolean, Boolean.prototype.valueOf())",
 	      "false",
-	      ToString.call( Boolean, Boolean.prototype.valueOf() ) );
+	      ConvertToString.call(Boolean, Boolean.prototype.valueOf()));
 
 test();
 
-function ToString( obj ) {
+function ConvertToString(obj) {
   return obj +"";
 }

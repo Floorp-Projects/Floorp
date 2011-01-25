@@ -1970,18 +1970,6 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, void *aScope, void *aHandler
     PRUint32 argc = 0;
     jsval *argv = nsnull;
 
-    js::LazilyConstructed<nsAutoPoolRelease> poolRelease;
-    js::LazilyConstructed<js::AutoArrayRooter> tvr;
-
-    // Use |target| as the scope for wrapping the arguments, since aScope is
-    // the safe scope in many cases, which isn't very useful.  Wrapping aTarget
-    // was OK because those typically have PreCreate methods that give them the
-    // right scope anyway, and we want to make sure that the arguments end up
-    // in the same scope as aTarget.
-    rv = ConvertSupportsTojsvals(aargv, target, &argc,
-                                 &argv, poolRelease, tvr);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     JSObject *funobj = static_cast<JSObject *>(aHandler);
     nsCOMPtr<nsIPrincipal> principal;
     rv = sSecurityManager->GetObjectPrincipal(mContext, funobj,
@@ -2000,6 +1988,18 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, void *aScope, void *aHandler
       sSecurityManager->PopContextPrincipal(mContext);
       return NS_ERROR_FAILURE;
     }
+
+    js::LazilyConstructed<nsAutoPoolRelease> poolRelease;
+    js::LazilyConstructed<js::AutoArrayRooter> tvr;
+
+    // Use |target| as the scope for wrapping the arguments, since aScope is
+    // the safe scope in many cases, which isn't very useful.  Wrapping aTarget
+    // was OK because those typically have PreCreate methods that give them the
+    // right scope anyway, and we want to make sure that the arguments end up
+    // in the same scope as aTarget.
+    rv = ConvertSupportsTojsvals(aargv, target, &argc,
+                                 &argv, poolRelease, tvr);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     ++mExecuteDepth;
     PRBool ok = ::JS_CallFunctionValue(mContext, target,

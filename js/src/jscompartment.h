@@ -374,16 +374,6 @@ struct JS_FRIEND_API(JSCompartment) {
     bool                         debugMode;  // true iff debug mode on
     JSCList                      scripts;    // scripts in this compartment
 
-    /*
-     * Weak references to lazily-created, well-known XML singletons.
-     *
-     * NB: Singleton objects must be carefully disconnected from the rest of
-     * the object graph usually associated with a JSContext's global object,
-     * including the set of standard class objects.  See jsxml.c for details.
-     */
-    JSObject                     *anynameObject;
-    JSObject                     *functionNamespaceObject;
-
     JSC::ExecutableAllocator     *regExpAllocator;
 
     js::NativeIterCache          nativeIterCache;

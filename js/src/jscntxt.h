@@ -833,7 +833,7 @@ private:
                         _(joinedsetmethod), _(joinedinitmethod),              \
                         _(joinedreplace), _(joinedsort), _(joinedmodulepat),  \
                         _(mreadbarrier), _(mwritebarrier), _(mwslotbarrier),  \
-                        _(unjoined)
+                        _(unjoined), _(indynamicscope)
 # define identity(x)    x
 
 struct JSFunctionMeter {
@@ -1633,6 +1633,10 @@ VersionIsKnown(JSVersion version)
     return VersionNumber(version) != JSVERSION_UNKNOWN;
 }
 
+typedef js::HashSet<JSObject *,
+                    js::DefaultHasher<JSObject *>,
+                    js::SystemAllocPolicy> BusyArraysMap;
+
 } /* namespace js */
 
 struct JSContext
@@ -1732,7 +1736,7 @@ struct JSContext
 
     /* State for object and array toSource conversion. */
     JSSharpObjectMap    sharpObjectMap;
-    js::HashSet<JSObject *> busyArrays;
+    js::BusyArraysMap   busyArrays;
 
     /* Argument formatter support for JS_{Convert,Push}Arguments{,VA}. */
     JSArgumentFormatMap *argumentFormatMap;
@@ -2133,9 +2137,6 @@ struct JSContext
      * a boolean flag to minimize the amount of code in its inlined callers.
      */
     JS_FRIEND_API(void) checkMallocGCPressure(void *p);
-
-    /* To silence MSVC warning about using 'this' in a member initializer. */
-    JSContext *thisInInitializer() { return this; }
 }; /* struct JSContext */
 
 #ifdef JS_THREADSAFE
