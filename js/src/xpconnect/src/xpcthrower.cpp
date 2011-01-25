@@ -310,6 +310,8 @@ XPCThrower::ThrowExceptionObject(JSContext* cx, nsIException* e)
            (xpcEx = do_QueryInterface(e)) &&
            NS_SUCCEEDED(xpcEx->StealJSVal(&thrown)))
         {
+            if (!JS_WrapValue(cx, &thrown))
+                return JS_FALSE;
             JS_SetPendingException(cx, thrown);
             success = JS_TRUE;
         }
