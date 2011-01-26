@@ -1181,15 +1181,6 @@ Browser.MainDragger.prototype = {
     this._contentView = null;
     this.dragMove(Browser.snapSidebars(), 0, scroller);
     Browser.tryUnfloatToolbar();
-
-    if (dx == 0 && dy == 0)
-      return;
-
-    // Update the scroll position of the content
-    let browser = getBrowser();
-    browser._updateCSSViewport();
-    let view = browser.getRootView();
-    view._updateCacheViewport();
   },
 
   dragMove: function dragMove(dx, dy, scroller) {
@@ -1237,10 +1228,16 @@ Browser.MainDragger.prototype = {
         this._showScrollbars();
         break;
       }
-      case "PanFinished":
+      case "PanFinished": {
         this._hideScrollbars();
-        break;
 
+        // Update the scroll position of the content
+        let browser = getBrowser();
+        browser._updateCSSViewport();
+        let view = browser.getRootView();
+        view._updateCacheViewport();
+        break;
+      }
       case "SizeChanged":
         let height = Elements.contentNavigator.getBoundingClientRect().height;
         this._horizontalScrollbar.setAttribute("bottom", 2 + height);
