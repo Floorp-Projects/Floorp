@@ -5766,11 +5766,12 @@ public:
 
   nsresult Install(JSContext *cx, JSObject *target, jsval thisAsVal)
   {
+    // The 'attrs' argument used to be JSPROP_PERMANENT. See bug 628612.
     JSBool ok = JS_WrapValue(cx, &thisAsVal) &&
       ::JS_DefineUCProperty(cx, target,
                             reinterpret_cast<const jschar *>(mClassName),
                             nsCRT::strlen(mClassName), thisAsVal, nsnull,
-                            nsnull, JSPROP_PERMANENT);
+                            nsnull, 0);
 
     return ok ? NS_OK : NS_ERROR_UNEXPECTED;
   }

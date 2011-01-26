@@ -68,6 +68,9 @@ Notification.prototype = {
   },
 
   get anchorElement() {
+    if (!this.owner.iconBox)
+      return null;
+
     let anchorElement = null;
     if (this.anchorID)
       anchorElement = this.owner.iconBox.querySelector("#"+this.anchorID);
@@ -99,27 +102,21 @@ Notification.prototype = {
 function PopupNotifications(tabbrowser, panel, iconBox) {
   if (!(tabbrowser instanceof Ci.nsIDOMXULElement))
     throw "Invalid tabbrowser";
-  if (!(iconBox instanceof Ci.nsIDOMXULElement))
+  if (iconBox && !(iconBox instanceof Ci.nsIDOMXULElement))
     throw "Invalid iconBox";
   if (!(panel instanceof Ci.nsIDOMXULElement))
     throw "Invalid panel";
 
   this.window = tabbrowser.ownerDocument.defaultView;
   this.panel = panel;
-  this.iconBox = iconBox;
   this.tabbrowser = tabbrowser;
 
-  let self = this;
-  this.iconBox.addEventListener("click", function (event) {
-    self._onIconBoxCommand(event);
-  }, false);
-  this.iconBox.addEventListener("keypress", function (event) {
-    self._onIconBoxCommand(event);
-  }, false);
-  this.panel.addEventListener("popuphidden", function (event) {
-    self._onPopupHidden(event);
-  }, true);
+  this._onIconBoxCommand = this._onIconBoxCommand.bind(this);
+  this.iconBox = iconBox;
 
+  this.panel.addEventListener("popuphidden", this._onPopupHidden.bind(this), true);
+
+  let self = this;
   function updateFromListeners() {
     // setTimeout(..., 0) needed, otherwise openPopup from "activate" event
     // handler results in the popup being hidden again for some reason...
@@ -132,6 +129,22 @@ function PopupNotifications(tabbrowser, panel, iconBox) {
 }
 
 PopupNotifications.prototype = {
+  set iconBox(iconBox) {
+    // Remove the listeners on the old iconBox, if needed
+    if (this._iconBox) {
+      this._iconBox.removeEventListener("click", this._onIconBoxCommand, false);
+      this._iconBox.removeEventListener("keypress", this._onIconBoxCommand, false);
+    }
+    this._iconBox = iconBox;
+    if (iconBox) {
+      iconBox.addEventListener("click", this._onIconBoxCommand, false);
+      iconBox.addEventListener("keypress", this._onIconBoxCommand, false);
+    }
+  },
+  get iconBox() {
+    return this._iconBox;
+  },
+
   /**
    * Retrieve a Notification object associated with the browser/ID pair.
    * @param id
@@ -419,12 +432,17 @@ PopupNotifications.prototype = {
     // safe to call even if the panel is already hidden.)
     this._hidePanel();
 
-    // If the anchor element is hidden, use the tab as the anchor. We only ever
-    // show notifications for the current browser, so we can just use the
-    // current tab.
-    let bo = anchorElement.boxObject;
-    if (bo.height == 0 && bo.width == 0)
-      anchorElement = this.tabbrowser.selectedTab;
+    // If the anchor element is hidden or null, use the tab as the anchor. We
+    // only ever show notifications for the current browser, so we can just use
+    // the current tab.
+    let selectedTab = this.tabbrowser.selectedTab;
+    if (anchorElement) {
+      let bo = anchorElement.boxObject;
+      if (bo.height == 0 && bo.width == 0)
+        anchorElement = selectedTab; // hidden
+    } else {
+      anchorElement = selectedTab; // null
+    }
 
     this._currentAnchorElement = anchorElement;
 
@@ -447,8 +465,10 @@ PopupNotifications.prototype = {
       // notifications will be shown once these are dismissed.
       anchorElement = anchor || this._currentNotifications[0].anchorElement;
 
-      this.iconBox.hidden = false;
-      this.iconBox.setAttribute("anchorid", anchorElement.id);
+      if (this.iconBox) {
+        this.iconBox.hidden = false;
+        this.iconBox.setAttribute("anchorid", anchorElement.id);
+      }
 
       // Also filter out notifications that have been dismissed.
       notificationsToShow = this._currentNotifications.filter(function (n) {

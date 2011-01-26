@@ -56,6 +56,7 @@
 #include "nsString.h"
 #include "nsProxiedService.h"
 #include "nsTArray.h"
+#include "mozilla/Monitor.h"
 
 class nsCacheRequest;
 class nsCacheProfilePrefObserver;
@@ -145,6 +146,11 @@ public:
 
     static nsresult DispatchToCacheIOThread(nsIRunnable* event);
 
+    // Calling this method will block the calling thread until all pending
+    // events on the cache-io thread has finished. The calling thread must
+    // hold the cache-lock
+    static nsresult SyncWithCacheIOThread();
+
 
     /**
      * Methods called by nsCacheProfilePrefObserver
@@ -171,6 +177,7 @@ private:
     friend class nsOfflineCacheDevice;
     friend class nsProcessRequestEvent;
     friend class nsSetSmartSizeEvent;
+    friend class nsBlockOnCacheThreadEvent;
 
     /**
      * Internal Methods
@@ -248,6 +255,8 @@ private:
     nsCacheProfilePrefObserver *    mObserver;
     
     PRLock *                        mLock;
+
+    mozilla::Monitor                mMonitor;
 
 #if defined(DEBUG)
     PRThread *                      mLockedThread;  // The thread holding mLock

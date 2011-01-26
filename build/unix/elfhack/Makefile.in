@@ -1,0 +1,112 @@
+#
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is elfhack
+#
+# The Initial Developer of the Original Code is
+# Mozilla Foundation
+# Portions created by the Initial Developer are Copyright (C) 2010
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Mike Hommey <mh@glandium.org>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+INTERNAL_TOOLS = 1
+
+HOST_PROGRAM = elfhack
+NO_DIST_INSTALL = 1
+
+HOST_CPPSRCS = \
+  elf.cpp \
+  elfhack.cpp \
+  $(NULL)
+
+OS_CXXFLAGS += -fexceptions
+
+ifneq (,$(filter %86,$(TARGET_CPU)))
+CPU := x86
+else
+CPU := $(TARGET_CPU)
+endif
+
+CSRCS := \
+  inject/$(CPU).c \
+  inject/$(CPU)-noinit.c \
+  $(NULL)
+
+libs:: $(CSRCS:.c=.$(OBJ_SUFFIX))
+
+ifndef CROSS_COMPILE
+test$(DLL_SUFFIX): test.$(OBJ_SUFFIX) elfhack $(CSRCS:.c=.$(OBJ_SUFFIX))
+	$(MKSHLIB) $<
+	rm -f $@.bak
+	$(CURDIR)/elfhack -b $@
+	# Fail if the backup file doesn't exist
+	[ -f "$@.bak" ]
+	# Fail if the new library doesn't contain less relocations
+	[ $$(objdump -R $@.bak | wc -l) -gt $$(objdump -R $@ | wc -l) ]
+
+dummy: dummy.$(OBJ_SUFFIX) test$(DLL_SUFFIX)
+	$(CC) -o $@ $^
+
+libs:: dummy
+	# Will either crash or return exit code 1 if elfhack is broken
+	LD_LIBRARY_PATH=$(CURDIR) $(CURDIR)/dummy
+
+CSRCS += test.c dummy.c
+
+GARBAGE += dummy test$(DLL_SUFFIX) test$(DLL_SUFFIX).bak
+endif
+
+inject:
+	$(NSINSTALL) -D $@
+
+inject/%.c: inject.c | inject
+	cp $< $@
+
+GARBAGE_DIRS += inject
+
+inject/%.$(OBJ_SUFFIX): DEFINES += -DBITS=$(if $(HAVE_64BIT_OS),64,32)
+inject/$(CPU)-noinit.$(OBJ_SUFFIX): DEFINES += -DNOINIT
+
+# need this to suppress errors due to /usr/include/linux/byteorder/swab.h
+# on mozilla buildbots
+OS_CXXFLAGS := $(filter-out -pedantic,$(OS_CXXFLAGS))
+
+# Avoid building as thumb code, this is not supported yet
+COMMA := ,
+OS_CFLAGS := $(filter-out -mthumb -Wa$(COMMA)-mthumb,$(OS_CFLAGS))
+
+include $(topsrcdir)/config/rules.mk

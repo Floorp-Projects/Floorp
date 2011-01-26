@@ -857,12 +857,13 @@ customMethodCalls = {
     'nsIDOMHTMLElement_': {
         'thisType': 'nsGenericHTMLElement'
         },
-    'nsIDOMElementCSSInlineStyle_': {
-        'thisType': 'nsStyledElement'
-        },
     'nsIDOMElementCSSInlineStyle_GetStyle': {
         'thisType': 'nsStyledElement',
-        'code': '    nsIDOMCSSStyleDeclaration* result = '
+        'code': '    /* XXXbz MathML elements inherit from nsStyledElement but\n'
+                '       don\'t actually implement GetStyle. */\n'
+                '    if (self->GetNameSpaceID() == kNameSpaceID_MathML)\n'
+                '      return xpc_qsThrow(cx, NS_ERROR_XPC_BAD_CONVERT_JS);\n'
+                '    nsIDOMCSSStyleDeclaration* result = '
                 'self->GetStyle(&rv);'
         },
     'nsIDOMSVGStylable_GetStyle': {

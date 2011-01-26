@@ -411,8 +411,14 @@ class VMAllocator : public nanojit::Allocator
 {
 
 public:
-    VMAllocator() : mOutOfMemory(false), mSize(0)
+    VMAllocator(char* reserve, size_t reserveSize)
+      : mOutOfMemory(false), mSize(0), mReserve(reserve),
+        mReserveCurr(uintptr_t(reserve)), mReserveLimit(uintptr_t(reserve + reserveSize))
     {}
+
+    ~VMAllocator() {
+        js_free(mReserve);
+    }
 
     size_t size() {
         return mSize;
@@ -464,43 +470,10 @@ public:
     bool mOutOfMemory;
     size_t mSize;
 
-    /*
-     * FIXME: Area the LIR spills into if we encounter an OOM mid-way
-     * through compilation; we must check mOutOfMemory before we run out
-     * of mReserve, otherwise we're in undefined territory. This area
-     * used to be one page, now 16 to be "safer". This is a temporary
-     * and quite unsatisfactory approach to handling OOM in Nanojit.
-     */
-    uintptr_t mReserve[0x10000];
-};
-
-struct REHashKey {
-    size_t re_length;
-    uint16 re_flags;
-    const jschar* re_chars;
-
-    REHashKey(size_t re_length, uint16 re_flags, const jschar *re_chars)
-        : re_length(re_length)
-        , re_flags(re_flags)
-        , re_chars(re_chars)
-    {}
-
-    bool operator==(const REHashKey& other) const
-    {
-        return ((this->re_length == other.re_length) &&
-                (this->re_flags == other.re_flags) &&
-                !memcmp(this->re_chars, other.re_chars,
-                        this->re_length * sizeof(jschar)));
-    }
-};
-
-struct REHashFn {
-    static size_t hash(const REHashKey& k) {
-        return
-            k.re_length +
-            k.re_flags +
-            nanojit::murmurhash(k.re_chars, k.re_length * sizeof(jschar));
-    }
+    /* See nanojit::Allocator::allocChunk() for details on these. */
+    char* mReserve;
+    uintptr_t mReserveCurr;
+    uintptr_t mReserveLimit;
 };
 
 struct FrameInfo {

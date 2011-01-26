@@ -977,6 +977,12 @@ struct JSFunctionBox : public JSObjectBox
     bool joinable() const;
 
     /*
+     * True if this function is inside the scope of a with-statement, an E4X
+     * filter-expression, or a function that uses direct eval.
+     */
+    bool inAnyDynamicScope() const;
+
+    /*
      * Unbrand an object being initialized or constructed if any method cannot
      * be joined to one compiler-created null closure shared among N different
      * closure environments.
@@ -1151,7 +1157,7 @@ private:
     JSParseNode *unaryExpr();
     JSParseNode *memberExpr(JSBool allowCallSyntax);
     JSParseNode *primaryExpr(js::TokenKind tt, JSBool afterDot);
-    JSParseNode *parenExpr(JSParseNode *pn1, JSBool *genexp);
+    JSParseNode *parenExpr(JSBool *genexp = NULL);
 
     /*
      * Additional JS parsers.
@@ -1166,7 +1172,7 @@ private:
     JSParseNode *condition();
     JSParseNode *comprehensionTail(JSParseNode *kid, uintN blockid,
                                    js::TokenKind type = js::TOK_SEMI, JSOp op = JSOP_NOP);
-    JSParseNode *generatorExpr(JSParseNode *pn, JSParseNode *kid);
+    JSParseNode *generatorExpr(JSParseNode *kid);
     JSBool argumentList(JSParseNode *listNode);
     JSParseNode *bracketedExpr();
     JSParseNode *letBlock(JSBool statement);

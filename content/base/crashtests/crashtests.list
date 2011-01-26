@@ -54,6 +54,7 @@ load 448615-1.html
 load 450383-1.html
 load 450385-1.html
 skip load 458637-1.html # sporadically times out (bug 473680)
+load 467392.html
 load 472593-1.html
 load 474041-1.svg
 load 483818-1.html

@@ -4,8 +4,7 @@ Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/constants.js");
-Cu.import("resource://services-sync/base_records/wbo.js");      // For Records.
-Cu.import("resource://services-sync/base_records/crypto.js");   // For CollectionKeys.
+Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/engines/tabs.js");
 Cu.import("resource://services-sync/log4moz.js");
   

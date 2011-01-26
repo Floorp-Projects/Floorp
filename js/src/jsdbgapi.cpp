@@ -141,6 +141,9 @@ PurgeCallICs(JSContext *cx, JSScript *start)
 JS_FRIEND_API(JSBool)
 js_SetDebugMode(JSContext *cx, JSBool debug)
 {
+    if (!cx->compartment)
+        return JS_TRUE;
+
     cx->compartment->debugMode = debug;
 #ifdef JS_METHODJIT
     for (JSScript *script = (JSScript *)cx->compartment->scripts.next;
@@ -1924,13 +1927,14 @@ JS_StopProfiling()
 static JSBool
 StartProfiling(JSContext *cx, uintN argc, jsval *vp)
 {
-    JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(Probes::startProfiling()));
+    JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(JS_StartProfiling()));
     return true;
 }
 
 static JSBool
 StopProfiling(JSContext *cx, uintN argc, jsval *vp)
 {
+    JS_StopProfiling();
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return true;
 }

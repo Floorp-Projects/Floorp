@@ -4356,8 +4356,7 @@ nsDocument::CreateElement(const nsAString& aTagName,
     ToLowerCase(aTagName, lcTagName);
   }
 
-  rv = CreateElem(needsLowercase ? static_cast<const nsAString&>(lcTagName)
-                                 : aTagName,
+  rv = CreateElem(needsLowercase ? lcTagName : aTagName,
                   nsnull,
                   IsHTML() ? kNameSpaceID_XHTML : GetDefaultNamespaceID(),
                   PR_TRUE, aReturn);

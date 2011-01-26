@@ -1502,11 +1502,15 @@ random-if(layersGPUAccelerated) == 564991-1.html 564991-1-ref.html
 == 571347-3.html 571347-3-ref.html
 == 572598-1.html 572598-ref.html
 == 574898-1.html 574898-ref.html
-== 579655-1.html 579655-1-ref.html
+# 574907 is a windows-only issue, result on other platforms depends on details of font support
+random-if(!winWidget) == 574907-1.html 574907-1-ref.html
+random-if(!winWidget) == 574907-2.html 574907-2-ref.html
+random-if(!winWidget) fails-if(winWidget&&!d2d) != 574907-3.html 574907-3-notref.html
 == 577838-1.html 577838-1-ref.html
 == 577838-2.html 577838-2-ref.html
-random-if(layersGPUAccelerated) fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == 579323-1.html 579323-1-ref.html # bug 623450 for WinXP
+random-if(layersGPUAccelerated) fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) fails-if(/Mac\x20OS\x20X\x2010\.5/.test(http.oscpu)) == 579323-1.html 579323-1-ref.html # bug 623450 for WinXP and bug 627560 for OSX 10.5
 == 579349-1.html 579349-1-ref.html
+== 579655-1.html 579655-1-ref.html
 == 579808-1.html 579808-1-ref.html
 random-if(layersGPUAccelerated) fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu))  == 579985-1.html 579985-1-ref.html # bug 623452 for WinXP; this bug was only for a regression in BasicLayers anyway
 == 580160-1.html 580160-1-ref.html
@@ -1563,8 +1567,10 @@ HTTP(..) == 615121-1.html 615121-1-ref.html
 HTTP(..) != 615121-2.html 615121-2-notref.html
 == 617242-1.html 617242-1-ref.html
 != 618071.html 618071-notref.html
+== 619117-1.html 619117-1-ref.html
 == 621253-1.xhtml 621253-1-ref.xhtml
 HTTP(..) == 619511-1.html 619511-1-ref.html
 random-if(winWidget) == 621918-1.svg 621918-1-ref.svg # 1-pixel diacritic positioning discrepancy in rotated text (may depend on platform fonts)
-HTTP(..) == 621918-2.svg 621918-2-ref.svg # http(..) for filters.svg, used to mask antialiasing issues where glyphs touch
+random-if(winWidget) HTTP(..) == 621918-2.svg 621918-2-ref.svg # same 1px issue as above, and HTTP(..) for filters.svg, used to mask antialiasing issues where glyphs touch
 == 625409-1.html 625409-1-ref.html
+== 627393-1.html about:blank

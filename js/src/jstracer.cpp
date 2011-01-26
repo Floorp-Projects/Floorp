@@ -133,27 +133,84 @@ using namespace js;
 using namespace js::gc;
 using namespace js::tjit;
 
+/*
+ * This macro is just like JS_NOT_REACHED but it exists in non-debug builds
+ * too.  Its presence indicates shortcomings in jstracer's handling of some
+ * OOM situations:
+ * - OOM failures in constructors, which lack a return value to pass back a
+ *   failure code (though it can and should be done indirectly).
+ * - OOM failures in the "infallible" allocators used for Nanojit.
+ *
+ * FIXME: bug 624590 is open to fix these problems.
+ */
+#define OUT_OF_MEMORY_ABORT(msg)    JS_Assert(msg, __FILE__, __LINE__);
+
 /* Implement embedder-specific nanojit members. */
 
+/* 
+ * Nanojit requires infallible allocations most of the time.  We satisfy this
+ * by reserving some space in each allocator which is used as a fallback if
+ * js_calloc() fails.  Ideallly this reserve space should be big enough to
+ * allow for all infallible requests made to the allocator until the next OOM
+ * check occurs, but it turns out that's impossible to guarantee (though it
+ * should be unlikely).  So we abort if the reserve runs out;  this is better
+ * than allowing memory errors to occur.
+ *
+ * The space calculations are as follows... between OOM checks, each
+ * VMAllocator can do (ie. has been seen to do) the following maximum
+ * allocations on 64-bits:
+ *
+ * - dataAlloc: 31 minimum-sized chunks (MIN_CHUNK_SZB) in assm->compile()
+ *   (though arbitrarily more could occur due to LabelStateMap additions done
+ *   when handling labels):  62,248 bytes.  This one is the most likely to
+ *   overflow.
+ *
+ * - traceAlloc: 1 minimum-sized chunk:  2,008 bytes.
+ *
+ * - tempAlloc: 1 LIR code chunk (CHUNK_SZB) and 5 minimum-sized chunks for
+ *   sundry small allocations:  18,048 bytes.
+ *
+ * The reserve sizes are chosen by exceeding this by a reasonable amount.
+ * Reserves for 32-bits are slightly more than half, because most of the
+ * allocated space is used to hold pointers.
+ *
+ * FIXME: Bug 624590 is open to get rid of all this.
+ */
+static const size_t DataReserveSize  = 12500 * sizeof(uintptr_t);
+static const size_t TraceReserveSize =  5000 * sizeof(uintptr_t);
+static const size_t TempReserveSize  =  1000 * sizeof(uintptr_t);
+
 void*
-nanojit::Allocator::allocChunk(size_t nbytes)
+nanojit::Allocator::allocChunk(size_t nbytes, bool fallible)
 {
     VMAllocator *vma = (VMAllocator*)this;
-    JS_ASSERT(!vma->outOfMemory());
+    /*
+     * Nb: it's conceivable that request 1 might fail (in which case
+     * mOutOfMemory will be set) and then request 2 succeeds.  The subsequent
+     * OOM check will still fail, which is what we want, and the success of
+     * request 2 makes it less likely that the reserve space will overflow.
+     */
     void *p = js_calloc(nbytes);
-    if (!p) {
-        JS_ASSERT(nbytes < sizeof(vma->mReserve));
+    if (p) {
+        vma->mSize += nbytes;
+    } else {
         vma->mOutOfMemory = true;
-        p = (void*) &vma->mReserve[0];
+        if (!fallible) {
+            p = (void *)vma->mReserveCurr;
+            vma->mReserveCurr += nbytes;
+            if (vma->mReserveCurr > vma->mReserveLimit)
+                OUT_OF_MEMORY_ABORT("nanojit::Allocator::allocChunk: out of memory");
+            memset(p, 0, nbytes);
+            vma->mSize += nbytes;
+        }
     }
-    vma->mSize += nbytes;
     return p;
 }
 
 void
 nanojit::Allocator::freeChunk(void *p) {
     VMAllocator *vma = (VMAllocator*)this;
-    if (p != &vma->mReserve[0])
+    if (p < vma->mReserve || uintptr_t(p) >= vma->mReserveLimit)
         js_free(p);
 }
 
@@ -162,6 +219,7 @@ nanojit::Allocator::postReset() {
     VMAllocator *vma = (VMAllocator*)this;
     vma->mOutOfMemory = false;
     vma->mSize = 0;
+    vma->mReserveCurr = uintptr_t(vma->mReserve);
 }
 
 int
@@ -501,12 +559,6 @@ InitJITStatsClass(JSContext *cx, JSObject *glob)
 static avmplus::AvmCore s_core = avmplus::AvmCore();
 static avmplus::AvmCore* core = &s_core;
 
-static void OutOfMemoryAbort()
-{
-    JS_NOT_REACHED("out of memory");
-    abort();
-}
-
 #ifdef JS_JIT_SPEW
 static void
 DumpPeerStability(TraceMonitor* tm, const void* ip, JSObject* globalObj, uint32 globalShape, uint32 argc);
@@ -626,8 +678,8 @@ InitJITLogController()
 /*
  * All the allocations done by this profile data-collection and
  * display machinery, are done in TraceMonitor::profAlloc.  That is
- * emptied out at the end of js_FinishJIT.  It has a lifetime from
- * js_InitJIT to js_FinishJIT, which exactly matches the span
+ * emptied out at the end of FinishJIT.  It has a lifetime from
+ * InitJIT to FinishJIT, which exactly matches the span
  * js_FragProfiling_init to js_FragProfiling_showResults.
  */
 template<class T>
@@ -1399,7 +1451,7 @@ FrameInfoCache::FrameInfoCache(VMAllocator *allocator)
   : allocator(allocator)
 {
     if (!set.init())
-        OutOfMemoryAbort();
+        OUT_OF_MEMORY_ABORT("FrameInfoCache::FrameInfoCache(): out of memory");
 }
 
 #define PC_HASH_COUNT 1024
@@ -2285,7 +2337,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
      */
 
     if (!guardedShapeTable.init())
-        abort();
+        OUT_OF_MEMORY_ABORT("TraceRecorder::TraceRecorder: out of memory");
 
 #ifdef JS_JIT_SPEW
     debug_only_print0(LC_TMMinimal, "\n");
@@ -2465,7 +2517,6 @@ TraceRecorder::finishAbort(const char* reason)
 {
     JS_ASSERT(!traceMonitor->profile);
     JS_ASSERT(traceMonitor->recorder == this);
-    JS_ASSERT(!fragment->code());
 
     AUDIT(recorderAborted);
 #ifdef DEBUG
@@ -2782,18 +2833,16 @@ TraceMonitor::flush()
     oracle->clear();
     loopProfiles->clear();
 
-    Allocator& alloc = *dataAlloc;
-
     for (size_t i = 0; i < MONITOR_N_GLOBAL_STATES; ++i) {
         globalStates[i].globalShape = -1;
-        globalStates[i].globalSlots = new (alloc) SlotList(&alloc);
+        globalStates[i].globalSlots = new (*dataAlloc) SlotList(dataAlloc);
     }
 
-    assembler = new (alloc) Assembler(*codeAlloc, alloc, alloc, core, &LogController, avmplus::AvmCore::config);
+    assembler = new (*dataAlloc) Assembler(*codeAlloc, *dataAlloc, *dataAlloc, core,
+                                           &LogController, avmplus::AvmCore::config);
     verbose_only( branches = NULL; )
 
     PodArrayZero(vmfragments);
-    reFragments = new (alloc) REHashMap(alloc);
     tracedScripts.clear();
 
     needFlush = JS_FALSE;
@@ -4518,10 +4567,10 @@ TraceRecorder::compile()
 #endif
 
     Assembler *assm = traceMonitor->assembler;
-    JS_ASSERT(assm->error() == nanojit::None);
+    JS_ASSERT(!assm->error());
     assm->compile(fragment, tempAlloc(), /*optimize*/true verbose_only(, lirbuf->printer));
 
-    if (assm->error() != nanojit::None) {
+    if (assm->error()) {
         assm->setError(nanojit::None);
         debug_only_print0(LC_TMTracer, "Blacklisted: error during compilation\n");
         Blacklist((jsbytecode*)tree->ip);
@@ -5707,7 +5756,8 @@ RecordTree(JSContext* cx, TreeFragment* first, JSScript* outerScript, jsbytecode
 
     if (tm->outOfMemory() ||
         OverfullJITCache(cx, tm) ||
-        !tm->tracedScripts.put(cx->fp()->script())) {
+        !tm->tracedScripts.put(cx->fp()->script()))
+    {
         if (!OverfullJITCache(cx, tm))
             js_ReportOutOfMemory(cx);
         Backoff(cx, (jsbytecode*) f->root->ip);
@@ -7632,7 +7682,7 @@ InitJIT(TraceMonitor *tm)
     }
     /* Set up fragprofiling, if required. */
     if (LogController.lcbits & LC_FragProfile) {
-        tm->profAlloc = js_new<VMAllocator>();
+        tm->profAlloc = js_new<VMAllocator>((char*)NULL, 0); /* no reserve needed in debug builds */
         JS_ASSERT(tm->profAlloc);
         tm->profTab = new (*tm->profAlloc) FragStatsMap(*tm->profAlloc);
     }
@@ -7684,9 +7734,13 @@ InitJIT(TraceMonitor *tm)
 
     tm->flushEpoch = 0;
     
-    CHECK_ALLOC(tm->dataAlloc, js_new<VMAllocator>());
-    CHECK_ALLOC(tm->traceAlloc, js_new<VMAllocator>());
-    CHECK_ALLOC(tm->tempAlloc, js_new<VMAllocator>());
+    char *dataReserve, *traceReserve, *tempReserve;
+    CHECK_ALLOC(dataReserve, (char *)js_malloc(DataReserveSize));
+    CHECK_ALLOC(traceReserve, (char *)js_malloc(TraceReserveSize));
+    CHECK_ALLOC(tempReserve, (char *)js_malloc(TempReserveSize));
+    CHECK_ALLOC(tm->dataAlloc, js_new<VMAllocator>(dataReserve, DataReserveSize));
+    CHECK_ALLOC(tm->traceAlloc, js_new<VMAllocator>(traceReserve, TraceReserveSize));
+    CHECK_ALLOC(tm->tempAlloc, js_new<VMAllocator>(tempReserve, TempReserveSize));
     CHECK_ALLOC(tm->codeAlloc, js_new<CodeAlloc>());
     CHECK_ALLOC(tm->frameCache, js_new<FrameInfoCache>(tm->dataAlloc));
     CHECK_ALLOC(tm->storage, js_new<TraceNativeStorage>());
@@ -7782,12 +7836,6 @@ FinishJIT(TraceMonitor *tm)
                     FragProfiling_FragFinalizer(p, tm);
             }
         }
-        REHashMap::Iter iter(*(tm->reFragments));
-        while (iter.next()) {
-            VMFragment* frag = (VMFragment*)iter.value();
-            FragProfiling_FragFinalizer(frag, tm);
-        }
-
         FragProfiling_showResults(tm);
         js_delete(tm->profAlloc);
 
@@ -7891,7 +7939,7 @@ OverfullJITCache(JSContext *cx, TraceMonitor* tm)
      *
      * Presently, the code in this file doesn't check the outOfMemory condition
      * often enough, and frequently misuses the unchecked results of
-     * lirbuffer insertions on the asssumption that it will notice the
+     * lirbuffer insertions on the assumption that it will notice the
      * outOfMemory flag "soon enough" when it returns to the monitorRecording
      * function. This turns out to be a false assumption if we use outOfMemory
      * to signal condition 2: we regularly provoke "passing our intended
@@ -7909,11 +7957,7 @@ OverfullJITCache(JSContext *cx, TraceMonitor* tm)
      *
      */
     jsuint maxsz = JS_THREAD_DATA(cx)->maxCodeCacheBytes;
-    VMAllocator *dataAlloc = tm->dataAlloc;
-    VMAllocator *traceAlloc = tm->traceAlloc;
-    CodeAlloc *codeAlloc = tm->codeAlloc;
-
-    return (codeAlloc->size() + dataAlloc->size() + traceAlloc->size() > maxsz);
+    return (tm->codeAlloc->size() + tm->dataAlloc->size() + tm->traceAlloc->size() > maxsz);
 }
 
 JS_FORCES_STACK JS_FRIEND_API(void)
@@ -12414,7 +12458,7 @@ TraceRecorder::recordInitPropertyOp(jsbytecode op)
     LIns* v_ins = get(&v);
 
     JSAtom* atom = atoms[GET_INDEX(cx->regs->pc)];
-    jsid id = ATOM_TO_JSID(atom);
+    jsid id = js_CheckForStringIndex(ATOM_TO_JSID(atom));
 
     // If obj already has this property (because JSOP_NEWOBJECT already set its
     // shape or because the id appears more than once in the initializer), just
@@ -14729,29 +14773,38 @@ TraceRecorder::record_JSOP_MOREITER()
     LIns* iterobj_ins = get(&iterobj_val);
     LIns* cond_ins;
 
-    /* JSOP_FOR* already guards on this, but in certain rare cases we might record misformed loop traces. */
+    /*
+     * JSOP_FOR* already guards on this, but in certain rare cases we might
+     * record misformed loop traces. Note that it's not necessary to guard on
+     * ni->flags (nor do we in unboxNextValue), because the different
+     * iteration type will guarantee a different entry typemap.
+     */
     if (iterobj->hasClass(&js_IteratorClass)) {
         guardClass(iterobj_ins, &js_IteratorClass, snapshot(BRANCH_EXIT), LOAD_NORMAL);
 
-        LIns *ni_ins = w.ldpObjPrivate(iterobj_ins);
-        LIns *cursor_ins = w.ldpIterCursor(ni_ins);
-        LIns *end_ins = w.ldpIterEnd(ni_ins);
+        NativeIterator *ni = (NativeIterator *) iterobj->getPrivate();
+        if (ni->isKeyIter()) {
+            LIns *ni_ins = w.ldpObjPrivate(iterobj_ins);
+            LIns *cursor_ins = w.ldpIterCursor(ni_ins);
+            LIns *end_ins = w.ldpIterEnd(ni_ins);
 
-        cond_ins = w.ltp(cursor_ins, end_ins);
+            cond_ins = w.ltp(cursor_ins, end_ins);
+            stack(0, cond_ins);
+            return ARECORD_CONTINUE;
+        }
     } else {
         guardNotClass(iterobj_ins, &js_IteratorClass, snapshot(BRANCH_EXIT), LOAD_NORMAL);
-
-        enterDeepBailCall();
-
-        LIns* vp_ins = w.allocp(sizeof(Value));
-        LIns* args[] = { vp_ins, iterobj_ins, cx_ins };
-        pendingGuardCondition = w.call(&IteratorMore_ci, args);
-
-        leaveDeepBailCall();
-
-        cond_ins = is_boxed_true(AllocSlotsAddress(vp_ins));
     }
 
+    enterDeepBailCall();
+
+    LIns* vp_ins = w.allocp(sizeof(Value));
+    LIns* args[] = { vp_ins, iterobj_ins, cx_ins };
+    pendingGuardCondition = w.call(&IteratorMore_ci, args);
+
+    leaveDeepBailCall();
+
+    cond_ins = is_boxed_true(AllocSlotsAddress(vp_ins));
     stack(0, cond_ins);
 
     return ARECORD_CONTINUE;
@@ -14819,9 +14872,9 @@ TraceRecorder::unboxNextValue(LIns* &v_ins)
 
         /* Emit code to stringify the id if necessary. */
         Address cursorAddr = IterPropsAddress(cursor_ins);
-        if (!(((NativeIterator *) iterobj->getPrivate())->flags & JSITER_FOREACH)) {
+        if (ni->isKeyIter()) {
             /* Read the next id from the iterator. */
-            jsid id = *ni->currentKey();
+            jsid id = *ni->current();
             LIns *id_ins = w.name(w.ldp(cursorAddr), "id");
 
             /*
@@ -14850,23 +14903,17 @@ TraceRecorder::unboxNextValue(LIns* &v_ins)
 
             /* Increment the cursor by one jsid and store it back. */
             cursor_ins = w.addp(cursor_ins, w.nameImmw(sizeof(jsid)));
-        } else {
-            /* Read the next value from the iterator. */
-            Value v = *ni->currentValue();
-            v_ins = unbox_value(v, cursorAddr, snapshot(BRANCH_EXIT));
-
-            /* Increment the cursor by one Value and store it back. */
-            cursor_ins = w.addp(cursor_ins, w.nameImmw(sizeof(Value)));
+            w.stpIterCursor(cursor_ins, ni_ins);
+            return ARECORD_CONTINUE;
         }
-
-        w.stpIterCursor(cursor_ins, ni_ins);
     } else {
         guardNotClass(iterobj_ins, &js_IteratorClass, snapshot(BRANCH_EXIT), LOAD_NORMAL);
-
-        Address iterValueAddr = CxAddress(iterValue);
-        v_ins = unbox_value(cx->iterValue, iterValueAddr, snapshot(BRANCH_EXIT));
-        storeMagic(JS_NO_ITER_VALUE, iterValueAddr);
     }
+
+
+    Address iterValueAddr = CxAddress(iterValue);
+    v_ins = unbox_value(cx->iterValue, iterValueAddr, snapshot(BRANCH_EXIT));
+    storeMagic(JS_NO_ITER_VALUE, iterValueAddr);
 
     return ARECORD_CONTINUE;
 }
@@ -14931,6 +14978,13 @@ TraceRecorder::record_JSOP_POPN()
     return ARECORD_CONTINUE;
 }
 
+static inline bool
+IsFindableCallObj(JSObject *obj)
+{
+    return obj->isCall() &&
+           (obj->callIsForEval() || obj->getCallObjCalleeFunction()->isHeavyweight());
+}
+
 /*
  * Generate LIR to reach |obj2| from |obj| by traversing the scope chain. The
  * generated code also ensures that any call objects found have not changed shape.
@@ -14972,13 +15026,10 @@ TraceRecorder::traverseScopeChain(JSObject *obj, LIns *obj_ins, JSObject *target
 
     for (;;) {
         if (searchObj != globalObj) {
-            Class* clasp = searchObj->getClass();
-            if (clasp == &js_BlockClass) {
+            if (searchObj->isBlock())
                 foundBlockObj = true;
-            } else if (clasp == &js_CallClass &&
-                       searchObj->getCallObjCalleeFunction()->isHeavyweight()) {
+            else if (IsFindableCallObj(searchObj))
                 foundCallObj = true;
-            }
         }
 
         if (searchObj == targetObj)
@@ -15007,8 +15058,7 @@ TraceRecorder::traverseScopeChain(JSObject *obj, LIns *obj_ins, JSObject *target
             // We must guard on the shape of all call objects for heavyweight functions
             // that we traverse on the scope chain: if the shape changes, a variable with
             // the same name may have been inserted in the scope chain.
-            if (obj->isCall() &&
-                obj->getCallObjCalleeFunction()->isHeavyweight()) {
+            if (IsFindableCallObj(obj)) {
                 if (!exit)
                     exit = snapshot(BRANCH_EXIT);
                 guard(true,

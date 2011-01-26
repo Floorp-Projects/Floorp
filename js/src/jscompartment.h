@@ -239,11 +239,6 @@ struct TraceMonitor {
      */
     JSBool                  needFlush;
 
-    /*
-     * Fragment map for the regular expression compiler.
-     */
-    REHashMap*              reFragments;
-
     // Cached temporary typemap to avoid realloc'ing every time we create one.
     // This must be used in only one place at a given time. It must be cleared
     // before use.
@@ -257,8 +252,8 @@ struct TraceMonitor {
     nanojit::Seq<nanojit::Fragment*>* branches;
     uint32                  lastFragID;
     /*
-     * profAlloc has a lifetime which spans exactly from js_InitJIT to
-     * js_FinishJIT.
+     * profAlloc has a lifetime which spans exactly from InitJIT to
+     * FinishJIT.
      */
     VMAllocator*            profAlloc;
     FragStatsMap*           profTab;
@@ -378,16 +373,6 @@ struct JS_FRIEND_API(JSCompartment) {
 
     bool                         debugMode;  // true iff debug mode on
     JSCList                      scripts;    // scripts in this compartment
-
-    /*
-     * Weak references to lazily-created, well-known XML singletons.
-     *
-     * NB: Singleton objects must be carefully disconnected from the rest of
-     * the object graph usually associated with a JSContext's global object,
-     * including the set of standard class objects.  See jsxml.c for details.
-     */
-    JSObject                     *anynameObject;
-    JSObject                     *functionNamespaceObject;
 
     JSC::ExecutableAllocator     *regExpAllocator;
 

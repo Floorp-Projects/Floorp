@@ -22,7 +22,7 @@
  * Contributor(s):
  *   Steve Clark <buster@netscape.com>
  *   Dan Rosen <dr@netscape.com>
- *   Mihai Șucan <mihai.sucan@gmail.com>
+ *   Mihai Sucan <mihai.sucan@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),

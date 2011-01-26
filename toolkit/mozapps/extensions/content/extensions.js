@@ -887,7 +887,7 @@ var gViewController = {
       doCommand: function(aAddon) {
         var aboutURL = aAddon.aboutURL;
         if (aboutURL)
-          openDialog(aboutURL, "", "chrome,centerscreen,modal");
+          openDialog(aboutURL, "", "chrome,centerscreen,modal", aAddon);
         else
           openDialog("chrome://mozapps/content/extensions/about.xul",
                      "", "chrome,centerscreen,modal", aAddon);
@@ -1190,8 +1190,12 @@ function createItem(aObj, aIsInstall, aIsRemote) {
 }
 
 function sortElements(aElements, aSortBy, aAscending) {
+  // aSortBy is an Array of attributes to sort by, in decending
+  // order of priority.
+
   const DATE_FIELDS = ["updateDate"];
   const NUMERIC_FIELDS = ["size", "relevancescore", "purchaseAmount"];
+  const UISTATE_ORDER = ["enabled", "incompatible", "disabled", "blocked"]
 
   function dateCompare(a, b) {
     var aTime = a.getTime();
@@ -1211,47 +1215,92 @@ function sortElements(aElements, aSortBy, aAscending) {
     return a.localeCompare(b);
   }
 
-  function getValue(aObj) {
+  function uiStateCompare(a, b) {
+    // If we're in descending order, swap a and b, because
+    // we don't ever want to have descending uiStates
+    if (!aAscending)
+      [a, b] = [b, a];
+
+    return (UISTATE_ORDER.indexOf(a) - UISTATE_ORDER.indexOf(b));
+  }
+
+  function getValue(aObj, aKey) {
     if (!aObj)
       return null;
 
-    if (aObj.hasAttribute(aSortBy))
-      return aObj.getAttribute(aSortBy);
+    if (aObj.hasAttribute(aKey))
+      return aObj.getAttribute(aKey);
 
     addon = aObj.mAddon || aObj.mInstall;
     if (!addon)
       return null;
+    if (aKey == "uiState") {
+      if (addon.isActive)
+        return "enabled";
+      else if (!addon.isCompatible)
+        return "incompatible";
+      else if (addon.blocklistState == Ci.nsIBlocklistService.STATE_NOT_BLOCKED)
+        return "disabled";
+      else if (addon.isCompatible &&
+               addon.blocklistState != Ci.nsIBlocklistService.STATE_NOT_BLOCKED)
+        return "blocked";
+    }
 
-    return addon[aSortBy];
+
+    return addon[aKey];
   }
 
-  var sortFunc = stringCompare;
-  if (DATE_FIELDS.indexOf(aSortBy) != -1)
-    sortFunc = dateCompare;
-  else if (NUMERIC_FIELDS.indexOf(aSortBy) != -1)
-    sortFunc = numberCompare;
+  // aSortFuncs will hold the sorting functions that we'll
+  // use per element, in the correct order.
+  var aSortFuncs = [];
+
+  for (let i = 0; i < aSortBy.length; i++) {
+    var sortBy = aSortBy[i];
+
+    aSortFuncs[i] = stringCompare;
+
+    if (sortBy == "uiState")
+      aSortFuncs[i] = uiStateCompare;
+    else if (DATE_FIELDS.indexOf(sortBy) != -1)
+      aSortFuncs[i] = dateCompare;
+    else if (NUMERIC_FIELDS.indexOf(sortBy) != -1)
+      aSortFuncs[i] = numberCompare;
+  }
+
 
   aElements.sort(function(a, b) {
     if (!aAscending)
       [a, b] = [b, a];
 
-    var aValue = getValue(a);
-    var bValue = getValue(b);
+    for (let i = 0; i < aSortFuncs.length; i++) {
+      var sortBy = aSortBy[i];
+      var aValue = getValue(a, sortBy);
+      var bValue = getValue(b, sortBy);
 
-    if (!aValue && !bValue)
-      return 0;
-    if (!aValue)
-      return -1;
-    if (!bValue)
-      return 1;
+      if (!aValue && !bValue)
+        return 0;
+      if (!aValue)
+        return -1;
+      if (!bValue)
+        return 1;
+      if (aValue != bValue) {
+        var result = aSortFuncs[i](aValue, bValue);
 
-    return sortFunc(aValue, bValue);
+        if (result != 0)
+          return result;
+      }
+    }
+
+    // If we got here, then all values of a and b
+    // must have been equal.
+    return 0;
+
   });
 }
 
 function sortList(aList, aSortBy, aAscending) {
   var elements = Array.slice(aList.childNodes, 0);
-  sortElements(elements, aSortBy, aAscending);
+  sortElements(elements, [aSortBy], aAscending);
 
   while (aList.listChild)
     aList.removeChild(aList.lastChild);
@@ -1793,7 +1842,7 @@ var gSearchView = {
 
     function finishSearch(createdCount) {
       if (elements.length > 0) {
-        sortElements(elements, self._sorters.sortBy, self._sorters.ascending);
+        sortElements(elements, [self._sorters.sortBy], self._sorters.ascending);
         elements.forEach(function(aElement) {
           self._listBox.insertBefore(aElement, self._listBox.lastChild);
         });
@@ -2025,13 +2074,10 @@ var gListView = {
   node: null,
   _listBox: null,
   _emptyNotice: null,
-  _sorters: null,
   _type: null,
 
   initialize: function() {
     this.node = document.getElementById("list-view");
-    this._sorters = document.getElementById("list-sorters");
-    this._sorters.handler = this;
     this._listBox = document.getElementById("addon-list");
     this._emptyNotice = document.getElementById("addon-list-empty");
 
@@ -2069,7 +2115,7 @@ var gListView = {
 
       self.showEmptyNotice(elements.length == 0);
       if (elements.length > 0) {
-        sortElements(elements, self._sorters.sortBy, self._sorters.ascending);
+        sortElements(elements, ["uiState", "name"], true);
         elements.forEach(function(aElement) {
           self._listBox.appendChild(aElement);
         });
@@ -2639,7 +2685,7 @@ var gUpdatesView = {
 
       self.showEmptyNotice(elements.length == 0);
       if (elements.length > 0) {
-        sortElements(elements, self._sorters.sortBy, self._sorters.ascending);
+        sortElements(elements, [self._sorters.sortBy], self._sorters.ascending);
         elements.forEach(function(aElement) {
           self._listBox.appendChild(aElement);
         });
@@ -2686,7 +2732,7 @@ var gUpdatesView = {
       self.showEmptyNotice(elements.length == 0);
       if (elements.length > 0) {
         self._updateSelected.hidden = false;
-        sortElements(elements, self._sorters.sortBy, self._sorters.ascending);
+        sortElements(elements, [self._sorters.sortBy], self._sorters.ascending);
         elements.forEach(function(aElement) {
           self._listBox.appendChild(aElement);
         });

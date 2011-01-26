@@ -281,6 +281,8 @@
 }
 
 .category[disabled] {
+  border-top: 0;
+  border-bottom: 0;
   height: 0;
   opacity: 0;
   -moz-transition-property: height, opacity;
@@ -296,7 +298,6 @@
 .category[selected] {
   background-color: rgba(255, 255, 255, 0.4);
   color: #252F3B;
-  font-weight: bold;
   border-color: #C3CEDF;
   -moz-border-end-color: #E2E9F2;
 }

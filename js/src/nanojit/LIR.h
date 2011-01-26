@@ -2054,8 +2054,9 @@ namespace nanojit
         uint32_t findCall(LIns* ins);
         uint32_t findLoad(LIns* ins);
 
-        void growNL(NLKind kind);
-        void growL(CseAcc cseAcc);
+        // These return false if they failed to grow due to OOM.
+        bool growNL(NLKind kind);
+        bool growL(CseAcc cseAcc);
 
         void addNLImmISmall(LIns* ins, uint32_t k);
         // 'k' is the index found by findXYZ().
@@ -2068,6 +2069,17 @@ namespace nanojit
 
     public:
         CseFilter(LirWriter *out, uint8_t embNumUsedAccs, Allocator&);
+
+        // CseFilter does some largish fallible allocations at start-up.  If
+        // they fail, the constructor sets this field to 'true'.  It should be
+        // checked after creation, and if set the CseFilter cannot be used.
+        // (But the check can be skipped if allocChunk() always succeeds.)
+        //
+        // FIXME: This fallibility is a sop to TraceMonkey's implementation of
+        // infallible malloc -- by avoiding some largish infallible
+        // allocations, it reduces the size of the reserve space needed.
+        // Bug 624590 is open to fix this.
+        bool initOOM;
 
         LIns* insImmI(int32_t imm);
 #ifdef NANOJIT_64BIT
@@ -2116,12 +2128,12 @@ namespace nanojit
             LIns *state, *param1, *sp, *rp;
             LIns* savedRegs[NumSavedRegs+1]; // Allocate an extra element in case NumSavedRegs == 0
 
-        protected:
-            friend class LirBufWriter;
-
             /** Each chunk is just a raw area of LIns instances, with no header
                 and no more than 8-byte alignment.  The chunk size is somewhat arbitrary. */
             static const size_t CHUNK_SZB = 8000;
+
+        protected:
+            friend class LirBufWriter;
 
             /** Get CHUNK_SZB more memory for LIR instructions. */
             void        chunkAlloc();

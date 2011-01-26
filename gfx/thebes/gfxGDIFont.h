@@ -61,7 +61,7 @@ public:
 
     HFONT GetHFONT() { if (!mMetrics) Initialize(); return mFont; }
 
-    gfxFloat GetAdjustedSize() const { return mAdjustedSize; }
+    gfxFloat GetAdjustedSize() { if (!mMetrics) Initialize(); return mAdjustedSize; }
 
     cairo_font_face_t   *CairoFontFace() { return mFontFace; }
     cairo_scaled_font_t *CairoScaledFont() { return mScaledFont; }
@@ -76,10 +76,10 @@ public:
     /* required for MathML to suppress effects of ClearType "padding" */
     virtual gfxFont* CopyWithAntialiasOption(AntialiasOption anAAOption);
 
-    virtual PRBool ProvidesHintedWidths() const { return PR_TRUE; }
+    virtual PRBool ProvidesGlyphWidths() { return PR_TRUE; }
 
     // get hinted glyph width in pixels as 16.16 fixed-point value
-    virtual PRInt32 GetHintedGlyphWidth(gfxContext *aCtx, PRUint16 aGID);
+    virtual PRInt32 GetGlyphWidth(gfxContext *aCtx, PRUint16 aGID);
 
 protected:
     virtual void CreatePlatformShaper();

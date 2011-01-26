@@ -396,7 +396,7 @@ class Compiler : public BaseCompiler
     /* Emitting helpers. */
     void restoreFrameRegs(Assembler &masm);
     bool emitStubCmpOp(BoolStub stub, jsbytecode *target, JSOp fused);
-    void iter(uintN flags);
+    bool iter(uintN flags);
     void iterNext();
     bool iterMore();
     void iterEnd();
@@ -461,7 +461,7 @@ class Compiler : public BaseCompiler
     void leaveBlock();
     void emitEval(uint32 argc);
     void jsop_arguments();
-    void jsop_tableswitch(jsbytecode *pc);
+    bool jsop_tableswitch(jsbytecode *pc);
     void jsop_forprop(JSAtom *atom);
     void jsop_forname(JSAtom *atom);
     void jsop_forgname(JSAtom *atom);

@@ -501,8 +501,10 @@ html[dir=rtl] .resizer {
   cursor: se-resize;
   width: 12px;
   height: 12px;
-  right: 1px;
-  bottom: 1px;
+  padding-right: 3px;
+  padding-bottom: 3px;
+  right: -2px;
+  bottom: -2px;
 }
 
 html[dir=rtl] .iq-resizable-se {
