@@ -713,9 +713,8 @@ BasicImageLayer::GetAndPaintCurrentImage(gfxContext* aContext,
 
   pat->SetFilter(mFilter);
 
-  PaintContext(pat,
-               nsIntRegion(nsIntRect(0, 0, mSize.width, mSize.height)),
-               GetTileSourceRect(), aOpacity, aContext); 
+  PaintContext(pat, GetVisibleRegion(), GetTileSourceRect(),
+               aOpacity, aContext); 
   return pat.forget();
 }
 
