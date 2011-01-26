@@ -200,6 +200,17 @@ LayerManager::CreateOptimalSurface(const gfxIntSize &aSize,
     CreateOffscreenSurface(aSize, gfxASurface::ContentFromFormat(aFormat));
 }
 
+#ifdef DEBUG
+void
+LayerManager::Mutated(Layer* aLayer)
+{
+  NS_ABORT_IF_FALSE(!aLayer->GetTileSourceRect() ||
+                    (LAYERS_BASIC == GetBackendType() &&
+                     Layer::TYPE_IMAGE == aLayer->GetType()),
+                    "Tiling not supported for this manager/layer type");
+}
+#endif  // DEBUG
+
 //--------------------------------------------------
 // Layer
 

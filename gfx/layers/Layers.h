@@ -359,8 +359,15 @@ public:
   /**
    * CONSTRUCTION PHASE ONLY
    * Called when a managee has mutated.
+   * Subclasses overriding this method must first call their
+   * superclass's impl
    */
+#ifdef DEBUG
+  // In debug builds, we check some properties of |aLayer|.
+  virtual void Mutated(Layer* aLayer);
+#else
   virtual void Mutated(Layer* aLayer) { }
+#endif
 
   /**
    * CONSTRUCTION PHASE ONLY
@@ -641,6 +648,10 @@ public:
    * ColorLayers, a source rect for tiling doesn't make sense at all.
    *
    * If aRect is null no tiling will be performed. 
+   *
+   * NB: this interface is only implemented for BasicImageLayers, and
+   * then only for source rects the same size as the layers'
+   * underlying images.
    */
   void SetTileSourceRect(const nsIntRect* aRect)
   {
