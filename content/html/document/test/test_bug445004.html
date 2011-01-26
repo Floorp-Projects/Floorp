@@ -23,7 +23,7 @@ is(window.location.port, "8888", "Unexpected port; fix testcase");
 
 SimpleTest.waitForExplicitFinish();
 
-var loads = 0;
+var loads = 1;
 
 function loadStarted() {
   ++loads;
@@ -34,6 +34,8 @@ function loadEnded() {
     doTest();
   }
 }
+
+window.onload = loadEnded;
 
 function getMessage(evt) {
   ok(evt.data == "start" || evt.data == "end", "Must have start or end");
