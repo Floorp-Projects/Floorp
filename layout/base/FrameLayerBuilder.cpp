@@ -143,7 +143,7 @@ public:
    * if no clipping is required
    */
   void ProcessDisplayItems(const nsDisplayList& aList,
-                           const FrameLayerBuilder::Clip& aClip);
+                           FrameLayerBuilder::Clip& aClip);
   /**
    * This finalizes all the open ThebesLayers by popping every element off
    * mThebesLayerDataStack, then sets the children of the container layer
@@ -1199,7 +1199,7 @@ BuildTempManagerForInactiveLayer(nsDisplayListBuilder* aBuilder,
  */
 void
 ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
-                                    const FrameLayerBuilder::Clip& aClip)
+                                    FrameLayerBuilder::Clip& aClip)
 {
   PRInt32 appUnitsPerDevPixel =
     mContainerFrame->PresContext()->AppUnitsPerDevPixel();
@@ -1227,7 +1227,10 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
       item->GetLayerState(mBuilder, mManager);
 
     // Assign the item to a layer
-    if (layerState == LAYER_ACTIVE && aClip.mRoundedClipRects.IsEmpty()) {
+    if (layerState == LAYER_ACTIVE && (aClip.mRoundedClipRects.IsEmpty() ||
+        // We can use the visible rect here only because the item has its own
+        // layer, like the comment below.
+        !aClip.IsRectClippedByRoundedCorner(item->GetVisibleRect()))) {
       // If the item would have its own layer but is invisible, just hide it.
       // Note that items without their own layers can't be skipped this
       // way, since their ThebesLayer may decide it wants to draw them
@@ -1236,6 +1239,8 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
         InvalidateForLayerChange(item, nsnull);
         continue;
       }
+
+      aClip.RemoveRoundedCorners();
 
       // Just use its layer.
       nsRefPtr<Layer> ownLayer = item->BuildLayer(mBuilder, mManager);
@@ -1808,6 +1813,9 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
         visible = newVisible;
       }
     }
+    if (!cdi->mClip.IsRectClippedByRoundedCorner(cdi->mItem->GetVisibleRect())) {
+      cdi->mClip.RemoveRoundedCorners();
+    }
   }
 
   nsRefPtr<nsIRenderingContext> rc;
@@ -1957,6 +1965,101 @@ FrameLayerBuilder::Clip::ApproximateIntersect(const nsRect& aRect) const
     r = rgn.GetLargestRectangle();
   }
   return r;
+}
+
+// Test if (aXPoint, aYPoint) is in the ellipse with center (aXCenter, aYCenter)
+// and radii aXRadius, aYRadius.
+bool IsInsideEllipse(nscoord aXRadius, nscoord aXCenter, nscoord aXPoint,
+                     nscoord aYRadius, nscoord aYCenter, nscoord aYPoint)
+{
+  float scaledX = float(aXPoint - aXCenter) / float(aXRadius);
+  float scaledY = float(aYPoint - aYCenter) / float(aYRadius);
+  return scaledX * scaledX + scaledY * scaledY < 1.0f;
+}
+
+bool
+FrameLayerBuilder::Clip::IsRectClippedByRoundedCorner(const nsRect& aRect) const
+{
+  if (mRoundedClipRects.IsEmpty())
+    return false;
+
+  nsRect rect;
+  rect.IntersectRect(aRect, NonRoundedIntersection());
+  for (PRUint32 i = 0, iEnd = mRoundedClipRects.Length();
+       i < iEnd; ++i) {
+    const Clip::RoundedRect &rr = mRoundedClipRects[i];
+    // top left
+    if (rect.x < rr.mRect.x + rr.mRadii[NS_CORNER_TOP_LEFT_X] &&
+        rect.y < rr.mRect.y + rr.mRadii[NS_CORNER_TOP_LEFT_Y]) {
+      if (!IsInsideEllipse(rr.mRadii[NS_CORNER_TOP_LEFT_X],
+                           rr.mRect.x + rr.mRadii[NS_CORNER_TOP_LEFT_X],
+                           rect.x,
+                           rr.mRadii[NS_CORNER_TOP_LEFT_Y],
+                           rr.mRect.y + rr.mRadii[NS_CORNER_TOP_LEFT_Y],
+                           rect.y)) {
+        return true;
+      }
+    }
+    // top right
+    if (rect.XMost() > rr.mRect.XMost() - rr.mRadii[NS_CORNER_TOP_RIGHT_X] &&
+        rect.y < rr.mRect.y + rr.mRadii[NS_CORNER_TOP_RIGHT_Y]) {
+      if (!IsInsideEllipse(rr.mRadii[NS_CORNER_TOP_RIGHT_X],
+                           rr.mRect.XMost() - rr.mRadii[NS_CORNER_TOP_RIGHT_X],
+                           rect.XMost(),
+                           rr.mRadii[NS_CORNER_TOP_RIGHT_Y],
+                           rr.mRect.y + rr.mRadii[NS_CORNER_TOP_RIGHT_Y],
+                           rect.y)) {
+        return true;
+      }
+    }
+    // bottom left
+    if (rect.x < rr.mRect.x + rr.mRadii[NS_CORNER_BOTTOM_LEFT_X] &&
+        rect.YMost() > rr.mRect.YMost() - rr.mRadii[NS_CORNER_BOTTOM_LEFT_Y]) {
+      if (!IsInsideEllipse(rr.mRadii[NS_CORNER_BOTTOM_LEFT_X],
+                           rr.mRect.x + rr.mRadii[NS_CORNER_BOTTOM_LEFT_X],
+                           rect.x,
+                           rr.mRadii[NS_CORNER_BOTTOM_LEFT_Y],
+                           rr.mRect.YMost() - rr.mRadii[NS_CORNER_BOTTOM_LEFT_Y],
+                           rect.YMost())) {
+        return true;
+      }
+    }
+    // bottom right
+    if (rect.XMost() > rr.mRect.XMost() - rr.mRadii[NS_CORNER_BOTTOM_RIGHT_X] &&
+        rect.YMost() > rr.mRect.YMost() - rr.mRadii[NS_CORNER_BOTTOM_RIGHT_Y]) {
+      if (!IsInsideEllipse(rr.mRadii[NS_CORNER_BOTTOM_RIGHT_X],
+                           rr.mRect.XMost() - rr.mRadii[NS_CORNER_BOTTOM_RIGHT_X],
+                           rect.XMost(),
+                           rr.mRadii[NS_CORNER_BOTTOM_RIGHT_Y],
+                           rr.mRect.YMost() - rr.mRadii[NS_CORNER_BOTTOM_RIGHT_Y],
+                           rect.YMost())) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+nsRect
+FrameLayerBuilder::Clip::NonRoundedIntersection() const
+{
+  NS_ASSERTION(!mRoundedClipRects.IsEmpty(), "no rounded clip rects?");
+  nsRect result = mClipRect;
+  for (PRUint32 i = 0, iEnd = mRoundedClipRects.Length();
+       i < iEnd; ++i) {
+    result.IntersectRect(result, mRoundedClipRects[i].mRect);
+  }
+  return result;
+}
+
+void
+FrameLayerBuilder::Clip::RemoveRoundedCorners()
+{
+  if (mRoundedClipRects.IsEmpty())
+    return;
+
+  mClipRect = NonRoundedIntersection();
+  mRoundedClipRects.Clear();
 }
 
 } // namespace mozilla
