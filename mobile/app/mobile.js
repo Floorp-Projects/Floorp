@@ -444,7 +444,7 @@ pref("app.sync.tutorialURL", "https://support.mozilla.com/kb/sync-firefox-betwee
 pref("app.support.baseURL", "http://support.mozilla.com/mobile");
 pref("app.feedbackURL", "http://input.mozilla.com/feedback/");
 pref("app.privacyURL", "http://www.mozilla.com/%LOCALE%/m/privacy.html");
-pref("app.creditsURL", "http://www.mozilla.com/%LOCALE%/mobile/credits/");
+pref("app.creditsURL", "http://www.mozilla.org/credits/");
 #if MOZ_UPDATE_CHANNEL == beta
 pref("app.featuresURL", "http://www.mozilla.com/%LOCALE%/mobile/beta/features/");
 pref("app.faqURL", "http://www.mozilla.com/%LOCALE%/mobile/beta/faq/");
