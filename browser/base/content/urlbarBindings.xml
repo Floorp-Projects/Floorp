@@ -1334,9 +1334,6 @@
       <handler event="mouseover"><![CDATA[
         if (this.getAttribute("active") != "true" &&
             this.getAttribute("disabled") != "true") {
-          if (this._parentMenupopup._currentPopup)
-            this._parentMenupopup._currentPopup.hidePopup();
-
           this.setAttribute("active", "true");
 
           let self = this;
@@ -1363,6 +1360,12 @@
       <handler event="popuphidden"><![CDATA[
         if (event.target == this.firstChild)
           this.removeAttribute("active");
+      ]]></handler>
+
+      <handler event="popupshowing"><![CDATA[
+        if (event.target == this.firstChild &&
+            this._parentMenupopup._currentPopup)
+          this._parentMenupopup._currentPopup.hidePopup();
       ]]></handler>
 
       <handler event="click" phase="capturing"><![CDATA[
