@@ -788,14 +788,15 @@ Exception(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 exn_toString(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj;
     jsval v;
     JSString *name, *message, *result;
     jschar *chars, *cp;
     size_t name_length, message_length, length;
 
-    obj = ComputeThisFromVp(cx, vp);
-    if (!obj || !obj->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.nameAtom), Valueify(&v)))
+    JSObject *obj = ToObject(cx, &vp[1]);
+    if (!obj)
+        return JS_FALSE;
+    if (!obj->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.nameAtom), Valueify(&v)))
         return JS_FALSE;
     name = JSVAL_IS_STRING(v) ? JSVAL_TO_STRING(v) : cx->runtime->emptyString;
     vp->setString(name);
@@ -848,14 +849,15 @@ exn_toString(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 exn_toSource(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj;
     JSString *name, *message, *filename, *lineno_as_str, *result;
     jsval localroots[3] = {JSVAL_NULL, JSVAL_NULL, JSVAL_NULL};
     size_t lineno_length, name_length, message_length, filename_length, length;
     jschar *chars, *cp;
 
-    obj = ComputeThisFromVp(cx, vp);
-    if (!obj || !obj->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.nameAtom), vp))
+    JSObject *obj = ToObject(cx, &vp[1]);
+    if (!obj)
+        return false;
+    if (!obj->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.nameAtom), vp))
         return false;
     name = js_ValueToString(cx, *vp);
     if (!name)

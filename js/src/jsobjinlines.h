@@ -1178,6 +1178,28 @@ CopyInitializerObject(JSContext *cx, JSObject *baseobj)
     return obj;
 }
 
+/*
+ * When we have an object of a builtin class, we don't quite know what its
+ * valueOf/toString methods are, since these methods may have been overwritten
+ * or shadowed. However, we can still do better than js_TryMethod by
+ * hard-coding the necessary properties for us to find the native we expect.
+ *
+ * TODO: a per-thread shape-based cache would be faster and simpler.
+ */
+static JS_ALWAYS_INLINE bool
+ClassMethodIsNative(JSContext *cx, JSObject *obj, Class *clasp, jsid methodid,
+                    Native native)
+{
+    JS_ASSERT(obj->getClass() == clasp);
+
+    if (HasNativeMethod(obj, methodid, native))
+        return true;
+
+    JSObject *pobj = obj->getProto();
+    return pobj && pobj->getClass() == clasp &&
+           HasNativeMethod(pobj, methodid, native);
+}
+
 } /* namespace js */
 
 #endif /* jsobjinlines_h___ */

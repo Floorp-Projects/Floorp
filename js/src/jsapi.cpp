@@ -1955,9 +1955,7 @@ JS_PUBLIC_API(jsval)
 JS_ComputeThis(JSContext *cx, jsval *vp)
 {
     assertSameCompartment(cx, JSValueArray(vp, 2));
-    if (!ComputeThisFromVp(cx, Valueify(vp)))
-        return JSVAL_NULL;
-    return vp[1];
+    return BoxThisForVp(cx, Valueify(vp)) ? vp[1] : JSVAL_NULL;
 }
 
 JS_PUBLIC_API(void *)
@@ -4260,26 +4258,12 @@ JS_ObjectIsCallable(JSContext *cx, JSObject *obj)
 static JSBool
 js_generic_native_method_dispatcher(JSContext *cx, uintN argc, Value *vp)
 {
-    JSFunctionSpec *fs;
-    JSObject *tmp;
-    Native native;
-
-    fs = (JSFunctionSpec *) vp->toObject().getReservedSlot(0).toPrivate();
+    JSFunctionSpec *fs = (JSFunctionSpec *) vp->toObject().getReservedSlot(0).toPrivate();
     JS_ASSERT((fs->flags & JSFUN_GENERIC_NATIVE) != 0);
 
     if (argc < 1) {
         js_ReportMissingArg(cx, *vp, 0);
         return JS_FALSE;
-    }
-
-    if (vp[2].isPrimitive()) {
-        /*
-         * Make sure that this is an object or null, as required by the generic
-         * functions.
-         */
-        if (!js_ValueToObjectOrNull(cx, vp[2], &tmp))
-            return JS_FALSE;
-        vp[2].setObjectOrNull(tmp);
     }
 
     /*
@@ -4290,23 +4274,16 @@ js_generic_native_method_dispatcher(JSContext *cx, uintN argc, Value *vp)
      */
     memmove(vp + 1, vp + 2, argc * sizeof(jsval));
 
-    /*
-     * Follow Function.prototype.apply and .call by using the global object as
-     * the 'this' param if no args.
-     */
-    if (!ComputeThisFromArgv(cx, vp + 2))
-        return JS_FALSE;
-
     /* Clear the last parameter in case too few arguments were passed. */
     vp[2 + --argc].setUndefined();
 
-    native =
+    Native native =
 #ifdef JS_TRACER
-             (fs->flags & JSFUN_TRCINFO)
-             ? JS_FUNC_TO_DATA_PTR(JSNativeTraceInfo *, fs->call)->native
-             :
+                    (fs->flags & JSFUN_TRCINFO)
+                    ? JS_FUNC_TO_DATA_PTR(JSNativeTraceInfo *, fs->call)->native
+                    :
 #endif
-               Valueify(fs->call);
+                      Valueify(fs->call);
     return native(cx, argc, vp);
 }
 
@@ -5037,11 +5014,10 @@ JS_CallFunction(JSContext *cx, JSObject *obj, JSFunction *fun, uintN argc, jsval
                 jsval *rval)
 {
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
-    JSBool ok;
-
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, fun, JSValueArray(argv, argc));
-    ok = ExternalInvoke(cx, obj, ObjectValue(*fun), argc, Valueify(argv), Valueify(rval));
+    JSBool ok = ExternalInvoke(cx, ObjectOrNullValue(obj), ObjectValue(*fun), argc,
+                               Valueify(argv), Valueify(rval));
     LAST_FRAME_CHECKS(cx, ok);
     return ok;
 }
@@ -5056,9 +5032,11 @@ JS_CallFunctionName(JSContext *cx, JSObject *obj, const char *name, uintN argc, 
 
     AutoValueRooter tvr(cx);
     JSAtom *atom = js_Atomize(cx, name, strlen(name), 0);
-    JSBool ok = atom &&
-                js_GetMethod(cx, obj, ATOM_TO_JSID(atom), JSGET_NO_METHOD_BARRIER, tvr.addr()) &&
-                ExternalInvoke(cx, obj, tvr.value(), argc, Valueify(argv), Valueify(rval));
+    JSBool ok =
+        atom &&
+        js_GetMethod(cx, obj, ATOM_TO_JSID(atom), JSGET_NO_METHOD_BARRIER, tvr.addr()) &&
+        ExternalInvoke(cx, ObjectOrNullValue(obj), tvr.value(), argc, Valueify(argv),
+                       Valueify(rval));
     LAST_FRAME_CHECKS(cx, ok);
     return ok;
 }
@@ -5068,11 +5046,11 @@ JS_CallFunctionValue(JSContext *cx, JSObject *obj, jsval fval, uintN argc, jsval
                      jsval *rval)
 {
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
-    JSBool ok;
 
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, fval, JSValueArray(argv, argc));
-    ok = ExternalInvoke(cx, obj, Valueify(fval), argc, Valueify(argv), Valueify(rval));
+    JSBool ok = ExternalInvoke(cx, ObjectOrNullValue(obj), Valueify(fval), argc, Valueify(argv),
+                               Valueify(rval));
     LAST_FRAME_CHECKS(cx, ok);
     return ok;
 }

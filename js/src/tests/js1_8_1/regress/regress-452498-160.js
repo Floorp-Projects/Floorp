@@ -59,7 +59,7 @@ function test()
   reportCompare(expect, actual, summary + ': 1');
 
 // crash [@ js_Interpret]
-  (eval("(function(){ watch(\"x\", function () { new function ()y } ); const y });"))();
+  (eval("(function(){ this.watch(\"x\", function () { new function ()y } ); const y });"))();
   x = NaN;
   reportCompare(expect, actual, summary + ': 2');
 

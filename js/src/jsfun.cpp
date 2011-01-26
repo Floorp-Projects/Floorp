@@ -2051,7 +2051,7 @@ fun_toString(JSContext *cx, uintN argc, Value *vp)
     if (argc != 0 && !ValueToECMAUint32(cx, vp[2], &indent))
         return false;
 
-    JSObject *obj = ComputeThisFromVp(cx, vp);
+    JSObject *obj = ToObject(cx, &vp[1]);
     if (!obj)
         return false;
 
@@ -2069,7 +2069,7 @@ fun_toSource(JSContext *cx, uintN argc, Value *vp)
 {
     JS_ASSERT(IsFunctionObject(vp[0]));
 
-    JSObject *obj = ComputeThisFromVp(cx, vp);
+    JSObject *obj = ToObject(cx, &vp[1]);
     if (!obj)
         return false;
 
@@ -2086,15 +2086,10 @@ JSBool
 js_fun_call(JSContext *cx, uintN argc, Value *vp)
 {
     LeaveTrace(cx);
-
-    JSObject *obj = ComputeThisFromVp(cx, vp);
-    if (!obj)
-        return JS_FALSE;
     Value fval = vp[1];
 
     if (!js_IsCallable(fval)) {
-        JSString *str = js_ValueToString(cx, fval);
-        if (str) {
+        if (JSString *str = js_ValueToString(cx, fval)) {
             JSAutoByteString bytes(cx, str);
             if (!!bytes) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -2103,7 +2098,7 @@ js_fun_call(JSContext *cx, uintN argc, Value *vp)
                                      bytes.ptr());
             }
         }
-        return JS_FALSE;
+        return false;
     }
 
     Value *argv = vp + 2;
@@ -2136,10 +2131,6 @@ js_fun_call(JSContext *cx, uintN argc, Value *vp)
 JSBool
 js_fun_apply(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj = ComputeThisFromVp(cx, vp);
-    if (!obj)
-        return false;
-
     /* Step 1. */
     Value fval = vp[1];
     if (!js_IsCallable(fval)) {
@@ -2314,13 +2305,11 @@ static JSBool
 fun_bind(JSContext *cx, uintN argc, Value *vp)
 {
     /* Step 1. */
-    JSObject *target = ComputeThisFromVp(cx, vp);
-    if (!target)
-        return false;
+    Value &thisv = vp[1];
 
     /* Step 2. */
-    if (!target->isCallable()) {
-        if (JSString *str = js_ValueToString(cx, vp[1])) {
+    if (!js_IsCallable(thisv)) {
+        if (JSString *str = js_ValueToString(cx, thisv)) {
             JSAutoByteString bytes(cx, str);
             if (!!bytes) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -2330,6 +2319,8 @@ fun_bind(JSContext *cx, uintN argc, Value *vp)
         }
         return false;
     }
+
+    JSObject *target = &thisv.toObject();
 
     /* Step 3. */
     Value *args = NULL;

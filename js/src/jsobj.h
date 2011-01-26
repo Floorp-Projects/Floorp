@@ -1787,6 +1787,25 @@ js_PrimitiveToObject(JSContext *cx, js::Value *vp);
 extern JSBool
 js_ValueToObjectOrNull(JSContext *cx, const js::Value &v, JSObject **objp);
 
+namespace js {
+
+/*
+ * Invokes the ES5 ToObject algorithm on *vp, writing back the object to vp.
+ * If *vp might already be an object, use ToObject.
+ */
+extern JSObject *
+ToObjectSlow(JSContext *cx, js::Value *vp);
+
+JS_ALWAYS_INLINE JSObject *
+ToObject(JSContext *cx, js::Value *vp)
+{
+    if (vp->isObject())
+        return &vp->toObject();
+    return ToObjectSlow(cx, vp);
+}
+
+}
+
 /*
  * v and vp may alias. On successful return, vp->isObject(). If vp is not
  * rooted, the caller must root vp before the next possible GC.
