@@ -206,7 +206,7 @@ function GroupItem(listOfEls, options) {
   else {
     this.$titleShield
       .mousedown(function(e) {
-        self.lastMouseDownTarget = (Utils.isLeftClick(e) ? e.target : null);
+        self.lastMouseDownTarget = (Utils.isRightClick(e) ? null : e.target);
       })
       .mouseup(function(e) {
         var same = (e.target == self.lastMouseDownTarget);
@@ -1011,7 +1011,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       .data("xulTab", xulTab)
       .appendTo(this.$appTabTray)
       .click(function(event) {
-        if (!Utils.isLeftClick(event))
+        if (Utils.isRightClick(event))
           return;
 
         GroupItems.setActiveGroupItem(self);
