@@ -358,7 +358,8 @@ SearchEventHandlerClass.prototype = {
         event.keyCode == event.DOM_VK_SLEEP ||
         (event.keyCode >= event.DOM_VK_F1 &&
          event.keyCode <= event.DOM_VK_SCROLL_LOCK) ||
-        event.keyCode == event.DOM_VK_META) {
+        event.keyCode == event.DOM_VK_META ||
+        (!event.keyCode && !event.charCode)) {
       return;
     }
 
