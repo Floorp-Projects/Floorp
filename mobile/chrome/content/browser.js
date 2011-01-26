@@ -1292,21 +1292,20 @@ Browser.MainDragger.prototype = {
     let scaleX = this._scrollScales.x, scaleY = this._scrollScales.y;
     let contentScroll = Browser.getScrollboxPosition(Browser.contentScrollboxScroller);
     if (scaleX)
-      this._horizontalScrollbar.left = contentScroll.x * scaleX;
+      this._horizontalScrollbar.style.MozTransform = "translateX(" + Math.round(contentScroll.x * scaleX) + "px)";
 
     if (scaleY) {
-      const SCROLLER_MARGIN = 2;
-      this._verticalScrollbar.top = contentScroll.y * scaleY;
+      let y = Math.round(contentScroll.y * scaleY);
 
       // right scrollbar is out of view when showing the left sidebar,
       // the 'solution' for now is to reposition it if needed
+      let x = 0;
       if (Browser.floatedWhileDragging) {
         let [leftVis,,leftW,] = Browser.computeSidebarVisibility();
-        this._verticalScrollbar.setAttribute("right", Math.max(SCROLLER_MARGIN, leftW * leftVis + SCROLLER_MARGIN));
+        x = Math.round(Math.max(0, leftW * leftVis));
       }
-      else if (this._verticalScrollbar.getAttribute("right") != SCROLLER_MARGIN) {
-        this._verticalScrollbar.setAttribute("right", SCROLLER_MARGIN);
-      }
+
+      this._verticalScrollbar.style.MozTransform = "translate(" + x + "px," + y + "px)";
     }
   },
 
