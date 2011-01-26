@@ -24,3 +24,4 @@ script bug566661.js
 script iterator-in-catch.js
 script strict-function-statements.js
 skip-if(!xulRuntime.shell) script function-definition-with.js # needs evaluate()
+script extension-methods-reject-null-undefined-this.js

@@ -841,27 +841,13 @@ inline void
 PutActivationObjects(JSContext *cx, JSStackFrame *fp);
 
 /*
- * For a call with arguments argv including argv[-1] (nominal |this|) and
- * argv[-2] (callee) replace null |this| with callee's parent and replace
- * primitive values with the equivalent wrapper objects. argv[-1] must
- * not be JSVAL_VOID or an activation object.
+ * For a call's vp (which necessarily includes callee at vp[0] and the original
+ * specified |this| at vp[1]), convert null/undefined |this| into the global
+ * object for the callee and replace other primitives with boxed versions. The
+ * callee must not be strict mode code.
  */
 extern bool
-ComputeThisFromArgv(JSContext *cx, js::Value *argv);
-
-JS_ALWAYS_INLINE JSObject *
-ComputeThisFromVp(JSContext *cx, js::Value *vp)
-{
-    extern bool ComputeThisFromArgv(JSContext *, js::Value *);
-    return ComputeThisFromArgv(cx, vp + 2) ? &vp[1].toObject() : NULL;
-}
-
-JS_ALWAYS_INLINE bool
-ComputeThisFromVpInPlace(JSContext *cx, js::Value *vp)
-{
-    extern bool ComputeThisFromArgv(JSContext *, js::Value *);
-    return ComputeThisFromArgv(cx, vp + 2);
-}
+BoxThisForVp(JSContext *cx, js::Value *vp);
 
 /*
  * Abstracts the layout of the stack passed to natives from the engine and from
@@ -882,10 +868,6 @@ struct CallArgs
     Value *argv() const { return argv_; }
     uintN argc() const { return argc_; }
     Value &rval() const { return argv_[-2]; }
-
-    bool computeThis(JSContext *cx) const {
-        return ComputeThisFromArgv(cx, argv_);
-    }
 };
 
 /*
@@ -953,13 +935,6 @@ class InvokeSessionGuard;
 extern bool
 ExternalInvoke(JSContext *cx, const Value &thisv, const Value &fval,
                uintN argc, Value *argv, Value *rval);
-
-static JS_ALWAYS_INLINE bool
-ExternalInvoke(JSContext *cx, JSObject *obj, const Value &fval,
-               uintN argc, Value *argv, Value *rval)
-{
-    return ExternalInvoke(cx, ObjectOrNullValue(obj), fval, argc, argv, rval);
-}
 
 extern bool
 ExternalGetOrSet(JSContext *cx, JSObject *obj, jsid id, const Value &fval,

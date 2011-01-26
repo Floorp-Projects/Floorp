@@ -1181,6 +1181,20 @@ JS_THIS(JSContext *cx, jsval *vp)
 }
 #endif
 
+/*
+ * |this| is passed to functions in ES5 without change.  Functions themselves
+ * do any post-processing they desire to box |this|, compute the global object,
+ * &c.  Use this macro to retrieve a function's unboxed |this| value.
+ *
+ * This macro must not be used in conjunction with JS_THIS or JS_THIS_OBJECT,
+ * or vice versa.  Either use the provided this value with this macro, or
+ * compute the boxed this value using those.
+ *
+ * N.B. constructors must not use JS_THIS_VALUE, as no 'this' object has been
+ * created.
+ */
+#define JS_THIS_VALUE(cx,vp)    ((vp)[1])
+
 extern JS_PUBLIC_API(void *)
 JS_malloc(JSContext *cx, size_t nbytes);
 

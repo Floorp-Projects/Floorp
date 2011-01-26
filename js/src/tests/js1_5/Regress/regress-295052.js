@@ -44,6 +44,15 @@ var expect = 'No Crash';
 printBugNumber(BUGNUMBER);
 printStatus (summary);
 
-"".match.apply();
+try
+{
+  "".match.apply();
+  throw new Error("should have thrown for undefined this");
+}
+catch (e)
+{
+  assertEq(e instanceof TypeError, true,
+           "No TypeError for String.prototype.match");
+}
  
 reportCompare(expect, actual, summary);

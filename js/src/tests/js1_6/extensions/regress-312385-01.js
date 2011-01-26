@@ -42,6 +42,9 @@ var actual = '';
 var expect = true;
 var voids = [null, undefined];
 
+
+function noop() { }
+
 var generics = {
   String: [{ quote: [] },
 { substring: [] },
@@ -85,6 +88,8 @@ var generics = {
 printBugNumber(BUGNUMBER);
 printStatus (summary);
 
+var global = this;
+
 for (var c in generics)
 {
   var methods = generics[c];
@@ -96,59 +101,62 @@ for (var c in generics)
     {
       for (var v = 0; v < voids.length; v++)
       {
-        var lhs = c + '.' + methodname +
-          '(' + voids[v] + (method[methodname].length ?(', ' + method[methodname].toString()):'') + ')';
+        var Constructor = global[c]
 
-        var rhs = c + '.prototype.' + methodname +
-          '.apply(' + voids[v] + ', ' + method[methodname].toSource() + ')';
+        var argsLen = method[methodname].length;
+        assertEq(argsLen === 0 || argsLen === 1, true, "not all arities handled");
 
-        var expr = lhs + ' == ' + rhs;
-        printStatus('Testing ' + expr);
+        var generic = Constructor[methodname];
+        var prototypy = Constructor.prototype[methodname];
 
-        try
-        {
-          printStatus('lhs ' + lhs + ': ' + eval(lhs));
-        }
-        catch(ex)
-        {
-          printStatus(ex + '');
-        }
+        assertEq(typeof generic, "function");
+        assertEq(typeof prototypy, "function");
+
+        // GENERIC METHOD TESTING
 
         try
         {
-          printStatus('rhs ' + rhs + ': ' + eval(rhs));
+          switch (method[methodname].length)
+          {
+            case 0:
+              generic(voids[v]);
+              break;
+
+            case 1:
+              generic(voids[v], method[methodname][0]);
+              break;
+          }
+          throw new Error(c + "." + methodname + " must throw for null or " +
+                          "undefined first argument");
         }
-        catch(ex)
+        catch (e)
         {
-          printStatus(ex + '');
+          assertEq(e instanceof TypeError, true,
+                   "Didn't get a TypeError for " + c + "." + methodname +
+                   " called with null or undefined first argument");
         }
+
+
+        // PROTOTYPE METHOD TESTING
 
         try
         {
-          actual = comparelr(eval(lhs), eval(rhs));
+          prototypy.apply(voids[v], method[methodname][0]);
+          throw new Error(c + ".prototype." + methodname + " must throw " +
+                          "for null or undefined this");
         }
-        catch(ex)
+        catch (e)
         {
-          actual = ex + '';
+          assertEq(e instanceof TypeError, true,
+                   c + ".prototype." + methodname + "didn't throw a " +
+                   "TypeError when called with null or undefined this");
         }
-        reportCompare(expect, actual, expr);
-        printStatus('');
       }
     }
   }
 }
 
-function comparelr(lhs, rhs)
-{
- 
-  if (lhs.constructor.name != 'Array')
-  {
-    return (lhs == rhs);
-  }
+if (typeof reportCompare === "function")
+  reportCompare(true, true);
 
-  return (lhs.toSource() == rhs.toSource());
-}
-
-function noop()
-{
-}
+print("Tests finished.");

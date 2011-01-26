@@ -42,3 +42,5 @@ script vacuous-accessor-unqualified-name.js
 script add-property-non-extensible.js
 skip-if(!xulRuntime.shell) script freeze-global-eval-const.js # uses evalcx
 script preventExtensions-idempotent.js
+script isPrototypeOf.js
+script propertyIsEnumerable.js

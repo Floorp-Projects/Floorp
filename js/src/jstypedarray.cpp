@@ -824,10 +824,11 @@ class TypedArrayTemplate
     static JSBool
     fun_slice(JSContext *cx, uintN argc, Value *vp)
     {
-        Value *argv = JS_ARGV(cx, vp);
-        JSObject *obj = ComputeThisFromVp(cx, vp);
+        JSObject *obj = ToObject(cx, &vp[1]);
+        if (!obj)
+            return false;
 
-        if (!InstanceOf(cx, obj, ThisTypeArray::fastClass(), vp+2))
+        if (!InstanceOf(cx, obj, ThisTypeArray::fastClass(), vp + 2))
             return false;
 
         if (obj->getClass() != fastClass()) {
@@ -847,6 +848,7 @@ class TypedArrayTemplate
         int32_t length = int32(tarray->length);
 
         if (argc > 0) {
+            Value *argv = JS_ARGV(cx, vp);
             if (!ValueToInt32(cx, argv[0], &begin))
                 return false;
             if (begin < 0) {
@@ -898,10 +900,11 @@ class TypedArrayTemplate
     static JSBool
     fun_set(JSContext *cx, uintN argc, Value *vp)
     {
-        Value *argv = JS_ARGV(cx, vp);
-        JSObject *obj = ComputeThisFromVp(cx, vp);
+        JSObject *obj = ToObject(cx, &vp[1]);
+        if (!obj)
+            return false;
 
-        if (!InstanceOf(cx, obj, ThisTypeArray::fastClass(), vp+2))
+        if (!InstanceOf(cx, obj, ThisTypeArray::fastClass(), vp + 2))
             return false;
 
         if (obj->getClass() != fastClass()) {
@@ -919,6 +922,7 @@ class TypedArrayTemplate
         // these are the default values
         int32_t offset = 0;
 
+        Value *argv = JS_ARGV(cx, vp);
         if (argc > 1) {
             if (!ValueToInt32(cx, argv[1], &offset))
                 return false;
