@@ -96,43 +96,43 @@ for (var c in generics)
     {
       for (var v = 0; v < voids.length; v++)
       {
-	var lhs = c + '.' + methodname +
-	  '(' + voids[v] + (method[methodname].length ?(', ' + method[methodname].toString()):'') + ')';
+        var lhs = c + '.' + methodname +
+          '(' + voids[v] + (method[methodname].length ?(', ' + method[methodname].toString()):'') + ')';
 
-	var rhs = c + '.prototype.' + methodname +
-	  '.apply(' + voids[v] + ', ' + method[methodname].toSource() + ')';
+        var rhs = c + '.prototype.' + methodname +
+          '.apply(' + voids[v] + ', ' + method[methodname].toSource() + ')';
 
-	var expr = lhs + ' == ' + rhs;
-	printStatus('Testing ' + expr);
+        var expr = lhs + ' == ' + rhs;
+        printStatus('Testing ' + expr);
 
-	try
-	{
-	  printStatus('lhs ' + lhs + ': ' + eval(lhs));
-	}
-	catch(ex)
-	{
-	  printStatus(ex + '');
-	}
+        try
+        {
+          printStatus('lhs ' + lhs + ': ' + eval(lhs));
+        }
+        catch(ex)
+        {
+          printStatus(ex + '');
+        }
 
-	try
-	{
-	  printStatus('rhs ' + rhs + ': ' + eval(rhs));
-	}
-	catch(ex)
-	{
-	  printStatus(ex + '');
-	}
+        try
+        {
+          printStatus('rhs ' + rhs + ': ' + eval(rhs));
+        }
+        catch(ex)
+        {
+          printStatus(ex + '');
+        }
 
-	try
-	{
-	  actual = comparelr(eval(lhs), eval(rhs));
-	}
-	catch(ex)
-	{
-	  actual = ex + '';
-	}
-	reportCompare(expect, actual, expr);
-	printStatus('');
+        try
+        {
+          actual = comparelr(eval(lhs), eval(rhs));
+        }
+        catch(ex)
+        {
+          actual = ex + '';
+        }
+        reportCompare(expect, actual, expr);
+        printStatus('');
       }
     }
   }
