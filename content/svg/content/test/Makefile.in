@@ -65,6 +65,7 @@ _TEST_FILES = \
 		test_isSupported.xhtml \
 		test_nonAnimStrings.xhtml \
 		test_pathSeg.xhtml \
+		test_pointer-events.xhtml \
 		test_pointer-events-2.xhtml \
 		test_scientific.html \
 		scientific-helper.svg \
