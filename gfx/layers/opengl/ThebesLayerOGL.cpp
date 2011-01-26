@@ -693,18 +693,14 @@ ThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer,
 
     LayerManager::DrawThebesLayerCallback callback =
       mOGLManager->GetThebesLayerCallback();
-    if (!callback) {
-      NS_ERROR("GL should never need to update ThebesLayers in an empty transaction");
-    } else {
-      void* callbackData = mOGLManager->GetThebesLayerCallbackData();
-      callback(this, state.mContext, state.mRegionToDraw,
-               state.mRegionToInvalidate, callbackData);
-      // Everything that's visible has been validated. Do this instead of
-      // OR-ing with aRegionToDraw, since that can lead to a very complex region
-      // here (OR doesn't automatically simplify to the simplest possible
-      // representation of a region.)
-      mValidRegion.Or(mValidRegion, mVisibleRegion);
-    }
+    void* callbackData = mOGLManager->GetThebesLayerCallbackData();
+    callback(this, state.mContext, state.mRegionToDraw,
+             state.mRegionToInvalidate, callbackData);
+    // Everything that's visible has been validated. Do this instead of
+    // OR-ing with aRegionToDraw, since that can lead to a very complex region
+    // here (OR doesn't automatically simplify to the simplest possible
+    // representation of a region.)
+    mValidRegion.Or(mValidRegion, mVisibleRegion);
   }
 
   DEBUG_GL_ERROR_CHECK(gl());

@@ -136,7 +136,6 @@ public:
 
   void EndConstruction();
 
-  virtual bool EndEmptyTransaction();
   virtual void EndTransaction(DrawThebesLayerCallback aCallback,
                               void* aCallbackData);
 
