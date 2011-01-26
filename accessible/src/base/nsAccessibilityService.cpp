@@ -1247,7 +1247,7 @@ nsAccessibilityService::GetAccessibleByRule(nsINode* aNode,
 
   if (aWhatToGet & eGetAccForNode) {
     nsAccessible* cachedAcc = GetCachedAccessible(aNode, aWeakShell);
-    if (cachedAcc && cachedAcc->IsBoundToParent())
+    if (cachedAcc && (cachedAcc->IsBoundToParent() || cachedAcc->IsDocument()))
       return cachedAcc;
   }
 
