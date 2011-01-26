@@ -15434,6 +15434,9 @@ TraceRecorder::record_JSOP_LAMBDA()
     JSFunction* fun;
     fun = cx->fp()->script()->getFunction(getFullIndex());
 
+    if (FUN_NULL_CLOSURE(fun) && FUN_OBJECT(fun)->getParent() != globalObj)
+        RETURN_STOP_A("Null closure function object parent must be global object");
+
     /*
      * Emit code to clone a null closure parented by this recorder's global
      * object, in order to preserve function object evaluation rules observable
@@ -15445,10 +15448,7 @@ TraceRecorder::record_JSOP_LAMBDA()
      * JSOP_INITMETHOD logic governing the early ARECORD_CONTINUE returns below
      * must agree with the corresponding break-from-do-while(0) logic there.
      */
-    if (FUN_NULL_CLOSURE(fun)) {
-        if (FUN_OBJECT(fun)->getParent() != globalObj)
-            RETURN_STOP_A("Null closure function object parent must be global object");
-
+    if (FUN_NULL_CLOSURE(fun) && FUN_OBJECT(fun)->getParent() == &cx->fp()->scopeChain()) {
         jsbytecode *pc2 = AdvanceOverBlockchainOp(cx->regs->pc + JSOP_LAMBDA_LENGTH);
         JSOp op2 = JSOp(*pc2);
 
