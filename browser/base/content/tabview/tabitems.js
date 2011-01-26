@@ -738,7 +738,7 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       top:    orig.top    * (1 - 1/scaleCheat),
       left:   orig.left   * (1 - 1/scaleCheat),
       width:  zoomWidth,
-      height: (orig.width ? orig.height * zoomWidth / orig.width : 0)
+      height: orig.height * zoomWidth / orig.width
     };
   },
 
