@@ -836,7 +836,6 @@
                 <xul:label class="update-postfix" value="&addon.update.postfix;"/>
                 <xul:spacer flex="5000"/> <!-- Necessary to make the name crop -->
               </xul:hbox>
-              <xul:label anonid="creator" class="creator"/>
             </xul:vbox>
             <xul:label anonid="date-updated" class="date-updated"
                        unknown="&addon.unknownDate;"/>
@@ -982,10 +981,6 @@
         document.getAnonymousElementByAttribute(this, "anonid",
                                                 "info");
       </field>
-      <field name="_creator">
-        document.getAnonymousElementByAttribute(this, "anonid",
-                                                "creator");
-      </field>
       <field name="_version">
         document.getAnonymousElementByAttribute(this, "anonid", "version");
       </field>
@@ -1103,8 +1098,6 @@
             this._version.value = this.mAddon.version;
           else
             this._version.hidden = true;
-
-          this._creator.setCreator(this.mAddon.creator);
 
           if (this.mAddon.description)
             this._description.value = this.mAddon.description;
