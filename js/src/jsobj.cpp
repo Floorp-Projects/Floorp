@@ -2113,37 +2113,25 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropDesc &desc,
              */
             if (shape->isDataDescriptor()) {
                 /*
-                 * Non-standard: if the property is non-configurable and is
-                 * represented by a native getter or setter, don't permit
-                 * redefinition.  We expose properties with native getter/setter
-                 * as though they were data properties, for the most part, but
-                 * in this particular case we must worry about integrity
-                 * concerns for JSAPI users who expected that
-                 * permanent+getter/setter means precisely controlled behavior.
-                 * If we permitted such redefinitions, such a property could be
-                 * "fixed" to some specific previous value, no longer varying
-                 * according to the intent of the native getter/setter for the
-                 * property.
+                 * We must rule out a non-configurable js::PropertyOp-guarded
+                 * property becoming a writable unguarded data property, since
+                 * such a property can have its value changed to one the getter
+                 * and setter preclude.
                  *
-                 * Other engines expose properties of this nature using ECMA
-                 * getter/setter pairs, but we can't because we use them even
-                 * for properties which ECMA specifies as being true data
-                 * descriptors ([].length, Function.length, /regex/.lastIndex,
-                 * &c.).  Longer-term perhaps we should convert such properties
-                 * to use data descriptors (at which point representing a
-                 * descriptor with native getter/setter as an accessor
-                 * descriptor would be fine) and take a small memory hit, but
-                 * for now we'll simply forbid their redefinition.
+                 * A desc lacking writable but with value is a data descriptor
+                 * and we must reject it as if it had writable: true if current
+                 * is writable.
                  */
                 if (!shape->configurable() &&
-                    (!shape->hasDefaultGetter() || !shape->hasDefaultSetter())) {
+                    (!shape->hasDefaultGetter() || !shape->hasDefaultSetter()) &&
+                    desc.isDataDescriptor() &&
+                    (desc.hasWritable ? desc.writable() : shape->writable()))
+                {
                     return Reject(cx, JSMSG_CANT_REDEFINE_PROP, throwError, desc.id, rval);
                 }
 
-                if (!js_NativeGet(cx, obj, obj2, shape, JSGET_NO_METHOD_BARRIER, &v)) {
-                    /* current was dropped when the failure occurred. */
+                if (!js_NativeGet(cx, obj, obj2, shape, JSGET_NO_METHOD_BARRIER, &v))
                     return JS_FALSE;
-                }
             }
 
             if (desc.isDataDescriptor()) {
