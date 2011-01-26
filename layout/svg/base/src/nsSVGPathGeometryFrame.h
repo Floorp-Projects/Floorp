@@ -54,7 +54,7 @@ typedef nsSVGGeometryFrame nsSVGPathGeometryFrameBase;
 
 #define HITTEST_MASK_FILL        0x01
 #define HITTEST_MASK_STROKE      0x02
-#define HITTEST_MASK_FORCE_TEST  0x04
+#define HITTEST_MASK_CHECK_MRECT 0x04
 
 class nsSVGPathGeometryFrame : public nsSVGPathGeometryFrameBase,
                                public nsISVGChildFrame

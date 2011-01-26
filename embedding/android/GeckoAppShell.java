@@ -97,6 +97,7 @@ class GeckoAppShell
     public static native void putenv(String map);
     public static native void onResume();
     public static native void onLowMemory();
+    public static native void onCriticalOOM();
     public static native void callObserver(String observerKey, String topic, String data);
     public static native void removeObserver(String observerKey);
     public static native void loadLibs(String apkName, boolean shouldExtract);

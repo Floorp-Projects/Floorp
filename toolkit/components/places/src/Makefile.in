@@ -82,6 +82,12 @@ EXTRA_DSO_LDOPTS += \
 	$(MOZ_COMPONENT_LIBS) \
 	$(NULL)
 
+ifndef MOZ_ENABLE_LIBXUL
+EXTRA_DSO_LDOPTS += \
+	$(MOZ_JS_LIBS) \
+	$(NULL)
+endif
+
 LOCAL_INCLUDES += -I$(srcdir)/../../build
 
 # This is the default value.  Must be in sync with the one defined in SQLite.

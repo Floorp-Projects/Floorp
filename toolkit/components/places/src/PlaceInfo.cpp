@@ -38,7 +38,8 @@
 #include "PlaceInfo.h"
 #include "VisitInfo.h"
 #include "nsIURI.h"
-#include "nsContentUtils.h"
+#include "nsServiceManagerUtils.h"
+#include "nsIXPConnect.h"
 
 namespace mozilla {
 namespace places {
@@ -112,12 +113,22 @@ PlaceInfo::GetVisits(JSContext* aContext,
   JSObject* global = JS_GetGlobalForScopeChain(aContext);
   NS_ENSURE_TRUE(global, NS_ERROR_UNEXPECTED);
 
+  static NS_DEFINE_CID(kXPConnectCID, NS_XPCONNECT_CID);
+  nsresult rv;
+  nsCOMPtr<nsIXPConnect> xpc(do_GetService(kXPConnectCID, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   for (VisitsArray::size_type idx = 0; idx < mVisits.Length(); idx++) {
-    jsval wrappedVisit;
-    nsresult rv = nsContentUtils::WrapNative(aContext, global, mVisits[idx],
-                                             &NS_GET_IID(mozIVisitInfo),
-                                             &wrappedVisit);
+    nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
+    rv = xpc->WrapNative(aContext, global, mVisits[idx],
+                         NS_GET_IID(mozIVisitInfo),
+                         getter_AddRefs(wrapper));
     NS_ENSURE_SUCCESS(rv, rv);
+
+    JSObject* jsobj;
+    rv = wrapper->GetJSObject(&jsobj);
+    NS_ENSURE_SUCCESS(rv, rv);
+    jsval wrappedVisit = OBJECT_TO_JSVAL(jsobj);
 
     JSBool rc = JS_SetElement(aContext, visits, idx, &wrappedVisit);
     NS_ENSURE_TRUE(rc, NS_ERROR_UNEXPECTED);

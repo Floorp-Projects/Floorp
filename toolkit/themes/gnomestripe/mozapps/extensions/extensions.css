@@ -195,6 +195,8 @@
 }
 
 .category[disabled] {
+  border-top: 0;
+  border-bottom: 0;
   height: 0;
   opacity: 0;
   -moz-transition-property: height, opacity;
@@ -211,7 +213,6 @@
   background-color: -moz-Field;
   color: -moz-FieldText;
   border-color: ThreeDShadow;
-  font-weight: bold;
 }
 
 .category-name {

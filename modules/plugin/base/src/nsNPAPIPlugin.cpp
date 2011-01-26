@@ -2234,6 +2234,11 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
 
     return NPERR_NO_ERROR;
   }
+
+  case NPNVsupportsUpdatedCocoaTextInputBool: {
+    *(NPBool*)result = true;
+    return NPERR_NO_ERROR;
+  }
 #endif
 
   // we no longer hand out any XPCOM objects, except on WINCE,

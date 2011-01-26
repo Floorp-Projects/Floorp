@@ -20,6 +20,9 @@ skip-if(winWidget) == textarea-resize-background.html textarea-resize-background
 != textarea-in-ltr-doc-scrollbar.html textarea-in-rtl-doc-scrollbar.html
 != textarea-ltr.html textarea-no-resize.html
 != textarea-rtl.html textarea-no-resize.html
+== textarea-rtl.html textarea-rtl-dynamic-attr.html
+== textarea-rtl.html textarea-rtl-dynamic-style.html
+== textarea-rtl.html textarea-in-dynamic-rtl-doc.html
 == textarea-setvalue-framereconstruction-1.html textarea-setvalue-framereconstruction-ref.html
 
 == radio-label-dynamic.html radio-label-dynamic-ref.html

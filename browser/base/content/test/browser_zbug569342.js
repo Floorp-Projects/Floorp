@@ -4,45 +4,60 @@
 
 var gTab = null;
 
-function cleanUp() {
-  gBrowser.removeTab(gTab);
-  finish();
-}
-
-// function borrowed from browser_bug386835.js
-function load(tab, url, cb) {
-  tab.linkedBrowser.addEventListener("load", function (event) {
-    event.currentTarget.removeEventListener("load", arguments.callee, true);
+function load(url, cb) {
+  gTab = gBrowser.addTab(url);
+  gBrowser.addEventListener("load", function (event) {
+    gBrowser.removeEventListener("load", arguments.callee, true);
+    // Trigger onLocationChange by switching tabs.
+    gBrowser.selectedTab = gTab;
     cb();
   }, true);
-  tab.linkedBrowser.loadURI(url);
 }
 
 function test() {
   waitForExplicitFinish();
 
-  gTab = gBrowser.selectedTab = gBrowser.addTab();
   ok(gFindBar.hidden, "Find bar should not be visible");
 
   run_test_1();
 }
 
 function run_test_1() {
-  load(gTab, "about:config", function() {
+  load("about:config", function() {
     ok(gFindBar.hidden, "Find bar should not be visible");
     EventUtils.synthesizeKey("/", {}, gTab.linkedBrowser.contentWindow);
     ok(gFindBar.hidden, "Find bar should not be visible");
+    EventUtils.synthesizeKey("f", { accelKey: true });
+    ok(gFindBar.hidden, "Find bar should not be visible");
+    ok(document.getElementById("cmd_find").getAttribute("disabled"),
+       "Find command should be disabled");
 
+    gBrowser.removeTab(gTab);
     run_test_2();
   });
 }
 
 function run_test_2() {
-  load(gTab, "about:addons", function() {
+  load("about:addons", function() {
     ok(gFindBar.hidden, "Find bar should not be visible");
     EventUtils.synthesizeKey("/", {}, gTab.linkedBrowser.contentWindow);
     ok(gFindBar.hidden, "Find bar should not be visible");
+    EventUtils.synthesizeKey("f", { accelKey: true });
+    ok(gFindBar.hidden, "Find bar should not be visible");
+    ok(document.getElementById("cmd_find").getAttribute("disabled"),
+       "Find command should be disabled");
 
-    cleanUp();
+    gBrowser.removeTab(gTab);
+    run_test_3();
+  });
+}
+
+function run_test_3() {
+  load("about:blank", function() {
+    ok(!document.getElementById("cmd_find").getAttribute("disabled"),
+       "Find command should not be disabled");
+
+    gBrowser.removeTab(gTab);
+    finish();
   });
 }

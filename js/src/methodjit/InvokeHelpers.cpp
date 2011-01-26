@@ -920,9 +920,9 @@ UpdateTraceHintSingle(Repatcher &repatcher, JSC::CodeLocationJump jump, JSC::Cod
 }
 
 static void
-DisableTraceHint(VMFrame &f, ic::TraceICInfo &ic)
+DisableTraceHint(JITScript *jit, ic::TraceICInfo &ic)
 {
-    Repatcher repatcher(f.jit());
+    Repatcher repatcher(jit);
     UpdateTraceHintSingle(repatcher, ic.traceHint, ic.jumpTarget);
 
     if (ic.hasSlowTraceHint)
@@ -1021,7 +1021,7 @@ RunTracer(VMFrame &f)
 #if JS_MONOIC
     ic.loopCounterStart = *loopCounter;
     if (blacklist)
-        DisableTraceHint(f, ic);
+        DisableTraceHint(entryFrame->jit(), ic);
 #endif
 
     // Even though ExecuteTree() bypasses the interpreter, it should propagate

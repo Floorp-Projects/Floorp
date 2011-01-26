@@ -51,8 +51,8 @@ class gfxSharedImageSurface;
 namespace mozilla {
 namespace layers {
 
-struct Edit;
-struct EditReply;
+class Edit;
+class EditReply;
 class OptionalThebesBuffer;
 class PLayerChild;
 class PLayersChild;

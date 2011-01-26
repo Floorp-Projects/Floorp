@@ -78,6 +78,10 @@
     ${EndIf}
   ${EndIf}
 
+  ; Migrate the application's Start Menu directory to a single shortcut in the
+  ; root of the Start Menu Programs directory.
+  ${MigrateStartMenuShortcut}
+
   ${RemoveDeprecatedKeys}
 
   ${SetAppKeys}
@@ -126,9 +130,28 @@
     ${If} "$0" == ""
       ShellLink::GetShortCutTarget "$DESKTOP\${BrandFullName}.lnk"
       Pop $0
-      ; Needs to handle short paths
+      ${GetLongPath} "$0" $0
       ${If} "$0" == "$INSTDIR\${FileMainEXE}"
         Delete "$DESKTOP\${BrandFullName}.lnk"
+      ${EndIf}
+    ${EndIf}
+  ${EndIf}
+
+  SetShellVarContext all  ; Set $SMPROGRAMS to All Users
+  ${Unless} ${FileExists} "$SMPROGRAMS\${BrandFullName}.lnk"
+    SetShellVarContext current  ; Set $SMPROGRAMS to the current user's Start
+                                ; Menu Programs directory
+  ${EndUnless}
+
+  ${If} ${FileExists} "$SMPROGRAMS\${BrandFullName}.lnk"
+    ShellLink::GetShortCutArgs "$SMPROGRAMS\${BrandFullName}.lnk"
+    Pop $0
+    ${If} "$0" == ""
+      ShellLink::GetShortCutTarget "$SMPROGRAMS\${BrandFullName}.lnk"
+      Pop $0
+      ${GetLongPath} "$0" $0
+      ${If} "$0" == "$INSTDIR\${FileMainEXE}"
+        Delete "$SMPROGRAMS\${BrandFullName}.lnk"
       ${EndIf}
     ${EndIf}
   ${EndIf}
@@ -139,7 +162,7 @@
     ${If} "$0" == ""
       ShellLink::GetShortCutTarget "$QUICKLAUNCH\${BrandFullName}.lnk"
       Pop $0
-      ; Needs to handle short paths
+      ${GetLongPath} "$0" $0
       ${If} "$0" == "$INSTDIR\${FileMainEXE}"
         Delete "$QUICKLAUNCH\${BrandFullName}.lnk"
       ${EndIf}
@@ -154,24 +177,51 @@
   ${StrFilter} "${FileMainEXE}" "+" "" "" $0
   StrCpy $R1 "Software\Clients\StartMenuInternet\$0\InstallInfo"
   WriteRegDWORD HKLM "$R1" "IconsVisible" 1
+
   SetShellVarContext all  ; Set $DESKTOP to All Users
   ${Unless} ${FileExists} "$DESKTOP\${BrandFullName}.lnk"
-    CreateShortCut "$DESKTOP\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}" "" "$INSTDIR\${FileMainEXE}" 0
-    ApplicationID::Set "$DESKTOP\${BrandFullName}.lnk" "${AppUserModelID}"
+    CreateShortCut "$DESKTOP\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}" \
+                   "" "$INSTDIR\${FileMainEXE}" 0
     ShellLink::SetShortCutWorkingDirectory "$DESKTOP\${BrandFullName}.lnk" "$INSTDIR"
+    ApplicationID::Set "$DESKTOP\${BrandFullName}.lnk" "${AppUserModelID}"
     ${Unless} ${FileExists} "$DESKTOP\${BrandFullName}.lnk"
       SetShellVarContext current  ; Set $DESKTOP to the current user's desktop
       ${Unless} ${FileExists} "$DESKTOP\${BrandFullName}.lnk"
-        CreateShortCut "$DESKTOP\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}" "" "$INSTDIR\${FileMainEXE}" 0
+        CreateShortCut "$DESKTOP\${BrandFullName}.lnk" \
+                       "$INSTDIR\${FileMainEXE}" "" "$INSTDIR\${FileMainEXE}" 0
+        ShellLink::SetShortCutWorkingDirectory "$DESKTOP\${BrandFullName}.lnk" \
+                                               "$INSTDIR"
         ApplicationID::Set "$DESKTOP\${BrandFullName}.lnk" "${AppUserModelID}"
-        ShellLink::SetShortCutWorkingDirectory "$DESKTOP\${BrandFullName}.lnk" "$INSTDIR"
       ${EndUnless}
     ${EndUnless}
   ${EndUnless}
+
+  SetShellVarContext all  ; Set $DESKTOP to All Users
+  ${Unless} ${FileExists} "$SMPROGRAMS\${BrandFullName}.lnk"
+    CreateShortCut "$SMPROGRAMS\${BrandFullName}.lnk" \
+                   "$INSTDIR\${FileMainEXE}" "" "$INSTDIR\${FileMainEXE}" 0
+    ShellLink::SetShortCutWorkingDirectory "$SMPROGRAMS\${BrandFullName}.lnk" \
+                                           "$INSTDIR"
+    ApplicationID::Set "$SMPROGRAMS\${BrandFullName}.lnk" "${AppUserModelID}"
+    ${Unless} ${FileExists} "$SMPROGRAMS\${BrandFullName}.lnk"
+      SetShellVarContext current  ; Set $SMPROGRAMS to the current user's Start
+                                  ; Menu Programs directory
+      ${Unless} ${FileExists} "$SMPROGRAMS\${BrandFullName}.lnk"
+        CreateShortCut "$SMPROGRAMS\${BrandFullName}.lnk" \
+                       "$INSTDIR\${FileMainEXE}" "" "$INSTDIR\${FileMainEXE}" 0
+        ShellLink::SetShortCutWorkingDirectory "$SMPROGRAMS\${BrandFullName}.lnk" \
+                                               "$INSTDIR"
+        ApplicationID::Set "$SMPROGRAMS\${BrandFullName}.lnk" "${AppUserModelID}"
+      ${EndUnless}
+    ${EndUnless}
+  ${EndUnless}
+
   ${Unless} ${FileExists} "$QUICKLAUNCH\${BrandFullName}.lnk"
-    CreateShortCut "$QUICKLAUNCH\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}" "" "$INSTDIR\${FileMainEXE}" 0
+    CreateShortCut "$QUICKLAUNCH\${BrandFullName}.lnk" \
+                   "$INSTDIR\${FileMainEXE}" "" "$INSTDIR\${FileMainEXE}" 0
+    ShellLink::SetShortCutWorkingDirectory "$QUICKLAUNCH\${BrandFullName}.lnk" \
+                                           "$INSTDIR"
     ApplicationID::Set "$QUICKLAUNCH\${BrandFullName}.lnk" "${AppUserModelID}"
-    ShellLink::SetShortCutWorkingDirectory "$QUICKLAUNCH\${BrandFullName}.lnk" "$INSTDIR"
   ${EndUnless}
 !macroend
 !define ShowShortcuts "!insertmacro ShowShortcuts"
@@ -612,29 +662,114 @@
 !macroend
 !define RemoveDeprecatedFiles "!insertmacro RemoveDeprecatedFiles"
 
+; Adds a shortcut to the root of the Start Menu Programs directory if the
+; application's Start Menu Programs directory exists with a shortcut pointing to
+; this installation directory. This will also remove the old shortcuts and the
+; application's Start Menu Programs directory by calling the RemoveStartMenuDir
+; macro.
+!macro MigrateStartMenuShortcut
+  ${GetShortcutsLogPath} $0
+  ${If} ${FileExists} "$0"
+    ClearErrors
+    ReadINIStr $5 "$0" "SMPROGRAMS" "RelativePathToDir"
+    ${Unless} ${Errors}
+      ClearErrors
+      ReadINIStr $1 "$0" "STARTMENU" "Shortcut0"
+      ${If} ${Errors}
+        ; The STARTMENU ini section doesn't exist.
+        ${LogStartMenuShortcut} "${BrandFullName}.lnk"
+        ${GetLongPath} "$SMPROGRAMS" $2
+        ${GetLongPath} "$2\$5" $1
+        ${If} "$1" != ""
+          ClearErrors
+          ReadINIStr $3 "$0" "SMPROGRAMS" "Shortcut0"
+          ${Unless} ${Errors}
+            ${If} ${FileExists} "$1\$3"
+              ShellLink::GetShortCutTarget "$1\$3"
+              Pop $4
+              ${If} "$INSTDIR\${FileMainEXE}" == "$4"
+                CreateShortCut "$SMPROGRAMS\${BrandFullName}.lnk" \
+                               "$INSTDIR\${FileMainEXE}" "" \
+                               "$INSTDIR\${FileMainEXE}" 0
+                ShellLink::SetShortCutWorkingDirectory "$SMPROGRAMS\${BrandFullName}.lnk" \
+                                                       "$INSTDIR"
+                ApplicationID::Set "$SMPROGRAMS\${BrandFullName}.lnk" \
+                                   "${AppUserModelID}"
+              ${EndIf}
+            ${EndIf}
+          ${EndUnless}
+        ${EndIf}
+      ${EndIf}
+      ; Remove the application's Start Menu Programs directory, shortcuts, and
+      ; ini section.
+      ${RemoveStartMenuDir}
+    ${EndUnless}
+  ${EndIf}
+!macroend
+!define MigrateStartMenuShortcut "!insertmacro MigrateStartMenuShortcut"
+
+; Removes the application's start menu directory along with its shortcuts if
+; they exist and if they exist creates a start menu shortcut in the root of the
+; start menu directory (bug 598779). If the application's start menu directory
+; is not empty after removing the shortucts the directory will not be removed
+; since these additional items were not created by the installer (uses SHCTX).
+!macro RemoveStartMenuDir
+  ${GetShortcutsLogPath} $0
+  ${If} ${FileExists} "$0"
+    ; Delete Start Menu Programs shortcuts, directory if it is empty, and
+    ; parent directories if they are empty up to but not including the start
+    ; menu directory.
+    ${GetLongPath} "$SMPROGRAMS" $1
+    ClearErrors
+    ReadINIStr $2 "$0" "SMPROGRAMS" "RelativePathToDir"
+    ${Unless} ${Errors}
+      ${GetLongPath} "$1\$2" $2
+      ${If} "$2" != ""
+        ; Delete shortucts in the Start Menu Programs directory.
+        StrCpy $3 0
+        ${Do}
+          ClearErrors
+          ReadINIStr $4 "$0" "SMPROGRAMS" "Shortcut$3"
+          ; Stop if there are no more entries
+          ${If} ${Errors}
+            ${ExitDo}
+          ${EndIf}
+          ${If} ${FileExists} "$2\$4"
+            ShellLink::GetShortCutTarget "$2\$4"
+            Pop $5
+            ${If} "$INSTDIR\${FileMainEXE}" == "$5"
+              Delete "$2\$4"
+            ${EndIf}
+          ${EndIf}
+          IntOp $3 $3 + 1 ; Increment the counter
+        ${Loop}
+        ; Delete Start Menu Programs directory and parent directories
+        ${Do}
+          ; Stop if the current directory is the start menu directory
+          ${If} "$1" == "$2"
+            ${ExitDo}
+          ${EndIf}
+          ClearErrors
+          RmDir "$2"
+          ; Stop if removing the directory failed
+          ${If} ${Errors}
+            ${ExitDo}
+          ${EndIf}
+          ${GetParent} "$2" $2
+        ${Loop}
+      ${EndIf}
+      DeleteINISec "$0" "SMPROGRAMS"
+    ${EndUnless}
+  ${EndIf}
+!macroend
+!define RemoveStartMenuDir "!insertmacro RemoveStartMenuDir"
+
 ; Creates the shortcuts log ini file with the appropriate entries if it doesn't
 ; already exist.
 !macro CreateShortcutsLog
   ${GetShortcutsLogPath} $0
   ${Unless} ${FileExists} "$0"
-    ; Default to ${BrandFullName} for the Start Menu Folder
-    StrCpy $TmpVal "${BrandFullName}"
-    ; Prior to Firefox 3.1 the Start Menu directory was written to the registry and
-    ; this value can be used to set the Start Menu directory.
-    ClearErrors
-    ReadRegStr $0 SHCTX "Software\Mozilla\${BrandFullNameInternal}\${AppVersion} (${AB_CD})\Main" "Start Menu Folder"
-    ${If} ${Errors}
-      ${FindSMProgramsDir} $0
-      ${If} "$0" != ""
-        StrCpy $TmpVal "$0"
-      ${EndIf}
-    ${Else}
-      StrCpy $TmpVal "$0"
-    ${EndUnless}
-
-    ${LogSMProgramsDirRelPath} "$TmpVal"
-    ${LogSMProgramsShortcut} "${BrandFullName}.lnk"
-    ${LogSMProgramsShortcut} "${BrandFullName} ($(SAFE_MODE)).lnk"
+    ${LogStartMenuShortcut} "${BrandFullName}.lnk"
     ${LogQuickLaunchShortcut} "${BrandFullName}.lnk"
     ${LogDesktopShortcut} "${BrandFullName}.lnk"
   ${EndUnless}

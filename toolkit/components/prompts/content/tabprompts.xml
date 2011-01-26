@@ -116,14 +116,23 @@
             this.ui.button3.addEventListener("command", this.onButtonClick.bind(this, 3), false);
             // Anonymous wrapper used here because |Dialog| doesn't exist until init() is called!
             this.ui.checkbox.addEventListener("command", function() { self.Dialog.onCheckbox(); } , false);
+            this.isLive = false;
         ]]>
         </constructor>
+        <destructor>
+        <![CDATA[
+            if (this.isLive) {
+                this.shutdownPrompt();
+            }
+        ]]>  
+        </destructor>
 
         <field name="ui"/>
         <field name="args"/>
         <field name="linkedTab"/>
         <field name="onCloseCallback"/>
         <field name="Dialog"/>
+        <field name="isLive"/>
 
         <method name="init">
             <parameter name="args"/>
@@ -141,6 +150,7 @@
                 // We need to remove the prompt when the tab or browser window is closed or
                 // the page navigates, else we never unwind the event loop and that's sad times.
                 // Remember to cleanup in shutdownPrompt()!
+                this.isLive = true;
                 linkedTab.addEventListener("TabClose", this, false);
                 window.addEventListener("unload", this, false);
                 this.args.domWindow.addEventListener("pagehide", this, false);
@@ -167,6 +177,7 @@
                 } catch(e) { }
                 // invoke callback
                 this.onCloseCallback();
+                this.isLive = false;
             ]]>
             </body>
         </method>

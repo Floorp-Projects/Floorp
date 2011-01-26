@@ -73,7 +73,7 @@ protected:
   /**
    * Called by subclasses from a native event. See ScheduleNativeEventCallback.
    */
-  void NativeEventCallback();
+  void NativeEventCallback(PRBool aAlwaysBlockNative = PR_FALSE);
 
   /**
    * Make a decision as to whether or not NativeEventCallback will

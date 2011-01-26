@@ -59,7 +59,7 @@ endif
 endif
 ifeq ($(OS_ARCH),Darwin)
 ifdef UNIVERSAL_BINARY
-MOZ_PKG_PLATFORM := mac64
+MOZ_PKG_PLATFORM := mac
 else
 ifeq ($(TARGET_CPU),x86_64)
 MOZ_PKG_PLATFORM := mac64

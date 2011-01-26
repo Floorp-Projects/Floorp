@@ -74,6 +74,9 @@ public:
 
   // Initialization function. If you override this, you must call this class's
   // version of Init first.
+  // We need Init to be called separately from the constructor so we can
+  // register as an observer after all derived classes have been constructed
+  // and we know we have a non-zero refcount.
   // Ideally, Init() would be void-return, but the rules of
   // NS_GENERIC_FACTORY_CONSTRUCTOR_INIT require it be nsresult return.
   virtual nsresult Init();

@@ -49,8 +49,11 @@ _TEST_FILES = \
 	plain_bootstrap.html^headers^ \
 	subdom_bootstrap.html \
 	subdom_bootstrap.html^headers^ \
+	nosts_bootstrap.html \
+	nosts_bootstrap.html^headers^ \
 	verify.sjs \
 	test_stricttransportsecurity.html \
+	test_sts_privatebrowsing.html \
 	$(NULL)
 
 libs:: $(_TEST_FILES)

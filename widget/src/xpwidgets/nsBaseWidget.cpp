@@ -53,6 +53,7 @@
 #include "LayerManagerOGL.h"
 #include "nsIXULRuntime.h"
 #include "nsIGfxInfo.h"
+#include "npapi.h"
 
 #ifdef DEBUG
 #include "nsIObserver.h"
@@ -785,8 +786,17 @@ nsBaseWidget::GetShouldAccelerate()
 
   PRBool disableAcceleration = PR_FALSE;
   PRBool forceAcceleration = PR_FALSE;
-#if defined(XP_WIN) || defined(XP_MACOSX) || defined(ANDROID) || (MOZ_PLATFORM_MAEMO > 5)
+#if defined(XP_WIN) || defined(ANDROID) || (MOZ_PLATFORM_MAEMO > 5)
   PRBool accelerateByDefault = PR_TRUE;
+#elif defined(XP_MACOSX)
+/* quickdraw plugins don't work with OpenGL so we need to avoid OpenGL when we want to support
+ * them. e.g. 10.5 */
+# if defined(NP_NO_QUICKDRAW)
+  PRBool accelerateByDefault = PR_TRUE;
+# else
+  PRBool accelerateByDefault = PR_FALSE;
+# endif
+
 #else
   PRBool accelerateByDefault = PR_FALSE;
 #endif

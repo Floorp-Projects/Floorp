@@ -110,14 +110,6 @@ function test_blocked_install() {
        "software on your computer.",
        "Should have seen the right message");
 
-    // Click on Allow
-    EventUtils.synthesizeMouse(notification.button, 20, 10, {});
-
-    // Notification should have changed to progress notification
-    ok(PopupNotifications.isPanelOpen, "Notification should still be open");
-    notification = aPanel.childNodes[0];
-    is(notification.id, "addon-progress-notification", "Should have seen the progress notification");
-
     // Wait for the install confirmation dialog
     wait_for_install_dialog(function(aWindow) {
       // Wait for the complete notification
@@ -140,6 +132,15 @@ function test_blocked_install() {
 
       aWindow.document.documentElement.acceptDialog();
     });
+
+    // Click on Allow
+    EventUtils.synthesizeMouse(notification.button, 20, 10, {});
+
+    // Notification should have changed to progress notification
+    ok(PopupNotifications.isPanelOpen, "Notification should still be open");
+    notification = aPanel.childNodes[0];
+    is(notification.id, "addon-progress-notification", "Should have seen the progress notification");
+
   });
 
   var triggers = encodeURIComponent(JSON.stringify({
@@ -705,15 +706,6 @@ function test_cancel_restart() {
       notification = aPanel.childNodes[0];
       is(notification.id, "addon-install-cancelled-notification", "Should have seen the cancelled notification");
 
-      // Restart the download
-      EventUtils.synthesizeMouse(notification.button, 20, 10, {});
-
-      // Should be back to a progress notification
-      ok(PopupNotifications.isPanelOpen, "Notification should still be open");
-      is(PopupNotifications.panel.childNodes.length, 1, "Should be only one notification");
-      notification = aPanel.childNodes[0];
-      is(notification.id, "addon-progress-notification", "Should have seen the progress notification");
-
       // Wait for the install confirmation dialog
       wait_for_install_dialog(function(aWindow) {
         // Wait for the complete notification
@@ -737,6 +729,16 @@ function test_cancel_restart() {
 
         aWindow.document.documentElement.acceptDialog();
       });
+
+      // Restart the download
+      EventUtils.synthesizeMouse(notification.button, 20, 10, {});
+
+      // Should be back to a progress notification
+      ok(PopupNotifications.isPanelOpen, "Notification should still be open");
+      is(PopupNotifications.panel.childNodes.length, 1, "Should be only one notification");
+      notification = aPanel.childNodes[0];
+      is(notification.id, "addon-progress-notification", "Should have seen the progress notification");
+
     });
   });
 

@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=627498
+-->
+<head>
+  <title>Test hardware acceleration</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=627498">Mozilla Bug 627498</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+// Make sure that acceleration is enabled/disabled the way we expect it to be
+// based on platform.
+
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+Components.utils.import("resource://gre/modules/Services.jsm");
+
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+
+var sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
+
+var windows = Services.ww.getWindowEnumerator();
+var acceleratedWindows = 0;
+while (windows.hasMoreElements()) {
+  awindow = windows.getNext().QueryInterface(Ci.nsIInterfaceRequestor);
+  windowutils = awindow.getInterface(Ci.nsIDOMWindowUtils);
+  if (windowutils.layerManagerType != "Basic") {
+    acceleratedWindows++;
+  }
+}
+
+switch(sysInfo.getProperty("name"))
+{
+  case "Windows_NT":
+    ok(acceleratedWindows != 0, "Acceleration enabled on Windows");
+
+    // Also check that D2D is enabled.
+    var version = parseFloat(sysInfo.getProperty("version"));
+    if (version >= 6.0) {
+      var gfxInfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo);
+      ok(gfxInfo.D2DEnabled, "D2D enabled on Windows Vista or higher");
+    }
+
+    break;
+
+  case "Darwin":
+    // We only enable OpenGL layers on machines that don't support QuickDraw
+    // plugins. x86-64 architecture is a good proxy for this plugin support.
+    if (sysInfo.getProperty("arch") == "x86-64") {
+      ok(acceleratedWindows != 0, "Acceleration enabled on x86-64 OS X");
+    } else {
+      ok(acceleratedWindows == 0, "Acceleration not enabled on x86 OS X");
+    }
+    break;
+}
+
+</script>
+</pre>
+</body>
+</html>

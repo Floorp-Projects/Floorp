@@ -372,10 +372,28 @@ function runTest(testNum) {
         input.removeAttribute('mozNoFilter');
         restoreForm();
         doKey("down");
-        SimpleTest.finish();
+        testNum = 399;
+        setTimeout(runTest, 50, testNum + 1); // XXX 40ms was too slow, why?
       }, 500);
       return;
       break;
+
+    case 400:
+      // Check that the input event is fired.
+      input.addEventListener("input", function(event) {
+        input.removeEventListener("input", arguments.callee, false);
+        ok(true, "oninput should have been received");
+        ok(event.bubbles, "input event should bubble");
+        ok(event.cancelable, "input event should be cancelable");
+        SimpleTest.finish();
+      }, false);
+
+      doKey("down");
+      checkForm("");
+      doKey("return");
+      checkForm("Google");
+      return;
+
     default:
         ok(false, "Unexpected invocation of test #" + testNum);
         SimpleTest.finish();

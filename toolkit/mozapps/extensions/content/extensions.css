@@ -133,6 +133,13 @@ xhtml|link {
   display: none;
 }
 
+#addons-page:not([warning]) #list-view > .global-warning-container {
+  display: none;
+}
+#addon-list .date-updated {
+  display: none;
+}
+
 .view-pane:not(#updates-view) .addon .relnotes-toggle,
 .view-pane:not(#updates-view) .addon .include-update,
 #updates-view:not([updatetype="available"]) .addon .include-update,

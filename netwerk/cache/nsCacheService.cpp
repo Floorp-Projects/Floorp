@@ -268,6 +268,23 @@ private:
     PRInt32 mSmartSize;
 };
 
+class nsBlockOnCacheThreadEvent : public nsRunnable {
+public:
+    nsBlockOnCacheThreadEvent()
+    {
+    }
+    NS_IMETHOD Run()
+    {
+        mozilla::MonitorAutoEnter
+            autoMonitor(nsCacheService::gService->mMonitor);
+#ifdef PR_LOGGING
+        CACHE_LOG_DEBUG(("nsBlockOnCacheThreadEvent [%p]\n", this));
+#endif
+        autoMonitor.Notify();
+        return NS_OK;
+    }
+};
+
 
 nsresult
 nsCacheProfilePrefObserver::Install()
@@ -789,6 +806,33 @@ nsCacheService::DispatchToCacheIOThread(nsIRunnable* event)
     return gService->mCacheIOThread->Dispatch(event, NS_DISPATCH_NORMAL);
 }
 
+nsresult
+nsCacheService::SyncWithCacheIOThread()
+{
+    NS_ASSERTION(gService->mLockedThread == PR_GetCurrentThread(),
+                 "not holding cache-lock");
+    if (!gService->mCacheIOThread) return NS_ERROR_NOT_AVAILABLE;
+
+    mozilla::MonitorAutoEnter autoMonitor(gService->mMonitor);
+
+    nsCOMPtr<nsIRunnable> event = new nsBlockOnCacheThreadEvent();
+
+    // dispatch event - it will notify the monitor when it's done
+    nsresult rv =
+        gService->mCacheIOThread->Dispatch(event, NS_DISPATCH_NORMAL);
+    if (NS_FAILED(rv)) {
+        NS_WARNING("Failed dispatching block-event");
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    Unlock();
+    // wait until notified, then return
+    rv = autoMonitor.Wait();
+    Lock();
+
+    return rv;
+}
+
 
 PRBool
 nsCacheProfilePrefObserver::DiskCacheEnabled()
@@ -942,6 +986,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsCacheService, nsICacheService)
 
 nsCacheService::nsCacheService()
     : mLock(nsnull),
+      mMonitor("block-on-cache-monitor"),
       mInitialized(PR_FALSE),
       mEnableMemoryDevice(PR_TRUE),
       mEnableDiskDevice(PR_TRUE),
@@ -1046,6 +1091,10 @@ nsCacheService::Shutdown()
         ClearDoomList();
         ClearActiveEntries();
 
+        // Make sure to wait for any pending cache-operations before
+        // proceeding with destructive actions (bug #620660)
+        (void) SyncWithCacheIOThread();
+        
         // deallocate memory and disk caches
         delete mMemoryDevice;
         mMemoryDevice = nsnull;
@@ -1920,6 +1969,10 @@ nsCacheService::OnProfileShutdown(PRBool cleanse)
     gService->DoomActiveEntries();
     gService->ClearDoomList();
 
+    // Make sure to wait for any pending cache-operations before
+    // proceeding with destructive actions (bug #620660)
+    (void) SyncWithCacheIOThread();
+
 #ifdef NECKO_DISK_CACHE
     if (gService->mDiskDevice && gService->mEnableDiskDevice) {
         if (cleanse)
@@ -2324,6 +2377,7 @@ nsCacheService::ProcessPendingRequests(nsCacheEntry * entry)
         // XXX what should we do if there are only READ requests in queue?
         // XXX serialize their accesses, give them only read access, but force them to check validate flag?
         // XXX or do readers simply presume the entry is valid
+        // See fix for bug #467392 below
     }
 
     nsCacheAccessMode  accessGranted = nsICache::ACCESS_NONE;
@@ -2368,7 +2422,15 @@ nsCacheService::ProcessPendingRequests(nsCacheEntry * entry)
                 }
                 
             } else {
-                // XXX bad state
+                // read-only request to an invalid entry - need to wait for
+                // the entry to become valid so we post an event to process
+                // the request again later (bug #467392)
+                nsCOMPtr<nsIRunnable> ev =
+                    new nsProcessRequestEvent(request);
+                rv = DispatchToCacheIOThread(ev);
+                if (NS_FAILED(rv)) {
+                    delete request; // avoid leak
+                }
             }
         } else {
 

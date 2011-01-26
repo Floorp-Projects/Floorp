@@ -3947,6 +3947,24 @@ nsIFrame::InvalidateLayer(const nsRect& aDamageRect, PRUint32 aDisplayItemKey)
   InvalidateWithFlags(aDamageRect, flags);
 }
 
+void
+nsIFrame::InvalidateTransformLayer()
+{
+  NS_ASSERTION(mParent, "How can a viewport frame have a transform?");
+
+  PRBool hasLayer =
+      FrameLayerBuilder::HasDedicatedLayer(this, nsDisplayItem::TYPE_TRANSFORM);
+  // Invalidate post-transform area in the parent. We have to invalidate
+  // in the parent because our transform style may have changed from what was
+  // used to paint this frame.
+  // It's OK to bypass the SVG effects processing and other processing
+  // performed if we called this->InvalidateWithFlags, because those effects
+  // are performed before applying transforms.
+  mParent->InvalidateInternal(GetVisualOverflowRect() + GetPosition(),
+                              0, 0, this,
+                              hasLayer ? INVALIDATE_NO_THEBES_LAYERS : 0);
+}
+
 class LayerActivity {
 public:
   LayerActivity(nsIFrame* aFrame) : mFrame(aFrame) {}

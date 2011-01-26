@@ -249,6 +249,7 @@ let gSyncUI = {
   },
 
   onStartOver: function SUI_onStartOver() {
+    Weave.Notifications.removeAll();
     this.updateUI();
   },
 

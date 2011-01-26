@@ -3886,9 +3886,12 @@ void nsWindow::DispatchPendingEvents()
     --recursionBlocker;
   }
 
-  // Quickly check to see if there are any
-  // paint events pending.
-  if (::GetQueueStatus(QS_PAINT)) {
+  // Quickly check to see if there are any paint events pending,
+  // but only dispatch them if it has been long enough since the
+  // last paint completed.
+  if (::GetQueueStatus(QS_PAINT) && 
+      (mLastPaintEndTime.IsNull() ||
+       (TimeStamp::Now() - mLastPaintEndTime).ToMilliseconds() >= 50)) {
     // Find the top level window.
     HWND topWnd = GetTopLevelHWND(mWnd);
 
@@ -5835,9 +5838,11 @@ nsWindow::ClientMarginHitTestPoint(PRInt32 mx, PRInt32 my)
   else if (my < winRect.bottom && my >= (winRect.bottom - mVertResizeMargin))
     bottom = PR_TRUE;
 
-  if (mx >= winRect.left && mx < (winRect.left + mHorResizeMargin))
+  if (mx >= winRect.left && mx < (winRect.left +
+                                  (bottom ? (2*mHorResizeMargin) : mHorResizeMargin)))
     left = PR_TRUE;
-  else if (mx < winRect.right && mx >= (winRect.right - mHorResizeMargin))
+  else if (mx < winRect.right && mx >= (winRect.right -
+                                        (bottom ? (2*mHorResizeMargin) : mHorResizeMargin)))
     right = PR_TRUE;
 
   if (top) {
