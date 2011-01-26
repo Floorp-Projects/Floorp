@@ -479,10 +479,6 @@ JetpackChild::EvalInSandbox(JSContext* cx, uintN argc, jsval* vp)
 
   jsval* argv = JS_ARGV(cx, vp);
 
-  JSString* str = JS_ValueToString(cx, argv[1]);
-  if (!str)
-    return JS_FALSE;
-
   JSObject* obj;
   if (!JSVAL_IS_OBJECT(argv[0]) ||
       !(obj = JSVAL_TO_OBJECT(argv[0]))) {
@@ -504,6 +500,13 @@ JetpackChild::EvalInSandbox(JSContext* cx, uintN argc, jsval* vp)
     JS_ASSERT(JS_FALSE);
     return JS_FALSE;
   }
+
+  if (!JS_WrapValue(cx, &argv[1]))
+    return JS_FALSE;
+
+  JSString* str = JS_ValueToString(cx, argv[1]);
+  if (!str)
+    return JS_FALSE;
 
   size_t length;
   const jschar* chars = JS_GetStringCharsAndLength(cx, str, &length);
