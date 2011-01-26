@@ -197,6 +197,10 @@
           this.invoker.iframeDoc = iframe.contentDocument;
           return iframe;
         },
+        get targetDescr()
+        {
+          return "inner iframe of docload_wnd.html document";
+        },
         invoker: thisObj
       };
 

@@ -127,6 +127,14 @@ public:
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(NotificationController)
 
   /**
+   * Return true when tree is constructed.
+   */
+  inline bool IsTreeConstructed()
+  {
+    return mTreeConstructedState == eTreeConstructed;
+  }
+
+  /**
    * Shutdown the notification controller.
    */
   void Shutdown();
@@ -135,6 +143,11 @@ public:
    * Put an accessible event into the queue to process it later.
    */
   void QueueEvent(AccEvent* aEvent);
+
+  /**
+   * Schedule binding the child document to the tree of this document.
+   */
+  void ScheduleChildDocBinding(nsDocAccessible* aDocument);
 
   /**
    * Pend accessible tree update for content insertion.
@@ -266,6 +279,11 @@ private:
     eTreeConstructionPending
   };
   eTreeConstructedState mTreeConstructedState;
+
+  /**
+   * Child documents that needs to be bound to the tree.
+   */
+  nsTArray<nsRefPtr<nsDocAccessible> > mHangingChildDocuments;
 
   /**
    * Storage for content inserted notification information.
