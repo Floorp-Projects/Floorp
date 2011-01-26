@@ -252,7 +252,6 @@ bool
 RegExp::parseFlags(JSContext *cx, JSString *flagStr, uintN *flagsOut)
 {
     size_t n = flagStr->length();
-    Anchor<JSString *> afs(flagStr);
     const jschar *s = flagStr->getChars(cx);
     if (!s)
         return false;
@@ -847,7 +846,10 @@ regexp_construct(JSContext *cx, uintN argc, Value *vp)
     uintN flags = 0;
     if (argc > 1 && !argv[1].isUndefined()) {
         JSString *flagStr = js_ValueToString(cx, argv[1]);
-        if (!flagStr || !RegExp::parseFlags(cx, flagStr, &flags))
+        if (!flagStr)
+            return false;
+        argv[1].setString(flagStr);
+        if (!RegExp::parseFlags(cx, flagStr, &flags))
             return false;
     }
 
