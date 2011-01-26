@@ -127,6 +127,7 @@ extern "C" {
 #include "gfxPlatformGtk.h"
 #include "gfxContext.h"
 #include "gfxImageSurface.h"
+#include "gfxUtils.h"
 #include "Layers.h"
 #include "LayerManagerOGL.h"
 #include "GLContextProvider.h"
@@ -2092,6 +2093,14 @@ gdk_window_flash(GdkWindow *    aGdkWindow,
 #endif // DEBUG
 #endif
 
+static void
+DispatchDidPaint(nsIWidget* aWidget)
+{
+    nsEventStatus status;
+    nsPaintEvent didPaintEvent(PR_TRUE, NS_DID_PAINT, aWidget);
+    aWidget->DispatchEvent(&didPaintEvent, status);
+}
+
 gboolean
 nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
 {
@@ -2104,6 +2113,15 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
     // Windows that are not visible will be painted after they become visible.
     if (!mGdkWindow || mIsFullyObscured || !mHasMappedToplevel)
         return FALSE;
+
+    // Dispatch WILL_PAINT to allow scripts etc. to run before we
+    // dispatch PAINT
+    {
+        nsEventStatus status;
+        nsPaintEvent willPaintEvent(PR_TRUE, NS_WILL_PAINT, this);
+        willPaintEvent.willSendDidPaint = PR_TRUE;
+        DispatchEvent(&willPaintEvent, status);
+    }
 
     nsPaintEvent event(PR_TRUE, NS_PAINT, this);
     event.refPoint.x = aEvent->area.x;
@@ -2132,6 +2150,12 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
         event.region.Or(event.region, nsIntRect(r->x, r->y, r->width, r->height));
         LOGDRAW(("\t%d %d %d %d\n", r->x, r->y, r->width, r->height));
     }
+
+    // Our bounds may have changed after dispatching WILL_PAINT.  Clip
+    // to the new bounds here.  The event region is relative to this
+    // window.
+    event.region.And(event.region,
+                     nsIntRect(0, 0, mBounds.width, mBounds.height));
 
     PRBool translucent = eTransparencyTransparent == GetTransparencyMode();
     if (!translucent) {
@@ -2166,7 +2190,11 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
 
         nsEventStatus status;
         DispatchEvent(&event, status);
+
         g_free(rects);
+
+        DispatchDidPaint(this);
+
         return TRUE;
     }
             
@@ -2177,11 +2205,7 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
                                    GDK_DRAWABLE(mGdkWindow));
 
     // clip to the update region
-    ctx->NewPath();
-    for (r = rects; r < r_end; ++r) {
-        ctx->Rectangle(gfxRect(r->x, r->y, r->width, r->height));
-    }
-    ctx->Clip();
+    gfxUtils::ClipToRegion(ctx, event.region);
 
     BasicLayerManager::BufferMode layerBuffering =
         BasicLayerManager::BUFFER_NONE;
@@ -2200,9 +2224,7 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
         ctx->Rectangle(gfxRect(boundsRect.x, boundsRect.y,
                                boundsRect.width, boundsRect.height));
     } else {
-        for (r = rects; r < r_end; ++r) {
-            ctx->Rectangle(gfxRect(r->x, r->y, r->width, r->height));
-        }
+        gfxUtils::PathFromRegion(ctx, event.region);
     }
     ctx->Clip();
 
@@ -2228,7 +2250,8 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
     // cairo inflates the update region, etc.  So don't paint flash
     // for cairo.
 #ifdef DEBUG
-    if (WANT_PAINT_FLASHING && aEvent->window)
+    // XXX aEvent->region may refer to a newly-invalid area.  FIXME
+    if (0 && WANT_PAINT_FLASHING && aEvent->window)
         gdk_window_flash(aEvent->window, 1, 100, aEvent->region);
 #endif
 #endif
@@ -2281,8 +2304,7 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
 
     g_free(rects);
 
-    nsPaintEvent didPaintEvent(PR_TRUE, NS_DID_PAINT, this);
-    DispatchEvent(&didPaintEvent, status);
+    DispatchDidPaint(this);
 
     // Synchronously flush any new dirty areas
     GdkRegion* dirtyArea = gdk_window_get_update_area(mGdkWindow);
