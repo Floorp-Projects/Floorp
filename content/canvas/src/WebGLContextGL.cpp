@@ -394,6 +394,7 @@ WebGLContext::BufferData_size(WebGLenum target, WebGLsizei size, WebGLenum usage
 
     boundBuffer->SetByteLength(size);
     boundBuffer->ZeroDataIfElementArray();
+    boundBuffer->InvalidateCachedMaxElements();
 
     gl->fBufferData(target, size, 0, usage);
 
@@ -423,6 +424,7 @@ WebGLContext::BufferData_buf(WebGLenum target, js::ArrayBuffer *wb, WebGLenum us
 
     boundBuffer->SetByteLength(wb->byteLength);
     boundBuffer->CopyDataIfElementArray(wb->data);
+    boundBuffer->InvalidateCachedMaxElements();
 
     gl->fBufferData(target, wb->byteLength, wb->data, usage);
 
@@ -452,6 +454,7 @@ WebGLContext::BufferData_array(WebGLenum target, js::TypedArray *wa, WebGLenum u
 
     boundBuffer->SetByteLength(wa->byteLength);
     boundBuffer->CopyDataIfElementArray(wa->data);
+    boundBuffer->InvalidateCachedMaxElements();
 
     gl->fBufferData(target, wa->byteLength, wa->data, usage);
 
@@ -497,6 +500,7 @@ WebGLContext::BufferSubData_buf(GLenum target, WebGLsizei byteOffset, js::ArrayB
     MakeContextCurrent();
 
     boundBuffer->CopySubDataIfElementArray(byteOffset, wb->byteLength, wb->data);
+    boundBuffer->InvalidateCachedMaxElements();
 
     gl->fBufferSubData(target, byteOffset, wb->byteLength, wb->data);
 
@@ -530,6 +534,7 @@ WebGLContext::BufferSubData_array(WebGLenum target, WebGLsizei byteOffset, js::T
     MakeContextCurrent();
 
     boundBuffer->CopySubDataIfElementArray(byteOffset, wa->byteLength, wa->data);
+    boundBuffer->InvalidateCachedMaxElements();
 
     gl->fBufferSubData(target, byteOffset, wa->byteLength, wa->data);
 
@@ -1226,13 +1231,17 @@ WebGLContext::DrawArrays(GLenum mode, WebGLint first, WebGLsizei count)
     if (!mCurrentProgram)
         return NS_OK;
 
+    PRInt32 maxAllowedCount = 0;
+    if (!ValidateBuffers(&maxAllowedCount, "drawArrays"))
+        return NS_OK;
+
     CheckedInt32 checked_firstPlusCount = CheckedInt32(first) + count;
 
     if (!checked_firstPlusCount.valid())
         return ErrorInvalidOperation("drawArrays: overflow in first+count");
 
-    if (!ValidateBuffers(checked_firstPlusCount.value()))
-        return ErrorInvalidOperation("DrawArrays: bound vertex attribute buffers do not have sufficient size for given first and count");
+    if (checked_firstPlusCount.value() > maxAllowedCount)
+        return ErrorInvalidOperation("drawArrays: bound vertex attribute buffers do not have sufficient size for given first and count");
 
     MakeContextCurrent();
 
@@ -1299,22 +1308,37 @@ WebGLContext::DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type, Web
     if (checked_neededByteCount.value() > mBoundElementArrayBuffer->ByteLength())
         return ErrorInvalidOperation("DrawElements: bound element array buffer is too small for given count and offset");
 
-    WebGLuint maxIndex = 0;
-    if (type == LOCAL_GL_UNSIGNED_SHORT) {
-        maxIndex = mBoundElementArrayBuffer->FindMaximum<GLushort>(count, byteOffset);
-    } else if (type == LOCAL_GL_UNSIGNED_BYTE) {
-        maxIndex = mBoundElementArrayBuffer->FindMaximum<GLubyte>(count, byteOffset);
-    }
+    PRInt32 maxAllowedCount = 0;
+    if (!ValidateBuffers(&maxAllowedCount, "drawElements"))
+      return NS_OK;
 
-    // maxIndex+1 because ValidateBuffers expects the number of elements needed.
-    // it is very important here to check tha maxIndex+1 doesn't overflow, otherwise the buffer validation is bypassed !!!
-    // maxIndex is a WebGLuint, ValidateBuffers takes a PRUint32, we validate maxIndex+1 as a PRUint32.
-    CheckedUint32 checked_neededCount = CheckedUint32(maxIndex) + 1;
-    if (!checked_neededCount.valid())
-        return ErrorInvalidOperation("drawElements: overflow in maxIndex+1");
-    if (!ValidateBuffers(checked_neededCount.value())) {
-        return ErrorInvalidOperation("DrawElements: bound vertex attribute buffers do not have sufficient "
-                                     "size for given indices from the bound element array");
+    PRInt32 maxIndex
+      = type == LOCAL_GL_UNSIGNED_SHORT
+        ? mBoundElementArrayBuffer->FindMaxUshortElement()
+        : mBoundElementArrayBuffer->FindMaxUbyteElement();
+
+    CheckedInt32 checked_maxIndexPlusOne = CheckedInt32(maxIndex) + 1;
+
+    if (!checked_maxIndexPlusOne.valid() ||
+        checked_maxIndexPlusOne.value() > maxAllowedCount)
+    {
+        // the index array contains invalid indices for the current drawing state, but they
+        // might not be used by the present drawElements call, depending on first and count.
+
+        PRInt32 maxIndexInSubArray
+          = type == LOCAL_GL_UNSIGNED_SHORT
+            ? mBoundElementArrayBuffer->FindMaxElementInSubArray<GLushort>(count, byteOffset)
+            : mBoundElementArrayBuffer->FindMaxElementInSubArray<GLubyte>(count, byteOffset);
+
+        CheckedInt32 checked_maxIndexInSubArrayPlusOne = CheckedInt32(maxIndexInSubArray) + 1;
+
+        if (!checked_maxIndexInSubArrayPlusOne.valid() ||
+            checked_maxIndexInSubArrayPlusOne.value() > maxAllowedCount)
+        {
+            return ErrorInvalidOperation(
+                "DrawElements: bound vertex attribute buffers do not have sufficient "
+                "size for given indices from the bound element array");
+        }
     }
 
     MakeContextCurrent();
@@ -1323,7 +1347,7 @@ WebGLContext::DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type, Web
         return NS_OK;
 
     BindFakeBlackTextures();
-    DoFakeVertexAttrib0(checked_neededCount.value());
+    DoFakeVertexAttrib0(checked_maxIndexPlusOne.value());
 
     gl->fDrawElements(mode, count, type, (GLvoid*) (byteOffset));
 
