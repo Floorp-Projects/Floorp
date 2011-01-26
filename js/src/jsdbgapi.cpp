@@ -737,7 +737,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsid id, Value *vp)
              */
             JSBool ok = !wp->setter ||
                         (shape->hasSetterValue()
-                         ? ExternalInvoke(cx, obj,
+                         ? ExternalInvoke(cx, ObjectValue(*obj),
                                           ObjectValue(*CastAsObject(wp->setter)),
                                           1, vp, vp)
                          : CallJSPropertyOpSetter(cx, wp->setter, obj, userid, vp));
@@ -753,7 +753,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 static JSBool
 js_watch_set_wrapper(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj = ComputeThisFromVp(cx, vp);
+    JSObject *obj = ToObject(cx, &vp[1]);
     if (!obj)
         return false;
 

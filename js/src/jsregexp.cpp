@@ -619,8 +619,10 @@ js_regexp_toString(JSContext *cx, JSObject *obj, Value *vp)
 static JSBool
 regexp_toString(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj = JS_THIS_OBJECT(cx, Jsvalify(vp));
-    return obj && js_regexp_toString(cx, obj, vp);
+    JSObject *obj = ToObject(cx, &vp[1]);
+    if (!obj)
+        return false;
+    return js_regexp_toString(cx, obj, vp);
 }
 
 /*
@@ -758,13 +760,19 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, Value *argv, JSBool te
 JSBool
 js_regexp_exec(JSContext *cx, uintN argc, Value *vp)
 {
-    return regexp_exec_sub(cx, JS_THIS_OBJECT(cx, Jsvalify(vp)), argc, vp + 2, JS_FALSE, vp);
+    JSObject *obj = ToObject(cx, &vp[1]);
+    if (!obj)
+        return false;
+    return regexp_exec_sub(cx, obj, argc, vp + 2, JS_FALSE, vp);
 }
 
 JSBool
 js_regexp_test(JSContext *cx, uintN argc, Value *vp)
 {
-    if (!regexp_exec_sub(cx, JS_THIS_OBJECT(cx, Jsvalify(vp)), argc, vp + 2, JS_TRUE, vp))
+    JSObject *obj = ToObject(cx, &vp[1]);
+    if (!obj)
+        return false;
+    if (!regexp_exec_sub(cx, obj, argc, vp + 2, JS_TRUE, vp))
         return false;
     if (!vp->isTrue())
         vp->setBoolean(false);
