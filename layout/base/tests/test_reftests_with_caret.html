@@ -75,14 +75,18 @@ function refTest(test,ref) {
   createIframe(test,ref);
 };
 
-var caretBlinkTime;
+var caretBlinkTime = null;
 function endTest() {
   SimpleTest.finish();
   netscape.security.PrivilegeManager.enablePrivilege(
    'UniversalPreferencesRead UniversalPreferencesWrite UniversalXPConnect');
   var prefs = Components.classes["@mozilla.org/preferences-service;1"]
                         .getService(Components.interfaces.nsIPrefBranch);
-  prefs.setIntPref("ui.caretBlinkTime", caretBlinkTime);
+  if (caretBlinkTime !== null) {
+    prefs.setIntPref("ui.caretBlinkTime", caretBlinkTime);
+  } else {
+    prefs.clearUserPref("ui.caretBlinkTime");
+  }
 }
 
 var tests = [
@@ -128,7 +132,9 @@ function runTests() {
       'UniversalPreferencesRead UniversalPreferencesWrite UniversalXPConnect');
     var prefs = Components.classes["@mozilla.org/preferences-service;1"]
                           .getService(Components.interfaces.nsIPrefBranch);
-    caretBlinkTime = prefs.getIntPref("ui.caretBlinkTime");
+    try {
+      caretBlinkTime = prefs.getIntPref("ui.caretBlinkTime");
+    } catch (e) {}
     prefs.setIntPref("ui.caretBlinkTime", -1);
 
     nextTest();
