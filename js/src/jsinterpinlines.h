@@ -372,7 +372,7 @@ JSStackFrame::computeThis(JSContext *cx)
          */
         JS_ASSERT(!isEvalFrame());
     }
-    if (!js::ComputeThisFromArgv(cx, &thisv + 1))
+    if (!js::BoxThisForVp(cx, &thisv - 1))
         return NULL;
     JS_ASSERT(IsSaneThisObject(thisv.toObject()));
     return &thisv.toObject();
@@ -662,13 +662,7 @@ GetPrimitiveThis(JSContext *cx, Value *vp, T *v)
         return true;
     }
 
-    if (thisv.isObjectOrNull()) {
-        JSObject *obj = thisv.toObjectOrNull();
-        if (!obj || obj->getClass() != Behavior::getClass()) {
-            obj = ComputeThisFromVp(cx, vp);
-            if (!InstanceOf(cx, obj, Behavior::getClass(), vp + 2))
-                return false;
-        }
+    if (thisv.isObject() && thisv.toObject().getClass() == Behavior::getClass()) {
         *v = Behavior::extract(thisv.toObject().getPrimitiveThis());
         return true;
     }

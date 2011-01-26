@@ -190,11 +190,6 @@ new TestCase( SECTION,
 	      eval("var obj = new Object(); obj.indexOf = String.prototype.indexOf; obj.indexOf('bject')") );
 
 new TestCase( SECTION,
-	      "var f = new Object( String.prototype.indexOf ); f('"+GLOBAL+"')",
-	      0,
-	      eval("var f = new Object( String.prototype.indexOf ); f('"+GLOBAL+"')") );
-
-new TestCase( SECTION,
 	      "var f = new Function(); f.toString = Object.prototype.toString; f.indexOf = String.prototype.indexOf; f.indexOf('[object Function]')",
 	      0,
 	      eval("var f = new Function(); f.toString = Object.prototype.toString; f.indexOf = String.prototype.indexOf; f.indexOf('[object Function]')") );

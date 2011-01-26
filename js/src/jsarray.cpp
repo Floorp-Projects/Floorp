@@ -1095,12 +1095,11 @@ array_toSource(JSContext *cx, uintN argc, Value *vp)
 {
     JS_CHECK_RECURSION(cx, return false);
 
-    JSObject *obj = ComputeThisFromVp(cx, vp);
-    if (!obj ||
-        (obj->getClass() != &js_SlowArrayClass &&
-         !InstanceOf(cx, obj, &js_ArrayClass, vp + 2))) {
+    JSObject *obj = ToObject(cx, &vp[1]);
+    if (!obj)
         return false;
-    }
+    if (!obj->isSlowArray() && !InstanceOf(cx, obj, &js_ArrayClass, vp + 2))
+        return false;
 
     /* Find joins or cycles in the reachable object graph. */
     jschar *sharpchars;
@@ -1301,7 +1300,7 @@ array_toString_sub(JSContext *cx, JSObject *obj, JSBool locale,
 static JSBool
 array_toString(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj = ComputeThisFromVp(cx, vp);
+    JSObject *obj = ToObject(cx, &vp[1]);
     if (!obj)
         return false;
 
@@ -1335,7 +1334,7 @@ array_toString(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 array_toLocaleString(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj = ComputeThisFromVp(cx, vp);
+    JSObject *obj = ToObject(cx, &vp[1]);
     if (!obj)
         return false;
 
@@ -1441,17 +1440,22 @@ array_join(JSContext *cx, uintN argc, Value *vp)
             return JS_FALSE;
         vp[2].setString(str);
     }
-    JSObject *obj = ComputeThisFromVp(cx, vp);
-    return obj && array_toString_sub(cx, obj, JS_FALSE, str, vp);
+    JSObject *obj = ToObject(cx, &vp[1]);
+    if (!obj)
+        return false;
+    return array_toString_sub(cx, obj, JS_FALSE, str, vp);
 }
 
 static JSBool
 array_reverse(JSContext *cx, uintN argc, Value *vp)
 {
+    JSObject *obj = ToObject(cx, &vp[1]);
+    if (!obj)
+        return false;
+
     jsuint len;
-    JSObject *obj = ComputeThisFromVp(cx, vp);
-    if (!obj || !js_GetLengthProperty(cx, obj, &len))
-        return JS_FALSE;
+    if (!js_GetLengthProperty(cx, obj, &len))
+        return false;
     vp->setObject(*obj);
 
     do {
@@ -1462,7 +1466,7 @@ array_reverse(JSContext *cx, uintN argc, Value *vp)
         
         /* An empty array or an array with no elements is already reversed. */
         if (len == 0 || obj->getDenseArrayCapacity() == 0)
-            return JS_TRUE;
+            return true;
 
         /*
          * It's actually surprisingly complicated to reverse an array due to the
@@ -1759,8 +1763,10 @@ js::array_sort(JSContext *cx, uintN argc, Value *vp)
         fval.setNull();
     }
 
-    JSObject *obj = ComputeThisFromVp(cx, vp);
-    if (!obj || !js_GetLengthProperty(cx, obj, &len))
+    JSObject *obj = ToObject(cx, &vp[1]);
+    if (!obj)
+        return false;
+    if (!js_GetLengthProperty(cx, obj, &len))
         return false;
     if (len == 0) {
         vp->setObject(*obj);
@@ -2077,10 +2083,11 @@ JS_DEFINE_CALLINFO_3(extern, BOOL_FAIL, js_ArrayCompPush_tn, CONTEXT, OBJECT,
 static JSBool
 array_push(JSContext *cx, uintN argc, Value *vp)
 {
-    /* Insist on one argument and obj of the expected class. */
-    JSObject *obj = ComputeThisFromVp(cx, vp);
+    JSObject *obj = ToObject(cx, &vp[1]);
     if (!obj)
-        return JS_FALSE;
+        return false;
+
+    /* Insist on one argument and obj of the expected class. */
     if (argc != 1 || !obj->isDenseArray())
         return array_push_slowly(cx, obj, argc, vp + 2, vp);
 
@@ -2132,9 +2139,9 @@ array_pop_dense(JSContext *cx, JSObject* obj, Value *vp)
 static JSBool
 array_pop(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj = ComputeThisFromVp(cx, vp);
+    JSObject *obj = ToObject(cx, &vp[1]);
     if (!obj)
-        return JS_FALSE;
+        return false;
     if (obj->isDenseArray())
         return array_pop_dense(cx, obj, vp);
     return array_pop_slowly(cx, obj, vp);
@@ -2143,11 +2150,12 @@ array_pop(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 array_shift(JSContext *cx, uintN argc, Value *vp)
 {
-    jsuint length, i;
-    JSBool hole;
+    JSObject *obj = ToObject(cx, &vp[1]);
+    if (!obj)
+        return JS_FALSE;
 
-    JSObject *obj = ComputeThisFromVp(cx, vp);
-    if (!obj || !js_GetLengthProperty(cx, obj, &length))
+    jsuint length;
+    if (!js_GetLengthProperty(cx, obj, &length))
         return JS_FALSE;
 
     if (length == 0) {
@@ -2170,12 +2178,13 @@ array_shift(JSContext *cx, uintN argc, Value *vp)
         }
 
         /* Get the to-be-deleted property's value into vp ASAP. */
+        JSBool hole;
         if (!GetElement(cx, obj, 0, &hole, vp))
             return JS_FALSE;
 
         /* Slide down the array above the first element. */
         AutoValueRooter tvr(cx);
-        for (i = 0; i != length; i++) {
+        for (jsuint i = 0; i < length; i++) {
             if (!JS_CHECK_OPERATION_LIMIT(cx) ||
                 !GetElement(cx, obj, i + 1, &hole, tvr.addr()) ||
                 !SetOrDeleteArrayElement(cx, obj, i, hole, tvr.value())) {
@@ -2194,12 +2203,15 @@ static JSBool
 array_unshift(JSContext *cx, uintN argc, Value *vp)
 {
     Value *argv;
-    jsuint length;
     JSBool hole;
     jsdouble last, newlen;
 
-    JSObject *obj = ComputeThisFromVp(cx, vp);
-    if (!obj || !js_GetLengthProperty(cx, obj, &length))
+    JSObject *obj = ToObject(cx, &vp[1]);
+    if (!obj)
+        return false;
+
+    jsuint length;
+    if (!js_GetLengthProperty(cx, obj, &length))
         return JS_FALSE;
     newlen = length;
     if (argc > 0) {
@@ -2258,15 +2270,14 @@ array_unshift(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 array_splice(JSContext *cx, uintN argc, Value *vp)
 {
+    JSObject *obj = ToObject(cx, &vp[1]);
+    if (!obj)
+        return false;
+
     jsuint length, begin, end, count, delta, last;
     JSBool hole;
 
-    /*
-     * Create a new array value to return.  Our ECMA v2 proposal specs
-     * that splice always returns an array value, even when given no
-     * arguments.  We think this is best because it eliminates the need
-     * for callers to do an extra test to handle the empty splice case.
-     */
+    /* Create a new array value to return. */
     JSObject *obj2 = NewDenseEmptyArray(cx);
     if (!obj2)
         return JS_FALSE;
@@ -2276,8 +2287,7 @@ array_splice(JSContext *cx, uintN argc, Value *vp)
     if (argc == 0)
         return JS_TRUE;
     Value *argv = JS_ARGV(cx, vp);
-    JSObject *obj = ComputeThisFromVp(cx, vp);
-    if (!obj || !js_GetLengthProperty(cx, obj, &length))
+    if (!js_GetLengthProperty(cx, obj, &length))
         return JS_FALSE;
     jsuint origlength = length;
 
@@ -2428,7 +2438,10 @@ array_concat(JSContext *cx, uintN argc, Value *vp)
     Value *p = JS_ARGV(cx, vp) - 1;
 
     /* Create a new Array object and root it using *vp. */
-    JSObject *aobj = ComputeThisFromVp(cx, vp);
+    JSObject *aobj = ToObject(cx, &vp[1]);
+    if (!aobj)
+        return false;
+
     JSObject *nobj;
     jsuint length;
     if (aobj->isDenseArray()) {
@@ -2513,8 +2526,11 @@ array_slice(JSContext *cx, uintN argc, Value *vp)
 
     argv = JS_ARGV(cx, vp);
 
-    JSObject *obj = ComputeThisFromVp(cx, vp);
-    if (!obj || !js_GetLengthProperty(cx, obj, &length))
+    JSObject *obj = ToObject(cx, &vp[1]);
+    if (!obj)
+        return false;
+
+    if (!js_GetLengthProperty(cx, obj, &length))
         return JS_FALSE;
     begin = 0;
     end = length;
@@ -2589,8 +2605,10 @@ array_indexOfHelper(JSContext *cx, JSBool isLast, uintN argc, Value *vp)
     jsint direction;
     JSBool hole;
 
-    JSObject *obj = ComputeThisFromVp(cx, vp);
-    if (!obj || !js_GetLengthProperty(cx, obj, &length))
+    JSObject *obj = ToObject(cx, &vp[1]);
+    if (!obj)
+        return false;
+    if (!js_GetLengthProperty(cx, obj, &length))
         return JS_FALSE;
     if (length == 0)
         goto not_found;
@@ -2683,9 +2701,12 @@ typedef enum ArrayExtraMode {
 static JSBool
 array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, Value *vp)
 {
-    JSObject *obj = ComputeThisFromVp(cx, vp);
+    JSObject *obj = ToObject(cx, &vp[1]);
+    if (!obj)
+        return false;
+
     jsuint length;
-    if (!obj || !js_GetLengthProperty(cx, obj, &length))
+    if (!js_GetLengthProperty(cx, obj, &length))
         return JS_FALSE;
 
     /*

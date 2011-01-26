@@ -436,7 +436,7 @@ static const uint8 urlCharType[256] =
 
 /* See ECMA-262 Edition 3 B.2.1 */
 JSBool
-js_str_escape(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
+js_str_escape(JSContext *cx, uintN argc, Value *vp, Value *rval)
 {
     const char digits[] = {'0', '1', '2', '3', '4', '5', '6', '7',
                            '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
@@ -444,7 +444,7 @@ js_str_escape(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval
     jsint mask = URL_XALPHAS | URL_XPALPHAS | URL_PATH;
     if (argc > 1) {
         double d;
-        if (!ValueToNumber(cx, argv[1], &d))
+        if (!ValueToNumber(cx, vp[3], &d))
             return JS_FALSE;
         if (!JSDOUBLE_IS_FINITE(d) ||
             (mask = (jsint)d) != d ||
@@ -458,7 +458,7 @@ js_str_escape(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval
         }
     }
 
-    JSLinearString *str = ArgToRootedString(cx, argc, argv - 2, 0);
+    JSLinearString *str = ArgToRootedString(cx, argc, vp, 0);
     if (!str)
         return JS_FALSE;
 
@@ -535,8 +535,7 @@ js_str_escape(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval
 static JSBool
 str_escape(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj = ComputeThisFromVp(cx, vp);
-    return obj && js_str_escape(cx, obj, argc, vp + 2, vp);
+    return js_str_escape(cx, argc, vp, vp);
 }
 
 /* See ECMA-262 Edition 3 B.2.2 */
@@ -713,38 +712,33 @@ Class js_StringClass = {
     ConvertStub
 };
 
-#define NORMALIZE_THIS(cx,vp,str)                                             \
-    JS_BEGIN_MACRO                                                            \
-        if (vp[1].isString()) {                                               \
-            str = vp[1].toString();                                           \
-        } else {                                                              \
-            str = NormalizeThis(cx, vp);                                      \
-            if (!str)                                                         \
-                return JS_FALSE;                                              \
-        }                                                                     \
-    JS_END_MACRO
-
-static JSString *
-NormalizeThis(JSContext *cx, Value *vp)
+/*
+ * Returns a JSString * for the |this| value associated with vp, or throws a
+ * TypeError if |this| is null or undefined.  This algorithm is the same as
+ * calling CheckObjectCoercible(this), then returning ToString(this), as all
+ * String.prototype.* methods do.
+ */
+static JS_ALWAYS_INLINE JSString *
+ThisToStringForStringProto(JSContext *cx, Value *vp)
 {
-    if (vp[1].isNullOrUndefined() && !ComputeThisFromVp(cx, vp))
-        return NULL;
+    if (vp[1].isString())
+        return vp[1].toString();
 
-    /*
-     * String.prototype.{toString,toSource,valueOf} throw a TypeError if the
-     * this-argument is not a string or a String object. So those methods use
-     * js::GetPrimitiveThis which provides that behavior.
-     *
-     * By standard, the rest of the String methods must ToString the
-     * this-argument rather than throw a TypeError. So those methods use
-     * NORMALIZE_THIS (and thus NormalizeThis) instead.
-     */
     if (vp[1].isObject()) {
         JSObject *obj = &vp[1].toObject();
-        if (obj->getClass() == &js_StringClass) {
+        if (obj->getClass() == &js_StringClass &&
+            ClassMethodIsNative(cx, obj,
+                                &js_StringClass,
+                                ATOM_TO_JSID(cx->runtime->atomState.toStringAtom),
+                                js_str_toString))
+        {
             vp[1] = obj->getPrimitiveThis();
             return vp[1].toString();
         }
+    } else if (vp[1].isNullOrUndefined()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_CONVERT_TO,
+                             vp[1].isNull() ? "null" : "undefined", "object");
+        return NULL;
     }
 
     JSString *str = js_ValueToString(cx, vp[1]);
@@ -763,14 +757,14 @@ NormalizeThis(JSContext *cx, Value *vp)
 static JSBool
 str_quote(JSContext *cx, uintN argc, Value *vp)
 {
-    JSString *str;
-
-    NORMALIZE_THIS(cx, vp, str);
+    JSString *str = ThisToStringForStringProto(cx, vp);
+    if (!str)
+        return false;
     str = js_QuoteString(cx, str, '"');
     if (!str)
-        return JS_FALSE;
+        return false;
     vp->setString(str);
-    return JS_TRUE;
+    return true;
 }
 
 static JSBool
@@ -857,11 +851,11 @@ ValueToIntegerRange(JSContext *cx, const Value &v, int32 *out)
 static JSBool
 str_substring(JSContext *cx, uintN argc, Value *vp)
 {
-    JSString *str;
+    JSString *str = ThisToStringForStringProto(cx, vp);
+    if (!str)
+        return false;
+
     int32 length, begin, end;
-
-    NORMALIZE_THIS(cx, vp, str);
-
     if (argc > 0) {
         end = length = int32(str->length());
 
@@ -924,29 +918,30 @@ js_toLowerCase(JSContext *cx, JSString *str)
 static JSBool
 str_toLowerCase(JSContext *cx, uintN argc, Value *vp)
 {
-    JSString *str;
-
-    NORMALIZE_THIS(cx, vp, str);
+    JSString *str = ThisToStringForStringProto(cx, vp);
+    if (!str)
+        return false;
     str = js_toLowerCase(cx, str);
     if (!str)
-        return JS_FALSE;
+        return false;
     vp->setString(str);
-    return JS_TRUE;
+    return true;
 }
 
 static JSBool
 str_toLocaleLowerCase(JSContext *cx, uintN argc, Value *vp)
 {
-    JSString *str;
-
     /*
      * Forcefully ignore the first (or any) argument and return toLowerCase(),
      * ECMA has reserved that argument, presumably for defining the locale.
      */
     if (cx->localeCallbacks && cx->localeCallbacks->localeToLowerCase) {
-        NORMALIZE_THIS(cx, vp, str);
+        JSString *str = ThisToStringForStringProto(cx, vp);
+        if (!str)
+            return false;
         return cx->localeCallbacks->localeToLowerCase(cx, str, Jsvalify(vp));
     }
+
     return str_toLowerCase(cx, 0, vp);
 }
 
@@ -974,54 +969,56 @@ js_toUpperCase(JSContext *cx, JSString *str)
 static JSBool
 str_toUpperCase(JSContext *cx, uintN argc, Value *vp)
 {
-    JSString *str;
-
-    NORMALIZE_THIS(cx, vp, str);
+    JSString *str = ThisToStringForStringProto(cx, vp);
+    if (!str)
+        return false;
     str = js_toUpperCase(cx, str);
     if (!str)
-        return JS_FALSE;
+        return false;
     vp->setString(str);
-    return JS_TRUE;
+    return true;
 }
 
 static JSBool
 str_toLocaleUpperCase(JSContext *cx, uintN argc, Value *vp)
 {
-    JSString *str;
-
     /*
      * Forcefully ignore the first (or any) argument and return toUpperCase(),
      * ECMA has reserved that argument, presumably for defining the locale.
      */
     if (cx->localeCallbacks && cx->localeCallbacks->localeToUpperCase) {
-        NORMALIZE_THIS(cx, vp, str);
+        JSString *str = ThisToStringForStringProto(cx, vp);
+        if (!str)
+            return false;
         return cx->localeCallbacks->localeToUpperCase(cx, str, Jsvalify(vp));
     }
+
     return str_toUpperCase(cx, 0, vp);
 }
 
 static JSBool
 str_localeCompare(JSContext *cx, uintN argc, Value *vp)
 {
-    JSString *str, *thatStr;
+    JSString *str = ThisToStringForStringProto(cx, vp);
+    if (!str)
+        return false;
 
-    NORMALIZE_THIS(cx, vp, str);
     if (argc == 0) {
         vp->setInt32(0);
     } else {
-        thatStr = js_ValueToString(cx, vp[2]);
+        JSString *thatStr = js_ValueToString(cx, vp[2]);
         if (!thatStr)
-            return JS_FALSE;
+            return false;
         if (cx->localeCallbacks && cx->localeCallbacks->localeCompare) {
             vp[2].setString(thatStr);
             return cx->localeCallbacks->localeCompare(cx, str, thatStr, Jsvalify(vp));
         }
         int32 result;
         if (!CompareStrings(cx, str, thatStr, &result))
-            return JS_FALSE;
+            return false;
         vp->setInt32(result);
     }
-    return JS_TRUE;
+    return true;
 }
 
 JSBool
@@ -1037,13 +1034,15 @@ js_str_charAt(JSContext *cx, uintN argc, Value *vp)
         if ((size_t)i >= str->length())
             goto out_of_range;
     } else {
-        NORMALIZE_THIS(cx, vp, str);
+        str = ThisToStringForStringProto(cx, vp);
+        if (!str)
+            return false;
 
         if (argc == 0) {
             d = 0.0;
         } else {
             if (!ValueToNumber(cx, vp[2], &d))
-                return JS_FALSE;
+                return false;
             d = js_DoubleToInteger(d);
         }
 
@@ -1054,13 +1053,13 @@ js_str_charAt(JSContext *cx, uintN argc, Value *vp)
 
     str = JSString::getUnitString(cx, str, size_t(i));
     if (!str)
-        return JS_FALSE;
+        return false;
     vp->setString(str);
-    return JS_TRUE;
+    return true;
 
-out_of_range:
+  out_of_range:
     vp->setString(cx->runtime->emptyString);
-    return JS_TRUE;
+    return true;
 }
 
 JSBool
@@ -1074,7 +1073,9 @@ js_str_charCodeAt(JSContext *cx, uintN argc, Value *vp)
         if ((size_t)i >= str->length())
             goto out_of_range;
     } else {
-        NORMALIZE_THIS(cx, vp, str);
+        str = ThisToStringForStringProto(cx, vp);
+        if (!str)
+            return false;
 
         double d;
         if (argc == 0) {
@@ -1376,9 +1377,9 @@ RopeMatch(JSContext *cx, JSString *textstr, const jschar *pat, jsuint patlen, js
 static JSBool
 str_indexOf(JSContext *cx, uintN argc, Value *vp)
 {
-
-    JSString *str;
-    NORMALIZE_THIS(cx, vp, str);
+    JSString *str = ThisToStringForStringProto(cx, vp);
+    if (!str)
+        return false;
 
     JSLinearString *patstr = ArgToRootedString(cx, argc, vp, 0);
     if (!patstr)
@@ -1434,8 +1435,9 @@ str_indexOf(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 str_lastIndexOf(JSContext *cx, uintN argc, Value *vp)
 {
-    JSString *textstr;
-    NORMALIZE_THIS(cx, vp, textstr);
+    JSString *textstr = ThisToStringForStringProto(cx, vp);
+    if (!textstr)
+        return false;
     size_t textlen = textstr->length();
     const jschar *text = textstr->getChars(cx);
     if (!text)
@@ -1506,8 +1508,9 @@ str_lastIndexOf(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 js_TrimString(JSContext *cx, Value *vp, JSBool trimLeft, JSBool trimRight)
 {
-    JSString *str;
-    NORMALIZE_THIS(cx, vp, str);
+    JSString *str = ThisToStringForStringProto(cx, vp);
+    if (!str)
+        return false;
     size_t length = str->length();
     const jschar *chars = str->getChars(cx);
     if (!chars)
@@ -1855,8 +1858,9 @@ MatchCallback(JSContext *cx, RegExpStatics *res, size_t count, void *p)
 static JSBool
 str_match(JSContext *cx, uintN argc, Value *vp)
 {
-    JSString *str;
-    NORMALIZE_THIS(cx, vp, str);
+    JSString *str = ThisToStringForStringProto(cx, vp);
+    if (!str)
+        return false;
 
     RegExpGuard g(cx);
     if (!g.init(argc, vp))
@@ -1885,8 +1889,9 @@ str_match(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 str_search(JSContext *cx, uintN argc, Value *vp)
 {
-    JSString *str;
-    NORMALIZE_THIS(cx, vp, str);
+    JSString *str = ThisToStringForStringProto(cx, vp);
+    if (!str)
+        return false;
 
     RegExpGuard g(cx);
     if (!g.init(argc, vp))
@@ -2432,7 +2437,9 @@ JSBool
 js::str_replace(JSContext *cx, uintN argc, Value *vp)
 {
     ReplaceData rdata(cx);
-    NORMALIZE_THIS(cx, vp, rdata.str);
+    rdata.str = ThisToStringForStringProto(cx, vp);
+    if (!rdata.str)
+        return false;
     static const uint32 optarg = 2;
 
     /* Extract replacement string/function. */
@@ -2634,8 +2641,9 @@ find_split(JSContext *cx, RegExpStatics *res, JSString *str, js::RegExp *re, jsi
 static JSBool
 str_split(JSContext *cx, uintN argc, Value *vp)
 {
-    JSString *str;
-    NORMALIZE_THIS(cx, vp, str);
+    JSString *str = ThisToStringForStringProto(cx, vp);
+    if (!str)
+        return false;
 
     if (argc == 0) {
         Value v = StringValue(str);
@@ -2736,11 +2744,11 @@ str_split(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 str_substr(JSContext *cx, uintN argc, Value *vp)
 {
-    JSString *str;
+    JSString *str = ThisToStringForStringProto(cx, vp);
+    if (!str)
+        return false;
+
     int32 length, len, begin;
-
-    NORMALIZE_THIS(cx, vp, str);
-
     if (argc > 0) {
         length = int32(str->length());
         if (!ValueToIntegerRange(cx, vp[2], &begin))
@@ -2788,28 +2796,28 @@ out:
 static JSBool
 str_concat(JSContext *cx, uintN argc, Value *vp)
 {
-    JSString *str, *str2;
-    Value *argv;
-    uintN i;
-
-    NORMALIZE_THIS(cx, vp, str);
+    JSString *str = ThisToStringForStringProto(cx, vp);
+    if (!str)
+        return false;
 
     /* Set vp (aka rval) early to handle the argc == 0 case. */
     vp->setString(str);
 
+    Value *argv;
+    uintN i;
     for (i = 0, argv = vp + 2; i < argc; i++) {
-        str2 = js_ValueToString(cx, argv[i]);
+        JSString *str2 = js_ValueToString(cx, argv[i]);
         if (!str2)
-            return JS_FALSE;
+            return false;
         argv[i].setString(str2);
 
         str = js_ConcatStrings(cx, str, str2);
         if (!str)
-            return JS_FALSE;
+            return false;
         vp->setString(str);
     }
 
-    return JS_TRUE;
+    return true;
 }
 
 static JSBool
@@ -2837,8 +2845,9 @@ str_slice(JSContext *cx, uintN argc, Value *vp)
         }
     }
 
-    JSString *str;
-    NORMALIZE_THIS(cx, vp, str);
+    JSString *str = ThisToStringForStringProto(cx, vp);
+    if (!str)
+        return false;
 
     if (argc != 0) {
         double begin, end, length;
@@ -2890,8 +2899,9 @@ static bool
 tagify(JSContext *cx, const char *begin, JSLinearString *param, const char *end,
        Value *vp)
 {
-    JSString *thisstr;
-    NORMALIZE_THIS(cx, vp, thisstr);
+    JSString *thisstr = ThisToStringForStringProto(cx, vp);
+    if (!thisstr)
+        return false;
     JSLinearString *str = thisstr->ensureLinear(cx);
     if (!str)
         return false;
