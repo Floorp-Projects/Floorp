@@ -1033,9 +1033,15 @@ var Browser = {
     this.hideSidebars();
     this.hideTitlebar();
 
-    browser.scale = this.selectedTab.clampZoomLevel(zoomLevel);
+    let scale = this.selectedTab.clampZoomLevel(zoomLevel);
+
+    // Use _contentView and setScale so that the displayport does not update.
+    // See bug 628799.
     let view = browser.getRootView();
-    view.scrollTo(scrollX, scrollY);
+    view.setScale(scale);
+    view._contentView.scrollTo(scrollX, scrollY);
+
+    browser.scale = scale;
   },
 
   zoomToPoint: function zoomToPoint(cX, cY, aRect) {
