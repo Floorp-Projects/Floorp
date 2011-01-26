@@ -122,7 +122,6 @@ function testGroups(groupItemOne, groupItemTwo, contentWindow) {
         finish();
       });
       gBrowser.removeTab(groupItemTwo.getChild(0).tab);
-      groupItemTwo.close();
     }
     window.addEventListener("tabviewhidden", onTabViewHidden, false);
     EventUtils.synthesizeKey("t", { accelKey: true });
