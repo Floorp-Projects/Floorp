@@ -78,7 +78,7 @@ HTTP(..) != media-query-add-1-ref.html media-query-remove-1-ref.html
 
 HTTP(..) == ahem-metrics-1.html ahem-metrics-1-ref.html
 HTTP(..) == ex-unit-1.html ex-unit-1-ref.html
-HTTP(..) == ex-unit-1-dynamic.html ex-unit-1-ref.html
+random-if(cocoaWidget) HTTP(..) == ex-unit-1-dynamic.html ex-unit-1-ref.html
 
 # bug 493976 - for some reason the Arabic tests below cause Tinderbox timeouts
 # Arabic support requires AAT fonts under Mac OS, OpenType otherwise
