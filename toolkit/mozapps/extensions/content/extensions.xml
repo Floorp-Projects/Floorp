@@ -1094,7 +1094,7 @@
           else
             this._icon.src = null;
 
-          if (this.mAddon.version)
+          if (shouldShowVersionNumber(this.mAddon))
             this._version.value = this.mAddon.version;
           else
             this._version.hidden = true;
@@ -1295,7 +1295,7 @@
       <method name="_updateUpgradeInfo">
         <body><![CDATA[
           // Only update the version string if we're displaying the upgrade info
-          if (this.hasAttribute("upgrade"))
+          if (this.hasAttribute("upgrade") && shouldShowVersionNumber(this.mAddon))
             this._version.value = this.mManualUpdate.version;
         ]]></body>
       </method>

@@ -1159,6 +1159,16 @@ function shouldAutoUpdate(aAddon, aDefault) {
   return aDefault !== undefined ? aDefault : AddonManager.autoUpdateDefault;
 }
 
+function shouldShowVersionNumber(aAddon) {
+  if (!aAddon.version)
+    return false;
+
+  // The version number is hidden for lightweight themes.
+  if (aAddon.type == "theme")
+    return !/@personas\.mozilla\.org$/.test(aAddon.id);
+
+  return true;
+}
 
 function createItem(aObj, aIsInstall, aIsRemote) {
   let item = document.createElement("richlistitem");
@@ -2274,7 +2284,7 @@ var gDetailView = {
     document.getElementById("detail-creator").setCreator(aAddon.creator, aAddon.homepageURL);
 
     var version = document.getElementById("detail-version");
-    if (aAddon.version) {
+    if (shouldShowVersionNumber(aAddon)) {
       version.hidden = false;
       version.value = aAddon.version;
     } else {
