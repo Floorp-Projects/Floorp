@@ -50,6 +50,7 @@ const GUID_ANNO = "sync/guid";
 const MOBILE_ANNO = "mobile/bookmarksRoot";
 const PARENT_ANNO = "sync/parent";
 const SERVICE_NOT_SUPPORTED = "Service not supported on this platform";
+const SMART_BOOKMARKS_ANNO = "Places/SmartBookmark";
 const FOLDER_SORTINDEX = 1000000;
 
 try {
@@ -137,7 +138,8 @@ BookmarkQuery.prototype = {
   _logName: "Record.BookmarkQuery",
 };
 
-Utils.deferGetSet(BookmarkQuery, "cleartext", ["folderName"]);
+Utils.deferGetSet(BookmarkQuery, "cleartext", ["folderName",
+                                               "queryId"]);
 
 function BookmarkFolder(collection, id, type) {
   PlacesItem.call(this, collection, id, type || "folder");
@@ -585,6 +587,11 @@ BookmarksStore.prototype = {
       this._log.debug(["created bookmark", newId, "under", record._parent,
                        "as", record.title, record.bmkUri].join(" "));
 
+      // Smart bookmark annotations are strings.
+      if (record.queryId) {
+        Utils.anno(newId, SMART_BOOKMARKS_ANNO, record.queryId);
+      }
+
       if (Utils.isArray(record.tags)) {
         this._tagURI(uri, record.tags);
       }
@@ -735,6 +742,9 @@ BookmarksStore.prototype = {
           this._log.debug("Could not set microsummary generator URI: " + e);
         }
       } break;
+      case "queryId":
+        Utils.anno(itemId, SMART_BOOKMARKS_ANNO, val);
+        break;
       case "siteUri":
         this._ls.setSiteURI(itemId, Utils.makeURI(val));
         break;
@@ -884,7 +894,18 @@ BookmarksStore.prototype = {
             if (folder != null) {
               folder = folder[1];
               record.folderName = this._bms.getItemTitle(folder);
-              this._log.debug("query id: " + folder + " = " + record.folderName);
+              this._log.trace("query id: " + folder + " = " + record.folderName);
+            }
+          }
+          catch(ex) {}
+          
+          // Persist the Smart Bookmark anno, if found.
+          try {
+            let anno = Utils.anno(placeId, SMART_BOOKMARKS_ANNO);
+            if (anno != null) {
+              this._log.trace("query anno: " + SMART_BOOKMARKS_ANNO +
+                              " = " + anno);
+              record.queryId = anno;
             }
           }
           catch(ex) {}
