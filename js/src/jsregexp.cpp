@@ -252,6 +252,7 @@ bool
 RegExp::parseFlags(JSContext *cx, JSString *flagStr, uintN *flagsOut)
 {
     size_t n = flagStr->length();
+    Anchor<JSString *> afs(flagStr);
     const jschar *s = flagStr->getChars(cx);
     if (!s)
         return false;
