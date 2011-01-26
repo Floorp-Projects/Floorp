@@ -339,6 +339,21 @@ private:
    */
   PRPackedBool mBlockingOnload : 1;
 
+protected:
+  /**
+   * A hack to get animations to reset, see bug 594771. On requests
+   * that originate from setting .src, we mark them for needing their animation
+   * reset when they are ready. mNewRequestsWillNeedAnimationReset is set to
+   * true while preparing such requests (as a hack around needing to change an
+   * interface), and the other two booleans store which of the current
+   * and pending requests are of the sort that need their animation restarted.
+   */
+  PRPackedBool mNewRequestsWillNeedAnimationReset : 1;
+
+private:
+  PRPackedBool mPendingRequestNeedsResetAnimation : 1;
+  PRPackedBool mCurrentRequestNeedsResetAnimation : 1;
+
   /* The number of nested AutoStateChangers currently tracking our state. */
   PRUint8 mStateChangerDepth;
 };

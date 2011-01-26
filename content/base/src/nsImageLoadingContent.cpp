@@ -114,6 +114,9 @@ nsImageLoadingContent::nsImageLoadingContent()
     mUserDisabled(PR_FALSE),
     mSuppressed(PR_FALSE),
     mBlockingOnload(PR_FALSE),
+    mNewRequestsWillNeedAnimationReset(PR_FALSE),
+    mPendingRequestNeedsResetAnimation(PR_FALSE),
+    mCurrentRequestNeedsResetAnimation(PR_FALSE),
     mStateChangerDepth(0)
 {
   if (!nsContentUtils::GetImgLoader()) {
@@ -281,9 +284,19 @@ nsImageLoadingContent::OnStopDecode(imgIRequest* aRequest,
   if (aRequest == mPendingRequest) {
     PrepareCurrentRequest() = mPendingRequest;
     mPendingRequest = nsnull;
+    mCurrentRequestNeedsResetAnimation = mPendingRequestNeedsResetAnimation;
+    mPendingRequestNeedsResetAnimation = PR_FALSE;
   }
   NS_ABORT_IF_FALSE(aRequest == mCurrentRequest,
                     "One way or another, we should be current by now");
+
+  if (mCurrentRequestNeedsResetAnimation) {
+    nsCOMPtr<imgIContainer> container;
+    mCurrentRequest->GetImage(getter_AddRefs(container));
+    if (container)
+      container->ResetAnimation();
+    mCurrentRequestNeedsResetAnimation = PR_FALSE;
+  }
 
   // We just loaded all the data we're going to get. If we haven't done an
   // initial paint, we want to make sure the image starts decoding for 2
@@ -914,6 +927,8 @@ nsImageLoadingContent::PrepareCurrentRequest()
   // Get rid of anything that was there previously.
   ClearCurrentRequest(NS_ERROR_IMAGE_SRC_CHANGED);
 
+  mCurrentRequestNeedsResetAnimation = mNewRequestsWillNeedAnimationReset;
+
   // Return a reference.
   return mCurrentRequest;
 }
@@ -923,6 +938,8 @@ nsImageLoadingContent::PreparePendingRequest()
 {
   // Get rid of anything that was there previously.
   ClearPendingRequest(NS_ERROR_IMAGE_SRC_CHANGED);
+
+  mPendingRequestNeedsResetAnimation = mNewRequestsWillNeedAnimationReset;
 
   // Return a reference.
   return mPendingRequest;
@@ -944,6 +961,7 @@ nsImageLoadingContent::ClearCurrentRequest(nsresult aReason)
   UntrackImage(mCurrentRequest);
   mCurrentRequest->CancelAndForgetObserver(aReason);
   mCurrentRequest = nsnull;
+  mCurrentRequestNeedsResetAnimation = PR_FALSE;
 
   // We only block onload during the decoding of "current" images. This one is
   // going away, so we should unblock unconditionally here.
@@ -958,6 +976,7 @@ nsImageLoadingContent::ClearPendingRequest(nsresult aReason)
   UntrackImage(mPendingRequest);
   mPendingRequest->CancelAndForgetObserver(aReason);
   mPendingRequest = nsnull;
+  mPendingRequestNeedsResetAnimation = PR_FALSE;
 }
 
 bool
