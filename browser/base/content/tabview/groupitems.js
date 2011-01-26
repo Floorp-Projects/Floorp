@@ -582,7 +582,6 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         }
       });
 
-      this.droppable(false);
       this._createUndoButton();
     } else {
       if (!this.locked.close)
@@ -626,7 +625,6 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     this.hidden = false;
     this.$undoContainer.remove();
     this.$undoContainer = null;
-    this.droppable(true);
 
     iQ(this.container).show().animate({
       "-moz-transform": "scale(1)",
