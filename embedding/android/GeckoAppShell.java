@@ -166,11 +166,14 @@ class GeckoAppShell
 
         if (freeSpace + kLibFreeSpaceBuffer < kFreeSpaceThreshold) {
             // remove any previously extracted libs since we're apparently low
-            Iterator cacheFiles = Arrays.asList(cacheFile.listFiles()).iterator();
-            while (cacheFiles.hasNext()) {
-                File libFile = (File)cacheFiles.next();
-                if (libFile.getName().endsWith(".so"))
-                    libFile.delete();
+            File[] files = cacheFile.listFiles();
+            if (files != null) {
+                Iterator cacheFiles = Arrays.asList(files).iterator();
+                while (cacheFiles.hasNext()) {
+                    File libFile = (File)cacheFiles.next();
+                    if (libFile.getName().endsWith(".so"))
+                        libFile.delete();
+                }
             }
         }
         loadLibs(apkName, freeSpace > kFreeSpaceThreshold);
