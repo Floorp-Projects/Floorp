@@ -58,15 +58,17 @@ function test()
   actual = f + '';
   compareSource(expect, actual, summary);
 
-  expect = 'TypeError: "a" is not a function';
   try
   {
     f();
+    throw new Error("no TypeError thrown calling map with undefined this");
   }
   catch(ex)
   {
-    actual = ex + '';
+    assertEq(ex instanceof TypeError, true,
+             "No TypeError for Array.prototype.map with undefined this");
   }
-  reportCompare(expect, actual, summary);
+
+  reportCompare(true, true, summary);
   exitFunc ('test');
 }

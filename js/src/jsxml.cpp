@@ -261,9 +261,9 @@ static JSPropertySpec namespace_props[] = {
 static JSBool
 namespace_toString(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj;
-
-    obj = ComputeThisFromVp(cx, vp);
+    JSObject *obj = ToObject(cx, &vp[1]);
+    if (!obj)
+        return JS_FALSE;
     if (!JS_InstanceOf(cx, obj, Jsvalify(&js_NamespaceClass), Jsvalify(vp + 2)))
         return JS_FALSE;
     *vp = Valueify(obj->getNameURIVal());
@@ -451,8 +451,11 @@ ConvertQNameToString(JSContext *cx, JSObject *obj)
 static JSBool
 qname_toString(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj = ComputeThisFromVp(cx, vp);
-    if (!obj || !InstanceOf(cx, obj, &js_QNameClass, vp + 2))
+    JSObject *obj = ToObject(cx, &vp[1]);
+    if (!obj)
+        return false;
+
+    if (!InstanceOf(cx, obj, &js_QNameClass, vp + 2))
         return false;
 
     JSString *str = ConvertQNameToString(cx, obj);
@@ -5155,7 +5158,9 @@ StartNonListXMLMethod(JSContext *cx, jsval *vp, JSObject **objp)
 
     JS_ASSERT(VALUE_IS_FUNCTION(cx, *vp));
 
-    *objp = JS_THIS_OBJECT(cx, vp);
+    *objp = ToObject(cx, Valueify(&vp[1]));
+    if (!*objp)
+        return NULL;
     xml = (JSXML *) GetInstancePrivate(cx, *objp, &js_XMLClass, Valueify(vp + 2));
     if (!xml || xml->xml_class != JSXML_CLASS_LIST)
         return xml;
@@ -5183,7 +5188,9 @@ StartNonListXMLMethod(JSContext *cx, jsval *vp, JSObject **objp)
 
 /* Beware: these two are not bracketed by JS_BEGIN/END_MACRO. */
 #define XML_METHOD_PROLOG                                                     \
-    JSObject *obj = JS_THIS_OBJECT(cx, vp);                                   \
+    JSObject *obj = ToObject(cx, Valueify(&vp[1]));                           \
+    if (!obj)                                                                 \
+        return JS_FALSE;                                                      \
     JSXML *xml = (JSXML *)GetInstancePrivate(cx, obj, &js_XMLClass, Valueify(vp+2)); \
     if (!xml)                                                                 \
         return JS_FALSE
@@ -5274,7 +5281,10 @@ xml_attribute(JSContext *cx, uintN argc, jsval *vp)
     vp[2] = OBJECT_TO_JSVAL(qn);        /* local root */
 
     jsid id = OBJECT_TO_JSID(qn);
-    return GetProperty(cx, JS_THIS_OBJECT(cx, vp), id, vp);
+    JSObject *obj = ToObject(cx, Valueify(&vp[1]));
+    if (!obj)
+        return JS_FALSE;
+    return GetProperty(cx, obj, id, vp);
 }
 
 /* XML and XMLList */
@@ -5288,7 +5298,10 @@ xml_attributes(JSContext *cx, uintN argc, jsval *vp)
 
     AutoObjectRooter tvr(cx, qn);
     jsid id = OBJECT_TO_JSID(qn);
-    return GetProperty(cx, JS_THIS_OBJECT(cx, vp), id, vp);
+    JSObject *obj = ToObject(cx, Valueify(&vp[1]));
+    if (!obj)
+        return JS_FALSE;
+    return GetProperty(cx, obj, id, vp);
 }
 
 static JSXML *
@@ -5443,8 +5456,11 @@ xml_childIndex(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 xml_children(JSContext *cx, uintN argc, jsval *vp)
 {
+    JSObject *obj = ToObject(cx, Valueify(&vp[1]));
+    if (!obj)
+        return false;
     jsid name = ATOM_TO_JSID(cx->runtime->atomState.starAtom);
-    return GetProperty(cx, JS_THIS_OBJECT(cx, vp), name, vp);
+    return GetProperty(cx, obj, name, vp);
 }
 
 /* XML and XMLList */
@@ -5653,11 +5669,12 @@ xml_elements(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 xml_hasOwnProperty(JSContext *cx, uintN argc, jsval *vp)
 {
-    JSObject *obj;
     jsval name;
     JSBool found;
 
-    obj = JS_THIS_OBJECT(cx, vp);
+    JSObject *obj = ToObject(cx, Valueify(&vp[1]));
+    if (!obj)
+        return JS_FALSE;
     if (!InstanceOf(cx, obj, &js_XMLClass, Valueify(vp + 2)))
         return JS_FALSE;
 
@@ -6691,13 +6708,10 @@ xml_toString_helper(JSContext *cx, JSXML *xml)
 static JSBool
 xml_toSource(JSContext *cx, uintN argc, jsval *vp)
 {
-    jsval thisv;
-    JSString *str;
-
-    thisv = JS_THIS(cx, vp);
-    if (JSVAL_IS_NULL(thisv))
+    JSObject *obj = ToObject(cx, Valueify(&vp[1]));
+    if (!obj)
         return JS_FALSE;
-    str = ToXMLString(cx, thisv, TO_SOURCE_FLAG);
+    JSString *str = ToXMLString(cx, OBJECT_TO_JSVAL(obj), TO_SOURCE_FLAG);
     if (!str)
         return JS_FALSE;
     *vp = STRING_TO_JSVAL(str);
@@ -6721,13 +6735,10 @@ xml_toString(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 xml_toXMLString(JSContext *cx, uintN argc, jsval *vp)
 {
-    jsval thisv;
-    JSString *str;
-
-    thisv = JS_THIS(cx, vp);
-    if (JSVAL_IS_NULL(thisv))
+    JSObject *obj = ToObject(cx, Valueify(&vp[1]));
+    if (!obj)
         return JS_FALSE;
-    str = ToXMLString(cx, thisv, 0);
+    JSString *str = ToXMLString(cx, OBJECT_TO_JSVAL(obj), 0);
     if (!str)
         return JS_FALSE;
     *vp = STRING_TO_JSVAL(str);
@@ -6738,8 +6749,11 @@ xml_toXMLString(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 xml_valueOf(JSContext *cx, uintN argc, jsval *vp)
 {
-    *vp = JS_THIS(cx, vp);
-    return !JSVAL_IS_NULL(*vp);
+    JSObject *obj = ToObject(cx, Valueify(&vp[1]));
+    if (!obj)
+        return false;
+    *vp = OBJECT_TO_JSVAL(obj);
+    return true;
 }
 
 static JSFunctionSpec xml_methods[] = {
@@ -6831,25 +6845,24 @@ SetDefaultXMLSettings(JSContext *cx, JSObject *obj)
 static JSBool
 xml_settings(JSContext *cx, uintN argc, jsval *vp)
 {
-    JSObject *settings;
-    JSObject *obj;
-
-    settings = JS_NewObject(cx, NULL, NULL, NULL);
+    JSObject *settings = JS_NewObject(cx, NULL, NULL, NULL);
     if (!settings)
-        return JS_FALSE;
+        return false;
     *vp = OBJECT_TO_JSVAL(settings);
-    obj = JS_THIS_OBJECT(cx, vp);
-    return obj && CopyXMLSettings(cx, obj, settings);
+    JSObject *obj = ToObject(cx, Valueify(&vp[1]));
+    if (!obj)
+        return false;
+    return CopyXMLSettings(cx, obj, settings);
 }
 
 static JSBool
 xml_setSettings(JSContext *cx, uintN argc, jsval *vp)
 {
-    JSObject *obj, *settings;
+    JSObject *settings;
     jsval v;
     JSBool ok;
 
-    obj = JS_THIS_OBJECT(cx, vp);
+    JSObject *obj = ToObject(cx, Valueify(&vp[1]));
     if (!obj)
         return JS_FALSE;
     v = (argc == 0) ? JSVAL_VOID : vp[2];

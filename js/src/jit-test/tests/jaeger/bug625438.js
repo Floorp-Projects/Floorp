@@ -1,7 +1,7 @@
 // vim: set ts=4 sw=4 tw=99 et:
 
 var count = 0;
-watch("x", function() {
+this.watch("x", function() {
     count++;
 });
 for(var i=0; i<10; i++) {
