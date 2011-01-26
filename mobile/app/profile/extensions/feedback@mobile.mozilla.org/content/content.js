@@ -8,9 +8,8 @@ function populateFeedback(aMessage) {
     URLElem.value = referrer;
 
   let URLElems = content.document.getElementsByClassName("url");
-  URLElems.forEach(function(aElement) {
-    aElement.value = referrer;
-  });
+  for (let index=0; index<URLElems.length; index++)
+    URLElems[index].value = referrer;
 
   let device = json.device || "";
   let deviceElem = content.document.getElementById("id_device");
@@ -18,9 +17,8 @@ function populateFeedback(aMessage) {
     deviceElem.value = device;
 
   let deviceElems = content.document.getElementsByClassName("device");
-  deviceElems.forEach(function(aElement) {
-    aElement.value = device;
-  });
+  for (let index=0; index<deviceElems.length; index++)
+    deviceElems[index].value = device;
 
   let manufacturer = json.manufacturer || "";
   let manufacturerElem = content.document.getElementById("id_manufacturer");
@@ -28,9 +26,8 @@ function populateFeedback(aMessage) {
     manufacturerElem.value = manufacturer;
 
   let manufacturerElems = content.document.getElementsByClassName("manufacturer");
-  manufacturerElems.forEach(function(aElement) {
-    aElement.value = manufacturer;
-  });
+  for (let index=0; index<manufacturerElems.length; index++)
+    manufacturerElems[index].value = manufacturer;
 }
 
 addMessageListener("Feedback:InitPage", populateFeedback);
