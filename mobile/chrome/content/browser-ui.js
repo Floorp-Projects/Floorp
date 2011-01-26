@@ -422,7 +422,7 @@ var BrowserUI = {
 
     // content navigator helper
     let contentHelper = document.getElementById("content-navigator");
-    contentHelper.top = windowH;
+    contentHelper.top = windowH - contentHelper.getBoundingClientRect().height;
   },
 
   init: function() {
