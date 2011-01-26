@@ -1346,7 +1346,7 @@ asserts(1) == 496032-1.html 496032-1-ref.html # bug 399262
 == 501257-1b.html 501257-1-ref.html
 == 501257-1.xhtml 501257-1-ref.xhtml
 == 501627-1.html 501627-1-ref.html
-== 502288-1.html 502288-1-ref.html
+random-if(cocoaWidget) == 502288-1.html 502288-1-ref.html
 == 502942-1.html 502942-1-ref.html
 == 502447-1.html 502447-1-ref.html
 == 502795-1.html 502795-1-ref.html
@@ -1371,8 +1371,8 @@ fails == 503531-1.html 503531-1-ref.html
 == 509155-1.xhtml 509155-1-ref.xhtml
 == 512410.html 512410-ref.html
 == 512631-1.html 512631-1-ref.html
-== 513153-1a.html 513153-1-ref.html
-== 513153-1b.html 513153-1-ref.html
+random-if(cocoaWidget) == 513153-1a.html 513153-1-ref.html
+random-if(cocoaWidget) == 513153-1b.html 513153-1-ref.html
 == 513153-2a.html 513153-2-ref.html
 == 513153-2b.html 513153-2-ref.html
 == 513318-1.xul 513318-1-ref.xul
@@ -1394,7 +1394,7 @@ HTTP(..) == 518172-2b.html 518172-b-ref.html
 == 523096-1.html 523096-1-ref.html
 random-if(d2d) == 523468-1.html 523468-1-ref.html
 == 524175-1.html 524175-1-ref.html
-== 526463-1.html 526463-1-ref.html
+random-if(cocoaWidget) == 526463-1.html 526463-1-ref.html
 == 527464-1.html 527464-ref.html
 == 528038-1a.html 528038-1-ref.html
 == 528038-1b.html 528038-1-ref.html
