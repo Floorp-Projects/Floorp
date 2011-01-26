@@ -9,10 +9,12 @@ function browser() {
     return document.getElementById("content");
 }
 
+function frameLoader() {
+    return browser().QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader;
+}
+
 function viewManager() {
-    return browser().QueryInterface(Components.interfaces.nsIFrameLoaderOwner)
-                    .frameLoader
-                    .QueryInterface(Components.interfaces.nsIContentViewManager);
+    return frameLoader().QueryInterface(Components.interfaces.nsIContentViewManager);
 }
 
 function rootView() {
