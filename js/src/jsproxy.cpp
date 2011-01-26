@@ -378,6 +378,13 @@ ParsePropertyDescriptorObject(JSContext *cx, JSObject *obj, jsid id, const Value
 }
 
 static bool
+IndicatePropertyNotFound(JSContext *cx, PropertyDescriptor *desc)
+{
+    desc->obj = NULL;
+    return true;
+}
+
+static bool
 MakePropertyDescriptorObject(JSContext *cx, jsid id, PropertyDescriptor *desc, Value *vp)
 {
     if (!desc->obj) {
@@ -496,8 +503,9 @@ JSScriptedProxyHandler::getPropertyDescriptor(JSContext *cx, JSObject *proxy, js
     AutoValueRooter tvr(cx);
     return GetFundamentalTrap(cx, handler, ATOM(getPropertyDescriptor), tvr.addr()) &&
            Trap1(cx, handler, tvr.value(), id, tvr.addr()) &&
-           ReturnedValueMustNotBePrimitive(cx, proxy, ATOM(getPropertyDescriptor), tvr.value()) &&
-           ParsePropertyDescriptorObject(cx, proxy, id, tvr.value(), desc);
+           ((tvr.value().isUndefined() && IndicatePropertyNotFound(cx, desc)) ||
+            ReturnedValueMustNotBePrimitive(cx, proxy, ATOM(getPropertyDescriptor), tvr.value()) &&
+            ParsePropertyDescriptorObject(cx, proxy, id, tvr.value(), desc));
 }
 
 bool
@@ -508,8 +516,9 @@ JSScriptedProxyHandler::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy,
     AutoValueRooter tvr(cx);
     return GetFundamentalTrap(cx, handler, ATOM(getOwnPropertyDescriptor), tvr.addr()) &&
            Trap1(cx, handler, tvr.value(), id, tvr.addr()) &&
-           ReturnedValueMustNotBePrimitive(cx, proxy, ATOM(getPropertyDescriptor), tvr.value()) &&
-           ParsePropertyDescriptorObject(cx, proxy, id, tvr.value(), desc);
+           ((tvr.value().isUndefined() && IndicatePropertyNotFound(cx, desc)) ||
+            ReturnedValueMustNotBePrimitive(cx, proxy, ATOM(getPropertyDescriptor), tvr.value()) &&
+            ParsePropertyDescriptorObject(cx, proxy, id, tvr.value(), desc));
 }
 
 bool
