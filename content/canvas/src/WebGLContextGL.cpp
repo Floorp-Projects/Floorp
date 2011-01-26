@@ -2955,6 +2955,10 @@ WebGLContext::RenderbufferStorage(WebGLenum target, WebGLenum internalformat, We
         if (!gl->IsGLES2()) internalformatForGL = LOCAL_GL_RGB8;
         break;
     case LOCAL_GL_DEPTH_COMPONENT16:
+        if (!gl->IsGLES2() || gl->IsExtensionSupported(gl::GLContext::OES_depth24))
+            internalformatForGL = LOCAL_GL_DEPTH_COMPONENT24;
+        else if (gl->IsExtensionSupported(gl::GLContext::OES_packed_depth_stencil))
+            internalformatForGL = LOCAL_GL_DEPTH24_STENCIL8;
         break;
     case LOCAL_GL_STENCIL_INDEX8:
         break;
