@@ -439,7 +439,7 @@ class GeckoSurfaceView
 
     @Override
     public boolean onKeyPreIme(int keyCode, KeyEvent event) {
-        if (mIMEState != IME_STATE_DISABLED || event.isSystem())
+        if (event.isSystem())
             return super.onKeyPreIme(keyCode, event);
 
         switch (event.getAction()) {
