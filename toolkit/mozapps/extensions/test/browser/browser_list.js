@@ -116,7 +116,6 @@ add_test(function() {
     is(get_node(addon, "version").value, "1.0", "Version should be correct");
     is_element_visible(get_node(addon, "description"), "Description should be visible");
     is(get_node(addon, "description").value, "A test add-on", "Description should be correct");
-    is_element_hidden(get_node(addon, "creator"), "Creator should be hidden");
     is_element_hidden(get_class_node(addon, "disabled-postfix"), "Disabled postfix should be hidden");
     is_element_hidden(get_class_node(addon, "update-postfix"), "Update postfix should be hidden");
     is(Date.parse(get_node(addon, "date-updated").value), gDate.getTime(), "Update date should be correct");
@@ -153,7 +152,6 @@ add_test(function() {
     is_element_visible(get_node(addon, "version"), "Version should be visible");
     is(get_node(addon, "version").value, "2.0", "Version should be correct");
     is_element_hidden(get_node(addon, "description"), "Description should be hidden");
-    is_element_hidden(get_node(addon, "creator"), "Creator should be hidden");
     is_element_visible(get_class_node(addon, "disabled-postfix"), "Disabled postfix should be visible");
     is_element_hidden(get_class_node(addon, "update-postfix"), "Update postfix should be hidden");
     is(get_node(addon, "date-updated").value, "Unknown", "Date should be correct");
@@ -353,7 +351,6 @@ add_test(function() {
       is(get_node(addon, "version").value, "1.0", "Version should be correct");
       is_element_visible(get_node(addon, "description"), "Description should be visible");
       is(get_node(addon, "description").value, "A test add-on", "Description should be correct");
-      is_element_hidden(get_node(addon, "creator"), "Creator should be hidden");
       is_element_hidden(get_class_node(addon, "disabled-postfix"), "Disabled postfix should be hidden");
       is_element_hidden(get_class_node(addon, "update-postfix"), "Update postfix should be hidden");
       is(Date.parse(get_node(addon, "date-updated").value), gDate.getTime(), "Update date should be correct");
@@ -390,7 +387,6 @@ add_test(function() {
       is_element_visible(get_node(addon, "version"), "Version should be visible");
       is(get_node(addon, "version").value, "2.0", "Version should be correct");
       is_element_hidden(get_node(addon, "description"), "Description should be hidden");
-      is_element_hidden(get_node(addon, "creator"), "Creator should be hidden");
       is_element_visible(get_class_node(addon, "disabled-postfix"), "Disabled postfix should be visible");
       is_element_hidden(get_class_node(addon, "update-postfix"), "Update postfix should be hidden");
       is(get_node(addon, "date-updated").value, "Unknown", "Date should be correct");
@@ -558,7 +554,6 @@ add_test(function() {
   is(get_node(addon, "version").value, "2.0", "Version should be correct");
   is_element_visible(get_node(addon, "description"), "Description should be visible");
   is(get_node(addon, "description").value, "A test add-on with a new description", "Description should be correct");
-  is_element_hidden(get_node(addon, "creator"), "Creator should be hidden");
   is_element_hidden(get_class_node(addon, "disabled-postfix"), "Disabled postfix should be hidden");
   is_element_hidden(get_class_node(addon, "update-postfix"), "Update postfix should be hidden");
   is(Date.parse(get_node(addon, "date-updated").value), gDate.getTime(), "Update date should be correct");
