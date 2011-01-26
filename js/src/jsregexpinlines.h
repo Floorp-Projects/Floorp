@@ -140,6 +140,8 @@ class RegExp
     /*
      * Parse regexp flags. Report an error and return false if an invalid
      * sequence of flags is encountered (repeat/invalid flag).
+     *
+     * N.B. flagStr must be rooted.
      */
     static bool parseFlags(JSContext *cx, JSString *flagStr, uintN *flagsOut);
 
