@@ -121,8 +121,6 @@ public:
 
   JSObject* ToJSObject(JSContext* cx) {
     if (!mObj && !mCx) {
-      JSAutoRequest request(cx);
-
       JSClass* clasp = const_cast<JSClass*>(&sHandle_JSClass);
       JSObject* obj = JS_NewObject(cx, clasp, NULL, NULL);
       if (!obj)
