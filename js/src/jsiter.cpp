@@ -375,7 +375,7 @@ GetCustomIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
     /* Otherwise call it and return that object. */
     LeaveTrace(cx);
     Value arg = BooleanValue((flags & JSITER_FOREACH) == 0);
-    if (!ExternalInvoke(cx, obj, *vp, 1, &arg, vp))
+    if (!ExternalInvoke(cx, ObjectValue(*obj), *vp, 1, &arg, vp))
         return false;
     if (vp->isPrimitive()) {
         /*
@@ -710,10 +710,8 @@ js_ThrowStopIteration(JSContext *cx)
 static JSBool
 iterator_next(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj;
-
-    obj = ComputeThisFromVp(cx, vp);
-    if (!InstanceOf(cx, obj, &js_IteratorClass, vp + 2))
+    JSObject *obj = ToObject(cx, &vp[1]);
+    if (!obj || !InstanceOf(cx, obj, &js_IteratorClass, vp + 2))
         return false;
 
     if (!js_IteratorMore(cx, obj, vp))
@@ -953,7 +951,7 @@ js_IteratorMore(JSContext *cx, JSObject *iterobj, Value *rval)
         jsid id = ATOM_TO_JSID(cx->runtime->atomState.nextAtom);
         if (!js_GetMethod(cx, iterobj, id, JSGET_METHOD_BARRIER, rval))
             return false;
-        if (!ExternalInvoke(cx, iterobj, *rval, 0, NULL, rval)) {
+        if (!ExternalInvoke(cx, ObjectValue(*iterobj), *rval, 0, NULL, rval)) {
             /* Check for StopIteration. */
             if (!cx->isExceptionPending() || !js_ValueIsStopIteration(cx->getPendingException()))
                 return false;
@@ -1339,11 +1337,10 @@ CloseGenerator(JSContext *cx, JSObject *obj)
 static JSBool
 generator_op(JSContext *cx, JSGeneratorOp op, Value *vp, uintN argc)
 {
-    JSObject *obj;
     LeaveTrace(cx);
 
-    obj = ComputeThisFromVp(cx, vp);
-    if (!InstanceOf(cx, obj, &js_GeneratorClass, vp + 2))
+    JSObject *obj = ToObject(cx, &vp[1]);
+    if (!obj || !InstanceOf(cx, obj, &js_GeneratorClass, vp + 2))
         return JS_FALSE;
 
     JSGenerator *gen = (JSGenerator *) obj->getPrivate();
