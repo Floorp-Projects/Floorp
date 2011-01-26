@@ -165,7 +165,15 @@ struct VisitData {
   bool typed;
   PRUint32 transitionType;
   PRTime visitTime;
+
+  /**
+   * Stores the title.  If this is empty (IsEmpty() returns true), then the
+   * title should be removed from the Place.  If the title is void (IsVoid()
+   * returns true), then no title has been set on this object, and titleChanged
+   * should remain false.
+   */
   nsString title;
+
   nsCString referrerSpec;
 
   // TODO bug 626836 hook up hidden and typed change tracking too!
@@ -1442,12 +1450,17 @@ History::FetchPageInfo(VisitData& _place)
   rv = stmt->GetString(1, title);
   NS_ENSURE_SUCCESS(rv, true);
 
-  // We track if we change the title, but will add the current title to _place
-  // if we do not have one set.
-  _place.titleChanged = !(_place.title.Equals(title) ||
-                          (_place.title.IsVoid() && title.IsVoid()));
+  // If the title we were given was void, that means we did not bother to set
+  // it to anything.  As a result, ignore the fact that we may have changed the
+  // title (because we don't want to, that would be empty), and set the title
+  // to what is currently stored in the datbase.
   if (_place.title.IsVoid()) {
     _place.title = title;
+  }
+  // Otherwise, just indicate if the title has changed.
+  else {
+    _place.titleChanged = !(_place.title.Equals(title) ||
+                            (_place.title.IsEmpty() && title.IsVoid()));
   }
 
   if (_place.hidden) {
