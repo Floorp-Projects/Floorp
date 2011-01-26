@@ -89,9 +89,11 @@ const AnimatedZoom = {
     let zoomRatio = window.innerWidth / nextRect.width;
     let zoomLevel = browser.scale * zoomRatio;
 
+    // We use _contentView and setScale because we do *not* want the displayport to update.
+    // XXX We need a new API, see bug 628799.
     let contentView = browser.getRootView();
     contentView.setScale(zoomLevel);
-    contentView.scrollTo(nextRect.left * zoomRatio, nextRect.top * zoomRatio);
+    contentView._contentView.scrollTo(nextRect.left * zoomRatio, nextRect.top * zoomRatio);
 
     this.zoomRect = nextRect;
   },
