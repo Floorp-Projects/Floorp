@@ -58,6 +58,7 @@ _MAIN_TEST_FILES = \
   browser_bug567137.js \
   browser_bug572561.js \
   browser_bug577990.js \
+  browser_bug580298.js \
   browser_bug581076.js \
   browser_bug586574.js \
   browser_bug587970.js \
