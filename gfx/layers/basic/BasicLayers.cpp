@@ -667,7 +667,8 @@ public:
                      void* aCallbackData);
 
   static void PaintContext(gfxPattern* aPattern,
-                           const gfxIntSize& aSize,
+                           const nsIntRegion& aVisible,
+                           const nsIntRect* aTileSourceRect,
                            float aOpacity,
                            gfxContext* aContext);
 
@@ -712,13 +713,16 @@ BasicImageLayer::GetAndPaintCurrentImage(gfxContext* aContext,
 
   pat->SetFilter(mFilter);
 
-  PaintContext(pat, mSize, aOpacity, aContext); 
+  PaintContext(pat,
+               nsIntRegion(nsIntRect(0, 0, mSize.width, mSize.height)),
+               GetTileSourceRect(), aOpacity, aContext); 
   return pat.forget();
 }
 
 /*static*/ void
 BasicImageLayer::PaintContext(gfxPattern* aPattern,
-                              const gfxIntSize& aSize,
+                              const nsIntRegion& aVisible,
+                              const nsIntRect* aTileSourceRect,
                               float aOpacity,
                               gfxContext* aContext)
 {
@@ -736,14 +740,34 @@ BasicImageLayer::PaintContext(gfxPattern* aPattern,
     extend = gfxPattern::EXTEND_NONE;
   }
 
-  aPattern->SetExtend(extend);
+  if (!aTileSourceRect) {
+    aContext->NewPath();
+    // No need to snap here; our transform has already taken care of it.
+    // XXX true for arbitrary regions?  Don't care yet though
+    gfxUtils::PathFromRegion(aContext, aVisible);
+    aPattern->SetExtend(extend);
+    aContext->SetPattern(aPattern);
+    aContext->FillWithOpacity(aOpacity);
+  } else {
+    nsRefPtr<gfxASurface> source = aPattern->GetSurface();
+    NS_ABORT_IF_FALSE(source, "Expecting a surface pattern");
+    gfxIntSize sourceSize = source->GetSize();
+    nsIntRect sourceRect(0, 0, sourceSize.width, sourceSize.height);
+    NS_ABORT_IF_FALSE(sourceRect == *aTileSourceRect,
+                      "Cowardly refusing to create a temporary surface for tiling");
 
-  /* Draw RGB surface onto frame */
-  aContext->NewPath();
-  // No need to snap here; our transform has already taken care of it.
-  aContext->Rectangle(gfxRect(0, 0, aSize.width, aSize.height));
-  aContext->SetPattern(aPattern);
-  aContext->FillWithOpacity(aOpacity);
+    gfxContextAutoSaveRestore saveRestore(aContext);
+
+    aContext->NewPath();
+    gfxUtils::PathFromRegion(aContext, aVisible);
+
+    aPattern->SetExtend(gfxPattern::EXTEND_REPEAT);
+    aContext->SetPattern(aPattern);
+    aContext->FillWithOpacity(aOpacity);
+  }
+
+  // Reset extend mode for callers that need to reuse the pattern
+  aPattern->SetExtend(extend);
 }
 
 class BasicColorLayer : public ColorLayer, BasicImplData {
@@ -1890,7 +1914,9 @@ BasicShadowableImageLayer::Paint(gfxContext* aContext,
   }
 
   nsRefPtr<gfxContext> tmpCtx = new gfxContext(mBackSurface);
-  PaintContext(pat, mSize, 1.0, tmpCtx);
+  PaintContext(pat,
+               nsIntRegion(nsIntRect(0, 0, mSize.width, mSize.height)),
+               nsnull, 1.0, tmpCtx);
 
   BasicManager()->PaintedImage(BasicManager()->Hold(this),
                                mBackSurface);
@@ -2366,7 +2392,8 @@ BasicShadowImageLayer::Paint(gfxContext* aContext,
 
   nsRefPtr<gfxPattern> pat = new gfxPattern(mFrontSurface);
   pat->SetFilter(mFilter);
-  BasicImageLayer::PaintContext(pat, mSize, GetEffectiveOpacity(), aContext);
+  BasicImageLayer::PaintContext(
+    pat, GetEffectiveVisibleRegion(), GetTileSourceRect(), GetEffectiveOpacity(), aContext);
 }
 
 class BasicShadowColorLayer : public ShadowColorLayer,
@@ -2631,6 +2658,8 @@ BasicShadowLayerManager::SetRoot(Layer* aLayer)
 void
 BasicShadowLayerManager::Mutated(Layer* aLayer)
 {
+  BasicLayerManager::Mutated(aLayer);
+
   NS_ASSERTION(InConstruction() || InDrawing(), "wrong phase");
   if (HasShadowManager()) {
     ShadowLayerForwarder::Mutated(Hold(aLayer));
