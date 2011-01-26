@@ -83,7 +83,7 @@ function runTest() {
 
   popup.close();
 
-  SimpleTest.finish();
+  SimpleTest.executeSoon(SimpleTest.finish);
   dump('Final yield.\n');
   yield;
 }
