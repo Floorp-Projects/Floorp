@@ -595,6 +595,12 @@ BasicBufferOGL::BeginPaint(ContentType aContentType)
     result.mContext = new gfxContext(surf);
   } else {
     result.mContext = new gfxContext(mTexImage->BeginUpdate(result.mRegionToDraw));
+    if (mTexImage->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA) {
+      gfxUtils::ClipToRegion(result.mContext, result.mRegionToDraw);
+      result.mContext->SetOperator(gfxContext::OPERATOR_CLEAR);
+      result.mContext->Fill();
+      result.mContext->SetOperator(gfxContext::OPERATOR_OVER);
+    }
   }
   if (!result.mContext) {
     NS_WARNING("unable to get context for update");
@@ -687,14 +693,18 @@ ThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer,
 
     LayerManager::DrawThebesLayerCallback callback =
       mOGLManager->GetThebesLayerCallback();
-    void* callbackData = mOGLManager->GetThebesLayerCallbackData();
-    callback(this, state.mContext, state.mRegionToDraw,
-             state.mRegionToInvalidate, callbackData);
-    // Everything that's visible has been validated. Do this instead of
-    // OR-ing with aRegionToDraw, since that can lead to a very complex region
-    // here (OR doesn't automatically simplify to the simplest possible
-    // representation of a region.)
-    mValidRegion.Or(mValidRegion, mVisibleRegion);
+    if (!callback) {
+      NS_ERROR("GL should never need to update ThebesLayers in an empty transaction");
+    } else {
+      void* callbackData = mOGLManager->GetThebesLayerCallbackData();
+      callback(this, state.mContext, state.mRegionToDraw,
+               state.mRegionToInvalidate, callbackData);
+      // Everything that's visible has been validated. Do this instead of
+      // OR-ing with aRegionToDraw, since that can lead to a very complex region
+      // here (OR doesn't automatically simplify to the simplest possible
+      // representation of a region.)
+      mValidRegion.Or(mValidRegion, mVisibleRegion);
+    }
   }
 
   DEBUG_GL_ERROR_CHECK(gl());

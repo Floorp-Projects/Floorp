@@ -94,6 +94,14 @@
   -moz-margin-end: 6px;
 }
 
+.webconsole-msg-body-piece {
+  margin: 0;
+}
+
+.webconsole-msg-url {
+  margin: 0 6px;
+}
+
 .webconsole-location {
   margin-top: 0;
   margin-bottom: 0;

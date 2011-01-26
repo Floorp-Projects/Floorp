@@ -67,7 +67,14 @@
   -moz-appearance: none;
   background-color: transparent;
   border-top: none;
-  border-bottom: 1px solid ThreeDShadow;
+}
+
+#navigator-toolbox::after {
+  content: "";
+  display: -moz-box;
+  -moz-box-ordinal-group: 101; /* tabs toolbar is 100 */
+  height: 1px;
+  background-color: ThreeDShadow;
 }
 
 #navigator-toolbox > toolbar:not(:-moz-lwtheme) {
@@ -219,7 +226,7 @@
   -moz-margin-start: .5em;
 }
 
-.split-menuitem-menu {
+.splitmenu-menu {
   -moz-box-pack: end;
 }
 
@@ -669,12 +676,10 @@ menuitem.bookmark-item {
 .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
 .toolbarbutton-1 > .toolbarbutton-icon {
   -moz-margin-end: 0;
-  width: 18px;
-  height: 18px;
 }
 
-toolbar[iconsize="small"] .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
-toolbar[iconsize="small"] .toolbarbutton-1 > .toolbarbutton-icon {
+#nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
+#nav-bar .toolbarbutton-1 > .toolbarbutton-icon {
   margin: 1px;
   width: 16px;
   height: 16px;
@@ -1130,15 +1135,17 @@ html|*.urlbar-input:-moz-lwtheme:-moz-placeholder,
   -moz-box-align: stretch;
 }
 
-#urlbar-display {
+#urlbar-display-box {
   margin-top: -2px;
   margin-bottom: -2px;
-  padding-top: 3px;
-  padding-bottom: 2px;
-  -moz-padding-end: 3px;
-  color: GrayText;
   -moz-border-end: 1px solid #AAA;
   -moz-margin-end: 3px;
+}
+
+#urlbar-display {
+  margin-top: 0;
+  margin-bottom: 0;
+  color: GrayText;
 }
 
 /* over-link in location bar */

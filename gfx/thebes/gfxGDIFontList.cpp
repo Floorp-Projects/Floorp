@@ -39,6 +39,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_LOGGING
+#define FORCE_PR_LOG /* Allow logging in the release build */
+#endif
+#include "prlog.h"
+
 #include "gfxGDIFontList.h"
 #include "gfxWindowsPlatform.h"
 #include "gfxUserFontSet.h"
@@ -65,15 +70,20 @@
 #endif
 
 #ifdef PR_LOGGING
-static PRLogModuleInfo *gFontInfoLog = PR_NewLogModule("fontInfoLog");
-#endif /* PR_LOGGING */
+#define LOG_FONTLIST(args) PR_LOG(gfxPlatform::GetLog(eGfxLog_fontlist), \
+                               PR_LOG_DEBUG, args)
+#define LOG_FONTLIST_ENABLED() PR_LOG_TEST( \
+                                   gfxPlatform::GetLog(eGfxLog_fontlist), \
+                                   PR_LOG_DEBUG)
 
-#define LOG(args) PR_LOG(gFontInfoLog, PR_LOG_DEBUG, args)
-#define LOG_ENABLED() PR_LOG_TEST(gFontInfoLog, PR_LOG_DEBUG)
+#endif // PR_LOGGING
 
 // font info loader constants
-static const PRUint32 kDelayBeforeLoadingFonts = 8 * 1000; // 8secs
-static const PRUint32 kIntervalBetweenLoadingFonts = 150; // 150ms
+
+// avoid doing this during startup even on slow machines but try to start
+// it soon enough so that system fallback doesn't happen first
+static const PRUint32 kDelayBeforeLoadingFonts = 120 * 1000; // 2 minutes after init
+static const PRUint32 kIntervalBetweenLoadingFonts = 2000;   // every 2 seconds until complete
 
 static __inline void
 BuildKeyNameFromFontName(nsAString &aName)
@@ -248,8 +258,10 @@ GDIFontEntry::ReadCMAP()
     mSymbolFont = symbolFont;
     mHasCmapTable = NS_SUCCEEDED(rv);
 
-    PR_LOG(gFontInfoLog, PR_LOG_DEBUG, ("(fontinit-cmap) psname: %s, size: %d\n", 
-                                        NS_ConvertUTF16toUTF8(mName).get(), mCharacterMap.GetSize()));
+#ifdef PR_LOGGING
+    LOG_FONTLIST(("(fontlist-cmap) name: %s, size: %d\n",
+                  NS_ConvertUTF16toUTF8(mName).get(), mCharacterMap.GetSize()));
+#endif
     return rv;
 }
 
@@ -525,8 +537,8 @@ GDIFontFamily::FamilyAddStylesProc(const ENUMLOGFONTEXW *lpelfe,
     }
 
 #ifdef PR_LOGGING
-    if (LOG_ENABLED()) {
-        LOG(("(fontinit) added (%s) to family (%s)"
+    if (LOG_FONTLIST_ENABLED()) {
+        LOG_FONTLIST(("(fontlist) added (%s) to family (%s)"
              " with style: %s weight: %d stretch: %d",
              NS_ConvertUTF16toUTF8(fe->Name()).get(), 
              NS_ConvertUTF16toUTF8(ff->Name()).get(), 
@@ -561,8 +573,9 @@ GDIFontFamily::FindStyleVariations()
                         (FONTENUMPROCW)GDIFontFamily::FamilyAddStylesProc,
                         (LPARAM)this, 0);
 #ifdef PR_LOGGING
-    if (LOG_ENABLED() && mAvailableFonts.Length() == 0) {
-        LOG(("no styles available in family \"%s\"", NS_ConvertUTF16toUTF8(mName).get()));
+    if (LOG_FONTLIST_ENABLED() && mAvailableFonts.Length() == 0) {
+        LOG_FONTLIST(("(fontlist) no styles available in family \"%s\"",
+                      NS_ConvertUTF16toUTF8(mName).get()));
     }
 #endif
 
@@ -593,44 +606,49 @@ RemoveCharsetFromFontSubstitute(nsAString &aName)
         aName.Truncate(comma);
 }
 
+#define MAX_VALUE_NAME 512
+#define MAX_VALUE_DATA 512
+
 nsresult
 gfxGDIFontList::GetFontSubstitutes()
 {
-    // Create the list of FontSubstitutes
-    nsCOMPtr<nsIWindowsRegKey> regKey = do_CreateInstance("@mozilla.org/windows-registry-key;1");
-    if (!regKey)
+    HKEY hKey;
+    DWORD i, rv, lenAlias, lenActual, valueType;
+    WCHAR aliasName[MAX_VALUE_NAME];
+    WCHAR actualName[MAX_VALUE_DATA];
+
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, 
+          L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\FontSubstitutes",
+          0, KEY_READ, &hKey) != ERROR_SUCCESS)
+    {
         return NS_ERROR_FAILURE;
-    NS_NAMED_LITERAL_STRING(kFontSubstitutesKey, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\FontSubstitutes");
+    }
 
-    nsresult rv = regKey->Open(nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE,
-                               kFontSubstitutesKey, nsIWindowsRegKey::ACCESS_READ);
-    if (NS_FAILED(rv))
-        return rv;
+    for (i = 0, rv = ERROR_SUCCESS; rv != ERROR_NO_MORE_ITEMS; i++) {
+        aliasName[0] = 0;
+        lenAlias = sizeof(aliasName);
+        actualName[0] = 0;
+        lenActual = sizeof(actualName);
+        rv = RegEnumValueW(hKey, i, aliasName, &lenAlias, NULL, &valueType, 
+                (LPBYTE)actualName, &lenActual);
 
-    PRUint32 count;
-    rv = regKey->GetValueCount(&count);
-    if (NS_FAILED(rv) || count == 0)
-        return rv;
-    for (PRUint32 i = 0; i < count; i++) {
-        nsAutoString substituteName;
-        rv = regKey->GetValueName(i, substituteName);
-        if (NS_FAILED(rv) || substituteName.IsEmpty() || substituteName.CharAt(1) == PRUnichar('@'))
+        if (rv != ERROR_SUCCESS || valueType != REG_SZ || lenAlias == 0) {
             continue;
-        PRUint32 valueType;
-        rv = regKey->GetValueType(substituteName, &valueType);
-        if (NS_FAILED(rv) || valueType != nsIWindowsRegKey::TYPE_STRING)
-            continue;
-        nsAutoString actualFontName;
-        rv = regKey->ReadStringValue(substituteName, actualFontName);
-        if (NS_FAILED(rv))
-            continue;
+        }
 
+        if (aliasName[0] == WCHAR('@')) {
+            continue;
+        }
+
+        nsAutoString substituteName((PRUnichar*) aliasName);
+        nsAutoString actualFontName((PRUnichar*) actualName);
         RemoveCharsetFromFontSubstitute(substituteName);
         BuildKeyNameFromFontName(substituteName);
         RemoveCharsetFromFontSubstitute(actualFontName);
         BuildKeyNameFromFontName(actualFontName);
         gfxFontFamily *ff;
-        if (!actualFontName.IsEmpty() && (ff = mFontFamilies.GetWeak(actualFontName))) {
+        if (!actualFontName.IsEmpty() && 
+            (ff = mFontFamilies.GetWeak(actualFontName))) {
             mFontSubstitutes.Put(substituteName, ff);
         } else {
             mNonExistingFonts.AppendElement(substituteName);

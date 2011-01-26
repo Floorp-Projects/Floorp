@@ -44,7 +44,9 @@
 
 /* ::::: menu/menuitem ::::: */
 
-menu, menuitem {
+menu,
+menuitem,
+.splitmenu-menuitem {
   -moz-appearance: menuitem;
   -moz-box-align: center;
   max-width: 42em;
@@ -62,13 +64,15 @@ menuitem[default="true"] {
 }
 
 menu[_moz-menuactive="true"],
-menuitem[_moz-menuactive="true"] {
+menuitem[_moz-menuactive="true"],
+.splitmenu-menuitem[_moz-menuactive="true"] {
   color: -moz-menuhovertext;
   background-color: -moz-menuhover;
 }
 
 menu[disabled="true"],
-menuitem[disabled="true"] {
+menuitem[disabled="true"],
+.splitmenu-menuitem[disabled="true"] {
   color: GrayText;
 }
 

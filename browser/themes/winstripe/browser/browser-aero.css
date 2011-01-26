@@ -121,22 +121,22 @@
     text-shadow: 0 0 .5em white, 0 0 .5em white, 0 1px 0 rgba(255,255,255,.4);
   }
 
+  #main-window[sizemode="normal"] #navigator-toolbox:not([inFullscreen="true"])::after,
   #main-window[sizemode="normal"] #navigator-toolbox[tabsontop="true"] > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not([inFullscreen="true"]):not(:-moz-lwtheme) {
     border-left: 1px solid @glassToolbarBorderColor@;
     border-right: 1px solid @glassToolbarBorderColor@;
+    background-clip: padding-box;
   }
-  #navigator-toolbox[tabsontop="false"],
-  #main-window[disablechrome] #navigator-toolbox[tabsontop="true"],
   #navigator-toolbox > toolbar {
     border-color: @glassToolbarBorderColor@ !important;
     background-clip: padding-box;
   }
-  #main-window[sizemode="normal"]:not([disablechrome]) #navigator-toolbox[tabsontop="true"] {
-    border-bottom-left-radius: 2px;
-    border-bottom-right-radius: 2px;
+  #navigator-toolbox[tabsontop="false"]::after,
+  #main-window[disablechrome] #navigator-toolbox[tabsontop="true"]::after {
+    background-color: @glassToolbarBorderColor@;
   }
-  #main-window[sizemode="normal"] #browser-border-start,
-  #main-window[sizemode="normal"] #browser-border-end {
+  #main-window[sizemode="normal"]:not([inFullscreen="true"]) #browser-border-start,
+  #main-window[sizemode="normal"]:not([inFullscreen="true"]) #browser-border-end {
     display: -moz-box;
     background-color: @glassToolbarBorderColor@;
     width: 1px;
@@ -230,6 +230,12 @@
     font: normal 1.2em "Segoe UI";
     color: black;
     text-shadow: white -1px -1px .35em, white -1px 1px .35em, white 1px 1px .35em, white 1px -1px .35em;
+  }
+
+  #tab-view:-moz-lwtheme {
+    background-image: url("chrome://browser/skin/tabview/grain.png"),
+                      -moz-linear-gradient(rgba(255,255,255,0), #CCD9EA 200px, #C7D5E7);
+    background-attachment: fixed;
   }
 }
 

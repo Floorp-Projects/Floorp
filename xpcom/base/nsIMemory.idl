@@ -67,6 +67,12 @@
  * This will be passed as the extra data when the pressure 
  * observer has been asked to flush because a malloc() or 
  * realloc() has failed.
+ * 
+ * "oom-kill"
+ * This will be passed as the extra data when the pressure
+ * observer notices that the application will crash or the
+ * system will hang if immediate steps are not taken to
+ * free as much as possible.
  */
 
 [scriptable, uuid(59e7e77a-38e4-11d4-8cf5-0060b0fc14a3)]

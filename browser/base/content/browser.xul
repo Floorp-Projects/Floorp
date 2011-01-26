@@ -571,7 +571,9 @@
               </hbox>
             </hbox>
           </box>
-          <label id="urlbar-display" value="&urlbar.switchToTab.label;"/>
+          <box id="urlbar-display-box" align="center">
+            <label id="urlbar-display" value="&urlbar.switchToTab.label;"/>
+          </box>
           <hbox id="urlbar-icons">
             <image id="page-report-button"
                    class="urlbar-icon"

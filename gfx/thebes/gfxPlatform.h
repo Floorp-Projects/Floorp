@@ -40,6 +40,7 @@
 #define GFX_PLATFORM_H
 
 #include "prtypes.h"
+#include "prlog.h"
 #include "nsTArray.h"
 
 #include "nsIObserver.h"
@@ -116,6 +117,17 @@ enum eCMSMode {
     eCMSMode_All          = 1,     // Color manage everything
     eCMSMode_TaggedOnly   = 2,     // Color manage tagged Images Only
     eCMSMode_AllCount     = 3
+};
+
+enum eGfxLog {
+    // all font enumerations, localized names, fullname/psnames, cmap loads
+    eGfxLog_fontlist         = 0,
+    // timing info on font initialization
+    eGfxLog_fontinit         = 1,
+    // dump text runs, font matching, system fallback for content
+    eGfxLog_textrun          = 2,
+    // dump text runs, font matching, system fallback for chrome
+    eGfxLog_textrunui        = 3
 };
 
 // when searching through pref langs, max number of pref langs
@@ -361,6 +373,11 @@ public:
 
     virtual gfxImageFormat GetOffscreenFormat()
     { return gfxASurface::FormatFromContent(gfxASurface::CONTENT_COLOR); }
+
+    /**
+     * Returns a logger if one is available and logging is enabled
+     */
+    static PRLogModuleInfo* GetLog(eGfxLog aWhichLog);
 
 protected:
     gfxPlatform();

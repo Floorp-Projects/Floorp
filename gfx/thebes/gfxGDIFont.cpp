@@ -340,7 +340,7 @@ gfxGDIFont::Initialize()
         mMetrics->emAscent = ROUND(mMetrics->emHeight * (double)oMetrics.otmAscent / typEmHeight);
         mMetrics->emDescent = mMetrics->emHeight - mMetrics->emAscent;
         if (oMetrics.otmEMSquare > 0) {
-            mFUnitsConvFactor = float(GetAdjustedSize() / oMetrics.otmEMSquare);
+            mFUnitsConvFactor = float(mAdjustedSize / oMetrics.otmEMSquare);
         }
     } else {
         // Make a best-effort guess at extended metrics
@@ -476,7 +476,7 @@ gfxGDIFont::FillLogFont(LOGFONTW& aLogFont, gfxFloat aSize)
 }
 
 PRInt32
-gfxGDIFont::GetHintedGlyphWidth(gfxContext *aCtx, PRUint16 aGID)
+gfxGDIFont::GetGlyphWidth(gfxContext *aCtx, PRUint16 aGID)
 {
     if (!mGlyphWidths.IsInitialized()) {
         mGlyphWidths.Init(200);

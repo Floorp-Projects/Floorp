@@ -757,28 +757,22 @@ toolbar[mode="icons"] #zoom-in-button {
   width: 7em;
   min-width: 7em;
   -moz-appearance: none;
-  border: 0;
-  box-shadow: 0 1px rgba(255, 255, 255, 0.2);
+  box-shadow: 0 1px rgba(255, 255, 255, 0.2), inset 0 1px #d6d6d6;
   margin: 0 4px;
   padding: 0;
-  border: 1px solid transparent;
-  background: -moz-linear-gradient(#D6D6D6, #D6D6D6 1px, #F7F7F7 1px, #F7F7F7 2px, #FFF 2px, #FFF),
-              -moz-linear-gradient(rgba(0,0,0,.5), rgba(0,0,0,.2));
-  background-origin: padding-box, border-box;
-  background-clip: padding-box, border-box;
+  border: 1px solid;
+  border-color: #626262 #787878 #8c8c8c;
+  background-clip: padding-box;
 }
 
 #urlbar:-moz-window-inactive,
 .searchbar-textbox:-moz-window-inactive {
-  background-image: -moz-linear-gradient(#D6D6D6, #D6D6D6 1px, #F7F7F7 1px, #F7F7F7 2px, #FFF 2px, #FFF),
-                    -moz-linear-gradient(@toolbarbuttonInactiveBorderColor@, @toolbarbuttonInactiveBorderColor@);
+  border-color: @toolbarbuttonInactiveBorderColor@;
 }
 
 #urlbar[focused="true"],
 .searchbar-textbox[focused="true"] {
-  background-color: -moz-mac-focusring;
-  background-image: -moz-linear-gradient(#D6D6D6, #D6D6D6 1px, #F7F7F7 1px, #F7F7F7 2px, #FFF 2px, #FFF),
-                    -moz-linear-gradient(rgba(0,0,0,.1), rgba(0,0,0,.1));
+  border-color: -moz-mac-focusring;
   box-shadow: @focusRingShadow@;
 }
 
@@ -892,15 +886,15 @@ toolbar[mode="icons"] #zoom-in-button {
   max-width: 20em;
 }
 
-#urlbar-display {
-  margin-top: -3px;
-  margin-bottom: -2px;
-  padding-top: 3px;
-  padding-bottom: 2px;
-  -moz-padding-end: 3px;
-  color: GrayText;
+#urlbar-display-box {
   -moz-border-end: 1px solid #AAA;
   -moz-margin-end: 3px;
+}
+
+#urlbar-display {
+  margin-top: 0;
+  margin-bottom: 0;
+  color: GrayText;
 }
 
 #PopupAutoCompleteRichResult {
@@ -1427,12 +1421,12 @@ sidebarheader {
   -moz-border-end: 1px solid #404040;
   min-width: 1px;
   width: 1px;
-  background-image: none !important;       
-} 
+  background-image: none !important;
+}
 
 #sidebar-title {
   color: #535f6d;
-  font-weight: bold;  
+  font-weight: bold;
 }
 
 #sidebar-throbber[loading="true"] {

@@ -140,7 +140,6 @@ static struct {
  * Random utilities and global functions.
  */
 const char js_AttributeName_str[] = "AttributeName";
-const char js_AnyName_str[]       = "AnyName";
 const char js_isXMLName_str[]     = "isXMLName";
 const char js_XMLList_str[]       = "XMLList";
 const char js_localName_str[]     = "localName";
@@ -208,13 +207,6 @@ DEFINE_GETTER(NamePrefix_getter,
 DEFINE_GETTER(NameURI_getter,
               if (obj->getClass() == &js_NamespaceClass) *vp = obj->getNameURIVal())
 
-static void
-namespace_finalize(JSContext *cx, JSObject *obj)
-{
-    if (obj->compartment()->functionNamespaceObject == obj)
-        obj->compartment()->functionNamespaceObject = NULL;
-}
-
 static JSBool
 namespace_equality(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
 {
@@ -240,7 +232,7 @@ JS_FRIEND_DATA(Class) js_NamespaceClass = {
     EnumerateStub,
     ResolveStub,
     ConvertStub,
-    namespace_finalize,
+    FinalizeStub,
     NULL,           /* reserved0   */
     NULL,           /* checkAccess */
     NULL,           /* call        */
@@ -314,14 +306,6 @@ DEFINE_GETTER(QNameLocalName_getter,
               if (obj->getClass() == &js_QNameClass)
                   *vp = obj->getQNameLocalNameVal())
 
-static void
-anyname_finalize(JSContext* cx, JSObject* obj)
-{
-    /* Make sure the next call to js_GetAnyName doesn't try to use obj. */
-    if (obj->compartment()->anynameObject == obj)
-        obj->compartment()->anynameObject = NULL;
-}
-
 static JSBool
 qname_identity(JSObject *qna, JSObject *qnb)
 {
@@ -393,7 +377,8 @@ JS_FRIEND_DATA(Class) js_AttributeNameClass = {
     PropertyStub,   /* setProperty */
     EnumerateStub,
     ResolveStub,
-    ConvertStub
+    ConvertStub,
+    FinalizeStub
 };
 
 JS_FRIEND_DATA(Class) js_AnyNameClass = {
@@ -408,7 +393,7 @@ JS_FRIEND_DATA(Class) js_AnyNameClass = {
     EnumerateStub,
     ResolveStub,
     ConvertStub,
-    anyname_finalize
+    FinalizeStub
 };
 
 #define QNAME_ATTRS (JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT | JSPROP_SHARED)
@@ -6363,7 +6348,7 @@ xml_replace(JSContext *cx, uintN argc, jsval *vp)
 
     bool haveIndex;
     if (argc == 0) {
-        haveIndex = true;
+        haveIndex = false;
     } else {
         if (!js_IdValIsIndex(cx, vp[2], &index, &haveIndex))
             return JS_FALSE;
@@ -7185,15 +7170,14 @@ js_InitXMLClasses(JSContext *cx, JSObject *obj)
 JSBool
 js_GetFunctionNamespace(JSContext *cx, Value *vp)
 {
-    JSObject *obj;
-    JSLinearString *prefix, *uri;
+    JSObject *global = cx->hasfp() ? cx->fp()->scopeChain().getGlobal() : cx->globalObject;
 
-    obj = cx->compartment->functionNamespaceObject;
-    if (!obj) {
+    *vp = global->getReservedSlot(JSRESERVED_GLOBAL_FUNCTION_NS);
+    if (vp->isUndefined()) {
         JSRuntime *rt = cx->runtime;
-        prefix = rt->atomState.typeAtoms[JSTYPE_FUNCTION];
-        uri = rt->atomState.functionNamespaceURIAtom;
-        obj = NewXMLNamespace(cx, prefix, uri, JS_FALSE);
+        JSLinearString *prefix = rt->atomState.typeAtoms[JSTYPE_FUNCTION];
+        JSLinearString *uri = rt->atomState.functionNamespaceURIAtom;
+        JSObject *obj = NewXMLNamespace(cx, prefix, uri, JS_FALSE);
         if (!obj)
             return false;
 
@@ -7202,13 +7186,14 @@ js_GetFunctionNamespace(JSContext *cx, Value *vp)
          * Namespace.prototype is not detectable, as there is no way to
          * refer to this instance in scripts.  When used to qualify method
          * names, its prefix and uri references are copied to the QName.
+         * The parent remains set and links back to global.
          */
         obj->clearProto();
-        obj->clearParent();
 
-        cx->compartment->functionNamespaceObject = obj;
+        vp->setObject(*obj);
+        if (!js_SetReservedSlot(cx, global, JSRESERVED_GLOBAL_FUNCTION_NS, *vp))
+            return false;
     }
-    vp->setObject(*obj);
 
     return true;
 }
@@ -7351,28 +7336,25 @@ js_ValueToXMLString(JSContext *cx, const Value &v)
 JSBool
 js_GetAnyName(JSContext *cx, jsid *idp)
 {
-    JSObject *obj = cx->compartment->anynameObject;
-    if (!obj) {
-        /*
-         * Avoid entraining any Object.prototype found via cx's scope
-         * chain or global object for this internal AnyName object.
-         */
-        obj = NewNonFunction<WithProto::Given>(cx, &js_AnyNameClass, NULL, NULL);
+    JSObject *global = cx->hasfp() ? cx->fp()->scopeChain().getGlobal() : cx->globalObject;
+    Value v = global->getReservedSlot(JSProto_AnyName);
+    if (v.isUndefined()) {
+        JSObject *obj = NewNonFunction<WithProto::Given>(cx, &js_AnyNameClass, NULL, global);
         if (!obj)
             return false;
+
+        JS_ASSERT(!obj->getProto());
 
         JSRuntime *rt = cx->runtime;
         InitXMLQName(obj, rt->emptyString, rt->emptyString,
                      ATOM_TO_STRING(rt->atomState.starAtom));
         METER(xml_stats.qname);
 
-        JS_ASSERT(!obj->getProto());
-        JS_ASSERT(!obj->getParent());
-
-        cx->compartment->anynameObject = obj;
+        v.setObject(*obj);
+        if (!js_SetReservedSlot(cx, global, JSProto_AnyName, v))
+            return false;
     }
-
-    *idp = OBJECT_TO_JSID(obj);
+    *idp = OBJECT_TO_JSID(&v.toObject());
     return true;
 }
 

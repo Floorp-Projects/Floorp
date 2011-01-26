@@ -108,8 +108,11 @@ Writer::init(LogControl *logc_)
     if (logc->lcbits & LC_TMRecorder)
        lir = new (alloc) VerboseWriter(*alloc, lir, lirbuf->printer, logc);
 #endif
-    if (avmplus::AvmCore::config.cseopt)
-        lir = cse = new (alloc) CseFilter(lir, TM_NUM_USED_ACCS, *alloc);
+    if (avmplus::AvmCore::config.cseopt) {
+        cse = new (alloc) CseFilter(lir, TM_NUM_USED_ACCS, *alloc);
+        if (!cse->initOOM)
+            lir = cse;      // Skip CseFilter if we OOM'd when creating it.
+    }
     lir = new (alloc) ExprFilter(lir);
     lir = new (alloc) FuncFilter(lir);
 #ifdef DEBUG

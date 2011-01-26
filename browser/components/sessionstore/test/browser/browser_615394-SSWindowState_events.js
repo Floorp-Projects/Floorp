@@ -344,7 +344,7 @@ function test_undoCloseWindow() {
   function firstWindowObserver(aSubject, aTopic, aData) {
     if (aTopic == "domwindowopened") {
       newWindow = aSubject.QueryInterface(Ci.nsIDOMWindow);
-      Services.ww.unregisterNotification(windowObserver);
+      Services.ww.unregisterNotification(firstWindowObserver);
     }
   }
   Services.ww.registerNotification(firstWindowObserver);

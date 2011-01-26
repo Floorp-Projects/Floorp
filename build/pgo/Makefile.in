@@ -81,11 +81,7 @@ genpgocert.py: genpgocert.py.in
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
 	$(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $^ > $@
 
-profileserver.py: profileserver.py.in
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $^ > $@
-	chmod +x $@
-
-GARBAGE += profileserver.py genpgocert.py
+GARBAGE += genpgocert.py
 
 libs:: $(_PGO_FILES)
 	$(INSTALL) $^ $(_PROFILE_DIR)

@@ -750,13 +750,8 @@ IDBDatabase::Transaction(nsIVariant* aStoreNames,
 
   if (aOptionalArgCount) {
     if (aMode != nsIIDBTransaction::READ_WRITE &&
-        aMode != nsIIDBTransaction::READ_ONLY &&
-        aMode != nsIIDBTransaction::SNAPSHOT_READ) {
+        aMode != nsIIDBTransaction::READ_ONLY) {
       return NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR;
-    }
-    if (aMode == nsIIDBTransaction::SNAPSHOT_READ) {
-      NS_NOTYETIMPLEMENTED("Implement me!");
-      return NS_ERROR_NOT_IMPLEMENTED;
     }
   }
   else {

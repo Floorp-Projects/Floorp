@@ -1043,14 +1043,35 @@ TokenStream::getTokenInternal()
             !(flags & TSF_KEYWORD_IS_NAME) &&
             (kw = FindKeyword(tokenbuf.begin(), tokenbuf.length()))) {
             if (kw->tokentype == TOK_RESERVED) {
-                if (!ReportCompileErrorNumber(cx, this, NULL, JSREPORT_WARNING | JSREPORT_STRICT,
+                if (!ReportCompileErrorNumber(cx, this, NULL, JSREPORT_ERROR,
                                               JSMSG_RESERVED_ID, kw->chars)) {
                     goto error;
                 }
-            } else if (kw->version <= VersionNumber(version)) {
-                tt = kw->tokentype;
-                tp->t_op = (JSOp) kw->op;
-                goto out;
+            } else if (kw->tokentype == TOK_STRICT_RESERVED) {
+                if (isStrictMode()
+                    ? !ReportStrictModeError(cx, this, NULL, NULL, JSMSG_RESERVED_ID, kw->chars)
+                    : !ReportCompileErrorNumber(cx, this, NULL,
+                                                JSREPORT_STRICT | JSREPORT_WARNING,
+                                                JSMSG_RESERVED_ID, kw->chars)) {
+                    goto error;
+                }
+            } else {
+                if (kw->version <= VersionNumber(version)) {
+                    tt = kw->tokentype;
+                    tp->t_op = (JSOp) kw->op;
+                    goto out;
+                }
+
+                /*
+                 * let/yield are a Mozilla extension starting in JS1.7. If we
+                 * aren't parsing for a version supporting these extensions,
+                 * conform to ES5 and forbid these names in strict mode.
+                 */
+                if ((kw->tokentype == TOK_LET || kw->tokentype == TOK_YIELD) &&
+                    !ReportStrictModeError(cx, this, NULL, NULL, JSMSG_RESERVED_ID, kw->chars))
+                {
+                    goto error;
+                }
             }
         }
 

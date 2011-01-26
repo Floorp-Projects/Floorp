@@ -25,6 +25,7 @@
  * Ehsan Akhgari <ehsan@mozilla.com>
  * Raymond Lee <raymond@appcoast.com>
  * Sean Dunn <seanedunn@yahoo.com>
+ * Tim Taubert <tim.taubert@gmx.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -200,11 +201,6 @@ let UI = {
         }
       });
 
-      iQ(window).bind("beforeunload", function() {
-        Array.forEach(gBrowser.tabs, function(tab) {
-          gBrowser.showTab(tab);
-        });
-      });
       iQ(window).bind("unload", function() {
         self.uninit();
       });
@@ -342,13 +338,15 @@ let UI = {
         item.parent.remove(item);
       groupItem.add(item, {immediately: true});
     });
-    
+    GroupItems.setActiveGroupItem(groupItem);
+
     if (firstTime) {
       gPrefBranch.setBoolPref("experienced_first_run", true);
       // ensure that the first run pref is flushed to the file, in case a crash 
       // or force quit happens before the pref gets flushed automatically.
       Services.prefs.savePrefFile(null);
 
+      /* DISABLED BY BUG 626754. To be reenabled via bug 626926.
       let url = gPrefBranch.getCharPref("welcome_url");
       let newTab = gBrowser.loadOneTab(url, {inBackground: true});
       let newTabItem = newTab._tabViewTabItem;
@@ -360,11 +358,11 @@ let UI = {
       let welcomeBounds = new Rect(UI.rtl ? pageBounds.left : box.right, box.top,
                                    welcomeWidth, welcomeWidth * aspect);
       newTabItem.setBounds(welcomeBounds, true);
-      GroupItems.setActiveGroupItem(groupItem);
 
       // Remove the newly created welcome-tab from the tab bar
       if (!this.isTabViewVisible())
         GroupItems._updateTabBar();
+      */
     }
   },
 
@@ -476,7 +474,7 @@ let UI = {
 
     gBrowser.updateTitlebar();
 #ifdef XP_MACOSX
-    this._setActiveTitleColor(true);
+    this.setTitlebarColors(true);
 #endif
     let event = document.createEvent("Events");
     event.initEvent("tabviewshown", true, false);
@@ -553,7 +551,7 @@ let UI = {
 
     gBrowser.updateTitlebar();
 #ifdef XP_MACOSX
-    this._setActiveTitleColor(false);
+    this.setTitlebarColors(false);
 #endif
     let event = document.createEvent("Events");
     event.initEvent("tabviewhidden", true, false);
@@ -564,19 +562,27 @@ let UI = {
 
 #ifdef XP_MACOSX
   // ----------
-  // Function: _setActiveTitleColor
+  // Function: setTitlebarColors
   // Used on the Mac to make the title bar match the gradient in the rest of the
   // TabView UI.
   //
   // Parameters:
-  //   set - true for the special TabView color, false for the normal color.
-  _setActiveTitleColor: function UI__setActiveTitleColor(set) {
+  //   colors - (bool or object) true for the special TabView color, false for
+  //         the normal color, and an object with "active" and "inactive"
+  //         properties to specify directly.
+  setTitlebarColors: function UI_setTitlebarColors(colors) {
     // Mac Only
     var mainWindow = gWindow.document.getElementById("main-window");
-    if (set)
+    if (colors === true) {
       mainWindow.setAttribute("activetitlebarcolor", "#C4C4C4");
-    else
+      mainWindow.setAttribute("inactivetitlebarcolor", "#EDEDED");
+    } else if (colors && "active" in colors && "inactive" in colors) {
+      mainWindow.setAttribute("activetitlebarcolor", colors.active);
+      mainWindow.setAttribute("inactivetitlebarcolor", colors.inactive);
+    } else {
       mainWindow.removeAttribute("activetitlebarcolor");
+      mainWindow.removeAttribute("inactivetitlebarcolor");
+    }
   },
 #endif
 
@@ -1202,14 +1208,19 @@ let UI = {
     if (!this._pageBounds)
       return;
 
-    // If TabView isn't focused and is not showing, don't perform a resize.
-    // This resize really slows things down.
+    // Here are reasons why we *won't* resize:
+    // 1. Panorama isn't visible (in which case we will resize when we do display)
+    // 2. the screen dimensions haven't changed
+    // 3. everything on the screen fits and nothing feels cramped
     if (!force && !this.isTabViewVisible())
       return;
 
-    var oldPageBounds = new Rect(this._pageBounds);
-    var newPageBounds = Items.getPageBounds();
+    let oldPageBounds = new Rect(this._pageBounds);
+    let newPageBounds = Items.getPageBounds();
     if (newPageBounds.equals(oldPageBounds))
+      return;
+
+    if (!this.shouldResizeItems())
       return;
 
     var items = Items.getTopLevelItems();
@@ -1279,6 +1290,58 @@ let UI = {
     this._pageBounds = Items.getPageBounds();
     this._save();
   },
+  
+  // ----------
+  // Function: shouldResizeItems
+  // Returns whether we should resize the items on the screen, based on whether
+  // the top-level items fit in the screen or not and whether they feel
+  // "cramped" or not.
+  // These computations may be done using cached values. The cache can be
+  // cleared with UI.clearShouldResizeItems().
+  shouldResizeItems: function UI_shouldResizeItems() {
+
+    let newPageBounds = Items.getPageBounds();
+    
+    // If we don't have cached cached values...
+    if (this._minimalRect === undefined || this._feelsCramped === undefined) {
+
+      // Loop through every top-level Item for two operations:
+      // 1. check if it is feeling "cramped" due to squishing (a technical term),
+      // 2. union its bounds with the minimalRect
+      let feelsCramped = false;
+      let minimalRect = new Rect(0, 0, 1, 1);
+      
+      Items.getTopLevelItems()
+        .forEach(function UI_shouldResizeItems_checkItem(item) {
+          let bounds = new Rect(item.getBounds());
+          feelsCramped = feelsCramped || (item.userSize &&
+            (item.userSize.x > bounds.width || item.userSize.y > bounds.height));
+          bounds.inset(-Trenches.defaultRadius, -Trenches.defaultRadius);
+          minimalRect = minimalRect.union(bounds);
+        });
+      
+      // ensure the minimalRect extends to, but not beyond, the origin
+      minimalRect.left = 0;
+      minimalRect.top  = 0;
+  
+      this._minimalRect = minimalRect;
+      this._feelsCramped = feelsCramped;
+    }
+
+    return this._minimalRect.width > newPageBounds.width ||
+      this._minimalRect.height > newPageBounds.height ||
+      this._feelsCramped;
+  },
+  
+  // ----------
+  // Function: clearShouldResizeItems
+  // Clear the cache of whether we should resize the items on the Panorama
+  // screen, forcing a recomputation on the next UI.shouldResizeItems()
+  // call.
+  clearShouldResizeItems: function UI_clearShouldResizeItems() {
+    delete this._minimalRect;
+    delete this._feelsCramped;
+  },
 
   // ----------
   // Function: exit
@@ -1302,14 +1365,17 @@ let UI = {
       let unhiddenGroups = GroupItems.groupItems.filter(function(groupItem) {
         return (!groupItem.hidden && groupItem.getChildren().length > 0);
       });
-      // no visible groups, no orphaned tabs and no apps tabs, open a new group
-      // with a blank tab
-      if (unhiddenGroups.length == 0 && GroupItems.getOrphanedTabs().length == 0 &&
-          gBrowser._numPinnedTabs == 0) {
-        let box = new Rect(20, 20, 250, 200);
-        let groupItem = new GroupItem([], { bounds: box, immediately: true });
-        groupItem.newTab();
-        return;
+      // no pinned tabs, no visible groups and no orphaned tabs: open a new
+      // group. open a blank tab and return
+      if (!unhiddenGroups.length && !GroupItems.getOrphanedTabs().length) {
+        let emptyGroups = GroupItems.groupItems.filter(function (groupItem) {
+          return (!groupItem.hidden && !groupItem.getChildren().length);
+        });
+        let group = (emptyGroups.length ? emptyGroups[0] : GroupItems.newGroup());
+        if (!gBrowser._numPinnedTabs) {
+          group.newTab();
+          return;
+        }
       }
 
       // If there's an active TabItem, zoom into it. If not (for instance when the

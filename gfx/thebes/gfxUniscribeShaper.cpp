@@ -39,8 +39,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-//#define FORCE_PR_LOG
-
 #include "prtypes.h"
 #include "gfxTypes.h"
 
@@ -58,9 +56,7 @@
 
 #include "nsTArray.h"
 
-#include "prlog.h"
 #include "prinit.h"
-static PRLogModuleInfo *gFontLog = PR_NewLogModule("winfonts");
 
 /**********************************************************************
  *
@@ -523,7 +519,6 @@ gfxUniscribeShaper::InitTextRun(gfxContext *aContext,
 
         rv = item.Shape();
         if (FAILED(rv)) {
-            PR_LOG(gFontLog, PR_LOG_DEBUG, ("shaping failed"));
             // we know we have the glyphs to display this font already
             // so Uniscribe just doesn't know how to shape the script.
             // Render the glyphs without shaping.

@@ -127,6 +127,7 @@ using mozilla::dom::ContentParent;
 #ifdef XP_WIN
 #include "nsIWinAppHelper.h"
 #include <windows.h>
+#include "cairo/cairo-features.h"
 
 #ifndef PROCESS_DEP_ENABLE
 #define PROCESS_DEP_ENABLE 0x1
@@ -1642,6 +1643,8 @@ XRE_GetBinaryPath(const char* argv0, nsILocalFile* *aResult)
 #ifdef XP_WIN
 #include "nsWindowsRestart.cpp"
 #include <shellapi.h>
+
+typedef BOOL (WINAPI* SetProcessDEPPolicyFunc)(DWORD dwFlags);
 #endif
 
 #if defined(XP_OS2) && (__KLIBC__ == 0 && __KLIBC_MINOR__ >= 6) // broken kLibc
@@ -2720,8 +2723,61 @@ NS_VISIBILITY_DEFAULT PRBool nspr_use_zone_allocator = PR_FALSE;
 #define MOZ_SPLASHSCREEN_UPDATE(_i)  do { } while(0)
 #endif
 
-#ifdef XP_WIN
-typedef BOOL (WINAPI* SetProcessDEPPolicyFunc)(DWORD dwFlags);
+#ifdef CAIRO_HAS_DWRITE_FONT
+
+#include <dwrite.h>
+
+typedef HRESULT (WINAPI*DWriteCreateFactoryFunc)(
+  __in   DWRITE_FACTORY_TYPE factoryType,
+  __in   REFIID iid,
+  __out  IUnknown **factory
+);
+
+#ifdef DEBUG_DWRITE_STARTUP
+
+#define LOGREGISTRY(msg) LogRegistryEvent(msg)
+
+// for use when monitoring process
+static void LogRegistryEvent(const wchar_t *msg)
+{
+  HKEY dummyKey;
+  HRESULT hr;
+  wchar_t buf[512];
+
+  wsprintf(buf, L" log %s", msg);
+  hr = RegOpenKeyEx(HKEY_LOCAL_MACHINE, buf, 0, KEY_READ, &dummyKey);
+  if (SUCCEEDED(hr)) {
+    RegCloseKey(dummyKey);
+  }
+}
+#else
+
+#define LOGREGISTRY(msg)
+
+#endif
+
+static DWORD InitDwriteBG(LPVOID lpdwThreadParam)
+{
+  SetThreadPriority(GetCurrentThread(), THREAD_MODE_BACKGROUND_BEGIN);
+  LOGREGISTRY(L"loading dwrite.dll");
+  HMODULE dwdll = LoadLibraryW(L"dwrite.dll");
+  DWriteCreateFactoryFunc createDWriteFactory = (DWriteCreateFactoryFunc)
+    GetProcAddress(dwdll, "DWriteCreateFactory");
+  if (createDWriteFactory) {
+    LOGREGISTRY(L"creating dwrite factory");
+    IDWriteFactory *factory;
+    HRESULT hr = createDWriteFactory(
+      DWRITE_FACTORY_TYPE_SHARED,
+      __uuidof(IDWriteFactory),
+      reinterpret_cast<IUnknown**>(&factory));
+    
+    LOGREGISTRY(L"dwrite factory done");
+    factory->Release();
+    LOGREGISTRY(L"freed factory");
+  }
+  SetThreadPriority(GetCurrentThread(), THREAD_MODE_BACKGROUND_END);
+  return 0;
+}
 #endif
 
 PRTime gXRE_mainTimestamp = 0;
@@ -2747,6 +2803,26 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #endif
 
   SetupErrorHandling(argv[0]);
+
+#ifdef CAIRO_HAS_DWRITE_FONT
+
+  // Bug 602792 - when DWriteCreateFactory is called the dwrite client dll
+  // starts the FntCache service if it isn't already running (it's set
+  // to manual startup by default in Windows 7 RTM).  Subsequent DirectWrite
+  // calls cause the IDWriteFactory object to communicate with the FntCache
+  // service with a timeout; if there's no response after the timeout, the
+  // DirectWrite client library will assume the service isn't around and do
+  // manual font file I/O on _all_ system fonts.  To avoid this, load the
+  // dwrite library and create a factory as early as possible so that the
+  // FntCache service is ready by the time it's needed.
+      
+  OSVERSIONINFO vinfo;
+  vinfo.dwOSVersionInfoSize = sizeof(vinfo);
+  if (GetVersionEx(&vinfo) && vinfo.dwMajorVersion >= 6) {
+    CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)&InitDwriteBG, NULL, 0, NULL);
+  }
+
+#endif
 
 #ifdef XP_UNIX
   const char *home = PR_GetEnv("HOME");

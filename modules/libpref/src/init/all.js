@@ -204,6 +204,7 @@ pref("gfx.font_rendering.harfbuzz.level", 2);
 #ifdef XP_WIN
 #ifndef WINCE
 pref("gfx.font_rendering.directwrite.enabled", false);
+pref("gfx.font_rendering.directwrite.use_gdi_table_loading", true);
 #endif
 #endif
 
@@ -568,6 +569,8 @@ pref("dom.disable_open_click_delay", 1000);
 
 pref("dom.storage.enabled", true);
 pref("dom.storage.default_quota",      5120);
+
+pref("dom.send_after_paint_to_content", false);
 
 // Timeout clamp in ms for timeouts we clamp
 pref("dom.min_timeout_value", 10);

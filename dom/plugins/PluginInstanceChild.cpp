@@ -409,7 +409,12 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
         *((NPBool*)aValue) = true;
         return NPERR_NO_ERROR;
     }
-  
+
+    case NPNVsupportsUpdatedCocoaTextInputBool: {
+      *static_cast<NPBool*>(aValue) = true;
+      return NPERR_NO_ERROR;
+    }
+
 #ifndef NP_NO_QUICKDRAW
     case NPNVsupportsQuickDrawBool: {
         *((NPBool*)aValue) = false;

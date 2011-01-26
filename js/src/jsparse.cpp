@@ -149,15 +149,27 @@ JSParseNode::become(JSParseNode *pn2)
         pn2->pn_used = false;
     }
 
-    /* If this is a function node fix up the pn_funbox->node back-pointer. */
-    if (PN_TYPE(pn2) == TOK_FUNCTION && pn2->pn_arity == PN_FUNC)
-        pn2->pn_funbox->node = this;
-
     pn_type = pn2->pn_type;
     pn_op = pn2->pn_op;
     pn_arity = pn2->pn_arity;
     pn_parens = pn2->pn_parens;
     pn_u = pn2->pn_u;
+
+    /*
+     * If any pointers are pointing to pn2, change them to point to this
+     * instead, since pn2 will be cleared and probably recycled.
+     */
+    if (PN_TYPE(this) == TOK_FUNCTION && pn_arity == PN_FUNC) {
+        /* Function node: fix up the pn_funbox->node back-pointer. */
+        JS_ASSERT(pn_funbox->node == pn2);
+        pn_funbox->node = this;
+    } else if (pn_arity == PN_LIST && !pn_head) {
+        /* Empty list: fix up the pn_tail pointer. */
+        JS_ASSERT(pn_count == 0);
+        JS_ASSERT(pn_tail == &pn2->pn_head);
+        pn_tail = &pn_head;
+    }
+
     pn2->clear();
 }
 
@@ -289,6 +301,8 @@ Parser::newFunctionBox(JSObject *obj, JSParseNode *fn, JSTreeContext *tc)
     }
     funbox->level = tc->staticLevel;
     funbox->tcflags = (TCF_IN_FUNCTION | (tc->flags & (TCF_COMPILE_N_GO | TCF_STRICT_MODE_CODE)));
+    if (tc->innermostWith)
+        funbox->tcflags |= TCF_IN_WITH;
     return funbox;
 }
 
@@ -297,6 +311,16 @@ JSFunctionBox::joinable() const
 {
     return FUN_NULL_CLOSURE((JSFunction *) object) &&
            !(tcflags & (TCF_FUN_USES_ARGUMENTS | TCF_FUN_USES_OWN_NAME));
+}
+
+bool
+JSFunctionBox::inAnyDynamicScope() const
+{
+    for (const JSFunctionBox *funbox = this; funbox; funbox = funbox->parent) {
+        if (funbox->tcflags & (TCF_IN_WITH | TCF_FUN_CALLS_EVAL))
+            return true;
+    }
+    return false;
 }
 
 bool
@@ -2452,6 +2476,9 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags)
         FUN_METER(allfun);
         if (funbox->tcflags & TCF_FUN_HEAVYWEIGHT) {
             FUN_METER(heavy);
+        } else if (funbox->inAnyDynamicScope()) {
+            JS_ASSERT(!FUN_NULL_CLOSURE(fun));
+            FUN_METER(indynamicscope);
         } else if (pn->pn_type != TOK_UPVARS) {
             /*
              * No lexical dependencies => null closure, for best performance.
@@ -3501,7 +3528,7 @@ Parser::condition()
     JSParseNode *pn;
 
     MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_COND);
-    pn = parenExpr(NULL, NULL);
+    pn = parenExpr();
     if (!pn)
         return NULL;
     MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_COND);
@@ -5034,7 +5061,7 @@ Parser::switchStatement()
     MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_SWITCH);
 
     /* pn1 points to the switch's discriminant. */
-    JSParseNode *pn1 = parenExpr(NULL, NULL);
+    JSParseNode *pn1 = parenExpr();
     if (!pn1)
         return NULL;
 
@@ -5653,7 +5680,7 @@ Parser::withStatement()
     if (!pn)
         return NULL;
     MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_WITH);
-    JSParseNode *pn2 = parenExpr(NULL, NULL);
+    JSParseNode *pn2 = parenExpr();
     if (!pn2)
         return NULL;
     MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_WITH);
@@ -6176,7 +6203,6 @@ Parser::statement()
         pn->pn_type = TOK_SEMI;
         return pn;
 
-#if JS_HAS_DEBUGGER_KEYWORD
       case TOK_DEBUGGER:
         pn = NullaryNode::create(tc);
         if (!pn)
@@ -6184,7 +6210,6 @@ Parser::statement()
         pn->pn_type = TOK_DEBUGGER;
         tc->flags |= TCF_FUN_HEAVYWEIGHT;
         break;
-#endif /* JS_HAS_DEBUGGER_KEYWORD */
 
 #if JS_HAS_XML_SUPPORT
       case TOK_DEFAULT:
@@ -6939,28 +6964,35 @@ CompExprTransplanter::transplant(JSParseNode *pn)
 
     switch (pn->pn_arity) {
       case PN_LIST:
-        for (JSParseNode *pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next)
-            transplant(pn2);
+        for (JSParseNode *pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
+            if (!transplant(pn2))
+                return false;
+        }
         if (pn->pn_pos >= root->pn_pos)
             AdjustBlockId(pn, adjust, tc);
         break;
 
       case PN_TERNARY:
-        transplant(pn->pn_kid1);
-        transplant(pn->pn_kid2);
-        transplant(pn->pn_kid3);
+        if (!transplant(pn->pn_kid1) ||
+            !transplant(pn->pn_kid2) ||
+            !transplant(pn->pn_kid3))
+            return false;
         break;
 
       case PN_BINARY:
-        transplant(pn->pn_left);
+        if (!transplant(pn->pn_left))
+            return false;
 
         /* Binary TOK_COLON nodes can have left == right. See bug 492714. */
-        if (pn->pn_right != pn->pn_left)
-            transplant(pn->pn_right);
+        if (pn->pn_right != pn->pn_left) {
+            if (!transplant(pn->pn_right))
+                return false;
+        }
         break;
 
       case PN_UNARY:
-        transplant(pn->pn_kid);
+        if (!transplant(pn->pn_kid))
+            return false;
         break;
 
       case PN_FUNC:
@@ -6995,7 +7027,8 @@ CompExprTransplanter::transplant(JSParseNode *pn)
       }
 
       case PN_NAME:
-        transplant(pn->maybeExpr());
+        if (!transplant(pn->maybeExpr()))
+            return false;
         if (pn->pn_arity == PN_FUNC)
             --funcLevel;
 
@@ -7033,21 +7066,22 @@ CompExprTransplanter::transplant(JSParseNode *pn)
                 JS_ASSERT(!tc->decls.lookup(atom));
 
                 if (dn->pn_pos < root->pn_pos || dn->isPlaceholder()) {
-                    JSAtomListElement *ale = tc->lexdeps.add(tc->parser, dn->pn_atom);
+                    JSAtomListElement *ale = tc->lexdeps.add(tc->parser, atom);
                     if (!ale)
                         return false;
 
                     if (dn->pn_pos >= root->pn_pos) {
                         tc->parent->lexdeps.remove(tc->parser, atom);
                     } else {
-                        JSDefinition *dn2 = (JSDefinition *)NameNode::create(dn->pn_atom, tc);
+                        JSDefinition *dn2 = (JSDefinition *)NameNode::create(atom, tc);
                         if (!dn2)
                             return false;
 
-                        dn2->pn_type = dn->pn_type;
-                        dn2->pn_pos = root->pn_pos;
+                        dn2->pn_type = TOK_NAME;
+                        dn2->pn_op = JSOP_NOP;
                         dn2->pn_defn = true;
                         dn2->pn_dflags |= PND_PLACEHOLDER;
+                        dn2->pn_pos = root->pn_pos;
 
                         JSParseNode **pnup = &dn->dn_uses;
                         JSParseNode *pnu;
@@ -7073,7 +7107,8 @@ CompExprTransplanter::transplant(JSParseNode *pn)
         break;
 
       case PN_NAMESET:
-        transplant(pn->pn_tree);
+        if (!transplant(pn->pn_tree))
+            return false;
         break;
     }
     return true;
@@ -7280,20 +7315,22 @@ Parser::comprehensionTail(JSParseNode *kid, uintN blockid,
  * generator function that is immediately called to evaluate to the generator
  * iterator that is the value of this generator expression.
  *
- * Callers pass a blank unary node via pn, which generatorExpr fills in as the
- * yield expression, which ComprehensionTail in turn wraps in a TOK_SEMI-type
- * expression-statement node that constitutes the body of the |for| loop(s) in
- * the generator function.
+ * |kid| must be the expression before the |for| keyword; we return an
+ * application of a generator function that includes the |for| loops and
+ * |if| guards, with |kid| as the operand of a |yield| expression as the
+ * innermost loop body.
  *
  * Note how unlike Python, we do not evaluate the expression to the right of
  * the first |in| in the chain of |for| heads. Instead, a generator expression
  * is merely sugar for a generator function expression and its application.
  */
 JSParseNode *
-Parser::generatorExpr(JSParseNode *pn, JSParseNode *kid)
+Parser::generatorExpr(JSParseNode *kid)
 {
-    /* Initialize pn, connecting it to kid. */
-    JS_ASSERT(pn->pn_arity == PN_UNARY);
+    /* Create a |yield| node for |kid|. */
+    JSParseNode *pn = UnaryNode::create(tc);
+    if (!pn)
+        return NULL;
     pn->pn_type = TOK_YIELD;
     pn->pn_op = JSOP_YIELD;
     pn->pn_parens = true;
@@ -7395,10 +7432,7 @@ Parser::argumentList(JSParseNode *listNode)
 #endif
 #if JS_HAS_GENERATOR_EXPRS
         if (tokenStream.matchToken(TOK_FOR)) {
-            JSParseNode *pn = UnaryNode::create(tc);
-            if (!pn)
-                return JS_FALSE;
-            argNode = generatorExpr(pn, argNode);
+            argNode = generatorExpr(argNode);
             if (!argNode)
                 return JS_FALSE;
             if (listNode->pn_count > 1 ||
@@ -8713,7 +8747,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
       {
         JSBool genexp;
 
-        pn = parenExpr(NULL, &genexp);
+        pn = parenExpr(&genexp);
         if (!pn)
             return NULL;
         pn->pn_parens = true;
@@ -8954,7 +8988,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
 }
 
 JSParseNode *
-Parser::parenExpr(JSParseNode *pn1, JSBool *genexp)
+Parser::parenExpr(JSBool *genexp)
 {
     TokenPtr begin;
     JSParseNode *pn;
@@ -8979,12 +9013,7 @@ Parser::parenExpr(JSParseNode *pn1, JSBool *genexp)
                               js_generator_str);
             return NULL;
         }
-        if (!pn1) {
-            pn1 = UnaryNode::create(tc);
-            if (!pn1)
-                return NULL;
-        }
-        pn = generatorExpr(pn1, pn);
+        pn = generatorExpr(pn);
         if (!pn)
             return NULL;
         pn->pn_pos.begin = begin;

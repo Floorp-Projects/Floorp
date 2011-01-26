@@ -236,6 +236,7 @@ SHELL_WRAPPER1(notifyGeckoOfEvent, jobject)
 SHELL_WRAPPER1(setSurfaceView, jobject)
 SHELL_WRAPPER0(onResume)
 SHELL_WRAPPER0(onLowMemory)
+SHELL_WRAPPER0(onCriticalOOM)
 SHELL_WRAPPER3(callObserver, jstring, jstring, jstring)
 SHELL_WRAPPER1(removeObserver, jstring)
 SHELL_WRAPPER1(onChangeNetworkLinkStatus, jstring)
@@ -666,6 +667,7 @@ loadLibs(const char *apkName)
   GETFUNC(setSurfaceView);
   GETFUNC(onResume);
   GETFUNC(onLowMemory);
+  GETFUNC(onCriticalOOM);
   GETFUNC(callObserver);
   GETFUNC(removeObserver);
   GETFUNC(onChangeNetworkLinkStatus);
@@ -693,7 +695,13 @@ Java_org_mozilla_gecko_GeckoAppShell_loadLibs(JNIEnv *jenv, jclass jGeckoAppShel
 
   loadLibs(str);
   jenv->ReleaseStringUTFChars(jApkName, str);
-  if (extractLibs && cache_mapping) {
+  bool haveLibsToWrite = false;
+  if (cache_mapping && extractLibs)
+    for (int i = 0; i < cache_count && !haveLibsToWrite; i++)
+      if (cache_mapping[i].buffer)
+        haveLibsToWrite = true;
+
+  if (haveLibsToWrite) {
     if (!fork()) {
       sleep(10);
       nice(10);

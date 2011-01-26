@@ -41,7 +41,7 @@ function checkValidEmailAddress(element)
 {
   gInvalid = false;
   ok(!element.validity.typeMismatch,
-     "Element should not suffer from type mismatch");
+     "Element should not suffer from type mismatch (with value='"+element.value+"')");
   ok(element.validity.valid, "Element should be valid");
   ok(element.checkValidity(), "Element should be valid");
   ok(!gInvalid, "The invalid event should not have been thrown");
@@ -55,7 +55,7 @@ function checkInvalidEmailAddress(element)
 {
   gInvalid = false;
   ok(element.validity.typeMismatch,
-     "Element should suffer from type mismatch");
+     "Element should suffer from type mismatch (with value='"+element.value+"')");
   ok(!element.validity.valid, "Element should not be valid");
   ok(!element.checkValidity(), "Element should not be valid");
   ok(gInvalid, "The invalid event should have been thrown");
@@ -121,10 +121,10 @@ for each (c in illegalCharacters)
 
 // Some checks on the domain part of the address.
 email.value = 'foo@bar';
-checkInvalidEmailAddress(email);
+checkValidEmailAddress(email);
 
 email.value = 'foo@b';
-checkInvalidEmailAddress(email);
+checkValidEmailAddress(email);
 
 email.value = 'foo@';
 checkInvalidEmailAddress(email);
@@ -227,7 +227,7 @@ email.value = '<foo@bar.com>, <foo@bar.com>';
 checkInvalidEmailAddress(email);
 
 email.value = 'foo@bar, foo@bar.com';
-checkInvalidEmailAddress(email);
+checkValidEmailAddress(email);
 
 email.value = 'foo@bar.com, foo';
 checkInvalidEmailAddress(email);

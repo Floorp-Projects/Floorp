@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <windows.h>
+#include <setupapi.h>
 #include "gfxWindowsPlatform.h"
 #include "GfxInfo.h"
 #include "GfxInfoWebGL.h"
@@ -60,6 +61,14 @@ using namespace mozilla::widget;
 #ifdef DEBUG
 NS_IMPL_ISUPPORTS_INHERITED1(GfxInfo, GfxInfoBase, nsIGfxInfoDebug)
 #endif
+
+static const PRUint32 allWindowsVersions = 0xffffffff;
+static const PRUint64 allDriverVersions = 0xffffffffffffffffULL;
+
+static const PRUint32 vendorIntel = 0x8086;
+
+#define V(a,b,c,d) GFX_DRIVER_VERSION(a,b,c,d)
+
 
 GfxInfo::GfxInfo()
   : mAdapterVendorID(0),
@@ -172,6 +181,31 @@ static void normalizeDriverId(nsString& driverid) {
   }
 }
 
+// Setup API functions
+typedef HDEVINFO (WINAPI*SetupDiGetClassDevsWFunc)(
+  CONST GUID *ClassGuid,
+  PCWSTR Enumerator,
+  HWND hwndParent,
+  DWORD Flags
+);
+typedef BOOL (WINAPI*SetupDiEnumDeviceInfoFunc)(
+  HDEVINFO DeviceInfoSet,
+  DWORD MemberIndex,
+  PSP_DEVINFO_DATA DeviceInfoData
+);
+typedef BOOL (WINAPI*SetupDiGetDeviceRegistryPropertyWFunc)(
+  HDEVINFO DeviceInfoSet,
+  PSP_DEVINFO_DATA DeviceInfoData,
+  DWORD Property,
+  PDWORD PropertyRegDataType,
+  PBYTE PropertyBuffer,
+  DWORD PropertyBufferSize,
+  PDWORD RequiredSize
+);
+typedef BOOL (WINAPI*SetupDiDestroyDeviceInfoListFunc)(
+  HDEVINFO DeviceInfoSet
+);
+
 
 
 /* Other interesting places for info:
@@ -224,50 +258,73 @@ GfxInfo::Init()
   mDeviceString = displayDevice.DeviceString;
 
 
-  HKEY key, subkey;
-  LONG result, enumresult;
-  DWORD index = 0;
-  WCHAR subkeyname[64];
-  WCHAR value[128];
-  DWORD dwcbData = sizeof(subkeyname);
+  HMODULE setupapi = LoadLibraryW(L"setupapi.dll");
 
-  // "{4D36E968-E325-11CE-BFC1-08002BE10318}" is the display class
-  result = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                        L"System\\CurrentControlSet\\Control\\Class\\{4D36E968-E325-11CE-BFC1-08002BE10318}", 
-                        0, KEY_QUERY_VALUE | KEY_ENUMERATE_SUB_KEYS, &key);
-  if (result != ERROR_SUCCESS) {
-    return rv;
-  }
+  if (setupapi) {
+    SetupDiGetClassDevsWFunc setupGetClassDevs = (SetupDiGetClassDevsWFunc)
+      GetProcAddress(setupapi, "SetupDiGetClassDevsW");
+    SetupDiEnumDeviceInfoFunc setupEnumDeviceInfo = (SetupDiEnumDeviceInfoFunc)
+      GetProcAddress(setupapi, "SetupDiEnumDeviceInfo");
+    SetupDiGetDeviceRegistryPropertyWFunc setupGetDeviceRegistryProperty = (SetupDiGetDeviceRegistryPropertyWFunc)
+      GetProcAddress(setupapi, "SetupDiGetDeviceRegistryPropertyW");
+    SetupDiDestroyDeviceInfoListFunc setupDestroyDeviceInfoList = (SetupDiDestroyDeviceInfoListFunc)
+      GetProcAddress(setupapi, "SetupDiDestroyDeviceInfoList");
 
-  nsAutoString wantedDriverId(mDeviceID);
-  normalizeDriverId(wantedDriverId);
+    if (setupGetClassDevs &&
+        setupEnumDeviceInfo &&
+        setupGetDeviceRegistryProperty &&
+        setupDestroyDeviceInfoList) {
+      /* create a device information set composed of the current display device */
+      HDEVINFO devinfo = setupGetClassDevs(NULL,
+                                           PromiseFlatString(mDeviceID).get(),
+                                           NULL,
+                                           DIGCF_PRESENT | DIGCF_PROFILE | DIGCF_ALLCLASSES);
 
-  while ((enumresult = RegEnumKeyExW(key, index, subkeyname, &dwcbData, NULL, NULL, NULL, NULL)) != ERROR_NO_MORE_ITEMS) {
-    result = RegOpenKeyExW(key, subkeyname, 0, KEY_QUERY_VALUE, &subkey);
-    if (result == ERROR_SUCCESS) {
-      dwcbData = sizeof(value);
-      result = RegQueryValueExW(subkey, L"MatchingDeviceId", NULL, NULL, (LPBYTE)value, &dwcbData);
-      if (result == ERROR_SUCCESS) {
-        nsAutoString matchingDeviceId(value);
-        normalizeDriverId(matchingDeviceId);
-        if (wantedDriverId.Find(matchingDeviceId) > -1) {
-          /* we've found the driver we're looking for */
-          result = RegQueryValueExW(subkey, L"DriverVersion", NULL, NULL, (LPBYTE)value, &dwcbData);
-          if (result == ERROR_SUCCESS)
-            mDriverVersion = value;
-          result = RegQueryValueExW(subkey, L"DriverDate", NULL, NULL, (LPBYTE)value, &dwcbData);
-          if (result == ERROR_SUCCESS)
-            mDriverDate = value;
-          break;
+      if (devinfo != INVALID_HANDLE_VALUE) {
+        HKEY key;
+        LONG result;
+        WCHAR value[255];
+        DWORD dwcbData;
+        SP_DEVINFO_DATA devinfoData;
+        DWORD memberIndex = 0;
+
+        devinfoData.cbSize = sizeof(devinfoData);
+        NS_NAMED_LITERAL_STRING(driverKeyPre, "System\\CurrentControlSet\\Control\\Class\\");
+        /* enumerate device information elements in the device information set */
+        while (setupEnumDeviceInfo(devinfo, memberIndex++, &devinfoData)) {
+          /* get a string that identifies the device's driver key */
+          if (setupGetDeviceRegistryProperty(devinfo,
+                                             &devinfoData,
+                                             SPDRP_DRIVER,
+                                             NULL,
+                                             (PBYTE)value,
+                                             sizeof(value),
+                                             NULL)) {
+            nsAutoString driverKey(driverKeyPre);
+            driverKey += value;
+            result = RegOpenKeyExW(HKEY_LOCAL_MACHINE, driverKey.BeginReading(), 0, KEY_QUERY_VALUE, &key);
+            if (result == ERROR_SUCCESS) {
+              /* we've found the driver we're looking for */
+              dwcbData = sizeof(value);
+              result = RegQueryValueExW(key, L"DriverVersion", NULL, NULL, (LPBYTE)value, &dwcbData);
+              if (result == ERROR_SUCCESS)
+                mDriverVersion = value;
+              dwcbData = sizeof(value);
+              result = RegQueryValueExW(key, L"DriverDate", NULL, NULL, (LPBYTE)value, &dwcbData);
+              if (result == ERROR_SUCCESS)
+                mDriverDate = value;
+              RegCloseKey(key);
+              break;
+            }
+          }
         }
-      }
-      RegCloseKey(subkey);
-    }
-    index++;
-    dwcbData = sizeof(subkeyname);
-  }
 
-  RegCloseKey(key);
+        setupDestroyDeviceInfoList(devinfo);
+      }
+    }
+
+    FreeLibrary(setupapi);
+  }
 
   const char *spoofedDriverVersionString = PR_GetEnv("MOZ_GFX_SPOOF_DRIVER_VERSION");
   if (spoofedDriverVersionString) {
@@ -287,6 +344,29 @@ GfxInfo::Init()
     }
     nsresult err;
     mAdapterVendorID = vendor.ToInteger(&err, 16);
+  }
+
+  mHasDriverVersionMismatch = PR_FALSE;
+  if (mAdapterVendorID == vendorIntel) {
+    // we've had big crashers (bugs 590373 and 595364) apparently correlated
+    // with bad Intel driver installations where the DriverVersion reported by the registry was
+    // not the version of the DLL.
+    PRBool is64bitApp = sizeof(void*) == 8;
+    PRUnichar *dllFileName = is64bitApp
+                           ? L"igd10umd64.dll"
+                           : L"igd10umd32.dll";
+    nsString dllVersion;
+    // if GetDLLVersion fails, it gives "0.0.0.0"
+    gfxWindowsPlatform::GetPlatform()->GetDLLVersion(dllFileName, dllVersion);
+
+    PRUint64 dllNumericVersion = 0, driverNumericVersion = 0;
+    // so if GetDLLVersion failed, we get dllNumericVersion = 0
+    ParseDriverVersion(dllVersion, &dllNumericVersion);
+    ParseDriverVersion(mDriverVersion, &driverNumericVersion);
+
+    // so this test implicitly handles the case where GetDLLVersion failed
+    if (dllNumericVersion != driverNumericVersion)
+      mHasDriverVersionMismatch = PR_TRUE;
   }
 
   const char *spoofedDevice = PR_GetEnv("MOZ_GFX_SPOOF_DEVICE_ID");
@@ -380,9 +460,11 @@ GfxInfo::AddCrashReportAnnotations()
 #if defined(MOZ_CRASHREPORTER) && defined(MOZ_ENABLE_LIBXUL)
   nsCAutoString deviceIDString, vendorIDString;
   PRUint32 deviceID, vendorID;
+  nsAutoString adapterDriverVersionString;
 
   GetAdapterDeviceID(&deviceID);
   GetAdapterVendorID(&vendorID);
+  GetAdapterDriverVersion(adapterDriverVersionString);
 
   deviceIDString.AppendPrintf("%04x", deviceID);
   vendorIDString.AppendPrintf("%04x", vendorID);
@@ -391,13 +473,15 @@ GfxInfo::AddCrashReportAnnotations()
       vendorIDString);
   CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("AdapterDeviceID"),
       deviceIDString);
-
+  
   /* Add an App Note for now so that we get the data immediately. These
    * can go away after we store the above in the socorro db */
   nsCAutoString note;
   /* AppendPrintf only supports 32 character strings, mrghh. */
   note.AppendPrintf("AdapterVendorID: %04x, ", vendorID);
-  note.AppendPrintf("AdapterDeviceID: %04x", deviceID);
+  note.AppendPrintf("AdapterDeviceID: %04x, ", deviceID);
+  note.AppendPrintf("AdapterDriverVersion: ");
+  note.Append(NS_LossyConvertUTF16toASCII(adapterDriverVersionString));
 
   if (vendorID == 0) {
       /* if we didn't find a valid vendorID lets append the mDeviceID string to try to find out why */
@@ -412,17 +496,6 @@ GfxInfo::AddCrashReportAnnotations()
 
 #endif
 }
-
-static const PRUint32 allWindowsVersions = 0xffffffff;
-static const PRInt32  allFeatures = -1;
-static const PRUint64 allDriverVersions = 0xffffffffffffffffULL;
-
-/* Intel vendor and device IDs */
-static const PRUint32 vendorIntel = 0x8086;
-
-/* NVIDIA vendor and device IDs */
-
-/* AMD vendor and device IDs */
 
 #define V(a,b,c,d) GFX_DRIVER_VERSION(a,b,c,d)
 
@@ -540,7 +613,7 @@ static const GfxDriverInfo gDriverInfo[] = {
 #define IMPLEMENT_INTEL_DRIVER_BLOCKLIST(winVer, devFamily, driverVer) \
   GfxDriverInfo( winVer,                                               \
     vendorIntel, (GfxDeviceFamily) devFamily,                          \
-    allFeatures, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,           \
+    GfxDriverInfo::allFeatures, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,           \
     DRIVER_LESS_THAN, driverVer ),
 
   IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_XP, deviceFamilyIntelGMA500,   V(6,14,11,1018))
@@ -644,6 +717,16 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32 *aStatus, nsAString & aS
     info = aDriverInfo;
   else
     info = &gDriverInfo[0];
+
+  if (mHasDriverVersionMismatch) {
+    if (aFeature == nsIGfxInfo::FEATURE_DIRECT3D_10_LAYERS ||
+        aFeature == nsIGfxInfo::FEATURE_DIRECT3D_10_1_LAYERS ||
+        aFeature == nsIGfxInfo::FEATURE_DIRECT2D)
+    {
+      *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION;
+      return NS_OK;
+    }
+  }
 
   while (info->mOperatingSystem) {
 

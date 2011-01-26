@@ -509,8 +509,9 @@ function hideSearch(event){
 
   iQ("#searchbutton").css({ opacity:.8 });
 
-  let mainWindow = gWindow.document.getElementById("main-window");
-  mainWindow.setAttribute("activetitlebarcolor", "#C4C4C4");
+#ifdef XP_MACOSX
+  UI.setTitlebarColors(true);
+#endif
 
   performSearch();
   SearchEventHandler.switchToBeforeMode();
@@ -550,8 +551,10 @@ function ensureSearchShown(){
   if (!isSearchEnabled()) {
     $searchShade.show();
     $search.show();
-    var mainWindow = gWindow.document.getElementById("main-window");
-    mainWindow.setAttribute("activetitlebarcolor", "#717171");       
+
+#ifdef XP_MACOSX
+    UI.setTitlebarColors({active: "#717171", inactive: "#EDEDED"});
+#endif
 
     $searchbox[0].focus();
     $searchbox[0].val = '0';

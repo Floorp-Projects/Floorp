@@ -162,6 +162,10 @@ tee-surfaces-pointwise.patch: Composite tee subsurfaces pointwise if possible
 
 pattern_get_surface-no-error.patch: Don't put a pattern into error if cairo_pattern_get_surface fails
 
+missing-cairo-clip-init.diff: Missing cairo_clip_init call in cairo_gstate_show_text_glyphs lead to crash
+
+fix-cairo-win32-print-gdi-error.diff: Don't use fwprintf with char* format.  Flush stderr so that all error messages appears before exit.
+
 ==== pixman patches ====
 
 pixman-android-cpu-detect.patch: Add CPU detection support for Android, where we can't reliably access /proc/self/auxv.

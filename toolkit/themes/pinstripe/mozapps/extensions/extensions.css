@@ -216,6 +216,8 @@
 }
 
 .category[disabled] {
+  border-top: 0;
+  border-bottom: 0;
   height: 0;
   opacity: 0;
   -moz-transition-property: height, opacity;
@@ -231,7 +233,6 @@
 .category[selected] {
   background-color: rgba(255, 255, 255, 0.35);
   color: -moz-dialogtext;
-  font-weight: bold;
   border-color: rgba(50, 65, 92, 0.4);
   -moz-border-end-color: #C9CFD7;
 }

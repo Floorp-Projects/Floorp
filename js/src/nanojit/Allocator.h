@@ -46,30 +46,53 @@ namespace nanojit
      * Allocator is a bump-pointer allocator with an SPI for getting more
      * memory from embedder-implemented allocator, such as malloc()/free().
      *
-     * allocations never return NULL.  The implementation of allocChunk()
+     * alloc() never returns NULL.  The implementation of allocChunk()
      * is expected to perform a longjmp or exception when an allocation can't
-     * proceed.
+     * proceed.  fallibleAlloc() (and fallibleAllocChunk()) may return NULL.
+     * They should be used for large allocations whose failure can be handled
+     * without too much difficulty.
      */
     class Allocator {
     public:
         Allocator();
         ~Allocator();
+
+        // Usable space in the minimum chunk size;  there are also a few bytes
+        // used for administration.
+        static const size_t MIN_CHUNK_SZB = 2000;
+
         void reset();
 
         /** alloc memory, never return null. */
         void* alloc(size_t nbytes) {
+            void* p;
             nbytes = (nbytes + 7) & ~7; // round up
             if (current_top + nbytes <= current_limit) {
-                void *p = current_top;
+                p = current_top;
                 current_top += nbytes;
-                return p;
+            } else {
+                p = allocSlow(nbytes, /* fallible = */false);
+                NanoAssert(p);
             }
-            return allocSlow(nbytes);
+            return p;
+        }
+
+        /** alloc memory, maybe return null. */
+        void* fallibleAlloc(size_t nbytes) {
+            void* p;
+            nbytes = (nbytes + 7) & ~7; // round up
+            if (current_top + nbytes <= current_limit) {
+                p = current_top;
+                current_top += nbytes;
+            } else {
+                p = allocSlow(nbytes, /* fallible = */true);
+            }
+            return p;
         }
 
     protected:
-        void* allocSlow(size_t nbytes);
-        void fill(size_t minbytes);
+        void* allocSlow(size_t nbytes, bool fallible = false);
+        bool fill(size_t minbytes, bool fallible);
 
         class Chunk {
         public:
@@ -84,7 +107,7 @@ namespace nanojit
         // allocator SPI
 
         /** allocate another block from a host provided allocator */
-        void* allocChunk(size_t nbytes);
+        void* allocChunk(size_t nbytes, bool fallible);
 
         /** free back to the same allocator */
         void freeChunk(void*);
