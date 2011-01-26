@@ -233,9 +233,15 @@ let TabView = {
         event.preventDefault();
 
         self._initFrame(function() {
-          let tabItem = self._window.GroupItems.getNextGroupItemTab(event.shiftKey);
-          if (tabItem)
-            window.gBrowser.selectedTab = tabItem.tab;
+          let groupItems = self._window.GroupItems;
+          let tabItem = groupItems.getNextGroupItemTab(event.shiftKey);
+          if (!tabItem)
+            return;
+
+          // Switch to the new tab, and close the old group if it's now empty.
+          let oldGroupItem = groupItems.getActiveGroupItem();
+          window.gBrowser.selectedTab = tabItem.tab;
+          oldGroupItem.closeIfEmpty();
         });
       }
     }, true);
