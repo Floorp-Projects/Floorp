@@ -546,9 +546,9 @@
           <scrollbox class="syncsetup-scrollbox" orient="vertical" flex="1">
             <description class="syncsetup-desc syncsetup-center" flex="1">&sync.setup.manual;</description>
             <separator/>
-            <textbox id="syncsetup-account" class="syncsetup-edit" placeholder="&sync.account;"/>
-            <textbox id="syncsetup-password" class="syncsetup-edit" placeholder="&sync.password;" type="password"/>
-            <textbox id="syncsetup-synckey" class="syncsetup-edit" placeholder="&sync.syncKey;"/>
+            <textbox id="syncsetup-account" class="syncsetup-edit" placeholder="&sync.account;" oninput="WeaveGlue.canConnect();"/>
+            <textbox id="syncsetup-password" class="syncsetup-edit" placeholder="&sync.password;" type="password" oninput="WeaveGlue.canConnect();"/>
+            <textbox id="syncsetup-synckey" class="syncsetup-edit" placeholder="&sync.syncKey;" oninput="WeaveGlue.canConnect();"/>
             <separator class="thin"/>
             <button id="syncsetup-usecustomserver" type="checkbox" class="button-checkbox" pack="start" oncommand="WeaveGlue.toggleCustomServer();">
               <image class="button-image-icon"/>
@@ -560,7 +560,7 @@
           <hbox class="syncsetup-buttons" pack="center">
             <button oncommand="WeaveGlue.close();">&sync.setup.cancel;</button>
             <separator/>
-            <button oncommand="WeaveGlue.close(); WeaveGlue.connect();">&sync.setup.connect;</button>
+            <button id="syncsetup-button-connect" oncommand="WeaveGlue.close(); WeaveGlue.connect();">&sync.setup.connect;</button>
           </hbox>
         </vbox>
       </vbox>
