@@ -317,6 +317,7 @@ protected:
   static BOOL    CALLBACK EnumAllThreadWindowProc(HWND aWnd, LPARAM aParam);
   static void             AllowD3D9Callback(nsWindow *aWindow);
   static void             AllowD3D9WithReinitializeCallback(nsWindow *aWindow);
+  static BOOL CALLBACK    FindOurWindowAtPointCallback(HWND aHWND, LPARAM aLPARAM);
 
   /**
    * Window utilities
@@ -342,8 +343,9 @@ protected:
     return mTransparencyMode == eTransparencyGlass ||
            mTransparencyMode == eTransparencyBorderlessGlass;
   }
-  PRBool                  IsOurProcessWindow(HWND aHWND);
-  HWND                    FindOurProcessWindow(HWND aHWND);
+  static PRBool           IsOurProcessWindow(HWND aHWND);
+  static HWND             FindOurProcessWindow(HWND aHWND);
+  static HWND             FindOurWindowAtPoint(const POINT& aPoint);
 
   /**
    * Event processing helpers
