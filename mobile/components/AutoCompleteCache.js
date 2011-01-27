@@ -80,7 +80,7 @@ var AutoCompleteUtils = {
   query: "",
   busy: false,
   timer: null,
-  DELAY: 10000,
+  DELAY: 5000,
 
   // Use the base places search to get results
   fetch: function fetch(query, onResult) {
@@ -187,6 +187,8 @@ var AutoCompleteUtils = {
       NetUtil.asyncCopy(data, ostream, function(rv) {
         if (!Components.isSuccessCode(rv))
           Cu.reportError("AutoCompleteUtils: failure during asyncCopy: " + rv);
+        else
+          Services.obs.notifyObservers(null, "browser:cache-session-history-write-complete", "");
       });
     } catch (ex) {
       Cu.reportError("AutoCompleteUtils: Could not write to cache file: " + this.cacheFile + " | " + ex);
@@ -194,19 +196,26 @@ var AutoCompleteUtils = {
   },
 
   loadCache: function loadCache() {
+    if (!this.cacheFile.exists())
+      return;
+
     try {
-      // Load the cached results from the file
-      let stream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(Ci.nsIFileInputStream);
-      let json = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
+      let self = this;
+      NetUtil.asyncFetch(this.cacheFile, function(aInputStream, aResultCode) {
+        if (Components.isSuccessCode(aResultCode)) {
+          let cache = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON).
+                      decodeFromStream(aInputStream, aInputStream.available());
 
-      stream.init(this.cacheFile, MODE_RDONLY, PERMS_FILE, 0);
-      let cache = json.decodeFromStream(stream, stream.available());
-
-      if (cache.version != CACHE_VERSION) {
-        this.fetch(this.query);
-        return;
-      }
-      this.cache = new cacheResult(cache.result.searchString, cache.result.data);
+          if (cache.version != CACHE_VERSION) {
+            self.fetch(self.query);
+            return;
+          }
+          self.cache = new cacheResult(cache.result.searchString, cache.result.data);
+          Services.obs.notifyObservers(null, "browser:cache-session-history-read-complete", "");
+        } else {
+          Cu.reportError("AutoCompleteUtils: Could not read from cache file");
+        }
+      });
     } catch (ex) {
       Cu.reportError("AutoCompleteUtils: Could not read from cache file: " + ex);
     }
@@ -250,6 +259,7 @@ function AutoCompleteCache() {
   this.searchEngines = Services.search.getVisibleEngines();
   AutoCompleteUtils.init();
 
+  Services.obs.addObserver(this, "browser:cache-session-history-reload", true);
   Services.obs.addObserver(this, "browser:purge-session-history", true);
   Services.obs.addObserver(this, "browser-search-engine-modified", true);
 }
@@ -325,6 +335,12 @@ AutoCompleteCache.prototype = {
 
   observe: function (aSubject, aTopic, aData) {
     switch (aTopic) {
+      case "browser:cache-session-history-reload":
+        if (AutoCompleteUtils.cacheFile.exists())
+          AutoCompleteUtils.loadCache();
+        else
+          AutoCompleteUtils.fetch(AutoCompleteUtils.query);
+        break;
       case "browser:purge-session-history":
         AutoCompleteUtils.update();
         break;
