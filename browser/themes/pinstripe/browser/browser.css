@@ -775,7 +775,6 @@ toolbar[mode="icons"] #zoom-in-button {
 
 #urlbar {
   border-radius: @toolbarbuttonCornerRadius@;
-  direction: ltr;
 }
 
 #urlbar-container:not([combined]) > #urlbar {
@@ -895,28 +894,37 @@ toolbar[mode="icons"] #zoom-in-button {
 }
 
 #PopupAutoCompleteRichResult {
-  direction: ltr !important;
   margin-top: 2px;
 }
 
 /* over-link in location bar */
 
 .urlbar-origin-label {
-  padding: 0 0 0 1px;
+  padding-top: 0;
+  padding-bottom: 0;
+  -moz-padding-start: 1px;
+  -moz-padding-end: 0;
   margin: 0;
-}
-
-.urlbar-origin-label:-moz-locale-dir(rtl) {
-  -moz-padding-start: 4px;
 }
 
 .urlbar-over-link-box {
   position: relative;
-  right: 0;
   color: GrayText;
-  padding: 0 5px 0 18px;
   min-height: 20px;
+  padding-top: 0;
+  padding-bottom: 0;
+  -moz-padding-start: 18px;
+  -moz-padding-end: 5px;
+}
+
+.urlbar-over-link-box:-moz-locale-dir(ltr) {
   background: url(chrome://browser/skin/urlbar-over-link-arrow.png) no-repeat left center;
+  right: 0;
+}
+
+.urlbar-over-link-box:-moz-locale-dir(rtl) {
+  background: url(chrome://browser/skin/urlbar-over-link-arrow-rtl.png) no-repeat right center;
+  left: 0;
 }
 
 .urlbar-over-link-host-label,
@@ -1005,6 +1013,10 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
 
+#go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
+  -moz-transform: scaleX(-1);
+}
+
 #go-button:hover {
   -moz-image-region: rect(0px, 32px, 16px, 16px);
 }
@@ -1022,15 +1034,23 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   padding: 0 3px;
   background-origin: border-box;
   border: none;
-  border-left: 1px solid rgba(0,0,0,.25);
+  -moz-border-start: 1px solid rgba(0,0,0,.25);
+}
+
+#urlbar:-moz-locale-dir(ltr) > toolbarbutton {
   border-top-right-radius: 2px;
   border-bottom-right-radius: 2px;
 }
 
+#urlbar:-moz-locale-dir(rtl) > toolbarbutton {
+  border-top-left-radius: 2px;
+  border-bottom-left-radius: 2px;
+}
+
 #urlbar > toolbarbutton:not([disabled]):active:hover {
   box-shadow: @toolbarbuttonPressedInnerShadow@;
-  padding-left: 4px;
-  border-left: none;
+  -moz-padding-start: 4px;
+  -moz-border-start: none;
 }
 
 #urlbar-go-button {
@@ -1038,6 +1058,10 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   background-image: -moz-linear-gradient(rgb(184,221,142), rgb(154,201,111) 49%, rgb(130,187,92) 51%, rgb(114,171,79));
   box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
               -1px -1px 1px rgba(255,255,255,.15) inset;
+}
+
+#urlbar-go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
+  -moz-transform: scaleX(-1);
 }
 
 #urlbar-reload-button {
