@@ -132,6 +132,12 @@ ShowProgressUI()
   snprintf(path, sizeof(path), "%s/updater.ini", sUpdatePath);
   if (ReadStrings(path, &sLabels) != OK)
     return -1;
+
+  // Continue the update without showing the Progress UI if any of the supplied
+  // strings are larger than MAX_TEXT_LEN (Bug 628829).
+  if (!(strlen(sLabels.title) < MAX_TEXT_LEN - 1 &&
+        strlen(sLabels.info) < MAX_TEXT_LEN - 1))
+    return -1;
   
   [NSApplication sharedApplication];
   [NSBundle loadNibNamed:@"MainMenu" owner:NSApp];
