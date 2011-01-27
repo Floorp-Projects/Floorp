@@ -7,7 +7,7 @@
 
 # check that Turkish language causes a change in rendering (no fi ligature)
 # (also works via Pango)
-HTTP(..) != font-features-turkish.html font-features-ref.html
+fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) HTTP(..) != font-features-turkish.html font-features-ref.html
 
 # check that disabling ligatures causes a change
 HTTP(..) != font-features-noliga.html font-features-ref.html
