@@ -63,14 +63,27 @@ static const char *sUpdatePath;
 -(void)awakeFromNib
 {
   NSWindow *w = [progressBar window];
-  [w center];
   
   [w setTitle:[NSString stringWithUTF8String:sLabels.title]];
   [progressTextField setStringValue:[NSString stringWithUTF8String:sLabels.info]];
-  
+
+  NSRect origTextFrame = [progressTextField frame];
+  [progressTextField sizeToFit];
+
+  int widthAdjust = progressTextField.frame.size.width - origTextFrame.size.width;
+
+  if (widthAdjust > 0) {
+    NSRect f;
+    f.size.width  = w.frame.size.width + widthAdjust;
+    f.size.height = w.frame.size.height;
+    [w setFrame:f display:YES];
+  }
+
+  [w center];
+
   [progressBar setIndeterminate:NO];
   [progressBar setDoubleValue:0.0];
-  
+
   [[NSTimer scheduledTimerWithTimeInterval:TIMER_INTERVAL target:self
                                   selector:@selector(updateProgressUI:)
                                   userInfo:nil repeats:YES] retain];
