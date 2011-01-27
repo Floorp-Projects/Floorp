@@ -517,6 +517,34 @@ TransactionThreadPool::WaitForAllDatabasesToComplete(
   return true;
 }
 
+bool
+TransactionThreadPool::HasTransactionsForDatabase(IDBDatabase* aDatabase)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(aDatabase, "Null pointer!");
+
+  // Get list of transactions for this database id
+  DatabaseTransactionInfo* dbTransactionInfo;
+  if (!mTransactionsInProgress.Get(aDatabase->Id(), &dbTransactionInfo)) {
+    return false;
+  }
+
+  nsTArray<TransactionInfo>& transactionsInProgress =
+    dbTransactionInfo->transactions;
+
+  PRUint32 transactionCount = transactionsInProgress.Length();
+  NS_ASSERTION(transactionCount, "Should never be 0!");
+
+  for (PRUint32 index = 0; index < transactionCount; index++) {
+    // See if any transaction belongs to this IDBDatabase instance
+    if (transactionsInProgress[index].transaction->Database() == aDatabase) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 void
 TransactionThreadPool::MaybeFireCallback(PRUint32 aCallbackIndex)
 {

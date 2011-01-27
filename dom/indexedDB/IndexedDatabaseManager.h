@@ -104,6 +104,9 @@ public:
   // live database objects to close themselves.
   void CloseDatabasesForWindow(nsPIDOMWindow* aWindow);
 
+  // Used to check if there are running transactions in a given window.
+  bool HasOpenTransactions(nsPIDOMWindow* aWindow);
+
 private:
   IndexedDatabaseManager();
   ~IndexedDatabaseManager();
