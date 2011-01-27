@@ -203,13 +203,12 @@ Parser::Parser(JSContext *cx, JSPrincipals *prin, JSStackFrame *cfp)
 }
 
 bool
-Parser::init(const jschar *base, size_t length, const char *filename, uintN lineno)
+Parser::init(const jschar *base, size_t length, const char *filename, uintN lineno,
+             JSVersion version)
 {
     JSContext *cx = context;
-    version = cx->findVersion();
-    
     tempPoolMark = JS_ARENA_MARK(&cx->tempPool);
-    if (!tokenStream.init(version, base, length, filename, lineno)) {
+    if (!tokenStream.init(base, length, filename, lineno, version)) {
         JS_ARENA_RELEASE(&cx->tempPool, tempPoolMark);
         return false;
     }
@@ -887,7 +886,7 @@ JSScript *
 Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *callerFrame,
                         JSPrincipals *principals, uint32 tcflags,
                         const jschar *chars, size_t length,
-                        const char *filename, uintN lineno,
+                        const char *filename, uintN lineno, JSVersion version,
                         JSString *source /* = NULL */,
                         uintN staticLevel /* = 0 */)
 {
@@ -911,7 +910,7 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *calle
     JS_ASSERT_IF(staticLevel != 0, callerFrame);
 
     Compiler compiler(cx, principals, callerFrame);
-    if (!compiler.init(chars, length, filename, lineno))
+    if (!compiler.init(chars, length, filename, lineno, version))
         return NULL;
 
     JS_InitArenaPool(&codePool, "code", 1024, sizeof(jsbytecode),
@@ -1032,6 +1031,7 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *calle
 
         if (!js_EmitTree(cx, &cg, pn))
             goto out;
+
 #if JS_HAS_XML_SUPPORT
         if (PN_TYPE(pn) != TOK_SEMI ||
             !pn->pn_kid ||
@@ -1109,13 +1109,18 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *calle
      */
     if (js_Emit1(cx, &cg, JSOP_STOP) < 0)
         goto out;
+
 #ifdef METER_PARSENODES
     printf("Code-gen growth: %d (%u bytecodes, %u srcnotes)\n",
            (char *)sbrk(0) - (char *)before, CG_OFFSET(&cg), cg.noteCount);
 #endif
+
 #ifdef JS_ARENAMETER
     JS_DumpArenaStats(stdout);
 #endif
+
+    JS_ASSERT(cg.version() == version);
+
     script = JSScript::NewScriptFromCG(cx, &cg);
     if (script && funbox)
         script->savedCallerFun = true;
@@ -1544,7 +1549,7 @@ Parser::functionBody()
         pn->pn_pos.begin.lineno = firstLine;
 
         /* Check for falling off the end of a function that returns a value. */
-        if (JS_HAS_STRICT_OPTION(context) && (tc->flags & TCF_RETURN_EXPR) &&
+        if (context->hasStrictOption() && (tc->flags & TCF_RETURN_EXPR) &&
             !CheckFinalReturn(context, tc, pn)) {
             pn = NULL;
         }
@@ -1782,11 +1787,11 @@ DefineArg(JSParseNode *pn, JSAtom *atom, uintN i, JSTreeContext *tc)
 bool
 Compiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *principals,
                               Bindings *bindings, const jschar *chars, size_t length,
-                              const char *filename, uintN lineno)
+                              const char *filename, uintN lineno, JSVersion version)
 {
     Compiler compiler(cx, principals);
 
-    if (!compiler.init(chars, length, filename, lineno))
+    if (!compiler.init(chars, length, filename, lineno, version))
         return false;
 
     /* No early return from after here until the js_FinishArenaPool calls. */
@@ -3036,7 +3041,7 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
             JS_ASSERT(!dn->pn_used);
             JS_ASSERT(dn->pn_defn);
 
-            if (JS_HAS_STRICT_OPTION(context) || dn_kind == JSDefinition::CONST) {
+            if (context->hasStrictOption() || dn_kind == JSDefinition::CONST) {
                 JSAutoByteString name;
                 if (!js_AtomToPrintableString(context, funAtom, &name) ||
                     !reportErrorNumber(NULL,
@@ -3349,7 +3354,7 @@ Parser::functionStmt()
     if (tokenStream.getToken(TSF_KEYWORD_IS_NAME) == TOK_NAME) {
         name = tokenStream.currentToken().t_atom;
     } else {
-        if (context->options & JSOPTION_ANONFUNFIX) {
+        if (hasAnonFunFix()) {
             /* Extension: accept unnamed function expressions as statements. */
             reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_SYNTAX_ERROR);
             return NULL;
@@ -3910,7 +3915,7 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
                           (dn_kind == JSDefinition::LET &&
                            (stmt->type != STMT_CATCH || OuterLet(tc, stmt, atom))));
 
-            if (JS_HAS_STRICT_OPTION(cx)
+            if (cx->hasStrictOption()
                 ? op != JSOP_DEFVAR || dn_kind != JSDefinition::VAR
                 : error) {
                 JSAutoByteString name;
@@ -4801,7 +4806,7 @@ Parser::returnOrYield(bool useAssignExpr)
         return NULL;
     }
 
-    if (JS_HAS_STRICT_OPTION(context) &&
+    if (context->hasStrictOption() &&
         (~tc->flags & (TCF_RETURN_EXPR | TCF_RETURN_VOID)) == 0 &&
         !ReportBadReturn(context, tc, JSREPORT_WARNING | JSREPORT_STRICT,
                          JSMSG_NO_RETURN_VALUE,
@@ -5259,7 +5264,7 @@ Parser::forStatement()
         if (TokenKindIsDecl(tt)
             ? (pn1->pn_count > 1 || pn1->pn_op == JSOP_DEFCONST
 #if JS_HAS_DESTRUCTURING
-               || (VersionNumber(version) == JSVERSION_1_7 &&
+               || (versionNumber() == JSVERSION_1_7 &&
                    pn->pn_op == JSOP_ITER &&
                    !(pn->pn_iflags & JSITER_FOREACH) &&
                    (pn1->pn_head->pn_type == TOK_RC ||
@@ -5273,7 +5278,7 @@ Parser::forStatement()
             : (pn1->pn_type != TOK_NAME &&
                pn1->pn_type != TOK_DOT &&
 #if JS_HAS_DESTRUCTURING
-               ((VersionNumber(version) == JSVERSION_1_7 &&
+               ((versionNumber() == JSVERSION_1_7 &&
                  pn->pn_op == JSOP_ITER &&
                  !(pn->pn_iflags & JSITER_FOREACH))
                 ? (pn1->pn_type != TOK_RB || pn1->pn_count != 2)
@@ -5386,7 +5391,7 @@ Parser::forStatement()
             if (pn1 == pn2 && !CheckDestructuring(context, NULL, pn2, NULL, tc))
                 return NULL;
 
-            if (VersionNumber(version) == JSVERSION_1_7) {
+            if (versionNumber() == JSVERSION_1_7) {
                 /*
                  * Destructuring for-in requires [key, value] enumeration
                  * in JS1.7.
@@ -6018,7 +6023,7 @@ Parser::statement()
         PopStatement(tc);
         pn->pn_pos.end = pn3->pn_pos.end;
         pn->pn_right = pn3;
-        if (VersionNumber(version) != JSVERSION_ECMA_3) {
+        if (versionNumber() != JSVERSION_ECMA_3) {
             /*
              * All legacy and extended versions must do automatic semicolon
              * insertion after do-while.  See the testcase and discussion in
@@ -7253,7 +7258,7 @@ Parser::comprehensionTail(JSParseNode *kid, uintN blockid,
             if (!CheckDestructuring(context, &data, pn3, NULL, tc))
                 return NULL;
 
-            if (VersionNumber(version) == JSVERSION_1_7) {
+            if (versionNumber() == JSVERSION_1_7) {
                 /* Destructuring requires [key, value] enumeration in JS1.7. */
                 if (pn3->pn_type != TOK_RB || pn3->pn_count != 2) {
                     reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_BAD_FOR_LEFTSIDE);
@@ -8258,26 +8263,16 @@ Parser::xmlElementOrList(JSBool allowList)
 JSParseNode *
 Parser::xmlElementOrListRoot(JSBool allowList)
 {
-    uint32 oldopts;
-    JSParseNode *pn;
-
     /*
      * Force XML support to be enabled so that comments and CDATA literals
      * are recognized, instead of <! followed by -- starting an HTML comment
      * to end of line (used in script tags to hide content from old browsers
      * that don't recognize <script>).
      */
-    oldopts = JS_SetOptions(context, context->options | JSOPTION_XML);
-    version = context->findVersion();
-    tokenStream.setVersion(version);
-    JS_ASSERT(VersionHasXML(version));
-
-    pn = xmlElementOrList(allowList);
-
-    JS_SetOptions(context, oldopts);
-    version = context->findVersion();
-    tokenStream.setVersion(version);
-    JS_ASSERT(!!(oldopts & JSOPTION_XML) == VersionHasXML(version));
+    bool hadXML = tokenStream.hasXML();
+    tokenStream.setXML(true);
+    JSParseNode *pn = xmlElementOrList(allowList);
+    tokenStream.setXML(hadXML);
     return pn;
 }
 
