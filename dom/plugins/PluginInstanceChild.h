@@ -42,6 +42,7 @@
 #include "mozilla/plugins/PPluginInstanceChild.h"
 #include "mozilla/plugins/PluginScriptableObjectChild.h"
 #include "mozilla/plugins/StreamNotifyChild.h"
+#include "mozilla/plugins/PPluginSurfaceChild.h"
 #if defined(OS_WIN)
 #include "mozilla/gfx/SharedDIBWin.h"
 #elif defined(OS_MACOSX)
@@ -107,6 +108,16 @@ protected:
     DoAsyncSetWindow(const gfxSurfaceType& aSurfaceType,
                      const NPRemoteWindow& aWindow,
                      bool aIsAsync);
+
+    virtual PPluginSurfaceChild* AllocPPluginSurface(const WindowsSharedMemoryHandle&,
+                                                     const gfxIntSize&, const bool&) {
+        return new PPluginSurfaceChild();
+    }
+
+    virtual bool DeallocPPluginSurface(PPluginSurfaceChild* s) {
+        delete s;
+        return true;
+    }
 
     NS_OVERRIDE
     virtual bool
@@ -457,6 +468,15 @@ private:
     // non null mCurrentInvalidateTask will call this function
     void InvalidateRectDelayed(void);
 
+    // Clear mCurrentSurface/mCurrentSurfaceActor/mHelperSurface
+    void ClearCurrentSurface();
+
+    // Swap mCurrentSurface/mBackSurface and their associated actors
+    void SwapSurfaces();
+
+    // Clear all surfaces in response to NPP_Destroy
+    void ClearAllSurfaces();
+
     // Set as true when SetupLayer called
     // and go with different path in InvalidateRect function
     bool mLayersRendering;
@@ -467,6 +487,12 @@ private:
     // Back surface, just keeping reference to
     // surface which is on ParentProcess side
     nsRefPtr<gfxASurface> mBackSurface;
+
+#ifdef XP_WIN
+    // These actors mirror mCurrentSurface/mBackSurface
+    PPluginSurfaceChild* mCurrentSurfaceActor;
+    PPluginSurfaceChild* mBackSurfaceActor;
+#endif
 
     // Accumulated invalidate rect, while back buffer is not accessible,
     // in plugin coordinates.

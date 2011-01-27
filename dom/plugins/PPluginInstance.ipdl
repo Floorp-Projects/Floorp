@@ -42,6 +42,7 @@ include protocol PPluginScriptableObject;
 include protocol PBrowserStream;
 include protocol PPluginStream;
 include protocol PStreamNotify;
+include protocol PPluginSurface;
 
 include "mozilla/plugins/PluginMessageUtils.h";
 
@@ -66,16 +67,10 @@ struct SurfaceDescriptorX11 {
   gfxIntSize size;
 };
 
-struct SurfaceDescriptorWin {
-  WindowsSharedMemoryHandle handle;
-  gfxIntSize size;
-  bool transparent;
-};
-
 union SurfaceDescriptor {
   Shmem;
   SurfaceDescriptorX11;
-  SurfaceDescriptorWin;
+  PPluginSurface; // used on Windows
   // Descriptor can be null here in case
   // 1) of first Show call (prevSurface is null)
   // 2) when child is going to destroy
@@ -92,6 +87,7 @@ rpc protocol PPluginInstance
   manages PBrowserStream;
   manages PPluginStream;
   manages PStreamNotify;
+  manages PPluginSurface;
 
 child:
   rpc __delete__();
@@ -183,6 +179,10 @@ parent:
   //                      the shmem for reuse
   sync Show(NPRect updatedRect, SurfaceDescriptor newSurface)
     returns (SurfaceDescriptor prevSurface);
+
+  async PPluginSurface(WindowsSharedMemoryHandle handle,
+                       gfxIntSize size,
+                       bool transparent);
 
   rpc NPN_PushPopupsEnabledState(bool aState);
 
