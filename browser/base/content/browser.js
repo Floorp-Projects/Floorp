@@ -7090,6 +7090,7 @@ function undoCloseTab(aIndex) {
   if (ss.getClosedTabCount(window) > (aIndex || 0)) {
     TabView.prepareUndoCloseTab();
     tab = ss.undoCloseTab(window, aIndex || 0);
+    TabView.afterUndoCloseTab();
 
     if (blankTabToRemove)
       gBrowser.removeTab(blankTabToRemove);
