@@ -39,14 +39,14 @@ function pollDialog(okButton) {
 function checkExpectedState(ui, state) {
 
     // XXX check title? OS X has title in content
-    let iconClassPrefix = (isTabModal ? "info.icon " : "spaced ");
     is(ui.infoBody.textContent,       state.msg,         "Checking expected message");
     is(ui.loginContainer.hidden,      state.textHidden,  "Checking textbox visibility");
     is(ui.password1Container.hidden,  state.passHidden,  "Checking passbox visibility");
     is(ui.checkboxContainer.hidden,   state.checkHidden, "Checking checkbox visibility");
     is(ui.checkbox.label,             state.checkMsg,    "Checking checkbox label");
     is(ui.checkbox.checked,           state.checked,     "Checking checkbox checked");
-    is(ui.infoIcon.className,         iconClassPrefix + state.iconClass, "Checking expected icon CSS class");
+    if (!isTabModal)
+      is(ui.infoIcon.className,       "spaced " + state.iconClass, "Checking expected icon CSS class");
     is(ui.loginTextbox.getAttribute("value"),     state.textValue, "Checking textbox value");
     is(ui.password1Textbox.getAttribute("value"), state.passValue, "Checking passbox value");
 

@@ -24,25 +24,19 @@
 
         <!-- This is based on the guts of commonDialog.xul -->
         <spacer flex="1"/>
-        <hbox>
-            <spacer flex="1"/>
-            <vbox class="mainContainer">
-                <grid class="topContainer">
+        <hbox pack="center">
+            <vbox anonid="mainContainer" class="mainContainer">
+                <grid anonid="topContainer" class="topContainer" flex="1">
                     <columns>
                         <column/>
                         <column flex="1"/>
                     </columns>
 
                     <rows>
-                        <row>
-                            <hbox align="start">
-                                <image anonid="info.icon" class="info.icon"/>
-                            </hbox>
-                            <vbox class="infoContainer">
-                                <description anonid="info.title" hidden="true"/>
-                                <description anonid="info.body" class="info.body"/>
-                            </vbox>
-                        </row>
+                        <vbox anonid="infoContainer" align="center" pack="center" flex="1">
+                            <description anonid="info.title" hidden="true"/>
+                            <description anonid="info.body" class="info.body"/>
+                        </vbox>
 
                         <row anonid="loginContainer" hidden="true" align="center">
                             <label anonid="loginLabel" value="&editfield0.label;" control="loginTextbox"/>
@@ -77,7 +71,6 @@
 #endif
                 </hbox>
             </vbox>
-            <spacer flex="1"/>
         </hbox>
         <spacer flex="2"/>
     </xbl:content>
@@ -100,7 +93,7 @@
                 password1Label     : getElement("password1Label"),
                 infoBody           : getElement("info.body"),
                 infoTitle          : getElement("info.title"),
-                infoIcon           : getElement("info.icon"),
+                infoIcon           : null,
                 checkbox           : getElement("checkbox"),
                 checkboxContainer  : getElement("checkboxContainer"),
                 button3            : getElement("button3"),
@@ -133,6 +126,10 @@
         <field name="onCloseCallback"/>
         <field name="Dialog"/>
         <field name="isLive"/>
+        <field name="availWidth"/>
+        <field name="availHeight"/>
+        <field name="minWidth"/>
+        <field name="minHeight"/>
 
         <method name="init">
             <parameter name="args"/>
@@ -151,8 +148,9 @@
                 // the page navigates, else we never unwind the event loop and that's sad times.
                 // Remember to cleanup in shutdownPrompt()!
                 this.isLive = true;
-                linkedTab.addEventListener("TabClose", this, false);
+                window.addEventListener("resize", this, false);
                 window.addEventListener("unload", this, false);
+                linkedTab.addEventListener("TabClose", this, false);
                 this.args.domWindow.addEventListener("pagehide", this, false);
 
                 let tmp = {};
@@ -162,6 +160,8 @@
 
                 // TODO: should unhide buttonSpacer on Windows when there are 4 buttons.
                 //       Better yet, just drop support for 4-button dialogs. (bug 609510)
+
+                this.onResize();
             ]]>
             </body>
         </method>
@@ -171,8 +171,9 @@
             <![CDATA[
                 // remove our event listeners
                 try {
-                    this.linkedTab.removeEventListener("TabClose", this, false);
+                    window.removeEventListener("resize", this, false);
                     window.removeEventListener("unload", this, false);
+                    this.linkedTab.removeEventListener("TabClose", this, false);
                     this.args.domWindow.removeEventListener("pagehide", this, false);
                 } catch(e) { }
                 // invoke callback
@@ -187,12 +188,61 @@
             <body>
             <![CDATA[
                 switch (aEvent.type) {
-                  case "TabClose":
+                  case "resize":
+                    this.onResize();
+                    break;
                   case "unload":
+                  case "TabClose":
                   case "pagehide":
                     this.Dialog.abortPrompt();
                     this.shutdownPrompt();
                     break;
+                }
+            ]]>
+            </body>
+        </method>
+
+        <method name="onResize">
+            <body>
+            <![CDATA[
+                // XXX the <notificationbox/>; to be made app-agnostic later
+                let container = this.parentNode.parentNode;
+                let availWidth = container.clientWidth;
+                let availHeight = container.clientHeight;
+                if (availWidth == this.availWidth && availHeight == this.availHeight)
+                    return;
+                this.availWidth = availWidth;
+                this.availHeight = availHeight;
+
+                let self = this;
+                function getElement(anonid) {
+                    return document.getAnonymousElementByAttribute(self, "anonid", anonid);
+                }
+                let main = getElement("mainContainer");
+                let top  = getElement("topContainer");
+                let info = getElement("infoContainer");
+                let body = this.ui.infoBody;
+
+                // cap prompt dimensions at 60% width and 60% height of content area
+                if (!this.minWidth)
+                  this.minWidth = parseInt(window.getComputedStyle(main).minWidth);
+                if (!this.minHeight)
+                  this.minHeight = parseInt(window.getComputedStyle(main).minHeight);
+                let maxWidth = Math.max(Math.floor(availWidth * 0.6), this.minWidth) +
+                               top.clientWidth - main.clientWidth;
+                let maxHeight = Math.max(Math.floor(availHeight * 0.6), this.minHeight) +
+                                top.clientHeight - main.clientHeight;
+                body.style.maxWidth = maxWidth + "px";
+                info.style.overflow = info.style.width = info.style.height = "";
+
+                // when prompt text is too long, use scrollbars
+                if (info.clientWidth > maxWidth) {
+                    info.style.overflow = "auto";
+                    info.style.width = maxWidth + "px";
+                }
+                if (info.clientHeight > maxHeight) {
+                    info.style.overflow = "auto";
+                    info.style.height = maxHeight + "px";
                 }
             ]]>
             </body>
