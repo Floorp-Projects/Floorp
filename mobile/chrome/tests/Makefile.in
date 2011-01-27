@@ -86,6 +86,8 @@ _BROWSER_FILES = \
   browser_title.sjs \
   browser_install.xml \
   browser_upgrade.rdf\
+  browser_autocompletesearch.js\
+  mock_autocomplete.json\
   $(NULL)
 
 ifndef ANDROID
