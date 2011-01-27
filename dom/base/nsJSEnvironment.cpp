@@ -1156,7 +1156,11 @@ nsJSContext::~nsJSContext()
 #ifdef DEBUG
   nsCycleCollector_DEBUG_wasFreed(static_cast<nsIScriptContext*>(this));
 #endif
-  NS_PRECONDITION(!mTerminations, "Shouldn't have termination funcs by now");
+
+  // We may still have pending termination functions if the context is destroyed
+  // before they could be executed. In this case, free the references to their
+  // parameters, but don't execute the functions (see bug 622326).
+  delete mTerminations;
 
   mGlobalObjectRef = nsnull;
 
@@ -3360,7 +3364,7 @@ nsresult
 nsJSContext::SetTerminationFunction(nsScriptTerminationFunc aFunc,
                                     nsISupports* aRef)
 {
-  NS_PRECONDITION(JS_IsRunning(mContext), "should be executing script");
+  NS_PRECONDITION(GetExecutingScript(), "should be executing script");
 
   nsJSContext::TerminationFuncClosure* newClosure =
     new nsJSContext::TerminationFuncClosure(aFunc, aRef, mTerminations);
