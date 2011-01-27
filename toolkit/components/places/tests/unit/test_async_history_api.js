@@ -408,7 +408,7 @@ function test_non_addable_uri_errors()
       };
       places.push(place);
     }
-    catch (e if e.result === Cr.NS_ERROR_MALFORMED_URI) {
+    catch (e if e.result === Cr.NS_ERROR_FAILURE) {
       // NetUtil.newURI() can throw if e.g. our app knows about imap://
       // but the account is not set up and so the URL is invalid for us.
       // Note this in the log but ignore as it's not the subject of this test.
