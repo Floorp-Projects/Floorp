@@ -150,53 +150,21 @@ function FakePasswordService(contents) {
 
 function FakeFilesystemService(contents) {
   this.fakeContents = contents;
-
   let self = this;
 
-  Utils.getProfileFile = function fake_getProfileFile(arg) {
-    let fakeNsILocalFile = {
-      exists: function() {
-        return this._fakeFilename in self.fakeContents;
-      },
-      _fakeFilename: (typeof(arg) == "object") ? arg.path : arg
-    };
-    return fakeNsILocalFile;
+  Utils.jsonSave = function jsonSave(filePath, that, obj, callback) {
+    let json = typeof obj == "function" ? obj.call(that) : obj;
+    self.fakeContents["weave/" + filePath + ".json"] = JSON.stringify(json);
+    callback.call(that);
   };
 
-  Utils.readStream = function fake_readStream(stream) {
-    getTestLogger().info("Reading from stream.");
-    return stream._fakeData;
-  };
-
-  Utils.open = function fake_open(file, mode) {
-    switch (mode) {
-    case "<":
-      mode = "reading";
-      break;
-    case ">":
-      mode = "writing";
-      break;
-    default:
-      throw new Error("Unexpected mode: " + mode);
+  Utils.jsonLoad = function jsonLoad(filePath, that, callback) {
+    let obj;
+    let json = self.fakeContents["weave/" + filePath + ".json"];
+    if (json) {
+      obj = JSON.parse(json);
     }
-
-    getTestLogger().info("Opening '" + file._fakeFilename + "' for " +
-                         mode + ".");
-    var contents = "";
-    if (file._fakeFilename in self.fakeContents && mode == "reading")
-      contents = self.fakeContents[file._fakeFilename];
-    let fakeStream = {
-      writeString: function(data) {
-        contents += data;
-        getTestLogger().info("Writing data to local file '" +
-                             file._fakeFilename +"': " + data);
-      },
-      close: function() {
-        self.fakeContents[file._fakeFilename] = contents;
-      },
-      get _fakeData() { return contents; }
-    };
-    return [fakeStream];
+    callback.call(that, obj);
   };
 };
 
