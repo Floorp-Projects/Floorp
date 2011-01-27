@@ -84,7 +84,11 @@ public:
                                    nsTArray<nsRefPtr<IDBDatabase> >& aDatabases,
                                    nsIRunnable* aCallback);
 
-  // Returns true iff there are running or pending transactions for aDatabase
+  // Abort all transactions, unless they are already in the process of being
+  // committed, for aDatabase.
+  void AbortTransactionsForDatabase(IDBDatabase* aDatabase);
+
+  // Returns true iff there are running or pending transactions for aDatabase.
   bool HasTransactionsForDatabase(IDBDatabase* aDatabase);
 
 protected:
