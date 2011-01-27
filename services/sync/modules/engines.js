@@ -115,7 +115,9 @@ Tracker.prototype = {
 
   loadChangedIDs: function T_loadChangedIDs() {
     Utils.jsonLoad("changes/" + this.file, this, function(json) {
-      this.changedIDs = json;
+      if (json) {
+        this.changedIDs = json;
+      }
     });
   },
 
@@ -523,7 +525,9 @@ SyncEngine.prototype = {
     // Initialize to empty if there's no file
     this._toFetch = [];
     Utils.jsonLoad("toFetch/" + this.name, this, function(toFetch) {
-      this._toFetch = toFetch;
+      if (toFetch) {
+        this._toFetch = toFetch;
+      }
     });
   },
 

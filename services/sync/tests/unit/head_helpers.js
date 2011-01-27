@@ -378,6 +378,21 @@ function SyncTestingInfrastructure(engineFactory) {
   };
 }
 
+
+/*
+ * Ensure exceptions from inside callbacks leads to test failures.
+ */
+function ensureThrows(func) {
+  return function() {
+    try {
+      func.apply(this, arguments);
+    } catch (ex) {
+      do_throw(ex);
+    }
+  };
+}
+
+
 /**
  * Print some debug message to the console. All arguments will be printed,
  * separated by spaces.
