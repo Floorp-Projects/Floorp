@@ -743,8 +743,14 @@ var BrowserUI = {
     Elements.panelUI.hidden = false;
     Elements.contentShowing.setAttribute("disabled", "true");
 
-    if (aPage != undefined)
+    if (aPage) {
       this.switchPane(aPage);
+    } else {
+      // Fire a "select" event anyway so listeners know when the panel is opened.
+      let event = document.createEvent("Events");
+      event.initEvent("select", true, true);
+      document.getElementById("panel-items").dispatchEvent(event);
+    }
   },
 
   hidePanel: function hidePanel() {

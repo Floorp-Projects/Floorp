@@ -41,7 +41,7 @@ var PreferencesView = {
   _msg: null,
   _restartCount: 0,
 
-  _messageActions: function ev__messageActions(aData) {
+  _messageActions: function pv__messageActions(aData) {
     if (aData == "prefs-restart-app") {
       // Notify all windows that an application quit has been requested
       var cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
@@ -107,13 +107,15 @@ var PreferencesView = {
     let panels = document.getElementById("panel-items");
     panels.addEventListener("select",
                             function(aEvent) {
+                              if (aEvent.target != panels)
+                                return;
                               if (panels.selectedPanel.id == "prefs-container")
                                 self._delayedInit();
                             },
                             false);
   },
 
-  _delayedInit: function ev__delayedInit() {
+  _delayedInit: function pv__delayedInit() {
     if (this._languages)
       return;
 
