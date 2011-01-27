@@ -187,8 +187,10 @@
           <![CDATA[
             let container = this.parentNode.getBoundingClientRect();
             let element   = this.children.getBoundingClientRect();
-
-            let height = (element.top - container.top) + ((container.top + container.height) - (element.top + element.height));
+            let undo = this._tabsUndo.getBoundingClientRect();
+            let lastChild = this.parentNode.lastChild.getBoundingClientRect();
+            
+            let height = window.innerHeight - element.top - (undo.bottom - undo.top) - (lastChild.top - element.bottom) - lastChild.height;
             this.children.style.height = height + "px";
 
             this._updateWidth();
@@ -205,8 +207,10 @@
             let firstBox = this.children.firstChild.getBoundingClientRect();
             let lastBox = this.children.lastChild.getBoundingClientRect();
 
-            // XXX we can do better than using a constant here
-            let columnsCount = Math.ceil(this.children.childNodes.length / Math.floor(this.children.getBoundingClientRect().height / (firstBox.height + 4)));
+            // We can't rely on getBoundingClientRect() for this.children height
+            // it is not synced (sometimes, especially during resize) with the 
+            // style.height rule
+            let columnsCount = Math.ceil(this.children.childNodes.length / Math.floor(parseInt(this.children.style.height) / (firstBox.height + 4)));
             if (this._columnsCount != columnsCount && window.innerWidth > 1) { // > 1 to ignore column resizing while the main window is loading
               this.children.style.width = (columnsCount * (COLUMN_MARGIN + firstBox.width)) + "px";
               this._columnsCount = columnsCount;
