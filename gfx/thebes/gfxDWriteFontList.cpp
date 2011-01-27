@@ -156,21 +156,20 @@ gfxDWriteFontFamily::FindStyleVariations()
          */
         gfxDWriteFontEntry *fe = 
             new gfxDWriteFontEntry(fullID, font);
-        fe->SetFamily(this);
+        AddFontEntry(fe);
 
 #ifdef PR_LOGGING
-    if (LOG_FONTLIST_ENABLED()) {
-        LOG_FONTLIST(("(fontlist) added (%s) to family (%s)"
-             " with style: %s weight: %d stretch: %d",
-             NS_ConvertUTF16toUTF8(fe->Name()).get(),
-             NS_ConvertUTF16toUTF8(Name()).get(),
-             (fe->IsItalic()) ? "italic" : "normal",
-             fe->Weight(), fe->Stretch()));
-    }
+        if (LOG_FONTLIST_ENABLED()) {
+            LOG_FONTLIST(("(fontlist) added (%s) to family (%s)"
+                 " with style: %s weight: %d stretch: %d",
+                 NS_ConvertUTF16toUTF8(fe->Name()).get(),
+                 NS_ConvertUTF16toUTF8(Name()).get(),
+                 (fe->IsItalic()) ? "italic" : "normal",
+                 fe->Weight(), fe->Stretch()));
+        }
 #endif
-
-        mAvailableFonts.AppendElement(fe);
     }
+
     if (!mAvailableFonts.Length()) {
         NS_WARNING("Family with no font faces in it.");
     }
@@ -865,6 +864,59 @@ gfxDWriteFontList::DelayedInitFontList()
 
     mOtherFamilyNamesInitialized = PR_TRUE;
     GetFontSubstitutes();
+
+    // bug 551313 - DirectWrite creates a Gill Sans family out of 
+    // poorly named members of the Gill Sans MT family containing
+    // only Ultra Bold weights.  This causes big problems for pages
+    // using Gill Sans which is usually only available on OSX
+
+    nsAutoString nameGillSans(L"Gill Sans");
+    nsAutoString nameGillSansMT(L"Gill Sans MT");
+    BuildKeyNameFromFontName(nameGillSans);
+    BuildKeyNameFromFontName(nameGillSansMT);
+
+    gfxFontFamily *gillSansFamily = mFontFamilies.GetWeak(nameGillSans);
+    gfxFontFamily *gillSansMTFamily = mFontFamilies.GetWeak(nameGillSansMT);
+
+    if (gillSansFamily && gillSansMTFamily) {
+        gillSansFamily->FindStyleVariations();
+        nsTArray<nsRefPtr<gfxFontEntry> >& faces = gillSansFamily->GetFontList();
+        PRUint32 i;
+
+        PRBool allUltraBold = PR_TRUE;
+        for (i = 0; i < faces.Length(); i++) {
+            // does the face have 'Ultra Bold' in the name?
+            if (faces[i]->Name().Find(NS_LITERAL_STRING("Ultra Bold")) == -1) {
+                allUltraBold = PR_FALSE;
+                break;
+            }
+        }
+
+        // if all the Gill Sans faces are Ultra Bold ==> move faces
+        // for Gill Sans into Gill Sans MT family
+        if (allUltraBold) {
+
+            // add faces to Gill Sans MT
+            for (i = 0; i < faces.Length(); i++) {
+                gillSansMTFamily->AddFontEntry(faces[i]);
+
+#ifdef PR_LOGGING
+                if (LOG_FONTLIST_ENABLED()) {
+                    gfxFontEntry *fe = faces[i];
+                    LOG_FONTLIST(("(fontlist) moved (%s) to family (%s)"
+                         " with style: %s weight: %d stretch: %d",
+                         NS_ConvertUTF16toUTF8(fe->Name()).get(),
+                         NS_ConvertUTF16toUTF8(gillSansMTFamily->Name()).get(),
+                         (fe->IsItalic()) ? "italic" : "normal",
+                         fe->Weight(), fe->Stretch()));
+                }
+#endif
+            }
+
+            // remove Gills Sans
+            mFontFamilies.Remove(nameGillSans);
+        }
+    }
 
     StartLoader(kDelayBeforeLoadingFonts, kIntervalBetweenLoadingFonts);
 
