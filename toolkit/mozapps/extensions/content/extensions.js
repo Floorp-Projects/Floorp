@@ -54,6 +54,7 @@ const PREF_BACKGROUND_UPDATE = "extensions.update.enabled";
 const PREF_CHECK_COMPATIBILITY = "extensions.checkCompatibility";
 const PREF_CHECK_UPDATE_SECURITY = "extensions.checkUpdateSecurity";
 const PREF_AUTOUPDATE_DEFAULT = "extensions.update.autoUpdateDefault";
+const PREF_GETADDONS_CACHE_ENABLED = "extensions.%ID%.getAddons.cache.enabled";
 
 const BRANCH_REGEXP = /^([^\.]+\.[0-9]+[a-z]*).*/gi;
 
@@ -1623,6 +1624,11 @@ var gDiscoverView = {
     AddonManager.getAllAddons(function(aAddons) {
       var list = {};
       aAddons.forEach(function(aAddon) {
+        var prefName = PREF_GETADDONS_CACHE_ENABLED.replace("%ID%", aAddon.id);
+        try {
+          if (!Services.prefs.getBoolPref(prefName))
+            return;
+        } catch (e) { }
         list[aAddon.id] = {
           name: aAddon.name,
           version: aAddon.version,
