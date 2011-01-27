@@ -387,7 +387,7 @@ var Browser = {
         let disabledStrings = Strings.browser.GetStringFromName("alertAddonsDisabled");
         let label = PluralForm.get(addons.length, disabledStrings).replace("#1", addons.length);
 
-        let alerts = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
+        let alerts = Cc["@mozilla.org/toaster-alerts-service;1"].getService(Ci.nsIAlertsService);
         alerts.showAlertNotification(URI_GENERIC_ICON_XPINSTALL, Strings.browser.GetStringFromName("alertAddons"),
                                      label, false, "", null);
       }

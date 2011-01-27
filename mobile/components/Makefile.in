@@ -80,9 +80,7 @@ ifdef MOZ_UPDATER
 EXTRA_COMPONENTS += UpdatePrompt.js
 endif
 
-ifndef ANDROID
 EXTRA_COMPONENTS += AlertsService.js
-endif
 
 ifneq (Android,$(OS_TARGET))
 DIRS =  phone \

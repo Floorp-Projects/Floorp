@@ -241,7 +241,7 @@ HelperAppLauncherDialog.prototype = {
   _notify: function hald_notify(aLauncher, aCallback) {
     let bundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
 
-    let notifier = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
+    let notifier = Cc[aCallback ? "@mozilla.org/alerts-service;1" : "@mozilla.org/toaster-alerts-service;1"].getService(Ci.nsIAlertsService);
     notifier.showAlertNotification(URI_GENERIC_ICON_DOWNLOAD,
                                    bundle.GetStringFromName("alertDownloads"),
                                    bundle.GetStringFromName("alertCantOpenDownload"),

@@ -1173,7 +1173,7 @@ var BrowserUI = {
         Services.prefs.setBoolPref("toolkit.screen.lock", !locked);
 
         let strings = Strings.browser;
-        let alerts = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
+        let alerts = Cc["@mozilla.org/toaster-alerts-service;1"].getService(Ci.nsIAlertsService);
         alerts.showAlertNotification(null, strings.GetStringFromName("alertLockScreen"),
                                      strings.GetStringFromName("alertLockScreen." + (!locked ? "locked" : "unlocked")), false, "", null);
         break;
