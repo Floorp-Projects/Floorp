@@ -2603,7 +2603,8 @@ Tab.prototype = {
     let session = { data: dead.__SS_data, extra: dead.__SS_extdata };
 
     // We need this data to correctly create and position the new browser
-    let currentURL = dead.currentURI.spec;
+    // If this browser is already a zombie, fallback to the session data
+    let currentURL = dead.__SS_restore ? session.data.entries[0].url : dead.currentURI.spec;
     let sibling = dead.nextSibling;
 
     // Destory and re-create the browser
