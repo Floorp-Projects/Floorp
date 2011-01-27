@@ -226,6 +226,15 @@ public:
   virtual void SetRoleMapEntry(nsRoleMapEntry *aRoleMapEntry);
 
   /**
+   * Update the children cache.
+   */
+  inline bool UpdateChildren()
+  {
+    InvalidateChildren();
+    return EnsureChildren();
+  }
+
+  /**
    * Cache children if necessary. Return true if the accessible is defunct.
    */
   PRBool EnsureChildren();

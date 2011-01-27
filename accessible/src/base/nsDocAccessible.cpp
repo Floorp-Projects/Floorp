@@ -1390,7 +1390,7 @@ nsDocAccessible::ContentInserted(nsIContent* aContainerNode,
     // Update the whole tree of this document accessible when the container is
     // null (document element is inserted or removed).
     nsAccessible* container = aContainerNode ?
-      GetAccService()->GetCachedAccessibleOrContainer(aContainerNode) :
+      GetAccService()->GetAccessibleOrContainer(aContainerNode, mWeakShell) :
       this;
 
     mNotificationController->ScheduleContentInsertion(container,
@@ -1406,7 +1406,7 @@ nsDocAccessible::ContentRemoved(nsIContent* aContainerNode,
   // Update the whole tree of this document accessible when the container is
   // null (document element is removed).
   nsAccessible* container = aContainerNode ?
-    GetAccService()->GetCachedAccessibleOrContainer(aContainerNode) :
+    GetAccService()->GetAccessibleOrContainer(aContainerNode, mWeakShell) :
     this;
 
   UpdateTree(container, aChildNode, PR_FALSE);
@@ -1452,7 +1452,7 @@ nsDocAccessible::RecreateAccessible(nsINode* aNode)
   }
 
   // Get new accessible and fire show event.
-  parent->InvalidateChildren();
+  parent->UpdateChildren();
 
   nsAccessible* newAccessible =
     GetAccService()->GetAccessibleInWeakShell(aNode, mWeakShell);
@@ -1492,12 +1492,11 @@ nsDocAccessible::NotifyOfCachingEnd(nsAccessible* aAccessible)
     for (PRUint32 idx = 0; idx < mInvalidationList.Length(); idx++) {
       nsIContent* content = mInvalidationList[idx];
       nsAccessible* container =
-        GetAccService()->GetCachedContainerAccessible(content);
-      container->InvalidateChildren();
+        GetAccService()->GetContainerAccessible(content, mWeakShell);
 
       // Make sure we keep children updated. While we're inside of caching loop
       // then we must exist it with cached children.
-      container->EnsureChildren();
+      container->UpdateChildren();
     }
     mInvalidationList.Clear();
 
@@ -1860,16 +1859,14 @@ nsDocAccessible::ProcessContentInserted(nsAccessible* aContainer,
   // accessibles into accessible tree. We need to invalidate children even
   // there's no inserted accessibles in the end because accessible children
   // are created while parent recaches child accessibles.
-  aContainer->InvalidateChildren();
+  aContainer->UpdateChildren();
 
   // The container might be changed, for example, because of the subsequent
   // overlapping content insertion (i.e. other content was inserted between this
   // inserted content and its container or the content was reinserted into
   // different container of unrelated part of tree). These cases result in
   // double processing, however generated events are coalesced and we don't
-  // harm an AT. On the another hand container can be different because direct
-  // container wasn't cached yet when we handled content insertion notification
-  // and therefore we can't ignore the case when container has been changed.
+  // harm an AT.
   // Theoretically the element might be not in tree at all at this point what
   // means there's no container.
   for (PRUint32 idx = 0; idx < aInsertedContent->Length(); idx++) {
@@ -1945,9 +1942,7 @@ nsDocAccessible::UpdateTreeInternal(nsAccessible* aContainer,
     if (aIsInsert && !node->GetPrimaryFrame())
       continue;
 
-    nsAccessible* accessible = aIsInsert ?
-      GetAccService()->GetAccessibleInWeakShell(node, mWeakShell) :
-      GetCachedAccessible(node);
+    nsAccessible* accessible = GetCachedAccessible(node);
 
     if (!accessible) {
       updateFlags |= UpdateTreeInternal(aContainer, node->GetFirstChild(),
