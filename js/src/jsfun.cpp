@@ -2604,6 +2604,16 @@ Function(JSContext *cx, uintN argc, Value *vp)
                                          chars, length, filename, lineno);
 }
 
+namespace js {
+
+bool
+IsBuiltinFunctionConstructor(JSFunction *fun)
+{
+    return fun->maybeNative() == Function;
+}
+
+}
+
 static JSBool
 ThrowTypeError(JSContext *cx, uintN argc, Value *vp)
 {
