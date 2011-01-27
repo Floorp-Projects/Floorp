@@ -935,13 +935,13 @@ HandleString(JSContext *cx, JSONParser *jp, const jschar *buf, uint32 len)
 static JSBool
 HandleKeyword(JSContext *cx, JSONParser *jp, const jschar *buf, uint32 len)
 {
-    Value keyword;
-    TokenKind tt = js_CheckKeyword(buf, len);
-    if (tt != TOK_PRIMARY) {
+    const KeywordInfo *ki = FindKeyword(buf, len);
+    if (!ki || ki->tokentype != TOK_PRIMARY) {
         // bad keyword
         return JSONParseError(jp, cx);
     }
 
+    Value keyword;
     if (buf[0] == 'n') {
         keyword.setNull();
     } else if (buf[0] == 't') {

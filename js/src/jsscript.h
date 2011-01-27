@@ -265,12 +265,6 @@ class Bindings {
     }
 
     /*
-     * If this binding set for the given function includes duplicated argument
-     * names, return an arbitrary duplicate name.  Otherwise, return NULL.
-     */
-    JSAtom *findDuplicateArgument() const;
-
-    /*
      * Function and macros to work with local names as an array of words.
      * getLocalNameArray returns the array, or null if we are out of memory.
      * This function must be called only when hasLocalNames().

@@ -1910,14 +1910,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                ? JSOP_IFEQ                                                    \
                : JSOP_NOP)
 
-/*
- * Callers know that ATOM_IS_STRING(atom), and we leave it to the optimizer to
- * common ATOM_TO_STRING(atom) here and near the call sites.
- */
-#define ATOM_IS_IDENTIFIER(atom) js_IsIdentifier(ATOM_TO_STRING(atom))
-#define ATOM_IS_KEYWORD(atom)                                                 \
-    (js_CheckKeyword(ATOM_TO_STRING(atom)->chars(),                           \
-                     ATOM_TO_STRING(atom)->length()) != TOK_EOF)
+#define ATOM_IS_IDENTIFIER(atom) js_IsIdentifier(atom)
 
 /*
  * Given an atom already fetched from jp->script's atom map, quote/escape its
