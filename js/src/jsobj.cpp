@@ -3254,7 +3254,7 @@ js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth)
     JSStackFrame *priv = js_FloatingFrameIfGenerator(cx, cx->fp());
 
     obj->init(cx, &js_WithClass, proto, parent, priv, false);
-    obj->setMap(cx->runtime->emptyWithShape);
+    obj->setMap(cx->compartment->emptyWithShape);
     OBJ_SET_BLOCK_DEPTH(cx, obj, depth);
 
     AutoObjectRooter tvr(cx, obj);
@@ -3280,7 +3280,7 @@ js_NewBlockObject(JSContext *cx)
         return NULL;
 
     blockObj->init(cx, &js_BlockClass, NULL, NULL, NULL, false);
-    blockObj->setMap(cx->runtime->emptyBlockShape);
+    blockObj->setMap(cx->compartment->emptyBlockShape);
     return blockObj;
 }
 
@@ -4729,7 +4729,7 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &valu
      * member declaration.
      */
     if (obj->isDelegate() && (attrs & (JSPROP_READONLY | JSPROP_SETTER)))
-        cx->runtime->protoHazardShape = js_GenerateShape(cx, false);
+        cx->runtime->protoHazardShape = js_GenerateShape(cx);
 
     /* Use the object's class getter and setter by default. */
     Class *clasp = obj->getClass();
@@ -6538,7 +6538,7 @@ js_TraceObject(JSTracer *trc, JSObject *obj)
     }
     if (clasp->flags & JSCLASS_IS_GLOBAL) {
         JSCompartment *compartment = obj->getCompartment();
-        compartment->marked = true;
+        compartment->mark(trc);
     }
 
     /*
