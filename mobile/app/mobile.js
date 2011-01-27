@@ -188,7 +188,7 @@ pref("browser.microsummary.enabled", false);
 pref("browser.microsummary.updateGenerators", false);
 
 /* spellcheck */
-pref("layout.spellcheckDefault", 1);
+pref("layout.spellcheckDefault", 0);
 
 /* extension manager and xpinstall */
 pref("xpinstall.whitelist.add", "addons.mozilla.org");
