@@ -1325,8 +1325,11 @@ Browser.MainDragger.prototype = {
   },
 
   _hideScrollbars: function _hideScrollbars() {
+    this._scrollScales.x = 0, this._scrollScales.y = 0;
     this._horizontalScrollbar.removeAttribute("panning");
     this._verticalScrollbar.removeAttribute("panning");
+    this._horizontalScrollbar.style.MozTransform = "";
+    this._verticalScrollbar.style.MozTransform = "";
   }
 };
 
