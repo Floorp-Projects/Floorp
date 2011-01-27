@@ -60,7 +60,6 @@ public:
         : mRef(0)
         , mProxyInfo(proxyInfo)
         , mUsingSSL(usingSSL)
-        , mAllowHttp09(PR_TRUE)
     {
         LOG(("Creating nsHttpConnectionInfo @%x\n", this));
 
@@ -123,8 +122,6 @@ public:
     PRBool        UsingHttpProxy() const { return mUsingHttpProxy; }
     PRBool        UsingSSL() const       { return mUsingSSL; }
     PRInt32       DefaultPort() const    { return mUsingSSL ? NS_HTTPS_DEFAULT_PORT : NS_HTTP_DEFAULT_PORT; }
-    void          DisallowHttp09()       { mAllowHttp09 = PR_FALSE; }
-    PRBool        IsHttp09Allowed()      { return mAllowHttp09; }
     void          SetAnonymous(PRBool anon)         
                                          { mHashKey.SetCharAt(anon ? 'A' : '.', 2); }
             
@@ -136,7 +133,6 @@ private:
     nsCOMPtr<nsProxyInfo>  mProxyInfo;
     PRPackedBool           mUsingHttpProxy;
     PRPackedBool           mUsingSSL;
-    PRPackedBool           mAllowHttp09;
 };
 
 #endif // nsHttpConnectionInfo_h__
