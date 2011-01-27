@@ -107,7 +107,7 @@ JSObject::updateShape(JSContext *cx)
     JS_ASSERT(isNative());
     js::LeaveTraceIfGlobalObject(cx, this);
     if (hasOwnShape())
-        setOwnShape(js_GenerateShape(cx, false));
+        setOwnShape(js_GenerateShape(cx));
     else
         objShape = lastProp->shape;
 }
@@ -146,13 +146,13 @@ JSObject::trace(JSTracer *trc)
          * it must have the same shape as lastProp.
          */
         if (!shape->hasRegenFlag()) {
-            shape->shape = js_RegenerateShapeForGC(cx);
+            shape->shape = js_RegenerateShapeForGC(cx->runtime);
             shape->setRegenFlag();
         }
 
         uint32 newShape = shape->shape;
         if (hasOwnShape()) {
-            newShape = js_RegenerateShapeForGC(cx);
+            newShape = js_RegenerateShapeForGC(cx->runtime);
             JS_ASSERT(newShape != shape->shape);
         }
         objShape = newShape;
@@ -180,10 +180,18 @@ Shape::Shape(jsid id, js::PropertyOp getter, js::PropertyOp setter, uint32 slot,
 }
 
 inline
-Shape::Shape(JSContext *cx, Class *aclasp)
-  : JSObjectMap(js_GenerateShape(cx, false), JSSLOT_FREE(aclasp)), numSearches(0), table(NULL),
-    id(JSID_EMPTY), clasp(aclasp), rawSetter(NULL), slot(SHAPE_INVALID_SLOT), attrs(0),
-    flags(SHARED_EMPTY), shortid(0), parent(NULL)
+Shape::Shape(JSCompartment *comp, Class *aclasp)
+  : JSObjectMap(js_GenerateShape(comp->rt), JSSLOT_FREE(aclasp)),
+    numSearches(0),
+    table(NULL),
+    id(JSID_EMPTY),
+    clasp(aclasp),
+    rawSetter(NULL),
+    slot(SHAPE_INVALID_SLOT),
+    attrs(0),
+    flags(SHARED_EMPTY),
+    shortid(0),
+    parent(NULL)
 {
     kids.setNull();
 }
@@ -276,12 +284,12 @@ Shape::set(JSContext* cx, JSObject* obj, js::Value* vp) const
 }
 
 inline
-EmptyShape::EmptyShape(JSContext *cx, js::Class *aclasp)
-  : js::Shape(cx, aclasp)
+EmptyShape::EmptyShape(JSCompartment *comp, js::Class *aclasp)
+  : js::Shape(comp, aclasp)
 {
 #ifdef DEBUG
-    if (cx->runtime->meterEmptyShapes())
-        cx->runtime->emptyShapes.put(this);
+    if (comp->rt->meterEmptyShapes())
+        comp->emptyShapes.put(this);
 #endif
 }
 

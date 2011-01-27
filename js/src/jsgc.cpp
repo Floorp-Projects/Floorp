@@ -854,7 +854,7 @@ js_FinishGC(JSRuntime *rt)
         js_DumpGCStats(rt, stdout);
 #endif
 
-    /* Delete all remaining Compartments. Ideally only the atomsCompartment should be left. */
+    /* Delete all remaining Compartments. */
     for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c) {
         JSCompartment *comp = *c;
         comp->finishArenaLists();
@@ -1027,7 +1027,6 @@ JSRuntime::setGCTriggerFactor(uint32 factor)
     for (JSCompartment **c = compartments.begin(); c != compartments.end(); ++c) {
         (*c)->setGCLastBytes(gcLastBytes);
     }
-    atomsCompartment->setGCLastBytes(gcLastBytes);
 }
 
 void
@@ -1731,19 +1730,6 @@ MarkRuntime(JSTracer *trc)
     for (ThreadDataIter i(rt); !i.empty(); i.popFront())
         i.threadData()->mark(trc);
 
-    if (rt->emptyArgumentsShape)
-        rt->emptyArgumentsShape->trace(trc);
-    if (rt->emptyBlockShape)
-        rt->emptyBlockShape->trace(trc);
-    if (rt->emptyCallShape)
-        rt->emptyCallShape->trace(trc);
-    if (rt->emptyDeclEnvShape)
-        rt->emptyDeclEnvShape->trace(trc);
-    if (rt->emptyEnumeratorShape)
-        rt->emptyEnumeratorShape->trace(trc);
-    if (rt->emptyWithShape)
-        rt->emptyWithShape->trace(trc);
-
     /*
      * We mark extra roots at the last thing so it can use use additional
      * colors to implement cycle collection.
@@ -2247,7 +2233,7 @@ PreGCCleanup(JSContext *cx, JSGCInvocationKind gckind)
 #endif
         ) {
         rt->gcRegenShapes = true;
-        rt->shapeGen = Shape::LAST_RESERVED_SHAPE;
+        rt->shapeGen = 0;
         rt->protoHazardShape = 0;
     }
 
@@ -2287,7 +2273,9 @@ MarkAndSweepCompartment(JSContext *cx, JSCompartment *comp, JSGCInvocationKind g
          r.front()->clearMarkBitmap();
 
     for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
-        (*c)->mark(&gcmarker);
+        (*c)->markCrossCompartment(&gcmarker);
+
+    comp->mark(&gcmarker);
 
     MarkRuntime(&gcmarker);
 
@@ -2358,11 +2346,13 @@ MarkAndSweepCompartment(JSContext *cx, JSCompartment *comp, JSGCInvocationKind g
     comp->finalizeStringArenaLists(cx);
     TIMESTAMP(sweepStringEnd);
 
-    /*
-     * Unmark the runtime's property trees because we don't
-     * sweep them.
-     */
-    js::PropertyTree::unmarkShapes(cx);
+#ifdef DEBUG
+    /* Make sure that we didn't mark a Shape in another compartment. */
+    for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c) {
+        JS_ASSERT_IF(*c != comp, (*c)->propertyTree.checkShapesAllUnmarked(cx));
+    }
+    comp->propertyTree.dumpShapes(cx);
+#endif
 
     /*
      * Destroy arenas after we finished the sweeping so finalizers can safely
@@ -2399,6 +2389,9 @@ MarkAndSweep(JSContext *cx, JSGCInvocationKind gckind GCTIMER_PARAM)
 
     for (GCChunkSet::Range r(rt->gcChunkSet.all()); !r.empty(); r.popFront())
          r.front()->clearMarkBitmap();
+
+    for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
+        (*c)->mark(&gcmarker);
 
     MarkRuntime(&gcmarker);
     js_MarkScriptFilenames(rt);
@@ -2469,13 +2462,19 @@ MarkAndSweep(JSContext *cx, JSGCInvocationKind gckind GCTIMER_PARAM)
 
     TIMESTAMP(sweepStringEnd);
 
-    SweepCompartments(cx, gckind);
-
     /*
      * Sweep the runtime's property trees after finalizing objects, in case any
      * had watchpoints referencing tree nodes.
+     *
+     * Do this before sweeping compartments, so that we sweep all shapes in
+     * unreachable compartments.
      */
-    js::PropertyTree::sweepShapes(cx);
+    for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c) {
+        (*c)->propertyTree.sweepShapes(cx);
+        (*c)->propertyTree.dumpShapes(cx);
+    }
+
+    SweepCompartments(cx, gckind);
 
     /*
      * Sweep script filenames after sweeping functions in the generic loop
@@ -2702,6 +2701,12 @@ GCUntilDone(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind  GCTIM
 
     AutoGCSession gcsession(cx);
 
+    /*
+     * We should not be depending on cx->compartment in the GC, so set it to
+     * NULL to look for violations.
+     */
+    SwitchToCompartment(cx, (JSCompartment *)NULL);
+    
     JS_ASSERT(!rt->gcCurrentCompartment);
     rt->gcCurrentCompartment = comp;
 

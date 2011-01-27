@@ -398,6 +398,36 @@ struct JS_FRIEND_API(JSCompartment) {
     js::mjit::JaegerCompartment  *jaegerCompartment;
 #endif
 
+    /*
+     * Shared scope property tree, and arena-pool for allocating its nodes.
+     */
+    js::PropertyTree             propertyTree;
+
+#ifdef DEBUG
+    /* Property metering. */
+    jsrefcount                   livePropTreeNodes;
+    jsrefcount                   totalPropTreeNodes;
+    jsrefcount                   propTreeKidsChunks;
+    jsrefcount                   liveDictModeNodes;
+#endif
+
+    /*
+     * Runtime-shared empty scopes for well-known built-in objects that lack
+     * class prototypes (the usual locus of an emptyShape). Mnemonic: ABCDEW
+     */
+    js::EmptyShape               *emptyArgumentsShape;
+    js::EmptyShape               *emptyBlockShape;
+    js::EmptyShape               *emptyCallShape;
+    js::EmptyShape               *emptyDeclEnvShape;
+    js::EmptyShape               *emptyEnumeratorShape;
+    js::EmptyShape               *emptyWithShape;
+
+    typedef js::HashSet<js::EmptyShape *,
+                        js::DefaultHasher<js::EmptyShape *>,
+                        js::SystemAllocPolicy> EmptyShapeSet;
+
+    EmptyShapeSet                emptyShapes;
+
     bool                         debugMode;  // true iff debug mode on
     JSCList                      scripts;    // scripts in this compartment
 
@@ -405,12 +435,17 @@ struct JS_FRIEND_API(JSCompartment) {
 
     js::NativeIterCache          nativeIterCache;
 
-    JSCompartment(JSRuntime *cx);
+    JSCompartment(JSRuntime *rt);
     ~JSCompartment();
 
     bool init();
 
+    /* Mark cross-compartment pointers. */
+    void markCrossCompartment(JSTracer *trc);
+
+    /* Mark this compartment's local roots. */
     void mark(JSTracer *trc);
+
     bool wrap(JSContext *cx, js::Value *vp);
     bool wrap(JSContext *cx, JSString **strp);
     bool wrap(JSContext *cx, JSObject **objp);
@@ -441,8 +476,15 @@ struct JS_FRIEND_API(JSCompartment) {
     }
 };
 
-#define JS_TRACE_MONITOR(cx)    (cx->compartment->traceMonitor)
-#define JS_SCRIPTS_TO_GC(cx)    (cx->compartment->scriptsToGC)
+#define JS_TRACE_MONITOR(cx)    ((cx)->compartment->traceMonitor)
+#define JS_SCRIPTS_TO_GC(cx)    ((cx)->compartment->scriptsToGC)
+#define JS_PROPERTY_TREE(cx)    ((cx)->compartment->propertyTree)
+
+#ifdef DEBUG
+#define JS_COMPARTMENT_METER(x) x
+#else
+#define JS_COMPARTMENT_METER(x)
+#endif
 
 namespace js {
 static inline MathCache *

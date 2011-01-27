@@ -46,19 +46,6 @@
 
 namespace js {
 
-enum {
-    MAX_KIDS_PER_CHUNK   = 10U,
-    CHUNK_HASH_THRESHOLD = 30U
-};
-
-struct KidsChunk {
-    js::Shape   *kids[MAX_KIDS_PER_CHUNK];
-    KidsChunk   *next;
-
-    static KidsChunk *create(JSContext *cx);
-    static KidsChunk *destroy(JSContext *cx, KidsChunk *chunk);
-};
-
 struct ShapeHasher {
     typedef js::Shape *Key;
     typedef const js::Shape *Lookup;
@@ -73,9 +60,8 @@ class KidsPointer {
   private:
     enum {
         SHAPE = 0,
-        CHUNK = 1,
-        HASH  = 2,
-        TAG   = 3
+        HASH  = 1,
+        TAG   = 1
     };
 
     jsuword w;
@@ -84,7 +70,6 @@ class KidsPointer {
     bool isNull() const { return !w; }
     void setNull() { w = 0; }
 
-    bool isShapeOrNull() const { return (w & TAG) == SHAPE; }
     bool isShape() const { return (w & TAG) == SHAPE && !isNull(); }
     js::Shape *toShape() const {
         JS_ASSERT(isShape());
@@ -94,17 +79,6 @@ class KidsPointer {
         JS_ASSERT(shape);
         JS_ASSERT((reinterpret_cast<jsuword>(shape) & TAG) == 0);
         w = reinterpret_cast<jsuword>(shape) | SHAPE;
-    }
-
-    bool isChunk() const { return (w & TAG) == CHUNK; }
-    KidsChunk *toChunk() const {
-        JS_ASSERT(isChunk());
-        return reinterpret_cast<KidsChunk *>(w & ~jsuword(TAG));
-    }
-    void setChunk(KidsChunk *chunk) {
-        JS_ASSERT(chunk);
-        JS_ASSERT((reinterpret_cast<jsuword>(chunk) & TAG) == 0);
-        w = reinterpret_cast<jsuword>(chunk) | CHUNK;
     }
 
     bool isHash() const { return (w & TAG) == HASH; }
@@ -127,24 +101,35 @@ class PropertyTree
 {
     friend struct ::JSFunction;
 
-    JSArenaPool arenaPool;
-    js::Shape   *freeList;
+    JSCompartment *compartment;
+    JSArenaPool   arenaPool;
+    js::Shape     *freeList;
 
     bool insertChild(JSContext *cx, js::Shape *parent, js::Shape *child);
-    void removeChild(JSContext *cx, js::Shape *child);
+    void removeChild(js::Shape *child);
 
+    PropertyTree();
+    
   public:
     enum { MAX_HEIGHT = 64 };
 
+    PropertyTree(JSCompartment *comp)
+        : compartment(comp), freeList(NULL)
+    {
+        PodZero(&arenaPool);
+    }
+    
     bool init();
     void finish();
 
-    js::Shape *newShape(JSContext *cx, bool gcLocked = false);
+    js::Shape *newShapeUnchecked();
+    js::Shape *newShape(JSContext *cx);
     js::Shape *getChild(JSContext *cx, js::Shape *parent, const js::Shape &child);
 
-    static void orphanKids(JSContext *cx, js::Shape *shape);
-    static void sweepShapes(JSContext *cx);
-    static void unmarkShapes(JSContext *cx);
+    void orphanChildren(js::Shape *shape);
+    void sweepShapes(JSContext *cx);
+    bool checkShapesAllUnmarked(JSContext *cx);
+    void dumpShapes(JSContext *cx);
 #ifdef DEBUG
     static void meter(JSBasicStats *bs, js::Shape *node);
 #endif

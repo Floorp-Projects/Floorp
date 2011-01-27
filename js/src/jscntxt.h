@@ -1176,15 +1176,6 @@ struct JSRuntime {
     const JSStructuredCloneCallbacks *structuredCloneCallbacks;
 
     /*
-     * Shared scope property tree, and arena-pool for allocating its nodes.
-     * This really should be free of all locking overhead and allocated in
-     * thread-local storage, hence the JS_PROPERTY_TREE(cx) macro.
-     */
-    js::PropertyTree    propertyTree;
-
-#define JS_PROPERTY_TREE(cx) ((cx)->runtime->propertyTree)
-
-    /*
      * The propertyRemovals counter is incremented for every JSObject::clear,
      * and for each JSObject::remove method call that frees a slot in the given
      * object. See js_NativeGet and js_NativeSet in jsobj.cpp.
@@ -1241,17 +1232,6 @@ struct JSRuntime {
     JSAtomState         atomState;
 
     /*
-     * Runtime-shared empty scopes for well-known built-in objects that lack
-     * class prototypes (the usual locus of an emptyShape). Mnemonic: ABCDEW
-     */
-    js::EmptyShape      *emptyArgumentsShape;
-    js::EmptyShape      *emptyBlockShape;
-    js::EmptyShape      *emptyCallShape;
-    js::EmptyShape      *emptyDeclEnvShape;
-    js::EmptyShape      *emptyEnumeratorShape;
-    js::EmptyShape      *emptyWithShape;
-
-    /*
      * Various metering fields are defined at the end of JSRuntime. In this
      * way there is no need to recompile all the code that refers to other
      * fields of JSRuntime after enabling the corresponding metering macro.
@@ -1276,18 +1256,12 @@ struct JSRuntime {
     jsrefcount          nonInlineCalls;
     jsrefcount          constructs;
 
-    /* Property metering. */
     jsrefcount          liveObjectProps;
     jsrefcount          liveObjectPropsPreSweep;
-    jsrefcount          totalObjectProps;
-    jsrefcount          livePropTreeNodes;
-    jsrefcount          duplicatePropTreeNodes;
-    jsrefcount          totalPropTreeNodes;
-    jsrefcount          propTreeKidsChunks;
-    jsrefcount          liveDictModeNodes;
 
     /*
-     * NB: emptyShapes is init'ed iff at least one of these envars is set:
+     * NB: emptyShapes (in JSCompartment) is init'ed iff at least one
+     * of these envars is set:
      *
      *  JS_PROPTREE_STATFILE  statistics on the property tree forest
      *  JS_PROPTREE_DUMPFILE  all paths in the property tree forest
@@ -1296,12 +1270,6 @@ struct JSRuntime {
     const char          *propTreeDumpFilename;
 
     bool meterEmptyShapes() const { return propTreeStatFilename || propTreeDumpFilename; }
-
-    typedef js::HashSet<js::EmptyShape *,
-                        js::DefaultHasher<js::EmptyShape *>,
-                        js::SystemAllocPolicy> EmptyShapeSet;
-
-    EmptyShapeSet       emptyShapes;
 
     /* String instrumentation. */
     jsrefcount          liveStrings;
@@ -3214,19 +3182,19 @@ js_IsPropertyCacheDisabled(JSContext *cx)
 }
 
 static JS_INLINE uint32
-js_RegenerateShapeForGC(JSContext *cx)
+js_RegenerateShapeForGC(JSRuntime *rt)
 {
-    JS_ASSERT(cx->runtime->gcRunning);
-    JS_ASSERT(cx->runtime->gcRegenShapes);
+    JS_ASSERT(rt->gcRunning);
+    JS_ASSERT(rt->gcRegenShapes);
 
     /*
      * Under the GC, compared with js_GenerateShape, we don't need to use
      * atomic increments but we still must make sure that after an overflow
      * the shape stays such.
      */
-    uint32 shape = cx->runtime->shapeGen;
+    uint32 shape = rt->shapeGen;
     shape = (shape + 1) | (shape & js::SHAPE_OVERFLOW_BIT);
-    cx->runtime->shapeGen = shape;
+    rt->shapeGen = shape;
     return shape;
 }
 

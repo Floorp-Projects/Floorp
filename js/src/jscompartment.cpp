@@ -64,6 +64,7 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     data(NULL),
     marked(false),
     active(false),
+    propertyTree(this),
     debugMode(rt->debugMode),
     mathCache(NULL)
 {
@@ -74,6 +75,9 @@ JSCompartment::JSCompartment(JSRuntime *rt)
 
 JSCompartment::~JSCompartment()
 {
+    Shape::finishEmptyShapes(this);
+    propertyTree.finish();
+
 #if ENABLE_YARR_JIT
     js_delete(regExpAllocator);
 #endif
@@ -107,10 +111,22 @@ JSCompartment::init()
     if (!crossCompartmentWrappers.init())
         return false;
 
-#ifdef JS_TRACER
-    if (!InitJIT(&traceMonitor)) {
+    if (!propertyTree.init())
         return false;
+
+#ifdef DEBUG
+    if (rt->meterEmptyShapes()) {
+        if (!emptyShapes.init())
+            return false;
     }
+#endif
+
+    if (!Shape::initEmptyShapes(this))
+        return false;
+
+#ifdef JS_TRACER
+    if (!InitJIT(&traceMonitor))
+        return false;
 #endif
 
 #if ENABLE_YARR_JIT
@@ -387,10 +403,27 @@ ScriptPoolDestroyed(JSContext *cx, mjit::JITScript *jit,
 #endif
 
 void
-JSCompartment::mark(JSTracer *trc)
+JSCompartment::markCrossCompartment(JSTracer *trc)
 {
     for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront())
         MarkValue(trc, e.front().key, "cross-compartment wrapper");
+}
+
+void
+JSCompartment::mark(JSTracer *trc)
+{
+    if (emptyArgumentsShape)
+        emptyArgumentsShape->trace(trc);
+    if (emptyBlockShape)
+        emptyBlockShape->trace(trc);
+    if (emptyCallShape)
+        emptyCallShape->trace(trc);
+    if (emptyDeclEnvShape)
+        emptyDeclEnvShape->trace(trc);
+    if (emptyEnumeratorShape)
+        emptyEnumeratorShape->trace(trc);
+    if (emptyWithShape)
+        emptyWithShape->trace(trc);
 }
 
 void
