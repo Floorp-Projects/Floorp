@@ -6144,9 +6144,14 @@ PresShell::Paint(nsIView*           aDisplayRoot,
 
   if (frame) {
     if (!(frame->GetStateBits() & NS_FRAME_UPDATE_LAYER_TREE)) {
-      if (layerManager->EndEmptyTransaction())
+      if (layerManager->EndEmptyTransaction()) {
+        frame->UpdatePaintCountForPaintedPresShells();
+        
         return NS_OK;
+      }
     }
+    
+    frame->ClearPresShellsFromLastPaint();
     frame->RemoveStateBits(NS_FRAME_UPDATE_LAYER_TREE);
   }
 
