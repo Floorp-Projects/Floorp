@@ -453,7 +453,7 @@ var Browser = {
     let e = Services.wm.getEnumerator("navigator:browser");
     while (e.hasMoreElements() && lastBrowser) {
       let win = e.getNext();
-      if (win != window && win.toolbar.visible)
+      if (win != window)
         lastBrowser = false;
     }
     if (!lastBrowser)
