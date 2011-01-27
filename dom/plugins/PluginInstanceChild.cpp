@@ -136,6 +136,10 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface)
     , mCurrentEvent(nsnull)
 #endif
     , mLayersRendering(false)
+#ifdef XP_WIN
+    , mCurrentSurfaceActor(NULL)
+    , mBackSurfaceActor(NULL)
+#endif
     , mAccumulatedInvalidRect(0,0,0,0)
     , mIsTransparent(false)
     , mSurfaceType(gfxASurface::SurfaceTypeMax)
@@ -2281,8 +2285,7 @@ PluginInstanceChild::DoAsyncSetWindow(const gfxSurfaceType& aSurfaceType,
 
     mWindow.window = NULL;
     if (mWindow.width != aWindow.width || mWindow.height != aWindow.height) {
-        mCurrentSurface = nsnull;
-        mHelperSurface = nsnull;
+        ClearCurrentSurface();
         mAccumulatedInvalidRect = nsIntRect(0, 0, aWindow.width, aWindow.height);
     }
     if (mWindow.clipRect.top != aWindow.clipRect.top ||
@@ -2326,6 +2329,8 @@ GfxFromNsRect(const nsIntRect& aRect)
 bool
 PluginInstanceChild::CreateOptSurface(void)
 {
+    NS_ASSERTION(!mCurrentSurface, "mCurrentSurfaceActor can get out of sync.");
+
     nsRefPtr<gfxASurface> retsurf;
     gfxASurface::gfxImageFormat format =
         mIsTransparent ? gfxASurface::ImageFormatARGB32 :
@@ -2836,10 +2841,17 @@ PluginInstanceChild::ShowPluginFrame()
 #endif
 #ifdef XP_WIN
     if (SharedDIBSurface::IsSharedDIBSurface(mCurrentSurface)) {
-        base::SharedMemoryHandle handle = NULL;
         SharedDIBSurface* s = static_cast<SharedDIBSurface*>(mCurrentSurface.get());
-        s->ShareToProcess(PluginModuleChild::current()->OtherProcess(), &handle);
-        currSurf = SurfaceDescriptorWin(handle, mCurrentSurface->GetSize(), mIsTransparent);
+        if (!mCurrentSurfaceActor) {
+            base::SharedMemoryHandle handle = NULL;
+            s->ShareToProcess(PluginModuleChild::current()->OtherProcess(), &handle);
+
+            mCurrentSurfaceActor =
+                SendPPluginSurfaceConstructor(handle,
+                                              mCurrentSurface->GetSize(),
+                                              mIsTransparent);
+        }
+        currSurf = mCurrentSurfaceActor;
         s->Flush();
     } else
 #endif
@@ -2857,15 +2869,7 @@ PluginInstanceChild::ShowPluginFrame()
         return false;
     }
 
-    nsRefPtr<gfxASurface> tmp = mCurrentSurface;
-    mCurrentSurface = mBackSurface;
-    mBackSurface = tmp;
-    // Outdated back surface... not usable anymore due to changed plugin size.
-    // Dropping obsolete surface
-    if (mCurrentSurface && mBackSurface &&
-        mCurrentSurface->GetSize() != mBackSurface->GetSize()) {
-        mCurrentSurface = nsnull;
-    }
+    SwapSurfaces();
     mSurfaceDifferenceRect = rect;
     return true;
 }
@@ -3036,16 +3040,54 @@ DeleteObject(DeletingObjectEntry* e, void* userArg)
     return PL_DHASH_NEXT;
 }
 
-bool
-PluginInstanceChild::AnswerNPP_Destroy(NPError* aResult)
+void
+PluginInstanceChild::SwapSurfaces()
 {
-    PLUGIN_LOG_DEBUG_METHOD;
-    AssertPluginThread();
-
-#if defined(OS_WIN)
-    SetProp(mPluginWindowHWND, kPluginIgnoreSubclassProperty, (HANDLE)1);
+    nsRefPtr<gfxASurface> tmpsurf = mCurrentSurface;
+#ifdef XP_WIN
+    PPluginSurfaceChild* tmpactor = mCurrentSurfaceActor;
 #endif
 
+    mCurrentSurface = mBackSurface;
+#ifdef XP_WIN
+    mCurrentSurfaceActor = mBackSurfaceActor;
+#endif
+
+    mBackSurface = tmpsurf;
+#ifdef XP_WIN
+    mBackSurfaceActor = tmpactor;
+#endif
+
+    // Outdated back surface... not usable anymore due to changed plugin size.
+    // Dropping obsolete surface
+    if (mCurrentSurface && mBackSurface &&
+        mCurrentSurface->GetSize() != mBackSurface->GetSize()) {
+        mCurrentSurface = nsnull;
+#ifdef XP_WIN
+        if (mCurrentSurfaceActor) {
+            PPluginSurfaceChild::Send__delete__(mCurrentSurfaceActor);
+            mCurrentSurfaceActor = NULL;
+        }
+#endif
+    }
+}
+
+void
+PluginInstanceChild::ClearCurrentSurface()
+{
+    mCurrentSurface = nsnull;
+#ifdef XP_WIN
+    if (mCurrentSurfaceActor) {
+        PPluginSurfaceChild::Send__delete__(mCurrentSurfaceActor);
+        mCurrentSurfaceActor = NULL;
+    }
+#endif
+    mHelperSurface = nsnull;
+}
+
+void
+PluginInstanceChild::ClearAllSurfaces()
+{
     if (mBackSurface) {
         // Get last surface back, and drop it
         SurfaceDescriptor temp = null_t();
@@ -3058,6 +3100,28 @@ PluginInstanceChild::AnswerNPP_Destroy(NPError* aResult)
         DeallocShmem(static_cast<gfxSharedImageSurface*>(mBackSurface.get())->GetShmem());
     mCurrentSurface = nsnull;
     mBackSurface = nsnull;
+
+#ifdef XP_WIN
+    if (mCurrentSurfaceActor) {
+        PPluginSurfaceChild::Send__delete__(mCurrentSurfaceActor);
+        mCurrentSurfaceActor = NULL;
+    }
+    if (mBackSurfaceActor) {
+        PPluginSurfaceChild::Send__delete__(mBackSurfaceActor);
+        mBackSurfaceActor = NULL;
+    }
+#endif
+}
+
+bool
+PluginInstanceChild::AnswerNPP_Destroy(NPError* aResult)
+{
+    PLUGIN_LOG_DEBUG_METHOD;
+    AssertPluginThread();
+
+#if defined(OS_WIN)
+    SetProp(mPluginWindowHWND, kPluginIgnoreSubclassProperty, (HANDLE)1);
+#endif
 
     InfallibleTArray<PBrowserStreamChild*> streams;
     ManagedPBrowserStreamChild(streams);
@@ -3087,6 +3151,8 @@ PluginInstanceChild::AnswerNPP_Destroy(NPError* aResult)
     // allowed to make async calls on this instance.
     PluginModuleChild::current()->NPP_Destroy(this);
     mData.ndata = 0;
+
+    ClearAllSurfaces();
 
     mDeletingHash = new nsTHashtable<DeletingObjectEntry>;
     mDeletingHash->Init();
