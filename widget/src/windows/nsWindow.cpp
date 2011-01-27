@@ -7590,6 +7590,124 @@ HWND nsWindow::FindOurProcessWindow(HWND aHWND)
   return nsnull;
 }
 
+static PRBool PointInWindow(HWND aHWND, const POINT& aPoint)
+{
+  RECT bounds;
+  if (!::GetWindowRect(aHWND, &bounds)) {
+    return PR_FALSE;
+  }
+
+  if (aPoint.x < bounds.left
+      || aPoint.x >= bounds.right
+      || aPoint.y < bounds.top
+      || aPoint.y >= bounds.bottom) {
+    return PR_FALSE;
+  }
+
+  return PR_TRUE;
+}
+
+static HWND FindTopmostWindowAtPoint(HWND aHWND, const POINT& aPoint)
+{
+  if (!::IsWindowVisible(aHWND) || !PointInWindow(aHWND, aPoint)) {
+    return 0;
+  }
+
+  HWND childWnd = ::GetTopWindow(aHWND);
+  while (childWnd) {
+    HWND topmostWnd = FindTopmostWindowAtPoint(childWnd, aPoint);
+    if (topmostWnd) {
+      return topmostWnd;
+    }
+    childWnd = ::GetNextWindow(childWnd, GW_HWNDNEXT);
+  }
+
+  return aHWND;
+}
+
+struct FindOurWindowAtPointInfo
+{
+  POINT mInPoint;
+  HWND mOutHWND;
+};
+
+/* static */
+BOOL CALLBACK nsWindow::FindOurWindowAtPointCallback(HWND aHWND, LPARAM aLPARAM)
+{
+  if (!nsWindow::IsOurProcessWindow(aHWND)) {
+    // This isn't one of our top-level windows; continue enumerating.
+    return TRUE;
+  }
+
+  // Get the top-most child window under the point.  If there's no child
+  // window, and the point is within the top-level window, then the top-level
+  // window will be returned.  (This is the usual case.  A child window
+  // would be returned for plugins.)
+  FindOurWindowAtPointInfo* info = reinterpret_cast<FindOurWindowAtPointInfo*>(aLPARAM);
+  HWND childWnd = FindTopmostWindowAtPoint(aHWND, info->mInPoint);
+  if (!childWnd) {
+    // This window doesn't contain the point; continue enumerating.
+    return TRUE;
+  }
+
+  // Return the HWND and stop enumerating.
+  info->mOutHWND = childWnd;
+  return FALSE;
+}
+
+/* static */
+HWND nsWindow::FindOurWindowAtPoint(const POINT& aPoint)
+{
+  FindOurWindowAtPointInfo info;
+  info.mInPoint = aPoint;
+  info.mOutHWND = 0;
+
+  // This will enumerate all top-level windows in order from top to bottom.
+  EnumWindows(FindOurWindowAtPointCallback, reinterpret_cast<LPARAM>(&info));
+  return info.mOutHWND;
+}
+
+typedef DWORD (*GetProcessImageFileNameProc)(HANDLE, LPWSTR, DWORD);
+
+// Determine whether the given HWND is the handle for the Elantech helper
+// window.  The helper window cannot be distinguished based on its
+// window class, so we need to check if it is owned by the helper process,
+// ETDCtrl.exe.
+static PRBool IsElantechHelperWindow(HWND aHWND)
+{
+  static HMODULE hPSAPI = ::LoadLibraryW(L"psapi.dll");
+  static GetProcessImageFileNameProc pGetProcessImageFileName =
+    reinterpret_cast<GetProcessImageFileNameProc>(::GetProcAddress(hPSAPI, "GetProcessImageFileNameW"));
+
+  if (!pGetProcessImageFileName) {
+    return PR_FALSE;
+  }
+
+  const PRUnichar* filenameSuffix = L"\\etdctrl.exe";
+  const int filenameSuffixLength = 12;
+
+  DWORD pid;
+  ::GetWindowThreadProcessId(aHWND, &pid);
+
+  PRBool result = PR_FALSE;
+
+  HANDLE hProcess = ::OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
+  if (hProcess) {
+    PRUnichar path[256] = {L'\0'};
+    if (pGetProcessImageFileName(hProcess, path, NS_ARRAY_LENGTH(path))) {
+      int pathLength = lstrlenW(path);
+      if (pathLength >= filenameSuffixLength) {
+        if (lstrcmpiW(path + pathLength - filenameSuffixLength, filenameSuffix) == 0) {
+          result = PR_TRUE;
+        }
+      }
+    }
+    ::CloseHandle(hProcess);
+  }
+
+  return result;
+}
+
 // Scrolling helper function for handling plugins.  
 // Return value indicates whether the calling function should handle this
 // aHandled indicates whether this was handled at all
@@ -7643,6 +7761,14 @@ PRBool nsWindow::HandleScrollingPlugins(UINT aMsg, WPARAM aWParam,
   // we are focused, it's entirely possible that there
   // is another app's window or no window under the
   // pointer.
+
+  if (sUseElantechGestureHacks && IsElantechHelperWindow(destWnd)) {
+    // The Elantech driver places a window right underneath the cursor
+    // when sending a WM_MOUSEWHEEL event to us as part of a pinch-to-zoom
+    // gesture.  We detect that here, and search for our window that would
+    // be beneath the cursor if that window wasn't there.
+    destWnd = FindOurWindowAtPoint(point);
+  }
 
   if (!destWnd) {
     // No window is under the pointer
@@ -8978,8 +9104,8 @@ IsObsoleteElantechDriver()
   for (PRUnichar* p = buf; *p; p++) {
     if (*p >= L'0' && *p <= L'9' && (p == buf || *(p - 1) == L' ')) {
       int majorVersion = wcstol(p, NULL, 10);
-      // Version 7 needs the hack.
-      if (majorVersion == 7)
+      // Versions 7 and 8 need the hack.
+      if (majorVersion == 7 || majorVersion == 8)
         return PR_TRUE;
     }
   }
