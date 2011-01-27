@@ -67,6 +67,8 @@ let WeaveGlue = {
           this._elements.device.value = Services.prefs.getCharPref("services.sync.client.name");
         } catch(e) {}
       }
+    } else {
+      this.loadSetupData();
     }
   },
 
@@ -343,7 +345,6 @@ let WeaveGlue = {
 
   observe: function observe(aSubject, aTopic, aData) {
     let loggedIn = Weave.Service.isLoggedIn;
-    document.getElementById("cmd_remoteTabs").setAttribute("disabled", !loggedIn);
 
     // If we are going to auto-connect anyway, fake the settings UI to make it
     // look like we are connecting
@@ -422,18 +423,8 @@ let WeaveGlue = {
       connect.removeAttribute("desc");
 
     // Init the setup data if we just logged in from an autoConnect
-    if (!this.setupData && this.autoConnect && aTopic == "weave:service:login:finish") {
-      this.setupData = {};
-      this.setupData.account = Weave.Service.account || "";
-      this.setupData.password = Weave.Service.password || "";
-      this.setupData.synckey = Weave.Service.passphrase || "";
-
-      let serverURL = Weave.Service.serverURL;
-      let defaultPrefs = Services.prefs.getDefaultBranch(null);
-      if (serverURL == defaultPrefs.getCharPref("services.sync.serverURL"))
-        serverURL = "";
-      this.setupData.serverURL = serverURL;
-    }
+    if (!this.setupData && this.autoConnect && aTopic == "weave:service:login:finish")
+      this.loadSetupData();
 
     // Reset the auto-connect flag after the first attempted login
     if (aTopic == "weave:service:login:finish" || aTopic == "weave:service:login:error")
@@ -500,5 +491,27 @@ let WeaveGlue = {
     if (!uri)
       return "";
     return uri.spec;
+  },
+
+  openTutorial: function _openTutorial() {
+    WeaveGlue.abortEasySetup();
+    WeaveGlue.close();
+
+    let formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].getService(Ci.nsIURLFormatter);
+    let url = formatter.formatURLPref("app.sync.tutorialURL");
+    BrowserUI.newTab(url, null);
+  },
+
+  loadSetupData: function _loadSetupData() {
+    this.setupData = {};
+    this.setupData.account = Weave.Service.account || "";
+    this.setupData.password = Weave.Service.password || "";
+    this.setupData.synckey = Weave.Service.passphrase || "";
+
+    let serverURL = Weave.Service.serverURL;
+    let defaultPrefs = Services.prefs.getDefaultBranch(null);
+    if (serverURL == defaultPrefs.getCharPref("services.sync.serverURL"))
+      serverURL = "";
+    this.setupData.serverURL = serverURL;
   }
 };

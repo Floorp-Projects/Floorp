@@ -106,12 +106,7 @@
 
         function loadSync() {
           let win = getChromeWin();
-          win.BrowserUI.showPanel("prefs-container");
-
-          let prefsBox = win.document.getElementById("prefs-list");
-          let syncArea = win.document.getElementById("prefs-sync");
-          if (prefsBox && syncArea)
-            prefsBox.ensureElementIsVisible(syncArea);
+          win.WeaveGlue.open();
         }
 
         function loadAddons() {
