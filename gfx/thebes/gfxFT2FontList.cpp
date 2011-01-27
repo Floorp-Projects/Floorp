@@ -141,7 +141,6 @@ gfxFT2FontList::AppendFacesFromFontFile(const char *aFileName)
                         family->SetBadUnderlineFamily();
                 }
                 family->AddFontEntry(fe);
-                fe->SetFamily(family);
                 family->SetHasStyles(PR_TRUE);
                 if (family->IsBadUnderlineFamily())
                     fe->mIsBadUnderlineFont = PR_TRUE;
