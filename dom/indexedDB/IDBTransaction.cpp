@@ -174,9 +174,9 @@ IDBTransaction::OnRequestFinished()
   NS_ASSERTION(mPendingRequests, "Mismatched calls!");
   --mPendingRequests;
   if (!mPendingRequests) {
-    if (!mAborted) {
-      NS_ASSERTION(mReadyState == nsIIDBTransaction::LOADING, "Bad state!");
-    }
+    NS_ASSERTION(mAborted || mReadyState == nsIIDBTransaction::LOADING,
+                 "Bad state!");
+    mReadyState = IDBTransaction::COMMITTING;
     CommitOrRollback();
   }
 }
@@ -762,7 +762,10 @@ IDBTransaction::Abort()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (!IsOpen()) {
+  // We can't use IsOpen here since we need it to be possible to call Abort()
+  // even from outside of transaction callbacks.
+  if (mReadyState != IDBTransaction::INITIAL &&
+      mReadyState != IDBTransaction::LOADING) {
     return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
@@ -979,7 +982,7 @@ CommitHelper::Run()
     if (!mAborted) {
       NS_NAMED_LITERAL_CSTRING(release, "END TRANSACTION");
       if (NS_FAILED(mConnection->ExecuteSimpleSQL(release))) {
-        mAborted = PR_TRUE;
+        mAborted = true;
       }
     }
 

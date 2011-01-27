@@ -57,7 +57,8 @@ interface nsIIDBTransaction : nsISupports
 
   const unsigned short INITIAL = 0;
   const unsigned short LOADING = 1;
-  const unsigned short DONE = 2;
+  const unsigned short COMMITTING = 2;
+  const unsigned short DONE = 3;
   readonly attribute unsigned short readyState;
 
   const unsigned short READ_ONLY = 0;
