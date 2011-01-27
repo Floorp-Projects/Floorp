@@ -199,7 +199,7 @@ toolbarbutton.urlbar-button {
 }
 
 #urlbar-favicon[src=""] {
-  list-style-image: url("chrome://browser/skin/images/favicon-default-30.png");
+  list-style-image: url("chrome://browser/skin/images/favicon-default-32.png");
 }
 
 /* Main urlbar textbox */
@@ -704,7 +704,7 @@ placeitem > .bookmark-manage > image {
 
 .autocomplete-item-container > image[src=""],
 placeitem[src=""] .bookmark-item-container > image {
-  list-style-image: url(chrome://mozapps/skin/places/defaultFavicon.png);
+  list-style-image: url("chrome://browser/skin/images/favicon-default-32.png");
 }
 
 .autocomplete-item-container > vbox > label,
