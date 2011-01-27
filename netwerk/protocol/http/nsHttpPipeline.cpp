@@ -290,6 +290,20 @@ nsHttpPipeline::PushBack(const char *data, PRUint32 length)
     return NS_OK;
 }
 
+PRBool
+nsHttpPipeline::LastTransactionExpectedNoContent()
+{
+    NS_ABORT_IF_FALSE(mConnection, "no connection");
+    return mConnection->LastTransactionExpectedNoContent();
+}
+
+void
+nsHttpPipeline::SetLastTransactionExpectedNoContent(PRBool val)
+{
+    NS_ABORT_IF_FALSE(mConnection, "no connection");
+     mConnection->SetLastTransactionExpectedNoContent(val);
+}
+
 //-----------------------------------------------------------------------------
 // nsHttpPipeline::nsAHttpConnection
 //-----------------------------------------------------------------------------
