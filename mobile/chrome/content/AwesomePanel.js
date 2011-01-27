@@ -26,7 +26,7 @@ var AwesomePanel = function(aElementId, aCommandId) {
       this.panel.close();
 
     this.panel.hidden = true;
-    command.removeAttribute("checked", "true");
+    command.removeAttribute("checked");
   },
 
   this.doCommand = function aw_doCommand() {

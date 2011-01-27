@@ -69,7 +69,7 @@
       </div>
     </div>
 
-    <div id="remoteTabs" class="section-row" onclick="openRemoteTabs();" role="button" disabled="true">
+    <div id="remoteTabs" class="section-row" onclick="openRemoteTabs();" role="button">
       <div>
         <img class="favicon" src="chrome://browser/skin/images/remotetabs-32.png"/>
         <div>&aboutHome.remoteTabs;</div>
@@ -115,12 +115,10 @@
 
     function init() {
       initTabs();
-      initWeave();
       initAddons();
     }
 
     function uninit() {
-      uninitWeave();
       uninitAddons();
     }
 
@@ -229,26 +227,6 @@
         let placeHolder = document.getElementById("loadingTabs");
         placeHolder.innerHTML = "<div class='no-items'>" + document.getElementById("text-notabs").textContent + "</div>";
       }
-    }
-
-    function initWeave() {
-      let chromeWin = getChromeWin();
-      chromeWin.Services.obs.addObserver(updateWeaveButton, "weave:service:login:finish", false);
-      chromeWin.Services.obs.addObserver(updateWeaveButton, "weave:service:logout:finish", false);
-
-      updateWeaveButton();
-    }
-
-    function uninitWeave() {
-      let chromeWin = getChromeWin();
-      chromeWin.Services.obs.removeObserver(updateWeaveButton, "weave:service:login:finish");
-      chromeWin.Services.obs.removeObserver(updateWeaveButton, "weave:service:logout:finish");
-    }
-
-    function updateWeaveButton() {
-      let chromeWin = getChromeWin();
-      let isDisabled = chromeWin.document.getElementById("cmd_remoteTabs").getAttribute("disabled");
-      document.getElementById("remoteTabs").setAttribute("disabled", isDisabled);
     }
 
     function openRemoteTabs() {

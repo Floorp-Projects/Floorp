@@ -104,7 +104,7 @@
     <command id="cmd_newTab" label="&newtab.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_closeTab" label="&closetab.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
 #ifdef MOZ_SERVICES_SYNC
-    <command id="cmd_remoteTabs" oncommand="CommandUpdater.doCommand(this.id);" disabled="true"/>
+    <command id="cmd_remoteTabs" oncommand="CommandUpdater.doCommand(this.id);"/>
 #endif
     <command id="cmd_undoCloseTab" oncommand="CommandUpdater.doCommand(this.id);"/>
 
@@ -501,11 +501,11 @@
     <vbox id="awesome-panels" hidden="true">
       <!-- Awesome header row -->
       <hbox id="awesome-header" class="panel-row-header">
-        <toolbarbutton type="radio" group="awesome-header" label="&allPagesHeader.label;" command="cmd_openLocation" class="choice-all panel-row-button show-text"/>
-        <toolbarbutton type="radio" group="awesome-header" label="&bookmarksHeader.label;" command="cmd_bookmarks" class="choice-bookmarks panel-row-button show-text"/>
-        <toolbarbutton type="radio" group="awesome-header" label="&historyHeader.label;" command="cmd_history" class="choice-history panel-row-button show-text"/>
+        <toolbarbutton id="allpages-button" type="radio" group="awesome-header" label="&allPagesHeader.label;" command="cmd_openLocation" class="choice-all panel-row-button show-text"/>
+        <toolbarbutton id="bookmarks-button" type="radio" group="awesome-header" label="&bookmarksHeader.label;" command="cmd_bookmarks" class="choice-bookmarks panel-row-button show-text"/>
+        <toolbarbutton id="history-button" type="radio" group="awesome-header" label="&historyHeader.label;" command="cmd_history" class="choice-history panel-row-button show-text"/>
 #ifdef MOZ_SERVICES_SYNC
-        <toolbarbutton type="radio" group="awesome-header" label="&desktopHeader.label;" command="cmd_remoteTabs" class="choice-remotetabs panel-row-button show-text"/>
+        <toolbarbutton id="remotetabs-button" type="radio" group="awesome-header" label="&desktopHeader.label;" command="cmd_remoteTabs" class="choice-remotetabs panel-row-button show-text"/>
 #endif
       </hbox>
 
@@ -528,6 +528,7 @@
         <vbox id="syncsetup-simple" class="syncsetup-page" flex="1">
           <scrollbox class="syncsetup-scrollbox" orient="vertical" flex="1">
             <description class="syncsetup-desc syncsetup-center" flex="1">&sync.setup.jpake;</description>
+            <description class="syncsetup-center syncsetup-link" flex="1" onclick="WeaveGlue.openTutorial();">&sync.setup.tutorial;</description>
             <separator/>
             <vbox align="center" flex="1">
               <description id="syncsetup-code1" class="syncsetup-code">....</description>

@@ -1110,7 +1110,30 @@ var BrowserUI = {
         this.activePanel = HistoryList;
         break;
       case "cmd_remoteTabs":
-        this.activePanel = RemoteTabsList;
+        // remove the checked state set by the click it will be reset by setting
+        // checked on the command element if we decide to show this panel (see AwesomePanel.js)
+        document.getElementById("remotetabs-button").removeAttribute("checked");
+
+        if (Weave.Status.checkSetup() == Weave.CLIENT_NOT_CONFIGURED) {
+          this.activePanel = null;
+
+          WeaveGlue.open();
+        } else if (!Weave.Service.isLoggedIn) {
+          this.activePanel = null;
+
+          BrowserUI.showPanel("prefs-container");
+          let prefsBox = document.getElementById("prefs-list");
+          let syncArea = document.getElementById("prefs-sync");
+          if (prefsBox && syncArea) {
+            let prefsBoxY = prefsBox.firstChild.boxObject.screenY;
+            let syncAreaY = syncArea.boxObject.screenY;
+            setTimeout(function() {
+              prefsBox.scrollBoxObject.scrollTo(0, syncAreaY - prefsBoxY);
+            }, 0);
+          }
+        } else {
+          this.activePanel = RemoteTabsList;
+        }
         break;
       case "cmd_quit":
         GlobalOverlay.goQuitApplication();
