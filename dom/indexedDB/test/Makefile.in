@@ -77,6 +77,7 @@ TEST_FILES = \
   test_objectStore_inline_autoincrement_key_added_on_put.html \
   test_objectStore_remove_values.html \
   test_object_identity.html \
+  test_odd_result_order.html \
   test_open_empty_db.html \
   test_open_objectStore.html \
   test_overlapping_transactions.html \

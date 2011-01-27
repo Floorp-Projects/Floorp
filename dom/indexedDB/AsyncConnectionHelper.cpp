@@ -196,7 +196,10 @@ AsyncConnectionHelper::Run()
     gCurrentTransaction = mTransaction;
 
     if (mRequest) {
-      mRequest->SetDone(this);
+      nsresult rv = mRequest->SetDone(this);
+      if (NS_SUCCEEDED(mResultCode) && NS_FAILED(rv)) {
+        mResultCode = rv;
+      }
     }
 
     // Call OnError if the database had an error or if the OnSuccess handler
@@ -382,6 +385,7 @@ nsresult
 AsyncConnectionHelper::OnSuccess()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(mRequest, "Null request!");
 
   nsRefPtr<nsDOMEvent> event =
     CreateGenericEvent(NS_LITERAL_STRING(SUCCESS_EVT_STR));
@@ -416,6 +420,7 @@ void
 AsyncConnectionHelper::OnError()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(mRequest, "Null request!");
 
   // Make an error event and fire it at the target.
   nsRefPtr<nsDOMEvent> event =
@@ -465,19 +470,22 @@ AsyncConnectionHelper::ReleaseMainThreadObjects()
   mRequest = nsnull;
 }
 
-// static
 nsresult
 AsyncConnectionHelper::WrapNative(JSContext* aCx,
                                   nsISupports* aNative,
                                   jsval* aResult)
 {
-  JSObject* global = JS_GetGlobalForObject(aCx, JS_GetScopeChain(aCx));
+  NS_ASSERTION(aCx, "Null context!");
+  NS_ASSERTION(aNative, "Null pointer!");
+  NS_ASSERTION(aResult, "Null pointer!");
+  NS_ASSERTION(mRequest, "Null request!");
+
+  JSObject* global =
+    static_cast<JSObject*>(mRequest->ScriptContext()->GetNativeGlobal());
   NS_ENSURE_TRUE(global, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsresult rv =
-    nsContentUtils::WrapNative(aCx, global,
-                               static_cast<nsPIDOMEventTarget*>(aNative),
-                               aResult);
+    nsContentUtils::WrapNative(aCx, global, aNative, aResult);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   return NS_OK;
@@ -490,6 +498,9 @@ AsyncConnectionHelper::ConvertCloneBufferToJSVal(
                                            JSAutoStructuredCloneBuffer& aBuffer,
                                            jsval* aResult)
 {
+  NS_ASSERTION(aCx, "Null context!");
+  NS_ASSERTION(aResult, "Null pointer!");
+
   JSAutoRequest ar(aCx);
 
   if (aBuffer.data()) {
@@ -516,6 +527,9 @@ AsyncConnectionHelper::ConvertCloneBuffersToArray(
                                 nsTArray<JSAutoStructuredCloneBuffer>& aBuffers,
                                 jsval* aResult)
 {
+  NS_ASSERTION(aCx, "Null context!");
+  NS_ASSERTION(aResult, "Null pointer!");
+
   JSAutoRequest ar(aCx);
 
   nsresult rv = ConvertCloneBuffersToArrayInternal(aCx, aBuffers, aResult);
