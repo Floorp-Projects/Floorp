@@ -167,6 +167,8 @@ let WeaveGlue = {
         this._elements.customserver.value = "";
       }
     }
+
+    this.canConnect();
   },
 
   close: function close() {
@@ -199,6 +201,15 @@ let WeaveGlue = {
     this._elements.customserver.disabled = !useCustomServer;
     if (!useCustomServer)
       this._elements.customserver.value = "";
+  },
+
+  canConnect: function canConnect() {
+    let account = this._elements.account.value;
+    let password = this._elements.password.value;
+    let synckey = this._elements.synckey.value;
+
+    let disabled = !(account && password && synckey);
+    document.getElementById("syncsetup-button-connect").disabled = disabled;
   },
 
   showDetails: function showDetails() {
