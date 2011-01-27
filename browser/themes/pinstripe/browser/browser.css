@@ -455,13 +455,13 @@ toolbar[mode="icons"] .toolbarbutton-1 > menupopup {
   -moz-box-align: center;
 }
 
-#back-button:-moz-locale-dir(ltr),
-#forward-button:-moz-locale-dir(rtl) {
+#back-button,
+toolbar:not([mode="icons"]) #forward-button:-moz-locale-dir(rtl) {
   -moz-image-region: rect(0, 40px, 20px, 20px);
 }
 
-#back-button:-moz-locale-dir(rtl),
-#forward-button:-moz-locale-dir(ltr) {
+#forward-button,
+toolbar:not([mode="icons"]) #back-button:-moz-locale-dir(rtl) {
   -moz-image-region: rect(0, 60px, 20px, 40px);
 }
 
@@ -476,7 +476,8 @@ toolbar:not([iconsize="small"])[mode="icons"] #back-button {
   border-radius: 10000px;
 }
 
-toolbar:not([iconsize="small"])[mode="icons"] #back-button:-moz-locale-dir(rtl) {
+toolbar[mode="icons"] #back-button:-moz-locale-dir(rtl),
+toolbar[mode="icons"] #forward-button:-moz-locale-dir(rtl) {
   -moz-transform: scaleX(-1);
 }
 
@@ -486,8 +487,8 @@ toolbar[mode="icons"] #forward-button {
 
 toolbar[mode="icons"]:not([iconsize="small"]) #forward-button {
   /* 1px to the right */
-  -moz-padding-start: 4px;
-  -moz-padding-end: 2px;
+  padding-left: 4px;
+  padding-right: 2px;
 }
 
 toolbar[mode="icons"]:not([iconsize="small"]) #forward-button:-moz-lwtheme {
@@ -500,25 +501,21 @@ toolbar[iconsize="small"][mode="icons"] #back-button {
 
 toolbar[iconsize="small"][mode="icons"] #back-button {
   width: 26px;
-  -moz-border-end-width: 0;
-  -moz-padding-end: 2px;
+  border-right-width: 0;
+  padding-right: 2px;
 }
 
 toolbar[iconsize="small"][mode="icons"] #forward-button  {
   width: 27px;
-  -moz-padding-start: 2px;
+  padding-left: 2px;
 }
 
-toolbar[mode="icons"]:not([iconsize="small"]) #forward-button:-moz-locale-dir(ltr),
-toolbar[iconsize="small"][mode="icons"] #back-button:-moz-locale-dir(rtl),
-toolbar[iconsize="small"][mode="icons"] #forward-button:-moz-locale-dir(ltr) {
+toolbar[mode="icons"] #forward-button {
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
 }
 
-toolbar[mode="icons"]:not([iconsize="small"]) #forward-button:-moz-locale-dir(rtl),
-toolbar[iconsize="small"][mode="icons"] #back-button:-moz-locale-dir(ltr),
-toolbar[iconsize="small"][mode="icons"] #forward-button:-moz-locale-dir(rtl) {
+toolbar[iconsize="small"][mode="icons"] #back-button {
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
 }
