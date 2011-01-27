@@ -1284,10 +1284,12 @@ nsDisplayPlugin::Paint(nsDisplayListBuilder* aBuilder,
 
 PRBool
 nsDisplayPlugin::ComputeVisibility(nsDisplayListBuilder* aBuilder,
-                                   nsRegion* aVisibleRegion)
+                                   nsRegion* aVisibleRegion,
+                                   PRBool& aContainsRootContentDocBG)
 {
   mVisibleRegion.And(*aVisibleRegion, GetBounds(aBuilder));  
-  return nsDisplayItem::ComputeVisibility(aBuilder, aVisibleRegion);
+  return nsDisplayItem::ComputeVisibility(aBuilder, aVisibleRegion,
+                                          aContainsRootContentDocBG);
 }
 
 nsRegion
