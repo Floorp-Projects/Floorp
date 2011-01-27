@@ -160,6 +160,7 @@ public:
   }
 
   PRBool Contains (const nsRect& aRect) const;
+  PRBool Contains (const nsRegion& aRgn) const;
   PRBool Intersects (const nsRect& aRect) const;
 
   void MoveBy (PRInt32 aXOffset, PRInt32 aYOffset)
@@ -399,6 +400,10 @@ public:
   PRBool Contains (const nsIntRect& aRect) const
   {
     return mImpl.Contains (ToRect (aRect));
+  }
+  PRBool Contains (const nsIntRegion& aRgn) const
+  {
+    return mImpl.Contains (aRgn.mImpl);
   }
   PRBool Intersects (const nsIntRect& aRect) const
   {

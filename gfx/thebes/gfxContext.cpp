@@ -152,6 +152,21 @@ gfxContext::Fill()
 }
 
 void
+gfxContext::FillWithOpacity(gfxFloat aOpacity)
+{
+  // This method exists in the hope that one day cairo gets a direct
+  // API for this, and then we would change this method to use that
+  // API instead.
+  if (aOpacity != 1.0) {
+    gfxContextAutoSaveRestore saveRestore(this);
+    Clip();
+    Paint(aOpacity);
+  } else {
+    Fill();
+  }
+}
+
+void
 gfxContext::MoveTo(const gfxPoint& pt)
 {
     cairo_move_to(mCairo, pt.x, pt.y);

@@ -9,7 +9,7 @@ var ua = navigator.userAgent;
 if (/Windows/.test(ua)) {
   id = "win";
   if (/NT 5\.1/.test(ua) || /NT 5\.2; Win64/.test(ua))
-    var class = "winxp";
+    var classname = "winxp";
 }
 else if (/Linux/.test(ua))
   id = "linux";
@@ -24,5 +24,5 @@ else
   document.documentElement.appendChild(
     document.createTextNode("Unrecognized platform")
   );
-if (class)
-  document.documentElement.setAttribute("class", class);
+if (classname)
+  document.documentElement.setAttribute("class", classname);

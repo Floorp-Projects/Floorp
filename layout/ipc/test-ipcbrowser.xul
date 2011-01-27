@@ -69,6 +69,6 @@
        label="setViewportScale"/>
   </toolbar>
 
-  <browser type="content" src="http://people.mozilla.com/~cjones/anim.html" flex="1" id="content"
+  <browser type="content" src="http://www.google.com/" flex="1" id="content"
            remote="true"/>
 </window>

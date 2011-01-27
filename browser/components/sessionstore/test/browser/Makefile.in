@@ -47,7 +47,6 @@ include $(topsrcdir)/config/rules.mk
 
 # browser_506482.js is disabled because of frequent failures (bug 538672)
 # browser_526613.js is disabled because of frequent failures (bug 534489)
-# browser_580512.js is disabled because of wrong assumptions after bug 592822
 
 _BROWSER_TEST_FILES = \
 	head.js \
@@ -119,6 +118,7 @@ _BROWSER_TEST_FILES = \
 	browser_528776.js \
 	browser_579868.js \
 	browser_579879.js \
+	browser_580512.js \
 	browser_581593.js \
 	browser_586147.js \
 	browser_586068-cascaded_restore.js \

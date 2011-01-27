@@ -29,5 +29,5 @@ include autofocus/reftest.list
 == hidden-1f.html hidden-1-ref.html
 == hidden-1g.html hidden-1-ref.html
 == hidden-2.svg hidden-2-ref.svg
-== href-attr-change-restyles.html href-attr-change-restyles-ref.html
+random-if(cocoaWidget&&layersGPUAccelerated) == href-attr-change-restyles.html href-attr-change-restyles-ref.html
 == figure.html figure-ref.html

@@ -322,6 +322,18 @@ public:
     // not succeed.
     nsRect ApproximateIntersect(const nsRect& aRect) const;
 
+    // Returns false if aRect is definitely not clipped by a rounded corner in
+    // this clip. Returns true if aRect is clipped by a rounded corner in this
+    // clip or it can not be quickly determined that it is not clipped by a
+    // rounded corner in this clip.
+    bool IsRectClippedByRoundedCorner(const nsRect& aRect) const;
+
+    // Intersection of all rects in this clip ignoring any rounded corners.
+    nsRect NonRoundedIntersection() const;
+
+    // Gets rid of any rounded corners in this clip.
+    void RemoveRoundedCorners();
+
     bool operator==(const Clip& aOther) const {
       return mHaveClipRect == aOther.mHaveClipRect &&
              (!mHaveClipRect || mClipRect == aOther.mClipRect) &&

@@ -3,8 +3,8 @@
  */
 var imports = [ "SimpleTest", "is", "isnot", "ok", "onerror", "todo", 
   "todo_is", "todo_isnot" ];
-for each (var import in imports) {
-  window[import] = window.opener.wrappedJSObject[import];
+for each (var name in imports) {
+  window[name] = window.opener.wrappedJSObject[name];
 }
 
 /**

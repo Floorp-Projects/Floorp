@@ -204,8 +204,8 @@
         }
         var path = _entityEncode(this.path);
         var html = this.results.map(function (t) {
-          var class = t.info ? "info" : "result " + (t.pass ? "passed" : "failed");
-          return "<p class=\"" + class + "\">" + t.result + " | " + path +
+          var classname = t.info ? "info" : "result " + (t.pass ? "passed" : "failed");
+          return "<p class=\"" + classname + "\">" + t.result + " | " + path +
                  " | " + _entityEncode(t.msg) + "</p>";
         }).join("\n");
         if (this.duration) {

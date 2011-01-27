@@ -97,6 +97,7 @@ _TEST_FILES = \
 		$(warning test_bug507902.html temporarily disabled - see bug 510001) \
 		test_bug514732.html \
 		test_bug527306.html \
+		test_bug579767.html \
 		test_bug597333.html \
 		test_image_selection.html \
 		test_invalidate_during_plugin_paint.html \
@@ -118,6 +119,8 @@ _TEST_FILES = \
 		file_LoadingImageReference.png \
 		file_bug514732_1.html \
 		file_bug514732_helper.html \
+		file_bug579767_1.html \
+		file_bug579767_2.html \
 		test_bug522632.html \
 		test_bug589621.html \
 		test_bug589623.html \

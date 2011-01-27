@@ -40,6 +40,7 @@
 # ***** END LICENSE BLOCK *****
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/syncSetup.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/syncCommon.css" type="text/css"?>
 
 <!DOCTYPE window [
@@ -50,15 +51,12 @@
 %syncBrandDTD;
 %syncSetupDTD;
 ]>
-<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<wizard xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
         id="change-dialog"
         windowtype="Weave:ChangeSomething"
-        buttons="accept,cancel"
-        onload="Change.onLoad()"
-        buttondisabledaccept="true"
-        ondialogaccept="return Change.onDialogAccept();"
-        defaultButton="accept">
+        onwizardnext="Change.onLoad()"
+        onwizardfinish="return Change.onDialogAccept();">
 
   <script type="application/javascript"
           src="chrome://browser/content/syncGenericChange.js"/>
@@ -67,55 +65,65 @@
   <script type="application/javascript"
           src="chrome://global/content/printUtils.js"/>
 
-  <hbox align="top">
-    <image id="syncIcon"/>
-    <spacer style="width: 1em"/>
-    <description flex="1">
-      <html:p id="introText"/>
-      <html:p id="introText2"/>
+  <wizardpage id="change-page"
+              label="">
+
+    <description id="introText">
     </description>
-  </hbox>
-  <separator class="thin"/>
-  <vbox>
-    <grid>
-      <columns>
-        <column align="right"/>
-        <column flex="3"/>
-        <column flex="1"/>
-      </columns>
-      <rows>
-        <row id="textBox1Row" align="center">
-          <label id="textBox1Label" control="textBox1"/>
-          <textbox id="textBox1" type="password" oninput="Change.validate()"/>
-          <spacer/>
-        </row>
-        <row id="textBox2Row" align="center">
-          <label id="textBox2Label" control="textBox2"/>
-          <textbox id="textBox2" type="password" oninput="Change.validate()"/>
-          <spacer/>
-        </row>
-        <row id="passphraseRow" align="center">
+
+    <separator class="thin"/>
+
+    <groupbox>
+      <grid>
+        <columns>
+          <column align="right"/>
+          <column flex="3"/>
+          <column flex="1"/>
+        </columns>
+        <rows>
+          <row id="textBox1Row" align="center">
+            <label id="textBox1Label" control="textBox1"/>
+            <textbox id="textBox1" type="password" oninput="Change.validate()"/>
+            <spacer/>
+          </row>
+          <row id="textBox2Row" align="center">
+            <label id="textBox2Label" control="textBox2"/>
+            <textbox id="textBox2" type="password" oninput="Change.validate()"/>
+            <spacer/>
+          </row>
+        </rows>
+      </grid>
+
+      <vbox id="passphraseRow">
+        <hbox flex="1">
           <label id="passphraseLabel" control="passphraseBox"/>
-          <textbox id="passphraseBox"
-                   onfocus="this.select()"
-                   oninput="Change.validate()"/>
+          <spacer flex="1"/>
           <label id="generatePassphraseButton"
+                 hidden="true"
                  value="&syncKeyGenerate.label;"
                  class="text-link inline-link"
                  onclick="event.stopPropagation();
                           Change.doGeneratePassphrase();"/>
-        </row>
-      </rows>
-    </grid>
+        </hbox>
+        <textbox id="passphraseBox"
+                 flex="1"
+                 onfocus="this.select()"
+                 oninput="Change.validate()"/>
+      </vbox>
 
-    <vbox id="feedback" pack="center">
-      <hbox id="statusRow" align="center">
-        <image id="statusIcon" class="statusIcon"/>
-        <label id="status" class="status" value=" "/>
-      </hbox>
-    </vbox>
+      <vbox id="feedback" pack="center">
+        <hbox id="statusRow" align="center">
+          <image id="statusIcon" class="statusIcon"/>
+          <label id="status" class="status" value=" "/>
+        </hbox>
+      </vbox>
+    </groupbox>
 
-    <hbox id="passphraseBackupButtons" pack="center">
+    <separator class="thin"/>
+
+    <hbox id="passphraseBackupButtons"
+          hidden="true"
+          pack="center">
       <button id="printSyncKeyButton"
               label="&button.syncKeyBackup.print.label;"
               accesskey="&button.syncKeyBackup.print.accesskey;"
@@ -126,8 +134,24 @@
               oncommand="gSyncUtils.passphraseSave('passphraseBox');"/>
     </hbox>
 
-    <description>
-      <html:p class="data" id="warningText"/>
+    <vbox id="passphraseHelpBox"
+          hidden="true">
+      <description>
+        &existingSyncKey.description;
+        <label class="text-link"
+               href="https://services.mozilla.com/sync/help/manual-setup">
+          &addDevice.showMeHow.label;
+        </label>
+      </description>
+    </vbox>
+
+    <spacer id="passphraseSpacer"
+            flex="1"
+            hidden="true"/>
+
+    <description id="warningText" class="data">
     </description>
-  </vbox>
-</dialog>
+
+    <spacer flex="1"/>
+  </wizardpage>
+</wizard>

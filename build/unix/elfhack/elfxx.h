@@ -265,6 +265,8 @@ public:
 
     ElfSection *getSectionAt(unsigned int offset);
 
+    ElfSegment *getSegmentByType(unsigned int type);
+
     ElfDynamic_Section *getDynSection();
 
     void write(std::ofstream &file);

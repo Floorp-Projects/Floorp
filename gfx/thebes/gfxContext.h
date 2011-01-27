@@ -130,6 +130,14 @@ public:
     void Fill();
 
     /**
+     * Fill the current path according to the current settings and
+     * with |aOpacity|.
+     *
+     * Does not consume the current path.
+     */
+    void FillWithOpacity(gfxFloat aOpacity);
+
+    /**
      * Forgets the current path.
      */
     void NewPath();

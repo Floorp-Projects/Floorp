@@ -302,6 +302,8 @@ int do_relocation_section(Elf *elf, unsigned int rel_type)
         return -1;
     }
 
+    ElfSegment *relro = elf->getSegmentByType(PT_GNU_RELRO);
+
     ElfRel_Section<Rel_Type> *section = (ElfRel_Section<Rel_Type> *)dyn->getSectionForType(Rel_Type::d_tag);
     assert(section->getType() == Rel_Type::sh_type);
 
@@ -326,7 +328,9 @@ int do_relocation_section(Elf *elf, unsigned int rel_type)
         // Don't pack relocations happening in non writable sections.
         // Our injected code is likely not to be allowed to write there.
         ElfSection *section = elf->getSectionAt(i->r_offset);
-        if (!(section->getFlags() & SHF_WRITE) || (ELF32_R_TYPE(i->r_info) != rel_type))
+        if (!(section->getFlags() & SHF_WRITE) || (ELF32_R_TYPE(i->r_info) != rel_type) ||
+            (relro && (i->r_offset >= relro->getFirstSection()->getAddr()) &&
+                      (i->r_offset < relro->getFirstSection()->getAddr() + relro->getMemSize())))
             new_rels.push_back(*i);
         else {
             // TODO: check that i->r_addend == *i->r_offset

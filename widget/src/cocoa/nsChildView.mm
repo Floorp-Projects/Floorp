@@ -196,6 +196,10 @@ PRUint32 nsChildView::sLastInputEventCount = 0;
 
 - (void)drawRect:(NSRect)aRect inContext:(CGContextRef)aContext;
 
+// Called using performSelector:withObject:afterDelay:0 to release
+// aWidgetArray (and its contents) the next time through the run loop.
+- (void)releaseWidgets:(NSArray*)aWidgetArray;
+
 #if USE_CLICK_HOLD_CONTEXTMENU
  // called on a timer two seconds after a mouse down to see if we should display
  // a context menu (click-hold)
@@ -2811,9 +2815,46 @@ NSEvent* gLastDragMouseDownEvent = nil;
 #endif
 }
 
+- (void)releaseWidgets:(NSArray*)aWidgetArray
+{
+  if (!aWidgetArray) {
+    return;
+  }
+  NSInteger count = [aWidgetArray count];
+  for (NSInteger i = 0; i < count; ++i) {
+    NSNumber* pointer = (NSNumber*) [aWidgetArray objectAtIndex:i];
+    nsIWidget* widget = (nsIWidget*) [pointer unsignedIntegerValue];
+    NS_RELEASE(widget);
+  }
+}
+
 - (void)viewWillDraw
 {
   if (mGeckoChild) {
+    // The OS normally *will* draw our NSWindow, no matter what we do here.
+    // But Gecko can delete our parent widget(s) (along with mGeckoChild)
+    // while processing an NS_WILL_PAINT event, which closes our NSWindow and
+    // makes the OS throw an NSInternalInconsistencyException assertion when
+    // it tries to draw it.  Sometimes the OS also aborts the browser process.
+    // So we need to retain our parent(s) here and not release it/them until
+    // the next time through the main thread's run loop.  When we do this we
+    // also need to retain and release mGeckoChild, which holds a strong
+    // reference to us (otherwise we might have been deleted by the time
+    // releaseWidgets: is called on us).  See bug 550392.
+    nsIWidget* parent = mGeckoChild->GetParent();
+    if (parent) {
+      NSMutableArray* widgetArray = [NSMutableArray arrayWithCapacity:3];
+      while (parent) {
+        NS_ADDREF(parent);
+        [widgetArray addObject:[NSNumber numberWithUnsignedInteger:(NSUInteger)parent]];
+        parent = parent->GetParent();
+      }
+      NS_ADDREF(mGeckoChild);
+      [widgetArray addObject:[NSNumber numberWithUnsignedInteger:(NSUInteger)mGeckoChild]];
+      [self performSelector:@selector(releaseWidgets:)
+                 withObject:widgetArray
+                 afterDelay:0];
+    }
     nsPaintEvent paintEvent(PR_TRUE, NS_WILL_PAINT, mGeckoChild);
     mGeckoChild->DispatchWindowEvent(paintEvent);
   }
