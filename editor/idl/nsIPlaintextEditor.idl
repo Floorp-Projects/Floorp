@@ -71,6 +71,12 @@ interface nsIPlaintextEditor : nsISupports
   // when this is set, the characters in password editor are always masked.
   // see bug 530367 for the detail.
   const long eEditorDontEchoPassword    = 0x1000;
+  // when this flag is set, the internal direction of the editor is RTL.
+  // if neither of the direction flags are set, the direction is determined
+  // from the text control's content node.
+  const long eEditorRightToLeft         = 0x2000;
+  // when this flag is set, the internal direction of the editor is LTR.
+  const long eEditorLeftToRight         = 0x4000;
 
   /*
    * The valid values for newlines handling.
