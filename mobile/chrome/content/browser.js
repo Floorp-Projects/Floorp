@@ -1041,7 +1041,12 @@ var Browser = {
     view.setScale(scale);
     view._contentView.scrollTo(scrollX, scrollY);
 
-    browser.scale = scale;
+    // If the scale level doesn't change ensure the view is well refreshed
+    // otherwise setting the scale level of the browser will do it
+    if (scale == browser.scale)
+      view._updateCacheViewport();
+    else
+      browser.scale = scale;
   },
 
   zoomToPoint: function zoomToPoint(cX, cY, aRect) {
