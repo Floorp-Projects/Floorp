@@ -84,6 +84,9 @@ public:
                                    nsTArray<nsRefPtr<IDBDatabase> >& aDatabases,
                                    nsIRunnable* aCallback);
 
+  // Returns true iff there are running or pending transactions for aDatabase
+  bool HasTransactionsForDatabase(IDBDatabase* aDatabase);
+
 protected:
   class TransactionQueue : public nsIRunnable
   {
