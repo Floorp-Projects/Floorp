@@ -746,6 +746,11 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
 
     JS_ASSERT(cx->resolveFlags == 0);
 
+    if (!cx->busyArrays.init()) {
+        FreeContext(cx);
+        return NULL;
+    }
+
 #ifdef JS_THREADSAFE
     if (!js_InitContextThread(cx)) {
         FreeContext(cx);
@@ -838,12 +843,6 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
     cxCallback = rt->cxCallback;
     if (cxCallback && !cxCallback(cx, JSCONTEXT_NEW)) {
         js_DestroyContext(cx, JSDCM_NEW_FAILED);
-        return NULL;
-    }
-
-    /* Using ContextAllocPolicy, so init after JSContext is ready. */
-    if (!cx->busyArrays.init()) {
-        FreeContext(cx);
         return NULL;
     }
 
@@ -1994,7 +1993,7 @@ JSContext::JSContext(JSRuntime *rt)
   : runtime(rt),
     compartment(NULL),
     regs(NULL),
-    busyArrays(thisInInitializer())
+    busyArrays()
 {}
 
 void

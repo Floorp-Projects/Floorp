@@ -125,7 +125,7 @@ var TabUtils = {
     // of active Panoramas as well as for windows in which
     // Panorama has yet to be activated. We uses object sniffing to
     // determine the type of tab and then returns its name.     
-    return tab.label != undefined ? tab.label : tab.nameEl.innerHTML;
+    return tab.label != undefined ? tab.label : tab.$tabTitle[0].innerHTML;
   },
   
   // ---------
@@ -142,7 +142,7 @@ var TabUtils = {
   // Function: favURLOf
   // Given a <TabItem> or a <xul:tab> returns the URL of tab's favicon.
   faviconURLOf: function TabUtils_faviconURLOf(tab) {
-    return tab.image != undefined ? tab.image : tab.favImgEl.src;
+    return tab.image != undefined ? tab.image : tab.$favImage[0].src;
   },
   
   // ---------
@@ -196,7 +196,7 @@ TabMatcher.prototype = {
   _filterForUnmatches: function TabMatcher__filterForUnmatches(tabs) {
     var self = this;
     return tabs.filter(function(tab) {
-      var name = tab.nameEl.innerHTML;
+      var name = tab.$tabTitle[0].innerHTML;
       let url = TabUtils.URLOf(tab);
       return !name.match(self.term, "i") && !url.match(self.term, "i");
     });
@@ -368,7 +368,7 @@ SearchEventHandlerClass.prototype = {
 
     this.switchToInMode();
     this.initiatedBy = "keydown";
-    ensureSearchShown();
+    ensureSearchShown(true);
   },
 
   // ----------
@@ -429,22 +429,22 @@ var TabHandlers = {
     // Remove any existing handlers before adding the new ones.
     // If we don't do this, then we may add more handlers than
     // we remove.
-    iQ(tab.canvasEl)
-    .unbind("mousedown", TabHandlers._hideHandler)
-    .unbind("mouseup", TabHandlers._showHandler);
+    tab.$canvas
+      .unbind("mousedown", TabHandlers._hideHandler)
+      .unbind("mouseup", TabHandlers._showHandler);
 
-    iQ(tab.canvasEl)
-    .mousedown(TabHandlers._hideHandler)
-    .mouseup(TabHandlers._showHandler);
+    tab.$canvas
+      .mousedown(TabHandlers._hideHandler)
+      .mouseup(TabHandlers._showHandler);
   },
   
   onUnmatch: function(tab, index){
-    iQ(tab.container).removeClass("onTop");
+    tab.$container.removeClass("onTop");
     tab.removeClass("notMainMatch");
 
-    iQ(tab.canvasEl)
-     .unbind("mousedown", TabHandlers._hideHandler)
-     .unbind("mouseup", TabHandlers._showHandler);
+    tab.$canvas
+      .unbind("mousedown", TabHandlers._hideHandler)
+      .unbind("mouseup", TabHandlers._showHandler);
   },
   
   onOther: function(tab, index){
@@ -509,8 +509,9 @@ function hideSearch(event){
 
   iQ("#searchbutton").css({ opacity:.8 });
 
-  let mainWindow = gWindow.document.getElementById("main-window");
-  mainWindow.setAttribute("activetitlebarcolor", "#C4C4C4");
+#ifdef XP_MACOSX
+  UI.setTitlebarColors(true);
+#endif
 
   performSearch();
   SearchEventHandler.switchToBeforeMode();
@@ -541,7 +542,12 @@ function performSearch() {
   matcher.doSearch(TabHandlers.onMatch, TabHandlers.onUnmatch, TabHandlers.onOther);
 }
 
-function ensureSearchShown(){
+// ----------
+// Function: ensureSearchShown
+// Ensure the search feature is displayed.  If not, display it.
+// Parameters:
+//  - a boolean indicates whether this is triggered by a keypress or not
+function ensureSearchShown(activatedByKeypress) {
   var $search = iQ("#search");
   var $searchShade = iQ("#searchshade");
   var $searchbox = iQ("#searchbox");
@@ -550,20 +556,32 @@ function ensureSearchShown(){
   if (!isSearchEnabled()) {
     $searchShade.show();
     $search.show();
-    var mainWindow = gWindow.document.getElementById("main-window");
-    mainWindow.setAttribute("activetitlebarcolor", "#717171");       
 
-    $searchbox[0].focus();
-    $searchbox[0].val = '0';
+#ifdef XP_MACOSX
+    UI.setTitlebarColors({active: "#717171", inactive: "#EDEDED"});
+#endif
 
     // NOTE: when this function is called by keydown handler, next keypress
     // event or composition events of IME will be fired on the focused editor.
 
-    setTimeout(function dispatchTabViewSearchEnabledEvent() {
+    function dispatchTabViewSearchEnabledEvent() {
       let newEvent = document.createEvent("Events");
       newEvent.initEvent("tabviewsearchenabled", false, false);
       dispatchEvent(newEvent);
-    }, 0);
+    };
+
+    if (activatedByKeypress) {
+      // set the focus so key strokes are entered into the textbox.
+      $searchbox[0].focus();
+      dispatchTabViewSearchEnabledEvent(); 
+    } else {
+      // marshal the focusing, otherwise it ends up with searchbox[0].focus gets
+      // called before the search button gets the focus after being pressed.
+      setTimeout(function setFocusAndDispatchSearchEnabledEvent() {
+        $searchbox[0].focus();
+        dispatchTabViewSearchEnabledEvent();
+      }, 0);
+    }
   }
 }
 

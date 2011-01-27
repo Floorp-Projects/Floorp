@@ -49,11 +49,8 @@ panel {
 
 /* ::::: arrow panel ::::: */
 
-/*XXX: mostly disabled because of bug 620658 */
-
 panel[type="arrow"] {
   -moz-transition: opacity 300ms;
-/*
   -moz-appearance: none;
 }
 
@@ -67,12 +64,10 @@ panel[type="arrow"][side="left"],
 panel[type="arrow"][side="right"] {
   margin-top: -23px;
   margin-bottom: -23px;
-*/
 }
 
 .panel-arrowcontent {
   padding: 10px;
-/*
   color: -moz-DialogText;
   background: -moz-Dialog;
   border: 1px solid ThreeDShadow;
@@ -110,7 +105,6 @@ panel[type="arrow"][side="right"] {
 .panel-arrow[side="right"] {
   -moz-transform: scaleX(-1);
   margin-left: -1px;
-*/
 }
 
 /* ::::: tooltip ::::: */

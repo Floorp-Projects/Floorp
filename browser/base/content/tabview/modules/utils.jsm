@@ -581,6 +581,20 @@ let Utils = {
   // ___ Misc
 
   // ----------
+  // Function: isLeftClick
+  // Given a DOM mouse event, returns true if it was for the left mouse button.
+  isLeftClick: function Utils_isLeftClick(event) {
+    return event.button == 0;
+  },
+
+  // ----------
+  // Function: isMiddleClick
+  // Given a DOM mouse event, returns true if it was for the middle mouse button.
+  isMiddleClick: function Utils_isMiddleClick(event) {
+    return event.button == 1;
+  },
+
+  // ----------
   // Function: isRightClick
   // Given a DOM mouse event, returns true if it was for the right mouse button.
   isRightClick: function Utils_isRightClick(event) {

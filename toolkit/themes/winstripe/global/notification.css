@@ -102,10 +102,14 @@ XXX: apply styles to all themes until bug 509642 is fixed
   }
 
   .popup-notification-menubutton > .button-menubutton-button {
+    background-color: transparent;
+    padding: 1px;
+    -moz-border-end: none;
+  }
+
+  .popup-notification-menubutton > .button-menubutton-button > .button-box {
     -moz-padding-start: 8px;
     -moz-padding-end: 5px;
-    -moz-border-end: none;
-    background-color: transparent;
   }
 
   .popup-notification-menubutton > .button-menubutton-dropmarker {
@@ -113,6 +117,11 @@ XXX: apply styles to all themes until bug 509642 is fixed
     width: auto;
     height: auto;
     list-style-image: url("chrome://global/skin/arrow/arrow-dn-sharp.gif");
+  }
+
+  .popup-notification-menubutton > .button-menubutton-dropmarker {
+    outline: 1px dotted ThreeDDarkShadow;
+    outline-offset: -3px;
   }
 
 %ifdef WINSTRIPE_AERO

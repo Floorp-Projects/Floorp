@@ -4,7 +4,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  *
  * Contributor(s):
- *  Mihai   ucan <mihai.sucan@gmail.com>
+ *  Mihai Șucan <mihai.sucan@gmail.com>
  *
  * ***** END LICENSE BLOCK ***** */
 
@@ -27,12 +27,7 @@ function tabLoad1(aEvent) {
   browser.addEventListener("load", tabLoad2, true);
 
   // Reload so we get some output in the console.
-  // Wait a little to let the cache entry for test-console.html be released,
-  // otherwise the network load wouldn't be logged in the console and test
-  // would fail and stuck in tabLoad2.  See bug 579846 comment 73.
-  executeSoon(function() {
-    browser.contentWindow.location.reload();
-  });
+  browser.contentWindow.location.reload();
   log(document);
 }
 

@@ -45,6 +45,10 @@
 #include "mozIStorageConnection.h"
 #include "nsIIDBFactory.h"
 
+#include "nsIWeakReferenceUtils.h"
+
+class nsPIDOMWindow;
+
 BEGIN_INDEXEDDB_NAMESPACE
 
 struct DatabaseInfo;
@@ -58,7 +62,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIIDBFACTORY
 
-  static already_AddRefed<nsIIDBFactory> Create();
+  static already_AddRefed<nsIIDBFactory> Create(nsPIDOMWindow* aWindow);
 
   static already_AddRefed<mozIStorageConnection>
   GetConnection(const nsAString& aDatabaseFilePath);
@@ -87,6 +91,8 @@ public:
 private:
   IDBFactory() { }
   ~IDBFactory() { }
+
+  nsCOMPtr<nsIWeakReference> mWindow;
 };
 
 END_INDEXEDDB_NAMESPACE

@@ -5,7 +5,7 @@ body {
   line-height: 16px;
 }
 
-#bg {
+#bg:not(:-moz-system-metric(windows-compositor)) {
   background: url("chrome://browser/skin/tabview/grain.png") repeat scroll center top,
               -moz-linear-gradient(center top , #CCD9EA, #C7D5E7) repeat scroll 0 0 transparent;
 }
@@ -448,10 +448,8 @@ input.name:-moz-placeholder {
   font-style: italic !important;
   color: transparent;
   background-image: url(chrome://browser/skin/tabview/edit-light.png);
-  background-image-opacity: .1;
   background-repeat: no-repeat;
   -moz-padding-start: 20px;
-  -moz-padding-end: -20px;
 }
 
 .title-container:hover input.name:-moz-placeholder {
@@ -520,8 +518,10 @@ html[dir=rtl] .resizer {
   cursor: se-resize;
   width: 12px;
   height: 12px;
-  right: 1px;
-  bottom: 1px;
+  padding-right: 3px;
+  padding-bottom: 3px;
+  right: -2px;
+  bottom: -2px;
 }
 
 html[dir=rtl] .iq-resizable-se {
