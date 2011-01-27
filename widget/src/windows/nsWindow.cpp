@@ -376,6 +376,10 @@ static const int MIN_OPAQUE_RECT_HEIGHT_FOR_GLASS_MARGINS = 50;
 // Windows' glaze effect will start to look stupid.
 static const int MAX_HORIZONTAL_GLASS_MARGIN = 5;
 
+// 2 pixel offset for eTransparencyBorderlessGlass which equals
+// the size of the default window border Windows paints.
+static const PRInt32 kGlassMarginAdjustment = 2;
+
 /**************************************************************
  **************************************************************
  **
@@ -2557,63 +2561,66 @@ void nsWindow::SetTransparencyMode(nsTransparencyMode aMode)
   GetTopLevelWindow(PR_TRUE)->SetWindowTranslucencyInner(aMode);
 }
 
-static const PRInt32 kGlassMarginAdjustment = 2;
+static const nsIntRegion
+RegionFromArray(const nsTArray<nsIntRect>& aRects)
+{
+  nsIntRegion region;
+  for (PRUint32 i = 0; i < aRects.Length(); ++i) {
+    region.Or(region, aRects[i]);
+  }
+  return region;
+}
 
-void nsWindow::UpdatePossiblyTransparentRegion(const nsIntRegion &aDirtyRegion,
-                                               const nsIntRegion &aPossiblyTransparentRegion) {
+void nsWindow::UpdateTransparentRegion(const nsIntRegion &aTransparentRegion)
+{
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
-  if (!HasGlass())
+  if (!HasGlass() || GetParent())
     return;
-
-  HWND hWnd = GetTopLevelHWND(mWnd, PR_TRUE);
-  nsWindow* topWindow = GetNSWindowPtr(hWnd);
-
-  if (GetParent())
-    return;
-
-  mPossiblyTransparentRegion.Sub(mPossiblyTransparentRegion, aDirtyRegion);
-  mPossiblyTransparentRegion.Or(mPossiblyTransparentRegion, aPossiblyTransparentRegion);
 
   nsIntRect clientBounds;
-  topWindow->GetClientBounds(clientBounds);
+  GetClientBounds(clientBounds);
+
+  // calculate the known fully opaque region by subtracting the transparent
+  // areas from client bounds. We'll use this to calculate our new glass
+  // bounds.
   nsIntRegion opaqueRegion;
-  opaqueRegion.Sub(clientBounds, mPossiblyTransparentRegion);
- 
-  MARGINS margins = { 0, 0, 0, 0 };
-  DWORD_PTR dwStyle = ::GetWindowLongPtrW(hWnd, GWL_STYLE);
+  opaqueRegion.Sub(clientBounds, aTransparentRegion);
 
   // If there is no opaque region or hidechrome=true, set margins
-  // to support a full sheet of glass.
-  // Comments in MSDN indicate all values must be set to -1 to get a full
-  // sheet of glass.
-  margins.cxLeftWidth = margins.cxRightWidth =
-    margins.cyTopHeight = margins.cyBottomHeight = -1;
+  // to support a full sheet of glass. Comments in MSDN indicate
+  // all values must be set to -1 to get a full sheet of glass.
+  MARGINS margins = { -1, -1, -1, -1 };
+  bool visiblePlugin = false;
   if (!opaqueRegion.IsEmpty() && !mHideChrome) {
     nsIntRect pluginBounds;
     for (nsIWidget* child = GetFirstChild(); child; child = child->GetNextSibling()) {
       nsWindowType type;
       child->GetWindowType(type);
       if (type == eWindowType_plugin) {
+        // Collect the bounds of all plugins for GetLargestRectangle.
         nsIntRect childBounds;
         child->GetBounds(childBounds);
-        if (mTransparencyMode == eTransparencyBorderlessGlass) {
-          // We shrink the margins by kGlassMarginAdjustment in UpdateGlass.
-          // So here, try to ensure that the shrunk margin will still contain
-          // the plugin bounds. Of course there's no guarantee that we'll
-          // find an opaque rectangle including this enlarged area, for example
-          // if the plugin is already at the edge of the window.
-          childBounds.Inflate(kGlassMarginAdjustment, kGlassMarginAdjustment);
-        }
         pluginBounds.UnionRect(pluginBounds, childBounds);
+        // Detect if any region of a plugin is visible.
+        nsTArray<nsIntRect> currentRects;
+        child->GetWindowClipRegion(&currentRects);
+        nsIntRegion currentClipRegion = RegionFromArray(currentRects);
+        nsIntRect bounds = currentClipRegion.GetBounds();
+        if (!bounds.IsEmpty()) {
+          visiblePlugin = true;
+        }
       }
     }
 
     // Find the largest rectangle and use that to calculate the inset. Our top
     // priority is to include the bounds of all plugins.
+    // Also don't let MIN_OPAQUE_RECT_HEIGHT_FOR_GLASS_MARGINS override content
+    // that contains a visible plugin since glass over plugins looks bad.
     nsIntRect largest = opaqueRegion.GetLargestRectangle(pluginBounds);
-    if (largest.x <= MAX_HORIZONTAL_GLASS_MARGIN &&
-        clientBounds.width - largest.XMost() <= MAX_HORIZONTAL_GLASS_MARGIN &&
-        largest.height >= MIN_OPAQUE_RECT_HEIGHT_FOR_GLASS_MARGINS) {
+    if (visiblePlugin || 
+        (largest.x <= MAX_HORIZONTAL_GLASS_MARGIN &&
+         clientBounds.width - largest.XMost() <= MAX_HORIZONTAL_GLASS_MARGIN &&
+         largest.height >= MIN_OPAQUE_RECT_HEIGHT_FOR_GLASS_MARGINS)) {
       margins.cxLeftWidth = largest.x;
       margins.cxRightWidth = clientBounds.width - largest.XMost();
       margins.cyBottomHeight = clientBounds.height - largest.YMost();
@@ -2639,7 +2646,6 @@ void nsWindow::UpdatePossiblyTransparentRegion(const nsIntRegion &aDirtyRegion,
 void nsWindow::UpdateGlass()
 {
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
-  HWND hWnd = GetTopLevelHWND(mWnd, PR_TRUE);
   MARGINS margins = mGlassMargins;
 
   // DWMNCRP_USEWINDOWSTYLE - The non-client rendering area is
@@ -2675,8 +2681,8 @@ void nsWindow::UpdateGlass()
 
   // Extends the window frame behind the client area
   if(nsUXThemeData::CheckForCompositor()) {
-    nsUXThemeData::dwmExtendFrameIntoClientAreaPtr(hWnd, &margins);
-    nsUXThemeData::dwmSetWindowAttributePtr(hWnd, DWMWA_NCRENDERING_POLICY, &policy, sizeof policy);
+    nsUXThemeData::dwmExtendFrameIntoClientAreaPtr(mWnd, &margins);
+    nsUXThemeData::dwmSetWindowAttributePtr(mWnd, DWMWA_NCRENDERING_POLICY, &policy, sizeof policy);
   }
 #endif // #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
 }
@@ -7310,16 +7316,6 @@ CreateHRGNFromArray(const nsTArray<nsIntRect>& aRects)
   }
   ::SetRect(&data->rdh.rcBound, bounds.x, bounds.y, bounds.XMost(), bounds.YMost());
   return ::ExtCreateRegion(NULL, buf.Length(), data);
-}
-
-static const nsIntRegion
-RegionFromArray(const nsTArray<nsIntRect>& aRects)
-{
-  nsIntRegion region;
-  for (PRUint32 i = 0; i < aRects.Length(); ++i) {
-    region.Or(region, aRects[i]);
-  }
-  return region;
 }
 
 static const nsTArray<nsIntRect>
