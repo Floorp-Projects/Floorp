@@ -4,6 +4,7 @@ browser.jar:
 # NOTE: If you add a new file here, you'll need to add it to the aero
 # section at the bottom of this file
         skin/classic/browser/urlbar-over-link-arrow.png
+        skin/classic/browser/urlbar-over-link-arrow-rtl.png
         skin/classic/browser/sanitizeDialog.css                      (sanitizeDialog.css)
 *       skin/classic/browser/aboutPrivateBrowsing.css                (aboutPrivateBrowsing.css)
 *       skin/classic/browser/aboutSessionRestore.css                 (aboutSessionRestore.css)
@@ -94,7 +95,6 @@ browser.jar:
         skin/classic/browser/tabbrowser/tab-arrow-left.png                      (tabbrowser/tab-arrow-left.png)
         skin/classic/browser/tabbrowser/tabDragIndicator.png                    (tabbrowser/tabDragIndicator.png)
         skin/classic/browser/tabview/edit-light.png                 (tabview/edit-light.png)
-        skin/classic/browser/tabview/edit.png                       (tabview/edit.png)
         skin/classic/browser/tabview/grain.png                      (tabview/grain.png)
         skin/classic/browser/tabview/new-tab.png                    (tabview/new-tab.png)
         skin/classic/browser/tabview/search.png                     (tabview/search.png)
@@ -117,6 +117,7 @@ browser.jar:
 browser.jar:
 % skin browser classic/1.0 %skin/classic/aero/browser/ os=WINNT osversion>=6
         skin/classic/aero/browser/urlbar-over-link-arrow.png
+        skin/classic/aero/browser/urlbar-over-link-arrow-rtl.png
         skin/classic/aero/browser/sanitizeDialog.css                       (sanitizeDialog.css)
 *       skin/classic/aero/browser/aboutPrivateBrowsing.css           (aboutPrivateBrowsing.css)
 *       skin/classic/aero/browser/aboutSessionRestore.css            (aboutSessionRestore.css)
@@ -209,7 +210,6 @@ browser.jar:
         skin/classic/aero/browser/tabbrowser/tab-arrow-left.png                 (tabbrowser/tab-arrow-left.png)
         skin/classic/aero/browser/tabbrowser/tabDragIndicator.png               (tabbrowser/tabDragIndicator.png)
         skin/classic/aero/browser/tabview/edit-light.png             (tabview/edit-light.png)
-        skin/classic/aero/browser/tabview/edit.png                   (tabview/edit.png)
         skin/classic/aero/browser/tabview/grain.png                  (tabview/grain.png)
         skin/classic/aero/browser/tabview/new-tab.png                (tabview/new-tab.png)
         skin/classic/aero/browser/tabview/search.png                 (tabview/search.png)

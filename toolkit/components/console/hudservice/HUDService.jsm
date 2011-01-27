@@ -128,9 +128,8 @@ const CATEGORY_NETWORK = 0;
 const CATEGORY_CSS = 1;
 const CATEGORY_JS = 2;
 const CATEGORY_WEBDEV = 3;
-const CATEGORY_MISC = 4;    // always on
-const CATEGORY_INPUT = 5;   // always on
-const CATEGORY_OUTPUT = 6;  // always on
+const CATEGORY_INPUT = 4;   // always on
+const CATEGORY_OUTPUT = 5;  // always on
 
 // The possible message severities. As before, we start at zero so we can use
 // these as indexes into MESSAGE_PREFERENCE_KEYS.
@@ -165,7 +164,6 @@ const CATEGORY_CLASS_FRAGMENTS = [
   "cssparser",
   "exception",
   "console",
-  "misc",
   "input",
   "output",
 ];
@@ -189,7 +187,6 @@ const MESSAGE_PREFERENCE_KEYS = [
   [ "csserror",   "cssparser",  null,   null,          ],  // CSS
   [ "exception",  "jswarn",     null,   null,          ],  // JS
   [ "error",      "warn",       "info", "log",         ],  // Web Developer
-  [ null,         null,         null,   null,          ],  // Misc.
   [ null,         null,         null,   null,          ],  // Input
   [ null,         null,         null,   null,          ],  // Output
 ];
@@ -1948,7 +1945,7 @@ HUD_SERVICE.prototype =
     let hud = this.hudReferences[aHUDId];
     let chromeDocument = hud.HUDBox.ownerDocument;
     let message = stringBundle.GetStringFromName("ConsoleAPIDisabled");
-    let node = ConsoleUtils.createMessageNode(chromeDocument, CATEGORY_MISC,
+    let node = ConsoleUtils.createMessageNode(chromeDocument, CATEGORY_JS,
                                               SEVERITY_WARNING, message);
     ConsoleUtils.outputMessageNode(node, aHUDId);
   },

@@ -46,6 +46,10 @@ body {
   left: 0px;
 }
 
+.tabHidden {
+  display: none;
+}
+
 .thumb {
   position: relative;
   width: 100%;

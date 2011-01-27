@@ -1013,6 +1013,18 @@ PRBool nsRegion::Contains (const nsRect& aRect) const
   return tmpRgn.IsEmpty();
 }
 
+PRBool nsRegion::Contains (const nsRegion& aRgn) const
+{
+  // XXX this could be made faster
+  nsRegionRectIterator iter(aRgn);
+  while (const nsRect* r = iter.Next()) {
+    if (!Contains (*r)) {
+      return PR_FALSE;
+    }
+  }
+  return PR_TRUE;
+}
+
 PRBool nsRegion::Intersects (const nsRect& aRect) const
 {
   if (aRect.IsEmpty() || IsEmpty())

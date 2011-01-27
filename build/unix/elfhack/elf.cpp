@@ -351,6 +351,14 @@ ElfSection *Elf::getSectionAt(unsigned int offset)
     return NULL;
 }
 
+ElfSegment *Elf::getSegmentByType(unsigned int type)
+{
+    for (std::vector<ElfSegment *>::iterator seg = segments.begin(); seg != segments.end(); seg++)
+        if ((*seg)->getType() == type)
+            return *seg;
+    return NULL;
+}
+
 ElfDynamic_Section *Elf::getDynSection()
 {
     for (std::vector<ElfSegment *>::iterator seg = segments.begin(); seg != segments.end(); seg++)
@@ -563,15 +571,28 @@ unsigned int ElfSegment::getFileSize()
     // All sections are SHT_NOBITS
     if (i == sections.rend())
         return 0;
-    return ((*i)->getAddr() - sections.front()->getAddr()) + (*i)->getSize();
+
+    unsigned int end = (*i)->getAddr() + (*i)->getSize();
+
+    // GNU_RELRO segment end is page aligned.
+    if (type == PT_GNU_RELRO)
+        end = (end + 4095) & ~4095;
+
+    return end - sections.front()->getAddr();
 }
 
 unsigned int ElfSegment::getMemSize()
 {
     if (sections.empty())
         return 0;
-    return (sections.back()->getAddr() - sections.front()->getAddr()) +
-           (sections.back()->getSize());
+
+    unsigned int end = sections.back()->getAddr() + sections.back()->getSize();
+
+    // GNU_RELRO segment end is page aligned.
+    if (type == PT_GNU_RELRO)
+        end = (end + 4095) & ~4095;
+
+    return end - sections.front()->getAddr();
 }
 
 ElfSegment *ElfSegment::splitBefore(ElfSection *section)

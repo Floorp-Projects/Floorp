@@ -1,3 +1,4 @@
+%include shared.inc
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 notification {
@@ -91,6 +92,12 @@ notification[type="critical"] .messageImage {
 .popup-notification-menubutton {
   -moz-appearance: none;
   margin-top: 17px;
+}
+
+.popup-notification-menubutton:-moz-focusring > .button-menubutton-dropmarker,
+.popup-notification-menubutton > .button-menubutton-button:-moz-focusring {
+  box-shadow: @focusRingShadow@;
+  position: relative;
 }
 
 .popup-notification-menubutton:not([type="menu-button"]),

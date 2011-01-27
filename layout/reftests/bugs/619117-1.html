@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<style>
+div {
+  position: absolute;
+  padding: 2px;
+  left: 100px;
+  top: 700px;
+  width: 100px;
+  height: 100px;
+  background: yellow;
+  -moz-transform: scale(1.5);
+  transform: scale(1.5);
+}
+body.toggle div {
+  -moz-transform: translate(0, -400px);
+  transform: translate(0, -400px);
+}
+</style>
+</head>
+<body>
+<div>Hello</div>
+<script>
+function doTest() {
+  document.body.setAttribute("class", "toggle");
+  document.documentElement.removeAttribute("class");
+}
+window.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+</body>
+</html>

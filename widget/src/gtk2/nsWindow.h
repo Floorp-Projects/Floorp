@@ -390,6 +390,7 @@ private:
     PRBool             GetDragInfo(nsMouseEvent* aMouseEvent,
                                    GdkWindow** aWindow, gint* aButton,
                                    gint* aRootX, gint* aRootY);
+    void               ClearCachedResources();
 
     GtkWidget          *mShell;
     MozContainer       *mContainer;
@@ -468,19 +469,11 @@ private:
  
     // all of our DND stuff
     // this is the last window that had a drag event happen on it.
-    static nsWindow    *mLastDragMotionWindow;
+    static nsWindow    *sLastDragMotionWindow;
     void   InitDragEvent         (nsDragEvent &aEvent);
     void   UpdateDragStatus      (GdkDragContext *aDragContext,
                                   nsIDragService *aDragService);
 
-    // this is everything we need to be able to fire motion events
-    // repeatedly
-    GtkWidget         *mDragMotionWidget;
-    GdkDragContext    *mDragMotionContext;
-    gint               mDragMotionX;
-    gint               mDragMotionY;
-    guint              mDragMotionTime;
-    guint              mDragMotionTimerID;
     nsCOMPtr<nsITimer> mDragLeaveTimer;
     float              mLastMotionPressure;
 
@@ -492,14 +485,7 @@ private:
     // drag in progress
     static PRBool DragInProgress(void);
 
-    void         ResetDragMotionTimer     (GtkWidget      *aWidget,
-                                           GdkDragContext *aDragContext,
-                                           gint           aX,
-                                           gint           aY,
-                                           guint          aTime);
-    void         FireDragMotionTimer      (void);
     void         FireDragLeaveTimer       (void);
-    static guint DragMotionTimerCallback (gpointer aClosure);
     static void  DragLeaveTimerCallback  (nsITimer *aTimer, void *aClosure);
 
     void DispatchMissedButtonReleases(GdkEventCrossing *aGdkEvent);

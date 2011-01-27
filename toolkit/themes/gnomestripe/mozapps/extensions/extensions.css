@@ -195,6 +195,8 @@
 }
 
 .category[disabled] {
+  border-top: 0;
+  border-bottom: 0;
   height: 0;
   opacity: 0;
   -moz-transition-property: height, opacity;
@@ -418,8 +420,7 @@
 
 .icon-container {
   width: 48px;
-  height: 48px;
-  margin: 22px 7px 7px 7px;
+  margin: 15px 7px 7px 7px;
 }
 
 .icon {

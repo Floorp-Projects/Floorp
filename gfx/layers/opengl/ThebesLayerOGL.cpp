@@ -595,6 +595,12 @@ BasicBufferOGL::BeginPaint(ContentType aContentType)
     result.mContext = new gfxContext(surf);
   } else {
     result.mContext = new gfxContext(mTexImage->BeginUpdate(result.mRegionToDraw));
+    if (mTexImage->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA) {
+      gfxUtils::ClipToRegion(result.mContext, result.mRegionToDraw);
+      result.mContext->SetOperator(gfxContext::OPERATOR_CLEAR);
+      result.mContext->Fill();
+      result.mContext->SetOperator(gfxContext::OPERATOR_OVER);
+    }
   }
   if (!result.mContext) {
     NS_WARNING("unable to get context for update");

@@ -103,8 +103,9 @@ public:
 
         weight = NS_MAX<PRUint16>(100, weight);
         weight = NS_MIN<PRUint16>(900, weight);
-
         mWeight = weight;
+
+        mIsCJK = UNINITIALIZED_VALUE;
     }
 
     /**
@@ -130,6 +131,7 @@ public:
         mItalic = aItalic;
         mIsUserFont = PR_TRUE;
         mIsLocalUserFont = PR_TRUE;
+        mIsCJK = UNINITIALIZED_VALUE;
     }
 
     /**
@@ -152,6 +154,7 @@ public:
         mStretch = aStretch;
         mItalic = aItalic;
         mIsUserFont = PR_TRUE;
+        mIsCJK = UNINITIALIZED_VALUE;
     }
 
     virtual ~gfxDWriteFontEntry();
@@ -162,6 +165,9 @@ public:
                                   FallibleTArray<PRUint8>& aBuffer);
 
     nsresult ReadCMAP();
+
+    PRBool IsCJKFont();
+
 protected:
     friend class gfxDWriteFont;
     friend class gfxDWriteFontList;
@@ -182,6 +188,8 @@ protected:
     nsRefPtr<IDWriteFont> mFont;
     nsRefPtr<IDWriteFontFile> mFontFile;
     DWRITE_FONT_FACE_TYPE mFaceType;
+
+    PRBool mIsCJK;
 };
 
 

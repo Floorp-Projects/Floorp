@@ -19028,25 +19028,6 @@ todo(!_thrown_outer, 'should not throw exception');
 }
 </script>
 
-<!-- [[[ test_2d.type.delete.html ]]] -->
-
-<p>Canvas test: 2d.type.delete</p>
-<!-- Testing: window.CanvasRenderingContext2D is DontDelete -->
-<canvas id="c608" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
-<script>
-
-function test_2d_type_delete() {
-
-var canvas = document.getElementById('c608');
-var ctx = canvas.getContext('2d');
-
-delete window.CanvasRenderingContext2D;
-ok(window.CanvasRenderingContext2D !== undefined, "window.CanvasRenderingContext2D !== undefined");
-
-
-}
-</script>
-
 <!-- [[[ test_2d.type.exists.html ]]] -->
 
 <p>Canvas test: 2d.type.exists</p>
@@ -20755,25 +20736,6 @@ var ctx = canvas.getContext('2d');
 
 var data = canvas.toDataURL();
 todo(data === 'data:,', "data === 'data:,'");
-
-
-}
-</script>
-
-<!-- [[[ test_type.delete.html ]]] -->
-
-<p>Canvas test: type.delete</p>
-<!-- Testing: window.HTMLCanvasElement interface object is DontDelete -->
-<canvas id="c675" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
-<script>
-
-function test_type_delete() {
-
-var canvas = document.getElementById('c675');
-var ctx = canvas.getContext('2d');
-
-delete window.HTMLCanvasElement;
-ok(window.HTMLCanvasElement, "window.HTMLCanvasElement");
 
 
 }
@@ -23893,11 +23855,6 @@ function runTests() {
   ok(false, "unexpected exception thrown in: test_2d_transformation_translate_nonfinite");
  }
  try {
-  test_2d_type_delete();
- } catch (e) {
-  ok(false, "unexpected exception thrown in: test_2d_type_delete");
- }
- try {
   test_2d_type_exists();
  } catch (e) {
   ok(false, "unexpected exception thrown in: test_2d_type_exists");
@@ -24231,11 +24188,6 @@ function runTests() {
   test_toDataURL_zerosize();
  } catch (e) {
   ok(false, "unexpected exception thrown in: test_toDataURL_zerosize");
- }
- try {
-  test_type_delete();
- } catch (e) {
-  ok(false, "unexpected exception thrown in: test_type_delete");
  }
  try {
   test_type_exists();

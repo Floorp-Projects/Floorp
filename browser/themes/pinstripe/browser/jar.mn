@@ -1,6 +1,7 @@
 browser.jar:
 % skin browser classic/1.0 %skin/classic/browser/
   skin/classic/browser/urlbar-over-link-arrow.png
+  skin/classic/browser/urlbar-over-link-arrow-rtl.png
   skin/classic/browser/sanitizeDialog.css                   (sanitizeDialog.css)
 * skin/classic/browser/aboutPrivateBrowsing.css             (aboutPrivateBrowsing.css)
 * skin/classic/browser/aboutSessionRestore.css              (aboutSessionRestore.css)
@@ -117,7 +118,6 @@ browser.jar:
   skin/classic/browser/tabbrowser/tab-top-selected-active.png            (tabbrowser/tab-top-selected-active.png)
   skin/classic/browser/tabbrowser/tabDragIndicator.png                   (tabbrowser/tabDragIndicator.png)
   skin/classic/browser/tabview/edit-light.png               (tabview/edit-light.png)
-  skin/classic/browser/tabview/edit.png                     (tabview/edit.png)
   skin/classic/browser/tabview/new-tab.png                  (tabview/new-tab.png)
   skin/classic/browser/tabview/search.png                   (tabview/search.png)
   skin/classic/browser/tabview/stack-expander.png           (tabview/stack-expander.png)
