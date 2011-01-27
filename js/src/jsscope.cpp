@@ -71,12 +71,10 @@ using namespace js;
 using namespace js::gc;
 
 uint32
-js_GenerateShape(JSContext *cx, bool gcLocked)
+js_GenerateShape(JSRuntime *rt)
 {
-    JSRuntime *rt;
     uint32 shape;
 
-    rt = cx->runtime;
     shape = JS_ATOMIC_INCREMENT(&rt->shapeGen);
     JS_ASSERT(shape != 0);
     if (shape >= SHAPE_OVERFLOW_BIT) {
@@ -90,11 +88,17 @@ js_GenerateShape(JSContext *cx, bool gcLocked)
         shape = SHAPE_OVERFLOW_BIT;
 
 #ifdef JS_THREADSAFE
-        Conditionally<AutoLockGC> lockIf(!gcLocked, rt);
+        AutoLockGC lockIf(rt);
 #endif
         TriggerGC(rt);
     }
     return shape;
+}
+
+uint32
+js_GenerateShape(JSContext *cx)
+{
+    return js_GenerateShape(cx->runtime);
 }
 
 bool
@@ -198,11 +202,10 @@ Shape::hashify(JSRuntime *rt)
 #endif
 
 static inline bool
-InitField(JSContext *cx, EmptyShape *JSRuntime:: *field, Class *clasp, uint32 shape)
+InitField(JSCompartment *comp, EmptyShape *JSCompartment:: *field, Class *clasp)
 {
-    if (EmptyShape *emptyShape = EmptyShape::create(cx, clasp)) {
-        cx->runtime->*field = emptyShape;
-        JS_ASSERT(emptyShape->shape == shape);
+    if (EmptyShape *emptyShape = EmptyShape::create(comp, clasp)) {
+        comp->*field = emptyShape;
         return true;
     }
     return false;
@@ -210,7 +213,7 @@ InitField(JSContext *cx, EmptyShape *JSRuntime:: *field, Class *clasp, uint32 sh
 
 /* static */
 bool
-Shape::initRuntimeState(JSContext *cx)
+Shape::initEmptyShapes(JSCompartment *comp)
 {
     /*
      * NewArguments allocates dslots to have enough room for the argc of the
@@ -222,12 +225,10 @@ Shape::initRuntimeState(JSContext *cx)
      * arguments objects. This helps ensure that any arguments object needing
      * its own mutable scope (with unique shape) is a rare event.
      */
-    if (!InitField(cx, &JSRuntime::emptyArgumentsShape, &js_ArgumentsClass,
-                   Shape::EMPTY_ARGUMENTS_SHAPE)) {
+    if (!InitField(comp, &JSCompartment::emptyArgumentsShape, &js_ArgumentsClass))
         return false;
-    }
 
-    if (!InitField(cx, &JSRuntime::emptyBlockShape, &js_BlockClass, Shape::EMPTY_BLOCK_SHAPE))
+    if (!InitField(comp, &JSCompartment::emptyBlockShape, &js_BlockClass))
         return false;
 
     /*
@@ -235,23 +236,19 @@ Shape::initRuntimeState(JSContext *cx)
      * and vars do not force the creation of a mutable scope for the particular
      * call object being accessed.
      */
-    if (!InitField(cx, &JSRuntime::emptyCallShape, &js_CallClass, Shape::EMPTY_CALL_SHAPE))
+    if (!InitField(comp, &JSCompartment::emptyCallShape, &js_CallClass))
         return false;
 
     /* A DeclEnv object holds the name binding for a named function expression. */
-    if (!InitField(cx, &JSRuntime::emptyDeclEnvShape, &js_DeclEnvClass,
-                   Shape::EMPTY_DECL_ENV_SHAPE)) {
+    if (!InitField(comp, &JSCompartment::emptyDeclEnvShape, &js_DeclEnvClass))
         return false;
-    }
 
     /* Non-escaping native enumerator objects share this empty scope. */
-    if (!InitField(cx, &JSRuntime::emptyEnumeratorShape, &js_IteratorClass,
-                   Shape::EMPTY_ENUMERATOR_SHAPE)) {
+    if (!InitField(comp, &JSCompartment::emptyEnumeratorShape, &js_IteratorClass))
         return false;
-    }
 
     /* Same drill for With objects. */
-    if (!InitField(cx, &JSRuntime::emptyWithShape, &js_WithClass, Shape::EMPTY_WITH_SHAPE))
+    if (!InitField(comp, &JSCompartment::emptyWithShape, &js_WithClass))
         return false;
 
     return true;
@@ -259,16 +256,14 @@ Shape::initRuntimeState(JSContext *cx)
 
 /* static */
 void
-Shape::finishRuntimeState(JSContext *cx)
+Shape::finishEmptyShapes(JSCompartment *comp)
 {
-    JSRuntime *rt = cx->runtime;
-
-    rt->emptyArgumentsShape = NULL;
-    rt->emptyBlockShape = NULL;
-    rt->emptyCallShape = NULL;
-    rt->emptyDeclEnvShape = NULL;
-    rt->emptyEnumeratorShape = NULL;
-    rt->emptyWithShape = NULL;
+    comp->emptyArgumentsShape = NULL;
+    comp->emptyBlockShape = NULL;
+    comp->emptyCallShape = NULL;
+    comp->emptyDeclEnvShape = NULL;
+    comp->emptyEnumeratorShape = NULL;
+    comp->emptyWithShape = NULL;
 }
 
 JS_STATIC_ASSERT(sizeof(JSHashNumber) == 4);
@@ -591,12 +586,12 @@ Shape::newDictionaryShape(JSContext *cx, const Shape &child, Shape **listp)
 
     new (dprop) Shape(child.id, child.rawGetter, child.rawSetter, child.slot, child.attrs,
                       (child.flags & ~FROZEN) | IN_DICTIONARY, child.shortid,
-                      js_GenerateShape(cx, false), child.slotSpan);
+                      js_GenerateShape(cx), child.slotSpan);
 
     dprop->listp = NULL;
     dprop->insertIntoDictionary(listp);
 
-    JS_RUNTIME_METER(cx->runtime, liveDictModeNodes);
+    JS_COMPARTMENT_METER(cx->compartment->liveDictModeNodes++);
     return dprop;
 }
 
@@ -613,7 +608,7 @@ Shape::newDictionaryShapeForAddProperty(JSContext *cx, jsid id,
     shape->parent = NULL;
     shape->listp = NULL;
 
-    JS_RUNTIME_METER(cx->runtime, liveDictModeNodes);
+    JS_COMPARTMENT_METER(cx->compartment->liveDictModeNodes++);
     return shape;
 }
 
@@ -758,12 +753,6 @@ JSObject::checkShapeConsistency()
             }
             prev = shape;
         }
-
-        if (throttle == 0) {
-            JS_ASSERT(!shape->table);
-            JS_ASSERT(JSID_IS_EMPTY(shape->id));
-            JS_ASSERT(shape->slot == SHAPE_INVALID_SLOT);
-        }
     }
 }
 #else
@@ -853,7 +842,6 @@ JSObject::addPropertyInternal(JSContext *cx, jsid id,
         }
 #ifdef DEBUG
         LIVE_SCOPE_METER(cx, ++cx->runtime->liveObjectProps);
-        JS_RUNTIME_METER(cx->runtime, totalObjectProps);
 #endif
         CHECK_SHAPE_CONSISTENCY(this);
         METER(adds);
@@ -990,7 +978,7 @@ JSObject::putProperty(JSContext *cx, jsid id,
          * we regenerate only lastProp->shape. We will clearOwnShape(), which
          * sets objShape to lastProp->shape.
          */
-        lastProp->shape = js_GenerateShape(cx, false);
+        lastProp->shape = js_GenerateShape(cx);
         clearOwnShape();
     } else {
         /*
@@ -1101,7 +1089,7 @@ JSObject::changeProperty(JSContext *cx, const Shape *shape, uintN attrs, uintN m
         updateFlags(shape);
 
         /* See the corresponding code in putProperty. */
-        lastProp->shape = js_GenerateShape(cx, false);
+        lastProp->shape = js_GenerateShape(cx);
         clearOwnShape();
 
         if (!js_UpdateWatchpointsForShape(cx, this, shape)) {
@@ -1340,7 +1328,7 @@ JSObject::generateOwnShape(JSContext *cx)
         tr->forgetGuardedShapesForObject(this);
 #endif
 
-    setOwnShape(js_GenerateShape(cx, false));
+    setOwnShape(js_GenerateShape(cx));
 }
 
 void
@@ -1479,6 +1467,9 @@ PrintPropertyMethod(JSTracer *trc, char *buf, size_t bufsize)
 void
 Shape::trace(JSTracer *trc) const
 {
+    JSRuntime *rt = trc->context->runtime;
+    JS_ASSERT_IF(rt->gcCurrentCompartment, compartment == rt->gcCurrentCompartment);
+
     if (IS_GC_MARKING_TRACER(trc))
         mark();
 

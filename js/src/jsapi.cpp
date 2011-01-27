@@ -648,10 +648,6 @@ JSRuntime::init(uint32 maxbytes)
     }
     propTreeStatFilename = getenv("JS_PROPTREE_STATFILE");
     propTreeDumpFilename = getenv("JS_PROPTREE_DUMPFILE");
-    if (meterEmptyShapes()) {
-        if (!emptyShapes.init())
-            return false;
-    }
 #endif
 
     if (!(atomsCompartment = js_new<JSCompartment>(this)) ||
@@ -682,7 +678,7 @@ JSRuntime::init(uint32 maxbytes)
 
     debugMode = JS_FALSE;
 
-    return propertyTree.init() && js_InitThreads(this);
+    return js_InitThreads(this);
 }
 
 JSRuntime::~JSRuntime()
@@ -723,7 +719,6 @@ JSRuntime::~JSRuntime()
     if (debuggerLock)
         JS_DESTROY_LOCK(debuggerLock);
 #endif
-    propertyTree.finish();
 }
 
 JS_PUBLIC_API(JSRuntime *)

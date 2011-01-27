@@ -201,7 +201,7 @@ NewArguments(JSContext *cx, JSObject *parent, uint32 argc, JSObject &callee)
                   : &js_ArgumentsClass,
                   proto, parent, NULL, false);
 
-    argsobj->setMap(cx->runtime->emptyArgumentsShape);
+    argsobj->setMap(cx->compartment->emptyArgumentsShape);
 
     argsobj->setArgsLength(argc);
     argsobj->setArgsData(data);
@@ -989,7 +989,7 @@ NewDeclEnvObject(JSContext *cx, JSStackFrame *fp)
         return NULL;
 
     envobj->init(cx, &js_DeclEnvClass, NULL, &fp->scopeChain(), fp, false);
-    envobj->setMap(cx->runtime->emptyDeclEnvShape);
+    envobj->setMap(cx->compartment->emptyDeclEnvShape);
     return envobj;
 }
 
