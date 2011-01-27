@@ -164,31 +164,6 @@ Bindings::add(JSContext *cx, JSAtom *name, BindingKind kind)
     return true;
 }
 
-/*
- * This algorithm is O(n^2)! But this method is only called if the function is
- * strict mode code or if JSOPTION_STRICT is set, so for now we'll tolerate the
- * quadratic blowup.
- */
-JSAtom *
-Bindings::findDuplicateArgument() const
-{
-    JS_ASSERT(lastBinding);
-
-    if (nargs <= 1)
-        return NULL;
-
-    for (Shape::Range r = lastArgument(); !r.empty(); r.popFront()) {
-        const Shape &shape = r.front();
-        for (Shape::Range r2 = shape.previous(); !r2.empty(); r2.popFront()) {
-            if (r2.front().id == shape.id)
-                return JSID_TO_ATOM(shape.id);
-        }
-    }
-
-    return NULL;
-}
-
-
 jsuword *
 Bindings::getLocalNameArray(JSContext *cx, JSArenaPool *pool)
 {

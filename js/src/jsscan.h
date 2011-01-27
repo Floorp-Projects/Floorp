@@ -529,12 +529,23 @@ js_CloseTokenStream(JSContext *cx, js::TokenStream *ts);
 extern JS_FRIEND_API(int)
 js_fgets(char *buf, int size, FILE *file);
 
+namespace js {
+
+struct KeywordInfo {
+    const char  *chars;         /* C string with keyword text */
+    TokenKind   tokentype;
+    JSOp        op;             /* JSOp */
+    JSVersion   version;        /* JSVersion */
+};
+
 /*
- * If the given char array forms JavaScript keyword, return corresponding
- * token. Otherwise return TOK_EOF.
+ * Returns a KeywordInfo for the specified characters, or NULL if the string is
+ * not a keyword.
  */
-extern js::TokenKind
-js_CheckKeyword(const jschar *chars, size_t length);
+extern const KeywordInfo *
+FindKeyword(const jschar *s, size_t length);
+
+} // namespace js
 
 /*
  * Friend-exported API entry point to call a mapping function on each reserved

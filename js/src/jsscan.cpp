@@ -85,30 +85,23 @@ using namespace js;
 #include "jskeyword.tbl"
 #undef JS_KEYWORD
 
-struct keyword {
-    const char  *chars;         /* C string with keyword text */
-    TokenKind   tokentype;
-    JSOp        op;             /* JSOp */
-    JSVersion   version;        /* JSVersion */
-};
-
-static const struct keyword keyword_defs[] = {
+static const KeywordInfo keywords[] = {
 #define JS_KEYWORD(keyword, type, op, version) \
     {js_##keyword##_str, type, op, version},
 #include "jskeyword.tbl"
 #undef JS_KEYWORD
 };
 
-#define KEYWORD_COUNT JS_ARRAY_LENGTH(keyword_defs)
+namespace js {
 
-static const struct keyword *
+const KeywordInfo *
 FindKeyword(const jschar *s, size_t length)
 {
-    register size_t i;
-    const struct keyword *kw;
-    const char *chars;
-
     JS_ASSERT(length != 0);
+
+    register size_t i;
+    const struct KeywordInfo *kw;
+    const char *chars;
 
 #define JSKW_LENGTH()           length
 #define JSKW_AT(column)         s[column]
@@ -123,10 +116,10 @@ FindKeyword(const jschar *s, size_t length)
 #undef JSKW_LENGTH
 
   got_match:
-    return &keyword_defs[i];
+    return &keywords[i];
 
   test_guess:
-    kw = &keyword_defs[i];
+    kw = &keywords[i];
     chars = kw->chars;
     do {
         if (*s++ != (unsigned char)(*chars++))
@@ -138,15 +131,7 @@ FindKeyword(const jschar *s, size_t length)
     return NULL;
 }
 
-TokenKind
-js_CheckKeyword(const jschar *str, size_t length)
-{
-    const struct keyword *kw;
-
-    JS_ASSERT(length != 0);
-    kw = FindKeyword(str, length);
-    return kw ? kw->tokentype : TOK_EOF;
-}
+} // namespace js
 
 JSBool
 js_IsIdentifier(JSLinearString *str)
@@ -815,7 +800,6 @@ TokenStream::getTokenInternal()
     Token *tp;
     JSAtom *atom;
     bool hadUnicodeEscape;
-    const struct keyword *kw;
 #if JS_HAS_XML_SUPPORT
     JSBool inTarget;
     size_t targetLength;
@@ -1039,6 +1023,7 @@ TokenStream::getTokenInternal()
          * Check for keywords unless we saw Unicode escape or parser asks
          * to ignore keywords.
          */
+        const KeywordInfo *kw;
         if (!hadUnicodeEscape &&
             !(flags & TSF_KEYWORD_IS_NAME) &&
             (kw = FindKeyword(tokenbuf.begin(), tokenbuf.length()))) {
