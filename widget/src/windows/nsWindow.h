@@ -196,7 +196,7 @@ public:
 #ifdef MOZ_XUL
   virtual void            SetTransparencyMode(nsTransparencyMode aMode);
   virtual nsTransparencyMode GetTransparencyMode();
-  virtual void            UpdatePossiblyTransparentRegion(const nsIntRegion &aDirtyRegion, const nsIntRegion& aPossiblyTransparentRegion);
+  virtual void            UpdateTransparentRegion(const nsIntRegion& aTransparentRegion);
 #endif // MOZ_XUL
 #ifdef NS_ENABLE_TSF
   NS_IMETHOD              OnIMEFocusChange(PRBool aFocus);
