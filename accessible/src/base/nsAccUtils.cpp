@@ -404,7 +404,7 @@ nsAccUtils::IsARIASelected(nsAccessible *aAccessible)
                 nsAccessibilityAtoms::_true, eCaseMatters);
 }
 
-already_AddRefed<nsHyperTextAccessible>
+nsHyperTextAccessible*
 nsAccUtils::GetTextAccessibleFromSelection(nsISelection* aSelection)
 {
   // Get accessible from selection's focus DOM point (the DOM point where
@@ -432,8 +432,7 @@ nsAccUtils::GetTextAccessibleFromSelection(nsISelection* aSelection)
   }
 
   do {
-    nsHyperTextAccessible* textAcc = nsnull;
-    CallQueryInterface(accessible, &textAcc);
+    nsHyperTextAccessible* textAcc = accessible->AsHyperText();
     if (textAcc)
       return textAcc;
 
