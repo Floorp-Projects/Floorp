@@ -75,9 +75,9 @@ function test() {
           "tabview-groups": '{"nextID":3,"activeGroupId":2}',
           "tabview-group": 
             '{"1":{"bounds":{"left":15,"top":10,"width":320,"height":375},' + 
-            '"userSize":null,"locked":{},"title":"","id":1},' + 
+            '"userSize":null,"title":"","id":1},' + 
             '"2":{"bounds":{"left":380,"top":5,"width":320,"height":375},' + 
-            '"userSize":null,"locked":{},"title":"","id":2}}',
+            '"userSize":null,"title":"","id":2}}',
           "tabview-ui": '{"pageBounds":{"left":0,"top":0,"width":875,"height":650}}'
         }, sizemode:"normal"
       }]

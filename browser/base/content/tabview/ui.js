@@ -1243,9 +1243,6 @@ let UI = {
     itemBounds.width = 1;
     itemBounds.height = 1;
     items.forEach(function(item) {
-      if (item.locked.bounds)
-        return;
-
       var bounds = item.getBounds();
       itemBounds = (itemBounds ? itemBounds.union(bounds) : new Rect(bounds));
     });
@@ -1273,9 +1270,6 @@ let UI = {
     var self = this;
     var pairs = [];
     items.forEach(function(item) {
-      if (item.locked.bounds)
-        return;
-
       var bounds = item.getBounds();
       bounds.left += (UI.rtl ? -1 : 1) * (newPageBounds.left - self._pageBounds.left);
       bounds.left *= scale;

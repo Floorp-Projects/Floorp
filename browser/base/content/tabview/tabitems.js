@@ -92,7 +92,6 @@ function TabItem(tab, options) {
   this.tabCanvas = new TabCanvas(this.tab, this.$canvas[0]);
 
   this.defaultSize = new Point(TabItems.tabWidth, TabItems.tabHeight);
-  this.locked = {};
   this._hidden = false;
   this.isATabItem = true;
   this._zoomPrep = false;
