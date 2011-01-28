@@ -316,59 +316,22 @@ var PlacesUIUtils = {
     return null;
   },
 
-  /**
-   * Methods to show the bookmarkProperties dialog in its various modes.
-   *
-   * The showMinimalAdd* methods open the dialog by its alternative URI. Thus
-   * they persist the dialog dimensions separately from the showAdd* methods.
-   * Note these variants also do not return the dialog "performed" state since
-   * they may not open the dialog modally.
-   */
+  _reportDeprecatedAddBookmarkMethod:
+  function PUIU__reportDeprecatedAddBookmarkMethod() {
+    // Removes "PUIU_".
+    let oldFuncName = arguments.callee.caller.name.slice(5);
+    Cu.reportError(oldFuncName + " is deprecated and will be removed in a \
+                   future release.  Use showBookmarkDialog instead");
+  },
 
   /**
-   * Shows the "Add Bookmark" dialog.
-   *
-   * @param [optional] aURI
-   *        An nsIURI object for which the "add bookmark" dialog is
-   *        to be shown.
-   * @param [optional] aTitle
-   *        The default title for the new bookmark.
-   * @param [optional] aDescription
-            The default description for the new bookmark
-   * @param [optional] aDefaultInsertionPoint
-   *        The default insertion point for the new item. If set, the folder
-   *        picker would be hidden unless aShowPicker is set to true, in which
-   *        case the dialog only uses the folder identifier from the insertion
-   *        point as the initially selected item in the folder picker.
-   * @param [optional] aShowPicker
-   *        see above
-   * @param [optional] aLoadInSidebar
-   *        If true, the dialog will default to load the new item in the
-   *        sidebar (as a web panel).
-   * @param [optional] aKeyword
-   *        The default keyword for the new bookmark. The keyword field
-   *        will be shown in the dialog if this is used.
-   * @param [optional] aPostData
-   *        POST data for POST-style keywords.
-   * @param [optional] aCharSet
-   *        The character set for the bookmarked page.
-   * @return true if any transaction has been performed.
-   *
-   * Notes:
-   *  - the location, description and "loadInSidebar" fields are
-   *    visible only if there is no initial URI (aURI is null).
-   *  - When aDefaultInsertionPoint is not set, the dialog defaults to the
-   *    bookmarks root folder.
+   * This is here for compatibility reasons, use ShowBookmarkDialog instead.
    */
-  showAddBookmarkUI: function PUIU_showAddBookmarkUI(aURI,
-                                                     aTitle,
-                                                     aDescription,
-                                                     aDefaultInsertionPoint,
-                                                     aShowPicker,
-                                                     aLoadInSidebar,
-                                                     aKeyword,
-                                                     aPostData,
-                                                     aCharSet) {
+  showAddBookmarkUI: function PUIU_showAddBookmarkUI(
+    aURI, aTitle, aDescription, aDefaultInsertionPoint, aShowPicker,
+    aLoadInSidebar, aKeyword, aPostData, aCharSet) {
+    this._reportDeprecatedAddBookmarkMethod();
+
     var info = {
       action: "add",
       type: "bookmark"
@@ -401,25 +364,18 @@ var PlacesUIUtils = {
         info.charSet = aCharSet;
     }
 
-    return this._showBookmarkDialog(info);
+    return this.showBookmarkDialog(info);
   },
 
   /**
-   * @see showAddBookmarkUI
-   * This opens the dialog with only the name and folder pickers visible by
-   * default.
-   *
-   * You can still pass in the various paramaters as the default properties
-   * for the new bookmark.
-   *
-   * The keyword field will be visible only if the aKeyword parameter
-   * was used.
+   * This is here for compatibility reasons, use ShowBookmarkDialog instead.
    */
   showMinimalAddBookmarkUI:
-  function PUIU_showMinimalAddBookmarkUI(aURI, aTitle, aDescription,
-                                         aDefaultInsertionPoint, aShowPicker,
-                                         aLoadInSidebar, aKeyword, aPostData,
-                                         aCharSet) {
+  function PUIU_showMinimalAddBookmarkUI(
+    aURI, aTitle, aDescription, aDefaultInsertionPoint, aShowPicker,
+    aLoadInSidebar, aKeyword, aPostData, aCharSet) {
+    this._reportDeprecatedAddBookmarkMethod();
+
     var info = {
       action: "add",
       type: "bookmark",
@@ -459,30 +415,11 @@ var PlacesUIUtils = {
     else
       info.hiddenRows.push("keyword");
 
-    return this._showBookmarkDialog(info, true);
+    return this.showBookmarkDialog(info, undefined, true);
   },
 
   /**
-   * Shows the "Add Live Bookmark" dialog.
-   *
-   * @param [optional] aFeedURI
-   *        The feed URI for which the dialog is to be shown (nsIURI).
-   * @param [optional] aSiteURI
-   *        The site URI for the new live-bookmark (nsIURI).
-   * @param [optional] aDefaultInsertionPoint
-   *        The default insertion point for the new item. If set, the folder
-   *        picker would be hidden unless aShowPicker is set to true, in which
-   *        case the dialog only uses the folder identifier from the insertion
-   *        point as the initially selected item in the folder picker.
-   * @param [optional] aShowPicker
-   *        see above
-   * @return true if any transaction has been performed.
-   *
-   * Notes:
-   *  - the feedURI and description fields are visible only if there is no
-   *    initial feed URI (aFeedURI is null).
-   *  - When aDefaultInsertionPoint is not set, the dialog defaults to the
-   *    bookmarks root folder.
+   * This is here for compatibility reasons, use ShowBookmarkDialog instead.
    */
   showAddLivemarkUI: function PUIU_showAddLivemarkURI(aFeedURI,
                                                       aSiteURI,
@@ -490,6 +427,8 @@ var PlacesUIUtils = {
                                                       aDescription,
                                                       aDefaultInsertionPoint,
                                                       aShowPicker) {
+    this._reportDeprecatedAddBookmarkMethod();
+
     var info = {
       action: "add",
       type: "livemark"
@@ -512,21 +451,19 @@ var PlacesUIUtils = {
       if (!aShowPicker)
         info.hiddenRows = ["folderPicker"];
     }
-    return this._showBookmarkDialog(info);
+    return this.showBookmarkDialog(info);
   },
 
   /**
-   * @see showAddLivemarkUI
-   * This opens the dialog with only the name and folder pickers visible by
-   * default.
-   *
-   * You can still pass in the various paramaters as the default properties
-   * for the new live-bookmark.
+   * This is here for compatibility reasons, use ShowBookmarkDialog instead.
    */
   showMinimalAddLivemarkUI:
-  function PUIU_showMinimalAddLivemarkURI(aFeedURI, aSiteURI, aTitle,
-                                          aDescription, aDefaultInsertionPoint,
-                                          aShowPicker) {
+  function PUIU_showMinimalAddLivemarkURI(
+    aFeedURI, aSiteURI, aTitle, aDescription, aDefaultInsertionPoint,
+    aShowPicker) {
+
+    this._reportDeprecatedAddBookmarkMethod();
+
     var info = {
       action: "add",
       type: "livemark",
@@ -550,19 +487,15 @@ var PlacesUIUtils = {
       if (!aShowPicker)
         info.hiddenRows.push("folderPicker");
     }
-    return this._showBookmarkDialog(info, true);
+    return this.showBookmarkDialog(info, undefined, true);
   },
 
   /**
-   * Show an "Add Bookmarks" dialog to allow the adding of a folder full
-   * of bookmarks corresponding to the objects in the uriList.  This will
-   * be called most often as the result of a "Bookmark All Tabs..." command.
-   *
-   * @param aURIList  List of nsIURI objects representing the locations
-   *                  to be bookmarked.
-   * @return true if any transaction has been performed.
+   * This is here for compatibility reasons, use ShowBookmarkDialog instead.
    */
   showMinimalAddMultiBookmarkUI: function PUIU_showAddMultiBookmarkUI(aURIList) {
+    this._reportDeprecatedAddBookmarkMethod();
+
     if (aURIList.length == 0)
       throw("showAddMultiBookmarkUI expects a list of nsIURI objects");
     var info = {
@@ -571,46 +504,31 @@ var PlacesUIUtils = {
       hiddenRows: ["description"],
       URIList: aURIList
     };
-    return this._showBookmarkDialog(info, true);
+    return this.showBookmarkDialog(info, undefined, true);
   },
 
   /**
-   * Opens the properties dialog for a given item identifier.
-   *
-   * @param aItemId
-   *        item identifier for which the properties are to be shown
-   * @param aType
-   *        item type, either "bookmark" or "folder"
-   * @param [optional] aReadOnly
-   *        states if properties dialog should be readonly
-   * @return true if any transaction has been performed.
+   * This is here for compatibility reasons, use ShowBookmarkDialog instead.
    */
   showItemProperties: function PUIU_showItemProperties(aItemId, aType, aReadOnly) {
+    this._reportDeprecatedAddBookmarkMethod();
+
     var info = {
       action: "edit",
       type: aType,
       itemId: aItemId,
       readOnly: aReadOnly
     };
-    return this._showBookmarkDialog(info);
+    return this.showBookmarkDialog(info);
   },
 
   /**
-   * Shows the "New Folder" dialog.
-   *
-   * @param [optional] aTitle
-   *        The default title for the new bookmark.
-   * @param [optional] aDefaultInsertionPoint
-   *        The default insertion point for the new item. If set, the folder
-   *        picker would be hidden unless aShowPicker is set to true, in which
-   *        case the dialog only uses the folder identifier from the insertion
-   *        point as the initially selected item in the folder picker.
-   * @param [optional] aShowPicker
-   *        see above
-   * @return true if any transaction has been performed.
+   * This is here for compatibility reasons, use ShowBookmarkDialog instead.
    */
   showAddFolderUI:
   function PUIU_showAddFolderUI(aTitle, aDefaultInsertionPoint, aShowPicker) {
+    this._reportDeprecatedAddBookmarkMethod();
+
     var info = {
       action: "add",
       type: "folder",
@@ -626,41 +544,48 @@ var PlacesUIUtils = {
       if (!aShowPicker)
         info.hiddenRows.push("folderPicker");
     }
-    return this._showBookmarkDialog(info);
+    return this.showBookmarkDialog(info);
   },
 
+
   /**
-   * Shows the bookmark dialog corresponding to the specified info
+   * Shows the bookmark dialog corresponding to the specified info.
    *
    * @param aInfo
    *        Describes the item to be edited/added in the dialog.
    *        See documentation at the top of bookmarkProperties.js
-   * @param aMinimalUI
-   *        [optional] if true, the dialog is opened by its alternative
-   *        chrome: uri.
+   * @param aWindow
+   *        Owner window for the new dialog.
+   * @param aMinimalUI [optional]
+   *        Whether to open the dialog in "minimal ui" mode. Do not pass this
+   *        for new callers.  It'll be removed in a future release.
    *
+   * @see documentation at the top of bookmarkProperties.js
    * @return true if any transaction has been performed, false otherwise.
    */
-  _showBookmarkDialog: function PUIU__showBookmarkDialog(aInfo, aMinimalUI) {
-    var dialogURL = aMinimalUI ?
+  showBookmarkDialog:
+  function PUIU_showBookmarkDialog(aInfo, aParentWindow, aMinimalUI) {
+    if (!aParentWindow) {
+      aParentWindow = this._getWindow(null);
+    }
+
+    // Preserve size attributes differently based on the fact the dialog has
+    // a folder picker or not.
+    let minimalUI = "hiddenRows" in aInfo &&
+                    aInfo.hiddenRows.indexOf("folderPicker") != -1;
+    let dialogURL = aMinimalUI ?
                     "chrome://browser/content/places/bookmarkProperties2.xul" :
                     "chrome://browser/content/places/bookmarkProperties.xul";
 
-    var features;
-    if (aMinimalUI)
-      features = "centerscreen,chrome,modal,resizable=yes";
-    else
-      features = "centerscreen,chrome,modal,resizable=no";
-    this._getCurrentActiveWin().openDialog(dialogURL, "",  features, aInfo);
+    let features =
+      "centerscreen,chrome,modal,resizable=" + (aMinimalUI ? "yes" : "no");
+
+    aParentWindow.openDialog(dialogURL, "",  features, aInfo);
     return ("performed" in aInfo && aInfo.performed);
   },
 
   _getTopBrowserWin: function PUIU__getTopBrowserWin() {
     return Services.wm.getMostRecentWindow("navigator:browser");
-  },
-
-  _getCurrentActiveWin: function PUIU__getCurrentActiveWin() {
-    return focusManager.activeWindow;
   },
 
   /**
@@ -789,7 +714,8 @@ var PlacesUIUtils = {
   /**
    * Gives the user a chance to cancel loading lots of tabs at once
    */
-  _confirmOpenInTabs: function PUIU__confirmOpenInTabs(numTabsToOpen) {
+  _confirmOpenInTabs:
+  function PUIU__confirmOpenInTabs(numTabsToOpen, aWindow) {
     const WARN_ON_OPEN_PREF = "browser.tabs.warnOnOpen";
     var reallyOpen = true;
 
@@ -807,7 +733,7 @@ var PlacesUIUtils = {
                              GetStringFromName("brandShortName");
 
         var buttonPressed = Services.prompt.confirmEx(
-          this._getCurrentActiveWin(),
+          aWindow,
           this.getString("tabs.openWarningTitle"),
           this.getFormattedString(messageKey, [numTabsToOpen, brandShortName]),
           (Services.prompt.BUTTON_TITLE_IS_STRING * Services.prompt.BUTTON_POS_0) +
@@ -831,7 +757,7 @@ var PlacesUIUtils = {
   /** aItemsToOpen needs to be an array of objects of the form:
     * {uri: string, isBookmark: boolean}
     */
-  _openTabset: function PUIU__openTabset(aItemsToOpen, aEvent) {
+  _openTabset: function PUIU__openTabset(aItemsToOpen, aEvent, aWindow) {
     if (!aItemsToOpen.length)
       return;
 
@@ -846,37 +772,75 @@ var PlacesUIUtils = {
       urls.push(item.uri);
     }
 
-    var browserWindow = this._getTopBrowserWin();
-    var where = browserWindow ?
-                browserWindow.whereToOpenLink(aEvent, false, true) : "window";
+    var where = aWindow.whereToOpenLink(aEvent, false, true);
     if (where == "window") {
-      let win = this._getCurrentActiveWin();
-      win.openDialog(win.getBrowserURL(), "_blank",
-                     "chrome,all,dialog=no", urls.join("|"));
+      aWindow.openDialog(win.getBrowserURL(), "_blank",
+                         "chrome,all,dialog=no", urls.join("|"));
       return;
     }
 
     var loadInBackground = where == "tabshifted" ? true : false;
     var replaceCurrentTab = where == "tab" ? false : true;
+    var browserWindow = this._getTopBrowserWin();
     browserWindow.gBrowser.loadTabs(urls, loadInBackground, replaceCurrentTab);
   },
 
-  openContainerNodeInTabs: function PUIU_openContainerInTabs(aNode, aEvent) {
-    var urlsToOpen = PlacesUtils.getURLsForContainerNode(aNode);
-    if (!this._confirmOpenInTabs(urlsToOpen.length))
-      return;
+  /**
+   * Helper method for methods which are forced to take a view/window
+   * parameter as an optional parameter.  It will be removed post Fx4.
+   */
+  _getWindow: function PUIU__getWindow(aView) {
+    if (aView) {
+      // Pratically, this is the case for places trees.
+      if (aView instanceof Components.interfaces.nsIDOMNode)
+        return aView.ownerDocument.defaultView;
 
-    this._openTabset(urlsToOpen, aEvent);
+      return Cu.getGlobalForObject(aView);
+    }
+
+    let caller = arguments.callee.caller;
+
+    // If a view wasn't expected, the method should have got a window.
+    if (aView === null) {
+      Components.utils.reportError("The api has changed. A window should be \
+                                    passed to " + caller.name + ".  Not \
+                                    passing a window will throw in a future \
+                                    release.");
+    }
+    else {
+      Components.utils.reportError("The api has changed. A places view \
+                                    should be passed to " + caller.name + ".  \
+                                    Not passing a view will throw in a future \
+                                    release.");
+    }
+
+    // This could certainly break in some edge cases (like bug 562998), but
+    // that's the best we should do for those extreme backwards-compatibility cases.
+    let topBrowserWin = this._getTopBrowserWin();
+    return topBrowserWin ? topBrowserWin : focusManager.focusedWindow;
   },
 
-  openURINodesInTabs: function PUIU_openURINodesInTabs(aNodes, aEvent) {
-    var urlsToOpen = [];
+  openContainerNodeInTabs:
+  function PUIU_openContainerInTabs(aNode, aEvent, aView) {
+    let window = this._getWindow(aView);
+
+    let urlsToOpen = PlacesUtils.getURLsForContainerNode(aNode);
+    if (!this._confirmOpenInTabs(urlsToOpen.length, window))
+      return;
+
+    this._openTabset(urlsToOpen, aEvent, window);
+  },
+
+  openURINodesInTabs: function PUIU_openURINodesInTabs(aNodes, aEvent, aView) {
+    let window = this._getWindow(aView);
+
+    let urlsToOpen = [];
     for (var i=0; i < aNodes.length; i++) {
-      // skip over separators and folders
+      // Skip over separators and folders.
       if (PlacesUtils.nodeIsURI(aNodes[i]))
         urlsToOpen.push({uri: aNodes[i].uri, isBookmark: PlacesUtils.nodeIsBookmark(aNodes[i])});
     }
-    this._openTabset(urlsToOpen, aEvent);
+    this._openTabset(urlsToOpen, aEvent, window);
   },
 
   /**
@@ -888,9 +852,13 @@ var PlacesUIUtils = {
    * @param   aEvent
    *          The DOM mouse/key event with modifier keys set that track the
    *          user's preferred destination window or tab.
+   * @param   aView
+   *          The controller associated with aNode.
    */
-  openNodeWithEvent: function PUIU_openNodeWithEvent(aNode, aEvent) {
-    this.openNodeIn(aNode, this._getCurrentActiveWin().whereToOpenLink(aEvent));
+  openNodeWithEvent:
+  function PUIU_openNodeWithEvent(aNode, aEvent, aView) {
+    let window = this._getWindow(aView);
+    this._openNodeIn(aNode, window.whereToOpenLink(aEvent), window);
   },
 
   /**
@@ -898,10 +866,15 @@ var PlacesUIUtils = {
    * web panel.
    * see also openUILinkIn
    */
-  openNodeIn: function PUIU_openNodeIn(aNode, aWhere) {
+  openNodeIn: function PUIU_openNodeIn(aNode, aWhere, aView) {
+    let window = this._getWindow(aView);
+    this._openNodeIn(aNode, aWhere, window);
+  },
+
+  _openNodeIn: function PUIU_openNodeIn(aNode, aWhere, aWindow) {
     if (aNode && PlacesUtils.nodeIsURI(aNode) &&
-        this.checkURLSecurity(aNode, this._getCurrentActiveWin())) {
-      var isBookmark = PlacesUtils.nodeIsBookmark(aNode);
+        this.checkURLSecurity(aNode, aWindow)) {
+      let isBookmark = PlacesUtils.nodeIsBookmark(aNode);
 
       if (isBookmark)
         this.markPageAsFollowedBookmark(aNode.uri);
@@ -913,14 +886,14 @@ var PlacesUIUtils = {
       if (aWhere == "current" && isBookmark) {
         if (PlacesUtils.annotations
                        .itemHasAnnotation(aNode.itemId, this.LOAD_IN_SIDEBAR_ANNO)) {
-          var browserWin = this._getTopBrowserWin();
+          let browserWin = this._getTopBrowserWin();
           if (browserWin) {
             browserWin.openWebPanel(aNode.title, aNode.uri);
             return;
           }
         }
       }
-      this._getCurrentActiveWin().openUILinkIn(aNode.uri, aWhere);
+      aWindow.openUILinkIn(aNode.uri, aWhere);
     }
   },
 
