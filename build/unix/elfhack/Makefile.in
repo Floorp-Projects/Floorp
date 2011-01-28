@@ -53,7 +53,7 @@ HOST_CPPSRCS = \
   elfhack.cpp \
   $(NULL)
 
-OS_CXXFLAGS += -fexceptions
+OS_CXXFLAGS := $(filter-out -fno-exceptions,$(OS_CXXFLAGS)) -fexceptions
 
 ifneq (,$(filter %86,$(TARGET_CPU)))
 CPU := x86
