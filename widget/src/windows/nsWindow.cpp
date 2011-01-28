@@ -1186,7 +1186,7 @@ nsWindow::EnumAllWindows(WindowEnumCallback aCallback)
 {
   EnumThreadWindows(GetCurrentThreadId(),
                     EnumAllThreadWindowProc,
-                    (LPARAM)&aCallback);
+                    (LPARAM)aCallback);
 }
 
 /**************************************************************
