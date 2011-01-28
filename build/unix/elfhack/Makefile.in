@@ -71,7 +71,12 @@ libs:: $(CSRCS:.c=.$(OBJ_SUFFIX))
 ifndef CROSS_COMPILE
 test$(DLL_SUFFIX): test.$(OBJ_SUFFIX) elfhack $(CSRCS:.c=.$(OBJ_SUFFIX))
 	$(MKSHLIB) $<
-	rm -f $@.bak
+	@echo ===
+	@echo === If you get failures below, please file a bug describing the error
+	@echo === and your environment \(compiler and linker versions\), and use
+	@echo === --disable-elf-hack until this is fixed.
+	@echo ===
+	@rm -f $@.bak
 	$(CURDIR)/elfhack -b $@
 	# Fail if the backup file doesn't exist
 	[ -f "$@.bak" ]

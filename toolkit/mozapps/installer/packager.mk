@@ -543,6 +543,11 @@ endif # UNIVERSAL_BINARY
 	$(OPTIMIZE_JARS_CMD) --optimize $(DIST)/jarlog/ $(DIST)/bin/chrome $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)/chrome
 ifeq ($(USE_ELF_HACK)$(HOST_OS_ARCH)$(OS_ARCH)$(OS_TARGET),1LinuxLinuxLinux)
 ifneq (,$(filter %86 x86_64 arm,$(OS_TEST)))
+	@echo ===
+	@echo === If you get failures below, please file a bug describing the error
+	@echo === and your environment \(compiler and linker versions\), and use
+	@echo === --disable-elf-hack until this is fixed.
+	@echo ===
 	cd $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR); find . -name "*$(DLL_SUFFIX)" | xargs $(DEPTH)/build/unix/elfhack/elfhack
 endif
 endif
