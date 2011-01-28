@@ -80,6 +80,11 @@ typedef HashSet<JSScript *,
                 DefaultHasher<JSScript *>,
                 SystemAllocPolicy> TracedScriptSet;
 
+typedef HashMap<JSFunction *,
+                JSString *,
+                DefaultHasher<JSFunction *>,
+                SystemAllocPolicy> ToSourceCache;
+
 /* Holds the execution state during trace execution. */
 struct TracerState
 {
@@ -404,6 +409,8 @@ struct JS_FRIEND_API(JSCompartment) {
     JSC::ExecutableAllocator     *regExpAllocator;
 
     js::NativeIterCache          nativeIterCache;
+
+    js::ToSourceCache            toSourceCache;
 
     JSCompartment(JSRuntime *cx);
     ~JSCompartment();

@@ -2025,7 +2025,21 @@ fun_toStringHelper(JSContext *cx, JSObject *obj, uintN indent)
     JSFunction *fun = GET_FUNCTION_PRIVATE(cx, obj);
     if (!fun)
         return NULL;
-    return JS_DecompileFunction(cx, fun, indent);
+
+    if (!indent) {
+        ToSourceCache::Ptr p = cx->compartment->toSourceCache.lookup(fun);
+        if (p)
+            return p->value;
+    }
+
+    JSString *str = JS_DecompileFunction(cx, fun, indent);
+    if (!str)
+        return false;
+
+    if (!indent)
+        cx->compartment->toSourceCache.put(fun, str);
+
+    return str;
 }
 
 static JSBool
