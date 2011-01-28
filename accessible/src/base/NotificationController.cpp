@@ -243,7 +243,7 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
     nsIContent* ownerContent = mDocument->GetDocumentNode()->
       FindContentForSubDocument(childDoc->GetDocumentNode());
     if (ownerContent) {
-      nsAccessible* outerDocAcc = mDocument->GetCachedAccessible(ownerContent);
+      nsAccessible* outerDocAcc = mDocument->GetAccessible(ownerContent);
       if (outerDocAcc && outerDocAcc->AppendChild(childDoc)) {
         if (mDocument->AppendChildDocument(childDoc)) {
           // Fire reorder event to notify new accessible document has been

@@ -523,7 +523,7 @@ nsAccDocManager::SearchAccessibleInDocCache(const nsIDocument* aKey,
   if (aDocAccessible) {
     nsSearchAccessibleInCacheArg* arg =
       static_cast<nsSearchAccessibleInCacheArg*>(aUserArg);
-    arg->mAccessible = aDocAccessible->GetCachedAccessible(arg->mNode);
+    arg->mAccessible = aDocAccessible->GetAccessible(arg->mNode);
     if (arg->mAccessible)
       return PL_DHASH_STOP;
   }

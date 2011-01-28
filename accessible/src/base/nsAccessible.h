@@ -350,7 +350,7 @@ public:
    * Assert if child not in parent's cache if the cache was initialized at this
    * point.
    */
-  void TestChildCache(nsAccessible *aCachedChild);
+  void TestChildCache(nsAccessible* aCachedChild) const;
 
   //////////////////////////////////////////////////////////////////////////////
   // HyperLinkAccessible

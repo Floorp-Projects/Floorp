@@ -784,7 +784,7 @@ nsAccessible*
 nsAccessibilityService::GetAccessible(nsINode* aNode)
 {
   nsDocAccessible* document = GetDocAccessible(aNode->GetOwnerDoc());
-  return document ? document->GetCachedAccessible(aNode) : nsnull;
+  return document ? document->GetAccessible(aNode) : nsnull;
 }
 
 nsAccessible*
