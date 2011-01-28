@@ -175,6 +175,9 @@ class MozMill(object):
         self.add_listener(self.startTest_listener, eventType='mozmill.setTest')
         self.add_listener(self.userShutdown_listener, eventType='mozmill.userShutdown')
 
+        # disable the crashreporter
+        os.environ['MOZ_CRASHREPORTER_NO_REPORT'] = '1'
+
     def add_listener(self, callback, **kwargs):
         self.listeners.append((callback, kwargs,))
 
