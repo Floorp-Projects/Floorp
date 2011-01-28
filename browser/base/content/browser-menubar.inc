@@ -38,6 +38,10 @@
 # ***** END LICENSE BLOCK *****
 
        <menubar id="main-menubar"
+                onpopupshowing="if (event.target.parentNode.parentNode == this &amp;&amp;
+                                    !('@mozilla.org/widget/nativemenuservice;1' in Cc))
+                                  this.setAttribute('openedwithkey',
+                                                    event.target.parentNode.openedWithKey);"
                 style="border:0px;padding:0px;margin:0px;-moz-appearance:none">
             <menu id="file-menu" label="&fileMenu.label;"
                   accesskey="&fileMenu.accesskey;">
@@ -431,7 +435,8 @@
                openInTabs="children"
                oncommand="BookmarksEventHandler.onCommand(event);"
                onclick="BookmarksEventHandler.onClick(event);"
-               onpopupshowing="if (!this.parentNode._placesView)
+               onpopupshowing="PlacesCommandHook.updateBookmarkAllTabsCommand();
+                               if (!this.parentNode._placesView)
                                  new PlacesMenu(event, 'place:folder=BOOKMARKS_MENU');"
                tooltip="bhTooltip" popupsinherittooltip="true">
       <menuitem id="menu_bookmarkThisPage"
@@ -459,6 +464,7 @@
       </menu>
       <menuitem id="menu_bookmarkAllTabs"
                 label="&addCurPagesCmd.label;"
+                class="show-only-for-keyboard"
                 command="Browser:BookmarkAllTabs"
                 key="bookmarkAllTabsKb"/>
       <menuitem id="bookmarksShowAll"
