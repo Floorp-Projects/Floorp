@@ -2954,8 +2954,7 @@ nsAccessible::IsHyperLink()
 {
   // Every embedded accessible within hypertext accessible implements
   // hyperlink interface.
-  nsRefPtr<nsHyperTextAccessible> hyperText = do_QueryObject(GetParent());
-  return hyperText && nsAccUtils::IsEmbeddedObject(this);
+  return mParent && mParent->IsHyperText() && nsAccUtils::IsEmbeddedObject(this);
 }
 
 PRUint32
@@ -2963,7 +2962,7 @@ nsAccessible::StartOffset()
 {
   NS_PRECONDITION(IsHyperLink(), "StartOffset is called not on hyper link!");
 
-  nsRefPtr<nsHyperTextAccessible> hyperText(do_QueryObject(GetParent()));
+  nsHyperTextAccessible* hyperText = mParent ? mParent->AsHyperText() : nsnull;
   return hyperText ? hyperText->GetChildOffset(this) : 0;
 }
 
@@ -2972,7 +2971,7 @@ nsAccessible::EndOffset()
 {
   NS_PRECONDITION(IsHyperLink(), "EndOffset is called on not hyper link!");
 
-  nsRefPtr<nsHyperTextAccessible> hyperText(do_QueryObject(GetParent()));
+  nsHyperTextAccessible* hyperText = mParent ? mParent->AsHyperText() : nsnull;
   return hyperText ? (hyperText->GetChildOffset(this) + 1) : 0;
 }
 
