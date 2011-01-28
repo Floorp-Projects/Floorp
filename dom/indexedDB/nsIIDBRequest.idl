@@ -59,7 +59,6 @@ interface nsIIDBRequest : nsISupports
 
   readonly attribute nsIIDBTransaction transaction;
 
-  [implicit_jscontext]
   readonly attribute jsval result;
 
   readonly attribute unsigned short errorCode;

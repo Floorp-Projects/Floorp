@@ -283,20 +283,14 @@ protected:
    */
   bool ShouldShowValidityUI() const {
     /**
-     * Never show the validity UI if the form has the novalidate attribute set.
      * Always show the validity UI if the form has already tried to be submitted
      * but was invalid.
      *
      * Otherwise, show the validity UI if the element's value has been changed.
      */
 
-    if (mForm) {
-      if (mForm->HasAttr(kNameSpaceID_None, nsGkAtoms::novalidate)) {
-        return false;
-      }
-      if (mForm->HasEverTriedInvalidSubmit()) {
-        return true;
-      }
+    if (mForm && mForm->HasEverTriedInvalidSubmit()) {
+      return true;
     }
 
     return mValueChanged;
@@ -1074,10 +1068,11 @@ nsHTMLTextAreaElement::IntrinsicState() const
       state |= NS_EVENT_STATE_VALID;
     } else {
       state |= NS_EVENT_STATE_INVALID;
-      // NS_EVENT_STATE_MOZ_UI_INVALID always apply if the element suffers from
-      // VALIDITY_STATE_CUSTOM_ERROR.
-      if (GetValidityState(VALIDITY_STATE_CUSTOM_ERROR) ||
-          mCanShowInvalidUI && ShouldShowValidityUI()) {
+      // :-moz-ui-invalid always apply if the element suffers from a custom
+      // error and never applies if novalidate is set on the form owner.
+      if ((!mForm || !mForm->HasAttr(kNameSpaceID_None, nsGkAtoms::novalidate)) &&
+          (GetValidityState(VALIDITY_STATE_CUSTOM_ERROR) ||
+           mCanShowInvalidUI && ShouldShowValidityUI())) {
         state |= NS_EVENT_STATE_MOZ_UI_INVALID;
       }
     }
@@ -1087,11 +1082,14 @@ nsHTMLTextAreaElement::IntrinsicState() const
     //    :-moz-ui-invalid applying before it was focused ;
     // 2. The element is either valid or isn't allowed to have
     //    :-moz-ui-invalid applying ;
-    // 3. The rules to have :-moz-ui-valid applying are fulfilled
-    //    (see ShouldShowValidityUI()).
-    if (mCanShowValidUI && ShouldShowValidityUI() &&
-        (IsValid() || (state.HasState(NS_EVENT_STATE_MOZ_UI_INVALID) &&
-                       !mCanShowInvalidUI))) {
+    // 3. The element has no form owner or its form owner doesn't have the
+    //    novalidate attribute set ;
+    // 4. The element has already been modified or the user tried to submit the
+    //    form owner while invalid.
+    if ((!mForm || !mForm->HasAttr(kNameSpaceID_None, nsGkAtoms::novalidate)) &&
+        (mCanShowValidUI && ShouldShowValidityUI() &&
+         (IsValid() || (state.HasState(NS_EVENT_STATE_MOZ_UI_INVALID) &&
+                        !mCanShowInvalidUI)))) {
       state |= NS_EVENT_STATE_MOZ_UI_VALID;
     }
   }

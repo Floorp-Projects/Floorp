@@ -93,10 +93,9 @@ nsBaseAppShell::Init()
   return NS_OK;
 }
 
-// Called by nsAppShell's native event callback. Set aAlwaysBlockNative to true
-// to always block native events.
+// Called by nsAppShell's native event callback
 void
-nsBaseAppShell::NativeEventCallback(PRBool aAlwaysBlockNative)
+nsBaseAppShell::NativeEventCallback()
 {
   PRInt32 hasPending = PR_AtomicSet(&mNativeEventPending, 0);
   if (hasPending == 0)
@@ -118,9 +117,7 @@ nsBaseAppShell::NativeEventCallback(PRBool aAlwaysBlockNative)
 
   nsIThread *thread = NS_GetCurrentThread();
   PRBool prevBlockNativeEvent = mBlockNativeEvent;
-  if (aAlwaysBlockNative) {
-    mBlockNativeEvent = PR_TRUE;
-  } else if (mEventloopNestingState == eEventloopOther) {
+  if (mEventloopNestingState == eEventloopOther) {
     if (!NS_HasPendingEvents(thread))
       return;
     // We're in a nested native event loop and have some gecko events to

@@ -45,11 +45,8 @@ function frameLoad() {
 
 function load() {
     window.loaded = true;
-    // Thx to netdragon, this is so IE doesn't complain under SSL bugzilla
-    var protocol = "http";
-	if (location.href.indexOf("https://") != -1)
-		protocol = "https";
-    var imgsrc = "<img onload ='window.parent.imgLoad()' src='" + protocol + "://www.mozilla.org/images/header_logo.gif?noCache="+new Date().getTime()+""+"ignoremefrombuzillabug347174'>\n";
+
+    var imgsrc = "<img onload ='window.parent.imgLoad()' src='image.png'>\n";
     var doc = $('iframe').contentWindow.document;
     doc.writeln(imgsrc);
     doc.close();

@@ -559,15 +559,6 @@ nsAccessibilityService::RecreateAccessible(nsIPresShell* aPresShell,
     document->RecreateAccessible(aContent);
 }
 
-// nsAccessibilityService protected
-nsAccessible *
-nsAccessibilityService::GetCachedAccessible(nsINode *aNode,
-                                            nsIWeakReference *aWeakShell)
-{
-  nsDocAccessible *docAccessible = GetDocAccessible(aNode->GetOwnerDoc());
-  return docAccessible ? docAccessible->GetCachedAccessible(aNode) : nsnull;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // nsIAccessibleRetrieval
 
@@ -783,7 +774,7 @@ nsAccessibilityService::GetAccessibleInShell(nsINode* aNode,
     return nsnull;
 
   nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(aPresShell));
-  return GetAccessibleByRule(aNode, weakShell, eGetAccForNode);
+  return GetAccessibleInWeakShell(aNode, weakShell);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -792,33 +783,20 @@ nsAccessibilityService::GetAccessibleInShell(nsINode* aNode,
 nsAccessible*
 nsAccessibilityService::GetAccessible(nsINode* aNode)
 {
-  if (aNode) {
-    nsCOMPtr<nsIWeakReference> weakShell(nsCoreUtils::GetWeakShellFor(aNode));
-    if (weakShell)
-      return GetAccessibleByRule(aNode, weakShell, eGetAccForNode);
-  }
-  return nsnull;
+  nsDocAccessible* document = GetDocAccessible(aNode->GetOwnerDoc());
+  return document ? document->GetCachedAccessible(aNode) : nsnull;
 }
 
 nsAccessible*
-nsAccessibilityService::GetCachedAccessibleOrContainer(nsINode* aNode)
+nsAccessibilityService::GetAccessibleOrContainer(nsINode* aNode,
+                                                 nsIWeakReference* aWeakShell)
 {
-  if (!aNode)
+  if (!aNode || !aNode->IsInDoc())
     return nsnull;
 
-  nsIDocument *document = aNode->GetCurrentDoc();
-  if (!document)
-    return nsnull;
-
-  nsIPresShell *presShell = document->GetShell();
-  if (!presShell)
-    return nsnull;
-
-  nsINode *currNode = aNode;
-  nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(presShell));
-
-  nsAccessible *accessible = nsnull;
-  while (!(accessible = GetCachedAccessible(currNode, weakShell)) &&
+  nsINode* currNode = aNode;
+  nsAccessible* accessible = nsnull;
+  while (!(accessible = GetAccessibleInWeakShell(currNode, aWeakShell)) &&
          (currNode = currNode->GetNodeParent()));
 
   return accessible;
@@ -861,7 +839,7 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
     *aIsSubtreeHidden = false;
 
   // Check to see if we already have an accessible for this node in the cache.
-  nsAccessible *cachedAccessible = GetCachedAccessible(aNode, aWeakShell);
+  nsAccessible* cachedAccessible = GetAccessibleInWeakShell(aNode, aWeakShell);
   if (cachedAccessible) {
     NS_ADDREF(cachedAccessible);
     return cachedAccessible;
@@ -1238,69 +1216,6 @@ nsAccessibilityService::HasUniversalAriaProperty(nsIContent *aContent)
 }
 
 nsAccessible*
-nsAccessibilityService::GetAccessibleByRule(nsINode* aNode,
-                                            nsIWeakReference* aWeakShell,
-                                            EWhatAccToGet aWhatToGet)
-{
-  if (!aNode || !aWeakShell)
-    return nsnull;
-
-  if (aWhatToGet & eGetAccForNode) {
-    nsAccessible* cachedAcc = GetCachedAccessible(aNode, aWeakShell);
-    if (cachedAcc && cachedAcc->IsBoundToParent())
-      return cachedAcc;
-  }
-
-  // Go up looking for the nearest accessible container having cached children.
-  nsTArray<nsINode*> nodes;
-
-  nsINode* node = aNode;
-  nsAccessible* cachedAcc = nsnull;
-  while ((node = node->GetNodeParent())) {
-    cachedAcc = GetCachedAccessible(node, aWeakShell);
-    if (cachedAcc && cachedAcc->IsBoundToParent())
-      break;
-
-    nodes.AppendElement(node);
-  }
-
-  // Node is not in accessible document.
-  if (!cachedAcc)
-    return nsnull;
-
-  // If children of the cached accessible weren't initialized then go down to
-  // the given node and create accessible tree.
-  nsAccessible* containerAcc = cachedAcc;
-  if (!cachedAcc->AreChildrenCached()) {
-    cachedAcc->EnsureChildren();
-    for (PRInt32 idx = nodes.Length() - 1; idx >= 0; idx--) {
-      cachedAcc = GetCachedAccessible(nodes[idx], aWeakShell);
-      if (cachedAcc) {
-        cachedAcc->EnsureChildren();
-        containerAcc = cachedAcc;
-      }
-    }
-  }
-
-  // If the given node is accessible then it should be cached at this point.
-  // Exception is an area element because area and imagemap nodes aren't in
-  // the same parent chain.
-  cachedAcc = GetCachedAccessible(aNode, aWeakShell);
-  if (!cachedAcc && aNode->IsElement()) {
-    nsIFrame* frame = aNode->AsElement()->GetPrimaryFrame();
-    if (frame && frame->GetContent() != aNode)
-      cachedAcc = GetAreaAccessible(frame, aNode, aWeakShell, &containerAcc);
-  }
-
-  if ((aWhatToGet & eGetAccForNode) && cachedAcc)
-    return cachedAcc;
-  else if (aWhatToGet & eGetAccForContainer)
-    return containerAcc;
-
-  return nsnull;
-}
-
-nsAccessible*
 nsAccessibilityService::GetAreaAccessible(nsIFrame* aImageFrame,
                                           nsINode* aAreaNode,
                                           nsIWeakReference* aWeakShell,
@@ -1317,8 +1232,8 @@ nsAccessibilityService::GetAreaAccessible(nsIFrame* aImageFrame,
 
   // Try to get image map accessible from the global cache or create it
   // if failed.
-  nsRefPtr<nsAccessible> image = GetCachedAccessible(aImageFrame->GetContent(),
-                                                     aWeakShell);
+  nsRefPtr<nsAccessible> image =
+    GetAccessibleInWeakShell(aImageFrame->GetContent(), aWeakShell);
   if (!image) {
     image = CreateHTMLImageAccessible(aImageFrame->GetContent(),
                                       aImageFrame->PresContext()->PresShell());
@@ -1341,7 +1256,7 @@ nsAccessibilityService::GetAreaAccessible(nsIFrame* aImageFrame,
   // that they should be available in global cache.
   image->EnsureChildren();
 
-  return GetCachedAccessible(aAreaNode, aWeakShell);
+  return GetAccessibleInWeakShell(aAreaNode, aWeakShell);
 }
 
 already_AddRefed<nsAccessible>

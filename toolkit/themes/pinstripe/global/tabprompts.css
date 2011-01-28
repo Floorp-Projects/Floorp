@@ -19,16 +19,3 @@ tabmodalprompt {
 .buttonContainer {
   margin-top: 10px;
 }
-
-.info\.icon {
-  width: 64px !important;
-  height: 64px !important;
-}
-
-.alert-icon {
-  list-style-image: url("chrome://global/skin/icons/information-tabmodal-64.png") !important;
-}
-
-.question-icon {
-  list-style-image: url("chrome://global/skin/icons/question-tabmodal-64.png") !important;
-}

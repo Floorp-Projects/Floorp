@@ -126,7 +126,14 @@ CPPSRCS = \
   $(NULL)
 
 ifeq (WINNT,$(OS_ARCH))
-CPPSRCS += COMMessageFilter.cpp
+CPPSRCS += \
+  COMMessageFilter.cpp \
+  PluginSurfaceParent.cpp \
+  $(NULL)
+
+EXPORTS_mozilla/plugins += \
+  PluginSurfaceParent.h \
+  $(NULL)
 endif
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
