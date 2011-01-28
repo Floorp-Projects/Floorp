@@ -59,7 +59,6 @@
 #include "nsContentUtils.h"
 #include "nsCRTGlue.h"
 #include "nsAutoPtr.h"
-#include "nsIScriptSecurityManager.h"
 
 static const char kXPConnectServiceCID[] = "@mozilla.org/js/xpc/XPConnect;1";
 
@@ -210,20 +209,9 @@ nsJSON::EncodeFromJSVal(jsval *value, JSContext *cx, nsAString &result)
     return NS_ERROR_FAILURE;
   }
 
-  nsIScriptSecurityManager *ssm = nsContentUtils::GetSecurityManager();
-  nsCOMPtr<nsIPrincipal> principal;
-  nsresult rv = ssm->GetObjectPrincipal(cx, obj, getter_AddRefs(principal));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  JSStackFrame *fp = nsnull;
-  rv = ssm->PushContextPrincipal(cx, JS_FrameIterator(cx, &fp), principal);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsJSONWriter writer;
   JSBool ok = JS_Stringify(cx, value, NULL, JSVAL_NULL,
                            WriteCallback, &writer);
-
-  ssm->PopContextPrincipal(cx);
   if (!ok) {
     return NS_ERROR_XPC_BAD_CONVERT_JS;
   }
