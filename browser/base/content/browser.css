@@ -192,6 +192,11 @@ splitmenu {
 }
 %endif
 
+/* Hide menu elements intended for keyboard access support */
+#main-menubar[openedwithkey=false] .show-only-for-keyboard {
+  display: none;
+}
+
 /* ::::: location bar ::::: */
 #urlbar {
   -moz-binding: url(chrome://browser/content/urlbarBindings.xml#urlbar);
