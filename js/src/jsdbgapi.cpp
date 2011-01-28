@@ -595,12 +595,6 @@ DropWatchPointAndUnlock(JSContext *cx, JSWatchPoint *wp, uintN flag)
         return ok;
     }
 
-    /*
-     * Switch to the same compartment as the watch point, since changeProperty, below,
-     * needs to have a compartment.
-     */
-    SwitchToCompartment sc(cx, wp->object);
-
     /* Remove wp from the list, then restore wp->shape->setter from wp. */
     ++rt->debuggerMutations;
     JS_REMOVE_LINK(&wp->links);
