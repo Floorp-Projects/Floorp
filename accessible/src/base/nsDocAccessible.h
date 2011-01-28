@@ -260,6 +260,20 @@ public:
   nsAccessible* GetAccessibleByUniqueIDInSubtree(void* aUniqueID);
 
   /**
+   * Return an accessible for the given DOM node or container accessible if
+   * the node is not accessible.
+   */
+  nsAccessible* GetAccessibleOrContainer(nsINode* aNode);
+
+  /**
+   * Return a container accessible for the given DOM node.
+   */
+  inline nsAccessible* GetContainerAccessible(nsINode* aNode)
+  {
+    return aNode ? GetAccessibleOrContainer(aNode->GetNodeParent()) : nsnull;
+  }
+
+  /**
    * Return true if the given ID is referred by relation attribute.
    *
    * @note Different elements may share the same ID if they are hosted inside

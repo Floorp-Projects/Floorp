@@ -1325,6 +1325,20 @@ nsDocAccessible::GetAccessibleByUniqueIDInSubtree(void* aUniqueID)
   return nsnull;
 }
 
+nsAccessible*
+nsDocAccessible::GetAccessibleOrContainer(nsINode* aNode)
+{
+  if (!aNode || !aNode->IsInDoc())
+    return nsnull;
+
+  nsINode* currNode = aNode;
+  nsAccessible* accessible = nsnull;
+  while (!(accessible = GetAccessible(currNode)) &&
+         (currNode = currNode->GetNodeParent()));
+
+  return accessible;
+}
+
 bool
 nsDocAccessible::BindToDocument(nsAccessible* aAccessible,
                                 nsRoleMapEntry* aRoleMapEntry)
@@ -1390,8 +1404,7 @@ nsDocAccessible::ContentInserted(nsIContent* aContainerNode,
     // Update the whole tree of this document accessible when the container is
     // null (document element is inserted or removed).
     nsAccessible* container = aContainerNode ?
-      GetAccService()->GetAccessibleOrContainer(aContainerNode, mWeakShell) :
-      this;
+      GetAccessibleOrContainer(aContainerNode) : this;
 
     mNotificationController->ScheduleContentInsertion(container,
                                                       aStartChildNode,
@@ -1406,8 +1419,7 @@ nsDocAccessible::ContentRemoved(nsIContent* aContainerNode,
   // Update the whole tree of this document accessible when the container is
   // null (document element is removed).
   nsAccessible* container = aContainerNode ?
-    GetAccService()->GetAccessibleOrContainer(aContainerNode, mWeakShell) :
-    this;
+    GetAccessibleOrContainer(aContainerNode) : this;
 
   UpdateTree(container, aChildNode, PR_FALSE);
 }
@@ -1446,7 +1458,7 @@ nsDocAccessible::RecreateAccessible(nsINode* aNode)
     // with accessible tree mutation notifications. We could trigger
     // ContentRemoved/ContentInserted pair for that but it moves us away from
     // the idea to not recreate the whole subtree.
-    parent = GetAccService()->GetContainerAccessible(aNode, mWeakShell);
+    parent = GetContainerAccessible(aNode);
     if (!parent)
       return;
   }
@@ -1491,8 +1503,7 @@ nsDocAccessible::NotifyOfCachingEnd(nsAccessible* aAccessible)
     // invalidation list.
     for (PRUint32 idx = 0; idx < mInvalidationList.Length(); idx++) {
       nsIContent* content = mInvalidationList[idx];
-      nsAccessible* container =
-        GetAccService()->GetContainerAccessible(content, mWeakShell);
+      nsAccessible* container = GetContainerAccessible(content);
 
       // Make sure we keep children updated. While we're inside of caching loop
       // then we must exist it with cached children.
@@ -1823,8 +1834,7 @@ nsDocAccessible::ProcessAnchorJump(nsIContent* aTargetNode)
 {
   // If the jump target is not accessible then fire an event for nearest
   // accessible in parent chain.
-  nsAccessible* target = GetAccService()->GetAccessibleOrContainer(aTargetNode,
-                                                                   mWeakShell);
+  nsAccessible* target = GetAccessibleOrContainer(aTargetNode);
   if (!target)
     return;
 
@@ -1871,8 +1881,7 @@ nsDocAccessible::ProcessContentInserted(nsAccessible* aContainer,
   // means there's no container.
   for (PRUint32 idx = 0; idx < aInsertedContent->Length(); idx++) {
     nsAccessible* directContainer =
-      GetAccService()->GetContainerAccessible(aInsertedContent->ElementAt(idx),
-                                              mWeakShell);
+      GetContainerAccessible(aInsertedContent->ElementAt(idx));
     if (directContainer)
       UpdateTree(directContainer, aInsertedContent->ElementAt(idx), PR_TRUE);
   }
