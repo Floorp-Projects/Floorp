@@ -51,6 +51,13 @@ function getBrowserURL()
 }
 
 function getTopWin(skipPopups) {
+  // If this is called in a browser window, use that window regardless of
+  // whether it's the frontmost window, since commands can be executed in
+  // background windows (bug 626148).
+  if (top.document.documentElement.getAttribute("windowtype") == "navigator:browser" &&
+      (!skipPopups || !top.document.documentElement.getAttribute("chromehidden")))
+    return top;
+
   if (skipPopups) {
     return Components.classes["@mozilla.org/browser/browserglue;1"]
                      .getService(Components.interfaces.nsIBrowserGlue)
