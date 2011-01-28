@@ -619,13 +619,19 @@ ElfSegment *ElfSegment::splitBefore(ElfSection *section)
     return segment;
 }
 
-ElfSection *ElfDynamic_Section::getSectionForType(unsigned int tag)
+ElfValue *ElfDynamic_Section::getValueForType(unsigned int tag)
 {
     for (unsigned int i = 0; i < shdr.sh_size / shdr.sh_entsize; i++)
         if (dyns[i].tag == tag)
-            return dyns[i].value->getSection();
+            return dyns[i].value;
 
     return NULL;
+}
+
+ElfSection *ElfDynamic_Section::getSectionForType(unsigned int tag)
+{
+    ElfValue *value = getValueForType(tag);
+    return value ? value->getSection() : NULL;
 }
 
 void ElfDynamic_Section::setValueForType(unsigned int tag, ElfValue *val)
