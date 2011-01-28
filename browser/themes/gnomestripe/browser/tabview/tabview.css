@@ -26,7 +26,6 @@ body {
               -1px 0 1px rgba(255, 255, 255, 0.4) inset,
               0 1px 1.5px rgba(0, 0, 0, 0.4);
   cursor: pointer;
-  margin: 4px;
 }
 
 html[dir=rtl] .tab {
@@ -198,6 +197,7 @@ html[dir=rtl] .stack-trayed .tab-title {
 .tabInGroupItem {
   border: none;
   box-shadow: none !important;
+  margin: 4px;
 }
 
 .groupItem {
