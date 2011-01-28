@@ -110,8 +110,4 @@ inject/$(CPU)-noinit.$(OBJ_SUFFIX): DEFINES += -DNOINIT
 # on mozilla buildbots
 OS_CXXFLAGS := $(filter-out -pedantic,$(OS_CXXFLAGS))
 
-# Avoid building as thumb code, this is not supported yet
-COMMA := ,
-OS_CFLAGS := $(filter-out -mthumb -Wa$(COMMA)-mthumb,$(OS_CFLAGS))
-
 include $(topsrcdir)/config/rules.mk
