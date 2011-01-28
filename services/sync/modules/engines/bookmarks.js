@@ -267,8 +267,18 @@ BookmarksEngine.prototype = {
         let id = this._store.idForGUID(guid);
         switch (Svc.Bookmark.getItemType(id)) {
           case Svc.Bookmark.TYPE_BOOKMARK:
-            key = "b" + Svc.Bookmark.getBookmarkURI(id).spec + ":" +
-              Svc.Bookmark.getItemTitle(id);
+
+            // Smart bookmarks map to their annotation value.
+            let queryId;
+            try {
+              queryId = Utils.anno(id, SMART_BOOKMARKS_ANNO);
+            } catch(ex) {}
+            
+            if (queryId)
+              key = "q" + queryId;
+            else
+              key = "b" + Svc.Bookmark.getBookmarkURI(id).spec + ":" +
+                    Svc.Bookmark.getItemTitle(id);
             break;
           case Svc.Bookmark.TYPE_FOLDER:
             key = "f" + Svc.Bookmark.getItemTitle(id);
@@ -302,9 +312,19 @@ BookmarksEngine.prototype = {
       return this._lazyMap = function(item) {
         // Figure out if we have something to key with
         let key;
+        let altKey;
         switch (item.type) {
-          case "bookmark":
           case "query":
+            // Prior to Bug 610501, records didn't carry their Smart Bookmark
+            // anno, so we won't be able to dupe them correctly. This altKey
+            // hack should get them to dupe correctly.
+            if (item.queryId) {
+              key = "q" + item.queryId;
+              altKey = "b" + item.bmkUri + ":" + item.title;
+              break;
+            }
+            // No queryID? Fall through to the regular bookmark case.
+          case "bookmark":
           case "microsummary":
             key = "b" + item.bmkUri + ":" + item.title;
             break;
@@ -322,9 +342,29 @@ BookmarksEngine.prototype = {
         // Give the guid if we have the matching pair
         this._log.trace("Finding mapping: " + item.parentName + ", " + key);
         let parent = lazyMap[item.parentName];
-        let dupe = parent && parent[key];
-        this._log.trace("Mapped dupe: " + dupe);
-        return dupe;
+        
+        if (!parent) {
+          this._log.trace("No parent => no dupe.");
+          return undefined;
+        }
+          
+        let dupe = parent[key];
+        
+        if (dupe) {
+          this._log.trace("Mapped dupe: " + dupe);
+          return dupe;
+        }
+        
+        if (altKey) {
+          dupe = parent[altKey];
+          if (dupe) {
+            this._log.trace("Mapped dupe using altKey " + altKey + ": " + dupe);
+            return dupe;
+          }
+        }
+        
+        this._log.trace("No dupe found for key " + key + "/" + altKey + ".");
+        return undefined;
       };
     });
 
@@ -446,7 +486,60 @@ BookmarksStore.prototype = {
   itemExists: function BStore_itemExists(id) {
     return this.idForGUID(id, true) > 0;
   },
+  
+  /*
+   * If the record is a tag query, rewrite it to refer to the local tag ID.
+   * 
+   * Otherwise, just return.
+   */
+  preprocessTagQuery: function preprocessTagQuery(record) {
+    if (record.type != "query" ||
+        record.bmkUri == null ||
+        record.folderName == null)
+      return;
+    
+    // Yes, this works without chopping off the "place:" prefix.
+    let uri           = record.bmkUri
+    let queriesRef    = {};
+    let queryCountRef = {};
+    let optionsRef    = {};
+    Svc.History.queryStringToQueries(uri, queriesRef, queryCountRef, optionsRef);
+    
+    // We only process tag URIs.
+    if (optionsRef.value.resultType != optionsRef.value.RESULTS_AS_TAG_CONTENTS)
+      return;
+    
+    // Tag something to ensure that the tag exists.
+    let tag = record.folderName;
+    let dummyURI = Utils.makeURI("about:weave#BStore_preprocess");
+    this._ts.tagURI(dummyURI, [tag]);
 
+    // Look for the id of the tag, which might just have been added.
+    let tags = this._getNode(this._bms.tagsFolder);
+    if (!(tags instanceof Ci.nsINavHistoryQueryResultNode)) {
+      this._log.debug("tags isn't an nsINavHistoryQueryResultNode; aborting.");
+      return;
+    }
+
+    tags.containerOpen = true;
+    for (let i = 0; i < tags.childCount; i++) {
+      let child = tags.getChild(i);
+      if (child.title == tag) {
+        // Found the tag, so fix up the query to use the right id.
+        this._log.debug("Tag query folder: " + tag + " = " + child.itemId);
+        
+        this._log.trace("Replacing folders in: " + uri);
+        for each (let q in queriesRef.value)
+          q.setFolders([child.itemId], 1);
+        
+        record.bmkUri = Svc.History.queriesToQueryString(queriesRef.value,
+                                                         queryCountRef.value,
+                                                         optionsRef.value);
+        return;
+      }
+    }
+  },
+  
   applyIncoming: function BStore_applyIncoming(record) {
     // Don't bother with pre and post-processing for deletions.
     if (record.deleted) {
@@ -462,37 +555,8 @@ BookmarksStore.prototype = {
       return;
     }
 
-    // Preprocess the record before doing the normal apply
-    switch (record.type) {
-      case "query": {
-        // Convert the query uri if necessary
-        if (record.bmkUri == null || record.folderName == null)
-          break;
-
-        // Tag something so that the tag exists
-        let tag = record.folderName;
-        let dummyURI = Utils.makeURI("about:weave#BStore_preprocess");
-        this._ts.tagURI(dummyURI, [tag]);
-
-        // Look for the id of the tag (that might have just been added)
-        let tags = this._getNode(this._bms.tagsFolder);
-        if (!(tags instanceof Ci.nsINavHistoryQueryResultNode))
-          break;
-
-        tags.containerOpen = true;
-        for (let i = 0; i < tags.childCount; i++) {
-          let child = tags.getChild(i);
-          // Found the tag, so fix up the query to use the right id
-          if (child.title == tag) {
-            this._log.debug("query folder: " + tag + " = " + child.itemId);
-            record.bmkUri = record.bmkUri.replace(/([:&]folder=)\d+/, "$1" +
-              child.itemId);
-            break;
-          }
-        }
-        break;
-      }
-    }
+    // Preprocess the record before doing the normal apply.
+    this.preprocessTagQuery(record);
 
     // Figure out the local id of the parent GUID if available
     let parentGUID = record.parentid;
