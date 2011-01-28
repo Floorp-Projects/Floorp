@@ -316,62 +316,6 @@ protected:
 };
 
 
-class PlacesEvent : public nsRunnable
-                  , public mozIStorageCompletionCallback
-{
-public:
-  NS_DECL_ISUPPORTS
-
-  PlacesEvent(const char* aTopic)
-    : mTopic(aTopic)
-    , mDoubleEnqueue(false)
-  {
-  }
-
-  PlacesEvent(const char* aTopic,
-              bool aDoubleEnqueue)
-    : mTopic(aTopic)
-    , mDoubleEnqueue(aDoubleEnqueue)
-  {
-  }
-
-  NS_IMETHODIMP Run()
-  {
-    Notify();
-    return NS_OK;
-  }
-
-  NS_IMETHODIMP Complete()
-  {
-    Notify();
-    return NS_OK;
-  }
-
-protected:
-  void Notify()
-  {
-    if (mDoubleEnqueue) {
-      mDoubleEnqueue = false;
-      (void)NS_DispatchToMainThread(this);
-    }
-    else {
-      nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-      if (obs)
-        (void)obs->NotifyObservers(nsnull, mTopic, nsnull);
-    }
-  }
-
-  const char* const mTopic;
-  bool mDoubleEnqueue;
-};
-
-NS_IMPL_ISUPPORTS2(
-  PlacesEvent
-, mozIStorageCompletionCallback
-, nsIRunnable
-)
-
-
 // Used to notify a topic to system observers on async execute completion.
 class AsyncStatementCallbackNotifier : public AsyncStatementCallback
 {
@@ -1887,7 +1831,7 @@ nsNavHistory::InternalAddNewPage(nsIURI* aURI,
   rv = stmt->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRInt64 pageId;
+  PRInt64 pageId = 0;
   {
     DECLARE_AND_ASSIGN_SCOPED_LAZY_STMT(getIdStmt, mDBGetURLPageInfo);
     rv = URIBinder::Bind(getIdStmt, NS_LITERAL_CSTRING("page_url"), aURI);

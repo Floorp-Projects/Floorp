@@ -299,7 +299,6 @@ public:
   nsPIDOMWindow* GetPrivateParent();
   // callback for close event
   void ReallyCloseWindow();
-  void ReallyClearScope(nsRunnable *aRunnable);
 
   // nsISupports
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -593,6 +592,8 @@ protected:
   virtual ~nsGlobalWindow();
   void CleanUp(PRBool aIgnoreModalDialog);
   void ClearControllers();
+  static void TryClearWindowScope(nsISupports* aWindow);
+  void ClearScopeWhenAllScriptsStop();
   nsresult FinalClose();
 
   void FreeInnerObjects(PRBool aClearScope);

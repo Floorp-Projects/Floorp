@@ -80,6 +80,8 @@ var tests = [
       checkAddSucceeded(this.pageURI, this.favicon.mimetype, this.favicon.data);
       do_log_info("Check that the added page is marked as hidden.");
       do_check_true(isUrlHidden(this.pageURI));
+      do_log_info("Check that the added page has 0 frecency.");
+      do_check_eq(frecencyForUrl(this.pageURI), 0);
     }
   },
 

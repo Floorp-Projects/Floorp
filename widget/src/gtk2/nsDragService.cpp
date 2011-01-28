@@ -82,7 +82,19 @@ enum {
   MOZ_GTK_DRAG_RESULT_NO_TARGET
 };
 
+// Some gobject functions expect functions for gpointer arguments.
+// gpointer is void* but C++ doesn't like casting functions to void*.
+template<class T> static inline gpointer
+FuncToGpointer(T aFunction)
+{
+    return reinterpret_cast<gpointer>
+        (reinterpret_cast<uintptr_t>
+         // This cast just provides a warning if T is not a function.
+         (reinterpret_cast<void (*)()>(aFunction)));
+}
+
 static PRLogModuleInfo *sDragLm = NULL;
+static guint sMotionEventTimerID;
 
 static const char gMimeListType[] = "application/x-moz-internal-item-list";
 static const char gMozUrlType[] = "_NETSCAPE_URL";
@@ -141,6 +153,7 @@ nsDragService::nsDragService()
     if (!sDragLm)
         sDragLm = PR_NewLogModule("nsDragService");
     PR_LOG(sDragLm, PR_LOG_DEBUG, ("nsDragService::nsDragService"));
+    mGrabWidget = 0;
     mTargetWidget = 0;
     mTargetDragContext = 0;
     mTargetTime = 0;
@@ -178,6 +191,88 @@ nsDragService::Observe(nsISupports *aSubject, const char *aTopic,
   }
 
   return NS_OK;
+}
+
+// Support for periodic drag events
+
+// http://www.whatwg.org/specs/web-apps/current-work/multipage/dnd.html#drag-and-drop-processing-model
+// and the Xdnd protocol both recommend that drag events are sent periodically,
+// but GTK does not normally provide this.
+//
+// Here GTK is periodically stimulated by copies of the most recent mouse
+// motion events so as to send drag position messages to the destination when
+// appropriate (after it has received a status event from the previous
+// message).
+//
+// (If events were sent only on the destination side then the destination
+// would have no message to which it could reply with a drag status.  Without
+// sending a drag status to the source, the destination would not be able to
+// change its feedback re whether it could accept the drop, and so the
+// source's behavior on drop will not be consistent.)
+
+struct MotionEventData {
+    MotionEventData(GtkWidget *aWidget, GdkEvent *aEvent)
+        : mWidget(aWidget), mEvent(gdk_event_copy(aEvent))
+    {
+        MOZ_COUNT_CTOR(MotionEventData);
+        g_object_ref(mWidget);
+    }
+    ~MotionEventData()
+    {
+        MOZ_COUNT_DTOR(MotionEventData);
+        g_object_unref(mWidget);
+        gdk_event_free(mEvent);
+    }
+    GtkWidget *mWidget;
+    GdkEvent *mEvent;
+};
+
+static void
+DestroyMotionEventData(gpointer data)
+{
+    delete static_cast<MotionEventData*>(data);
+}
+
+static gboolean
+DispatchMotionEventCopy(gpointer aData)
+{
+    MotionEventData *data = static_cast<MotionEventData*>(aData);
+
+    // Clear the timer id before OnSourceGrabEventAfter is called during event dispatch.
+    sMotionEventTimerID = 0;
+
+    // If there is no longer a grab on the widget, then the drag is over and
+    // there is no need to continue drag motion.
+    if (gtk_grab_get_current() == data->mWidget) {
+        gtk_propagate_event(data->mWidget, data->mEvent);
+    }
+
+    // Cancel this timer;
+    // We've already started another if the motion event was dispatched.
+    return FALSE;
+}
+
+static void
+OnSourceGrabEventAfter(GtkWidget *widget, GdkEvent *event, gpointer user_data)
+{
+    if (event->type != GDK_MOTION_NOTIFY)
+        return;
+
+    if (sMotionEventTimerID) {
+        g_source_remove(sMotionEventTimerID);
+    }
+
+    MotionEventData *data = new MotionEventData(widget, event);
+
+    // G_PRIORITY_DEFAULT_IDLE is lower priority than GDK's redraw idle source
+    // and lower than GTK's idle source that sends drag position messages after
+    // motion-notify signals.
+    //
+    // http://www.whatwg.org/specs/web-apps/current-work/multipage/dnd.html#drag-and-drop-processing-model
+    // recommends an interval of 350ms +/- 200ms.
+    sMotionEventTimerID = 
+        g_timeout_add_full(G_PRIORITY_DEFAULT_IDLE, 350,
+                           DispatchMotionEventCopy, data, DestroyMotionEventData);
 }
 
 // nsIDragService
@@ -270,6 +365,16 @@ nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
 
         if (needsFallbackIcon)
           gtk_drag_set_icon_default(context);
+
+        // GTK uses another hidden window for receiving mouse events.
+        mGrabWidget = gtk_grab_get_current();
+        if (mGrabWidget) {
+            g_object_ref(mGrabWidget);
+            // Only motion events are required but connect to
+            // "event-after" as this is never blocked by other handlers.
+            g_signal_connect(mGrabWidget, "event-after",
+                             G_CALLBACK(OnSourceGrabEventAfter), NULL);
+        }
     }
 
     gtk_target_list_unref(sourceList);
@@ -341,6 +446,19 @@ nsDragService::EndDragSession(PRBool aDoneDrag)
 {
     PR_LOG(sDragLm, PR_LOG_DEBUG, ("nsDragService::EndDragSession %d",
                                    aDoneDrag));
+
+    if (mGrabWidget) {
+        g_signal_handlers_disconnect_by_func(mGrabWidget,
+             FuncToGpointer(OnSourceGrabEventAfter), NULL);
+        g_object_unref(mGrabWidget);
+        mGrabWidget = NULL;
+
+        if (sMotionEventTimerID) {
+            g_source_remove(sMotionEventTimerID);
+            sMotionEventTimerID = 0;
+        }
+    }
+
     // unset our drag action
     SetDragAction(DRAGDROP_ACTION_NONE);
     return nsBaseDragService::EndDragSession(aDoneDrag);

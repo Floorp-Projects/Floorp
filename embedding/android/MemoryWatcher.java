@@ -59,8 +59,6 @@ public class MemoryWatcher extends Handler
 {
     private static final long MEMORY_WATCHER_INTERVAL = 2000;
     private static final long MEMORY_WATCHER_INTERVAL_DELAY_FACTOR = 5;
-    private static final long MEMORY_WATCHER_LOW_MEMORY_THRESHOLD      = 39000000;
-    private static final long MEMORY_WATCHER_CRITICAL_MEMORY_THRESHOLD = 30000000;
     private static final long MEMORY_WATCHER_CRITICAL_RESPONSE_THRESHOLD = 200; // in ms
 
     private Handler mMemoryWatcherHandler;
@@ -101,13 +99,11 @@ public class MemoryWatcher extends Handler
         // if this call too long, something is very
         // wrong with the device.  fire a critical
         // notification and hope things get better.
-        if (took > MEMORY_WATCHER_CRITICAL_RESPONSE_THRESHOLD ||
-            mMemoryInfo.availMem < MEMORY_WATCHER_CRITICAL_MEMORY_THRESHOLD) {
+        if (took > MEMORY_WATCHER_CRITICAL_RESPONSE_THRESHOLD) {
             GeckoAppShell.onCriticalOOM();
             nextInterval *= MEMORY_WATCHER_INTERVAL_DELAY_FACTOR;
         }
-        else if (mMemoryInfo.lowMemory ||
-                 mMemoryInfo.availMem < MEMORY_WATCHER_LOW_MEMORY_THRESHOLD) {
+        else if (mMemoryInfo.lowMemory) {
             GeckoAppShell.onLowMemory();
             nextInterval *= MEMORY_WATCHER_INTERVAL_DELAY_FACTOR;
         }

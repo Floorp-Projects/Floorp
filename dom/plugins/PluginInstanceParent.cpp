@@ -59,9 +59,7 @@
 
 #if defined(OS_WIN)
 #include <windowsx.h>
-#include "mozilla/gfx/SharedDIBSurface.h"
-
-using mozilla::gfx::SharedDIBSurface;
+#include "mozilla/plugins/PluginSurfaceParent.h"
 
 // Plugin focus event for widget.
 extern const PRUnichar* kOOPPPluginFocusEventId;
@@ -520,11 +518,10 @@ PluginInstanceParent::RecvShow(const NPRect& updatedRect,
     }
 #endif
 #ifdef XP_WIN
-    else if (newSurface.type() == SurfaceDescriptor::TSurfaceDescriptorWin) {
-        SurfaceDescriptorWin windesc = newSurface.get_SurfaceDescriptorWin();
-        SharedDIBSurface* dibsurf = new SharedDIBSurface();
-        if (dibsurf->Attach(windesc.handle(), windesc.size().width, windesc.size().height, windesc.transparent()))
-            surface = dibsurf;
+    else if (newSurface.type() == SurfaceDescriptor::TPPluginSurfaceParent) {
+        PluginSurfaceParent* s =
+            static_cast<PluginSurfaceParent*>(newSurface.get_PPluginSurfaceParent());
+        surface = s->Surface();
     }
 #endif
 
@@ -1130,6 +1127,30 @@ PluginInstanceParent::GetActorForNPObject(NPObject* aObject)
 
     actor->InitializeLocal(aObject);
     return actor;
+}
+
+PPluginSurfaceParent*
+PluginInstanceParent::AllocPPluginSurface(const WindowsSharedMemoryHandle& handle,
+                                          const gfxIntSize& size,
+                                          const bool& transparent)
+{
+#ifdef XP_WIN
+    return new PluginSurfaceParent(handle, size, transparent);
+#else
+    NS_ERROR("This shouldn't be called!");
+    return NULL;
+#endif
+}
+
+bool
+PluginInstanceParent::DeallocPPluginSurface(PPluginSurfaceParent* s)
+{
+#ifdef XP_WIN
+    delete s;
+    return true;
+#else
+    return false;
+#endif
 }
 
 bool

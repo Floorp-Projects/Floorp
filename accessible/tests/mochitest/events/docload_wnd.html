@@ -2,20 +2,38 @@
 <head>
   <title>Accessible events testing for document</title>
   <script>
+    const STATE_BUSY = Components.interfaces.nsIAccessibleStates.STATE_BUSY;
+
+    var gRetrieval = null;
+    function waitForDocLoad()
+    {
+      if (!gRetrieval) {
+        gRetrieval = Components.classes["@mozilla.org/accessibleRetrieval;1"].
+         getService(Components.interfaces.nsIAccessibleRetrieval);
+      }
+
+      var accDoc = gRetrieval.getAccessibleFor(document);
+
+      var state = {};
+      accDoc.getState(state, {});
+      if (state.value & STATE_BUSY) {
+        window.setTimeout(waitForDocLoad, 0);
+        return;
+      }
+
+      hideIFrame();
+    }
+
     function hideIFrame()
     {
       var iframe = document.getElementById("iframe");
-
-      var accRetrieval = Components.classes["@mozilla.org/accessibleRetrieval;1"].
-        getService(Components.interfaces.nsIAccessibleRetrieval);
-      accRetrieval.getAccessibleFor(iframe.contentDocument);
-
+      gRetrieval.getAccessibleFor(iframe.contentDocument);
       iframe.style.display = 'none';
     }
   </script>
 </head>
 
-<body onload="hideIFrame();">
+<body onload="waitForDocLoad();">
   <iframe id="iframe"></iframe>
 </body>
 </html>

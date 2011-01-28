@@ -122,12 +122,32 @@ gfxDWriteFont::gfxDWriteFont(gfxFontEntry *aFontEntry,
     : gfxFont(aFontEntry, aFontStyle, anAAOption)
     , mCairoFontFace(nsnull)
     , mCairoScaledFont(nsnull)
-    , mInitialized(PR_FALSE)
     , mMetrics(nsnull)
     , mNeedsOblique(PR_FALSE)
     , mNeedsBold(aNeedsBold)
     , mUseSubpixelPositions(PR_FALSE)
 {
+    gfxDWriteFontEntry *fe =
+        static_cast<gfxDWriteFontEntry*>(aFontEntry);
+    nsresult rv;
+    DWRITE_FONT_SIMULATIONS sims = DWRITE_FONT_SIMULATIONS_NONE;
+    if ((GetStyle()->style & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)) &&
+        !fe->IsItalic()) {
+            // For this we always use the font_matrix for uniformity. Not the
+            // DWrite simulation.
+            mNeedsOblique = PR_TRUE;
+    }
+    if (aNeedsBold) {
+        sims |= DWRITE_FONT_SIMULATIONS_BOLD;
+    }
+
+    rv = fe->CreateFontFace(getter_AddRefs(mFontFace), sims);
+
+    if (NS_FAILED(rv)) {
+        mIsValid = PR_FALSE;
+        return;
+    }
+
     if ((anAAOption == gfxFont::kAntialiasDefault && UsingClearType()) ||
         anAAOption == gfxFont::kAntialiasSubpixel)
     {
@@ -135,6 +155,8 @@ gfxDWriteFont::gfxDWriteFont(gfxFontEntry *aFontEntry,
         // note that this may be reset to FALSE if we determine that a bitmap
         // strike is going to be used
     }
+
+    ComputeMetrics();
 
     if (FontCanSupportHarfBuzz()) {
         mHarfBuzzShaper = new gfxHarfBuzzShaper(this);
@@ -160,37 +182,6 @@ gfxDWriteFont::CopyWithAntialiasOption(AntialiasOption anAAOption)
 }
 
 void
-gfxDWriteFont::Initialize()
-{
-    NS_ASSERTION(!mInitialized, "initializing gfxDWriteFont a second time");
-    mInitialized = PR_TRUE;
-
-    gfxDWriteFontEntry *fe =
-        static_cast<gfxDWriteFontEntry*>((gfxFontEntry*)mFontEntry);
-
-    nsresult rv;
-    DWRITE_FONT_SIMULATIONS sims = DWRITE_FONT_SIMULATIONS_NONE;
-    if ((GetStyle()->style & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)) &&
-        !fe->IsItalic()) {
-            // For this we always use the font_matrix for uniformity. Not the
-            // DWrite simulation.
-            mNeedsOblique = PR_TRUE;
-    }
-    if (mNeedsBold) {
-        sims |= DWRITE_FONT_SIMULATIONS_BOLD;
-    }
-
-    rv = fe->CreateFontFace(getter_AddRefs(mFontFace), sims);
-
-    if (NS_FAILED(rv)) {
-        mIsValid = PR_FALSE;
-        return;
-    }
-
-    ComputeMetrics();
-}
-
-void
 gfxDWriteFont::CreatePlatformShaper()
 {
     mPlatformShaper = new gfxDWriteShaper(this);
@@ -205,9 +196,6 @@ gfxDWriteFont::GetUniqueName()
 const gfxFont::Metrics&
 gfxDWriteFont::GetMetrics()
 {
-    if (!mInitialized) {
-        Initialize();
-    }
     return *mMetrics;
 }
 
@@ -225,7 +213,9 @@ gfxDWriteFont::ComputeMetrics()
         mAdjustedSize = mStyle.size;
     }
 
-    if (HasBitmapStrikeForSize(NS_lround(mAdjustedSize))) {
+    gfxDWriteFontEntry *fe =
+        static_cast<gfxDWriteFontEntry*>(mFontEntry.get());
+    if (fe->IsCJKFont() && HasBitmapStrikeForSize(NS_lround(mAdjustedSize))) {
         mAdjustedSize = NS_lround(mAdjustedSize);
         mUseSubpixelPositions = PR_FALSE;
         // if we have bitmaps, we need to tell Cairo NOT to use subpixel AA,
@@ -518,9 +508,6 @@ gfxDWriteFont::HasBitmapStrikeForSize(PRUint32 aSize)
 PRUint32
 gfxDWriteFont::GetSpaceGlyph()
 {
-    if (!mInitialized) {
-        Initialize();
-    }
     UINT32 ucs = L' ';
     UINT16 glyph;
     HRESULT hr;
@@ -534,9 +521,6 @@ gfxDWriteFont::GetSpaceGlyph()
 PRBool
 gfxDWriteFont::SetupCairoFont(gfxContext *aContext)
 {
-    if (!mInitialized) {
-        Initialize();
-    }
     cairo_scaled_font_t *scaledFont = CairoScaledFont();
     if (cairo_scaled_font_status(scaledFont) != CAIRO_STATUS_SUCCESS) {
         // Don't cairo_set_scaled_font as that would propagate the error to
@@ -550,18 +534,12 @@ gfxDWriteFont::SetupCairoFont(gfxContext *aContext)
 PRBool
 gfxDWriteFont::IsValid()
 {
-    if (!mInitialized) {
-        Initialize();
-    }
     return mFontFace != NULL;
 }
 
 IDWriteFontFace*
 gfxDWriteFont::GetFontFace()
 {
-    if (!mInitialized) {
-        Initialize();
-    }
     return  mFontFace.get();
 }
 
@@ -681,9 +659,6 @@ gfxDWriteFont::GetFontTable(PRUint32 aTag)
 PRBool
 gfxDWriteFont::ProvidesGlyphWidths()
 {
-    if (!mInitialized) {
-        Initialize();
-    }
     return !mUseSubpixelPositions ||
            (mFontFace->GetSimulations() & DWRITE_FONT_SIMULATIONS_BOLD);
 }

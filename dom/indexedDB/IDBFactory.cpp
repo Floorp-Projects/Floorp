@@ -41,7 +41,6 @@
 
 #include "nsILocalFile.h"
 #include "nsIScriptContext.h"
-#include "mozIThirdPartyUtil.h"
 
 #include "mozilla/storage.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -512,11 +511,34 @@ CreateDatabaseConnection(const nsACString& aASCIIOrigin,
 
 // static
 already_AddRefed<nsIIDBFactory>
-IDBFactory::Create()
+IDBFactory::Create(nsPIDOMWindow* aWindow)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  nsCOMPtr<nsIIDBFactory> request(new IDBFactory());
-  return request.forget();
+  NS_ASSERTION(aWindow, "Must have a window!");
+
+  if (aWindow->IsOuterWindow()) {
+    aWindow = aWindow->GetCurrentInnerWindow();
+  }
+  NS_ENSURE_TRUE(aWindow, nsnull);
+
+  if (gCurrentDatabaseIndex == BAD_TLS_INDEX) {
+    // First time we're creating a database.
+    if (PR_NewThreadPrivateIndex(&gCurrentDatabaseIndex, NULL) != PR_SUCCESS) {
+      NS_ERROR("PR_NewThreadPrivateIndex failed!");
+      gCurrentDatabaseIndex = BAD_TLS_INDEX;
+      return nsnull;
+    }
+
+    nsContentUtils::AddIntPrefVarCache(PREF_INDEXEDDB_QUOTA, &gIndexedDBQuota,
+                                       DEFAULT_QUOTA);
+  }
+
+  nsRefPtr<IDBFactory> factory = new IDBFactory();
+
+  factory->mWindow = do_GetWeakReference(aWindow);
+  NS_ENSURE_TRUE(factory->mWindow, nsnull);
+
+  return factory.forget();
 }
 
 // static
@@ -798,26 +820,21 @@ IDBFactory::Open(const nsAString& aName,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  nsresult rv;
-
-  if (gCurrentDatabaseIndex == BAD_TLS_INDEX) {
-    // First time we're creating a database.
-    if (PR_NewThreadPrivateIndex(&gCurrentDatabaseIndex, NULL) != PR_SUCCESS) {
-      NS_ERROR("PR_NewThreadPrivateIndex failed!");
-      gCurrentDatabaseIndex = BAD_TLS_INDEX;
-      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-    }
-
-    nsContentUtils::AddIntPrefVarCache(PREF_INDEXEDDB_QUOTA, &gIndexedDBQuota,
-                                       DEFAULT_QUOTA);
-  }
-
   if (aName.IsEmpty()) {
     return NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR;
   }
 
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
+  NS_ENSURE_TRUE(window, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(window);
+  NS_ENSURE_TRUE(sgo, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  nsIScriptContext* context = sgo->GetContext();
+  NS_ENSURE_TRUE(context, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
   nsCOMPtr<nsIPrincipal> principal;
-  rv = nsContentUtils::GetSecurityManager()->
+  nsresult rv = nsContentUtils::GetSecurityManager()->
     GetSubjectPrincipal(getter_AddRefs(principal));
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
@@ -835,33 +852,7 @@ IDBFactory::Open(const nsAString& aName,
     }
   }
 
-  nsIScriptContext* context = GetScriptContextFromJSContext(aCx);
-  NS_ENSURE_TRUE(context, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
-  nsCOMPtr<nsPIDOMWindow> innerWindow;
-
-  nsCOMPtr<nsPIDOMWindow> window =
-    do_QueryInterface(context->GetGlobalObject());
-  if (window) {
-    innerWindow = window->GetCurrentInnerWindow();
-  }
-  NS_ENSURE_TRUE(innerWindow, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
-  nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
-    do_GetService(THIRDPARTYUTIL_CONTRACTID);
-  NS_ENSURE_TRUE(thirdPartyUtil, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
-  PRBool isThirdPartyWindow;
-  rv = thirdPartyUtil->IsThirdPartyWindow(window, nsnull, &isThirdPartyWindow);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
-  if (isThirdPartyWindow) {
-    NS_WARNING("IndexedDB is not permitted in a third-party window.");
-    *_retval = nsnull;
-    return NS_OK;
-  }
-
-  nsRefPtr<IDBRequest> request = IDBRequest::Create(this, context, innerWindow,
+  nsRefPtr<IDBRequest> request = IDBRequest::Create(this, context, window,
                                                     nsnull);
   NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
@@ -869,7 +860,7 @@ IDBFactory::Open(const nsAString& aName,
     new OpenDatabaseHelper(request, aName, origin);
 
   nsRefPtr<CheckPermissionsHelper> permissionHelper =
-    new CheckPermissionsHelper(openHelper, innerWindow, aName, origin);
+    new CheckPermissionsHelper(openHelper, window, aName, origin);
 
   nsRefPtr<IndexedDatabaseManager> mgr = IndexedDatabaseManager::GetOrCreate();
   NS_ENSURE_TRUE(mgr, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
@@ -956,7 +947,7 @@ OpenDatabaseHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
 nsresult
 OpenDatabaseHelper::GetSuccessResult(JSContext* aCx,
-                                     jsval* aVal)
+                                     jsval *aVal)
 {
   DatabaseInfo* dbInfo;
   if (DatabaseInfo::Get(mDatabaseId, &dbInfo)) {
@@ -1036,12 +1027,13 @@ OpenDatabaseHelper::GetSuccessResult(JSContext* aCx,
   dbInfo->nextObjectStoreId = mLastObjectStoreId + 1;
   dbInfo->nextIndexId = mLastIndexId + 1;
 
-  nsRefPtr<IDBDatabase> db =
+  nsRefPtr<IDBDatabase> database =
     IDBDatabase::Create(mRequest->ScriptContext(), mRequest->Owner(), dbInfo,
                         mASCIIOrigin);
-  if (!db) {
+  if (!database) {
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
-  return WrapNative(aCx, static_cast<nsPIDOMEventTarget*>(db), aVal);
+  return WrapNative(aCx, NS_ISUPPORTS_CAST(nsPIDOMEventTarget*, database),
+                    aVal);
 }

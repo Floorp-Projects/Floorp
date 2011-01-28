@@ -357,16 +357,6 @@ protected:
 };
 
 /* Local functions */
-static void PaintBackgroundLayer(nsPresContext* aPresContext,
-                                 nsIRenderingContext& aRenderingContext,
-                                 nsIFrame* aForFrame,
-                                 PRUint32 aFlags,
-                                 const nsRect& aDirtyRect,
-                                 const nsRect& aBorderArea,
-                                 const nsRect& aBGClipRect,
-                                 const nsStyleBackground& aBackground,
-                                 const nsStyleBackground::Layer& aLayer);
-
 static void DrawBorderImage(nsPresContext* aPresContext,
                             nsIRenderingContext& aRenderingContext,
                             nsIFrame* aForFrame,

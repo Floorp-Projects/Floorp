@@ -44,6 +44,9 @@ interface nsIVariant;
 #include "jsapi.h"
 %}
 
+/**
+ * @status EXPERIMENTAL
+ */
 [scriptable, uuid(1a3b1260-4bdb-45d0-a306-dc377dd9baa4)]
 interface mozIVisitInfo : nsISupports
 {
@@ -78,6 +81,9 @@ interface mozIVisitInfo : nsISupports
   readonly attribute long long sessionId;
 };
 
+/**
+ * @status EXPERIMENTAL
+ */
 [scriptable, uuid(ad83e137-c92a-4b7b-b67e-0a318811f91e)]
 interface mozIPlaceInfo : nsISupports
 {
@@ -113,6 +119,9 @@ interface mozIPlaceInfo : nsISupports
   readonly attribute jsval visits;
 };
 
+/**
+ * @status EXPERIMENTAL
+ */
 [scriptable,function, uuid(3b97ca3c-5ea8-424f-b429-797477c52302)]
 interface mozIVisitInfoCallback : nsISupports
 {
@@ -129,20 +138,22 @@ interface mozIVisitInfoCallback : nsISupports
                   in mozIPlaceInfo aPlaceInfo);
 };
 
+/**
+ * @status EXPERIMENTAL
+ */
 [scriptable, uuid(f79ca67c-7e57-4511-a400-ea31001c762f)]
 interface mozIAsyncHistory : nsISupports
 {
   /**
    * Adds a set of visits for one or more mozIPlaceInfo objects, and updates
-   * each mozIPlaceInfo's title or guid.  It is not necessary to add visits to
-   * change a Place's title or guid.
+   * each mozIPlaceInfo's title or guid.
    *
    * @param aPlaceInfo
    *        The mozIPlaceInfo object[s] containing the information to store or
    *        update.  This can be a single object, or an array of objects.
    * @param [optional] aCallback
    *        Callback to be notified for each visit addition, title change, or
-   *        guid change.  If more than one operation is done for a given place,
+   *        guid change.  If more than one operation is done for a given visit,
    *        only one callback will be given (i.e. title change and add visit).
    *
    * @throws NS_ERROR_INVALID_ARG
@@ -150,8 +161,7 @@ interface mozIAsyncHistory : nsISupports
    *         - Not providing at least one valid guid, placeId, or uri for all
    *           mozIPlaceInfo object[s].
    *         - Not providing an array or nothing for the visits property of
-   *           mozIPlaceInfo (the property can be undefined for title or guid
-   *           changes).
+   *           mozIPlaceInfo.
    *         - Not providing a visitDate and transitionType for each
    *           mozIVisitInfo.
    *         - Providing an invalid transitionType for a mozIVisitInfo.

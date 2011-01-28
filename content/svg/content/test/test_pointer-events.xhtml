@@ -1,58 +1,269 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=500174
+https://bugzilla.mozilla.org/show_bug.cgi?id=619959
 -->
 <head>
-  <title>Test Pointer Events</title>
+  <title>Test 'pointer-events' handling</title>
   <script type="text/javascript" src="/MochiKit/packed.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
-<body>
+<body onload="run_tests()">
 <script class="testbody" type="text/javascript">
 <![CDATA[
 
 SimpleTest.waitForExplicitFinish();
 
-function run()
+var pointer_events_values = [
+  'visiblePainted',
+  'visibleFill',
+  'visibleStroke',
+  'visible',
+  'painted',
+  'fill',
+  'stroke',
+  'all',
+  'none'
+];
+
+var paint_values = [
+  'blue',
+  'transparent',
+  'none'
+];
+
+var opacity_values = [
+  '1',
+  '0.5',
+  '0'
+];
+
+var visibility_values = [
+  'visible',
+  'hidden',
+  'collapse'
+];
+
+/**
+ * List of attributes and various values for which we want to test permutations
+ * when hit testing stroke and fill.
+ *
+ * We're using an array of objects so that we have control over the order in
+ * which permutations are tested.
+ *
+ * TODO: test the effect of clipping, masking, filters, markers, etc.
+ */
+var hit_test_attr_values = {
+  fill: [
+    { name: 'pointer-events',  values: pointer_events_values },
+    { name: 'fill',            values: paint_values },
+    { name: 'fill-opacity',    values: opacity_values },
+    { name: 'opacity',         values: opacity_values },
+    { name: 'visibility',      values: visibility_values }
+  ],
+  stroke: [
+    { name: 'pointer-events',  values: pointer_events_values },
+    { name: 'stroke',          values: paint_values },
+    { name: 'stroke-opacity',  values: opacity_values },
+    { name: 'opacity',         values: opacity_values },
+    { name: 'visibility',      values: visibility_values }
+  ]
+}
+
+/**
+ * The following object contains a list of 'pointer-events' property values,
+ * each with an object detailing the conditions under which the fill and stroke
+ * of a graphical object will intercept pointer events for the given value. If
+ * the object contains a 'fill-intercepts-iff' property then the fill is
+ * expected to intercept pointer events for that value of 'pointer-events' if
+ * and only if the conditions listed in the 'fill-intercepts-iff' object are
+ * met. If there are no conditions in the 'fill-intercepts-iff' object then the
+ * fill should always intercept pointer events. However, if the
+ * 'fill-intercepts-iff' property is not set at all then it indicates that the
+ * fill should never intercept pointer events. The same rules apply for
+ * 'stroke-intercepts-iff'.
+ *
+ * If an attribute name in the conditions list is followed by the "!"
+ * character then the requirement for a hit is that its value is NOT any
+ * of the values listed in the given array.
+ */
+var hit_conditions = {
+  visiblePainted: {
+    'fill-intercepts-iff': {
+      'visibility': ['visible'],
+      'fill!': ['none']
+    },
+    'stroke-intercepts-iff': {
+      'visibility': ['visible'],
+      'stroke!': ['none']
+    }
+  },
+  visibleFill: {
+    'fill-intercepts-iff': {
+      visibility: ['visible']
+    }
+    // stroke never intercepts pointer events
+  },
+  visibleStroke: {
+    // fill never intercepts pointer events
+    'stroke-intercepts-iff': {
+      visibility: ['visible']
+    }
+  },
+  visible: {
+    'fill-intercepts-iff': {
+      visibility: ['visible']
+    },
+    'stroke-intercepts-iff': {
+      visibility: ['visible']
+    }
+  },
+  painted: {
+    'fill-intercepts-iff': {
+      'fill!': ['none']
+    },
+    'stroke-intercepts-iff': {
+      'stroke!': ['none']
+    }
+  },
+  fill: {
+    'fill-intercepts-iff': {
+      // fill always intercepts pointer events
+    }
+    // stroke never intercepts pointer events
+  },
+  stroke: {
+    // fill never intercepts pointer events
+    'stroke-intercepts-iff': {
+      // stroke always intercepts pointer events
+    }
+  },
+  all: {
+    'fill-intercepts-iff': {
+      // fill always intercepts pointer events
+    },
+    'stroke-intercepts-iff': {
+      // stroke always intercepts pointer events
+    }
+  },
+  none: {
+    // neither fill nor stroke intercept pointer events
+  }
+}
+
+/**
+ * Examine the current attribute values and return true if the specified target
+ * (fill or stroke) is expected to intercept events, or else return false.
+ */
+function hit_expected(target /* {stroke|fill} */, attributes)
 {
-  var svgDoc = document.getElementById('svg');
+  var intercepts_iff =
+    hit_conditions[attributes['pointer-events']][target + '-intercepts-iff'];
+
+  if (!intercepts_iff) {
+    return false; // never intercepts events
+  }
+
+  for (var attr in intercepts_iff) {
+    var vals = intercepts_iff[attr];  // must get this before we adjust 'attr'
+    var invert = false;
+    if (attr.substr(-1) == '!') {
+      invert = true;
+      attr = attr.substr(0, attr.length-1);
+    }
+    var match = vals.indexOf(attributes[attr]) > -1;
+    if (invert) {
+      match = !match;
+    }
+    if (!match) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function for_all_permutations(inputs, callback)
+{
+  var current_permutation = arguments[2] || {};
+  var index = arguments[3] || 0;
+
+  if (index < inputs.length) {
+    var name = inputs[index].name;
+    var values = inputs[index].values;
+    for (var i = 0; i < values.length; ++i) {
+      current_permutation[name] = values[i];
+      for_all_permutations(inputs, callback, current_permutation, index+1);
+    }
+    return;
+  }
+
+  callback(current_permutation);
+}
+
+function log_msg(target, id, attributes)
+{
+  var msg = 'Check if events are intercepted by '+target+' on '+id+' for';
+  for (var attr in attributes) {
+    msg += ' '+attr+'='+attributes[attr];
+  }
+  return msg;
+}
+
+function run_tests()
+{
   var div = document.getElementById("div");
-  var x = div.offsetLeft;
-  var y = div.offsetTop;
-  var good = document.getElementById('good');
-  var fo = document.getElementById('fo');
-  var elementFromPoint = document.elementFromPoint(55 + x, 55 + y);
-  is(good, elementFromPoint, 'pointer-events="all"');
-  elementFromPoint = document.elementFromPoint(205 + x, 55 + y);
-  is(good, elementFromPoint, 'foreignObject with clip-path');
-  elementFromPoint = document.elementFromPoint(205 + x + 20, 55 + y + 20);
-  is(fo, elementFromPoint, 'foreignObject with clip-path');
+  var dx = div.offsetLeft;
+  var dy = div.offsetTop;
+
+  var id, element, target;  // target is 'fill' or 'stroke'
+  var x, y;  // coordinates to hit test
+
+  function test_permutation(attributes) {
+    for (var attr in attributes) {
+      element.setAttribute(attr, attributes[attr]);
+    }
+    var hit = document.elementFromPoint(dx + x, dy + y) == element;
+    is(hit, hit_expected(target, attributes), log_msg(target, id, attributes));
+  }
+
+  // To reduce the chance of bogus results
+  function clear_attributes_for_next_test(inputs) {
+    for (var i = 0; i < inputs.length; ++i) {
+      element.removeAttribute(inputs[i].name);
+    }
+    element.setAttribute('fill', 'none');
+    element.setAttribute('stroke', 'none');
+  }
+
+  id = 'rect';
+  element = document.getElementById(id);
+
+  var target = 'fill';
+  x = 30;
+  y = 30;
+  for_all_permutations(hit_test_attr_values[target], test_permutation);
+  clear_attributes_for_next_test(hit_test_attr_values[target]);
+
+  var target = 'stroke';
+  x = 5;
+  y = 5;
+  for_all_permutations(hit_test_attr_values[target], test_permutation);
+  clear_attributes_for_next_test(hit_test_attr_values[target]);
 
   SimpleTest.finish();
 }
 
 ]]>
 </script>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=500174">Mozilla Bug 500174</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=619959">Mozilla Bug 619959</a>
 <p id="display"></p>
 <div id="content">
 
-  <div width="100%" height="1" id="div">
-  </div>
-  <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" id="svg">
-    <defs>
-      <clipPath id="clip">
-        <rect x="20" y="20" width="50" height="50"/>
-      </clipPath>
-    </defs>
-    <rect id="bad" width="100%" height="100%" fill="green"/>
-    <circle id="good" cx="50%" cy="50%" r="1" stroke-width="1000" fill="black" pointer-events="all"/>
-      <foreignObject id="fo" x="200" y="50" width="50" height="50" clip-path="url(#clip)">
-      <svg onload="run()">
-        <rect width="100%" height="100%" fill="green"/>
-      </svg>
-    </foreignObject>
+  <div width="100%" height="1" id="div"></div>
+
+  <svg xmlns="http://www.w3.org/2000/svg" id="svg">
+    <rect id="rect" x="10" y="10" width="40" height="40" stroke-width="20"/>
   </svg>
 
 </div>

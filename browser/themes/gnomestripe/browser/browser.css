@@ -910,8 +910,6 @@ toolbar[iconsize="small"] #feed-button {
 
 .urlbar-frontcap-and-textbox {
   -moz-appearance: none;
-  /* keep the URL bar content LTR */
-  direction: ltr;
 }
 
 .urlbar-history-dropmarker {
@@ -956,19 +954,6 @@ toolbar[iconsize="small"] #feed-button {
   color: GrayText;
 }
 
-#PopupAutoComplete,
-#PopupAutoCompleteRichResult {
-  direction: ltr !important;
-}
-
-#PopupAutoComplete:-moz-locale-dir(rtl) > tree > treerows {
-  direction: rtl;
-}
-
-#PopupAutoComplete .autocomplete-treebody {
-  direction: ltr;
-}
-
 /* over-link in location bar */
 
 .urlbar-over-link-layer {
@@ -977,17 +962,31 @@ toolbar[iconsize="small"] #feed-button {
 }
 
 .urlbar-origin-label {
-  padding: 0 0 0 4px;
+  padding-top: 0;
+  padding-bottom: 0;
+  -moz-padding-start: 4px;
+  -moz-padding-end: 0;
   margin: 0;
 }
 
 .urlbar-over-link-box {
   position: relative;
-  right: 0;
   color: GrayText;
-  padding: 0 5px 0 18px;
   min-height: 22px;
+  padding-top: 0;
+  padding-bottom: 0;
+  -moz-padding-start: 18px;
+  -moz-padding-end: 5px;
+}
+
+.urlbar-over-link-box:-moz-locale-dir(ltr) {
   background: url(chrome://browser/skin/urlbar-over-link-arrow.png) no-repeat left center;
+  right: 0;
+}
+
+.urlbar-over-link-box:-moz-locale-dir(rtl) {
+  background: url(chrome://browser/skin/urlbar-over-link-arrow-rtl.png) no-repeat right center;
+  left: 0;
 }
 
 .urlbar-over-link-host-label,
@@ -1289,6 +1288,10 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   list-style-image: url("chrome://browser/skin/Go-arrow.png");
 }
 
+#go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
+  -moz-transform: scaleX(-1);
+}
+
 /* Combined go/reload/stop button in location bar */
 
 #urlbar > toolbarbutton {
@@ -1299,14 +1302,22 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   padding: 0 3px;
   background-origin: border-box;
   border: none;
-  border-left: 1px solid rgba(0,0,0,.35);
+  -moz-border-start: 1px solid rgba(0,0,0,.35);
+}
+
+#urlbar:-moz-locale-dir(ltr) > toolbarbutton {
   border-top-right-radius: 2px;
   border-bottom-right-radius: 2px;
 }
 
+#urlbar:-moz-locale-dir(rtl) > toolbarbutton {
+  border-top-left-radius: 2px;
+  border-bottom-left-radius: 2px;
+}
+
 #urlbar > toolbarbutton:not([disabled]):active:hover {
-  padding-left: 4px;
-  border-left: none;
+  -moz-padding-start: 4px;
+  -moz-border-start: none;
   box-shadow: 0 0 6.5px rgba(0,0,0,.4) inset,
               0 0 2px rgba(0,0,0,.4) inset;
 }
@@ -1316,6 +1327,10 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   background-image: -moz-linear-gradient(rgb(143,219,69), rgb(115,177,57));
   box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
               -1px -1px 0 rgba(255,255,255,.2) inset;
+}
+
+#urlbar-go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
+  -moz-transform: scaleX(-1);
 }
 
 #urlbar-go-button:hover {
