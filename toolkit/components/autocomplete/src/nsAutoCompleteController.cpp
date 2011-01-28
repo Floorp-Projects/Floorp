@@ -331,9 +331,13 @@ nsAutoCompleteController::HandleStartComposition()
 
   PRBool isOpen = PR_FALSE;
   input->GetPopupOpen(&isOpen);
-  if (isOpen)
+  if (isOpen) {
     ClosePopup();
-  mPopupClosedByCompositionStart = isOpen;
+
+    PRBool stillOpen = PR_FALSE;
+    input->GetPopupOpen(&stillOpen);
+    mPopupClosedByCompositionStart = !stillOpen;
+  }
   return NS_OK;
 }
 
