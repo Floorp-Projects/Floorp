@@ -83,8 +83,8 @@
       </div>
     </div>
 
-    <div id="about">
-      <img src="chrome://browser/skin/images/mozilla-32.png"/> <a href="http://www.firefox.com/m/feedback/">&aboutHome.giveFeedback;</a>
+    <div id="footer-wrapper">
+      <span id="feedback" style="width: &aboutHome.footerWidth;" class="section-row" onclick="openLink(this);" role="button">&aboutHome.giveFeedback;</span><span id="support" style="width: &aboutHome.footerWidth;" class="section-row" onclick="openLink(this);" role="button">&aboutHome.getHelp;</span>
     </div>
   </div>
 
@@ -98,6 +98,28 @@
   <script type="application/javascript;version=1.8"><![CDATA[
     let Ci = Components.interfaces, Cc = Components.classes, Cu = Components.utils;
     let gChromeWin = null;
+
+    let links = [
+      {id: "support", pref: "app.support.baseURL"},
+      {id: "feedback", pref: "app.feedbackURL"}
+    ];
+
+    function setupLinks() {
+      try {
+        let formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].getService(Ci.nsIURLFormatter);
+        links.forEach(function(link) {
+          let element = document.getElementById(link.id);
+          if (element) {
+            let url = formatter.formatURLPref(link.pref);
+            element.setAttribute("href", url);
+          }
+        });
+      } catch (ex) {}
+    }
+
+    function openLink(aElement) {
+      openTabs([aElement.getAttribute("href")]);
+    }
 
     function getChromeWin() {
       if (!gChromeWin) {
@@ -114,6 +136,7 @@
     }
 
     function init() {
+      setupLinks();
       initTabs();
       initAddons();
     }
