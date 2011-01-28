@@ -791,15 +791,12 @@ nsAccessible*
 nsAccessibilityService::GetAccessibleOrContainer(nsINode* aNode,
                                                  nsIWeakReference* aWeakShell)
 {
-  if (!aNode || !aNode->IsInDoc())
+  if (!aNode)
     return nsnull;
 
-  nsINode* currNode = aNode;
-  nsAccessible* accessible = nsnull;
-  while (!(accessible = GetAccessibleInWeakShell(currNode, aWeakShell)) &&
-         (currNode = currNode->GetNodeParent()));
-
-  return accessible;
+  // XXX: weak shell is ignored until multiple shell documents are supported.
+  nsDocAccessible* document = GetDocAccessible(aNode->GetOwnerDoc());
+  return document ? document->GetAccessibleOrContainer(aNode) : nsnull;
 }
 
 static PRBool HasRelatedContent(nsIContent *aContent)
