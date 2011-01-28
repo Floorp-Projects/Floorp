@@ -2166,6 +2166,17 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
   return mDPI;
 }
 
+- (BOOL)respondsToSelector:(SEL)aSelector
+{
+  // Claim the window doesn't respond to this so that the system
+  // doesn't steal keyboard equivalents for it. Bug 613710.
+  if (aSelector == @selector(cancelOperation:)) {
+    return NO;
+  }
+
+  return [super respondsToSelector:aSelector];
+}
+
 - (void) doCommandBySelector:(SEL)aSelector
 {
   // We override this so that it won't beep if it can't act.
