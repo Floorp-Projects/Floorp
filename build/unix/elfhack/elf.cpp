@@ -234,19 +234,19 @@ Elf::Elf(std::ifstream &file)
     s.sh_size = s.sh_entsize * ehdr->e_phnum;
     phdr_section = new ElfSection(s, NULL, NULL);
 
-    phdr_section->insertAfter(ehdr);
+    phdr_section->insertAfter(ehdr, false);
 
-    sections[1]->insertAfter(phdr_section);
+    sections[1]->insertAfter(phdr_section, false);
     for (int i = 2; i < ehdr->e_shnum; i++) {
         // TODO: this should be done in a better way
         if ((shdr_section->getPrevious() == NULL) && (shdr[i]->sh_offset > ehdr->e_shoff)) {
-            shdr_section->insertAfter(sections[i - 1]);
-            sections[i]->insertAfter(shdr_section);
+            shdr_section->insertAfter(sections[i - 1], false);
+            sections[i]->insertAfter(shdr_section, false);
         } else
-            sections[i]->insertAfter(sections[i - 1]);
+            sections[i]->insertAfter(sections[i - 1], false);
     }
     if (shdr_section->getPrevious() == NULL)
-        shdr_section->insertAfter(sections[ehdr->e_shnum - 1]);
+        shdr_section->insertAfter(sections[ehdr->e_shnum - 1], false);
 
     tmp_file = NULL;
     tmp_shdr = NULL;
@@ -273,7 +273,6 @@ Elf::Elf(std::ifstream &file)
             phdr_section->getShdr().sh_addr += phdr.p_vaddr;
             segment->addSection(ehdr);
             segment->addSection(phdr_section);
-            ehdr->markDirty();
         }
         if (phdr.p_type == PT_PHDR)
             segment->addSection(phdr_section);
@@ -381,7 +380,7 @@ void Elf::write(std::ofstream &file)
             ehdr->e_shnum = section->getIndex() + 1;
         section->getShdr().sh_name = eh_shstrndx->getStrIndex(section->getName());
     }
-    phdr_section->getNext()->markDirty();
+    ehdr->markDirty();
     // Adjust PT_LOAD segments
     int i = 0;
     for (std::vector<ElfSegment *>::iterator seg = segments.begin(); seg != segments.end(); seg++, i++) {
