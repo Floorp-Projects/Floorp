@@ -1133,8 +1133,8 @@ var Browser = {
       case "Browser:KeyPress":
         let event = document.createEvent("KeyEvents");
         event.initKeyEvent("keypress", true, true, null,
-                        json.ctrlKey, json.altKey, json.shiftKey, json.metaKey,
-                        json.keyCode, json.charCode)
+                           json.ctrlKey, json.altKey, json.shiftKey, json.metaKey,
+                           json.keyCode, json.charCode);
         document.getElementById("mainKeyset").dispatchEvent(event);
         break;
 
@@ -1710,26 +1710,25 @@ function ContentCustomKeySender(container) {
 
 ContentCustomKeySender.prototype = {
   handleEvent: function handleEvent(aEvent) {
-    if (Elements.contentShowing.getAttribute("disabled"))
+    if (Elements.contentShowing.getAttribute("disabled") == "true")
       return;
 
     let browser = getBrowser();
-    if (browser && browser.getAttribute("remote") == "true") {
+    if (browser && browser.active && browser.getAttribute("remote") == "true") {
       aEvent.stopPropagation();
       aEvent.preventDefault();
 
-      browser.messageManager.sendAsyncMessage("Browser:KeyEvent", {
-        type: aEvent.type,
-        keyCode: aEvent.keyCode,
-        charCode: (aEvent.type != "keydown") ? aEvent.charCode : null,
-        modifiers: this._parseModifiers(aEvent)
-      });
+      let fl = browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
+      fl.sendCrossProcessKeyEvent(aEvent.type,
+                                  aEvent.keyCode,
+                                  (aEvent.type != "keydown") ? aEvent.charCode : null,
+                                  this._parseModifiers(aEvent));
     }
   },
 
   _parseModifiers: function _parseModifiers(aEvent) {
     const masks = Ci.nsIDOMNSEvent;
-    var mval = 0;
+    let mval = 0;
     if (aEvent.shiftKey)
       mval |= masks.SHIFT_MASK;
     if (aEvent.ctrlKey)
