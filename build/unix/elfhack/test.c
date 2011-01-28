@@ -107,6 +107,13 @@ const char *strings2[] = {
 #undef DEF
 };
 
+static int ret = 1;
+
+__attribute__((visibility("default"))) int print_status() {
+    fprintf(stderr, "%s\n", ret ? "FAIL" : "PASS");
+    return ret;
+}
+
 /* On ARM, this creates a .tbss section before .init_array, which
  * elfhack could then pick instead of .init_array */
 __thread int foo;
@@ -114,19 +121,14 @@ __thread int foo;
 __attribute__((constructor)) void end_test() {
     static int count = 0;
     /* Only exit when both constructors have been called */
-    if (++count == 2) {
-        fprintf(stderr, "PASS\n");
-        exit(0);
-    }
+    if (++count == 2)
+        ret = 0;
 }
 
 __attribute__((constructor)) void test() {
     int i = 0, j = 0;
 #define DEF_(a,i,w) \
-    if (a[i++] != str_ ## w) { \
-        fprintf(stderr, "FAIL\n"); \
-        exit(1); \
-    }
+    if (a[i++] != str_ ## w) return;
 #define DEF(w) DEF_(strings,i,w)
 #include "test.c"
 #include "test.c"
