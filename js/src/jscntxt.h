@@ -47,7 +47,7 @@
 
 /* Gross special case for Gecko, which defines malloc/calloc/free. */
 #ifdef mozilla_mozalloc_macro_wrappers_h
-#  define JS_UNDEFD_MOZALLOC_WRAPPERS
+#  define JS_CNTXT_UNDEFD_MOZALLOC_WRAPPERS
 /* The "anti-header" */
 #  include "mozilla/mozalloc_undef_macro_wrappers.h"
 #endif
@@ -1176,15 +1176,6 @@ struct JSRuntime {
     const JSStructuredCloneCallbacks *structuredCloneCallbacks;
 
     /*
-     * Shared scope property tree, and arena-pool for allocating its nodes.
-     * This really should be free of all locking overhead and allocated in
-     * thread-local storage, hence the JS_PROPERTY_TREE(cx) macro.
-     */
-    js::PropertyTree    propertyTree;
-
-#define JS_PROPERTY_TREE(cx) ((cx)->runtime->propertyTree)
-
-    /*
      * The propertyRemovals counter is incremented for every JSObject::clear,
      * and for each JSObject::remove method call that frees a slot in the given
      * object. See js_NativeGet and js_NativeSet in jsobj.cpp.
@@ -1241,17 +1232,6 @@ struct JSRuntime {
     JSAtomState         atomState;
 
     /*
-     * Runtime-shared empty scopes for well-known built-in objects that lack
-     * class prototypes (the usual locus of an emptyShape). Mnemonic: ABCDEW
-     */
-    js::EmptyShape      *emptyArgumentsShape;
-    js::EmptyShape      *emptyBlockShape;
-    js::EmptyShape      *emptyCallShape;
-    js::EmptyShape      *emptyDeclEnvShape;
-    js::EmptyShape      *emptyEnumeratorShape;
-    js::EmptyShape      *emptyWithShape;
-
-    /*
      * Various metering fields are defined at the end of JSRuntime. In this
      * way there is no need to recompile all the code that refers to other
      * fields of JSRuntime after enabling the corresponding metering macro.
@@ -1276,18 +1256,12 @@ struct JSRuntime {
     jsrefcount          nonInlineCalls;
     jsrefcount          constructs;
 
-    /* Property metering. */
     jsrefcount          liveObjectProps;
     jsrefcount          liveObjectPropsPreSweep;
-    jsrefcount          totalObjectProps;
-    jsrefcount          livePropTreeNodes;
-    jsrefcount          duplicatePropTreeNodes;
-    jsrefcount          totalPropTreeNodes;
-    jsrefcount          propTreeKidsChunks;
-    jsrefcount          liveDictModeNodes;
 
     /*
-     * NB: emptyShapes is init'ed iff at least one of these envars is set:
+     * NB: emptyShapes (in JSCompartment) is init'ed iff at least one
+     * of these envars is set:
      *
      *  JS_PROPTREE_STATFILE  statistics on the property tree forest
      *  JS_PROPTREE_DUMPFILE  all paths in the property tree forest
@@ -1296,12 +1270,6 @@ struct JSRuntime {
     const char          *propTreeDumpFilename;
 
     bool meterEmptyShapes() const { return propTreeStatFilename || propTreeDumpFilename; }
-
-    typedef js::HashSet<js::EmptyShape *,
-                        js::DefaultHasher<js::EmptyShape *>,
-                        js::SystemAllocPolicy> EmptyShapeSet;
-
-    EmptyShapeSet       emptyShapes;
 
     /* String instrumentation. */
     jsrefcount          liveStrings;
@@ -1519,12 +1487,6 @@ namespace js {
 
 class AutoGCRooter;
 
-#define JS_HAS_OPTION(cx,option)        (((cx)->options & (option)) != 0)
-#define JS_HAS_STRICT_OPTION(cx)        JS_HAS_OPTION(cx, JSOPTION_STRICT)
-#define JS_HAS_WERROR_OPTION(cx)        JS_HAS_OPTION(cx, JSOPTION_WERROR)
-#define JS_HAS_COMPILE_N_GO_OPTION(cx)  JS_HAS_OPTION(cx, JSOPTION_COMPILE_N_GO)
-#define JS_HAS_ATLINE_OPTION(cx)        JS_HAS_OPTION(cx, JSOPTION_ATLINE)
-
 static inline bool
 OptionsHasXML(uint32 options)
 {
@@ -1553,9 +1515,10 @@ OptionsSameVersionFlags(uint32 self, uint32 other)
  * become invalid.
  */
 namespace VersionFlags {
-static const uint32 MASK        = 0x0FFF; /* see JSVersion in jspubtd.h */
-static const uint32 HAS_XML     = 0x1000; /* flag induced by XML option */
-static const uint32 ANONFUNFIX  = 0x2000; /* see jsapi.h comment on JSOPTION_ANONFUNFIX */
+static const uintN MASK         = 0x0FFF; /* see JSVersion in jspubtd.h */
+static const uintN HAS_XML      = 0x1000; /* flag induced by XML option */
+static const uintN ANONFUNFIX   = 0x2000; /* see jsapi.h comment on JSOPTION_ANONFUNFIX */
+static const uintN FULL_MASK    = 0x3FFF;
 }
 
 static inline JSVersion
@@ -1607,10 +1570,33 @@ VersionExtractFlags(JSVersion version)
     return JSVersion(uint32(version) & ~VersionFlags::MASK);
 }
 
+static inline void
+VersionCopyFlags(JSVersion *version, JSVersion from)
+{
+    *version = JSVersion(VersionNumber(*version) | VersionExtractFlags(from));
+}
+
 static inline bool
 VersionHasFlags(JSVersion version)
 {
     return !!VersionExtractFlags(version);
+}
+
+static inline uintN
+VersionFlagsToOptions(JSVersion version)
+{
+    uintN copts = (VersionHasXML(version) ? JSOPTION_XML : 0) |
+                  (VersionHasAnonFunFix(version) ? JSOPTION_ANONFUNFIX : 0);
+    JS_ASSERT((copts & JSCOMPILEOPTION_MASK) == copts);
+    return copts;
+}
+
+static inline JSVersion
+OptionFlagsToVersion(uintN options, JSVersion version)
+{
+    VersionSetXML(&version, OptionsHasXML(options));
+    VersionSetAnonFunFix(&version, OptionsHasAnonFunFix(options));
+    return version;
 }
 
 static inline bool
@@ -1642,10 +1628,10 @@ struct JSContext
     JSBool              throwing;           /* is there a pending exception? */
     js::Value           exception;          /* most-recently-thrown exception */
 
-  public:
-    /* Per-context options. */
-    uint32              options;            /* see jsapi.h for JSOPTION_* */
+    /* Per-context run options. */
+    uintN               runOptions;            /* see jsapi.h for JSOPTION_* */
 
+  public:
     /* Locale specific callbacks for string conversion. */
     JSLocaleCallbacks   *localeCallbacks;
 
@@ -1817,7 +1803,7 @@ struct JSContext
         return fp;
     }
 
-  private:
+  public:
     /*
      * The default script compilation version can be set iff there is no code running.
      * This typically occurs via the JSAPI right after a context is constructed.
@@ -1833,18 +1819,18 @@ struct JSContext
         hasVersionOverride = true;
     }
 
-  public:
-    void clearVersionOverride() {
-        hasVersionOverride = false;
-    }
-    
-    bool isVersionOverridden() const {
-        return hasVersionOverride;
-    }
-
     /* Set the default script compilation version. */
     void setDefaultVersion(JSVersion version) {
         defaultVersion = version;
+    }
+
+    void clearVersionOverride() { hasVersionOverride = false; }
+    JSVersion getDefaultVersion() const { return defaultVersion; }
+    bool isVersionOverridden() const { return hasVersionOverride; }
+
+    JSVersion getVersionOverride() const {
+        JS_ASSERT(isVersionOverridden());
+        return versionOverride;
     }
 
     /*
@@ -1860,6 +1846,23 @@ struct JSContext
         return true;
     }
 
+  private:
+    /*
+     * If there is no code currently executing, turn the override version into
+     * the default version.
+     *
+     * NB: the only time the version is potentially capable of migrating is
+     * on return from the Execute or ExternalInvoke paths as they call through
+     * JSContext::popSegmentAndFrame.
+     */
+    void maybeMigrateVersionOverride() {
+        if (JS_LIKELY(!isVersionOverridden() || currentSegment))
+            return;
+        defaultVersion = versionOverride;
+        clearVersionOverride();
+    }
+
+  public:
     /*
      * Return:
      * - The override version, if there is an override version.
@@ -1884,29 +1887,33 @@ struct JSContext
         return defaultVersion;
     }
 
-    void optionFlagsToVersion(JSVersion *version) const {
-        js::VersionSetXML(version, js::OptionsHasXML(options));
-        js::VersionSetAnonFunFix(version, js::OptionsHasAnonFunFix(options));
-    }
-
-    void checkOptionVersionSync() const {
-#ifdef DEBUG
-        JSVersion version = findVersion();
-        JS_ASSERT(js::VersionHasXML(version) == js::OptionsHasXML(options));
-        JS_ASSERT(js::VersionHasAnonFunFix(version) == js::OptionsHasAnonFunFix(options));
-#endif
+    void setRunOptions(uintN ropts) {
+        JS_ASSERT((ropts & JSRUNOPTION_MASK) == ropts);
+        runOptions = ropts;
     }
 
     /* Note: may override the version. */
-    void syncOptionsToVersion() {
-        JSVersion version = findVersion();
-        if (js::OptionsHasXML(options) == js::VersionHasXML(version) &&
-            js::OptionsHasAnonFunFix(options) == js::VersionHasAnonFunFix(version))
+    void setCompileOptions(uintN newcopts) {
+        JS_ASSERT((newcopts & JSCOMPILEOPTION_MASK) == newcopts);
+        if (JS_LIKELY(getCompileOptions() == newcopts))
             return;
-        js::VersionSetXML(&version, js::OptionsHasXML(options));
-        js::VersionSetAnonFunFix(&version, js::OptionsHasAnonFunFix(options));
-        maybeOverrideVersion(version);
+        JSVersion version = findVersion();
+        JSVersion newVersion = js::OptionFlagsToVersion(newcopts, version);
+        maybeOverrideVersion(newVersion);
     }
+
+    uintN getRunOptions() const { return runOptions; }
+    uintN getCompileOptions() const { return js::VersionFlagsToOptions(findVersion()); }
+    uintN allOptions() const { return getRunOptions() | getCompileOptions(); }
+
+    bool hasRunOption(uintN ropt) const {
+        JS_ASSERT((ropt & JSRUNOPTION_MASK) == ropt);
+        return !!(runOptions & ropt);
+    }
+
+    bool hasStrictOption() const { return hasRunOption(JSOPTION_STRICT); }
+    bool hasWErrorOption() const { return hasRunOption(JSOPTION_WERROR); }
+    bool hasAtLineOption() const { return hasRunOption(JSOPTION_ATLINE); }
 
 #ifdef JS_THREADSAFE
     JSThread            *thread;
@@ -3175,19 +3182,19 @@ js_IsPropertyCacheDisabled(JSContext *cx)
 }
 
 static JS_INLINE uint32
-js_RegenerateShapeForGC(JSContext *cx)
+js_RegenerateShapeForGC(JSRuntime *rt)
 {
-    JS_ASSERT(cx->runtime->gcRunning);
-    JS_ASSERT(cx->runtime->gcRegenShapes);
+    JS_ASSERT(rt->gcRunning);
+    JS_ASSERT(rt->gcRegenShapes);
 
     /*
      * Under the GC, compared with js_GenerateShape, we don't need to use
      * atomic increments but we still must make sure that after an overflow
      * the shape stays such.
      */
-    uint32 shape = cx->runtime->shapeGen;
+    uint32 shape = rt->shapeGen;
     shape = (shape + 1) | (shape & js::SHAPE_OVERFLOW_BIT);
-    cx->runtime->shapeGen = shape;
+    rt->shapeGen = shape;
     return shape;
 }
 
@@ -3353,7 +3360,7 @@ NewIdArray(JSContext *cx, jsint length);
 #pragma warning(pop)
 #endif
 
-#ifdef JS_UNDEFD_MOZALLOC_WRAPPERS
+#ifdef JS_CNTXT_UNDEFD_MOZALLOC_WRAPPERS
 #  include "mozilla/mozalloc_macro_wrappers.h"
 #endif
 

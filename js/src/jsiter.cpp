@@ -427,7 +427,7 @@ NewIteratorObject(JSContext *cx, uintN flags)
         if (!obj)
             return false;
         obj->init(cx, &js_IteratorClass, NULL, NULL, NULL, false);
-        obj->setMap(cx->runtime->emptyEnumeratorShape);
+        obj->setMap(cx->compartment->emptyEnumeratorShape);
         return obj;
     }
 

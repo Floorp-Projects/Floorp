@@ -811,19 +811,6 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
             ok = js_InitRuntimeScriptState(rt);
         if (ok)
             ok = js_InitRuntimeNumberState(cx);
-        if (ok) {
-            /*
-             * Ensure that the empty scopes initialized by
-             * Shape::initRuntimeState get the desired special shapes.
-             * (The rt->state dance above guarantees that this abuse of
-             * rt->shapeGen is thread-safe.)
-             */
-            uint32 shapeGen = rt->shapeGen;
-            rt->shapeGen = 0;
-            ok = Shape::initRuntimeState(cx);
-            if (rt->shapeGen < shapeGen)
-                rt->shapeGen = shapeGen;
-        }
 
 #ifdef JS_THREADSAFE
         JS_EndRequest(cx);
@@ -1045,7 +1032,6 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
                 JS_BeginRequest(cx);
 #endif
 
-            Shape::finishRuntimeState(cx);
             js_FinishRuntimeNumberState(cx);
 
             /* Unpin all common atoms before final GC. */
@@ -1404,18 +1390,18 @@ checkReportFlags(JSContext *cx, uintN *flags)
         JSStackFrame *fp = js_GetScriptedCaller(cx, NULL);
         if (fp && fp->script()->strictModeCode)
             *flags &= ~JSREPORT_WARNING;
-        else if (JS_HAS_STRICT_OPTION(cx))
+        else if (cx->hasStrictOption())
             *flags |= JSREPORT_WARNING;
         else
             return true;
     } else if (JSREPORT_IS_STRICT(*flags)) {
         /* Warning/error only when JSOPTION_STRICT is set. */
-        if (!JS_HAS_STRICT_OPTION(cx))
+        if (!cx->hasStrictOption())
             return true;
     }
 
     /* Warnings become errors when JSOPTION_WERROR is set. */
-    if (JSREPORT_IS_WARNING(*flags) && JS_HAS_WERROR_OPTION(cx))
+    if (JSREPORT_IS_WARNING(*flags) && cx->hasWErrorOption())
         *flags &= ~JSREPORT_WARNING;
 
     return false;
@@ -1988,7 +1974,8 @@ DSTOffsetCache::DSTOffsetCache()
 }
 
 JSContext::JSContext(JSRuntime *rt)
-  : runtime(rt),
+  : hasVersionOverride(false),
+    runtime(rt),
     compartment(NULL),
     regs(NULL),
     busyArrays()
@@ -2073,6 +2060,7 @@ JSContext::popSegmentAndFrame()
         JS_ASSERT(regs->fp->prev() == NULL);
         setCurrentRegs(NULL);
     }
+    maybeMigrateVersionOverride();
 }
 
 void
@@ -2273,14 +2261,14 @@ void
 JSContext::updateJITEnabled()
 {
 #ifdef JS_TRACER
-    traceJitEnabled = ((options & JSOPTION_JIT) &&
+    traceJitEnabled = ((runOptions & JSOPTION_JIT) &&
                        !IsJITBrokenHere() &&
                        (debugHooks == &js_NullDebugHooks ||
                         (debugHooks == &runtime->globalDebugHooks &&
                          !runtime->debuggerInhibitsJIT())));
 #endif
 #ifdef JS_METHODJIT
-    methodJitEnabled = (options & JSOPTION_METHODJIT) &&
+    methodJitEnabled = (runOptions & JSOPTION_METHODJIT) &&
                        !IsJITBrokenHere()
 # if defined JS_CPU_X86 || defined JS_CPU_X64
                        && JSC::MacroAssemblerX86Common::getSSEState() >=
@@ -2288,7 +2276,7 @@ JSContext::updateJITEnabled()
 # endif
                         ;
 #ifdef JS_TRACER
-    profilingEnabled = (options & JSOPTION_PROFILING) && traceJitEnabled && methodJitEnabled;
+    profilingEnabled = (runOptions & JSOPTION_PROFILING) && traceJitEnabled && methodJitEnabled;
 #endif
 #endif
 }

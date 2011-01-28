@@ -40,6 +40,14 @@
 
 #ifndef jsobj_h___
 #define jsobj_h___
+
+/* Gross special case for Gecko, which defines malloc/calloc/free. */
+#ifdef mozilla_mozalloc_macro_wrappers_h
+#  define JS_OBJ_UNDEFD_MOZALLOC_WRAPPERS
+/* The "anti-header" */
+#  include "mozilla/mozalloc_undef_macro_wrappers.h"
+#endif
+
 /*
  * JS object definitions.
  *
@@ -307,6 +315,10 @@ struct JSObject : js::gc::Cell {
      * list it links among properties in this scope. The {remove,insert} pair
      * for DictionaryProperties assert that the scope is in dictionary mode and
      * any reachable properties are flagged as dictionary properties.
+     *
+     * For native objects, this field is always a Shape. For non-native objects,
+     * it points to the singleton sharedNonNative JSObjectMap, whose shape field
+     * is SHAPELESS.
      *
      * NB: these private methods do *not* update this scope's shape to track
      * lastProp->shape after they finish updating the linked list in the case
@@ -1864,8 +1876,13 @@ extern bool
 EvalKernel(JSContext *cx, uintN argc, js::Value *vp, EvalType evalType, JSStackFrame *caller,
            JSObject *scopeobj);
 
-extern bool
+extern JS_FRIEND_API(bool)
 IsBuiltinEvalFunction(JSFunction *fun);
 
 }
+
+#ifdef JS_OBJ_UNDEFD_MOZALLOC_WRAPPERS
+#  include "mozilla/mozalloc_macro_wrappers.h"
+#endif
+
 #endif /* jsobj_h___ */
