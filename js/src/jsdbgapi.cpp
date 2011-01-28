@@ -595,6 +595,12 @@ DropWatchPointAndUnlock(JSContext *cx, JSWatchPoint *wp, uintN flag)
         return ok;
     }
 
+    /*
+     * Switch to the same compartment as the watch point, since changeProperty, below,
+     * needs to have a compartment.
+     */
+    SwitchToCompartment sc(cx, wp->object);
+
     /* Remove wp from the list, then restore wp->shape->setter from wp. */
     ++rt->debuggerMutations;
     JS_REMOVE_LINK(&wp->links);
@@ -1483,8 +1489,8 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fp,
      */
     JSScript *script = Compiler::compileScript(cx, scobj, fp, js_StackFramePrincipals(cx, fp),
                                                TCF_COMPILE_N_GO, chars, length,
-                                               filename, lineno, NULL,
-                                               UpvarCookie::UPVAR_LEVEL_LIMIT);
+                                               filename, lineno, cx->findVersion(),
+                                               NULL, UpvarCookie::UPVAR_LEVEL_LIMIT);
 
     if (!script)
         return false;
