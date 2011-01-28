@@ -3242,18 +3242,7 @@ nsJSContext::ClearScope(void *aGlobalObj, PRBool aClearFromProtoChain)
       JS_ClearPendingException(mContext);
     }
 
-    // Hack fix for bug 611653. Originally, this always called JS_ClearScope,
-    // which was required to avoid leaks. But for native objects, the JS
-    // engine has an optimization that requires that permanent properties of
-    // the global object are never deleted. So instead, we call a new special
-    // API that clears the values of the global, thus avoiding leaks without
-    // deleting any properties.
-    if (obj->isNative()) {
-      js_UnbrandAndClearSlots(mContext, obj);
-    } else {
-      JS_ClearScope(mContext, obj);
-    }
-
+    JS_ClearScope(mContext, obj);
     if (xpc::WrapperFactory::IsXrayWrapper(obj)) {
       JS_ClearScope(mContext, &obj->getProxyExtra().toObject());
     }
