@@ -336,8 +336,7 @@ PlacesTreeView.prototype = {
         if (isopen != curChild.containerOpen)
           aToOpen.push(curChild);
         else if (curChild.containerOpen && curChild.childCount > 0)
-          rowsInserted += this._buildVisibleSection(curChild, aToOpen,
-                                                    row + 1);
+          rowsInserted += this._buildVisibleSection(curChild, row + 1, aToOpen);
       }
     }
 

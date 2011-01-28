@@ -66,9 +66,9 @@
             <xul:hbox anonid="over-link-box" class="urlbar-over-link-box"
                       xbl:inherits="overlinkstate" align="center">
               <xul:label anonid="over-link-host-label"
-                         class="urlbar-over-link-host-label"/>
+                         class="urlbar-over-link-host-label uri-element-right-align"/>
               <xul:label anonid="over-link-path-label"
-                         class="urlbar-over-link-path-label" flex="1"/>
+                         class="urlbar-over-link-path-label uri-element-right-align" flex="1"/>
             </xul:hbox>
           </xul:scrollbox>
           <xul:hbox anonid="textbox-container"
@@ -82,7 +82,7 @@
                 <children/>
               </xul:hbox>
               <html:input anonid="input"
-                          class="autocomplete-textbox urlbar-input textbox-input"
+                          class="autocomplete-textbox urlbar-input textbox-input uri-element-right-align"
                           flex="1" allowevents="true"
                           xbl:inherits="tooltiptext=inputtooltiptext,onfocus,onblur,value,type,maxlength,disabled,size,readonly,placeholder,tabindex,accesskey"/>
             </xul:hbox>
@@ -1334,9 +1334,6 @@
       <handler event="mouseover"><![CDATA[
         if (this.getAttribute("active") != "true" &&
             this.getAttribute("disabled") != "true") {
-          if (this._parentMenupopup._currentPopup)
-            this._parentMenupopup._currentPopup.hidePopup();
-
           this.setAttribute("active", "true");
 
           let self = this;
@@ -1363,6 +1360,12 @@
       <handler event="popuphidden"><![CDATA[
         if (event.target == this.firstChild)
           this.removeAttribute("active");
+      ]]></handler>
+
+      <handler event="popupshowing"><![CDATA[
+        if (event.target == this.firstChild &&
+            this._parentMenupopup._currentPopup)
+          this._parentMenupopup._currentPopup.hidePopup();
       ]]></handler>
 
       <handler event="click" phase="capturing"><![CDATA[

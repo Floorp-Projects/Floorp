@@ -420,7 +420,7 @@ protected:
 
     PRBool SafeToCreateCanvas3DContext(nsHTMLCanvasElement *canvasElement);
     PRBool InitAndValidateGL();
-    PRBool ValidateBuffers(PRUint32 count);
+    PRBool ValidateBuffers(PRInt32* maxAllowedCount, const char *info);
     PRBool ValidateCapabilityEnum(WebGLenum cap, const char *info);
     PRBool ValidateBlendEquationEnum(WebGLenum cap, const char *info);
     PRBool ValidateBlendFuncDstEnum(WebGLenum mode, const char *info);
@@ -723,7 +723,7 @@ public:
     // the buffer starting at given offset, consisting of given count of elements. The type T is the type
     // to interprete the array elements as, must be GLushort or GLubyte.
     template<typename T>
-    T FindMaximum(GLuint count, GLuint byteOffset)
+    PRInt32 FindMaxElementInSubArray(GLuint count, GLuint byteOffset)
     {
         const T* start = reinterpret_cast<T*>(reinterpret_cast<size_t>(mData) + byteOffset);
         const T* stop = start + count;
@@ -734,6 +734,31 @@ public:
         return result;
     }
 
+    void InvalidateCachedMaxElements() {
+      mHasCachedMaxUbyteElement = PR_FALSE;
+      mHasCachedMaxUshortElement = PR_FALSE;
+    }
+
+    PRInt32 FindMaxUbyteElement() {
+      if (mHasCachedMaxUbyteElement) {
+        return mCachedMaxUbyteElement;
+      } else {
+        mHasCachedMaxUbyteElement = PR_TRUE;
+        mCachedMaxUbyteElement = FindMaxElementInSubArray<GLubyte>(mByteLength, 0);
+        return mCachedMaxUbyteElement;
+      }
+    }
+
+    PRInt32 FindMaxUshortElement() {
+      if (mHasCachedMaxUshortElement) {
+        return mCachedMaxUshortElement;
+      } else {
+        mHasCachedMaxUshortElement = PR_TRUE;
+        mCachedMaxUshortElement = FindMaxElementInSubArray<GLshort>(mByteLength>>1, 0);
+        return mCachedMaxUshortElement;
+      }
+    }
+
     NS_DECL_ISUPPORTS
     NS_DECL_NSIWEBGLBUFFER
 protected:
@@ -741,6 +766,12 @@ protected:
     PRBool mDeleted;
     GLuint mByteLength;
     GLenum mTarget;
+
+    PRUint8 mCachedMaxUbyteElement;
+    PRBool mHasCachedMaxUbyteElement;
+    PRUint16 mCachedMaxUshortElement;
+    PRBool mHasCachedMaxUshortElement;
+    
     void* mData; // in the case of an Element Array Buffer, we keep a copy.
 };
 

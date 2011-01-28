@@ -72,9 +72,6 @@ public:
     virtual PRBool IsValid();
 
     gfxFloat GetAdjustedSize() {
-        if (!mInitialized) {
-            Initialize();
-        }
         return mAdjustedSize;
     }
 
@@ -93,8 +90,6 @@ protected:
 
     virtual void CreatePlatformShaper();
 
-    void Initialize(); // creates IDWriteFontFace and metrics
-
     void ComputeMetrics();
 
     PRBool HasBitmapStrikeForSize(PRUint32 aSize);
@@ -109,7 +104,6 @@ protected:
     cairo_font_face_t *mCairoFontFace;
     cairo_scaled_font_t *mCairoScaledFont;
 
-    PRBool                     mInitialized;
     gfxFont::Metrics          *mMetrics;
 
     // cache of glyph widths in 16.16 fixed-point pixels

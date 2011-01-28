@@ -57,9 +57,13 @@
 #include "mozilla/Services.h"
 #include "nsThreadUtils.h"
 #include "nsNetUtil.h"
+#include "nsContentUtils.h"
 
 // Initial size for the cache holding visited status observers.
 #define VISIT_OBSERVERS_INITIAL_CACHE_SIZE 128
+
+// Topic used to notify that work in mozIAsyncHistory::updatePlaces is done.
+#define TOPIC_UPDATEPLACES_COMPLETE "places-updatePlaces-complete"
 
 using namespace mozilla::dom;
 
@@ -87,6 +91,7 @@ struct VisitData {
   , typed(false)
   , transitionType(PR_UINT32_MAX)
   , visitTime(0)
+  , titleChanged(false)
   {
     guid.SetIsVoid(PR_TRUE);
     title.SetIsVoid(PR_TRUE);
@@ -101,6 +106,7 @@ struct VisitData {
   , typed(false)
   , transitionType(PR_UINT32_MAX)
   , visitTime(0)
+  , titleChanged(false)
   {
     (void)aURI->GetSpec(spec);
     (void)GetReversedHostname(aURI, revHost);
@@ -159,14 +165,166 @@ struct VisitData {
   bool typed;
   PRUint32 transitionType;
   PRTime visitTime;
+
+  /**
+   * Stores the title.  If this is empty (IsEmpty() returns true), then the
+   * title should be removed from the Place.  If the title is void (IsVoid()
+   * returns true), then no title has been set on this object, and titleChanged
+   * should remain false.
+   */
   nsString title;
+
   nsCString referrerSpec;
+
+  // TODO bug 626836 hook up hidden and typed change tracking too!
+  bool titleChanged;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Anonymous Helpers
 
 namespace {
+
+/**
+ * Obtains an nsIURI from the "uri" property of a JSObject.
+ *
+ * @param aCtx
+ *        The JSContext for aObject.
+ * @param aObject
+ *        The JSObject to get the URI from.
+ * @param aProperty
+ *        The name of the property to get the URI from.
+ * @return the URI if it exists.
+ */
+already_AddRefed<nsIURI>
+GetURIFromJSObject(JSContext* aCtx,
+                   JSObject* aObject,
+                   const char* aProperty)
+{
+  jsval uriVal;
+  JSBool rc = JS_GetProperty(aCtx, aObject, aProperty, &uriVal);
+  NS_ENSURE_TRUE(rc, nsnull);
+  if (!JSVAL_IS_PRIMITIVE(uriVal)) {
+    nsCOMPtr<nsIXPConnectWrappedNative> wrappedObj;
+    nsresult rv = nsContentUtils::XPConnect()->GetWrappedNativeOfJSObject(
+      aCtx,
+      JSVAL_TO_OBJECT(uriVal),
+      getter_AddRefs(wrappedObj)
+    );
+    NS_ENSURE_SUCCESS(rv, nsnull);
+    nsCOMPtr<nsIURI> uri = do_QueryWrappedNative(wrappedObj);
+    return uri.forget();
+  }
+  return nsnull;
+}
+
+/**
+ * Obtains the specified property of a JSObject.
+ *
+ * @param aCtx
+ *        The JSContext for aObject.
+ * @param aObject
+ *        The JSObject to get the string from.
+ * @param aProperty
+ *        The property to get the value from.
+ * @param _string
+ *        The string to populate with the value, or set it to void.
+ */
+void
+GetStringFromJSObject(JSContext* aCtx,
+                      JSObject* aObject,
+                      const char* aProperty,
+                      nsString& _string)
+{
+  jsval val;
+  JSBool rc = JS_GetProperty(aCtx, aObject, aProperty, &val);
+  if (!rc || JSVAL_IS_VOID(val) ||
+      !(JSVAL_IS_NULL(val) || JSVAL_IS_STRING(val))) {
+    _string.SetIsVoid(PR_TRUE);
+    return;
+  }
+  // |null| in JS maps to the empty string.
+  if (JSVAL_IS_NULL(val)) {
+    _string.Truncate();
+    return;
+  }
+  size_t length;
+  const jschar* chars =
+    JS_GetStringCharsZAndLength(aCtx, JSVAL_TO_STRING(val), &length);
+  if (!chars) {
+    _string.SetIsVoid(PR_TRUE);
+    return;
+  }
+  _string.Assign(static_cast<const PRUnichar*>(chars), length);
+}
+
+/**
+ * Obtains the specified property of a JSObject.
+ *
+ * @param aCtx
+ *        The JSContext for aObject.
+ * @param aObject
+ *        The JSObject to get the int from.
+ * @param aProperty
+ *        The property to get the value from.
+ * @param _int
+ *        The integer to populate with the value on success.
+ */
+template <typename IntType>
+nsresult
+GetIntFromJSObject(JSContext* aCtx,
+                   JSObject* aObject,
+                   const char* aProperty,
+                   IntType* _int)
+{
+  jsval value;
+  JSBool rc = JS_GetProperty(aCtx, aObject, aProperty, &value);
+  NS_ENSURE_TRUE(rc, NS_ERROR_UNEXPECTED);
+  if (JSVAL_IS_VOID(value)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  NS_ENSURE_ARG(JSVAL_IS_PRIMITIVE(value));
+  NS_ENSURE_ARG(JSVAL_IS_NUMBER(value));
+
+  jsdouble num;
+  rc = JS_ValueToNumber(aCtx, value, &num);
+  NS_ENSURE_TRUE(rc, NS_ERROR_UNEXPECTED);
+  NS_ENSURE_ARG(IntType(num) == num);
+
+  *_int = IntType(num);
+  return NS_OK;
+}
+
+/**
+ * Obtains the specified property of a JSObject.
+ *
+ * @pre aArray must be an Array object.
+ *
+ * @param aCtx
+ *        The JSContext for aArray.
+ * @param aArray
+ *        The JSObject to get the object from.
+ * @param aIndex
+ *        The index to get the object from.
+ * @param _object
+ *        The JSObject pointer on success.
+ */
+nsresult
+GetJSObjectFromArray(JSContext* aCtx,
+                     JSObject* aArray,
+                     jsuint aIndex,
+                     JSObject** _rooter)
+{
+  NS_PRECONDITION(JS_IsArrayObject(aCtx, aArray),
+                  "Must provide an object that is an array!");
+
+  jsval value;
+  JSBool rc = JS_GetElement(aCtx, aArray, aIndex, &value);
+  NS_ENSURE_TRUE(rc, NS_ERROR_UNEXPECTED);
+  NS_ENSURE_ARG(!JSVAL_IS_PRIMITIVE(value));
+  *_rooter = JSVAL_TO_OBJECT(value);
+  return NS_OK;
+}
 
 class VisitedQuery : public AsyncStatementCallback
 {
@@ -330,6 +488,45 @@ private:
 };
 
 /**
+ * Notifies observers about a pages title changing.
+ */
+class NotifyTitleObservers : public nsRunnable
+{
+public:
+  /**
+   * Notifies observers on the main thread.
+   *
+   * @param aSpec
+   *        The spec of the URI to notify about.
+   * @param aTitle
+   *        The new title to notify about.
+   */
+  NotifyTitleObservers(const nsCString& aSpec,
+                       const nsString& aTitle)
+  : mSpec(aSpec)
+  , mTitle(aTitle)
+  {
+  }
+
+  NS_IMETHOD Run()
+  {
+    NS_PRECONDITION(NS_IsMainThread(),
+                    "This should be called on the main thread");
+
+    nsNavHistory* navHistory = nsNavHistory::GetHistoryService();
+    NS_ENSURE_TRUE(navHistory, NS_ERROR_OUT_OF_MEMORY);
+    nsCOMPtr<nsIURI> uri;
+    (void)NS_NewURI(getter_AddRefs(uri), mSpec);
+    navHistory->NotifyTitleChange(uri, mTitle);
+
+    return NS_OK;
+  }
+private:
+  const nsCString mSpec;
+  const nsString mTitle;
+};
+
+/**
  * Notifies a callback object about completion.
  */
 class NotifyCompletion : public nsRunnable
@@ -383,6 +580,58 @@ private:
   VisitData mPlace;
   const nsresult mResult;
 };
+
+/**
+ * Checks to see if we can add aURI to history, and dispatches an error to
+ * aCallback (if provided) if we cannot.
+ *
+ * @param aURI
+ *        The URI to check.
+ * @param [optional] aGUID
+ *        The guid of the URI to check.  This is passed back to the callback.
+ * @param [optional] aPlaceId
+ *        The placeId of the URI to check.  This is passed back to the callback.
+ * @param [optional] aCallback
+ *        The callback to notify if the URI cannot be added to history.
+ * @return true if the URI can be added to history, false otherwise.
+ */
+bool
+CanAddURI(nsIURI* aURI,
+          const nsCString& aGUID = EmptyCString(),
+          PRInt64 aPlaceId = 0,
+          mozIVisitInfoCallback* aCallback = NULL)
+{
+  nsNavHistory* navHistory = nsNavHistory::GetHistoryService();
+  NS_ENSURE_TRUE(navHistory, false);
+
+  PRBool canAdd;
+  nsresult rv = navHistory->CanAddURI(aURI, &canAdd);
+  if (NS_SUCCEEDED(rv) && canAdd) {
+    return true;
+  };
+
+  // We cannot add the URI.  Notify the callback, if we were given one.
+  if (aCallback) {
+    // NotifyCompletion does not hold a strong reference to the callback, so we
+    // have to manage it by AddRefing now and then releasing it after the event
+    // has run.
+    NS_ADDREF(aCallback);
+
+    VisitData place(aURI);
+    place.guid = aGUID;
+    place.placeId = aPlaceId;
+    nsCOMPtr<nsIRunnable> event =
+      new NotifyCompletion(aCallback, place, NS_ERROR_INVALID_ARG);
+    (void)NS_DispatchToMainThread(event);
+
+    // Also dispatch an event to release our reference to the callback after
+    // NotifyCompletion has run.
+    nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+    (void)NS_ProxyRelease(mainThread, aCallback, PR_TRUE);
+  }
+
+  return false;
+}
 
 /**
  * Adds a visit to the database.
@@ -453,6 +702,13 @@ public:
       rv = NS_DispatchToMainThread(event);
       NS_ENSURE_SUCCESS(rv, rv);
 
+      // Notify about title change if needed.
+      if ((!known && !place.title.IsVoid()) || place.titleChanged) {
+        event = new NotifyTitleObservers(place.spec, place.title);
+        rv = NS_DispatchToMainThread(event);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
       lastPlace = &mPlaces.ElementAt(i);
     }
 
@@ -488,6 +744,13 @@ private:
       if (mPlaces[i].sessionId <= 0) {
         mPlaces[i].sessionId = navHistory->GetNewSessionID();
       }
+
+#ifdef DEBUG
+      nsCOMPtr<nsIURI> uri;
+      (void)NS_NewURI(getter_AddRefs(uri), mPlaces[i].spec);
+      NS_ASSERTION(CanAddURI(uri),
+                   "Passed a VisitData with a URI we cannot add to history!");
+#endif
     }
 
     // We AddRef on the main thread, and release it when we are destroyed.
@@ -812,48 +1075,6 @@ private:
 };
 
 /**
- * Notifies observers about a pages title changing.
- */
-class NotifyTitleObservers : public nsRunnable
-{
-public:
-  /**
-   * Notifies observers on the main thread.
-   *
-   * @param aSpec
-   *        The spec of the URI to notify about.
-   * @param aTitle
-   *        The new title to notify about.
-   */
-  NotifyTitleObservers(const nsCString& aSpec,
-                       const nsString& aTitle)
-  : mSpec(aSpec)
-  , mTitle(aTitle)
-  {
-    NS_PRECONDITION(!NS_IsMainThread(),
-                    "This should not be called on the main thread");
-  }
-
-  NS_IMETHOD Run()
-  {
-    NS_PRECONDITION(NS_IsMainThread(),
-                    "This should be called on the main thread");
-
-    nsNavHistory* navHistory = nsNavHistory::GetHistoryService();
-    NS_ENSURE_TRUE(navHistory, NS_ERROR_OUT_OF_MEMORY);
-    nsCOMPtr<nsIURI> uri;
-    (void)NS_NewURI(getter_AddRefs(uri), mSpec);
-    navHistory->NotifyTitleChange(uri, mTitle);
-
-    return NS_OK;
-  }
-private:
-  const nsCString mSpec;
-  const nsString mTitle;
-};
-
-
-/**
  * Sets the page title for a page in moz_places (if necessary).
  */
 class SetPageTitle : public nsRunnable
@@ -871,7 +1092,7 @@ public:
    */
   static nsresult Start(mozIStorageConnection* aConnection,
                         nsIURI* aURI,
-                        const nsString& aTitle)
+                        const nsAString& aTitle)
   {
     NS_PRECONDITION(NS_IsMainThread(),
                     "This should be called on the main thread");
@@ -899,21 +1120,14 @@ public:
 
     // First, see if the page exists in the database (we'll need its id later).
     bool exists = mHistory->FetchPageInfo(mPlace);
-    if (!exists) {
-      // We have no record of this page, so there is no need to do any further
-      // work.
+    if (!exists || !mPlace.titleChanged) {
+      // We have no record of this page, or we have no title change, so there
+      // is no need to do any further work.
       return NS_OK;
     }
 
     NS_ASSERTION(mPlace.placeId > 0,
                  "We somehow have an invalid place id here!");
-
-    // Also, if we have the same title, there is no reason to do another write
-    // or notify our observers, so bail early.
-    if (mTitle.Equals(mPlace.title) ||
-        (mTitle.IsVoid() && mPlace.title.IsVoid())) {
-      return NS_OK;
-    }
 
     // Now we can update our database record.
     nsCOMPtr<mozIStorageStatement> stmt =
@@ -929,19 +1143,22 @@ public:
       nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"),
                                           mPlace.placeId);
       NS_ENSURE_SUCCESS(rv, rv);
-      if (mTitle.IsVoid()) {
+      // Empty strings should clear the title, just like
+      // nsNavHistory::SetPageTitle.
+      if (mPlace.title.IsEmpty()) {
         rv = stmt->BindNullByName(NS_LITERAL_CSTRING("page_title"));
       }
       else {
         rv = stmt->BindStringByName(NS_LITERAL_CSTRING("page_title"),
-                                    StringHead(mTitle, TITLE_LENGTH_MAX));
+                                    StringHead(mPlace.title, TITLE_LENGTH_MAX));
       }
       NS_ENSURE_SUCCESS(rv, rv);
       rv = stmt->Execute();
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    nsCOMPtr<nsIRunnable> event = new NotifyTitleObservers(mPlace.spec, mTitle);
+    nsCOMPtr<nsIRunnable> event =
+      new NotifyTitleObservers(mPlace.spec, mPlace.title);
     nsresult rv = NS_DispatchToMainThread(event);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -950,15 +1167,14 @@ public:
 
 private:
   SetPageTitle(const nsCString& aSpec,
-               const nsString& aTitle)
-  : mTitle(aTitle)
-  , mHistory(History::GetService())
+               const nsAString& aTitle)
+  : mHistory(History::GetService())
   {
     mPlace.spec = aSpec;
+    mPlace.title = aTitle;
   }
 
   VisitData mPlace;
-  const nsString mTitle;
 
   /**
    * Strong reference to the History object because we do not want it to
@@ -1133,7 +1349,8 @@ History::InsertPlace(const VisitData& aPlace)
   NS_ENSURE_SUCCESS(rv, rv);
   rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("url"), aPlace.spec);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (aPlace.title.IsVoid()) {
+  // Empty strings should have no title, just like nsNavHistory::SetPageTitle.
+  if (aPlace.title.IsEmpty()) {
     rv = stmt->BindNullByName(NS_LITERAL_CSTRING("title"));
   }
   else {
@@ -1177,11 +1394,15 @@ History::UpdatePlace(const VisitData& aPlace)
   mozStorageStatementScoper scoper(stmt);
 
   nsresult rv;
-  if (!aPlace.title.IsVoid()) {
+  // Empty strings should clear the title, just like nsNavHistory::SetPageTitle.
+  if (aPlace.title.IsEmpty()) {
+    rv = stmt->BindNullByName(NS_LITERAL_CSTRING("title"));
+  }
+  else {
     rv = stmt->BindStringByName(NS_LITERAL_CSTRING("title"),
                                 StringHead(aPlace.title, TITLE_LENGTH_MAX));
-    NS_ENSURE_SUCCESS(rv, rv);
   }
+  NS_ENSURE_SUCCESS(rv, rv);
   rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("typed"), aPlace.typed);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("hidden"), aPlace.hidden);
@@ -1225,9 +1446,21 @@ History::FetchPageInfo(VisitData& _place)
   rv = stmt->GetInt64(0, &_place.placeId);
   NS_ENSURE_SUCCESS(rv, false);
 
+  nsAutoString title;
+  rv = stmt->GetString(1, title);
+  NS_ENSURE_SUCCESS(rv, true);
+
+  // If the title we were given was void, that means we did not bother to set
+  // it to anything.  As a result, ignore the fact that we may have changed the
+  // title (because we don't want to, that would be empty), and set the title
+  // to what is currently stored in the datbase.
   if (_place.title.IsVoid()) {
-    rv = stmt->GetString(1, _place.title);
-    NS_ENSURE_SUCCESS(rv, true);
+    _place.title = title;
+  }
+  // Otherwise, just indicate if the title has changed.
+  else {
+    _place.titleChanged = !(_place.title.Equals(title) ||
+                            (_place.title.IsEmpty() && title.IsVoid()));
   }
 
   if (_place.hidden) {
@@ -1578,18 +1811,10 @@ History::SetURITitle(nsIURI* aURI, const nsAString& aTitle)
     return NS_OK;
   }
 
-  nsAutoString title;
-  if (aTitle.IsEmpty()) {
-    title.SetIsVoid(PR_TRUE);
-  }
-  else {
-    title.Assign(aTitle);
-  }
-
   mozIStorageConnection* dbConn = GetDBConn();
   NS_ENSURE_STATE(dbConn);
 
-  rv = SetPageTitle::Start(dbConn, aURI, title);
+  rv = SetPageTitle::Start(dbConn, aURI, aTitle);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -1604,8 +1829,157 @@ History::UpdatePlaces(const jsval& aPlaceInfos,
                       JSContext* aCtx)
 {
   NS_ENSURE_TRUE(NS_IsMainThread(), NS_ERROR_UNEXPECTED);
+  NS_ENSURE_TRUE(!JSVAL_IS_PRIMITIVE(aPlaceInfos), NS_ERROR_INVALID_ARG);
 
-  return NS_ERROR_NOT_IMPLEMENTED;
+  jsuint infosLength = 1;
+  JSObject* infos;
+  if (JS_IsArrayObject(aCtx, JSVAL_TO_OBJECT(aPlaceInfos))) {
+    infos = JSVAL_TO_OBJECT(aPlaceInfos);
+    (void)JS_GetArrayLength(aCtx, infos, &infosLength);
+    NS_ENSURE_ARG(infosLength > 0);
+  }
+  else {
+    // Build a temporary array to store this one item so the code below can
+    // just loop.
+    infos = JS_NewArrayObject(aCtx, 0, NULL);
+    NS_ENSURE_TRUE(infos, NS_ERROR_OUT_OF_MEMORY);
+
+    JSBool rc = JS_DefineElement(aCtx, infos, 0, aPlaceInfos, NULL, NULL, 0);
+    NS_ENSURE_TRUE(rc, NS_ERROR_UNEXPECTED);
+  }
+
+  nsTArray<VisitData> visitData;
+  for (jsuint i = 0; i < infosLength; i++) {
+    JSObject* info;
+    nsresult rv = GetJSObjectFromArray(aCtx, infos, i, &info);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIURI> uri = GetURIFromJSObject(aCtx, info, "uri");
+    PRInt64 placeId;
+    rv = GetIntFromJSObject(aCtx, info, "placeId", &placeId);
+    if (rv == NS_ERROR_INVALID_ARG) {
+      placeId = 0;
+    }
+    else {
+      NS_ENSURE_SUCCESS(rv, rv);
+      NS_ENSURE_ARG(placeId > 0);
+    }
+    nsCString guid;
+    {
+      nsString fatGUID;
+      GetStringFromJSObject(aCtx, info, "guid", fatGUID);
+      if (fatGUID.IsVoid()) {
+        guid.SetIsVoid(PR_TRUE);
+      }
+      else {
+        guid = NS_ConvertUTF16toUTF8(fatGUID);
+      }
+    }
+
+    // Make sure that any uri we are given can be added to history, and if not,
+    // skip it (CanAddURI will notify our callback for us).
+    if (uri && !CanAddURI(uri, guid, placeId, aCallback)) {
+      continue;
+    }
+
+    // We must have at least one of uri, valid id, or guid.
+    NS_ENSURE_ARG(uri || placeId > 0 || !guid.IsVoid());
+
+    // If we were given a guid, make sure it is valid.
+    bool isValidGUID = IsValidGUID(guid);
+    NS_ENSURE_ARG(guid.IsVoid() || isValidGUID);
+
+    nsString title;
+    GetStringFromJSObject(aCtx, info, "title", title);
+
+    JSObject* visits = NULL;
+    {
+      jsval visitsVal;
+      JSBool rc = JS_GetProperty(aCtx, info, "visits", &visitsVal);
+      NS_ENSURE_TRUE(rc, NS_ERROR_UNEXPECTED);
+      if (!JSVAL_IS_PRIMITIVE(visitsVal)) {
+        visits = JSVAL_TO_OBJECT(visitsVal);
+        NS_ENSURE_ARG(JS_IsArrayObject(aCtx, visits));
+      }
+    }
+    NS_ENSURE_ARG(visits);
+
+    jsuint visitsLength = 0;
+    if (visits) {
+      (void)JS_GetArrayLength(aCtx, visits, &visitsLength);
+    }
+    NS_ENSURE_ARG(visitsLength > 0);
+
+    // Check each visit, and build our array of VisitData objects.
+    visitData.SetCapacity(visitData.Length() + visitsLength);
+    for (jsuint j = 0; j < visitsLength; j++) {
+      JSObject* visit;
+      rv = GetJSObjectFromArray(aCtx, visits, j, &visit);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      VisitData& data = *visitData.AppendElement(VisitData(uri));
+      data.placeId = placeId;
+      data.title = title;
+      data.guid = guid;
+
+      // We must have a date and a transaction type!
+      rv = GetIntFromJSObject(aCtx, visit, "visitDate", &data.visitTime);
+      NS_ENSURE_SUCCESS(rv, rv);
+      PRUint32 transitionType;
+      rv = GetIntFromJSObject(aCtx, visit, "transitionType", &transitionType);
+      NS_ENSURE_SUCCESS(rv, rv);
+      NS_ENSURE_ARG_RANGE(transitionType,
+                          nsINavHistoryService::TRANSITION_LINK,
+                          nsINavHistoryService::TRANSITION_FRAMED_LINK);
+      data.SetTransitionType(transitionType);
+
+      // If the visit is an embed visit, we do not actually add it to the
+      // database.
+      if (transitionType == nsINavHistoryService::TRANSITION_EMBED) {
+        StoreAndNotifyEmbedVisit(data, aCallback);
+        visitData.RemoveElementAt(visitData.Length() - 1);
+        continue;
+      }
+
+      // The session id is optional.
+      rv = GetIntFromJSObject(aCtx, visit, "sessionId", &data.sessionId);
+      if (rv == NS_ERROR_INVALID_ARG) {
+        data.sessionId = 0;
+      }
+      else {
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // The referrer is optional.
+      nsCOMPtr<nsIURI> referrer = GetURIFromJSObject(aCtx, visit,
+                                                     "referrerURI");
+      if (referrer) {
+        (void)referrer->GetSpec(data.referrerSpec);
+      }
+    }
+  }
+
+  mozIStorageConnection* dbConn = GetDBConn();
+  NS_ENSURE_STATE(dbConn);
+
+  // It is possible that all of the visits we were passed were dissallowed by
+  // CanAddURI, which isn't an error.  If we have no visits to add, however,
+  // we should not call InsertVisitedURIs::Start.
+  if (visitData.Length()) {
+    nsresult rv = InsertVisitedURIs::Start(dbConn, visitData, aCallback);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Be sure to notify that all of our operations are complete.  This is
+  // double enqueued to make sure that all database notifications and all embed
+  // or canAddURI notifications have finished.
+  nsCOMPtr<nsIEventTarget> backgroundThread = do_GetInterface(dbConn);
+  NS_ENSURE_TRUE(backgroundThread, NS_ERROR_UNEXPECTED);
+  nsRefPtr<PlacesEvent> completeEvent =
+    new PlacesEvent(TOPIC_UPDATEPLACES_COMPLETE, true);
+  (void)backgroundThread->Dispatch(completeEvent, 0);
+
+  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

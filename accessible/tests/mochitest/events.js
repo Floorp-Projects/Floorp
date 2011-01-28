@@ -430,7 +430,7 @@ function eventQueue(aEventType)
             msg += " unexpected";
 
           msg += ": event type: " + this.getEventTypeAsString(idx) +
-            ", target: " + prettyName(this.getEventTarget(idx));
+            ", target: " + this.getEventTargetDescr(idx);
 
           gLogger.logToConsole(msg);
           gLogger.logToDOM(msg, true);
@@ -485,6 +485,12 @@ function eventQueue(aEventType)
   this.getEventTarget = function eventQueue_getEventTarget(aIdx)
   {
     return this.mEventSeq[aIdx].target;
+  }
+
+  this.getEventTargetDescr = function eventQueue_getEventTargetDescr(aIdx)
+  {
+    var descr = this.mEventSeq[aIdx].targetDescr;
+    return descr ? descr : "no target description";
   }
 
   this.getEventPhase = function eventQueue_getEventPhase(aIdx)
@@ -893,6 +899,16 @@ function invokerChecker(aEventType, aTargetOrFunc, aTargetFuncArg)
   {
     this.mTarget = aValue;
     return this.mTarget;
+  }
+
+  this.__defineGetter__("targetDescr", invokerChecker_targetDescrGetter);
+
+  function invokerChecker_targetDescrGetter()
+  {
+    if (typeof this.mTarget == "function")
+      return this.mTarget.toSource() + this.mTargetFuncArg;
+
+    return prettyName(this.mTarget);
   }
 
   this.mTarget = aTargetOrFunc;

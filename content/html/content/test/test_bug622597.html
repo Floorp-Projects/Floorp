@@ -1,0 +1,116 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=622597
+-->
+<head>
+  <title>Test for Bug 622597</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=622597">Mozilla Bug 622597</a>
+<p id="display"></p>
+<div id="content">
+  <form>
+    <input required>
+    <textarea required></textarea>
+    <select required><option>foo</option><option value="">bar</option></select>
+    <button>submit</button>
+  </form>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 622597 **/
+
+var form = document.forms[0];
+var input = form.elements[0];
+var textarea = form.elements[1];
+var select = form.elements[2];
+var button = form.elements[3];
+
+function checkPseudoClasses(aElement, aValid, aInvalid)
+{
+  is(aElement.mozMatchesSelector(":-moz-ui-valid"), aValid,
+     aValid ? aElement + " should match :-moz-ui-valid"
+            : aElement + " should not match :-moz-ui-valid");
+  is(aElement.mozMatchesSelector(":-moz-ui-invalid"), aInvalid,
+     aInvalid ? aElement + " should match :-moz-ui-invalid"
+              : aElement + " should not match :-moz-ui-invalid");
+  if (aValid && aInvalid) {
+    ok(false,
+       aElement +  " should not match :-moz-ui-valid AND :-moz-ui-invalid");
+  }
+}
+
+select.addEventListener("focus", function() {
+  select.removeEventListener("focus", arguments.callee, false);
+
+  SimpleTest.executeSoon(function() {
+    form.noValidate = false;
+    SimpleTest.executeSoon(function() {
+      checkPseudoClasses(select, false, true);
+      SimpleTest.finish();
+    });
+  });
+}, false);
+
+textarea.addEventListener("focus", function() {
+  textarea.removeEventListener("focus", arguments.callee, false);
+
+  SimpleTest.executeSoon(function() {
+    form.noValidate = false;
+    SimpleTest.executeSoon(function() {
+      checkPseudoClasses(textarea, false, true);
+      form.noValidate = true;
+      select.selectedIndex = 1;
+      select.focus();
+    });
+  });
+}, false);
+
+input.addEventListener("invalid", function() {
+  input.removeEventListener("invalid", arguments.callee, false);
+
+  input.addEventListener("focus", function() {
+    input.removeEventListener("focus", arguments.callee, false);
+
+    SimpleTest.executeSoon(function() {
+      form.noValidate = false;
+      SimpleTest.executeSoon(function() {
+        checkPseudoClasses(input, false, true);
+        form.noValidate = true;
+        textarea.value = '';
+        textarea.focus();
+      });
+    });
+  }, false);
+
+  SimpleTest.executeSoon(function() {
+    form.noValidate = true;
+    input.blur();
+    input.value = '';
+    input.focus();
+  });
+}, false);
+
+button.addEventListener("focus", function() {
+  button.removeEventListener("focus", arguments.callee, false);
+
+  SimpleTest.executeSoon(function() {
+    synthesizeKey("VK_RETURN", {});
+  });
+}, false);
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  button.focus();
+});
+
+</script>
+</pre>
+</body>
+</html>

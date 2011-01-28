@@ -316,6 +316,14 @@ ContainerLayerD3D9::RenderLayer()
     }
 
     layerToRender->RenderLayer();
+
+    if (clipRect && !useIntermediate) {
+      // In this situation we've set a new scissor rect and we will continue
+      // to render directly to our container. We need to restore its scissor.
+      // Not setting this when useIntermediate is true is an optimization since
+      // we'll get a new one set anyway.
+      device()->SetScissorRect(&containerClipRect);
+    }
   }
 
   if (useIntermediate) {
@@ -337,8 +345,6 @@ ContainerLayerD3D9::RenderLayer()
     device()->SetScissorRect(&containerClipRect);
     device()->SetTexture(0, renderTexture);
     device()->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
-  } else {
-    device()->SetScissorRect(&containerClipRect);
   }
 }
 

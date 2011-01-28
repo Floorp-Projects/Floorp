@@ -40,10 +40,11 @@
         request.onerror = errorHandler;
         request.onsuccess = function(event) {
           db.deleteObjectStore("foo");
-
-          testResult = "finished";
-          testException = undefined;
-          finishTest();
+          request.transaction.oncomplete = function(event) {
+            testResult = "finished";
+            testException = undefined;
+            finishTest();
+          }
         }
       }
 

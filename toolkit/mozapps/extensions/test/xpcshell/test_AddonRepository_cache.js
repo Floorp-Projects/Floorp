@@ -14,6 +14,7 @@ const BASE_URL  = "http://localhost:" + PORT;
 
 const PREF_GETADDONS_CACHE_ENABLED = "extensions.getAddons.cache.enabled";
 const PREF_GETADDONS_BYIDS         = "extensions.getAddons.get.url";
+const PREF_EM_AUTOUPDATE_DEFAULT   = "extensions.update.autoUpdateDefault";
 const GETADDONS_RESULTS            = BASE_URL + "/data/test_AddonRepository_cache.xml";
 const GETADDONS_EMPTY              = BASE_URL + "/data/test_AddonRepository_empty.xml";
 const GETADDONS_FAILED             = BASE_URL + "/data/test_AddonRepository_failed.xml";
@@ -596,7 +597,49 @@ function run_test_14() {
 
     AddonManager.getAddonsByIDs(ADDON_IDS, function(aAddons) {
       check_results(aAddons, WITHOUT_CACHE);
-      run_test_15();
+      run_test_14_1();
+    });
+  });
+}
+
+// Tests that the XPI add-ons have the correct properties if caching is
+// enabled but updates are disabled by default
+function run_test_14_1() {
+  Services.prefs.setBoolPref(PREF_EM_AUTOUPDATE_DEFAULT, false);
+  Services.prefs.setCharPref(PREF_GETADDONS_BYIDS, GETADDONS_RESULTS);
+
+  trigger_background_update(function() {
+    check_database_exists(true);
+
+    AddonManager.getAddonsByIDs(ADDON_IDS, function(aAddons) {
+      check_results(aAddons, WITHOUT_CACHE);
+      run_test_14_2();
+    });
+  });
+}
+
+// Tests that the XPI add-ons have the correct properties if caching is
+// enabled but updates are disabled by individually
+function run_test_14_2() {
+  Services.prefs.setBoolPref(PREF_EM_AUTOUPDATE_DEFAULT, true);
+
+  AddonManager.getAddonsByIDs(ADDON_IDS, function(aAddons) {
+    aAddons.forEach(function(aAddon) {
+      aAddon.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DISABLE;
+    });
+
+    trigger_background_update(function() {
+      check_database_exists(true);
+
+      AddonManager.getAddonsByIDs(ADDON_IDS, function(aAddons) {
+        check_results(aAddons, WITHOUT_CACHE);
+
+        aAddons.forEach(function(aAddon) {
+          aAddon.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DEFAULT;
+        });
+
+        run_test_15();
+      });
     });
   });
 }
@@ -604,8 +647,6 @@ function run_test_14() {
 // Tests that the XPI add-ons correctly use the repository properties when
 // caching is enabled and the repository information is available
 function run_test_15() {
-  Services.prefs.setCharPref(PREF_GETADDONS_BYIDS, GETADDONS_RESULTS);
-
   trigger_background_update(function() {
     AddonManager.getAddonsByIDs(ADDON_IDS, function(aAddons) {
       check_results(aAddons, WITH_CACHE);

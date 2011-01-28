@@ -78,8 +78,8 @@ nsDataDocumentContentPolicy::ShouldLoad(PRUint32 aContentType,
     return NS_OK;
   }
 
-  // Nothing else is OK to load for data documents
-  if (doc->IsLoadedAsData()) {
+  // Nothing else is OK to load for data documents or SVG-as-an-image documents
+  if (doc->IsLoadedAsData() || doc->IsBeingUsedAsImage()) {
     *aDecision = nsIContentPolicy::REJECT_TYPE;
     return NS_OK;
   }

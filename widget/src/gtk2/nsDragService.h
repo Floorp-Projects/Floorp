@@ -138,6 +138,8 @@ private:
 
     // the source of our drags
     GtkWidget     *mHiddenWidget;
+    // the widget receiving mouse events
+    GtkWidget     *mGrabWidget;
     // our source data items
     nsCOMPtr<nsISupportsArray> mSourceDataItems;
     // get a list of the sources in gtk's format
