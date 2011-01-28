@@ -541,7 +541,7 @@ endif # DMG
 endif # MOZ_PKG_MANIFEST
 endif # UNIVERSAL_BINARY
 	$(OPTIMIZE_JARS_CMD) --optimize $(DIST)/jarlog/ $(DIST)/bin/chrome $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)/chrome
-ifeq ($(USE_ELF_HACK)$(HOST_OS_ARCH)$(OS_ARCH)$(OS_TARGET),1LinuxLinuxLinux)
+ifeq ($(USE_ELF_HACK)$(HOST_OS_ARCH)$(OS_ARCH),1LinuxLinux)
 ifneq (,$(filter %86 x86_64 arm,$(OS_TEST)))
 	@echo ===
 	@echo === If you get failures below, please file a bug describing the error
