@@ -1368,7 +1368,9 @@ nsDocAccessible::BindToDocument(nsAccessible* aAccessible,
   }
 
   aAccessible->SetRoleMapEntry(aRoleMapEntry);
-  AddDependentIDsFor(aAccessible);
+  if (aAccessible->IsElement())
+    AddDependentIDsFor(aAccessible);
+
   return true;
 }
 
