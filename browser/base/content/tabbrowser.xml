@@ -3696,6 +3696,7 @@
     <content>
       <xul:hbox class="statuspanel-inner">
         <xul:label class="statuspanel-label"
+                   role="status"
                    xbl:inherits="value=label,mirror"
                    flex="1"
                    crop="end"/>
