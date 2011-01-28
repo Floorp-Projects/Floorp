@@ -316,8 +316,6 @@ int do_relocation_section(Elf *elf, unsigned int rel_type)
     Elf_Shdr relhackcode_section(relhackcode32_section);
     ElfRelHack_Section *relhack = new ElfRelHack_Section(relhack_section);
     ElfRelHackCode_Section *relhackcode = new ElfRelHackCode_Section(relhackcode_section, *elf);
-    relhackcode->insertAfter(section);
-    relhack->insertAfter(relhackcode);
 
     std::vector<Rel_Type> new_rels;
     Elf_RelHack relhack_entry;
@@ -349,6 +347,9 @@ int do_relocation_section(Elf *elf, unsigned int rel_type)
     // Last entry must be NULL
     relhack_entry.r_offset = relhack_entry.r_info = 0;
     relhack->push_back(relhack_entry);
+
+    relhackcode->insertAfter(section);
+    relhack->insertAfter(relhackcode);
 
     section->rels.assign(new_rels.begin(), new_rels.end());
     section->shrink(new_rels.size() * section->getEntSize());

@@ -334,7 +334,7 @@ public:
                 (getFlags() & SHF_ALLOC));
     }
 
-    void insertAfter(ElfSection *section) {
+    void insertAfter(ElfSection *section, bool dirty = true) {
         if (previous != NULL)
             previous->next = next;
         if (next != NULL)
@@ -347,7 +347,8 @@ public:
             next = NULL;
         if (next != NULL)
             next->previous = this;
-        markDirty();
+        if (dirty)
+            markDirty();
     }
 
     void markDirty() {
