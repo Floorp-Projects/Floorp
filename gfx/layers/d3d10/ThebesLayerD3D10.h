@@ -67,20 +67,29 @@ private:
   /* Shader resource view for our texture */
   nsRefPtr<ID3D10ShaderResourceView> mSRView;
 
+  /* Texture for render-on-whitew when doing component alpha */
+  nsRefPtr<ID3D10Texture2D> mTextureOnWhite;
+
+  /* Shader resource view for our render-on-white texture */
+  nsRefPtr<ID3D10ShaderResourceView> mSRViewOnWhite;
+
   /* Visible region used when we drew the contents of the textures */
   nsIntRegion mTextureRegion;
 
   /* Checks if our D2D surface has the right content type */
-  void VerifyContentType();
+  void VerifyContentType(SurfaceMode aMode);
 
   /* This contains the thebes surface */
   nsRefPtr<gfxASurface> mD2DSurface;
 
+  /* This contains the thebes surface for our render-on-white texture */
+  nsRefPtr<gfxASurface> mD2DSurfaceOnWhite;
+
   /* Have a region of our layer drawn */
-  void DrawRegion(const nsIntRegion &aRegion);
+  void DrawRegion(const nsIntRegion &aRegion, SurfaceMode aMode);
 
   /* Create a new texture */
-  void CreateNewTexture(const gfxIntSize &aSize);
+  void CreateNewTextures(const gfxIntSize &aSize, SurfaceMode aMode);
 
   /* Copy a texture region */
   void CopyRegion(ID3D10Texture2D* aSrc, const nsIntPoint &aSrcOffset,
