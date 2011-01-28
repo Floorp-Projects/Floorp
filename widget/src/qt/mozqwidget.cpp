@@ -74,6 +74,11 @@ static bool gFailedOpenKeyboard = false;
 */
 static bool gPendingVKBOpen = false;
 
+/*
+  Contains the last preedit String, this is needed in order to generate KeyEvents
+*/
+static QString gLastPreeditString;
+
 MozQWidget::MozQWidget(nsWindow* aReceiver, QGraphicsItem* aParent)
     : QGraphicsWidget(aParent),
       mReceiver(aReceiver)
@@ -153,6 +158,10 @@ void MozQWidget::focusInEvent(QFocusEvent* aEvent)
 void MozQWidget::focusOutEvent(QFocusEvent* aEvent)
 {
     mReceiver->OnFocusOutEvent(aEvent);
+    //OtherFocusReason most like means VKB was closed manual (done button)
+    if (aEvent->reason() == Qt::OtherFocusReason && gKeyboardOpen) {
+        hideVKB();
+    }
 }
 
 void MozQWidget::hoverEnterEvent(QGraphicsSceneHoverEvent* aEvent)
@@ -172,7 +181,15 @@ void MozQWidget::hoverMoveEvent(QGraphicsSceneHoverEvent* aEvent)
 
 void MozQWidget::keyPressEvent(QKeyEvent* aEvent)
 {
-#if (MOZ_PLATFORM_MAEMO==5)
+#if (MOZ_PLATFORM_MAEMO == 6)
+    if (!gKeyboardOpen ||
+       //those might get sended as KeyEvents, even in 'NormalMode'
+       aEvent->key() == Qt::Key_Space ||
+       aEvent->key() == Qt::Key_Return ||
+       aEvent->key() == Qt::Key_Backspace) {
+        mReceiver->OnKeyPressEvent(aEvent);
+    }
+#elif (MOZ_PLATFORM_MAEMO == 5)
     // Below removed to prevent invertion of upper and lower case
     // See bug 561234
     // mReceiver->OnKeyPressEvent(aEvent);
@@ -183,11 +200,113 @@ void MozQWidget::keyPressEvent(QKeyEvent* aEvent)
 
 void MozQWidget::keyReleaseEvent(QKeyEvent* aEvent)
 {
-#if (MOZ_PLATFORM_MAEMO==5)
+#if (MOZ_PLATFORM_MAEMO == 6)
+    if (!gKeyboardOpen ||
+       //those might get sended as KeyEvents, even in 'NormalMode'
+       aEvent->key() == Qt::Key_Space ||
+       aEvent->key() == Qt::Key_Return ||
+       aEvent->key() == Qt::Key_Backspace) {
+        mReceiver->OnKeyReleaseEvent(aEvent);
+    }
+    return;
+#elif (MOZ_PLATFORM_MAEMO == 5)
     // Below line should be removed when bug 561234 is fixed
     mReceiver->OnKeyPressEvent(aEvent);
 #endif
     mReceiver->OnKeyReleaseEvent(aEvent);
+}
+
+void MozQWidget::inputMethodEvent(QInputMethodEvent* aEvent)
+{
+    QString currentPreeditString = aEvent->preeditString();
+    QString currentCommitString = aEvent->commitString();
+
+    //first check for some controllkeys send as text...
+    if (currentCommitString == " ") {
+        sendPressReleaseKeyEvent(Qt::Key_Space, currentCommitString.unicode());
+    } else if (currentCommitString == "\n") {
+        sendPressReleaseKeyEvent(Qt::Key_Return, currentCommitString.unicode());
+    } else if (currentCommitString.isEmpty()) {
+        //if its no controllkey than check if current Commit is empty
+        //if yes than we have some preedit text here
+        if (currentPreeditString.length() == 1 && gLastPreeditString.isEmpty()) {
+            //Preedit text can change its entire look'a'like
+            //check if length of new compared to the old is 1,
+            //means that its a new startup
+            sendPressReleaseKeyEvent(0, currentPreeditString.unicode());
+        } else if (currentPreeditString.startsWith(gLastPreeditString)) {
+            //Length was not 1 or not a new startup
+            //check if the current preedit starts with the last one,
+            //if so: Add new letters (note: this can be more then one new letter)
+            const QChar * text = currentPreeditString.unicode();
+            for (int i = gLastPreeditString.length(); i < currentPreeditString.length(); i++) {
+                sendPressReleaseKeyEvent(0, &text[i]);
+            }
+        } else {
+            //last possible case, we had a PreeditString which was now completely changed.
+            //first, check if just one letter was removed (normal Backspace case!)
+            //if so: just send the backspace
+            QString tempLastPre = gLastPreeditString;
+            tempLastPre.truncate(gLastPreeditString.length()-1);
+            if (currentPreeditString == tempLastPre) {
+                sendPressReleaseKeyEvent(Qt::Key_Backspace);
+            } else if (currentPreeditString != tempLastPre) {
+                //more than one character changed, so just renew everything
+                //delete all preedit
+                for (int i = 0; i < gLastPreeditString.length(); i++) {
+                    sendPressReleaseKeyEvent(Qt::Key_Backspace);
+                }
+                //send new Preedit
+                const QChar * text = currentPreeditString.unicode();
+                for (int i = 0; i < currentPreeditString.length(); i++) {
+                    sendPressReleaseKeyEvent(0, &text[i]);
+                }
+            }
+        }
+    } else if (gLastPreeditString != currentCommitString) {
+        //User commited something
+        if (currentCommitString.length() == 1 && gLastPreeditString.isEmpty()) {
+            //if commit string ist one and there is no Preedit String
+            //case i.e. when no error correction is enabled in the system (default meego.com)
+            sendPressReleaseKeyEvent(0, currentCommitString.unicode());
+        } else {
+            //There is a Preedit, first remove it
+            for (int i = 0; i < gLastPreeditString.length(); i++) {
+                sendPressReleaseKeyEvent(Qt::Key_Backspace);
+            }
+            //Now push commited String into
+            const QChar * text = currentCommitString.unicode();
+            for (int i = 0; i < currentCommitString.length(); i++) {
+                sendPressReleaseKeyEvent(0, &text[i]);
+            }
+        }
+    }
+
+    //save preedit for next round.
+    gLastPreeditString = currentPreeditString;
+
+    //pre edit is continues string of new chars pressed by the user.
+    //if pre edit is changing rapidly without commit string first then user choose some overed text
+    //if commitstring comes directly after, forget about it
+    QGraphicsWidget::inputMethodEvent(aEvent);
+}
+
+void MozQWidget::sendPressReleaseKeyEvent(int key,
+                                          const QChar* letter,
+                                          bool autorep,
+                                          ushort count)
+{
+     Qt::KeyboardModifiers modifiers  = Qt::NoModifier;
+     if (letter && letter->isUpper()) {
+         modifiers = Qt::ShiftModifier;
+     }
+
+     QString text = letter ? QString(*letter) : QString();
+
+     QKeyEvent press(QEvent::KeyPress, key, modifiers, text, autorep, count);
+     mReceiver->OnKeyPressEvent(&press);
+     QKeyEvent release(QEvent::KeyRelease, key, modifiers, text, autorep, count);
+     mReceiver->OnKeyReleaseEvent(&release);
 }
 
 void MozQWidget::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* aEvent)
@@ -238,12 +357,15 @@ bool MozQWidget::event ( QEvent * event )
         mReceiver->OnGestureEvent(static_cast<QGestureEvent*>(event),handled);
         return handled;
     }
+#if (MOZ_PLATFORM_MAEMO != 6)
+    // This does not work for maemo6, due to partially implemented IM framework
     case QEvent::InputMethod:
     {
         PRBool handled = PR_FALSE;
         mReceiver->imComposeEvent(static_cast<QInputMethodEvent*>(event),handled);
         return handled;
     }
+#endif
 
     default:
         break;
@@ -355,7 +477,7 @@ QVariant MozQWidget::inputMethodQuery(Qt::InputMethodQuery aQuery) const
     // we use the values directly here. The original values are in the comments.
     if (static_cast<Qt::InputMethodQuery>(/*M::ImModeQuery*/ 10004 ) == aQuery)
     {
-        return QVariant(/*M::InputMethodModeDirect*/ 1 );
+        return QVariant(/*M::InputMethodModeNormal*/ 0 );
     }
 
     return QGraphicsWidget::inputMethodQuery(aQuery);
@@ -420,6 +542,10 @@ void MozQWidget::hideVKB()
     if (gPendingVKBOpen) {
         // do not really open
         gPendingVKBOpen = false;
+    }
+
+    if (!gKeyboardOpen) {
+        return;
     }
 
 #if (QT_VERSION >= QT_VERSION_CHECK(4, 6, 0))
