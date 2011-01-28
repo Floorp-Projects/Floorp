@@ -189,6 +189,8 @@ JS_SetDebugModeForCompartment(JSContext *cx, JSCompartment *comp, JSBool debug)
 JS_FRIEND_API(JSBool)
 js_SetSingleStepMode(JSContext *cx, JSScript *script, JSBool singleStep)
 {
+    assertSameCompartment(cx, script);
+
 #ifdef JS_METHODJIT
     if (!script->singleStepMode == !singleStep)
         return JS_TRUE;
@@ -231,6 +233,7 @@ CheckDebugMode(JSContext *cx)
 JS_PUBLIC_API(JSBool)
 JS_SetSingleStepMode(JSContext *cx, JSScript *script, JSBool singleStep)
 {
+    assertSameCompartment(cx, script);
     if (!CheckDebugMode(cx))
         return JS_FALSE;
 
@@ -472,6 +475,7 @@ JS_HandleTrap(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval)
     jsint op;
     JSTrapStatus status;
 
+    assertSameCompartment(cx, script);
     DBG_LOCK(cx->runtime);
     trap = FindTrap(cx->runtime, script, pc);
     JS_ASSERT(!trap || trap->handler);
@@ -706,6 +710,7 @@ FindWatchPoint(JSRuntime *rt, JSObject *obj, jsid id)
 JSBool
 js_watch_set(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
 {
+    assertSameCompartment(cx, obj);
     JSRuntime *rt = cx->runtime;
     DBG_LOCK(rt);
     for (JSWatchPoint *wp = (JSWatchPoint *)rt->watchPointList.next;
@@ -930,6 +935,8 @@ UpdateWatchpointShape(JSContext *cx, JSWatchPoint *wp, const Shape *newShape)
 const Shape *
 js_SlowPathUpdateWatchpointsForShape(JSContext *cx, JSObject *obj, const Shape *newShape)
 {
+    assertSameCompartment(cx, obj);
+
     /*
      * The watchpoint code uses the normal property-modification functions to install its
      * own watchpoint-aware shapes. Those functions report those changes back to the
@@ -976,6 +983,8 @@ JS_PUBLIC_API(JSBool)
 JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
                  JSWatchPointHandler handler, JSObject *closure)
 {
+    assertSameCompartment(cx, obj);
+
     JSObject *origobj;
     Value v;
     uintN attrs;
@@ -1116,6 +1125,8 @@ JS_PUBLIC_API(JSBool)
 JS_ClearWatchPoint(JSContext *cx, JSObject *obj, jsid id,
                    JSWatchPointHandler *handlerp, JSObject **closurep)
 {
+    assertSameCompartment(cx, obj);
+
     JSRuntime *rt;
     JSWatchPoint *wp;
 
@@ -1143,6 +1154,8 @@ JS_ClearWatchPoint(JSContext *cx, JSObject *obj, jsid id,
 JS_PUBLIC_API(JSBool)
 JS_ClearWatchPointsForObject(JSContext *cx, JSObject *obj)
 {
+    assertSameCompartment(cx, obj);
+
     JSRuntime *rt;
     JSWatchPoint *wp, *next;
     uint32 sample;
@@ -2052,6 +2065,7 @@ static JSFunctionSpec profiling_functions[] = {
 JS_PUBLIC_API(JSBool)
 JS_DefineProfilingFunctions(JSContext *cx, JSObject *obj)
 {
+    assertSameCompartment(cx, obj);
 #ifdef MOZ_PROFILING
     return JS_DefineFunctions(cx, obj, profiling_functions);
 #else
