@@ -692,7 +692,7 @@ gfxWindowsPlatform::WindowsOSVersion()
 }
 
 void 
-gfxWindowsPlatform::GetDLLVersion(PRUnichar *aDLLPath, nsAString& aVersion)
+gfxWindowsPlatform::GetDLLVersion(const PRUnichar *aDLLPath, nsAString& aVersion)
 {
     DWORD versInfoSize, vers[4] = {0};
     // version info not available case
@@ -703,7 +703,7 @@ gfxWindowsPlatform::GetDLLVersion(PRUnichar *aDLLPath, nsAString& aVersion)
     if (!versionInfo.AppendElements(PRUint32(versInfoSize))) {
         return;
     }
-    if (!GetFileVersionInfoW(aDLLPath, NULL, versInfoSize, 
+    if (!GetFileVersionInfoW(aDLLPath, 0, versInfoSize, 
            LPBYTE(versionInfo.Elements()))) {
         return;
     } 
