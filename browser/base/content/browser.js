@@ -4026,10 +4026,6 @@ var XULBrowserWindow = {
     delete this.reloadCommand;
     return this.reloadCommand = document.getElementById("Browser:Reload");
   },
-  get statusTextField () {
-    delete this.statusTextField;
-    return this.statusTextField = document.getElementById("statusbar-display");
-  },
   get isImage () {
     delete this.isImage;
     return this.isImage = document.getElementById("isImage");
@@ -4055,23 +4051,19 @@ var XULBrowserWindow = {
     delete this.throbberElement;
     delete this.stopCommand;
     delete this.reloadCommand;
-    delete this.statusTextField;
     delete this.statusText;
   },
 
   setJSStatus: function (status) {
     this.jsStatus = status;
-    this.updateStatusField();
   },
 
   setJSDefaultStatus: function (status) {
     this.jsDefaultStatus = status;
-    this.updateStatusField();
   },
 
   setDefaultStatus: function (status) {
     this.defaultStatus = status;
-    this.updateStatusField();
   },
 
   setOverLink: function (url, anchorElt) {
@@ -4081,17 +4073,6 @@ var XULBrowserWindow = {
       url = url.replace(/[\u200e\u200f\u202a\u202b\u202c\u202d\u202e]/g,
                         encodeURIComponent);
       gURLBar.setOverLink(url);
-    }
-  }, 
-
-  updateStatusField: function () {
-    var text = this.status || this.jsStatus || this.jsDefaultStatus || this.defaultStatus;
-
-    // check the current value so we don't trigger an attribute change
-    // and cause needless (slow!) UI updates
-    if (this.statusText != text) {
-      this.statusTextField.label = text;
-      this.statusText = text;
     }
   },
 
@@ -4196,12 +4177,19 @@ var XULBrowserWindow = {
 
           if (location.spec != "about:blank") {
             switch (aStatus) {
+              case Components.results.NS_BINDING_ABORTED:
+                msg = gNavigatorBundle.getString("nv_stopped");
+                break;
               case Components.results.NS_ERROR_NET_TIMEOUT:
                 msg = gNavigatorBundle.getString("nv_timeout");
                 break;
             }
           }
         }
+        // If msg is false then we did not have an error (channel may have
+        // been null, in the case of a stray image load).
+        if (!msg && (!location || location.spec != "about:blank"))
+          msg = gNavigatorBundle.getString("nv_done");
 
         this.status = "";
         this.setDefaultStatus(msg);
@@ -4383,7 +4371,6 @@ var XULBrowserWindow = {
 
   onStatusChange: function (aWebProgress, aRequest, aStatus, aMessage) {
     this.status = aMessage;
-    this.updateStatusField();
   },
 
   // Properties used to cache security state used to update the UI
