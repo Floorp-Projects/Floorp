@@ -645,6 +645,8 @@ gfxDWriteFontList::InitFontList()
 {
     LOGREGISTRY(L"InitFontList start");
 
+    mInitialized = PR_FALSE;
+
 #ifdef PR_LOGGING
     LARGE_INTEGER frequency;        // ticks per second
     LARGE_INTEGER t1, t2, t3;           // ticks
