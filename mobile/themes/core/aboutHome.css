@@ -57,12 +57,12 @@ html {
   font-weight: bold;
   color: white;
   background: transparent -moz-linear-gradient(top, rgba(57,89,117,1) 0%, rgba(30,66,98,1) 50%, rgba(24,54,82,1) 90%);
-  -moz-border-radius: 6px;
+  border-radius: 6px;
   padding: 12px;
   padding-bottom: 14px;
   margin-bottom: 12px;
   margin-top: 20px;
-  -moz-box-shadow: inset rgba(0, 0, 0, 0.2) 0 -3px 0px, rgba(0, 0, 0, 0.1) 0px 2px 0px;
+  box-shadow: inset rgba(0, 0, 0, 0.2) 0 -3px 0px, rgba(0, 0, 0, 0.1) 0px 2px 0px;
 }
 
 #header-suffix {
@@ -73,9 +73,9 @@ html {
   background-color: white;
   padding: 0;
   margin-bottom: 8px;
-  -moz-border-radius: 8px;
+  border-radius: 8px;
   border: 1px solid rgba(0,0,0,0.3);
-  -moz-box-shadow: 
+  box-shadow: 
     inset rgba(255, 255, 255, 0.5) 0 1px 0px,
     inset rgba(0, 0, 0, 0.1) 0 -3px 0px,
     rgba(0, 0, 0, 0.1) 0px 2px 0px;
@@ -90,7 +90,7 @@ html {
   background: transparent -moz-linear-gradient(top, rgba(235,235,235,0.2) 0%, rgba(235,235,235,1) 90%);
   margin: 0;
   padding: 4px 12px 8px 12px;
-  -moz-border-radius: 8px 8px 0 0;
+  border-radius: 8px 8px 0 0;
 }
 
 .section-box > div {
@@ -173,9 +173,9 @@ body[dir="rtl"] #newAddons > div:not(.loading) {
   background: transparent -moz-linear-gradient(top, rgba(235,235,235,0.2) 0%, rgba(235,235,235,1) 90%);
   padding: 8px;
   padding-bottom: 12px;
-  -moz-border-radius: 8px;
+  border-radius: 8px;
   border: 1px solid rgba(0,0,0,0.3);
-  -moz-box-shadow: 
+  box-shadow: 
     inset rgba(255, 255, 255, 0.5) 0 1px 0px,
     inset rgba(0, 0, 0, 0.1) 0 -3px 0px,
     rgba(0, 0, 0, 0.1) 0px 2px 0px;
@@ -212,13 +212,23 @@ body[dir="rtl"] {
   text-align: center;
 }
 
-#about {
+#footer-wrapper {
   font-size: 18px;
-  text-align: center;
   margin-top: 24px;
+  text-align: center;
 }
 
-#about > img {
-  vertical-align: middle;
-  margin: 4px;
+#feedback {
+  display: inline-block;
+  padding: 8px;
+  margin: 0;
+  border-radius: 8px 0 0 8px;
+}
+
+#support {
+  display: inline-block;
+  padding: 8px;
+  margin: 0;
+  border-left: none;
+  border-radius: 0 8px 8px 0;
 }

@@ -427,6 +427,7 @@ pref("breakpad.reportURL", "http://crash-stats.mozilla.com/report/index/");
 pref("app.releaseNotesURL", "http://www.mozilla.com/%LOCALE%/mobile/%VERSION%/releasenotes/");
 pref("app.sync.tutorialURL", "https://www.mozilla.com/%LOCALE%/mobile/sync/");
 pref("app.support.baseURL", "http://mobile.support.mozilla.com/");
+pref("app.feedbackURL", "http://input.mozilla.com/feedback/");
 pref("app.privacyURL", "https://www.mozilla.com/%LOCALE%/legal/privacy/firefox/mobile/");
 pref("app.creditsURL", "http://www.mozilla.com/%LOCALE%/mobile/credits/");
 #if MOZ_UPDATE_CHANNEL == beta
