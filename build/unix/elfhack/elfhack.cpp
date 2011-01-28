@@ -150,13 +150,11 @@ public:
         // Find the init symbol
         entry_point = -1;
         int shndx = 0;
-        ElfStrtab_Section *strtab = (ElfStrtab_Section *)symtab->getLink();
-        for (std::vector<Elf_Sym>::iterator sym = symtab->syms.begin();
+        for (std::vector<Elf_SymValue>::iterator sym = symtab->syms.begin();
              sym != symtab->syms.end(); sym++) {
-            const char *name = strtab->getStr(sym->st_name);
-            if (strcmp(name, "init") == 0) {
-                entry_point = sym->st_value;
-                shndx = sym->st_shndx;
+            if (strcmp(sym->name, "init") == 0) {
+                entry_point = sym->value.getValue();
+                shndx = sym->value.getSection()->getIndex();
                 break;
             }
         }
@@ -262,12 +260,11 @@ private:
         char *buf = data + (the_code->getAddr() - code.front()->getAddr());
         // TODO: various checks on the sections
         ElfSymtab_Section *symtab = (ElfSymtab_Section *)rel->getLink();
-        ElfStrtab_Section *strtab = (ElfStrtab_Section *)symtab->getLink();
         for (typename std::vector<Rel_Type>::iterator r = rel->rels.begin(); r != rel->rels.end(); r++) {
             // TODO: various checks on the symbol
-            const char *name = strtab->getStr(symtab->syms[ELF32_R_SYM(r->r_info)].st_name);
+            const char *name = symtab->syms[ELF32_R_SYM(r->r_info)].name;
             unsigned int addr;
-            if (symtab->syms[ELF32_R_SYM(r->r_info)].st_shndx == 0) {
+            if (symtab->syms[ELF32_R_SYM(r->r_info)].value.getSection() == NULL) {
                 if (strcmp(name, "relhack") == 0) {
                     addr = getNext()->getAddr();
                 } else if (strcmp(name, "elf_header") == 0) {
@@ -287,9 +284,9 @@ private:
                     throw std::runtime_error("Unsupported symbol in relocation");
                 }
             } else {
-                ElfSection *section = elf->getSection(symtab->syms[ELF32_R_SYM(r->r_info)].st_shndx);
+                ElfSection *section = symtab->syms[ELF32_R_SYM(r->r_info)].value.getSection();
                 assert((section->getType() == SHT_PROGBITS) && (section->getFlags() & SHF_EXECINSTR));
-                addr = section->getAddr() + symtab->syms[ELF32_R_SYM(r->r_info)].st_value;
+                addr = symtab->syms[ELF32_R_SYM(r->r_info)].value.getValue();
             }
             // Do the relocation
 #define REL(machine, type) (EM_ ## machine | (R_ ## machine ## _ ## type << 8))

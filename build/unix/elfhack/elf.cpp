@@ -328,6 +328,7 @@ ElfSection *Elf::getSection(int index)
         case SHT_RELA:
             sections[index] = new ElfRel_Section<Elf_Rela>(*tmp_shdr[index], tmp_file, this);
             break;
+        case SHT_DYNSYM:
         case SHT_SYMTAB:
             sections[index] = new ElfSymtab_Section(*tmp_shdr[index], tmp_file, this);
             break;
@@ -774,12 +775,40 @@ ElfSymtab_Section::ElfSymtab_Section(Elf_Shdr &s, std::ifstream *file, Elf *pare
 : ElfSection(s, file, parent)
 {
     int pos = file->tellg();
+    syms.resize(s.sh_size / s.sh_entsize);
+    ElfStrtab_Section *strtab = (ElfStrtab_Section *)getLink();
     file->seekg(shdr.sh_offset);
     for (unsigned int i = 0; i < shdr.sh_size / shdr.sh_entsize; i++) {
         Elf_Sym sym(*file, parent->getClass(), parent->getData());
-        syms.push_back(sym);
+        syms[i].name = strtab->getStr(sym.st_name);
+        syms[i].info = sym.st_info;
+        syms[i].other = sym.st_other;
+        ElfSection *section = (sym.st_shndx == SHN_ABS) ? NULL : parent->getSection(sym.st_shndx);
+        new (&syms[i].value) ElfLocation(section, sym.st_value, ElfLocation::ABSOLUTE);
+        syms[i].size = sym.st_size;
+        syms[i].defined = (sym.st_shndx != SHN_UNDEF);
     }
     file->seekg(pos);
+}
+
+void
+ElfSymtab_Section::serialize(std::ofstream &file, char ei_class, char ei_data)
+{
+    ElfStrtab_Section *strtab = (ElfStrtab_Section *)getLink();
+    for (unsigned int i = 0; i < shdr.sh_size / shdr.sh_entsize; i++) {
+        Elf_Sym sym;
+        sym.st_name = strtab->getStrIndex(syms[i].name);
+        sym.st_info = syms[i].info;
+        sym.st_other = syms[i].other;
+        sym.st_value = syms[i].value.getValue();
+        ElfSection *section = syms[i].value.getSection();
+        if (syms[i].defined)
+            sym.st_shndx = section ? section->getIndex() : SHN_ABS;
+        else
+            sym.st_shndx = SHN_UNDEF;
+        sym.st_size = syms[i].size;
+        sym.serialize(file, ei_class, ei_data);
+    }
 }
 
 const char *

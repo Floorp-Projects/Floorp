@@ -161,8 +161,9 @@ class ElfLocation: public ElfValue {
     ElfSection *section;
     unsigned int offset;
 public:
+    enum position { ABSOLUTE, RELATIVE };
     ElfLocation(): section(NULL), offset(0) {};
-    ElfLocation(ElfSection *section, unsigned int offset): section(section), offset(offset) {};
+    ElfLocation(ElfSection *section, unsigned int off, enum position pos = RELATIVE);
     ElfLocation(unsigned int location, Elf *elf);
     unsigned int getValue();
     ElfSection *getSection() { return section; }
@@ -471,12 +472,23 @@ private:
 
 typedef serializable<Elf_Sym_Traits> Elf_Sym;
 
+struct Elf_SymValue {
+    const char *name;
+    unsigned char info;
+    unsigned char other;
+    ElfLocation value;
+    unsigned int size;
+    bool defined;
+};
+
 class ElfSymtab_Section: public ElfSection {
 public:
     ElfSymtab_Section(Elf_Shdr &s, std::ifstream *file, Elf *parent);
 
+    void serialize(std::ofstream &file, char ei_class, char ei_data);
+
 //private: // Until we have a real API
-    std::vector<Elf_Sym> syms;
+    std::vector<Elf_SymValue> syms;
 };
 
 class Elf_Rel: public serializable<Elf_Rel_Traits> {
@@ -579,6 +591,14 @@ inline unsigned int Elf::getSize() {
     for (section = shdr_section /* It's usually not far from the end */;
         section->getNext() != NULL; section = section->getNext());
     return section->getOffset() + section->getSize();
+}
+
+inline ElfLocation::ElfLocation(ElfSection *section, unsigned int off, enum position pos)
+: section(section) {
+    if ((pos == ABSOLUTE) && section)
+        offset = off - section->getAddr();
+    else
+        offset = off;
 }
 
 inline ElfLocation::ElfLocation(unsigned int location, Elf *elf) {
