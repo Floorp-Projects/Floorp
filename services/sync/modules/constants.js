@@ -88,6 +88,9 @@ MASTER_PASSWORD_LOCKED_RETRY_INTERVAL: 15 * 60 * 1000,   // 15 minutes
 // (GUIDs can be up to 64 chars long)
 MOBILE_BATCH_SIZE:                     50,
 
+// Default batch size for applying incoming records.
+DEFAULT_STORE_BATCH_SIZE:              1,
+
 // score thresholds for early syncs
 SINGLE_USER_THRESHOLD:                 1000,
 MULTI_DESKTOP_THRESHOLD:               500,
@@ -151,6 +154,7 @@ RESPONSE_OVER_QUOTA:                   "14",
 ENGINE_UPLOAD_FAIL:                    "error.engine.reason.record_upload_fail",
 ENGINE_DOWNLOAD_FAIL:                  "error.engine.reason.record_download_fail",
 ENGINE_UNKNOWN_FAIL:                   "error.engine.reason.unknown_fail",
+ENGINE_APPLY_FAIL:                     "error.engine.reason.apply_fail",
 ENGINE_METARECORD_DOWNLOAD_FAIL:       "error.engine.reason.metarecord_download_fail",
 ENGINE_METARECORD_UPLOAD_FAIL:         "error.engine.reason.metarecord_upload_fail",
 

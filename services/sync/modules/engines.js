@@ -195,6 +195,21 @@ function Store(name) {
   this._log.level = Log4Moz.Level[level];
 }
 Store.prototype = {
+
+  applyIncomingBatch: function applyIncomingBatch(records) {
+    let failed = [];
+    records.forEach(function (record) {
+      try {
+        this.applyIncoming(record);
+      } catch (ex) {
+        this._log.warn("Failed to apply incoming record " + record.id);
+        this._log.warn("Encountered exception: " + Utils.exceptionStr(ex));
+        failed.push(record.id);
+      }
+    }, this);
+    return failed;
+  },
+
   applyIncoming: function Store_applyIncoming(record) {
     if (record.deleted)
       this.remove(record);
@@ -321,7 +336,6 @@ EngineManagerSvc.prototype = {
 function Engine(name) {
   this.Name = name || "Unnamed";
   this.name = name.toLowerCase();
-  this.downloadLimit = null;
 
   this._notify = Utils.notify("weave:engine:");
   this._log = Log4Moz.repository.getLogger("Engine." + this.Name);
@@ -475,6 +489,8 @@ SyncEngine.prototype = {
   __proto__: Engine.prototype,
   _recordObj: CryptoWrapper,
   version: 1,
+  downloadLimit: null,
+  applyIncomingBatchSize: DEFAULT_STORE_BATCH_SIZE,
 
   get storageURL() Svc.Prefs.get("clusterURL") + Svc.Prefs.get("storageAPI") +
     "/" + ID.get("WeaveID").username + "/storage/",
@@ -649,8 +665,33 @@ SyncEngine.prototype = {
     newitems.full = true;
     newitems.limit = batchSize;
 
-    let count = {applied: 0, reconciled: 0};
+    let count = {applied: 0, failed: 0, reconciled: 0};
     let handled = [];
+    let applyBatch = [];
+    let failed = [];
+    let fetchBatch = this.toFetch;
+
+    function doApplyBatch() {
+      this._tracker.ignoreAll = true;
+      failed = failed.concat(this._store.applyIncomingBatch(applyBatch));
+      this._tracker.ignoreAll = false;
+      applyBatch = [];
+    }
+
+    function doApplyBatchAndPersistFailed() {
+      // Apply remaining batch.
+      if (applyBatch.length) {
+        doApplyBatch.call(this);
+      }
+      // Persist failed items so we refetch them.
+      if (failed.length) {
+        this.toFetch = Utils.arrayUnion(failed, this.toFetch);
+        count.failed += failed.length;
+        this._log.debug("Records that failed to apply: " + failed);
+        failed = [];
+      }
+    }
+
     newitems.recordHandler = Utils.bind2(this, function(item) {
       // Grab a later last modified if possible
       if (this.lastModified == null || item.modified > this.lastModified)
@@ -672,30 +713,41 @@ SyncEngine.prototype = {
           // we've got new keys.
           this._log.info("Trying decrypt again...");
           item.decrypt();
-        }
-       
-        if (this._reconcile(item)) {
-          count.applied++;
-          this._tracker.ignoreAll = true;
-          this._store.applyIncoming(item);
-        } else {
-          count.reconciled++;
-          this._log.trace("Skipping reconciled incoming item " + item.id);
-        }
-      } catch (ex if (Utils.isHMACMismatch(ex))) {
-        this._log.warn("Error processing record: " + Utils.exceptionStr(ex));
-
-        // Upload a new record to replace the bad one if we have it
-        if (this._store.itemExists(item.id))
-          this._modified[item.id] = 0;
+        }       
+      } catch (ex) {
+        this._log.warn("Error decrypting record: " + Utils.exceptionStr(ex));
+        failed.push(item.id);
+        return;
       }
-      this._tracker.ignoreAll = false;
+
+      let shouldApply;
+      try {
+        shouldApply = this._reconcile(item);
+      } catch (ex) {
+        this._log.warn("Failed to reconcile incoming record " + item.id);
+        this._log.warn("Encountered exception: " + Utils.exceptionStr(ex));
+        failed.push(item.id);
+        return;
+      }
+
+      if (shouldApply) {
+        count.applied++;
+        applyBatch.push(item);
+      } else {
+        count.reconciled++;
+        this._log.trace("Skipping reconciled incoming item " + item.id);
+      }
+
+      if (applyBatch.length == this.applyIncomingBatchSize) {
+        doApplyBatch.call(this);
+      }
       Sync.sleep(0);
     });
 
     // Only bother getting data from the server if there's new things
     if (this.lastModified == null || this.lastModified > this.lastSync) {
       let resp = newitems.get();
+      doApplyBatchAndPersistFailed.call(this);
       if (!resp.success) {
         resp.failureCode = ENGINE_DOWNLOAD_FAIL;
         throw resp;
@@ -720,8 +772,10 @@ SyncEngine.prototype = {
       // Figure out which guids weren't just fetched then remove any guids that
       // were already waiting and prepend the new ones
       let extra = Utils.arraySub(guids.obj, handled);
-      if (extra.length > 0)
-        this.toFetch = extra.concat(Utils.arraySub(this.toFetch, extra));
+      if (extra.length > 0) {
+        fetchBatch = Utils.arrayUnion(extra, fetchBatch);
+        this.toFetch = Utils.arrayUnion(extra, this.toFetch);
+      }
     }
 
     // Fast-foward the lastSync timestamp since we have stored the
@@ -731,12 +785,12 @@ SyncEngine.prototype = {
     }
 
     // Mobile: process any backlog of GUIDs
-    while (this.toFetch.length) {
+    while (fetchBatch.length) {
       // Reuse the original query, but get rid of the restricting params
       // and batch remaining records.
       newitems.limit = 0;
       newitems.newer = 0;
-      newitems.ids = this.toFetch.slice(0, batchSize);
+      newitems.ids = fetchBatch.slice(0, batchSize);
 
       // Reuse the existing record handler set earlier
       let resp = newitems.get();
@@ -745,15 +799,31 @@ SyncEngine.prototype = {
         throw resp;
       }
 
-      // This batch was successfully applied.
-      this.toFetch = this.toFetch.slice(batchSize);
+      // This batch was successfully applied. Not using
+      // doApplyBatchAndPersistFailed() here to avoid writing toFetch twice.
+      fetchBatch = fetchBatch.slice(batchSize);
+      let newToFetch = Utils.arraySub(this.toFetch, newitems.ids);
+      this.toFetch = Utils.arrayUnion(newToFetch, failed);
+      count.failed += failed.length;
+      this._log.debug("Records that failed to apply: " + failed);
+      failed = [];
       if (this.lastSync < this.lastModified) {
         this.lastSync = this.lastModified;
       }
     }
 
-    this._log.info(["Records:", count.applied, "applied,", count.reconciled,
-      "reconciled."].join(" "));
+    // Apply remaining items.
+    doApplyBatchAndPersistFailed.call(this);
+
+    if (count.failed) {
+      // Notify observers if records failed to apply. Pass the count object
+      // along so that they can make an informed decision on what to do.
+      Observers.notify("weave:engine:sync:apply-failed", count, this.name);
+    }
+    this._log.info(["Records:",
+                    count.applied, "applied,",
+                    count.failed, "failed to apply,",
+                    count.reconciled, "reconciled."].join(" "));
   },
 
   /**
