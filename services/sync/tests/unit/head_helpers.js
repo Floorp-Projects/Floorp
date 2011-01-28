@@ -1,3 +1,4 @@
+Cu.import("resource://services-sync/util.js");
 var btoa;
 
 // initialize nss
@@ -48,8 +49,6 @@ function loadInSandbox(aUri) {
 }
 
 function FakeTimerService() {
-  Cu.import("resource://services-sync/util.js");
-
   this.callbackQueue = [];
 
   var self = this;
@@ -358,6 +357,10 @@ function ensureThrows(func) {
       do_throw(ex);
     }
   };
+}
+
+function asyncChainTests() {
+  return Utils.asyncChain.apply(this, Array.map(arguments, ensureThrows));
 }
 
 
