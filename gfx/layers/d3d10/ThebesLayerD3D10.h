@@ -51,9 +51,6 @@ public:
   ThebesLayerD3D10(LayerManagerD3D10 *aManager);
   virtual ~ThebesLayerD3D10();
 
-  /* Layer implementation */
-  void SetVisibleRegion(const nsIntRegion& aRegion);
-
   /* ThebesLayer implementation */
   void InvalidateRegion(const nsIntRegion& aRegion);
 
@@ -70,6 +67,9 @@ private:
   /* Shader resource view for our texture */
   nsRefPtr<ID3D10ShaderResourceView> mSRView;
 
+  /* Visible region used when we drew the contents of the textures */
+  nsIntRegion mTextureRegion;
+
   /* Checks if our D2D surface has the right content type */
   void VerifyContentType();
 
@@ -81,6 +81,11 @@ private:
 
   /* Create a new texture */
   void CreateNewTexture(const gfxIntSize &aSize);
+
+  /* Copy a texture region */
+  void CopyRegion(ID3D10Texture2D* aSrc, const nsIntPoint &aSrcOffset,
+                  ID3D10Texture2D* aDest, const nsIntPoint &aDestOffset,
+                  const nsIntRegion &aCopyRegion, nsIntRegion* aValidRegion);
 };
 
 } /* layers */
