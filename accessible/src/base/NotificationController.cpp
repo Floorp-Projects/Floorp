@@ -527,9 +527,13 @@ NotificationController::CoalesceTextChangeEventsFor(AccShowEvent* aTailEvent,
 void
 NotificationController::CreateTextChangeEventFor(AccMutationEvent* aEvent)
 {
-  nsRefPtr<nsHyperTextAccessible> textAccessible = do_QueryObject(
+  nsAccessible* container =
     GetAccService()->GetContainerAccessible(aEvent->mNode,
-                                            aEvent->mAccessible->GetWeakShell()));
+                                            aEvent->mAccessible->GetWeakShell());
+  if (!container)
+    return;
+
+  nsHyperTextAccessible* textAccessible = container->AsHyperText();
   if (!textAccessible)
     return;
 

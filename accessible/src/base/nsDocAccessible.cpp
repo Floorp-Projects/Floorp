@@ -1716,8 +1716,11 @@ nsDocAccessible::FireTextChangeEventForText(nsIContent *aContent,
   if (!accessible)
     return;
 
-  nsRefPtr<nsHyperTextAccessible> textAccessible =
-    do_QueryObject(accessible->GetParent());
+  nsAccessible* parent = accessible->GetParent();
+  if (!parent)
+    return;
+
+  nsHyperTextAccessible* textAccessible = parent->AsHyperText();
   if (!textAccessible)
     return;
 
