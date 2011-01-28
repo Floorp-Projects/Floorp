@@ -172,8 +172,9 @@ html[dir=rtl] .stack-trayed .tab-title {
   box-shadow: none !important;
 }
 
-.focus {
-  box-shadow: rgba(54,79,225,1) 0px 0px 3.5px -1px !important;
+.tab.focus {
+  box-shadow: Highlight 0px 0px 5px 1px !important;
+  border: 1px solid Highlight;
 }
 
 /* Tab: Zooming
