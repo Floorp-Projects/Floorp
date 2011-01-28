@@ -150,6 +150,16 @@ public:
   void ScheduleChildDocBinding(nsDocAccessible* aDocument);
 
   /**
+   * Schedule the accessible tree update because of rendered text changes.
+   */
+  inline void ScheduleTextUpdate(nsIContent* aTextNode)
+  {
+    // Ignore the notification if initial tree construction hasn't been done yet.
+    if (mTreeConstructedState != eTreeConstructionPending)
+      mTextHash.PutEntry(aTextNode);
+  }
+
+  /**
    * Pend accessible tree update for content insertion.
    */
   void ScheduleContentInsertion(nsAccessible* aContainer,
@@ -322,6 +332,17 @@ private:
    * Don't make this an nsAutoTArray; we use SwapElements() on it.
    */
   nsTArray<nsRefPtr<ContentInsertion> > mContentInsertions;
+
+  /**
+   * A pending accessible tree update notifications for rendered text changes.
+   */
+  nsTHashtable<nsPtrHashKey<nsIContent> > mTextHash;
+
+  /**
+   * Update the accessible tree for pending rendered text change notifications.
+   */
+  static PLDHashOperator TextEnumerator(nsPtrHashKey<nsIContent>* aEntry,
+                                        void* aUserArg);
 
   /**
    * Other notifications like DOM events. Don't make this an nsAutoTArray; we
