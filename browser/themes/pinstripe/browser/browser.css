@@ -1935,16 +1935,16 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 #TabsToolbar #alltabs-button {
   list-style-image: url(chrome://browser/skin/tabbrowser/alltabs-box-bkgnd-icon.png);
-  -moz-image-region: rect(0, 22px, 20px, 0);
+  -moz-image-region: rect(0, 17px, 20px, 0);
 }
 
 #TabsToolbar > #alltabs-button:not([disabled="true"]):hover {
-  -moz-image-region: rect(0, 44px, 20px, 22px);
+  -moz-image-region: rect(0, 34px, 20px, 17px);
 }
 
 #TabsToolbar > #alltabs-button[type="menu"][open="true"]:not([disabled="true"]),
 #TabsToolbar > #alltabs-button:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(0, 66px, 20px, 44px);
+  -moz-image-region: rect(0, 51px, 20px, 34px);
 }
 
 #alltabs-button[type="menu"] > .toolbarbutton-menu-dropmarker {
