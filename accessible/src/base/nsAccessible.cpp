@@ -3180,7 +3180,7 @@ nsAccessible::CacheChildren()
 }
 
 void
-nsAccessible::TestChildCache(nsAccessible *aCachedChild)
+nsAccessible::TestChildCache(nsAccessible* aCachedChild) const
 {
 #ifdef DEBUG
   PRInt32 childCount = mChildren.Length();
