@@ -166,6 +166,11 @@ public:
   {
     return GetNode() && GetNode()->IsNodeOfType(nsINode::eCONTENT);
   }
+  bool IsElement() const
+  {
+    nsINode* node = GetNode();
+    return node && node->IsElement();
+  }
   PRBool IsDocument() const
   {
     return GetNode() && GetNode()->IsNodeOfType(nsINode::eDOCUMENT);
