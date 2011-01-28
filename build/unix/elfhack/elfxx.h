@@ -328,10 +328,19 @@ public:
     ElfSection *getPrevious() { return previous; }
 
     virtual bool isRelocatable() {
-        return ((getType() != SHT_NULL) &&
-                (getType() != SHT_NOBITS) &&
-                (getType() != SHT_PROGBITS) &&
-                (getFlags() & SHF_ALLOC));
+        return ((getType() == SHT_SYMTAB) ||
+                (getType() == SHT_STRTAB) ||
+                (getType() == SHT_RELA) ||
+                (getType() == SHT_HASH) ||
+                (getType() == SHT_DYNAMIC) ||
+                (getType() == SHT_NOTE) ||
+                (getType() == SHT_REL) ||
+                (getType() == SHT_DYNSYM) ||
+                (getType() == SHT_GNU_HASH) ||
+                (getType() == SHT_GNU_verdef) ||
+                (getType() == SHT_GNU_verneed) ||
+                (getType() == SHT_GNU_versym)) &&
+                (getFlags() & SHF_ALLOC);
     }
 
     void insertAfter(ElfSection *section, bool dirty = true) {
