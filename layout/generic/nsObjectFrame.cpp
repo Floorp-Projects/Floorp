@@ -166,7 +166,7 @@ enum { XKeyPress = KeyPress };
 
 // accessibility support
 #ifdef ACCESSIBILITY
-#include "nsIAccessibilityService.h"
+#include "nsAccessibilityService.h"
 #endif
 
 #ifdef MOZ_LOGGING
@@ -635,7 +635,7 @@ NS_QUERYFRAME_TAIL_INHERITING(nsObjectFrameSuper)
 already_AddRefed<nsAccessible>
 nsObjectFrame::CreateAccessible()
 {
-  nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
+  nsAccessibilityService* accService = nsIPresShell::AccService();
   return accService ?
     accService->CreateHTMLObjectFrameAccessible(this, mContent,
                                                 PresContext()->PresShell()) :
@@ -2348,12 +2348,9 @@ nsObjectFrame::Instantiate(nsIChannel* aChannel, nsIStreamListener** aStreamList
   mPreventInstantiation = PR_FALSE;
 
 #ifdef ACCESSIBILITY
-  if (PresContext()->PresShell()->IsAccessibilityActive()) {
-    nsCOMPtr<nsIAccessibilityService> accService =
-      do_GetService("@mozilla.org/accessibilityService;1");
-    if (accService) {
-      accService->RecreateAccessible(PresContext()->PresShell(), mContent);
-    }
+  nsAccessibilityService* accService = nsIPresShell::AccService();
+  if (accService) {
+    accService->RecreateAccessible(PresContext()->PresShell(), mContent);
   }
 #endif
 
@@ -2420,12 +2417,9 @@ nsObjectFrame::Instantiate(const char* aMimeType, nsIURI* aURI)
                "Instantiation should still be prevented!");
 
 #ifdef ACCESSIBILITY
-  if (PresContext()->PresShell()->IsAccessibilityActive()) {
-    nsCOMPtr<nsIAccessibilityService> accService =
-      do_GetService("@mozilla.org/accessibilityService;1");
-    if (accService) {
-      accService->RecreateAccessible(PresContext()->PresShell(), mContent);
-    }
+  nsAccessibilityService* accService = nsIPresShell::AccService();
+  if (accService) {
+    accService->RecreateAccessible(PresContext()->PresShell(), mContent);
   }
 #endif
 

@@ -75,7 +75,7 @@
 #include "nsIDOM3EventTarget.h"
 #include "nsIDOMHTMLInputElement.h"
 #ifdef ACCESSIBILITY
-#include "nsIAccessibilityService.h"
+#include "nsAccessibilityService.h"
 #endif
 
 #include "nsInterfaceHashtable.h"
@@ -720,7 +720,7 @@ already_AddRefed<nsAccessible>
 nsFileControlFrame::CreateAccessible()
 {
   // Accessible object exists just to hold onto its children, for later shutdown
-  nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
+  nsAccessibilityService* accService = nsIPresShell::AccService();
   if (!accService)
     return nsnull;
 

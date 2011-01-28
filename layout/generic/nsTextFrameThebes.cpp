@@ -103,7 +103,7 @@
 
 #include "nsIServiceManager.h"
 #ifdef ACCESSIBILITY
-#include "nsIAccessibilityService.h"
+#include "nsAccessibilityService.h"
 #endif
 #include "nsAutoPtr.h"
 
@@ -3546,8 +3546,7 @@ nsTextFrame::CreateAccessible()
     }
   }
 
-  nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
-
+  nsAccessibilityService* accService = nsIPresShell::AccService();
   if (accService) {
     return accService->CreateHTMLTextAccessible(mContent,
                                                 PresContext()->PresShell());
