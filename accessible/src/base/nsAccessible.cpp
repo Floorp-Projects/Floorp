@@ -3203,16 +3203,16 @@ nsAccessible::TestChildCache(nsAccessible* aCachedChild) const
 }
 
 // nsAccessible public
-PRBool
+bool
 nsAccessible::EnsureChildren()
 {
   if (IsDefunct()) {
     mChildrenFlags = eChildrenUninitialized;
-    return PR_TRUE;
+    return true;
   }
 
   if (mChildrenFlags != eChildrenUninitialized)
-    return PR_FALSE;
+    return false;
 
   // State is embedded children until text leaf accessible is appended.
   mChildrenFlags = eEmbeddedChildren; // Prevent reentry
@@ -3227,7 +3227,7 @@ nsAccessible::EnsureChildren()
   if (document)
     document->NotifyOfCachingEnd(this);
 
-  return PR_FALSE;
+  return false;
 }
 
 nsAccessible*
