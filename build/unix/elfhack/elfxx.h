@@ -428,6 +428,10 @@ public:
         // This may be biased, but should work in most cases
         if ((section->getFlags() & SHF_ALLOC) == 0)
             return false;
+        // Special case for PT_DYNAMIC. Eventually, this should
+        // be better handled than special cases
+        if ((p_type == PT_DYNAMIC) && (section->getType() != SHT_DYNAMIC))
+            return false;
         return (addr >= p_vaddr) &&
                (addr + size <= p_vaddr + p_memsz);
 
