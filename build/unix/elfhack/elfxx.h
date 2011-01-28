@@ -568,11 +568,11 @@ inline unsigned int Elf::getSize() {
 
 inline ElfLocation::ElfLocation(unsigned int location, Elf *elf) {
     section = elf->getSectionAt(location);
-    offset = location - section->getAddr();
+    offset = location - (section ? section->getAddr() : 0);
 }
 
 inline unsigned int ElfLocation::getValue() {
-    return section->getAddr() + offset;
+    return (section ? section->getAddr() : 0) + offset;
 }
 
 inline unsigned int ElfSize::getValue() {
