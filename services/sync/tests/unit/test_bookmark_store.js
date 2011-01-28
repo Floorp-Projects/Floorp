@@ -349,7 +349,65 @@ function test_reparentOrphans() {
   }
 }
 
+// Copying a bookmark in the UI also copies its annotations, including the GUID
+// annotation in 3.x.
+function test_copying_avoid_duplicate_guids() {
+  if (store._haveGUIDColumn) {
+    _("No GUID annotation handling functionality; returning without testing.");
+    return;
+  }
+    
+  try {
+    _("Ensure the record isn't present yet.");
+    let ids = Svc.Bookmark.getBookmarkIdsForURI(fxuri, {});
+    do_check_eq(ids.length, 0);
+
+    _("Let's create a new record.");
+    let fxrecord = new Bookmark("bookmarks", "get-firefox1");
+    fxrecord.bmkUri        = fxuri.spec;
+    fxrecord.description   = "Firefox is awesome.";
+    fxrecord.title         = "Get Firefox!";
+    fxrecord.tags          = ["firefox", "awesome", "browser"];
+    fxrecord.keyword       = "awesome";
+    fxrecord.loadInSidebar = false;
+    fxrecord.parentName    = "Bookmarks Toolbar";
+    fxrecord.parentid      = "toolbar";
+    store.applyIncoming(fxrecord);
+
+    _("Verify it has been created correctly.");
+    let id = store.idForGUID(fxrecord.id);
+    do_check_eq(store.GUIDForId(id), fxrecord.id);
+    do_check_true(Svc.Bookmark.getBookmarkURI(id).equals(fxuri));
+    do_check_eq(Utils.anno(id, "bookmarkProperties/description"),
+                fxrecord.description);
+    
+    _("Copy the record as happens in the UI: with the same GUID.");
+    let parentID = Svc.Bookmark.getFolderIdForItem(id);
+    let copy = Svc.Bookmark.insertBookmark(parentID, fxuri, -1, fxrecord.title);
+    Svc.Bookmark.setItemLastModified(copy, Svc.Bookmark.getItemLastModified(id));
+    Svc.Bookmark.setItemDateAdded(copy, Svc.Bookmark.getItemDateAdded(id));
+    store._setGUID(copy, fxrecord.id);
+    
+    do_check_eq(store.GUIDForId(copy), store.GUIDForId(id));
+    
+    _("Calling idForGUID fixes things.");
+    _("GUID before: " + store.GUIDForId(copy));
+    do_check_eq(store.idForGUID(fxrecord.id), id);           // Oldest wins.
+    _("GUID now: " + store.GUIDForId(copy));
+    do_check_neq(store.GUIDForId(copy), store.GUIDForId(id));
+    
+    _("Verify that the anno itself has changed.");
+    do_check_neq(Utils.anno(copy, "sync/guid"), fxrecord.id);
+    do_check_eq(Utils.anno(copy, "sync/guid"), store.GUIDForId(copy));
+    
+  } finally {
+    _("Clean up.");
+    store.wipe();
+  }
+}
+
 function run_test() {
+  initTestLogging('Trace');
   test_bookmark_create();
   test_bookmark_createRecord();
   test_bookmark_update();
@@ -360,4 +418,5 @@ function run_test() {
   test_move_order();
   test_orphan();
   test_reparentOrphans();
+  test_copying_avoid_duplicate_guids();
 }

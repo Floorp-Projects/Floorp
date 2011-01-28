@@ -49,6 +49,15 @@ Cu.import("resource://services-sync/ext/StringBundle.js");
 Cu.import("resource://services-sync/ext/Sync.js");
 Cu.import("resource://services-sync/log4moz.js");
 
+let NetUtil;
+try {
+  let ns = {};
+  Cu.import("resource://gre/modules/NetUtil.jsm", ns);
+  NetUtil = ns.NetUtil;
+} catch (ex) {
+  // Firefox 3.5 :(
+}
+
 /*
  * Utility functions
  */
@@ -1062,19 +1071,42 @@ let Utils = {
       that._log.trace("Loading json from disk: " + filePath);
 
     let file = Utils.getProfileFile(filePath);
-    if (!file.exists())
+    if (!file.exists()) {
+      callback.call(that);
       return;
+    }
 
-    try {
-      let [is] = Utils.open(file, "<");
-      let json = Utils.readStream(is);
+    // Gecko < 2.0
+    if (!NetUtil || !NetUtil.newChannel) {
+      let json;
+      try {
+        let [is] = Utils.open(file, "<");
+        json = JSON.parse(Utils.readStream(is));
+        is.close();
+      } catch (ex) {
+        if (that._log)
+          that._log.debug("Failed to load json: " + Utils.exceptionStr(ex));
+      }
+      callback.call(that, json);
+      return;
+    }
+
+    NetUtil.asyncFetch(file, function (is, result) {
+      if (!Components.isSuccessCode(result)) {
+        callback.call(that);
+        return;
+      }
+      let string = NetUtil.readInputStreamToString(is, is.available());
       is.close();
-      callback.call(that, JSON.parse(json));
-    }
-    catch (ex) {
-      if (that._log)
-        that._log.debug("Failed to load json: " + Utils.exceptionStr(ex));
-    }
+      let json;
+      try {
+        json = JSON.parse(string);
+      } catch (ex) {
+        if (that._log)
+          that._log.debug("Failed to load json: " + Utils.exceptionStr(ex));
+      }
+      callback.call(that, json);
+    });
   },
 
   /**
@@ -1084,21 +1116,44 @@ let Utils = {
    *        Json file path save to weave/[filePath].json
    * @param that
    *        Object to use for logging and "this" for callback
-   * @param callback
+   * @param obj
    *        Function to provide json-able object to save. If this isn't a
    *        function, it'll be used as the object to make a json string.
+   * @param callback
+   *        Function called when the write has been performed. Optional.
    */
-  jsonSave: function Utils_jsonSave(filePath, that, callback) {
+  jsonSave: function Utils_jsonSave(filePath, that, obj, callback) {
     filePath = "weave/" + filePath + ".json";
     if (that._log)
       that._log.trace("Saving json to disk: " + filePath);
 
     let file = Utils.getProfileFile({ autoCreate: true, path: filePath });
-    let json = typeof callback == "function" ? callback.call(that) : callback;
+    let json = typeof obj == "function" ? obj.call(that) : obj;
     let out = JSON.stringify(json);
-    let [fos] = Utils.open(file, ">");
-    fos.writeString(out);
-    fos.close();
+
+    // Firefox 3.5
+    if (!NetUtil) {
+      let [fos] = Utils.open(file, ">");
+      fos.writeString(out);
+      fos.close();
+      if (typeof callback == "function") {
+        callback.call(that);
+      }
+      return;
+    }
+
+    let fos = Cc["@mozilla.org/network/safe-file-output-stream;1"]
+                .createInstance(Ci.nsIFileOutputStream);
+    fos.init(file, MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE, PERMS_FILE, 0);
+    let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+                      .createInstance(Ci.nsIScriptableUnicodeConverter);
+    converter.charset = "UTF-8";
+    let is = converter.convertToInputStream(out);
+    NetUtil.asyncCopy(is, fos, function (result) {
+      if (typeof callback == "function") {
+        callback.call(that);        
+      }
+    });
   },
 
   /**
@@ -1141,6 +1196,7 @@ let Utils = {
     return thisObj[name] = timer;
   },
 
+  // Gecko <2.0
   open: function open(pathOrFile, mode, perms) {
     let stream, file;
 
@@ -1213,6 +1269,7 @@ let Utils = {
     return Str.errors.get("error.reason.unknown");
   },
 
+  // Gecko <2.0
   // assumes an nsIConverterInputStream
   readStream: function Weave_readStream(is) {
     let ret = "", str = {};
