@@ -178,6 +178,68 @@ function test_annotation_uploaded() {
   }
 }
 
+function test_smart_bookmarks_duped() {
+  let parent = PlacesUtils.toolbarFolderId;
+  let uri =
+    Utils.makeURI("place:redirectsMode=" +
+                  Ci.nsINavHistoryQueryOptions.REDIRECTS_MODE_TARGET +
+                  "&sort=" +
+                  Ci.nsINavHistoryQueryOptions.SORT_BY_VISITCOUNT_DESCENDING +
+                  "&maxResults=10");
+  let title = "Most Visited";
+  let mostVisitedID = newSmartBookmark(parent, uri, -1, title, "MostVisited");
+  let mostVisitedGUID = store.GUIDForId(mostVisitedID);
+  
+  let record = store.createRecord(mostVisitedGUID);
+  
+  _("Prepare sync.");
+  Svc.Prefs.set("username", "foo");
+  Service.serverURL = "http://localhost:8080/";
+  Service.clusterURL = "http://localhost:8080/";
+
+  let collection = new ServerCollection({}, true);
+  let global = new ServerWBO('global',
+                             {engines: {bookmarks: {version: engine.version,
+                                                    syncID: engine.syncID}}});
+  let server = httpd_setup({
+    "/1.0/foo/storage/meta/global": global.handler(),
+    "/1.0/foo/storage/bookmarks": collection.handler()
+  });
+  
+  try {
+    engine._syncStartup();
+    
+    _("Verify that lazyMap uses the anno, discovering a dupe regardless of URI.");
+    do_check_eq(mostVisitedGUID, engine._lazyMap(record));
+    
+    record.bmkUri = "http://foo/";
+    do_check_eq(mostVisitedGUID, engine._lazyMap(record));
+    do_check_neq(Svc.Bookmark.getBookmarkURI(mostVisitedID).spec, record.bmkUri);
+    
+    _("Verify that different annos don't dupe.");
+    let other = new BookmarkQuery("bookmarks", "abcdefabcdef");
+    other.queryId = "LeastVisited";
+    other.parentName = "Bookmarks Toolbar";
+    other.bmkUri = "place:foo";
+    other.title = "";
+    do_check_eq(undefined, engine._findDupe(other));
+    
+    _("Handle records without a queryId entry.");
+    record.bmkUri = uri;
+    delete record.queryId;
+    do_check_eq(mostVisitedGUID, engine._lazyMap(record));
+    
+    engine._syncFinish();
+
+  } finally {
+    // Clean up.
+    store.wipe();
+    server.stop(do_test_finished);
+    Svc.Prefs.resetBranch("");
+    Records.clearCache();
+  }
+}
+
 function run_test() {
   initTestLogging("Trace");
   Log4Moz.repository.getLogger("Engine.Bookmarks").level = Log4Moz.Level.Trace;
@@ -185,4 +247,5 @@ function run_test() {
   CollectionKeys.generateNewKeys();
 
   test_annotation_uploaded();
+  test_smart_bookmarks_duped();
 }
