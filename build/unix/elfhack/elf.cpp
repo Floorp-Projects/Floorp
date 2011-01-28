@@ -35,6 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#undef NDEBUG
 #include <cstring>
 #include <assert.h>
 #include "elfxx.h"
@@ -653,6 +654,10 @@ void ElfDynamic_Section::setValueForType(unsigned int tag, ElfValue *val)
     if (i < shdr.sh_size / shdr.sh_entsize)
         return;
 
+    // Growing the .dynamic section needs it to be moved depending where it
+    // was originally. Growing it blindly is dangerous. Safer to just fail
+    // for now
+    throw std::runtime_error("Growing .dynamic section is unsupported");
     Elf_DynValue value;
     value.tag = DT_NULL;
     value.value = NULL;
