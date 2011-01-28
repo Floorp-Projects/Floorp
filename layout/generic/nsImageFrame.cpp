@@ -79,7 +79,7 @@
 #include "nsImageMapUtils.h"
 #include "nsIScriptSecurityManager.h"
 #ifdef ACCESSIBILITY
-#include "nsIAccessibilityService.h"
+#include "nsAccessibilityService.h"
 #endif
 #include "nsIServiceManager.h"
 #include "nsIDOMNode.h"
@@ -192,8 +192,7 @@ NS_QUERYFRAME_TAIL_INHERITING(ImageFrameSuper)
 already_AddRefed<nsAccessible>
 nsImageFrame::CreateAccessible()
 {
-  nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
-
+  nsAccessibilityService* accService = nsIPresShell::AccService();
   if (accService) {
     return accService->CreateHTMLImageAccessible(mContent,
                                                  PresContext()->PresShell());
