@@ -50,6 +50,21 @@ using namespace mozilla;
 using mozilla::layers::ImageContainer;
 using mozilla::layers::PlanarYCbCrImage;
 
+// The maximum height and width of the video. Used for
+// sanitizing the memory allocation of the RGB buffer.
+// The maximum resolution we anticipate encountering in the
+// wild is 2160p - 3840x2160 pixels.
+#define MAX_VIDEO_WIDTH  4000
+#define MAX_VIDEO_HEIGHT 3000
+
+using mozilla::layers::PlanarYCbCrImage;
+
+// Verify these values are sane. Once we've checked the frame sizes, we then
+// can do less integer overflow checking.
+PR_STATIC_ASSERT(MAX_VIDEO_WIDTH < PlanarYCbCrImage::MAX_DIMENSION);
+PR_STATIC_ASSERT(MAX_VIDEO_HEIGHT < PlanarYCbCrImage::MAX_DIMENSION);
+PR_STATIC_ASSERT(PlanarYCbCrImage::MAX_DIMENSION < PR_UINT32_MAX / PlanarYCbCrImage::MAX_DIMENSION);
+
 // Un-comment to enable logging of seek bisections.
 //#define SEEK_LOGGING
 
@@ -71,7 +86,32 @@ ValidatePlane(const VideoData::YCbCrBuffer::Plane& aPlane)
 {
   return aPlane.mWidth <= PlanarYCbCrImage::MAX_DIMENSION &&
          aPlane.mHeight <= PlanarYCbCrImage::MAX_DIMENSION &&
+         aPlane.mWidth * aPlane.mHeight < MAX_VIDEO_WIDTH * MAX_VIDEO_HEIGHT &&
          aPlane.mStride > 0;
+}
+
+PRBool
+nsVideoInfo::ValidateVideoRegion(const nsIntSize& aFrame,
+                                 const nsIntRect& aPicture,
+                                 const nsIntSize& aDisplay)
+{
+  return
+    aFrame.width <= PlanarYCbCrImage::MAX_DIMENSION &&
+    aFrame.height <= PlanarYCbCrImage::MAX_DIMENSION &&
+    aFrame.width * aFrame.height <= MAX_VIDEO_WIDTH * MAX_VIDEO_HEIGHT &&
+    aFrame.width * aFrame.height != 0 &&
+    aPicture.width <= PlanarYCbCrImage::MAX_DIMENSION &&
+    aPicture.x < PlanarYCbCrImage::MAX_DIMENSION &&
+    aPicture.x + aPicture.width < PlanarYCbCrImage::MAX_DIMENSION &&
+    aPicture.height <= PlanarYCbCrImage::MAX_DIMENSION &&
+    aPicture.y < PlanarYCbCrImage::MAX_DIMENSION &&
+    aPicture.y + aPicture.height < PlanarYCbCrImage::MAX_DIMENSION &&
+    aPicture.width * aPicture.height <= MAX_VIDEO_WIDTH * MAX_VIDEO_HEIGHT &&
+    aPicture.width * aPicture.height != 0 &&
+    aDisplay.width <= PlanarYCbCrImage::MAX_DIMENSION &&
+    aDisplay.height <= PlanarYCbCrImage::MAX_DIMENSION &&
+    aDisplay.width * aDisplay.height <= MAX_VIDEO_WIDTH * MAX_VIDEO_HEIGHT &&
+    aDisplay.width * aDisplay.height != 0;
 }
 
 VideoData* VideoData::Create(nsVideoInfo& aInfo,
@@ -100,23 +140,35 @@ VideoData* VideoData::Create(nsVideoInfo& aInfo,
     NS_WARNING("Empty picture rect");
     return nsnull;
   }
-  if (aBuffer.mPlanes[0].mWidth != PRUint32(aInfo.mFrame.width) ||
-      aBuffer.mPlanes[0].mHeight != PRUint32(aInfo.mFrame.height)) {
-    NS_WARNING("Unexpected frame size");
-    return nsnull;
-  }
   if (!ValidatePlane(aBuffer.mPlanes[0]) || !ValidatePlane(aBuffer.mPlanes[1]) ||
       !ValidatePlane(aBuffer.mPlanes[2])) {
     NS_WARNING("Invalid plane size");
     return nsnull;
   }
+
+  PRUint32 picX = aInfo.mPicture.x;
+  PRUint32 picY = aInfo.mPicture.y;
+  gfxIntSize picSize = gfxIntSize(aInfo.mPicture.width, aInfo.mPicture.height);
+
+  if (aInfo.mFrame.width != aBuffer.mPlanes[0].mWidth ||
+      aInfo.mFrame.height != aBuffer.mPlanes[0].mHeight)
+  {
+    // Frame size is different from what the container reports. This is legal
+    // in WebM, and we will preserve the ratio of the crop rectangle as it
+    // was reported relative to the picture size reported by the container.
+    picX = (aInfo.mPicture.x * aBuffer.mPlanes[0].mWidth) / aInfo.mFrame.width;
+    picY = (aInfo.mPicture.y * aBuffer.mPlanes[0].mHeight) / aInfo.mFrame.height;
+    picSize = gfxIntSize((aBuffer.mPlanes[0].mWidth * aInfo.mPicture.width) / aInfo.mFrame.width,
+                         (aBuffer.mPlanes[0].mHeight * aInfo.mPicture.height) / aInfo.mFrame.height);
+  }
+
   // Ensure the picture size specified in the headers can be extracted out of
   // the frame we've been supplied without indexing out of bounds.
   PRUint32 picXLimit;
   PRUint32 picYLimit;
-  if (!AddOverflow32(aInfo.mPicture.x, aInfo.mPicture.width, picXLimit) ||
+  if (!AddOverflow32(picX, picSize.width, picXLimit) ||
       picXLimit > aBuffer.mPlanes[0].mStride ||
-      !AddOverflow32(aInfo.mPicture.y, aInfo.mPicture.height, picYLimit) ||
+      !AddOverflow32(picY, picSize.height, picYLimit) ||
       picYLimit > aBuffer.mPlanes[0].mHeight)
   {
     // The specified picture dimensions can't be contained inside the video
@@ -145,9 +197,9 @@ VideoData* VideoData::Create(nsVideoInfo& aInfo,
   data.mCrChannel = aBuffer.mPlanes[2].mData;
   data.mCbCrSize = gfxIntSize(aBuffer.mPlanes[1].mWidth, aBuffer.mPlanes[1].mHeight);
   data.mCbCrStride = aBuffer.mPlanes[1].mStride;
-  data.mPicX = aInfo.mPicture.x;
-  data.mPicY = aInfo.mPicture.y;
-  data.mPicSize = gfxIntSize(aInfo.mPicture.width, aInfo.mPicture.height);
+  data.mPicX = picX;
+  data.mPicY = picY;
+  data.mPicSize = picSize;
   data.mStereoMode = aInfo.mStereoMode;
 
   videoImage->SetData(data); // Copies buffer

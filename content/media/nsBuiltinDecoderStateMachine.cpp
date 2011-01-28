@@ -1243,7 +1243,7 @@ void nsBuiltinDecoderStateMachine::RenderVideoFrame(VideoData* aData)
   nsRefPtr<Image> image = aData->mImage;
   if (image) {
     const nsVideoInfo& info = mReader->GetInfo();
-    mDecoder->SetVideoData(gfxIntSize(info.mPicture.width, info.mPicture.height), info.mPixelAspectRatio, image);
+    mDecoder->SetVideoData(gfxIntSize(info.mDisplay.width, info.mDisplay.height), info.mPixelAspectRatio, image);
   }
 }
 
