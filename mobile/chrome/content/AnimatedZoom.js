@@ -93,7 +93,8 @@ const AnimatedZoom = {
     // XXX We need a new API, see bug 628799.
     let contentView = browser.getRootView();
     contentView.setScale(zoomLevel);
-    contentView._contentView.scrollTo(nextRect.left * zoomRatio, nextRect.top * zoomRatio);
+    if ("_contentView" in contentView)
+      contentView._contentView.scrollTo(nextRect.left * zoomRatio, nextRect.top * zoomRatio);
 
     this.zoomRect = nextRect;
   },
