@@ -88,3 +88,13 @@ random-if(cocoaWidget&&layersGPUAccelerated) random-if(d2d) == img-width-slice-2
 == svg-image-recursive-1b.svg  svg-image-recursive-1-ref.svg
 == svg-image-recursive-2a.svg  svg-image-recursive-2-ref.svg
 == svg-image-recursive-2b.html svg-image-recursive-2-ref.svg
+
+# tests for external resources vs. data URIs in SVG as an image
+== svg-image-datauri-1.html            lime100x100.svg
+HTTP == svg-image-datauri-1.html       lime100x100.svg
+== svg-image-external-1.html           lime100x100.svg
+HTTP == svg-image-external-1.html      blue100x100.svg
+== svg-stylesheet-datauri-1.html       lime100x100.svg
+HTTP == svg-stylesheet-datauri-1.html  lime100x100.svg
+== svg-stylesheet-external-1.html      lime100x100.svg
+HTTP == svg-stylesheet-external-1.html blue100x100.svg
