@@ -54,6 +54,7 @@ _TEST_FILES =\
 		test_select.html \
 		test_textleaf.html \
 		test_visibility.html \
+		test_whitespace.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
