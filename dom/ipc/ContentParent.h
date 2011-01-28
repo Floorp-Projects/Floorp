@@ -105,8 +105,6 @@ protected:
 private:
     static ContentParent* gSingleton;
 
-    void Cleanup();
-
     // Hide the raw constructor methods since we don't want client code
     // using them.
     using PContentParent::SendPBrowserConstructor;
