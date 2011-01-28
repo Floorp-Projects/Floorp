@@ -303,7 +303,7 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   getStorageData: function TabItem_getStorageData(getImageData) {
     let imageData = null;
 
-    if (getImageData) { 
+    if (getImageData && this.tab.linkedBrowser.currentURI.scheme != 'https') {
       if (this._cachedImageData)
         imageData = this._cachedImageData;
       else if (this.tabCanvas)
