@@ -113,7 +113,7 @@ __thread int foo;
 
 __attribute__((constructor)) void end_test() {
     static int count = 0;
-    // Only exit when both constructors have been called
+    /* Only exit when both constructors have been called */
     if (++count == 2) {
         fprintf(stderr, "PASS\n");
         exit(0);
