@@ -78,7 +78,7 @@ static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 
 nsHyperTextAccessible::
   nsHyperTextAccessible(nsIContent *aNode, nsIWeakReference *aShell) :
-  nsAccessibleWrap(aNode, aShell)
+  nsAccessibleWrap(aNode, aShell), mFlags(eHyperTextAccessible)
 {
 }
 
