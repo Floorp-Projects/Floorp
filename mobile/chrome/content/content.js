@@ -235,7 +235,6 @@ let Content = {
     this._isZoomedToElement = false;
 
     addMessageListener("Browser:Blur", this);
-    addMessageListener("Browser:KeyEvent", this);
     addMessageListener("Browser:MouseOver", this);
     addMessageListener("Browser:MouseLong", this);
     addMessageListener("Browser:MouseDown", this);
@@ -251,12 +250,33 @@ let Content = {
     addEventListener("MozApplicationManifest", this, false);
     addEventListener("command", this, false);
     addEventListener("pagehide", this, false);
+    addEventListener("keypress", this, false, false);
 
     this._formAssistant = new FormAssistant();
   },
 
   handleEvent: function handleEvent(aEvent) {
     switch (aEvent.type) {
+      // If the keypress is a trusted event and has not been consume by content
+      // let's send it back to the chrome process to have it handle shortcuts
+      case "keypress":
+        let timer = new Util.Timeout(function() {
+          if(aEvent.getPreventDefault())
+            return;
+
+          let eventData = {
+            ctrlKey: aEvent.ctrlKey,
+            altKey: aEvent.altKey,
+            shiftKey: aEvent.shiftKey,
+            metaKey: aEvent.metaKey,
+            keyCode: aEvent.keyCode,
+            charCode: aEvent.charCode
+          };
+          sendAsyncMessage("Browser:KeyPress", eventData);
+        });
+        timer.once(0);
+        break;
+
       case "DOMActivate": {
         // In a local tab, open remote links in new tabs.
         let target = aEvent.originalTarget;
@@ -328,23 +348,6 @@ let Content = {
     switch (aMessage.name) {
       case "Browser:Blur":
         gFocusManager.clearFocus(content);
-        break;
-
-      case "Browser:KeyEvent":
-        let utils = Util.getWindowUtils(content);
-        let defaultAction;
-        if (!Util.isParentProcess())
-          defaultAction = utils.sendKeyEvent(json.type, json.keyCode, json.charCode, modifiers);
-        if (defaultAction && json.type == "keypress") {
-          const masks = Ci.nsIDOMNSEvent;
-          sendAsyncMessage("Browser:KeyPress", {
-            ctrlKey: json.modifiers & masks.CONTROL_MASK,
-            shiftKey: json.modifiers & masks.SHIFT_MASK,
-            metaKey: json.modifiers & masks.META_MASK,
-            keyCode: json.keyCode,
-            charCode: json.charCode
-          });
-        }
         break;
 
       case "Browser:MouseOver": {
