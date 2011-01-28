@@ -450,18 +450,6 @@ function openAdvancedPreferences(tabID)
 }
 
 /**
- * Opens the release notes page for this version of the application.
- */
-function openReleaseNotes()
-{
-  var formatter = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
-                            .getService(Components.interfaces.nsIURLFormatter);
-  var relnotesURL = formatter.formatURLPref("app.releaseNotesURL");
-  
-  openUILinkIn(relnotesURL, "tab");
-}
-
-/**
  * Opens the troubleshooting information (about:support) page for this version
  * of the application.
  */
