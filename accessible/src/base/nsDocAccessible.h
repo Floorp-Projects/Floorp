@@ -230,7 +230,15 @@ public:
    *
    * @return the accessible object
    */
-  nsAccessible* GetCachedAccessible(nsINode* aNode);
+  nsAccessible* GetAccessible(nsINode* aNode) const;
+
+  /**
+   * Return whether the given DOM node has an accessible or not.
+   */
+  inline bool HasAccessible(nsINode* aNode)
+  {
+    return GetAccessible(aNode);
+  }
 
   /**
    * Return the cached accessible by the given unique ID within this document.
@@ -239,7 +247,7 @@ public:
    *
    * @param  aUniqueID  [in] the unique ID used to cache the node.
    */
-  nsAccessible* GetCachedAccessibleByUniqueID(void* aUniqueID)
+  inline nsAccessible* GetAccessibleByUniqueID(void* aUniqueID)
   {
     return UniqueID() == aUniqueID ?
       this : mAccessibleCache.GetWeak(aUniqueID);
@@ -249,7 +257,7 @@ public:
    * Return the cached accessible by the given unique ID looking through
    * this and nested documents.
    */
-  nsAccessible* GetCachedAccessibleByUniqueIDInSubtree(void* aUniqueID);
+  nsAccessible* GetAccessibleByUniqueIDInSubtree(void* aUniqueID);
 
   /**
    * Return true if the given ID is referred by relation attribute.

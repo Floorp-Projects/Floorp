@@ -588,8 +588,8 @@ NS_IMETHODIMP nsDocAccessible::GetAssociatedEditor(nsIEditor **aEditor)
 }
 
 // nsDocAccessible public method
-nsAccessible *
-nsDocAccessible::GetCachedAccessible(nsINode *aNode)
+nsAccessible*
+nsDocAccessible::GetAccessible(nsINode* aNode) const
 {
   nsAccessible* accessible = mNodeToAccessibleMap.Get(aNode);
 
@@ -599,7 +599,7 @@ nsDocAccessible::GetCachedAccessible(nsINode *aNode)
     if (GetNode() != aNode)
       return nsnull;
 
-    accessible = this;
+    accessible = const_cast<nsDocAccessible*>(this);
   }
 
 #ifdef DEBUG
@@ -942,7 +942,7 @@ nsDocAccessible::AttributeWillChange(nsIDocument *aDocument,
   // elements.
   if (aModType == nsIDOMMutationEvent::MODIFICATION ||
       aModType == nsIDOMMutationEvent::REMOVAL) {
-    nsAccessible* accessible = GetCachedAccessible(aElement);
+    nsAccessible* accessible = GetAccessible(aElement);
     if (accessible)
       RemoveDependentIDsFor(accessible, aAttribute);
   }
@@ -967,7 +967,7 @@ nsDocAccessible::AttributeChanged(nsIDocument *aDocument,
   // (which is treated as attribute change on this document accessible).
   // Note: we don't bail if all the content hasn't finished loading because
   // these attributes are changing for a loaded part of the content.
-  nsAccessible* accessible = GetCachedAccessible(aElement);
+  nsAccessible* accessible = GetAccessible(aElement);
   if (!accessible && (mContent != aElement))
     return;
 
@@ -1308,16 +1308,16 @@ nsDocAccessible::GetNativeWindow() const
 }
 
 nsAccessible*
-nsDocAccessible::GetCachedAccessibleByUniqueIDInSubtree(void* aUniqueID)
+nsDocAccessible::GetAccessibleByUniqueIDInSubtree(void* aUniqueID)
 {
-  nsAccessible* child = GetCachedAccessibleByUniqueID(aUniqueID);
+  nsAccessible* child = GetAccessibleByUniqueID(aUniqueID);
   if (child)
     return child;
 
   PRUint32 childDocCount = mChildDocuments.Length();
   for (PRUint32 childDocIdx= 0; childDocIdx < childDocCount; childDocIdx++) {
     nsDocAccessible* childDocument = mChildDocuments.ElementAt(childDocIdx);
-    child = childDocument->GetCachedAccessibleByUniqueIDInSubtree(aUniqueID);
+    child = childDocument->GetAccessibleByUniqueIDInSubtree(aUniqueID);
     if (child)
       return child;
   }
@@ -1573,7 +1573,7 @@ nsDocAccessible::AddDependentIDsFor(nsAccessible* aRelProvider,
           // children invalidation (this happens immediately after the caching
           // is finished).
           nsIContent* dependentContent = iter.GetElem(id);
-          if (dependentContent && !GetCachedAccessible(dependentContent)) {
+          if (dependentContent && !HasAccessible(dependentContent)) {
             mInvalidationList.AppendElement(dependentContent);
           }
         }
@@ -1840,7 +1840,7 @@ nsDocAccessible::ProcessContentInserted(nsAccessible* aContainer,
                                         const nsTArray<nsCOMPtr<nsIContent> >* aInsertedContent)
 {
   // Process the notification if the container accessible is still in tree.
-  if (!GetCachedAccessible(aContainer->GetNode()))
+  if (!HasAccessible(aContainer->GetNode()))
     return;
 
   if (aContainer == this) {
@@ -1942,7 +1942,7 @@ nsDocAccessible::UpdateTreeInternal(nsAccessible* aContainer,
     if (aIsInsert && !node->GetPrimaryFrame())
       continue;
 
-    nsAccessible* accessible = GetCachedAccessible(node);
+    nsAccessible* accessible = GetAccessible(node);
 
     if (!accessible) {
       updateFlags |= UpdateTreeInternal(aContainer, node->GetFirstChild(),
