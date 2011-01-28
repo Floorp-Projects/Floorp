@@ -59,7 +59,6 @@
 //
 // Possible options:
 //   id - specifies the groupItem's id; otherwise automatically generated
-//   locked - see <Item.locked>; default is {}
 //   userSize - see <Item.userSize>; default is null
 //   bounds - a <Rect>; otherwise based on the locations of the provided elements
 //   container - a DOM element to use as the container for this groupItem; otherwise will create
@@ -79,7 +78,6 @@ function GroupItem(listOfEls, options) {
   this.id = options.id || GroupItems.getNextID();
   this._isStacked = false;
   this.expanded = null;
-  this.locked = (options.locked ? Utils.copy(options.locked) : {});
   this.topChild = null;
   this.hidden = false;
   this.fadeAwayUndoButtonDelay = 15000;
@@ -193,34 +191,26 @@ function GroupItem(listOfEls, options) {
       self.$titleShield.show();
     })
     .focus(function() {
-      if (self.locked.title) {
-        (self.$title)[0].blur();
-        return;
-      }
       (self.$title)[0].select();
     })
     .keydown(handleKeyDown)
     .keyup(handleKeyUp);
 
-  if (this.locked.title)
-    this.$title.addClass('name-locked');
-  else {
-    this.$titleShield
-      .mousedown(function(e) {
-        self.lastMouseDownTarget = (Utils.isLeftClick(e) ? e.target : null);
-      })
-      .mouseup(function(e) {
-        var same = (e.target == self.lastMouseDownTarget);
-        self.lastMouseDownTarget = null;
-        if (!same)
-          return;
+  this.$titleShield
+    .mousedown(function(e) {
+      self.lastMouseDownTarget = (Utils.isLeftClick(e) ? e.target : null);
+    })
+    .mouseup(function(e) {
+      var same = (e.target == self.lastMouseDownTarget);
+      self.lastMouseDownTarget = null;
+      if (!same)
+        return;
 
-        if (!self.isDragging) {
-          self.$titleShield.hide();
-          (self.$title)[0].focus();
-        }
-      });
-  }
+      if (!self.isDragging) {
+        self.$titleShield.hide();
+        (self.$title)[0].focus();
+      }
+    });
 
   // ___ Stack Expander
   this.$expander = iQ("<div/>")
@@ -237,13 +227,6 @@ function GroupItem(listOfEls, options) {
     if (xulTab.pinned && xulTab.ownerDocument.defaultView == gWindow)
       self.addAppTab(xulTab);
   });
-
-  // ___ locking
-  if (this.locked.bounds)
-    $container.css({cursor: 'default'});
-
-  if (this.locked.close)
-    this.$closeButton.hide();
 
   // ___ Undo Close
   this.$undoContainer = null;
@@ -263,8 +246,7 @@ function GroupItem(listOfEls, options) {
   // ___ Finish Up
   this._addHandlers($container);
 
-  if (!this.locked.bounds)
-    this.setResizable(true, immediately);
+  this.setResizable(true, immediately);
 
   GroupItems.register(this);
 
@@ -318,7 +300,6 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     var data = {
       bounds: this.getBounds(),
       userSize: null,
-      locked: Utils.copy(this.locked),
       title: this.getTitle(),
       id: this.id
     };
@@ -596,10 +577,8 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       });
 
       this._createUndoButton();
-    } else {
-      if (!this.locked.close)
-        this.close();
-    }
+    } else
+      this.close();
     
     this._makeClosestTabActive();
   },
@@ -630,11 +609,11 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
   // ----------
   // Function: closeIfEmpty
-  // Closes the group if it's empty, unlocked, has no title, is closable, and
+  // Closes the group if it's empty, has no title, is closable, and
   // autoclose is enabled (see pauseAutoclose()). Returns true if the close
   // occurred and false otherwise.
   closeIfEmpty: function() {
-    if (!this._children.length && !this.locked.close && !this.getTitle() &&
+    if (!this._children.length && !this.getTitle() &&
         !GroupItems.getUnclosableGroupItemId() &&
         !GroupItems._autoclosePaused) {
       this.close();
@@ -1229,16 +1208,14 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
     let angleAccum = 0;
     children.forEach(function GroupItem__stackArrange_apply(child, index) {
-      if (!child.locked.bounds) {
-        child.setZ(zIndex);
-        zIndex--;
+      child.setZ(zIndex);
+      zIndex--;
 
-        // Force a recalculation of height because we've changed how the title
-        // is shown.
-        child.setBounds(box, !animate, {force:true});
-        child.setRotation((UI.rtl ? -1 : 1) * angleAccum);
-        angleAccum += angleDelta;
-      }
+      // Force a recalculation of height because we've changed how the title
+      // is shown.
+      child.setBounds(box, !animate, {force:true});
+      child.setRotation((UI.rtl ? -1 : 1) * angleAccum);
+      angleAccum += angleDelta;
     });
 
     self._isStacked = true;
@@ -1301,12 +1278,10 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       // (and skip one for the dropPos)
       if (self._dropSpaceActive && index === dropIndex)
         index++;
-      if (!child.locked.bounds) {
-        child.setBounds(rects[index], !options.animate);
-        child.setRotation(0);
-        if (arrangeOptions.z)
-          child.setZ(arrangeOptions.z);
-      }
+      child.setBounds(rects[index], !options.animate);
+      child.setRotation(0);
+      if (arrangeOptions.z)
+        child.setZ(arrangeOptions.z);
       index++;
     });
 
@@ -1576,9 +1551,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       iQ(this.container).removeClass("acceptsDrop");
     }
 
-    if (!this.locked.bounds)
-      this.draggable();
-
+    this.draggable();
     this.droppable(true);
 
     this.$expander.click(function() {
