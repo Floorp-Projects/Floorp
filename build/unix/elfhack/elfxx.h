@@ -452,6 +452,7 @@ public:
 
     void serialize(std::ofstream &file, char ei_class, char ei_data);
 
+    ElfValue *getValueForType(unsigned int tag);
     ElfSection *getSectionForType(unsigned int tag);
     void setValueForType(unsigned int tag, ElfValue *val);
 private:

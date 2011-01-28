@@ -355,7 +355,8 @@ int do_relocation_section(Elf *elf, unsigned int rel_type)
     ElfLocation *init = new ElfLocation(relhackcode, 0);
     dyn->setValueForType(DT_INIT, init);
     // TODO: adjust the value according to the remaining number of relative relocations
-    dyn->setValueForType(Rel_Type::d_tag_count, new ElfPlainValue(0));
+    if (dyn->getValueForType(Rel_Type::d_tag_count))
+        dyn->setValueForType(Rel_Type::d_tag_count, new ElfPlainValue(0));
     return 0;
 }
 
