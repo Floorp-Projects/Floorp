@@ -1550,9 +1550,6 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
 
   PlacesToolbarHelper.init();
 
-  // bookmark-all-tabs command
-  gBookmarkAllTabsHandler.init();
-
   ctrlTab.readPref();
   gPrefService.addObserver(ctrlTab.prefName, ctrlTab, false);
   gPrefService.addObserver(allTabs.prefName, allTabs, false);
@@ -7160,41 +7157,6 @@ function formatURL(aFormat, aIsPref) {
 }
 
 /**
- * This also takes care of updating the command enabled-state when tabs are
- * created or removed.
- */
-var gBookmarkAllTabsHandler = {
-  init: function () {
-    this._command = document.getElementById("Browser:BookmarkAllTabs");
-    gBrowser.tabContainer.addEventListener("TabOpen", this, true);
-    gBrowser.tabContainer.addEventListener("TabClose", this, true);
-    gBrowser.tabContainer.addEventListener("TabShow", this, true);
-    gBrowser.tabContainer.addEventListener("TabHide", this, true);
-    this._updateCommandState();
-  },
-
-  _updateCommandState: function BATH__updateCommandState() {
-    let remainingTabs = gBrowser.visibleTabs.filter(function(tab) {
-      return gBrowser._removingTabs.indexOf(tab) == -1;
-    });
-
-    if (remainingTabs.length > 1)
-      this._command.removeAttribute("disabled");
-    else
-      this._command.setAttribute("disabled", "true");
-  },
-
-  doCommand: function BATH_doCommand() {
-    PlacesCommandHook.bookmarkCurrentPages();
-  },
-
-  // nsIDOMEventListener
-  handleEvent: function(aEvent) {
-    this._updateCommandState();
-  }
-};
-
-/**
  * Utility object to handle manipulations of the identity indicators in the UI
  */
 var gIdentityHandler = {
@@ -8302,6 +8264,12 @@ var TabContextMenu = {
     let unpinnedTabs = gBrowser.visibleTabs.length - gBrowser._numPinnedTabs;
     document.getElementById("context_closeOtherTabs").disabled = unpinnedTabs <= 1;
     document.getElementById("context_closeOtherTabs").hidden = this.contextTab.pinned;
+
+    // Hide "Bookmark All Tabs" for a pinned tab.  Update its state if visible.
+    let bookmarkAllTabs = document.getElementById("context_bookmarkAllTabs");
+    bookmarkAllTabs.hidden = this.contextTab.pinned;
+    if (!bookmarkAllTabs.hidden)
+      PlacesCommandHook.updateBookmarkAllTabsCommand();
 
     // Hide "Move to Group" if it's a pinned tab.
     document.getElementById("context_tabViewMenu").hidden = this.contextTab.pinned;
