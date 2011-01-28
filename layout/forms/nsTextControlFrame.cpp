@@ -1409,6 +1409,20 @@ nsTextControlFrame::SetValueChanged(PRBool aValueChanged)
 {
   nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
   NS_ASSERTION(txtCtrl, "Content not a text control element");
+
+  if (mUsePlaceholder && !nsContentUtils::IsFocusedContent(mContent)) {
+    // If the content is focused, we don't care about the changes because
+    // the placeholder is going to be hidden/shown on blur.
+    PRInt32 textLength;
+    GetTextLength(&textLength);
+
+    nsWeakFrame weakFrame(this);
+    txtCtrl->SetPlaceholderClass(!textLength, PR_TRUE);
+    if (!weakFrame.IsAlive()) {
+      return;
+    }
+  }
+
   txtCtrl->SetValueChanged(aValueChanged);
 }
 
