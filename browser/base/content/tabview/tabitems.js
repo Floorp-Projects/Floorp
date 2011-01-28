@@ -369,7 +369,8 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         }
       }
 
-      if (tabData.imageData)
+      let currentUrl = this.tab.linkedBrowser.currentURI.spec;
+      if (tabData.imageData && tabData.url == currentUrl)
         this.showCachedData(tabData);
     } else {
       // create tab by double click is handled in UI_init().
@@ -973,7 +974,9 @@ let TabItems = {
       // ___ label
       let label = tab.label;
       let $name = tabItem.$tabTitle;
-      if (!tabItem.isShowingCachedData() && $name.text() != label)
+      let isLabelUpdateAllowed = !tabItem.isShowingCachedData() ||
+                                 tabItem.shouldHideCachedData;
+      if (isLabelUpdateAllowed && $name.text() != label)
         $name.text(label);
 
       // ___ thumbnail
