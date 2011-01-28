@@ -135,6 +135,35 @@ function test_overQuota() {
   }
 }
 
+// Slightly misplaced test as it doesn't actually test checkServerError,
+// but the observer for "weave:engine:sync:apply-failed".
+function test_engine_applyFailed() {
+  let server = sync_httpd_setup();
+  do_test_pending();
+  setUp();
+
+  Engines.register(CatapultEngine);
+  let engine = Engines.get("catapult");
+  engine.enabled = true;
+  engine.sync = function sync() {
+    Svc.Obs.notify("weave:engine:sync:apply-failed", {}, "steam");
+  };
+
+  try {
+    do_check_eq(Status.engines["steam"], undefined);
+
+    Service.login();
+    Service.sync();
+
+    do_check_eq(Status.engines["steam"], ENGINE_APPLY_FAIL);
+  } finally {
+    server.stop(do_test_finished);
+    Engines.unregister("catapult");
+    Status.resetSync();
+    Service.startOver();
+  }
+}
+
 function run_test() {
   if (DISABLE_TESTS_BUG_604565)
     return;
@@ -142,4 +171,5 @@ function run_test() {
   test_backoff500();
   test_backoff503();
   test_overQuota();
+  test_engine_applyFailed();
 }

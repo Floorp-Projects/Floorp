@@ -74,7 +74,6 @@ function test_processIncoming_error_orderChildren() {
     "/1.0/foo/storage/bookmarks": collection.handler()
   });
 
-
   try {
 
     let folder1_id = Svc.Bookmark.createFolder(
@@ -98,17 +97,19 @@ function test_processIncoming_error_orderChildren() {
     collection.wbos[folder1_guid] = new ServerWBO(
       folder1_guid, encryptPayload(folder1_payload));
 
-    // Also create a bogus server record (no parent) to provoke an exception.
+    // Create a bogus record that when synced down will provoke a
+    // network error which in turn provokes an exception in _processIncoming.
     const BOGUS_GUID = "zzzzzzzzzzzz";
-    collection.wbos[BOGUS_GUID] = new ServerWBO(
-      BOGUS_GUID, encryptPayload({
-        id: BOGUS_GUID,
-        type: "folder",
-        title: "Bogus Folder",
-        parentid: null,
-        parentName: null,
-        children: []
-    }));
+    let bogus_record = collection.wbos[BOGUS_GUID]
+      = new ServerWBO(BOGUS_GUID, "I'm a bogus record!");
+    bogus_record.get = function get() {
+      throw "Sync this!";
+    };
+
+    // Make the 10 minutes old so it will only be synced in the toFetch phase.
+    bogus_record.modified = Date.now() / 1000 - 60 * 10;
+    engine.lastSync = Date.now() / 1000 - 60;
+    engine.toFetch = [BOGUS_GUID];
 
     let error;
     try {

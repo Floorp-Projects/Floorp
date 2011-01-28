@@ -68,13 +68,13 @@ Utils.deferGetSet(HistoryRec, "cleartext", ["histUri", "title", "visits"]);
 
 function HistoryEngine() {
   SyncEngine.call(this, "History");
-  this.downloadLimit = MAX_HISTORY_DOWNLOAD;
 }
 HistoryEngine.prototype = {
   __proto__: SyncEngine.prototype,
   _recordObj: HistoryRec,
   _storeObj: HistoryStore,
   _trackerObj: HistoryTracker,
+  downloadLimit: MAX_HISTORY_DOWNLOAD,
 
   _sync: Utils.batchSync("History", SyncEngine),
 

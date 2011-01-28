@@ -1451,6 +1451,13 @@ let Utils = {
     return minuend.filter(function(i) subtrahend.indexOf(i) == -1);
   },
 
+  /**
+   * Build the union of two arrays.
+   */
+  arrayUnion: function arrayUnion(foo, bar) {
+    return foo.concat(Utils.arraySub(bar, foo));
+  },
+
   bind2: function Async_bind2(object, method) {
     return function innerBind() { return method.apply(object, arguments); };
   },
