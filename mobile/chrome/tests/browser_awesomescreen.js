@@ -316,9 +316,85 @@ gTests.push({
         self.onPopupReady();
       }, 500);
     } else {
+      BrowserUI.activePanel = null;
       runNextTest();
     }
   }
 });
 
+
+// Case: Test compositionevent
+gTests.push({
+  desc: "Test sending composition events",
+  _textValue: null,
+  get popup() {
+    delete this.popup;
+    return this.popup = document.getElementById("popup_autocomplete");
+  },
+
+  get popupHeader() {
+    delete this.popupHeader;
+    return this.popupHeader = document.getElementById("awesome-header");
+  },
+
+  get inputField() {
+    delete this.inputField;
+    return this.inputField = document.getElementById("urlbar-edit");
+  },
+
+  run: function() {
+    // Saving value to compare the result before and after the composition event
+    gCurrentTest._textValue = gCurrentTest.inputField.value;
+
+    window.addEventListener("popupshown", function() {
+      window.removeEventListener("popupshown", arguments.callee, false);
+      gCurrentTest.inputField.readOnly = false;
+      setTimeout(gCurrentTest.onPopupReady, 0);
+    }, false);
+    AllPagesList.doCommand();
+  },
+
+  _checkState: function() {
+    ok(gCurrentTest.popup._popupOpen, "AutoComplete popup should be opened");
+    is(gCurrentTest.popupHeader.hidden, false, "AutoComplete popup header should be visible");
+    is(gCurrentTest.inputField.value, gCurrentTest._textValue, "Value should not have changed");
+  },
+
+  onPopupReady: function() {
+    gCurrentTest._checkState();
+
+    window.addEventListener("compositionstart", function() {
+      window.removeEventListener("compositionstart", arguments.callee, false);
+      setTimeout(gCurrentTest.onCompositionStart, 0)
+    }, false);
+    Browser.windowUtils.sendCompositionEvent("compositionstart");
+  },
+
+  onCompositionStart: function() {
+    gCurrentTest._checkState();
+
+    window.addEventListener("compositionend", function() {
+      window.removeEventListener("compositionend", arguments.callee, false);
+      setTimeout(gCurrentTest.onCompositionEnd, 0)
+    }, false);
+    Browser.windowUtils.sendCompositionEvent("compositionend");
+  },
+
+  onCompositionEnd: function() {
+    gCurrentTest._checkState();
+
+    let isHiddenHeader = function() {
+      return gCurrentTest.popupHeader.hidden;
+    }
+
+    // Wait to be sure there the header won't dissapear
+    // XXX this sucks because it means we'll be stuck 500ms if the test succeed
+    // but I don't have a better idea about how to do it for now since we don't
+    // that to happen!
+    waitForAndContinue(function() {
+      gCurrentTest._checkState();
+      runNextTest();
+    }, isHiddenHeader, Date.now() + 500);
+  }
+});
 
