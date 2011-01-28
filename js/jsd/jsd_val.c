@@ -211,36 +211,50 @@ jsd_GetValueString(JSDContext* jsdc, JSDValue* jsdval)
     JSContext* cx = jsdc->dumbContext;
     JSExceptionState* exceptionState;
     JSCrossCompartmentCall *call = NULL;
+    jsval stringval;
+    JSString *string;
+    JSBool needWrap;
+    JSObject *scopeObj;
 
-    if(!jsdval->string)
-    {
-        /* if the jsval is a string, then we don't need to double root it */
-        if(JSVAL_IS_STRING(jsdval->val))
-            jsdval->string = JSVAL_TO_STRING(jsdval->val);
-        else
-        {
-            JS_BeginRequest(cx);
-            call = JSVAL_IS_PRIMITIVE(jsdval->val)
-                   ? NULL
-                   : JS_EnterCrossCompartmentCall(jsdc->dumbContext, JSVAL_TO_OBJECT(jsdval->val));
-            if(!call) {
-                JS_EndRequest(cx);
+    if(jsdval->string)
+        return jsdval->string;
 
-                return NULL;
-            }
-
-            exceptionState = JS_SaveExceptionState(cx);
-            jsdval->string = JS_ValueToString(cx, jsdval->val);
-            JS_RestoreExceptionState(cx, exceptionState);
-            if(jsdval->string)
-            {
-                if(!JS_AddNamedStringRoot(cx, &jsdval->string, "ValueString"))
-                    jsdval->string = NULL;
-            }
-            JS_LeaveCrossCompartmentCall(call);
-            JS_EndRequest(cx);
-        }
+    /* Reuse the string without copying or re-rooting it */
+    if(JSVAL_IS_STRING(jsdval->val)) {
+        jsdval->string = JSVAL_TO_STRING(jsdval->val);
+        return jsdval->string;
     }
+
+    JS_BeginRequest(cx);
+
+    /* Objects call JS_ValueToString in their own compartment. */
+    scopeObj = JSVAL_IS_OBJECT(jsdval->val) ? JSVAL_TO_OBJECT(jsdval->val) : jsdc->glob;
+    call = JS_EnterCrossCompartmentCall(cx, scopeObj);
+    if(!call) {
+        JS_EndRequest(cx);
+        return NULL;
+    }
+    exceptionState = JS_SaveExceptionState(cx);
+
+    string = JS_ValueToString(cx, jsdval->val);
+
+    JS_RestoreExceptionState(cx, exceptionState);
+    JS_LeaveCrossCompartmentCall(call);
+
+    stringval = STRING_TO_JSVAL(string);
+    call = JS_EnterCrossCompartmentCall(cx, jsdc->glob);
+    if(!call || !JS_WrapValue(cx, &stringval)) {
+        JS_EndRequest(cx);
+        return NULL;
+    }
+
+    jsdval->string = JSVAL_TO_STRING(stringval);
+    if(!JS_AddNamedStringRoot(cx, &jsdval->string, "ValueString"))
+        jsdval->string = NULL;
+
+    JS_LeaveCrossCompartmentCall(call);
+    JS_EndRequest(cx);
+
     return jsdval->string;
 }
 
@@ -281,6 +295,11 @@ jsd_GetValueFunctionId(JSDContext* jsdc, JSDValue* jsdval)
 
 /***************************************************************************/
 
+/*
+ * Create a new JSD value referring to a jsval. Copy string values into the
+ * JSD compartment. Leave all other GCTHINGs in their native compartments
+ * and access them through cross-compartment calls.
+ */
 JSDValue*
 jsd_NewValue(JSDContext* jsdc, jsval val)
 {
@@ -292,7 +311,7 @@ jsd_NewValue(JSDContext* jsdc, jsval val)
 
     if(JSVAL_IS_GCTHING(val))
     {
-        JSBool ok = JS_FALSE;
+        JSBool ok;
         JS_BeginRequest(jsdc->dumbContext);
 
         call = JS_EnterCrossCompartmentCall(jsdc->dumbContext, jsdc->glob);
@@ -303,6 +322,12 @@ jsd_NewValue(JSDContext* jsdc, jsval val)
         }
 
         ok = JS_AddNamedValueRoot(jsdc->dumbContext, &jsdval->val, "JSDValue");
+        if(ok && JSVAL_IS_STRING(val)) {
+            if(!JS_WrapValue(jsdc->dumbContext, &val)) {
+                ok = JS_FALSE;
+            }
+        }
+
         JS_LeaveCrossCompartmentCall(call);
         JS_EndRequest(jsdc->dumbContext);
         if(!ok)
