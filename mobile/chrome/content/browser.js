@@ -1039,7 +1039,8 @@ var Browser = {
     // See bug 628799.
     let view = browser.getRootView();
     view.setScale(scale);
-    view._contentView.scrollTo(scrollX, scrollY);
+    if ("_contentView" in view)
+      view._contentView.scrollTo(scrollX, scrollY);
 
     // If the scale level doesn't change ensure the view is well refreshed
     // otherwise setting the scale level of the browser will do it
