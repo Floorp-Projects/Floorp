@@ -264,6 +264,11 @@ let Utils = {
     return Utils.encodeBase64url(Utils.generateRandomBytes(9));
   },
 
+  _base64url_regex: /^[-abcdefghijklmnopqrstuvwxyz0123456789_]{12}$/i,
+  checkGUID: function checkGUID(guid) {
+    return !!guid && this._base64url_regex.test(guid);
+  },
+
   anno: function anno(id, anno, val, expire) {
     // Figure out if we have a bookmark or page
     let annoFunc = (typeof id == "number" ? "Item" : "Page") + "Annotation";
