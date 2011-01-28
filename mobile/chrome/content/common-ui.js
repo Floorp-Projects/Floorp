@@ -165,8 +165,8 @@ var PageActions = {
     return this._loginManager = Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
   },
 
-  // This is easy for an addon to add his own perm type here
-  _permissions: ["popup", "offline-app", "geo"],
+  // Permissions we track in Page Actions
+  _permissions: ["popup", "offline-app", "geolocation", "desktop-notification"],
 
   _forEachPermissions: function _forEachPermissions(aHost, aCallback) {
     let pm = Services.perms;
@@ -230,6 +230,10 @@ var PageActions = {
     let host = Browser.selectedBrowser.currentURI;
     this._forEachPermissions(host, function(aType) {
       pm.remove(host.asciiHost, aType);
+
+      // reset the 'remember' counter for permissions that support it
+      if (["geolocation", "desktop-notification"].indexOf(aType) != -1)
+        Services.contentPrefs.setPref(host.asciiHost, aType + ".request.remember", 0);
     });
 
     let lm = this._loginManager;
