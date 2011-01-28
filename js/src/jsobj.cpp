@@ -1051,7 +1051,7 @@ EvalCacheLookup(JSContext *cx, JSLinearString *str, JSStackFrame *caller, uintN 
     while ((script = *scriptp) != NULL) {
         if (script->savedCallerFun &&
             script->staticLevel == staticLevel &&
-            script->version == version &&
+            script->getVersion() == version &&
             !script->hasSingletons &&
             (script->principals == principals ||
              (principals->subsume(principals, script->principals) &&
@@ -1258,7 +1258,8 @@ EvalKernel(JSContext *cx, uintN argc, Value *vp, EvalType evalType, JSStackFrame
         uint32 tcflags = TCF_COMPILE_N_GO | TCF_NEED_MUTABLE_SCRIPT | TCF_COMPILE_FOR_EVAL;
         script = Compiler::compileScript(cx, scopeobj, callerFrame,
                                          principals, tcflags, chars, length,
-                                         filename, lineno, linearStr, staticLevel);
+                                         filename, lineno, cx->findVersion(),
+                                         linearStr, staticLevel);
         if (!script)
             return false;
     }
@@ -1282,7 +1283,7 @@ EvalKernel(JSContext *cx, uintN argc, Value *vp, EvalType evalType, JSStackFrame
     return ok;
 }
 
-bool
+JS_FRIEND_API(bool)
 IsBuiltinEvalFunction(JSFunction *fun)
 {
     return fun->maybeNative() == eval;
@@ -3208,7 +3209,7 @@ js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth)
     JSStackFrame *priv = js_FloatingFrameIfGenerator(cx, cx->fp());
 
     obj->init(cx, &js_WithClass, proto, parent, priv, false);
-    obj->setMap(cx->runtime->emptyWithShape);
+    obj->setMap(cx->compartment->emptyWithShape);
     OBJ_SET_BLOCK_DEPTH(cx, obj, depth);
 
     AutoObjectRooter tvr(cx, obj);
@@ -3234,7 +3235,7 @@ js_NewBlockObject(JSContext *cx)
         return NULL;
 
     blockObj->init(cx, &js_BlockClass, NULL, NULL, NULL, false);
-    blockObj->setMap(cx->runtime->emptyBlockShape);
+    blockObj->setMap(cx->compartment->emptyBlockShape);
     return blockObj;
 }
 
@@ -4645,7 +4646,7 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &valu
      * member declaration.
      */
     if (obj->isDelegate() && (attrs & (JSPROP_READONLY | JSPROP_SETTER)))
-        cx->runtime->protoHazardShape = js_GenerateShape(cx, false);
+        cx->runtime->protoHazardShape = js_GenerateShape(cx);
 
     /* Use the object's class getter and setter by default. */
     clasp = obj->getClass();
@@ -5274,7 +5275,7 @@ js_GetPropertyHelperWithShapeInline(JSContext *cx, JSObject *obj, JSObject *rece
             if (op == JSOP_GETXPROP) {
                 flags = JSREPORT_ERROR;
             } else {
-                if (!JS_HAS_STRICT_OPTION(cx) ||
+                if (!cx->hasStrictOption() ||
                     (op != JSOP_GETPROP && op != JSOP_GETELEM) ||
                     js_CurrentPCIsInImacro(cx)) {
                     return JS_TRUE;
@@ -5407,7 +5408,7 @@ js_CheckUndeclaredVarAssignment(JSContext *cx, JSString *propname)
 
     /* If neither cx nor the code is strict, then no check is needed. */
     if (!(fp->isScriptFrame() && fp->script()->strictModeCode) &&
-        !JS_HAS_STRICT_OPTION(cx)) {
+        !cx->hasStrictOption()) {
         return true;
     }
 
@@ -5483,7 +5484,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
                 if (pd.attrs & JSPROP_READONLY) {
                     if (strict)
                         return obj->reportReadOnly(cx, id);
-                    if (JS_HAS_STRICT_OPTION(cx))
+                    if (cx->hasStrictOption())
                         return obj->reportReadOnly(cx, id, JSREPORT_STRICT | JSREPORT_WARNING);
                     return true;
                 }
@@ -5528,7 +5529,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
                 /* Error in strict mode code, warn with strict option, otherwise do nothing. */
                 if (strict)
                     return obj->reportReadOnly(cx, id);
-                if (JS_HAS_STRICT_OPTION(cx))
+                if (cx->hasStrictOption())
                     return obj->reportReadOnly(cx, id, JSREPORT_STRICT | JSREPORT_WARNING);
                 return JS_TRUE;
             }
@@ -5621,7 +5622,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
             /* Error in strict mode code, warn with strict option, otherwise do nothing. */
             if (strict)
                 return obj->reportNotExtensible(cx);
-            if (JS_HAS_STRICT_OPTION(cx))
+            if (cx->hasStrictOption())
                 return obj->reportNotExtensible(cx, JSREPORT_STRICT | JSREPORT_WARNING);
             return JS_TRUE;
         }

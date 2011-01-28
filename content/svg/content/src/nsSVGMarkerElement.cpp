@@ -220,7 +220,8 @@ NS_IMETHODIMP nsSVGMarkerElement::SetOrientToAngle(nsIDOMSVGAngle *angle)
     return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
 
   float f;
-  angle->GetValue(&f);
+  nsresult rv = angle->GetValue(&f);
+  NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_FINITE(f, NS_ERROR_DOM_SVG_WRONG_TYPE_ERR);
   mAngleAttributes[ORIENT].SetBaseValue(f, this);
 
