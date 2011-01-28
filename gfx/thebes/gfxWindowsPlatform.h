@@ -227,7 +227,7 @@ public:
 
     static PRInt32 WindowsOSVersion();
 
-    static void GetDLLVersion(PRUnichar *aDLLPath, nsAString& aVersion);
+    static void GetDLLVersion(const PRUnichar *aDLLPath, nsAString& aVersion);
 
     virtual void FontsPrefsChanged(nsIPrefBranch *aPrefBranch, const char *aPref);
 
