@@ -52,14 +52,14 @@ namespace js {
 
 inline
 Bindings::Bindings(JSContext *cx)
-  : lastBinding(cx->compartment->emptyCallShape), nargs(0), nvars(0), nupvars(0)
+  : lastBinding(cx->runtime->emptyCallShape), nargs(0), nvars(0), nupvars(0)
 {
 }
 
 inline void
 Bindings::transfer(JSContext *cx, Bindings *bindings)
 {
-    JS_ASSERT(lastBinding == cx->compartment->emptyCallShape);
+    JS_ASSERT(lastBinding == cx->runtime->emptyCallShape);
 
     *this = *bindings;
 #ifdef DEBUG
@@ -74,7 +74,7 @@ Bindings::transfer(JSContext *cx, Bindings *bindings)
 inline void
 Bindings::clone(JSContext *cx, Bindings *bindings)
 {
-    JS_ASSERT(lastBinding == cx->compartment->emptyCallShape);
+    JS_ASSERT(lastBinding == cx->runtime->emptyCallShape);
 
     /*
      * Non-dictionary bindings are fine to share, as are dictionary bindings if
