@@ -229,6 +229,7 @@ Elf::Elf(std::ifstream &file)
 
     // Fake section for program headers
     s.sh_offset = ehdr->e_phoff;
+    s.sh_addr = ehdr->e_phoff;
     s.sh_entsize = Elf_Phdr::size(e_ident[EI_CLASS]);
     s.sh_size = s.sh_entsize * ehdr->e_phnum;
     phdr_section = new ElfSection(s, NULL, NULL);
@@ -269,7 +270,7 @@ Elf::Elf(std::ifstream &file)
         if ((phdr.p_type == PT_LOAD) && (phdr.p_offset == 0)) {
             // Use a fake section for ehdr and phdr
             ehdr->getShdr().sh_addr = phdr.p_vaddr;
-            phdr_section->getShdr().sh_addr = phdr.p_vaddr + ehdr->e_ehsize;
+            phdr_section->getShdr().sh_addr += phdr.p_vaddr;
             segment->addSection(ehdr);
             segment->addSection(phdr_section);
             ehdr->markDirty();
