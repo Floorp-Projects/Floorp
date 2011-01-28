@@ -189,6 +189,7 @@ gfxUnicodeProperties::ScriptShapingLevel(PRInt32 aScriptCode)
     case HB_SCRIPT_KANNADA:
     case HB_SCRIPT_MALAYALAM:
     case HB_SCRIPT_ORIYA:
+    case HB_SCRIPT_SINHALA:
     case HB_SCRIPT_TAMIL:
     case HB_SCRIPT_TELUGU:
     case HB_SCRIPT_KHMER:
