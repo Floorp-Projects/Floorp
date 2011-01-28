@@ -185,7 +185,7 @@ nsresult nsAccessible::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 nsAccessible::nsAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
   nsAccessNodeWrap(aContent, aShell),
-  mParent(nsnull), mIndexInParent(-1), mChildrenFlags(eChildrenUninitialized),
+  mParent(nsnull), mIndexInParent(-1), mFlags(eChildrenUninitialized),
   mIndexOfEmbeddedChild(-1), mRoleMapEntry(nsnull)
 {
 #ifdef NS_DEBUG_X
@@ -2758,7 +2758,7 @@ nsAccessible::InvalidateChildren()
 
   mEmbeddedObjCollector = nsnull;
   mChildren.Clear();
-  mChildrenFlags = eChildrenUninitialized;
+  SetChildrenFlag(eChildrenUninitialized);
 }
 
 PRBool
@@ -2771,7 +2771,7 @@ nsAccessible::AppendChild(nsAccessible* aChild)
     return PR_FALSE;
 
   if (!nsAccUtils::IsEmbeddedObject(aChild))
-    mChildrenFlags = eMixedChildren;
+    SetChildrenFlag(eMixedChildren);
 
   aChild->BindToParent(this, mChildren.Length() - 1);
   return PR_TRUE;
@@ -2792,7 +2792,7 @@ nsAccessible::InsertChildAt(PRUint32 aIndex, nsAccessible* aChild)
   }
 
   if (nsAccUtils::IsText(aChild))
-    mChildrenFlags = eMixedChildren;
+    SetChildrenFlag(eMixedChildren);
 
   mEmbeddedObjCollector = nsnull;
 
@@ -2905,7 +2905,7 @@ nsAccessible::GetEmbeddedChildCount()
   if (EnsureChildren())
     return -1;
 
-  if (mChildrenFlags == eMixedChildren) {
+  if (IsChildrenFlag(eMixedChildren)) {
     if (!mEmbeddedObjCollector)
       mEmbeddedObjCollector = new EmbeddedObjCollector(this);
     return mEmbeddedObjCollector ? mEmbeddedObjCollector->Count() : -1;
@@ -2920,7 +2920,7 @@ nsAccessible::GetEmbeddedChildAt(PRUint32 aIndex)
   if (EnsureChildren())
     return nsnull;
 
-  if (mChildrenFlags == eMixedChildren) {
+  if (IsChildrenFlag(eMixedChildren)) {
     if (!mEmbeddedObjCollector)
       mEmbeddedObjCollector = new EmbeddedObjCollector(this);
     return mEmbeddedObjCollector ?
@@ -2936,7 +2936,7 @@ nsAccessible::GetIndexOfEmbeddedChild(nsAccessible* aChild)
   if (EnsureChildren())
     return -1;
 
-  if (mChildrenFlags == eMixedChildren) {
+  if (IsChildrenFlag(eMixedChildren)) {
     if (!mEmbeddedObjCollector)
       mEmbeddedObjCollector = new EmbeddedObjCollector(this);
     return mEmbeddedObjCollector ?
@@ -3185,7 +3185,7 @@ nsAccessible::TestChildCache(nsAccessible* aCachedChild) const
 #ifdef DEBUG
   PRInt32 childCount = mChildren.Length();
   if (childCount == 0) {
-    NS_ASSERTION(mChildrenFlags == eChildrenUninitialized,
+    NS_ASSERTION(IsChildrenFlag(eChildrenUninitialized),
                  "No children but initialized!");
     return;
   }
@@ -3207,15 +3207,15 @@ bool
 nsAccessible::EnsureChildren()
 {
   if (IsDefunct()) {
-    mChildrenFlags = eChildrenUninitialized;
+    SetChildrenFlag(eChildrenUninitialized);
     return true;
   }
 
-  if (mChildrenFlags != eChildrenUninitialized)
+  if (!IsChildrenFlag(eChildrenUninitialized))
     return false;
 
   // State is embedded children until text leaf accessible is appended.
-  mChildrenFlags = eEmbeddedChildren; // Prevent reentry
+  SetChildrenFlag(eEmbeddedChildren); // Prevent reentry
 
   // Notify the document about caching status.
   nsDocAccessible* document = GetDocAccessible();
