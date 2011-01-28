@@ -206,9 +206,7 @@ GetURIFromJSObject(JSContext* aCtx,
   NS_ENSURE_TRUE(rc, nsnull);
 
   if (!JSVAL_IS_PRIMITIVE(uriVal)) {
-    static NS_DEFINE_CID(kXPConnectCID, NS_XPCONNECT_CID);
-    nsCOMPtr<nsIXPConnect> xpc = do_GetService(kXPConnectCID);
-    NS_ENSURE_TRUE(xpc, nsnull);
+    nsCOMPtr<nsIXPConnect> xpc = mozilla::services::GetXPConnect();
 
     nsCOMPtr<nsIXPConnectWrappedNative> wrappedObj;
     nsresult rv = xpc->GetWrappedNativeOfJSObject(aCtx, JSVAL_TO_OBJECT(uriVal),
