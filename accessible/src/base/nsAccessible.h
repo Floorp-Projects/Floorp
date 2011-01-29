@@ -261,7 +261,7 @@ public:
   /**
    * Return parent accessible.
    */
-  virtual nsAccessible* GetParent();
+  nsAccessible* GetParent() const { return mParent; }
 
   /**
    * Return child accessible at the given index.
