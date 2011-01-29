@@ -205,7 +205,7 @@ _dumpJSDScript(JSDContext* jsdc, JSDScript* jsdscript, const char* leadingtext)
     size_t n;
 
     name   = jsd_GetScriptFilename(jsdc, jsdscript);
-    fun    = jsd_GetScriptFunctionName(jsdc, jsdscript);
+    fun    = jsd_GetScriptFunctionId(jsdc, jsdscript);
     base   = jsd_GetScriptBaseLineNumber(jsdc, jsdscript);
     extent = jsd_GetScriptLineExtent(jsdc, jsdscript);
     n = size_t(snprintf(Buf, sizeof(Buf), "%sscript=%08X, %s, ",
@@ -498,7 +498,7 @@ jsd_GetScriptFilename(JSDContext* jsdc, JSDScript *jsdscript)
 }
 
 JSString*
-jsd_GetScriptFunctionName(JSDContext* jsdc, JSDScript *jsdscript)
+jsd_GetScriptFunctionId(JSDContext* jsdc, JSDScript *jsdscript)
 {
     JSString* str;
 

@@ -461,7 +461,7 @@ extern const char*
 jsd_GetScriptFilename(JSDContext* jsdc, JSDScript *jsdscript);
 
 extern JSString*
-jsd_GetScriptFunctionName(JSDContext* jsdc, JSDScript *jsdscript);
+jsd_GetScriptFunctionId(JSDContext* jsdc, JSDScript *jsdscript);
 
 extern uintN
 jsd_GetScriptBaseLineNumber(JSDContext* jsdc, JSDScript *jsdscript);
@@ -725,9 +725,9 @@ jsd_GetThisForStackFrame(JSDContext* jsdc,
                          JSDStackFrameInfo* jsdframe);
 
 extern JSString*
-jsd_GetNameForStackFrame(JSDContext* jsdc, 
-                         JSDThreadState* jsdthreadstate,
-                         JSDStackFrameInfo* jsdframe);
+jsd_GetIdForStackFrame(JSDContext* jsdc, 
+                       JSDThreadState* jsdthreadstate,
+                       JSDStackFrameInfo* jsdframe);
 
 extern JSDThreadState*
 jsd_NewThreadState(JSDContext* jsdc, JSContext *cx);
@@ -970,7 +970,7 @@ extern JSString*
 jsd_GetValueString(JSDContext* jsdc, JSDValue* jsdval);
 
 extern JSString*
-jsd_GetValueFunctionName(JSDContext* jsdc, JSDValue* jsdval);
+jsd_GetValueFunctionId(JSDContext* jsdc, JSDValue* jsdval);
 
 extern JSFunction*
 jsd_GetValueFunction(JSDContext* jsdc, JSDValue* jsdval);
