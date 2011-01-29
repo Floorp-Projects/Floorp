@@ -154,7 +154,7 @@ _scriptHook( JSDContext* jsdc,
     if( creating )
     {
         char* url      = (char*)JSD_GetScriptFilename       (jsdc, jsdscript);
-        char* function = (char*)JSD_GetScriptFunctionName   (jsdc, jsdscript);
+        JSString* function =    JSD_GetScriptFunctionId     (jsdc, jsdscript);
         int base       =        JSD_GetScriptBaseLineNumber (jsdc, jsdscript);
         int extent     =        JSD_GetScriptLineExtent     (jsdc, jsdscript);
 

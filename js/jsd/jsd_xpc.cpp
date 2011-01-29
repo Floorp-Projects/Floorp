@@ -991,7 +991,7 @@ jsdScript::jsdScript (JSDContext *aCx, JSDScript *aScript) : mValid(PR_FALSE),
         mFileName = new nsCString(JSD_GetScriptFilename(mCx, mScript));
         mFunctionName = new nsCString();
         if (mFunctionName) {
-            JSString *str = JSD_GetScriptFunctionName(mCx, mScript);
+            JSString *str = JSD_GetScriptFunctionId(mCx, mScript);
             if (str)
                 AssignToJSString(mFunctionName, str);
         }
@@ -1907,7 +1907,7 @@ NS_IMETHODIMP
 jsdStackFrame::GetFunctionName(nsACString &_rval)
 {
     ASSERT_VALID_EPHEMERAL;
-    JSString *str = JSD_GetNameForStackFrame(mCx, mThreadState, mStackFrameInfo);
+    JSString *str = JSD_GetIdForStackFrame(mCx, mThreadState, mStackFrameInfo);
     if (str)
         return AssignToJSString(&_rval, str);
     
@@ -2239,7 +2239,7 @@ NS_IMETHODIMP
 jsdValue::GetJsFunctionName(nsACString &_rval)
 {
     ASSERT_VALID_EPHEMERAL;
-    return AssignToJSString(&_rval, JSD_GetValueFunctionName(mCx, mValue));
+    return AssignToJSString(&_rval, JSD_GetValueFunctionId(mCx, mValue));
 }
 
 NS_IMETHODIMP

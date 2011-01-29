@@ -72,7 +72,7 @@ EXPORTS
 	_JSD_GetScriptBaseLineNumber
 	_JSD_GetScriptFilename
 	_JSD_GetScriptForStackFrame
-	_JSD_GetScriptFunctionName
+	_JSD_GetScriptFunctionId
 	_JSD_GetScriptHook
 	_JSD_GetScriptLineExtent
 	_JSD_GetSourceAlterCount

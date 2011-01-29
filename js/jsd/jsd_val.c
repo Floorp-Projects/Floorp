@@ -245,7 +245,7 @@ jsd_GetValueString(JSDContext* jsdc, JSDValue* jsdval)
 }
 
 JSString*
-jsd_GetValueFunctionName(JSDContext* jsdc, JSDValue* jsdval)
+jsd_GetValueFunctionId(JSDContext* jsdc, JSDValue* jsdval)
 {
     JSContext* cx = jsdc->dumbContext;
     JSFunction* fun;
