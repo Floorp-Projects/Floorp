@@ -57,14 +57,14 @@ function start() {
 
   function setPreferGL(value) {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    prefSvc().setBoolPref("webgl.prefer_gl", value);
+    prefSvc().setBoolPref("webgl.prefer-native-gl", value);
   }
 
   function getPreferGL() {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     var retval = false;
     try {
-      retval = prefSvc().getBoolPref("webgl.prefer_gl");
+      retval = prefSvc().getBoolPref("webgl.prefer-native-gl");
     } catch (ex) { }
     return retval;
   }
