@@ -158,7 +158,7 @@ jsd_Constructing(JSDContext* jsdc, JSContext *cx, JSObject *obj,
             JSD_UNLOCK_SCRIPTS(jsdc);
             if( jsdscript )
             {
-                ctorName = jsd_GetScriptFunctionName(jsdc, jsdscript);
+                ctorName = jsd_GetScriptFunctionId(jsdc, jsdscript);
                 if( ctorName )
                     jsdobj->ctorName = jsd_AddAtom(jsdc, ctorName);
             }
