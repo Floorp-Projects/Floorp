@@ -1286,6 +1286,11 @@ jsdScript::GetParameterNames(PRUint32* count, PRUnichar*** paramNames)
         return NS_ERROR_FAILURE;
     }
     JSFunction *fun = JSD_GetJSFunction (mCx, mScript);
+    if (!fun) {
+        *count = 0;
+        *paramNames = nsnull;
+        return NS_OK;
+    }
 
     JSAutoRequest ar(cx);
     JSAutoEnterCompartment ac;
@@ -1293,8 +1298,7 @@ jsdScript::GetParameterNames(PRUint32* count, PRUnichar*** paramNames)
         return NS_ERROR_FAILURE;
 
     uintN nargs;
-    if (!fun ||
-        !JS_FunctionHasLocalNames(cx, fun) ||
+    if (!JS_FunctionHasLocalNames(cx, fun) ||
         (nargs = JS_GetFunctionArgumentCount(cx, fun)) == 0) {
         *count = 0;
         *paramNames = nsnull;
