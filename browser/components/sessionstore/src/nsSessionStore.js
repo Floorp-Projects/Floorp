@@ -2345,7 +2345,13 @@ SessionStoreService.prototype = {
     // prevent unnecessary flickering
     if (aOverwriteTabs && tabbrowser.selectedTab._tPos >= newTabCount)
       tabbrowser.moveTabTo(tabbrowser.selectedTab, newTabCount - 1);
-    
+
+    // unpin all tabs to ensure they are not reordered in the next loop
+    if (aOverwriteTabs) {
+      for (let t = tabbrowser._numPinnedTabs - 1; t > -1; t--)
+        tabbrowser.unpinTab(tabbrowser.tabs[t]);
+    }
+
     for (var t = 0; t < newTabCount; t++) {
       tabs.push(t < openTabCount ?
                 tabbrowser.tabs[t] :
@@ -2357,8 +2363,6 @@ SessionStoreService.prototype = {
 
       if (winData.tabs[t].pinned)
         tabbrowser.pinTab(tabs[t]);
-      else
-        tabbrowser.unpinTab(tabs[t]);
 
       if (winData.tabs[t].hidden)
         tabbrowser.hideTab(tabs[t]);
