@@ -23,6 +23,8 @@
 #
 # Contributor(s):
 #   Marco Bonardo <mak77@bonardo.net> (original author)
+#   Mihai Sucan <mihai.sucan@gmail.com>
+#   Stephen Horlander <shorlander@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -63,32 +65,41 @@
   </head>
 
   <body dir="&locale.dir;" onload="onLoad(event)">
-    <div id="pageContainer">
-      <div id="topSection">
-        <div id="brandStart">
-          &abouthome.brandStart;
+    <div id="brandStartSpacer" />
+    <div id="brandStart">
+      <img id="brandStartLogo" src="chrome://branding/content/about-logo.png" alt="" />
+    </div>
+
+    <div id="searchContainer">
+      <form name="searchForm" id="searchForm" onsubmit="onSearchSubmit(event)">
+        <div id="searchLogoContainer"><img id="searchEngineLogo" /></div>
+        <div id="searchInputContainer">
+          <input type="text" name="searchText" value="" id="searchText" maxLength="256" />
         </div>
-        <div id ="searchContainer">
-          <img id="searchEngineLogo"/>
-          <form name="searchForm" onsubmit="onSearchSubmit(event)">
-            <input type="text" name="searchText" value="" id="searchText" maxLength="256"/>
-            <input type="submit" value="&abouthome.searchEngineButton.label;"/>
-            <span id="searchEngineLinks">
-              <a hidden="true" id="searchEngineAdvancedLink">&abouthome.searchEngineLinks.advanced;</a>
-              <a hidden="true" id="searchEngineAdvancedPreferences">&abouthome.searchEngineLinks.preferences;</a>
-            </span>
-          </form>
+        <div id="searchButtons">
+          <input id="searchSubmit" type="submit" value="&abouthome.searchEngineButton.label;" />
+          <span id="searchEngineLinks">
+            <a hidden="true" id="searchEngineAdvancedLink">&abouthome.searchEngineLinks.advanced;</a>
+            <a hidden="true" id="searchEngineAdvancedPreferences">&abouthome.searchEngineLinks.preferences;</a>
+          </span>
         </div>
+      </form>
+    </div>
+
+    <div id="contentContainer">
+      <div id="snippetContainer">
+        <div id="defaultSnippets">
+          <span hidden="true">&abouthome.defaultSnippet1.v1;</span>
+          <span hidden="true">&abouthome.defaultSnippet2.v1;</span>
+        </div>
+
+        <div id="snippets" hidden="true"/>
       </div>
-      <div id="defaultSnippets">
-        <span hidden="true">&abouthome.defaultSnippet1.v1;</span>
-        <span hidden="true">&abouthome.defaultSnippet2.v1;</span>
-      </div>
-      <div id="snippets" hidden="true"/>
-      <div id="bottomSection">
-        <div id="aboutMozilla">
-          <a href="http://www.mozilla.com/about/">&abouthome.aboutMozilla;</a>
-        </div>
+    </div>
+
+    <div id="bottomSection">
+      <div id="aboutMozilla">
+        <a href="http://www.mozilla.com/about/">&abouthome.aboutMozilla;</a>
       </div>
     </div>
   </body>
