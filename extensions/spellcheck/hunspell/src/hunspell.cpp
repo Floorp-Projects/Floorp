@@ -1529,7 +1529,12 @@ int Hunspell::analyze(char*** slst, const char * word)
       if (dash[1] == '\0') { // base word ending with dash
         if (spell(cw)) {
 		char * p = pSMgr->suggest_morph(cw);
-		if (p) return line_tok(pSMgr->suggest_morph(cw), slst, MSEP_REC);
+		if (p) {
+		    int ret = line_tok(p, slst, MSEP_REC);
+		    free(p);
+		    return ret;
+		}
+		
 	}
       } else if ((dash[1] == 'e') && (dash[2] == '\0')) { // XXX (HU) -e hat.
         if (spell(cw) && (spell("-e"))) {
