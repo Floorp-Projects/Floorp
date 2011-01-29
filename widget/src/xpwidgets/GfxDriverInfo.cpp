@@ -53,8 +53,7 @@ GfxDriverInfo::GfxDriverInfo()
     mFeatureStatus(nsIGfxInfo::FEATURE_NO_INFO),
     mComparisonOp(DRIVER_UNKNOWN_COMPARISON),
     mDriverVersion(0),
-    mDriverVersionMax(0),
-    mSuggestedVersion(nsnull)
+    mDriverVersionMax(0)
 {}
 
 GfxDriverInfo::GfxDriverInfo(OperatingSystem os, PRUint32 vendor,
@@ -62,7 +61,6 @@ GfxDriverInfo::GfxDriverInfo(OperatingSystem os, PRUint32 vendor,
                              PRInt32 feature, PRInt32 featureStatus,
                              VersionComparisonOp op,
                              PRUint64 driverVersion,
-                             const char *suggestedVersion /* = nsnull */,
                              bool ownDevices /* = false */)
   : mOperatingSystem(os),
     mAdapterVendor(vendor),
@@ -72,8 +70,7 @@ GfxDriverInfo::GfxDriverInfo(OperatingSystem os, PRUint32 vendor,
     mFeatureStatus(featureStatus),
     mComparisonOp(op),
     mDriverVersion(driverVersion),
-    mDriverVersionMax(0),
-    mSuggestedVersion(suggestedVersion)
+    mDriverVersionMax(0)
 {}
 
 GfxDriverInfo::GfxDriverInfo(const GfxDriverInfo& aOrig)
@@ -83,8 +80,7 @@ GfxDriverInfo::GfxDriverInfo(const GfxDriverInfo& aOrig)
     mFeatureStatus(aOrig.mFeatureStatus),
     mComparisonOp(aOrig.mComparisonOp),
     mDriverVersion(aOrig.mDriverVersion),
-    mDriverVersionMax(aOrig.mDriverVersionMax),
-    mSuggestedVersion(aOrig.mSuggestedVersion)
+    mDriverVersionMax(aOrig.mDriverVersionMax)
 {
   // If we're managing the lifetime of the devices array, we have to make a
   // copy of the original's array.
