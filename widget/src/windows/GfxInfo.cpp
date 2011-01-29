@@ -67,6 +67,11 @@ static const PRUint64 allDriverVersions = 0xffffffffffffffffULL;
 
 static const PRUint32 vendorIntel = 0x8086;
 
+static const PRUint32 vendorNVIDIA = 0x10de;
+
+static const PRUint32 vendorAMD = 0x1022;
+static const PRUint32 vendorATI = 0x1002;
+
 #define V(a,b,c,d) GFX_DRIVER_VERSION(a,b,c,d)
 
 
@@ -357,7 +362,7 @@ GfxInfo::Init()
                                  : L"igd10umd32.dll";
     nsString dllVersion;
     // if GetDLLVersion fails, it gives "0.0.0.0"
-    gfxWindowsPlatform::GetPlatform()->GetDLLVersion(dllFileName, dllVersion);
+    gfxWindowsPlatform::GetPlatform()->GetDLLVersion((PRUnichar*)dllFileName, dllVersion);
 
     PRUint64 dllNumericVersion = 0, driverNumericVersion = 0;
     // so if GetDLLVersion failed, we get dllNumericVersion = 0
@@ -595,6 +600,27 @@ static const GfxDriverInfo gDriverInfo[] = {
    */
 
   /*
+   * NVIDIA entries
+   */
+  GfxDriverInfo( DRIVER_OS_ALL,
+    vendorNVIDIA, GfxDriverInfo::allDevices,
+    GfxDriverInfo::allFeatures, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
+    DRIVER_LESS_THAN, V(8,17,12,5721), "257.21" ),
+
+  /*
+   * AMD/ATI entries
+   */
+  GfxDriverInfo( DRIVER_OS_ALL,
+    vendorATI, GfxDriverInfo::allDevices,
+    GfxDriverInfo::allFeatures, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
+    DRIVER_LESS_THAN, V(8,741,0,0), "10.6" ),
+  GfxDriverInfo( DRIVER_OS_ALL,
+    vendorAMD, GfxDriverInfo::allDevices,
+    GfxDriverInfo::allFeatures, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
+    DRIVER_LESS_THAN, V(8,741,0,0), "10.6" ),
+
+
+  /*
    * Intel entries
    */
 
@@ -701,8 +727,6 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32 *aStatus, nsAString & aS
     return NS_ERROR_FAILURE;
   }
   
-  PRUint64 suggestedDriverVersion = 0;
-
   if (aFeature == FEATURE_DIRECT3D_9_LAYERS &&
       mWindowsVersion < gfxWindowsPlatform::kWindowsXP)
   {
@@ -726,6 +750,17 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32 *aStatus, nsAString & aS
       *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION;
       return NS_OK;
     }
+  }
+
+  // special-case the WinXP test slaves: they have out-of-date drivers, but we still want to
+  // whitelist them, actually we do know that this combination of device and driver version
+  // works well.
+  if (os == DRIVER_OS_WINDOWS_XP &&
+      adapterVendor == vendorNVIDIA &&
+      adapterDeviceID == 0x0861 && // GeForce 9400
+      driverVersion == V(6,14,11,7756))
+  {
+    return NS_OK;
   }
 
   while (info->mOperatingSystem) {
@@ -763,7 +798,6 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32 *aStatus, nsAString & aS
     switch (info->mComparisonOp) {
     case DRIVER_LESS_THAN:
       match = driverVersion < info->mDriverVersion;
-      suggestedDriverVersion = info->mDriverVersion;
       break;
     case DRIVER_LESS_THAN_OR_EQUAL:
       match = driverVersion <= info->mDriverVersion;
@@ -808,12 +842,18 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32 *aStatus, nsAString & aS
 
   *aStatus = status;
 
-  if (status == FEATURE_BLOCKED_DRIVER_VERSION && suggestedDriverVersion) {
-      aSuggestedDriverVersion.AppendPrintf("%lld.%lld.%lld.%lld",
-                                           (suggestedDriverVersion & 0xffff000000000000) >> 48,
-                                           (suggestedDriverVersion & 0x0000ffff00000000) >> 32,
-                                           (suggestedDriverVersion & 0x00000000ffff0000) >> 16,
-                                           (suggestedDriverVersion & 0x000000000000ffff));
+  if (status == FEATURE_BLOCKED_DRIVER_VERSION) {
+      if (info->mSuggestedVersion) {
+          aSuggestedDriverVersion.AppendPrintf("%s", info->mSuggestedVersion);
+      } else if (info->mComparisonOp == DRIVER_LESS_THAN &&
+                 info->mDriverVersion != allDriverVersions)
+      {
+          aSuggestedDriverVersion.AppendPrintf("%lld.%lld.%lld.%lld",
+                                               (info->mDriverVersion & 0xffff000000000000) >> 48,
+                                               (info->mDriverVersion & 0x0000ffff00000000) >> 32,
+                                               (info->mDriverVersion & 0x00000000ffff0000) >> 16,
+                                               (info->mDriverVersion & 0x000000000000ffff));
+      }
   }
   
   return NS_OK;
