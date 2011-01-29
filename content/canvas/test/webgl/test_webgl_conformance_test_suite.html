@@ -45,14 +45,14 @@ function start() {
     return svc;
   }
 
-  function setEnabledForAllSites(value) {
+  function setForceEnabled(value) {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    prefSvc().setBoolPref("webgl.enabled_for_all_sites", value);
+    prefSvc().setBoolPref("webgl.force-enabled", value);
   }
 
-  function getEnabledForAllSites() {
+  function getForceEnabled() {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    return prefSvc().getBoolPref("webgl.enabled_for_all_sites");
+    return prefSvc().getBoolPref("webgl.force-enabled");
   }
 
   function setPreferGL(value) {
@@ -70,7 +70,7 @@ function start() {
   }
 
   function restoreOldPrefs() {
-    setEnabledForAllSites(saved_enabled_for_all_sites);
+    setForceEnabled(saved_force_enabled);
     setPreferGL(saved_prefer_gl);
   }
 
@@ -296,7 +296,7 @@ function start() {
     var reporter = new Reporter();
 
     // set WebGL-related preferences needed to run WebGL tests
-    setEnabledForAllSites(true);
+    setForceEnabled(true);
 
     // XXX temporary hack. Until the DirectX runtime is deployed on test slaves, we just use OpenGL,
     // so that rel-eng can safely deploy DirectX runtime without getting sudden mochitest failures
@@ -383,7 +383,7 @@ function start() {
     }
   }
 
-  var saved_enabled_for_all_sites = getEnabledForAllSites();
+  var saved_force_enabled = getForceEnabled();
   var saved_prefer_gl = getPreferGL();
 
   var statusElem = document.getElementById("status");
