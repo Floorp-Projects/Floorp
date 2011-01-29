@@ -696,15 +696,6 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32 *aStatus, nsAString & aS
     return NS_ERROR_FAILURE;
   }
 
-  if (adapterVendor != vendorIntel &&
-      adapterVendor != vendorNVIDIA &&
-      adapterVendor != vendorAMD &&
-      adapterVendor != vendorATI)
-  {
-    *aStatus = FEATURE_BLOCKED_DEVICE;
-    return NS_OK;
-  }
-
   PRUint64 driverVersion;
   if (!ParseDriverVersion(adapterDriverVersionString, &driverVersion)) {
     return NS_ERROR_FAILURE;
