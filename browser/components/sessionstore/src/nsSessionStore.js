@@ -2553,7 +2553,14 @@ SessionStoreService.prototype = {
       // is always visible in the address bar
       let activeIndex = (tabData.index || tabData.entries.length) - 1;
       let activePageData = tabData.entries[activeIndex] || null;
-      browser.userTypedValue = activePageData ? activePageData.url || null : null;
+      let uri = activePageData ? activePageData.url || null : null;
+      browser.userTypedValue = uri;
+
+      // Also make sure currentURI is set so that switch-to-tab works before
+      // the tab is restored. We'll reset this to about:blank when we try to
+      // restore the tab to ensure that docshell doeesn't get confused.
+      if (uri)
+        browser.docShell.setCurrentURI(this._getURIFromString(uri));
 
       // If the page has a title, set it.
       if (activePageData) {
@@ -2723,6 +2730,9 @@ SessionStoreService.prototype = {
     let activeIndex = (tabData.index || tabData.entries.length) - 1;
     if (activeIndex >= tabData.entries.length)
       activeIndex = tabData.entries.length - 1;
+
+    // Reset currentURI.
+    browser.webNavigation.setCurrentURI(this._getURIFromString("about:blank"));
 
     // Attach data that will be restored on "load" event, after tab is restored.
     if (activeIndex > -1) {

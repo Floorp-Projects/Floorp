@@ -131,6 +131,7 @@ _BROWSER_TEST_FILES = \
 	browser_597315_c.html \
 	browser_597315_c1.html \
 	browser_597315_c2.html \
+	browser_599909.js \
 	browser_600545.js \
 	browser_601955.js \
 	browser_607016.js \
