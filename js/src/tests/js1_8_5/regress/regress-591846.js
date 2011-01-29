@@ -15,13 +15,27 @@ function check(obj, name, value, readonly) {
         // Do not allow a transition from js::PropertyOp to writable js::Value
         // data property.
         Object.defineProperty(obj, name, {writable: true});
+        assertEq(0, 1);
+    } catch (e) {
+        assertEq('' + e, "TypeError: can't redefine non-configurable property '" + name + "'");
+    }
 
-        if (!readonly) {
+    if (!readonly) {
+        try {
             // Do not allow the property denoted by name to become a true data
             // property via a descriptor that preserves the native property's
             // writable attribute.
             Object.defineProperty(obj, name, {value: value});
+            assertEq(0, 1);
+        } catch (e) {
+            assertEq('' + e, "TypeError: can't redefine non-configurable property '" + name + "'");
         }
+    }
+
+    try {
+        // Do not allow the property to be frozen at some bogus value.
+        Object.defineProperty(obj, name, {value: "bogus", writable: false});
+        assertEq(0, 1);
     } catch (e) {
         assertEq('' + e, "TypeError: can't redefine non-configurable property '" + name + "'");
     }

@@ -2142,8 +2142,30 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropDesc &desc,
                 if (desc.hasValue) {
                     if (!SameValue(cx, desc.value, v, &same))
                         return JS_FALSE;
-                    if (!same)
+                    if (!same) {
+                        /*
+                         * Insist that a non-configurable js::PropertyOp data
+                         * property is frozen at exactly the last-got value.
+                         *
+                         * Duplicate the first part of the big conjunction that
+                         * we tested above, rather than add a local bool flag.
+                         * Likewise, don't try to keep shape->writable() in a
+                         * flag we veto from true to false for non-configurable
+                         * PropertyOp-based data properties and test before the
+                         * SameValue check later on in order to re-use that "if
+                         * (!SameValue) Reject" logic.
+                         *
+                         * This function is large and complex enough that it
+                         * seems best to repeat a small bit of code and return
+                         * Reject(...) ASAP, instead of being clever.
+                         */
+                        if (!shape->configurable() &&
+                            (!shape->hasDefaultGetter() || !shape->hasDefaultSetter()))
+                        {
+                            return Reject(cx, JSMSG_CANT_REDEFINE_PROP, throwError, desc.id, rval);
+                        }
                         break;
+                    }
                 }
                 if (desc.hasWritable && desc.writable() != shape->writable())
                     break;
