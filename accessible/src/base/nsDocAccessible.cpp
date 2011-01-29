@@ -607,7 +607,7 @@ nsDocAccessible::GetAccessible(nsINode* aNode) const
   // It will assert if not all the children were created
   // when they were first cached, and no invalidation
   // ever corrected parent accessible's child cache.
-  nsAccessible* parent(accessible->GetCachedParent());
+  nsAccessible* parent(accessible->GetParent());
   if (parent)
     parent->TestChildCache(accessible);
 #endif
