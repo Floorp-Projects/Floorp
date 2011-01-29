@@ -22,6 +22,8 @@
  *
  * Contributor(s):
  *   Marco Bonardo <mak77@bonardo.net> (original author)
+ *   Mihai Sucan <mihai.sucan@gmail.com>
+ *   Stephen Horlander <shorlander@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -42,76 +44,232 @@ html {
   font: message-box;
   background: -moz-Field;
   color: -moz-FieldText;
+  height: 100%;
 }
 
-#topSection,
-#bottomSection {
+body {
+  display: inline-block;
   position: relative;
-  margin: 1em auto;
-  padding: 25px;
-  width: 560px;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+}
+
+a {
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
 }
 
 #brandStart {
-  background: -moz-linear-gradient(top, #42607C, #1E4262 30%, #1E4262 80%, #143552 98%, #244665);
-  border-radius: 5.6px;
-  padding-top: 0.1em;
-  padding-bottom: 0.1em;
-  -moz-padding-start: 0.5em;
-  font-size: 250%;
-  font-weight: bold;
-  color: #688196;
-  margin-top: 18px;
-  margin-bottom: 6px;
-}
-#brandStart > span {
-  color: white;
+  text-align: center;
+  height: 19%;
+  max-height: 256px;
+  min-height: 92px;
 }
 
-#brandStart:before {
-  content: url("chrome://branding/content/icon128.png");
-  position: absolute;
-  top: 0;
+#brandStartSpacer {
+  height: 6.5%;
 }
 
-body[dir="ltr"] #brandStart:before {
-  right: 0;
-}
-body[dir="rtl"] #brandStart:before {
-  left: -15px;
+#brandStartLogo {
+  height: 100%;
 }
 
 #searchContainer {
-  border: 1px solid ThreeDShadow;
-  border-radius: 5.6px;
-  padding: 3em;
+  height: 15%;
+  min-height: 90px;
 }
-#searchEngineLinks {
-  font-size: 80%;
+
+#searchContainer:before {
+  content: " ";
+  display: block;
+  height: 23%;
 }
-#searchEngineLinks > a {
-  -moz-margin-start: 1em;
+
+#searchForm {
+  display: table;
+  width: 100%;
+  max-width: 1830px;
+  margin: 0 auto;
 }
-body[dir="ltr"] #searchEngineLinks {
-  float: right;
+
+@media all and (max-height: 700px) {
+  #searchContainer { height: 20% }
 }
-body[dir="rtl"] #searchEngineLinks {
-  float: left;
+
+@media all and (max-height: 450px) {
+  #searchContainer { height: 30% }
+}
+
+#searchLogoContainer {
+  display: table-cell;
+  width: 30%;
+  text-align: end;
+  line-height: 32px;
 }
 
 #searchEngineLogo {
-  margin: 5px;
+  -moz-margin-end: 2.5%;
+  vertical-align: middle;
+}
+
+#searchInputContainer {
+  display: table-cell;
+  width: 38%;
+  max-width: 700px;
+  min-width: 150px;
 }
 
 #searchText {
-  margin-bottom: 10px;
   width: 100%;
+  height: 24px;
+  padding: 3px 6px;
+  border-radius: 2px;
+  border: 1px solid rgb(150,150,150);
+  border-top-color: rgb(100,100,100);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.5);
+  font-size: 13px;
 }
 
-#aboutMozilla {
+#searchButtons {
+  display: table-cell;
+  width: 31%;
+  -moz-padding-start: 13px;
+  vertical-align: top;
+}
+
+@media all and (max-width: 470px) {
+  #searchLogoContainer { width: 10% }
+  #searchButtons { width: 11% }
+  #searchInputContainer { width: 40% }
+}
+
+@media all and (min-width: 470px) and (max-width: 600px) {
+  #searchLogoContainer { width: 15% }
+  #searchButtons { width: 16%; white-space: nowrap }
+  #searchInputContainer { width: 45% }
+}
+
+@media all and (min-width: 600px) and (max-width: 850px) {
+  #searchLogoContainer { width: 20% }
+  #searchButtons { width: 21%; white-space: nowrap }
+  #searchInputContainer { width: 49% }
+}
+
+#searchSubmit {
+  background: -moz-linear-gradient(#f1f1f1, #dfdfdf);
+  padding: 4px 8px;
+  height: 32px;
+  border: 1px solid #ccc;
+  border-top-color: #ccc;
+  border-bottom-color: #999;
+  -moz-border-start-color: #afafaf;
+  -moz-border-end-color: #999;
+  box-shadow: 1px 1px 0 #e7e7e7,
+              0 1px 0 #fcfcfc inset,
+              0 -1px 0 #d7d7d7 inset;
+  font-size: 13px;
+  color: #000;
+}
+
+body[dir=rtl] #searchSubmit {
+  box-shadow: -1px 1px 0 #e7e7e7,
+              0 1px 0 #fcfcfc inset,
+              0 -1px 0 #d7d7d7 inset;
+}
+
+#searchSubmit:active {
+  background: -moz-linear-gradient(#c5c5c5, #c5c5c5);
+  box-shadow: 1px 1px 0 #e7e7e7;
+}
+
+body[dir=rtl] #searchSubmit:active {
+  box-shadow: -1px 1px 0 #e7e7e7;
+}
+
+#searchEngineLinks {
+  display: inline-block;
+  -moz-margin-start: 1.5%;
+  vertical-align: middle;
+  font-size: 10px;
+}
+
+#searchEngineLinks a {
+  display: block;
+  white-space: nowrap;
+}
+
+#contentContainer {
+  height: 30%;
+  background-image: -moz-radial-gradient(center top, ellipse farthest-side, rgba(16,83,130,.5), rgba(16,83,130,0) 75%),
+                    -moz-radial-gradient(center top, ellipse farthest-side, rgba(180,218,244,.5), rgba(180,218,244,0)),
+                    -moz-radial-gradient(center top, ellipse farthest-side, rgba(180,218,244,.3), rgba(180,218,244,0));
+  background-size: 100% 5px,
+                   100% 50px,
+                   100% 100%;
+  background-repeat: no-repeat;
+}
+
+@media all and (max-height: 400px) {
+  #contentContainer { height: 20% }
+}
+
+#snippetContainer {
+  position: relative;
+  top: -24px;
   text-align: center;
 }
 
 #defaultSnippets {
+  display: inline-block;
+  padding: 14px;
+  width: 30%;
+  max-width: 600px;
+  background-image: -moz-linear-gradient(rgba(255,255,255,.8), rgba(255,255,255,.1));
+  background-color: rgb(250,250,250);
+  border-radius: 4px;
+  box-shadow: 0 1px 0 rgba(255,255,255,.8) inset,
+              0 -2px 0 rgba(0,0,0,.1) inset,
+              0 0 10px rgba(255,255,255,.5) inset,
+              0 0 0 1px rgba(0,0,0,.1),
+              0 2px 4px rgba(0,0,0,.2);
+  color: rgb(60,60,60);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+@media all and (max-width: 470px) {
+  #defaultSnippets { width: 65% }
+}
+
+@media all and (min-width: 470px) and (max-width: 850px) {
+  #defaultSnippets { width: 45% }
+}
+
+#defaultSnippets:hover {
+  background-color: rgb(255,255,255);
+  box-shadow: 0 1px 0 rgba(255,255,255,.8) inset,
+              0 -2px 0 rgba(0,0,0,.1) inset,
+              0 0 10px rgba(255,255,255,.5) inset,
+              0 0 5px rgba(0,0,0,.1),
+              0 0 0 1px rgba(0,0,0,.1),
+              0 2px 4px rgba(0,0,0,.2);
+}
+
+#defaultSnippets:hover:active {
+  background-color: rgb(210,210,210);
+  box-shadow: 0 2px 3px rgba(0,0,0,.3) inset,
+              0 1px 0 rgba(255,255,255,.5);
+}
+
+#bottomSection {
+  position: absolute;
+  color: rgb(150,150,150);
+  font-size: 10px;
+  width: 100%;
   text-align: center;
+  bottom: 2%;
 }
