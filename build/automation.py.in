@@ -391,6 +391,11 @@ user_pref("extensions.update.url", "http://%(server)s/extensions-dummy/updateURL
 user_pref("extensions.blocklist.url", "http://%(server)s/extensions-dummy/blocklistURL");
 // Make sure opening about:addons won't hit the network
 user_pref("extensions.webservice.discoverURL", "http://%(server)s/extensions-dummy/discoveryURL");
+// no graphics driver blacklist (test slaves currently have out of date drivers that we're
+// otherwise going to blacklist)
+user_pref("gfx.direct2d.force-enabled", true);
+user_pref("layers.acceleration.force-enabled", true);
+user_pref("webgl.force-enabled", true);
 """ % { "server" : self.webServer + ":" + str(self.httpPort) }
     prefs.append(part)
 
