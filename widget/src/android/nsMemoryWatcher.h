@@ -16,11 +16,10 @@
  *
  * The Initial Developer of the Original Code is
  *   Mozilla Foundation
- * Portions created by the Initial Developer are Copyright (C) 2009-2010
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Vladimir Vukicevic <vladimir@pobox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,66 +35,35 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsAppShell_h__
-#define nsAppShell_h__
+#ifndef nsMemoryWatcher_h__
+#define nsMemoryWatcher_h__
 
-#include "nsBaseAppShell.h"
-#include "nsCOMPtr.h"
-#include "nsTArray.h"
-#include "nsInterfaceHashtable.h"
-#include "nsMemoryWatcher.h"
-#include "nsAutoPtr.h"
+#include <stdio.h>
+#include <prtime.h>
+#include <prinrval.h>
+#include <nsCOMPtr.h>
+#include <nsITimer.h>
 
-#include "prcvar.h"
-
-namespace mozilla {
-class AndroidGeckoEvent;
-bool ProcessNextEvent();
-void NotifyEvent();
-}
-
-class nsAppShell :
-    public nsBaseAppShell
+class nsMemoryWatcher : public nsITimerCallback
 {
 public:
-    static nsAppShell *gAppShell;
-    static mozilla::AndroidGeckoEvent *gEarlyEvent;
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSITIMERCALLBACK
 
-    nsAppShell();
+    nsMemoryWatcher();
+    virtual ~nsMemoryWatcher();
 
-    NS_DECL_ISUPPORTS_INHERITED
-    NS_DECL_NSIOBSERVER
+    void StartWatching();
+    void StopWatching();
 
-    nsresult Init();
-
-    void NotifyNativeEvent();
-
-    virtual PRBool ProcessNextNativeEvent(PRBool mayWait);
-
-    void PostEvent(mozilla::AndroidGeckoEvent *event);
-    void RemoveNextEvent();
-
-    nsresult AddObserver(const nsAString &aObserverKey, nsIObserver *aObserver);
-    void CallObserver(const nsAString &aObserverKey, const nsAString &aTopic, const nsAString &aData);
-    void RemoveObserver(const nsAString &aObserverKey);
-    void NotifyObservers(nsISupports *aSupports, const char *aTopic, const PRUnichar *aData);
-
-protected:
-    virtual void ScheduleNativeEventCallback();
-    virtual ~nsAppShell();
-
-    int mNumDraws;
-    PRLock *mQueueLock;
-    PRLock *mCondLock;
-    PRCondVar *mQueueCond;
-    nsTArray<mozilla::AndroidGeckoEvent *> mEventQueue;
-    nsInterfaceHashtable<nsStringHashKey, nsIObserver> mObserversHash;
-
-    mozilla::AndroidGeckoEvent *GetNextEvent();
-    mozilla::AndroidGeckoEvent *PeekNextEvent();
-
-    nsRefPtr<nsMemoryWatcher> mMemoryWatcher;
+private:
+    long mTimerInterval;
+    long mLowWaterMark;
+    long mHighWaterMark;
+    PRIntervalTime mLastLowNotification;
+    PRIntervalTime mLastHighNotification;
+    nsCOMPtr<nsITimer> mTimer;
+    FILE* mMemInfoFile;
 };
 
-#endif // nsAppShell_h__
-
+#endif /* nsMemoryWatcher_h__ */

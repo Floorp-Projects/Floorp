@@ -70,7 +70,6 @@ abstract public class GeckoApp
     public static GeckoApp mAppContext;
     public static boolean mFullscreen = false;
     static Thread mLibLoadThread = null;
-    private static MemoryWatcher mMemoryWatcher = null;
 
     enum LaunchState {PreLaunch, Launching, WaitButton,
                       Launched, GeckoRunning, GeckoExiting};
@@ -214,8 +213,6 @@ abstract public class GeckoApp
             surfaceView.mSplashStatusMsg =
                 getResources().getString(R.string.splash_screen_label);
         mLibLoadThread.start();
-
-        mMemoryWatcher = new MemoryWatcher(this);
     }
 
     @Override
@@ -275,8 +272,6 @@ abstract public class GeckoApp
 
         // onPause will be followed by either onResume or onStop.
         super.onPause();
-
-        mMemoryWatcher.StopMemoryWatcher();
     }
 
     @Override
@@ -284,7 +279,8 @@ abstract public class GeckoApp
     {
         Log.i("GeckoApp", "resume");
         if (checkLaunchState(LaunchState.GeckoRunning))
-            GeckoAppShell.onResume();
+            GeckoAppShell.sendEventToGecko(new GeckoEvent(GeckoEvent.ACTIVITY_RESUMING));
+
         // After an onPause, the activity is back in the foreground.
         // Undo whatever we did in onPause.
         super.onResume();
@@ -293,41 +289,6 @@ abstract public class GeckoApp
         if (checkLaunchState(LaunchState.PreLaunch) ||
             checkLaunchState(LaunchState.Launching))
             onNewIntent(getIntent());
-
-        mMemoryWatcher.StartMemoryWatcher();
-    }
-
-    @Override
-    public void onStop()
-    {
-        Log.i("GeckoApp", "stop");
-        // We're about to be stopped, potentially in preparation for
-        // being destroyed.  We're killable after this point -- as I
-        // understand it, in extreme cases the process can be terminated
-        // without going through onDestroy.
-        //
-        // We might also get an onRestart after this; not sure what
-        // that would mean for Gecko if we were to kill it here.
-        // Instead, what we should do here is save prefs, session,
-        // etc., and generally mark the profile as 'clean', and then
-        // dirty it again if we get an onResume.
-
-        GeckoAppShell.sendEventToGecko(new GeckoEvent(GeckoEvent.ACTIVITY_STOPPING));
-        super.onStop();
-    }
-
-    @Override
-    public void onRestart()
-    {
-        Log.i("GeckoApp", "restart");
-        super.onRestart();
-    }
-
-    @Override
-    public void onStart()
-    {
-        Log.i("GeckoApp", "start");
-        super.onStart();
     }
 
     @Override
@@ -353,8 +314,6 @@ abstract public class GeckoApp
     @Override
     public void onLowMemory()
     {
-        // if you change this handler, please take a look at
-        // MemoryWatcher too.
         Log.e("GeckoApp", "low memory");
         if (checkLaunchState(LaunchState.GeckoRunning))
             GeckoAppShell.onLowMemory();
