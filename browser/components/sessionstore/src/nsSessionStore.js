@@ -877,9 +877,9 @@ SessionStoreService.prototype = {
         this._updateCookies([winData]);
       }
       
-      // save the window if it has multiple tabs or a single tab with entries
+      // save the window if it has multiple tabs or a single saveable tab
       if (winData.tabs.length > 1 ||
-          (winData.tabs.length == 1 && winData.tabs[0].entries.length > 0)) {
+          (winData.tabs.length == 1 && this._shouldSaveTabState(winData.tabs[0]))) {
         this._closedWindows.unshift(winData);
         this._capClosedWindows();
       }
@@ -984,7 +984,7 @@ SessionStoreService.prototype = {
     this._updateTextAndScrollDataForTab(aWindow, aTab.linkedBrowser, tabState);
 
     // store closed-tab data for undo
-    if (tabState.entries.length > 0) {
+    if (this._shouldSaveTabState(tabState)) {
       let tabTitle = aTab.label;
       let tabbrowser = aWindow.gBrowser;
       tabTitle = this._replaceLoadingTitle(tabTitle, tabbrowser, aTab);
@@ -3539,6 +3539,24 @@ SessionStoreService.prototype = {
     return max_resumed_crashes != -1 &&
            (aRecentCrashes > max_resumed_crashes ||
             sessionAge && sessionAge >= SIX_HOURS_IN_MS);
+  },
+
+  /**
+   * Determine if the tab state we're passed is something we should save. This
+   * is used when closing a tab or closing a window with a single tab
+   *
+   * @param aTabState
+   *        The current tab state
+   * @returns boolean
+   */
+  _shouldSaveTabState: function sss__shouldSaveTabState(aTabState) {
+    // If the tab has only the transient about:blank history entry, no other
+    // session history, and no userTypedValue, then we don't actually want to
+    // store this tab's data.
+    return aTabState.entries.length &&
+           !(aTabState.entries.length == 1 &&
+             aTabState.entries[0].url == "about:blank" &&
+             !aTabState.userTypedValue);
   },
 
   /**
