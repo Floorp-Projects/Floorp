@@ -1,5 +1,6 @@
 # HG changeset patch
-# Parent 0f2a334e5049bffe457bd31d3d8f5550af7ba299
+# Parent 438b6d09a9fac42fd66235e626a09a0ea4e88b61
+
 diff --git a/gfx/angle/include/GLSLANG/ShaderLang.h b/gfx/angle/include/GLSLANG/ShaderLang.h
 --- a/gfx/angle/include/GLSLANG/ShaderLang.h
 +++ b/gfx/angle/include/GLSLANG/ShaderLang.h
@@ -40,6 +41,31 @@ diff --git a/gfx/angle/include/GLSLANG/ShaderLang.h b/gfx/angle/include/GLSLANG/
  #ifdef __cplusplus
  extern "C" {
  #endif
+@@ -76,22 +96,22 @@ typedef enum {
+   SH_SOURCE_PATH            = 0x0200,
+ } ShCompileOptions;
+ 
+ //
+ // Driver must call this first, once, before doing any other
+ // compiler operations.
+ // If the function succeeds, the return value is nonzero, else zero.
+ //
+-int ShInitialize();
++ANGLE_API int ShInitialize();
+ //
+ // Driver should call this at shutdown.
+ // If the function succeeds, the return value is nonzero, else zero.
+ //
+-int ShFinalize();
++ANGLE_API int ShFinalize();
+ 
+ //
+ // Implementation dependent built-in resources (constants and extensions).
+ // The names for these resources has been obtained by stripping gl_/GL_.
+ //
+ typedef struct
+ {
+     // Constants.
 @@ -107,17 +127,17 @@ typedef struct
      // Extensions.
      // Set to 1 to enable the extension, else 0.
