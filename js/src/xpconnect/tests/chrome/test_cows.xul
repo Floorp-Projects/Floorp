@@ -29,9 +29,9 @@ var test_utils = window.QueryInterface(Ci.nsIInterfaceRequestor).
                  getInterface(Ci.nsIDOMWindowUtils);
 
 function getCOW(x) {
-  if (typeof x == "function")
-    return eval(uneval(x));
   var rval = {};
+  if (typeof x == "function")
+    rval = eval(uneval(x));
   for (var i in x) {
     if (x.__lookupGetter__(i))
       rval.__defineGetter__(i, eval(uneval(x.__lookupGetter__(i))))
@@ -65,61 +65,148 @@ function COWTests() {
     // functions like assertIsWritable(myObj, 'someproperty') might
     // be useful.
 
-    function isProp(obj, propName, value, msg) {
+    function isProp(obj, propName, value, desc) {
       try {
-          propValue = obj[propName];
-          is(propValue, value, msg);
+          is(obj[propName], value, "getting " + propName + " on " + desc);
+          ok(propName in obj,
+             propName + " on " + desc + " should exist");
+          //ok(Object.hasOwnProperty.call(obj, propName),
+          //   propName + " on " + desc + " should exist");
       } catch (e) {
-          ok(false, msg + " (accessing '" + propName + "' threw " + e + ")");
+          ok(false, "getting " + propName + " on " + desc + " threw " + e);
+      }
+    }
+    function isPropHidden(obj, propName, desc) {
+      try {
+          is(obj[propName], undefined,
+             "getting " + propName + " on " + desc + " should return undefined");
+          ok(!(propName in obj),
+             propName + " on " + desc + " should act as if it doesn't exist");
+          //ok(!Object.hasOwnProperty.call(obj, propName),
+          //   propName + " on " + desc + " should act as if it doesn't exist");
+      } catch (e) {
+          ok(false, "getting " + propName + " on " + desc + " threw " + e);
       }
     }
 
+    //var cow = getCOW({ foo: "fooval", __exposedProps__: {}});
+    //Math.sin(1);
+    //is(cow.foo, undefined, "one test to rule them all");
+    //return;
+
+    const PROPS_TO_TEST = ['foo', 'bar', '__proto__', 'prototype', 'constructor'];
+
     var empty = {};
-    isProp(getCOW(empty), "foo", undefined, "empty.foo is undefined");
+    // Once we flip the default for __exposedProps__, this should behave
+    // the same as for function objects below.
+    is(getCOW(empty).foo, undefined,
+       "shouldn't throw when accessing exposed properties that doesn't exist");
 
-    const PROPS_TO_TEST = ['foo', '__proto__', 'prototype', 'constructor'];
-
-    var strict = { __exposedProps__: {} };
-    var strictCOW = getCOW(strict);
-
+    // Test function objects without __exposedProps__
+    var func = function(x) { return 42; };
+    func.foo = "foo property";
+    var funcCOW = getCOW(func);
     PROPS_TO_TEST.forEach(function(name) {
-        try {
-            strictCOW[name];
-            ok(false, "COWs didn't restrict access to " + uneval(name));
-        } catch (e) {
-            ok(/Permission denied/.test(e.message),
-               "should get 'Permission denied' trying to access arbitrary property " +
-               uneval(name) + ", got: " + e.message);
+        isPropHidden(funcCOW, name, "function without exposedProps");
+    });
+    is([name for (name in funcCOW)].length, 0,
+       "function without exposedProps shouldn't have any properties");
+    is(funcCOW(), 42, "COW without exposedProps should still be callable");
+
+    // Test function objects with __exposedProps__
+    var func = function(x) { return 42; };
+    func.foo = "foo property";
+    func.__exposedProps__ = { foo: "r" };
+    var funcCOWr = getCOW(func);
+    PROPS_TO_TEST.forEach(function(name) {
+        if (name == "foo") {
+            isProp(funcCOWr, name, "foo property",
+                   "function with exposedProps");
+        }
+        else {
+            isPropHidden(funcCOWr, name, "function with exposedProps");
         }
     });
+    is([name for (name in funcCOWr)].length, 1,
+       "function with exposedProps should only enumerate exposed props");
+    is([name for (name in funcCOWr)][0], "foo",
+       "function with exposedProps should only enumerate exposed props");
+    is(funcCOWr(), 42, "COW with exposedProps should be callable");
 
-    try {
-        if (strictCOW.foo)
-            ok(false, "nonexistent property shouldn't be truthy.");
-        else
-            ok(true, "'duck-typing' detection on nonexistent prop " +
-                     "should work.");
-    } catch (e) {
-        todo(false,
-             "'duck-typing' detection on a non-exposed prop of a COWed " +
-             "obj should not throw");
-    }
+    // Test function objects with __exposedProps__
+    var func = function(x) { return 42; };
+    func.foo = "foo property";
+    func.__exposedProps__ = { foo: "r", bar: "r" };
+    var funcCOWr2 = getCOW(func);
+    PROPS_TO_TEST.forEach(function(name) {
+        if (name == "foo") {
+            isProp(funcCOWr2, name, "foo property",
+                   "function with more exposedProps");
+        }
+        else {
+            isPropHidden(funcCOWr2, name, "function with more exposedProps");
+        }
+    });
+    is([name for (name in funcCOWr2)].length, 1,
+       "function with exposedProps should only enumerate exposed props");
+    is([name for (name in funcCOWr2)][0], "foo",
+       "function with exposedProps should only enumerate exposed props");
 
+    // Test object with empty exposedProps
+    var strict = { __exposedProps__: {}, foo: "foo property" };
+    var strictCOW = getCOW(strict);
+    PROPS_TO_TEST.forEach(function(name) {
+        isPropHidden(strictCOW, name, "object with empty exposedProps");
+    });
+    is([name for (name in strictCOW)].length, 0,
+       "object with empty exposedProps shouldn't have any properties");
+
+    // Test object with one exposed property
+    var strict = { __exposedProps__: { foo: "r" }, foo: "foo property" };
+    var strictCOWr = getCOW(strict);
+    PROPS_TO_TEST.forEach(function(name) {
+        if (name == "foo") {
+            isProp(strictCOWr, name, "foo property",
+                   "object with exposed 'foo'");
+        }
+        else {
+            isPropHidden(strictCOW, name, "object with exposed 'foo'");
+        }
+    });
+    is([name for (name in strictCOWr)].length, 1,
+       "object with exposedProps only enumerate exposed props");
+    is([name for (name in strictCOWr)][0], "foo",
+       "object with exposedProps only enumerate exposed props");
+
+    // Test writable property
     var writable = getCOW({ __exposedProps__: {foo: 'w'}});
     try {
+        Math.sin("foo" in writable);
+        ok(!("foo" in writable),
+           "non-existing write-only property shouldn't exist");
         writable.foo = 5;
-        is(chromeGet(writable, "foo"), 5, "writing to a writable exposed prop works");
+        is(chromeGet(writable, "foo"), 5, "writing to a write-only exposed prop works");
+        todo("foo" in writable,
+             "existing write-only property should exist");
     } catch (e) {
-        ok(false, "writing to a writable exposed prop shouldn't throw " + e);
+        ok(false, "writing to a write-only exposed prop shouldn't throw " + e);
     }
     try {
         writable.foo;
-        ok(false, "reading from a write-only exposed prop should fail");
+        todo(false, "reading from a write-only exposed prop should throw");
     } catch (e) {
-        ok(/Permission denied/.test(e),
-           "reading from a write-only exposed prop should fail");
+        todo(/Permission denied/.test(e),
+             "reading from a write-only exposed prop should throw");
+    }
+    try {
+        delete writable.foo;
+        is(chromeGet(writable, "foo"), undefined,
+           "deleting a write-only exposed prop works");
+    } catch (e) {
+        ok(false, "deleting a write-only exposed prop shouldn't throw " + e);
     }
 
+    // Test readable property
     var readable = { __exposedProps__: {foo: 'r'},
                      foo: 5,
                      bar: 6 };
@@ -136,7 +223,6 @@ function COWTests() {
         ok(/Permission denied/.test(e),
            "writing to a read-only exposed prop should fail");
     }
-
     try {
         delete getCOW(readable).foo;
         ok(false, "deleting a read-only exposed prop shouldn't work");
@@ -156,20 +242,36 @@ function COWTests() {
                   "on enumeration: " + e);
     }
 
+    // Test read/write property
+    var readwrite = getCOW({ __exposedProps__: {foo: 'rw'}});
+    try {
+        ok(!("foo" in readwrite),
+           "non-existing readwrite property shouldn't exist");
+        readwrite.foo = 5;
+        is(readwrite.foo, 5, "writing to a readwrite exposed prop looks like it worked");
+        is(chromeGet(readwrite, "foo"), 5, "writing to a readwrite exposed prop works");
+        ok("foo" in readwrite,
+           "existing readwrite property should exist");
+    } catch (e) {
+        ok(false, "writing to a readwrite exposed prop shouldn't throw " + e);
+    }
+    try {
+        delete readwrite.foo;
+        is(readwrite.foo, undefined, "deleting readwrite prop looks like it worked");
+        ok(!("foo" in readwrite), "deleting readwrite prop looks like it really worked");
+        is(chromeGet(readwrite, "foo"), undefined,
+           "deleting a readwrite exposed prop works");
+    } catch (e) {
+        ok(false, "deleting a readwrite exposed prop shouldn't throw " + e);
+    }
+
+    // Readables and functions
     try {
         var COWFunc = getCOW((function() { return 5; }));
         is(COWFunc(), 5, "COWed functions should be callable");
     } catch (e) {
         todo(false, "COWed functions should not raise " + e);
     }
-
-    try {
-        var obj = {
-            get prop() { return { __exposedProps__: {}, test: "FAIL" } }
-        };
-        ok(getCOW(obj).prop.test != "FAIL", "getting prop.test should throw");
-    } catch (e) {}
-
     try {
         var objWithFunc = {__exposedProps__: {foo: 'r'},
                            foo: function foo() { return 5; }};
@@ -179,6 +281,14 @@ function COWTests() {
         ok(false, "Readable function exposed props should be callable" + e);
     }
 
+    // Readables with getters
+    var obj = {
+       get prop() { return { __exposedProps__: {}, test: "FAIL" } }
+    };
+    is(getCOW(obj).prop.test, undefined, "getting prop.test shouldn't return anything");
+    ok(!("test" in getCOW(obj).prop), "getting prop.test shouldn't return anything");
+
+    // Alien objects
     try {
         is(alienObject.funProp(1), 2,
            "COWs wrapping objects from different principals should work");
