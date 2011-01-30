@@ -101,12 +101,12 @@ typedef enum {
 // compiler operations.
 // If the function succeeds, the return value is nonzero, else zero.
 //
-int ShInitialize();
+ANGLE_API int ShInitialize();
 //
 // Driver should call this at shutdown.
 // If the function succeeds, the return value is nonzero, else zero.
 //
-int ShFinalize();
+ANGLE_API int ShFinalize();
 
 //
 // Implementation dependent built-in resources (constants and extensions).
