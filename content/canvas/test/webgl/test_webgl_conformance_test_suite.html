@@ -374,7 +374,10 @@ function start() {
       var version = Components.classes["@mozilla.org/system-info;1"]
                               .getService(Components.interfaces.nsIPropertyBag2)
                               .getProperty("version");
-      is106orHigher = (parseFloat(version) >= 10.6);
+      // the next line is correct: Mac OS 10.6 corresponds to Darwin version 10 !
+      // Mac OS 10.5 would be Darwin version 9. the |version| string we've got here
+      // is the Darwin version.
+      is106orHigher = (parseFloat(version) >= 10.0);
     } catch (ex) { }
     if (!is106orHigher) {
       dump("WebGL mochitest disabled on Mac OSX versions older than 10.6");
