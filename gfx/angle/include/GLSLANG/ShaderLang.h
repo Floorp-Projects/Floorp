@@ -93,7 +93,7 @@ typedef enum {
   SH_OBJECT_CODE            = 0x0004,
   SH_ATTRIBUTES_UNIFORMS    = 0x0008,
   SH_LINE_DIRECTIVES        = 0x0010,
-  SH_SOURCE_PATH            = 0x0200,
+  SH_SOURCE_PATH            = 0x0200
 } ShCompileOptions;
 
 //
