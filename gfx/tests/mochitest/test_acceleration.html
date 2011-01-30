@@ -31,10 +31,11 @@ var Ci = Components.interfaces;
 var sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
 
 var windows = Services.ww.getWindowEnumerator();
+var windowutils;
 var acceleratedWindows = 0;
 while (windows.hasMoreElements()) {
-  awindow = windows.getNext().QueryInterface(Ci.nsIInterfaceRequestor);
-  windowutils = awindow.getInterface(Ci.nsIDOMWindowUtils);
+  windowutils = windows.getNext().QueryInterface(Ci.nsIInterfaceRequestor)
+                                 .getInterface(Ci.nsIDOMWindowUtils);
   if (windowutils.layerManagerType != "Basic") {
     acceleratedWindows++;
   }
@@ -42,6 +43,16 @@ while (windows.hasMoreElements()) {
 
 switch(sysInfo.getProperty("name"))
 {
+  case "Darwin":
+    // We only enable OpenGL layers on machines that don't support QuickDraw
+    // plugins. x86-64 architecture is a good proxy for this plugin support.
+    if (sysInfo.getProperty("arch") == "x86-64") {
+      ok(acceleratedWindows != 0, "Acceleration enabled on x86-64 OS X");
+    } else {
+      ok(acceleratedWindows == 0, "Acceleration not enabled on x86 OS X");
+    }
+    break;
+
   case "Windows_NT":
     ok(acceleratedWindows != 0, "Acceleration enabled on Windows");
 
@@ -50,17 +61,6 @@ switch(sysInfo.getProperty("name"))
     if (version >= 6.0) {
       var gfxInfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo);
       ok(gfxInfo.D2DEnabled, "D2D enabled on Windows Vista or higher");
-    }
-
-    break;
-
-  case "Darwin":
-    // We only enable OpenGL layers on machines that don't support QuickDraw
-    // plugins. x86-64 architecture is a good proxy for this plugin support.
-    if (sysInfo.getProperty("arch") == "x86-64") {
-      ok(acceleratedWindows != 0, "Acceleration enabled on x86-64 OS X");
-    } else {
-      ok(acceleratedWindows == 0, "Acceleration not enabled on x86 OS X");
     }
     break;
 }
