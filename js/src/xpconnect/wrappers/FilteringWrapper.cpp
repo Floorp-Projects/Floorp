@@ -82,28 +82,6 @@ Filter(JSContext *cx, JSObject *wrapper, AutoIdVector &props)
     return true;
 }
 
-template <typename Policy>
-static bool
-CheckAndReport(JSContext *cx, JSObject *wrapper, jsid id, JSWrapper::Action act, Permission &perm)
-{
-    if (!Policy::check(cx, wrapper, id, act, perm)) {
-        return false;
-    }
-    if (perm == DenyAccess) {
-        // Reporting an error here indicates a problem entering the
-        // compartment. Therefore, any errors that we throw should be
-        // thrown in our *caller's* compartment, so they can inspect
-        // the error object.
-        JSAutoEnterCompartment ac;
-        if (!ac.enter(cx, wrapper))
-            return false;
-
-        AccessCheck::deny(cx, id);
-        return false;
-    }
-    return true;
-}
-
 template <typename Base, typename Policy>
 bool
 FilteringWrapper<Base, Policy>::getOwnPropertyNames(JSContext *cx, JSObject *wrapper, AutoIdVector &props)
@@ -142,11 +120,17 @@ FilteringWrapper<Base, Policy>::iterate(JSContext *cx, JSObject *wrapper, uintN 
 template <typename Base, typename Policy>
 bool
 FilteringWrapper<Base, Policy>::enter(JSContext *cx, JSObject *wrapper, jsid id,
-                                      JSWrapper::Action act)
+                                      JSWrapper::Action act, bool *bp)
 {
     Permission perm;
-    return CheckAndReport<Policy>(cx, wrapper, id, act, perm) &&
-           Base::enter(cx, wrapper, id, act);
+    if (!Policy::check(cx, wrapper, id, act, perm)) {
+        *bp = false;
+        return false;
+    }
+    *bp = true;
+    if (perm == DenyAccess)
+        return false;
+    return Base::enter(cx, wrapper, id, act, bp);
 }
 
 #define SOW FilteringWrapper<JSCrossCompartmentWrapper, OnlyIfSubjectIsSystem>
