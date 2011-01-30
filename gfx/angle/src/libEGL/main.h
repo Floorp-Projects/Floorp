@@ -11,7 +11,6 @@
 
 #define EGLAPI
 #include <EGL/egl.h>
-#include <EGL/eglext.h>
 
 namespace egl
 {

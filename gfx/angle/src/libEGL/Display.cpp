@@ -55,17 +55,8 @@ bool Display::initialize()
         return true;
     }
 
-    mD3d9Module = LoadLibrary(TEXT("d3d9.dll"));
+    mD3d9Module = GetModuleHandle(TEXT("d3d9.dll"));
     if (mD3d9Module == NULL)
-    {
-        terminate();
-        return false;
-    }
-
-    typedef IDirect3D9* (WINAPI *Direct3DCreate9Func)(UINT);
-    Direct3DCreate9Func Direct3DCreate9Ptr = reinterpret_cast<Direct3DCreate9Func>(GetProcAddress(mD3d9Module, "Direct3DCreate9"));
-
-    if (Direct3DCreate9Ptr == NULL)
     {
         terminate();
         return false;
@@ -85,7 +76,7 @@ bool Display::initialize()
     }
     else
     {
-        mD3d9 = Direct3DCreate9Ptr(D3D_SDK_VERSION);
+        mD3d9 = Direct3DCreate9(D3D_SDK_VERSION);
     }
 
     if (mD3d9)
@@ -189,8 +180,7 @@ bool Display::initialize()
                         {
                             // FIXME: enumerate multi-sampling
 
-                            configSet.add(currentDisplayMode, mMinSwapInterval, mMaxSwapInterval, renderTargetFormat, depthStencilFormat, 0,
-                                          mDeviceCaps.MaxTextureWidth, mDeviceCaps.MaxTextureHeight);
+                            configSet.add(currentDisplayMode, mMinSwapInterval, mMaxSwapInterval, renderTargetFormat, depthStencilFormat, 0);
                         }
                     }
                 }
@@ -268,7 +258,6 @@ void Display::terminate()
 
     if (mD3d9Module)
     {
-        FreeLibrary(mD3d9Module);
         mD3d9Module = NULL;
     }
 }
@@ -333,9 +322,6 @@ bool Display::getConfigAttrib(EGLConfig config, EGLint attribute, EGLint *value)
       case EGL_RENDERABLE_TYPE:           *value = configuration->mRenderableType;         break;
       case EGL_MATCH_NATIVE_PIXMAP:       *value = false; UNIMPLEMENTED();                 break;
       case EGL_CONFORMANT:                *value = configuration->mConformant;             break;
-      case EGL_MAX_PBUFFER_WIDTH:         *value = configuration->mMaxPBufferWidth;        break;
-      case EGL_MAX_PBUFFER_HEIGHT:        *value = configuration->mMaxPBufferHeight;       break;
-      case EGL_MAX_PBUFFER_PIXELS:        *value = configuration->mMaxPBufferPixels;       break;
       default:
         return false;
     }
@@ -402,16 +388,6 @@ Surface *Display::createWindowSurface(HWND window, EGLConfig config)
     const Config *configuration = mConfigSet.get(config);
 
     Surface *surface = new Surface(this, configuration, window);
-    mSurfaceSet.insert(surface);
-
-    return surface;
-}
-
-Surface *Display::createOffscreenSurface(int width, int height, EGLConfig config)
-{
-    const Config *configuration = mConfigSet.get(config);
-
-    Surface *surface = new Surface(this, configuration, width, height);
     mSurfaceSet.insert(surface);
 
     return surface;
@@ -618,6 +594,23 @@ bool Display::getLuminanceAlphaTextureSupport()
     mD3d9->GetAdapterDisplayMode(mAdapter, &currentDisplayMode);
 
     return SUCCEEDED(mD3d9->CheckDeviceFormat(mAdapter, mDeviceType, currentDisplayMode.Format, 0, D3DRTYPE_TEXTURE, D3DFMT_A8L8));
+}
+
+D3DPOOL Display::getBufferPool(DWORD usage) const
+{
+    if (mD3d9ex != NULL)
+    {
+        return D3DPOOL_DEFAULT;
+    }
+    else
+    {
+        if (!(usage & D3DUSAGE_DYNAMIC))
+        {
+            return D3DPOOL_MANAGED;
+        }
+    }
+
+    return D3DPOOL_DEFAULT;
 }
 
 bool Display::getEventQuerySupport()

@@ -43,7 +43,6 @@ class Display
     bool getConfigAttrib(EGLConfig config, EGLint attribute, EGLint *value);
 
     egl::Surface *createWindowSurface(HWND window, EGLConfig config);
-    egl::Surface *createOffscreenSurface(int width, int height, EGLConfig config);
     EGLContext createContext(EGLConfig configHandle, const gl::Context *shareContext);
 
     void destroySurface(egl::Surface *surface);
@@ -67,8 +66,7 @@ class Display
     virtual bool getHalfFloatTextureSupport(bool *filtering, bool *renderable);
     virtual bool getLuminanceTextureSupport();
     virtual bool getLuminanceAlphaTextureSupport();
-
-    bool isD3d9exDevice() { return mD3d9ex != NULL; }
+    virtual D3DPOOL getBufferPool(DWORD usage) const;
 
   private:
     DISALLOW_COPY_AND_ASSIGN(Display);

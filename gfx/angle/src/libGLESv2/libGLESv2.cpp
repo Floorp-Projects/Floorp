@@ -14,6 +14,7 @@
 #include <limits>
 
 #include "common/debug.h"
+#include "common/version.h"
 
 #include "libGLESv2/main.h"
 #include "libGLESv2/mathutil.h"
@@ -32,7 +33,7 @@ extern "C"
 
 void __stdcall glActiveTexture(GLenum texture)
 {
-    TRACE("(GLenum texture = 0x%X)", texture);
+    EVENT("(GLenum texture = 0x%X)", texture);
 
     try
     {
@@ -56,7 +57,7 @@ void __stdcall glActiveTexture(GLenum texture)
 
 void __stdcall glAttachShader(GLuint program, GLuint shader)
 {
-    TRACE("(GLuint program = %d, GLuint shader = %d)", program, shader);
+    EVENT("(GLuint program = %d, GLuint shader = %d)", program, shader);
 
     try
     {
@@ -105,7 +106,7 @@ void __stdcall glAttachShader(GLuint program, GLuint shader)
 
 void __stdcall glBindAttribLocation(GLuint program, GLuint index, const GLchar* name)
 {
-    TRACE("(GLuint program = %d, GLuint index = %d, const GLchar* name = 0x%0.8p)", program, index, name);
+    EVENT("(GLuint program = %d, GLuint index = %d, const GLchar* name = 0x%0.8p)", program, index, name);
 
     try
     {
@@ -148,7 +149,7 @@ void __stdcall glBindAttribLocation(GLuint program, GLuint index, const GLchar* 
 
 void __stdcall glBindBuffer(GLenum target, GLuint buffer)
 {
-    TRACE("(GLenum target = 0x%X, GLuint buffer = %d)", target, buffer);
+    EVENT("(GLenum target = 0x%X, GLuint buffer = %d)", target, buffer);
 
     try
     {
@@ -177,7 +178,7 @@ void __stdcall glBindBuffer(GLenum target, GLuint buffer)
 
 void __stdcall glBindFramebuffer(GLenum target, GLuint framebuffer)
 {
-    TRACE("(GLenum target = 0x%X, GLuint framebuffer = %d)", target, framebuffer);
+    EVENT("(GLenum target = 0x%X, GLuint framebuffer = %d)", target, framebuffer);
 
     try
     {
@@ -209,7 +210,7 @@ void __stdcall glBindFramebuffer(GLenum target, GLuint framebuffer)
 
 void __stdcall glBindRenderbuffer(GLenum target, GLuint renderbuffer)
 {
-    TRACE("(GLenum target = 0x%X, GLuint renderbuffer = %d)", target, renderbuffer);
+    EVENT("(GLenum target = 0x%X, GLuint renderbuffer = %d)", target, renderbuffer);
 
     try
     {
@@ -233,7 +234,7 @@ void __stdcall glBindRenderbuffer(GLenum target, GLuint renderbuffer)
 
 void __stdcall glBindTexture(GLenum target, GLuint texture)
 {
-    TRACE("(GLenum target = 0x%X, GLuint texture = %d)", target, texture);
+    EVENT("(GLenum target = 0x%X, GLuint texture = %d)", target, texture);
 
     try
     {
@@ -269,7 +270,7 @@ void __stdcall glBindTexture(GLenum target, GLuint texture)
 
 void __stdcall glBlendColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha)
 {
-    TRACE("(GLclampf red = %f, GLclampf green = %f, GLclampf blue = %f, GLclampf alpha = %f)",
+    EVENT("(GLclampf red = %f, GLclampf green = %f, GLclampf blue = %f, GLclampf alpha = %f)",
           red, green, blue, alpha);
 
     try
@@ -294,7 +295,7 @@ void __stdcall glBlendEquation(GLenum mode)
 
 void __stdcall glBlendEquationSeparate(GLenum modeRGB, GLenum modeAlpha)
 {
-    TRACE("(GLenum modeRGB = 0x%X, GLenum modeAlpha = 0x%X)", modeRGB, modeAlpha);
+    EVENT("(GLenum modeRGB = 0x%X, GLenum modeAlpha = 0x%X)", modeRGB, modeAlpha);
 
     try
     {
@@ -338,7 +339,7 @@ void __stdcall glBlendFunc(GLenum sfactor, GLenum dfactor)
 
 void __stdcall glBlendFuncSeparate(GLenum srcRGB, GLenum dstRGB, GLenum srcAlpha, GLenum dstAlpha)
 {
-    TRACE("(GLenum srcRGB = 0x%X, GLenum dstRGB = 0x%X, GLenum srcAlpha = 0x%X, GLenum dstAlpha = 0x%X)",
+    EVENT("(GLenum srcRGB = 0x%X, GLenum dstRGB = 0x%X, GLenum srcAlpha = 0x%X, GLenum dstAlpha = 0x%X)",
           srcRGB, dstRGB, srcAlpha, dstAlpha);
 
     try
@@ -456,7 +457,7 @@ void __stdcall glBlendFuncSeparate(GLenum srcRGB, GLenum dstRGB, GLenum srcAlpha
 
 void __stdcall glBufferData(GLenum target, GLsizeiptr size, const GLvoid* data, GLenum usage)
 {
-    TRACE("(GLenum target = 0x%X, GLsizeiptr size = %d, const GLvoid* data = 0x%0.8p, GLenum usage = %d)",
+    EVENT("(GLenum target = 0x%X, GLsizeiptr size = %d, const GLvoid* data = 0x%0.8p, GLenum usage = %d)",
           target, size, data, usage);
 
     try
@@ -510,7 +511,7 @@ void __stdcall glBufferData(GLenum target, GLsizeiptr size, const GLvoid* data, 
 
 void __stdcall glBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, const GLvoid* data)
 {
-    TRACE("(GLenum target = 0x%X, GLintptr offset = %d, GLsizeiptr size = %d, const GLvoid* data = 0x%0.8p)",
+    EVENT("(GLenum target = 0x%X, GLintptr offset = %d, GLsizeiptr size = %d, const GLvoid* data = 0x%0.8p)",
           target, offset, size, data);
 
     try
@@ -564,7 +565,7 @@ void __stdcall glBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, 
 
 GLenum __stdcall glCheckFramebufferStatus(GLenum target)
 {
-    TRACE("(GLenum target = 0x%X)", target);
+    EVENT("(GLenum target = 0x%X)", target);
 
     try
     {
@@ -600,7 +601,7 @@ GLenum __stdcall glCheckFramebufferStatus(GLenum target)
 
 void __stdcall glClear(GLbitfield mask)
 {
-    TRACE("(GLbitfield mask = %X)", mask);
+    EVENT("(GLbitfield mask = %X)", mask);
 
     try
     {
@@ -619,7 +620,7 @@ void __stdcall glClear(GLbitfield mask)
 
 void __stdcall glClearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha)
 {
-    TRACE("(GLclampf red = %f, GLclampf green = %f, GLclampf blue = %f, GLclampf alpha = %f)",
+    EVENT("(GLclampf red = %f, GLclampf green = %f, GLclampf blue = %f, GLclampf alpha = %f)",
           red, green, blue, alpha);
 
     try
@@ -639,7 +640,7 @@ void __stdcall glClearColor(GLclampf red, GLclampf green, GLclampf blue, GLclamp
 
 void __stdcall glClearDepthf(GLclampf depth)
 {
-    TRACE("(GLclampf depth = %f)", depth);
+    EVENT("(GLclampf depth = %f)", depth);
 
     try
     {
@@ -658,7 +659,7 @@ void __stdcall glClearDepthf(GLclampf depth)
 
 void __stdcall glClearStencil(GLint s)
 {
-    TRACE("(GLint s = %d)", s);
+    EVENT("(GLint s = %d)", s);
 
     try
     {
@@ -677,7 +678,7 @@ void __stdcall glClearStencil(GLint s)
 
 void __stdcall glColorMask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha)
 {
-    TRACE("(GLboolean red = %d, GLboolean green = %d, GLboolean blue = %d, GLboolean alpha = %d)",
+    EVENT("(GLboolean red = %d, GLboolean green = %d, GLboolean blue = %d, GLboolean alpha = %d)",
           red, green, blue, alpha);
 
     try
@@ -697,7 +698,7 @@ void __stdcall glColorMask(GLboolean red, GLboolean green, GLboolean blue, GLboo
 
 void __stdcall glCompileShader(GLuint shader)
 {
-    TRACE("(GLuint shader = %d)", shader);
+    EVENT("(GLuint shader = %d)", shader);
 
     try
     {
@@ -731,7 +732,7 @@ void __stdcall glCompileShader(GLuint shader)
 void __stdcall glCompressedTexImage2D(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, 
                                       GLint border, GLsizei imageSize, const GLvoid* data)
 {
-    TRACE("(GLenum target = 0x%X, GLint level = %d, GLenum internalformat = 0x%X, GLsizei width = %d, " 
+    EVENT("(GLenum target = 0x%X, GLint level = %d, GLenum internalformat = 0x%X, GLsizei width = %d, " 
           "GLsizei height = %d, GLint border = %d, GLsizei imageSize = %d, const GLvoid* data = 0x%0.8p)",
           target, level, internalformat, width, height, border, imageSize, data);
 
@@ -855,7 +856,7 @@ void __stdcall glCompressedTexImage2D(GLenum target, GLint level, GLenum interna
 void __stdcall glCompressedTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
                                          GLenum format, GLsizei imageSize, const GLvoid* data)
 {
-    TRACE("(GLenum target = 0x%X, GLint level = %d, GLint xoffset = %d, GLint yoffset = %d, "
+    EVENT("(GLenum target = 0x%X, GLint level = %d, GLint xoffset = %d, GLint yoffset = %d, "
           "GLsizei width = %d, GLsizei height = %d, GLenum format = 0x%X, "
           "GLsizei imageSize = %d, const GLvoid* data = 0x%0.8p)",
           target, level, xoffset, yoffset, width, height, format, imageSize, data);
@@ -975,7 +976,7 @@ void __stdcall glCompressedTexSubImage2D(GLenum target, GLint level, GLint xoffs
 
 void __stdcall glCopyTexImage2D(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border)
 {
-    TRACE("(GLenum target = 0x%X, GLint level = %d, GLenum internalformat = 0x%X, "
+    EVENT("(GLenum target = 0x%X, GLint level = %d, GLenum internalformat = 0x%X, "
           "GLint x = %d, GLint y = %d, GLsizei width = %d, GLsizei height = %d, GLint border = %d)",
           target, level, internalformat, x, y, width, height, border);
 
@@ -1105,7 +1106,7 @@ void __stdcall glCopyTexImage2D(GLenum target, GLint level, GLenum internalforma
                     return error(GL_INVALID_OPERATION);
                 }
 
-                texture->copyImage(level, internalformat, x, y, width, height, source);
+                texture->copyImage(level, internalformat, x, y, width, height, framebuffer);
             }
             else if (gl::IsCubemapTextureTarget(target))
             {
@@ -1116,7 +1117,7 @@ void __stdcall glCopyTexImage2D(GLenum target, GLint level, GLenum internalforma
                     return error(GL_INVALID_OPERATION);
                 }
 
-                texture->copyImage(target, level, internalformat, x, y, width, height, source);
+                texture->copyImage(target, level, internalformat, x, y, width, height, framebuffer);
             }
             else UNREACHABLE();
         }
@@ -1129,7 +1130,7 @@ void __stdcall glCopyTexImage2D(GLenum target, GLint level, GLenum internalforma
 
 void __stdcall glCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height)
 {
-    TRACE("(GLenum target = 0x%X, GLint level = %d, GLint xoffset = %d, GLint yoffset = %d, "
+    EVENT("(GLenum target = 0x%X, GLint level = %d, GLint xoffset = %d, GLint yoffset = %d, "
           "GLint x = %d, GLint y = %d, GLsizei width = %d, GLsizei height = %d)",
           target, level, xoffset, yoffset, x, y, width, height);
 
@@ -1240,7 +1241,7 @@ void __stdcall glCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GL
                 return error(GL_INVALID_OPERATION);
             }
 
-            texture->copySubImage(target, level, xoffset, yoffset, x, y, width, height, source);
+            texture->copySubImage(target, level, xoffset, yoffset, x, y, width, height, framebuffer);
         }
     }
 
@@ -1252,7 +1253,7 @@ void __stdcall glCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GL
 
 GLuint __stdcall glCreateProgram(void)
 {
-    TRACE("()");
+    EVENT("()");
 
     try
     {
@@ -1273,7 +1274,7 @@ GLuint __stdcall glCreateProgram(void)
 
 GLuint __stdcall glCreateShader(GLenum type)
 {
-    TRACE("(GLenum type = 0x%X)", type);
+    EVENT("(GLenum type = 0x%X)", type);
 
     try
     {
@@ -1301,7 +1302,7 @@ GLuint __stdcall glCreateShader(GLenum type)
 
 void __stdcall glCullFace(GLenum mode)
 {
-    TRACE("(GLenum mode = 0x%X)", mode);
+    EVENT("(GLenum mode = 0x%X)", mode);
 
     try
     {
@@ -1331,7 +1332,7 @@ void __stdcall glCullFace(GLenum mode)
 
 void __stdcall glDeleteBuffers(GLsizei n, const GLuint* buffers)
 {
-    TRACE("(GLsizei n = %d, const GLuint* buffers = 0x%0.8p)", n, buffers);
+    EVENT("(GLsizei n = %d, const GLuint* buffers = 0x%0.8p)", n, buffers);
 
     try
     {
@@ -1358,7 +1359,7 @@ void __stdcall glDeleteBuffers(GLsizei n, const GLuint* buffers)
 
 void __stdcall glDeleteFencesNV(GLsizei n, const GLuint* fences)
 {
-    TRACE("(GLsizei n = %d, const GLuint* fences = 0x%0.8p)", n, fences);
+    EVENT("(GLsizei n = %d, const GLuint* fences = 0x%0.8p)", n, fences);
 
     try
     {
@@ -1385,7 +1386,7 @@ void __stdcall glDeleteFencesNV(GLsizei n, const GLuint* fences)
 
 void __stdcall glDeleteFramebuffers(GLsizei n, const GLuint* framebuffers)
 {
-    TRACE("(GLsizei n = %d, const GLuint* framebuffers = 0x%0.8p)", n, framebuffers);
+    EVENT("(GLsizei n = %d, const GLuint* framebuffers = 0x%0.8p)", n, framebuffers);
 
     try
     {
@@ -1415,7 +1416,7 @@ void __stdcall glDeleteFramebuffers(GLsizei n, const GLuint* framebuffers)
 
 void __stdcall glDeleteProgram(GLuint program)
 {
-    TRACE("(GLuint program = %d)", program);
+    EVENT("(GLuint program = %d)", program);
 
     try
     {
@@ -1451,7 +1452,7 @@ void __stdcall glDeleteProgram(GLuint program)
 
 void __stdcall glDeleteRenderbuffers(GLsizei n, const GLuint* renderbuffers)
 {
-    TRACE("(GLsizei n = %d, const GLuint* renderbuffers = 0x%0.8p)", n, renderbuffers);
+    EVENT("(GLsizei n = %d, const GLuint* renderbuffers = 0x%0.8p)", n, renderbuffers);
 
     try
     {
@@ -1478,7 +1479,7 @@ void __stdcall glDeleteRenderbuffers(GLsizei n, const GLuint* renderbuffers)
 
 void __stdcall glDeleteShader(GLuint shader)
 {
-    TRACE("(GLuint shader = %d)", shader);
+    EVENT("(GLuint shader = %d)", shader);
 
     try
     {
@@ -1514,7 +1515,7 @@ void __stdcall glDeleteShader(GLuint shader)
 
 void __stdcall glDeleteTextures(GLsizei n, const GLuint* textures)
 {
-    TRACE("(GLsizei n = %d, const GLuint* textures = 0x%0.8p)", n, textures);
+    EVENT("(GLsizei n = %d, const GLuint* textures = 0x%0.8p)", n, textures);
 
     try
     {
@@ -1544,7 +1545,7 @@ void __stdcall glDeleteTextures(GLsizei n, const GLuint* textures)
 
 void __stdcall glDepthFunc(GLenum func)
 {
-    TRACE("(GLenum func = 0x%X)", func);
+    EVENT("(GLenum func = 0x%X)", func);
 
     try
     {
@@ -1578,7 +1579,7 @@ void __stdcall glDepthFunc(GLenum func)
 
 void __stdcall glDepthMask(GLboolean flag)
 {
-    TRACE("(GLboolean flag = %d)", flag);
+    EVENT("(GLboolean flag = %d)", flag);
 
     try
     {
@@ -1597,7 +1598,7 @@ void __stdcall glDepthMask(GLboolean flag)
 
 void __stdcall glDepthRangef(GLclampf zNear, GLclampf zFar)
 {
-    TRACE("(GLclampf zNear = %f, GLclampf zFar = %f)", zNear, zFar);
+    EVENT("(GLclampf zNear = %f, GLclampf zFar = %f)", zNear, zFar);
 
     try
     {
@@ -1616,7 +1617,7 @@ void __stdcall glDepthRangef(GLclampf zNear, GLclampf zFar)
 
 void __stdcall glDetachShader(GLuint program, GLuint shader)
 {
-    TRACE("(GLuint program = %d, GLuint shader = %d)", program, shader);
+    EVENT("(GLuint program = %d, GLuint shader = %d)", program, shader);
 
     try
     {
@@ -1669,7 +1670,7 @@ void __stdcall glDetachShader(GLuint program, GLuint shader)
 
 void __stdcall glDisable(GLenum cap)
 {
-    TRACE("(GLenum cap = 0x%X)", cap);
+    EVENT("(GLenum cap = 0x%X)", cap);
 
     try
     {
@@ -1701,7 +1702,7 @@ void __stdcall glDisable(GLenum cap)
 
 void __stdcall glDisableVertexAttribArray(GLuint index)
 {
-    TRACE("(GLuint index = %d)", index);
+    EVENT("(GLuint index = %d)", index);
 
     try
     {
@@ -1714,7 +1715,7 @@ void __stdcall glDisableVertexAttribArray(GLuint index)
 
         if (context)
         {
-            context->setVertexAttribEnabled(index, false);
+            context->setEnableVertexAttribArray(index, false);
         }
     }
     catch(std::bad_alloc&)
@@ -1725,7 +1726,7 @@ void __stdcall glDisableVertexAttribArray(GLuint index)
 
 void __stdcall glDrawArrays(GLenum mode, GLint first, GLsizei count)
 {
-    TRACE("(GLenum mode = 0x%X, GLint first = %d, GLsizei count = %d)", mode, first, count);
+    EVENT("(GLenum mode = 0x%X, GLint first = %d, GLsizei count = %d)", mode, first, count);
 
     try
     {
@@ -1749,7 +1750,7 @@ void __stdcall glDrawArrays(GLenum mode, GLint first, GLsizei count)
 
 void __stdcall glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid* indices)
 {
-    TRACE("(GLenum mode = 0x%X, GLsizei count = %d, GLenum type = 0x%X, const GLvoid* indices = 0x%0.8p)",
+    EVENT("(GLenum mode = 0x%X, GLsizei count = %d, GLenum type = 0x%X, const GLvoid* indices = 0x%0.8p)",
           mode, count, type, indices);
 
     try
@@ -1759,20 +1760,25 @@ void __stdcall glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLv
             return error(GL_INVALID_VALUE);
         }
 
-        switch (type)
-        {
-          case GL_UNSIGNED_BYTE:
-          case GL_UNSIGNED_SHORT:
-          case GL_UNSIGNED_INT:
-            break;
-          default:
-            return error(GL_INVALID_ENUM);
-        }
-
         gl::Context *context = gl::getContext();
 
         if (context)
         {
+            switch (type)
+            {
+              case GL_UNSIGNED_BYTE:
+              case GL_UNSIGNED_SHORT:
+                break;
+              case GL_UNSIGNED_INT:
+                if (!context->supports32bitIndices())
+                {
+                    return error(GL_INVALID_ENUM);    
+                }
+                break;
+              default:
+                return error(GL_INVALID_ENUM);
+            }
+        
             context->drawElements(mode, count, type, indices);
         }
     }
@@ -1784,7 +1790,7 @@ void __stdcall glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLv
 
 void __stdcall glEnable(GLenum cap)
 {
-    TRACE("(GLenum cap = 0x%X)", cap);
+    EVENT("(GLenum cap = 0x%X)", cap);
 
     try
     {
@@ -1816,7 +1822,7 @@ void __stdcall glEnable(GLenum cap)
 
 void __stdcall glEnableVertexAttribArray(GLuint index)
 {
-    TRACE("(GLuint index = %d)", index);
+    EVENT("(GLuint index = %d)", index);
 
     try
     {
@@ -1829,7 +1835,7 @@ void __stdcall glEnableVertexAttribArray(GLuint index)
 
         if (context)
         {
-            context->setVertexAttribEnabled(index, true);
+            context->setEnableVertexAttribArray(index, true);
         }
     }
     catch(std::bad_alloc&)
@@ -1840,7 +1846,7 @@ void __stdcall glEnableVertexAttribArray(GLuint index)
 
 void __stdcall glFinishFenceNV(GLuint fence)
 {
-    TRACE("(GLuint fence = %d)", fence);
+    EVENT("(GLuint fence = %d)", fence);
 
     try
     {
@@ -1866,7 +1872,7 @@ void __stdcall glFinishFenceNV(GLuint fence)
 
 void __stdcall glFinish(void)
 {
-    TRACE("()");
+    EVENT("()");
 
     try
     {
@@ -1885,7 +1891,7 @@ void __stdcall glFinish(void)
 
 void __stdcall glFlush(void)
 {
-    TRACE("()");
+    EVENT("()");
 
     try
     {
@@ -1904,7 +1910,7 @@ void __stdcall glFlush(void)
 
 void __stdcall glFramebufferRenderbuffer(GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer)
 {
-    TRACE("(GLenum target = 0x%X, GLenum attachment = 0x%X, GLenum renderbuffertarget = 0x%X, "
+    EVENT("(GLenum target = 0x%X, GLenum attachment = 0x%X, GLenum renderbuffertarget = 0x%X, "
           "GLuint renderbuffer = %d)", target, attachment, renderbuffertarget, renderbuffer);
 
     try
@@ -1961,7 +1967,7 @@ void __stdcall glFramebufferRenderbuffer(GLenum target, GLenum attachment, GLenu
 
 void __stdcall glFramebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level)
 {
-    TRACE("(GLenum target = 0x%X, GLenum attachment = 0x%X, GLenum textarget = 0x%X, "
+    EVENT("(GLenum target = 0x%X, GLenum attachment = 0x%X, GLenum textarget = 0x%X, "
           "GLuint texture = %d, GLint level = %d)", target, attachment, textarget, texture, level);
 
     try
@@ -2068,7 +2074,7 @@ void __stdcall glFramebufferTexture2D(GLenum target, GLenum attachment, GLenum t
 
 void __stdcall glFrontFace(GLenum mode)
 {
-    TRACE("(GLenum mode = 0x%X)", mode);
+    EVENT("(GLenum mode = 0x%X)", mode);
 
     try
     {
@@ -2097,7 +2103,7 @@ void __stdcall glFrontFace(GLenum mode)
 
 void __stdcall glGenBuffers(GLsizei n, GLuint* buffers)
 {
-    TRACE("(GLsizei n = %d, GLuint* buffers = 0x%0.8p)", n, buffers);
+    EVENT("(GLsizei n = %d, GLuint* buffers = 0x%0.8p)", n, buffers);
 
     try
     {
@@ -2124,7 +2130,7 @@ void __stdcall glGenBuffers(GLsizei n, GLuint* buffers)
 
 void __stdcall glGenerateMipmap(GLenum target)
 {
-    TRACE("(GLenum target = 0x%X)", target);
+    EVENT("(GLenum target = 0x%X)", target);
 
     try
     {
@@ -2164,7 +2170,7 @@ void __stdcall glGenerateMipmap(GLenum target)
 
 void __stdcall glGenFencesNV(GLsizei n, GLuint* fences)
 {
-    TRACE("(GLsizei n = %d, GLuint* fences = 0x%0.8p)", n, fences);
+    EVENT("(GLsizei n = %d, GLuint* fences = 0x%0.8p)", n, fences);
 
     try
     {
@@ -2191,7 +2197,7 @@ void __stdcall glGenFencesNV(GLsizei n, GLuint* fences)
 
 void __stdcall glGenFramebuffers(GLsizei n, GLuint* framebuffers)
 {
-    TRACE("(GLsizei n = %d, GLuint* framebuffers = 0x%0.8p)", n, framebuffers);
+    EVENT("(GLsizei n = %d, GLuint* framebuffers = 0x%0.8p)", n, framebuffers);
 
     try
     {
@@ -2218,7 +2224,7 @@ void __stdcall glGenFramebuffers(GLsizei n, GLuint* framebuffers)
 
 void __stdcall glGenRenderbuffers(GLsizei n, GLuint* renderbuffers)
 {
-    TRACE("(GLsizei n = %d, GLuint* renderbuffers = 0x%0.8p)", n, renderbuffers);
+    EVENT("(GLsizei n = %d, GLuint* renderbuffers = 0x%0.8p)", n, renderbuffers);
 
     try
     {
@@ -2245,7 +2251,7 @@ void __stdcall glGenRenderbuffers(GLsizei n, GLuint* renderbuffers)
 
 void __stdcall glGenTextures(GLsizei n, GLuint* textures)
 {
-    TRACE("(GLsizei n = %d, GLuint* textures =  0x%0.8p)", n, textures);
+    EVENT("(GLsizei n = %d, GLuint* textures =  0x%0.8p)", n, textures);
 
     try
     {
@@ -2272,7 +2278,7 @@ void __stdcall glGenTextures(GLsizei n, GLuint* textures)
 
 void __stdcall glGetActiveAttrib(GLuint program, GLuint index, GLsizei bufsize, GLsizei *length, GLint *size, GLenum *type, GLchar *name)
 {
-    TRACE("(GLuint program = %d, GLuint index = %d, GLsizei bufsize = %d, GLsizei *length = 0x%0.8p, "
+    EVENT("(GLuint program = %d, GLuint index = %d, GLsizei bufsize = %d, GLsizei *length = 0x%0.8p, "
           "GLint *size = 0x%0.8p, GLenum *type = %0.8p, GLchar *name = %0.8p)",
           program, index, bufsize, length, size, type, name);
 
@@ -2317,7 +2323,7 @@ void __stdcall glGetActiveAttrib(GLuint program, GLuint index, GLsizei bufsize, 
 
 void __stdcall glGetActiveUniform(GLuint program, GLuint index, GLsizei bufsize, GLsizei* length, GLint* size, GLenum* type, GLchar* name)
 {
-    TRACE("(GLuint program = %d, GLuint index = %d, GLsizei bufsize = %d, "
+    EVENT("(GLuint program = %d, GLuint index = %d, GLsizei bufsize = %d, "
           "GLsizei* length = 0x%0.8p, GLint* size = 0x%0.8p, GLenum* type = 0x%0.8p, GLchar* name = 0x%0.8p)",
           program, index, bufsize, length, size, type, name);
 
@@ -2362,7 +2368,7 @@ void __stdcall glGetActiveUniform(GLuint program, GLuint index, GLsizei bufsize,
 
 void __stdcall glGetAttachedShaders(GLuint program, GLsizei maxcount, GLsizei* count, GLuint* shaders)
 {
-    TRACE("(GLuint program = %d, GLsizei maxcount = %d, GLsizei* count = 0x%0.8p, GLuint* shaders = 0x%0.8p)",
+    EVENT("(GLuint program = %d, GLsizei maxcount = %d, GLsizei* count = 0x%0.8p, GLuint* shaders = 0x%0.8p)",
           program, maxcount, count, shaders);
 
     try
@@ -2401,7 +2407,7 @@ void __stdcall glGetAttachedShaders(GLuint program, GLsizei maxcount, GLsizei* c
 
 int __stdcall glGetAttribLocation(GLuint program, const GLchar* name)
 {
-    TRACE("(GLuint program = %d, const GLchar* name = %s)", program, name);
+    EVENT("(GLuint program = %d, const GLchar* name = %s)", program, name);
 
     try
     {
@@ -2442,7 +2448,7 @@ int __stdcall glGetAttribLocation(GLuint program, const GLchar* name)
 
 void __stdcall glGetBooleanv(GLenum pname, GLboolean* params)
 {
-    TRACE("(GLenum pname = 0x%X, GLboolean* params = 0x%0.8p)",  pname, params);
+    EVENT("(GLenum pname = 0x%X, GLboolean* params = 0x%0.8p)",  pname, params);
 
     try
     {
@@ -2505,7 +2511,7 @@ void __stdcall glGetBooleanv(GLenum pname, GLboolean* params)
 
 void __stdcall glGetBufferParameteriv(GLenum target, GLenum pname, GLint* params)
 {
-    TRACE("(GLenum target = 0x%X, GLenum pname = 0x%X, GLint* params = 0x%0.8p)", target, pname, params);
+    EVENT("(GLenum target = 0x%X, GLenum pname = 0x%X, GLint* params = 0x%0.8p)", target, pname, params);
 
     try
     {
@@ -2552,7 +2558,7 @@ void __stdcall glGetBufferParameteriv(GLenum target, GLenum pname, GLint* params
 
 GLenum __stdcall glGetError(void)
 {
-    TRACE("()");
+    EVENT("()");
 
     gl::Context *context = gl::getContext();
 
@@ -2566,7 +2572,7 @@ GLenum __stdcall glGetError(void)
 
 void __stdcall glGetFenceivNV(GLuint fence, GLenum pname, GLint *params)
 {
-    TRACE("(GLuint fence = %d, GLenum pname = 0x%X, GLint *params = 0x%0.8p)", fence, pname, params);
+    EVENT("(GLuint fence = %d, GLenum pname = 0x%X, GLint *params = 0x%0.8p)", fence, pname, params);
 
     try
     {
@@ -2593,7 +2599,7 @@ void __stdcall glGetFenceivNV(GLuint fence, GLenum pname, GLint *params)
 
 void __stdcall glGetFloatv(GLenum pname, GLfloat* params)
 {
-    TRACE("(GLenum pname = 0x%X, GLfloat* params = 0x%0.8p)", pname, params);
+    EVENT("(GLenum pname = 0x%X, GLfloat* params = 0x%0.8p)", pname, params);
 
     try
     {
@@ -2653,7 +2659,7 @@ void __stdcall glGetFloatv(GLenum pname, GLfloat* params)
 
 void __stdcall glGetFramebufferAttachmentParameteriv(GLenum target, GLenum attachment, GLenum pname, GLint* params)
 {
-    TRACE("(GLenum target = 0x%X, GLenum attachment = 0x%X, GLenum pname = 0x%X, GLint* params = 0x%0.8p)",
+    EVENT("(GLenum target = 0x%X, GLenum attachment = 0x%X, GLenum pname = 0x%X, GLint* params = 0x%0.8p)",
           target, attachment, pname, params);
 
     try
@@ -2772,7 +2778,7 @@ void __stdcall glGetFramebufferAttachmentParameteriv(GLenum target, GLenum attac
 
 void __stdcall glGetIntegerv(GLenum pname, GLint* params)
 {
-    TRACE("(GLenum pname = 0x%X, GLint* params = 0x%0.8p)", pname, params);
+    EVENT("(GLenum pname = 0x%X, GLint* params = 0x%0.8p)", pname, params);
 
     try
     {
@@ -2837,7 +2843,7 @@ void __stdcall glGetIntegerv(GLenum pname, GLint* params)
 
 void __stdcall glGetProgramiv(GLuint program, GLenum pname, GLint* params)
 {
-    TRACE("(GLuint program = %d, GLenum pname = %d, GLint* params = 0x%0.8p)", program, pname, params);
+    EVENT("(GLuint program = %d, GLenum pname = %d, GLint* params = 0x%0.8p)", program, pname, params);
 
     try
     {
@@ -2894,7 +2900,7 @@ void __stdcall glGetProgramiv(GLuint program, GLenum pname, GLint* params)
 
 void __stdcall glGetProgramInfoLog(GLuint program, GLsizei bufsize, GLsizei* length, GLchar* infolog)
 {
-    TRACE("(GLuint program = %d, GLsizei bufsize = %d, GLsizei* length = 0x%0.8p, GLchar* infolog = 0x%0.8p)",
+    EVENT("(GLuint program = %d, GLsizei bufsize = %d, GLsizei* length = 0x%0.8p, GLchar* infolog = 0x%0.8p)",
           program, bufsize, length, infolog);
 
     try
@@ -2926,7 +2932,7 @@ void __stdcall glGetProgramInfoLog(GLuint program, GLsizei bufsize, GLsizei* len
 
 void __stdcall glGetRenderbufferParameteriv(GLenum target, GLenum pname, GLint* params)
 {
-    TRACE("(GLenum target = 0x%X, GLenum pname = 0x%X, GLint* params = 0x%0.8p)", target, pname, params);
+    EVENT("(GLenum target = 0x%X, GLenum pname = 0x%X, GLint* params = 0x%0.8p)", target, pname, params);
 
     try
     {
@@ -3042,7 +3048,7 @@ void __stdcall glGetRenderbufferParameteriv(GLenum target, GLenum pname, GLint* 
 
 void __stdcall glGetShaderiv(GLuint shader, GLenum pname, GLint* params)
 {
-    TRACE("(GLuint shader = %d, GLenum pname = %d, GLint* params = 0x%0.8p)", shader, pname, params);
+    EVENT("(GLuint shader = %d, GLenum pname = %d, GLint* params = 0x%0.8p)", shader, pname, params);
 
     try
     {
@@ -3087,7 +3093,7 @@ void __stdcall glGetShaderiv(GLuint shader, GLenum pname, GLint* params)
 
 void __stdcall glGetShaderInfoLog(GLuint shader, GLsizei bufsize, GLsizei* length, GLchar* infolog)
 {
-    TRACE("(GLuint shader = %d, GLsizei bufsize = %d, GLsizei* length = 0x%0.8p, GLchar* infolog = 0x%0.8p)",
+    EVENT("(GLuint shader = %d, GLsizei bufsize = %d, GLsizei* length = 0x%0.8p, GLchar* infolog = 0x%0.8p)",
           shader, bufsize, length, infolog);
 
     try
@@ -3119,7 +3125,7 @@ void __stdcall glGetShaderInfoLog(GLuint shader, GLsizei bufsize, GLsizei* lengt
 
 void __stdcall glGetShaderPrecisionFormat(GLenum shadertype, GLenum precisiontype, GLint* range, GLint* precision)
 {
-    TRACE("(GLenum shadertype = 0x%X, GLenum precisiontype = 0x%X, GLint* range = 0x%0.8p, GLint* precision = 0x%0.8p)",
+    EVENT("(GLenum shadertype = 0x%X, GLenum precisiontype = 0x%X, GLint* range = 0x%0.8p, GLint* precision = 0x%0.8p)",
           shadertype, precisiontype, range, precision);
 
     try
@@ -3164,7 +3170,7 @@ void __stdcall glGetShaderPrecisionFormat(GLenum shadertype, GLenum precisiontyp
 
 void __stdcall glGetShaderSource(GLuint shader, GLsizei bufsize, GLsizei* length, GLchar* source)
 {
-    TRACE("(GLuint shader = %d, GLsizei bufsize = %d, GLsizei* length = 0x%0.8p, GLchar* source = 0x%0.8p)",
+    EVENT("(GLuint shader = %d, GLsizei bufsize = %d, GLsizei* length = 0x%0.8p, GLchar* source = 0x%0.8p)",
           shader, bufsize, length, source);
 
     try
@@ -3196,7 +3202,7 @@ void __stdcall glGetShaderSource(GLuint shader, GLsizei bufsize, GLsizei* length
 
 const GLubyte* __stdcall glGetString(GLenum name)
 {
-    TRACE("(GLenum name = 0x%X)", name);
+    EVENT("(GLenum name = 0x%X)", name);
 
     try
     {
@@ -3205,13 +3211,13 @@ const GLubyte* __stdcall glGetString(GLenum name)
         switch (name)
         {
           case GL_VENDOR:
-            return (GLubyte*)"TransGaming Inc.";
+            return (GLubyte*)"Google Inc.";
           case GL_RENDERER:
             return (GLubyte*)"ANGLE";
           case GL_VERSION:
-            return (GLubyte*)"OpenGL ES 2.0 (git-devel "__DATE__ " " __TIME__")";
+            return (GLubyte*)"OpenGL ES 2.0 (ANGLE "VERSION_STRING")";
           case GL_SHADING_LANGUAGE_VERSION:
-            return (GLubyte*)"OpenGL ES GLSL ES 1.00 (git-devel "__DATE__ " " __TIME__")";
+            return (GLubyte*)"OpenGL ES GLSL ES 1.00 (ANGLE "VERSION_STRING")";
           case GL_EXTENSIONS:
             return (GLubyte*)((context != NULL) ? context->getExtensionString() : "");
           default:
@@ -3228,7 +3234,7 @@ const GLubyte* __stdcall glGetString(GLenum name)
 
 void __stdcall glGetTexParameterfv(GLenum target, GLenum pname, GLfloat* params)
 {
-    TRACE("(GLenum target = 0x%X, GLenum pname = 0x%X, GLfloat* params = 0x%0.8p)", target, pname, params);
+    EVENT("(GLenum target = 0x%X, GLenum pname = 0x%X, GLfloat* params = 0x%0.8p)", target, pname, params);
 
     try
     {
@@ -3277,7 +3283,7 @@ void __stdcall glGetTexParameterfv(GLenum target, GLenum pname, GLfloat* params)
 
 void __stdcall glGetTexParameteriv(GLenum target, GLenum pname, GLint* params)
 {
-    TRACE("(GLenum target = 0x%X, GLenum pname = 0x%X, GLint* params = 0x%0.8p)", target, pname, params);
+    EVENT("(GLenum target = 0x%X, GLenum pname = 0x%X, GLint* params = 0x%0.8p)", target, pname, params);
 
     try
     {
@@ -3326,7 +3332,7 @@ void __stdcall glGetTexParameteriv(GLenum target, GLenum pname, GLint* params)
 
 void __stdcall glGetUniformfv(GLuint program, GLint location, GLfloat* params)
 {
-    TRACE("(GLuint program = %d, GLint location = %d, GLfloat* params = 0x%0.8p)", program, location, params);
+    EVENT("(GLuint program = %d, GLint location = %d, GLfloat* params = 0x%0.8p)", program, location, params);
 
     try
     {
@@ -3360,7 +3366,7 @@ void __stdcall glGetUniformfv(GLuint program, GLint location, GLfloat* params)
 
 void __stdcall glGetUniformiv(GLuint program, GLint location, GLint* params)
 {
-    TRACE("(GLuint program = %d, GLint location = %d, GLint* params = 0x%0.8p)", program, location, params);
+    EVENT("(GLuint program = %d, GLint location = %d, GLint* params = 0x%0.8p)", program, location, params);
 
     try
     {
@@ -3399,7 +3405,7 @@ void __stdcall glGetUniformiv(GLuint program, GLint location, GLint* params)
 
 int __stdcall glGetUniformLocation(GLuint program, const GLchar* name)
 {
-    TRACE("(GLuint program = %d, const GLchar* name = 0x%0.8p)", program, name);
+    EVENT("(GLuint program = %d, const GLchar* name = 0x%0.8p)", program, name);
 
     try
     {
@@ -3444,7 +3450,7 @@ int __stdcall glGetUniformLocation(GLuint program, const GLchar* name)
 
 void __stdcall glGetVertexAttribfv(GLuint index, GLenum pname, GLfloat* params)
 {
-    TRACE("(GLuint index = %d, GLenum pname = 0x%X, GLfloat* params = 0x%0.8p)", index, pname, params);
+    EVENT("(GLuint index = %d, GLenum pname = 0x%X, GLfloat* params = 0x%0.8p)", index, pname, params);
 
     try
     {
@@ -3457,12 +3463,12 @@ void __stdcall glGetVertexAttribfv(GLuint index, GLenum pname, GLfloat* params)
                 return error(GL_INVALID_VALUE);
             }
 
-            const gl::AttributeState &attribState = context->getVertexAttribState(index);
+            const gl::VertexAttribute &attribState = context->getVertexAttribState(index);
 
             switch (pname)
             {
               case GL_VERTEX_ATTRIB_ARRAY_ENABLED:
-                *params = (GLfloat)(attribState.mEnabled ? GL_TRUE : GL_FALSE);
+                *params = (GLfloat)(attribState.mArrayEnabled ? GL_TRUE : GL_FALSE);
                 break;
               case GL_VERTEX_ATTRIB_ARRAY_SIZE:
                 *params = (GLfloat)attribState.mSize;
@@ -3497,7 +3503,7 @@ void __stdcall glGetVertexAttribfv(GLuint index, GLenum pname, GLfloat* params)
 
 void __stdcall glGetVertexAttribiv(GLuint index, GLenum pname, GLint* params)
 {
-    TRACE("(GLuint index = %d, GLenum pname = 0x%X, GLint* params = 0x%0.8p)", index, pname, params);
+    EVENT("(GLuint index = %d, GLenum pname = 0x%X, GLint* params = 0x%0.8p)", index, pname, params);
 
     try
     {
@@ -3510,12 +3516,12 @@ void __stdcall glGetVertexAttribiv(GLuint index, GLenum pname, GLint* params)
                 return error(GL_INVALID_VALUE);
             }
 
-            const gl::AttributeState &attribState = context->getVertexAttribState(index);
+            const gl::VertexAttribute &attribState = context->getVertexAttribState(index);
 
             switch (pname)
             {
               case GL_VERTEX_ATTRIB_ARRAY_ENABLED:
-                *params = (attribState.mEnabled ? GL_TRUE : GL_FALSE);
+                *params = (attribState.mArrayEnabled ? GL_TRUE : GL_FALSE);
                 break;
               case GL_VERTEX_ATTRIB_ARRAY_SIZE:
                 *params = attribState.mSize;
@@ -3551,7 +3557,7 @@ void __stdcall glGetVertexAttribiv(GLuint index, GLenum pname, GLint* params)
 
 void __stdcall glGetVertexAttribPointerv(GLuint index, GLenum pname, GLvoid** pointer)
 {
-    TRACE("(GLuint index = %d, GLenum pname = 0x%X, GLvoid** pointer = 0x%0.8p)", index, pname, pointer);
+    EVENT("(GLuint index = %d, GLenum pname = 0x%X, GLvoid** pointer = 0x%0.8p)", index, pname, pointer);
 
     try
     {
@@ -3580,7 +3586,7 @@ void __stdcall glGetVertexAttribPointerv(GLuint index, GLenum pname, GLvoid** po
 
 void __stdcall glHint(GLenum target, GLenum mode)
 {
-    TRACE("(GLenum target = 0x%X, GLenum mode = 0x%X)", target, mode);
+    EVENT("(GLenum target = 0x%X, GLenum mode = 0x%X)", target, mode);
 
     try
     {
@@ -3615,7 +3621,7 @@ void __stdcall glHint(GLenum target, GLenum mode)
 
 GLboolean __stdcall glIsBuffer(GLuint buffer)
 {
-    TRACE("(GLuint buffer = %d)", buffer);
+    EVENT("(GLuint buffer = %d)", buffer);
 
     try
     {
@@ -3641,7 +3647,7 @@ GLboolean __stdcall glIsBuffer(GLuint buffer)
 
 GLboolean __stdcall glIsEnabled(GLenum cap)
 {
-    TRACE("(GLenum cap = 0x%X)", cap);
+    EVENT("(GLenum cap = 0x%X)", cap);
 
     try
     {
@@ -3675,7 +3681,7 @@ GLboolean __stdcall glIsEnabled(GLenum cap)
 
 GLboolean __stdcall glIsFenceNV(GLuint fence)
 {
-    TRACE("(GLuint fence = %d)", fence);
+    EVENT("(GLuint fence = %d)", fence);
 
     try
     {
@@ -3703,7 +3709,7 @@ GLboolean __stdcall glIsFenceNV(GLuint fence)
 
 GLboolean __stdcall glIsFramebuffer(GLuint framebuffer)
 {
-    TRACE("(GLuint framebuffer = %d)", framebuffer);
+    EVENT("(GLuint framebuffer = %d)", framebuffer);
 
     try
     {
@@ -3729,7 +3735,7 @@ GLboolean __stdcall glIsFramebuffer(GLuint framebuffer)
 
 GLboolean __stdcall glIsProgram(GLuint program)
 {
-    TRACE("(GLuint program = %d)", program);
+    EVENT("(GLuint program = %d)", program);
 
     try
     {
@@ -3755,7 +3761,7 @@ GLboolean __stdcall glIsProgram(GLuint program)
 
 GLboolean __stdcall glIsRenderbuffer(GLuint renderbuffer)
 {
-    TRACE("(GLuint renderbuffer = %d)", renderbuffer);
+    EVENT("(GLuint renderbuffer = %d)", renderbuffer);
 
     try
     {
@@ -3781,7 +3787,7 @@ GLboolean __stdcall glIsRenderbuffer(GLuint renderbuffer)
 
 GLboolean __stdcall glIsShader(GLuint shader)
 {
-    TRACE("(GLuint shader = %d)", shader);
+    EVENT("(GLuint shader = %d)", shader);
 
     try
     {
@@ -3807,7 +3813,7 @@ GLboolean __stdcall glIsShader(GLuint shader)
 
 GLboolean __stdcall glIsTexture(GLuint texture)
 {
-    TRACE("(GLuint texture = %d)", texture);
+    EVENT("(GLuint texture = %d)", texture);
 
     try
     {
@@ -3833,7 +3839,7 @@ GLboolean __stdcall glIsTexture(GLuint texture)
 
 void __stdcall glLineWidth(GLfloat width)
 {
-    TRACE("(GLfloat width = %f)", width);
+    EVENT("(GLfloat width = %f)", width);
 
     try
     {
@@ -3857,7 +3863,7 @@ void __stdcall glLineWidth(GLfloat width)
 
 void __stdcall glLinkProgram(GLuint program)
 {
-    TRACE("(GLuint program = %d)", program);
+    EVENT("(GLuint program = %d)", program);
 
     try
     {
@@ -3890,7 +3896,7 @@ void __stdcall glLinkProgram(GLuint program)
 
 void __stdcall glPixelStorei(GLenum pname, GLint param)
 {
-    TRACE("(GLenum pname = 0x%X, GLint param = %d)", pname, param);
+    EVENT("(GLenum pname = 0x%X, GLint param = %d)", pname, param);
 
     try
     {
@@ -3931,7 +3937,7 @@ void __stdcall glPixelStorei(GLenum pname, GLint param)
 
 void __stdcall glPolygonOffset(GLfloat factor, GLfloat units)
 {
-    TRACE("(GLfloat factor = %f, GLfloat units = %f)", factor, units);
+    EVENT("(GLfloat factor = %f, GLfloat units = %f)", factor, units);
 
     try
     {
@@ -3950,7 +3956,7 @@ void __stdcall glPolygonOffset(GLfloat factor, GLfloat units)
 
 void __stdcall glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid* pixels)
 {
-    TRACE("(GLint x = %d, GLint y = %d, GLsizei width = %d, GLsizei height = %d, "
+    EVENT("(GLint x = %d, GLint y = %d, GLsizei width = %d, GLsizei height = %d, "
           "GLenum format = 0x%X, GLenum type = 0x%X, GLvoid* pixels = 0x%0.8p)",
           x, y, width, height, format, type,  pixels);
 
@@ -4011,7 +4017,7 @@ void __stdcall glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLe
 
 void __stdcall glReleaseShaderCompiler(void)
 {
-    TRACE("()");
+    EVENT("()");
 
     try
     {
@@ -4025,7 +4031,7 @@ void __stdcall glReleaseShaderCompiler(void)
 
 void __stdcall glRenderbufferStorageMultisampleANGLE(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height)
 {
-    TRACE("(GLenum target = 0x%X, GLsizei samples = %d, GLenum internalformat = 0x%X, GLsizei width = %d, GLsizei height = %d)",
+    EVENT("(GLenum target = 0x%X, GLsizei samples = %d, GLenum internalformat = 0x%X, GLsizei width = %d, GLsizei height = %d)",
           target, samples, internalformat, width, height);
 
     try
@@ -4101,7 +4107,7 @@ void __stdcall glRenderbufferStorage(GLenum target, GLenum internalformat, GLsiz
 
 void __stdcall glSampleCoverage(GLclampf value, GLboolean invert)
 {
-    TRACE("(GLclampf value = %f, GLboolean invert = %d)", value, invert);
+    EVENT("(GLclampf value = %f, GLboolean invert = %d)", value, invert);
 
     try
     {
@@ -4120,7 +4126,7 @@ void __stdcall glSampleCoverage(GLclampf value, GLboolean invert)
 
 void __stdcall glSetFenceNV(GLuint fence, GLenum condition)
 {
-    TRACE("(GLuint fence = %d, GLenum condition = 0x%X)", fence, condition);
+    EVENT("(GLuint fence = %d, GLenum condition = 0x%X)", fence, condition);
 
     try
     {
@@ -4151,7 +4157,7 @@ void __stdcall glSetFenceNV(GLuint fence, GLenum condition)
 
 void __stdcall glScissor(GLint x, GLint y, GLsizei width, GLsizei height)
 {
-    TRACE("(GLint x = %d, GLint y = %d, GLsizei width = %d, GLsizei height = %d)", x, y, width, height);
+    EVENT("(GLint x = %d, GLint y = %d, GLsizei width = %d, GLsizei height = %d)", x, y, width, height);
 
     try
     {
@@ -4175,7 +4181,7 @@ void __stdcall glScissor(GLint x, GLint y, GLsizei width, GLsizei height)
 
 void __stdcall glShaderBinary(GLsizei n, const GLuint* shaders, GLenum binaryformat, const GLvoid* binary, GLsizei length)
 {
-    TRACE("(GLsizei n = %d, const GLuint* shaders = 0x%0.8p, GLenum binaryformat = 0x%X, "
+    EVENT("(GLsizei n = %d, const GLuint* shaders = 0x%0.8p, GLenum binaryformat = 0x%X, "
           "const GLvoid* binary = 0x%0.8p, GLsizei length = %d)",
           n, shaders, binaryformat, binary, length);
 
@@ -4192,7 +4198,7 @@ void __stdcall glShaderBinary(GLsizei n, const GLuint* shaders, GLenum binaryfor
 
 void __stdcall glShaderSource(GLuint shader, GLsizei count, const GLchar** string, const GLint* length)
 {
-    TRACE("(GLuint shader = %d, GLsizei count = %d, const GLchar** string = 0x%0.8p, const GLint* length = 0x%0.8p)",
+    EVENT("(GLuint shader = %d, GLsizei count = %d, const GLchar** string = 0x%0.8p, const GLint* length = 0x%0.8p)",
           shader, count, string, length);
 
     try
@@ -4236,7 +4242,7 @@ void __stdcall glStencilFunc(GLenum func, GLint ref, GLuint mask)
 
 void __stdcall glStencilFuncSeparate(GLenum face, GLenum func, GLint ref, GLuint mask)
 {
-    TRACE("(GLenum face = 0x%X, GLenum func = 0x%X, GLint ref = %d, GLuint mask = %d)", face, func, ref, mask);
+    EVENT("(GLenum face = 0x%X, GLenum func = 0x%X, GLint ref = %d, GLuint mask = %d)", face, func, ref, mask);
 
     try
     {
@@ -4293,7 +4299,7 @@ void __stdcall glStencilMask(GLuint mask)
 
 void __stdcall glStencilMaskSeparate(GLenum face, GLuint mask)
 {
-    TRACE("(GLenum face = 0x%X, GLuint mask = %d)", face, mask);
+    EVENT("(GLenum face = 0x%X, GLuint mask = %d)", face, mask);
 
     try
     {
@@ -4335,7 +4341,7 @@ void __stdcall glStencilOp(GLenum fail, GLenum zfail, GLenum zpass)
 
 void __stdcall glStencilOpSeparate(GLenum face, GLenum fail, GLenum zfail, GLenum zpass)
 {
-    TRACE("(GLenum face = 0x%X, GLenum fail = 0x%X, GLenum zfail = 0x%X, GLenum zpas = 0x%Xs)",
+    EVENT("(GLenum face = 0x%X, GLenum fail = 0x%X, GLenum zfail = 0x%X, GLenum zpas = 0x%Xs)",
           face, fail, zfail, zpass);
 
     try
@@ -4418,7 +4424,7 @@ void __stdcall glStencilOpSeparate(GLenum face, GLenum fail, GLenum zfail, GLenu
 
 GLboolean __stdcall glTestFenceNV(GLuint fence)
 {
-    TRACE("(GLuint fence = %d)", fence);
+    EVENT("(GLuint fence = %d)", fence);
 
     try
     {
@@ -4447,7 +4453,7 @@ GLboolean __stdcall glTestFenceNV(GLuint fence)
 void __stdcall glTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height,
                             GLint border, GLenum format, GLenum type, const GLvoid* pixels)
 {
-    TRACE("(GLenum target = 0x%X, GLint level = %d, GLint internalformat = %d, GLsizei width = %d, GLsizei height = %d, "
+    EVENT("(GLenum target = 0x%X, GLint level = %d, GLint internalformat = %d, GLsizei width = %d, GLsizei height = %d, "
           "GLint border = %d, GLenum format = 0x%X, GLenum type = 0x%X, const GLvoid* pixels =  0x%0.8p)",
           target, level, internalformat, width, height, border, format, type, pixels);
 
@@ -4654,7 +4660,7 @@ void __stdcall glTexParameterfv(GLenum target, GLenum pname, const GLfloat* para
 
 void __stdcall glTexParameteri(GLenum target, GLenum pname, GLint param)
 {
-    TRACE("(GLenum target = 0x%X, GLenum pname = 0x%X, GLint param = %d)", target, pname, param);
+    EVENT("(GLenum target = 0x%X, GLenum pname = 0x%X, GLint param = %d)", target, pname, param);
 
     try
     {
@@ -4721,7 +4727,7 @@ void __stdcall glTexParameteriv(GLenum target, GLenum pname, const GLint* params
 void __stdcall glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
                                GLenum format, GLenum type, const GLvoid* pixels)
 {
-    TRACE("(GLenum target = 0x%X, GLint level = %d, GLint xoffset = %d, GLint yoffset = %d, "
+    EVENT("(GLenum target = 0x%X, GLint level = %d, GLint xoffset = %d, GLint yoffset = %d, "
           "GLsizei width = %d, GLsizei height = %d, GLenum format = 0x%X, GLenum type = 0x%X, "
           "const GLvoid* pixels = 0x%0.8p)",
            target, level, xoffset, yoffset, width, height, format, type, pixels);
@@ -4838,7 +4844,7 @@ void __stdcall glUniform1f(GLint location, GLfloat x)
 
 void __stdcall glUniform1fv(GLint location, GLsizei count, const GLfloat* v)
 {
-    TRACE("(GLint location = %d, GLsizei count = %d, const GLfloat* v = 0x%0.8p)", location, count, v);
+    EVENT("(GLint location = %d, GLsizei count = %d, const GLfloat* v = 0x%0.8p)", location, count, v);
 
     try
     {
@@ -4882,7 +4888,7 @@ void __stdcall glUniform1i(GLint location, GLint x)
 
 void __stdcall glUniform1iv(GLint location, GLsizei count, const GLint* v)
 {
-    TRACE("(GLint location = %d, GLsizei count = %d, const GLint* v = 0x%0.8p)", location, count, v);
+    EVENT("(GLint location = %d, GLsizei count = %d, const GLint* v = 0x%0.8p)", location, count, v);
 
     try
     {
@@ -4928,7 +4934,7 @@ void __stdcall glUniform2f(GLint location, GLfloat x, GLfloat y)
 
 void __stdcall glUniform2fv(GLint location, GLsizei count, const GLfloat* v)
 {
-    TRACE("(GLint location = %d, GLsizei count = %d, const GLfloat* v = 0x%0.8p)", location, count, v);
+    EVENT("(GLint location = %d, GLsizei count = %d, const GLfloat* v = 0x%0.8p)", location, count, v);
 
     try
     {
@@ -4974,7 +4980,7 @@ void __stdcall glUniform2i(GLint location, GLint x, GLint y)
 
 void __stdcall glUniform2iv(GLint location, GLsizei count, const GLint* v)
 {
-    TRACE("(GLint location = %d, GLsizei count = %d, const GLint* v = 0x%0.8p)", location, count, v);
+    EVENT("(GLint location = %d, GLsizei count = %d, const GLint* v = 0x%0.8p)", location, count, v);
 
     try
     {
@@ -5020,7 +5026,7 @@ void __stdcall glUniform3f(GLint location, GLfloat x, GLfloat y, GLfloat z)
 
 void __stdcall glUniform3fv(GLint location, GLsizei count, const GLfloat* v)
 {
-    TRACE("(GLint location = %d, GLsizei count = %d, const GLfloat* v = 0x%0.8p)", location, count, v);
+    EVENT("(GLint location = %d, GLsizei count = %d, const GLfloat* v = 0x%0.8p)", location, count, v);
 
     try
     {
@@ -5066,7 +5072,7 @@ void __stdcall glUniform3i(GLint location, GLint x, GLint y, GLint z)
 
 void __stdcall glUniform3iv(GLint location, GLsizei count, const GLint* v)
 {
-    TRACE("(GLint location = %d, GLsizei count = %d, const GLint* v = 0x%0.8p)", location, count, v);
+    EVENT("(GLint location = %d, GLsizei count = %d, const GLint* v = 0x%0.8p)", location, count, v);
 
     try
     {
@@ -5112,7 +5118,7 @@ void __stdcall glUniform4f(GLint location, GLfloat x, GLfloat y, GLfloat z, GLfl
 
 void __stdcall glUniform4fv(GLint location, GLsizei count, const GLfloat* v)
 {
-    TRACE("(GLint location = %d, GLsizei count = %d, const GLfloat* v = 0x%0.8p)", location, count, v);
+    EVENT("(GLint location = %d, GLsizei count = %d, const GLfloat* v = 0x%0.8p)", location, count, v);
 
     try
     {
@@ -5158,7 +5164,7 @@ void __stdcall glUniform4i(GLint location, GLint x, GLint y, GLint z, GLint w)
 
 void __stdcall glUniform4iv(GLint location, GLsizei count, const GLint* v)
 {
-    TRACE("(GLint location = %d, GLsizei count = %d, const GLint* v = 0x%0.8p)", location, count, v);
+    EVENT("(GLint location = %d, GLsizei count = %d, const GLint* v = 0x%0.8p)", location, count, v);
 
     try
     {
@@ -5197,7 +5203,7 @@ void __stdcall glUniform4iv(GLint location, GLsizei count, const GLint* v)
 
 void __stdcall glUniformMatrix2fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat* value)
 {
-    TRACE("(GLint location = %d, GLsizei count = %d, GLboolean transpose = %d, const GLfloat* value = 0x%0.8p)",
+    EVENT("(GLint location = %d, GLsizei count = %d, GLboolean transpose = %d, const GLfloat* value = 0x%0.8p)",
           location, count, transpose, value);
 
     try
@@ -5237,7 +5243,7 @@ void __stdcall glUniformMatrix2fv(GLint location, GLsizei count, GLboolean trans
 
 void __stdcall glUniformMatrix3fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat* value)
 {
-    TRACE("(GLint location = %d, GLsizei count = %d, GLboolean transpose = %d, const GLfloat* value = 0x%0.8p)",
+    EVENT("(GLint location = %d, GLsizei count = %d, GLboolean transpose = %d, const GLfloat* value = 0x%0.8p)",
           location, count, transpose, value);
 
     try
@@ -5277,7 +5283,7 @@ void __stdcall glUniformMatrix3fv(GLint location, GLsizei count, GLboolean trans
 
 void __stdcall glUniformMatrix4fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat* value)
 {
-    TRACE("(GLint location = %d, GLsizei count = %d, GLboolean transpose = %d, const GLfloat* value = 0x%0.8p)",
+    EVENT("(GLint location = %d, GLsizei count = %d, GLboolean transpose = %d, const GLfloat* value = 0x%0.8p)",
           location, count, transpose, value);
 
     try
@@ -5317,7 +5323,7 @@ void __stdcall glUniformMatrix4fv(GLint location, GLsizei count, GLboolean trans
 
 void __stdcall glUseProgram(GLuint program)
 {
-    TRACE("(GLuint program = %d)", program);
+    EVENT("(GLuint program = %d)", program);
 
     try
     {
@@ -5355,7 +5361,7 @@ void __stdcall glUseProgram(GLuint program)
 
 void __stdcall glValidateProgram(GLuint program)
 {
-    TRACE("(GLuint program = %d)", program);
+    EVENT("(GLuint program = %d)", program);
 
     try
     {
@@ -5388,7 +5394,7 @@ void __stdcall glValidateProgram(GLuint program)
 
 void __stdcall glVertexAttrib1f(GLuint index, GLfloat x)
 {
-    TRACE("(GLuint index = %d, GLfloat x = %f)", index, x);
+    EVENT("(GLuint index = %d, GLfloat x = %f)", index, x);
 
     try
     {
@@ -5413,7 +5419,7 @@ void __stdcall glVertexAttrib1f(GLuint index, GLfloat x)
 
 void __stdcall glVertexAttrib1fv(GLuint index, const GLfloat* values)
 {
-    TRACE("(GLuint index = %d, const GLfloat* values = 0x%0.8p)", index, values);
+    EVENT("(GLuint index = %d, const GLfloat* values = 0x%0.8p)", index, values);
 
     try
     {
@@ -5438,7 +5444,7 @@ void __stdcall glVertexAttrib1fv(GLuint index, const GLfloat* values)
 
 void __stdcall glVertexAttrib2f(GLuint index, GLfloat x, GLfloat y)
 {
-    TRACE("(GLuint index = %d, GLfloat x = %f, GLfloat y = %f)", index, x, y);
+    EVENT("(GLuint index = %d, GLfloat x = %f, GLfloat y = %f)", index, x, y);
 
     try
     {
@@ -5463,7 +5469,7 @@ void __stdcall glVertexAttrib2f(GLuint index, GLfloat x, GLfloat y)
 
 void __stdcall glVertexAttrib2fv(GLuint index, const GLfloat* values)
 {
-    TRACE("(GLuint index = %d, const GLfloat* values = 0x%0.8p)", index, values);
+    EVENT("(GLuint index = %d, const GLfloat* values = 0x%0.8p)", index, values);
 
     try
     {
@@ -5488,7 +5494,7 @@ void __stdcall glVertexAttrib2fv(GLuint index, const GLfloat* values)
 
 void __stdcall glVertexAttrib3f(GLuint index, GLfloat x, GLfloat y, GLfloat z)
 {
-    TRACE("(GLuint index = %d, GLfloat x = %f, GLfloat y = %f, GLfloat z = %f)", index, x, y, z);
+    EVENT("(GLuint index = %d, GLfloat x = %f, GLfloat y = %f, GLfloat z = %f)", index, x, y, z);
 
     try
     {
@@ -5513,7 +5519,7 @@ void __stdcall glVertexAttrib3f(GLuint index, GLfloat x, GLfloat y, GLfloat z)
 
 void __stdcall glVertexAttrib3fv(GLuint index, const GLfloat* values)
 {
-    TRACE("(GLuint index = %d, const GLfloat* values = 0x%0.8p)", index, values);
+    EVENT("(GLuint index = %d, const GLfloat* values = 0x%0.8p)", index, values);
 
     try
     {
@@ -5538,7 +5544,7 @@ void __stdcall glVertexAttrib3fv(GLuint index, const GLfloat* values)
 
 void __stdcall glVertexAttrib4f(GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
 {
-    TRACE("(GLuint index = %d, GLfloat x = %f, GLfloat y = %f, GLfloat z = %f, GLfloat w = %f)", index, x, y, z, w);
+    EVENT("(GLuint index = %d, GLfloat x = %f, GLfloat y = %f, GLfloat z = %f, GLfloat w = %f)", index, x, y, z, w);
 
     try
     {
@@ -5563,7 +5569,7 @@ void __stdcall glVertexAttrib4f(GLuint index, GLfloat x, GLfloat y, GLfloat z, G
 
 void __stdcall glVertexAttrib4fv(GLuint index, const GLfloat* values)
 {
-    TRACE("(GLuint index = %d, const GLfloat* values = 0x%0.8p)", index, values);
+    EVENT("(GLuint index = %d, const GLfloat* values = 0x%0.8p)", index, values);
 
     try
     {
@@ -5587,7 +5593,7 @@ void __stdcall glVertexAttrib4fv(GLuint index, const GLfloat* values)
 
 void __stdcall glVertexAttribPointer(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid* ptr)
 {
-    TRACE("(GLuint index = %d, GLint size = %d, GLenum type = 0x%X, "
+    EVENT("(GLuint index = %d, GLint size = %d, GLenum type = 0x%X, "
           "GLboolean normalized = %d, GLsizei stride = %d, const GLvoid* ptr = 0x%0.8p)",
           index, size, type, normalized, stride, ptr);
 
@@ -5636,7 +5642,7 @@ void __stdcall glVertexAttribPointer(GLuint index, GLint size, GLenum type, GLbo
 
 void __stdcall glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 {
-    TRACE("(GLint x = %d, GLint y = %d, GLsizei width = %d, GLsizei height = %d)", x, y, width, height);
+    EVENT("(GLint x = %d, GLint y = %d, GLsizei width = %d, GLsizei height = %d)", x, y, width, height);
 
     try
     {
@@ -5661,7 +5667,7 @@ void __stdcall glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 void __stdcall glBlitFramebufferANGLE(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1,
                                       GLbitfield mask, GLenum filter)
 {
-    TRACE("(GLint srcX0 = %d, GLint srcY0 = %d, GLint srcX1 = %d, GLint srcY1 = %d, "
+    EVENT("(GLint srcX0 = %d, GLint srcY0 = %d, GLint srcX1 = %d, GLint srcY1 = %d, "
           "GLint dstX0 = %d, GLint dstY0 = %d, GLint dstX1 = %d, GLint dstY1 = %d, "
           "GLbitfield mask = 0x%X, GLenum filter = 0x%X)",
           srcX0, srcY0, srcX1, srcX1, dstX0, dstY0, dstX1, dstY1, mask, filter);
@@ -5709,7 +5715,7 @@ void __stdcall glBlitFramebufferANGLE(GLint srcX0, GLint srcY0, GLint srcX1, GLi
 void __stdcall glTexImage3DOES(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth,
                                GLint border, GLenum format, GLenum type, const GLvoid* pixels)
 {
-    TRACE("(GLenum target = 0x%X, GLint level = %d, GLenum internalformat = 0x%X, "
+    EVENT("(GLenum target = 0x%X, GLint level = %d, GLenum internalformat = 0x%X, "
           "GLsizei width = %d, GLsizei height = %d, GLsizei depth = %d, GLint border = %d, "
           "GLenum format = 0x%X, GLenum type = 0x%x, const GLvoid* pixels = 0x%0.8p)",
           target, level, internalformat, width, height, depth, border, format, type, pixels);
@@ -5736,6 +5742,7 @@ __eglMustCastToProperFunctionPointerType __stdcall glGetProcAddress(const char *
     {
         {"glTexImage3DOES", (__eglMustCastToProperFunctionPointerType)glTexImage3DOES},
         {"glBlitFramebufferANGLE", (__eglMustCastToProperFunctionPointerType)glBlitFramebufferANGLE},
+        {"glRenderbufferStorageMultisampleANGLE", (__eglMustCastToProperFunctionPointerType)glRenderbufferStorageMultisampleANGLE},
         {"glDeleteFencesNV", (__eglMustCastToProperFunctionPointerType)glDeleteFencesNV},
         {"glGenFencesNV", (__eglMustCastToProperFunctionPointerType)glGenFencesNV},
         {"glIsFenceNV", (__eglMustCastToProperFunctionPointerType)glIsFenceNV},
