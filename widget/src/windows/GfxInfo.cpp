@@ -602,7 +602,15 @@ static const GfxDriverInfo gDriverInfo[] = {
   /*
    * NVIDIA entries
    */
-  GfxDriverInfo( DRIVER_OS_ALL,
+  GfxDriverInfo( DRIVER_OS_WINDOWS_XP,
+    vendorNVIDIA, GfxDriverInfo::allDevices,
+    GfxDriverInfo::allFeatures, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
+    DRIVER_LESS_THAN, V(6,14,12,5721), "257.21" ),
+  GfxDriverInfo( DRIVER_OS_WINDOWS_VISTA,
+    vendorNVIDIA, GfxDriverInfo::allDevices,
+    GfxDriverInfo::allFeatures, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
+    DRIVER_LESS_THAN, V(8,17,12,5721), "257.21" ),
+  GfxDriverInfo( DRIVER_OS_WINDOWS_7,
     vendorNVIDIA, GfxDriverInfo::allDevices,
     GfxDriverInfo::allFeatures, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
     DRIVER_LESS_THAN, V(8,17,12,5721), "257.21" ),
