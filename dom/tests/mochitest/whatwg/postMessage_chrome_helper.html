@@ -12,7 +12,11 @@
         respond("path-is-set");
       } else {
         // Content cannot post to chrome without privileges
-        window.parent.postMessage("SHOULD NOT GET THIS!", "*");
+        try {
+          window.parent.postMessage("SHOULD NOT GET THIS!", "*");
+        }
+        catch (ex) {
+        }
 
         var msg = "post-to-content-response";
 

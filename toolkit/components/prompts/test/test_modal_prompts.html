@@ -759,7 +759,10 @@ function handleDialog(ui, testNum) {
         // Can't use setInterval here, because the window's in a modal state
         // and thus DOM events are suppressed.
         pollTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-        pollTimer.initWithCallback(function() { pollDialog(ui.button0); },
+        pollTimer.initWithCallback(function() {
+          netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+          pollDialog(ui.button0);
+        },
                                    100, Ci.nsITimer.TYPE_REPEATING_SLACK);
         return;
     } else {
