@@ -423,13 +423,38 @@ AccessCheck::deny(JSContext *cx, jsid id)
     }
 }
 
-typedef enum { READ = (1<<0), WRITE = (1<<1), NO_ACCESS = 0 } Access;
+enum Access { READ = (1<<0), WRITE = (1<<1), NO_ACCESS = 0 };
+
+bool
+PermitIfUniversalXPConnect(ExposedPropertiesOnly::Permission &perm)
+{
+    // If UniversalXPConnect is enabled, allow access even if __exposedProps__ doesn't
+    // exists.
+    nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
+    if (!ssm) {
+        return false;
+    }
+    PRBool privileged;
+    if (NS_SUCCEEDED(ssm->IsCapabilityEnabled("UniversalXPConnect", &privileged)) &&
+        privileged) {
+        perm = ExposedPropertiesOnly::PermitPropertyAccess;
+        return true; // Allow
+    }
+
+    // Use default
+    return true;
+}
 
 bool
 ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapper, jsid id, JSWrapper::Action act,
                              Permission &perm)
 {
-    JSObject *holder = JSWrapper::wrappedObject(wrapper);
+    JSObject *wrappedObject = JSWrapper::wrappedObject(wrapper);
+
+    if (act == JSWrapper::CALL) {
+        perm = PermitObjectAccess;
+        return true;
+    }
 
     perm = DenyAccess;
 
@@ -437,11 +462,26 @@ ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapper, jsid id, JSWrappe
 
     JSBool found = JS_FALSE;
     JSAutoEnterCompartment ac;
-    if (!ac.enter(cx, holder) || !JS_HasPropertyById(cx, holder, exposedPropsId, &found))
+    if (!ac.enter(cx, wrappedObject) ||
+        !JS_HasPropertyById(cx, wrappedObject, exposedPropsId, &found))
         return false;
-    if (!found) {
-        perm = PermitObjectAccess;
+
+    // Always permit access to "length" and indexed properties of arrays.
+    if (JS_IsArrayObject(cx, wrappedObject) &&
+        ((JSID_IS_INT(id) && JSID_TO_INT(id) >= 0) ||
+         (JSID_IS_ATOM(id) && JS_FlatStringEqualsAscii(JSID_TO_FLAT_STRING(id), "length")))) {
+        perm = PermitPropertyAccess;
         return true; // Allow
+    }
+
+    // If no __exposedProps__ existed, deny access.
+    if (!found) {
+        // For now, only do this on functions.
+        if (!JS_ObjectIsFunction(cx, wrappedObject)) {
+            perm = PermitPropertyAccess;
+            return true;
+        }
+        return PermitIfUniversalXPConnect(perm); // Deny
     }
 
     if (id == JSID_VOID) {
@@ -451,11 +491,11 @@ ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapper, jsid id, JSWrappe
     }
 
     jsval exposedProps;
-    if (!JS_LookupPropertyById(cx, holder, exposedPropsId, &exposedProps))
+    if (!JS_LookupPropertyById(cx, wrappedObject, exposedPropsId, &exposedProps))
         return false;
 
     if (JSVAL_IS_VOID(exposedProps) || JSVAL_IS_NULL(exposedProps)) {
-        return true; // Deny
+        return PermitIfUniversalXPConnect(perm); // Deny
     }
 
     if (!JSVAL_IS_OBJECT(exposedProps)) {
@@ -472,7 +512,7 @@ ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapper, jsid id, JSWrappe
         return false; // Error
     }
     if (desc.obj == NULL || !(desc.attrs & JSPROP_ENUMERATE)) {
-        return true; // Deny
+        return PermitIfUniversalXPConnect(perm); // Deny
     }
 
     if (!JSVAL_IS_STRING(desc.value)) {
@@ -517,7 +557,7 @@ ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapper, jsid id, JSWrappe
 
     if ((act == JSWrapper::SET && !(access & WRITE)) ||
         (act != JSWrapper::SET && !(access & READ))) {
-        return true; // Deny
+        return PermitIfUniversalXPConnect(perm); // Deny
     }
 
     perm = PermitPropertyAccess;
