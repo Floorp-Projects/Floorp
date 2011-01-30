@@ -128,20 +128,6 @@ function getSHistory(theWindow)
   return sh;
 }
 
-function getChromeWin(theWindow)
-{
- netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
- const Ci = Components.interfaces;
- return theWindow
-           .QueryInterface(Ci.nsIInterfaceRequestor)
-           .getInterface(Ci.nsIWebNavigation)
-           .QueryInterface(Ci.nsIDocShellTreeItem)
-           .rootTreeItem
-           .QueryInterface(Ci.nsIInterfaceRequestor)
-           .getInterface(Ci.nsIDOMWindow)
-           .QueryInterface(Ci.nsIDOMChromeWindow);
-}
-
 function getSHTitle(sh, offset)
 {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
@@ -405,8 +391,7 @@ function runTest() {
   popstateExpected("Didn't get popstate after opening window.");
 
   popup.history.pushState(null, "title 0");
-  ok(!getChromeWin(popup).document
-        .getElementById("Browser:Back").hasAttribute("disabled"),
+  ok(SpecialPowers.isBackButtonEnabled(popup),
      "Back button was not enabled after initial pushstate.");
 
   popup.document.title = "title 1";

@@ -81,6 +81,7 @@
   <script class="testbody" type="text/javascript">
 
   function hTest(node, validate) {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     if (node)
       Microformats.parser.newMicroformat(this, node, "hTest", validate);
   }
