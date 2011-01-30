@@ -135,7 +135,7 @@
 #define LAYOUT_DEBUG_MODULE
 #endif
 
-#if defined(MOZ_IPC) && defined(ENABLE_JETPACK_SERVICE)
+#ifdef MOZ_IPC
 #define JETPACK_MODULES \
     MODULE(jetpack)
 #else
