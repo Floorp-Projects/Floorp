@@ -1318,6 +1318,9 @@ bool Texture2D::redefineTexture(GLint level, GLenum internalFormat, GLsizei widt
         mHeight = height << level;
         mImageArray[0].format = internalFormat;
         mType = type;
+
+        if (mColorbufferProxy.get())
+            mColorbufferProxy->setStorage(new TextureColorbufferProxy(this, GL_TEXTURE_2D));
     }
 
     return !textureOkay;
@@ -2215,6 +2218,12 @@ bool TextureCubeMap::redefineTexture(GLint level, GLenum internalFormat, GLsizei
         mImageArray[0][0].height = width << level;
 
         mImageArray[0][0].format = internalFormat;
+
+        for (int i = 0; i < 6; i++)
+        {
+            if (mFaceProxies[i].get())
+                mFaceProxies[i]->setStorage(new TextureColorbufferProxy(this, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i));
+        }
     }
 
     return !textureOkay;

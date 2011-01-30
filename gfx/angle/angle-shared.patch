@@ -1,3 +1,5 @@
+# HG changeset patch
+# Parent 0f2a334e5049bffe457bd31d3d8f5550af7ba299
 diff --git a/gfx/angle/include/GLSLANG/ShaderLang.h b/gfx/angle/include/GLSLANG/ShaderLang.h
 --- a/gfx/angle/include/GLSLANG/ShaderLang.h
 +++ b/gfx/angle/include/GLSLANG/ShaderLang.h
@@ -38,31 +40,7 @@ diff --git a/gfx/angle/include/GLSLANG/ShaderLang.h b/gfx/angle/include/GLSLANG/
  #ifdef __cplusplus
  extern "C" {
  #endif
-@@ -73,21 +93,21 @@ typedef enum {
-   SH_OBJECT_CODE            = 0x0004,
-   SH_ATTRIBUTES_UNIFORMS    = 0x0008
- } ShCompileOptions;
- 
- //
- // Driver must call this first, once, before doing any other
- // compiler operations.
- //
--int ShInitialize();
-+ANGLE_API int ShInitialize();
- //
- // Driver should call this at shutdown.
- //
--int ShFinalize();
-+ANGLE_API int ShFinalize();
- 
- //
- // Implementation dependent built-in resources (constants and extensions).
- // The names for these resources has been obtained by stripping gl_/GL_.
- //
- typedef struct
- {
-     // Constants.
-@@ -103,17 +123,17 @@ typedef struct
+@@ -107,17 +127,17 @@ typedef struct
      // Extensions.
      // Set to 1 to enable the extension, else 0.
      int OES_standard_derivatives;
@@ -81,7 +59,7 @@ diff --git a/gfx/angle/include/GLSLANG/ShaderLang.h b/gfx/angle/include/GLSLANG/
  //
  // If handle creation fails, 0 will be returned.
  //
-@@ -123,19 +143,19 @@ typedef void* ShHandle;
+@@ -127,19 +147,19 @@ typedef void* ShHandle;
  // Driver calls these to create and destroy compiler objects.
  //
  // Returns the handle of constructed compiler.
@@ -103,7 +81,7 @@ diff --git a/gfx/angle/include/GLSLANG/ShaderLang.h b/gfx/angle/include/GLSLANG/
  // handle: Specifies the handle of compiler to be used.
  // shaderStrings: Specifies an array of pointers to null-terminated strings
  //                containing the shader source code.
-@@ -152,17 +172,17 @@ void ShDestruct(ShHandle handle);
+@@ -156,17 +176,17 @@ void ShDestruct(ShHandle handle);
  // SH_INTERMEDIATE_TREE: Writes intermediate tree to info log.
  //                       Can be queried by calling ShGetInfoLog().
  // SH_OBJECT_CODE: Translates intermediate tree to glsl or hlsl shader.
@@ -122,7 +100,7 @@ diff --git a/gfx/angle/include/GLSLANG/ShaderLang.h b/gfx/angle/include/GLSLANG/
  
  // Returns a parameter from a compiled shader.
  // Parameters:
-@@ -178,53 +198,53 @@ int ShCompile(
+@@ -182,53 +202,53 @@ int ShCompile(
  //                                 variable name including the null
  //                                 termination character.
  // SH_ACTIVE_UNIFORMS: the number of active uniform variables.
@@ -180,7 +158,7 @@ diff --git a/gfx/angle/include/GLSLANG/ShaderLang.h b/gfx/angle/include/GLSLANG/
  
  // Returns information about an active uniform variable.
  // Parameters:
-@@ -235,17 +255,17 @@ void ShGetActiveAttrib(const ShHandle ha
+@@ -239,17 +259,17 @@ void ShGetActiveAttrib(const ShHandle ha
  //         other than NULL is passed.
  // size: Returns the size of the uniform variable.
  // type: Returns the data type of the uniform variable.
