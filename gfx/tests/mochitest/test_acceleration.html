@@ -41,28 +41,39 @@ while (windows.hasMoreElements()) {
   }
 }
 
-switch(sysInfo.getProperty("name"))
+var osName = sysInfo.getProperty("name");
+switch(osName)
 {
   case "Darwin":
     // We only enable OpenGL layers on machines that don't support QuickDraw
     // plugins. x86-64 architecture is a good proxy for this plugin support.
-    if (sysInfo.getProperty("arch") == "x86-64") {
-      ok(acceleratedWindows != 0, "Acceleration enabled on x86-64 OS X");
+    if (sysInfo.getProperty("arch") != "x86-64") {
+      is(acceleratedWindows, 0, "Acceleration not supported on x86 OS X");
     } else {
-      ok(acceleratedWindows == 0, "Acceleration not enabled on x86 OS X");
+      isnot(acceleratedWindows, 0, "Acceleration enabled on x86-64 OS X");
     }
     break;
 
   case "Windows_NT":
-    ok(acceleratedWindows != 0, "Acceleration enabled on Windows");
-
-    // Also check that D2D is enabled.
     var version = parseFloat(sysInfo.getProperty("version"));
-    if (version >= 6.0) {
-      var gfxInfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo);
-      ok(gfxInfo.D2DEnabled, "D2D enabled on Windows Vista or higher");
+    if (version == 5.0) {
+      is(acceleratedWindows, 0, "Acceleration not supported on Windows 2000");
+    } else {
+      isnot(acceleratedWindows, 0, "Acceleration enabled on Windows XP or newer");
+    }
+
+    var gfxInfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo);
+    if (version < 6.0) {
+      ok(!gfxInfo.D2DEnabled, "Direct2D not supported on Windows 2003 or older");
+      ok(!gfxInfo.DWriteEnabled, "DWrite not supported on Windows 2003 or older");
+    } else {
+      ok(gfxInfo.D2DEnabled, "Direct2D enabled on Windows Vista or newer");
+      ok(gfxInfo.DWriteEnabled, "DWrite enabled on Windows Vista or newer");
     }
     break;
+
+  default:
+    is(acceleratedWindows, 0, "Acceleration not supported on '" + osName + "'");
 }
 
 </script>
