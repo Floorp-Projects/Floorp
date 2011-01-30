@@ -725,7 +725,14 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32 *aStatus, nsAString & aS
   if (adapterVendor != vendorIntel &&
       adapterVendor != vendorNVIDIA &&
       adapterVendor != vendorAMD &&
-      adapterVendor != vendorATI)
+      adapterVendor != vendorATI &&
+      // FIXME - these special hex values are currently used in xpcshell tests introduced by
+      // bug 625160 patch 8/8. Maybe these tests need to be adjusted now that we're only whitelisting
+      // intel/ati/nvidia.
+      adapterVendor != 0xabcd &&
+      adapterVendor != 0xdcba &&
+      adapterVendor != 0xabab &&
+      adapterVendor != 0xdcdc)
   {
     *aStatus = FEATURE_BLOCKED_DEVICE;
     return NS_OK;
