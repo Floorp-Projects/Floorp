@@ -97,8 +97,9 @@ JSWrapper::~JSWrapper()
 
 #define CHECKED(op, act)                                                     \
     JS_BEGIN_MACRO                                                           \
-        if (!enter(cx, wrapper, id, act))                                    \
-            return false;                                                    \
+        bool status;                                                         \
+        if (!enter(cx, wrapper, id, act, &status))                           \
+            return status;                                                   \
         bool ok = (op);                                                      \
         leave(cx, wrapper);                                                  \
         return ok;                                                           \
@@ -111,6 +112,7 @@ bool
 JSWrapper::getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
                                  bool set, PropertyDescriptor *desc)
 {
+    desc->obj= NULL; // default result if we refuse to perform this action
     CHECKED(JS_GetPropertyDescriptorById(cx, wrappedObject(wrapper), id, JSRESOLVE_QUALIFIED,
                                          Jsvalify(desc)), set ? SET : GET);
 }
@@ -129,6 +131,7 @@ bool
 JSWrapper::getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id, bool set,
                                     PropertyDescriptor *desc)
 {
+    desc->obj= NULL; // default result if we refuse to perform this action
     CHECKED(GetOwnPropertyDescriptor(cx, wrappedObject(wrapper), id, JSRESOLVE_QUALIFIED,
                                      Jsvalify(desc)), set ? SET : GET);
 }
@@ -144,6 +147,7 @@ JSWrapper::defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
 bool
 JSWrapper::getOwnPropertyNames(JSContext *cx, JSObject *wrapper, AutoIdVector &props)
 {
+    // if we refuse to perform this action, props remains empty
     jsid id = JSID_VOID;
     GET(GetPropertyNames(cx, wrappedObject(wrapper), JSITER_OWNONLY | JSITER_HIDDEN, &props));
 }
@@ -158,6 +162,7 @@ ValueToBoolean(Value *vp, bool *bp)
 bool
 JSWrapper::delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp)
 {
+    *bp = true; // default result if we refuse to perform this action
     Value v;
     SET(JS_DeletePropertyById2(cx, wrappedObject(wrapper), id, Jsvalify(&v)) &&
         ValueToBoolean(&v, bp));
@@ -166,6 +171,7 @@ JSWrapper::delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp)
 bool
 JSWrapper::enumerate(JSContext *cx, JSObject *wrapper, AutoIdVector &props)
 {
+    // if we refuse to perform this action, props remains empty
     static jsid id = JSID_VOID;
     GET(GetPropertyNames(cx, wrappedObject(wrapper), 0, &props));
 }
@@ -187,6 +193,7 @@ Cond(JSBool b, bool *bp)
 bool
 JSWrapper::has(JSContext *cx, JSObject *wrapper, jsid id, bool *bp)
 {
+    *bp = false; // default result if we refuse to perform this action
     JSBool found;
     GET(JS_HasPropertyById(cx, wrappedObject(wrapper), id, &found) &&
         Cond(found, bp));
@@ -195,6 +202,7 @@ JSWrapper::has(JSContext *cx, JSObject *wrapper, jsid id, bool *bp)
 bool
 JSWrapper::hasOwn(JSContext *cx, JSObject *wrapper, jsid id, bool *bp)
 {
+    *bp = false; // default result if we refuse to perform this action
     PropertyDescriptor desc;
     JSObject *wobj = wrappedObject(wrapper);
     GET(JS_GetPropertyDescriptorById(cx, wobj, id, JSRESOLVE_QUALIFIED, Jsvalify(&desc)) &&
@@ -204,6 +212,7 @@ JSWrapper::hasOwn(JSContext *cx, JSObject *wrapper, jsid id, bool *bp)
 bool
 JSWrapper::get(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id, Value *vp)
 {
+    vp->setUndefined(); // default result if we refuse to perform this action
     GET(wrappedObject(wrapper)->getProperty(cx, receiver, id, vp));
 }
 
@@ -217,6 +226,7 @@ JSWrapper::set(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id, Va
 bool
 JSWrapper::keys(JSContext *cx, JSObject *wrapper, AutoIdVector &props)
 {
+    // if we refuse to perform this action, props remains empty
     const jsid id = JSID_VOID;
     GET(GetPropertyNames(cx, wrappedObject(wrapper), JSITER_OWNONLY, &props));
 }
@@ -224,6 +234,7 @@ JSWrapper::keys(JSContext *cx, JSObject *wrapper, AutoIdVector &props)
 bool
 JSWrapper::iterate(JSContext *cx, JSObject *wrapper, uintN flags, Value *vp)
 {
+    vp->setUndefined(); // default result if we refuse to perform this action
     const jsid id = JSID_VOID;
     GET(GetIterator(cx, wrappedObject(wrapper), flags, vp));
 }
@@ -231,20 +242,23 @@ JSWrapper::iterate(JSContext *cx, JSObject *wrapper, uintN flags, Value *vp)
 bool
 JSWrapper::call(JSContext *cx, JSObject *wrapper, uintN argc, Value *vp)
 {
+    vp->setUndefined(); // default result if we refuse to perform this action
     const jsid id = JSID_VOID;
     CHECKED(JSProxyHandler::call(cx, wrapper, argc, vp), CALL);
 }
 
 bool
-JSWrapper::construct(JSContext *cx, JSObject *wrapper, uintN argc, Value *argv, Value *rval)
+JSWrapper::construct(JSContext *cx, JSObject *wrapper, uintN argc, Value *argv, Value *vp)
 {
+    vp->setUndefined(); // default result if we refuse to perform this action
     const jsid id = JSID_VOID;
-    GET(JSProxyHandler::construct(cx, wrapper, argc, argv, rval));
+    GET(JSProxyHandler::construct(cx, wrapper, argc, argv, vp));
 }
 
 bool
 JSWrapper::hasInstance(JSContext *cx, JSObject *wrapper, const Value *vp, bool *bp)
 {
+    *bp = true; // default result if we refuse to perform this action
     const jsid id = JSID_VOID;
     JSBool b;
     GET(JS_HasInstance(cx, wrappedObject(wrapper), Jsvalify(*vp), &b) && Cond(b, bp));
@@ -259,10 +273,15 @@ JSWrapper::typeOf(JSContext *cx, JSObject *wrapper)
 JSString *
 JSWrapper::obj_toString(JSContext *cx, JSObject *wrapper)
 {
-    JSString *str;
-    if (!enter(cx, wrapper, JSID_VOID, GET))
+    bool status;
+    if (!enter(cx, wrapper, JSID_VOID, GET, &status)) {
+        if (status) {
+            // Perform some default behavior that doesn't leak any information.
+            return JS_NewStringCopyZ(cx, "[object Object]");
+        }
         return NULL;
-    str = obj_toStringHelper(cx, wrappedObject(wrapper));
+    }
+    JSString *str = obj_toStringHelper(cx, wrappedObject(wrapper));
     leave(cx, wrapper);
     return str;
 }
@@ -270,10 +289,19 @@ JSWrapper::obj_toString(JSContext *cx, JSObject *wrapper)
 JSString *
 JSWrapper::fun_toString(JSContext *cx, JSObject *wrapper, uintN indent)
 {
-    JSString *str;
-    if (!enter(cx, wrapper, JSID_VOID, GET))
+    bool status;
+    if (!enter(cx, wrapper, JSID_VOID, GET, &status)) {
+        if (status) {
+            // Perform some default behavior that doesn't leak any information.
+            if (wrapper->isCallable())
+                return JS_NewStringCopyZ(cx, "function () {\n    [native code]\n}");
+            js::Value v = ObjectValue(*wrapper);
+            js_ReportIsNotFunction(cx, &v, 0);
+            return NULL;
+        }
         return NULL;
-    str = JSProxyHandler::fun_toString(cx, wrapper, indent);
+    }
+    JSString *str = JSProxyHandler::fun_toString(cx, wrapper, indent);
     leave(cx, wrapper);
     return str;
 }
@@ -285,8 +313,9 @@ JSWrapper::trace(JSTracer *trc, JSObject *wrapper)
 }
 
 bool
-JSWrapper::enter(JSContext *cx, JSObject *wrapper, jsid id, Action act)
+JSWrapper::enter(JSContext *cx, JSObject *wrapper, jsid id, Action act, bool *bp)
 {
+    *bp = true;
     return true;
 }
 

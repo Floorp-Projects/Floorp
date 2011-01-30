@@ -84,10 +84,16 @@ struct Permissive : public Policy {
 struct OnlyIfSubjectIsSystem : public Policy {
     static bool check(JSContext *cx, JSObject *wrapper, jsid id, JSWrapper::Action act,
                       Permission &perm) {
-        perm = DenyAccess;
-        if (AccessCheck::isSystemOnlyAccessPermitted(cx))
+        if (AccessCheck::isSystemOnlyAccessPermitted(cx)) {
             perm = PermitObjectAccess;
-        return true;
+            return true;
+        }
+        perm = DenyAccess;
+        JSAutoEnterCompartment ac;
+        if (!ac.enter(cx, wrapper))
+            return false;
+        AccessCheck::deny(cx, id);
+        return false;
     }
 };
 
@@ -96,10 +102,16 @@ struct OnlyIfSubjectIsSystem : public Policy {
 struct CrossOriginAccessiblePropertiesOnly : public Policy {
     static bool check(JSContext *cx, JSObject *wrapper, jsid id, JSWrapper::Action act,
                       Permission &perm) {
-        perm = DenyAccess;
-        if (AccessCheck::isCrossOriginAccessPermitted(cx, wrapper, id, act))
+        if (AccessCheck::isCrossOriginAccessPermitted(cx, wrapper, id, act)) {
             perm = PermitPropertyAccess;
-        return true;
+            return true;
+        }
+        perm = DenyAccess;
+        JSAutoEnterCompartment ac;
+        if (!ac.enter(cx, wrapper))
+            return false;
+        AccessCheck::deny(cx, id);
+        return false;
     }
 };
 
@@ -108,12 +120,17 @@ struct CrossOriginAccessiblePropertiesOnly : public Policy {
 struct SameOriginOrCrossOriginAccessiblePropertiesOnly : public Policy {
     static bool check(JSContext *cx, JSObject *wrapper, jsid id, JSWrapper::Action act,
                       Permission &perm) {
-        perm = DenyAccess;
         if (AccessCheck::isCrossOriginAccessPermitted(cx, wrapper, id, act) ||
             AccessCheck::isLocationObjectSameOrigin(cx, wrapper)) {
             perm = PermitPropertyAccess;
+            return true;
         }
-        return true;
+        perm = DenyAccess;
+        JSAutoEnterCompartment ac;
+        if (!ac.enter(cx, wrapper))
+            return false;
+        AccessCheck::deny(cx, id);
+        return false;
     }
 };
 
