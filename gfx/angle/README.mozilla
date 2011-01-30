@@ -1,15 +1,13 @@
 This is the ANGLE project, from http://code.google.com/p/angleproject/.
 
-Current revision: r515
+Current revision: r550
 
-Local patches:
+Applied local patches:
     angle-shared.patch - add declspec dllexport/dllimport support on win32
 
     angle-fixes.patch - fix angle issues 51 & 52
 
     angle-nspr-misc.patch - don't bother with ANGLE_OS detection with NSPR
-
-    angle-pbuffers.patch - add pbuffer support to ANGLE, and d3d texture handle query (angle issue 91)
 
 == Visual Studio Solution Files ==
 
