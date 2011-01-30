@@ -246,12 +246,12 @@ bool Colorbuffer::isColorbuffer() const
     return true;
 }
 
-GLuint Colorbuffer::getRedSize() const
+GLuint Colorbuffer::getRedSize()
 {
-    if (mRenderTarget)
+    if (getRenderTarget())
     {
         D3DSURFACE_DESC description;
-        mRenderTarget->GetDesc(&description);
+        getRenderTarget()->GetDesc(&description);
 
         return es2dx::GetRedSize(description.Format);
     }
@@ -259,12 +259,12 @@ GLuint Colorbuffer::getRedSize() const
     return 0;
 }
 
-GLuint Colorbuffer::getGreenSize() const
+GLuint Colorbuffer::getGreenSize()
 {
-    if (mRenderTarget)
+    if (getRenderTarget())
     {
         D3DSURFACE_DESC description;
-        mRenderTarget->GetDesc(&description);
+        getRenderTarget()->GetDesc(&description);
 
         return es2dx::GetGreenSize(description.Format);
     }
@@ -272,12 +272,12 @@ GLuint Colorbuffer::getGreenSize() const
     return 0;
 }
 
-GLuint Colorbuffer::getBlueSize() const
+GLuint Colorbuffer::getBlueSize()
 {
-    if (mRenderTarget)
+    if (getRenderTarget())
     {
         D3DSURFACE_DESC description;
-        mRenderTarget->GetDesc(&description);
+        getRenderTarget()->GetDesc(&description);
 
         return es2dx::GetBlueSize(description.Format);
     }
@@ -285,12 +285,12 @@ GLuint Colorbuffer::getBlueSize() const
     return 0;
 }
 
-GLuint Colorbuffer::getAlphaSize() const
+GLuint Colorbuffer::getAlphaSize()
 {
-    if (mRenderTarget)
+    if (getRenderTarget())
     {
         D3DSURFACE_DESC description;
-        mRenderTarget->GetDesc(&description);
+        getRenderTarget()->GetDesc(&description);
 
         return es2dx::GetAlphaSize(description.Format);
     }

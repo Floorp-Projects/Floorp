@@ -1,37 +1,14 @@
-Fixes for angle defects 51 and 52
-
-Index: src/libGLESv2/Texture.cpp
-===================================================================
---- src/libGLESv2/Texture.cpp	(revision 474)
-+++ src/libGLESv2/Texture.cpp	(working copy)
-@@ -1207,6 +1207,9 @@
-         mHeight = height << level;
-         mImageArray[0].format = internalFormat;
-         mType = type;
-+
-+        if (mColorbufferProxy.get())
-+            mColorbufferProxy->setStorage(new TextureColorbufferProxy(this, GL_TEXTURE_2D));
+# HG changeset patch
+# Parent 50279bda70bb802be20e508ef1f2d7deebf9bc64
+diff --git a/gfx/angle/src/libGLESv2/Renderbuffer.cpp b/gfx/angle/src/libGLESv2/Renderbuffer.cpp
+--- a/gfx/angle/src/libGLESv2/Renderbuffer.cpp
++++ b/gfx/angle/src/libGLESv2/Renderbuffer.cpp
+@@ -241,61 +241,61 @@ Colorbuffer::~Colorbuffer()
      }
+ }
  
-     return !textureOkay;
-@@ -2081,6 +2084,12 @@
-         mImageArray[0][0].height = width << level;
- 
-         mImageArray[0][0].format = internalFormat;
-+
-+        for (int i = 0; i < 6; i++)
-+        {
-+            if (mFaceProxies[i].get())
-+                mFaceProxies[i]->setStorage(new TextureColorbufferProxy(this, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i));
-+        }
-     }
- 
-     return !textureOkay;
-Index: src/libGLESv2/Renderbuffer.cpp
-===================================================================
---- src/libGLESv2/Renderbuffer.cpp	(revision 474)
-+++ src/libGLESv2/Renderbuffer.cpp	(working copy)
-@@ -246,12 +246,12 @@
+ bool Colorbuffer::isColorbuffer() const
+ {
      return true;
  }
  
@@ -47,7 +24,7 @@ Index: src/libGLESv2/Renderbuffer.cpp
  
          return es2dx::GetRedSize(description.Format);
      }
-@@ -259,12 +259,12 @@
+ 
      return 0;
  }
  
@@ -63,7 +40,7 @@ Index: src/libGLESv2/Renderbuffer.cpp
  
          return es2dx::GetGreenSize(description.Format);
      }
-@@ -272,12 +272,12 @@
+ 
      return 0;
  }
  
@@ -79,7 +56,7 @@ Index: src/libGLESv2/Renderbuffer.cpp
  
          return es2dx::GetBlueSize(description.Format);
      }
-@@ -285,12 +285,12 @@
+ 
      return 0;
  }
  
@@ -95,11 +72,20 @@ Index: src/libGLESv2/Renderbuffer.cpp
  
          return es2dx::GetAlphaSize(description.Format);
      }
-Index: src/libGLESv2/Renderbuffer.h
-===================================================================
---- src/libGLESv2/Renderbuffer.h	(revision 474)
-+++ src/libGLESv2/Renderbuffer.h	(working copy)
-@@ -109,10 +109,10 @@
+ 
+     return 0;
+ }
+ 
+ IDirect3DSurface9 *Colorbuffer::getRenderTarget()
+diff --git a/gfx/angle/src/libGLESv2/Renderbuffer.h b/gfx/angle/src/libGLESv2/Renderbuffer.h
+--- a/gfx/angle/src/libGLESv2/Renderbuffer.h
++++ b/gfx/angle/src/libGLESv2/Renderbuffer.h
+@@ -104,20 +104,20 @@ class Colorbuffer : public RenderbufferS
+     explicit Colorbuffer(IDirect3DSurface9 *renderTarget);
+     explicit Colorbuffer(const Texture* texture);
+     Colorbuffer(int width, int height, GLenum format, GLsizei samples);
+ 
+     ~Colorbuffer();
  
      bool isColorbuffer() const;
  
@@ -114,3 +100,54 @@ Index: src/libGLESv2/Renderbuffer.h
  
      IDirect3DSurface9 *getRenderTarget();
  
+   protected:
+     IDirect3DSurface9 *mRenderTarget;
+ 
+   private:
+     DISALLOW_COPY_AND_ASSIGN(Colorbuffer);
+diff --git a/gfx/angle/src/libGLESv2/Texture.cpp b/gfx/angle/src/libGLESv2/Texture.cpp
+--- a/gfx/angle/src/libGLESv2/Texture.cpp
++++ b/gfx/angle/src/libGLESv2/Texture.cpp
+@@ -1313,16 +1313,19 @@ bool Texture2D::redefineTexture(GLint le
+             mTexture = NULL;
+             dropTexture();
+         }
+ 
+         mWidth = width << level;
+         mHeight = height << level;
+         mImageArray[0].format = internalFormat;
+         mType = type;
++
++        if (mColorbufferProxy.get())
++            mColorbufferProxy->setStorage(new TextureColorbufferProxy(this, GL_TEXTURE_2D));
+     }
+ 
+     return !textureOkay;
+ }
+ 
+ void Texture2D::setImage(GLint level, GLenum internalFormat, GLsizei width, GLsizei height, GLenum format, GLenum type, GLint unpackAlignment, const void *pixels)
+ {
+     redefineTexture(level, internalFormat, width, height, type);
+@@ -2210,16 +2213,22 @@ bool TextureCubeMap::redefineTexture(GLi
+         }
+ 
+         mWidth = width << level;
+         mImageArray[0][0].width = width << level;
+         mHeight = width << level;
+         mImageArray[0][0].height = width << level;
+ 
+         mImageArray[0][0].format = internalFormat;
++
++        for (int i = 0; i < 6; i++)
++        {
++            if (mFaceProxies[i].get())
++                mFaceProxies[i]->setStorage(new TextureColorbufferProxy(this, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i));
++        }
+     }
+ 
+     return !textureOkay;
+ }
+ 
+ void TextureCubeMap::copyImage(GLenum target, GLint level, GLenum internalFormat, GLint x, GLint y, GLsizei width, GLsizei height, Framebuffer *source)
+ {
+     IDirect3DSurface9 *renderTarget = source->getRenderTarget();

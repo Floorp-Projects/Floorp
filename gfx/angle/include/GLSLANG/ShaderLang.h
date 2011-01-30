@@ -6,6 +6,26 @@
 #ifndef _COMPILER_INTERFACE_INCLUDED_
 #define _COMPILER_INTERFACE_INCLUDED_
 
+#ifdef MOZILLA_VERSION
+#include "nscore.h"
+
+#ifdef WIN32
+# if !defined(MOZ_ENABLE_LIBXUL) && !defined(MOZ_STATIC_BUILD)
+#  ifdef ANGLE_BUILD
+#   define ANGLE_API NS_EXPORT
+#  else
+#   define ANGLE_API NS_IMPORT
+#  endif
+# else
+#  define ANGLE_API  /*nothing*/
+# endif
+#else
+# define ANGLE_API NS_EXTERNAL_VIS
+#endif
+#else
+#define ANGLE_API /*nothing*/
+#endif
+
 //
 // This is the platform independent interface between an OGL driver
 // and the shading language compiler.
@@ -112,7 +132,7 @@ typedef struct
 //
 // Initialize built-in resources with minimum expected values.
 //
-void ShInitBuiltInResources(ShBuiltInResources* resources);
+ANGLE_API void ShInitBuiltInResources(ShBuiltInResources* resources);
 
 //
 // ShHandle held by but opaque to the driver.  It is allocated,
@@ -132,9 +152,9 @@ typedef void* ShHandle;
 // spec: Specifies the language spec the compiler must conform to -
 //       SH_GLES2_SPEC or SH_WEBGL_SPEC.
 // resources: Specifies the built-in resources.
-ShHandle ShConstructCompiler(ShShaderType type, ShShaderSpec spec,
+ANGLE_API ShHandle ShConstructCompiler(ShShaderType type, ShShaderSpec spec,
                              const ShBuiltInResources* resources);
-void ShDestruct(ShHandle handle);
+ANGLE_API void ShDestruct(ShHandle handle);
 
 //
 // Compiles the given shader source.
@@ -161,7 +181,7 @@ void ShDestruct(ShHandle handle);
 //                         Can be queried by calling ShGetActiveAttrib() and
 //                         ShGetActiveUniform().
 //
-int ShCompile(
+ANGLE_API int ShCompile(
     const ShHandle handle,
     const char* const shaderStrings[],
     const int numStrings,
@@ -187,7 +207,7 @@ int ShCompile(
 //                               termination character.
 // 
 // params: Requested parameter
-void ShGetInfo(const ShHandle handle, ShShaderInfo pname, int* params);
+ANGLE_API void ShGetInfo(const ShHandle handle, ShShaderInfo pname, int* params);
 
 // Returns nul-terminated information log for a compiled shader.
 // Parameters:
@@ -197,7 +217,7 @@ void ShGetInfo(const ShHandle handle, ShShaderInfo pname, int* params);
 //          to accomodate the information log. The size of the buffer required
 //          to store the returned information log can be obtained by calling
 //          ShGetInfo with SH_INFO_LOG_LENGTH.
-void ShGetInfoLog(const ShHandle handle, char* infoLog);
+ANGLE_API void ShGetInfoLog(const ShHandle handle, char* infoLog);
 
 // Returns null-terminated object code for a compiled shader.
 // Parameters:
@@ -207,7 +227,7 @@ void ShGetInfoLog(const ShHandle handle, char* infoLog);
 //          accomodate the object code. The size of the buffer required to
 //          store the returned object code can be obtained by calling
 //          ShGetInfo with SH_OBJECT_CODE_LENGTH.
-void ShGetObjectCode(const ShHandle handle, char* objCode);
+ANGLE_API void ShGetObjectCode(const ShHandle handle, char* objCode);
 
 // Returns information about an active attribute variable.
 // Parameters:
@@ -223,7 +243,7 @@ void ShGetObjectCode(const ShHandle handle, char* objCode);
 //       accomodate the attribute variable name. The size of the buffer
 //       required to store the attribute variable name can be obtained by
 //       calling ShGetInfo with SH_ACTIVE_ATTRIBUTE_MAX_LENGTH.
-void ShGetActiveAttrib(const ShHandle handle,
+ANGLE_API void ShGetActiveAttrib(const ShHandle handle,
                        int index,
                        int* length,
                        int* size,
@@ -244,7 +264,7 @@ void ShGetActiveAttrib(const ShHandle handle,
 //       accomodate the uniform variable name. The size of the buffer required
 //       to store the uniform variable name can be obtained by calling
 //       ShGetInfo with SH_ACTIVE_UNIFORMS_MAX_LENGTH.
-void ShGetActiveUniform(const ShHandle handle,
+ANGLE_API void ShGetActiveUniform(const ShHandle handle,
                         int index,
                         int* length,
                         int* size,
