@@ -230,7 +230,7 @@ OPDEF(JSOP_OBJECT,    80, "object",     NULL,         3,  0,  1, 19,  JOF_OBJECT
 /* Pop value and discard it. */
 OPDEF(JSOP_POP,       81, "pop",        NULL,         1,  1,  0,  2,  JOF_BYTE)
 
-/* Convert value to number, for unary +. */
+/* Call a function as a constructor; operand is argc. */
 OPDEF(JSOP_NEW,       82, js_new_str,   NULL,         3, -1,  1, 17,  JOF_UINT16|JOF_INVOKE)
 
 /* Trap into debugger for breakpoint, etc. */
