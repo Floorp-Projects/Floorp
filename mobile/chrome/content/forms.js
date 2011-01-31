@@ -92,7 +92,10 @@ FormAssistant.prototype = {
 
   set currentIndex(aIndex) {
     let element = this._elements[aIndex];
-    if (element) {
+    if (!element)
+      return -1;
+
+    if (this._isVisibleElement(element)) {
       this._currentIndex = aIndex;
       gFocusManager.setFocus(element, Ci.nsIFocusManager.FLAG_NOSCROLL);
 
@@ -101,6 +104,18 @@ FormAssistant.prototype = {
       this._executeDelayed(function(self) {
         sendAsyncMessage("FormAssist:Show", self._getJSON());
       });
+    } else {
+      // Repopulate the list of elements in the page, some could have gone
+      // because of AJAX changes for example
+      this._elements = [];
+      let currentIndex = this._getAllElements(gFocusManager.focusedElement)
+
+      if (aIndex < this._currentIndex)
+        this.currentIndex = currentIndex - 1;
+      else if (aIndex > this._currentIndex)
+        this.currentIndex = currentIndex + 1;
+      else if (this._currentIndex != currentIndex)
+        this.currentIndex = currentIndex;
     }
     return element;
   },
