@@ -907,7 +907,7 @@ helper_nsIDOMWebGLRenderingContext_Uniform_x_iv_tn(JSContext *cx, JSObject *obj,
 
     nsIDOMWebGLRenderingContext *self;
     xpc_qsSelfRef selfref;
-    js::Anchor<jsval> self_anchor;
+    JS::Anchor<jsval> self_anchor;
     if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr,
                           &self_anchor.get(), nsnull)) {
         js_SetTraceableNativeFailed(cx);
@@ -923,7 +923,7 @@ helper_nsIDOMWebGLRenderingContext_Uniform_x_iv_tn(JSContext *cx, JSObject *obj,
 
     nsIWebGLUniformLocation *location;
     xpc_qsSelfRef location_selfref;
-    js::Anchor<jsval> location_anchor;
+    JS::Anchor<jsval> location_anchor;
     nsresult rv_convert_arg0
         = xpc_qsUnwrapThis(cx, locationobj, nsnull, &location,
                            &location_selfref.ptr, &location_anchor.get(),
@@ -979,7 +979,7 @@ helper_nsIDOMWebGLRenderingContext_Uniform_x_fv_tn(JSContext *cx, JSObject *obj,
 
     nsIDOMWebGLRenderingContext *self;
     xpc_qsSelfRef selfref;
-    js::Anchor<jsval> self_anchor;
+    JS::Anchor<jsval> self_anchor;
     if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr,
                           &self_anchor.get(), nsnull)) {
         js_SetTraceableNativeFailed(cx);
@@ -995,7 +995,7 @@ helper_nsIDOMWebGLRenderingContext_Uniform_x_fv_tn(JSContext *cx, JSObject *obj,
 
     nsIWebGLUniformLocation *location;
     xpc_qsSelfRef location_selfref;
-    js::Anchor<jsval> location_anchor;
+    JS::Anchor<jsval> location_anchor;
     nsresult rv_convert_arg0
         = xpc_qsUnwrapThis(cx, locationobj, nsnull, &location,
                            &location_selfref.ptr, &location_anchor.get(),
@@ -1053,7 +1053,7 @@ helper_nsIDOMWebGLRenderingContext_UniformMatrix_x_fv_tn(JSContext *cx, JSObject
 
     nsIDOMWebGLRenderingContext *self;
     xpc_qsSelfRef selfref;
-    js::Anchor<jsval> self_anchor;
+    JS::Anchor<jsval> self_anchor;
     if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr,
                           &self_anchor.get(), nsnull)) {
         js_SetTraceableNativeFailed(cx);
@@ -1069,7 +1069,7 @@ helper_nsIDOMWebGLRenderingContext_UniformMatrix_x_fv_tn(JSContext *cx, JSObject
 
     nsIWebGLUniformLocation *location;
     xpc_qsSelfRef location_selfref;
-    js::Anchor<jsval> location_anchor;
+    JS::Anchor<jsval> location_anchor;
     nsresult rv_convert_arg0
         = xpc_qsUnwrapThis(cx, locationobj, nsnull, &location,
                            &location_selfref.ptr, &location_anchor.get(),
