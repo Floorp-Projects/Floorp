@@ -173,6 +173,7 @@ class Bindings {
     uint16 nargs;
     uint16 nvars;
     uint16 nupvars;
+    bool hasExtensibleParents;
 
   public:
     inline Bindings(JSContext *cx);
@@ -302,6 +303,43 @@ class Bindings {
      * the original bindings to be safely shared.
      */
     void makeImmutable();
+
+    /*
+     * Sometimes call objects and run-time block objects need unique shapes, but
+     * sometimes they don't.
+     *
+     * Property cache entries only record the shapes of the first and last
+     * objects along the search path, so if the search traverses more than those
+     * two objects, then those first and last shapes must determine the shapes
+     * of everything else along the path. The js_PurgeScopeChain stuff takes
+     * care of making this work, but that suffices only because we require that
+     * start points with the same shape have the same successor object in the
+     * search path --- if two start points have different successors, they must
+     * have different shapes.
+     *
+     * For call and run-time block objects, the "successor" is the scope chain
+     * parent. Unlike prototype objects (of which there are usually few), scope
+     * chain parents are created frequently (possibly on every call), so it's
+     * not too far from optimal to give every call and block its own shape.
+     *
+     * In many cases, however, it's not actually necessary to give call and
+     * block objects their own shapes, so we can do better. If the code will
+     * always be used with the same global object, and none of the enclosing
+     * call objects could have bindings added to them at runtime (by direct eval
+     * calls or function statements), then we can use a fixed set of shapes for
+     * those objects. You could think of the shapes in the functions' bindings
+     * and compile-time blocks as uniquely identifying the global object(s) at
+     * the end of the scope chain.
+     *
+     * (In fact, some JSScripts we do use against multiple global objects (see
+     * bug 618497), and using the fixed shapes isn't sound there.)
+     * 
+     * If the hasExtensibleParents flag is set, then Call objects created for
+     * the function this Bindings describes need unique shapes. If the flag is
+     * clear, then we can use lastBinding's shape.
+     */
+    void setExtensibleParents() { hasExtensibleParents = true; }
+    bool extensibleParents() const { return hasExtensibleParents; }
 
     /*
      * These methods provide direct access to the shape path normally
