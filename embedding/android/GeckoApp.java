@@ -105,7 +105,7 @@ abstract public class GeckoApp
         new AlertDialog.Builder(this)
             .setMessage(message)
             .setCancelable(false)
-            .setPositiveButton("Exit",
+            .setPositiveButton(getResources().getString(R.string.exit_label),
                                new DialogInterface.OnClickListener() {
                                    public void onClick(DialogInterface dialog,
                                                        int id)
