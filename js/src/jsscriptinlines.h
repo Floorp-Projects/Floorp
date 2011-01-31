@@ -85,7 +85,7 @@ Bindings::clone(JSContext *cx, Bindings *bindings)
     *this = *bindings;
 }
 
-const Shape *
+Shape *
 Bindings::lastShape() const
 {
     JS_ASSERT(lastBinding);
