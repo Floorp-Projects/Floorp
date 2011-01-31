@@ -1841,6 +1841,7 @@ panel[dimmed="true"] {
   border: 1px none #ccc;
   border-top-style: solid;
   color: #333;
+  text-shadow: none;
 }
 
 .statuspanel-label:-moz-locale-dir(ltr):not([mirror]),
