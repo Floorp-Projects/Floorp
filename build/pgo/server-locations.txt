@@ -123,6 +123,10 @@ https://expired.example.com:443        privileged,cert=expired
 https://requestclientcert.example.com:443         privileged,clientauth=request
 https://requireclientcert.example.com:443         privileged,clientauth=require
 
+# This is here so that we don't load the default live bookmark over
+# the network in every test suite.
+http://fxfeeds.mozilla.com:80
+
 #
 # These are subdomains of <ält.example.org>.
 #
