@@ -415,25 +415,6 @@ protected:
      */
     void ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute);
 
-    /**
-     * Fire text changed event for character data changed. The method is used
-     * from nsIMutationObserver methods.
-     *
-     * @param aContent     the text node holding changed data
-     * @param aInfo        info structure describing how the data was changed
-     * @param aIsInserted  the flag pointed whether removed or inserted
-     *                     characters should be cause of event
-     */
-    void FireTextChangeEventForText(nsIContent *aContent,
-                                    CharacterDataChangeInfo* aInfo,
-                                    PRBool aIsInserted);
-
-  /**
-   * Fire a value change event for the the given accessible if it is a text
-   * field (has a ROLE_ENTRY).
-   */
-  void FireValueChangeForTextFields(nsAccessible *aAccessible);
-
   /**
    * Process the event when the queue of pending events is untwisted. Fire
    * accessible events as result of the processing.

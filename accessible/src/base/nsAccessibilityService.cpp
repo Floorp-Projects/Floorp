@@ -913,25 +913,22 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
 
   // Attempt to create an accessible based on what we know.
   nsRefPtr<nsAccessible> newAcc;
-  if (content->IsNodeOfType(nsINode::eTEXT)) {
-    // --- Create HTML for visible text frames ---
-    nsIFrame* f = weakFrame.GetFrame();
-    if (f && f->IsEmpty()) {
-      nsAutoString renderedWhitespace;
-      f->GetRenderedText(&renderedWhitespace, nsnull, nsnull, 0, 1);
-      if (renderedWhitespace.IsEmpty()) {
-        // Really empty -- nothing is rendered
-        if (aIsSubtreeHidden)
-          *aIsSubtreeHidden = true;
 
-        return nsnull;
-      }
-    }
-    if (weakFrame.IsAlive()) {
-      newAcc = weakFrame.GetFrame()->CreateAccessible();
-      if (docAcc->BindToDocument(newAcc, nsnull))
-        return newAcc.forget();
+  // Create accessible for visible text frames.
+  if (content->IsNodeOfType(nsINode::eTEXT)) {
+    nsAutoString text;
+    weakFrame->GetRenderedText(&text, nsnull, nsnull, 0, PR_UINT32_MAX);
+    if (text.IsEmpty()) {
+      if (aIsSubtreeHidden)
+        *aIsSubtreeHidden = true;
+
       return nsnull;
+    }
+
+    newAcc = weakFrame->CreateAccessible();
+    if (docAcc->BindToDocument(newAcc, nsnull)) {
+      newAcc->AsTextLeaf()->SetText(text);
+      return newAcc.forget();
     }
 
     return nsnull;
