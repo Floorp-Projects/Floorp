@@ -170,8 +170,3 @@ xhtml|link {
 #discover-view:not([selectedIndex="0"]) .loading {
   display: none;
 }
-
-/* Elements in unselected richlistitems cannot be focused */
-richlistitem:not([selected]) * {
-  -moz-user-focus: ignore;
-}
