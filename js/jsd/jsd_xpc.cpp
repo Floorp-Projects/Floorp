@@ -523,8 +523,15 @@ jsds_GCCallbackProc (JSContext *cx, JSGCStatus status)
     }
 
     gGCStatus = status;
-    if (gLastGCProc)
-        return gLastGCProc (cx, status);
+    if (gLastGCProc && !gLastGCProc (cx, status)) {
+        /*
+         * If gLastGCProc returns false, then the GC will abort without making
+         * another callback with status=JSGC_END, so set the status to JSGC_END
+         * here.
+         */
+        gGCStatus = JSGC_END;
+        return JS_FALSE;
+    }
     
     return JS_TRUE;
 }
@@ -2599,7 +2606,8 @@ jsdService::Off (void)
             return NS_ERROR_NOT_AVAILABLE;
 
         JSContext *cx = JSD_GetDefaultJSContext(mCx);
-        jsds_NotifyPendingDeadScripts(cx);
+        while (gDeadScripts)
+            jsds_NotifyPendingDeadScripts (cx);
     }
 
     /*
