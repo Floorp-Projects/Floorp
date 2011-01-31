@@ -2752,7 +2752,7 @@ Tab.prototype = {
   },
 
   get allowZoom() {
-    return this.metadata.allowZoom;
+    return this.metadata.allowZoom && !Util.isURLEmpty(this.browser.currentURI.spec);
   },
 
   updateThumbnail: function updateThumbnail() {
