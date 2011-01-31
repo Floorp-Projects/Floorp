@@ -40,6 +40,9 @@
 #include "android/log.h"
 #include "nsString.h"
 #include "nsAppShell.h"
+#include "nsIPropertyBag2.h"
+#include "nsIServiceManager.h"
+#include "nsXULAppAPI.h"
 
 NS_IMPL_ISUPPORTS1(nsMemoryWatcher, nsITimerCallback)
 
@@ -73,7 +76,27 @@ nsMemoryWatcher::StartWatching()
 {
   if (mTimer)
     return;
-  
+
+  // Prevent this from running in the child process
+  if (XRE_GetProcessType() != GeckoProcessType_Default)
+      return;
+
+  // Prevent this from running anything but the devices that need it
+  nsCOMPtr<nsIPropertyBag2> sysInfo = do_GetService("@mozilla.org/system-info;1");
+  if (sysInfo) {
+      nsCString deviceType;
+      nsresult rv = sysInfo->GetPropertyAsACString(NS_LITERAL_STRING("device"),
+                                                       deviceType);
+      if (NS_SUCCEEDED(rv)) {
+          if (! deviceType.EqualsLiteral("Nexus S"))
+              return;
+      }
+  }
+
+  __android_log_print(ANDROID_LOG_WARN, "Gecko",
+                      "!!!!!!!!! Watching Memory....");
+
+
   mMemInfoFile = fopen("/proc/meminfo", "r");
   NS_ASSERTION(mMemInfoFile, "Could not open /proc/meminfo for reading.");
 
