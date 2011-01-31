@@ -974,6 +974,8 @@ struct JSFunctionBox : public JSObjectBox
                         level:JSFB_LEVEL_BITS;
     uint32              tcflags;
 
+    JSFunction *function() const { return (JSFunction *) object; }
+
     bool joinable() const;
 
     /*

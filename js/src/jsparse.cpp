@@ -308,7 +308,7 @@ Parser::newFunctionBox(JSObject *obj, JSParseNode *fn, JSTreeContext *tc)
 bool
 JSFunctionBox::joinable() const
 {
-    return FUN_NULL_CLOSURE((JSFunction *) object) &&
+    return FUN_NULL_CLOSURE(function()) &&
            !(tcflags & (TCF_FUN_USES_ARGUMENTS | TCF_FUN_USES_OWN_NAME));
 }
 
@@ -1175,7 +1175,7 @@ Compiler::defineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *scrip
         Value rval;
 
         if (def.funbox) {
-            JSFunction *fun = (JSFunction *)def.funbox->object;
+            JSFunction *fun = def.funbox->function();
 
             /*
              * No need to check for redeclarations or anything, global
@@ -2069,7 +2069,7 @@ FindFunArgs(JSFunctionBox *funbox, int level, JSFunctionBoxQueue *queue)
     do {
         JSParseNode *fn = funbox->node;
         JS_ASSERT(fn->pn_arity == PN_FUNC);
-        JSFunction *fun = (JSFunction *) funbox->object;
+        JSFunction *fun = funbox->function();
         int fnlevel = level;
 
         /*
@@ -2328,7 +2328,7 @@ CanFlattenUpvar(JSDefinition *dn, JSFunctionBox *funbox, uint32 tcflags)
      * function refers to its own name) or strictly after afunbox, we also
      * defeat the flat closure optimization for this dn.
      */
-    JSFunction *afun = (JSFunction *) afunbox->object;
+    JSFunction *afun = afunbox->function();
     if (!(afun->flags & JSFUN_LAMBDA)) {
         if (dn->isBindingForm() || dn->pn_pos >= afunbox->node->pn_pos)
             return false;
@@ -2474,7 +2474,7 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags)
             }
         }
 
-        JSFunction *fun = (JSFunction *) funbox->object;
+        JSFunction *fun = funbox->function();
 
         JS_ASSERT(FUN_KIND(fun) == JSFUN_INTERPRETED);
 
@@ -3135,7 +3135,7 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
     if (!funbox)
         return NULL;
 
-    JSFunction *fun = (JSFunction *) funbox->object;
+    JSFunction *fun = funbox->function();
 
     /* Now parse formal argument list and compute fun->nargs. */
     JSParseNode *prelude = NULL;
@@ -7466,7 +7466,7 @@ CheckForImmediatelyAppliedLambda(JSParseNode *pn)
         JS_ASSERT(pn->pn_arity == PN_FUNC);
 
         JSFunctionBox *funbox = pn->pn_funbox;
-        JS_ASSERT(((JSFunction *) funbox->object)->flags & JSFUN_LAMBDA);
+        JS_ASSERT((funbox->function())->flags & JSFUN_LAMBDA);
         if (!(funbox->tcflags & (TCF_FUN_USES_ARGUMENTS | TCF_FUN_USES_OWN_NAME)))
             pn->pn_dflags &= ~PND_FUNARG;
     }
