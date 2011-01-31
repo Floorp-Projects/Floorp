@@ -467,8 +467,7 @@ protected:
     eAlertAccessible = 2
   };
 
-  PRUint32 UpdateTreeInternal(nsAccessible* aContainer,
-                              nsIContent* aStartNode,
+  PRUint32 UpdateTreeInternal(nsIContent* aStartNode,
                               nsIContent* aEndNode,
                               PRBool aIsInsert);
 

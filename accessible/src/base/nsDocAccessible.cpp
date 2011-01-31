@@ -1898,8 +1898,7 @@ nsDocAccessible::UpdateTree(nsAccessible* aContainer, nsIContent* aChildNode,
                             PRBool aIsInsert)
 {
   PRUint32 updateFlags =
-    UpdateTreeInternal(aContainer, aChildNode, aChildNode->GetNextSibling(),
-                       aIsInsert);
+    UpdateTreeInternal(aChildNode, aChildNode->GetNextSibling(), aIsInsert);
 
   // Content insertion/removal is not cause of accessible tree change.
   if (updateFlags == eNoAccessible)
@@ -1942,8 +1941,7 @@ nsDocAccessible::UpdateTree(nsAccessible* aContainer, nsIContent* aChildNode,
 }
 
 PRUint32
-nsDocAccessible::UpdateTreeInternal(nsAccessible* aContainer,
-                                    nsIContent* aStartNode,
+nsDocAccessible::UpdateTreeInternal(nsIContent* aStartNode,
                                     nsIContent* aEndNode,
                                     PRBool aIsInsert)
 {
@@ -1960,8 +1958,8 @@ nsDocAccessible::UpdateTreeInternal(nsAccessible* aContainer,
     nsAccessible* accessible = GetAccessible(node);
 
     if (!accessible) {
-      updateFlags |= UpdateTreeInternal(aContainer, node->GetFirstChild(),
-                                        nsnull, aIsInsert);
+      updateFlags |= UpdateTreeInternal(node->GetFirstChild(), nsnull,
+                                        aIsInsert);
       continue;
     }
 
