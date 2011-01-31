@@ -568,6 +568,7 @@ Script::analyze(JSContext *cx, JSScript *script)
             break;
 
           case JSOP_CALLLOCAL:
+          case JSOP_GETLOCALPROP:
           case JSOP_INCLOCAL:
           case JSOP_DECLOCAL:
           case JSOP_LOCALINC:
