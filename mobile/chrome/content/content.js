@@ -253,6 +253,8 @@ let Content = {
     addEventListener("keypress", this, false, false);
 
     this._formAssistant = new FormAssistant();
+
+    docShell.QueryInterface(Ci.nsIDocShellHistory).useGlobalHistory = true;
   },
 
   handleEvent: function handleEvent(aEvent) {
