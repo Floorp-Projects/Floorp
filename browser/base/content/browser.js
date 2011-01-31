@@ -4082,7 +4082,11 @@ var XULBrowserWindow = {
   }, 
 
   updateStatusField: function () {
-    var text = this.status || this.jsStatus || this.jsDefaultStatus || this.defaultStatus;
+    var text;
+    if (this._busyUI)
+      text = this.status;
+    if (!text)
+      text = this.jsStatus || this.jsDefaultStatus || this.defaultStatus;
 
     // check the current value so we don't trigger an attribute change
     // and cause needless (slow!) UI updates
