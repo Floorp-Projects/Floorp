@@ -572,6 +572,20 @@ public:
 #undef ATTR
     }
 
+    void DumpEGLConfigs() {
+        int nc = 0;
+        fGetConfigs(mEGLDisplay, NULL, 0, &nc);
+        EGLConfig *ec = new EGLConfig[nc];
+        fGetConfigs(mEGLDisplay, ec, nc, &nc);
+
+        for (int i = 0; i < nc; ++i) {
+            printf_stderr ("========= EGL Config %d ========\n");
+            DumpEGLConfig(ec[i]);
+        }
+
+        delete [] ec;
+    }
+
 private:
     PRBool mInitialized;
     PRLibrary *mEGLLibrary;
@@ -605,6 +619,7 @@ public:
         , mBound(PR_FALSE)
         , mIsPBuffer(PR_FALSE)
         , mIsDoubleBuffered(PR_FALSE)
+        , mPBufferCanBindToTexture(PR_FALSE)
     {
         // any EGL contexts will always be GLESv2
         SetIsGLES2(PR_TRUE);
@@ -782,10 +797,6 @@ public:
         mGLWidget = widget;
     }
 
-    void SetIsPBuffer() {
-        mIsPBuffer = PR_TRUE;
-    }
-
     EGLContext Context() {
         return mContext;
     }
@@ -842,6 +853,7 @@ protected:
 
     PRPackedBool mIsPBuffer;
     PRPackedBool mIsDoubleBuffered;
+    PRPackedBool mPBufferCanBindToTexture;
 };
 
 PRBool
@@ -854,7 +866,7 @@ GLContextEGL::BindTex2DOffscreen(GLContext *aOffscreen)
 
     GLContextEGL *offs = static_cast<GLContextEGL*>(aOffscreen);
 
-    if (offs->mIsPBuffer) {
+    if (offs->mIsPBuffer && offs->mPBufferCanBindToTexture) {
         PRBool ok = sEGLLibrary.fBindTexImage(EGL_DISPLAY(),
                                               offs->mSurface,
                                               LOCAL_EGL_BACK_BUFFER);
@@ -884,7 +896,7 @@ GLContextEGL::UnbindTex2DOffscreen(GLContext *aOffscreen)
 
     GLContextEGL *offs = static_cast<GLContextEGL*>(aOffscreen);
 
-    if (offs->mIsPBuffer) {
+    if (offs->mIsPBuffer && offs->mPBufferCanBindToTexture) {
         sEGLLibrary.fReleaseTexImage(EGL_DISPLAY(),
                                      offs->mSurface,
                                      LOCAL_EGL_BACK_BUFFER);
@@ -900,7 +912,7 @@ GLContextEGL::ResizeOffscreen(const gfxIntSize& aNewSize)
         ADD_ATTR_2(pbattrs, LOCAL_EGL_WIDTH, 0);
         ADD_ATTR_2(pbattrs, LOCAL_EGL_HEIGHT, 0);
 
-        if (!sEGLLibrary.IsANGLE()) {
+        if (mPBufferCanBindToTexture) {
             ADD_ATTR_2(pbattrs, LOCAL_EGL_TEXTURE_TARGET, LOCAL_EGL_TEXTURE_2D);
             ADD_ATTR_2(pbattrs, LOCAL_EGL_TEXTURE_FORMAT,
                        mCreationFormat.minAlpha ?
@@ -1722,6 +1734,17 @@ GLContextEGL::CreateEGLPBufferOffscreenContext(const gfxIntSize& aSize,
     EGLSurface surface;
     EGLContext context;
 
+    bool configCanBindToTexture = true;
+
+    EGLConfig configs[64];
+    int numConfigs = sizeof(configs)/sizeof(EGLConfig);
+    int foundConfigs = 0;
+
+    // if we're running under ANGLE, we can't set BIND_TO_TEXTURE --
+    // it's not supported, and we have dx interop pbuffers anyway
+    if (sEGLLibrary.IsANGLE())
+        configCanBindToTexture = false;
+
     EGLint attribs[] = {
         LOCAL_EGL_RENDERABLE_TYPE, LOCAL_EGL_OPENGL_ES2_BIT,
         LOCAL_EGL_SURFACE_TYPE, LOCAL_EGL_PBUFFER_BIT,
@@ -1733,33 +1756,47 @@ GLContextEGL::CreateEGLPBufferOffscreenContext(const gfxIntSize& aSize,
         LOCAL_EGL_DEPTH_SIZE, aFormat.minDepth,
         LOCAL_EGL_STENCIL_SIZE, aFormat.minStencil,
 
-        // these get overwritten below; if you add anything above
-        aFormat.minAlpha ?
-          LOCAL_EGL_BIND_TO_TEXTURE_RGBA :
-          LOCAL_EGL_BIND_TO_TEXTURE_RGB,
-        LOCAL_EGL_TRUE,
+        // these two get overwritten below; add anything permanent above
+        LOCAL_EGL_NONE, LOCAL_EGL_NONE,
 
         LOCAL_EGL_NONE
     };
 
-    // if we're running under ANGLE, we can't set
-    // BIND_TO_TEXTURE since we're probably doing d3d interop
-    if (sEGLLibrary.IsANGLE()) {
-        int k = sizeof(attribs)/sizeof(EGLint) - 3;
-        attribs[k] = LOCAL_EGL_NONE;
-        attribs[k+1] = LOCAL_EGL_NONE;
-    }
+    int attribsToOverwrite = sizeof(attribs)/sizeof(EGLint) - 3;
 
-    EGLConfig configs[64];
-    int numConfigs = 64;
+TRY_AGAIN_NO_BIND_TO_TEXTURE:
+    if (configCanBindToTexture) {
+        attribs[attribsToOverwrite] = aFormat.minAlpha ?
+            LOCAL_EGL_BIND_TO_TEXTURE_RGBA :
+            LOCAL_EGL_BIND_TO_TEXTURE_RGB;
+        attribs[attribsToOverwrite+1] = LOCAL_EGL_TRUE;
+    } else {
+        attribs[attribsToOverwrite] = LOCAL_EGL_NONE;
+        attribs[attribsToOverwrite+1] = LOCAL_EGL_NONE;
+    }
 
     if (!sEGLLibrary.fChooseConfig(EGL_DISPLAY(),
                                    attribs,
                                    configs, numConfigs,
-                                   &numConfigs)
-        || numConfigs == 0)
+                                   &foundConfigs)
+        || foundConfigs == 0)
     {
-        NS_WARNING("No configs");
+        if (configCanBindToTexture) {
+            NS_WARNING("No pbuffer EGL configs that can bind to texture, trying without");
+            configCanBindToTexture = false;
+            goto TRY_AGAIN_NO_BIND_TO_TEXTURE;
+        }
+
+        NS_WARNING("No workable pbuffer EGL configs, can't create pbuffer!");
+
+#ifdef DEBUG
+        static bool first = true;
+        if (first) {
+            sEGLLibrary.DumpEGLConfigs();
+            first = false;
+        }
+#endif
+
         // no configs? no pbuffers!
         return nsnull;
     }
@@ -1777,7 +1814,7 @@ GLContextEGL::CreateEGLPBufferOffscreenContext(const gfxIntSize& aSize,
     ADD_ATTR_2(pbattrs, LOCAL_EGL_WIDTH, 0);
     ADD_ATTR_2(pbattrs, LOCAL_EGL_HEIGHT, 0);
 
-    if (!sEGLLibrary.IsANGLE()) {
+    if (configCanBindToTexture) {
         ADD_ATTR_2(pbattrs, LOCAL_EGL_TEXTURE_TARGET, LOCAL_EGL_TEXTURE_2D);
         ADD_ATTR_2(pbattrs, LOCAL_EGL_TEXTURE_FORMAT,
                    aFormat.minAlpha ?
@@ -1835,8 +1872,8 @@ TRY_AGAIN_POWER_OF_TWO:
     }
 
     glContext->SetOffscreenSize(aSize, pbsize);
-
-    glContext->SetIsPBuffer();
+    glContext->mIsPBuffer = PR_TRUE;
+    glContext->mPBufferCanBindToTexture = configCanBindToTexture;
 
     return glContext.forget();
 }
