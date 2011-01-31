@@ -69,7 +69,6 @@ _BROWSER_FILES = \
   browser_formsZoom.js \
   browser_mainui.js \
   browser_navigation.js \
-  browser_preferences_basic.js \
   browser_preferences_text.js \
   browser_rect.js \
   browser_rememberPassword.js \
