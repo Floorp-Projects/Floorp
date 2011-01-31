@@ -69,7 +69,7 @@
 
       <field name="_documentURI">null</field>
       <property name="documentURI"
-                onget="return this._documentURI ? Services.io.newURI(this._documentURI, null, null) : null"
+                onget="return this._documentURI ? this._ios.newURI(this._documentURI, null, null) : null"
                 readonly="true"/>
 
       <field name="contentWindowId">null</field>
@@ -158,7 +158,7 @@
         <parameter name="aCharset"/>
         <body><![CDATA[
             try { // newURI call is throwing for chrome URI
-              let iconURI = Services.io.newURI(aURL, aCharset, null);
+              let iconURI = this._ios.newURI(aURL, aCharset, null);
               if (gFaviconService.isFailedFavicon(iconURI))
                 return;
 
@@ -228,16 +228,17 @@
                 break;
 
               case "Content:SecurityChange":
-                let serhelper = Cc["@mozilla.org/network/serialization-helper;1"].getService(Ci.nsISerializationHelper);
+                let serhelper = Components.classes["@mozilla.org/network/serialization-helper;1"]
+                                .getService(Components.interfaces.nsISerializationHelper);
                 let SSLStatus = json.SSLStatusAsString ? serhelper.deserializeObject(json.SSLStatusAsString) : null;
                 if (SSLStatus) {
-                  SSLStatus.QueryInterface(Ci.nsISSLStatus);
+                  SSLStatus.QueryInterface(Components.interfaces.nsISSLStatus);
                   if (SSLStatus) {
                     // We must check the Extended Validation (EV) state here, on the chrome
                     // process, because NSS is needed for that determination.
-                    let ii = SSLStatus.serverCert.QueryInterface(Ci.nsIIdentityInfo);
+                    let ii = SSLStatus.serverCert.QueryInterface(Components.interfaces.nsIIdentityInfo);
                     if (ii && ii.isExtendedValidation)
-                      json.state |= Ci.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL;
+                      json.state |= Components.interfaces.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL;
                   }
                 }
 
@@ -283,7 +284,8 @@
               result.caOrg =  cert.issuerOrganization || cert.issuerCommonName;
 
               if (!this._overrideService)
-                this._overrideService = Cc["@mozilla.org/security/certoverride;1"].getService(Ci.nsICertOverrideService);
+                this._overrideService = Components.classes["@mozilla.org/security/certoverride;1"]
+                                        .getService(Components.interfaces.nsICertOverrideService);
 
               // Check whether this site is a security exception.
               let currentURI = this._browser._webNavigation._currentURI;
@@ -354,7 +356,7 @@
             // http://mxr.mozilla.org/mozilla-central/source/browser/base/content/browser.js#500
             var obj = {
               requestingWindowId: json.windowId,
-              popupWindowURI: Services.io.newURI(json.popupWindowURI.spec, json.popupWindowURI.charset, null),
+              popupWindowURI: this._ios.newURI(json.popupWindowURI.spec, json.popupWindowURI.charset, null),
               popupWindowFeatures: json.popupWindowFeatures,
               popupWindowName: json.popupWindowName
             };
@@ -437,10 +439,53 @@
         </body>
       </method>
 
+      <field name="_contentViewPrototype"><![CDATA[
+        ({
+          _scrollbox: null,
+
+          init: function(aElement) {
+            this._scrollbox = aElement.scrollBoxObject;
+          },
+
+          isRoot: function() {
+            return false;
+          },
+
+          scrollBy: function(x, y) {
+            this._scrollbox.scrollBy(x,y);
+          },
+
+          scrollTo: function(x, y) {
+            this._scrollbox.scrollTo(x,y);
+          },
+
+          getPosition: function() {
+            let x = {}, y = {};
+            this._scrollbox.getPosition(x, y);
+            return { x: x.value, y: y.value };
+          }
+        })
+        ]]>
+      </field>
+
       <method name="getViewAt">
+        <parameter name="x"/>
+        <parameter name="y"/>
         <body>
           <![CDATA[
-            return this._contentView;
+            let cwu = this.contentDocument.defaultView.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                                                      .getInterface(Components.interfaces.nsIDOMWindowUtils);
+            let elt = cwu.elementFromPoint(x, y, false, false);
+
+            while (elt && !elt.scrollBoxObject)
+              elt = elt.parentNode;
+ 
+            if (!elt)
+              return this._contentView;
+
+            let cv = Object.create(this._contentViewPrototype);
+            cv.init(elt);
+            return cv;
           ]]>
         </body>
       </method>
