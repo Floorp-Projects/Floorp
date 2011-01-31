@@ -98,6 +98,15 @@ let WeaveGlue = {
     if (!container.hidden)
       return;
 
+    // Services.io.offline is lying to us, so we use the NetworkLinkService instead
+    let nls = Cc["@mozilla.org/network/network-link-service;1"].getService(Ci.nsINetworkLinkService);
+    if (!nls.isLinkUp) {
+      Services.prompt.alert(window,
+                             this._bundle.GetStringFromName("sync.setup.error.title"),
+                             this._bundle.GetStringFromName("sync.setup.error.network"));
+      return;
+    }
+
     // Clear up any previous JPAKE codes
     this.abortEasySetup();
 
@@ -130,13 +139,33 @@ let WeaveGlue = {
           return;
 
         // Automatically go to manual setup if we couldn't acquire a channel.
-        if (aError == Weave.JPAKE_ERROR_CHANNEL) {
-          self.openManual();
-          return;
-        }
+        let brandShortName = Strings.brand.GetStringFromName("brandShortName");
+        let tryAgain = self._bundle.GetStringFromName("sync.setup.tryagain");
+        let manualSetup = self._bundle.GetStringFromName("sync.setup.manual");
+        let buttonFlags = Ci.nsIPrompt.BUTTON_POS_1_DEFAULT +
+                         (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_0) +
+                         (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_1) +
+                         (Ci.nsIPrompt.BUTTON_TITLE_CANCEL    * Ci.nsIPrompt.BUTTON_POS_2);
 
-        // Restart on all other errors.
-        self.open();
+        let button = Services.prompt.confirmEx(window,
+                               self._bundle.GetStringFromName("sync.setup.error.title"),
+                               self._bundle.formatStringFromName("sync.setup.error.nodata", [brandShortName], 1),
+                               buttonFlags, tryAgain, manualSetup, null, "", {});
+        switch (button) {
+          case 0:
+            // we have to build a new JPAKEClient here rather than reuse the old one
+            container.hidden = true;
+            self.open();
+            break;
+          case 1:
+            self.openManual();
+            break;
+          case 2:
+          default:
+            self.abortEasySetup();
+            self.close();
+            break;
+        }
       }
     });
     this.jpake.receiveNoPIN();
