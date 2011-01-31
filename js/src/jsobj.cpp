@@ -2331,7 +2331,7 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropDesc &desc,
      * redefining it or we had invoked its setter to change its value).
      */
     if (callDelProperty) {
-        Value dummy;
+        Value dummy = UndefinedValue();
         if (!CallJSPropertyOp(cx, obj2->getClass()->delProperty, obj2, desc.id, &dummy))
             return false;
     }
