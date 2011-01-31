@@ -1810,6 +1810,7 @@ panel[dimmed="true"] {
 /* Add-on bar */
 
 #addon-bar {
+  box-shadow: 0 1px 0 rgba(0,0,0,.15) inset;
   padding: 0;
   min-height: 20px;
 }

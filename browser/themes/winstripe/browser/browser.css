@@ -2267,9 +2267,14 @@ panel[dimmed="true"] {
   min-height: 20px;
 }
 
+#addon-bar:not(:-moz-lwtheme) {
+  -moz-appearance: statusbar;
+}
+
 #status-bar {
-  border: none;
   -moz-appearance: none;
+  background-color: transparent;
+  border: none;
   min-height: 0;
 }
 
