@@ -76,6 +76,9 @@
 #endif
 #endif
 
+#include <Shlobj.h>
+#include <Shlwapi.h>
+
 #ifdef CAIRO_HAS_D2D_SURFACE
 #include "gfxD2DSurface.h"
 
@@ -726,6 +729,36 @@ gfxWindowsPlatform::GetDLLVersion(const PRUnichar *aDLLPath, nsAString& aVersion
     char buf[256];
     sprintf(buf, "%d.%d.%d.%d", vers[0], vers[1], vers[2], vers[3]);
     aVersion.Assign(NS_ConvertUTF8toUTF16(buf));
+}
+
+void
+gfxWindowsPlatform::GetFontCacheSize(nsAString& aSize)
+{
+    WIN32_FIND_DATAW findFileData;
+    HANDLE file;
+    LARGE_INTEGER fileSize;
+    WCHAR path[MAX_PATH];
+
+    aSize.Assign(L"n/a");
+
+    if (FAILED(SHGetFolderPathW(NULL, CSIDL_WINDOWS, NULL, 0, path))) {
+        return;
+    }
+
+    PathAppendW(path, 
+        L"ServiceProfiles\\LocalService\\AppData\\Local\\FontCache-*-*.dat");
+    file = FindFirstFileW(path, &findFileData);
+    if (file == INVALID_HANDLE_VALUE) {
+        return;
+    }
+     
+    WCHAR size[256];
+
+    double sizeMB = (double(findFileData.nFileSizeLow) +
+                     findFileData.nFileSizeHigh * (double(MAXDWORD) + 1))
+                    / 1000000.0;
+    swprintf(size, L"%.2f MB", sizeMB);
+    aSize.Assign(size);
 }
 
 void
