@@ -162,6 +162,14 @@ public:
   }
 
   /**
+   * Cancel pending text update.
+   */
+  inline void CancelTextUpdate(nsIContent* aTextNode)
+  {
+    mTextHash.RemoveEntry(aTextNode);
+  }
+
+  /**
    * Pend accessible tree update for content insertion.
    */
   void ScheduleContentInsertion(nsAccessible* aContainer,
