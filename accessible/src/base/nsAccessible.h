@@ -53,12 +53,13 @@
 #include "nsTArray.h"
 #include "nsRefPtrHashtable.h"
 
+class AccEvent;
 class AccGroupInfo;
 class EmbeddedObjCollector;
-class nsHyperTextAccessible;
 class nsAccessible;
-class AccEvent;
+class nsHyperTextAccessible;
 struct nsRoleMapEntry;
+class nsTextAccessible;
 
 struct nsRect;
 class nsIContent;
@@ -359,6 +360,9 @@ public:
   inline bool IsHyperText() const { return mFlags & eHyperTextAccessible; }
   nsHyperTextAccessible* AsHyperText();
 
+  inline bool IsTextLeaf() const { return mFlags & eTextLeafAccessible; }
+  nsTextAccessible* AsTextLeaf();
+
   //////////////////////////////////////////////////////////////////////////////
   // HyperLinkAccessible
 
@@ -499,7 +503,8 @@ protected:
    * @note keep these flags in sync with ChildrenFlags
    */
   enum AccessibleTypes {
-    eHyperTextAccessible = 1 << 2
+    eHyperTextAccessible = 1 << 2,
+    eTextLeafAccessible = 1 << 3
   };
 
   //////////////////////////////////////////////////////////////////////////////

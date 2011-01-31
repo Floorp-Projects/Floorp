@@ -48,6 +48,7 @@ nsTextAccessible::
   nsTextAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
   nsLinkableAccessible(aContent, aShell)
 {
+  mFlags |= eTextLeafAccessible;
 }
 
 PRUint32
