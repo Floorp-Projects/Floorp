@@ -65,6 +65,9 @@
 #include "nsContentEventHandler.h"
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
+#include "nsIFormControl.h"
+#include "nsIForm.h"
+#include "nsHTMLFormElement.h"
 
 /******************************************************************/
 /* nsIMEStateManager                                              */
@@ -282,6 +285,25 @@ nsIMEStateManager::SetIMEState(PRUint32 aState,
                         context.mHTMLInputType);
       aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::moz_action_hint,
                         context.mActionHint);
+
+      // if we don't have an action hint and  return won't submit the form use "next"
+      if (context.mActionHint.IsEmpty() && aContent->Tag() == nsGkAtoms::input) {
+        PRBool willSubmit = PR_FALSE;
+        nsCOMPtr<nsIFormControl> control(do_QueryInterface(aContent));
+        mozilla::dom::Element* formElement = control->GetFormElement();
+        nsCOMPtr<nsIForm> form;
+        if (control) {
+          // is this a form and does it have a default submit element?
+          if ((form = do_QueryInterface(formElement)) && form->GetDefaultSubmitElement()) {
+            willSubmit = PR_TRUE;
+          // is this an html form and does it only have a single text input element?
+          } else if (formElement && formElement->Tag() == nsGkAtoms::form && formElement->IsHTML() &&
+                     static_cast<nsHTMLFormElement*>(formElement)->HasSingleTextControl()) {
+            willSubmit = PR_TRUE;
+          }
+        }
+        context.mActionHint.Assign(willSubmit ? NS_LITERAL_STRING("go") : NS_LITERAL_STRING("next"));
+      }
     }
 
     widget2->SetInputMode(context);
