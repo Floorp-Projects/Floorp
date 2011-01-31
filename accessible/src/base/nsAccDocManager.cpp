@@ -332,7 +332,6 @@ nsAccDocManager::HandleDOMDocumentLoad(nsIDocument *aDocument,
   nsDocAccessible* docAcc = mDocAccessibleCache.GetWeak(aDocument);
   if (!docAcc) {
     docAcc = CreateDocOrRootAccessible(aDocument);
-    NS_ASSERTION(docAcc, "Can't create document accessible!");
     if (!docAcc)
       return;
   }
