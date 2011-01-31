@@ -1524,9 +1524,7 @@ jsdScript::EnableSingleStepInterrupts(PRBool enable)
     if (enable && !jsdService::GetService()->CheckInterruptHook())
         return NS_ERROR_NOT_INITIALIZED;
 
-    JSD_EnableSingleStepInterrupts(mCx, mScript, enable);
-
-    return NS_OK;
+    return (JSD_EnableSingleStepInterrupts(mCx, mScript, enable) ? NS_OK : NS_ERROR_FAILURE);
 }
 
 NS_IMETHODIMP

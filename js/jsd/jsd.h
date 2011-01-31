@@ -611,6 +611,11 @@ extern JSBool
 jsd_ClearInterruptHook(JSDContext* jsdc);
 
 extern JSBool
+jsd_EnableSingleStepInterrupts(JSDContext* jsdc,
+                               JSDScript*  jsdscript,
+                               JSBool      enable);
+
+extern JSBool
 jsd_SetDebugBreakHook(JSDContext*           jsdc,
                       JSD_ExecutionHookProc hook,
                       void*                 callerdata);
