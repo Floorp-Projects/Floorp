@@ -54,10 +54,16 @@ public:
   virtual nsresult AppendTextTo(nsAString& aText, PRUint32 aStartOffset,
                                 PRUint32 aLength);
 
-protected:
+  // nsTextAccessible
+  void SetText(const nsAString& aText) { mText = aText; }
+  const nsString& Text() const { return mText; }
 
+protected:
   // nsAccessible
   virtual void CacheChildren();
+
+protected:
+  nsString mText;
 };
 
 
