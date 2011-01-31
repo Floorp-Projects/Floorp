@@ -184,7 +184,8 @@ NotificationController::IsUpdatePending()
     do_QueryInterface(mPresShell);
   return presShell->IsLayoutFlushObserver() ||
     mObservingState == eRefreshProcessingForUpdate ||
-    mContentInsertions.Length() != 0 || mNotifications.Length() != 0;
+    mContentInsertions.Length() != 0 || mNotifications.Length() != 0 ||
+    mTextHash.Count() != 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

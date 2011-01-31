@@ -155,8 +155,10 @@ public:
   inline void ScheduleTextUpdate(nsIContent* aTextNode)
   {
     // Ignore the notification if initial tree construction hasn't been done yet.
-    if (mTreeConstructedState != eTreeConstructionPending)
-      mTextHash.PutEntry(aTextNode);
+    if (mTreeConstructedState != eTreeConstructionPending &&
+        mTextHash.PutEntry(aTextNode)) {
+      ScheduleProcessing();
+    }
   }
 
   /**
