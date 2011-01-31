@@ -2861,10 +2861,8 @@ nsAccessible::GetIndexOf(nsAccessible* aChild)
 }
 
 PRInt32
-nsAccessible::GetIndexInParent()
+nsAccessible::GetIndexInParent() const
 {
-  // XXX: call GetParent() to repair the tree if it's broken.
-  GetParent();
   return mIndexInParent;
 }
 
