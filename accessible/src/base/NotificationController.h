@@ -343,15 +343,39 @@ private:
    */
   nsTArray<nsRefPtr<ContentInsertion> > mContentInsertions;
 
+  template<class T>
+  class nsCOMPtrHashKey : public PLDHashEntryHdr
+  {
+  public:
+    typedef T* KeyType;
+    typedef const T* KeyTypePointer;
+
+    nsCOMPtrHashKey(const T* aKey) : mKey(const_cast<T*>(aKey)) {}
+    nsCOMPtrHashKey(const nsPtrHashKey<T> &aToCopy) : mKey(aToCopy.mKey) {}
+    ~nsCOMPtrHashKey() { }
+
+    KeyType GetKey() const { return mKey; }
+    PRBool KeyEquals(KeyTypePointer aKey) const { return aKey == mKey; }
+
+    static KeyTypePointer KeyToPointer(KeyType aKey) { return aKey; }
+    static PLDHashNumber HashKey(KeyTypePointer aKey)
+      { return NS_PTR_TO_INT32(aKey) >> 2; }
+
+    enum { ALLOW_MEMMOVE = PR_TRUE };
+
+   protected:
+     nsCOMPtr<T> mKey;
+  };
+
   /**
    * A pending accessible tree update notifications for rendered text changes.
    */
-  nsTHashtable<nsPtrHashKey<nsIContent> > mTextHash;
+  nsTHashtable<nsCOMPtrHashKey<nsIContent> > mTextHash;
 
   /**
    * Update the accessible tree for pending rendered text change notifications.
    */
-  static PLDHashOperator TextEnumerator(nsPtrHashKey<nsIContent>* aEntry,
+  static PLDHashOperator TextEnumerator(nsCOMPtrHashKey<nsIContent>* aEntry,
                                         void* aUserArg);
 
   /**
