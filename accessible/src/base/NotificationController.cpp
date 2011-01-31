@@ -575,7 +575,7 @@ NotificationController::CreateTextChangeEventFor(AccMutationEvent* aEvent)
 }
 
 PLDHashOperator
-NotificationController::TextEnumerator(nsPtrHashKey<nsIContent>* aEntry,
+NotificationController::TextEnumerator(nsCOMPtrHashKey<nsIContent>* aEntry,
                                        void* aUserArg)
 {
   nsDocAccessible* document = static_cast<nsDocAccessible*>(aUserArg);
