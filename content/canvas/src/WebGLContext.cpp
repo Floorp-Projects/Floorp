@@ -574,9 +574,12 @@ WebGLContext::GetInputStream(const char* aMimeType,
     if (surf->CairoStatus() != 0)
         return NS_ERROR_FAILURE;
 
-    gl->ReadPixelsIntoImageSurface(0, 0, mWidth, mHeight, surf);
+    nsRefPtr<gfxContext> tmpcx = new gfxContext(surf);
+    // Use Render() to make sure that appropriate y-flip gets applied
+    nsresult rv = Render(tmpcx, gfxPattern::FILTER_NEAREST);
+    if (NS_FAILED(rv))
+        return rv;
 
-    nsresult rv;
     const char encoderPrefix[] = "@mozilla.org/image/encoder;2?type=";
     nsAutoArrayPtr<char> conid(new char[strlen(encoderPrefix) + strlen(aMimeType) + 1]);
 
