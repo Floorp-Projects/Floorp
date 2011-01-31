@@ -701,13 +701,23 @@ Java_org_mozilla_gecko_GeckoAppShell_loadLibs(JNIEnv *jenv, jclass jGeckoAppShel
       if (cache_mapping[i].buffer)
         haveLibsToWrite = true;
 
+  int count = cache_count;
+  struct lib_cache_info *info;
   if (haveLibsToWrite) {
-    if (!fork()) {
+    if (fork()) {
+      // just unmap.  fork will do the real work.
+      while (count--) {
+        info = &cache_mapping[count];
+        if (!info->buffer)
+          continue;
+        munmap(info->buffer, info->lib_size);
+      }
+    }
+    else {
       sleep(10);
       nice(10);
-      int count = cache_count;
       while (count--) {
-        struct lib_cache_info *info = &cache_mapping[count];
+        info = &cache_mapping[count];
         if (!info->buffer)
           continue;
 
@@ -719,7 +729,6 @@ Java_org_mozilla_gecko_GeckoAppShell_loadLibs(JNIEnv *jenv, jclass jGeckoAppShel
         // using sendfile would be preferable, but it doesn't seem to work
         // with shared memory on any of the devices we've tested
         uint32_t sent = write(file_fd, info->buffer, info->lib_size);
-
         munmap(info->buffer, info->lib_size);
         info->buffer = 0;
         close(file_fd);
