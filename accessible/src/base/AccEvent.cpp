@@ -279,7 +279,7 @@ AccStateChangeEvent::CreateXPCOMObject()
 // XXX revisit this when coalescence is faster (eCoalesceFromSameSubtree)
 AccTextChangeEvent::
   AccTextChangeEvent(nsAccessible* aAccessible, PRInt32 aStart,
-                     nsAString& aModifiedText, PRBool aIsInserted,
+                     const nsAString& aModifiedText, PRBool aIsInserted,
                      EIsFromUserInput aIsFromUserInput)
   : AccEvent(aIsInserted ?
              static_cast<PRUint32>(nsIAccessibleEvent::EVENT_TEXT_INSERTED) :
