@@ -61,6 +61,7 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
 
     JS_ASSERT(this == &JS_PROPERTY_CACHE(cx));
     JS_ASSERT(!cx->runtime->gcRunning);
+    JS_ASSERT_IF(adding, !obj->isCall());
 
     if (js_IsPropertyCacheDisabled(cx)) {
         PCMETER(disfills++);
