@@ -1283,7 +1283,7 @@ js_RemoveRoot(JSRuntime *rt, void *rp);
 #ifdef __cplusplus
 JS_END_EXTERN_C
 
-namespace js {
+namespace JS {
 
 /*
  * Protecting non-jsval, non-JSObject *, non-JSString * values from collection
@@ -1331,12 +1331,12 @@ namespace js {
  * knows about, but when we work with derived values like |ch|, we must root
  * their owners, as the derived value alone won't keep them alive.
  *
- * A js::Anchor is a kind of GC root that allows us to keep the owners of
+ * A JS::Anchor is a kind of GC root that allows us to keep the owners of
  * derived values like |ch| alive throughout the Anchor's lifetime. We could
  * fix the above code as follows:
  *
  *   void f(JSString *str) {
- *     js::Anchor<JSString *> a_str(str);
+ *     JS::Anchor<JSString *> a_str(str);
  *     const jschar *ch = JS_GetStringCharsZ(str);
  *     ... do stuff with ch, but no uses of str ...;
  *   }
@@ -1436,7 +1436,7 @@ inline Anchor<jsval>::~Anchor() {
 #endif
 #endif
 
-}  /* namespace js */
+}  /* namespace JS */
 
 JS_BEGIN_EXTERN_C
 #endif

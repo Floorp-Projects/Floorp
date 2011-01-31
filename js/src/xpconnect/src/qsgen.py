@@ -1208,7 +1208,7 @@ def writeTraceableArgumentConversion(f, member, i, name, type, haveCcx,
                 f.write("    nsresult rv;\n");
             f.write("    %s *%s;\n" % (type.name, name))
             f.write("    xpc_qsSelfRef %sref;\n" % name)
-            f.write("    js::Anchor<jsval> %sanchor;\n" % name);
+            f.write("    JS::Anchor<jsval> %sanchor;\n" % name);
             f.write("    rv = xpc_qsUnwrapArg<%s>("
                     "cx, js::Jsvalify(js::ValueArgToConstRef(%s)), &%s, &%sref.ptr, &%sanchor.get());\n"
                     % (type.name, argVal, name, name, name))
@@ -1348,7 +1348,7 @@ def writeTraceableQuickStub(f, customMethodCalls, member, stubName):
     else:
         f.write("    %s *self;\n" % customMethodCall['thisType'])
     f.write("    xpc_qsSelfRef selfref;\n")
-    f.write("    js::Anchor<jsval> selfanchor;\n")
+    f.write("    JS::Anchor<jsval> selfanchor;\n")
     if haveCcx:
         f.write("    if (!xpc_qsUnwrapThisFromCcx(ccx, &self, &selfref.ptr, "
                 "&selfanchor.get())) {\n")
