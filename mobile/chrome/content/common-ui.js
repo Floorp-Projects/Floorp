@@ -897,8 +897,10 @@ var FormHelperUI = {
       return;
 
     let [deltaX, deltaY] = this._getOffsetForCaret(caretRect, zoomRect);
-    if (deltaX != 0 || deltaY != 0)
-      browser.scrollBy(deltaX, deltaY);
+    if (deltaX != 0 || deltaY != 0) {
+      let view = browser.getRootView();
+      view.scrollBy(deltaX, deltaY);
+    }
   },
 
   /* Store the current zoom level, and scroll positions to restore them if needed */
