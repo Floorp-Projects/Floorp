@@ -564,8 +564,10 @@ nsAccessibilityService::RecreateAccessible(nsIPresShell* aPresShell,
                                            nsIContent* aContent)
 {
   nsDocAccessible* document = GetDocAccessible(aPresShell->GetDocument());
-  if (document)
-    document->RecreateAccessible(aContent);
+  if (document) {
+    document->HandleNotification<nsDocAccessible, nsIContent>
+      (document, &nsDocAccessible::RecreateAccessible, aContent);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
