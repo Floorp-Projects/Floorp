@@ -55,7 +55,6 @@ _BROWSER_TEST_FILES =  \
 		browser_privatebrowsing_forgetthissite.js \
 		browser_privatebrowsing_geoprompt.js \
 		browser_privatebrowsing_geoprompt_page.html \
-		browser_privatebrowsing_import.js \
 		browser_privatebrowsing_newwindow_stopcmd.js \
 		browser_privatebrowsing_opendir.js \
 		browser_privatebrowsing_openlocation.js \
