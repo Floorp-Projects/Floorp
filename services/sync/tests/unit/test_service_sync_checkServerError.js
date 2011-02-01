@@ -69,8 +69,8 @@ function test_backoff500(next) {
     Engines.unregister("catapult");
     Status.resetBackoff();
     Service.startOver();
-    server.stop(next);
   }
+  server.stop(next);
 }
 
 function test_backoff503(next) {
@@ -102,8 +102,8 @@ function test_backoff503(next) {
     Engines.unregister("catapult");
     Status.resetBackoff();
     Service.startOver();
-    server.stop(next);
   }
+  server.stop(next);
 }
 
 function test_overQuota(next) {
@@ -128,8 +128,52 @@ function test_overQuota(next) {
     Engines.unregister("catapult");
     Status.resetSync();
     Service.startOver();
-    server.stop(next);
   }
+  server.stop(next);
+}
+
+function test_service_networkError(next) {
+  setUp();
+  // Provoke connection refused.
+  Service.clusterURL = "http://localhost:12345/";
+  try {
+    do_check_eq(Status.sync, SYNC_SUCCEEDED);
+
+    Service._loggedIn = true;
+    Service.sync();
+
+    do_check_eq(Status.sync, LOGIN_FAILED_NETWORK_ERROR);
+  } finally {
+    Status.resetSync();
+    Service.startOver();
+  }
+  next();
+}
+
+function test_engine_networkError(next) {
+  _("Test: Network related exceptions from engine.sync() lead to the right status code.");
+  let server = sync_httpd_setup();
+  setUp();
+
+  Engines.register(CatapultEngine);
+  let engine = Engines.get("catapult");
+  engine.enabled = true;
+  engine.exception = Components.Exception("NS_ERROR_UNKNOWN_HOST",
+                                          Cr.NS_ERROR_UNKNOWN_HOST);
+
+  try {
+    do_check_eq(Status.sync, SYNC_SUCCEEDED);
+
+    Service.login();
+    Service.sync();
+
+    do_check_eq(Status.sync, LOGIN_FAILED_NETWORK_ERROR);
+  } finally {
+    Engines.unregister("catapult");
+    Status.resetSync();
+    Service.startOver();
+  }
+  server.stop(next);
 }
 
 // Slightly misplaced test as it doesn't actually test checkServerError,
@@ -156,8 +200,8 @@ function test_engine_applyFailed(next) {
     Engines.unregister("catapult");
     Status.resetSync();
     Service.startOver();
-    server.stop(next);
   }
+  server.stop(next);
 }
 
 function run_test() {
@@ -168,6 +212,8 @@ function run_test() {
   asyncChainTests(test_backoff500,
                   test_backoff503,
                   test_overQuota,
+                  test_service_networkError,
+                  test_engine_networkError,
                   test_engine_applyFailed,
                   do_test_finished)();
 }
