@@ -70,6 +70,7 @@ function ContentSecurityPolicy() {
 
   this._requestHeaders = []; 
   this._request = "";
+  this._docRequest = null;
   CSPdebug("CSP POLICY INITED TO 'allow *'");
 }
 
@@ -200,6 +201,7 @@ ContentSecurityPolicy.prototype = {
     }
 
     this._request = aChannel.requestMethod + " " + aChannel.URI.asciiSpec;
+    this._docRequest = aChannel;
 
     // We will only be able to provide the HTTP version information if aChannel
     // implements nsIHttpChannelInternal
@@ -244,7 +246,9 @@ ContentSecurityPolicy.prototype = {
     // If there is a policy-uri, fetch the policy, then re-call this function.
     // (1) parse and create a CSPRep object
     var newpolicy = CSPRep.fromString(aPolicy,
-                                      selfURI.scheme + "://" + selfURI.hostPort);
+                                      selfURI.scheme + "://" + selfURI.hostPort,
+                                      this._docRequest,
+                                      this);
 
     // (2) Intersect the currently installed CSPRep object with the new one
     var intersect = this._policy.intersectWith(newpolicy);
