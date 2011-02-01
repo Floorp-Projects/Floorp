@@ -4636,11 +4636,6 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &valu
                         uintN flags, intN shortid, JSProperty **propp,
                         uintN defineHow /* = 0 */)
 {
-    Class *clasp;
-    const Shape *shape;
-    JSBool added;
-    Value valueCopy;
-
     JS_ASSERT((defineHow & ~(JSDNP_CACHE_RESULT | JSDNP_DONT_PURGE | JSDNP_SET_METHOD)) == 0);
     LeaveTraceIfGlobalObject(cx, obj);
 
@@ -4652,7 +4647,7 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &valu
      * update the attributes and property ops.  A getter or setter is really
      * only half of a property.
      */
-    shape = NULL;
+    const Shape *shape = NULL;
     if (attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
         JSObject *pobj;
         JSProperty *prop;
@@ -4703,7 +4698,7 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &valu
         cx->runtime->protoHazardShape = js_GenerateShape(cx, false);
 
     /* Use the object's class getter and setter by default. */
-    clasp = obj->getClass();
+    Class *clasp = obj->getClass();
     if (!(defineHow & JSDNP_SET_METHOD)) {
         if (!getter && !(attrs & JSPROP_GETTER))
             getter = clasp->getProperty;
@@ -4715,7 +4710,7 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &valu
     if (!obj->ensureClassReservedSlots(cx))
         return false;
 
-    added = false;
+    bool added = false;
     if (!shape) {
         /* Add a new property, or replace an existing one of the same id. */
         if (defineHow & JSDNP_SET_METHOD) {
@@ -4731,7 +4726,13 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &valu
             }
         }
 
-        added = !obj->nativeContains(id);
+        if (const Shape *existingShape = obj->nativeLookup(id)) {
+            if (existingShape->hasSlot())
+                AbortRecordingIfUnexpectedGlobalWrite(cx, obj, existingShape->slot);
+        } else {
+            added = true;
+        }
+
         uint32 oldShape = obj->shape();
         shape = obj->putProperty(cx, id, getter, setter, SHAPE_INVALID_SLOT,
                                  attrs, flags, shortid);
@@ -4754,13 +4755,11 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &valu
     }
 
     /* Store value before calling addProperty, in case the latter GC's. */
-    if (obj->containsSlot(shape->slot)) {
-        AbortRecordingIfUnexpectedGlobalWrite(cx, obj, shape->slot);
+    if (obj->containsSlot(shape->slot))
         obj->nativeSetSlot(shape->slot, value);
-    }
 
     /* XXXbe called with lock held */
-    valueCopy = value;
+    Value valueCopy = value;
     if (!CallAddPropertyHook(cx, clasp, obj, shape, &valueCopy)) {
         obj->removeProperty(cx, id);
         return false;
@@ -5239,9 +5238,11 @@ js_NativeSet(JSContext *cx, JSObject *obj, const Shape *shape, bool added, Value
 
         /* If shape has a stub setter, keep obj locked and just store *vp. */
         if (shape->hasDefaultSetter()) {
-            if (!added && !obj->methodWriteBarrier(cx, *shape, *vp))
-                return false;
-            AbortRecordingIfUnexpectedGlobalWrite(cx, obj, slot);
+            if (!added) {
+                AbortRecordingIfUnexpectedGlobalWrite(cx, obj, slot);
+                if (!obj->methodWriteBarrier(cx, *shape, *vp))
+                    return false;
+            }
             obj->nativeSetSlot(slot, *vp);
             return true;
         }
@@ -5269,9 +5270,11 @@ js_NativeSet(JSContext *cx, JSObject *obj, const Shape *shape, bool added, Value
     if (obj->containsSlot(slot) &&
         (JS_LIKELY(cx->runtime->propertyRemovals == sample) ||
          obj->nativeContains(*shape))) {
-        if (!added && !obj->methodWriteBarrier(cx, *shape, *vp))
-            return false;
-        AbortRecordingIfUnexpectedGlobalWrite(cx, obj, slot);
+        if (!added) {
+            AbortRecordingIfUnexpectedGlobalWrite(cx, obj, slot);
+            if (!obj->methodWriteBarrier(cx, *shape, *vp))
+                return false;
+        }
         obj->setSlot(slot, *vp);
     }
 
