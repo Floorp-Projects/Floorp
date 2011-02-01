@@ -1594,7 +1594,7 @@ nsCanvasRenderingContext2D::CreateLinearGradient(float x0, float y0, float x1, f
                                                  nsIDOMCanvasGradient **_retval)
 {
     if (!FloatValidate(x0,y0,x1,y1))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 
     nsRefPtr<gfxPattern> gradpat = new gfxPattern(x0, y0, x1, y1);
     if (!gradpat)
@@ -1613,7 +1613,7 @@ nsCanvasRenderingContext2D::CreateRadialGradient(float x0, float y0, float r0, f
                                                  nsIDOMCanvasGradient **_retval)
 {
     if (!FloatValidate(x0,y0,r0,x1,y1,r1))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 
     nsRefPtr<gfxPattern> gradpat = new gfxPattern(x0, y0, r0, x1, y1, r1);
     if (!gradpat)
