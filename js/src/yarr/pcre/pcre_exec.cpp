@@ -429,6 +429,10 @@ struct MatchStack {
     /* Return true iff the instruction pointer is currently at an optional bracket,
      i.e., a bracket that may be matched zero times. */
     bool atOptionalBracket() const {
+        /* We don't need to include OP_BRAMINZERO: we try to match the group within
+         the BRAMINZERO only if we have already failed to match the rest of the 
+         regular expression. Thus, we will not be able to complete a successful
+         match by matching the group against the empty string anyway. */
         unsigned char prevOp = currentFrame->args.instructionPtr[-1];
         return prevOp == OP_BRAZERO;
     }
@@ -547,7 +551,8 @@ RECURSE:
                  bracket data. */
                 stack.currentFrame->locals.skipBytes = 3;
                 /* We must compute this value at the top, before we move the instruction pointer. */
-                stack.currentFrame->locals.minSatisfied = stack.atOptionalBracket();
+                stack.currentFrame->locals.minSatisfied = instructionPtr != stack.currentFrame->args.instructionPtr &&
+                                                          stack.atOptionalBracket();
                 do {
                     /* We need to extract this into a variable so we can correctly pass it by value
                      through RECURSIVE_MATCH_NEW_GROUP, which modifies currentFrame. */
