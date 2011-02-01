@@ -88,8 +88,12 @@ CanvasLayerD3D10::Initialize(const Data& aData)
   HANDLE shareHandle = mGLContext ? mGLContext->GetD3DShareHandle() : nsnull;
   if (shareHandle) {
     HRESULT hr = device()->OpenSharedResource(shareHandle, __uuidof(ID3D10Texture2D), getter_AddRefs(mTexture));
-    if (SUCCEEDED(hr))
+    if (SUCCEEDED(hr)) {
       mUsingSharedTexture = PR_TRUE;
+      // XXX for ANGLE, it's already the right-way up.  If we start using NV GL-D3D interop
+      // however, we'll need to do the right thing.
+      mNeedsYFlip = PR_FALSE;
+    }
   }
 
   if (!mUsingSharedTexture) {

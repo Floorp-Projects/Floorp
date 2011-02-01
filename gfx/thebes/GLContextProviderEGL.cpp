@@ -396,8 +396,8 @@ public:
         if (!fInitialize(mEGLDisplay, NULL, NULL))
             return PR_FALSE;
 
-        const char *vendor = (const char*) fQueryString(mEGLDisplay, LOCAL_EGL_VENDOR);
-        if (vendor && strstr(vendor, "TransGaming") != 0) {
+        const char *version = (const char*) fQueryString(mEGLDisplay, LOCAL_EGL_VERSION);
+        if (version && strstr(version, "ANGLE") != 0) {
             mIsANGLE = PR_TRUE;
         }
         
