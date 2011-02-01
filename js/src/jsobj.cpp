@@ -6514,10 +6514,7 @@ js_TraceObject(JSTracer *trc, JSObject *obj)
      * reserved slots (this Date issue may be a bug in JSObject::growSlots, but
      * the general problem occurs in other built-in class implementations).
      */
-    uint32 nslots = obj->numSlots();
-    if (!obj->nativeEmpty() && obj->slotSpan() < nslots)
-        nslots = obj->slotSpan();
-
+    uint32 nslots = Min(obj->numSlots(), obj->slotSpan());
     for (uint32 i = 0; i != nslots; ++i) {
         const Value &v = obj->getSlot(i);
         JS_SET_TRACING_DETAILS(trc, js_PrintObjectSlotName, obj, i);
