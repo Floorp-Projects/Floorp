@@ -1250,7 +1250,8 @@
             b.setAttribute("contextmenu", this.getAttribute("contentcontextmenu"));
             b.setAttribute("tooltip", this.getAttribute("contenttooltip"));
 
-            if (window.gShowPageResizers && document.getElementById("addon-bar").collapsed) {
+            if (window.gShowPageResizers && document.getElementById("addon-bar").collapsed &&
+                window.windowState == window.STATE_NORMAL) {
               b.setAttribute("showresizer", "true");
             }
 
