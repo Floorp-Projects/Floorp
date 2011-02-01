@@ -364,19 +364,24 @@ var PlacesOrganizer = {
   },
 
   /**
-   * Show the migration wizard for importing from a file.
+   * Show the migration wizard for importing passwords,
+     cookies, history, preferences, and bookmarks.
    */
-  importBookmarks: function PO_import() {
-    // XXX: ifdef it to be non-modal (non-"sheet") on mac (see bug 259039)
-    var features = "modal,centerscreen,chrome,resizable=no";
-
-    // The migrator window will set this to true when it closes, if the user
-    // chose to migrate from a specific file.
-    window.fromFile = false;
-    openDialog("chrome://browser/content/migration/migration.xul",
-               "migration", features, "bookmarks");
-    if (window.fromFile)
-      this.importFromFile();
+  browserImport: function PO_browserImport() {
+#ifdef XP_MACOSX
+    var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
+             .getService(Ci.nsIWindowMediator);
+    var win = wm.getMostRecentWindow("Browser:MigrationWizard");
+    if (win)
+      win.focus();
+    else {
+      window.openDialog("chrome://browser/content/migration/migration.xul",
+                        "migration", "centerscreen,chrome,resizable=no");
+    }
+#else
+    window.openDialog("chrome://browser/content/migration/migration.xul",
+                      "migration", "modal,centerscreen,chrome,resizable=no");
+#endif
   },
 
   /**
