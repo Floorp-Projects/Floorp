@@ -33,6 +33,8 @@ function testURI(aURI)
   testURIWithClearCookies(aURI);
 
   testURIWithRejectCookies(aURI);
+
+  testURIWithCasing(aURI);
 }
 
 function testURIWithPrivateBrowsing(aURI) {
@@ -107,6 +109,29 @@ function testURIWithRejectCookies(aURI) {
   // Reject.
   Services.prefs.setIntPref("network.cookie.cookieBehavior", 2);
   test_storage();
+}
+
+function testURIWithCasing(aURI) {
+  print("Testing: " + aURI.spec);
+  let storage = getStorageForURI(aURI);
+  storage.setItem("test-item", "test-value");
+  print("Check that our value has been correctly stored.");
+  do_check_eq(storage.length, 1);
+  do_check_eq(storage.key(0), "test-item");
+  do_check_eq(storage.getItem("test-item"), "test-value");
+
+  let ucSpec = aURI.spec.toUpperCase();
+  print("Testing: " + ucSpec);
+  let ucStorage = getStorageForURI(Services.io.newURI(ucSpec, null, null));
+  print("Check that our value is accessible in a case-insensitive way.");
+  do_check_eq(ucStorage.length, 1);
+  do_check_eq(ucStorage.key(0), "test-item");
+  do_check_eq(ucStorage.getItem("test-item"), "test-value");
+
+  print("Check that our value is correctly removed.");
+  storage.removeItem("test-item");
+  do_check_eq(storage.length, 0);
+  do_check_eq(storage.getItem("test-item"), null);
 }
 
 function getStorageForURI(aURI)
