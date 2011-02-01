@@ -2305,19 +2305,12 @@ nsJSContext::GetGlobalObject()
     return nsnull;
   }
 
-  JSAutoEnterCompartment ac;
-
-  // NB: This AutoCrossCompartmentCall is only here to silence a warning. If
-  // it fails, nothing bad will happen.
-  ac.enterAndIgnoreErrors(mContext, global);
-
-  nsCOMPtr<nsIScriptGlobalObject> sgo;
-  nsISupports *priv =
-    (nsISupports *)::JS_GetPrivate(mContext, global);
+  nsISupports *priv = (nsISupports *)global->getPrivate();
 
   nsCOMPtr<nsIXPConnectWrappedNative> wrapped_native =
     do_QueryInterface(priv);
 
+  nsCOMPtr<nsIScriptGlobalObject> sgo;
   if (wrapped_native) {
     // The global object is a XPConnect wrapped native, the native in
     // the wrapper might be the nsIScriptGlobalObject
