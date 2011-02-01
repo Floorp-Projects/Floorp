@@ -1358,7 +1358,7 @@ void
 JSObject::generateOwnShape(JSContext *cx)
 {
 #ifdef JS_TRACER
-    JS_ASSERT_IF(!parent && JS_ON_TRACE(cx), JS_TRACE_MONITOR(cx).bailExit);
+    JS_ASSERT_IF(!parent && JS_ON_TRACE(cx), JS_TRACE_MONITOR_ON_TRACE(cx)->bailExit);
     LeaveTraceIfGlobalObject(cx, this);
 
     /*
@@ -1366,8 +1366,7 @@ JSObject::generateOwnShape(JSContext *cx)
      * Any subsequent property operation upon object on the trace currently
      * being recorded will re-guard (and re-memoize).
      */
-    TraceMonitor *tm = &JS_TRACE_MONITOR(cx);
-    if (TraceRecorder *tr = tm->recorder)
+    if (TraceRecorder *tr = TRACE_RECORDER(cx))
         tr->forgetGuardedShapesForObject(this);
 #endif
 
