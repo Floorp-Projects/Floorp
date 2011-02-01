@@ -600,6 +600,13 @@ static const PRUint32 deviceFamilyIntelGMAX4500HD[] = {
     0
 };
 
+// see bug 612007
+static const PRUint32 deviceFamilyNvidia6200TurboCache[] = {
+    0x0161, /* NV44 [GeForce 6200 TurboCache(TM)] */
+    0x0162, /* NV44 [GeForce 6200SE TurboCache (TM)] */
+    0
+};
+
 static const GfxDriverInfo gDriverInfo[] = {
   /*
    * Notice that the first match defines the result. So always implement special cases firsts and general case last.
@@ -620,6 +627,12 @@ static const GfxDriverInfo gDriverInfo[] = {
     vendorNVIDIA, GfxDriverInfo::allDevices,
     GfxDriverInfo::allFeatures, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
     DRIVER_LESS_THAN, V(8,17,12,5721), "257.21" ),
+
+  // bug 612007: disable D3D9 layers on NVIDIA 6200 TurboCache series.
+  GfxDriverInfo( DRIVER_OS_ALL,
+    vendorNVIDIA, (GfxDeviceFamily) deviceFamilyNvidia6200TurboCache,
+    nsIGfxInfo::FEATURE_DIRECT3D_9_LAYERS, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
+    DRIVER_LESS_THAN, allDriverVersions ),
 
   /*
    * AMD/ATI entries
