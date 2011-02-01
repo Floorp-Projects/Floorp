@@ -243,16 +243,11 @@ void
 nsOuterDocAccessible::CacheChildren()
 {
   // Request document accessible for the content document to make sure it's
-  // created because once it's created it appends itself as a child.
-  nsIDocument *outerDoc = mContent->GetCurrentDoc();
-  if (!outerDoc)
-    return;
-
-  nsIDocument *innerDoc = outerDoc->GetSubDocumentFor(mContent);
-  if (!innerDoc)
-    return;
-
-  nsDocAccessible *docAcc = GetAccService()->GetDocAccessible(innerDoc);
-  NS_ASSERTION(docAcc && docAcc->GetParent() == this,
-               "Document accessible isn't a child of outerdoc accessible!");
+  // created. It will appended to outerdoc accessible children asynchronously.
+  nsIDocument* outerDoc = mContent->GetCurrentDoc();
+  if (outerDoc) {
+    nsIDocument* innerDoc = outerDoc->GetSubDocumentFor(mContent);
+    if (innerDoc)
+      GetAccService()->GetDocAccessible(innerDoc);
+  }
 }
