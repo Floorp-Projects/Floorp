@@ -6146,6 +6146,7 @@ PresShell::Paint(nsIView*           aDisplayRoot,
     if (!(frame->GetStateBits() & NS_FRAME_UPDATE_LAYER_TREE)) {
       if (layerManager->EndEmptyTransaction()) {
         frame->UpdatePaintCountForPaintedPresShells();
+        presContext->NotifyDidPaintForSubtree();
         
         return NS_OK;
       }
