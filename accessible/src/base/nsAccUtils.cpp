@@ -661,7 +661,7 @@ nsAccUtils::TextLength(nsAccessible *aAccessible)
   // XXX In the future, list bullets may have frame and anon content, so 
   // we should be able to remove this at that point
   nsAutoString text;
-  aAccessible->AppendTextTo(text, 0, PR_UINT32_MAX); // Get all the text
+  aAccessible->AppendTextTo(text); // Get all the text
   return text.Length();
 }
 
