@@ -10041,20 +10041,14 @@ nsHistorySH::PreCreate(nsISupports *nativeObj, JSContext *cx,
                        JSObject *globalObj, JSObject **parentObj)
 {
   nsHistory *history = (nsHistory *)nativeObj;
-  nsIDocShell *ds = history->GetDocShell();
-  if (!ds) {
-    NS_WARNING("Refusing to create a history object in the wrong scope");
-    return NS_ERROR_UNEXPECTED;
+  nsCOMPtr<nsPIDOMWindow> innerWindow;
+  history->GetWindow(getter_AddRefs(innerWindow));
+  if (!innerWindow) {
+    NS_WARNING("refusing to create history object in the wrong scope");
+    return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIScriptGlobalObject> sgo = do_GetInterface(ds);
-  if (!sgo) {
-    NS_WARNING("Refusing to create a history object in the wrong scope because the "
-               "docshell is being destroyed");
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  *parentObj = sgo->GetGlobalJSObject();
+  *parentObj = static_cast<nsGlobalWindow *>(innerWindow.get())->FastGetGlobalJSObject();
   return NS_OK;
 }
 
