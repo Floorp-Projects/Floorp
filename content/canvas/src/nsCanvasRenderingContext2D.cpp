@@ -3078,8 +3078,8 @@ nsCanvasRenderingContext2D::MozTextAlongPath(const nsAString& textToDraw, PRBool
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::SetLineWidth(float width)
 {
-    if (!FloatValidate(width))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+    if (!FloatValidate(width) || width <= 0.0)
+        return NS_OK;
 
     mThebes->SetLineWidth(width);
     return NS_OK;
