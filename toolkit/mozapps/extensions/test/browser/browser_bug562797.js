@@ -632,8 +632,10 @@ add_test(function() {
 // Tests that when displaying in-content and opened in the background the back
 // and forward buttons still appear when switching tabs
 add_test(function() {
-  if (!gUseInContentUI)
-    run_next_text();
+  if (!gUseInContentUI) {
+    run_next_test();
+    return;
+  }
 
   var tab = gBrowser.addTab("about:addons");
   var browser = gBrowser.getBrowserForTab(tab);
