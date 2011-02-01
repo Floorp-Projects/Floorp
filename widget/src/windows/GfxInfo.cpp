@@ -779,6 +779,11 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32 *aStatus, nsAString & aS
 
   OperatingSystem os = WindowsVersionToOperatingSystem(mWindowsVersion);
 
+  // Windows Server 2003 should be just like Windows XP for present purpose, but still has a different version number.
+  // OTOH Windows Server 2008 R1 and R2 already have the same version numbers as Vista and Seven respectively
+  if (os == DRIVER_OS_WINDOWS_SERVER_2003)
+    os = DRIVER_OS_WINDOWS_XP;
+
   const GfxDriverInfo *info;
   if (aDriverInfo)
     info = aDriverInfo;
