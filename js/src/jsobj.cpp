@@ -6508,19 +6508,10 @@ js_TraceObject(JSTracer *trc, JSObject *obj)
     }
 
     /*
-     * NB: In case clasp->mark mutates something (which would be a bug, but we
-     * want to be defensive), leave this code here -- don't move it up and
-     * unify it with the |if (!traceScope)| section above.
-     *
-     * FIXME: We minimize nslots against obj->slotSpan because native objects
-     * such as Date instances may have failed to advance slotSpan to cover all
-     * reserved slots (this Date issue may be a bug in JSObject::growSlots, but
-     * the general problem occurs in other built-in class implementations).
+     * NB: clasp->mark could mutate something (which would be a bug, but we are
+     * defensive), so don't hoist this above calling clasp->mark.
      */
-    uint32 nslots = obj->numSlots();
-    if (!obj->nativeEmpty() && obj->slotSpan() < nslots)
-        nslots = obj->slotSpan();
-
+    uint32 nslots = Min(obj->numSlots(), obj->slotSpan());
     for (uint32 i = 0; i != nslots; ++i) {
         const Value &v = obj->getSlot(i);
         JS_SET_TRACING_DETAILS(trc, js_PrintObjectSlotName, obj, i);
