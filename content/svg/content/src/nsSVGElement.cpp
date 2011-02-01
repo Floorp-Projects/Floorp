@@ -1748,15 +1748,14 @@ nsSVGElement::DidAnimatePointList()
 void
 nsSVGElement::DidChangePathSegList(PRBool aDoSetAttr)
 {
-  NS_ABORT_IF_FALSE(GetPathDataAttrName(), "Changing non-existent path data?");
-
   if (!aDoSetAttr)
     return;
 
-  nsAutoString newStr;
-  GetAnimPathSegList()->GetBaseValue().GetValueAsString(newStr);
+  nsAutoString serializedValue;
+  GetAnimPathSegList()->GetBaseValue().GetValueAsString(serializedValue);
 
-  SetAttr(kNameSpaceID_None, GetPathDataAttrName(), newStr, PR_TRUE);
+  nsAttrValue attrValue(serializedValue);
+  SetParsedAttr(kNameSpaceID_None, GetPathDataAttrName(), nsnull, attrValue, PR_TRUE);
 }
 
 void
