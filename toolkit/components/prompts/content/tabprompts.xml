@@ -115,7 +115,6 @@
         <destructor>
         <![CDATA[
             if (this.isLive) {
-                this.Dialog.abortPrompt();
                 this.shutdownPrompt();
             }
         ]]>  
