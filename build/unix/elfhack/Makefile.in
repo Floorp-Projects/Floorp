@@ -53,12 +53,16 @@ HOST_CPPSRCS = \
   elfhack.cpp \
   $(NULL)
 
-OS_CXXFLAGS += -fexceptions
+OS_CXXFLAGS := $(filter-out -fno-exceptions,$(OS_CXXFLAGS)) -fexceptions
 
 ifneq (,$(filter %86,$(TARGET_CPU)))
 CPU := x86
 else
+ifneq (,$(filter arm%,$(TARGET_CPU)))
+CPU := arm
+else
 CPU := $(TARGET_CPU)
+endif
 endif
 
 CSRCS := \
@@ -71,7 +75,12 @@ libs:: $(CSRCS:.c=.$(OBJ_SUFFIX))
 ifndef CROSS_COMPILE
 test$(DLL_SUFFIX): test.$(OBJ_SUFFIX) elfhack $(CSRCS:.c=.$(OBJ_SUFFIX))
 	$(MKSHLIB) $<
-	rm -f $@.bak
+	@echo ===
+	@echo === If you get failures below, please file a bug describing the error
+	@echo === and your environment \(compiler and linker versions\), and use
+	@echo === --disable-elf-hack until this is fixed.
+	@echo ===
+	@rm -f $@.bak
 	$(CURDIR)/elfhack -b $@
 	# Fail if the backup file doesn't exist
 	[ -f "$@.bak" ]
@@ -104,9 +113,5 @@ inject/$(CPU)-noinit.$(OBJ_SUFFIX): DEFINES += -DNOINIT
 # need this to suppress errors due to /usr/include/linux/byteorder/swab.h
 # on mozilla buildbots
 OS_CXXFLAGS := $(filter-out -pedantic,$(OS_CXXFLAGS))
-
-# Avoid building as thumb code, this is not supported yet
-COMMA := ,
-OS_CFLAGS := $(filter-out -mthumb -Wa$(COMMA)-mthumb,$(OS_CFLAGS))
 
 include $(topsrcdir)/config/rules.mk

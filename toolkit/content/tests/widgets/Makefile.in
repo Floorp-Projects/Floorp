@@ -44,7 +44,8 @@ relativesrcdir  = toolkit/content/tests/widgets
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES = 	test_bug360220.xul \
+_TEST_FILES = 	test_arrowpanel.xul \
+		test_bug360220.xul \
 		test_bug359754.xul \
 		test_bug365773.xul \
 		test_bug382990.xul \
@@ -145,10 +146,6 @@ _TEST_FILES = 	test_bug360220.xul \
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 _TEST_FILES += test_menubar.xul \
                window_menubar.xul
-endif
-
-ifneq (gtk2,$(MOZ_WIDGET_TOOLKIT))
-_TEST_FILES += test_arrowpanel.xul
 endif
 
 libs:: $(_TEST_FILES)

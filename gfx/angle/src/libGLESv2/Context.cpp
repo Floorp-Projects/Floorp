@@ -25,10 +25,8 @@
 #include "libGLESv2/RenderBuffer.h"
 #include "libGLESv2/Shader.h"
 #include "libGLESv2/Texture.h"
-#include "libGLESv2/geometry/backend.h"
 #include "libGLESv2/geometry/VertexDataManager.h"
 #include "libGLESv2/geometry/IndexDataManager.h"
-#include "libGLESv2/geometry/dx9.h"
 
 #undef near
 #undef far
@@ -139,7 +137,6 @@ Context::Context(const egl::Config *config, const gl::Context *shareContext)
     mState.packAlignment = 4;
     mState.unpackAlignment = 4;
 
-    mBufferBackEnd = NULL;
     mVertexDataManager = NULL;
     mIndexDataManager = NULL;
     mBlit = NULL;
@@ -212,7 +209,6 @@ Context::~Context()
     mTexture2DZero.set(NULL);
     mTextureCubeMapZero.set(NULL);
 
-    delete mBufferBackEnd;
     delete mVertexDataManager;
     delete mIndexDataManager;
     delete mBlit;
@@ -233,9 +229,8 @@ void Context::makeCurrent(egl::Display *display, egl::Surface *surface)
     {
         mDeviceCaps = display->getDeviceCaps();
 
-        mBufferBackEnd = new Dx9BackEnd(this, device);
-        mVertexDataManager = new VertexDataManager(this, mBufferBackEnd);
-        mIndexDataManager = new IndexDataManager(this, mBufferBackEnd);
+        mVertexDataManager = new VertexDataManager(this, device);
+        mIndexDataManager = new IndexDataManager(this, device);
         mBlit = new Blit(this);
 
         mSupportsShaderModel3 = mDeviceCaps.PixelShaderVersion == D3DPS_VERSION(3, 0);
@@ -280,6 +275,8 @@ void Context::makeCurrent(egl::Display *display, egl::Surface *surface)
         mSupportsHalfFloatTextures = display->getHalfFloatTextureSupport(&mSupportsHalfFloatLinearFilter, &mSupportsHalfFloatRenderableTextures);
         mSupportsLuminanceTextures = display->getLuminanceTextureSupport();
         mSupportsLuminanceAlphaTextures = display->getLuminanceAlphaTextureSupport();
+
+        mSupports32bitIndices = mDeviceCaps.MaxVertexIndex >= (1 << 16);
 
         initExtensionString();
 
@@ -339,11 +336,6 @@ void Context::markAllStateDirty()
     mSampleStateDirty = true;
     mDitherStateDirty = true;
     mFrontFaceDirty = true;
-
-    if (mBufferBackEnd != NULL)
-    {
-        mBufferBackEnd->invalidate();
-    }
 }
 
 void Context::setClearColor(float red, float green, float blue, float alpha)
@@ -743,12 +735,12 @@ GLuint Context::getArrayBufferHandle() const
     return mState.arrayBuffer.id();
 }
 
-void Context::setVertexAttribEnabled(unsigned int attribNum, bool enabled)
+void Context::setEnableVertexAttribArray(unsigned int attribNum, bool enabled)
 {
-    mState.vertexAttribute[attribNum].mEnabled = enabled;
+    mState.vertexAttribute[attribNum].mArrayEnabled = enabled;
 }
 
-const AttributeState &Context::getVertexAttribState(unsigned int attribNum)
+const VertexAttribute &Context::getVertexAttribState(unsigned int attribNum)
 {
     return mState.vertexAttribute[attribNum];
 }
@@ -769,8 +761,7 @@ const void *Context::getVertexAttribPointer(unsigned int attribNum) const
     return mState.vertexAttribute[attribNum].mPointer;
 }
 
-// returns entire set of attributes as a block
-const AttributeState *Context::getVertexAttribBlock()
+const VertexAttributeArray &Context::getVertexAttributes()
 {
     return mState.vertexAttribute;
 }
@@ -1656,10 +1647,11 @@ bool Context::applyRenderTarget(bool ignoreViewport)
     }
     else
     {
-        viewport.X = std::max(mState.viewportX, 0);
-        viewport.Y = std::max(mState.viewportY, 0);
-        viewport.Width = std::min(mState.viewportWidth, (int)desc.Width - (int)viewport.X);
-        viewport.Height = std::min(mState.viewportHeight, (int)desc.Height - (int)viewport.Y);
+        RECT rect = transformPixelRect(mState.viewportX, mState.viewportY, mState.viewportWidth, mState.viewportHeight, desc.Height);
+        viewport.X = clamp(rect.left, 0L, static_cast<LONG>(desc.Width));
+        viewport.Y = clamp(rect.top, 0L, static_cast<LONG>(desc.Height));
+        viewport.Width = clamp(rect.right - rect.left, 0L, static_cast<LONG>(desc.Width) - static_cast<LONG>(viewport.X));
+        viewport.Height = clamp(rect.bottom - rect.top, 0L, static_cast<LONG>(desc.Height) - static_cast<LONG>(viewport.Y));
         viewport.MinZ = zNear;
         viewport.MaxZ = zFar;
     }
@@ -1675,12 +1667,11 @@ bool Context::applyRenderTarget(bool ignoreViewport)
     {
         if (mState.scissorTest)
         {
-            RECT rect = {mState.scissorX,
-                         mState.scissorY,
-                         mState.scissorX + mState.scissorWidth,
-                         mState.scissorY + mState.scissorHeight};
-            rect.right = std::min(static_cast<UINT>(rect.right), desc.Width);
-            rect.bottom = std::min(static_cast<UINT>(rect.bottom), desc.Height);
+            RECT rect = transformPixelRect(mState.scissorX, mState.scissorY, mState.scissorWidth, mState.scissorHeight, desc.Height);
+            rect.left = clamp(rect.left, 0L, static_cast<LONG>(desc.Width));
+            rect.top = clamp(rect.top, 0L, static_cast<LONG>(desc.Height));
+            rect.right = clamp(rect.right, 0L, static_cast<LONG>(desc.Width));
+            rect.bottom = clamp(rect.bottom, 0L, static_cast<LONG>(desc.Height));
             device->SetScissorRect(&rect);
             device->SetRenderState(D3DRS_SCISSORTESTENABLE, TRUE);
         }
@@ -1697,7 +1688,7 @@ bool Context::applyRenderTarget(bool ignoreViewport)
         Program *programObject = getCurrentProgram();
 
         GLint halfPixelSize = programObject->getDxHalfPixelSizeLocation();
-        GLfloat xy[2] = {1.0f / viewport.Width, 1.0f / viewport.Height};
+        GLfloat xy[2] = {1.0f / viewport.Width, -1.0f / viewport.Height};
         programObject->setUniform2fv(halfPixelSize, 1, xy);
 
         GLint viewport = programObject->getDxViewportLocation();
@@ -1724,21 +1715,23 @@ void Context::applyState(GLenum drawMode)
     IDirect3DDevice9 *device = getDevice();
     Program *programObject = getCurrentProgram();
 
+    Framebuffer *framebufferObject = getDrawFramebuffer();
+
+    GLenum adjustedFrontFace = adjustWinding(mState.frontFace);
+
     GLint frontCCW = programObject->getDxFrontCCWLocation();
-    GLint ccw = (mState.frontFace == GL_CCW);
+    GLint ccw = (adjustedFrontFace == GL_CCW);
     programObject->setUniform1iv(frontCCW, 1, &ccw);
 
     GLint pointsOrLines = programObject->getDxPointsOrLinesLocation();
     GLint alwaysFront = !isTriangleMode(drawMode);
     programObject->setUniform1iv(pointsOrLines, 1, &alwaysFront);
 
-    Framebuffer *framebufferObject = getDrawFramebuffer();
-
     if (mCullStateDirty || mFrontFaceDirty)
     {
         if (mState.cullFace)
         {
-            device->SetRenderState(D3DRS_CULLMODE, es2dx::ConvertCullMode(mState.cullMode, mState.frontFace));
+            device->SetRenderState(D3DRS_CULLMODE, es2dx::ConvertCullMode(mState.cullMode, adjustedFrontFace));
         }
         else
         {
@@ -1833,32 +1826,32 @@ void Context::applyState(GLenum drawMode)
             gl::DepthStencilbuffer *stencilbuffer = framebufferObject->getStencilbuffer();
             GLuint maxStencil = (1 << stencilbuffer->getStencilSize()) - 1;
 
-            device->SetRenderState(mState.frontFace == GL_CCW ? D3DRS_STENCILWRITEMASK : D3DRS_CCW_STENCILWRITEMASK, mState.stencilWritemask);
-            device->SetRenderState(mState.frontFace == GL_CCW ? D3DRS_STENCILFUNC : D3DRS_CCW_STENCILFUNC, 
+            device->SetRenderState(adjustedFrontFace == GL_CCW ? D3DRS_STENCILWRITEMASK : D3DRS_CCW_STENCILWRITEMASK, mState.stencilWritemask);
+            device->SetRenderState(adjustedFrontFace == GL_CCW ? D3DRS_STENCILFUNC : D3DRS_CCW_STENCILFUNC, 
                                    es2dx::ConvertComparison(mState.stencilFunc));
 
-            device->SetRenderState(mState.frontFace == GL_CCW ? D3DRS_STENCILREF : D3DRS_CCW_STENCILREF, (mState.stencilRef < (GLint)maxStencil) ? mState.stencilRef : maxStencil);
-            device->SetRenderState(mState.frontFace == GL_CCW ? D3DRS_STENCILMASK : D3DRS_CCW_STENCILMASK, mState.stencilMask);
+            device->SetRenderState(adjustedFrontFace == GL_CCW ? D3DRS_STENCILREF : D3DRS_CCW_STENCILREF, (mState.stencilRef < (GLint)maxStencil) ? mState.stencilRef : maxStencil);
+            device->SetRenderState(adjustedFrontFace == GL_CCW ? D3DRS_STENCILMASK : D3DRS_CCW_STENCILMASK, mState.stencilMask);
 
-            device->SetRenderState(mState.frontFace == GL_CCW ? D3DRS_STENCILFAIL : D3DRS_CCW_STENCILFAIL, 
+            device->SetRenderState(adjustedFrontFace == GL_CCW ? D3DRS_STENCILFAIL : D3DRS_CCW_STENCILFAIL, 
                                    es2dx::ConvertStencilOp(mState.stencilFail));
-            device->SetRenderState(mState.frontFace == GL_CCW ? D3DRS_STENCILZFAIL : D3DRS_CCW_STENCILZFAIL, 
+            device->SetRenderState(adjustedFrontFace == GL_CCW ? D3DRS_STENCILZFAIL : D3DRS_CCW_STENCILZFAIL, 
                                    es2dx::ConvertStencilOp(mState.stencilPassDepthFail));
-            device->SetRenderState(mState.frontFace == GL_CCW ? D3DRS_STENCILPASS : D3DRS_CCW_STENCILPASS, 
+            device->SetRenderState(adjustedFrontFace == GL_CCW ? D3DRS_STENCILPASS : D3DRS_CCW_STENCILPASS, 
                                    es2dx::ConvertStencilOp(mState.stencilPassDepthPass));
 
-            device->SetRenderState(mState.frontFace == GL_CW ? D3DRS_STENCILWRITEMASK : D3DRS_CCW_STENCILWRITEMASK, mState.stencilBackWritemask);
-            device->SetRenderState(mState.frontFace == GL_CW ? D3DRS_STENCILFUNC : D3DRS_CCW_STENCILFUNC, 
+            device->SetRenderState(adjustedFrontFace == GL_CW ? D3DRS_STENCILWRITEMASK : D3DRS_CCW_STENCILWRITEMASK, mState.stencilBackWritemask);
+            device->SetRenderState(adjustedFrontFace == GL_CW ? D3DRS_STENCILFUNC : D3DRS_CCW_STENCILFUNC, 
                                    es2dx::ConvertComparison(mState.stencilBackFunc));
 
-            device->SetRenderState(mState.frontFace == GL_CW ? D3DRS_STENCILREF : D3DRS_CCW_STENCILREF, (mState.stencilBackRef < (GLint)maxStencil) ? mState.stencilBackRef : maxStencil);
-            device->SetRenderState(mState.frontFace == GL_CW ? D3DRS_STENCILMASK : D3DRS_CCW_STENCILMASK, mState.stencilBackMask);
+            device->SetRenderState(adjustedFrontFace == GL_CW ? D3DRS_STENCILREF : D3DRS_CCW_STENCILREF, (mState.stencilBackRef < (GLint)maxStencil) ? mState.stencilBackRef : maxStencil);
+            device->SetRenderState(adjustedFrontFace == GL_CW ? D3DRS_STENCILMASK : D3DRS_CCW_STENCILMASK, mState.stencilBackMask);
 
-            device->SetRenderState(mState.frontFace == GL_CW ? D3DRS_STENCILFAIL : D3DRS_CCW_STENCILFAIL, 
+            device->SetRenderState(adjustedFrontFace == GL_CW ? D3DRS_STENCILFAIL : D3DRS_CCW_STENCILFAIL, 
                                    es2dx::ConvertStencilOp(mState.stencilBackFail));
-            device->SetRenderState(mState.frontFace == GL_CW ? D3DRS_STENCILZFAIL : D3DRS_CCW_STENCILZFAIL, 
+            device->SetRenderState(adjustedFrontFace == GL_CW ? D3DRS_STENCILZFAIL : D3DRS_CCW_STENCILZFAIL, 
                                    es2dx::ConvertStencilOp(mState.stencilBackPassDepthFail));
-            device->SetRenderState(mState.frontFace == GL_CW ? D3DRS_STENCILPASS : D3DRS_CCW_STENCILPASS, 
+            device->SetRenderState(adjustedFrontFace == GL_CW ? D3DRS_STENCILPASS : D3DRS_CCW_STENCILPASS, 
                                    es2dx::ConvertStencilOp(mState.stencilBackPassDepthPass));
         }
         else
@@ -1963,18 +1956,18 @@ void Context::lookupAttributeMapping(TranslatedAttribute *attributes)
 {
     for (int i = 0; i < MAX_VERTEX_ATTRIBS; i++)
     {
-        if (attributes[i].enabled)
+        if (attributes[i].active)
         {
             attributes[i].semanticIndex = getCurrentProgram()->getSemanticIndex(i);
         }
     }
 }
 
-GLenum Context::applyVertexBuffer(GLenum mode, GLint first, GLsizei count, bool *useIndexing, TranslatedIndexData *indexInfo)
+GLenum Context::applyVertexBuffer(GLint first, GLsizei count)
 {
     TranslatedAttribute translated[MAX_VERTEX_ATTRIBS];
 
-    GLenum err = mVertexDataManager->preRenderValidate(first, count, translated);
+    GLenum err = mVertexDataManager->prepareVertexData(first, count, translated);
     if (err != GL_NO_ERROR)
     {
         return err;
@@ -1982,53 +1975,20 @@ GLenum Context::applyVertexBuffer(GLenum mode, GLint first, GLsizei count, bool 
 
     lookupAttributeMapping(translated);
 
-    mBufferBackEnd->setupAttributesPreDraw(translated);
+    mVertexDataManager->setupAttributes(translated);
 
-    for (int i = 0; i < MAX_VERTEX_ATTRIBS; i++)
-    {
-        if (translated[i].enabled && translated[i].nonArray)
-        {
-            err = mIndexDataManager->preRenderValidateUnindexed(mode, count, indexInfo);
-            if (err != GL_NO_ERROR)
-            {
-                return err;
-            }
-
-            mBufferBackEnd->setupIndicesPreDraw(*indexInfo);
-
-            *useIndexing = true;
-            return GL_NO_ERROR;
-        }
-    }
-
-    *useIndexing = false;
     return GL_NO_ERROR;
-}
-
-GLenum Context::applyVertexBuffer(const TranslatedIndexData &indexInfo)
-{
-    TranslatedAttribute translated[MAX_VERTEX_ATTRIBS];
-
-    GLenum err = mVertexDataManager->preRenderValidate(indexInfo.minIndex, indexInfo.maxIndex-indexInfo.minIndex+1, translated);
-
-    if (err == GL_NO_ERROR)
-    {
-        lookupAttributeMapping(translated);
-
-        mBufferBackEnd->setupAttributesPreDraw(translated);
-    }
-
-    return err;
 }
 
 // Applies the indices and element array bindings to the Direct3D 9 device
 GLenum Context::applyIndexBuffer(const void *indices, GLsizei count, GLenum mode, GLenum type, TranslatedIndexData *indexInfo)
 {
-    GLenum err = mIndexDataManager->preRenderValidate(mode, type, count, mState.elementArrayBuffer.get(), indices, indexInfo);
+    IDirect3DDevice9 *device = getDevice();
+    GLenum err = mIndexDataManager->prepareIndexData(type, count, mState.elementArrayBuffer.get(), indices, indexInfo);
 
     if (err == GL_NO_ERROR)
     {
-        mBufferBackEnd->setupIndicesPreDraw(*indexInfo);
+        device->SetIndices(indexInfo->indexBuffer);
     }
 
     return err;
@@ -2168,10 +2128,11 @@ void Context::readPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum
     }
 
     D3DLOCKED_RECT lock;
-    RECT rect = {std::max(x, 0),
-                 std::max(y, 0),
-                 std::min(x + width, (int)desc.Width),
-                 std::min(y + height, (int)desc.Height)};
+    RECT rect = transformPixelRect(x, y, width, height, desc.Height);
+    rect.left = clamp(rect.left, 0L, static_cast<LONG>(desc.Width));
+    rect.top = clamp(rect.top, 0L, static_cast<LONG>(desc.Height));
+    rect.right = clamp(rect.right, 0L, static_cast<LONG>(desc.Width));
+    rect.bottom = clamp(rect.bottom, 0L, static_cast<LONG>(desc.Height));
 
     result = systemSurface->LockRect(&lock, &rect, D3DLOCK_READONLY);
 
@@ -2183,10 +2144,10 @@ void Context::readPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum
         return;   // No sensible error to generate
     }
 
-    unsigned char *source = (unsigned char*)lock.pBits;
+    unsigned char *source = ((unsigned char*)lock.pBits) + lock.Pitch * (rect.bottom - rect.top - 1);
     unsigned char *dest = (unsigned char*)pixels;
     unsigned short *dest16 = (unsigned short*)pixels;
-
+    int inputPitch = -lock.Pitch;
     GLsizei outputPitch = ComputePitch(width, format, type, mState.packAlignment);
 
     for (int j = 0; j < rect.bottom - rect.top; j++)
@@ -2199,7 +2160,7 @@ void Context::readPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum
             // an RGBA source buffer.  Note that buffers with no
             // alpha go through the slow path below.
             memcpy(dest + j * outputPitch,
-                   source + j * lock.Pitch,
+                   source + j * inputPitch,
                    (rect.right - rect.left) * 4);
             continue;
         }
@@ -2215,7 +2176,7 @@ void Context::readPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum
             {
               case D3DFMT_R5G6B5:
                 {
-                    unsigned short rgb = *(unsigned short*)(source + 2 * i + j * lock.Pitch);
+                    unsigned short rgb = *(unsigned short*)(source + 2 * i + j * inputPitch);
 
                     a = 1.0f;
                     b = (rgb & 0x001F) * (1.0f / 0x001F);
@@ -2225,7 +2186,7 @@ void Context::readPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum
                 break;
               case D3DFMT_A1R5G5B5:
                 {
-                    unsigned short argb = *(unsigned short*)(source + 2 * i + j * lock.Pitch);
+                    unsigned short argb = *(unsigned short*)(source + 2 * i + j * inputPitch);
 
                     a = (argb & 0x8000) ? 1.0f : 0.0f;
                     b = (argb & 0x001F) * (1.0f / 0x001F);
@@ -2235,7 +2196,7 @@ void Context::readPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum
                 break;
               case D3DFMT_A8R8G8B8:
                 {
-                    unsigned int argb = *(unsigned int*)(source + 4 * i + j * lock.Pitch);
+                    unsigned int argb = *(unsigned int*)(source + 4 * i + j * inputPitch);
 
                     a = (argb & 0xFF000000) * (1.0f / 0xFF000000);
                     b = (argb & 0x000000FF) * (1.0f / 0x000000FF);
@@ -2245,7 +2206,7 @@ void Context::readPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum
                 break;
               case D3DFMT_X8R8G8B8:
                 {
-                    unsigned int xrgb = *(unsigned int*)(source + 4 * i + j * lock.Pitch);
+                    unsigned int xrgb = *(unsigned int*)(source + 4 * i + j * inputPitch);
 
                     a = 1.0f;
                     b = (xrgb & 0x000000FF) * (1.0f / 0x000000FF);
@@ -2255,7 +2216,7 @@ void Context::readPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum
                 break;
               case D3DFMT_A2R10G10B10:
                 {
-                    unsigned int argb = *(unsigned int*)(source + 4 * i + j * lock.Pitch);
+                    unsigned int argb = *(unsigned int*)(source + 4 * i + j * inputPitch);
 
                     a = (argb & 0xC0000000) * (1.0f / 0xC0000000);
                     b = (argb & 0x000003FF) * (1.0f / 0x000003FF);
@@ -2266,10 +2227,10 @@ void Context::readPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum
               case D3DFMT_A32B32G32R32F:
                 {
                     // float formats in D3D are stored rgba, rather than the other way round
-                    r = *((float*)(source + 16 * i + j * lock.Pitch) + 0);
-                    g = *((float*)(source + 16 * i + j * lock.Pitch) + 1);
-                    b = *((float*)(source + 16 * i + j * lock.Pitch) + 2);
-                    a = *((float*)(source + 16 * i + j * lock.Pitch) + 3);
+                    r = *((float*)(source + 16 * i + j * inputPitch) + 0);
+                    g = *((float*)(source + 16 * i + j * inputPitch) + 1);
+                    b = *((float*)(source + 16 * i + j * inputPitch) + 2);
+                    a = *((float*)(source + 16 * i + j * inputPitch) + 3);
                 }
                 break;
               case D3DFMT_A16B16G16R16F:
@@ -2277,7 +2238,7 @@ void Context::readPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum
                     // float formats in D3D are stored rgba, rather than the other way round
                     float abgr[4];
 
-                    D3DXFloat16To32Array(abgr, (D3DXFLOAT16*)(source + 8 * i + j * lock.Pitch), 4);
+                    D3DXFloat16To32Array(abgr, (D3DXFLOAT16*)(source + 8 * i + j * inputPitch), 4);
 
                     a = abgr[3];
                     b = abgr[2];
@@ -2486,7 +2447,6 @@ void Context::clear(GLbitfield mask)
             device->SetPixelShader(NULL);
             device->SetVertexShader(NULL);
             device->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE);
-            device->SetStreamSourceFreq(0, 1);
             device->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_DISABLE);
 
             hr = device->EndStateBlock(&mMaskedClearSavedState);
@@ -2542,7 +2502,6 @@ void Context::clear(GLbitfield mask)
         device->SetPixelShader(NULL);
         device->SetVertexShader(NULL);
         device->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE);
-        device->SetStreamSourceFreq(0, 1);
         device->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_DISABLE);
 
         struct Vertex
@@ -2624,9 +2583,7 @@ void Context::drawArrays(GLenum mode, GLint first, GLsizei count)
 
     applyState(mode);
 
-    TranslatedIndexData indexInfo;
-    bool useIndexing;
-    GLenum err = applyVertexBuffer(mode, first, count, &useIndexing, &indexInfo);
+    GLenum err = applyVertexBuffer(first, count);
     if (err != GL_NO_ERROR)
     {
         return error(err);
@@ -2643,18 +2600,17 @@ void Context::drawArrays(GLenum mode, GLint first, GLsizei count)
     if (!cullSkipsDraw(mode))
     {
         display->startScene();
-        if (useIndexing)
+        
+        device->DrawPrimitive(primitiveType, 0, primitiveCount);
+
+        if (mode == GL_LINE_LOOP)   // Draw the last segment separately
         {
-            device->DrawIndexedPrimitive(primitiveType, -(INT)indexInfo.minIndex, indexInfo.minIndex, indexInfo.maxIndex-indexInfo.minIndex+1, indexInfo.offset/indexInfo.indexSize, primitiveCount);
-        }
-        else
-        {
-            device->DrawPrimitive(primitiveType, 0, primitiveCount);
+            drawClosingLine(first, first + count - 1);
         }
     }
 }
 
-void Context::drawElements(GLenum mode, GLsizei count, GLenum type, const void* indices)
+void Context::drawElements(GLenum mode, GLsizei count, GLenum type, const void *indices)
 {
     if (!mState.currentProgram)
     {
@@ -2693,7 +2649,8 @@ void Context::drawElements(GLenum mode, GLsizei count, GLenum type, const void* 
         return error(err);
     }
 
-    err = applyVertexBuffer(indexInfo);
+    GLsizei vertexCount = indexInfo.maxIndex - indexInfo.minIndex + 1;
+    err = applyVertexBuffer(indexInfo.minIndex, vertexCount);
     if (err != GL_NO_ERROR)
     {
         return error(err);
@@ -2710,7 +2667,13 @@ void Context::drawElements(GLenum mode, GLsizei count, GLenum type, const void* 
     if (!cullSkipsDraw(mode))
     {
         display->startScene();
-        device->DrawIndexedPrimitive(primitiveType, -(INT)indexInfo.minIndex, indexInfo.minIndex, indexInfo.maxIndex-indexInfo.minIndex+1, indexInfo.offset/indexInfo.indexSize, primitiveCount);
+
+        device->DrawIndexedPrimitive(primitiveType, -(INT)indexInfo.minIndex, indexInfo.minIndex, vertexCount, indexInfo.startIndex, primitiveCount);
+
+        if (mode == GL_LINE_LOOP)   // Draw the last segment separately
+        {
+            drawClosingLine(count, type, indices);
+        }
     }
 }
 
@@ -2738,7 +2701,6 @@ void Context::finish()
         ASSERT(SUCCEEDED(result));
 
         // Render something outside the render target
-        device->SetStreamSourceFreq(0, 1);
         device->SetPixelShader(NULL);
         device->SetVertexShader(NULL);
         device->SetFVF(D3DFVF_XYZRHW);
@@ -2792,6 +2754,93 @@ void Context::flush()
             error(GL_OUT_OF_MEMORY);
         }
     }
+}
+
+void Context::drawClosingLine(unsigned int first, unsigned int last)
+{
+    IDirect3DDevice9 *device = getDevice();
+    IDirect3DIndexBuffer9 *indexBuffer = NULL;
+    HRESULT result = D3DERR_INVALIDCALL;
+
+    if (supports32bitIndices())
+    {
+        result = device->CreateIndexBuffer(8, D3DUSAGE_WRITEONLY, D3DFMT_INDEX32, D3DPOOL_DEFAULT, &indexBuffer, 0);
+
+        if (SUCCEEDED(result))
+        {
+            unsigned int *data;
+            result = indexBuffer->Lock(0, 0, (void**)&data, 0);
+
+            if (SUCCEEDED(result))
+            {
+                data[0] = last;
+                data[1] = first;
+            }
+        }
+    }
+    else
+    {
+        result = device->CreateIndexBuffer(4, D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_DEFAULT, &indexBuffer, 0);
+
+        if (SUCCEEDED(result))
+        {
+            unsigned short *data;
+            result = indexBuffer->Lock(0, 0, (void**)&data, 0);
+
+            if (SUCCEEDED(result))
+            {
+                data[0] = last;
+                data[1] = first;
+            }
+        }
+    }
+    
+    if (SUCCEEDED(result))
+    {
+        indexBuffer->Unlock();
+        device->SetIndices(indexBuffer);
+
+        device->DrawIndexedPrimitive(D3DPT_LINELIST, 0, 0, 2, 0, 1);
+
+        indexBuffer->Release();
+    }
+    else
+    {
+        ERR("Could not create an index buffer for closing a line loop.");
+        error(GL_OUT_OF_MEMORY);
+    }
+}
+
+void Context::drawClosingLine(GLsizei count, GLenum type, const void *indices)
+{
+    unsigned int first = 0;
+    unsigned int last = 0;
+
+    if (mState.elementArrayBuffer.get())
+    {
+        Buffer *indexBuffer = mState.elementArrayBuffer.get();
+        intptr_t offset = reinterpret_cast<intptr_t>(indices);
+        indices = static_cast<const GLubyte*>(indexBuffer->data()) + offset;
+    }
+
+    switch (type)
+    {
+      case GL_UNSIGNED_BYTE:
+        first = static_cast<const GLubyte*>(indices)[0];
+        last = static_cast<const GLubyte*>(indices)[count - 1];
+        break;
+      case GL_UNSIGNED_SHORT:
+        first = static_cast<const GLushort*>(indices)[0];
+        last = static_cast<const GLushort*>(indices)[count - 1];
+        break;
+      case GL_UNSIGNED_INT:
+        first = static_cast<const GLuint*>(indices)[0];
+        last = static_cast<const GLuint*>(indices)[count - 1];
+        break;
+      default: UNREACHABLE();
+    }
+
+    drawClosingLine(first, last);
 }
 
 void Context::recordInvalidEnum()
@@ -2973,6 +3022,11 @@ bool Context::supportsLuminanceTextures() const
 bool Context::supportsLuminanceAlphaTextures() const
 {
     return mSupportsLuminanceAlphaTextures;
+}
+
+bool Context::supports32bitIndices() const
+{
+    return mSupports32bitIndices;
 }
 
 void Context::detachBuffer(GLuint buffer)
@@ -3160,7 +3214,7 @@ void Context::setVertexAttrib(GLuint index, const GLfloat *values)
     mState.vertexAttribute[index].mCurrentValue[2] = values[2];
     mState.vertexAttribute[index].mCurrentValue[3] = values[3];
 
-    mVertexDataManager->dirtyCurrentValues();
+    mVertexDataManager->dirtyCurrentValue(index);
 }
 
 void Context::initExtensionString()
@@ -3207,7 +3261,7 @@ void Context::initExtensionString()
         mExtensionString += "GL_ANGLE_framebuffer_multisample ";
     }
 
-    if (mBufferBackEnd->supportIntIndices())
+    if (supports32bitIndices())
     {
         mExtensionString += "GL_OES_element_index_uint ";
     }
@@ -3244,6 +3298,11 @@ void Context::blitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1
         return error(GL_INVALID_OPERATION);
     }
 
+    int readBufferWidth = readFramebuffer->getColorbuffer()->getWidth();
+    int readBufferHeight = readFramebuffer->getColorbuffer()->getHeight();
+    int drawBufferWidth = drawFramebuffer->getColorbuffer()->getWidth();
+    int drawBufferHeight = drawFramebuffer->getColorbuffer()->getHeight();
+
     RECT sourceRect;
     RECT destRect;
 
@@ -3262,21 +3321,19 @@ void Context::blitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1
         destRect.right = dstX0;
     }
 
-    // Arguments to StretchRect must be in D3D-style (0-top) coordinates, so we must 
-    // flip our Y-values here
     if (srcY0 < srcY1)
     {
-        sourceRect.bottom = srcY1;
-        destRect.bottom = dstY1;
-        sourceRect.top = srcY0;
-        destRect.top = dstY0;
+        sourceRect.top = readBufferHeight - srcY1;
+        destRect.top = drawBufferHeight - dstY1;
+        sourceRect.bottom = readBufferHeight - srcY0;
+        destRect.bottom = drawBufferHeight - dstY0;
     }
     else
     {
-        sourceRect.bottom = srcY0;
-        destRect.bottom = dstY0;
-        sourceRect.top = srcY1;
-        destRect.top = dstY1;
+        sourceRect.top = readBufferHeight - srcY0;
+        destRect.top = drawBufferHeight - dstY0;
+        sourceRect.bottom = readBufferHeight - srcY1;
+        destRect.bottom = drawBufferHeight - dstY1;
     }
 
     RECT sourceScissoredRect = sourceRect;
@@ -3331,11 +3388,6 @@ void Context::blitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1
         destTrimmedRect.left += xDiff;
     }
 
-    int readBufferWidth = readFramebuffer->getColorbuffer()->getWidth();
-    int readBufferHeight = readFramebuffer->getColorbuffer()->getHeight();
-    int drawBufferWidth = drawFramebuffer->getColorbuffer()->getWidth();
-    int drawBufferHeight = drawFramebuffer->getColorbuffer()->getHeight();
-
     if (sourceTrimmedRect.right > readBufferWidth)
     {
         int xDiff = sourceTrimmedRect.right - readBufferWidth;
@@ -3386,10 +3438,10 @@ void Context::blitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1
     }
 
     bool partialBufferCopy = false;
-    if (sourceTrimmedRect.bottom - sourceTrimmedRect.top < readFramebuffer->getColorbuffer()->getHeight() ||
-        sourceTrimmedRect.right - sourceTrimmedRect.left < readFramebuffer->getColorbuffer()->getWidth() || 
-        destTrimmedRect.bottom - destTrimmedRect.top < drawFramebuffer->getColorbuffer()->getHeight() ||
-        destTrimmedRect.right - destTrimmedRect.left < drawFramebuffer->getColorbuffer()->getWidth() ||
+    if (sourceTrimmedRect.bottom - sourceTrimmedRect.top < readBufferHeight ||
+        sourceTrimmedRect.right - sourceTrimmedRect.left < readBufferWidth || 
+        destTrimmedRect.bottom - destTrimmedRect.top < drawBufferHeight ||
+        destTrimmedRect.right - destTrimmedRect.left < drawBufferWidth ||
         sourceTrimmedRect.top != 0 || destTrimmedRect.top != 0 || sourceTrimmedRect.left != 0 || destTrimmedRect.left != 0)
     {
         partialBufferCopy = true;

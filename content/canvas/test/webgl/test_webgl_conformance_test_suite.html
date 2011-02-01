@@ -45,32 +45,32 @@ function start() {
     return svc;
   }
 
-  function setEnabledForAllSites(value) {
+  function setForceEnabled(value) {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    prefSvc().setBoolPref("webgl.enabled_for_all_sites", value);
+    prefSvc().setBoolPref("webgl.force-enabled", value);
   }
 
-  function getEnabledForAllSites() {
+  function getForceEnabled() {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    return prefSvc().getBoolPref("webgl.enabled_for_all_sites");
+    return prefSvc().getBoolPref("webgl.force-enabled");
   }
 
   function setPreferGL(value) {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    prefSvc().setBoolPref("webgl.prefer_gl", value);
+    prefSvc().setBoolPref("webgl.prefer-native-gl", value);
   }
 
   function getPreferGL() {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     var retval = false;
     try {
-      retval = prefSvc().getBoolPref("webgl.prefer_gl");
+      retval = prefSvc().getBoolPref("webgl.prefer-native-gl");
     } catch (ex) { }
     return retval;
   }
 
   function restoreOldPrefs() {
-    setEnabledForAllSites(saved_enabled_for_all_sites);
+    setForceEnabled(saved_force_enabled);
     setPreferGL(saved_prefer_gl);
   }
 
@@ -296,7 +296,7 @@ function start() {
     var reporter = new Reporter();
 
     // set WebGL-related preferences needed to run WebGL tests
-    setEnabledForAllSites(true);
+    setForceEnabled(true);
 
     // XXX temporary hack. Until the DirectX runtime is deployed on test slaves, we just use OpenGL,
     // so that rel-eng can safely deploy DirectX runtime without getting sudden mochitest failures
@@ -374,7 +374,10 @@ function start() {
       var version = Components.classes["@mozilla.org/system-info;1"]
                               .getService(Components.interfaces.nsIPropertyBag2)
                               .getProperty("version");
-      is106orHigher = (parseFloat(version) >= 10.6);
+      // the next line is correct: Mac OS 10.6 corresponds to Darwin version 10 !
+      // Mac OS 10.5 would be Darwin version 9. the |version| string we've got here
+      // is the Darwin version.
+      is106orHigher = (parseFloat(version) >= 10.0);
     } catch (ex) { }
     if (!is106orHigher) {
       dump("WebGL mochitest disabled on Mac OSX versions older than 10.6");
@@ -383,7 +386,7 @@ function start() {
     }
   }
 
-  var saved_enabled_for_all_sites = getEnabledForAllSites();
+  var saved_force_enabled = getForceEnabled();
   var saved_prefer_gl = getPreferGL();
 
   var statusElem = document.getElementById("status");

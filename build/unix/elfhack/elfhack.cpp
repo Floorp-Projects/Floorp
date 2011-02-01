@@ -35,6 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#undef NDEBUG
 #include <assert.h>
 #include <cstring>
 #include <cstdlib>
@@ -122,22 +123,43 @@ public:
         if (elf->getMachine() != parent.getMachine())
             throw std::runtime_error("architecture of object for injected code doesn't match");
 
+        ElfSymtab_Section *symtab = NULL;
+
         // Get all executable sections from the injected code object.
         // Most of the time, there will only be one for the init function,
         // but on e.g. x86, there is a separate section for
         // __i686.get_pc_thunk.$reg
-        for (ElfSection *text = elf->getSection(1); text != NULL;
-             text = text->getNext()) {
-            if ((text->getType() == SHT_PROGBITS) &&
-                (text->getFlags() & SHF_EXECINSTR)) {
-                code.push_back(text);
+        // Find the symbol table at the same time.
+        for (ElfSection *section = elf->getSection(1); section != NULL;
+             section = section->getNext()) {
+            if ((section->getType() == SHT_PROGBITS) &&
+                (section->getFlags() & SHF_EXECINSTR)) {
+                code.push_back(section);
                 // We need to align this section depending on the greater
                 // alignment required by code sections.
-                if (shdr.sh_addralign < text->getAddrAlign())
-                    shdr.sh_addralign = text->getAddrAlign();
+                if (shdr.sh_addralign < section->getAddrAlign())
+                    shdr.sh_addralign = section->getAddrAlign();
+            } else if (section->getType() == SHT_SYMTAB) {
+                symtab = (ElfSymtab_Section *) section;
             }
         }
         assert(code.size() != 0);
+        if (symtab == NULL)
+            throw std::runtime_error("Couldn't find a symbol table for the injected code");
+
+        // Find the init symbol
+        entry_point = -1;
+        int shndx = 0;
+        for (std::vector<Elf_SymValue>::iterator sym = symtab->syms.begin();
+             sym != symtab->syms.end(); sym++) {
+            if (strcmp(sym->name, "init") == 0) {
+                entry_point = sym->value.getValue();
+                shndx = sym->value.getSection()->getIndex();
+                break;
+            }
+        }
+        if (entry_point == -1)
+            throw std::runtime_error("Couldn't find an 'init' symbol in the injected code");
 
         // Adjust code sections offsets according to their size
         std::vector<ElfSection *>::iterator c = code.begin();
@@ -154,6 +176,8 @@ public:
         for (c = code.begin(); c != code.end(); c++) {
             memcpy(buf, (*c)->getData(), (*c)->getSize());
             buf += (*c)->getSize();
+            if ((*c)->getIndex() < shndx)
+                entry_point += (*c)->getSize();
         }
         name = elfhack_text;
     }
@@ -187,6 +211,9 @@ public:
         return true;
     }
 
+    unsigned int getEntryPoint() {
+        return entry_point;
+    }
 private:
     void apply_pc32_relocation(ElfSection *the_code, char *base, Elf_Rel *r, unsigned int addr)
     {
@@ -233,12 +260,11 @@ private:
         char *buf = data + (the_code->getAddr() - code.front()->getAddr());
         // TODO: various checks on the sections
         ElfSymtab_Section *symtab = (ElfSymtab_Section *)rel->getLink();
-        ElfStrtab_Section *strtab = (ElfStrtab_Section *)symtab->getLink();
         for (typename std::vector<Rel_Type>::iterator r = rel->rels.begin(); r != rel->rels.end(); r++) {
             // TODO: various checks on the symbol
-            const char *name = strtab->getStr(symtab->syms[ELF32_R_SYM(r->r_info)].st_name);
+            const char *name = symtab->syms[ELF32_R_SYM(r->r_info)].name;
             unsigned int addr;
-            if (symtab->syms[ELF32_R_SYM(r->r_info)].st_shndx == 0) {
+            if (symtab->syms[ELF32_R_SYM(r->r_info)].value.getSection() == NULL) {
                 if (strcmp(name, "relhack") == 0) {
                     addr = getNext()->getAddr();
                 } else if (strcmp(name, "elf_header") == 0) {
@@ -255,13 +281,12 @@ private:
                     // This is for R_ARM_V4BX, until we find something better
                     addr = -1;
                 } else {
-                    fprintf(stderr, "Unsupported symbol in relocation: %s\n", name);
-                    break;
+                    throw std::runtime_error("Unsupported symbol in relocation");
                 }
             } else {
-                ElfSection *section = elf->getSection(symtab->syms[ELF32_R_SYM(r->r_info)].st_shndx);
+                ElfSection *section = symtab->syms[ELF32_R_SYM(r->r_info)].value.getSection();
                 assert((section->getType() == SHT_PROGBITS) && (section->getFlags() & SHF_EXECINSTR));
-                addr = section->getAddr() + symtab->syms[ELF32_R_SYM(r->r_info)].st_value;
+                addr = symtab->syms[ELF32_R_SYM(r->r_info)].value.getValue();
             }
             // Do the relocation
 #define REL(machine, type) (EM_ ## machine | (R_ ## machine ## _ ## type << 8))
@@ -283,7 +308,7 @@ private:
                 // Ignore R_ARM_V4BX relocations
                 break;
             default:
-                fprintf(stderr, "Unsupported relocation type\n");
+                throw std::runtime_error("Unsupported relocation type");
             }
         }
     }
@@ -291,6 +316,7 @@ private:
     Elf *elf, &parent;
     std::vector<ElfSection *> code;
     ElfSection *init;
+    int entry_point;
 };
 
 template <typename Rel_Type>
@@ -316,8 +342,6 @@ int do_relocation_section(Elf *elf, unsigned int rel_type)
     Elf_Shdr relhackcode_section(relhackcode32_section);
     ElfRelHack_Section *relhack = new ElfRelHack_Section(relhack_section);
     ElfRelHackCode_Section *relhackcode = new ElfRelHackCode_Section(relhackcode_section, *elf);
-    relhackcode->insertAfter(section);
-    relhack->insertAfter(relhackcode);
 
     std::vector<Rel_Type> new_rels;
     Elf_RelHack relhack_entry;
@@ -350,12 +374,16 @@ int do_relocation_section(Elf *elf, unsigned int rel_type)
     relhack_entry.r_offset = relhack_entry.r_info = 0;
     relhack->push_back(relhack_entry);
 
+    relhackcode->insertAfter(section);
+    relhack->insertAfter(relhackcode);
+
     section->rels.assign(new_rels.begin(), new_rels.end());
     section->shrink(new_rels.size() * section->getEntSize());
-    ElfLocation *init = new ElfLocation(relhackcode, 0);
+    ElfLocation *init = new ElfLocation(relhackcode, relhackcode->getEntryPoint());
     dyn->setValueForType(DT_INIT, init);
     // TODO: adjust the value according to the remaining number of relative relocations
-    dyn->setValueForType(Rel_Type::d_tag_count, new ElfPlainValue(0));
+    if (dyn->getValueForType(Rel_Type::d_tag_count))
+        dyn->setValueForType(Rel_Type::d_tag_count, new ElfPlainValue(0));
     return 0;
 }
 

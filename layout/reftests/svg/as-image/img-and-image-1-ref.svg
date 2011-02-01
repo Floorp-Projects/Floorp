@@ -29,18 +29,10 @@
     <!-- Single column from the testcase -->
     <g id="column">
       <use y="0"   xlink:href="#pAR_xMaxYMax_slice" width="60"  height="20"/>
-<!--
-      XXXdholbert As of bug 628747, the svg:image elements *within* an SVG
-      image are no longer honored, so I'm commenting out the chunk of this
-      reference case that was expected to match those parts of the testcase.
-      We might eventually want to just remove this chunk, but I'm leaving it
-      for now in case we refine this behavior later on.
-
       <use y="50"  xlink:href="#pAR_xMinYMin_slice" width="100" height="40"/>
       <use y="100" xlink:href="#pAR_none"           width="100" height="40"/>
       <use y="150" xlink:href="#pAR_xMaxYMax_meet"  width="80"  height="40"/>
       <use y="200" xlink:href="#pAR_xMaxYMax_slice" width="80"  height="40"/>
--->
       <use y="250" xlink:href="#pAR_xMaxYMax_slice" width="30"  height="50"/>
     </g>
   </defs>

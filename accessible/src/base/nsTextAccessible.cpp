@@ -48,6 +48,7 @@ nsTextAccessible::
   nsTextAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
   nsLinkableAccessible(aContent, aShell)
 {
+  mFlags |= eTextLeafAccessible;
 }
 
 PRUint32
@@ -56,13 +57,11 @@ nsTextAccessible::NativeRole()
   return nsIAccessibleRole::ROLE_TEXT_LEAF;
 }
 
-nsresult
-nsTextAccessible::AppendTextTo(nsAString& aText, PRUint32 aStartOffset, PRUint32 aLength)
+void
+nsTextAccessible::AppendTextTo(nsAString& aText, PRUint32 aStartOffset,
+                               PRUint32 aLength)
 {
-  nsIFrame *frame = GetFrame();
-  if (!frame) return NS_ERROR_FAILURE;//NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
-
-  return frame->GetRenderedText(&aText, nsnull, nsnull, aStartOffset, aLength);
+  aText.Append(Substring(mText, aStartOffset, aLength));
 }
 
 void

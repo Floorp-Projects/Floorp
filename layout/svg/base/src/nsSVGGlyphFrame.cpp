@@ -62,7 +62,11 @@ struct CharacterPosition {
   gfxFloat angle;
   PRBool draw;
 };
-  
+
+static gfxContext* MakeTmpCtx() {
+  return new gfxContext(gfxPlatform::GetPlatform()->ScreenReferenceSurface());
+}
+
 /**
  * This is a do-it-all helper class. It supports iterating through the
  * drawable character clusters of a string. For each cluster, it can set up
@@ -412,42 +416,50 @@ nsSVGGlyphFrame::PaintSVG(nsSVGRenderState *aContext,
 NS_IMETHODIMP_(nsIFrame*)
 nsSVGGlyphFrame::GetFrameForPoint(const nsPoint &aPoint)
 {
-  if (!mRect.Contains(aPoint))
+  PRUint16 mask = GetHittestMask();
+  if (!mask) {
     return nsnull;
-
-  PRBool events = PR_FALSE;
-  switch (GetStyleVisibility()->mPointerEvents) {
-    case NS_STYLE_POINTER_EVENTS_NONE:
-      break;
-    case NS_STYLE_POINTER_EVENTS_VISIBLEPAINTED:
-    case NS_STYLE_POINTER_EVENTS_AUTO:
-      if (GetStyleVisibility()->IsVisible() &&
-          (GetStyleSVG()->mFill.mType != eStyleSVGPaintType_None ||
-           GetStyleSVG()->mStroke.mType != eStyleSVGPaintType_None))
-        events = PR_TRUE;
-      break;
-    case NS_STYLE_POINTER_EVENTS_VISIBLEFILL:
-    case NS_STYLE_POINTER_EVENTS_VISIBLESTROKE:
-    case NS_STYLE_POINTER_EVENTS_VISIBLE:
-      if (GetStyleVisibility()->IsVisible())
-        events = PR_TRUE;
-      break;
-    case NS_STYLE_POINTER_EVENTS_PAINTED:
-      if (GetStyleSVG()->mFill.mType != eStyleSVGPaintType_None ||
-          GetStyleSVG()->mStroke.mType != eStyleSVGPaintType_None)
-        events = PR_TRUE;
-      break;
-    case NS_STYLE_POINTER_EVENTS_FILL:
-    case NS_STYLE_POINTER_EVENTS_STROKE:
-    case NS_STYLE_POINTER_EVENTS_ALL:
-      events = PR_TRUE;
-      break;
-    default:
-      NS_ERROR("not reached");
-      break;
   }
 
-  if (events && ContainsPoint(aPoint))
+  nsRefPtr<gfxContext> context = MakeTmpCtx();
+  SetupGlobalTransform(context);
+  CharacterIterator iter(this, PR_TRUE);
+  iter.SetInitialMatrix(context);
+
+  // The SVG 1.1 spec says that text is hit tested against the character cells
+  // of the text, not the fill and stroke. See the section starting "For text
+  // elements..." here:
+  //
+  //   http://www.w3.org/TR/SVG11/interact.html#PointerEventsProperty
+  //
+  // Currently we just test the character cells if GetHittestMask says we're
+  // supposed to be testing either the fill OR the stroke:
+
+  PRInt32 i;
+  while ((i = iter.NextCluster()) >= 0) {
+    gfxTextRun::Metrics metrics =
+    mTextRun->MeasureText(i, iter.ClusterLength(),
+                          gfxFont::LOOSE_INK_EXTENTS, nsnull, nsnull);
+    iter.SetupForMetrics(context);
+    context->Rectangle(metrics.mBoundingBox);
+  }
+
+  gfxPoint userSpacePoint =
+    context->DeviceToUser(gfxPoint(PresContext()->AppUnitsToGfxUnits(aPoint.x),
+                                   PresContext()->AppUnitsToGfxUnits(aPoint.y)));
+
+  PRBool isHit = PR_FALSE;
+  if (mask & HITTEST_MASK_FILL || mask & HITTEST_MASK_STROKE) {
+    isHit = context->PointInFill(userSpacePoint);
+  }
+
+  // If isHit is false, we may also want to fill and stroke the text to check
+  // whether the pointer is over an area of fill or stroke that lies outside
+  // the character cells. (With a thick stroke, or with fonts like Zapfino, such
+  // areas may be very significant.) This is what Opera appears to do, but
+  // currently we do not.
+
+  if (isHit && nsSVGUtils::HitTestClip(this, aPoint))
     return this;
 
   return nsnull;
@@ -457,11 +469,6 @@ NS_IMETHODIMP_(nsRect)
 nsSVGGlyphFrame::GetCoveredRegion()
 {
   return mRect;
-}
-
-static gfxContext *
-MakeTmpCtx() {
-  return new gfxContext(gfxPlatform::GetPlatform()->ScreenReferenceSurface());
 }
 
 NS_IMETHODIMP
@@ -1470,28 +1477,6 @@ nsSVGGlyphFrame::NotifyGlyphMetricsChange()
     static_cast<nsSVGTextContainerFrame *>(mParent);
   if (containerFrame)
     containerFrame->NotifyGlyphMetricsChange();
-}
-
-PRBool
-nsSVGGlyphFrame::ContainsPoint(const nsPoint &aPoint)
-{
-  nsRefPtr<gfxContext> tmpCtx = MakeTmpCtx();
-  SetupGlobalTransform(tmpCtx);
-  CharacterIterator iter(this, PR_TRUE);
-  iter.SetInitialMatrix(tmpCtx);
-  
-  PRInt32 i;
-  while ((i = iter.NextCluster()) >= 0) {
-    gfxTextRun::Metrics metrics =
-      mTextRun->MeasureText(i, iter.ClusterLength(),
-                            gfxFont::LOOSE_INK_EXTENTS, nsnull, nsnull);
-    iter.SetupForMetrics(tmpCtx);
-    tmpCtx->Rectangle(metrics.mBoundingBox);
-  }
-
-  tmpCtx->IdentityMatrix();
-  return tmpCtx->PointInFill(gfxPoint(PresContext()->AppUnitsToGfxUnits(aPoint.x),
-                                      PresContext()->AppUnitsToGfxUnits(aPoint.y)));
 }
 
 PRBool

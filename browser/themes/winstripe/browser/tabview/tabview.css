@@ -27,7 +27,6 @@ body {
     -1px 0 1px rgba(255, 255, 255, 0.8) inset,
     0 1px 1.5px rgba(4, 38, 60, 0.4);
   cursor: pointer;
-  margin: 4px;
 }
 
 html[dir=rtl] .tab {
@@ -211,6 +210,7 @@ html[dir=rtl] .tab.focus {
 .tabInGroupItem {
   box-shadow: none;
   background-color: #E0EAF5;
+  margin: 4px;
 }
 
 .tabInGroupItem .favicon {

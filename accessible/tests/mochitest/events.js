@@ -12,6 +12,7 @@ const EVENT_MENU_START = nsIAccessibleEvent.EVENT_MENU_START;
 const EVENT_MENU_END = nsIAccessibleEvent.EVENT_MENU_END;
 const EVENT_MENUPOPUP_START = nsIAccessibleEvent.EVENT_MENUPOPUP_START;
 const EVENT_MENUPOPUP_END = nsIAccessibleEvent.EVENT_MENUPOPUP_END;
+const EVENT_OBJECT_ATTRIBUTE_CHANGED = nsIAccessibleEvent.EVENT_OBJECT_ATTRIBUTE_CHANGED;
 const EVENT_REORDER = nsIAccessibleEvent.EVENT_REORDER;
 const EVENT_SCROLLING_START = nsIAccessibleEvent.EVENT_SCROLLING_START;
 const EVENT_SELECTION_ADD = nsIAccessibleEvent.EVENT_SELECTION_ADD;
@@ -906,7 +907,7 @@ function invokerChecker(aEventType, aTargetOrFunc, aTargetFuncArg)
   function invokerChecker_targetDescrGetter()
   {
     if (typeof this.mTarget == "function")
-      return this.mTarget.toSource() + this.mTargetFuncArg;
+      return this.mTarget.name + ", arg: " + this.mTargetFuncArg;
 
     return prettyName(this.mTarget);
   }

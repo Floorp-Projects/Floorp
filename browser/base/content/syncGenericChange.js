@@ -103,7 +103,7 @@ let Change = {
         }
         else {
           document.getElementById("generatePassphraseButton").hidden = false;
-          document.getElementById("generatePassphraseButton").hidden = false;
+          document.getElementById("passphraseBackupButtons").hidden = false;
           this._passphraseBox.setAttribute("readonly", "true");
           let pp = Weave.Service.passphrase;
           if (Weave.Utils.isPassphrase(pp))

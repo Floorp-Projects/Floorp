@@ -669,6 +669,12 @@ nsImageDocument::CreateSyntheticDocument()
   nsCAutoString src;
   mDocumentURI->GetSpec(src);
 
+  // Push a null JSContext on the stack so that code that runs within
+  // the below code doesn't think it's being called by JS. See bug
+  // 604262.
+  nsCxPusher pusher;
+  pusher.PushNull();
+
   NS_ConvertUTF8toUTF16 srcString(src);
   // Make sure not to start the image load from here...
   imageLoader->SetLoadingEnabled(PR_FALSE);

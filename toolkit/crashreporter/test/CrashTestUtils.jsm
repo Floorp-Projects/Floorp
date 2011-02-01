@@ -5,6 +5,7 @@ let CrashTestUtils = {
   crash: null,
   lockDir: null,
   dumpHasStream: null,
+  dumpHasInstructionPointerMemory: null,
 
   // Constants for crash()
   // Keep these in sync with nsTestCrasher.cpp!
@@ -40,3 +41,9 @@ CrashTestUtils.dumpHasStream = lib.declare("DumpHasStream",
                                            ctypes.bool,
                                            ctypes.char.ptr,
                                            ctypes.uint32_t);
+
+CrashTestUtils.dumpHasInstructionPointerMemory =
+  lib.declare("DumpHasInstructionPointerMemory",
+              ctypes.default_abi,
+              ctypes.bool,
+              ctypes.char.ptr);

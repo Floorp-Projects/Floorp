@@ -112,6 +112,11 @@
   <binding id="notification" extends="chrome://global/content/bindings/notification.xml#notification">
     <content>
       <xul:hbox class="notification-inner outset" flex="1" xbl:inherits="type">
+        <xul:toolbarbutton ondblclick="event.stopPropagation();"
+                           class="messageCloseButton tabbable"
+                           xbl:inherits="hidden=hideclose"
+                           tooltiptext="&closeNotification.tooltip;"
+                           oncommand="document.getBindingParent(this).close()"/>
         <xul:hbox anonid="details" align="center" flex="1">
           <xul:image anonid="messageImage" class="messageImage" xbl:inherits="src=image"/>
           <xul:description anonid="messageText" class="messageText" xbl:inherits="xbl:text=label"/>
@@ -120,13 +125,7 @@
           <xul:hbox oncommand="document.getBindingParent(this)._doButtonCommand(event);">
             <children/>
           </xul:hbox>
-          <xul:spacer flex="1"/>
         </xul:hbox>
-        <xul:toolbarbutton ondblclick="event.stopPropagation();"
-                           class="messageCloseButton tabbable"
-                           xbl:inherits="hidden=hideclose"
-                           tooltiptext="&closeNotification.tooltip;"
-                           oncommand="document.getBindingParent(this).close()"/>
       </xul:hbox>
     </content>
     <implementation>

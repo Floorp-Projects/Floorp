@@ -131,8 +131,6 @@ public:
 
   virtual void InvalidateChildren();
 
-  virtual nsAccessible* GetParent();
-
 protected:
 
   // nsAccessible

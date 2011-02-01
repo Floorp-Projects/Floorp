@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>nsIAccessibleText getText related function tests for rich text</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../text.js"></script>
+
+  <script type="application/javascript">
+    function doTest()
+    {
+      //////////////////////////////////////////////////////////////////////////
+      // hypertext
+      //////////////////////////////////////////////////////////////////////////
+
+      // ! - embedded object char
+      // @ - imaginary object char, space is used
+      // __h__e__l__l__o__ __!__ __s__e__e__ __@__
+      //  0  1  2  3  4  5  6  7  8  9 10 11 12 13
+
+      var IDs = [ "hypertext" ];
+
+      ////////////////////////////////////////////////////////////////////////
+      // characterCount
+
+      testCharacterCount(IDs, 13);
+
+      ////////////////////////////////////////////////////////////////////////
+      // getText
+
+      testText(IDs, 0, 1, "h");
+      testText(IDs, 5, 7, " " + kEmbedChar);
+      testText(IDs, 10, 13, "e  ");
+      testText(IDs, 0, 13, "hello " + kEmbedChar + " see  ");
+
+      //////////////////////////////////////////////////////////////////////////
+      // list
+      //////////////////////////////////////////////////////////////////////////
+
+      IDs = [ "list" ];
+      testCharacterCount(IDs, 1);
+      testText(IDs, 0, 1, kEmbedChar);
+
+      IDs = [ "listitem" ];
+      testCharacterCount(IDs, 5);
+      testText(IDs, 0, 5, "1.foo");
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="Fix getText"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=630001">Mozilla Bug 630001, part3</a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="hypertext">hello <a>friend</a> see <img></div>
+  <ol id="list"><li id="listitem">foo</li></ol>
+
+</body>
+</html>

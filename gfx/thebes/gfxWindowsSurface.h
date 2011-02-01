@@ -67,6 +67,9 @@ public:
 
     gfxWindowsSurface(cairo_surface_t *csurf);
 
+    virtual already_AddRefed<gfxASurface> CreateSimilarSurface(gfxContentType aType,
+                                                               const gfxIntSize& aSize);
+
     void InitWithDC(PRUint32 flags);
 
     virtual ~gfxWindowsSurface();

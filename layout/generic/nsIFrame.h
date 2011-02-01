@@ -2649,6 +2649,37 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::EmbeddingLevelProperty()))
    */
   virtual void PullOverflowsFromPrevInFlow() {}
 
+  /**
+   * Clear the list of child PresShells generated during the last paint
+   * so that we can begin generating a new one.
+   */  
+  void ClearPresShellsFromLastPaint() { 
+    PaintedPresShellList()->Clear(); 
+  }
+  
+  /**
+   * Flag a child PresShell as painted so that it will get its paint count
+   * incremented during empty transactions.
+   */  
+  void AddPaintedPresShell(nsIPresShell* shell) { 
+    PaintedPresShellList()->AppendElement(do_GetWeakReference(shell)); 
+  }
+  
+  /**
+   * Increment the paint count of all child PresShells that were painted during
+   * the last repaint.
+   */  
+  void UpdatePaintCountForPaintedPresShells() {
+    nsTArray<nsWeakPtr> * list = PaintedPresShellList();
+    for (int i = 0, l = list->Length(); i < l; i++) {
+      nsCOMPtr<nsIPresShell> shell = do_QueryReferent(list->ElementAt(i));
+      
+      if (shell) {
+        shell->IncrementPaintCount();
+      }
+    }
+  }  
+  
 protected:
   // Members
   nsRect           mRect;
@@ -2658,6 +2689,31 @@ protected:
 private:
   nsIFrame*        mNextSibling;  // doubly-linked list of frames
   nsIFrame*        mPrevSibling;  // Do not touch outside SetNextSibling!
+
+  static void DestroyPaintedPresShellList(void* propertyValue) {
+    nsTArray<nsWeakPtr>* list = static_cast<nsTArray<nsWeakPtr>*>(propertyValue);
+    list->Clear();
+    delete list;
+  }
+
+  // Stores weak references to all the PresShells that were painted during
+  // the last paint event so that we can increment their paint count during
+  // empty transactions
+  NS_DECLARE_FRAME_PROPERTY(PaintedPresShellsProperty, DestroyPaintedPresShellList)
+  
+  nsTArray<nsWeakPtr>* PaintedPresShellList() {
+    nsTArray<nsWeakPtr>* list = static_cast<nsTArray<nsWeakPtr>*>(
+      Properties().Get(PaintedPresShellsProperty())
+    );
+    
+    if (!list) {
+      list = new nsTArray<nsWeakPtr>();
+      Properties().Set(PaintedPresShellsProperty(), list);
+    }
+    
+    return list;
+  }
+
 protected:
   nsFrameState     mState;
 
