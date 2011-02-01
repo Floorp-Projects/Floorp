@@ -3666,30 +3666,9 @@ js_EmitFunctionScript(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body)
         CG_SWITCH_TO_MAIN(cg);
     }
 
-    if (!js_EmitTree(cx, cg, body) ||
-        js_Emit1(cx, cg, JSOP_STOP) < 0 ||
-        !JSScript::NewScriptFromCG(cx, cg)) {
-        return false;
-    }
-
-    JSFunction *fun = cg->fun();
-    if (fun->script()->bindings.extensibleParents()) {
-        /*
-         * Since the function has extensible parents, its blocks need unique
-         * shapes. See the comments for js::Bindings::extensibleParents.
-         */
-        JSScript *script = FUN_SCRIPT(fun);
-        if (JSScript::isValidOffset(script->objectsOffset)) {
-            JSObjectArray *objects = FUN_SCRIPT(fun)->objects();
-            for (uint32 i = 0; i < objects->length; i++) {
-                JSObject *obj = objects->vector[i];
-                if (obj->isBlock())
-                    obj->setBlockOwnShape(cx);
-            }
-        }
-    }
-
-    return true;
+    return js_EmitTree(cx, cg, body) &&
+           js_Emit1(cx, cg, JSOP_STOP) >= 0 &&
+           JSScript::NewScriptFromCG(cx, cg);
 }
 
 /* A macro for inlining at the top of js_EmitTree (whence it came). */
@@ -4593,7 +4572,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         }
 #endif
 
-        fun = pn->pn_funbox->function();
+        fun = (JSFunction *) pn->pn_funbox->object;
         JS_ASSERT(FUN_INTERPRETED(fun));
         if (fun->u.i.script) {
             /*

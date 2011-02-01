@@ -171,7 +171,6 @@ struct PropertyCacheEntry;
 
 struct Shape;
 struct EmptyShape;
-class Bindings;
 
 } /* namespace js */
 

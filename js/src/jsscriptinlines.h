@@ -52,8 +52,7 @@ namespace js {
 
 inline
 Bindings::Bindings(JSContext *cx)
-  : lastBinding(cx->runtime->emptyCallShape), nargs(0), nvars(0), nupvars(0),
-    hasExtensibleParents(false)
+  : lastBinding(cx->runtime->emptyCallShape), nargs(0), nvars(0), nupvars(0)
 {
 }
 
@@ -86,7 +85,7 @@ Bindings::clone(JSContext *cx, Bindings *bindings)
     *this = *bindings;
 }
 
-Shape *
+const Shape *
 Bindings::lastShape() const
 {
     JS_ASSERT(lastBinding);

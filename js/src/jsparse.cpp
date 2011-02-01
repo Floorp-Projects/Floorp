@@ -308,7 +308,7 @@ Parser::newFunctionBox(JSObject *obj, JSParseNode *fn, JSTreeContext *tc)
 bool
 JSFunctionBox::joinable() const
 {
-    return FUN_NULL_CLOSURE(function()) &&
+    return FUN_NULL_CLOSURE((JSFunction *) object) &&
            !(tcflags & (TCF_FUN_USES_ARGUMENTS | TCF_FUN_USES_OWN_NAME));
 }
 
@@ -319,23 +319,6 @@ JSFunctionBox::inAnyDynamicScope() const
         if (funbox->tcflags & (TCF_IN_WITH | TCF_FUN_CALLS_EVAL))
             return true;
     }
-    return false;
-}
-
-bool
-JSFunctionBox::scopeIsExtensible() const
-{
-    /* Direct eval calls can add bindings, but not in strict mode functions. */
-    if ((tcflags & TCF_FUN_CALLS_EVAL) && !(tcflags & TCF_STRICT_MODE_CODE))
-        return true;
-
-    /* 
-     * Function statements also extend call objects. (We forbid function
-     * statements in strict mode code.)
-     */
-    if (tcflags & TCF_HAS_FUNCTION_STMT)
-        return true;
-
     return false;
 }
 
@@ -1192,7 +1175,7 @@ Compiler::defineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *scrip
         Value rval;
 
         if (def.funbox) {
-            JSFunction *fun = def.funbox->function();
+            JSFunction *fun = (JSFunction *)def.funbox->object;
 
             /*
              * No need to check for redeclarations or anything, global
@@ -2044,7 +2027,6 @@ Parser::analyzeFunctions(JSTreeContext *tc)
         return true;
     if (!markFunArgs(tc->functionList))
         return false;
-    markExtensibleScopeDescendants(tc->functionList, false);
     setFunctionKinds(tc->functionList, &tc->flags);
     return true;
 }
@@ -2087,7 +2069,7 @@ FindFunArgs(JSFunctionBox *funbox, int level, JSFunctionBoxQueue *queue)
     do {
         JSParseNode *fn = funbox->node;
         JS_ASSERT(fn->pn_arity == PN_FUNC);
-        JSFunction *fun = funbox->function();
+        JSFunction *fun = (JSFunction *) funbox->object;
         int fnlevel = level;
 
         /*
@@ -2346,7 +2328,7 @@ CanFlattenUpvar(JSDefinition *dn, JSFunctionBox *funbox, uint32 tcflags)
      * function refers to its own name) or strictly after afunbox, we also
      * defeat the flat closure optimization for this dn.
      */
-    JSFunction *afun = afunbox->function();
+    JSFunction *afun = (JSFunction *) afunbox->object;
     if (!(afun->flags & JSFUN_LAMBDA)) {
         if (dn->isBindingForm() || dn->pn_pos >= afunbox->node->pn_pos)
             return false;
@@ -2492,7 +2474,7 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags)
             }
         }
 
-        JSFunction *fun = funbox->function();
+        JSFunction *fun = (JSFunction *) funbox->object;
 
         JS_ASSERT(FUN_KIND(fun) == JSFUN_INTERPRETED);
 
@@ -2649,37 +2631,6 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32 *tcflags)
     }
 
 #undef FUN_METER
-}
-
-/*
- * Walk the JSFunctionBox tree looking for functions whose call objects may
- * acquire new bindings as they execute: non-strict functions that call eval,
- * and functions that contain function statements (definitions not appearing
- * within the top statement list, which don't take effect unless they are
- * evaluated). Enclosed functions that could refer to bindings these extensible
- * call objects can shadow must have their bindings' extensibleParents flags
- * set, and such compiler-created blocks must have their OWN_SHAPE flags set;
- * the comments for js::Bindings::extensibleParents explain why.
- */
-void
-Parser::markExtensibleScopeDescendants(JSFunctionBox *funbox, bool hasExtensibleParent) 
-{
-    for (; funbox; funbox = funbox->siblings) {
-        /*
-         * It would be nice to use FUN_KIND(fun) here to recognize functions
-         * that will never consult their parent chains, and thus don't need
-         * their 'extensible parents' flag set. Filed as bug 619750. 
-         */
-
-        JS_ASSERT(!funbox->bindings.extensibleParents());
-        if (hasExtensibleParent)
-            funbox->bindings.setExtensibleParents();
-
-        if (funbox->kids) {
-            markExtensibleScopeDescendants(funbox->kids,
-                                           hasExtensibleParent || funbox->scopeIsExtensible());
-        }
-    }
 }
 
 const char js_argument_str[] = "argument";
@@ -3184,7 +3135,7 @@ Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
     if (!funbox)
         return NULL;
 
-    JSFunction *fun = funbox->function();
+    JSFunction *fun = (JSFunction *) funbox->object;
 
     /* Now parse formal argument list and compute fun->nargs. */
     JSParseNode *prelude = NULL;
@@ -7515,7 +7466,7 @@ CheckForImmediatelyAppliedLambda(JSParseNode *pn)
         JS_ASSERT(pn->pn_arity == PN_FUNC);
 
         JSFunctionBox *funbox = pn->pn_funbox;
-        JS_ASSERT((funbox->function())->flags & JSFUN_LAMBDA);
+        JS_ASSERT(((JSFunction *) funbox->object)->flags & JSFUN_LAMBDA);
         if (!(funbox->tcflags & (TCF_FUN_USES_ARGUMENTS | TCF_FUN_USES_OWN_NAME)))
             pn->pn_dflags &= ~PND_FUNARG;
     }
