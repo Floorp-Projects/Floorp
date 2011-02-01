@@ -474,12 +474,62 @@ nsHyperTextAccessible::GetPosAndText(PRInt32& aStartOffset, PRInt32& aEndOffset,
   return startFrame;
 }
 
-NS_IMETHODIMP nsHyperTextAccessible::GetText(PRInt32 aStartOffset, PRInt32 aEndOffset, nsAString &aText)
+NS_IMETHODIMP
+nsHyperTextAccessible::GetText(PRInt32 aStartOffset, PRInt32 aEndOffset,
+                               nsAString &aText)
 {
+  aText.Truncate();
+
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  return GetPosAndText(aStartOffset, aEndOffset, &aText) ? NS_OK : NS_ERROR_FAILURE;
+  if (aStartOffset == nsIAccessibleText::TEXT_OFFSET_END_OF_TEXT)
+    aStartOffset = CharacterCount();
+  else if (aStartOffset == nsIAccessibleText::TEXT_OFFSET_CARET)
+    GetCaretOffset(&aStartOffset);
+
+  if (aEndOffset == nsIAccessibleText::TEXT_OFFSET_END_OF_TEXT)
+    aEndOffset = CharacterCount();
+  else if (aEndOffset == nsIAccessibleText::TEXT_OFFSET_CARET)
+    GetCaretOffset(&aEndOffset);
+
+  PRInt32 startChildIdx = GetChildIndexAtOffset(aStartOffset);
+  if (startChildIdx == -1)
+    return NS_ERROR_INVALID_ARG;
+
+  PRInt32 endChildIdx = GetChildIndexAtOffset(aEndOffset);
+  if (endChildIdx == -1)
+    return NS_ERROR_INVALID_ARG;
+
+  if (startChildIdx == endChildIdx) {
+    PRInt32 childOffset =  GetChildOffset(startChildIdx);
+    NS_ENSURE_STATE(childOffset != -1);
+
+    nsAccessible* child = GetChildAt(startChildIdx);
+    child->AppendTextTo(aText, aStartOffset - childOffset,
+                        aEndOffset - aStartOffset);
+
+    return NS_OK;
+  }
+
+  PRInt32 startChildOffset =  GetChildOffset(startChildIdx);
+  NS_ENSURE_STATE(startChildOffset != -1);
+
+  nsAccessible* startChild = GetChildAt(startChildIdx);
+  startChild->AppendTextTo(aText, aStartOffset - startChildOffset);
+
+  for (PRInt32 childIdx = startChildIdx + 1; childIdx < endChildIdx; childIdx++) {
+    nsAccessible* child = GetChildAt(childIdx);
+    child->AppendTextTo(aText);
+  }
+
+  PRInt32 endChildOffset =  GetChildOffset(endChildIdx);
+  NS_ENSURE_STATE(endChildOffset != -1);
+
+  nsAccessible* endChild = GetChildAt(endChildIdx);
+  endChild->AppendTextTo(aText, 0, aEndOffset - endChildOffset);
+
+  return NS_OK;
 }
 
 /*
