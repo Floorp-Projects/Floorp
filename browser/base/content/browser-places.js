@@ -386,30 +386,21 @@ var PlacesCommandHook = {
   },
 
   /**
-   * This function returns a list of nsIURI objects characterizing the
-   * tabs currently open in the browser.  The URIs will appear in the
-   * list in the order in which their corresponding tabs appeared.  However,
-   * only the first instance of each URI will be returned.
-   *
-   * @returns a list of nsIURI objects representing unique locations open
+   * List of nsIURI objects characterizing the tabs currently open in the
+   * browser, modulo pinned tabs.  The URIs will be in the order in which their
+   * corresponding tabs appeared and duplicates are discarded.
    */
-  _getUniqueTabInfo: function BATC__getUniqueTabInfo() {
-    var tabList = [];
-    var seenURIs = {};
-
-    let tabs = gBrowser.visibleTabs;
-    for (let i = 0; i < tabs.length; ++i) {
-      let uri = tabs[i].linkedBrowser.currentURI;
-
-      // skip redundant entries
-      if (uri.spec in seenURIs)
-        continue;
-
-      // add to the set of seen URIs
-      seenURIs[uri.spec] = null;
-      tabList.push(uri);
-    }
-    return tabList;
+  get uniqueCurrentPages() {
+    let uniquePages = {};
+    let URIs = [];
+    gBrowser.visibleTabs.forEach(function (tab) {
+      let spec = tab.linkedBrowser.currentURI.spec;
+      if (!tab.pinned && !(spec in uniquePages)) {
+        uniquePages[spec] = null;
+        URIs.push(tab.linkedBrowser.currentURI);
+      }
+    });
+    return URIs;
   },
 
   /**
@@ -417,11 +408,27 @@ var PlacesCommandHook = {
    * window.
    */
   bookmarkCurrentPages: function PCH_bookmarkCurrentPages() {
-    var tabURIs = this._getUniqueTabInfo();
-    PlacesUIUtils.showMinimalAddMultiBookmarkUI(tabURIs);
+    let pages = this.uniqueCurrentPages;
+    if (pages.length > 1) {
+      PlacesUIUtils.showMinimalAddMultiBookmarkUI(pages);
+    }
   },
 
-  
+  /**
+   * Updates disabled state for the "Bookmark All Tabs" command.
+   */
+  updateBookmarkAllTabsCommand:
+  function PCH_updateBookmarkAllTabsCommand() {
+    // There's nothing to do in non-browser windows.
+    if (window.location.href != getBrowserURL())
+      return;
+
+    // Disable "Bookmark All Tabs" if there are less than two
+    // "unique current pages".
+    goSetCommandEnabled("Browser:BookmarkAllTabs",
+                        this.uniqueCurrentPages.length >= 2);
+  },
+
   /**
    * Adds a Live Bookmark to a feed associated with the current page. 
    * @param     url
@@ -710,8 +717,10 @@ var BookmarksEventHandler = {
    * If the click came through a menu, close the menu.
    * @param aEvent
    *        DOMEvent for the click
+   * @param aView
+   *        The places view which aEvent should be associated with.
    */
-  onClick: function BEH_onClick(aEvent) {
+  onClick: function BEH_onClick(aEvent, aView) {
     // Only handle middle-click or left-click with modifiers.
 #ifdef XP_MACOSX
     var modifKey = aEvent.metaKey || aEvent.shiftKey;
@@ -741,11 +750,11 @@ var BookmarksEventHandler = {
       // is middle-clicked or when a non-bookmark item except for Open in Tabs)
       // in a bookmarks menupopup is middle-clicked.
       if (target.localName == "menu" || target.localName == "toolbarbutton")
-        PlacesUIUtils.openContainerNodeInTabs(target._placesNode, aEvent);
+        PlacesUIUtils.openContainerNodeInTabs(target._placesNode, aEvent, aView);
     }
     else if (aEvent.button == 1) {
       // left-clicks with modifier are already served by onCommand
-      this.onCommand(aEvent);
+      this.onCommand(aEvent, aView);
     }
   },
 
@@ -755,11 +764,13 @@ var BookmarksEventHandler = {
    * Opens the item.
    * @param aEvent 
    *        DOMEvent for the command
+   * @param aView
+   *        The places view which aEvent should be associated with.
    */
-  onCommand: function BEH_onCommand(aEvent) {
+  onCommand: function BEH_onCommand(aEvent, aView) {
     var target = aEvent.originalTarget;
     if (target._placesNode)
-      PlacesUIUtils.openNodeWithEvent(target._placesNode, aEvent);
+      PlacesUIUtils.openNodeWithEvent(target._placesNode, aEvent, aView);
   },
 
   fillInBHTooltip: function BEH_fillInBHTooltip(aDocument, aEvent) {

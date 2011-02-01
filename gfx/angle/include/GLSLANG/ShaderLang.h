@@ -91,16 +91,20 @@ typedef enum {
   SH_VALIDATE_LOOP_INDEXING = 0x0001,
   SH_INTERMEDIATE_TREE      = 0x0002,
   SH_OBJECT_CODE            = 0x0004,
-  SH_ATTRIBUTES_UNIFORMS    = 0x0008
+  SH_ATTRIBUTES_UNIFORMS    = 0x0008,
+  SH_LINE_DIRECTIVES        = 0x0010,
+  SH_SOURCE_PATH            = 0x0200
 } ShCompileOptions;
 
 //
 // Driver must call this first, once, before doing any other
 // compiler operations.
+// If the function succeeds, the return value is nonzero, else zero.
 //
 ANGLE_API int ShInitialize();
 //
 // Driver should call this at shutdown.
+// If the function succeeds, the return value is nonzero, else zero.
 //
 ANGLE_API int ShFinalize();
 

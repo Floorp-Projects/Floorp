@@ -181,8 +181,7 @@
 #include "nsIDOMHTMLLinkElement.h"
 #include "nsITimer.h"
 #ifdef ACCESSIBILITY
-#include "nsIAccessibilityService.h"
-#include "nsAccessible.h"
+#include "nsAccessibilityService.h"
 #endif
 
 // For style data reconstruction
@@ -1901,12 +1900,9 @@ PresShell::Destroy()
     return;
 
 #ifdef ACCESSIBILITY
-  if (gIsAccessibilityActive) {
-    nsCOMPtr<nsIAccessibilityService> accService =
-      do_GetService("@mozilla.org/accessibilityService;1");
-    if (accService) {
-      accService->PresShellDestroyed(this);
-    }
+  nsAccessibilityService* accService = AccService();
+  if (accService) {
+    accService->PresShellDestroyed(this);
   }
 #endif // ACCESSIBILITY
 
@@ -4030,9 +4026,8 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
   }
 
 #ifdef ACCESSIBILITY
-  if (anchorTarget && gIsAccessibilityActive) {
-    nsCOMPtr<nsIAccessibilityService> accService = 
-      do_GetService("@mozilla.org/accessibilityService;1");
+  if (anchorTarget) {
+    nsAccessibilityService* accService = AccService();
     if (accService)
       accService->NotifyOfAnchorJumpTo(anchorTarget);
   }
@@ -5155,6 +5150,13 @@ PresShell::ContentRemoved(nsIDocument *aDocument,
 nsresult
 PresShell::ReconstructFrames(void)
 {
+  NS_PRECONDITION(!FrameManager()->GetRootFrame() || mDidInitialReflow,
+                  "Must not have root frame before initial reflow");
+  if (!mDidInitialReflow) {
+    // Nothing to do here
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIPresShell> kungFuDeathGrip(this);
 
   // Have to make sure that the content notifications are flushed before we
@@ -9257,6 +9259,23 @@ nsIFrame* nsIPresShell::GetAbsoluteContainingBlock(nsIFrame *aFrame)
 {
   return FrameConstructor()->GetAbsoluteContainingBlock(aFrame);
 }
+
+#ifdef ACCESSIBILITY
+nsAccessibilityService*
+nsIPresShell::AccService()
+{
+#ifdef MOZ_ENABLE_LIBXUL
+  return GetAccService();
+#else
+  if (gIsAccessibilityActive) {
+    nsCOMPtr<nsIAccessibilityService> srv =
+      do_GetService("@mozilla.org/accessibilityService;1");
+    return static_cast<nsAccessibilityService*>(srv.get());
+  }
+  return nsnull;
+#endif
+}
+#endif
 
 void nsIPresShell::InitializeStatics()
 {

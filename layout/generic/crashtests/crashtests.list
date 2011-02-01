@@ -298,7 +298,7 @@ load 501535-1.html
 load 503961-1.xhtml
 load 503961-2.html
 load 508168-1.html
-#load 508908-1.html # Test disabled due to it accessing the network, and causing pain.  See bug 616085.
+load 508908-1.html
 load 505912-1.html
 load 509749-1.html
 load 511482.html

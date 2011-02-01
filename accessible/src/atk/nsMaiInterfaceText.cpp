@@ -373,7 +373,7 @@ getCharacterCountCB(AtkText *aText)
     if (!accWrap)
         return 0;
 
-    nsRefPtr<nsHyperTextAccessible> textAcc(do_QueryObject(accWrap));
+    nsHyperTextAccessible* textAcc = accWrap->AsHyperText();
     return textAcc->IsDefunct() ?
         0 : static_cast<gint>(textAcc->CharacterCount());
 }

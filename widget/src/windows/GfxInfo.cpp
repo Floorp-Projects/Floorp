@@ -67,6 +67,11 @@ static const PRUint64 allDriverVersions = 0xffffffffffffffffULL;
 
 static const PRUint32 vendorIntel = 0x8086;
 
+static const PRUint32 vendorNVIDIA = 0x10de;
+
+static const PRUint32 vendorAMD = 0x1022;
+static const PRUint32 vendorATI = 0x1002;
+
 #define V(a,b,c,d) GFX_DRIVER_VERSION(a,b,c,d)
 
 
@@ -97,7 +102,13 @@ GfxInfo::GetDWriteEnabled(PRBool *aEnabled)
 NS_IMETHODIMP
 GfxInfo::GetDWriteVersion(nsAString & aDwriteVersion)
 {
-  gfxWindowsPlatform::GetPlatform()->GetDLLVersion(L"dwrite.dll", aDwriteVersion);
+  nsAutoString str;
+  gfxWindowsPlatform::GetPlatform()->GetDLLVersion(L"dwrite.dll", str);
+  aDwriteVersion.Assign(str);
+  aDwriteVersion.Append(L", font cache ");
+  gfxWindowsPlatform::GetPlatform()->GetFontCacheSize(str);
+  aDwriteVersion.Append(str);
+
   return NS_OK;
 }
 
@@ -352,12 +363,12 @@ GfxInfo::Init()
     // with bad Intel driver installations where the DriverVersion reported by the registry was
     // not the version of the DLL.
     PRBool is64bitApp = sizeof(void*) == 8;
-    PRUnichar *dllFileName = is64bitApp
-                           ? L"igd10umd64.dll"
-                           : L"igd10umd32.dll";
+    const PRUnichar *dllFileName = is64bitApp
+                                 ? L"igd10umd64.dll"
+                                 : L"igd10umd32.dll";
     nsString dllVersion;
     // if GetDLLVersion fails, it gives "0.0.0.0"
-    gfxWindowsPlatform::GetPlatform()->GetDLLVersion(dllFileName, dllVersion);
+    gfxWindowsPlatform::GetPlatform()->GetDLLVersion((PRUnichar*)dllFileName, dllVersion);
 
     PRUint64 dllNumericVersion = 0, driverNumericVersion = 0;
     // so if GetDLLVersion failed, we get dllNumericVersion = 0
@@ -589,10 +600,52 @@ static const PRUint32 deviceFamilyIntelGMAX4500HD[] = {
     0
 };
 
+// see bug 612007
+static const PRUint32 deviceFamilyNvidia6200TurboCache[] = {
+    0x0161, /* NV44 [GeForce 6200 TurboCache(TM)] */
+    0x0162, /* NV44 [GeForce 6200SE TurboCache (TM)] */
+    0
+};
+
 static const GfxDriverInfo gDriverInfo[] = {
   /*
    * Notice that the first match defines the result. So always implement special cases firsts and general case last.
    */
+
+  /*
+   * NVIDIA entries
+   */
+  GfxDriverInfo( DRIVER_OS_WINDOWS_XP,
+    vendorNVIDIA, GfxDriverInfo::allDevices,
+    GfxDriverInfo::allFeatures, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
+    DRIVER_LESS_THAN, V(6,14,12,5721), "257.21" ),
+  GfxDriverInfo( DRIVER_OS_WINDOWS_VISTA,
+    vendorNVIDIA, GfxDriverInfo::allDevices,
+    GfxDriverInfo::allFeatures, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
+    DRIVER_LESS_THAN, V(8,17,12,5721), "257.21" ),
+  GfxDriverInfo( DRIVER_OS_WINDOWS_7,
+    vendorNVIDIA, GfxDriverInfo::allDevices,
+    GfxDriverInfo::allFeatures, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
+    DRIVER_LESS_THAN, V(8,17,12,5721), "257.21" ),
+
+  // bug 612007: disable D3D9 layers on NVIDIA 6200 TurboCache series.
+  GfxDriverInfo( DRIVER_OS_ALL,
+    vendorNVIDIA, (GfxDeviceFamily) deviceFamilyNvidia6200TurboCache,
+    nsIGfxInfo::FEATURE_DIRECT3D_9_LAYERS, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
+    DRIVER_LESS_THAN, allDriverVersions ),
+
+  /*
+   * AMD/ATI entries
+   */
+  GfxDriverInfo( DRIVER_OS_ALL,
+    vendorATI, GfxDriverInfo::allDevices,
+    GfxDriverInfo::allFeatures, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
+    DRIVER_LESS_THAN, V(8,741,0,0), "10.6" ),
+  GfxDriverInfo( DRIVER_OS_ALL,
+    vendorAMD, GfxDriverInfo::allDevices,
+    GfxDriverInfo::allFeatures, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
+    DRIVER_LESS_THAN, V(8,741,0,0), "10.6" ),
+
 
   /*
    * Intel entries
@@ -696,13 +749,27 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32 *aStatus, nsAString & aS
     return NS_ERROR_FAILURE;
   }
 
+  if (adapterVendor != vendorIntel &&
+      adapterVendor != vendorNVIDIA &&
+      adapterVendor != vendorAMD &&
+      adapterVendor != vendorATI &&
+      // FIXME - these special hex values are currently used in xpcshell tests introduced by
+      // bug 625160 patch 8/8. Maybe these tests need to be adjusted now that we're only whitelisting
+      // intel/ati/nvidia.
+      adapterVendor != 0xabcd &&
+      adapterVendor != 0xdcba &&
+      adapterVendor != 0xabab &&
+      adapterVendor != 0xdcdc)
+  {
+    *aStatus = FEATURE_BLOCKED_DEVICE;
+    return NS_OK;
+  }
+
   PRUint64 driverVersion;
   if (!ParseDriverVersion(adapterDriverVersionString, &driverVersion)) {
     return NS_ERROR_FAILURE;
   }
   
-  PRUint64 suggestedDriverVersion = 0;
-
   if (aFeature == FEATURE_DIRECT3D_9_LAYERS &&
       mWindowsVersion < gfxWindowsPlatform::kWindowsXP)
   {
@@ -711,6 +778,11 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32 *aStatus, nsAString & aS
   }
 
   OperatingSystem os = WindowsVersionToOperatingSystem(mWindowsVersion);
+
+  // Windows Server 2003 should be just like Windows XP for present purpose, but still has a different version number.
+  // OTOH Windows Server 2008 R1 and R2 already have the same version numbers as Vista and Seven respectively
+  if (os == DRIVER_OS_WINDOWS_SERVER_2003)
+    os = DRIVER_OS_WINDOWS_XP;
 
   const GfxDriverInfo *info;
   if (aDriverInfo)
@@ -726,6 +798,17 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32 *aStatus, nsAString & aS
       *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION;
       return NS_OK;
     }
+  }
+
+  // special-case the WinXP test slaves: they have out-of-date drivers, but we still want to
+  // whitelist them, actually we do know that this combination of device and driver version
+  // works well.
+  if (os == DRIVER_OS_WINDOWS_XP &&
+      adapterVendor == vendorNVIDIA &&
+      adapterDeviceID == 0x0861 && // GeForce 9400
+      driverVersion == V(6,14,11,7756))
+  {
+    return NS_OK;
   }
 
   while (info->mOperatingSystem) {
@@ -763,7 +846,6 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32 *aStatus, nsAString & aS
     switch (info->mComparisonOp) {
     case DRIVER_LESS_THAN:
       match = driverVersion < info->mDriverVersion;
-      suggestedDriverVersion = info->mDriverVersion;
       break;
     case DRIVER_LESS_THAN_OR_EQUAL:
       match = driverVersion <= info->mDriverVersion;
@@ -808,12 +890,18 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, PRInt32 *aStatus, nsAString & aS
 
   *aStatus = status;
 
-  if (status == FEATURE_BLOCKED_DRIVER_VERSION && suggestedDriverVersion) {
-      aSuggestedDriverVersion.AppendPrintf("%lld.%lld.%lld.%lld",
-                                           (suggestedDriverVersion & 0xffff000000000000) >> 48,
-                                           (suggestedDriverVersion & 0x0000ffff00000000) >> 32,
-                                           (suggestedDriverVersion & 0x00000000ffff0000) >> 16,
-                                           (suggestedDriverVersion & 0x000000000000ffff));
+  if (status == FEATURE_BLOCKED_DRIVER_VERSION) {
+      if (info->mSuggestedVersion) {
+          aSuggestedDriverVersion.AppendPrintf("%s", info->mSuggestedVersion);
+      } else if (info->mComparisonOp == DRIVER_LESS_THAN &&
+                 info->mDriverVersion != allDriverVersions)
+      {
+          aSuggestedDriverVersion.AppendPrintf("%lld.%lld.%lld.%lld",
+                                               (info->mDriverVersion & 0xffff000000000000) >> 48,
+                                               (info->mDriverVersion & 0x0000ffff00000000) >> 32,
+                                               (info->mDriverVersion & 0x00000000ffff0000) >> 16,
+                                               (info->mDriverVersion & 0x000000000000ffff));
+      }
   }
   
   return NS_OK;

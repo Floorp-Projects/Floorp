@@ -30,8 +30,8 @@ struct TPragma {
 // they can be passed to the parser without needing a global.
 //
 struct TParseContext {
-    TParseContext(TSymbolTable& symt, const TExtensionBehavior& ext, TIntermediate& interm, ShShaderType type, ShShaderSpec spec, TInfoSink& is) :
-            intermediate(interm), symbolTable(symt), extensionBehavior(ext), infoSink(is), shaderType(type), shaderSpec(spec), treeRoot(0),
+    TParseContext(TSymbolTable& symt, const TExtensionBehavior& ext, TIntermediate& interm, ShShaderType type, ShShaderSpec spec, int options, const char* sourcePath, TInfoSink& is) :
+            intermediate(interm), symbolTable(symt), extensionBehavior(ext), infoSink(is), shaderType(type), shaderSpec(spec), compileOptions(options), sourcePath(sourcePath), treeRoot(0),
             recoveredFromError(false), numErrors(0), lexAfterType(false), loopNestingLevel(0),
             inTypeParen(false), scanner(NULL), contextPragma(true, false) {  }
     TIntermediate& intermediate; // to hold and build a parse tree
@@ -40,6 +40,8 @@ struct TParseContext {
     TInfoSink& infoSink;
     ShShaderType shaderType;              // vertex or fragment language (future: pack or unpack)
     ShShaderSpec shaderSpec;              // The language specification compiler conforms to - GLES2 or WebGL.
+    int compileOptions;
+    const char* sourcePath;      // Path of source file or NULL.
     TIntermNode* treeRoot;       // root of parse tree being created
     bool recoveredFromError;     // true if a parse error has occurred, but we continue to parse
     int numErrors;

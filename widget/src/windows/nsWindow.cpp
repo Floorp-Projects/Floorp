@@ -1186,7 +1186,7 @@ nsWindow::EnumAllWindows(WindowEnumCallback aCallback)
 {
   EnumThreadWindows(GetCurrentThreadId(),
                     EnumAllThreadWindowProc,
-                    (LPARAM)&aCallback);
+                    (LPARAM)aCallback);
 }
 
 /**************************************************************
@@ -2098,7 +2098,7 @@ GetWindowInfoHook(HWND hWnd, PWINDOWINFO pwi)
     return FALSE;
   }
   int windowStatus = 
-    reinterpret_cast<int>(GetPropW(hWnd, kManageWindowInfoProperty));
+    reinterpret_cast<LONG_PTR>(GetPropW(hWnd, kManageWindowInfoProperty));
   // No property set, return the default data.
   if (!windowStatus)
     return sGetWindowInfoPtrStub(hWnd, pwi);
@@ -2118,7 +2118,7 @@ nsWindow::UpdateGetWindowInfoCaptionStatus(PRBool aActiveCaption)
 
   if (!sGetWindowInfoPtrStub) {
     sUser32Intercept.Init("user32.dll");
-    if (!sUser32Intercept.AddHook("GetWindowInfo", GetWindowInfoHook,
+    if (!sUser32Intercept.AddHook("GetWindowInfo", (void*)GetWindowInfoHook,
                                   (void**) &sGetWindowInfoPtrStub))
       return;
   }
@@ -8502,7 +8502,7 @@ nsWindow::ClearCachedResources()
       static_cast<BasicLayerManager*>(mLayerManager.get())->
         ClearCachedResources();
     }
-    ::EnumChildWindows(mWnd, nsWindow::ClearResourcesCallback, NULL);
+    ::EnumChildWindows(mWnd, nsWindow::ClearResourcesCallback, 0);
 }
 
 static PRBool IsDifferentThreadWindow(HWND aWnd)

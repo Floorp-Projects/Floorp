@@ -45,7 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE       = build
 
-ifeq ($(USE_ELF_HACK)$(HOST_OS_ARCH)$(OS_ARCH)$(OS_TARGET),1LinuxLinuxLinux)
+ifeq ($(USE_ELF_HACK)$(HOST_OS_ARCH)$(OS_ARCH),1LinuxLinux)
 DIRS = elfhack
 endif
 

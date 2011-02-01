@@ -128,6 +128,7 @@ nsContentPermissionRequestProxy::Allow()
   if (mParent == nsnull)
     return NS_ERROR_FAILURE;
   unused << mozilla::dom::ContentPermissionRequestParent::Send__delete__(mParent, true);
+  mParent = nsnull;
   return NS_OK;
 }
 

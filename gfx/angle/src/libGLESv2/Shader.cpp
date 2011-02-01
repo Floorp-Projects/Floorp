@@ -278,12 +278,33 @@ void Shader::compileToHLSL(void *compiler)
         return;
     }
 
-    TRACE("\n%s", mSource);
-
     delete[] mInfoLog;
     mInfoLog = NULL;
 
-    int result = ShCompile(compiler, &mSource, 1, SH_OBJECT_CODE);
+    int compileOptions = SH_OBJECT_CODE;
+    std::string sourcePath;
+    if (perfActive())
+    {
+        sourcePath = getTempPath();
+        writeFile(sourcePath.c_str(), mSource, strlen(mSource));
+        compileOptions |= SH_LINE_DIRECTIVES;
+    }
+
+    int result;
+    if (sourcePath.empty())
+    {
+        result = ShCompile(compiler, &mSource, 1, compileOptions);
+    }
+    else
+    {
+        const char* sourceStrings[2] =
+        {
+            sourcePath.c_str(),
+            mSource
+        };
+
+        result = ShCompile(compiler, sourceStrings, 2, compileOptions | SH_SOURCE_PATH);
+    }
 
     if (result)
     {
@@ -291,8 +312,6 @@ void Shader::compileToHLSL(void *compiler)
         ShGetInfo(compiler, SH_OBJECT_CODE_LENGTH, &objCodeLen);
         mHlsl = new char[objCodeLen];
         ShGetObjectCode(compiler, mHlsl);
-
-        TRACE("\n%s", mHlsl);
     }
     else
     {

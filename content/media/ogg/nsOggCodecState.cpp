@@ -42,6 +42,7 @@
 #include <string.h>
 #include "nsTraceRefcnt.h"
 #include "VideoUtils.h"
+#include "nsBuiltinDecoderReader.h"
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gBuiltinDecoderLog;
@@ -49,15 +50,6 @@ extern PRLogModuleInfo* gBuiltinDecoderLog;
 #else
 #define LOG(type, msg)
 #endif
-
-/*
-   The maximum height and width of the video. Used for
-   sanitizing the memory allocation of the RGB buffer.
-   The maximum resolution we anticipate encountering in the
-   wild is 2160p - 3840x2160 pixels.
-*/
-#define MAX_VIDEO_WIDTH  4000
-#define MAX_VIDEO_HEIGHT 3000
 
 nsOggCodecState*
 nsOggCodecState::Create(ogg_page* aPage)
@@ -170,20 +162,11 @@ PRBool nsTheoraState::Init() {
   mPixelAspectRatio = (n == 0 || d == 0) ?
     1.0f : static_cast<float>(n) / static_cast<float>(d);
 
-  // Ensure the frame region isn't larger than our prescribed maximum.
-  PRUint32 pixels;
-  if (!MulOverflow32(mInfo.frame_width, mInfo.frame_height, pixels) ||
-      pixels > MAX_VIDEO_WIDTH * MAX_VIDEO_HEIGHT ||
-      pixels == 0)
-  {
-    return mActive = PR_FALSE;
-  }
-
-  // Ensure the picture region isn't larger than our prescribed maximum.
-  if (!MulOverflow32(mInfo.pic_width, mInfo.pic_height, pixels) ||
-      pixels > MAX_VIDEO_WIDTH * MAX_VIDEO_HEIGHT ||
-      pixels == 0)
-  {
+  // Ensure the frame and picture regions aren't larger than our prescribed
+  // maximum, or zero sized.
+  nsIntSize frame(mInfo.frame_width, mInfo.frame_height);
+  nsIntRect picture(mInfo.pic_x, mInfo.pic_y, mInfo.pic_width, mInfo.pic_height);
+  if (!nsVideoInfo::ValidateVideoRegion(frame, picture, frame)) {
     return mActive = PR_FALSE;
   }
 

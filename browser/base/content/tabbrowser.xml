@@ -3692,4 +3692,39 @@
     </handlers>
   </binding>
 
+  <binding id="statuspanel" display="xul:hbox">
+    <content>
+      <xul:hbox class="statuspanel-inner">
+        <xul:label class="statuspanel-label"
+                   role="status"
+                   xbl:inherits="value=label,mirror"
+                   flex="1"
+                   crop="end"/>
+      </xul:hbox>
+    </content>
+
+    <implementation>
+      <property name="label">
+        <setter>
+          if (!this.label)
+            this.removeAttribute("mirror");
+          this.setAttribute("label", val);
+          return val;
+        </setter>
+        <getter>
+          return this.getAttribute("label");
+        </getter>
+      </property>
+    </implementation>
+
+    <handlers>
+      <handler event="mouseover">
+        if (this.hasAttribute("mirror"))
+          this.removeAttribute("mirror");
+        else
+          this.setAttribute("mirror", "true");
+      </handler>
+    </handlers>
+  </binding>
+
 </bindings>

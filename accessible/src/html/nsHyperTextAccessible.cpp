@@ -80,6 +80,7 @@ nsHyperTextAccessible::
   nsHyperTextAccessible(nsIContent *aNode, nsIWeakReference *aShell) :
   nsAccessibleWrap(aNode, aShell)
 {
+  mFlags |= eHyperTextAccessible;
 }
 
 NS_IMPL_ADDREF_INHERITED(nsHyperTextAccessible, nsAccessibleWrap)

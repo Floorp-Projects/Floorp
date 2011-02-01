@@ -223,9 +223,9 @@ EGLAPI EGLBoolean eglQuerySurfacePointerANGLE(EGLDisplay dpy, EGLSurface surface
 typedef EGLBoolean (EGLAPIENTRYP PFNEGLQUERYSURFACEPOINTERANGLEPROC) (EGLDisplay dpy, EGLSurface surface, EGLint attribute, void **value);
 #endif
 
-#ifndef EGL_ANGLE_surface_d3d_texture_2d_share_handle
-#define EGL_ANGLE_surface_d3d_texture_2d_share_handle 1
-#define EGL_D3D_TEXTURE_2D_SHARE_HANDLE_ANGLE 0x3200
+#ifndef EGL_ANGLE_surface_d3d_share_handle
+#define EGL_ANGLE_surface_d3d_share_handle
+#define EGL_D3D_TEXTURE_SHARE_HANDLE_ANGLE 0x3200
 #endif
 
 #ifdef __cplusplus

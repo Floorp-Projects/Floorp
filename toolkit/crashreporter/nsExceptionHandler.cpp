@@ -725,9 +725,9 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
   if (version_size > 0) {
     std::vector<BYTE> buffer(version_size);
     if (GetFileVersionInfoW(L"dbghelp.dll",
-                           0,
-                           version_size,
-                           &buffer[0])) {
+                            0,
+                            version_size,
+                            &buffer[0])) {
       UINT len;
       VS_FIXEDFILEINFO* file_info;
       VerQueryValue(&buffer[0], L"\\", (void**)&file_info, &len);

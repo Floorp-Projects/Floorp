@@ -20,6 +20,8 @@ browser.jar:
 *       content/browser/aboutHome.xhtml               (content/aboutHome.xhtml)
 *       content/browser/aboutHome.js                  (content/aboutHome.js)
 *       content/browser/aboutHome.css                 (content/aboutHome.css)
+        content/browser/aboutHome-restore-icon.png    (content/aboutHome-restore-icon.png)
+        content/browser/aboutHome-restore-icon-rtl.png (content/aboutHome-restore-icon-rtl.png)
         content/browser/aboutRobots-icon.png          (content/aboutRobots-icon.png)
         content/browser/aboutRobots-widget-left.png   (content/aboutRobots-widget-left.png)
 *       content/browser/browser.css                   (content/browser.css)

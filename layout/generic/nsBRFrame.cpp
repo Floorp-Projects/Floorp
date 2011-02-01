@@ -50,7 +50,7 @@
 
 #ifdef ACCESSIBILITY
 #include "nsIServiceManager.h"
-#include "nsIAccessibilityService.h"
+#include "nsAccessibilityService.h"
 #endif
 
 //FOR SELECTION
@@ -296,7 +296,7 @@ BRFrame::PeekOffsetWord(PRBool aForward, PRBool aWordSelectEatSpace, PRBool aIsK
 already_AddRefed<nsAccessible>
 BRFrame::CreateAccessible()
 {
-  nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
+  nsAccessibilityService* accService = nsIPresShell::AccService();
   if (!accService) {
     return nsnull;
   }
