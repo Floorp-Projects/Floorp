@@ -2069,12 +2069,14 @@ js_ArrayCompPush(JSContext *cx, JSObject *obj, const Value &vp)
 JSBool JS_FASTCALL
 js_ArrayCompPush_tn(JSContext *cx, JSObject *obj, ValueArgType v)
 {
+    TraceMonitor *tm = &JS_TRACE_MONITOR(cx);
+
     if (!ArrayCompPushImpl(cx, obj, ValueArgToConstRef(v))) {
-        SetBuiltinError(cx);
+        SetBuiltinError(tm);
         return JS_FALSE;
     }
 
-    return WasBuiltinSuccessful(cx);
+    return WasBuiltinSuccessful(tm);
 }
 JS_DEFINE_CALLINFO_3(extern, BOOL_FAIL, js_ArrayCompPush_tn, CONTEXT, OBJECT,
                      VALUE, 0, nanojit::ACCSET_STORE_ANY)

@@ -85,10 +85,13 @@ typedef HashMap<JSFunction *,
                 DefaultHasher<JSFunction *>,
                 SystemAllocPolicy> ToSourceCache;
 
+struct TraceMonitor;
+
 /* Holds the execution state during trace execution. */
 struct TracerState
 {
     JSContext*     cx;                  // current VM context handle
+    TraceMonitor*  traceMonitor;        // current TM
     double*        stackBase;           // native stack base
     double*        sp;                  // native stack pointer, stack[0] is spbase[0]
     double*        eos;                 // first unusable word after the native stack / begin of globals
@@ -450,6 +453,17 @@ struct JS_FRIEND_API(JSCompartment) {
 
 #define JS_TRACE_MONITOR(cx)    (cx->compartment->traceMonitor)
 #define JS_SCRIPTS_TO_GC(cx)    (cx->compartment->scriptsToGC)
+
+/*
+ * N.B. JS_ON_TRACE(cx) is true if JIT code is on the stack in the current
+ * thread, regardless of whether cx is the context in which that trace is
+ * executing. cx must be a context on the current thread.
+ */
+#ifdef JS_TRACER
+# define JS_ON_TRACE(cx)            (cx->compartment && JS_TRACE_MONITOR(cx).ontrace())
+#else
+# define JS_ON_TRACE(cx)            false
+#endif
 
 namespace js {
 static inline MathCache *
