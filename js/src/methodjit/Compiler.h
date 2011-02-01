@@ -70,27 +70,21 @@ class Compiler : public BaseCompiler
     struct MICGenInfo {
         MICGenInfo(ic::MICInfo::Kind kind) : kind(kind)
         { }
-        Label entry;
-        Label stubEntry;
+        Label fastPathStart;
+        Label slowPathStart;
+        Label fastPathRejoin;
+        Label load;
         DataLabel32 shape;
         DataLabelPtr addrLabel;
-        Label load;
         DataLabel32 store;
         Call call;
         ic::MICInfo::Kind kind;
-        jsbytecode *jumpTarget;
-        Jump traceHint;
-        MaybeJump slowTraceHint;
-        union {
-            struct {
-                bool typeConst;
-                bool dataConst;
-                bool usePropertyCache;
-            } name;
-            struct {
-                uint32 pcOffs;
-            } tracer;
-        } u;
+        Jump shapeGuardJump;
+        ValueRemat vr;
+        RegisterID objReg;
+        RegisterID shapeReg;
+        bool objConst;
+        bool usePropertyCache;
     };
 
     struct EqualityGenInfo {
