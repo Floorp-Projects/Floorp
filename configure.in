@@ -6383,7 +6383,9 @@ i?86-apple-darwin*|powerpc-apple-darwin*|x86_64-apple-darwin*)
   MOZ_CRASHREPORTER=1
   ;;
 i?86-*-linux*|x86_64-*-linux*|arm-*-linux*)
-  MOZ_CRASHREPORTER=1
+  if test "$MOZ_ENABLE_GTK2"; then
+    MOZ_CRASHREPORTER=1
+  fi
   ;;
 arm-android-eabi)
   MOZ_CRASHREPORTER=1
