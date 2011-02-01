@@ -265,6 +265,111 @@ body[dir=rtl] #searchSubmit:active {
               0 1px 0 rgba(255,255,255,.5);
 }
 
+#sessionRestoreContainer {
+  padding-top: 1.5%;
+  height: 33%;
+  text-align: center;
+}
+
+@media all and (max-height: 370px) {
+  #sessionRestoreContainer {
+    position: relative;
+    top: -5px;
+    padding-top: 0;
+  }
+}
+
+#restorePreviousSession {
+  -moz-padding-start: 7.5%;
+  -moz-padding-end: 10px;
+  height: 100%;
+  border: 0;
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px rgba(9,37,59,0),
+              0 1px 2px rgba(9,37,59,0),
+              0 0 10px rgba(255,255,255,0),
+              0 -3px 0 rgba(180,194,212,0) inset;
+  -moz-transition-property: background-color, box-shadow;
+  -moz-transition-duration: 0.25s;
+  -moz-transition-timing-function: ease-out;
+  background: transparent url("chrome://browser/content/aboutHome-restore-icon.png") no-repeat 10px 50%;
+  background-size: auto 77%;
+  color: rgb(50,50,50);
+  font-weight: bold;
+}
+
+body[dir=rtl] #restorePreviousSession {
+  background-image: url("chrome://browser/content/aboutHome-restore-icon-rtl.png");
+  background-position: 100% 50%;
+}
+
+@media all and (max-aspect-ratio: 8/16) {
+  #restorePreviousSession { -moz-padding-start: 25% }
+}
+
+@media all and (min-aspect-ratio: 8/16) and (max-aspect-ratio: 10/16) {
+  #restorePreviousSession { -moz-padding-start: 18% }
+}
+
+@media all and (min-aspect-ratio: 10/16) and (max-aspect-ratio: 12/16) {
+  #restorePreviousSession { -moz-padding-start: 15% }
+}
+
+@media all and (min-aspect-ratio: 12/16) and (max-aspect-ratio: 15/16) {
+  #restorePreviousSession { -moz-padding-start: 12% }
+}
+
+@media all and (min-aspect-ratio: 15/16) and (max-aspect-ratio: 20/16) {
+  #restorePreviousSession { -moz-padding-start: 9% }
+}
+
+@media all and (min-aspect-ratio: 31/16) and (max-aspect-ratio: 51/16) {
+  #restorePreviousSession { -moz-padding-start: 5% }
+}
+
+@media all and (min-aspect-ratio: 51/16) {
+  #restorePreviousSession { -moz-padding-start: 3% }
+}
+
+#restorePreviousSession:disabled {
+  display: none;
+}
+
+#restorePreviousSession:hover {
+  background-image: url("chrome://browser/content/aboutHome-restore-icon.png"),
+                    -moz-linear-gradient(rgba(255,255,255,.7), rgba(255,255,255,.2));
+  background-position: 10px 50%, 0 0;
+  background-size: auto 77%, auto auto;
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px rgba(9,37,59,.2),
+              0 1px 2px rgba(9,37,59,.2),
+              0 0 10px rgba(255,255,255,.4),
+              0 -3px 0 rgba(180,194,212,.3) inset;
+}
+
+body[dir=rtl] #restorePreviousSession:hover {
+  background-image: url("chrome://browser/content/aboutHome-restore-icon-rtl.png"),
+                    -moz-linear-gradient(rgba(255,255,255,.7), rgba(255,255,255,.2));
+  background-position: 100% 50%, 0 0;
+}
+
+#restorePreviousSession:hover:active {
+  background-image: url("chrome://browser/content/aboutHome-restore-icon.png"),
+                    -moz-linear-gradient(rgba(255,255,255,.0), rgba(255,255,255,.2));
+  background-position: 10px 50%, 0 0;
+  background-size: auto 77%, auto auto;
+  background-color: rgba(23,75,115,.1);
+  box-shadow: 0 0 0 1px rgba(9,37,59,.2),
+              0 1px 2px rgba(9,37,59,.4) inset,
+              0 1px 5px rgba(9,37,59,.15) inset;
+}
+
+body[dir=rtl] #restorePreviousSession:hover:active {
+  background-image: url("chrome://browser/content/aboutHome-restore-icon-rtl.png"),
+                    -moz-linear-gradient(rgba(255,255,255,.0), rgba(255,255,255,.2));
+  background-position: 100% 50%, 0 0;
+}
+
 #bottomSection {
   position: absolute;
   color: rgb(150,150,150);
