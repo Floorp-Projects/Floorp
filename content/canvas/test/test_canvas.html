@@ -10119,28 +10119,28 @@ ok(ctx.lineWidth === 1.5, "ctx.lineWidth === 1.5");
 
 ctx.lineWidth = 1.5;
 ctx.lineWidth = 0;
-todo(ctx.lineWidth === 1.5, "ctx.lineWidth === 1.5");
+ok(ctx.lineWidth === 1.5, "ctx.lineWidth === 1.5");
 
 ctx.lineWidth = 1.5;
 ctx.lineWidth = -1;
-todo(ctx.lineWidth === 1.5, "ctx.lineWidth === 1.5");
+ok(ctx.lineWidth === 1.5, "ctx.lineWidth === 1.5");
 
 ctx.lineWidth = 1.5;
 ctx.lineWidth = Infinity;
-todo(ctx.lineWidth === 1.5, "ctx.lineWidth === 1.5");
+ok(ctx.lineWidth === 1.5, "ctx.lineWidth === 1.5");
 
 ctx.lineWidth = 1.5;
 ctx.lineWidth = -Infinity;
-todo(ctx.lineWidth === 1.5, "ctx.lineWidth === 1.5");
+ok(ctx.lineWidth === 1.5, "ctx.lineWidth === 1.5");
 
 ctx.lineWidth = 1.5;
 ctx.lineWidth = NaN;
-todo(ctx.lineWidth === 1.5, "ctx.lineWidth === 1.5");
+ok(ctx.lineWidth === 1.5, "ctx.lineWidth === 1.5");
 
 } catch (e) {
     _thrown_outer = true;
 }
-todo(!_thrown_outer, 'should not throw exception');
+ok(!_thrown_outer, 'should not throw exception');
 
 
 }
