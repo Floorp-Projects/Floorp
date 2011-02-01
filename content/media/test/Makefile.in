@@ -89,6 +89,8 @@ _TEST_FILES = \
 		seek9.js \
 		seek10.js \
 		seek11.js \
+		seek12.js \
+		seek13.js \
 		test_access_control.html \
 		test_audio1.html \
 		test_audio2.html \
