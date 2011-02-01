@@ -225,7 +225,7 @@ struct TraceMonitor {
     LoopProfile*            profile;
 
     GlobalState             globalStates[MONITOR_N_GLOBAL_STATES];
-    TreeFragment*           vmfragments[FRAGMENT_TABLE_SIZE];
+    TreeFragment            *vmfragments[FRAGMENT_TABLE_SIZE];
     RecordAttemptMap*       recordAttempts;
 
     /* A hashtable mapping PC values to loop profiles for those loops. */
