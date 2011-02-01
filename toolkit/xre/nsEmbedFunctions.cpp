@@ -699,7 +699,17 @@ XRE_ShutdownChildProcess()
   //  (3) ProcessChild goes out of scope and terminates the IO thread
   //  (4) ProcessChild joins the IO thread
   //  (5) exit()
-  MessageLoop::current()->Quit(); 
+  MessageLoop::current()->Quit();
+#if defined(XP_MACOSX)
+  nsCOMPtr<nsIAppShell> appShell(do_GetService(kAppShellCID));
+  if (appShell) {
+      // On Mac, we might be only above nsAppShell::Run(), not
+      // MessagePump::Run().  See XRE_RunAppShell(). To account for
+      // that case, we fire off an Exit() here.  If we were indeed
+      // above MessagePump::Run(), this Exit() is just superfluous.
+      appShell->Exit();
+  }
+#endif // XP_MACOSX
 }
 
 namespace {
