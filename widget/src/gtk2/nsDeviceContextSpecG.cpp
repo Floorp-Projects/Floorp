@@ -476,12 +476,13 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::GetSurfaceForPrinter(gfxASurface **aSurfac
       const gchar* fmtGTK = gtk_print_settings_get(mGtkPrintSettings, GTK_PRINT_SETTINGS_OUTPUT_FILE_FORMAT);
       if (!fmtGTK && GTK_IS_PRINTER(mGtkPrinter)) {
         // Likely not print-to-file, check printer's capabilities
-        format = (gtk_printer_accepts_ps(mGtkPrinter)) ? nsIPrintSettings::kOutputFormatPS
-                                                       : nsIPrintSettings::kOutputFormatPDF;
+        format = (gtk_printer_accepts_ps(mGtkPrinter))
+          ? static_cast<PRInt16>(nsIPrintSettings::kOutputFormatPS)
+          : static_cast<PRInt16>(nsIPrintSettings::kOutputFormatPDF);
       } else if (nsDependentCString(fmtGTK).EqualsIgnoreCase("pdf")) {
-          format = nsIPrintSettings::kOutputFormatPDF;
+        format = nsIPrintSettings::kOutputFormatPDF;
       } else {
-          format = nsIPrintSettings::kOutputFormatPS;
+        format = nsIPrintSettings::kOutputFormatPS;
       }
     }
   }
