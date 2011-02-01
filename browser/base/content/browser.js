@@ -2551,6 +2551,19 @@ function BrowserImport()
 }
 
 /**
+ *  Handle load of some pages (about:*) so that we can make modifications
+ *  to the DOM for unprivileged pages.
+ */
+function BrowserOnAboutPageLoad(document) {
+  if (/^about:home$/i.test(document.documentURI)) {
+    let ss = Components.classes["@mozilla.org/browser/sessionstore;1"].
+             getService(Components.interfaces.nsISessionStore);
+    if (!ss.canRestoreLastSession)
+      document.getElementById("sessionRestoreContainer").hidden = true;
+  }
+}
+
+/**
  * Handle command events bubbling up from error page content
  */
 function BrowserOnClick(event) {
@@ -2670,6 +2683,15 @@ function BrowserOnClick(event) {
           notificationBox.PRIORITY_CRITICAL_HIGH,
           buttons
         );
+      }
+    }
+    else if (/^about:home$/i.test(errorDoc.documentURI)) {
+      if (ot == errorDoc.getElementById("restorePreviousSession")) {
+        let ss = Cc["@mozilla.org/browser/sessionstore;1"].
+                 getService(Ci.nsISessionStore);
+        if (ss.canRestoreLastSession)
+          ss.restoreLastSession();
+        errorDoc.getElementById("sessionRestoreContainer").hidden = true;
       }
     }
 }
@@ -4637,6 +4659,9 @@ var TabsProgressListener = {
         aBrowser.removeEventListener("click", BrowserOnClick, false);
         aBrowser.removeEventListener("pagehide", arguments.callee, true);
       }, true);
+
+      // We also want to make changes to page UI for unprivileged about pages.
+      BrowserOnAboutPageLoad(aWebProgress.DOMWindow.document);
     }
   },
 
