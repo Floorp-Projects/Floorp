@@ -495,13 +495,11 @@ NotificationController::CoalesceTextChangeEventsFor(AccHideEvent* aTailEvent,
     return;
 
   if (aThisEvent->mNextSibling == aTailEvent->mAccessible) {
-    aTailEvent->mAccessible->AppendTextTo(textEvent->mModifiedText,
-                                          0, PR_UINT32_MAX);
+    aTailEvent->mAccessible->AppendTextTo(textEvent->mModifiedText);
 
   } else if (aThisEvent->mPrevSibling == aTailEvent->mAccessible) {
     PRUint32 oldLen = textEvent->GetLength();
-    aTailEvent->mAccessible->AppendTextTo(textEvent->mModifiedText,
-                                          0, PR_UINT32_MAX);
+    aTailEvent->mAccessible->AppendTextTo(textEvent->mModifiedText);
     textEvent->mStart -= textEvent->GetLength() - oldLen;
   }
 
@@ -520,15 +518,14 @@ NotificationController::CoalesceTextChangeEventsFor(AccShowEvent* aTailEvent,
       aThisEvent->mAccessible->GetIndexInParent() + 1) {
     // If tail target was inserted after this target, i.e. tail target is next
     // sibling of this target.
-    aTailEvent->mAccessible->AppendTextTo(textEvent->mModifiedText,
-                                          0, PR_UINT32_MAX);
+    aTailEvent->mAccessible->AppendTextTo(textEvent->mModifiedText);
 
   } else if (aTailEvent->mAccessible->GetIndexInParent() ==
              aThisEvent->mAccessible->GetIndexInParent() -1) {
     // If tail target was inserted before this target, i.e. tail target is
     // previous sibling of this target.
     nsAutoString startText;
-    aTailEvent->mAccessible->AppendTextTo(startText, 0, PR_UINT32_MAX);
+    aTailEvent->mAccessible->AppendTextTo(startText);
     textEvent->mModifiedText = startText + textEvent->mModifiedText;
     textEvent->mStart -= startText.Length();
   }
@@ -564,7 +561,7 @@ NotificationController::CreateTextChangeEventFor(AccMutationEvent* aEvent)
   PRInt32 offset = textAccessible->GetChildOffset(aEvent->mAccessible);
 
   nsAutoString text;
-  aEvent->mAccessible->AppendTextTo(text, 0, PR_UINT32_MAX);
+  aEvent->mAccessible->AppendTextTo(text);
   if (text.IsEmpty())
     return;
 
