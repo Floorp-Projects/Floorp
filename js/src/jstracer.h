@@ -1662,8 +1662,6 @@ class TraceRecorder
 
 #define TRACING_ENABLED(cx)       ((cx)->traceJitEnabled)
 #define REGEX_JIT_ENABLED(cx)     ((cx)->traceJitEnabled || (cx)->methodJitEnabled)
-#define TRACE_RECORDER(cx)        (JS_TRACE_MONITOR(cx).recorder)
-#define TRACE_PROFILER(cx)        (JS_TRACE_MONITOR(cx).profile)
 
 #define JSOP_IN_RANGE(op,lo,hi)   (uintN((op) - (lo)) <= uintN((hi) - (lo)))
 #define JSOP_IS_BINARY(op)        JSOP_IN_RANGE(op, JSOP_BITOR, JSOP_MOD)

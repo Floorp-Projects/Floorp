@@ -2447,11 +2447,6 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
             goto error;                                                       \
     JS_END_MACRO
 
-#ifndef TRACE_RECORDER
-#define TRACE_RECORDER(cx) (false)
-#define TRACE_PROFILER(cx) (false)
-#endif
-
 #if defined(JS_TRACER) && defined(JS_METHODJIT)
 # define LEAVE_ON_SAFE_POINT()                                                \
     do {                                                                      \

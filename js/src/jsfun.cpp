@@ -1287,9 +1287,11 @@ SetCallVar(JSContext *cx, JSObject *obj, jsid id, Value *vp)
      * outer tree is illegal, and runtime would fall off trace.
      */
 #ifdef JS_TRACER
-    TraceMonitor *tm = &JS_TRACE_MONITOR(cx);
-    if (tm->recorder && tm->tracecx)
-        AbortRecording(cx, "upvar write in nested tree");
+    if (JS_ON_TRACE(cx)) {
+        TraceMonitor *tm = JS_TRACE_MONITOR_ON_TRACE(cx);
+        if (tm->recorder && tm->tracecx)
+            AbortRecording(cx, "upvar write in nested tree");
+    }
 #endif
 
     Value *varp;

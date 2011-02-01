@@ -848,6 +848,20 @@ struct JSThreadData {
     unsigned            requestDepth;
 #endif
 
+#ifdef JS_TRACER
+    /*
+     * During trace execution (or during trace recording or
+     * profiling), these fields point to the compartment doing the
+     * execution on this thread. At other times, they are NULL.  If a
+     * thread tries to execute/record/profile one trace while another
+     * is still running, the initial one will abort. Therefore, we
+     * only need to track one at a time.
+     */
+    JSCompartment       *onTraceCompartment;
+    JSCompartment       *recordingCompartment;
+    JSCompartment       *profilingCompartment;
+ #endif
+
     /*
      * If non-zero, we were been asked to call the operation callback as soon
      * as possible.  If the thread has an active request, this contributes
