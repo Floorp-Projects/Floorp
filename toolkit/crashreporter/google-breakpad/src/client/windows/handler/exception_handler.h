@@ -295,6 +295,13 @@ class ExceptionHandler {
                                   EXCEPTION_POINTERS* exinfo,
                                   MDRawAssertionInfo* assertion);
 
+  // This function is used as a callback when calling MinidumpWriteDump,
+  // in order to add additional memory regions to the dump.
+  static BOOL CALLBACK MinidumpWriteDumpCallback(
+      PVOID context,
+      const PMINIDUMP_CALLBACK_INPUT callback_input,
+      PMINIDUMP_CALLBACK_OUTPUT callback_output);
+
   // This function does the actual writing of a minidump.  It is
   // called on the handler thread.  requesting_thread_id is the ID of
   // the thread that requested the dump, if that information is

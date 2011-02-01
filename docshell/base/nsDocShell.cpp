@@ -712,6 +712,7 @@ nsDocShell::nsDocShell():
     mIsOffScreenBrowser(PR_FALSE),
     mIsActive(PR_TRUE),
     mIsAppTab(PR_FALSE),
+    mUseGlobalHistory(PR_FALSE),
     mFiredUnloadEvent(PR_FALSE),
     mEODForCurrentDocument(PR_FALSE),
     mURIResultedInDocument(PR_FALSE),
@@ -3090,7 +3091,7 @@ nsDocShell::AddChild(nsIDocShellTreeItem * aChild)
     childDocShell->SetChildOffset(dynamic ? -1 : mChildList.Count() - 1);
 
     /* Set the child's global history if the parent has one */
-    if (mGlobalHistory) {
+    if (mUseGlobalHistory) {
         nsCOMPtr<nsIDocShellHistory>
             dsHistoryChild(do_QueryInterface(aChild));
         if (dsHistoryChild)
@@ -3432,6 +3433,8 @@ nsDocShell::SetUseGlobalHistory(PRBool aUseGlobalHistory)
 {
     nsresult rv;
 
+    mUseGlobalHistory = aUseGlobalHistory;
+
     if (!aUseGlobalHistory) {
         mGlobalHistory = nsnull;
         return NS_OK;
@@ -3448,7 +3451,7 @@ nsDocShell::SetUseGlobalHistory(PRBool aUseGlobalHistory)
 NS_IMETHODIMP
 nsDocShell::GetUseGlobalHistory(PRBool *aUseGlobalHistory)
 {
-    *aUseGlobalHistory = (mGlobalHistory != nsnull);
+    *aUseGlobalHistory = mUseGlobalHistory;
     return NS_OK;
 }
 
@@ -4949,7 +4952,7 @@ nsDocShell::SetTitle(const PRUnichar * aTitle)
             treeOwnerAsWin->SetTitle(aTitle);
     }
 
-    if (mCurrentURI && mLoadType != LOAD_ERROR_PAGE) {
+    if (mCurrentURI && mLoadType != LOAD_ERROR_PAGE && mUseGlobalHistory) {
         nsCOMPtr<IHistory> history = services::GetHistoryService();
         if (history) {
             history->SetURITitle(mCurrentURI, mTitle);
@@ -8352,12 +8355,14 @@ nsDocShell::InternalLoad(nsIURI * aURI,
 
             /* Set the title for the Global History entry for this anchor url.
              */
-            nsCOMPtr<IHistory> history = services::GetHistoryService();
-            if (history) {
-                history->SetURITitle(aURI, mTitle);
-            }
-            else if (mGlobalHistory) {
-                mGlobalHistory->SetPageTitle(aURI, mTitle);
+            if (mUseGlobalHistory) {
+                nsCOMPtr<IHistory> history = services::GetHistoryService();
+                if (history) {
+                    history->SetURITitle(aURI, mTitle);
+                }
+                else if (mGlobalHistory) {
+                    mGlobalHistory->SetPageTitle(aURI, mTitle);
+                }
             }
 
             if (sameDocIdent) {
@@ -10526,8 +10531,9 @@ nsDocShell::AddURIVisit(nsIURI* aURI,
 {
     NS_ASSERTION(aURI, "Visited URI is null!");
 
-    // Only content-type docshells save URI visits.
-    if (mItemType != typeContent) {
+    // Only content-type docshells save URI visits.  Also don't do
+    // anything here if we're not supposed to use global history.
+    if (mItemType != typeContent || !mUseGlobalHistory) {
         return;
     }
 

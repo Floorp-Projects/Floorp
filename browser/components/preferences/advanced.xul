@@ -127,6 +127,9 @@
       <preference id="security.disable_button.openDeviceManager"
                   name="security.disable_button.openDeviceManager"
                   type="bool"/>
+      <preference id="privacy.donottrackheader.enabled"
+                  name="privacy.donottrackheader.enabled"
+                  type="bool"/>
     </preferences>
     
 #ifdef HAVE_SHELL_SERVICE
@@ -191,6 +194,10 @@
                       onsyncfrompreference="return gAdvancedPane.readCheckSpelling();"
                       onsynctopreference="return gAdvancedPane.writeCheckSpelling();"
                       preference="layout.spellcheckDefault"/>
+            <checkbox id="privacyDoNotTrackPrefs"
+                      label="&doNotTrack.label;"
+                      accesskey="&doNotTrack.accesskey;"
+                      preference="privacy.donottrackheader.enabled"/>
           </groupbox>
 
 #ifdef HAVE_SHELL_SERVICE

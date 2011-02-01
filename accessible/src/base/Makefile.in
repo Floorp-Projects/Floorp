@@ -81,6 +81,8 @@ CPPSRCS = \
 
 EXPORTS = \
   a11yGeneric.h \
+  nsAccDocManager.h \
+  nsAccessibilityService.h \
   nsAccessible.h \
   nsAccessNode.h \
   nsARIAMap.h \

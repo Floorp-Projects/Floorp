@@ -396,8 +396,8 @@ public:
         if (!fInitialize(mEGLDisplay, NULL, NULL))
             return PR_FALSE;
 
-        const char *vendor = (const char*) fQueryString(mEGLDisplay, LOCAL_EGL_VENDOR);
-        if (vendor && strstr(vendor, "TransGaming") != 0) {
+        const char *version = (const char*) fQueryString(mEGLDisplay, LOCAL_EGL_VERSION);
+        if (version && strstr(version, "ANGLE") != 0) {
             mIsANGLE = PR_TRUE;
         }
         
@@ -572,6 +572,20 @@ public:
 #undef ATTR
     }
 
+    void DumpEGLConfigs() {
+        int nc = 0;
+        fGetConfigs(mEGLDisplay, NULL, 0, &nc);
+        EGLConfig *ec = new EGLConfig[nc];
+        fGetConfigs(mEGLDisplay, ec, nc, &nc);
+
+        for (int i = 0; i < nc; ++i) {
+            printf_stderr ("========= EGL Config %d ========\n");
+            DumpEGLConfig(ec[i]);
+        }
+
+        delete [] ec;
+    }
+
 private:
     PRBool mInitialized;
     PRLibrary *mEGLLibrary;
@@ -605,6 +619,7 @@ public:
         , mBound(PR_FALSE)
         , mIsPBuffer(PR_FALSE)
         , mIsDoubleBuffered(PR_FALSE)
+        , mPBufferCanBindToTexture(PR_FALSE)
     {
         // any EGL contexts will always be GLESv2
         SetIsGLES2(PR_TRUE);
@@ -782,10 +797,6 @@ public:
         mGLWidget = widget;
     }
 
-    void SetIsPBuffer() {
-        mIsPBuffer = PR_TRUE;
-    }
-
     EGLContext Context() {
         return mContext;
     }
@@ -842,6 +853,50 @@ protected:
 
     PRPackedBool mIsPBuffer;
     PRPackedBool mIsDoubleBuffered;
+    PRPackedBool mPBufferCanBindToTexture;
+
+    static EGLSurface CreatePBufferSurfaceTryingPowerOfTwo(EGLConfig config,
+                                                           EGLenum bindToTextureFormat,
+                                                           gfxIntSize& pbsize)
+    {
+        nsTArray<EGLint> pbattrs(16);
+        EGLSurface surface = nsnull;
+
+    TRY_AGAIN_POWER_OF_TWO:
+        pbattrs.Clear();
+        pbattrs.AppendElement(LOCAL_EGL_WIDTH); pbattrs.AppendElement(pbsize.width);
+        pbattrs.AppendElement(LOCAL_EGL_HEIGHT); pbattrs.AppendElement(pbsize.height);
+
+        if (bindToTextureFormat != LOCAL_EGL_NONE) {
+            pbattrs.AppendElement(LOCAL_EGL_TEXTURE_TARGET);
+            pbattrs.AppendElement(LOCAL_EGL_TEXTURE_2D);
+
+            pbattrs.AppendElement(LOCAL_EGL_TEXTURE_FORMAT);
+            pbattrs.AppendElement(bindToTextureFormat);
+        }
+
+        pbattrs.AppendElement(LOCAL_EGL_NONE);
+
+        surface = sEGLLibrary.fCreatePbufferSurface(EGL_DISPLAY(), config, &pbattrs[0]);
+        if (!surface) {
+            if (!is_power_of_two(pbsize.width) ||
+                !is_power_of_two(pbsize.height))
+            {
+                if (!is_power_of_two(pbsize.width))
+                    pbsize.width = next_power_of_two(pbsize.width);
+                if (!is_power_of_two(pbsize.height))
+                    pbsize.height = next_power_of_two(pbsize.height);
+
+                NS_WARNING("Failed to create pbuffer, trying power of two dims");
+                goto TRY_AGAIN_POWER_OF_TWO;
+            }
+
+            NS_WARNING("Failed to create pbuffer surface");
+            return nsnull;
+        }
+
+        return surface;
+    }
 };
 
 PRBool
@@ -854,7 +909,7 @@ GLContextEGL::BindTex2DOffscreen(GLContext *aOffscreen)
 
     GLContextEGL *offs = static_cast<GLContextEGL*>(aOffscreen);
 
-    if (offs->mIsPBuffer) {
+    if (offs->mIsPBuffer && offs->mPBufferCanBindToTexture) {
         PRBool ok = sEGLLibrary.fBindTexImage(EGL_DISPLAY(),
                                               offs->mSurface,
                                               LOCAL_EGL_BACK_BUFFER);
@@ -884,7 +939,7 @@ GLContextEGL::UnbindTex2DOffscreen(GLContext *aOffscreen)
 
     GLContextEGL *offs = static_cast<GLContextEGL*>(aOffscreen);
 
-    if (offs->mIsPBuffer) {
+    if (offs->mIsPBuffer && offs->mPBufferCanBindToTexture) {
         sEGLLibrary.fReleaseTexImage(EGL_DISPLAY(),
                                      offs->mSurface,
                                      LOCAL_EGL_BACK_BUFFER);
@@ -895,42 +950,17 @@ PRBool
 GLContextEGL::ResizeOffscreen(const gfxIntSize& aNewSize)
 {
     if (mIsPBuffer) {
-        nsTArray<EGLint> pbattrs;
-
-        ADD_ATTR_2(pbattrs, LOCAL_EGL_WIDTH, 0);
-        ADD_ATTR_2(pbattrs, LOCAL_EGL_HEIGHT, 0);
-
-        if (!sEGLLibrary.IsANGLE()) {
-            ADD_ATTR_2(pbattrs, LOCAL_EGL_TEXTURE_TARGET, LOCAL_EGL_TEXTURE_2D);
-            ADD_ATTR_2(pbattrs, LOCAL_EGL_TEXTURE_FORMAT,
-                       mCreationFormat.minAlpha ?
-                       LOCAL_EGL_TEXTURE_RGBA :
-                       LOCAL_EGL_TEXTURE_RGB);
-        }
-
-        ADD_ATTR_1(pbattrs, LOCAL_EGL_NONE);
-
-        EGLSurface surface = nsnull;
         gfxIntSize pbsize(aNewSize);
 
-TRY_AGAIN_POWER_OF_TWO:
-        pbattrs[1] = pbsize.width;
-        pbattrs[3] = pbsize.height;
-
-        surface = sEGLLibrary.fCreatePbufferSurface(EGL_DISPLAY(), mConfig, &pbattrs[0]);
+        EGLSurface surface =
+            CreatePBufferSurfaceTryingPowerOfTwo(mConfig,
+                                                 mPBufferCanBindToTexture
+                                                 ? (mCreationFormat.minAlpha
+                                                    ? LOCAL_EGL_TEXTURE_RGBA
+                                                    : LOCAL_EGL_TEXTURE_RGB)
+                                                 : LOCAL_EGL_NONE,
+                                                 pbsize);
         if (!surface) {
-            if (!is_power_of_two(pbsize.width) ||
-                !is_power_of_two(pbsize.height))
-            {
-                if (!is_power_of_two(pbsize.width))
-                    pbsize.width = next_power_of_two(pbsize.width);
-                if (!is_power_of_two(pbsize.height))
-                    pbsize.height = next_power_of_two(pbsize.height);
-
-                NS_WARNING("Failed to resize pbuffer, trying power of two dims");
-                goto TRY_AGAIN_POWER_OF_TWO;
-            }
-
             NS_WARNING("Failed to resize pbuffer");
             return nsnull;
         }
@@ -1714,6 +1744,50 @@ TRY_AGAIN_NO_SHARING:
 }
 #endif
 
+static void
+FillPBufferAttribs(nsTArray<EGLint>& aAttrs,
+                   const ContextFormat& aFormat,
+                   bool aCanBindToTexture,
+                   int aColorBitsOverride,
+                   int aDepthBitsOverride)
+{
+    aAttrs.Clear();
+
+#define A1(_x)      do { aAttrs.AppendElement(_x); } while (0)
+#define A2(_x,_y)   do { A1(_x); A1(_y); } while (0)
+
+    A2(LOCAL_EGL_RENDERABLE_TYPE, LOCAL_EGL_OPENGL_ES2_BIT);
+
+    if (aColorBitsOverride == -1) {
+        A2(LOCAL_EGL_RED_SIZE, aFormat.red);
+        A2(LOCAL_EGL_GREEN_SIZE, aFormat.green);
+        A2(LOCAL_EGL_BLUE_SIZE, aFormat.blue);
+    } else {
+        A2(LOCAL_EGL_RED_SIZE, aColorBitsOverride);
+        A2(LOCAL_EGL_GREEN_SIZE, aColorBitsOverride);
+        A2(LOCAL_EGL_BLUE_SIZE, aColorBitsOverride);
+    }
+
+    A2(LOCAL_EGL_ALPHA_SIZE, aFormat.alpha);
+
+    if (aDepthBitsOverride == -1) {
+        A2(LOCAL_EGL_DEPTH_SIZE, aFormat.minDepth);
+    } else {
+        A2(LOCAL_EGL_DEPTH_SIZE, aDepthBitsOverride);
+    }
+
+    A2(LOCAL_EGL_STENCIL_SIZE, aFormat.minStencil);
+
+    if (aCanBindToTexture) {
+        A2(aFormat.minAlpha ? LOCAL_EGL_BIND_TO_TEXTURE_RGBA : LOCAL_EGL_BIND_TO_TEXTURE_RGB,
+           LOCAL_EGL_TRUE);
+    }
+
+    A1(LOCAL_EGL_NONE);
+#undef A1
+#undef A2
+}
+
 already_AddRefed<GLContextEGL>
 GLContextEGL::CreateEGLPBufferOffscreenContext(const gfxIntSize& aSize,
                                                const ContextFormat& aFormat)
@@ -1722,92 +1796,72 @@ GLContextEGL::CreateEGLPBufferOffscreenContext(const gfxIntSize& aSize,
     EGLSurface surface;
     EGLContext context;
 
-    EGLint attribs[] = {
-        LOCAL_EGL_RENDERABLE_TYPE, LOCAL_EGL_OPENGL_ES2_BIT,
-        LOCAL_EGL_SURFACE_TYPE, LOCAL_EGL_PBUFFER_BIT,
-
-        LOCAL_EGL_RED_SIZE, aFormat.red,
-        LOCAL_EGL_GREEN_SIZE, aFormat.green,
-        LOCAL_EGL_BLUE_SIZE, aFormat.blue,
-        LOCAL_EGL_ALPHA_SIZE, aFormat.alpha,
-        LOCAL_EGL_DEPTH_SIZE, aFormat.minDepth,
-        LOCAL_EGL_STENCIL_SIZE, aFormat.minStencil,
-
-        // these get overwritten below; if you add anything above
-        aFormat.minAlpha ?
-          LOCAL_EGL_BIND_TO_TEXTURE_RGBA :
-          LOCAL_EGL_BIND_TO_TEXTURE_RGB,
-        LOCAL_EGL_TRUE,
-
-        LOCAL_EGL_NONE
-    };
-
-    // if we're running under ANGLE, we can't set
-    // BIND_TO_TEXTURE since we're probably doing d3d interop
-    if (sEGLLibrary.IsANGLE()) {
-        int k = sizeof(attribs)/sizeof(EGLint) - 3;
-        attribs[k] = LOCAL_EGL_NONE;
-        attribs[k+1] = LOCAL_EGL_NONE;
-    }
+    bool configCanBindToTexture = true;
 
     EGLConfig configs[64];
-    int numConfigs = 64;
+    int numConfigs = sizeof(configs)/sizeof(EGLConfig);
+    int foundConfigs = 0;
+
+    // if we're running under ANGLE, we can't set BIND_TO_TEXTURE --
+    // it's not supported, and we have dx interop pbuffers anyway
+    if (sEGLLibrary.IsANGLE())
+        configCanBindToTexture = false;
+
+    nsTArray<EGLint> attribs(32);
+    int attribAttempt = 0;
+
+TRY_ATTRIBS_AGAIN:
+    switch (attribAttempt) {
+    case 0:
+        FillPBufferAttribs(attribs, aFormat, configCanBindToTexture, 8, 24);
+        break;
+    case 1:
+        FillPBufferAttribs(attribs, aFormat, configCanBindToTexture, -1, 24);
+        break;
+    case 2:
+        FillPBufferAttribs(attribs, aFormat, configCanBindToTexture, -1, -1);
+        break;
+    }
 
     if (!sEGLLibrary.fChooseConfig(EGL_DISPLAY(),
-                                   attribs,
+                                   &attribs[0],
                                    configs, numConfigs,
-                                   &numConfigs)
-        || numConfigs == 0)
+                                   &foundConfigs)
+        || foundConfigs == 0)
     {
-        NS_WARNING("No configs");
+        if (attribAttempt < 3) {
+            attribAttempt++;
+            goto TRY_ATTRIBS_AGAIN;
+        }
+
+        if (configCanBindToTexture) {
+            NS_WARNING("No pbuffer EGL configs that can bind to texture, trying without");
+            configCanBindToTexture = false;
+            attribAttempt = 0;
+            goto TRY_ATTRIBS_AGAIN;
+        }
+
         // no configs? no pbuffers!
         return nsnull;
     }
 
-    // XXX do some smarter matching here
+    // XXX do some smarter matching here, perhaps instead of the more complex
+    // minimum overrides above
     config = configs[0];
 #ifdef DEBUG
     sEGLLibrary.DumpEGLConfig(config);
 #endif
 
     gfxIntSize pbsize(aSize);
-
-    nsTArray<EGLint> pbattrs;
-
-    ADD_ATTR_2(pbattrs, LOCAL_EGL_WIDTH, 0);
-    ADD_ATTR_2(pbattrs, LOCAL_EGL_HEIGHT, 0);
-
-    if (!sEGLLibrary.IsANGLE()) {
-        ADD_ATTR_2(pbattrs, LOCAL_EGL_TEXTURE_TARGET, LOCAL_EGL_TEXTURE_2D);
-        ADD_ATTR_2(pbattrs, LOCAL_EGL_TEXTURE_FORMAT,
-                   aFormat.minAlpha ?
-                   LOCAL_EGL_TEXTURE_RGBA :
-                   LOCAL_EGL_TEXTURE_RGB);
-    }
-
-    ADD_ATTR_1(pbattrs, LOCAL_EGL_NONE);
-
-TRY_AGAIN_POWER_OF_TWO:
-    pbattrs[1] = pbsize.width;
-    pbattrs[3] = pbsize.height;
-
-    surface = sEGLLibrary.fCreatePbufferSurface(EGL_DISPLAY(), config, &pbattrs[0]);
-    if (!surface) {
-        if (!is_power_of_two(pbsize.width) ||
-            !is_power_of_two(pbsize.height))
-        {
-            if (!is_power_of_two(pbsize.width))
-                pbsize.width = next_power_of_two(pbsize.width);
-            if (!is_power_of_two(pbsize.height))
-                pbsize.height = next_power_of_two(pbsize.height);
-
-            NS_WARNING("Failed to create pbuffer, trying power of two dims");
-            goto TRY_AGAIN_POWER_OF_TWO;
-        }
-
-        NS_WARNING("Failed to create pbuffer");
+    surface = GLContextEGL::CreatePBufferSurfaceTryingPowerOfTwo(config,
+                                                                 configCanBindToTexture
+                                                                 ? (aFormat.minAlpha
+                                                                    ? LOCAL_EGL_TEXTURE_RGBA
+                                                                    : LOCAL_EGL_TEXTURE_RGB)
+                                                                 : LOCAL_EGL_NONE,
+                                                                 pbsize);
+    if (!surface)
         return nsnull;
-    }
 
     sEGLLibrary.fBindAPI(LOCAL_EGL_OPENGL_ES_API);
 
@@ -1835,8 +1889,8 @@ TRY_AGAIN_POWER_OF_TWO:
     }
 
     glContext->SetOffscreenSize(aSize, pbsize);
-
-    glContext->SetIsPBuffer();
+    glContext->mIsPBuffer = PR_TRUE;
+    glContext->mPBufferCanBindToTexture = configCanBindToTexture;
 
     return glContext.forget();
 }

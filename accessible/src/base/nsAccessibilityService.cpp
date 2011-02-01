@@ -529,6 +529,15 @@ nsAccessibilityService::ContentRemoved(nsIPresShell* aPresShell,
 }
 
 void
+nsAccessibilityService::UpdateText(nsIPresShell* aPresShell,
+                                   nsIContent* aContent)
+{
+  nsDocAccessible* document = GetDocAccessible(aPresShell->GetDocument());
+  if (document)
+    document->UpdateText(aContent);
+}
+
+void
 nsAccessibilityService::PresShellDestroyed(nsIPresShell *aPresShell)
 {
   // Presshell destruction will automatically destroy shells for descendant
@@ -555,8 +564,10 @@ nsAccessibilityService::RecreateAccessible(nsIPresShell* aPresShell,
                                            nsIContent* aContent)
 {
   nsDocAccessible* document = GetDocAccessible(aPresShell->GetDocument());
-  if (document)
-    document->RecreateAccessible(aContent);
+  if (document) {
+    document->HandleNotification<nsDocAccessible, nsIContent>
+      (document, &nsDocAccessible::RecreateAccessible, aContent);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -784,22 +795,19 @@ nsAccessible*
 nsAccessibilityService::GetAccessible(nsINode* aNode)
 {
   nsDocAccessible* document = GetDocAccessible(aNode->GetOwnerDoc());
-  return document ? document->GetCachedAccessible(aNode) : nsnull;
+  return document ? document->GetAccessible(aNode) : nsnull;
 }
 
 nsAccessible*
 nsAccessibilityService::GetAccessibleOrContainer(nsINode* aNode,
                                                  nsIWeakReference* aWeakShell)
 {
-  if (!aNode || !aNode->IsInDoc())
+  if (!aNode)
     return nsnull;
 
-  nsINode* currNode = aNode;
-  nsAccessible* accessible = nsnull;
-  while (!(accessible = GetAccessibleInWeakShell(currNode, aWeakShell)) &&
-         (currNode = currNode->GetNodeParent()));
-
-  return accessible;
+  // XXX: weak shell is ignored until multiple shell documents are supported.
+  nsDocAccessible* document = GetDocAccessible(aNode->GetOwnerDoc());
+  return document ? document->GetAccessibleOrContainer(aNode) : nsnull;
 }
 
 static PRBool HasRelatedContent(nsIContent *aContent)
@@ -907,25 +915,22 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
 
   // Attempt to create an accessible based on what we know.
   nsRefPtr<nsAccessible> newAcc;
-  if (content->IsNodeOfType(nsINode::eTEXT)) {
-    // --- Create HTML for visible text frames ---
-    nsIFrame* f = weakFrame.GetFrame();
-    if (f && f->IsEmpty()) {
-      nsAutoString renderedWhitespace;
-      f->GetRenderedText(&renderedWhitespace, nsnull, nsnull, 0, 1);
-      if (renderedWhitespace.IsEmpty()) {
-        // Really empty -- nothing is rendered
-        if (aIsSubtreeHidden)
-          *aIsSubtreeHidden = true;
 
-        return nsnull;
-      }
-    }
-    if (weakFrame.IsAlive()) {
-      newAcc = weakFrame.GetFrame()->CreateAccessible();
-      if (docAcc->BindToDocument(newAcc, nsnull))
-        return newAcc.forget();
+  // Create accessible for visible text frames.
+  if (content->IsNodeOfType(nsINode::eTEXT)) {
+    nsAutoString text;
+    weakFrame->GetRenderedText(&text, nsnull, nsnull, 0, PR_UINT32_MAX);
+    if (text.IsEmpty()) {
+      if (aIsSubtreeHidden)
+        *aIsSubtreeHidden = true;
+
       return nsnull;
+    }
+
+    newAcc = weakFrame->CreateAccessible();
+    if (docAcc->BindToDocument(newAcc, nsnull)) {
+      newAcc->AsTextLeaf()->SetText(text);
+      return newAcc.forget();
     }
 
     return nsnull;
@@ -1206,7 +1211,7 @@ nsAccessibilityService::HasUniversalAriaProperty(nsIContent *aContent)
          aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_flowto) ||
          nsAccUtils::HasDefinedARIAToken(aContent, nsAccessibilityAtoms::aria_grabbed) ||
          nsAccUtils::HasDefinedARIAToken(aContent, nsAccessibilityAtoms::aria_haspopup) ||
-         // purposely ignore aria-hidden; since we use gecko for detecting this anyways
+         aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_hidden) ||
          nsAccUtils::HasDefinedARIAToken(aContent, nsAccessibilityAtoms::aria_invalid) ||
          aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_label) ||
          aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_labelledby) ||

@@ -219,20 +219,10 @@ AudioParent::RecvResume()
 }
 
 bool
-AudioParent::Recv__delete__()
+AudioParent::RecvShutdown()
 {
-  if (mTimer) {
-    mTimer->Cancel();
-    mTimer = nsnull;
-  }
-
-  if (mStream) {
-      nsCOMPtr<nsIRunnable> event = new AudioStreamShutdownEvent(mStream);
-      nsCOMPtr<nsIThread> thread = mStream->GetThread();
-      thread->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);
-      mStream = nsnull;
-  }
-
+  Shutdown();
+  PAudioParent::Send__delete__(this);
   return true;
 }
 
@@ -261,6 +251,24 @@ void
 AudioParent::ActorDestroy(ActorDestroyReason aWhy)
 {
   mIPCOpen = PR_FALSE;
+
+  Shutdown();
+}
+
+void
+AudioParent::Shutdown()
+{
+  if (mTimer) {
+    mTimer->Cancel();
+    mTimer = nsnull;
+  }
+
+  if (mStream) {
+      nsCOMPtr<nsIRunnable> event = new AudioStreamShutdownEvent(mStream);
+      nsCOMPtr<nsIThread> thread = mStream->GetThread();
+      thread->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);
+      mStream = nsnull;
+  }
 }
 
 } // namespace dom

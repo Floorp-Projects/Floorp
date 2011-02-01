@@ -119,6 +119,7 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_613642_maintain_scroll.js \
 	browser_webconsole_bug_613642_prune_scroll.js \
 	browser_webconsole_bug_618078_network_exceptions.js \
+	browser_webconsole_bug_613280_jsterm_copy.js \
 	head.js \
 	$(NULL)
 

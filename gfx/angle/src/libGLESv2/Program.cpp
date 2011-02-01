@@ -971,7 +971,24 @@ ID3DXBuffer *Program::compileToBinary(const char *hlsl, const char *profile, ID3
     ID3DXBuffer *binary = NULL;
     ID3DXBuffer *errorMessage = NULL;
 
-    HRESULT result = D3DXCompileShader(hlsl, (UINT)strlen(hlsl), NULL, NULL, "main", profile, 0, &binary, &errorMessage, constantTable);
+    DWORD result;
+    if (perfActive())
+    {
+        DWORD flags = D3DXSHADER_DEBUG;
+#ifndef NDEBUG
+        flags |= D3DXSHADER_SKIPOPTIMIZATION;
+#endif
+
+        std::string sourcePath = getTempPath();
+        std::string sourceText = std::string("#line 2 \"") + sourcePath + std::string("\"\n\n") + std::string(hlsl);
+        writeFile(sourcePath.c_str(), sourceText.c_str(), sourceText.size());
+        
+        result = D3DXCompileShader(sourceText.c_str(), sourceText.size(), NULL, NULL, "main", profile, flags, &binary, &errorMessage, constantTable);
+    }
+    else
+    {
+        result = D3DXCompileShader(hlsl, (UINT)strlen(hlsl), NULL, NULL, "main", profile, 0, &binary, &errorMessage, constantTable);
+    }
 
     if (SUCCEEDED(result))
     {
@@ -1272,7 +1289,7 @@ bool Program::linkVaryings()
                    "\n"
                    "    VS_OUTPUT output;\n"
                    "    output.gl_Position.x = gl_Position.x - dx_HalfPixelSize.x * gl_Position.w;\n"
-                   "    output.gl_Position.y = -(gl_Position.y - dx_HalfPixelSize.y * gl_Position.w);\n"
+                   "    output.gl_Position.y = gl_Position.y - dx_HalfPixelSize.y * gl_Position.w;\n"
                    "    output.gl_Position.z = (gl_Position.z + gl_Position.w) * 0.5;\n"
                    "    output.gl_Position.w = gl_Position.w;\n";
 
@@ -1404,10 +1421,10 @@ bool Program::linkVaryings()
         mPixelHLSL += "    float rhw = 1.0 / input.gl_FragCoord.w;\n";
         if (sm3) {
             mPixelHLSL += "    gl_FragCoord.x = input.dx_VPos.x;\n"
-                          "    gl_FragCoord.y = input.dx_VPos.y;\n";
+                          "    gl_FragCoord.y = 2.0 * dx_Viewport.y - input.dx_VPos.y;\n";
         } else {
             mPixelHLSL += "    gl_FragCoord.x = (input.gl_FragCoord.x * rhw) * dx_Viewport.x + dx_Viewport.z;\n"
-                          "    gl_FragCoord.y = (input.gl_FragCoord.y * rhw) * dx_Viewport.y + dx_Viewport.w;\n";
+                          "    gl_FragCoord.y = -(input.gl_FragCoord.y * rhw) * dx_Viewport.y + dx_Viewport.w;\n";
         }
         mPixelHLSL += "    gl_FragCoord.z = (input.gl_FragCoord.z * rhw) * dx_Depth.x + dx_Depth.y;\n"
                       "    gl_FragCoord.w = rhw;\n";
@@ -1415,7 +1432,7 @@ bool Program::linkVaryings()
 
     if (mFragmentShader->mUsesPointCoord && sm3)
     {
-        mPixelHLSL += "    gl_PointCoord = float2(input.gl_PointCoord.x, 1.0 - input.gl_PointCoord.y);\n";
+        mPixelHLSL += "    gl_PointCoord = input.gl_PointCoord;\n";
     }
 
     if (mFragmentShader->mUsesFrontFacing)
@@ -1460,9 +1477,6 @@ bool Program::linkVaryings()
                   "\n"
                   "    return output;\n"
                   "}\n";
-
-    TRACE("\n%s", mPixelHLSL.c_str());
-    TRACE("\n%s", mVertexHLSL.c_str());
 
     return true;
 }

@@ -16,7 +16,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLinkerTool" AdditionalDependencies="D3dx9.lib" LinkIncremental="2" ModuleDefinitionFile="libGLESv2.def" GenerateDebugInformation="true" SubSystem="2" RandomizedBaseAddress="1" DataExecutionPrevention="0" TargetMachine="1" />
+      <Tool Name="VCLinkerTool" AdditionalDependencies="d3d9.lib D3dx9.lib" LinkIncremental="2" ModuleDefinitionFile="libGLESv2.def" GenerateDebugInformation="true" SubSystem="2" RandomizedBaseAddress="1" DataExecutionPrevention="0" TargetMachine="1" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCManifestTool" />
       <Tool Name="VCXDCMakeTool" />
@@ -35,7 +35,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLinkerTool" AdditionalDependencies="D3dx9.lib" LinkIncremental="1" IgnoreAllDefaultLibraries="false" ModuleDefinitionFile="libGLESv2.def" GenerateDebugInformation="true" SubSystem="2" OptimizeReferences="2" EnableCOMDATFolding="2" RandomizedBaseAddress="1" DataExecutionPrevention="0" TargetMachine="1" />
+      <Tool Name="VCLinkerTool" AdditionalDependencies="d3d9.lib D3dx9.lib" LinkIncremental="1" IgnoreAllDefaultLibraries="false" ModuleDefinitionFile="libGLESv2.def" GenerateDebugInformation="true" SubSystem="2" OptimizeReferences="2" EnableCOMDATFolding="2" RandomizedBaseAddress="1" DataExecutionPrevention="0" TargetMachine="1" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCManifestTool" />
       <Tool Name="VCXDCMakeTool" />
@@ -80,10 +80,6 @@
       <File RelativePath=".\utilities.cpp">
       </File>
       <Filter Name="Geometry">
-        <File RelativePath=".\geometry\backend.cpp">
-        </File>
-        <File RelativePath=".\geometry\dx9.cpp">
-        </File>
         <File RelativePath=".\geometry\IndexDataManager.cpp">
         </File>
         <File RelativePath=".\geometry\VertexDataManager.cpp">
@@ -117,6 +113,8 @@
       </File>
       <File RelativePath=".\Renderbuffer.h">
       </File>
+      <File RelativePath=".\resource.h">
+      </File>
       <File RelativePath=".\ResourceManager.h">
       </File>
       <File RelativePath=".\Shader.h">
@@ -125,11 +123,9 @@
       </File>
       <File RelativePath=".\utilities.h">
       </File>
+      <File RelativePath="..\common\version.h">
+      </File>
       <Filter Name="Geometry">
-        <File RelativePath=".\geometry\backend.h">
-        </File>
-        <File RelativePath=".\geometry\dx9.h">
-        </File>
         <File RelativePath=".\geometry\IndexDataManager.h">
         </File>
         <File RelativePath=".\geometry\vertexconversion.h">
@@ -139,6 +135,8 @@
       </Filter>
     </Filter>
     <File RelativePath=".\libGLESv2.def">
+    </File>
+    <File RelativePath=".\libGLESv2.rc">
     </File>
   </Files>
   <Globals>

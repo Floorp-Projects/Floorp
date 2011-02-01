@@ -32,7 +32,7 @@
 
       testAccessibleTree("txc1", accTree);
 
-      // input@type="text"
+      // input@type="text", value
       accTree = {
         role: ROLE_ENTRY,
         children: [
@@ -44,6 +44,12 @@
       };
 
       testAccessibleTree("txc2", accTree);
+
+      // input@type="text", no value
+      accTree =
+        { ENTRY: [ ] };
+
+      testAccessibleTree("txc3", accTree);
 
       // textarea
       accTree = {
@@ -58,7 +64,7 @@
         ]
       };
 
-      testAccessibleTree("txc3", accTree);
+      testAccessibleTree("txc4", accTree);
 
       // input@type="password"
       accTree = {
@@ -71,7 +77,7 @@
         ]
       };
 
-      testAccessibleTree("txc4", accTree);
+      testAccessibleTree("txc5", accTree);
 
       SimpleTest.finish();
     }
@@ -92,6 +98,11 @@
      title="Create child accessibles for text controls from native anonymous content">
     Mozilla Bug 542824
   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=625652"
+     title="Make sure accessible tree is correct when rendered text is changed">
+    Mozilla Bug 625652
+  </a>
 
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -102,11 +113,12 @@
     1hellohello
   </div>
   <input id="txc2" value="hello">
-  <textarea id="txc3">
+  <input id="txc3">
+  <textarea id="txc4">
     hello1
     hello2
   </textarea>
-  <input id="txc4" type="password" value="hello">
+  <input id="txc5" type="password" value="hello">
 
 </body>
 </html>

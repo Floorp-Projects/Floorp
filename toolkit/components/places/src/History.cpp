@@ -57,7 +57,7 @@
 #include "mozilla/Services.h"
 #include "nsThreadUtils.h"
 #include "nsNetUtil.h"
-#include "nsContentUtils.h"
+#include "nsIXPConnect.h"
 
 // Initial size for the cache holding visited status observers.
 #define VISIT_OBSERVERS_INITIAL_CACHE_SIZE 128
@@ -204,13 +204,15 @@ GetURIFromJSObject(JSContext* aCtx,
   jsval uriVal;
   JSBool rc = JS_GetProperty(aCtx, aObject, aProperty, &uriVal);
   NS_ENSURE_TRUE(rc, nsnull);
+
   if (!JSVAL_IS_PRIMITIVE(uriVal)) {
+    static NS_DEFINE_CID(kXPConnectCID, NS_XPCONNECT_CID);
+    nsCOMPtr<nsIXPConnect> xpc = do_GetService(kXPConnectCID);
+    NS_ENSURE_TRUE(xpc, nsnull);
+
     nsCOMPtr<nsIXPConnectWrappedNative> wrappedObj;
-    nsresult rv = nsContentUtils::XPConnect()->GetWrappedNativeOfJSObject(
-      aCtx,
-      JSVAL_TO_OBJECT(uriVal),
-      getter_AddRefs(wrappedObj)
-    );
+    nsresult rv = xpc->GetWrappedNativeOfJSObject(aCtx, JSVAL_TO_OBJECT(uriVal),
+                                                  getter_AddRefs(wrappedObj));
     NS_ENSURE_SUCCESS(rv, nsnull);
     nsCOMPtr<nsIURI> uri = do_QueryWrappedNative(wrappedObj);
     return uri.forget();
