@@ -9,6 +9,8 @@ Applied local patches:
 
     angle-nspr-misc.patch - don't bother with ANGLE_OS detection with NSPR
 
+    angle-pbuffers.patch - add pbuffer support to ANGLE, and d3d texture handle query (angle issue 91)
+
 == Visual Studio Solution Files ==
 
 The VS solution/project files that are used to build ANGLE are built

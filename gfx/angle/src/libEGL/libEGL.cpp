@@ -194,7 +194,7 @@ const char *__stdcall eglQueryString(EGLDisplay dpy, EGLint name)
           case EGL_CLIENT_APIS:
             return success("OpenGL_ES");
           case EGL_EXTENSIONS:
-            return success("");
+            return success("EGL_ANGLE_query_surface_pointer EGL_ANGLE_surface_d3d_share_handle");
           case EGL_VENDOR:
             return success("Google Inc.");
           case EGL_VERSION:
@@ -391,15 +391,61 @@ EGLSurface __stdcall eglCreatePbufferSurface(EGLDisplay dpy, EGLConfig config, c
     try
     {
         egl::Display *display = static_cast<egl::Display*>(dpy);
+        EGLint width = 0, height = 0;
 
         if (!validate(display, config))
         {
             return EGL_NO_SURFACE;
         }
 
-        UNIMPLEMENTED();   // FIXME
+        if (attrib_list)
+        {
+            while (*attrib_list != EGL_NONE)
+            {
+                switch (attrib_list[0])
+                {
+                  case EGL_WIDTH:
+                    width = attrib_list[1];
+                    break;
+                  case EGL_HEIGHT:
+                    height = attrib_list[1];
+                    break;
+                  case EGL_LARGEST_PBUFFER:
+                    if (attrib_list[1] != EGL_FALSE)
+                      UNIMPLEMENTED(); // FIXME
+                    break;
+                  case EGL_TEXTURE_FORMAT:
+                  case EGL_TEXTURE_TARGET:
+                    switch (attrib_list[1])
+                    {
+                      case EGL_NO_TEXTURE:
+                        break;
+                      default:
+                        return error(EGL_BAD_ATTRIBUTE, EGL_NO_SURFACE);
+                    }
+                    break;
+                  case EGL_MIPMAP_TEXTURE:
+                    if (attrib_list[1] != EGL_FALSE)
+                      return error(EGL_BAD_ATTRIBUTE, EGL_NO_SURFACE);
+                    break;
+                  case EGL_VG_COLORSPACE:
+                    return error(EGL_BAD_MATCH, EGL_NO_SURFACE);
+                  case EGL_VG_ALPHA_FORMAT:
+                    return error(EGL_BAD_MATCH, EGL_NO_SURFACE);
+                  default:
+                    return error(EGL_BAD_ATTRIBUTE, EGL_NO_SURFACE);
+                }
 
-        return success(EGL_NO_DISPLAY);
+                attrib_list += 2;
+            }
+        }
+
+        if (width == 0 || height == 0)
+          return error(EGL_BAD_ATTRIBUTE, EGL_NO_SURFACE);
+
+        EGLSurface surface = (EGLSurface)display->createOffscreenSurface(width, height, config);
+
+        return success(surface);
     }
     catch(std::bad_alloc&)
     {
@@ -425,7 +471,7 @@ EGLSurface __stdcall eglCreatePixmapSurface(EGLDisplay dpy, EGLConfig config, EG
 
         UNIMPLEMENTED();   // FIXME
 
-        return success(EGL_NO_DISPLAY);
+        return success(EGL_NO_SURFACE);
     }
     catch(std::bad_alloc&)
     {
@@ -535,6 +581,46 @@ EGLBoolean __stdcall eglQuerySurface(EGLDisplay dpy, EGLSurface surface, EGLint 
             break;
           case EGL_WIDTH:
             *value = eglSurface->getWidth();
+            break;
+          default:
+            return error(EGL_BAD_ATTRIBUTE, EGL_FALSE);
+        }
+
+        return success(EGL_TRUE);
+    }
+    catch(std::bad_alloc&)
+    {
+        return error(EGL_BAD_ALLOC, EGL_FALSE);
+    }
+
+    return EGL_FALSE;
+}
+
+EGLBoolean __stdcall eglQuerySurfacePointerANGLE(EGLDisplay dpy, EGLSurface surface, EGLint attribute, void **value)
+{
+    TRACE("(EGLDisplay dpy = 0x%0.8p, EGLSurface surface = 0x%0.8p, EGLint attribute = %d, void **value = 0x%0.8p)",
+          dpy, surface, attribute, value);
+
+    try
+    {
+        egl::Display *display = static_cast<egl::Display*>(dpy);
+
+        if (!validate(display))
+        {
+            return EGL_FALSE;
+        }
+
+        if (surface == EGL_NO_SURFACE)
+        {
+            return error(EGL_BAD_SURFACE, EGL_FALSE);
+        }
+
+        egl::Surface *eglSurface = (egl::Surface*)surface;
+
+        switch (attribute)
+        {
+          case EGL_D3D_TEXTURE_SHARE_HANDLE_ANGLE:
+            *value = (void*) eglSurface->getShareHandle();
             break;
           default:
             return error(EGL_BAD_ATTRIBUTE, EGL_FALSE);
@@ -699,9 +785,9 @@ EGLBoolean __stdcall eglBindTexImage(EGLDisplay dpy, EGLSurface surface, EGLint 
             return EGL_FALSE;
         }
 
-        UNIMPLEMENTED();   // FIXME
+        // FIXME - need implementation
 
-        return success(EGL_TRUE);
+        return success(EGL_FALSE);
     }
     catch(std::bad_alloc&)
     {
@@ -724,9 +810,9 @@ EGLBoolean __stdcall eglReleaseTexImage(EGLDisplay dpy, EGLSurface surface, EGLi
             return EGL_FALSE;
         }
 
-        UNIMPLEMENTED();   // FIXME
+        // FIXME - need implementation
 
-        return success(EGL_TRUE);
+        return success(EGL_FALSE);
     }
     catch(std::bad_alloc&)
     {
@@ -1093,6 +1179,7 @@ __eglMustCastToProperFunctionPointerType __stdcall eglGetProcAddress(const char 
 
         static const Extension eglExtensions[] =
         {
+            {"eglQuerySurfacePointerANGLE", (__eglMustCastToProperFunctionPointerType)eglQuerySurfacePointerANGLE},
             {"", NULL},
         };
 
