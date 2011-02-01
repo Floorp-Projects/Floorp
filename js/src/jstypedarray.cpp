@@ -820,9 +820,9 @@ class TypedArrayTemplate
             cx->destroy<ThisTypeArray>(tarray);
     }
 
-    /* slice(start[, end]) */
+    /* subarray(start[, end]) */
     static JSBool
-    fun_slice(JSContext *cx, uintN argc, Value *vp)
+    fun_subarray(JSContext *cx, uintN argc, Value *vp)
     {
         JSObject *obj = ToObject(cx, &vp[1]);
         if (!obj)
@@ -832,10 +832,10 @@ class TypedArrayTemplate
             return false;
 
         if (obj->getClass() != fastClass()) {
-            // someone tried to apply this slice() to the wrong class
+            // someone tried to apply this subarray() to the wrong class
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                  JSMSG_INCOMPATIBLE_METHOD,
-                                 fastClass()->name, "slice", obj->getClass()->name);
+                                 fastClass()->name, "subarray", obj->getClass()->name);
             return false;
         }
 
@@ -875,7 +875,7 @@ class TypedArrayTemplate
         if (begin > end)
             begin = end;
 
-        ThisTypeArray *ntarray = tarray->slice(cx, begin, end);
+        ThisTypeArray *ntarray = tarray->subarray(cx, begin, end);
         if (!ntarray) {
             // this should rarely ever happen
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -982,7 +982,7 @@ class TypedArrayTemplate
         return reinterpret_cast<ThisTypeArray*>(obj->getPrivate());
     }
 
-    // helper used by both the constructor and Slice()
+    // helper used by both the constructor and Subarray()
     static bool
     makeFastWithPrivate(JSContext *cx, JSObject *obj, ThisTypeArray *tarray)
     {
@@ -1093,7 +1093,7 @@ class TypedArrayTemplate
     inline void copyIndexToValue(JSContext *cx, uint32 index, Value *vp);
 
     ThisTypeArray *
-    slice(JSContext *cx, uint32 begin, uint32 end)
+    subarray(JSContext *cx, uint32 begin, uint32 end)
     {
         if (begin > length || end > length)
             return NULL;
@@ -1484,7 +1484,7 @@ JSPropertySpec TypedArray::jsprops[] = {
 
 #define IMPL_TYPED_ARRAY_STATICS(_typedArray)                                  \
 template<> JSFunctionSpec _typedArray::jsfuncs[] = {                           \
-    JS_FN("slice", _typedArray::fun_slice, 2, 0),                              \
+    JS_FN("subarray", _typedArray::fun_subarray, 2, 0),                            \
     JS_FN("set", _typedArray::fun_set, 2, 0),                                  \
     JS_FS_END                                                                  \
 }
