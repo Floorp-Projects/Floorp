@@ -7886,9 +7886,6 @@ FinishJIT(TraceMonitor *tm)
 
     js_delete(tm->cachedTempTypeMap);
     tm->cachedTempTypeMap = NULL;
-
-    /* FinishJIT may be called more than once. Make sure we don't double-free. */
-    PodZero(tm);
 }
 
 JS_REQUIRES_STACK void
