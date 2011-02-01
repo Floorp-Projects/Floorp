@@ -2352,7 +2352,7 @@ namespace nanojit
             // Quadratic probe:  h(k,i) = h(k) + 0.5i + 0.5i^2, which gives the
             // sequence h(k), h(k)+1, h(k)+3, h(k)+6, h+10, ...  This is a
             // good sequence for 2^n-sized tables as the values h(k,i) for i
-            // in [0,m − 1] are all distinct so termination is guaranteed.
+            // in [0,m - 1] are all distinct so termination is guaranteed.
             // See http://portal.acm.org/citation.cfm?id=360737 and
             // http://en.wikipedia.org/wiki/Quadratic_probing (fetched
             // 06-Nov-2009) for more details.
