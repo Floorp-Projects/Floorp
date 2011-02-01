@@ -69,10 +69,13 @@
 
 .webconsole-msg-icon {
   list-style-image: url(chrome://global/skin/icons/webconsole.png);
-  -moz-image-region: rect(0, 1px, 0, 0);
-  margin: 5px 4px;
-  width: 8px;
-  height: 8px;
+  margin: 2px 3px;
+  width: 10px;
+  height: 10px;
+}
+
+.webconsole-msg-log > .webconsole-msg-icon-container > .webconsole-msg-icon {
+  visibility: hidden;
 }
 
 .hud-clickable {
@@ -138,7 +141,7 @@
 
 /* Network styles */
 .webconsole-filter-button[category="net"] {
-  -moz-image-region: rect(0, 8px, 8px, 0);
+  -moz-image-region: rect(0, 40px, 10px, 30px);
 }
 
 .webconsole-msg-network > .webconsole-msg-icon-container {
@@ -146,12 +149,12 @@
 }
 
 .webconsole-msg-network.webconsole-msg-error > .webconsole-msg-icon-container > .webconsole-msg-icon {
-  -moz-image-region: rect(0, 16px, 8px, 8px);
+  -moz-image-region: rect(0, 10px, 10px, 0);
 }
 
 /* CSS styles */
 .webconsole-filter-button[category="css"] {
-  -moz-image-region: rect(8px, 8px, 16px, 0);
+  -moz-image-region: rect(10px, 40px, 20px, 30px);
 }
 
 .webconsole-msg-cssparser > .webconsole-msg-icon-container {
@@ -159,16 +162,16 @@
 }
 
 .webconsole-msg-cssparser.webconsole-msg-error > .webconsole-msg-icon-container > .webconsole-msg-icon {
-  -moz-image-region: rect(8px, 16px, 16px, 8px);
+  -moz-image-region: rect(10px, 10px, 20px, 0);
 }
 
 .webconsole-msg-cssparser.webconsole-msg-warn > .webconsole-msg-icon-container > .webconsole-msg-icon {
-  -moz-image-region: rect(8px, 24px, 16px, 16px);
+  -moz-image-region: rect(10px, 20px, 20px, 10px);
 }
 
 /* JS styles */
 .webconsole-filter-button[category="js"] {
-  -moz-image-region: rect(16px, 8px, 24px, 0);
+  -moz-image-region: rect(20px, 40px, 30px, 30px);
 }
 
 .webconsole-msg-exception > .webconsole-msg-icon-container {
@@ -176,16 +179,16 @@
 }
 
 .webconsole-msg-exception.webconsole-msg-error > .webconsole-msg-icon-container > .webconsole-msg-icon {
-  -moz-image-region: rect(16px, 16px, 24px, 8px);
+  -moz-image-region: rect(20px, 10px, 30px, 0);
 }
 
 .webconsole-msg-exception.webconsole-msg-warn > .webconsole-msg-icon-container > .webconsole-msg-icon {
-  -moz-image-region: rect(16px, 24px, 24px, 16px);
+  -moz-image-region: rect(20px, 20px, 30px, 10px);
 }
 
 /* Web Developer styles */
 .webconsole-filter-button[category="webdev"] {
-  -moz-image-region: rect(24px, 8px, 32px, 0);
+  -moz-image-region: rect(30px, 40px, 40px, 30px);
 }
 
 .webconsole-msg-console > .webconsole-msg-icon-container {
@@ -194,29 +197,21 @@
 
 .webconsole-msg-console.webconsole-msg-error > .webconsole-msg-icon-container > .webconsole-msg-icon,
 .webconsole-msg-output.webconsole-msg-error > .webconsole-msg-icon-container > .webconsole-msg-icon {
-  -moz-image-region: rect(24px, 16px, 32px, 8px);
+  -moz-image-region: rect(30px, 10px, 40px, 0);
 }
 
 .webconsole-msg-console.webconsole-msg-warn > .webconsole-msg-icon-container > .webconsole-msg-icon {
-  -moz-image-region: rect(24px, 24px, 32px, 16px);
+  -moz-image-region: rect(30px, 20px, 40px, 10px);
 }
 
 .webconsole-msg-console.webconsole-msg-info > .webconsole-msg-icon-container > .webconsole-msg-icon {
-  -moz-image-region: rect(24px, 32px, 32px, 24px);
+  -moz-image-region: rect(30px, 30px, 40px, 20px);
 }
 
 /* Input and output styles */
 .webconsole-msg-input > .webconsole-msg-icon-container,
 .webconsole-msg-output > .webconsole-msg-icon-container {
   border-left: solid #808080 6px;
-}
-
-.webconsole-msg-input > .webconsole-msg-icon-container > .webconsole-msg-icon {
-  -moz-image-region: rect(24px, 40px, 32px, 32px);
-}
-
-.webconsole-msg-output > .webconsole-msg-icon-container > .webconsole-msg-icon {
-  -moz-image-region: rect(24px, 48px, 32px, 40px);
 }
 
 .webconsole-close-button {
