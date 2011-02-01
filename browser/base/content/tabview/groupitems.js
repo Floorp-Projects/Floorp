@@ -2356,10 +2356,8 @@ let GroupItems = {
 
     if (shouldUpdateTabBar)
       this._updateTabBar();
-    else if (shouldShowTabView) {
-      tab._tabViewTabItem.setZoomPrep(false);
+    else if (shouldShowTabView)
       UI.showTabView();
-    }
   },
 
   // ----------
