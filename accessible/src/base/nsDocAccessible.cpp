@@ -1911,7 +1911,8 @@ nsDocAccessible::UpdateTreeInternal(nsIContent* aStartNode,
       // selects.
       nsAccessible* parent = accessible->GetParent();
       NS_ASSERTION(parent, "No accessible parent?!");
-      parent->RemoveChild(accessible);
+      if (parent)
+        parent->RemoveChild(accessible);
 
       UncacheChildrenInSubtree(accessible);
     }
