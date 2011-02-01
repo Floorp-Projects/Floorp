@@ -272,8 +272,14 @@ stubs::FixupArity(VMFrame &f, uint32 nactual)
     JSStackFrame *newfp = cx->stack().getInlineFrameWithinLimit(cx, (Value*) oldfp, nactual,
                                                                 fun, fun->script(), &flags,
                                                                 f.entryfp, &f.stackLimit);
-    if (!newfp)
+    if (!newfp) {
+        /*
+         * The PC is not coherent with the current frame, so fix it up for
+         * exception handling.
+         */
+        f.regs.pc = f.jit()->nativeToPC(ncode);
         THROWV(NULL);
+    }
 
     /* Reset the part of the stack frame set by the caller. */
     newfp->initCallFrameCallerHalf(cx, flags, ncode);
