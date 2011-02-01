@@ -515,9 +515,6 @@ let UI = {
         TabItems.resumePainting();
       });
     } else {
-      if (currentTab && currentTab._tabViewTabItem)
-        currentTab._tabViewTabItem.setZoomPrep(false);
-
       self.setActiveTab(null);
       dispatchEvent(event);
 
@@ -744,9 +741,6 @@ let UI = {
           if (closingLastOfGroup || closingUnnamedGroup) {
             // for the tab focus event to pick up.
             self._closedLastVisibleTab = true;
-            // remove the zoom prep.
-            if (tab && tab._tabViewTabItem)
-              tab._tabViewTabItem.setZoomPrep(false);
             self.showTabView();
           }
         }
@@ -886,15 +880,6 @@ let UI = {
       if (GroupItems.getActiveGroupItem() || GroupItems.getActiveOrphanTab())
         GroupItems._updateTabBar();
     }
-
-    // ___ prepare for when we return to TabView
-    if (newItem != oldItem) {
-      if (oldItem)
-        oldItem.setZoomPrep(false);
-      if (newItem)
-        newItem.setZoomPrep(true);
-    } else if (oldItem)
-      oldItem.setZoomPrep(true);
   },
 
   // ----------
