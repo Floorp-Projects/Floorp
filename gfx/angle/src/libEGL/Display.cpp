@@ -180,7 +180,8 @@ bool Display::initialize()
                         {
                             // FIXME: enumerate multi-sampling
 
-                            configSet.add(currentDisplayMode, mMinSwapInterval, mMaxSwapInterval, renderTargetFormat, depthStencilFormat, 0);
+                            configSet.add(currentDisplayMode, mMinSwapInterval, mMaxSwapInterval, renderTargetFormat, depthStencilFormat, 0,
+                                          mDeviceCaps.MaxTextureWidth, mDeviceCaps.MaxTextureHeight);
                         }
                     }
                 }
@@ -322,6 +323,9 @@ bool Display::getConfigAttrib(EGLConfig config, EGLint attribute, EGLint *value)
       case EGL_RENDERABLE_TYPE:           *value = configuration->mRenderableType;         break;
       case EGL_MATCH_NATIVE_PIXMAP:       *value = false; UNIMPLEMENTED();                 break;
       case EGL_CONFORMANT:                *value = configuration->mConformant;             break;
+      case EGL_MAX_PBUFFER_WIDTH:         *value = configuration->mMaxPBufferWidth;        break;
+      case EGL_MAX_PBUFFER_HEIGHT:        *value = configuration->mMaxPBufferHeight;       break;
+      case EGL_MAX_PBUFFER_PIXELS:        *value = configuration->mMaxPBufferPixels;       break;
       default:
         return false;
     }
@@ -388,6 +392,16 @@ Surface *Display::createWindowSurface(HWND window, EGLConfig config)
     const Config *configuration = mConfigSet.get(config);
 
     Surface *surface = new Surface(this, configuration, window);
+    mSurfaceSet.insert(surface);
+
+    return surface;
+}
+
+Surface *Display::createOffscreenSurface(int width, int height, EGLConfig config)
+{
+    const Config *configuration = mConfigSet.get(config);
+
+    Surface *surface = new Surface(this, configuration, width, height);
     mSurfaceSet.insert(surface);
 
     return surface;

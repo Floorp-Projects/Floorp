@@ -1,0 +1,860 @@
+# HG changeset patch
+# Parent f0b9a118e816430191f013f327a19aff57cfb136
+try: -b do -p win32 -u all -t none
+repair ANGLE
+
+diff --git a/gfx/angle/include/EGL/eglext.h b/gfx/angle/include/EGL/eglext.h
+--- a/gfx/angle/include/EGL/eglext.h
++++ b/gfx/angle/include/EGL/eglext.h
+@@ -210,13 +210,26 @@ EGLBoolean eglGetSyncAttribNV (EGLSyncNV
+ typedef EGLSyncNV (EGLAPIENTRYP PFNEGLCREATEFENCESYNCNVPROC) (EGLDisplay dpy, EGLenum condition, const EGLint *attrib_list);
+ typedef EGLBoolean (EGLAPIENTRYP PFNEGLDESTROYSYNCNVPROC) (EGLSyncNV sync);
+ typedef EGLBoolean (EGLAPIENTRYP PFNEGLFENCENVPROC) (EGLSyncNV sync);
+ typedef EGLint (EGLAPIENTRYP PFNEGLCLIENTWAITSYNCNVPROC) (EGLSyncNV sync, EGLint flags, EGLTimeNV timeout);
+ typedef EGLBoolean (EGLAPIENTRYP PFNEGLSIGNALSYNCNVPROC) (EGLSyncNV sync, EGLenum mode);
+ typedef EGLBoolean (EGLAPIENTRYP PFNEGLGETSYNCATTRIBNVPROC) (EGLSyncNV sync, EGLint attribute, EGLint *value);
+ #endif
+ 
++#ifndef EGL_ANGLE_query_surface_pointer
++#define EGL_ANGLE_query_surface_pointer 1
++#ifdef EGL_EGLEXT_PROTOTYPES
++EGLAPI EGLBoolean eglQuerySurfacePointerANGLE(EGLDisplay dpy, EGLSurface surface, EGLint attribute, void **value);
++#endif
++typedef EGLBoolean (EGLAPIENTRYP PFNEGLQUERYSURFACEPOINTERANGLEPROC) (EGLDisplay dpy, EGLSurface surface, EGLint attribute, void **value);
++#endif
++
++#ifndef EGL_ANGLE_surface_d3d_share_handle
++#define EGL_ANGLE_surface_d3d_share_handle
++#define EGL_D3D_TEXTURE_SHARE_HANDLE_ANGLE 0x3200
++#endif
++
+ #ifdef __cplusplus
+ }
+ #endif
+ 
+ #endif
+diff --git a/gfx/angle/src/libEGL/Config.cpp b/gfx/angle/src/libEGL/Config.cpp
+--- a/gfx/angle/src/libEGL/Config.cpp
++++ b/gfx/angle/src/libEGL/Config.cpp
+@@ -14,20 +14,20 @@
+ #include <vector>
+ 
+ #include "common/debug.h"
+ 
+ using namespace std;
+ 
+ namespace egl
+ {
+-Config::Config(D3DDISPLAYMODE displayMode, EGLint minInterval, EGLint maxInterval, D3DFORMAT renderTargetFormat, D3DFORMAT depthStencilFormat, EGLint multiSample)
++Config::Config(D3DDISPLAYMODE displayMode, EGLint minInterval, EGLint maxInterval, D3DFORMAT renderTargetFormat, D3DFORMAT depthStencilFormat, EGLint multiSample, EGLint texWidth, EGLint texHeight)
+     : mDisplayMode(displayMode), mRenderTargetFormat(renderTargetFormat), mDepthStencilFormat(depthStencilFormat), mMultiSample(multiSample)
+ {
+-    set(displayMode, minInterval, maxInterval, renderTargetFormat, depthStencilFormat, multiSample);
++    set(displayMode, minInterval, maxInterval, renderTargetFormat, depthStencilFormat, multiSample, texWidth, texHeight);
+ }
+ 
+ void Config::setDefaults()
+ {
+     mBufferSize = 0;
+     mRedSize = 0;
+     mGreenSize = 0;
+     mBlueSize = 0;
+@@ -57,17 +57,17 @@ void Config::setDefaults()
+     mStencilSize = 0;
+     mSurfaceType = EGL_WINDOW_BIT;
+     mTransparentType = EGL_NONE;
+     mTransparentRedValue = EGL_DONT_CARE;
+     mTransparentGreenValue = EGL_DONT_CARE;
+     mTransparentBlueValue = EGL_DONT_CARE;
+ }
+ 
+-void Config::set(D3DDISPLAYMODE displayMode, EGLint minInterval, EGLint maxInterval, D3DFORMAT renderTargetFormat, D3DFORMAT depthStencilFormat, EGLint multiSample)
++void Config::set(D3DDISPLAYMODE displayMode, EGLint minInterval, EGLint maxInterval, D3DFORMAT renderTargetFormat, D3DFORMAT depthStencilFormat, EGLint multiSample, EGLint texWidth, EGLint texHeight)
+ {
+     switch (renderTargetFormat)
+     {
+       case D3DFMT_A1R5G5B5:
+         mBufferSize = 16;
+         mRedSize = 5;
+         mGreenSize = 5;
+         mBlueSize = 5;
+@@ -153,19 +153,19 @@ void Config::set(D3DDISPLAYMODE displayM
+ //      mStencilSize = 8;
+ //      break;
+       default:
+         UNREACHABLE();
+     }
+ 
+     mLevel = 0;
+     mMatchNativePixmap = EGL_NONE;
+-    mMaxPBufferWidth = 0;
+-    mMaxPBufferHeight = 0;
+-    mMaxPBufferPixels = 0;
++    mMaxPBufferWidth = texWidth;
++    mMaxPBufferHeight = texHeight;
++    mMaxPBufferPixels = texWidth*texHeight;
+     mMaxSwapInterval = maxInterval;
+     mMinSwapInterval = minInterval;
+     mNativeRenderable = EGL_FALSE;
+     mNativeVisualID = 0;
+     mNativeVisualType = 0;
+     mRenderableType = EGL_OPENGL_ES2_BIT;
+     mSampleBuffers = multiSample ? 1 : 0;
+     mSamples = multiSample;
+@@ -277,19 +277,19 @@ const EGLint ConfigSet::mSortAttribs[] =
+     EGL_NONE
+ };
+ 
+ ConfigSet::ConfigSet()
+     : mSet(SortConfig(mSortAttribs))
+ {
+ }
+ 
+-void ConfigSet::add(D3DDISPLAYMODE displayMode, EGLint minSwapInterval, EGLint maxSwapInterval, D3DFORMAT renderTargetFormat, D3DFORMAT depthStencilFormat, EGLint multiSample)
++void ConfigSet::add(D3DDISPLAYMODE displayMode, EGLint minSwapInterval, EGLint maxSwapInterval, D3DFORMAT renderTargetFormat, D3DFORMAT depthStencilFormat, EGLint multiSample, EGLint texWidth, EGLint texHeight)
+ {
+-    Config config(displayMode, minSwapInterval, maxSwapInterval, renderTargetFormat, depthStencilFormat, multiSample);
++    Config config(displayMode, minSwapInterval, maxSwapInterval, renderTargetFormat, depthStencilFormat, multiSample, texWidth, texHeight);
+ 
+     mSet.insert(config);
+ }
+ 
+ size_t ConfigSet::size() const
+ {
+     return mSet.size();
+ }
+@@ -332,16 +332,19 @@ bool ConfigSet::getConfigs(EGLConfig *co
+               case EGL_MIN_SWAP_INTERVAL:         match = config->mMinSwapInterval == attribute[1];                 break;
+               case EGL_MAX_SWAP_INTERVAL:         match = config->mMaxSwapInterval == attribute[1];                 break;
+               case EGL_LUMINANCE_SIZE:            match = config->mLuminanceSize >= attribute[1];                   break;
+               case EGL_ALPHA_MASK_SIZE:           match = config->mAlphaMaskSize >= attribute[1];                   break;
+               case EGL_COLOR_BUFFER_TYPE:         match = config->mColorBufferType == attribute[1];                 break;
+               case EGL_RENDERABLE_TYPE:           match = (config->mRenderableType & attribute[1]) == attribute[1]; break;
+               case EGL_MATCH_NATIVE_PIXMAP:       match = false; UNIMPLEMENTED();                                   break;
+               case EGL_CONFORMANT:                match = (config->mConformant & attribute[1]) == attribute[1];     break;
++              case EGL_MAX_PBUFFER_WIDTH:         match = config->mMaxPBufferWidth >= attribute[1];                 break;
++              case EGL_MAX_PBUFFER_HEIGHT:        match = config->mMaxPBufferHeight >= attribute[1];                break;
++              case EGL_MAX_PBUFFER_PIXELS:        match = config->mMaxPBufferPixels >= attribute[1];                break;
+               default:
+                 return false;
+             }
+ 
+             if (!match)
+             {
+                 break;
+             }
+diff --git a/gfx/angle/src/libEGL/Config.h b/gfx/angle/src/libEGL/Config.h
+--- a/gfx/angle/src/libEGL/Config.h
++++ b/gfx/angle/src/libEGL/Config.h
+@@ -21,20 +21,20 @@
+ 
+ namespace egl
+ {
+ class Display;
+ 
+ class Config
+ {
+   public:
+-    Config(D3DDISPLAYMODE displayMode, EGLint minSwapInterval, EGLint maxSwapInterval, D3DFORMAT renderTargetFormat, D3DFORMAT depthStencilFormat, EGLint multiSample);
++    Config(D3DDISPLAYMODE displayMode, EGLint minSwapInterval, EGLint maxSwapInterval, D3DFORMAT renderTargetFormat, D3DFORMAT depthStencilFormat, EGLint multiSample, EGLint texWidth, EGLint texHeight);
+ 
+     void setDefaults();
+-    void set(D3DDISPLAYMODE displayMode, EGLint minSwapInterval, EGLint maxSwapInterval, D3DFORMAT renderTargetFormat, D3DFORMAT depthStencilFormat, EGLint multiSample);
++    void set(D3DDISPLAYMODE displayMode, EGLint minSwapInterval, EGLint maxSwapInterval, D3DFORMAT renderTargetFormat, D3DFORMAT depthStencilFormat, EGLint multiSample, EGLint texWidth, EGLint texHeight);
+     EGLConfig getHandle() const;
+ 
+     const D3DDISPLAYMODE mDisplayMode;
+     const D3DFORMAT mRenderTargetFormat;
+     const D3DFORMAT mDepthStencilFormat;
+     const EGLint mMultiSample;
+ 
+     EGLint mBufferSize;              // Depth of the color buffer
+@@ -94,17 +94,17 @@ class SortConfig
+ 
+ class ConfigSet
+ {
+     friend Display;
+ 
+   public:
+     ConfigSet();
+ 
+-    void add(D3DDISPLAYMODE displayMode, EGLint minSwapInterval, EGLint maxSwapInterval, D3DFORMAT renderTargetFormat, D3DFORMAT depthStencilFormat, EGLint multiSample);
++    void add(D3DDISPLAYMODE displayMode, EGLint minSwapInterval, EGLint maxSwapInterval, D3DFORMAT renderTargetFormat, D3DFORMAT depthStencilFormat, EGLint multiSample, EGLint texWidth, EGLint texHeight);
+     size_t size() const;
+     bool getConfigs(EGLConfig *configs, const EGLint *attribList, EGLint configSize, EGLint *numConfig);
+     const egl::Config *get(EGLConfig configHandle);
+ 
+   private:
+     DISALLOW_COPY_AND_ASSIGN(ConfigSet);
+ 
+     typedef std::set<Config, SortConfig> Set;
+diff --git a/gfx/angle/src/libEGL/Display.cpp b/gfx/angle/src/libEGL/Display.cpp
+--- a/gfx/angle/src/libEGL/Display.cpp
++++ b/gfx/angle/src/libEGL/Display.cpp
+@@ -175,17 +175,18 @@ bool Display::initialize()
+                     if (SUCCEEDED(result))
+                     {
+                         HRESULT result = mD3d9->CheckDepthStencilMatch(mAdapter, mDeviceType, currentDisplayMode.Format, renderTargetFormat, depthStencilFormat);
+ 
+                         if (SUCCEEDED(result))
+                         {
+                             // FIXME: enumerate multi-sampling
+ 
+-                            configSet.add(currentDisplayMode, mMinSwapInterval, mMaxSwapInterval, renderTargetFormat, depthStencilFormat, 0);
++                            configSet.add(currentDisplayMode, mMinSwapInterval, mMaxSwapInterval, renderTargetFormat, depthStencilFormat, 0,
++                                          mDeviceCaps.MaxTextureWidth, mDeviceCaps.MaxTextureHeight);
+                         }
+                     }
+                 }
+             }
+         }
+ 
+         // Give the sorted configs a unique ID and store them internally
+         EGLint index = 1;
+@@ -317,16 +318,19 @@ bool Display::getConfigAttrib(EGLConfig 
+       case EGL_MIN_SWAP_INTERVAL:         *value = configuration->mMinSwapInterval;        break;
+       case EGL_MAX_SWAP_INTERVAL:         *value = configuration->mMaxSwapInterval;        break;
+       case EGL_LUMINANCE_SIZE:            *value = configuration->mLuminanceSize;          break;
+       case EGL_ALPHA_MASK_SIZE:           *value = configuration->mAlphaMaskSize;          break;
+       case EGL_COLOR_BUFFER_TYPE:         *value = configuration->mColorBufferType;        break;
+       case EGL_RENDERABLE_TYPE:           *value = configuration->mRenderableType;         break;
+       case EGL_MATCH_NATIVE_PIXMAP:       *value = false; UNIMPLEMENTED();                 break;
+       case EGL_CONFORMANT:                *value = configuration->mConformant;             break;
++      case EGL_MAX_PBUFFER_WIDTH:         *value = configuration->mMaxPBufferWidth;        break;
++      case EGL_MAX_PBUFFER_HEIGHT:        *value = configuration->mMaxPBufferHeight;       break;
++      case EGL_MAX_PBUFFER_PIXELS:        *value = configuration->mMaxPBufferPixels;       break;
+       default:
+         return false;
+     }
+ 
+     return true;
+ }
+ 
+ bool Display::createDevice()
+@@ -388,16 +392,26 @@ Surface *Display::createWindowSurface(HW
+     const Config *configuration = mConfigSet.get(config);
+ 
+     Surface *surface = new Surface(this, configuration, window);
+     mSurfaceSet.insert(surface);
+ 
+     return surface;
+ }
+ 
++Surface *Display::createOffscreenSurface(int width, int height, EGLConfig config)
++{
++    const Config *configuration = mConfigSet.get(config);
++
++    Surface *surface = new Surface(this, configuration, width, height);
++    mSurfaceSet.insert(surface);
++
++    return surface;
++}
++
+ EGLContext Display::createContext(EGLConfig configHandle, const gl::Context *shareContext)
+ {
+     if (!mDevice)
+     {
+         if (!createDevice())
+         {
+             return NULL;
+         }
+@@ -641,9 +655,9 @@ D3DPRESENT_PARAMETERS Display::getDefaul
+     presentParameters.MultiSampleQuality = 0;
+     presentParameters.MultiSampleType = D3DMULTISAMPLE_NONE;
+     presentParameters.PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
+     presentParameters.SwapEffect = D3DSWAPEFFECT_DISCARD;
+     presentParameters.Windowed = TRUE;
+ 
+     return presentParameters;
+ }
+-}
+\ No newline at end of file
++}
+diff --git a/gfx/angle/src/libEGL/Display.h b/gfx/angle/src/libEGL/Display.h
+--- a/gfx/angle/src/libEGL/Display.h
++++ b/gfx/angle/src/libEGL/Display.h
+@@ -38,16 +38,17 @@ class Display
+ 
+     virtual void startScene();
+     virtual void endScene();
+ 
+     bool getConfigs(EGLConfig *configs, const EGLint *attribList, EGLint configSize, EGLint *numConfig);
+     bool getConfigAttrib(EGLConfig config, EGLint attribute, EGLint *value);
+ 
+     egl::Surface *createWindowSurface(HWND window, EGLConfig config);
++    egl::Surface *createOffscreenSurface(int width, int height, EGLConfig config);
+     EGLContext createContext(EGLConfig configHandle, const gl::Context *shareContext);
+ 
+     void destroySurface(egl::Surface *surface);
+     void destroyContext(gl::Context *context);
+ 
+     bool isInitialized();
+     bool isValidConfig(EGLConfig config);
+     bool isValidContext(gl::Context *context);
+@@ -63,16 +64,18 @@ class Display
+     virtual bool getCompressedTextureSupport();
+     virtual bool getEventQuerySupport();
+     virtual bool getFloatTextureSupport(bool *filtering, bool *renderable);
+     virtual bool getHalfFloatTextureSupport(bool *filtering, bool *renderable);
+     virtual bool getLuminanceTextureSupport();
+     virtual bool getLuminanceAlphaTextureSupport();
+     virtual D3DPOOL getBufferPool(DWORD usage) const;
+ 
++    bool isD3d9exDevice() { return mD3d9ex != NULL; }
++
+   private:
+     DISALLOW_COPY_AND_ASSIGN(Display);
+ 
+     D3DPRESENT_PARAMETERS getDefaultPresentParameters();
+ 
+     const HDC mDc;
+ 
+     HMODULE mD3d9Module;
+diff --git a/gfx/angle/src/libEGL/Surface.cpp b/gfx/angle/src/libEGL/Surface.cpp
+--- a/gfx/angle/src/libEGL/Surface.cpp
++++ b/gfx/angle/src/libEGL/Surface.cpp
+@@ -20,27 +20,48 @@
+ namespace egl
+ {
+ Surface::Surface(Display *display, const Config *config, HWND window) 
+     : mDisplay(display), mConfig(config), mWindow(window)
+ {
+     mSwapChain = NULL;
+     mDepthStencil = NULL;
+     mRenderTarget = NULL;
++    mOffscreenTexture = NULL;
++    mShareHandle = NULL;
+ 
+     mPixelAspectRatio = (EGLint)(1.0 * EGL_DISPLAY_SCALING);   // FIXME: Determine actual pixel aspect ratio
+     mRenderBuffer = EGL_BACK_BUFFER;
+     mSwapBehavior = EGL_BUFFER_PRESERVED;
+     mSwapInterval = -1;
+     setSwapInterval(1);
+ 
+     subclassWindow();
+     resetSwapChain();
+ }
+ 
++Surface::Surface(Display *display, const Config *config, EGLint width, EGLint height)
++    : mDisplay(display), mWindow(NULL), mConfig(config), mWidth(width), mHeight(height)
++{
++    mSwapChain = NULL;
++    mDepthStencil = NULL;
++    mRenderTarget = NULL;
++    mOffscreenTexture = NULL;
++    mShareHandle = NULL;
++    mWindowSubclassed = false;
++
++    mPixelAspectRatio = (EGLint)(1.0 * EGL_DISPLAY_SCALING);   // FIXME: Determine actual pixel aspect ratio
++    mRenderBuffer = EGL_BACK_BUFFER;
++    mSwapBehavior = EGL_BUFFER_PRESERVED;
++    mSwapInterval = -1;
++    setSwapInterval(1);
++
++    resetSwapChain(width, height);
++}
++
+ Surface::~Surface()
+ {
+     unsubclassWindow();
+     release();
+ }
+ 
+ void Surface::release()
+ {
+@@ -56,20 +77,31 @@ void Surface::release()
+         mDepthStencil = NULL;
+     }
+ 
+     if (mRenderTarget)
+     {
+         mRenderTarget->Release();
+         mRenderTarget = NULL;
+     }
++
++    if (mOffscreenTexture)
++    {
++        mOffscreenTexture->Release();
++        mOffscreenTexture = NULL;
++    }
+ }
+ 
+ void Surface::resetSwapChain()
+ {
++    if (!mWindow) {
++        resetSwapChain(mWidth, mHeight);
++        return;
++    }
++
+     RECT windowRect;
+     if (!GetClientRect(getWindowHandle(), &windowRect))
+     {
+         ASSERT(false);
+ 
+         ERR("Could not retrieve the window dimensions");
+         return;
+     }
+@@ -85,40 +117,52 @@ void Surface::resetSwapChain(int backbuf
+     {
+         return;
+     }
+ 
+     // Evict all non-render target textures to system memory and release all resources
+     // before reallocating them to free up as much video memory as possible.
+     device->EvictManagedResources();
+     release();
+-    
++
+     D3DPRESENT_PARAMETERS presentParameters = {0};
++    HRESULT result;
+ 
+     presentParameters.AutoDepthStencilFormat = mConfig->mDepthStencilFormat;
+     presentParameters.BackBufferCount = 1;
+     presentParameters.BackBufferFormat = mConfig->mRenderTargetFormat;
+     presentParameters.EnableAutoDepthStencil = FALSE;
+     presentParameters.Flags = 0;
+     presentParameters.hDeviceWindow = getWindowHandle();
+     presentParameters.MultiSampleQuality = 0;                  // FIXME: Unimplemented
+     presentParameters.MultiSampleType = D3DMULTISAMPLE_NONE;   // FIXME: Unimplemented
+     presentParameters.PresentationInterval = mPresentInterval;
+     presentParameters.SwapEffect = D3DSWAPEFFECT_DISCARD;
+     presentParameters.Windowed = TRUE;
+     presentParameters.BackBufferWidth = backbufferWidth;
+     presentParameters.BackBufferHeight = backbufferHeight;
+ 
+-    HRESULT result = device->CreateAdditionalSwapChain(&presentParameters, &mSwapChain);
++    if (mWindow)
++    {
++        result = device->CreateAdditionalSwapChain(&presentParameters, &mSwapChain);
++    } else {
++        HANDLE *pShareHandle = NULL;
++        if (mDisplay->isD3d9exDevice()) {
++            pShareHandle = &mShareHandle;
++        }
++
++        result = device->CreateTexture(presentParameters.BackBufferWidth, presentParameters.BackBufferHeight, 1, D3DUSAGE_RENDERTARGET,
++                                       presentParameters.BackBufferFormat, D3DPOOL_DEFAULT, &mOffscreenTexture, pShareHandle);
++    }
+ 
+     if (FAILED(result))
+     {
+         ASSERT(result == D3DERR_OUTOFVIDEOMEMORY || result == E_OUTOFMEMORY);
+ 
+-        ERR("Could not create additional swap chains: %08lX", result);
++        ERR("Could not create additional swap chains or offscreen surfaces: %08lX", result);
+         release();
+         return error(EGL_BAD_ALLOC);
+     }
+ 
+     result = device->CreateDepthStencilSurface(presentParameters.BackBufferWidth, presentParameters.BackBufferHeight,
+                                                presentParameters.AutoDepthStencilFormat, presentParameters.MultiSampleType,
+                                                presentParameters.MultiSampleQuality, FALSE, &mDepthStencil, NULL);
+ 
+@@ -126,23 +170,27 @@ void Surface::resetSwapChain(int backbuf
+     {
+         ASSERT(result == D3DERR_OUTOFVIDEOMEMORY || result == E_OUTOFMEMORY);
+ 
+         ERR("Could not create depthstencil surface for new swap chain: %08lX", result);
+         release();
+         return error(EGL_BAD_ALLOC);
+     }
+ 
+-    mSwapChain->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &mRenderTarget);
++    if (mWindow) {
++        mSwapChain->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &mRenderTarget);
++        InvalidateRect(mWindow, NULL, FALSE);
++    } else {
++        mOffscreenTexture->GetSurfaceLevel(0, &mRenderTarget);
++    }
++
+     mWidth = presentParameters.BackBufferWidth;
+     mHeight = presentParameters.BackBufferHeight;
+ 
+     mPresentIntervalDirty = false;
+-
+-    InvalidateRect(mWindow, NULL, FALSE);
+ }
+ 
+ HWND Surface::getWindowHandle()
+ {
+     return mWindow;
+ }
+ 
+ 
+@@ -157,16 +205,19 @@ static LRESULT CALLBACK SurfaceWindowPro
+       }
+   }
+   WNDPROC prevWndFunc = reinterpret_cast<WNDPROC >(GetProp(hwnd, kParentWndProc));
+   return CallWindowProc(prevWndFunc, hwnd, message, wparam, lparam);
+ }
+ 
+ void Surface::subclassWindow()
+ {
++  if (!mWindow)
++    return;
++
+   SetLastError(0);
+   LONG oldWndProc = SetWindowLong(mWindow, GWL_WNDPROC, reinterpret_cast<LONG>(SurfaceWindowProc));
+   if(oldWndProc == 0 && GetLastError() != ERROR_SUCCESS) {
+     mWindowSubclassed = false;
+     return;
+   }
+ 
+   SetProp(mWindow, kSurfaceProperty, reinterpret_cast<HANDLE>(this));
+diff --git a/gfx/angle/src/libEGL/Surface.h b/gfx/angle/src/libEGL/Surface.h
+--- a/gfx/angle/src/libEGL/Surface.h
++++ b/gfx/angle/src/libEGL/Surface.h
+@@ -21,41 +21,47 @@ namespace egl
+ {
+ class Display;
+ class Config;
+ 
+ class Surface
+ {
+   public:
+     Surface(Display *display, const egl::Config *config, HWND window);
++    Surface(Display *display, const egl::Config *config, EGLint width, EGLint height);
+ 
+     ~Surface();
+ 
+     void release();
+     void resetSwapChain();
+ 
+     HWND getWindowHandle();
+     bool swap();
+ 
+     virtual EGLint getWidth() const;
+     virtual EGLint getHeight() const;
+ 
+     virtual IDirect3DSurface9 *getRenderTarget();
+     virtual IDirect3DSurface9 *getDepthStencil();
+ 
++    HANDLE getShareHandle() { return mShareHandle; }
++
+     void setSwapInterval(EGLint interval);
+     bool checkForOutOfDateSwapChain();   // Returns true if swapchain changed due to resize or interval update
+ 
+ private:
+     DISALLOW_COPY_AND_ASSIGN(Surface);
+ 
+     Display *const mDisplay;
+     IDirect3DSwapChain9 *mSwapChain;
+     IDirect3DSurface9 *mDepthStencil;
+     IDirect3DSurface9* mRenderTarget;
++    IDirect3DTexture9* mOffscreenTexture;
++
++    HANDLE mShareHandle;
+ 
+     void subclassWindow();
+     void unsubclassWindow();
+     void resetSwapChain(int backbufferWidth, int backbufferHeight);
+     static DWORD convertInterval(EGLint interval);
+ 
+     const HWND mWindow;            // Window that the surface is created for.
+     bool mWindowSubclassed;        // Indicates whether we successfully subclassed mWindow for WM_RESIZE hooking
+diff --git a/gfx/angle/src/libEGL/libEGL.cpp b/gfx/angle/src/libEGL/libEGL.cpp
+--- a/gfx/angle/src/libEGL/libEGL.cpp
++++ b/gfx/angle/src/libEGL/libEGL.cpp
+@@ -189,17 +189,17 @@ const char *__stdcall eglQueryString(EGL
+             return NULL;
+         }
+ 
+         switch (name)
+         {
+           case EGL_CLIENT_APIS:
+             return success("OpenGL_ES");
+           case EGL_EXTENSIONS:
+-            return success("");
++            return success("EGL_ANGLE_query_surface_pointer EGL_ANGLE_surface_d3d_share_handle");
+           case EGL_VENDOR:
+             return success("Google Inc.");
+           case EGL_VERSION:
+             return success("1.4 (ANGLE "VERSION_STRING")");
+         }
+ 
+         return error(EGL_BAD_PARAMETER, (const char*)NULL);
+     }
+@@ -386,25 +386,71 @@ EGLSurface __stdcall eglCreateWindowSurf
+ EGLSurface __stdcall eglCreatePbufferSurface(EGLDisplay dpy, EGLConfig config, const EGLint *attrib_list)
+ {
+     EVENT("(EGLDisplay dpy = 0x%0.8p, EGLConfig config = 0x%0.8p, const EGLint *attrib_list = 0x%0.8p)",
+           dpy, config, attrib_list);
+ 
+     try
+     {
+         egl::Display *display = static_cast<egl::Display*>(dpy);
++        EGLint width = 0, height = 0;
+ 
+         if (!validate(display, config))
+         {
+             return EGL_NO_SURFACE;
+         }
+ 
+-        UNIMPLEMENTED();   // FIXME
++        if (attrib_list)
++        {
++            while (*attrib_list != EGL_NONE)
++            {
++                switch (attrib_list[0])
++                {
++                  case EGL_WIDTH:
++                    width = attrib_list[1];
++                    break;
++                  case EGL_HEIGHT:
++                    height = attrib_list[1];
++                    break;
++                  case EGL_LARGEST_PBUFFER:
++                    if (attrib_list[1] != EGL_FALSE)
++                      UNIMPLEMENTED(); // FIXME
++                    break;
++                  case EGL_TEXTURE_FORMAT:
++                  case EGL_TEXTURE_TARGET:
++                    switch (attrib_list[1])
++                    {
++                      case EGL_NO_TEXTURE:
++                        break;
++                      default:
++                        return error(EGL_BAD_ATTRIBUTE, EGL_NO_SURFACE);
++                    }
++                    break;
++                  case EGL_MIPMAP_TEXTURE:
++                    if (attrib_list[1] != EGL_FALSE)
++                      return error(EGL_BAD_ATTRIBUTE, EGL_NO_SURFACE);
++                    break;
++                  case EGL_VG_COLORSPACE:
++                    return error(EGL_BAD_MATCH, EGL_NO_SURFACE);
++                  case EGL_VG_ALPHA_FORMAT:
++                    return error(EGL_BAD_MATCH, EGL_NO_SURFACE);
++                  default:
++                    return error(EGL_BAD_ATTRIBUTE, EGL_NO_SURFACE);
++                }
+ 
+-        return success(EGL_NO_DISPLAY);
++                attrib_list += 2;
++            }
++        }
++
++        if (width == 0 || height == 0)
++          return error(EGL_BAD_ATTRIBUTE, EGL_NO_SURFACE);
++
++        EGLSurface surface = (EGLSurface)display->createOffscreenSurface(width, height, config);
++
++        return success(surface);
+     }
+     catch(std::bad_alloc&)
+     {
+         return error(EGL_BAD_ALLOC, EGL_NO_SURFACE);
+     }
+ 
+     return EGL_NO_SURFACE;
+ }
+@@ -420,17 +466,17 @@ EGLSurface __stdcall eglCreatePixmapSurf
+ 
+         if (!validate(display, config))
+         {
+             return EGL_NO_SURFACE;
+         }
+ 
+         UNIMPLEMENTED();   // FIXME
+ 
+-        return success(EGL_NO_DISPLAY);
++        return success(EGL_NO_SURFACE);
+     }
+     catch(std::bad_alloc&)
+     {
+         return error(EGL_BAD_ALLOC, EGL_NO_SURFACE);
+     }
+ 
+     return EGL_NO_SURFACE;
+ }
+@@ -545,16 +591,56 @@ EGLBoolean __stdcall eglQuerySurface(EGL
+     catch(std::bad_alloc&)
+     {
+         return error(EGL_BAD_ALLOC, EGL_FALSE);
+     }
+ 
+     return EGL_FALSE;
+ }
+ 
++EGLBoolean __stdcall eglQuerySurfacePointerANGLE(EGLDisplay dpy, EGLSurface surface, EGLint attribute, void **value)
++{
++    TRACE("(EGLDisplay dpy = 0x%0.8p, EGLSurface surface = 0x%0.8p, EGLint attribute = %d, void **value = 0x%0.8p)",
++          dpy, surface, attribute, value);
++
++    try
++    {
++        egl::Display *display = static_cast<egl::Display*>(dpy);
++
++        if (!validate(display))
++        {
++            return EGL_FALSE;
++        }
++
++        if (surface == EGL_NO_SURFACE)
++        {
++            return error(EGL_BAD_SURFACE, EGL_FALSE);
++        }
++
++        egl::Surface *eglSurface = (egl::Surface*)surface;
++
++        switch (attribute)
++        {
++          case EGL_D3D_TEXTURE_SHARE_HANDLE_ANGLE:
++            *value = (void*) eglSurface->getShareHandle();
++            break;
++          default:
++            return error(EGL_BAD_ATTRIBUTE, EGL_FALSE);
++        }
++
++        return success(EGL_TRUE);
++    }
++    catch(std::bad_alloc&)
++    {
++        return error(EGL_BAD_ALLOC, EGL_FALSE);
++    }
++
++    return EGL_FALSE;
++}
++
+ EGLBoolean __stdcall eglBindAPI(EGLenum api)
+ {
+     EVENT("(EGLenum api = 0x%X)", api);
+ 
+     try
+     {
+         switch (api)
+         {
+@@ -694,19 +780,19 @@ EGLBoolean __stdcall eglBindTexImage(EGL
+     {
+         egl::Display *display = static_cast<egl::Display*>(dpy);
+ 
+         if (!validate(display))
+         {
+             return EGL_FALSE;
+         }
+ 
+-        UNIMPLEMENTED();   // FIXME
++        // FIXME - need implementation
+ 
+-        return success(EGL_TRUE);
++        return success(EGL_FALSE);
+     }
+     catch(std::bad_alloc&)
+     {
+         return error(EGL_BAD_ALLOC, EGL_FALSE);
+     }
+ 
+     return EGL_FALSE;
+ }
+@@ -719,19 +805,19 @@ EGLBoolean __stdcall eglReleaseTexImage(
+     {
+         egl::Display *display = static_cast<egl::Display*>(dpy);
+ 
+         if (!validate(display))
+         {
+             return EGL_FALSE;
+         }
+ 
+-        UNIMPLEMENTED();   // FIXME
++        // FIXME - need implementation
+ 
+-        return success(EGL_TRUE);
++        return success(EGL_FALSE);
+     }
+     catch(std::bad_alloc&)
+     {
+         return error(EGL_BAD_ALLOC, EGL_FALSE);
+     }
+ 
+     return EGL_FALSE;
+ }
+@@ -1088,16 +1174,17 @@ __eglMustCastToProperFunctionPointerType
+         struct Extension
+         {
+             const char *name;
+             __eglMustCastToProperFunctionPointerType address;
+         };
+ 
+         static const Extension eglExtensions[] =
+         {
++            {"eglQuerySurfacePointerANGLE", (__eglMustCastToProperFunctionPointerType)eglQuerySurfacePointerANGLE},
+             {"", NULL},
+         };
+ 
+         for (int ext = 0; ext < sizeof(eglExtensions) / sizeof(Extension); ext++)
+         {
+             if (strcmp(procname, eglExtensions[ext].name) == 0)
+             {
+                 return (__eglMustCastToProperFunctionPointerType)eglExtensions[ext].address;
+diff --git a/gfx/angle/src/libEGL/main.h b/gfx/angle/src/libEGL/main.h
+--- a/gfx/angle/src/libEGL/main.h
++++ b/gfx/angle/src/libEGL/main.h
+@@ -6,16 +6,17 @@
+ 
+ // main.h: Management of thread-local data.
+ 
+ #ifndef LIBEGL_MAIN_H_
+ #define LIBEGL_MAIN_H_
+ 
+ #define EGLAPI
+ #include <EGL/egl.h>
++#include <EGL/eglext.h>
+ 
+ namespace egl
+ {
+ struct Current
+ {
+     EGLint error;
+     EGLenum API;
+     EGLDisplay display;
+diff --git a/gfx/layers/d3d10/CanvasLayerD3D10.cpp b/gfx/layers/d3d10/CanvasLayerD3D10.cpp
+--- a/gfx/layers/d3d10/CanvasLayerD3D10.cpp
++++ b/gfx/layers/d3d10/CanvasLayerD3D10.cpp
+@@ -83,18 +83,22 @@ CanvasLayerD3D10::Initialize(const Data&
+   }
+ 
+   mIsD2DTexture = PR_FALSE;
+   mUsingSharedTexture = PR_FALSE;
+ 
+   HANDLE shareHandle = mGLContext ? mGLContext->GetD3DShareHandle() : nsnull;
+   if (shareHandle) {
+     HRESULT hr = device()->OpenSharedResource(shareHandle, __uuidof(ID3D10Texture2D), getter_AddRefs(mTexture));
+-    if (SUCCEEDED(hr))
++    if (SUCCEEDED(hr)) {
+       mUsingSharedTexture = PR_TRUE;
++      // XXX for ANGLE, it's already the right-way up.  If we start using NV GL-D3D interop
++      // however, we'll need to do the right thing.
++      mNeedsYFlip = PR_FALSE;
++    }
+   }
+ 
+   if (!mUsingSharedTexture) {
+     CD3D10_TEXTURE2D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM, mBounds.width, mBounds.height, 1, 1);
+     desc.Usage = D3D10_USAGE_DYNAMIC;
+     desc.CPUAccessFlags = D3D10_CPU_ACCESS_WRITE;
+ 
+     HRESULT hr = device()->CreateTexture2D(&desc, NULL, getter_AddRefs(mTexture));
+diff --git a/gfx/thebes/GLContextProviderEGL.cpp b/gfx/thebes/GLContextProviderEGL.cpp
+--- a/gfx/thebes/GLContextProviderEGL.cpp
++++ b/gfx/thebes/GLContextProviderEGL.cpp
+@@ -391,18 +391,18 @@ public:
+             NS_WARNING("Couldn't find required entry points in EGL library (early init)");
+             return PR_FALSE;
+         }
+ 
+         mEGLDisplay = fGetDisplay(EGL_DEFAULT_DISPLAY);
+         if (!fInitialize(mEGLDisplay, NULL, NULL))
+             return PR_FALSE;
+ 
+-        const char *vendor = (const char*) fQueryString(mEGLDisplay, LOCAL_EGL_VENDOR);
+-        if (vendor && strstr(vendor, "TransGaming") != 0) {
++        const char *version = (const char*) fQueryString(mEGLDisplay, LOCAL_EGL_VERSION);
++        if (version && strstr(version, "ANGLE") != 0) {
+             mIsANGLE = PR_TRUE;
+         }
+         
+         const char *extensions = (const char*) fQueryString(mEGLDisplay, LOCAL_EGL_EXTENSIONS);
+         if (!extensions)
+             extensions = "";
+ 
+         printf_stderr("Extensions: %s 0x%02x\n", extensions, extensions[0]);
