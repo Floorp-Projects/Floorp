@@ -5175,17 +5175,40 @@ nsEditor::SwitchTextDirection()
   nsIDOMElement *rootElement = GetRoot();
 
   nsresult rv;
-  nsCOMPtr<nsIContent> content = do_QueryInterface(rootElement, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsIFrame *frame = content->GetPrimaryFrame();
-  NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE); 
+  // If we don't have an explicit direction, determine our direction
+  // from the content's direction
+  if (!(mFlags & (nsIPlaintextEditor::eEditorLeftToRight |
+                  nsIPlaintextEditor::eEditorRightToLeft))) {
+    nsCOMPtr<nsIContent> content = do_QueryInterface(rootElement, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsIFrame* frame = content->GetPrimaryFrame();
+    NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
+
+    // Set the flag here, to enable us to use the same code path below.
+    // It will be flipped before returning from the function.
+    if (frame->GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
+      mFlags |= nsIPlaintextEditor::eEditorRightToLeft;
+    } else {
+      mFlags |= nsIPlaintextEditor::eEditorLeftToRight;
+    }
+  }
 
   // Apply the opposite direction
-  if (frame->GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL)
+  if (mFlags & nsIPlaintextEditor::eEditorRightToLeft) {
+    NS_ASSERTION(!(mFlags & nsIPlaintextEditor::eEditorLeftToRight),
+                 "Unexpected mutually exclusive flag");
+    mFlags &= ~nsIPlaintextEditor::eEditorRightToLeft;
+    mFlags |= nsIPlaintextEditor::eEditorLeftToRight;
     rv = rootElement->SetAttribute(NS_LITERAL_STRING("dir"), NS_LITERAL_STRING("ltr"));
-  else
+  } else if (mFlags & nsIPlaintextEditor::eEditorLeftToRight) {
+    NS_ASSERTION(!(mFlags & nsIPlaintextEditor::eEditorRightToLeft),
+                 "Unexpected mutually exclusive flag");
+    mFlags |= nsIPlaintextEditor::eEditorRightToLeft;
+    mFlags &= ~nsIPlaintextEditor::eEditorLeftToRight;
     rv = rootElement->SetAttribute(NS_LITERAL_STRING("dir"), NS_LITERAL_STRING("rtl"));
+  }
 
   return rv;
 }

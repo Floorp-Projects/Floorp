@@ -83,12 +83,12 @@ var gPrefObserver = {
 };
 
 
-function CSPWarning(aMsg) {
+function CSPWarning(aMsg, aSource, aScriptSample, aLineNum) {
   var textMessage = 'CSP WARN:  ' + aMsg + "\n";
 
   var consoleMsg = Components.classes["@mozilla.org/scripterror;1"]
                     .createInstance(Components.interfaces.nsIScriptError);
-  consoleMsg.init('CSP: ' + aMsg, null, null, 0, 0,
+  consoleMsg.init('CSP: ' + aMsg, aSource, aScriptSample, aLineNum, 0,
                   Components.interfaces.nsIScriptError.warningFlag,
                   "Content Security Policy");
   Components.classes["@mozilla.org/consoleservice;1"]

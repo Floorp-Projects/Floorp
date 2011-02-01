@@ -46,7 +46,7 @@ LIBRARY_NAME	= exception_handler_s
 XPI_NAME 	= crashreporter
 
 LOCAL_INCLUDES 	= -I$(topsrcdir)/toolkit/crashreporter/google-breakpad/src
-DEFINES += -DUNICODE -D_UNICODE -DBREAKPAD_NO_TERMINATE_THREAD
+DEFINES += -DUNICODE -D_UNICODE -DBREAKPAD_NO_TERMINATE_THREAD -DNOMINMAX
 
 CPPSRCS		= \
 		exception_handler.cc \

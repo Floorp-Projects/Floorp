@@ -120,6 +120,7 @@ _BROWSER_TEST_FILES = \
 	browser_579879.js \
 	browser_580512.js \
 	browser_581593.js \
+	browser_581937.js \
 	browser_586147.js \
 	browser_586068-cascaded_restore.js \
 	browser_589246.js \
@@ -131,12 +132,14 @@ _BROWSER_TEST_FILES = \
 	browser_597315_c.html \
 	browser_597315_c1.html \
 	browser_597315_c2.html \
+	browser_599909.js \
 	browser_600545.js \
 	browser_601955.js \
 	browser_607016.js \
 	browser_615394-SSWindowState_events.js \
 	browser_618151.js \
 	browser_623779.js \
+	browser_624727.js \
 	browser_625257.js \
 	$(NULL)
 

@@ -54,7 +54,7 @@
 #include "nsFrameManager.h"
 #ifdef ACCESSIBILITY
 #include "nsIServiceManager.h"
-#include "nsIAccessibilityService.h"
+#include "nsAccessibilityService.h"
 #endif
 #include "nsDisplayList.h"
 
@@ -932,7 +932,8 @@ nsInlineFrame::CreateAccessible()
   if ((tagAtom == nsGkAtoms::img || tagAtom == nsGkAtoms::input || 
        tagAtom == nsGkAtoms::label) && mContent->IsHTML()) {
     // Only get accessibility service if we're going to use it
-    nsCOMPtr<nsIAccessibilityService> accService(do_GetService("@mozilla.org/accessibilityService;1"));
+
+    nsAccessibilityService* accService = nsIPresShell::AccService();
     if (!accService)
       return nsnull;
     if (tagAtom == nsGkAtoms::input)  // Broken <input type=image ... />

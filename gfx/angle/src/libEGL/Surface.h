@@ -52,24 +52,16 @@ private:
 
     Display *const mDisplay;
     IDirect3DSwapChain9 *mSwapChain;
-    IDirect3DSurface9 *mBackBuffer;
     IDirect3DSurface9 *mDepthStencil;
-    IDirect3DTexture9 *mFlipTexture;
+    IDirect3DSurface9* mRenderTarget;
+    IDirect3DTexture9* mOffscreenTexture;
+
     HANDLE mShareHandle;
 
     void subclassWindow();
     void unsubclassWindow();
     void resetSwapChain(int backbufferWidth, int backbufferHeight);
     static DWORD convertInterval(EGLint interval);
-
-    void applyFlipState(IDirect3DDevice9 *device);
-    void restoreState(IDirect3DDevice9 *device);
-    void writeRecordableFlipState(IDirect3DDevice9 *device);
-    void releaseRecordedState(IDirect3DDevice9 *device);
-    IDirect3DStateBlock9 *mFlipState;
-    IDirect3DStateBlock9 *mPreFlipState;
-    IDirect3DSurface9 *mPreFlipBackBuffer;
-    IDirect3DSurface9 *mPreFlipDepthStencil;
 
     const HWND mWindow;            // Window that the surface is created for.
     bool mWindowSubclassed;        // Indicates whether we successfully subclassed mWindow for WM_RESIZE hooking

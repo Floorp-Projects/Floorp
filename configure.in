@@ -6351,22 +6351,21 @@ if test -n "$MOZ_ANGLE"; then
     AC_MSG_ERROR([Building ANGLE requires MSVC.  To build without ANGLE, reconfigure with --disable-angle.])
   fi
 
-  AC_CHECK_HEADER(d3dx9.h, [], [MOZ_ANGLE=])
+  # Get the SDK path from the registry.
+  MOZ_DIRECTX_SDK_REG_KEY=`reg query 'HKLM\Software\Microsoft\DirectX' //s | grep 'Microsoft DirectX SDK' | head -n 1`
+  MOZ_DIRECTX_SDK_PATH=`reg query "$MOZ_DIRECTX_SDK_REG_KEY" //v InstallPath | grep REG_SZ | sed 's,  *, ,g' | cut -d' ' -f4-`
 
-  if test -z "$MOZ_ANGLE"; then
-    # Try again, but try to get the SDK path from the registry.  We're going to hardcode
-    # the February 2010 SDK, since that's the one that's installed on the tinderboxen.
-    MOZ_DIRECTX_SDK_PATH=`reg query 'HKLM\Software\Microsoft\DirectX\Microsoft DirectX SDK (February 2010)' //v InstallPath | grep REG_SZ | sed 's,  *, ,g' | cut -d' ' -f4-`
-    if test -n "$MOZ_DIRECTX_SDK_PATH" ; then
-      if test -f "$MOZ_DIRECTX_SDK_PATH"/include/d3dx9.h && test -f "$MOZ_DIRECTX_SDK_PATH"/lib/x86/dxguid.lib ; then
-        AC_MSG_WARN([Found DirectX SDK in registry, using $MOZ_DIRECTX_SDK_PATH])
-        MOZ_ANGLE=1
-      fi
+  MOZ_ANGLE=
+
+  if test -n "$MOZ_DIRECTX_SDK_PATH" ; then
+    if test -f "$MOZ_DIRECTX_SDK_PATH"/include/d3dx9.h && test -f "$MOZ_DIRECTX_SDK_PATH"/lib/x86/dxguid.lib ; then
+      AC_MSG_RESULT([Found DirectX SDK via DXSDK_DIR, using $MOZ_DIRECTX_SDK_PATH])
+      MOZ_ANGLE=1
     fi
   fi
 
-  if test -z "$MOZ_ANGLE"; then
-    AC_MSG_WARN([Couldn't find d3dx9.h in your INCLUDE path, needed for ANGLE.  Please install the February 2010 DirectX SDK, or make another version available in your LIB and INCLUDE path env variables.  To explicitly build without ANGLE, reconfigure with --disable-angle.])
+  if test -z "$MOZ_ANGLE" ; then
+    AC_MSG_WARN([Couldn't find the DirectX SDK, needed for ANGLE. Please install it (February 2010 or newer). To explicitly build without ANGLE, reconfigure with --disable-angle.])
     AC_MSG_WARN([This will become an error in the future.])
   fi
 fi
@@ -9167,6 +9166,7 @@ AC_SUBST(HOST_CC)
 AC_SUBST(HOST_CXX)
 AC_SUBST(HOST_CFLAGS)
 AC_SUBST(HOST_CXXFLAGS)
+AC_SUBST(HOST_LDFLAGS)
 AC_SUBST(HOST_OPTIMIZE_FLAGS)
 AC_SUBST(HOST_AR)
 AC_SUBST(HOST_AR_FLAGS)

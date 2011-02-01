@@ -36,16 +36,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsEventShell.h"
-
-#include "nsAccUtils.h"
-#include "nsCoreUtils.h"
-#include "nsDocAccessible.h"
-
 #include "NotificationController.h"
 
 #include "nsAccessibilityService.h"
+#include "nsAccUtils.h"
+#include "nsCoreUtils.h"
 #include "nsDocAccessible.h"
+#include "nsEventShell.h"
+#include "nsTextAccessible.h"
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // NotificationCollector
@@ -56,6 +55,8 @@ NotificationController::NotificationController(nsDocAccessible* aDocument,
   mObservingState(eNotObservingRefresh), mDocument(aDocument),
   mPresShell(aPresShell), mTreeConstructedState(eTreeConstructionPending)
 {
+  mTextHash.Init();
+
   // Schedule initial accessible tree construction.
   ScheduleProcessing();
 }
@@ -113,6 +114,7 @@ NotificationController::Shutdown()
   mDocument = nsnull;
   mPresShell = nsnull;
 
+  mTextHash.Clear();
   mContentInsertions.Clear();
   mNotifications.Clear();
   mEvents.Clear();
@@ -181,7 +183,8 @@ NotificationController::IsUpdatePending()
     do_QueryInterface(mPresShell);
   return presShell->IsLayoutFlushObserver() ||
     mObservingState == eRefreshProcessingForUpdate ||
-    mContentInsertions.Length() != 0 || mNotifications.Length() != 0;
+    mContentInsertions.Length() != 0 || mNotifications.Length() != 0 ||
+    mTextHash.Count() != 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -207,6 +210,11 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
     // ready yet (process notifications later).
     if (!mDocument->IsBoundToParent())
       return;
+
+#ifdef DEBUG_NOTIFICATIONS
+    printf("\ninitial tree created, document: %p, document node: %p\n",
+           mDocument.get(), mDocument->GetDocumentNode());
+#endif
 
     mTreeConstructedState = eTreeConstructed;
     mDocument->CacheChildrenInSubtree(mDocument);
@@ -235,6 +243,10 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
       return;
   }
 
+  // Process rendered text change notifications.
+  mTextHash.EnumerateEntries(TextEnumerator, mDocument);
+  mTextHash.Clear();
+
   // Bind hanging child documents.
   PRUint32 childDocCount = mHangingChildDocuments.Length();
   for (PRUint32 idx = 0; idx < childDocCount; idx++) {
@@ -243,7 +255,7 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
     nsIContent* ownerContent = mDocument->GetDocumentNode()->
       FindContentForSubDocument(childDoc->GetDocumentNode());
     if (ownerContent) {
-      nsAccessible* outerDocAcc = mDocument->GetCachedAccessible(ownerContent);
+      nsAccessible* outerDocAcc = mDocument->GetAccessible(ownerContent);
       if (outerDocAcc && outerDocAcc->AppendChild(childDoc)) {
         if (mDocument->AppendChildDocument(childDoc)) {
           // Fire reorder event to notify new accessible document has been
@@ -483,13 +495,11 @@ NotificationController::CoalesceTextChangeEventsFor(AccHideEvent* aTailEvent,
     return;
 
   if (aThisEvent->mNextSibling == aTailEvent->mAccessible) {
-    aTailEvent->mAccessible->AppendTextTo(textEvent->mModifiedText,
-                                          0, PR_UINT32_MAX);
+    aTailEvent->mAccessible->AppendTextTo(textEvent->mModifiedText);
 
   } else if (aThisEvent->mPrevSibling == aTailEvent->mAccessible) {
     PRUint32 oldLen = textEvent->GetLength();
-    aTailEvent->mAccessible->AppendTextTo(textEvent->mModifiedText,
-                                          0, PR_UINT32_MAX);
+    aTailEvent->mAccessible->AppendTextTo(textEvent->mModifiedText);
     textEvent->mStart -= textEvent->GetLength() - oldLen;
   }
 
@@ -508,15 +518,14 @@ NotificationController::CoalesceTextChangeEventsFor(AccShowEvent* aTailEvent,
       aThisEvent->mAccessible->GetIndexInParent() + 1) {
     // If tail target was inserted after this target, i.e. tail target is next
     // sibling of this target.
-    aTailEvent->mAccessible->AppendTextTo(textEvent->mModifiedText,
-                                          0, PR_UINT32_MAX);
+    aTailEvent->mAccessible->AppendTextTo(textEvent->mModifiedText);
 
   } else if (aTailEvent->mAccessible->GetIndexInParent() ==
              aThisEvent->mAccessible->GetIndexInParent() -1) {
     // If tail target was inserted before this target, i.e. tail target is
     // previous sibling of this target.
     nsAutoString startText;
-    aTailEvent->mAccessible->AppendTextTo(startText, 0, PR_UINT32_MAX);
+    aTailEvent->mAccessible->AppendTextTo(startText);
     textEvent->mModifiedText = startText + textEvent->mModifiedText;
     textEvent->mStart -= startText.Length();
   }
@@ -527,9 +536,13 @@ NotificationController::CoalesceTextChangeEventsFor(AccShowEvent* aTailEvent,
 void
 NotificationController::CreateTextChangeEventFor(AccMutationEvent* aEvent)
 {
-  nsRefPtr<nsHyperTextAccessible> textAccessible = do_QueryObject(
+  nsAccessible* container =
     GetAccService()->GetContainerAccessible(aEvent->mNode,
-                                            aEvent->mAccessible->GetWeakShell()));
+                                            aEvent->mAccessible->GetWeakShell());
+  if (!container)
+    return;
+
+  nsHyperTextAccessible* textAccessible = container->AsHyperText();
   if (!textAccessible)
     return;
 
@@ -548,7 +561,7 @@ NotificationController::CreateTextChangeEventFor(AccMutationEvent* aEvent)
   PRInt32 offset = textAccessible->GetChildOffset(aEvent->mAccessible);
 
   nsAutoString text;
-  aEvent->mAccessible->AppendTextTo(text, 0, PR_UINT32_MAX);
+  aEvent->mAccessible->AppendTextTo(text);
   if (text.IsEmpty())
     return;
 
@@ -556,6 +569,396 @@ NotificationController::CreateTextChangeEventFor(AccMutationEvent* aEvent)
     new AccTextChangeEvent(textAccessible, offset, text, aEvent->IsShow(),
                            aEvent->mIsFromUserInput ? eFromUserInput : eNoUserInput);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// Notification controller: text leaf accessible text update
+
+/**
+ * Used to find a difference between old and new text and fire text change
+ * events.
+ */
+class TextUpdater
+{
+public:
+  TextUpdater(nsDocAccessible* aDocument, nsTextAccessible* aTextLeaf) :
+    mDocument(aDocument), mTextLeaf(aTextLeaf) { }
+  ~TextUpdater() { mDocument = nsnull; mTextLeaf = nsnull; }
+
+  /**
+   * Update text of the text leaf accessible, fire text change events for its
+   * container hypertext accessible.
+   */
+  void Run(const nsAString& aNewText);
+
+private:
+  TextUpdater();
+  TextUpdater(const TextUpdater&);
+  TextUpdater& operator = (const TextUpdater&);
+
+  /**
+   * Fire text change events based on difference between strings.
+   */
+  void FindDiffNFireEvents(const nsDependentSubstring& aStr1,
+                           const nsDependentSubstring& aStr2,
+                           PRUint32** aMatrix,
+                           PRUint32 aStartOffset);
+
+  /**
+   * Change type used to describe the diff between strings.
+   */
+  enum ChangeType {
+    eNoChange,
+    eInsertion,
+    eRemoval,
+    eSubstitution
+  };
+
+  /**
+   * Helper to fire text change events.
+   */
+  inline void MayFireEvent(nsAString* aInsertedText, nsAString* aRemovedText,
+                           PRUint32 aOffset, ChangeType* aChange)
+  {
+    if (*aChange == eNoChange)
+      return;
+
+    if (*aChange == eRemoval || *aChange == eSubstitution) {
+      FireEvent(*aRemovedText, aOffset, PR_FALSE);
+      aRemovedText->Truncate();
+    }
+
+    if (*aChange == eInsertion || *aChange == eSubstitution) {
+      FireEvent(*aInsertedText, aOffset, PR_TRUE);
+      aInsertedText->Truncate();
+    }
+
+    *aChange = eNoChange;
+  }
+
+  /**
+   * Fire text change event.
+   */
+  void FireEvent(const nsAString& aModText, PRUint32 aOffset, PRBool aType);
+
+private:
+  nsDocAccessible* mDocument;
+  nsTextAccessible* mTextLeaf;
+};
+
+void
+TextUpdater::Run(const nsAString& aNewText)
+{
+  NS_ASSERTION(mTextLeaf, "No text leaf accessible?");
+
+  const nsString& oldText = mTextLeaf->Text();
+  PRUint32 oldLen = oldText.Length(), newLen = aNewText.Length();
+  PRUint32 minLen = oldLen < newLen ? oldLen : newLen;
+
+  // Skip coinciding begin substrings.
+  PRUint32 skipIdx = 0;
+  for (; skipIdx < minLen; skipIdx++) {
+    if (aNewText[skipIdx] != oldText[skipIdx])
+      break;
+  }
+
+  // No change, text append or removal to/from the end.
+  if (skipIdx == minLen) {
+    if (oldLen == newLen)
+      return;
+
+    // If text has been appended to the end, fire text inserted event.
+    if (oldLen < newLen) {
+      FireEvent(Substring(aNewText, oldLen), oldLen, PR_TRUE);
+      mTextLeaf->SetText(aNewText);
+      return;
+    }
+
+    // Text has been removed from the end, fire text removed event.
+    FireEvent(Substring(oldText, newLen), newLen, PR_FALSE);
+    mTextLeaf->SetText(aNewText);
+    return;
+  }
+
+  // Trim coinciding substrings from the end.
+  PRUint32 endIdx = minLen;
+  if (oldLen < newLen) {
+    PRUint32 delta = newLen - oldLen;
+    for (; endIdx > skipIdx; endIdx--) {
+      if (aNewText[endIdx + delta] != oldText[endIdx])
+        break;
+    }
+  } else {
+    PRUint32 delta = oldLen - newLen;
+    for (; endIdx > skipIdx; endIdx--) {
+      if (aNewText[endIdx] != oldText[endIdx + delta])
+        break;
+    }
+  }
+  PRUint32 oldEndIdx = oldLen - minLen + endIdx;
+  PRUint32 newEndIdx = newLen - minLen + endIdx;
+
+  // Find the difference starting from start character, we can skip initial and
+  // final coinciding characters since they don't affect on the Levenshtein
+  // distance.
+
+  const nsDependentSubstring& str1 =
+    Substring(oldText, skipIdx, oldEndIdx - skipIdx);
+  const nsDependentSubstring& str2 =
+    Substring(aNewText, skipIdx, newEndIdx - skipIdx);
+
+  // Compute the matrix.
+  PRUint32 len1 = str1.Length() + 1, len2 = str2.Length() + 1;
+
+  PRUint32** matrix = new PRUint32*[len1];
+  for (PRUint32 i = 0; i < len1; i++)
+    matrix[i] = new PRUint32[len2];
+
+  matrix[0][0] = 0;
+
+  for (PRUint32 i = 1; i < len1; i++)
+    matrix[i][0] = i;
+
+  for (PRUint32 j = 1; j < len2; j++)
+    matrix[0][j] = j;
+
+  for (PRUint32 i = 1; i < len1; i++) {
+    for (PRUint32 j = 1; j < len2; j++) {
+      if (str1[i - 1] != str2[j - 1]) {
+        PRUint32 left = matrix[i - 1][j];
+        PRUint32 up = matrix[i][j - 1];
+
+        PRUint32 upleft = matrix[i - 1][j - 1];
+        matrix[i][j] =
+            (left < up ? (upleft < left ? upleft : left) :
+                (upleft < up ? upleft : up)) + 1;
+      } else {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      }
+    }
+  }
+
+  FindDiffNFireEvents(str1, str2, matrix, skipIdx);
+
+  for (PRUint32 i = 0; i < len1; i++)
+    delete[] matrix[i];
+  delete[] matrix;
+
+  mTextLeaf->SetText(aNewText);
+}
+
+void
+TextUpdater::FindDiffNFireEvents(const nsDependentSubstring& aStr1,
+                                 const nsDependentSubstring& aStr2,
+                                 PRUint32** aMatrix,
+                                 PRUint32 aStartOffset)
+{
+  // Find the difference.
+  ChangeType change = eNoChange;
+  nsAutoString insertedText;
+  nsAutoString removedText;
+  PRUint32 offset = 0;
+
+  PRInt32 i = aStr1.Length(), j = aStr2.Length();
+  while (i >= 0 && j >= 0) {
+    if (aMatrix[i][j] == 0) {
+      MayFireEvent(&insertedText, &removedText, offset + aStartOffset, &change);
+      return;
+    }
+
+    // move up left
+    if (i >= 1 && j >= 1) {
+      // no change
+      if (aStr1[i - 1] == aStr2[j - 1]) {
+        MayFireEvent(&insertedText, &removedText, offset + aStartOffset, &change);
+
+        i--; j--;
+        continue;
+      }
+
+      // substitution
+      if (aMatrix[i][j] == aMatrix[i - 1][j - 1] + 1) {
+        if (change != eSubstitution)
+          MayFireEvent(&insertedText, &removedText, offset + aStartOffset, &change);
+
+        offset = j - 1;
+        insertedText.Append(aStr1[i - 1]);
+        removedText.Append(aStr2[offset]);
+        change = eSubstitution;
+
+        i--; j--;
+        continue;
+      }
+    }
+
+    // move up, insertion
+    if (j >= 1 && aMatrix[i][j] == aMatrix[i][j - 1] + 1) {
+      if (change != eInsertion)
+        MayFireEvent(&insertedText, &removedText, offset + aStartOffset, &change);
+
+      offset = j - 1;
+      insertedText.Insert(aStr2[offset], 0);
+      change = eInsertion;
+
+      j--;
+      continue;
+    }
+
+    // move left, removal
+    if (i >= 1 && aMatrix[i][j] == aMatrix[i - 1][j] + 1) {
+      if (change != eRemoval) {
+        MayFireEvent(&insertedText, &removedText, offset + aStartOffset, &change);
+
+        offset = j;
+      }
+
+      removedText.Insert(aStr1[i - 1], 0);
+      change = eRemoval;
+
+      i--;
+      continue;
+    }
+
+    NS_NOTREACHED("Huh?");
+    return;
+  }
+
+  MayFireEvent(&insertedText, &removedText, offset + aStartOffset, &change);
+}
+
+void
+TextUpdater::FireEvent(const nsAString& aModText, PRUint32 aOffset,
+                       PRBool aIsInserted)
+{
+  nsAccessible* parent = mTextLeaf->GetParent();
+  NS_ASSERTION(parent, "No parent for text leaf!");
+
+  nsHyperTextAccessible* hyperText = parent->AsHyperText();
+  NS_ASSERTION(hyperText, "Text leaf parnet is not hyper text!");
+
+  PRInt32 textLeafOffset = hyperText->GetChildOffset(mTextLeaf, PR_TRUE);
+  NS_ASSERTION(textLeafOffset != -1,
+               "Text leaf hasn't offset within hyper text!");
+
+  // Fire text change event.
+  nsRefPtr<AccEvent> textChangeEvent =
+    new AccTextChangeEvent(hyperText, textLeafOffset + aOffset, aModText,
+                           aIsInserted);
+  mDocument->FireDelayedAccessibleEvent(textChangeEvent);
+
+  // Fire value change event.
+  if (hyperText->Role() == nsIAccessibleRole::ROLE_ENTRY) {
+    nsRefPtr<AccEvent> valueChangeEvent =
+      new AccEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE, hyperText,
+                   eAutoDetect, AccEvent::eRemoveDupes);
+    mDocument->FireDelayedAccessibleEvent(valueChangeEvent);
+  }
+}
+
+PLDHashOperator
+NotificationController::TextEnumerator(nsCOMPtrHashKey<nsIContent>* aEntry,
+                                       void* aUserArg)
+{
+  nsDocAccessible* document = static_cast<nsDocAccessible*>(aUserArg);
+  nsIContent* textNode = aEntry->GetKey();
+  nsAccessible* textAcc = document->GetAccessible(textNode);
+
+  // If the text node is not in tree or doesn't have frame then this case should
+  // have been handled already by content removal notifications.
+  nsINode* containerNode = textNode->GetNodeParent();
+  if (!containerNode) {
+    NS_ASSERTION(!textAcc,
+                 "Text node was removed but accessible is kept alive!");
+    return PL_DHASH_NEXT;
+  }
+
+  nsIFrame* textFrame = textNode->GetPrimaryFrame();
+  if (!textFrame) {
+    NS_ASSERTION(!textAcc,
+                 "Text node isn't rendered but accessible is kept alive!");
+    return PL_DHASH_NEXT;
+  }
+
+  nsIContent* containerElm = containerNode->IsElement() ?
+    containerNode->AsElement() : nsnull;
+
+  nsAutoString text;
+  textFrame->GetRenderedText(&text);
+
+  // Remove text accessible if rendered text is empty.
+  if (textAcc) {
+    if (text.IsEmpty()) {
+#ifdef DEBUG_NOTIFICATIONS
+      PRUint32 index = containerNode->IndexOf(textNode);
+
+      nsCAutoString tag;
+      nsCAutoString id;
+      if (containerElm) {
+        containerElm->Tag()->ToUTF8String(tag);
+        nsIAtom* atomid = containerElm->GetID();
+        if (atomid)
+          atomid->ToUTF8String(id);
+      }
+
+      printf("\npending text node removal: container: %s@id='%s', index in container: %d\n\n",
+             tag.get(), id.get(), index);
+#endif
+
+      document->ContentRemoved(containerElm, textNode);
+      return PL_DHASH_NEXT;
+    }
+
+    // Update text of the accessible and fire text change events.
+#ifdef DEBUG_TEXTCHANGE
+      PRUint32 index = containerNode->IndexOf(textNode);
+
+      nsCAutoString tag;
+      nsCAutoString id;
+      if (containerElm) {
+        containerElm->Tag()->ToUTF8String(tag);
+        nsIAtom* atomid = containerElm->GetID();
+        if (atomid)
+          atomid->ToUTF8String(id);
+      }
+
+      printf("\ntext may be changed: container: %s@id='%s', index in container: %d, old text '%s', new text: '%s'\n\n",
+             tag.get(), id.get(), index,
+             NS_ConvertUTF16toUTF8(textAcc->AsTextLeaf()->Text()).get(),
+             NS_ConvertUTF16toUTF8(text).get());
+#endif
+
+    TextUpdater updater(document, textAcc->AsTextLeaf());
+    updater.Run(text);
+
+    return PL_DHASH_NEXT;
+  }
+
+  // Append an accessible if rendered text is not empty.
+  if (!text.IsEmpty()) {
+#ifdef DEBUG_NOTIFICATIONS
+      PRUint32 index = containerNode->IndexOf(textNode);
+
+      nsCAutoString tag;
+      nsCAutoString id;
+      if (containerElm) {
+        containerElm->Tag()->ToUTF8String(tag);
+        nsIAtom* atomid = containerElm->GetID();
+        if (atomid)
+          atomid->ToUTF8String(id);
+      }
+
+      printf("\npending text node insertion: container: %s@id='%s', index in container: %d\n\n",
+             tag.get(), id.get(), index);
+#endif
+
+    nsAccessible* container = document->GetAccessibleOrContainer(containerNode);
+    nsTArray<nsCOMPtr<nsIContent> > insertedContents;
+    insertedContents.AppendElement(textNode);
+    document->ProcessContentInserted(container, &insertedContents);
+  }
+
+  return PL_DHASH_NEXT;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // NotificationController: content inserted notification
@@ -612,7 +1015,7 @@ NotificationController::ContentInsertion::Process()
       catomid->ToUTF8String(cid);
   }
 
-  printf("\npending content insertion process: %s@id='%s', container: %s@id='%s', inserted content amount: %d\n\n",
+  printf("\npending content insertion: %s@id='%s', container: %s@id='%s', inserted content amount: %d\n\n",
          tag.get(), id.get(), ctag.get(), cid.get(), mInsertedContent.Length());
 #endif
 
@@ -622,3 +1025,4 @@ NotificationController::ContentInsertion::Process()
   mContainer = nsnull;
   mInsertedContent.Clear();
 }
+

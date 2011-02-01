@@ -27,7 +27,6 @@ body {
   box-shadow: 0 1px 1.5px rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(255, 255, 255, 0.5);
   cursor: pointer;
-  margin: 8px;
 }
 
 .tab canvas,
@@ -197,6 +196,7 @@ html[dir=rtl] .stack-trayed .tab-title {
   box-shadow: none;
   border-color: transparent;
   background-color: transparent;
+  margin: 8px;
 }
 
 .tabInGroupItem .favicon {

@@ -64,12 +64,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452161
       aTestRun.add(et);
     }
 
+    //gA11yEventDumpToConsole = true; // debug stuff
+
     function runTest()
     {
       var testRun = new editableTextTestRun();
 
       addTestEditable("input", testRun);
-      // addTestEditable("div"); XXX: bug 452599
+      addTestEditable("div", testRun);
       addTestEditable(getNode("frame").contentDocument, testRun);
 
       testRun.run(); // Will call SimpleTest.finish();
@@ -94,6 +96,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452161
   <a target="_blank"
      title="nsIAccessibleEditableText chrome tests"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=452161">Mozilla Bug 452161</a>
+  <a target="_blank"
+     title="Cache rendered text on a11y side"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=626660">
+    Mozilla Bug 626660
+  </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
@@ -101,7 +108,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452161
 
   <input id="input"/>
 
-  <div id="div" contentEditable="true"/>
+  <div id="div" contentEditable="true"></div>
 
   <iframe id="frame"/>
 </body>

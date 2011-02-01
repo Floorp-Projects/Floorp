@@ -2039,7 +2039,7 @@ PR_IMPLEMENT(PRAddrInfo *) PR_GetAddrInfoByName(const char  *hostname,
          */
 
         memset(&hints, 0, sizeof(hints));
-        if (flags & PR_AI_NOCANONNAME)
+        if (!(flags & PR_AI_NOCANONNAME))
             hints.ai_flags |= AI_CANONNAME;
 #ifdef AI_ADDRCONFIG
         /* 

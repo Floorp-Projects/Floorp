@@ -81,6 +81,10 @@ static NS_DEFINE_CID(kMultiplexInputStream, NS_MULTIPLEXINPUTSTREAM_CID);
 // mLineBuf is limited to this number of bytes.
 #define MAX_LINEBUF_LENGTH (1024 * 10)
 
+// Place a limit on how much non-compliant HTTP can be skipped while
+// looking for a response header
+#define MAX_INVALID_RESPONSE_BODY_SIZE (1024 * 128)
+
 //-----------------------------------------------------------------------------
 // helpers
 //-----------------------------------------------------------------------------
@@ -115,6 +119,7 @@ nsHttpTransaction::nsHttpTransaction()
     , mResponseHead(nsnull)
     , mContentLength(-1)
     , mContentRead(0)
+    , mInvalidResponseBytesRead(0)
     , mChunkedDecoder(nsnull)
     , mStatus(NS_OK)
     , mPriority(0)
@@ -815,23 +820,13 @@ nsHttpTransaction::ParseHead(char *buf,
     }
 
     if (!mHttpResponseMatched) {
-        // If HTTP 0.9 response is allowed (i.e. neither 1.0 nor 1.1 was yet
-        // received on the connection) then do a simple junk detection.
-        // Otherwise find a HTTP response.
-
-        // Value returned by IsHttp09Allowed() can change between calls to this
-        // method, but it can change only from PR_TRUE to PR_FALSE and this is
-        // OK since we can enter this statement multiple time only when the
-        // value is PR_FALSE.
-        nsRefPtr<nsHttpConnectionInfo> ci;
-        if (mConnection) {
-            mConnection->GetConnectionInfo(getter_AddRefs(ci));
-        }
-
-        // If the connection information is not available, we can't have a response
-        // body, so it doens't make sense to look for jumk in it.
-        if (ci && ci->IsHttp09Allowed()) {
-            // tolerate some junk before the status line
+        // Normally we insist on seeing HTTP/1.x in the first few bytes,
+        // but if we are on a persistent connection and the previous transaction
+        // was not supposed to have any content then we need to be prepared
+        // to skip over a response body that the server may have sent even
+        // though it wasn't allowed.
+        if (!mConnection || !mConnection->LastTransactionExpectedNoContent()) {
+            // tolerate only minor junk before the status line
             mHttpResponseMatched = PR_TRUE;
             char *p = LocateHttpStart(buf, PR_MIN(count, 8), PR_TRUE);
             if (!p) {
@@ -846,6 +841,7 @@ nsHttpTransaction::ParseHead(char *buf,
             }
             if (p > buf) {
                 // skip over the junk
+                mInvalidResponseBytesRead += p - buf;
                 *countRead = p - buf;
                 buf = p;
             }
@@ -853,11 +849,20 @@ nsHttpTransaction::ParseHead(char *buf,
         else {
             char *p = LocateHttpStart(buf, count, PR_FALSE);
             if (p) {
+                mInvalidResponseBytesRead += p - buf;
                 *countRead = p - buf;
                 buf = p;
                 mHttpResponseMatched = PR_TRUE;
             } else {
+                mInvalidResponseBytesRead += count;
                 *countRead = count;
+                if (mInvalidResponseBytesRead > MAX_INVALID_RESPONSE_BODY_SIZE) {
+                    LOG(("nsHttpTransaction::ParseHead() "
+                         "Cannot find Response Header\n"));
+                    // cannot go back and call this 0.9 anymore as we
+                    // have thrown away a lot of the leading junk
+                    return NS_ERROR_ABORT;
+                }
                 return NS_OK;
             }
         }
@@ -942,6 +947,7 @@ nsHttpTransaction::HandleContentStart()
             LOG(("this response should not contain a body.\n"));
             break;
         }
+        mConnection->SetLastTransactionExpectedNoContent(mNoContent);
 
         if (mNoContent)
             mContentLength = 0;

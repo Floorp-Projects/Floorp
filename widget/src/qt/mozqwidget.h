@@ -110,6 +110,7 @@ protected:
     virtual void mouseMoveEvent(QGraphicsSceneMouseEvent* aEvent);
     virtual void mousePressEvent(QGraphicsSceneMouseEvent* aEvent);
     virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent* aEvent);
+    virtual void inputMethodEvent(QInputMethodEvent* aEvent);
 
     virtual void wheelEvent(QGraphicsSceneWheelEvent* aEvent);
     virtual void paint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption, QWidget* aWidget = 0);
@@ -122,6 +123,7 @@ protected:
     bool SetCursor(const QPixmap& aPixmap, int, int);
 
 private:
+    void sendPressReleaseKeyEvent(int key, const QChar* letter = 0, bool autorep = false, ushort count = 1);
     nsWindow *mReceiver;
 };
 

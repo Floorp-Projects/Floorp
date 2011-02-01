@@ -256,25 +256,42 @@ nsresult nsWebMReader::ReadMetadata()
         return NS_ERROR_FAILURE;
       }
 
+      // Picture region, taking into account cropping, before scaling
+      // to the display size.
+      nsIntRect pictureRect(params.crop_left,
+                        params.crop_top,
+                        params.width - (params.crop_right + params.crop_left),
+                        params.height - (params.crop_bottom + params.crop_top));
+
+      // If the cropping data appears invalid then use the frame data
+      if (pictureRect.width <= 0 ||
+          pictureRect.height <= 0 ||
+          pictureRect.x < 0 ||
+          pictureRect.y < 0)
+      {
+        pictureRect.x = 0;
+        pictureRect.y = 0;
+        pictureRect.width = params.width;
+        pictureRect.height = params.height;
+      }
+
+      // Validate the container-reported frame and pictureRect sizes. This ensures
+      // that our video frame creation code doesn't overflow.
+      nsIntSize displaySize(params.display_width, params.display_height);
+      nsIntSize frameSize(params.width, params.height);
+      if (!nsVideoInfo::ValidateVideoRegion(frameSize, pictureRect, displaySize)) {
+        // Video track's frame sizes will overflow. Ignore the video track.
+        continue;
+      }
+          
       mVideoTrack = track;
       mHasVideo = PR_TRUE;
       mInfo.mHasVideo = PR_TRUE;
-      mInfo.mPicture.x = params.crop_left;
-      mInfo.mPicture.y = params.crop_top;
-      mInfo.mPicture.width = params.width - (params.crop_right - params.crop_left);
-      mInfo.mPicture.height = params.height - (params.crop_bottom - params.crop_top);
-      mInfo.mFrame.width = params.width;
-      mInfo.mFrame.height = params.height;
-      mInfo.mPixelAspectRatio = (float(params.display_width) / params.width) /
-                                (float(params.display_height) / params.height);
-
-      // If the cropping data appears invalid then use the frame data
-      if (mInfo.mPicture.width <= 0 || mInfo.mPicture.height <= 0) {
-        mInfo.mPicture.x = 0;
-        mInfo.mPicture.y = 0;
-        mInfo.mPicture.width = params.width;
-        mInfo.mPicture.height = params.height;
-      }
+      mInfo.mPicture = pictureRect;
+      mInfo.mDisplay = displaySize;
+      mInfo.mFrame = frameSize;
+      mInfo.mPixelAspectRatio = (static_cast<float>(params.display_width) / mInfo.mPicture.width) /
+                                (static_cast<float>(params.display_height) / mInfo.mPicture.height);
 
       switch (params.stereo_mode) {
       case NESTEGG_VIDEO_MONO:
@@ -685,10 +702,6 @@ PRBool nsWebMReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
     vpx_image_t      *img;
 
     while((img = vpx_codec_get_frame(&mVP8, &iter))) {
-      NS_ASSERTION(mInfo.mPicture.width == static_cast<PRInt32>(img->d_w), 
-                   "WebM picture width from header does not match decoded frame");
-      NS_ASSERTION(mInfo.mPicture.height == static_cast<PRInt32>(img->d_h),
-                   "WebM picture height from header does not match decoded frame");
       NS_ASSERTION(img->fmt == IMG_FMT_I420, "WebM image format is not I420");
 
       // Chroma shifts are rounded down as per the decoding examples in the VP8 SDK

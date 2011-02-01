@@ -75,6 +75,7 @@ nsHttpConnection::nsHttpConnection()
     , mSupportsPipelining(PR_FALSE) // assume low-grade server
     , mIsReused(PR_FALSE)
     , mCompletedSSLConnect(PR_FALSE)
+    , mLastTransactionExpectedNoContent(PR_FALSE)
 {
     LOG(("Creating nsHttpConnection @%x\n", this));
 
@@ -327,16 +328,6 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
 
     // reset to default (the server may have changed since we last checked)
     mSupportsPipelining = PR_FALSE;
-
-    // Ignore response to CONNECT from SSL proxy, we need
-    // version of the target server.
-    if (!mSSLProxyConnectStream) {
-        if ((responseHead->Version() > NS_HTTP_VERSION_0_9) &&
-            (requestHead->Version() > NS_HTTP_VERSION_0_9))
-        {
-            mConnInfo->DisallowHttp09();
-        }
-    }
 
     if ((responseHead->Version() < NS_HTTP_VERSION_1_1) ||
         (requestHead->Version() < NS_HTTP_VERSION_1_1)) {

@@ -185,7 +185,7 @@ nsresult nsAccessible::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 nsAccessible::nsAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
   nsAccessNodeWrap(aContent, aShell),
-  mParent(nsnull), mIndexInParent(-1), mChildrenFlags(eChildrenUninitialized),
+  mParent(nsnull), mIndexInParent(-1), mFlags(eChildrenUninitialized),
   mIndexOfEmbeddedChild(-1), mRoleMapEntry(nsnull)
 {
 #ifdef NS_DEBUG_X
@@ -2641,16 +2641,18 @@ nsAccessible::GetSelected(PRBool *aSelected)
 
 }
 
-nsresult
-nsAccessible::AppendTextTo(nsAString& aText, PRUint32 aStartOffset, PRUint32 aLength)
+void
+nsAccessible::AppendTextTo(nsAString& aText, PRUint32 aStartOffset,
+                           PRUint32 aLength)
 {
   // Return text representation of non-text accessible within hypertext
   // accessible. Text accessible overrides this method to return enclosed text.
-  if (aStartOffset != 0)
-    return NS_OK;
+  if (aStartOffset != 0 || aLength == 0)
+    return;
 
   nsIFrame *frame = GetFrame();
-  NS_ENSURE_STATE(frame);
+  if (!frame)
+    return;
 
   if (frame->GetType() == nsAccessibilityAtoms::brFrame) {
     aText += kForcedNewLineChar;
@@ -2661,8 +2663,6 @@ nsAccessible::AppendTextTo(nsAString& aText, PRUint32 aStartOffset, PRUint32 aLe
   } else {
     aText += kEmbeddedObjectChar;
   }
-
-  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2758,7 +2758,7 @@ nsAccessible::InvalidateChildren()
 
   mEmbeddedObjCollector = nsnull;
   mChildren.Clear();
-  mChildrenFlags = eChildrenUninitialized;
+  SetChildrenFlag(eChildrenUninitialized);
 }
 
 PRBool
@@ -2771,7 +2771,7 @@ nsAccessible::AppendChild(nsAccessible* aChild)
     return PR_FALSE;
 
   if (!nsAccUtils::IsEmbeddedObject(aChild))
-    mChildrenFlags = eMixedChildren;
+    SetChildrenFlag(eMixedChildren);
 
   aChild->BindToParent(this, mChildren.Length() - 1);
   return PR_TRUE;
@@ -2792,7 +2792,7 @@ nsAccessible::InsertChildAt(PRUint32 aIndex, nsAccessible* aChild)
   }
 
   if (nsAccUtils::IsText(aChild))
-    mChildrenFlags = eMixedChildren;
+    SetChildrenFlag(eMixedChildren);
 
   mEmbeddedObjCollector = nsnull;
 
@@ -2829,37 +2829,6 @@ nsAccessible::RemoveChild(nsAccessible* aChild)
 }
 
 nsAccessible*
-nsAccessible::GetParent()
-{
-  if (mParent)
-    return mParent;
-
-  if (IsDefunct())
-    return nsnull;
-
-  // XXX: mParent can be null randomly because supposedly we get layout
-  // notification and invalidate parent-child relations, this accessible stays
-  // unattached. This should gone after bug 572951.
-  NS_WARNING("Bad accessible tree!");
-
-#ifdef DEBUG
-  nsDocAccessible *docAccessible = GetDocAccessible();
-  NS_ASSERTION(docAccessible, "No document accessible for valid accessible!");
-#endif
-
-  nsAccessible* parent = GetAccService()->GetContainerAccessible(mContent,
-                                                                 mWeakShell);
-  NS_ASSERTION(parent, "No accessible parent for valid accessible!");
-  if (!parent)
-    return nsnull;
-
-  // Repair parent-child relations.
-  parent->EnsureChildren();
-  NS_ASSERTION(parent == mParent, "Wrong children repair!");
-  return parent;
-}
-
-nsAccessible*
 nsAccessible::GetChildAt(PRUint32 aIndex)
 {
   if (EnsureChildren())
@@ -2892,10 +2861,8 @@ nsAccessible::GetIndexOf(nsAccessible* aChild)
 }
 
 PRInt32
-nsAccessible::GetIndexInParent()
+nsAccessible::GetIndexInParent() const
 {
-  // XXX: call GetParent() to repair the tree if it's broken.
-  GetParent();
   return mIndexInParent;
 }
 
@@ -2905,7 +2872,7 @@ nsAccessible::GetEmbeddedChildCount()
   if (EnsureChildren())
     return -1;
 
-  if (mChildrenFlags == eMixedChildren) {
+  if (IsChildrenFlag(eMixedChildren)) {
     if (!mEmbeddedObjCollector)
       mEmbeddedObjCollector = new EmbeddedObjCollector(this);
     return mEmbeddedObjCollector ? mEmbeddedObjCollector->Count() : -1;
@@ -2920,7 +2887,7 @@ nsAccessible::GetEmbeddedChildAt(PRUint32 aIndex)
   if (EnsureChildren())
     return nsnull;
 
-  if (mChildrenFlags == eMixedChildren) {
+  if (IsChildrenFlag(eMixedChildren)) {
     if (!mEmbeddedObjCollector)
       mEmbeddedObjCollector = new EmbeddedObjCollector(this);
     return mEmbeddedObjCollector ?
@@ -2936,7 +2903,7 @@ nsAccessible::GetIndexOfEmbeddedChild(nsAccessible* aChild)
   if (EnsureChildren())
     return -1;
 
-  if (mChildrenFlags == eMixedChildren) {
+  if (IsChildrenFlag(eMixedChildren)) {
     if (!mEmbeddedObjCollector)
       mEmbeddedObjCollector = new EmbeddedObjCollector(this);
     return mEmbeddedObjCollector ?
@@ -2954,8 +2921,7 @@ nsAccessible::IsHyperLink()
 {
   // Every embedded accessible within hypertext accessible implements
   // hyperlink interface.
-  nsRefPtr<nsHyperTextAccessible> hyperText = do_QueryObject(GetParent());
-  return hyperText && nsAccUtils::IsEmbeddedObject(this);
+  return mParent && mParent->IsHyperText() && nsAccUtils::IsEmbeddedObject(this);
 }
 
 PRUint32
@@ -2963,7 +2929,7 @@ nsAccessible::StartOffset()
 {
   NS_PRECONDITION(IsHyperLink(), "StartOffset is called not on hyper link!");
 
-  nsRefPtr<nsHyperTextAccessible> hyperText(do_QueryObject(GetParent()));
+  nsHyperTextAccessible* hyperText = mParent ? mParent->AsHyperText() : nsnull;
   return hyperText ? hyperText->GetChildOffset(this) : 0;
 }
 
@@ -2972,7 +2938,7 @@ nsAccessible::EndOffset()
 {
   NS_PRECONDITION(IsHyperLink(), "EndOffset is called on not hyper link!");
 
-  nsRefPtr<nsHyperTextAccessible> hyperText(do_QueryObject(GetParent()));
+  nsHyperTextAccessible* hyperText = mParent ? mParent->AsHyperText() : nsnull;
   return hyperText ? (hyperText->GetChildOffset(this) + 1) : 0;
 }
 
@@ -3180,12 +3146,12 @@ nsAccessible::CacheChildren()
 }
 
 void
-nsAccessible::TestChildCache(nsAccessible *aCachedChild)
+nsAccessible::TestChildCache(nsAccessible* aCachedChild) const
 {
 #ifdef DEBUG
   PRInt32 childCount = mChildren.Length();
   if (childCount == 0) {
-    NS_ASSERTION(mChildrenFlags == eChildrenUninitialized,
+    NS_ASSERTION(IsChildrenFlag(eChildrenUninitialized),
                  "No children but initialized!");
     return;
   }
@@ -3203,19 +3169,19 @@ nsAccessible::TestChildCache(nsAccessible *aCachedChild)
 }
 
 // nsAccessible public
-PRBool
+bool
 nsAccessible::EnsureChildren()
 {
   if (IsDefunct()) {
-    mChildrenFlags = eChildrenUninitialized;
-    return PR_TRUE;
+    SetChildrenFlag(eChildrenUninitialized);
+    return true;
   }
 
-  if (mChildrenFlags != eChildrenUninitialized)
-    return PR_FALSE;
+  if (!IsChildrenFlag(eChildrenUninitialized))
+    return false;
 
   // State is embedded children until text leaf accessible is appended.
-  mChildrenFlags = eEmbeddedChildren; // Prevent reentry
+  SetChildrenFlag(eEmbeddedChildren); // Prevent reentry
 
   // Notify the document about caching status.
   nsDocAccessible* document = GetDocAccessible();
@@ -3227,7 +3193,7 @@ nsAccessible::EnsureChildren()
   if (document)
     document->NotifyOfCachingEnd(this);
 
-  return PR_FALSE;
+  return false;
 }
 
 nsAccessible*

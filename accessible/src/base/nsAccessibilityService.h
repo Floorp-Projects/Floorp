@@ -118,6 +118,8 @@ public:
   virtual void ContentRemoved(nsIPresShell* aPresShell, nsIContent* aContainer,
                               nsIContent* aChild);
 
+  virtual void UpdateText(nsIPresShell* aPresShell, nsIContent* aContent);
+
   virtual void NotifyOfAnchorJumpTo(nsIContent *aTarget);
 
   virtual void PresShellDestroyed(nsIPresShell* aPresShell);
