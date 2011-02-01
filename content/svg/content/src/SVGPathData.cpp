@@ -51,6 +51,12 @@
 
 using namespace mozilla;
 
+static PRBool IsMoveto(PRUint16 aSegType)
+{
+  return aSegType == nsIDOMSVGPathSeg::PATHSEG_MOVETO_ABS ||
+         aSegType == nsIDOMSVGPathSeg::PATHSEG_MOVETO_REL;
+}
+
 nsresult
 SVGPathData::CopyFrom(const SVGPathData& rhs)
 {
@@ -235,6 +241,10 @@ SVGPathData::GetPathSegAtLength(float aDistance) const
 void
 SVGPathData::ConstructPath(gfxContext *aCtx) const
 {
+  if (!mData.Length() || !IsMoveto(SVGPathSegUtils::DecodeType(mData[0]))) {
+    return; // paths without an initial moveto are invalid
+  }
+
   PRUint32 segType, prevSegType = nsIDOMSVGPathSeg::PATHSEG_UNKNOWN;
   gfxPoint pathStart(0.0, 0.0); // start point of [sub]path
   gfxPoint segEnd(0.0, 0.0);    // end point of previous/current segment
@@ -418,12 +428,6 @@ SVGPathData::ToFlattenedPath(const gfxMatrix& aMatrix) const
   ctx->IdentityMatrix();
 
   return ctx->GetFlattenedPath();
-}
-
-static PRBool IsMoveto(PRUint16 aSegType)
-{
-  return aSegType == nsIDOMSVGPathSeg::PATHSEG_MOVETO_ABS ||
-         aSegType == nsIDOMSVGPathSeg::PATHSEG_MOVETO_REL;
 }
 
 static float AngleOfVector(gfxPoint v)
