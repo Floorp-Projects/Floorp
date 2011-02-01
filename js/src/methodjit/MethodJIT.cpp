@@ -845,8 +845,7 @@ mjit::JITScript::scriptDataSize()
     return sizeof(JITScript) +
         sizeof(NativeMapEntry) * nNmapPairs +
 #if defined JS_MONOIC
-        sizeof(ic::GetGlobalNameIC) * nGetGlobalNames +
-        sizeof(ic::SetGlobalNameIC) * nSetGlobalNames +
+        sizeof(ic::MICInfo) * nMICs +
         sizeof(ic::CallICInfo) * nCallICs +
         sizeof(ic::EqualityICInfo) * nEqualityICs +
         sizeof(ic::TraceICInfo) * nTraceICs +
