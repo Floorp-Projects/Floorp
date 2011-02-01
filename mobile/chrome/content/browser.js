@@ -2606,6 +2606,7 @@ Tab.prototype = {
 
   resurrect: function resurrect() {
     let dead = this._browser;
+    let active = this.active;
 
     // Hold onto the session store data
     let session = { data: dead.__SS_data, extra: dead.__SS_extdata };
@@ -2618,6 +2619,8 @@ Tab.prototype = {
     // Destory and re-create the browser
     this._destroyBrowser();
     let browser = this._createBrowser(currentURL, sibling);
+    if (active)
+      this.active = true;
 
     // Reattach session store data and flag this browser so it is restored on select
     browser.__SS_data = session.data;
