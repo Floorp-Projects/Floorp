@@ -1519,10 +1519,18 @@ var gHeader = {
       gViewController.loadView("addons://search/" + encodeURIComponent(query));
     }, false);
 
-    if (this.shouldShowNavButtons) {
-      document.getElementById("back-btn").hidden = false;
-      document.getElementById("forward-btn").hidden = false;
+    function updateNavButtonVisibility() {
+      var shouldShow = gHeader.shouldShowNavButtons;
+      document.getElementById("back-btn").hidden = !shouldShow;
+      document.getElementById("forward-btn").hidden = !shouldShow;
     }
+
+    window.addEventListener("focus", function(aEvent) {
+      if (aEvent.target == window)
+        updateNavButtonVisibility();
+    }, false);
+
+    updateNavButtonVisibility();
   },
 
   get shouldShowNavButtons() {
