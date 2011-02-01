@@ -410,6 +410,7 @@ StoreToTypedArray(JSContext *cx, Assembler &masm, js::TypedArray *tarray, T addr
             return false;
 
         PreserveRegisters saveRHS(masm);
+        PreserveRegisters saveLHS(masm);
 
         // There are three tricky situations to handle:
         //   (1) The RHS needs conversion. saveMask will be stomped, and 
@@ -441,7 +442,7 @@ StoreToTypedArray(JSContext *cx, Assembler &masm, js::TypedArray *tarray, T addr
             //   - won't clobber the key, object, or RHS type regs
             //   - is temporary, but
             //   - is not in saveMask, which contains live volatile registers.
-            uint32 allowMask = Registers::TempRegs;
+            uint32 allowMask = Registers::AvailRegs;
             if (singleByte)
                 allowMask &= Registers::SingleByteRegs;
 
@@ -465,11 +466,25 @@ StoreToTypedArray(JSContext *cx, Assembler &masm, js::TypedArray *tarray, T addr
                 } else {
                     // Oh no! *All* single byte registers are pinned. This
                     // sucks. We'll swap the type and data registers in |vr|
-                    // and unswap them later. First, save both registers to
-                    // make this easier.
-                    saveRHS.preserve(Registers::mask2Regs(vr.typeReg(), vr.dataReg()));
+                    // and unswap them later.
 
-                    // Perform the swap.
+                    // If |vr|'s registers are part of the address, swapping is
+                    // going to cause problems during the store.
+                    uint32 vrRegs = Registers::mask2Regs(vr.dataReg(), vr.typeReg());
+                    uint32 lhsMask = vrRegs & Assembler::maskAddress(address);
+
+                    // We'll also need to save any of the registers which won't
+                    // be restored via |lhsMask| above.
+                    uint32 rhsMask = vrRegs & ~lhsMask;
+
+                    // Push them, but get the order right. We'll pop LHS first.
+                    saveRHS.preserve(rhsMask);
+                    saveLHS.preserve(lhsMask);
+
+                    // Don't store/restore registers if we dont have to.
+                    saveMask &= ~lhsMask;
+
+                    // Actually perform the swap.
                     masm.swap(vr.typeReg(), vr.dataReg());
                     vr = ValueRemat::FromRegisters(vr.dataReg(), vr.typeReg());
                     newReg = vr.dataReg();
@@ -491,12 +506,17 @@ StoreToTypedArray(JSContext *cx, Assembler &masm, js::TypedArray *tarray, T addr
         }
 
         GenConversionForIntArray(masm, tarray, vr, saveMask);
+
+        // Restore the registers in |address|. |GenConversionForIntArray| won't
+        // restore them because we told it not to by fiddling with |saveMask|.
+        saveLHS.restore();
+
         if (vr.isConstant())
             StoreToIntArray(masm, tarray, Imm32(vr.value().toInt32()), address);
         else
             StoreToIntArray(masm, tarray, vr.dataReg(), address);
 
-        // Note that this will also correctly restore the damage from the
+        // Note that this will finish restoring the damage from the
         // earlier register swap.
         saveRHS.restore();
         break;
