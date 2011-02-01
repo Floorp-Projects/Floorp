@@ -43,7 +43,6 @@
 
 #include "assembler/assembler/MacroAssembler.h"
 #include "assembler/assembler/CodeLocation.h"
-#include "assembler/moco/MocoStubs.h"
 #include "methodjit/MethodJIT.h"
 #include "CodeGenIncludes.h"
 
@@ -101,10 +100,9 @@ struct MICInfo {
         SET
     };
 
-    typedef JSC::MacroAssembler::RegisterID RegisterID;
-
-    JSC::CodeLocationLabel fastPathStart;
-    JSC::CodeLocationLabel slowPathStart;
+    /* Used by multiple MICs. */
+    JSC::CodeLocationLabel entry;
+    JSC::CodeLocationLabel stubEntry;
 
     /*
      * - ARM and x64 always emit exactly one instruction which needs to be
@@ -119,21 +117,17 @@ struct MICInfo {
     JSC::CodeLocationDataLabel32 shape;
     JSC::CodeLocationCall stubCall;
 
-    /* SET only, if we had to generate an out-of-line path. */
-    Kind kind : 2;
-    bool usePropertyCache : 1;
-    int inlineShapeJump : 10;   /* Offset into inline path for shape jump. */
-    int extraShapeGuard : 6;    /* Offset into stub for shape guard. */
-    bool objConst : 1;          /* True if the object is constant. */
-    RegisterID objReg   : 5;    /* Register for object, if objConst is false. */
-    RegisterID shapeReg : 5;    /* Register for shape; volatile. */
-    JSC::JITCode extraStub;     /* Out-of-line generated stub. */
-
-    int fastRejoinOffset : 16;  /* Offset from fastPathStart to rejoin. */
-    int extraStoreOffset : 16;  /* Offset into store code. */
-
-    /* SET only. */
-    ValueRemat vr;              /* RHS value. */
+    /* Used by all MICs. */
+    Kind kind : 3;
+    union {
+        /* Used by GET/SET. */
+        struct {
+            bool touched : 1;
+            bool typeConst : 1;
+            bool dataConst : 1;
+            bool usePropertyCache : 1;
+        } name;
+    } u;
 };
 
 struct TraceICInfo {

@@ -500,33 +500,24 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
     if (ic::MICInfo *scriptMICs = jit->mics) {
         for (size_t i = 0; i < mics.length(); i++) {
             scriptMICs[i].kind = mics[i].kind;
-            scriptMICs[i].fastPathStart = fullCode.locationOf(mics[i].fastPathStart);
-            scriptMICs[i].slowPathStart = stubCode.locationOf(mics[i].slowPathStart);
-            if (mics[i].kind == ic::MICInfo::GET)
-                scriptMICs[i].load = fullCode.locationOf(mics[i].load);
-            else
-                scriptMICs[i].load = fullCode.locationOf(mics[i].store).labelAtOffset(0);
-            scriptMICs[i].shape = fullCode.locationOf(mics[i].shape);
-            scriptMICs[i].stubCall = stubCode.locationOf(mics[i].call);
-            scriptMICs[i].usePropertyCache = mics[i].usePropertyCache;
-            scriptMICs[i].extraShapeGuard = 0;
-            scriptMICs[i].objConst = mics[i].objConst;
-            scriptMICs[i].shapeReg = mics[i].shapeReg;
-            scriptMICs[i].objReg = mics[i].objReg;
-            scriptMICs[i].vr = mics[i].vr;
-
-            if (mics[i].kind == ic::MICInfo::SET) {
-                int offset = fullCode.locationOf(mics[i].shapeGuardJump) -
-                             scriptMICs[i].fastPathStart;
-                scriptMICs[i].inlineShapeJump = offset;
-                JS_ASSERT(scriptMICs[i].inlineShapeJump == offset);
-
-                offset = fullCode.locationOf(mics[i].fastPathRejoin) -
-                         scriptMICs[i].fastPathStart;
-                scriptMICs[i].fastRejoinOffset = offset;
-                JS_ASSERT(scriptMICs[i].fastRejoinOffset == offset);
+            scriptMICs[i].entry = fullCode.locationOf(mics[i].entry);
+            switch (mics[i].kind) {
+              case ic::MICInfo::GET:
+              case ic::MICInfo::SET:
+                if (mics[i].kind == ic::MICInfo::GET)
+                    scriptMICs[i].load = fullCode.locationOf(mics[i].load);
+                else
+                    scriptMICs[i].load = fullCode.locationOf(mics[i].store).labelAtOffset(0);
+                scriptMICs[i].shape = fullCode.locationOf(mics[i].shape);
+                scriptMICs[i].stubCall = stubCode.locationOf(mics[i].call);
+                scriptMICs[i].stubEntry = stubCode.locationOf(mics[i].stubEntry);
+                scriptMICs[i].u.name.typeConst = mics[i].u.name.typeConst;
+                scriptMICs[i].u.name.dataConst = mics[i].u.name.dataConst;
+                scriptMICs[i].u.name.usePropertyCache = mics[i].u.name.usePropertyCache;
+                break;
+              default:
+                JS_NOT_REACHED("Bad MIC kind");
             }
-
             stubCode.patch(mics[i].addrLabel, &scriptMICs[i]);
         }
     }
@@ -4317,7 +4308,7 @@ mjit::Compiler::jsop_getgname(uint32 index)
     RegisterID objReg;
     Jump shapeGuard;
 
-    mic.fastPathStart = masm.label();
+    mic.entry = masm.label();
     if (fe->isConstant()) {
         JSObject *obj = &fe->getValue().toObject();
         frame.pop();
@@ -4339,10 +4330,11 @@ mjit::Compiler::jsop_getgname(uint32 index)
                                             Imm32(int32(JSObjectMap::INVALID_SHAPE)), mic.shape);
         frame.freeReg(reg);
     }
-    mic.slowPathStart = stubcc.linkExit(shapeGuard, Uses(0));
+    stubcc.linkExit(shapeGuard, Uses(0));
 
     stubcc.leave();
     passMICAddress(mic);
+    mic.stubEntry = stubcc.masm.label();
     mic.call = OOL_STUBCALL(ic::GetGlobalName);
 
     /* Garbage value. */
@@ -4361,8 +4353,6 @@ mjit::Compiler::jsop_getgname(uint32 index)
     frame.pushRegs(treg, dreg);
 
     stubcc.rejoin(Changes(1));
-
-    mic.fastPathRejoin = masm.label();
     mics.append(mic);
 
 #else
@@ -4388,71 +4378,91 @@ mjit::Compiler::jsop_setgname(JSAtom *atom, bool usePropertyCache)
 {
 #if defined JS_MONOIC
     FrameEntry *objFe = frame.peek(-2);
-    FrameEntry *fe = frame.peek(-1);
     JS_ASSERT_IF(objFe->isTypeKnown(), objFe->getKnownType() == JSVAL_TYPE_OBJECT);
 
     MICGenInfo mic(ic::MICInfo::SET);
-    frame.pinEntry(fe, mic.vr);
-
     RESERVE_IC_SPACE(masm);
+    RegisterID objReg;
     Jump shapeGuard;
 
-    mic.fastPathStart = masm.label();
+    mic.entry = masm.label();
     if (objFe->isConstant()) {
         JSObject *obj = &objFe->getValue().toObject();
         JS_ASSERT(obj->isNative());
 
-        mic.objReg = frame.allocReg();
-        mic.shapeReg = mic.objReg;
-        mic.objConst = true;
+        objReg = frame.allocReg();
 
-        masm.load32FromImm(&obj->objShape, mic.shapeReg);
-        shapeGuard = masm.branch32WithPatch(Assembler::NotEqual, mic.shapeReg,
+        masm.load32FromImm(&obj->objShape, objReg);
+        shapeGuard = masm.branch32WithPatch(Assembler::NotEqual, objReg,
                                             Imm32(int32(JSObjectMap::INVALID_SHAPE)),
                                             mic.shape);
-        masm.move(ImmPtr(obj), mic.objReg);
+        masm.move(ImmPtr(obj), objReg);
     } else {
-        mic.objReg = frame.copyDataIntoReg(objFe);
-        mic.shapeReg = frame.allocReg();
-        mic.objConst = false;
+        objReg = frame.copyDataIntoReg(objFe);
+        RegisterID reg = frame.allocReg();
 
-        masm.loadShape(mic.objReg, mic.shapeReg);
-        shapeGuard = masm.branch32WithPatch(Assembler::NotEqual, mic.shapeReg,
+        masm.loadShape(objReg, reg);
+        shapeGuard = masm.branch32WithPatch(Assembler::NotEqual, reg,
                                             Imm32(int32(JSObjectMap::INVALID_SHAPE)),
                                             mic.shape);
-        frame.freeReg(mic.shapeReg);
+        frame.freeReg(reg);
     }
-    mic.shapeGuardJump = shapeGuard;
-    mic.slowPathStart = stubcc.linkExit(shapeGuard, Uses(2));
+    stubcc.linkExit(shapeGuard, Uses(2));
 
     stubcc.leave();
     passMICAddress(mic);
+    mic.stubEntry = stubcc.masm.label();
     mic.call = OOL_STUBCALL(ic::SetGlobalName);
 
     /* Garbage value. */
     uint32 slot = 1 << 24;
 
-    mic.usePropertyCache = usePropertyCache;
+    /* Get both type and reg into registers. */
+    FrameEntry *fe = frame.peek(-1);
 
-    masm.loadPtr(Address(mic.objReg, offsetof(JSObject, slots)), mic.objReg);
-    Address address(mic.objReg, slot);
+    Value v;
+    RegisterID typeReg = Registers::ReturnReg;
+    RegisterID dataReg = Registers::ReturnReg;
+    JSValueType typeTag = JSVAL_TYPE_INT32;
 
-    if (mic.vr.isConstant()) {
-        mic.store = masm.storeValueWithAddressOffsetPatch(mic.vr.value(), address);
-    } else if (mic.vr.isTypeKnown()) {
-        mic.store = masm.storeValueWithAddressOffsetPatch(ImmType(mic.vr.knownType()),
-                                                          mic.vr.dataReg(), address);
+    mic.u.name.typeConst = fe->isTypeKnown();
+    mic.u.name.dataConst = fe->isConstant();
+    mic.u.name.usePropertyCache = usePropertyCache;
+
+    if (!mic.u.name.dataConst) {
+        dataReg = frame.ownRegForData(fe);
+        if (!mic.u.name.typeConst)
+            typeReg = frame.ownRegForType(fe);
+        else
+            typeTag = fe->getKnownType();
     } else {
-        mic.store = masm.storeValueWithAddressOffsetPatch(mic.vr.typeReg(), mic.vr.dataReg(), address);
+        v = fe->getValue();
     }
 
-    frame.freeReg(mic.objReg);
-    frame.unpinEntry(mic.vr);
-    frame.shimmy(1);
+    masm.loadPtr(Address(objReg, offsetof(JSObject, slots)), objReg);
+    Address address(objReg, slot);
+
+    if (mic.u.name.dataConst) {
+        mic.store = masm.storeValueWithAddressOffsetPatch(v, address);
+    } else if (mic.u.name.typeConst) {
+        mic.store = masm.storeValueWithAddressOffsetPatch(ImmType(typeTag), dataReg, address);
+    } else {
+        mic.store = masm.storeValueWithAddressOffsetPatch(typeReg, dataReg, address);
+    }
+
+    frame.freeReg(objReg);
+    frame.popn(2);
+    if (mic.u.name.dataConst) {
+        frame.push(v);
+    } else {
+        if (mic.u.name.typeConst)
+            frame.pushTypedPayload(typeTag, dataReg);
+        else
+            frame.pushRegs(typeReg, dataReg);
+    }
 
     stubcc.rejoin(Changes(1));
 
-    mic.fastPathRejoin = masm.label();
     mics.append(mic);
 #else
     jsop_setgname_slow(atom, usePropertyCache);
