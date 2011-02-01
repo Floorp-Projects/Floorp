@@ -333,7 +333,7 @@ num_parseFloat(JSContext *cx, uintN argc, Value *vp)
 static jsdouble FASTCALL
 ParseFloat(JSContext* cx, JSString* str)
 {
-    TraceMonitor *tm = &JS_TRACE_MONITOR(cx);
+    TraceMonitor *tm = JS_TRACE_MONITOR_ON_TRACE(cx);
 
     const jschar *bp = str->getChars(cx);
     if (!bp) {
@@ -477,7 +477,7 @@ num_parseInt(JSContext *cx, uintN argc, Value *vp)
 static jsdouble FASTCALL
 ParseInt(JSContext* cx, JSString* str)
 {
-    TraceMonitor *tm = &JS_TRACE_MONITOR(cx);
+    TraceMonitor *tm = JS_TRACE_MONITOR_ON_TRACE(cx);
 
     const jschar *start = str->getChars(cx);
     if (!start) {

@@ -2069,7 +2069,7 @@ js_ArrayCompPush(JSContext *cx, JSObject *obj, const Value &vp)
 JSBool JS_FASTCALL
 js_ArrayCompPush_tn(JSContext *cx, JSObject *obj, ValueArgType v)
 {
-    TraceMonitor *tm = &JS_TRACE_MONITOR(cx);
+    TraceMonitor *tm = JS_TRACE_MONITOR_ON_TRACE(cx);
 
     if (!ArrayCompPushImpl(cx, obj, ValueArgToConstRef(v))) {
         SetBuiltinError(tm);

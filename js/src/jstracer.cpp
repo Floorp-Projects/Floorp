@@ -2314,6 +2314,11 @@ TraceRecorder::TraceRecorder(JSContext* cx, TraceMonitor *tm,
     JS_ASSERT(globalObj->hasOwnShape());
     JS_ASSERT(cx->regs->pc == (jsbytecode*)fragment->ip);
 
+    JS_ASSERT(JS_THREAD_DATA(cx)->onTraceCompartment == NULL);
+    JS_ASSERT(JS_THREAD_DATA(cx)->profilingCompartment == NULL);
+    JS_ASSERT(JS_THREAD_DATA(cx)->recordingCompartment == NULL);
+    JS_THREAD_DATA(cx)->recordingCompartment = cx->compartment;
+
 #ifdef DEBUG
     lirbuf->printer = new (tempAlloc()) LInsPrinter(tempAlloc(), TM_NUM_USED_ACCS);
 #endif
@@ -2462,6 +2467,10 @@ TraceRecorder::~TraceRecorder()
 {
     /* Should already have been adjusted by callers before calling delete. */
     JS_ASSERT(traceMonitor->recorder != this);
+
+    JS_ASSERT(JS_THREAD_DATA(cx)->profilingCompartment == NULL);
+    JS_ASSERT(&JS_THREAD_DATA(cx)->recordingCompartment->traceMonitor == traceMonitor);
+    JS_THREAD_DATA(cx)->recordingCompartment = NULL;
 
     if (trashSelf)
         TrashTree(fragment->root);
@@ -3257,7 +3266,7 @@ template<typename T>
 inline JSValueType
 GetUpvarOnTrace(JSContext* cx, uint32 upvarLevel, int32 slot, uint32 callDepth, double* result)
 {
-    TracerState* state = JS_TRACE_MONITOR(cx).tracerState;
+    TracerState* state = JS_TRACE_MONITOR_ON_TRACE(cx)->tracerState;
     FrameInfo** fip = state->rp + callDepth;
 
     /*
@@ -3394,7 +3403,7 @@ GetFromClosure(JSContext* cx, JSObject* call, const ClosureVarInfo* cv, double* 
     JS_ASSERT(call->isCall());
 
 #ifdef DEBUG
-    TracerState* state = JS_TRACE_MONITOR(cx).tracerState;
+    TracerState* state = JS_TRACE_MONITOR_ON_TRACE(cx)->tracerState;
     FrameInfo** fip = state->rp + cv->callDepth;
     int32 stackOffset = StackDepthFromCallStack(state, cv->callDepth);
     while (--fip > state->callstackBase) {
@@ -6488,6 +6497,12 @@ TracerState::TracerState(JSContext* cx, TraceMonitor* tm, TreeFragment* f,
     prev = tm->tracerState;
     tm->tracerState = this;
 
+    JS_ASSERT(JS_THREAD_DATA(cx)->onTraceCompartment == NULL);
+    JS_ASSERT(JS_THREAD_DATA(cx)->recordingCompartment == NULL ||
+              JS_THREAD_DATA(cx)->recordingCompartment == cx->compartment);
+    JS_ASSERT(JS_THREAD_DATA(cx)->profilingCompartment == NULL);
+    JS_THREAD_DATA(cx)->onTraceCompartment = cx->compartment;
+
     JS_ASSERT(eos == stackBase + MAX_NATIVE_STACK_SLOTS);
     JS_ASSERT(sp < eos);
 
@@ -6513,6 +6528,15 @@ TracerState::~TracerState()
 {
     JS_ASSERT(!nativeVp);
 
+    if (traceMonitor->tracecx) {
+        /* If we didn't already deep-bail... */
+        JS_ASSERT(JS_THREAD_DATA(cx)->recordingCompartment == NULL ||
+                  JS_THREAD_DATA(cx)->recordingCompartment == cx->compartment);
+        JS_ASSERT(JS_THREAD_DATA(cx)->profilingCompartment == NULL);
+        JS_ASSERT(JS_THREAD_DATA(cx)->onTraceCompartment == cx->compartment);
+        JS_THREAD_DATA(cx)->onTraceCompartment = NULL;
+    }
+    
     TraceMonitor *tm = &JS_TRACE_MONITOR(cx);
     tm->tracerState = prev;
     tm->tracecx = NULL;
@@ -7967,7 +7991,10 @@ DeepBail(JSContext *cx)
      * Exactly one context on the current thread is on trace. Find out which
      * one. (Most callers cannot guarantee that it's cx.)
      */
-    TraceMonitor *tm = &JS_TRACE_MONITOR(cx);
+    TraceMonitor *tm = JS_TRACE_MONITOR_ON_TRACE(cx);
+
+    JS_ASSERT(JS_THREAD_DATA(cx)->profilingCompartment == NULL);
+    JS_THREAD_DATA(cx)->onTraceCompartment = NULL;
 
     /* It's a bug if a non-FAIL_STATUS builtin gets here. */
     JS_ASSERT(tm->bailExit);
@@ -11761,7 +11788,7 @@ TraceRecorder::record_JSOP_DELNAME()
 static JSBool JS_FASTCALL
 DeleteIntKey(JSContext* cx, JSObject* obj, int32 i, JSBool strict)
 {
-    TraceMonitor *tm = &JS_TRACE_MONITOR(cx);
+    TraceMonitor *tm = JS_TRACE_MONITOR_ON_TRACE(cx);
 
     LeaveTraceIfGlobalObject(cx, obj);
     LeaveTraceIfArgumentsObject(cx, obj);
@@ -11786,7 +11813,7 @@ JS_DEFINE_CALLINFO_4(extern, BOOL_FAIL, DeleteIntKey, CONTEXT, OBJECT, INT32, BO
 static JSBool JS_FASTCALL
 DeleteStrKey(JSContext* cx, JSObject* obj, JSString* str, JSBool strict)
 {
-    TraceMonitor *tm = &JS_TRACE_MONITOR(cx);
+    TraceMonitor *tm = JS_TRACE_MONITOR_ON_TRACE(cx);
 
     LeaveTraceIfGlobalObject(cx, obj);
     LeaveTraceIfArgumentsObject(cx, obj);
@@ -12072,7 +12099,7 @@ TraceRecorder::lookupForSetPropertyOp(JSObject* obj, LIns* obj_ins, jsid id,
 static JSBool FASTCALL
 MethodWriteBarrier(JSContext* cx, JSObject* obj, uint32 slot, const Value* v)
 {
-    TraceMonitor *tm = &JS_TRACE_MONITOR(cx);
+    TraceMonitor *tm = JS_TRACE_MONITOR_ON_TRACE(cx);
 
     bool ok = obj->methodWriteBarrier(cx, slot, *v);
     JS_ASSERT(WasBuiltinSuccessful(tm));
@@ -12605,7 +12632,7 @@ struct PICTable
 static JSBool FASTCALL
 GetPropertyByName(JSContext* cx, JSObject* obj, JSString** namep, Value* vp, PICTable *picTable)
 {
-    TraceMonitor *tm = &JS_TRACE_MONITOR(cx);
+    TraceMonitor *tm = JS_TRACE_MONITOR_ON_TRACE(cx);
 
     LeaveTraceIfGlobalObject(cx, obj);
 
@@ -12711,7 +12738,7 @@ TraceRecorder::getPropertyByName(LIns* obj_ins, Value* idvalp, Value* outp)
 static JSBool FASTCALL
 GetPropertyByIndex(JSContext* cx, JSObject* obj, int32 index, Value* vp)
 {
-    TraceMonitor *tm = &JS_TRACE_MONITOR(cx);
+    TraceMonitor *tm = JS_TRACE_MONITOR_ON_TRACE(cx);
 
     LeaveTraceIfGlobalObject(cx, obj);
 
@@ -12743,7 +12770,7 @@ TraceRecorder::getPropertyByIndex(LIns* obj_ins, LIns* index_ins, Value* outp)
 static JSBool FASTCALL
 GetPropertyById(JSContext* cx, JSObject* obj, jsid id, Value* vp)
 {
-    TraceMonitor *tm = &JS_TRACE_MONITOR(cx);
+    TraceMonitor *tm = JS_TRACE_MONITOR_ON_TRACE(cx);
 
     LeaveTraceIfGlobalObject(cx, obj);
     if (!obj->getProperty(cx, id, vp)) {
@@ -12788,7 +12815,7 @@ TraceRecorder::getPropertyById(LIns* obj_ins, Value* outp)
 static JSBool FASTCALL
 GetPropertyWithNativeGetter(JSContext* cx, JSObject* obj, Shape* shape, Value* vp)
 {
-    TraceMonitor *tm = &JS_TRACE_MONITOR(cx);
+    TraceMonitor *tm = JS_TRACE_MONITOR_ON_TRACE(cx);
 
     LeaveTraceIfGlobalObject(cx, obj);
 
@@ -13123,7 +13150,7 @@ TraceRecorder::record_JSOP_GETELEM()
 static JSBool FASTCALL
 SetPropertyByName(JSContext* cx, JSObject* obj, JSString** namep, Value* vp, JSBool strict)
 {
-    TraceMonitor *tm = &JS_TRACE_MONITOR(cx);
+    TraceMonitor *tm = JS_TRACE_MONITOR_ON_TRACE(cx);
 
     LeaveTraceIfGlobalObject(cx, obj);
 
@@ -13141,7 +13168,7 @@ JS_DEFINE_CALLINFO_5(static, BOOL_FAIL, SetPropertyByName,
 static JSBool FASTCALL
 InitPropertyByName(JSContext* cx, JSObject* obj, JSString** namep, ValueArgType arg)
 {
-    TraceMonitor *tm = &JS_TRACE_MONITOR(cx);
+    TraceMonitor *tm = JS_TRACE_MONITOR_ON_TRACE(cx);
 
     LeaveTraceIfGlobalObject(cx, obj);
 
@@ -13183,7 +13210,7 @@ TraceRecorder::initOrSetPropertyByName(LIns* obj_ins, Value* idvalp, Value* rval
 static JSBool FASTCALL
 SetPropertyByIndex(JSContext* cx, JSObject* obj, int32 index, Value* vp, JSBool strict)
 {
-    TraceMonitor *tm = &JS_TRACE_MONITOR(cx);
+    TraceMonitor *tm = JS_TRACE_MONITOR_ON_TRACE(cx);
 
     LeaveTraceIfGlobalObject(cx, obj);
 
@@ -13200,7 +13227,7 @@ JS_DEFINE_CALLINFO_5(static, BOOL_FAIL, SetPropertyByIndex, CONTEXT, OBJECT, INT
 static JSBool FASTCALL
 InitPropertyByIndex(JSContext* cx, JSObject* obj, int32 index, ValueArgType arg)
 {
-    TraceMonitor *tm = &JS_TRACE_MONITOR(cx);
+    TraceMonitor *tm = JS_TRACE_MONITOR_ON_TRACE(cx);
 
     LeaveTraceIfGlobalObject(cx, obj);
 
@@ -14728,7 +14755,7 @@ TraceRecorder::record_JSOP_IMACOP()
 static JSBool FASTCALL
 ObjectToIterator(JSContext* cx, JSObject *obj, int32 flags, Value* vp)
 {
-    TraceMonitor *tm = &JS_TRACE_MONITOR(cx);
+    TraceMonitor *tm = JS_TRACE_MONITOR_ON_TRACE(cx);
 
     vp->setObject(*obj);
     bool ok = js_ValueToIterator(cx, flags, vp);
@@ -14778,7 +14805,7 @@ TraceRecorder::record_JSOP_ITER()
 static JSBool FASTCALL
 IteratorMore(JSContext *cx, JSObject *iterobj, Value *vp)
 {
-    TraceMonitor *tm = &JS_TRACE_MONITOR(cx);
+    TraceMonitor *tm = JS_TRACE_MONITOR_ON_TRACE(cx);
 
     if (!js_IteratorMore(cx, iterobj, vp)) {
         SetBuiltinError(tm);
@@ -14842,7 +14869,7 @@ TraceRecorder::record_JSOP_MOREITER()
 static JSBool FASTCALL
 CloseIterator(JSContext *cx, JSObject *iterobj)
 {
-    TraceMonitor *tm = &JS_TRACE_MONITOR(cx);
+    TraceMonitor *tm = JS_TRACE_MONITOR_ON_TRACE(cx);
 
     if (!js_CloseIterator(cx, iterobj)) {
         SetBuiltinError(tm);
@@ -15308,7 +15335,7 @@ TraceRecorder::record_JSOP_IN()
 static JSBool FASTCALL
 HasInstanceOnTrace(JSContext* cx, JSObject* ctor, ValueArgType arg)
 {
-    TraceMonitor *tm = &JS_TRACE_MONITOR(cx);
+    TraceMonitor *tm = JS_TRACE_MONITOR_ON_TRACE(cx);
 
     const Value &argref = ValueArgToConstRef(arg);
     JSBool result = JS_FALSE;
@@ -16940,6 +16967,10 @@ LookupLoopProfile(TraceMonitor *tm, jsbytecode *pc)
 void
 LoopProfile::stopProfiling(JSContext *cx)
 {
+    JS_ASSERT(JS_THREAD_DATA(cx)->onTraceCompartment == NULL);
+    JS_ASSERT(JS_THREAD_DATA(cx)->recordingCompartment == NULL);
+    JS_THREAD_DATA(cx)->profilingCompartment = NULL;
+
     traceMonitor->profile = NULL;
 }
 
@@ -16947,7 +16978,7 @@ JS_REQUIRES_STACK TracePointAction
 MonitorTracePoint(JSContext *cx, uintN& inlineCallCount, bool* blacklist,
                   void** traceData, uintN *traceEpoch, uint32 *loopCounter, uint32 hits)
 {
-    TraceMonitor *tm = &JS_TRACE_MONITOR(cx);
+    TraceMonitor *tm = JS_TRACE_MONITOR_FROM_CONTEXT(cx);
 
     if (!cx->profilingEnabled)
         return RecordTracePoint(cx, tm, inlineCallCount, blacklist, true);
@@ -16987,6 +17018,11 @@ MonitorTracePoint(JSContext *cx, uintN& inlineCallCount, bool* blacklist,
 
     tm->profile = prof;
 
+    JS_ASSERT(JS_THREAD_DATA(cx)->profilingCompartment == NULL);
+    JS_ASSERT(JS_THREAD_DATA(cx)->onTraceCompartment == NULL);
+    JS_ASSERT(JS_THREAD_DATA(cx)->recordingCompartment == NULL);
+    JS_THREAD_DATA(cx)->profilingCompartment = cx->compartment;
+
     if (!Interpret(cx, cx->fp(), inlineCallCount, JSINTERP_PROFILE))
         return TPA_Error;
 
@@ -17018,7 +17054,7 @@ PCWithinLoop(JSStackFrame *fp, jsbytecode *pc, T& loop)
 LoopProfile::ProfileAction
 LoopProfile::profileOperation(JSContext* cx, JSOp op)
 {
-    TraceMonitor* tm = &JS_TRACE_MONITOR(cx);
+    TraceMonitor* tm = JS_TRACE_MONITOR_FROM_CONTEXT(cx);
 
     if (profiled) {
         stopProfiling(cx);
@@ -17131,7 +17167,7 @@ LoopProfile::profileOperation(JSContext* cx, JSOp op)
     if (numAllOps >= MAX_PROFILE_OPS) {
         debug_only_print0(LC_TMProfiler, "Profiling complete (maxops)\n");
         tm->profile->decide(cx);
-        tm->profile = NULL;
+        stopProfiling(cx);
         return ProfComplete;
     }
 
@@ -17378,7 +17414,7 @@ LoopProfile::decide(JSContext *cx)
 JS_REQUIRES_STACK MonitorResult
 MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
 {
-    TraceMonitor *tm = &JS_TRACE_MONITOR(cx);
+    TraceMonitor *tm = JS_TRACE_MONITOR_FROM_CONTEXT(cx);
     if (tm->profile)
         return tm->profile->profileLoopEdge(cx, inlineCallCount);
     else
@@ -17403,7 +17439,7 @@ AbortProfiling(JSContext *cx)
 JS_REQUIRES_STACK MonitorResult
 MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
 {
-    TraceMonitor *tm = &JS_TRACE_MONITOR(cx);
+    TraceMonitor *tm = JS_TRACE_MONITOR_FROM_CONTEXT(cx);
     return RecordLoopEdge(cx, tm, inlineCallCount);
 }
 
