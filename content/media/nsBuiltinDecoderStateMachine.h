@@ -300,6 +300,12 @@ protected:
   // count. Called on the state machine thread.
   void FindEndTime();
 
+  // Update only the state machine's current playback position (and duration,
+  // if unknown).  Does not update the playback position on the decoder or
+  // media element -- use UpdatePlaybackPosition for that.  Called on the state
+  // machine thread, caller must hold the decoder lock.
+  void UpdatePlaybackPositionInternal(PRInt64 aTime);
+
   // Performs YCbCr to RGB conversion, and pushes the image down the
   // rendering pipeline. Called on the state machine thread.
   void RenderVideoFrame(VideoData* aData);
