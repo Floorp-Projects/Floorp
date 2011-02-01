@@ -73,7 +73,7 @@ try
 }
 catch(ex)
 {
-  expect = 'InternalError: script stack space quota is exhausted';
+  expect = 'InternalError: allocation size overflow';
   actual = ex + '';
   print(actual);
 }
