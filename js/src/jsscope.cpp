@@ -570,11 +570,11 @@ JSObject::getChildProperty(JSContext *cx, Shape *parent, Shape &child)
             return NULL;
     } else {
         shape = JS_PROPERTY_TREE(cx).getChild(cx, parent, child);
-        if (shape) {
-            JS_ASSERT(shape->parent == parent);
-            JS_ASSERT_IF(parent != lastProp, parent == lastProp->parent);
-            setLastProperty(shape);
-        }
+        if (!shape)
+            return NULL;
+        JS_ASSERT(shape->parent == parent);
+        JS_ASSERT_IF(parent != lastProp, parent == lastProp->parent);
+        setLastProperty(shape);
     }
 
     updateFlags(shape);
