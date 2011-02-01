@@ -6739,8 +6739,8 @@ PresShell::HandleEvent(nsIView         *aView,
         // content area from grabbing the focus from chrome in-between key
         // events.
         if (mCurrentEventContent &&
-            nsContentUtils::IsChromeDoc(gKeyDownTarget->GetCurrentDoc()) &&
-            !nsContentUtils::IsChromeDoc(mCurrentEventContent->GetCurrentDoc())) {
+            nsContentUtils::IsChromeDoc(gKeyDownTarget->GetCurrentDoc()) !=
+            nsContentUtils::IsChromeDoc(mCurrentEventContent->GetCurrentDoc())) {
           mCurrentEventContent = gKeyDownTarget;
         }
 
