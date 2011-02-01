@@ -48,6 +48,7 @@ include $(topsrcdir)/config/rules.mk
 _TEST_FILES = \
 		doc.html \
 		test_doc.html \
+		test_hypertext.html \
 		test_singleline.html \
 		test_whitespaces.html \
 		test_words.html \
