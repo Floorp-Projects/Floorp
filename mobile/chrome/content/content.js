@@ -256,7 +256,7 @@ let Content = {
 
     try{
       docShell.QueryInterface(Ci.nsIDocShellHistory).useGlobalHistory = true;
-    } catch(e) { dump("---error: " + e + "\n"); }
+    } catch(e) { }
   },
 
   handleEvent: function handleEvent(aEvent) {
