@@ -6351,8 +6351,10 @@ if test -n "$MOZ_ANGLE"; then
     AC_MSG_ERROR([Building ANGLE requires MSVC.  To build without ANGLE, reconfigure with --disable-angle.])
   fi
 
-  # remove trailing backslash
-  MOZ_DIRECTX_SDK_PATH=`echo $DXSDK_DIR|sed 's/\\\\\$//'`
+  # Get the SDK path from the registry.
+  MOZ_DIRECTX_SDK_REG_KEY=`reg query 'HKLM\Software\Microsoft\DirectX' //s | grep 'Microsoft DirectX SDK' | head -n 1`
+  MOZ_DIRECTX_SDK_PATH=`reg query "$MOZ_DIRECTX_SDK_REG_KEY" //v InstallPath | grep REG_SZ | sed 's,  *, ,g' | cut -d' ' -f4-`
+
   MOZ_ANGLE=
 
   if test -n "$MOZ_DIRECTX_SDK_PATH" ; then
