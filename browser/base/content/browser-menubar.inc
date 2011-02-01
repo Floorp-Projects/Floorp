@@ -108,13 +108,6 @@
                           key="printKb"
                           command="cmd_print"/>
                 <menuseparator/>
-                <menuitem id="menu_import"
-                          label="&import.label;"
-                          accesskey="&import.accesskey;"
-                          oncommand="BrowserImport();"/>
-#ifndef XP_MACOSX
-                <menuseparator/>
-#endif
 #endif
                 <menuitem id="goOfflineMenuitem"
                           label="&goOfflineCmd.label;"
