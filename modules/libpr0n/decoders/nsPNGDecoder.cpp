@@ -647,7 +647,7 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
    * successfully decoded) before bailing, but it's simpler to just bail
    * out with an error message.
    */
-  png_set_crc_action(png_ptr, NULL, PNG_CRC_ERROR_QUIT);
+  png_set_crc_action(png_ptr, PNG_CRC_NO_CHANGE, PNG_CRC_ERROR_QUIT);
 
   return;
 }

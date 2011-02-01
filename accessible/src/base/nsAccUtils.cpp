@@ -44,12 +44,12 @@
 
 #include "nsAccessibilityService.h"
 #include "nsAccessibilityAtoms.h"
-#include "nsAccessible.h"
 #include "nsAccTreeWalker.h"
 #include "nsARIAMap.h"
 #include "nsDocAccessible.h"
 #include "nsHyperTextAccessible.h"
 #include "nsHTMLTableAccessible.h"
+#include "nsTextAccessible.h"
 #include "nsXULTreeGridAccessible.h"
 
 #include "nsIDOMXULContainerElement.h"
@@ -404,7 +404,7 @@ nsAccUtils::IsARIASelected(nsAccessible *aAccessible)
                 nsAccessibilityAtoms::_true, eCaseMatters);
 }
 
-already_AddRefed<nsHyperTextAccessible>
+nsHyperTextAccessible*
 nsAccUtils::GetTextAccessibleFromSelection(nsISelection* aSelection)
 {
   // Get accessible from selection's focus DOM point (the DOM point where
@@ -432,8 +432,7 @@ nsAccUtils::GetTextAccessibleFromSelection(nsISelection* aSelection)
   }
 
   do {
-    nsHyperTextAccessible* textAcc = nsnull;
-    CallQueryInterface(accessible, &textAcc);
+    nsHyperTextAccessible* textAcc = accessible->AsHyperText();
     if (textAcc)
       return textAcc;
 
@@ -639,30 +638,16 @@ nsAccUtils::TextLength(nsAccessible *aAccessible)
   if (!IsText(aAccessible))
     return 1;
 
-  nsIFrame *frame = aAccessible->GetFrame();
-  if (frame && frame->GetType() == nsAccessibilityAtoms::textFrame) {
-    // Ensure that correct text length is calculated (with non-rendered
-    // whitespace chars not counted).
-    nsIContent *content = frame->GetContent();
-    if (content) {
-      PRUint32 length;
-      nsresult rv = nsHyperTextAccessible::
-        ContentToRenderedOffset(frame, content->TextLength(), &length);
-      if (NS_FAILED(rv)) {
-        NS_NOTREACHED("Failed to get rendered offset!");
-        return 0;
-      }
-
-      return length;
-    }
-  }
+  nsTextAccessible* textLeaf = aAccessible->AsTextLeaf();
+  if (textLeaf)
+    return textLeaf->Text().Length();
 
   // For list bullets (or anything other accessible which would compute its own
   // text. They don't have their own frame.
   // XXX In the future, list bullets may have frame and anon content, so 
   // we should be able to remove this at that point
   nsAutoString text;
-  aAccessible->AppendTextTo(text, 0, PR_UINT32_MAX); // Get all the text
+  aAccessible->AppendTextTo(text); // Get all the text
   return text.Length();
 }
 

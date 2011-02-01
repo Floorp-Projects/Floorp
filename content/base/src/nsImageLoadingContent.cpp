@@ -171,6 +171,8 @@ nsImageLoadingContent::FrameChanged(imgIContainer* aContainer,
 NS_IMETHODIMP
 nsImageLoadingContent::OnStartRequest(imgIRequest* aRequest)
 {
+  NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
+
   LOOP_OVER_OBSERVERS(OnStartRequest(aRequest));
   return NS_OK;
 }
@@ -178,7 +180,7 @@ nsImageLoadingContent::OnStartRequest(imgIRequest* aRequest)
 NS_IMETHODIMP
 nsImageLoadingContent::OnStartDecode(imgIRequest* aRequest)
 {
-  nsresult rv;
+  NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
 
   // Onload blocking. This only applies for the current request.
   if (aRequest == mCurrentRequest) {
@@ -186,7 +188,7 @@ nsImageLoadingContent::OnStartDecode(imgIRequest* aRequest)
     // Determine whether this is a background request (this can be the case
     // with multipart/x-mixed-replace images, for example).
     PRUint32 loadFlags;
-    rv = aRequest->GetLoadFlags(&loadFlags);
+    nsresult rv = aRequest->GetLoadFlags(&loadFlags);
     PRBool background =
       (NS_SUCCEEDED(rv) && (loadFlags & nsIRequest::LOAD_BACKGROUND));
 
@@ -205,6 +207,8 @@ NS_IMETHODIMP
 nsImageLoadingContent::OnStartContainer(imgIRequest* aRequest,
                                         imgIContainer* aContainer)
 {
+  NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
+
   LOOP_OVER_OBSERVERS(OnStartContainer(aRequest, aContainer));
 
   // Have to check for state changes here, since we might have been in
@@ -217,6 +221,8 @@ NS_IMETHODIMP
 nsImageLoadingContent::OnStartFrame(imgIRequest* aRequest,
                                     PRUint32 aFrame)
 {
+  NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
+
   LOOP_OVER_OBSERVERS(OnStartFrame(aRequest, aFrame));
   return NS_OK;    
 }
@@ -226,6 +232,8 @@ nsImageLoadingContent::OnDataAvailable(imgIRequest* aRequest,
                                        PRBool aCurrentFrame,
                                        const nsIntRect* aRect)
 {
+  NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
+
   LOOP_OVER_OBSERVERS(OnDataAvailable(aRequest, aCurrentFrame, aRect));
   return NS_OK;
 }
@@ -234,6 +242,8 @@ NS_IMETHODIMP
 nsImageLoadingContent::OnStopFrame(imgIRequest* aRequest,
                                    PRUint32 aFrame)
 {
+  NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
+
   // If we're blocking a load, one frame is enough
   if (aRequest == mCurrentRequest)
     SetBlockingOnload(PR_FALSE);
@@ -246,6 +256,8 @@ NS_IMETHODIMP
 nsImageLoadingContent::OnStopContainer(imgIRequest* aRequest,
                                        imgIContainer* aContainer)
 {
+  NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
+
   // This is really hacky. We need to handle the case where we start decoding,
   // block onload, but then hit an error before we get to our first frame. In
   // theory we would just hook in at OnStopDecode, but OnStopDecode is broken
@@ -267,6 +279,8 @@ nsImageLoadingContent::OnStopDecode(imgIRequest* aRequest,
                                     nsresult aStatus,
                                     const PRUnichar* aStatusArg)
 {
+  NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
+
   // We should definitely have a request here
   NS_ABORT_IF_FALSE(aRequest, "no request?");
 
@@ -355,6 +369,8 @@ nsImageLoadingContent::OnStopDecode(imgIRequest* aRequest,
 NS_IMETHODIMP
 nsImageLoadingContent::OnStopRequest(imgIRequest* aRequest, PRBool aLastPart)
 {
+  NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
+
   LOOP_OVER_OBSERVERS(OnStopRequest(aRequest, aLastPart));
 
   return NS_OK;
@@ -363,6 +379,8 @@ nsImageLoadingContent::OnStopRequest(imgIRequest* aRequest, PRBool aLastPart)
 NS_IMETHODIMP
 nsImageLoadingContent::OnDiscard(imgIRequest *aRequest)
 {
+  NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
+
   LOOP_OVER_OBSERVERS(OnDiscard(aRequest));
 
   return NS_OK;
@@ -375,6 +393,8 @@ nsImageLoadingContent::OnDiscard(imgIRequest *aRequest)
 NS_IMETHODIMP
 nsImageLoadingContent::GetLoadingEnabled(PRBool *aLoadingEnabled)
 {
+  NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
+
   *aLoadingEnabled = mLoadingEnabled;
   return NS_OK;
 }
@@ -382,6 +402,8 @@ nsImageLoadingContent::GetLoadingEnabled(PRBool *aLoadingEnabled)
 NS_IMETHODIMP
 nsImageLoadingContent::SetLoadingEnabled(PRBool aLoadingEnabled)
 {
+  NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
+
   if (nsContentUtils::GetImgLoader()) {
     mLoadingEnabled = aLoadingEnabled;
   }
@@ -391,6 +413,8 @@ nsImageLoadingContent::SetLoadingEnabled(PRBool aLoadingEnabled)
 NS_IMETHODIMP
 nsImageLoadingContent::GetImageBlockingStatus(PRInt16* aStatus)
 {
+  NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
+
   NS_PRECONDITION(aStatus, "Null out param");
   *aStatus = mImageBlockingStatus;
   return NS_OK;
@@ -399,6 +423,8 @@ nsImageLoadingContent::GetImageBlockingStatus(PRInt16* aStatus)
 NS_IMETHODIMP
 nsImageLoadingContent::AddObserver(imgIDecoderObserver* aObserver)
 {
+  NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
+
   NS_ENSURE_ARG_POINTER(aObserver);
 
   if (!mObserverList.mObserver) {
@@ -425,6 +451,8 @@ nsImageLoadingContent::AddObserver(imgIDecoderObserver* aObserver)
 NS_IMETHODIMP
 nsImageLoadingContent::RemoveObserver(imgIDecoderObserver* aObserver)
 {
+  NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
+
   NS_ENSURE_ARG_POINTER(aObserver);
 
   if (mObserverList.mObserver == aObserver) {
@@ -482,6 +510,8 @@ NS_IMETHODIMP
 nsImageLoadingContent::GetRequestType(imgIRequest* aRequest,
                                       PRInt32* aRequestType)
 {
+  NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
+
   NS_PRECONDITION(aRequestType, "Null out param");
   
   if (aRequest == mCurrentRequest) {
@@ -518,6 +548,8 @@ NS_IMETHODIMP
 nsImageLoadingContent::LoadImageWithChannel(nsIChannel* aChannel,
                                             nsIStreamListener** aListener)
 {
+  NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
+
   if (!nsContentUtils::GetImgLoader()) {
     return NS_ERROR_NULL_POINTER;
   }
@@ -555,6 +587,8 @@ nsImageLoadingContent::LoadImageWithChannel(nsIChannel* aChannel,
 
 NS_IMETHODIMP nsImageLoadingContent::ForceReload()
 {
+  NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
+
   nsCOMPtr<nsIURI> currentURI;
   GetCurrentURI(getter_AddRefs(currentURI));
   if (!currentURI) {
@@ -714,6 +748,8 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
 nsresult
 nsImageLoadingContent::ForceImageState(PRBool aForce, nsEventStates::InternalType aState)
 {
+  NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
+
   mIsImageStateForced = aForce;
   mForcedImageState = nsEventStates(aState);
   return NS_OK;
@@ -973,6 +1009,13 @@ nsImageLoadingContent::ClearPendingRequest(nsresult aReason)
 {
   if (!mPendingRequest)
     return;
+
+  // Push a null JSContext on the stack so that code that runs within
+  // the below code doesn't think it's being called by JS. See bug
+  // 604262.
+  nsCxPusher pusher;
+  pusher.PushNull();
+
   UntrackImage(mPendingRequest);
   mPendingRequest->CancelAndForgetObserver(aReason);
   mPendingRequest = nsnull;

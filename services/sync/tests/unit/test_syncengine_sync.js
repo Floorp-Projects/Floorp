@@ -462,7 +462,6 @@ function test_processIncoming_mobile_batchSize() {
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
   Svc.Prefs.set("username", "foo");
   Svc.Prefs.set("client.type", "mobile");
-  let crypto_steam = new ServerWBO('steam');
 
   // A collection that logs each GET
   let collection = new ServerCollection();
@@ -528,6 +527,429 @@ function test_processIncoming_mobile_batchSize() {
     syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
   }
 }
+
+
+function test_processIncoming_store_toFetch() {
+  _("If processIncoming fails in the middle of a batch on mobile, state is saved in toFetch and lastSync.");
+  Svc.Prefs.set("clusterURL", "http://localhost:8080/");
+  Svc.Prefs.set("username", "foo");
+  Svc.Prefs.set("client.type", "mobile");
+
+  // A collection that throws at the fourth get.
+  let collection = new ServerCollection();
+  collection._get_calls = 0;
+  collection._get = collection.get;
+  collection.get = function() {
+    this._get_calls += 1;
+    if (this._get_calls > 3) {
+      throw "Abort on fourth call!";
+    }
+    return this._get.apply(this, arguments);
+  };
+
+  // Let's create three batches worth of server side records.
+  for (var i = 0; i < MOBILE_BATCH_SIZE * 3; i++) {
+    let id = 'record-no-' + i;
+    let payload = encryptPayload({id: id, denomination: "Record No. " + id});
+    let wbo = new ServerWBO(id, payload);
+    wbo.modified = Date.now()/1000 + 60 * (i - MOBILE_BATCH_SIZE * 3);
+    collection.wbos[id] = wbo;
+  }
+
+  let engine = makeSteamEngine();
+  engine.enabled = true;
+
+  let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
+  meta_global.payload.engines = {steam: {version: engine.version,
+                                         syncID: engine.syncID}};
+  let server = sync_httpd_setup({
+      "/1.0/foo/storage/steam": collection.handler()
+  });
+  do_test_pending();
+
+  try {
+
+    // Confirm initial environment
+    do_check_eq(engine.lastSync, 0);
+    do_check_eq([id for (id in engine._store.items)].length, 0);
+
+    let error;
+    try {
+      engine.sync();
+    } catch (ex) {
+      error = ex;
+    }
+    do_check_true(!!error);
+
+    // Only the first two batches have been applied.
+    do_check_eq([id for (id in engine._store.items)].length,
+                MOBILE_BATCH_SIZE * 2);
+
+    // The third batch is stuck in toFetch. lastSync has been moved forward to
+    // the last successful item's timestamp.
+    do_check_eq(engine.toFetch.length, MOBILE_BATCH_SIZE);
+    do_check_eq(engine.lastSync, collection.wbos["record-no-99"].modified);
+
+  } finally {
+    server.stop(do_test_finished);
+    Svc.Prefs.resetBranch("");
+    Records.clearCache();
+    syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
+  }
+}
+
+
+function test_processIncoming_resume_toFetch() {
+  _("toFetch items left over from previous syncs are fetched on the next sync, along with new items.");
+  Svc.Prefs.set("clusterURL", "http://localhost:8080/");
+  Svc.Prefs.set("username", "foo");
+
+  const LASTSYNC = Date.now() / 1000;
+
+  // Server records that will be downloaded
+  let collection = new ServerCollection();
+  collection.wbos.flying = new ServerWBO(
+      'flying', encryptPayload({id: 'flying',
+                                denomination: "LNER Class A3 4472"}));
+  collection.wbos.scotsman = new ServerWBO(
+      'scotsman', encryptPayload({id: 'scotsman',
+                                  denomination: "Flying Scotsman"}));
+  collection.wbos.rekolok = new ServerWBO(
+      'rekolok', encryptPayload({id: 'rekolok',
+                                 denomination: "Rekonstruktionslokomotive"}));
+
+  collection.wbos.flying.modified = collection.wbos.scotsman.modified
+    = LASTSYNC - 10;
+  collection.wbos.rekolok.modified = LASTSYNC + 10;
+
+  // Time travel 10 seconds into the future but still download the above WBOs.
+  let engine = makeSteamEngine();
+  engine.lastSync = LASTSYNC;
+  engine.toFetch = ["flying", "scotsman"];
+
+  let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
+  meta_global.payload.engines = {steam: {version: engine.version,
+                                         syncID: engine.syncID}};
+  let server = sync_httpd_setup({
+      "/1.0/foo/storage/steam": collection.handler()
+  });
+  do_test_pending();
+
+  try {
+
+    // Confirm initial environment
+    do_check_eq(engine._store.items.flying, undefined);
+    do_check_eq(engine._store.items.scotsman, undefined);
+    do_check_eq(engine._store.items.rekolok, undefined);
+
+    engine._syncStartup();
+    engine._processIncoming();
+
+    // Local records have been created from the server data.
+    do_check_eq(engine._store.items.flying, "LNER Class A3 4472");
+    do_check_eq(engine._store.items.scotsman, "Flying Scotsman");
+    do_check_eq(engine._store.items.rekolok, "Rekonstruktionslokomotive");
+
+  } finally {
+    server.stop(do_test_finished);
+    Svc.Prefs.resetBranch("");
+    Records.clearCache();
+    syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
+  }
+}
+
+
+function test_processIncoming_applyIncomingBatchSize_smaller() {
+  _("Ensure that a number of incoming items less than applyIncomingBatchSize is still applied.");
+  Svc.Prefs.set("clusterURL", "http://localhost:8080/");
+  Svc.Prefs.set("username", "foo");
+
+  // Engine that doesn't like the first and last record it's given.
+  const APPLY_BATCH_SIZE = 10;
+  let engine = makeSteamEngine();
+  engine.applyIncomingBatchSize = APPLY_BATCH_SIZE;
+  engine._store._applyIncomingBatch = engine._store.applyIncomingBatch;
+  engine._store.applyIncomingBatch = function (records) {
+    let failed1 = records.shift();
+    let failed2 = records.pop();
+    this._applyIncomingBatch(records);
+    return [failed1.id, failed2.id];
+  };
+
+  // Let's create less than a batch worth of server side records.
+  let collection = new ServerCollection();
+  for (let i = 0; i < APPLY_BATCH_SIZE - 1; i++) {
+    let id = 'record-no-' + i;
+    let payload = encryptPayload({id: id, denomination: "Record No. " + id});
+    collection.wbos[id] = new ServerWBO(id, payload);
+  }
+
+  let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
+  meta_global.payload.engines = {steam: {version: engine.version,
+                                         syncID: engine.syncID}};
+  let server = sync_httpd_setup({
+      "/1.0/foo/storage/steam": collection.handler()
+  });
+  do_test_pending();
+
+  try {
+
+    // Confirm initial environment
+    do_check_eq([id for (id in engine._store.items)].length, 0);
+
+    engine._syncStartup();
+    engine._processIncoming();
+
+    // Records have been applied.
+    do_check_eq([id for (id in engine._store.items)].length,
+                APPLY_BATCH_SIZE - 1 - 2);
+    do_check_eq(engine.toFetch.length, 2);
+    do_check_eq(engine.toFetch[0], "record-no-0");
+    do_check_eq(engine.toFetch[1], "record-no-8");
+
+  } finally {
+    server.stop(do_test_finished);
+    Svc.Prefs.resetBranch("");
+    Records.clearCache();
+    syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
+  }
+}
+
+
+function test_processIncoming_applyIncomingBatchSize_multiple() {
+  _("Ensure that incoming items are applied according to applyIncomingBatchSize.");
+  Svc.Prefs.set("clusterURL", "http://localhost:8080/");
+  Svc.Prefs.set("username", "foo");
+
+  const APPLY_BATCH_SIZE = 10;
+
+  // Engine that applies records in batches.
+  let engine = makeSteamEngine();
+  engine.applyIncomingBatchSize = APPLY_BATCH_SIZE;
+  let batchCalls = 0;
+  engine._store._applyIncomingBatch = engine._store.applyIncomingBatch;
+  engine._store.applyIncomingBatch = function (records) {
+    batchCalls += 1;
+    do_check_eq(records.length, APPLY_BATCH_SIZE);
+    this._applyIncomingBatch.apply(this, arguments);
+  };
+
+  // Let's create three batches worth of server side records.
+  let collection = new ServerCollection();
+  for (let i = 0; i < APPLY_BATCH_SIZE * 3; i++) {
+    let id = 'record-no-' + i;
+    let payload = encryptPayload({id: id, denomination: "Record No. " + id});
+    collection.wbos[id] = new ServerWBO(id, payload);
+  }
+
+  let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
+  meta_global.payload.engines = {steam: {version: engine.version,
+                                         syncID: engine.syncID}};
+  let server = sync_httpd_setup({
+      "/1.0/foo/storage/steam": collection.handler()
+  });
+  do_test_pending();
+
+  try {
+
+    // Confirm initial environment
+    do_check_eq([id for (id in engine._store.items)].length, 0);
+
+    engine._syncStartup();
+    engine._processIncoming();
+
+    // Records have been applied in 3 batches.
+    do_check_eq(batchCalls, 3);
+    do_check_eq([id for (id in engine._store.items)].length,
+                APPLY_BATCH_SIZE * 3);
+
+  } finally {
+    server.stop(do_test_finished);
+    Svc.Prefs.resetBranch("");
+    Records.clearCache();
+    syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
+  }
+}
+
+
+function test_processIncoming_failed_records() {
+  _("Ensure that failed records from _reconcile and applyIncomingBatch are refetched.");
+  Svc.Prefs.set("clusterURL", "http://localhost:8080/");
+  Svc.Prefs.set("username", "foo");
+
+  // Pretend to be a mobile client so we can test failed record handling
+  // while batching GETs.
+  Svc.Prefs.set("client.type", "mobile");
+
+  // Let's create three and a bit batches worth of server side records.
+  let collection = new ServerCollection();
+  const NUMBER_OF_RECORDS = MOBILE_BATCH_SIZE * 3 + 5;
+  for (var i = 0; i < NUMBER_OF_RECORDS; i++) {
+    let id = 'record-no-' + i;
+    let payload = encryptPayload({id: id, denomination: "Record No. " + id});
+    let wbo = new ServerWBO(id, payload);
+    wbo.modified = Date.now()/1000 + 60 * (i - MOBILE_BATCH_SIZE * 3);
+    collection.wbos[id] = wbo;
+  }
+
+  // Engine that batches but likes to throw on a couple of records,
+  // two in each batch: the even ones fail in reconcile, the odd ones
+  // in applyIncoming.
+  const BOGUS_RECORDS = ["record-no-" + 42,
+                         "record-no-" + 23,
+                         "record-no-" + (42 + MOBILE_BATCH_SIZE),
+                         "record-no-" + (23 + MOBILE_BATCH_SIZE),
+                         "record-no-" + (42 + MOBILE_BATCH_SIZE * 2),
+                         "record-no-" + (23 + MOBILE_BATCH_SIZE * 2),
+                         "record-no-" + (2 + MOBILE_BATCH_SIZE * 3),
+                         "record-no-" + (1 + MOBILE_BATCH_SIZE * 3)];
+  let engine = makeSteamEngine();
+  engine.applyIncomingBatchSize = MOBILE_BATCH_SIZE;
+
+  engine.__reconcile = engine._reconcile;
+  engine._reconcile = function _reconcile(record) {
+    if (BOGUS_RECORDS.indexOf(record.id) % 2 == 0) {
+      throw "I don't like this record! Baaaaaah!";
+    }
+    return this.__reconcile.apply(this, arguments);
+  };
+  engine._store._applyIncoming = engine._store.applyIncoming;
+  engine._store.applyIncoming = function (record) {
+    if (BOGUS_RECORDS.indexOf(record.id) % 2 == 1) {
+      throw "I don't like this record! Baaaaaah!";
+    }
+    return this._applyIncoming.apply(this, arguments);
+  };
+
+  let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
+  meta_global.payload.engines = {steam: {version: engine.version,
+                                         syncID: engine.syncID}};
+  let server = sync_httpd_setup({
+      "/1.0/foo/storage/steam": collection.handler()
+  });
+  do_test_pending();
+
+  try {
+
+    // Confirm initial environment
+    do_check_eq(engine.lastSync, 0);
+    do_check_eq(engine.toFetch.length, 0);
+    do_check_eq([id for (id in engine._store.items)].length, 0);
+
+    let observerSubject;
+    let observerData;
+    Svc.Obs.add("weave:engine:sync:apply-failed",
+                function onApplyFailed(subject, data) {
+      Svc.Obs.remove("weave:engine:sync:apply-failed", onApplyFailed);
+      observerSubject = subject;
+      observerData = data;
+    });
+
+    engine._syncStartup();
+    engine._processIncoming();
+
+    // Ensure that all records but the bogus 4 have been applied.
+    do_check_eq([id for (id in engine._store.items)].length,
+                NUMBER_OF_RECORDS - BOGUS_RECORDS.length);
+
+    // Ensure that the bogus records will be fetched again on the next sync.
+    do_check_eq(engine.toFetch.length, BOGUS_RECORDS.length);
+    engine.toFetch.sort();
+    BOGUS_RECORDS.sort();
+    for (let i = 0; i < engine.toFetch.length; i++) {
+      do_check_eq(engine.toFetch[i], BOGUS_RECORDS[i]);
+    }
+
+    // Ensure the observer was notified
+    do_check_eq(observerData, engine.name);
+    do_check_eq(observerSubject.failed, BOGUS_RECORDS.length);
+  } finally {
+    server.stop(do_test_finished);
+    Svc.Prefs.resetBranch("");
+    Records.clearCache();
+    syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
+  }
+}
+
+
+function test_processIncoming_decrypt_failed() {
+  _("Ensure that records failing to decrypt are either replaced or refetched.");
+  Svc.Prefs.set("clusterURL", "http://localhost:8080/");
+  Svc.Prefs.set("username", "foo");
+
+  // Some good and some bogus records. One doesn't contain valid JSON,
+  // the other will throw during decrypt.
+  let collection = new ServerCollection();
+  collection.wbos.flying = new ServerWBO(
+      'flying', encryptPayload({id: 'flying',
+                                denomination: "LNER Class A3 4472"}));
+  collection.wbos.nojson = new ServerWBO("nojson", "This is invalid JSON");
+  collection.wbos.nojson2 = new ServerWBO("nojson2", "This is invalid JSON");
+  collection.wbos.scotsman = new ServerWBO(
+      'scotsman', encryptPayload({id: 'scotsman',
+                                  denomination: "Flying Scotsman"}));
+  collection.wbos.nodecrypt = new ServerWBO("nodecrypt", "Decrypt this!");
+  collection.wbos.nodecrypt2 = new ServerWBO("nodecrypt2", "Decrypt this!");
+
+  // Patch the fake crypto service to throw on the record above.
+  Svc.Crypto._decrypt = Svc.Crypto.decrypt;
+  Svc.Crypto.decrypt = function (ciphertext) {
+    if (ciphertext == "Decrypt this!") {
+      throw "Derp! Cipher finalized failed. Im ur crypto destroyin ur recordz.";
+    }
+    return this._decrypt.apply(this, arguments);
+  };
+
+  // Some broken records also exist locally.
+  let engine = makeSteamEngine();
+  engine.enabled = true;
+  engine._store.items = {nojson: "Valid JSON",
+                         nodecrypt: "Valid ciphertext"};
+
+  let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
+  meta_global.payload.engines = {steam: {version: engine.version,
+                                         syncID: engine.syncID}};
+  let server = sync_httpd_setup({
+      "/1.0/foo/storage/steam": collection.handler()
+  });
+  do_test_pending();
+
+  try {
+
+    // Confirm initial state
+    do_check_eq(engine.toFetch.length, 0);
+
+    let observerSubject;
+    let observerData;
+    Svc.Obs.add("weave:engine:sync:apply-failed",
+                function onApplyFailed(subject, data) {
+      Svc.Obs.remove("weave:engine:sync:apply-failed", onApplyFailed);
+      observerSubject = subject;
+      observerData = data;
+    });
+
+    engine.lastSync = collection.wbos.nojson.modified - 1;
+    engine.sync();
+
+    do_check_eq(engine.toFetch.length, 4);
+    do_check_eq(engine.toFetch[0], "nojson");
+    do_check_eq(engine.toFetch[1], "nojson2");
+    do_check_eq(engine.toFetch[2], "nodecrypt");
+    do_check_eq(engine.toFetch[3], "nodecrypt2");
+
+    // Ensure the observer was notified
+    do_check_eq(observerData, engine.name);
+    do_check_eq(observerSubject.applied, 2);
+    do_check_eq(observerSubject.failed, 4);
+
+  } finally {
+    server.stop(do_test_finished);
+    Svc.Prefs.resetBranch("");
+    Records.clearCache();
+    syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
+  }
+}
+
 
 function test_uploadOutgoing_toEmptyServer() {
   _("SyncEngine._uploadOutgoing uploads new records to server");
@@ -850,10 +1272,8 @@ function test_sync_partialUpload() {
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
   Svc.Prefs.set("username", "foo");
 
-  let crypto_steam = new ServerWBO('steam');
   let collection = new ServerCollection();
   let server = sync_httpd_setup({
-      "/1.0/foo/storage/crypto/steam": crypto_steam.handler(),
       "/1.0/foo/storage/steam": collection.handler()
   });
   do_test_pending();
@@ -998,6 +1418,12 @@ function run_test() {
   test_processIncoming_createFromServer();
   test_processIncoming_reconcile();
   test_processIncoming_mobile_batchSize();
+  test_processIncoming_store_toFetch();
+  test_processIncoming_resume_toFetch();
+  test_processIncoming_applyIncomingBatchSize_smaller();
+  test_processIncoming_applyIncomingBatchSize_multiple();
+  test_processIncoming_failed_records();
+  test_processIncoming_decrypt_failed();
   test_uploadOutgoing_toEmptyServer();
   test_uploadOutgoing_failed();
   test_uploadOutgoing_MAX_UPLOAD_RECORDS();

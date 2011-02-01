@@ -3776,6 +3776,12 @@ nsLayoutUtils::SurfaceFromElement(nsIDOMElement *aElement,
   if (!imageLoader)
     return result;
 
+  // Push a null JSContext on the stack so that code that runs within
+  // the below code doesn't think it's being called by JS. See bug
+  // 604262.
+  nsCxPusher pusher;
+  pusher.PushNull();
+
   nsCOMPtr<imgIRequest> imgRequest;
   rv = imageLoader->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
                                getter_AddRefs(imgRequest));

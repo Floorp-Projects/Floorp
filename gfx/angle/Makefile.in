@@ -148,8 +148,8 @@ ANGLE_DIR = Release
 endif
 
 ifdef MOZ_DIRECTX_SDK_PATH
-INCLUDE := $(INCLUDE);$(MOZ_DIRECTX_SDK_PATH)\include
-LIB := $(LIB);$(MOZ_DIRECTX_SDK_PATH)\lib\x86
+export INCLUDE := $(INCLUDE);$(MOZ_DIRECTX_SDK_PATH)\include
+export LIB := $(LIB);$(MOZ_DIRECTX_SDK_PATH)\lib\x86
 endif
 
 ANGLE_DEP_PATTERNS = \

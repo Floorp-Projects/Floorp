@@ -586,6 +586,9 @@ pref("content.sink.pending_event_mode", 0);
 //   2 = openAbused
 pref("privacy.popups.disable_from_plugins", 2);
 
+// "do not track" HTTP header, disabled by default
+pref("privacy.donottrackheader.enabled",    false);
+
 pref("dom.event.contextmenu.enabled",       true);
 
 pref("javascript.enabled",                  true);
@@ -3205,12 +3208,13 @@ pref("image.mem.max_ms_before_yield", 400);
 pref("image.mem.max_bytes_for_sync_decode", 150000);
 
 // WebGL prefs
-pref("webgl.enabled_for_all_sites", true);
+pref("webgl.force-enabled", false);
+pref("webgl.disabled", false);
 pref("webgl.shader_validator", true);
 pref("webgl.force_osmesa", false);
-pref("webgl.mochitest_native_gl", false);
 pref("webgl.osmesalib", "");
 pref("webgl.verbose", false);
+pref("webgl.prefer-native-gl", false);
 
 #ifdef XP_WIN
 #ifndef WINCE

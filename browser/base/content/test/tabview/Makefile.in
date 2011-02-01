@@ -89,9 +89,13 @@ _BROWSER_FILES = \
                  browser_tabview_bug622835.js \
                  browser_tabview_bug622872.js \
                  browser_tabview_bug624265.js \
+                 browser_tabview_bug624931.js \
+                 browser_tabview_bug624727.js \
                  browser_tabview_bug624953.js \
                  browser_tabview_bug625269.js \
+                 browser_tabview_bug625424.js \
                  browser_tabview_bug626368.js \
+                 browser_tabview_bug627288.js \
                  browser_tabview_bug627736.js \
                  browser_tabview_bug628165.js \
                  browser_tabview_dragdrop.js \

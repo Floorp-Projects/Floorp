@@ -3534,11 +3534,15 @@ int  AffixMgr::parse_convtable(char * line, FileMgr * af, RepList ** rl, const c
            }
            piece = mystrsep(&tp, 0);
         }
-        if (!pattern || !pattern2) {
-             HUNSPELL_WARNING(stderr, "error: line %d: table is corrupt\n", af->getlinenum());
-             return 1;
-        }
-        (*rl)->add(pattern, pattern2);
+      if (!pattern || !pattern2) {
+         if (pattern)
+            free(pattern);
+         if (pattern2)
+            free(pattern2);
+         HUNSPELL_WARNING(stderr, "error: line %d: table is corrupt\n", af->getlinenum());
+         return 1;
+      }
+      (*rl)->add(pattern, pattern2);
    }
    return 0;
 }

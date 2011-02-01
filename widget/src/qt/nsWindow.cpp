@@ -177,6 +177,8 @@ static PRBool     check_for_rollup(double aMouseX, double aMouseY,
 static bool
 is_mouse_in_window (MozQWidget* aWindow, double aMouseX, double aMouseY);
 
+static bool sAltGrModifier = false;
+
 static PRBool
 isContextMenuKeyEvent(const QKeyEvent *qe)
 {
@@ -197,6 +199,11 @@ InitKeyEvent(nsKeyEvent &aEvent, QKeyEvent *aQEvent)
     aEvent.isAlt     = (aQEvent->modifiers() & Qt::AltModifier) ? PR_TRUE : PR_FALSE;
     aEvent.isMeta    = (aQEvent->modifiers() & Qt::MetaModifier) ? PR_TRUE : PR_FALSE;
     aEvent.time      = 0;
+
+    if (sAltGrModifier) {
+        aEvent.isControl = PR_TRUE;
+        aEvent.isAlt = PR_TRUE;
+    }
 
     // The transformations above and in qt for the keyval are not invertible
     // so link to the QKeyEvent (which will vanish soon after return from the
@@ -1461,6 +1468,10 @@ nsWindow::OnKeyPressEvent(QKeyEvent *aEvent)
 
     PRBool setNoDefault = PR_FALSE;
 
+    if (aEvent->key() == Qt::Key_AltGr) {
+        sAltGrModifier = true;
+    }
+
 #ifdef MOZ_X11
     // before we dispatch a key, check if it's the context menu key.
     // If so, send a context menu key event instead.
@@ -1820,6 +1831,10 @@ nsWindow::OnKeyReleaseEvent(QKeyEvent *aEvent)
     // send the key event as a key up event
     nsKeyEvent event(PR_TRUE, NS_KEY_UP, this);
     InitKeyEvent(event, aEvent);
+
+    if (aEvent->key() == Qt::Key_AltGr) {
+        sAltGrModifier = false;
+    }
 
     event.keyCode = domKeyCode;
 

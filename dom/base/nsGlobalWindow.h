@@ -902,7 +902,6 @@ protected:
   nsCOMPtr<nsIPrincipal>        mArgumentsOrigin;
   nsRefPtr<nsNavigator>         mNavigator;
   nsRefPtr<nsScreen>            mScreen;
-  nsRefPtr<nsHistory>           mHistory;
   nsRefPtr<nsDOMWindowList>     mFrames;
   nsRefPtr<nsBarProp>           mMenubar;
   nsRefPtr<nsBarProp>           mToolbar;
@@ -933,6 +932,7 @@ protected:
   PRUint32                      mTimeoutPublicIdCounter;
   PRUint32                      mTimeoutFiringDepth;
   nsRefPtr<nsLocation>          mLocation;
+  nsRefPtr<nsHistory>           mHistory;
 
   // Holder of the dummy java plugin, used to expose window.java and
   // window.packages.

@@ -52,106 +52,90 @@
 .endef
 XPTC__InvokebyIndex:
 
-   #
    # store register parameters
-   #
 
     mov     qword ptr [rsp+32], r9        # params
     mov     dword ptr [rsp+24], r8d       # paramCount
     mov     dword ptr [rsp+16], edx       # methodIndex
     mov     qword ptr [rsp+8], rcx        # that
 
-    #
-    # store RBX/RBP register for backup
-    #
-
-    mov     qword ptr [rsp-16], rbp
-
+    push    rbp
+    # .PUSHREG rbp
     mov     rbp, rsp            # store current RSP to RBP
     # .SETFRAME rbp, 0
     # .ENDPROLOG
 
     sub     rsp, 32
 
-    #
     # maybe we don't have any parameters to copy
-    #
 
     test    r8d, r8d
     jz      noparams
 
     #
-    # make space for 1st parameter
+    # Build stack for stdcall
+    #
+
+    # 1st parameter is space for parameters
 
     mov     eax, r8d
-    and     eax, 1              # AMD64 must be alignment to 16 bytes
-    add     eax, r8d
+    or      eax, 1
     shl     rax, 3              # *= 8
     sub     rsp, rax
     mov     rcx, rsp
 
-    #
     # 2nd parameter is parameter count
-    #
 
     mov     edx, r8d
 
-    #
     # 3rd parameter is params
-    #
 
     mov     r8, r9
 
-    sub     rsp, 32
-
-    call    invoke_copy_to_stack  # rcx = d
-                                  # edx = paramCount
-                                  # r8  = s
-
+    sub     rsp, 40
+    call    invoke_copy_to_stack # rcx = d
+                                 # edx = paramCount
+                                 # r8  = s
     add     rsp, 32
 
+    # Current stack is the following.
     #
-    # Build parameters
+    #  0h: [space (for this)]
+    #  8h: [1st parameter]
+    # 10h: [2nd parameter]
+    # 18h: [3rd parameter]
+    # 20h: [4th parameter]
+    # ...
     #
+    # On Win64 ABI, the first 4 parameters are passed using registers,
+    # and others are on stack. 
 
-    mov     rdx, qword ptr [rsp] # 1st parameter
-    movsd   xmm1, qword ptr [rsp] # for double
+    # 1st, 2nd and 3rd arguments are passed via registers
 
-    mov     r8, qword ptr [rsp+8] # 2nd parameter
-    movsd   xmm2, qword ptr [rsp+8] # for double
+    mov     rdx, qword ptr [rsp+8] # 1st parameter
+    movsd   xmm1, qword ptr [rsp+8] # for double
 
-    mov     r9, qword ptr [rsp+16] # 3rd parameter
-    movsd   xmm3, qword ptr [rsp+16] # for double
+    mov     r8, qword ptr [rsp+16] # 2nd parameter
+    movsd   xmm2, qword ptr [rsp+16] # for double
 
-    #
-    # 1st parameter (this)
-    #
+    mov     r9, qword ptr [rsp+24] # 3rd parameter
+    movsd   xmm3, qword ptr [rsp+24] # for double
 
-    mov     rcx, qword ptr [rbp+8] # that
+    # rcx register is this
+
+    mov     rcx, qword ptr [rbp+8+8] # that
 
 noparams:
 
-    #
     # calculate call address
-    #
 
     mov     r11, qword ptr [rcx]
-    mov     eax, dword ptr [rbp+16] # methodIndex
-
-    #
-    # Now current stack has parameter list
-    # But, since callee function backups parameters, make space into stack.
-
-    sub     rsp, 8
+    mov     eax, dword ptr [rbp+16+8] # methodIndex
 
     call    qword ptr [r11+rax*8]      # stdcall, i.e. callee cleans up stack.
 
-    #
-    # restore registers
-    #
-
     mov     rsp, rbp
-    mov     rbp, qword ptr [rsp-16]
+    pop     rbp
 
     ret
 

@@ -67,8 +67,8 @@ NS_IMETHODIMP
 nsHTMLTextAccessible::GetName(nsAString& aName)
 {
   // Text node, ARIA can't be used.
-  aName.Truncate();
-  return AppendTextTo(aName, 0, PR_UINT32_MAX);
+  aName = mText;
+  return NS_OK;
 }
 
 PRUint32
@@ -390,7 +390,7 @@ nsHTMLListBulletAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraS
   return NS_OK;
 }
 
-nsresult
+void
 nsHTMLListBulletAccessible::AppendTextTo(nsAString& aText, PRUint32 aStartOffset,
                                          PRUint32 aLength)
 {
@@ -405,7 +405,6 @@ nsHTMLListBulletAccessible::AppendTextTo(nsAString& aText, PRUint32 aStartOffset
 
     aText += Substring(bulletText, aStartOffset, aLength);
   }
-  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -49,11 +49,6 @@ def kill_pid(pid):
         windll.kernel32.TerminateProcess(process, 0)
         windll.kernel32.CloseHandle(process)
 
-def kill_process_by_name(name):
-    pids = get_pids(name)
-    for pid in pids:
-        kill_pid(pid)
-
 if __name__ == '__main__':
     import subprocess
     import time

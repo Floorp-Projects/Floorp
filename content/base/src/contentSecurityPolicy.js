@@ -127,21 +127,45 @@ ContentSecurityPolicy.prototype = {
   },
 
   get allowsInlineScript() {
-    // trigger automatic report to go out when inline scripts are disabled.
-    if (!this._policy.allowsInlineScripts) {
-      this._asyncReportViolation('self','inline script base restriction',
-                                 'violated base restriction: Inline Scripts will not execute');
-    }
     return this._reportOnlyMode || this._policy.allowsInlineScripts;
   },
 
   get allowsEval() {
-    // trigger automatic report to go out when eval and friends are disabled.
-    if (!this._policy.allowsEvalInScripts) {
-      this._asyncReportViolation('self','eval script base restriction',
-                                 'violated base restriction: Code will not be created from strings');
-    }
     return this._reportOnlyMode || this._policy.allowsEvalInScripts;
+  },
+
+  /**
+   * Log policy violation on the Error Console and send a report if a report-uri
+   * is present in the policy
+   *
+   * @param aViolationType
+   *     one of the VIOLATION_TYPE_* constants, e.g. inline-script or eval
+   * @param aSourceFile
+   *     name of the source file containing the violation (if available)
+   * @param aContentSample
+   *     sample of the violating content (to aid debugging)
+   * @param aLineNum
+   *     source line number of the violation (if available)
+   */
+  logViolationDetails:
+  function(aViolationType, aSourceFile, aScriptSample, aLineNum) {
+    // allowsInlineScript and allowsEval both return true when report-only mode
+    // is enabled, resulting in a call to this function. Therefore we need to
+    // check that the policy was in fact violated before logging any violations
+    switch (aViolationType) {
+    case Ci.nsIContentSecurityPolicy.VIOLATION_TYPE_INLINE_SCRIPT:
+      if (!this._policy.allowsInlineScripts)
+        this._asyncReportViolation('self','inline script base restriction',
+                                   'violated base restriction: Inline Scripts will not execute',
+                                   aSourceFile, aScriptSample, aLineNum);
+      break;
+    case Ci.nsIContentSecurityPolicy.VIOLATION_TYPE_EVAL:
+      if (!this._policy.allowsEvalInScripts)
+        this._asyncReportViolation('self','eval script base restriction',
+                                   'violated base restriction: Code will not be created from strings',
+                                   aSourceFile, aScriptSample, aLineNum);
+      break;
+    }
   },
 
   set reportOnlyMode(val) {
@@ -234,7 +258,7 @@ ContentSecurityPolicy.prototype = {
    * Generates and sends a violation report to the specified report URIs.
    */
   sendReports:
-  function(blockedUri, violatedDirective) {
+  function(blockedUri, violatedDirective, aSourceFile, aScriptSample, aLineNum) {
     var uriString = this._policy.getReportURIs();
     var uris = uriString.split(/\s+/);
     if (uris.length > 0) {
@@ -262,10 +286,21 @@ ContentSecurityPolicy.prototype = {
           'violated-directive': violatedDirective
         }
       }
+      // extra report fields for script errors (if available)
+      if (aSourceFile)
+        report["csp-report"]["source-file"] = aSourceFile;
+      if (aScriptSample)
+        report["csp-report"]["script-sample"] = aScriptSample;
+      if (aLineNum)
+        report["csp-report"]["line-number"] = aLineNum;
+
       CSPdebug("Constructed violation report:\n" + JSON.stringify(report));
 
       CSPWarning("Directive \"" + violatedDirective + "\" violated"
-               + (blockedUri['asciiSpec'] ? " by " + blockedUri.asciiSpec : ""));
+               + (blockedUri['asciiSpec'] ? " by " + blockedUri.asciiSpec : ""),
+                 (aSourceFile) ? aSourceFile : null,
+                 (aScriptSample) ? decodeURIComponent(aScriptSample) : null,
+                 (aLineNum) ? aLineNum : null);
 
       // For each URI in the report list, send out a report.
       // We make the assumption that all of the URIs are absolute URIs; this
@@ -439,9 +474,16 @@ ContentSecurityPolicy.prototype = {
    * @param observerSubject
    *        optional, subject sent to the nsIObservers listening to the CSP
    *        violation topic.
+   * @param aSourceFile
+   *        name of the file containing the inline script violation
+   * @param aScriptSample
+   *        a sample of the violating inline script
+   * @param aLineNum
+   *        source line number of the violation (if available)
    */
   _asyncReportViolation:
-  function(blockedContentSource, violatedDirective, observerSubject) {
+  function(blockedContentSource, violatedDirective, observerSubject,
+           aSourceFile, aScriptSample, aLineNum) {
     // if optional observerSubject isn't specified, default to the source of
     // the violation.
     if (!observerSubject)
@@ -463,7 +505,8 @@ ContentSecurityPolicy.prototype = {
         Services.obs.notifyObservers(observerSubject,
                                      CSP_VIOLATION_TOPIC,
                                      violatedDirective);
-        reportSender.sendReports(blockedContentSource, violatedDirective);
+        reportSender.sendReports(blockedContentSource, violatedDirective,
+                                 aSourceFile, aScriptSample, aLineNum);
       }, Ci.nsIThread.DISPATCH_NORMAL);
   },
 };

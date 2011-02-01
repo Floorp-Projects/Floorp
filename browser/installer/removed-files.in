@@ -24,7 +24,6 @@ chrome/classic.manifest
 chrome/comm.jar
 chrome/comm.manifest
 chrome/en-win.jar
-chrome/@AB_CD@.manifest
 chrome/help.jar
 chrome/installed-chrome.txt
 chrome/m3ffxtbr.jar
@@ -672,7 +671,162 @@ uninstall/uninst.exe
 uninstall/uninstall.exe
 xpicleanup@BIN_SUFFIX@
 #ifdef MOZ_OMNIJAR
-  chrome/@AB_CD@.jar
+  chrome/af.jar
+  chrome/af.manifest
+  chrome/ar.jar
+  chrome/ar.manifest
+  chrome/as.jar
+  chrome/as.manifest
+  chrome/ast.jar
+  chrome/ast.manifest
+  chrome/be.jar
+  chrome/be.manifest
+  chrome/bg.jar
+  chrome/bg.manifest
+  chrome/bn-BD.jar
+  chrome/bn-BD.manifest
+  chrome/bn-IN.jar
+  chrome/bn-IN.manifest
+  chrome/ca.jar
+  chrome/ca.manifest
+  chrome/cs.jar
+  chrome/cs.manifest
+  chrome/cy.jar
+  chrome/cy.manifest
+  chrome/da.jar
+  chrome/da.manifest
+  chrome/de.jar
+  chrome/de.manifest
+  chrome/el.jar
+  chrome/el.manifest
+  chrome/en-GB.jar
+  chrome/en-GB.manifest
+  chrome/en-US.jar
+  chrome/en-US.manifest
+  chrome/eo.jar
+  chrome/eo.manifest
+  chrome/es-AR.jar
+  chrome/es-AR.manifest
+  chrome/es-CL.jar
+  chrome/es-CL.manifest
+  chrome/es-ES.jar
+  chrome/es-ES.manifest
+  chrome/es-MX.jar
+  chrome/es-MX.manifest
+  chrome/et.jar
+  chrome/et.manifest
+  chrome/eu.jar
+  chrome/eu.manifest
+  chrome/fa.jar
+  chrome/fa.manifest
+  chrome/fi.jar
+  chrome/fi.manifest
+  chrome/fr.jar
+  chrome/fr.manifest
+  chrome/fy-NL.jar
+  chrome/fy-NL.manifest
+  chrome/ga-IE.jar
+  chrome/ga-IE.manifest
+  chrome/gd.jar
+  chrome/gd.manifest
+  chrome/gl.jar
+  chrome/gl.manifest
+  chrome/gu-IN.jar
+  chrome/gu-IN.manifest
+  chrome/he.jar
+  chrome/he.manifest
+  chrome/hi-IN.jar
+  chrome/hi-IN.manifest
+  chrome/hr.jar
+  chrome/hr.manifest
+  chrome/hu.jar
+  chrome/hu.manifest
+  chrome/id.jar
+  chrome/id.manifest
+  chrome/is.jar
+  chrome/is.manifest
+  chrome/it.jar
+  chrome/it.manifest
+  chrome/ja-JP-mac.jar
+  chrome/ja-JP-mac.manifest
+  chrome/ja.jar
+  chrome/ja.manifest
+  chrome/ka.jar
+  chrome/ka.manifest
+  chrome/kk.jar
+  chrome/kk.manifest
+  chrome/kn.jar
+  chrome/kn.manifest
+  chrome/ko.jar
+  chrome/ko.manifest
+  chrome/ku.jar
+  chrome/ku.manifest
+  chrome/lt.jar
+  chrome/lt.manifest
+  chrome/lv.jar
+  chrome/lv.manifest
+  chrome/mk.jar
+  chrome/mk.manifest
+  chrome/ml.jar
+  chrome/ml.manifest
+  chrome/mn.jar
+  chrome/mn.manifest
+  chrome/mr.jar
+  chrome/mr.manifest
+  chrome/nb-NO.jar
+  chrome/nb-NO.manifest
+  chrome/nl.jar
+  chrome/nl.manifest
+  chrome/nn-NO.jar
+  chrome/nn-NO.manifest
+  chrome/oc.jar
+  chrome/oc.manifest
+  chrome/or.jar
+  chrome/or.manifest
+  chrome/pa-IN.jar
+  chrome/pa-IN.manifest
+  chrome/pl.jar
+  chrome/pl.manifest
+  chrome/pt-BR.jar
+  chrome/pt-BR.manifest
+  chrome/pt-PT.jar
+  chrome/pt-PT.manifest
+  chrome/rm.jar
+  chrome/rm.manifest
+  chrome/ro.jar
+  chrome/ro.manifest
+  chrome/ru.jar
+  chrome/ru.manifest
+  chrome/si.jar
+  chrome/si.manifest
+  chrome/sk.jar
+  chrome/sk.manifest
+  chrome/sl.jar
+  chrome/sl.manifest
+  chrome/sq.jar
+  chrome/sq.manifest
+  chrome/sr.jar
+  chrome/sr.manifest
+  chrome/sv-SE.jar
+  chrome/sv-SE.manifest
+  chrome/ta-LK.jar
+  chrome/ta-LK.manifest
+  chrome/ta.jar
+  chrome/ta.manifest
+  chrome/te.jar
+  chrome/te.manifest
+  chrome/th.jar
+  chrome/th.manifest
+  chrome/tr.jar
+  chrome/tr.manifest
+  chrome/uk.jar
+  chrome/uk.manifest
+  chrome/vi.jar
+  chrome/vi.manifest
+  chrome/zh-CN.jar
+  chrome/zh-CN.manifest
+  chrome/zh-TW.jar
+  chrome/zh-TW.manifest
   chrome/browser.jar
   chrome/localized.manifest
   chrome/nonlocalized.manifest
@@ -1060,14 +1214,24 @@ xpicleanup@BIN_SUFFIX@
   plugins/Default Plugin.plugin/Contents/PkgInfo
   plugins/Default Plugin.plugin/Contents/Resources/Default Plugin.rsrc
   plugins/Default Plugin.plugin/Contents/Resources/English.lproj/InfoPlist.strings
-  plugins/DefaultPlugin.plugin/
   plugins/DefaultPlugin.plugin/Contents/Info.plist
-  plugins/DefaultPlugin.plugin/Contents/MacOS/
   plugins/DefaultPlugin.plugin/Contents/MacOS/DefaultPlugin
-  plugins/DefaultPlugin.plugin/Contents/Resources/
-  plugins/DefaultPlugin.plugin/Contents/Resources/English.lproj/
   plugins/DefaultPlugin.plugin/Contents/Resources/English.lproj/InfoPlist.strings
   plugins/DefaultPlugin.plugin/Contents/Resources/plugin.png
+  plugins/JavaEmbeddingPlugin.bundle/Contents/Info.plist
+  plugins/JavaEmbeddingPlugin.bundle/Contents/MacOS/JavaEmbeddingPlugin
+  plugins/JavaEmbeddingPlugin.bundle/Contents/MacOS/JavaEmbeddingPlugin.policy
+  plugins/JavaEmbeddingPlugin.bundle/Contents/PkgInfo
+  plugins/JavaEmbeddingPlugin.bundle/Contents/Resources/English.lproj/InfoPlist.strings
+  plugins/JavaEmbeddingPlugin.bundle/Contents/Resources/Java/JavaEmbeddingPlugin.jar
+  plugins/MRJPlugin.plugin/Contents/Info.plist
+  plugins/MRJPlugin.plugin/Contents/MacOS/MRJPlugin
+  plugins/MRJPlugin.plugin/Contents/MacOS/MRJPlugin.jar
+  plugins/MRJPlugin.plugin/Contents/MacOS/MRJPlugin.policy
+  plugins/MRJPlugin.plugin/Contents/MacOS/MRJPlugin.properties
+  plugins/MRJPlugin.plugin/Contents/PkgInfo
+  plugins/MRJPlugin.plugin/Contents/Resources/English.lproj/InfoPlist.strings
+  plugins/MRJPlugin.plugin/Contents/Resources/MRJPlugin.rsrc
   redo-prebinding.sh
   res/bloatcycle.html
   res/cursors/CVS/Entries

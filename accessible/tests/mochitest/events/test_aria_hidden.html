@@ -1,0 +1,79 @@
+<html>
+
+<head>
+  <title>Accessible ARIA hidden attribute</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+
+    /**
+     * Do tests.
+     */
+    var gQueue = null;
+
+    function hideNode(aID, bHide)
+    {
+      this.node = getNode(aID);
+      this.accessible = getAccessible(this.node);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_OBJECT_ATTRIBUTE_CHANGED, this.accessible),
+      ];
+
+      this.invoke = function hideNode_invoke()
+      {
+        this.node.setAttribute("aria-hidden", bHide);
+      }
+
+      this.getID = function hideNode_getID()
+      {
+        return "aria-hidden for " + aID + " " + bHide;
+      }
+    }
+
+    function doTests()
+    {
+      //gA11yEventDumpID = "eventdump"; // debug stuff
+
+      gQueue = new eventQueue();
+
+      gQueue.push(new hideNode("hideable", "true"));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=581096"
+     title="Add support for aria-hidden">
+    Mozilla Bug 581096
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+  <div id="eventdump"></div>
+
+  <div id="hideable"><div>Hi</div><div>there</div></div>
+
+</body>
+</html>

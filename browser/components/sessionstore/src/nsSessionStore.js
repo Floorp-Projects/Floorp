@@ -877,9 +877,9 @@ SessionStoreService.prototype = {
         this._updateCookies([winData]);
       }
       
-      // save the window if it has multiple tabs or a single tab with entries
+      // save the window if it has multiple tabs or a single saveable tab
       if (winData.tabs.length > 1 ||
-          (winData.tabs.length == 1 && winData.tabs[0].entries.length > 0)) {
+          (winData.tabs.length == 1 && this._shouldSaveTabState(winData.tabs[0]))) {
         this._closedWindows.unshift(winData);
         this._capClosedWindows();
       }
@@ -984,7 +984,7 @@ SessionStoreService.prototype = {
     this._updateTextAndScrollDataForTab(aWindow, aTab.linkedBrowser, tabState);
 
     // store closed-tab data for undo
-    if (tabState.entries.length > 0) {
+    if (this._shouldSaveTabState(tabState)) {
       let tabTitle = aTab.label;
       let tabbrowser = aWindow.gBrowser;
       tabTitle = this._replaceLoadingTitle(tabTitle, tabbrowser, aTab);
@@ -2345,7 +2345,13 @@ SessionStoreService.prototype = {
     // prevent unnecessary flickering
     if (aOverwriteTabs && tabbrowser.selectedTab._tPos >= newTabCount)
       tabbrowser.moveTabTo(tabbrowser.selectedTab, newTabCount - 1);
-    
+
+    // unpin all tabs to ensure they are not reordered in the next loop
+    if (aOverwriteTabs) {
+      for (let t = tabbrowser._numPinnedTabs - 1; t > -1; t--)
+        tabbrowser.unpinTab(tabbrowser.tabs[t]);
+    }
+
     for (var t = 0; t < newTabCount; t++) {
       tabs.push(t < openTabCount ?
                 tabbrowser.tabs[t] :
@@ -2357,8 +2363,6 @@ SessionStoreService.prototype = {
 
       if (winData.tabs[t].pinned)
         tabbrowser.pinTab(tabs[t]);
-      else
-        tabbrowser.unpinTab(tabs[t]);
 
       if (winData.tabs[t].hidden)
         tabbrowser.hideTab(tabs[t]);
@@ -2553,7 +2557,14 @@ SessionStoreService.prototype = {
       // is always visible in the address bar
       let activeIndex = (tabData.index || tabData.entries.length) - 1;
       let activePageData = tabData.entries[activeIndex] || null;
-      browser.userTypedValue = activePageData ? activePageData.url || null : null;
+      let uri = activePageData ? activePageData.url || null : null;
+      browser.userTypedValue = uri;
+
+      // Also make sure currentURI is set so that switch-to-tab works before
+      // the tab is restored. We'll reset this to about:blank when we try to
+      // restore the tab to ensure that docshell doeesn't get confused.
+      if (uri)
+        browser.docShell.setCurrentURI(this._getURIFromString(uri));
 
       // If the page has a title, set it.
       if (activePageData) {
@@ -2723,6 +2734,9 @@ SessionStoreService.prototype = {
     let activeIndex = (tabData.index || tabData.entries.length) - 1;
     if (activeIndex >= tabData.entries.length)
       activeIndex = tabData.entries.length - 1;
+
+    // Reset currentURI.
+    browser.webNavigation.setCurrentURI(this._getURIFromString("about:blank"));
 
     // Attach data that will be restored on "load" event, after tab is restored.
     if (activeIndex > -1) {
@@ -3529,6 +3543,24 @@ SessionStoreService.prototype = {
     return max_resumed_crashes != -1 &&
            (aRecentCrashes > max_resumed_crashes ||
             sessionAge && sessionAge >= SIX_HOURS_IN_MS);
+  },
+
+  /**
+   * Determine if the tab state we're passed is something we should save. This
+   * is used when closing a tab or closing a window with a single tab
+   *
+   * @param aTabState
+   *        The current tab state
+   * @returns boolean
+   */
+  _shouldSaveTabState: function sss__shouldSaveTabState(aTabState) {
+    // If the tab has only the transient about:blank history entry, no other
+    // session history, and no userTypedValue, then we don't actually want to
+    // store this tab's data.
+    return aTabState.entries.length &&
+           !(aTabState.entries.length == 1 &&
+             aTabState.entries[0].url == "about:blank" &&
+             !aTabState.userTypedValue);
   },
 
   /**

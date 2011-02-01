@@ -9,6 +9,19 @@
   <script type="text/javascript" src="/MochiKit/packed.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript">
+    function _runTest() {
+      // Work around Win2k3 debug tinderboxes that may be too slow to complete this test. (Bug 614474)
+      if (navigator.oscpu == "Windows NT 5.2") {
+        todo(false, "Test disabled on (too slow debug) Windows 2003 (tinderboxes)");
+
+        finishTest();
+        return;
+      }
+
+      runTest();
+    }
+  </script>
   <script type="text/javascript;version=1.7">
     var gOrigMaxTotalViewers = undefined;
     function setCachePref(enabled) {
@@ -58,7 +71,7 @@
 
 </head>
 
-<body onload="runTest();">
+<body onload="_runTest();">
   <iframe id="iframe"></iframe>
 </body>
 
