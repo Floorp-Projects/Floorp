@@ -46,6 +46,7 @@
 #include "assembler/moco/MocoStubs.h"
 #include "methodjit/MethodJIT.h"
 #include "CodeGenIncludes.h"
+#include "methodjit/ICRepatcher.h"
 
 namespace js {
 namespace mjit {
@@ -91,20 +92,12 @@ class FrameSize
 
 namespace ic {
 
-struct MICInfo {
-    enum Kind
-#ifdef _MSC_VER
-    : uint8_t
-#endif
-    {
-        GET,
-        SET
-    };
-
+struct GlobalNameIC
+{
     typedef JSC::MacroAssembler::RegisterID RegisterID;
 
-    JSC::CodeLocationLabel fastPathStart;
-    JSC::CodeLocationLabel slowPathStart;
+    JSC::CodeLocationLabel  fastPathStart;
+    JSC::CodeLocationCall   slowPathCall;
 
     /*
      * - ARM and x64 always emit exactly one instruction which needs to be
@@ -115,25 +108,37 @@ struct MICInfo {
      *   of this, x86 is the only platform which requires non-trivial patching
      *   code.
      */
-    JSC::CodeLocationLabel load;
-    JSC::CodeLocationDataLabel32 shape;
-    JSC::CodeLocationCall stubCall;
+    int32 loadStoreOffset   : 15;
+    int32 shapeOffset       : 15;
+    bool usePropertyCache   : 1;
+};
+
+struct GetGlobalNameIC : public GlobalNameIC
+{
+};
+
+struct SetGlobalNameIC : public GlobalNameIC
+{
+    JSC::CodeLocationLabel  slowPathStart;
+
+    /* Dynamically generted stub for method-write checks. */
+    JSC::JITCode            extraStub;
 
     /* SET only, if we had to generate an out-of-line path. */
-    Kind kind : 2;
-    bool usePropertyCache : 1;
     int inlineShapeJump : 10;   /* Offset into inline path for shape jump. */
     int extraShapeGuard : 6;    /* Offset into stub for shape guard. */
     bool objConst : 1;          /* True if the object is constant. */
     RegisterID objReg   : 5;    /* Register for object, if objConst is false. */
     RegisterID shapeReg : 5;    /* Register for shape; volatile. */
-    JSC::JITCode extraStub;     /* Out-of-line generated stub. */
 
     int fastRejoinOffset : 16;  /* Offset from fastPathStart to rejoin. */
     int extraStoreOffset : 16;  /* Offset into store code. */
 
     /* SET only. */
     ValueRemat vr;              /* RHS value. */
+
+    void patchInlineShapeGuard(Repatcher &repatcher, int32 shape);
+    void patchExtraShapeGuard(Repatcher &repatcher, int32 shape);
 };
 
 struct TraceICInfo {
@@ -159,8 +164,8 @@ struct TraceICInfo {
 
 static const uint16 BAD_TRACEIC_INDEX = (uint16)0xffff;
 
-void JS_FASTCALL GetGlobalName(VMFrame &f, ic::MICInfo *ic);
-void JS_FASTCALL SetGlobalName(VMFrame &f, ic::MICInfo *ic);
+void JS_FASTCALL GetGlobalName(VMFrame &f, ic::GetGlobalNameIC *ic);
+void JS_FASTCALL SetGlobalName(VMFrame &f, ic::SetGlobalNameIC *ic);
 
 struct EqualityICInfo {
     typedef JSC::MacroAssembler::RegisterID RegisterID;

@@ -246,7 +246,8 @@ namespace ic {
     struct SetElementIC;
 # endif
 # if defined JS_MONOIC
-    struct MICInfo;
+    struct GetGlobalNameIC;
+    struct SetGlobalNameIC;
     struct EqualityICInfo;
     struct TraceICInfo;
     struct CallICInfo;
@@ -276,8 +277,8 @@ typedef JSBool (JS_FASTCALL *BoolStubUInt32)(VMFrame &f, uint32);
 #ifdef JS_MONOIC
 typedef void (JS_FASTCALL *VoidStubCallIC)(VMFrame &, js::mjit::ic::CallICInfo *);
 typedef void * (JS_FASTCALL *VoidPtrStubCallIC)(VMFrame &, js::mjit::ic::CallICInfo *);
-typedef void (JS_FASTCALL *VoidStubMIC)(VMFrame &, js::mjit::ic::MICInfo *);
-typedef void * (JS_FASTCALL *VoidPtrStubMIC)(VMFrame &, js::mjit::ic::MICInfo *);
+typedef void (JS_FASTCALL *VoidStubGetGlobal)(VMFrame &, js::mjit::ic::GetGlobalNameIC *);
+typedef void (JS_FASTCALL *VoidStubSetGlobal)(VMFrame &, js::mjit::ic::SetGlobalNameIC *);
 typedef JSBool (JS_FASTCALL *BoolStubEqualityIC)(VMFrame &, js::mjit::ic::EqualityICInfo *);
 typedef void * (JS_FASTCALL *VoidPtrStubTraceIC)(VMFrame &, js::mjit::ic::TraceICInfo *);
 #endif
@@ -317,7 +318,8 @@ struct JITScript {
                                            .ncode values may not be NULL. */
     bool            singleStepMode:1;   /* compiled in "single step mode" */
 #ifdef JS_MONOIC
-    uint32          nMICs;
+    uint32          nGetGlobalNames;
+    uint32          nSetGlobalNames;
     uint32          nCallICs;
     uint32          nEqualityICs;
     uint32          nTraceICs;
@@ -337,7 +339,8 @@ struct JITScript {
 
     NativeMapEntry *nmap() const;
 #ifdef JS_MONOIC
-    ic::MICInfo    *mics() const;
+    ic::GetGlobalNameIC *getGlobalNames() const;
+    ic::SetGlobalNameIC *setGlobalNames() const;
     ic::CallICInfo *callICs() const;
     ic::EqualityICInfo *equalityICs() const;
     ic::TraceICInfo *traceICs() const;
