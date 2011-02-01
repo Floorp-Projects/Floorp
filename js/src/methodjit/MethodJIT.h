@@ -246,7 +246,8 @@ namespace ic {
     struct SetElementIC;
 # endif
 # if defined JS_MONOIC
-    struct MICInfo;
+    struct GetGlobalNameIC;
+    struct SetGlobalNameIC;
     struct EqualityICInfo;
     struct TraceICInfo;
     struct CallICInfo;
@@ -276,8 +277,8 @@ typedef JSBool (JS_FASTCALL *BoolStubUInt32)(VMFrame &f, uint32);
 #ifdef JS_MONOIC
 typedef void (JS_FASTCALL *VoidStubCallIC)(VMFrame &, js::mjit::ic::CallICInfo *);
 typedef void * (JS_FASTCALL *VoidPtrStubCallIC)(VMFrame &, js::mjit::ic::CallICInfo *);
-typedef void (JS_FASTCALL *VoidStubMIC)(VMFrame &, js::mjit::ic::MICInfo *);
-typedef void * (JS_FASTCALL *VoidPtrStubMIC)(VMFrame &, js::mjit::ic::MICInfo *);
+typedef void (JS_FASTCALL *VoidStubGetGlobal)(VMFrame &, js::mjit::ic::GetGlobalNameIC *);
+typedef void (JS_FASTCALL *VoidStubSetGlobal)(VMFrame &, js::mjit::ic::SetGlobalNameIC *);
 typedef JSBool (JS_FASTCALL *BoolStubEqualityIC)(VMFrame &, js::mjit::ic::EqualityICInfo *);
 typedef void * (JS_FASTCALL *VoidPtrStubTraceIC)(VMFrame &, js::mjit::ic::TraceICInfo *);
 #endif
@@ -311,27 +312,29 @@ struct JITScript {
     /* To minimize the size of this struct on 64-bit, put uint32s after all pointers. */
     js::mjit::CallSite *callSites;
 #ifdef JS_MONOIC
-    ic::MICInfo     *mics;      /* MICs in this script. */
-    ic::CallICInfo  *callICs;   /* CallICs in this script. */
-    ic::EqualityICInfo *equalityICs;
-    ic::TraceICInfo *traceICs;
+    ic::GetGlobalNameIC *getGlobalNames;
+    ic::SetGlobalNameIC *setGlobalNames;
+    ic::CallICInfo      *callICs;
+    ic::EqualityICInfo  *equalityICs;
+    ic::TraceICInfo     *traceICs;
 #endif
 #ifdef JS_POLYIC
-    ic::PICInfo     *pics;      /* PICs in this script */
-    ic::GetElementIC *getElems;
-    ic::SetElementIC *setElems;
+    ic::PICInfo         *pics;
+    ic::GetElementIC    *getElems;
+    ic::SetElementIC    *setElems;
 #endif
 
     uint32          nCallSites:31;
     bool            singleStepMode:1;   /* compiled in "single step mode" */
 #ifdef JS_MONOIC
-    uint32          nMICs;      /* number of MonoICs */
-    uint32          nCallICs;   /* number of call ICs */
+    uint32          nGetGlobalNames;
+    uint32          nSetGlobalNames;
+    uint32          nCallICs;
     uint32          nEqualityICs;
     uint32          nTraceICs;
 #endif
 #ifdef JS_POLYIC
-    uint32          nPICs;      /* number of PolyICs */
+    uint32          nPICs;
     uint32          nGetElems;
     uint32          nSetElems;
 #endif
