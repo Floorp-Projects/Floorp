@@ -465,10 +465,29 @@ GfxInfo::GetAdapterDeviceID(PRUint32 *aAdapterDeviceID)
   return NS_OK;
 }
 
+#if defined(MOZ_CRASHREPORTER) && defined(MOZ_ENABLE_LIBXUL)
+/* Cisco's VPN software can cause corruption of the floating point state.
+ * Make a note of this in our crash reports so that some weird crashes
+ * make more sense */
+static void
+CheckForCiscoVPN() {
+  LONG result;
+  HKEY key;
+  /* This will give false positives, but hopefully no false negatives */
+  result = RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"Software\\Cisco Systems\\VPN Client", 0, KEY_QUERY_VALUE, &key);
+  if (result == ERROR_SUCCESS) {
+    RegCloseKey(key);
+    CrashReporter::AppendAppNotesToCrashReport(NS_LITERAL_CSTRING("Cisco VPN\n"));
+  }
+}
+#endif
+
 void
 GfxInfo::AddCrashReportAnnotations()
 {
 #if defined(MOZ_CRASHREPORTER) && defined(MOZ_ENABLE_LIBXUL)
+  CheckForCiscoVPN();
+
   nsCAutoString deviceIDString, vendorIDString;
   PRUint32 deviceID, vendorID;
   nsAutoString adapterDriverVersionString;
