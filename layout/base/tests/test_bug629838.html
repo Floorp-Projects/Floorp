@@ -1,0 +1,91 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Tests for MozAfterPaint</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display">
+<embed type="application/x-test" width="100" height="100" id="p"
+       drawmode="solid" color="FF00FF00"></embed>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+var initialPaintCount, afterPaintCount;
+var color = 0;
+
+function onAfterPaint () {
+  ok(true, "OnAfterPaint");
+  afterPaintCount += 1;
+}
+
+function startTest() {
+  setTimeout(function () {
+    afterPaintCount = 0;
+    initialPaintCount = window.mozPaintCount;
+    window.addEventListener("MozAfterPaint", onAfterPaint, true);
+    doBackgroundFlicker();
+  }, 1000);
+}
+
+document.addEventListener("DOMContentLoaded", startTest, true);
+
+function doPluginFlicker() {
+  ok(true, "Plugin color iteration " + color + 
+     ", afterpaint count: " + afterPaintCount +
+     ", mozpaint count: " + window.mozPaintCount);
+  if ((afterPaintCount >= window.mozPaintCount - initialPaintCount) && 
+      (afterPaintCount > 20)) {
+    ok(true, "Got enough paints from plugin color changes");
+    SimpleTest.finish();
+    return;
+  }
+
+  color = (color + 1) % 256;
+  var str = color.toString(16);
+  if (str.length < 2) {
+    str = "0" + str;
+  }
+  str = "FF" + str + str + str;
+  document.getElementById("p").setColor(str);
+  setTimeout(doPluginFlicker, 0);
+}
+
+function doBackgroundFlicker() {
+  ok(true, "Background color iteration " + color + 
+     ", afterpaint count: " + afterPaintCount +
+     ", mozpaint count: " + window.mozPaintCount);
+  if ((afterPaintCount >= window.mozPaintCount - initialPaintCount) && 
+      (afterPaintCount > 20)) {
+    ok(true, "Got enough paints from background color changes");
+    afterPaintCount = 0;
+    initialPaintCount = window.mozPaintCount;
+    doPluginFlicker();
+    return;
+  }
+
+  color = (color + 1) % 256;
+  document.body.style.backgroundColor = "rgb(" + color + "," + color + "," + color + ")";
+  setTimeout(doBackgroundFlicker, 0);
+}
+
+</script>
+</pre>
+
+<div style="height:4000px"></div>
+<a id="first"  href="http://www.mozilla.org/">first<br>link</a>
+<a id="second" href="http://www.mozilla.org/">second link</a>
+<a id="third"  href="http://www.mozilla.org/">third<br>link</a>
+<div style="height:4000px"></div>
+
+</body>
+</html>
+
