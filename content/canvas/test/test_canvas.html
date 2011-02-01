@@ -9829,28 +9829,28 @@ ok(ctx.miterLimit === 1.5, "ctx.miterLimit === 1.5");
 
 ctx.miterLimit = 1.5;
 ctx.miterLimit = 0;
-todo(ctx.miterLimit === 1.5, "ctx.miterLimit === 1.5");
+ok(ctx.miterLimit === 1.5, "ctx.miterLimit === 1.5");
 
 ctx.miterLimit = 1.5;
 ctx.miterLimit = -1;
-todo(ctx.miterLimit === 1.5, "ctx.miterLimit === 1.5");
+ok(ctx.miterLimit === 1.5, "ctx.miterLimit === 1.5");
 
 ctx.miterLimit = 1.5;
 ctx.miterLimit = Infinity;
-todo(ctx.miterLimit === 1.5, "ctx.miterLimit === 1.5");
+ok(ctx.miterLimit === 1.5, "ctx.miterLimit === 1.5");
 
 ctx.miterLimit = 1.5;
 ctx.miterLimit = -Infinity;
-todo(ctx.miterLimit === 1.5, "ctx.miterLimit === 1.5");
+ok(ctx.miterLimit === 1.5, "ctx.miterLimit === 1.5");
 
 ctx.miterLimit = 1.5;
 ctx.miterLimit = NaN;
-todo(ctx.miterLimit === 1.5, "ctx.miterLimit === 1.5");
+ok(ctx.miterLimit === 1.5, "ctx.miterLimit === 1.5");
 
 } catch (e) {
     _thrown_outer = true;
 }
-todo(!_thrown_outer, 'should not throw exception');
+ok(!_thrown_outer, 'should not throw exception');
 
 
 }

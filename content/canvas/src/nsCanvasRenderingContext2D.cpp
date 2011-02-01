@@ -3168,8 +3168,8 @@ nsCanvasRenderingContext2D::GetLineJoin(nsAString& joinstyle)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::SetMiterLimit(float miter)
 {
-    if (!FloatValidate(miter))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+    if (!FloatValidate(miter) || miter <= 0.0)
+        return NS_OK;
 
     mThebes->SetMiterLimit(miter);
     return NS_OK;
