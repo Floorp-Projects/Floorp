@@ -164,20 +164,20 @@ function test()
     checkThrows(function() new Float32Array(buf, 500));
     checkThrows(function() new Float32Array(buf, 0, 50));
 
-    var sl = a.slice(5,10);
+    var sl = a.subarray(5,10);
     check(function() sl.length == 5);
     check(function() sl.buffer == a.buffer);
     check(function() sl.byteLength == 20);
     check(function() sl.byteOffset == 20);
 
-    check(function() a.slice(5,5).length == 0);
-    check(function() a.slice(-5).length == 5);
-    check(function() a.slice(-100).length == 20);
-    check(function() a.slice(0, 2).length == 2);
-    check(function() a.slice().length == a.length);
-    check(function() a.slice(-7,-5).length == 2);
-    check(function() a.slice(-5,-7).length == 0);
-    check(function() a.slice(15).length == 5);
+    check(function() a.subarray(5,5).length == 0);
+    check(function() a.subarray(-5).length == 5);
+    check(function() a.subarray(-100).length == 20);
+    check(function() a.subarray(0, 2).length == 2);
+    check(function() a.subarray().length == a.length);
+    check(function() a.subarray(-7,-5).length == 2);
+    check(function() a.subarray(-5,-7).length == 0);
+    check(function() a.subarray(15).length == 5);
 
     a = new Uint8Array([0xaa, 0xbb, 0xcc]);
     check(function() a.length == 3);
@@ -280,22 +280,30 @@ function test()
           a[0] == 7 && a[1] == 8 && a[2] == 9 &&
           a[3] == 7 && a[4] == 8 && a[5] == 9 &&
           a[6] == 0 && a[7] == 0 && a[8] == 0);
-    a.set(a.slice(0,3), 6);
+    a.set(a.subarray(0,3), 6);
     check(function()
           a[0] == 7 && a[1] == 8 && a[2] == 9 &&
           a[3] == 7 && a[4] == 8 && a[5] == 9 &&
           a[6] == 7 && a[7] == 8 && a[8] == 9);
 
     a.set([1,2,3,4,5,6,7,8,9]);
-    a.set(a.slice(0,6), 3);
+    a.set(a.subarray(0,6), 3);
     check(function()
           a[0] == 1 && a[1] == 2 && a[2] == 3 &&
           a[3] == 1 && a[4] == 2 && a[5] == 3 &&
           a[6] == 4 && a[7] == 5 && a[8] == 6);
 
-    a.set(a.slice(3,9), 0);
+    a.set(a.subarray(3,9), 0);
     check(function()
           a[0] == 1 && a[1] == 2 && a[2] == 3 &&
+          a[3] == 4 && a[4] == 5 && a[5] == 6 &&
+          a[6] == 4 && a[7] == 5 && a[8] == 6);
+
+    // verify that subarray() returns a new view that
+    // references the same buffer
+    a.subarray(0,3).set(a.subarray(3,6), 0);
+    check(function()
+          a[0] == 4 && a[1] == 5 && a[2] == 6 &&
           a[3] == 4 && a[4] == 5 && a[5] == 6 &&
           a[6] == 4 && a[7] == 5 && a[8] == 6);
 
@@ -305,7 +313,7 @@ function test()
     checkThrows(function() new Float32Array(null));
 
     a = new Uint8Array(0x100);
-    checkThrows(function() Uint32Array.prototype.slice.apply(a, [0, 0x100]));
+    checkThrows(function() Uint32Array.prototype.subarray.apply(a, [0, 0x100]));
 
     // The prototypes are objects that don't have a length property, so they act
     // like empty arrays.
