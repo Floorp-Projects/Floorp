@@ -9348,7 +9348,6 @@ Boolish(JSParseNode *pn)
 
       case JSOP_DEFFUN:
       case JSOP_LAMBDA:
-      case JSOP_THIS:
       case JSOP_TRUE:
         return 1;
 
