@@ -341,12 +341,14 @@ public:
    * Returns text of accessible if accessible has text role otherwise empty
    * string.
    *
-   * @param aText         returned text of the accessible
-   * @param aStartOffset  start offset inside of the accesible
-   * @param aLength       required lenght of text
+   * @param aText         [in] returned text of the accessible
+   * @param aStartOffset  [in, optional] start offset inside of the accessible,
+   *                        if missed entire text is appended
+   * @param aLength       [in, optional] required length of text, if missed
+   *                        then text form start offset till the end is appended
    */
-  virtual nsresult AppendTextTo(nsAString& aText, PRUint32 aStartOffset,
-                                PRUint32 aLength);
+  virtual void AppendTextTo(nsAString& aText, PRUint32 aStartOffset = 0,
+                            PRUint32 aLength = PR_UINT32_MAX);
 
   /**
    * Assert if child not in parent's cache if the cache was initialized at this

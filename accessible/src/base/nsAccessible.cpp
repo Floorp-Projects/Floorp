@@ -2641,16 +2641,18 @@ nsAccessible::GetSelected(PRBool *aSelected)
 
 }
 
-nsresult
-nsAccessible::AppendTextTo(nsAString& aText, PRUint32 aStartOffset, PRUint32 aLength)
+void
+nsAccessible::AppendTextTo(nsAString& aText, PRUint32 aStartOffset,
+                           PRUint32 aLength)
 {
   // Return text representation of non-text accessible within hypertext
   // accessible. Text accessible overrides this method to return enclosed text.
-  if (aStartOffset != 0)
-    return NS_OK;
+  if (aStartOffset != 0 || aLength == 0)
+    return;
 
   nsIFrame *frame = GetFrame();
-  NS_ENSURE_STATE(frame);
+  if (!frame)
+    return;
 
   if (frame->GetType() == nsAccessibilityAtoms::brFrame) {
     aText += kForcedNewLineChar;
@@ -2661,8 +2663,6 @@ nsAccessible::AppendTextTo(nsAString& aText, PRUint32 aStartOffset, PRUint32 aLe
   } else {
     aText += kEmbeddedObjectChar;
   }
-
-  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
