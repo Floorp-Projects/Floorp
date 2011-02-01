@@ -474,20 +474,15 @@ struct JSObject : js::gc::Cell {
 
     bool hasOwnShape() const    { return !!(flags & OWN_SHAPE); }
 
-    void setMap(JSObjectMap *amap) {
+    void setMap(const JSObjectMap *amap) {
         JS_ASSERT(!hasOwnShape());
-        map = amap;
+        map = const_cast<JSObjectMap *>(amap);
         objShape = map->shape;
     }
 
     void setSharedNonNativeMap() {
-        setMap(const_cast<JSObjectMap *>(&JSObjectMap::sharedNonNative));
+        setMap(&JSObjectMap::sharedNonNative);
     }
-
-    /* Functions for setting up scope chain object maps and shapes. */
-    void initCall(JSContext *cx, const js::Bindings *bindings, JSObject *parent);
-    void initClonedBlock(JSContext *cx, JSObject *proto, JSStackFrame *priv);
-    void setBlockOwnShape(JSContext *cx);
 
     void deletingShapeChange(JSContext *cx, const js::Shape &shape);
     const js::Shape *methodShapeChange(JSContext *cx, const js::Shape &shape);
