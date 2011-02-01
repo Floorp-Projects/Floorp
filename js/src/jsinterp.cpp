@@ -2090,7 +2090,7 @@ AssertValidPropertyCacheHit(JSContext *cx, JSScript *script, JSFrameRegs& regs,
     }
     if (!ok)
         return false;
-    if (cx->runtime->gcNumber != sample)
+    if (cx->runtime->gcNumber != sample || entry->vshape() != pobj->shape())
         return true;
     JS_ASSERT(prop);
     JS_ASSERT(pobj == found);
