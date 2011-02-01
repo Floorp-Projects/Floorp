@@ -145,6 +145,12 @@ nsSVGImageFrame::~nsSVGImageFrame()
   if (mListener) {
     nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mContent);
     if (imageLoader) {
+      // Push a null JSContext on the stack so that code that runs
+      // within the below code doesn't think it's being called by
+      // JS. See bug 604262.
+      nsCxPusher pusher;
+      pusher.PushNull();
+
       imageLoader->RemoveObserver(mListener);
     }
     reinterpret_cast<nsSVGImageListener*>(mListener.get())->SetFrame(nsnull);
@@ -169,6 +175,13 @@ nsSVGImageFrame::Init(nsIContent* aContent,
   if (!mListener) return NS_ERROR_OUT_OF_MEMORY;
   nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mContent);
   NS_ENSURE_TRUE(imageLoader, NS_ERROR_UNEXPECTED);
+
+  // Push a null JSContext on the stack so that code that runs within
+  // the below code doesn't think it's being called by JS. See bug
+  // 604262.
+  nsCxPusher pusher;
+  pusher.PushNull();
+
   imageLoader->AddObserver(mListener);
 
   return NS_OK; 
