@@ -758,21 +758,8 @@ ContainerState::CreateOrRecycleThebesLayer(nsIFrame* aActiveScrolledRoot)
   // Set up transform so that 0,0 in the Thebes layer corresponds to the
   // (pixel-snapped) top-left of the aActiveScrolledRoot.
   nsPoint offset = mBuilder->ToReferenceFrame(aActiveScrolledRoot);
-  nsIntPoint pixOffset;
-  pixOffset.x = NSToIntRound(NSAppUnitsToFloatPixels(offset.x, float(aActiveScrolledRoot->PresContext()->AppUnitsPerDevPixel())));
-  pixOffset.y = NSToIntRound(NSAppUnitsToFloatPixels(offset.y, float(aActiveScrolledRoot->PresContext()->AppUnitsPerDevPixel())));
-  nsIntPoint pixOffset2 = offset.ToNearestPixels(
+  nsIntPoint pixOffset = offset.ToNearestPixels(
       aActiveScrolledRoot->PresContext()->AppUnitsPerDevPixel());
-  if (pixOffset != pixOffset2) {
-    printf("offset %d %d offset/60 %d %d pixoffset %d %d pixoffset2 %d %d", offset.x, offset.y, offset.x/60, offset.y/60, pixOffset.x, pixOffset.y, pixOffset2.x, pixOffset2.y);
-    if (offset.y % 60 == 0) printf(" exact");
-    if ((offset.y / 60)*60 == offset.y) printf(" exact2");
-    printf(" float val %f double val %fL", NSAppUnitsToFloatPixels(offset.y, float(aActiveScrolledRoot->PresContext()->AppUnitsPerDevPixel())),
-      double(offset.y)/double(aActiveScrolledRoot->PresContext()->AppUnitsPerDevPixel()));
-    printf("\n");
-  }
-  pixOffset.x = NSToIntRound(float(double(offset.x)/double(aActiveScrolledRoot->PresContext()->AppUnitsPerDevPixel())));
-  pixOffset.y = NSToIntRound(float(double(offset.y)/double(aActiveScrolledRoot->PresContext()->AppUnitsPerDevPixel())));
   gfxMatrix matrix;
   matrix.Translate(gfxPoint(pixOffset.x, pixOffset.y));
   layer->SetTransform(gfx3DMatrix::From2D(matrix));
