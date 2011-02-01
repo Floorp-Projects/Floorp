@@ -323,7 +323,7 @@ public:
   /**
    * Recreate an accessible, results in hide/show events pair.
    */
-  void RecreateAccessible(nsINode* aNode);
+  void RecreateAccessible(nsIContent* aContent);
 
   /**
    * Used to notify the document that the accessible caching is started or

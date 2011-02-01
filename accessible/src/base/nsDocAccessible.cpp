@@ -1426,63 +1426,22 @@ nsDocAccessible::ContentRemoved(nsIContent* aContainerNode,
 }
 
 void
-nsDocAccessible::RecreateAccessible(nsINode* aNode)
+nsDocAccessible::RecreateAccessible(nsIContent* aContent)
 {
-  // XXX: we shouldn't recreate whole accessible subtree that happens when
-  // hide event is handled, instead we should subclass hide and show events
-  // to handle them separately and implement their coalescence with normal hide
-  // and show events.
+  // XXX: we shouldn't recreate whole accessible subtree, instead we should
+  // subclass hide and show events to handle them separately and implement their
+  // coalescence with normal hide and show events. Note, in this case they
+  // should be coalesced with normal show/hide events.
 
-  nsAccessible* parent = nsnull;
+  // Check if the node is in DOM still.
+  nsIContent* parentContent = aContent->GetParent();
+  if (parentContent && parentContent->IsInDoc()) {
+    nsAccessible* container = GetAccessibleOrContainer(parentContent);
 
-  // Fire hide event for old accessible.
-  nsAccessible* oldAccessible =
-    GetAccService()->GetAccessibleInWeakShell(aNode, mWeakShell);
-  if (oldAccessible) {
-    parent = oldAccessible->GetParent();
-
-    nsRefPtr<AccEvent> hideEvent = new AccHideEvent(oldAccessible, aNode);
-    if (hideEvent)
-      FireDelayedAccessibleEvent(hideEvent);
-
-    // Unbind old accessible from tree.
-    parent->RemoveChild(oldAccessible);
-
-    if (oldAccessible->IsPrimaryForNode() &&
-        mNodeToAccessibleMap.Get(oldAccessible->GetNode()) == oldAccessible)
-      mNodeToAccessibleMap.Remove(oldAccessible->GetNode());
-
-  } else {
-    // Not accessible node may not have container accessible if we recreate
-    // an accessible asynchronously.
-    // XXX: asynchronous RecreateAccessible notifications should be coalesced
-    // with accessible tree mutation notifications. We could trigger
-    // ContentRemoved/ContentInserted pair for that but it moves us away from
-    // the idea to not recreate the whole subtree.
-    parent = GetContainerAccessible(aNode);
-    if (!parent)
-      return;
-  }
-
-  // Get new accessible and fire show event.
-  parent->UpdateChildren();
-
-  nsAccessible* newAccessible =
-    GetAccService()->GetAccessibleInWeakShell(aNode, mWeakShell);
-  if (newAccessible) {
-    nsRefPtr<AccEvent> showEvent = new AccShowEvent(newAccessible, aNode);
-    if (showEvent)
-      FireDelayedAccessibleEvent(showEvent);
-  }
-
-  // Fire reorder event.
-  if (oldAccessible || newAccessible) {
-    nsRefPtr<AccEvent> reorderEvent =
-      new AccEvent(nsIAccessibleEvent::EVENT_REORDER, parent->GetNode(),
-                   eAutoDetect, AccEvent::eCoalesceFromSameSubtree);
-
-    if (reorderEvent)
-      FireDelayedAccessibleEvent(reorderEvent);
+    // Remove and reinsert.
+    UpdateTree(container, aContent, PR_FALSE);
+    container->UpdateChildren();
+    UpdateTree(container, aContent, PR_TRUE);
   }
 }
 
@@ -1651,7 +1610,7 @@ nsDocAccessible::UpdateAccessibleOnAttrChange(dom::Element* aElement,
     // Recreate the accessible when role is changed because we might require a
     // different accessible class for the new role or the accessible may expose
     // a different sets of interfaces (COM restriction).
-    HandleNotification<nsDocAccessible, nsINode>
+    HandleNotification<nsDocAccessible, nsIContent>
       (this, &nsDocAccessible::RecreateAccessible, aElement);
 
     return true;
@@ -1659,10 +1618,13 @@ nsDocAccessible::UpdateAccessibleOnAttrChange(dom::Element* aElement,
 
   if (aAttribute == nsAccessibilityAtoms::href ||
       aAttribute == nsAccessibilityAtoms::onclick) {
-    // Not worth the expense to ensure which namespace these are in
-    // It doesn't kill use to recreate the accessible even if the attribute was used
-    // in the wrong namespace or an element that doesn't support it
-    HandleNotification<nsDocAccessible, nsINode>
+    // Not worth the expense to ensure which namespace these are in. It doesn't
+    // kill use to recreate the accessible even if the attribute was used in
+    // the wrong namespace or an element that doesn't support it.
+
+    // Recreate accessible asynchronously to allow the content to handle
+    // the attribute change.
+    mNotificationController->ScheduleNotification<nsDocAccessible, nsIContent>
       (this, &nsDocAccessible::RecreateAccessible, aElement);
 
     return true;
@@ -1673,7 +1635,7 @@ nsDocAccessible::UpdateAccessibleOnAttrChange(dom::Element* aElement,
     // This affects whether the accessible supports SelectAccessible.
     // COM says we cannot change what interfaces are supported on-the-fly,
     // so invalidate this object. A new one will be created on demand.
-    HandleNotification<nsDocAccessible, nsINode>
+    HandleNotification<nsDocAccessible, nsIContent>
       (this, &nsDocAccessible::RecreateAccessible, aElement);
 
     return true;
