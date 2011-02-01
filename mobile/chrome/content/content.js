@@ -254,7 +254,9 @@ let Content = {
 
     this._formAssistant = new FormAssistant();
 
-    docShell.QueryInterface(Ci.nsIDocShellHistory).useGlobalHistory = true;
+    try{
+      docShell.QueryInterface(Ci.nsIDocShellHistory).useGlobalHistory = true;
+    } catch(e) { dump("---error: " + e + "\n"); }
   },
 
   handleEvent: function handleEvent(aEvent) {
