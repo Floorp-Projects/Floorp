@@ -2472,7 +2472,21 @@ SessionStoreService.prototype = {
       }
     }
 
-    if (aTabs.length > 0) {
+    if (!this._isWindowLoaded(aWindow)) {
+      // from now on, the data will come from the actual window
+      delete this._statesToRestore[aWindow.__SS_restoreID];
+      delete aWindow.__SS_restoreID;
+      delete this._windows[aWindow.__SSi]._restoring;
+    }
+
+    if (aTabs.length == 0) {
+      // this is normally done in restoreHistory() but as we're returning early
+      // here we need to take care of it.
+      this._sendWindowStateEvent(aWindow, "Ready");
+      return;
+    }
+
+    if (aTabs.length > 1) {
       // Load hidden tabs last, by pushing them to the end of the list
       let unhiddenTabs = aTabs.length;
       for (let t = 0; t < unhiddenTabs; ) {
@@ -2505,13 +2519,13 @@ SessionStoreService.prototype = {
         aTabData = aTabData.splice(firstVisibleTab, maxVisibleTabs).concat(aTabData);
         aSelectTab -= firstVisibleTab;
       }
+    }
 
-      // make sure to restore the selected tab first (if any)
-      if (aSelectTab-- && aTabs[aSelectTab]) {
-        aTabs.unshift(aTabs.splice(aSelectTab, 1)[0]);
-        aTabData.unshift(aTabData.splice(aSelectTab, 1)[0]);
-        tabbrowser.selectedTab = aTabs[0];
-      }
+    // make sure to restore the selected tab first (if any)
+    if (aSelectTab-- && aTabs[aSelectTab]) {
+      aTabs.unshift(aTabs.splice(aSelectTab, 1)[0]);
+      aTabData.unshift(aTabData.splice(aSelectTab, 1)[0]);
+      tabbrowser.selectedTab = aTabs[0];
     }
 
     // Prepare the tabs so that they can be properly restored. We'll pin/unpin
@@ -2578,13 +2592,6 @@ SessionStoreService.prototype = {
       }
     }
 
-    if (!this._isWindowLoaded(aWindow)) {
-      // from now on, the data will come from the actual window
-      delete this._statesToRestore[aWindow.__SS_restoreID];
-      delete aWindow.__SS_restoreID;
-      delete this._windows[aWindow.__SSi]._restoring;
-    }
-    
     // helper hashes for ensuring unique frame IDs and unique document
     // identifiers.
     var idMap = { used: {} };
