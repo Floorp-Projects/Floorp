@@ -12096,7 +12096,9 @@ TraceRecorder::lookupForSetPropertyOp(JSObject* obj, LIns* obj_ins, jsid id,
 static JSBool FASTCALL
 MethodWriteBarrier(JSContext* cx, JSObject* obj, uint32 slot, const Value* v)
 {
+#ifdef DEBUG
     TraceMonitor *tm = JS_TRACE_MONITOR_ON_TRACE(cx);
+#endif
 
     bool ok = obj->methodWriteBarrier(cx, slot, *v);
     JS_ASSERT(WasBuiltinSuccessful(tm));
@@ -12689,7 +12691,9 @@ TraceRecorder::primitiveToStringInPlace(Value* vp)
     if (!v.isString()) {
         // v is not a string. Turn it into one. js_ValueToString is safe
         // because v is not an object.
+#ifdef DEBUG
         TraceMonitor *localtm = traceMonitor;
+#endif
         JSString *str = js_ValueToString(cx, v);
         JS_ASSERT(localtm->recorder == this);
         if (!str)
@@ -16866,7 +16870,6 @@ LoopProfile::profileLoopEdge(JSContext* cx, uintN& inlineCallCount)
     if (cx->regs->pc == top) {
         debug_only_print0(LC_TMProfiler, "Profiling complete (edge)\n");
         decide(cx);
-        stopProfiling(cx);
     } else {
         /* Record an inner loop invocation. */
         JSStackFrame *fp = cx->fp();
