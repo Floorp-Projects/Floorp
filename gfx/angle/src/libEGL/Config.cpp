@@ -337,9 +337,9 @@ bool ConfigSet::getConfigs(EGLConfig *configs, const EGLint *attribList, EGLint 
               case EGL_RENDERABLE_TYPE:           match = (config->mRenderableType & attribute[1]) == attribute[1]; break;
               case EGL_MATCH_NATIVE_PIXMAP:       match = false; UNIMPLEMENTED();                                   break;
               case EGL_CONFORMANT:                match = (config->mConformant & attribute[1]) == attribute[1];     break;
-              case EGL_MAX_PBUFFER_WIDTH:         /* ignore */                                                      break;
-              case EGL_MAX_PBUFFER_HEIGHT:        /* ignore */                                                      break;
-              case EGL_MAX_PBUFFER_PIXELS:        /* ignore */                                                      break;
+              case EGL_MAX_PBUFFER_WIDTH:         match = config->mMaxPBufferWidth >= attribute[1];                 break;
+              case EGL_MAX_PBUFFER_HEIGHT:        match = config->mMaxPBufferHeight >= attribute[1];                break;
+              case EGL_MAX_PBUFFER_PIXELS:        match = config->mMaxPBufferPixels >= attribute[1];                break;
               default:
                 return false;
             }

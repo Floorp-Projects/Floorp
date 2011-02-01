@@ -70,20 +70,35 @@ interface nsIContentSecurityPolicy : nsISupports
 
   /**
    * Whether this policy allows in-page script.
-   *
-   * Calls to this may trigger violation reports when queried, so
-   * this value should not be cached.
    */
   readonly attribute boolean allowsInlineScript;
 
   /**
    * whether this policy allows eval and eval-like functions
    * such as setTimeout("code string", time).
-   *
-   * Calls to this may trigger violation reports when queried, so
-   * this value should not be cached.
    */
   readonly attribute boolean allowsEval;
+
+  /**
+   * Log policy violation on the Error Console and send a report if a report-uri
+   * is present in the policy
+   *
+   * @param violationType
+   *     one of the VIOLATION_TYPE_* constants, e.g. inline-script or eval
+   * @param sourceFile
+   *     name of the source file containing the violation (if available)
+   * @param contentSample
+   *     sample of the violating content (to aid debugging)
+   * @param lineNum
+   *     source line number of the violation (if available)
+   */
+  void logViolationDetails(in unsigned short violationType,
+                           in AString sourceFile,
+                           in AString scriptSample,
+                           in PRInt32 lineNum);
+
+  const unsigned short VIOLATION_TYPE_INLINE_SCRIPT = 1;
+  const unsigned short VIOLATION_TYPE_EVAL = 2;
 
   /**
    * Manually triggers violation report sending given a URI and reason.
@@ -92,10 +107,17 @@ interface nsIContentSecurityPolicy : nsISupports
    *     the URI that violated the policy
    * @param violatedDirective
    *     the directive that was violated.
+   * @param scriptSample
+   *     a sample of the violating inline script
+   * @param lineNum
+   *     source line number of the violation (if available)
    * @return 
    *     nothing.
    */
-  void sendReports(in AString blockedURI, in AString violatedDirective);
+  void sendReports(in AString blockedURI,
+                   in AString violatedDirective,
+                   in AString scriptSample,
+                   in PRInt32 lineNum);
 
   /**
    * Called after the CSP object is created to fill in the appropriate request

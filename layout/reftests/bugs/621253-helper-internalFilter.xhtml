@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<body style="margin: 0px">
+  <svg xmlns="http://www.w3.org/2000/svg" style="display: block; height: 0px">
+    <defs>
+      <!-- Copied verbatim from layout/reftests/filters.svg: -->
+      <filter id="NonWhiteToBlack" x="0%" y="0%" width="100%" height="100%">
+        <feComponentTransfer>
+          <feFuncR type="linear" slope="-1" intercept="1" />
+          <feFuncG type="linear" slope="-1" intercept="1" />
+          <feFuncB type="linear" slope="-1" intercept="1" />
+        </feComponentTransfer>
+        <feColorMatrix type="matrix" values="255 255 255 0 0
+                                             255 255 255 0 0
+                                             255 255 255 0 0
+                                             0 0 0 1 0" />
+        <feComponentTransfer>
+          <feFuncR type="linear" slope="-1" intercept="1" />
+          <feFuncG type="linear" slope="-1" intercept="1" />
+          <feFuncB type="linear" slope="-1" intercept="1" />
+        </feComponentTransfer>
+      </filter>
+    </defs>
+  </svg>
+  <div style="filter: url(#NonWhiteToBlack);
+              background: lime;
+              height: 100px; width: 100px">
+  </div>
+</body>
+</html>

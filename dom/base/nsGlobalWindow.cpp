@@ -1084,7 +1084,6 @@ nsGlobalWindow::CleanUp(PRBool aIgnoreModalDialog)
 
   mNavigator = nsnull;
   mScreen = nsnull;
-  mHistory = nsnull;
   mMenubar = nsnull;
   mToolbar = nsnull;
   mLocationbar = nsnull;
@@ -1092,6 +1091,7 @@ nsGlobalWindow::CleanUp(PRBool aIgnoreModalDialog)
   mStatusbar = nsnull;
   mScrollbars = nsnull;
   mLocation = nsnull;
+  mHistory = nsnull;
   mFrames = nsnull;
   mApplicationCache = nsnull;
   mIndexedDB = nsnull;
@@ -1236,6 +1236,7 @@ nsGlobalWindow::FreeInnerObjects(PRBool aClearScope)
   }
 
   mLocation = nsnull;
+  mHistory = nsnull;
 
   if (mDocument) {
     NS_ASSERTION(mDoc, "Why is mDoc null?");
@@ -2388,8 +2389,6 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
 
   if (mNavigator)
     mNavigator->SetDocShell(aDocShell);
-  if (mHistory)
-    mHistory->SetDocShell(aDocShell);
   if (mFrames)
     mFrames->SetDocShell(aDocShell);
   if (mScreen)
@@ -2910,12 +2909,12 @@ nsGlobalWindow::GetScreen(nsIDOMScreen** aScreen)
 NS_IMETHODIMP
 nsGlobalWindow::GetHistory(nsIDOMHistory** aHistory)
 {
-  FORWARD_TO_OUTER(GetHistory, (aHistory), NS_ERROR_NOT_INITIALIZED);
+  FORWARD_TO_INNER(GetHistory, (aHistory), NS_ERROR_NOT_INITIALIZED);
 
   *aHistory = nsnull;
 
-  if (!mHistory && mDocShell) {
-    mHistory = new nsHistory(mDocShell);
+  if (!mHistory) {
+    mHistory = new nsHistory(this);
     if (!mHistory) {
       return NS_ERROR_OUT_OF_MEMORY;
     }

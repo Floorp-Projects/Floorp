@@ -1,12 +1,13 @@
 body {
-  font-family: Tahoma, sans-serif !important;
-  color: rgba(0,0,0,0.4);
+  font: -moz-window !important;
+  color: WindowText;
   font-size: 12px;
   line-height: 16px;
 }
 
 #bg {
-  background: -moz-linear-gradient(top,#C4C4C4,#9E9E9E);
+  background-color: window;
+  background-image: -moz-linear-gradient(rgba(0,0,0,0.1),rgba(0,0,0,.2));
 }
 
 /* Tabs
@@ -25,7 +26,6 @@ body {
               -1px 0 1px rgba(255, 255, 255, 0.4) inset,
               0 1px 1.5px rgba(0, 0, 0, 0.4);
   cursor: pointer;
-  margin: 4px;
 }
 
 html[dir=rtl] .tab {
@@ -159,7 +159,7 @@ html[dir=rtl] .stacked .thumb {
 
 .stack-trayed .tab-title {
   text-shadow: rgba(0,0,0,1) 1px 1px 1.5px;
-  color: #EEE;
+  color: WindowText;
   font-size: 11px;
 }
 
@@ -171,8 +171,9 @@ html[dir=rtl] .stack-trayed .tab-title {
   box-shadow: none !important;
 }
 
-.focus {
-  box-shadow: rgba(54,79,225,1) 0px 0px 3.5px -1px !important;
+.tab.focus {
+  box-shadow: Highlight 0px 0px 5px 1px !important;
+  border: 1px solid Highlight;
 }
 
 /* Tab: Zooming
@@ -196,12 +197,14 @@ html[dir=rtl] .stack-trayed .tab-title {
 .tabInGroupItem {
   border: none;
   box-shadow: none !important;
+  margin: 4px;
 }
 
 .groupItem {
   cursor: move;
   border: 1px solid rgba(230,230,230,1);
-  background-color: rgba(248,248,248,1);
+  background-color: window;
+  background-image: -moz-linear-gradient(rgba(255,255,255,.3),rgba(255,255,255,.1));
   border-radius: 0.4em;
   box-shadow:
     inset rgba(255, 255, 255, 0.6) 0 0 0 2px,
@@ -259,13 +262,13 @@ html[dir=rtl] .appTabTray {
 }
 
 .undo {
-  background-color: #A0A0A0;
+  background-color: rgba(0,0,0,.2);
   width: 150px;
   height: 30px;
   line-height: 30px;
-  box-shadow: 0px 1px 0px rgba(255,255,255,.5), 0px -1px 0px rgba(0,0,0,.24);
-  text-shadow: 0px -1px 0px rgba(255,255,255,.2);
-  color: rgba( 0,0,0, .8);
+  box-shadow: 0 1px 0 rgba(255,255,255,.4), 0 1px 0 rgba(0,0,0,.3) inset;
+  text-shadow: 0 1px 0 rgba(255,255,255,.2);
+  color: WindowText;
   border-radius: 0.4em;
   text-align: center;
   border: none;
@@ -273,7 +276,7 @@ html[dir=rtl] .appTabTray {
 }
 
 .undo:hover {
-  background-color: #949494;
+  background-color: rgba(0,0,0,.3);
 }
 
 .undo .close {
@@ -399,7 +402,7 @@ html[dir=rtl] .acceptsDrop {
 input.name {
   background: transparent;
   border: 1px solid transparent;
-  color: #999;
+  color: GrayText;
   margin-top: 3px;
   -moz-margin-end: 0;
   margin-bottom: 0;
@@ -422,7 +425,7 @@ html[dir=rtl] input.name {
 }
 
 input.name:focus {
-  color: #555;
+  color: WindowText;
 }
 
 input.name:-moz-placeholder {
@@ -434,7 +437,7 @@ input.name:-moz-placeholder {
 }
 
 .title-container:hover input.name:-moz-placeholder {
-  color: #CCC;
+  color: GrayText;
 }
 
 .title-container {
@@ -645,3 +648,4 @@ html[dir=rtl] #otherresults {
   max-width: 200px;
   height: 15px;
 }
+

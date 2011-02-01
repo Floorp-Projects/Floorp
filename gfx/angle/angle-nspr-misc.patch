@@ -1,9 +1,14 @@
 # HG changeset patch
-# Parent f0e6e4c311dd940147f1589d72cc87f8ce755697
+# Parent 3f4e2a35c49bb865018798a76b62c169d8e3537b
 diff --git a/gfx/angle/src/compiler/osinclude.h b/gfx/angle/src/compiler/osinclude.h
 --- a/gfx/angle/src/compiler/osinclude.h
 +++ b/gfx/angle/src/compiler/osinclude.h
-@@ -12,8 +12,10 @@
+@@ -7,17 +7,19 @@
+ #ifndef __OSINCLUDE_H
+ #define __OSINCLUDE_H
+ 
+ //
+ // This file contains contains os-specific datatypes and
  // declares any os-specific functions.
  //
  
@@ -15,3 +20,7 @@ diff --git a/gfx/angle/src/compiler/osinclude.h b/gfx/angle/src/compiler/osinclu
  #elif defined(__APPLE__) || defined(__linux__) || \
        defined(__FreeBSD__) || defined(__OpenBSD__) || \
        defined(__sun)
+ #define ANGLE_OS_POSIX
+ #else
+ #error Unsupported platform.
+ #endif

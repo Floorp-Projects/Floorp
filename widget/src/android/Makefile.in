@@ -68,6 +68,7 @@ CPPSRCS	= \
 	nsIMEPicker.cpp \
 	nsDeviceContextAndroid.cpp \
 	nsPrintOptionsAndroid.cpp \
+	nsMemoryWatcher.cpp \
 	$(NULL)
 
 NOT_THERE_YET_CPPSRCS = \

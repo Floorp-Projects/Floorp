@@ -127,11 +127,6 @@
         try {
           docAcc = docAcc.parent;
         } catch (e) {
-          // XXX: it may randomaly fail on propertypage accessible of browser's
-          // tabbbrowser if nsIAccessible::parent returns cached parent only.
-          // This should gone after bug 572951.
-          // Error: failed | Can't get parent for [ 'panel1277435313424' ,
-          // role: propertypage]
           ok(false, "Can't get parent for " + prettyName(docAcc));
           throw e;
         }

@@ -1133,7 +1133,7 @@ WebGLContext::NeedFakeBlack()
         return PR_FALSE;
 
     if (mFakeBlackStatus == DontKnowIfNeedFakeBlack) {
-        for (PRInt32 i = 0; i < mGLMaxTextureImageUnits; ++i) {
+        for (PRInt32 i = 0; i < mGLMaxTextureUnits; ++i) {
             if ((mBound2DTextures[i] && mBound2DTextures[i]->NeedFakeBlack()) ||
                 (mBoundCubeMapTextures[i] && mBoundCubeMapTextures[i]->NeedFakeBlack()))
             {
@@ -1180,7 +1180,7 @@ WebGLContext::BindFakeBlackTextures()
         mBlackTexturesAreInitialized = PR_TRUE;
     }
 
-    for (PRInt32 i = 0; i < mGLMaxTextureImageUnits; ++i) {
+    for (PRInt32 i = 0; i < mGLMaxTextureUnits; ++i) {
         if (mBound2DTextures[i] && mBound2DTextures[i]->NeedFakeBlack()) {
             gl->fActiveTexture(LOCAL_GL_TEXTURE0 + i);
             gl->fBindTexture(LOCAL_GL_TEXTURE_2D, mBlackTexture2D);
@@ -1199,7 +1199,7 @@ WebGLContext::UnbindFakeBlackTextures()
     if (!NeedFakeBlack())
         return;
 
-    for (PRInt32 i = 0; i < mGLMaxTextureImageUnits; ++i) {
+    for (PRInt32 i = 0; i < mGLMaxTextureUnits; ++i) {
         if (mBound2DTextures[i] && mBound2DTextures[i]->NeedFakeBlack()) {
             gl->fActiveTexture(LOCAL_GL_TEXTURE0 + i);
             gl->fBindTexture(LOCAL_GL_TEXTURE_2D, mBound2DTextures[i]->GLName());

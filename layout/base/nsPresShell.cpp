@@ -181,8 +181,7 @@
 #include "nsIDOMHTMLLinkElement.h"
 #include "nsITimer.h"
 #ifdef ACCESSIBILITY
-#include "nsIAccessibilityService.h"
-#include "nsAccessible.h"
+#include "nsAccessibilityService.h"
 #endif
 
 // For style data reconstruction
@@ -1901,12 +1900,9 @@ PresShell::Destroy()
     return;
 
 #ifdef ACCESSIBILITY
-  if (gIsAccessibilityActive) {
-    nsCOMPtr<nsIAccessibilityService> accService =
-      do_GetService("@mozilla.org/accessibilityService;1");
-    if (accService) {
-      accService->PresShellDestroyed(this);
-    }
+  nsAccessibilityService* accService = AccService();
+  if (accService) {
+    accService->PresShellDestroyed(this);
   }
 #endif // ACCESSIBILITY
 
@@ -4030,9 +4026,8 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
   }
 
 #ifdef ACCESSIBILITY
-  if (anchorTarget && gIsAccessibilityActive) {
-    nsCOMPtr<nsIAccessibilityService> accService = 
-      do_GetService("@mozilla.org/accessibilityService;1");
+  if (anchorTarget) {
+    nsAccessibilityService* accService = AccService();
     if (accService)
       accService->NotifyOfAnchorJumpTo(anchorTarget);
   }
@@ -5155,6 +5150,13 @@ PresShell::ContentRemoved(nsIDocument *aDocument,
 nsresult
 PresShell::ReconstructFrames(void)
 {
+  NS_PRECONDITION(!FrameManager()->GetRootFrame() || mDidInitialReflow,
+                  "Must not have root frame before initial reflow");
+  if (!mDidInitialReflow) {
+    // Nothing to do here
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIPresShell> kungFuDeathGrip(this);
 
   // Have to make sure that the content notifications are flushed before we
@@ -6142,9 +6144,14 @@ PresShell::Paint(nsIView*           aDisplayRoot,
 
   if (frame) {
     if (!(frame->GetStateBits() & NS_FRAME_UPDATE_LAYER_TREE)) {
-      if (layerManager->EndEmptyTransaction())
+      if (layerManager->EndEmptyTransaction()) {
+        frame->UpdatePaintCountForPaintedPresShells();
+        
         return NS_OK;
+      }
     }
+    
+    frame->ClearPresShellsFromLastPaint();
     frame->RemoveStateBits(NS_FRAME_UPDATE_LAYER_TREE);
   }
 
@@ -6732,8 +6739,8 @@ PresShell::HandleEvent(nsIView         *aView,
         // content area from grabbing the focus from chrome in-between key
         // events.
         if (mCurrentEventContent &&
-            nsContentUtils::IsChromeDoc(gKeyDownTarget->GetCurrentDoc()) &&
-            !nsContentUtils::IsChromeDoc(mCurrentEventContent->GetCurrentDoc())) {
+            nsContentUtils::IsChromeDoc(gKeyDownTarget->GetCurrentDoc()) !=
+            nsContentUtils::IsChromeDoc(mCurrentEventContent->GetCurrentDoc())) {
           mCurrentEventContent = gKeyDownTarget;
         }
 
@@ -8170,8 +8177,9 @@ PRBool
 nsIPresShell::AddRefreshObserverInternal(nsARefreshObserver* aObserver,
                                          mozFlushType aFlushType)
 {
-  return GetPresContext()->RefreshDriver()->
-    AddRefreshObserver(aObserver, aFlushType);
+  nsPresContext* presContext = GetPresContext();
+  return presContext ? presContext->RefreshDriver()->
+    AddRefreshObserver(aObserver, aFlushType) : PR_FALSE;
 }
 
 /* virtual */ PRBool
@@ -8185,8 +8193,9 @@ PRBool
 nsIPresShell::RemoveRefreshObserverInternal(nsARefreshObserver* aObserver,
                                             mozFlushType aFlushType)
 {
-  return GetPresContext()->RefreshDriver()->
-    RemoveRefreshObserver(aObserver, aFlushType);
+  nsPresContext* presContext = GetPresContext();
+  return presContext ? presContext->RefreshDriver()->
+    RemoveRefreshObserver(aObserver, aFlushType) : PR_FALSE;
 }
 
 /* virtual */ PRBool
@@ -9257,6 +9266,23 @@ nsIFrame* nsIPresShell::GetAbsoluteContainingBlock(nsIFrame *aFrame)
 {
   return FrameConstructor()->GetAbsoluteContainingBlock(aFrame);
 }
+
+#ifdef ACCESSIBILITY
+nsAccessibilityService*
+nsIPresShell::AccService()
+{
+#ifdef MOZ_ENABLE_LIBXUL
+  return GetAccService();
+#else
+  if (gIsAccessibilityActive) {
+    nsCOMPtr<nsIAccessibilityService> srv =
+      do_GetService("@mozilla.org/accessibilityService;1");
+    return static_cast<nsAccessibilityService*>(srv.get());
+  }
+  return nsnull;
+#endif
+}
+#endif
 
 void nsIPresShell::InitializeStatics()
 {

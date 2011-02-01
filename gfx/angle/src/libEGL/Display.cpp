@@ -55,17 +55,8 @@ bool Display::initialize()
         return true;
     }
 
-    mD3d9Module = LoadLibrary(TEXT("d3d9.dll"));
+    mD3d9Module = GetModuleHandle(TEXT("d3d9.dll"));
     if (mD3d9Module == NULL)
-    {
-        terminate();
-        return false;
-    }
-
-    typedef IDirect3D9* (WINAPI *Direct3DCreate9Func)(UINT);
-    Direct3DCreate9Func Direct3DCreate9Ptr = reinterpret_cast<Direct3DCreate9Func>(GetProcAddress(mD3d9Module, "Direct3DCreate9"));
-
-    if (Direct3DCreate9Ptr == NULL)
     {
         terminate();
         return false;
@@ -85,7 +76,7 @@ bool Display::initialize()
     }
     else
     {
-        mD3d9 = Direct3DCreate9Ptr(D3D_SDK_VERSION);
+        mD3d9 = Direct3DCreate9(D3D_SDK_VERSION);
     }
 
     if (mD3d9)
@@ -268,7 +259,6 @@ void Display::terminate()
 
     if (mD3d9Module)
     {
-        FreeLibrary(mD3d9Module);
         mD3d9Module = NULL;
     }
 }
@@ -618,6 +608,23 @@ bool Display::getLuminanceAlphaTextureSupport()
     mD3d9->GetAdapterDisplayMode(mAdapter, &currentDisplayMode);
 
     return SUCCEEDED(mD3d9->CheckDeviceFormat(mAdapter, mDeviceType, currentDisplayMode.Format, 0, D3DRTYPE_TEXTURE, D3DFMT_A8L8));
+}
+
+D3DPOOL Display::getBufferPool(DWORD usage) const
+{
+    if (mD3d9ex != NULL)
+    {
+        return D3DPOOL_DEFAULT;
+    }
+    else
+    {
+        if (!(usage & D3DUSAGE_DYNAMIC))
+        {
+            return D3DPOOL_MANAGED;
+        }
+    }
+
+    return D3DPOOL_DEFAULT;
 }
 
 bool Display::getEventQuerySupport()

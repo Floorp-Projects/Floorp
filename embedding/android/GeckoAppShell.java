@@ -95,7 +95,6 @@ class GeckoAppShell
     // helper methods
     public static native void setSurfaceView(GeckoSurfaceView sv);
     public static native void putenv(String map);
-    public static native void onResume();
     public static native void onLowMemory();
     public static native void onCriticalOOM();
     public static native void callObserver(String observerKey, String topic, String data);
@@ -587,7 +586,7 @@ class GeckoAppShell
         removeNotification(notificationID);
 
         AlertNotification notification = new AlertNotification(GeckoApp.mAppContext,
-            notificationID, icon, aAlertTitle, System.currentTimeMillis());
+            notificationID, icon, aAlertTitle, aAlertText, System.currentTimeMillis());
 
         // The intent to launch when the user clicks the expanded notification
         Intent notificationIntent = new Intent(GeckoApp.ACTION_ALERT_CLICK);

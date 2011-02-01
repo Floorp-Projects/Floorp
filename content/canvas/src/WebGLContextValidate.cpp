@@ -122,10 +122,10 @@ WebGLContext::ValidateBuffers(PRInt32 *maxAllowedCount, const char *info)
             continue;
 
         // the base offset
-        CheckedUint32 checked_byteLength
-          = CheckedUint32(vd.buf->ByteLength()) - vd.byteOffset;
-        CheckedUint32 checked_sizeOfLastElement
-          = CheckedUint32(vd.componentSize()) * vd.size;
+        CheckedInt32 checked_byteLength
+          = CheckedInt32(vd.buf->ByteLength()) - vd.byteOffset;
+        CheckedInt32 checked_sizeOfLastElement
+          = CheckedInt32(vd.componentSize()) * vd.size;
 
         if (!checked_byteLength.valid() ||
             !checked_sizeOfLastElement.valid())
@@ -137,7 +137,7 @@ WebGLContext::ValidateBuffers(PRInt32 *maxAllowedCount, const char *info)
         if (checked_byteLength.value() < checked_sizeOfLastElement.value()) {
           *maxAllowedCount = 0;
         } else {
-          CheckedUint32 checked_maxAllowedCount
+          CheckedInt32 checked_maxAllowedCount
             = ((checked_byteLength - checked_sizeOfLastElement) / vd.actualStride()) + 1;
 
           if (!checked_maxAllowedCount.valid()) {

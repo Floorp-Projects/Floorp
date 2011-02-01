@@ -50,7 +50,7 @@ function test() {
 
     is(gBrowser.visibleTabs.length, 1, "Only one tab is visible");
 
-    let uris = PlacesCommandHook._getUniqueTabInfo();
+    let uris = PlacesCommandHook.uniqueCurrentPages;
     is(uris.length, 1, "Only one uri is returned");
 
     is(uris[0].spec, tabTwo.linkedBrowser.currentURI.spec, "It's the correct URI");

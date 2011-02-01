@@ -42,6 +42,8 @@
  */
 
 #include "nsDataDocumentContentPolicy.h"
+#include "nsNetUtil.h"
+#include "nsScriptSecurityManager.h"
 #include "nsIDocument.h"
 #include "nsINode.h"
 #include "nsIDOMWindow.h"
@@ -78,9 +80,35 @@ nsDataDocumentContentPolicy::ShouldLoad(PRUint32 aContentType,
     return NS_OK;
   }
 
-  // Nothing else is OK to load for data documents or SVG-as-an-image documents
-  if (doc->IsLoadedAsData() || doc->IsBeingUsedAsImage()) {
+  // Nothing else is OK to load for data documents
+  if (doc->IsLoadedAsData()) {
     *aDecision = nsIContentPolicy::REJECT_TYPE;
+    return NS_OK;
+  }
+
+  // Allow local resources for SVG-as-an-image documents, but disallow
+  // everything else, to prevent data leakage
+  if (doc->IsBeingUsedAsImage()) {
+    PRBool hasFlags;
+    nsresult rv = NS_URIChainHasFlags(aContentLocation,
+                                      nsIProtocolHandler::URI_IS_LOCAL_RESOURCE,
+                                      &hasFlags);
+    if (NS_FAILED(rv) || !hasFlags) {
+      // resource is not local (or we couldn't tell) - reject!
+      *aDecision = nsIContentPolicy::REJECT_TYPE;
+
+      // report error, if we can.
+      if (node) {
+        nsIPrincipal* requestingPrincipal = node->NodePrincipal();
+        nsRefPtr<nsIURI> principalURI;
+        rv = requestingPrincipal->GetURI(getter_AddRefs(principalURI));
+        if (NS_SUCCEEDED(rv) && principalURI) {
+          nsScriptSecurityManager::ReportError(
+            nsnull, NS_LITERAL_STRING("CheckSameOriginError"), principalURI,
+            aContentLocation);
+        }
+      }
+    }
     return NS_OK;
   }
 

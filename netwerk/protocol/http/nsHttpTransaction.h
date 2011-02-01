@@ -182,6 +182,13 @@ private:
     nsInt64                         mContentLength;   // equals -1 if unknown
     nsInt64                         mContentRead;     // count of consumed content bytes
 
+    // After a 304/204 or other "no-content" style response we will skip over
+    // up to MAX_INVALID_RESPONSE_BODY_SZ bytes when looking for the next
+    // response header to deal with servers that actually sent a response
+    // body where they should not have. This member tracks how many bytes have
+    // so far been skipped.
+    PRUint32                        mInvalidResponseBytesRead;
+
     nsHttpChunkedDecoder           *mChunkedDecoder;
 
     nsresult                        mStatus;

@@ -1410,12 +1410,11 @@ static int reloc_library(soinfo *si, Elf32_Rel *rel, unsigned count)
     Elf32_Phdr *phdr = (Elf32_Phdr *)((unsigned char *)si->base + ehdr->e_phoff);
     for (cnt = 0; cnt < ehdr->e_phnum; ++cnt, ++phdr) {
         if (phdr->p_type != PT_LOAD ||
-            PFLAGS_TO_PROT(phdr->p_flags) & PROT_WRITE ||
-            phdr->p_vaddr != 0)
+            PFLAGS_TO_PROT(phdr->p_flags) & PROT_WRITE)
             continue;
 
-        ro_region_end = si->base + phdr->p_filesz;
-        break;
+        if (si->base + phdr->p_vaddr + phdr->p_filesz > ro_region_end)
+            ro_region_end = si->base + phdr->p_vaddr + phdr->p_filesz;
     }
 
     void * remapped_page = NULL;

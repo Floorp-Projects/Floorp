@@ -524,3 +524,11 @@ _cairo_surface_wrapper_fini (cairo_surface_wrapper_t *wrapper)
 {
     cairo_surface_destroy (wrapper->target);
 }
+
+cairo_status_t
+_cairo_surface_wrapper_flush (cairo_surface_wrapper_t *wrapper)
+{
+    if (wrapper->target->backend->flush) {
+	return wrapper->target->backend->flush(wrapper->target);
+    }
+}

@@ -1568,7 +1568,10 @@ HTTP(..) != 615121-2.html 615121-2-notref.html
 == 617242-1.html 617242-1-ref.html
 != 618071.html 618071-notref.html
 == 619117-1.html 619117-1-ref.html
-== 621253-1.xhtml 621253-1-ref.xhtml
+HTTP(..) == 621253-1-externalFilter.html 621253-1-ref.html # XXX update reference case after bug 541270 is fixed
+== 621253-1-internalFilter.html 621253-1-ref.html # XXX update reference case after bug 541270 is fixed
+HTTP(..) == 621253-2-externalFilter.html 621253-2-ref.html
+== 621253-2-internalFilter.html 621253-2-ref.html
 HTTP(..) == 619511-1.html 619511-1-ref.html
 random-if(winWidget) == 621918-1.svg 621918-1-ref.svg # 1-pixel diacritic positioning discrepancy in rotated text (may depend on platform fonts)
 random-if(winWidget) HTTP(..) == 621918-2.svg 621918-2-ref.svg # same 1px issue as above, and HTTP(..) for filters.svg, used to mask antialiasing issues where glyphs touch

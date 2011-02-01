@@ -51,15 +51,31 @@ public:
 
   // nsAccessible
   virtual PRUint32 NativeRole();
-  virtual nsresult AppendTextTo(nsAString& aText, PRUint32 aStartOffset,
-                                PRUint32 aLength);
+  virtual void AppendTextTo(nsAString& aText, PRUint32 aStartOffset = 0,
+                            PRUint32 aLength = PR_UINT32_MAX);
+
+  // nsTextAccessible
+  void SetText(const nsAString& aText) { mText = aText; }
+  const nsString& Text() const { return mText; }
 
 protected:
-
   // nsAccessible
   virtual void CacheChildren();
+
+protected:
+  nsString mText;
 };
 
+
+////////////////////////////////////////////////////////////////////////////////
+// nsAccessible downcast method
+
+inline nsTextAccessible*
+nsAccessible::AsTextLeaf()
+{
+  return mFlags & eTextLeafAccessible ?
+    static_cast<nsTextAccessible*>(this) : nsnull;
+}
 
 #endif
 

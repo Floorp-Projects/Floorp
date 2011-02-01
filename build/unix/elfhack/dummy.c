@@ -1,3 +1,5 @@
+extern __attribute__((visibility("default"))) int print_status();
+
 int main() {
-    return 1;
+    return print_status();
 }

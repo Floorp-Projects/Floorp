@@ -20,6 +20,7 @@
 #include "libGLESv2/mathutil.h"
 #include "libGLESv2/utilities.h"
 #include "libGLESv2/Blit.h"
+#include "libGLESv2/Framebuffer.h"
 
 namespace gl
 {
@@ -246,7 +247,8 @@ D3DFORMAT Texture::selectFormat(GLenum format, GLenum type)
 void Texture::loadImageData(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type,
                             GLint unpackAlignment, const void *input, size_t outputPitch, void *output, D3DSURFACE_DESC *description) const
 {
-    GLsizei inputPitch = ComputePitch(width, format, type, unpackAlignment);
+    GLsizei inputPitch = -ComputePitch(width, format, type, unpackAlignment);
+    input = ((char*)input) - inputPitch * (height - 1);
 
     switch (type)
     {
@@ -350,7 +352,7 @@ void Texture::loadImageData(GLint xoffset, GLint yoffset, GLsizei width, GLsizei
 }
 
 void Texture::loadAlphaImageData(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
-                                 size_t inputPitch, const void *input, size_t outputPitch, void *output) const
+                                 int inputPitch, const void *input, size_t outputPitch, void *output) const
 {
     const unsigned char *source = NULL;
     unsigned char *dest = NULL;
@@ -370,7 +372,7 @@ void Texture::loadAlphaImageData(GLint xoffset, GLint yoffset, GLsizei width, GL
 }
 
 void Texture::loadAlphaFloatImageData(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
-                                      size_t inputPitch, const void *input, size_t outputPitch, void *output) const
+                                      int inputPitch, const void *input, size_t outputPitch, void *output) const
 {
     const float *source = NULL;
     float *dest = NULL;
@@ -390,7 +392,7 @@ void Texture::loadAlphaFloatImageData(GLint xoffset, GLint yoffset, GLsizei widt
 }
 
 void Texture::loadAlphaHalfFloatImageData(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
-                                          size_t inputPitch, const void *input, size_t outputPitch, void *output) const
+                                          int inputPitch, const void *input, size_t outputPitch, void *output) const
 {
     const unsigned short *source = NULL;
     unsigned short *dest = NULL;
@@ -410,15 +412,16 @@ void Texture::loadAlphaHalfFloatImageData(GLint xoffset, GLint yoffset, GLsizei 
 }
 
 void Texture::loadLuminanceImageData(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
-                                     size_t inputPitch, const void *input, size_t outputPitch, void *output, bool native) const
+                                     int inputPitch, const void *input, size_t outputPitch, void *output, bool native) const
 {
+    const int destBytesPerPixel = native? 1: 4;
     const unsigned char *source = NULL;
     unsigned char *dest = NULL;
 
     for (int y = 0; y < height; y++)
     {
         source = static_cast<const unsigned char*>(input) + y * inputPitch;
-        dest = static_cast<unsigned char*>(output) + (y + yoffset) * outputPitch + xoffset * 4;
+        dest = static_cast<unsigned char*>(output) + (y + yoffset) * outputPitch + xoffset * destBytesPerPixel;
 
         if (!native)   // BGRA8 destination format
         {
@@ -438,7 +441,7 @@ void Texture::loadLuminanceImageData(GLint xoffset, GLint yoffset, GLsizei width
 }
 
 void Texture::loadLuminanceFloatImageData(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
-                                          size_t inputPitch, const void *input, size_t outputPitch, void *output) const
+                                          int inputPitch, const void *input, size_t outputPitch, void *output) const
 {
     const float *source = NULL;
     float *dest = NULL;
@@ -458,7 +461,7 @@ void Texture::loadLuminanceFloatImageData(GLint xoffset, GLint yoffset, GLsizei 
 }
 
 void Texture::loadLuminanceHalfFloatImageData(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
-                                                   size_t inputPitch, const void *input, size_t outputPitch, void *output) const
+                                                   int inputPitch, const void *input, size_t outputPitch, void *output) const
 {
     const unsigned short *source = NULL;
     unsigned short *dest = NULL;
@@ -478,15 +481,16 @@ void Texture::loadLuminanceHalfFloatImageData(GLint xoffset, GLint yoffset, GLsi
 }
 
 void Texture::loadLuminanceAlphaImageData(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
-                                          size_t inputPitch, const void *input, size_t outputPitch, void *output, bool native) const
+                                          int inputPitch, const void *input, size_t outputPitch, void *output, bool native) const
 {
+    const int destBytesPerPixel = native? 2: 4;
     const unsigned char *source = NULL;
     unsigned char *dest = NULL;
 
     for (int y = 0; y < height; y++)
     {
         source = static_cast<const unsigned char*>(input) + y * inputPitch;
-        dest = static_cast<unsigned char*>(output) + (y + yoffset) * outputPitch + xoffset * 4;
+        dest = static_cast<unsigned char*>(output) + (y + yoffset) * outputPitch + xoffset * destBytesPerPixel;
         
         if (!native)   // BGRA8 destination format
         {
@@ -506,7 +510,7 @@ void Texture::loadLuminanceAlphaImageData(GLint xoffset, GLint yoffset, GLsizei 
 }
 
 void Texture::loadLuminanceAlphaFloatImageData(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
-                                               size_t inputPitch, const void *input, size_t outputPitch, void *output) const
+                                               int inputPitch, const void *input, size_t outputPitch, void *output) const
 {
     const float *source = NULL;
     float *dest = NULL;
@@ -526,7 +530,7 @@ void Texture::loadLuminanceAlphaFloatImageData(GLint xoffset, GLint yoffset, GLs
 }
 
 void Texture::loadLuminanceAlphaHalfFloatImageData(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
-                                                   size_t inputPitch, const void *input, size_t outputPitch, void *output) const
+                                                   int inputPitch, const void *input, size_t outputPitch, void *output) const
 {
     const unsigned short *source = NULL;
     unsigned short *dest = NULL;
@@ -546,7 +550,7 @@ void Texture::loadLuminanceAlphaHalfFloatImageData(GLint xoffset, GLint yoffset,
 }
 
 void Texture::loadRGBUByteImageData(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
-                                    size_t inputPitch, const void *input, size_t outputPitch, void *output) const
+                                    int inputPitch, const void *input, size_t outputPitch, void *output) const
 {
     const unsigned char *source = NULL;
     unsigned char *dest = NULL;
@@ -566,7 +570,7 @@ void Texture::loadRGBUByteImageData(GLint xoffset, GLint yoffset, GLsizei width,
 }
 
 void Texture::loadRGB565ImageData(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
-                                  size_t inputPitch, const void *input, size_t outputPitch, void *output) const
+                                  int inputPitch, const void *input, size_t outputPitch, void *output) const
 {
     const unsigned short *source = NULL;
     unsigned char *dest = NULL;
@@ -587,7 +591,7 @@ void Texture::loadRGB565ImageData(GLint xoffset, GLint yoffset, GLsizei width, G
 }
 
 void Texture::loadRGBFloatImageData(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
-                                    size_t inputPitch, const void *input, size_t outputPitch, void *output) const
+                                    int inputPitch, const void *input, size_t outputPitch, void *output) const
 {
     const float *source = NULL;
     float *dest = NULL;
@@ -607,7 +611,7 @@ void Texture::loadRGBFloatImageData(GLint xoffset, GLint yoffset, GLsizei width,
 }
 
 void Texture::loadRGBHalfFloatImageData(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
-                                        size_t inputPitch, const void *input, size_t outputPitch, void *output) const
+                                        int inputPitch, const void *input, size_t outputPitch, void *output) const
 {
     const unsigned short *source = NULL;
     unsigned short *dest = NULL;
@@ -627,7 +631,7 @@ void Texture::loadRGBHalfFloatImageData(GLint xoffset, GLint yoffset, GLsizei wi
 }
 
 void Texture::loadRGBAUByteImageData(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
-                                     size_t inputPitch, const void *input, size_t outputPitch, void *output) const
+                                     int inputPitch, const void *input, size_t outputPitch, void *output) const
 {
     const unsigned char *source = NULL;
     unsigned char *dest = NULL;
@@ -647,7 +651,7 @@ void Texture::loadRGBAUByteImageData(GLint xoffset, GLint yoffset, GLsizei width
 }
 
 void Texture::loadRGBA4444ImageData(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
-                                    size_t inputPitch, const void *input, size_t outputPitch, void *output) const
+                                    int inputPitch, const void *input, size_t outputPitch, void *output) const
 {
     const unsigned short *source = NULL;
     unsigned char *dest = NULL;
@@ -668,7 +672,7 @@ void Texture::loadRGBA4444ImageData(GLint xoffset, GLint yoffset, GLsizei width,
 }
 
 void Texture::loadRGBA5551ImageData(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
-                                    size_t inputPitch, const void *input, size_t outputPitch, void *output) const
+                                    int inputPitch, const void *input, size_t outputPitch, void *output) const
 {
     const unsigned short *source = NULL;
     unsigned char *dest = NULL;
@@ -689,7 +693,7 @@ void Texture::loadRGBA5551ImageData(GLint xoffset, GLint yoffset, GLsizei width,
 }
 
 void Texture::loadRGBAFloatImageData(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
-                                     size_t inputPitch, const void *input, size_t outputPitch, void *output) const
+                                     int inputPitch, const void *input, size_t outputPitch, void *output) const
 {
     const float *source = NULL;
     float *dest = NULL;
@@ -703,7 +707,7 @@ void Texture::loadRGBAFloatImageData(GLint xoffset, GLint yoffset, GLsizei width
 }
 
 void Texture::loadRGBAHalfFloatImageData(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
-                                        size_t inputPitch, const void *input, size_t outputPitch, void *output) const
+                                        int inputPitch, const void *input, size_t outputPitch, void *output) const
 {
     const unsigned char *source = NULL;
     unsigned char *dest = NULL;
@@ -717,7 +721,7 @@ void Texture::loadRGBAHalfFloatImageData(GLint xoffset, GLint yoffset, GLsizei w
 }
 
 void Texture::loadBGRAImageData(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
-                                size_t inputPitch, const void *input, size_t outputPitch, void *output) const
+                                int inputPitch, const void *input, size_t outputPitch, void *output) const
 {
     const unsigned char *source = NULL;
     unsigned char *dest = NULL;
@@ -727,6 +731,67 @@ void Texture::loadBGRAImageData(GLint xoffset, GLint yoffset, GLsizei width, GLs
         source = static_cast<const unsigned char*>(input) + y * inputPitch;
         dest = static_cast<unsigned char*>(output) + (y + yoffset) * outputPitch + xoffset * 4;
         memcpy(dest, source, width*4);
+    }
+}
+
+void Texture::loadCompressedImageData(GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
+                                      int inputPitch, const void *input, size_t outputPitch, void *output) const
+{
+    ASSERT(xoffset % 4 == 0);
+    ASSERT(yoffset % 4 == 0);
+    ASSERT(width % 4 == 0 || width == 2 || width == 1);
+    ASSERT(inputPitch % 8 == 0);
+    ASSERT(outputPitch % 8 == 0);
+
+    const unsigned int *source = reinterpret_cast<const unsigned int*>(input);
+    unsigned int *dest = reinterpret_cast<unsigned int*>(output);
+
+    switch (height)
+    {
+        case 1:
+            // Round width up in case it is 1.
+            for (int x = 0; x < (width + 1) / 2; x += 2)
+            {
+                // First 32-bits is two RGB565 colors shared by tile and does not need to be modified.
+                dest[x] = source[x];
+
+                // Second 32-bits contains 4 rows of 4 2-bit interpolants between the colors, the last 3 rows being unused. No flipping should occur.
+                dest[x + 1] = source[x + 1];
+            }
+            break;
+        case 2:
+            // Round width up in case it is 1.
+            for (int x = 0; x < (width + 1) / 2; x += 2)
+            {
+                // First 32-bits is two RGB565 colors shared by tile and does not need to be modified.
+                dest[x] = source[x];
+
+                // Second 32-bits contains 4 rows of 4 2-bit interpolants between the colors, the last 2 rows being unused. Only the top 2 rows should be flipped.
+                dest[x + 1] = ((source[x + 1] << 8) & 0x0000FF00) |
+                              ((source[x + 1] >> 8) & 0x000000FF);       
+            }
+            break;
+        default:
+            ASSERT(height % 4 == 0);
+            for (int y = 0; y < height / 4; ++y)
+            {
+                const unsigned int *source = reinterpret_cast<const unsigned int*>(static_cast<const unsigned char*>(input) + y * inputPitch);
+                unsigned int *dest = reinterpret_cast<unsigned int*>(static_cast<unsigned char*>(output) + (y + yoffset) * outputPitch + xoffset * 8);
+
+                // Round width up in case it is 1.
+                for (int x = 0; x < (width + 1) / 2; x += 2)
+                {
+                    // First 32-bits is two RGB565 colors shared by tile and does not need to be modified.
+                    dest[x] = source[x];
+
+                    // Second 32-bits contains 4 rows of 4 2-bit interpolants between the colors. All rows should be flipped.
+                    dest[x + 1] = (source[x + 1] >> 24) | 
+                                  ((source[x + 1] << 8) & 0x00FF0000) |
+                                  ((source[x + 1] >> 8) & 0x0000FF00) |
+                                  (source[x + 1] << 24);                    
+                }
+            }
+            break;
     }
 }
 
@@ -817,7 +882,9 @@ void Texture::setCompressedImage(GLsizei width, GLsizei height, GLenum format, G
 
         if (SUCCEEDED(result))
         {
-            memcpy(locked.pBits, pixels, imageSize);
+            int inputPitch = ComputeCompressedPitch(width, format);
+            int inputSize = ComputeCompressedSize(width, height, format);
+            loadCompressedImageData(0, 0, width, height, -inputPitch, static_cast<const char*>(pixels) + inputSize - inputPitch, locked.Pitch, locked.pBits);
             img->surface->UnlockRect();
         }
 
@@ -852,7 +919,7 @@ bool Texture::subImage(GLint xoffset, GLint yoffset, GLsizei width, GLsizei heig
 
         if (SUCCEEDED(result))
         {
-            loadImageData(xoffset, yoffset, width, height, format, type, unpackAlignment, pixels, locked.Pitch, locked.pBits, &description);
+            loadImageData(xoffset, transformPixelYOffset(yoffset, height, img->height), width, height, format, type, unpackAlignment, pixels, locked.Pitch, locked.pBits, &description);
             img->surface->UnlockRect();
         }
 
@@ -896,12 +963,9 @@ bool Texture::subImageCompressed(GLint xoffset, GLint yoffset, GLsizei width, GL
 
         if (SUCCEEDED(result))
         {
-            GLsizei inputPitch = ComputeCompressedPitch(width, format);
-            int rows = imageSize / inputPitch;
-            for (int i = 0; i < rows; ++i)
-            {
-                memcpy((void*)((BYTE*)locked.pBits + i * locked.Pitch), (void*)((BYTE*)pixels + i * inputPitch), inputPitch);
-            }
+            int inputPitch = ComputeCompressedPitch(width, format);
+            int inputSize = ComputeCompressedSize(width, height, format);
+            loadCompressedImageData(xoffset, transformPixelYOffset(yoffset, height, img->height), width, height, -inputPitch, static_cast<const char*>(pixels) + inputSize - inputPitch, locked.Pitch, locked.pBits);
             img->surface->UnlockRect();
         }
 
@@ -937,7 +1001,7 @@ void Texture::copyNonRenderable(Image *image, GLenum internalFormat, GLint xoffs
     }
 
     D3DLOCKED_RECT sourceLock = {0};
-    RECT sourceRect = {x, y, x + width, y + height};
+    RECT sourceRect = transformPixelRect(x, y, width, height, description.Height);
     result = surface->LockRect(&sourceLock, &sourceRect, 0);
 
     if (FAILED(result))
@@ -962,7 +1026,8 @@ void Texture::copyNonRenderable(Image *image, GLenum internalFormat, GLint xoffs
     }
 
     D3DLOCKED_RECT destLock = {0};
-    RECT destRect = {xoffset, yoffset, xoffset + width, yoffset + height};
+    int destYOffset = transformPixelYOffset(yoffset, height, image->height);
+    RECT destRect = {xoffset, destYOffset, xoffset + width, destYOffset + height};
     result = image->surface->LockRect(&destLock, &destRect, 0);
     
     if (FAILED(result))
@@ -1326,7 +1391,7 @@ void Texture2D::subImageCompressed(GLint level, GLint xoffset, GLint yoffset, GL
     }
 }
 
-void Texture2D::copyImage(GLint level, GLenum internalFormat, GLint x, GLint y, GLsizei width, GLsizei height, RenderbufferStorage *source)
+void Texture2D::copyImage(GLint level, GLenum internalFormat, GLint x, GLint y, GLsizei width, GLsizei height, Framebuffer *source)
 {
     IDirect3DSurface9 *renderTarget = source->getRenderTarget();
 
@@ -1356,12 +1421,12 @@ void Texture2D::copyImage(GLint level, GLenum internalFormat, GLint x, GLint y, 
 
         if (width != 0 && height != 0 && level < levelCount())
         {
-            RECT sourceRect;
-            sourceRect.left = x;
-            sourceRect.right = x + width;
-            sourceRect.top = y;
-            sourceRect.bottom = y + height;
-
+            RECT sourceRect = transformPixelRect(x, y, width, height, source->getColorbuffer()->getHeight());
+            sourceRect.left = clamp(sourceRect.left, 0, source->getColorbuffer()->getWidth());
+            sourceRect.top = clamp(sourceRect.top, 0, source->getColorbuffer()->getHeight());
+            sourceRect.right = clamp(sourceRect.right, 0, source->getColorbuffer()->getWidth());
+            sourceRect.bottom = clamp(sourceRect.bottom, 0, source->getColorbuffer()->getHeight());
+            
             IDirect3DSurface9 *dest;
             HRESULT hr = mTexture->GetSurfaceLevel(level, &dest);
 
@@ -1375,7 +1440,7 @@ void Texture2D::copyImage(GLint level, GLenum internalFormat, GLint x, GLint y, 
     mImageArray[level].format = internalFormat;
 }
 
-void Texture2D::copySubImage(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height, RenderbufferStorage *source)
+void Texture2D::copySubImage(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height, Framebuffer *source)
 {
     if (xoffset + width > mImageArray[level].width || yoffset + height > mImageArray[level].height)
     {
@@ -1410,16 +1475,18 @@ void Texture2D::copySubImage(GLenum target, GLint level, GLint xoffset, GLint yo
 
         if (level < levelCount())
         {
-            RECT sourceRect;
-            sourceRect.left = x;
-            sourceRect.right = x + width;
-            sourceRect.top = y;
-            sourceRect.bottom = y + height;
+            RECT sourceRect = transformPixelRect(x, y, width, height, source->getColorbuffer()->getHeight());
+            sourceRect.left = clamp(sourceRect.left, 0, source->getColorbuffer()->getWidth());
+            sourceRect.top = clamp(sourceRect.top, 0, source->getColorbuffer()->getHeight());
+            sourceRect.right = clamp(sourceRect.right, 0, source->getColorbuffer()->getWidth());
+            sourceRect.bottom = clamp(sourceRect.bottom, 0, source->getColorbuffer()->getHeight());
+
+            GLint destYOffset = transformPixelYOffset(yoffset, height, mImageArray[level].height);
 
             IDirect3DSurface9 *dest;
             HRESULT hr = mTexture->GetSurfaceLevel(level, &dest);
 
-            getBlitter()->formatConvert(source->getRenderTarget(), sourceRect, mImageArray[0].format, xoffset, yoffset, dest);
+            getBlitter()->formatConvert(source->getRenderTarget(), sourceRect, mImageArray[0].format, xoffset, destYOffset, dest);
             dest->Release();
         }
     }
@@ -1815,12 +1882,11 @@ void TextureCubeMap::setCompressedImage(GLenum face, GLint level, GLenum interna
 void TextureCubeMap::commitRect(GLenum faceTarget, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height)
 {
     int face = faceIndex(faceTarget);
-
     ASSERT(mImageArray[face][level].surface != NULL);
 
     if (level < levelCount())
     {
-        IDirect3DSurface9 *destLevel = getCubeMapSurface(face, level);
+        IDirect3DSurface9 *destLevel = getCubeMapSurface(faceTarget, level);
         ASSERT(destLevel != NULL);
 
         if (destLevel != NULL)
@@ -1978,7 +2044,7 @@ void TextureCubeMap::updateTexture()
 
             if (img->dirty)
             {
-                IDirect3DSurface9 *levelSurface = getCubeMapSurface(face, level);
+                IDirect3DSurface9 *levelSurface = getCubeMapSurface(GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, level);
                 ASSERT(levelSurface != NULL);
 
                 if (levelSurface != NULL)
@@ -2163,7 +2229,7 @@ bool TextureCubeMap::redefineTexture(GLint level, GLenum internalFormat, GLsizei
     return !textureOkay;
 }
 
-void TextureCubeMap::copyImage(GLenum target, GLint level, GLenum internalFormat, GLint x, GLint y, GLsizei width, GLsizei height, RenderbufferStorage *source)
+void TextureCubeMap::copyImage(GLenum target, GLint level, GLenum internalFormat, GLint x, GLint y, GLsizei width, GLsizei height, Framebuffer *source)
 {
     IDirect3DSurface9 *renderTarget = source->getRenderTarget();
 
@@ -2196,11 +2262,11 @@ void TextureCubeMap::copyImage(GLenum target, GLint level, GLenum internalFormat
 
         if (width > 0 && level < levelCount())
         {
-            RECT sourceRect;
-            sourceRect.left = x;
-            sourceRect.right = x + width;
-            sourceRect.top = y;
-            sourceRect.bottom = y + height;
+            RECT sourceRect = transformPixelRect(x, y, width, height, source->getColorbuffer()->getHeight());
+            sourceRect.left = clamp(sourceRect.left, 0, source->getColorbuffer()->getWidth());
+            sourceRect.top = clamp(sourceRect.top, 0, source->getColorbuffer()->getHeight());
+            sourceRect.right = clamp(sourceRect.right, 0, source->getColorbuffer()->getWidth());
+            sourceRect.bottom = clamp(sourceRect.bottom, 0, source->getColorbuffer()->getHeight());
 
             IDirect3DSurface9 *dest = getCubeMapSurface(target, level);
 
@@ -2214,24 +2280,8 @@ void TextureCubeMap::copyImage(GLenum target, GLint level, GLenum internalFormat
     mImageArray[faceindex][level].format = internalFormat;
 }
 
-IDirect3DSurface9 *TextureCubeMap::getCubeMapSurface(unsigned int faceIdentifier, unsigned int level)
+IDirect3DSurface9 *TextureCubeMap::getCubeMapSurface(GLenum face, unsigned int level)
 {
-    unsigned int faceIndex;
-
-    if (faceIdentifier < 6)
-    {
-        faceIndex = faceIdentifier;
-    }
-    else if (faceIdentifier >= GL_TEXTURE_CUBE_MAP_POSITIVE_X && faceIdentifier <= GL_TEXTURE_CUBE_MAP_NEGATIVE_Z)
-    {
-        faceIndex = faceIdentifier - GL_TEXTURE_CUBE_MAP_POSITIVE_X;
-    }
-    else
-    {
-        UNREACHABLE();
-        faceIndex = 0;
-    }
-
     if (mTexture == NULL)
     {
         UNREACHABLE();
@@ -2240,12 +2290,12 @@ IDirect3DSurface9 *TextureCubeMap::getCubeMapSurface(unsigned int faceIdentifier
 
     IDirect3DSurface9 *surface = NULL;
 
-    HRESULT hr = mTexture->GetCubeMapSurface(static_cast<D3DCUBEMAP_FACES>(faceIndex), level, &surface);
+    HRESULT hr = mTexture->GetCubeMapSurface(es2dx::ConvertCubeFace(face), level, &surface);
 
     return (SUCCEEDED(hr)) ? surface : NULL;
 }
 
-void TextureCubeMap::copySubImage(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height, RenderbufferStorage *source)
+void TextureCubeMap::copySubImage(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height, Framebuffer *source)
 {
     GLsizei size = mImageArray[faceIndex(target)][level].width;
 
@@ -2283,15 +2333,17 @@ void TextureCubeMap::copySubImage(GLenum target, GLint level, GLint xoffset, GLi
 
         if (level < levelCount())
         {
-            RECT sourceRect;
-            sourceRect.left = x;
-            sourceRect.right = x + width;
-            sourceRect.top = y;
-            sourceRect.bottom = y + height;
+            RECT sourceRect = transformPixelRect(x, y, width, height, source->getColorbuffer()->getHeight());
+            sourceRect.left = clamp(sourceRect.left, 0, source->getColorbuffer()->getWidth());
+            sourceRect.top = clamp(sourceRect.top, 0, source->getColorbuffer()->getHeight());
+            sourceRect.right = clamp(sourceRect.right, 0, source->getColorbuffer()->getWidth());
+            sourceRect.bottom = clamp(sourceRect.bottom, 0, source->getColorbuffer()->getHeight());
+
+            GLint destYOffset = transformPixelYOffset(yoffset, height, mImageArray[faceindex][level].width);
 
             IDirect3DSurface9 *dest = getCubeMapSurface(target, level);
 
-            getBlitter()->formatConvert(source->getRenderTarget(), sourceRect, mImageArray[0][0].format, xoffset, yoffset, dest);
+            getBlitter()->formatConvert(source->getRenderTarget(), sourceRect, mImageArray[0][0].format, xoffset, destYOffset, dest);
             dest->Release();
         }
     }
@@ -2354,8 +2406,8 @@ void TextureCubeMap::generateMipmaps()
         {
             for (unsigned int i = 1; i <= q; i++)
             {
-                IDirect3DSurface9 *upper = getCubeMapSurface(f, i-1);
-                IDirect3DSurface9 *lower = getCubeMapSurface(f, i);
+                IDirect3DSurface9 *upper = getCubeMapSurface(GL_TEXTURE_CUBE_MAP_POSITIVE_X + f, i-1);
+                IDirect3DSurface9 *lower = getCubeMapSurface(GL_TEXTURE_CUBE_MAP_POSITIVE_X + f, i);
 
                 if (upper != NULL && lower != NULL)
                 {
@@ -2421,7 +2473,7 @@ IDirect3DSurface9 *TextureCubeMap::getRenderTarget(GLenum target)
     }
     
     IDirect3DSurface9 *renderTarget = NULL;
-    mTexture->GetCubeMapSurface(static_cast<D3DCUBEMAP_FACES>(faceIndex(target)), 0, &renderTarget);
+    mTexture->GetCubeMapSurface(es2dx::ConvertCubeFace(target), 0, &renderTarget);
 
     return renderTarget;
 }

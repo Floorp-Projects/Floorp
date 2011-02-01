@@ -252,4 +252,3 @@ void ShGetActiveUniform(const ShHandle handle,
     getVariableInfo(SH_ACTIVE_UNIFORMS,
                     handle, index, length, size, type, name);
 }
-

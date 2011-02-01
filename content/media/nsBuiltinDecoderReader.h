@@ -59,10 +59,20 @@ public:
       mAudioRate(0),
       mAudioChannels(0),
       mFrame(0,0),
+      mDisplay(0,0),
       mStereoMode(mozilla::layers::STEREO_MODE_MONO),
       mHasAudio(PR_FALSE),
       mHasVideo(PR_FALSE)
   {}
+
+  // Returns PR_TRUE if it's safe to use aPicture as the picture to be
+  // extracted inside a frame of size aFrame, and scaled up to and displayed
+  // at a size of aDisplay. You should validate the frame, picture, and
+  // display regions before setting them into the mFrame, mPicture and
+  // mDisplay fields of nsVideoInfo.
+  static PRBool ValidateVideoRegion(const nsIntSize& aFrame,
+                                    const nsIntRect& aPicture,
+                                    const nsIntSize& aDisplay);
 
   // Pixel aspect ratio, as stored in the metadata.
   float mPixelAspectRatio;
@@ -78,6 +88,10 @@ public:
 
   // The picture region inside the video frame to be displayed.
   nsIntRect mPicture;
+
+  // Display size of the video frame. The picture region will be scaled
+  // to and displayed at this size.
+  nsIntSize mDisplay;
 
   // The offset of the first non-header page in the file, in bytes.
   // Used to seek to the start of the media.

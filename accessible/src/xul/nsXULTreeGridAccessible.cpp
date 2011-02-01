@@ -1205,6 +1205,12 @@ nsXULTreeGridCellAccessible::GetStateInternal(PRUint32 *aStates,
   return NS_OK;
 }
 
+PRInt32
+nsXULTreeGridCellAccessible::GetIndexInParent() const
+{
+  return GetColumnIndex();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULTreeGridCellAccessible: public implementation
 

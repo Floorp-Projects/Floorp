@@ -310,12 +310,14 @@ nsresult nsOggReader::ReadMetadata()
   }
   if (HasVideo()) {
     mInfo.mPixelAspectRatio = mTheoraState->mPixelAspectRatio;
-    mInfo.mPicture.width = mTheoraState->mInfo.pic_width;
-    mInfo.mPicture.height = mTheoraState->mInfo.pic_height;
-    mInfo.mPicture.x = mTheoraState->mInfo.pic_x;
-    mInfo.mPicture.y = mTheoraState->mInfo.pic_y;
-    mInfo.mFrame.width = mTheoraState->mInfo.frame_width;
-    mInfo.mFrame.height = mTheoraState->mInfo.frame_height;
+    mInfo.mPicture = nsIntRect(mTheoraState->mInfo.pic_x,
+                               mTheoraState->mInfo.pic_y,
+                               mTheoraState->mInfo.pic_width,
+                               mTheoraState->mInfo.pic_height);
+    mInfo.mFrame = nsIntSize(mTheoraState->mInfo.frame_width,
+                             mTheoraState->mInfo.frame_height);
+    mInfo.mDisplay = nsIntSize(mInfo.mPicture.width,
+                               mInfo.mPicture.height);
   }
   mInfo.mDataOffset = mDataOffset;
 

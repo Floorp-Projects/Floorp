@@ -33,6 +33,8 @@
 #include <stdio.h>
 #include <winternl.h>
 
+#include <algorithm>
+
 #include "common/windows/string_utils-inl.h"
 
 #include "client/windows/common/ipc_protocol.h"
@@ -128,6 +130,13 @@ namespace google_breakpad {
 
 static const int kWaitForHandlerThreadMs = 60000;
 static const int kExceptionHandlerThreadInitialStackSize = 64 * 1024;
+
+// This is passed as the context to the MinidumpWriteDump callback.
+typedef struct {
+  ULONG64 memory_base;
+  ULONG memory_size;
+  bool finished;
+} MinidumpCallbackContext;
 
 vector<ExceptionHandler*>* ExceptionHandler::handler_stack_ = NULL;
 LONG ExceptionHandler::handler_stack_index_ = 0;
@@ -908,6 +917,45 @@ bool ExceptionHandler::WriteMinidumpWithException(
   return success;
 }
 
+// static
+BOOL CALLBACK ExceptionHandler::MinidumpWriteDumpCallback(
+    PVOID context,
+    const PMINIDUMP_CALLBACK_INPUT callback_input,
+    PMINIDUMP_CALLBACK_OUTPUT callback_output) {
+  switch (callback_input->CallbackType) {
+  case MemoryCallback: {
+    MinidumpCallbackContext* callback_context =
+        reinterpret_cast<MinidumpCallbackContext*>(context);
+    if (callback_context->finished)
+      return FALSE;
+
+    // Include the specified memory region.
+    callback_output->MemoryBase = callback_context->memory_base;
+    callback_output->MemorySize = callback_context->memory_size;
+    callback_context->finished = true;
+    return TRUE;
+  }
+    
+    // Include all modules.
+  case IncludeModuleCallback:
+  case ModuleCallback:
+    return TRUE;
+
+    // Include all threads.
+  case IncludeThreadCallback:
+  case ThreadCallback:
+    return TRUE;
+
+    // Stop receiving cancel callbacks.
+  case CancelCallback:
+    callback_output->CheckCancel = FALSE;
+    callback_output->Cancel = FALSE;
+    return TRUE;
+  }
+  // Ignore other callback types.
+  return FALSE;
+}
+
 bool ExceptionHandler::WriteMinidumpWithExceptionForProcess(
     DWORD requesting_thread_id,
     EXCEPTION_POINTERS* exinfo,
@@ -967,6 +1015,50 @@ bool ExceptionHandler::WriteMinidumpWithExceptionForProcess(
         ++user_streams.UserStreamCount;
       }
 
+      MINIDUMP_CALLBACK_INFORMATION callback;
+      MinidumpCallbackContext context;
+      MINIDUMP_CALLBACK_INFORMATION* callback_pointer = NULL;
+      // Older versions of DbgHelp.dll don't correctly put the memory around
+      // the faulting instruction pointer into the minidump. This
+      // callback will ensure that it gets included.
+      if (exinfo) {
+        // Find a memory region of 256 bytes centered on the
+        // faulting instruction pointer.
+        const ULONG64 instruction_pointer = 
+#if defined(_M_IX86)
+          exinfo->ContextRecord->Eip;
+#elif defined(_M_AMD64)
+          exinfo->ContextRecord->Rip;
+#else
+#error Unsupported platform
+#endif
+ 
+        MEMORY_BASIC_INFORMATION info;
+        if (VirtualQuery(reinterpret_cast<LPCVOID>(instruction_pointer),
+                         &info,
+                         sizeof(MEMORY_BASIC_INFORMATION)) != 0 &&
+            info.State == MEM_COMMIT) {
+          // Attempt to get 128 bytes before and after the instruction
+          // pointer, but settle for whatever's available up to the
+          // boundaries of the memory region.
+          const ULONG64 kIPMemorySize = 256;
+          context.memory_base = 
+            std::max(reinterpret_cast<ULONG64>(info.BaseAddress),
+                     instruction_pointer - (kIPMemorySize / 2));
+          ULONG64 end_of_range =
+            std::min(instruction_pointer + (kIPMemorySize / 2),
+                     reinterpret_cast<ULONG64>(info.BaseAddress)
+                     + info.RegionSize);
+          context.memory_size =
+            static_cast<ULONG>(end_of_range - context.memory_base);
+ 
+          context.finished = false;
+          callback.CallbackRoutine = MinidumpWriteDumpCallback;
+          callback.CallbackParam = reinterpret_cast<void*>(&context);
+          callback_pointer = &callback;
+        }
+      }
+
       // The explicit comparison to TRUE avoids a warning (C4800).
       success = (minidump_write_dump_(process,
                                       processId,
@@ -974,7 +1066,7 @@ bool ExceptionHandler::WriteMinidumpWithExceptionForProcess(
                                       dump_type_,
                                       exinfo ? &except_info : NULL,
                                       &user_streams,
-                                      NULL) == TRUE);
+                                      callback_pointer) == TRUE);
 
       CloseHandle(dump_file);
     }

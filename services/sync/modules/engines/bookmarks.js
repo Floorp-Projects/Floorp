@@ -47,8 +47,10 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 
 const GUID_ANNO = "sync/guid";
+const MOBILE_ANNO = "mobile/bookmarksRoot";
 const PARENT_ANNO = "sync/parent";
 const SERVICE_NOT_SUPPORTED = "Service not supported on this platform";
+const SMART_BOOKMARKS_ANNO = "Places/SmartBookmark";
 const FOLDER_SORTINDEX = 1000000;
 
 try {
@@ -62,6 +64,7 @@ Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/util.js");
 
+Cu.import("resource://services-sync/main.js");      // For access to Service.
 
 function PlacesItem(collection, id, type) {
   CryptoWrapper.call(this, collection, id);
@@ -135,7 +138,8 @@ BookmarkQuery.prototype = {
   _logName: "Record.BookmarkQuery",
 };
 
-Utils.deferGetSet(BookmarkQuery, "cleartext", ["folderName"]);
+Utils.deferGetSet(BookmarkQuery, "cleartext", ["folderName",
+                                               "queryId"]);
 
 function BookmarkFolder(collection, id, type) {
   PlacesItem.call(this, collection, id, type || "folder");
@@ -177,32 +181,64 @@ function archiveBookmarks() {
   catch(ex) {}
 }
 
-// Lazily initialize the special top level folders
-let kSpecialIds = {};
-[["menu", "bookmarksMenuFolder"],
- ["places", "placesRoot"],
- ["tags", "tagsFolder"],
- ["toolbar", "toolbarFolder"],
- ["unfiled", "unfiledBookmarksFolder"],
-].forEach(function([guid, placeName]) {
-  Utils.lazy2(kSpecialIds, guid, function() Svc.Bookmark[placeName]);
-});
-Utils.lazy2(kSpecialIds, "mobile", function() {
-  // Use the (one) mobile root if it already exists
-  let anno = "mobile/bookmarksRoot";
-  let root = Svc.Annos.getItemsWithAnnotation(anno, {});
-  if (root.length != 0)
-    return root[0];
+let kSpecialIds = {
 
-  // Create the special mobile folder to store mobile bookmarks
-  let mobile = Svc.Bookmark.createFolder(Svc.Bookmark.placesRoot, "mobile", -1);
-  Utils.anno(mobile, anno, 1);
-  return mobile;
-});
+  // Special IDs. Note that mobile can attempt to create a record on
+  // dereference; special accessors are provided to prevent recursion within
+  // observers.
+  get guids()
+    ["menu", "places", "tags", "toolbar", "unfiled", "mobile"],
+
+  // Create the special mobile folder to store mobile bookmarks.
+  createMobileRoot: function createMobileRoot() {
+    let root = Svc.Bookmark.placesRoot;
+    let mRoot = Svc.Bookmark.createFolder(root, "mobile", -1);
+    Utils.anno(mRoot, MOBILE_ANNO, 1);
+    return mRoot;
+  },
+
+  findMobileRoot: function findMobileRoot(create) {
+    // Use the (one) mobile root if it already exists.
+    let root = Svc.Annos.getItemsWithAnnotation(MOBILE_ANNO, {});
+    if (root.length != 0)
+      return root[0];
+
+    if (create)
+      return this.createMobileRoot();
+
+    return null;
+  },
+
+  // Accessors for IDs.
+  isSpecialGUID: function isSpecialGUID(g) {
+    return this.guids.indexOf(g) != -1;
+  },
+
+  specialIdForGUID: function specialIdForGUID(guid, create) {
+    if (guid == "mobile") {
+      return this.findMobileRoot(create);
+    }
+    return this[guid];
+  },
+
+  // Don't bother creating mobile: if it doesn't exist, this ID can't be it!
+  specialGUIDForId: function specialGUIDForId(id) {
+    for each (let guid in this.guids)
+      if (this.specialIdForGUID(guid, false) == id)
+        return guid;
+    return null;
+  },
+
+  get menu()    Svc.Bookmark.bookmarksMenuFolder,
+  get places()  Svc.Bookmark.placesRoot,
+  get tags()    Svc.Bookmark.tagsFolder,
+  get toolbar() Svc.Bookmark.toolbarFolder,
+  get unfiled() Svc.Bookmark.unfiledBookmarksFolder,
+  get mobile()  this.findMobileRoot(true),
+};
 
 function BookmarksEngine() {
   SyncEngine.call(this, "Bookmarks");
-  this._handleImport();
 }
 BookmarksEngine.prototype = {
   __proto__: SyncEngine.prototype,
@@ -210,26 +246,6 @@ BookmarksEngine.prototype = {
   _storeObj: BookmarksStore,
   _trackerObj: BookmarksTracker,
   version: 2,
-
-  _handleImport: function _handleImport() {
-    Svc.Obs.add("bookmarks-restore-begin", function() {
-      this._log.debug("Ignoring changes from importing bookmarks");
-      this._tracker.ignoreAll = true;
-    }, this);
-
-    Svc.Obs.add("bookmarks-restore-success", function() {
-      this._log.debug("Tracking all items on successful import");
-      this._tracker.ignoreAll = false;
-
-      // Mark all the items as changed so they get uploaded
-      for (let id in this._store.getAllIDs())
-        this._tracker.addChangedID(id);
-    }, this);
-
-    Svc.Obs.add("bookmarks-restore-failed", function() {
-      this._tracker.ignoreAll = false;
-    }, this);
-  },
 
   _sync: Utils.batchSync("Bookmark", SyncEngine),
 
@@ -251,8 +267,18 @@ BookmarksEngine.prototype = {
         let id = this._store.idForGUID(guid);
         switch (Svc.Bookmark.getItemType(id)) {
           case Svc.Bookmark.TYPE_BOOKMARK:
-            key = "b" + Svc.Bookmark.getBookmarkURI(id).spec + ":" +
-              Svc.Bookmark.getItemTitle(id);
+
+            // Smart bookmarks map to their annotation value.
+            let queryId;
+            try {
+              queryId = Utils.anno(id, SMART_BOOKMARKS_ANNO);
+            } catch(ex) {}
+            
+            if (queryId)
+              key = "q" + queryId;
+            else
+              key = "b" + Svc.Bookmark.getBookmarkURI(id).spec + ":" +
+                    Svc.Bookmark.getItemTitle(id);
             break;
           case Svc.Bookmark.TYPE_FOLDER:
             key = "f" + Svc.Bookmark.getItemTitle(id);
@@ -286,9 +312,19 @@ BookmarksEngine.prototype = {
       return this._lazyMap = function(item) {
         // Figure out if we have something to key with
         let key;
+        let altKey;
         switch (item.type) {
-          case "bookmark":
           case "query":
+            // Prior to Bug 610501, records didn't carry their Smart Bookmark
+            // anno, so we won't be able to dupe them correctly. This altKey
+            // hack should get them to dupe correctly.
+            if (item.queryId) {
+              key = "q" + item.queryId;
+              altKey = "b" + item.bmkUri + ":" + item.title;
+              break;
+            }
+            // No queryID? Fall through to the regular bookmark case.
+          case "bookmark":
           case "microsummary":
             key = "b" + item.bmkUri + ":" + item.title;
             break;
@@ -306,9 +342,29 @@ BookmarksEngine.prototype = {
         // Give the guid if we have the matching pair
         this._log.trace("Finding mapping: " + item.parentName + ", " + key);
         let parent = lazyMap[item.parentName];
-        let dupe = parent && parent[key];
-        this._log.trace("Mapped dupe: " + dupe);
-        return dupe;
+        
+        if (!parent) {
+          this._log.trace("No parent => no dupe.");
+          return undefined;
+        }
+          
+        let dupe = parent[key];
+        
+        if (dupe) {
+          this._log.trace("Mapped dupe: " + dupe);
+          return dupe;
+        }
+        
+        if (altKey) {
+          dupe = parent[altKey];
+          if (dupe) {
+            this._log.trace("Mapped dupe using altKey " + altKey + ": " + dupe);
+            return dupe;
+          }
+        }
+        
+        this._log.trace("No dupe found for key " + key + "/" + altKey + ".");
+        return undefined;
       };
     });
 
@@ -428,9 +484,62 @@ BookmarksStore.prototype = {
 
 
   itemExists: function BStore_itemExists(id) {
-    return this.idForGUID(id) > 0;
+    return this.idForGUID(id, true) > 0;
   },
+  
+  /*
+   * If the record is a tag query, rewrite it to refer to the local tag ID.
+   * 
+   * Otherwise, just return.
+   */
+  preprocessTagQuery: function preprocessTagQuery(record) {
+    if (record.type != "query" ||
+        record.bmkUri == null ||
+        record.folderName == null)
+      return;
+    
+    // Yes, this works without chopping off the "place:" prefix.
+    let uri           = record.bmkUri
+    let queriesRef    = {};
+    let queryCountRef = {};
+    let optionsRef    = {};
+    Svc.History.queryStringToQueries(uri, queriesRef, queryCountRef, optionsRef);
+    
+    // We only process tag URIs.
+    if (optionsRef.value.resultType != optionsRef.value.RESULTS_AS_TAG_CONTENTS)
+      return;
+    
+    // Tag something to ensure that the tag exists.
+    let tag = record.folderName;
+    let dummyURI = Utils.makeURI("about:weave#BStore_preprocess");
+    this._ts.tagURI(dummyURI, [tag]);
 
+    // Look for the id of the tag, which might just have been added.
+    let tags = this._getNode(this._bms.tagsFolder);
+    if (!(tags instanceof Ci.nsINavHistoryQueryResultNode)) {
+      this._log.debug("tags isn't an nsINavHistoryQueryResultNode; aborting.");
+      return;
+    }
+
+    tags.containerOpen = true;
+    for (let i = 0; i < tags.childCount; i++) {
+      let child = tags.getChild(i);
+      if (child.title == tag) {
+        // Found the tag, so fix up the query to use the right id.
+        this._log.debug("Tag query folder: " + tag + " = " + child.itemId);
+        
+        this._log.trace("Replacing folders in: " + uri);
+        for each (let q in queriesRef.value)
+          q.setFolders([child.itemId], 1);
+        
+        record.bmkUri = Svc.History.queriesToQueryString(queriesRef.value,
+                                                         queryCountRef.value,
+                                                         optionsRef.value);
+        return;
+      }
+    }
+  },
+  
   applyIncoming: function BStore_applyIncoming(record) {
     // Don't bother with pre and post-processing for deletions.
     if (record.deleted) {
@@ -446,37 +555,8 @@ BookmarksStore.prototype = {
       return;
     }
 
-    // Preprocess the record before doing the normal apply
-    switch (record.type) {
-      case "query": {
-        // Convert the query uri if necessary
-        if (record.bmkUri == null || record.folderName == null)
-          break;
-
-        // Tag something so that the tag exists
-        let tag = record.folderName;
-        let dummyURI = Utils.makeURI("about:weave#BStore_preprocess");
-        this._ts.tagURI(dummyURI, [tag]);
-
-        // Look for the id of the tag (that might have just been added)
-        let tags = this._getNode(this._bms.tagsFolder);
-        if (!(tags instanceof Ci.nsINavHistoryQueryResultNode))
-          break;
-
-        tags.containerOpen = true;
-        for (let i = 0; i < tags.childCount; i++) {
-          let child = tags.getChild(i);
-          // Found the tag, so fix up the query to use the right id
-          if (child.title == tag) {
-            this._log.debug("query folder: " + tag + " = " + child.itemId);
-            record.bmkUri = record.bmkUri.replace(/([:&]folder=)\d+/, "$1" +
-              child.itemId);
-            break;
-          }
-        }
-        break;
-      }
-    }
+    // Preprocess the record before doing the normal apply.
+    this.preprocessTagQuery(record);
 
     // Figure out the local id of the parent GUID if available
     let parentGUID = record.parentid;
@@ -570,6 +650,11 @@ BookmarksStore.prototype = {
                                        Svc.Bookmark.DEFAULT_INDEX, record.title);
       this._log.debug(["created bookmark", newId, "under", record._parent,
                        "as", record.title, record.bmkUri].join(" "));
+
+      // Smart bookmark annotations are strings.
+      if (record.queryId) {
+        Utils.anno(newId, SMART_BOOKMARKS_ANNO, record.queryId);
+      }
 
       if (Utils.isArray(record.tags)) {
         this._tagURI(uri, record.tags);
@@ -721,6 +806,9 @@ BookmarksStore.prototype = {
           this._log.debug("Could not set microsummary generator URI: " + e);
         }
       } break;
+      case "queryId":
+        Utils.anno(itemId, SMART_BOOKMARKS_ANNO, val);
+        break;
       case "siteUri":
         this._ls.setSiteURI(itemId, Utils.makeURI(val));
         break;
@@ -870,7 +958,18 @@ BookmarksStore.prototype = {
             if (folder != null) {
               folder = folder[1];
               record.folderName = this._bms.getItemTitle(folder);
-              this._log.debug("query id: " + folder + " = " + record.folderName);
+              this._log.trace("query id: " + folder + " = " + record.folderName);
+            }
+          }
+          catch(ex) {}
+          
+          // Persist the Smart Bookmark anno, if found.
+          try {
+            let anno = Utils.anno(placeId, SMART_BOOKMARKS_ANNO);
+            if (anno != null) {
+              this._log.trace("query anno: " + SMART_BOOKMARKS_ANNO +
+                              " = " + anno);
+              record.queryId = anno;
             }
           }
           catch(ex) {}
@@ -1092,9 +1191,9 @@ BookmarksStore.prototype = {
   },
 
   GUIDForId: function GUIDForId(id) {
-    for (let [guid, specialId] in Iterator(kSpecialIds))
-      if (id == specialId)
-         return guid;
+    let special = kSpecialIds.specialGUIDForId(id);
+    if (special)
+      return special;
 
     let stmt = this._guidForIdStm;
     stmt.params.item_id = id;
@@ -1125,29 +1224,58 @@ BookmarksStore.prototype = {
         "FROM moz_bookmarks " +
         "WHERE guid = :guid");
     } else {
+      // Order results by lastModified so we can preserve the ID of the oldest bookmark.
+      // Copying a record preserves its dateAdded, and only modifying the
+      // bookmark alters its lastModified, so we also order by its item_id --
+      // lowest wins ties. Of course, Places can still screw us by reassigning IDs...
       stmt = this._getStmt(
         "SELECT a.item_id AS item_id " +
         "FROM moz_items_annos a " +
         "JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id " +
         "WHERE n.name = '" + GUID_ANNO + "' " +
-        "AND a.content = :guid");
+        "AND a.content = :guid " +
+        "ORDER BY a.lastModified, a.item_id");
     }
 
     return this.__idForGUIDStm = stmt;
   },
 
-  idForGUID: function idForGUID(guid) {
-    if (guid in kSpecialIds)
-      return kSpecialIds[guid];
+  // noCreate is provided as an optional argument to prevent the creation of
+  // non-existent special records, such as "mobile".
+  idForGUID: function idForGUID(guid, noCreate) {
+    if (kSpecialIds.isSpecialGUID(guid))
+      return kSpecialIds.specialIdForGUID(guid, !noCreate);
 
     let stmt = this._idForGUIDStm;
     // guid might be a String object rather than a string.
     stmt.params.guid = guid.toString();
 
-    let result = Utils.queryAsync(stmt, ["item_id"])[0];
-    if (result)
-      return result.item_id;
-    return -1;
+    let results = Utils.queryAsync(stmt, ["item_id"]);
+    this._log.trace("Rows matching GUID " + guid + ": " + results.length);
+    
+    // Here's the one we care about: the first.
+    let result = results[0];
+    
+    if (!result)
+      return -1;
+    
+    if (!this._haveGUIDColumn) {
+      try {
+        // Assign new GUIDs to any that came later.
+        for (let i = 1; i < results.length; ++i) {
+          let surplus = results[i];
+          this._log.debug("Assigning new GUID to copied row " + surplus.item_id);
+          this._setGUID(surplus.item_id);
+        }
+      } catch (ex) {
+        // Just skip it and carry on. This shouldn't happen, but if it does we
+        // don't want to fail hard.
+        this._log.debug("Got exception assigning new GUIDs: " +
+                        Utils.exceptionStr(ex));
+      }
+    }
+    
+    return result.item_id;
   },
 
   _calculateIndex: function _calculateIndex(record) {
@@ -1174,9 +1302,15 @@ BookmarksStore.prototype = {
 
   _getChildren: function BStore_getChildren(guid, items) {
     let node = guid; // the recursion case
-    if (typeof(node) == "string") // callers will give us the guid as the first arg
-      node = this._getNode(this.idForGUID(guid));
-
+    if (typeof(node) == "string") { // callers will give us the guid as the first arg
+      let nodeID = this.idForGUID(guid, true);
+      if (!nodeID) {
+        this._log.debug("No node for GUID " + guid + "; returning no children.");
+        return items;
+      }
+      node = this._getNode(nodeID);
+    }
+    
     if (node.type == node.RESULT_TYPE_FOLDER &&
         !this._ls.isLivemark(node.itemId)) {
       node.QueryInterface(Ci.nsINavHistoryQueryResultNode);
@@ -1208,9 +1342,10 @@ BookmarksStore.prototype = {
   getAllIDs: function BStore_getAllIDs() {
     let items = {"menu": true,
                  "toolbar": true};
-    for (let [guid, id] in Iterator(kSpecialIds))
+    for each (let guid in kSpecialIds.guids) {
       if (guid != "places" && guid != "tags")
         this._getChildren(guid, items);
+    }
     return items;
   },
 
@@ -1218,9 +1353,12 @@ BookmarksStore.prototype = {
     // Save a backup before clearing out all bookmarks
     archiveBookmarks();
 
-    for (let [guid, id] in Iterator(kSpecialIds))
-      if (guid != "places")
-        this._bms.removeFolderChildren(id);
+    for each (let guid in kSpecialIds.guids)
+      if (guid != "places") {
+        let id = kSpecialIds.specialIdForGUID(guid);
+        if (id)
+          this._bms.removeFolderChildren(id);
+      }
   }
 };
 
@@ -1240,12 +1378,18 @@ BookmarksTracker.prototype = {
       case "weave:engine:start-tracking":
         if (!this._enabled) {
           Svc.Bookmark.addObserver(this, true);
+          Svc.Obs.add("bookmarks-restore-begin", this);
+          Svc.Obs.add("bookmarks-restore-success", this);
+          Svc.Obs.add("bookmarks-restore-failed", this);
           this._enabled = true;
         }
         break;
       case "weave:engine:stop-tracking":
         if (this._enabled) {
           Svc.Bookmark.removeObserver(this);
+          Svc.Obs.remove("bookmarks-restore-begin", this);
+          Svc.Obs.remove("bookmarks-restore-success", this);
+          Svc.Obs.remove("bookmarks-restore-failed", this);
           this._enabled = false;
         }
         // Fall through to clean up.
@@ -1254,6 +1398,24 @@ BookmarksTracker.prototype = {
         // we don't leak
         this.__ls = null;
         this.__bms = null;
+        break;
+        
+      case "bookmarks-restore-begin":
+        this._log.debug("Ignoring changes from importing bookmarks.");
+        this.ignoreAll = true;
+        break;
+      case "bookmarks-restore-success":
+        this._log.debug("Tracking all items on successful import.");
+        this.ignoreAll = false;
+        
+        this._log.debug("Restore succeeded: wiping server and other clients.");
+        Weave.Service.resetClient([this.name]);
+        Weave.Service.wipeServer([this.name]);
+        Weave.Service.prepCommand("wipeEngine", [this.name]);
+        break;
+      case "bookmarks-restore-failed":
+        this._log.debug("Tracking all items on failed import.");
+        this.ignoreAll = false;
         break;
     }
   },

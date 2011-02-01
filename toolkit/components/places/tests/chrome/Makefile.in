@@ -56,9 +56,10 @@ _CHROME_FILES	= \
 		test_371798.xul \
 		test_342484.xul \
 		test_341972a.xul \
-		test_381357.xul \
 		test_favicon_annotations.xul \
 		$(NULL)
+
+# test_381357.xul is disabled for now because of bug 561007. See also bug 624549. 
 
 libs:: $(_HTTP_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

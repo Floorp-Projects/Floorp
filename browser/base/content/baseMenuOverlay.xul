@@ -98,11 +98,6 @@
                   label="&helpTroubleshootingInfo.label;"
                   oncommand="openTroubleshootingPage()"
                   onclick="checkForMiddleClick(this, event);"/>
-        <menuitem id="releaseNotes"
-                  accesskey="&helpReleaseNotes.accesskey;"
-                  label="&helpReleaseNotes.label;"
-                  oncommand="openReleaseNotes()"
-                  onclick="checkForMiddleClick(this, event);"/>
         <menuitem id="feedbackPage"
                   accesskey="&helpFeedbackPage.accesskey;"
                   label="&helpFeedbackPage.label;"

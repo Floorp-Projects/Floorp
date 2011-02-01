@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Whitespace text accessible creation/desctruction</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Invokers
+
+    /**
+     * Middle image accessible removal results in text accessible removal.
+     *
+     * Before:
+     *   DOM: whitespace img1 whitespace img2 whitespace img3 whitespace,
+     *   a11y: img1 whitespace img2 whitespace img3
+     * After:
+     *   DOM: whitespace img1 whitespace whitespace img3 whitespace,
+     *   a11y: img1 whitespace img3
+     */
+    function removeImg()
+    {
+      this.containerNode = getNode("container1");
+      this.imgNode = getNode("img1");
+      this.img = getAccessible(this.imgNode);
+      this.text = this.img.nextSibling;
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, this.img),
+        new invokerChecker(EVENT_HIDE, this.text),
+        new invokerChecker(EVENT_REORDER, this.containerNode)
+      ];
+
+      this.finalCheck = function textLeafUpdate_finalCheck()
+      {
+        var tree =
+          { SECTION: [
+            { GRAPHIC: [] },
+            { TEXT_LEAF: [] },
+            { GRAPHIC: [] }
+          ] };
+
+        testAccessibleTree(this.containerNode, tree);
+      }
+
+      this.invoke = function setOnClickAttr_invoke()
+      {
+        var tree =
+          { SECTION: [
+            { GRAPHIC: [] },
+            { TEXT_LEAF: [] },
+            { GRAPHIC: [] },
+            { TEXT_LEAF: [] },
+            { GRAPHIC: [] }
+          ] };
+
+        testAccessibleTree(this.containerNode, tree);
+
+        this.containerNode.removeChild(this.imgNode);
+      }
+
+      this.getID = function setOnClickAttr_getID()
+      {
+        return "remove middle img";
+      }
+    }
+
+    /**
+     * Append image making the whitespace visible and thus accessible.
+     * Note: images and whitespaces are on different leves of accessible trees,
+     * so that image container accessible update doesn't update the tree
+     * of whitespace container.
+     *
+     * Before:
+     *   DOM: whitespace emptylink whitespace linkwithimg whitespace
+     *   a11y: emptylink linkwithimg
+     * After:
+     *   DOM: whitespace linkwithimg whitespace linkwithimg whitespace
+     *   a11y: linkwithimg whitespace linkwithimg
+     */
+    function insertImg()
+    {
+      this.containerNode = getNode("container2");
+      this.topNode = this.containerNode.parentNode;
+      this.textNode = this.containerNode.nextSibling;
+      this.imgNode = document.createElement("img");
+      this.imgNode.setAttribute("src", "../moz.png");
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_SHOW, getAccessible, this.imgNode),
+        new invokerChecker(EVENT_SHOW, getAccessible, this.textNode),
+        new invokerChecker(EVENT_REORDER, this.topNode)
+      ];
+
+      this.invoke = function insertImg_invoke()
+      {
+        var tree =
+          { SECTION: [
+            { LINK: [] },
+            { LINK: [
+              { GRAPHIC: [] }
+            ] }
+          ] };
+
+        testAccessibleTree(this.topNode, tree);
+
+        this.containerNode.appendChild(this.imgNode);
+      }
+
+      this.finalCheck = function insertImg_finalCheck()
+      {
+        var tree =
+          { SECTION: [
+            { LINK: [
+              { GRAPHIC: [ ] }
+            ] },
+            { TEXT_LEAF: [ ] },
+            { LINK: [
+              { GRAPHIC: [ ] }
+            ] }
+          ] };
+
+        testAccessibleTree(this.topNode, tree);
+      }
+
+      this.getID = function appendImg_getID()
+      {
+        return "insert img into internal container";
+      }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Test
+
+    //gA11yEventDumpID = "eventdump"; // debug stuff
+    //gA11yEventDumpToConsole = true;
+
+    var gQueue = null;
+
+    function doTest()
+    {
+      gQueue = new eventQueue();
+
+      gQueue.push(new removeImg());
+      gQueue.push(new insertImg());
+
+      gQueue.invoke(); // SimpleTest.finish() will be called in the end
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="Make sure accessible tree is correct when rendered text is changed"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=625652">
+    Mozilla Bug 625652
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="container1">  <img src="../moz.png">  <img id="img1" src="../moz.png">  <img src="../moz.png">  </div>
+  <div> <a id="container2"></a> <a><img src="../moz.png"></a> </div>
+
+  <div id="eventdump"></div>
+</body>
+</html>

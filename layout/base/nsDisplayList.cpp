@@ -266,6 +266,8 @@ nsDisplayListBuilder::EnterPresShell(nsIFrame* aReferenceFrame,
   state->mPresShell->UpdateCanvasBackground();
 
   if (mIsPaintingToWindow) {
+    mReferenceFrame->AddPaintedPresShell(state->mPresShell);
+    
     state->mPresShell->IncrementPaintCount();
   }
 

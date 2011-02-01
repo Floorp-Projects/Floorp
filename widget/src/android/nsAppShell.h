@@ -43,6 +43,8 @@
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
 #include "nsInterfaceHashtable.h"
+#include "nsMemoryWatcher.h"
+#include "nsAutoPtr.h"
 
 #include "prcvar.h"
 
@@ -72,7 +74,6 @@ public:
 
     void PostEvent(mozilla::AndroidGeckoEvent *event);
     void RemoveNextEvent();
-    void OnResume();
 
     nsresult AddObserver(const nsAString &aObserverKey, nsIObserver *aObserver);
     void CallObserver(const nsAString &aObserverKey, const nsAString &aTopic, const nsAString &aData);
@@ -92,6 +93,8 @@ protected:
 
     mozilla::AndroidGeckoEvent *GetNextEvent();
     mozilla::AndroidGeckoEvent *PeekNextEvent();
+
+    nsRefPtr<nsMemoryWatcher> mMemoryWatcher;
 };
 
 #endif // nsAppShell_h__

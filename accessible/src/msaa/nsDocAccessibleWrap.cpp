@@ -109,7 +109,7 @@ nsDocAccessibleWrap::GetXPAccessibleFor(const VARIANT& aVarChild)
   if (aVarChild.vt == VT_I4 && aVarChild.lVal < 0) {
     // Convert child ID to unique ID.
     void* uniqueID = reinterpret_cast<void*>(-aVarChild.lVal);
-    return GetCachedAccessibleByUniqueIDInSubtree(uniqueID);
+    return GetAccessibleByUniqueIDInSubtree(uniqueID);
   }
 
   return nsAccessibleWrap::GetXPAccessibleFor(aVarChild);

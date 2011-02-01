@@ -502,6 +502,7 @@ int HashMgr::load_tables(const char * tpath, const char * key)
         al = decode_flags(&flags, ap + 1, dict);
         if (al == -1) {
             HUNSPELL_WARNING(stderr, "Can't allocate memory.\n");
+            delete dict;
             return 6;
         }
         flag_qsort(flags, 0, al);

@@ -48,8 +48,6 @@ protocol PAudio
 
 parent:
 
-  __delete__();
-
   Write(nsCString data, PRUint32 count);
 
   SetVolume(float aVolume);
@@ -58,12 +56,14 @@ parent:
 
   Pause();
   Resume();
+  Shutdown();
 
  child:
 
+  __delete__();
+
   SampleOffsetUpdate(PRInt64 offset, PRInt64 time);
   DrainDone();
-
 
 };
 

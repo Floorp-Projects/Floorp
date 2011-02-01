@@ -32,8 +32,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
       testAttrs("checkedOption", {"checkable" : "true"}, true); 
       testAttrs("checkedRadio", {"checkable" : "true"}, true); 
       testAttrs("checkedTreeitem", {"checkable" : "true"}, true); 
-      testAttrs("grabbed", {"grabbed" : "true"}, true);
       testAttrs("dropeffect", {"dropeffect" : "copy"}, true);
+      testAttrs("grabbed", {"grabbed" : "true"}, true);
+      testAttrs("hidden", {"hidden" : "true"}, true);
       testAttrs("sortAscending", {"sort" : "ascending"}, true);
       testAttrs("sortDescending", {"sort" : "descending"}, true);
       testAttrs("sortNone", {"sort" : "none"}, true);
@@ -134,8 +135,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
   <div id="checkedOption" role="option" aria-checked="true"></div>
   <div id="checkedRadio" role="radio" aria-checked="true"></div>
   <div id="checkedTreeitem" role="treeitem" aria-checked="true"></div>
-  <div id="grabbed" aria-grabbed="true"></div>
   <div id="dropeffect" aria-dropeffect="copy"></div>
+  <div id="grabbed" aria-grabbed="true"></div>
+  <div id="hidden" aria-hidden="true"></div>
   <div id="sortAscending" role="columnheader" aria-sort="ascending"></div>
   <div id="sortDescending" role="columnheader" aria-sort="descending"></div>
   <div id="sortNone" role="columnheader" aria-sort="none"></div>

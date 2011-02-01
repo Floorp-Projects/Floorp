@@ -51,6 +51,7 @@ _TEST_FILES =\
 		focus.html \
 		scroll.html \
 		test_aria_alert.html \
+		test_aria_hidden.html \
 		test_aria_menu.html \
 		test_aria_statechange.html \
 		test_attrs.html \

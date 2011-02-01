@@ -50,18 +50,21 @@ public class AlertNotification
     int mId;
     int mIcon;
     String mTitle;
+    String mText;
     boolean mProgressStyle;
     NotificationManager mNotificationManager;
     double mPrevPercent  = -1;
     String mPrevAlertText = "";
     static final double UPDATE_THRESHOLD = .01;
 
-    public AlertNotification(Context aContext, int aNotificationId, int aIcon, String aTitle, long aWhen) {
-        super(aIcon, aTitle, aWhen);
+    public AlertNotification(Context aContext, int aNotificationId, int aIcon,
+                             String aTitle, String aText, long aWhen) {
+        super(aIcon, (aText.length() > 0) ? aText : aTitle, aWhen);
 
         mContext = aContext;
         mIcon = aIcon;
         mTitle = aTitle;
+        mText = aText;
         mProgressStyle = false;
         mId = aNotificationId;
 
