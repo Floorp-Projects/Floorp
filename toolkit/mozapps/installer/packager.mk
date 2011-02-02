@@ -588,14 +588,11 @@ ifdef MOZ_PKG_REMOVALS
 	$(SYSINSTALL) $(IFLAGS1) $(MOZ_PKG_REMOVALS_GEN) $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)
 endif # MOZ_PKG_REMOVALS
 
-make-package: stage-package $(PACKAGE_XULRUNNER) make-sourcestamp-file
+make-package: stage-package $(PACKAGE_XULRUNNER)
 	@echo "Compressing..."
 	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
 	cd $(DIST) && $(MAKE_PACKAGE)
-
-make-sourcestamp-file::
-	@echo "$(BUILDID)" > $(MOZ_SOURCESTAMP_FILE)
-	@echo "$(MOZ_SOURCE_REPO)/rev/$(MOZ_SOURCE_STAMP)" >> $(MOZ_SOURCESTAMP_FILE)
+	@echo "$(BUILDID) $(MOZ_SOURCE_STAMP)" > $(DIST)/$(PKG_PATH)/$(PKG_BASENAME).txt
 
 # The install target will install the application to prefix/lib/appname-version
 # In addition if INSTALL_SDK is set, it will install the development headers,
@@ -696,7 +693,7 @@ UPLOAD_FILES= \
   $(call QUOTED_WILDCARD,$(DIST)/$(PKG_PATH)$(TEST_PACKAGE)) \
   $(call QUOTED_WILDCARD,$(DIST)/$(PKG_PATH)$(SYMBOL_ARCHIVE_BASENAME).zip) \
   $(call QUOTED_WILDCARD,$(DIST)/$(SDK)) \
-  $(call QUOTED_WILDCARD,$(MOZ_SOURCESTAMP_FILE)) \
+  $(call QUOTED_WILDCARD,$(DIST)/$(PKG_PATH)/$(PKG_BASENAME).txt) \
   $(if $(UPLOAD_EXTRA_FILES), $(foreach f, $(UPLOAD_EXTRA_FILES), $(wildcard $(DIST)/$(f))))
 
 checksum:
