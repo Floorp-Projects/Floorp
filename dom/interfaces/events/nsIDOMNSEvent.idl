@@ -107,12 +107,12 @@ interface nsIDOMNSEvent : nsISupports
   /**
    * @deprecated Use nsIDOMEvent::stopPropagation.
    */
-  [deprecated] void         preventBubble();
+  void                      preventBubble();
 
   /**
    * @deprecated Use nsIDOMEvent::stopPropagation.
    */
-  [deprecated] void         preventCapture();
+  void                      preventCapture();
 
   boolean                   getPreventDefault();
 
