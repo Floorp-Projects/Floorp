@@ -1090,15 +1090,12 @@ GestureModule.prototype = {
   },
 
   cancelPending: function cancelPending() {
-    // terminate pinch zoom if ongoing
-    if (this._pinchZoom) {
-      this._pinchZoom.finish();
-      this._pinchZoom = null;
-    }
+    if (AnimatedZoom.isZooming())
+      AnimatedZoom.finish();
   },
 
   _pinchStart: function _pinchStart(aEvent) {
-    if (this._pinchZoom)
+    if (AnimatedZoom.isZooming())
       return;
 
     // Cancel other touch sequence events, and be courteous by allowing them
@@ -1110,14 +1107,8 @@ GestureModule.prototype = {
     if (!success || !Browser.selectedTab.allowZoom)
       return;
 
-    // create the AnimatedZoom object for fast arbitrary zooming
     AnimatedZoom.start();
-    this._pinchZoom = AnimatedZoom;
-    this._pinchStartRect = AnimatedZoom.getStartRect();
     this._pinchDelta = 0;
-
-    let browser = getBrowser();
-    this._pinchStartScale = this._pinchScale = browser.scale;
 
     this._ignoreNextUpdate = true; // first update gives useless, huge delta
 
@@ -1127,17 +1118,18 @@ GestureModule.prototype = {
     this._scalingFactor = Services.prefs.getIntPref("browser.ui.pinch.scalingFactor");
 
     // Adjust the client coordinates to be relative to the browser element's top left corner.
-    this._browserBCR = browser.getBoundingClientRect();
+    this._browserBCR = getBrowser().getBoundingClientRect();
     this._pinchStartX = aEvent.clientX - this._browserBCR.left;
     this._pinchStartY = aEvent.clientY - this._browserBCR.top;
   },
 
   _pinchUpdate: function _pinchUpdate(aEvent) {
-    if (!this._pinchZoom || !aEvent.delta)
+    if (!AnimatedZoom.isZooming() || !aEvent.delta)
       return;
 
     let delta = 0;
-    let oldScale = this._pinchScale;
+    let browser = AnimatedZoom.browser;
+    let oldScale = browser.scale;
 
     // Accumulate pinch delta. Small changes are just jitter.
     this._pinchDelta += aEvent.delta;
@@ -1150,34 +1142,29 @@ GestureModule.prototype = {
     delta = Util.clamp(delta, -this._maxShrink, this._maxGrowth);
 
     let newScale = Browser.selectedTab.clampZoomLevel(oldScale * (1 + delta / this._scalingFactor));
-    let startScale = this._pinchStartScale;
+    let startScale = AnimatedZoom.startScale;
     let scaleRatio = startScale / newScale;
     let cX = aEvent.clientX - this._browserBCR.left;
     let cY = aEvent.clientY - this._browserBCR.top;
 
     // Calculate the new zoom rect.
-    let rect = this._pinchStartRect.clone();
+    let rect = AnimatedZoom.zoomFrom.clone();
     rect.translate(this._pinchStartX - cX + (1-scaleRatio) * cX * rect.width / window.innerWidth,
                    this._pinchStartY - cY + (1-scaleRatio) * cY * rect.height / window.innerHeight);
 
     rect.width *= scaleRatio;
     rect.height *= scaleRatio;
 
-    this.translateInside(rect, new Rect(0, 0, getBrowser().contentDocumentWidth * startScale,
-                                              getBrowser().contentDocumentHeight * startScale));
+    this.translateInside(rect, new Rect(0, 0, browser.contentDocumentWidth * startScale,
+                                              browser.contentDocumentHeight * startScale));
 
     // redraw zoom canvas according to new zoom rect
-    this._pinchZoom.updateTo(rect);
-    this._pinchScale = newScale;
+    AnimatedZoom.updateTo(rect);
   },
 
   _pinchEnd: function _pinchEnd(aEvent) {
-    // stop ongoing animated zoom
-    if (this._pinchZoom) {
-      // zoom to current level for real
-      this._pinchZoom.finish();
-      this._pinchZoom = null;
-    }
+    if (AnimatedZoom.isZooming())
+      AnimatedZoom.finish();
   },
 
   /**
