@@ -342,22 +342,32 @@
   min-height: 1em;
 }
 
+#appmenu-editmenu {
+  -moz-box-pack: end;
+}
+
 #appmenu_print,
 #appmenu_print_popup,
 .appmenu-edit-button,
+#appmenu-editmenu-cut,
+#appmenu-editmenu-copy,
+#appmenu-editmenu-paste,
 #appmenu-quit {
   list-style-image: url("appmenu-icons.png");
 }
 
-#appmenu-cut {
+#appmenu-cut,
+#appmenu-editmenu-cut {
   -moz-image-region: rect(0 16px 16px 0);
 }
 
-#appmenu-copy {
+#appmenu-copy,
+#appmenu-editmenu-copy {
   -moz-image-region: rect(0 32px 16px 16px);
 }
 
-#appmenu-paste {
+#appmenu-paste,
+#appmenu-editmenu-paste {
   -moz-image-region: rect(0 48px 16px 32px);
 }
 

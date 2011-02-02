@@ -166,7 +166,9 @@ splitmenu {
 }
 
 .splitmenu-menu > .menu-text,
-:-moz-any(.splitmenu-menu, .splitmenu-menuitem) > .menu-accel-container {
+:-moz-any(.splitmenu-menu, .splitmenu-menuitem) > .menu-accel-container,
+#appmenu-editmenu > .menu-text,
+#appmenu-editmenu > .menu-accel-container {
   display: none;
 }
 
