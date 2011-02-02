@@ -567,7 +567,7 @@ var FindHelperUI = {
       zoomLevel = Browser.selectedTab.clampZoomLevel(zoomLevel);
 
       let zoomRect = Browser._getZoomRectForPoint(aElementRect.center().x, aElementRect.y, zoomLevel);
-      Browser.animatedZoomTo(zoomRect);
+      AnimatedZoom.animateTo(zoomRect);
     }
   }
 };
@@ -859,12 +859,12 @@ var FormHelperUI = {
       let zoomLevel = Browser.selectedTab.clampZoomLevel(this._getZoomLevelForRect(aElementRect));
 
       zoomRect = Browser._getZoomRectForPoint(aElementRect.center().x, aElementRect.y, zoomLevel);
-      Browser.animatedZoomTo(zoomRect);
+      AnimatedZoom.animateTo(zoomRect);
     } else if (aElementRect && !Browser.selectedTab.allowZoom && autozoomEnabled) {
       // Even if zooming is disabled we could need to reposition the view in
       // order to keep the element on-screen
       zoomRect = Browser._getZoomRectForPoint(aElementRect.center().x, aElementRect.y, browser.scale);
-      Browser.animatedZoomTo(zoomRect);
+      AnimatedZoom.animateTo(zoomRect);
     }
 
     this._ensureCaretVisible(aCaretRect);
