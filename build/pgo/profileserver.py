@@ -46,11 +46,13 @@ import os
 import sys
 import shutil
 from datetime import datetime
+
+SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])))
+os.path.insert(0, SCRIPT_DIR)
 from automation import Automation
 from automationutils import getDebuggerInfo, addCommonOptions
 
 PORT = 8888
-SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])))
 PROFILE_DIRECTORY = os.path.abspath(os.path.join(SCRIPT_DIR, "./pgoprofile"))
 MOZ_JAR_LOG_DIR = os.path.abspath(os.path.join(os.path.join(os.getenv("OBJDIR"), "dist"), "jarlog"))
 os.chdir(SCRIPT_DIR)
