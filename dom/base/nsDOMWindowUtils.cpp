@@ -998,17 +998,22 @@ nsDOMWindowUtils::FindElementWithViewId(nsViewID aID,
 {
   if (aID == FrameMetrics::ROOT_SCROLL_ID) {
     nsPresContext* presContext = GetPresContext();
+    if (!presContext) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+
     nsIDocument* document = presContext->Document();
     mozilla::dom::Element* rootElement = document->GetRootElement();
     if (!rootElement) {
       return NS_ERROR_NOT_AVAILABLE;
     }
+
     CallQueryInterface(rootElement, aResult);
     return NS_OK;
   }
 
   nsRefPtr<nsIContent> content = nsLayoutUtils::FindContentFor(aID);
-  return CallQueryInterface(content, aResult);
+  return content ? CallQueryInterface(content, aResult) : NS_OK;
 }
 
 NS_IMETHODIMP
