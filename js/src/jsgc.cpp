@@ -2353,7 +2353,7 @@ MarkAndSweepCompartment(JSContext *cx, JSCompartment *comp, JSGCInvocationKind g
     for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
         JS_ASSERT_IF(*c != comp, (*c)->propertyTree.checkShapesAllUnmarked(cx));
 
-    js::PropertyTree::dumpShapes(cx);
+    PropertyTree::dumpShapes(cx);
 #endif
 
     /*
@@ -2471,7 +2471,7 @@ MarkAndSweep(JSContext *cx, JSGCInvocationKind gckind GCTIMER_PARAM)
     for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
         (*c)->propertyTree.sweepShapes(cx);
 
-    js::PropertyTree::dumpShapes(cx);
+    PropertyTree::dumpShapes(cx);
 
     SweepCompartments(cx, gckind);
 
