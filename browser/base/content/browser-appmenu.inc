@@ -101,6 +101,45 @@
                        command="cmd_paste"
                        onclick="if (!this.disabled) hidePopup();"
                        tooltiptext="&pasteButton.tooltip;"/>
+        <spacer flex="1"/>
+        <menu id="appmenu-editmenu">
+          <menupopup id="appmenu-editmenu-menupopup">
+            <menuitem id="appmenu-editmenu-cut"
+                      class="menuitem-iconic"
+                      label="&cutCmd.label;"
+                      key="key_cut"
+                      command="cmd_cut"/>
+            <menuitem id="appmenu-editmenu-copy"
+                      class="menuitem-iconic"
+                      label="&copyCmd.label;"
+                      key="key_copy"
+                      command="cmd_copy"/>
+            <menuitem id="appmenu-editmenu-paste"
+                      class="menuitem-iconic"
+                      label="&pasteCmd.label;"
+                      key="key_paste"
+                      command="cmd_paste"/>
+            <menuseparator/>
+            <menuitem id="appmenu-editmenu-undo"
+                      label="&undoCmd.label;"
+                      key="key_undo"
+                      command="cmd_undo"/>
+            <menuitem id="appmenu-editmenu-redo"
+                      label="&redoCmd.label;"
+                      key="key_redo"
+                      command="cmd_redo"/>
+            <menuseparator/>
+            <menuitem id="appmenu-editmenu-selectAll"
+                      label="&selectAllCmd.label;"
+                      key="key_selectAll"
+                      command="cmd_selectAll"/>
+            <menuseparator/>
+            <menuitem id="appmenu-editmenu-delete"
+                      label="&deleteCmd.label;"
+                      key="key_delete"
+                      command="cmd_delete"/>
+          </menupopup>
+        </menu>
       </hbox>
       <menuitem id="appmenu_find"
                 class="menuitem-tooltip"

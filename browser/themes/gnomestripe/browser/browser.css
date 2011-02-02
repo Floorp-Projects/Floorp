@@ -1739,13 +1739,16 @@ toolbar[mode="text"] toolbarbutton.chevron > .toolbarbutton-icon {
 #appmenuSecondaryPane-spacer {
   min-height: 1em;
 }
-#appmenu-cut {
+#appmenu-cut,
+#appmenu-editmenu-cut {
   list-style-image: url("moz-icon://stock/gtk-cut?size=menu");
 }
-#appmenu-copy {
+#appmenu-copy,
+#appmenu-editmenu-copy {
   list-style-image: url("moz-icon://stock/gtk-copy?size=menu");
 }
-#appmenu-paste {
+#appmenu-paste,
+#appmenu-editmenu-paste {
   list-style-image: url("moz-icon://stock/gtk-paste?size=menu");
 }
 #wrapper-appmenu-toolbar-button,
