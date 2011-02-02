@@ -169,6 +169,11 @@ Tester.prototype = {
         }
       };
 
+      // Clear document.popupNode.  The test could have set it to a custom value
+      // for its own purposes, nulling it out it will go back to the default
+      // behavior of returning the last opened popup.
+      document.popupNode = null;
+
       // Note the test run time
       let time = Date.now() - this.lastStartTime;
       this.dumper.dump("INFO TEST-END | " + this.currentTest.path + " | finished in " + time + "ms\n");
