@@ -6463,9 +6463,9 @@ FindVMCompatiblePeer(JSContext* cx, JSObject* globalObj, TreeFragment* f, uintN&
 
 /*
  * For the native stacks and global frame, reuse the storage in |tm->storage|.
- * This reuse depends on the invariant that only one trace uses |tm->storage|
- * at a time. This is subtly correct in case of deep bail; see the comment
- * about "clobbering deep bails" in DeepBail.
+ * This reuse depends on the invariant that only one trace uses |tm->storage| at
+ * a time. This is subtley correct in lieu of deep bail; see comment for
+ * |deepBailSp| in DeepBail.
  */
 JS_ALWAYS_INLINE
 TracerState::TracerState(JSContext* cx, TraceMonitor* tm, TreeFragment* f,
@@ -6803,10 +6803,9 @@ LeaveTree(TraceMonitor *tm, TracerState& state, VMSideExit* lr)
         /*
          * Deep-bail case.
          *
-         * A _FAIL native already called LeaveTree once. At that time we
-         * reconstructed the interpreter stack, in pre-call state, with pc
-         * pointing to the op that triggered the call. Then we continued in
-         * native code.
+         * A _FAIL native already called LeaveTree. We already reconstructed
+         * the interpreter stack, in pre-call state, with pc pointing to the
+         * CALL/APPLY op, for correctness. Then we continued in native code.
          */
         if (!(bs & BUILTIN_ERROR)) {
             /*
@@ -7324,7 +7323,6 @@ TraceRecorder::monitorRecording(JSOp op)
     if (pendingGuardCondition) {
         LIns* cond = pendingGuardCondition;
         bool expected = true;
-
         /* Put 'cond' in a form suitable for a guard/branch condition if it's not already. */
         ensureCond(&cond, &expected);
         guard(expected, cond, STATUS_EXIT);
@@ -8007,28 +8005,13 @@ DeepBail(JSContext *cx)
     state->builtinStatus |= BUILTIN_BAILED;
 
     /*
-     * Between now and the LeaveTree in ExecuteTree, |tm->storage| may be
-     * reused if another trace executes before the currently executing native
-     * returns. If this happens, at least some of the native stack will be
-     * clobbered, potentially all of it. This is called a clobbering deep bail.
-     *
-     * The nested trace will complete before we return to the deep-bailed one,
-     * hence the invariant is maintained that only one trace uses |tm->storage|
-     * at a time.
-     *
-     * When we return to the deep-bailed trace, it will very soon reach a
-     * STATUS_EXIT guard and bail out. Most of the native stack will just be
-     * thrown away. However, LeaveTree will copy a few slots from the top of
-     * the native stack to the interpreter stack--only those slots written by
-     * the current bytecode instruction. To make sure LeaveTree has correct
-     * data to copy from the native stack to the operand stack, we have this
-     * rule: every caller of enterDeepBailCall must ensure that between the
-     * deep bail call and the STATUS_EXIT guard, all those slots are written.
-     *
-     * The rule is a bit subtle. For example, JSOP_MOREITER uses a slot which
-     * it never writes to; in order to satisfy the above rule,
-     * record_JSOP_MOREITER emits code to write the value back to the slot
-     * anyway.
+     * Between now and the LeaveTree in ExecuteTree, |tm->storage| may be reused
+     * if another trace executes before the currently executing native returns.
+     * However, all such traces will complete by the time the currently
+     * executing native returns and the return value is written to the native
+     * stack. After that point, no traces may execute until the LeaveTree in
+     * ExecuteTree, hence the invariant is maintained that only one trace uses
+     * |tm->storage| at a time.
      */
     state->deepBailSp = state->sp;
 }
@@ -14880,10 +14863,6 @@ TraceRecorder::record_JSOP_MOREITER()
 
     cond_ins = is_boxed_true(AllocSlotsAddress(vp_ins));
     stack(0, cond_ins);
-
-    // Write this value back even though we haven't changed it.
-    // See the comment in DeepBail about "clobbering deep bails".
-    stack(-1, iterobj_ins);
 
     return ARECORD_CONTINUE;
 }
