@@ -115,7 +115,7 @@ function getBoundingContentRect(aElement) {
   return new Rect(r.left + offset.x, r.top + offset.y, r.width, r.height);
 }
 
-browserViewToClient: function browserViewToClient(x, y) {
+function browserViewToClient(x, y) {
   let container = document.getElementById("browsers");
   let containerBCR = container.getBoundingClientRect();
 
