@@ -58,17 +58,17 @@ interface nsIDOMOfflineResourceList : nsISupports
 
   /**
    * Get the number of dynamically-managed entries.
-   *
-   * @deprecated Clients should use the "items" attribute.
+   * @status DEPRECATED
+   *         Clients should use the "items" attribute.
    */
-  [deprecated] readonly attribute unsigned long mozLength;
+  readonly attribute unsigned long mozLength;
 
   /**
    * Get the URI of a dynamically-managed entry.
-   *
-   * @deprecated Clients should use the "items" attribute.
+   * @status DEPRECATED
+   *         Clients should use the "items" attribute.
    */
-  [deprecated] DOMString mozItem(in unsigned long index);
+  DOMString mozItem(in unsigned long index);
 
   /**
    * Add an item to the list of dynamically-managed entries.  The resource
