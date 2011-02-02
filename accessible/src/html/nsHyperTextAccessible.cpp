@@ -2093,6 +2093,17 @@ nsHyperTextAccessible::InvalidateChildren()
   nsAccessibleWrap::InvalidateChildren();
 }
 
+PRBool
+nsHyperTextAccessible::RemoveChild(nsAccessible* aAccessible)
+{
+  PRInt32 childIndex = aAccessible->GetIndexInParent();
+  PRInt32 count = mOffsets.Length() - childIndex;
+  if (count > 0)
+    mOffsets.RemoveElementsAt(childIndex, count);
+
+  return nsAccessible::RemoveChild(aAccessible);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsHyperTextAccessible public static
 
