@@ -1584,19 +1584,21 @@ function goUpdatePlacesCommands() {
 
 function doGetPlacesControllerForCommand(aCommand)
 {
+  // A context menu may be built for non-focusable views.  Thus, we first try
+  // to look for a view associated with document.popupNode
+  let popupNode = document.popupNode;
+  if (popupNode) {
+    let view = PlacesUIUtils.getViewForNode(popupNode);
+    if (view && view._contextMenuShown)
+      return view.controllers.getControllerForCommand(aCommand);
+  }
+
+  // When we're not building a context menu, only focusable views
+  // are possible.  Thus, we can safely use the command dispatcher.
   let controller = top.document.commandDispatcher
                       .getControllerForCommand(aCommand);
   if (controller)
     return controller;
-
-  // If building commands for a context menu, look for an element in the
-  // current popup.
-  let element = document.popupNode;
-  if (element) {
-    let view = PlacesUIUtils.getViewForNode(element);
-    if (view && view._contextMenuShown)
-      return view.viewElt.controllers.getControllerForCommand(aCommand);
-  }
 
   return null;
 }
