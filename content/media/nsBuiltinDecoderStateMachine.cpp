@@ -251,7 +251,9 @@ void nsBuiltinDecoderStateMachine::DecodeLoop()
     // We don't want to consider skipping to the next keyframe if we've
     // only just started up the decode loop, so wait until we've decoded
     // some frames before enabling the keyframe skip logic on video.
-    if (videoPump && videoQueue.GetSize() >= videoPumpThreshold) {
+    if (videoPump &&
+        static_cast<PRUint32>(videoQueue.GetSize()) >= videoPumpThreshold)
+    {
       videoPump = PR_FALSE;
     }
 
@@ -272,14 +274,18 @@ void nsBuiltinDecoderStateMachine::DecodeLoop()
         videoPlaying &&
         !IsDecodeCloseToDownload() &&
         ((!audioPump && audioPlaying && GetDecodedAudioDuration() < lowAudioThreshold) ||
-         (!videoPump && videoPlaying && videoQueue.GetSize() < LOW_VIDEO_FRAMES)))
+         (!videoPump &&
+           videoPlaying &&
+           static_cast<PRUint32>(videoQueue.GetSize()) < LOW_VIDEO_FRAMES)))
     {
       skipToNextKeyframe = PR_TRUE;
       LOG(PR_LOG_DEBUG, ("Skipping video decode to the next keyframe"));
     }
 
     // Video decode.
-    if (videoPlaying && videoQueue.GetSize() < AMPLE_VIDEO_FRAMES) {
+    if (videoPlaying &&
+        static_cast<PRUint32>(videoQueue.GetSize()) < AMPLE_VIDEO_FRAMES)
+    {
       // Time the video decode, so that if it's slow, we can increase our low
       // audio threshold to reduce the chance of an audio underrun while we're
       // waiting for a video decode to complete.
@@ -329,7 +335,8 @@ void nsBuiltinDecoderStateMachine::DecodeLoop()
         (!audioPlaying || (GetDecodedAudioDuration() >= ampleAudioThreshold &&
                            audioQueue.GetSize() > 0))
         &&
-        (!videoPlaying || videoQueue.GetSize() >= AMPLE_VIDEO_FRAMES))
+        (!videoPlaying ||
+          static_cast<PRUint32>(videoQueue.GetSize()) >= AMPLE_VIDEO_FRAMES))
     {
       // All active bitstreams' decode is well ahead of the playback
       // position, we may as well wait for the playback to catch up. Note the
