@@ -413,9 +413,9 @@ ScriptPoolDestroyed(JSContext *cx, mjit::JITScript *jit,
 #endif
 
 /*
- * This method marks pointers that cross compartment boundaries.  It should
- * should only be called by per-compartment GCs, since full GCs naturally
- * follow pointers across compartments.
+ * This method marks pointers that cross compartment boundaries. It should be
+ * called only by per-compartment GCs, since full GCs naturally follow pointers
+ * across compartments.
  */
 void
 JSCompartment::markCrossCompartment(JSTracer *trc)
