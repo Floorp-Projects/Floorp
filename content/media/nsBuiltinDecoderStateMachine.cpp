@@ -510,9 +510,34 @@ void nsBuiltinDecoderStateMachine::AudioLoop()
     // before the audio thread terminates.
     MonitorAutoEnter audioMon(mAudioMonitor);
     if (mAudioStream) {
-      mAudioStream->Drain();
-      // Fire one last event for any extra samples that didn't fill a framebuffer.
-      mEventManager.Drain(mAudioEndTime);
+      PRBool seeking = PR_FALSE;
+      PRInt64 oldPosition = -1;
+
+      {
+        MonitorAutoExit audioExit(mAudioMonitor);
+        MonitorAutoEnter mon(mDecoder->GetMonitor());
+        PRInt64 position = GetMediaTime();
+        while (oldPosition != position &&
+               mAudioEndTime - position > 0 &&
+               mState != DECODER_STATE_SEEKING &&
+               mState != DECODER_STATE_SHUTDOWN)
+        {
+          const PRInt64 DRAIN_BLOCK_MS = 100;
+          Wait(NS_MIN(mAudioEndTime - position, DRAIN_BLOCK_MS));
+          oldPosition = position;
+          position = GetMediaTime();
+        }
+        if (mState == DECODER_STATE_SEEKING) {
+          seeking = PR_TRUE;
+        }
+      }
+
+      if (!seeking && mAudioStream) {
+        mAudioStream->Drain();
+
+        // Fire one last event for any extra samples that didn't fill a framebuffer.
+        mEventManager.Drain(mAudioEndTime);
+      }
     }
     LOG(PR_LOG_DEBUG, ("%p Reached audio stream end.", mDecoder));
   }
