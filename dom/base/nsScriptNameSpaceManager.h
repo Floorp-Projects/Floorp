@@ -171,6 +171,8 @@ protected:
 
   /**
    * Add a new category entry into the hash table.
+   * Only some categories can be added (see the beginning of the definition).
+   * The other ones will be ignored.
    *
    * @aCategoryManager Instance of the category manager service.
    * @aCategory        Category where the entry comes from.
