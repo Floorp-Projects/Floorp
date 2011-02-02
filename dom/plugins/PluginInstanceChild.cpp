@@ -414,6 +414,13 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
         return NPERR_NO_ERROR;
     }
 
+#ifndef NP_NO_CARBON
+    case NPNVsupportsCarbonBool: {
+      *((NPBool*)aValue) = false;
+      return NPERR_NO_ERROR;
+    }
+#endif
+
     case NPNVsupportsUpdatedCocoaTextInputBool: {
       *static_cast<NPBool*>(aValue) = true;
       return NPERR_NO_ERROR;
