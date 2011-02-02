@@ -68,14 +68,10 @@ interface nsIDOMFile : nsIDOMBlob
   // This performs no security checks!
   [noscript] readonly attribute DOMString mozFullPathInternal;
 
-  /**
-   * @deprecated
-   */
-  [deprecated] readonly attribute DOMString fileName;
-  /**
-   * @deprecated
-   */
-  [deprecated] readonly attribute unsigned long long fileSize;
+  // These are all deprecated and not in spec. Will be removed in a future
+  // release
+  readonly attribute DOMString fileName;
+  readonly attribute unsigned long long fileSize;
   DOMString getAsText(in DOMString encoding); // raises(FileException) on retrieval
   DOMString getAsDataURL();             // raises(FileException) on retrieval
   DOMString getAsBinary();              // raises(FileException) on retrieval
