@@ -44,10 +44,10 @@ interface nsIDOMNode;
 interface nsIDOMDocument;
 
 /**
- * @deprecated Use nsIXSLTProcessor instead!!
+ * DEPRECATED! Don't use this interface! Use nsIXSLTProcessor instead!!
  */
 
-[deprecated, scriptable, uuid(3fbff728-2d20-11d3-aef3-00108300ff91)]
+[scriptable, uuid(3fbff728-2d20-11d3-aef3-00108300ff91)]
 interface nsIXSLTProcessorObsolete : nsISupports
 {
     void transformDocument(in nsIDOMNode aSourceDOM,
