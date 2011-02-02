@@ -768,18 +768,18 @@ interface nsIDOMWindowUtils : nsISupports {
    * Put the window into a state where scripts are frozen and events
    * suppressed, for use when the window has launched a modal prompt.
    */
-  void enterModalState();
+  [noscript] void enterModalState();
 
   /**
    * Resume normal window state, where scripts can run and events are
    * delivered.
    */
-  void leaveModalState();
+  [noscript] void leaveModalState();
 
   /**
    * Is the window is in a modal state? [See enterModalState()]
    */
-  boolean isInModalState();
+  [noscript] boolean isInModalState();
 
   /**
    * Suspend/resume timeouts on this window and its descendant windows.
@@ -824,7 +824,7 @@ interface nsIDOMWindowUtils : nsISupports {
 
 typedef unsigned long long nsViewID;
 
-[scriptable, uuid(3a0334aa-b9cc-4b32-9b6c-599cd4e40d5b)]
+[scriptable, uuid(526d22ab-4997-8666-53f6-38c7f93e77a5)]
 interface nsIDOMWindowUtils_MOZILLA_2_0_BRANCH : nsISupports {
   /**
    * Get the type of the currently focused html input, if any.
@@ -837,4 +837,17 @@ interface nsIDOMWindowUtils_MOZILLA_2_0_BRANCH : nsISupports {
    * element of the document is returned.
    */
   nsIDOMElement findElementWithViewId(in nsViewID aId);
+
+  /**
+   * Same as enterModalState, but returns the window associated with the
+   * current JS context.
+   */
+  nsIDOMWindow enterModalStateWithWindow();
+
+  /**
+   * Same as leaveModalState, but takes a window associated with the active
+   * context when enterModalStateWithWindow was called. The currently context
+   * might be different at the moment (see bug 621764).
+   */
+  void leaveModalStateWithWindow(in nsIDOMWindow aWindow);
 };
