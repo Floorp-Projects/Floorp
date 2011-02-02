@@ -4564,12 +4564,7 @@ fi
 dnl Top-level Mozilla switched to requiring NSPR 4.8.6 (bug 560582), but we don't need it in JS.
 if test -n "$_USE_SYSTEM_NSPR"; then
     MOZ_NATIVE_NSPR=
-    AM_PATH_NSPR(4.7.0, [MOZ_NATIVE_NSPR=1])
-    if test -z "$MOZ_NATIVE_NSPR"; then
-        AC_MSG_ERROR([--with-system-nspr given, but configure could not find a suitable NSPR.
-Pass --with-nspr-exec-prefix, --with-nspr-prefix, or --with-nspr-cflags/libs.
-See 'configure --help'.])
-    fi
+    AM_PATH_NSPR(4.7.0, [MOZ_NATIVE_NSPR=1], [AC_MSG_ERROR([your don't have NSPR installed or your version is too old])])
 fi
 
 if test -n "$MOZ_NATIVE_NSPR"; then
