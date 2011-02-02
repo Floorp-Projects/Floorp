@@ -1470,7 +1470,8 @@ CheckStrictParameters(JSContext *cx, JSTreeContext *tc)
     JSAtom *argumentsAtom = cx->runtime->atomState.argumentsAtom;
     JSAtom *evalAtom = cx->runtime->atomState.evalAtom;
 
-    HashSet<JSAtom *> parameters(cx);
+    /* name => whether we've warned about the name already */
+    HashMap<JSAtom *, bool> parameters(cx);
     if (!parameters.init(tc->bindings.countArgs()))
         return false;
 
@@ -1496,12 +1497,18 @@ CheckStrictParameters(JSContext *cx, JSTreeContext *tc)
             return false;
         }
 
-        HashSet<JSAtom *>::AddPtr p = parameters.lookupForAdd(name);
-        if (p && !ReportBadParameter(cx, tc, name, JSMSG_DUPLICATE_FORMAL))
-            return false;
-
-        if (!parameters.add(p, name))
-            return false;
+        /*
+         * Check for a duplicate parameter: warn or report an error exactly
+         * once for each duplicated parameter.
+         */
+        if (HashMap<JSAtom *, bool>::AddPtr p = parameters.lookupForAdd(name)) {
+            if (!p->value && !ReportBadParameter(cx, tc, name, JSMSG_DUPLICATE_FORMAL))
+                return false;
+            p->value = true;
+        } else {
+            if (!parameters.add(p, name, false))
+                return false;
+        }
     }
 
     return true;
