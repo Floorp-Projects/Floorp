@@ -6330,6 +6330,9 @@ public:
 JS_REQUIRES_STACK TreeFragment*
 TraceRecorder::findNestedCompatiblePeer(TreeFragment* f)
 {
+    TraceMonitor* tm;
+
+    tm = &JS_TRACE_MONITOR(cx);
     unsigned int ngslots = tree->globalSlots->length();
 
     for (; f != NULL; f = f->peer) {
@@ -6534,8 +6537,9 @@ TracerState::~TracerState()
         JS_THREAD_DATA(cx)->onTraceCompartment = NULL;
     }
     
-    traceMonitor->tracerState = prev;
-    traceMonitor->tracecx = NULL;
+    TraceMonitor *tm = &JS_TRACE_MONITOR(cx);
+    tm->tracerState = prev;
+    tm->tracecx = NULL;
 }
 
 /* Call |f|, return the exit taken. */

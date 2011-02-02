@@ -306,14 +306,20 @@ struct Shape : public JSObjectMap
   public:
     inline void freeTable(JSContext *cx);
 
-    static bool initEmptyShapes(JSCompartment *comp);
-    static void finishEmptyShapes(JSCompartment *comp);
+    static bool initRuntimeState(JSContext *cx);
+    static void finishRuntimeState(JSContext *cx);
+
+    enum {
+        EMPTY_ARGUMENTS_SHAPE   = 1,
+        EMPTY_BLOCK_SHAPE       = 2,
+        EMPTY_CALL_SHAPE        = 3,
+        EMPTY_DECL_ENV_SHAPE    = 4,
+        EMPTY_ENUMERATOR_SHAPE  = 5,
+        EMPTY_WITH_SHAPE        = 6,
+        LAST_RESERVED_SHAPE     = 6
+    };
 
     jsid                id;
-
-#ifdef DEBUG
-    JSCompartment       *compartment;
-#endif
 
   protected:
     union {
@@ -504,7 +510,7 @@ struct Shape : public JSObjectMap
           uintN flags, intN shortid, uint32 shape = INVALID_SHAPE, uint32 slotSpan = 0);
 
     /* Used by EmptyShape (see jsscopeinlines.h). */
-    Shape(JSCompartment *comp, Class *aclasp);
+    Shape(JSContext *cx, Class *aclasp);
 
     bool marked() const         { return (flags & MARK) != 0; }
     void mark() const           { flags |= MARK; }
@@ -632,22 +638,15 @@ struct Shape : public JSObjectMap
 
 struct EmptyShape : public js::Shape
 {
-    EmptyShape(JSCompartment *comp, js::Class *aclasp);
+    EmptyShape(JSContext *cx, js::Class *aclasp);
 
     js::Class *getClass() const { return clasp; };
-
-    static EmptyShape *create(JSCompartment *comp, js::Class *clasp) {
-        js::Shape *eprop = comp->propertyTree.newShapeUnchecked();
-        if (!eprop)
-            return NULL;
-        return new (eprop) EmptyShape(comp, clasp);
-    }
 
     static EmptyShape *create(JSContext *cx, js::Class *clasp) {
         js::Shape *eprop = JS_PROPERTY_TREE(cx).newShape(cx);
         if (!eprop)
             return NULL;
-        return new (eprop) EmptyShape(cx->compartment, clasp);
+        return new (eprop) EmptyShape(cx, clasp);
     }
 };
 
@@ -738,7 +737,6 @@ JSObject::setLastProperty(const js::Shape *shape)
     JS_ASSERT(!inDictionaryMode());
     JS_ASSERT(!JSID_IS_VOID(shape->id));
     JS_ASSERT_IF(lastProp, !JSID_IS_VOID(lastProp->id));
-    JS_ASSERT(shape->compartment == compartment());
 
     lastProp = const_cast<js::Shape *>(shape);
 }
@@ -807,11 +805,12 @@ Shape::insertIntoDictionary(js::Shape **dictp)
     ((shape)->hasShortID() ? INT_TO_JSID((shape)->shortid)                    \
                            : (shape)->id)
 
-extern uint32
-js_GenerateShape(JSRuntime *rt);
+#ifndef JS_THREADSAFE
+# define js_GenerateShape(cx, gcLocked)    js_GenerateShape (cx)
+#endif
 
 extern uint32
-js_GenerateShape(JSContext *cx);
+js_GenerateShape(JSContext *cx, bool gcLocked);
 
 #ifdef DEBUG
 struct JSScopeStats {
