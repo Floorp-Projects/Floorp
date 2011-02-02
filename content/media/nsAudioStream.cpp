@@ -512,6 +512,8 @@ void nsAudioStreamLocal::SetVolume(double aVolume)
 
 void nsAudioStreamLocal::Drain()
 {
+  NS_ASSERTION(!mPaused, "Don't drain audio when paused, it won't finish!");
+
   if (mInError)
     return;
 

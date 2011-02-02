@@ -532,7 +532,7 @@ void nsBuiltinDecoderStateMachine::AudioLoop()
         }
       }
 
-      if (!seeking && mAudioStream) {
+      if (!seeking && mAudioStream && !mAudioStream->IsPaused()) {
         mAudioStream->Drain();
 
         // Fire one last event for any extra samples that didn't fill a framebuffer.
