@@ -338,14 +338,14 @@ bool MinidumpCallback(const XP_CHAR* dump_path,
 {
   bool returnValue = showOSCrashReporter ? false : succeeded;
 
-  XP_CHAR minidumpPath[XP_PATH_MAX];
+  static XP_CHAR minidumpPath[XP_PATH_MAX];
   int size = XP_PATH_MAX;
   XP_CHAR* p = Concat(minidumpPath, dump_path, &size);
   p = Concat(p, XP_PATH_SEPARATOR, &size);
   p = Concat(p, minidump_id, &size);
   Concat(p, dumpFileExtension, &size);
 
-  XP_CHAR extraDataPath[XP_PATH_MAX];
+  static XP_CHAR extraDataPath[XP_PATH_MAX];
   size = XP_PATH_MAX;
   p = Concat(extraDataPath, dump_path, &size);
   p = Concat(p, XP_PATH_SEPARATOR, &size);
