@@ -389,11 +389,10 @@
                 onget="return this._contentDocumentHeight;"
                 readonly="true"/>
 
-      <!-- Zoom level is the ratio of device pixels to CSS pixels -->
-      <field name="_scale">1</field>
+      <!-- The ratio of device pixels to CSS pixels -->
       <property name="scale"
-                onget="return this._scale;"
-                onset="return this._setScale(val);"/>
+                onget="return 1;"
+                onset="return 1;"/>
 
       <!-- These counters are used to update the cached viewport after they reach a certain
            threshold when scrolling -->
@@ -403,16 +402,6 @@
       <!-- Used in remote tabs only. -->
       <method name="_updateCSSViewport">
         <body/>
-      </method>
-
-      <!-- Sets the scale of CSS pixels to device pixels. Does not affect page layout. -->
-      <method name="_setScale">
-        <parameter name="scale"/>
-        <body>
-          <![CDATA[
-            // XXX Not implemented for local browsers.
-          ]]>
-        </body>
       </method>
 
       <!-- Sets size of CSS viewport, which affects how page is layout. -->
@@ -501,9 +490,6 @@
             return true;
           },
 
-          setScale: function(aXScale, aYScale) {
-          },
-
           scrollBy: function(x, y) {
             let self = this.self;
             let position = this.getPosition();
@@ -544,8 +530,8 @@
             let bcr = this.getBoundingClientRect();
             let view = this.getRootView();
             let scroll = this.getRootView().getPosition();
-            return { x: (clientX + scroll.x - bcr.left) / this._scale,
-                     y: (clientY + scroll.y - bcr.top) / this._scale };
+            return { x: (clientX + scroll.x - bcr.left) / this.scale,
+                     y: (clientY + scroll.y - bcr.top) / this.scale };
           ]]>
         </body>
       </method>
@@ -765,9 +751,10 @@
             return true;
           },
 
+          _scale: 1,
+          _setScale: function(scale) {},
           scrollBy: function(x, y) {},
           scrollTo: function(x, y) {},
-          setScale: function(aXScale, aYScale) {},
           getPosition: function() {
             return { x: 0, y: 0 };
           }
@@ -904,13 +891,13 @@
             displayport.translateInside(bounds);
 
             self.messageManager.sendAsyncMessage("Content:SetCacheViewport", {
-              scrollX: contentView.scrollX / self._scale,
-              scrollY: contentView.scrollY / self._scale,
-              x: displayport.x / self._scale,
-              y: displayport.y / self._scale,
-              w: displayport.width / self._scale,
-              h: displayport.height / self._scale,
-              scale: self._scale,
+              scrollX: contentView.scrollX / this._scale,
+              scrollY: contentView.scrollY / this._scale,
+              x: displayport.x / this._scale,
+              y: displayport.y / this._scale,
+              w: displayport.width / this._scale,
+              h: displayport.height / this._scale,
+              scale: this._scale,
               id: contentView.id
             });
 
@@ -994,10 +981,9 @@
             this.scrollBy(x - contentView.scrollX, y - contentView.scrollY);
           },
 
-          setScale: function(scale) {
-            let contentView = this._contentView;
+          _setScale: function _setScale(scale) {
             this._scale = scale;
-            contentView.setScale(scale, scale);
+            this._contentView.setScale(scale, scale);
           },
 
           getPosition: function() {
@@ -1008,25 +994,44 @@
         ]]>
       </field>
 
-      <!-- Sets the scale of CSS pixels to device pixels. Does not affect page layout. -->
-      <method name="_setScale">
+      <!-- Transform the viewport without updating the displayport. -->
+      <method name="fuzzyZoom">
         <parameter name="scale"/>
-        <body>
-          <![CDATA[
-            if (scale <= 0 || scale == this._scale)
-              return;
-
-            this._scale = scale;
-            let rootView = this.getRootView();
-            rootView.setScale(scale);
-            rootView._updateCacheViewport();
-
-            let event = document.createEvent("Events");
-            event.initEvent("ZoomChanged", true, false);
-            this.dispatchEvent(event);
-          ]]>
-        </body>
+        <parameter name="x"/>
+        <parameter name="y"/>
+        <body><![CDATA[
+          let rootView = this.getRootView();
+          rootView._setScale(scale);
+          rootView._contentView.scrollTo(x, y);
+        ]]></body>
       </method>
+
+      <!-- After fuzzy zoom, sync the displayport with the new viewport. -->
+      <method name="finishFuzzyZoom">
+        <body><![CDATA[
+          this.getRootView()._updateCacheViewport();
+        ]]></body>
+      </method>
+
+      <!-- The ratio of CSS pixels to device pixels. -->
+      <property name="scale">
+        <getter><![CDATA[
+          return this.getRootView()._scale;
+        ]]></getter>
+        <setter><![CDATA[
+          if (val <= 0 || val == this.scale)
+            return;
+
+          let rootView = this.getRootView();
+          rootView._setScale(val);
+          rootView._updateCacheViewport();
+
+          let event = document.createEvent("Events");
+          event.initEvent("ZoomChanged", true, false);
+          this.dispatchEvent(event);
+          return val;
+        ]]></setter>
+      </property>
 
       <method name="_getView">
         <parameter name="contentView"/>
@@ -1082,8 +1087,8 @@
           <![CDATA[
             let rootView = this._contentViewManager.rootContentView;
             this.messageManager.sendAsyncMessage("Content:ScrollTo", {
-              x: rootView.scrollX / this._scale,
-              y: rootView.scrollY / this._scale
+              x: rootView.scrollX / this.scale,
+              y: rootView.scrollY / this.scale
             });
           ]]>
         </body>
