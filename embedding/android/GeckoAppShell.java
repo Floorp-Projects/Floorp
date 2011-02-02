@@ -95,6 +95,7 @@ class GeckoAppShell
     // helper methods
     public static native void setSurfaceView(GeckoSurfaceView sv);
     public static native void putenv(String map);
+    public static native void onResume();
     public static native void onLowMemory();
     public static native void onCriticalOOM();
     public static native void callObserver(String observerKey, String topic, String data);

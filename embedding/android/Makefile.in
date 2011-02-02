@@ -53,6 +53,7 @@ JAVAFILES = \
   GeckoSurfaceView.java \
   GeckoInputConnection.java \
   AlertNotification.java \
+  MemoryWatcher.java \
   $(NULL)
 
 PROCESSEDJAVAFILES = \
