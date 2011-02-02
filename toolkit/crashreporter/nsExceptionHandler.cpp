@@ -717,10 +717,13 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
   }
 #endif
 
-#ifdef XP_WIN
+#ifdef XP_WIN32
+  MINIDUMP_TYPE minidump_type = MiniDumpNormal;
+
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
   // Try to determine what version of dbghelp.dll we're using.
   // MinidumpWithFullMemoryInfo is only available in 6.1.x or newer.
-  MINIDUMP_TYPE minidump_type = MiniDumpNormal;
+
   DWORD version_size = GetFileVersionInfoSizeW(L"dbghelp.dll", NULL);
   if (version_size > 0) {
     std::vector<BYTE> buffer(version_size);
@@ -740,7 +743,8 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
       }
     }
   }
-#endif
+#endif // MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+#endif // XP_WIN32
 
   // now set the exception handler
   gExceptionHandler = new google_breakpad::
