@@ -367,20 +367,7 @@ ContentParent::Observe(nsISupports* aSubject,
 
     // listening for memory pressure event
     if (!strcmp(aTopic, "memory-pressure")) {
-      NS_ConvertUTF16toUTF8 dataStr(aData);
-      const char *deathPending = dataStr.get();
-
-      if (!strcmp(deathPending, "oom-kill")) {
-#ifdef MOZ_CRASHREPORTER
-          nsCOMPtr<nsICrashReporter> cr = do_GetService("@mozilla.org/toolkit/crash-reporter;1");
-          if (cr) {
-              cr->AnnotateCrashReport(NS_LITERAL_CSTRING("oom"), NS_LITERAL_CSTRING("true"));
-          }
-#endif
-          KillProcess(OtherProcess(), 0, false);
-      }
-      else
-        SendFlushMemory(nsDependentString(aData));
+      SendFlushMemory(nsDependentString(aData));
     }
     // listening for remotePrefs...
     else if (!strcmp(aTopic, "nsPref:changed")) {
