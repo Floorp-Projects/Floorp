@@ -114,5 +114,5 @@ OS_CXXFLAGS := $(filter-out -pedantic,$(OS_CXXFLAGS))
 include $(topsrcdir)/config/rules.mk
 
 inject/%.$(OBJ_SUFFIX): DEFINES += -DBITS=$(if $(HAVE_64BIT_OS),64,32)
-inject/%.$(OBJ_SUFFIX): CFLAGS := -O2 $(filter -m% -I%,$(CFLAGS))
+inject/%.$(OBJ_SUFFIX): CFLAGS := -O2 -fno-stack-protector $(filter -m% -I%,$(CFLAGS))
 inject/$(CPU)-noinit.$(OBJ_SUFFIX): DEFINES += -DNOINIT
