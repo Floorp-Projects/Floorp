@@ -1111,6 +1111,7 @@ GestureModule.prototype = {
       return;
 
     // create the AnimatedZoom object for fast arbitrary zooming
+    AnimatedZoom.start();
     this._pinchZoom = AnimatedZoom;
     this._pinchStartRect = AnimatedZoom.getStartRect();
     this._pinchDelta = 0;
