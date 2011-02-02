@@ -96,5 +96,5 @@ HTTP == svg-image-datauri-1.html       lime100x100.svg
 HTTP == svg-image-external-1.html      blue100x100.svg
 == svg-stylesheet-datauri-1.html       lime100x100.svg
 HTTP == svg-stylesheet-datauri-1.html  lime100x100.svg
-== svg-stylesheet-external-1.html      lime100x100.svg
+random == svg-stylesheet-external-1.html      lime100x100.svg # see bug 629885 comment 9
 HTTP == svg-stylesheet-external-1.html blue100x100.svg
