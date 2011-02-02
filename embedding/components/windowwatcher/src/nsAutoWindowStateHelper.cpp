@@ -65,7 +65,7 @@ nsAutoWindowStateHelper::~nsAutoWindowStateHelper()
   nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(mWindow));
 
   if (window) {
-    window->LeaveModalState();
+    window->LeaveModalState(nsnull);
   }
 
   if (mDefaultEnabled) {
