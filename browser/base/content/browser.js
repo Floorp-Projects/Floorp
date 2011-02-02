@@ -1984,6 +1984,7 @@ function BrowserGoHome(aEvent) {
 
   // Home page should open in a new tab when current tab is an app tab
   if (where == "current" &&
+      gBrowser &&
       gBrowser.selectedTab.pinned)
     where = "tab";
 
