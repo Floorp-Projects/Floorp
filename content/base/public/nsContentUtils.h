@@ -1172,6 +1172,12 @@ public:
     }
   }
 
+  static void DropScriptObject(PRUint32 aLangID, void *aObject,
+                               const char *name, void *aClosure)
+  {
+    DropScriptObject(aLangID, aObject, aClosure);
+  }
+
   /**
    * Unbinds the content from the tree and nulls it out if it's not null.
    */
@@ -1278,7 +1284,7 @@ public:
     if (aCache->PreservingWrapper()) {
       aCallback(nsIProgrammingLanguage::JAVASCRIPT,
                 aCache->GetWrapperPreserveColor(),
-                aClosure);
+                "Preserved wrapper", aClosure);
     }
   }
 

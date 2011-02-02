@@ -6240,7 +6240,8 @@ private:
 };
 
 static void
-DebugWrapperTraceCallback(PRUint32 langID, void *p, void *closure)
+DebugWrapperTraceCallback(PRUint32 langID, void *p, const char *name,
+                          void *closure)
 {
   DebugWrapperTraversalCallback* callback =
     static_cast<DebugWrapperTraversalCallback*>(closure);
