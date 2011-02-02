@@ -2476,8 +2476,9 @@ struct hentry * AffixMgr::suffix_check (const char * word, int len,
         }
        se = se->getNext();
     }
-  
+
     // now handle the general case
+    if (len == 0) return NULL; // FULLSTRIP
     unsigned char sp = *((const unsigned char *)(word + len - 1));
     SfxEntry * sptr = sStart[sp];
 
@@ -2543,8 +2544,9 @@ struct hentry * AffixMgr::suffix_check_twosfx(const char * word, int len,
         }
         se = se->getNext();
     }
-  
+
     // now handle the general case
+    if (len == 0) return NULL; // FULLSTRIP
     unsigned char sp = *((const unsigned char *)(word + len - 1));
     SfxEntry * sptr = sStart[sp];
 
@@ -2605,8 +2607,9 @@ char * AffixMgr::suffix_check_twosfx_morph(const char * word, int len,
         }
         se = se->getNext();
     }
-  
+
     // now handle the general case
+    if (len == 0) return NULL; // FULLSTRIP
     unsigned char sp = *((const unsigned char *)(word + len - 1));
     SfxEntry * sptr = sStart[sp];
 
@@ -2711,8 +2714,9 @@ char * AffixMgr::suffix_check_morph(const char * word, int len,
        }
        se = se->getNext();
     }
-  
+
     // now handle the general case
+    if (len == 0) return NULL; // FULLSTRIP
     unsigned char sp = *((const unsigned char *)(word + len - 1));
     SfxEntry * sptr = sStart[sp];
 
