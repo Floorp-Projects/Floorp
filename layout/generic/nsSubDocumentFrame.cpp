@@ -674,11 +674,6 @@ nsSubDocumentFrame::Reflow(nsPresContext*           aPresContext,
 
   FinishAndStoreOverflow(&aDesiredSize);
 
-  // Invalidate the frame contents
-  // XXX is this really needed?
-  nsRect rect(nsPoint(0, 0), GetSize());
-  Invalidate(rect);
-
   if (!aPresContext->IsPaginated() && !mPostedReflowCallback) {
     PresContext()->PresShell()->PostReflowCallback(this);
     mPostedReflowCallback = PR_TRUE;
