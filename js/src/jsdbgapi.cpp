@@ -130,7 +130,9 @@ JS_SetDebugModeForCompartment(JSContext *cx, JSCompartment *comp, JSBool debug)
     // Find all live scripts
 
     JSContext *iter = NULL;
+#ifdef JS_THREADSAFE
     jsword currentThreadId = reinterpret_cast<jsword>(js_CurrentThreadId());
+#endif
     typedef HashSet<JSScript *, DefaultHasher<JSScript*>, ContextAllocPolicy> ScriptMap;
     ScriptMap liveScripts(cx);
     if (!liveScripts.init())
@@ -138,9 +140,11 @@ JS_SetDebugModeForCompartment(JSContext *cx, JSCompartment *comp, JSBool debug)
 
     JSContext *icx;
     while ((icx = JS_ContextIterator(rt, &iter))) {
+#ifdef JS_THREADSAFE
         if (JS_GetContextThread(icx) != currentThreadId)
             continue;
-            
+#endif
+
         for (AllFramesIter i(icx); !i.done(); ++i) {
             JSScript *script = i.fp()->maybeScript();
             if (script)
