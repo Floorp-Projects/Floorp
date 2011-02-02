@@ -72,9 +72,9 @@ interface nsIDOMNSHTMLDocument : nsISupports
    * @deprecated These are old Netscape 4 methods. Do not use,
    *             the implementation is no-op.
    */
-  [deprecated] void         captureEvents(in long eventFlags);
-  [deprecated] void         releaseEvents(in long eventFlags);
-  [deprecated] void         routeEvent(in nsIDOMEvent evt);
+  void                      captureEvents(in long eventFlags);
+  void                      releaseEvents(in long eventFlags);
+  void                      routeEvent(in nsIDOMEvent evt);
 
   // returns "BackCompat" if we're in quirks mode,
   // or "CSS1Compat" if we're in strict mode
