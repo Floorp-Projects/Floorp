@@ -200,14 +200,18 @@ _cairo_spline_decompose_into (cairo_spline_knots_t *s1, double tolerance_squared
     }
 #endif
 
-    if (_cairo_spline_error_squared (s1) < tolerance_squared)
+    if (_cairo_spline_error_squared (s1) < tolerance_squared) {
+        depth--;
 	return _cairo_spline_add_point (result, &s1->a);
+    }
 
     _de_casteljau (s1, &s2);
 
     status = _cairo_spline_decompose_into (s1, tolerance_squared, result);
-    if (unlikely (status))
+    if (unlikely (status)) {
+        depth--;
 	return status;
+    }
 
     status = _cairo_spline_decompose_into (&s2, tolerance_squared, result);
     depth--;
