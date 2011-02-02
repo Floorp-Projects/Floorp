@@ -1445,7 +1445,8 @@ static PLDHashOperator
 TraceXBLHandlers(const void* aKey, void* aData, void* aClosure)
 {
   TraceData* data = static_cast<TraceData*>(aClosure);
-  data->callback(nsIProgrammingLanguage::JAVASCRIPT, aData, data->closure);
+  data->callback(nsIProgrammingLanguage::JAVASCRIPT, aData,
+                 "Cached XBL prototype handler", data->closure);
   return PL_DHASH_NEXT;
 }
 
