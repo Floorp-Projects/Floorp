@@ -582,6 +582,23 @@
         ]]></setter>
       </property>
 
+      <!-- Transform the viewport without updating the displayport. -->
+      <method name="fuzzyZoom">
+        <parameter name="scale"/>
+        <parameter name="x"/>
+        <parameter name="y"/>
+        <body><![CDATA[
+          this.getRootView().scrollTo(x, y);
+        ]]></body>
+      </method>
+
+      <!-- After fuzzy zoom, sync the displayport with the new viewport. -->
+      <method name="finishFuzzyZoom">
+        <body><![CDATA[
+          return;
+        ]]></body>
+      </method>
+
     </implementation>
   </binding>
 
