@@ -253,6 +253,7 @@ protected:
 };
 #endif
 
+extern PRUint32 gRestartMode;
 extern void InstallSignalHandlers(const char *ProgramName);
 #include "nsX11ErrorHandler.h"
 
@@ -1758,7 +1759,7 @@ static nsresult LaunchChild(nsINativeAppSupport* aNative,
 #else
 #if defined(XP_MACOSX)
   CommandLineServiceMac::SetupMacCommandLine(gRestartArgc, gRestartArgv, PR_TRUE);
-  LaunchChildMac(gRestartArgc, gRestartArgv);
+  LaunchChildMac(gRestartArgc, gRestartArgv, gRestartMode);
 #else
   nsCOMPtr<nsILocalFile> lf;
   nsresult rv = XRE_GetBinaryPath(gArgv[0], getter_AddRefs(lf));
