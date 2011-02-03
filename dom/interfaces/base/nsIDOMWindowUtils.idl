@@ -824,7 +824,7 @@ interface nsIDOMWindowUtils : nsISupports {
 
 typedef unsigned long long nsViewID;
 
-[scriptable, uuid(526d22ab-4997-8666-53f6-38c7f93e77a5)]
+[scriptable, uuid(be2e28c8-64f8-4100-906d-8a451ddd6835)]
 interface nsIDOMWindowUtils_MOZILLA_2_0_BRANCH : nsISupports {
   /**
    * Get the type of the currently focused html input, if any.
@@ -850,4 +850,12 @@ interface nsIDOMWindowUtils_MOZILLA_2_0_BRANCH : nsISupports {
    * might be different at the moment (see bug 621764).
    */
   void leaveModalStateWithWindow(in nsIDOMWindow aWindow);
+
+  /**
+   * Checks the layer tree for this window and returns true
+   * if all layers have transforms that are translations by integers,
+   * no leaf layers overlap, and the union of the leaf layers is exactly
+   * the bounds of the window. Always returns true in non-DEBUG builds.
+   */
+  boolean leafLayersPartitionWindow();
 };
