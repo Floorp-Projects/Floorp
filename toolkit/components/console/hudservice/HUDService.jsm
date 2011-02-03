@@ -2851,17 +2851,26 @@ HUD_SERVICE.prototype =
     // Gather up the selected items and concatenate their clipboard text.
 
     let strings = [];
+    let newGroup = false;
     for (let i = 0; i < aOutputNode.selectedCount; i++) {
       let item = aOutputNode.selectedItems[i];
 
       // Add newlines between groups so that group boundaries show up in the
       // copied output.
       if (i > 0 && item.classList.contains("webconsole-new-group")) {
-        strings.push("\n");
+        newGroup = true;
       }
 
-      let timestampString = ConsoleUtils.timestampString(item.timestamp);
-      strings.push("[" + timestampString + "] " + item.clipboardText);
+      // Ensure the selected item hasn't been filtered by type or string.
+      if (!item.classList.contains("hud-filtered-by-type") &&
+          !item.classList.contains("hud-filtered-by-string")) {
+        let timestampString = ConsoleUtils.timestampString(item.timestamp);
+        if (newGroup) {
+          strings.push("\n");
+          newGroup = false;
+        }
+        strings.push("[" + timestampString + "] " + item.clipboardText);
+      }
     }
     clipboardHelper.copyString(strings.join("\n"));
   }
