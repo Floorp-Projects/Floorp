@@ -396,7 +396,55 @@ function test9()
 
     // Clean-up and next test.
     gBrowser.removeTab(gBrowser.selectedTab, {animate: false});
-    executeSoon(finish);
+    executeSoon(test10);
+  }, false);
+
+  tab.linkedBrowser.addEventListener("load", function(aEvent) {
+    tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
+
+    gBrowser.contentDocument.getElementById('s').click();
+  }, true);
+
+  gBrowser.selectedTab = tab;
+  gBrowser.selectedTab.linkedBrowser.loadURI(uri);
+}
+
+/**
+ * In this test, we check that the message is correctly updated when it changes.
+ */
+function test10()
+{
+  let uri = "data:text/html,<iframe name='t'></iframe><form target='t' action='data:text/html,'><input type='email' required id='i'><input id='s' type='submit'></form>";
+  let tab = gBrowser.addTab();
+
+  gInvalidFormPopup.addEventListener("popupshown", function() {
+    gInvalidFormPopup.removeEventListener("popupshown", arguments.callee, false);
+
+    let doc = gBrowser.contentDocument;
+    let input = doc.getElementById('i');
+    is(doc.activeElement, input, "First invalid element should be focused");
+
+    checkPopupShow();
+
+    is(gInvalidFormPopup.firstChild.textContent, input.validationMessage,
+       "The panel should show the current validation message");
+
+    input.addEventListener('input', function() {
+      input.removeEventListener('input', arguments.callee, false);
+
+      executeSoon(function() {
+        // Now, the element suffers from another error, the message should have
+	// been updated.
+        is(gInvalidFormPopup.firstChild.textContent, input.validationMessage,
+           "The panel should show the current validation message");
+
+        // Clean-up and next test.
+        gBrowser.removeTab(gBrowser.selectedTab, {animate: false});
+        executeSoon(finish);
+      });
+    }, false);
+
+    EventUtils.synthesizeKey('f', {});
   }, false);
 
   tab.linkedBrowser.addEventListener("load", function(aEvent) {
