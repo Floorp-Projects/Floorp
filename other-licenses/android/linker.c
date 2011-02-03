@@ -828,6 +828,11 @@ get_lib_extents(int fd, const char *name, void *__hdr, unsigned *total_sz)
 
 static int reserve_mem_region(soinfo *si)
 {
+#ifdef MOZ_LINKER
+    static int mapping_collision = 0;
+    if (mapping_collision)
+        si->base = NULL;
+#endif
     void *base = mmap((void *)si->base, si->size, PROT_READ | PROT_EXEC,
                       MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     if (base == MAP_FAILED) {
@@ -837,11 +842,16 @@ static int reserve_mem_region(soinfo *si)
               errno, strerror(errno));
         return -1;
     } else if (base != (void *)si->base) {
+#ifdef MOZ_LINKER
+        mapping_collision = 1;
+        si->base = base;
+#else
         DL_ERR("OOPS: %5d %sprelinked library '%s' mapped at 0x%08x, "
               "not at 0x%08x", pid, (si->ba_index < 0 ? "" : "non-"),
               si->name, (unsigned)base, si->base);
         munmap(base, si->size);
         return -1;
+#endif
     }
     return 0;
 }
