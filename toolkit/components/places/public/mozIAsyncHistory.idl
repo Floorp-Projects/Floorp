@@ -158,7 +158,7 @@ interface mozIAsyncHistory : nsISupports
    *
    * @throws NS_ERROR_INVALID_ARG
    *         - Passing in NULL for aPlaceInfo.
-   *         - Not providing at least one valid guid, placeId, or uri for all
+   *         - Not providing at least one valid guid, or uri for all
    *           mozIPlaceInfo object[s].
    *         - Not providing an array or nothing for the visits property of
    *           mozIPlaceInfo.
