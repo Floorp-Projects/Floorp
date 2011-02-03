@@ -1019,7 +1019,8 @@
         <body><![CDATA[
           let rootView = this.getRootView();
           rootView._setScale(scale);
-          rootView._contentView.scrollTo(x, y);
+          if ("_contentView" in rootView)
+            rootView._contentView.scrollTo(x, y);
         ]]></body>
       </method>
 
