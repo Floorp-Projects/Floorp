@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <script type="text/javascript">
+function focusInput() {
+  document.getElementById('i').focus();
+}
+function done() {
+  document.documentElement.className = '';
+}
+  </script>
+  <body onload="focusInput();">
+    <input type="text" id="i" onfocus="done();">
+  </body>
+</html>
