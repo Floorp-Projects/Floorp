@@ -204,6 +204,11 @@ parent:
                        NPCoordinateSpace destSpace)
     returns (double destX, double destY, bool result);
 
+  // Send notification that a plugin tried to negotiate Carbon NPAPI so that
+  // users can be notified that restarting the browser in i386 mode may allow
+  // them to use the plugin.
+  sync NegotiatedCarbon();
+
 both:
   async PPluginScriptableObject();
 
