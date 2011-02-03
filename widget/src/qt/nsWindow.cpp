@@ -1255,14 +1255,14 @@ define CHECK_MOUSE_BLOCKED {}
 #endif
 
 nsEventStatus
-nsWindow::OnMotionNotifyEvent(QGraphicsSceneMouseEvent *aEvent)
+nsWindow::OnMotionNotifyEvent(QPointF aPos,  Qt::KeyboardModifiers aModifiers)
 {
     UserActivity();
 
     CHECK_MOUSE_BLOCKED
 
-    mMoveEvent.pos = aEvent->pos();
-    mMoveEvent.modifiers = aEvent->modifiers();
+    mMoveEvent.pos = aPos;
+    mMoveEvent.modifiers = aModifiers;
     mMoveEvent.needDispatch = true;
     DispatchMotionToMainThread();
 
