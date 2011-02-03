@@ -883,12 +883,18 @@ const gFormSubmitObserver = {
         (element.type == 'radio' || element.type == 'checkbox')) {
       position = "bottomcenter topleft";
     } else {
-      let style = element.ownerDocument.defaultView.getComputedStyle(element, null);
+      let win = element.ownerDocument.defaultView;
+      let style = win.getComputedStyle(element, null);
+      let utils = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                     .getInterface(Components.interfaces.nsIDOMWindowUtils);
+
       if (style.direction == 'rtl') {
         offset = parseInt(style.paddingRight) + parseInt(style.borderRightWidth);
       } else {
         offset = parseInt(style.paddingLeft) + parseInt(style.borderLeftWidth);
       }
+
+      offset = Math.round(offset * utils.screenPixelsPerCSSPixel);
 
       position = "after_start";
     }
