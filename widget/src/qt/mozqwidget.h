@@ -193,6 +193,7 @@ public:
      , mTopLevelWidget(aTopLevel)
     {
         scene()->addItem(aTopLevel);
+        setMouseTracking(true);
     }
 
 protected:
