@@ -170,13 +170,13 @@ ensure_stock_image_widget()
 {
   if (!gProtoWindow) {
     gProtoWindow = gtk_window_new(GTK_WINDOW_POPUP);
-    gtk_widget_realize(gProtoWindow);
     GtkWidget* protoLayout = gtk_fixed_new();
     gtk_container_add(GTK_CONTAINER(gProtoWindow), protoLayout);
 
     gStockImageWidget = gtk_image_new();
     gtk_container_add(GTK_CONTAINER(protoLayout), gStockImageWidget);
-    gtk_widget_realize(gStockImageWidget);
+
+    gtk_widget_ensure_style(gStockImageWidget);
   }
 }
 
