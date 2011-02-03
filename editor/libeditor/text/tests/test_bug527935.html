@@ -22,6 +22,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=527935
 <pre id="test">
 <script type="application/javascript">
 
+function getAutocompletePopup() {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    var Ci = Components.interfaces;
+    chromeWin = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                      .getInterface(Ci.nsIWebNavigation)
+                      .QueryInterface(Ci.nsIDocShellTreeItem)
+                      .rootTreeItem
+                      .QueryInterface(Ci.nsIInterfaceRequestor)
+                      .getInterface(Ci.nsIDOMWindow)
+                      .QueryInterface(Ci.nsIDOMChromeWindow);
+    autocompleteMenu = chromeWin.document.getElementById("PopupAutoComplete");
+    ok(autocompleteMenu, "Got autocomplete popup");
+
+    return autocompleteMenu;
+}
+
 /** Test for Bug 527935 **/
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
@@ -35,10 +51,11 @@ SimpleTest.waitForFocus(function() {
 
     setTimeout(function() {
       var popupShown = false;
+      var popup = getAutocompletePopup();
       function listener() {
         popupShown = true;
       }
-      SpecialPowers.addAutoCompletePopupEventListener(window, listener);
+      popup.addEventListener("popupshowing", listener, false);
 
       var event = document.createEvent("KeyboardEvent");
 
@@ -50,7 +67,7 @@ SimpleTest.waitForFocus(function() {
 
       setTimeout(function() {
         ok(!popupShown, "Popup must not be opened");
-        SpecialPowers.removeAutoCompletePopupEventListener(window, listener);
+        popup.removeEventListener("popupshowing", listener, false);
         SimpleTest.finish();
       }, 1000);
     }, 0);
