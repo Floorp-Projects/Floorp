@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+    SimpleTest.waitForExplicitFinish();
+    // Run the test in a separate window so we get a clean browser window.
+    window.open("data:text/html,<html style='overflow:scroll'><script>opener.doTest(window)</script>",
+                "", "scrollbars=yes,toolbar,menubar,width=500,height=500");
+    function doTest(win) {
+      var currentCount = win.mozPaintCount;
+      function nextStep() {
+        if (win.mozPaintCount == currentCount) {
+          setTimeout(nextStep, 0, win);
+          return;
+        }
+        var utils = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+            getInterface(Components.interfaces.nsIDOMWindowUtils).
+            QueryInterface(Components.interfaces.nsIDOMWindowUtils_MOZILLA_2_0_BRANCH);
+        ok(utils.leafLayersPartitionWindow(),
+           "Leaf layers should form a non-overlapping partition of the browser window");
+        win.close();
+        SimpleTest.finish();
+      }
+      setTimeout(nextStep, 0);
+    }
+  ]]>
+  </script>
+</window>
