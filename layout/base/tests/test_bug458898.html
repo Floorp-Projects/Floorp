@@ -19,12 +19,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=458898
 <script class="testbody" type="text/javascript">
 
 SimpleTest.waitForExplicitFinish();
-// This should be rewritten as a chrome test
 netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 var win = window.openDialog("data:text/html,<div style='height:200px; width:100px;'>");
 
 function loaded() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   win.sizeToContent();
   ok(win.innerWidth >= 100, "innerWidth: " + win.innerWidth + " >= 100 ?");
   ok(win.innerHeight >= 200, "innerHeight: " + win.innerHeight + " >= 200 ?");
