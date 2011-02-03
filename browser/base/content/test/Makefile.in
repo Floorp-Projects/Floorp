@@ -232,7 +232,6 @@ _BROWSER_FILES = \
                  browser_tabMatchesInAwesomebar.js \
                  file_bug550565_popup.html \
                  file_bug550565_favicon.ico \
-                 browser_overLinkInLocationBar.js \
                  browser_aboutHome.js \
                  app_bug575561.html \
                  app_subframe_bug575561.html \

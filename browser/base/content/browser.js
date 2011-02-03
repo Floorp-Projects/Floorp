@@ -4022,6 +4022,7 @@ var XULBrowserWindow = {
   defaultStatus: "",
   jsStatus: "",
   jsDefaultStatus: "",
+  overLink: "",
   startTime: 0,
   statusText: "",
   isBusy: false,
@@ -4094,18 +4095,17 @@ var XULBrowserWindow = {
   },
 
   setOverLink: function (url, anchorElt) {
-    if (gURLBar) {
-      // Encode bidirectional formatting characters.
-      // (RFC 3987 sections 3.2 and 4.1 paragraph 6)
-      url = url.replace(/[\u200e\u200f\u202a\u202b\u202c\u202d\u202e]/g,
-                        encodeURIComponent);
-      gURLBar.setOverLink(url);
-    }
-  }, 
+    // Encode bidirectional formatting characters.
+    // (RFC 3987 sections 3.2 and 4.1 paragraph 6)
+    this.overLink = url.replace(/[\u200e\u200f\u202a\u202b\u202c\u202d\u202e]/g,
+                                encodeURIComponent)
+                       .replace(/^http:\/\//, "");
+    LinkTargetDisplay.update();
+  },
 
   updateStatusField: function () {
-    var text;
-    if (this._busyUI)
+    var text = this.overLink;
+    if (!text && this._busyUI)
       text = this.status;
     if (!text)
       text = this.jsStatus || this.jsDefaultStatus || this.defaultStatus;
@@ -4539,6 +4539,58 @@ var XULBrowserWindow = {
       Services.obs.notifyObservers(content, notification, urlStr);
     } catch (e) {
     }
+  }
+};
+
+var LinkTargetDisplay = {
+  DELAY_SHOW: 70,
+  DELAY_HIDE: 150,
+  _timer: 0,
+
+  get _isVisible () XULBrowserWindow.statusTextField.label != "",
+
+  update: function () {
+    clearTimeout(this._timer);
+    window.removeEventListener("mousemove", this, true);
+
+    if (!XULBrowserWindow.overLink) {
+      if (XULBrowserWindow.hideOverLinkImmediately)
+        this._hide();
+      else
+        this._timer = setTimeout(this._hide.bind(this), this.DELAY_HIDE);
+      return;
+    }
+
+    if (this._isVisible) {
+      XULBrowserWindow.updateStatusField();
+    } else {
+      // Let the display appear when the mouse doesn't move within the delay
+      this._showDelayed();
+      window.addEventListener("mousemove", this, true);
+    }
+  },
+
+  handleEvent: function (event) {
+    switch (event.type) {
+      case "mousemove":
+        // Restart the delay since the mouse was moved
+        clearTimeout(this._timer);
+        this._showDelayed();
+        break;
+    }
+  },
+
+  _showDelayed: function () {
+    this._timer = setTimeout(function (self) {
+      XULBrowserWindow.updateStatusField();
+      window.removeEventListener("mousemove", self, true);
+    }, this.DELAY_SHOW, this);
+  },
+
+  _hide: function () {
+    clearTimeout(this._timer);
+
+    XULBrowserWindow.updateStatusField();
   }
 };
 

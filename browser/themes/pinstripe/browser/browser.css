@@ -897,42 +897,6 @@ toolbar[mode="icons"] #zoom-in-button {
   margin-top: 2px;
 }
 
-/* over-link in location bar */
-
-.urlbar-origin-label {
-  padding-top: 0;
-  padding-bottom: 0;
-  -moz-padding-start: 1px;
-  -moz-padding-end: 0;
-  margin: 0;
-}
-
-.urlbar-over-link-box {
-  position: relative;
-  color: GrayText;
-  min-height: 20px;
-  padding-top: 0;
-  padding-bottom: 0;
-  -moz-padding-start: 18px;
-  -moz-padding-end: 5px;
-}
-
-.urlbar-over-link-box:-moz-locale-dir(ltr) {
-  background: url(chrome://browser/skin/urlbar-over-link-arrow.png) no-repeat left center;
-  right: 0;
-}
-
-.urlbar-over-link-box:-moz-locale-dir(rtl) {
-  background: url(chrome://browser/skin/urlbar-over-link-arrow-rtl.png) no-repeat right center;
-  left: 0;
-}
-
-.urlbar-over-link-host-label,
-.urlbar-over-link-path-label {
-  padding: 0;
-  margin: 0;
-}
-
 /* ----- AUTOCOMPLETE ----- */
 
 #treecolAutoCompleteImage {

@@ -1,7 +1,5 @@
 browser.jar:
 % skin browser classic/1.0 %skin/classic/browser/
-  skin/classic/browser/urlbar-over-link-arrow.png
-  skin/classic/browser/urlbar-over-link-arrow-rtl.png
   skin/classic/browser/sanitizeDialog.css                   (sanitizeDialog.css)
 * skin/classic/browser/aboutPrivateBrowsing.css             (aboutPrivateBrowsing.css)
 * skin/classic/browser/aboutSessionRestore.css              (aboutSessionRestore.css)
