@@ -91,7 +91,6 @@
 #include "jsbuiltins.h"
 #include "jscntxt.h"
 #include "jsversion.h"
-#include "jsdbgapi.h" /* for js_TraceWatchPoints */
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsinterp.h"

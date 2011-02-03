@@ -156,7 +156,6 @@ typedef struct JSPropertyDescriptor JSPropertyDescriptor;
 typedef struct JSPropertySpec    JSPropertySpec;
 typedef struct JSObjectMap       JSObjectMap;
 typedef struct JSRuntime         JSRuntime;
-typedef struct JSScript          JSScript;
 typedef struct JSStackFrame      JSStackFrame;
 typedef struct JSXDRState        JSXDRState;
 typedef struct JSExceptionState  JSExceptionState;
@@ -466,12 +465,6 @@ typedef void
 
 typedef JSBool
 (* JSOperationCallback)(JSContext *cx);
-
-/*
- * Deprecated form of JSOperationCallback.
- */
-typedef JSBool
-(* JSBranchCallback)(JSContext *cx, JSScript *script);
 
 typedef void
 (* JSErrorReporter)(JSContext *cx, const char *message, JSErrorReport *report);

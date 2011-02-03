@@ -397,7 +397,7 @@ static void
 Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
 {
     JSBool ok, hitEOF;
-    JSScript *script;
+    JSObject *scriptObj;
     jsval result;
     JSString *str;
     char *buffer;
@@ -446,10 +446,10 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
         int64 t1 = PRMJ_Now();
         oldopts = JS_GetOptions(cx);
         JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO | JSOPTION_NO_SCRIPT_RVAL);
-        script = JS_CompileFileHandle(cx, obj, filename, file);
+        scriptObj = JS_CompileFileHandle(cx, obj, filename, file);
         JS_SetOptions(cx, oldopts);
-        if (script && !compileOnly) {
-            (void)JS_ExecuteScript(cx, obj, script, NULL);
+        if (scriptObj && !compileOnly) {
+            (void) JS_ExecuteScript(cx, obj, scriptObj, NULL);
             int64 t2 = PRMJ_Now() - t1;
             if (printTiming)
                 printf("runtime = %.3f ms\n", double(t2) / PRMJ_USEC_PER_MSEC);
@@ -535,13 +535,13 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
         oldopts = JS_GetOptions(cx);
         if (!compileOnly)
             JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO);
-        script = JS_CompileScript(cx, obj, buffer, len, "typein",
-                                  startline);
+        scriptObj = JS_CompileScript(cx, obj, buffer, len, "typein",
+                                     startline);
         if (!compileOnly)
             JS_SetOptions(cx, oldopts);
 
-        if (script && !compileOnly) {
-            ok = JS_ExecuteScript(cx, obj, script, &result);
+        if (scriptObj && !compileOnly) {
+            ok = JS_ExecuteScript(cx, obj, scriptObj, &result);
             if (ok && !JSVAL_IS_VOID(result)) {
                 str = JS_ValueToSource(cx, result);
                 ok = !!str;
@@ -1018,36 +1018,32 @@ Options(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 Load(JSContext *cx, uintN argc, jsval *vp)
 {
-    uintN i;
-    JSString *str;
-    JSScript *script;
-    uint32 oldopts;
-
     JSObject *thisobj = JS_THIS_OBJECT(cx, vp);
     if (!thisobj)
         return JS_FALSE;
 
     jsval *argv = JS_ARGV(cx, vp);
-    for (i = 0; i < argc; i++) {
-        str = JS_ValueToString(cx, argv[i]);
+    for (uintN i = 0; i < argc; i++) {
+        JSString *str = JS_ValueToString(cx, argv[i]);
         if (!str)
-            return JS_FALSE;
+            return false;
         argv[i] = STRING_TO_JSVAL(str);
         JSAutoByteString filename(cx, str);
         if (!filename)
             return JS_FALSE;
         errno = 0;
-        oldopts = JS_GetOptions(cx);
+        uint32 oldopts = JS_GetOptions(cx);
         JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO | JSOPTION_NO_SCRIPT_RVAL);
-        script = JS_CompileFile(cx, thisobj, filename.ptr());
-        if (!script)
-            return JS_FALSE;
+        JSObject *scriptObj = JS_CompileFile(cx, thisobj, filename.ptr());
         JS_SetOptions(cx, oldopts);
-        if (!compileOnly && !JS_ExecuteScript(cx, thisobj, script, NULL))
-            return JS_FALSE;
+        if (!scriptObj)
+            return false;
+
+        if (!compileOnly && !JS_ExecuteScript(cx, thisobj, scriptObj, NULL))
+            return false;
     }
 
-    return JS_TRUE;
+    return true;
 }
 
 static JSBool
@@ -1160,17 +1156,12 @@ Run(JSContext *cx, uintN argc, jsval *vp)
     JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO | JSOPTION_NO_SCRIPT_RVAL);
 
     int64 startClock = PRMJ_Now();
-    JSScript *script = JS_CompileUCScript(cx, thisobj, ucbuf, buflen, filename.ptr(), 1);
+    JSObject *scriptObj = JS_CompileUCScript(cx, thisobj, ucbuf, buflen, filename.ptr(), 1);
     JS_SetOptions(cx, oldopts);
-    if (!script)
+    if (!scriptObj || !JS_ExecuteScript(cx, thisobj, scriptObj, NULL))
         return false;
 
-    JSBool ok = JS_ExecuteScript(cx, thisobj, script, NULL);
     int64 endClock = PRMJ_Now();
-    JS_DestroyScript(cx, script);
-    if (!ok)
-        return false;
-
     JS_SET_RVAL(cx, vp, DOUBLE_TO_JSVAL((endClock - startClock) / double(PRMJ_USEC_PER_MSEC)));
     return true;
 }
@@ -2257,7 +2248,6 @@ DisassFile(JSContext *cx, uintN argc, jsval *vp)
     argv += argc-1;
     argc = 1;
 
-
     JSObject *thisobj = JS_THIS_OBJECT(cx, vp);
     if (!thisobj)
         return JS_FALSE;
@@ -2271,16 +2261,12 @@ DisassFile(JSContext *cx, uintN argc, jsval *vp)
 
     uint32 oldopts = JS_GetOptions(cx);
     JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO | JSOPTION_NO_SCRIPT_RVAL);
-    JSScript *script = JS_CompileFile(cx, thisobj, filename.ptr());
+    JSObject *scriptObj = JS_CompileFile(cx, thisobj, filename.ptr());
     JS_SetOptions(cx, oldopts);
-    if (!script)
-        return JS_FALSE;
+    if (!scriptObj)
+        return false;
 
-    JSObject *obj = JS_NewScriptObject(cx, script);
-    if (!obj)
-        return JS_FALSE;
-
-    argv[0] = OBJECT_TO_JSVAL(obj); /* I like to root it, root it. */
+    argv[0] = OBJECT_TO_JSVAL(scriptObj);
     JSBool ok = Disassemble(cx, _argc, vp); /* gross, but works! */
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return ok;
@@ -4318,10 +4304,10 @@ Compile(JSContext *cx, uintN argc, jsval *vp)
     }
 
     JSString *scriptContents = JSVAL_TO_STRING(arg0);
-    JSScript *result = JS_CompileUCScript(cx, NULL, JS_GetStringCharsZ(cx, scriptContents),
-                                          JS_GetStringLength(scriptContents), "<string>", 0);
-    if (!result)
-        return JS_FALSE;
+    if (!JS_CompileUCScript(cx, NULL, JS_GetStringCharsZ(cx, scriptContents),
+                            JS_GetStringLength(scriptContents), "<string>", 0)) {
+        return false;
+    }
 
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return JS_TRUE;

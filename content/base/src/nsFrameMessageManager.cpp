@@ -628,9 +628,7 @@ nsFrameScriptExecutor::LoadFrameScriptInternal(const nsAString& aURL)
       mGlobal->GetJSObject(&global);
       if (global) {
         jsval val;
-        JS_ExecuteScript(mCx, global,
-                         (JSScript*)JS_GetPrivate(mCx, holder->mObject),
-                         &val);
+        JS_ExecuteScript(mCx, global, holder->mObject, &val);
       }
     }
     JSContext* unused;
@@ -682,15 +680,13 @@ nsFrameScriptExecutor::LoadFrameScriptInternal(const nsAString& aURL)
         JSPrincipals* jsprin = nsnull;
         mPrincipal->GetJSPrincipals(mCx, &jsprin);
         nsContentUtils::XPConnect()->FlagSystemFilenamePrefix(url.get(), PR_TRUE);
-        JSScript* script =
+        JSObject* scriptObj =
           JS_CompileUCScriptForPrincipals(mCx, nsnull, jsprin,
                                          (jschar*)dataString.get(),
                                           dataString.Length(),
                                           url.get(), 1);
 
-        if (script) {
-          JSObject* scriptObj = JS_NewScriptObject(mCx, script);
-          JS_AddObjectRoot(mCx, &scriptObj);
+        if (scriptObj) {
           nsCAutoString scheme;
           uri->GetScheme(scheme);
           // We don't cache data: scripts!
@@ -703,9 +699,7 @@ nsFrameScriptExecutor::LoadFrameScriptInternal(const nsAString& aURL)
             sCachedScripts->Put(aURL, holder);
           }
           jsval val;
-          JS_ExecuteScript(mCx, global,
-                           (JSScript*)JS_GetPrivate(mCx, scriptObj), &val);
-          JS_RemoveObjectRoot(mCx, &scriptObj);
+          JS_ExecuteScript(mCx, global, scriptObj, &val);
         }
         //XXX Argh, JSPrincipals are manually refcounted!
         JSPRINCIPALS_DROP(mCx, jsprin);
