@@ -673,6 +673,22 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       group.newTab();
     }
 
+    this.destroy();
+  },
+
+  // ----------
+  // Function: destroy
+  // Close all tabs linked to children (tabItems), removes all children and 
+  // close the groupItem.
+  //
+  // Parameters:
+  //   options - An object with optional settings for this call.
+  //
+  // Options:
+  //   immediately - (bool) if true, no animation will be used
+  destroy: function GroupItem_destroy(options) {
+    let self = this;
+
     // when "TabClose" event is fired, the browser tab is about to close and our 
     // item "close" event is fired.  And then, the browser tab gets closed. 
     // In other words, the group "close" event is fired before all browser
@@ -703,7 +719,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
       this.$undoContainer.fadeOut(function() { self._unhide() });
     } else {
-      this.close();
+      this.close(options);
     }
   },
 
@@ -1892,7 +1908,6 @@ let GroupItems = {
   // ----------
   // Function: reconstitute
   // Restores to stored state, creating groupItems as needed.
-  // If no data, sets up blank slate (including "new tabs" groupItem).
   reconstitute: function GroupItems_reconstitute(groupItemsData, groupItemData) {
     try {
       let activeGroupId;
@@ -1910,7 +1925,7 @@ let GroupItems = {
           let data = groupItemData[id];
           if (this.groupItemStorageSanity(data)) {
             let groupItem = this.groupItem(data.id); 
-            if (groupItem) {
+            if (groupItem && !groupItem.hidden) {
               groupItem.userSize = data.userSize;
               groupItem.setTitle(data.title);
               groupItem.setBounds(data.bounds, true);
@@ -1930,7 +1945,7 @@ let GroupItems = {
         }
 
         toClose.forEach(function(groupItem) {
-          groupItem.close({immediately: true});
+          groupItem.destroy({immediately: true});
         });
       }
 
