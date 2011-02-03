@@ -145,9 +145,42 @@ var gSyncSetup = {
     this.wizard.pageIndex = EXISTING_ACCOUNT_CONNECT_PAGE;
   },
 
+  resetPassphrase: function resetPassphrase() {
+    // Apply the existing form fields so that
+    // Weave.Service.changePassphrase() has the necessary credentials.
+    Weave.Service.account = document.getElementById("existingAccountName").value;
+    Weave.Service.password = document.getElementById("existingPassword").value;
+
+    // Generate a new passphrase so that Weave.Service.login() will
+    // actually do something.
+    let passphrase = Weave.Utils.generatePassphrase();
+    Weave.Service.passphrase = passphrase;
+
+    // Only open the dialog if username + password are actually correct.
+    Weave.Service.login();
+    if ([Weave.LOGIN_FAILED_INVALID_PASSPHRASE,
+         Weave.LOGIN_FAILED_NO_PASSPHRASE,
+         Weave.LOGIN_SUCCEEDED].indexOf(Weave.Status.login) == -1) {
+      return;
+    }
+
+    // Hide any errors about the passphrase, we know it's not right.
+    let feedback = document.getElementById("existingPassphraseFeedbackRow");
+    feedback.hidden = true;
+    let el = document.getElementById("existingPassphrase");
+    el.value = Weave.Utils.hyphenatePassphrase(passphrase);
+
+    // changePassphrase() will sync, make sure we set the "firstSync" pref
+    // according to the user's pref.
+    Weave.Svc.Prefs.reset("firstSync");
+    this.setupInitialSync();
+    gSyncUtils.resetPassphrase();
+  },
+
   onResetPassphrase: function () {
     document.getElementById("existingPassphrase").value = 
       Weave.Utils.hyphenatePassphrase(Weave.Service.passphrase);
+    this.checkFields();
     this.wizard.advance();
   },
 
@@ -904,7 +937,6 @@ var gSyncSetup = {
     }
     this._setFeedback(element, success, str);
   },
-
 
   onStateChange: function(webProgress, request, stateFlags, status) {
     // We're only looking for the end of the frame load
