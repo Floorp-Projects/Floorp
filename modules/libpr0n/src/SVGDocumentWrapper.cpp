@@ -241,7 +241,7 @@ SVGDocumentWrapper::ResetAnimation()
     return;
 
 #ifdef DEBUG
-  nsresult rv = 
+  nsresult rv =
 #endif
     svgElem->SetCurrentTime(0.0f);
   NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "SetCurrentTime failed");

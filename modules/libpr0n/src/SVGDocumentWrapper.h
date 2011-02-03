@@ -124,7 +124,7 @@ public:
    * Returns a PRBool indicating whether the wrapped document has been parsed
    * successfully.
    *
-   * @return PR_TRUE if the document has been parsed successfully, 
+   * @return PR_TRUE if the document has been parsed successfully,
    *         PR_FALSE otherwise (e.g. if there's a syntax error in the SVG).
    */
   inline PRBool    ParsedSuccessfully()  { return !!GetRootSVGElem(); }
