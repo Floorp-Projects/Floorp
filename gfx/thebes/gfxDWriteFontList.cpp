@@ -261,13 +261,37 @@ gfxDWriteFontEntry::IsSymbolFont()
     }
 }
 
+static bool
+UsingArabicScriptSystemLocale()
+{
+    LANGID langid = PRIMARYLANGID(::GetSystemDefaultLangID());
+    switch (langid) {
+    case LANG_ARABIC:
+    case LANG_DARI:
+    case LANG_PASHTO:
+    case LANG_PERSIAN:
+    case LANG_SINDHI:
+    case LANG_UIGHUR:
+    case LANG_URDU:
+        return true;
+    default:
+        return false;
+    }
+}
+
 nsresult
 gfxDWriteFontEntry::GetFontTable(PRUint32 aTableTag,
                                  FallibleTArray<PRUint8> &aBuffer)
 {
     gfxDWriteFontList *pFontList = gfxDWriteFontList::PlatformFontList();
 
-    if (mFont && pFontList->UseGDIFontTableAccess()) {
+    // don't use GDI table loading for symbol fonts or for
+    // italic fonts in Arabic-script system locales because of
+    // potential cmap discrepancies, see bug 629386
+    if (mFont && pFontList->UseGDIFontTableAccess() &&
+        !(mItalic && UsingArabicScriptSystemLocale()) &&
+        !mFont->IsSymbolFont())
+    {
         LOGFONTW logfont = { 0 };
         if (!InitLogFont(mFont, &logfont))
             return NS_ERROR_FAILURE;
