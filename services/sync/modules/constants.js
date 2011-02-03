@@ -1,3 +1,4 @@
+#filter substitution
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -38,7 +39,7 @@
 // Process each item in the "constants hash" to add to "global" and give a name
 let EXPORTED_SYMBOLS = [((this[key] = val), key) for ([key, val] in Iterator({
 
-WEAVE_CHANNEL:                         "@xpi_type@",
+WEAVE_CHANNEL:                         "@weave_channel@",
 WEAVE_VERSION:                         "@weave_version@",
 WEAVE_ID:                              "@weave_id@",
 
@@ -47,7 +48,7 @@ WEAVE_ID:                              "@weave_id@",
 // the per-engine cleartext formats.
 STORAGE_VERSION:                       5,
 
-UPDATED_DEV_URL:                       "https://services.mozilla.com/sync/updated/?version=@weave_version@&channel=@xpi_type@",
+UPDATED_DEV_URL:                       "https://services.mozilla.com/sync/updated/?version=@weave_version@&channel=@weave_channel@",
 UPDATED_REL_URL:                       "http://www.mozilla.com/firefox/sync/updated.html",
 
 PREFS_BRANCH:                          "services.sync.",
@@ -76,6 +77,9 @@ MULTI_DESKTOP_SYNC:                    60 * 60 * 1000, // 1 hour
 MULTI_MOBILE_SYNC:                     5 * 60 * 1000, // 5 minutes
 PARTIAL_DATA_SYNC:                     60 * 1000, // 1 minute
 
+MAX_ERROR_COUNT_BEFORE_BACKOFF:        3,
+MAX_IGNORE_ERROR_COUNT:                5,
+
 // HMAC event handling timeout.
 // 10 minutes: a compromise between the multi-desktop sync interval
 // and the mobile sync interval.
@@ -91,6 +95,7 @@ MOBILE_BATCH_SIZE:                     50,
 // Default batch size for applying incoming records.
 DEFAULT_STORE_BATCH_SIZE:              1,
 HISTORY_STORE_BATCH_SIZE:              50, // same as MOBILE_BATCH_SIZE
+FORMS_STORE_BATCH_SIZE:                50, // same as MOBILE_BATCH_SIZE
 
 // score thresholds for early syncs
 SINGLE_USER_THRESHOLD:                 1000,
