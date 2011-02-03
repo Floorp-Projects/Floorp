@@ -133,9 +133,12 @@ function test_overQuota(next) {
 }
 
 function test_service_networkError(next) {
+  _("Test: Connection refused error from Service.sync() leads to the right status code.");
   setUp();
   // Provoke connection refused.
   Service.clusterURL = "http://localhost:12345/";
+  Service._ignorableErrorCount = 0;
+
   try {
     do_check_eq(Status.sync, SYNC_SUCCEEDED);
 
@@ -143,6 +146,7 @@ function test_service_networkError(next) {
     Service.sync();
 
     do_check_eq(Status.sync, LOGIN_FAILED_NETWORK_ERROR);
+    do_check_eq(Service._ignorableErrorCount, 1);
   } finally {
     Status.resetSync();
     Service.startOver();
@@ -150,10 +154,54 @@ function test_service_networkError(next) {
   next();
 }
 
+function test_service_offline(next) {
+  _("Test: Wanting to sync in offline mode leads to the right status code but does not increment the ignorable error count.");
+  setUp();
+  Svc.IO.offline = true;
+  Service._ignorableErrorCount = 0;
+
+  try {
+    do_check_eq(Status.sync, SYNC_SUCCEEDED);
+
+    Service._loggedIn = true;
+    Service.sync();
+
+    do_check_eq(Status.sync, LOGIN_FAILED_NETWORK_ERROR);
+    do_check_eq(Service._ignorableErrorCount, 0);
+  } finally {
+    Status.resetSync();
+    Service.startOver();
+  }
+  Svc.IO.offline = false;
+  next();
+}
+
+function test_service_reset_ignorableErrorCount(next) {
+  _("Test: Successful sync resets the ignorable error count.");
+  let server = sync_httpd_setup();
+  setUp();
+  Service._ignorableErrorCount = 10;
+
+  try {
+    do_check_eq(Status.sync, SYNC_SUCCEEDED);
+
+    Service.login();
+    Service.sync();
+
+    do_check_eq(Status.sync, SYNC_SUCCEEDED);
+    do_check_eq(Service._ignorableErrorCount, 0);
+  } finally {
+    Status.resetSync();
+    Service.startOver();
+  }
+  server.stop(next);
+}
+
 function test_engine_networkError(next) {
   _("Test: Network related exceptions from engine.sync() lead to the right status code.");
   let server = sync_httpd_setup();
   setUp();
+  Service._ignorableErrorCount = 0;
 
   Engines.register(CatapultEngine);
   let engine = Engines.get("catapult");
@@ -168,6 +216,7 @@ function test_engine_networkError(next) {
     Service.sync();
 
     do_check_eq(Status.sync, LOGIN_FAILED_NETWORK_ERROR);
+    do_check_eq(Service._ignorableErrorCount, 1);
   } finally {
     Engines.unregister("catapult");
     Status.resetSync();
@@ -213,6 +262,8 @@ function run_test() {
                   test_backoff503,
                   test_overQuota,
                   test_service_networkError,
+                  test_service_offline,
+                  test_service_reset_ignorableErrorCount,
                   test_engine_networkError,
                   test_engine_applyFailed,
                   do_test_finished)();
