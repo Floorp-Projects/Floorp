@@ -359,6 +359,8 @@ SearchEventHandlerClass.prototype = {
         (event.keyCode >= event.DOM_VK_F1 &&
          event.keyCode <= event.DOM_VK_SCROLL_LOCK) ||
         event.keyCode == event.DOM_VK_META ||
+        event.keyCode == 91 || // 91 = left windows key
+        event.keyCode == 92 || // 92 = right windows key
         (!event.keyCode && !event.charCode)) {
       return;
     }
