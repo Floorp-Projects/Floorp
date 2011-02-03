@@ -461,6 +461,7 @@ statuspanel {
   margin-top: -3em;
   left: 0;
   max-width: 50%;
+  min-width: 25%;
   -moz-transition: opacity 100ms ease-out;
 }
 
@@ -471,11 +472,13 @@ statuspanel:-moz-locale-dir(rtl):not([mirror]) {
 }
 
 statuspanel[label=""] {
+  -moz-transition: none;
   opacity: 0;
   pointer-events: none;
 }
 
 .statuspanel-inner {
   height: 3em;
+  width: 100%;
   -moz-box-align: end;
 }

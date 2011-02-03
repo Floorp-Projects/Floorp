@@ -3707,8 +3707,12 @@
     <implementation>
       <property name="label">
         <setter>
-          if (!this.label)
+          if (!this.label) {
             this.removeAttribute("mirror");
+            this.style.minWidth = "";
+          } else {
+            this.style.minWidth = getComputedStyle(this).width;
+          }
           this.setAttribute("label", val);
           return val;
         </setter>
