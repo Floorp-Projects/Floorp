@@ -398,6 +398,7 @@ WeaveSvc.prototype = {
     Svc.Obs.add("weave:service:setup-complete", this);
     Svc.Obs.add("network:offline-status-changed", this);
     Svc.Obs.add("weave:service:sync:finish", this);
+    Svc.Obs.add("weave:service:login:error", this);
     Svc.Obs.add("weave:service:sync:error", this);
     Svc.Obs.add("weave:service:backoff:interval", this);
     Svc.Obs.add("weave:engine:score:updated", this);
@@ -542,15 +543,28 @@ WeaveSvc.prototype = {
         this._log.trace("Network offline status change: " + data);
         this._checkSyncStatus();
         break;
+      case "weave:service:login:error":
+        if (Status.login == LOGIN_FAILED_NETWORK_ERROR && !Svc.IO.offline) {
+          this._ignorableErrorCount += 1;
+        }
+        break;
       case "weave:service:sync:error":
         this._handleSyncError();
-        if (Status.sync == CREDENTIALS_CHANGED) {
-          this.logout();
+        switch (Status.sync) {
+          case LOGIN_FAILED_NETWORK_ERROR:
+            if (!Svc.IO.offline) {
+              this._ignorableErrorCount += 1;
+            }
+            break;
+          case CREDENTIALS_CHANGED:
+            this.logout();
+            break;
         }
         break;
       case "weave:service:sync:finish":
         this._scheduleNextSync();
         this._syncErrors = 0;
+        this._ignorableErrorCount = 0;
         break;
       case "weave:service:backoff:interval":
         let interval = (data + Math.random() * data * 0.25) * 1000; // required backoff + up to 25%
@@ -1078,8 +1092,10 @@ WeaveSvc.prototype = {
     this._catch(this._lock("service.js: login", 
           this._notify("login", "", function() {
       this._loggedIn = false;
-      if (Svc.IO.offline)
+      if (Svc.IO.offline) {
+        Status.login = LOGIN_FAILED_NETWORK_ERROR;
         throw "Application is offline, login should not be called";
+      }
 
       let initialStatus = this._checkSetup();
       if (username)
@@ -1617,9 +1633,10 @@ WeaveSvc.prototype = {
   _handleSyncError: function WeaveSvc__handleSyncError() {
     this._syncErrors++;
 
-    // do nothing on the first couple of failures, if we're not in backoff due to 5xx errors
+    // Do nothing on the first couple of failures, if we're not in
+    // backoff due to 5xx errors.
     if (!Status.enforceBackoff) {
-      if (this._syncErrors < 3) {
+      if (this._syncErrors < MAX_ERROR_COUNT_BEFORE_BACKOFF) {
         this._scheduleNextSync();
         return;
       }
@@ -1627,6 +1644,12 @@ WeaveSvc.prototype = {
     }
     
     this._scheduleAtInterval();
+  },
+
+  _ignorableErrorCount: 0,
+  shouldIgnoreError: function shouldIgnoreError() {
+    return ([Status.login, Status.sync].indexOf(LOGIN_FAILED_NETWORK_ERROR) != -1
+            && this._ignorableErrorCount < MAX_IGNORE_ERROR_COUNT);
   },
 
   _skipScheduledRetry: function _skipScheduledRetry() {
@@ -1675,6 +1698,9 @@ WeaveSvc.prototype = {
     // Make sure we should sync or record why we shouldn't
     let reason = this._checkSync();
     if (reason) {
+      if (reason == kSyncNetworkOffline) {
+        Status.sync = LOGIN_FAILED_NETWORK_ERROR;
+      }
       // this is a purposeful abort rather than a failure, so don't set
       // any status bits
       reason = "Can't sync: " + reason;
