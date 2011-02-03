@@ -207,7 +207,6 @@ html|input.uri-element-right-align:-moz-locale-dir(rtl),
 .ac-url-text:-moz-locale-dir(rtl),
 .ac-title:-moz-locale-dir(rtl) > description {
   direction: ltr !important;
-  text-align: right !important;
 }
 
 /* For results that are actions, their description text is shown instead of
