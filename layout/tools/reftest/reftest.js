@@ -41,6 +41,7 @@ const CI = Components.interfaces;
 const CR = Components.results;
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
+const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 const NS_LOCAL_FILE_CONTRACTID = "@mozilla.org/file/local;1";
 const NS_GFXINFO_CONTRACTID = "@mozilla.org/gfx/info;1";
@@ -67,6 +68,9 @@ var gThisChunk = 0;
 const BLANK_URL_FOR_CLEARING = "data:text/html,%3C%21%2D%2DCLEAR%2D%2D%3E";
 
 var gBrowser;
+// Are we testing web content loaded in a separate process?
+var gBrowserIsRemote;           // bool
+var gBrowserMessageManager;
 var gCanvas1, gCanvas2;
 // gCurrentCanvas is non-null between InitCurrentCanvasWithSnapshot and the next
 // RecordResult.
@@ -96,18 +100,7 @@ var gTestResults = {
 };
 var gTotalTests = 0;
 var gState;
-// Plugin layers can be updated asynchronously, so to make sure that all
-// layer surfaces have the right content, we need to listen for explicit
-// "MozPaintWait" and "MozPaintWaitFinished" events that signal when it's OK
-// to take snapshots. We cannot take a snapshot while the number of
-// "MozPaintWait" events fired exceeds the number of "MozPaintWaitFinished"
-// events fired. We count the number of such excess events here. When
-// the counter reaches zero we call gExplicitPendingPaintsCompleteHook.
-var gExplicitPendingPaintCount = 0;
-var gExplicitPendingPaintsCompleteHook;
 var gCurrentURL;
-var gFailureTimeout = null;
-var gFailureReason;
 var gTestLog = [];
 var gServer;
 var gCount = 0;
@@ -117,10 +110,8 @@ var gIOService;
 var gDebug;
 var gWindowUtils;
 
-var gCurrentTestStartTime;
 var gSlowestTestTime = 0;
 var gSlowestTestURL;
-var gClearingForAssertionCheck = false;
 
 var gDrawWindowFlags;
 
@@ -151,6 +142,10 @@ var gRecycledCanvases = new Array();
 // By default we just log to stdout
 var gDumpLog = dump;
 
+// Only dump the sandbox once, because it doesn't depend on the
+// manifest URL (yet!).
+var gDumpedConditionSandbox = false;
+
 function LogWarning(str)
 {
     gDumpLog("REFTEST INFO | " + str + "\n");
@@ -159,7 +154,7 @@ function LogWarning(str)
 
 function LogInfo(str)
 {
-    // gDumpLog("REFTEST INFO | " + str + "\n");
+//    gDumpLog("REFTEST INFO | " + str + "\n");
     gTestLog.push(str);
 }
 
@@ -202,30 +197,35 @@ function IDForEventTarget(event)
     }
 }
 
-function PaintWaitListener(event)
-{
-    LogInfo("MozPaintWait received for ID " + IDForEventTarget(event));
-    gExplicitPendingPaintCount++;
-}
-
-function PaintWaitFinishedListener(event)
-{
-    LogInfo("MozPaintWaitFinished received for ID " + IDForEventTarget(event));
-    gExplicitPendingPaintCount--;
-    if (gExplicitPendingPaintCount < 0) {
-        LogWarning("Underrun in gExplicitPendingPaintCount\n");
-        gExplicitPendingPaintCount = 0;
-    }
-    if (gExplicitPendingPaintCount == 0 &&
-        gExplicitPendingPaintsCompleteHook) {
-        gExplicitPendingPaintsCompleteHook();
-    }
-}
-
 function OnRefTestLoad()
 {
-    gBrowser = document.getElementById("browser");
+    var prefs = Components.classes["@mozilla.org/preferences-service;1"].
+                getService(Components.interfaces.nsIPrefBranch2);
+    try {
+        gBrowserIsRemote = prefs.getBoolPref("browser.tabs.remote");
+    } catch (e) {
+        gBrowserIsRemote = false;
+    }
 
+    gBrowser = document.createElementNS(XUL_NS, "xul:browser");
+    gBrowser.setAttribute("id", "browser");
+    gBrowser.setAttribute("type", "content-primary");
+    gBrowser.setAttribute("remote", gBrowserIsRemote ? "true" : "false");
+    // Make sure the browser element is exactly 800x1000, no matter
+    // what size our window is
+    gBrowser.setAttribute("style", "min-width: 800px; min-height: 1000px; max-width: 800px; max-height: 1000px");
+
+    document.getElementById("reftest-window").appendChild(gBrowser);
+
+    gBrowserMessageManager = gBrowser.QueryInterface(CI.nsIFrameLoaderOwner)
+                             .frameLoader.messageManager;
+    // The content script waits for the initial onload, then notifies
+    // us.
+    RegisterMessageListenersAndLoadContentScript();
+}
+
+function InitAndStartRefTests()
+{
     /* set the gLoadTimeout */
     try {
       var prefs = Components.classes["@mozilla.org/preferences-service;1"].
@@ -260,8 +260,6 @@ function OnRefTestLoad()
       gThisChunk = 0;
     }
 
-    gBrowser.addEventListener("load", OnDocumentLoad, true);
-
     try {
         gWindowUtils = window.QueryInterface(CI.nsIInterfaceRequestor).getInterface(CI.nsIDOMWindowUtils);
         if (gWindowUtils && !gWindowUtils.compareCanvases)
@@ -293,10 +291,6 @@ function OnRefTestLoad()
 
     // Focus the content browser
     gBrowser.focus();
-
-    // Connect to async rendering notifications
-    gBrowser.addEventListener("MozPaintWait", PaintWaitListener, true);
-    gBrowser.addEventListener("MozPaintWaitFinished", PaintWaitFinishedListener, true);
 
     StartTests();
 }
@@ -359,7 +353,6 @@ function StartTests()
 
 function OnRefTestUnload()
 {
-    gBrowser.removeEventListener("load", OnDocumentLoad, true);
     MozillaFileLogger.close();
 }
 
@@ -397,7 +390,7 @@ function BuildConditionSandbox(aURL) {
   
     try {
       // nsIGfxInfo is currently only implemented on Windows
-      sandbox.d2d = CC[NS_GFXINFO_CONTRACTID].getService(CI.nsIGfxInfo).D2DEnabled;
+      sandbox.d2d = (NS_GFXINFO_CONTRACTID in CC) && CC[NS_GFXINFO_CONTRACTID].getService(CI.nsIGfxInfo).D2DEnabled;
     } catch(e) {
       sandbox.d2d = false;
     }
@@ -492,8 +485,15 @@ function BuildConditionSandbox(aURL) {
         return testPluginIsOOP;
     };
 
-    gDumpLog("REFTEST INFO | Dumping JSON representation of sandbox \n");
-    gDumpLog("REFTEST INFO | " + JSON.stringify(sandbox) + " \n");
+    // Tests shouldn't care about this except for when they need to
+    // crash the content process
+    sandbox.browserIsRemote = gBrowserIsRemote;
+
+    if (!gDumpedConditionSandbox) {
+        dump("REFTEST INFO | Dumping JSON representation of sandbox \n");
+        dump("REFTEST INFO | " + JSON.stringify(sandbox) + " \n");
+        gDumpedConditionSandbox = true;
+    }
 
     return sandbox;
 }
@@ -555,8 +555,9 @@ function ReadManifest(aURL)
         var allow_silent_fail = false;
         var minAsserts = 0;
         var maxAsserts = 0;
+        var needs_focus = false;
         var slow = false;
-        while (items[0].match(/^(fails|random|skip|asserts|slow|silentfail)/)) {
+        while (items[0].match(/^(fails|needs-focus|random|skip|asserts|slow|silentfail)/)) {
             var item = items.shift();
             var stat;
             var cond;
@@ -568,6 +569,8 @@ function ReadManifest(aURL)
             } else if (item.match(/^(fails|random|skip)$/)) {
                 stat = item;
                 cond = true;
+            } else if (item == "needs-focus") {
+                needs_focus = true;
             } else if ((m = item.match(/^asserts\((\d+)(-\d+)?\)$/))) {
                 cond = false;
                 minAsserts = Number(m[1]);
@@ -665,6 +668,7 @@ function ReadManifest(aURL)
                           prettyPath: prettyPath,
                           minAsserts: minAsserts,
                           maxAsserts: maxAsserts,
+                          needsFocus: needs_focus,
                           slow: slow,
                           url1: testURI,
                           url2: null } );
@@ -686,6 +690,7 @@ function ReadManifest(aURL)
                           prettyPath: prettyPath,
                           minAsserts: minAsserts,
                           maxAsserts: maxAsserts,
+                          needsFocus: needs_focus,
                           slow: slow,
                           url1: testURI,
                           url2: null } );
@@ -710,6 +715,7 @@ function ReadManifest(aURL)
                           prettyPath: prettyPath,
                           minAsserts: minAsserts,
                           maxAsserts: maxAsserts,
+                          needsFocus: needs_focus,
                           slow: slow,
                           url1: testURI,
                           url2: refURI } );
@@ -787,6 +793,26 @@ function ServeFiles(manifestURL, depth, aURL, files)
     return files.map(FileToURI);
 }
 
+// Return true iff this window is focused when this function returns.
+function Focus()
+{
+    // FIXME/bug 583976: focus doesn't yet work with out-of-process
+    // content.
+    if (gBrowserIsRemote) {
+        return false;
+    }
+
+    // FIXME/bug 623625: determine if the window is focused and/or try
+    // to acquire focus if it's not.
+    //
+    // NB: we can't add anything here that would return false on
+    // tinderbox, otherwise we could lose testing coverage due to
+    // problems on the test machines.  We might want a require-focus
+    // mode, defaulting to false for developers, but that's true on
+    // tinderbox.
+    return true;
+}
+
 function StartCurrentTest()
 {
     gTestLog = [];
@@ -797,6 +823,10 @@ function StartCurrentTest()
         if (test.expected == EXPECTED_DEATH) {
             ++gTestResults.Skip;
             gDumpLog("REFTEST TEST-KNOWN-FAIL | " + test.url1.spec + " | (SKIP)\n");
+            gURLs.shift();
+        } else if (test.needsFocus && !Focus()) {
+            ++gTestResults.Skip;
+            gDumpLog("REFTEST TEST-KNOWN-FAIL | " + test.url1.spec + " | (SKIPPED; COULDN'T GET FOCUS)\n");
             gURLs.shift();
         } else if (test.slow && !gRunSlowTests) {
             ++gTestResults.Slow;
@@ -820,24 +850,8 @@ function StartCurrentTest()
 
 function StartCurrentURI(aState)
 {
-    gCurrentTestStartTime = Date.now();
-    if (gFailureTimeout != null) {
-        gDumpLog("REFTEST TEST-UNEXPECTED-FAIL | " +
-             "| program error managing timeouts\n");
-        ++gTestResults.Exception;
-    }
-    gFailureTimeout = setTimeout(LoadFailed, gLoadTimeout);
-    gFailureReason = "timed out waiting for onload to fire";
-
     gState = aState;
     gCurrentURL = gURLs[0]["url" + aState].spec;
-    // Reset gExplicitPendingPaintCount in case there was a timeout or
-    // the count is out of sync for some other reason
-    if (gExplicitPendingPaintCount != 0) {
-        LogWarning("Resetting gExplicitPendingPaintCount to zero (currently " +
-                   gExplicitPendingPaintCount + "\n");
-        gExplicitPendingPaintCount = 0;
-    }
 
     if (gURICanvases[gCurrentURL] &&
         (gURLs[0].type == TYPE_REFTEST_EQUAL ||
@@ -849,7 +863,12 @@ function StartCurrentURI(aState)
     } else {
         gDumpLog("REFTEST TEST-START | " + gCurrentURL + "\n");
         LogInfo("START " + gCurrentURL);
-        gBrowser.loadURI(gCurrentURL);
+        var type = gURLs[0].type
+        if (TYPE_SCRIPT == type) {
+            SendLoadScriptTest(gCurrentURL, gLoadTimeout);
+        } else {
+            SendLoadTest(type, gCurrentURL, gLoadTimeout);
+        }
     }
 }
 
@@ -895,330 +914,6 @@ function DoneTests()
         onStopped();
 }
 
-function setupZoom(contentRootElement) {
-    if (!contentRootElement || !contentRootElement.hasAttribute('reftest-zoom'))
-        return;
-    gBrowser.markupDocumentViewer.fullZoom =
-        contentRootElement.getAttribute('reftest-zoom');
-}
-
-function resetZoom() {
-    gBrowser.markupDocumentViewer.fullZoom = 1.0;
-}
-
-function doPrintMode(contentRootElement) {
-    // use getAttribute because className works differently in HTML and SVG
-    return contentRootElement &&
-           contentRootElement.hasAttribute('class') &&
-           contentRootElement.getAttribute('class').split(/\s+/)
-                             .indexOf("reftest-print") != -1;
-}
-
-function setupPrintMode() {
-   var PSSVC = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
-               .getService(Components.interfaces.nsIPrintSettingsService);
-   var ps = PSSVC.newPrintSettings;
-   ps.paperWidth = 5;
-   ps.paperHeight = 3;
-
-   // Override any os-specific unwriteable margins
-   ps.unwriteableMarginTop = 0;
-   ps.unwriteableMarginLeft = 0;
-   ps.unwriteableMarginBottom = 0;
-   ps.unwriteableMarginRight = 0;
-
-   ps.headerStrLeft = "";
-   ps.headerStrCenter = "";
-   ps.headerStrRight = "";
-   ps.footerStrLeft = "";
-   ps.footerStrCenter = "";
-   ps.footerStrRight = "";
-   gBrowser.docShell.contentViewer.setPageMode(true, ps);
-}
-
-function shouldWaitForExplicitPaintWaiters() {
-    return gExplicitPendingPaintCount > 0;
-}
-
-function shouldWaitForPendingPaints() {
-    // if gCurrentCanvas is null, we're not taking snapshots so there is
-    // no need to wait for pending paints to be flushed.
-    return gCurrentCanvas && gWindowUtils.isMozAfterPaintPending;
-}
-
-function shouldWaitForReftestWaitRemoval(contentRootElement) {
-    // use getAttribute because className works differently in HTML and SVG
-    return contentRootElement &&
-           contentRootElement.hasAttribute('class') &&
-           contentRootElement.getAttribute('class').split(/\s+/)
-                             .indexOf("reftest-wait") != -1;
-}
-
-// Initial state. When the document has loaded and all MozAfterPaint events and
-// all explicit paint waits are flushed, we can fire the MozReftestInvalidate
-// event and move to the next state.
-const STATE_WAITING_TO_FIRE_INVALIDATE_EVENT = 0;
-// When reftest-wait has been removed from the root element, we can move to the
-// next state.
-const STATE_WAITING_FOR_REFTEST_WAIT_REMOVAL = 1;
-// When all MozAfterPaint events and all explicit paint waits are flushed, we're
-// done and can move to the COMPLETED state.
-const STATE_WAITING_TO_FINISH = 2;
-const STATE_COMPLETED = 3;
-
-function WaitForTestEnd(contentRootElement, inPrintMode) {
-    var stopAfterPaintReceived = false;
-    var state = STATE_WAITING_TO_FIRE_INVALIDATE_EVENT;
-
-    function FlushRendering() {
-        var anyPendingPaintsGeneratedInDescendants = false;
-
-        function flushWindow(win) {
-            var utils = win.QueryInterface(CI.nsIInterfaceRequestor)
-                        .getInterface(CI.nsIDOMWindowUtils);
-            var afterPaintWasPending = utils.isMozAfterPaintPending;
-
-            try {
-                // Flush pending restyles and reflows for this window
-                win.document.documentElement.getBoundingClientRect();
-            } catch (e) {
-                LogWarning("flushWindow failed: " + e + "\n");
-            }
-            
-            if (!afterPaintWasPending && utils.isMozAfterPaintPending) {
-                LogInfo("FlushRendering generated paint for window " + win.location.href);
-                anyPendingPaintsGeneratedInDescendants = true;
-            }
-
-            for (var i = 0; i < win.frames.length; ++i) {
-                flushWindow(win.frames[i]);
-            }
-        }
-
-        flushWindow(gBrowser.contentWindow);
-
-        if (anyPendingPaintsGeneratedInDescendants &&
-            !gWindowUtils.isMozAfterPaintPending) {
-            LogWarning("Internal error: descendant frame generated a MozAfterPaint event, but the root document doesn't have one!");
-        }
-    }
-
-    function AfterPaintListener(event) {
-        LogInfo("AfterPaintListener in " + event.target.document.location.href);
-        if (event.target.document != document) {
-            // ignore paint events for subframes or old documents in the window.
-            // Invalidation in subframes will cause invalidation in the toplevel document anyway.
-            return;
-        }
-        UpdateCurrentCanvasForEvent(event);
-        // These events are fired immediately after a paint. Don't
-        // confuse ourselves by firing synchronously if we triggered the
-        // paint ourselves.
-        setTimeout(MakeProgress, 0);
-    }
-
-    function AttrModifiedListener() {
-        LogInfo("AttrModifiedListener fired");
-        // Wait for the next return-to-event-loop before continuing --- for
-        // example, the attribute may have been modified in an subdocument's
-        // load event handler, in which case we need load event processing
-        // to complete and unsuppress painting before we check isMozAfterPaintPending.
-        setTimeout(MakeProgress, 0);
-    }
-
-    function ExplicitPaintsCompleteListener() {
-        LogInfo("ExplicitPaintsCompleteListener fired");
-        // Since this can fire while painting, don't confuse ourselves by
-        // firing synchronously. It's fine to do this asynchronously.
-        setTimeout(MakeProgress, 0);
-    }
-
-    function RemoveListeners() {
-        // OK, we can end the test now.
-        window.removeEventListener("MozAfterPaint", AfterPaintListener, false);
-        if (contentRootElement) {
-          contentRootElement.removeEventListener("DOMAttrModified", AttrModifiedListener, false);
-        }
-        gExplicitPendingPaintsCompleteHook = null;
-        gTimeoutHook = null;
-        // Make sure we're in the COMPLETED state just in case
-        // (this may be called via the test-timeout hook)
-        state = STATE_COMPLETED;
-    }
-
-    // Everything that could cause shouldWaitForXXX() to
-    // change from returning true to returning false is monitored via some kind
-    // of event listener which eventually calls this function.
-    function MakeProgress() {
-        if (state >= STATE_COMPLETED) {
-            LogInfo("MakeProgress: STATE_COMPLETED");
-            return;
-        }
-
-        FlushRendering();
-
-        switch (state) {
-        case STATE_WAITING_TO_FIRE_INVALIDATE_EVENT: {
-            LogInfo("MakeProgress: STATE_WAITING_TO_FIRE_INVALIDATE_EVENT");
-            if (shouldWaitForExplicitPaintWaiters() || shouldWaitForPendingPaints()) {
-                gFailureReason = "timed out waiting for pending paint count to reach zero";
-                if (shouldWaitForExplicitPaintWaiters()) {
-                    gFailureReason += " (waiting for MozPaintWaitFinished)";
-                    LogInfo("MakeProgress: waiting for MozPaintWaitFinished");
-                }
-                if (shouldWaitForPendingPaints()) {
-                    gFailureReason += " (waiting for MozAfterPaint)";
-                    LogInfo("MakeProgress: waiting for MozAfterPaint");
-                }
-                return;
-            }
-
-            state = STATE_WAITING_FOR_REFTEST_WAIT_REMOVAL;
-            var hasReftestWait = shouldWaitForReftestWaitRemoval(contentRootElement);            
-            // Notify the test document that now is a good time to test some invalidation
-            if (contentRootElement) {
-                var notification = document.createEvent("Events");
-                notification.initEvent("MozReftestInvalidate", true, false);
-                contentRootElement.dispatchEvent(notification);
-            }
-            if (hasReftestWait && !shouldWaitForReftestWaitRemoval(contentRootElement)) {
-                // MozReftestInvalidate handler removed reftest-wait.
-                // We expect something to have been invalidated...
-                FlushRendering();
-                if (!shouldWaitForPendingPaints() && !shouldWaitForExplicitPaintWaiters()) {
-                    LogWarning("MozInvalidateEvent didn't invalidate");
-                }
-            }
-            // Try next state
-            MakeProgress();
-            return;
-        }
-
-        case STATE_WAITING_FOR_REFTEST_WAIT_REMOVAL:
-            LogInfo("MakeProgress: STATE_WAITING_FOR_REFTEST_WAIT_REMOVAL");
-            if (shouldWaitForReftestWaitRemoval(contentRootElement)) {
-                gFailureReason = "timed out waiting for reftest-wait to be removed";
-                LogInfo("MakeProgress: waiting for reftest-wait to be removed");
-                return;
-            }
-            state = STATE_WAITING_TO_FINISH;
-            if (!inPrintMode && doPrintMode(contentRootElement)) {
-                LogInfo("MakeProgress: setting up print mode");
-                setupPrintMode();
-            }
-            // Try next state
-            MakeProgress();
-            return;
-
-        case STATE_WAITING_TO_FINISH:
-            LogInfo("MakeProgress: STATE_WAITING_TO_FINISH");
-            if (shouldWaitForExplicitPaintWaiters() || shouldWaitForPendingPaints()) {
-                gFailureReason = "timed out waiting for pending paint count to " +
-                    "reach zero (after reftest-wait removed and switch to print mode)";
-                if (shouldWaitForExplicitPaintWaiters()) {
-                    gFailureReason += " (waiting for MozPaintWaitFinished)";
-                    LogInfo("MakeProgress: waiting for MozPaintWaitFinished");
-                }
-                if (shouldWaitForPendingPaints()) {
-                    gFailureReason += " (waiting for MozAfterPaint)";
-                    LogInfo("MakeProgress: waiting for MozAfterPaint");
-                }
-                return;
-            }
-            LogInfo("MakeProgress: Completed");
-            state = STATE_COMPLETED;
-            gFailureReason = "timed out while taking snapshot (bug in harness?)";
-            RemoveListeners();
-            setTimeout(RecordResult, 0);
-            return;
-        }
-    }
-
-    LogInfo("WaitForTestEnd: Adding listeners");
-    window.addEventListener("MozAfterPaint", AfterPaintListener, false);
-    // If contentRootElement is null then shouldWaitForReftestWaitRemoval will
-    // always return false so we don't need a listener anyway
-    if (contentRootElement) {
-      contentRootElement.addEventListener("DOMAttrModified", AttrModifiedListener, false);
-    }
-    gExplicitPendingPaintsCompleteHook = ExplicitPaintsCompleteListener;
-    gTimeoutHook = RemoveListeners;
-
-    // Take a full snapshot now that all our listeners are set up. This
-    // ensures it's impossible for us to miss updates between taking the snapshot
-    // and adding our listeners.
-    InitCurrentCanvasWithSnapshot();
-    MakeProgress();
-}
-
-function OnDocumentLoad(event)
-{
-    var currentDoc = gBrowser.contentDocument;
-    if (event.target != currentDoc)
-        // Ignore load events for subframes.
-        return;
-
-    if (gClearingForAssertionCheck &&
-        currentDoc.location.href == BLANK_URL_FOR_CLEARING) {
-        DoAssertionCheck();
-        return;
-    }
-
-    if (currentDoc.location.href != gCurrentURL) {
-        LogInfo("OnDocumentLoad fired for previous document");
-        // Ignore load events for previous documents.
-        return;
-    }
-
-    var contentRootElement = currentDoc ? currentDoc.documentElement : null;
-    setupZoom(contentRootElement);
-    var inPrintMode = false;
-
-    function AfterOnLoadScripts() {
-        // Take a snapshot now. We need to do this before we check whether
-        // we should wait, since this might trigger dispatching of
-        // MozPaintWait events and make shouldWaitForExplicitPaintWaiters() true
-        // below.
-        var painted = InitCurrentCanvasWithSnapshot();
-
-        if (shouldWaitForExplicitPaintWaiters() ||
-            (!inPrintMode && doPrintMode(contentRootElement)) ||
-            // If we didn't force a paint above, in
-            // InitCurrentCanvasWithSnapshot, so we should wait for a
-            // paint before we consider them done.
-            !painted) {
-            LogInfo("AfterOnLoadScripts belatedly entering WaitForTestEnd");
-            // Go into reftest-wait mode belatedly.
-            WaitForTestEnd(contentRootElement, inPrintMode);
-        } else {
-            RecordResult();
-        }
-    }
-
-    if (shouldWaitForReftestWaitRemoval(contentRootElement) ||
-        shouldWaitForExplicitPaintWaiters()) {
-        // Go into reftest-wait mode immediately after painting has been
-        // unsuppressed, after the onload event has finished dispatching.
-        gFailureReason = "timed out waiting for test to complete (trying to get into WaitForTestEnd)";
-        LogInfo("OnDocumentLoad triggering WaitForTestEnd");
-        setTimeout(WaitForTestEnd, 0, contentRootElement, inPrintMode);
-    } else {
-        if (doPrintMode(contentRootElement)) {
-            LogInfo("OnDocumentLoad setting up print mode");
-            setupPrintMode();
-            inPrintMode = true;
-        }
-
-        // Since we can't use a bubbling-phase load listener from chrome,
-        // this is a capturing phase listener.  So do setTimeout twice, the
-        // first to get us after the onload has fired in the content, and
-        // the second to get us after any setTimeout(foo, 0) in the content.
-        gFailureReason = "timed out waiting for test to complete (waiting for onload scripts to complete)";
-        LogInfo("OnDocumentLoad triggering AfterOnLoadScripts");
-        setTimeout(setTimeout, 0, AfterOnLoadScripts, 0);
-    }
-}
-
 function UpdateCanvasCache(url, canvas)
 {
     var spec = url.spec;
@@ -1252,6 +947,9 @@ function DoDrawWindow(ctx, x, y, w, h)
         // because the window is big enough to display the entire
         // browser element
         flags |= ctx.DRAWWINDOW_USE_WIDGET_LAYERS;
+    } else if (gBrowserIsRemote) {
+        gDumpLog("REFTEST TEST-UNEXPECTED-FAIL | | can't drawWindow remote content\n");
+        ++gTestResults.Exception;
     }
 
     if (gDrawWindowFlags != flags) {
@@ -1278,6 +976,8 @@ function DoDrawWindow(ctx, x, y, w, h)
 
 function InitCurrentCanvasWithSnapshot()
 {
+    LogInfo("Initializing canvas snapshot");
+
     if (gURLs[0].type == TYPE_LOAD || gURLs[0].type == TYPE_SCRIPT) {
         // We don't want to snapshot this kind of test
         return false;
@@ -1292,20 +992,17 @@ function InitCurrentCanvasWithSnapshot()
     return true;
 }
 
-function roundTo(x, fraction)
+function UpdateCurrentCanvasForInvalidation(rects)
 {
-    return Math.round(x/fraction)*fraction;
-}
+    LogInfo("Updating canvas for invalidation");
 
-function UpdateCurrentCanvasForEvent(event)
-{
-    if (!gCurrentCanvas)
+    if (!gCurrentCanvas) {
         return;
+    }
 
     var ctx = gCurrentCanvas.getContext("2d");
-    var rectList = event.clientRects;
-    for (var i = 0; i < rectList.length; ++i) {
-        var r = rectList[i];
+    for (var i = 0; i < rects.length; ++i) {
+        var r = rects[i];
         // Set left/top/right/bottom to pixel boundaries
         var left = Math.floor(r.left);
         var top = Math.floor(r.top);
@@ -1319,20 +1016,15 @@ function UpdateCurrentCanvasForEvent(event)
     }
 }
 
-function RecordResult()
+function RecordResult(testRunTime, errorMsg, scriptResults)
 {
     LogInfo("RecordResult fired");
 
     // Keep track of which test was slowest, and how long it took.
-    var currentTestRunTime = Date.now() - gCurrentTestStartTime;
-    if (currentTestRunTime > gSlowestTestTime) {
-        gSlowestTestTime = currentTestRunTime;
+    if (testRunTime > gSlowestTestTime) {
+        gSlowestTestTime = testRunTime;
         gSlowestTestURL  = gCurrentURL;
     }
-
-    clearTimeout(gFailureTimeout);
-    gFailureReason = null;
-    gFailureTimeout = null;
 
     // Not 'const ...' because of 'EXPECTED_*' value dependency.
     var outputs = {};
@@ -1359,51 +1051,34 @@ function RecordResult()
         return;
     }
     if (gURLs[0].type == TYPE_SCRIPT) {
-        var missing_msg = false;
-        var testwindow = gBrowser.contentWindow;
-        expected = gURLs[0].expected;
+        var expected = gURLs[0].expected;
 
-        if (testwindow.wrappedJSObject)
-            testwindow = testwindow.wrappedJSObject;
-
-        var testcases;
-
-        if (!testwindow.getTestCases || typeof testwindow.getTestCases != "function") {
+        if (errorMsg) {
             // Force an unexpected failure to alert the test author to fix the test.
             expected = EXPECTED_PASS;
-            missing_msg = "test must provide a function getTestCases(). (SCRIPT)\n";
-        }
-        else if (!(testcases = testwindow.getTestCases())) {
-            // Force an unexpected failure to alert the test author to fix the test.
-            expected = EXPECTED_PASS;
-            missing_msg = "test's getTestCases() must return an Array-like Object. (SCRIPT)\n";
-        }
-        else if (testcases.length == 0) {
-            // This failure may be due to a JavaScript Engine bug causing
-            // early termination of the test. If we do not allow silent
-            // failure, report an error.
-            if (!gURLs[0].allowSilentFail)
-                missing_msg = "No test results reported. (SCRIPT)\n";
-            else
-                gDumpLog("REFTEST INFO | An expected silent failure occurred \n");
+        } else if (scriptResults.length == 0) {
+             // This failure may be due to a JavaScript Engine bug causing
+             // early termination of the test. If we do not allow silent
+             // failure, report an error.
+             if (!gURLs[0].allowSilentFail)
+                 errorMsg = "No test results reported. (SCRIPT)\n";
+             else
+                 gDumpLog("REFTEST INFO | An expected silent failure occurred \n");
         }
 
-        if (missing_msg) {
+        if (errorMsg) {
             output = outputs[expected][false];
             ++gTestResults[output.n];
             var result = "REFTEST " + output.s + " | " +
                 gURLs[0].prettyPath + " | " + // the URL being tested
-                missing_msg;
+                errorMsg;
 
             gDumpLog(result);
             FinishTestItem();
             return;
         }
 
-        var results = testcases.map(function(test) {
-                return { passed: test.testPassed(), description: test.testDescription()};
-            });
-        var anyFailed = results.some(function(result) { return !result.passed; });
+        var anyFailed = scriptResults.some(function(result) { return !result.passed; });
         var outputPair;
         if (anyFailed && expected == EXPECTED_FAIL) {
             // If we're marked as expected to fail, and some (but not all) tests
@@ -1416,7 +1091,7 @@ function RecordResult()
             outputPair = outputs[expected];
         }
         var index = 0;
-        results.forEach(function(result) {
+        scriptResults.forEach(function(result) {
                 var output = outputPair[result.passed];
 
                 ++gTestResults[output.n];
@@ -1437,6 +1112,10 @@ function RecordResult()
     if (gURICanvases[gCurrentURL]) {
         gCurrentCanvas = gURICanvases[gCurrentURL];
     }
+    if (gCurrentCanvas == null) {
+        gDumpLog("REFTEST TEST-UNEXPECTED-FAIL | | program error managing snapshots\n");
+        ++gTestResults.Exception;
+    }
     if (gState == 1) {
         gCanvas1 = gCurrentCanvas;
     } else {
@@ -1444,7 +1123,7 @@ function RecordResult()
     }
     gCurrentCanvas = null;
 
-    resetZoom();
+    SendResetZoom();
 
     switch (gState) {
         case 1:
@@ -1518,15 +1197,11 @@ function RecordResult()
     }
 }
 
-function LoadFailed()
+function LoadFailed(why)
 {
-    if (gTimeoutHook) {
-        gTimeoutHook();
-    }
-    gFailureTimeout = null;
     ++gTestResults.FailedLoad;
     gDumpLog("REFTEST TEST-UNEXPECTED-FAIL | " +
-         gURLs[0]["url" + gState].spec + " | " + gFailureReason + "\n");
+         gURLs[0]["url" + gState].spec + " | " + why + "\n");
     FlushTestLog();
     FinishTestItem();
 }
@@ -1536,18 +1211,23 @@ function FinishTestItem()
     // Replace document with BLANK_URL_FOR_CLEARING in case there are
     // assertions when unloading.
     gDumpLog("REFTEST INFO | Loading a blank page\n");
-    gClearingForAssertionCheck = true;
-    gBrowser.loadURI(BLANK_URL_FOR_CLEARING);
+    // After clearing, content will notify us of the assertion count
+    // and tests will continue.
+    SendClear();
 }
 
-function DoAssertionCheck()
+function DoAssertionCheck(numAsserts)
 {
-    gClearingForAssertionCheck = false;
-
     if (gDebug.isDebugBuild) {
-        var newAssertionCount = gDebug.assertionCount;
-        var numAsserts = newAssertionCount - gAssertionCount;
-        gAssertionCount = newAssertionCount;
+        if (gBrowserIsRemote) {
+            // Count chrome-process asserts too when content is out of
+            // process.
+            var newAssertionCount = gDebug.assertionCount;
+            var numLocalAsserts = newAssertionCount - gAssertionCount;
+            gAssertionCount = newAssertionCount;
+
+            numAsserts += numLocalAsserts;
+        }
 
         var minAsserts = gURLs[0].minAsserts;
         var maxAsserts = gURLs[0].maxAsserts;
@@ -1579,4 +1259,126 @@ function DoAssertionCheck()
     // And start the next test.
     gURLs.shift();
     StartCurrentTest();
+}
+
+
+function RegisterMessageListenersAndLoadContentScript()
+{
+    gBrowserMessageManager.addMessageListener(
+        "reftest:AssertionCount",
+        function (m) { RecvAssertionCount(m.json.count); }
+    );
+    gBrowserMessageManager.addMessageListener(
+        "reftest:ContentReady",
+        function (m) { return RecvContentReady() }
+    );
+    gBrowserMessageManager.addMessageListener(
+        "reftest:Exception",
+        function (m) { RecvException(m.json.what) }
+    );
+    gBrowserMessageManager.addMessageListener(
+        "reftest:FailedLoad",
+        function (m) { RecvFailedLoad(m.json.why); }
+    );
+    gBrowserMessageManager.addMessageListener(
+        "reftest:InitCanvasWithSnapshot",
+        function (m) { return RecvInitCanvasWithSnapshot(); }
+    );
+    gBrowserMessageManager.addMessageListener(
+        "reftest:Log",
+        function (m) { RecvLog(m.json.type, m.json.msg); }
+    );
+    gBrowserMessageManager.addMessageListener(
+        "reftest:ScriptResults",
+        function (m) { RecvScriptResults(m.json.runtimeMs, m.json.error, m.json.results); }
+    );
+    gBrowserMessageManager.addMessageListener(
+        "reftest:TestDone",
+        function (m) { RecvTestDone(m.json.runtimeMs); }
+    );
+    gBrowserMessageManager.addMessageListener(
+        "reftest:UpdateCanvasForInvalidation",
+        function (m) { RecvUpdateCanvasForInvalidation(m.json.rects); }
+    );
+
+    gBrowserMessageManager.loadFrameScript("chrome://reftest/content/reftest-content.js", true);
+}
+
+function RecvAssertionCount(count)
+{
+    DoAssertionCheck(count);
+}
+
+function RecvContentReady()
+{
+    InitAndStartRefTests();
+    return { remote: gBrowserIsRemote };
+}
+
+function RecvException(what)
+{
+    gDumpLog("REFTEST TEST-UNEXPECTED-FAIL | | "+ what +"\n");
+    ++gTestResults.Exception;
+}
+
+function RecvFailedLoad(why)
+{
+    LoadFailed(why);
+}
+
+function RecvInitCanvasWithSnapshot()
+{
+    var painted = InitCurrentCanvasWithSnapshot();
+    return { painted: painted };
+}
+
+function RecvLog(type, msg)
+{
+    msg = "[CONTENT] "+ msg;
+    if (type == "info") {
+        LogInfo(msg);
+    } else if (type == "warning") {
+        LogWarning(msg);
+    } else {
+        gDumpLog("REFTEST TEST-UNEXPECTED-FAIL | | unknown log type "+ type +"\n");
+        ++gTestResults.Exception;
+    }
+}
+
+function RecvScriptResults(runtimeMs, error, results)
+{
+    RecordResult(runtimeMs, error, results);
+}
+
+function RecvTestDone(runtimeMs)
+{
+    RecordResult(runtimeMs, '', [ ]);
+}
+
+function RecvUpdateCanvasForInvalidation(rects)
+{
+    UpdateCurrentCanvasForInvalidation(rects);
+}
+
+function SendClear()
+{
+    gBrowserMessageManager.sendAsyncMessage("reftest:Clear");
+}
+
+function SendLoadScriptTest(uri, timeout)
+{
+    gBrowserMessageManager.sendAsyncMessage("reftest:LoadScriptTest",
+                                            { uri: uri, timeout: timeout });
+}
+
+function SendLoadTest(type, uri, timeout)
+{
+    gBrowserMessageManager.sendAsyncMessage("reftest:LoadTest",
+                                            { type: type, uri: uri, timeout: timeout }
+    );
+}
+
+function SendResetZoom()
+{
+    gBrowserMessageManager.sendAsyncMessage("reftest:ResetZoom");
 }

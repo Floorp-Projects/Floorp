@@ -35,7 +35,7 @@ load 342322-1.html
 load 343206-1.xhtml
 load 345139-1.xhtml
 load 345617-1.html
-load 348887-1.html
+skip load 348887-1.html # bug 623091
 load 348991-1.xhtml
 load 354458-1.html
 load 354458-2.html
