@@ -144,6 +144,7 @@ nsSHEntry::nsSHEntry(const nsSHEntry &other)
   , mParent(other.mParent)
   , mViewerBounds(0, 0, 0, 0)
   , mOwner(other.mOwner)
+  , mStateData(other.mStateData)
   , mDocShellID(other.mDocShellID)
 {
 }

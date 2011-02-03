@@ -383,10 +383,13 @@ protected:
     // |aReplaceEntry|.  |aSrcShell| is a (possibly null) docshell which
     // corresponds to |aSrcEntry| via its mLSHE or mOHE pointers, and will
     // have that pointer updated to point to the cloned history entry.
+    // If aCloneChildren is true then the children of the entry with id
+    // |aCloneID| will be cloned into |aReplaceEntry|.
     static nsresult CloneAndReplace(nsISHEntry *aSrcEntry,
                                     nsDocShell *aSrcShell,
                                     PRUint32 aCloneID,
                                     nsISHEntry *aReplaceEntry,
+                                    PRBool aCloneChildren,
                                     nsISHEntry **aDestEntry);
 
     // Child-walking callback for CloneAndReplace
