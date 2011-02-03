@@ -88,6 +88,7 @@ public:
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
   virtual PRUint32 NativeRole();
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
+  virtual PRBool RemoveChild(nsAccessible *aAccessible);
 
   virtual void InvalidateChildren();
 
