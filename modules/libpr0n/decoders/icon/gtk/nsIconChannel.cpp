@@ -163,8 +163,6 @@ static GtkWidget *gStockImageWidget = nsnull;
 static GnomeIconTheme *gIconTheme = nsnull;
 #endif
 
-static GtkIconFactory *gIconFactory = nsnull;
-
 static void
 ensure_stock_image_widget()
 {
@@ -179,15 +177,6 @@ ensure_stock_image_widget()
     gtk_container_add(GTK_CONTAINER(protoLayout), gStockImageWidget);
 
     gtk_widget_ensure_style(gStockImageWidget);
-  }
-}
-
-static void
-ensure_icon_factory()
-{
-  if (!gIconFactory) {
-    gIconFactory = gtk_icon_factory_new();
-    gtk_icon_factory_add_default(gIconFactory);
   }
 }
 
@@ -483,19 +472,11 @@ nsIconChannel::Init(nsIURI* aURI)
     // Creating a GtkIconSet is a convenient way to allow the style to
     // render the icon, possibly with variations suitable for insensitive
     // states.
-    //
-    // The GtkIconSet is also used to add a new stock id in such a way that
-    // the look up above will succeed next time.  Maybe this is to take
-    // advantage of the cache of stock icon GdkPixbufs.
-
-    ensure_icon_factory();
-      
     icon_set = gtk_icon_set_new();
     GtkIconSource *icon_source = gtk_icon_source_new();
     
     gtk_icon_source_set_icon_name(icon_source, stockIcon.get());
     gtk_icon_set_add_source(icon_set, icon_source);
-    gtk_icon_factory_add(gIconFactory, stockIcon.get(), icon_set);
     gtk_icon_source_free(icon_source);
   }
 
@@ -524,11 +505,6 @@ nsIconChannel::Shutdown() {
     gtk_widget_destroy(gProtoWindow);
     gProtoWindow = nsnull;
     gStockImageWidget = nsnull;
-  }
-  if (gIconFactory) {
-    gtk_icon_factory_remove_default(gIconFactory);
-    g_object_unref(gIconFactory);
-    gIconFactory = nsnull;
   }
 #ifdef MOZ_ENABLE_GNOMEUI
   if (gIconTheme) {
