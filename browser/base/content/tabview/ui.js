@@ -781,6 +781,10 @@ let UI = {
 
       TabItems.handleTabUnpin(tab);
       GroupItems.removeAppTab(tab);
+
+      let groupItem = tab._tabViewTabItem.parent;
+      if (groupItem)
+        self.setReorderTabItemsOnShow(groupItem);
     };
 
     // Actually register the above handlers
