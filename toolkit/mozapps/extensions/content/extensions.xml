@@ -821,8 +821,8 @@
         <xul:spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
       </xul:hbox>
 
-      <xul:hbox>
-        <xul:vbox align="center" pack="start" class="icon-container">
+      <xul:hbox align="start">
+        <xul:vbox align="center" pack="center" class="icon-container">
           <xul:image anonid="icon" class="icon"/>
         </xul:vbox>
         <xul:vbox flex="1">
