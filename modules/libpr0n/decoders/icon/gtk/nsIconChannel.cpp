@@ -458,11 +458,26 @@ nsIconChannel::Init(nsIURI* aURI)
   GtkStateType state = iconStateString.EqualsLiteral("disabled") ?
     GTK_STATE_INSENSITIVE : GTK_STATE_NORMAL;
 
-  // First lookup the icon by stock id.
+  // First lookup the icon by stock id and text direction.
+  GtkTextDirection direction = GTK_TEXT_DIR_NONE;
+  if (StringEndsWith(stockIcon, NS_LITERAL_CSTRING("-ltr"))) {
+    direction = GTK_TEXT_DIR_LTR;
+  } else if (StringEndsWith(stockIcon, NS_LITERAL_CSTRING("-rtl"))) {
+    direction = GTK_TEXT_DIR_RTL;
+  }
+
+  PRBool haveDirection = direction != GTK_TEXT_DIR_NONE;
+  nsCAutoString stockID;
+  if (haveDirection) {
+    stockID = Substring(stockIcon, 0, stockIcon.Length() - 4);
+  } else {
+    direction = gtk_widget_get_default_direction();
+    stockID = stockIcon;
+  }
+
   ensure_stock_image_widget();
   GtkStyle *style = gtk_widget_get_style(gStockImageWidget);
-  GtkIconSet *icon_set =
-    gtk_style_lookup_icon_set(style, stockIcon.get());
+  GtkIconSet *icon_set = gtk_style_lookup_icon_set(style, stockID.get());
 
   if (icon_set) {
     gtk_icon_set_ref(icon_set);
@@ -481,8 +496,7 @@ nsIconChannel::Init(nsIURI* aURI)
   }
 
   GdkPixbuf *icon =
-    gtk_icon_set_render_icon (icon_set, style,
-                              gtk_widget_get_default_direction(), state,
+    gtk_icon_set_render_icon (icon_set, style, direction, state,
                               icon_size, gStockImageWidget, NULL);
   gtk_icon_set_unref(icon_set);
 
