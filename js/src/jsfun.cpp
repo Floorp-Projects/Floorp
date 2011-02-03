@@ -580,14 +580,16 @@ ArgSetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     }
 
     /*
-     * For simplicity we use delete/set to replace the property with one
+     * For simplicity we use delete/define to replace the property with one
      * backed by the default Object getter and setter. Note that we rely on
      * args_delProperty to clear the corresponding reserved slot so the GC can
-     * collect its value.
+     * collect its value. Note also that we must define the property instead
+     * of setting it in case the user has changed the prototype to an object
+     * that has a setter for this id.
      */
     AutoValueRooter tvr(cx);
     return js_DeleteProperty(cx, obj, id, tvr.addr(), false) &&
-           js_SetProperty(cx, obj, id, vp, false);
+           js_DefineProperty(cx, obj, id, vp, NULL, NULL, JSPROP_ENUMERATE);
 }
 
 static JSBool
