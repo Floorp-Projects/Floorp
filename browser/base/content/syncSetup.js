@@ -23,6 +23,7 @@
  *   Mike Connor <mconnor@mozilla.com>
  *   Philipp von Weitershausen <philipp@weitershausen.de>
  *   Paul O’Shannessy <paul@oshannessy.com>
+ *   Richard Newman <rnewman@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -248,7 +249,8 @@ var gSyncSetup = {
 
   checkAccount: function() {
     delete this._checkAccountTimer;
-    let value = document.getElementById("weaveEmail").value;
+    let value = Weave.Utils.normalizeAccount(
+      document.getElementById("weaveEmail").value);
     if (!value) {
       this.status.email = false;
       this.checkFields();
@@ -415,7 +417,8 @@ var gSyncSetup = {
         feedback.hidden = false;
 
         let password = document.getElementById("weavePassword").value;
-        let email    = document.getElementById("weaveEmail").value;
+        let email = Weave.Utils.normalizeAccount(
+          document.getElementById("weaveEmail").value);
         let challenge = getField("challenge");
         let response = getField("response");
 
@@ -440,7 +443,8 @@ var gSyncSetup = {
         this.captchaBrowser.loadURI(Weave.Service.miscAPI + "captcha_html");
         break;
       case EXISTING_ACCOUNT_LOGIN_PAGE:
-        Weave.Service.account = document.getElementById("existingAccountName").value;
+        Weave.Service.account = Weave.Utils.normalizeAccount(
+          document.getElementById("existingAccountName").value);
         Weave.Service.password = document.getElementById("existingPassword").value;
         let pp = document.getElementById("existingPassphrase").value;
         Weave.Service.passphrase = Weave.Utils.normalizePassphrase(pp);
