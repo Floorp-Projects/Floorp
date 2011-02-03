@@ -1884,7 +1884,13 @@ PluginModuleChild::AnswerPPluginInstanceConstructor(PPluginInstanceChild* aActor
     // plugins need to actively negotiate something else in order to work
     // out of process.
     if (childInstance->EventModel() == NPEventModelCarbon) {
-        *rv = NPERR_MODULE_LOAD_FAILED_ERROR;
+      // Send notification that a plugin tried to negotiate Carbon NPAPI so that
+      // users can be notified that restarting the browser in i386 mode may allow
+      // them to use the plugin.
+      childInstance->SendNegotiatedCarbon();
+
+      // Fail to instantiate.
+      *rv = NPERR_MODULE_LOAD_FAILED_ERROR;
     }
 #endif
 
