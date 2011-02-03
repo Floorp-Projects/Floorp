@@ -163,9 +163,7 @@ static GtkWidget *gStockImageWidget = nsnull;
 static GnomeIconTheme *gIconTheme = nsnull;
 #endif
 
-#if GTK_CHECK_VERSION(2,4,0)
 static GtkIconFactory *gIconFactory = nsnull;
-#endif
 
 static void
 ensure_stock_image_widget()
@@ -182,7 +180,6 @@ ensure_stock_image_widget()
   }
 }
 
-#if GTK_CHECK_VERSION(2,4,0)
 static void
 ensure_icon_factory()
 {
@@ -191,7 +188,6 @@ ensure_icon_factory()
     gtk_icon_factory_add_default(gIconFactory);
   }
 }
-#endif
 
 #ifdef MOZ_ENABLE_GNOMEUI
 static nsresult
@@ -295,7 +291,6 @@ moz_gtk_icon_size(const char *name)
 nsresult
 nsIconChannel::InitWithGnome(nsIMozIconURI *aIconURI)
 {
-#if GTK_CHECK_VERSION(2,4,0)
   nsresult rv;
 
   if (NS_FAILED(ensure_libgnomeui()) || NS_FAILED(ensure_libgnome()) || NS_FAILED(ensure_libgnomevfs())) {
@@ -443,9 +438,6 @@ nsIconChannel::InitWithGnome(nsIMozIconURI *aIconURI)
                                  getter_AddRefs(mRealChannel));
   g_object_unref(scaled);
   return rv;
-#else // GTK_CHECK_VERSION(2,4,0)
-  return NS_ERROR_NOT_AVAILABLE;
-#endif // GTK_CHECK_VERSION(2,4,0)
 }
 #endif
 
@@ -480,7 +472,6 @@ nsIconChannel::Init(nsIURI* aURI)
 
   GdkPixbuf *icon = gtk_widget_render_icon(gStockImageWidget, stockIcon.get(),
                                            icon_size, NULL);
-#if GTK_CHECK_VERSION(2,4,0)
   if (!icon) {
     ensure_icon_factory();
       
@@ -496,7 +487,6 @@ nsIconChannel::Init(nsIURI* aURI)
     icon = gtk_widget_render_icon(gStockImageWidget, stockIcon.get(),
                                   icon_size, NULL);
   }
-#endif
 
   if (!icon)
     return NS_ERROR_NOT_AVAILABLE;
@@ -516,13 +506,11 @@ nsIconChannel::Shutdown() {
     gProtoWindow = nsnull;
     gStockImageWidget = nsnull;
   }
-#if GTK_CHECK_VERSION(2,4,0)
   if (gIconFactory) {
     gtk_icon_factory_remove_default(gIconFactory);
     g_object_unref(gIconFactory);
     gIconFactory = nsnull;
   }
-#endif
 #ifdef MOZ_ENABLE_GNOMEUI
   if (gIconTheme) {
     g_object_unref(G_OBJECT(gIconTheme));
