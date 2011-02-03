@@ -448,14 +448,11 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
         JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO | JSOPTION_NO_SCRIPT_RVAL);
         script = JS_CompileFileHandle(cx, obj, filename, file);
         JS_SetOptions(cx, oldopts);
-        if (script) {
-            if (!compileOnly) {
-                (void)JS_ExecuteScript(cx, obj, script, NULL);
-                int64 t2 = PRMJ_Now() - t1;
-                if (printTiming)
-                    printf("runtime = %.3f ms\n", double(t2) / PRMJ_USEC_PER_MSEC);
-            }
-            JS_DestroyScript(cx, script);
+        if (script && !compileOnly) {
+            (void)JS_ExecuteScript(cx, obj, script, NULL);
+            int64 t2 = PRMJ_Now() - t1;
+            if (printTiming)
+                printf("runtime = %.3f ms\n", double(t2) / PRMJ_USEC_PER_MSEC);
         }
 
         goto cleanup;
@@ -543,21 +540,18 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
         if (!compileOnly)
             JS_SetOptions(cx, oldopts);
 
-        if (script) {
-            if (!compileOnly) {
-                ok = JS_ExecuteScript(cx, obj, script, &result);
-                if (ok && !JSVAL_IS_VOID(result)) {
-                    str = JS_ValueToSource(cx, result);
-                    ok = !!str;
-                    if (ok) {
-                        JSAutoByteString bytes(cx, str);
-                        ok = !!bytes;
-                        if (ok)
-                            fprintf(gOutFile, "%s\n", bytes.ptr());
-                    }
+        if (script && !compileOnly) {
+            ok = JS_ExecuteScript(cx, obj, script, &result);
+            if (ok && !JSVAL_IS_VOID(result)) {
+                str = JS_ValueToSource(cx, result);
+                ok = !!str;
+                if (ok) {
+                    JSAutoByteString bytes(cx, str);
+                    ok = !!bytes;
+                    if (ok)
+                        fprintf(gOutFile, "%s\n", bytes.ptr());
                 }
             }
-            JS_DestroyScript(cx, script);
         }
         *buffer = '\0';
     } while (!hitEOF && !gQuitting);
@@ -1019,7 +1013,6 @@ Load(JSContext *cx, uintN argc, jsval *vp)
     uintN i;
     JSString *str;
     JSScript *script;
-    JSBool ok;
     uint32 oldopts;
 
     JSObject *thisobj = JS_THIS_OBJECT(cx, vp);
@@ -1039,16 +1032,10 @@ Load(JSContext *cx, uintN argc, jsval *vp)
         oldopts = JS_GetOptions(cx);
         JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO | JSOPTION_NO_SCRIPT_RVAL);
         script = JS_CompileFile(cx, thisobj, filename.ptr());
+        if (!script)
+            return JS_FALSE;
         JS_SetOptions(cx, oldopts);
-        if (!script) {
-            ok = JS_FALSE;
-        } else {
-            ok = !compileOnly
-                 ? JS_ExecuteScript(cx, thisobj, script, NULL)
-                 : JS_TRUE;
-            JS_DestroyScript(cx, script);
-        }
-        if (!ok)
+        if (!compileOnly && !JS_ExecuteScript(cx, thisobj, script, NULL))
             return JS_FALSE;
     }
 
@@ -4199,7 +4186,6 @@ Compile(JSContext *cx, uintN argc, jsval *vp)
     if (!result)
         return JS_FALSE;
 
-    JS_DestroyScript(cx, result);
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return JS_TRUE;
 }
