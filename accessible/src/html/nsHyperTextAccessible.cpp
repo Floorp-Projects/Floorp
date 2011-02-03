@@ -204,6 +204,17 @@ nsHyperTextAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
   return NS_OK;
 }
 
+PRBool
+nsHyperTextAccessible::RemoveChild(nsAccessible *aAccessible)
+{
+  PRInt32 childIndex = aAccessible->GetIndexInParent();
+  PRInt32 count = mOffsets.Length() - childIndex;
+  if (count > 0)
+    mOffsets.RemoveElementsAt(childIndex, count);
+
+  return nsAccessible::RemoveChild(aAccessible);
+}
+
 // Substring must be entirely within the same text node
 nsIntRect nsHyperTextAccessible::GetBoundsForString(nsIFrame *aFrame, PRUint32 aStartRenderedOffset,
                                                     PRUint32 aEndRenderedOffset)
