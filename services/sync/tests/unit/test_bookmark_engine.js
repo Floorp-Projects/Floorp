@@ -60,6 +60,7 @@ function test_ID_caching() {
 function test_processIncoming_error_orderChildren() {
   _("Ensure that _orderChildren() is called even when _processIncoming() throws an error.");
 
+  do_test_pending();
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
   Svc.Prefs.set("username", "foo");
 
@@ -139,6 +140,7 @@ function test_processIncoming_error_orderChildren() {
 
 function test_restorePromptsReupload() {
   _("Ensure that restoring from a backup will reupload all records.");
+  do_test_pending();
   Svc.Prefs.set("username", "foo");
   Service.serverURL = "http://localhost:8080/";
   Service.clusterURL = "http://localhost:8080/";

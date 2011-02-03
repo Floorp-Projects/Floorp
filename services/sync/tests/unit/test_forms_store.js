@@ -1,9 +1,14 @@
 _("Make sure the form store follows the Store api and correctly accesses the backend form storage");
 Cu.import("resource://services-sync/engines/forms.js");
+Cu.import("resource://services-sync/util.js");
 
 function run_test() {
   let baseuri = "http://fake/uri/";
   let store = new FormEngine()._store;
+
+  function applyEnsureNoFailures(records) {
+    do_check_eq(store.applyIncomingBatch(records).length, 0);
+  }
 
   _("Remove any existing entries");
   store.wipe();
@@ -12,10 +17,11 @@ function run_test() {
   }
 
   _("Add a form entry");
-  store.create({
+  applyEnsureNoFailures([{
+    id: Utils.makeGUID(),
     name: "name!!",
     value: "value??"
-  });
+  }]);
 
   _("Should have 1 entry now");
   let id = "";
@@ -45,10 +51,11 @@ function run_test() {
   }
 
   _("Add another entry");
-  store.create({
+  applyEnsureNoFailures([{
+    id: Utils.makeGUID(),
     name: "another",
     value: "entry"
-  });
+  }]);
   id = "";
   for (let _id in store.getAllIDs()) {
     if (id == "")
