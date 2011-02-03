@@ -986,6 +986,11 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       if (typeof item.setResizable == 'function')
         item.setResizable(true, options.immediately);
 
+      // if a blank tab is selected while restoring a tab the blank tab gets
+      // removed. we need to keep the group alive for the restored tab.
+      if (item.tab._tabViewTabIsRemovedAfterRestore)
+        options.dontClose = true;
+
       let closed = options.dontClose ? false : this.closeIfEmpty();
       if (closed)
         this._makeClosestTabActive();

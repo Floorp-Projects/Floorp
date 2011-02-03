@@ -7183,7 +7183,7 @@ function undoCloseTab(aIndex) {
   var ss = Cc["@mozilla.org/browser/sessionstore;1"].
            getService(Ci.nsISessionStore);
   if (ss.getClosedTabCount(window) > (aIndex || 0)) {
-    TabView.prepareUndoCloseTab();
+    TabView.prepareUndoCloseTab(blankTabToRemove);
     tab = ss.undoCloseTab(window, aIndex || 0);
     TabView.afterUndoCloseTab();
 
