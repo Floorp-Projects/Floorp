@@ -679,7 +679,7 @@ js_DestroyCachedScript(JSContext *cx, JSScript *script);
 extern void
 js_TraceScript(JSTracer *trc, JSScript *script);
 
-extern JSBool
+extern JSObject *
 js_NewScriptObject(JSContext *cx, JSScript *script);
 
 /*
@@ -733,5 +733,18 @@ js_CloneScript(JSContext *cx, JSScript *script);
  */
 extern JSBool
 js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic);
+
+inline bool
+JSObject::isScript() const
+{
+    return getClass() == &js_ScriptClass;
+}
+
+inline JSScript *
+JSObject::getScript() const
+{
+    JS_ASSERT(isScript());
+    return static_cast<JSScript *>(getPrivate());
+}
 
 #endif /* jsscript_h___ */

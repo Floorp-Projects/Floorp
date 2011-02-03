@@ -462,47 +462,37 @@ Dump(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 Load(JSContext *cx, uintN argc, jsval *vp)
 {
-    uintN i;
-    JSString *str;
-    JSScript *script;
-    JSBool ok;
-    jsval result;
-    FILE *file;
-
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
     if (!obj)
-        return JS_FALSE;
+        return false;
 
     jsval *argv = JS_ARGV(cx, vp);
-    for (i = 0; i < argc; i++) {
-        str = JS_ValueToString(cx, argv[i]);
+    for (uintN i = 0; i < argc; i++) {
+        JSString *str = JS_ValueToString(cx, argv[i]);
         if (!str)
-            return JS_FALSE;
+            return false;
         argv[i] = STRING_TO_JSVAL(str);
         JSAutoByteString filename(cx, str);
         if (!filename)
-            return JS_FALSE;
-        file = fopen(filename.ptr(), "r");
+            return false;
+        FILE *file = fopen(filename.ptr(), "r");
         if (!file) {
             JS_ReportError(cx, "cannot open file '%s' for reading",
                            filename.ptr());
-            return JS_FALSE;
+            return false;
         }
-        script = JS_CompileFileHandleForPrincipals(cx, obj, filename.ptr(),
-                                                   file, gJSPrincipals);
+        JSObject *scriptObj = JS_CompileFileHandleForPrincipals(cx, obj, filename.ptr(),
+                                                                file, gJSPrincipals);
         fclose(file);
-        if (!script)
-            return JS_FALSE;
+        if (!scriptObj)
+            return false;
 
-        ok = !compileOnly
-             ? JS_ExecuteScript(cx, obj, script, &result)
-             : JS_TRUE;
-        JS_DestroyScript(cx, script);
-        if (!ok)
-            return JS_FALSE;
+        jsval result;
+        if (!compileOnly && !JS_ExecuteScript(cx, obj, scriptObj, &result))
+            return false;
     }
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
-    return JS_TRUE;
+    return true;
 }
 
 static JSBool
@@ -1046,7 +1036,7 @@ static void
 ProcessFile(JSContext *cx, JSObject *obj, const char *filename, FILE *file,
             JSBool forceTTY)
 {
-    JSScript *script;
+    JSObject *scriptObj;
     jsval result;
     int lineno, startline;
     JSBool ok, hitEOF;
@@ -1079,14 +1069,11 @@ ProcessFile(JSContext *cx, JSObject *obj, const char *filename, FILE *file,
         ungetc(ch, file);
         DoBeginRequest(cx);
 
-        script = JS_CompileFileHandleForPrincipals(cx, obj, filename, file,
-                                                   gJSPrincipals);
+        scriptObj = JS_CompileFileHandleForPrincipals(cx, obj, filename, file,
+                                                      gJSPrincipals);
 
-        if (script) {
-            if (!compileOnly)
-                (void)JS_ExecuteScript(cx, obj, script, &result);
-            JS_DestroyScript(cx, script);
-        }
+        if (scriptObj && !compileOnly)
+            (void)JS_ExecuteScript(cx, obj, scriptObj, &result);
         DoEndRequest(cx);
 
         return;
@@ -1118,13 +1105,13 @@ ProcessFile(JSContext *cx, JSObject *obj, const char *filename, FILE *file,
         DoBeginRequest(cx);
         /* Clear any pending exception from previous failed compiles.  */
         JS_ClearPendingException(cx);
-        script = JS_CompileScriptForPrincipals(cx, obj, gJSPrincipals, buffer,
-                                               strlen(buffer), "typein", startline);
-        if (script) {
+        scriptObj = JS_CompileScriptForPrincipals(cx, obj, gJSPrincipals, buffer,
+                                                  strlen(buffer), "typein", startline);
+        if (scriptObj) {
             JSErrorReporter older;
 
             if (!compileOnly) {
-                ok = JS_ExecuteScript(cx, obj, script, &result);
+                ok = JS_ExecuteScript(cx, obj, scriptObj, &result);
                 if (ok && result != JSVAL_VOID) {
                     /* Suppress error reports from JS_ValueToString(). */
                     older = JS_SetErrorReporter(cx, NULL);
@@ -1137,7 +1124,6 @@ ProcessFile(JSContext *cx, JSObject *obj, const char *filename, FILE *file,
                         ok = JS_FALSE;
                 }
             }
-            JS_DestroyScript(cx, script);
         }
         DoEndRequest(cx);
     } while (!hitEOF && !gQuitting);
