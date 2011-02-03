@@ -121,7 +121,8 @@ struct SameOriginOrCrossOriginAccessiblePropertiesOnly : public Policy {
     static bool check(JSContext *cx, JSObject *wrapper, jsid id, JSWrapper::Action act,
                       Permission &perm) {
         if (AccessCheck::isCrossOriginAccessPermitted(cx, wrapper, id, act) ||
-            AccessCheck::isLocationObjectSameOrigin(cx, wrapper)) {
+            AccessCheck::isLocationObjectSameOrigin(cx, wrapper) ||
+            AccessCheck::documentDomainMakesSameOrigin(cx, wrapper->unwrap())) {
             perm = PermitPropertyAccess;
             return true;
         }
