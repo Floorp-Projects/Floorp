@@ -15,31 +15,15 @@ struct ScriptObjectFixture : public JSAPITest {
             uc_code[i] = code[i];
     }
 
-    bool tryScript(JSScript *script)
+    bool tryScript(JSObject *scriptObj)
     {
-        CHECK(script);
-
-        /* We should have allocated a script object for the script already. */
-        jsvalRoot script_object(cx, OBJECT_TO_JSVAL(JS_GetScriptObject(script)));
-        CHECK(JSVAL_TO_OBJECT(script_object.value()));
-
-        /*
-         * JS_NewScriptObject just returns the object already created for the
-         * script. It was always a bug to call this more than once.
-         */
-        jsvalRoot second_script_object
-            (cx, OBJECT_TO_JSVAL(JS_NewScriptObject(cx, script)));
-        CHECK_SAME(second_script_object.value(), script_object.value());
+        CHECK(scriptObj);
 
         JS_GC(cx);
 
         /* After a garbage collection, the script should still work. */
         jsval result;
-        CHECK(JS_ExecuteScript(cx, global, script, &result));
-
-        /* JS_DestroyScript must still be safe to call, whether or not it
-           actually has any effect. */
-        JS_DestroyScript(cx, script);
+        CHECK(JS_ExecuteScript(cx, global, scriptObj, &result));
 
         return true;
     }
@@ -103,9 +87,9 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFile)
     FILE *script_stream = tempScript.open(script_filename);
     CHECK(fputs(code, script_stream) != EOF);
     tempScript.close();
-    JSScript *script = JS_CompileFile(cx, global, script_filename);
+    JSObject *scriptObj = JS_CompileFile(cx, global, script_filename);
     tempScript.remove();
-    return tryScript(script);
+    return tryScript(scriptObj);
 }
 END_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFile)
 
@@ -115,9 +99,9 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFile_empty)
     static const char script_filename[] = "temp-bug438633_JS_CompileFile_empty";
     tempScript.open(script_filename);
     tempScript.close();
-    JSScript *script = JS_CompileFile(cx, global, script_filename);
+    JSObject *scriptObj = JS_CompileFile(cx, global, script_filename);
     tempScript.remove();
-    return tryScript(script);
+    return tryScript(scriptObj);
 }
 END_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFile_empty)
 
@@ -152,19 +136,3 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFileHandleForPrincip
                                                        script_stream, NULL));
 }
 END_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFileHandleForPrincipals)
-
-BEGIN_TEST(testScriptObject_ScriptlessScriptObjects)
-{
-    /* JS_NewScriptObject(cx, NULL) should return a fresh object each time. */
-    jsvalRoot script_object1(cx, OBJECT_TO_JSVAL(JS_NewScriptObject(cx, NULL)));
-    CHECK(!JSVAL_IS_PRIMITIVE(script_object1.value()));
-
-    jsvalRoot script_object2(cx, OBJECT_TO_JSVAL(JS_NewScriptObject(cx, NULL)));
-    CHECK(!JSVAL_IS_PRIMITIVE(script_object2.value()));
-
-    if (script_object1.value() == script_object2.value())
-        return false;
-
-    return true;
-}
-END_TEST(testScriptObject_ScriptlessScriptObjects)

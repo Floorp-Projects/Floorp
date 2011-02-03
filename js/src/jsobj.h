@@ -1054,6 +1054,12 @@ struct JSObject : js::gc::Cell {
     inline void setNativeIterator(js::NativeIterator *);
 
     /*
+     * Script-related getters.
+     */
+
+    inline JSScript *getScript() const;
+
+    /*
      * XML-related getters and setters.
      */
 
@@ -1296,6 +1302,7 @@ struct JSObject : js::gc::Cell {
     inline bool isClonedBlock() const;
     inline bool isCall() const;
     inline bool isRegExp() const;
+    inline bool isScript() const;
     inline bool isXML() const;
     inline bool isXMLId() const;
     inline bool isNamespace() const;
