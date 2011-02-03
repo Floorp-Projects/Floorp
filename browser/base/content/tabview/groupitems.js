@@ -188,10 +188,17 @@ function GroupItem(listOfEls, options) {
 
   this.$title
     .blur(function() {
+      self._titleFocused = false;
       self.$titleShield.show();
     })
     .focus(function() {
-      (self.$title)[0].select();
+      if (!self._titleFocused) {
+        (self.$title)[0].select();
+        self._titleFocused = true;
+      }
+    })
+    .mousedown(function(e) {
+      e.stopPropagation();
     })
     .keydown(handleKeyDown)
     .keyup(handleKeyUp);
