@@ -1052,27 +1052,12 @@ toolbar:not([iconsize="small"])[mode="icons"] #back-button {
 .searchbar-textbox {
   -moz-appearance: none;
   margin: 1px 3px;
+  padding: 2px;
   background-clip: padding-box;
   border: 1px solid ThreeDDarkShadow;
   border-radius: 4px;
   box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
               0 1px 0 rgba(255,255,255,.4);
-}
-
-.urlbar-textbox-container {
-  margin-top: 2px;
-  margin-bottom: 2px;
-  margin-right: 2px;
-}
-
-.urlbar-frontcap {
-  margin-top: 2px;
-  margin-bottom: 2px;
-  margin-left: 2px;
-}
-
-.searchbar-textbox {
-  padding: 2px;
 }
 
 @media all and (-moz-windows-default-theme) {
@@ -1130,10 +1115,6 @@ html|*.urlbar-input:-moz-lwtheme:-moz-placeholder,
   -moz-margin-start: 0;
 }
 
-.urlbar-frontcap-and-textbox {
-  -moz-box-align: stretch;
-}
-
 #urlbar-display-box {
   margin-top: -2px;
   margin-bottom: -2px;
@@ -1145,42 +1126,6 @@ html|*.urlbar-input:-moz-lwtheme:-moz-placeholder,
   margin-top: 0;
   margin-bottom: 0;
   color: GrayText;
-}
-
-/* over-link in location bar */
-
-.urlbar-origin-label {
-  padding-top: 0;
-  padding-bottom: 0;
-  -moz-padding-start: 4px;
-  -moz-padding-end: 0;
-  margin: 0;
-}
-
-.urlbar-over-link-box {
-  position: relative;
-  color: GrayText;
-  min-height: 20px;
-  padding-top: 0;
-  padding-bottom: 0;
-  -moz-padding-start: 18px;
-  -moz-padding-end: 5px;
-}
-
-.urlbar-over-link-box:-moz-locale-dir(ltr) {
-  background: url(chrome://browser/skin/urlbar-over-link-arrow.png) no-repeat left center;
-  right: 0;
-}
-
-.urlbar-over-link-box:-moz-locale-dir(rtl) {
-  background: url(chrome://browser/skin/urlbar-over-link-arrow-rtl.png) no-repeat right center;
-  left: 0;
-}
-
-.urlbar-over-link-host-label,
-.urlbar-over-link-path-label {
-  padding: 0;
-  margin: 0;
 }
 
 /* identity box */
@@ -1375,6 +1320,8 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 #urlbar > toolbarbutton {
   -moz-appearance: none;
   list-style-image: url("chrome://browser/skin/reload-stop-go.png");
+  margin: -2px;
+  -moz-margin-start: 0;
   padding: 0 3px;
   background-origin: border-box;
   border: none;
