@@ -6138,11 +6138,19 @@ PresShell::Paint(nsIView*           aDisplayRoot,
   nsIFrame* frame = aPaintDefaultBackground
       ? nsnull : static_cast<nsIFrame*>(aDisplayRoot->GetClientData());
 
-  LayerManager* layerManager = aWidgetToPaint->GetLayerManager();
+  bool isRetainingManager;
+  LayerManager* layerManager =
+    aWidgetToPaint->GetLayerManager(&isRetainingManager);
   NS_ASSERTION(layerManager, "Must be in paint event");
   layerManager->BeginTransaction();
 
-  if (frame) {
+  if (frame && isRetainingManager) {
+    // Try to do an empty transaction, if the frame tree does not
+    // need to be updated. Do not try to do an empty transaction on
+    // a non-retained layer manager (like the BasicLayerManager that
+    // draws the window title bar on Mac), because a) it won't work
+    // and b) below we don't want to clear NS_FRAME_UPDATE_LAYER_TREE,
+    // that will cause us to forget to update the real layer manager!
     if (!(frame->GetStateBits() & NS_FRAME_UPDATE_LAYER_TREE)) {
       if (layerManager->EndEmptyTransaction()) {
         frame->UpdatePaintCountForPaintedPresShells();
@@ -6152,8 +6160,11 @@ PresShell::Paint(nsIView*           aDisplayRoot,
       }
     }
     
-    frame->ClearPresShellsFromLastPaint();
+
     frame->RemoveStateBits(NS_FRAME_UPDATE_LAYER_TREE);
+  }
+  if (frame) {
+    frame->ClearPresShellsFromLastPaint();
   }
 
   nscolor bgcolor = ComputeBackstopColor(aDisplayRoot);
