@@ -20,6 +20,7 @@
 # Contributor(s):
 #   Raymond Lee <raymond@appcoast.com>
 #   Ian Gilman <ian@iangilman.com>
+#   Tim Taubert <tim.taubert@gmx.de>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -246,12 +247,16 @@ let TabView = {
       }
     }, true);
   },
-  
+
   // ----------
   // Prepares the tab view for undo close tab.
-  prepareUndoCloseTab: function() {
-    if (this._window)
+  prepareUndoCloseTab: function(blankTabToRemove) {
+    if (this._window) {
       this._window.UI.restoredClosedTab = true;
+
+      if (blankTabToRemove)
+        blankTabToRemove._tabViewTabIsRemovedAfterRestore = true;
+    }
   },
 
   // ----------
