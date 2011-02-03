@@ -1480,6 +1480,13 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
     // Create new tab and zoom in on it after a double click
     container.mousedown(function(e) {
+      if (!Utils.isLeftClick(e))
+        return;
+
+      // clicking in the title bar shouldn't create new tabs
+      if (self.$titlebar[0] == e.target || self.$titlebar.contains(e.target))
+        return;
+
       if (Date.now() - self._lastClick <= UI.DBLCLICK_INTERVAL &&
           (self._lastClickPositions.x - UI.DBLCLICK_OFFSET) <= e.clientX &&
           (self._lastClickPositions.x + UI.DBLCLICK_OFFSET) >= e.clientX &&

@@ -21,6 +21,7 @@
  * Ian Gilman <ian@iangilman.com>
  * Aza Raskin <aza@mozilla.com>
  * Michael Yoshitaka Erlewine <mitcho@mitcho.com>
+ * Tim Taubert <tim.taubert@gmx.de>
  *
  * This file incorporates work from:
  * jQuery JavaScript Library v1.4.2: http://code.jquery.com/jquery-1.4.2.js
@@ -291,6 +292,30 @@ iQClass.prototype = {
     }
 
     return iQ(ret);
+  },
+
+  // ----------
+  // Function: contains
+  // Check to see if a given DOM node descends from the receiver.
+  contains: function iQClass_contains(selector) {
+    Utils.assert(this.length == 1, 'does not yet support multi-objects (or null objects)');
+
+    // fast path when querySelector() can be used
+    if ('string' == typeof selector)
+      return null != this[0].querySelector(selector);
+
+    let object = iQ(selector);
+    Utils.assert(object.length <= 1, 'does not yet support multi-objects');
+
+    let elem = object[0];
+    if (!elem || !elem.parentNode)
+      return false;
+
+    do {
+      elem = elem.parentNode;
+    } while (elem && this[0] != elem);
+
+    return this[0] == elem;
   },
 
   // ----------
