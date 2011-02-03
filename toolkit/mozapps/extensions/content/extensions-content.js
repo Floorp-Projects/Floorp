@@ -62,7 +62,6 @@ function createInstallTrigger(window) {
       install: "r",
       installChrome: "r",
       startSoftwareUpdate: "r",
-      toString: "r",
       toSource: "r", // XXX workaround for bug 582100
     },
 
