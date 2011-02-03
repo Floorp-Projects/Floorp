@@ -1713,3 +1713,69 @@ nsDOMWindowUtils::GetOuterWindowWithId(PRUint64 aWindowID,
   NS_IF_ADDREF(*aWindow);
   return NS_OK;
 }
+
+#ifdef DEBUG
+static PRBool
+CheckLeafLayers(Layer* aLayer, const nsIntPoint& aOffset, nsIntRegion* aCoveredRegion)
+{
+  gfxMatrix transform;
+  if (!aLayer->GetTransform().Is2D(&transform) ||
+      transform.HasNonIntegerTranslation())
+    return PR_FALSE;
+  transform.NudgeToIntegers();
+  nsIntPoint offset = aOffset + nsIntPoint(transform.x0, transform.y0);
+
+  Layer* child = aLayer->GetFirstChild();
+  if (child) {
+    while (child) {
+      if (!CheckLeafLayers(child, offset, aCoveredRegion))
+        return PR_FALSE;
+      child = child->GetNextSibling();
+    }
+  } else {
+    nsIntRegion rgn = aLayer->GetVisibleRegion();
+    rgn.MoveBy(offset);
+    nsIntRegion tmp;
+    tmp.And(rgn, *aCoveredRegion);
+    if (!tmp.IsEmpty())
+      return PR_FALSE;
+    aCoveredRegion->Or(*aCoveredRegion, rgn);
+  }
+
+  return PR_TRUE;
+}
+#endif
+
+NS_IMETHODIMP
+nsDOMWindowUtils::LeafLayersPartitionWindow(PRBool* aResult)
+{
+  if (!IsUniversalXPConnectCapable()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  *aResult = PR_TRUE;
+#ifdef DEBUG
+  nsIWidget* widget = GetWidget();
+  if (!widget)
+    return NS_ERROR_FAILURE;
+  LayerManager* manager = widget->GetLayerManager();
+  if (!manager)
+    return NS_ERROR_FAILURE;
+  nsPresContext* presContext = GetPresContext();
+  if (!presContext)
+    return NS_ERROR_FAILURE;
+  Layer* root = manager->GetRoot();
+  if (!root)
+    return NS_ERROR_FAILURE;
+
+  nsIntPoint offset(0, 0);
+  nsIntRegion coveredRegion;
+  if (!CheckLeafLayers(root, offset, &coveredRegion)) {
+    *aResult = PR_FALSE;
+  }
+  if (!coveredRegion.IsEqual(root->GetVisibleRegion())) {
+    *aResult = PR_FALSE;
+  }
+#endif
+  return NS_OK;
+}
