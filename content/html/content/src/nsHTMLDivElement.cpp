@@ -116,7 +116,7 @@ nsHTMLDivElement::ParseAttribute(PRInt32 aNamespaceID,
     if (mNodeInfo->Equals(nsGkAtoms::marquee)) {
       if ((aAttribute == nsGkAtoms::width) ||
           (aAttribute == nsGkAtoms::height)) {
-        return aResult.ParseSpecialIntValue(aValue, PR_TRUE);
+        return aResult.ParseSpecialIntValue(aValue);
       }
       if (aAttribute == nsGkAtoms::bgcolor) {
         return aResult.ParseColor(aValue);
