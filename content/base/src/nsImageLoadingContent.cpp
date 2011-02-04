@@ -641,7 +641,6 @@ nsImageLoadingContent::LoadImage(const nsAString& aNewURI,
       doc->GetDocumentURI() &&
       NS_SUCCEEDED(doc->GetDocumentURI()->Equals(imageURI, &equal)) && 
       equal)  {
-
     // Loading an embedded img from the same URI as the document URI will not work
     // as a resource cannot recursively embed itself. Attempting to do so generally
     // results in having to pre-emptively close down an in-flight HTTP transaction 
@@ -650,6 +649,7 @@ nsImageLoadingContent::LoadImage(const nsAString& aNewURI,
     // In light of that, just skip loading it..
     // Do make sure to drop our existing image, if any
     CancelImageRequests(aNotify);
+    FireEvent(NS_LITERAL_STRING("error"));
     return NS_OK;
   }
 
