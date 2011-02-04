@@ -91,4 +91,30 @@ public:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIContentUtils2, NS_ICONTENTUTILS2_IID)
 
+#ifndef MOZ_ENABLE_LIBXUL
+// nsIContentUtils_MOZILLA_2_0_BRANCH is a non-libxul only interface to enable
+// us keep those builds working.
+
+#define NS_ICONTENTUTILS_MOZILLA_2_0_BRANCH_IID \
+{ 0x0fe8099c, 0x622a, 0x4c79, \
+{ 0xb0, 0x02, 0x55, 0xf0, 0x44, 0x34, 0x00, 0x30 } }
+
+class nsIContentUtils_MOZILLA_2_0_BRANCH : public nsISupports
+{
+public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICONTENTURILS_MOZILLA_2_0_BRANCH_IID)
+  NS_DECL_ISUPPORTS
+
+  virtual nsresult DispatchTrustedEvent(nsIDocument* aDoc,
+                                        nsISupports* aTarget,
+                                        const nsAString& aEventName,
+                                        PRBool aCanBubble,
+                                        PRBool aCancelable,
+                                        PRBool *aDefaultAction = nsnull);
+};
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIContentUtils_MOZILLA_2_0_BRANCH, NS_ICONTENTUTILS_MOZILLA_2_0_BRANCH_IID)
+
+#endif
+
 #endif /* nsIContentUtils_h__ */
