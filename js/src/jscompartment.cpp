@@ -62,16 +62,17 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     gcTriggerBytes(0),
     gcLastBytes(0),
     data(NULL),
-    marked(false),
     active(false),
 #ifdef JS_METHODJIT
     jaegerCompartment(NULL),
 #endif
+    propertyTree(this),
     debugMode(rt->debugMode),
 #if ENABLE_YARR_JIT
     regExpAllocator(NULL),
 #endif
-    mathCache(NULL)
+    mathCache(NULL),
+    marked(false)
 {
     JS_INIT_CLIST(&scripts);
 
@@ -85,6 +86,9 @@ JSCompartment::JSCompartment(JSRuntime *rt)
 
 JSCompartment::~JSCompartment()
 {
+    Shape::finishEmptyShapes(this);
+    propertyTree.finish();
+
 #if ENABLE_YARR_JIT
     js_delete(regExpAllocator);
 #endif
@@ -119,10 +123,22 @@ JSCompartment::init()
     if (!crossCompartmentWrappers.init())
         return false;
 
-#ifdef JS_TRACER
-    if (!InitJIT(&traceMonitor)) {
+    if (!propertyTree.init())
         return false;
+
+#ifdef DEBUG
+    if (rt->meterEmptyShapes()) {
+        if (!emptyShapes.init())
+            return false;
     }
+#endif
+
+    if (!Shape::initEmptyShapes(this))
+        return false;
+
+#ifdef JS_TRACER
+    if (!InitJIT(&traceMonitor))
+        return false;
 #endif
 
     if (!toSourceCache.init())
@@ -398,11 +414,44 @@ ScriptPoolDestroyed(JSContext *cx, mjit::JITScript *jit,
 }
 #endif
 
+/*
+ * This method marks pointers that cross compartment boundaries. It should be
+ * called only by per-compartment GCs, since full GCs naturally follow pointers
+ * across compartments.
+ */
 void
-JSCompartment::mark(JSTracer *trc)
+JSCompartment::markCrossCompartment(JSTracer *trc)
 {
     for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront())
         MarkValue(trc, e.front().key, "cross-compartment wrapper");
+}
+
+void
+JSCompartment::mark(JSTracer *trc)
+{
+    if (IS_GC_MARKING_TRACER(trc)) {
+        JSRuntime *rt = trc->context->runtime;
+        if (rt->gcCurrentCompartment != NULL && rt->gcCurrentCompartment != this)
+            return;
+        
+        if (marked)
+            return;
+        
+        marked = true;
+    }
+
+    if (emptyArgumentsShape)
+        emptyArgumentsShape->trace(trc);
+    if (emptyBlockShape)
+        emptyBlockShape->trace(trc);
+    if (emptyCallShape)
+        emptyCallShape->trace(trc);
+    if (emptyDeclEnvShape)
+        emptyDeclEnvShape->trace(trc);
+    if (emptyEnumeratorShape)
+        emptyEnumeratorShape->trace(trc);
+    if (emptyWithShape)
+        emptyWithShape->trace(trc);
 }
 
 void
