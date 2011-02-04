@@ -844,7 +844,7 @@ nsNPAPIPluginStreamListener::HandleRedirectNotification(nsIChannel *oldChannel, 
     return false;
   }
 
-  if (!mInst) {
+  if (!mInst || !mInst->CanFireNotifications()) {
     return false;
   }
 
