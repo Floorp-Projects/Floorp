@@ -1,0 +1,108 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=607464
+-->
+<head>
+  <title>Test for Bug 607464</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=607464">Mozilla Bug 607464</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript;version=1.7">
+
+/**
+ * Test for Bug 607464:
+ * Pixel scrolling shouldn't scroll smoothly, even if general.smoothScroll is on.
+ **/
+
+function scrollDown15PxWithPixelScrolling(scrollbox) {
+  var win = scrollbox.ownerDocument.defaultView;
+  let event = {
+    'type': "DOMMouseScroll",
+    'axis': "vertical",
+    'delta': 1,
+    'hasPixels': true,
+  };
+  // first a line scroll
+  synthesizeMouseScroll(scrollbox, 10, 10, event, win);
+  // then 5 pixel scrolls with 3px each
+  event.delta *= 3;
+  event.type = "MozMousePixelScroll";
+  event.hasPixels = false;
+  for (let i = 0; i < 5; ++i) {
+    synthesizeMouseScroll(scrollbox, 10, 10, event, win);
+  }
+
+  // Note: the line scroll shouldn't have any effect because it has
+  // hasPixels = true set on it. We send it to emulate normal
+  // behavior.
+}
+
+function runTest() {
+  var win = open('data:text/html,<!DOCTYPE html>\n' +
+    '<div id="scrollbox" style="height: 100px; overflow: auto;">' +
+    '  <div style="height: 1000px;"></div>' +
+    '</div>', '_blank', 'width=300,height=300');
+  SimpleTest.waitForFocus(function () {
+    var scrollbox = win.document.getElementById("scrollbox");
+    let scrollTopBefore = scrollbox.scrollTop;
+
+    scrollDown15PxWithPixelScrolling(scrollbox);
+
+    setTimeout(function checkThatScrollIsFinishedAlmostInstantly() {
+      is(scrollbox.scrollTop, scrollTopBefore + 15, "Pixel scrolling should have finished after waiting for one 0-interval timer. We shouldn't be scrolling smoothly, even though the pref is set.")
+      win.close();
+      clearPrefs();
+      SimpleTest.finish();
+    }, 0);
+  }, win);
+}
+
+function initPrefs()
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var prefSvc = Components.classes["@mozilla.org/preferences-service;1"].
+                  getService(Components.interfaces.nsIPrefBranch2);
+  // Disables the app level scroll acceleration
+  prefSvc.setIntPref("mousewheel.acceleration.start", -1);
+  prefSvc.setBoolPref("mousewheel.system_scroll_override_on_root_content.enabled", false);
+
+  // Enables smooth scrolling
+  prefSvc.setBoolPref("general.smoothScroll", true);
+}
+
+function clearPrefs()
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var prefSvc = Components.classes["@mozilla.org/preferences-service;1"].
+                  getService(Components.interfaces.nsIPrefBranch2);
+
+  if (prefSvc.prefHasUserValue("mousewheel.acceleration.start"))
+    prefSvc.clearUserPref("mousewheel.acceleration.start");
+  if (prefSvc.prefHasUserValue("mousewheel.system_scroll_override_on_root_content.enabled"))
+    prefSvc.clearUserPref("mousewheel.system_scroll_override_on_root_content.enabled");
+  if (prefSvc.prefHasUserValue("general.smoothScroll"))
+    prefSvc.clearUserPref("general.smoothScroll");
+}
+
+window.onload = function () {
+  initPrefs();
+  SimpleTest.executeSoon(runTest);
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+
+</body>
+</html>
