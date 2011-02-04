@@ -236,7 +236,6 @@ _TEST_FILES = \
 		test_bug607145.html \
 		test_bug601061.html \
 		test_bug596511.html \
-		test_bug599975.html \
 		reflect.js \
 		test_bug611189.html \
 		test_bug613113.html \

@@ -372,25 +372,11 @@ public:
     return mWidgetSize;
   }
 
-  enum WorldTransforPolicy {
-    ApplyWorldTransform,
-    DontApplyWorldTransform
-  };
-
   /**
    * Setup the viewport and projection matrix for rendering
    * to a window of the given dimensions.
    */
-  void SetupPipeline(int aWidth, int aHeight, WorldTransforPolicy aTransformPolicy);
-
-  /**
-   * Setup World transform matrix.
-   * Transform will be ignored if it is not PreservesAxisAlignedRectangles
-   * or has non integer scale
-   */
-  void SetWorldTransform(const gfxMatrix& aMatrix);
-  gfxMatrix& GetWorldTransform(void);
-  void WorldTransformRect(nsIntRect& aRect);
+  void SetupPipeline(int aWidth, int aHeight);
 
 private:
   /** Widget associated with this layer manager */
@@ -469,7 +455,6 @@ private:
    * while rendering */
   DrawThebesLayerCallback mThebesLayerCallback;
   void *mThebesLayerCallbackData;
-  gfxMatrix mWorldMatrix;
 };
 
 /**

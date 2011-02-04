@@ -1054,7 +1054,8 @@ nsAttrValue::ParseEnumValue(const nsAString& aValue,
 }
 
 PRBool
-nsAttrValue::ParseSpecialIntValue(const nsAString& aString)
+nsAttrValue::ParseSpecialIntValue(const nsAString& aString,
+                                  PRBool aCanBePercent)
 {
   ResetIfSet();
 
@@ -1062,7 +1063,7 @@ nsAttrValue::ParseSpecialIntValue(const nsAString& aString)
   PRBool strict;
   PRBool isPercent = PR_FALSE;
   nsAutoString tmp(aString);
-  PRInt32 originalVal = StringToInteger(aString, &strict, &ec, PR_TRUE, &isPercent);
+  PRInt32 originalVal = StringToInteger(aString, &strict, &ec, aCanBePercent, &isPercent);
 
   if (NS_FAILED(ec)) {
     return PR_FALSE;
@@ -1071,7 +1072,7 @@ nsAttrValue::ParseSpecialIntValue(const nsAString& aString)
   PRInt32 val = NS_MAX(originalVal, 0);
 
   // % (percent)
-  if (isPercent || tmp.RFindChar('%') >= 0) {
+  if (aCanBePercent && (isPercent || tmp.RFindChar('%') >= 0)) {
     isPercent = PR_TRUE;
   }
 

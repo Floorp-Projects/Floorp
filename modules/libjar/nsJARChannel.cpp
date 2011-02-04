@@ -94,10 +94,7 @@ public:
         , mContentLength(-1)
     {
         if (fullJarURI) {
-#ifdef DEBUG
-            nsresult rv =
-#endif
-                fullJarURI->GetAsciiSpec(mJarDirSpec);
+            nsresult rv = fullJarURI->GetAsciiSpec(mJarDirSpec);
             NS_ASSERTION(NS_SUCCEEDED(rv), "this shouldn't fail");
         }
     }
