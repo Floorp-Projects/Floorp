@@ -47,6 +47,7 @@
 #include "nsIScrollableFrame.h"
 #include "nsStubMutationObserver.h"
 #include "nsITextControlElement.h"
+#include "nsIStatefulFrame.h"
 
 class nsIEditor;
 class nsISelectionController;
@@ -59,10 +60,13 @@ class nsTextEditorState;
 
 class nsTextControlFrame : public nsStackFrame,
                            public nsIAnonymousContentCreator,
-                           public nsITextControlFrame
+                           public nsITextControlFrame,
+                           public nsIStatefulFrame
 {
 public:
   NS_DECL_FRAMEARENA_HELPERS
+
+  NS_DECLARE_FRAME_PROPERTY(ContentScrollPos, DestroyPoint)
 
   nsTextControlFrame(nsIPresShell* aShell, nsStyleContext* aContext);
   virtual ~nsTextControlFrame();
@@ -156,6 +160,14 @@ public:
   virtual nsresult EnsureEditorInitialized();
 
 //==== END NSITEXTCONTROLFRAME
+
+//==== NSISTATEFULFRAME
+
+  NS_IMETHOD SaveState(SpecialStateID aStateID, nsPresState** aState);
+  NS_IMETHOD RestoreState(nsPresState* aState);
+
+//=== END NSISTATEFULFRAME
+
 //==== OVERLOAD of nsIFrame
   virtual nsIAtom* GetType() const;
 
