@@ -1,0 +1,95 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=631615
+-->
+<head>
+  <title>Test for Bug 631615</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=631615">Mozilla Bug 631615</a>
+<pre id="monitor">
+</pre>
+<script type="application/javascript">
+
+netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cr = Components.results;
+
+var consoleService =
+  Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService);
+
+var messageCount = 0;
+var monitor = document.getElementById("monitor");
+
+var listener = {
+  observe: function(message) {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+    if (message.message === "sentinel") {
+      is(messageCount, 0, "should have been no console messages");
+      removeListener();
+      SimpleTest.finish();
+    } else {
+      messageCount++;
+      var err = "" + messageCount + ": " + message.message + "\n";
+      monitor.appendChild(document.createTextNode(err));
+    }
+  },
+
+  QueryInterface: function(iid) {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    if (iid.equals(Ci.nsIConsoleListener) ||
+        iid.equals(Ci.nsISupports)) {
+      return this;
+    }
+    throw Cr.NS_NOINTERFACE;
+  }
+};
+
+function addListener() {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  consoleService.reset();
+  consoleService.registerListener(listener);
+}
+
+function removeListener() {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  consoleService.unregisterListener(listener);
+}
+
+function postSentinel() {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  consoleService.logStringMessage("sentinel");
+}
+
+SimpleTest.waitForExplicitFinish();
+
+function doTest() {
+  var html = document.documentElement;
+  var results;
+  var matches = html.matchesSelector || html.mozMatchesSelector;
+
+  addListener();
+  try {
+    results = "return: " +
+      matches.call(html, "[test!='']:sizzle") + "\n";
+  } catch (e) {
+    results = "throws: " + e + "\n";
+  }
+
+  monitor.appendChild(document.createTextNode(results));
+  is(results.slice(0, 6), "throws", "looking for an exception");
+
+  postSentinel();
+}
+doTest();
+
+</script>
+</body>
+</html>
