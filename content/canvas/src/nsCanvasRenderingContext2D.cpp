@@ -4066,6 +4066,7 @@ nsCanvasRenderingContext2D::GetCanvasLayer(CanvasLayer *aOldLayer,
             // of the rectangle based on Redraw args.
             aOldLayer->Updated(nsIntRect(0, 0, mWidth, mHeight));
             MarkContextClean();
+            HTMLCanvasElement()->GetPrimaryCanvasFrame()->MarkLayersActive();
         }
 
         return aOldLayer;
