@@ -76,8 +76,8 @@
 #endif
 #endif
 
-#include <Shlobj.h>
-#include <Shlwapi.h>
+#include <shlobj.h>
+#include <shlwapi.h>
 
 #ifdef CAIRO_HAS_D2D_SURFACE
 #include "gfxD2DSurface.h"
