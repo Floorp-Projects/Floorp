@@ -2,9 +2,18 @@ do_load_httpd_js();
 
 var httpserver = null;
 
-const responseBody = [0x1f, 0x8b, 0x08, 0x00, 0x16, 0x5a, 0x8a, 0x48, 0x02,
-		      0x03, 0x2b, 0x49, 0x2d, 0x2e, 0xe1, 0x02, 0x00, 0xc6,
-		      0x35, 0xb9, 0x3b, 0x05, 0x00, 0x00, 0x00];
+// testString = "This is a slightly longer test\n";
+const responseBody = [0x1f, 0x8b, 0x08, 0x08, 0xef, 0x70, 0xe6, 0x4c, 0x00, 0x03, 0x74, 0x65, 0x78, 0x74, 0x66, 0x69,
+                     0x6c, 0x65, 0x2e, 0x74, 0x78, 0x74, 0x00, 0x0b, 0xc9, 0xc8, 0x2c, 0x56, 0x00, 0xa2, 0x44, 0x85,
+                     0xe2, 0x9c, 0xcc, 0xf4, 0x8c, 0x92, 0x9c, 0x4a, 0x85, 0x9c, 0xfc, 0xbc, 0xf4, 0xd4, 0x22, 0x85,
+                     0x92, 0xd4, 0xe2, 0x12, 0x2e, 0x2e, 0x00, 0x00, 0xe5, 0xe6, 0xf0, 0x20, 0x00, 0x00, 0x00];
+
+function getCacheService()
+{
+    var nsCacheService = Components.classes["@mozilla.org/network/cache-service;1"];
+    var service = nsCacheService.getService(Components.interfaces.nsICacheService);
+    return service;
+}
 
 function make_channel(url, callback, ctx) {
   var ios = Cc["@mozilla.org/network/io-service;1"].
@@ -18,6 +27,8 @@ function cachedHandler(metadata, response) {
   response.setHeader("Content-Type", "application/x-gzip", false);
   response.setHeader("Content-Encoding", "gzip", false);
   response.setHeader("ETag", "Just testing");
+  response.setHeader("Cache-Control", "max-age=3600000"); // avoid validation
+  response.setHeader("Content-Length", "" + responseBody.length);
 
   var body = responseBody;
 
@@ -37,6 +48,7 @@ function cachedHandler(metadata, response) {
     response.setHeader("Content-Range", from + "-" + to + "/" + responseBody.length, false);
   } else {
     response.setHeader("Accept-Ranges", "bytes");
+    body = body.slice(0, 17); // slice off a piece to send first
     doRangeResponse = true;
   }
 
@@ -44,49 +56,24 @@ function cachedHandler(metadata, response) {
       .createInstance(Ci.nsIBinaryOutputStream);
   bos.setOutputStream(response.bodyOutputStream);
 
+  response.processAsync();
   bos.writeByteArray(body, body.length);
+  response.finish();
 }
 
-function Canceler() {
-}
-
-Canceler.prototype = {
-  QueryInterface: function(iid) {
-    if (iid.equals(Ci.nsIStreamListener) ||
-        iid.equals(Ci.nsIRequestObserver) ||
-        iid.equals(Ci.nsISupports))
-      return this;
-    throw Components.results.NS_ERROR_NO_INTERFACE;
-  },
-
-  onStartRequest: function(request, context) {
-  },
-
-  onDataAvailable: function(request, context, stream, offset, count) {
-    request.QueryInterface(Ci.nsIChannel)
-           .cancel(Components.results.NS_BINDING_ABORTED);
-  },
-
-  onStopRequest: function(request, context, status) {
-    do_check_eq(status, Components.results.NS_BINDING_ABORTED);
-    continue_test();
-  }
-};
-
-function continue_test() {
+function continue_test(request, data) {
+  do_check_true(17 == data.length);
   var chan = make_channel("http://localhost:4444/cached/test.gz");
-  chan.asyncOpen(new ChannelListener(finish_test, null), null);
+  chan.asyncOpen(new ChannelListener(finish_test, null, CL_EXPECT_GZIP), null);
 }
 
 function finish_test(request, data, ctx) {
-  do_test_pending();
-  httpserver.stop(do_test_finished);
   do_check_eq(request.status, 0);
   do_check_eq(data.length, responseBody.length);
   for (var i = 0; i < data.length; ++i) {
     do_check_eq(data.charCodeAt(i), responseBody[i]);
   }
-  do_test_finished();
+  httpserver.stop(do_test_finished);
 }
 
 function run_test() {
@@ -94,7 +81,10 @@ function run_test() {
   httpserver.registerPathHandler("/cached/test.gz", cachedHandler);
   httpserver.start(4444);
 
+  // wipe out cached content
+  getCacheService().evictEntries(Components.interfaces.nsICache.STORE_ANYWHERE);
+
   var chan = make_channel("http://localhost:4444/cached/test.gz");
-  chan.asyncOpen(new Canceler(), null);
+  chan.asyncOpen(new ChannelListener(continue_test, null, CL_EXPECT_GZIP), null);
   do_test_pending();
 }
