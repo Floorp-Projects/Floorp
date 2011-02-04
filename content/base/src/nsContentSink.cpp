@@ -524,9 +524,6 @@ nsContentSink::ProcessHeaderData(nsIAtom* aHeader, const nsAString& aValue,
       return rv;
     }
   }
-  else if (aHeader == nsGkAtoms::link) {
-    rv = ProcessLinkHeader(aContent, aValue);
-  }
   else if (aHeader == nsGkAtoms::msthemecompatible) {
     // Disable theming for the presshell if the value is no.
     // XXXbz don't we want to support this as an HTTP header too?
