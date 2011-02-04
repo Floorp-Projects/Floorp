@@ -119,6 +119,7 @@
 #include "nsTextEditRules.h"
 #include "nsIFontMetrics.h"
 #include "nsIDOMNSHTMLElement.h"
+#include "nsPresState.h"
 
 #include "mozilla/FunctionTimer.h"
 
@@ -139,6 +140,7 @@ NS_QUERYFRAME_HEAD(nsTextControlFrame)
   NS_QUERYFRAME_ENTRY(nsIFormControlFrame)
   NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
   NS_QUERYFRAME_ENTRY(nsITextControlFrame)
+  NS_QUERYFRAME_ENTRY(nsIStatefulFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
 
 #ifdef ACCESSIBILITY
@@ -1394,6 +1396,20 @@ nsTextControlFrame::SetInitialChildList(nsIAtom*        aListName,
     nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
     NS_ASSERTION(txtCtrl, "Content not a text control element");
     txtCtrl->InitializeKeyboardEventListeners();
+
+    nsPoint* contentScrollPos = static_cast<nsPoint*>
+      (Properties().Get(ContentScrollPos()));
+    if (contentScrollPos) {
+      // If we have a scroll pos stored to be passed to our anonymous
+      // div, do it here!
+      nsIStatefulFrame* statefulFrame = do_QueryFrame(first);
+      NS_ASSERTION(statefulFrame, "unexpected type of frame for the anonymous div");
+      nsPresState fakePresState;
+      fakePresState.SetScrollState(*contentScrollPos);
+      statefulFrame->RestoreState(&fakePresState);
+      Properties().RemoveProperty(ContentScrollPos());
+      delete contentScrollPos;
+    }
   }
   return rv;
 }
@@ -1511,5 +1527,51 @@ nsTextControlFrame::GetOwnedFrameSelection()
   NS_ASSERTION(txtCtrl, "Content not a text control element");
 
   return txtCtrl->GetConstFrameSelection();
+}
+
+NS_IMETHODIMP
+nsTextControlFrame::SaveState(nsIStatefulFrame::SpecialStateID aStateID, nsPresState** aState)
+{
+  NS_ENSURE_ARG_POINTER(aState);
+
+  *aState = nsnull;
+
+  nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
+  NS_ASSERTION(txtCtrl, "Content not a text control element");
+
+  nsIContent* rootNode = txtCtrl->GetRootEditorNode();
+  if (rootNode) {
+    // Query the nsIStatefulFrame from the HTMLScrollFrame
+    nsIStatefulFrame* scrollStateFrame = do_QueryFrame(rootNode->GetPrimaryFrame());
+    if (scrollStateFrame) {
+      return scrollStateFrame->SaveState(aStateID, aState);
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTextControlFrame::RestoreState(nsPresState* aState)
+{
+  NS_ENSURE_ARG_POINTER(aState);
+
+  nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
+  NS_ASSERTION(txtCtrl, "Content not a text control element");
+
+  nsIContent* rootNode = txtCtrl->GetRootEditorNode();
+  if (rootNode) {
+    // Query the nsIStatefulFrame from the HTMLScrollFrame
+    nsIStatefulFrame* scrollStateFrame = do_QueryFrame(rootNode->GetPrimaryFrame());
+    if (scrollStateFrame) {
+      return scrollStateFrame->RestoreState(aState);
+    }
+  }
+
+  // Most likely, we don't have our anonymous content constructed yet, which
+  // would cause us to end up here.  In this case, we'll just store the scroll
+  // pos ourselves, and forward it to the scroll frame later when it's created.
+  Properties().Set(ContentScrollPos(), new nsPoint(aState->GetScrollState()));
+  return NS_OK;
 }
 
