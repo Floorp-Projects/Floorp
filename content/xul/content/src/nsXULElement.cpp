@@ -2414,33 +2414,12 @@ nsXULElement::SetTitlebarColor(nscolor aColor, PRBool aActive)
     }
 }
 
-class SetDrawInTitleBarEvent : public nsRunnable
-{
-public:
-  SetDrawInTitleBarEvent(nsIWidget* aWidget, PRBool aState)
-    : mWidget(aWidget)
-    , mState(aState)
-  {}
-
-  NS_IMETHOD Run() {
-    NS_ASSERTION(mWidget, "You shouldn't call this runnable with a null widget!");
-
-    mWidget->SetDrawsInTitlebar(mState);
-    return NS_OK;
-  }
-
-private:
-  nsCOMPtr<nsIWidget> mWidget;
-  PRBool mState;
-};
-
 void
 nsXULElement::SetDrawsInTitlebar(PRBool aState)
 {
     nsIWidget* mainWidget = GetWindowWidget();
     if (mainWidget) {
-        nsCOMPtr<nsIRunnable> event = new SetDrawInTitleBarEvent(mainWidget, aState);
-        NS_DispatchToCurrentThread(event);
+        mainWidget->SetDrawsInTitlebar(aState);
     }
 }
 
