@@ -23,7 +23,6 @@ var initialPaintCount, afterPaintCount;
 var color = 0;
 
 function onAfterPaint () {
-  ok(true, "OnAfterPaint");
   afterPaintCount += 1;
 }
 
@@ -33,18 +32,30 @@ function startTest() {
     initialPaintCount = window.mozPaintCount;
     window.addEventListener("MozAfterPaint", onAfterPaint, true);
     doBackgroundFlicker();
-  }, 1000);
+  }, 500);
 }
 
 document.addEventListener("DOMContentLoaded", startTest, true);
+
+// Unfortunately we cannot reliably assert that mozPaintCount and afterPaintCount increment perfectly
+// in sync, because they can diverge in the presence of OS-triggered paints or system load.
+// Instead, we wait for mozPaintCount to increase by a set amount, and then assert that we got a
+// minimum number of MozAfterPaint events. This number needs to be high enough to ensure that this test
+// will fail if empty transactions are not triggering MozAfterPaint, but low enough to allow the test to
+// pass even if the operating system triggers extra repaints or the browser is running slowly.
+// If this test still fails occasionally, examine the output to see whether minimumAfterPaints needs to be
+// adjusted down or whether you are dealing with a different issue.
+const mozPaintsToWait = 50;
+const minimumAfterPaintsToPass = 37;
 
 function doPluginFlicker() {
   ok(true, "Plugin color iteration " + color + 
      ", afterpaint count: " + afterPaintCount +
      ", mozpaint count: " + window.mozPaintCount);
-  if ((afterPaintCount >= window.mozPaintCount - initialPaintCount) && 
-      (afterPaintCount > 20)) {
-    ok(true, "Got enough paints from plugin color changes");
+  var mozPaints = (window.mozPaintCount - initialPaintCount);
+  if (mozPaints >= mozPaintsToWait) { 
+    ok(true, "mozPaintCount incremented enough from plugin color changes.");
+    ok(afterPaintCount >= minimumAfterPaintsToPass, "Got MozAfterPaint event " + afterPaintCount + " time(s).");
     SimpleTest.finish();
     return;
   }
@@ -63,9 +74,10 @@ function doBackgroundFlicker() {
   ok(true, "Background color iteration " + color + 
      ", afterpaint count: " + afterPaintCount +
      ", mozpaint count: " + window.mozPaintCount);
-  if ((afterPaintCount >= window.mozPaintCount - initialPaintCount) && 
-      (afterPaintCount > 20)) {
-    ok(true, "Got enough paints from background color changes");
+  var mozPaints = (window.mozPaintCount - initialPaintCount);
+  if (mozPaints >= mozPaintsToWait) {
+    ok(true, "mozPaintCount incremented enough from background color changes.");
+    ok(afterPaintCount >= minimumAfterPaintsToPass, "Got MozAfterPaint event " + afterPaintCount + " time(s).");
     afterPaintCount = 0;
     initialPaintCount = window.mozPaintCount;
     doPluginFlicker();
