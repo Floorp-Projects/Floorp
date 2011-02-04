@@ -983,7 +983,7 @@ nsHTMLTableElement::ParseAttribute(PRInt32 aNamespaceID,
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::cellspacing ||
         aAttribute == nsGkAtoms::cellpadding) {
-      return aResult.ParseSpecialIntValue(aValue);
+      return aResult.ParseSpecialIntValue(aValue, PR_TRUE);
     }
     if (aAttribute == nsGkAtoms::cols) {
       return aResult.ParseIntWithBounds(aValue, 0);
@@ -997,10 +997,10 @@ nsHTMLTableElement::ParseAttribute(PRInt32 aNamespaceID,
       return PR_TRUE;
     }
     if (aAttribute == nsGkAtoms::height) {
-      return aResult.ParseSpecialIntValue(aValue);
+      return aResult.ParseSpecialIntValue(aValue, PR_TRUE);
     }
     if (aAttribute == nsGkAtoms::width) {
-      if (aResult.ParseSpecialIntValue(aValue)) {
+      if (aResult.ParseSpecialIntValue(aValue, PR_TRUE)) {
         // treat 0 width as auto
         nsAttrValue::ValueType type = aResult.Type();
         if ((type == nsAttrValue::eInteger &&

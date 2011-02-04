@@ -229,11 +229,13 @@ public:
    * whether it be percent or raw integer.
    *
    * @param aString the string to parse
+   * @param aCanBePercent PR_TRUE if it can be a percent value (%)
    * @return whether the value could be parsed
    *
    * @see http://www.whatwg.org/html/#rules-for-parsing-dimension-values
    */
-  PRBool ParseSpecialIntValue(const nsAString& aString);
+  PRBool ParseSpecialIntValue(const nsAString& aString,
+                              PRBool aCanBePercent);
 
 
   /**
