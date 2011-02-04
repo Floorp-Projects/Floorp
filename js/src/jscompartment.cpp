@@ -75,8 +75,10 @@ JSCompartment::JSCompartment(JSRuntime *rt)
 {
     JS_INIT_CLIST(&scripts);
 
-    // InitJIT expects this area to be zero'd
+#ifdef JS_TRACER
+    /* InitJIT expects this area to be zero'd. */
     PodZero(&traceMonitor);
+#endif
 
     PodArrayZero(scriptsToGC);
 }
