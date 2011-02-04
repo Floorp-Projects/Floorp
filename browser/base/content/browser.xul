@@ -467,6 +467,8 @@
            defaultmode="icons" mode="icons"
 #ifdef WINCE
            defaulticonsize="small" iconsize="small"
+#else
+           iconsize="large"
 #endif
            tabsontop="true"
            persist="tabsontop">
