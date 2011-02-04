@@ -91,6 +91,7 @@ _newJSDContext(JSRuntime*         jsrt,
 {
     JSDContext* jsdc = NULL;
     JSCrossCompartmentCall *call = NULL;
+    JSBool ok;
 
     if( ! jsrt )
         return NULL;
@@ -148,11 +149,11 @@ _newJSDContext(JSRuntime*         jsrt,
     if( ! call )
         goto label_newJSDContext_failure;
 
-    if( ! JS_InitStandardClasses(jsdc->dumbContext, jsdc->glob) )
-        goto label_newJSDContext_failure;
+    ok = JS_InitStandardClasses(jsdc->dumbContext, jsdc->glob);
 
-    if( call )
-        JS_LeaveCrossCompartmentCall(call);
+    JS_LeaveCrossCompartmentCall(call);
+    if( ! ok )
+        goto label_newJSDContext_failure;
 
     JS_EndRequest(jsdc->dumbContext);
 
@@ -169,7 +170,8 @@ label_newJSDContext_failure:
     if( jsdc ) {
         jsd_DestroyObjectManager(jsdc);
         jsd_DestroyAtomTable(jsdc);
-        JS_EndRequest(jsdc->dumbContext);
+        if( jsdc->dumbContext )
+            JS_EndRequest(jsdc->dumbContext);
         free(jsdc);
     }
     return NULL;
