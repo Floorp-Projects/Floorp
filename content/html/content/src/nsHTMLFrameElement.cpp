@@ -139,10 +139,10 @@ nsHTMLFrameElement::ParseAttribute(PRInt32 aNamespaceID,
       return ParseFrameborderValue(aValue, aResult);
     }
     if (aAttribute == nsGkAtoms::marginwidth) {
-      return aResult.ParseSpecialIntValue(aValue);
+      return aResult.ParseSpecialIntValue(aValue, PR_TRUE);
     }
     if (aAttribute == nsGkAtoms::marginheight) {
-      return aResult.ParseSpecialIntValue(aValue);
+      return aResult.ParseSpecialIntValue(aValue, PR_TRUE);
     }
     if (aAttribute == nsGkAtoms::scrolling) {
       return ParseScrollingValue(aValue, aResult);

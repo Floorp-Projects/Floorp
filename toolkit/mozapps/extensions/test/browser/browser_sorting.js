@@ -13,81 +13,67 @@ function test() {
 
   gProvider = new MockProvider();
   gProvider.createAddons([{
-    //  enabledInstalled group
-    //    * Enabled
-    //    * Incompatible but enabled because compatibility checking is off
-    //    * Waiting to be installed
-    //    * Waiting to be enabled
+    // Enabled extensions
     id: "test1@tests.mozilla.org",
     name: "Test add-on",
     description: "foo",
     updateDate: new Date(2010, 04, 02, 00, 00, 00),
-    size: 1,
-    pendingOperations: AddonManager.PENDING_NONE,
+    size: 1
   }, {
     id: "test2@tests.mozilla.org",
     name: "a first add-on",
     description: "foo",
     updateDate: new Date(2010, 04, 01, 23, 59, 59),
-    size: 0265,
-    pendingOperations: AddonManager.PENDING_UPGRADE,
-    isActive: true,
-    isCompatible: false,
+    size: 0265
   }, {
     id: "test3@tests.mozilla.org",
     name: "\u010Cesk\u00FD slovn\u00EDk", // Český slovník
     description: "foo",
     updateDate: new Date(2010, 04, 02, 00, 00, 01),
-    size: 12,
-    pendingOperations: AddonManager.PENDING_INSTALL,
-    isActive: false,
+    size: 12
   }, {
     id: "test4@tests.mozilla.org",
     name: "canadian dictionary",
     updateDate: new Date(1970, 0, 01, 00, 00, 00),
     description: "foo",
-    isActive: true,
   }, {
     id: "test5@tests.mozilla.org",
     name: "croatian dictionary",
     description: "foo",
     updateDate: new Date(2012, 12, 12, 00, 00, 00),
-    size: 5,
-    pendingOperations: AddonManager.PENDING_ENABLE,
-    isActive: false,
+    size: 5
   }, {
-    //  pendingDisable group
-    //    * Waiting to be disabled
+    // Incompatible, disabled extensions
     id: "test6@tests.mozilla.org",
     name: "orange Add-on",
     description: "foo",
     updateDate: new Date(2010, 04, 02, 00, 00, 00),
     size: 142,
     isCompatible: false,
-    isActive: true,
-    pendingOperations: AddonManager.PENDING_DISABLE,
+    isActive: false,
   }, {
     id: "test7@tests.mozilla.org",
     name: "Blue Add-on",
     description: "foo",
     updateDate: new Date(2010, 04, 01, 23, 59, 59),
     size: 65,
-    isActive: true,
-    pendingOperations: AddonManager.PENDING_DISABLE,
+    isCompatible: false,
+    isActive: false,
   }, {
     id: "test8@tests.mozilla.org",
     name: "Green Add-on",
     description: "foo",
     updateDate: new Date(2010, 04, 03, 00, 00, 01),
     size: 125,
-    pendingOperations: AddonManager.PENDING_DISABLE,
+    isCompatible: false,
+    isActive: false,
   }, {
     id: "test9@tests.mozilla.org",
     name: "red Add-on",
     updateDate: new Date(2011, 04, 01, 00, 00, 00),
     description: "foo",
     isCompatible: false,
-    pendingOperations: AddonManager.PENDING_DISABLE,
+    isActive: false,
   }, {
     id: "test10@tests.mozilla.org",
     name: "Purple Add-on",
@@ -95,26 +81,22 @@ function test() {
     updateDate: new Date(2012, 12, 12, 00, 00, 00),
     size: 56,
     isCompatible: false,
-    pendingOperations: AddonManager.PENDING_DISABLE,
+    isActive: false,
   }, {
-    //  pendingUninstall group
-    //    * Waiting to be removed
+    // Disabled, compatible extensions
     id: "test11@tests.mozilla.org",
     name: "amber Add-on",
     description: "foo",
     updateDate: new Date(1978, 04, 02, 00, 00, 00),
     size: 142,
     isActive: false,
-    appDisabled: true,
-    pendingOperations: AddonManager.PENDING_UNINSTALL,
   }, {
     id: "test12@tests.mozilla.org",
-    name: "Salmon Add-on - pending disable",
+    name: "Salmon Add-on",
     description: "foo",
     updateDate: new Date(2054, 04, 01, 23, 59, 59),
     size: 65,
-    isActive: true,
-    pendingOperations: AddonManager.PENDING_UNINSTALL,
+    isActive: false,
   }, {
     id: "test13@tests.mozilla.org",
     name: "rose Add-on",
@@ -122,16 +104,12 @@ function test() {
     updateDate: new Date(2010, 04, 02, 00, 00, 01),
     size: 125,
     isActive: false,
-    userDisabled: true,
-    pendingOperations: AddonManager.PENDING_UNINSTALL,
   }, {
     id: "test14@tests.mozilla.org",
     name: "Violet Add-on",
     updateDate: new Date(2010, 05, 01, 00, 00, 00),
     description: "foo",
     isActive: false,
-    appDisabled: true,
-    pendingOperations: AddonManager.PENDING_UNINSTALL,
   }, {
     id: "test15@tests.mozilla.org",
     name: "white Add-on",
@@ -139,20 +117,15 @@ function test() {
     updateDate: new Date(2010, 04, 12, 00, 00, 00),
     size: 56,
     isActive: false,
-    userDisabled: true,
-    pendingOperations: AddonManager.PENDING_UNINSTALL,
   }, {
-    //  disabledIncompatibleBlocked group
-    //    * Disabled
-    //    * Incompatible
-    //    * Blocklisted
+    // Blocked extensions
     id: "test16@tests.mozilla.org",
     name: "grimsby Add-on",
     description: "foo",
     updateDate: new Date(2010, 04, 01, 00, 00, 00),
     size: 142,
     isActive: false,
-    appDisabled: true,
+    blocklistState: Ci.nsIBlocklistService.STATE_SOFTBLOCKED,
   }, {
     id: "test17@tests.mozilla.org",
     name: "beamsville Add-on",
@@ -160,7 +133,7 @@ function test() {
     updateDate: new Date(2010, 04, 8, 23, 59, 59),
     size: 65,
     isActive: false,
-    userDisabled: true,
+    blocklistState: Ci.nsIBlocklistService.STATE_SOFTBLOCKED,
   }, {
     id: "test18@tests.mozilla.org",
     name: "smithville Add-on",
@@ -168,7 +141,6 @@ function test() {
     updateDate: new Date(2010, 04, 03, 00, 00, 01),
     size: 125,
     isActive: false,
-    userDisabled: true,
     blocklistState: Ci.nsIBlocklistService.STATE_OUTDATED,
   }, {
     id: "test19@tests.mozilla.org",
@@ -176,9 +148,7 @@ function test() {
     updateDate: new Date(2010, 04, 02, 00, 00, 00),
     description: "foo",
     isActive: false,
-    appDisabled: true,
-    isCompatible: false,
-    blocklistState: Ci.nsIBlocklistService.STATE_NOT_BLOCKED,
+    blocklistState: Ci.nsIBlocklistService.STATE_SOFTBLOCKED,
   }, {
     id: "test20@tests.mozilla.org",
     name: "silverdale Add-on",
@@ -186,10 +156,8 @@ function test() {
     updateDate: new Date(2010, 04, 12, 00, 00, 00),
     size: 56,
     isActive: false,
-    appDisabled: true,
     blocklistState: Ci.nsIBlocklistService.STATE_BLOCKED,
   }]);
-
 
   open_manager("addons://list/extension", function(aWindow) {
     gManagerWindow = aWindow;
@@ -256,6 +224,7 @@ add_test(function() {
     "test20@tests.mozilla.org",
     "test18@tests.mozilla.org",
   ]);
+
   run_next_test();
 });
 

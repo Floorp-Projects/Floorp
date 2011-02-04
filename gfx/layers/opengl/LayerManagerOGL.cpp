@@ -550,7 +550,6 @@ LayerManagerOGL::Render()
 
   nsIntRect rect;
   mWidget->GetClientBounds(rect);
-  WorldTransformRect(rect);
 
   GLint width = rect.width;
   GLint height = rect.height;
@@ -576,7 +575,7 @@ LayerManagerOGL::Render()
   DEBUG_GL_ERROR_CHECK(mGLContext);
 
   SetupBackBuffer(width, height);
-  SetupPipeline(width, height, ApplyWorldTransform);
+  SetupPipeline(width, height);
 
   // Default blend function implements "OVER"
   mGLContext->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA,
@@ -589,7 +588,6 @@ LayerManagerOGL::Render()
 
   if (clipRect) {
     nsIntRect r = *clipRect;
-    WorldTransformRect(r);
     if (!mGLContext->IsDoubleBuffered() && !mTarget)
       mGLContext->FixWindowCoordinateRect(r, mWidgetSize.height);
     mGLContext->fScissor(r.x, r.y, r.width, r.height);
@@ -664,8 +662,6 @@ LayerManagerOGL::Render()
   nsIntRegionRectIterator iter(mClippingRegion);
 
   while ((r = iter.Next()) != nsnull) {
-    nsIntRect cRect = *r; r = &cRect;
-    WorldTransformRect(cRect);
     float left = (GLfloat)r->x / width;
     float right = (GLfloat)r->XMost() / width;
     float top = (GLfloat)r->y / height;
@@ -710,32 +706,7 @@ LayerManagerOGL::Render()
 }
 
 void
-LayerManagerOGL::SetWorldTransform(const gfxMatrix& aMatrix)
-{
-  NS_ASSERTION(aMatrix.PreservesAxisAlignedRectangles(),
-               "SetWorldTransform only accepts matrices that satisfy PreservesAxisAlignedRectangles");
-  NS_ASSERTION(!aMatrix.HasNonIntegerScale(),
-               "SetWorldTransform only accepts matrices with integer scale");
-
-  mWorldMatrix = aMatrix;
-}
-
-gfxMatrix&
-LayerManagerOGL::GetWorldTransform(void)
-{
-  return mWorldMatrix;
-}
-
-void
-LayerManagerOGL::WorldTransformRect(nsIntRect& aRect)
-{
-  gfxRect grect(aRect.x, aRect.y, aRect.width, aRect.height);
-  grect = mWorldMatrix.TransformBounds(grect);
-  aRect.SetRect(grect.pos.x, grect.pos.y, grect.size.width, grect.size.height);
-}
-
-void
-LayerManagerOGL::SetupPipeline(int aWidth, int aHeight, WorldTransforPolicy aTransformPolicy)
+LayerManagerOGL::SetupPipeline(int aWidth, int aHeight)
 {
   // Set the viewport correctly. 
   //
@@ -771,10 +742,6 @@ LayerManagerOGL::SetupPipeline(int aWidth, int aHeight, WorldTransforPolicy aTra
     viewMatrix._22 = 2.0f / float(aHeight);
     viewMatrix._41 = -1.0f;
     viewMatrix._42 = -1.0f;
-  }
-
-  if (aTransformPolicy == ApplyWorldTransform) {
-    viewMatrix = gfx3DMatrix::From2D(mWorldMatrix) * viewMatrix;
   }
 
   SetLayerProgramProjectionMatrix(viewMatrix);

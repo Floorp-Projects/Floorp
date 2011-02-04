@@ -305,10 +305,10 @@ nsHTMLTableCellElement::ParseAttribute(PRInt32 aNamespaceID,
       return res;
     }
     if (aAttribute == nsGkAtoms::height) {
-      return aResult.ParseSpecialIntValue(aValue);
+      return aResult.ParseSpecialIntValue(aValue, PR_TRUE);
     }
     if (aAttribute == nsGkAtoms::width) {
-      return aResult.ParseSpecialIntValue(aValue);
+      return aResult.ParseSpecialIntValue(aValue, PR_TRUE);
     }
     if (aAttribute == nsGkAtoms::align) {
       return ParseTableCellHAlignValue(aValue, aResult);

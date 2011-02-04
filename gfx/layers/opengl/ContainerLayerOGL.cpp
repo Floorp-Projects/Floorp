@@ -211,8 +211,7 @@ ContainerRender(Container* aContainer,
     childOffset.y = visibleRect.y;
 
     aContainer->gl()->PushViewportRect();
-    aManager->SetupPipeline(visibleRect.width, visibleRect.height,
-                            LayerManagerOGL::DontApplyWorldTransform);
+    aManager->SetupPipeline(visibleRect.width, visibleRect.height);
 
   } else {
     frameBuffer = aPreviousFrameBuffer;
@@ -257,11 +256,6 @@ ContainerRender(Container* aContainer,
     if (needsFramebuffer) {
       scissorRect.MoveBy(- visibleRect.TopLeft());
     } else {
-      if (!frameBuffer) {
-        // Transform scissorRect here
-        aManager->WorldTransformRect(scissorRect);
-      }
-
       if (!aPreviousFrameBuffer) {
         /**
          * glScissor coordinates are oriented with 0,0 being at the bottom left,
@@ -304,8 +298,7 @@ ContainerRender(Container* aContainer,
     // Restore the viewport
     aContainer->gl()->PopViewportRect();
     nsIntRect viewport = aContainer->gl()->ViewportRect();
-    aManager->SetupPipeline(viewport.width, viewport.height,
-                            LayerManagerOGL::ApplyWorldTransform);
+    aManager->SetupPipeline(viewport.width, viewport.height);
 
     aContainer->gl()->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, aPreviousFrameBuffer);
     aContainer->gl()->fDeleteFramebuffers(1, &frameBuffer);
