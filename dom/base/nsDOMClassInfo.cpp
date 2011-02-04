@@ -6533,7 +6533,7 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
 
       JSObject *prop_obj = nsnull;
       rv = owner->GetScriptObject(context, (void**)&prop_obj);
-      NS_ENSURE_TRUE(prop_obj, NS_ERROR_UNEXPECTED);
+      NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && prop_obj, NS_ERROR_UNEXPECTED);
 
       prop_val = OBJECT_TO_JSVAL(prop_obj);
     } else {
@@ -6542,10 +6542,6 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
       if (gpi) {
         rv = gpi->Init(aWin, &prop_val);
         NS_ENSURE_SUCCESS(rv, rv);
-
-        if (!JS_WrapValue(cx, &prop_val)) {
-          return NS_ERROR_UNEXPECTED;
-        }
       }
     }
 
@@ -6566,6 +6562,10 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
     }
 
     NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!JS_WrapValue(cx, &prop_val)) {
+      return NS_ERROR_UNEXPECTED;
+    }
 
     JSBool ok = ::JS_DefinePropertyById(cx, obj, id, prop_val, nsnull, nsnull,
                                         JSPROP_ENUMERATE);
