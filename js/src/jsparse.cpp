@@ -2092,8 +2092,15 @@ FindFunArgs(JSFunctionBox *funbox, int level, JSFunctionBoxQueue *queue)
          * TCF_FUN_HEAVYWEIGHT bottom up, funbox's ancestor function nodes have
          * already been marked as funargs by this point. Therefore we have to
          * flag only funbox->node and funbox->kids' nodes here.
+         *
+         * Generators need to be treated in the same way. Even if the value
+         * of a generator function doesn't escape, anything defined or referred
+         * to inside the generator can escape through a call to the generator.
+         * We could imagine doing static analysis to track the calls and see
+         * if any iterators or values returned by iterators escape, but that
+         * would be hard, so instead we just assume everything might escape.
          */
-        if (funbox->tcflags & TCF_FUN_HEAVYWEIGHT) {
+        if (funbox->tcflags & (TCF_FUN_HEAVYWEIGHT | TCF_FUN_IS_GENERATOR)) {
             fn->setFunArg();
             for (JSFunctionBox *kid = funbox->kids; kid; kid = kid->siblings)
                 kid->node->setFunArg();
