@@ -459,7 +459,13 @@ TabWindow.prototype = {
                   .QueryInterface(Ci.nsIInterfaceRequestor)
                   .getInterface(Ci.nsIWebNavigation)
                   .QueryInterface(Ci.nsIDocShell);
-    let preview = AeroPeek.taskbar.createTaskbarTabPreview(docShell, controller);
+    let preview;
+    try {
+      preview = AeroPeek.taskbar.createTaskbarTabPreview(docShell, controller);
+    } catch (e) {
+      controller.destroy();
+      return;
+    }
     preview.visible = AeroPeek.enabled;
     preview.active = this.tabbrowser.selectedTab == tab;
     // Grab the default favicon
