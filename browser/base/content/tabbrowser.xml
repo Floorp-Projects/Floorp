@@ -3720,15 +3720,20 @@
           return this.getAttribute("label");
         </getter>
       </property>
+
+      <method name="_mirror">
+        <body>
+          if (this.hasAttribute("mirror"))
+            this.removeAttribute("mirror");
+          else
+            this.setAttribute("mirror", "true");
+        </body>
+      </method>
     </implementation>
 
     <handlers>
-      <handler event="mouseover">
-        if (this.hasAttribute("mirror"))
-          this.removeAttribute("mirror");
-        else
-          this.setAttribute("mirror", "true");
-      </handler>
+      <handler event="mouseover" action="this._mirror();"/>
+      <handler event="dragover" action="this._mirror();"/>
     </handlers>
   </binding>
 
