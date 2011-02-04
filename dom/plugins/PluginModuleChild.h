@@ -238,6 +238,9 @@ public:
         // Win: Flash trashes the alpha channel in our buffers when cleartype
         // is enabled. Mask this setting so they don't know it's enabled.
         QUIRK_FLASH_MASK_CLEARTYPE_SETTINGS             = 1 << 6,
+        // Win: Addresses a flash bug with mouse capture and full screen
+        // windows.
+        QUIRK_FLASH_HOOK_MOUSE_CAPTURE                  = 1 << 7,
     };
 
     int GetQuirks() { return mQuirks; }

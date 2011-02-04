@@ -346,6 +346,7 @@ private:
     nsIntPoint mPluginSize;
     WNDPROC mWinlessThrottleOldWndProc;
     HWND mWinlessHiddenMsgHWND;
+    HHOOK mMouseHook;
 #endif
 
     friend class ChildAsyncCall;
