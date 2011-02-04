@@ -4368,11 +4368,7 @@ var XULBrowserWindow = {
       }
 
       // Show or hide browser chrome based on the whitelist
-      var disableChrome = this.inContentWhitelist.some(function(aSpec) {
-        return aSpec == location;
-      });
-
-      if (disableChrome)
+      if (this.hideChromeForLocation(location))
         document.documentElement.setAttribute("disablechrome", "true");
       else
         document.documentElement.removeAttribute("disablechrome");
@@ -4417,6 +4413,12 @@ var XULBrowserWindow = {
 
   asyncUpdateUI: function () {
     FeedHandler.updateFeeds();
+  },
+
+  hideChromeForLocation: function(aLocation) {
+    return this.inContentWhitelist.some(function(aSpec) {
+      return aSpec == aLocation;
+    });
   },
 
   onStatusChange: function (aWebProgress, aRequest, aStatus, aMessage) {
