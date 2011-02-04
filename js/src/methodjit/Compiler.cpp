@@ -460,195 +460,170 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
     cursor += sizeof(JITScript);
 
     jit->code = JSC::MacroAssemblerCodeRef(result, execPool, masm.size() + stubcc.size());
-    jit->nCallSites = callSites.length();
     jit->invokeEntry = result;
     jit->singleStepMode = script->singleStepMode;
-
-    /* Build the pc -> ncode mapping. */
-    NativeMapEntry *nmap = (NativeMapEntry *)cursor;
-    cursor += sizeof(NativeMapEntry) * nNmapLive;
-
-    size_t ix = 0;
-    if (nNmapLive > 0) {
-        for (size_t i = 0; i < script->length; i++) {
-            analyze::Bytecode *opinfo = analysis->maybeCode(i);
-            if (opinfo && opinfo->safePoint) {
-                Label L = jumpMap[i];
-                JS_ASSERT(L.isValid());
-                nmap[ix].bcOff = i;
-                nmap[ix].ncode = (uint8 *)(result + masm.distanceOf(L));
-                ix++;
-            }
-        }
-    }
-    JS_ASSERT(ix == nNmapLive);
-
     if (fun) {
         jit->arityCheckEntry = stubCode.locationOf(arityLabel).executableAddress();
         jit->fastEntry = fullCode.locationOf(invokeLabel).executableAddress();
     }
 
-#if defined JS_MONOIC
-    jit->nMICs = mics.length();
-    if (mics.length()) {
-        jit->mics = (ic::MICInfo *)cursor;
-        cursor += sizeof(ic::MICInfo) * mics.length();
-    } else {
-        jit->mics = NULL;
-    }
+    /* 
+     * WARNING: mics(), callICs() et al depend on the ordering of these
+     * variable-length sections.  See JITScript's declaration for details.
+     */
 
-    if (ic::MICInfo *scriptMICs = jit->mics) {
-        for (size_t i = 0; i < mics.length(); i++) {
-            scriptMICs[i].kind = mics[i].kind;
-            scriptMICs[i].entry = fullCode.locationOf(mics[i].entry);
-            switch (mics[i].kind) {
-              case ic::MICInfo::GET:
-              case ic::MICInfo::SET:
-                if (mics[i].kind == ic::MICInfo::GET)
-                    scriptMICs[i].load = fullCode.locationOf(mics[i].load);
-                else
-                    scriptMICs[i].load = fullCode.locationOf(mics[i].store).labelAtOffset(0);
-                scriptMICs[i].shape = fullCode.locationOf(mics[i].shape);
-                scriptMICs[i].stubCall = stubCode.locationOf(mics[i].call);
-                scriptMICs[i].stubEntry = stubCode.locationOf(mics[i].stubEntry);
-                scriptMICs[i].u.name.typeConst = mics[i].u.name.typeConst;
-                scriptMICs[i].u.name.dataConst = mics[i].u.name.dataConst;
-                scriptMICs[i].u.name.usePropertyCache = mics[i].u.name.usePropertyCache;
-                break;
-              default:
-                JS_NOT_REACHED("Bad MIC kind");
+    /* Build the pc -> ncode mapping. */
+    NativeMapEntry *jitNmap = (NativeMapEntry *)cursor;
+    jit->nNmapPairs = nNmapLive;
+    cursor += sizeof(NativeMapEntry) * jit->nNmapPairs;
+    size_t ix = 0;
+    if (jit->nNmapPairs > 0) {
+        for (size_t i = 0; i < script->length; i++) {
+            analyze::Bytecode *opinfo = analysis->maybeCode(i);
+            if (opinfo && opinfo->safePoint) {
+                Label L = jumpMap[i];
+                JS_ASSERT(L.isValid());
+                jitNmap[ix].bcOff = i;
+                jitNmap[ix].ncode = (uint8 *)(result + masm.distanceOf(L));
+                ix++;
             }
-            stubCode.patch(mics[i].addrLabel, &scriptMICs[i]);
         }
     }
+    JS_ASSERT(ix == jit->nNmapPairs);
 
+#if defined JS_MONOIC
+    ic::MICInfo *jitMICs = (ic::MICInfo *)cursor;
+    jit->nMICs = mics.length();
+    cursor += sizeof(ic::MICInfo) * jit->nMICs;
+    for (size_t i = 0; i < jit->nMICs; i++) {
+        jitMICs[i].kind = mics[i].kind;
+        jitMICs[i].entry = fullCode.locationOf(mics[i].entry);
+        switch (mics[i].kind) {
+          case ic::MICInfo::GET:
+          case ic::MICInfo::SET:
+            if (mics[i].kind == ic::MICInfo::GET)
+                jitMICs[i].load = fullCode.locationOf(mics[i].load);
+            else
+                jitMICs[i].load = fullCode.locationOf(mics[i].store).labelAtOffset(0);
+            jitMICs[i].shape = fullCode.locationOf(mics[i].shape);
+            jitMICs[i].stubCall = stubCode.locationOf(mics[i].call);
+            jitMICs[i].stubEntry = stubCode.locationOf(mics[i].stubEntry);
+            jitMICs[i].u.name.typeConst = mics[i].u.name.typeConst;
+            jitMICs[i].u.name.dataConst = mics[i].u.name.dataConst;
+            jitMICs[i].u.name.usePropertyCache = mics[i].u.name.usePropertyCache;
+            break;
+          default:
+            JS_NOT_REACHED("Bad MIC kind");
+        }
+        stubCode.patch(mics[i].addrLabel, &jitMICs[i]);
+    }
+
+    ic::CallICInfo *jitCallICs = (ic::CallICInfo *)cursor;
     jit->nCallICs = callICs.length();
-    if (callICs.length()) {
-        jit->callICs = (ic::CallICInfo *)cursor;
-        cursor += sizeof(ic::CallICInfo) * callICs.length();
-    } else {
-        jit->callICs = NULL;
+    cursor += sizeof(ic::CallICInfo) * jit->nCallICs;
+    for (size_t i = 0; i < jit->nCallICs; i++) {
+        jitCallICs[i].reset();
+        jitCallICs[i].funGuard = fullCode.locationOf(callICs[i].funGuard);
+        jitCallICs[i].funJump = fullCode.locationOf(callICs[i].funJump);
+        jitCallICs[i].slowPathStart = stubCode.locationOf(callICs[i].slowPathStart);
+
+        /* Compute the hot call offset. */
+        uint32 offset = fullCode.locationOf(callICs[i].hotJump) -
+                        fullCode.locationOf(callICs[i].funGuard);
+        jitCallICs[i].hotJumpOffset = offset;
+        JS_ASSERT(jitCallICs[i].hotJumpOffset == offset);
+
+        /* Compute the join point offset. */
+        offset = fullCode.locationOf(callICs[i].joinPoint) -
+                 fullCode.locationOf(callICs[i].funGuard);
+        jitCallICs[i].joinPointOffset = offset;
+        JS_ASSERT(jitCallICs[i].joinPointOffset == offset);
+                                        
+        /* Compute the OOL call offset. */
+        offset = stubCode.locationOf(callICs[i].oolCall) -
+                 stubCode.locationOf(callICs[i].slowPathStart);
+        jitCallICs[i].oolCallOffset = offset;
+        JS_ASSERT(jitCallICs[i].oolCallOffset == offset);
+
+        /* Compute the OOL jump offset. */
+        offset = stubCode.locationOf(callICs[i].oolJump) -
+                 stubCode.locationOf(callICs[i].slowPathStart);
+        jitCallICs[i].oolJumpOffset = offset;
+        JS_ASSERT(jitCallICs[i].oolJumpOffset == offset);
+
+        /* Compute the start of the OOL IC call. */
+        offset = stubCode.locationOf(callICs[i].icCall) -
+                 stubCode.locationOf(callICs[i].slowPathStart);
+        jitCallICs[i].icCallOffset = offset;
+        JS_ASSERT(jitCallICs[i].icCallOffset == offset);
+
+        /* Compute the slow join point offset. */
+        offset = stubCode.locationOf(callICs[i].slowJoinPoint) -
+                 stubCode.locationOf(callICs[i].slowPathStart);
+        jitCallICs[i].slowJoinOffset = offset;
+        JS_ASSERT(jitCallICs[i].slowJoinOffset == offset);
+
+        /* Compute the join point offset for continuing on the hot path. */
+        offset = stubCode.locationOf(callICs[i].hotPathLabel) -
+                 stubCode.locationOf(callICs[i].funGuard);
+        jitCallICs[i].hotPathOffset = offset;
+        JS_ASSERT(jitCallICs[i].hotPathOffset == offset);
+
+        jitCallICs[i].pc = callICs[i].pc;
+        jitCallICs[i].frameSize = callICs[i].frameSize;
+        jitCallICs[i].funObjReg = callICs[i].funObjReg;
+        jitCallICs[i].funPtrReg = callICs[i].funPtrReg;
+        stubCode.patch(callICs[i].addrLabel1, &jitCallICs[i]);
+        stubCode.patch(callICs[i].addrLabel2, &jitCallICs[i]);
     }
 
-    if (ic::CallICInfo *cics = jit->callICs) {
-        for (size_t i = 0; i < callICs.length(); i++) {
-            cics[i].reset();
-            cics[i].funGuard = fullCode.locationOf(callICs[i].funGuard);
-            cics[i].funJump = fullCode.locationOf(callICs[i].funJump);
-            cics[i].slowPathStart = stubCode.locationOf(callICs[i].slowPathStart);
-
-            /* Compute the hot call offset. */
-            uint32 offset = fullCode.locationOf(callICs[i].hotJump) -
-                            fullCode.locationOf(callICs[i].funGuard);
-            cics[i].hotJumpOffset = offset;
-            JS_ASSERT(cics[i].hotJumpOffset == offset);
-
-            /* Compute the join point offset. */
-            offset = fullCode.locationOf(callICs[i].joinPoint) -
-                     fullCode.locationOf(callICs[i].funGuard);
-            cics[i].joinPointOffset = offset;
-            JS_ASSERT(cics[i].joinPointOffset == offset);
-                                            
-            /* Compute the OOL call offset. */
-            offset = stubCode.locationOf(callICs[i].oolCall) -
-                     stubCode.locationOf(callICs[i].slowPathStart);
-            cics[i].oolCallOffset = offset;
-            JS_ASSERT(cics[i].oolCallOffset == offset);
-
-            /* Compute the OOL jump offset. */
-            offset = stubCode.locationOf(callICs[i].oolJump) -
-                     stubCode.locationOf(callICs[i].slowPathStart);
-            cics[i].oolJumpOffset = offset;
-            JS_ASSERT(cics[i].oolJumpOffset == offset);
-
-            /* Compute the start of the OOL IC call. */
-            offset = stubCode.locationOf(callICs[i].icCall) -
-                     stubCode.locationOf(callICs[i].slowPathStart);
-            cics[i].icCallOffset = offset;
-            JS_ASSERT(cics[i].icCallOffset == offset);
-
-            /* Compute the slow join point offset. */
-            offset = stubCode.locationOf(callICs[i].slowJoinPoint) -
-                     stubCode.locationOf(callICs[i].slowPathStart);
-            cics[i].slowJoinOffset = offset;
-            JS_ASSERT(cics[i].slowJoinOffset == offset);
-
-            /* Compute the join point offset for continuing on the hot path. */
-            offset = stubCode.locationOf(callICs[i].hotPathLabel) -
-                     stubCode.locationOf(callICs[i].funGuard);
-            cics[i].hotPathOffset = offset;
-            JS_ASSERT(cics[i].hotPathOffset == offset);
-
-            cics[i].pc = callICs[i].pc;
-            cics[i].frameSize = callICs[i].frameSize;
-            cics[i].funObjReg = callICs[i].funObjReg;
-            cics[i].funPtrReg = callICs[i].funPtrReg;
-            stubCode.patch(callICs[i].addrLabel1, &cics[i]);
-            stubCode.patch(callICs[i].addrLabel2, &cics[i]);
-        } 
-    }
-
+    ic::EqualityICInfo *jitEqualityICs = (ic::EqualityICInfo *)cursor;
     jit->nEqualityICs = equalityICs.length();
-    if (equalityICs.length()) {
-        jit->equalityICs = (ic::EqualityICInfo *)cursor;
-        cursor += sizeof(ic::EqualityICInfo) * equalityICs.length();
-    } else {
-        jit->equalityICs = NULL;
+    cursor += sizeof(ic::EqualityICInfo) * jit->nEqualityICs;
+    for (size_t i = 0; i < jit->nEqualityICs; i++) {
+        uint32 offs = uint32(equalityICs[i].jumpTarget - script->code);
+        JS_ASSERT(jumpMap[offs].isValid());
+        jitEqualityICs[i].target = fullCode.locationOf(jumpMap[offs]);
+        jitEqualityICs[i].stubEntry = stubCode.locationOf(equalityICs[i].stubEntry);
+        jitEqualityICs[i].stubCall = stubCode.locationOf(equalityICs[i].stubCall);
+        jitEqualityICs[i].stub = equalityICs[i].stub;
+        jitEqualityICs[i].lvr = equalityICs[i].lvr;
+        jitEqualityICs[i].rvr = equalityICs[i].rvr;
+        jitEqualityICs[i].tempReg = equalityICs[i].tempReg;
+        jitEqualityICs[i].cond = equalityICs[i].cond;
+        if (equalityICs[i].jumpToStub.isSet())
+            jitEqualityICs[i].jumpToStub = fullCode.locationOf(equalityICs[i].jumpToStub.get());
+        jitEqualityICs[i].fallThrough = fullCode.locationOf(equalityICs[i].fallThrough);
+        
+        stubCode.patch(equalityICs[i].addrLabel, &jitEqualityICs[i]);
     }
 
-    if (ic::EqualityICInfo *scriptEICs = jit->equalityICs) {
-        for (size_t i = 0; i < equalityICs.length(); i++) {
-            uint32 offs = uint32(equalityICs[i].jumpTarget - script->code);
-            JS_ASSERT(jumpMap[offs].isValid());
-            scriptEICs[i].target = fullCode.locationOf(jumpMap[offs]);
-            scriptEICs[i].stubEntry = stubCode.locationOf(equalityICs[i].stubEntry);
-            scriptEICs[i].stubCall = stubCode.locationOf(equalityICs[i].stubCall);
-            scriptEICs[i].stub = equalityICs[i].stub;
-            scriptEICs[i].lvr = equalityICs[i].lvr;
-            scriptEICs[i].rvr = equalityICs[i].rvr;
-            scriptEICs[i].tempReg = equalityICs[i].tempReg;
-            scriptEICs[i].cond = equalityICs[i].cond;
-            if (equalityICs[i].jumpToStub.isSet())
-                scriptEICs[i].jumpToStub = fullCode.locationOf(equalityICs[i].jumpToStub.get());
-            scriptEICs[i].fallThrough = fullCode.locationOf(equalityICs[i].fallThrough);
-            
-            stubCode.patch(equalityICs[i].addrLabel, &scriptEICs[i]);
-        }
-    }
-
+    ic::TraceICInfo *jitTraceICs = (ic::TraceICInfo *)cursor;
     jit->nTraceICs = traceICs.length();
-    if (traceICs.length()) {
-        jit->traceICs = (ic::TraceICInfo *)cursor;
-        cursor += sizeof(ic::TraceICInfo) * traceICs.length();
-    } else {
-        jit->traceICs = NULL;
-    }
+    cursor += sizeof(ic::TraceICInfo) * jit->nTraceICs;
+    for (size_t i = 0; i < jit->nTraceICs; i++) {
+        jitTraceICs[i].initialized = traceICs[i].initialized;
+        if (!traceICs[i].initialized)
+            continue;
 
-    if (ic::TraceICInfo *scriptTICs = jit->traceICs) {
-        for (size_t i = 0; i < traceICs.length(); i++) {
-            scriptTICs[i].initialized = traceICs[i].initialized;
-            if (!traceICs[i].initialized)
-                continue;
-
-            uint32 offs = uint32(traceICs[i].jumpTarget - script->code);
-            JS_ASSERT(jumpMap[offs].isValid());
-            scriptTICs[i].traceHint = fullCode.locationOf(traceICs[i].traceHint);
-            scriptTICs[i].jumpTarget = fullCode.locationOf(jumpMap[offs]);
-            scriptTICs[i].stubEntry = stubCode.locationOf(traceICs[i].stubEntry);
-            scriptTICs[i].traceData = NULL;
+        uint32 offs = uint32(traceICs[i].jumpTarget - script->code);
+        JS_ASSERT(jumpMap[offs].isValid());
+        jitTraceICs[i].traceHint = fullCode.locationOf(traceICs[i].traceHint);
+        jitTraceICs[i].jumpTarget = fullCode.locationOf(jumpMap[offs]);
+        jitTraceICs[i].stubEntry = stubCode.locationOf(traceICs[i].stubEntry);
+        jitTraceICs[i].traceData = NULL;
 #ifdef DEBUG
-            scriptTICs[i].jumpTargetPC = traceICs[i].jumpTarget;
+        jitTraceICs[i].jumpTargetPC = traceICs[i].jumpTarget;
 #endif
-            scriptTICs[i].hasSlowTraceHint = traceICs[i].slowTraceHint.isSet();
-            if (traceICs[i].slowTraceHint.isSet())
-                scriptTICs[i].slowTraceHint = stubCode.locationOf(traceICs[i].slowTraceHint.get());
+        jitTraceICs[i].hasSlowTraceHint = traceICs[i].slowTraceHint.isSet();
+        if (traceICs[i].slowTraceHint.isSet())
+            jitTraceICs[i].slowTraceHint = stubCode.locationOf(traceICs[i].slowTraceHint.get());
 #ifdef JS_TRACER
-            scriptTICs[i].loopCounterStart = GetHotloop(cx);
+        jitTraceICs[i].loopCounterStart = GetHotloop(cx);
 #endif
-            scriptTICs[i].loopCounter = scriptTICs[i].loopCounterStart;
-            
-            stubCode.patch(traceICs[i].addrLabel, &scriptTICs[i]);
-        }
+        jitTraceICs[i].loopCounter = jitTraceICs[i].loopCounterStart;
+        
+        stubCode.patch(traceICs[i].addrLabel, &jitTraceICs[i]);
     }
 #endif /* JS_MONOIC */
 
@@ -662,16 +637,11 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
     }
 
 #ifdef JS_POLYIC
+    ic::GetElementIC *jitGetElems = (ic::GetElementIC *)cursor;
     jit->nGetElems = getElemICs.length();
-    if (getElemICs.length()) {
-        jit->getElems = (ic::GetElementIC *)cursor;
-        cursor += sizeof(ic::GetElementIC) * getElemICs.length();
-    } else {
-        jit->getElems = NULL;
-    }
-
-    for (size_t i = 0; i < getElemICs.length(); i++) {
-        ic::GetElementIC &to = jit->getElems[i];
+    cursor += sizeof(ic::GetElementIC) * jit->nGetElems;
+    for (size_t i = 0; i < jit->nGetElems; i++) {
+        ic::GetElementIC &to = jitGetElems[i];
         GetElementICInfo &from = getElemICs[i];
 
         new (&to) ic::GetElementIC();
@@ -695,16 +665,11 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
         stubCode.patch(from.paramAddr, &to);
     }
 
+    ic::SetElementIC *jitSetElems = (ic::SetElementIC *)cursor;
     jit->nSetElems = setElemICs.length();
-    if (setElemICs.length()) {
-        jit->setElems = (ic::SetElementIC *)cursor;
-        cursor += sizeof(ic::SetElementIC) * setElemICs.length();
-    } else {
-        jit->setElems = NULL;
-    }
-
-    for (size_t i = 0; i < setElemICs.length(); i++) {
-        ic::SetElementIC &to = jit->setElems[i];
+    cursor += sizeof(ic::SetElementIC) * jit->nSetElems;
+    for (size_t i = 0; i < jit->nSetElems; i++) {
+        ic::SetElementIC &to = jitSetElems[i];
         SetElementICInfo &from = setElemICs[i];
 
         new (&to) ic::SetElementIC();
@@ -740,40 +705,33 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
         stubCode.patch(from.paramAddr, &to);
     }
 
+    ic::PICInfo *jitPics = (ic::PICInfo *)cursor;
     jit->nPICs = pics.length();
-    if (pics.length()) {
-        jit->pics = (ic::PICInfo *)cursor;
-        cursor += sizeof(ic::PICInfo) * pics.length();
-    } else {
-        jit->pics = NULL;
-    }
+    cursor += sizeof(ic::PICInfo) * jit->nPICs;
+    for (size_t i = 0; i < jit->nPICs; i++) {
+        new (&jitPics[i]) ic::PICInfo();
+        pics[i].copyTo(jitPics[i], fullCode, stubCode);
+        pics[i].copySimpleMembersTo(jitPics[i]);
 
-    if (ic::PICInfo *scriptPICs = jit->pics) {
-        for (size_t i = 0; i < pics.length(); i++) {
-            new (&scriptPICs[i]) ic::PICInfo();
-            pics[i].copyTo(scriptPICs[i], fullCode, stubCode);
-            pics[i].copySimpleMembersTo(scriptPICs[i]);
+        jitPics[i].shapeGuard = masm.distanceOf(pics[i].shapeGuard) -
+                                masm.distanceOf(pics[i].fastPathStart);
+        JS_ASSERT(jitPics[i].shapeGuard == masm.distanceOf(pics[i].shapeGuard) -
+                                           masm.distanceOf(pics[i].fastPathStart));
+        jitPics[i].shapeRegHasBaseShape = true;
+        jitPics[i].pc = pics[i].pc;
 
-            scriptPICs[i].shapeGuard = masm.distanceOf(pics[i].shapeGuard) -
-                                         masm.distanceOf(pics[i].fastPathStart);
-            JS_ASSERT(scriptPICs[i].shapeGuard == masm.distanceOf(pics[i].shapeGuard) -
-                                         masm.distanceOf(pics[i].fastPathStart));
-            scriptPICs[i].shapeRegHasBaseShape = true;
-            scriptPICs[i].pc = pics[i].pc;
-
-            if (pics[i].kind == ic::PICInfo::SET ||
-                pics[i].kind == ic::PICInfo::SETMETHOD) {
-                scriptPICs[i].u.vr = pics[i].vr;
-            } else if (pics[i].kind != ic::PICInfo::NAME) {
-                if (pics[i].hasTypeCheck) {
-                    int32 distance = stubcc.masm.distanceOf(pics[i].typeCheck) -
-                                     stubcc.masm.distanceOf(pics[i].slowPathStart);
-                    JS_ASSERT(distance <= 0);
-                    scriptPICs[i].u.get.typeCheckOffset = distance;
-                }
+        if (pics[i].kind == ic::PICInfo::SET ||
+            pics[i].kind == ic::PICInfo::SETMETHOD) {
+            jitPics[i].u.vr = pics[i].vr;
+        } else if (pics[i].kind != ic::PICInfo::NAME) {
+            if (pics[i].hasTypeCheck) {
+                int32 distance = stubcc.masm.distanceOf(pics[i].typeCheck) -
+                                 stubcc.masm.distanceOf(pics[i].slowPathStart);
+                JS_ASSERT(distance <= 0);
+                jitPics[i].u.get.typeCheckOffset = distance;
             }
-            stubCode.patch(pics[i].paramAddr, &scriptPICs[i]);
         }
+        stubCode.patch(pics[i].paramAddr, &jitPics[i]);
     }
 #endif
 
@@ -815,27 +773,20 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
     JSC::ExecutableAllocator::cacheFlush(result, masm.size() + stubcc.size());
 
     /* Build the table of call sites. */
+    CallSite *jitCallSites = (CallSite *)cursor;
     jit->nCallSites = callSites.length();
-    if (callSites.length()) {
-        jit->callSites = (CallSite *)cursor;
-        cursor += sizeof(CallSite) * callSites.length();
-
-        for (size_t i = 0; i < callSites.length(); i++) {
-            CallSite &to = jit->callSites[i];
-            InternalCallSite &from = callSites[i];
-            uint32 codeOffset = from.ool
-                                ? masm.size() + from.returnOffset
-                                : from.returnOffset;
-            to.initialize(codeOffset, from.pc - script->code, from.id);
-        }
-    } else {
-        jit->callSites = NULL;
+    cursor += sizeof(CallSite) * jit->nCallSites;
+    for (size_t i = 0; i < jit->nCallSites; i++) {
+        CallSite &to = jitCallSites[i];
+        InternalCallSite &from = callSites[i];
+        uint32 codeOffset = from.ool
+                            ? masm.size() + from.returnOffset
+                            : from.returnOffset;
+        to.initialize(codeOffset, from.pc - script->code, from.id);
     }
 
     JS_ASSERT(size_t(cursor - (uint8*)jit) == totalBytes);
 
-    jit->nmap = nmap;
-    jit->nNmapPairs = nNmapLive;
     *jitp = jit;
 
     /* We tolerate a race in the stats. */
