@@ -941,7 +941,7 @@ ResetTraceHintAt(JSScript *script, js::mjit::JITScript *jit,
 {
     if (index >= jit->nTraceICs)
         return;
-    ic::TraceICInfo &ic = jit->traceICs[index];
+    ic::TraceICInfo &ic = jit->traceICs()[index];
     if (!ic.initialized)
         return;
     
