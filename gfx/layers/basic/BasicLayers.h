@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -184,6 +184,8 @@ public:
 
   void SetTransactionIncomplete() { mTransactionIncomplete = true; }
 
+  virtual PRBool IsCompositingCheap() { return PR_FALSE; }
+
 protected:
 #ifdef DEBUG
   enum TransactionPhase {
@@ -268,6 +270,8 @@ public:
   {
     mShadowManager = aShadowManager;
   }
+
+  virtual PRBool IsCompositingCheap();
 
 private:
   /**
