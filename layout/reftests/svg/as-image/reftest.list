@@ -65,17 +65,15 @@ random-if(d2d) == img-widthAndHeight-meet-2.html  img-widthAndHeight-meet-2-ref.
 random-if(d2d) == img-widthAndHeight-slice-1.html img-widthAndHeight-slice-1-ref.html
 random-if(d2d) == img-widthAndHeight-slice-2.html img-widthAndHeight-slice-2-ref.html
 
-# NOTE: img-*-*-2.html are near-permaorange on 64-bit OS X - marking as random,
-# investigating in bug 629143.
 random-if(d2d) == img-height-meet-1.html   img-height-meet-1-ref.html
-random-if(cocoaWidget&&layersGPUAccelerated) random-if(d2d) == img-height-meet-2.html   img-height-meet-2-ref.html
+random-if(d2d) == img-height-meet-2.html   img-height-meet-2-ref.html
 random-if(d2d) == img-height-slice-1.html  img-height-slice-1-ref.html
-random-if(cocoaWidget&&layersGPUAccelerated) random-if(d2d) == img-height-slice-2.html  img-height-slice-2-ref.html
+random-if(d2d) == img-height-slice-2.html  img-height-slice-2-ref.html
 
 random-if(d2d) == img-width-meet-1.html   img-width-meet-1-ref.html
-random-if(cocoaWidget&&layersGPUAccelerated) random-if(d2d) == img-width-meet-2.html   img-width-meet-2-ref.html
+random-if(d2d) == img-width-meet-2.html   img-width-meet-2-ref.html
 random-if(d2d) == img-width-slice-1.html  img-width-slice-1-ref.html
-random-if(cocoaWidget&&layersGPUAccelerated) random-if(d2d) == img-width-slice-2.html  img-width-slice-2-ref.html
+random-if(d2d) == img-width-slice-2.html  img-width-slice-2-ref.html
 
 == list-simple-1.html list-simple-1-ref.html
 
