@@ -1,14 +1,14 @@
-load 91332.xml
-load 111994.xml
+asserts-if(browserIsRemote,1) load 91332.xml
+asserts-if(browserIsRemote,1) load 111994.xml
 load 182460-table.xhtml
-load 226425.xml
+asserts-if(browserIsRemote,1) load 226425.xml
 load 406106-1.html
-load 483444.xml
-load 485217.xml
-load 485286.xml
-load 528300.xml
-load 528488.xml
-load 528963.xml
+asserts-if(browserIsRemote,1) load 483444.xml
+asserts-if(browserIsRemote,1) load 485217.xml
+asserts-if(browserIsRemote,1) load 485286.xml
+asserts-if(browserIsRemote,1) load 528300.xml
+asserts-if(browserIsRemote,1) load 528488.xml
+asserts-if(browserIsRemote,1) load 528963.xml
 load 545927.html
 load 601543.html
 load 602115.html
