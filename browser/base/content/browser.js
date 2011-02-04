@@ -1674,6 +1674,7 @@ function BrowserShutdown()
   gPrefService.removeObserver(allTabs.prefName, allTabs);
   ctrlTab.uninit();
   allTabs.uninit();
+  TabView.uninit();
 
   CombinedStopReload.uninit();
 
@@ -8408,7 +8409,8 @@ var TabContextMenu = {
       PlacesCommandHook.updateBookmarkAllTabsCommand();
 
     // Hide "Move to Group" if it's a pinned tab.
-    document.getElementById("context_tabViewMenu").hidden = this.contextTab.pinned;
+    document.getElementById("context_tabViewMenu").hidden =
+      (this.contextTab.pinned || !TabView.firstRunExperienced);
   }
 };
 
