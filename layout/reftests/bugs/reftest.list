@@ -1215,6 +1215,7 @@ fails == 472020-2.xul 472020-2-ref.xul
 == 474336-1.xul 474336-1-ref.xul
 == 474417-1.html 474417-1-ref.html
 == 474472-1.html 474472-1-ref.html
+== 447749-1.html 447749-1-ref.html
 == 475986-1a.html 475986-1-ref.html
 == 475986-1b.html 475986-1-ref.html
 == 475986-1c.html 475986-1-ref.html
