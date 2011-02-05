@@ -2622,7 +2622,7 @@
     </resources>
 
     <content>
-      <xul:hbox align="start">
+      <xul:hbox align="end">
         <xul:image class="tab-drop-indicator" anonid="tab-drop-indicator" collapsed="true"/>
       </xul:hbox>
       <xul:arrowscrollbox anonid="arrowscrollbox" orient="horizontal" flex="1"
@@ -3221,7 +3221,6 @@
 
         ind.style.MozTransform = "translate(" + Math.round(newMargin) + "px)";
         ind.style.MozMarginStart = (-ind.clientWidth) + "px";
-        ind.style.marginTop = (-ind.clientHeight) + "px";
       ]]></handler>
 
       <handler event="drop"><![CDATA[
