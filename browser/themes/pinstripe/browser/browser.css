@@ -1766,8 +1766,8 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
  */
 
 .tab-drop-indicator {
-  margin-top: -8px !important;
   list-style-image: url(chrome://browser/skin/tabbrowser/tabDragIndicator.png);
+  margin-bottom: -8px;
 }
 
 /**
