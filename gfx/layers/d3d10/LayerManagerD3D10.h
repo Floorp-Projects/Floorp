@@ -46,6 +46,8 @@
 #include "gfxContext.h"
 #include "nsIWidget.h"
 
+#include "ReadbackManagerD3D10.h"
+
 namespace mozilla {
 namespace layers {
 
@@ -123,6 +125,8 @@ public:
 
   virtual already_AddRefed<CanvasLayer> CreateCanvasLayer();
 
+  virtual already_AddRefed<ReadbackLayer> CreateReadbackLayer();
+
   virtual already_AddRefed<ImageContainer> CreateImageContainer();
 
   virtual already_AddRefed<gfxASurface>
@@ -142,6 +146,8 @@ public:
 
   ID3D10Effect *effect() const { return mEffect; }
 
+  ReadbackManagerD3D10 *readbackManager();
+
   void SetViewport(const nsIntSize &aViewport);
   const nsIntSize &GetViewport() { return mViewport; }
 
@@ -156,6 +162,7 @@ private:
   void SetupPipeline();
   void UpdateRenderTarget();
   void VerifyBufferSize();
+  void EnsureReadbackManager();
 
   void Render();
 
@@ -164,6 +171,7 @@ private:
   nsRefPtr<ID3D10Effect> mEffect;
   nsRefPtr<ID3D10InputLayout> mInputLayout;
   nsRefPtr<ID3D10Buffer> mVertexBuffer;
+  nsRefPtr<ReadbackManagerD3D10> mReadbackManager;
 
   nsRefPtr<ID3D10RenderTargetView> mRTView;
 
