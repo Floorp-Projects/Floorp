@@ -76,6 +76,8 @@ public:
    * @throws various and sundry other things
    */
   virtual nsresult EnsureEditorInitialized() = 0;
+
+  virtual nsresult ScrollSelectionIntoView() = 0;
 };
 
 #endif

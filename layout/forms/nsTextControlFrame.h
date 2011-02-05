@@ -370,6 +370,8 @@ protected:
   nsresult CalcIntrinsicSize(nsIRenderingContext* aRenderingContext,
                              nsSize&              aIntrinsicSize);
 
+  nsresult ScrollSelectionIntoView();
+
 private:
   //helper methods
   nsresult SetSelectionInternal(nsIDOMNode *aStartNode, PRInt32 aStartOffset,
