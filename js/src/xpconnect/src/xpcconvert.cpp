@@ -239,13 +239,18 @@ INT64_TO_DOUBLE(const int64 &v)
 // static
 JSBool
 XPCConvert::NativeData2JS(XPCLazyCallContext& lccx, jsval* d, const void* s,
-                          const nsXPTType& type, const nsID* iid,
-                          JSObject* scope, nsresult* pErr)
+                          const nsXPTType& type, const nsID* iid, nsresult* pErr)
 {
     NS_PRECONDITION(s, "bad param");
     NS_PRECONDITION(d, "bad param");
 
-    JSContext* cx = lccx.GetJSContext();
+   JSContext* cx = lccx.GetJSContext();
+
+    // Allow wrong compartment or unset ScopeForNewObject when the caller knows
+    // the value is primitive (viz., XPCNativeMember::GetConstantValue).
+    NS_ABORT_IF_FALSE(type.IsArithmetic() ||
+                      cx->compartment == lccx.GetScopeForNewJSObjects()->compartment(),
+                      "bad scope for new JSObjects");
 
     if(pErr)
         *pErr = NS_ERROR_XPC_BAD_CONVERT_NATIVE;
@@ -294,18 +299,6 @@ XPCConvert::NativeData2JS(XPCLazyCallContext& lccx, jsval* d, const void* s,
     case nsXPTType::T_JSVAL :
         {
             *d = *((jsval*)s);
-
-            JSAutoEnterCompartment ac;
-            XPCCallContext &ccx = lccx.GetXPCCallContext();
-            if(ccx.GetXPCContext()->CallerTypeIsNative())
-            {
-                JSObject *jsscope = ccx.GetCallee();
-                if(!jsscope || !JS_ObjectIsFunction(ccx, jsscope))
-                    jsscope = JS_GetGlobalForObject(ccx, scope);
-                if(!ac.enter(ccx, jsscope))
-                    return JS_FALSE;
-            }
-
             if(!JS_WrapValue(cx, d))
                 return JS_FALSE;
             break;
@@ -333,7 +326,7 @@ XPCConvert::NativeData2JS(XPCLazyCallContext& lccx, jsval* d, const void* s,
                 if(!iid2)
                     break;
                 JSObject* obj;
-                if(!(obj = xpc_NewIDObject(cx, scope, *iid2)))
+                if(!(obj = xpc_NewIDObject(cx, lccx.GetScopeForNewJSObjects(), *iid2)))
                     return JS_FALSE;
                 *d = OBJECT_TO_JSVAL(obj);
                 break;
@@ -479,7 +472,7 @@ XPCConvert::NativeData2JS(XPCLazyCallContext& lccx, jsval* d, const void* s,
                             return JS_FALSE;
 
                         return XPCVariant::VariantDataToJS(lccx, variant, 
-                                                           scope, pErr, d);
+                                                           pErr, d);
                     }
                     // else...
                     
@@ -490,7 +483,7 @@ XPCConvert::NativeData2JS(XPCLazyCallContext& lccx, jsval* d, const void* s,
                     // creating a new XPCNativeScriptableShared.
                     xpcObjectHelper helper(iface);
                     if(!NativeInterface2JSObject(lccx, d, nsnull, helper, iid,
-                                                 nsnull, scope, PR_TRUE,
+                                                 nsnull, PR_TRUE,
                                                  OBJ_IS_NOT_GLOBAL, pErr))
                         return JS_FALSE;
 
@@ -1113,34 +1106,6 @@ CreateHolderIfNeeded(XPCCallContext& ccx, JSObject* obj, jsval* d,
     return JS_TRUE;
 }
 
-static PRBool
-ComputeWrapperInfo(const XPCCallContext &ccx, XPCWrappedNativeScope *scope,
-                   JSObject **callee)
-{
-    if(ccx.GetXPCContext()->CallerTypeIsJavaScript())
-    {
-        // Called from JS.  We're going to hand the resulting JSObject
-        // to said JS. The correct compartment must already be pushed
-        // on cx, so return true and don't give back a callee.
-        *callee = nsnull;
-        return PR_TRUE;
-    }
-
-    if(ccx.GetXPCContext()->CallerTypeIsNative())
-    {
-        // Calling from JS -> C++, return false to indicate that we need
-        // to push a compartment and return the callee.
-        *callee = ccx.GetCallee();
-        if(!*callee || !JS_ObjectIsFunction(ccx, *callee))
-        {
-            *callee = scope->GetGlobalJSObject();
-            OBJ_TO_INNER_OBJECT(ccx, *callee);
-        }
-    }
-
-    return PR_FALSE;
-}
-
 /***************************************************************************/
 // static
 JSBool
@@ -1150,12 +1115,10 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
                                      xpcObjectHelper& aHelper,
                                      const nsID* iid,
                                      XPCNativeInterface** Interface,
-                                     JSObject* scope,
                                      PRBool allowNativeWrapper,
                                      PRBool isGlobal,
                                      nsresult* pErr)
 {
-    NS_ASSERTION(scope, "bad param");
     NS_ASSERTION(!Interface || iid,
                  "Need the iid if you pass in an XPCNativeInterface cache.");
 
@@ -1176,9 +1139,12 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
     // optimal -- we could detect this and roll the functionality into a
     // single wrapper, but the current solution is good enough for now.
     JSContext* cx = lccx.GetJSContext();
+    NS_ABORT_IF_FALSE(lccx.GetScopeForNewJSObjects()->compartment() == cx->compartment,
+                      "bad scope for new JSObjects");
 
+    JSObject *jsscope = lccx.GetScopeForNewJSObjects();
     XPCWrappedNativeScope* xpcscope =
-        XPCWrappedNativeScope::FindInJSObjectScope(cx, scope);
+        XPCWrappedNativeScope::FindInJSObjectScope(cx, jsscope);
     if(!xpcscope)
         return JS_FALSE;
 
@@ -1189,8 +1155,6 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
     // to use is found as cache->GetWrapper(). If that is null, then the
     // object will create (and fill the cache) from its PreCreate call.
     nsWrapperCache *cache = aHelper.GetWrapperCache();
-
-    JSObject *callee;
 
     PRBool tryConstructSlimWrapper = PR_FALSE;
     JSObject *flat;
@@ -1205,13 +1169,6 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
 
             if(!flat)
                 flat = ConstructProxyObject(ccx, aHelper, xpcscope);
-
-            JSAutoEnterCompartment ac;
-            if(!ComputeWrapperInfo(ccx, xpcscope, &callee) &&
-               !ac.enter(ccx, callee))
-            {
-                return JS_FALSE;
-            }
 
             if(!JS_WrapObject(ccx, &flat))
                 return JS_FALSE;
@@ -1367,13 +1324,6 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
     XPCCallContext &ccx = lccx.GetXPCCallContext();
     if(!ccx.IsValid())
         return JS_FALSE;
-
-    JSAutoEnterCompartment ac;
-    if(!ComputeWrapperInfo(ccx, xpcscope, &callee) &&
-       !ac.enter(ccx, callee))
-    {
-        return JS_FALSE;
-    }
 
     JSObject *original = flat;
     if(!JS_WrapObject(ccx, &flat))
@@ -1959,8 +1909,8 @@ XPC_JSArgumentFormatter(JSContext *cx, const char *format,
         // NOTE: MUST be retrieved *after* the iid in the 'p' case above.
         p = va_arg(ap, void *);
 
-        if(!XPCConvert::NativeData2JS(ccx, &vp[0], &p, type, iid,
-                                      JS_GetGlobalObject(cx), nsnull))
+        ccx.SetScopeForNewJSObjects(JS_GetGlobalForScopeChain(cx));
+        if(!XPCConvert::NativeData2JS(ccx, &vp[0], &p, type, iid, nsnull))
             return JS_FALSE;
     }
     *vpp = vp + 1;
@@ -1981,8 +1931,7 @@ JSBool
 XPCConvert::NativeArray2JS(XPCLazyCallContext& lccx,
                            jsval* d, const void** s,
                            const nsXPTType& type, const nsID* iid,
-                           JSUint32 count, JSObject* scope,
-                           nsresult* pErr)
+                           JSUint32 count, nsresult* pErr)
 {
     NS_PRECONDITION(s, "bad param");
     NS_PRECONDITION(d, "bad param");
@@ -1992,6 +1941,8 @@ XPCConvert::NativeArray2JS(XPCLazyCallContext& lccx,
         return JS_FALSE;
 
     JSContext* cx = ccx.GetJSContext();
+    NS_ABORT_IF_FALSE(lccx.GetScopeForNewJSObjects()->compartment() == cx->compartment,
+                      "bad scope for new JSObjects");
 
     // XXX add support for putting chars in a string rather than an array
 
@@ -2017,8 +1968,7 @@ XPCConvert::NativeArray2JS(XPCLazyCallContext& lccx,
     PR_BEGIN_MACRO                                                           \
         for(i = 0; i < count; i++)                                           \
         {                                                                    \
-            if(!NativeData2JS(ccx, &current, ((_t*)*s)+i, type, iid,         \
-                              scope, pErr) ||                                \
+            if(!NativeData2JS(ccx, &current, ((_t*)*s)+i, type, iid, pErr) ||\
                !JS_SetElement(cx, array, i, &current))                       \
                 goto failure;                                                \
         }                                                                    \
