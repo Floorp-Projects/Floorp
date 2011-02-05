@@ -410,9 +410,12 @@ function TabWindow(win) {
 
   this.previews = [];
 
-  for (let i = 0; i < this.events.length; i++)
-    this.tabbrowser.tabContainer.addEventListener(this.events[i], this, false);
+  for (let i = 0; i < this.tabEvents.length; i++)
+    this.tabbrowser.tabContainer.addEventListener(this.tabEvents[i], this, false);
   this.tabbrowser.addTabsProgressListener(this);
+
+  for (let i = 0; i < this.winEvents.length; i++)
+    this.win.addEventListener(this.winEvents[i], this, false);
 
   AeroPeek.windows.push(this);
   let tabs = this.tabbrowser.tabs;
@@ -425,7 +428,8 @@ function TabWindow(win) {
 
 TabWindow.prototype = {
   _enabled: false,
-  events: ["TabOpen", "TabClose", "TabSelect", "TabMove"],
+  tabEvents: ["TabOpen", "TabClose", "TabSelect", "TabMove"],
+  winEvents: ["tabviewshown", "tabviewhidden"],
 
   destroy: function () {
     this._destroying = true;
@@ -433,9 +437,11 @@ TabWindow.prototype = {
     let tabs = this.tabbrowser.tabs;
 
     this.tabbrowser.removeTabsProgressListener(this);
+    for (let i = 0; i < this.tabEvents.length; i++)
+      this.tabbrowser.tabContainer.removeEventListener(this.tabEvents[i], this, false);
 
-    for (let i = 0; i < this.events.length; i++)
-      this.tabbrowser.tabContainer.removeEventListener(this.events[i], this, false);
+    for (let i = 0; i < this.winEvents.length; i++)
+      this.win.removeEventListener(this.winEvents[i], this, false);
 
     for (let i = 0; i < tabs.length; i++)
       this.removeTab(tabs[i]);
@@ -553,6 +559,12 @@ TabWindow.prototype = {
         this.previews.splice(oldPos, 1);
         this.previews.splice(newPos, 0, preview);
         this.updateTabOrdering();
+        break;
+      case "tabviewshown":
+        this.enabled = false;
+        break;
+      case "tabviewhidden":
+        this.enabled = true;
         break;
     }
   },
