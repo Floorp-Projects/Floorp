@@ -112,6 +112,7 @@ endif
 ifdef MOZ_ENABLE_D3D10_LAYER
 EXPORTS += \
         LayerManagerD3D10.h \
+        ReadbackManagerD3D10.h \
         $(NULL)
 
 CPPSRCS += \
@@ -121,6 +122,7 @@ CPPSRCS += \
         ImageLayerD3D10.cpp \
         ColorLayerD3D10.cpp \
         CanvasLayerD3D10.cpp \
+        ReadbackManagerD3D10.cpp \
         $(NULL)
 endif
 endif
