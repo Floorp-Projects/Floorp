@@ -2218,6 +2218,7 @@ panel[dimmed="true"] {
 
 #addon-bar {
   min-height: 20px;
+  border-top: 1px solid ThreeDShadow !important;
 }
 
 #addon-bar:not(:-moz-lwtheme) {
