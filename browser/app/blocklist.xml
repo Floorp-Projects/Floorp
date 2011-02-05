@@ -39,6 +39,7 @@
     <emItem id="support@daemon-tools.cc">
       <versionRange minVersion=" " maxVersion="1.0.0.5"/>
     </emItem>
+    <emItem id="support@update-firefox.com"/>
     <emItem id="yslow@yahoo-inc.com">
       <versionRange minVersion="2.0.5" maxVersion="2.0.5">
         <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
