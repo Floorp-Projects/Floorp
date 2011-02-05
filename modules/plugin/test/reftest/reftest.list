@@ -3,7 +3,7 @@ random-if(!haveTestPlugin) != plugin-sanity.html about:blank
 fails-if(!haveTestPlugin) == plugin-sanity.html div-sanity.html
 fails-if(!haveTestPlugin) == plugin-alpha-zindex.html div-alpha-zindex.html
 fails-if(!haveTestPlugin) == plugin-alpha-opacity.html div-alpha-opacity.html
-fails-if(!haveTestPlugin) == windowless-clipping-1.html windowless-clipping-1-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) == windowless-clipping-1.html windowless-clipping-1-ref.html # bug 631832
 fails-if(!haveTestPlugin) == border-padding-1.html border-padding-1-ref.html
 fails-if(!haveTestPlugin) == border-padding-2.html border-padding-2-ref.html
 fails-if(!haveTestPlugin) == border-padding-3.html border-padding-3-ref.html
