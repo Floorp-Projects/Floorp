@@ -57,18 +57,17 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
         mJSContext(cx),
         mContextPopRequired(JS_FALSE),
         mDestroyJSContextInDestructor(JS_FALSE),
-        mCallerLanguage(callerLanguage),
-        mCallee(nsnull)
+        mCallerLanguage(callerLanguage)
 {
-    Init(callerLanguage, callerLanguage == NATIVE_CALLER, obj, funobj, JS_TRUE,
-         name, argc, argv, rval);
+    Init(callerLanguage, callerLanguage == NATIVE_CALLER, obj, funobj,
+         INIT_SHOULD_LOOKUP_WRAPPER, name, argc, argv, rval);
 }
 
 XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
                                JSContext* cx,
                                JSBool callBeginRequest,
                                JSObject* obj,
-                               JSObject* currentJSObject,
+                               JSObject* flattenedJSObject,
                                XPCWrappedNative* wrapper,
                                XPCWrappedNativeTearOff* tearOff)
     :   mState(INIT_FAILED),
@@ -79,12 +78,12 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
         mContextPopRequired(JS_FALSE),
         mDestroyJSContextInDestructor(JS_FALSE),
         mCallerLanguage(callerLanguage),
-        mCurrentJSObject(currentJSObject),
+        mFlattenedJSObject(flattenedJSObject),
         mWrapper(wrapper),
-        mTearOff(tearOff),
-        mCallee(nsnull)
+        mTearOff(tearOff)
 {
-    Init(callerLanguage, callBeginRequest, obj, nsnull, JS_FALSE, JSID_VOID, NO_ARGS,
+    Init(callerLanguage, callBeginRequest, obj, nsnull,
+         WRAPPER_PASSED_TO_CONSTRUCTOR, JSID_VOID, NO_ARGS,
          nsnull, nsnull);
 }
 
@@ -93,7 +92,7 @@ XPCCallContext::Init(XPCContext::LangType callerLanguage,
                      JSBool callBeginRequest,
                      JSObject* obj,
                      JSObject* funobj,
-                     JSBool getWrappedNative,
+                     WrapperInitOptions wrapperInitOptions,
                      jsid name,
                      uintN argc,
                      jsval *argv,
@@ -180,44 +179,37 @@ XPCCallContext::Init(XPCContext::LangType callerLanguage,
     if(!obj)
         return;
 
+    mScopeForNewJSObjects = obj;
+
+    mState = HAVE_SCOPE;
+
     mMethodIndex = 0xDEAD;
-    mOperandJSObject = obj;
 
     mState = HAVE_OBJECT;
 
     mTearOff = nsnull;
-
-    if(getWrappedNative)
+    if(wrapperInitOptions == INIT_SHOULD_LOOKUP_WRAPPER)
+    {
         mWrapper = XPCWrappedNative::GetWrappedNativeOfJSObject(mJSContext, obj,
                                                                 funobj,
-                                                                &mCurrentJSObject,
+                                                                &mFlattenedJSObject,
                                                                 &mTearOff);
-    if(mWrapper)
-    {
-        DEBUG_CheckWrapperThreadSafety(mWrapper);
-
-        mFlattenedJSObject = mWrapper->GetFlatJSObjectAndMark();
-
-        if(mTearOff)
+        if(mWrapper)
         {
-            mCurrentJSObject = mTearOff->GetJSObject();
-            mScriptableInfo = nsnull;
+            DEBUG_CheckWrapperThreadSafety(mWrapper);
+
+            mFlattenedJSObject = mWrapper->GetFlatJSObjectAndMark();
+
+            if(mTearOff)
+                mScriptableInfo = nsnull;
+            else
+                mScriptableInfo = mWrapper->GetScriptableInfo();
         }
         else
         {
-            mWrapper->GetJSObject(&mCurrentJSObject);
-            mScriptableInfo = mWrapper->GetScriptableInfo();
+            NS_ABORT_IF_FALSE(!mFlattenedJSObject || IS_SLIM_WRAPPER(mFlattenedJSObject),
+                              "should have a slim wrapper");
         }
-    }
-    else
-    {
-        if(!mCurrentJSObject)
-            return;
-
-        NS_ASSERTION(IS_SLIM_WRAPPER(mCurrentJSObject),
-                     "What kind of wrapper is this?");
-
-        mFlattenedJSObject = mCurrentJSObject;
     }
 
     if(!JSID_IS_VOID(name))

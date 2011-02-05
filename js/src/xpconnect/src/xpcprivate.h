@@ -66,6 +66,7 @@
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsCycleCollector.h"
+#include "nsDebug.h"
 #include "nsISupports.h"
 #include "nsIServiceManager.h"
 #include "nsIClassInfoImpl.h"
@@ -1095,10 +1096,18 @@ public:
     inline XPCContext::LangType         GetPrevCallerLanguage() const ;
     inline XPCCallContext*              GetPrevCallContext() const ;
 
-    inline JSObject*                    GetOperandJSObject() const ;
-    inline JSObject*                    GetCurrentJSObject() const ;
-    inline JSObject*                    GetFlattenedJSObject() const ;
+    /*
+     * The 'scope for new JSObjects' will be the scope for objects created when
+     * carrying out a JS/C++ call. This member is only available if HAVE_SCOPE.
+     * The object passed to the ccx constructor is used as the scope for new
+     * JSObjects. However, this object is also queried for a wrapper, so
+     * clients that don't want a wrapper (and thus pass NULL to the ccx
+     * constructor) need to manually call SetScopeForNewJSObjects.
+     */
+    inline JSObject*                    GetScopeForNewJSObjects() const ;
+    inline void                         SetScopeForNewJSObjects(JSObject *obj) ;
 
+    inline JSObject*                    GetFlattenedJSObject() const ;
     inline nsISupports*                 GetIdentityObject() const ;
     inline XPCWrappedNative*            GetWrapper() const ;
     inline XPCWrappedNativeProto*       GetProto() const ;
@@ -1134,9 +1143,6 @@ public:
 
     inline void SetRetVal(jsval val);
 
-    inline JSObject* GetCallee() const;
-    inline void SetCallee(JSObject* callee);
-
     void SetName(jsid name);
     void SetArgsAndResultPtr(uintN argc, jsval *argv, jsval *rval);
     void SetCallInfo(XPCNativeInterface* iface, XPCNativeMember* member,
@@ -1171,15 +1177,20 @@ private:
                    JSContext* cx,
                    JSBool callBeginRequest,
                    JSObject* obj,
-                   JSObject* currentJSObject,
+                   JSObject* flattenedJSObject,
                    XPCWrappedNative* wn,
                    XPCWrappedNativeTearOff* tearoff);
+
+    enum WrapperInitOptions {
+        WRAPPER_PASSED_TO_CONSTRUCTOR,
+        INIT_SHOULD_LOOKUP_WRAPPER
+    };
 
     void Init(XPCContext::LangType callerLanguage,
               JSBool callBeginRequest,
               JSObject* obj,
               JSObject* funobj,
-              JSBool getWrappedNative,
+              WrapperInitOptions wrapperInitOptions,
               jsid name,
               uintN argc,
               jsval *argv,
@@ -1191,6 +1202,7 @@ private:
         INIT_FAILED,
         SYSTEM_SHUTDOWN,
         HAVE_CONTEXT,
+        HAVE_SCOPE,
         HAVE_OBJECT,
         HAVE_NAME,
         HAVE_ARGS,
@@ -1223,8 +1235,7 @@ private:
 
     XPCCallContext*                 mPrevCallContext;
 
-    JSObject*                       mOperandJSObject;
-    JSObject*                       mCurrentJSObject;
+    JSObject*                       mScopeForNewJSObjects;
     JSObject*                       mFlattenedJSObject;
     XPCWrappedNative*               mWrapper;
     XPCWrappedNativeTearOff*        mTearOff;
@@ -1247,12 +1258,6 @@ private:
     void*                           mIDispatchMember;
 #endif
     PRUint16                        mMethodIndex;
-
-    // If not null, this is the function object of the function we're going to
-    // call.  This member only makes sense when CallerTypeIsNative() on our
-    // XPCContext returns true.  We're not responsible for rooting this object;
-    // whoever sets it on us needs to deal with that.
-    JSObject*                       mCallee;
 
 #define XPCCCX_STRING_CACHE_SIZE 2
 
@@ -1288,7 +1293,7 @@ public:
           , mCx(nsnull)
           , mCallerLanguage(JS_CALLER)
           , mObj(nsnull)
-          , mCurrentJSObject(nsnull)
+          , mFlattenedJSObject(nsnull)
           , mWrapper(nsnull)
           , mTearOff(nsnull)
 #endif
@@ -1296,7 +1301,7 @@ public:
     }
     XPCLazyCallContext(XPCContext::LangType callerLanguage, JSContext* cx,
                        JSObject* obj = nsnull,
-                       JSObject* currentJSObject = nsnull,
+                       JSObject* flattenedJSObject = nsnull,
                        XPCWrappedNative* wrapper = nsnull,
                        XPCWrappedNativeTearOff* tearoff = nsnull)
         : mCallBeginRequest(callerLanguage == NATIVE_CALLER ?
@@ -1306,7 +1311,7 @@ public:
           mCx(cx),
           mCallerLanguage(callerLanguage),
           mObj(obj),
-          mCurrentJSObject(currentJSObject),
+          mFlattenedJSObject(flattenedJSObject),
           mWrapper(wrapper),
           mTearOff(tearoff)
     {
@@ -1327,7 +1332,7 @@ public:
     }
     void SetWrapper(XPCWrappedNative* wrapper,
                     XPCWrappedNativeTearOff* tearoff);
-    void SetWrapper(JSObject* currentJSObject);
+    void SetWrapper(JSObject* flattenedJSObject);
 
     JSContext *GetJSContext()
     {
@@ -1341,12 +1346,28 @@ public:
 
         return mCx;
     }
-    JSObject *GetCurrentJSObject() const
+    JSObject *GetScopeForNewJSObjects() const
     {
         if(mCcx)
-            return mCcx->GetCurrentJSObject();
+            return mCcx->GetScopeForNewJSObjects();
 
-        return mCurrentJSObject;
+        return mObj;
+    }
+    void SetScopeForNewJSObjects(JSObject *obj)
+    {
+        if(mCcx) {
+            mCcx->SetScopeForNewJSObjects(obj);
+            return;
+        }
+        NS_ABORT_IF_FALSE(!mObj, "already set!");
+        mObj = obj;
+    }
+    JSObject *GetFlattenedJSObject() const
+    {
+        if(mCcx)
+            return mCcx->GetFlattenedJSObject();
+
+        return mFlattenedJSObject;
     }
     XPCCallContext &GetXPCCallContext()
     {
@@ -1356,7 +1377,7 @@ public:
                 new (mData) XPCCallContext(mCallerLanguage, mCx,
                                            mCallBeginRequest == CALL_BEGINREQUEST,
                                            mObj,
-                                           mCurrentJSObject, mWrapper,
+                                           mFlattenedJSObject, mWrapper,
                                            mTearOff);
             if(!mCcx->IsValid())
             {
@@ -1383,7 +1404,7 @@ private:
     JSContext *mCx;
     XPCContext::LangType mCallerLanguage;
     JSObject *mObj;
-    JSObject *mCurrentJSObject;
+    JSObject *mFlattenedJSObject;
     XPCWrappedNative *mWrapper;
     XPCWrappedNativeTearOff *mTearOff;
     char mData[sizeof(XPCCallContext)];
@@ -3205,15 +3226,14 @@ public:
      */    
     static JSBool NativeData2JS(XPCCallContext& ccx, jsval* d, const void* s,
                                 const nsXPTType& type, const nsID* iid,
-                                JSObject* scope, nsresult* pErr)
+                                nsresult* pErr)
     {
         XPCLazyCallContext lccx(ccx);
-        return NativeData2JS(lccx, d, s, type, iid, scope, pErr);
+        return NativeData2JS(lccx, d, s, type, iid, pErr);
     }
     static JSBool NativeData2JS(XPCLazyCallContext& lccx, jsval* d,
                                 const void* s, const nsXPTType& type,
-                                const nsID* iid, JSObject* scope,
-                                nsresult* pErr);
+                                const nsID* iid, nsresult* pErr);
 
     static JSBool JSData2Native(XPCCallContext& ccx, void* d, jsval s,
                                 const nsXPTType& type,
@@ -3230,7 +3250,6 @@ public:
      * @param Interface the interface of src that we want
      * @param cache the wrapper cache for src (may be null, in which case src
      *              will be QI'ed to get the cache)
-     * @param scope the default scope to put on the new JSObject's parent chain
      * @param allowNativeWrapper if true, this method may wrap the resulting
      *        JSObject in an XPCNativeWrapper and return that, as needed.
      * @param isGlobal
@@ -3244,15 +3263,13 @@ public:
                                            xpcObjectHelper& aHelper,
                                            const nsID* iid,
                                            XPCNativeInterface** Interface,
-                                           JSObject* scope,
                                            PRBool allowNativeWrapper,
                                            PRBool isGlobal,
                                            nsresult* pErr)
     {
         XPCLazyCallContext lccx(ccx);
         return NativeInterface2JSObject(lccx, d, dest, aHelper, iid, Interface,
-                                        scope, allowNativeWrapper, isGlobal,
-                                        pErr);
+                                        allowNativeWrapper, isGlobal, pErr);
     }
     static JSBool NativeInterface2JSObject(XPCLazyCallContext& lccx,
                                            jsval* d,
@@ -3260,7 +3277,6 @@ public:
                                            xpcObjectHelper& aHelper,
                                            const nsID* iid,
                                            XPCNativeInterface** Interface,
-                                           JSObject* scope,
                                            PRBool allowNativeWrapper,
                                            PRBool isGlobal,
                                            nsresult* pErr);
@@ -3291,8 +3307,7 @@ public:
     static JSBool NativeArray2JS(XPCLazyCallContext& ccx,
                                  jsval* d, const void** s,
                                  const nsXPTType& type, const nsID* iid,
-                                 JSUint32 count, JSObject* scope,
-                                 nsresult* pErr);
+                                 JSUint32 count, nsresult* pErr);
 
     static JSBool JSArray2Native(XPCCallContext& ccx, void** d, jsval s,
                                  JSUint32 count, JSUint32 capacity,
@@ -4324,8 +4339,7 @@ public:
      */    
     static JSBool VariantDataToJS(XPCLazyCallContext& lccx, 
                                   nsIVariant* variant,
-                                  JSObject* scope, nsresult* pErr,
-                                  jsval* pJSVal);
+                                  nsresult* pErr, jsval* pJSVal);
 
 protected:
     virtual ~XPCVariant() { }

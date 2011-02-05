@@ -1093,6 +1093,7 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
     JSAutoEnterCompartment ac;
     if(!ac.enter(ccx, tempGlobal))
         return UnexpectedFailure(NS_ERROR_FAILURE);
+    ccx.SetScopeForNewJSObjects(tempGlobal);
 
     PRBool system = (aFlags & nsIXPConnect::FLAG_SYSTEM_GLOBAL_OBJECT) != 0;
     if(system && !JS_MakeSystemObject(aJSContext, tempGlobal))
@@ -1113,8 +1114,7 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
         if(!XPCConvert::NativeInterface2JSObject(ccx, &v,
                                                  getter_AddRefs(holder),
                                                  helper, &aIID, nsnull,
-                                                 tempGlobal, PR_FALSE,
-                                                 OBJ_IS_GLOBAL, &rv))
+                                                 PR_FALSE, OBJ_IS_GLOBAL, &rv))
             return UnexpectedFailure(rv);
 
         NS_ASSERTION(NS_SUCCEEDED(rv) && holder, "Didn't wrap properly");
@@ -1207,10 +1207,16 @@ NativeInterface2JSObject(XPCLazyCallContext & lccx,
                          jsval *aVal,
                          nsIXPConnectJSObjectHolder **aHolder)
 {
+    JSAutoEnterCompartment ac;
+    if (!ac.enter(lccx.GetJSContext(), aScope))
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    lccx.SetScopeForNewJSObjects(aScope);
+
     nsresult rv;
     xpcObjectHelper helper(aCOMObj, aCache);
     if(!XPCConvert::NativeInterface2JSObject(lccx, aVal, aHolder, helper, aIID,
-                                             nsnull, aScope, aAllowWrapping,
+                                             nsnull, aAllowWrapping,
                                              OBJ_IS_NOT_GLOBAL, &rv))
         return rv;
 
@@ -2273,8 +2279,10 @@ nsXPConnect::VariantToJS(JSContext* ctx, JSObject* scope, nsIVariant* value, jsv
         return NS_ERROR_FAILURE;
     XPCLazyCallContext lccx(ccx);
 
+    ccx.SetScopeForNewJSObjects(scope);
+
     nsresult rv = NS_OK;
-    if(!XPCVariant::VariantDataToJS(lccx, value, scope, &rv, _retval))
+    if(!XPCVariant::VariantDataToJS(lccx, value, &rv, _retval))
     {
         if(NS_FAILED(rv)) 
             return rv;

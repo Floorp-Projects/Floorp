@@ -184,26 +184,31 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, JSObject *scope, JSObject *obj
     if (!wn->GetClassInfo())
         return DoubleWrap(cx, obj, flags);
 
-    XPCCallContext ccx(JS_CALLER, cx, obj);
-    if (NATIVE_HAS_FLAG(&ccx, WantPreCreate)) {
-        // We have a precreate hook. This object might enforce that we only
-        // ever create JS object for it.
-        JSObject *originalScope = scope;
-        nsresult rv = wn->GetScriptableInfo()->GetCallback()->
-            PreCreate(wn->Native(), cx, scope, &scope);
-        NS_ENSURE_SUCCESS(rv, DoubleWrap(cx, obj, flags));
+    {
+        JSAutoEnterCompartment ac;
+        if (!ac.enter(cx, obj))
+            return nsnull;
+        XPCCallContext ccx(JS_CALLER, cx, obj);
+        if (NATIVE_HAS_FLAG(&ccx, WantPreCreate)) {
+            // We have a precreate hook. This object might enforce that we only
+            // ever create JS object for it.
+            JSObject *originalScope = scope;
+            nsresult rv = wn->GetScriptableInfo()->GetCallback()->
+                PreCreate(wn->Native(), cx, scope, &scope);
+            NS_ENSURE_SUCCESS(rv, DoubleWrap(cx, obj, flags));
 
-        // If the handed back scope differs from the passed-in scope and is in
-        // a separate compartment, then this object is explicitly requesting
-        // that we don't create a second JS object for it: create a security
-        // wrapper.
-        if (originalScope->compartment() != scope->getCompartment())
-            return DoubleWrap(cx, obj, flags);
+            // If the handed back scope differs from the passed-in scope and is in
+            // a separate compartment, then this object is explicitly requesting
+            // that we don't create a second JS object for it: create a security
+            // wrapper.
+            if (originalScope->compartment() != scope->getCompartment())
+                return DoubleWrap(cx, obj, flags);
 
-        // Note: this penalizes objects that only have one wrapper, but are
-        // being accessed across compartments. We would really prefer to
-        // replace the above code with a test that says "do you only have one
-        // wrapper?"
+            // Note: this penalizes objects that only have one wrapper, but are
+            // being accessed across compartments. We would really prefer to
+            // replace the above code with a test that says "do you only have one
+            // wrapper?"
+        }
     }
 
     // The object we're looking at might allow us to create a new wrapped

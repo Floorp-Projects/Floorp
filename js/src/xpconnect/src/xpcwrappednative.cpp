@@ -2595,8 +2595,7 @@ CallMethodHelper::GatherAndConvertResults()
             XPCLazyCallContext lccx(mCallContext);
             if(!XPCConvert::NativeArray2JS(lccx, &v, (const void**)&dp->val,
                                            datum_type, &param_iid,
-                                           array_count, mCallContext.GetCurrentJSObject(),
-                                           &err))
+                                           array_count, &err))
             {
                 // XXX need exception scheme for arrays to indicate bad element
                 ThrowBadParam(err, i, mCallContext);
@@ -2617,8 +2616,7 @@ CallMethodHelper::GatherAndConvertResults()
         else
         {
             if(!XPCConvert::NativeData2JS(mCallContext, &v, &dp->val, datum_type,
-                                          &param_iid,
-                                          mCallContext.GetCurrentJSObject(), &err))
+                                          &param_iid, &err))
             {
                 ThrowBadParam(err, i, mCallContext);
                 return JS_FALSE;
@@ -2703,7 +2701,7 @@ CallMethodHelper::QueryInterfaceFastPath() const
     JSBool success =
         XPCConvert::NativeData2JS(mCallContext, &v, &qiresult,
                                   nsXPTType::T_INTERFACE_IS | XPT_TDP_POINTER,
-                                  iid, mCallContext.GetCurrentJSObject(), &err);
+                                  iid, &err);
     NS_IF_RELEASE(qiresult);
 
     if(!success)

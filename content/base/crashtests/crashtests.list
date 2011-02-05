@@ -25,7 +25,7 @@ load 348049-1.xhtml
 load 344882-1.html
 load 345837-1.xhtml
 load 349355-1.html
-asserts(1) load 354645-1.xul # bug 512815
+load 354645-1.xul
 load 360599-1.html
 load 366200-1.xhtml
 load 369216-1.html

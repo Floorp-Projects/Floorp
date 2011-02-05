@@ -135,7 +135,7 @@ XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface,
         jsval resultVal;
 
         if(!XPCConvert::NativeData2JS(ccx, &resultVal, &v.val, v.type,
-                                      nsnull, nsnull, nsnull))
+                                      nsnull, nsnull))
             return JS_FALSE;
 
         *vp = resultVal;
