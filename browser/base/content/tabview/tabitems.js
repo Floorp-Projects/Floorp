@@ -706,6 +706,8 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       // The scaleCheat of 2 here is a clever way to speed up the zoom-out
       // code. See getZoomTransform() below.
       let transform = this.getZoomTransform(2);
+      TabItems.pausePainting();
+
       $canvas.css({
         '-moz-transform': transform.transform,
         '-moz-transform-origin': transform.transformOrigin
@@ -1103,6 +1105,7 @@ let TabItems = {
    // three times before TabItems will start updating thumbnails again.
    resumePainting: function TabItems_resumePainting() {
      this.paintingPaused--;
+     Utils.assert(this.paintingPaused > -1, "paintingPaused should not go below zero");
      if (!this.isPaintingPaused())
        this.startHeartbeat();
    },
