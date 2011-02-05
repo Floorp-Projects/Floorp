@@ -1309,19 +1309,25 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
         cx = nsnull;
     }
 
+    if(!cx || !xpcc || !IsReflectable(methodIndex))
+        return NS_ERROR_FAILURE;
+
+    obj = thisObj = wrapper->GetJSObject();
+
+    JSAutoEnterCompartment ac;
+    if (!ac.enter(cx, obj))
+        return NS_ERROR_FAILURE;
+
+    ccx.SetScopeForNewJSObjects(obj);
+
     js::AutoValueVector args(cx);
     AutoScriptEvaluate scriptEval(cx);
     ContextPrincipalGuard principalGuard(ccx);
-
-    obj = thisObj = wrapper->GetJSObject();
 
     // XXX ASSUMES that retval is last arg. The xpidl compiler ensures this.
     paramCount = info->num_args;
     argc = paramCount -
         (paramCount && XPT_PD_IS_RETVAL(info->params[paramCount-1].flags) ? 1 : 0);
-
-    if(!cx || !xpcc || !IsReflectable(methodIndex))
-        goto pre_call_clean_up;
 
     if (!scriptEval.StartEvaluating(obj, xpcWrappedJSErrorReporter))
         goto pre_call_clean_up;
@@ -1440,7 +1446,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
                                 JSBool ok =
                                   XPCConvert::NativeInterface2JSObject(ccx,
                                         &v, nsnull, helper, newWrapperIID,
-                                        nsnull, obj, PR_FALSE, PR_FALSE,
+                                        nsnull, PR_FALSE, PR_FALSE,
                                         nsnull);
                                 if(newWrapperIID)
                                     nsMemory::Free(newWrapperIID);
@@ -1476,41 +1482,6 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
 
     argv = args.jsval_begin();
     sp = argv;
-
-    // Figure out what our callee is
-    if(XPT_MD_IS_GETTER(info->flags) || XPT_MD_IS_SETTER(info->flags))
-    {
-        // Pull the getter or setter off of |obj|
-        uintN attrs;
-        JSBool found;
-        JSPropertyOp getter;
-        JSStrictPropertyOp setter;
-        if(!JS_GetPropertyAttrsGetterAndSetter(cx, obj, name,
-                                               &attrs, &found,
-                                               &getter, &setter))
-        {
-            // XXX Do we want to report this exception?
-            JS_ClearPendingException(cx);
-            goto pre_call_clean_up;
-        }
-
-        if(XPT_MD_IS_GETTER(info->flags) && (attrs & JSPROP_GETTER))
-        {
-            // JSPROP_GETTER means the getter is actually a
-            // function object.
-            ccx.SetCallee(JS_FUNC_TO_DATA_PTR(JSObject*, getter));
-        }
-        else if(XPT_MD_IS_SETTER(info->flags) && (attrs & JSPROP_SETTER))
-        {
-            // JSPROP_SETTER means the setter is actually a
-            // function object.
-            ccx.SetCallee(JS_FUNC_TO_DATA_PTR(JSObject*, setter));
-        }
-    }
-    else if(JSVAL_IS_OBJECT(fval))
-    {
-        ccx.SetCallee(JSVAL_TO_OBJECT(fval));
-    }
 
     // build the args
     // NB: This assignment *looks* wrong because we haven't yet called our
@@ -1578,7 +1549,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
                 if(!XPCConvert::NativeArray2JS(lccx, &val,
                                                (const void**)&pv->val,
                                                datum_type, &param_iid,
-                                               array_count, obj, nsnull))
+                                               array_count, nsnull))
                     goto pre_call_clean_up;
             }
             else if(isSizedString)
@@ -1592,7 +1563,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
             else
             {
                 if(!XPCConvert::NativeData2JS(ccx, &val, &pv->val, type,
-                                              &param_iid, obj, nsnull))
+                                              &param_iid, nsnull))
                     goto pre_call_clean_up;
             }
         }

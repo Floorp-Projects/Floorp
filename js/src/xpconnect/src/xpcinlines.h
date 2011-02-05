@@ -157,17 +157,19 @@ XPCCallContext::GetPrevCallContext() const
 }
 
 inline JSObject*
-XPCCallContext::GetOperandJSObject() const
+XPCCallContext::GetScopeForNewJSObjects() const
 {
-    CHECK_STATE(HAVE_OBJECT);
-    return mOperandJSObject;
+    CHECK_STATE(HAVE_SCOPE);
+    return mScopeForNewJSObjects;
 }
 
-inline JSObject*
-XPCCallContext::GetCurrentJSObject() const
+inline void
+XPCCallContext::SetScopeForNewJSObjects(JSObject *scope)
 {
-    CHECK_STATE(HAVE_OBJECT);
-    return mCurrentJSObject;
+    NS_ABORT_IF_FALSE(mState == HAVE_CONTEXT, "wrong call context state");
+    NS_ABORT_IF_FALSE(scope->compartment() == mJSContext->compartment, "wrong compartment");
+    mScopeForNewJSObjects = scope;
+    mState = HAVE_SCOPE;
 }
 
 inline JSObject*
@@ -183,8 +185,8 @@ XPCCallContext::GetIdentityObject() const
     CHECK_STATE(HAVE_OBJECT);
     if(mWrapper)
         return mWrapper->GetIdentityObject();
-    return mCurrentJSObject ?
-           static_cast<nsISupports*>(xpc_GetJSPrivate(mCurrentJSObject)) :
+    return mFlattenedJSObject ?
+           static_cast<nsISupports*>(xpc_GetJSPrivate(mFlattenedJSObject)) :
            nsnull;
 }
 
@@ -204,7 +206,7 @@ XPCCallContext::GetProto() const
     CHECK_STATE(HAVE_OBJECT);
     if(mWrapper)
         return mWrapper->GetProto();
-    return mCurrentJSObject ? GetSlimWrapperProto(mCurrentJSObject) : nsnull;
+    return mFlattenedJSObject ? GetSlimWrapperProto(mFlattenedJSObject) : nsnull;
 }
 
 inline JSBool
@@ -346,22 +348,6 @@ XPCCallContext::SetResolvingWrapper(XPCWrappedNative* w)
 {
     CHECK_STATE(HAVE_OBJECT);
     return mThreadData->SetResolvingWrapper(w);
-}
-
-inline JSObject*
-XPCCallContext::GetCallee() const
-{
-    NS_ASSERTION(mCallerLanguage == NATIVE_CALLER,
-                 "GetCallee() doesn't make sense");
-    return mCallee;
-}
-
-inline void
-XPCCallContext::SetCallee(JSObject* callee)
-{
-    NS_ASSERTION(mCallerLanguage == NATIVE_CALLER,
-                 "SetCallee() doesn't make sense");
-    mCallee = callee;
 }
 
 inline PRUint16
@@ -803,18 +789,18 @@ XPCLazyCallContext::SetWrapper(XPCWrappedNative* wrapper,
     mWrapper = wrapper;
     mTearOff = tearoff;
     if(mTearOff)
-        mCurrentJSObject = mTearOff->GetJSObject();
+        mFlattenedJSObject = mTearOff->GetJSObject();
     else
-        mWrapper->GetJSObject(&mCurrentJSObject);
+        mFlattenedJSObject = mWrapper->GetFlatJSObjectAndMark();
 }
 inline void
-XPCLazyCallContext::SetWrapper(JSObject* currentJSObject)
+XPCLazyCallContext::SetWrapper(JSObject* flattenedJSObject)
 {
-    NS_ASSERTION(IS_SLIM_WRAPPER_OBJECT(currentJSObject),
+    NS_ASSERTION(IS_SLIM_WRAPPER_OBJECT(flattenedJSObject),
                  "What kind of object is this?");
     mWrapper = nsnull;
     mTearOff = nsnull;
-    mCurrentJSObject = currentJSObject;
+    mFlattenedJSObject = flattenedJSObject;
 }
 
 /***************************************************************************/

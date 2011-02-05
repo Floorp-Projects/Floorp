@@ -412,8 +412,7 @@ XPCVariant::GetAsJSVal(jsval* result)
 JSBool 
 XPCVariant::VariantDataToJS(XPCLazyCallContext& lccx, 
                             nsIVariant* variant,
-                            JSObject* scope, nsresult* pErr,
-                            jsval* pJSVal)
+                            nsresult* pErr, jsval* pJSVal)
 {
     // Get the type early because we might need to spoof it below.
     PRUint16 type;
@@ -429,11 +428,8 @@ XPCVariant::VariantDataToJS(XPCLazyCallContext& lccx,
        type == nsIDataType::VTYPE_EMPTY_ARRAY ||
        type == nsIDataType::VTYPE_ID))
     {
-        // It's not a JSObject (or it's a JSArray or a JSObject representing an
-        // nsID).  Just pass through the underlying data.
-        JSAutoEnterCompartment ac;
         JSContext *cx = lccx.GetJSContext();
-        if(!ac.enter(cx, scope) || !JS_WrapValue(cx, &realVal))
+        if(!JS_WrapValue(cx, &realVal))
             return JS_FALSE;
         *pJSVal = realVal;
         return JS_TRUE;
@@ -446,9 +442,8 @@ XPCVariant::VariantDataToJS(XPCLazyCallContext& lccx,
                      type == nsIDataType::VTYPE_INTERFACE_IS,
                      "Weird variant");
 
-        JSAutoEnterCompartment ac;
         JSContext *cx = lccx.GetJSContext();
-        if(!ac.enter(cx, scope) || !JS_WrapValue(cx, &realVal))
+        if(!JS_WrapValue(cx, &realVal))
             return JS_FALSE;
         *pJSVal = realVal;
         return JS_TRUE;
@@ -474,6 +469,9 @@ XPCVariant::VariantDataToJS(XPCLazyCallContext& lccx,
     JSBool success;
 
     JSContext* cx = lccx.GetJSContext();
+    NS_ABORT_IF_FALSE(lccx.GetScopeForNewJSObjects()->compartment() == cx->compartment,
+                      "bad scope for new JSObjects");
+
     switch(type)
     {
         case nsIDataType::VTYPE_INT8:        
@@ -656,8 +654,7 @@ XPCVariant::VariantDataToJS(XPCLazyCallContext& lccx,
                 XPCConvert::NativeArray2JS(lccx, pJSVal, 
                                            (const void**)&du.u.array.mArrayValue,
                                            conversionType, pid,
-                                           du.u.array.mArrayCount, 
-                                           scope, pErr);
+                                           du.u.array.mArrayCount, pErr);
 
 VARIANT_DONE:                                
             nsVariant::Cleanup(&du);
@@ -697,7 +694,7 @@ VARIANT_DONE:
         success = XPCConvert::NativeData2JS(lccx, pJSVal,
                                             (const void*)&xpctvar.val,
                                             xpctvar.type,
-                                            &iid, scope, pErr);
+                                            &iid, pErr);
     }
 
     if(xpctvar.IsValAllocated())
