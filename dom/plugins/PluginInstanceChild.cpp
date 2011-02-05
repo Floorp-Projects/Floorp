@@ -124,7 +124,6 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface)
     , mWinlessPopupSurrogateHWND(0)
     , mWinlessThrottleOldWndProc(0)
     , mWinlessHiddenMsgHWND(0)
-    , mMouseHook(NULL)
 #endif // OS_WIN
     , mAsyncCallMutex("PluginInstanceChild::mAsyncCallMutex")
 #if defined(OS_MACOSX)
@@ -1043,42 +1042,6 @@ PluginInstanceChild::RegisterWindowClass()
     return RegisterClassEx(&wcex) ? true : false;
 }
 
-static inline void
-HandleMouseCapture(HWND aWnd, UINT aMessage)
-{
-    // Make sure capture is released by the child on mouse events. Fixes a
-    // problem with flash full screen mode mouse input. Appears to be
-    // caused by a bug in flash, since we are not setting the capture
-    // on the window. (In non-oopp land, we would set and release via
-    // widget for other reasons.)
-    switch (aMessage) {
-        case WM_LBUTTONDOWN:
-        case WM_MBUTTONDOWN:
-        case WM_RBUTTONDOWN:
-            SetCapture(aWnd);
-            break;
-        case WM_LBUTTONUP:
-        case WM_MBUTTONUP:
-        case WM_RBUTTONUP:
-            ReleaseCapture();
-            break;
-    }
-}
-
-LRESULT CALLBACK MouseHookProc(int code,
-                               WPARAM wParam,
-                               LPARAM lParam)
-{
-  if (code == HC_ACTION) {
-      MOUSEHOOKSTRUCT* hookStruct =
-          reinterpret_cast<MOUSEHOOKSTRUCT*>(lParam);
-      if (hookStruct)
-          HandleMouseCapture(hookStruct->hwnd, wParam);
-  }
-
-  return CallNextHookEx(NULL, code, wParam, lParam);
-}
-
 bool
 PluginInstanceChild::CreatePluginWindow()
 {
@@ -1105,11 +1068,6 @@ PluginInstanceChild::CreatePluginWindow()
     SetWindowLongPtrA(mPluginWindowHWND, GWLP_WNDPROC,
                       reinterpret_cast<LONG_PTR>(DefWindowProcA));
 
-    // Mouse capture hook for flash full screen capture bug
-    if (GetQuirks() & PluginModuleChild::QUIRK_FLASH_HOOK_MOUSE_CAPTURE) {
-        mMouseHook = SetWindowsHookEx(WH_MOUSE, MouseHookProc, NULL,
-                                      GetCurrentThreadId());
-    }
     return true;
 }
 
@@ -1130,11 +1088,6 @@ PluginInstanceChild::DestroyPluginWindow()
         }
         DestroyWindow(mPluginWindowHWND);
         mPluginWindowHWND = 0;
-    }
-
-    if (mMouseHook) {
-        UnhookWindowsHookEx(mMouseHook);
-        mMouseHook = NULL;
     }
 }
 
@@ -1247,10 +1200,24 @@ PluginInstanceChild::PluginWindowProc(HWND hWnd,
         return 0;
     }
 
-    HandleMouseCapture(hWnd, message);
-    
     LRESULT res = CallWindowProc(self->mPluginWndProc, hWnd, message, wParam,
                                  lParam);
+
+    // Make sure capture is released by the child on mouse events. Fixes a
+    // problem with flash full screen mode mouse input. Appears to be
+    // caused by a bug in flash, since we are not setting the capture
+    // on the window. (In non-oopp land, we would set and release via
+    // widget for other reasons.)
+    switch (message) {
+      case WM_LBUTTONDOWN:
+      case WM_MBUTTONDOWN:
+      case WM_RBUTTONDOWN:
+      case WM_LBUTTONUP:
+      case WM_MBUTTONUP:
+      case WM_RBUTTONUP:
+      ReleaseCapture();
+      break;
+    }
 
     if (message == WM_CLOSE)
         self->DestroyPluginWindow();
