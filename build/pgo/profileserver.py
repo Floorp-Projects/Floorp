@@ -48,7 +48,7 @@ import shutil
 from datetime import datetime
 
 SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])))
-os.path.insert(0, SCRIPT_DIR)
+sys.path.insert(0, SCRIPT_DIR)
 from automation import Automation
 from automationutils import getDebuggerInfo, addCommonOptions
 
