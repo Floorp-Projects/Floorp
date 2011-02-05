@@ -39,9 +39,9 @@ function test() {
   let tests = [{
     url: 'data:text/html,' + html1,
     colors: [
-      {right: [0, 0, 255], bottom: [255, 255, 255]},
-      {right: [0, 0, 255], bottom: [255, 255, 255]},
-      {right: [0, 0, 255], bottom: [255, 255, 255]}
+      {right: [255, 255, 255], bottom: [255, 255, 255]},
+      {right: [255, 255, 255], bottom: [255, 255, 255]},
+      {right: [255, 255, 255], bottom: [255, 255, 255]}
     ]
   }, {
     url: 'about:blank',
@@ -54,7 +54,7 @@ function test() {
     url: 'data:text/html,' + html2,
     colors: [
       {right: [0, 0, 255], bottom: [0, 0, 255]},
-      {right: [0, 0, 255], bottom: [255, 255, 255]},
+      {right: [0, 0, 255], bottom: [0, 0, 255]},
       {right: [0, 0, 255], bottom: [0, 0, 255]}
     ]
   }];
