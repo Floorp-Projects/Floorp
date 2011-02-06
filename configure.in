@@ -1942,7 +1942,11 @@ dnl Get mozilla version from central milestone file
 MOZILLA_VERSION=`$PERL $srcdir/config/milestone.pl -topsrcdir $srcdir`
 
 dnl Get version of various core apps from the version files.
-FIREFOX_VERSION=`cat $topsrcdir/browser/config/version.txt`
+FIREFOX_VERSION=`cat $_topsrcdir/browser/config/version.txt`
+
+if test -z "$FIREFOX_VERSION"; then
+    AC_MSG_ERROR([FIREFOX_VERSION is unexpectedly blank.])
+fi
 
 AC_DEFINE_UNQUOTED(MOZILLA_VERSION,"$MOZILLA_VERSION")
 AC_DEFINE_UNQUOTED(MOZILLA_VERSION_U,$MOZILLA_VERSION)
