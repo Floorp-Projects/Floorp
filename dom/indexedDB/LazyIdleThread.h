@@ -151,6 +151,14 @@ private:
   void SelfDestruct();
 
   /**
+   * Returns true if events should be queued rather than immediately dispatched
+   * to mThread. Currently only happens when the thread is shutting down.
+   */
+  PRBool UseRunnableQueue() {
+    return !!mQueuedRunnables;
+  }
+
+  /**
    * Protects data that is accessed on both threads.
    */
   mozilla::Mutex mMutex;
@@ -178,6 +186,12 @@ private:
    * only when Shutdown() is called.
    */
   nsIObserver* mIdleObserver;
+
+  /**
+   * Temporary storage for events that happen to be dispatched while we're in
+   * the process of shutting down our real thread.
+   */
+  nsTArray<nsCOMPtr<nsIRunnable> >* mQueuedRunnables;
 
   /**
    * The number of milliseconds a thread should be idle before dying.

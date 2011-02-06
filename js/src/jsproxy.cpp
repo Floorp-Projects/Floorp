@@ -148,27 +148,45 @@ JSProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id,
         return false;
     /* The control-flow here differs from ::get() because of the fall-through case below. */
     if (desc.obj) {
-        if (desc.setter && ((desc.attrs & JSPROP_SETTER) || desc.setter != PropertyStub))
-            return CallSetter(cx, receiver, id, desc.setter, desc.attrs, desc.shortid, vp);
         if (desc.attrs & JSPROP_READONLY)
             return true;
+        if (desc.setter && ((desc.attrs & JSPROP_SETTER) || desc.setter != PropertyStub)) {
+            if (!CallSetter(cx, receiver, id, desc.setter, desc.attrs, desc.shortid, vp))
+                return false;
+            if (desc.attrs & JSPROP_SHARED)
+                return true;
+        }
+        if (!desc.getter)
+            desc.getter = PropertyStub;
+        if (!desc.setter)
+            desc.setter = PropertyStub;
         desc.value = *vp;
         return defineProperty(cx, receiver, id, &desc);
     }
     if (!getPropertyDescriptor(cx, proxy, id, true, &desc))
         return false;
     if (desc.obj) {
-        if (desc.setter && ((desc.attrs & JSPROP_SETTER) || desc.setter != PropertyStub))
-            return CallSetter(cx, receiver, id, desc.setter, desc.attrs, desc.shortid, vp);
         if (desc.attrs & JSPROP_READONLY)
             return true;
+        if (desc.setter && ((desc.attrs & JSPROP_SETTER) || desc.setter != PropertyStub)) {
+            if (!CallSetter(cx, receiver, id, desc.setter, desc.attrs, desc.shortid, vp))
+                return false;
+            if (desc.attrs & JSPROP_SHARED)
+                return true;
+        }
+        if (!desc.getter)
+            desc.getter = PropertyStub;
+        if (!desc.setter)
+            desc.setter = PropertyStub;
         /* fall through */
+    } else {
+        /* Pick up the class getter/setter. */
+        desc.getter = desc.setter = NULL;
     }
+
     desc.obj = receiver;
     desc.value = *vp;
     desc.attrs = JSPROP_ENUMERATE;
-    desc.getter = NULL;
-    desc.setter = NULL;
     desc.shortid = 0;
     return defineProperty(cx, receiver, id, &desc);
 }

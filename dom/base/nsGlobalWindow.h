@@ -409,8 +409,8 @@ public:
                                            PRBool aOriginalOpener);
   virtual NS_HIDDEN_(void) EnsureSizeUpToDate();
 
-  virtual NS_HIDDEN_(void) EnterModalState();
-  virtual NS_HIDDEN_(void) LeaveModalState();
+  virtual NS_HIDDEN_(nsIDOMWindow *) EnterModalState();
+  virtual NS_HIDDEN_(void) LeaveModalState(nsIDOMWindow *aWindow);
 
   virtual NS_HIDDEN_(PRBool) CanClose();
   virtual NS_HIDDEN_(nsresult) ForceClose();
@@ -945,7 +945,7 @@ protected:
 
   typedef nsCOMArray<nsIDOMStorageEvent> nsDOMStorageEventArray;
   nsDOMStorageEventArray mPendingStorageEvents;
-  nsDataHashtable<nsStringHashKey, PRBool> *mPendingStorageEventsObsolete;
+  nsAutoPtr< nsDataHashtable<nsStringHashKey, PRBool> > mPendingStorageEventsObsolete;
 
   PRUint32 mTimeoutsSuspendDepth;
 

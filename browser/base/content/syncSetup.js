@@ -23,6 +23,7 @@
  *   Mike Connor <mconnor@mozilla.com>
  *   Philipp von Weitershausen <philipp@weitershausen.de>
  *   Paul O’Shannessy <paul@oshannessy.com>
+ *   Richard Newman <rnewman@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -144,9 +145,42 @@ var gSyncSetup = {
     this.wizard.pageIndex = EXISTING_ACCOUNT_CONNECT_PAGE;
   },
 
+  resetPassphrase: function resetPassphrase() {
+    // Apply the existing form fields so that
+    // Weave.Service.changePassphrase() has the necessary credentials.
+    Weave.Service.account = document.getElementById("existingAccountName").value;
+    Weave.Service.password = document.getElementById("existingPassword").value;
+
+    // Generate a new passphrase so that Weave.Service.login() will
+    // actually do something.
+    let passphrase = Weave.Utils.generatePassphrase();
+    Weave.Service.passphrase = passphrase;
+
+    // Only open the dialog if username + password are actually correct.
+    Weave.Service.login();
+    if ([Weave.LOGIN_FAILED_INVALID_PASSPHRASE,
+         Weave.LOGIN_FAILED_NO_PASSPHRASE,
+         Weave.LOGIN_SUCCEEDED].indexOf(Weave.Status.login) == -1) {
+      return;
+    }
+
+    // Hide any errors about the passphrase, we know it's not right.
+    let feedback = document.getElementById("existingPassphraseFeedbackRow");
+    feedback.hidden = true;
+    let el = document.getElementById("existingPassphrase");
+    el.value = Weave.Utils.hyphenatePassphrase(passphrase);
+
+    // changePassphrase() will sync, make sure we set the "firstSync" pref
+    // according to the user's pref.
+    Weave.Svc.Prefs.reset("firstSync");
+    this.setupInitialSync();
+    gSyncUtils.resetPassphrase(true);
+  },
+
   onResetPassphrase: function () {
     document.getElementById("existingPassphrase").value = 
       Weave.Utils.hyphenatePassphrase(Weave.Service.passphrase);
+    this.checkFields();
     this.wizard.advance();
   },
 
@@ -248,7 +282,8 @@ var gSyncSetup = {
 
   checkAccount: function() {
     delete this._checkAccountTimer;
-    let value = document.getElementById("weaveEmail").value;
+    let value = Weave.Utils.normalizeAccount(
+      document.getElementById("weaveEmail").value);
     if (!value) {
       this.status.email = false;
       this.checkFields();
@@ -415,7 +450,8 @@ var gSyncSetup = {
         feedback.hidden = false;
 
         let password = document.getElementById("weavePassword").value;
-        let email    = document.getElementById("weaveEmail").value;
+        let email = Weave.Utils.normalizeAccount(
+          document.getElementById("weaveEmail").value);
         let challenge = getField("challenge");
         let response = getField("response");
 
@@ -440,7 +476,8 @@ var gSyncSetup = {
         this.captchaBrowser.loadURI(Weave.Service.miscAPI + "captcha_html");
         break;
       case EXISTING_ACCOUNT_LOGIN_PAGE:
-        Weave.Service.account = document.getElementById("existingAccountName").value;
+        Weave.Service.account = Weave.Utils.normalizeAccount(
+          document.getElementById("existingAccountName").value);
         Weave.Service.password = document.getElementById("existingPassword").value;
         let pp = document.getElementById("existingPassphrase").value;
         Weave.Service.passphrase = Weave.Utils.normalizePassphrase(pp);
@@ -900,7 +937,6 @@ var gSyncSetup = {
     }
     this._setFeedback(element, success, str);
   },
-
 
   onStateChange: function(webProgress, request, stateFlags, status) {
     // We're only looking for the end of the frame load

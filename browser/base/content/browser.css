@@ -207,73 +207,6 @@ html|input.uri-element-right-align:-moz-locale-dir(rtl),
 .ac-url-text:-moz-locale-dir(rtl),
 .ac-title:-moz-locale-dir(rtl) > description {
   direction: ltr !important;
-  text-align: right !important;
-}
-
-.urlbar-over-link-box:-moz-locale-dir(rtl) {
-  -moz-box-direction: reverse;
-}
-
-/* over-link in location bar */
-
-.urlbar-textbox-container[overlinkstate="fade-in"],
-.urlbar-over-link-layer[overlinkstate="fade-out"] {
-  -moz-transition-property: color;
-  -moz-transition-duration: 150ms;
-  color: transparent;
-}
-
-.urlbar-over-link-layer[overlinkstate="fade-in"],
-.urlbar-textbox-container[overlinkstate="fade-out"] {
-  -moz-transition-property: color;
-  -moz-transition-duration: 150ms;
-  -moz-transition-timing-function: cubic-bezier(0.0, 1.0, 1.0, 1.0);
-}
-
-.urlbar-over-link-box[overlinkstate="fade-in"] {
-  -moz-transition-property: opacity;
-  -moz-transition-duration: 150ms;
-  opacity: 1;
-}
-
-.urlbar-over-link-box[overlinkstate="fade-out"] {
-  -moz-transition-property: opacity;
-  -moz-transition-duration: 150ms;
-  -moz-transition-timing-function: cubic-bezier(0.0, 1.0, 1.0, 1.0);
-  opacity: 0;
-}
-
-.urlbar-textbox-container-children[overlinkstate="fade-in"] {
-  -moz-transition-property: opacity;
-  -moz-transition-duration: 150ms;
-  opacity: 0;
-}
-
-.urlbar-textbox-container-children[overlinkstate="fade-out"] {
-  -moz-transition-property: opacity;
-  -moz-transition-duration: 150ms;
-  -moz-transition-timing-function: cubic-bezier(0.0, 1.0, 1.0, 1.0);
-  opacity: 1;
-}
-
-.urlbar-textbox-container[overlinkstate="showing"] {
-  color: transparent;
-}
-
-.urlbar-over-link-box[overlinkstate="showing"] {
-  opacity: 1;
-}
-
-.urlbar-textbox-container-children[overlinkstate="showing"] {
-  opacity: 0;
-}
-
-.urlbar-over-link-layer:not([overlinkstate]) {
-  color: transparent;
-}
-
-.urlbar-over-link-box:not([overlinkstate]) {
-  opacity: 0;
 }
 
 /* For results that are actions, their description text is shown instead of
@@ -526,6 +459,9 @@ statuspanel {
   position: fixed;
   margin-top: -3em;
   left: 0;
+  max-width: 50%;
+  min-width: 25%;
+  -moz-transition: opacity 100ms ease-out;
 }
 
 statuspanel:-moz-locale-dir(ltr)[mirror],
@@ -535,10 +471,13 @@ statuspanel:-moz-locale-dir(rtl):not([mirror]) {
 }
 
 statuspanel[label=""] {
-  visibility: collapse;
+  -moz-transition: none;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .statuspanel-inner {
   height: 3em;
+  width: 100%;
   -moz-box-align: end;
 }

@@ -86,13 +86,6 @@
 #else
                   />
 #endif
-# Show IE Users menu item on Windows only
-#ifdef XP_WIN
-        <menuitem label="&helpForIEUsers.label;"
-                  accesskey="&helpForIEUsers.accesskey;"
-                  oncommand="openHelpLink('ieusers');"
-                  onclick="checkForMiddleClick(this, event);"/>
-#endif
         <menuitem id="troubleShooting"
                   accesskey="&helpTroubleshootingInfo.accesskey;"
                   label="&helpTroubleshootingInfo.label;"

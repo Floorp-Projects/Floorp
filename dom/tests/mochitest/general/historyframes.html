@@ -1,0 +1,152 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=602256
+-->
+<head>
+  <title>Test for Bug 602256</title>
+</head>
+<body onload="SimpleTest.executeSoon(run_test)">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=602256">Mozilla Bug 602256</a>
+<div id="content">
+  <iframe id="iframe" src="data:text/html,<p%20id='text'>Start</p>"></iframe>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 602256 **/
+
+var testWin = window.opener ? window.opener : window.parent;
+
+var SimpleTest = testWin.SimpleTest;
+function is() { testWin.is.apply(testWin, arguments); }
+
+var gFrame = null;
+
+var gState = null;
+
+window.addEventListener("popstate", function(aEvent) {
+  gState = aEvent.state;
+}, false);
+
+function waitForLoad(aCallback) {
+  function listener() {
+    gFrame.removeEventListener("load", listener, false);
+    SimpleTest.executeSoon(aCallback);
+  }
+
+  gFrame.addEventListener("load", listener, false);
+}
+
+function loadContent(aURL, aCallback) {
+  waitForLoad(aCallback);
+
+  gFrame.src = aURL;
+}
+
+function getURL() {
+  return gFrame.contentDocument.documentURI;
+}
+
+function getContent() {
+  return gFrame.contentDocument.getElementById("text").textContent;
+}
+
+var START = "data:text/html,<p%20id='text'>Start</p>";
+var URL1 = "data:text/html,<p%20id='text'>Test1</p>";
+var URL2 = "data:text/html,<p%20id='text'>Test2</p>";
+
+function run_test() {
+  window.history.pushState("START", window.location);
+
+  gFrame = document.getElementById("iframe");
+
+  test_basic_inner_navigation();
+}
+
+function end_test() {
+  testWin.done();
+}
+
+function test_basic_inner_navigation() {
+  // Navigate the inner frame a few times
+  loadContent(URL1, function() {
+    is(getURL(), URL1, "URL should be correct");
+    is(getContent(), "Test1", "Page should be correct");
+
+    loadContent(URL2, function() {
+      is(getURL(), URL2, "URL should be correct");
+      is(getContent(), "Test2", "Page should be correct");
+
+      // Test that history is working
+      waitForLoad(function() {
+        is(getURL(), URL1, "URL should be correct");
+        is(getContent(), "Test1", "Page should be correct");
+
+        waitForLoad(function() {
+          is(getURL(), URL2, "URL should be correct");
+          is(getContent(), "Test2", "Page should be correct");
+
+          test_state_navigation();
+        });
+        window.history.forward();
+      });
+      window.history.back();
+    });
+  });
+}
+
+function test_state_navigation() {
+  window.history.pushState("STATE1", window.location);
+
+  is(getURL(), URL2, "URL should be correct");
+  is(getContent(), "Test2", "Page should be correct");
+
+  window.history.pushState("STATE2", window.location);
+
+  is(getURL(), URL2, "URL should be correct");
+  is(getContent(), "Test2", "Page should be correct");
+
+  window.history.back();
+
+  is(gState, "STATE1", "State should be correct");
+  is(getURL(), URL2, "URL should be correct");
+  is(getContent(), "Test2", "Page should be correct");
+
+  window.history.forward();
+
+  is(gState, "STATE2", "State should be correct");
+  is(getURL(), URL2, "URL should be correct");
+  is(getContent(), "Test2", "Page should be correct");
+
+  window.history.back();
+  window.history.back();
+
+  is(gState, "START", "State should be correct");
+  is(getURL(), URL2, "URL should be correct");
+  is(getContent(), "Test2", "Page should be correct");
+
+  waitForLoad(function() {
+    is(getURL(), URL1, "URL should be correct");
+    is(getContent(), "Test1", "Page should be correct");
+
+    waitForLoad(function() {
+      is(gState, "START", "State should be correct");
+      is(getURL(), START, "URL should be correct");
+      is(getContent(), "Start", "Page should be correct");
+
+      end_test();
+    });
+
+    window.history.back();
+
+    is(gState, "START", "State should be correct");
+  });
+
+  window.history.back();
+  is(gState, "START", "State should be correct");
+}
+</script>
+</pre>
+</body>
+</html>

@@ -57,6 +57,69 @@
 #include "nsIDOMNodeList.h"
 #include "nsTArray.h"
 
+#if defined(MOZ_CRASHREPORTER) && defined(MOZ_ENABLE_LIBXUL)
+#include "nsExceptionHandler.h"
+#endif
+
+extern "C" {
+  void StoreSpline(double ax, double ay, double bx, double by, double cx, double cy, double dx, double dy);
+  void CrashSpline();
+}
+
+static double crash_ax;
+static double crash_ay;
+static double crash_bx;
+static double crash_by;
+static double crash_cx;
+static double crash_cy;
+static double crash_dx;
+static double crash_dy;
+
+void
+StoreSpline(double ax, double ay, double bx, double by, double cx, double cy, double dx, double dy) {
+    crash_ax = ax;
+    crash_ay = ay;
+    crash_bx = bx;
+    crash_by = by;
+    crash_cx = cx;
+    crash_cy = cy;
+    crash_dx = dx;
+    crash_dy = dy;
+}
+
+void
+CrashSpline() {
+#if defined(MOZ_CRASHREPORTER) && defined(MOZ_ENABLE_LIBXUL)
+  static bool annotated;
+
+  if (!annotated) {
+    nsCAutoString note;
+
+    note.AppendPrintf("curve ");
+    note.AppendPrintf("%llx ", crash_ax);
+    note.AppendPrintf("%llx, ", crash_ay);
+    note.AppendPrintf("%llx ", crash_bx);
+    note.AppendPrintf("%llx, ", crash_by);
+    note.AppendPrintf("%llx ", crash_cx);
+    note.AppendPrintf("%llx, ", crash_cy);
+    note.AppendPrintf("%llx ", crash_dx);
+    note.AppendPrintf("%llx\n", crash_dy);
+    note.AppendPrintf("crv-f: %f ", crash_ax);
+    note.AppendPrintf("%f, ", crash_ay);
+    note.AppendPrintf("%f ", crash_bx);
+    note.AppendPrintf("%f, ", crash_by);
+    note.AppendPrintf("%f ", crash_cx);
+    note.AppendPrintf("%f, ", crash_cy);
+    note.AppendPrintf("%f ", crash_dx);
+    note.AppendPrintf("%f\n", crash_dy);
+
+    CrashReporter::AppendAppNotesToCrashReport(note);
+    annotated = true;
+  }
+#endif
+}
+
+
 using namespace mozilla::widget;
 
 NS_IMPL_ISUPPORTS3(GfxInfoBase, nsIGfxInfo, nsIObserver, nsISupportsWeakReference)

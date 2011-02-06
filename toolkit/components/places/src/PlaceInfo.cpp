@@ -40,6 +40,7 @@
 #include "nsIURI.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIXPConnect.h"
+#include "mozilla/Services.h"
 
 namespace mozilla {
 namespace places {
@@ -113,16 +114,13 @@ PlaceInfo::GetVisits(JSContext* aContext,
   JSObject* global = JS_GetGlobalForScopeChain(aContext);
   NS_ENSURE_TRUE(global, NS_ERROR_UNEXPECTED);
 
-  static NS_DEFINE_CID(kXPConnectCID, NS_XPCONNECT_CID);
-  nsresult rv;
-  nsCOMPtr<nsIXPConnect> xpc(do_GetService(kXPConnectCID, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIXPConnect> xpc = mozilla::services::GetXPConnect();
 
   for (VisitsArray::size_type idx = 0; idx < mVisits.Length(); idx++) {
     nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
-    rv = xpc->WrapNative(aContext, global, mVisits[idx],
-                         NS_GET_IID(mozIVisitInfo),
-                         getter_AddRefs(wrapper));
+    nsresult rv = xpc->WrapNative(aContext, global, mVisits[idx],
+                                  NS_GET_IID(mozIVisitInfo),
+                                  getter_AddRefs(wrapper));
     NS_ENSURE_SUCCESS(rv, rv);
 
     JSObject* jsobj;

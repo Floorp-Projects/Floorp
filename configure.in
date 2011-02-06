@@ -2521,7 +2521,13 @@ ia64*-hpux*)
         if test $_MSC_VER -ge 1400; then
             LDFLAGS="$LDFLAGS -SAFESEH"
         fi
-	AC_CHECK_HEADERS(mmintrin.h)
+
+        if test -n "$GNU_CC"; then
+            CFLAGS="$CFLAGS -mstackrealign"
+            CXXFLAGS="$CXXFLAGS -mstackrealign"
+        fi
+
+        AC_CHECK_HEADERS(mmintrin.h)
     	AC_DEFINE(_X86_)
 	;;
     alpha-*)
@@ -4617,7 +4623,7 @@ MOZ_ARG_WITH_BOOL(system-nspr,
     _USE_SYSTEM_NSPR=1 )
 
 if test -n "$_USE_SYSTEM_NSPR"; then
-    AM_PATH_NSPR(4.8.7, [MOZ_NATIVE_NSPR=1], [MOZ_NATIVE_NSPR=])
+    AM_PATH_NSPR(4.8.7, [MOZ_NATIVE_NSPR=1], [AC_MSG_ERROR([your don't have NSPR installed or your version is too old])])
 fi
 
 if test -n "$MOZ_NATIVE_NSPR"; then
@@ -4694,7 +4700,7 @@ MOZ_ARG_WITH_BOOL(system-nss,
     _USE_SYSTEM_NSS=1 )
 
 if test -n "$_USE_SYSTEM_NSS"; then
-    AM_PATH_NSS(3.12.9, [MOZ_NATIVE_NSS=1], [MOZ_NATIVE_NSS=])
+    AM_PATH_NSS(3.12.9, [MOZ_NATIVE_NSS=1], [AC_MSG_ERROR([you don't have NSS installed or your version is too old])])
 fi
 
 if test -n "$MOZ_NATIVE_NSS"; then
@@ -5420,7 +5426,6 @@ AC_SUBST(MOZ_GTK2_CFLAGS)
 AC_SUBST(MOZ_GTK2_LIBS)
 AC_SUBST(MOZ_QT_CFLAGS)
 AC_SUBST(MOZ_QT_LIBS)
-AC_SUBST(MOZ_ENABLE_MEEGOTOUCH)
 
 AC_SUBST(MOC)
 
@@ -7092,19 +7097,27 @@ if test $MOZ_PLATFORM_MAEMO; then
 
    fi
    if test $MOZ_PLATFORM_MAEMO = 6; then
-      PKG_CHECK_MODULES(LIBCONTENTACTION, contentaction-0.1, _LIB_FOUND=1, _LIB_FOUND=)
-      MOZ_PLATFORM_MAEMO_LIBS="$MOZ_PLATFORM_MAEMO_LIBS $LIBCONTENTACTION_LIBS"
-      MOZ_PLATFORM_MAEMO_CFLAGS="$MOZ_PLATFORM_MAEMO_CFLAGS $LIBCONTENTACTION_CFLAGS"
-      if test -z "$_LIB_FOUND"; then
-         AC_MSG_ERROR([libcontentaction is required when build for Maemo])
+      dnl ========================================================
+      dnl = Enable meego libcontentaction
+      dnl ========================================================
+      MOZ_ARG_ENABLE_BOOL(meegocontentaction,
+      [  --enable-meegocontentaction           Enable meegocontentaction support],
+         MOZ_MEEGOCONTENTACTION=1,
+         MOZ_MEEGOCONTENTACTION=)
+
+      if test -n "$MOZ_MEEGOCONTENTACTION"; then
+
+         PKG_CHECK_MODULES(LIBCONTENTACTION, contentaction-0.1, _LIB_FOUND=1, _LIB_FOUND=)
+         if test "$_LIB_FOUND"; then
+            MOZ_PLATFORM_MAEMO_LIBS="$MOZ_PLATFORM_MAEMO_LIBS $LIBCONTENTACTION_LIBS"
+            MOZ_PLATFORM_MAEMO_CFLAGS="$MOZ_PLATFORM_MAEMO_CFLAGS $LIBCONTENTACTION_CFLAGS"
+            MOZ_ENABLE_CONTENTACTION=1
+            AC_DEFINE(MOZ_ENABLE_CONTENTACTION)
+            AC_SUBST(MOZ_ENABLE_CONTENTACTION)
+         fi
       fi
-     
-     MOZ_THUMB2=1
-     PKG_CHECK_MODULES(MOZ_MEEGOTOUCH, meegotouchcore)
-     MOZ_ENABLE_MEEGOTOUCH=1
-     AC_DEFINE(MOZ_ENABLE_MEEGOTOUCH)
-     MOZ_QT_CFLAGS="$MOZ_MEEGOTOUCH_CFLAGS $MOZ_QT_CFLAGS"
-     MOZ_QT_LIBS="$MOZ_MEEGOTOUCH_LIBS $MOZ_QT_LIBS"
+
+      MOZ_THUMB2=1
    fi
 
    PKG_CHECK_MODULES(LIBLOCATION,liblocation, _LIB_FOUND=1, _LIB_FOUND=)

@@ -47,6 +47,7 @@ include $(topsrcdir)/config/rules.mk
 _TEST_FILES = \
 		497633.html \
 		489127.html \
+		historyframes.html \
 		test_497898.html \
 		test_bug504220.html \
 		test_consoleAPI.html \
@@ -62,6 +63,8 @@ _TEST_FILES = \
 		test_nodesFromRect.html \
 		test_frameElementWrapping.html \
 		file_frameElementWrapping.html \
+		test_framedhistoryframes.html \
+		test_windowedhistoryframes.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

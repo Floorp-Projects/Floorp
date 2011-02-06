@@ -108,10 +108,6 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
 CPPSRCS += nsNativeAppSupportQt.cpp
 CPPSRCS += nsQAppInstance.cpp
 EXPORTS += nsQAppInstance.h
-ifdef MOZ_ENABLE_MEEGOTOUCH
-MOCSRCS += moc_MozMeegoAppService.cpp
-CPPSRCS += moc_MozMeegoAppService.cpp
-endif
 else
 CPPSRCS += nsNativeAppSupportDefault.cpp
 endif

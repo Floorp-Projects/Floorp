@@ -76,17 +76,16 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS(DOMSVGLengthList)
   NS_DECL_NSIDOMSVGLENGTHLIST
 
-  DOMSVGLengthList(DOMSVGAnimatedLengthList *aAList)
+  DOMSVGLengthList(DOMSVGAnimatedLengthList *aAList,
+                   const SVGLengthList &aInternalList)
     : mAList(aAList)
   {
-    // We silently ignore SetLength OOM failure since being out of sync is safe
-    // so long as we have *fewer* items than our internal list.
-
-    mItems.SetLength(InternalList().Length());
-    for (PRUint32 i = 0; i < Length(); ++i) {
-      // null out all the pointers - items are created on-demand
-      mItems[i] = nsnull;
-    }
+    // aInternalList must be passed in explicitly because we can't use
+    // InternalList() here. (Because it depends on IsAnimValList, which depends
+    // on this object having been assigned to aAList's mBaseVal or mAnimVal,
+    // which hasn't happend yet.)
+    
+    InternalListLengthWillChange(aInternalList.Length()); // Sync mItems
   }
 
   ~DOMSVGLengthList() {
@@ -129,6 +128,8 @@ private:
 
   /// Used to determine if this list is the baseVal or animVal list.
   PRBool IsAnimValList() const {
+    NS_ABORT_IF_FALSE(this == mAList->mBaseVal || this == mAList->mAnimVal,
+                      "Calling IsAnimValList() too early?!");
     return this == mAList->mAnimVal;
   }
 

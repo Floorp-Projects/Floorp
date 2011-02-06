@@ -1616,7 +1616,7 @@ nsGenericHTMLElement::ParseImageAttribute(nsIAtom* aAttribute,
 {
   if ((aAttribute == nsGkAtoms::width) ||
       (aAttribute == nsGkAtoms::height)) {
-    return aResult.ParseSpecialIntValue(aString, PR_TRUE);
+    return aResult.ParseSpecialIntValue(aString);
   }
   else if ((aAttribute == nsGkAtoms::hspace) ||
            (aAttribute == nsGkAtoms::vspace) ||

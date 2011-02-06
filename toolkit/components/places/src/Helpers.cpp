@@ -276,8 +276,8 @@ GenerateRandomBytes(PRUint32 aSize,
                                 CRYPT_VERIFYCONTEXT | CRYPT_SILENT);
   if (rc) {
     rc = CryptGenRandom(cryptoProvider, aSize, _buffer);
+    (void)CryptReleaseContext(cryptoProvider, 0);
   }
-  (void)CryptReleaseContext(cryptoProvider, 0);
   return rc ? NS_OK : NS_ERROR_FAILURE;
 
   // On Unix, we'll just read in from /dev/urandom.

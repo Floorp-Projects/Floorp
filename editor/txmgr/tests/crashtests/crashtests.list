@@ -1,2 +1,2 @@
-asserts(3) load 407072-1.html # bug 382210?
+needs-focus asserts(3) load 407072-1.html # bug 382210?
 load 449006-1.html

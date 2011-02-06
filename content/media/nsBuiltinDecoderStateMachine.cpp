@@ -251,7 +251,9 @@ void nsBuiltinDecoderStateMachine::DecodeLoop()
     // We don't want to consider skipping to the next keyframe if we've
     // only just started up the decode loop, so wait until we've decoded
     // some frames before enabling the keyframe skip logic on video.
-    if (videoPump && videoQueue.GetSize() >= videoPumpThreshold) {
+    if (videoPump &&
+        static_cast<PRUint32>(videoQueue.GetSize()) >= videoPumpThreshold)
+    {
       videoPump = PR_FALSE;
     }
 
@@ -272,14 +274,18 @@ void nsBuiltinDecoderStateMachine::DecodeLoop()
         videoPlaying &&
         !IsDecodeCloseToDownload() &&
         ((!audioPump && audioPlaying && GetDecodedAudioDuration() < lowAudioThreshold) ||
-         (!videoPump && videoPlaying && videoQueue.GetSize() < LOW_VIDEO_FRAMES)))
+         (!videoPump &&
+           videoPlaying &&
+           static_cast<PRUint32>(videoQueue.GetSize()) < LOW_VIDEO_FRAMES)))
     {
       skipToNextKeyframe = PR_TRUE;
       LOG(PR_LOG_DEBUG, ("Skipping video decode to the next keyframe"));
     }
 
     // Video decode.
-    if (videoPlaying && videoQueue.GetSize() < AMPLE_VIDEO_FRAMES) {
+    if (videoPlaying &&
+        static_cast<PRUint32>(videoQueue.GetSize()) < AMPLE_VIDEO_FRAMES)
+    {
       // Time the video decode, so that if it's slow, we can increase our low
       // audio threshold to reduce the chance of an audio underrun while we're
       // waiting for a video decode to complete.
@@ -329,7 +335,8 @@ void nsBuiltinDecoderStateMachine::DecodeLoop()
         (!audioPlaying || (GetDecodedAudioDuration() >= ampleAudioThreshold &&
                            audioQueue.GetSize() > 0))
         &&
-        (!videoPlaying || videoQueue.GetSize() >= AMPLE_VIDEO_FRAMES))
+        (!videoPlaying ||
+          static_cast<PRUint32>(videoQueue.GetSize()) >= AMPLE_VIDEO_FRAMES))
     {
       // All active bitstreams' decode is well ahead of the playback
       // position, we may as well wait for the playback to catch up. Note the
@@ -510,9 +517,34 @@ void nsBuiltinDecoderStateMachine::AudioLoop()
     // before the audio thread terminates.
     MonitorAutoEnter audioMon(mAudioMonitor);
     if (mAudioStream) {
-      mAudioStream->Drain();
-      // Fire one last event for any extra samples that didn't fill a framebuffer.
-      mEventManager.Drain(mAudioEndTime);
+      PRBool seeking = PR_FALSE;
+      PRInt64 oldPosition = -1;
+
+      {
+        MonitorAutoExit audioExit(mAudioMonitor);
+        MonitorAutoEnter mon(mDecoder->GetMonitor());
+        PRInt64 position = GetMediaTime();
+        while (oldPosition != position &&
+               mAudioEndTime - position > 0 &&
+               mState != DECODER_STATE_SEEKING &&
+               mState != DECODER_STATE_SHUTDOWN)
+        {
+          const PRInt64 DRAIN_BLOCK_MS = 100;
+          Wait(NS_MIN(mAudioEndTime - position, DRAIN_BLOCK_MS));
+          oldPosition = position;
+          position = GetMediaTime();
+        }
+        if (mState == DECODER_STATE_SEEKING) {
+          seeking = PR_TRUE;
+        }
+      }
+
+      if (!seeking && mAudioStream && !mAudioStream->IsPaused()) {
+        mAudioStream->Drain();
+
+        // Fire one last event for any extra samples that didn't fill a framebuffer.
+        mEventManager.Drain(mAudioEndTime);
+      }
     }
     LOG(PR_LOG_DEBUG, ("%p Reached audio stream end.", mDecoder));
   }
@@ -668,7 +700,7 @@ void nsBuiltinDecoderStateMachine::StartPlayback()
   mDecoder->GetMonitor().NotifyAll();
 }
 
-void nsBuiltinDecoderStateMachine::UpdatePlaybackPosition(PRInt64 aTime)
+void nsBuiltinDecoderStateMachine::UpdatePlaybackPositionInternal(PRInt64 aTime)
 {
   NS_ASSERTION(IsCurrentThread(mDecoder->mStateMachineThread),
                "Should be on state machine thread.");
@@ -685,6 +717,12 @@ void nsBuiltinDecoderStateMachine::UpdatePlaybackPosition(PRInt64 aTime)
       NS_NewRunnableMethod(mDecoder, &nsBuiltinDecoder::DurationChanged);
     NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
   }
+}
+
+void nsBuiltinDecoderStateMachine::UpdatePlaybackPosition(PRInt64 aTime)
+{
+  UpdatePlaybackPositionInternal(aTime);
+
   if (!mPositionChangeQueued) {
     mPositionChangeQueued = PR_TRUE;
     nsCOMPtr<nsIRunnable> event =
@@ -1026,10 +1064,7 @@ nsresult nsBuiltinDecoderStateMachine::Run()
         PRInt64 mediaTime = GetMediaTime();
         if (mediaTime != seekTime) {
           currentTimeChanged = true;
-          // If in the midst of a seek, report the requested seek time
-          // as the current time as required by step 8 of 4.8.10.9 'Seeking'
-          // in the WHATWG spec.
-          UpdatePlaybackPosition(seekTime);
+          UpdatePlaybackPositionInternal(seekTime);
         }
 
         // SeekingStarted will do a UpdateReadyStateForData which will
@@ -1041,6 +1076,7 @@ nsresult nsBuiltinDecoderStateMachine::Run()
             NS_NewRunnableMethod(mDecoder, &nsBuiltinDecoder::SeekingStarted);
           NS_DispatchToMainThread(startEvent, NS_DISPATCH_SYNC);
         }
+
         if (currentTimeChanged) {
           // The seek target is different than the current playback position,
           // we'll need to seek the playback position, so shutdown our decode
@@ -1073,7 +1109,9 @@ nsresult nsBuiltinDecoderStateMachine::Run()
                              "Seek target should lie inside the first frame after seek");
                 RenderVideoFrame(video);
                 mReader->mVideoQueue.PopFront();
-                UpdatePlaybackPosition(seekTime);
+                nsCOMPtr<nsIRunnable> event =
+                  NS_NewRunnableMethod(mDecoder, &nsBuiltinDecoder::Invalidate);
+                NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
               }
             }
           }

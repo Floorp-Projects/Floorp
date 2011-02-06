@@ -449,6 +449,11 @@ toolbar[mode="icons"] .toolbarbutton-1 > menupopup {
   margin-top: 1px;
 }
 
+#navigator-toolbox > toolbar {
+  /* force iconsize="small" on these toolbars */
+  counter-reset: smallicons;
+}
+
 /* unified back/forward button */
 
 #unified-back-forward-button {
@@ -465,7 +470,7 @@ toolbar:not([mode="icons"]) #back-button:-moz-locale-dir(rtl) {
   -moz-image-region: rect(0, 60px, 20px, 40px);
 }
 
-toolbar:not([iconsize="small"])[mode="icons"] #back-button {
+#navigator-toolbox[iconsize="large"][mode="icons"] > #nav-bar #back-button {
   -moz-margin-end: -5px;
   position: relative;
   z-index: 1;
@@ -485,27 +490,17 @@ toolbar[mode="icons"] #forward-button {
   -moz-margin-start: 0;
 }
 
-toolbar[mode="icons"]:not([iconsize="small"]) #forward-button {
+#navigator-toolbox[iconsize="large"][mode="icons"] > #nav-bar #forward-button {
   /* 1px to the right */
   padding-left: 4px;
   padding-right: 2px;
 }
 
-toolbar[mode="icons"]:not([iconsize="small"]) #forward-button:-moz-lwtheme {
+#navigator-toolbox[iconsize="large"][mode="icons"] > #nav-bar #forward-button:-moz-lwtheme {
   mask: url(chrome://browser/content/browser.xul#pinstripe-keyhole-forward-mask);
 }
 
-toolbar[iconsize="small"][mode="icons"] #back-button {
-  -moz-margin-end: 0;
-}
-
-toolbar[iconsize="small"][mode="icons"] #back-button {
-  width: 26px;
-  border-right-width: 0;
-  padding-right: 2px;
-}
-
-toolbar[iconsize="small"][mode="icons"] #forward-button  {
+#navigator-toolbox[iconsize="small"][mode="icons"] > #nav-bar #forward-button {
   width: 27px;
   padding-left: 2px;
 }
@@ -515,7 +510,11 @@ toolbar[mode="icons"] #forward-button {
   border-bottom-left-radius: 0;
 }
 
-toolbar[iconsize="small"][mode="icons"] #back-button {
+#navigator-toolbox[iconsize="small"][mode="icons"] > #nav-bar #back-button {
+  -moz-margin-end: 0;
+  width: 26px;
+  padding-right: 2px;
+  border-right-width: 0;
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
 }
@@ -895,42 +894,6 @@ toolbar[mode="icons"] #zoom-in-button {
 
 #PopupAutoCompleteRichResult {
   margin-top: 2px;
-}
-
-/* over-link in location bar */
-
-.urlbar-origin-label {
-  padding-top: 0;
-  padding-bottom: 0;
-  -moz-padding-start: 1px;
-  -moz-padding-end: 0;
-  margin: 0;
-}
-
-.urlbar-over-link-box {
-  position: relative;
-  color: GrayText;
-  min-height: 20px;
-  padding-top: 0;
-  padding-bottom: 0;
-  -moz-padding-start: 18px;
-  -moz-padding-end: 5px;
-}
-
-.urlbar-over-link-box:-moz-locale-dir(ltr) {
-  background: url(chrome://browser/skin/urlbar-over-link-arrow.png) no-repeat left center;
-  right: 0;
-}
-
-.urlbar-over-link-box:-moz-locale-dir(rtl) {
-  background: url(chrome://browser/skin/urlbar-over-link-arrow-rtl.png) no-repeat right center;
-  left: 0;
-}
-
-.urlbar-over-link-host-label,
-.urlbar-over-link-path-label {
-  padding: 0;
-  margin: 0;
 }
 
 /* ----- AUTOCOMPLETE ----- */
@@ -1803,8 +1766,8 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
  */
 
 .tab-drop-indicator {
-  margin-top: -8px !important;
   list-style-image: url(chrome://browser/skin/tabbrowser/tabDragIndicator.png);
+  margin-bottom: -8px;
 }
 
 /**
@@ -2358,6 +2321,7 @@ panel[dimmed="true"] {
 
 #addon-bar {
   min-height: 18px;
+  padding-right: 16px; /* replace with -moz-padding-end when/if bug 631729 gets fixed */
 }
 
 #addon-bar:not(:-moz-lwtheme) {
@@ -2366,6 +2330,7 @@ panel[dimmed="true"] {
 
 #status-bar {
   -moz-appearance: none;
+  padding-right: 0;
 }
 
 #status-bar > statusbarpanel {
