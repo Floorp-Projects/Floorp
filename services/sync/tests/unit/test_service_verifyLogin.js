@@ -49,11 +49,13 @@ function run_test() {
     do_check_eq(Status.service, STATUS_OK);
 
     _("Credentials won't check out because we're not configured yet.");
+    Status.resetSync();
     do_check_false(Service.verifyLogin());
     do_check_eq(Status.service, CLIENT_NOT_CONFIGURED);
     do_check_eq(Status.login, LOGIN_FAILED_NO_USERNAME);
 
     _("Try again with username and password set.");
+    Status.resetSync();
     Service.username = "johndoe";
     Service.password = "ilovejane";
     do_check_false(Service.verifyLogin());
@@ -64,12 +66,14 @@ function run_test() {
     do_check_eq(Service.clusterURL, "http://localhost:8080/api/");
 
     _("Success if passphrase is set.");
+    Status.resetSync();
     Service.passphrase = "foo";
     do_check_true(Service.verifyLogin());
     do_check_eq(Status.service, STATUS_OK);
     do_check_eq(Status.login, LOGIN_SUCCEEDED);
 
     _("If verifyLogin() encounters a server error, it flips on the backoff flag and notifies observers on a 503 with Retry-After.");
+    Status.resetSync();
     Service.username = "janedoe";
     do_check_false(Status.enforceBackoff);
     let backoffInterval;    
@@ -81,6 +85,20 @@ function run_test() {
     do_check_eq(backoffInterval, 42);
     do_check_eq(Status.service, LOGIN_FAILED);
     do_check_eq(Status.login, LOGIN_FAILED_SERVER_ERROR);
+
+    _("Ensure a network error when finding the cluster sets the right Status bits.");
+    Status.resetSync();
+    Service.serverURL = "http://localhost:12345/";
+    do_check_false(Service.verifyLogin());
+    do_check_eq(Status.service, LOGIN_FAILED);
+    do_check_eq(Status.login, LOGIN_FAILED_NETWORK_ERROR);
+
+    _("Ensure a network error when getting the collection info sets the right Status bits.");
+    Status.resetSync();
+    Service.clusterURL = "http://localhost:12345/";
+    do_check_false(Service.verifyLogin());
+    do_check_eq(Status.service, LOGIN_FAILED);
+    do_check_eq(Status.login, LOGIN_FAILED_NETWORK_ERROR);
 
   } finally {
     Svc.Prefs.resetBranch("");
