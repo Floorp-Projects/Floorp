@@ -183,22 +183,39 @@ _cairo_spline_error_squared (const cairo_spline_knots_t *knots)
 	return cerr;
 }
 
+void StoreSpline(double ax, double ay, double bx, double by, double cx, double cy, double dx, double dy);
+void CrashSpline();
+
 static cairo_status_t
 _cairo_spline_decompose_into (cairo_spline_knots_t *s1, double tolerance_squared, cairo_spline_t *result)
 {
+    static int depth;
     cairo_spline_knots_t s2;
     cairo_status_t status;
 
-    if (_cairo_spline_error_squared (s1) < tolerance_squared)
+    depth++;
+#ifdef MOZ_ENABLE_LIBXUL
+    if (depth == 200) {
+        CrashSpline();
+    }
+#endif
+
+    if (_cairo_spline_error_squared (s1) < tolerance_squared) {
+        depth--;
 	return _cairo_spline_add_point (result, &s1->a);
+    }
 
     _de_casteljau (s1, &s2);
 
     status = _cairo_spline_decompose_into (s1, tolerance_squared, result);
-    if (unlikely (status))
+    if (unlikely (status)) {
+        depth--;
 	return status;
+    }
 
-    return _cairo_spline_decompose_into (&s2, tolerance_squared, result);
+    status = _cairo_spline_decompose_into (&s2, tolerance_squared, result);
+    depth--;
+    return status;
 }
 
 cairo_status_t
@@ -207,6 +224,16 @@ _cairo_spline_decompose (cairo_spline_t *spline, double tolerance)
     cairo_spline_knots_t s1;
     cairo_status_t status;
 
+#ifdef MOZ_ENABLE_LIBXUL
+    StoreSpline(spline->knots.a.x,
+                spline->knots.a.y,
+                spline->knots.b.x,
+                spline->knots.b.y,
+                spline->knots.c.x,
+                spline->knots.c.y,
+                spline->knots.d.x,
+                spline->knots.d.y);
+#endif
     s1 = spline->knots;
     spline->last_point = s1.a;
     status = _cairo_spline_decompose_into (&s1, tolerance * tolerance, spline);

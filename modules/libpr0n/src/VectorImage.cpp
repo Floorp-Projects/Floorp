@@ -618,7 +618,7 @@ VectorImage::ResetAnimation()
   }
 
   mSVGDocumentWrapper->ResetAnimation();
-  
+
   return NS_OK;
 }
 

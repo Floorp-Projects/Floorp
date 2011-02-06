@@ -52,53 +52,29 @@
   <binding id="urlbar" extends="chrome://global/content/bindings/autocomplete.xml#autocomplete">
 
     <content sizetopopup="pref">
-      <xul:hbox class="urlbar-frontcap-and-textbox" flex="1">
-        <xul:hbox class="urlbar-frontcap">
-          <children includes="image|deck|stack|box">
-            <xul:image class="autocomplete-icon" allowevents="true"/>
-          </children>
+      <children includes="image|deck|stack|box">
+        <xul:image class="autocomplete-icon" allowevents="true"/>
+      </children>
+      <xul:hbox anonid="textbox-container"
+                class="autocomplete-textbox-container urlbar-textbox-container"
+                flex="1" xbl:inherits="focused">
+        <xul:hbox anonid="textbox-input-box"
+                  class="textbox-input-box urlbar-input-box"
+                  flex="1" xbl:inherits="tooltiptext=inputtooltiptext">
+          <children/>
+          <html:input anonid="input"
+                      class="autocomplete-textbox urlbar-input textbox-input uri-element-right-align"
+                      flex="1" allowevents="true"
+                      xbl:inherits="tooltiptext=inputtooltiptext,onfocus,onblur,value,type,maxlength,disabled,size,readonly,placeholder,tabindex,accesskey"/>
         </xul:hbox>
-        <xul:stack anonid="stack" class="urlbar-stack" flex="1">
-          <xul:scrollbox class="urlbar-over-link-layer" flex="1"
-                         xbl:inherits="overlinkstate" align="center">
-            <xul:label anonid="origin-label" class="urlbar-origin-label" flex="1"
-                       crop="end"/>
-            <xul:hbox anonid="over-link-box" class="urlbar-over-link-box"
-                      xbl:inherits="overlinkstate" align="center">
-              <xul:label anonid="over-link-host-label"
-                         class="urlbar-over-link-host-label uri-element-right-align"/>
-              <xul:label anonid="over-link-path-label"
-                         class="urlbar-over-link-path-label uri-element-right-align" flex="1"/>
-            </xul:hbox>
-          </xul:scrollbox>
-          <xul:hbox anonid="textbox-container"
-                    class="autocomplete-textbox-container urlbar-textbox-container"
-                    flex="1" xbl:inherits="focused,overlinkstate">
-            <xul:hbox anonid="textbox-input-box"
-                      class="textbox-input-box urlbar-input-box"
-                      flex="1" xbl:inherits="tooltiptext=inputtooltiptext">
-              <xul:hbox class="urlbar-textbox-container-children"
-                        xbl:inherits="overlinkstate">
-                <children/>
-              </xul:hbox>
-              <html:input anonid="input"
-                          class="autocomplete-textbox urlbar-input textbox-input uri-element-right-align"
-                          flex="1" allowevents="true"
-                          xbl:inherits="tooltiptext=inputtooltiptext,onfocus,onblur,value,type,maxlength,disabled,size,readonly,placeholder,tabindex,accesskey"/>
-            </xul:hbox>
-            <xul:hbox class="urlbar-textbox-container-children"
-                      xbl:inherits="overlinkstate">
-              <children includes="hbox"/>
-            </xul:hbox>
-          </xul:hbox>
-        </xul:stack>
-        <xul:dropmarker anonid="historydropmarker"
-                        class="autocomplete-history-dropmarker urlbar-history-dropmarker"
-                        allowevents="true"
-                        xbl:inherits="open,enablehistory,parentfocused=focused"/>
-        <xul:popupset anonid="popupset"
-                      class="autocomplete-result-popupset"/>
+        <children includes="hbox"/>
       </xul:hbox>
+      <xul:dropmarker anonid="historydropmarker"
+                      class="autocomplete-history-dropmarker urlbar-history-dropmarker"
+                      allowevents="true"
+                      xbl:inherits="open,enablehistory,parentfocused=focused"/>
+      <xul:popupset anonid="popupset"
+                    class="autocomplete-result-popupset"/>
       <children includes="toolbarbutton"/>
     </content>
 
@@ -123,7 +99,6 @@
         this.inputField.addEventListener("mouseout", this, false);
         this.inputField.addEventListener("overflow", this, false);
         this.inputField.addEventListener("underflow", this, false);
-        this._overLinkBox.addEventListener("transitionend", this, false);
 
         const kXULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
         var textBox = document.getAnonymousElementByAttribute(this,
@@ -167,7 +142,6 @@
         this.inputField.removeEventListener("mouseout", this, false);
         this.inputField.removeEventListener("overflow", this, false);
         this.inputField.removeEventListener("underflow", this, false);
-        this._overLinkBox.removeEventListener("transitionend", this, false);
       ]]></destructor>
 
       <field name="_value"></field>
@@ -192,7 +166,6 @@
       <method name="onBeforeValueSet">
         <parameter name="aValue"/>
         <body><![CDATA[
-          this._hideOverLink();
           this._value = aValue;
           var returnValue = aValue;
           var action = this._parseActionUrl(aValue);
@@ -550,12 +523,6 @@
               this._contentIsCropped = false;
               this._hideURLTooltip();
               break;
-            case "transitionend":
-              if (aEvent.target == this._overLinkBox &&
-                  aEvent.propertyName == "opacity") {
-                this._overLinkTransitioning = false;
-              }
-              break;
           }
         ]]></body>
       </method>
@@ -591,200 +558,6 @@
           // url is in the format moz-action:ACTION,PARAM
           let [, action, param] = aUrl.match(/^moz-action:([^,]+),(.*)$/);
           return {type: action, param: param};
-        ]]></body>
-      </method>
-
-      <field name="_stack" readonly="true"><![CDATA[
-        document.getAnonymousElementByAttribute(this, "anonid", "stack");
-      ]]></field>
-
-      <field name="_originLabel" readonly="true"><![CDATA[
-        document.getAnonymousElementByAttribute(this, "anonid", "origin-label");
-      ]]></field>
-
-      <field name="_overLinkBox" readonly="true"><![CDATA[
-        document.getAnonymousElementByAttribute(this, "anonid",
-                                                "over-link-box");
-      ]]></field>
-
-      <field name="_overLinkHostLabel" readonly="true"><![CDATA[
-        document.getAnonymousElementByAttribute(this, "anonid",
-                                                "over-link-host-label");
-      ]]></field>
-
-      <field name="_overLinkPathLabel" readonly="true"><![CDATA[
-        document.getAnonymousElementByAttribute(this, "anonid",
-                                                "over-link-path-label");
-      ]]></field>
-
-      <field name="_textboxContainer" readonly="true"><![CDATA[
-        document.getAnonymousElementByAttribute(this, "anonid",
-                                                "textbox-container");
-      ]]></field>
-
-      <field name="_overLinkIntervalDelay" readonly="true"><![CDATA[
-        100
-      ]]></field>
-
-      <field name="_overLinkInterval"><![CDATA[
-        null
-      ]]></field>
-
-      <method name="setOverLink">
-        <parameter name="aURL"/>
-        <body><![CDATA[
-          // NOTE: This method is called many times in a row very quickly when
-          // the user mouses over a bookmarks menu, tabs menu, or long list of
-          // links in a page, or leaves the cursor over a page with many links
-          // while scrolling.  Therefore it's important that it be fast.  Don't
-          // regress performance when you modify it!
-
-          // Hide the over-link immediately if necessary.
-          if ((!aURL && (XULBrowserWindow.hideOverLinkImmediately ||
-                         this._hideOverLinkImmediately)) ||
-              this.focused) {
-            this._clearOverLinkInterval();
-            this._setOverLinkState(null);
-            return;
-          }
-
-          // Update and show it immediately if it's in transition.
-          if (aURL && this._overLinkTransitioning) {
-            this._clearOverLinkInterval();
-            this._updateOverLink(aURL);
-            this._setOverLinkState("showing");
-            return;
-          }
-
-          this._overLinkURL = aURL;
-          this._seenNewOverLink = true;
-
-          // If the user is continually mousing over links, make this method
-          // basically a no-op.
-          if (this._overLinkInterval)
-            return;
-
-          // Otherwise, the user has just moused over or focused a single link.
-          // Start the interval and signal that we should potentially show the
-          // over-link the first time it fires by unsetting _seenNewOverLink.
-          this._seenNewOverLink = false;
-          this._overLinkInterval = setInterval(this._overLinkIntervalCallback,
-                                               this._overLinkIntervalDelay,
-                                               this);
-        ]]></body>
-      </method>
-
-      <method name="_overLinkIntervalCallback">
-        <parameter name="self"/>
-        <body><![CDATA[
-          // If the user is still mousing over links, bail out early.
-          if (self._seenNewOverLink) {
-            self._seenNewOverLink = false;
-            return;
-          }
-
-          // Otherwise, the user has stopped over a link.  Clear the interval
-          // and update the over-link.
-          self._clearOverLinkInterval();
-          if (self._overLinkURL) {
-            self._updateOverLink(self._overLinkURL);
-            self._setOverLinkState("fade-in");
-          }
-          else {
-            self._setOverLinkState("fade-out");
-          }
-        ]]></body>
-      </method>
-
-      <method name="_hideOverLink">
-        <body><![CDATA[
-          this._hideOverLinkImmediately = true;
-          this.setOverLink("");
-          this._hideOverLinkImmediately = false;
-        ]]></body>
-      </method>
-
-      <method name="_clearOverLinkInterval">
-        <body><![CDATA[
-          if (this._overLinkInterval) {
-            clearInterval(this._overLinkInterval);
-            this._overLinkInterval = null;
-          }
-        ]]></body>
-      </method>
-
-      <method name="_setOverLinkState">
-        <parameter name="aVal"/>
-        <body><![CDATA[
-          switch (aVal) {
-          case "fade-in":
-            var style = window.getComputedStyle(this._overLinkBox);
-            this._overLinkTransitioning = style.opacity != 1;
-            this.setAttribute("overlinkstate", aVal);
-            break;
-          case "fade-out":
-            style = window.getComputedStyle(this._overLinkBox);
-            this._overLinkTransitioning = style.opacity != 0;
-            this.setAttribute("overlinkstate", aVal);
-            break;
-          case "showing":
-            this._overLinkTransitioning = false;
-            this.setAttribute("overlinkstate", aVal);
-            break;
-          default:
-            this._overLinkTransitioning = false;
-            this.removeAttribute("overlinkstate");
-            break;
-          }
-        ]]></body>
-      </method>
-
-      <method name="_updateOverLink">
-        <parameter name="aURL"/>
-        <body><![CDATA[
-          // Get the width of the bar before we go modifying it.
-          var barWidth = this._stack.boxObject.width;
-
-          // Determine the pre-path and path of the over-link.  Include the
-          // path's leading slash in the pre-path so that if the path is
-          // truncated its leading slash is visible.
-          var re = new RegExp("^([a-z0-9+.-]+://[^/]+/)(.*)$");
-          var match = re.exec(aURL);
-          var host = match ? match[1] : "";
-          var path = match ? match[2] : aURL;
-
-          var overLink = this._overLinkBox;
-          var overLinkHost = this._overLinkHostLabel;
-          var overLinkPath = this._overLinkPathLabel;
-
-          overLinkHost.value = host;
-          overLinkPath.value = path;
-
-          // Remove restrictions on the over-link's width.
-          overLinkHost.flex = 0;
-          overLinkHost.crop = "none";
-          overLinkPath.crop = "none";
-          overLink.style.minWidth = "";
-          overLink.style.maxWidth = "";
-
-          // Cap the width of the over-link to 2/3 of the location bar's.
-          var maxWidth = barWidth * 0.67;
-          var overLinkWidth = overLinkHost.boxObject.width +
-                              overLinkPath.boxObject.width;
-          if (overLinkWidth > maxWidth) {
-            // If the host is wider than the cap and therefore the path is not
-            // visible at all, crop the host at the end.
-            if (overLinkHost.boxObject.width > maxWidth) {
-              overLinkHost.flex = 1;
-              overLinkHost.crop = "end";
-            }
-            overLinkPath.crop = host ? "start" : "end";
-            overLink.style.minWidth = maxWidth + "px";
-            overLink.style.maxWidth = maxWidth + "px";
-          }
-
-          var action = this._parseActionUrl(this._value);
-          this._originLabel.value = action ? action.param : this._value;
         ]]></body>
       </method>
 
@@ -860,7 +633,6 @@
       ]]></handler>
 
       <handler event="focus" phase="capturing"><![CDATA[
-        this._hideOverLink();
         this._hideURLTooltip();
       ]]></handler>
 

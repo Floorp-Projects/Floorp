@@ -136,7 +136,7 @@ interface nsIHttpAuthenticator : nsISupports
      */
 
     /**
-     * Indicates that the authenticator has used an out-of-band or internal 
+     * Indicates that the authenticator has used an out-of-band or internal
      * source of identity and tells the consumer that it must not cache 
      * the returned identity because it might not be valid and would overwrite
      * the cached identity.  See bug 542318 comment 32.

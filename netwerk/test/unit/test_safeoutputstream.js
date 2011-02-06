@@ -1,4 +1,4 @@
-/* -*- Mode: c++; tab-width: 40; indent-tabs-mode: nil; c-basic-offset: 4; -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -15,11 +15,12 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- *   Mozilla Foundation
+ * the Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Boris Zbarsky <bzbarsky@mit.edu> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,35 +36,48 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsMemoryWatcher_h__
-#define nsMemoryWatcher_h__
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cr = Components.results;
 
-#include <stdio.h>
-#include <prtime.h>
-#include <prinrval.h>
-#include <nsCOMPtr.h>
-#include <nsITimer.h>
+function write(file, str) {
+    var stream = Cc["@mozilla.org/network/safe-file-output-stream;1"]
+                   .createInstance(Ci.nsIFileOutputStream);
+    stream.init(file, -1, -1, 0);
+    do {
+        var written = stream.write(str, str.length);
+        if (written == str.length)
+            break;
+        str = str.substring(written);
+    } while (1);
+    stream.QueryInterface(Ci.nsISafeOutputStream).finish();
+    stream.close();
+}
 
-class nsMemoryWatcher : public nsITimerCallback
+function checkFile(file, str) {
+    var stream = Cc["@mozilla.org/network/file-input-stream;1"]
+                   .createInstance(Ci.nsIFileInputStream);
+    stream.init(file, -1, -1, 0);
+
+    var scriptStream = Cc["@mozilla.org/scriptableinputstream;1"]
+                         .createInstance(Ci.nsIScriptableInputStream);
+    scriptStream.init(stream);
+
+    do_check_eq(scriptStream.read(scriptStream.available()), str);
+    scriptStream.close();
+}
+
+function run_test()
 {
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSITIMERCALLBACK
+    var filename = "\u0913";
+    var file = Cc["@mozilla.org/file/directory_service;1"]
+                 .getService(Ci.nsIProperties)
+                 .get("TmpD", Ci.nsIFile);
+    file.append(filename);
 
-    nsMemoryWatcher();
-    virtual ~nsMemoryWatcher();
+    write(file, "First write");
+    checkFile(file, "First write");
 
-    void StartWatching();
-    void StopWatching();
-
-private:
-    long mTimerInterval;
-    long mLowWaterMark;
-    long mHighWaterMark;
-    PRIntervalTime mLastLowNotification;
-    PRIntervalTime mLastHighNotification;
-    nsCOMPtr<nsITimer> mTimer;
-    FILE* mMemInfoFile;
-};
-
-#endif /* nsMemoryWatcher_h__ */
+    write(file, "Second write");
+    checkFile(file, "Second write");
+}

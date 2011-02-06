@@ -1,7 +1,11 @@
 load 41276-1.html
 load 48856-1.html
 load 110650-1.html
-skip-if(!haveTestPlugin) skip-if(cocoaWidget) script 539897-1.html
-skip-if(!haveTestPlugin) script 540114-1.html
+skip-if(browserIsRemote||!haveTestPlugin||cocoaWidget) script 539897-1.html # browserIsRemote is bug XXXXXX
+skip-if(browserIsRemote||!haveTestPlugin) script 540114-1.html # browserIsRemote is bug XXXXXX
 load 570884.html
-skip-if(!haveTestPlugin||http.platform!="X11"||!testPluginIsOOP()) load 598862.html
+# This test relies on the reading of screenX/Y forcing a round trip to
+# the X server, which is a bad assumption for <browser remote>.
+# Plugin arch is going to change anyway with OOP content so skipping
+# this test for now is OK.
+skip-if(browserIsRemote||!haveTestPlugin||http.platform!="X11"||!testPluginIsOOP()) load 598862.html

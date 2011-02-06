@@ -4557,11 +4557,55 @@ nsGenericElement::CopyInnerTo(nsGenericElement* aDst) const
   return NS_OK;
 }
 
+PRBool
+nsGenericElement::MaybeCheckSameAttrVal(PRInt32 aNamespaceID, nsIAtom* aName,
+                                        nsIAtom* aPrefix, const nsAString& aValue,
+                                        PRBool aNotify, nsAutoString* aOldValue,
+                                        PRUint8* aModType, PRBool* aHasListeners)
+{
+  PRBool modification = PR_FALSE;
+  *aHasListeners = aNotify &&
+    nsContentUtils::HasMutationListeners(this,
+                                         NS_EVENT_BITS_MUTATION_ATTRMODIFIED,
+                                         this);
+
+  // If we have no listeners and aNotify is false, we are almost certainly
+  // coming from the content sink and will almost certainly have no previous
+  // value.  Even if we do, setting the value is cheap when we have no
+  // listeners and don't plan to notify.  The check for aNotify here is an
+  // optimization, the check for *aHasListeners is a correctness issue.
+  if (*aHasListeners || aNotify) {
+    nsAttrInfo info(GetAttrInfo(aNamespaceID, aName));
+    if (info.mValue) {
+      // Check whether the old value is the same as the new one.  Note that we
+      // only need to actually _get_ the old value if we have listeners.
+      PRBool valueMatches;
+      if (*aHasListeners) {
+        // Need to store the old value
+        info.mValue->ToString(*aOldValue);
+        valueMatches = aValue.Equals(*aOldValue);
+      } else if (aNotify) {
+        valueMatches = info.mValue->Equals(aValue, eCaseMatters);
+      }
+      if (valueMatches && aPrefix == info.mName->GetPrefix()) {
+        return PR_TRUE;
+      }
+      modification = PR_TRUE;
+    }
+  }
+  *aModType = modification ?
+    static_cast<PRUint8>(nsIDOMMutationEvent::MODIFICATION) :
+    static_cast<PRUint8>(nsIDOMMutationEvent::ADDITION);
+  return PR_FALSE;
+}
+
 nsresult
 nsGenericElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
                           nsIAtom* aPrefix, const nsAString& aValue,
                           PRBool aNotify)
 {
+  // Keep this in sync with SetParsedAttr below
+
   NS_ENSURE_ARG_POINTER(aName);
   NS_ASSERTION(aNamespaceID != kNameSpaceID_Unknown,
                "Don't call SetAttr with unknown namespace");
@@ -4570,45 +4614,18 @@ nsGenericElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
     return NS_ERROR_FAILURE;
   }
 
+  PRUint8 modType;
+  PRBool hasListeners;
   nsAutoString oldValue;
-  PRBool modification = PR_FALSE;
-  PRBool hasListeners = aNotify &&
-    nsContentUtils::HasMutationListeners(this,
-                                         NS_EVENT_BITS_MUTATION_ATTRMODIFIED,
-                                         this);
-  
-  // If we have no listeners and aNotify is false, we are almost certainly
-  // coming from the content sink and will almost certainly have no previous
-  // value.  Even if we do, setting the value is cheap when we have no
-  // listeners and don't plan to notify.  The check for aNotify here is an
-  // optimization, the check for haveListeners is a correctness issue.
-  if (hasListeners || aNotify) {
-    nsAttrInfo info(GetAttrInfo(aNamespaceID, aName));
-    if (info.mValue) {
-      // Check whether the old value is the same as the new one.  Note that we
-      // only need to actually _get_ the old value if we have listeners.
-      PRBool valueMatches;
-      if (hasListeners) {
-        // Need to store the old value
-        info.mValue->ToString(oldValue);
-        valueMatches = aValue.Equals(oldValue);
-      } else if (aNotify) {
-        valueMatches = info.mValue->Equals(aValue, eCaseMatters);
-      }
-      if (valueMatches && aPrefix == info.mName->GetPrefix()) {
-        return NS_OK;
-      }
-      modification = PR_TRUE;
-    }
-  }
 
+  if (MaybeCheckSameAttrVal(aNamespaceID, aName, aPrefix, aValue, aNotify,
+                            &oldValue, &modType, &hasListeners)) {
+    return NS_OK;
+  }
 
   nsresult rv = BeforeSetAttr(aNamespaceID, aName, &aValue, aNotify);
   NS_ENSURE_SUCCESS(rv, rv);
-  
-  PRUint8 modType = modification ?
-    static_cast<PRUint8>(nsIDOMMutationEvent::MODIFICATION) :
-    static_cast<PRUint8>(nsIDOMMutationEvent::ADDITION);
+
   if (aNotify) {
     nsNodeUtils::AttributeWillChange(this, aNamespaceID, aName, modType);
   }
@@ -4622,7 +4639,46 @@ nsGenericElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
                           attrValue, modType, hasListeners, aNotify,
                           &aValue);
 }
-  
+
+nsresult
+nsGenericElement::SetParsedAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+                                nsIAtom* aPrefix, nsAttrValue& aParsedValue,
+                                PRBool aNotify)
+{
+  // Keep this in sync with SetAttr above
+
+  NS_ENSURE_ARG_POINTER(aName);
+  NS_ASSERTION(aNamespaceID != kNameSpaceID_Unknown,
+               "Don't call SetAttr with unknown namespace");
+
+  if (!mAttrsAndChildren.CanFitMoreAttrs()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsAutoString value;
+  aParsedValue.ToString(value);
+
+  PRUint8 modType;
+  PRBool hasListeners;
+  nsAutoString oldValue;
+
+  if (MaybeCheckSameAttrVal(aNamespaceID, aName, aPrefix, value, aNotify,
+                            &oldValue, &modType, &hasListeners)) {
+    return NS_OK;
+  }
+
+  nsresult rv = BeforeSetAttr(aNamespaceID, aName, &value, aNotify);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aNotify) {
+    nsNodeUtils::AttributeWillChange(this, aNamespaceID, aName, modType);
+  }
+
+  return SetAttrAndNotify(aNamespaceID, aName, aPrefix, oldValue,
+                          aParsedValue, modType, hasListeners, aNotify,
+                          &value);
+}
+
 nsresult
 nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
                                    nsIAtom* aName,

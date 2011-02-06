@@ -1478,7 +1478,8 @@ nsGfxScrollFrameInner::ScrollTo(nsPoint aScrollPosition,
 
   PRInt32 currentVelocityX = 0;
   PRInt32 currentVelocityY = 0;
-  PRBool isSmoothScroll = IsSmoothScrollingEnabled();
+  PRBool isSmoothScroll = (aMode == nsIScrollableFrame::SMOOTH) &&
+                          IsSmoothScrollingEnabled();
 
   if (mAsyncScroll) {
     if (mAsyncScroll->mIsSmoothScroll) {

@@ -2622,7 +2622,7 @@
     </resources>
 
     <content>
-      <xul:hbox align="start">
+      <xul:hbox align="end">
         <xul:image class="tab-drop-indicator" anonid="tab-drop-indicator" collapsed="true"/>
       </xul:hbox>
       <xul:arrowscrollbox anonid="arrowscrollbox" orient="horizontal" flex="1"
@@ -3221,7 +3221,6 @@
 
         ind.style.MozTransform = "translate(" + Math.round(newMargin) + "px)";
         ind.style.MozMarginStart = (-ind.clientWidth) + "px";
-        ind.style.marginTop = (-ind.clientHeight) + "px";
       ]]></handler>
 
       <handler event="drop"><![CDATA[
@@ -3707,8 +3706,12 @@
     <implementation>
       <property name="label">
         <setter>
-          if (!this.label)
+          if (!this.label) {
             this.removeAttribute("mirror");
+            this.style.minWidth = "";
+          } else {
+            this.style.minWidth = getComputedStyle(this).width;
+          }
           this.setAttribute("label", val);
           return val;
         </setter>
@@ -3716,15 +3719,20 @@
           return this.getAttribute("label");
         </getter>
       </property>
+
+      <method name="_mirror">
+        <body>
+          if (this.hasAttribute("mirror"))
+            this.removeAttribute("mirror");
+          else
+            this.setAttribute("mirror", "true");
+        </body>
+      </method>
     </implementation>
 
     <handlers>
-      <handler event="mouseover">
-        if (this.hasAttribute("mirror"))
-          this.removeAttribute("mirror");
-        else
-          this.setAttribute("mirror", "true");
-      </handler>
+      <handler event="mouseover" action="this._mirror();"/>
+      <handler event="dragover" action="this._mirror();"/>
     </handlers>
   </binding>
 

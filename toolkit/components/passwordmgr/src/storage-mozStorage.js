@@ -55,7 +55,15 @@ function LoginManagerStorage_mozStorage() { };
 LoginManagerStorage_mozStorage.prototype = {
 
     classID : Components.ID("{8c2023b9-175c-477e-9761-44ae7b549756}"),
-    QueryInterface : XPCOMUtils.generateQI([Ci.nsILoginManagerStorage]),
+    QueryInterface : XPCOMUtils.generateQI([Ci.nsILoginManagerStorage,
+                                            Ci.nsIInterfaceRequestor]),
+    getInterface : function(aIID) {
+      if (aIID.equals(Ci.mozIStorageConnection)) {
+        return this._dbConnection;
+      }
+
+      throw Cr.NS_ERROR_NO_INTERFACE;
+    },
 
     __crypto : null,  // nsILoginManagerCrypto service
     get _crypto() {
@@ -1563,6 +1571,7 @@ LoginManagerStorage_mozStorage.prototype = {
 
         // Close the connection, ignore 'already closed' error
         try { this._dbConnection.close() } catch(e) {}
+        this._dbConnection = null;
         this._signonsFile.remove(false);
     }
 

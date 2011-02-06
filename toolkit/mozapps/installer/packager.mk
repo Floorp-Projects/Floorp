@@ -595,10 +595,10 @@ endif # MOZ_PKG_REMOVALS
 
 make-package: stage-package $(PACKAGE_XULRUNNER) make-sourcestamp-file
 	@echo "Compressing..."
-	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
 	cd $(DIST) && $(MAKE_PACKAGE)
 
 make-sourcestamp-file::
+	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
 	@echo "$(BUILDID)" > $(MOZ_SOURCESTAMP_FILE)
 	@echo "$(MOZ_SOURCE_REPO)/rev/$(MOZ_SOURCE_STAMP)" >> $(MOZ_SOURCESTAMP_FILE)
 

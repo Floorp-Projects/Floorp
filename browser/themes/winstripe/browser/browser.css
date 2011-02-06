@@ -108,8 +108,8 @@
 }
 %endif
 
-#navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar)[iconsize="small"],
-#navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar)[defaulticonsize="small"]:not([iconsize]) {
+#navigator-toolbox[iconsize="small"] > #nav-bar,
+#navigator-toolbox > toolbar:not(#nav-bar):not(#toolbar-menubar):not(#TabsToolbar)[iconsize="small"] {
   padding-top: 1px;
   padding-bottom: 1px;
 }
@@ -572,6 +572,11 @@ menuitem.bookmark-item {
   opacity: .4;
 }
 
+#nav-bar {
+  /* force iconsize="small" on this toolbar */
+  counter-reset: smallicons;
+}
+
 #nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-button,
 #nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker,
 #nav-bar .toolbarbutton-1 {
@@ -592,8 +597,8 @@ menuitem.bookmark-item {
 }
 
 #nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker,
-#nav-bar[iconsize="small"][mode="icons"] .toolbarbutton-1 > .toolbarbutton-menubutton-button,
-#nav-bar[iconsize="small"][mode="icons"] .toolbarbutton-1 {
+#navigator-toolbox[iconsize="small"][mode="icons"] > #nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-button,
+#navigator-toolbox[iconsize="small"][mode="icons"] > #nav-bar .toolbarbutton-1 {
   padding-left: 3px;
   padding-right: 3px;
 }
@@ -610,7 +615,7 @@ menuitem.bookmark-item {
   margin: 1px 3px;
 }
 
-#nav-bar[iconsize="small"][mode="icons"] .toolbarbutton-1 {
+#navigator-toolbox[iconsize="small"][mode="icons"] > #nav-bar .toolbarbutton-1 {
   margin-left: 2px;
   margin-right: 2px;
 }
@@ -732,7 +737,7 @@ toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   -moz-image-region: rect(0, 36px, 18px, 18px);
 }
 
-toolbar:not([iconsize="small"])[mode="icons"] #back-button {
+#navigator-toolbox[iconsize="large"][mode="icons"] > #nav-bar #back-button {
   -moz-image-region: rect(18px, 20px, 38px, 0);
 }
 
@@ -743,12 +748,12 @@ toolbar:not([iconsize="small"])[mode="icons"] #back-button {
 }
 
 #nav-bar #back-button {
-  -moz-margin-end: 0;
+  -moz-margin-end: 0 !important;
 }
 
 #nav-bar #forward-button {
-  border-left: none;
-  -moz-margin-start: 0;
+  border-left-style: none;
+  -moz-margin-start: 0 !important;
 }
 
 #nav-bar #back-button:-moz-locale-dir(ltr) {
@@ -762,7 +767,7 @@ toolbar:not([iconsize="small"])[mode="icons"] #back-button {
   border-bottom-left-radius: 0;
 }
 
-#nav-bar:not([iconsize="small"])[mode="icons"] #back-button {
+#navigator-toolbox[iconsize="large"][mode="icons"] > #nav-bar #back-button {
   border-radius: 10000px;
   padding: 0;
   width: 30px;
@@ -782,7 +787,7 @@ toolbar:not([iconsize="small"])[mode="icons"] #back-button {
               1px 2px 1px rgba(0,0,0,.2);
 }
 
-#nav-bar:not([iconsize="small"])[mode="icons"] #back-button:not([disabled="true"]):not([open="true"]):not(:active):hover {
+#navigator-toolbox[iconsize="large"][mode="icons"] > #nav-bar #back-button:not([disabled="true"]):not([open="true"]):not(:active):hover {
   box-shadow: 0 0 0 1px rgba(255,255,255,.3) inset,
               0 0 0 2px rgba(255,255,255,.1) inset,
               0 0 0 1px hsla(190,50%,40%,.3),
@@ -792,34 +797,34 @@ toolbar:not([iconsize="small"])[mode="icons"] #back-button {
               0 0 5px 1px hsl(190,90%,80%);
 }
 
-#nav-bar:not([iconsize="small"])[mode="icons"] #back-button:not([disabled="true"]):hover:active,
-#nav-bar:not([iconsize="small"])[mode="icons"] #back-button[open="true"] {
+#navigator-toolbox[iconsize="large"][mode="icons"] > #nav-bar #back-button:not([disabled="true"]):hover:active,
+#navigator-toolbox[iconsize="large"][mode="icons"] > #nav-bar #back-button[open="true"] {
   box-shadow: 0 0 6.5px rgba(0,0,0,.4) inset,
               0 0 2px rgba(0,0,0,.4) inset,
               0 0 0 1px rgba(0,0,0,.65),
               0 2px 0 rgba(255,255,255,.4);
 }
 
-#nav-bar:not([iconsize="small"])[mode="icons"][currentset*="unified-back-forward-button"],
-#nav-bar:not([iconsize="small"])[mode="icons"]:not([currentset]) {
+#navigator-toolbox[iconsize="large"][mode="icons"] > #nav-bar[currentset*="unified-back-forward-button"],
+#navigator-toolbox[iconsize="large"][mode="icons"] > #nav-bar:not([currentset]) {
   padding-top: 3px;
   padding-bottom: 5px;
 }
 
-#navigator-toolbox[tabsontop="true"] > #nav-bar:not([iconsize="small"])[mode="icons"][currentset*="unified-back-forward-button"],
-#navigator-toolbox[tabsontop="true"] > #nav-bar:not([iconsize="small"])[mode="icons"]:not([currentset]) {
+#navigator-toolbox[iconsize="large"][mode="icons"][tabsontop="true"] > #nav-bar[currentset*="unified-back-forward-button"],
+#navigator-toolbox[iconsize="large"][mode="icons"][tabsontop="true"] > #nav-bar:not([currentset]) {
   padding-top: 5px;
 }
 
-#nav-bar:not([iconsize="small"])[mode="icons"] #forward-button {
+#navigator-toolbox[iconsize="large"][mode="icons"] > #nav-bar #forward-button {
   /*mask: url(keyhole-forward-mask.svg#mask); XXX: this regresses twinopen */
   mask: url(chrome://browser/content/browser.xul#winstripe-keyhole-forward-mask);
-  -moz-margin-start: -6px;
+  -moz-margin-start: -6px !important;
   padding-left: 7px;
   padding-right: 3px;
 }
 
-#nav-bar:not([iconsize="small"])[mode="icons"] #forward-button:not([disabled="true"]):not(:active):hover {
+#navigator-toolbox[iconsize="large"][mode="icons"] > #nav-bar #forward-button:not([disabled="true"]):not(:active):hover {
   /*mask: url(keyhole-forward-mask.svg#mask-hover);*/
   mask: url(chrome://browser/content/browser.xul#winstripe-keyhole-forward-mask-hover);
   /* Don't animate the box shadow, as the blur and spread radii affect the mask. */
@@ -1052,27 +1057,12 @@ toolbar:not([iconsize="small"])[mode="icons"] #back-button {
 .searchbar-textbox {
   -moz-appearance: none;
   margin: 1px 3px;
+  padding: 2px;
   background-clip: padding-box;
   border: 1px solid ThreeDDarkShadow;
   border-radius: 4px;
   box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
               0 1px 0 rgba(255,255,255,.4);
-}
-
-.urlbar-textbox-container {
-  margin-top: 2px;
-  margin-bottom: 2px;
-  margin-right: 2px;
-}
-
-.urlbar-frontcap {
-  margin-top: 2px;
-  margin-bottom: 2px;
-  margin-left: 2px;
-}
-
-.searchbar-textbox {
-  padding: 2px;
 }
 
 @media all and (-moz-windows-default-theme) {
@@ -1130,10 +1120,6 @@ html|*.urlbar-input:-moz-lwtheme:-moz-placeholder,
   -moz-margin-start: 0;
 }
 
-.urlbar-frontcap-and-textbox {
-  -moz-box-align: stretch;
-}
-
 #urlbar-display-box {
   margin-top: -2px;
   margin-bottom: -2px;
@@ -1145,42 +1131,6 @@ html|*.urlbar-input:-moz-lwtheme:-moz-placeholder,
   margin-top: 0;
   margin-bottom: 0;
   color: GrayText;
-}
-
-/* over-link in location bar */
-
-.urlbar-origin-label {
-  padding-top: 0;
-  padding-bottom: 0;
-  -moz-padding-start: 4px;
-  -moz-padding-end: 0;
-  margin: 0;
-}
-
-.urlbar-over-link-box {
-  position: relative;
-  color: GrayText;
-  min-height: 20px;
-  padding-top: 0;
-  padding-bottom: 0;
-  -moz-padding-start: 18px;
-  -moz-padding-end: 5px;
-}
-
-.urlbar-over-link-box:-moz-locale-dir(ltr) {
-  background: url(chrome://browser/skin/urlbar-over-link-arrow.png) no-repeat left center;
-  right: 0;
-}
-
-.urlbar-over-link-box:-moz-locale-dir(rtl) {
-  background: url(chrome://browser/skin/urlbar-over-link-arrow-rtl.png) no-repeat right center;
-  left: 0;
-}
-
-.urlbar-over-link-host-label,
-.urlbar-over-link-path-label {
-  padding: 0;
-  margin: 0;
 }
 
 /* identity box */
@@ -1375,6 +1325,8 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 #urlbar > toolbarbutton {
   -moz-appearance: none;
   list-style-image: url("chrome://browser/skin/reload-stop-go.png");
+  margin: -2px;
+  -moz-margin-start: 0;
   padding: 0 3px;
   background-origin: border-box;
   border: none;
@@ -1663,6 +1615,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 /* Tab DnD indicator */
 .tab-drop-indicator {
   list-style-image: url(chrome://browser/skin/tabbrowser/tabDragIndicator.png);
+  margin-bottom: -11px;
 }
 
 /* Tab close button */
@@ -2265,6 +2218,7 @@ panel[dimmed="true"] {
 
 #addon-bar {
   min-height: 20px;
+  border-top: 1px solid ThreeDShadow !important;
 }
 
 #addon-bar:not(:-moz-lwtheme) {

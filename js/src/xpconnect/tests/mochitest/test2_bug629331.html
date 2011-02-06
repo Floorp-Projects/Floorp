@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  </head>
+  <body>
+    <script>
+      document.domain = "example.org";
+
+      for (var j = 1; j <= 9; j++) {
+        parent.i = j;
+        var locali = parent.i;
+        parent.is(locali, j, 'step ' + j + ' worked');
+      }
+
+      parent.finish();
+    </script>
+  </body>
+</html>

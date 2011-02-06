@@ -147,7 +147,7 @@ random == 99850-1b.html 99850-1-ref.html # bug 471629
 == 180085-2.html 180085-2-ref.html
 == 185388-1.html 185388-1-ref.html
 == 192902-1.html 192902-ref.html
-!= 200774-1.html about:blank # really a crashtest
+!= 200774-1.html about:blank
 == 201215-1.html 201215-1-ref.html
 == 201293-1a.html 201293-1-ref.html
 == 201293-1b.html 201293-1-ref.html
@@ -1215,6 +1215,7 @@ fails == 472020-2.xul 472020-2-ref.xul
 == 474336-1.xul 474336-1-ref.xul
 == 474417-1.html 474417-1-ref.html
 == 474472-1.html 474472-1-ref.html
+== 447749-1.html 447749-1-ref.html
 == 475986-1a.html 475986-1-ref.html
 == 475986-1b.html 475986-1-ref.html
 == 475986-1c.html 475986-1-ref.html
@@ -1346,7 +1347,7 @@ asserts(1) == 496032-1.html 496032-1-ref.html # bug 399262
 == 501257-1b.html 501257-1-ref.html
 == 501257-1.xhtml 501257-1-ref.xhtml
 == 501627-1.html 501627-1-ref.html
-random-if(cocoaWidget&&layersGPUAccelerated) == 502288-1.html 502288-1-ref.html
+== 502288-1.html 502288-1-ref.html
 == 502942-1.html 502942-1-ref.html
 == 502447-1.html 502447-1-ref.html
 == 502795-1.html 502795-1-ref.html
@@ -1355,7 +1356,7 @@ random-if(cocoaWidget&&layersGPUAccelerated) == 502288-1.html 502288-1-ref.html
 == 503399.html 503399-ref.html
 # Reftest for bug 503531 marked as failing; should be re-enabled when
 # bug 607548 gets resolved.
-fails == 503531-1.html 503531-1-ref.html
+needs-focus fails == 503531-1.html 503531-1-ref.html
 == 504032-1.html 504032-1-ref.html
 == 505743-1.html about:blank
 == 506481-1.html 506481-1-ref.html
@@ -1371,8 +1372,8 @@ fails == 503531-1.html 503531-1-ref.html
 == 509155-1.xhtml 509155-1-ref.xhtml
 == 512410.html 512410-ref.html
 == 512631-1.html 512631-1-ref.html
-random-if(cocoaWidget&&layersGPUAccelerated) == 513153-1a.html 513153-1-ref.html
-random-if(cocoaWidget&&layersGPUAccelerated) == 513153-1b.html 513153-1-ref.html
+== 513153-1a.html 513153-1-ref.html
+== 513153-1b.html 513153-1-ref.html
 == 513153-2a.html 513153-2-ref.html
 == 513153-2b.html 513153-2-ref.html
 == 513318-1.xul 513318-1-ref.xul
@@ -1394,7 +1395,7 @@ HTTP(..) == 518172-2b.html 518172-b-ref.html
 == 523096-1.html 523096-1-ref.html
 random-if(d2d) == 523468-1.html 523468-1-ref.html
 == 524175-1.html 524175-1-ref.html
-random-if(cocoaWidget&&layersGPUAccelerated) == 526463-1.html 526463-1-ref.html
+== 526463-1.html 526463-1-ref.html
 == 527464-1.html 527464-ref.html
 == 528038-1a.html 528038-1-ref.html
 == 528038-1b.html 528038-1-ref.html
@@ -1428,9 +1429,9 @@ asserts(5) == 528038-2.html 528038-2-ref.html # bug 512749
 == 539949-1.html#test2 539949-1-ref.html#test2
 == 541382-1.html 541382-1-ref.html
 random-if(!haveTestPlugin) == 541406-1.html 541406-1-ref.html
-!= 542116-1.html 542116-1-ref.html
-asserts(1) != 542116-2.html 542116-2-ref.html # bug 596901
-!= 542116-3.html 542116-3-ref.html
+needs-focus != 542116-1.html 542116-1-ref.html
+needs-focus asserts(1) != 542116-2.html 542116-2-ref.html # bug 596901
+needs-focus != 542116-3.html 542116-3-ref.html
 == 542317-1.html 542317-1-ref.html
 == 542605-hidden-unscrollable.xul 542605-hidden-unscrollable-ref.xul
 == 542620-1.html 542620-1-ref.html
@@ -1488,7 +1489,7 @@ random-if(d2d) == 555388-1.html 555388-1-ref.html
 random-if(layersGPUAccelerated) == 564991-1.html 564991-1-ref.html
 == 565819-1.html 565819-ref.html
 == 565819-2.html 565819-ref.html
-== 568441.html 568441-ref.html
+needs-focus == 568441.html 568441-ref.html
 == 569006-1.html 569006-1-ref.html
 == 571281-1a.html 571281-1-ref.html
 == 571281-1b.html 571281-1-ref.html
@@ -1535,7 +1536,7 @@ asserts(0-1) == 582146-1.html about:blank
 == 594624-1.html 594624-1-ref.html
 == 594737-1.html 594737-1-ref.html
 == 597721-1.html 597721-1-ref.html
-== 598726-1.html 598726-1-ref.html
+needs-focus == 598726-1.html 598726-1-ref.html
 == 599113-1.html 599113-1-ref.html
 fails-if(!haveTestPlugin) == 599476.html 599476-ref.html
 == 600045-1.html 600045-1-ref.html
@@ -1553,15 +1554,15 @@ fails-if(!haveTestPlugin) == 599476.html 599476-ref.html
 == 605157-1.xhtml 605157-1-ref.xhtml
 == 609272-1.html 609272-1-ref.html
 == 608636-1.html 608636-1-ref.html
-== 613433-1.html 613433-1-ref.html
-== 613433-1.html 613433-2-ref.html
-== 613433-1.html 613433-3-ref.html
-== 613433-2.html 613433-1-ref.html
-== 613433-2.html 613433-2-ref.html
-== 613433-2.html 613433-3-ref.html
-== 613433-3.html 613433-1-ref.html
-== 613433-3.html 613433-2-ref.html
-== 613433-3.html 613433-3-ref.html
+needs-focus == 613433-1.html 613433-1-ref.html
+needs-focus == 613433-1.html 613433-2-ref.html
+needs-focus == 613433-1.html 613433-3-ref.html
+needs-focus == 613433-2.html 613433-1-ref.html
+needs-focus == 613433-2.html 613433-2-ref.html
+needs-focus == 613433-2.html 613433-3-ref.html
+needs-focus == 613433-3.html 613433-1-ref.html
+needs-focus == 613433-3.html 613433-2-ref.html
+needs-focus == 613433-3.html 613433-3-ref.html
 == 614272-1.svg  614272-1-ref.svg
 HTTP(..) == 615121-1.html 615121-1-ref.html
 HTTP(..) != 615121-2.html 615121-2-notref.html

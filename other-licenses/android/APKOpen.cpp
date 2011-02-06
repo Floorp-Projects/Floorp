@@ -236,7 +236,6 @@ SHELL_WRAPPER1(notifyGeckoOfEvent, jobject)
 SHELL_WRAPPER1(setSurfaceView, jobject)
 SHELL_WRAPPER0(onResume)
 SHELL_WRAPPER0(onLowMemory)
-SHELL_WRAPPER0(onCriticalOOM)
 SHELL_WRAPPER3(callObserver, jstring, jstring, jstring)
 SHELL_WRAPPER1(removeObserver, jstring)
 SHELL_WRAPPER1(onChangeNetworkLinkStatus, jstring)
@@ -667,7 +666,6 @@ loadLibs(const char *apkName)
   GETFUNC(setSurfaceView);
   GETFUNC(onResume);
   GETFUNC(onLowMemory);
-  GETFUNC(onCriticalOOM);
   GETFUNC(callObserver);
   GETFUNC(removeObserver);
   GETFUNC(onChangeNetworkLinkStatus);

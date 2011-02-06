@@ -271,7 +271,7 @@ protected:
     virtual nsEventStatus OnCloseEvent(QCloseEvent *);
     virtual nsEventStatus OnEnterNotifyEvent(QGraphicsSceneHoverEvent *);
     virtual nsEventStatus OnLeaveNotifyEvent(QGraphicsSceneHoverEvent *);
-    virtual nsEventStatus OnMotionNotifyEvent(QGraphicsSceneMouseEvent *);
+    virtual nsEventStatus OnMotionNotifyEvent(QPointF, Qt::KeyboardModifiers);
     virtual nsEventStatus OnButtonPressEvent(QGraphicsSceneMouseEvent *);
     virtual nsEventStatus OnButtonReleaseEvent(QGraphicsSceneMouseEvent *);
     virtual nsEventStatus OnMouseDoubleClickEvent(QGraphicsSceneMouseEvent *);

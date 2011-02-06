@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -2777,6 +2777,14 @@ BasicShadowLayerManager::Hold(Layer* aLayer)
 
   mKeepAlive.AppendElement(aLayer);
   return shadowable;
+}
+
+PRBool
+BasicShadowLayerManager::IsCompositingCheap()
+{
+  // Whether compositing is cheap depends on the parent backend.
+  return mShadowManager &&
+         LayerManager::IsCompositingCheap(GetParentBackendType());
 }
 #endif  // MOZ_IPC
 

@@ -90,6 +90,44 @@
       }
     }
 
+    /**
+     * Text offsets must be updated when hypertext child is removed.
+     */
+    function removeChild(aContainerID, aChildID, aInitialText, aFinalText)
+    {
+      this.containerNode = getNode(aContainerID);
+      this.container = getAccessible(this.containerNode, nsIAccessibleText);
+      this.childNode = getNode(aChildID);
+
+      // Call first to getText so offsets are cached
+      is(this.container.getText(0, -1), aInitialText,
+         "Wrong text before child removal");
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, this.containerNode)
+      ];
+
+      this.invoke = function removeChild_invoke()
+      {
+        this.containerNode.removeChild(this.childNode);
+      }
+
+      this.finalCheck = function removeChild_finalCheck()
+      {
+        is(this.container.getText(0, -1), aFinalText,
+           "Wrong text after child removal");
+        is(this.container.characterCount, aFinalText.length,
+           "Wrong text after child removal");
+      }
+
+      this.getID = function removeChild_getID()
+      {
+        return "check text after removing child from '" + aContainerID + "'";
+      }
+    }
+
+
+
     //gA11yEventDumpToConsole = true; // debug stuff
 
     var gQueue = null;
@@ -98,6 +136,8 @@
       gQueue = new eventQueue();
       gQueue.push(new addLinks("p1"));
       gQueue.push(new updateText("p2"));
+      gQueue.push(new removeChild("div1","div2",
+                                  "hello my good friend", "hello friend"));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
@@ -117,6 +157,11 @@
      title="Text offsets don't get updated when text of first child text accessible is changed"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=625009">
     Mozilla Bug 625009
+  </a>
+  <a target="_blank"
+     title="Crash in nsHyperTextAccessible::GetText()"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=630841">
+    Mozilla Bug 630841
   </a><br>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -125,5 +170,6 @@
 
   <p id="p1"></p>
   <p id="p2"><b>hello</b><a>friend</a></p>
+  <div id="div1">hello<span id="div2"> my<span id="div3"> good</span></span> friend</span></div>
 </body>
 </html>

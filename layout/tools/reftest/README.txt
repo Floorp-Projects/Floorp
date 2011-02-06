@@ -58,6 +58,9 @@ must be one of the following:
                           conditions of <type>. If the condition is not met,
                           the test passes if the conditions of <type> are met.
 
+      needs-focus  The test fails or times out if the reftest window is not
+                   focused.
+
       random  The results of the test are random and therefore not to be
               considered in the output.
 

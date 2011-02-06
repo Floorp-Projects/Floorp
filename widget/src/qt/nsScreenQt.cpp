@@ -43,11 +43,6 @@
 #include <qdesktopwidget.h>
 #include <qapplication.h>
 
-#ifdef MOZ_ENABLE_MEEGOTOUCH
-#include <MApplication>
-#include <MApplicationWindow>
-#endif
-
 #include "nsScreenQt.h"
 #include "nsXULAppAPI.h"
 
@@ -71,17 +66,7 @@ NS_IMETHODIMP
 nsScreenQt::GetRect(PRInt32 *outLeft,PRInt32 *outTop,
                     PRInt32 *outWidth,PRInt32 *outHeight)
 {
-    QRect r;
-#if defined MOZ_IPC && defined MOZ_ENABLE_MEEGOTOUCH
-    if (XRE_GetProcessType() == GeckoProcessType_Default) {
-        MWindow *window = MApplication::activeWindow();
-        if (window) {
-            QSize aSceneSize = window->visibleSceneSize();
-            r = QRect(QPoint(), aSceneSize);
-        }
-    } else
-#endif
-    r = QApplication::desktop()->screenGeometry(mScreen);
+    QRect r = QApplication::desktop()->screenGeometry(mScreen);
 
     *outTop = r.x();
     *outLeft = r.y();

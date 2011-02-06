@@ -32,19 +32,72 @@ function run_tests()
 {
   document.getElementById('svg').pauseAnimations();
 
+  var d;
+  var seg;
   var path = document.getElementById("path");
-  var d = path.pathSegList;
-  var arc = path.createSVGPathSegArcAbs(400, 0, 200, 200, 0, 1, 1);
+  var list = path.pathSegList;
 
   // See https://bugzilla.mozilla.org/show_bug.cgi?id=611138
   // Here we are doing a replace with a segment (arc) that has more arguments
-  // than the total number of arguments in the entire path + 2 (for the two
-  // segment types).
+  // than the total number of arguments in the entire path + 2 (the +2
+  // refering to the encoding of the segment types for the two segments).
   path.setAttribute('d', 'M0,0 L100,100');
-  d.replaceItem(arc, 1);
+  var arc = path.createSVGPathSegArcAbs(400, 0, 200, 200, 0, 1, 1);
+  list.replaceItem(arc, 1);
 
-  ok(d.numberOfItems == 2, 'The number of items should be 2');
-  ok(d.getItem(1) == arc, 'The second item is the wrong object');
+  is(list.numberOfItems, 2, 'The length of the list should be the same after a valid replaceItem() call');
+  is(list.getItem(1), arc, 'The inserted object should now be the object at the index being replaced');
+
+  // Test whether and when we normalize the 'd' attribute:
+
+  d = "  \n  M  10  ,  10  \n  L  20  10  \n  ";
+  path.setAttribute('d', d);
+  is(path.getAttribute('d'), d, "Values passed to setAttribute for the 'd' attribute should not be normalised");
+  list.getItem(1).y = 20;
+  isnot(path.getAttribute('d'), d, "The 'd' attribute should change when its underlying DOM list changes");
+
+  // Test that path manipulations still work even when the path is invalid due
+  // to it not starting with a moveto segment:
+
+  path.setAttribute('d', 'M0,0 L1,1');
+  is(list.numberOfItems, 2, 'setAttribute should result in two items')
+
+  seg = list.getItem(1);
+  list.removeItem(0);
+  ok(list.numberOfItems == 1 && list.getItem(0) == seg,
+    'If removeItem removes the initial moveto leaving an invalid path, the other items should still be left in the list')
+
+  seg = path.createSVGPathSegLinetoAbs(1, 2);
+  list.appendItem(seg);
+  ok(list.numberOfItems == 2 && list.getItem(1) == seg,
+    'appendItem should be able to append to an invalid path');
+
+  seg = path.createSVGPathSegLinetoAbs(1, 2);
+  list.replaceItem(seg, 1);
+  ok(list.numberOfItems == 2 && list.getItem(1) == seg,
+    'replaceItem should be able to replace items in an invalid path');
+
+  seg = path.createSVGPathSegLinetoAbs(1, 2);
+  list.insertItemBefore(seg, 1);
+  ok(list.numberOfItems == 3 && list.getItem(1) == seg,
+    'insertItemBefore should be able insert items into an invalid path');
+
+  seg = path.createSVGPathSegLinetoAbs(1, 2);
+  list.initialize(seg);
+  ok(list.numberOfItems == 1 && list.getItem(0) == seg,
+    'initialize should be able initialize an invalid path with a non-moveto item');
+
+  d = 'M0,0 L12,34'
+  path.setAttribute('d', d);
+  function check_old_value(e) {
+    is(e.target, path, 'check mutation event is for expected node');
+    is(e.attrName, 'd', 'check mutation event is for expected attribute');
+    is(e.prevValue, d, 'check old attribute value is correctly reported');
+    isnot(e.newValue, d, 'check attribute value has changed');
+  }
+  path.addEventListener('DOMAttrModified', check_old_value, false);
+  list.getItem(1).y = 35;
+  path.removeEventListener('DOMAttrModified', check_old_value, false);
 
   SimpleTest.finish();
 }

@@ -958,20 +958,6 @@ nsGlobalWindow::~nsGlobalWindow()
            ("DOMWINDOW %p destroyed", this));
 #endif
 
-  if (mObserver) {
-    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-    if (os) {
-      os->RemoveObserver(mObserver, NS_IOSERVICE_OFFLINE_STATUS_TOPIC);
-      os->RemoveObserver(mObserver, "dom-storage2-changed");
-      os->RemoveObserver(mObserver, "dom-storage-changed");
-    }
-
-    // Drop its reference to this dying window, in case for some bogus reason
-    // the object stays around.
-    mObserver->Forget();
-    NS_RELEASE(mObserver);
-  }
-
   if (IsOuterWindow()) {
     // An outer window is destroyed with inner windows still possibly
     // alive, iterate through the inner windows and null out their
@@ -1082,6 +1068,20 @@ nsGlobalWindow::CleanUp(PRBool aIgnoreModalDialog)
     return;
   mCleanedUp = PR_TRUE;
 
+  if (mObserver) {
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+    if (os) {
+      os->RemoveObserver(mObserver, NS_IOSERVICE_OFFLINE_STATUS_TOPIC);
+      os->RemoveObserver(mObserver, "dom-storage2-changed");
+      os->RemoveObserver(mObserver, "dom-storage-changed");
+    }
+
+    // Drop its reference to this dying window, in case for some bogus reason
+    // the object stays around.
+    mObserver->Forget();
+    NS_RELEASE(mObserver);
+  }
+
   mNavigator = nsnull;
   mScreen = nsnull;
   mMenubar = nsnull;
@@ -1095,7 +1095,7 @@ nsGlobalWindow::CleanUp(PRBool aIgnoreModalDialog)
   mFrames = nsnull;
   mApplicationCache = nsnull;
   mIndexedDB = nsnull;
-  delete mPendingStorageEventsObsolete;
+  mPendingStorageEventsObsolete = nsnull;
 
 
   ClearControllers();
@@ -5063,7 +5063,7 @@ nsGlobalWindow::Print()
 
       EnterModalState();
       webBrowserPrint->Print(printSettings, nsnull);
-      LeaveModalState();
+      LeaveModalState(nsnull);
 
       PRBool savePrintSettings =
         nsContentUtils::GetBoolPref("print.save_print_settings", PR_FALSE);
@@ -6268,7 +6268,7 @@ nsGlobalWindow::ReallyCloseWindow()
   }
 }
 
-void
+nsIDOMWindow *
 nsGlobalWindow::EnterModalState()
 {
   nsGlobalWindow* topWin = GetTop();
@@ -6276,7 +6276,7 @@ nsGlobalWindow::EnterModalState()
   if (!topWin) {
     NS_ERROR("Uh, EnterModalState() called w/o a reachable top window?");
 
-    return;
+    return nsnull;
   }
 
   // If there is an active ESM in this window, clear it. Otherwise, this can
@@ -6311,9 +6311,20 @@ nsGlobalWindow::EnterModalState()
   }
   topWin->mModalStateDepth++;
 
+  JSContext *cx = nsContentUtils::GetCurrentJSContext();
+
+  nsCOMPtr<nsIDOMWindow> callerWin;
+  nsIScriptContext *scx;
+  if (cx && (scx = GetScriptContextFromJSContext(cx))) {
+    scx->EnterModalState();
+    callerWin = do_QueryInterface(nsJSUtils::GetDynamicScriptGlobal(cx));
+  }
+
   if (mContext) {
     mContext->EnterModalState();
   }
+
+  return callerWin;
 }
 
 // static
@@ -6387,7 +6398,7 @@ private:
 };
 
 void
-nsGlobalWindow::LeaveModalState()
+nsGlobalWindow::LeaveModalState(nsIDOMWindow *aCallerWin)
 {
   nsGlobalWindow *topWin = GetTop();
 
@@ -6409,6 +6420,14 @@ nsGlobalWindow::LeaveModalState()
       mSuspendedDoc->UnsuppressEventHandlingAndFireEvents(currentDoc == mSuspendedDoc);
       mSuspendedDoc = nsnull;
     }
+  }
+
+  JSContext *cx = nsContentUtils::GetCurrentJSContext();
+
+  if (aCallerWin) {
+    nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(aCallerWin));
+    nsIScriptContext *scx = sgo->GetContext();
+    scx->LeaveModalState();
   }
 
   if (mContext) {
@@ -6762,7 +6781,7 @@ nsGlobalWindow::ShowModalDialog(const nsAString& aURI, nsIVariant *aArgs,
                              GetPrincipal(),    // aCalleePrincipal
                              nsnull,            // aJSCallerContext
                              getter_AddRefs(dlgWin));
-  LeaveModalState();
+  LeaveModalState(nsnull);
 
   NS_ENSURE_SUCCESS(rv, rv);
   
@@ -8395,7 +8414,7 @@ nsGlobalWindow::FireDelayedDOMEvents()
 {
   FORWARD_TO_INNER(FireDelayedDOMEvents, (), NS_ERROR_UNEXPECTED);
 
-  for (PRUint32 i = 0; i < mPendingStorageEvents.Count(); ++i) {
+  for (PRInt32 i = 0; i < mPendingStorageEvents.Count(); ++i) {
     Observe(mPendingStorageEvents[i], "dom-storage2-changed", nsnull);
   }
 
