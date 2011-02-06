@@ -958,20 +958,6 @@ nsGlobalWindow::~nsGlobalWindow()
            ("DOMWINDOW %p destroyed", this));
 #endif
 
-  if (mObserver) {
-    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-    if (os) {
-      os->RemoveObserver(mObserver, NS_IOSERVICE_OFFLINE_STATUS_TOPIC);
-      os->RemoveObserver(mObserver, "dom-storage2-changed");
-      os->RemoveObserver(mObserver, "dom-storage-changed");
-    }
-
-    // Drop its reference to this dying window, in case for some bogus reason
-    // the object stays around.
-    mObserver->Forget();
-    NS_RELEASE(mObserver);
-  }
-
   if (IsOuterWindow()) {
     // An outer window is destroyed with inner windows still possibly
     // alive, iterate through the inner windows and null out their
@@ -1082,6 +1068,20 @@ nsGlobalWindow::CleanUp(PRBool aIgnoreModalDialog)
     return;
   mCleanedUp = PR_TRUE;
 
+  if (mObserver) {
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+    if (os) {
+      os->RemoveObserver(mObserver, NS_IOSERVICE_OFFLINE_STATUS_TOPIC);
+      os->RemoveObserver(mObserver, "dom-storage2-changed");
+      os->RemoveObserver(mObserver, "dom-storage-changed");
+    }
+
+    // Drop its reference to this dying window, in case for some bogus reason
+    // the object stays around.
+    mObserver->Forget();
+    NS_RELEASE(mObserver);
+  }
+
   mNavigator = nsnull;
   mScreen = nsnull;
   mMenubar = nsnull;
@@ -1095,7 +1095,7 @@ nsGlobalWindow::CleanUp(PRBool aIgnoreModalDialog)
   mFrames = nsnull;
   mApplicationCache = nsnull;
   mIndexedDB = nsnull;
-  delete mPendingStorageEventsObsolete;
+  mPendingStorageEventsObsolete = nsnull;
 
 
   ClearControllers();
