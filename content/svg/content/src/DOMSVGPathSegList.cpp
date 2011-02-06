@@ -86,10 +86,8 @@ DOMSVGPathSegList::GetDOMWrapperIfExists(void *aList)
 
 DOMSVGPathSegList::~DOMSVGPathSegList()
 {
-  // We no longer have any list items, and there are no script references to
-  // us.
-  //
-  // Do NOT use InternalList() here! That's different!
+  // There are now no longer any references to us held by script or list items.
+  // Note we must use GetAnimValKey/GetBaseValKey here, NOT InternalList()!
   void *key = mIsAnimValList ?
     InternalAList().GetAnimValKey() :
     InternalAList().GetBaseValKey();
@@ -345,8 +343,8 @@ DOMSVGPathSegList::InsertItemBefore(nsIDOMSVGPathSeg *aNewItem,
   mItems.InsertElementAt(aIndex, ItemProxy(domItem.get(), internalIndex));
 
   // This MUST come after the insertion into InternalList(), or else under the
-  // insertion into InternalList() the data read from domItem would be bad data
-  // from InternalList() itself!:
+  // insertion into InternalList() the values read from domItem would be bad
+  // data from InternalList() itself!:
   domItem->InsertingIntoList(this, aIndex, IsAnimValList());
 
   for (PRUint32 i = aIndex + 1; i < Length(); ++i) {
@@ -411,7 +409,7 @@ DOMSVGPathSegList::ReplaceItem(nsIDOMSVGPathSeg *aNewItem,
   }
   ItemAt(aIndex) = domItem;
 
-  // This MUST come after the ToSVGPathSegEncodedData call otherwise that call
+  // This MUST come after the ToSVGPathSegEncodedData call, otherwise that call
   // would end up reading bad data from InternalList()!
   domItem->InsertingIntoList(this, aIndex, IsAnimValList());
 
