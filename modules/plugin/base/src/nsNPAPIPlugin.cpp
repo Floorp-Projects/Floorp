@@ -1517,7 +1517,7 @@ _retainobject(NPObject* npobj)
     NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_retainobject called from the wrong thread\n"));
   }
   if (npobj) {
-#ifdef DEBUG
+#ifdef NS_BUILD_REFCNT_LOGGING
     int32_t refCnt =
 #endif
       PR_AtomicIncrement((PRInt32*)&npobj->referenceCount);
