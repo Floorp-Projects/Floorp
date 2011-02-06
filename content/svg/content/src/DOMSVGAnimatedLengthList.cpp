@@ -67,7 +67,7 @@ NS_IMETHODIMP
 DOMSVGAnimatedLengthList::GetBaseVal(nsIDOMSVGLengthList **_retval)
 {
   if (!mBaseVal) {
-    mBaseVal = new DOMSVGLengthList(this);
+    mBaseVal = new DOMSVGLengthList(this, InternalAList().GetBaseValue());
   }
   NS_ADDREF(*_retval = mBaseVal);
   return NS_OK;
@@ -77,7 +77,7 @@ NS_IMETHODIMP
 DOMSVGAnimatedLengthList::GetAnimVal(nsIDOMSVGLengthList **_retval)
 {
   if (!mAnimVal) {
-    mAnimVal = new DOMSVGLengthList(this);
+    mAnimVal = new DOMSVGLengthList(this, InternalAList().GetAnimValue());
   }
   NS_ADDREF(*_retval = mAnimVal);
   return NS_OK;
