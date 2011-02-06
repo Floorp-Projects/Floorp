@@ -115,7 +115,8 @@ html[dir=rtl] .expander {
 }
 
 .close:hover,
-.expander:hover {
+.expander:hover,
+.appTabIcon:hover {
   -moz-transition-property: opacity;
   -moz-transition-duration: 0.5s;
   -moz-transition-timing-function: ease-out;
@@ -239,20 +240,52 @@ html[dir=rtl] .overlay {
   box-shadow: -3px 3px 5.5px rgba(0,0,0,.5);
 }
 
-.appTabTray {
+.appTabTrayContainer {
   top: 34px;
   right: 1px;
+  -moz-border-start: 1px solid #E1E1E1;
+  padding: 0 5px;
+  overflow-x: hidden;
+  text-align: start;
+  line-height: 0;
 }
 
-html[dir=rtl] .appTabTray {
+html[dir=rtl] .appTabTrayContainer {
   right: auto;
   left: 1px;
+}
+
+.appTabTray {
+  display: inline-block;
+  -moz-column-width: 16px;
+  -moz-column-count: 0;
+  -moz-column-gap: 5px;
+}
+
+.appTabTrayContainerTruncated {
+  padding-bottom: 7px;
+}
+
+.appTabTrayContainerTruncated:after {
+  content: "…";
+  position: absolute;
+  bottom: 2px;
+  left: 0;
+  display: block;
+  width: 100%;
+  height: 15px;
+  line-height: 15px;
+  text-align: center;
+  font-size: 15px;
 }
 
 .appTabIcon {
   width: 16px;
   height: 16px;
   cursor: pointer;
+  opacity: 0.8;
+  padding-bottom: 3px;
+  display: block;
 }
 
 .undo {

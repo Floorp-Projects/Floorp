@@ -391,9 +391,9 @@ interface nsIXHRSendable : nsISupports {
 };
 
 /**
- * DEPRECATED.
+ * @deprecated
  */
-[scriptable, uuid(423fdd3d-41c9-4149-8fe5-b14a1d3912a0)]
+[deprecated, scriptable, uuid(423fdd3d-41c9-4149-8fe5-b14a1d3912a0)]
 interface nsIJSXMLHttpRequest : nsISupports {
   /**
    * Meant to be a script-only mechanism for setting an upload progress event

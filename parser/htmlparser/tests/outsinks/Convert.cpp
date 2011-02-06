@@ -318,7 +318,11 @@ Usage: %s [-i intype] [-o outtype] [-f flags] [-w wrapcol] [-c comparison_file] 
     ret = HTML2text(inString, inType, outType, flags, wrapCol, compareAgainst);
   } // this scopes the nsCOMPtrs
   // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
-  nsresult rv = NS_ShutdownXPCOM( NULL );
+
+#ifdef DEBUG
+  nsresult rv =
+#endif
+    NS_ShutdownXPCOM( NULL );
   NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
   return ret;
 }

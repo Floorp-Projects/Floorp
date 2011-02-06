@@ -26,6 +26,7 @@
  * Raymond Lee <raymond@appcoast.com>
  * Tim Taubert <tim.taubert@gmx.de>
  * Sean Dunn <seanedunn@yahoo.com>
+ * Mihai Sucan <mihai.sucan@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -188,10 +189,17 @@ function GroupItem(listOfEls, options) {
 
   this.$title
     .blur(function() {
+      self._titleFocused = false;
       self.$titleShield.show();
     })
     .focus(function() {
-      (self.$title)[0].select();
+      if (!self._titleFocused) {
+        (self.$title)[0].select();
+        self._titleFocused = true;
+      }
+    })
+    .mousedown(function(e) {
+      e.stopPropagation();
     })
     .keydown(handleKeyDown)
     .keyup(handleKeyUp);
@@ -219,9 +227,12 @@ function GroupItem(listOfEls, options) {
     .hide();
 
   // ___ app tabs: create app tab tray and populate it
+  let appTabTrayContainer = iQ("<div/>")
+    .addClass("appTabTrayContainer")
+    .appendTo($container);
   this.$appTabTray = iQ("<div/>")
     .addClass("appTabTray")
-    .appendTo($container);
+    .appendTo(appTabTrayContainer);
 
   AllTabs.tabs.forEach(function(xulTab) {
     if (xulTab.pinned && xulTab.ownerDocument.defaultView == gWindow)
@@ -369,6 +380,74 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   },
 
   // ----------
+  // Function: adjustAppTabTray
+  // Used to adjust the appTabTray size, to split the appTabIcons across
+  // multiple columns when needed - if the groupItem size is too small.
+  //
+  // Parameters:
+  //   arrangeGroup - rearrange the groupItem if the number of appTab columns
+  //   changes. If true, then this.arrange() is called, otherwise not.
+  adjustAppTabTray: function GroupItem_adjustAppTabTray(arrangeGroup) {
+    let icons = iQ(".appTabIcon", this.$appTabTray);
+    let container = iQ(this.$appTabTray[0].parentNode);
+    if (!icons.length) {
+      // There are no icons, so hide the appTabTray if needed.
+      if (parseInt(container.css("width")) != 0) {
+        this.$appTabTray.css("-moz-column-count", 0);
+        this.$appTabTray.css("height", 0);
+        container.css("width", 0);
+        container.css("height", 0);
+
+        if (container.hasClass("appTabTrayContainerTruncated"))
+          container.removeClass("appTabTrayContainerTruncated");
+
+        if (arrangeGroup)
+          this.arrange();
+      }
+      return;
+    }
+
+    let iconBounds = iQ(icons[0]).bounds();
+    let boxBounds = this.getBounds();
+    let contentHeight = boxBounds.height -
+                        parseInt(container.css("top")) -
+                        this.$resizer.height();
+    let rows = Math.floor(contentHeight / iconBounds.height);
+    let columns = Math.ceil(icons.length / rows);
+    let columnsGap = parseInt(this.$appTabTray.css("-moz-column-gap"));
+    let iconWidth = iconBounds.width + columnsGap;
+    let maxColumns = Math.floor((boxBounds.width * 0.20) / iconWidth);
+
+    if (columns > maxColumns)
+      container.addClass("appTabTrayContainerTruncated");
+    else if (container.hasClass("appTabTrayContainerTruncated"))
+      container.removeClass("appTabTrayContainerTruncated");
+
+    // Need to drop the -moz- prefix when Gecko makes it obsolete.
+    // See bug 629452.
+    if (parseInt(this.$appTabTray.css("-moz-column-count")) != columns)
+      this.$appTabTray.css("-moz-column-count", columns);
+
+    if (parseInt(this.$appTabTray.css("height")) != contentHeight) {
+      this.$appTabTray.css("height", contentHeight + "px");
+      container.css("height", contentHeight + "px");
+    }
+
+    let fullTrayWidth = iconWidth * columns - columnsGap;
+    if (parseInt(this.$appTabTray.css("width")) != fullTrayWidth)
+      this.$appTabTray.css("width", fullTrayWidth + "px");
+
+    let trayWidth = iconWidth * Math.min(columns, maxColumns) - columnsGap;
+    if (parseInt(container.css("width")) != trayWidth) {
+      container.css("width", trayWidth + "px");
+
+      // Rearrange the groupItem if the width changed.
+      if (arrangeGroup)
+        this.arrange();
+    }
+  },
+
+  // ----------
   // Function: getContentBounds
   // Returns a <Rect> for the groupItem's content area (which doesn't include the title, etc).
   getContentBounds: function GroupItem_getContentBounds() {
@@ -377,7 +456,11 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     box.top += titleHeight;
     box.height -= titleHeight;
 
-    var appTabTrayWidth = this.$appTabTray.width();
+    let appTabTrayContainer = iQ(this.$appTabTray[0].parentNode);
+    var appTabTrayWidth = appTabTrayContainer.width();
+    if (appTabTrayWidth)
+      appTabTrayWidth += parseInt(appTabTrayContainer.css(UI.rtl ? "left" : "right"));
+
     box.width -= appTabTrayWidth;
     if (UI.rtl) {
       box.left += appTabTrayWidth;
@@ -445,6 +528,10 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
     var offset = new Point(rect.left - this.bounds.left, rect.top - this.bounds.top);
     this.bounds = new Rect(rect);
+
+    // Make sure the AppTab icons fit the new groupItem size.
+    if (css.width || css.height)
+      this.adjustAppTabTray();
 
     // ___ Deal with children
     if (css.width || css.height) {
@@ -673,6 +760,22 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       group.newTab();
     }
 
+    this.destroy();
+  },
+
+  // ----------
+  // Function: destroy
+  // Close all tabs linked to children (tabItems), removes all children and 
+  // close the groupItem.
+  //
+  // Parameters:
+  //   options - An object with optional settings for this call.
+  //
+  // Options:
+  //   immediately - (bool) if true, no animation will be used
+  destroy: function GroupItem_destroy(options) {
+    let self = this;
+
     // when "TabClose" event is fired, the browser tab is about to close and our 
     // item "close" event is fired.  And then, the browser tab gets closed. 
     // In other words, the group "close" event is fired before all browser
@@ -703,7 +806,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
       this.$undoContainer.fadeOut(function() { self._unhide() });
     } else {
-      this.close();
+      this.close(options);
     }
   },
 
@@ -842,8 +945,10 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         $el = iQ(a);
         item = Items.item($el);
       }
-      Utils.assertThrow(!item.parent || item.parent == this,
-          "shouldn't already be in another groupItem");
+
+      // safeguard to remove the item from its previous group
+      if (item.parent && item.parent !== this)
+        item.parent.remove(item);
 
       item.removeTrenches();
 
@@ -961,6 +1066,11 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       if (typeof item.setResizable == 'function')
         item.setResizable(true, options.immediately);
 
+      // if a blank tab is selected while restoring a tab the blank tab gets
+      // removed. we need to keep the group alive for the restored tab.
+      if (item.tab._tabViewTabIsRemovedAfterRestore)
+        options.dontClose = true;
+
       let closed = options.dontClose ? false : this.closeIfEmpty();
       if (closed)
         this._makeClosestTabActive();
@@ -1024,11 +1134,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       });
 
     // adjust the tray
-    let columnWidth = $appTab.width();
-    if (parseInt(this.$appTabTray.css("width")) != columnWidth) {
-      this.$appTabTray.css({width: columnWidth});
-      this.arrange();
-    }
+    this.adjustAppTabTray(true);
   },
 
   // ----------
@@ -1044,10 +1150,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     });
     
     // adjust the tray
-    if (!iQ(".appTabIcon", this.$appTabTray).length) {
-      this.$appTabTray.css({width: 0});
-      this.arrange();
-    }
+    this.adjustAppTabTray(true);
 
     xulTab.removeEventListener("error", this._onAppTabError, false);
   },
@@ -1450,6 +1553,13 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
     // Create new tab and zoom in on it after a double click
     container.mousedown(function(e) {
+      if (!Utils.isLeftClick(e))
+        return;
+
+      // clicking in the title bar shouldn't create new tabs
+      if (self.$titlebar[0] == e.target || self.$titlebar.contains(e.target))
+        return;
+
       if (Date.now() - self._lastClick <= UI.DBLCLICK_INTERVAL &&
           (self._lastClickPositions.x - UI.DBLCLICK_OFFSET) <= e.clientX &&
           (self._lastClickPositions.x + UI.DBLCLICK_OFFSET) >= e.clientX &&
@@ -1524,12 +1634,6 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
                                   addTab: drag.info.item.parent != self,
                                   animate: true});
       }
-
-      // remove the item from its parent if that's not the current groupItem.
-      // this may occur when dragging too quickly so the out event is not fired.
-      var groupItem = drag.info.item.parent;
-      if (groupItem && self !== groupItem)
-        groupItem.remove(drag.info.$el, {dontClose: true});
 
       if (dropIndex !== false)
         options = {index: dropIndex};
@@ -1892,7 +1996,6 @@ let GroupItems = {
   // ----------
   // Function: reconstitute
   // Restores to stored state, creating groupItems as needed.
-  // If no data, sets up blank slate (including "new tabs" groupItem).
   reconstitute: function GroupItems_reconstitute(groupItemsData, groupItemData) {
     try {
       let activeGroupId;
@@ -1910,7 +2013,7 @@ let GroupItems = {
           let data = groupItemData[id];
           if (this.groupItemStorageSanity(data)) {
             let groupItem = this.groupItem(data.id); 
-            if (groupItem) {
+            if (groupItem && !groupItem.hidden) {
               groupItem.userSize = data.userSize;
               groupItem.setTitle(data.title);
               groupItem.setBounds(data.bounds, true);
@@ -1930,7 +2033,7 @@ let GroupItems = {
         }
 
         toClose.forEach(function(groupItem) {
-          groupItem.close({immediately: true});
+          groupItem.destroy({immediately: true});
         });
       }
 

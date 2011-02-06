@@ -56,6 +56,7 @@
 #include "gfxContext.h"
 #include "gfxColor.h"
 #include "gfxUtils.h"
+#include "nsNPAPIPluginInstance.h"
 
 #if defined(OS_WIN)
 #include <windowsx.h>
@@ -1239,6 +1240,17 @@ PluginInstanceParent::AnswerNPN_ConvertPoint(const double& sourceX,
                                       destSpace);
 
     return true;
+}
+
+bool
+PluginInstanceParent::RecvNegotiatedCarbon()
+{
+  nsNPAPIPluginInstance *inst = static_cast<nsNPAPIPluginInstance*>(mNPP->ndata);
+  if (!inst) {
+    return false;
+  }
+  inst->CarbonNPAPIFailure();
+  return true;
 }
 
 #if defined(OS_WIN)

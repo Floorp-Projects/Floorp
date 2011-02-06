@@ -418,7 +418,7 @@ let UI = {
       let self = this;
       this._activeTab.addSubscriber(this, "close", function(closedTabItem) {
         if (self._activeTab == closedTabItem)
-          self._activeTab = null;
+          self.setActiveTab(null);
       });
 
       this._activeTab.makeActive();
@@ -731,14 +731,21 @@ let UI = {
           let closingLastOfGroup = (groupItem && 
               groupItem._children.length == 1 && 
               groupItem._children[0].tab == tab);
-          
+
           // 2) Take care of the case where you've closed the last tab in
           // an un-named groupItem, which means that the groupItem is gone (null) and
           // there are no visible tabs. 
           let closingUnnamedGroup = (groupItem == null &&
               gBrowser.visibleTabs.length <= 1); 
-              
-          if (closingLastOfGroup || closingUnnamedGroup) {
+
+          // 3) When a blank tab is active while restoring a closed tab the
+          // blank tab gets removed. The active group is not closed as this is
+          // where the restored tab goes. So do not show the TabView.
+          let closingBlankTabAfterRestore =
+            (tab && tab._tabViewTabIsRemovedAfterRestore);
+
+          if ((closingLastOfGroup || closingUnnamedGroup) &&
+              !closingBlankTabAfterRestore) {
             // for the tab focus event to pick up.
             self._closedLastVisibleTab = true;
             self.showTabView();
@@ -781,6 +788,10 @@ let UI = {
 
       TabItems.handleTabUnpin(tab);
       GroupItems.removeAppTab(tab);
+
+      let groupItem = tab._tabViewTabItem.parent;
+      if (groupItem)
+        self.setReorderTabItemsOnShow(groupItem);
     };
 
     // Actually register the above handlers

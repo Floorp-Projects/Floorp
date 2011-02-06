@@ -20,6 +20,7 @@
 # Contributor(s):
 #   Raymond Lee <raymond@appcoast.com>
 #   Ian Gilman <ian@iangilman.com>
+#   Tim Taubert <tim.taubert@gmx.de>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,7 +39,8 @@
 let TabView = {
   _deck: null,
   _window: null,
-  _sessionstore: null,
+  _firstRunExperienced: false,
+  _browserKeyHandlerInitialized: false,
   VISIBILITY_IDENTIFIER: "tabview-visibility",
 
   // ----------
@@ -49,32 +51,67 @@ let TabView = {
     let title = gNavigatorBundle.getFormattedString("tabView2.title", [brandShortName]);
     return this.windowTitle = title;
   },
+  
+  // ----------
+  get firstRunExperienced() {
+    return this._firstRunExperienced;
+  },
 
   // ----------
   init: function TabView_init() {
-    // ___ keys    
-    this._setBrowserKeyHandlers();
-
-    // ___ visibility
-    this._sessionstore =
-      Cc["@mozilla.org/browser/sessionstore;1"].
-        getService(Ci.nsISessionStore);
-
-    let data = this._sessionstore.getWindowValue(window, this.VISIBILITY_IDENTIFIER);
-
-    if (data && data == "true") {
-      this.show();
+    if (!Services.prefs.prefHasUserValue("browser.panorama.experienced_first_run") ||
+        !Services.prefs.getBoolPref("browser.panorama.experienced_first_run")) {
+      Services.prefs.addObserver(
+        "browser.panorama.experienced_first_run", this, false);
     } else {
-      let self = this;
-      // if a tab is changed from hidden to unhidden and the iframe is not 
-      // initialized, load the iframe and setup the tab.
-      this._tabShowEventListener = function (event) {
-        if (!self._window)
-          self._initFrame(function() {
-            self._window.UI.onTabSelect(gBrowser.selectedTab);
-          });
-      };
-      gBrowser.tabContainer.addEventListener(
+      this._firstRunExperienced = true;
+
+      if ((gBrowser.tabs.length - gBrowser.visibleTabs.length) > 0)
+        this._setBrowserKeyHandlers();
+
+      // ___ visibility
+      let sessionstore =
+        Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
+      let data = sessionstore.getWindowValue(window, this.VISIBILITY_IDENTIFIER);
+
+      if (data && data == "true") {
+        this.show();
+      } else {
+        let self = this;
+
+        // if a tab is changed from hidden to unhidden and the iframe is not 
+        // initialized, load the iframe and setup the tab.
+        this._tabShowEventListener = function (event) {
+          if (!self._window)
+            self._initFrame(function() {
+              self._window.UI.onTabSelect(gBrowser.selectedTab);
+            });
+        };
+        gBrowser.tabContainer.addEventListener(
+          "TabShow", this._tabShowEventListener, true);
+      }
+    }
+  },
+
+  // ----------
+  // Observes topic changes.
+  observe: function TabView_observe(subject, topic, data) {
+    if (topic == "nsPref:changed") {
+      Services.prefs.removeObserver(
+        "browser.panorama.experienced_first_run", this);
+      this._firstRunExperienced = true;
+    }
+  },
+
+  // ----------
+  // Uninitializes TabView.
+  uninit: function TabView_uninit() {
+    if (!this._firstRunExperienced) {
+      Services.prefs.removeObserver(
+        "browser.panorama.experienced_first_run", this);
+    }
+    if (this._tabShowEventListener) {
+      gBrowser.tabContainer.removeEventListener(
         "TabShow", this._tabShowEventListener, true);
     }
   },
@@ -106,7 +143,10 @@ let TabView = {
       if (this._tabShowEventListener) {
         gBrowser.tabContainer.removeEventListener(
           "TabShow", this._tabShowEventListener, true);
+        this._tabShowEventListener = null;
       }
+
+      this._setBrowserKeyHandlers();
     }
   },
 
@@ -150,7 +190,7 @@ let TabView = {
       this.show();
   },
   
-  getActiveGroupName: function Tabview_getActiveGroupName() {
+  getActiveGroupName: function TabView_getActiveGroupName() {
     // We get the active group this way, instead of querying
     // GroupItems.getActiveGroupItem() because the tabSelect event
     // will not have happened by the time the browser tries to
@@ -193,7 +233,7 @@ let TabView = {
   },
 
   // ----------
-  _createGroupMenuItem : function(groupItem) {
+  _createGroupMenuItem: function TabView__createGroupMenuItem(groupItem) {
     let menuItem = document.createElement("menuitem")
     menuItem.setAttribute("label", groupItem.getTitle());
     menuItem.setAttribute(
@@ -204,13 +244,19 @@ let TabView = {
   },
 
   // ----------
-  moveTabTo: function(tab, groupItemId) {
-    if (this._window)
+  moveTabTo: function TabView_moveTabTo(tab, groupItemId) {
+    if (this._window) {
       this._window.GroupItems.moveTabToGroupItem(tab, groupItemId);
+    } else {
+      let self = this;
+      this._initFrame(function() {
+        self._window.GroupItems.moveTabToGroupItem(tab, groupItemId);
+      });
+    }
   },
 
   // ----------
-  enableSearch: function Tabview_enableSearch(event) {
+  enableSearch: function TabView_enableSearch(event) {
     if (this._window)
       this._window.UI.enableSearch(event);
   },
@@ -218,11 +264,16 @@ let TabView = {
   // ----------
   // Adds new key commands to the browser, for invoking the Tab Candy UI
   // and for switching between groups of tabs when outside of the Tab Candy UI.
-  _setBrowserKeyHandlers : function() {
-    let self = this;
+  _setBrowserKeyHandlers: function TabView__setBrowserKeyHandlers() {
+    if (this._browserKeyHandlerInitialized)
+      return;
 
+    this._browserKeyHandlerInitialized = true;
+
+    let self = this;
     window.addEventListener("keypress", function(event) {
-      if (self.isVisible())
+      if (self.isVisible() ||
+          (gBrowser.tabs.length - gBrowser.visibleTabs.length) == 0)
         return;
 
       let charCode = event.charCode;
@@ -246,12 +297,16 @@ let TabView = {
       }
     }, true);
   },
-  
+
   // ----------
   // Prepares the tab view for undo close tab.
-  prepareUndoCloseTab: function() {
-    if (this._window)
+  prepareUndoCloseTab: function(blankTabToRemove) {
+    if (this._window) {
       this._window.UI.restoredClosedTab = true;
+
+      if (blankTabToRemove)
+        blankTabToRemove._tabViewTabIsRemovedAfterRestore = true;
+    }
   },
 
   // ----------
@@ -259,5 +314,13 @@ let TabView = {
   afterUndoCloseTab: function () {
     if (this._window)
       this._window.UI.restoredClosedTab = false;
+  },
+
+  // ----------
+  // On move to group pop showing.
+  moveToGroupPopupShowing: function TabView_moveToGroupPopupShowing(event) {
+    // there are hidden tabs so initialize the iframe and update the context menu
+    if ((gBrowser.tabs.length - gBrowser.visibleTabs.length) > 0)
+      this.updateContextMenu(TabContextMenu.contextTab, event.target);
   }
 };

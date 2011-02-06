@@ -37,27 +37,23 @@
       ////////////////////////////////////////////////////////////////////////
       // getTextAfterOffset
 
+      var IDs = [ "input", "div", "editable", "textarea" ];
+      var regularIDs = [ "input", "div", "editable" ];
+
       // BOUNDARY_CHAR
-      testTextAfterOffset(0, BOUNDARY_CHAR, "e", 1, 2,
-                          "input", kTodo, kTodo, kTodo,
-                          "div", kTodo, kTodo, kTodo,
-                          "editable", kTodo, kTodo, kTodo,
-                          "textarea", kTodo, kTodo, kTodo);
-      testTextAfterOffset(1, BOUNDARY_CHAR, "l", 2, 3,
-                          "input", kTodo, kTodo, kTodo,
-                          "div", kTodo, kTodo, kTodo,
-                          "editable", kTodo, kTodo, kTodo,
-                          "textarea", kTodo, kTodo, kTodo);
-      testTextAfterOffset(14, BOUNDARY_CHAR, "", 15, 15,
-                          "input", kTodo, kTodo, kOk,
-                          "div", kTodo, kTodo, kOk,
-                          "editable", kTodo, kTodo, kOk,
-                          "textarea", kTodo, kTodo, kOk);
+
+      testCharAfterOffset(IDs, 0, "e", 1, 2);
+      testCharAfterOffset(IDs, 1, "l", 2, 3);
+      testCharAfterOffset(regularIDs, 14, "", 15, 15);
+      testCharAfterOffset("textarea", 14, "\n", 15, 16);
+
+      // XXX: why are 15/15 expected? there's no 16 offset we are trying to
+      // get an offset for?
       testTextAfterOffset(15, BOUNDARY_CHAR, "", 15, 15,
 			  "input", kOk, kTodo, kTodo,
 			  "div", kOk, kTodo, kTodo,
-			  "editable", kOk, kTodo, kTodo,
-			  "textarea", kTodo, kOk, kTodo);
+			  "editable", kOk, kTodo, kTodo);
+      testCharAfterOffset("textarea", 15, "", 16, 16);
 
       // BOUNDARY_WORD_START
       testTextAfterOffset(0, BOUNDARY_WORD_START, "my ", 6, 9,
@@ -210,27 +206,13 @@
       ////////////////////////////////////////////////////////////////////////
       // getTextBeforeOffset
 
+      var IDs = [ "input", "div", "editable", "textarea" ];
+
       // BOUNDARY_CHAR
-      testTextBeforeOffset(0, BOUNDARY_CHAR, "", 0, 0, 
-                           "input", kTodo, kOk, kTodo,
-                           "div", kTodo, kOk, kTodo,
-                           "editable", kTodo, kOk, kTodo,
-                           "textarea", kTodo, kOk, kTodo);
-      testTextBeforeOffset(1, BOUNDARY_CHAR, "h", 0, 1,
-                           "input", kTodo, kOk, kTodo,
-                           "div", kTodo, kOk, kTodo,
-                           "editable", kTodo, kOk, kTodo,
-                           "textarea", kTodo, kOk, kTodo);
-      testTextBeforeOffset(14, BOUNDARY_CHAR, "n", 13, 14,
-                           "input", kTodo, kOk, kTodo,
-                           "div", kTodo, kOk, kTodo,
-                           "editable", kTodo, kOk, kTodo,
-                           "textarea", kTodo, kOk, kTodo);
-      testTextBeforeOffset(15, BOUNDARY_CHAR, "d", 14, 15,
-                           "input", kTodo, kTodo, kTodo,
-                           "div", kTodo, kTodo, kTodo,
-                           "editable", kTodo, kTodo, kTodo,
-                           "textarea", kTodo, kOk, kTodo);
+      testCharBeforeOffset(IDs, 0, "", 0, 0);
+      testCharBeforeOffset(IDs, 1, "h", 0, 1);
+      testCharBeforeOffset(IDs, 14, "n", 13, 14);
+      testCharBeforeOffset(IDs, 15, "d", 14, 15);
 
       // BOUNDARY_WORD_START
       testTextBeforeOffset(0, BOUNDARY_WORD_START, "", 0, 0,
@@ -383,27 +365,17 @@
       ////////////////////////////////////////////////////////////////////////
       // getTextAtOffset
 
+      IDs = [ "input", "div", "editable", "textarea" ];
+      regularIDs = [ "input", "div", "editable" ];
+
       // BOUNDARY_CHAR
-      testTextAtOffset(0, BOUNDARY_CHAR, "h", 0, 1,
-                       "input", kOk, kOk, kOk,
-                       "div", kOk, kOk, kOk,
-                       "editable", kOk, kOk, kOk,
-                       "textarea", kOk, kOk, kOk);
-      testTextAtOffset(1, BOUNDARY_CHAR, "e", 1, 2,
-                       "input", kOk, kOk, kOk,
-                       "div", kOk, kOk, kOk,
-                       "editable", kOk, kOk, kOk,
-                       "textarea", kOk, kOk, kOk);
-      testTextAtOffset(14, BOUNDARY_CHAR, "d", 14, 15,
-                       "input", kOk, kOk, kOk,
-                       "div", kOk, kOk, kOk,
-                       "editable", kOk, kOk, kOk,
-                       "textarea", kOk, kOk, kOk);
-      testTextAtOffset(15, BOUNDARY_CHAR, "", 15, 15,
-                        "input", kOk, kTodo, kTodo,
-                        "div", kOk, kTodo, kTodo,
-                        "editable", kOk, kTodo, kTodo,
-                        "textarea", kTodo, kOk, kTodo);
+
+      testCharAtOffset(IDs, 0, "h", 0, 1);
+      testCharAtOffset(IDs, 1, "e", 1, 2);
+      testCharAtOffset(IDs, 14, "d", 14, 15);
+      testCharAtOffset(regularIDs, 15, "", 15, 15);
+      testCharAtOffset("textarea", 15, "\n", 15, 16);
+      testCharAtOffset("textarea", 16, "", 16, 16);
 
       // BOUNDARY_WORD_START
       testTextAtOffset(0, BOUNDARY_WORD_START, "hello ", 0, 6,

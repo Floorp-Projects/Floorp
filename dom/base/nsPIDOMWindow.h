@@ -392,8 +392,8 @@ public:
    * Callback for notifying a window about a modal dialog being
    * opened/closed with the window as a parent.
    */
-  virtual void EnterModalState() = 0;
-  virtual void LeaveModalState() = 0;
+  virtual nsIDOMWindow *EnterModalState() = 0;
+  virtual void LeaveModalState(nsIDOMWindow *) = 0;
 
   virtual PRBool CanClose() = 0;
   virtual nsresult ForceClose() = 0;

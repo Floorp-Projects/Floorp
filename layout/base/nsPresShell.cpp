@@ -4416,7 +4416,7 @@ nsresult PresShell::GetLinkLocation(nsIDOMNode* aNode, nsAString& aLocationStrin
   NS_ENSURE_ARG_POINTER(aNode);
   nsresult rv;
   nsAutoString anchorText;
-  static char strippedChars[] = {'\t','\r','\n'};
+  static const char strippedChars[] = "\t\r\n";
 
   // are we an anchor?
   nsCOMPtr<nsIDOMHTMLAnchorElement> anchor(do_QueryInterface(aNode));
@@ -4996,18 +4996,7 @@ PresShell::DocumentStatesChanged(nsIDocument* aDocument,
   if (aStateMask.HasState(NS_DOCUMENT_STATE_WINDOW_INACTIVE)) {
     nsIFrame* root = FrameManager()->GetRootFrame();
     if (root) {
-      // It's a display root. So, invalidate the layer contents of
-      // everything we can find. We need to do this because the contents
-      // of controls etc can depend on whether the window is active,
-      // and when a window becomes (in)active it just gets repainted
-      // and we don't specifically invalidate each affected control.
-      nsIWidget* widget = root->GetNearestWidget();
-      if (widget) {
-        LayerManager* layerManager = widget->GetLayerManager();
-        if (layerManager) {
-          FrameLayerBuilder::InvalidateAllThebesLayerContents(layerManager);
-        }
-      }
+      root->InvalidateFrameSubtree();
     }
   }
 }
@@ -6138,21 +6127,33 @@ PresShell::Paint(nsIView*           aDisplayRoot,
   nsIFrame* frame = aPaintDefaultBackground
       ? nsnull : static_cast<nsIFrame*>(aDisplayRoot->GetClientData());
 
-  LayerManager* layerManager = aWidgetToPaint->GetLayerManager();
+  bool isRetainingManager;
+  LayerManager* layerManager =
+    aWidgetToPaint->GetLayerManager(&isRetainingManager);
   NS_ASSERTION(layerManager, "Must be in paint event");
   layerManager->BeginTransaction();
 
-  if (frame) {
+  if (frame && isRetainingManager) {
+    // Try to do an empty transaction, if the frame tree does not
+    // need to be updated. Do not try to do an empty transaction on
+    // a non-retained layer manager (like the BasicLayerManager that
+    // draws the window title bar on Mac), because a) it won't work
+    // and b) below we don't want to clear NS_FRAME_UPDATE_LAYER_TREE,
+    // that will cause us to forget to update the real layer manager!
     if (!(frame->GetStateBits() & NS_FRAME_UPDATE_LAYER_TREE)) {
       if (layerManager->EndEmptyTransaction()) {
         frame->UpdatePaintCountForPaintedPresShells();
+        presContext->NotifyDidPaintForSubtree();
         
         return NS_OK;
       }
     }
     
-    frame->ClearPresShellsFromLastPaint();
+
     frame->RemoveStateBits(NS_FRAME_UPDATE_LAYER_TREE);
+  }
+  if (frame) {
+    frame->ClearPresShellsFromLastPaint();
   }
 
   nscolor bgcolor = ComputeBackstopColor(aDisplayRoot);

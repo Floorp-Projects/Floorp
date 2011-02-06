@@ -232,7 +232,6 @@ _BROWSER_FILES = \
                  browser_tabMatchesInAwesomebar.js \
                  file_bug550565_popup.html \
                  file_bug550565_favicon.ico \
-                 browser_overLinkInLocationBar.js \
                  browser_aboutHome.js \
                  app_bug575561.html \
                  app_subframe_bug575561.html \
@@ -252,6 +251,10 @@ else
 _BROWSER_FILES += \
 		browser_customize.js \
 		$(NULL)
+
+# TODO: Activate after carbon test plugin lands, bug 628651
+# 		browser_maconly_carbon_mismatch_plugin.js \
+
 endif
 
 ifneq (gtk2,$(MOZ_WIDGET_TOOLKIT))

@@ -149,14 +149,7 @@ NS_InvokeByIndex_P(nsISupports * that, PRUint32 methodIndex,
     invoke_copy_to_stack(stack, paramCount, params, gpregs, fpregs);
 
     // Load FPR registers from fpregs[]
-    register double d0 asm("xmm0");
-    register double d1 asm("xmm1");
-    register double d2 asm("xmm2");
-    register double d3 asm("xmm3");
-    register double d4 asm("xmm4");
-    register double d5 asm("xmm5");
-    register double d6 asm("xmm6");
-    register double d7 asm("xmm7");
+    double d0, d1, d2, d3, d4, d5, d6, d7;
 
     switch (nr_fpr) {
 #define ARG_FPR(N) \
@@ -174,12 +167,7 @@ NS_InvokeByIndex_P(nsISupports * that, PRUint32 methodIndex,
     }
     
     // Load GPR registers from gpregs[]
-    register PRUint64 a0 asm("rdi");
-    register PRUint64 a1 asm("rsi");
-    register PRUint64 a2 asm("rdx");
-    register PRUint64 a3 asm("rcx");
-    register PRUint64 a4 asm("r8");
-    register PRUint64 a5 asm("r9");
+    PRUint64 a0, a1, a2, a3, a4, a5;
     
     switch (nr_gpr) {
 #define ARG_GPR(N) \
@@ -193,18 +181,17 @@ NS_InvokeByIndex_P(nsISupports * that, PRUint32 methodIndex,
     case 0:;
 #undef ARG_GPR
     }
-
-    // Ensure that assignments to SSE registers won't be optimized away
-    asm("" ::
-        "x" (d0), "x" (d1), "x" (d2), "x" (d3),
-        "x" (d4), "x" (d5), "x" (d6), "x" (d7));
     
     // Get pointer to method
     PRUint64 methodAddress = *((PRUint64 *)that);
     methodAddress += 8 * methodIndex;
     methodAddress = *((PRUint64 *)methodAddress);
     
-    typedef PRUint32 (*Method)(PRUint64, PRUint64, PRUint64, PRUint64, PRUint64, PRUint64);
-    PRUint32 result = ((Method)methodAddress)(a0, a1, a2, a3, a4, a5);
+    typedef PRUint32 (*Method)(PRUint64, PRUint64, PRUint64, PRUint64,
+                               PRUint64, PRUint64, double, double, double,
+                               double, double, double, double, double);
+    PRUint32 result = ((Method)methodAddress)(a0, a1, a2, a3, a4, a5,
+                                              d0, d1, d2, d3, d4, d5,
+                                              d6, d7);
     return result;
 }

@@ -124,7 +124,7 @@ nsHTMLVideoElement::ParseAttribute(PRInt32 aNamespaceID,
                                    nsAttrValue& aResult)
 {
    if (aAttribute == nsGkAtoms::width || aAttribute == nsGkAtoms::height) {
-     return aResult.ParseSpecialIntValue(aValue, PR_TRUE);
+     return aResult.ParseSpecialIntValue(aValue);
    }
 
    return nsHTMLMediaElement::ParseAttribute(aNamespaceID, aAttribute, aValue,

@@ -54,7 +54,7 @@ fails == canvas-drawImage-slice-1b.html lime100x100-ref.html # XXX all edges fuz
 # with a variety of preserveAspectRatio values in play.
 # NOTE: The reference cases in this test triggers 72 assertions (bug 563481)
 asserts(72) == img-and-image-1.html img-and-image-1-ref.svg
- 
+
 # More complex <img> tests
 random-if(gtk2Widget) == img-anim-1.html  lime100x100-ref.html # bug 612214
 == img-content-outside-viewBox-1.html img-content-outside-viewBox-1-ref.html
@@ -65,17 +65,15 @@ random-if(d2d) == img-widthAndHeight-meet-2.html  img-widthAndHeight-meet-2-ref.
 random-if(d2d) == img-widthAndHeight-slice-1.html img-widthAndHeight-slice-1-ref.html
 random-if(d2d) == img-widthAndHeight-slice-2.html img-widthAndHeight-slice-2-ref.html
 
-# NOTE: img-*-*-2.html are near-permaorange on 64-bit OS X - marking as random,
-# investigating in bug 629143.
 random-if(d2d) == img-height-meet-1.html   img-height-meet-1-ref.html
-random-if(cocoaWidget&&layersGPUAccelerated) random-if(d2d) == img-height-meet-2.html   img-height-meet-2-ref.html
+random-if(d2d) == img-height-meet-2.html   img-height-meet-2-ref.html
 random-if(d2d) == img-height-slice-1.html  img-height-slice-1-ref.html
-random-if(cocoaWidget&&layersGPUAccelerated) random-if(d2d) == img-height-slice-2.html  img-height-slice-2-ref.html
+random-if(d2d) == img-height-slice-2.html  img-height-slice-2-ref.html
 
 random-if(d2d) == img-width-meet-1.html   img-width-meet-1-ref.html
-random-if(cocoaWidget&&layersGPUAccelerated) random-if(d2d) == img-width-meet-2.html   img-width-meet-2-ref.html
+random-if(d2d) == img-width-meet-2.html   img-width-meet-2-ref.html
 random-if(d2d) == img-width-slice-1.html  img-width-slice-1-ref.html
-random-if(cocoaWidget&&layersGPUAccelerated) random-if(d2d) == img-width-slice-2.html  img-width-slice-2-ref.html
+random-if(d2d) == img-width-slice-2.html  img-width-slice-2-ref.html
 
 == list-simple-1.html list-simple-1-ref.html
 
@@ -96,5 +94,5 @@ HTTP == svg-image-datauri-1.html       lime100x100.svg
 HTTP == svg-image-external-1.html      blue100x100.svg
 == svg-stylesheet-datauri-1.html       lime100x100.svg
 HTTP == svg-stylesheet-datauri-1.html  lime100x100.svg
-== svg-stylesheet-external-1.html      lime100x100.svg
+random == svg-stylesheet-external-1.html      lime100x100.svg # see bug 629885 comment 9
 HTTP == svg-stylesheet-external-1.html blue100x100.svg

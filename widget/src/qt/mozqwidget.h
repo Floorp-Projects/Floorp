@@ -42,14 +42,6 @@
 #include <QtGui/QGraphicsView>
 #include <QtGui/QGraphicsWidget>
 
-#ifdef MOZ_ENABLE_MEEGOTOUCH
-#include <QtGui/QGraphicsSceneResizeEvent>
-#include <MSceneWindow>
-#include <QTimer>
-#include <mstatusbar.h>
-#include <MInputMethodState>
-#endif
-
 #include "nsIWidget.h"
 #include "prenv.h"
 
@@ -201,6 +193,7 @@ public:
      , mTopLevelWidget(aTopLevel)
     {
         scene()->addItem(aTopLevel);
+        setMouseTracking(true);
     }
 
 protected:
@@ -228,134 +221,5 @@ private:
     MozQWidget* mTopLevelWidget;
 };
 
-#ifdef MOZ_ENABLE_MEEGOTOUCH
-class MozMSceneWindow : public MSceneWindow
-{
-    Q_OBJECT
-public:
-    MozMSceneWindow(MozQWidget* aTopLevel)
-     : MSceneWindow(aTopLevel->parentItem())
-     , mTopLevelWidget(aTopLevel)
-     , mStatusBar(nsnull)
-    {
-        mTopLevelWidget->setParentItem(this);
-        mTopLevelWidget->installEventFilter(this);
-        mStatusBar = new MStatusBar();
-        mStatusBar->appear(scene());
-        connect(mStatusBar, SIGNAL(appeared()), this, SLOT(CheckTopLevelSize()));
-        connect(mStatusBar, SIGNAL(disappeared()), this, SLOT(CheckTopLevelSize()));
-        MInputMethodState *inputMethodState = MInputMethodState::instance();
-        if (inputMethodState) 
-            connect(inputMethodState, SIGNAL(inputMethodAreaChanged(const QRect &)),
-                    this, SLOT(VisibleScreenAreaChanged(const QRect &)));
-    }
-
-protected:
-    virtual void resizeEvent(QGraphicsSceneResizeEvent* aEvent) {
-        mCurrentSize = aEvent->newSize();
-        MSceneWindow::resizeEvent(aEvent);
-        CheckTopLevelSize();
-    }
-
-    virtual bool eventFilter(QObject* watched, QEvent* e)
-    {
-        if (e->type() == QEvent::GraphicsSceneResize ||
-            e->type() == QEvent::GraphicsSceneMove) {
-
-            //Do this in next event loop, or we are in recursion!
-            QTimer::singleShot(0, this, SLOT(CheckTopLevelSize()));
-        }
-
-        //false == let event processing continue
-        return false;
-    }
-
-private slots:
-    void CheckTopLevelSize() {
-        if (mTopLevelWidget) {
-            qreal xpos = 0;
-            qreal ypos = 0;
-            qreal width = mCurrentSize.width();
-            qreal height = mCurrentSize.height();
-
-            //If statusbar is visible, move toplevel widget down
-            if (mStatusBar->isVisible()) {
-                ypos = mStatusBar->size().height();
-                height -= ypos;
-            }
-
-            // transfer new size to graphics widget if changed
-            QRectF r = mTopLevelWidget->geometry();
-            if (r != QRectF(xpos, ypos, width, height))
-                mTopLevelWidget->setGeometry(xpos, ypos, width, height);
-        }
-    }
-
-    void VisibleScreenAreaChanged(const QRect & region) {
-        if (mTopLevelWidget) {
-            QRect r = mTopLevelWidget->geometry().toRect();
-            r.setHeight(r.height()-region.height());
-
-            nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
-            if (observerService) {
-                QString rect = QString("{\"left\": %1, \"top\": %2, \"right\": %3, \"bottom\": %4}")
-                                      .arg(r.left())
-                                      .arg(r.top())
-                                      .arg(r.right())
-                                      .arg(r.bottom());
-
-                observerService->NotifyObservers(nsnull, "softkb-change", rect.utf16());
-            }
-        }
-    }
-private:
-    MozQWidget* mTopLevelWidget;
-    MStatusBar* mStatusBar;
-    QSizeF mCurrentSize;
-};
-
-/**
-    This is a helper class to synchronize the MWindow window with
-    its contained QGraphicsWidget for things like resizing and closing
-    by the user.
-*/
-class MozMGraphicsView : public MWindow
-{
-
-public:
-    MozMGraphicsView(MozQWidget* aTopLevel, QWidget* aParent = nsnull)
-     : MWindow(aParent)
-     , mEventHandler(this)
-     , mTopLevelWidget(aTopLevel)
-    {
-        MozMSceneWindow *page = new MozMSceneWindow(aTopLevel);
-        if (page)
-            page->appear(this);
-    }
-
-protected:
-    virtual bool event(QEvent* aEvent) {
-        mEventHandler.handleEvent(aEvent, mTopLevelWidget);
-        return MWindow::event(aEvent);
-    }
-
-    virtual void resizeEvent(QResizeEvent* aEvent)
-    {
-        setSceneRect(viewport()->rect());
-        MWindow::resizeEvent(aEvent);
-    }
-
-    virtual void closeEvent (QCloseEvent* aEvent)
-    {
-        if (!mEventHandler.handleCloseEvent(aEvent, mTopLevelWidget))
-            MWindow::closeEvent(aEvent);
-    }
-
-private:
-    MozQGraphicsViewEvents mEventHandler;
-    MozQWidget* mTopLevelWidget;
-};
-
-#endif /* MOZ_ENABLE_MEEGOTOUCH */
 
 #endif

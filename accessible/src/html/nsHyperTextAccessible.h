@@ -90,6 +90,7 @@ public:
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
 
   virtual void InvalidateChildren();
+  virtual PRBool RemoveChild(nsAccessible* aAccessible);
 
   // nsHyperTextAccessible (static helper method)
 
@@ -210,6 +211,20 @@ public:
   }
 
   /**
+   * Get a character before/at/after the given offset.
+   *
+   * @param aOffset       [in] the given offset
+   * @param aShift        [in] specifies whether to get a char before/at/after
+   *                        offset
+   * @param aChar         [out] the character
+   * @param aStartOffset  [out, optional] the start offset of the character
+   * @param aEndOffset    [out, optional] the end offset of the character
+   * @return               false if offset at the given shift is out of range
+   */
+  bool GetCharAt(PRInt32 aOffset, EGetTextType aShift, nsAString& aChar,
+                 PRInt32* aStartOffset = nsnull, PRInt32* aEndOffset = nsnull);
+
+  /**
    * Return text offset of the given child accessible within hypertext
    * accessible.
    *
@@ -249,6 +264,23 @@ public:
 
 protected:
   // nsHyperTextAccessible
+
+  /**
+   * Transform magic offset into text offset.
+   */
+  inline PRInt32 ConvertMagicOffset(PRInt32 aOffset)
+  {
+    if (aOffset == nsIAccessibleText::TEXT_OFFSET_END_OF_TEXT)
+      return CharacterCount();
+
+    if (aOffset == nsIAccessibleText::TEXT_OFFSET_CARET) {
+      PRInt32 caretOffset = -1;
+      GetCaretOffset(&caretOffset);
+      return caretOffset;
+    }
+
+    return aOffset;
+  }
 
   /*
    * This does the work for nsIAccessibleText::GetText[At|Before|After]Offset

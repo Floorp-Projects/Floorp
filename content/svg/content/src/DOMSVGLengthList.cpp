@@ -85,7 +85,9 @@ DOMSVGLengthList::InternalListLengthWillChange(PRUint32 aNewLength)
     }
   }
 
-  if (!mItems.SetLength(aNewLength)) { // OOM
+  if (!mItems.SetLength(aNewLength)) {
+    // We silently ignore SetLength OOM failure since being out of sync is safe
+    // so long as we have *fewer* items than our internal list.
     mItems.Clear();
     return;
   }
@@ -204,26 +206,31 @@ DOMSVGLengthList::InsertItemBefore(nsIDOMSVGLength *newItem,
   if (!domItem) {
     return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
   }
-  index = NS_MIN(index, Length());
-  SVGLength length = domItem->ToSVGLength(); // get before setting domItem
   if (domItem->HasOwner()) {
-    domItem = new DOMSVGLength();
+    domItem = domItem->Copy(); // must do this before changing anything!
   }
-  PRBool ok = !!InternalList().InsertItem(index, length);
-  if (!ok) {
+  index = NS_MIN(index, Length());
+
+  // Ensure we have enough memory so we can avoid complex error handling below:
+  if (!mItems.SetCapacity(mItems.Length() + 1) ||
+      !InternalList().SetCapacity(InternalList().Length() + 1)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+
+  InternalList().InsertItem(index, domItem->ToSVGLength());
+  mItems.InsertElementAt(index, domItem.get());
+
+  // This MUST come after the insertion into InternalList(), or else under the
+  // insertion into InternalList() the values read from domItem would be bad
+  // data from InternalList() itself!:
   domItem->InsertingIntoList(this, AttrEnum(), index, IsAnimValList());
-  ok = !!mItems.InsertElementAt(index, domItem.get());
-  if (!ok) {
-    InternalList().RemoveItem(index);
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+
   for (PRUint32 i = index + 1; i < Length(); ++i) {
     if (mItems[i]) {
       mItems[i]->UpdateListIndex(i);
     }
   }
+
   Element()->DidChangeLengthList(AttrEnum(), PR_TRUE);
 #ifdef MOZ_SMIL
   if (mAList->IsAnimating()) {
@@ -251,18 +258,22 @@ DOMSVGLengthList::ReplaceItem(nsIDOMSVGLength *newItem,
   if (index >= Length()) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
-  SVGLength length = domItem->ToSVGLength(); // get before setting domItem
   if (domItem->HasOwner()) {
-    domItem = new DOMSVGLength();
+    domItem = domItem->Copy(); // must do this before changing anything!
   }
+
   if (mItems[index]) {
     // Notify any existing DOM item of removal *before* modifying the lists so
     // that the DOM item can copy the *old* value at its index:
     mItems[index]->RemovingFromList();
   }
-  InternalList()[index] = length;
-  domItem->InsertingIntoList(this, AttrEnum(), index, IsAnimValList());
+
+  InternalList()[index] = domItem->ToSVGLength();
   mItems[index] = domItem;
+
+  // This MUST come after the ToSVGPoint() call, otherwise that call
+  // would end up reading bad data from InternalList()!
+  domItem->InsertingIntoList(this, AttrEnum(), index, IsAnimValList());
 
   Element()->DidChangeLengthList(AttrEnum(), PR_TRUE);
 #ifdef MOZ_SMIL
@@ -292,16 +303,17 @@ DOMSVGLengthList::RemoveItem(PRUint32 index,
   // Notify the DOM item of removal *before* modifying the lists so that the
   // DOM item can copy its *old* value:
   mItems[index]->RemovingFromList();
+  NS_ADDREF(*_retval = mItems[index]);
 
   InternalList().RemoveItem(index);
-
-  NS_ADDREF(*_retval = mItems[index]);
   mItems.RemoveElementAt(index);
+
   for (PRUint32 i = index; i < Length(); ++i) {
     if (mItems[i]) {
       mItems[i]->UpdateListIndex(i);
     }
   }
+
   Element()->DidChangeLengthList(AttrEnum(), PR_TRUE);
 #ifdef MOZ_SMIL
   if (mAList->IsAnimating()) {

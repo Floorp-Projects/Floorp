@@ -87,6 +87,7 @@ MozQWidget::MozQWidget(nsWindow* aReceiver, QGraphicsItem* aParent)
      setFlag(QGraphicsItem::ItemAcceptsInputMethod);
      setAcceptTouchEvents(true);
 #endif
+     setAcceptHoverEvents(true);
 }
 
 MozQWidget::~MozQWidget()
@@ -176,7 +177,7 @@ void MozQWidget::hoverLeaveEvent(QGraphicsSceneHoverEvent* aEvent)
 
 void MozQWidget::hoverMoveEvent(QGraphicsSceneHoverEvent* aEvent)
 {
-    mReceiver->OnMoveEvent(aEvent);
+    mReceiver->OnMotionNotifyEvent(aEvent->pos(), aEvent->modifiers());
 }
 
 void MozQWidget::keyPressEvent(QKeyEvent* aEvent)
@@ -318,7 +319,7 @@ void MozQWidget::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* aEvent)
 
 void MozQWidget::mouseMoveEvent(QGraphicsSceneMouseEvent* aEvent)
 {
-    mReceiver->OnMotionNotifyEvent(aEvent);
+    mReceiver->OnMotionNotifyEvent(aEvent->pos(), aEvent->modifiers());
 }
 
 void MozQWidget::mousePressEvent(QGraphicsSceneMouseEvent* aEvent)

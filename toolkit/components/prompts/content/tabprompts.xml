@@ -115,6 +115,7 @@
         <destructor>
         <![CDATA[
             if (this.isLive) {
+                this.Dialog.abortPrompt();
                 this.shutdownPrompt();
             }
         ]]>  
@@ -176,9 +177,9 @@
                     this.linkedTab.removeEventListener("TabClose", this, false);
                     this.args.domWindow.removeEventListener("pagehide", this, false);
                 } catch(e) { }
+                this.isLive = false;
                 // invoke callback
                 this.onCloseCallback();
-                this.isLive = false;
             ]]>
             </body>
         </method>

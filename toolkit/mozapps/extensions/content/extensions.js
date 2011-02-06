@@ -1206,7 +1206,28 @@ function sortElements(aElements, aSortBy, aAscending) {
 
   const DATE_FIELDS = ["updateDate"];
   const NUMERIC_FIELDS = ["size", "relevancescore", "purchaseAmount"];
-  const UISTATE_ORDER = ["enabled", "incompatible", "disabled", "blocked"]
+
+  // We're going to group add-ons into the following buckets:
+  //
+  //  enabledInstalled
+  //    * Enabled
+  //    * Incompatible but enabled because compatibility checking is off
+  //    * Waiting to be installed
+  //    * Waiting to be enabled
+  //
+  //  pendingDisable
+  //    * Waiting to be disabled
+  //
+  //  pendingUninstall
+  //    * Waiting to be removed
+  //
+  //  disabledIncompatibleBlocked
+  //    * Disabled
+  //    * Incompatible
+  //    * Blocklisted
+
+  const UISTATE_ORDER = ["enabled", "pendingDisable", "pendingUninstall",
+                         "disabled"];
 
   function dateCompare(a, b) {
     var aTime = a.getTime();
@@ -1245,18 +1266,19 @@ function sortElements(aElements, aSortBy, aAscending) {
     addon = aObj.mAddon || aObj.mInstall;
     if (!addon)
       return null;
-    if (aKey == "uiState") {
-      if (addon.isActive)
-        return "enabled";
-      else if (!addon.isCompatible)
-        return "incompatible";
-      else if (addon.blocklistState == Ci.nsIBlocklistService.STATE_NOT_BLOCKED)
-        return "disabled";
-      else if (addon.isCompatible &&
-               addon.blocklistState != Ci.nsIBlocklistService.STATE_NOT_BLOCKED)
-        return "blocked";
-    }
 
+    if (aKey == "uiState") {
+      if (addon.pendingOperations == AddonManager.PENDING_DISABLE)
+        return "pendingDisable";
+      if (addon.pendingOperations == AddonManager.PENDING_UNINSTALL)
+        return "pendingUninstall";
+      if (!addon.isActive &&
+          (addon.pendingOperations != AddonManager.PENDING_ENABLE &&
+           addon.pendingOperations != AddonManager.PENDING_INSTALL))
+        return "disabled";
+      else
+        return "enabled";
+    }
 
     return addon[aKey];
   }
@@ -1519,10 +1541,18 @@ var gHeader = {
       gViewController.loadView("addons://search/" + encodeURIComponent(query));
     }, false);
 
-    if (this.shouldShowNavButtons) {
-      document.getElementById("back-btn").hidden = false;
-      document.getElementById("forward-btn").hidden = false;
+    function updateNavButtonVisibility() {
+      var shouldShow = gHeader.shouldShowNavButtons;
+      document.getElementById("back-btn").hidden = !shouldShow;
+      document.getElementById("forward-btn").hidden = !shouldShow;
     }
+
+    window.addEventListener("focus", function(aEvent) {
+      if (aEvent.target == window)
+        updateNavButtonVisibility();
+    }, false);
+
+    updateNavButtonVisibility();
   },
 
   get shouldShowNavButtons() {

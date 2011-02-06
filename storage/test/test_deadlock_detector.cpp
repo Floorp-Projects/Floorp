@@ -106,14 +106,13 @@ spawn(void (*run)(void*), void* arg)
     do {                                        \
         passed(__FUNCTION__);                   \
         return NS_OK;                           \
-    } while (0);
-
+    } while (0)
 
 #define FAIL(why)                               \
     do {                                        \
-        fail(why);                              \
+        fail("%s | %s - %s", __FILE__, __FUNCTION__, why); \
         return NS_ERROR_FAILURE;                \
-    } while (0);
+    } while (0)
 
 //-----------------------------------------------------------------------------
 
@@ -611,7 +610,7 @@ main(int argc, char** argv)
         FAIL("unknown child test");
     }
 
-    ScopedXPCOM xpcom("Deadlock detector correctness");
+    ScopedXPCOM xpcom("Storage deadlock detector correctness (" __FILE__ ")");
     if (xpcom.failed())
         return 1;
 

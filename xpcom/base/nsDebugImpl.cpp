@@ -40,6 +40,10 @@
 
 #include "nsDebugImpl.h"
 #include "nsDebug.h"
+#ifdef MOZ_CRASHREPORTER
+# include "nsExceptionHandler.h"
+#endif
+#include "nsStringGlue.h"
 #include "prprf.h"
 #include "prlog.h"
 #include "prinit.h"
@@ -329,13 +333,21 @@ NS_DebugBreak(PRUint32 aSeverity, const char *aStr, const char *aExpr,
      Break(buf.buffer);
      return;
 
-   case NS_DEBUG_ABORT:
+   case NS_DEBUG_ABORT: {
+#if defined(MOZ_CRASHREPORTER) && defined(MOZ_ENABLE_LIBXUL)
+     nsCString note("xpcom_runtime_abort(");
+     note += buf.buffer;
+     note += ")";
+     CrashReporter::AppendAppNotesToCrashReport(note);
+#endif  // MOZ_CRASHREPORTER
+
 #if defined(DEBUG) && defined(_WIN32)
      RealBreak();
 #endif
      nsTraceRefcntImpl::WalkTheStack(stderr);
      Abort(buf.buffer);
      return;
+   }
    }
 
    // Now we deal with assertions

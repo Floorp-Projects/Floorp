@@ -22,6 +22,7 @@ function startSeeking() {
   if (!seekedNonZero) {
     v.currentTime = target;
     v._seekTarget = target;
+    seekedNonZero = true;
   }
 }
 
@@ -32,7 +33,6 @@ function seekEnded() {
   if (v.currentTime > 0) {
     ok(v.currentTime > target - 0.1 && v.currentTime < target + 0.1,
        "Seek to wrong destination " + v.currentTime);
-    seekedNonZero = true;
     v.currentTime = 0.0;
     v._seekTarget = 0.0;
   } else {

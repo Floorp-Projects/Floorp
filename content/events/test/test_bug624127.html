@@ -1,0 +1,36 @@
+<html>
+<head>
+  <title>Test for Bug 624127</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="setTimeout('runTest()', 0)">
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+function runTest() {
+  synthesizeMouse($("text"), 2, 2, { type: "mousedown" });
+  synthesizeMouse(frames[0].document.body, 2, 2, { type: "mouseup" }, frames[0]);
+  synthesizeMouse($("text2"), 50, 8, { type: "mousemove" });
+
+  is(window.getSelection().toString(), "", "no selection made");
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+
+<p id="text">Normal text</p>
+<iframe src="data:text/plain,text in iframe"></iframe>
+<p id="text2">Normal text</p>
+
+</body>
+</html>

@@ -17,10 +17,14 @@ function seekStarted() {
   if (completed)
     return false;
 
+  seekCount += 1;
+
   ok(v.currentTime >= v._seekTarget - 0.1,
      "Video currentTime should be around " + v._seekTarget + ": " + v.currentTime);
-  v.currentTime=seekTime/2;
-  v._seekTarget=seekTime/2;
+  if (seekCount == 1) {
+    v.currentTime=seekTime/2;
+    v._seekTarget=seekTime/2;
+  }
   return false;
 }
 
@@ -28,9 +32,8 @@ function seekEnded() {
   if (completed)
     return false;
 
-  seekCount++;
   if (seekCount == 2) {
-    ok(Math.abs(v.currentTime - seekTime/2) <= 0.1, "Second seek on target: " + v.currentTime);
+    ok(Math.abs(v.currentTime - seekTime/2) <= 0.1, "seek on target: " + v.currentTime);
     completed = true;
     finish();
   }

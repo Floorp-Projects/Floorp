@@ -57,6 +57,8 @@ PlacesViewBase.prototype = {
   _viewElt: null,
   get viewElt() this._viewElt,
 
+  get controllers() this._viewElt.controllers,
+
   // The xul element that represents the root container.
   _rootElt: null,
 

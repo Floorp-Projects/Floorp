@@ -23,16 +23,11 @@ SimpleTest.waitForExplicitFinish();
 netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 var win = window.openDialog("data:text/html,<div style='height:200px; width:100px;'>");
 
-// doesn't succeed on SeaMonkey currently, see bug 469331
-// mark it todo there instead
-var testfunc_h = (navigator.userAgent.match(/ SeaMonkey\//)) ? todo : ok;
-var testfunc_w = (navigator.userAgent.match(/Windows/)) ? ok : testfunc_h;
-
 function loaded() {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   win.sizeToContent();
-  testfunc_w(win.innerWidth >= 100, "innerWidth: " + win.innerWidth + " >= 100 ?");
-  testfunc_h(win.innerHeight >= 200, "innerHeight: " + win.innerHeight + " >= 200 ?");
+  ok(win.innerWidth >= 100, "innerWidth: " + win.innerWidth + " >= 100 ?");
+  ok(win.innerHeight >= 200, "innerHeight: " + win.innerHeight + " >= 200 ?");
   win.close();
   SimpleTest.finish();
 }

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -301,10 +301,8 @@ public:
    * returns false, and the caller must proceed with a normal layer tree
    * update and EndTransaction.
    */
-  virtual bool EndEmptyTransaction()
-  {
-    return false;
-  }
+  virtual bool EndEmptyTransaction() = 0;
+
   /**
    * Function called to draw the contents of each ThebesLayer.
    * aRegionToDraw contains the region that needs to be drawn.
@@ -475,6 +473,11 @@ public:
 
   static bool IsLogEnabled();
   static PRLogModuleInfo* GetLog() { return sLog; }
+
+  PRBool IsCompositingCheap(LayerManager::LayersBackend aBackend)
+  { return LAYERS_BASIC != aBackend; }
+
+  virtual PRBool IsCompositingCheap() { return PR_TRUE; }
 
 protected:
   nsRefPtr<Layer> mRoot;

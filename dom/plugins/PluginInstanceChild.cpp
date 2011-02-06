@@ -414,6 +414,13 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
         return NPERR_NO_ERROR;
     }
 
+#ifndef NP_NO_CARBON
+    case NPNVsupportsCarbonBool: {
+      *((NPBool*)aValue) = false;
+      return NPERR_NO_ERROR;
+    }
+#endif
+
     case NPNVsupportsUpdatedCocoaTextInputBool: {
       *static_cast<NPBool*>(aValue) = true;
       return NPERR_NO_ERROR;
@@ -1353,9 +1360,13 @@ PluginInstanceChild::SetWindowLongAHook(HWND hWnd,
         GetProp(hWnd, kPluginInstanceChildProperty));
 
     // Hook our subclass back up, just like we do on setwindow.   
-    self->mPluginWndProc =
-        reinterpret_cast<WNDPROC>(sUser32SetWindowLongAHookStub(hWnd, nIndex,
-            reinterpret_cast<LONG_PTR>(PluginWindowProc)));
+    WNDPROC currentProc =
+        reinterpret_cast<WNDPROC>(GetWindowLongPtr(hWnd, GWLP_WNDPROC));
+    if (currentProc != PluginWindowProc) {
+        self->mPluginWndProc =
+            reinterpret_cast<WNDPROC>(sUser32SetWindowLongAHookStub(hWnd, nIndex,
+                reinterpret_cast<LONG_PTR>(PluginWindowProc)));
+    }
     return proc;
 }
 
@@ -1382,9 +1393,13 @@ PluginInstanceChild::SetWindowLongWHook(HWND hWnd,
         GetProp(hWnd, kPluginInstanceChildProperty));
 
     // Hook our subclass back up, just like we do on setwindow.   
-    self->mPluginWndProc =
-        reinterpret_cast<WNDPROC>(sUser32SetWindowLongWHookStub(hWnd, nIndex,
-            reinterpret_cast<LONG_PTR>(PluginWindowProc)));
+    WNDPROC currentProc =
+        reinterpret_cast<WNDPROC>(GetWindowLongPtr(hWnd, GWLP_WNDPROC));
+    if (currentProc != PluginWindowProc) {
+        self->mPluginWndProc =
+            reinterpret_cast<WNDPROC>(sUser32SetWindowLongAHookStub(hWnd, nIndex,
+                reinterpret_cast<LONG_PTR>(PluginWindowProc)));
+    }
     return proc;
 }
 

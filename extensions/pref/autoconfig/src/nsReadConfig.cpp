@@ -272,9 +272,10 @@ nsresult nsReadConfig::openAndEvaluateJSFile(const char *aFileName, PRInt32 obsc
                                              PRBool isBinDir)
 {
     nsresult rv;
-    nsCOMPtr<nsIFile> jsFile;
 
+    nsCOMPtr<nsIInputStream> inStr;
     if (isBinDir) {
+        nsCOMPtr<nsIFile> jsFile;
         rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR, 
                                     getter_AddRefs(jsFile));
         if (NS_FAILED(rv)) 
@@ -283,36 +284,44 @@ nsresult nsReadConfig::openAndEvaluateJSFile(const char *aFileName, PRInt32 obsc
 #ifdef XP_MAC
         jsFile->AppendNative(NS_LITERAL_CSTRING("Essential Files"));
 #endif
-    } else {
-        rv = NS_GetSpecialDirectory(NS_GRE_DIR,
-                                    getter_AddRefs(jsFile));
+        rv = jsFile->AppendNative(nsDependentCString(aFileName));
         if (NS_FAILED(rv)) 
             return rv;
-        rv = jsFile->AppendNative(NS_LITERAL_CSTRING("defaults"));
+
+        rv = NS_NewLocalFileInputStream(getter_AddRefs(inStr), jsFile);
+        if (NS_FAILED(rv)) 
+            return rv;
+
+    } else {
+        nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
+        if (NS_FAILED(rv)) 
+            return rv;
+
+        nsCAutoString location("resource://gre/defaults/autoconfig/");
+        location += aFileName;
+
+        nsCOMPtr<nsIURI> uri;
+        rv = ioService->NewURI(location, nsnull, nsnull, getter_AddRefs(uri));
         if (NS_FAILED(rv))
             return rv;
-        rv = jsFile->AppendNative(NS_LITERAL_CSTRING("autoconfig"));
+
+        nsCOMPtr<nsIChannel> channel;
+        rv = ioService->NewChannelFromURI(uri, getter_AddRefs(channel));
         if (NS_FAILED(rv))
+            return rv;
+
+        rv = channel->Open(getter_AddRefs(inStr));
+        if (NS_FAILED(rv)) 
             return rv;
     }
-    rv = jsFile->AppendNative(nsDependentCString(aFileName));
-    if (NS_FAILED(rv)) 
-        return rv;
 
-    nsCOMPtr<nsIInputStream> inStr;
-    rv = NS_NewLocalFileInputStream(getter_AddRefs(inStr), jsFile);
-    if (NS_FAILED(rv)) 
-        return rv;        
-        
-    PRInt64 fileSize;
     PRUint32 fs, amt = 0;
-    jsFile->GetFileSize(&fileSize);
-    LL_L2UI(fs, fileSize); // Converting 64 bit structure to unsigned int
+    inStr->Available(&fs);
 
     char *buf = (char *)PR_Malloc(fs * sizeof(char));
     if (!buf) 
         return NS_ERROR_OUT_OF_MEMORY;
-      
+
     rv = inStr->Read(buf, fs, &amt);
     NS_ASSERTION((amt == fs), "failed to read the entire configuration file!!");
     if (NS_SUCCEEDED(rv)) {
@@ -322,13 +331,8 @@ nsresult nsReadConfig::openAndEvaluateJSFile(const char *aFileName, PRInt32 obsc
             for (PRUint32 i = 0; i < amt; i++)
                 buf[i] -= obscureValue;
         }
-        nsCAutoString path;
-
-        jsFile->GetNativePath(path);
-        nsCAutoString fileURL;
-        fileURL = NS_LITERAL_CSTRING("file:///") + path;
-        rv = EvaluateAdminConfigScript(buf, amt, fileURL.get(), 
-                                       PR_FALSE, PR_TRUE, 
+        rv = EvaluateAdminConfigScript(buf, amt, aFileName,
+                                       PR_FALSE, PR_TRUE,
                                        isEncoded ? PR_TRUE:PR_FALSE);
     }
     inStr->Close();

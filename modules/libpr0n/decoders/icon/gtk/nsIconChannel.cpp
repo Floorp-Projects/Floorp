@@ -163,35 +163,22 @@ static GtkWidget *gStockImageWidget = nsnull;
 static GnomeIconTheme *gIconTheme = nsnull;
 #endif
 
-#if GTK_CHECK_VERSION(2,4,0)
-static GtkIconFactory *gIconFactory = nsnull;
-#endif
-
 static void
 ensure_stock_image_widget()
 {
+  // Only the style of the GtkImage needs to be used, but the widget is kept
+  // to track dynamic style changes.
   if (!gProtoWindow) {
     gProtoWindow = gtk_window_new(GTK_WINDOW_POPUP);
-    gtk_widget_realize(gProtoWindow);
     GtkWidget* protoLayout = gtk_fixed_new();
     gtk_container_add(GTK_CONTAINER(gProtoWindow), protoLayout);
 
     gStockImageWidget = gtk_image_new();
     gtk_container_add(GTK_CONTAINER(protoLayout), gStockImageWidget);
-    gtk_widget_realize(gStockImageWidget);
-  }
-}
 
-#if GTK_CHECK_VERSION(2,4,0)
-static void
-ensure_icon_factory()
-{
-  if (!gIconFactory) {
-    gIconFactory = gtk_icon_factory_new();
-    gtk_icon_factory_add_default(gIconFactory);
+    gtk_widget_ensure_style(gStockImageWidget);
   }
 }
-#endif
 
 #ifdef MOZ_ENABLE_GNOMEUI
 static nsresult
@@ -295,7 +282,6 @@ moz_gtk_icon_size(const char *name)
 nsresult
 nsIconChannel::InitWithGnome(nsIMozIconURI *aIconURI)
 {
-#if GTK_CHECK_VERSION(2,4,0)
   nsresult rv;
 
   if (NS_FAILED(ensure_libgnomeui()) || NS_FAILED(ensure_libgnome()) || NS_FAILED(ensure_libgnomevfs())) {
@@ -443,9 +429,6 @@ nsIconChannel::InitWithGnome(nsIMozIconURI *aIconURI)
                                  getter_AddRefs(mRealChannel));
   g_object_unref(scaled);
   return rv;
-#else // GTK_CHECK_VERSION(2,4,0)
-  return NS_ERROR_NOT_AVAILABLE;
-#endif // GTK_CHECK_VERSION(2,4,0)
 }
 #endif
 
@@ -472,32 +455,53 @@ nsIconChannel::Init(nsIURI* aURI)
   iconURI->GetIconState(iconStateString);
 
   GtkIconSize icon_size = moz_gtk_icon_size(iconSizeString.get());
-   
+  GtkStateType state = iconStateString.EqualsLiteral("disabled") ?
+    GTK_STATE_INSENSITIVE : GTK_STATE_NORMAL;
+
+  // First lookup the icon by stock id and text direction.
+  GtkTextDirection direction = GTK_TEXT_DIR_NONE;
+  if (StringEndsWith(stockIcon, NS_LITERAL_CSTRING("-ltr"))) {
+    direction = GTK_TEXT_DIR_LTR;
+  } else if (StringEndsWith(stockIcon, NS_LITERAL_CSTRING("-rtl"))) {
+    direction = GTK_TEXT_DIR_RTL;
+  }
+
+  PRBool haveDirection = direction != GTK_TEXT_DIR_NONE;
+  nsCAutoString stockID;
+  if (haveDirection) {
+    stockID = Substring(stockIcon, 0, stockIcon.Length() - 4);
+  } else {
+    direction = gtk_widget_get_default_direction();
+    stockID = stockIcon;
+  }
+
   ensure_stock_image_widget();
+  GtkStyle *style = gtk_widget_get_style(gStockImageWidget);
+  GtkIconSet *icon_set = gtk_style_lookup_icon_set(style, stockID.get());
 
-  gboolean sensitive = strcmp(iconStateString.get(), "disabled");
-  gtk_widget_set_sensitive (gStockImageWidget, sensitive);
-
-  GdkPixbuf *icon = gtk_widget_render_icon(gStockImageWidget, stockIcon.get(),
-                                           icon_size, NULL);
-#if GTK_CHECK_VERSION(2,4,0)
-  if (!icon) {
-    ensure_icon_factory();
-      
-    GtkIconSet *icon_set = gtk_icon_set_new();
+  if (icon_set) {
+    gtk_icon_set_ref(icon_set);
+  } else {
+    // stockIcon is not a stock id, so assume it is an icon name.
+    //
+    // Creating a GtkIconSet is a convenient way to allow the style to
+    // render the icon, possibly with variations suitable for insensitive
+    // states.
+    icon_set = gtk_icon_set_new();
     GtkIconSource *icon_source = gtk_icon_source_new();
     
     gtk_icon_source_set_icon_name(icon_source, stockIcon.get());
     gtk_icon_set_add_source(icon_set, icon_source);
-    gtk_icon_factory_add(gIconFactory, stockIcon.get(), icon_set);
-    gtk_icon_set_unref(icon_set);
     gtk_icon_source_free(icon_source);
-
-    icon = gtk_widget_render_icon(gStockImageWidget, stockIcon.get(),
-                                  icon_size, NULL);
   }
-#endif
 
+  GdkPixbuf *icon =
+    gtk_icon_set_render_icon (icon_set, style, direction, state,
+                              icon_size, gStockImageWidget, NULL);
+  gtk_icon_set_unref(icon_set);
+
+  // gtk_icon_set_render_icon() never returns NULL, except when we have
+  // https://bugzilla.gnome.org/show_bug.cgi?id=629878#c13
   if (!icon)
     return NS_ERROR_NOT_AVAILABLE;
   
@@ -516,13 +520,6 @@ nsIconChannel::Shutdown() {
     gProtoWindow = nsnull;
     gStockImageWidget = nsnull;
   }
-#if GTK_CHECK_VERSION(2,4,0)
-  if (gIconFactory) {
-    gtk_icon_factory_remove_default(gIconFactory);
-    g_object_unref(gIconFactory);
-    gIconFactory = nsnull;
-  }
-#endif
 #ifdef MOZ_ENABLE_GNOMEUI
   if (gIconTheme) {
     g_object_unref(G_OBJECT(gIconTheme));

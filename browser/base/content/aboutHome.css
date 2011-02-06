@@ -41,7 +41,7 @@
 %endif
 
 html {
-  font: message-box;
+  font-family: sans-serif;
   background: -moz-Field;
   color: -moz-FieldText;
   height: 100%;
@@ -131,7 +131,7 @@ a:hover {
   border: 1px solid rgb(150,150,150);
   border-top-color: rgb(100,100,100);
   box-shadow: 0 1px 0 rgba(255,255,255,0.5);
-  font-size: 13px;
+  font-size: 1.2em;
 }
 
 #searchButtons {
@@ -171,8 +171,9 @@ a:hover {
   box-shadow: 1px 1px 0 #e7e7e7,
               0 1px 0 #fcfcfc inset,
               0 -1px 0 #d7d7d7 inset;
-  font-size: 13px;
+  font-size: 1em;
   color: #000;
+  cursor: pointer;
 }
 
 body[dir=rtl] #searchSubmit {
@@ -194,10 +195,10 @@ body[dir=rtl] #searchSubmit:active {
   display: inline-block;
   -moz-margin-start: 1.5%;
   vertical-align: middle;
-  font-size: 10px;
+  font-size: .7em;
 }
 
-#searchEngineLinks a {
+#searchEngineLinks > a:not([hidden="true"]) {
   display: block;
   white-space: nowrap;
 }
@@ -237,7 +238,7 @@ body[dir=rtl] #searchSubmit:active {
               0 0 0 1px rgba(0,0,0,.1),
               0 2px 4px rgba(0,0,0,.2);
   color: rgb(60,60,60);
-  font-size: 11px;
+  font-size: .85em;
   cursor: pointer;
 }
 
@@ -267,7 +268,6 @@ body[dir=rtl] #searchSubmit:active {
 
 #sessionRestoreContainer {
   padding-top: 1.5%;
-  height: 33%;
   text-align: center;
 }
 
@@ -280,9 +280,7 @@ body[dir=rtl] #searchSubmit:active {
 }
 
 #restorePreviousSession {
-  -moz-padding-start: 7.5%;
-  -moz-padding-end: 10px;
-  height: 100%;
+  padding: 10px;
   border: 0;
   border-radius: 4px;
   box-shadow: 0 0 0 1px rgba(9,37,59,0),
@@ -292,43 +290,37 @@ body[dir=rtl] #searchSubmit:active {
   -moz-transition-property: background-color, box-shadow;
   -moz-transition-duration: 0.25s;
   -moz-transition-timing-function: ease-out;
-  background: transparent url("chrome://browser/content/aboutHome-restore-icon.png") no-repeat 10px 50%;
-  background-size: auto 77%;
+  background: transparent;
   color: rgb(50,50,50);
   font-weight: bold;
+  font-size: 1em;
+  cursor: pointer;
 }
 
-body[dir=rtl] #restorePreviousSession {
-  background-image: url("chrome://browser/content/aboutHome-restore-icon-rtl.png");
-  background-position: 100% 50%;
+#restorePreviousSession::before {
+  display: inline-block;
+  content: url("chrome://browser/content/aboutHome-restore-icon.png");
+  -moz-margin-end: 10px;
+  vertical-align: middle;
+  height: 66px; /* Needed to avoid a blank space under the image */
 }
 
-@media all and (max-aspect-ratio: 8/16) {
-  #restorePreviousSession { -moz-padding-start: 25% }
+body[dir=rtl] #restorePreviousSession::before {
+  -moz-transform: scaleX(-1);
 }
 
-@media all and (min-aspect-ratio: 8/16) and (max-aspect-ratio: 10/16) {
-  #restorePreviousSession { -moz-padding-start: 18% }
+@media all and (max-height: 500px) {
+  #restorePreviousSession::before {
+    content: url("chrome://browser/content/aboutHome-restore-icon-small.png");
+    height: 41px;
+  }
 }
 
-@media all and (min-aspect-ratio: 10/16) and (max-aspect-ratio: 12/16) {
-  #restorePreviousSession { -moz-padding-start: 15% }
-}
-
-@media all and (min-aspect-ratio: 12/16) and (max-aspect-ratio: 15/16) {
-  #restorePreviousSession { -moz-padding-start: 12% }
-}
-
-@media all and (min-aspect-ratio: 15/16) and (max-aspect-ratio: 20/16) {
-  #restorePreviousSession { -moz-padding-start: 9% }
-}
-
-@media all and (min-aspect-ratio: 31/16) and (max-aspect-ratio: 51/16) {
-  #restorePreviousSession { -moz-padding-start: 5% }
-}
-
-@media all and (min-aspect-ratio: 51/16) {
-  #restorePreviousSession { -moz-padding-start: 3% }
+@media all and (max-width: 500px) {
+  #restorePreviousSession::before { 
+    content: url("chrome://browser/content/aboutHome-restore-icon-small.png");
+    height: 41px;
+  }
 }
 
 #restorePreviousSession:disabled {
@@ -336,10 +328,7 @@ body[dir=rtl] #restorePreviousSession {
 }
 
 #restorePreviousSession:hover {
-  background-image: url("chrome://browser/content/aboutHome-restore-icon.png"),
-                    -moz-linear-gradient(rgba(255,255,255,.7), rgba(255,255,255,.2));
-  background-position: 10px 50%, 0 0;
-  background-size: auto 77%, auto auto;
+  background-image: -moz-linear-gradient(rgba(255,255,255,.7), rgba(255,255,255,.2));
   border-radius: 4px;
   box-shadow: 0 0 0 1px rgba(9,37,59,.2),
               0 1px 2px rgba(9,37,59,.2),
@@ -347,33 +336,18 @@ body[dir=rtl] #restorePreviousSession {
               0 -3px 0 rgba(180,194,212,.3) inset;
 }
 
-body[dir=rtl] #restorePreviousSession:hover {
-  background-image: url("chrome://browser/content/aboutHome-restore-icon-rtl.png"),
-                    -moz-linear-gradient(rgba(255,255,255,.7), rgba(255,255,255,.2));
-  background-position: 100% 50%, 0 0;
-}
-
 #restorePreviousSession:hover:active {
-  background-image: url("chrome://browser/content/aboutHome-restore-icon.png"),
-                    -moz-linear-gradient(rgba(255,255,255,.0), rgba(255,255,255,.2));
-  background-position: 10px 50%, 0 0;
-  background-size: auto 77%, auto auto;
+  background-image: -moz-linear-gradient(rgba(255,255,255,.0), rgba(255,255,255,.2));
   background-color: rgba(23,75,115,.1);
   box-shadow: 0 0 0 1px rgba(9,37,59,.2),
               0 1px 2px rgba(9,37,59,.4) inset,
               0 1px 5px rgba(9,37,59,.15) inset;
 }
 
-body[dir=rtl] #restorePreviousSession:hover:active {
-  background-image: url("chrome://browser/content/aboutHome-restore-icon-rtl.png"),
-                    -moz-linear-gradient(rgba(255,255,255,.0), rgba(255,255,255,.2));
-  background-position: 100% 50%, 0 0;
-}
-
 #bottomSection {
   position: absolute;
   color: rgb(150,150,150);
-  font-size: 10px;
+  font-size: .8em;
   width: 100%;
   text-align: center;
   bottom: 2%;

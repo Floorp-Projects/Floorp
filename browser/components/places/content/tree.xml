@@ -665,15 +665,19 @@
         ]]></body>
       </method>
 
+      <field name="_contextMenuShown">false</field>
+
       <method name="buildContextMenu">
         <parameter name="aPopup"/>
         <body><![CDATA[
+          this._contextMenuShown = true;
           return this.controller.buildContextMenu(aPopup);
         ]]></body>
       </method>
 
       <method name="destroyContextMenu">
         <parameter name="aPopup"/>
+          this._contextMenuShown = false;
         <body/>
       </method>
     </implementation>
