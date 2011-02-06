@@ -556,8 +556,8 @@ function run_test() {
     let res11 = new AsyncResource("http://localhost:12345/does/not/exist");
     res11.get(ensureThrows(function (error, content) {
       do_check_neq(error, null);
+      do_check_eq(error.result, Cr.NS_ERROR_CONNECTION_REFUSED);
       do_check_eq(error.message, "NS_ERROR_CONNECTION_REFUSED");
-      do_check_eq(typeof error.stack, "string");
       do_test_finished();
       next();
     }));
@@ -621,7 +621,8 @@ function run_test() {
     res14._log.warn = function(msg) { warnings.push(msg) };
 
     res14.get(ensureThrows(function (error, content) {
-      do_check_eq(error, "Error: NS_ERROR_MALFORMED_URI");
+      do_check_eq(error.result, Cr.NS_ERROR_MALFORMED_URI);
+      do_check_eq(error.message, "NS_ERROR_MALFORMED_URI");
       do_check_eq(content, null);
       do_check_eq(warnings.pop(),
                   "Got exception calling onProgress handler during fetch of " +
@@ -643,13 +644,24 @@ function run_test() {
     res15._log.warn = function(msg) { warnings.push(msg) };
 
     res15.get(ensureThrows(function (error, content) {
-      do_check_eq(error, "Error: NS_ERROR_XPC_JS_THREW_STRING");
+      do_check_eq(error.result, Cr.NS_ERROR_XPC_JS_THREW_STRING);
+      do_check_eq(error.message, "NS_ERROR_XPC_JS_THREW_STRING");
       do_check_eq(content, null);
       do_check_eq(warnings.pop(),
                   "Got exception calling onProgress handler during fetch of " +
                   "http://localhost:8080/json");
       
       do_test_finished();
+      next();
+    }));
+
+  }, function (next) {
+
+    _("Ensure channel timeouts are thrown appropriately.");
+    let res19 = new AsyncResource("http://localhost:8080/json");
+    res19.ABORT_TIMEOUT = 0;
+    res19.get(ensureThrows(function (error, content) {
+      do_check_eq(error.result, Cr.NS_ERROR_NET_TIMEOUT);
       next();
     }));
 
