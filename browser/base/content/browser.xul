@@ -1002,7 +1002,7 @@
       <toolbarbutton id="addonbar-closebutton"
                      tooltiptext="&addonBarCloseButton.tooltip;"
                      oncommand="setToolbarVisibility(this.parentNode, false);"/>
-      <statusbar id="status-bar"/>
+      <statusbar id="status-bar" ordinal="1000"/>
     </toolbar>
   </vbox>
 
