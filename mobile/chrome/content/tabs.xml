@@ -108,8 +108,10 @@
     <implementation>
       <field name="children">document.getAnonymousElementByAttribute(this, "anonid", "tabs-children");</field>
       <field name="_tabsUndo">document.getAnonymousElementByAttribute(this, "anonid", "tabs-undo");</field>
-      <field name="_closedTab">null</field>
       <field name="_selectedTab">null</field>
+
+      <field name="_closedTab">null</field>
+      <property name="hasClosedTab" readonly="true" onget="return !!this._closedTab;"/>
 
       <property name="selectedTab" onget="return this._selectedTab;">
         <setter>
@@ -189,8 +191,8 @@
             let element   = this.children.getBoundingClientRect();
             let undo = this._tabsUndo.getBoundingClientRect();
             let lastChild = this.parentNode.lastChild.getBoundingClientRect();
-            
-            let height = window.innerHeight - element.top - (undo.bottom - undo.top) - (lastChild.top - element.bottom) - lastChild.height;
+
+            let height = window.innerHeight - element.top - (lastChild.top - element.bottom) - lastChild.height;
             this.children.style.height = height + "px";
 
             this._updateWidth();

@@ -737,10 +737,15 @@ var Browser = {
     tab.chromeTab.dispatchEvent(event);
     tab.browser.messageManager.sendAsyncMessage("Browser:TabClose");
 
+    let container = tab.chromeTab.parentNode;
     tab.destroy();
     this._tabs.splice(tabIndex, 1);
 
     this.selectedTab = nextTab;
+
+    event = document.createEvent("Events");
+    event.initEvent("TabRemove", true, false);
+    container.dispatchEvent(event);
   },
 
   get selectedTab() {

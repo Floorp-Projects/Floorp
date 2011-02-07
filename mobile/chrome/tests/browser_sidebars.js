@@ -170,6 +170,47 @@ gTests.push({
 
   onFinish: function() {
     Browser.hideSidebars();
+    BrowserUI.activePanel = null;
+    runNextTest();
+  }
+});
+
+gTests.push({
+  desc: "Testing horizontal positionning of the sidebars for multiple columns with an undo tab",
+
+  run: function() {
+    let tabs = document.getElementById("tabs");
+    ok(tabs._columnsCount > 1, "Tabs layout should be on multiple columns");
+
+    Elements.tabs.addEventListener("TabRemove", function() {
+      Elements.tabs.removeEventListener("TabRemove", arguments.callee, false);
+      setTimeout(gCurrentTest.onTabClose, 0);
+    }, false);
+
+    let lastTab = newTabs.pop().chromeTab;
+    lastTab._onClose();
+  },
+
+  onTabClose: function() {
+    checkSidebars(0, 0);
+    checkOnResize(gCurrentTest.checkLeftVisible);
+  },
+
+  checkLeftVisible: function() {
+    Browser.controlsScrollboxScroller.scrollTo(0, 0);
+    checkSidebars(1, 0);
+    checkOnResize(gCurrentTest.checkRightVisible);
+  },
+
+  checkRightVisible: function() {
+    let [,, leftWidth, rightWidth] = Browser.computeSidebarVisibility();
+    Browser.controlsScrollboxScroller.scrollTo(leftWidth + rightWidth, 0);
+    checkSidebars(0, 1);
+    checkOnResize(gCurrentTest.onFinish);
+  },
+
+  onFinish: function() {
+    Browser.hideSidebars();
     runNextTest();
   }
 });
