@@ -506,7 +506,6 @@ BoxThisForVp(JSContext *cx, Value *vp)
     if (!vp[1].isObject())
         return !!js_PrimitiveToObject(cx, &vp[1]);
 
-    JS_ASSERT(IsSaneThisObject(vp[1].toObject()));
     return true;
 }
 
@@ -836,7 +835,6 @@ ExternalInvoke(JSContext *cx, const Value &thisv, const Value &fval,
         JSObject *thisp = args.thisv().toObject().thisObject(cx);
         if (!thisp)
              return false;
-        JS_ASSERT(IsSaneThisObject(*thisp));
         args.thisv().setObject(*thisp);
     }
 
@@ -4697,7 +4695,6 @@ BEGIN_CASE(JSOP_FUNCALL)
                                                        newscript, &flags);
             if (JS_UNLIKELY(!newfp))
                 goto error;
-            JS_ASSERT_IF(!vp[1].isPrimitive(), IsSaneThisObject(vp[1].toObject()));
 
             /* Initialize frame, locals. */
             newfp->initCallFrame(cx, *callee, newfun, argc, flags);

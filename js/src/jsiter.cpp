@@ -1084,9 +1084,17 @@ generator_trace(JSTracer *trc, JSObject *obj)
 
     JSStackFrame *fp = gen->floatingFrame();
     JS_ASSERT(gen->liveFrame() == fp);
-    MarkValueRange(trc, gen->floatingStack, fp->formalArgsEnd(), "generator slots");
+
+    /*
+     * Currently, generators are not mjitted. Still, (overflow) args can be
+     * pushed by the mjit and need to be conservatively marked. Technically, the
+     * formal args and generator slots are safe for exact marking, but since the
+     * plan is to eventually mjit generators, it makes sense to future-proof
+     * this code and save someone an hour later.
+     */
+    MarkStackRangeConservatively(trc, gen->floatingStack, fp->formalArgsEnd());
     js_TraceStackFrame(trc, fp);
-    MarkValueRange(trc, fp->slots(), gen->regs.sp, "generator slots");
+    MarkStackRangeConservatively(trc, fp->slots(), gen->regs.sp);
 }
 
 Class js_GeneratorClass = {
