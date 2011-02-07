@@ -728,6 +728,7 @@ static UINT CALLBACK PrintHookProc(HWND hdlg, UINT uiMsg, WPARAM wParam, LPARAM 
 
     // Looks like we were able to extend the dialog
     gDialogWasExtended = PR_TRUE;
+    return TRUE;
   }
   return 0L;
 }
@@ -1179,6 +1180,7 @@ static BOOL APIENTRY PropSheetCallBack(HWND hdlg, UINT uiMsg, UINT wParam, LONG 
 
     // Looks like we were able to extend the dialog
     gDialogWasExtended = PR_TRUE;
+    return TRUE;
   }
   return 0L;
 }
