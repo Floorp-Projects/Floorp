@@ -2241,7 +2241,8 @@ class AutoGCRooter {
         DESCRIPTOR =  -13, /* js::AutoPropertyDescriptorRooter */
         STRING =      -14, /* js::AutoStringRooter */
         IDVECTOR =    -15, /* js::AutoIdVector */
-        BINDINGS =    -16  /* js::Bindings */
+        BINDINGS =    -16, /* js::Bindings */
+        SHAPEVECTOR = -17  /* js::AutoShapeVector */
     };
 
     private:
@@ -3227,28 +3228,28 @@ ContextAllocPolicy::reportAllocOverflow() const
     js_ReportAllocationOverflow(cx);
 }
 
-class AutoValueVector : private AutoGCRooter
+template<class T>
+class AutoVectorRooter : protected AutoGCRooter
 {
   public:
-    explicit AutoValueVector(JSContext *cx
-                             JS_GUARD_OBJECT_NOTIFIER_PARAM)
-        : AutoGCRooter(cx, VALVECTOR), vector(cx)
+    explicit AutoVectorRooter(JSContext *cx, ptrdiff_t tag
+                              JS_GUARD_OBJECT_NOTIFIER_PARAM)
+        : AutoGCRooter(cx, tag), vector(cx)
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
     size_t length() const { return vector.length(); }
 
-    bool append(const Value &v) { return vector.append(v); }
+    bool append(const T &v) { return vector.append(v); }
 
     void popBack() { vector.popBack(); }
 
     bool growBy(size_t inc) {
-        /* N.B. Value's default ctor leaves the Value undefined */
         size_t oldLength = vector.length();
         if (!vector.growByUninitialized(inc))
             return false;
-        MakeValueRangeGCSafe(vector.begin() + oldLength, vector.end());
+        MakeRangeGCSafe(vector.begin() + oldLength, vector.end());
         return true;
     }
 
@@ -3258,10 +3259,9 @@ class AutoValueVector : private AutoGCRooter
             vector.shrinkBy(oldLength - newLength);
             return true;
         }
-        /* N.B. Value's default ctor leaves the Value undefined */
         if (!vector.growByUninitialized(newLength - oldLength))
             return false;
-        MakeValueRangeGCSafe(vector.begin() + oldLength, vector.end());
+        MakeRangeGCSafe(vector.begin() + oldLength, vector.end());
         return true;
     }
 
@@ -3269,14 +3269,33 @@ class AutoValueVector : private AutoGCRooter
         return vector.reserve(newLength);
     }
 
-    Value &operator[](size_t i) { return vector[i]; }
-    const Value &operator[](size_t i) const { return vector[i]; }
+    T &operator[](size_t i) { return vector[i]; }
+    const T &operator[](size_t i) const { return vector[i]; }
 
-    const Value *begin() const { return vector.begin(); }
-    Value *begin() { return vector.begin(); }
+    const T *begin() const { return vector.begin(); }
+    T *begin() { return vector.begin(); }
 
-    const Value *end() const { return vector.end(); }
-    Value *end() { return vector.end(); }
+    const T *end() const { return vector.end(); }
+    T *end() { return vector.end(); }
+
+    const T &back() const { return vector.back(); }
+
+    friend void AutoGCRooter::trace(JSTracer *trc);
+
+  private:
+    Vector<T, 8> vector;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+class AutoValueVector : public AutoVectorRooter<Value>
+{
+  public:
+    explicit AutoValueVector(JSContext *cx
+                             JS_GUARD_OBJECT_NOTIFIER_PARAM)
+        : AutoVectorRooter<Value>(cx, VALVECTOR)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
 
     const jsval *jsval_begin() const { return Jsvalify(begin()); }
     jsval *jsval_begin() { return Jsvalify(begin()); }
@@ -3284,72 +3303,32 @@ class AutoValueVector : private AutoGCRooter
     const jsval *jsval_end() const { return Jsvalify(end()); }
     jsval *jsval_end() { return Jsvalify(end()); }
 
-    const Value &back() const { return vector.back(); }
-
-    friend void AutoGCRooter::trace(JSTracer *trc);
-
-  private:
-    Vector<Value, 8> vector;
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-class AutoIdVector : private AutoGCRooter
+class AutoIdVector : public AutoVectorRooter<jsid>
 {
   public:
     explicit AutoIdVector(JSContext *cx
                           JS_GUARD_OBJECT_NOTIFIER_PARAM)
-        : AutoGCRooter(cx, IDVECTOR), vector(cx)
+        : AutoVectorRooter<jsid>(cx, IDVECTOR)
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
-    size_t length() const { return vector.length(); }
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
 
-    bool append(jsid id) { return vector.append(id); }
-
-    void popBack() { vector.popBack(); }
-
-    bool growBy(size_t inc) {
-        /* N.B. jsid's default ctor leaves the jsid undefined */
-        size_t oldLength = vector.length();
-        if (!vector.growByUninitialized(inc))
-            return false;
-        MakeIdRangeGCSafe(vector.begin() + oldLength, vector.end());
-        return true;
+class AutoShapeVector : public AutoVectorRooter<const Shape *>
+{
+  public:
+    explicit AutoShapeVector(JSContext *cx
+                             JS_GUARD_OBJECT_NOTIFIER_PARAM)
+        : AutoVectorRooter<const Shape *>(cx, SHAPEVECTOR)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
-    bool resize(size_t newLength) {
-        size_t oldLength = vector.length();
-        if (newLength <= oldLength) {
-            vector.shrinkBy(oldLength - newLength);
-            return true;
-        }
-        /* N.B. jsid's default ctor leaves the jsid undefined */
-        if (!vector.growByUninitialized(newLength - oldLength))
-            return false;
-        MakeIdRangeGCSafe(vector.begin() + oldLength, vector.end());
-        return true;
-    }
-
-    bool reserve(size_t newLength) {
-        return vector.reserve(newLength);
-    }
-
-    jsid &operator[](size_t i) { return vector[i]; }
-    const jsid &operator[](size_t i) const { return vector[i]; }
-
-    const jsid *begin() const { return vector.begin(); }
-    jsid *begin() { return vector.begin(); }
-
-    const jsid *end() const { return vector.end(); }
-    jsid *end() { return vector.end(); }
-
-    const jsid &back() const { return vector.back(); }
-
-    friend void AutoGCRooter::trace(JSTracer *trc);
-
-  private:
-    Vector<jsid, 8> vector;
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 

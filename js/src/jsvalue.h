@@ -1145,28 +1145,40 @@ ValueArgToConstRef(const Value &v)
 /******************************************************************************/
 
 static JS_ALWAYS_INLINE void
-MakeValueRangeGCSafe(Value *vec, size_t len)
+MakeRangeGCSafe(Value *vec, size_t len)
 {
     PodZero(vec, len);
 }
 
 static JS_ALWAYS_INLINE void
-MakeValueRangeGCSafe(Value *beg, Value *end)
+MakeRangeGCSafe(Value *beg, Value *end)
 {
     PodZero(beg, end - beg);
 }
 
 static JS_ALWAYS_INLINE void
-MakeIdRangeGCSafe(jsid *beg, jsid *end)
+MakeRangeGCSafe(jsid *beg, jsid *end)
 {
     for (jsid *id = beg; id != end; ++id)
         *id = INT_TO_JSID(0);
 }
 
 static JS_ALWAYS_INLINE void
-MakeIdRangeGCSafe(jsid *vec, size_t len)
+MakeRangeGCSafe(jsid *vec, size_t len)
 {
-    MakeIdRangeGCSafe(vec, vec + len);
+    MakeRangeGCSafe(vec, vec + len);
+}
+
+static JS_ALWAYS_INLINE void
+MakeRangeGCSafe(const Shape **beg, const Shape **end)
+{
+    PodZero(beg, end - beg);
+}
+
+static JS_ALWAYS_INLINE void
+MakeRangeGCSafe(const Shape **vec, size_t len)
+{
+    PodZero(vec, len);
 }
 
 static JS_ALWAYS_INLINE void
