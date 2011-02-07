@@ -440,6 +440,7 @@ var BrowserUI = {
 
     Elements.tabs.addEventListener("TabSelect", this, true);
     Elements.tabs.addEventListener("TabOpen", this, true);
+    Elements.tabs.addEventListener("TabRemove", this, true);
 
     Elements.browsers.addEventListener("PanFinished", this, true);
 #if MOZ_PLATFORM_MAEMO == 6
@@ -843,9 +844,10 @@ var BrowserUI = {
         this._tabSelect(aEvent);
         break;
       case "TabOpen":
+      case "TabRemove":
       {
         // Workaround to hide the tabstrip if it is partially visible
-        // See bug 524469
+        // See bug 524469 and bug 626660
         let [tabsVisibility,,,] = Browser.computeSidebarVisibility();
         if (tabsVisibility > 0.0 && tabsVisibility < 1.0)
           Browser.hideSidebars();
@@ -853,9 +855,18 @@ var BrowserUI = {
         break;
       }
       case "PanFinished":
-        let [tabsVisibility,,,] = Browser.computeSidebarVisibility();
-        if (tabsVisibility == 0.0)
-          document.getElementById("tabs").removeClosedTab();
+        let tabs = document.getElementById("tabs");
+        let [tabsVisibility,,oldLeftWidth, oldRightWidth] = Browser.computeSidebarVisibility();
+        if (tabsVisibility == 0.0 && tabs.hasClosedTab) {
+          let { x: x1, y: y1 } = Browser.getScrollboxPosition(Browser.controlsScrollboxScroller);
+          tabs.removeClosedTab();
+
+          let [,, leftWidth, rightWidth] = Browser.computeSidebarVisibility();
+          let delta = (oldLeftWidth - leftWidth) || (oldRightWidth - rightWidth);
+          x1 += (x1 == leftWidth) ? delta : -delta;
+          Browser.controlsScrollboxScroller.scrollTo(x1, 0);
+          Browser.tryFloatToolbar(0, 0);
+        }
         break;
       case "SizeChanged":
         this.sizeControls(ViewableAreaObserver.width, ViewableAreaObserver.height);
