@@ -414,9 +414,15 @@
 }
 
 .details {
+  -moz-appearance: none;
+  border: none;
   cursor: pointer;
+  padding: 0;
   margin: 0;
-  -moz-margin-start: 10px;
+  background: transparent;
+  min-width: 13px;
+  -moz-margin-start: 6px;
+  list-style-image: url("moz-icon://stock/gtk-go-forward?size=16");
 }
 
 .icon-container {

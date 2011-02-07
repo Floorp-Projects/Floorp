@@ -128,7 +128,7 @@ add_test(function() {
   }, false);
 
   info("Opening context menu on enabled extension item");
-  EventUtils.synthesizeMouse(el, 4, 4, { }, gManagerWindow);
+  el.parentNode.selectedItem = el;
   EventUtils.synthesizeMouse(el, 4, 4, { type: "contextmenu", button: 2 }, gManagerWindow);
 });
 
@@ -147,7 +147,7 @@ add_test(function() {
   }, false);
 
   info("Opening context menu on newly disabled extension item");
-  EventUtils.synthesizeMouse(el, 4, 4, { }, gManagerWindow);
+  el.parentNode.selectedItem = el;
   EventUtils.synthesizeMouse(el, 4, 4, { type: "contextmenu", button: 2 }, gManagerWindow);
 });
 
@@ -166,7 +166,7 @@ add_test(function() {
   }, false);
 
   info("Opening context menu on newly enabled extension item");
-  EventUtils.synthesizeMouse(el, 4, 4, { }, gManagerWindow);
+  el.parentNode.selectedItem = el;
   EventUtils.synthesizeMouse(el, 4, 4, { type: "contextmenu", button: 2 }, gManagerWindow);
 });
 
@@ -183,7 +183,7 @@ add_test(function() {
   }, false);
 
   info("Opening context menu on disabled extension item");
-  EventUtils.synthesizeMouse(el, 4, 4, { }, gManagerWindow);
+  el.parentNode.selectedItem = el;
   EventUtils.synthesizeMouse(el, 4, 4, { type: "contextmenu", button: 2 }, gManagerWindow);
 });
 
@@ -203,7 +203,7 @@ add_test(function() {
     }, false);
 
     info("Opening context menu on enabled theme item");
-    EventUtils.synthesizeMouse(el, 4, 4, { }, gManagerWindow);
+    el.parentNode.selectedItem = el;
     EventUtils.synthesizeMouse(el, 4, 4, { type: "contextmenu", button: 2 }, gManagerWindow);
   });
 });
@@ -222,7 +222,7 @@ add_test(function() {
   }, false);
 
   info("Opening context menu on disabled theme item");
-  EventUtils.synthesizeMouse(el, 4, 4, { }, gManagerWindow);
+  el.parentNode.selectedItem = el;
   EventUtils.synthesizeMouse(el, 4, 4, { type: "contextmenu", button: 2 }, gManagerWindow);
 });
 
@@ -242,7 +242,7 @@ add_test(function() {
 
     info("Opening context menu on enabled extension, in detail view");
     var el = gManagerWindow.document.querySelector("#detail-view .detail-view-container");
-    EventUtils.synthesizeMouse(el, 4, 4, { }, gManagerWindow);
+    el.parentNode.selectedItem = el;
     EventUtils.synthesizeMouse(el, 4, 4, { type: "contextmenu", button: 2 }, gManagerWindow);
   });
 });
@@ -263,7 +263,7 @@ add_test(function() {
 
     info("Opening context menu on disabled extension, in detail view");
     var el = gManagerWindow.document.querySelector("#detail-view .detail-view-container");
-    EventUtils.synthesizeMouse(el, 4, 4, { }, gManagerWindow);
+    el.parentNode.selectedItem = el;
     EventUtils.synthesizeMouse(el, 4, 4, { type: "contextmenu", button: 2 }, gManagerWindow);
   });
 });
@@ -284,7 +284,7 @@ add_test(function() {
 
     info("Opening context menu on enabled theme, in detail view");
     var el = gManagerWindow.document.querySelector("#detail-view .detail-view-container");
-    EventUtils.synthesizeMouse(el, 4, 4, { }, gManagerWindow);
+    el.parentNode.selectedItem = el;
     EventUtils.synthesizeMouse(el, 4, 4, { type: "contextmenu", button: 2 }, gManagerWindow);
   });
 });
@@ -305,7 +305,7 @@ add_test(function() {
 
     info("Opening context menu on disabled theme, in detail view");
     var el = gManagerWindow.document.querySelector("#detail-view .detail-view-container");
-    EventUtils.synthesizeMouse(el, 4, 4, { }, gManagerWindow);
+    el.parentNode.selectedItem = el;
     EventUtils.synthesizeMouse(el, 4, 4, { type: "contextmenu", button: 2 }, gManagerWindow);
   });
 });
@@ -325,7 +325,7 @@ add_test(function() {
 
     info("Opening context menu with single menu item on enabled theme, in detail view");
     var el = gManagerWindow.document.querySelector("#detail-view .detail-view-container");
-    EventUtils.synthesizeMouse(el, 4, 4, { }, gManagerWindow);
+    el.parentNode.selectedItem = el;
     EventUtils.synthesizeMouse(el, 4, 4, { type: "contextmenu", button: 2 }, gManagerWindow);
   });
 });
@@ -359,7 +359,7 @@ add_test(function() {
       }, false);
 
       info("Opening context menu on remote extension item");
-      EventUtils.synthesizeMouse(el, 4, 4, { }, gManagerWindow);
+      el.parentNode.selectedItem = el;
       EventUtils.synthesizeMouse(el, 4, 4, { type: "contextmenu", button: 2 }, gManagerWindow);
 
     });
@@ -389,7 +389,7 @@ add_test(function() {
 
     info("Opening context menu on remote extension, in detail view");
     var el = gManagerWindow.document.querySelector("#detail-view .detail-view-container");
-    EventUtils.synthesizeMouse(el, 4, 4, { }, gManagerWindow);
+    el.parentNode.selectedItem = el;
     EventUtils.synthesizeMouse(el, 4, 4, { type: "contextmenu", button: 2 }, gManagerWindow);
   });
 });
