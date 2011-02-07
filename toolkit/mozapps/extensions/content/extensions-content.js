@@ -49,7 +49,7 @@ var gIoService = Components.classes["@mozilla.org/network/io-service;1"]
                            .getService(Components.interfaces.nsIIOService);
 
 function createInstallTrigger(window) {
-  return {
+  let chromeObject = {
     window: window,
 
     __exposedProps__: {
@@ -61,9 +61,7 @@ function createInstallTrigger(window) {
       updateEnabled: "r",
       install: "r",
       installChrome: "r",
-      startSoftwareUpdate: "r",
-      toString: "r",
-      toSource: "r", // XXX workaround for bug 582100
+      startSoftwareUpdate: "r"
     },
 
     // == Public interface ==
@@ -188,6 +186,26 @@ function createInstallTrigger(window) {
       }
     }
   };
+
+  let sandbox = Cu.Sandbox(window);
+  let obj = Cu.evalInSandbox(
+    "(function (x) {\
+       var bind = Function.bind;\
+       return {\
+         enabled: bind.call(x.enabled, x);\
+         updateEnabled: bind.call(x.updateEnabled, x);\
+         install: bind.call(x.install, x);\
+         installChrome: bind.call(x.installChrome, x);\
+         startSoftwareUpdate: bind.call(x.startSoftwareUpdate, x);\
+       };\
+     })", sandbox)(chromeObject);
+
+  obj.SKIN = chromeObject.SKIN;
+  obj.LOCALE = chromeObject.LOCALE;
+  obj.CONTENT = chromeObject.CONTENT;
+  obj.PACKAGE = chromeObject.PACKAGE;
+
+  return obj;
 };
 
 /**
