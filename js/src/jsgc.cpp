@@ -1038,8 +1038,8 @@ JSRuntime::setGCLastBytes(size_t lastBytes)
     float trigger1 = float(lastBytes) * float(gcTriggerFactor) / 100.0f;
     float trigger2 = float(Max(lastBytes, GC_ARENA_ALLOCATION_TRIGGER)) *
                      GC_HEAP_GROWTH_FACTOR;
-    float maxtriger = Max(trigger1, trigger2);
-    gcTriggerBytes = (float(gcMaxBytes) < maxtriger) ? gcMaxBytes : size_t(maxtriger);
+    float maxtrigger = Max(trigger1, trigger2);
+    gcTriggerBytes = (float(gcMaxBytes) < maxtrigger) ? gcMaxBytes : size_t(maxtrigger);
 }
 
 void
@@ -1051,8 +1051,8 @@ JSCompartment::setGCLastBytes(size_t lastBytes)
     float trigger1 = float(lastBytes) * float(rt->gcTriggerFactor) / 100.0f;
     float trigger2 = float(Max(lastBytes, GC_ARENA_ALLOCATION_TRIGGER)) *
                      GC_HEAP_GROWTH_FACTOR;
-    float maxtriger = Max(trigger1, trigger2);
-    gcTriggerBytes = (float(rt->gcMaxBytes) < maxtriger) ? rt->gcMaxBytes : size_t(maxtriger);
+    float maxtrigger = Max(trigger1, trigger2);
+    gcTriggerBytes = (float(rt->gcMaxBytes) < maxtrigger) ? rt->gcMaxBytes : size_t(maxtrigger);
 }
 
 void
@@ -1824,12 +1824,12 @@ MaybeGC(JSContext *cx)
 
     JSCompartment *comp = cx->compartment;
     if (rt->gcIsNeeded) {
-        js_GC(cx, comp == rt->gcTriggerCompartment ? comp : NULL, GC_NORMAL);
+        js_GC(cx, (comp == rt->gcTriggerCompartment) ? comp : NULL, GC_NORMAL);
         return;
     }
 
     if (comp->gcBytes > 8192 && comp->gcBytes >= 3 * (comp->gcTriggerBytes / 4))
-        js_GC(cx, comp, GC_NORMAL);
+        js_GC(cx, (rt->gcMode == JSGC_MODE_COMPARTMENT) ? comp : NULL, GC_NORMAL);
 }
 
 } /* namespace js */
@@ -2264,6 +2264,7 @@ MarkAndSweepCompartment(JSContext *cx, JSCompartment *comp, JSGCInvocationKind g
     JS_ASSERT(gckind != GC_LAST_CONTEXT);
     JS_ASSERT(comp != rt->atomsCompartment);
     JS_ASSERT(!comp->isMarked());
+    JS_ASSERT(comp->rt->gcMode == JSGC_MODE_COMPARTMENT);
 
     /*
      * Mark phase.
