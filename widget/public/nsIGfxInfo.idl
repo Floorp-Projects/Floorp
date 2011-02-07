@@ -71,6 +71,11 @@ interface nsIGfxInfo : nsISupports
   
   readonly attribute DOMString adapterDriverDate;
 
+  void getFailures(
+               [optional] out unsigned long failureCount,
+               [retval, array, size_is(failureCount)] out string failures);
+
+  [noscript, notxpcom] void logFailure(in ACString failure);
   /*
    * A set of constants for features that we can ask this GfxInfo object
    * about via GetFeatureStatus
