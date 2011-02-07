@@ -1533,6 +1533,13 @@ DocumentViewerImpl::Destroy()
         vm->GetRootView(rootView);
 
         if (rootView) {
+          // The invalidate that removing this view causes is dropped because
+          // the Freeze call above sets painting to be suppressed for our
+          // document. So we do it ourselves and make it happen.
+          vm->UpdateViewNoSuppression(rootView,
+            rootView->GetBounds() - rootView->GetPosition(),
+            NS_VMREFRESH_NO_SYNC);
+
           nsIView *rootViewParent = rootView->GetParent();
           if (rootViewParent) {
             nsIViewManager *parentVM = rootViewParent->GetViewManager();
