@@ -1078,6 +1078,7 @@ ShowNativePrintDialog(HWND              aHWnd,
 #endif
     
   } else {
+    ::SetFocus(aHWnd);
     aPrintSettings->SetIsCancelled(PR_TRUE);
     if (hGlobalDevMode) ::GlobalFree(hGlobalDevMode);
     return NS_ERROR_ABORT;
