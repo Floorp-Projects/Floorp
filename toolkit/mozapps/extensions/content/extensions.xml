@@ -521,6 +521,61 @@
   </binding>
 
 
+  <binding id="addons-richlistbox" extends="chrome://global/content/bindings/richlistbox.xml#richlistbox">
+    <implementation>
+      <field name="mLastMoveTime">null</field>
+      <field name="mLastMousePos">null</field>
+    </implementation>
+    <handlers>
+      <!-- Automatically select the item under the mouse cursor -->
+      <handler event="mousemove"><![CDATA[
+        // Save latest mouse position incase we want to scroll and keep the item
+        // under the mouse selected (the scroll event doesn't include this information).
+        this.mLastMousePos = { x: event.clientX,
+                               y: event.clientY };
+
+        // Updating every mousemove can kill performance, so make sure
+        // at least 30ms has passed.
+        var now = Date.now();
+
+        if ((!this.mLastMoveTime) || (now - this.mLastMoveTime > 30)) {
+          var item = event.target;
+
+          while (item && item.localName != "richlistitem")
+            item = item == this ? null : item.parentNode;
+
+          if (!item)
+            return;
+
+          var index = this.getIndexOfItem(item);
+          if (index != this.selectedIndex)
+            this.selectedIndex = index;
+
+          this.mLastMoveTime = now;
+        }
+      ]]></handler>
+      <!-- Automatically select the item under the mouse cursor when scrolling -->
+      <handler event="scroll"><![CDATA[
+        if (!this.mLastMousePos)
+          return;
+
+        var item = document.elementFromPoint(this.mLastMousePos.x,
+                                             this.mLastMousePos.y);
+
+        while (item && item.localName != "richlistitem")
+          item = item == this ? null : item.parentNode;
+
+        if (!item)
+          return;
+
+        var index = this.getIndexOfItem(item);
+        if (index != this.selectedIndex)
+          this.selectedIndex = index;
+      ]]></handler>
+    </handlers>
+  </binding>
+
+
   <!-- Install status - Displays the status of an install/upgrade. -->
   <binding id="install-status">
     <content>
@@ -845,8 +900,7 @@
             <xul:vbox flex="1">
               <xul:hbox align="center" class="description-container">
                 <xul:label flex="1" anonid="description" class="description" crop="end"/>
-                <xul:button anonid="details-btn" class="details button-link"
-                            label="&addon.details.label;"
+                <xul:button anonid="details-btn" class="details"
                             tooltiptext="&addon.details.tooltip;"
                             oncommand="document.getBindingParent(this).showInDetailView();"/>
                 <xul:spacer flex="5000"/> <!-- Necessary to make the description crop -->
@@ -1627,19 +1681,32 @@
 
     <handlers>
       <handler event="click" button="0"><![CDATA[
-        switch (event.detail) {
-        case 1:
-          // Prevent double-click where the UI changes on the first click
-          this._lastClickTarget = event.originalTarget;
-          break;
-        case 2:
-          if (event.originalTarget.localName != 'button' &&
-              !event.originalTarget.classList.contains('text-link') &&
-              event.originalTarget == this._lastClickTarget) {
-            this.showInDetailView();
-          }
-          break;
+       if (event.originalTarget.localName != "button" &&
+           event.originalTarget.localName != "checkbox" &&
+           !event.originalTarget.classList.contains("text-link")) {
+          this.showInDetailView();
         }
+      ]]></handler>
+      <!-- CSS's :active pseudo-class will match if a button is clicked,
+           so we need to track it manually via mousedown. -->
+      <handler event="mousedown" button="0"><![CDATA[
+       if (event.originalTarget.localName != "button" &&
+           event.originalTarget.localName != "checkbox" &&
+           !event.originalTarget.classList.contains("text-link")) {
+          this.setAttribute("mousedown", true);
+        }
+      ]]></handler>
+      <handler event="mouseup" button="0"><![CDATA[
+        this.removeAttribute("mousedown");
+      ]]></handler>
+      <handler event="mouseout"><![CDATA[
+        var el = event.relatedTarget;
+        while (el != null && el != this.parentNode) {
+          if (el == this)
+            return;
+          el = el.parentNode;
+        }
+        this.removeAttribute("mousedown");
       ]]></handler>
     </handlers>
   </binding>
