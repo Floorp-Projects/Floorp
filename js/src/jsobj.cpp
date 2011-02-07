@@ -7021,17 +7021,5 @@ js_DumpStackFrame(JSContext *cx, JSStackFrame *start)
     }
 }
 
-#ifdef DEBUG
-bool
-IsSaneThisObject(JSObject &obj)
-{
-    Class *clasp = obj.getClass();
-    return clasp != &js_CallClass &&
-           clasp != &js_BlockClass &&
-           clasp != &js_DeclEnvClass &&
-           clasp != &js_WithClass;
-}
-#endif
-
 #endif /* DEBUG */
 
