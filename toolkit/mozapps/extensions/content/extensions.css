@@ -54,6 +54,10 @@ xhtml|link {
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#sorters");
 }
 
+.list {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addons-richlistbox");  
+}
+
 .addon[status="installed"] {
   -moz-box-orient: vertical;
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-generic");

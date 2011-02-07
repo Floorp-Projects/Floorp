@@ -594,7 +594,8 @@ add_test(function() {
            getService(Ci.nsIFocusManager);
 
   let addon = items["Test add-on 6"];
-  EventUtils.synthesizeMouseAtCenter(addon, { }, gManagerWindow);
+  addon.parentNode.selectedItem = addon;
+  addon.focus();
   is(fm.focusedElement, addon.parentNode, "Focus should have moved to the list");
 
   EventUtils.synthesizeKey("VK_TAB", { }, gManagerWindow);

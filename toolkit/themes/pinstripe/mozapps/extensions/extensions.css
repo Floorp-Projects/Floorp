@@ -440,9 +440,24 @@
 }
 
 .details {
+  -moz-appearance: none;
+  border: none;
   cursor: pointer;
+  padding: 3px 0 0 0;
   margin: 0;
-  -moz-margin-start: 10px;
+  background: transparent;
+  min-width: 13px;
+  -moz-margin-start: 6px;
+  list-style-image: url("chrome://mozapps/skin/extensions/detail-btn.png");
+  -moz-image-region: rect(0px, 13px, 13px, 0px);
+}
+
+.details:hover {
+  -moz-image-region: rect(0px, 26px, 13px, 13px);
+}
+
+.details:active {
+  -moz-image-region: rect(0px, 39px, 13px, 26px);
 }
 
 .icon-container {
@@ -627,7 +642,7 @@
 }
 
 .addon[selected] {
-  background-color: rgba(105, 125, 149, 0.39);
+  background-color: rgba(255, 255, 255, 0.45);
   color: black;
 }
 
@@ -637,6 +652,11 @@
 
 .addon[active="false"][selected] .name-container {
   color: #3F3F3F;
+}
+
+.addon[mousedown] {
+  background-color: rgba(255, 255, 255, 0.3);
+  box-shadow: inset 1px 1px 4px rgba(0, 0, 0, 0.15);
 }
 
 
