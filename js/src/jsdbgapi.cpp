@@ -576,9 +576,6 @@ struct JSWatchPoint {
 #define JSWP_LIVE       0x1             /* live because set and not cleared */
 #define JSWP_HELD       0x2             /* held while running handler/setter */
 
-static bool
-IsWatchedProperty(JSContext *cx, const Shape *shape);
-
 /*
  * NB: DropWatchPointAndUnlock releases cx->runtime->debuggerLock in all cases.
  */
@@ -770,7 +767,9 @@ js_watch_set_wrapper(JSContext *cx, uintN argc, Value *vp)
     return js_watch_set(cx, obj, userid, vp);
 }
 
-static bool
+namespace js {
+
+bool
 IsWatchedProperty(JSContext *cx, const Shape *shape)
 {
     if (shape->hasSetterValue()) {
@@ -778,10 +777,12 @@ IsWatchedProperty(JSContext *cx, const Shape *shape)
         if (!funobj || !funobj->isFunction())
             return false;
 
-        JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
+        JSFunction *fun = funobj->getFunctionPrivate();
         return fun->maybeNative() == js_watch_set_wrapper;
     }
     return shape->setterOp() == js_watch_set;
+}
+
 }
 
 /*

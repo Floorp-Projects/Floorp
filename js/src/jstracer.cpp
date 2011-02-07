@@ -12241,6 +12241,11 @@ TraceRecorder::record_AddProperty(JSObject *obj)
     LIns* v_ins = get(&v);
     const Shape* shape = obj->lastProperty();
 
+    if (!shape->hasDefaultSetter()) {
+        JS_ASSERT(IsWatchedProperty(cx, shape));
+        RETURN_STOP_A("assignment adds property with watchpoint");
+    }
+
 #ifdef DEBUG
     JS_ASSERT(addPropShapeBefore);
     if (obj->inDictionaryMode())
