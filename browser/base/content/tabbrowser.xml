@@ -1226,15 +1226,6 @@
 
             this.tabContainer.appendChild(t);
 
-            if (this.tabContainer.mTabstrip._isRTLScrollbox) {
-              /* In RTL UI, the tab is visually added to the left side of the
-               * tabstrip. This means the tabstip has to be scrolled back in
-               * order to make sure the same set of tabs is visible before and
-               * after the new tab is added.  See bug 508816. */
-
-              this.tabContainer.mTabstrip.scrollByPixels(t.clientWidth);
-            }
-
             // invalidate cache, because tabContainer is about to change
             this._browsers = null;
 

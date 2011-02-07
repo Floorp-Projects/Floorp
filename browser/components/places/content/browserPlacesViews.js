@@ -1037,11 +1037,6 @@ PlacesToolbar.prototype = {
     if (this._chevron.collapsed)
       return;
 
-    // XXX (bug 508816) Scrollbox does not handle correctly RTL mode.
-    // This workarounds the issue scrolling the box to the right.
-    if (this.isRTL)
-      this._rootElt.scrollLeft = this._rootElt.scrollWidth;
-
     // Update the chevron on a timer.  This will avoid repeated work when
     // lot of changes happen in a small timeframe.
     if (this._updateChevronTimer)
