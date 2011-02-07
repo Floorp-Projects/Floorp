@@ -2518,6 +2518,21 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew)
     RegisterID      icCalleeData; /* data to call */
     Address         icRvalAddr;   /* return slot on slow-path rejoin */
 
+    /*
+     * IC space must be reserved (using RESERVE_IC_SPACE or RESERVE_OOL_SPACE) between the
+     * following labels (as used in finishThisUp):
+     *  - funGuard -> hotJump
+     *  - funGuard -> joinPoint
+     *  - funGuard -> hotPathLabel
+     *  - slowPathStart -> oolCall
+     *  - slowPathStart -> oolJump
+     *  - slowPathStart -> icCall
+     *  - slowPathStart -> slowJoinPoint
+     * Because the call ICs are fairly long (compared to PICs), we don't reserve the space in each
+     * path until the first usage of funGuard (for the in-line path) or slowPathStart (for the
+     * out-of-line path).
+     */
+
     /* Initialized only on lowerFunCallOrApply branch. */
     Jump            uncachedCallSlowRejoin;
     CallPatchInfo   uncachedCallPatch;
@@ -2594,6 +2609,9 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew)
     }
     RegisterID funPtrReg = tempRegs.takeRegInMask(Registers::SavedRegs);
 
+    /* Reserve space just before initialization of funGuard. */
+    RESERVE_IC_SPACE(masm);
+
     /*
      * Guard on the callee identity. This misses on the first run. If the
      * callee is scripted, compiled/compilable, and argc == nargs, then this
@@ -2601,6 +2619,9 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew)
      */
     Jump j = masm.branchPtrWithPatch(Assembler::NotEqual, icCalleeData, callIC.funGuard);
     callIC.funJump = j;
+
+    /* Reserve space just before initialization of slowPathStart. */
+    RESERVE_OOL_SPACE(stubcc.masm);
 
     Jump rejoin1, rejoin2;
     {
@@ -2710,6 +2731,12 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew)
         uncachedCallPatch.joinPoint = callIC.joinPoint;
     masm.loadPtr(Address(JSFrameReg, JSStackFrame::offsetOfPrev()), JSFrameReg);
 
+    /*
+     * We've placed hotJump, joinPoint and hotPathLabel, and no other labels are located by offset
+     * in the in-line path so we can check the IC space now.
+     */
+    CHECK_IC_SPACE();
+
     frame.popn(speculatedArgc + 2);
     frame.takeReg(JSReturnReg_Type);
     frame.takeReg(JSReturnReg_Data);
@@ -2728,6 +2755,8 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew)
     stubcc.masm.loadValueAsComponents(icRvalAddr, JSReturnReg_Type, JSReturnReg_Data);
     stubcc.crossJump(stubcc.masm.jump(), masm.label());
     JaegerSpew(JSpew_Insns, " ---- END SLOW RESTORE CODE ---- \n");
+
+    CHECK_OOL_SPACE();
 
     if (lowerFunCallOrApply)
         stubcc.crossJump(uncachedCallSlowRejoin, masm.label());
