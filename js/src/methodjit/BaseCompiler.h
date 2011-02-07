@@ -266,7 +266,8 @@ class AutoReserveICSpace {
     }
 };
 
-# define RESERVE_IC_SPACE(__masm)       AutoReserveICSpace<96> arics(__masm)
+# define RESERVE_IC_SPACE(__masm)       AutoReserveICSpace<128> arics(__masm)
+# define CHECK_IC_SPACE()               arics.check()
 
 /* The OOL path can need a lot of space because we save and restore a lot of registers. The actual
  * sequene varies. However, dumping the literal pool before an OOL block is probably a good idea
@@ -278,6 +279,7 @@ class AutoReserveICSpace {
 # define CHECK_OOL_SPACE()              arics_ool.check()
 #else
 # define RESERVE_IC_SPACE(__masm)       /* Do nothing. */
+# define CHECK_IC_SPACE()               /* Do nothing. */
 # define RESERVE_OOL_SPACE(__masm)      /* Do nothing. */
 # define CHECK_OOL_SPACE()              /* Do nothing. */
 #endif
