@@ -70,8 +70,7 @@ class nsGfxScrollFrameInner : public nsIReflowCallback {
 public:
   class AsyncScroll;
 
-  nsGfxScrollFrameInner(nsContainerFrame* aOuter, PRBool aIsRoot,
-                        PRBool aIsXUL);
+  nsGfxScrollFrameInner(nsContainerFrame* aOuter, PRBool aIsRoot);
   ~nsGfxScrollFrameInner();
 
   typedef nsIScrollableFrame::ScrollbarStyles ScrollbarStyles;
@@ -153,6 +152,21 @@ public:
   nsRect GetScrollPortRect() const { return mScrollPort; }
   nsPoint GetScrollPosition() const {
     return mScrollPort.TopLeft() - mScrolledFrame->GetPosition();
+  }
+  /**
+   * For LTR frames, the logical scroll position is the offset of the top left
+   * corner of the frame from the top left corner of the scroll port (same as
+   * GetScrollPosition).
+   * For RTL frames, it is the offset of the top right corner of the frame from
+   * the top right corner of the scroll port
+   */
+  nsPoint GetLogicalScrollPosition() const {
+    nsPoint pt;
+    pt.x = IsLTR() ?
+      mScrollPort.x - mScrolledFrame->GetPosition().x :
+      mScrollPort.XMost() - mScrolledFrame->GetRect().XMost();
+    pt.y = mScrollPort.y - mScrolledFrame->GetPosition().y;
+    return pt;
   }
   nsRect GetScrollRange() const;
 
@@ -278,8 +292,6 @@ public:
   PRPackedBool mDidHistoryRestore:1;
   // Is this the scrollframe for the document's viewport?
   PRPackedBool mIsRoot:1;
-  // Is mOuter an nsXULScrollFrame?
-  PRPackedBool mIsXUL:1;
   // If true, don't try to layout the scrollbars in Reflow().  This can be
   // useful if multiple passes are involved, because we don't want to place the
   // scrollbars at the wrong size.
@@ -600,7 +612,8 @@ public:
 
   virtual nsPoint GetPositionOfChildIgnoringScrolling(nsIFrame* aChild)
   { nsPoint pt = aChild->GetPosition();
-    if (aChild == mInner.GetScrolledFrame()) pt += GetScrollPosition();
+    if (aChild == mInner.GetScrolledFrame())
+      pt += mInner.GetLogicalScrollPosition();
     return pt;
   }
 
