@@ -86,6 +86,7 @@ cairo-glitz.h
 cairo-os2.h
 cairo-pdf.h
 cairo-ps.h
+cairo-tee.h
 cairo-quartz.h
 cairo-win32.h
 cairo-xlib.h
