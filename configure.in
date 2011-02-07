@@ -6396,20 +6396,24 @@ if test -n "$MOZ_ANGLE"; then
     AC_MSG_WARN([This will become an error in the future.])
   fi
 
-  # Get the SDK numeric version (e.g. 42 or 43) by looking at the dependencies of d3dx9.lib
-  MOZ_D3DX9_VERSION=`dumpbin //headers "$MOZ_DIRECTX_SDK_PATH"/lib/$MOZ_DIRECTX_SDK_CPU_SUFFIX/d3dx9.lib | egrep d3dx9_[[0-9]][[0-9]]\.dll | head -n1 | sed 's/.*\([[0-9]][[0-9]]\).*/\\1/g'`
+  if test -n "$MOZ_ANGLE" ; then
+    # Get the SDK numeric version (e.g. 42 or 43) by looking at the dependencies of d3dx9.lib
+    MOZ_D3DX9_VERSION=`dumpbin //headers "$MOZ_DIRECTX_SDK_PATH"/lib/$MOZ_DIRECTX_SDK_CPU_SUFFIX/d3dx9.lib | egrep d3dx9_[[0-9]][[0-9]]\.dll | head -n1 | sed 's/.*\([[0-9]][[0-9]]\).*/\\1/g'`
 
-  if test -z "$MOZ_D3DX9_VERSION" ; then
-    MOZ_ANGLE=
-    AC_MSG_WARN([Couldn't determine the D3DX9 version! Disabling ANGLE.])
-    AC_MSG_ERROR([This will become an error in the future.])
+    if test -z "$MOZ_D3DX9_VERSION" ; then
+      MOZ_ANGLE=
+      AC_MSG_WARN([Couldn't determine the D3DX9 version! Disabling ANGLE.])
+      AC_MSG_WARN([This will become an error in the future.])
+    fi
+
+    if test -n "$MOZ_ANGLE" ; then
+      MOZ_D3DX9_CAB=`find "$MOZ_DIRECTX_SDK_PATH"/Redist -name *d3dx9_${MOZ_D3DX9_VERSION}_${MOZ_DIRECTX_SDK_CPU_SUFFIX}.cab | head -n1`
+      MOZ_D3DCOMPILER_CAB=`find "$MOZ_DIRECTX_SDK_PATH"/Redist -name *D3DCompiler_${MOZ_D3DX9_VERSION}_${MOZ_DIRECTX_SDK_CPU_SUFFIX}.cab | head -n1`
+
+      MOZ_D3DX9_DLL=d3dx9_$MOZ_D3DX9_VERSION.dll
+      MOZ_D3DCOMPILER_DLL=D3DCompiler_$MOZ_D3DX9_VERSION.dll
+    fi
   fi
-
-  MOZ_D3DX9_CAB=`find "$MOZ_DIRECTX_SDK_PATH"/Redist -name *d3dx9_${MOZ_D3DX9_VERSION}_${MOZ_DIRECTX_SDK_CPU_SUFFIX}.cab | head -n1`
-  MOZ_D3DCOMPILER_CAB=`find "$MOZ_DIRECTX_SDK_PATH"/Redist -name *D3DCompiler_${MOZ_D3DX9_VERSION}_${MOZ_DIRECTX_SDK_CPU_SUFFIX}.cab | head -n1`
-
-  MOZ_D3DX9_DLL=d3dx9_$MOZ_D3DX9_VERSION.dll
-  MOZ_D3DCOMPILER_DLL=D3DCompiler_$MOZ_D3DX9_VERSION.dll
 fi
 fi
 
