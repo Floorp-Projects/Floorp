@@ -248,7 +248,7 @@ StackSpace::pushInvokeArgs(JSContext *cx, uintN argc, InvokeArgsGuard *ag)
 
     Value *vp = start;
     Value *vpend = vp + nvals;
-    /* Don't need to MakeValueRangeGCSafe: the VM stack is conservatively marked. */
+    /* Don't need to MakeRangeGCSafe: the VM stack is conservatively marked. */
 
     /* Use invokeArgEnd to root [vp, vpend) until the frame is pushed. */
     ag->prevInvokeArgEnd = invokeArgEnd;

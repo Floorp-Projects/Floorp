@@ -1867,7 +1867,7 @@ js::array_sort(JSContext *cx, uintN argc, Value *vp)
          * the root set covered by tvr.count.
          */
         Value *mergesort_tmp = vec + newlen;
-        MakeValueRangeGCSafe(mergesort_tmp, newlen);
+        MakeRangeGCSafe(mergesort_tmp, newlen);
         tvr.changeLength(newlen * 2);
 
         /* Here len == 2 * (newlen + undefs + number_of_holes). */
@@ -1932,7 +1932,7 @@ js::array_sort(JSContext *cx, uintN argc, Value *vp)
                     return false;
                 }
                 mergesort_tmp = vec + 2 * newlen;
-                MakeValueRangeGCSafe(mergesort_tmp, 2 * newlen);
+                MakeRangeGCSafe(mergesort_tmp, 2 * newlen);
                 tvr.changeArray(vec, newlen * 4);
                 elemsize = 2 * sizeof(Value);
             }

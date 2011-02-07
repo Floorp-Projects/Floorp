@@ -1601,6 +1601,12 @@ AutoGCRooter::trace(JSTracer *trc)
         return;
       }
 
+      case SHAPEVECTOR: {
+        Vector<const Shape *, 8> &vector = static_cast<js::AutoShapeVector *>(this)->vector;
+        MarkShapeRange(trc, vector.length(), vector.begin(), "js::AutoShapeVector.vector");
+        return;
+      }
+
       case BINDINGS: {
         static_cast<js::AutoBindingsRooter *>(this)->bindings.trace(trc);
         return;
