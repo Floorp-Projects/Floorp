@@ -2696,9 +2696,20 @@ HUD_SERVICE.prototype =
       }
     }
 
-    // Need to detect that the console component has been paved over.
+    // Need to detect that the console component has been paved over. Do this by
+    // checking whether its global object is equal to that of an object
+    // returned by our native ConsoleAPI nsIDOMGlobalPropertyInitializer.
     let consoleObject = unwrap(aContentWindow).console;
-    if (!("__mozillaConsole__" in consoleObject))
+    let consoleGlobal = Cu.getGlobalForObject(consoleObject);
+
+    let nativeConsoleObj = Cc["@mozilla.org/console-api;1"].
+                           createInstance(Ci.nsIDOMGlobalPropertyInitializer).
+                           init(aContentWindow);
+    let nativeConsoleGlobal = Cu.getGlobalForObject(nativeConsoleObj);
+
+    // Need a "===" comparison because backstagepass objects have strange
+    // behavior with ==
+    if (consoleGlobal !== nativeConsoleGlobal)
       this.logWarningAboutReplacedAPI(hudId);
 
     // register the controller to handle "select all" properly
