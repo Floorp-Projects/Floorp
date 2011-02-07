@@ -5274,7 +5274,9 @@ js_NativeSet(JSContext *cx, JSObject *obj, const Shape *shape, bool added, Value
         if (shape->hasDefaultSetter()) {
             if (!added) {
                 AbortRecordingIfUnexpectedGlobalWrite(cx, obj, slot);
-                if (!obj->methodWriteBarrier(cx, *shape, *vp))
+
+                /* FIXME: This should pass *shape, not slot, but see bug 630354. */
+                if (!obj->methodWriteBarrier(cx, slot, *vp))
                     return false;
             }
             obj->nativeSetSlot(slot, *vp);
