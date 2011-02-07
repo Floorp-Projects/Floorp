@@ -159,6 +159,13 @@ js_SweepWatchPoints(JSContext *cx);
 extern JSBool
 js_watch_set(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
 
+namespace js {
+
+bool
+IsWatchedProperty(JSContext *cx, const Shape *shape);
+
+}
+
 #endif
 
 #endif /* JS_HAS_OBJ_WATCHPOINT */
