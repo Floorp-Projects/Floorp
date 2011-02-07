@@ -3426,7 +3426,7 @@ JSObject::copyPropertiesFrom(JSContext *cx, JSObject *obj)
     if (!isNative())
         return true;
 
-    Vector<const Shape *> shapes(cx);
+    AutoShapeVector shapes(cx);
     for (Shape::Range r(obj->lastProperty()); !r.empty(); r.popFront()) {
         if (!shapes.append(&r.front()))
             return false;
@@ -3725,8 +3725,8 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
                 return false;
         }
     } else {
-        Vector<const Shape *, 8> shapes(cx);
-        shapes.growByUninitialized(count);
+        AutoShapeVector shapes(cx);
+        shapes.growBy(count);
 
         for (Shape::Range r(obj->lastProperty()); !r.empty(); r.popFront()) {
             shape = &r.front();
