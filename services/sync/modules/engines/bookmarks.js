@@ -1252,7 +1252,8 @@ BookmarksStore.prototype = {
     stmt.params.guid = guid.toString();
 
     let results = Utils.queryAsync(stmt, ["item_id"]);
-    this._log.trace("Rows matching GUID " + guid + ": " + results.length);
+    this._log.trace("Rows matching GUID " + guid + ": " +
+                    results.map(function(x) x.item_id));
     
     // Here's the one we care about: the first.
     let result = results[0];
@@ -1443,6 +1444,11 @@ BookmarksTracker.prototype = {
     Ci.nsISupportsWeakReference
   ]),
 
+  _idForGUID: function _idForGUID(item_id) {
+    // Isn't indirection fun...
+    return Engines.get("bookmarks")._store.idForGUID(item_id);
+  },
+
   _GUIDForId: function _GUIDForId(item_id) {
     // Isn't indirection fun...
     return Engines.get("bookmarks")._store.GUIDForId(item_id);
@@ -1455,7 +1461,7 @@ BookmarksTracker.prototype = {
    *        Places internal id of the bookmark to upload
    */
   _addId: function BMT__addId(itemId) {
-    if (this.addChangedID(this._GUIDForId(itemId, true)))
+    if (this.addChangedID(this._GUIDForId(itemId)))
       this._upScore();
   },
 
@@ -1483,7 +1489,7 @@ BookmarksTracker.prototype = {
 
     // Make sure to remove items that have the exclude annotation
     if (Svc.Annos.itemHasAnnotation(itemId, "places/excludeFromBackup")) {
-      this.removeChangedID(this._GUIDForId(itemId, true));
+      this.removeChangedID(this._GUIDForId(itemId));
       return true;
     }
 
@@ -1562,6 +1568,15 @@ BookmarksTracker.prototype = {
     if (this._ignore(itemId))
       return;
 
+    // Allocate a new GUID if necessary.
+    // We only want to do it if there's a dupe, so use idForGUID to achieve that.
+    if (isAnno && (property == GUID_ANNO)) {
+      this._log.trace("onItemChanged for " + GUID_ANNO +
+                      ": probably needs a new one.");
+      this._idForGUID(this._GUIDForId(itemId));
+      this._addId(itemId);
+    }
+
     // ignore annotations except for the ones that we sync
     let annos = ["bookmarkProperties/description",
       "bookmarkProperties/loadInSidebar", "bookmarks/staticTitle",
@@ -1575,7 +1590,7 @@ BookmarksTracker.prototype = {
 
     this._log.trace("onItemChanged: " + itemId +
                     (", " + property + (isAnno? " (anno)" : "")) +
-                    (value? (" = \"" + value + "\"") : ""));
+                    (value ? (" = \"" + value + "\"") : ""));
     this._addId(itemId);
   },
 
