@@ -562,6 +562,7 @@ GfxInfoBase::Observe(nsISupports* aSubject, const char* aTopic,
 }
 
 GfxInfoBase::GfxInfoBase()
+    : mFailureCount(0)
 {
 }
 
@@ -665,4 +666,45 @@ GfxInfoBase::EvaluateDownloadedBlacklist(nsTArray<GfxDriverInfo>& aDriverInfo)
 
     ++i;
   }
+}
+
+NS_IMETHODIMP_(void)
+GfxInfoBase::LogFailure(const nsACString &failure)
+{
+  /* We only keep the first 9 failures */
+  if (mFailureCount < NS_ARRAY_LENGTH(mFailures)) {
+    mFailures[mFailureCount++] = failure;
+  }
+}
+
+/* void getFailures ([optional] out unsigned long failureCount, [array, size_is (failureCount), retval] out string failures); */
+/* XPConnect method of returning arrays is very ugly. Would not recommend. Fallable nsMemory::Alloc makes things worse */
+NS_IMETHODIMP GfxInfoBase::GetFailures(PRUint32 *failureCount NS_OUTPARAM, char ***failures NS_OUTPARAM)
+{
+
+  NS_ENSURE_ARG_POINTER(failureCount);
+  NS_ENSURE_ARG_POINTER(failures);
+
+  *failures = nsnull;
+  *failureCount = mFailureCount;
+
+  if (*failureCount != 0) {
+    *failures = (char**)nsMemory::Alloc(*failureCount * sizeof(char*));
+    if (!failures)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    /* copy over the failure messages into the array we just allocated */
+    for (PRUint32 i = 0; i < *failureCount; i++) {
+      nsPromiseFlatCString flattenedFailureMessage(mFailures[i]);
+      (*failures)[i] = (char*)nsMemory::Clone(flattenedFailureMessage.get(), flattenedFailureMessage.Length() + 1);
+
+      if (!(*failures)[i]) {
+        /* <sarcasm> I'm too afraid to use an inline function... </sarcasm> */
+        NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(i, (*failures));
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+    }
+  }
+
+  return NS_OK;
 }
