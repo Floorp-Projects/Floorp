@@ -100,7 +100,10 @@ function getBoundingContentRect(aElement) {
     document = document.defaultView.frameElement.ownerDocument;
 
   let content = document.defaultView;
-  let offset = Util.getScrollOffset(content);
+  let cwu = content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+  let scrollX = {}, scrollY = {};
+  cwu.getScrollXY(false, scrollX, scrollY);
+  let offset = new Point(scrollX.value, scrollY.value);
   let r = aElement.getBoundingClientRect();
 
   // step out of iframes and frames, offsetting scroll values

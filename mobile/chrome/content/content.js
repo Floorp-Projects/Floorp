@@ -176,6 +176,8 @@ function getBoundingContentRect(aElement) {
     document = document.defaultView.frameElement.ownerDocument;
 
   let offset = ContentScroll.getScrollOffset(content);
+  offset = new Point(offset.x, offset.y);
+
   let r = aElement.getBoundingClientRect();
 
   // step out of iframes and frames, offsetting scroll values
@@ -207,6 +209,8 @@ function getOverflowContentBoundingRect(aElement) {
 
 function getContentClientRects(aElement) {
   let offset = ContentScroll.getScrollOffset(content);
+  offset = new Point(offset.x, offset.y);
+
   let nativeRects = aElement.getClientRects();
   // step out of iframes and frames, offsetting scroll values
   for (let frame = aElement.ownerDocument.defaultView; frame != content; frame = frame.parent) {

@@ -490,7 +490,7 @@ var BrowserUI = {
       // Listen tabs event
       Elements.tabs.addEventListener("TabSelect", BrowserUI, true);
       Elements.tabs.addEventListener("TabOpen", BrowserUI, true);
-      Elements.tabs.addEventListener("TabRemove", this, true);
+      Elements.tabs.addEventListener("TabRemove", BrowserUI, true);
 
       // Init the views
       ExtensionsView.init();

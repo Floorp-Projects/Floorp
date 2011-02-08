@@ -291,7 +291,6 @@ var Browser = {
 
         setTimeout(function() { scrollInterface.ensureElementIsVisible(currentElement) }, 0);
       }
-      getBrowser().finishFuzzyZoom();
     }
     window.addEventListener("resize", resizeHandler, false);
 
@@ -2503,13 +2502,17 @@ Tab.prototype = {
 
   restoreViewportPosition: function restoreViewportPosition(aOldWidth, aNewWidth) {
     let browser = this._browser;
-    let view = browser.getRootView();
-    let pos = view.getPosition();
 
     // zoom to keep the same portion of the document visible
     let oldScale = browser.scale;
     let newScale = this.clampZoomLevel(oldScale * aNewWidth / aOldWidth);
     let scaleRatio = newScale / oldScale;
+  
+    // Recalculate whether the visible area is actually in bounds
+    let view = browser.getRootView();
+    view.scrollBy(0,0);
+
+    let pos = view.getPosition();
     browser.fuzzyZoom(newScale, pos.x * scaleRatio, pos.y * scaleRatio);
   },
 
@@ -2839,8 +2842,10 @@ var ViewableAreaObserver = {
 
       // If the viewport width is still the same, the page layout has not
       // changed, so we can keep keep the same content on-screen.
-      if (tab.browser.contentWindowWidth == oldWidth)
+      if (tab.browser.contentWindowWidth == oldWidth) {
         tab.restoreViewportPosition(oldWidth, newWidth);
+        tab.browser.finishFuzzyZoom();
+      }
     }
 
     // setTimeout(callback, 0) to ensure the resize event handler dispatch is finished
