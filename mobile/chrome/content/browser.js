@@ -75,95 +75,68 @@ XPCOMUtils.defineLazyServiceGetter(this, "CrashReporter",
   "@mozilla.org/xre/app-info;1", "nsICrashReporter");
 #endif
 
-function onDebugKeyPress(ev) {
-  if (!ev.ctrlKey)
+function onDebugKeyPress(aEvent) {
+  if (!aEvent.ctrlKey)
     return;
 
-  // use capitals so we require SHIFT here too
-
-  const a = 65; // swipe left
-  const b = 66;
-  const c = 67;
-  const d = 68; // swipe right
-  const e = 69;
-  const f = 70;  // force GC
-  const g = 71;
-  const h = 72;
-  const i = 73;
-  const j = 74;
-  const k = 75;
-  const l = 76;
-  const m = 77; // Android menu
-  const n = 78;
-  const o = 79;
-  const p = 80;  // fake pinch zoom
-  const q = 81;  // toggle orientation
-  const r = 82;
-  const s = 83; // swipe down
-  const t = 84;
-  const u = 85;
-  const v = 86;
-  const w = 87; // swipe up
-  const x = 88;
-  const y = 89;
-  const z = 90;
-
   function doSwipe(aDirection) {
-    let e = document.createEvent("SimpleGestureEvent");
-    e.initSimpleGestureEvent("MozSwipeGesture", true, true, window, null,
+    let evt = document.createEvent("SimpleGestureEvent");
+    evt.initSimpleGestureEvent("MozSwipeGesture", true, true, window, null,
                                0, 0, 0, 0, false, false, false, false, 0, null,
                                aDirection, 0);
-    Browser.selectedTab.inputHandler.dispatchEvent(e);
+    Browser.selectedTab.inputHandler.dispatchEvent(evt);
   }
-  switch (ev.charCode) {
-  case w:
-    doSwipe(Ci.nsIDOMSimpleGestureEvent.DIRECTION_UP);
-    break;
-  case s:
-    doSwipe(Ci.nsIDOMSimpleGestureEvent.DIRECTION_DOWN);
-    break;
-  case d:
-    doSwipe(Ci.nsIDOMSimpleGestureEvent.DIRECTION_RIGHT);
-    break;
-  case a:
-    doSwipe(Ci.nsIDOMSimpleGestureEvent.DIRECTION_LEFT);
-    break;
-  case f:
-    MemoryObserver.observe();
-    dump("Forced a GC\n");
-    break;
-  case m:
-    CommandUpdater.doCommand("cmd_menu");
-    break;
-#ifndef MOZ_PLATFORM_MAEMO
-  case p:
-    function dispatchMagnifyEvent(aName, aDelta) {
-      let e = document.createEvent("SimpleGestureEvent");
-      e.initSimpleGestureEvent("MozMagnifyGesture"+aName, true, true, window, null,
-                               0, 0, 0, 0, false, false, false, false, 0, null, 0, aDelta);
-      Browser.selectedTab.inputHandler.dispatchEvent(e);
-    }
-    dispatchMagnifyEvent("Start", 0);
 
-    let frame = 0;
-    let timer = new Util.Timeout();
-    timer.interval(100, function() {
-      dispatchMagnifyEvent("Update", 20);
-      if (++frame > 10) {
-        timer.clear();
-        dispatchMagnifyEvent("", frame*20);
+  let nsIDOMKeyEvent  = Ci.nsIDOMKeyEvent;
+  switch (aEvent.charCode) {
+    case nsIDOMKeyEvent.DOM_VK_A: // Swipe Left
+      doSwipe(Ci.nsIDOMSimpleGestureEvent.DIRECTION_LEFT);
+      break;
+    case nsIDOMKeyEvent.DOM_VK_D: // Swipe Right
+      doSwipe(Ci.nsIDOMSimpleGestureEvent.DIRECTION_RIGHT);
+      break;
+    case nsIDOMKeyEvent.DOM_VK_F: // Forge GC
+      MemoryObserver.observe();
+      dump("Forced a GC\n");
+      break;
+    case nsIDOMKeyEvent.DOM_VK_M: // Android Menu
+      CommandUpdater.doCommand("cmd_menu");
+      break;
+#ifndef MOZ_PLATFORM_MAEMO
+    case nsIDOMKeyEvent.DOM_VK_P: // Fake pinch zoom
+      function dispatchMagnifyEvent(aName, aDelta) {
+        let evt = document.createEvent("SimpleGestureEvent");
+        evt.initSimpleGestureEvent("MozMagnifyGesture" + aName, true, true, window, null,
+                                   0, 0, 0, 0, false, false, false, false, 0, null, 0, aDelta);
+        Browser.selectedTab.inputHandler.dispatchEvent(evt);
       }
-    });
-    break;
-  case q:
-    if (Util.isPortrait())
-      window.top.resizeTo(800,480);
-    else
-      window.top.resizeTo(480,800);
-    break;
+      dispatchMagnifyEvent("Start", 0);
+
+      let frame = 0;
+      let timer = new Util.Timeout();
+      timer.interval(100, function() {
+        dispatchMagnifyEvent("Update", 20);
+        if (++frame > 10) {
+          timer.clear();
+          dispatchMagnifyEvent("", frame*20);
+        }
+      });
+      break;
+    case nsIDOMKeyEvent.DOM_VK_Q: // Toggle Orientation
+      if (Util.isPortrait())
+        window.top.resizeTo(800,480);
+      else
+        window.top.resizeTo(480,800);
+      break;
 #endif
-  default:
-    break;
+    case nsIDOMKeyEvent.DOM_VK_S: // Swipe down
+      doSwipe(Ci.nsIDOMSimpleGestureEvent.DIRECTION_DOWN);
+      break;
+    case nsIDOMKeyEvent.DOM_VK_W: // Swipe up
+      doSwipe(Ci.nsIDOMSimpleGestureEvent.DIRECTION_UP);
+      break;
+    default:
+      break;
   }
 }
 
@@ -341,7 +314,6 @@ var Browser = {
     os.addObserver(SessionHistoryObserver, "browser:purge-session-history", false);
     os.addObserver(ContentCrashObserver, "ipc:content-shutdown", false);
     os.addObserver(MemoryObserver, "memory-pressure", false);
-    os.addObserver(BrowserSearch, "browser-search-engine-modified", false);
 
     // Listens for change in the viewable area
 #if MOZ_PLATFORM_MAEMO == 6
@@ -354,10 +326,6 @@ var Browser = {
     window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow = new nsBrowserAccess();
 
     Elements.browsers.addEventListener("DOMUpdatePageReport", PopupBlockerObserver.onUpdatePageReport, false);
-
-    // Login Manager and Form History initialization
-    Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
-    Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
 
     // Make sure we're online before attempting to load
     Util.forceOnline();
@@ -487,7 +455,6 @@ var Browser = {
     os.removeObserver(SessionHistoryObserver, "browser:purge-session-history");
     os.removeObserver(ContentCrashObserver, "ipc:content-shutdown");
     os.removeObserver(MemoryObserver, "memory-pressure");
-    os.removeObserver(BrowserSearch, "browser-search-engine-modified");
 
     window.controllers.removeController(this);
     window.controllers.removeController(BrowserUI);
@@ -2815,6 +2782,11 @@ function rendererFactory(aBrowser, aCanvas) {
   return wrapper;
 };
 
+/* ViewableAreaObserver is an helper object where width/height represents the
+ * size of the currently viewable area in pixels. This is use instead of
+ * window.innerHeight/innerWidth because some keyboards does not resize the
+ * window but floats over it.
+ */
 var ViewableAreaObserver = {
   get width() {
     return this._width || window.innerWidth;

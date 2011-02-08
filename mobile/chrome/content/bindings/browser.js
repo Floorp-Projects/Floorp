@@ -284,11 +284,18 @@ let ContentScroll =  {
     addEventListener("MozScrolledAreaChanged", this, false);
   },
 
+  getScrollOffset: function(aWindow) {
+    let cwu = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+    let scrollX = {}, scrollY = {};
+    cwu.getScrollXY(false, scrollX, scrollY);
+    return { x: scrollX.value, y: scrollY.value };
+  },
+
   receiveMessage: function(aMessage) {
     let json = aMessage.json;
     switch (aMessage.name) {
       case "Content:ScrollTo": {
-        let scrollOffset = Util.getScrollOffset(content);
+        let scrollOffset = this.getScrollOffset(content);
         if (scrollOffset.x == json.x && scrollOffset.y == json.y)
           return;
 
@@ -306,7 +313,7 @@ let ContentScroll =  {
         break;
 
       case "Content:SetCacheViewport": {
-        let rootCwu = Util.getWindowUtils(content);
+        let rootCwu = content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
         if (json.id == 1)
           rootCwu.setResolution(json.scale, json.scale);
 
@@ -333,10 +340,10 @@ let ContentScroll =  {
           if (json.id != 1)
             win.scrollTo(json.scrollX, json.scrollY);
           displayportElement = null;
-          scrollOffset = Util.getScrollOffset(win);
+          scrollOffset = this.getScrollOffset(win);
         }
 
-        let winCwu = Util.getWindowUtils(win);
+        let winCwu = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
         winCwu.setDisplayPort(
           displayport.x - scrollOffset.x, displayport.y - scrollOffset.y,
           displayport.width, displayport.height,
@@ -346,7 +353,7 @@ let ContentScroll =  {
       }
 
       case "Content:SetWindowSize": {
-        let cwu = Util.getWindowUtils(content);
+        let cwu = content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
         cwu.setCSSViewport(json.width, json.height);
         break;
       }
@@ -365,7 +372,7 @@ let ContentScroll =  {
         if (doc != content.document)
           return;
 
-        let scrollOffset = Util.getScrollOffset(content);
+        let scrollOffset = this.getScrollOffset(content);
         sendAsyncMessage("scroll", scrollOffset);
         break;
       }
@@ -375,12 +382,10 @@ let ContentScroll =  {
         if (content != doc.defaultView) // We are only interested in root scroll pane changes
           return;
 
-        // XXX need to make some things in Util as its own module!
-        let scrollOffset = Util.getScrollOffset(content);
-
         // Adjust width and height from the incoming event properties so that we
         // ignore changes to width and height contributed by growth in page
         // quadrants other than x > 0 && y > 0.
+        let scrollOffset = this.getScrollOffset(content);
         let x = aEvent.x + scrollOffset.x;
         let y = aEvent.y + scrollOffset.y;
         let width = aEvent.width + (x < 0 ? x : 0);
@@ -410,8 +415,8 @@ let ContentActive =  {
     switch (aMessage.name) {
       case "Content:Deactivate":
         docShell.isActive = false;
-        let utils = Util.getWindowUtils(content);
-        utils.setDisplayPort(0,0,0,0);
+        let cwu = content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+        cwu.setDisplayPort(0,0,0,0);
         break;
 
       case "Content:Activate":

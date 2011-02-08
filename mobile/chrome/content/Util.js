@@ -69,14 +69,6 @@ let Util = {
     return aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
   },
 
-  getScrollOffset: function getScrollOffset(aWindow) {
-    let cwu = Util.getWindowUtils(aWindow);
-    let scrollX = {};
-    let scrollY = {};
-    cwu.getScrollXY(false, scrollX, scrollY);
-    return new Point(scrollX.value, scrollY.value);
-  },
-
   /** Executes aFunc after other events have been processed. */
   executeSoon: function executeSoon(aFunc) {
     Services.tm.mainThread.dispatch({
