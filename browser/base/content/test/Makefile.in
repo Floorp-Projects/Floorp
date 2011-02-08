@@ -199,6 +199,9 @@ _BROWSER_FILES = \
                  browser_sanitize-passwordDisabledHosts.js \
                  browser_sanitize-sitepermissions.js \
                  browser_sanitize-timespans.js \
+                 browser_clearplugindata.js \
+                 browser_clearplugindata.html \
+                 browser_clearplugindata_noage.html \
                  browser_sanitizeDialog.js \
                  browser_scope.js \
                  browser_selectTabAtIndex.js \
