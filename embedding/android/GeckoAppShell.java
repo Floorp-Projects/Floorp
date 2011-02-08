@@ -224,6 +224,7 @@ class GeckoAppShell
                 moveDir(intProf, profileDir);
         }
         GeckoAppShell.putenv("HOME=" + homeDir);
+        GeckoAppShell.putenv("GRE_HOME=" + GeckoApp.sGREDir.getPath());
         Intent i = geckoApp.getIntent();
         String env = i.getStringExtra("env0");
         Log.i("GeckoApp", "env0: "+ env);
