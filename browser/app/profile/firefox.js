@@ -255,6 +255,7 @@ pref("browser.warnOnRestart", false);
 pref("browser.showQuitWarning", false);
 pref("browser.fullscreen.autohide", true);
 pref("browser.fullscreen.animateUp", 1);
+pref("browser.overlink-delay", 70);
 
 #ifdef UNIX_BUT_NOT_MAC
 pref("browser.urlbar.clickSelectsAll", false);
