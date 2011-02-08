@@ -599,7 +599,7 @@ extern "C" void simple_linker_init(void);
 static void
 loadLibs(const char *apkName)
 {
-  chdir("/data/data/" ANDROID_PACKAGE_NAME);
+  chdir(getenv("GRE_HOME"));
 
   simple_linker_init();
 
