@@ -161,6 +161,7 @@
 #include "winbase.h"
 #endif
 
+using namespace mozilla;
 using mozilla::TimeStamp;
 
 // Null out a strong ref to a linked list iteratively to avoid
@@ -430,8 +431,9 @@ nsPluginHost::~nsPluginHost()
   sInst = nsnull;
 }
 
-NS_IMPL_ISUPPORTS4(nsPluginHost,
+NS_IMPL_ISUPPORTS5(nsPluginHost,
                    nsIPluginHost,
+                   nsIPluginHost_MOZILLA_2_0_BRANCH,
                    nsIObserver,
                    nsITimerCallback,
                    nsISupportsWeakReference)
@@ -1731,7 +1733,7 @@ static nsresult ConvertToNative(nsIUnicodeEncoder *aEncoder,
 }
 
 static nsresult CreateNPAPIPlugin(nsPluginTag *aPluginTag,
-                                  nsIPlugin **aOutNPAPIPlugin)
+                                  nsNPAPIPlugin **aOutNPAPIPlugin)
 {
   // If this is an in-process plugin we'll need to load it here if we haven't already.
 #ifdef MOZ_IPC
@@ -1788,7 +1790,7 @@ static nsresult CreateNPAPIPlugin(nsPluginTag *aPluginTag,
 
 #if defined(XP_MACOSX) && !defined(__LP64__)
   if (NS_SUCCEEDED(rv))
-    static_cast<nsNPAPIPlugin*>(*aOutNPAPIPlugin)->SetPluginRefNum(pluginRefNum);
+    (*aOutNPAPIPlugin)->SetPluginRefNum(pluginRefNum);
   else if (pluginRefNum > 0)
     ::CloseResFile(pluginRefNum);
   ::UseResFile(appRefNum);
@@ -1821,7 +1823,7 @@ NS_IMETHODIMP nsPluginHost::GetPlugin(const char *aMimeType, nsIPlugin** aPlugin
 #endif
 
     // Create a plugin object if necessary
-    nsCOMPtr<nsIPlugin> plugin = pluginTag->mEntryPoint;
+    nsRefPtr<nsNPAPIPlugin> plugin = pluginTag->mEntryPoint;
     if (!plugin) {
       rv = CreateNPAPIPlugin(pluginTag, getter_AddRefs(plugin));
       if (NS_FAILED(rv))
@@ -1839,6 +1841,204 @@ NS_IMETHODIMP nsPluginHost::GetPlugin(const char *aMimeType, nsIPlugin** aPlugin
   (pluginTag ? pluginTag->mFileName.get() : "(not found)")));
 
   return rv;
+}
+
+// Normalize 'host' to ACE.
+nsresult
+nsPluginHost::NormalizeHostname(nsCString& host)
+{
+  if (IsASCII(host)) {
+    ToLowerCase(host);
+    return NS_OK;
+  }
+
+  if (!mIDNService) {
+    nsresult rv;
+    mIDNService = do_GetService(NS_IDNSERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return mIDNService->ConvertUTF8toACE(host, host);
+}
+
+// Enumerate a 'sites' array returned by GetSitesWithData and determine if
+// any of them have a base domain in common with 'domain'; if so, append them
+// to the 'result' array. If 'firstMatchOnly' is true, return after finding the
+// first match.
+nsresult
+nsPluginHost::EnumerateSiteData(const nsACString& domain,
+                                const nsTArray<nsCString>& sites,
+                                InfallibleTArray<nsCString>& result,
+                                bool firstMatchOnly)
+{
+  NS_ASSERTION(!domain.IsVoid(), "null domain string");
+
+  nsresult rv;
+  if (!mTLDService) {
+    mTLDService = do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Get the base domain from the domain.
+  nsCString baseDomain;
+  rv = mTLDService->GetBaseDomainFromHost(domain, 0, baseDomain);
+  bool isIP = rv == NS_ERROR_HOST_IS_IP_ADDRESS;
+  if (isIP || rv == NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS) {
+    // The base domain is the site itself. However, we must be careful to
+    // normalize.
+    baseDomain = domain;
+    rv = NormalizeHostname(baseDomain);
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // Enumerate the array of sites with data.
+  for (PRUint32 i = 0; i < sites.Length(); ++i) {
+    const nsCString& site = sites[i];
+
+    // Check if the site is an IP address.
+    bool siteIsIP =
+      site.Length() >= 2 && site.First() == '[' && site.Last() == ']';
+    if (siteIsIP != isIP)
+      continue;
+
+    nsCString siteBaseDomain;
+    if (siteIsIP) {
+      // Strip the '[]'.
+      siteBaseDomain = Substring(site, 1, site.Length() - 2);
+    } else {
+      // Determine the base domain of the site.
+      rv = mTLDService->GetBaseDomainFromHost(site, 0, siteBaseDomain);
+      if (rv == NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS) {
+        // The base domain is the site itself. However, we must be careful to
+        // normalize.
+        siteBaseDomain = site;
+        rv = NormalizeHostname(siteBaseDomain);
+        NS_ENSURE_SUCCESS(rv, rv);
+      } else if (NS_FAILED(rv)) {
+        return rv;
+      }
+    }
+
+    // At this point, we can do an exact comparison of the two domains.
+    if (baseDomain != siteBaseDomain) {
+      continue;
+    }
+
+    // Append the site to the result array.
+    result.AppendElement(site);
+
+    // If we're supposed to return early, do so.
+    if (firstMatchOnly) {
+      break;
+    }
+  }
+
+  return NS_OK;
+}
+
+// Ensure that 'plugin' is still a live, valid tag, and that it's loaded.
+nsPluginTag*
+nsPluginHost::EnsurePlugin(nsIPluginTag* plugin)
+{
+  LoadPlugins();
+
+  // Make sure the nsIPluginTag we're given is still live.
+  nsPluginTag* tag;
+  for (tag = mPlugins; tag && tag != plugin; tag = tag->mNext);
+  if (!tag) {
+    return NULL;
+  }
+
+  nsRefPtr<nsNPAPIPlugin> entrypoint = tag->mEntryPoint;
+  if (!entrypoint) {
+    nsresult rv = CreateNPAPIPlugin(tag, getter_AddRefs(entrypoint));
+    if (NS_FAILED(rv)) {
+      return NULL;
+    }
+
+    tag->mEntryPoint = entrypoint;
+  }
+
+  return tag;
+}
+
+NS_IMETHODIMP
+nsPluginHost::ClearSiteData(nsIPluginTag* plugin, const nsACString& domain,
+                            PRUint64 flags, PRInt64 maxAge)
+{
+  // maxAge must be either a nonnegative integer or -1.
+  NS_ENSURE_ARG(maxAge >= 0 || maxAge == -1);
+
+  nsPluginTag* tag = EnsurePlugin(plugin);
+  if (!tag) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  PluginLibrary* library = tag->mEntryPoint->GetLibrary();
+
+  // If 'domain' is the null string, clear everything.
+  if (domain.IsVoid()) {
+    return library->NPP_ClearSiteData(NULL, flags, maxAge);
+  }
+
+  // Get the list of sites from the plugin.
+  InfallibleTArray<nsCString> sites;
+  nsresult rv = library->NPP_GetSitesWithData(sites);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Enumerate the sites and build a list of matches.
+  InfallibleTArray<nsCString> matches;
+  rv = EnumerateSiteData(domain, sites, matches, false);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Clear the matches.
+  for (PRUint32 i = 0; i < matches.Length(); ++i) {
+    const nsCString& match = matches[i];
+    rv = library->NPP_ClearSiteData(match.get(), flags, maxAge);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPluginHost::SiteHasData(nsIPluginTag* plugin, const nsACString& domain,
+                          PRBool* result)
+{
+  nsPluginTag* tag = EnsurePlugin(plugin);
+  if (!tag) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  PluginLibrary* library = tag->mEntryPoint->GetLibrary();
+
+  // Get the list of sites from the plugin.
+  InfallibleTArray<nsCString> sites;
+  nsresult rv = library->NPP_GetSitesWithData(sites);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // If there's no data, we're done.
+  if (sites.IsEmpty()) {
+    *result = false;
+    return NS_OK;
+  }
+
+  // If 'domain' is the null string, and there's data for at least one site,
+  // we're done.
+  if (domain.IsVoid()) {
+    *result = true;
+    return NS_OK;
+  }
+
+  // Enumerate the sites and determine if there's a match.
+  InfallibleTArray<nsCString> matches;
+  rv = EnumerateSiteData(domain, sites, matches, true);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *result = !matches.IsEmpty();
+  return NS_OK;
 }
 
 // XXX called from ScanPluginsDirectory only when told to filter

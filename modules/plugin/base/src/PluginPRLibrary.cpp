@@ -69,8 +69,11 @@ PluginPRLibrary::NP_Initialize(NPNetscapeFuncs* bFuncs,
     *error = pfNP_Initialize(bFuncs, pFuncs);
   }
 
-  // save NPP_New
+
+  // Save pointers to functions that get called through PluginLibrary itself.
   mNPP_New = pFuncs->newp;
+  mNPP_ClearSiteData = pFuncs->clearsitedata;
+  mNPP_GetSitesWithData = pFuncs->getsiteswithdata;
   return NS_OK;
 }
 #else
@@ -168,8 +171,10 @@ PluginPRLibrary::NP_GetEntryPoints(NPPluginFuncs* pFuncs, NPError* error)
     *error = pfNP_GetEntryPoints(pFuncs);
   }
 
-  // save NPP_New
+  // Save pointers to functions that get called through PluginLibrary itself.
   mNPP_New = pFuncs->newp;
+  mNPP_ClearSiteData = pFuncs->clearsitedata;
+  mNPP_GetSitesWithData = pFuncs->getsiteswithdata;
   return NS_OK;
 }
 #endif
@@ -183,6 +188,53 @@ PluginPRLibrary::NPP_New(NPMIMEType pluginType, NPP instance,
   if (!mNPP_New)
     return NS_ERROR_FAILURE;
   *error = mNPP_New(pluginType, instance, mode, argc, argn, argv, saved);
+  return NS_OK;
+}
+
+nsresult
+PluginPRLibrary::NPP_ClearSiteData(const char* site, uint64_t flags,
+                                   uint64_t maxAge)
+{
+  if (!mNPP_ClearSiteData) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  NPError result = mNPP_ClearSiteData(site, flags, maxAge);
+
+  switch (result) {
+  case NPERR_NO_ERROR:
+    return NS_OK;
+  case NPERR_TIME_RANGE_NOT_SUPPORTED:
+    return NS_ERROR_PLUGIN_TIME_RANGE_NOT_SUPPORTED;
+  case NPERR_MALFORMED_SITE:
+    return NS_ERROR_INVALID_ARG;
+  default:
+    return NS_ERROR_FAILURE;
+  }
+}
+
+nsresult
+PluginPRLibrary::NPP_GetSitesWithData(InfallibleTArray<nsCString>& result)
+{
+  if (!mNPP_GetSitesWithData) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  result.Clear();
+
+  char** sites = mNPP_GetSitesWithData();
+  if (!sites) {
+    return NS_OK;
+  }
+
+  char** iterator = sites;
+  while (*iterator) {
+    result.AppendElement(*iterator);
+    NS_Free(*iterator);
+    ++iterator;
+  }
+  NS_Free(sites);
+
   return NS_OK;
 }
 
