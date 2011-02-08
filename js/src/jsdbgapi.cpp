@@ -825,23 +825,23 @@ WrapWatchedSetter(JSContext *cx, jsid id, uintN attrs, StrictPropertyOp setter)
     return CastAsStrictPropertyOp(FUN_OBJECT(wrapper));
 }
 
-static bool
-UpdateWatchpointShape(JSContext *cx, JSWatchPoint *wp, const js::Shape *newShape)
+static const Shape *
+UpdateWatchpointShape(JSContext *cx, JSWatchPoint *wp, const Shape *newShape)
 {
     JS_ASSERT_IF(wp->shape, wp->shape->id == newShape->id);
     JS_ASSERT(!IsWatchedProperty(cx, newShape));
 
     /* Create a watching setter we can substitute for the new shape's setter. */
-    js::StrictPropertyOp watchingSetter = 
+    StrictPropertyOp watchingSetter =
         WrapWatchedSetter(cx, newShape->id, newShape->attributes(), newShape->setter());
     if (!watchingSetter)
-        return false;
+        return NULL;
 
     /*
      * Save the shape's setter; we don't know whether js_ChangeNativePropertyAttrs will
      * return a new shape, or mutate this one.
      */
-    js::StrictPropertyOp originalSetter = newShape->setter();
+    StrictPropertyOp originalSetter = newShape->setter();
 
     /*
      * Drop the watching setter into the object, in place of newShape. Note that a single
@@ -849,21 +849,21 @@ UpdateWatchpointShape(JSContext *cx, JSWatchPoint *wp, const js::Shape *newShape
      * wrap all (JSPropertyOp, not JSObject *) setters with js_watch_set, so shapes that
      * differ only in their setter may all get wrapped to the same shape.
      */
-    const js::Shape *watchingShape = 
+    const Shape *watchingShape = 
         js_ChangeNativePropertyAttrs(cx, wp->object, newShape, 0, newShape->attributes(),
                                      newShape->getter(), watchingSetter);
     if (!watchingShape)
-        return false;
+        return NULL;
 
     /* Update the watchpoint with the new shape and its original setter. */
     wp->setter = originalSetter;
     wp->shape = watchingShape;
 
-    return true;
+    return watchingShape;
 }
 
-bool
-js_SlowPathUpdateWatchpointsForShape(JSContext *cx, JSObject *obj, const js::Shape *newShape)
+const Shape *
+js_SlowPathUpdateWatchpointsForShape(JSContext *cx, JSObject *obj, const Shape *newShape)
 {
     /*
      * The watchpoint code uses the normal property-modification functions to install its
@@ -873,11 +873,11 @@ js_SlowPathUpdateWatchpointsForShape(JSContext *cx, JSObject *obj, const js::Sha
      * proceed without interference.
      */
     if (IsWatchedProperty(cx, newShape))
-        return true;
+        return newShape;
 
     JSWatchPoint *wp = FindWatchPoint(cx->runtime, obj, newShape->id);
     if (!wp)
-        return true;
+        return newShape;
 
     return UpdateWatchpointShape(cx, wp, newShape);
 }
