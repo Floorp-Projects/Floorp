@@ -343,6 +343,8 @@ struct NS_GFX nsIntRect {
 
   inline nsRect ToAppUnits(nscoord aAppUnitsPerPixel) const;
 
+  nsIntRect& ScaleRoundOut(float aXScale, float aYScale);
+
   // Returns a special nsIntRect that's used in some places to signify
   // "all available space".
   static const nsIntRect& GetMaxSizedIntRect() { return kMaxSizedIntRect; }

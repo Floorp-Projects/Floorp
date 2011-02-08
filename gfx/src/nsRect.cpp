@@ -328,3 +328,15 @@ PRBool nsIntRect::UnionRect(const nsIntRect &aRect1, const nsIntRect &aRect2)
   return result;
 }
 
+// scale the rect but round to smallest containing rect
+nsIntRect& nsIntRect::ScaleRoundOut(float aXScale, float aYScale)
+{
+  nscoord right = NSToCoordCeil(float(XMost()) * aXScale);
+  nscoord bottom = NSToCoordCeil(float(YMost()) * aYScale);
+  x = NSToCoordFloor(float(x) * aXScale);
+  y = NSToCoordFloor(float(y) * aYScale);
+  width = (right - x);
+  height = (bottom - y);
+  return *this;
+}
+
