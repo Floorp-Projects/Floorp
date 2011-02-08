@@ -50,6 +50,7 @@ _TEST_FILES = \
 		historyframes.html \
 		test_497898.html \
 		test_bug504220.html \
+		test_bug631440.html \
 		test_consoleAPI.html \
 		test_domWindowUtils.html \
 		test_domWindowUtils_scrollXY.html \

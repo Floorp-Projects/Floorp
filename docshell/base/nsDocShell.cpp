@@ -9570,8 +9570,6 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
     nsCOMPtr<nsIDocument> document = do_GetInterface(GetAsSupports(this));
     NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
 
-    mLoadType = LOAD_PUSHSTATE;
-
     // Step 1: Clone aData by getting its JSON representation
     nsString dataStr;
     rv = StringifyJSValVariant(aData, dataStr);
@@ -9688,6 +9686,8 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
     // keep a reference here.
     NS_ENSURE_TRUE(mOSHE, NS_ERROR_FAILURE);
     nsCOMPtr<nsISHEntry> oldOSHE = mOSHE;
+
+    mLoadType = LOAD_PUSHSTATE;
 
     nsCOMPtr<nsISHEntry> newSHEntry;
     if (!aReplace) {
@@ -9921,7 +9921,7 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI, nsIChannel * aChannel,
     if (root == static_cast<nsIDocShellTreeItem *>(this) && mSessionHistory) {
         // Bug 629559: Detect if this is an anchor navigation and clone the
         // session history in that case too
-        if (mLoadType == LOAD_PUSHSTATE) {
+        if (mLoadType == LOAD_PUSHSTATE && mOSHE) {
             PRUint32 cloneID;
             mOSHE->GetID(&cloneID);
             nsCOMPtr<nsISHEntry> newEntry;
