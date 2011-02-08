@@ -171,15 +171,8 @@ abstract public class GeckoApp
         Log.i("GeckoApp", "create");
         super.onCreate(savedInstanceState);
 
-        if (sGREDir == null) {
-            // If application.ini already exists in the old dir, use its parent.
-            File app_ini =
-                new File("/data/data/" + getPackageName() + "/application.ini");
-            if (app_ini.exists())
-                sGREDir = app_ini.getParentFile();
-            else
-                sGREDir = this.getDir("gre", 0);
-        }
+        if (sGREDir == null)
+            sGREDir = new File(this.getApplicationInfo().dataDir);
 
         mAppContext = this;
 
