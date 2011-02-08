@@ -43,9 +43,12 @@
 #include "npapi.h"
 #include "npfunctions.h"
 #include "nscore.h"
+#include "nsTArray.h"
+#include "nsPluginError.h"
 
 class nsNPAPIPlugin;
 class gfxASurface;
+class nsCString;
 
 namespace mozilla {
 
@@ -78,6 +81,10 @@ public:
                            uint16_t mode, int16_t argc, char* argn[],
                            char* argv[], NPSavedData* saved,
                            NPError* error) = 0;
+
+  virtual nsresult NPP_ClearSiteData(const char* site, uint64_t flags,
+                                     uint64_t maxAge) = 0;
+  virtual nsresult NPP_GetSitesWithData(InfallibleTArray<nsCString>& aResult) = 0;
 
   virtual nsresult AsyncSetWindow(NPP instance, NPWindow* window) = 0;
   virtual nsresult GetSurface(NPP instance, gfxASurface** aSurface) = 0;
