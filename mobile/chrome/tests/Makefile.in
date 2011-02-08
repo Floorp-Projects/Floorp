@@ -72,6 +72,7 @@ _BROWSER_FILES = \
   browser_preferences_text.js \
   browser_rect.js \
   browser_rememberPassword.js \
+  browser_scrollbar.js \
   browser_select.html \
   browser_select.js \
   browser_sessionstore.js \
@@ -82,6 +83,7 @@ _BROWSER_FILES = \
   browser_vkb.js \
   browser_viewport.js \
   browser_viewport.sjs \
+  browser_scrollbar.sjs \
   browser_title.sjs \
   browser_install.xml \
   browser_upgrade.rdf\
