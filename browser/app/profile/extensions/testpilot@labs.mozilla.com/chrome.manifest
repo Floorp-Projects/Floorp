@@ -2,6 +2,7 @@ resource testpilot ./
 content testpilot content/
 skin testpilot skin skin/all/
 skin testpilot-os skin skin/linux/ os=Linux
+skin testpilot-os skin skin/linux/ os=SunOS
 skin testpilot-os skin skin/mac/ os=Darwin
 skin testpilot-os skin skin/win/ os=WINNT
 
