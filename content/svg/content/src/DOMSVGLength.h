@@ -104,8 +104,8 @@ public:
    * Generic ctor for DOMSVGLength objects that are created for an attribute.
    */
   DOMSVGLength(DOMSVGLengthList *aList,
-               PRUint32 aAttrEnum,
-               PRUint8 aListIndex,
+               PRUint8 aAttrEnum,
+               PRUint32 aListIndex,
                PRUint8 aIsAnimValItem);
 
   /**
@@ -157,12 +157,12 @@ public:
    * the necessary notifications) is located elsewhere (in DOMSVGLengthList).)
    */
   void InsertingIntoList(DOMSVGLengthList *aList,
-                         PRUint32 aAttrEnum,
-                         PRUint8 aListIndex,
+                         PRUint8 aAttrEnum,
+                         PRUint32 aListIndex,
                          PRUint8 aIsAnimValItem);
 
   /// This method is called to notify this object that its list index changed.
-  void UpdateListIndex(PRUint8 aListIndex) {
+  void UpdateListIndex(PRUint32 aListIndex) {
     mListIndex = aListIndex;
   }
 
