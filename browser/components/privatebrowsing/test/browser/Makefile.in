@@ -77,6 +77,8 @@ _BROWSER_TEST_FILES =  \
 		browser_privatebrowsing_windowtitle_page.html \
 		browser_privatebrowsing_zoom.js \
 		browser_privatebrowsing_zoomrestore.js \
+		browser_privatebrowsing_clearplugindata.js \
+		browser_privatebrowsing_clearplugindata.html \
 		ctxmenu.html \
 		ctxmenu-image.png \
 		popup.html \
