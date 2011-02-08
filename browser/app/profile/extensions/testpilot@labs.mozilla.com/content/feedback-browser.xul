@@ -8,21 +8,9 @@
 ]>
 
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-<script src="chrome://testpilot/content/browser.js"
-  type="application/x-javascript" />
-<script src="chrome://testpilot/content/window-utils.js"
-  type="application/x-javascript" />
-
 <menupopup id="menu_ToolsPopup">
   <menu id="pilot-menu" insertafter="menu_openAddons" />
 </menupopup>
-
-<toolbarpalette id="BrowserToolbarPalette">
-  <toolbarbutton type="menu" id="feedback-menu-button"
-    class="toolbarbutton-1" label="&testpilot.feedbackbutton.label;"
-    onmousedown="event.preventDefault();
-        TestPilotMenuUtils.onMenuButtonMouseDown('feedback-menu-button');"/>
-</toolbarpalette>
 
 <toolbar id="nav-bar">
   <panel id="pilot-notification-popup" hidden="true" noautofocus="true"

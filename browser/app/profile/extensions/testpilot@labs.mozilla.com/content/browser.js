@@ -146,12 +146,14 @@ var TestPilotMenuUtils;
 
   var TestPilotWindowHandlers = {
     onWindowLoad: function() {
+      // Customize the interface of the newly opened window.
+      Cu.import("resource://testpilot/modules/interface.js");
+      TestPilotUIBuilder.buildCorrectInterface(window);
+
       /* "Hold" window load events for TestPilotSetup, passing them along only
        * after startup is complete.  It's hacky, but the benefit is that
        * TestPilotSetup.onWindowLoad can treat all windows the same no matter
        * whether they opened with Firefox on startup or were opened later. */
-      TestPilotWindowHandlers.setUpToolbarFeedbackButton();
-
       if (TestPilotSetup && TestPilotSetup.startupComplete) {
         TestPilotSetup.onWindowLoad(window);
       } else {
@@ -164,40 +166,6 @@ var TestPilotMenuUtils;
           }
         };
         observerSvc.addObserver(observer, "testpilot:startup:complete", false);
-      }
-    },
-
-    setUpToolbarFeedbackButton: function() {
-      /* If this is first run, and it's ffx4 beta version, and the feedback
-       * button is not in the expected place, put it there!
-       * (copied from MozReporterButtons extension) */
-      if (!window.document.getElementById("feedback-menu-happy-button")) {
-        return;
-      }
-      let firefoxnav = window.document.getElementById("nav-bar");
-      /* This is sometimes called for windows that don't have a navbar - in
-       * that case, do nothing. */
-      if (!firefoxnav) {
-        return;
-      }
-      // TODO if the user has removed the feedback button via customization
-      // interface, we don't want to add it back in.  Use a pref to store whether
-      // this setup was done or not.
-
-      let curSet = firefoxnav.currentSet;
-
-      if (-1 == curSet.indexOf("feedback-menu-button")) {
-        // place the buttons after the search box.
-        let newSet = curSet + ",feedback-menu-button";
-
-        firefoxnav.setAttribute("currentset", newSet);
-        firefoxnav.currentSet = newSet;
-        window.document.persist("nav-bar", "currentset");
-        // if you don't do the following call, funny things happen.
-        try {
-          BrowserToolboxCustomizeDone(true);
-        } catch (e) {
-        }
       }
     },
 
