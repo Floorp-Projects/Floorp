@@ -1609,3 +1609,4 @@ random-if(winWidget) == 621918-1.svg 621918-1-ref.svg # 1-pixel diacritic positi
 random-if(winWidget) HTTP(..) == 621918-2.svg 621918-2-ref.svg # same 1px issue as above, and HTTP(..) for filters.svg, used to mask antialiasing issues where glyphs touch
 == 625409-1.html 625409-1-ref.html
 == 627393-1.html about:blank
+== 631352-1.html 631352-1-ref.html
