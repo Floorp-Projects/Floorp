@@ -4598,7 +4598,11 @@ var XULBrowserWindow = {
 };
 
 var LinkTargetDisplay = {
-  DELAY_SHOW: 70,
+  get DELAY_SHOW() {
+     delete this.DELAY_SHOW;
+     return this.DELAY_SHOW = Services.prefs.getIntPref("browser.overlink-delay");
+  },
+
   DELAY_HIDE: 150,
   _timer: 0,
 
