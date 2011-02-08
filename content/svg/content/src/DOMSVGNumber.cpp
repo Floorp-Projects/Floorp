@@ -87,7 +87,7 @@ DOMSVGNumber::DOMSVGNumber(DOMSVGNumberList *aList,
   // These shifts are in sync with the members in the header.
   NS_ABORT_IF_FALSE(aList &&
                     aAttrEnum < (1 << 4) &&
-                    aListIndex < (1 << 27) &&
+                    aListIndex <= MaxListIndex() &&
                     aIsAnimValItem < (1 << 1), "bad arg");
 
   NS_ABORT_IF_FALSE(IndexIsValid(), "Bad index for DOMSVGNumber!");
