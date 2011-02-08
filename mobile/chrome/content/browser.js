@@ -1460,6 +1460,7 @@ nsBrowserAccess.prototype = {
       if (isExternal)
         tab.closeOnExit = true;
       browser = tab.browser;
+      BrowserUI.hidePanel();
     } else { // OPEN_CURRENTWINDOW and illegal values
       browser = Browser.selectedBrowser;
     }
