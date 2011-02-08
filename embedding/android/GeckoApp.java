@@ -69,6 +69,7 @@ abstract public class GeckoApp
     public static GeckoSurfaceView surfaceView;
     public static GeckoApp mAppContext;
     public static boolean mFullscreen = false;
+    public static File sGREDir = null;
     static Thread mLibLoadThread = null;
 
     enum LaunchState {PreLaunch, Launching, WaitButton,
@@ -169,6 +170,16 @@ abstract public class GeckoApp
     {
         Log.i("GeckoApp", "create");
         super.onCreate(savedInstanceState);
+
+        if (sGREDir == null) {
+            // If application.ini already exists in the old dir, use its parent.
+            File app_ini =
+                new File("/data/data/" + getPackageName() + "/application.ini");
+            if (app_ini.exists())
+                sGREDir = app_ini.getParentFile();
+            else
+                sGREDir = this.getDir("gre", 0);
+        }
 
         mAppContext = this;
 
@@ -361,8 +372,7 @@ abstract public class GeckoApp
         ZipFile zip;
         InputStream listStream;
 
-        File componentsDir = new File("/data/data/" + getPackageName() +
-                                      "/components");
+        File componentsDir = new File(sGREDir, "components");
         componentsDir.mkdir();
         zip = new ZipFile(getApplication().getPackageResourcePath());
 
@@ -394,8 +404,7 @@ abstract public class GeckoApp
             throw new FileNotFoundException("Can't find " + name + " in " +
                                             zip.getName());
 
-        File outFile = new File("/data/data/" + getPackageName() +
-                                "/" + name);
+        File outFile = new File(sGREDir, name);
         if (outFile.exists() &&
             outFile.lastModified() == fileEntry.getTime() &&
             outFile.length() == fileEntry.getSize())
@@ -560,9 +569,7 @@ abstract public class GeckoApp
                 File file = 
                     File.createTempFile("tmp_" + 
                                         (int)Math.floor(1000 * Math.random()), 
-                                        fileExt, 
-                                        new File("/data/data/" +
-                                                 getPackageName()));
+                                        fileExt, sGREDir);
                 
                 FileOutputStream fos = new FileOutputStream(file);
                 InputStream is = cr.openInputStream(uri);
