@@ -1015,10 +1015,12 @@ mjit::Compiler::jsop_equality_int_string(JSOp op, BoolStub stub, jsbytecode *tar
         frame.pop();
         frame.discardFrame();
 
+        JaegerSpew(JSpew_Insns, " ---- BEGIN STUB CALL CODE ---- \n");
+
+        RESERVE_OOL_SPACE(stubcc.masm);
+
         /* Start of the slow path for equality stub call. */
         Label stubEntry = stubcc.masm.label();
-
-        JaegerSpew(JSpew_Insns, " ---- BEGIN STUB CALL CODE ---- \n");
 
         /* The lhs/rhs need to be synced in the stub call path. */
         frame.ensureValueSynced(stubcc.masm, lhs, lvr);
@@ -1063,6 +1065,7 @@ mjit::Compiler::jsop_equality_int_string(JSOp op, BoolStub stub, jsbytecode *tar
         Jump stubFallthrough = stubcc.masm.jump();
 
         JaegerSpew(JSpew_Insns, " ---- END STUB CALL CODE ---- \n");
+        CHECK_OOL_SPACE();
 
         Jump fast;
         MaybeJump firstStubJump;
