@@ -81,9 +81,9 @@
             popupBox = this.popupBoxObject;
           } catch(e) {}
           try {
-            menuBox = this.parentNode.boxObject.QueryInterface(Components.interfaces.nsIMenuBoxObject);
+            menuBox = this.parentNode.boxObject;
           } catch(e) {}
-          if (menuBox)
+          if (menuBox instanceof Components.interfaces.nsIMenuBoxObject)
             menuBox.openMenu(true);
           else if (popupBox)
             popupBox.showPopup(element, this, xpos, ypos, popuptype, anchoralignment, popupalignment);
@@ -100,9 +100,9 @@
             popupBox = this.boxObject.QueryInterface(Components.interfaces.nsIPopupBoxObject);
           } catch(e) {}
           try {
-            menuBox = this.parentNode.boxObject.QueryInterface(Components.interfaces.nsIMenuBoxObject);
+            menuBox = this.parentNode.boxObject;
           } catch(e) {}
-          if (menuBox)
+          if (menuBox instanceof Components.interfaces.nsIMenuBoxObject)
             menuBox.openMenu(false);
           else if (popupBox)
             popupBox.hidePopup();
