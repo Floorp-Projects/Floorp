@@ -2625,6 +2625,7 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew)
 
     Jump rejoin1, rejoin2;
     {
+        RESERVE_OOL_SPACE(stubcc.masm);
         stubcc.linkExitDirect(j, stubcc.masm.label());
         callIC.slowPathStart = stubcc.masm.label();
 
@@ -2709,6 +2710,8 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew)
 
         rejoin2 = stubcc.masm.jump();
     }
+
+    RESERVE_IC_SPACE(masm);
 
     /*
      * If the call site goes to a closure over the same function, it will
