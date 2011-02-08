@@ -500,7 +500,8 @@ nsIconChannel::Init(nsIURI* aURI)
                               icon_size, gStockImageWidget, NULL);
   gtk_icon_set_unref(icon_set);
 
-  // gtk_icon_set_render_icon() never returns NULL, except when we have
+  // According to documentation, gtk_icon_set_render_icon() never returns
+  // NULL, but it does return NULL when we have the problem reported here:
   // https://bugzilla.gnome.org/show_bug.cgi?id=629878#c13
   if (!icon)
     return NS_ERROR_NOT_AVAILABLE;
