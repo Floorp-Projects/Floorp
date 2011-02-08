@@ -53,6 +53,8 @@ class nsSVGElement;
 #define MOZILLA_DOMSVGLENGTH_IID \
   { 0xA8468350, 0x7F7B, 0x4976, { 0x9A, 0x7E, 0x37, 0x65, 0xA1, 0xDA, 0xDF, 0x9A } }
 
+#define MOZ_SVG_LIST_INDEX_BIT_COUNT 22 // supports > 4 million list items
+
 namespace mozilla {
 
 /**
@@ -161,6 +163,10 @@ public:
                          PRUint32 aListIndex,
                          PRUint8 aIsAnimValItem);
 
+  static PRUint32 MaxListIndex() {
+    return (1U << MOZ_SVG_LIST_INDEX_BIT_COUNT) - 1;
+  }
+
   /// This method is called to notify this object that its list index changed.
   void UpdateListIndex(PRUint32 aListIndex) {
     mListIndex = aListIndex;
@@ -214,7 +220,7 @@ private:
   // Bounds for the following are checked in the ctor, so be sure to update
   // that if you change the capacity of any of the following.
 
-  PRUint32 mListIndex:22; // supports > 4 million list items
+  PRUint32 mListIndex:MOZ_SVG_LIST_INDEX_BIT_COUNT;
   PRUint32 mAttrEnum:4; // supports up to 16 attributes
   PRUint32 mIsAnimValItem:1;
 
@@ -226,5 +232,7 @@ private:
 NS_DEFINE_STATIC_IID_ACCESSOR(DOMSVGLength, MOZILLA_DOMSVGLENGTH_IID)
 
 } // namespace mozilla
+
+#undef MOZ_SVG_LIST_INDEX_BIT_COUNT
 
 #endif // MOZILLA_DOMSVGLENGTH_H__

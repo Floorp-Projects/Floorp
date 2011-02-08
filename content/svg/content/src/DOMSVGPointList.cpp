@@ -102,7 +102,13 @@ DOMSVGPointList::InternalListWillChangeTo(const SVGPointList& aNewValue)
   // DOMSVGLengthList::InternalBaseValListWillChangeTo applies here too!
 
   PRUint32 oldLength = mItems.Length();
+
   PRUint32 newLength = aNewValue.Length();
+  if (newLength > DOMSVGPoint::MaxListIndex()) {
+    // It's safe to get out of sync with our internal list as long as we have
+    // FEWER items than it does.
+    newLength = DOMSVGPoint::MaxListIndex();
+  }
 
   // If our length will decrease, notify the items that will be removed:
   for (PRUint32 i = newLength; i < oldLength; ++i) {
@@ -250,6 +256,11 @@ DOMSVGPointList::InsertItemBefore(nsIDOMSVGPoint *aNewItem,
     return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
   }
 
+  aIndex = NS_MIN(aIndex, Length());
+  if (aIndex >= DOMSVGPoint::MaxListIndex()) {
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  }
+
   nsCOMPtr<DOMSVGPoint> domItem = do_QueryInterface(aNewItem);
   if (!domItem) {
     return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
@@ -257,7 +268,6 @@ DOMSVGPointList::InsertItemBefore(nsIDOMSVGPoint *aNewItem,
   if (domItem->HasOwner() || domItem->IsReadonly()) {
     domItem = domItem->Clone(); // must do this before changing anything!
   }
-  aIndex = NS_MIN(aIndex, mItems.Length());
 
   // Ensure we have enough memory so we can avoid complex error handling below:
   if (!mItems.SetCapacity(mItems.Length() + 1) ||

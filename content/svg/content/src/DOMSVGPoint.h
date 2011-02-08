@@ -55,6 +55,8 @@ class nsSVGElement;
   { 0xd6b6c440, 0xaf8d, 0x40ee, \
     { 0x85, 0x6b, 0x02, 0xa3, 0x17, 0xca, 0xb2, 0x75 } }
 
+#define MOZ_SVG_LIST_INDEX_BIT_COUNT 30
+
 namespace mozilla {
 
 /**
@@ -92,7 +94,7 @@ public:
   {
     // These shifts are in sync with the members.
     NS_ABORT_IF_FALSE(aList &&
-                      aListIndex < (1U << 30), "bad arg");
+                      aListIndex <= MaxListIndex(), "bad arg");
 
     NS_ABORT_IF_FALSE(IndexIsValid(), "Bad index for DOMSVGPoint!");
   }
@@ -175,6 +177,10 @@ public:
                          PRUint32 aListIndex,
                          PRBool aIsAnimValItem);
 
+  static PRUint32 MaxListIndex() {
+    return (1U << MOZ_SVG_LIST_INDEX_BIT_COUNT) - 1;
+  }
+
   /// This method is called to notify this object that its list index changed.
   void UpdateListIndex(PRUint32 aListIndex) {
     mListIndex = aListIndex;
@@ -225,7 +231,7 @@ protected:
   // Bounds for the following are checked in the ctor, so be sure to update
   // that if you change the capacity of any of the following.
 
-  PRUint32 mListIndex:30;
+  PRUint32 mListIndex:MOZ_SVG_LIST_INDEX_BIT_COUNT;
   PRUint32 mIsReadonly:1;    // PRUint32 because MSVC won't pack otherwise
   PRUint32 mIsAnimValItem:1; // PRUint32 because MSVC won't pack otherwise
 
@@ -236,5 +242,7 @@ protected:
 NS_DEFINE_STATIC_IID_ACCESSOR(DOMSVGPoint, MOZILLA_DOMSVGPOINT_IID)
 
 } // namespace mozilla
+
+#undef MOZ_SVG_LIST_INDEX_BIT_COUNT
 
 #endif // MOZILLA_DOMSVGPOINT_H__
