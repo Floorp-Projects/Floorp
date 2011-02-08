@@ -234,6 +234,12 @@
     text-shadow: none;
   }
 
+  #main-window[sizemode=normal]:not([inFullscreen=true]) .statuspanel-inner {
+    /* align with the browser's side borders */
+    padding-left: 1px;
+    padding-right: 1px;
+  }
+
   #allTabs-panel,
   #ctrlTab-panel {
     background: transparent;
