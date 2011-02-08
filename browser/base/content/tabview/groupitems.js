@@ -236,7 +236,7 @@ function GroupItem(listOfEls, options) {
 
   AllTabs.tabs.forEach(function(xulTab) {
     if (xulTab.pinned && xulTab.ownerDocument.defaultView == gWindow)
-      self.addAppTab(xulTab);
+      self.addAppTab(xulTab, {dontAdjustTray: true});
   });
 
   // ___ Undo Close
@@ -393,7 +393,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     if (!icons.length) {
       // There are no icons, so hide the appTabTray if needed.
       if (parseInt(container.css("width")) != 0) {
-        this.$appTabTray.css("-moz-column-count", 0);
+        this.$appTabTray.css("-moz-column-count", "auto");
         this.$appTabTray.css("height", 0);
         container.css("width", 0);
         container.css("height", 0);
@@ -417,6 +417,9 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     let columnsGap = parseInt(this.$appTabTray.css("-moz-column-gap"));
     let iconWidth = iconBounds.width + columnsGap;
     let maxColumns = Math.floor((boxBounds.width * 0.20) / iconWidth);
+
+    Utils.assert(rows > 0 && columns > 0 && maxColumns > 0,
+      "make sure the calculated rows, columns and maxColumns are correct");
 
     if (columns > maxColumns)
       container.addClass("appTabTrayContainerTruncated");
@@ -1113,7 +1116,15 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
   // ----------
   // Adds the given xul:tab as an app tab in this group's apptab tray
-  addAppTab: function GroupItem_addAppTab(xulTab) {
+  //
+  // Parameters:
+  //   options - change how the app tab is added.
+  //
+  // Options:
+  //   dontAdjustTray - (boolean) if true, the $appTabTray size is not adjusted,
+  //                    which means that the adjustAppTabTray() method is not
+  //                    called.
+  addAppTab: function GroupItem_addAppTab(xulTab, options) {
     let self = this;
 
     xulTab.addEventListener("error", this._onAppTabError, false);
@@ -1133,8 +1144,9 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         UI.goToTab(iQ(this).data("xulTab"));
       });
 
-    // adjust the tray
-    this.adjustAppTabTray(true);
+    // adjust the tray, if needed.
+    if (!options || !options.dontAdjustTray)
+      this.adjustAppTabTray(true);
   },
 
   // ----------
