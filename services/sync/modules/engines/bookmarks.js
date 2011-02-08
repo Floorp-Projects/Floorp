@@ -1575,6 +1575,7 @@ BookmarksTracker.prototype = {
                       ": probably needs a new one.");
       this._idForGUID(this._GUIDForId(itemId));
       this._addId(itemId);
+      return;
     }
 
     // ignore annotations except for the ones that we sync
