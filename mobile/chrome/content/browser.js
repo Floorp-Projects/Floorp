@@ -1288,6 +1288,7 @@ Browser.MainDragger.prototype = {
   },
 
   _showScrollbars: function _showScrollbars() {
+    this._updateScrollbars();
     let scaleX = this._scrollScales.x, scaleY = this._scrollScales.y;
     if (scaleX) {
       this._horizontalScrollbar.width = ViewableAreaObserver.width * scaleX;
