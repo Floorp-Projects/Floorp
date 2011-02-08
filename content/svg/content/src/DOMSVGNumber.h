@@ -80,8 +80,8 @@ public:
    * Generic ctor for DOMSVGNumber objects that are created for an attribute.
    */
   DOMSVGNumber(DOMSVGNumberList *aList,
-               PRUint32 aAttrEnum,
-               PRUint8 aListIndex,
+               PRUint8 aAttrEnum,
+               PRUint32 aListIndex,
                PRUint8 aIsAnimValItem);
 
   /**
@@ -130,12 +130,12 @@ public:
    * the necessary notifications) is located elsewhere (in DOMSVGNumberList).)
    */
   void InsertingIntoList(DOMSVGNumberList *aList,
-                         PRUint32 aAttrEnum,
-                         PRUint8 aListIndex,
+                         PRUint8 aAttrEnum,
+                         PRUint32 aListIndex,
                          PRUint8 aIsAnimValItem);
 
   /// This method is called to notify this object that its list index changed.
-  void UpdateListIndex(PRUint8 aListIndex) {
+  void UpdateListIndex(PRUint32 aListIndex) {
     mListIndex = aListIndex;
   }
 
