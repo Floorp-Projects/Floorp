@@ -149,7 +149,7 @@ function elementFromPoint(x, y) {
   // browser's elementFromPoint expect browser-relative client coordinates.
   // subtract browser's scroll values to adjust
   let cwu = Util.getWindowUtils(content);
-  let scroll = Util.getScrollOffset(content);
+  let scroll = ContentScroll.getScrollOffset(content);
   x = x - scroll.x;
   y = y - scroll.y;
   let elem = ElementTouchHelper.getClosest(cwu, x, y);
@@ -175,7 +175,7 @@ function getBoundingContentRect(aElement) {
   while(document.defaultView.frameElement)
     document = document.defaultView.frameElement.ownerDocument;
 
-  let offset = Util.getScrollOffset(content);
+  let offset = ContentScroll.getScrollOffset(content);
   let r = aElement.getBoundingClientRect();
 
   // step out of iframes and frames, offsetting scroll values
@@ -206,7 +206,7 @@ function getOverflowContentBoundingRect(aElement) {
 }
 
 function getContentClientRects(aElement) {
-  let offset = Util.getScrollOffset(content);
+  let offset = ContentScroll.getScrollOffset(content);
   let nativeRects = aElement.getClientRects();
   // step out of iframes and frames, offsetting scroll values
   for (let frame = aElement.ownerDocument.defaultView; frame != content; frame = frame.parent) {
@@ -231,6 +231,11 @@ function getContentClientRects(aElement) {
 
 
 let Content = {
+  get _formAssistant() {
+    delete this._formAssistant;
+    return this._formAssistant = new FormAssistant();
+  },
+
   init: function init() {
     this._isZoomedToElement = false;
 
@@ -251,8 +256,6 @@ let Content = {
     addEventListener("command", this, false);
     addEventListener("pagehide", this, false);
     addEventListener("keypress", this, false, false);
-
-    this._formAssistant = new FormAssistant();
 
     try{
       docShell.QueryInterface(Ci.nsIDocShellHistory).useGlobalHistory = true;
@@ -538,7 +541,7 @@ let Content = {
       }
     }
 
-    let scrollOffset = Util.getScrollOffset(content);
+    let scrollOffset = ContentScroll.getScrollOffset(content);
     let windowUtils = Util.getWindowUtils(content);
     aButton = aButton || 0;
     windowUtils.sendMouseEventToWindow(aName, aX - scrollOffset.x, aY - scrollOffset.y, aButton, 1, 0, true);
@@ -947,7 +950,7 @@ var FindHandler = {
       }
     }
 
-    let scroll = Util.getScrollOffset(content);
+    let scroll = ContentScroll.getScrollOffset(content);
     for (let frame = this._fastFind.currentWindow; frame != content; frame = frame.parent) {
       let rect = frame.frameElement.getBoundingClientRect();
       let left = frame.getComputedStyle(frame.frameElement, "").borderLeftWidth;

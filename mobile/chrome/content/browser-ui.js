@@ -438,10 +438,6 @@ var BrowserUI = {
     window.addEventListener("NavigationPanelShown", this, false);
     window.addEventListener("NavigationPanelHidden", this, false);
 
-    Elements.tabs.addEventListener("TabSelect", this, true);
-    Elements.tabs.addEventListener("TabOpen", this, true);
-    Elements.tabs.addEventListener("TabRemove", this, true);
-
     Elements.browsers.addEventListener("PanFinished", this, true);
 #if MOZ_PLATFORM_MAEMO == 6
     Elements.browsers.addEventListener("SizeChanged", this, true);
@@ -487,6 +483,15 @@ var BrowserUI = {
       // We unhide the panelUI so the XBL and settings can initialize
       Elements.panelUI.hidden = false;
 
+      // Login Manager and Form History initialization
+      Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
+      Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
+
+      // Listen tabs event
+      Elements.tabs.addEventListener("TabSelect", BrowserUI, true);
+      Elements.tabs.addEventListener("TabOpen", BrowserUI, true);
+      Elements.tabs.addEventListener("TabRemove", this, true);
+
       // Init the views
       ExtensionsView.init();
       DownloadsView.init();
@@ -503,6 +508,8 @@ var BrowserUI = {
       // Init the sync system
       WeaveGlue.init();
 #endif
+
+      Services.obs.addObserver(BrowserSearch, "browser-search-engine-modified", false);
 
       // Init helpers
       BadgeHandlers.register(BrowserUI._edit.popup);
@@ -531,6 +538,7 @@ var BrowserUI = {
   },
 
   uninit: function() {
+    Services.obs.removeObserver(BrowserSearch, "browser-search-engine-modified");
     ExtensionsView.uninit();
     ConsoleView.uninit();
   },
@@ -1180,13 +1188,11 @@ var BrowserUI = {
         break;
       }
       case "cmd_panel":
-      {
-        if (BrowserUI.isPanelVisible())
+        if (this.isPanelVisible())
           this.hidePanel();
         else
           this.showPanel();
         break;
-      }
       case "cmd_zoomin":
         Browser.zoom(-1);
         break;

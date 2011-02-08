@@ -500,7 +500,7 @@ FormAssistant.prototype = {
       let utils = Util.getWindowUtils(element.ownerDocument.defaultView);
       let rect = utils.sendQueryContentEvent(utils.QUERY_CARET_RECT, element.selectionEnd, 0, 0, 0);
       if (rect) {
-        let scroll = Util.getScrollOffset(element.ownerDocument.defaultView);
+        let scroll = ContentScroll.getScrollOffset(element.ownerDocument.defaultView);
         return new Rect(scroll.x + rect.left, scroll.y + rect.top, rect.width, rect.height);
       }
     }
