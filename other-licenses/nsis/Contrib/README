@@ -32,13 +32,3 @@ http://nsis.sourceforge.net/ApplicationID_plug-in
 Unicode support and taskbar resource deleteion was added for this plugin. A diff
 of the changes to the source is available at:
 https://bugzilla.mozilla.org/show_bug.cgi?id=521141
-
--------------------------------------------------------------------------------
-nsProcess NSIS plugin v1.5
-http://nsis.sourceforge.net/NsProcess_plugin
-Unicode support was added for this plugin. A diff of the changes to the source
-are available at:
-https://bugzilla.mozilla.org/show_bug.cgi?id=473348
-https://bugzilla.mozilla.org/attachment.cgi?id=357012
-
--------------------------------------------------------------------------------
