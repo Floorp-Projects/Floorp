@@ -4,10 +4,11 @@ skin testpilot skin skin/all/
 skin testpilot-os skin skin/linux/ os=Linux
 skin testpilot-os skin skin/mac/ os=Darwin
 skin testpilot-os skin skin/win/ os=WINNT
-overlay chrome://browser/content/macBrowserOverlay.xul chrome://testpilot/content/tp-browser.xul application={ec8030f7-c20a-464f-9b0e-13a3a9e97384} appversion<4.0b1pre
-overlay chrome://browser/content/macBrowserOverlay.xul chrome://testpilot/content/feedback-browser.xul application={ec8030f7-c20a-464f-9b0e-13a3a9e97384} appversion>=4.0b1pre
-overlay chrome://browser/content/browser.xul chrome://testpilot/content/tp-browser.xul application={ec8030f7-c20a-464f-9b0e-13a3a9e97384} appversion<=3.6.*
-overlay chrome://browser/content/browser.xul chrome://testpilot/content/feedback-browser.xul application={ec8030f7-c20a-464f-9b0e-13a3a9e97384} appversion>3.7a1pre
+
+overlay chrome://browser/content/macBrowserOverlay.xul chrome://testpilot/content/browser.xul
+
+overlay chrome://browser/content/browser.xul chrome://testpilot/content/browser.xul
+
 # For the menubar on Mac
 overlay chrome://testpilot/content/all-studies-window.xul chrome://browser/content/macBrowserOverlay.xul application={ec8030f7-c20a-464f-9b0e-13a3a9e97384} os=Darwin
 
