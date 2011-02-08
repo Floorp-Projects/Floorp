@@ -466,24 +466,52 @@ nsIconChannel::Init(nsIURI* aURI)
     direction = GTK_TEXT_DIR_RTL;
   }
 
-  PRBool haveDirection = direction != GTK_TEXT_DIR_NONE;
+  PRBool forceDirection = direction != GTK_TEXT_DIR_NONE;
   nsCAutoString stockID;
-  if (haveDirection) {
-    stockID = Substring(stockIcon, 0, stockIcon.Length() - 4);
-  } else {
+  PRBool useIconName = PR_FALSE;
+  if (!forceDirection) {
     direction = gtk_widget_get_default_direction();
     stockID = stockIcon;
+  } else {
+    // GTK versions < 2.22 use icon names from concatenating stock id with
+    // -(rtl|ltr), which is how the moz-icon stock name is interpreted here.
+    stockID = Substring(stockIcon, 0, stockIcon.Length() - 4);
+    // However, if we lookup bidi icons by the stock name, then GTK versions
+    // >= 2.22 will use a bidi lookup convention that most icon themes do not
+    // yet follow.  Therefore, we first check to see if the theme supports the
+    // old icon name as this will have bidi support (if found).
+    GtkIconTheme *icon_theme = gtk_icon_theme_get_default();
+    // Micking what gtk_icon_set_render_icon does with sizes, though it's not
+    // critical as icons will be scaled to suit size.  It just means we follow
+    // the same pathes and so share caches.
+    gint width, height;
+    if (gtk_icon_size_lookup(icon_size, &width, &height)) {
+      gint size = NS_MIN(width, height);
+      // We use gtk_icon_theme_lookup_icon() without
+      // GTK_ICON_LOOKUP_USE_BUILTIN instead of gtk_icon_theme_has_icon() so
+      // we don't pick up fallback icons added by distributions for backward
+      // compatibility.
+      GtkIconInfo *icon =
+        gtk_icon_theme_lookup_icon(icon_theme, stockIcon.get(),
+                                   size, (GtkIconLookupFlags)0);
+      if (icon) {
+        useIconName = PR_TRUE;
+        gtk_icon_info_free(icon);
+      }
+    }
   }
 
   ensure_stock_image_widget();
   GtkStyle *style = gtk_widget_get_style(gStockImageWidget);
-  GtkIconSet *icon_set = gtk_style_lookup_icon_set(style, stockID.get());
+  GtkIconSet *icon_set = NULL;
+  if (!useIconName) {
+    icon_set = gtk_style_lookup_icon_set(style, stockID.get());
+  }
 
-  if (icon_set) {
-    gtk_icon_set_ref(icon_set);
-  } else {
-    // stockIcon is not a stock id, so assume it is an icon name.
-    //
+  if (!icon_set) {
+    // Either we have choosen icon-name lookup for a bidi icon, or stockIcon is
+    // not a stock id so we assume it is an icon name.
+    useIconName = PR_TRUE;
     // Creating a GtkIconSet is a convenient way to allow the style to
     // render the icon, possibly with variations suitable for insensitive
     // states.
@@ -498,7 +526,9 @@ nsIconChannel::Init(nsIURI* aURI)
   GdkPixbuf *icon =
     gtk_icon_set_render_icon (icon_set, style, direction, state,
                               icon_size, gStockImageWidget, NULL);
-  gtk_icon_set_unref(icon_set);
+  if (useIconName) {
+    gtk_icon_set_unref(icon_set);
+  }
 
   // According to documentation, gtk_icon_set_render_icon() never returns
   // NULL, but it does return NULL when we have the problem reported here:
