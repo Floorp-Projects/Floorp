@@ -1013,10 +1013,12 @@ int Hunspell::suggest(char*** slst, const char * word)
       if (strcmp((*slst)[k], (*slst)[j]) == 0) {
         free((*slst)[j]);
         l--;
+        break;
       }
     }
     l++;
   }
+  ns = l;
 
   // output conversion
   rl = (pAMgr) ? pAMgr->get_oconvtable() : NULL;
