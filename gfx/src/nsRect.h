@@ -183,6 +183,11 @@ struct NS_GFX nsRect {
   nsRect& ScaleRoundOut(float aScale) { return ScaleRoundOut(aScale, aScale); }
   nsRect& ScaleRoundOut(float aXScale, float aYScale);
 
+  // Extend the rect outwards such that the edges are on integer boundaries
+  // and the edges scaled by aXMult/aYMult are also on integer boundaries.
+  // aXMult/aYMult must be N or 1/N for integer N.
+  nsRect& ExtendForScaling(float aXMult, float aYMult);
+
   // Converts this rect from aFromAPP, an appunits per pixel ratio, to aToAPP.
   // In the RoundOut version we make the rect the smallest rect containing the
   // unrounded result. In the RoundIn version we make the rect the largest rect
