@@ -205,14 +205,14 @@ public:
   //   If the previous call to cycle collector did collect something,
   //   MaybeCC works effectively as if aHigherProbability was true.
   // @return PR_TRUE if cycle collector was called.
-  static PRBool MaybeCC(PRBool aHigherProbability);
+  static PRBool MaybeCC(PRBool aHigherProbability, PRBool aForceGC = PR_FALSE);
 
   // IntervalCC() calls CC() if at least NS_MIN_CC_INTERVAL milliseconds have
   // elapsed since the previous cycle collector call.
   static PRBool IntervalCC(PRBool aForceGC = PR_FALSE);
 
   // Calls IntervalCC(PR_TRUE) if user is currently inactive,
-  // otherwise MaybeCC(PR_TRUE)
+  // otherwise MaybeCC(PR_TRUE, PR_TRUE)
   static void CCIfUserInactive();
 
   static void MaybeCCIfUserInactive();
