@@ -11,6 +11,7 @@ pref("extensions.testpilot.popup.showOnStudyFinished", true);
 pref("extensions.testpilot.popup.showOnNewResults", false);
 pref("extensions.testpilot.alwaysSubmitData", false);
 pref("extensions.testpilot.runStudies", true);
+pref("extensions.testpilot.alreadyCustomizedToolbar", false);
 
 pref("extensions.testpilot.indexBaseURL", "https://testpilot.mozillalabs.com/testcases/");
 pref("extensions.testpilot.firstRunUrl", "chrome://testpilot/content/welcome.html");
