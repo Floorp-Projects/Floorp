@@ -789,8 +789,6 @@ var FormHelperUI = {
       return;
 
     this._container.hidden = !aVal;
-    this._container.contentHasChanged();
-
     if (aVal) {
       this._zoomStart();
       this._container.show(this);
