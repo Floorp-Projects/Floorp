@@ -288,6 +288,10 @@
                  group="system" action="this.onKeyAction('default', event);"/>
         <handler event="keypress" keycode="VK_ESCAPE"
                  group="system" action="this.onKeyAction('cancel', event);"/>
+#ifdef XP_MACOSX
+        <handler event="keypress" key="." modifiers="meta"
+                 group="system" action="this.onKeyAction('cancel', event);"/>
+#endif
         <handler event="focus" phase="capturing">
             let bnum = this.args.defaultButtonNum || 0;
             let defaultButton = this.ui["button" + bnum];
