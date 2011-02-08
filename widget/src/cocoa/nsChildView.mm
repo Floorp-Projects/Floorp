@@ -1711,8 +1711,9 @@ NS_IMETHODIMP nsChildView::Invalidate(const nsIntRect &aRect, PRBool aIsSynchron
 PRBool
 nsChildView::GetShouldAccelerate()
 {
-  // Don't use OpenGL for transparent windows.
-  if (!mView || ![[mView window] isOpaque])
+  // Don't use OpenGL for transparent windows or for popup windows.
+  if (!mView || ![[mView window] isOpaque] ||
+      [[mView window] isKindOfClass:[PopupWindow class]])
     return PR_FALSE;
 
   return nsBaseWidget::GetShouldAccelerate();
