@@ -540,7 +540,7 @@
             <separator flex="1"/>
           </scrollbox>
           <hbox class="syncsetup-buttons" pack="center">
-            <button oncommand="WeaveGlue.abortEasySetup(); WeaveGlue.close();">&sync.setup.cancel;</button>
+            <button oncommand="WeaveGlue.close();">&sync.setup.cancel;</button>
           </hbox>
         </vbox>
         <vbox id="syncsetup-fallback" class="syncsetup-page" flex="1" hidden="true">

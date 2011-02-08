@@ -135,7 +135,7 @@ let WeaveGlue = {
         self.jpake = null;
 
         // No error means manual abort. Ignore.
-        if (!aError)
+        if (!aError || container.hidden)
           return;
 
         // Automatically go to manual setup if we couldn't acquire a channel.
@@ -162,7 +162,6 @@ let WeaveGlue = {
             break;
           case 2:
           default:
-            self.abortEasySetup();
             self.close();
             break;
         }
@@ -203,6 +202,9 @@ let WeaveGlue = {
   },
 
   close: function close() {
+    if (this.jpake)
+      this.abortEasySetup();
+
     // Reset the scroll since the previous page might have been scrolled
     this._resetScrollPosition();
 
@@ -523,7 +525,6 @@ let WeaveGlue = {
   },
 
   openTutorial: function _openTutorial() {
-    WeaveGlue.abortEasySetup();
     WeaveGlue.close();
 
     let formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].getService(Ci.nsIURLFormatter);
